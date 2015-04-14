@@ -1165,10 +1165,10 @@ namespace transport
         void set_fail(bool g) { this->fail = g; }
 
         //! Get list of failed serial numbers
-        const std::list<unsigned int> get_failed_serials() const { return(this->failed_serials); }
+        const std::list<unsigned int>& get_failed_serials() const { return(this->failed_serials); }
 
         //! Set list of failed serial numbers
-        void set_failed_serials(const std::list<unsigned int> f) { this->failed_serials = f; }
+        void set_failed_serials(const std::list<unsigned int>& f) { this->failed_serials = f; }
 
         //! Get workgroup number
         unsigned int get_workgroup_number() const { return(this->workgroup_number); }
@@ -1294,10 +1294,10 @@ namespace transport
         void set_fail(bool g) { this->fail = g; }
 
         //! Get list of failed serial numbers
-        const std::list<unsigned int> get_failed_serials() const { return(this->failed_serials); }
+        const std::list<unsigned int>& get_failed_serials() const { return(this->failed_serials); }
 
         //! Set list of failed serial numbers
-        void set_failed_serials(const std::list<unsigned int> f) { this->failed_serials = f; }
+        void set_failed_serials(const std::list<unsigned int>& f) { this->failed_serials = f; }
 
         //! Set pair
         void set_pair(bool g) { this->paired = g; }

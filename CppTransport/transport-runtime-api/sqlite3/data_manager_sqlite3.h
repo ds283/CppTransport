@@ -727,8 +727,9 @@ namespace transport
         writer->get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "** Seeding SQLite3 container '" << writer->get_abs_container_path().string() << "' "
-          << "from previous content group '" << seed->get_name() << "', container '" << seed->get_abs_output_path() << "'";
+          << "from previous content group '" << seed->get_name() << "', container '" << seed->get_abs_output_path().string() << "'";
 
+        boost::timer::cpu_timer timer;
         boost::filesystem::path seed_container_path = seed->get_abs_repo_path() / seed->get_payload().get_container_path();
 
         sqlite3_operations::aggregate_backg<number>(db, *writer, seed_container_path.string());
@@ -737,6 +738,9 @@ namespace transport
 
         sqlite3_operations::aggregate_workers<number>(db, *writer, seed_container_path.string());
         if(writer->collect_statistics() && seed->get_payload().has_statistics()) sqlite3_operations::aggregate_statistics<number>(db, *writer, seed_container_path.string());
+
+        timer.stop();
+        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "** Seeding complete in time " << format_time(timer.elapsed().wall);
       }
 
 
@@ -748,8 +752,9 @@ namespace transport
         writer->get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "** Seeding SQLite3 container '" << writer->get_abs_container_path().string() << "' "
-            << "from previous content group '" << seed->get_name() << "', container '" << seed->get_abs_output_path() << "'";
+            << "from previous content group '" << seed->get_name() << "', container '" << seed->get_abs_output_path().string() << "'";
 
+        boost::timer::cpu_timer timer;
         boost::filesystem::path seed_container_path = seed->get_abs_repo_path() / seed->get_payload().get_container_path();
 
         sqlite3_operations::aggregate_backg<number>(db, *writer, seed_container_path.string());
@@ -760,6 +765,9 @@ namespace transport
 
         sqlite3_operations::aggregate_workers<number>(db, *writer, seed_container_path.string());
         if(writer->collect_statistics() && seed->get_payload().has_statistics()) sqlite3_operations::aggregate_statistics<number>(db, *writer, seed_container_path.string());
+
+        timer.stop();
+        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "** Seeding complete in time " << format_time(timer.elapsed().wall);
       }
 
 
@@ -771,11 +779,15 @@ namespace transport
         writer->get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "** Seeding SQLite3 container '" << writer->get_abs_container_path().string() << "' "
-            << "from previous content group '" << seed->get_name() << "', container '" << seed->get_abs_output_path() << "'";
+            << "from previous content group '" << seed->get_name() << "', container '" << seed->get_abs_output_path().string() << "'";
 
+        boost::timer::cpu_timer timer;
         boost::filesystem::path seed_container_path = seed->get_abs_repo_path() / seed->get_payload().get_container_path();
 
         sqlite3_operations::aggregate_zeta_twopf<number>(db, *writer, seed_container_path.string());
+
+        timer.stop();
+        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "** Seeding complete in time " << format_time(timer.elapsed().wall);
       }
 
 
@@ -787,13 +799,17 @@ namespace transport
         writer->get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "** Seeding SQLite3 container '" << writer->get_abs_container_path().string() << "' "
-            << "from previous content group '" << seed->get_name() << "', container '" << seed->get_abs_output_path() << "'";
+            << "from previous content group '" << seed->get_name() << "', container '" << seed->get_abs_output_path().string() << "'";
 
+        boost::timer::cpu_timer timer;
         boost::filesystem::path seed_container_path = seed->get_abs_repo_path() / seed->get_payload().get_container_path();
 
         sqlite3_operations::aggregate_zeta_twopf<number>(db, *writer, seed_container_path.string());
         sqlite3_operations::aggregate_zeta_threepf<number>(db, *writer, seed_container_path.string());
         sqlite3_operations::aggregate_zeta_reduced_bispectrum<number>(db, *writer, seed_container_path.string());
+
+        timer.stop();
+        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "** Seeding complete in time " << format_time(timer.elapsed().wall);
       }
 
 
@@ -1385,12 +1401,13 @@ namespace transport
               {
                 BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << "** Dropping extra configurations not missing from container, but advised by backend:";
                 sqlite3_operations::drop_twopf_configurations(db, writer, remainder, tk->get_twopf_kconfig_list());
+                serials.merge(remainder);
               }
 
 		        // push list of missing serial numbers to writer
-            std::list<unsigned int> merged_missing = serials;
-            merged_missing.merge(remainder);
-		        writer.set_missing_serials(merged_missing);
+		        writer.set_missing_serials(serials);
+
+            if(writer.collect_statistics()) sqlite3_operations::drop_statistics(db, serials, tk->get_twopf_kconfig_list());
           }
       }
 
@@ -1449,6 +1466,7 @@ namespace transport
         if(threepf_serials.size() > 0)
           {
             writer.set_missing_serials(threepf_serials);
+            if(writer.collect_statistics()) sqlite3_operations::drop_statistics(db, threepf_serials, tk->get_threepf_kconfig_list());
 
             // build list of twopf configurations which should be dropped for this entire set of threepf configurations
             std::list<unsigned int> twopf_drop = this->compute_twopf_drop_list(threepf_serials, tk->get_threepf_kconfig_list());

@@ -193,11 +193,27 @@ namespace transport
           };
 
 
+        template <typename ConfigurationData>
+        void drop_statistics(sqlite3* db, const std::list<unsigned int>& drop_list, const std::vector<ConfigurationData>& configs)
+          {
+            for(std::list<unsigned int>::const_iterator t = drop_list.begin(); t != drop_list.end(); t++)
+              {
+                typename std::vector<ConfigurationData>::const_iterator u = std::find_if(configs.begin(), configs.end(), ConfigurationFinder<ConfigurationData>(*t));
+
+                if(u != configs.end())
+                  {
+                    std::ostringstream drop_stmt;
+                    drop_stmt << "DELETE FROM " << __CPP_TRANSPORT_SQLITE_STATS_TABLE << " WHERE kserial=" << *t << ";";
+                    exec(db, drop_stmt.str());
+                  }
+              }
+          }
+
+
         template <typename WriterObject>
         void drop_twopf_configurations(sqlite3* db, WriterObject& writer, const std::list<unsigned int>& drop_list, const std::vector<twopf_kconfig>& configs,
                                        twopf_value_type type=real_twopf, bool silent=false)
           {
-
             for(std::list<unsigned int>::const_iterator t = drop_list.begin(); t != drop_list.end(); t++)
               {
                 std::vector<twopf_kconfig>::const_iterator u = std::find_if(configs.begin(), configs.end(), ConfigurationFinder<twopf_kconfig>(*t));

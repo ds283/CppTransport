@@ -510,10 +510,9 @@ namespace transport
         // integration times. That can bias the average time-per-item low or high at the beginnng of the integration,
         // making the remaining-time estimate unreliable
         // shuffling attempt to alleviate that problem a bit
-        std::vector<unsigned int> temp;
+        std::vector<unsigned int> temp(this->queue.size());
         std::copy(this->queue.begin(), this->queue.end(), temp.begin());
         std::random_shuffle(temp.begin(), temp.end());
-        this->queue.clear();
         std::copy(temp.begin(), temp.end(), this->queue.begin());
 			}
 
@@ -525,10 +524,9 @@ namespace transport
         this->queue.sort();
         this->queue.unique();
 
-        std::vector<unsigned int> temp;
+        std::vector<unsigned int> temp(this->queue.size());
         std::copy(this->queue.begin(), this->queue.end(), temp.begin());
         std::random_shuffle(temp.begin(), temp.end());
-        this->queue.clear();
         std::copy(temp.begin(), temp.end(), this->queue.begin());
       }
 

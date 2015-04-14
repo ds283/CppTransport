@@ -1514,7 +1514,7 @@ namespace transport
         p_writer->set_parent_group(i_writer->get_name());
 
         // seed writers if a group has been provided
-        this->seed_writer_pair(i_writer, p_writer, tk, ptk, seed_group);
+        if(seeded) this->seed_writer_pair(i_writer, p_writer, tk, ptk, seed_group);
 
         // set up aggregators
         integration_aggregator     i_agg = std::bind(&master_controller<number>::aggregate_integration, this, i_writer, std::placeholders::_1, std::placeholders::_2);

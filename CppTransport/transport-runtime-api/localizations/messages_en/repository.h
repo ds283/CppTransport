@@ -57,7 +57,7 @@
 #define __CPP_TRANSPORT_REPO_COMMITTING_OUTPUT_GROUP_D   "at"
 
 #define __CPP_TRANSPORT_REPO_WARN_OUTPUT_GROUP_A         "Output group"
-#define __CPP_TRANSPORT_REPO_WARN_OUTPUT_GROUP_B         "has some missing content"
+#define __CPP_TRANSPORT_REPO_WARN_OUTPUT_GROUP_B         "has missing content"
 
 #define __CPP_TRANSPORT_REPO_FAILED_OUTPUT_GROUP_A       "Task"
 #define __CPP_TRANSPORT_REPO_FAILED_OUTPUT_GROUP_B       "Errors were encountered during integration. Failing output group"
