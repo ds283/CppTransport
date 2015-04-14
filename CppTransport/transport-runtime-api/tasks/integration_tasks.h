@@ -372,7 +372,7 @@ namespace transport
 				fast_forward = reader[__CPP_TRANSPORT_NODE_FAST_FORWARD].asBool();
 
 				// deserialize number of fast-forward efolds
-				ff_efolds = reader[__CPP_TRANSPORT_NODE_FAST_FORWARD_EFOLDS].asUInt();
+				ff_efolds = reader[__CPP_TRANSPORT_NODE_FAST_FORWARD_EFOLDS].asDouble();
 
 				// deserialize max number of mesh refinements
 				max_refinements = reader[__CPP_TRANSPORT_NODE_MESH_REFINEMENTS].asUInt();
@@ -460,7 +460,7 @@ namespace transport
 
 				// compute earliest time at which all modes will have available data, if using fast-forward integration
 				double tmin = this->ics.get_Nstar() + log(this->get_kmax()) - this->ff_efolds;
-				if(tmin <= 0.0) tmin = 0.0;
+				if(tmin <= 0.0) tmin = 0.0;   // TODO: consider whether this is correct
 
 		    // filter sampling times according to our storage policy
 				time_config_list.clear();
@@ -518,7 +518,8 @@ namespace transport
 			{
         if(refine > this->max_refinements) throw runtime_exception(runtime_exception::REFINEMENT_FAILURE, __CPP_TRANSPORT_REFINEMENT_TOO_DEEP);
 
-				if(!this->fast_forward || Nstart <= 0.0) Nstart = 0.0;
+        assert(Nstart >= 0.0);
+				if(!this->fast_forward) Nstart = 0.0;
 
 				unsigned int reserve_size = (this->raw_time_list.size()+1) * static_cast<unsigned int>(pow(4.0, refine));
 
@@ -537,6 +538,9 @@ namespace transport
 
 				for(unsigned int i = 0; i < this->raw_time_list.size(); i++)
 					{
+            // ensure next time to be stored is not earlier than the time we are currently looking at
+            assert(t == this->time_config_list.end() || t->t >= this->raw_time_list[i]);
+
 						if(this->raw_time_list[i] >= Nstart)
 							{
 						    if(t != this->time_config_list.end() && t->serial == i)
