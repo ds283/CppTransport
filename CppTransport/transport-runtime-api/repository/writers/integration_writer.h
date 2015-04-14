@@ -130,7 +130,7 @@ namespace transport
         const integration_metadata& get_metadata() const { return(this->metadata); }
 
         //! Merge list of failed serials reported by backend (not all backends may support this)
-        void merge_failure_list(const std::list<unsigned int>& failed) { std::list<unsigned int> temp = failed; this->set_fail(true); this->failed_serials.splice(this->failed_serials.end(), temp); this->failed_serials.sort(); }
+        void merge_failure_list(const std::list<unsigned int>& failed) { std::list<unsigned int> temp = failed; this->set_fail(true); temp.sort(); this->failed_serials.merge(temp); }
 
 
         // INTEGRITY CHECK

@@ -17,10 +17,10 @@ namespace transport
     namespace sqlite3_operations
       {
 
-        std::list<unsigned int> get_missing_twopf_serials(sqlite3* db)
+        std::list<unsigned int> get_missing_twopf_serials(sqlite3* db, twopf_value_type type=real_twopf)
           {
             std::ostringstream find_stmt;
-            find_stmt << "SELECT serial FROM " << __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE << " WHERE serial NOT IN (SELECT DISTINCT kserial FROM " << __CPP_TRANSPORT_SQLITE_TWOPF_VALUE_TABLE << ");";
+            find_stmt << "SELECT serial FROM " << __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE << " WHERE serial NOT IN (SELECT DISTINCT kserial FROM " << twopf_table_name(type) << ") ORDER BY serial;";
 
             sqlite3_stmt* stmt;
             check_stmt(db, sqlite3_prepare_v2(db, find_stmt.str().c_str(), find_stmt.str().length()+1, &stmt, nullptr));
@@ -52,7 +52,7 @@ namespace transport
         std::list<unsigned int> get_missing_threepf_serials(sqlite3* db)
           {
             std::ostringstream find_stmt;
-            find_stmt << "SELECT serial FROM " << __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE << " WHERE serial NOT IN (SELECT DISTINCT kserial FROM " << __CPP_TRANSPORT_SQLITE_THREEPF_VALUE_TABLE << ");";
+            find_stmt << "SELECT serial FROM " << __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE << " WHERE serial NOT IN (SELECT DISTINCT kserial FROM " << __CPP_TRANSPORT_SQLITE_THREEPF_VALUE_TABLE << ") ORDER BY serial;";
 
             sqlite3_stmt* stmt;
             check_stmt(db, sqlite3_prepare_v2(db, find_stmt.str().c_str(), find_stmt.str().length()+1, &stmt, nullptr));
@@ -84,7 +84,7 @@ namespace transport
         std::list<unsigned int> get_missing_zeta_twopf_serials(sqlite3* db)
           {
             std::ostringstream find_stmt;
-            find_stmt << "SELECT serial FROM " << __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE << " WHERE serial NOT IN (SELECT DISTINCT kserial FROM " << __CPP_TRANSPORT_SQLITE_ZETA_TWOPF_VALUE_TABLE << ");";
+            find_stmt << "SELECT serial FROM " << __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE << " WHERE serial NOT IN (SELECT DISTINCT kserial FROM " << __CPP_TRANSPORT_SQLITE_ZETA_TWOPF_VALUE_TABLE << ") ORDER BY serial;";
 
             sqlite3_stmt* stmt;
             check_stmt(db, sqlite3_prepare_v2(db, find_stmt.str().c_str(), find_stmt.str().length()+1, &stmt, nullptr));
@@ -116,7 +116,7 @@ namespace transport
         std::list<unsigned int> get_missing_zeta_threepf_serials(sqlite3* db)
           {
             std::ostringstream find_stmt;
-            find_stmt << "SELECT serial FROM " << __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE << " WHERE serial NOT IN (SELECT DISTINCT kserial FROM " << __CPP_TRANSPORT_SQLITE_ZETA_THREEPF_VALUE_TABLE << ");";
+            find_stmt << "SELECT serial FROM " << __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE << " WHERE serial NOT IN (SELECT DISTINCT kserial FROM " << __CPP_TRANSPORT_SQLITE_ZETA_THREEPF_VALUE_TABLE << ") ORDER BY serial;";
 
             sqlite3_stmt* stmt;
             check_stmt(db, sqlite3_prepare_v2(db, find_stmt.str().c_str(), find_stmt.str().length()+1, &stmt, nullptr));
@@ -148,7 +148,7 @@ namespace transport
         std::list<unsigned int> get_missing_zeta_redbsp_serials(sqlite3* db)
           {
             std::ostringstream find_stmt;
-            find_stmt << "SELECT serial FROM " << __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE << " WHERE serial NOT IN (SELECT DISTINCT kserial FROM " << __CPP_TRANSPORT_SQLITE_ZETA_REDUCED_BISPECTRUM_VALUE_TABLE << ");";
+            find_stmt << "SELECT serial FROM " << __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE << " WHERE serial NOT IN (SELECT DISTINCT kserial FROM " << __CPP_TRANSPORT_SQLITE_ZETA_REDUCED_BISPECTRUM_VALUE_TABLE << ") ORDER BY serial;";
 
             sqlite3_stmt* stmt;
             check_stmt(db, sqlite3_prepare_v2(db, find_stmt.str().c_str(), find_stmt.str().length()+1, &stmt, nullptr));
@@ -194,7 +194,8 @@ namespace transport
 
 
         template <typename WriterObject>
-        void drop_twopf_configurations(sqlite3* db, WriterObject& writer, const std::list<unsigned int>& drop_list, const std::vector<twopf_kconfig>& configs)
+        void drop_twopf_configurations(sqlite3* db, WriterObject& writer, const std::list<unsigned int>& drop_list, const std::vector<twopf_kconfig>& configs,
+                                       twopf_value_type type=real_twopf, bool silent=false)
           {
 
             for(std::list<unsigned int>::const_iterator t = drop_list.begin(); t != drop_list.end(); t++)
@@ -203,10 +204,10 @@ namespace transport
 
                 if(u != configs.end())
                   {
-                    BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << "** " << *u;
+                    if(!silent) BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << "** " << *u;
 
                     std::ostringstream drop_stmt;
-                    drop_stmt << "DELETE FROM " << __CPP_TRANSPORT_SQLITE_TWOPF_VALUE_TABLE << " WHERE kserial=" << *t << ";";
+                    drop_stmt << "DELETE FROM " << twopf_table_name(type) << " WHERE kserial=" << *t << ";";
                     exec(db, drop_stmt.str());
                   }
               }
@@ -214,7 +215,8 @@ namespace transport
 
 
         template <typename WriterObject>
-        void drop_threepf_configurations(sqlite3* db, WriterObject& writer, const std::list<unsigned int>& drop_list, const std::vector<threepf_kconfig>& configs)
+        void drop_threepf_configurations(sqlite3* db, WriterObject& writer, const std::list<unsigned int>& drop_list, const std::vector<threepf_kconfig>& configs,
+                                         bool silent = false)
           {
             for(std::list<unsigned int>::const_iterator t = drop_list.begin(); t != drop_list.end(); t++)
               {
@@ -222,7 +224,7 @@ namespace transport
 
                 if(u != configs.end())
                   {
-                    BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << "** " << *u;
+                    if(!silent) BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << "** " << *u;
 
                     std::ostringstream drop_stmt;
                     drop_stmt << "DELETE FROM " << __CPP_TRANSPORT_SQLITE_THREEPF_VALUE_TABLE << " WHERE kserial=" << *t << ";";
@@ -233,7 +235,8 @@ namespace transport
 
 
         template <typename WriterObject>
-        void drop_zeta_twopf_configurations(sqlite3* db, WriterObject& writer, const std::list<unsigned int>& drop_list, const std::vector<twopf_kconfig>& configs)
+        void drop_zeta_twopf_configurations(sqlite3* db, WriterObject& writer, const std::list<unsigned int>& drop_list, const std::vector<twopf_kconfig>& configs,
+                                            bool silent=false)
           {
             for(std::list<unsigned int>::const_iterator t = drop_list.begin(); t != drop_list.end(); t++)
               {
@@ -241,7 +244,7 @@ namespace transport
 
                 if(u != configs.end())
                   {
-                    BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << "** " << *u;
+                    if(!silent) BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << "** " << *u;
 
                     std::ostringstream drop_stmt;
                     drop_stmt << "DELETE FROM " << __CPP_TRANSPORT_SQLITE_ZETA_TWOPF_VALUE_TABLE << " WHERE kserial=" << *t << ";";
@@ -252,7 +255,8 @@ namespace transport
 
 
         template <typename WriterObject>
-        void drop_zeta_threepf_configurations(sqlite3* db, WriterObject& writer, const std::list<unsigned int>& drop_list, const std::vector<threepf_kconfig>& configs)
+        void drop_zeta_threepf_configurations(sqlite3* db, WriterObject& writer, const std::list<unsigned int>& drop_list, const std::vector<threepf_kconfig>& configs,
+                                              bool silent = false)
           {
             for(std::list<unsigned int>::const_iterator t = drop_list.begin(); t != drop_list.end(); t++)
               {
@@ -260,7 +264,7 @@ namespace transport
 
                 if(u != configs.end())
                   {
-                    BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << "** " << *u;
+                    if(!silent) BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << "** " << *u;
 
                     std::ostringstream drop_stmt;
                     drop_stmt << "DELETE FROM " << __CPP_TRANSPORT_SQLITE_ZETA_THREEPF_VALUE_TABLE << " WHERE kserial=" << *t << ";";
@@ -271,7 +275,8 @@ namespace transport
 
 
         template <typename WriterObject>
-        void drop_zeta_redbsp_configurations(sqlite3* db, WriterObject& writer, const std::list<unsigned int>& drop_list, const std::vector<threepf_kconfig>& configs)
+        void drop_zeta_redbsp_configurations(sqlite3* db, WriterObject& writer, const std::list<unsigned int>& drop_list, const std::vector<threepf_kconfig>& configs,
+                                             bool silent=false)
           {
             for(std::list<unsigned int>::const_iterator t = drop_list.begin(); t != drop_list.end(); t++)
               {
@@ -279,7 +284,7 @@ namespace transport
 
                 if(u != configs.end())
                   {
-                    BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << "** " << *u;
+                    if(!silent) BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << "** " << *u;
 
                     std::ostringstream drop_stmt;
                     drop_stmt << "DELETE FROM " << __CPP_TRANSPORT_SQLITE_ZETA_REDUCED_BISPECTRUM_VALUE_TABLE << " WHERE kserial=" << *t << ";";
