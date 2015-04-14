@@ -137,7 +137,7 @@ namespace transport
         const output_metadata& get_metadata() const { return(this->metadata); }
 
         //! Merge list of failed serials reported by backend or paired integrator (not all backends may support this)
-        void merge_failure_list(const std::list<unsigned int>& failed) { std::list<unsigned int> temp = failed; this->set_fail(true); this->failed_serials.merge(temp); }
+        void merge_failure_list(const std::list<unsigned int>& failed) { std::list<unsigned int> temp = failed; this->set_fail(true); this->failed_serials.splice(this->failed_serials.end(), temp); this->failed_serials.sort();  }
 
 
         // INTEGRITY CHECK
@@ -146,6 +146,9 @@ namespace transport
 
         //! get list of missing k-configuration serials
         const std::list<unsigned int>& get_missing_serials() const { return(this->missing_serials); }
+
+        //! set list of missing k-configuration serials
+        void set_missing_serials(const std::list<unsigned int>& s) { this->missing_serials = s; this->missing_serials.sort(); }
 
 
 		    // CONTENT

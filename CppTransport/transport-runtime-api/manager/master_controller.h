@@ -1280,7 +1280,7 @@ namespace transport
       {
         std::list<std::string> this_group = payload.get_content_groups();
 
-        groups.merge(this_group);
+        groups.splice(groups.end(), this_group);
         groups.sort();
         groups.unique();
       }

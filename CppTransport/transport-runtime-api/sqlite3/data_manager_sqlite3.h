@@ -1228,6 +1228,11 @@ namespace transport
                 BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << "** Dropping extra configurations not missing from container, but advised by backend:";
                 sqlite3_operations::drop_twopf_configurations(db, writer, remainder, task->get_twopf_kconfig_list());
               }
+
+		        // push list of missing serial numbers to writer
+            std::list<unsigned int> merged_missing = serials;
+		        merged_missing.splice(merged_missing.end(), remainder);
+		        writer.set_missing_serials(merged_missing);
           }
       }
 
@@ -1255,6 +1260,11 @@ namespace transport
                 sqlite3_operations::drop_threepf_configurations(db, writer, remainder, task->get_threepf_kconfig_list());
               }
 
+            // push list of missing serial numbers to writer
+            std::list<unsigned int> merged_missing = serials;
+            merged_missing.splice(merged_missing.end(), remainder);
+            writer.set_missing_serials(merged_missing);
+
             // build a list of twopf configurations which should be dropped for this set of threepf configurations
             std::list<unsigned int> twopf_drop = this->compute_twopf_drop_list(serials, task->get_threepf_kconfig_list());
             std::list<unsigned int> twopf_missing = sqlite3_operations::get_missing_twopf_serials(db);
@@ -1268,7 +1278,7 @@ namespace transport
 
             if(undropped.size() > 0)
               {
-                BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << std::endl << "** Dropping twopf configurations entailed by these threepf configuraitons, but present in the container";
+                BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << std::endl << "** Dropping twopf configurations entailed by these threepf configurations, but present in the container";
                 sqlite3_operations::drop_twopf_configurations(db, writer, undropped, task->get_twopf_kconfig_list());
               }
           }
@@ -1297,6 +1307,11 @@ namespace transport
                 BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << std::endl << "** Dropping extra configurations not missing from container, but advised by backend:";
                 sqlite3_operations::drop_zeta_twopf_configurations(db, writer, remainder, task->get_twopf_kconfig_list());
               }
+
+            // push list of missing serial numbers to writer
+            std::list<unsigned int> merged_missing = serials;
+            merged_missing.splice(merged_missing.end(), remainder);
+            writer.set_missing_serials(merged_missing);
           }
       }
 
@@ -1324,9 +1339,14 @@ namespace transport
                 sqlite3_operations::drop_zeta_threepf_configurations(db, writer, remainder, task->get_threepf_kconfig_list());
               }
 
+            // push list of missing serial numbers to writer
+            std::list<unsigned int> merged_missing = serials;
+            merged_missing.splice(merged_missing.end(), remainder);
+            writer.set_missing_serials(merged_missing);
+
             // build a list of twopf configurations which should be dropped for this set of threepf configurations
             std::list<unsigned int> twopf_drop = this->compute_twopf_drop_list(serials, task->get_threepf_kconfig_list());
-            std::list<unsigned int> twopf_missing = sqlite3_operations::get_missing_twopf_serials(db);
+            std::list<unsigned int> twopf_missing = sqlite3_operations::get_missing_zeta_twopf_serials(db);
 
             // remove any any which are already missing from the container
             twopf_drop.sort();
@@ -1337,7 +1357,7 @@ namespace transport
 
             if(undropped.size() > 0)
               {
-                BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << std::endl << "** Dropping twopf configurations entailed by these threepf configuraitons, but present in the container";
+                BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << std::endl << "** Dropping twopf configurations entailed by these threepf configurations, but present in the container";
                 sqlite3_operations::drop_zeta_twopf_configurations(db, writer, undropped, task->get_twopf_kconfig_list());
               }
           }
@@ -1356,9 +1376,16 @@ namespace transport
                 sqlite3_operations::drop_zeta_redbsp_configurations(db, writer, remainder, task->get_threepf_kconfig_list());
               }
 
+            // push list of missing serial numbers to writer
+            std::list<unsigned int> merged_missing = serials;
+            std::list<unsigned int> previous_list  = writer.get_missing_serials();
+            merged_missing.splice(merged_missing.end(), remainder);
+		        merged_missing.splice(merged_missing.end(), previous_list);
+            writer.set_missing_serials(merged_missing);
+
             // build a list of twopf configurations which should be dropped for this set of threepf configurations
             std::list<unsigned int> twopf_drop = this->compute_twopf_drop_list(serials, task->get_threepf_kconfig_list());
-            std::list<unsigned int> twopf_missing = sqlite3_operations::get_missing_twopf_serials(db);
+            std::list<unsigned int> twopf_missing = sqlite3_operations::get_missing_zeta_twopf_serials(db);
 
             // remove any any which are already missing from the container
             twopf_drop.sort();
