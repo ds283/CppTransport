@@ -258,6 +258,9 @@ namespace transport
 		    template <typename number>
 		    void prepare_queue(output_task<number>& task);
 
+        //! build a work queue using specified serial numbers (used when seeding tasks)
+        void prepare_queue(const std::list<unsigned int>& list);
+
 		    //! current queue exhausted? ie., finished all current work?
 		    bool is_finished() const { return(this->queue.size() == 0); }
 
@@ -502,7 +505,32 @@ namespace transport
 				// (note duplicate removal using unique() requires a sorted list)
 				this->queue.sort();
 				this->queue.unique();
+
+        // shuffle items; work items with nearby serial numbers typically have similar properties and therefore similar
+        // integration times. That can bias the average time-per-item low or high at the beginnng of the integration,
+        // making the remaining-time estimate unreliable
+        // shuffling attempt to alleviate that problem a bit
+        std::vector<unsigned int> temp;
+        std::copy(this->queue.begin(), this->queue.end(), temp.begin());
+        std::random_shuffle(temp.begin(), temp.end());
+        this->queue.clear();
+        std::copy(temp.begin(), temp.end(), this->queue.begin());
 			}
+
+
+    void master_scheduler::prepare_queue(const std::list<unsigned int>& list)
+      {
+        this->queue = list;
+
+        this->queue.sort();
+        this->queue.unique();
+
+        std::vector<unsigned int> temp;
+        std::copy(this->queue.begin(), this->queue.end(), temp.begin());
+        std::random_shuffle(temp.begin(), temp.end());
+        this->queue.clear();
+        std::copy(temp.begin(), temp.end(), this->queue.begin());
+      }
 
 
 		void master_scheduler::complete_queue_setup()

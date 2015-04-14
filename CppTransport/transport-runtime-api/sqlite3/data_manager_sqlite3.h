@@ -91,7 +91,7 @@ namespace transport
         virtual void close_writer(std::shared_ptr< postintegration_writer<number> >& writer) override;
 
 
-        // WRITE INDEX TABLES -- implements a 'data_manager' interface
+        // WRITE TABLES -- implements a 'data_manager' interface
 
       public:
 
@@ -109,6 +109,31 @@ namespace transport
 
         //! Create tables needed for an fNL container
         virtual void create_tables(std::shared_ptr< postintegration_writer<number> >& writer, fNL_task<number>* tk) override;
+
+
+        // SEEDING -- implements a 'data manager' interface
+
+      public:
+
+        //! Seed a writer for a twopf task
+        virtual void seed_writer(std::shared_ptr< integration_writer<number> >& writer, twopf_task<number>* tk,
+                                 const std::shared_ptr< output_group_record<integration_payload> >& seed) override;
+
+        //! Seed a writer for a threepf task
+        virtual void seed_writer(std::shared_ptr< integration_writer<number> >& writer, threepf_task<number>* tk,
+                                 const std::shared_ptr< output_group_record<integration_payload> >& seed) override;
+
+        //! Seed a writer for a zeta twopf task
+        virtual void seed_writer(std::shared_ptr< postintegration_writer<number> >& writer, zeta_twopf_task<number>* tk,
+                                 const std::shared_ptr< output_group_record<postintegration_payload> >& seed) override;
+
+        //! Seed a writer for a zeta threepf task
+        virtual void seed_writer(std::shared_ptr< postintegration_writer<number> >& writer, zeta_threepf_task<number>* tk,
+                                 const std::shared_ptr< output_group_record<postintegration_payload> >& seed) override;
+
+        //! Seed a writer for an fNL task
+        virtual void seed_writer(std::shared_ptr< postintegration_writer<number> >& writer, fNL_task<number>* tk,
+                                 const std::shared_ptr< output_group_record<postintegration_payload> >& seed) override;
 
 
         // CONSTRUCT BATCHERS  -- implements a 'data_manager' interface
@@ -691,7 +716,97 @@ namespace transport
       }
 
 
-    // TEMPORARY CONTAINERS
+    // SEEDING
+
+
+    template <typename number>
+    void data_manager_sqlite3<number>::seed_writer(std::shared_ptr< integration_writer<number> >& writer, twopf_task<number>* tk,
+                                                   const std::shared_ptr< output_group_record<integration_payload> >& seed)
+      {
+        sqlite3* db = nullptr;
+        writer->get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
+
+        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "** Seeding SQLite3 container '" << writer->get_abs_container_path().string() << "' "
+          << "from previous content group '" << seed->get_name() << "', container '" << seed->get_abs_output_path() << "'";
+
+        boost::filesystem::path seed_container_path = seed->get_abs_repo_path() / seed->get_payload().get_container_path();
+
+        sqlite3_operations::aggregate_backg<number>(db, *writer, seed_container_path.string());
+        sqlite3_operations::aggregate_twopf<number>(db, *writer, seed_container_path.string(), sqlite3_operations::real_twopf);
+        sqlite3_operations::aggregate_tensor_twopf<number>(db, *writer, seed_container_path.string());
+
+        sqlite3_operations::aggregate_workers<number>(db, *writer, seed_container_path.string());
+        if(writer->collect_statistics() && seed->get_payload().has_statistics()) sqlite3_operations::aggregate_statistics<number>(db, *writer, seed_container_path.string());
+      }
+
+
+    template <typename number>
+    void data_manager_sqlite3<number>::seed_writer(std::shared_ptr< integration_writer<number> >& writer, threepf_task<number>* tk,
+                                                   const std::shared_ptr< output_group_record<integration_payload> >& seed)
+      {
+        sqlite3* db = nullptr;
+        writer->get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
+
+        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "** Seeding SQLite3 container '" << writer->get_abs_container_path().string() << "' "
+            << "from previous content group '" << seed->get_name() << "', container '" << seed->get_abs_output_path() << "'";
+
+        boost::filesystem::path seed_container_path = seed->get_abs_repo_path() / seed->get_payload().get_container_path();
+
+        sqlite3_operations::aggregate_backg<number>(db, *writer, seed_container_path.string());
+        sqlite3_operations::aggregate_twopf<number>(db, *writer, seed_container_path.string(), sqlite3_operations::real_twopf);
+        sqlite3_operations::aggregate_twopf<number>(db, *writer, seed_container_path.string(), sqlite3_operations::imag_twopf);
+        sqlite3_operations::aggregate_tensor_twopf<number>(db, *writer, seed_container_path.string());
+        sqlite3_operations::aggregate_threepf<number>(db, *writer, seed_container_path.string());
+
+        sqlite3_operations::aggregate_workers<number>(db, *writer, seed_container_path.string());
+        if(writer->collect_statistics() && seed->get_payload().has_statistics()) sqlite3_operations::aggregate_statistics<number>(db, *writer, seed_container_path.string());
+      }
+
+
+    template <typename number>
+    void data_manager_sqlite3<number>::seed_writer(std::shared_ptr< postintegration_writer<number> >& writer, zeta_twopf_task<number>* tk,
+                                                   const std::shared_ptr< output_group_record<postintegration_payload> >& seed)
+      {
+        sqlite3* db = nullptr;
+        writer->get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
+
+        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "** Seeding SQLite3 container '" << writer->get_abs_container_path().string() << "' "
+            << "from previous content group '" << seed->get_name() << "', container '" << seed->get_abs_output_path() << "'";
+
+        boost::filesystem::path seed_container_path = seed->get_abs_repo_path() / seed->get_payload().get_container_path();
+
+        sqlite3_operations::aggregate_zeta_twopf<number>(db, *writer, seed_container_path.string());
+      }
+
+
+    template <typename number>
+    void data_manager_sqlite3<number>::seed_writer(std::shared_ptr< postintegration_writer<number> >& writer, zeta_threepf_task<number>* tk,
+                                                   const std::shared_ptr< output_group_record<postintegration_payload> >& seed)
+      {
+        sqlite3* db = nullptr;
+        writer->get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
+
+        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "** Seeding SQLite3 container '" << writer->get_abs_container_path().string() << "' "
+            << "from previous content group '" << seed->get_name() << "', container '" << seed->get_abs_output_path() << "'";
+
+        boost::filesystem::path seed_container_path = seed->get_abs_repo_path() / seed->get_payload().get_container_path();
+
+        sqlite3_operations::aggregate_zeta_twopf<number>(db, *writer, seed_container_path.string());
+        sqlite3_operations::aggregate_zeta_threepf<number>(db, *writer, seed_container_path.string());
+        sqlite3_operations::aggregate_zeta_reduced_bispectrum<number>(db, *writer, seed_container_path.string());
+      }
+
+
+    template <typename number>
+    void data_manager_sqlite3<number>::seed_writer(std::shared_ptr< postintegration_writer<number> >& writer, fNL_task<number>* tk,
+                                                   const std::shared_ptr< output_group_record<postintegration_payload> >& seed)
+      {
+        assert(false);
+      }
+
+
+    // BATCHERS
+
 
     template <typename number>
     twopf_batcher<number>

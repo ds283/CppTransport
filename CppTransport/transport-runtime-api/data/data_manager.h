@@ -99,7 +99,7 @@ namespace transport
         virtual void close_writer(std::shared_ptr< postintegration_writer<number> >& writer) = 0;
 
 
-        // WRITE INDEX TABLES FOR A DATA CONTAINER
+        // WRITE TABLES FOR A DATA CONTAINER
 
       public:
 
@@ -117,6 +117,31 @@ namespace transport
 
         //! Create tables needed for an fNL container
         virtual void create_tables(std::shared_ptr< postintegration_writer<number> >& writer, fNL_task<number>* tk) = 0;
+
+
+        // SEEDING
+
+      public:
+
+        //! Seed a writer for a twopf task
+        virtual void seed_writer(std::shared_ptr< integration_writer<number> >& writer, twopf_task<number>* tk,
+                                 const std::shared_ptr< output_group_record<integration_payload> >& seed) = 0;
+
+        //! Seed a writer for a threepf task
+        virtual void seed_writer(std::shared_ptr< integration_writer<number> >& writer, threepf_task<number>* tk,
+                                 const std::shared_ptr< output_group_record<integration_payload> >& seed) = 0;
+
+        //! Seed a writer for a zeta twopf task
+        virtual void seed_writer(std::shared_ptr< postintegration_writer<number> >& writer, zeta_twopf_task<number>* tk,
+                                 const std::shared_ptr< output_group_record<postintegration_payload> >& seed) = 0;
+
+        //! Seed a writer for a zeta threepf task
+        virtual void seed_writer(std::shared_ptr< postintegration_writer<number> >& writer, zeta_threepf_task<number>* tk,
+                                 const std::shared_ptr< output_group_record<postintegration_payload> >& seed) = 0;
+
+        //! Seed a writer for an fNL task
+        virtual void seed_writer(std::shared_ptr< postintegration_writer<number> >& writer, fNL_task<number>* tk,
+                                 const std::shared_ptr< output_group_record<postintegration_payload> >& seed) = 0;
 
 
         // CONSTRUCT BATCHERS

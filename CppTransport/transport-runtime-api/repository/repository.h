@@ -328,6 +328,22 @@ namespace transport
 	    };
 
 
+    template <typename Payload>
+    class OutputGroupFinder
+      {
+      public:
+        OutputGroupFinder(const std::string& n)
+          : name(n)
+          {
+          }
+
+        bool operator()(const std::shared_ptr< output_group_record<Payload> >& a) { return(a->get_name() == name); }
+
+      private:
+        std::string name;
+      };
+
+
     // ADMINISTRATION
 
 
@@ -594,8 +610,12 @@ namespace transport
         output_record->get_payload().set_metadata(writer.get_metadata());
         output_record->get_payload().set_workgroup_number(writer.get_workgroup_number());
 
+        if(writer.is_seeded()) output_record->get_payload().set_seed(writer.get_seed_group());
+
         output_record->get_payload().set_fail(writer.is_failed());
         output_record->get_payload().set_failed_serials(writer.get_missing_serials());
+
+        output_record->get_payload().set_statistics(writer.collect_statistics());
 
         // commit new output record
         output_record->commit();
@@ -667,6 +687,8 @@ namespace transport
         // populate output group with content from the writer
         output_record->get_payload().set_container_path(writer.get_relative_container_path());
         output_record->get_payload().set_metadata(writer.get_metadata());
+
+        if(writer.is_seeded()) output_record->get_payload().set_seed(writer.get_seed_group());
 
         output_record->get_payload().set_pair(writer.is_paired());
         output_record->get_payload().set_parent_group(writer.get_parent_group());

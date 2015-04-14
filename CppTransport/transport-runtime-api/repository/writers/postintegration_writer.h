@@ -139,6 +139,15 @@ namespace transport
         //! Merge list of failed serials reported by backend or paired integrator (not all backends may support this)
         void merge_failure_list(const std::list<unsigned int>& failed) { std::list<unsigned int> temp = failed; this->set_fail(true); temp.sort(); this->failed_serials.merge(temp); }
 
+        //! Set seed
+        void set_seed(const std::string& g) { this->seeded = true; this->seed_group = g; }
+
+        //! Query seeded status
+        bool is_seeded() const { return(this->seeded); }
+
+        //! Query seeded group name
+        const std::string& get_seed_group() const { return(this->seed_group); }
+
 
         // INTEGRITY CHECK
 
@@ -186,6 +195,12 @@ namespace transport
         //! output metadata for this task
         output_metadata metadata;
 
+        //! was this writer seeded?
+        bool seeded;
+
+        //! name of seed group, if so
+        std::string seed_group;
+
 
         // PARENT CONTENT
 
@@ -227,6 +242,7 @@ namespace transport
                                                            const generic_writer::metadata_group& m, const generic_writer::paths_group& p, unsigned int w)
 	    : generic_writer(n, m, p, w),
         paired(false),
+        seeded(false),
 	      callbacks(c),
 	      aggregator(nullptr),
         integrity_checker(nullptr),

@@ -120,6 +120,9 @@ namespace transport
         //! get workgroup number
         unsigned int get_workgroup_number() const { return(this->workgroup_number); }
 
+        //! set workgroup number (used if seeding this writer by a previous integration)
+        void set_workgroup_number(unsigned int wg) { this->workgroup_number = wg; }
+
         //! Return task
         integration_task_record<number>* get_record() const { return(this->parent_record); }
 
@@ -131,6 +134,15 @@ namespace transport
 
         //! Merge list of failed serials reported by backend (not all backends may support this)
         void merge_failure_list(const std::list<unsigned int>& failed) { std::list<unsigned int> temp = failed; this->set_fail(true); temp.sort(); this->failed_serials.merge(temp); }
+
+        //! Set seed
+        void set_seed(const std::string& g) { this->seeded = true; this->seed_group = g; }
+
+        //! Query seeded status
+        bool is_seeded() const { return(this->seeded); }
+
+        //! Query seeded group name
+        const std::string& get_seed_group() const { return(this->seed_group); }
 
 
         // INTEGRITY CHECK
@@ -174,6 +186,12 @@ namespace transport
         //! metadata for this integration
         integration_metadata metadata;
 
+        //! was this writer seeded?
+        bool seeded;
+
+        //! name of seed group, if so
+        std::string seed_group;
+
 
         // FAILURE STATUS
 
@@ -207,6 +225,7 @@ namespace transport
                                                    unsigned int w, unsigned int wg)
 	    : generic_writer(n, m, p, w),
         workgroup_number(wg),
+        seeded(false),
 	      callbacks(c),
 	      aggregator(nullptr),
         integrity_checker(nullptr),

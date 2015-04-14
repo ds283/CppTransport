@@ -272,15 +272,21 @@ namespace transport
 
 		    //! Master node: Dispatch an integration task to the worker processes.
 		    //! Makes a queue then invokes master_dispatch_integration_queue()
-		    void dispatch_integration_task(integration_task_record<number>* rec, const std::list<std::string>& tags);
+		    void dispatch_integration_task(integration_task_record<number>* rec, bool seeded, const std::string& seed_group, const std::list<std::string>& tags);
 
 		    //! Master node: Dispatch an integration queue to the worker processes.
 		    template <typename TaskObject>
-		    void schedule_integration(integration_task_record<number>* rec, TaskObject* tk, const std::list<std::string>& tags,
+		    void schedule_integration(integration_task_record<number>* rec, TaskObject* tk,
+                                  bool seeded, const std::string& seed_group, const std::list<std::string>& tags,
 		                              slave_work_event::event_type begin_label, slave_work_event::event_type end_label);
 
+        //! Master node: Seed an integration writer using a previous integration
+        //! returns list of serial numbers which remain to be integrated
+        template <typename TaskObject>
+        std::list<unsigned int> seed_writer(std::shared_ptr< integration_writer<number> >& writer, TaskObject* tk, const std::string& seed_group);
+
 		    //! Master node: Pass new integration task to the workers
-		    bool integration_task_to_workers(std::shared_ptr< integration_writer<number>>& writer,
+		    bool integration_task_to_workers(std::shared_ptr< integration_writer<number> >& writer,
                                          integration_aggregator& i_agg, postintegration_aggregator& p_agg, derived_content_aggregator& d_agg,
                                          slave_work_event::event_type begin_label, slave_work_event::event_type end_label);
 
@@ -300,19 +306,29 @@ namespace transport
 		  protected:
 
 		    //! Master node: Dispatch a postintegration task to the worker processes.
-		    void dispatch_postintegration_task(postintegration_task_record<number>* rec, const std::list<std::string>& tags);
+		    void dispatch_postintegration_task(postintegration_task_record<number>* rec, bool seeded, const std::string& seed_group, const std::list<std::string>& tags);
 
 		    //! Master node: Dispatch a postintegration queue to the worker processes
 		    template <typename TaskObject>
-		    void schedule_postintegration(postintegration_task_record<number>* rec, TaskObject* tk, const std::list<std::string>& tags,
+		    void schedule_postintegration(postintegration_task_record<number>* rec, TaskObject* tk,
+                                      bool seeded, const std::string& seed_group, const std::list<std::string>& tags,
 		                                  slave_work_event::event_type begin_label, slave_work_event::event_type end_label);
 
         //! Master node: Dispatch a paired postintegration queue to the worker processes
         template <typename TaskObject, typename ParentTaskObject>
-        void schedule_paired_postintegration(postintegration_task_record<number>* rec, TaskObject* tk,
-                                             ParentTaskObject* ptk, const std::list<std::string>& tags,
+        void schedule_paired_postintegration(postintegration_task_record<number>* rec, TaskObject* tk, ParentTaskObject* ptk,
+                                             bool seeded, const std::string& seed_group, const std::list<std::string>& tags,
                                              slave_work_event::event_type begin_label,
                                              slave_work_event::event_type end_label);
+
+        //! Master node: Seed an integration writer using a previous integration
+        template <typename TaskObject>
+        std::list<unsigned int> seed_writer(std::shared_ptr< postintegration_writer<number> >& writer, TaskObject* tk, const std::string& seed_group);
+
+        //! Master node: Seed a pair of integration & postintegration writers using a previous integration/postintegration output
+        template <typename TaskObject, typename ParentTaskObject>
+        std::list<unsigned int> seed_writer_pair(std::shared_ptr<integration_writer<number> >& i_writer, std::shared_ptr<postintegration_writer<number> >& p_writer,
+                                                 TaskObject* tk, ParentTaskObject* ptk, const std::string& seed_group);
 
         //! Master node: Pass new postintegration task to workers
 		    bool postintegration_task_to_workers(std::shared_ptr< postintegration_writer<number> >& writer, const std::list<std::string>& tags,
@@ -843,7 +859,7 @@ namespace transport
                     assert(int_rec != nullptr);
                     if(int_rec == nullptr) throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_RECORD_CAST_FAILED);
 
-                    this->dispatch_integration_task(int_rec, job.get_tags());
+                    this->dispatch_integration_task(int_rec, job.is_seeded(), job.get_seed_group(), job.get_tags());
                     break;
 	                }
 
@@ -865,7 +881,7 @@ namespace transport
                     assert(pint_rec != nullptr);
                     if(pint_rec == nullptr) throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_RECORD_CAST_FAILED);
 
-                    this->dispatch_postintegration_task(pint_rec, job.get_tags());
+                    this->dispatch_postintegration_task(pint_rec, job.is_seeded(), job.get_seed_group(), job.get_tags());
                     break;
 	                }
 
@@ -903,7 +919,8 @@ namespace transport
 
 
     template <typename number>
-    void master_controller<number>::dispatch_integration_task(integration_task_record<number>* rec, const std::list<std::string>& tags)
+    void master_controller<number>::dispatch_integration_task(integration_task_record<number>* rec, bool seeded, const std::string& seed_group,
+                                                              const std::list<std::string>& tags)
 	    {
         assert(rec != nullptr);
 
@@ -919,14 +936,14 @@ namespace transport
         if((tka = dynamic_cast< twopf_task<number>* >(tk)) != nullptr)
 	        {
 		        this->work_scheduler.set_state_size(m->backend_twopf_state_size());
-		        this->work_scheduler.prepare_queue(*tka);
-            this->schedule_integration(rec, tka, tags, slave_work_event::begin_twopf_assignment, slave_work_event::end_twopf_assignment);
+            this->work_scheduler.prepare_queue(*tka);
+            this->schedule_integration(rec, tka, seeded, seed_group, tags, slave_work_event::begin_twopf_assignment, slave_work_event::end_twopf_assignment);
 	        }
         else if((tkb = dynamic_cast< threepf_task<number>* >(tk)) != nullptr)
 	        {
 		        this->work_scheduler.set_state_size(m->backend_threepf_state_size());
             this->work_scheduler.prepare_queue(*tkb);
-            this->schedule_integration(rec, tkb, tags, slave_work_event::begin_threepf_assignment, slave_work_event::end_threepf_assignment);
+            this->schedule_integration(rec, tkb, seeded, seed_group, tags, slave_work_event::begin_threepf_assignment, slave_work_event::end_threepf_assignment);
 	        }
         else
 	        {
@@ -939,7 +956,8 @@ namespace transport
 
     template <typename number>
     template <typename TaskObject>
-    void master_controller<number>::schedule_integration(integration_task_record<number>* rec, TaskObject* tk, const std::list<std::string>& tags,
+    void master_controller<number>::schedule_integration(integration_task_record<number>* rec, TaskObject* tk,
+                                                         bool seeded, const std::string& seed_group, const std::list<std::string>& tags,
                                                          slave_work_event::event_type begin_label, slave_work_event::event_type end_label)
 	    {
         assert(rec != nullptr);
@@ -954,6 +972,9 @@ namespace transport
 
         // write the various tables needed in the database
         this->data_mgr->create_tables(writer, tk);
+
+        // seed writer if a group has been provided
+        if(seeded) this->seed_writer(writer, tk, seed_group);
 
         // set up aggregators
         integration_aggregator     i_agg = std::bind(&master_controller<number>::aggregate_integration, this, writer, std::placeholders::_1, std::placeholders::_2);
@@ -980,6 +1001,39 @@ namespace transport
         // commit output if successful
         if(success) writer->commit();
 	    }
+
+
+    template <typename number>
+    template <typename TaskObject>
+    std::list<unsigned int> master_controller<number>::seed_writer(std::shared_ptr< integration_writer<number> >& writer, TaskObject* tk, const std::string& seed_group)
+      {
+        // enumerate the content groups available for our own task
+        std::list< std::shared_ptr< output_group_record<integration_payload> > > list = this->repo->enumerate_integration_task_content(tk->get_name());
+
+        // find the specified group in this list
+        std::list< std::shared_ptr< output_group_record<integration_payload> > >::const_iterator t = std::find_if(list.begin(), list.end(),
+                                                                                                                  OutputGroupFinder<integration_payload>(seed_group));
+
+        if(t == list.end())   // no record found
+          {
+            std::ostringstream msg;
+            msg << __CPP_TRANSPORT_SEED_GROUP_NOT_FOUND_A << " '" << seed_group << "' " << __CPP_TRANSPORT_SEED_GROUP_NOT_FOUND_B << " '" << tk->get_name() << "'";
+            this->warning_handler(msg.str());
+            return std::list<unsigned int>{};
+          }
+
+        // mark writer as seeded
+        writer->set_seed(seed_group);
+
+        // get workgroup number used by seed
+        unsigned int seed_workgroup = (*t)->get_payload().get_workgroup_number();
+        writer->set_workgroup_number(seed_workgroup+1);
+
+        this->data_mgr->seed_writer(writer, tk, *t);
+        this->work_scheduler.prepare_queue((*t)->get_payload().get_failed_serials());
+
+        return((*t)->get_payload().get_failed_serials());
+      }
 
 
     template <typename number>
@@ -1290,7 +1344,8 @@ namespace transport
 
 
     template <typename number>
-    void master_controller<number>::dispatch_postintegration_task(postintegration_task_record<number>* rec, const std::list<std::string>& tags)
+    void master_controller<number>::dispatch_postintegration_task(postintegration_task_record<number>* rec, bool seeded, const std::string& seed_group,
+                                                                  const std::list<std::string>& tags)
 	    {
         assert(rec != nullptr);
 
@@ -1321,13 +1376,13 @@ namespace transport
                 model<number>* m = ptk->get_model();
                 this->work_scheduler.set_state_size(m->backend_twopf_state_size());
                 this->work_scheduler.prepare_queue(*ptk);
-                this->schedule_paired_postintegration(rec, z2pf, ptk, tags, slave_work_event::begin_twopf_assignment, slave_work_event::end_twopf_assignment);
+                this->schedule_paired_postintegration(rec, z2pf, ptk, seeded, seed_group, tags, slave_work_event::begin_twopf_assignment, slave_work_event::end_twopf_assignment);
               }
             else
               {
                 this->work_scheduler.set_state_size(sizeof(number));
                 this->work_scheduler.prepare_queue(*ptk);
-                this->schedule_postintegration(rec, z2pf, tags, slave_work_event::begin_zeta_twopf_assignment, slave_work_event::end_zeta_twopf_assignment);
+                this->schedule_postintegration(rec, z2pf, seeded, seed_group, tags, slave_work_event::begin_zeta_twopf_assignment, slave_work_event::end_zeta_twopf_assignment);
               }
 	        }
         else if((z3pf = dynamic_cast< zeta_threepf_task<number>* >(tk)) != nullptr)
@@ -1347,14 +1402,13 @@ namespace transport
               {
                 model<number>* m = ptk->get_model();
                 this->work_scheduler.set_state_size(m->backend_threepf_state_size());
-                this->work_scheduler.prepare_queue(*ptk);
-                this->schedule_paired_postintegration(rec, z3pf, ptk, tags, slave_work_event::begin_threepf_assignment, slave_work_event::end_threepf_assignment);
+                this->schedule_paired_postintegration(rec, z3pf, ptk, seeded, seed_group, tags, slave_work_event::begin_threepf_assignment, slave_work_event::end_threepf_assignment);
               }
             else
               {
                 this->work_scheduler.set_state_size(sizeof(number));
                 this->work_scheduler.prepare_queue(*ptk);
-                this->schedule_postintegration(rec, z3pf, tags, slave_work_event::begin_zeta_threepf_assignment, slave_work_event::end_zeta_threepf_assignment);
+                this->schedule_postintegration(rec, z3pf, seeded, seed_group, tags, slave_work_event::begin_zeta_threepf_assignment, slave_work_event::end_zeta_threepf_assignment);
               }
 	        }
         else if((zfNL = dynamic_cast< fNL_task<number>* >(tk)) != nullptr)
@@ -1371,7 +1425,7 @@ namespace transport
 
 		        this->work_scheduler.set_state_size(sizeof(number));
 		        this->work_scheduler.prepare_queue(*ptk);
-            this->schedule_postintegration(rec, zfNL, tags, slave_work_event::begin_fNL_assignment, slave_work_event::end_fNL_assignment);
+            this->schedule_postintegration(rec, zfNL, false, "", tags, slave_work_event::begin_fNL_assignment, slave_work_event::end_fNL_assignment);
 	        }
         else
 	        {
@@ -1384,7 +1438,8 @@ namespace transport
 
     template <typename number>
     template <typename TaskObject>
-    void master_controller<number>::schedule_postintegration(postintegration_task_record<number>* rec, TaskObject* tk, const std::list<std::string>& tags,
+    void master_controller<number>::schedule_postintegration(postintegration_task_record<number>* rec, TaskObject* tk,
+                                                             bool seeded, const std::string& seed_group, const std::list<std::string>& tags,
                                                              slave_work_event::event_type begin_label, slave_work_event::event_type end_label)
 	    {
         assert(rec != nullptr);
@@ -1399,6 +1454,9 @@ namespace transport
 
         // create new tables needed in the database
         this->data_mgr->create_tables(writer, tk);
+
+        // seed writer if a group has been provided
+        if(seeded) this->seed_writer(writer, tk, seed_group);
 
         // set up aggregators
         integration_aggregator     i_agg;
@@ -1428,7 +1486,8 @@ namespace transport
 
     template <typename number>
     template <typename TaskObject, typename ParentTaskObject>
-    void master_controller<number>::schedule_paired_postintegration(postintegration_task_record<number>* rec, TaskObject* tk, ParentTaskObject* ptk, const std::list<std::string>& tags,
+    void master_controller<number>::schedule_paired_postintegration(postintegration_task_record<number>* rec, TaskObject* tk, ParentTaskObject* ptk,
+                                                                    bool seeded, const std::string& seed_group, const std::list<std::string>& tags,
                                                                     slave_work_event::event_type begin_label, slave_work_event::event_type end_label)
       {
         assert(rec != nullptr);
@@ -1452,6 +1511,9 @@ namespace transport
         // pair
         p_writer->set_pair(true);
         p_writer->set_parent_group(i_writer->get_name());
+
+        // seed writers if a group has been provided
+        this->seed_writer_pair(i_writer, p_writer, tk, ptk, seed_group);
 
         // set up aggregators
         integration_aggregator     i_agg = std::bind(&master_controller<number>::aggregate_integration, this, i_writer, std::placeholders::_1, std::placeholders::_2);
@@ -1482,6 +1544,95 @@ namespace transport
             i_writer->commit();
             p_writer->commit();
           }
+      }
+
+
+    template <typename number>
+    template <typename TaskObject>
+    std::list<unsigned int> master_controller<number>::seed_writer(std::shared_ptr< postintegration_writer<number> >& writer, TaskObject* tk, const std::string& seed_group)
+      {
+        // enumerate the content groups available for our own task
+        std::list< std::shared_ptr< output_group_record<postintegration_payload> > > list = this->repo->enumerate_postintegration_task_content(tk->get_name());
+
+        // find the specified group in this list
+        std::list< std::shared_ptr< output_group_record<postintegration_payload> > >::const_iterator t = std::find_if(list.begin(), list.end(),
+                                                                                                                      OutputGroupFinder<postintegration_payload>(seed_group));
+
+        if(t == list.end())   // no record found
+          {
+            std::ostringstream msg;
+            msg << __CPP_TRANSPORT_SEED_GROUP_NOT_FOUND_A << " '" << seed_group << "' " << __CPP_TRANSPORT_SEED_GROUP_NOT_FOUND_B << " '" << tk->get_name() << "'";
+            this->warning_handler(msg.str());
+            return std::list<unsigned int>{};
+          };
+
+        // mark writer as seeded
+        writer->set_seed(seed_group);
+
+        this->data_mgr->seed_writer(writer, tk, *t);
+        this->work_scheduler.prepare_queue((*t)->get_payload().get_failed_serials());
+
+        return((*t)->get_payload().get_failed_serials());
+      }
+
+
+    template <typename number>
+    template <typename TaskObject, typename ParentTaskObject>
+    std::list<unsigned int> master_controller<number>::seed_writer_pair(std::shared_ptr<integration_writer<number> >& i_writer,
+                                                                        std::shared_ptr<postintegration_writer<number> >& p_writer,
+                                                                        TaskObject* tk, ParentTaskObject* ptk, const std::string& seed_group)
+      {
+        // enumerate the content groups available for our own task
+        std::list< std::shared_ptr< output_group_record<postintegration_payload> > > list = this->repo->enumerate_postintegration_task_content(tk->get_name());
+
+        // find the specified group in this list
+        std::list< std::shared_ptr< output_group_record<postintegration_payload> > >::const_iterator t = std::find_if(list.begin(), list.end(),
+                                                                                                                      OutputGroupFinder<postintegration_payload>(seed_group));
+
+        if(t == list.end())   // no record found
+          {
+            std::ostringstream msg;
+            msg << __CPP_TRANSPORT_SEED_GROUP_NOT_FOUND_A << " '" << seed_group << "' " << __CPP_TRANSPORT_SEED_GROUP_NOT_FOUND_B << " '" << tk->get_name() << "'";
+            this->warning_handler(msg.str());
+            return std::list<unsigned int>{};
+          }
+
+        // find parent content group for the seed
+        std::string parent_seed_name = (*t)->get_payload().get_parent_group();
+
+        std::list<unsigned int> integration_serials = this->seed_writer(i_writer, ptk, parent_seed_name);
+
+        if(i_writer->is_seeded())
+          {
+            std::list<unsigned int> postintegration_serials = (*t)->get_payload().get_failed_serials();
+
+            if(postintegration_serials.size() != integration_serials.size())
+              {
+                std::ostringstream msg;
+                msg << __CPP_TRANSPORT_SEED_GROUP_MISMATCHED_SERIALS_A << " '" << (*t)->get_name() << "' "
+                  << __CPP_TRANSPORT_SEED_GROUP_MISMATCHED_SERIALS_B << " '" << parent_seed_name << "' "
+                  << __CPP_TRANSPORT_SEED_GROUP_MISMATCHED_SERIALS_C;
+                throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
+              }
+
+            std::list<unsigned int> diff;
+            std::set_difference(integration_serials.begin(), integration_serials.end(),
+                                postintegration_serials.begin(), postintegration_serials.end(), std::back_inserter(diff));
+
+            if(diff.size() > 0)
+              {
+                std::ostringstream msg;
+                msg << __CPP_TRANSPORT_SEED_GROUP_MISMATCHED_SERIALS_A << " '" << (*t)->get_name() << "' "
+                  << __CPP_TRANSPORT_SEED_GROUP_MISMATCHED_SERIALS_B << " '" << parent_seed_name << "' "
+                  << __CPP_TRANSPORT_SEED_GROUP_MISMATCHED_SERIALS_C;
+                throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
+              }
+
+            p_writer->set_seed(seed_group);
+            this->data_mgr->seed_writer(p_writer, tk, *t);
+          }
+
+        return((*t)->get_payload().get_failed_serials());
       }
 
 
