@@ -151,5 +151,5 @@ enum process_type output_stack::top_process_type() const
       {
         return this->inclusions[0].type;
       }
-    basic_error(ERROR_FILESTACK_EMPTY);
+    throw std::runtime_error(ERROR_FILESTACK_EMPTY);
   }
