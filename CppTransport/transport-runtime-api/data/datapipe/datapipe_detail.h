@@ -800,11 +800,11 @@ namespace transport
 			{
         // attach new cache tables for this container
 
-        this->time_config_cache_table = &(this->time_config_cache.get_table_handle(payload.get_container_path().string()));
-        this->twopf_kconfig_cache_table = &(this->twopf_kconfig_cache.get_table_handle(payload.get_container_path().string()));
+        this->time_config_cache_table     = &(this->time_config_cache.get_table_handle(payload.get_container_path().string()));
+        this->twopf_kconfig_cache_table   = &(this->twopf_kconfig_cache.get_table_handle(payload.get_container_path().string()));
         this->threepf_kconfig_cache_table = &(this->threepf_kconfig_cache.get_table_handle(payload.get_container_path().string()));
-        this->data_cache_table = &(this->data_cache.get_table_handle(payload.get_container_path().string()));
-        this->zeta_cache_table = &(this->zeta_cache.get_table_handle(payload.get_container_path().string()));
+        this->data_cache_table            = &(this->data_cache.get_table_handle(payload.get_container_path().string()));
+        this->zeta_cache_table            = &(this->zeta_cache.get_table_handle(payload.get_container_path().string()));
 	    }
 
 
@@ -834,11 +834,11 @@ namespace transport
 
 		    this->type = none_attached;
 
-        this->time_config_cache_table = nullptr;
-        this->twopf_kconfig_cache_table = nullptr;
+        this->time_config_cache_table     = nullptr;
+        this->twopf_kconfig_cache_table   = nullptr;
         this->threepf_kconfig_cache_table = nullptr;
-        this->data_cache_table = nullptr;
-        this->zeta_cache_table = nullptr;
+        this->data_cache_table            = nullptr;
+        this->zeta_cache_table            = nullptr;
 	    }
 
 
