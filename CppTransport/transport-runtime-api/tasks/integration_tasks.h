@@ -245,6 +245,9 @@ namespace transport
 		    //! Get largest wavenumber included in the integration
 		    virtual double get_kmax() const { return(1.0); }
 
+        //! Get smallest wavenumber included in the integration
+        virtual double get_kmin() const { return(1.0); }
+
       protected:
 
         //! Populate list of time configurations to be sorted, given that the earliest allowed time is tmin.
@@ -462,6 +465,13 @@ namespace transport
 				double tmin = this->ics.get_Nstar() + log(this->get_kmax()) - this->ff_efolds;
 				if(tmin <= 0.0) tmin = 0.0;   // TODO: consider whether this is correct
 
+        double tstart = this->ics.get_Nstar() + log(this->get_kmin()) - this->ff_efolds;
+        if(tstart < 0.0 && fabs(this->ff_efolds-5.0) > 0.1)
+          {
+            std::cerr << "Nstart = " << tstart << ", N* = " << this->ics.get_Nstar() << ", log(kmin) = " << log(this->get_kmin()) << ", kmin = " << this->get_kmin() << ", ff_efolds = " << this->ff_efolds << std::endl;
+            assert(false);
+          }
+
 		    // filter sampling times according to our storage policy
 				time_config_list.clear();
 		    for(unsigned int i = 0; i < raw_time_list.size(); i++)
@@ -497,6 +507,7 @@ namespace transport
 		std::vector<double> integration_task<number>::get_integration_step_times(const twopf_kconfig& kconfig, std::vector<time_storage_record>& slist, unsigned int refine) const
 			{
 		    double Nstart = this->ics.get_Nstar() + log(kconfig.k_conventional) - this->ff_efolds;
+        assert(Nstart >= 0.0);
 
 		    return this->get_integration_step_times(Nstart, slist, refine);
 			}
@@ -508,6 +519,8 @@ namespace transport
         double kmin = std::min(std::min(kconfig.k1_conventional, kconfig.k2_conventional), kconfig.k3_conventional);
 
         double Nstart = this->ics.get_Nstar() + log(kmin) - this->ff_efolds;
+        if(Nstart < 0.0) std::cerr << "Nstart = " << Nstart << ", N* = " << this->ics.get_Nstar() << ", log(kmin) = " << log(kmin) << ", kmin = " << kmin << ", ff_efolds = " << this->ff_efolds << std::endl;
+        assert(Nstart >= 0.0);
 
         return this->get_integration_step_times(Nstart, slist, refine);
 	    }
@@ -518,7 +531,6 @@ namespace transport
 			{
         if(refine > this->max_refinements) throw runtime_exception(runtime_exception::REFINEMENT_FAILURE, __CPP_TRANSPORT_REFINEMENT_TOO_DEEP);
 
-        assert(Nstart >= 0.0);
 				if(!this->fast_forward) Nstart = 0.0;
 
 				unsigned int reserve_size = (this->raw_time_list.size()+1) * static_cast<unsigned int>(pow(4.0, refine));
@@ -725,6 +737,9 @@ namespace transport
 		    //! get largest k-mode included in the integration
 		    virtual double get_kmax() const override { return(this->kmax); }
 
+        //! get smallest k-mode included in the integration
+        virtual double get_kmin() const override { return(this->kmin); }
+
 
         // SERIALIZATION -- implements a 'serializable' interface
 
@@ -747,6 +762,9 @@ namespace transport
 		    //! Maximum wavenumber
 		    double kmax;
 
+        //! Minimum wavenumber
+        double kmin;
+
         //! current serial number
         unsigned int serial;
 
@@ -758,6 +776,7 @@ namespace transport
                                              typename integration_task<number>::time_config_storage_policy p)
       : integration_task<number>(nm, i, t, p),
         kmax(-DBL_MAX),
+        kmin(DBL_MAX),
         serial(0)
       {
         // we can use 'this' here, because the integration-task components are guaranteed to be initialized
@@ -772,6 +791,7 @@ namespace transport
     twopf_list_task<number>::twopf_list_task(const std::string& nm, Json::Value& reader, const initial_conditions<number>& i)
       : integration_task<number>(nm, reader, i),
         kmax(-DBL_MAX),
+        kmin(DBL_MAX),
         serial(0)
       {
         // deserialize comoving normalization constant
@@ -793,6 +813,7 @@ namespace transport
             assert(c.k_conventional > 0.0);
             c.k_comoving = c.k_conventional*comoving_normalization;
 		        if(c.k_conventional > this->kmax) this->kmax = c.k_conventional;
+            if(c.k_conventional < this->kmin) this->kmin = c.k_conventional;
 
             c.store_background = (*t)[__CPP_TRANSPORT_NODE_TWOPF_KCONFIG_STORAGE_BG].asBool();
 
@@ -826,9 +847,9 @@ namespace transport
           {
             Json::Value config_element(Json::objectValue);
             config_element[__CPP_TRANSPORT_NODE_TWOPF_KCONFIG_STORAGE_SN] = t->serial;
-            config_element[__CPP_TRANSPORT_NODE_TWOPF_KCONFIG_STORAGE_K] = t->k_conventional;
+            config_element[__CPP_TRANSPORT_NODE_TWOPF_KCONFIG_STORAGE_K]  = t->k_conventional;
             config_element[__CPP_TRANSPORT_NODE_TWOPF_KCONFIG_STORAGE_BG] = t->store_background;
-		        config_list.append(config_element);
+            config_list.append(config_element);
           }
         writer[__CPP_TRANSPORT_NODE_TWOPF_KCONFIG_STORAGE] = config_list;
 
@@ -851,6 +872,7 @@ namespace transport
 
         this->twopf_config_list.push_back(c);
 		    if(k > this->kmax) this->kmax = k;
+        if(k < this->kmin) this->kmin = k;
 
         return(c.serial);
       }
@@ -1336,8 +1358,7 @@ namespace transport
     template <typename number>
     void threepf_cubic_task<number>::serialize(Json::Value& writer) const
       {
-        writer[__CPP_TRANSPORT_NODE_TASK_TYPE] = std::string(__CPP_TRANSPORT_NODE_TASK_TYPE_THREEPF_CUBIC);
-
+        writer[__CPP_TRANSPORT_NODE_TASK_TYPE]             = std::string(__CPP_TRANSPORT_NODE_TASK_TYPE_THREEPF_CUBIC);
         writer[__CPP_TRANSPORT_NODE_THREEPF_CUBIC_SPACING] = this->spacing;
 
         this->threepf_task<number>::serialize(writer);

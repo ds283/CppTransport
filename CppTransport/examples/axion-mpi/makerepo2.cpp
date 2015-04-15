@@ -56,7 +56,7 @@ bool threepf_kconfig_fixed_kt_lo(const transport::derived_data::filter::threepf_
 bool threepf_kconfig_fixed_kt_hi(const transport::derived_data::filter::threepf_kconfig_filter_data& data)
 	{
     // use high value of k_t, restrict to isosceles triangles which have alpha=0
-    return(fabs(data.kt-exp(7.0)) < 0.001 && fabs(data.alpha) < 0.001);
+    return(fabs(data.kt-exp(4.0)) < 0.001 && fabs(data.alpha) < 0.001);
 	}
 
 bool twopf_kseries_axis_filter(const transport::derived_data::filter::twopf_kconfig_filter_data& data)
@@ -121,8 +121,8 @@ int main(int argc, char* argv[])
     // k=1 is the mode which crosses the horizon at time N*,
     // where N* is the 'offset' we pass to the integration method (see below)
     const double        ktmin      = exp(3.0);
-    const double        ktmax      = exp(7.0);
-    const unsigned int  k_samples  = 20;
+    const double        ktmax      = exp(4.0);
+    const unsigned int  k_samples  = 40;
 
 		const double        alphamin   = -1.0;
 		const double        alphamax   = +1.0;
@@ -130,7 +130,7 @@ int main(int argc, char* argv[])
 
 		const double        betamin    = 0.0;
 		const double        betamax    = 0.9999;
-		const unsigned int  b_samples  = 500;
+		const unsigned int  b_samples  = 1000;
 
 		struct ThreepfStoragePolicy
 			{
@@ -148,7 +148,7 @@ int main(int argc, char* argv[])
 
     // construct a threepf task
     transport::threepf_fls_task<double> tk3("axion.threepf-1", ics, times, kts, alphas, betas, TimeStoragePolicy(), ThreepfStoragePolicy());
-		tk3.set_fast_forward_efolds(3.0);
+		tk3.set_fast_forward_efolds(5.5);
 
 		// construct a zeta threepf task, paired with the primary integration task
     transport::zeta_threepf_task<double> ztk3("axion.threepf-1.zeta", tk3);
