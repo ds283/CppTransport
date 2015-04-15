@@ -84,7 +84,7 @@ namespace transport
 
       public:
 
-        virtual range<value>* clone() const override { return new stepping_range<value>(dynamic_cast<const stepping_range<value>&>(*this)); }
+        virtual stepping_range<value>* clone() const override { return new stepping_range<value>(dynamic_cast<const stepping_range<value>&>(*this)); }
 
 
         // SERIALIZATION INTERFACE -- implements a 'serializable' interface

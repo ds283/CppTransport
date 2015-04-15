@@ -354,7 +354,7 @@ namespace transport
       public:
 
         //! clone this object
-        virtual repository_record* clone() const override { return new package_record(static_cast<const package_record&>(*this)); };
+        virtual package_record<number>* clone() const override { return new package_record<number>(static_cast<const package_record<number>&>(*this)); };
 
 
         // INTERNAL DATA
@@ -484,7 +484,7 @@ namespace transport
       public:
 
         //! clone this object
-        virtual repository_record* clone() const override { return new integration_task_record(static_cast<const integration_task_record&>(*this)); };
+        virtual integration_task_record<number>* clone() const override { return new integration_task_record<number>(static_cast<const integration_task_record<number>&>(*this)); };
 
 
         // INTERNAL DATA
@@ -552,7 +552,7 @@ namespace transport
       public:
 
         //! clone this object
-        virtual repository_record* clone() const override { return new postintegration_task_record(static_cast<const postintegration_task_record&>(*this)); }
+        virtual postintegration_task_record<number>* clone() const override { return new postintegration_task_record<number>(static_cast<const postintegration_task_record<number>&>(*this)); }
 
 
         // INTERNAL DATA
@@ -609,7 +609,7 @@ namespace transport
       public:
 
         //! clone this object
-        virtual repository_record* clone() const override { return new derived_product_record(static_cast<const derived_product_record&>(*this)); };
+        virtual derived_product_record<number>* clone() const override { return new derived_product_record<number>(static_cast<const derived_product_record<number>&>(*this)); };
 
 
         // INTERNAL DATA
@@ -677,7 +677,7 @@ namespace transport
       public:
 
         //! clone this object
-        virtual repository_record* clone() const override { return new output_task_record(static_cast<const output_task_record&>(*this)); };
+        virtual output_task_record<number>* clone() const override { return new output_task_record<number>(static_cast<const output_task_record<number>&>(*this)); };
 
 
         // INTERNAL DATA
@@ -1544,7 +1544,7 @@ namespace transport
       public:
 
         //! clone this object
-        virtual repository_record* clone() const override { return new output_group_record<Payload>(static_cast<const output_group_record<Payload>&>(*this)); };
+        virtual output_group_record<Payload>* clone() const override { return new output_group_record<Payload>(static_cast<const output_group_record<Payload>&>(*this)); };
 
 
         // WRITE TO A STREAM

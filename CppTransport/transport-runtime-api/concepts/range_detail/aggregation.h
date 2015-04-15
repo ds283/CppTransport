@@ -87,7 +87,7 @@ namespace transport
 
 		  public:
 
-		    virtual range<value>* clone() const override { return new aggregation_range<value>(dynamic_cast<const aggregation_range<value>&>(*this)); }
+		    virtual aggregation_range<value>* clone() const override { return new aggregation_range<value>(dynamic_cast<const aggregation_range<value>&>(*this)); }
 
 
 		    // SERIALIZATION INTERFACE -- implements a 'serializable' interface

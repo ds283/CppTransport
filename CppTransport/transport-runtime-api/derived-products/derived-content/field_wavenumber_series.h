@@ -64,7 +64,7 @@ namespace transport
             // CLONE
 
             //! self-replicate
-            virtual derived_line<number>* clone() const override { return new twopf_wavenumber_series<number>(static_cast<const twopf_wavenumber_series<number>&>(*this)); }
+            virtual twopf_wavenumber_series<number>* clone() const override { return new twopf_wavenumber_series<number>(static_cast<const twopf_wavenumber_series<number>&>(*this)); }
 
 
             // WRITE TO A STREAM
@@ -284,7 +284,7 @@ namespace transport
 		      public:
 
 		        //! self-replicate
-		        virtual derived_line<number>* clone() const override { return new threepf_wavenumber_series<number>(static_cast<const threepf_wavenumber_series<number>&>(*this)); }
+		        virtual threepf_wavenumber_series<number>* clone() const override { return new threepf_wavenumber_series<number>(static_cast<const threepf_wavenumber_series<number>&>(*this)); }
 
 
 		        // WRITE TO A STREAM

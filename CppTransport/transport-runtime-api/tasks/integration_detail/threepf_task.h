@@ -290,7 +290,7 @@ namespace transport
       public:
 
         //! Virtual copy
-        virtual task<number>* clone() const override { return new threepf_cubic_task<number>(static_cast<const threepf_cubic_task<number>&>(*this)); }
+        virtual threepf_cubic_task<number>* clone() const override { return new threepf_cubic_task<number>(static_cast<const threepf_cubic_task<number>&>(*this)); }
 
 
         // INTERNAL DATA
@@ -455,7 +455,7 @@ namespace transport
       public:
 
         //! Virtual copy
-        virtual task<number>* clone() const override { return new threepf_fls_task<number>(static_cast<const threepf_fls_task<number>&>(*this)); }
+        virtual threepf_fls_task<number>* clone() const override { return new threepf_fls_task<number>(static_cast<const threepf_fls_task<number>&>(*this)); }
 
 
         // INTERNAL DATA

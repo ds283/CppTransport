@@ -48,7 +48,7 @@ namespace transport
       public:
 
         //! Virtual copy
-        virtual task<number>* clone() const override { return new background_task<number>(static_cast<const background_task<number>&>(*this)); }
+        virtual background_task<number>* clone() const override { return new background_task<number>(static_cast<const background_task<number>&>(*this)); }
 
 	    };
 

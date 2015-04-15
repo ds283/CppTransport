@@ -58,7 +58,7 @@ namespace transport
       public:
 
         //! Virtual copy
-        virtual task<number>* clone() const override { return new twopf_task<number>(static_cast<const twopf_task<number>&>(*this)); }
+        virtual twopf_task<number>* clone() const override { return new twopf_task<number>(static_cast<const twopf_task<number>&>(*this)); }
 
 	    };
 

@@ -67,7 +67,7 @@ namespace transport
 
       public:
 
-        virtual task<number>* clone() const override { return new fNL_task<number>(static_cast<const fNL_task<number>&>(*this)); }
+        virtual fNL_task<number>* clone() const override { return new fNL_task<number>(static_cast<const fNL_task<number>&>(*this)); }
 
 
         // INTERNAL DATA

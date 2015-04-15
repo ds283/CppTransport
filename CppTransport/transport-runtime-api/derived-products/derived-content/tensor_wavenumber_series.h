@@ -63,7 +63,7 @@ namespace transport
 				    // CLONE
 
 				    //! self-replicate
-				    virtual derived_line<number>* clone() const override { return new tensor_twopf_wavenumber_series<number>(static_cast<const tensor_twopf_wavenumber_series<number>&>(*this)); }
+				    virtual tensor_twopf_wavenumber_series<number>* clone() const override { return new tensor_twopf_wavenumber_series<number>(static_cast<const tensor_twopf_wavenumber_series<number>&>(*this)); }
 
 
 				    // WRITE TO A STREAM

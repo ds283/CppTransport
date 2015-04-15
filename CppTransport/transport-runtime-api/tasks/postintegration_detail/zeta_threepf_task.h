@@ -71,7 +71,7 @@ namespace transport
 
       public:
 
-        virtual task<number>* clone() const override { return new zeta_threepf_task<number>(static_cast<const zeta_threepf_task<number>&>(*this)); }
+        virtual zeta_threepf_task<number>* clone() const override { return new zeta_threepf_task<number>(static_cast<const zeta_threepf_task<number>&>(*this)); }
 
 
         // PRIVATE DATA

@@ -70,7 +70,7 @@ namespace transport
 		        // CLONE
 
 		        //! self-replicate
-		        virtual derived_line<number>* clone() const override { return new background_time_series<number>(static_cast<const background_time_series<number>&>(*this)); }
+		        virtual background_time_series<number>* clone() const override { return new background_time_series<number>(static_cast<const background_time_series<number>&>(*this)); }
 
 
 		        // WRITE TO A STREAM
@@ -293,7 +293,7 @@ namespace transport
 		        // CLONE
 
 		        //! self-replicate
-		        virtual derived_line<number>* clone() const override { return new twopf_time_series<number>(static_cast<const twopf_time_series<number>&>(*this)); }
+		        virtual twopf_time_series<number>* clone() const override { return new twopf_time_series<number>(static_cast<const twopf_time_series<number>&>(*this)); }
 
 
 		        // WRITE TO A STREAM
@@ -502,7 +502,7 @@ namespace transport
 		      public:
 
 		        //! self-replicate
-		        virtual derived_line<number>* clone() const override { return new threepf_time_series<number>(static_cast<const threepf_time_series<number>&>(*this)); }
+		        virtual threepf_time_series<number>* clone() const override { return new threepf_time_series<number>(static_cast<const threepf_time_series<number>&>(*this)); }
 
 
 		        // WRITE TO A STREAM

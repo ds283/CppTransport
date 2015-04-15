@@ -309,7 +309,7 @@ namespace transport
       public:
 
         //! copy this object
-        data_tag<number>* clone() const { return new background_time_data_tag<number>(static_cast<const background_time_data_tag<number>&>(*this)); }
+        background_time_data_tag<number>* clone() const { return new background_time_data_tag<number>(static_cast<const background_time_data_tag<number>&>(*this)); }
 
 
         // HASH
@@ -369,7 +369,7 @@ namespace transport
       public:
 
         //! copy this object
-        data_tag<number>* clone() const { return new cf_time_data_tag<number>(static_cast<const cf_time_data_tag<number>&>(*this)); }
+        cf_time_data_tag<number>* clone() const { return new cf_time_data_tag<number>(static_cast<const cf_time_data_tag<number>&>(*this)); }
 
 
         // HASH
@@ -435,7 +435,7 @@ namespace transport
       public:
 
         //! copy this object
-        data_tag<number>* clone() const { return new cf_kconfig_data_tag<number>(static_cast<const cf_kconfig_data_tag<number>&>(*this)); }
+        cf_kconfig_data_tag<number>* clone() const { return new cf_kconfig_data_tag<number>(static_cast<const cf_kconfig_data_tag<number>&>(*this)); }
 
 
         // HASH
@@ -499,7 +499,7 @@ namespace transport
       public:
 
         //! copy this object
-        data_tag<number>* clone() const { return new zeta_twopf_time_data_tag<number>(static_cast<const zeta_twopf_time_data_tag<number>&>(*this)); }
+        zeta_twopf_time_data_tag<number>* clone() const { return new zeta_twopf_time_data_tag<number>(static_cast<const zeta_twopf_time_data_tag<number>&>(*this)); }
 
 
         // HASH
@@ -557,7 +557,7 @@ namespace transport
       public:
 
         //! copy this object
-        data_tag<number>* clone() const { return new zeta_threepf_time_data_tag<number>(static_cast<const zeta_threepf_time_data_tag<number>&>(*this)); }
+        zeta_threepf_time_data_tag<number>* clone() const { return new zeta_threepf_time_data_tag<number>(static_cast<const zeta_threepf_time_data_tag<number>&>(*this)); }
 
 
         // HASH
@@ -615,7 +615,7 @@ namespace transport
       public:
 
         //! copy this object
-        data_tag<number>* clone() const { return new zeta_reduced_bispectrum_time_data_tag<number>(static_cast<const zeta_reduced_bispectrum_time_data_tag<number>&>(*this)); }
+        zeta_reduced_bispectrum_time_data_tag<number>* clone() const { return new zeta_reduced_bispectrum_time_data_tag<number>(static_cast<const zeta_reduced_bispectrum_time_data_tag<number>&>(*this)); }
 
 
         // HASH
@@ -673,7 +673,7 @@ namespace transport
       public:
 
         //! copy this object
-        data_tag<number>* clone() const { return new zeta_twopf_kconfig_data_tag<number>(static_cast<const zeta_twopf_kconfig_data_tag<number>&>(*this)); }
+        zeta_twopf_kconfig_data_tag<number>* clone() const { return new zeta_twopf_kconfig_data_tag<number>(static_cast<const zeta_twopf_kconfig_data_tag<number>&>(*this)); }
 
 
         // HASH
@@ -731,7 +731,7 @@ namespace transport
       public:
 
         //! copy this object
-        data_tag<number>* clone() const { return new zeta_threepf_kconfig_data_tag<number>(static_cast<const zeta_threepf_kconfig_data_tag<number>&>(*this)); }
+        zeta_threepf_kconfig_data_tag<number>* clone() const { return new zeta_threepf_kconfig_data_tag<number>(static_cast<const zeta_threepf_kconfig_data_tag<number>&>(*this)); }
 
 
         // HASH
@@ -789,7 +789,7 @@ namespace transport
       public:
 
         //! copy this object
-        data_tag<number>* clone() const { return new zeta_reduced_bispectrum_kconfig_data_tag<number>(static_cast<const zeta_reduced_bispectrum_kconfig_data_tag&>(*this)); }
+        zeta_reduced_bispectrum_kconfig_data_tag<number>* clone() const { return new zeta_reduced_bispectrum_kconfig_data_tag<number>(static_cast<const zeta_reduced_bispectrum_kconfig_data_tag&>(*this)); }
 
 
         // HASH
@@ -847,7 +847,7 @@ namespace transport
       public:
 
         //! copy this object
-        data_tag<number>* clone() const { return new fNL_time_data_tag<number>(static_cast<const fNL_time_data_tag<number>&>(*this)); }
+        fNL_time_data_tag<number>* clone() const { return new fNL_time_data_tag<number>(static_cast<const fNL_time_data_tag<number>&>(*this)); }
 
 
         // HASH
@@ -905,7 +905,7 @@ namespace transport
       public:
 
         //! copy this object
-        data_tag<number>* clone() const { return new BT_time_data_tag<number>(static_cast<const BT_time_data_tag<number>&>(*this)); }
+        BT_time_data_tag<number>* clone() const { return new BT_time_data_tag<number>(static_cast<const BT_time_data_tag<number>&>(*this)); }
 
 
         // HASH
@@ -963,7 +963,7 @@ namespace transport
       public:
 
         //! copy this object
-        data_tag<number>* clone() const { return new TT_time_data_tag<number>(static_cast<const TT_time_data_tag<number>&>(*this)); }
+        TT_time_data_tag<number>* clone() const { return new TT_time_data_tag<number>(static_cast<const TT_time_data_tag<number>&>(*this)); }
 
 
         // HASH

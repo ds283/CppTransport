@@ -68,7 +68,7 @@ namespace transport
           public:
 
             //! self-replicate
-            virtual derived_line<number>* clone() const override { return new zeta_twopf_time_series<number>(static_cast<const zeta_twopf_time_series<number>&>(*this)); }
+            virtual zeta_twopf_time_series<number>* clone() const override { return new zeta_twopf_time_series<number>(static_cast<const zeta_twopf_time_series<number>&>(*this)); }
 
 
             // WRITE TO A STREAM
@@ -258,7 +258,7 @@ namespace transport
             // CLONE
 
             //! self-replicate
-            virtual derived_line<number>* clone() const override { return new zeta_threepf_time_series<number>(static_cast<const zeta_threepf_time_series<number>&>(*this)); }
+            virtual zeta_threepf_time_series<number>* clone() const override { return new zeta_threepf_time_series<number>(static_cast<const zeta_threepf_time_series<number>&>(*this)); }
 
 
             // WRITE TO A STREAM
@@ -438,7 +438,7 @@ namespace transport
             // CLONE
 
             //! self-replicate
-            virtual derived_line<number>* clone() const override { return new zeta_reduced_bispectrum_time_series<number>(static_cast<const zeta_reduced_bispectrum_time_series<number>&>(*this)); }
+            virtual zeta_reduced_bispectrum_time_series<number>* clone() const override { return new zeta_reduced_bispectrum_time_series<number>(static_cast<const zeta_reduced_bispectrum_time_series<number>&>(*this)); }
 
 
             // WRITE TO A STREAM

@@ -67,7 +67,7 @@ namespace transport
 		      public:
 
 				    //! self-replicate
-				    virtual derived_line<number>* clone() const override { return new tensor_twopf_time_series<number>(static_cast<const tensor_twopf_time_series<number>&>(*this)); }
+				    virtual tensor_twopf_time_series<number>* clone() const override { return new tensor_twopf_time_series<number>(static_cast<const tensor_twopf_time_series<number>&>(*this)); }
 
 
 				    // WRITE TO A STREAM

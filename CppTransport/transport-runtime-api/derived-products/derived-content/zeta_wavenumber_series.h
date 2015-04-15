@@ -64,7 +64,7 @@ namespace transport
 		        // CLONE
 
 		        //! self-replicate
-		        virtual derived_line<number>* clone() const override { return new zeta_twopf_wavenumber_series<number>(static_cast<const zeta_twopf_wavenumber_series<number>&>(*this)); }
+		        virtual zeta_twopf_wavenumber_series<number>* clone() const override { return new zeta_twopf_wavenumber_series<number>(static_cast<const zeta_twopf_wavenumber_series<number>&>(*this)); }
 
 
 		        // WRITE TO A STREAM
@@ -267,7 +267,7 @@ namespace transport
 				    // CLONE
 
 				    //! self-replicate
-				    virtual derived_line<number>* clone() const override { return new zeta_threepf_wavenumber_series<number>(static_cast<const zeta_threepf_wavenumber_series<number>&>(*this)); }
+				    virtual zeta_threepf_wavenumber_series<number>* clone() const override { return new zeta_threepf_wavenumber_series<number>(static_cast<const zeta_threepf_wavenumber_series<number>&>(*this)); }
 
 
 				    // WRITE TO A STREAM
@@ -454,7 +454,7 @@ namespace transport
 		        // CLONE
 
 		        //! self-replicate
-		        virtual derived_line<number>* clone() const override { return new zeta_reduced_bispectrum_wavenumber_series<number>(static_cast<const zeta_reduced_bispectrum_wavenumber_series<number>&>(*this)); }
+		        virtual zeta_reduced_bispectrum_wavenumber_series<number>* clone() const override { return new zeta_reduced_bispectrum_wavenumber_series<number>(static_cast<const zeta_reduced_bispectrum_wavenumber_series<number>&>(*this)); }
 
 
 		        // WRITE TO A STREAM

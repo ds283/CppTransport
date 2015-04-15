@@ -200,7 +200,7 @@ namespace transport
 		  public:
 
 		    //! Clone
-		    virtual work_event* clone() const override { return new master_work_event(dynamic_cast< const master_work_event& >(*this)); }
+		    virtual master_work_event* clone() const override { return new master_work_event(dynamic_cast< const master_work_event& >(*this)); }
 
 
 				// PRIVATE DATA
@@ -269,7 +269,7 @@ namespace transport
 		  public:
 
 		    //! Clone
-		    virtual work_event* clone() const override { return new slave_work_event(dynamic_cast< const slave_work_event& >(*this)); }
+		    virtual slave_work_event* clone() const override { return new slave_work_event(dynamic_cast< const slave_work_event& >(*this)); }
 
 
 				// PRIVATE DATA
