@@ -150,7 +150,7 @@ int main(int argc, char* argv[])
         bool operator() (const transport::integration_task<double>::time_config_storage_policy_data& data) { return((data.serial % 1) == 0); }
       };
 
-    transport::range<double> times = transport::range<double >(Ninit, Nmax+Npre, t_samples, transport::logarithmic_bottom_stepping);
+    transport::stepping_range<double> times(Ninit, Nmax+Npre, t_samples, transport::logarithmic_bottom_stepping);
 
     // the conventions for k-numbers are as follows:
     // k=1 is the mode which crosses the horizon at time N*,
@@ -165,7 +165,7 @@ int main(int argc, char* argv[])
 				bool operator() (const transport::threepf_task<double>::threepf_kconfig_storage_policy_data& data) { return(true); }
 			};
 
-    transport::range<double> ks = transport::range<double>(kmin, kmax, k_samples, transport::linear_stepping);
+    transport::stepping_range<double> ks(kmin, kmax, k_samples, transport::linear_stepping);
 
     // construct a twopf task
     transport::twopf_task<double> tk2 = transport::twopf_task<double>("axion.twopf-1", ics, times, ks);
