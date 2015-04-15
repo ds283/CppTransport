@@ -34,6 +34,12 @@ namespace transport
 				//! Construct an aggregation range
 				aggregation_range();
 
+				//! Construct an aggregation range from a given subrange
+				aggregation_range(range<value>& a);
+
+				//! Construct an aggregation range from a pair of subranges
+				aggregation_range(range<value>& a, range<value>& b);
+
 				//! Deserialization constructor
 				aggregation_range(Json::Value& reader);
 
@@ -121,6 +127,31 @@ namespace transport
         steps(0)
 			{
 			}
+
+
+		template <typename value>
+		aggregation_range<value>::aggregation_range(range<value>& a)
+			: aggregation_range<value>()
+			{
+		    std::shared_ptr< range<value> > element(a.clone());
+		    this->subrange_list.push_back(element);
+
+		    this->populate_grid();
+			}
+
+
+    template <typename value>
+    aggregation_range<value>::aggregation_range(range<value>& a, range<value>& b)
+	    : aggregation_range<value>()
+	    {
+        std::shared_ptr< range<value> > element_a(a.clone());
+        this->subrange_list.push_back(element_a);
+
+        std::shared_ptr< range<value> > element_b(b.clone());
+        this->subrange_list.push_back(element_b);
+
+        this->populate_grid();
+	    }
 
 
 		template <typename value>
