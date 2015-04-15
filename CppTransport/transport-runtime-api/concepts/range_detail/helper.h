@@ -14,15 +14,16 @@
 namespace transport
 	{
 
-		namespace range_helper
+    namespace range_helper
 			{
 
 				template <typename value>
 				range<value>* deserialize(Json::Value& reader)
 					{
-				    std::string type = reader[__CPP_TRANSPORT_NODE_RANGE_ROOT][__CPP_TRANSPORT_NODE_RANGE_TYPE].asString();
+				    std::string type = reader[__CPP_TRANSPORT_NODE_RANGE_TYPE].asString();
 
-						if(type == __CPP_TRANSPORT_NODE_RANGE_STEPPING) return new stepping_range<value>(reader);
+						if(type == __CPP_TRANSPORT_NODE_RANGE_STEPPING)       return new stepping_range<value>(reader);
+						else if(type == __CPP_TRANSPORT_NODE_RANGE_AGGREGATE) return new aggregation_range<value>(reader);
 
 				    std::ostringstream msg;
 				    msg << __CPP_TRANSPORT_RANGE_UNKNOWN_TYPE << " '" << type << "'";

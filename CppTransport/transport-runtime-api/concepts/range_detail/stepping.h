@@ -107,7 +107,7 @@ namespace transport
         //! Maximum value
         value max;
 
-        //! Numnber of steps
+        //! Number of steps
         unsigned int steps;
 
         //! Spacing type
@@ -130,15 +130,15 @@ namespace transport
     template <typename value>
     stepping_range<value>::stepping_range(Json::Value& reader)
 	    {
-        double m = reader[__CPP_TRANSPORT_NODE_RANGE_ROOT][__CPP_TRANSPORT_NODE_MIN].asDouble();
+        double m = reader[__CPP_TRANSPORT_NODE_MIN].asDouble();
         min = static_cast<value>(m);
 
-        m = reader[__CPP_TRANSPORT_NODE_RANGE_ROOT][__CPP_TRANSPORT_NODE_MAX].asDouble();
+        m = reader[__CPP_TRANSPORT_NODE_MAX].asDouble();
         max = static_cast<value>(m);
 
-        steps = reader[__CPP_TRANSPORT_NODE_RANGE_ROOT][__CPP_TRANSPORT_NODE_STEPS].asUInt();
+        steps = reader[__CPP_TRANSPORT_NODE_STEPS].asUInt();
 
-        std::string spc_string = reader[__CPP_TRANSPORT_NODE_RANGE_ROOT][__CPP_TRANSPORT_NODE_SPACING].asString();
+        std::string spc_string = reader[__CPP_TRANSPORT_NODE_SPACING].asString();
 
         if(spc_string == __CPP_TRANSPORT_VALUE_LINEAR)                  spacing = linear_stepping;
         else if(spc_string == __CPP_TRANSPORT_VALUE_LOGARITHMIC_BOTTOM) spacing = logarithmic_bottom_stepping;
@@ -234,29 +234,29 @@ namespace transport
     template <typename value>
     void stepping_range<value>::serialize(Json::Value& writer) const
 	    {
-        writer[__CPP_TRANSPORT_NODE_RANGE_ROOT][__CPP_TRANSPORT_NODE_RANGE_TYPE] = std::string(__CPP_TRANSPORT_NODE_RANGE_STEPPING);
+        writer[__CPP_TRANSPORT_NODE_RANGE_TYPE] = std::string(__CPP_TRANSPORT_NODE_RANGE_STEPPING);
 
-        writer[__CPP_TRANSPORT_NODE_RANGE_ROOT][__CPP_TRANSPORT_NODE_MIN]   = static_cast<double>(this->min);
-        writer[__CPP_TRANSPORT_NODE_RANGE_ROOT][__CPP_TRANSPORT_NODE_MAX]   = static_cast<double>(this->max);
-        writer[__CPP_TRANSPORT_NODE_RANGE_ROOT][__CPP_TRANSPORT_NODE_STEPS] = this->steps;
+        writer[__CPP_TRANSPORT_NODE_MIN]   = static_cast<double>(this->min);
+        writer[__CPP_TRANSPORT_NODE_MAX]   = static_cast<double>(this->max);
+        writer[__CPP_TRANSPORT_NODE_STEPS] = this->steps;
 
         switch(this->spacing)
 	        {
             case linear_stepping:
-	            writer[__CPP_TRANSPORT_NODE_RANGE_ROOT][__CPP_TRANSPORT_NODE_SPACING] = std::string(__CPP_TRANSPORT_VALUE_LINEAR);
-            break;
+	            writer[__CPP_TRANSPORT_NODE_SPACING] = std::string(__CPP_TRANSPORT_VALUE_LINEAR);
+	            break;
 
             case logarithmic_bottom_stepping:
-	            writer[__CPP_TRANSPORT_NODE_RANGE_ROOT][__CPP_TRANSPORT_NODE_SPACING] = std::string(__CPP_TRANSPORT_VALUE_LOGARITHMIC_BOTTOM);
-            break;
+	            writer[__CPP_TRANSPORT_NODE_SPACING] = std::string(__CPP_TRANSPORT_VALUE_LOGARITHMIC_BOTTOM);
+              break;
 
             case logarithmic_top_stepping:
-	            writer[__CPP_TRANSPORT_NODE_RANGE_ROOT][__CPP_TRANSPORT_NODE_SPACING] = std::string(__CPP_TRANSPORT_VALUE_LOGARITHMIC_TOP);
-            break;
+	            writer[__CPP_TRANSPORT_NODE_SPACING] = std::string(__CPP_TRANSPORT_VALUE_LOGARITHMIC_TOP);
+              break;
 
             default:
 	            assert(false);
-            throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_RANGE_INVALID_SPACING);
+              throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_RANGE_INVALID_SPACING);
 	        }
 	    }
 

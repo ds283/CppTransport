@@ -12,14 +12,14 @@
 #include <stdexcept>
 #include <algorithm>
 
+#include <assert.h>
+
 #include "math.h"
 
 #include "transport-runtime-api/serialization/serializable.h"
 #include "transport-runtime-api/messages.h"
 #include "transport-runtime-api/exceptions.h"
 
-
-#define __CPP_TRANSPORT_NODE_RANGE_ROOT          "range"
 
 #define __CPP_TRANSPORT_NODE_RANGE_TYPE          "range-type"
 #define __CPP_TRANSPORT_NODE_RANGE_STEPPING      "stepping-range"
