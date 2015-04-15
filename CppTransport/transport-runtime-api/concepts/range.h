@@ -192,7 +192,7 @@ namespace transport
               }
 
             // the logarithmically-spaced interval isn't translation-invariant
-            // (logarithmic spacing between 10 and 20 doesn't isn't the same as logarithmic
+            // (logarithmic spacing between 10 and 20 isn't the same as logarithmic
             // spacing between 110 and 120)
             // to standardize, and also to allow log-spacing for ranges that contain 0,
             // we shift the range to begin at 1, perform the log-spacing, and then
