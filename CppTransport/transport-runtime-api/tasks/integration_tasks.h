@@ -159,8 +159,11 @@ namespace transport
 		    //! deserialization constructor
 		    integration_task(const std::string& nm, Json::Value& reader, const initial_conditions<number>& i);
 
+		    //! override copy constructor to perform a deep copy of associated range<> object
+		    integration_task(const integration_task<number>& obj);
+
         //! Destroy an integration task
-        virtual ~integration_task() = default;
+        virtual ~integration_task();
 
 
         // INTERFACE - TASK COMPONENTS
@@ -190,7 +193,7 @@ namespace transport
       public:
 
         //! Get initial times
-        double get_Ninit() const { return(this->times.get_min()); }
+        double get_Ninit() const { return(this->times->get_min()); }
 
         //! Get horizon-crossing time
         double get_Nstar() const { return(this->ics.get_Nstar()); }
@@ -222,7 +225,7 @@ namespace transport
       protected:
 
         //! insert refinements in the list of integration step times
-        void refine_integration_step_times(std::vector<double>& times, std::vector<time_storage_record>& slist,
+        void refine_integration_step_times(std::vector<double>& time_values, std::vector<time_storage_record>& slist,
                                            unsigned int refine, double step_min, double step_max) const;
 
 
@@ -295,7 +298,7 @@ namespace transport
 
         //! Range of times at which to sample for this task;
 				//! really kept only for serialization purposes
-        range<double>                    times;
+        range<double>*                   times;
 
 
 		    // TIME STORAGE POLICY
@@ -332,34 +335,34 @@ namespace transport
                                                const range<double>& t, time_config_storage_policy p)
       : derivable_task<number>(nm),
         ics(i),
-        times(t),
+        times(t.clone()),
         time_storage_policy(p),
         fast_forward(true), ff_efolds(__CPP_TRANSPORT_DEFAULT_FAST_FORWARD_EFOLDS),
         max_refinements(__CPP_TRANSPORT_DEFAULT_MESH_REFINEMENTS)
       {
         // validate relation between Nstar and the sampling time
-        assert(times.get_steps() > 0);
-        assert(i.get_Nstar() > times.get_min());
-        assert(i.get_Nstar() < times.get_max());
+        assert(times->get_steps() > 0);
+        assert(i.get_Nstar() > times->get_min());
+        assert(i.get_Nstar() < times->get_max());
 
-        if(times.get_steps() == 0)
+        if(times->get_steps() == 0)
           {
             std::ostringstream msg;
             msg << __CPP_TRANSPORT_NO_TIMES;
             throw std::logic_error(msg.str());
           }
 
-        if(times.get_min() >= ics.get_Nstar())
+        if(times->get_min() >= ics.get_Nstar())
           {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_NSTAR_TOO_EARLY << " (Ninit = " << times.get_min() << ", Nstar = " << ics.get_Nstar() << ")";
+            msg << __CPP_TRANSPORT_NSTAR_TOO_EARLY << " (Ninit = " << times->get_min() << ", Nstar = " << ics.get_Nstar() << ")";
             throw std::logic_error(msg.str());
           }
 
-        if(times.get_max() <= ics.get_Nstar())
+        if(times->get_max() <= ics.get_Nstar())
           {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_NSTAR_TOO_LATE << " (Nend = " << times.get_max() << ", Nstar = " << ics.get_Nstar() << ")";
+            msg << __CPP_TRANSPORT_NSTAR_TOO_LATE << " (Nend = " << times->get_max() << ", Nstar = " << ics.get_Nstar() << ")";
             throw std::logic_error(msg.str());
           }
       }
@@ -369,7 +372,8 @@ namespace transport
 		integration_task<number>::integration_task(const std::string& nm, Json::Value& reader, const initial_conditions<number>& i)
 			: derivable_task<number>(nm, reader),
 			  time_storage_policy(integration_task<number>::default_time_config_storage_policy()),
-        ics(i)
+        ics(i),
+				times(range_helper::deserialize<double>(reader[__CPP_TRANSPORT_NODE_TIME_RANGE]))
 			{
 				// deserialize fast-forward integration setting
 				fast_forward = reader[__CPP_TRANSPORT_NODE_FAST_FORWARD].asBool();
@@ -380,13 +384,8 @@ namespace transport
 				// deserialize max number of mesh refinements
 				max_refinements = reader[__CPP_TRANSPORT_NODE_MESH_REFINEMENTS].asUInt();
 
-        // deserialize range of sampling times
-		    Json::Value& time_range = reader[__CPP_TRANSPORT_NODE_TIME_RANGE];
-				assert(time_range.isObject());
-        times = range<double>(time_range);
-
 				// raw grid of sampling times can be reconstructed from the range object
-				raw_time_list = times.get_grid();
+				raw_time_list = times->get_grid();
 
 				// filtered times have to be reconstructed from the database
 		    Json::Value& time_storage = reader[__CPP_TRANSPORT_NODE_TIME_CONFIG_STORAGE];
@@ -417,6 +416,30 @@ namespace transport
 			}
 
 
+    template <typename number>
+    integration_task<number>::integration_task(const integration_task<number>& obj)
+	    : derivable_task<number>(obj),
+	      ics(obj.ics),
+	      times(obj.times->clone()),
+	      time_storage_policy(obj.time_storage_policy),
+	      raw_time_list(obj.raw_time_list),
+	      time_config_list(obj.time_config_list),
+	      fast_forward(obj.fast_forward),
+	      ff_efolds(obj.ff_efolds),
+	      max_refinements(obj.max_refinements)
+	    {
+	    }
+
+
+    template <typename number>
+    integration_task<number>::~integration_task()
+	    {
+        assert(this->times != nullptr);
+
+        delete this->times;
+	    }
+
+
 		template <typename number>
 		void integration_task<number>::serialize(Json::Value& writer) const
 			{
@@ -434,7 +457,7 @@ namespace transport
 
         // serialize range of sampling times
 		    Json::Value time_range(Json::objectValue);
-		    this->times.serialize(time_range);
+		    this->times->serialize(time_range);
 				writer[__CPP_TRANSPORT_NODE_TIME_RANGE] = time_range;
 
         // serialize filtered range of times, those which will be stored in the database
@@ -459,7 +482,7 @@ namespace transport
 			{
 		    // get raw grid of sampling times
 				raw_time_list.clear();
-		    raw_time_list = times.get_grid();
+		    raw_time_list = times->get_grid();
 
 				// compute earliest time at which all modes will have available data, if using fast-forward integration
 				double tmin = this->ics.get_Nstar() + log(this->get_kmax()) - this->ff_efolds;
@@ -538,11 +561,11 @@ namespace transport
 				slist.clear();
 				slist.reserve(reserve_size);
 
-		    std::vector<double> times;
-				times.reserve(reserve_size);
+		    std::vector<double> time_values;
+				time_values.reserve(reserve_size);
 				if(Nstart < this->time_config_list.front().t)
 			    {
-				    times.push_back(Nstart);
+				    time_values.push_back(Nstart);
 				    slist.push_back(time_storage_record(false, 0, 0));
 			    }
 
@@ -557,40 +580,40 @@ namespace transport
 							{
 						    if(t != this->time_config_list.end() && t->serial == i)
 							    {
-								    times.push_back(this->raw_time_list[i]);
+								    time_values.push_back(this->raw_time_list[i]);
 								    slist.push_back(time_storage_record(true, t->serial, t->t));
                     t++;
 							    }
 								else
 							    {
-								    times.push_back(this->raw_time_list[i]);
+								    time_values.push_back(this->raw_time_list[i]);
 								    slist.push_back(time_storage_record(false, 0, 0));
 							    }
 
 								if(refine > 0 && i < this->raw_time_list.size()-1)
 									{
-										this->refine_integration_step_times(times, slist, refine, this->raw_time_list[i], this->raw_time_list[i+1]);
+										this->refine_integration_step_times(time_values, slist, refine, this->raw_time_list[i], this->raw_time_list[i+1]);
 									}
 							}
 					}
 
-				assert(times.size() == slist.size());
-				return(times);
+				assert(time_values.size() == slist.size());
+				return(time_values);
 			}
 
 
     template <typename number>
-    void integration_task<number>::refine_integration_step_times(std::vector<double>& times, std::vector<time_storage_record>& slist,
+    void integration_task<number>::refine_integration_step_times(std::vector<double>& time_values, std::vector<time_storage_record>& slist,
                                                                  unsigned int refine, double step_min, double step_max) const
 	    {
-				unsigned int steps = pow(4.0, refine);
+				unsigned int steps = static_cast<unsigned int>(pow(4.0, refine));
 
-		    range<double> mesh(step_min, step_max, steps, this->times.get_spacing());
+		    stepping_range<double> mesh(step_min, step_max, steps, linear_stepping);
         const std::vector<double>& mesh_grid = mesh.get_grid();
 
 		    for(unsigned int i = 1; i < mesh_grid.size(); i++)
           {
-	          times.push_back(mesh_grid[i]);
+	          time_values.push_back(mesh_grid[i]);
 				    slist.push_back(time_storage_record(false, 0, 0));
           }
 	    }
@@ -1099,7 +1122,7 @@ namespace transport
         //! List of k-configurations associated with this task
         std::vector<threepf_kconfig> threepf_config_list;
 
-        //! current serial number
+        //! next serial number to be assigned to a k-configuration
         unsigned int serial;
 
         //! Is this threepf task integrable? ie., have we dropped any configurations, and is the spacing linear?
@@ -1187,14 +1210,14 @@ namespace transport
         for(std::vector<threepf_kconfig>::const_iterator t = this->threepf_config_list.begin(); t != this->threepf_config_list.end(); t++)
           {
             Json::Value config_element(Json::objectValue);
-            config_element[__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_SN] = t->serial;
+            config_element[__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_SN]    = t->serial;
             config_element[__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_K1_SN] = t->index[0];
             config_element[__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_K2_SN] = t->index[1];
             config_element[__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_K3_SN] = t->index[2];
-            config_element[__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_BG] = t->store_background;
-            config_element[__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_TPF1] = t->store_twopf_k1;
-            config_element[__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_TPF2] = t->store_twopf_k2;
-            config_element[__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_TPF3] = t->store_twopf_k3;
+            config_element[__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_BG]    = t->store_background;
+            config_element[__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_TPF1]  = t->store_twopf_k1;
+            config_element[__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_TPF2]  = t->store_twopf_k2;
+            config_element[__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_TPF3]  = t->store_twopf_k3;
 						config_list.append(config_element);
           }
         writer[__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE] = config_list;
@@ -1340,7 +1363,7 @@ namespace transport
         if(!stored_background) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_BACKGROUND_STORE);
 
         // need linear spacing to be integrable
-        if(ks.get_spacing() != linear_stepping) this->integrable = false;
+        if(!ks.is_simple_linear()) this->integrable = false;
         spacing = (ks.get_max() - ks.get_min())/ks.get_steps();
 
         this->apply_time_storage_policy();
@@ -1511,7 +1534,7 @@ namespace transport
         if(!stored_background) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_BACKGROUND_STORE);
 
         // need linear spacing to be integrable
-        if(kts.get_spacing() != linear_stepping || alphas.get_spacing() != linear_stepping || betas.get_spacing() != linear_stepping) this->integrable = false;
+        if(!kts.is_simple_linear() || !alphas.is_simple_linear() || !betas.is_simple_linear()) this->integrable = false;
         kt_spacing = (kts.get_max() - kts.get_min())/kts.get_steps();
         alpha_spacing = (alphas.get_max() - alphas.get_min())/alphas.get_steps();
         beta_spacing = (betas.get_max() - betas.get_min())/betas.get_steps();
@@ -1524,9 +1547,9 @@ namespace transport
     threepf_fls_task<number>::threepf_fls_task(const std::string& nm, Json::Value& reader, const initial_conditions<number>& i)
       : threepf_task<number>(nm, reader, i)
       {
-        kt_spacing = reader[__CPP_TRANSPORT_NODE_THREEPF_FLS_KT_SPACING].asDouble();
+        kt_spacing    = reader[__CPP_TRANSPORT_NODE_THREEPF_FLS_KT_SPACING].asDouble();
         alpha_spacing = reader[__CPP_TRANSPORT_NODE_THREEPF_FLS_ALPHA_SPACING].asDouble();
-        beta_spacing = reader[__CPP_TRANSPORT_NODE_THREEPF_FLS_BETA_SPACING].asDouble();
+        beta_spacing  = reader[__CPP_TRANSPORT_NODE_THREEPF_FLS_BETA_SPACING].asDouble();
       }
 
 
@@ -1535,9 +1558,9 @@ namespace transport
       {
         writer[__CPP_TRANSPORT_NODE_TASK_TYPE] = std::string(__CPP_TRANSPORT_NODE_TASK_TYPE_THREEPF_FLS);
 
-        writer[__CPP_TRANSPORT_NODE_THREEPF_FLS_KT_SPACING] = this->kt_spacing;
+        writer[__CPP_TRANSPORT_NODE_THREEPF_FLS_KT_SPACING]    = this->kt_spacing;
         writer[__CPP_TRANSPORT_NODE_THREEPF_FLS_ALPHA_SPACING] = this->alpha_spacing;
-        writer[__CPP_TRANSPORT_NODE_THREEPF_FLS_BETA_SPACING] = this->beta_spacing;
+        writer[__CPP_TRANSPORT_NODE_THREEPF_FLS_BETA_SPACING]  = this->beta_spacing;
 
         this->threepf_task<number>::serialize(writer);
       }

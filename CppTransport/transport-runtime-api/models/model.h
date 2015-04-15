@@ -279,7 +279,7 @@ namespace transport
             std::vector< std::vector<number> > history;
 
             // set up times at which we wish to sample -- we just need a few
-            range<double> times(Ninit, Ncross-Npre, time_steps);
+            stepping_range<double> times(Ninit, Ncross-Npre, time_steps);
 
             // set up initial conditions
             // Npre is irrelevant, provided it falls between the beginning and end times
@@ -328,7 +328,7 @@ namespace transport
         std::vector< std::vector<number> > history;
 
         // set up times at which we wish to sample -- we just need a few
-        range<double> times(tk->get_Ninit(), tk->get_Nstar(), time_steps);
+        stepping_range<double> times(tk->get_Ninit(), tk->get_Nstar(), time_steps);
 
         double new_Npre = (tk->get_Ninit() + tk->get_Nstar()) / 2.0;
         initial_conditions<double> new_ics(tk->get_model(), tk->get_params(), tk->get_ics().get_vector(), new_Npre);
