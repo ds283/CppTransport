@@ -136,7 +136,7 @@ namespace transport
       public:
 
         $$__MODEL_basic_twopf_observer(twopf_batcher<number>& b, const twopf_kconfig& c,
-                                       const std::vector< typename integration_task<number>::time_storage_record >& l)
+                                       const std::vector< time_storage_record >& l)
 	        : twopf_singleconfig_batch_observer<number>(b, c, l,
 	                                                    $$__MODEL_pool::backg_size, $$__MODEL_pool::tensor_size, $$__MODEL_pool::twopf_size,
 	                                                    $$__MODEL_pool::backg_start, $$__MODEL_pool::tensor_start, $$__MODEL_pool::twopf_start)
@@ -179,7 +179,7 @@ namespace transport
 
       public:
         $$__MODEL_basic_threepf_observer(threepf_batcher<number>& b, const threepf_kconfig& c,
-                                         const std::vector< typename integration_task<number>::time_storage_record >& l)
+                                         const std::vector< time_storage_record >& l)
 	        : threepf_singleconfig_batch_observer<number>(b, c, l,
 	                                                      $$__MODEL_pool::backg_size, $$__MODEL_pool::tensor_size,
 	                                                      $$__MODEL_pool::twopf_size, $$__MODEL_pool::threepf_size,
@@ -291,7 +291,7 @@ namespace transport
                                               unsigned int refinement_level)
 	    {
         // get list of time steps, and storage list
-        std::vector< typename integration_task<number>::time_storage_record > slist;
+        std::vector< time_storage_record > slist;
         const std::vector<double> times = tk->get_integration_step_times(kconfig, slist, refinement_level);
 
         // set up a functor to observe the integration

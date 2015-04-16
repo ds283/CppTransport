@@ -42,56 +42,10 @@ namespace transport
     class integration_task: public derivable_task<number>
 	    {
 
-        // TIME CONFIGURATION STORAGE POLICIES
-
       public:
-
-        //! defines a 'time-configuration storage policy' data object, passed to a policy specification
-        //! for the purpose of deciding whether a time configuration will be kept
-        class time_config_storage_policy_data
-	        {
-          public:
-            time_config_storage_policy_data(double t, unsigned int s)
-	            : serial(s), time(t)
-	            {
-	            }
-
-          public:
-            unsigned int serial;
-            double       time;
-	        };
-
-        //! defines a 'time-configuration storage policy' object which determines which time steps are retained in the database
-        typedef std::function<bool(time_config_storage_policy_data&)> time_config_storage_policy;
 
         //! defines an object which computes kstar for a given integration task
         typedef std::function<double(integration_task<number>*)> kconfig_kstar;
-
-        class time_storage_record
-	        {
-          public:
-            time_storage_record(bool s, unsigned int n, double t)
-	            : store(s),
-	              tserial(n),
-	              time(t)
-	            {
-                assert(s == true || (s== false && n == 0));
-	            }
-
-            bool store;
-            unsigned int tserial;
-            double time;
-	        };
-
-
-      protected:
-
-        //! default time configuration storage policy - store everything
-        class default_time_config_storage_policy
-	        {
-          public:
-            bool operator() (time_config_storage_policy_data&) { return(true); }
-	        };
 
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -325,7 +279,7 @@ namespace transport
     template <typename number>
     integration_task<number>::integration_task(const std::string& nm, Json::Value& reader, const initial_conditions<number>& i)
 	    : derivable_task<number>(nm, reader),
-	      time_storage_policy(integration_task<number>::default_time_config_storage_policy()),
+	      time_storage_policy(default_time_config_storage_policy()),
 	      ics(i),
 	      times(range_helper::deserialize<double>(reader[__CPP_TRANSPORT_NODE_TIME_RANGE]))
 	    {

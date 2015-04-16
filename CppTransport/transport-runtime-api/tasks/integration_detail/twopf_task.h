@@ -29,12 +29,12 @@ namespace transport
         //! Construct a named two-point function task with specified time-configuration storage policy
         twopf_task(const std::string& nm, const initial_conditions<number>& i,
                    const range<double>& t, const range<double>& ks,
-                   typename integration_task<number>::time_config_storage_policy p);
+                   time_config_storage_policy p);
 
         //! Construct a named two-point function task with default storage policies
         twopf_task(const std::string& nm, const initial_conditions<number>& i,
                    const range<double>& t, const range<double>& ks)
-	        : twopf_task(nm, i, t, ks, typename integration_task<number>::default_time_config_storage_policy())
+	        : twopf_task(nm, i, t, ks, default_time_config_storage_policy())
 	        {
 	        }
 
@@ -67,7 +67,7 @@ namespace transport
     template <typename number>
     twopf_task<number>::twopf_task(const std::string& nm, const initial_conditions<number>& i,
                                    const range<double>& t, const range<double>& ks,
-                                   typename integration_task<number>::time_config_storage_policy p)
+                                   time_config_storage_policy p)
 	    : twopf_list_task<number>(nm, i, t, p)
 	    {
         // the mapping from the provided list of ks to the work list is just one-to-one

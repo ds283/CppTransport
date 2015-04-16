@@ -33,58 +33,54 @@
 namespace transport
 	{
 
+    // THREEPF CONFIGURATION STORAGE POLICIES
+
+    //! defines a 'threepf-configuration storage policy' data object, passed to a policy specification
+    //! for the purpose of deciding whether a threepf-kconfiguration will be kept
+    class threepf_kconfig_storage_policy_data
+	    {
+
+      public:
+
+        threepf_kconfig_storage_policy_data(double k, double a, double b, unsigned int s)
+	        : k_t(k),
+	          alpha(a),
+	          beta(b),
+	          serial(s)
+	        {
+            k1 = (k_t/4.0)*(1.0 + alpha + beta);
+            k2 = (k_t/4.0)*(1.0 - alpha + beta);
+            k3 = (k_t/2.0)*(1.0 - beta);
+	        }
+
+      public:
+
+        double k_t;
+        double alpha;
+        double beta;
+        double k1;
+        double k2;
+        double k3;
+        unsigned int serial;
+	    };
+
+
+    //! defines a 'threepf-kconfiguration storage policy' object which determines which threepf-kconfigurations
+    //! are retained in the database
+    typedef std::function<bool(threepf_kconfig_storage_policy_data&)> threepf_kconfig_storage_policy;
+
+    //! default threepf kconfig storage policy - store everything
+    class default_threepf_kconfig_storage_policy
+	    {
+      public:
+        bool operator() (threepf_kconfig_storage_policy_data&) { return(true); }
+	    };
+
+
     // three-point function task
     template <typename number>
     class threepf_task: public twopf_list_task<number>
 	    {
-
-        // THREEPF CONFIGURATION STORAGE POLICIES
-
-      public:
-
-        //! defines a 'threepf-configuration storage policy' data object, passed to a policy specification
-        //! for the purpose of deciding whether a threepf-kconfiguration will be kept
-        class threepf_kconfig_storage_policy_data
-	        {
-
-          public:
-
-            threepf_kconfig_storage_policy_data(double k, double a, double b, unsigned int s)
-	            : k_t(k),
-	              alpha(a),
-	              beta(b),
-	              serial(s)
-	            {
-                k1 = (k_t/4.0)*(1.0 + alpha + beta);
-                k2 = (k_t/4.0)*(1.0 - alpha + beta);
-                k3 = (k_t/2.0)*(1.0 - beta);
-	            }
-
-          public:
-
-            double k_t;
-            double alpha;
-            double beta;
-            double k1;
-            double k2;
-            double k3;
-            unsigned int serial;
-	        };
-
-
-        //! defines a 'threepf-kconfiguration storage policy' object which determines which threepf-kconfigurations
-        //! are retained in the database
-        typedef std::function<bool(threepf_kconfig_storage_policy_data&)> threepf_kconfig_storage_policy;
-
-      protected:
-
-        //! default threepf kconfig storage policy - store everything
-        class default_threepf_kconfig_storage_policy
-	        {
-          public:
-            bool operator() (threepf_kconfig_storage_policy_data&) { return(true); }
-	        };
-
 
         // CONSTRUCTOR, DESTRUCTOR
 
@@ -92,7 +88,7 @@ namespace transport
 
         //! Construct a threepf-task
         threepf_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t,
-                     typename integration_task<number>::time_config_storage_policy p);
+                     time_config_storage_policy p);
 
         //! deserialization constructor
         threepf_task(const std::string& n, Json::Value& reader, const initial_conditions<number>& i);
@@ -144,7 +140,7 @@ namespace transport
 
     template <typename number>
     threepf_task<number>::threepf_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t,
-                                       typename integration_task<number>::time_config_storage_policy p)
+                                       time_config_storage_policy p)
 	    : twopf_list_task<number>(nm, i, t, p),
 	      serial(0), integrable(true)
 	    {
@@ -249,16 +245,15 @@ namespace transport
         //! with specified policies
         threepf_cubic_task(const std::string& nm, const initial_conditions<number>& i,
                            const range<double>& t, const range<double>& ks,
-                           typename integration_task<number>::time_config_storage_policy tp,
-                           typename threepf_task<number>::threepf_kconfig_storage_policy kp);
+                           time_config_storage_policy tp, threepf_kconfig_storage_policy kp);
 
         //! Construct a named three-point function task based on sampling from a cubic lattice of ks,
         //! with default policies
         threepf_cubic_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t,
                            const range<double>& ks)
 	        : threepf_cubic_task(nm, i, t, ks,
-	                             typename integration_task<number>::default_time_config_storage_policy(),
-	                             typename threepf_task<number>::default_threepf_kconfig_storage_policy())
+	                             default_time_config_storage_policy(),
+	                             default_threepf_kconfig_storage_policy())
 	        {
 	        }
 
@@ -306,8 +301,7 @@ namespace transport
     template <typename number>
     threepf_cubic_task<number>::threepf_cubic_task(const std::string& nm, const initial_conditions<number>& i,
                                                    const range<double>& t, const range<double>& ks,
-                                                   typename integration_task<number>::time_config_storage_policy tp,
-                                                   typename threepf_task<number>::threepf_kconfig_storage_policy kp)
+                                                   time_config_storage_policy tp, threepf_kconfig_storage_policy kp)
 	    : threepf_task<number>(nm, i, t, tp)
 	    {
         bool stored_background = false;
@@ -342,7 +336,7 @@ namespace transport
 
                         kconfig.serial = this->serial++;
 
-                        typename threepf_task<number>::threepf_kconfig_storage_policy_data data(kconfig.k_t_conventional, kconfig.alpha, kconfig.beta, kconfig.serial);
+                        threepf_kconfig_storage_policy_data data(kconfig.k_t_conventional, kconfig.alpha, kconfig.beta, kconfig.serial);
                         if(kp(data))
 	                        {
                             // check whether any of these k-wavenumbers have been stored before
@@ -412,8 +406,7 @@ namespace transport
         //! with specified storage policies
         threepf_fls_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t,
                          const range<double>& kts, const range<double>& alphas, const range<double>& betas,
-                         typename integration_task<number>::time_config_storage_policy tp,
-                         typename threepf_task<number>::threepf_kconfig_storage_policy kp,
+                         time_config_storage_policy tp, threepf_kconfig_storage_policy kp,
                          double smallest_squeezing=__CPP_TRANSPORT_DEFAULT_SMALLEST_SQUEEZING);
 
         //! Construct a named three-point function task based on sampling at specified values of
@@ -422,8 +415,8 @@ namespace transport
         threepf_fls_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t,
                          const range<double>& kts, const range<double>& alphas, const range<double>& betas)
 	        : threepf_fls_task(nm, i, t, kts, alphas, betas,
-	                           typename integration_task<number>::default_time_config_storage_policy(),
-	                           typename threepf_task<number>::default_threepf_kconfig_storage_policy())
+	                           default_time_config_storage_policy(),
+	                           default_threepf_kconfig_storage_policy())
 	        {
 	        }
 
@@ -478,8 +471,7 @@ namespace transport
     template <typename number>
     threepf_fls_task<number>::threepf_fls_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t,
                                                const range<double>& kts, const range<double>& alphas, const range<double>& betas,
-                                               typename integration_task<number>::time_config_storage_policy tp,
-                                               typename threepf_task<number>::threepf_kconfig_storage_policy kp,
+                                               time_config_storage_policy tp, threepf_kconfig_storage_policy kp,
                                                double smallest_squeezing)
 	    : threepf_task<number>(nm, i, t, tp)
 	    {
@@ -513,7 +505,7 @@ namespace transport
 
                         kconfig.serial = this->serial++;
 
-                        typename threepf_task<number>::threepf_kconfig_storage_policy_data data(kconfig.k_t_conventional, kconfig.alpha, kconfig.beta, kconfig.serial);
+                        threepf_kconfig_storage_policy_data data(kconfig.k_t_conventional, kconfig.alpha, kconfig.beta, kconfig.serial);
                         if(kconfig.k1_conventional > 0.0 && kconfig.k2_conventional > 0.0 && kconfig.k3_conventional > 0.0 && kp(data))
 	                        {
                             // check whether any of these k-wavenumbers have been stored before

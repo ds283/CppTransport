@@ -319,7 +319,7 @@ namespace transport
                 const work_queue<twopf_kconfig>::device_work_list list = queues[i];
 
 		            // get list of time steps, and storage list
-                std::vector<typename integration_task<number>::time_storage_record> slist;
+                std::vector<time_storage_record> slist;
                 const std::vector<double>& times = tk->get_raw_integration_step_times(slist);
 
                 // set up a functor to observe this system

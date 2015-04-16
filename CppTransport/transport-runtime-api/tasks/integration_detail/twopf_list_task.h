@@ -36,7 +36,7 @@ namespace transport
 
         //! construct a twopf-list-task object
         twopf_list_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t,
-                        typename integration_task<number>::time_config_storage_policy p);
+                        time_config_storage_policy p);
 
         //! deserialization constructor
         twopf_list_task(const std::string& nm, Json::Value& reader, const initial_conditions<number>& i);
@@ -113,7 +113,7 @@ namespace transport
 
     template <typename number>
     twopf_list_task<number>::twopf_list_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t,
-                                             typename integration_task<number>::time_config_storage_policy p)
+                                             time_config_storage_policy p)
 	    : integration_task<number>(nm, i, t, p),
 	      kmax(-DBL_MAX),
 	      kmin(DBL_MAX),

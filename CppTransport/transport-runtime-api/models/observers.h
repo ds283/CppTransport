@@ -35,7 +35,7 @@ namespace transport
       public:
 
         //! Create a stepping observer object
-        stepping_observer(const std::vector< typename integration_task<number>::time_storage_record >& l)
+        stepping_observer(const std::vector< time_storage_record >& l)
           : time_step(0), storage_list(l)
           {
           }
@@ -66,7 +66,7 @@ namespace transport
         unsigned int time_step;
 
         //! List of steps which should be stored
-        const std::vector< typename integration_task<number>::time_storage_record >& storage_list;
+        const std::vector< time_storage_record >& storage_list;
 
       };
 
@@ -80,7 +80,7 @@ namespace transport
       public:
 
         //! Create a timing observer object
-        timing_observer(const std::vector< typename integration_task<number>::time_storage_record >& l, double t_int=1.0, bool s=false, unsigned int p=3);
+        timing_observer(const std::vector< time_storage_record >& l, double t_int=1.0, bool s=false, unsigned int p=3);
 
 
         // INTERFACE
@@ -134,7 +134,7 @@ namespace transport
 
 
     template <typename number>
-    timing_observer<number>::timing_observer(const std::vector< typename integration_task<number>::time_storage_record >& l, double t_int, bool s, unsigned int p)
+    timing_observer<number>::timing_observer(const std::vector< time_storage_record >& l, double t_int, bool s, unsigned int p)
       : stepping_observer<number>(l), t_interval(t_int), silent(s), first_step(true), t_last(0), precision(p)
       {
         batching_timer.stop();
@@ -197,7 +197,7 @@ namespace transport
       public:
 
         twopf_singleconfig_batch_observer(twopf_batcher<number>& b, const twopf_kconfig& c,
-                                          const std::vector< typename integration_task<number>::time_storage_record >& l,
+                                          const std::vector< time_storage_record >& l,
                                           unsigned int bg_sz, unsigned int ten_sz, unsigned int tw_sz,
                                           unsigned int bg_st, unsigned int ten_st, unsigned int tw_st,
                                           double t_int = 1.0, bool s = true, unsigned int p = 3);
@@ -243,7 +243,7 @@ namespace transport
 
     template <typename number>
     twopf_singleconfig_batch_observer<number>::twopf_singleconfig_batch_observer(twopf_batcher<number>& b, const twopf_kconfig& c,
-                                                                                 const std::vector< typename integration_task<number>::time_storage_record >& l,
+                                                                                 const std::vector< time_storage_record >& l,
                                                                                  unsigned int bg_sz, unsigned int ten_sz, unsigned int tw_sz,
                                                                                  unsigned int bg_st, unsigned int ten_st, unsigned int tw_st,
                                                                                  double t_int, bool s, unsigned int p)
@@ -300,7 +300,7 @@ namespace transport
       public:
 
         threepf_singleconfig_batch_observer(threepf_batcher<number>& b, const threepf_kconfig& c,
-                                            const std::vector< typename integration_task<number>::time_storage_record >& l,
+                                            const std::vector< time_storage_record >& l,
                                             unsigned int bg_sz, unsigned int ten_sz, unsigned int tw_sz, unsigned int th_sz,
                                             unsigned int bg_st,
                                             unsigned int ten_k1_st, unsigned int ten_k2_st, unsigned int ten_k3_st,
@@ -361,7 +361,7 @@ namespace transport
 
     template <typename number>
     threepf_singleconfig_batch_observer<number>::threepf_singleconfig_batch_observer(threepf_batcher<number>& b, const threepf_kconfig& c,
-                                                                                     const std::vector< typename integration_task<number>::time_storage_record >& l,
+                                                                                     const std::vector< time_storage_record >& l,
                                                                                      unsigned int bg_sz, unsigned int ten_sz, unsigned int tw_sz, unsigned int th_sz,
                                                                                      unsigned int bg_st,
                                                                                      unsigned int ten_k1_st, unsigned int ten_k2_st, unsigned int ten_k3_st,
@@ -471,7 +471,7 @@ namespace transport
 
         twopf_groupconfig_batch_observer(twopf_batcher<number>& b,
                                          const work_queue<twopf_kconfig>::device_work_list& c,
-                                         const std::vector< typename integration_task<number>::time_storage_record >& l,
+                                         const std::vector< time_storage_record >& l,
                                          unsigned int bg_sz, unsigned int ten_sz, unsigned int tw_sz,
                                          unsigned int bg_st, unsigned int ten_st, unsigned int tw_st,
                                          double t_int = 1.0, bool s = false, unsigned int p = 3);
@@ -521,7 +521,7 @@ namespace transport
     template <typename number>
     twopf_groupconfig_batch_observer<number>::twopf_groupconfig_batch_observer(twopf_batcher<number>& b,
                                                                                const work_queue<twopf_kconfig>::device_work_list& c,
-                                                                               const std::vector< typename integration_task<number>::time_storage_record >& l,
+                                                                               const std::vector< time_storage_record >& l,
                                                                                unsigned int bg_sz, unsigned int ten_sz, unsigned int tw_sz,
                                                                                unsigned int bg_st, unsigned int ten_st, unsigned int tw_st,
                                                                                double t_int, bool s, unsigned int p)
@@ -585,7 +585,7 @@ namespace transport
 
         threepf_groupconfig_batch_observer(threepf_batcher<number>& b,
                                                    const work_queue<threepf_kconfig>::device_work_list& c,
-                                                   const std::vector< typename integration_task<number>::time_storage_record >& l,
+                                                   const std::vector< time_storage_record >& l,
                                                    unsigned int bg_sz, unsigned int ten_sz, unsigned int tw_sz, unsigned int th_sz,
                                                    unsigned int bg_st,
                                                    unsigned int ten_k1_st, unsigned int ten_k2_st, unsigned int ten_k3_st,
@@ -649,7 +649,7 @@ namespace transport
     template <typename number>
     threepf_groupconfig_batch_observer<number>::threepf_groupconfig_batch_observer(threepf_batcher<number>& b,
                                                                                    const work_queue<threepf_kconfig>::device_work_list& c,
-                                                                                   const std::vector< typename integration_task<number>::time_storage_record >& l,
+                                                                                   const std::vector< time_storage_record >& l,
                                                                                    unsigned int bg_sz, unsigned int ten_sz, unsigned int tw_sz, unsigned int th_sz,
                                                                                    unsigned int bg_st,
                                                                                    unsigned int ten_k1_st, unsigned int ten_k2_st, unsigned int ten_k3_st,
