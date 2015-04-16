@@ -42,12 +42,6 @@ namespace transport
     class integration_task: public derivable_task<number>
 	    {
 
-      public:
-
-        //! defines an object which computes kstar for a given integration task
-        typedef std::function<double(integration_task<number>*)> kconfig_kstar;
-
-
         // CONSTRUCTOR, DESTRUCTOR
 
       public:
