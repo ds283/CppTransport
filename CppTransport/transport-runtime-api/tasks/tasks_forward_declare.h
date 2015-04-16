@@ -19,10 +19,19 @@ namespace transport
 		template <typename number> class derivable_task;
 #endif
 
-#ifndef __integration_tasks_H_
+#ifndef __integration_abstract_tasks_H_
     template <typename number> class integration_task;
+#endif
+
+#ifdef __twopf_list_task_H_
     template <typename number> class twopf_list_task;
+#endif
+
+#ifndef __twopf_task_H_
     template <typename number> class twopf_task;
+#endif
+
+#ifndef __threepf_task_H_
     template <typename number> class threepf_task;
 #endif
 
@@ -46,10 +55,23 @@ namespace transport
 	    }
 #endif
 
-#ifndef __zeta_tasks_H_
+#ifndef __postintegration_abstract_task_H_
     template <typename number> class postintegration_task;
+#endif
+
+#ifndef __zeta_twopf_list_task_H_
+		template <typename number> class zeta_twopf_list_task;
+#endif
+
+#ifndef __zeta_twopf_task_H_
     template <typename number> class zeta_twopf_task;
+#endif
+
+#ifndef __zeta_threepf_task_H_
     template <typename number> class zeta_threepf_task;
+#endif
+
+#ifndef __fNL_task_H_
     template <typename number> class fNL_task;
 #endif
 

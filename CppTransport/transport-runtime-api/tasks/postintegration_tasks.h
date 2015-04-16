@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __zeta_tasks_H_
-#define __zeta_tasks_H_
+#ifndef __postintegration_tasks_H_
+#define __postintegration_tasks_H_
 
 
 #include "transport-runtime-api/tasks/postintegration_detail/zeta_twopf_task.h"
@@ -13,4 +13,4 @@
 #include "transport-runtime-api/tasks/postintegration_detail/fNL_task.h"
 
 
-#endif //__zeta_tasks_H_
+#endif //__postintegration_tasks_H_
