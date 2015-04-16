@@ -73,7 +73,7 @@ namespace transport
         // the mapping from the provided list of ks to the work list is just one-to-one
         for(unsigned int j = 0; j < ks.size(); j++)
 	        {
-            this->push_twopf_klist(ks[j], j==0);
+            this->twopf_list_task<number>::twopf_db.add_record(ks[j]);
 	        }
 
         this->apply_time_storage_policy();
