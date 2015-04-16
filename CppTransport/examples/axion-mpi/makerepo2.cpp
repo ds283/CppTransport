@@ -112,7 +112,7 @@ int main(int argc, char* argv[])
     struct TimeStoragePolicy
       {
       public:
-        bool operator() (const transport::integration_task<double>::time_config_storage_policy_data& data) { return((data.serial % 20) == 0); }
+        bool operator() (const transport::time_config_storage_policy_data& data) { return((data.serial % 20) == 0); }
       };
 
     transport::range<double> times = transport::range<double >(Ninit, Nmax+Npre, t_samples, transport::logarithmic_bottom_stepping);
@@ -135,7 +135,7 @@ int main(int argc, char* argv[])
 		struct ThreepfStoragePolicy
 			{
 		  public:
-				bool operator() (const transport::threepf_task<double>::threepf_kconfig_storage_policy_data& data) { return(true); }
+				bool operator() (const transport::threepf_kconfig& data) { return(true); }
 			};
 
 
