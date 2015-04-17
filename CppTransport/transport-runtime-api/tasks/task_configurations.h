@@ -36,7 +36,7 @@ namespace transport
 				unsigned int get_serial() const { return(this->serial); }
 
 				//! Output to a standard stream
-				friend std::ostream& operator<<(std::ostream& out, time_config& obj);
+				friend std::ostream& operator<<(std::ostream& out, const time_config& obj);
 			};
 
 
@@ -65,11 +65,8 @@ namespace transport
         double       k_comoving;
         double       k_conventional;
 
-        //! flag which indicates to the integrator whether to store the background
-        bool         store_background;
-
         //! Output to a standard stream
-        friend std::ostream& operator<<(std::ostream& out, twopf_kconfig& obj);
+        friend std::ostream& operator<<(std::ostream& out, const twopf_kconfig& obj);
 	    };
 
 
@@ -109,15 +106,8 @@ namespace transport
         double                      alpha;
         double                      beta;
 
-        //! flags which indicate to the integrator whether to
-        //! store the background and twopf results from this integration
-        bool                        store_background;
-        bool                        store_twopf_k1;
-        bool                        store_twopf_k2;
-        bool                        store_twopf_k3;
-
         //! Output to a standard stream
-        friend std::ostream& operator<<(std::ostream& out, threepf_kconfig& obj);
+        friend std::ostream& operator<<(std::ostream& out, const threepf_kconfig& obj);
 	    };
 
 

@@ -111,10 +111,10 @@ namespace transport
 		        virtual void write(std::ostream& out);
 
 		        //! Write details of the k-configurations included in this product - twopf version
-		        void write_kconfig_list(std::ostream& out, const std::vector< twopf_kconfig >& list);
+		        void write_kconfig_list(std::ostream& out, const twopf_kconfig_database& twopf_db);
 
 		        //! Write details of the k-configurations included in this product - threepf version
-		        void write_kconfig_list(std::ostream& out, const std::vector< threepf_kconfig >& list);
+		        void write_kconfig_list(std::ostream& out, const threepf_kconfig_database& threepf_db);
 
 
 		        // SERIALIZATION -- implements a 'serializable' interface
@@ -340,7 +340,7 @@ namespace transport
 
 
 		    template <typename number>
-		    void wavenumber_series<number>::write_kconfig_list(std::ostream& out, const std::vector< twopf_kconfig >& list)
+		    void wavenumber_series<number>::write_kconfig_list(std::ostream& out, const twopf_kconfig_database& twopf_db)
 			    {
 		        unsigned int count = 0;
 
@@ -348,7 +348,7 @@ namespace transport
 		        this->wrapper.set_left_margin(2);
 		        this->wrapper.wrap_newline(out);
 
-		        for(std::vector< twopf_kconfig >::const_iterator t = list.begin(); t != list.end(); t++)
+		        for(twopf_kconfig_database::const_config_iterator t = twopf_db.config_begin(); t != twopf_db.config_end(); t++)
 			        {
 		            std::vector< unsigned int >::iterator s = std::find(this->kconfig_sample_sns.begin(), this->kconfig_sample_sns.end(), t->serial);
 
@@ -373,7 +373,7 @@ namespace transport
 
 
 		    template <typename number>
-		    void wavenumber_series<number>::write_kconfig_list(std::ostream& out, const std::vector< threepf_kconfig >& list)
+		    void wavenumber_series<number>::write_kconfig_list(std::ostream& out, const threepf_kconfig_database& threepf_db)
 			    {
 				    unsigned int count = 0;
 
@@ -381,7 +381,7 @@ namespace transport
 				    this->wrapper.set_left_margin(2);
 				    this->wrapper.wrap_newline(out);
 
-				    for(std::vector< threepf_kconfig >::const_iterator t = list.begin(); t != list.end(); t++)
+				    for(threepf_kconfig_database::const_config_iterator t = threepf_db.config_begin(); t != threepf_db.config_end(); t++)
 					    {
 				        std::vector< unsigned int >::iterator s = std::find(this->kconfig_sample_sns.begin(), this->kconfig_sample_sns.end(), t->serial);
 

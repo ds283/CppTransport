@@ -50,8 +50,8 @@ namespace transport
 
       public:
 
-        //! Get list of k-configurations at which this task will sample the threepf
-        const std::vector<threepf_kconfig>& get_threepf_kconfig_list() const { return(this->threepf_config_list); }
+        //! Provide access to threepf k-configuration database
+        const threepf_kconfig_database& get_threepf_database() const { return(this->threepf_db); }
 
         //! Determine whether this task is integrable
         bool is_integrable() const { return(this->integrable); }
@@ -77,9 +77,6 @@ namespace transport
 
         //! database of threepf k-configurations
         threepf_kconfig_database threepf_db;
-
-        //! List of k-configurations associated with this task
-        std::vector<threepf_kconfig> threepf_config_list;
 
         //! Is this threepf task integrable? ie., have we dropped any configurations, and is the spacing linear?
         bool integrable;

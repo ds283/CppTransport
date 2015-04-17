@@ -54,11 +54,12 @@ namespace transport
         //! Determine whether this task is integrable; inherited from parent threepf_task
         bool is_integrable() const { return(this->ptk_as_threepf->is_integrable()); }
 
-        //! Get list of k-configurations at which this task samples the threepf; inherited from parent threepf_task
-        const std::vector<threepf_kconfig>& get_threepf_kconfig_list() const { return(this->ptk_as_threepf->get_threepf_kconfig_list()); }
+        //! Provide access to threepf k-configuration database
+        const threepf_kconfig_database& get_threepf_database() const { return(this->ptk_as_threepf->get_threepf_database()); }
 
         //! Get measure at a particular k-point
         number measure(const threepf_kconfig& config) const { return(this->ptk_as_threepf->measure(config)); }
+
 
         // SERIALIZATION
 

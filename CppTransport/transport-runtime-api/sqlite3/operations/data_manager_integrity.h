@@ -193,14 +193,15 @@ namespace transport
           };
 
 
-        template <typename ConfigurationData>
-        void drop_statistics(sqlite3* db, const std::list<unsigned int>& drop_list, const std::vector<ConfigurationData>& configs)
+        template <typename Database>
+        void drop_statistics(sqlite3* db, const std::list<unsigned int>& drop_list, const Database& dbase)
           {
             for(std::list<unsigned int>::const_iterator t = drop_list.begin(); t != drop_list.end(); t++)
               {
-                typename std::vector<ConfigurationData>::const_iterator u = std::find_if(configs.begin(), configs.end(), ConfigurationFinder<ConfigurationData>(*t));
+                typename Database::const_config_iterator u = std::find_if(dbase.config_begin(), dbase.config_end(),
+                                                                          ConfigurationFinder<typename Database::const_config_iterator::type>(*t));
 
-                if(u != configs.end())
+                if(u != dbase.config_end())
                   {
                     std::ostringstream drop_stmt;
                     drop_stmt << "DELETE FROM " << __CPP_TRANSPORT_SQLITE_STATS_TABLE << " WHERE kserial=" << *t << ";";
@@ -211,14 +212,15 @@ namespace transport
 
 
         template <typename WriterObject>
-        void drop_twopf_configurations(sqlite3* db, WriterObject& writer, const std::list<unsigned int>& drop_list, const std::vector<twopf_kconfig>& configs,
+        void drop_twopf_configurations(sqlite3* db, WriterObject& writer, const std::list<unsigned int>& drop_list, const twopf_kconfig_database& twopf_db,
                                        twopf_value_type type=real_twopf, bool silent=false)
           {
             for(std::list<unsigned int>::const_iterator t = drop_list.begin(); t != drop_list.end(); t++)
               {
-                std::vector<twopf_kconfig>::const_iterator u = std::find_if(configs.begin(), configs.end(), ConfigurationFinder<twopf_kconfig>(*t));
+                twopf_kconfig_database::const_config_iterator u = std::find_if(twopf_db.config_begin(), twopf_db.config_end(),
+                                                                               ConfigurationFinder<twopf_kconfig_database::const_config_iterator::type>(*t));
 
-                if(u != configs.end())
+                if(u != twopf_db.config_end())
                   {
                     if(!silent) BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << "** " << *u;
 
@@ -231,14 +233,15 @@ namespace transport
 
 
         template <typename WriterObject>
-        void drop_threepf_configurations(sqlite3* db, WriterObject& writer, const std::list<unsigned int>& drop_list, const std::vector<threepf_kconfig>& configs,
+        void drop_threepf_configurations(sqlite3* db, WriterObject& writer, const std::list<unsigned int>& drop_list, const threepf_kconfig_database& threepf_db,
                                          bool silent = false)
           {
             for(std::list<unsigned int>::const_iterator t = drop_list.begin(); t != drop_list.end(); t++)
               {
-                std::vector<threepf_kconfig>::const_iterator u = std::find_if(configs.begin(), configs.end(), ConfigurationFinder<threepf_kconfig>(*t));
+                threepf_kconfig_database::const_config_iterator u = std::find_if(threepf_db.config_begin(), threepf_db.config_end(),
+                                                                                ConfigurationFinder<threepf_kconfig_database::const_config_iterator::type>(*t));
 
-                if(u != configs.end())
+                if(u != threepf_db.config_end())
                   {
                     if(!silent) BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << "** " << *u;
 
@@ -251,14 +254,15 @@ namespace transport
 
 
         template <typename WriterObject>
-        void drop_zeta_twopf_configurations(sqlite3* db, WriterObject& writer, const std::list<unsigned int>& drop_list, const std::vector<twopf_kconfig>& configs,
+        void drop_zeta_twopf_configurations(sqlite3* db, WriterObject& writer, const std::list<unsigned int>& drop_list, const twopf_kconfig_database& twopf_db,
                                             bool silent=false)
           {
             for(std::list<unsigned int>::const_iterator t = drop_list.begin(); t != drop_list.end(); t++)
               {
-                std::vector<twopf_kconfig>::const_iterator u = std::find_if(configs.begin(), configs.end(), ConfigurationFinder<twopf_kconfig>(*t));
+                twopf_kconfig_database::const_config_iterator u = std::find_if(twopf_db.config_begin(), twopf_db.config_end(),
+                                                                               ConfigurationFinder<twopf_kconfig_database::const_config_iterator::type>(*t));
 
-                if(u != configs.end())
+                if(u != twopf_db.config_end())
                   {
                     if(!silent) BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << "** " << *u;
 
@@ -271,14 +275,15 @@ namespace transport
 
 
         template <typename WriterObject>
-        void drop_zeta_threepf_configurations(sqlite3* db, WriterObject& writer, const std::list<unsigned int>& drop_list, const std::vector<threepf_kconfig>& configs,
+        void drop_zeta_threepf_configurations(sqlite3* db, WriterObject& writer, const std::list<unsigned int>& drop_list, const threepf_kconfig_database& threepf_db,
                                               bool silent = false)
           {
             for(std::list<unsigned int>::const_iterator t = drop_list.begin(); t != drop_list.end(); t++)
               {
-                std::vector<threepf_kconfig>::const_iterator u = std::find_if(configs.begin(), configs.end(), ConfigurationFinder<threepf_kconfig>(*t));
+                threepf_kconfig_database::const_config_iterator u = std::find_if(threepf_db.config_begin(), threepf_db.config_end(),
+                                                                                 ConfigurationFinder<threepf_kconfig_database::const_config_iterator::type>(*t));
 
-                if(u != configs.end())
+                if(u != threepf_db.config_end())
                   {
                     if(!silent) BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << "** " << *u;
 
@@ -291,14 +296,15 @@ namespace transport
 
 
         template <typename WriterObject>
-        void drop_zeta_redbsp_configurations(sqlite3* db, WriterObject& writer, const std::list<unsigned int>& drop_list, const std::vector<threepf_kconfig>& configs,
+        void drop_zeta_redbsp_configurations(sqlite3* db, WriterObject& writer, const std::list<unsigned int>& drop_list, const threepf_kconfig_database& threepf_db,
                                              bool silent=false)
           {
             for(std::list<unsigned int>::const_iterator t = drop_list.begin(); t != drop_list.end(); t++)
               {
-                std::vector<threepf_kconfig>::const_iterator u = std::find_if(configs.begin(), configs.end(), ConfigurationFinder<threepf_kconfig>(*t));
+                threepf_kconfig_database::const_config_iterator u = std::find_if(threepf_db.config_begin(), threepf_db.config_end(),
+                                                                                 ConfigurationFinder<threepf_kconfig_database::const_config_iterator::type>(*t));
 
-                if(u != configs.end())
+                if(u != threepf_db.config_end())
                   {
                     if(!silent) BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << "** " << *u;
 

@@ -189,13 +189,13 @@ namespace transport
 
         // process a work list of twopf items
         // must be over-ridden by a derived implementation class
-        virtual void backend_process_queue(work_queue<twopf_kconfig>& work, const integration_task<number>* tk,
+        virtual void backend_process_queue(work_queue<twopf_kconfig_record>& work, const integration_task<number>* tk,
                                            twopf_batcher<number>& batcher,
                                            bool silent = false) = 0;
 
         // process a work list of threepf items
         // must be over-ridden by a derived implementation class
-        virtual void backend_process_queue(work_queue<threepf_kconfig>& work, const integration_task<number>* tk,
+        virtual void backend_process_queue(work_queue<threepf_kconfig_record>& work, const integration_task<number>* tk,
                                            threepf_batcher<number>& batcher,
                                            bool silent = false) = 0;
 

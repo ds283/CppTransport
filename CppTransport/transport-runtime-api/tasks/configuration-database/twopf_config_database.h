@@ -16,6 +16,8 @@
 #include "transport-runtime-api/serialization/serializable.h"
 #include "transport-runtime-api/tasks/task_configurations.h"
 
+#include "transport-runtime-api/tasks/configuration-database/generic_iterator.h"
+
 #include "transport-runtime-api/defaults.h"
 #include "transport-runtime-api/messages.h"
 #include "transport-runtime-api/exceptions.h"
@@ -60,6 +62,8 @@ namespace transport
         twopf_kconfig* operator->() { return(&this->record); }
         const twopf_kconfig* operator->() const { return(&this->record); }
 
+        friend std::ostream& operator<<(std::ostream& out, const twopf_kconfig_record& obj);
+
         // INTERNAL DATA
 
       private:
@@ -80,9 +84,18 @@ namespace transport
       }
 
 
+    std::ostream& operator<<(std::ostream& out, const twopf_kconfig_record& obj)
+      {
+        out << *obj;
+        return(out);
+      }
+
+
     //! database of twopf k-configurations
     class twopf_kconfig_database: public serializable
       {
+
+      private:
 
         //! alias for database data structure
         typedef std::map< unsigned int, twopf_kconfig_record > database_type;
@@ -92,202 +105,18 @@ namespace transport
 
       public:
 
-        template <bool is_const_iterator=true>
-        class generic_record_iterator: public std::iterator< std::bidirectional_iterator_tag, twopf_kconfig_record >
-          {
-
-            //! set up an alias for a reference to each element.
-            //! there are const- and non-const-versions
-            typedef typename std::conditional< is_const_iterator, const twopf_kconfig_record&, twopf_kconfig_record& >::type record_reference_type;
-
-            //! set up an alias for the underlying iterator
-            typedef typename std::conditional< is_const_iterator, database_type::const_iterator, database_type::iterator>::type record_iterator_type;
-
-          public:
-
-            //! default constructor
-            generic_record_iterator()
-              {
-              }
-
-            //! value constructor
-            generic_record_iterator(record_iterator_type i)
-              : it(i)
-              {
-              }
-
-            //! copy constructor - allows for implicit conversion from a regular iterator to a const iterator
-            generic_record_iterator(const generic_record_iterator<false>& obj)
-              : it(obj.it)
-              {
-              }
-
-            //! equality comparison
-            bool operator==(const generic_record_iterator& obj) const
-              {
-                return(this->it == obj.it);
-              }
-
-            //! inequality comparison
-            bool operator!=(const generic_record_iterator& obj) const
-              {
-                return(this->it != obj.it);
-              }
-
-            //! deference pointer to get value
-            record_reference_type operator*()
-              {
-                return(this->it->second);
-              }
-
-            //! prefix decrement
-            generic_record_iterator& operator--()
-              {
-                --this->it;
-                return(*this);
-              }
-
-            //! postfix decrement
-            generic_record_iterator operator--(int)
-              {
-                const generic_record_iterator old(*this);
-                --this->it;
-                return(old);
-              }
-
-            //! prefix increment
-            generic_record_iterator& operator++()
-              {
-                ++this->it;
-                return(*this);
-              }
-
-            //! postfix increment
-            generic_record_iterator operator++(int)
-              {
-                const generic_record_iterator old(*this);
-                ++this->it;
-                return(old);
-              }
-
-            // make generic_record_iterator<true> a friend class of generic_record_iterator<false>, so that
-            // the copy constructor can access its private member variables
-            friend class generic_record_iterator<true>;
-
-
-            // INTERNAL DATA
-
-          private:
-
-            //! current value of iterator
-            record_iterator_type it;
-
-          };
-
         // specialize to obtain intended iterators
-        typedef generic_record_iterator<false> record_iterator;
-        typedef generic_record_iterator<true> const_record_iterator;
+        typedef configuration_database::generic_record_iterator<database_type, twopf_kconfig_record, false > record_iterator;
+        typedef configuration_database::generic_record_iterator<database_type, twopf_kconfig_record, true >  const_record_iterator;
 
 
         // CONFIG VALUED ITERATOR
 
       public:
 
-        template <bool is_const_iterator=true>
-        class generic_config_iterator: public std::iterator< std::bidirectional_iterator_tag, twopf_kconfig >
-          {
-
-            //! set up an alias for a reference to each element.
-            //! there are const- and non-const-versions
-            typedef typename std::conditional< is_const_iterator, const twopf_kconfig&, twopf_kconfig& >::type config_reference_type;
-
-            //! set up an alias for the underlying iterator
-            typedef typename std::conditional< is_const_iterator, database_type::const_iterator, database_type::iterator>::type config_iterator_type;
-
-          public:
-
-            //! default constructor
-            generic_config_iterator()
-              {
-              }
-
-            //! value constructor
-            generic_config_iterator(config_iterator_type i)
-              : it(i)
-              {
-              }
-
-            //! copy constructor - allows for implicit conversion from a regular iterator to a const iterator
-            generic_config_iterator(const generic_config_iterator<false>& obj)
-              : it(obj.it)
-              {
-              }
-
-            //! equality comparison
-            bool operator==(const generic_config_iterator& obj) const
-              {
-                return(this->it == obj.it);
-              }
-
-            //! inequality comparison
-            bool operator!=(const generic_config_iterator& obj) const
-              {
-                return(this->it != obj.it);
-              }
-
-            //! deference pointer to get value
-            config_reference_type operator*()
-              {
-                return(*(this->it->second));
-              }
-
-            //! prefix decrement
-            generic_config_iterator& operator--()
-              {
-                --this->it;
-                return(*this);
-              }
-
-            //! postfix decrement
-            generic_config_iterator operator--(int)
-              {
-                const generic_config_iterator old(*this);
-                --this->it;
-                return(old);
-              }
-
-            //! prefix increment
-            generic_config_iterator& operator++()
-              {
-                ++this->it;
-                return(*this);
-              }
-
-            //! postfix increment
-            generic_config_iterator operator++(int)
-              {
-                const generic_config_iterator old(*this);
-                ++this->it;
-                return(old);
-              }
-
-            // make generic_record_iterator<true> a friend class of generic_record_iterator<false>, so that
-            // the copy constructor can access its private member variables
-            friend class generic_config_iterator<true>;
-
-
-            // INTERNAL DATA
-
-          private:
-
-            //! current value of iterator
-            config_iterator_type it;
-
-          };
-
         // specialize to obtain intended iterators
-        typedef generic_config_iterator<false> config_iterator;
-        typedef generic_config_iterator<true> const_config_iterator;
+        typedef configuration_database::generic_config_iterator<database_type, twopf_kconfig, false> config_iterator;
+        typedef configuration_database::generic_config_iterator<database_type, twopf_kconfig, true>  const_config_iterator;
 
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -308,22 +137,26 @@ namespace transport
 
       public:
 
-        record_iterator       record_begin() { return record_iterator(this->database.begin()); }
-        record_iterator       record_end()   { return record_iterator(this->database.end()); }
+        record_iterator       record_begin()       { return record_iterator(this->database.begin()); }
+        record_iterator       record_end()         { return record_iterator(this->database.end()); }
+        const_record_iterator record_begin() const { return const_record_iterator(this->database.begin()); }
+        const_record_iterator record_end()   const { return const_record_iterator(this->database.end()); }
 
-        const_record_iterator crecord_begin() { return const_record_iterator(this->database.cbegin()); }
-        const_record_iterator crecord_end()   { return const_record_iterator(this->database.cend()); }
+        const_record_iterator crecord_begin()      { return const_record_iterator(this->database.cbegin()); }
+        const_record_iterator crecord_end()        { return const_record_iterator(this->database.cend()); }
 
 
         // CONFIG ITERATORS
 
       public:
 
-        config_iterator       config_begin()  { return config_iterator(this->database.begin()); }
-        config_iterator       config_end()    { return config_iterator(this->database.end()); }
+        config_iterator       config_begin()       { return config_iterator(this->database.begin()); }
+        config_iterator       config_end()         { return config_iterator(this->database.end()); }
+        const_config_iterator config_begin() const { return const_config_iterator(this->database.begin()); }
+        const_config_iterator config_end()   const { return const_config_iterator(this->database.end()); }
 
-        const_config_iterator cconfig_begin() { return const_config_iterator(this->database.cbegin()); }
-        const_config_iterator cconfig_end()   { return const_config_iterator(this->database.cend()); }
+        const_config_iterator cconfig_begin()      { return const_config_iterator(this->database.cbegin()); }
+        const_config_iterator cconfig_end()        { return const_config_iterator(this->database.cend()); }
 
 
         // INTERFACE -- ADD AND LOOKUP RECORDS

@@ -46,8 +46,8 @@ namespace transport
 
       public:
 
-        //! Get flattened list of ks at which we sample the two-point function
-        const std::vector<twopf_kconfig>& get_twopf_kconfig_list() const { return(this->twopf_config_list); }
+        //! Provide access to twopf k-configuration database
+        const twopf_kconfig_database& get_twopf_database() const { return(this->twopf_db); }
 
 
         // FAST-FORWARD INTEGRATION
@@ -75,9 +75,6 @@ namespace transport
 
         //! database of twopf k-configurations
         twopf_kconfig_database twopf_db;
-
-        //! List of twopf k-configurations associated with this task
-        std::vector<twopf_kconfig> twopf_config_list;
 
 	    };
 

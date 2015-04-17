@@ -42,8 +42,8 @@ namespace transport
 
       public:
 
-        //! Get flattened list of ks at which we sample the two-point function
-        const std::vector<twopf_kconfig>& get_twopf_kconfig_list() const { return(this->ptk_as_twopf_list->get_twopf_kconfig_list()); }
+        //! Provide access to twopf k-configuration database
+        const twopf_kconfig_database& get_twopf_database() const { return(this->ptk_as_twopf_list->get_twopf_database()); }
 
 
         // SERIALIZATION

@@ -46,15 +46,15 @@ namespace transport
       public:
 
         //! Handler: zeta twopf task
-        void postintegration_handler(zeta_twopf_task<number>* tk, twopf_task<number>* ptk, work_queue<twopf_kconfig>& work,
+        void postintegration_handler(zeta_twopf_task<number>* tk, twopf_task<number>* ptk, work_queue<twopf_kconfig_record>& work,
                                      zeta_twopf_batcher<number>& batcher, datapipe<number>& pipe);
 
         //! Handler: zeta threepf task
-        void postintegration_handler(zeta_threepf_task<number>* tk, threepf_task<number>* ptk, work_queue<threepf_kconfig>& work,
+        void postintegration_handler(zeta_threepf_task<number>* tk, threepf_task<number>* ptk, work_queue<threepf_kconfig_record>& work,
                                      zeta_threepf_batcher<number>& batcher, datapipe<number>& pipe);
 
         //! Handler: fNL task
-        void postintegration_handler(fNL_task<number>* tk, zeta_threepf_task<number>* ptk, work_queue<threepf_kconfig>& work,
+        void postintegration_handler(fNL_task<number>* tk, zeta_threepf_task<number>* ptk, work_queue<threepf_kconfig_record>& work,
                                      fNL_batcher<number>& batcher, datapipe<number>& pipe);
 
 
@@ -72,16 +72,16 @@ namespace transport
 
 
     template <typename number>
-    void slave_work_handler<number>::postintegration_handler(zeta_twopf_task<number>* tk, twopf_task<number>* ptk, work_queue<twopf_kconfig>& work,
+    void slave_work_handler<number>::postintegration_handler(zeta_twopf_task<number>* tk, twopf_task<number>* ptk, work_queue<twopf_kconfig_record>& work,
                                                              zeta_twopf_batcher<number>& batcher, datapipe<number>& pipe)
 	    {
         assert(tk != nullptr);
         assert(ptk != nullptr);
 
-        const typename work_queue<twopf_kconfig>::device_queue queues = work[0];
+        const typename work_queue<twopf_kconfig_record>::device_queue queues = work[0];
         assert(queues.size() == 1);
 
-        const typename work_queue<twopf_kconfig>::device_work_list list = queues[0];
+        const typename work_queue<twopf_kconfig_record>::device_work_list list = queues[0];
 
         // get list of time values at which to sample
         const std::vector<time_config> time_list = ptk->get_time_config_list();
@@ -97,7 +97,7 @@ namespace transport
         std::vector<unsigned int> kconfig_sns(list.size());
         for(unsigned int i = 0; i < list.size(); i++)
 	        {
-            kconfig_sns[i] = list[i].serial;
+            kconfig_sns[i] = list[i]->serial;
 	        }
 
         // set up cache handles
@@ -130,23 +130,23 @@ namespace transport
             timer.stop();
             batcher.report_finished_item(timer.elapsed().wall);
 
-            BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << "-- Processed configuration " << list[i].serial << " (" << i+1
+            BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << "-- Processed configuration " << list[i]->serial << " (" << i+1
 		            << " of " << list.size() << "), processing time = " << format_time(timer.elapsed().wall);
 	        }
 	    }
 
 
     template <typename number>
-    void slave_work_handler<number>::postintegration_handler(zeta_threepf_task<number>* tk, threepf_task<number>* ptk, work_queue<threepf_kconfig>& work,
+    void slave_work_handler<number>::postintegration_handler(zeta_threepf_task<number>* tk, threepf_task<number>* ptk, work_queue<threepf_kconfig_record>& work,
                                                              zeta_threepf_batcher<number>& batcher, datapipe<number>& pipe)
 	    {
         assert(tk != nullptr);
         assert(ptk != nullptr);
 
-        const typename work_queue<threepf_kconfig>::device_queue queues = work[0];
+        const typename work_queue<threepf_kconfig_record>::device_queue queues = work[0];
         assert(queues.size() == 1);
 
-        const typename work_queue<threepf_kconfig>::device_work_list list = queues[0];
+        const typename work_queue<threepf_kconfig_record>::device_work_list list = queues[0];
 
         // get list of time values at which to sample
         const std::vector<time_config> time_list = ptk->get_time_config_list();
@@ -162,7 +162,7 @@ namespace transport
         std::vector<unsigned int> kconfig_sns(list.size());
         for(unsigned int i = 0; i < list.size(); i++)
 	        {
-            kconfig_sns[i] = list[i].serial;
+            kconfig_sns[i] = list[i]->serial;
 	        }
 
         // set up cache handles
@@ -198,7 +198,7 @@ namespace transport
                 batcher.push_reduced_bispectrum(time_sns[j], kconfig_sns[i], sample[j]);
 	            }
 
-            if(list[i].store_twopf_k1)
+            if(list[i].is_twopf_k1_stored())
 	            {
                 twopf_configuration k1;
 
@@ -213,7 +213,7 @@ namespace transport
 	                }
 	            }
 
-            if(list[i].store_twopf_k2)
+            if(list[i].is_twopf_k2_stored())
 	            {
                 twopf_configuration k2;
 
@@ -228,7 +228,7 @@ namespace transport
 	                }
 	            }
 
-            if(list[i].store_twopf_k3)
+            if(list[i].is_twopf_k3_stored())
 	            {
                 twopf_configuration k3;
 
@@ -246,23 +246,23 @@ namespace transport
             timer.stop();
             batcher.report_finished_item(timer.elapsed().wall);
 
-            BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << "-- Processed configuration " << list[i].serial << " (" << i+1
+            BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << "-- Processed configuration " << list[i]->serial << " (" << i+1
 		            << " of " << list.size() << "), processing time = " << format_time(timer.elapsed().wall);
 	        }
 	    }
 
 
     template <typename number>
-    void slave_work_handler<number>::postintegration_handler(fNL_task<number>* tk, zeta_threepf_task<number>* ptk, work_queue<threepf_kconfig>& work,
+    void slave_work_handler<number>::postintegration_handler(fNL_task<number>* tk, zeta_threepf_task<number>* ptk, work_queue<threepf_kconfig_record>& work,
                                                              fNL_batcher<number>& batcher, datapipe<number>& pipe)
 	    {
         assert(tk != nullptr);
         assert(ptk != nullptr);
 
-        const typename work_queue<threepf_kconfig>::device_queue queues = work[0];
+        const typename work_queue<threepf_kconfig_record>::device_queue queues = work[0];
         assert(queues.size() == 1);
 
-        const typename work_queue<threepf_kconfig>::device_work_list list = queues[0];
+        const typename work_queue<threepf_kconfig_record>::device_work_list list = queues[0];
 
         boost::timer::cpu_timer timer;
 
@@ -280,7 +280,7 @@ namespace transport
         std::vector<unsigned int> kconfig_sns(list.size());
         for(unsigned int i = 0; i < list.size(); i++)
 	        {
-            kconfig_sns[i] = list[i].serial;
+            kconfig_sns[i] = list[i]->serial;
 	        }
 
         // set up cache handles

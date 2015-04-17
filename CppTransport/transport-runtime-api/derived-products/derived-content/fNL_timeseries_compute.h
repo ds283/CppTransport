@@ -178,13 +178,12 @@ namespace transport
 			    {
             this->validate();
 
-            const std::vector<threepf_kconfig>& raw_kconfigs = tk->get_threepf_kconfig_list();
+            const threepf_kconfig_database& threepf_db = tk->get_threepf_database();
 
             kconfig_sns.clear();
-            kconfig_sns.resize(raw_kconfigs.size());
-            for(unsigned int i = 0; i < raw_kconfigs.size(); i++)
+            for(threepf_kconfig_database::const_config_iterator t = threepf_db.config_begin(); t != threepf_db.config_end(); t++)
               {
-                kconfig_sns[i] = raw_kconfigs[i].serial;
+                kconfig_sns.push_back(t->serial);
               }
 			    }
 

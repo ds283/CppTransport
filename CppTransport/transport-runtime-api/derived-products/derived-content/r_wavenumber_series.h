@@ -229,7 +229,7 @@ namespace transport
 		        zeta_twopf_list_task<number>* ptk = dynamic_cast< zeta_twopf_list_task<number>* >(this->get_parent_task());
 		        if(ptk != nullptr)
 			        {
-		            this->write_kconfig_list(out, ptk->get_twopf_kconfig_list());
+		            this->write_kconfig_list(out, ptk->get_twopf_database());
 			        }
 			    }
 
