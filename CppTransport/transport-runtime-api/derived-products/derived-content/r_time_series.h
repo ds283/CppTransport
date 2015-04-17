@@ -54,10 +54,10 @@ namespace transport
 				                              const std::list<std::string>& tags) const override;
 
 		        //! generate a LaTeX label
-		        std::string get_LaTeX_label(const twopf_configuration& k) const;
+		        std::string get_LaTeX_label(const twopf_kconfig& k) const;
 
 		        //! generate a non-LaTeX label
-		        std::string get_non_LaTeX_label(const twopf_configuration& k) const;
+		        std::string get_non_LaTeX_label(const twopf_kconfig& k) const;
 
 
 				    // CLONE
@@ -130,7 +130,7 @@ namespace transport
 
 				    // pull k-configuration information from the database
 				    twopf_kconfig_tag<number> k_tag = pipe.new_twopf_kconfig_tag();
-				    const typename std::vector< twopf_configuration > k_values = k_handle.lookup_tag(k_tag);
+				    const typename std::vector< twopf_kconfig > k_values = k_handle.lookup_tag(k_tag);
 
 		        std::vector< std::vector<number> > zeta_data;
 				    zeta_data.resize(this->kconfig_sample_sns.size());
@@ -182,7 +182,7 @@ namespace transport
 
 
 		    template <typename number>
-		    std::string r_time_series<number>::get_LaTeX_label(const twopf_configuration& k) const
+		    std::string r_time_series<number>::get_LaTeX_label(const twopf_kconfig& k) const
 			    {
 		        std::string tag = this->make_LaTeX_tag(k);
 		        std::string label;
@@ -202,7 +202,7 @@ namespace transport
 
 
 		    template <typename number>
-		    std::string r_time_series<number>::get_non_LaTeX_label(const twopf_configuration& k) const
+		    std::string r_time_series<number>::get_non_LaTeX_label(const twopf_kconfig& k) const
 			    {
 		        std::string tag = this->make_non_LaTeX_tag(k);
 		        std::string label;

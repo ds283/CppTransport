@@ -38,7 +38,7 @@
 #include "transport-runtime-api/data/batchers/integration_items.h"
 #include "transport-runtime-api/data/batchers/postintegration_items.h"
 
-#include "transport-runtime-api/data/datapipe/configurations.h"
+#include "transport-runtime-api/data/datapipe/specializations.h"
 
 #include "boost/filesystem/operations.hpp"
 #include "boost/timer/timer.hpp"
@@ -101,10 +101,10 @@ namespace transport
         typedef std::function<void(datapipe<number>*, const std::vector<unsigned int>&, std::vector<double>&)> time_config_callback;
 
         //! Extract a set of 2pf k-configuration sample points from a datapipe
-        typedef std::function<void(datapipe<number>*, const std::vector<unsigned int>&, std::vector<twopf_configuration>&)> kconfig_twopf_callback;
+        typedef std::function<void(datapipe<number>*, const std::vector<unsigned int>&, std::vector<twopf_kconfig>&)> kconfig_twopf_callback;
 
         //! Extract a set of 3pf k-configuration sample points from a datapipe
-        typedef std::function<void(datapipe<number>*, const std::vector<unsigned int>&, std::vector<threepf_configuration>&)> kconfig_threepf_callback;
+        typedef std::function<void(datapipe<number>*, const std::vector<unsigned int>&, std::vector<threepf_kconfig>&)> kconfig_threepf_callback;
 
         //! Extract a background field at a set of time sample-points
         typedef std::function<void(datapipe<number>*, unsigned int, const std::vector<unsigned int>&, std::vector<number>&)> background_time_callback;
@@ -363,8 +363,8 @@ namespace transport
       public:
 
         typedef linecache::serial_group< std::vector<double>, time_config_tag<number>, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE > time_config_handle;
-        typedef linecache::serial_group< std::vector<twopf_configuration>, twopf_kconfig_tag<number>, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE > twopf_kconfig_handle;
-        typedef linecache::serial_group< std::vector<threepf_configuration>, threepf_kconfig_tag<number>, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE > threepf_kconfig_handle;
+        typedef linecache::serial_group< std::vector<twopf_kconfig>, twopf_kconfig_tag<number>, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE > twopf_kconfig_handle;
+        typedef linecache::serial_group< std::vector<threepf_kconfig>, threepf_kconfig_tag<number>, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE > threepf_kconfig_handle;
         typedef linecache::serial_group< std::vector<number>, data_tag<number>, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE > time_data_handle;
         typedef linecache::serial_group< std::vector<number>, data_tag<number>, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE > kconfig_data_handle;
         typedef linecache::serial_group< std::vector<number>, data_tag<number>, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE > time_zeta_handle;
@@ -415,13 +415,13 @@ namespace transport
         cf_kconfig_data_tag<number> new_cf_kconfig_data_tag(typename data_tag<number>::cf_data_type type, unsigned int id, unsigned int tserial);
 
         //! Generate a new zeta-correlation-function time tag
-        zeta_twopf_time_data_tag<number> new_zeta_twopf_time_data_tag(const twopf_configuration& kdata);
+        zeta_twopf_time_data_tag<number> new_zeta_twopf_time_data_tag(const twopf_kconfig& kdata);
 
         //! Generate a new zeta-correlationn-function time tag
-        zeta_threepf_time_data_tag<number> new_zeta_threepf_time_data_tag(const threepf_configuration& kdata);
+        zeta_threepf_time_data_tag<number> new_zeta_threepf_time_data_tag(const threepf_kconfig& kdata);
 
         //! Generate a new reduced bispectrum time tag
-        zeta_reduced_bispectrum_time_data_tag<number> new_zeta_reduced_bispectrum_time_data_tag(const threepf_configuration& kdata);
+        zeta_reduced_bispectrum_time_data_tag<number> new_zeta_reduced_bispectrum_time_data_tag(const threepf_kconfig& kdata);
 
         //! Generate a new zeta-correlation-function kconfig tag
         zeta_twopf_kconfig_data_tag<number> new_zeta_twopf_kconfig_data_tag(unsigned int tserial);
@@ -474,10 +474,10 @@ namespace transport
         linecache::cache<std::vector<double>, time_config_tag<number>, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE> time_config_cache;
 
         //! twopf k-config cache
-        linecache::cache<std::vector<twopf_configuration>, twopf_kconfig_tag<number>, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE> twopf_kconfig_cache;
+        linecache::cache<std::vector<twopf_kconfig>, twopf_kconfig_tag<number>, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE> twopf_kconfig_cache;
 
         //! threepf k-config cache
-        linecache::cache<std::vector<threepf_configuration>, threepf_kconfig_tag<number>, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE> threepf_kconfig_cache;
+        linecache::cache<std::vector<threepf_kconfig>, threepf_kconfig_tag<number>, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE> threepf_kconfig_cache;
 
         //! data cache
         linecache::cache<std::vector<number>, data_tag<number>, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE> data_cache;
@@ -492,10 +492,10 @@ namespace transport
         linecache::table<std::vector<number>, time_config_tag<number>, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE>* time_config_cache_table;
 
         //! twopf k-config cache table for currently-attached group; null if no group is attached
-        linecache::table<std::vector<twopf_configuration>, twopf_kconfig_tag<number>, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE>* twopf_kconfig_cache_table;
+        linecache::table<std::vector<twopf_kconfig>, twopf_kconfig_tag<number>, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE>* twopf_kconfig_cache_table;
 
         //! threepf k-config cache table for currently-attached group; null if no group is attached
-        linecache::table<std::vector<threepf_configuration>, threepf_kconfig_tag<number>, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE>* threepf_kconfig_cache_table;
+        linecache::table<std::vector<threepf_kconfig>, threepf_kconfig_tag<number>, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE>* threepf_kconfig_cache_table;
 
         //! data cache table for currently-attached group; null if no group is attached
         linecache::table<std::vector<number>, data_tag<number>, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE>* data_cache_table;
@@ -967,21 +967,21 @@ namespace transport
 
 
     template <typename number>
-    zeta_twopf_time_data_tag<number> datapipe<number>::new_zeta_twopf_time_data_tag(const twopf_configuration& kdata)
+    zeta_twopf_time_data_tag<number> datapipe<number>::new_zeta_twopf_time_data_tag(const twopf_kconfig& kdata)
 	    {
         return zeta_twopf_time_data_tag<number>(this, kdata);
 	    }
 
 
     template <typename number>
-    zeta_threepf_time_data_tag<number> datapipe<number>::new_zeta_threepf_time_data_tag(const threepf_configuration& kdata)
+    zeta_threepf_time_data_tag<number> datapipe<number>::new_zeta_threepf_time_data_tag(const threepf_kconfig& kdata)
 	    {
         return zeta_threepf_time_data_tag<number>(this, kdata);
 	    }
 
 
     template <typename number>
-    zeta_reduced_bispectrum_time_data_tag<number> datapipe<number>::new_zeta_reduced_bispectrum_time_data_tag(const threepf_configuration& kdata)
+    zeta_reduced_bispectrum_time_data_tag<number> datapipe<number>::new_zeta_reduced_bispectrum_time_data_tag(const threepf_kconfig& kdata)
 	    {
         return zeta_reduced_bispectrum_time_data_tag<number>(this, kdata);
 	    }

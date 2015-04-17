@@ -127,7 +127,7 @@ namespace transport
 
 		        // pull k-configuration information from the database
 		        twopf_kconfig_tag<number> k_tag = pipe.new_twopf_kconfig_tag();
-		        const typename std::vector< twopf_configuration > k_values = kc_handle.lookup_tag(k_tag);
+		        const typename std::vector< twopf_kconfig > k_values = kc_handle.lookup_tag(k_tag);
 
 		        // loop through all components of the twopf, for each t-configuration we use, pulling data from the database
 		        for(unsigned int i = 0; i < this->time_sample_sns.size(); i++)

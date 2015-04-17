@@ -109,7 +109,7 @@ namespace transport
         const std::vector<double> time_values = tc_handle.lookup_tag(tc_tag);
 
         twopf_kconfig_tag<number> k_tag = pipe.new_twopf_kconfig_tag();
-        const std::vector< twopf_configuration > k_values = kc_handle.lookup_tag(k_tag);
+        const std::vector< twopf_kconfig > k_values = kc_handle.lookup_tag(k_tag);
 
         // set up handle for compute delegate
         std::shared_ptr<typename derived_data::zeta_timeseries_compute<number>::handle> handle = this->zeta_computer.make_handle(pipe, ptk, time_sns, time_values, ptk->get_model()->get_N_fields());
@@ -174,7 +174,7 @@ namespace transport
         const std::vector<double> time_values = tc_handle.lookup_tag(tc_tag);
 
         threepf_kconfig_tag<number> k_tag = pipe.new_threepf_kconfig_tag();
-        const std::vector< threepf_configuration > k_values = kc_handle.lookup_tag(k_tag);
+        const std::vector< threepf_kconfig > k_values = kc_handle.lookup_tag(k_tag);
 
         // set up handle for compute delegate
         std::shared_ptr<typename derived_data::zeta_timeseries_compute<number>::handle> handle = this->zeta_computer.make_handle(pipe, ptk, time_sns, time_values, ptk->get_model()->get_N_fields());
@@ -200,7 +200,7 @@ namespace transport
 
             if(list[i].is_twopf_k1_stored())
 	            {
-                twopf_configuration k1;
+                twopf_kconfig k1;
 
                 k1.serial         = k_values[i].k1_serial;
                 k1.k_comoving     = k_values[i].k1_comoving;
@@ -215,7 +215,7 @@ namespace transport
 
             if(list[i].is_twopf_k2_stored())
 	            {
-                twopf_configuration k2;
+                twopf_kconfig k2;
 
                 k2.serial         = k_values[i].k2_serial;
                 k2.k_comoving     = k_values[i].k2_comoving;
@@ -230,7 +230,7 @@ namespace transport
 
             if(list[i].is_twopf_k3_stored())
 	            {
-                twopf_configuration k3;
+                twopf_kconfig k3;
 
                 k3.serial         = k_values[i].k3_serial;
                 k3.k_comoving     = k_values[i].k3_comoving;

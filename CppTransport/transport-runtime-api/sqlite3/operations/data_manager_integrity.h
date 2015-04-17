@@ -212,7 +212,7 @@ namespace transport
 
 
         template <typename WriterObject>
-        void drop_twopf_configurations(sqlite3* db, WriterObject& writer, const std::list<unsigned int>& drop_list, const twopf_kconfig_database& twopf_db,
+        void drop_twopf_kconfigs(sqlite3* db, WriterObject& writer, const std::list<unsigned int>& drop_list, const twopf_kconfig_database& twopf_db,
                                        twopf_value_type type=real_twopf, bool silent=false)
           {
             for(std::list<unsigned int>::const_iterator t = drop_list.begin(); t != drop_list.end(); t++)
@@ -233,7 +233,7 @@ namespace transport
 
 
         template <typename WriterObject>
-        void drop_threepf_configurations(sqlite3* db, WriterObject& writer, const std::list<unsigned int>& drop_list, const threepf_kconfig_database& threepf_db,
+        void drop_threepf_kconfigs(sqlite3* db, WriterObject& writer, const std::list<unsigned int>& drop_list, const threepf_kconfig_database& threepf_db,
                                          bool silent = false)
           {
             for(std::list<unsigned int>::const_iterator t = drop_list.begin(); t != drop_list.end(); t++)
@@ -254,7 +254,7 @@ namespace transport
 
 
         template <typename WriterObject>
-        void drop_zeta_twopf_configurations(sqlite3* db, WriterObject& writer, const std::list<unsigned int>& drop_list, const twopf_kconfig_database& twopf_db,
+        void drop_zeta_twopf_kconfigs(sqlite3* db, WriterObject& writer, const std::list<unsigned int>& drop_list, const twopf_kconfig_database& twopf_db,
                                             bool silent=false)
           {
             for(std::list<unsigned int>::const_iterator t = drop_list.begin(); t != drop_list.end(); t++)
@@ -275,7 +275,7 @@ namespace transport
 
 
         template <typename WriterObject>
-        void drop_zeta_threepf_configurations(sqlite3* db, WriterObject& writer, const std::list<unsigned int>& drop_list, const threepf_kconfig_database& threepf_db,
+        void drop_zeta_threepf_kconfigs(sqlite3* db, WriterObject& writer, const std::list<unsigned int>& drop_list, const threepf_kconfig_database& threepf_db,
                                               bool silent = false)
           {
             for(std::list<unsigned int>::const_iterator t = drop_list.begin(); t != drop_list.end(); t++)

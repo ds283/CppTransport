@@ -112,7 +112,7 @@ namespace transport
         bool operator==(const twopf_kconfig_tag<number>& obj) const { return(true); }     // nothing to check
 
         //! pull data corresponding to this tag
-        void pull(const std::vector<unsigned int>& sns, std::vector<twopf_configuration>& data);
+        void pull(const std::vector<unsigned int>& sns, std::vector<twopf_kconfig>& data);
 
         //! emit a log item for this tag
         void log(const std::string& log_item) const { BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::normal) << log_item; }
@@ -172,7 +172,7 @@ namespace transport
         bool operator==(const threepf_kconfig_tag<number>& obj) const { return(true); }     // nothing to check
 
         //! pull data corresponding to this tag
-        void pull(const std::vector<unsigned int>& sns, std::vector<threepf_configuration>& data);
+        void pull(const std::vector<unsigned int>& sns, std::vector<threepf_kconfig>& data);
 
         //! emit a log item for this tag
         void log(const std::string& log_item) const { BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::normal) << log_item; }
@@ -471,7 +471,7 @@ namespace transport
 
       public:
 
-        zeta_twopf_time_data_tag(datapipe<number>* p, const twopf_configuration& k)
+        zeta_twopf_time_data_tag(datapipe<number>* p, const twopf_kconfig& k)
 	        : data_tag<number>(p),
 	          kdata(k)
 	        {
@@ -515,7 +515,7 @@ namespace transport
       protected:
 
         //! kserial - controls which k serial number is sampled
-        const twopf_configuration kdata;
+        const twopf_kconfig kdata;
 
 	    };
 
@@ -529,7 +529,7 @@ namespace transport
 
       public:
 
-        zeta_threepf_time_data_tag(datapipe<number>* p, const threepf_configuration& k)
+        zeta_threepf_time_data_tag(datapipe<number>* p, const threepf_kconfig& k)
 	        : data_tag<number>(p),
 	          kdata(k)
 	        {
@@ -573,7 +573,7 @@ namespace transport
       protected:
 
         //! kserial - controls which k serial number is sampled
-        const threepf_configuration kdata;
+        const threepf_kconfig kdata;
 
 	    };
 
@@ -587,7 +587,7 @@ namespace transport
 
       public:
 
-        zeta_reduced_bispectrum_time_data_tag(datapipe<number>* p, const threepf_configuration& k)
+        zeta_reduced_bispectrum_time_data_tag(datapipe<number>* p, const threepf_kconfig& k)
 	        : data_tag<number>(p),
 	          kdata(k)
 	        {
@@ -631,7 +631,7 @@ namespace transport
       protected:
 
         //! kserial - controls which k serial number is sampled
-        const threepf_configuration kdata;
+        const threepf_kconfig kdata;
 
 	    };
 
@@ -1004,7 +1004,7 @@ namespace transport
 
 
     template <typename number>
-    void twopf_kconfig_tag<number>::pull(const std::vector<unsigned int>& sns, std::vector<twopf_configuration>& data)
+    void twopf_kconfig_tag<number>::pull(const std::vector<unsigned int>& sns, std::vector<twopf_kconfig>& data)
 	    {
 		    // TODO: should work out whether this content group can serve twopf configuration data?
         assert(this->pipe->validate_attached());
@@ -1021,7 +1021,7 @@ namespace transport
 
 
     template <typename number>
-    void threepf_kconfig_tag<number>::pull(const std::vector<unsigned int>& sns, std::vector<threepf_configuration>& data)
+    void threepf_kconfig_tag<number>::pull(const std::vector<unsigned int>& sns, std::vector<threepf_kconfig>& data)
 	    {
 		    // TODO: should work out whether this content group can serve threepf configuration data?
         assert(this->pipe->validate_attached());

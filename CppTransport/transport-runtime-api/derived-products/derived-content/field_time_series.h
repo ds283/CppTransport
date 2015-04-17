@@ -284,10 +284,10 @@ namespace transport
                                       const std::list<std::string>& tags) const override;
 
 		        //! generate a LaTeX label
-		        std::string get_LaTeX_label(unsigned int m, unsigned int n, const twopf_configuration& k) const;
+		        std::string get_LaTeX_label(unsigned int m, unsigned int n, const twopf_kconfig& k) const;
 
 		        //! generate a non-LaTeX label
-		        std::string get_non_LaTeX_label(unsigned int m, unsigned int n, const twopf_configuration& k) const;
+		        std::string get_non_LaTeX_label(unsigned int m, unsigned int n, const twopf_kconfig& k) const;
 
 
 		        // CLONE
@@ -352,7 +352,7 @@ namespace transport
 		        // pull k-configuration information from the database
 		        twopf_kconfig_tag<number> k_tag = pipe.new_twopf_kconfig_tag();
 
-		        const typename std::vector< twopf_configuration > k_values = k_handle.lookup_tag(k_tag);
+		        const typename std::vector< twopf_kconfig > k_values = k_handle.lookup_tag(k_tag);
 
 		        // loop through all components of the twopf, for each k-configuration we use,
 		        // pulling data from the database
@@ -399,7 +399,7 @@ namespace transport
 
 
 		    template <typename number>
-		    std::string twopf_time_series<number>::get_LaTeX_label(unsigned int m, unsigned int n, const twopf_configuration& k) const
+		    std::string twopf_time_series<number>::get_LaTeX_label(unsigned int m, unsigned int n, const twopf_kconfig& k) const
 			    {
 		        std::string tag = this->make_LaTeX_tag(k);
 		        std::string label;
@@ -419,7 +419,7 @@ namespace transport
 
 
 		    template <typename number>
-		    std::string twopf_time_series<number>::get_non_LaTeX_label(unsigned int m, unsigned int n, const twopf_configuration& k) const
+		    std::string twopf_time_series<number>::get_non_LaTeX_label(unsigned int m, unsigned int n, const twopf_kconfig& k) const
 			    {
 		        std::string tag = this->make_non_LaTeX_tag(k);
 		        std::string label;
@@ -491,10 +491,10 @@ namespace transport
                                       const std::list<std::string>& tags) const override;
 
 		        //! generate a LaTeX label
-		        std::string get_LaTeX_label(unsigned int l, unsigned int m, unsigned int n, const threepf_configuration& k) const;
+		        std::string get_LaTeX_label(unsigned int l, unsigned int m, unsigned int n, const threepf_kconfig& k) const;
 
 		        //! generate a non-LaTeX label
-		        std::string get_non_LaTeX_label(unsigned int l, unsigned int m, unsigned int n, const threepf_configuration& k) const;
+		        std::string get_non_LaTeX_label(unsigned int l, unsigned int m, unsigned int n, const threepf_kconfig& k) const;
 
 
 		        // CLONE
@@ -572,7 +572,7 @@ namespace transport
 		        // pull k-configuration information from the database
 		        threepf_kconfig_tag<number> k_tag = pipe.new_threepf_kconfig_tag();
 
-		        const typename std::vector< threepf_configuration > k_values = k_handle.lookup_tag(k_tag);
+		        const typename std::vector< threepf_kconfig > k_values = k_handle.lookup_tag(k_tag);
 
 		        // loop through all components of the threepf, for each k-configuration we use,
 		        // pulling data from the database
@@ -613,7 +613,7 @@ namespace transport
 
 
 		    template <typename number>
-		    std::string threepf_time_series<number>::get_LaTeX_label(unsigned int l, unsigned int m, unsigned int n, const threepf_configuration& k) const
+		    std::string threepf_time_series<number>::get_LaTeX_label(unsigned int l, unsigned int m, unsigned int n, const threepf_kconfig& k) const
 			    {
 		        std::string tag = this->make_LaTeX_tag(k, this->use_kt_label, this->use_alpha_label, this->use_beta_label);
 		        std::string label;
@@ -633,7 +633,7 @@ namespace transport
 
 
 		    template <typename number>
-		    std::string threepf_time_series<number>::get_non_LaTeX_label(unsigned int l, unsigned int m, unsigned int n, const threepf_configuration& k) const
+		    std::string threepf_time_series<number>::get_non_LaTeX_label(unsigned int l, unsigned int m, unsigned int n, const threepf_kconfig& k) const
 			    {
 		        std::string tag = this->make_non_LaTeX_tag(k, this->use_kt_label, this->use_alpha_label, this->use_beta_label);
 		        std::string label;

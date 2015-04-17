@@ -77,17 +77,17 @@ namespace transport
 		      public:
 
 				    //! make a LaTeX label tag for a twopf k-configuration
-				    std::string make_LaTeX_tag(const twopf_configuration& config) const;
+				    std::string make_LaTeX_tag(const twopf_kconfig& config) const;
 
 				    //! make a non-LaTeX label tag for a twopf k-configuration
-				    std::string make_non_LaTeX_tag(const twopf_configuration& config) const;
+				    std::string make_non_LaTeX_tag(const twopf_kconfig& config) const;
 
 		        //! make a LaTeX label tag for a threepf k-configuration
-		        std::string make_LaTeX_tag(const threepf_configuration& config,
+		        std::string make_LaTeX_tag(const threepf_kconfig& config,
 		                                   bool use_kt, bool use_alpha, bool use_beta) const;
 
 				    //! make a non-LaTeX label tag for a threepf k-configuration
-				    std::string make_non_LaTeX_tag(const threepf_configuration& config,
+				    std::string make_non_LaTeX_tag(const threepf_kconfig& config,
 				                                   bool use_kt, bool use_alpha, bool use_beta) const;
 
 
@@ -155,7 +155,7 @@ namespace transport
 
 
 				template <typename number>
-				std::string time_series<number>::make_non_LaTeX_tag(const twopf_configuration& config) const
+				std::string time_series<number>::make_non_LaTeX_tag(const twopf_kconfig& config) const
 					{
 				    std::ostringstream label;
 
@@ -170,7 +170,7 @@ namespace transport
 
 
 				template <typename number>
-				std::string time_series<number>::make_LaTeX_tag(const twopf_configuration& config) const
+				std::string time_series<number>::make_LaTeX_tag(const twopf_kconfig& config) const
 					{
 				    std::ostringstream label;
 
@@ -183,7 +183,7 @@ namespace transport
 
 
 		    template <typename number>
-		    std::string time_series<number>::make_LaTeX_tag(const threepf_configuration& config,
+		    std::string time_series<number>::make_LaTeX_tag(const threepf_kconfig& config,
 		                                                    bool use_kt, bool use_alpha, bool use_beta) const
 			    {
 		        std::ostringstream label;
@@ -212,7 +212,7 @@ namespace transport
 
 
 				template <typename number>
-				std::string time_series<number>::make_non_LaTeX_tag(const threepf_configuration& config,
+				std::string time_series<number>::make_non_LaTeX_tag(const threepf_kconfig& config,
 				                                                    bool use_kt, bool use_alpha, bool use_beta) const
 					{
 				    std::ostringstream label;

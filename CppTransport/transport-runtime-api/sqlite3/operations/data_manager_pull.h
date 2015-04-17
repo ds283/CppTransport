@@ -138,7 +138,7 @@ namespace transport
         // Pull a set of twopf k-configuration sample points, identified by their serial numbers
         template <typename number>
         void pull_twopf_kconfig_sample(sqlite3* db, const std::vector<unsigned int>& serial_numbers,
-                                       std::vector<twopf_configuration>& sample, unsigned int worker)
+                                       std::vector<twopf_kconfig>& sample, unsigned int worker)
           {
             assert(db != nullptr);
 
@@ -167,7 +167,7 @@ namespace transport
               {
                 if(status == SQLITE_ROW)
                   {
-                    twopf_configuration value;
+                    twopf_kconfig value;
 
                     value.serial         = *t;
                     value.k_conventional = sqlite3_column_double(stmt, 0);
@@ -198,7 +198,7 @@ namespace transport
         // Pull a set of threepf k-configuration sample points, identified by their serial numbers
         template <typename number>
         void pull_threepf_kconfig_sample(sqlite3* db, const std::vector<unsigned int>& serial_numbers,
-                                         std::vector<threepf_configuration>& sample, unsigned int worker)
+                                         std::vector<threepf_kconfig>& sample, unsigned int worker)
           {
             assert(db != nullptr);
 
@@ -253,7 +253,7 @@ namespace transport
               {
                 if(status == SQLITE_ROW)
                   {
-                    threepf_configuration value;
+                    threepf_kconfig value;
 
                     value.serial          = *t;
                     value.kt_conventional = sqlite3_column_double(stmt, 0);

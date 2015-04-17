@@ -69,7 +69,7 @@ namespace transport
                        const std::vector<unsigned int>& time_sample, std::vector<number>& line_data,
                        const std::vector<double>& time_axis,
                        unsigned int l, unsigned int m, unsigned int n,
-                       const threepf_configuration& config) const;
+                       const threepf_kconfig& config) const;
 
           protected:
 
@@ -101,7 +101,7 @@ namespace transport
                                                const std::vector<unsigned int>& time_sample, std::vector<number>& line_data,
                                                const std::vector<double>& time_axis,
                                                unsigned int l, unsigned int m, unsigned int n,
-                                               const threepf_configuration& config) const
+                                               const threepf_kconfig& config) const
 			    {
 						assert(mdl != nullptr);
 		        assert(tk != nullptr);

@@ -254,14 +254,14 @@ namespace transport
 
             // extract k-configuration data
             threepf_kconfig_tag<number> k_tag = h->pipe.new_threepf_kconfig_tag();
-            std::vector< threepf_configuration > configs = kc_handle.lookup_tag(k_tag);
+            std::vector< threepf_kconfig > configs = kc_handle.lookup_tag(k_tag);
 
             // zip lists of serial numbers for each of the k1, k2, k3 configurations
             std::vector<unsigned int> k1_serials;
             std::vector<unsigned int> k2_serials;
             std::vector<unsigned int> k3_serials;
 
-            for(typename std::vector< threepf_configuration >::const_iterator t = configs.begin(); t != configs.end(); t++)
+            for(typename std::vector< threepf_kconfig >::const_iterator t = configs.begin(); t != configs.end(); t++)
               {
                 k1_serials.push_back((*t).k1_serial);
                 k2_serials.push_back((*t).k2_serial);
@@ -410,14 +410,14 @@ namespace transport
             // extract k-configuration data
             threepf_kconfig_tag<number> k_tag = h->pipe.new_threepf_kconfig_tag();
             // safe to take a reference here and avoid a copy
-            const std::vector< threepf_configuration >& configs = kc_handle.lookup_tag(k_tag);
+            const std::vector< threepf_kconfig >& configs = kc_handle.lookup_tag(k_tag);
 
             // zip lists of serial numbers for each of the k1, k2, k3 configurations
             std::vector<unsigned int> k1_serials;
             std::vector<unsigned int> k2_serials;
             std::vector<unsigned int> k3_serials;
 
-            for(typename std::vector< threepf_configuration >::const_iterator t = configs.begin(); t != configs.end(); t++)
+            for(typename std::vector< threepf_kconfig >::const_iterator t = configs.begin(); t != configs.end(); t++)
               {
                 k1_serials.push_back((*t).k1_serial);
                 k2_serials.push_back((*t).k2_serial);

@@ -67,7 +67,7 @@ namespace transport
 		        //! and supplied time configuration
 		        void shift(integration_task<number>* tk, model<number>* mdl,
 		                   datapipe<number>& pipe,
-		                   const std::vector<number>& background, std::vector< threepf_configuration>& configs,
+		                   const std::vector<number>& background, std::vector< threepf_kconfig>& configs,
 		                   std::vector<number>& line_data,
 		                   unsigned int l, unsigned int m, unsigned int n,
 		                   unsigned int t_serial, double t_value) const;
@@ -77,7 +77,7 @@ namespace transport
 		        //! apply the derivative shift to a particular operator
 		        void make_shift(integration_task<number>* tk, model<number>* mdl,
 		                        datapipe<number>& pipe,
-		                        const std::vector< threepf_configuration >& configs,
+		                        const std::vector< threepf_kconfig >& configs,
 		                        std::vector< std::array<extractor<number>, 3> >& extractors,
 		                        std::vector<number>& line_data,
 		                        unsigned int t_serial, double t_value,
@@ -90,7 +90,7 @@ namespace transport
 				template <typename number>
 				void threepf_kconfig_shift<number>::shift(integration_task<number>* tk, model<number>* mdl,
 				                                          datapipe<number>& pipe,
-				                                          const std::vector<number>& background, std::vector< threepf_configuration>& configs,
+				                                          const std::vector<number>& background, std::vector< threepf_kconfig>& configs,
 				                                          std::vector<number>& line_data,
 				                                          unsigned int l, unsigned int m, unsigned int n,
 				                                          unsigned int t_serial, double t_value) const
@@ -105,7 +105,7 @@ namespace transport
 						    // set up array of k-value extractors for the first operator
 						    std::vector< std::array<extractor<number>, 3> > extractors;
 
-						    for(typename std::vector<threepf_configuration>::iterator t = configs.begin(); t != configs.end(); t++)
+						    for(typename std::vector<threepf_kconfig>::iterator t = configs.begin(); t != configs.end(); t++)
 							    {
 						        std::array<extractor<number>, 3> elt = { extractor<number>(1, *t), extractor<number>(2, *t), extractor<number>(3, *t) };
 						        extractors.push_back(elt);
@@ -119,7 +119,7 @@ namespace transport
 						    // set up array of k-value extractors for the first operator
 						    std::vector< std::array<extractor<number>, 3> > extractors;
 
-						    for(typename std::vector<threepf_configuration>::iterator t = configs.begin(); t != configs.end(); t++)
+						    for(typename std::vector<threepf_kconfig>::iterator t = configs.begin(); t != configs.end(); t++)
 							    {
 						        std::array<extractor<number>, 3> elt = { extractor<number>(2, *t), extractor<number>(1, *t), extractor<number>(3, *t) };
 						        extractors.push_back(elt);
@@ -133,7 +133,7 @@ namespace transport
 						    // set up array of k-value extractors for the first operator
 						    std::vector< std::array<extractor<number>, 3> > extractors;
 
-						    for(typename std::vector<threepf_configuration>::iterator t = configs.begin(); t != configs.end(); t++)
+						    for(typename std::vector<threepf_kconfig>::iterator t = configs.begin(); t != configs.end(); t++)
 							    {
 						        std::array<extractor<number>, 3> elt = { extractor<number>(3, *t), extractor<number>(1, *t), extractor<number>(2, *t) };
 						        extractors.push_back(elt);
@@ -147,7 +147,7 @@ namespace transport
 		    template <typename number>
 		    void threepf_kconfig_shift<number>::make_shift(integration_task<number>* tk, model<number>* mdl,
 		                                                   datapipe<number>& pipe,
-		                                                   const std::vector<threepf_configuration>& configs,
+		                                                   const std::vector<threepf_kconfig>& configs,
 		                                                   std::vector< std::array<extractor<number>, 3> >& extractors,
 		                                                   std::vector<number>& line_data,
 		                                                   unsigned int t_serial, double t_value,

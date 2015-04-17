@@ -187,11 +187,11 @@ namespace transport
             twopf_kconfig_tag<number> tag = pipe.new_twopf_kconfig_tag();
 
             // safe to take a reference here and avoid a copy
-            const std::vector< twopf_configuration >& configs = handle.lookup_tag(tag);
+            const std::vector< twopf_kconfig >& configs = handle.lookup_tag(tag);
 
             std::vector<double> axis;
 
-            for(typename std::vector< twopf_configuration >::const_iterator t = configs.begin(); t != configs.end(); t++)
+            for(typename std::vector< twopf_kconfig >::const_iterator t = configs.begin(); t != configs.end(); t++)
 	            {
                 if(this->klabel_meaning == derived_line<number>::comoving) axis.push_back((*t).k_comoving);
                 else if(this->klabel_meaning == derived_line<number>::conventional) axis.push_back((*t).k_conventional);
@@ -213,7 +213,7 @@ namespace transport
             threepf_kconfig_tag<number> tag = pipe.new_threepf_kconfig_tag();
 
             // safe to take a reference here
-            const std::vector< threepf_configuration >& configs = handle.lookup_tag(tag);
+            const std::vector< threepf_kconfig >& configs = handle.lookup_tag(tag);
 
             std::vector<double> axis;
 
@@ -222,7 +222,7 @@ namespace transport
 		            case k_axis:
 			            {
 				            // axis consists of k_t values
-		                for(typename std::vector< threepf_configuration >::const_iterator t = configs.begin(); t != configs.end(); t++)
+		                for(typename std::vector< threepf_kconfig >::const_iterator t = configs.begin(); t != configs.end(); t++)
 			                {
 		                    if(this->klabel_meaning == derived_line<number>::comoving) axis.push_back(t->kt_comoving);
 		                    else if(this->klabel_meaning == derived_line<number>::conventional) axis.push_back(t->kt_conventional);
@@ -237,7 +237,7 @@ namespace transport
 
 		            case efolds_exit_axis:
 			            {
-		                for(typename std::vector< threepf_configuration >::const_iterator t = configs.begin(); t != configs.end(); t++)
+		                for(typename std::vector< threepf_kconfig >::const_iterator t = configs.begin(); t != configs.end(); t++)
 			                {
 				                axis.push_back(log(t->kt_conventional));
 			                }
@@ -246,7 +246,7 @@ namespace transport
 
 		            case alpha_axis:
 			            {
-		                for(typename std::vector< threepf_configuration >::const_iterator t = configs.begin(); t != configs.end(); t++)
+		                for(typename std::vector< threepf_kconfig >::const_iterator t = configs.begin(); t != configs.end(); t++)
 			                {
 		                    axis.push_back(t->alpha);
 			                }
@@ -255,7 +255,7 @@ namespace transport
 
 		            case beta_axis:
 			            {
-		                for(typename std::vector< threepf_configuration >::const_iterator t = configs.begin(); t != configs.end(); t++)
+		                for(typename std::vector< threepf_kconfig >::const_iterator t = configs.begin(); t != configs.end(); t++)
 			                {
 		                    axis.push_back(t->beta);
 			                }
@@ -264,7 +264,7 @@ namespace transport
 
 		            case squeezing_fraction_k1_axis:
 			            {
-		                for(typename std::vector< threepf_configuration >::const_iterator t = configs.begin(); t != configs.end(); t++)
+		                for(typename std::vector< threepf_kconfig >::const_iterator t = configs.begin(); t != configs.end(); t++)
 			                {
 		                    axis.push_back(t->k1_conventional/t->kt_conventional);
 			                }
@@ -273,7 +273,7 @@ namespace transport
 
 		            case squeezing_fraction_k2_axis:
 			            {
-		                for(typename std::vector< threepf_configuration >::const_iterator t = configs.begin(); t != configs.end(); t++)
+		                for(typename std::vector< threepf_kconfig >::const_iterator t = configs.begin(); t != configs.end(); t++)
 			                {
 		                    axis.push_back(t->k2_conventional/t->kt_conventional);
 			                }
@@ -282,7 +282,7 @@ namespace transport
 
 		            case squeezing_fraction_k3_axis:
 			            {
-		                for(typename std::vector< threepf_configuration >::const_iterator t = configs.begin(); t != configs.end(); t++)
+		                for(typename std::vector< threepf_kconfig >::const_iterator t = configs.begin(); t != configs.end(); t++)
 			                {
 		                    axis.push_back(t->k3_conventional/t->kt_conventional);
 			                }

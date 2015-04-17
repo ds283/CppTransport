@@ -104,13 +104,13 @@ namespace transport
           public:
 
             //! compute a time series for the zeta two-point function
-            void twopf(std::shared_ptr<handle>& h, std::vector<number>& line_data, const twopf_configuration& k) const;
+            void twopf(std::shared_ptr<handle>& h, std::vector<number>& line_data, const twopf_kconfig& k) const;
 
             //! compute a time series for the zeta three-point function
-            void threepf(std::shared_ptr<handle>& h, std::vector<number>& line_data, const threepf_configuration& k) const;
+            void threepf(std::shared_ptr<handle>& h, std::vector<number>& line_data, const threepf_kconfig& k) const;
 
             //! compute a time series for the zeta reduced bispectrum
-            void reduced_bispectrum(std::shared_ptr<handle>& h, std::vector<number>& line_data, const threepf_configuration& k) const;
+            void reduced_bispectrum(std::shared_ptr<handle>& h, std::vector<number>& line_data, const threepf_kconfig& k) const;
 
 
             // INTERNAL DATA
@@ -183,7 +183,7 @@ namespace transport
 
         template <typename number>
         void zeta_timeseries_compute<number>::twopf(std::shared_ptr<typename zeta_timeseries_compute<number>::handle>& h,
-                                                    std::vector<number>& line_data, const twopf_configuration& k) const
+                                                    std::vector<number>& line_data, const twopf_kconfig& k) const
           {
             unsigned int N_fields = h->N_fields;
 
@@ -236,7 +236,7 @@ namespace transport
 
         template <typename number>
         void zeta_timeseries_compute<number>::threepf(std::shared_ptr<typename zeta_timeseries_compute<number>::handle>& h,
-                                                      std::vector<number>& line_data, const threepf_configuration& k) const
+                                                      std::vector<number>& line_data, const threepf_kconfig& k) const
           {
             unsigned int N_fields = h->N_fields;
 
@@ -366,7 +366,7 @@ namespace transport
 
         template <typename number>
         void zeta_timeseries_compute<number>::reduced_bispectrum(std::shared_ptr<typename zeta_timeseries_compute::handle>& h,
-                                                                 std::vector<number>& line_data, const threepf_configuration& k) const
+                                                                 std::vector<number>& line_data, const threepf_kconfig& k) const
           {
             line_data.clear();
             line_data.assign(h->time_sample_sns.size(), 0.0);
@@ -380,17 +380,17 @@ namespace transport
             std::vector<number> twopf_k2;
             std::vector<number> twopf_k3;
 
-            twopf_configuration k1;
+            twopf_kconfig k1;
             k1.serial         = k.k1_serial;
             k1.k_comoving     = k.k1_comoving;
             k1.k_conventional = k.k1_conventional;
 
-            twopf_configuration k2;
+            twopf_kconfig k2;
             k2.serial         = k.k2_serial;
             k2.k_comoving     = k.k2_comoving;
             k2.k_conventional = k.k2_conventional;
 
-            twopf_configuration k3;
+            twopf_kconfig k3;
             k3.serial         = k.k3_serial;
             k3.k_comoving     = k.k3_comoving;
             k3.k_conventional = k.k3_conventional;

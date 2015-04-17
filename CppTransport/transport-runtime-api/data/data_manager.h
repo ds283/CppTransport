@@ -188,12 +188,12 @@ namespace transport
         virtual void pull_time_config(datapipe<number>* pipe, const std::vector<unsigned int>& serial_numbers, std::vector<double>& sample) = 0;
 
         //! Pull a set of 2pf k-configuration serial numbers from a datapipe
-        virtual void pull_kconfig_twopf(datapipe<number>* pipe, const std::vector<unsigned int>& serial_numbers, std::vector<twopf_configuration>& sample) = 0;
+        virtual void pull_kconfig_twopf(datapipe<number>* pipe, const std::vector<unsigned int>& serial_numbers, std::vector<twopf_kconfig>& sample) = 0;
 
         //! Pull a set of 3pd k-configuration serial numbesr from a datapipe
         //! Simultaneously, populates three lists (k1, k2, k3) with serial numbers for the 2pf k-configurations
         //! corresponding to k1, k2, k3
-        virtual void pull_kconfig_threepf(datapipe<number>* pipe, const std::vector<unsigned int>& serial_numbers, std::vector<threepf_configuration>& sample) = 0;
+        virtual void pull_kconfig_threepf(datapipe<number>* pipe, const std::vector<unsigned int>& serial_numbers, std::vector<threepf_kconfig>& sample) = 0;
 
         //! Pull a time sample of a background field from a datapipe
         virtual void pull_background_time_sample(datapipe<number>* pipe, unsigned int id, const std::vector<unsigned int>& t_serials, std::vector<number>& sample) = 0;
