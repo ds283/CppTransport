@@ -8,6 +8,8 @@
 #define __threepf_config_database_H_
 
 
+#include <map>
+
 #include <assert.h>
 
 #include "transport-runtime-api/serialization/serializable.h"

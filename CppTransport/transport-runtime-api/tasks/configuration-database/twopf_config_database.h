@@ -9,6 +9,7 @@
 
 
 #include <limits>
+#include <map>
 
 #include <math.h>
 #include <assert.h>
@@ -63,6 +64,7 @@ namespace transport
         const twopf_kconfig* operator->() const { return(&this->record); }
 
         friend std::ostream& operator<<(std::ostream& out, const twopf_kconfig_record& obj);
+
 
         // INTERNAL DATA
 
