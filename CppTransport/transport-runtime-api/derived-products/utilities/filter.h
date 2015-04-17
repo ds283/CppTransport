@@ -208,8 +208,8 @@ namespace transport
 		        // scan through to find min and max values of time
             for(threepf_kconfig_database::const_config_iterator t = threepf_db.config_begin(); t != threepf_db.config_end(); t++)
 			        {
-		            if(t->k_t_conventional < kt_min) { kt_min = t->k_t_conventional; }
-		            if(t->k_t_conventional > kt_max) { kt_max = t->k_t_conventional; }
+		            if(t->kt_conventional < kt_min) { kt_min = t->kt_conventional; }
+		            if(t->kt_conventional > kt_max) { kt_max = t->kt_conventional; }
 
 		            if(t->alpha < alpha_min) { alpha_min = t->alpha; }
 		            if(t->alpha > alpha_max) { alpha_max = t->alpha; }
@@ -235,9 +235,9 @@ namespace transport
 
 				        data.serial = t->serial;
 
-		            data.kt_max = fabs(t->k_t_conventional - kt_max) < this->tolerance;
-		            data.kt_min = fabs(t->k_t_conventional - kt_min) < this->tolerance;
-		            data.kt = t->k_t_conventional;
+		            data.kt_max = fabs(t->kt_conventional - kt_max) < this->tolerance;
+		            data.kt_min = fabs(t->kt_conventional - kt_min) < this->tolerance;
+		            data.kt = t->kt_conventional;
 
 		            data.alpha_max = fabs(t->alpha - alpha_max) < this->tolerance;
 		            data.alpha_min = fabs(t->alpha - alpha_min) < this->tolerance;

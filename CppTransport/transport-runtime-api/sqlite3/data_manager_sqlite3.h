@@ -1349,9 +1349,9 @@ namespace transport
 
             if(u != threepf_db.record_end())
               {
-                if(u->is_twopf_k1_stored()) drop_serials.push_back((*u)->index[0]);
-                if(u->is_twopf_k2_stored()) drop_serials.push_back((*u)->index[1]);
-                if(u->is_twopf_k3_stored()) drop_serials.push_back((*u)->index[2]);
+                if(u->is_twopf_k1_stored()) drop_serials.push_back((*u)->k1_serial);
+                if(u->is_twopf_k2_stored()) drop_serials.push_back((*u)->k2_serial);
+                if(u->is_twopf_k3_stored()) drop_serials.push_back((*u)->k3_serial);
               }
           }
 
@@ -1372,17 +1372,17 @@ namespace transport
           {
             for(threepf_kconfig_database::const_record_iterator u = threepf_db.record_begin(); u != threepf_db.record_end(); u++)
               {
-                if(u->is_twopf_k1_stored() && (*u)->index[0] == *t)
+                if(u->is_twopf_k1_stored() && (*u)->k1_serial == *t)
                   {
                     threepf_list.push_back((*u)->serial);
                     break;
                   }
-                if(u->is_twopf_k2_stored() && (*u)->index[1] == *t)
+                if(u->is_twopf_k2_stored() && (*u)->k2_serial == *t)
                   {
                     threepf_list.push_back((*u)->serial);
                     break;
                   }
-                if(u->is_twopf_k3_stored() && (*u)->index[2] == *t)
+                if(u->is_twopf_k3_stored() && (*u)->k3_serial == *t)
                   {
                     threepf_list.push_back((*u)->serial);
                     break;

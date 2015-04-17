@@ -392,12 +392,12 @@ namespace transport
 
 						        line << count << ". ";
 								    line << "serial = " << t->serial << ", ";
-						        line << "k_t = " << t->k_t_conventional << ", ";
+						        line << "k_t = " << t->kt_conventional << ", ";
 						        line << "alpha = " << t->alpha << ", ";
 						        line << "beta = " << t->beta << ", ";
-						        line << "k1/k_t = " << t->k1_conventional/t->k_t_conventional << ", ";
-						        line << "k2/k_t = " << t->k2_conventional/t->k_t_conventional << ", ";
-						        line << "k3/k_t = " << t->k3_conventional/t->k_t_conventional;
+						        line << "k1/k_t = " << t->k1_conventional/t->kt_conventional << ", ";
+						        line << "k2/k_t = " << t->k2_conventional/t->kt_conventional << ", ";
+						        line << "k3/k_t = " << t->k3_conventional/t->kt_conventional;
 
 						        this->wrapper.wrap_out(out, line.str());
 						        this->wrapper.wrap_newline(out);

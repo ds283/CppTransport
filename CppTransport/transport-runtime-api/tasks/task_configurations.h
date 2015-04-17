@@ -85,26 +85,28 @@ namespace transport
       public:
 
         //! serial number of this k-configuration
-        unsigned int                serial;
-        unsigned int                get_serial() const { return(this->serial); }
+        unsigned int serial;
+        unsigned int get_serial() const { return(this->serial); }
 
         //! serial numbers of k1, k2, k3 into list of twopf-kconfigurations
         //! eg. used to look up appropriate values of the power spectrum when constructing reduced 3pfs
-        std::array<unsigned int, 3> index;
+		    unsigned int k1_serial;
+		    unsigned int k2_serial;
+		    unsigned int k3_serial;
 
         //! (k1,k2,k3) coordinates for this k-configuration
-        double                      k1_comoving;
-        double                      k2_comoving;
-        double                      k3_comoving;
-        double                      k1_conventional;
-        double                      k2_conventional;
-        double                      k3_conventional;
+        double       k1_comoving;
+        double       k2_comoving;
+        double       k3_comoving;
+        double       k1_conventional;
+        double       k2_conventional;
+        double       k3_conventional;
 
         //! Fergusson-Shellard-Liguori coordinates for this k-configuration
-        double                      k_t_comoving;     // comoving normalize k_t
-        double                      k_t_conventional; // conventionally normalized k_t
-        double                      alpha;
-        double                      beta;
+        double       kt_comoving;
+        double       kt_conventional;
+        double       alpha;
+        double       beta;
 
         //! Output to a standard stream
         friend std::ostream& operator<<(std::ostream& out, const threepf_kconfig& obj);
@@ -117,7 +119,7 @@ namespace transport
         std::ostringstream alpha_str;
         std::ostringstream beta_str;
 
-        kt_str    << std::setprecision(__CPP_TRANSPORT_DEFAULT_K_PRECISION) << obj.k_t_comoving;
+        kt_str    << std::setprecision(__CPP_TRANSPORT_DEFAULT_K_PRECISION) << obj.kt_comoving;
         alpha_str << std::setprecision(__CPP_TRANSPORT_DEFAULT_K_PRECISION) << obj.alpha;
         beta_str  << std::setprecision(__CPP_TRANSPORT_DEFAULT_K_PRECISION) << obj.beta;
 

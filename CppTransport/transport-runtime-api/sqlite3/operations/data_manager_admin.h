@@ -143,11 +143,11 @@ namespace transport
             for(threepf_kconfig_database::const_config_iterator t = threepf_db.config_begin(); t != threepf_db.config_end(); t++)
               {
                 check_stmt(db, sqlite3_bind_int(stmt, 1, t->serial));
-                check_stmt(db, sqlite3_bind_int(stmt, 2, t->index[0]));
-                check_stmt(db, sqlite3_bind_int(stmt, 3, t->index[1]));
-                check_stmt(db, sqlite3_bind_int(stmt, 4, t->index[2]));
-                check_stmt(db, sqlite3_bind_double(stmt, 5, t->k_t_comoving));
-                check_stmt(db, sqlite3_bind_double(stmt, 6, t->k_t_conventional));
+                check_stmt(db, sqlite3_bind_int(stmt, 2, t->k1_serial));
+                check_stmt(db, sqlite3_bind_int(stmt, 3, t->k2_serial));
+                check_stmt(db, sqlite3_bind_int(stmt, 4, t->k3_serial));
+                check_stmt(db, sqlite3_bind_double(stmt, 5, t->kt_comoving));
+                check_stmt(db, sqlite3_bind_double(stmt, 6, t->kt_conventional));
                 check_stmt(db, sqlite3_bind_double(stmt, 7, t->alpha));
                 check_stmt(db, sqlite3_bind_double(stmt, 8, t->beta));
 

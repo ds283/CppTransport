@@ -304,8 +304,8 @@ namespace transport
                 // get integration measure from task
                 threepf_kconfig kcfg;
                 kcfg.serial = k_values[i].serial;
-                kcfg.k_t_comoving = k_values[i].kt_comoving;
-                kcfg.k_t_conventional = k_values[i].kt_conventional;
+                kcfg.kt_comoving = k_values[i].kt_comoving;
+                kcfg.kt_conventional = k_values[i].kt_conventional;
                 kcfg.k1_comoving      = k_values[i].k1_comoving;
                 kcfg.k1_conventional  = k_values[i].k1_conventional;
                 kcfg.k2_comoving      = k_values[i].k2_comoving;
@@ -372,8 +372,8 @@ namespace transport
                 // get integration measure from task
                 threepf_kconfig kcfg;
                 kcfg.serial = k_values[i].serial;
-                kcfg.k_t_comoving = k_values[i].kt_comoving;
-                kcfg.k_t_conventional = k_values[i].kt_conventional;
+                kcfg.kt_comoving = k_values[i].kt_comoving;
+                kcfg.kt_conventional = k_values[i].kt_conventional;
                 kcfg.k1_comoving      = k_values[i].k1_comoving;
                 kcfg.k1_conventional  = k_values[i].k1_conventional;
                 kcfg.k2_comoving      = k_values[i].k2_comoving;

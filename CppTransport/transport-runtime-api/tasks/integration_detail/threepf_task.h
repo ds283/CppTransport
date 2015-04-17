@@ -258,7 +258,7 @@ namespace transport
         virtual double voxel_size() const override { return(this->kt_spacing*this->alpha_spacing*this->beta_spacing); }
 
         //! get measure; here k_t^2 dk_t dalpha dbeta
-        virtual number measure(const threepf_kconfig& config) const override { return(static_cast<number>(config.k_t_conventional*config.k_t_conventional)); }
+        virtual number measure(const threepf_kconfig& config) const override { return(static_cast<number>(config.kt_conventional *config.kt_conventional)); }
 
 
         // SERIALIZATION (implements a 'serialiazble' interface)

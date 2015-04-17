@@ -196,7 +196,7 @@ namespace transport
 
         //! add record to the database -- specified by Fergusson-Shellard-Liguori parametrization
         template <typename StoragePolicy>
-        int add_FLS_record(twopf_kconfig_database& twopf_db, double k_t_conventional, double alpha, double beta, StoragePolicy policy);
+        int add_FLS_record(twopf_kconfig_database& twopf_db, double kt_conventional, double alpha, double beta, StoragePolicy policy);
 
         //! add a record to the database -- directly specified
         template <typename StoragePolicy>
@@ -263,13 +263,13 @@ namespace transport
             threepf_kconfig config;
 
             config.serial = serial++;
-            config.index[0] = (*t)[__CPP_TRANSPORT_NODE_THREEPF_DATABASE_K1_SERIAL].asUInt();
-            config.index[1] = (*t)[__CPP_TRANSPORT_NODE_THREEPF_DATABASE_K2_SERIAL].asUInt();
-            config.index[2] = (*t)[__CPP_TRANSPORT_NODE_THREEPF_DATABASE_K3_SERIAL].asUInt();
+            config.k1_serial = (*t)[__CPP_TRANSPORT_NODE_THREEPF_DATABASE_K1_SERIAL].asUInt();
+            config.k2_serial = (*t)[__CPP_TRANSPORT_NODE_THREEPF_DATABASE_K2_SERIAL].asUInt();
+            config.k3_serial = (*t)[__CPP_TRANSPORT_NODE_THREEPF_DATABASE_K3_SERIAL].asUInt();
 
-            const twopf_kconfig& k1 = *(twopf_db.lookup(config.index[0]));
-            const twopf_kconfig& k2 = *(twopf_db.lookup(config.index[1]));
-            const twopf_kconfig& k3 = *(twopf_db.lookup(config.index[2]));
+            const twopf_kconfig& k1 = *(twopf_db.lookup(config.k1_serial));
+            const twopf_kconfig& k2 = *(twopf_db.lookup(config.k2_serial));
+            const twopf_kconfig& k3 = *(twopf_db.lookup(config.k3_serial));
 
             config.k1_conventional = k1.k_conventional;
             config.k1_comoving     = k1.k_comoving;
@@ -280,11 +280,11 @@ namespace transport
             config.k3_conventional = k3.k_conventional;
             config.k3_comoving     = k3.k_comoving;
 
-            config.k_t_conventional = k1.k_conventional + k2.k_conventional + k3.k_conventional;
-            config.k_t_comoving     = k1.k_comoving + k2.k_comoving + k3.k_comoving;
+            config.kt_conventional = k1.k_conventional + k2.k_conventional + k3.k_conventional;
+            config.kt_comoving = k1.k_comoving + k2.k_comoving + k3.k_comoving;
 
-            config.beta  = 1.0 - 2.0 * config.k3_conventional / config.k_t_conventional;
-            config.alpha = 4.0 * k2.k_conventional / config.k_t_conventional - 1.0 - config.beta;
+            config.beta  = 1.0 - 2.0 * config.k3_conventional / config.kt_conventional;
+            config.alpha = 4.0 * k2.k_conventional / config.kt_conventional - 1.0 - config.beta;
 
             this->threepf_db.emplace(config.serial, threepf_kconfig_record(config,
                                                                            (*t)[__CPP_TRANSPORT_NODE_THREEPF_DATABASE_STORE_BACKGROUND].asBool(),
@@ -302,7 +302,7 @@ namespace transport
         threepf_kconfig config;
 
         config.serial = 0;
-        config.index[0] = config.index[1] = config.index[2] = 0;
+        config.k1_serial = config.k2_serial = config.k3_serial = 0;
 
         config.k1_conventional  = k1_conventional;
         config.k2_conventional  = k2_conventional;
@@ -312,36 +312,36 @@ namespace transport
         config.k2_comoving      = k2_conventional * this->comoving_normalization;
         config.k3_comoving      = k3_conventional * this->comoving_normalization;
 
-        config.k_t_conventional = k1_conventional + k2_conventional + k3_conventional;
-        config.k_t_comoving     = config.k_t_conventional * this->comoving_normalization;
-        config.beta             = 1.0 - 2.0 * k3_conventional / config.k_t_conventional;
-        config.alpha            = 4.0 * k2_conventional / config.k_t_conventional - 1.0 - config.beta;
+        config.kt_conventional  = k1_conventional + k2_conventional + k3_conventional;
+        config.kt_comoving = config.kt_conventional * this->comoving_normalization;
+        config.beta             = 1.0 - 2.0 * k3_conventional / config.kt_conventional;
+        config.alpha            = 4.0 * k2_conventional / config.kt_conventional - 1.0 - config.beta;
 
         return(this->add_record(twopf_db, config, policy));
       }
 
 
     template <typename StoragePolicy>
-    int threepf_kconfig_database::add_FLS_record(twopf_kconfig_database& twopf_db, double k_t_conventional, double alpha, double beta, StoragePolicy policy)
+    int threepf_kconfig_database::add_FLS_record(twopf_kconfig_database& twopf_db, double kt_conventional, double alpha, double beta, StoragePolicy policy)
       {
         // insert a record into the database
         threepf_kconfig config;
 
         config.serial = 0;
-        config.index[0] = config.index[1] = config.index[2] = 0;
+        config.k1_serial = config.k2_serial = config.k3_serial = 0;
 
-        config.k_t_conventional = k_t_conventional;
-        config.k_t_comoving     = k_t_conventional * this->comoving_normalization;
+        config.kt_conventional = kt_conventional;
+        config.kt_comoving = kt_conventional * this->comoving_normalization;
         config.alpha            = alpha;
         config.beta             = beta;
 
-        config.k1_conventional  = (k_t_conventional / 4.0) * (1.0 + alpha + beta);
+        config.k1_conventional  = (kt_conventional / 4.0) * (1.0 + alpha + beta);
         config.k1_comoving      = config.k1_conventional * this->comoving_normalization;
 
-        config.k2_conventional  = (k_t_conventional / 4.0) * (1.0 - alpha + beta);
+        config.k2_conventional  = (kt_conventional / 4.0) * (1.0 - alpha + beta);
         config.k2_comoving      = config.k2_conventional * this->comoving_normalization;
 
-        config.k3_conventional  = (k_t_conventional / 4.0) * (1.0 - beta);
+        config.k3_conventional  = (kt_conventional / 4.0) * (1.0 - beta);
         config.k3_comoving      = config.k3_conventional * this->comoving_normalization;
 
         return(this->add_record(twopf_db, config, policy));
@@ -359,14 +359,14 @@ namespace transport
             bool k2_stored;
             bool k3_stored;
 
-            k1_stored = twopf_db.find(config.k1_conventional, config.index[0]);
-            if(!k1_stored) config.index[0] = twopf_db.add_record(config.k1_conventional);
+            k1_stored = twopf_db.find(config.k1_conventional, config.k1_serial);
+            if(!k1_stored) config.k1_serial = twopf_db.add_record(config.k1_conventional);
 
-            k2_stored = twopf_db.find(config.k2_conventional, config.index[1]);
-            if(!k2_stored) config.index[1] = twopf_db.add_record(config.k2_conventional);
+            k2_stored = twopf_db.find(config.k2_conventional, config.k2_serial);
+            if(!k2_stored) config.k2_serial = twopf_db.add_record(config.k2_conventional);
 
-            k3_stored = twopf_db.find(config.k3_conventional, config.index[2]);
-            if(!k3_stored) config.index[2] = twopf_db.add_record(config.k3_conventional);
+            k3_stored = twopf_db.find(config.k3_conventional, config.k3_serial);
+            if(!k3_stored) config.k3_serial = twopf_db.add_record(config.k3_conventional);
 
             this->threepf_db.emplace(config.serial, threepf_kconfig_record(config, this->store_background, !k1_stored, !k2_stored, !k3_stored));
             this->store_background = false;
@@ -392,9 +392,9 @@ namespace transport
             if(count != t->first) throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_THREEPF_DATABASE_OUT_OF_ORDER);
 
             Json::Value record(Json::objectValue);
-            record[__CPP_TRANSPORT_NODE_THREEPF_DATABASE_K1_SERIAL] = t->second->index[0];
-            record[__CPP_TRANSPORT_NODE_THREEPF_DATABASE_K2_SERIAL] = t->second->index[1];
-            record[__CPP_TRANSPORT_NODE_THREEPF_DATABASE_K3_SERIAL] = t->second->index[2];
+            record[__CPP_TRANSPORT_NODE_THREEPF_DATABASE_K1_SERIAL] = t->second->k1_serial;
+            record[__CPP_TRANSPORT_NODE_THREEPF_DATABASE_K2_SERIAL] = t->second->k2_serial;
+            record[__CPP_TRANSPORT_NODE_THREEPF_DATABASE_K3_SERIAL] = t->second->k3_serial;
 
             if(t->second.is_background_stored()) record[__CPP_TRANSPORT_NODE_THREEPF_DATABASE_STORE_BACKGROUND] = true;
             if(t->second.is_twopf_k1_stored())   record[__CPP_TRANSPORT_NODE_THREEPF_DATABASE_STORE_TWOPF_K1]   = true;
