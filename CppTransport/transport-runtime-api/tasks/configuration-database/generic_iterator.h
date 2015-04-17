@@ -238,6 +238,118 @@ namespace transport
 
           };
 
+
+		    // VALUE ITERATOR
+
+
+        template <typename DatabaseType, typename ValueType, bool is_const_iterator=true >
+        class generic_value_iterator: public std::iterator< std::bidirectional_iterator_tag, ValueType >
+	        {
+
+          private:
+
+            //! set up an alias for a reference to each element.
+            //! there are const- and non-const-versions
+            typedef typename std::conditional< is_const_iterator, const ValueType&, ValueType& >::type value_reference_type;
+
+            //! set up an alias for a pointer to each element
+            typedef typename std::conditional< is_const_iterator, const ValueType*, ValueType* >::type value_pointer_type;
+
+            //! set up an alias for the underlying iterator
+            typedef typename std::conditional< is_const_iterator, typename DatabaseType::const_iterator, typename DatabaseType::iterator>::type record_iterator_type;
+
+          public:
+
+            //! setup an alias for the value type
+            typedef typename std::conditional< is_const_iterator, const ValueType, ValueType >::type type;
+
+          public:
+
+            //! default constructor
+            generic_value_iterator()
+	            {
+	            }
+
+            //! value constructor
+            generic_value_iterator(record_iterator_type i)
+	            : it(i)
+	            {
+	            }
+
+            //! copy constructor - allows for implicit conversion from a regular iterator to a const iterator
+            generic_value_iterator(const generic_value_iterator<DatabaseType, ValueType, false>& obj)
+	            : it(obj.it)
+	            {
+	            }
+
+            //! equality comparison
+            bool operator==(const generic_value_iterator& obj) const
+	            {
+                return(this->it == obj.it);
+	            }
+
+            //! inequality comparison
+            bool operator!=(const generic_value_iterator& obj) const
+	            {
+                return(this->it != obj.it);
+	            }
+
+            //! deference pointer to get value
+            value_reference_type operator*()
+	            {
+                return(this->it->second.get_value());
+	            }
+
+            //! provide member access
+            value_pointer_type operator->()
+	            {
+                return(&(this->it->second.get_value()));
+	            }
+
+            //! prefix decrement
+            generic_value_iterator& operator--()
+	            {
+                --this->it;
+                return(*this);
+	            }
+
+            //! postfix decrement
+            generic_value_iterator operator--(int)
+	            {
+                const generic_value_iterator old(*this);
+                --this->it;
+                return(old);
+	            }
+
+            //! prefix increment
+            generic_value_iterator& operator++()
+	            {
+                ++this->it;
+                return(*this);
+	            }
+
+            //! postfix increment
+            generic_value_iterator operator++(int)
+	            {
+                const generic_value_iterator old(*this);
+                ++this->it;
+                return(old);
+	            }
+
+            // make generic_record_iterator<true> a friend class of generic_record_iterator<false>, so that
+            // the copy constructor can access its private member variables
+            friend class generic_value_iterator<DatabaseType, ValueType, true>;
+
+
+            // INTERNAL DATA
+
+          private:
+
+            //! current value of iterator
+            record_iterator_type it;
+
+	        };
+
       }
 
   }

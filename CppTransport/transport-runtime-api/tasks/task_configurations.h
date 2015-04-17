@@ -33,7 +33,11 @@ namespace transport
 
 				//! serial number
 				unsigned int serial;
-				unsigned int get_serial() const { return(this->serial); }
+
+				unsigned int  get_serial() const { return(this->serial); }
+
+				double&       get_value()        { return(this->t); }
+				const double& get_value()  const { return(this->t); }
 
 				//! Output to a standard stream
 				friend std::ostream& operator<<(std::ostream& out, const time_config& obj);
