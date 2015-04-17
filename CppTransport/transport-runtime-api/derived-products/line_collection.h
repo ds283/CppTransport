@@ -450,7 +450,7 @@ namespace transport
 		            if(!finished)
 			            {
 		                // find next point to add to merged x-axis (we work from the far right because std::vector can only pop from the end)
-		                double next_axis_point = -DBL_MAX;
+		                double next_axis_point = -std::numeric_limits<double>::max();
 		                for(unsigned int i = 0; i < output.size(); i++)
 			                {
 		                    if(data[i].size() > 0)
@@ -460,7 +460,7 @@ namespace transport
 			                    }
 			                }
 
-		                if(next_axis_point != -DBL_MAX)
+		                if(next_axis_point != -std::numeric_limits<double>::max())
 			                {
 		                    // push point to merged axis
 		                    axis.push_front(next_axis_point);

@@ -8,6 +8,8 @@
 #define __range_aggregation_H_
 
 
+#include <limits>
+
 #include "transport-runtime-api/concepts/range_detail/common.h"
 #include "transport-runtime-api/concepts/range_detail/abstract.h"
 
@@ -122,8 +124,8 @@ namespace transport
 
 		template <typename value>
 		aggregation_range<value>::aggregation_range()
-			: min(DBL_MAX),
-        max(-DBL_MAX),
+			: min(std::numeric_limits<double>::max()),
+        max(-std::numeric_limits<double>::max()),
         steps(0)
 			{
 			}
@@ -217,8 +219,8 @@ namespace transport
 		void aggregation_range<value>::populate_grid()
 			{
 		    this->grid.clear();
-		    this->min   = DBL_MAX;
-		    this->max   = -DBL_MAX;
+		    this->min   = std::numeric_limits<double>::max();
+		    this->max   = -std::numeric_limits<double>::max();
 		    this->steps = 0;
 
 				// splice all subranges together

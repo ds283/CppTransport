@@ -195,8 +195,8 @@ namespace transport
 
 //            std::vector<number> small;
 //            std::vector<number> large;
-//            small.assign(h->kconfig_sample_sns.size(), +DBL_MAX);
-//            large.assign(h->kconfig_sample_sns.size(), -DBL_MAX);
+//            small.assign(h->kconfig_sample_sns.size(), +std::numeric_limits<double>::max());
+//            large.assign(h->kconfig_sample_sns.size(), -std::numeric_limits<double>::max());
 
             for(unsigned int m = 0; m < 2*N_fields; m++)
               {
@@ -218,8 +218,8 @@ namespace transport
                   }
               }
 
-//            number global_small = +DBL_MAX;
-//            number global_large = -DBL_MAX;
+//            number global_small = +std::numeric_limits<double>::max();
+//            number global_large = -std::numeric_limits<double>::max();
 //            for(unsigned int j = 0; j < h->kconfig_sample_sns.size(); j++)
 //              {
 //                number large_fraction = fabs(large[j]/line_data[j]);
@@ -288,8 +288,8 @@ namespace transport
 
 //            std::vector<number> small;
 //            std::vector<number> large;
-//            small.assign(h->kconfig_sample_sns.size(), +DBL_MAX);
-//            large.assign(h->kconfig_sample_sns.size(), -DBL_MAX);
+//            small.assign(h->kconfig_sample_sns.size(), +std::numeric_limits<double>::max());
+//            large.assign(h->kconfig_sample_sns.size(), -std::numeric_limits<double>::max());
 
             // linear part of the gauge transformation
             for(unsigned int l = 0; l < 2*N_fields; l++)
@@ -372,8 +372,8 @@ namespace transport
                   }
               }
 
-//            number global_small = +DBL_MAX;
-//            number global_large = -DBL_MAX;
+//            number global_small = +std::numeric_limits<double>::max();
+//            number global_large = -std::numeric_limits<double>::max();
 //            for(unsigned int j = 0; j < h->kconfig_sample_sns.size(); j++)
 //              {
 //                number large_fraction = fabs(large[j]/line_data[j]);
