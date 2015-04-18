@@ -8,8 +8,6 @@
 #define __CPP_TRANSPORT_MESSAGES_EN_TASKS_H
 
 
-#define __CPP_TRANSPORT_REFINEMENT_TOO_DEEP              "Integration error: too many levels of mesh refinement were required; decrease the underlying time step"
-
 #define __CPP_TRANSPORT_TASK_NULL_SERIALIZATION_READER   "Internal error: null serialization reader passed to 'task' object or derived class"
 #define __CPP_TRANSPORT_TASK_TIME_CONFIG_SN_TOO_BIG      "Internal error: time configuration serial number out of range when deserializing 'integration_task' object"
 #define __CPP_TRANSPORT_TASK_TWOPF_CONFIG_SN_TOO_BIG     "Internal error: twopf k-configuration serial number out of range when deserializing 'integration_task' object"

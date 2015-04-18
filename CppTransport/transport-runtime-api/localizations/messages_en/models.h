@@ -39,5 +39,8 @@
 #define __CPP_TRANSPORT_REFINEMENT_LEVEL      "mesh refinement level"
 #define __CPP_TRANSPORT_REFINEMENT_INTERNAL   "internal exception="
 
+#define __CPP_TRANSPORT_REFINEMENT_TOO_DEEP   "Integration error: too many levels of mesh refinement were required; decrease the underlying time step"
+
+
 
 #endif // __CPP_TRANSPORT_MESSAGES_EN_MODELS_H

@@ -364,7 +364,9 @@ namespace transport
                                               boost::timer::nanosecond_type& int_time, boost::timer::nanosecond_type& batch_time,
                                               unsigned int refinement_level)
       {
-		    // get time configuration database
+        if(refinement_level > tk->get_max_refinements()) throw runtime_exception(runtime_exception::REFINEMENT_FAILURE, __CPP_TRANSPORT_REFINEMENT_TOO_DEEP);
+
+        // get time configuration database
         const time_config_database time_db = tk->get_time_config_database(*kconfig);
 
         // set up a functor to observe the integration
@@ -513,8 +515,9 @@ namespace transport
                                                 boost::timer::nanosecond_type& int_time, boost::timer::nanosecond_type& batch_time,
                                                 unsigned int refinement_level)
       {
+        if(refinement_level > tk->get_max_refinements()) throw runtime_exception(runtime_exception::REFINEMENT_FAILURE, __CPP_TRANSPORT_REFINEMENT_TOO_DEEP);
+
 		    // get list of time steps, and storage list
-        std::vector<time_storage_record> slist;
         const time_config_database time_db = tk->get_time_config_database(*kconfig);
 
         // set up a functor to observe the integration
