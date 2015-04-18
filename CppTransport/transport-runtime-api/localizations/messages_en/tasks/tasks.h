@@ -46,9 +46,9 @@
 #define __CPP_TRANSPORT_TASK_TWOPF_ELEMENTS_B            "2pf k-configurations"
 
 #define __CPP_TRANSPORT_TASK_TWOPF_LIST_MODE_RANGE_A     "largest scale kmin="
-#define __CPP_TRANSPORT_TASK_TWOPF_LIST_MODE_RANGE_B     "crosses horizon at time N*="
+#define __CPP_TRANSPORT_TASK_TWOPF_LIST_MODE_RANGE_B     "crosses horizon at time N*"
 #define __CPP_TRANSPORT_TASK_TWOPF_LIST_MODE_RANGE_C     "smallest scale kmax="
-#define __CPP_TRANSPORT_TASK_TWOPF_LIST_MODE_RANGE_D     "crosses horizon at time N*="
+#define __CPP_TRANSPORT_TASK_TWOPF_LIST_MODE_RANGE_D     "crosses horizon at time N*"
 
 #define __CPP_TRANSPORT_TASK_TWOPF_LIST_TOO_EARLY_A      "earliest required time N="
 #define __CPP_TRANSPORT_TASK_TWOPF_LIST_TOO_EARLY_B      "is earlier than time of initial conditions N="
