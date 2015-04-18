@@ -38,5 +38,28 @@
 
 #define __CPP_TRANSPORT_FNL_TASK_NOT_INTEGRABLE          "fNL_task: can't construct fNL product from non-integrable task"
 
+#define __CPP_TRANSPORT_TASK_THREEPF_ELEMENTS_A          "task with"
+#define __CPP_TRANSPORT_TASK_THREEPF_ELEMENTS_B          "3pf k-configurations and"
+#define __CPP_TRANSPORT_TASK_THREEPF_ELEMENTS_C          "2pf k-configurations"
+
+#define __CPP_TRANSPORT_TASK_TWOPF_ELEMENTS_A            "task with"
+#define __CPP_TRANSPORT_TASK_TWOPF_ELEMENTS_B            "2pf k-configurations"
+
+#define __CPP_TRANSPORT_TASK_TWOPF_LIST_MODE_RANGE_A     "largest scale kmin="
+#define __CPP_TRANSPORT_TASK_TWOPF_LIST_MODE_RANGE_B     "crosses horizon at time N*="
+#define __CPP_TRANSPORT_TASK_TWOPF_LIST_MODE_RANGE_C     "smallest scale kmax="
+#define __CPP_TRANSPORT_TASK_TWOPF_LIST_MODE_RANGE_D     "crosses horizon at time N*="
+
+#define __CPP_TRANSPORT_TASK_TWOPF_LIST_TOO_EARLY_A      "earliest required time N="
+#define __CPP_TRANSPORT_TASK_TWOPF_LIST_TOO_EARLY_B      "is earlier than time of initial conditions N="
+
+#define __CPP_TRANSPORT_TASK_TWOPF_LIST_CROSS_WARN_A     "initial conditions set at time N="
+#define __CPP_TRANSPORT_TASK_TWOPF_LIST_CROSS_WARN_B     "allow only"
+#define __CPP_TRANSPORT_TASK_TWOPF_LIST_CROSS_WARN_C     "e-folds of subhorizon evolution for largest scale"
+
+#define __CPP_TRANSPORT_TASK_TWOPF_LIST_EARLIEST_STORED  "earliest stored time N="
+
+#define __CPP_TRANSPORT_TASK_TWOPF_LIST_NO_TIMES         "no times to be stored"
+
 
 #endif // __CPP_TRANSPORT_MESSAGES_EN_TASKS_H

@@ -22,6 +22,8 @@
 
 #include "transport-runtime-api/tasks/task.h"
 #include "transport-runtime-api/tasks/task_configurations.h"
+#include "transport-runtime-api/tasks/configuration-database/time_config_database.h"
+
 
 namespace transport
 	{
@@ -50,8 +52,8 @@ namespace transport
 
       public:
 
-        //! Get vector of time configurations to store
-        virtual const std::vector<time_config>& get_time_config_list() const = 0;
+        //! Get database of stored time configurations
+        virtual const time_config_database& get_stored_time_config_database() const = 0;
 
 
         // SERIALIZE -- implements a 'serializable' interface

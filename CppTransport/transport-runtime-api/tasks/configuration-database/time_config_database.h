@@ -26,48 +26,6 @@
 namespace transport
   {
 
-    // TIME CONFIGURATION STORAGE POLICIES
-
-    //! defines a 'time-configuration storage policy' data object, passed to a policy specification
-    //! for the purpose of deciding whether a time configuration will be kept
-    class time_config_storage_policy_data
-      {
-      public:
-        time_config_storage_policy_data(double t, unsigned int s)
-          : serial(s), time(t)
-          {
-          }
-
-      public:
-        unsigned int serial;
-        double       time;
-      };
-
-    //! defines a 'time-configuration storage policy' object which determines which time steps are retained in the database
-    typedef std::function<bool(time_config_storage_policy_data&)> time_config_storage_policy;
-
-    class time_storage_record
-      {
-      public:
-        time_storage_record(bool s, unsigned int n, double t)
-          : store(s),
-            tserial(n),
-            time(t)
-          {
-            assert(s == true || (s== false && n == 0));
-          }
-
-        bool store;
-        unsigned int tserial;
-        double time;
-      };
-
-    //! default time configuration storage policy - store everything
-    class default_time_config_storage_policy
-      {
-      public:
-        bool operator() (time_config_storage_policy_data&) { return(true); }
-      };
 		class time_config_record
 			{
 
@@ -92,6 +50,10 @@ namespace transport
 				//! dereference to get time
 				time_config& operator*() { return(this->record); }
 				const time_config& operator*() const { return(this->record); }
+
+        //! provide member access into the time_config record
+        time_config* operator->() { return(&this->record); }
+        const time_config* operator->() const { return(&this->record); }
 
 				friend std::ostream& operator<<(std::ostream& out, const time_config_record& obj);
 
@@ -119,6 +81,7 @@ namespace transport
 		std::ostream& operator<<(std::ostream& out, const time_config_record& obj)
 			{
 				out << *obj;
+        return(out);
 			}
 
 
@@ -208,12 +171,23 @@ namespace transport
 		    const_value_iterator cvalue_end()        { return const_value_iterator(this->database.cend()); }
 
 
+				// INTERFACE -- GLOBAL OPERATIONS
+
+		  public:
+
+				//! empty database
+				void clear();
+
+				//! get number of records in database
+				size_t size() const { return(this->database.size()); }
+
+
 				// INTERFACE -- ADD AND LOOKUP RECORDS
 
 		  public:
 
 				//! add record to the database
-				unsigned int add_record(double t, bool store=true);
+				void add_record(double t, bool store, unsigned int serial);
 
 
 		    // INTERNAL DATA
@@ -226,28 +200,28 @@ namespace transport
 		    //! database of k-configurations
 		    database_type database;
 
-		    //! serial number for next inserted item
-		    unsigned int serial;
-
 			};
 
 
 		time_config_database::time_config_database()
-			: serial(0)
 			{
 			}
 
 
-		unsigned int time_config_database::add_record(double t, bool store)
+    void time_config_database::clear()
+	    {
+        this->database.clear();
+	    }
+
+
+		void time_config_database::add_record(double t, bool store, unsigned int serial)
 			{
 				time_config config;
 
-				config.serial = this->serial++;
+				config.serial = serial;
 				config.t = t;
 
 				this->database.emplace(config.serial, time_config_record(config, store));
-
-				return(config.serial);
 			}
 
 

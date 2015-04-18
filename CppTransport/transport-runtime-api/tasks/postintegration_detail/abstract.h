@@ -48,9 +48,8 @@ namespace transport
 
       public:
 
-        //! Get vector of time configurations to store; in a postintegration task, this is inherited from our parent,
-        //! which may itself inherit from its parent, and so on
-        virtual const std::vector<time_config>& get_time_config_list() const override { return(this->ptk->get_time_config_list()); }
+        //! Get database of stored time configurations
+        virtual const time_config_database& get_stored_time_config_database() const override { return(this->ptk->get_stored_time_config_database()); }
 
 
         // INTERFACE

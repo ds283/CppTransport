@@ -82,6 +82,18 @@ namespace transport
                 return(&this->it->second);
               }
 
+            //! deference pointer to get value (const version)
+            const record_reference_type operator*() const
+              {
+                return(this->it->second);
+              }
+
+            //! provide member access (const version)
+            const record_pointer_type operator->() const
+              {
+                return(&this->it->second);
+              }
+
             //! prefix decrement
             generic_record_iterator& operator--()
               {
@@ -130,18 +142,18 @@ namespace transport
         // CONFIGURATION ITERATOR (differs only in dereference behaviour)
 
 
-        template <typename DatabaseType, typename RecordType, bool is_const_iterator=true>
-        class generic_config_iterator: public std::iterator< std::bidirectional_iterator_tag, RecordType >
+        template <typename DatabaseType, typename ConfigType, bool is_const_iterator=true>
+        class generic_config_iterator: public std::iterator< std::bidirectional_iterator_tag, ConfigType >
           {
 
           private:
 
             //! set up an alias for a reference to each element.
             //! there are const- and non-const-versions
-            typedef typename std::conditional< is_const_iterator, const RecordType&, RecordType& >::type config_reference_type;
+            typedef typename std::conditional< is_const_iterator, const ConfigType&, ConfigType& >::type config_reference_type;
 
             //! set up an alias for a pointer to each element
-            typedef typename std::conditional< is_const_iterator, const RecordType*, RecordType* >::type record_pointer_type;
+            typedef typename std::conditional< is_const_iterator, const ConfigType*, ConfigType* >::type config_pointer_type;
 
             //! set up an alias for the underlying iterator
             typedef typename std::conditional< is_const_iterator, typename DatabaseType::const_iterator, typename DatabaseType::iterator>::type config_iterator_type;
@@ -149,7 +161,7 @@ namespace transport
           public:
 
             //! setup an alias for the value type
-            typedef typename std::conditional< is_const_iterator, const RecordType, RecordType >::type type;
+            typedef typename std::conditional< is_const_iterator, const ConfigType, ConfigType >::type type;
 
           public:
 
@@ -165,7 +177,7 @@ namespace transport
               }
 
             //! copy constructor - allows for implicit conversion from a regular iterator to a const iterator
-            generic_config_iterator(const generic_config_iterator<DatabaseType, RecordType, false>& obj)
+            generic_config_iterator(const generic_config_iterator<DatabaseType, ConfigType, false>& obj)
               : it(obj.it)
               {
               }
@@ -189,7 +201,19 @@ namespace transport
               }
 
             //! provide member access
-            record_pointer_type operator->()
+            config_pointer_type operator->()
+              {
+                return(&(*(this->it->second)));
+              }
+
+            //! deference pointer to get value (const version)
+            const config_reference_type operator*() const
+              {
+                return(*this->it->second);
+              }
+
+            //! provide member access (const version)
+            const config_pointer_type operator->() const
               {
                 return(&(*(this->it->second)));
               }
@@ -226,7 +250,7 @@ namespace transport
 
             // make generic_record_iterator<true> a friend class of generic_record_iterator<false>, so that
             // the copy constructor can access its private member variables
-            friend class generic_config_iterator<DatabaseType, RecordType, true>;
+            friend class generic_config_iterator<DatabaseType, ConfigType, true>;
 
 
             // INTERNAL DATA
@@ -297,14 +321,26 @@ namespace transport
             //! deference pointer to get value
             value_reference_type operator*()
 	            {
-                return(this->it->second.get_value());
+                return((*this->it->second).get_value());
 	            }
 
             //! provide member access
             value_pointer_type operator->()
 	            {
-                return(&(this->it->second.get_value()));
+                return(&((*this->it->second).get_value()));
 	            }
+
+            //! deference pointer to get value (const version)
+            const value_reference_type operator*() const
+              {
+                return((*this->it->second).get_value());
+              }
+
+            //! provide member access (const version)
+            const value_pointer_type operator->() const
+              {
+                return(&((*this->it->second).get_value()));
+              }
 
             //! prefix decrement
             generic_value_iterator& operator--()

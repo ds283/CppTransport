@@ -91,7 +91,7 @@ namespace transport
 		      public:
 
 		        //! time filter: filter out the serial numbers we want from a list
-		        void filter_time_sample(time_filter t_filter, const std::vector<time_config>& t_samples,
+		        void filter_time_sample(time_filter t_filter, const time_config_database& time_db,
                                     std::vector<unsigned int>& t_serials) const;
 
 		        //! 2pf k-configuration filter
@@ -118,34 +118,34 @@ namespace transport
           }
 
 
-		    void filter::filter_time_sample(time_filter t_filter, const std::vector<time_config>& t_samples, std::vector<unsigned int>& t_serials) const
+		    void filter::filter_time_sample(time_filter t_filter, const time_config_database& time_db, std::vector<unsigned int>& t_serials) const
 			    {
-		        int min_pos = -1;
-		        double t_min = 0.0;
-		        int max_pos = -1;
-		        double t_max = 0.0;
+		        double t_min = std::numeric_limits<double>::max();
+		        double t_max = -std::numeric_limits<double>::max();
+
+            assert(time_db.size() > 0);
 
 		        // scan through to find min and max values of time
-            for(unsigned int i = 0; i < t_samples.size(); i++)
+            for(time_config_database::const_value_iterator t = time_db.value_begin(); t != time_db.value_end(); t++)
               {
-		            if(min_pos == -1 || t_samples[i].t < t_min) { t_min = t_samples[i].t; min_pos = i; }
-		            if(max_pos == -1 || t_samples[i].t > t_max) { t_max = t_samples[i].t; max_pos = i; }
+		            if(*t < t_min) { t_min = *t; }
+		            if(*t > t_max) { t_max = *t; }
 			        }
 
 		        // ask filter to decide which values it wants
 		        t_serials.clear();
-		        for(unsigned int i = 0; i < t_samples.size(); i++)
+            for(time_config_database::const_config_iterator t = time_db.config_begin(); t != time_db.config_end(); t++)
 			        {
 		            time_filter_data data;
 
-				        data.serial = t_samples[i].serial;
+				        data.serial = t->serial;
 
-		            data.max = (i == max_pos ? true : false);
-		            data.min = (i == min_pos ? true : false);
+		            data.max = fabs(t->t - t_max) < this->tolerance;
+		            data.min = fabs(t->t - t_min) < this->tolerance;
 
-		            data.time = t_samples[i].t;
+		            data.time = t->t;
 
-		            if(t_filter(data)) t_serials.push_back(t_samples[i].serial);
+		            if(t_filter(data)) t_serials.push_back(t->serial);
 			        }
 
             if(t_serials.size() == 0) throw runtime_exception(runtime_exception::FILTER_EMPTY, "");

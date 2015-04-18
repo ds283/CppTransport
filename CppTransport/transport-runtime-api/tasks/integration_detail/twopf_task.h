@@ -26,17 +26,9 @@ namespace transport
 
         // CONSTRUCTOR, DESTRUCTOR
 
-        //! Construct a named two-point function task with specified time-configuration storage policy
+        //! Construct a named two-point function task
         twopf_task(const std::string& nm, const initial_conditions<number>& i,
-                   const range<double>& t, const range<double>& ks,
-                   time_config_storage_policy p);
-
-        //! Construct a named two-point function task with default storage policies
-        twopf_task(const std::string& nm, const initial_conditions<number>& i,
-                   const range<double>& t, const range<double>& ks)
-	        : twopf_task(nm, i, t, ks, default_time_config_storage_policy())
-	        {
-	        }
+                   const range<double>& t, const range<double>& ks);
 
         //! deserialization constructor
         twopf_task(const std::string& nm, Json::Value& reader, const initial_conditions<number>& i);
@@ -66,9 +58,8 @@ namespace transport
     // build a twopf task
     template <typename number>
     twopf_task<number>::twopf_task(const std::string& nm, const initial_conditions<number>& i,
-                                   const range<double>& t, const range<double>& ks,
-                                   time_config_storage_policy p)
-	    : twopf_list_task<number>(nm, i, t, p)
+                                   const range<double>& t, const range<double>& ks)
+	    : twopf_list_task<number>(nm, i, t)
 	    {
         // the mapping from the provided list of ks to the work list is just one-to-one
         for(unsigned int j = 0; j < ks.size(); j++)
@@ -76,15 +67,20 @@ namespace transport
             this->twopf_list_task<number>::twopf_db.add_record(ks[j]);
 	        }
 
-        this->apply_time_storage_policy();
+        std::cout << "'" << this->get_name() << "': " << __CPP_TRANSPORT_TASK_TWOPF_ELEMENTS_A << " " << this->twopf_db.size() << " "
+          <<__CPP_TRANSPORT_TASK_TWOPF_ELEMENTS_B << std::endl;
+        this->write_time_details();
+
+        this->cache_stored_time_config_database();
 	    }
 
 
-    // deserializtaion constructor
+    // deserialization constructor
     template <typename number>
     twopf_task<number>::twopf_task(const std::string& nm, Json::Value& reader, const initial_conditions<number>& i)
 	    : twopf_list_task<number>(nm, reader, i)
 	    {
+        this->cache_stored_time_config_database();
 	    }
 
 

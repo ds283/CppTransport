@@ -84,13 +84,13 @@ namespace transport
         const typename work_queue<twopf_kconfig_record>::device_work_list list = queues[0];
 
         // get list of time values at which to sample
-        const std::vector<time_config> time_list = ptk->get_time_config_list();
+        const time_config_database& time_db = ptk->get_stored_time_config_database();
 
         // reslice to get a vector of serial numbers
-        std::vector<unsigned int> time_sns(time_list.size());
-        for(unsigned int i = 0; i < time_list.size(); i++)
+        std::vector<unsigned int> time_sns;
+        for(time_config_database::const_config_iterator t = time_db.config_begin(); t != time_db.config_end(); t++)
 	        {
-            time_sns[i] = time_list[i].serial;
+            time_sns.push_back(t->serial);
 	        }
 
         // get list of kserial numbers
@@ -149,14 +149,14 @@ namespace transport
         const typename work_queue<threepf_kconfig_record>::device_work_list list = queues[0];
 
         // get list of time values at which to sample
-        const std::vector<time_config> time_list = ptk->get_time_config_list();
+        const time_config_database& time_db = ptk->get_stored_time_config_database();
 
         // reslice to get a vector of serial numbers
-        std::vector<unsigned int> time_sns(time_list.size());
-        for(unsigned int i = 0; i < time_list.size(); i++)
-	        {
-            time_sns[i] = time_list[i].serial;
-	        }
+        std::vector<unsigned int> time_sns;
+        for(time_config_database::const_config_iterator t = time_db.config_begin(); t != time_db.config_end(); t++)
+          {
+            time_sns.push_back(t->serial);
+          }
 
         // get list of kserial numbers
         std::vector<unsigned int> kconfig_sns(list.size());
@@ -267,14 +267,14 @@ namespace transport
         boost::timer::cpu_timer timer;
 
         // get list of time values at which to sample
-        const std::vector<time_config> time_list = ptk->get_time_config_list();
+        const time_config_database& time_db = ptk->get_stored_time_config_database();
 
         // reslice to get a vector of serial numbers
-        std::vector<unsigned int> time_sns(time_list.size());
-        for(unsigned int i = 0; i < time_list.size(); i++)
-	        {
-            time_sns[i] = time_list[i].serial;
-	        }
+        std::vector<unsigned int> time_sns;
+        for(time_config_database::const_config_iterator t = time_db.config_begin(); t != time_db.config_end(); t++)
+          {
+            time_sns.push_back(t->serial);
+          }
 
         // get list of kserial numbers
         std::vector<unsigned int> kconfig_sns(list.size());

@@ -116,7 +116,7 @@ namespace transport
 		        // set up a list of serial numbers corresponding to the sample times for this derived line
             try
               {
-                this->f.filter_time_sample(tfilter, tk.get_time_config_list(), this->time_sample_sns);
+                this->f.filter_time_sample(tfilter, tk.get_stored_time_config_database(), this->time_sample_sns);
               }
             catch(runtime_exception& xe)
               {

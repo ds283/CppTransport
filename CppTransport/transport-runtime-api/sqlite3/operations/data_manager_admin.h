@@ -24,7 +24,7 @@ namespace transport
             assert(db != nullptr);
             assert(tk != nullptr);
 
-            std::vector<time_config> sample_times = tk->get_time_config_list();
+            const time_config_database& time_db = tk->get_stored_time_config_database();
 
             // set up a table
             std::stringstream create_stmt;
@@ -43,7 +43,7 @@ namespace transport
 
             exec(db, "BEGIN TRANSACTION;");
 
-            for(std::vector<time_config>::const_iterator t = sample_times.begin(); t != sample_times.end(); t++)
+            for(time_config_database::const_config_iterator t = time_db.config_begin(); t != time_db.config_end(); t++)
               {
                 check_stmt(db, sqlite3_bind_int(stmt, 1, t->serial));
                 check_stmt(db, sqlite3_bind_double(stmt, 2, t->t));

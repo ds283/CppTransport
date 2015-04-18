@@ -36,8 +36,7 @@ namespace transport
       public:
 
         //! Construct a threepf-task
-        threepf_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t,
-                     time_config_storage_policy p);
+        threepf_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t);
 
         //! deserialization constructor
         threepf_task(const std::string& n, Json::Value& reader, const initial_conditions<number>& i);
@@ -46,7 +45,7 @@ namespace transport
         virtual ~threepf_task() = default;
 
 
-        // INTERFACE
+        // INTERFACE - THREEPF K-CONFIGURATIONS
 
       public:
 
@@ -61,6 +60,22 @@ namespace transport
 
         //! get measure at a particular k-configuration
         virtual number measure(const threepf_kconfig& config) const = 0;
+
+
+        // INTERFACE - INITIAL CONDITIONS AND INTEGRATION DETAILS
+
+
+        //! Get std::vector of initial conditions, offset using fast forwarding if enabled
+        std::vector<number> get_ics_vector(const threepf_kconfig& kconfig) const;
+
+        //! Build time-sample database
+        const time_config_database get_time_config_database(const threepf_kconfig& config) const;
+
+
+        // INTERFACE - FAST FORWARD MANAGEMENT
+
+        //! Get start time for a threepf configuration
+        double get_fast_forward_start(const threepf_kconfig& config) const;
 
 
         // SERIALIZATION -- implements a 'serialiazble' interface
@@ -85,9 +100,8 @@ namespace transport
 
 
     template <typename number>
-    threepf_task<number>::threepf_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t,
-                                       time_config_storage_policy p)
-	    : twopf_list_task<number>(nm, i, t, p),
+    threepf_task<number>::threepf_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t)
+	    : twopf_list_task<number>(nm, i, t),
         threepf_db(i.get_model()->compute_kstar(this)),
 	      integrable(true)
 	    {
@@ -101,6 +115,8 @@ namespace transport
 	    {
         //! deserialize integrable status
         integrable = reader[__CPP_TRANSPORT_NODE_THREEPF_INTEGRABLE].asBool();
+
+        this->cache_stored_time_config_database();
 	    }
 
 
@@ -119,6 +135,29 @@ namespace transport
 
 
     template <typename number>
+    const time_config_database threepf_task<number>::get_time_config_database(const threepf_kconfig& config) const
+      {
+        return(this->build_time_config_database(this->get_fast_forward_start(config)));
+      }
+
+
+    template <typename number>
+    double threepf_task<number>::get_fast_forward_start(const threepf_kconfig& config) const
+      {
+        double kmin = std::min(std::min(config.k1_conventional, config.k2_conventional), config.k3_conventional);
+
+        return(this->ics.get_Nstar() + log(kmin) - this->ff_efolds);
+      }
+
+
+    template <typename number>
+    std::vector<number> threepf_task<number>::get_ics_vector(const threepf_kconfig& config) const
+	    {
+        return this->integration_task<number>::get_ics_vector(this->get_fast_forward_start(config));
+	    }
+
+
+    template <typename number>
     class threepf_cubic_task: public threepf_task<number>
 	    {
 
@@ -130,8 +169,7 @@ namespace transport
         //! with specified policies
         template <typename StoragePolicy>
         threepf_cubic_task(const std::string& nm, const initial_conditions<number>& i,
-                           const range<double>& t, const range<double>& ks,
-                           time_config_storage_policy tp, StoragePolicy policy);
+                           const range<double>& t, const range<double>& ks, StoragePolicy policy);
 
         //! Deserialization constructor
         threepf_cubic_task(const std::string& nm, Json::Value& reader, const initial_conditions<number>& i);
@@ -177,9 +215,8 @@ namespace transport
     template <typename number>
     template <typename StoragePolicy>
     threepf_cubic_task<number>::threepf_cubic_task(const std::string& nm, const initial_conditions<number>& i,
-                                                   const range<double>& t, const range<double>& ks,
-                                                   time_config_storage_policy tp, StoragePolicy policy)
-	    : threepf_task<number>(nm, i, t, tp)
+                                                   const range<double>& t, const range<double>& ks, StoragePolicy policy)
+	    : threepf_task<number>(nm, i, t)
 	    {
         // step through the lattice of k-modes, recording which are viable triangular configurations
         // we insist on ordering, so i <= j <= k
@@ -207,7 +244,11 @@ namespace transport
         if(!ks.is_simple_linear()) this->threepf_task<number>::integrable = false;
         spacing = (ks.get_max() - ks.get_min())/ks.get_steps();
 
-        this->apply_time_storage_policy();
+        std::cout << "'" << this->get_name() << "': " << __CPP_TRANSPORT_TASK_THREEPF_ELEMENTS_A << " " << this->threepf_db.size() << " "
+          << __CPP_TRANSPORT_TASK_THREEPF_ELEMENTS_B << " " << this->twopf_db.size() << " " <<__CPP_TRANSPORT_TASK_THREEPF_ELEMENTS_C << std::endl;
+        this->write_time_details();
+
+        this->cache_stored_time_config_database();
 	    }
 
 
@@ -243,8 +284,7 @@ namespace transport
         template <typename StoragePolicy>
         threepf_fls_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t,
                          const range<double>& kts, const range<double>& alphas, const range<double>& betas,
-                         time_config_storage_policy tp, StoragePolicy kp,
-                         double smallest_squeezing=__CPP_TRANSPORT_DEFAULT_SMALLEST_SQUEEZING);
+                         StoragePolicy kp, double smallest_squeezing=__CPP_TRANSPORT_DEFAULT_SMALLEST_SQUEEZING);
 
         //! Deserialization constructor
         threepf_fls_task(const std::string& nm, Json::Value& reader, const initial_conditions<number>& i);
@@ -298,9 +338,8 @@ namespace transport
     template <typename StoragePolicy>
     threepf_fls_task<number>::threepf_fls_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t,
                                                const range<double>& kts, const range<double>& alphas, const range<double>& betas,
-                                               time_config_storage_policy tp, StoragePolicy policy,
-                                               double smallest_squeezing)
-	    : threepf_task<number>(nm, i, t, tp)
+                                               StoragePolicy policy, double smallest_squeezing)
+	    : threepf_task<number>(nm, i, t)
 	    {
         for(unsigned int j = 0; j < kts.size(); j++)
 	        {
@@ -329,7 +368,11 @@ namespace transport
         alpha_spacing = (alphas.get_max() - alphas.get_min())/alphas.get_steps();
         beta_spacing = (betas.get_max() - betas.get_min())/betas.get_steps();
 
-        this->apply_time_storage_policy();
+        std::cout << "'" << this->get_name() << "': " << __CPP_TRANSPORT_TASK_THREEPF_ELEMENTS_A << " " << this->threepf_db.size() << " "
+          << __CPP_TRANSPORT_TASK_THREEPF_ELEMENTS_B << " " << this->twopf_db.size() << " " <<__CPP_TRANSPORT_TASK_THREEPF_ELEMENTS_C << std::endl;
+        this->write_time_details();
+
+        this->cache_stored_time_config_database();
 	    }
 
 

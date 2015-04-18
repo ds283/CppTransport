@@ -161,6 +161,17 @@ namespace transport
         const_config_iterator cconfig_end()        { return const_config_iterator(this->database.cend()); }
 
 
+        // INTERFACE -- GLOBAL OPERATIONS
+
+      public:
+
+        //! empty database
+        void clear();
+
+        //! get number of records in database
+        size_t size() const { return(this->database.size()); }
+
+
         // INTERFACE -- ADD AND LOOKUP RECORDS
 
       public:
@@ -267,6 +278,15 @@ namespace transport
             this->database.emplace(config.serial, twopf_kconfig_record(config, (*t)[__CPP_TRANSPORT_NODE_TWOPF_DATABASE_STORE].asBool()));
           }
       }
+
+
+    void twopf_kconfig_database::clear()
+	    {
+        this->database.clear();
+
+        this->serial           = 0;
+        this->store_background = true;
+	    }
 
 
     unsigned int twopf_kconfig_database::add_record(double k_conventional)

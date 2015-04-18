@@ -9,6 +9,8 @@
 
 
 #include "transport-runtime-api/tasks/integration_detail/common.h"
+#include "transport-runtime-api/tasks/configuration-database/time_config_database.h"
+
 #include "transport-runtime-api/utilities/random_string.h"
 
 
@@ -16,10 +18,8 @@
 #define __CPP_TRANSPORT_NODE_FAST_FORWARD_EFOLDS           "ff-efolds"
 #define __CPP_TRANSPORT_NODE_MESH_REFINEMENTS              "mesh-refinements"
 
-#define __CPP_TRANSPORT_NODE_TIME_CONFIG_STORAGE           "time-config-storage-policy"
-#define __CPP_TRANSPORT_NODE_TIME_RANGE                    "time-config-range"
+#define __CPP_TRANSPORT_NODE_TIME_RANGE                    "integration-range"
 
-#define __CPP_TRANSPORT_NODE_KSTAR                         "kstar"
 #define __CPP_TRANSPORT_NODE_PACKAGE_NAME                  "package"
 
 
@@ -46,15 +46,15 @@ namespace transport
 
       public:
 
-        //! Construct a named integration task with supplied initial conditions and time-configuration storage policy
-        integration_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t, time_config_storage_policy p);
+        //! Construct a named integration task with supplied initial conditions and sample times
+        integration_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t);
 
         //! Construct an anonymized integration task with supplied initial conditions.
         //! Anonymized tasks are used for things like constructing initial conditions,
         //! integrating the background only, finding H at horizon-crossing etc.
         //! Science output is expected to be generated using named tasks.
         integration_task(const initial_conditions<number>& i, const range<double>& t)
-	        : integration_task(random_string(), i, t, default_time_config_storage_policy())
+	        : integration_task(random_string(), i, t)
 	        {
 	        }
 
@@ -86,92 +86,36 @@ namespace transport
 
       public:
 
-        //! Get vector of time configurations to store
-        virtual const std::vector<time_config>& get_time_config_list() const override { return(this->time_config_list); }
+        //! Get database of stored time configurations
+        virtual const time_config_database& get_stored_time_config_database() const override { return(this->stored_time_db); }
 
 
         // INTERFACE - INTEGRATION DETAILS - TIMES AND INITIAL CONDITIONS
 
       public:
 
-        //! Get initial times
+		    //! Build sample-time database
+		    const time_config_database get_time_config_database() const { return(this->build_time_config_database()); }
+
+        //! Get time at which initial conditions are set
         double get_Ninit() const { return(this->times->get_min()); }
 
         //! Get horizon-crossing time
         double get_Nstar() const { return(this->ics.get_Nstar()); }
 
-        //! Get std::vector of integration step times
-        const std::vector<double> get_integration_step_times() const;
-
-        //! Get std::vector of integration step times, and simultaneously populate a storage list
-        const std::vector<double> get_integration_step_times(std::vector<time_storage_record>& slist, unsigned int refine = 0) const;
-
-        //! Get std::vector of integration step times, truncated for fast-forwarding if enabled
-        std::vector<double> get_integration_step_times(const twopf_kconfig& kconfig, std::vector<time_storage_record>& slist, unsigned int refine = 0) const;
-
-        //! Get std::vector of integration step times, truncated for fast-forwarding if enabled
-        std::vector<double> get_integration_step_times(const threepf_kconfig& kconfig, std::vector<time_storage_record>& slist, unsigned int regine = 0) const;
-
-        //! Get std::vector of integration step times, truncated at Nstart if fast-forwarding enabled
-        std::vector<double> get_integration_step_times(double Nstart, std::vector<time_storage_record>& slist, unsigned int refine = 0) const;
-
-        //! Get std::vector of initial conditions, offset using fast forwarding if enabled
-        std::vector<number> get_ics_vector(const twopf_kconfig& kconfig) const;
-
-        //! Get std::vector of initial conditions, offset using fast forwarding if enabled
-        std::vector<number> get_ics_vector(const threepf_kconfig& kconfig) const;
-
         //! Get std::vector of initial conditions, offset by Nstar using fast forwarding if enables
         std::vector<number> get_ics_vector(double Nstart=0.0) const;
 
-      protected:
 
-        //! insert refinements in the list of integration step times
-        void refine_integration_step_times(std::vector<double>& time_values, std::vector<time_storage_record>& slist,
-                                           unsigned int refine, double step_min, double step_max) const;
-
-
-        // FAST-FORWARD INTEGRATION MANAGEMENT
-
-      public:
-
-        //! Get fast-forward integration setting
-        bool get_fast_forward() const { return(this->fast_forward); }
-
-        //! Set fast-forward integration setting
-        void set_fast_forward(bool g) { this->fast_forward = g; this->apply_time_storage_policy(); }
-
-        //! Get number of fast-forward e-folds
-        double get_fast_forward_efolds() const { return(this->ff_efolds); }
-
-        //! Set number of fast-forward e-folds
-        void set_fast_forward_efolds(double N) { this->ff_efolds = (N >= 0.0 ? N : this->ff_efolds); this->apply_time_storage_policy(); }
-
-        //! Get largest wavenumber included in the integration
-        virtual double get_kmax() const { return(1.0); }
-
-        //! Get smallest wavenumber included in the integration
-        virtual double get_kmin() const { return(1.0); }
+        // TIME CONFIGURATION DATABASE
 
       protected:
 
-        //! Populate list of time configurations to be sorted, given that the earliest allowed time is tmin.
-        //! If we are using fast-forward integration, tmin will be Nstar + ln(kmax) - ff_efolds,
-        //! where kmax is the largest k number we are evolving for.
-        //! Since this is the start time for that mode, we can't guarantee that results will be available
-        //! be at earlier times
-        void apply_time_storage_policy();
+        //! build and return a database of times at which to sample a time integration
+        time_config_database build_time_config_database() const;
 
-
-        // MESH REFINEMENT
-
-      public:
-
-        //! Get number of allowed mesh refinements
-        unsigned int get_max_refinements() const { return(this->max_refinements); }
-
-        //! Set number of allowed mesh refinements
-        void set_max_refinemenets(unsigned int max) { this->max_refinements = (max > 0 ? max : this->max_refinements); }
+        //! build and cache stored time database -- only includes records for times which are committed to the database
+        virtual void cache_stored_time_config_database();
 
 
         // SERIALIZE - implements a 'serializable' interface
@@ -180,7 +124,6 @@ namespace transport
 
         //! serialize this object
         virtual void serialize(Json::Value& writer) const override;
-
 
 
         // WRITE TO STREAM
@@ -199,51 +142,26 @@ namespace transport
         initial_conditions<number>       ics;
 
         //! Range of times at which to sample for this task;
-        //! really kept only for serialization purposes
+        //! kept for serialization purposes, and so we can reconstruct the time configuration database if the
+		    //! k-range changes
         range<double>*                   times;
 
 
-        // TIME STORAGE POLICY
+        // STORED TIME CONFIGURATION DATABASE
 
-        //! Time configuration storage policy for this task
-        const time_config_storage_policy time_storage_policy;
-
-        //! Unfiltered list of time-vales
-        std::vector<double>              raw_time_list;
-
-        //! Filtered list of time-configurations (corresponding to values stored in the database)
-        std::vector<time_config>         time_config_list;
-
-
-        // FAST FORWARD INTEGRATION
-
-        //! Whether to use fast-forward integration
-        bool                             fast_forward;
-
-        //! Number of e-folds to use in fast-forward integration
-        double                           ff_efolds;
-
-
-        // MESH REFINEMENT
-
-        //! How many mesh refinements to allow per triangle
-        unsigned int                     max_refinements;
+        time_config_database             stored_time_db;
 
 	    };
 
 
     template <typename number>
-    integration_task<number>::integration_task(const std::string& nm, const initial_conditions<number>& i,
-                                               const range<double>& t, time_config_storage_policy p)
+    integration_task<number>::integration_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t)
 	    : derivable_task<number>(nm),
 	      ics(i),
-	      times(t.clone()),
-	      time_storage_policy(p),
-	      fast_forward(true), ff_efolds(__CPP_TRANSPORT_DEFAULT_FAST_FORWARD_EFOLDS),
-	      max_refinements(__CPP_TRANSPORT_DEFAULT_MESH_REFINEMENTS)
+	      times(t.clone())
 	    {
         // validate relation between Nstar and the sampling time
-        assert(times->get_steps() > 0);
+        assert(this->times->get_steps() > 0);
         assert(i.get_Nstar() > times->get_min());
         assert(i.get_Nstar() < times->get_max());
 
@@ -273,48 +191,9 @@ namespace transport
     template <typename number>
     integration_task<number>::integration_task(const std::string& nm, Json::Value& reader, const initial_conditions<number>& i)
 	    : derivable_task<number>(nm, reader),
-	      time_storage_policy(default_time_config_storage_policy()),
 	      ics(i),
 	      times(range_helper::deserialize<double>(reader[__CPP_TRANSPORT_NODE_TIME_RANGE]))
 	    {
-        // deserialize fast-forward integration setting
-        fast_forward = reader[__CPP_TRANSPORT_NODE_FAST_FORWARD].asBool();
-
-        // deserialize number of fast-forward efolds
-        ff_efolds = reader[__CPP_TRANSPORT_NODE_FAST_FORWARD_EFOLDS].asDouble();
-
-        // deserialize max number of mesh refinements
-        max_refinements = reader[__CPP_TRANSPORT_NODE_MESH_REFINEMENTS].asUInt();
-
-        // raw grid of sampling times can be reconstructed from the range object
-        raw_time_list = times->get_grid();
-
-        // filtered times have to be reconstructed from the database
-        Json::Value& time_storage = reader[__CPP_TRANSPORT_NODE_TIME_CONFIG_STORAGE];
-        assert(time_storage.isArray());
-
-        time_config_list.clear();
-        time_config_list.reserve(time_storage.size());
-
-        for(Json::Value::iterator t = time_storage.begin(); t != time_storage.end(); t++)
-	        {
-            unsigned int sn = t->asUInt();
-            if(sn >= raw_time_list.size()) throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_TASK_TIME_CONFIG_SN_TOO_BIG);
-
-            time_config tc;
-            tc.t = raw_time_list[sn];
-            tc.serial = sn;
-            time_config_list.push_back(tc);
-	        }
-
-        // the integrator relies on the list of time configurations being in order
-        struct TimeConfigSorter
-	        {
-          public:
-            bool operator() (const time_config& a, const time_config& b) { return(a.serial < b.serial); }
-	        };
-
-        std::sort(time_config_list.begin(), time_config_list.end(), TimeConfigSorter());
 	    }
 
 
@@ -323,12 +202,7 @@ namespace transport
 	    : derivable_task<number>(obj),
 	      ics(obj.ics),
 	      times(obj.times->clone()),
-	      time_storage_policy(obj.time_storage_policy),
-	      raw_time_list(obj.raw_time_list),
-	      time_config_list(obj.time_config_list),
-	      fast_forward(obj.fast_forward),
-	      ff_efolds(obj.ff_efolds),
-	      max_refinements(obj.max_refinements)
+        stored_time_db(obj.stored_time_db)
 	    {
 	    }
 
@@ -348,30 +222,11 @@ namespace transport
         // store name of package
         writer[__CPP_TRANSPORT_NODE_PACKAGE_NAME] = this->ics.get_name();
 
-        // store fast-forward integration setting
-        writer[__CPP_TRANSPORT_NODE_FAST_FORWARD] = this->fast_forward;
+        Json::Value time_data(Json::objectValue);
+        this->times->serialize(time_data);
+        writer[__CPP_TRANSPORT_NODE_TIME_RANGE] = time_data;
 
-        // store number of fast-forward efolds
-        writer[__CPP_TRANSPORT_NODE_FAST_FORWARD_EFOLDS] = this->ff_efolds;
-
-        // store max number of mesh refinements
-        writer[__CPP_TRANSPORT_NODE_MESH_REFINEMENTS] = this->max_refinements;
-
-        // serialize range of sampling times
-        Json::Value time_range(Json::objectValue);
-        this->times->serialize(time_range);
-        writer[__CPP_TRANSPORT_NODE_TIME_RANGE] = time_range;
-
-        // serialize filtered range of times, those which will be stored in the database
-        Json::Value time_storage(Json::arrayValue);
-        for(std::vector<time_config>::const_iterator t = this->time_config_list.begin(); t != this->time_config_list.end(); t++)
-	        {
-            Json::Value storage_element = t->serial;
-            time_storage.append(storage_element);
-	        }
-        writer[__CPP_TRANSPORT_NODE_TIME_CONFIG_STORAGE] = time_storage;
-
-        // note that we DO NOT serialize the initial conditions;
+        // note that we do not serialize the initial conditions;
         // these are handled separately by the repository layer
 
         // call next serializers in the queue
@@ -380,181 +235,47 @@ namespace transport
 
 
     template <typename number>
-    void integration_task<number>::apply_time_storage_policy()
+    time_config_database integration_task<number>::build_time_config_database() const
 	    {
-        // get raw grid of sampling times
-        raw_time_list.clear();
-        raw_time_list = times->get_grid();
+        // set up new time configuration database
+        time_config_database time_db;
 
-        // compute earliest time at which all modes will have available data, if using fast-forward integration
-        double tmin = this->ics.get_Nstar() + log(this->get_kmax()) - this->ff_efolds;
-        if(tmin <= 0.0) tmin = 0.0;   // TODO: consider whether this is correct
+		    // push all user-specified sample times into the database
 
-        double tstart = this->ics.get_Nstar() + log(this->get_kmin()) - this->ff_efolds;
-        if(tstart < 0.0 && fabs(this->ff_efolds-5.0) > 0.1)
-	        {
-            std::cerr << "Nstart = " << tstart << ", N* = " << this->ics.get_Nstar() << ", log(kmin) = " << log(this->get_kmin()) << ", kmin = " << this->get_kmin() << ", ff_efolds = " << this->ff_efolds << std::endl;
-            assert(false);
-	        }
+		    // get raw time sample points
+		    const std::vector<double>& raw_times = this->times->get_grid();
 
-        // filter sampling times according to our storage policy
-        time_config_list.clear();
-        for(unsigned int i = 0; i < raw_time_list.size(); i++)
-	        {
-            time_config tc;
-            tc.t = raw_time_list[i];
-            tc.serial = i;
+        unsigned int serial = 0;
+		    for(std::vector<double>::const_iterator t = raw_times.begin(); t != raw_times.end(); t++, serial++)
+			    {
+				    time_db.add_record(*t, true, serial);
+			    }
 
-            time_config_storage_policy_data data(tc.t, tc.serial);
-            if((!this->fast_forward || (this->fast_forward && tc.t >= tmin)) && time_storage_policy(data))
-	            {
-                time_config_list.push_back(tc);
-	            }
-	        }
+        return(time_db);
 	    }
 
 
     template <typename number>
-    const std::vector<double> integration_task<number>::get_integration_step_times() const
-	    {
-        return this->raw_time_list;
-	    }
-
-
-    template <typename number>
-    const std::vector<double> integration_task<number>::get_integration_step_times(std::vector<time_storage_record>& slist, unsigned int refine) const
-	    {
-        return(this->get_integration_step_times(0.0, slist, refine));
-	    }
-
-
-    template <typename number>
-    std::vector<double> integration_task<number>::get_integration_step_times(const twopf_kconfig& kconfig, std::vector<time_storage_record>& slist, unsigned int refine) const
-	    {
-        double Nstart = this->ics.get_Nstar() + log(kconfig.k_conventional) - this->ff_efolds;
-        if(Nstart < 0.0 && this->ff_efolds) std::cerr << "Task '" << this->name << "', Nstart = " << Nstart << ", N* = " << this->ics.get_Nstar() << ", log(k) = " << log(kconfig.k_conventional) << ", kmin = " << kconfig.k_conventional << ", ff_efolds = " << this->ff_efolds << std::endl;
-        assert(!this->ff_efolds || Nstart >= 0.0);
-
-        return this->get_integration_step_times(Nstart, slist, refine);
-	    }
-
-
-    template <typename number>
-    std::vector<double> integration_task<number>::get_integration_step_times(const threepf_kconfig& kconfig, std::vector<time_storage_record>& slist, unsigned int refine) const
-	    {
-        double kmin = std::min(std::min(kconfig.k1_conventional, kconfig.k2_conventional), kconfig.k3_conventional);
-
-        double Nstart = this->ics.get_Nstar() + log(kmin) - this->ff_efolds;
-        if(Nstart < 0.0 && this->ff_efolds) std::cerr << "Task '" << this->name << "', Nstart = " << Nstart << ", N* = " << this->ics.get_Nstar() << ", log(kmin) = " << log(kmin) << ", kmin = " << kmin << ", ff_efolds = " << this->ff_efolds << std::endl;
-        assert(!this->ff_efolds || Nstart >= 0.0);
-
-        return this->get_integration_step_times(Nstart, slist, refine);
-	    }
-
-
-    template <typename number>
-    std::vector<double> integration_task<number>::get_integration_step_times(double Nstart, std::vector<time_storage_record>& slist, unsigned int refine) const
-	    {
-        if(refine > this->max_refinements) throw runtime_exception(runtime_exception::REFINEMENT_FAILURE, __CPP_TRANSPORT_REFINEMENT_TOO_DEEP);
-
-        if(!this->fast_forward) Nstart = 0.0;
-
-        unsigned int reserve_size = (this->raw_time_list.size()+1) * static_cast<unsigned int>(pow(4.0, refine));
-
-        slist.clear();
-        slist.reserve(reserve_size);
-
-        std::vector<double> time_values;
-        time_values.reserve(reserve_size);
-        if(Nstart < this->time_config_list.front().t)
-	        {
-            time_values.push_back(Nstart);
-            slist.push_back(time_storage_record(false, 0, 0));
-	        }
-
-        std::vector<time_config>::const_iterator t = this->time_config_list.begin();
-
-        for(unsigned int i = 0; i < this->raw_time_list.size(); i++)
-	        {
-            // ensure next time to be stored is not earlier than the time we are currently looking at
-            assert(t == this->time_config_list.end() || t->t >= this->raw_time_list[i]);
-
-            if(this->raw_time_list[i] >= Nstart)
-	            {
-                if(t != this->time_config_list.end() && t->serial == i)
-	                {
-                    time_values.push_back(this->raw_time_list[i]);
-                    slist.push_back(time_storage_record(true, t->serial, t->t));
-                    t++;
-	                }
-                else
-	                {
-                    time_values.push_back(this->raw_time_list[i]);
-                    slist.push_back(time_storage_record(false, 0, 0));
-	                }
-
-                if(refine > 0 && i < this->raw_time_list.size()-1)
-	                {
-                    this->refine_integration_step_times(time_values, slist, refine, this->raw_time_list[i], this->raw_time_list[i+1]);
-	                }
-	            }
-	        }
-
-        assert(time_values.size() == slist.size());
-        return(time_values);
-	    }
-
-
-    template <typename number>
-    void integration_task<number>::refine_integration_step_times(std::vector<double>& time_values, std::vector<time_storage_record>& slist,
-                                                                 unsigned int refine, double step_min, double step_max) const
-	    {
-        unsigned int steps = static_cast<unsigned int>(pow(4.0, refine));
-
-        stepping_range<double> mesh(step_min, step_max, steps, linear_stepping);
-        const std::vector<double>& mesh_grid = mesh.get_grid();
-
-        for(unsigned int i = 1; i < mesh_grid.size(); i++)
-	        {
-            time_values.push_back(mesh_grid[i]);
-            slist.push_back(time_storage_record(false, 0, 0));
-	        }
-	    }
-
-
-    template <typename number>
-    std::vector<number> integration_task<number>::get_ics_vector(const twopf_kconfig& kconfig) const
-	    {
-        double Nstart = this->ics.get_Nstar() + log(kconfig.k_conventional) - this->ff_efolds;
-
-        return this->get_ics_vector(Nstart);
-	    }
-
-
-    template <typename number>
-    std::vector<number> integration_task<number>::get_ics_vector(const threepf_kconfig& kconfig) const
-	    {
-        double kmin = std::min(std::min(kconfig.k1_conventional, kconfig.k2_conventional), kconfig.k3_conventional);
-
-        double Nstart = this->ics.get_Nstar() + log(kmin) - this->ff_efolds;
-
-        return this->get_ics_vector(Nstart);
-	    }
+    void integration_task<number>::cache_stored_time_config_database()
+      {
+        // empty database and start again
+        this->stored_time_db = build_time_config_database();
+      }
 
 
     template <typename number>
     std::vector<number> integration_task<number>::get_ics_vector(double Nstart) const
 	    {
-        if(this->fast_forward && Nstart > 0.0) return this->ics.get_offset_vector(Nstart);
-        else                                   return this->ics.get_vector();
+        if(Nstart < 0.0) assert(false);
+
+        if(Nstart > 0.0) return this->ics.get_offset_vector(Nstart);
+        else             return this->ics.get_vector();
 	    }
 
 
     template <typename number>
     std::ostream& operator<<(std::ostream& out, const integration_task<number>& obj)
 	    {
-        out << __CPP_TRANSPORT_FAST_FORWARD     << ": " << (obj.fast_forward ? __CPP_TRANSPORT_YES : __CPP_TRANSPORT_NO) << ", ";
-        out << __CPP_TRANSPORT_MESH_REFINEMENTS << ": " << obj.max_refinements << std::endl;
         out << obj.ics << std::endl;
 //        out << __CPP_TRANSPORT_TASK_TIMES << obj.times;
         return(out);

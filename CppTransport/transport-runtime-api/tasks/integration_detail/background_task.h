@@ -57,7 +57,7 @@ namespace transport
     background_task<number>::background_task(const initial_conditions<number>& i, const range<double>& t)
 	    : integration_task<number>(i, t)
 	    {
-        this->apply_time_storage_policy();
+        this->build_time_config_database();
 	    }
 
 	}   // namespace transport

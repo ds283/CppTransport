@@ -38,9 +38,10 @@ namespace transport
       public:
 
         //! Create a stepping observer object
-        stepping_observer(const std::vector< time_storage_record >& l)
-          : time_step(0), storage_list(l)
+        stepping_observer(const time_config_database& t)
+          : time_db(t)
           {
+            current_step = time_db.record_begin();
           }
 
 
@@ -49,27 +50,27 @@ namespace transport
       public:
 
         //! Advance time-step counter
-        void step() { this->time_step++; }
+        void step() { this->current_step++; }
 
         //! Query whether the current time step should be stored
-        bool store_time_step() const { return(this->storage_list[time_step].store); }
+        bool store_time_step() const { return(this->current_step->is_stored()); }
 
         //! Query serial number to use when storing
-        unsigned int store_serial_number() const { return(this->storage_list[time_step].tserial); }
+        unsigned int store_serial_number() const { return((*this->current_step)->serial); }
 
         //! Query time associated with storing
-        double store_time() const { return(this->storage_list[time_step].time); }
+        double store_time() const { return((*this->current_step)->t); }
 
 
         // INTERNAL DATA
 
       protected:
 
-        //! Records current time step
-        unsigned int time_step;
+        //! Pointer to record for current time
+        time_config_database::const_record_iterator current_step;
 
         //! List of steps which should be stored
-        const std::vector< time_storage_record >& storage_list;
+        const time_config_database& time_db;
 
       };
 
@@ -83,7 +84,7 @@ namespace transport
       public:
 
         //! Create a timing observer object
-        timing_observer(const std::vector< time_storage_record >& l, double t_int=1.0, bool s=false, unsigned int p=3);
+        timing_observer(const time_config_database& t, double t_int=1.0, bool s=false, unsigned int p=3);
 
 
         // INTERFACE
@@ -137,8 +138,8 @@ namespace transport
 
 
     template <typename number>
-    timing_observer<number>::timing_observer(const std::vector< time_storage_record >& l, double t_int, bool s, unsigned int p)
-      : stepping_observer<number>(l), t_interval(t_int), silent(s), first_step(true), t_last(0), precision(p)
+    timing_observer<number>::timing_observer(const time_config_database& t, double t_int, bool s, unsigned int p)
+      : stepping_observer<number>(t), t_interval(t_int), silent(s), first_step(true), t_last(0), precision(p)
       {
         batching_timer.stop();
         // leave the integration timer running, so it also records start-up time associated with the integration,
@@ -200,7 +201,7 @@ namespace transport
       public:
 
         twopf_singleconfig_batch_observer(twopf_batcher<number>& b, const twopf_kconfig_record& c,
-                                          const std::vector< time_storage_record >& l,
+                                          const time_config_database& t,
                                           unsigned int bg_sz, unsigned int ten_sz, unsigned int tw_sz,
                                           unsigned int bg_st, unsigned int ten_st, unsigned int tw_st,
                                           double t_int = 1.0, bool s = true, unsigned int p = 3);
@@ -246,11 +247,11 @@ namespace transport
 
     template <typename number>
     twopf_singleconfig_batch_observer<number>::twopf_singleconfig_batch_observer(twopf_batcher<number>& b, const twopf_kconfig_record& c,
-                                                                                 const std::vector< time_storage_record >& l,
+                                                                                 const time_config_database& t,
                                                                                  unsigned int bg_sz, unsigned int ten_sz, unsigned int tw_sz,
                                                                                  unsigned int bg_st, unsigned int ten_st, unsigned int tw_st,
                                                                                  double t_int, bool s, unsigned int p)
-      : timing_observer<number>(l, t_int, s, p),
+      : timing_observer<number>(t, t_int, s, p),
         batcher(b), k_config(c),
         backg_size(bg_sz), tensor_size(ten_sz), twopf_size(tw_sz),
         backg_start(bg_st), tensor_start(ten_st), twopf_start(tw_st)
@@ -303,7 +304,7 @@ namespace transport
       public:
 
         threepf_singleconfig_batch_observer(threepf_batcher<number>& b, const threepf_kconfig_record& c,
-                                            const std::vector< time_storage_record >& l,
+                                            const time_config_database& t,
                                             unsigned int bg_sz, unsigned int ten_sz, unsigned int tw_sz, unsigned int th_sz,
                                             unsigned int bg_st,
                                             unsigned int ten_k1_st, unsigned int ten_k2_st, unsigned int ten_k3_st,
@@ -364,7 +365,7 @@ namespace transport
 
     template <typename number>
     threepf_singleconfig_batch_observer<number>::threepf_singleconfig_batch_observer(threepf_batcher<number>& b, const threepf_kconfig_record& c,
-                                                                                     const std::vector< time_storage_record >& l,
+                                                                                     const time_config_database& t,
                                                                                      unsigned int bg_sz, unsigned int ten_sz, unsigned int tw_sz, unsigned int th_sz,
                                                                                      unsigned int bg_st,
                                                                                      unsigned int ten_k1_st, unsigned int ten_k2_st, unsigned int ten_k3_st,
@@ -373,7 +374,7 @@ namespace transport
                                                                                      unsigned int tw_re_k3_st, unsigned int tw_im_k3_st,
                                                                                      unsigned int th_st,
                                                                                      double t_int, bool s, unsigned int p)
-      : timing_observer<number>(l, t_int, s, p),
+      : timing_observer<number>(t, t_int, s, p),
         batcher(b), k_config(c),
         backg_size(bg_sz), tensor_size(ten_sz), twopf_size(tw_sz), threepf_size(th_sz),
         backg_start(bg_st),
@@ -474,7 +475,7 @@ namespace transport
 
         twopf_groupconfig_batch_observer(twopf_batcher<number>& b,
                                          const work_queue<twopf_kconfig_record>::device_work_list& c,
-                                         const std::vector< time_storage_record >& l,
+                                         const time_config_database& t,
                                          unsigned int bg_sz, unsigned int ten_sz, unsigned int tw_sz,
                                          unsigned int bg_st, unsigned int ten_st, unsigned int tw_st,
                                          double t_int = 1.0, bool s = false, unsigned int p = 3);
@@ -524,11 +525,11 @@ namespace transport
     template <typename number>
     twopf_groupconfig_batch_observer<number>::twopf_groupconfig_batch_observer(twopf_batcher<number>& b,
                                                                                const work_queue<twopf_kconfig_record>::device_work_list& c,
-                                                                               const std::vector< time_storage_record >& l,
+                                                                               const time_config_database& t,
                                                                                unsigned int bg_sz, unsigned int ten_sz, unsigned int tw_sz,
                                                                                unsigned int bg_st, unsigned int ten_st, unsigned int tw_st,
                                                                                double t_int, bool s, unsigned int p)
-      : timing_observer<number>(l, t_int, s, p),
+      : timing_observer<number>(t, t_int, s, p),
         batcher(b), work_list(c),
         backg_size(bg_sz), tensor_size(ten_sz), twopf_size(tw_sz),
         backg_start(bg_st), tensor_start(ten_st), twopf_start(tw_st)
@@ -588,7 +589,7 @@ namespace transport
 
         threepf_groupconfig_batch_observer(threepf_batcher<number>& b,
                                                    const work_queue<threepf_kconfig_record>::device_work_list& c,
-                                                   const std::vector< time_storage_record >& l,
+                                                   const time_config_database& t,
                                                    unsigned int bg_sz, unsigned int ten_sz, unsigned int tw_sz, unsigned int th_sz,
                                                    unsigned int bg_st,
                                                    unsigned int ten_k1_st, unsigned int ten_k2_st, unsigned int ten_k3_st,
@@ -652,7 +653,7 @@ namespace transport
     template <typename number>
     threepf_groupconfig_batch_observer<number>::threepf_groupconfig_batch_observer(threepf_batcher<number>& b,
                                                                                    const work_queue<threepf_kconfig_record>::device_work_list& c,
-                                                                                   const std::vector< time_storage_record >& l,
+                                                                                   const time_config_database& t,
                                                                                    unsigned int bg_sz, unsigned int ten_sz, unsigned int tw_sz, unsigned int th_sz,
                                                                                    unsigned int bg_st,
                                                                                    unsigned int ten_k1_st, unsigned int ten_k2_st, unsigned int ten_k3_st,
@@ -661,7 +662,7 @@ namespace transport
                                                                                    unsigned int tw_re_k3_st, unsigned int tw_im_k3_st,
                                                                                    unsigned int th_st,
                                                                                    double t_int, bool s, unsigned int p)
-      : timing_observer<number>(l, t_int, s, p),
+      : timing_observer<number>(t, t_int, s, p),
         batcher(b), work_list(c),
         backg_size(bg_sz), tensor_size(ten_sz), twopf_size(tw_sz), threepf_size(th_sz),
         backg_start(bg_st),

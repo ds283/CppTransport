@@ -189,13 +189,13 @@ namespace transport
 
         // process a work list of twopf items
         // must be over-ridden by a derived implementation class
-        virtual void backend_process_queue(work_queue<twopf_kconfig_record>& work, const integration_task<number>* tk,
+        virtual void backend_process_queue(work_queue<twopf_kconfig_record>& work, const twopf_list_task<number>* tk,
                                            twopf_batcher<number>& batcher,
                                            bool silent = false) = 0;
 
         // process a work list of threepf items
         // must be over-ridden by a derived implementation class
-        virtual void backend_process_queue(work_queue<threepf_kconfig_record>& work, const integration_task<number>* tk,
+        virtual void backend_process_queue(work_queue<threepf_kconfig_record>& work, const threepf_task<number>* tk,
                                            threepf_batcher<number>& batcher,
                                            bool silent = false) = 0;
 
@@ -297,6 +297,7 @@ namespace transport
               }
             else
               {
+                assert(false);
                 throw std::logic_error(__CPP_TRANSPORT_INTEGRATION_FAIL);
               }
           }
@@ -327,7 +328,7 @@ namespace transport
 
         std::vector< std::vector<number> > history;
 
-        // set up times at which we wish to sample -- we just need a few
+        // set up times at which we wish to sample -- we just need a few scattered between Ninit and Nstar
         stepping_range<double> times(tk->get_Ninit(), tk->get_Nstar(), time_steps);
 
         double new_Npre = (tk->get_Ninit() + tk->get_Nstar()) / 2.0;
@@ -347,6 +348,7 @@ namespace transport
           }
         else
           {
+            assert(false);
             throw std::logic_error(__CPP_TRANSPORT_INTEGRATION_FAIL);
           }
       }
