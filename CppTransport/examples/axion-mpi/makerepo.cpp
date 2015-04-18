@@ -144,12 +144,6 @@ int main(int argc, char* argv[])
 
     const unsigned int t_samples = 1000;       // record 5000 samples - enough to find a good stepsize
 
-    struct TimeStoragePolicy
-      {
-      public:
-        bool operator() (const transport::time_config_storage_policy_data& data) { return((data.serial % 1) == 0); }
-      };
-
     transport::stepping_range<double> times(Ninit, Nmax+Npre, t_samples, transport::logarithmic_bottom_stepping);
 
     // the conventions for k-numbers are as follows:
@@ -172,7 +166,7 @@ int main(int argc, char* argv[])
     tk2.set_fast_forward(false);
 
     // construct a threepf task
-    transport::threepf_cubic_task<double> tk3 = transport::threepf_cubic_task<double>("axion.threepf-1", ics, times, ks, TimeStoragePolicy(), ThreepfStoragePolicy());
+    transport::threepf_cubic_task<double> tk3 = transport::threepf_cubic_task<double>("axion.threepf-1", ics, times, ks, ThreepfStoragePolicy());
 
     // construct zeta threepf versions
     transport::zeta_threepf_task<double> ztk3  = transport::zeta_threepf_task<double>("axion.threepf-1.zeta", tk3);

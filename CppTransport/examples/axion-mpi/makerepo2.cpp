@@ -56,7 +56,7 @@ bool threepf_kconfig_fixed_kt_lo(const transport::derived_data::filter::threepf_
 bool threepf_kconfig_fixed_kt_hi(const transport::derived_data::filter::threepf_kconfig_filter_data& data)
 	{
     // use high value of k_t, restrict to isosceles triangles which have alpha=0
-    return(fabs(data.kt-exp(4.0)) < 0.001 && fabs(data.alpha) < 0.001);
+    return(fabs(data.kt-exp(7.0)) < 0.001 && fabs(data.alpha) < 0.001);
 	}
 
 bool twopf_kseries_axis_filter(const transport::derived_data::filter::twopf_kconfig_filter_data& data)
@@ -92,36 +92,31 @@ int main(int argc, char* argv[])
 
     // set up parameter choices
     const std::vector<double>     init_params = { m, Lambda, f, M_PI };
-    transport::parameters<double> params      =
-                                    transport::parameters<double>(M_Planck, init_params, model);
+    transport::parameters<double> params(M_Planck, init_params, model);
 
     const std::vector<double> init_values = { phi_init, chi_init };
 
     const double Ninit  = 0.0;  // start counting from N=0 at the beginning of the integration
     const double Ncross = 4.0;  // horizon-crossing occurs at 4 e-folds from init_values
-    const double Npre   = 4.0;  // how many e-folds do we wish to track the mode prior to horizon exit?
+    const double Npre   = 4.0;  // number of e-folds of subhorizon evolution
+    const double Nsplit = 30.0; // split point between early and late
     const double Nmax   = 61.0; // how many e-folds to integrate after horizon crossing
 
     // set up initial conditions
-    transport::initial_conditions<double> ics =
-                                            transport::initial_conditions<double>("axion-1", model, params, init_values, Ninit, Ncross, Npre);
+    transport::initial_conditions<double> ics("axion-1", model, params, init_values, Ninit, Ncross, Npre);
 
-    const unsigned int t_samples = 1000;
+    const unsigned int early_t_samples = 40;
+    const unsigned int late_t_samples  = 20;
 
-    // time storage policy is to store only 500 samples
-    struct TimeStoragePolicy
-      {
-      public:
-        bool operator() (const transport::time_config_storage_policy_data& data) { return((data.serial % 20) == 0); }
-      };
-
-    transport::range<double> times = transport::range<double >(Ninit, Nmax+Npre, t_samples, transport::logarithmic_bottom_stepping);
+    transport::stepping_range<double> early_times(Ninit, Ncross+Nsplit, early_t_samples, transport::logarithmic_bottom_stepping);
+    transport::stepping_range<double> late_times(Ncross+Nsplit, Ncross+Nmax, late_t_samples, transport::linear_stepping);
+    transport::aggregation_range<double> times(early_times, late_times);
 
     // the conventions for k-numbers are as follows:
     // k=1 is the mode which crosses the horizon at time N*,
     // where N* is the 'offset' we pass to the integration method (see below)
     const double        ktmin      = exp(3.0);
-    const double        ktmax      = exp(4.0);
+    const double        ktmax      = exp(7.0);
     const unsigned int  k_samples  = 40;
 
 		const double        alphamin   = -1.0;
@@ -141,14 +136,13 @@ int main(int argc, char* argv[])
 
     // SET UP TASKS
 
-
-    transport::range<double> kts    = transport::range<double>(ktmin, ktmax, k_samples, transport::linear_stepping);
-    transport::range<double> alphas = transport::range<double>(alphamin, alphamax, a_samples, transport::linear_stepping);
-    transport::range<double> betas  = transport::range<double>(betamin, betamax, b_samples, transport::logarithmic_top_stepping);
+    transport::stepping_range<double> kts   (ktmin, ktmax, k_samples, transport::linear_stepping);
+    transport::stepping_range<double> alphas(alphamin, alphamax, a_samples, transport::linear_stepping);
+    transport::stepping_range<double> betas (betamin, betamax, b_samples, transport::logarithmic_top_stepping);
 
     // construct a threepf task
-    transport::threepf_fls_task<double> tk3("axion.threepf-1", ics, times, kts, alphas, betas, TimeStoragePolicy(), ThreepfStoragePolicy());
-		tk3.set_fast_forward_efolds(5.5);
+    transport::threepf_fls_task<double> tk3("axion.threepf-1", ics, times, kts, alphas, betas, ThreepfStoragePolicy());
+		tk3.set_fast_forward_efolds(Npre);
 
 		// construct a zeta threepf task, paired with the primary integration task
     transport::zeta_threepf_task<double> ztk3("axion.threepf-1.zeta", tk3);
@@ -234,7 +228,7 @@ int main(int argc, char* argv[])
                                                                                                     transport::derived_data::filter::time_filter(kseries_last_time),
                                                                                                     transport::derived_data::filter::threepf_kconfig_filter(threepf_kconfig_near_squeezed));
 		tk3_zeta_redbsp_spec.set_klabel_meaning(transport::derived_data::derived_line<double>::conventional);
-		tk3_zeta_redbsp_spec.set_label_text("$k_3/k_t = 0.99$", "k3/k_t = 0.95");
+		tk3_zeta_redbsp_spec.set_label_text("$k_3/k_t = 0.9999$", "k3/k_t = 0.9999");
 
     transport::derived_data::wavenumber_series_plot<double> tk3_redbsp_spec_plot("axion.threepf-1.redbsp-spec", "redbsp-spec.pdf");
 		tk3_redbsp_spec_plot.add_line(tk3_zeta_redbsp_spec);
