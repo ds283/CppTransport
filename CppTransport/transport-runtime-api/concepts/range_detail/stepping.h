@@ -264,15 +264,16 @@ namespace transport
     template <typename value>
     std::ostream& operator<<(std::ostream& out, const stepping_range<value>& obj)
 	    {
-        out << __CPP_TRANSPORT_RANGE_A << obj.steps;
-        out << __CPP_TRANSPORT_RANGE_B;
+        out << __CPP_TRANSPORT_STEPPING_RANGE_A << obj.steps;
+        out << __CPP_TRANSPORT_STEPPING_RANGE_B;
 
-        if(obj.spacing == linear_stepping)                  out << __CPP_TRANSPORT_RANGE_LINEAR;
-        else if(obj.spacing == logarithmic_bottom_stepping) out << __CPP_TRANSPORT_RANGE_LOGARITHMIC_BOTTOM;
-        else if(obj.spacing == logarithmic_top_stepping)    out << __CPP_TRANSPORT_RANGE_LOGARITHMIC_TOP;
+        if(obj.spacing == linear_stepping)                  out << __CPP_TRANSPORT_STEPPING_RANGE_LINEAR;
+        else if(obj.spacing == logarithmic_bottom_stepping) out << __CPP_TRANSPORT_STEPPING_RANGE_LOGARITHMIC_BOTTOM;
+        else if(obj.spacing == logarithmic_top_stepping)    out << __CPP_TRANSPORT_STEPPING_RANGE_LOGARITHMIC_TOP;
 
-        out << __CPP_TRANSPORT_RANGE_C << obj.min << ", " << __CPP_TRANSPORT_RANGE_D << obj.max << std::endl;
+        out << __CPP_TRANSPORT_STEPPING_RANGE_C << obj.min << ", " << __CPP_TRANSPORT_STEPPING_RANGE_D << obj.max << std::endl;
 
+        out << __CPP_TRANSPORT_STEPPING_RANGE_E << std::endl;
         for(unsigned int i = 0; i < obj.grid.size(); i++)
 	        {
             out << i << ". " << obj.grid[i] << std::endl;
