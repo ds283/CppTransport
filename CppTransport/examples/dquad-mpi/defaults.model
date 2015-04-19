@@ -1,11 +1,11 @@
-author         "David Seery and others 2013";
+author         "David Seery and others 2013-15";
 tag            "please cite arXiv:XXXX.YYYY";
 
 indexorder     right;
 
 % specify which class template should be used with this model
 core           "canonical_core";
-implementation "canonical_basic";
+implementation "canonical_basic_unrolled";
 
 % fix properties of the steppers
 background
