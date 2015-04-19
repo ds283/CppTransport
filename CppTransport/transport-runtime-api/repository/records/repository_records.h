@@ -56,6 +56,8 @@
 #define __CPP_TRANSPORT_NODE_RECORD_DERIVED_PRODUCT                 "derived-product"
 #define __CPP_TRANSPORT_NODE_RECORD_CONTENT                         "content-group"
 
+#define __CPP_TRANSPORT_NODE_INITIAL_CONDITIONS                     "package-data"
+
 #define __CPP_TRANSPORT_NODE_METADATA_GROUP                         "metadata"
 #define __CPP_TRANSPORT_NODE_METADATA_CREATED                       "created"
 #define __CPP_TRANSPORT_NODE_METADATA_EDITED                        "edited"
@@ -1673,7 +1675,7 @@ namespace transport
     package_record<number>::package_record(Json::Value& reader, typename instance_manager<number>::model_finder& f,
                                            repository_record::handler_package& pkg)
 	    : repository_record(reader, pkg),
-	      ics(this->name, reader, f)        // name gets deserialized by repository_record, so is safe to use here
+	      ics(this->name, reader[__CPP_TRANSPORT_NODE_INITIAL_CONDITIONS], f)        // name gets deserialized by repository_record, so is safe to use here
 	    {
 	    }
 
@@ -1682,7 +1684,11 @@ namespace transport
     void package_record<number>::serialize(Json::Value& writer) const
 	    {
         writer[__CPP_TRANSPORT_NODE_RECORD_TYPE] = std::string(__CPP_TRANSPORT_NODE_RECORD_PACKAGE);
-        this->ics.serialize(writer);
+
+        Json::Value ics_package(Json::objectValue);
+        this->ics.serialize(ics_package);
+        writer[__CPP_TRANSPORT_NODE_INITIAL_CONDITIONS] = ics_package;
+
         this->repository_record::serialize(writer);
 	    }
 

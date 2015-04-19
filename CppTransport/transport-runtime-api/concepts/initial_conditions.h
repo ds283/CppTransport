@@ -28,11 +28,12 @@
 
 
 #define __CPP_TRANSPORT_NODE_ICS_VALUE         "value"
-#define __CPP_TRANSPORT_NODE_ICS_MODEL_UID     "ics-model-uid"
+#define __CPP_TRANSPORT_NODE_ICS_MODEL_UID     "model-uid"
 #define __CPP_TRANSPORT_NODE_ICS_NAME          "name"
-#define __CPP_TRANSPORT_NODE_ICS_N_SUB_HORIZON "ics-sub-horizon-efolds"
-#define __CPP_TRANSPORT_NODE_ICS_N_INIT        "ics-initial-time"
-#define __CPP_TRANSPORT_NODE_ICS_VALUES        "ics-values"
+#define __CPP_TRANSPORT_NODE_ICS_N_SUB_HORIZON "sub-horizon-efolds"
+#define __CPP_TRANSPORT_NODE_ICS_N_INIT        "initial-time"
+#define __CPP_TRANSPORT_NODE_ICS_VALUES        "values"
+#define __CPP_TRANSPORT_NODE_ICS_PARAMETERS    "parameters"
 
 
 namespace transport
@@ -198,7 +199,7 @@ namespace transport
     template <typename number>
     initial_conditions<number>::initial_conditions(const std::string& nm, Json::Value& reader,
                                                    typename instance_manager<number>::model_finder f)
-      : name(nm), params(reader, f)
+      : name(nm), params(reader[__CPP_TRANSPORT_NODE_ICS_PARAMETERS], f)
       {
 		    // construct model object
         std::string uid = reader[__CPP_TRANSPORT_NODE_ICS_MODEL_UID].asString();
@@ -284,8 +285,9 @@ namespace transport
           }
 		    writer[__CPP_TRANSPORT_NODE_ICS_VALUES] = ics;
 
-        // serialize parameter values
-        this->params.serialize(writer);
+        Json::Value params_serialize(Json::objectValue);
+        this->params.serialize(params_serialize);
+        writer[__CPP_TRANSPORT_NODE_ICS_PARAMETERS] = params_serialize;
       }
 
 
