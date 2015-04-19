@@ -19,6 +19,11 @@
 namespace transport
 	{
 
+    template <typename value> class aggregation_range;
+
+    template <typename value>
+    std::ostream& operator<<(std::ostream& out, const aggregation_range<value>& obj);
+
 		// forward-declare helper
 		namespace range_helper
 			{
@@ -98,6 +103,8 @@ namespace transport
 
 		    //! Serialize this object
 		    virtual void serialize(Json::Value& writer) const override;
+
+        friend std::ostream& operator<< <>(std::ostream& out, const aggregation_range<value>& obj);
 
 
 				// INTERNAL DATA
@@ -236,10 +243,27 @@ namespace transport
 
 				// sort resulting grid into order and remove duplicates
 		    std::sort(this->grid.begin(), this->grid.end());
-		    std::unique(this->grid.begin(), this->grid.end());
+        auto last = std::unique(this->grid.begin(), this->grid.end());
+		    this->grid.erase(last, this->grid.end());
 
 				this->steps = this->grid.size()+1;
 			}
+
+
+    template <typename value>
+    std::ostream& operator<<(std::ostream& out, const aggregation_range<value>& obj)
+      {
+        out << __CPP_TRANSPORT_AGGREGATION_RANGE_A << obj.subrange_list.size() << " ";
+        out << __CPP_TRANSPORT_AGGREGATION_RANGE_B << std::endl;
+
+        out << __CPP_TRANSPORT_AGGREGATION_RANGE_C << std::endl;
+        for(unsigned int i = 0; i < obj.grid.size(); i++)
+          {
+            out << i << ". " << obj.grid[i] << std::endl;
+          }
+
+        return(out);
+      }
 
 	}
 
