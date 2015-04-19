@@ -242,7 +242,7 @@ namespace transport
     template <typename number>
     void twopf_list_task<number>::write_time_details()
       {
-        // compute horizon-crossing time for earliest and latest modes (the one with the smallest wavenumber)
+        // compute horizon-crossing time for earliest mode (the one with the smallest wavenumber) and the latest one (the one with the largest wavenumber)
         double earliest_crossing = log(this->twopf_db.get_kmin_conventional());
         double latest_crossing   = log(this->twopf_db.get_kmax_conventional());
 

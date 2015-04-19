@@ -668,6 +668,10 @@ namespace transport
 				// many times the time required to aggregate, otherwise the workers will spend
 				// a lot of time waiting around for the master to process MPI messages
 				// in between aggregations
+
+        // note we don't have to worry about how many items are left;
+        // the scheduler will never allocate more than an equitable amount of work per-worker,
+        // no matter how large the granularity becomes
 				if(10*mean_aggregation_time > __CPP_TRANSPORT_DEFAULT_SCHEDULING_GRANULARITY)
 					{
 						this->current_granularity = 10*mean_aggregation_time;
