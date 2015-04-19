@@ -73,13 +73,13 @@ namespace transport
         bool get_fast_forward() const { return(this->fast_forward); }
 
         //! Set fast-forward integration setting
-        void set_fast_forward(bool g) { this->fast_forward = g; }
+        void set_fast_forward(bool g) { this->fast_forward = g; this->cache_stored_time_config_database(); }
 
         //! Get number of fast-forward e-folds
         double get_fast_forward_efolds() const { return(this->ff_efolds); }
 
         //! Set number of fast-forward e-folds
-        void set_fast_forward_efolds(double N) { this->fast_forward = true; this->ff_efolds = (N >= 0.0 ? N : this->ff_efolds); }
+        void set_fast_forward_efolds(double N) { this->fast_forward = true; this->ff_efolds = (N >= 0.0 ? N : this->ff_efolds); this->cache_stored_time_config_database(); }
 
         //! Get start time for a twopf configuration
         double get_fast_forward_start(const twopf_kconfig& config) const;
@@ -93,7 +93,7 @@ namespace transport
         unsigned int get_max_refinements() const { return(this->max_refinements); }
 
         //! Set number of allowed time step refinements
-        void set_max_refinemenets(unsigned int max) { this->max_refinements = (max > 0 ? max : this->max_refinements); }
+        void set_max_refinements(unsigned int max) { this->max_refinements = (max > 0 ? max : this->max_refinements); }
 
 
         // TIME CONFIGURATION DATABASE
