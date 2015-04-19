@@ -28,7 +28,7 @@ namespace transport
 
         //! Construct a named two-point function task
         twopf_task(const std::string& nm, const initial_conditions<number>& i,
-                   const range<double>& t, const range<double>& ks);
+                   const range<double>& t, const range<double>& ks, bool ff=true);
 
         //! deserialization constructor
         twopf_task(const std::string& nm, Json::Value& reader, const initial_conditions<number>& i);
@@ -58,8 +58,8 @@ namespace transport
     // build a twopf task
     template <typename number>
     twopf_task<number>::twopf_task(const std::string& nm, const initial_conditions<number>& i,
-                                   const range<double>& t, const range<double>& ks)
-	    : twopf_list_task<number>(nm, i, t)
+                                   const range<double>& t, const range<double>& ks, bool ff)
+	    : twopf_list_task<number>(nm, i, t, ff)
 	    {
         // the mapping from the provided list of ks to the work list is just one-to-one
         for(unsigned int j = 0; j < ks.size(); j++)

@@ -36,7 +36,7 @@ namespace transport
       public:
 
         //! Construct a threepf-task
-        threepf_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t);
+        threepf_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t, bool ff);
 
         //! deserialization constructor
         threepf_task(const std::string& n, Json::Value& reader, const initial_conditions<number>& i);
@@ -100,8 +100,8 @@ namespace transport
 
 
     template <typename number>
-    threepf_task<number>::threepf_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t)
-	    : twopf_list_task<number>(nm, i, t),
+    threepf_task<number>::threepf_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t, bool ff)
+	    : twopf_list_task<number>(nm, i, t, ff),
         threepf_db(i.get_model()->compute_kstar(this)),
 	      integrable(true)
 	    {
@@ -146,14 +146,21 @@ namespace transport
       {
         double kmin = std::min(std::min(config.k1_conventional, config.k2_conventional), config.k3_conventional);
 
-        return(this->ics.get_Nstar() + log(kmin) - this->ff_efolds);
+        return(this->ics.get_N_horizon_crossing() + log(kmin) - this->ff_efolds);
       }
 
 
     template <typename number>
     std::vector<number> threepf_task<number>::get_ics_vector(const threepf_kconfig& config) const
 	    {
-        return this->integration_task<number>::get_ics_vector(this->get_fast_forward_start(config));
+        if(this->fast_forward)
+          {
+            return this->integration_task<number>::get_ics_vector(this->get_fast_forward_start(config));
+          }
+        else
+          {
+            return this->ics.get_vector();
+          }
 	    }
 
 
@@ -169,7 +176,7 @@ namespace transport
         //! with specified policies
         template <typename StoragePolicy>
         threepf_cubic_task(const std::string& nm, const initial_conditions<number>& i,
-                           const range<double>& t, const range<double>& ks, StoragePolicy policy);
+                           const range<double>& t, const range<double>& ks, StoragePolicy policy, bool ff=true);
 
         //! Deserialization constructor
         threepf_cubic_task(const std::string& nm, Json::Value& reader, const initial_conditions<number>& i);
@@ -215,8 +222,8 @@ namespace transport
     template <typename number>
     template <typename StoragePolicy>
     threepf_cubic_task<number>::threepf_cubic_task(const std::string& nm, const initial_conditions<number>& i,
-                                                   const range<double>& t, const range<double>& ks, StoragePolicy policy)
-	    : threepf_task<number>(nm, i, t)
+                                                   const range<double>& t, const range<double>& ks, StoragePolicy policy, bool ff)
+	    : threepf_task<number>(nm, i, t, ff)
 	    {
         // step through the lattice of k-modes, recording which are viable triangular configurations
         // we insist on ordering, so i <= j <= k
@@ -284,7 +291,7 @@ namespace transport
         template <typename StoragePolicy>
         threepf_fls_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t,
                          const range<double>& kts, const range<double>& alphas, const range<double>& betas,
-                         StoragePolicy kp, double smallest_squeezing=__CPP_TRANSPORT_DEFAULT_SMALLEST_SQUEEZING);
+                         StoragePolicy kp, bool ff=true, double smallest_squeezing=__CPP_TRANSPORT_DEFAULT_SMALLEST_SQUEEZING);
 
         //! Deserialization constructor
         threepf_fls_task(const std::string& nm, Json::Value& reader, const initial_conditions<number>& i);
@@ -338,8 +345,8 @@ namespace transport
     template <typename StoragePolicy>
     threepf_fls_task<number>::threepf_fls_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t,
                                                const range<double>& kts, const range<double>& alphas, const range<double>& betas,
-                                               StoragePolicy policy, double smallest_squeezing)
-	    : threepf_task<number>(nm, i, t)
+                                               StoragePolicy policy, bool ff, double smallest_squeezing)
+	    : threepf_task<number>(nm, i, t, ff)
 	    {
         for(unsigned int j = 0; j < kts.size(); j++)
 	        {

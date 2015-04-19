@@ -41,7 +41,7 @@ namespace transport
       public:
 
         //! construct a twopf-list-task object
-        twopf_list_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t);
+        twopf_list_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t, bool ff);
 
         //! deserialization constructor
         twopf_list_task(const std::string& nm, Json::Value& reader, const initial_conditions<number>& i);
@@ -114,12 +114,12 @@ namespace transport
         //! output information about timings
         void write_time_details();
 
-        //! Populate list of time configurations to be sorted, given that the earliest allowed time is tmin.
-        //! If we are using fast-forward integration, tmin will be Nstar + ln(kmax) - ff_efolds,
-        //! where kmax is the largest k number we are evolving for.
-        //! Since this is the start time for that mode, we can't guarantee that results will be available
-        //! be at earlier times
-        time_config_database build_time_config_database(double Nbegin) const;
+        //! Populate list of time configurations to be stored.
+        //! The parameter N_config_begin specifies the initial time for whatever configuration is being integrated.
+        //! If fast-forward integration is being used then this parameter is used to set the initial
+        //! time of the integration.
+        //! Otherwise, integration begins at the initial conditions time.
+        time_config_database build_time_config_database(double N_config_begin) const;
 
 
         // SERIALIZATION -- implements a 'serializable' interface
@@ -164,13 +164,12 @@ namespace transport
 
 
     template <typename number>
-    twopf_list_task<number>::twopf_list_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t)
+    twopf_list_task<number>::twopf_list_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t, bool ff)
 	    : integration_task<number>(nm, i, t),
         twopf_db(i.get_model()->compute_kstar(this)),
-        fast_forward(true),
+        fast_forward(ff),
         ff_efolds(__CPP_TRANSPORT_DEFAULT_FAST_FORWARD_EFOLDS),
         max_refinements(__CPP_TRANSPORT_DEFAULT_MESH_REFINEMENTS)
-
       {
 	    }
 
@@ -222,14 +221,21 @@ namespace transport
     template <typename number>
     double twopf_list_task<number>::get_fast_forward_start(const twopf_kconfig& config) const
       {
-        return(this->ics.get_Nstar() + log(config.k_conventional) - this->ff_efolds);
+        return(this->ics.get_N_horizon_crossing() + log(config.k_conventional) - this->ff_efolds);
       }
 
 
     template <typename number>
     std::vector<number> twopf_list_task<number>::get_ics_vector(const twopf_kconfig& config) const
 	    {
-        return this->integration_task<number>::get_ics_vector(this->get_fast_forward_start(config));
+        if(this->fast_forward)
+          {
+            return this->integration_task<number>::get_ics_vector(this->get_fast_forward_start(config));
+          }
+        else
+          {
+            return this->ics.get_vector();
+          }
 	    }
 
 
@@ -251,25 +257,25 @@ namespace transport
         std::cout << latest_crossing;
         std::cout << std::endl;
 
-        double earliest_required = this->get_Nstar() + earliest_crossing;
+        double earliest_required = this->get_N_horizon_crossing() + earliest_crossing;
         if(this->fast_forward) earliest_required -= this->ff_efolds;
 
-        if(earliest_required < this->get_Ninit())
+        if(earliest_required < this->get_N_initial())
           {
             std::ostringstream msg;
             msg << "'" << this->get_name() << "': " << __CPP_TRANSPORT_TASK_TWOPF_LIST_TOO_EARLY_A << earliest_required << " "
-              << __CPP_TRANSPORT_TASK_TWOPF_LIST_TOO_EARLY_B << this->get_Ninit();
+              << __CPP_TRANSPORT_TASK_TWOPF_LIST_TOO_EARLY_B << this->get_N_initial();
             throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
           }
 
-        if(!this->ff_efolds && earliest_required - this->get_Ninit() < 2.0)
+        if(!this->fast_forward && earliest_required - this->get_N_initial() < __CPP_TRANSPORT_DEFAULT_RECOMMENDED_EFOLDS)
           {
-            std::cout << "'" << this->get_name() << "': " << __CPP_TRANSPORT_TASK_TWOPF_LIST_CROSS_WARN_A << this->get_Ninit() << " "
-              << __CPP_TRANSPORT_TASK_TWOPF_LIST_CROSS_WARN_B << " " << earliest_required-this->get_Ninit() << " "
+            std::cout << "'" << this->get_name() << "': " << __CPP_TRANSPORT_TASK_TWOPF_LIST_CROSS_WARN_A << this->get_N_initial() << " "
+              << __CPP_TRANSPORT_TASK_TWOPF_LIST_CROSS_WARN_B << " " << earliest_required-this->get_N_initial() << " "
               << __CPP_TRANSPORT_TASK_TWOPF_LIST_CROSS_WARN_C << std::endl;
           }
 
-        assert(earliest_required >= this->get_Ninit());
+        assert(earliest_required >= this->get_N_initial());
 
         try
           {
@@ -291,7 +297,7 @@ namespace transport
 
 
 		template <typename number>
-		time_config_database twopf_list_task<number>::build_time_config_database(double Nbegin) const
+		time_config_database twopf_list_task<number>::build_time_config_database(double N_config_begin) const
 			{
         // set up new time configuration database
         time_config_database time_db;
@@ -301,8 +307,12 @@ namespace transport
         double latest_crossing = log(this->twopf_db.get_kmax_conventional());
 
         double earliest_recordable;
-        if(this->fast_forward) earliest_recordable = this->get_Nstar() + latest_crossing - this->ff_efolds;
-        else                   earliest_recordable = this->get_Ninit();
+        if(this->fast_forward) earliest_recordable = this->get_N_horizon_crossing() + latest_crossing - this->ff_efolds;
+        else                   earliest_recordable = this->get_N_initial();
+
+        double Nbegin = 0.0;
+        if(this->fast_forward) Nbegin = N_config_begin;
+        else                   Nbegin = this->ics.get_N_initial();
 
         // get raw time sample points
 		    const std::vector<double> raw_times = this->times->get_grid();
@@ -327,6 +337,7 @@ namespace transport
                         if(Nbegin < *t) time_db.add_record(Nbegin, false, 0);
                       }
                     time_db.add_record(*t, true, serial);
+                    first = false;
                   }
                 else
                   {
@@ -349,8 +360,8 @@ namespace transport
         double latest_crossing = log(this->twopf_db.get_kmax_conventional());
 
         double earliest_recordable;
-        if(this->fast_forward) earliest_recordable = this->get_Nstar() + latest_crossing - this->ff_efolds;
-        else                   earliest_recordable = this->get_Ninit();
+        if(this->fast_forward) earliest_recordable = this->get_N_horizon_crossing() + latest_crossing - this->ff_efolds;
+        else                   earliest_recordable = this->get_N_initial();
 
         // get raw time sample points
         const std::vector<double> raw_times = this->times->get_grid();
@@ -358,7 +369,7 @@ namespace transport
         unsigned int serial = 0;
         for(std::vector<double>::const_iterator t = raw_times.begin(); t != raw_times.end(); t++, serial++)
           {
-            if(!fast_forward || *t >= earliest_recordable)
+            if(*t >= earliest_recordable)
               {
                 this->stored_time_db.add_record(*t, true, serial);
               }

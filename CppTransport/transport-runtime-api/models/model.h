@@ -117,7 +117,8 @@ namespace transport
 		    //! Validate initial conditions
 		    virtual void validate_ics(const parameters<number>& params, const std::vector<number>& input, std::vector<number>& output) = 0;
 
-        //! Compute initial conditions which give horizon-crossing at Nstar, if we allow Npre e-folds before horizon-crossing.
+        //! Compute initial conditions which give horizon-crossing at time Ncross,
+        //! if we allow Npre e-folds before horizon-crossing.
         //! The supplied parameters should be validated.
         void offset_ics(const parameters<number>& params, const std::vector<number>& input, std::vector<number>& output,
                         double Ninit, double Ncross, double Npre,
@@ -262,8 +263,7 @@ namespace transport
 
     template <typename number>
     void model<number>::offset_ics(const parameters<number>& params, const std::vector<number>& input, std::vector<number>& output,
-                                   double Ninit, double Ncross, double Npre,
-                                   double tolerance, unsigned int time_steps)
+                                   double Ninit, double Ncross, double Npre, double tolerance, unsigned int time_steps)
       {
         assert(Ncross >= Npre);
 
@@ -286,9 +286,7 @@ namespace transport
             stepping_range<double> times(Ninit, Ncross-Npre, time_steps);
 
             // set up initial conditions
-            // Npre is irrelevant, provided it falls between the beginning and end times
-            double temp_Nstar = (Ninit + Ncross - Npre)/2.0;
-            initial_conditions<double> ics(params.get_model(), params, input, temp_Nstar);
+            initial_conditions<double> ics(params.get_model(), params, input, Ninit, Ncross-Ninit);
 
             // set up a new task object for this integration
             background_task<double> tk(ics, times);
@@ -302,7 +300,7 @@ namespace transport
             else
               {
                 assert(false);
-                throw std::logic_error(__CPP_TRANSPORT_INTEGRATION_FAIL);
+                throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_INTEGRATION_FAIL);
               }
           }
       }
@@ -332,11 +330,10 @@ namespace transport
 
         std::vector< std::vector<number> > history;
 
-        // set up times at which we wish to sample -- we just need a few scattered between Ninit and Nstar
-        stepping_range<double> times(tk->get_Ninit(), tk->get_Nstar(), time_steps);
+        // set up times at which we wish to sample -- we just need a few scattered between the initial time and the horizon-crossing time
+        stepping_range<double> times(tk->get_N_initial(), tk->get_N_horizon_crossing(), time_steps);
 
-        double new_Npre = (tk->get_Ninit() + tk->get_Nstar()) / 2.0;
-        initial_conditions<double> new_ics(tk->get_model(), tk->get_params(), tk->get_ics().get_vector(), new_Npre);
+        initial_conditions<double> new_ics(tk->get_model(), tk->get_params(), tk->get_ics().get_vector(), tk->get_N_initial(), tk->get_N_subhorizon_efolds());
 
         background_task<double> new_task(new_ics, times);
 
@@ -348,12 +345,12 @@ namespace transport
             // use k=1 for the wavenumber which crosses the horizon at time Nstar.
             // This wavenumber should have comoving value k=aH
             // Here, we return the normalization constant aH
-            return this->H(tk->get_params(), history.back()) * exp(tk->get_Nstar());
+            return this->H(tk->get_params(), history.back()) * exp(tk->get_N_horizon_crossing());
           }
         else
           {
             assert(false);
-            throw std::logic_error(__CPP_TRANSPORT_INTEGRATION_FAIL);
+            throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_INTEGRATION_FAIL);
           }
       }
 

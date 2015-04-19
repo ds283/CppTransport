@@ -1098,7 +1098,7 @@ namespace transport
         try
           {
             using namespace boost::numeric::odeint;
-            integrate_adaptive($$__MAKE_BACKG_STEPPER{backg_state<number>}, system, x, tk->get_Ninit(), tk->get_Ninit()+search_time, $$__BACKG_STEP_SIZE);
+            integrate_adaptive($$__MAKE_BACKG_STEPPER{backg_state<number>}, system, x, tk->get_N_initial(), tk->get_N_initial()+search_time, $$__BACKG_STEP_SIZE);
           }
         catch(epsilon_unity_trigger& trigger)
           {

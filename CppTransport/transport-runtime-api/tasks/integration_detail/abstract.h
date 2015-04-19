@@ -98,10 +98,13 @@ namespace transport
 		    const time_config_database get_time_config_database() const { return(this->build_time_config_database()); }
 
         //! Get time at which initial conditions are set
-        double get_Ninit() const { return(this->times->get_min()); }
+        double get_N_initial() const { return(this->ics.get_N_initial()); }
+
+        //! Get number of subhorizon e-folds of evolution
+        double get_N_subhorizon_efolds() const { return(this->ics.get_N_subhorion_efolds()); }
 
         //! Get horizon-crossing time
-        double get_Nstar() const { return(this->ics.get_Nstar()); }
+        double get_N_horizon_crossing() const { return(this->ics.get_N_horizon_crossing()); }
 
         //! Get std::vector of initial conditions, offset by Nstar using fast forwarding if enables
         std::vector<number> get_ics_vector(double Nstart=0.0) const;
@@ -161,29 +164,24 @@ namespace transport
 	      times(t.clone())
 	    {
         // validate relation between Nstar and the sampling time
-        assert(this->times->get_steps() > 0);
-        assert(i.get_Nstar() > times->get_min());
-        assert(i.get_Nstar() < times->get_max());
+        assert(times->get_steps() > 0);
+        assert(times->get_min() >= ics.get_N_initial());
 
         if(times->get_steps() == 0)
 	        {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_NO_TIMES;
-            throw std::logic_error(msg.str());
+            msg << "'" << this->get_name() << "': " << __CPP_TRANSPORT_NO_TIMES;
+            throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
 	        }
 
-        if(times->get_min() >= ics.get_Nstar())
+        // the sampling points don't have to begin at the initial time, but they shouldn't be earlier than it
+        if(times->get_min() < ics.get_N_initial())
 	        {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_NSTAR_TOO_EARLY << " (Ninit = " << times->get_min() << ", Nstar = " << ics.get_Nstar() << ")";
-            throw std::logic_error(msg.str());
-	        }
-
-        if(times->get_max() <= ics.get_Nstar())
-	        {
-            std::ostringstream msg;
-            msg << __CPP_TRANSPORT_NSTAR_TOO_LATE << " (Nend = " << times->get_max() << ", Nstar = " << ics.get_Nstar() << ")";
-            throw std::logic_error(msg.str());
+            msg << "'" << this->get_name() << "': " << __CPP_TRANSPORT_SAMPLES_START_TOO_EARLY_A << " ("
+              << __CPP_TRANSPORT_SAMPLES_START_TOO_EARLY_B << "=" << times->get_min() << ", "
+              << __CPP_TRANSPORT_SAMPLES_START_TOO_EARLY_C << "=" << i.get_N_initial() << ")";
+            throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
 	        }
 	    }
 
@@ -246,9 +244,18 @@ namespace transport
 		    const std::vector<double>& raw_times = this->times->get_grid();
 
         unsigned int serial = 0;
+        bool first = true;
 		    for(std::vector<double>::const_iterator t = raw_times.begin(); t != raw_times.end(); t++, serial++)
 			    {
-				    time_db.add_record(*t, true, serial);
+            if(*t > this->get_N_initial())
+              {
+                if(first)   // check that initial time is included, because this sets where the integrator begins
+                  {
+                    if(this->get_N_initial() < *t) time_db.add_record(this->get_N_initial(), false, 0);
+                  }
+                time_db.add_record(*t, true, serial);
+                first = false;
+              }
 			    }
 
         return(time_db);
