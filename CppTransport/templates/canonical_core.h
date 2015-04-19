@@ -181,6 +181,8 @@ namespace transport
 
         virtual void backend_process_backg(const background_task<number>* tk, typename model<number>::backg_history& solution, bool silent=false) override;
 
+        virtual double backend_compute_epsilon_unity(const integration_task<number>* tk, double search_time) override;
+
 
         // CALCULATE INITIAL CONDITIONS FOR N-POINT FUNCTIONS
 
@@ -204,14 +206,19 @@ namespace transport
 
       public:
 
-        $$__MODEL_background_functor(const parameters<number>& p)
-          : params(p)
+        $$__MODEL_background_functor(const parameters<number>& p, bool t=false)
+          : params(p),
+            trigger_on_epsilon(t)
           {
           }
 
         void operator ()(const backg_state<number>& __x, backg_state<number>& __dxdt, double __t);
 
+      protected:
+
         const parameters<number> params;
+
+        bool trigger_on_epsilon;
 
       };
 
@@ -1054,6 +1061,54 @@ namespace transport
       }
 
 
+    class epsilon_unity_trigger: public std::exception
+      {
+      public:
+        epsilon_unity_trigger(double t)
+          : time(t)
+          {
+            std::ostringstream msg;
+            msg << time;
+            message = msg.str();
+          }
+
+        virtual const char* what() const noexcept override { return this->message.c_str(); }
+
+        double get_time() const { return(this->time); }
+
+      private:
+        std::string message;
+        double time;
+      };
+
+
+    template <typename number>
+    double $$__MODEL<number>::backend_compute_epsilon_unity(const integration_task<number>* tk, double search_time)
+      {
+        assert(tk != nullptr);
+
+        // set up a functor to evolve this system, triggering on epsilon=1
+        $$__MODEL_background_functor<number> system(tk->get_params(), true);
+
+        auto ics = tk->get_ics_vector();
+
+        backg_state<number> x($$__MODEL_pool::backg_state_size);
+        x[this->flatten($$__A)] = $$// ics[$$__A];
+
+        try
+          {
+            using namespace boost::numeric::odeint;
+            integrate_adaptive($$__MAKE_BACKG_STEPPER{backg_state<number>}, system, x, tk->get_Ninit(), tk->get_Ninit()+search_time, $$__BACKG_STEP_SIZE);
+          }
+        catch(epsilon_unity_trigger& trigger)
+          {
+            return(trigger.get_time());
+          }
+
+        throw end_of_inflation_not_found();
+      }
+
+
     // IMPLEMENTATION - FUNCTOR FOR BACKGROUND INTEGRATION
 
 
@@ -1068,6 +1123,8 @@ namespace transport
         const auto __eps             = $$__EPSILON;
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
+
+        if(this->trigger_on_epsilon && __eps >= 1.0) throw epsilon_unity_trigger(__t);
 
         __dxdt[this->flatten($$__A)] = $$__U1_PREDEF[A]{__Hsq,__eps};
       }
@@ -1087,7 +1144,7 @@ namespace transport
       }
 
 
-  }   // namespace transport
+  };   // namespace transport
 
 
 #endif  // $$__GUARD

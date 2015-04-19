@@ -15,6 +15,7 @@
 #include <math.h>
 
 #include "transport-runtime-api/messages.h"
+#include "transport-runtime-api/defaults.h"
 
 #include "transport-runtime-api/concepts/flattener.h"
 #include "transport-runtime-api/concepts/initial_conditions.h"
@@ -28,6 +29,8 @@
 #include "transport-runtime-api/manager/instance_manager.h"
 #include "transport-runtime-api/data/data_manager.h"
 
+#include "transport-runtime-api/models/advisory_classes.h"
+
 #include "boost/log/core.hpp"
 #include "boost/log/trivial.hpp"
 #include "boost/log/sources/severity_feature.hpp"
@@ -37,12 +40,9 @@
 #include "boost/log/utility/setup/common_attributes.hpp"
 
 
-#define __CPP_TRANSPORT_DEFAULT_ICS_GAP_TOLERANCE (1E-8)
-#define __CPP_TRANSPORT_DEFAULT_ICS_TIME_STEPS    (50)
-
-
 namespace transport
   {
+
     // MODEL OBJECTS -- objects representing inflationary models
 
     // basic class from which all other model representations are derived
@@ -127,6 +127,9 @@ namespace transport
         //! Get value of H at horizon crossing, which can be used to normalize the comoving waveumbers
         double compute_kstar(const integration_task<number>* tk, unsigned int time_steps= __CPP_TRANSPORT_DEFAULT_ICS_TIME_STEPS);
 
+        //! Compute when the end of inflation occurs relative to the initial conditions
+        double compute_end_of_inflation(const integration_task<number>* tk, double search_time=__CPP_TRANSPORT_DEFAULT_END_OF_INFLATION_SEARCH);
+
 
         // INTERFACE - PARAMETER HANDLING
 
@@ -187,17 +190,18 @@ namespace transport
         // suitable storage is passed in soln
         virtual void backend_process_backg(const background_task<number>* tk, std::vector< std::vector<number> >& solution, bool silent=false) = 0;
 
+        // process a background computation, triggering when epsilon=1
+        virtual double backend_compute_epsilon_unity(const integration_task<number>* tk, double search_time) = 0;
+
         // process a work list of twopf items
         // must be over-ridden by a derived implementation class
         virtual void backend_process_queue(work_queue<twopf_kconfig_record>& work, const twopf_list_task<number>* tk,
-                                           twopf_batcher<number>& batcher,
-                                           bool silent = false) = 0;
+                                           twopf_batcher<number>& batcher, bool silent = false) = 0;
 
         // process a work list of threepf items
         // must be over-ridden by a derived implementation class
         virtual void backend_process_queue(work_queue<threepf_kconfig_record>& work, const threepf_task<number>* tk,
-                                           threepf_batcher<number>& batcher,
-                                           bool silent = false) = 0;
+                                           threepf_batcher<number>& batcher, bool silent = false) = 0;
 
         // return size of state vectors
         virtual unsigned int backend_twopf_state_size(void) const = 0;
@@ -351,6 +355,14 @@ namespace transport
             assert(false);
             throw std::logic_error(__CPP_TRANSPORT_INTEGRATION_FAIL);
           }
+      }
+
+
+    template <typename number>
+    double model<number>::compute_end_of_inflation(const integration_task<number>* tk, double search_time)
+      {
+        // integrate to find where the end of inflation occurs
+        return(this->backend_compute_epsilon_unity(tk, search_time));
       }
 
 

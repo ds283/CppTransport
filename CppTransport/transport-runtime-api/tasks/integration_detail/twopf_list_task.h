@@ -13,6 +13,9 @@
 
 #include "transport-runtime-api/tasks/configuration-database/twopf_config_database.h"
 
+#include "transport-runtime-api/models/advisory_classes.h"
+
+
 #define __CPP_TRANSPORT_NODE_TWOPF_LIST_DATABASE "twopf-database"
 
 
@@ -267,6 +270,23 @@ namespace transport
           }
 
         assert(earliest_required >= this->get_Ninit());
+
+        try
+          {
+            double end_of_inflation = this->ics.get_model()->compute_end_of_inflation(this);
+            std::cout << "'" << this->get_name() << "': " << __CPP_TRANSPORT_TASK_TWOPF_LIST_END_OF_INFLATION  << end_of_inflation << std::endl;
+
+            // check if end time is after the end of inflation
+            double end_time = this->times->get_grid().back();
+            if(end_time > end_of_inflation)
+              {
+                std::cout << "'" << this->get_name() << "': " << __CPP_TRANSPORT_TASK_TWOPF_LIST_WARN_LATE_END << std::endl;
+              }
+          }
+        catch(end_of_inflation_not_found& xe)
+          {
+            std::cout << "'" << this->get_name() << "': " << __CPP_TRANSPORT_TASK_TWOPF_LIST_NO_END_INFLATION << std::endl;
+          }
       }
 
 

@@ -57,6 +57,10 @@
 
 #define __CPP_TRANSPORT_TASK_TWOPF_LIST_EARLIEST_STORED  "earliest stored time N="
 
+#define __CPP_TRANSPORT_TASK_TWOPF_LIST_END_OF_INFLATION "end of inflation occurs at time N="
+#define __CPP_TRANSPORT_TASK_TWOPF_LIST_WARN_LATE_END    "warning: end time for integration is later than end of inflation"
+#define __CPP_TRANSPORT_TASK_TWOPF_LIST_NO_END_INFLATION "warning: end of inflation not found within search window"
+
 #define __CPP_TRANSPORT_TASK_TWOPF_LIST_NO_TIMES         "no times to be stored"
 
 
