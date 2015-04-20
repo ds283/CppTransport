@@ -82,13 +82,13 @@ namespace transport
         bool get_fast_forward() const { return(this->fast_forward); }
 
         //! Set fast-forward integration setting
-        void set_fast_forward(bool g) { this->fast_forward = g; this->cache_stored_time_config_database(); }
+        void set_fast_forward(bool g) { this->fast_forward = g; this->validate_subhorizon_efolds(); this->cache_stored_time_config_database(); }
 
         //! Get number of fast-forward e-folds
         double get_fast_forward_efolds() const { return(this->ff_efolds); }
 
         //! Set number of fast-forward e-folds
-        void set_fast_forward_efolds(double N) { this->fast_forward = true; this->ff_efolds = (N >= 0.0 ? N : this->ff_efolds); this->cache_stored_time_config_database(); }
+        void set_fast_forward_efolds(double N) { this->fast_forward = true; this->ff_efolds = (N >= 0.0 ? N : this->ff_efolds); this->validate_subhorizon_efolds(); this->cache_stored_time_config_database(); }
 
         //! Get start time for a twopf configuration
         double get_fast_forward_start(const twopf_kconfig& config) const;
@@ -117,8 +117,12 @@ namespace transport
 
       protected:
 
-        //! output information about timings
+        //! output advisory information about horizon crossing times and number of subhorizon efolds
         void write_time_details();
+
+        //! validate intended number of subhorizon efolds (if fast-forward integration is being used),
+        //! or check that initial conditions allow all modes to be subhorizon at the initial time otherwise
+        void validate_subhorizon_efolds();
 
         //! Populate list of time configurations to be stored.
         //! The parameter N_config_begin specifies the initial time for whatever configuration is being integrated.
@@ -263,25 +267,7 @@ namespace transport
         std::cout << latest_crossing;
         std::cout << std::endl;
 
-        double earliest_required = this->get_N_horizon_crossing() + earliest_crossing;
-        if(this->fast_forward) earliest_required -= this->ff_efolds;
-
-        if(earliest_required < this->get_N_initial())
-          {
-            std::ostringstream msg;
-            msg << "'" << this->get_name() << "': " << __CPP_TRANSPORT_TASK_TWOPF_LIST_TOO_EARLY_A << earliest_required << " "
-              << __CPP_TRANSPORT_TASK_TWOPF_LIST_TOO_EARLY_B << this->get_N_initial();
-            throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
-          }
-
-        if(!this->fast_forward && earliest_required - this->get_N_initial() < __CPP_TRANSPORT_DEFAULT_RECOMMENDED_EFOLDS)
-          {
-            std::cout << "'" << this->get_name() << "': " << __CPP_TRANSPORT_TASK_TWOPF_LIST_CROSS_WARN_A << this->get_N_initial() << " "
-              << __CPP_TRANSPORT_TASK_TWOPF_LIST_CROSS_WARN_B << " " << earliest_required-this->get_N_initial() << " "
-              << __CPP_TRANSPORT_TASK_TWOPF_LIST_CROSS_WARN_C << std::endl;
-          }
-
-        assert(earliest_required >= this->get_N_initial());
+        this->validate_subhorizon_efolds();
 
         try
           {
@@ -298,6 +284,31 @@ namespace transport
         catch(end_of_inflation_not_found& xe)
           {
             std::cout << "'" << this->get_name() << "': " << __CPP_TRANSPORT_TASK_TWOPF_LIST_NO_END_INFLATION << std::endl;
+          }
+      }
+
+
+    template <typename number>
+    void twopf_list_task<number>::validate_subhorizon_efolds()
+      {
+        double earliest_crossing = log(this->twopf_db.get_kmin_conventional());
+
+        double earliest_required = this->get_N_horizon_crossing() + earliest_crossing;
+        if(this->fast_forward) earliest_required -= this->ff_efolds;
+
+        if(earliest_required < this->get_N_initial())
+          {
+            std::ostringstream msg;
+            msg << "'" << this->get_name() << "': " << __CPP_TRANSPORT_TASK_TWOPF_LIST_TOO_EARLY_A << earliest_required << " "
+              << __CPP_TRANSPORT_TASK_TWOPF_LIST_TOO_EARLY_B << this->get_N_initial();
+            throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
+          }
+
+        if(!this->fast_forward && earliest_required - this->get_N_initial() < __CPP_TRANSPORT_DEFAULT_RECOMMENDED_EFOLDS)
+          {
+            std::cout << "'" << this->get_name() << "': " << __CPP_TRANSPORT_TASK_TWOPF_LIST_CROSS_WARN_A << this->get_N_initial() << " "
+              << __CPP_TRANSPORT_TASK_TWOPF_LIST_CROSS_WARN_B << " " << earliest_required-this->get_N_initial() << " "
+              << __CPP_TRANSPORT_TASK_TWOPF_LIST_CROSS_WARN_C << std::endl;
           }
       }
 
