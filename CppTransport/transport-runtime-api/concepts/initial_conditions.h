@@ -248,13 +248,20 @@ namespace transport
 			{
 		    std::vector<number> offset_ics;
 
+				// N is the time at which we want to know the values of the fields
+				// It is an absolute time
+
         // offset_ics() takes a triple Ninit, Ncross, Npre
-        // Ninit specifies the initial time for our set of initial conditions
-        // Ncross specifies where horizon-crossing happens for the k=1 mode
+
+        // Ninit specifies the initial time for our set of initial conditions. It is an absolute time.
+        // Ncross specifies where horizon-crossing happens for the k=1 mode. It is an absolute time.
         // Npre specifies how many e-folds of subhorizon evolution we want, which can be negative if N falls later
-        // than horizon crossing. This can happen for configurations with large enough k_t.
-        // if we want initial conditions which start at time N, then we need N_sub_horizon-N efolds of subhorizon evolution
-				this->mdl->offset_ics(this->params, this->ics, offset_ics, this->N_init, this->N_init+this->N_sub_horizon, this->N_sub_horizon - N);
+        // than horizon crossing. This can happen for configurations with large enough k_t. It is measured relative to Ncross.
+
+        // if we want initial conditions which start at time N, then we need Ncross-N efolds of subhorizon evolution
+
+				double Ncross = this->N_init + this->N_sub_horizon;
+				this->mdl->offset_ics(this->params, this->ics, offset_ics, this->N_init, Ncross, Ncross - N);
 
         return(offset_ics);
 			}
