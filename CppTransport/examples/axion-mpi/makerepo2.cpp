@@ -21,8 +21,13 @@ const double m        = 1e-5;
 const double f        = M_Planck;
 const double Lambda   = pow(5*m*f/(2*M_PI),1.0/2.0);
 
-const double phi_init = 16.0 * M_Planck;
-const double chi_init = f/2.0 - 0.001*M_Planck;
+const double phi_init = 17.0 * M_Planck;
+const double chi_init = f/2.0 - 0.0001*M_Planck;
+
+//const double phi_init = 16.226326960501915;
+//const double chi_init = 0.4996987587739809;
+//const double dphi_init = -0.12178382115883865;
+//const double dchi_init = -5.3264420843266415e-05;
 
 
 // ****************************************************************************
@@ -37,14 +42,14 @@ bool timeseries_axis_filter(const transport::derived_data::filter::time_filter_d
 // filter to determine which twopf-kconfigs are plotted - we use the largest and smallest
 bool timeseries_twopf_kconfig_filter(const transport::derived_data::filter::twopf_kconfig_filter_data& data)
 	{
-		return(data.min || data.max);
+		return(data.min);
 	}
 
 // filter for near-squeezed 3pf k-configurations
 bool threepf_kconfig_near_squeezed(const transport::derived_data::filter::threepf_kconfig_filter_data& data)
 	{
     // use highly squeezed value of beta, restruct to isosceles triangles with alpha=0
-    return(fabs(data.beta-0.9999) < 0.0001 && fabs(data.alpha) < 0.001);
+    return(fabs(data.beta-0.99) < 0.0001 && fabs(data.alpha) < 0.001);
 	}
 
 bool threepf_kconfig_fixed_kt_lo(const transport::derived_data::filter::threepf_kconfig_filter_data& data)
@@ -68,6 +73,12 @@ bool kseries_last_time(const transport::derived_data::filter::time_filter_data& 
 	{
 		return(data.max);
 	}
+
+// filter for near-equilateral 3pf k configurations - pick the largest and smallest kt
+bool threepf_kconfig_equilateral(const transport::derived_data::filter::threepf_kconfig_filter_data& data)
+  {
+    return(fabs(data.alpha) < 0.01 && fabs(data.beta-(1.0/3.0)) < 0.01 && (data.kt_min));
+  }
 
 
 
@@ -97,18 +108,20 @@ int main(int argc, char* argv[])
     const std::vector<double> init_values = { phi_init, chi_init };
 
     const double Ninit  = 0.0;  // start counting from N=0 at the beginning of the integration
-    const double Ncross = 4.0;  // horizon-crossing occurs at 4 e-folds from init_values
-    const double Npre   = 4.0;  // number of e-folds of subhorizon evolution
-    const double Nsplit = 30.0; // split point between early and late
-    const double Nmax   = 61.0; // how many e-folds to integrate after horizon crossing
+    const double Ncross = 13;   // horizon-crossing occurs at N=13
+    const double Npre   = 7;    // number of e-folds of subhorizon evolution
+    const double Nsplit = 32.0; // split point between early and late
+    const double Nmax   = 47.0; // how many e-folds to integrate after horizon crossing
 
-    // set up initial conditions
+    // set up initial conditions with the specified horizon-crossing time Ncross and Npre
+    // e-folds of subhorizon evolution.
+    // The resulting initial conditions apply at time Ncross-Npre
     transport::initial_conditions<double> ics("axion-1", model, params, init_values, Ninit, Ncross, Npre);
 
-    const unsigned int early_t_samples = 40;
-    const unsigned int late_t_samples  = 20;
+    const unsigned int early_t_samples = 200;
+    const unsigned int late_t_samples  = 100;
 
-    transport::stepping_range<double> early_times(Ninit, Ncross+Nsplit, early_t_samples, transport::logarithmic_bottom_stepping);
+    transport::stepping_range<double> early_times(Ncross-Npre, Ncross+Nsplit, early_t_samples, transport::logarithmic_bottom_stepping);
     transport::stepping_range<double> late_times(Ncross+Nsplit, Ncross+Nmax, late_t_samples, transport::linear_stepping);
     transport::aggregation_range<double> times(early_times, late_times);
 
@@ -124,8 +137,8 @@ int main(int argc, char* argv[])
 		const unsigned int  a_samples  = 2;
 
 		const double        betamin    = 0.0;
-		const double        betamax    = 0.9999;
-		const unsigned int  b_samples  = 1000;
+		const double        betamax    = 0.99;
+		const unsigned int  b_samples  = 100;
 
 		struct ThreepfStoragePolicy
 			{
@@ -141,8 +154,8 @@ int main(int argc, char* argv[])
     transport::stepping_range<double> betas (betamin, betamax, b_samples, transport::logarithmic_top_stepping);
 
     // construct a threepf task
-    transport::threepf_fls_task<double> tk3("axion.threepf-1", ics, times, kts, alphas, betas, ThreepfStoragePolicy());
-		tk3.set_fast_forward_efolds(Npre);
+    transport::threepf_fls_task<double> tk3("axion.threepf-1", ics, times, kts, alphas, betas, ThreepfStoragePolicy(), false);
+//		tk3.set_fast_forward_efolds(4.0);
 
 		// construct a zeta threepf task, paired with the primary integration task
     transport::zeta_threepf_task<double> ztk3("axion.threepf-1.zeta", tk3);
@@ -150,6 +163,55 @@ int main(int argc, char* argv[])
 
 
     // PLOTS
+
+
+    // a. TIME EVOLUTION OF THE FIELD-SPACE TWOPF, THREEPF
+
+
+    transport::index_selector<2> twopf_fields(model->get_N_fields());
+    std::array<unsigned int, 2> index_set_a = { 0, 0 };
+    std::array<unsigned int, 2> index_set_b = { 0, 1 };
+    std::array<unsigned int, 2> index_set_c = { 1, 1 };
+    twopf_fields.none();
+    twopf_fields.set_on(index_set_a);
+    twopf_fields.set_on(index_set_b);
+    twopf_fields.set_on(index_set_c);
+
+    transport::derived_data::twopf_time_series<double> tk3_twopf_group(tk3, twopf_fields,
+                                                                       transport::derived_data::filter::time_filter(timeseries_axis_filter),
+                                                                       transport::derived_data::filter::twopf_kconfig_filter(timeseries_twopf_kconfig_filter));
+    tk3_twopf_group.set_klabel_meaning(transport::derived_data::derived_line<double>::conventional);
+
+    transport::derived_data::time_series_plot<double> tk3_twopf_plot("axion.threepf-1.twopf-time", "twopf-time.pdf");
+    tk3_twopf_plot.add_line(tk3_twopf_group);
+    tk3_twopf_plot.set_title_text("Time evolution of two-point function");
+    tk3_twopf_plot.set_legend_position(transport::derived_data::line_plot2d<double>::bottom_left);
+
+    transport::index_selector<3> threepf_fields(model->get_N_fields());
+    std::array<unsigned int, 3> sq_set_a    = { 0, 0, 0 };
+    std::array<unsigned int, 3> sq_set_b    = { 0, 1, 0 };
+    std::array<unsigned int, 3> sq_set_c    = { 1, 1, 0 };
+    std::array<unsigned int, 3> sq_set_d    = { 0, 0, 1 };
+    std::array<unsigned int, 3> sq_set_e    = { 0, 1, 1 };
+    std::array<unsigned int, 3> sq_set_f    = { 1, 1, 1 };
+    threepf_fields.none();
+    threepf_fields.set_on(sq_set_a);
+    threepf_fields.set_on(sq_set_b);
+    threepf_fields.set_on(sq_set_c);
+    threepf_fields.set_on(sq_set_d);
+    threepf_fields.set_on(sq_set_e);
+    threepf_fields.set_on(sq_set_f);
+
+    transport::derived_data::threepf_time_series<double> tk3_threepf_group(tk3, threepf_fields,
+                                                                           transport::derived_data::filter::time_filter(timeseries_axis_filter),
+                                                                           transport::derived_data::filter::threepf_kconfig_filter(threepf_kconfig_equilateral));
+    tk3_twopf_group.set_klabel_meaning(transport::derived_data::derived_line<double>::conventional);
+
+    transport::derived_data::time_series_plot<double> tk3_threepf_plot("axion.threepf-1.threepf-time", "threepf-time.pdf");
+    tk3_threepf_plot.add_line(tk3_threepf_group);
+    tk3_threepf_plot.set_title_text("Time evolution of three-point function");
+    tk3_threepf_plot.set_legend_position(transport::derived_data::line_plot2d<double>::bottom_left);
+
 
     // 1. TIME EVOLUTION OF THE ZETA TWOPF
 
@@ -159,7 +221,7 @@ int main(int argc, char* argv[])
                                                                                  transport::derived_data::filter::twopf_kconfig_filter(timeseries_twopf_kconfig_filter));
     tk3_zeta_twopf_group.set_dimensionless(true);
 
-    transport::derived_data::time_series_plot<double> tk3_zeta_twopf("axion.threepf-1.zeta-twopf", "zeta-twopf.pdf");
+    transport::derived_data::time_series_plot<double> tk3_zeta_twopf("axion.threepf-1.zeta-twopf", "zeta-twopf-time.pdf");
 
     tk3_zeta_twopf.add_line(tk3_zeta_twopf_group);
     tk3_zeta_twopf.set_title_text("$\\zeta$ two-point function");
@@ -364,16 +426,18 @@ int main(int argc, char* argv[])
     // OUTPUT TASKS
 
 
-    transport::output_task<double> threepf_output = transport::output_task<double>("axion.threepf-1.output", tk3_zeta_twopf);
+    transport::output_task<double> threepf_output = transport::output_task<double>("axion.threepf-1.output", tk3_twopf_plot);
+    threepf_output.add_element(tk3_threepf_plot);
+    threepf_output.add_element(tk3_zeta_twopf);
     threepf_output.add_element(tk3_zeta_sq);
     threepf_output.add_element(tk3_redbsp);
-    threepf_output.add_element(tk3_zeta_2spec_plot);
-		threepf_output.add_element(tk3_redbsp_spec_plot);
-		threepf_output.add_element(tk3_redbsp_beta_plot);
-    threepf_output.add_element(tk3_redbsp_sqk3_plot);
-    threepf_output.add_element(tk3_redbsp_sqk3_index_plot);
-    threepf_output.add_element(tk3_redbsp_spec_index_plot);
-    threepf_output.add_element(tk3_zeta_2spec_index_plot);
+//    threepf_output.add_element(tk3_zeta_2spec_plot);
+//		threepf_output.add_element(tk3_redbsp_spec_plot);
+//		threepf_output.add_element(tk3_redbsp_beta_plot);
+//    threepf_output.add_element(tk3_redbsp_sqk3_plot);
+//    threepf_output.add_element(tk3_redbsp_sqk3_index_plot);
+//    threepf_output.add_element(tk3_redbsp_spec_index_plot);
+//    threepf_output.add_element(tk3_zeta_2spec_index_plot);
 
     std::cout << "axion.threepf-1 output task:" << std::endl << threepf_output << std::endl;
 

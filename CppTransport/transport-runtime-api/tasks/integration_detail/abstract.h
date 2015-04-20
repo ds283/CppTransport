@@ -100,8 +100,11 @@ namespace transport
         //! Get time at which initial conditions are set
         double get_N_initial() const { return(this->ics.get_N_initial()); }
 
-        //! Get std::vector of initial conditions, offset by Nstar using fast forwarding if enables
-        std::vector<number> get_ics_vector(double Nstart=0.0) const;
+        //! Get std::vector of initial conditions at a specified absolute time Nstart, which should be > Ninit
+        std::vector<number> get_ics_vector(double Nstart) const;
+
+		    //! Get std::vector of initial conditions at time Ninit
+		    std::vector<number> get_ics_vector(void) const;
 
 
         // TIME CONFIGURATION DATABASE
@@ -252,6 +255,9 @@ namespace transport
               }
 			    }
 
+		    // should always produce some output
+		    assert(time_db.size() > 0);
+
         return(time_db);
 	    }
 
@@ -267,11 +273,22 @@ namespace transport
     template <typename number>
     std::vector<number> integration_task<number>::get_ics_vector(double Nstart) const
 	    {
-        if(Nstart < 0.0) assert(false);
+        if(Nstart < this->ics.get_N_initial())
+	        {
+            std::cout << "Nstart = " << Nstart << ", Ninit = " << this->ics.get_N_initial() << std::endl;
+            assert(false);
+	        }
 
-        if(Nstart > 0.0) return this->ics.get_offset_vector(Nstart);
-        else             return this->ics.get_vector();
+        if(Nstart > this->ics.get_N_initial()) return this->ics.get_offset_vector(Nstart);
+        else                                   return this->ics.get_vector();
 	    }
+
+
+		template <typename number>
+		std::vector<number> integration_task<number>::get_ics_vector(void) const
+			{
+				return this->ics.get_vector();
+			}
 
 
     template <typename number>

@@ -18,6 +18,6 @@ background
 perturbations
  { abserr   = 1E-12;
    relerr   = 1E-12;
-   stepsize = 1E-10;
-   stepper  = "runge_kutta_fehlberg78";
+   stepsize = 1E-15;
+   stepper  = "bulirsch_stoer_dense_out";
  };

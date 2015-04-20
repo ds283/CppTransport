@@ -143,8 +143,8 @@ int main(int argc, char* argv[])
 //    const double Nsplit = 32.0; // split point between early and late
 //    const double Nmax   = 47.0; // how many e-folds to integrate after horizon crossing
 
-    const double Ninit  = 8.0;  // start counting from N=0 at the beginning of the integration
-    const double Ncross = 13.0;  // horizon-crossing occurs at N=13
+    const double Ninit  = 0.0;  // start counting from N=0 at the beginning of the integration
+    const double Ncross = 5.0;  // horizon-crossing occurs at N=13
     const double Npre   = 5.0;  // number of e-folds of subhorizon evolution
     const double Nsplit = 24.0; // split point between early and late
     const double Nmax   = 39.0; // how many e-folds to integrate after horizon crossing

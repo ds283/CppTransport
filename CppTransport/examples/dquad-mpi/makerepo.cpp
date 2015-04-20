@@ -25,6 +25,10 @@ const double m_chi = 1.0 * mass;
 const double phi_init = 10;
 const double chi_init = 12.9;
 
+//const double phi_init = 9.3981343686532135;
+//const double chi_init = 12.890177463729746;
+//const double dphi_init = -0.20654194543752599;
+//const double dchi_init = -0.003472577153076918;
 
 // ****************************************************************************
 
@@ -131,19 +135,23 @@ int main(int argc, char* argv[])
     const std::vector<double>     init_params = { m_phi, m_chi };
     transport::parameters<double> params(M_Planck, init_params, model);
 
-    const std::vector<double> init_values = { phi_init, chi_init };
+//    const std::vector<double> init_values = { phi_init, chi_init, dphi_init, dchi_init };
+  const std::vector<double> init_values = { phi_init, chi_init };
 
     const double Ninit  = 0.0;  // start counting from N=0 at the beginning of the integration
-    const double Ncross = 5.0;  // horizon-crossing occurs at 7 e-folds from init_values
+    const double Ncross = 8.0;  // horizon-crossing occurs at 7 e-folds from init_values
     const double Npre   = 5.0;  // how many e-folds do we wish to track the mode prior to horizon exit?
-    const double Nmax   = 60; // how many e-folds to integrate after horizon crossing
+    const double Nmax   = 55.0; // how many e-folds to integrate after horizon crossing
 
-    // set up initial conditions
+//    // set up initial conditions
     transport::initial_conditions<double> ics("dquad-1", model, params, init_values, Ninit, Ncross, Npre);
+
+//    transport::initial_conditions<double> ics("dquad-1", model, params, init_values, 3.0, 5.0);
 
     const unsigned int t_samples = 1000;       // record 5000 samples - enough to find a good stepsize
 
-    transport::stepping_range<double> times(Ninit, Nmax + Npre, t_samples, transport::logarithmic_bottom_stepping);
+    transport::stepping_range<double> times(Ncross-Npre, Nmax + Ncross, t_samples, transport::logarithmic_bottom_stepping);
+//    transport::stepping_range<double> times(3.0, 63.0, t_samples, transport::logarithmic_bottom_stepping);
 
     // the conventions for k-numbers are as follows:
     // k=1 is the mode which crosses the horizon at time N*,

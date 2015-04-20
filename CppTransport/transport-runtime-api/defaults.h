@@ -13,7 +13,7 @@
 #define __CPP_TRANSPORT_DEFAULT_TABLE_PRECISION          (17)
 
 #define __CPP_TRANSPORT_DEFAULT_ICS_GAP_TOLERANCE        (1E-8)
-#define __CPP_TRANSPORT_DEFAULT_ICS_TIME_STEPS           (50)
+#define __CPP_TRANSPORT_DEFAULT_ICS_TIME_STEPS           (5)
 
 // default number of e-folds over which to search for end of inflation
 #define __CPP_TRANSPORT_DEFAULT_END_OF_INFLATION_SEARCH  (10000.0)
