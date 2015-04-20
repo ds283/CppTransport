@@ -155,7 +155,7 @@ int main(int argc, char* argv[])
 
     // construct a threepf task
     transport::threepf_fls_task<double> tk3("axion.threepf-1", ics, times, kts, alphas, betas, ThreepfStoragePolicy(), false);
-//		tk3.set_fast_forward_efolds(4.0);
+		tk3.set_fast_forward_efolds(4.0);
 
 		// construct a zeta threepf task, paired with the primary integration task
     transport::zeta_threepf_task<double> ztk3("axion.threepf-1.zeta", tk3);
