@@ -333,8 +333,7 @@ namespace transport
             double k_conventional;
           };
 
-        database_type::iterator t;
-        std::find_if(this->database.begin(), this->database.end(), FindByKConventional(k_conventional));
+        database_type::const_iterator t = std::find_if(this->database.begin(), this->database.end(), FindByKConventional(k_conventional));
 
         if(t != this->database.end())
           {
