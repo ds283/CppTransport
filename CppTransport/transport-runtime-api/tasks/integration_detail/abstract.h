@@ -252,6 +252,9 @@ namespace transport
               }
 			    }
 
+		    // should always produce some output
+		    assert(time_db.size() > 0);
+
         return(time_db);
 	    }
 
