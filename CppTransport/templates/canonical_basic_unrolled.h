@@ -103,13 +103,13 @@ namespace transport
                            unsigned int refinement_level);
 
         void populate_twopf_ic(twopf_state<number>& x, unsigned int start, double kmode, double Ninit,
-                               const parameters<number>& p, const std::vector<number>& ic, bool imaginary = false);
+                               const twopf_list_task<number>* tk, const std::vector<number>& ic, bool imaginary = false);
 
         void populate_tensor_ic(twopf_state<number>& x, unsigned int start, double kmode, double Ninit,
-                                const parameters<number>& p, const std::vector<number>& ic);
+                                const twopf_list_task<number>* tk, const std::vector<number>& ic);
 
         void populate_threepf_ic(threepf_state<number>& x, unsigned int start, const threepf_kconfig& kconfig,
-                                 double Ninit, const parameters<number>& p, const std::vector<number>& ic);
+                                 double Ninit, const twopf_list_task<number>* tk, const std::vector<number>& ic);
 
       };
 
@@ -121,8 +121,10 @@ namespace transport
 
       public:
 
-        $$__MODEL_basic_twopf_functor(const parameters<number>& p, double k)
-          : params(p), k_mode(k)
+        $$__MODEL_basic_twopf_functor(const twopf_list_task<number>* tk, double k)
+          : params(tk->get_params()),
+            N_horizon_exit(tk->get_N_horizon_crossing()),
+            k_mode(k)
           {
           }
 
@@ -131,6 +133,8 @@ namespace transport
       private:
 
         const parameters<number>& params;
+
+        const double N_horizon_exit;
 
         const double k_mode;
 
@@ -163,8 +167,12 @@ namespace transport
       {
 
       public:
-        $$__MODEL_basic_threepf_functor(const parameters<number>& p, double k1, double k2, double k3)
-          : params(p), kmode_1(k1), kmode_2(k2), kmode_3(k3)
+        $$__MODEL_basic_threepf_functor(const twopf_list_task<number>* tk, double k1, double k2, double k3)
+          : params(tk->get_params()),
+            N_horizon_exit(tk->get_N_horizon_crossing()),
+            kmode_1(k1),
+            kmode_2(k2),
+            kmode_3(k3)
           {
           }
 
@@ -173,6 +181,8 @@ namespace transport
       private:
 
         const parameters<number>& params;
+
+        const double N_horizon_exit;
 
         const double kmode_1;
         const double kmode_2;
@@ -330,7 +340,7 @@ namespace transport
         $$__MODEL_basic_twopf_observer<number> obs(batcher, kconfig, time_db);
 
         // set up a functor to evolve this system
-        $$__MODEL_basic_twopf_functor<number> rhs(tk->get_params(), kconfig->k_comoving);
+        $$__MODEL_basic_twopf_functor<number> rhs(tk, kconfig->k_comoving);
 
         // set up a state vector
         twopf_state<number> x;
@@ -341,10 +351,10 @@ namespace transport
         x[$$__MODEL_pool::backg_start + FLATTEN($$__A)] = $$// ics[$$__A];
 
         // fix initial conditions - tensors
-        this->populate_tensor_ic(x, $$__MODEL_pool::tensor_start, kconfig->k_comoving, *(time_db.value_begin()), tk->get_params(), ics);
+        this->populate_tensor_ic(x, $$__MODEL_pool::tensor_start, kconfig->k_comoving, *(time_db.value_begin()), tk, ics);
 
         // fix initial conditions - 2pf
-        this->populate_twopf_ic(x, $$__MODEL_pool::twopf_start, kconfig->k_comoving, *(time_db.value_begin()), tk->get_params(), ics);
+        this->populate_twopf_ic(x, $$__MODEL_pool::twopf_start, kconfig->k_comoving, *(time_db.value_begin()), tk, ics);
 
         using namespace boost::numeric::odeint;
         integrate_times($$__MAKE_PERT_STEPPER{twopf_state<number>}, rhs, x, time_db.value_begin(), time_db.value_end(), $$__PERT_STEP_SIZE/pow(4.0,refinement_level), obs);
@@ -365,27 +375,27 @@ namespace transport
     // imaginary - whether to populate using real or imaginary components of the 2pf
     template <typename number>
     void $$__MODEL_basic<number>::populate_twopf_ic(twopf_state<number>& x, unsigned int start, double kmode, double Ninit,
-                                                    const parameters<number>& p, const std::vector<number>& ics, bool imaginary)
+                                                    const twopf_list_task<number>* tk, const std::vector<number>& ics, bool imaginary)
       {
         assert(x.size() >= start);
         assert(x.size() >= start + $$__MODEL_pool::twopf_size);
 
-        x[start + FLATTEN($$__A,$$__B)] = imaginary ? this->make_twopf_im_ic($$__A, $$__B, kmode, Ninit, p, ics) : this->make_twopf_re_ic($$__A, $$__B, kmode, Ninit, p, ics) $$// ;
+        x[start + FLATTEN($$__A,$$__B)] = imaginary ? this->make_twopf_im_ic($$__A, $$__B, kmode, Ninit, tk, ics) : this->make_twopf_re_ic($$__A, $$__B, kmode, Ninit, tk, ics) $$// ;
       }
 
 
     // make initial conditions for the tensor twopf
     template <typename number>
     void $$__MODEL_basic<number>::populate_tensor_ic(twopf_state<number>& x, unsigned int start, double kmode, double Ninit,
-                                                     const parameters<number>& p, const std::vector<number>& ics)
+                                                     const twopf_list_task<number>* tk, const std::vector<number>& ics)
       {
         assert(x.size() >= start);
         assert(x.size() >= start + $$__MODEL_pool::tensor_size);
 
-        x[start + TENSOR_FLATTEN(0,0)] = this->make_twopf_tensor_ic(0, 0, kmode, Ninit, p, ics);
-        x[start + TENSOR_FLATTEN(0,1)] = this->make_twopf_tensor_ic(0, 1, kmode, Ninit, p, ics);
-        x[start + TENSOR_FLATTEN(1,0)] = this->make_twopf_tensor_ic(1, 0, kmode, Ninit, p, ics);
-        x[start + TENSOR_FLATTEN(1,1)] = this->make_twopf_tensor_ic(1, 1, kmode, Ninit, p, ics);
+        x[start + TENSOR_FLATTEN(0,0)] = this->make_twopf_tensor_ic(0, 0, kmode, Ninit, tk, ics);
+        x[start + TENSOR_FLATTEN(0,1)] = this->make_twopf_tensor_ic(0, 1, kmode, Ninit, tk, ics);
+        x[start + TENSOR_FLATTEN(1,0)] = this->make_twopf_tensor_ic(1, 0, kmode, Ninit, tk, ics);
+        x[start + TENSOR_FLATTEN(1,1)] = this->make_twopf_tensor_ic(1, 1, kmode, Ninit, tk, ics);
       }
 
 
@@ -476,12 +486,15 @@ namespace transport
 		    // get list of time steps, and storage list
         const time_config_database time_db = tk->get_time_config_database(*kconfig);
 
+        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) <<
+            ">> Serial " << kconfig->serial << ", start time N = " << *(time_db.value_begin()) << ", time from N* = " << tk->get_N_horizon_crossing() - *(time_db.value_begin());
+
         // set up a functor to observe the integration
         // this also starts the timers running, so we do it as early as possible
         $$__MODEL_basic_threepf_observer<number> obs(batcher, kconfig, time_db);
 
         // set up a functor to evolve this system
-        $$__MODEL_basic_threepf_functor<number>  rhs(tk->get_params(), kconfig->k1_comoving, kconfig->k2_comoving, kconfig->k3_comoving);
+        $$__MODEL_basic_threepf_functor<number>  rhs(tk, kconfig->k1_comoving, kconfig->k2_comoving, kconfig->k3_comoving);
 
         // set up a state vector
         threepf_state<number> x;
@@ -494,22 +507,30 @@ namespace transport
         x[$$__MODEL_pool::backg_start + $$__A] = $$// ics[$$__A];
 
         // fix initial conditions - tensors
-        this->populate_tensor_ic(x, $$__MODEL_pool::tensor_k1_start, kconfig->k1_comoving, *(time_db.value_begin()), tk->get_params(), ics);
-        this->populate_tensor_ic(x, $$__MODEL_pool::tensor_k2_start, kconfig->k2_comoving, *(time_db.value_begin()), tk->get_params(), ics);
-        this->populate_tensor_ic(x, $$__MODEL_pool::tensor_k3_start, kconfig->k3_comoving, *(time_db.value_begin()), tk->get_params(), ics);
+        this->populate_tensor_ic(x, $$__MODEL_pool::tensor_k1_start, kconfig->k1_comoving, *(time_db.value_begin()), tk, ics);
+        this->populate_tensor_ic(x, $$__MODEL_pool::tensor_k2_start, kconfig->k2_comoving, *(time_db.value_begin()), tk, ics);
+        this->populate_tensor_ic(x, $$__MODEL_pool::tensor_k3_start, kconfig->k3_comoving, *(time_db.value_begin()), tk, ics);
+
+        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << ">>  tensor k1 first element = " << x[$$__MODEL_pool::tensor_k1_start];
 
         // fix initial conditions - real 2pfs
-        this->populate_twopf_ic(x, $$__MODEL_pool::twopf_re_k1_start, kconfig->k1_comoving, *(time_db.value_begin()), tk->get_params(), ics, false);
-        this->populate_twopf_ic(x, $$__MODEL_pool::twopf_re_k2_start, kconfig->k2_comoving, *(time_db.value_begin()), tk->get_params(), ics, false);
-        this->populate_twopf_ic(x, $$__MODEL_pool::twopf_re_k3_start, kconfig->k3_comoving, *(time_db.value_begin()), tk->get_params(), ics, false);
+        this->populate_twopf_ic(x, $$__MODEL_pool::twopf_re_k1_start, kconfig->k1_comoving, *(time_db.value_begin()), tk, ics, false);
+        this->populate_twopf_ic(x, $$__MODEL_pool::twopf_re_k2_start, kconfig->k2_comoving, *(time_db.value_begin()), tk, ics, false);
+        this->populate_twopf_ic(x, $$__MODEL_pool::twopf_re_k3_start, kconfig->k3_comoving, *(time_db.value_begin()), tk, ics, false);
+
+        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << ">>  real twopf first element = " << x[$$__MODEL_pool::twopf_re_k1_start];
 
         // fix initial conditions - imaginary 2pfs
-        this->populate_twopf_ic(x, $$__MODEL_pool::twopf_im_k1_start, kconfig->k1_comoving, *(time_db.value_begin()), tk->get_params(), ics, true);
-        this->populate_twopf_ic(x, $$__MODEL_pool::twopf_im_k2_start, kconfig->k2_comoving, *(time_db.value_begin()), tk->get_params(), ics, true);
-        this->populate_twopf_ic(x, $$__MODEL_pool::twopf_im_k3_start, kconfig->k3_comoving, *(time_db.value_begin()), tk->get_params(), ics, true);
+        this->populate_twopf_ic(x, $$__MODEL_pool::twopf_im_k1_start, kconfig->k1_comoving, *(time_db.value_begin()), tk, ics, true);
+        this->populate_twopf_ic(x, $$__MODEL_pool::twopf_im_k2_start, kconfig->k2_comoving, *(time_db.value_begin()), tk, ics, true);
+        this->populate_twopf_ic(x, $$__MODEL_pool::twopf_im_k3_start, kconfig->k3_comoving, *(time_db.value_begin()), tk, ics, true);
+
+        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << ">>  imaginary twopf first element = " << x[$$__MODEL_pool::twopf_im_k1_start];
 
         // fix initial conditions - threepf
-        this->populate_threepf_ic(x, $$__MODEL_pool::threepf_start, *kconfig, *(time_db.value_begin()), tk->get_params(), ics);
+        this->populate_threepf_ic(x, $$__MODEL_pool::threepf_start, *kconfig, *(time_db.value_begin()), tk, ics);
+
+        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << ">>  threepf first element = " << x[$$__MODEL_pool::threepf_start];
 
         using namespace boost::numeric::odeint;
         integrate_times( $$__MAKE_PERT_STEPPER{threepf_state<number>}, rhs, x, time_db.value_begin(), time_db.value_end(), $$__PERT_STEP_SIZE/pow(4.0,refinement_level), obs);
@@ -523,12 +544,12 @@ namespace transport
     template <typename number>
     void $$__MODEL_basic<number>::populate_threepf_ic(threepf_state<number>& x, unsigned int start,
                                                       const threepf_kconfig& kconfig, double Ninit,
-                                                      const parameters<number>& p, const std::vector<number>& ics)
+                                                      const twopf_list_task<number>* tk, const std::vector<number>& ics)
       {
         assert(x.size() >= start);
         assert(x.size() >= start + $$__MODEL_pool::threepf_size);
 
-        x[start + FLATTEN($$__A,$$__B,$$__C)] = this->make_threepf_ic($$__A, $$__B, $$__C, kconfig.k1_comoving, kconfig.k2_comoving, kconfig.k3_comoving, Ninit, p, ics) $$// ;
+        x[start + FLATTEN($$__A,$$__B,$$__C)] = this->make_threepf_ic($$__A, $$__B, $$__C, kconfig.k1_comoving, kconfig.k2_comoving, kconfig.k3_comoving, Ninit, tk, ics) $$// ;
       }
 
 
@@ -542,7 +563,7 @@ namespace transport
         const auto $$__COORDINATE[A] = __x[FLATTEN($$__A)];
         const auto __Mp              = this->params.get_Mp();
         const auto __k               = this->k_mode;
-        const auto __a               = exp(__t);
+        const auto __a               = exp(__t - this->N_horizon_exit + __CPP_TRANSPORT_DEFAULT_ASTAR_NORMALIZATION);
         const auto __Hsq             = $$__HUBBLE_SQ;
         const auto __eps             = $$__EPSILON;
 
@@ -610,7 +631,7 @@ namespace transport
         const auto __k1              = this->kmode_1;
         const auto __k2              = this->kmode_2;
         const auto __k3              = this->kmode_3;
-        const auto __a               = exp(__t);
+        const auto __a               = exp(__t - this->N_horizon_exit + __CPP_TRANSPORT_DEFAULT_ASTAR_NORMALIZATION);
         const auto __Hsq             = $$__HUBBLE_SQ;
         const auto __eps             = $$__EPSILON;
 

@@ -65,7 +65,7 @@ namespace transport
 
 		        //! shift a threepf kconfig-line for coordinate labels (l,m,n)
 		        //! and supplied time configuration
-		        void shift(integration_task<number>* tk, model<number>* mdl,
+		        void shift(twopf_list_task<number>* tk, model<number>* mdl,
 		                   datapipe<number>& pipe,
 		                   const std::vector<number>& background, std::vector< threepf_kconfig>& configs,
 		                   std::vector<number>& line_data,
@@ -75,7 +75,7 @@ namespace transport
 		      protected:
 
 		        //! apply the derivative shift to a particular operator
-		        void make_shift(integration_task<number>* tk, model<number>* mdl,
+		        void make_shift(twopf_list_task<number>* tk, model<number>* mdl,
 		                        datapipe<number>& pipe,
 		                        const std::vector< threepf_kconfig >& configs,
 		                        std::vector< std::array<extractor<number>, 3> >& extractors,
@@ -88,7 +88,7 @@ namespace transport
 
 
 				template <typename number>
-				void threepf_kconfig_shift<number>::shift(integration_task<number>* tk, model<number>* mdl,
+				void threepf_kconfig_shift<number>::shift(twopf_list_task<number>* tk, model<number>* mdl,
 				                                          datapipe<number>& pipe,
 				                                          const std::vector<number>& background, std::vector< threepf_kconfig>& configs,
 				                                          std::vector<number>& line_data,
@@ -145,7 +145,7 @@ namespace transport
 
 
 		    template <typename number>
-		    void threepf_kconfig_shift<number>::make_shift(integration_task<number>* tk, model<number>* mdl,
+		    void threepf_kconfig_shift<number>::make_shift(twopf_list_task<number>* tk, model<number>* mdl,
 		                                                   datapipe<number>& pipe,
 		                                                   const std::vector<threepf_kconfig>& configs,
 		                                                   std::vector< std::array<extractor<number>, 3> >& extractors,
@@ -259,9 +259,9 @@ namespace transport
 				        std::vector< std::vector< std::vector<number> > > C_prq;
 
 				        // evaluate B and C tensors for this configuration
-				        mdl->B(tk->get_params(), bg_config, extractors[i][1].comoving(), extractors[i][2].comoving(), extractors[i][0].comoving(), t_value, B_qrp);
-				        mdl->C(tk->get_params(), bg_config, extractors[i][0].comoving(), extractors[i][1].comoving(), extractors[i][2].comoving(), t_value, C_pqr);
-				        mdl->C(tk->get_params(), bg_config, extractors[i][0].comoving(), extractors[i][2].comoving(), extractors[i][1].comoving(), t_value, C_prq);
+				        mdl->B(tk, bg_config, extractors[i][1].comoving(), extractors[i][2].comoving(), extractors[i][0].comoving(), t_value, B_qrp);
+				        mdl->C(tk, bg_config, extractors[i][0].comoving(), extractors[i][1].comoving(), extractors[i][2].comoving(), t_value, C_pqr);
+				        mdl->C(tk, bg_config, extractors[i][0].comoving(), extractors[i][2].comoving(), extractors[i][1].comoving(), t_value, C_prq);
 
 				        number shift = 0.0;
 

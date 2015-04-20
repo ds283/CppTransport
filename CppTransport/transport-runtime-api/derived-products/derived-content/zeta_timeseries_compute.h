@@ -39,7 +39,7 @@ namespace transport
 
               public:
 
-                handle(datapipe<number>& pipe, integration_task<number>* tk,
+                handle(datapipe<number>& pipe, twopf_list_task<number>* tk,
                        const std::vector<unsigned int>& tsample, const std::vector<double>& taxis, unsigned int Nf);
 
                 ~handle() = default;
@@ -55,7 +55,7 @@ namespace transport
                 model<number>* mdl;
 
                 //! task pointer
-                integration_task<number>* tk;
+                twopf_list_task<number>* tk;
 
                 //! set of time serial numbers for which we are computing
                 const std::vector<unsigned int>& time_sample_sns;
@@ -95,7 +95,7 @@ namespace transport
           public:
 
             //! make a handle
-            std::shared_ptr<handle> make_handle(datapipe<number>& pipe, integration_task<number>* tk,
+            std::shared_ptr<handle> make_handle(datapipe<number>& pipe, twopf_list_task<number>* tk,
                                                 const std::vector<unsigned int>& tsample, const std::vector<double>& taxis, unsigned int Nf) const;
 
 
@@ -126,7 +126,7 @@ namespace transport
 
 
         template <typename number>
-        zeta_timeseries_compute<number>::handle::handle(datapipe<number>& p, integration_task<number>* t,
+        zeta_timeseries_compute<number>::handle::handle(datapipe<number>& p, twopf_list_task<number>* t,
                                                         const std::vector<unsigned int>& tsample, const std::vector<double>& taxis, unsigned int Nf)
           : pipe(p),
             tk(t),
@@ -163,7 +163,7 @@ namespace transport
             dN.resize(tsample.size());
             for(unsigned int j = 0; j < tsample.size(); j++)
               {
-                mdl->compute_gauge_xfm_1(tk->get_params(), background[j], dN[j]);
+                mdl->compute_gauge_xfm_1(tk, background[j], dN[j]);
 //                mdl->compute_deltaN_xfm_1(tk->get_params(), background[j], dN[j]);
               }
           }
@@ -174,7 +174,7 @@ namespace transport
 
         template <typename number>
         std::shared_ptr<typename zeta_timeseries_compute<number>::handle>
-        zeta_timeseries_compute<number>::make_handle(datapipe<number>& pipe, integration_task<number>* t,
+        zeta_timeseries_compute<number>::make_handle(datapipe<number>& pipe, twopf_list_task<number>* t,
                                                      const std::vector<unsigned int>& tsample, const std::vector<double>& taxis, unsigned int Nf) const
           {
             return std::shared_ptr<handle>(new handle(pipe, t, tsample, taxis, Nf));
@@ -250,12 +250,12 @@ namespace transport
             std::vector< std::vector< std::vector<number> > > ddN312(h->time_sample_sns.size());
             for(unsigned int j = 0; j < h->time_sample_sns.size(); j++)
               {
-              h->mdl->compute_gauge_xfm_2(h->tk->get_params(), h->background[j], k.k1_comoving, k.k2_comoving, k.k3_comoving, h->time_axis[j], ddN123[j]);
-              h->mdl->compute_gauge_xfm_2(h->tk->get_params(), h->background[j], k.k2_comoving, k.k1_comoving, k.k3_comoving, h->time_axis[j], ddN213[j]);
-              h->mdl->compute_gauge_xfm_2(h->tk->get_params(), h->background[j], k.k3_comoving, k.k1_comoving, k.k2_comoving, h->time_axis[j], ddN312[j]);
-//                h->mdl->compute_deltaN_xfm_2(h->tk->get_params(), h->background[j], ddN123[j]);
-//                h->mdl->compute_deltaN_xfm_2(h->tk->get_params(), h->background[j], ddN213[j]);
-//                h->mdl->compute_deltaN_xfm_2(h->tk->get_params(), h->background[j], ddN312[j]);
+              h->mdl->compute_gauge_xfm_2(h->tk, h->background[j], k.k1_comoving, k.k2_comoving, k.k3_comoving, h->time_axis[j], ddN123[j]);
+              h->mdl->compute_gauge_xfm_2(h->tk, h->background[j], k.k2_comoving, k.k1_comoving, k.k3_comoving, h->time_axis[j], ddN213[j]);
+              h->mdl->compute_gauge_xfm_2(h->tk, h->background[j], k.k3_comoving, k.k1_comoving, k.k2_comoving, h->time_axis[j], ddN312[j]);
+//                h->mdl->compute_deltaN_xfm_2(h->tk, h->background[j], ddN123[j]);
+//                h->mdl->compute_deltaN_xfm_2(h->tk, h->background[j], ddN213[j]);
+//                h->mdl->compute_deltaN_xfm_2(h->tk, h->background[j], ddN312[j]);
               }
 
 //            std::vector<number> small;

@@ -15,7 +15,11 @@
 #define __CPP_TRANSPORT_DEFAULT_ICS_GAP_TOLERANCE        (1E-8)
 #define __CPP_TRANSPORT_DEFAULT_ICS_TIME_STEPS           (50)
 
+// default number of e-folds over which to search for end of inflation
 #define __CPP_TRANSPORT_DEFAULT_END_OF_INFLATION_SEARCH  (10000.0)
+
+// default normalization of scale factor ln a(t) at horizon exit of k=1 mode
+#define __CPP_TRANSPORT_DEFAULT_ASTAR_NORMALIZATION      (4.0)
 
 #define __CPP_TRANSPORT_DEFAULT_MESH_REFINEMENTS         (10)
 #define __CPP_TRANSPORT_DEFAULT_FAST_FORWARD_EFOLDS      (5.0)

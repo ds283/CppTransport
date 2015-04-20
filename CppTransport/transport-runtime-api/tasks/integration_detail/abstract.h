@@ -100,12 +100,6 @@ namespace transport
         //! Get time at which initial conditions are set
         double get_N_initial() const { return(this->ics.get_N_initial()); }
 
-        //! Get number of subhorizon e-folds of evolution
-        double get_N_subhorizon_efolds() const { return(this->ics.get_N_subhorion_efolds()); }
-
-        //! Get horizon-crossing time
-        double get_N_horizon_crossing() const { return(this->ics.get_N_horizon_crossing()); }
-
         //! Get std::vector of initial conditions, offset by Nstar using fast forwarding if enables
         std::vector<number> get_ics_vector(double Nstart=0.0) const;
 

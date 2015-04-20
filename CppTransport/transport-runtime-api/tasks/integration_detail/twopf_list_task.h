@@ -67,6 +67,12 @@ namespace transport
         //! Build sample-time database
         const time_config_database get_time_config_database(const twopf_kconfig& config) const;
 
+        //! Get number of subhorizon e-folds of evolution
+        double get_N_subhorizon_efolds() const { return(this->ics.get_N_subhorion_efolds()); }
+
+        //! Get horizon-crossing time
+        double get_N_horizon_crossing() const { return(this->ics.get_N_horizon_crossing()); }
+
 
         // INTERFACE - FAST-FORWARD MANAGEMENT
 

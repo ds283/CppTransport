@@ -191,7 +191,7 @@ namespace transport
 
             // cache gauge transformation matrices for this time sample
             std::vector<number> dN;
-            h->mdl->compute_gauge_xfm_1(h->tk->get_params(), h->background[tindex], dN);
+            h->mdl->compute_gauge_xfm_1(h->tk, h->background[tindex], dN);
 
 //            std::vector<number> small;
 //            std::vector<number> large;
@@ -247,7 +247,7 @@ namespace transport
 
             // cache gauge transformation matrices for this time sample
             std::vector<number> dN;
-            h->mdl->compute_gauge_xfm_1(h->tk->get_params(), h->background[tindex], dN);
+            h->mdl->compute_gauge_xfm_1(h->tk, h->background[tindex], dN);
 
             // set up cache handle for 3pf configuration data
             typename datapipe<number>::threepf_kconfig_handle& kc_handle = h->pipe.new_threepf_kconfig_handle(h->kconfig_sample_sns);
@@ -281,9 +281,9 @@ namespace transport
 
             for(unsigned int j = 0; j < h->kconfig_sample_sns.size(); j++)
               {
-                h->mdl->compute_gauge_xfm_2(h->tk->get_params(), h->background[tindex], configs[j].k1_comoving, configs[j].k2_comoving, configs[j].k3_comoving, h->time_values[tindex], ddN123[j]);
-                h->mdl->compute_gauge_xfm_2(h->tk->get_params(), h->background[tindex], configs[j].k2_comoving, configs[j].k1_comoving, configs[j].k3_comoving, h->time_values[tindex], ddN213[j]);
-                h->mdl->compute_gauge_xfm_2(h->tk->get_params(), h->background[tindex], configs[j].k3_comoving, configs[j].k1_comoving, configs[j].k2_comoving, h->time_values[tindex], ddN312[j]);
+                h->mdl->compute_gauge_xfm_2(h->tk, h->background[tindex], configs[j].k1_comoving, configs[j].k2_comoving, configs[j].k3_comoving, h->time_values[tindex], ddN123[j]);
+                h->mdl->compute_gauge_xfm_2(h->tk, h->background[tindex], configs[j].k2_comoving, configs[j].k1_comoving, configs[j].k3_comoving, h->time_values[tindex], ddN213[j]);
+                h->mdl->compute_gauge_xfm_2(h->tk, h->background[tindex], configs[j].k3_comoving, configs[j].k1_comoving, configs[j].k2_comoving, h->time_values[tindex], ddN312[j]);
               }
 
 //            std::vector<number> small;

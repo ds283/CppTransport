@@ -11,6 +11,8 @@
 #include <vector>
 
 #include "transport-runtime-api/models/model_forward_declare.h"
+
+#include "transport-runtime-api/tasks/integration_tasks.h"
 #include "transport-runtime-api/tasks/task_configurations.h"
 
 
@@ -29,7 +31,7 @@ namespace transport
 
       public:
 
-        zeta_compute(model<number>* m, integration_task<number>* tk);
+        zeta_compute(model<number>* m, twopf_list_task<number>* tk);
 
         ~zeta_compute() = default;
 
@@ -89,7 +91,7 @@ namespace transport
         model<number>* mdl;
 
         //! cache point to task instance
-        integration_task<number>* parent_task;
+        twopf_list_task<number>* parent_task;
 
 
         //! First-order gauge xfm cache
@@ -117,7 +119,7 @@ namespace transport
 
 
     template <typename number>
-    zeta_compute<number>::zeta_compute(model<number> *m, integration_task<number>* tk)
+    zeta_compute<number>::zeta_compute(model<number> *m, twopf_list_task<number>* tk)
       : mdl(m),
         Nfields(m->get_N_fields()),
         parent_task(tk)
@@ -139,7 +141,7 @@ namespace transport
       {
         number zeta_twopf = 0.0;
 
-        if(!precomputed) this->mdl->compute_gauge_xfm_1(this->parent_task->get_params(), bg, this->dN);
+        if(!precomputed) this->mdl->compute_gauge_xfm_1(this->parent_task, bg, this->dN);
 
         for(unsigned int m = 0; m < 2*this->Nfields; m++)
           {
@@ -165,11 +167,11 @@ namespace transport
         zeta_threepf = 0.0;
 
         // compute gauge transformation coefficients for this time
-        this->mdl->compute_gauge_xfm_1(this->parent_task->get_params(), bg, this->dN);
+        this->mdl->compute_gauge_xfm_1(this->parent_task, bg, this->dN);
 
-        this->mdl->compute_gauge_xfm_2(this->parent_task->get_params(), bg, kconfig.k1_comoving, kconfig.k2_comoving, kconfig.k3_comoving, t, this->ddN123);
-        this->mdl->compute_gauge_xfm_2(this->parent_task->get_params(), bg, kconfig.k2_comoving, kconfig.k1_comoving, kconfig.k3_comoving, t, this->ddN213);
-        this->mdl->compute_gauge_xfm_2(this->parent_task->get_params(), bg, kconfig.k3_comoving, kconfig.k1_comoving, kconfig.k2_comoving, t, this->ddN312);
+        this->mdl->compute_gauge_xfm_2(this->parent_task, bg, kconfig.k1_comoving, kconfig.k2_comoving, kconfig.k3_comoving, t, this->ddN123);
+        this->mdl->compute_gauge_xfm_2(this->parent_task, bg, kconfig.k2_comoving, kconfig.k1_comoving, kconfig.k3_comoving, t, this->ddN213);
+        this->mdl->compute_gauge_xfm_2(this->parent_task, bg, kconfig.k3_comoving, kconfig.k1_comoving, kconfig.k2_comoving, t, this->ddN312);
 
         // compute linear part of gauge transformation
         for(unsigned int l = 0; l < 2*this->Nfields; l++)
@@ -247,9 +249,9 @@ namespace transport
                                                const std::vector<number>& r_re, const std::vector<number>& r_im,
                                                const std::vector<number>& bg, operator_position pos)
       {
-        this->mdl->B(this->parent_task->get_params(), bg, q_comoving, r_comoving, p_comoving, t, this->B_qrp);
-        this->mdl->C(this->parent_task->get_params(), bg, p_comoving, q_comoving, r_comoving, t, this->C_pqr);
-        this->mdl->C(this->parent_task->get_params(), bg, p_comoving, r_comoving, q_comoving, t, this->C_prq);
+        this->mdl->B(this->parent_task, bg, q_comoving, r_comoving, p_comoving, t, this->B_qrp);
+        this->mdl->C(this->parent_task, bg, p_comoving, q_comoving, r_comoving, t, this->C_pqr);
+        this->mdl->C(this->parent_task, bg, p_comoving, r_comoving, q_comoving, t, this->C_prq);
 
         number shift = 0.0;
         unsigned int p_species = this->mdl->species(p);

@@ -40,7 +40,7 @@ namespace transport
 		      public:
 
             //! construct a background time-data object
-            background_time_series(const integration_task<number>& tk, index_selector<1>& sel,
+            background_time_series(const twopf_list_task<number>& tk, index_selector<1>& sel,
                                    filter::time_filter tfilter, unsigned int prec = __CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
 
 		        //! deserialization constructor.
@@ -102,7 +102,7 @@ namespace transport
 				// note that because time_series<> inherits virtually from derived_line<>, the constructor for
 				// derived_line<> is *not* called from time_series<>. We have to call it ourselves.
 		    template <typename number>
-		    background_time_series<number>::background_time_series(const integration_task<number>& tk, index_selector<1>& sel,
+		    background_time_series<number>::background_time_series(const twopf_list_task<number>& tk, index_selector<1>& sel,
 		                                                           filter::time_filter tfilter, unsigned int prec)
 			    : derived_line<number>(tk, time_axis, std::list<axis_value>{ efolds_axis }, prec),
 			      time_series<number>(tk, tfilter),
