@@ -486,9 +486,6 @@ namespace transport
 		    // get list of time steps, and storage list
         const time_config_database time_db = tk->get_time_config_database(*kconfig);
 
-        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) <<
-            ">> Serial " << kconfig->serial << ", start time N = " << *(time_db.value_begin()) << ", time from N* = " << tk->get_N_horizon_crossing() - *(time_db.value_begin());
-
         // set up a functor to observe the integration
         // this also starts the timers running, so we do it as early as possible
         $$__MODEL_basic_threepf_observer<number> obs(batcher, kconfig, time_db);
@@ -511,26 +508,18 @@ namespace transport
         this->populate_tensor_ic(x, $$__MODEL_pool::tensor_k2_start, kconfig->k2_comoving, *(time_db.value_begin()), tk, ics);
         this->populate_tensor_ic(x, $$__MODEL_pool::tensor_k3_start, kconfig->k3_comoving, *(time_db.value_begin()), tk, ics);
 
-        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << ">>  tensor k1 first element = " << x[$$__MODEL_pool::tensor_k1_start];
-
         // fix initial conditions - real 2pfs
         this->populate_twopf_ic(x, $$__MODEL_pool::twopf_re_k1_start, kconfig->k1_comoving, *(time_db.value_begin()), tk, ics, false);
         this->populate_twopf_ic(x, $$__MODEL_pool::twopf_re_k2_start, kconfig->k2_comoving, *(time_db.value_begin()), tk, ics, false);
         this->populate_twopf_ic(x, $$__MODEL_pool::twopf_re_k3_start, kconfig->k3_comoving, *(time_db.value_begin()), tk, ics, false);
-
-        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << ">>  real twopf first element = " << x[$$__MODEL_pool::twopf_re_k1_start];
 
         // fix initial conditions - imaginary 2pfs
         this->populate_twopf_ic(x, $$__MODEL_pool::twopf_im_k1_start, kconfig->k1_comoving, *(time_db.value_begin()), tk, ics, true);
         this->populate_twopf_ic(x, $$__MODEL_pool::twopf_im_k2_start, kconfig->k2_comoving, *(time_db.value_begin()), tk, ics, true);
         this->populate_twopf_ic(x, $$__MODEL_pool::twopf_im_k3_start, kconfig->k3_comoving, *(time_db.value_begin()), tk, ics, true);
 
-        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << ">>  imaginary twopf first element = " << x[$$__MODEL_pool::twopf_im_k1_start];
-
         // fix initial conditions - threepf
         this->populate_threepf_ic(x, $$__MODEL_pool::threepf_start, *kconfig, *(time_db.value_begin()), tk, ics);
-
-        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << ">>  threepf first element = " << x[$$__MODEL_pool::threepf_start];
 
         using namespace boost::numeric::odeint;
         integrate_times( $$__MAKE_PERT_STEPPER{threepf_state<number>}, rhs, x, time_db.value_begin(), time_db.value_end(), $$__PERT_STEP_SIZE/pow(4.0,refinement_level), obs);
