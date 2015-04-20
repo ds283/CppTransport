@@ -265,7 +265,8 @@ namespace transport
     void model<number>::offset_ics(const parameters<number>& params, const std::vector<number>& input, std::vector<number>& output,
                                    double Ninit, double Ncross, double Npre, double tolerance, unsigned int time_steps)
       {
-        assert(Ncross >= Npre);
+        assert(Ncross >= Ninit);
+				assert(Ncross - Npre > Ninit);
 
         // we are guaranteed that the input ics 'input' are validated
 
