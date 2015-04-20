@@ -121,22 +121,25 @@ namespace transport
 
       public:
 
-        $$__MODEL_basic_twopf_functor(const twopf_list_task<number>* tk, double k)
+        $$__MODEL_basic_twopf_functor(const twopf_list_task<number>* tk, const twopf_kconfig& k)
           : params(tk->get_params()),
             N_horizon_exit(tk->get_N_horizon_crossing()),
-            k_mode(k)
+            config(k)
           {
           }
 
         void operator ()(const twopf_state<number>& __x, twopf_state<number>& __dxdt, double __t);
 
+				// adjust horizon exit time, given an initial time N_init which we wish to move to zero
+        void rebase_horizon_exit_time(double N_init) { this->N_horizon_exit -= N_init; }
+
       private:
 
         const parameters<number>& params;
 
-        const double N_horizon_exit;
+        double N_horizon_exit;
 
-        const double k_mode;
+        const twopf_kconfig config;
 
       };
 
@@ -167,26 +170,25 @@ namespace transport
       {
 
       public:
-        $$__MODEL_basic_threepf_functor(const twopf_list_task<number>* tk, double k1, double k2, double k3)
+        $$__MODEL_basic_threepf_functor(const twopf_list_task<number>* tk, const threepf_kconfig& k)
           : params(tk->get_params()),
             N_horizon_exit(tk->get_N_horizon_crossing()),
-            kmode_1(k1),
-            kmode_2(k2),
-            kmode_3(k3)
+            config(k)
           {
           }
 
         void operator ()(const threepf_state<number>& __x, threepf_state<number>& __dxdt, double __dt);
 
+				// adjust horizon exit time, given an initial time N_init which we wish to move to zero
+        void rebase_horizon_exit_time(double N_init) { this->N_horizon_exit -= N_init; }
+
       private:
 
         const parameters<number>& params;
 
-        const double N_horizon_exit;
+        double N_horizon_exit;
 
-        const double kmode_1;
-        const double kmode_2;
-        const double kmode_3;
+        const threepf_kconfig config;
 
       };
 
@@ -340,7 +342,7 @@ namespace transport
         $$__MODEL_basic_twopf_observer<number> obs(batcher, kconfig, time_db);
 
         // set up a functor to evolve this system
-        $$__MODEL_basic_twopf_functor<number> rhs(tk, kconfig->k_comoving);
+        $$__MODEL_basic_twopf_functor<number> rhs(tk, *kconfig);
 
         // set up a state vector
         twopf_state<number> x;
@@ -356,8 +358,15 @@ namespace transport
         // fix initial conditions - 2pf
         this->populate_twopf_ic(x, $$__MODEL_pool::twopf_start, kconfig->k_comoving, *(time_db.value_begin()), tk, ics);
 
+        // up to this point the calculation has been done in the user-supplied time variable.
+        // However, the integrator apparently performs much better if times are measured from zero (but not yet clear why)
+        // TODO: would be nice to remove this in future
+        rhs.rebase_horizon_exit_time(tk->get_ics().get_N_initial());
+        time_config_database::const_value_iterator begin_iterator = time_db.value_begin(tk->get_ics().get_N_initial());
+        time_config_database::const_value_iterator end_iterator   = time_db.value_end(tk->get_ics().get_N_initial());
+
         using namespace boost::numeric::odeint;
-        integrate_times($$__MAKE_PERT_STEPPER{twopf_state<number>}, rhs, x, time_db.value_begin(), time_db.value_end(), $$__PERT_STEP_SIZE/pow(4.0,refinement_level), obs);
+        integrate_times($$__MAKE_PERT_STEPPER{twopf_state<number>}, rhs, x, begin_iterator, end_iterator, $$__PERT_STEP_SIZE/pow(4.0,refinement_level), obs);
 
         obs.stop_timers(refinement_level);
         int_time = obs.get_integration_time();
@@ -491,7 +500,7 @@ namespace transport
         $$__MODEL_basic_threepf_observer<number> obs(batcher, kconfig, time_db);
 
         // set up a functor to evolve this system
-        $$__MODEL_basic_threepf_functor<number>  rhs(tk, kconfig->k1_comoving, kconfig->k2_comoving, kconfig->k3_comoving);
+        $$__MODEL_basic_threepf_functor<number>  rhs(tk, *kconfig);
 
         // set up a state vector
         threepf_state<number> x;
@@ -521,8 +530,15 @@ namespace transport
         // fix initial conditions - threepf
         this->populate_threepf_ic(x, $$__MODEL_pool::threepf_start, *kconfig, *(time_db.value_begin()), tk, ics);
 
+		    // up to this point the calculation has been done in the user-supplied time variable.
+		    // However, the integrator apparently performs much better if times are measured from zero (but not yet clear why)
+		    // TODO: would be nice to remove this in future
+        rhs.rebase_horizon_exit_time(tk->get_ics().get_N_initial());
+        time_config_database::const_value_iterator begin_iterator = time_db.value_begin(tk->get_ics().get_N_initial());
+        time_config_database::const_value_iterator end_iterator   = time_db.value_end(tk->get_ics().get_N_initial());
+
         using namespace boost::numeric::odeint;
-        integrate_times( $$__MAKE_PERT_STEPPER{threepf_state<number>}, rhs, x, time_db.value_begin(), time_db.value_end(), $$__PERT_STEP_SIZE/pow(4.0,refinement_level), obs);
+        integrate_times( $$__MAKE_PERT_STEPPER{threepf_state<number>}, rhs, x, begin_iterator, end_iterator, $$__PERT_STEP_SIZE/pow(4.0,refinement_level), obs);
 
         obs.stop_timers(refinement_level);
         int_time = obs.get_integration_time();
@@ -551,7 +567,7 @@ namespace transport
         const auto $$__PARAMETER[1]  = this->params.get_vector()[$$__1];
         const auto $$__COORDINATE[A] = __x[FLATTEN($$__A)];
         const auto __Mp              = this->params.get_Mp();
-        const auto __k               = this->k_mode;
+        const auto __k               = this->config.k_comoving;
         const auto __a               = exp(__t - this->N_horizon_exit + __CPP_TRANSPORT_DEFAULT_ASTAR_NORMALIZATION);
         const auto __Hsq             = $$__HUBBLE_SQ;
         const auto __eps             = $$__EPSILON;
@@ -617,9 +633,9 @@ namespace transport
         const auto $$__PARAMETER[1]  = this->params.get_vector()[$$__1];
         const auto $$__COORDINATE[A] = __x[FLATTEN($$__A)];
         const auto __Mp              = this->params.get_Mp();
-        const auto __k1              = this->kmode_1;
-        const auto __k2              = this->kmode_2;
-        const auto __k3              = this->kmode_3;
+        const auto __k1              = this->config.k1_comoving;
+        const auto __k2              = this->config.k2_comoving;
+        const auto __k3              = this->config.k3_comoving;
         const auto __a               = exp(__t - this->N_horizon_exit + __CPP_TRANSPORT_DEFAULT_ASTAR_NORMALIZATION);
         const auto __Hsq             = $$__HUBBLE_SQ;
         const auto __eps             = $$__EPSILON;

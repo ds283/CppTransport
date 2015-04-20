@@ -274,13 +274,10 @@ namespace transport
 
             //! set up an alias for a reference to each element.
             //! there are const- and non-const-versions
-            typedef typename std::conditional< is_const_iterator, const ValueType&, ValueType& >::type value_reference_type;
-
-            //! set up an alias for a pointer to each element
-            typedef typename std::conditional< is_const_iterator, const ValueType*, ValueType* >::type value_pointer_type;
+            typedef typename std::conditional< is_const_iterator, const ValueType, ValueType >::type value_type;
 
             //! set up an alias for the underlying iterator
-            typedef typename std::conditional< is_const_iterator, typename DatabaseType::const_iterator, typename DatabaseType::iterator>::type record_iterator_type;
+            typedef typename std::conditional< is_const_iterator, typename DatabaseType::const_iterator, typename DatabaseType::iterator>::type value_iterator_type;
 
           public:
 
@@ -291,18 +288,21 @@ namespace transport
 
             //! default constructor
             generic_value_iterator()
+              : offset(0.0)
 	            {
 	            }
 
             //! value constructor
-            generic_value_iterator(record_iterator_type i)
-	            : it(i)
+            generic_value_iterator(value_iterator_type i, ValueType o)
+	            : it(i),
+                offset(o)
 	            {
 	            }
 
             //! copy constructor - allows for implicit conversion from a regular iterator to a const iterator
             generic_value_iterator(const generic_value_iterator<DatabaseType, ValueType, false>& obj)
-	            : it(obj.it)
+	            : it(obj.it),
+                offset(obj.offset)
 	            {
 	            }
 
@@ -319,27 +319,15 @@ namespace transport
 	            }
 
             //! deference pointer to get value
-            value_reference_type operator*()
+            value_type operator*()
 	            {
-                return((*this->it->second).get_value());
-	            }
-
-            //! provide member access
-            value_pointer_type operator->()
-	            {
-                return(&((*this->it->second).get_value()));
+                return((*this->it->second).get_value() - this->offset);
 	            }
 
             //! deference pointer to get value (const version)
-            const value_reference_type operator*() const
+            const value_type operator*() const
               {
-                return((*this->it->second).get_value());
-              }
-
-            //! provide member access (const version)
-            const value_pointer_type operator->() const
-              {
-                return(&((*this->it->second).get_value()));
+                return((*this->it->second).get_value() - this->offset);
               }
 
             //! prefix decrement
@@ -382,7 +370,10 @@ namespace transport
           private:
 
             //! current value of iterator
-            record_iterator_type it;
+            value_iterator_type it;
+
+		        //! offset to apply to dereferenced values
+		        const ValueType offset;
 
 	        };
 

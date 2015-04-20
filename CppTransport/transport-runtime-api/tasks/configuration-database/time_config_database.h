@@ -162,13 +162,13 @@ namespace transport
 
 		  public:
 
-		    value_iterator       value_begin()       { return value_iterator(this->database.begin()); }
-		    value_iterator       value_end()         { return value_iterator(this->database.end()); }
-		    const_value_iterator value_begin() const { return const_value_iterator(this->database.begin()); }
-		    const_value_iterator value_end()   const { return const_value_iterator(this->database.end()); }
+		    value_iterator       value_begin(double offset=0.0)       { return value_iterator(this->database.begin(), offset); }
+		    value_iterator       value_end(double offset=0.0)         { return value_iterator(this->database.end(), offset); }
+		    const_value_iterator value_begin(double offset=0.0) const { return const_value_iterator(this->database.begin(), offset); }
+		    const_value_iterator value_end(double offset=0.0)   const { return const_value_iterator(this->database.end(), offset); }
 
-		    const_value_iterator cvalue_begin()      { return const_value_iterator(this->database.cbegin()); }
-		    const_value_iterator cvalue_end()        { return const_value_iterator(this->database.cend()); }
+		    const_value_iterator cvalue_begin(double offset=0.0)      { return const_value_iterator(this->database.cbegin(), offset); }
+		    const_value_iterator cvalue_end(double offset=0.0)        { return const_value_iterator(this->database.cend(), offset); }
 
 
 				// INTERFACE -- GLOBAL OPERATIONS
@@ -188,6 +188,14 @@ namespace transport
 
 				//! add record to the database
 				void add_record(double t, bool store, unsigned int serial);
+
+
+				// INTERFACE -- REBASE TIMES
+
+			public:
+
+				//! rebase times so that the time N_init becomes time=0
+				void rebase_time_configurations(double N_init);
 
 
 		    // INTERNAL DATA
@@ -223,6 +231,17 @@ namespace transport
 
 				this->database.emplace(config.serial, time_config_record(config, store));
 			}
+
+
+			void time_config_database::rebase_time_configurations(double Ninit)
+				{
+					if(Ninit == 0.0) return;
+
+					for(database_type::iterator t = this->database.begin(); t != this->database.end(); t++)
+						{
+							t->second->t -= Ninit;
+						}
+				}
 
 
   }   // namespace transport
