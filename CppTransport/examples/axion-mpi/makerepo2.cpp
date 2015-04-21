@@ -40,11 +40,18 @@ bool timeseries_twopf_kconfig_filter(const transport::derived_data::filter::twop
 		return(data.min);
 	}
 
-// filter for near-squeezed 3pf k-configurations
+// filter for near-squeezed 3pf k-configurations -- just pick a few lines (eg. for time history plots)
 bool threepf_kconfig_near_squeezed(const transport::derived_data::filter::threepf_kconfig_filter_data& data)
 	{
     // use highly squeezed value of beta, restrict to isosceles triangles with alpha=0
     return(fabs(data.beta-0.999) < 0.0001 && fabs(data.alpha) < 0.001 && (data.kt_min || data.kt_max));
+	}
+
+// filter for near-squeezed 3pf k-configurations -- all lines (eg. for spectrum plots)
+bool threepf_kconfig_all_near_squeezed(const transport::derived_data::filter::threepf_kconfig_filter_data& data)
+	{
+    // use highly squeezed value of beta, restrict to isosceles triangles with alpha=0
+    return(fabs(data.beta-0.999) < 0.0001 && fabs(data.alpha) < 0.001);
 	}
 
 bool threepf_kconfig_fixed_kt_lo(const transport::derived_data::filter::threepf_kconfig_filter_data& data)
@@ -283,7 +290,7 @@ int main(int argc, char* argv[])
 
     transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_spec(ztk3,
                                                                                                     transport::derived_data::filter::time_filter(kseries_last_time),
-                                                                                                    transport::derived_data::filter::threepf_kconfig_filter(threepf_kconfig_near_squeezed));
+                                                                                                    transport::derived_data::filter::threepf_kconfig_filter(threepf_kconfig_all_near_squeezed));
 		tk3_zeta_redbsp_spec.set_klabel_meaning(transport::derived_data::derived_line<double>::conventional);
 		tk3_zeta_redbsp_spec.set_label_text("$k_3/k_t = 0.9999$", "k3/k_t = 0.9999");
 
@@ -387,7 +394,7 @@ int main(int argc, char* argv[])
 
     transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_spec_index(ztk3,
                                                                                                           transport::derived_data::filter::time_filter(kseries_last_time),
-                                                                                                          transport::derived_data::filter::threepf_kconfig_filter(threepf_kconfig_near_squeezed));
+                                                                                                          transport::derived_data::filter::threepf_kconfig_filter(threepf_kconfig_all_near_squeezed));
     tk3_zeta_redbsp_spec_index.set_klabel_meaning(transport::derived_data::derived_line<double>::conventional);
     tk3_zeta_redbsp_spec_index.set_label_text("$n_{f_{\\mathrm{NL}}} \\;\\; k_3/k_t = 0.999$", "k3/k_t = 0.999");
     tk3_zeta_redbsp_spec_index.set_spectral_index(true);
