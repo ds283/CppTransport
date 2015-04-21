@@ -207,7 +207,7 @@ namespace transport
                 double shifted_max = this->max - (this->min-1.0);
                 for(unsigned int i = 0; i <= this->steps; i++)
 	                {
-                    grid.push_back(shifted_max - static_cast<value>(pow(shifted_max, static_cast<double>(i)/this->steps)));
+                    grid.push_back(this->min-1.0 + static_cast<value>(pow(shifted_max, 1.0 - static_cast<double>(i)/this->steps)));
 	                }
                 // the result is out-of-order, but it will be sorted below
                 break;
