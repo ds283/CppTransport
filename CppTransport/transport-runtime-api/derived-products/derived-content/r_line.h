@@ -108,12 +108,12 @@ namespace transport
 				template <typename number>
 				r_line<number>::r_line(const zeta_twopf_list_task<number>& tk, filter::twopf_kconfig_filter& kfilter)
 					: derived_line<number>(tk),
-						gadget(dynamic_cast< integration_task<number>& >(*(tk.get_parent_task())))
+						gadget(dynamic_cast< twopf_list_task<number>& >(*(tk.get_parent_task())))
 					{
 						// set up a list of serial numbers corresponding to the k-configurations for this derived line
 				    try
 					    {
-				        this->f.filter_twopf_kconfig_sample(kfilter, tk.get_twopf_kconfig_list(), this->kconfig_sample_sns);
+				        this->f.filter_twopf_kconfig_sample(kfilter, tk.get_twopf_database(), this->kconfig_sample_sns);
 					    }
 				    catch(runtime_exception& xe)
 					    {

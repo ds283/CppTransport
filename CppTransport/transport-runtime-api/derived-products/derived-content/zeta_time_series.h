@@ -57,10 +57,10 @@ namespace transport
                                       const std::list<std::string>& tags) const override;
 
             //! generate a LaTeX label
-            std::string get_LaTeX_label(const twopf_configuration& k) const;
+            std::string get_LaTeX_label(const twopf_kconfig& k) const;
 
             //! generate a non-LaTeX label
-            std::string get_non_LaTeX_label(const twopf_configuration& k) const;
+            std::string get_non_LaTeX_label(const twopf_kconfig& k) const;
 
 
             // CLONE
@@ -68,7 +68,7 @@ namespace transport
           public:
 
             //! self-replicate
-            virtual derived_line<number>* clone() const override { return new zeta_twopf_time_series<number>(static_cast<const zeta_twopf_time_series<number>&>(*this)); }
+            virtual zeta_twopf_time_series<number>* clone() const override { return new zeta_twopf_time_series<number>(static_cast<const zeta_twopf_time_series<number>&>(*this)); }
 
 
             // WRITE TO A STREAM
@@ -127,7 +127,7 @@ namespace transport
 
             // pull k-configuration information from the database
 		        twopf_kconfig_tag<number> k_tag = pipe.new_twopf_kconfig_tag();
-            const typename std::vector< twopf_configuration > k_values = kc_handle.lookup_tag(k_tag);
+            const typename std::vector< twopf_kconfig > k_values = kc_handle.lookup_tag(k_tag);
 
             for(unsigned int i = 0; i < this->kconfig_sample_sns.size(); i++)
               {
@@ -160,7 +160,7 @@ namespace transport
 
 
         template <typename number>
-        std::string zeta_twopf_time_series<number>::get_LaTeX_label(const twopf_configuration& k) const
+        std::string zeta_twopf_time_series<number>::get_LaTeX_label(const twopf_kconfig& k) const
 	        {
             std::string tag = this->make_LaTeX_tag(k);
             std::string label;
@@ -180,7 +180,7 @@ namespace transport
 
 
         template <typename number>
-        std::string zeta_twopf_time_series<number>::get_non_LaTeX_label(const twopf_configuration& k) const
+        std::string zeta_twopf_time_series<number>::get_non_LaTeX_label(const twopf_kconfig& k) const
 	        {
             std::string tag = this->make_non_LaTeX_tag(k);
             std::string label;
@@ -249,16 +249,16 @@ namespace transport
                                       const std::list<std::string>& tags) const override;
 
             //! generate a LaTeX label
-            std::string get_LaTeX_label(const threepf_configuration& k) const;
+            std::string get_LaTeX_label(const threepf_kconfig& k) const;
 
             //! generate a non-LaTeX label
-            std::string get_non_LaTeX_label(const threepf_configuration& k) const;
+            std::string get_non_LaTeX_label(const threepf_kconfig& k) const;
 
 
             // CLONE
 
             //! self-replicate
-            virtual derived_line<number>* clone() const override { return new zeta_threepf_time_series<number>(static_cast<const zeta_threepf_time_series<number>&>(*this)); }
+            virtual zeta_threepf_time_series<number>* clone() const override { return new zeta_threepf_time_series<number>(static_cast<const zeta_threepf_time_series<number>&>(*this)); }
 
 
             // WRITE TO A STREAM
@@ -315,7 +315,7 @@ namespace transport
 
             // pull k-configuration information from the database
 		        threepf_kconfig_tag<number> k_tag = pipe.new_threepf_kconfig_tag();
-            const typename std::vector< threepf_configuration > k_values = kc_handle.lookup_tag(k_tag);
+            const typename std::vector< threepf_kconfig > k_values = kc_handle.lookup_tag(k_tag);
 
             for(unsigned int i = 0; i < this->kconfig_sample_sns.size(); i++)
               {
@@ -339,7 +339,7 @@ namespace transport
 
 
         template <typename number>
-        std::string zeta_threepf_time_series<number>::get_LaTeX_label(const threepf_configuration& k) const
+        std::string zeta_threepf_time_series<number>::get_LaTeX_label(const threepf_kconfig& k) const
 	        {
             std::string tag = this->make_LaTeX_tag(k, this->use_kt_label, this->use_alpha_label, this->use_beta_label);
             std::string label;
@@ -359,7 +359,7 @@ namespace transport
 
 
         template <typename number>
-        std::string zeta_threepf_time_series<number>::get_non_LaTeX_label(const threepf_configuration& k) const
+        std::string zeta_threepf_time_series<number>::get_non_LaTeX_label(const threepf_kconfig& k) const
 	        {
             std::string tag = this->make_non_LaTeX_tag(k, this->use_kt_label, this->use_alpha_label, this->use_beta_label);
             std::string label;
@@ -429,16 +429,16 @@ namespace transport
                                       const std::list<std::string>& tags) const override;
 
             //! generate a LaTeX label
-            std::string get_LaTeX_label(const threepf_configuration& k) const;
+            std::string get_LaTeX_label(const threepf_kconfig& k) const;
 
             //! generate a non-LaTeX label
-            std::string get_non_LaTeX_label(const threepf_configuration& k) const;
+            std::string get_non_LaTeX_label(const threepf_kconfig& k) const;
 
 
             // CLONE
 
             //! self-replicate
-            virtual derived_line<number>* clone() const override { return new zeta_reduced_bispectrum_time_series<number>(static_cast<const zeta_reduced_bispectrum_time_series<number>&>(*this)); }
+            virtual zeta_reduced_bispectrum_time_series<number>* clone() const override { return new zeta_reduced_bispectrum_time_series<number>(static_cast<const zeta_reduced_bispectrum_time_series<number>&>(*this)); }
 
 
             // WRITE TO A STREAM
@@ -496,12 +496,10 @@ namespace transport
 
             // pull k-configuration information from the database
             threepf_kconfig_tag<number> k_tag = pipe.new_threepf_kconfig_tag();
-            const typename std::vector< threepf_configuration > k_values = kc_handle.lookup_tag(k_tag);
+            const typename std::vector< threepf_kconfig > k_values = kc_handle.lookup_tag(k_tag);
 
             for(unsigned int i = 0; i < this->kconfig_sample_sns.size(); i++)
               {
-                BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::normal) << "§§ Processing 3pf k-configuration " << i << std::endl;
-
 		            zeta_reduced_bispectrum_time_data_tag<number> tag = pipe.new_zeta_reduced_bispectrum_time_data_tag(k_values[i]);
 
                 // it's safe to take a reference here to avoid a copy; we don't need the cache data to survive over multiple calls to lookup_tag()
@@ -519,7 +517,7 @@ namespace transport
 
 
         template <typename number>
-        std::string zeta_reduced_bispectrum_time_series<number>::get_LaTeX_label(const threepf_configuration& k) const
+        std::string zeta_reduced_bispectrum_time_series<number>::get_LaTeX_label(const threepf_kconfig& k) const
 	        {
             std::string tag = this->make_LaTeX_tag(k, this->use_kt_label, this->use_alpha_label, this->use_beta_label);
             std::string label;
@@ -539,7 +537,7 @@ namespace transport
 
 
         template <typename number>
-        std::string zeta_reduced_bispectrum_time_series<number>::get_non_LaTeX_label(const threepf_configuration& k) const
+        std::string zeta_reduced_bispectrum_time_series<number>::get_non_LaTeX_label(const threepf_kconfig& k) const
 	        {
             std::string tag = this->make_non_LaTeX_tag(k, this->use_kt_label, this->use_alpha_label, this->use_beta_label);
             std::string label;

@@ -133,7 +133,7 @@ namespace transport
       public:
 
         //! Virtual copy
-        virtual task<number>* clone() const override { return new output_task<number>(static_cast<const output_task<number>&>(*this)); }
+        virtual output_task<number>* clone() const override { return new output_task<number>(static_cast<const output_task<number>&>(*this)); }
 
 
         // INTERNAL DATA

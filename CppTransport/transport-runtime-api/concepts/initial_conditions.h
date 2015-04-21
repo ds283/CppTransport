@@ -27,11 +27,13 @@
 #include "transport-runtime-api/concepts/initial_conditions_forward_declare.h"
 
 
-#define __CPP_TRANSPORT_NODE_ICS_VALUE     "value"
-#define __CPP_TRANSPORT_NODE_ICS_MODEL_UID "ics-model-uid"
-#define __CPP_TRANSPORT_NODE_ICS_NAME      "name"
-#define __CPP_TRANSPORT_NODE_ICS_NSTAR     "ics-nstar"
-#define __CPP_TRANSPORT_NODE_ICS_VALUES    "ics-values"
+#define __CPP_TRANSPORT_NODE_ICS_VALUE         "value"
+#define __CPP_TRANSPORT_NODE_ICS_MODEL_UID     "model-uid"
+#define __CPP_TRANSPORT_NODE_ICS_NAME          "name"
+#define __CPP_TRANSPORT_NODE_ICS_N_SUB_HORIZON "sub-horizon-efolds"
+#define __CPP_TRANSPORT_NODE_ICS_N_INIT        "initial-time"
+#define __CPP_TRANSPORT_NODE_ICS_VALUES        "values"
+#define __CPP_TRANSPORT_NODE_ICS_PARAMETERS    "parameters"
 
 
 namespace transport
@@ -45,25 +47,33 @@ namespace transport
 
       public:
 
-        //! Construct named initial conditions from directly-supplied data
-        initial_conditions(const std::string& nm, model<number>* m, const parameters<number>& p, const std::vector<number>& i, double Npre);
+        //! Construct named initial conditions from directly-supplied data.
+        //! There are Npre e-folds of evolution prior to horizon exit for the conventionally-normalized
+        //! mode with k=1, so N* (the horizon-crossing time for the k=1 mode) is equal to Ninit + Npre
+        initial_conditions(const std::string& nm, model<number>* m, const parameters<number>& p, const std::vector<number>& i,
+                           double Nini, double Npre);
 
         //! Construct anonymized initial conditions from directly-supplied data
-        initial_conditions(model<number>* m, const parameters<number>& p, const std::vector<number>& i, double Npre)
-          : initial_conditions(random_string(), m, p, i, Npre)
+        initial_conditions(model<number>* m, const parameters<number>& p, const std::vector<number>& i,
+                           double Nini, double Npre)
+          : initial_conditions(random_string(), m, p, i, Nini, Npre)
           {
           }
 
-        //! Construct named initial conditions offset from directly-supplied data using a supplied model
+        //! Construct named initial conditions *offset* from directly-supplied data using a model.
+        //! Ninit is the time at which intial conditions are set up
+        //! Ncross is the time of horizon-crossing for the k=1 mode
+        //! Npre is the desired number of e-folds of subhorizon evolution
+        //! N* should equal Ncross
         initial_conditions(const std::string& nm, model<number>* m,
                            const parameters<number>& p, const std::vector<number>& i,
-                           double Ninit, double Ncross, double Npre);
+                           double Nini, double Ncross, double Npre);
 
         //! Construct anonymized initial conditions offset from directly-supplied data using a supplied model
         initial_conditions(model<number>* m,
                            const parameters<number>& p, const std::vector<number>& i,
-                           double Ninit, double Ncross, double Npre)
-          : initial_conditions(random_string(), m, p, i, Ninit, Ncross, Npre)
+                           double Nini, double Ncross, double Npre)
+          : initial_conditions(random_string(), m, p, i, Nini, Ncross, Npre)
           {
           }
 
@@ -90,7 +100,13 @@ namespace transport
 		    std::vector<number> get_offset_vector(double N) const;
 
         //! Return relative time of horizon-crossing
-        double get_Nstar() const { return(this->Nstar); }
+        double get_N_subhorion_efolds() const { return(this->N_sub_horizon); }
+
+        //! Return initial time
+        double get_N_initial() const { return(this->N_init); }
+
+        //! Return horizon-crossing time for the k=1 mode
+        double get_N_horizon_crossing() const { return(this->N_init + this->N_sub_horizon); }
 
         //! Return name of this 'package'
         const std::string& get_name() const { return(this->name); }
@@ -128,16 +144,20 @@ namespace transport
         //! values of fields and their derivatives, constituting the initial conditions
         std::vector<number> ics;
 
+        //! initial time
+        double N_init;
+
         //! number of e-folds from initial conditions to horizon-crossing
-        double Nstar;
+        double N_sub_horizon;
 
       };
 
 
     template <typename number>
     initial_conditions<number>::initial_conditions(const std::string& nm, model<number>* m,
-                                                   const parameters<number>& p, const std::vector<number>& i, double Npre)
-      : name(nm), mdl(m), params(p), Nstar(Npre)
+                                                   const parameters<number>& p, const std::vector<number>& i,
+                                                   double Nini, double Npre)
+      : name(nm), mdl(m), params(p), N_init(Nini), N_sub_horizon(Npre)
       {
 		    assert(m != nullptr);
 		    if(m == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_ICS_NULL_MODEL);
@@ -160,8 +180,8 @@ namespace transport
     template <typename number>
     initial_conditions<number>::initial_conditions(const std::string& nm, model<number>* m,
                                                    const parameters<number>& p, const std::vector<number>& i,
-                                                   double Ninit, double Ncross, double Npre)
-      : name(nm), mdl(m), params(p), Nstar(Npre)
+                                                   double Nini, double Ncross, double Npre)
+      : name(nm), mdl(m), params(p), N_init(Ncross-Npre), N_sub_horizon(Npre)
       {
         assert(m != nullptr);
         if(m == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_ICS_NULL_MODEL);
@@ -172,21 +192,22 @@ namespace transport
         mdl->validate_ics(p, i, validated_ics);
 
         // call supplied finder function to correctly offset these ics
-        mdl->offset_ics(p, validated_ics, ics, Ninit, Ncross, Npre);
+        mdl->offset_ics(p, validated_ics, ics, Nini, Ncross, Npre);
       }
 
 
     template <typename number>
     initial_conditions<number>::initial_conditions(const std::string& nm, Json::Value& reader,
                                                    typename instance_manager<number>::model_finder f)
-      : name(nm), params(reader, f)
+      : name(nm), params(reader[__CPP_TRANSPORT_NODE_ICS_PARAMETERS], f)
       {
 		    // construct model object
         std::string uid = reader[__CPP_TRANSPORT_NODE_ICS_MODEL_UID].asString();
 		    mdl = f(uid);
 
-        // deserialize N*
-		    Nstar = reader[__CPP_TRANSPORT_NODE_ICS_NSTAR].asDouble();
+        // deserialize time parameters
+        N_init        = reader[__CPP_TRANSPORT_NODE_ICS_N_INIT].asDouble();
+        N_sub_horizon = reader[__CPP_TRANSPORT_NODE_ICS_N_SUB_HORIZON].asDouble();
 
         // deserialize array of initial values
         Json::Value& ics_array = reader[__CPP_TRANSPORT_NODE_ICS_VALUES];
@@ -227,9 +248,20 @@ namespace transport
 			{
 		    std::vector<number> offset_ics;
 
-        // offset_ics() changes the initial conditions to give horizon-crossing at Nstar, with Npre e-folds before horizon crossing.
-        // we want there to be Nstar-N efolds to horizon crossing. That can be negative if N > Nstar
-				this->mdl->offset_ics(this->params, this->ics, offset_ics, 0.0, this->Nstar, this->Nstar - N);
+				// N is the time at which we want to know the values of the fields
+				// It is an absolute time
+
+        // offset_ics() takes a triple Ninit, Ncross, Npre
+
+        // Ninit specifies the initial time for our set of initial conditions. It is an absolute time.
+        // Ncross specifies where horizon-crossing happens for the k=1 mode. It is an absolute time.
+        // Npre specifies how many e-folds of subhorizon evolution we want, which can be negative if N falls later
+        // than horizon crossing. This can happen for configurations with large enough k_t. It is measured relative to Ncross.
+
+        // if we want initial conditions which start at time N, then we need Ncross-N efolds of subhorizon evolution
+
+				double Ncross = this->N_init + this->N_sub_horizon;
+				this->mdl->offset_ics(this->params, this->ics, offset_ics, this->N_init, Ncross, Ncross - N);
 
         return(offset_ics);
 			}
@@ -239,10 +271,11 @@ namespace transport
     void initial_conditions<number>::serialize(Json::Value& writer) const
       {
 		    // serialize model UID
-		    writer[__CPP_TRANSPORT_NODE_ICS_MODEL_UID] = Json::Value(this->mdl->get_identity_string());
+		    writer[__CPP_TRANSPORT_NODE_ICS_MODEL_UID] = this->mdl->get_identity_string();
 
-        // serialize N*
-        writer[__CPP_TRANSPORT_NODE_ICS_NSTAR] = Json::Value(this->Nstar);
+        // serialize time parameters
+        writer[__CPP_TRANSPORT_NODE_ICS_N_SUB_HORIZON] = this->N_sub_horizon;
+        writer[__CPP_TRANSPORT_NODE_ICS_N_INIT]        = this->N_init;
 
         // serialize array of initial values
         Json::Value ics(Json::arrayValue);
@@ -259,8 +292,9 @@ namespace transport
           }
 		    writer[__CPP_TRANSPORT_NODE_ICS_VALUES] = ics;
 
-        // serialize parameter values
-        this->params.serialize(writer);
+        Json::Value params_serialize(Json::objectValue);
+        this->params.serialize(params_serialize);
+        writer[__CPP_TRANSPORT_NODE_ICS_PARAMETERS] = params_serialize;
       }
 
 

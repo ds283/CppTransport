@@ -65,9 +65,9 @@ namespace transport
 
 		        //! shift a threepf kconfig-line for coordinate labels (l,m,n)
 		        //! and supplied time configuration
-		        void shift(integration_task<number>* tk, model<number>* mdl,
+		        void shift(twopf_list_task<number>* tk, model<number>* mdl,
 		                   datapipe<number>& pipe,
-		                   const std::vector<number>& background, std::vector< threepf_configuration>& configs,
+		                   const std::vector<number>& background, std::vector< threepf_kconfig>& configs,
 		                   std::vector<number>& line_data,
 		                   unsigned int l, unsigned int m, unsigned int n,
 		                   unsigned int t_serial, double t_value) const;
@@ -75,9 +75,9 @@ namespace transport
 		      protected:
 
 		        //! apply the derivative shift to a particular operator
-		        void make_shift(integration_task<number>* tk, model<number>* mdl,
+		        void make_shift(twopf_list_task<number>* tk, model<number>* mdl,
 		                        datapipe<number>& pipe,
-		                        const std::vector< threepf_configuration >& configs,
+		                        const std::vector< threepf_kconfig >& configs,
 		                        std::vector< std::array<extractor<number>, 3> >& extractors,
 		                        std::vector<number>& line_data,
 		                        unsigned int t_serial, double t_value,
@@ -88,9 +88,9 @@ namespace transport
 
 
 				template <typename number>
-				void threepf_kconfig_shift<number>::shift(integration_task<number>* tk, model<number>* mdl,
+				void threepf_kconfig_shift<number>::shift(twopf_list_task<number>* tk, model<number>* mdl,
 				                                          datapipe<number>& pipe,
-				                                          const std::vector<number>& background, std::vector< threepf_configuration>& configs,
+				                                          const std::vector<number>& background, std::vector< threepf_kconfig>& configs,
 				                                          std::vector<number>& line_data,
 				                                          unsigned int l, unsigned int m, unsigned int n,
 				                                          unsigned int t_serial, double t_value) const
@@ -105,7 +105,7 @@ namespace transport
 						    // set up array of k-value extractors for the first operator
 						    std::vector< std::array<extractor<number>, 3> > extractors;
 
-						    for(typename std::vector<threepf_configuration>::iterator t = configs.begin(); t != configs.end(); t++)
+						    for(typename std::vector<threepf_kconfig>::iterator t = configs.begin(); t != configs.end(); t++)
 							    {
 						        std::array<extractor<number>, 3> elt = { extractor<number>(1, *t), extractor<number>(2, *t), extractor<number>(3, *t) };
 						        extractors.push_back(elt);
@@ -119,7 +119,7 @@ namespace transport
 						    // set up array of k-value extractors for the first operator
 						    std::vector< std::array<extractor<number>, 3> > extractors;
 
-						    for(typename std::vector<threepf_configuration>::iterator t = configs.begin(); t != configs.end(); t++)
+						    for(typename std::vector<threepf_kconfig>::iterator t = configs.begin(); t != configs.end(); t++)
 							    {
 						        std::array<extractor<number>, 3> elt = { extractor<number>(2, *t), extractor<number>(1, *t), extractor<number>(3, *t) };
 						        extractors.push_back(elt);
@@ -133,7 +133,7 @@ namespace transport
 						    // set up array of k-value extractors for the first operator
 						    std::vector< std::array<extractor<number>, 3> > extractors;
 
-						    for(typename std::vector<threepf_configuration>::iterator t = configs.begin(); t != configs.end(); t++)
+						    for(typename std::vector<threepf_kconfig>::iterator t = configs.begin(); t != configs.end(); t++)
 							    {
 						        std::array<extractor<number>, 3> elt = { extractor<number>(3, *t), extractor<number>(1, *t), extractor<number>(2, *t) };
 						        extractors.push_back(elt);
@@ -145,9 +145,9 @@ namespace transport
 
 
 		    template <typename number>
-		    void threepf_kconfig_shift<number>::make_shift(integration_task<number>* tk, model<number>* mdl,
+		    void threepf_kconfig_shift<number>::make_shift(twopf_list_task<number>* tk, model<number>* mdl,
 		                                                   datapipe<number>& pipe,
-		                                                   const std::vector<threepf_configuration>& configs,
+		                                                   const std::vector<threepf_kconfig>& configs,
 		                                                   std::vector< std::array<extractor<number>, 3> >& extractors,
 		                                                   std::vector<number>& line_data,
 		                                                   unsigned int t_serial, double t_value,
@@ -259,9 +259,9 @@ namespace transport
 				        std::vector< std::vector< std::vector<number> > > C_prq;
 
 				        // evaluate B and C tensors for this configuration
-				        mdl->B(tk->get_params(), bg_config, extractors[i][1].comoving(), extractors[i][2].comoving(), extractors[i][0].comoving(), t_value, B_qrp);
-				        mdl->C(tk->get_params(), bg_config, extractors[i][0].comoving(), extractors[i][1].comoving(), extractors[i][2].comoving(), t_value, C_pqr);
-				        mdl->C(tk->get_params(), bg_config, extractors[i][0].comoving(), extractors[i][2].comoving(), extractors[i][1].comoving(), t_value, C_prq);
+				        mdl->B(tk, bg_config, extractors[i][1].comoving(), extractors[i][2].comoving(), extractors[i][0].comoving(), t_value, B_qrp);
+				        mdl->C(tk, bg_config, extractors[i][0].comoving(), extractors[i][1].comoving(), extractors[i][2].comoving(), t_value, C_pqr);
+				        mdl->C(tk, bg_config, extractors[i][0].comoving(), extractors[i][2].comoving(), extractors[i][1].comoving(), t_value, C_prq);
 
 				        number shift = 0.0;
 

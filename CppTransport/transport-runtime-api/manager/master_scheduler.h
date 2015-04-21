@@ -273,6 +273,7 @@ namespace transport
 		    //! check for an update string
 		    bool generate_update_string(std::string& msg);
 
+
 		    // INTERFACE -- MANAGE WORK ASSIGNMENTS
 
       public:
@@ -303,6 +304,10 @@ namespace transport
 		    //! build a work queue from a list of work items
 		    template <typename WorkItem>
 		    void build_queue(const std::vector<WorkItem>& q);
+
+        //! build a work queue for a database of configurations
+        template <typename Database>
+        void build_queue(const Database& db);
 
 
 		    // SCHEDULING STRATEGIES
@@ -458,38 +463,40 @@ namespace transport
 		template <typename number>
 		void master_scheduler::prepare_queue(twopf_task<number>& task)
 			{
-				this->build_queue(task.get_twopf_kconfig_list());
+				this->build_queue(task.get_twopf_database());
 			}
 
 
 		template <typename number>
 		void master_scheduler::prepare_queue(threepf_task<number>& task)
 			{
-				this->build_queue(task.get_threepf_kconfig_list());
+				this->build_queue(task.get_threepf_database());
 			}
 
 
 		template <typename number>
 		void master_scheduler::prepare_queue(zeta_twopf_task<number>& task)
 			{
-				this->build_queue(task.get_twopf_kconfig_list());
+				this->build_queue(task.get_twopf_database());
 			}
 
 
 		template <typename number>
 		void master_scheduler::prepare_queue(zeta_threepf_task<number>& task)
 			{
-				this->build_queue(task.get_threepf_kconfig_list());
+				this->build_queue(task.get_threepf_database());
 			}
 
 
 		template <typename number>
 		void master_scheduler::prepare_queue(output_task<number>& task)
 			{
+        // TODO: move output tasks to a database system?
 				this->build_queue(task.get_elements());
 			}
 
 
+    // TODO: this version of build_queue() is required only for output tasks, which don't use the database variant. Refactor output_task so it can be removed?
 		template <typename WorkItem>
 		void master_scheduler::build_queue(const std::vector<WorkItem>& q)
 			{
@@ -515,6 +522,33 @@ namespace transport
         std::random_shuffle(temp.begin(), temp.end());
         std::copy(temp.begin(), temp.end(), this->queue.begin());
 			}
+
+
+    template <typename Database>
+    void master_scheduler::build_queue(const Database& db)
+      {
+        this->queue.clear();
+
+        // build a queue of work items from the serial numbers of each work item
+        for(typename Database::const_config_iterator t = db.config_begin(); t != db.config_end(); t++)
+          {
+            this->queue.push_back(t->get_serial());
+          }
+
+        // sort into ascending order of serial number, and remove any duplicates
+        // (note duplicate removal using unique() requires a sorted list)
+        this->queue.sort();
+        this->queue.unique();
+
+        // shuffle items; work items with nearby serial numbers typically have similar properties and therefore similar
+        // integration times. That can bias the average time-per-item low or high at the beginnng of the integration,
+        // making the remaining-time estimate unreliable
+        // shuffling attempt to alleviate that problem a bit
+        std::vector<unsigned int> temp(this->queue.size());
+        std::copy(this->queue.begin(), this->queue.end(), temp.begin());
+        std::random_shuffle(temp.begin(), temp.end());
+        std::copy(temp.begin(), temp.end(), this->queue.begin());
+      }
 
 
     void master_scheduler::prepare_queue(const std::list<unsigned int>& list)
@@ -634,6 +668,10 @@ namespace transport
 				// many times the time required to aggregate, otherwise the workers will spend
 				// a lot of time waiting around for the master to process MPI messages
 				// in between aggregations
+
+        // note we don't have to worry about how many items are left;
+        // the scheduler will never allocate more than an equitable amount of work per-worker,
+        // no matter how large the granularity becomes
 				if(10*mean_aggregation_time > __CPP_TRANSPORT_DEFAULT_SCHEDULING_GRANULARITY)
 					{
 						this->current_granularity = 10*mean_aggregation_time;

@@ -21,9 +21,13 @@ const double m        = 1e-5;
 const double f        = M_Planck;
 const double Lambda   = pow(5*m*f/(2*M_PI),1.0/2.0);
 
-const double phi_init = 16.0 * M_Planck;
-const double chi_init = f/2.0 - 0.001*M_Planck;
+//const double phi_init = 17.0 * M_Planck;
+//const double chi_init = f/2.0 - 0.0001*M_Planck;
 
+const double phi_init = 15.286384430525004;
+const double chi_init = 0.49877698808418636;
+const double dphi_init = -0.1290777663916847;
+const double dchi_init = -0.00024165779871675337;
 
 // ****************************************************************************
 
@@ -131,26 +135,39 @@ int main(int argc, char* argv[])
     transport::parameters<double> params      =
                                     transport::parameters<double>(M_Planck, init_params, model);
 
-    const std::vector<double> init_values = { phi_init, chi_init };
+    const std::vector<double> init_values = { phi_init, chi_init, dphi_init, dchi_init };
 
-    const double Ninit  = 0.0;  // start counting from N=0 at the beginning of the integration
-    const double Ncross = 5.0;  // horizon-crossing occurs at 7 e-folds from init_values
-    const double Npre   = 5.0;  // how many e-folds do we wish to track the mode prior to horizon exit?
-    const double Nmax   = 60.0; // how many e-folds to integrate after horizon crossing
+//    const double Ninit  = 0.0;  // start counting from N=0 at the beginning of the integration
+//    const double Ncross = 13;   // horizon-crossing occurs at N=13
+//    const double Npre   = 5;    // number of e-folds of subhorizon evolution
+//    const double Nsplit = 32.0; // split point between early and late
+//    const double Nmax   = 47.0; // how many e-folds to integrate after horizon crossing
 
-    // set up initial conditions
-    transport::initial_conditions<double> ics =
-                                            transport::initial_conditions<double>("axion-1", model, params, init_values, Ninit, Ncross, Npre);
+    const double Ninit  = 8.0;  // start counting from N=0 at the beginning of the integration
+    const double Ncross = 13.0;  // horizon-crossing occurs at N=13
+    const double Npre   = 5.0;  // number of e-folds of subhorizon evolution
+    const double Nsplit = 32.0; // split point between early and late
+    const double Nmax   = 47.0; // how many e-folds to integrate after horizon crossing
 
-    const unsigned int t_samples = 1000;       // record 5000 samples - enough to find a good stepsize
+//    const double Ninit  = 0.0;  // start counting from N=0 at the beginning of the integration
+//    const double Ncross = 5.0;  // horizon-crossing occurs at N=13
+//    const double Npre   = 5.0;  // number of e-folds of subhorizon evolution
+//    const double Nsplit = 32.0; // split point between early and late
+//    const double Nmax   = 47.0; // how many e-folds to integrate after horizon crossing
 
-    struct TimeStoragePolicy
-      {
-      public:
-        bool operator() (const transport::integration_task<double>::time_config_storage_policy_data& data) { return((data.serial % 1) == 0); }
-      };
 
-    transport::range<double> times = transport::range<double >(Ninit, Nmax+Npre, t_samples, transport::logarithmic_bottom_stepping);
+    // set up initial conditions with the specified horizon-crossing time Ncross and Npre
+    // e-folds of subhorizon evolution.
+    // The resulting initial conditions apply at time Ncross-Npre
+//    transport::initial_conditions<double> ics("axion-1", model, params, init_values, Ninit, Ncross, Npre);
+    transport::initial_conditions<double> ics("axion-1", model, params, init_values, Ninit, Npre);
+
+    const unsigned int early_t_samples = 200;
+    const unsigned int late_t_samples  = 100;
+
+    transport::stepping_range<double> early_times(Ncross-Npre, Ncross+Nsplit, early_t_samples, transport::logarithmic_bottom_stepping);
+    transport::stepping_range<double> late_times(Ncross+Nsplit, Ncross+Nmax, late_t_samples, transport::linear_stepping);
+    transport::aggregation_range<double> times(early_times, late_times);
 
     // the conventions for k-numbers are as follows:
     // k=1 is the mode which crosses the horizon at time N*,
@@ -162,28 +179,28 @@ int main(int argc, char* argv[])
 		struct ThreepfStoragePolicy
 			{
 		  public:
-				bool operator() (const transport::threepf_task<double>::threepf_kconfig_storage_policy_data& data) { return(true); }
+				bool operator() (const transport::threepf_kconfig& data) { return(true); }
 			};
 
-    transport::range<double> ks = transport::range<double>(kmin, kmax, k_samples, transport::linear_stepping);
+    transport::stepping_range<double> ks(kmin, kmax, k_samples, transport::linear_stepping);
 
     // construct a twopf task
     transport::twopf_task<double> tk2 = transport::twopf_task<double>("axion.twopf-1", ics, times, ks);
-    tk2.set_fast_forward(false);
+
+    // construct a zeta twopf task
+    transport::zeta_twopf_task<double> ztk2 = transport::zeta_twopf_task<double>("axion.twopf-1.zeta", tk2);
+    ztk2.set_paired(true);
 
     // construct a threepf task
-    transport::threepf_cubic_task<double> tk3 = transport::threepf_cubic_task<double>("axion.threepf-1", ics, times, ks, TimeStoragePolicy(), ThreepfStoragePolicy());
+    transport::threepf_cubic_task<double> tk3 = transport::threepf_cubic_task<double>("axion.threepf-1", ics, times, ks, ThreepfStoragePolicy());
 
-    // construct zeta threepf versions
+    // construct zeta threepf task
     transport::zeta_threepf_task<double> ztk3  = transport::zeta_threepf_task<double>("axion.threepf-1.zeta", tk3);
     ztk3.set_paired(true);
+
     transport::fNL_task<double> ztk3_fNL_local = transport::fNL_task<double>("axion.threepf-1.fNL_local", ztk3, transport::derived_data::fNL_local_template);
     transport::fNL_task<double> ztk3_fNL_equi  = transport::fNL_task<double>("axion.threepf-1.fNL_equi", ztk3, transport::derived_data::fNL_equi_template);
     transport::fNL_task<double> ztk3_fNL_ortho = transport::fNL_task<double>("axion.threepf-1.fNL_ortho", ztk3, transport::derived_data::fNL_ortho_template);
-
-    // construct a zeta twopf version
-    transport::zeta_twopf_task<double> ztk2 = transport::zeta_twopf_task<double>("axion.twopf-1.zeta", tk2);
-    ztk2.set_paired(true);
 
 		// construct some derived data products; first, simply plots of the background
 

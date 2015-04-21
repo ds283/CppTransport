@@ -43,34 +43,28 @@ namespace transport
 		            template <typename number>
 		            derived_line<number>* deserialize(Json::Value& reader, typename repository_finder<number>::task_finder finder)
 			            {
-		                derived_line<number>* rval = nullptr;
-
 		                std::string type = reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE].asString();
 
-		                if     (type == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_BACKGROUND)                                rval = new background_time_series<number>(reader, finder);
-		                else if(type == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TWOPF_TIME_SERIES)                         rval = new twopf_time_series<number>(reader, finder);
-		                else if(type == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_TIME_SERIES)                       rval = new threepf_time_series<number>(reader, finder);
-		                else if(type == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TENSOR_TWOPF_TIME_SERIES)                  rval = new tensor_twopf_time_series<number>(reader, finder);
-		                else if(type == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TENSOR_TWOPF_WAVENUMBER_SERIES)            rval = new tensor_twopf_wavenumber_series<number>(reader, finder);
-                    else if(type == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_TWOPF_TIME_SERIES)                    rval = new zeta_twopf_time_series<number>(reader, finder);
-                    else if(type == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_THREEPF_TIME_SERIES)                  rval = new zeta_threepf_time_series<number>(reader, finder);
-                    else if(type == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_REDUCED_BISPECTRUM_TIME_SERIES)       rval = new zeta_reduced_bispectrum_time_series<number>(reader, finder);
-			              else if(type == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TWOPF_WAVENUMBER_SERIES)                   rval = new twopf_wavenumber_series<number>(reader, finder);
-		                else if(type == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_WAVENUMBER_SERIES)                 rval = new threepf_wavenumber_series<number>(reader, finder);
-		                else if(type == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_TWOPF_WAVENUMBER_SERIES)              rval = new zeta_twopf_wavenumber_series<number>(reader, finder);
-		                else if(type == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_THREEPF_WAVENUMBER_SERIES)            rval = new zeta_threepf_wavenumber_series<number>(reader, finder);
-		                else if(type == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_REDUCED_BISPECTRUM_WAVENUMBER_SERIES) rval = new zeta_reduced_bispectrum_wavenumber_series<number>(reader, finder);
-                    else if(type == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_FNL_TIME_SERIES)                           rval = new fNL_time_series<number>(reader, finder);
-		                else if(type == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_R_TIME_SERIES)                             rval = new r_time_series<number>(reader, finder);
-		                else if(type == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_R_WAVENUMBER_SERIES)                       rval = new r_wavenumber_series<number>(reader, finder);
-		                else
-			                {
-		                    std::ostringstream msg;
-		                    msg << __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_CONTENT_TYPE_UNKNOWN << " '" << type << "'";
-		                    throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
-			                }
+		                if     (type == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_BACKGROUND)                                return new background_time_series<number>(reader, finder);
+		                else if(type == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TWOPF_TIME_SERIES)                         return new twopf_time_series<number>(reader, finder);
+		                else if(type == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_TIME_SERIES)                       return new threepf_time_series<number>(reader, finder);
+		                else if(type == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TENSOR_TWOPF_TIME_SERIES)                  return new tensor_twopf_time_series<number>(reader, finder);
+		                else if(type == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TENSOR_TWOPF_WAVENUMBER_SERIES)            return new tensor_twopf_wavenumber_series<number>(reader, finder);
+                    else if(type == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_TWOPF_TIME_SERIES)                    return new zeta_twopf_time_series<number>(reader, finder);
+                    else if(type == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_THREEPF_TIME_SERIES)                  return new zeta_threepf_time_series<number>(reader, finder);
+                    else if(type == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_REDUCED_BISPECTRUM_TIME_SERIES)       return new zeta_reduced_bispectrum_time_series<number>(reader, finder);
+			              else if(type == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TWOPF_WAVENUMBER_SERIES)                   return new twopf_wavenumber_series<number>(reader, finder);
+		                else if(type == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_WAVENUMBER_SERIES)                 return new threepf_wavenumber_series<number>(reader, finder);
+		                else if(type == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_TWOPF_WAVENUMBER_SERIES)              return new zeta_twopf_wavenumber_series<number>(reader, finder);
+		                else if(type == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_THREEPF_WAVENUMBER_SERIES)            return new zeta_threepf_wavenumber_series<number>(reader, finder);
+		                else if(type == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_REDUCED_BISPECTRUM_WAVENUMBER_SERIES) return new zeta_reduced_bispectrum_wavenumber_series<number>(reader, finder);
+                    else if(type == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_FNL_TIME_SERIES)                           return new fNL_time_series<number>(reader, finder);
+		                else if(type == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_R_TIME_SERIES)                             return new r_time_series<number>(reader, finder);
+		                else if(type == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_R_WAVENUMBER_SERIES)                       return new r_wavenumber_series<number>(reader, finder);
 
-		                return(rval);
+                    std::ostringstream msg;
+                    msg << __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_CONTENT_TYPE_UNKNOWN << " '" << type << "'";
+                    throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
 			            }
 
 			        }   // namespace derived_line_helper

@@ -346,7 +346,7 @@ namespace transport
 				    std::string xtype = reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_X_AXIS_CLASS].asString();
 				    if(xtype == __CPP_TRANSPORT_NODE_PRODUCT_AXIS_CLASS_TIME)                       x_class = time_axis;
 				    else if(xtype == __CPP_TRANSPORT_NODE_PRODUCT_AXIS_CLASS_WAVENUMBER)            x_class = wavenumber_axis;
-				    else if(xtype == __CPP_TRANSPORT_NODE_PRODUCT_AXIS_CLASS_THREEPF_CONFIGURATION) x_class = threepf_configuration_axis;
+				    else if(xtype == __CPP_TRANSPORT_NODE_PRODUCT_AXIS_CLASS_THREEPF_CONFIGURATION) x_class = threepf_kconfig_axis;
 				    else
 					    {
 				        std::ostringstream msg;
@@ -565,7 +565,7 @@ namespace transport
 							    writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_X_AXIS_CLASS] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_AXIS_CLASS_WAVENUMBER);
 									break;
 
-				        case threepf_configuration_axis:
+				        case threepf_kconfig_axis:
 					        writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_X_AXIS_CLASS] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_AXIS_CLASS_THREEPF_CONFIGURATION);
 						      break;
 
@@ -742,7 +742,7 @@ namespace transport
 									out << __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_CLASS_WAVENUMBER_LABEL << std::endl;
 									break;
 
-						    case threepf_configuration_axis:
+						    case threepf_kconfig_axis:
 							    out << __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_CLASS_THREEPF_CONFIGURATION_LABEL << std::endl;
 
 						    default:

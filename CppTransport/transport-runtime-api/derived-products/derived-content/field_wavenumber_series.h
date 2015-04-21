@@ -64,7 +64,7 @@ namespace transport
             // CLONE
 
             //! self-replicate
-            virtual derived_line<number>* clone() const override { return new twopf_wavenumber_series<number>(static_cast<const twopf_wavenumber_series<number>&>(*this)); }
+            virtual twopf_wavenumber_series<number>* clone() const override { return new twopf_wavenumber_series<number>(static_cast<const twopf_wavenumber_series<number>&>(*this)); }
 
 
             // WRITE TO A STREAM
@@ -129,7 +129,7 @@ namespace transport
 
 		        // pull k-configuration information from the database
 		        twopf_kconfig_tag<number> k_tag = pipe.new_twopf_kconfig_tag();
-		        const typename std::vector< twopf_configuration > k_values = kc_handle.lookup_tag(k_tag);
+		        const typename std::vector< twopf_kconfig > k_values = kc_handle.lookup_tag(k_tag);
 
 				    // loop through all components of the twopf, for each t-configuration we use, pulling data from the database
 				    for(unsigned int i = 0; i < this->time_sample_sns.size(); i++)
@@ -226,7 +226,7 @@ namespace transport
             twopf_list_task<number>* ptk = dynamic_cast< twopf_list_task<number>* >(this->get_parent_task());
             if(ptk != nullptr)
 	            {
-                this->write_kconfig_list(out, ptk->get_twopf_kconfig_list());
+                this->write_kconfig_list(out, ptk->get_twopf_database());
 	            }
 	        }
 
@@ -284,7 +284,7 @@ namespace transport
 		      public:
 
 		        //! self-replicate
-		        virtual derived_line<number>* clone() const override { return new threepf_wavenumber_series<number>(static_cast<const threepf_wavenumber_series<number>&>(*this)); }
+		        virtual threepf_wavenumber_series<number>* clone() const override { return new threepf_wavenumber_series<number>(static_cast<const threepf_wavenumber_series<number>&>(*this)); }
 
 
 		        // WRITE TO A STREAM
@@ -369,7 +369,7 @@ namespace transport
 
             // extract k-configuration data
             threepf_kconfig_tag<number> k_tag = pipe.new_threepf_kconfig_tag();
-            std::vector< threepf_configuration > configs = kc_handle.lookup_tag(k_tag);
+            std::vector< threepf_kconfig > configs = kc_handle.lookup_tag(k_tag);
 
             // loop through all components of the twopf, for each t-configuration we use, pulling data from the database
             for(unsigned int i = 0; i < this->time_sample_sns.size(); i++)
@@ -459,7 +459,7 @@ namespace transport
             threepf_task<number>* ptk = dynamic_cast< threepf_task<number>* >(this->get_parent_task());
             if(ptk != nullptr)
 	            {
-                this->write_kconfig_list(out, ptk->get_threepf_kconfig_list());
+                this->write_kconfig_list(out, ptk->get_threepf_database());
 	            }
 	        }
 

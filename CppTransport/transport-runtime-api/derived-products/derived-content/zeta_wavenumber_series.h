@@ -64,7 +64,7 @@ namespace transport
 		        // CLONE
 
 		        //! self-replicate
-		        virtual derived_line<number>* clone() const override { return new zeta_twopf_wavenumber_series<number>(static_cast<const zeta_twopf_wavenumber_series<number>&>(*this)); }
+		        virtual zeta_twopf_wavenumber_series<number>* clone() const override { return new zeta_twopf_wavenumber_series<number>(static_cast<const zeta_twopf_wavenumber_series<number>&>(*this)); }
 
 
 		        // WRITE TO A STREAM
@@ -127,7 +127,7 @@ namespace transport
 
 		        // pull k-configuration information from the database
 		        twopf_kconfig_tag<number> k_tag = pipe.new_twopf_kconfig_tag();
-		        const typename std::vector< twopf_configuration > k_values = kc_handle.lookup_tag(k_tag);
+		        const typename std::vector< twopf_kconfig > k_values = kc_handle.lookup_tag(k_tag);
 
 		        // loop through all components of the twopf, for each t-configuration we use, pulling data from the database
 		        for(unsigned int i = 0; i < this->time_sample_sns.size(); i++)
@@ -213,7 +213,7 @@ namespace transport
 		        zeta_twopf_list_task<number>* ptk = dynamic_cast< zeta_twopf_list_task<number>* >(this->get_parent_task());
 		        if(ptk != nullptr)
 			        {
-		            this->write_kconfig_list(out, ptk->get_twopf_kconfig_list());
+		            this->write_kconfig_list(out, ptk->get_twopf_database());
 			        }
 			    }
 
@@ -267,7 +267,7 @@ namespace transport
 				    // CLONE
 
 				    //! self-replicate
-				    virtual derived_line<number>* clone() const override { return new zeta_threepf_wavenumber_series<number>(static_cast<const zeta_threepf_wavenumber_series<number>&>(*this)); }
+				    virtual zeta_threepf_wavenumber_series<number>* clone() const override { return new zeta_threepf_wavenumber_series<number>(static_cast<const zeta_threepf_wavenumber_series<number>&>(*this)); }
 
 
 				    // WRITE TO A STREAM
@@ -400,7 +400,7 @@ namespace transport
 		        zeta_threepf_task<number>* ptk = dynamic_cast< zeta_threepf_task<number>* >(this->get_parent_task());
 		        if(ptk != nullptr)
 			        {
-		            this->write_kconfig_list(out, ptk->get_threepf_kconfig_list());
+		            this->write_kconfig_list(out, ptk->get_threepf_database());
 			        }
 			    }
 
@@ -454,7 +454,7 @@ namespace transport
 		        // CLONE
 
 		        //! self-replicate
-		        virtual derived_line<number>* clone() const override { return new zeta_reduced_bispectrum_wavenumber_series<number>(static_cast<const zeta_reduced_bispectrum_wavenumber_series<number>&>(*this)); }
+		        virtual zeta_reduced_bispectrum_wavenumber_series<number>* clone() const override { return new zeta_reduced_bispectrum_wavenumber_series<number>(static_cast<const zeta_reduced_bispectrum_wavenumber_series<number>&>(*this)); }
 
 
 		        // WRITE TO A STREAM
@@ -587,7 +587,7 @@ namespace transport
 				    zeta_threepf_task<number>* ptk = dynamic_cast< zeta_threepf_task<number>* >(this->get_parent_task());
 				    if(ptk != nullptr)
 					    {
-				        this->write_kconfig_list(out, ptk->get_threepf_kconfig_list());
+				        this->write_kconfig_list(out, ptk->get_threepf_database());
 					    }
 			    }
 

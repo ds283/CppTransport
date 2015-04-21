@@ -39,7 +39,7 @@ namespace transport
 
               public:
 
-                handle(datapipe<number>& pipe, integration_task<number>* tk,
+                handle(datapipe<number>& pipe, twopf_list_task<number>* tk,
                        const std::vector<unsigned int>& tsample, const std::vector<double>& taxis, unsigned int Nf);
 
                 ~handle() = default;
@@ -55,7 +55,7 @@ namespace transport
                 model<number>* mdl;
 
                 //! task pointer
-                integration_task<number>* tk;
+                twopf_list_task<number>* tk;
 
                 //! set of time serial numbers for which we are computing
                 const std::vector<unsigned int>& time_sample_sns;
@@ -95,7 +95,7 @@ namespace transport
           public:
 
             //! make a handle
-            std::shared_ptr<handle> make_handle(datapipe<number>& pipe, integration_task<number>* tk,
+            std::shared_ptr<handle> make_handle(datapipe<number>& pipe, twopf_list_task<number>* tk,
                                                 const std::vector<unsigned int>& tsample, const std::vector<double>& taxis, unsigned int Nf) const;
 
 
@@ -104,13 +104,13 @@ namespace transport
           public:
 
             //! compute a time series for the zeta two-point function
-            void twopf(std::shared_ptr<handle>& h, std::vector<number>& line_data, const twopf_configuration& k) const;
+            void twopf(std::shared_ptr<handle>& h, std::vector<number>& line_data, const twopf_kconfig& k) const;
 
             //! compute a time series for the zeta three-point function
-            void threepf(std::shared_ptr<handle>& h, std::vector<number>& line_data, const threepf_configuration& k) const;
+            void threepf(std::shared_ptr<handle>& h, std::vector<number>& line_data, const threepf_kconfig& k) const;
 
             //! compute a time series for the zeta reduced bispectrum
-            void reduced_bispectrum(std::shared_ptr<handle>& h, std::vector<number>& line_data, const threepf_configuration& k) const;
+            void reduced_bispectrum(std::shared_ptr<handle>& h, std::vector<number>& line_data, const threepf_kconfig& k) const;
 
 
             // INTERNAL DATA
@@ -126,7 +126,7 @@ namespace transport
 
 
         template <typename number>
-        zeta_timeseries_compute<number>::handle::handle(datapipe<number>& p, integration_task<number>* t,
+        zeta_timeseries_compute<number>::handle::handle(datapipe<number>& p, twopf_list_task<number>* t,
                                                         const std::vector<unsigned int>& tsample, const std::vector<double>& taxis, unsigned int Nf)
           : pipe(p),
             tk(t),
@@ -163,7 +163,7 @@ namespace transport
             dN.resize(tsample.size());
             for(unsigned int j = 0; j < tsample.size(); j++)
               {
-                mdl->compute_gauge_xfm_1(tk->get_params(), background[j], dN[j]);
+                mdl->compute_gauge_xfm_1(tk, background[j], dN[j]);
 //                mdl->compute_deltaN_xfm_1(tk->get_params(), background[j], dN[j]);
               }
           }
@@ -174,7 +174,7 @@ namespace transport
 
         template <typename number>
         std::shared_ptr<typename zeta_timeseries_compute<number>::handle>
-        zeta_timeseries_compute<number>::make_handle(datapipe<number>& pipe, integration_task<number>* t,
+        zeta_timeseries_compute<number>::make_handle(datapipe<number>& pipe, twopf_list_task<number>* t,
                                                      const std::vector<unsigned int>& tsample, const std::vector<double>& taxis, unsigned int Nf) const
           {
             return std::shared_ptr<handle>(new handle(pipe, t, tsample, taxis, Nf));
@@ -183,7 +183,7 @@ namespace transport
 
         template <typename number>
         void zeta_timeseries_compute<number>::twopf(std::shared_ptr<typename zeta_timeseries_compute<number>::handle>& h,
-                                                    std::vector<number>& line_data, const twopf_configuration& k) const
+                                                    std::vector<number>& line_data, const twopf_kconfig& k) const
           {
             unsigned int N_fields = h->N_fields;
 
@@ -192,8 +192,8 @@ namespace transport
 
 //            std::vector<number> small;
 //            std::vector<number> large;
-//            small.assign(h->time_sample_sns.size(), +DBL_MAX);
-//            large.assign(h->time_sample_sns.size(), -DBL_MAX);
+//            small.assign(h->time_sample_sns.size(), +std::numeric_limits<double>::max());
+//            large.assign(h->time_sample_sns.size(), -std::numeric_limits<double>::max());
 
             for(unsigned int m = 0; m < 2*N_fields; m++)
               {
@@ -216,8 +216,8 @@ namespace transport
                   }
               }
 
-//            number global_small = +DBL_MAX;
-//            number global_large = -DBL_MAX;
+//            number global_small = +std::numeric_limits<double>::max();
+//            number global_large = -std::numeric_limits<double>::max();
 //            for(unsigned int j = 0; j < h->time_sample_sns.size(); j++)
 //              {
 //                number large_fraction = fabs(large[j]/line_data[j]);
@@ -236,7 +236,7 @@ namespace transport
 
         template <typename number>
         void zeta_timeseries_compute<number>::threepf(std::shared_ptr<typename zeta_timeseries_compute<number>::handle>& h,
-                                                      std::vector<number>& line_data, const threepf_configuration& k) const
+                                                      std::vector<number>& line_data, const threepf_kconfig& k) const
           {
             unsigned int N_fields = h->N_fields;
 
@@ -250,18 +250,18 @@ namespace transport
             std::vector< std::vector< std::vector<number> > > ddN312(h->time_sample_sns.size());
             for(unsigned int j = 0; j < h->time_sample_sns.size(); j++)
               {
-              h->mdl->compute_gauge_xfm_2(h->tk->get_params(), h->background[j], k.k1_comoving, k.k2_comoving, k.k3_comoving, h->time_axis[j], ddN123[j]);
-              h->mdl->compute_gauge_xfm_2(h->tk->get_params(), h->background[j], k.k2_comoving, k.k1_comoving, k.k3_comoving, h->time_axis[j], ddN213[j]);
-              h->mdl->compute_gauge_xfm_2(h->tk->get_params(), h->background[j], k.k3_comoving, k.k1_comoving, k.k2_comoving, h->time_axis[j], ddN312[j]);
-//                h->mdl->compute_deltaN_xfm_2(h->tk->get_params(), h->background[j], ddN123[j]);
-//                h->mdl->compute_deltaN_xfm_2(h->tk->get_params(), h->background[j], ddN213[j]);
-//                h->mdl->compute_deltaN_xfm_2(h->tk->get_params(), h->background[j], ddN312[j]);
+              h->mdl->compute_gauge_xfm_2(h->tk, h->background[j], k.k1_comoving, k.k2_comoving, k.k3_comoving, h->time_axis[j], ddN123[j]);
+              h->mdl->compute_gauge_xfm_2(h->tk, h->background[j], k.k2_comoving, k.k1_comoving, k.k3_comoving, h->time_axis[j], ddN213[j]);
+              h->mdl->compute_gauge_xfm_2(h->tk, h->background[j], k.k3_comoving, k.k1_comoving, k.k2_comoving, h->time_axis[j], ddN312[j]);
+//                h->mdl->compute_deltaN_xfm_2(h->tk, h->background[j], ddN123[j]);
+//                h->mdl->compute_deltaN_xfm_2(h->tk, h->background[j], ddN213[j]);
+//                h->mdl->compute_deltaN_xfm_2(h->tk, h->background[j], ddN312[j]);
               }
 
 //            std::vector<number> small;
 //            std::vector<number> large;
-//            small.assign(h->time_sample_sns.size(), +DBL_MAX);
-//            large.assign(h->time_sample_sns.size(), -DBL_MAX);
+//            small.assign(h->time_sample_sns.size(), +std::numeric_limits<double>::max());
+//            large.assign(h->time_sample_sns.size(), -std::numeric_limits<double>::max());
 
             // linear component of the gauge transformation
             for(unsigned int l = 0; l < 2*N_fields; l++)
@@ -346,8 +346,8 @@ namespace transport
                   }
               }
 
-//            number global_small = +DBL_MAX;
-//            number global_large = -DBL_MAX;
+//            number global_small = +std::numeric_limits<double>::max();
+//            number global_large = -std::numeric_limits<double>::max();
 //            for(unsigned int j = 0; j < h->time_sample_sns.size(); j++)
 //              {
 //                number large_fraction = fabs(large[j]/line_data[j]);
@@ -366,7 +366,7 @@ namespace transport
 
         template <typename number>
         void zeta_timeseries_compute<number>::reduced_bispectrum(std::shared_ptr<typename zeta_timeseries_compute::handle>& h,
-                                                                 std::vector<number>& line_data, const threepf_configuration& k) const
+                                                                 std::vector<number>& line_data, const threepf_kconfig& k) const
           {
             line_data.clear();
             line_data.assign(h->time_sample_sns.size(), 0.0);
@@ -380,17 +380,17 @@ namespace transport
             std::vector<number> twopf_k2;
             std::vector<number> twopf_k3;
 
-            twopf_configuration k1;
+            twopf_kconfig k1;
             k1.serial         = k.k1_serial;
             k1.k_comoving     = k.k1_comoving;
             k1.k_conventional = k.k1_conventional;
 
-            twopf_configuration k2;
+            twopf_kconfig k2;
             k2.serial         = k.k2_serial;
             k2.k_comoving     = k.k2_comoving;
             k2.k_conventional = k.k2_conventional;
 
-            twopf_configuration k3;
+            twopf_kconfig k3;
             k3.serial         = k.k3_serial;
             k3.k_comoving     = k.k3_comoving;
             k3.k_conventional = k.k3_conventional;

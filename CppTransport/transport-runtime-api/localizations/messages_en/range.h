@@ -8,20 +8,24 @@
 #define __CPP_TRANSPORT_MESSAGES_EN_RANGE_H
 
 
-#define __CPP_TRANSPORT_RANGE_RANGE                     "Internal error: Out of range when accessing 'range' object"
+#define __CPP_TRANSPORT_RANGE_RANGE                       "Internal error: Out of range when accessing 'range' object"
 
-#define __CPP_TRANSPORT_RANGE_INVALID_SPACING           "Unknown spacing type in 'range' object"
+#define __CPP_TRANSPORT_RANGE_INVALID_SPACING             "Unknown spacing type in 'range' object"
 
-#define __CPP_TRANSPORT_RANGE_A                         "Range: "
-#define __CPP_TRANSPORT_RANGE_B                         " steps, spacing = "
-#define __CPP_TRANSPORT_RANGE_C                         ": min = "
-#define __CPP_TRANSPORT_RANGE_D                         "max = "
-#define __CPP_TRANSPORT_RANGE_LINEAR                    "linear"
-#define __CPP_TRANSPORT_RANGE_LOGARITHMIC_BOTTOM        "logarithmic from bottom"
-#define __CPP_TRANSPORT_RANGE_LOGARITHMIC_TOP           "logarithmic from top"
-#define __CPP_TRANSPORT_SERIALIZE_NULL_RANGE            "Internal error: attempt to serialize null 'range' object"
+#define __CPP_TRANSPORT_STEPPING_RANGE_A                  "Stepping range: "
+#define __CPP_TRANSPORT_STEPPING_RANGE_B                  " steps, spacing = "
+#define __CPP_TRANSPORT_STEPPING_RANGE_C                  ": min = "
+#define __CPP_TRANSPORT_STEPPING_RANGE_D                  "max = "
+#define __CPP_TRANSPORT_STEPPING_RANGE_E                  "Range:"
+#define __CPP_TRANSPORT_STEPPING_RANGE_LINEAR             "linear"
+#define __CPP_TRANSPORT_STEPPING_RANGE_LOGARITHMIC_BOTTOM "logarithmic from bottom"
+#define __CPP_TRANSPORT_STEPPING_RANGE_LOGARITHMIC_TOP    "logarithmic from top"
 
-#define __CPP_TRANSPORT_RANGE_NULL_SERIALIZATION_READER "Internal error: null serialization reader in 'range' object"
+#define __CPP_TRANSPORT_AGGREGATION_RANGE_A               "Aggregation range: "
+#define __CPP_TRANSPORT_AGGREGATION_RANGE_B               "subranges"
+#define __CPP_TRANSPORT_AGGREGATION_RANGE_C               "Merged range:"
+
+#define __CPP_TRANSPORT_RANGE_UNKNOWN_TYPE                "Internal error: unknown range type"
 
 
 #endif // __CPP_TRANSPORT_MESSAGES_EN_RANGE_H

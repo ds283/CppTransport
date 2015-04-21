@@ -715,13 +715,15 @@ namespace transport
 	    {
         assert(tk != nullptr);
 
-//        if(!silent) this->write_task_data(tk, std::cout, $$__BACKG_ABS_ERR, $$__BACKG_REL_ERR, $$__BACKG_STEP_SIZE, "$$__BACKG_STEPPER");
+        const time_config_database time_db = tk->get_time_config_database();
 
         solution.clear();
-        solution.reserve(tk->get_time_config_list().size());
+        solution.reserve(time_db.size());
+
+//        if(!silent) this->write_task_data(tk, std::cout, $$__BACKG_ABS_ERR, $$__BACKG_REL_ERR, $$__BACKG_STEP_SIZE, "$$__BACKG_STEPPER");
 
         // set up an observer which writes to this history vector
-        $$__MODEL_background_observer<number> obs(solution, tk->get_time_config_list());
+        $$__MODEL_background_observer<number> obs(solution, time_db);
 
         // set up a functor to evolve this system
         $$__MODEL_background_functor<number> system(tk->get_params());
@@ -731,11 +733,9 @@ namespace transport
         backg_state<number> x($$__MODEL_pool::backg_state_size);
         x[this->flatten($$__A)] = $$// ics[$$__A];
 
-        auto times = tk->get_integration_step_times();
-
         using namespace boost::numeric::odeint;
-        integrate_times($$__MAKE_BACKG_STEPPER{backg_state<number>}, system, x, times.begin(), times.end(), $$__BACKG_STEP_SIZE, obs);
-	    }
+        integrate_times($$__MAKE_BACKG_STEPPER{backg_state<number>}, system, x, time_db.value_begin(), time_db.value_end(), $$__BACKG_STEP_SIZE, obs);
+      }
 
 
     // IMPLEMENTATION - FUNCTOR FOR BACKGROUND INTEGRATION
@@ -763,13 +763,12 @@ namespace transport
     template <typename number>
     void $$__MODEL_background_observer<number>::operator()(const backg_state<number>& x, double t)
 	    {
-        if(this->current_config != this->storage_list.end() && (*(this->current_config)).serial == this->serial)
-	        {
+        if(this->current_step != this->time_db.record_end() && this->current_step->is_stored())
+          {
             this->history.push_back(x);
-            this->current_config++;
-	        }
-        this->serial++;
-	    }
+          }
+        this->current_step++;
+      }
 
 
 	}   // namespace transport

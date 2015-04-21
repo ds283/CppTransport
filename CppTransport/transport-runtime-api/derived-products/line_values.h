@@ -34,7 +34,7 @@ namespace transport
 			{
 
 				//! derived lines are associated with one a three classes of axis
-				typedef enum { time_axis, wavenumber_axis, threepf_configuration_axis } axis_class;
+				typedef enum { time_axis, wavenumber_axis, threepf_kconfig_axis } axis_class;
 
 				//! possible axis choices for a given derived line
 				typedef enum

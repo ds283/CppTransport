@@ -56,10 +56,10 @@ namespace transport
 		                                  const std::list<std::string>& tags) const override;
 
 		        //! generate a LaTeX label
-		        std::string get_LaTeX_label(unsigned int m, unsigned int n, const twopf_configuration& k) const;
+		        std::string get_LaTeX_label(unsigned int m, unsigned int n, const twopf_kconfig& k) const;
 
 		        //! generate a non-LaTeX label
-		        std::string get_non_LaTeX_label(unsigned int m, unsigned int n, const twopf_configuration& k) const;
+		        std::string get_non_LaTeX_label(unsigned int m, unsigned int n, const twopf_kconfig& k) const;
 
 
 				    // CLONE
@@ -67,7 +67,7 @@ namespace transport
 		      public:
 
 				    //! self-replicate
-				    virtual derived_line<number>* clone() const override { return new tensor_twopf_time_series<number>(static_cast<const tensor_twopf_time_series<number>&>(*this)); }
+				    virtual tensor_twopf_time_series<number>* clone() const override { return new tensor_twopf_time_series<number>(static_cast<const tensor_twopf_time_series<number>&>(*this)); }
 
 
 				    // WRITE TO A STREAM
@@ -130,7 +130,7 @@ namespace transport
 		        // pull k-configuration information from the database
 		        twopf_kconfig_tag<number> k_tag = pipe.new_twopf_kconfig_tag();
 
-		        const typename std::vector< twopf_configuration > k_values = k_handle.lookup_tag(k_tag);
+		        const typename std::vector< twopf_kconfig > k_values = k_handle.lookup_tag(k_tag);
 
 		        // for each k-configuration, loop through all components of the tensor twopf and pull data from the database
 		        for(unsigned int i = 0; i < this->kconfig_sample_sns.size(); i++)
@@ -162,7 +162,7 @@ namespace transport
 
 
         template <typename number>
-        std::string tensor_twopf_time_series<number>::get_LaTeX_label(unsigned int m, unsigned int n, const twopf_configuration& k) const
+        std::string tensor_twopf_time_series<number>::get_LaTeX_label(unsigned int m, unsigned int n, const twopf_kconfig& k) const
 	        {
             std::string tag = this->make_LaTeX_tag(k);
             std::string label;
@@ -182,7 +182,7 @@ namespace transport
 
 
         template <typename number>
-        std::string tensor_twopf_time_series<number>::get_non_LaTeX_label(unsigned int m, unsigned int n, const twopf_configuration& k) const
+        std::string tensor_twopf_time_series<number>::get_non_LaTeX_label(unsigned int m, unsigned int n, const twopf_kconfig& k) const
 	        {
             std::string tag = this->make_non_LaTeX_tag(k);
             std::string label;

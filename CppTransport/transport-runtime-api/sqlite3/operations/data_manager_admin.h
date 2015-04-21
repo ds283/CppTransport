@@ -24,7 +24,7 @@ namespace transport
             assert(db != nullptr);
             assert(tk != nullptr);
 
-            std::vector<time_config> sample_times = tk->get_time_config_list();
+            const time_config_database& time_db = tk->get_stored_time_config_database();
 
             // set up a table
             std::stringstream create_stmt;
@@ -43,7 +43,7 @@ namespace transport
 
             exec(db, "BEGIN TRANSACTION;");
 
-            for(std::vector<time_config>::const_iterator t = sample_times.begin(); t != sample_times.end(); t++)
+            for(time_config_database::const_config_iterator t = time_db.config_begin(); t != time_db.config_end(); t++)
               {
                 check_stmt(db, sqlite3_bind_int(stmt, 1, t->serial));
                 check_stmt(db, sqlite3_bind_double(stmt, 2, t->t));
@@ -66,7 +66,7 @@ namespace transport
             assert(db != nullptr);
             assert(tk != nullptr);
 
-            std::vector<twopf_kconfig> kconfig_list = tk->get_twopf_kconfig_list();
+            const twopf_kconfig_database& twopf_db = tk->get_twopf_database();
 
             // set up a table
             std::stringstream stmt_text;
@@ -87,7 +87,7 @@ namespace transport
 
             exec(db, "BEGIN TRANSACTION;");
 
-            for(std::vector<twopf_kconfig>::const_iterator t = kconfig_list.begin(); t != kconfig_list.end(); t++)
+            for(twopf_kconfig_database::const_config_iterator t = twopf_db.config_begin(); t != twopf_db.config_end(); t++)
               {
                 check_stmt(db, sqlite3_bind_int(stmt, 1, t->serial));
                 check_stmt(db, sqlite3_bind_double(stmt, 2, t->k_conventional));
@@ -111,7 +111,7 @@ namespace transport
             assert(db != nullptr);
             assert(tk != nullptr);
 
-            std::vector<threepf_kconfig> threepf_sample = tk->get_threepf_kconfig_list();
+            const threepf_kconfig_database& threepf_db = tk->get_threepf_database();
 
             // set up a table
             std::stringstream stmt_text;
@@ -140,14 +140,14 @@ namespace transport
 
             exec(db, "BEGIN TRANSACTION;");
 
-            for(std::vector<threepf_kconfig>::const_iterator t = threepf_sample.begin(); t != threepf_sample.end(); t++)
+            for(threepf_kconfig_database::const_config_iterator t = threepf_db.config_begin(); t != threepf_db.config_end(); t++)
               {
                 check_stmt(db, sqlite3_bind_int(stmt, 1, t->serial));
-                check_stmt(db, sqlite3_bind_int(stmt, 2, t->index[0]));
-                check_stmt(db, sqlite3_bind_int(stmt, 3, t->index[1]));
-                check_stmt(db, sqlite3_bind_int(stmt, 4, t->index[2]));
-                check_stmt(db, sqlite3_bind_double(stmt, 5, t->k_t_comoving));
-                check_stmt(db, sqlite3_bind_double(stmt, 6, t->k_t_conventional));
+                check_stmt(db, sqlite3_bind_int(stmt, 2, t->k1_serial));
+                check_stmt(db, sqlite3_bind_int(stmt, 3, t->k2_serial));
+                check_stmt(db, sqlite3_bind_int(stmt, 4, t->k3_serial));
+                check_stmt(db, sqlite3_bind_double(stmt, 5, t->kt_comoving));
+                check_stmt(db, sqlite3_bind_double(stmt, 6, t->kt_conventional));
                 check_stmt(db, sqlite3_bind_double(stmt, 7, t->alpha));
                 check_stmt(db, sqlite3_bind_double(stmt, 8, t->beta));
 

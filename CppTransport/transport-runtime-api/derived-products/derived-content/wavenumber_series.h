@@ -111,10 +111,10 @@ namespace transport
 		        virtual void write(std::ostream& out);
 
 		        //! Write details of the k-configurations included in this product - twopf version
-		        void write_kconfig_list(std::ostream& out, const std::vector< twopf_kconfig >& list);
+		        void write_kconfig_list(std::ostream& out, const twopf_kconfig_database& twopf_db);
 
 		        //! Write details of the k-configurations included in this product - threepf version
-		        void write_kconfig_list(std::ostream& out, const std::vector< threepf_kconfig >& list);
+		        void write_kconfig_list(std::ostream& out, const threepf_kconfig_database& threepf_db);
 
 
 		        // SERIALIZATION -- implements a 'serializable' interface
@@ -152,7 +152,7 @@ namespace transport
 				    // set up list of serial numbers corresponding to the sample times for this derived line
             try
               {
-                this->f.filter_time_sample(tfilter, tk.get_time_config_list(), this->time_sample_sns);
+                this->f.filter_time_sample(tfilter, tk.get_stored_time_config_database(), this->time_sample_sns);
               }
             catch(runtime_exception& xe)
               {
@@ -187,11 +187,11 @@ namespace transport
             twopf_kconfig_tag<number> tag = pipe.new_twopf_kconfig_tag();
 
             // safe to take a reference here and avoid a copy
-            const std::vector< twopf_configuration >& configs = handle.lookup_tag(tag);
+            const std::vector< twopf_kconfig >& configs = handle.lookup_tag(tag);
 
             std::vector<double> axis;
 
-            for(typename std::vector< twopf_configuration >::const_iterator t = configs.begin(); t != configs.end(); t++)
+            for(typename std::vector< twopf_kconfig >::const_iterator t = configs.begin(); t != configs.end(); t++)
 	            {
                 if(this->klabel_meaning == derived_line<number>::comoving) axis.push_back((*t).k_comoving);
                 else if(this->klabel_meaning == derived_line<number>::conventional) axis.push_back((*t).k_conventional);
@@ -213,7 +213,7 @@ namespace transport
             threepf_kconfig_tag<number> tag = pipe.new_threepf_kconfig_tag();
 
             // safe to take a reference here
-            const std::vector< threepf_configuration >& configs = handle.lookup_tag(tag);
+            const std::vector< threepf_kconfig >& configs = handle.lookup_tag(tag);
 
             std::vector<double> axis;
 
@@ -222,7 +222,7 @@ namespace transport
 		            case k_axis:
 			            {
 				            // axis consists of k_t values
-		                for(typename std::vector< threepf_configuration >::const_iterator t = configs.begin(); t != configs.end(); t++)
+		                for(typename std::vector< threepf_kconfig >::const_iterator t = configs.begin(); t != configs.end(); t++)
 			                {
 		                    if(this->klabel_meaning == derived_line<number>::comoving) axis.push_back(t->kt_comoving);
 		                    else if(this->klabel_meaning == derived_line<number>::conventional) axis.push_back(t->kt_conventional);
@@ -237,7 +237,7 @@ namespace transport
 
 		            case efolds_exit_axis:
 			            {
-		                for(typename std::vector< threepf_configuration >::const_iterator t = configs.begin(); t != configs.end(); t++)
+		                for(typename std::vector< threepf_kconfig >::const_iterator t = configs.begin(); t != configs.end(); t++)
 			                {
 				                axis.push_back(log(t->kt_conventional));
 			                }
@@ -246,7 +246,7 @@ namespace transport
 
 		            case alpha_axis:
 			            {
-		                for(typename std::vector< threepf_configuration >::const_iterator t = configs.begin(); t != configs.end(); t++)
+		                for(typename std::vector< threepf_kconfig >::const_iterator t = configs.begin(); t != configs.end(); t++)
 			                {
 		                    axis.push_back(t->alpha);
 			                }
@@ -255,7 +255,7 @@ namespace transport
 
 		            case beta_axis:
 			            {
-		                for(typename std::vector< threepf_configuration >::const_iterator t = configs.begin(); t != configs.end(); t++)
+		                for(typename std::vector< threepf_kconfig >::const_iterator t = configs.begin(); t != configs.end(); t++)
 			                {
 		                    axis.push_back(t->beta);
 			                }
@@ -264,7 +264,7 @@ namespace transport
 
 		            case squeezing_fraction_k1_axis:
 			            {
-		                for(typename std::vector< threepf_configuration >::const_iterator t = configs.begin(); t != configs.end(); t++)
+		                for(typename std::vector< threepf_kconfig >::const_iterator t = configs.begin(); t != configs.end(); t++)
 			                {
 		                    axis.push_back(t->k1_conventional/t->kt_conventional);
 			                }
@@ -273,7 +273,7 @@ namespace transport
 
 		            case squeezing_fraction_k2_axis:
 			            {
-		                for(typename std::vector< threepf_configuration >::const_iterator t = configs.begin(); t != configs.end(); t++)
+		                for(typename std::vector< threepf_kconfig >::const_iterator t = configs.begin(); t != configs.end(); t++)
 			                {
 		                    axis.push_back(t->k2_conventional/t->kt_conventional);
 			                }
@@ -282,7 +282,7 @@ namespace transport
 
 		            case squeezing_fraction_k3_axis:
 			            {
-		                for(typename std::vector< threepf_configuration >::const_iterator t = configs.begin(); t != configs.end(); t++)
+		                for(typename std::vector< threepf_kconfig >::const_iterator t = configs.begin(); t != configs.end(); t++)
 			                {
 		                    axis.push_back(t->k3_conventional/t->kt_conventional);
 			                }
@@ -340,7 +340,7 @@ namespace transport
 
 
 		    template <typename number>
-		    void wavenumber_series<number>::write_kconfig_list(std::ostream& out, const std::vector< twopf_kconfig >& list)
+		    void wavenumber_series<number>::write_kconfig_list(std::ostream& out, const twopf_kconfig_database& twopf_db)
 			    {
 		        unsigned int count = 0;
 
@@ -348,7 +348,7 @@ namespace transport
 		        this->wrapper.set_left_margin(2);
 		        this->wrapper.wrap_newline(out);
 
-		        for(std::vector< twopf_kconfig >::const_iterator t = list.begin(); t != list.end(); t++)
+		        for(twopf_kconfig_database::const_config_iterator t = twopf_db.config_begin(); t != twopf_db.config_end(); t++)
 			        {
 		            std::vector< unsigned int >::iterator s = std::find(this->kconfig_sample_sns.begin(), this->kconfig_sample_sns.end(), t->serial);
 
@@ -373,7 +373,7 @@ namespace transport
 
 
 		    template <typename number>
-		    void wavenumber_series<number>::write_kconfig_list(std::ostream& out, const std::vector< threepf_kconfig >& list)
+		    void wavenumber_series<number>::write_kconfig_list(std::ostream& out, const threepf_kconfig_database& threepf_db)
 			    {
 				    unsigned int count = 0;
 
@@ -381,7 +381,7 @@ namespace transport
 				    this->wrapper.set_left_margin(2);
 				    this->wrapper.wrap_newline(out);
 
-				    for(std::vector< threepf_kconfig >::const_iterator t = list.begin(); t != list.end(); t++)
+				    for(threepf_kconfig_database::const_config_iterator t = threepf_db.config_begin(); t != threepf_db.config_end(); t++)
 					    {
 				        std::vector< unsigned int >::iterator s = std::find(this->kconfig_sample_sns.begin(), this->kconfig_sample_sns.end(), t->serial);
 
@@ -392,12 +392,12 @@ namespace transport
 
 						        line << count << ". ";
 								    line << "serial = " << t->serial << ", ";
-						        line << "k_t = " << t->k_t_conventional << ", ";
+						        line << "k_t = " << t->kt_conventional << ", ";
 						        line << "alpha = " << t->alpha << ", ";
 						        line << "beta = " << t->beta << ", ";
-						        line << "k1/k_t = " << t->k1_conventional/t->k_t_conventional << ", ";
-						        line << "k2/k_t = " << t->k2_conventional/t->k_t_conventional << ", ";
-						        line << "k3/k_t = " << t->k3_conventional/t->k_t_conventional;
+						        line << "k1/k_t = " << t->k1_conventional/t->kt_conventional << ", ";
+						        line << "k2/k_t = " << t->k2_conventional/t->kt_conventional << ", ";
+						        line << "k3/k_t = " << t->k3_conventional/t->kt_conventional;
 
 						        this->wrapper.wrap_out(out, line.str());
 						        this->wrapper.wrap_newline(out);

@@ -23,9 +23,12 @@
 #include "transport-runtime-api/localizations/messages_en/parameters.h"
 #include "transport-runtime-api/localizations/messages_en/initial_conditions.h"
 #include "transport-runtime-api/localizations/messages_en/range.h"
-#include "transport-runtime-api/localizations/messages_en/tasks.h"
 #include "transport-runtime-api/localizations/messages_en/scheduler.h"
 #include "transport-runtime-api/localizations/messages_en/model_list.h"
+
+#include "transport-runtime-api/localizations/messages_en/tasks/tasks.h"
+#include "transport-runtime-api/localizations/messages_en/tasks/twopf_config_database.h"
+#include "transport-runtime-api/localizations/messages_en/tasks/threepf_config_database.h"
 
 #include "transport-runtime-api/localizations/messages_en/manager.h"
 #include "transport-runtime-api/localizations/messages_en/data_manager.h"

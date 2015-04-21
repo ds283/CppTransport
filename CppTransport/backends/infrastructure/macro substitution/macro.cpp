@@ -134,6 +134,7 @@ std::shared_ptr< std::vector<std::string> > macro_agent::apply_line(std::string&
 		// It's important to distinguish these two cases!
 
 		// generate an assignment for each RHS index
+		// TODO: check that RHS assignments match the expected type for each macro (the previous implementation did this; the revised one doesn't yet)
     std::vector<index_abstract> RHS_indices = assigner.difference(right_tokens.get_indices(), left_tokens.get_indices());
     std::vector< std::vector<struct index_assignment> > RHS_assignments = assigner.assign(RHS_indices);
 
