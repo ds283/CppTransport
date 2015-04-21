@@ -238,7 +238,7 @@ namespace transport
 
                     if(ks[j] + ks[k] + ks[l] >= 2.0 * maxijk)   // impose the triangle conditions
 	                    {
-                        if(this->threepf_task<number>::threepf_db.add_k1k2k3_record(this->twopf_task<number>::twopf_db, ks[j], ks[k], ks[l], policy) < 0)
+                        if(this->threepf_task<number>::threepf_db.add_k1k2k3_record(this->twopf_list_task<number>::twopf_db, ks[j], ks[k], ks[l], policy) < 0)
                           {
                             this->threepf_task<number>::integrable = false;    // can't integrate any task which has dropped configurations, because the points may be scattered over the integration region
                           }
