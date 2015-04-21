@@ -438,13 +438,13 @@ int main(int argc, char* argv[])
     threepf_output.add_element(tk3_zeta_twopf);
     threepf_output.add_element(tk3_zeta_sq);
     threepf_output.add_element(tk3_redbsp);
-//    threepf_output.add_element(tk3_zeta_2spec_plot);
-//		threepf_output.add_element(tk3_redbsp_spec_plot);
-//		threepf_output.add_element(tk3_redbsp_beta_plot);
-//    threepf_output.add_element(tk3_redbsp_sqk3_plot);
-//    threepf_output.add_element(tk3_redbsp_sqk3_index_plot);
-//    threepf_output.add_element(tk3_redbsp_spec_index_plot);
-//    threepf_output.add_element(tk3_zeta_2spec_index_plot);
+    threepf_output.add_element(tk3_zeta_2spec_plot);
+		threepf_output.add_element(tk3_redbsp_spec_plot);
+		threepf_output.add_element(tk3_redbsp_beta_plot);
+    threepf_output.add_element(tk3_redbsp_sqk3_plot);
+    threepf_output.add_element(tk3_redbsp_sqk3_index_plot);
+    threepf_output.add_element(tk3_redbsp_spec_index_plot);
+    threepf_output.add_element(tk3_zeta_2spec_index_plot);
 
     std::cout << "axion.threepf-1 output task:" << std::endl << threepf_output << std::endl;
 
