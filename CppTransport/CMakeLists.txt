@@ -4,6 +4,8 @@ project(CppTransport)
 
 SET ( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/" )
 
+SET ( ODEINT_INCLUDE_PATH "/Users/ds283/Documents/Code/odeint-v2-ds283/include" )
+
 find_package(MPI REQUIRED)
 find_package(Boost REQUIRED COMPONENTS system filesystem random timer date_time mpi log_setup log serialization thread)
 find_package(GiNaC REQUIRED)
@@ -39,6 +41,7 @@ include_directories(./ backends
 					   jsoncpp
 					/usr/include
 					/usr/local/include
+					${ODEINT_INCLUDE_PATH}
 					${Boost_INCLUDE_DIRS}
 					${MPI_CXX_INCLUDE_PATH}
 					${GINAC_INCLUDE_DIRS}
@@ -103,6 +106,10 @@ target_link_libraries(dquad-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${GS
 
 add_executable(dquad-makerepo examples/dquad-mpi/makerepo.cpp jsoncpp/jsoncpp.cpp)
 target_link_libraries(dquad-makerepo sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${GSL_LIBRARIES})
+
+
+add_executable(dquad-makerepo2 examples/dquad-mpi/makerepo2.cpp jsoncpp/jsoncpp.cpp)
+target_link_libraries(dquad-makerepo2 sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${GSL_LIBRARIES})
 
 
 add_executable(quadratic-mpi examples/quadratic/main.cpp jsoncpp/jsoncpp.cpp)
