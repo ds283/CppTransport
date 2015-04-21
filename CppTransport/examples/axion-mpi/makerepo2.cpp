@@ -130,17 +130,19 @@ int main(int argc, char* argv[])
     // the conventions for k-numbers are as follows:
     // k=1 is the mode which crosses the horizon at time N*,
     // where N* is the 'offset' we pass to the integration method (see below)
-    const double        ktmin      = exp(3.0);
-    const double        ktmax      = exp(7.0);
-    const unsigned int  k_samples  = 40;
+    const double        ktmin         = exp(3.0);
+    const double        ktmax         = exp(7.0);
+    const unsigned int  k_samples     = 40;
 
-		const double        alphamin   = -1.0;
-		const double        alphamax   = +1.0;
-		const unsigned int  a_samples  = 2;
+		const double        alphamin      = -1.0;
+		const double        alphamax      = +1.0;
+		const unsigned int  a_samples     = 2;
 
-		const double        betamin    = 0.0;
-		const double        betamax    = 0.999;
-		const unsigned int  b_samples  = 100;
+		const double        betamin       = 0.0;
+		const double        betamid       = 0.98;
+		const double        betamax       = 0.999;
+		const unsigned int  lo_b_samples  = 150;
+		const unsigned int  hi_b_samples  = 200;
 
 		struct ThreepfStoragePolicy
 			{
@@ -153,7 +155,10 @@ int main(int argc, char* argv[])
 
     transport::stepping_range<double> kts   (ktmin, ktmax, k_samples, transport::linear_stepping);
     transport::stepping_range<double> alphas(alphamin, alphamax, a_samples, transport::linear_stepping);
-    transport::stepping_range<double> betas (betamin, betamax, b_samples, transport::logarithmic_top_stepping);
+
+    transport::stepping_range<double> betas_lo(betamin, betamid, lo_b_samples, transport::linear_stepping);
+    transport::stepping_range<double> betas_hi(betamid, betamax, hi_b_samples, transport::logarithmic_top_stepping);
+    transport::aggregation_range<double> betas(betas_lo, betas_hi);
 
     // construct a threepf task
     transport::threepf_fls_task<double> tk3("axion.threepf-1", ics, times, kts, alphas, betas, ThreepfStoragePolicy(), false);
