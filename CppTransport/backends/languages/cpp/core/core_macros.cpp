@@ -104,6 +104,10 @@ namespace cpp
           {
             out << "bulirsch_stoer_dense_out< " << state_name << " >(" << s.abserr << ", " << s.relerr << ")";
           }
+        else if(s.name == "bulirsch_stoer")
+	        {
+						out << "bulirsch_stoer< " << state_name << " >(" << s.abserr << ", " << s.relerr << ")";
+	        }
         else if(s.name == "runge_kutta_fehlberg78")
           {
             out << "make_controlled< runge_kutta_fehlberg78< " << state_name << " > >(" << s.abserr << ", " << s.relerr << ")";
