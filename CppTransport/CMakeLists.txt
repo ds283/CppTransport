@@ -4,7 +4,7 @@ project(CppTransport)
 
 SET ( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/" )
 
-SET ( ODEINT_INCLUDE_PATH "/Users/ds283/Documents/Code/odeint-v2-ds283/include" )
+SET ( ODEINT_INCLUDE_PATH "/home/d/ds/ds283/CppTransport/libraries/odeint-v2-ds283/include" )
 
 find_package(MPI REQUIRED)
 find_package(Boost REQUIRED COMPONENTS system filesystem random timer date_time mpi log_setup log serialization thread)
@@ -13,9 +13,9 @@ find_package(GSL REQUIRED)
 #find_package(CUDA REQUIRED)
 #find_package(OpenCL REQUIRED)
 
-SET ( CMAKE_CXX_FLAGS "-std=c++11 -Ofast -mavx" CACHE STRING "compile flags" FORCE )
+SET ( CMAKE_CXX_FLAGS "-std=c++11 -Ofast" CACHE STRING "compile flags" FORCE )
 #SET ( CMAKE_CXX_FLAGS "-std=c++11 -O1" CACHE STRING "compile flags" FORCE )
-SET ( CMAKE_C_FLAGS "-Ofast -mavx" CACHE STRING "compile flags" FORCE )
+SET ( CMAKE_C_FLAGS "-Ofast" CACHE STRING "compile flags" FORCE )
 
 include_directories(./ backends
 					   backends/infrastructure
