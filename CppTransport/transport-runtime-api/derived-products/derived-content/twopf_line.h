@@ -37,9 +37,12 @@
 #include "transport-runtime-api/derived-products/derived-content/integration_task_gadget.h"
 
 
-#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_TYPE      "twopf-components"
-#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_REAL      "real"
-#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_IMAGINARY "imaginary"
+#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_ROOT          "twopf-line-settings"
+
+#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_TYPE          "components"
+#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_REAL          "real"
+#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_IMAGINARY     "imaginary"
+#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_DIMENSIONLESS "dimensionless"
 
 
 
@@ -80,13 +83,21 @@ namespace transport
 
             //! get twopf type setting
             twopf_type get_type() const { return(this->twopf_meaning); }
+
             //! set twopf type setting
             void set_type(twopf_type m) { this->twopf_meaning = m; }
 
             //! query type of twopf - is it real?
             bool is_real_twopf() const { return(this->twopf_meaning == real); }
+
             //! query type of twopf - is it imaginary?
             bool is_imag_twopf() const { return(this->twopf_meaning == imaginary); }
+
+            //! is this dimensionles?
+            bool is_dimensionless() const { return(this->dimensionless); }
+
+            //! set dimensionless
+            void set_dimensionless(bool g) { this->dimensionless = g; }
 
 
 		        // LABELLING SERVICES
@@ -98,14 +109,6 @@ namespace transport
 
 		        //! make a non-LaTeX label for one of our lines
 		        std::string make_non_LaTeX_label(unsigned int m, unsigned int n) const;
-
-
-		        // K-CONFIGURATION SERVICES
-
-          public:
-
-		        //! lookup wavenumber axis data
-		        void pull_wavenumber_axis(datapipe<number>& pipe, std::vector<double>& axis) const;
 
 
 		        // WRITE TO A STREAM
@@ -137,6 +140,9 @@ namespace transport
             //! record which type of 2pf we are plotting
             twopf_type twopf_meaning;
 
+		        //! compute the dimensionless twopf?
+		        bool dimensionless;
+
 	        };
 
 
@@ -146,7 +152,8 @@ namespace transport
 		      : derived_line<number>(tk),
 		        gadget(tk),
 		        active_indices(sel),
-		        twopf_meaning(real)
+		        twopf_meaning(real),
+		        dimensionless(false)
 			    {
 		        if(active_indices.get_number_fields() != gadget.get_N_fields())
 			        {
@@ -160,7 +167,7 @@ namespace transport
 				    // set up a list of serial numbers corresponding to the k-configurations for this derived line
             try
               {
-                this->f.filter_twopf_kconfig_sample(kfilter, tk.get_twopf_kconfig_list(), this->kconfig_sample_sns);
+                this->f.filter_twopf_kconfig_sample(kfilter, tk.get_twopf_database(), this->kconfig_sample_sns);
               }
             catch(runtime_exception& xe)
               {
@@ -186,7 +193,9 @@ namespace transport
 				    assert(this->parent_task != nullptr);
 				    gadget.set_task(this->parent_task, finder);
 
-		        std::string tpf_type = reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_TYPE].asString();
+				    dimensionless = reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_DIMENSIONLESS].asBool();
+
+		        std::string tpf_type = reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_TYPE].asString();
 
 		        if(tpf_type == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_REAL) twopf_meaning = real;
 		        else if(tpf_type == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_IMAGINARY) twopf_meaning = imaginary;
@@ -206,7 +215,7 @@ namespace transport
 
 		        unsigned int N_fields = this->gadget.get_N_fields();
 
-		        label << std::setprecision(this->precision);
+				    if(this->dimensionless) label << __CPP_TRANSPORT_LATEX_DIMENSIONLESS_TWOPF << "_{";
 
 		        label << (this->twopf_meaning == real ? __CPP_TRANSPORT_LATEX_RE_SYMBOL : __CPP_TRANSPORT_LATEX_IM_SYMBOL) << " ";
 
@@ -223,6 +232,8 @@ namespace transport
 			                << (n >= N_fields ? "p_{" : "") << field_names[n % N_fields] << (n >= N_fields ? "}" : "");
 			        }
 
+				    if(this->dimensionless) label << "}";
+
 		        return (label.str());
 			    }
 
@@ -234,7 +245,7 @@ namespace transport
 
 		        unsigned int N_fields = this->gadget.get_N_fields();
 
-		        label << std::setprecision(this->precision);
+				    if(this->dimensionless) label << __CPP_TRANSPORT_NONLATEX_DIMENSIONLESS_TWOPF << "[";
 
 		        label << (this->twopf_meaning == real ? __CPP_TRANSPORT_NONLATEX_RE_SYMBOL : __CPP_TRANSPORT_NONLATEX_IM_SYMBOL) << " ";
 
@@ -251,6 +262,8 @@ namespace transport
 			                << (n >= N_fields ? "p_{" : "") << field_names[n % N_fields] << (n >= N_fields ? "}" : "");
 			        }
 
+				    if(this->dimensionless) label << "]";
+
 				    return(label.str());
 			    }
 
@@ -264,42 +277,21 @@ namespace transport
 			        {
 		            case real:
 			            {
-		                writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_TYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_REAL);
+		                writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_TYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_REAL);
 		                break;
 			            }
 
 		            case imaginary:
 			            {
-		                writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_TYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_IMAGINARY);
+		                writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_TYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_IMAGINARY);
 		                break;
 			            }
 
 		            default:
 			            throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_TWOPF_TYPE_UNKNOWN);
 			        }
-			    }
 
-
-		    template <typename number>
-		    void twopf_line<number>::pull_wavenumber_axis(datapipe<number>& pipe, std::vector<double>& axis) const
-			    {
-				    typename datapipe<number>::twopf_kconfig_handle& handle = pipe.new_twopf_kconfig_handle(this->kconfig_sample_sns);
-				    twopf_kconfig_tag<number> tag = pipe.new_twopf_kconfig_tag();
-
-            // safe to take a reference here and avoid a copy
-				    const std::vector< twopf_configuration >& configs = handle.lookup_tag(tag);
-
-				    axis.clear();
-				    for(typename std::vector< twopf_configuration >::const_iterator t = configs.begin(); t != configs.end(); t++)
-					    {
-						    if(this->klabel_meaning == derived_line<number>::comoving) axis.push_back((*t).k_comoving);
-						    else if(this->klabel_meaning == derived_line<number>::conventional) axis.push_back((*t).k_conventional);
-						    else
-							    {
-						        assert(false);
-						        throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_KLABEL_TYPE_UNKNOWN);
-							    }
-					    }
+				    writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_DIMENSIONLESS] = this->dimensionless;
 			    }
 
 

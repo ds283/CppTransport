@@ -24,4 +24,6 @@
 
 #define __CPP_TRANSPORT_DERIVED_PRODUCT_FAILED          "Error: I/O error; failed to generate derived product"
 
+#define __CPP_TRANSPORT_DERIVED_PRODUCT_FILENAME        "Filename"
+
 #endif // __CPP_TRANSPORT_MESSAGES_EN_DERIVED_PRODUCT_H

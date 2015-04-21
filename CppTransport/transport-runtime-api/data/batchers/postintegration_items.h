@@ -30,6 +30,9 @@ namespace transport
             //! kconfig serial number of this configuration
             unsigned int kconfig_serial;
 
+            //! kconfig serial number for the integration which produced these values. Used when unwinding a batch.
+            unsigned int source_serial;
+
             // value
             number value;
 	        };
@@ -44,6 +47,9 @@ namespace transport
 
             //! kconfig serial number of this configuration
             unsigned int kconfig_serial;
+
+            //! kconfig serial number for the integration which produced these values. Used when unwinding a batch.
+            unsigned int source_serial;
 
             // value
             number value;

@@ -15,8 +15,7 @@
 // forward-declare derived products if needed
 #include "transport-runtime-api/derived-products/derived_product_forward_declare.h"
 
-
-#define __CPP_TRANSPORT_DEFAULT_K_PRECISION (2)
+#define __CPP_TRANSPORT_DEFAULT_K_PRECISION (6)
 #define __CPP_TRANSPORT_DEFAULT_T_PRECISION (2)
 
 
@@ -34,10 +33,14 @@ namespace transport
 
 				//! serial number
 				unsigned int serial;
-				unsigned int get_serial() const { return(this->serial); }
+
+				unsigned int  get_serial() const { return(this->serial); }
+
+				double&       get_value()        { return(this->t); }
+				const double& get_value()  const { return(this->t); }
 
 				//! Output to a standard stream
-				friend std::ostream& operator<<(std::ostream& out, time_config& obj);
+				friend std::ostream& operator<<(std::ostream& out, const time_config& obj);
 			};
 
 
@@ -66,11 +69,8 @@ namespace transport
         double       k_comoving;
         double       k_conventional;
 
-        //! flag which indicates to the integrator whether to store the background
-        bool         store_background;
-
         //! Output to a standard stream
-        friend std::ostream& operator<<(std::ostream& out, twopf_kconfig& obj);
+        friend std::ostream& operator<<(std::ostream& out, const twopf_kconfig& obj);
 	    };
 
 
@@ -89,36 +89,31 @@ namespace transport
       public:
 
         //! serial number of this k-configuration
-        unsigned int                serial;
-        unsigned int                get_serial() const { return(this->serial); }
+        unsigned int serial;
+        unsigned int get_serial() const { return(this->serial); }
 
         //! serial numbers of k1, k2, k3 into list of twopf-kconfigurations
         //! eg. used to look up appropriate values of the power spectrum when constructing reduced 3pfs
-        std::array<unsigned int, 3> index;
+		    unsigned int k1_serial;
+		    unsigned int k2_serial;
+		    unsigned int k3_serial;
 
         //! (k1,k2,k3) coordinates for this k-configuration
-        double                      k1_comoving;
-        double                      k2_comoving;
-        double                      k3_comoving;
-        double                      k1_conventional;
-        double                      k2_conventional;
-        double                      k3_conventional;
+        double       k1_comoving;
+        double       k2_comoving;
+        double       k3_comoving;
+        double       k1_conventional;
+        double       k2_conventional;
+        double       k3_conventional;
 
         //! Fergusson-Shellard-Liguori coordinates for this k-configuration
-        double                      k_t_comoving;     // comoving normalize k_t
-        double                      k_t_conventional; // conventionally normalized k_t
-        double                      alpha;
-        double                      beta;
-
-        //! flags which indicate to the integrator whether to
-        //! store the background and twopf results from this integration
-        bool                        store_background;
-        bool                        store_twopf_k1;
-        bool                        store_twopf_k2;
-        bool                        store_twopf_k3;
+        double       kt_comoving;
+        double       kt_conventional;
+        double       alpha;
+        double       beta;
 
         //! Output to a standard stream
-        friend std::ostream& operator<<(std::ostream& out, threepf_kconfig& obj);
+        friend std::ostream& operator<<(std::ostream& out, const threepf_kconfig& obj);
 	    };
 
 
@@ -128,7 +123,7 @@ namespace transport
         std::ostringstream alpha_str;
         std::ostringstream beta_str;
 
-        kt_str    << std::setprecision(__CPP_TRANSPORT_DEFAULT_K_PRECISION) << obj.k_t_comoving;
+        kt_str    << std::setprecision(__CPP_TRANSPORT_DEFAULT_K_PRECISION) << obj.kt_comoving;
         alpha_str << std::setprecision(__CPP_TRANSPORT_DEFAULT_K_PRECISION) << obj.alpha;
         beta_str  << std::setprecision(__CPP_TRANSPORT_DEFAULT_K_PRECISION) << obj.beta;
 

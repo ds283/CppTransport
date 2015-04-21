@@ -53,11 +53,17 @@ namespace transport
 				    virtual void derive_lines(datapipe<number>& pipe, std::list<data_line<number> >& lines,
 				                              const std::list<std::string>& tags) const override;
 
+		        //! generate a LaTeX label
+		        std::string get_LaTeX_label(unsigned int m, unsigned int n, double t) const;
+
+		        //! generate a non-LaTeX label
+		        std::string get_non_LaTeX_label(unsigned int m, unsigned int n, double t) const;
+
 
 				    // CLONE
 
 				    //! self-replicate
-				    virtual derived_line<number>* clone() const override { return new tensor_twopf_wavenumber_series<number>(static_cast<const tensor_twopf_wavenumber_series<number>&>(*this)); }
+				    virtual tensor_twopf_wavenumber_series<number>* clone() const override { return new tensor_twopf_wavenumber_series<number>(static_cast<const tensor_twopf_wavenumber_series<number>&>(*this)); }
 
 
 				    // WRITE TO A STREAM
@@ -82,7 +88,7 @@ namespace transport
         template <typename number>
         tensor_twopf_wavenumber_series<number>::tensor_twopf_wavenumber_series(const twopf_list_task<number>& tk, index_selector<2>& sel,
                                                                                filter::time_filter tfilter, filter::twopf_kconfig_filter kfilter, unsigned int prec)
-	        : derived_line<number>(tk, wavenumber_axis, prec),
+	        : derived_line<number>(tk, wavenumber_axis, std::list<axis_value>{ k_axis, efolds_exit_axis }, prec),
 	          tensor_twopf_line<number>(tk, sel, kfilter),
 	          wavenumber_series<number>(tk, tfilter)
 	        {
@@ -106,11 +112,10 @@ namespace transport
                                                                   const std::list<std::string>& tags) const
 	        {
 						// attach our datapipe to an output group
-		        this->attach(pipe, tags);
+            std::string group = this->attach(pipe, tags);
 
 		        // pull wavenumber-axis data
-            std::vector<double> w_axis;
-		        this->pull_wavenumber_axis(pipe, w_axis);
+            std::vector<double> w_axis = this->pull_twopf_kconfig_axis(pipe);
 
 		        // set up cache handles
 		        typename datapipe<number>::time_config_handle& tc_handle = pipe.new_time_config_handle(this->time_sample_sns);
@@ -138,8 +143,8 @@ namespace transport
 								            std::string latex_label = "$" + this->make_LaTeX_label(m,n) + "\\;" + this->make_LaTeX_tag(t_values[i]) + "$";
 								            std::string nonlatex_label = this->make_non_LaTeX_label(m,n) + " " + this->make_non_LaTeX_tag(t_values[i]);
 
-								            data_line<number> line = data_line<number>(wavenumber_axis, correlation_function_value,
-								                                                       w_axis, line_data, latex_label, nonlatex_label);
+								            data_line<number> line = data_line<number>(group, this->x_type, correlation_function_value, w_axis, line_data,
+								                                                       this->get_LaTeX_label(m,n,t_values[i]), this->get_non_LaTeX_label(m,n,t_values[i]), this->is_spectral_index());
 
 										        lines.push_back(line);
 									        }
@@ -152,14 +157,60 @@ namespace transport
 	        }
 
 
+        template <typename number>
+        std::string tensor_twopf_wavenumber_series<number>::get_LaTeX_label(unsigned int m, unsigned int n, double t) const
+	        {
+            std::string tag = this->make_LaTeX_tag(t);
+            std::string label;
+
+            if(this->label_set)
+	            {
+                label = this->LaTeX_label;
+	            }
+            else
+	            {
+                label = "$" + this->make_LaTeX_label(m,n) + "$";
+	            }
+
+            if(this->use_tags) label += " $" + tag + "$";
+            return(label);
+	        }
+
+
+        template <typename number>
+        std::string tensor_twopf_wavenumber_series<number>::get_non_LaTeX_label(unsigned int m, unsigned int n, double t) const
+	        {
+            std::string tag = this->make_non_LaTeX_tag(t);
+            std::string label;
+
+            if(this->label_set)
+	            {
+                label = this->non_LaTeX_label;
+	            }
+            else
+	            {
+                label = this->make_non_LaTeX_label(m,n);
+	            }
+
+            if(this->use_tags) label += " " + tag;
+            return(label);
+	        }
+
+
         // note that because time_series<> inherits virtually from derived_line<>, the write method for
         // derived_line<> is not called from time_series<>. We have to call it for ourselves.
         template <typename number>
         void tensor_twopf_wavenumber_series<number>::write(std::ostream& out)
 	        {
-            this->derived_line<number>::write(out);
             this->tensor_twopf_line<number>::write(out);
             this->wavenumber_series<number>::write(out);
+            this->derived_line<number>::write(out);
+
+            twopf_list_task<number>* ptk = dynamic_cast< twopf_list_task<number>* >(this->get_parent_task());
+            if(ptk != nullptr)
+	            {
+                this->write_kconfig_list(out, ptk->get_twopf_database());
+	            }
 	        }
 
 

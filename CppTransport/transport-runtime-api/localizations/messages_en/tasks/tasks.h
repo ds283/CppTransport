@@ -8,11 +8,6 @@
 #define __CPP_TRANSPORT_MESSAGES_EN_TASKS_H
 
 
-#define __CPP_TRANSPORT_REFINEMENT_TOO_DEEP              "Integration error: too many levels of mesh refinement were required; decrease the underlying time step"
-
-#define __CPP_TRANSPORT_TASK_NULL_SERIALIZATION_READER   "Internal error: null serialization reader passed to 'task' object or derived class"
-#define __CPP_TRANSPORT_TASK_TIME_CONFIG_SN_TOO_BIG      "Internal error: time configuration serial number out of range when deserializing 'integration_task' object"
-#define __CPP_TRANSPORT_TASK_TWOPF_CONFIG_SN_TOO_BIG     "Internal error: twopf k-configuration serial number out of range when deserializing 'integration_task' object"
 #define __CPP_TRANSPORT_TASK_TYPE_UNKNOWN                "Internal error: unknown task type"
 
 #define __CPP_TRANSPORT_OUTPUT_TASK_RANGE                "Internal error: Out of range when accessing 'output_task' object"
@@ -37,6 +32,33 @@
 #define __CPP_TRANSPORT_FNL_TASK_UNKNOWN_TEMPLATE        "Internal error: unknown bispectrum template"
 
 #define __CPP_TRANSPORT_FNL_TASK_NOT_INTEGRABLE          "fNL_task: can't construct fNL product from non-integrable task"
+
+#define __CPP_TRANSPORT_TASK_THREEPF_ELEMENTS_A          "task with"
+#define __CPP_TRANSPORT_TASK_THREEPF_ELEMENTS_B          "3pf k-configurations and"
+#define __CPP_TRANSPORT_TASK_THREEPF_ELEMENTS_C          "2pf k-configurations"
+
+#define __CPP_TRANSPORT_TASK_TWOPF_ELEMENTS_A            "task with"
+#define __CPP_TRANSPORT_TASK_TWOPF_ELEMENTS_B            "2pf k-configurations"
+
+#define __CPP_TRANSPORT_TASK_TWOPF_LIST_MODE_RANGE_A     "largest scale kmin="
+#define __CPP_TRANSPORT_TASK_TWOPF_LIST_MODE_RANGE_B     "crosses horizon at time N*"
+#define __CPP_TRANSPORT_TASK_TWOPF_LIST_MODE_RANGE_C     "smallest scale kmax="
+#define __CPP_TRANSPORT_TASK_TWOPF_LIST_MODE_RANGE_D     "crosses horizon at time N*"
+
+#define __CPP_TRANSPORT_TASK_TWOPF_LIST_TOO_EARLY_A      "earliest required time N="
+#define __CPP_TRANSPORT_TASK_TWOPF_LIST_TOO_EARLY_B      "is earlier than time of initial conditions N="
+
+#define __CPP_TRANSPORT_TASK_TWOPF_LIST_CROSS_WARN_A     "warning: initial conditions set at time N="
+#define __CPP_TRANSPORT_TASK_TWOPF_LIST_CROSS_WARN_B     "allow only"
+#define __CPP_TRANSPORT_TASK_TWOPF_LIST_CROSS_WARN_C     "e-folds of subhorizon evolution for largest scale"
+
+#define __CPP_TRANSPORT_TASK_TWOPF_LIST_EARLIEST_STORED  "earliest stored time N="
+
+#define __CPP_TRANSPORT_TASK_TWOPF_LIST_END_OF_INFLATION "end of inflation occurs near time N="
+#define __CPP_TRANSPORT_TASK_TWOPF_LIST_WARN_LATE_END    "warning: end time for integration is later than end of inflation"
+#define __CPP_TRANSPORT_TASK_TWOPF_LIST_NO_END_INFLATION "warning: end of inflation not found within search window"
+
+#define __CPP_TRANSPORT_TASK_TWOPF_LIST_NO_TIMES         "no times to be stored"
 
 
 #endif // __CPP_TRANSPORT_MESSAGES_EN_TASKS_H

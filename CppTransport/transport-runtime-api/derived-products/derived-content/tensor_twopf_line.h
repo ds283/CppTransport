@@ -78,14 +78,6 @@ namespace transport
 				    std::string make_non_LaTeX_label(unsigned int m, unsigned int n) const;
 
 
-				    // K-CONFIGURATION SERVICES
-
-		      public:
-
-				    //! lookup wavenumber axis data
-				    void pull_wavenumber_axis(datapipe<number>& pipe, std::vector<double>& axis) const;
-
-
 				    // WRITE TO A STREAM
 
 		      public:
@@ -134,7 +126,7 @@ namespace transport
 				    // set up a list of serial numbers corresponding to the k-configurations for this derived line
 		        try
 			        {
-		            this->f.filter_twopf_kconfig_sample(kfilter, tk.get_twopf_kconfig_list(), this->kconfig_sample_sns);
+		            this->f.filter_twopf_kconfig_sample(kfilter, tk.get_twopf_database(), this->kconfig_sample_sns);
 			        }
 				    catch(runtime_exception& xe)
 					    {
@@ -214,29 +206,6 @@ namespace transport
 
             return(label.str());
 	        }
-
-
-		    template <typename number>
-		    void tensor_twopf_line<number>::pull_wavenumber_axis(datapipe<number>& pipe, std::vector<double>& axis) const
-			    {
-				    typename datapipe<number>::twopf_kconfig_handle& handle = pipe.new_twopf_kconfig_handle(this->kconfig_sample_sns);
-				    twopf_kconfig_tag<number> tag = pipe.new_twopf_kconfig_tag();
-
-		        // safe to take a reference here and avoid a copy
-		        const std::vector< twopf_configuration >& configs = handle.lookup_tag(tag);
-
-		        axis.clear();
-		        for(typename std::vector< twopf_configuration >::const_iterator t = configs.begin(); t != configs.end(); t++)
-			        {
-		            if(this->klabel_meaning == derived_line<number>::comoving) axis.push_back((*t).k_comoving);
-		            else if(this->klabel_meaning == derived_line<number>::conventional) axis.push_back((*t).k_conventional);
-		            else
-			            {
-		                assert(false);
-		                throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_KLABEL_TYPE_UNKNOWN);
-			            }
-			        }
-			    }
 
 
 		    template <typename number>

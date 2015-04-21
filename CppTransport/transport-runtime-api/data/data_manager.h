@@ -99,7 +99,7 @@ namespace transport
         virtual void close_writer(std::shared_ptr< postintegration_writer<number> >& writer) = 0;
 
 
-        // WRITE INDEX TABLES FOR A DATA CONTAINER
+        // WRITE TABLES FOR A DATA CONTAINER
 
       public:
 
@@ -119,18 +119,45 @@ namespace transport
         virtual void create_tables(std::shared_ptr< postintegration_writer<number> >& writer, fNL_task<number>* tk) = 0;
 
 
+        // SEEDING
+
+      public:
+
+        //! Seed a writer for a twopf task
+        virtual void seed_writer(std::shared_ptr< integration_writer<number> >& writer, twopf_task<number>* tk,
+                                 const std::shared_ptr< output_group_record<integration_payload> >& seed) = 0;
+
+        //! Seed a writer for a threepf task
+        virtual void seed_writer(std::shared_ptr< integration_writer<number> >& writer, threepf_task<number>* tk,
+                                 const std::shared_ptr< output_group_record<integration_payload> >& seed) = 0;
+
+        //! Seed a writer for a zeta twopf task
+        virtual void seed_writer(std::shared_ptr< postintegration_writer<number> >& writer, zeta_twopf_task<number>* tk,
+                                 const std::shared_ptr< output_group_record<postintegration_payload> >& seed) = 0;
+
+        //! Seed a writer for a zeta threepf task
+        virtual void seed_writer(std::shared_ptr< postintegration_writer<number> >& writer, zeta_threepf_task<number>* tk,
+                                 const std::shared_ptr< output_group_record<postintegration_payload> >& seed) = 0;
+
+        //! Seed a writer for an fNL task
+        virtual void seed_writer(std::shared_ptr< postintegration_writer<number> >& writer, fNL_task<number>* tk,
+                                 const std::shared_ptr< output_group_record<postintegration_payload> >& seed) = 0;
+
+
         // CONSTRUCT BATCHERS
 
       public:
 
         //! Create a temporary container for twopf data. Returns a batcher which can be used for writing to the container.
-        virtual twopf_batcher<number> create_temp_twopf_container(const boost::filesystem::path& tempdir, const boost::filesystem::path& logdir,
-                                                                  unsigned int worker, model<number>* m,
+        virtual twopf_batcher<number> create_temp_twopf_container(twopf_task<number>* tk, const boost::filesystem::path& tempdir,
+                                                                  const boost::filesystem::path& logdir,
+                                                                  unsigned int worker, unsigned int group, model<number>* m,
                                                                   generic_batcher::container_dispatch_function dispatcher) = 0;
 
         //! Create a temporary container for threepf data. Returns a batcher which can be used for writing to the container.
-        virtual threepf_batcher<number> create_temp_threepf_container(const boost::filesystem::path& tempdir, const boost::filesystem::path& logdir,
-                                                                      unsigned int worker, model<number>* m,
+        virtual threepf_batcher<number> create_temp_threepf_container(threepf_task<number>* tk, const boost::filesystem::path& tempdir,
+                                                                      const boost::filesystem::path& logdir,
+                                                                      unsigned int worker, unsigned int group, model<number>* m,
                                                                       generic_batcher::container_dispatch_function dispatcher) = 0;
 
         //! Create a temporary container for zeta twopf data. Returns a batcher which can be used for writing to the container.
@@ -161,12 +188,12 @@ namespace transport
         virtual void pull_time_config(datapipe<number>* pipe, const std::vector<unsigned int>& serial_numbers, std::vector<double>& sample) = 0;
 
         //! Pull a set of 2pf k-configuration serial numbers from a datapipe
-        virtual void pull_kconfig_twopf(datapipe<number>* pipe, const std::vector<unsigned int>& serial_numbers, std::vector<twopf_configuration>& sample) = 0;
+        virtual void pull_kconfig_twopf(datapipe<number>* pipe, const std::vector<unsigned int>& serial_numbers, std::vector<twopf_kconfig>& sample) = 0;
 
         //! Pull a set of 3pd k-configuration serial numbesr from a datapipe
         //! Simultaneously, populates three lists (k1, k2, k3) with serial numbers for the 2pf k-configurations
         //! corresponding to k1, k2, k3
-        virtual void pull_kconfig_threepf(datapipe<number>* pipe, const std::vector<unsigned int>& serial_numbers, std::vector<threepf_configuration>& sample) = 0;
+        virtual void pull_kconfig_threepf(datapipe<number>* pipe, const std::vector<unsigned int>& serial_numbers, std::vector<threepf_kconfig>& sample) = 0;
 
         //! Pull a time sample of a background field from a datapipe
         virtual void pull_background_time_sample(datapipe<number>* pipe, unsigned int id, const std::vector<unsigned int>& t_serials, std::vector<number>& sample) = 0;

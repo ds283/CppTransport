@@ -25,11 +25,11 @@
 #include "boost/lexical_cast.hpp"
 
 
-#define __CPP_TRANSPORT_NODE_PARAMS_MPLANCK   "param-mplanck"
-#define __CPP_TRANSPORT_NODE_PARAMS_VALUES    "param-values"
+#define __CPP_TRANSPORT_NODE_PARAMS_MPLANCK   "mplanck"
+#define __CPP_TRANSPORT_NODE_PARAMS_VALUES    "values"
 #define __CPP_TRANSPORT_NODE_PARAMS_VALUE     "value"
 #define __CPP_TRANSPORT_NODE_PARAMS_NAME      "name"
-#define __CPP_TRANSPORT_NODE_PARAMS_MODEL_UID "param-model-uid"
+#define __CPP_TRANSPORT_NODE_PARAMS_MODEL_UID "model-uid"
 
 
 namespace transport

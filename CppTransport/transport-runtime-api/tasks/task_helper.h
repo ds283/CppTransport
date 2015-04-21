@@ -31,8 +31,6 @@ namespace transport
         template <typename number>
         integration_task<number>* deserialize(const std::string& nm, Json::Value& reader, typename repository_finder<number>::package_finder& f)
           {
-            integration_task<number>* rval = nullptr;
-
             std::string type = reader[__CPP_TRANSPORT_NODE_TASK_TYPE].asString();
 
             // extract initial conditions
@@ -40,17 +38,13 @@ namespace transport
             std::unique_ptr< package_record<number> > record(f(pkg_name));
             initial_conditions<number> ics = record->get_ics();
 
-            if(type == __CPP_TRANSPORT_NODE_TASK_TYPE_TWOPF)              rval = new twopf_task<number>(nm, reader, ics);
-            else if(type == __CPP_TRANSPORT_NODE_TASK_TYPE_THREEPF_CUBIC) rval = new threepf_cubic_task<number>(nm, reader, ics);
-            else if(type == __CPP_TRANSPORT_NODE_TASK_TYPE_THREEPF_FLS)   rval = new threepf_fls_task<number>(nm, reader, ics);
-            else
-              {
-                std::ostringstream msg;
-                msg << __CPP_TRANSPORT_TASK_TYPE_UNKNOWN << " '" << type << "'";
-                throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
-              }
+            if(type == __CPP_TRANSPORT_NODE_TASK_TYPE_TWOPF)              return new twopf_task<number>(nm, reader, ics);
+            else if(type == __CPP_TRANSPORT_NODE_TASK_TYPE_THREEPF_CUBIC) return new threepf_cubic_task<number>(nm, reader, ics);
+            else if(type == __CPP_TRANSPORT_NODE_TASK_TYPE_THREEPF_FLS)   return new threepf_fls_task<number>(nm, reader, ics);
 
-            return(rval);
+            std::ostringstream msg;
+            msg << __CPP_TRANSPORT_TASK_TYPE_UNKNOWN << " '" << type << "'";
+            throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
           }
 
       }   // namespace integration_task_helper
@@ -61,19 +55,13 @@ namespace transport
         template <typename number>
         output_task<number>* deserialize(const std::string& nm, Json::Value& reader, typename repository_finder<number>::derived_product_finder& pfinder)
           {
-            output_task<number>* rval = nullptr;
-
             std::string type = reader[__CPP_TRANSPORT_NODE_TASK_TYPE].asString();
 
-            if(type == __CPP_TRANSPORT_NODE_TASK_TYPE_OUTPUT) rval = new output_task<number>(nm, reader, pfinder);
-            else
-              {
-                std::ostringstream msg;
-                msg << __CPP_TRANSPORT_TASK_TYPE_UNKNOWN << " '" << type << "'";
-                throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
-              }
+            if(type == __CPP_TRANSPORT_NODE_TASK_TYPE_OUTPUT) return new output_task<number>(nm, reader, pfinder);
 
-            return(rval);
+            std::ostringstream msg;
+            msg << __CPP_TRANSPORT_TASK_TYPE_UNKNOWN << " '" << type << "'";
+            throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
           }
 
       }   // namespace output_task_helper
@@ -84,21 +72,15 @@ namespace transport
         template <typename number>
         postintegration_task<number>* deserialize(const std::string& nm, Json::Value& reader, typename repository_finder<number>::task_finder& f)
           {
-            postintegration_task<number>* rval = nullptr;
-
             std::string type = reader[__CPP_TRANSPORT_NODE_TASK_TYPE].asString();
 
-            if     (type == __CPP_TRANSPORT_NODE_TASK_TYPE_ZETA_TWOPF)   rval = new zeta_twopf_task<number>(nm, reader, f);
-            else if(type == __CPP_TRANSPORT_NODE_TASK_TYPE_ZETA_THREEPF) rval = new zeta_threepf_task<number>(nm, reader, f);
-            else if(type == __CPP_TRANSPORT_NODE_TASK_TYPE_FNL)          rval = new fNL_task<number>(nm, reader, f);
-            else
-              {
-                std::ostringstream msg;
-                msg << __CPP_TRANSPORT_TASK_TYPE_UNKNOWN << " '" << type << "'";
-                throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
-              }
+            if     (type == __CPP_TRANSPORT_NODE_TASK_TYPE_ZETA_TWOPF)   return new zeta_twopf_task<number>(nm, reader, f);
+            else if(type == __CPP_TRANSPORT_NODE_TASK_TYPE_ZETA_THREEPF) return new zeta_threepf_task<number>(nm, reader, f);
+            else if(type == __CPP_TRANSPORT_NODE_TASK_TYPE_FNL)          return new fNL_task<number>(nm, reader, f);
 
-            return(rval);
+            std::ostringstream msg;
+            msg << __CPP_TRANSPORT_TASK_TYPE_UNKNOWN << " '" << type << "'";
+            throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
           }
 
       }   // namespace postintegration_task_helper

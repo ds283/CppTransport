@@ -9,11 +9,15 @@
 
 #include <vector>
 #include <string>
+#include <algorithm>
 
 #include "transport-runtime-api/messages.h"
 #include "transport-runtime-api/exceptions.h"
 
 #include "transport-runtime-api/derived-products/line_values.h"
+
+#include "transport-runtime-api/utilities/spline1d.h"
+
 
 namespace transport
   {
@@ -31,12 +35,24 @@ namespace transport
           public:
 
 		        //! Construct a dataline object from a sequence of axis and data points
-            data_line(axis_type at, value_type vt, const std::vector<double> a, const std::vector<number> d, const std::string& Ll, const std::string& nLl);
+            data_line(const std::list<std::string>& g, axis_value at, value_type vt, const std::vector<double>& a, const std::vector<number>& d,
+                      const std::string& Ll, const std::string& nLl,
+                      bool spectral_index=false);
+
+            //! Construct a dataline object from a sequence of axis and data points
+            data_line(const std::string& g, axis_value at, value_type vt, const std::vector<double>& a, const std::vector<number>& d,
+                      const std::string& Ll, const std::string& nLl,
+                      bool spectral_index=false)
+              : data_line(std::list<std::string>{g}, at, vt, a, d, Ll, nLl, spectral_index)
+              {
+              }
 
             ~data_line() = default;
 
 
             // GET DATA
+
+          public:
 
             //! Get number of sample points
             unsigned int size() const { return(this->data.size()); }
@@ -51,21 +67,42 @@ namespace transport
 		        const std::vector< std::pair<double, number> >& get_data_points() const { return(this->data); }
 
 		        //! Get axis type
-		        axis_type get_axis_type() const { return(this->x_type); }
+		        axis_class get_axis_value() const { return(this->x_type); }
 
 		        //! Get value type
 		        value_type get_value_type() const { return(this->y_type); }
 
+            //! Get parent content groups
+            const std::list<std::string>& get_parent_groups() const { return(this->groups); }
+
+
+            // INTERNAL API
+
+          protected:
+
+            void zip(const std::vector<double>& a, const std::vector<number>& d, std::vector< std::pair<double, number> >& zipped);
+
 
             // INTERNAL DATA
 
+          protected:
+
+
+            // DATA LINE
+
+            //! source content group
+            std::list<std::string> groups;
+
 		        //! axis type
-		        const axis_type x_type;
+		        const axis_value x_type;
 
 		        //! value type
 		        const value_type y_type;
 
 		        std::vector< std::pair<double, number> > data;
+
+
+            // LABELS
 
             //! non-LaTeX label
             const std::string LaTeX_label;
@@ -77,23 +114,59 @@ namespace transport
 
 
         template <typename number>
-        data_line<number>::data_line(axis_type at, value_type vt,
-                                     const std::vector<double> a, const std::vector<number> d,
-                                     const std::string& Ll, const std::string& nLl)
-	        : x_type(at),
-	          y_type(vt),
+        data_line<number>::data_line(const std::list<std::string>& g, axis_value at, value_type vt,
+                                     const std::vector<double>& a, const std::vector<number>& d,
+                                     const std::string& Ll, const std::string& nLl, bool spectral_index)
+	        : groups(g),
+            x_type(at),
+	          y_type(spectral_index ? spectral_index_value : vt),
 	          LaTeX_label(Ll),
 	          non_LaTeX_label(nLl)
-	        {
+          {
             if(a.size() != d.size())
-	            throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_DATALINE_AXIS_MISMATCH);
+              throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_DATALINE_AXIS_MISMATCH);
 
-            data.reserve(a.size());
+            if(!spectral_index)
+              {
+                this->zip(a, d, data);
+              }
+            else
+              {
+                std::vector< std::pair<double, number> > zipped;
+                this->zip(a, d, zipped);
+
+                std::vector<double> new_axis(a.size());
+                std::vector<number> new_data(d.size());
+
+                for(unsigned int i = 0; i < zipped.size(); i++)
+                  {
+                    new_axis[i] = zipped[i].first;
+                    new_data[i] = zipped[i].second;
+                  }
+
+                spline1d<number> spline(new_axis, new_data);
+
+                // compute logarithmic derivative at each axis point
+                for(unsigned int i = 0; i < new_axis.size(); i++)
+                  {
+                    number value = spline.eval_diff(new_axis[i]) * (new_axis[i]/new_data[i]);
+                    new_data[i] = value;
+                  }
+                this->zip(new_axis, new_data, data);
+              }
+          }
+
+
+        template <typename number>
+        void data_line<number>::zip(const std::vector<double>& a, const std::vector<number>& d, std::vector< std::pair<double, number> >& zipped)
+          {
+            zipped.clear();
+            zipped.reserve(a.size());
 
             // push data points onto the axis
             for(unsigned int i = 0; i < a.size(); i++)
 	            {
-                data.push_back(std::make_pair(a[i], d[i]));
+                zipped.push_back(std::make_pair(a[i], d[i]));
 	            }
 
             // now sort axis into ascending order
@@ -105,7 +178,7 @@ namespace transport
 	                }
 	            };
 
-            sort(data.begin(), data.end(), AxisSorter());
+            std::sort(zipped.begin(), zipped.end(), AxisSorter());
 	        }
 
 

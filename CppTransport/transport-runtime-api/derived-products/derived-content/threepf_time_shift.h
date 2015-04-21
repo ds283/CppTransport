@@ -64,18 +64,18 @@ namespace transport
 
             //! shift a threepf timeline for coordinate labels (l,m,n)
             //! and supplied 2pf k-configuration serial numbers
-            void shift(integration_task<number>* tk, model<number>* mdl,
+            void shift(twopf_list_task<number>* tk, model<number>* mdl,
                        datapipe<number>& pipe,
                        const std::vector<unsigned int>& time_sample, std::vector<number>& line_data,
                        const std::vector<double>& time_axis,
                        unsigned int l, unsigned int m, unsigned int n,
-                       const threepf_configuration& config) const;
+                       const threepf_kconfig& config) const;
 
           protected:
 
             //! apply the derivative shift to a threepf-timeline for a specific
             //! configuration
-            void make_shift(integration_task<number>* tk, model<number>* mdl,
+            void make_shift(twopf_list_task<number>* tk, model<number>* mdl,
                             datapipe<number>& pipe,
                             const std::vector<unsigned int>& time_sample, std::vector<number>& line_data,
                             const std::vector<double>& time_axis,
@@ -96,12 +96,12 @@ namespace transport
 
 
         template <typename number>
-        void threepf_time_shift<number>::shift(integration_task<number>* tk, model<number>* mdl,
+        void threepf_time_shift<number>::shift(twopf_list_task<number>* tk, model<number>* mdl,
                                                datapipe<number>& pipe,
                                                const std::vector<unsigned int>& time_sample, std::vector<number>& line_data,
                                                const std::vector<double>& time_axis,
                                                unsigned int l, unsigned int m, unsigned int n,
-                                               const threepf_configuration& config) const
+                                               const threepf_kconfig& config) const
 			    {
 						assert(mdl != nullptr);
 		        assert(tk != nullptr);
@@ -135,7 +135,7 @@ namespace transport
 
 
         template <typename number>
-        void threepf_time_shift<number>::make_shift(integration_task<number>* tk, model<number>* mdl,
+        void threepf_time_shift<number>::make_shift(twopf_list_task<number>* tk, model<number>* mdl,
                                                     datapipe<number>& pipe,
                                                     const std::vector<unsigned int>& time_sample, std::vector<number>& line_data,
                                                     const std::vector<double>& time_axis, const std::vector<std::vector<number> >& background,
@@ -242,9 +242,9 @@ namespace transport
 		            // evaluate B and C tensors for this time step
 		            // B is symmetric on its first two indices, which are the ones we sum over, so we only need a single copy of that.
 		            // C is symmetric on its first two indices but we sum over the last two. So we need to symmetrize the momenta.
-		            mdl->B(tk->get_params(), background[i], q_config.comoving(), r_config.comoving(), p_config.comoving(), time_axis[i], B_qrp);
-		            mdl->C(tk->get_params(), background[i], p_config.comoving(), q_config.comoving(), r_config.comoving(), time_axis[i], C_pqr);
-		            mdl->C(tk->get_params(), background[i], p_config.comoving(), r_config.comoving(), q_config.comoving(), time_axis[i], C_prq);
+		            mdl->B(tk, background[i], q_config.comoving(), r_config.comoving(), p_config.comoving(), time_axis[i], B_qrp);
+		            mdl->C(tk, background[i], p_config.comoving(), q_config.comoving(), r_config.comoving(), time_axis[i], C_pqr);
+		            mdl->C(tk, background[i], p_config.comoving(), r_config.comoving(), q_config.comoving(), time_axis[i], C_prq);
 
 		            number shift = 0.0;
 

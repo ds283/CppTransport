@@ -34,6 +34,10 @@
 #include "transport-runtime-api/derived-products/utilities/filter.h"
 
 
+#define __CPP_TRANSPORT_NODE_PRODUCT_ZETA_TWOPF_LINE_ROOT          "zeta-twopf-line-settings"
+#define __CPP_TRANSPORT_NODE_PRODUCT_ZETA_TWOPF_LINE_DIMENSIONLESS "dimensionless"
+
+
 namespace transport
 	{
 
@@ -62,6 +66,17 @@ namespace transport
 				    virtual ~zeta_twopf_line() = default;
 
 
+				    // SETTINGS
+
+		      public:
+
+				    //! is this dimensionles?
+				    bool is_dimensionless() const { return(this->dimensionless); }
+
+				    //! set dimensionless
+				    void set_dimensionless(bool g) { this->dimensionless = g; }
+
+
 				    // LABELLING SERVICES
 
 		      public:
@@ -71,14 +86,6 @@ namespace transport
 
 				    //! make a non-LaTeX label
 				    std::string make_non_LaTeX_label(void) const;
-
-
-		        // K-CONFIGURATION SERVICES
-
-		      public:
-
-		        //! lookup wavenumber axis data
-		        void pull_wavenumber_axis(datapipe<number>& pipe, std::vector<double>& axis) const;
 
 
 				    // WRITE TO A STREAM
@@ -96,18 +103,27 @@ namespace transport
 				    //! Serialize this object
 				    virtual void serialize(Json::Value& writer) const override;
 
+
+				    // INTERNAL DATA
+
+		      protected:
+
+				    //! compute the dimensionless twopf?
+				    bool dimensionless;
+
 			    };
 
 
 		    // constructor DOESN'T CALL the correct derived_line<> constructor; concrete classes must call it for themselves
 				template <typename number>
 				zeta_twopf_line<number>::zeta_twopf_line(const zeta_twopf_list_task<number>& tk, filter::twopf_kconfig_filter& kfilter)
-		      : derived_line<number>(tk)
+		      : derived_line<number>(tk),
+		        dimensionless(false)
 					{
 				    // set up a list of serial numbers corresponding to the k-configurations for this derived line
             try
               {
-                this->f.filter_twopf_kconfig_sample(kfilter, tk.get_twopf_kconfig_list(), this->kconfig_sample_sns);
+                this->f.filter_twopf_kconfig_sample(kfilter, tk.get_twopf_database(), this->kconfig_sample_sns);
               }
             catch(runtime_exception& xe)
               {
@@ -128,49 +144,42 @@ namespace transport
 				zeta_twopf_line<number>::zeta_twopf_line(Json::Value& reader)
 					: derived_line<number>(reader)
 					{
+						dimensionless = reader[__CPP_TRANSPORT_NODE_PRODUCT_ZETA_TWOPF_LINE_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_ZETA_TWOPF_LINE_DIMENSIONLESS].asBool();
 					}
 
 
 				template <typename number>
 				std::string zeta_twopf_line<number>::make_LaTeX_label(void) const
 					{
-				    return( std::string(__CPP_TRANSPORT_LATEX_ZETA_SYMBOL) + std::string(" ") + std::string(__CPP_TRANSPORT_LATEX_ZETA_SYMBOL) );
+						if(this->dimensionless)
+							{
+								return( std::string(__CPP_TRANSPORT_LATEX_DIMENSIONLESS_PZETA) );
+							}
+						else
+							{
+						    return( std::string(__CPP_TRANSPORT_LATEX_ZETA_SYMBOL) + std::string(" ") + std::string(__CPP_TRANSPORT_LATEX_ZETA_SYMBOL) );
+							}
 					}
 
 
 				template <typename number>
 				std::string zeta_twopf_line<number>::make_non_LaTeX_label(void) const
 					{
-				    return( std::string(__CPP_TRANSPORT_NONLATEX_ZETA_SYMBOL) + std::string(" ") + std::string(__CPP_TRANSPORT_NONLATEX_ZETA_SYMBOL) );
+						if(this->dimensionless)
+							{
+								return( std::string(__CPP_TRANSPORT_NONLATEX_DIMENSIONLESS_PZETA) );
+							}
+						else
+							{
+						    return( std::string(__CPP_TRANSPORT_NONLATEX_ZETA_SYMBOL) + std::string(" ") + std::string(__CPP_TRANSPORT_NONLATEX_ZETA_SYMBOL) );
+							}
 					}
-
-
-		    template <typename number>
-		    void zeta_twopf_line<number>::pull_wavenumber_axis(datapipe<number>& pipe, std::vector<double>& axis) const
-			    {
-		        typename datapipe<number>::twopf_kconfig_handle& handle = pipe.new_twopf_kconfig_handle(this->kconfig_sample_sns);
-		        twopf_kconfig_tag<number> tag = pipe.new_twopf_kconfig_tag();
-
-            // safe to take a reference here and avoid a copy
-		        const std::vector< twopf_configuration >& configs = handle.lookup_tag(tag);
-
-		        axis.clear();
-		        for(typename std::vector< twopf_configuration >::const_iterator t = configs.begin(); t != configs.end(); t++)
-			        {
-		            if(this->klabel_meaning == derived_line<number>::comoving) axis.push_back((*t).k_comoving);
-		            else if(this->klabel_meaning == derived_line<number>::conventional) axis.push_back((*t).k_conventional);
-		            else
-			            {
-		                assert(false);
-		                throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_KLABEL_TYPE_UNKNOWN);
-			            }
-			        }
-			    }
 
 
 				template <typename number>
 				void zeta_twopf_line<number>::serialize(Json::Value& writer) const
 					{
+						writer[__CPP_TRANSPORT_NODE_PRODUCT_ZETA_TWOPF_LINE_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_ZETA_TWOPF_LINE_DIMENSIONLESS] = this->dimensionless;
 					}
 
 

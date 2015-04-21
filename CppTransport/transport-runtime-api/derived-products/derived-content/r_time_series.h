@@ -53,13 +53,19 @@ namespace transport
 				    virtual void derive_lines(datapipe<number>& pipe, std::list<data_line<number> >& lines,
 				                              const std::list<std::string>& tags) const override;
 
+		        //! generate a LaTeX label
+		        std::string get_LaTeX_label(const twopf_kconfig& k) const;
+
+		        //! generate a non-LaTeX label
+		        std::string get_non_LaTeX_label(const twopf_kconfig& k) const;
+
 
 				    // CLONE
 
 		      public:
 
 				    //! self-replicate
-				    virtual derived_line<number>* clone() const override { return new r_time_series<number>(static_cast<const r_time_series<number>&>(*this)); }
+				    virtual r_time_series<number>* clone() const override { return new r_time_series<number>(static_cast<const r_time_series<number>&>(*this)); }
 
 
 				    // WRITE TO A STREAM
@@ -86,7 +92,7 @@ namespace transport
 				template <typename number>
 				r_time_series<number>::r_time_series(const zeta_twopf_list_task<number>& tk, filter::time_filter tfilter,
 				                                     filter::twopf_kconfig_filter kfilter, unsigned int prec)
-					: derived_line<number>(tk, time_axis, prec),
+					: derived_line<number>(tk, time_axis, std::list<axis_value>{ efolds_axis }, prec),
 					  r_line<number>(tk, kfilter),
 					  time_series<number>(tk, tfilter)
 					{
@@ -109,8 +115,11 @@ namespace transport
 		    void r_time_series<number>::derive_lines(datapipe<number>& pipe, std::list<data_line<number> >& lines,
 		                                             const std::list<std::string>& tags) const
 			    {
+            std::list< std::string > groups;
+
 						// attach our datapipe to an output group
-		        this->attach(pipe, tags, this->parent_task);
+            std::string group = this->attach(pipe, tags, this->parent_task);
+            groups.push_back(group);
 
 				    // pull time-axis data
 				    const std::vector<double> t_axis = this->pull_time_axis(pipe);
@@ -121,7 +130,7 @@ namespace transport
 
 				    // pull k-configuration information from the database
 				    twopf_kconfig_tag<number> k_tag = pipe.new_twopf_kconfig_tag();
-				    const typename std::vector< twopf_configuration > k_values = k_handle.lookup_tag(k_tag);
+				    const typename std::vector< twopf_kconfig > k_values = k_handle.lookup_tag(k_tag);
 
 		        std::vector< std::vector<number> > zeta_data;
 				    zeta_data.resize(this->kconfig_sample_sns.size());
@@ -141,7 +150,8 @@ namespace transport
 				    postintegration_task<number>* ptk = dynamic_cast< postintegration_task<number>* >(this->parent_task);
 				    assert(ptk != nullptr);
 
-				    this->attach(pipe, tags, ptk->get_parent_task());
+            group = this->attach(pipe, tags, ptk->get_parent_task());
+            groups.push_back(group);
 
 						// rebind handles
 		        typename datapipe<number>::time_data_handle& t_handle = pipe.new_time_data_handle(this->time_sample_sns);
@@ -160,10 +170,8 @@ namespace transport
 				            line_data[j] = tensor_data[j] / zeta_data[i][j];
 					        }
 
-				        std::string latex_label    = "$" + this->make_LaTeX_label() + "\\;" + this->make_LaTeX_tag(k_values[i]) + "$";
-				        std::string nonlatex_label = this->make_non_LaTeX_label() + " " + this->make_non_LaTeX_tag(k_values[i]);
-
-				        data_line<number> line = data_line<number>(time_axis, r_value, t_axis, line_data, latex_label, nonlatex_label);
+				        data_line<number> line = data_line<number>(groups, this->x_type, r_value, t_axis, line_data,
+				                                                   this->get_LaTeX_label(k_values[i]), this->get_non_LaTeX_label(k_values[i]));
 
 				        lines.push_back(line);
 					    }
@@ -173,14 +181,54 @@ namespace transport
 			    }
 
 
+		    template <typename number>
+		    std::string r_time_series<number>::get_LaTeX_label(const twopf_kconfig& k) const
+			    {
+		        std::string tag = this->make_LaTeX_tag(k);
+		        std::string label;
+
+		        if(this->label_set)
+			        {
+		            label = this->LaTeX_label;
+			        }
+		        else
+			        {
+		            label = "$" + this->make_LaTeX_label() + "$";
+			        }
+
+		        if(this->use_tags) label += " $" + tag + "$";
+		        return(label);
+			    }
+
+
+		    template <typename number>
+		    std::string r_time_series<number>::get_non_LaTeX_label(const twopf_kconfig& k) const
+			    {
+		        std::string tag = this->make_non_LaTeX_tag(k);
+		        std::string label;
+
+		        if(this->label_set)
+			        {
+		            label = this->non_LaTeX_label;
+			        }
+		        else
+			        {
+		            label = this->make_non_LaTeX_label();
+			        }
+
+		        if(this->use_tags) label += " " + tag;
+		        return(label);
+			    }
+
+
 				// note that because time_series<> inherits virtually from derived_line<>, the write method for
 				// derived_line<> is *not* called from time_series<>. We have to call it ourselves.
 				template <typename number>
 				void r_time_series<number>::write(std::ostream& out)
 					{
+				    this->r_line<number>::write(out);
+				    this->time_series<number>::write(out);
 						this->derived_line<number>::write(out);
-						this->r_line<number>::write(out);
-						this->time_series<number>::write(out);
 					}
 
 

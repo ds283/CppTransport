@@ -26,18 +26,12 @@ namespace transport
               {
                 std::string type = reader[__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_TYPE].asString();
 
-                derived_data::derived_product<number>* rval = nullptr;
+                if (type == __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_LINE_PLOT2D)         return new line_plot2d<number>(name, reader, finder);
+                else if(type == __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_LINE_ASCIITABLE) return new line_asciitable<number>(name, reader, finder);
 
-                if (type == __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_LINE_PLOT2D) rval = new line_plot2d<number>(name, reader, finder);
-                else if(type == __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_LINE_ASCIITABLE) rval = new line_asciitable<number>(name, reader, finder);
-                else
-                  {
-                    std::ostringstream msg;
-                    msg << __CPP_TRANSPORT_PRODUCT_UNKNOWN_TYPE << " '" << type << "'";
-                    throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
-                  }
-
-                return(rval);
+                std::ostringstream msg;
+                msg << __CPP_TRANSPORT_PRODUCT_UNKNOWN_TYPE << " '" << type << "'";
+                throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
               }
 
           }   // namespace derived_product_helper

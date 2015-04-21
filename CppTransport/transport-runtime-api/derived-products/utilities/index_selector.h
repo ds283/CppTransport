@@ -20,6 +20,8 @@
 #include "transport-runtime-api/exceptions.h"
 
 
+#define __CPP_TRANSPORT_NODE_INDEX_ROOT        "index-selection"
+
 #define __CPP_TRANSPORT_NODE_INDEX_RANGE       "index-range"
 #define __CPP_TRANSPORT_NODE_INDEX_FIELDS      "num-fields"
 #define __CPP_TRANSPORT_NODE_INDEX_RANGE_ALL   "all"
@@ -186,8 +188,8 @@ namespace transport
 		template <unsigned int indices>
 		void index_selector<indices>::serialize(Json::Value& writer) const
 			{
-				writer[__CPP_TRANSPORT_NODE_INDEX_RANGE] = this->range == all_range ? std::string(__CPP_TRANSPORT_NODE_INDEX_RANGE_ALL) : std::string(__CPP_TRANSPORT_NODE_INDEX_RANGE_FIELD);
-				writer[__CPP_TRANSPORT_NODE_INDEX_FIELDS] = this->N_fields;
+		    writer[__CPP_TRANSPORT_NODE_INDEX_ROOT][__CPP_TRANSPORT_NODE_INDEX_RANGE]  = this->range == all_range ? std::string(__CPP_TRANSPORT_NODE_INDEX_RANGE_ALL) : std::string(__CPP_TRANSPORT_NODE_INDEX_RANGE_FIELD);
+		    writer[__CPP_TRANSPORT_NODE_INDEX_ROOT][__CPP_TRANSPORT_NODE_INDEX_FIELDS] = this->N_fields;
 
 		    Json::Value toggle_array(Json::arrayValue);
 				for(unsigned int i = 0; i < this->size; i++)
@@ -195,15 +197,15 @@ namespace transport
 				    Json::Value elt = static_cast<bool>(this->enabled[i]);
 						toggle_array.append(elt);
 					}
-				writer[__CPP_TRANSPORT_NODE_INDEX_TOGGLES] = toggle_array;
+				writer[__CPP_TRANSPORT_NODE_INDEX_ROOT][__CPP_TRANSPORT_NODE_INDEX_TOGGLES] = toggle_array;
 			}
 
 
 		template <unsigned int indices>
 		index_selector<indices>::index_selector(Json::Value& reader)
 			{
-		    std::string range_string = reader[__CPP_TRANSPORT_NODE_INDEX_RANGE].asString();
-		    N_fields = reader[__CPP_TRANSPORT_NODE_INDEX_FIELDS].asUInt();
+		    std::string range_string = reader[__CPP_TRANSPORT_NODE_INDEX_ROOT][__CPP_TRANSPORT_NODE_INDEX_RANGE].asString();
+		    N_fields                 = reader[__CPP_TRANSPORT_NODE_INDEX_ROOT][__CPP_TRANSPORT_NODE_INDEX_FIELDS].asUInt();
 
 		    if(range_string == __CPP_TRANSPORT_NODE_INDEX_RANGE_ALL)        range = index_selector<indices>::all_range;
 		    else if(range_string == __CPP_TRANSPORT_NODE_INDEX_RANGE_FIELD) range = index_selector<indices>::field_range;
@@ -217,7 +219,7 @@ namespace transport
 		    // read array of toggles
 
 				enabled.clear();
-		    Json::Value toggle_array = reader[__CPP_TRANSPORT_NODE_INDEX_TOGGLES];
+		    Json::Value toggle_array = reader[__CPP_TRANSPORT_NODE_INDEX_ROOT][__CPP_TRANSPORT_NODE_INDEX_TOGGLES];
 				assert(toggle_array.isArray());
 
 				for(Json::Value::iterator t = toggle_array.begin(); t != toggle_array.end(); t++)

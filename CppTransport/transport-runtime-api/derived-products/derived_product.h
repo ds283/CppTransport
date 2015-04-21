@@ -87,7 +87,7 @@ namespace transport
 				    const boost::filesystem::path& get_filename() const { return(this->filename); }
 
 		        //! Apply the analysis represented by this derived product to a given output group
-		        virtual void derive(datapipe<number>& pipe, const std::list<std::string>& tags) = 0;
+		        virtual std::list<std::string> derive(datapipe<number>& pipe, const std::list<std::string>& tags) = 0;
 
 
             // DERIVED PRODUCTS -- AGGREGATE CONSTITUENT TASKS
@@ -145,7 +145,7 @@ namespace transport
 				template <typename number>
 				void derived_product<number>::write(std::ostream& out)
 					{
-						out << this->filename << std::endl;
+						out << __CPP_TRANSPORT_DERIVED_PRODUCT_FILENAME << ": " << this->filename << std::endl;
 					}
 
 

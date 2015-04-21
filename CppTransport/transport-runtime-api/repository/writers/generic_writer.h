@@ -94,7 +94,7 @@ namespace transport
       public:
 
         //! construct a generic writer object
-        generic_writer(const metadata_group& m, const paths_group& p, unsigned int w);
+        generic_writer(const std::string& n, const metadata_group& m, const paths_group& p, unsigned int w);
 
         //! destroy a generic writer object
         virtual ~generic_writer();
@@ -119,11 +119,20 @@ namespace transport
 
       public:
 
+        //! Get name
+        const std::string& get_name() const { return(this->name); }
+
         //! Return tags
         const std::list<std::string>& get_tags() const { return(this->generic_metadata.tags); }
 
         //! Get creation time
         const boost::posix_time::ptime& get_creation_time() const { return(this->generic_metadata.creation_time); }
+
+        //! Set failed status
+        void set_fail(bool g) { this->fail = g; }
+
+        //! Query failed status
+        bool is_failed() const { return(this->fail); }
 
 
         // ABSOLUTE PATHS
@@ -166,8 +175,12 @@ namespace transport
 
       protected:
 
+        //! name of output group we are writing to
+        std::string name;
+
         // SUCCESS FLAG - USED TO DETERMINE WHETHER TO ABORT/ROLLBACK WHEN WINDING UP
 
+        //! has this written been committed to the repository?
         bool committed;
 
 
@@ -181,6 +194,9 @@ namespace transport
 
         //! metadata
         metadata_group generic_metadata;
+
+        //! fail flag (eg. failed integrations, failed content generation)
+        bool fail;
 
 
         // MISCELLANEOUS
@@ -206,14 +222,15 @@ namespace transport
     // GENERIC WRITER METHODS
 
 
-    generic_writer::generic_writer(const generic_writer::metadata_group& m,
-                                   const generic_writer::paths_group& p,
-                                   unsigned int w)
+    generic_writer::generic_writer(const std::string& n, const generic_writer::metadata_group& m,
+                                   const generic_writer::paths_group& p, unsigned int w)
 	    : generic_metadata(m),
 	      paths(p),
+        name(n),
 	      worker_number(w),
 	      data_manager_handle(nullptr),
-	      committed(false)
+	      committed(false),
+        fail(false)
 	    {
         // set up logging
 

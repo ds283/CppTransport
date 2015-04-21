@@ -47,82 +47,100 @@
 
 // JSON node names
 
-#define __CPP_TRANSPORT_NODE_RECORD_NAME                         "name"
-#define __CPP_TRANSPORT_NODE_RECORD_TYPE                         "record-type"
-#define __CPP_TRANSPORT_NODE_RECORD_PACKAGE                      "package"
-#define __CPP_TRANSPORT_NODE_RECORD_INTEGRATION_TASK             "integration-task"
-#define __CPP_TRANSPORT_NODE_RECORD_POSTINTEGRATION_TASK         "postintegration-task"
-#define __CPP_TRANSPORT_NODE_RECORD_OUTPUT_TASK                  "output-task"
-#define __CPP_TRANSPORT_NODE_RECORD_DERIVED_PRODUCT              "derived-product"
-#define __CPP_TRANSPORT_NODE_RECORD_CONTENT                      "content-group"
+#define __CPP_TRANSPORT_NODE_RECORD_NAME                            "name"
+#define __CPP_TRANSPORT_NODE_RECORD_TYPE                            "record-type"
+#define __CPP_TRANSPORT_NODE_RECORD_PACKAGE                         "package"
+#define __CPP_TRANSPORT_NODE_RECORD_INTEGRATION_TASK                "integration-task"
+#define __CPP_TRANSPORT_NODE_RECORD_POSTINTEGRATION_TASK            "postintegration-task"
+#define __CPP_TRANSPORT_NODE_RECORD_OUTPUT_TASK                     "output-task"
+#define __CPP_TRANSPORT_NODE_RECORD_DERIVED_PRODUCT                 "derived-product"
+#define __CPP_TRANSPORT_NODE_RECORD_CONTENT                         "content-group"
 
-#define __CPP_TRANSPORT_NODE_METADATA_GROUP                      "metadata"
-#define __CPP_TRANSPORT_NODE_METADATA_CREATED                    "created"
-#define __CPP_TRANSPORT_NODE_METADATA_EDITED                     "edited"
-#define __CPP_TRANSPORT_NODE_METADATA_RUNTIME_API                "api"
+#define __CPP_TRANSPORT_NODE_INITIAL_CONDITIONS                     "package-data"
 
-// used for integration tasks
-#define __CPP_TRANSPORT_NODE_TASK_OUTPUT_GROUPS                  "output-groups"
-// used for output tasks
+#define __CPP_TRANSPORT_NODE_METADATA_GROUP                         "metadata"
+#define __CPP_TRANSPORT_NODE_METADATA_CREATED                       "created"
+#define __CPP_TRANSPORT_NODE_METADATA_EDITED                        "edited"
+#define __CPP_TRANSPORT_NODE_METADATA_RUNTIME_API                   "api"
 
-#define __CPP_TRANSPORT_NODE_OUTPUTGROUP_TASK_NAME               "parent-task"
-#define __CPP_TRANSPORT_NODE_OUTPUTGROUP_DATA_ROOT               "output-path"
-#define __CPP_TRANSPORT_NODE_OUTPUTGROUP_CREATED                 "creation-time"
-#define __CPP_TRANSPORT_NODE_OUTPUTGROUP_LOCKED                  "locked"
-#define __CPP_TRANSPORT_NODE_OUTPUTGROUP_NOTES                   "notes"
-#define __CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS                    "tags"
+#define __CPP_TRANSPORT_NODE_TASK_OUTPUT_GROUPS                     "output-groups"
 
-#define __CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_BACKEND         "backend"
-#define __CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_DATABASE        "database-path"
-#define __CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_ZETA_TWOPF      "zeta-twopf"
-#define __CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_ZETA_THREEPF    "zeta-threepf"
-#define __CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_ZETA_REDBSP     "zeta-redbsp"
-#define __CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FNL_LOCAL       "fNL_local"
-#define __CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FNL_EQUI        "fNL_equi"
-#define __CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FNL_ORTHO       "fNL_ortho"
-#define __CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FNL_DBI         "fNL_DBI"
+#define __CPP_TRANSPORT_NODE_OUTPUTGROUP_TASK_NAME                  "parent-task"
+#define __CPP_TRANSPORT_NODE_OUTPUTGROUP_DATA_ROOT                  "output-path"
+#define __CPP_TRANSPORT_NODE_OUTPUTGROUP_LOCKED                     "locked"
+#define __CPP_TRANSPORT_NODE_OUTPUTGROUP_NOTES                      "notes"
+#define __CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS                       "tags"
 
-#define __CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_ARRAY               "output-array"
-#define __CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_PRODUCT_NAME        "parent-product"
-#define __CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_FILENAME            "filename"
-#define __CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_CREATED             "creation-time"
-#define __CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_NOTES               "notes"
-#define __CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_TAGS                "tags"
+#define __CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_DATABASE           "database-path"
+#define __CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FAILED             "failed"
+#define __CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_WORKGROUP          "workgroup"
+#define __CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FAILED_SERIALS     "failed-serials"
+#define __CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_SEEDED             "seeded"
+#define __CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_SEED_GROUP         "seed-group"
+#define __CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_STATISTICS         "has-statistics"
 
-#define __CPP_TRANSPORT_NODE_TIMINGDATA_GROUP                    "integration-metadata"
-#define __CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_WALLCLOCK_TIME     "total-wallclock-time"
-#define __CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_AGG_TIME           "total-aggregation-time"
-#define __CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_INT_TIME           "total-integration-time"
-#define __CPP_TRANSPORT_NODE_TIMINGDATA_MIN_MEAN_INT_TIME        "min-mean-integration-time"
-#define __CPP_TRANSPORT_NODE_TIMINGDATA_MAX_MEAN_INT_TIME        "max-mean-integration-time"
-#define __CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MIN_INT_TIME      "global-min-integration-time"
-#define __CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MAX_INT_TIME      "global-max-integration-time"
-#define __CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_BATCH_TIME         "total-batching-time"
-#define __CPP_TRANSPORT_NODE_TIMINGDATA_MIN_MEAN_BATCH_TIME      "min-mean-batching-time"
-#define __CPP_TRANSPORT_NODE_TIMINGDATA_MAX_MEAN_BATCH_TIME      "max-mean-batching-time"
-#define __CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MIN_BATCH_TIME    "global-min-batching-time"
-#define __CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MAX_BATCH_TIME    "global-max-batching-time"
-#define __CPP_TRANSPORT_NODE_TIMINGDATA_NUM_CONFIGURATIONS       "total-configurations"
+#define __CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_DATABASE       "database-path"
+#define __CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_FAILED         "failed"
+#define __CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_PAIRED         "paired"
+#define __CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_PARENT_GROUP   "parent-group"
+#define __CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_SEEDED         "seeded"
+#define __CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_SEED_GROUP     "seed-group"
+#define __CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_FAILED_SERIALS "failed-serials"
 
-#define __CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP                    "output-metadata"
-#define __CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_WALLCLOCK_TIME     "total-wallclock-time"
-#define __CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_DB_TIME            "total-db-time"
-#define __CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_AGG_TIME           "total-aggregation-time"
-#define __CPP_TRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_HITS          "time-cache-hits"
-#define __CPP_TRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_UNLOADS       "time-cache-unloads"
-#define __CPP_TRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_HITS         "twopf-cache-hits"
-#define __CPP_TRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_UNLOADS      "twopf-cache-unloads"
-#define __CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_HITS       "threepf-cache-hits"
-#define __CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_UNLOADS    "threepf-cache-unloads"
-#define __CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_HITS          "data-cache-hits"
-#define __CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_UNLOADS       "data-cache-unloads"
-#define __CPP_TRANSPORT_NODE_OUTPUTDATA_ZETA_CACHE_HITS          "zeta-cache-hits"
-#define __CPP_TRANSPORT_NODE_OUTPUTDATA_ZETA_CACHE_UNLOADS       "zeta-cache-unloads"
-#define __CPP_TRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_EVICTIONS     "time-cache-evictions"
-#define __CPP_TRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_EVICTIONS    "twopf-cache-evictions"
-#define __CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_EVICTIONS  "threepf-cache-evictions"
-#define __CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_EVICTIONS     "data-cache-evictions"
-#define __CPP_TRANSPORT_NODE_OUTPUTDATA_ZETA_CACHE_EVICTIONS     "zeta-cache-evictions"
+#define __CPP_TRANSPORT_NODE_PRECOMPUTED_ROOT                       "contains-products"
+#define __CPP_TRANSPORT_NODE_PRECOMPUTED_ZETA_TWOPF                 "zeta-twopf"
+#define __CPP_TRANSPORT_NODE_PRECOMPUTED_ZETA_THREEPF               "zeta-threepf"
+#define __CPP_TRANSPORT_NODE_PRECOMPUTED_ZETA_REDBSP                "zeta-redbsp"
+#define __CPP_TRANSPORT_NODE_PRECOMPUTED_FNL_LOCAL                  "fNL_local"
+#define __CPP_TRANSPORT_NODE_PRECOMPUTED_FNL_EQUI                   "fNL_equi"
+#define __CPP_TRANSPORT_NODE_PRECOMPUTED_FNL_ORTHO                  "fNL_ortho"
+#define __CPP_TRANSPORT_NODE_PRECOMPUTED_FNL_DBI                    "fNL_DBI"
+
+#define __CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_FAILED                 "failed"
+#define __CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_ARRAY                  "generated-products"
+#define __CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_USED_GROUPS            "used-content-groups"
+#define __CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_PRODUCT_NAME           "parent-product"
+#define __CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_FILENAME               "filename"
+#define __CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_CREATED                "creation-time"
+#define __CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_NOTES                  "notes"
+#define __CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_TAGS                   "tags"
+
+#define __CPP_TRANSPORT_NODE_TIMINGDATA_GROUP                       "integration-metadata"
+#define __CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_WALLCLOCK_TIME        "total-wallclock-time"
+#define __CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_AGG_TIME              "total-aggregation-time"
+#define __CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_INT_TIME              "total-integration-time"
+#define __CPP_TRANSPORT_NODE_TIMINGDATA_MIN_MEAN_INT_TIME           "min-mean-integration-time"
+#define __CPP_TRANSPORT_NODE_TIMINGDATA_MAX_MEAN_INT_TIME           "max-mean-integration-time"
+#define __CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MIN_INT_TIME         "global-min-integration-time"
+#define __CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MAX_INT_TIME         "global-max-integration-time"
+#define __CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_BATCH_TIME            "total-batching-time"
+#define __CPP_TRANSPORT_NODE_TIMINGDATA_MIN_MEAN_BATCH_TIME         "min-mean-batching-time"
+#define __CPP_TRANSPORT_NODE_TIMINGDATA_MAX_MEAN_BATCH_TIME         "max-mean-batching-time"
+#define __CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MIN_BATCH_TIME       "global-min-batching-time"
+#define __CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MAX_BATCH_TIME       "global-max-batching-time"
+#define __CPP_TRANSPORT_NODE_TIMINGDATA_NUM_CONFIGURATIONS          "configurations-processed"
+#define __CPP_TRANSPORT_NODE_TIMINGDATA_NUM_FAILURES                "configurations-failed"
+#define __CPP_TRANSPORT_NODE_TIMINGDATA_NUM_REFINED                 "configurations-refined"
+
+#define __CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP                       "output-metadata"
+#define __CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_WALLCLOCK_TIME        "total-wallclock-time"
+#define __CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_DB_TIME               "total-db-time"
+#define __CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_AGG_TIME              "total-aggregation-time"
+#define __CPP_TRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_HITS             "time-cache-hits"
+#define __CPP_TRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_UNLOADS          "time-cache-unloads"
+#define __CPP_TRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_HITS            "twopf-cache-hits"
+#define __CPP_TRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_UNLOADS         "twopf-cache-unloads"
+#define __CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_HITS          "threepf-cache-hits"
+#define __CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_UNLOADS       "threepf-cache-unloads"
+#define __CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_HITS             "data-cache-hits"
+#define __CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_UNLOADS          "data-cache-unloads"
+#define __CPP_TRANSPORT_NODE_OUTPUTDATA_ZETA_CACHE_HITS             "zeta-cache-hits"
+#define __CPP_TRANSPORT_NODE_OUTPUTDATA_ZETA_CACHE_UNLOADS          "zeta-cache-unloads"
+#define __CPP_TRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_EVICTIONS        "time-cache-evictions"
+#define __CPP_TRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_EVICTIONS       "twopf-cache-evictions"
+#define __CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_EVICTIONS     "threepf-cache-evictions"
+#define __CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_EVICTIONS        "data-cache-evictions"
+#define __CPP_TRANSPORT_NODE_OUTPUTDATA_ZETA_CACHE_EVICTIONS        "zeta-cache-evictions"
 
 
 namespace transport
@@ -233,7 +251,7 @@ namespace transport
         const std::string get_name() const { return(this->name); }
 
         //! Set record time from creation-time metadata
-        void set_name_from_creation_time() { this->name = boost::posix_time::to_iso_string(this->metadata.get_creation_time()); }
+        void set_name(const std::string& n) { this->name = n; }
 
 
         // GET AND SET METADATA -- delegated to the metadata container
@@ -338,7 +356,7 @@ namespace transport
       public:
 
         //! clone this object
-        virtual repository_record* clone() const override { return new package_record(static_cast<const package_record&>(*this)); };
+        virtual package_record<number>* clone() const override { return new package_record<number>(static_cast<const package_record<number>&>(*this)); };
 
 
         // INTERNAL DATA
@@ -468,7 +486,7 @@ namespace transport
       public:
 
         //! clone this object
-        virtual repository_record* clone() const override { return new integration_task_record(static_cast<const integration_task_record&>(*this)); };
+        virtual integration_task_record<number>* clone() const override { return new integration_task_record<number>(static_cast<const integration_task_record<number>&>(*this)); };
 
 
         // INTERNAL DATA
@@ -536,7 +554,7 @@ namespace transport
       public:
 
         //! clone this object
-        virtual repository_record* clone() const override { return new postintegration_task_record(static_cast<const postintegration_task_record&>(*this)); }
+        virtual postintegration_task_record<number>* clone() const override { return new postintegration_task_record<number>(static_cast<const postintegration_task_record<number>&>(*this)); }
 
 
         // INTERNAL DATA
@@ -593,7 +611,7 @@ namespace transport
       public:
 
         //! clone this object
-        virtual repository_record* clone() const override { return new derived_product_record(static_cast<const derived_product_record&>(*this)); };
+        virtual derived_product_record<number>* clone() const override { return new derived_product_record<number>(static_cast<const derived_product_record<number>&>(*this)); };
 
 
         // INTERNAL DATA
@@ -661,7 +679,7 @@ namespace transport
       public:
 
         //! clone this object
-        virtual repository_record* clone() const override { return new output_task_record(static_cast<const output_task_record&>(*this)); };
+        virtual output_task_record<number>* clone() const override { return new output_task_record<number>(static_cast<const output_task_record<number>&>(*this)); };
 
 
         // INTERNAL DATA
@@ -701,7 +719,9 @@ namespace transport
 	          max_mean_batching_time(0),
 	          global_min_batching_time(0),
 	          global_max_batching_time(0),
-	          total_configurations(0)
+	          total_configurations(0),
+            total_failures(0),
+            total_refinements(0)
 	        {
 	        }
 
@@ -711,7 +731,8 @@ namespace transport
                              boost::timer::nanosecond_type min_it, boost::timer::nanosecond_type max_it,
                              boost::timer::nanosecond_type bt, boost::timer::nanosecond_type min_m_bt, boost::timer::nanosecond_type max_m_bt,
                              boost::timer::nanosecond_type min_bt, boost::timer::nanosecond_type max_bt,
-                             unsigned int num)
+                             unsigned int num_processed, unsigned int num_failed, unsigned int num_refined,
+                             const std::list<unsigned int>& failures, bool f)
 	        : total_wallclock_time(wc),
 	          total_aggregation_time(ag),
 	          total_integration_time(it),
@@ -724,7 +745,9 @@ namespace transport
 	          max_mean_batching_time(max_m_bt),
 	          global_min_batching_time(min_bt),
 	          global_max_batching_time(max_bt),
-	          total_configurations(num)
+	          total_configurations(num_processed),
+            total_failures(num_failed),
+            total_refinements(num_refined)
 	        {
 	        }
 
@@ -782,6 +805,12 @@ namespace transport
 
         // total number of configurations processed
         unsigned int total_configurations;
+
+        //! total number of failures reported
+        unsigned int total_failures;
+
+        //! total number of mesh refinements reported
+        unsigned int total_refinements;
 
 	    };
 
@@ -911,8 +940,13 @@ namespace transport
 
         //! Create a derived_product descriptor
         derived_content(const std::string& prod, const std::string& fnam, const boost::posix_time::ptime& now,
-                        const std::list<std::string>& nt, const std::list<std::string>& tg)
-	        : parent_product(prod), filename(fnam), created(now), notes(nt), tags(tg)
+                        const std::list<std::string>& gp, const std::list<std::string>& nt, const std::list<std::string>& tg)
+	        : parent_product(prod),
+            filename(fnam),
+            created(now),
+            content_groups(gp),
+            notes(nt),
+            tags(tg)
 	        {
 	        }
 
@@ -942,6 +976,9 @@ namespace transport
         //! Get creation time
         const boost::posix_time::ptime& get_creation_time() const { return(this->created); }
 
+        //! Get content groups
+        const std::list<std::string>& get_content_groups() const { return(this->content_groups); }
+
 
         // SERIALIZATION -- implements a 'serializable' interface
 
@@ -969,6 +1006,9 @@ namespace transport
 
         //! Tags
         std::list<std::string> tags;
+
+        //! content groups used to create
+        std::list<std::string> content_groups;
 
 	    };
 
@@ -1089,7 +1129,11 @@ namespace transport
 
         //! Create a payload
         integration_payload()
-	        : metadata()
+	        : metadata(),
+            fail(false),
+            workgroup_number(0),
+            seeded(false),
+            statistics(false)
 	        {
 	        }
 
@@ -1104,20 +1148,50 @@ namespace transport
 
       public:
 
-        //! Get name of backend used to generate this output group
-        const std::string& get_backend() const { return(this->backend); }
-        //! Set name of backend used to generate this output group
-        void set_backend(const std::string& be) { this->backend = be; }
-
         //! Get path of data container
         const boost::filesystem::path& get_container_path() const { return(this->container); }
+
         //! Set path of data container
         void set_container_path(const boost::filesystem::path& pt) { this->container = pt; }
 
         //! Get metadata
         const integration_metadata& get_metadata() const { return(this->metadata); }
+
         //! Set metadata
         void set_metadata(const integration_metadata& data) { this->metadata = data; }
+
+        //! Get fail status
+        bool is_failed() const { return(this->fail); }
+
+        //! Set fail status
+        void set_fail(bool g) { this->fail = g; }
+
+        //! Get list of failed serial numbers
+        const std::list<unsigned int>& get_failed_serials() const { return(this->failed_serials); }
+
+        //! Set list of failed serial numbers
+        void set_failed_serials(const std::list<unsigned int>& f) { this->failed_serials = f; }
+
+        //! Get workgroup number
+        unsigned int get_workgroup_number() const { return(this->workgroup_number); }
+
+        //! Set workgroup number
+        void set_workgroup_number(unsigned int w) { this->workgroup_number = w; }
+
+        //! Set seed
+        void set_seed(const std::string& s) { this->seeded = true; this->seed_group = s; }
+
+        //! Query seeded status
+        bool is_seeded() const { return(this->seeded); }
+
+        //! Query seed group
+        const std::string& get_seed_group() const { return(this->seed_group); }
+
+        //! Set statistics flag
+        void set_statistics(bool g) { this->statistics = g; }
+
+        //! Get statistics flag
+        bool has_statistics() const { return(this->statistics); }
 
 
         // GET AND SET PROPERTIES
@@ -1144,14 +1218,29 @@ namespace transport
 
       protected:
 
-        //! Backend used to generate this payload
-        std::string backend;
-
         //! Path to data container
         boost::filesystem::path container;
 
         //! Metadata
         integration_metadata metadata;
+
+        //! mark this group as failed?
+        bool fail;
+
+        //! serial numbers reported failed
+        std::list< unsigned int > failed_serials;
+
+        //! workgroup number associated with this integration
+        unsigned int workgroup_number;
+
+        //! was this integration seeded?
+        bool seeded;
+
+        //! if this integration was seeded, parent output group
+        std::string seed_group;
+
+        //! does this group have per-configuration statistics?
+        bool statistics;
 
 	    };
 
@@ -1165,7 +1254,9 @@ namespace transport
         //! Create a payload
         postintegration_payload()
 	        : metadata(),
-	          precomputed()
+	          precomputed(),
+            paired(false),
+            seeded(false)
 	        {
 	        }
 
@@ -1198,6 +1289,39 @@ namespace transport
         //! Get precomputed products record
         precomputed_products& get_precomputed_products() { return(this->precomputed); }
 
+        //! Get fail status
+        bool is_failed() const { return(this->fail); }
+
+        //! Set fail status
+        void set_fail(bool g) { this->fail = g; }
+
+        //! Get list of failed serial numbers
+        const std::list<unsigned int>& get_failed_serials() const { return(this->failed_serials); }
+
+        //! Set list of failed serial numbers
+        void set_failed_serials(const std::list<unsigned int>& f) { this->failed_serials = f; }
+
+        //! Set pair
+        void set_pair(bool g) { this->paired = g; }
+
+        //! Query paired status
+        bool is_paired() const { return(this->paired); }
+
+        //! Set parent content group
+        void set_parent_group(const std::string& p) { this->parent_group = p; }
+
+        //! Query paired gorup
+        const std::string& get_parent_group() const { return(this->parent_group); }
+
+        //! Set seed
+        void set_seed(const std::string& s) { this->seeded = true; this->seed_group = s; }
+
+        //! Query seeded status
+        bool is_seeded() const { return(this->seeded); }
+
+        //! Query seed group
+        const std::string& get_seed_group() const { return(this->seed_group); }
+
 
         // WRITE TO A STREAM
 
@@ -1227,6 +1351,24 @@ namespace transport
         //! Precomputed products
         precomputed_products precomputed;
 
+        //! mark this group as failed?
+        bool fail;
+
+        //! serial numbers reported failed
+        std::list< unsigned int > failed_serials;
+
+        //! Paired to an integration output group?
+        bool paired;
+
+        //! Paired output group name, if used
+        std::string parent_group;
+
+        //! was this postintegration seeded?
+        bool seeded;
+
+        //! if this postintegration was seeded, parent output group
+        std::string seed_group;
+
 	    };
 
 
@@ -1238,7 +1380,8 @@ namespace transport
 
         //! Create a payload
         output_payload()
-	        : metadata()
+	        : metadata(),
+            fail(false)
 	        {
 	        }
 
@@ -1261,6 +1404,22 @@ namespace transport
         //! Set metadata
         void set_metadata(const output_metadata& data) { this->metadata = data; }
 
+
+        // GET/SET PROPERTIES
+
+      public:
+
+        //! Get fail status
+        bool is_failed() const { return(this->fail); }
+
+        //! Set fail status
+        void set_fail(bool g) { this->fail = g; }
+
+        //! Get list of used content groups
+        const std::list<std::string>& get_content_groups() const { return(this->used_groups); }
+
+        //! Set list of used content groups
+        void set_content_groups(const std::list<std::string>& list) { this->used_groups = list; }
 
         // WRITE TO A STREAM
 
@@ -1286,6 +1445,12 @@ namespace transport
 
         //! Metadata
         output_metadata metadata;
+
+        //! failed flag
+        bool fail;
+
+        //! list of content groups used to produce this output
+        std::list<std::string> used_groups;
 
 	    };
 
@@ -1357,7 +1522,7 @@ namespace transport
         const boost::filesystem::path& get_abs_repo_path() const { return(this->paths.root); }
 
         //! Get path to output root (typically a subdir of the repository root)
-        const boost::filesystem::path& get_abs_output_path() const { return(this->paths.root/this->paths.output); }
+        const boost::filesystem::path get_abs_output_path() const { return(this->paths.root/this->paths.output); }
 
 
         // PAYLOAD
@@ -1381,7 +1546,7 @@ namespace transport
       public:
 
         //! clone this object
-        virtual repository_record* clone() const override { return new output_group_record<Payload>(static_cast<const output_group_record<Payload>&>(*this)); };
+        virtual output_group_record<Payload>* clone() const override { return new output_group_record<Payload>(static_cast<const output_group_record<Payload>&>(*this)); };
 
 
         // WRITE TO A STREAM
@@ -1441,16 +1606,13 @@ namespace transport
 
     record_metadata::record_metadata(Json::Value& reader)
 	    {
-        Json::Value& metadata = reader[__CPP_TRANSPORT_NODE_METADATA_GROUP];
-		    assert(metadata.isObject());
-
-        std::string ctime_str = metadata[__CPP_TRANSPORT_NODE_METADATA_CREATED].asString();
+        std::string ctime_str = reader[__CPP_TRANSPORT_NODE_METADATA_GROUP][__CPP_TRANSPORT_NODE_METADATA_CREATED].asString();
         this->creation_time = boost::posix_time::from_iso_string(ctime_str);
 
-        std::string etime_str = metadata[__CPP_TRANSPORT_NODE_METADATA_EDITED].asString();
+        std::string etime_str = reader[__CPP_TRANSPORT_NODE_METADATA_GROUP][__CPP_TRANSPORT_NODE_METADATA_EDITED].asString();
         this->last_edit_time = boost::posix_time::from_iso_string(etime_str);
 
-        this->runtime_api = reader[__CPP_TRANSPORT_NODE_METADATA_RUNTIME_API].asUInt();
+        this->runtime_api = reader[__CPP_TRANSPORT_NODE_METADATA_GROUP][__CPP_TRANSPORT_NODE_METADATA_RUNTIME_API].asUInt();
 	    }
 
 
@@ -1458,10 +1620,9 @@ namespace transport
 	    {
         Json::Value metadata(Json::objectValue);
 
-        metadata[__CPP_TRANSPORT_NODE_METADATA_CREATED] = boost::posix_time::to_iso_string(this->creation_time);
-        metadata[__CPP_TRANSPORT_NODE_METADATA_EDITED] = boost::posix_time::to_iso_string(this->last_edit_time);
-        metadata[__CPP_TRANSPORT_NODE_METADATA_RUNTIME_API] = this->runtime_api;
-        writer[__CPP_TRANSPORT_NODE_METADATA_GROUP] = metadata;
+        writer[__CPP_TRANSPORT_NODE_METADATA_GROUP][__CPP_TRANSPORT_NODE_METADATA_CREATED] = boost::posix_time::to_iso_string(this->creation_time);
+        writer[__CPP_TRANSPORT_NODE_METADATA_GROUP][__CPP_TRANSPORT_NODE_METADATA_EDITED] = boost::posix_time::to_iso_string(this->last_edit_time);
+        writer[__CPP_TRANSPORT_NODE_METADATA_GROUP][__CPP_TRANSPORT_NODE_METADATA_RUNTIME_API] = this->runtime_api;
 	    }
 
 
@@ -1514,7 +1675,7 @@ namespace transport
     package_record<number>::package_record(Json::Value& reader, typename instance_manager<number>::model_finder& f,
                                            repository_record::handler_package& pkg)
 	    : repository_record(reader, pkg),
-	      ics(this->name, reader, f)        // name gets deserialized by repository_record, so is safe to use here
+	      ics(this->name, reader[__CPP_TRANSPORT_NODE_INITIAL_CONDITIONS], f)        // name gets deserialized by repository_record, so is safe to use here
 	    {
 	    }
 
@@ -1523,7 +1684,11 @@ namespace transport
     void package_record<number>::serialize(Json::Value& writer) const
 	    {
         writer[__CPP_TRANSPORT_NODE_RECORD_TYPE] = std::string(__CPP_TRANSPORT_NODE_RECORD_PACKAGE);
-        this->ics.serialize(writer);
+
+        Json::Value ics_package(Json::objectValue);
+        this->ics.serialize(ics_package);
+        writer[__CPP_TRANSPORT_NODE_INITIAL_CONDITIONS] = ics_package;
+
         this->repository_record::serialize(writer);
 	    }
 
@@ -1764,54 +1929,47 @@ namespace transport
 
     output_metadata::output_metadata(Json::Value& reader)
 	    {
-        Json::Value node = reader[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP];
-		    assert(node.isObject());
-
-        work_time                 = node[__CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_WALLCLOCK_TIME].asLargestInt();
-        db_time                   = node[__CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_DB_TIME].asLargestInt();
-        aggregation_time          = node[__CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_AGG_TIME].asLargestInt();
-        time_config_hits          = node[__CPP_TRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_HITS].asUInt();
-        time_config_unloads       = node[__CPP_TRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_UNLOADS].asUInt();
-        twopf_kconfig_hits        = node[__CPP_TRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_HITS].asUInt();
-        twopf_kconfig_unloads     = node[__CPP_TRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_UNLOADS].asUInt();
-        threepf_kconfig_hits      = node[__CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_HITS].asUInt();
-        threepf_kconfig_unloads   = node[__CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_UNLOADS].asUInt();
-        data_hits                 = node[__CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_HITS].asUInt();
-        data_unloads              = node[__CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_UNLOADS].asUInt();
-        zeta_hits                 = node[__CPP_TRANSPORT_NODE_OUTPUTDATA_ZETA_CACHE_HITS].asUInt();
-        zeta_unloads              = node[__CPP_TRANSPORT_NODE_OUTPUTDATA_ZETA_CACHE_UNLOADS].asUInt();
-        time_config_evictions     = node[__CPP_TRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_EVICTIONS].asLargestInt();
-        twopf_kconfig_evictions   = node[__CPP_TRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_EVICTIONS].asLargestInt();
-        threepf_kconfig_evictions = node[__CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_EVICTIONS].asLargestInt();
-        data_evictions            = node[__CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_EVICTIONS].asLargestInt();
-        zeta_evictions            = node[__CPP_TRANSPORT_NODE_OUTPUTDATA_ZETA_CACHE_EVICTIONS].asLargestInt();
+        work_time                 = reader[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_WALLCLOCK_TIME].asLargestInt();
+        db_time                   = reader[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_DB_TIME].asLargestInt();
+        aggregation_time          = reader[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_AGG_TIME].asLargestInt();
+        time_config_hits          = reader[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_HITS].asUInt();
+        time_config_unloads       = reader[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_UNLOADS].asUInt();
+        twopf_kconfig_hits        = reader[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_HITS].asUInt();
+        twopf_kconfig_unloads     = reader[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_UNLOADS].asUInt();
+        threepf_kconfig_hits      = reader[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_HITS].asUInt();
+        threepf_kconfig_unloads   = reader[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_UNLOADS].asUInt();
+        data_hits                 = reader[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_HITS].asUInt();
+        data_unloads              = reader[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_UNLOADS].asUInt();
+        zeta_hits                 = reader[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_ZETA_CACHE_HITS].asUInt();
+        zeta_unloads              = reader[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_ZETA_CACHE_UNLOADS].asUInt();
+        time_config_evictions     = reader[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_EVICTIONS].asLargestInt();
+        twopf_kconfig_evictions   = reader[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_EVICTIONS].asLargestInt();
+        threepf_kconfig_evictions = reader[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_EVICTIONS].asLargestInt();
+        data_evictions            = reader[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_EVICTIONS].asLargestInt();
+        zeta_evictions            = reader[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_ZETA_CACHE_EVICTIONS].asLargestInt();
 	    }
 
 
     void output_metadata::serialize(Json::Value& writer) const
 	    {
-        Json::Value node(Json::objectValue);
-
-        node[__CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_WALLCLOCK_TIME]    = static_cast<Json::LargestInt>(this->work_time);
-        node[__CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_DB_TIME]           = static_cast<Json::LargestInt>(this->db_time);
-        node[__CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_AGG_TIME]          = static_cast<Json::LargestInt>(aggregation_time);
-        node[__CPP_TRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_HITS]         = this->time_config_hits;
-        node[__CPP_TRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_UNLOADS]      = this->time_config_unloads;
-        node[__CPP_TRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_HITS]        = this->twopf_kconfig_hits;
-        node[__CPP_TRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_UNLOADS]     = this->twopf_kconfig_unloads;
-        node[__CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_HITS]      = this->threepf_kconfig_hits;
-        node[__CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_UNLOADS]   = this->threepf_kconfig_unloads;
-        node[__CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_HITS]         = this->data_hits;
-        node[__CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_UNLOADS]      = this->data_unloads;
-        node[__CPP_TRANSPORT_NODE_OUTPUTDATA_ZETA_CACHE_HITS]         = this->zeta_hits;
-        node[__CPP_TRANSPORT_NODE_OUTPUTDATA_ZETA_CACHE_UNLOADS]      = this->zeta_unloads;
-        node[__CPP_TRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_EVICTIONS]    = static_cast<Json::LargestInt>(this->time_config_evictions);
-        node[__CPP_TRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_EVICTIONS]   = static_cast<Json::LargestInt>(this->twopf_kconfig_evictions);
-        node[__CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_EVICTIONS] = static_cast<Json::LargestInt>(this->threepf_kconfig_evictions);
-        node[__CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_EVICTIONS]    = static_cast<Json::LargestInt>(this->data_evictions);
-        node[__CPP_TRANSPORT_NODE_OUTPUTDATA_ZETA_CACHE_EVICTIONS]    = static_cast<Json::LargestInt>(this->zeta_evictions);
-
-        writer[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP] = node;
+        writer[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_WALLCLOCK_TIME]    = static_cast<Json::LargestInt>(this->work_time);
+        writer[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_DB_TIME]           = static_cast<Json::LargestInt>(this->db_time);
+        writer[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_AGG_TIME]          = static_cast<Json::LargestInt>(aggregation_time);
+        writer[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_HITS]         = this->time_config_hits;
+        writer[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_UNLOADS]      = this->time_config_unloads;
+        writer[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_HITS]        = this->twopf_kconfig_hits;
+        writer[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_UNLOADS]     = this->twopf_kconfig_unloads;
+        writer[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_HITS]      = this->threepf_kconfig_hits;
+        writer[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_UNLOADS]   = this->threepf_kconfig_unloads;
+        writer[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_HITS]         = this->data_hits;
+        writer[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_UNLOADS]      = this->data_unloads;
+        writer[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_ZETA_CACHE_HITS]         = this->zeta_hits;
+        writer[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_ZETA_CACHE_UNLOADS]      = this->zeta_unloads;
+        writer[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_EVICTIONS]    = static_cast<Json::LargestInt>(this->time_config_evictions);
+        writer[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_EVICTIONS]   = static_cast<Json::LargestInt>(this->twopf_kconfig_evictions);
+        writer[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_EVICTIONS] = static_cast<Json::LargestInt>(this->threepf_kconfig_evictions);
+        writer[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_EVICTIONS]    = static_cast<Json::LargestInt>(this->data_evictions);
+        writer[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_ZETA_CACHE_EVICTIONS]    = static_cast<Json::LargestInt>(this->zeta_evictions);
 	    }
 
 
@@ -1820,44 +1978,41 @@ namespace transport
 
     integration_metadata::integration_metadata(Json::Value& reader)
 	    {
-        Json::Value& node = reader[__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP];
-		    assert(node.isObject());
-
-        total_wallclock_time        = node[__CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_WALLCLOCK_TIME].asLargestInt();
-        total_aggregation_time      = node[__CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_AGG_TIME].asLargestInt();
-        total_integration_time      = node[__CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_INT_TIME].asLargestInt();
-        min_mean_integration_time   = node[__CPP_TRANSPORT_NODE_TIMINGDATA_MIN_MEAN_INT_TIME].asLargestInt();
-        max_mean_integration_time   = node[__CPP_TRANSPORT_NODE_TIMINGDATA_MAX_MEAN_INT_TIME].asLargestInt();
-        global_min_integration_time = node[__CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MIN_INT_TIME].asLargestInt();
-        global_max_integration_time = node[__CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MAX_INT_TIME].asLargestInt();
-        total_batching_time         = node[__CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_BATCH_TIME].asLargestInt();
-        min_mean_batching_time      = node[__CPP_TRANSPORT_NODE_TIMINGDATA_MIN_MEAN_BATCH_TIME].asLargestInt();
-        max_mean_batching_time      = node[__CPP_TRANSPORT_NODE_TIMINGDATA_MAX_MEAN_BATCH_TIME].asLargestInt();
-        global_min_batching_time    = node[__CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MIN_BATCH_TIME].asLargestInt();
-        global_max_batching_time    = node[__CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MAX_BATCH_TIME].asLargestInt();
-        total_configurations        = node[__CPP_TRANSPORT_NODE_TIMINGDATA_NUM_CONFIGURATIONS].asUInt();
+        total_wallclock_time        = reader[__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP][__CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_WALLCLOCK_TIME].asLargestInt();
+        total_aggregation_time      = reader[__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP][__CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_AGG_TIME].asLargestInt();
+        total_integration_time      = reader[__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP][__CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_INT_TIME].asLargestInt();
+        min_mean_integration_time   = reader[__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP][__CPP_TRANSPORT_NODE_TIMINGDATA_MIN_MEAN_INT_TIME].asLargestInt();
+        max_mean_integration_time   = reader[__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP][__CPP_TRANSPORT_NODE_TIMINGDATA_MAX_MEAN_INT_TIME].asLargestInt();
+        global_min_integration_time = reader[__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP][__CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MIN_INT_TIME].asLargestInt();
+        global_max_integration_time = reader[__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP][__CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MAX_INT_TIME].asLargestInt();
+        total_batching_time         = reader[__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP][__CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_BATCH_TIME].asLargestInt();
+        min_mean_batching_time      = reader[__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP][__CPP_TRANSPORT_NODE_TIMINGDATA_MIN_MEAN_BATCH_TIME].asLargestInt();
+        max_mean_batching_time      = reader[__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP][__CPP_TRANSPORT_NODE_TIMINGDATA_MAX_MEAN_BATCH_TIME].asLargestInt();
+        global_min_batching_time    = reader[__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP][__CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MIN_BATCH_TIME].asLargestInt();
+        global_max_batching_time    = reader[__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP][__CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MAX_BATCH_TIME].asLargestInt();
+        total_configurations        = reader[__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP][__CPP_TRANSPORT_NODE_TIMINGDATA_NUM_CONFIGURATIONS].asUInt();
+        total_failures              = reader[__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP][__CPP_TRANSPORT_NODE_TIMINGDATA_NUM_FAILURES].asUInt();
+        total_refinements           = reader[__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP][__CPP_TRANSPORT_NODE_TIMINGDATA_NUM_REFINED].asUInt();
 	    }
 
 
     void integration_metadata::serialize(Json::Value& writer) const
 	    {
-        Json::Value node(Json::objectValue);
-
-        node[__CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_WALLCLOCK_TIME]  = static_cast<Json::LargestInt>(this->total_wallclock_time);
-        node[__CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_AGG_TIME]        = static_cast<Json::LargestInt>(this->total_aggregation_time);
-        node[__CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_INT_TIME]        = static_cast<Json::LargestInt>(this->total_integration_time);
-        node[__CPP_TRANSPORT_NODE_TIMINGDATA_MIN_MEAN_INT_TIME]     = static_cast<Json::LargestInt>(this->min_mean_integration_time);
-        node[__CPP_TRANSPORT_NODE_TIMINGDATA_MAX_MEAN_INT_TIME]     = static_cast<Json::LargestInt>(this->max_mean_integration_time);
-        node[__CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MIN_INT_TIME]   = static_cast<Json::LargestInt>(this->global_min_integration_time);
-        node[__CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MAX_INT_TIME]   = static_cast<Json::LargestInt>(this->global_max_integration_time);
-        node[__CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_BATCH_TIME]      = static_cast<Json::LargestInt>(this->total_batching_time);
-        node[__CPP_TRANSPORT_NODE_TIMINGDATA_MIN_MEAN_BATCH_TIME]   = static_cast<Json::LargestInt>(this->min_mean_batching_time);
-        node[__CPP_TRANSPORT_NODE_TIMINGDATA_MAX_MEAN_BATCH_TIME]   = static_cast<Json::LargestInt>(this->max_mean_batching_time);
-        node[__CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MIN_BATCH_TIME] = static_cast<Json::LargestInt>(this->global_min_batching_time);
-        node[__CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MAX_BATCH_TIME] = static_cast<Json::LargestInt>(this->global_max_batching_time);
-        node[__CPP_TRANSPORT_NODE_TIMINGDATA_NUM_CONFIGURATIONS]    = this->total_configurations;
-
-        writer[__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP] = node;
+        writer[__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP][__CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_WALLCLOCK_TIME]  = static_cast<Json::LargestInt>(this->total_wallclock_time);
+        writer[__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP][__CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_AGG_TIME]        = static_cast<Json::LargestInt>(this->total_aggregation_time);
+        writer[__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP][__CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_INT_TIME]        = static_cast<Json::LargestInt>(this->total_integration_time);
+        writer[__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP][__CPP_TRANSPORT_NODE_TIMINGDATA_MIN_MEAN_INT_TIME]     = static_cast<Json::LargestInt>(this->min_mean_integration_time);
+        writer[__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP][__CPP_TRANSPORT_NODE_TIMINGDATA_MAX_MEAN_INT_TIME]     = static_cast<Json::LargestInt>(this->max_mean_integration_time);
+        writer[__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP][__CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MIN_INT_TIME]   = static_cast<Json::LargestInt>(this->global_min_integration_time);
+        writer[__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP][__CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MAX_INT_TIME]   = static_cast<Json::LargestInt>(this->global_max_integration_time);
+        writer[__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP][__CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_BATCH_TIME]      = static_cast<Json::LargestInt>(this->total_batching_time);
+        writer[__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP][__CPP_TRANSPORT_NODE_TIMINGDATA_MIN_MEAN_BATCH_TIME]   = static_cast<Json::LargestInt>(this->min_mean_batching_time);
+        writer[__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP][__CPP_TRANSPORT_NODE_TIMINGDATA_MAX_MEAN_BATCH_TIME]   = static_cast<Json::LargestInt>(this->max_mean_batching_time);
+        writer[__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP][__CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MIN_BATCH_TIME] = static_cast<Json::LargestInt>(this->global_min_batching_time);
+        writer[__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP][__CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MAX_BATCH_TIME] = static_cast<Json::LargestInt>(this->global_max_batching_time);
+        writer[__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP][__CPP_TRANSPORT_NODE_TIMINGDATA_NUM_CONFIGURATIONS]    = this->total_configurations;
+        writer[__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP][__CPP_TRANSPORT_NODE_TIMINGDATA_NUM_FAILURES]          = this->total_failures;
+        writer[__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP][__CPP_TRANSPORT_NODE_TIMINGDATA_NUM_REFINED]           = this->total_refinements;
 	    }
 
 
@@ -1933,9 +2088,9 @@ namespace transport
 	    {
         paths.root = root;
 
-        task = reader[__CPP_TRANSPORT_NODE_OUTPUTGROUP_TASK_NAME].asString();
+        task         = reader[__CPP_TRANSPORT_NODE_OUTPUTGROUP_TASK_NAME].asString();
         paths.output = reader[__CPP_TRANSPORT_NODE_OUTPUTGROUP_DATA_ROOT].asString();
-				locked = reader[__CPP_TRANSPORT_NODE_OUTPUTGROUP_LOCKED].asBool();
+        locked       = reader[__CPP_TRANSPORT_NODE_OUTPUTGROUP_LOCKED].asBool();
 
         Json::Value note_list = reader[__CPP_TRANSPORT_NODE_OUTPUTGROUP_NOTES];
 				assert(note_list.isArray());
@@ -1962,7 +2117,7 @@ namespace transport
 
         writer[__CPP_TRANSPORT_NODE_OUTPUTGROUP_TASK_NAME] = this->task;
         writer[__CPP_TRANSPORT_NODE_OUTPUTGROUP_DATA_ROOT] = this->paths.output.string();
-        writer[__CPP_TRANSPORT_NODE_OUTPUTGROUP_LOCKED] = this->locked;
+        writer[__CPP_TRANSPORT_NODE_OUTPUTGROUP_LOCKED]    = this->locked;
 
         Json::Value note_list(Json::arrayValue);
 
@@ -2019,25 +2174,25 @@ namespace transport
 
     precomputed_products::precomputed_products(Json::Value& reader)
 	    {
-        zeta_twopf   = reader[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_ZETA_TWOPF].asBool();
-        zeta_threepf = reader[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_ZETA_THREEPF].asBool();
-        zeta_redbsp  = reader[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_ZETA_REDBSP].asBool();
-        fNL_local    = reader[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FNL_LOCAL].asBool();
-        fNL_equi     = reader[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FNL_EQUI].asBool();
-        fNL_ortho    = reader[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FNL_ORTHO].asBool();
-        fNL_DBI      = reader[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FNL_DBI].asBool();
+        zeta_twopf   = reader[__CPP_TRANSPORT_NODE_PRECOMPUTED_ROOT][__CPP_TRANSPORT_NODE_PRECOMPUTED_ZETA_TWOPF].asBool();
+        zeta_threepf = reader[__CPP_TRANSPORT_NODE_PRECOMPUTED_ROOT][__CPP_TRANSPORT_NODE_PRECOMPUTED_ZETA_THREEPF].asBool();
+        zeta_redbsp  = reader[__CPP_TRANSPORT_NODE_PRECOMPUTED_ROOT][__CPP_TRANSPORT_NODE_PRECOMPUTED_ZETA_REDBSP].asBool();
+        fNL_local    = reader[__CPP_TRANSPORT_NODE_PRECOMPUTED_ROOT][__CPP_TRANSPORT_NODE_PRECOMPUTED_FNL_LOCAL].asBool();
+        fNL_equi     = reader[__CPP_TRANSPORT_NODE_PRECOMPUTED_ROOT][__CPP_TRANSPORT_NODE_PRECOMPUTED_FNL_EQUI].asBool();
+        fNL_ortho    = reader[__CPP_TRANSPORT_NODE_PRECOMPUTED_ROOT][__CPP_TRANSPORT_NODE_PRECOMPUTED_FNL_ORTHO].asBool();
+        fNL_DBI      = reader[__CPP_TRANSPORT_NODE_PRECOMPUTED_ROOT][__CPP_TRANSPORT_NODE_PRECOMPUTED_FNL_DBI].asBool();
 	    }
 
 
     void precomputed_products::serialize(Json::Value& writer) const
 	    {
-        writer[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_ZETA_TWOPF]   = this->zeta_twopf;
-        writer[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_ZETA_THREEPF] = this->zeta_threepf;
-        writer[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_ZETA_REDBSP]  = this->zeta_redbsp;
-        writer[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FNL_LOCAL]    = this->fNL_local;
-        writer[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FNL_EQUI]     = this->fNL_equi;
-        writer[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FNL_ORTHO]    = this->fNL_ortho;
-        writer[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FNL_DBI]      = this->fNL_DBI;
+        writer[__CPP_TRANSPORT_NODE_PRECOMPUTED_ROOT][__CPP_TRANSPORT_NODE_PRECOMPUTED_ZETA_TWOPF]   = this->zeta_twopf;
+        writer[__CPP_TRANSPORT_NODE_PRECOMPUTED_ROOT][__CPP_TRANSPORT_NODE_PRECOMPUTED_ZETA_THREEPF] = this->zeta_threepf;
+        writer[__CPP_TRANSPORT_NODE_PRECOMPUTED_ROOT][__CPP_TRANSPORT_NODE_PRECOMPUTED_ZETA_REDBSP]  = this->zeta_redbsp;
+        writer[__CPP_TRANSPORT_NODE_PRECOMPUTED_ROOT][__CPP_TRANSPORT_NODE_PRECOMPUTED_FNL_LOCAL]    = this->fNL_local;
+        writer[__CPP_TRANSPORT_NODE_PRECOMPUTED_ROOT][__CPP_TRANSPORT_NODE_PRECOMPUTED_FNL_EQUI]     = this->fNL_equi;
+        writer[__CPP_TRANSPORT_NODE_PRECOMPUTED_ROOT][__CPP_TRANSPORT_NODE_PRECOMPUTED_FNL_ORTHO]    = this->fNL_ortho;
+        writer[__CPP_TRANSPORT_NODE_PRECOMPUTED_ROOT][__CPP_TRANSPORT_NODE_PRECOMPUTED_FNL_DBI]      = this->fNL_DBI;
 	    }
 
 
@@ -2056,15 +2211,39 @@ namespace transport
     integration_payload::integration_payload(Json::Value& reader)
 	    : metadata(reader)
 	    {
-        backend = reader[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_BACKEND].asString();
-        container = reader[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_DATABASE].asString();
+        container        = reader[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_DATABASE].asString();
+        fail             = reader[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FAILED].asBool();
+        workgroup_number = reader[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_WORKGROUP].asUInt();
+        seeded           = reader[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_SEEDED].asBool();
+        seed_group       = reader[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_SEED_GROUP].asString();
+        statistics       = reader[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_STATISTICS].asBool();
+
+        Json::Value failure_array = reader[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FAILED_SERIALS];
+        assert(failure_array.isArray());
+        failed_serials.clear();
+        for(Json::Value::iterator t = failure_array.begin(); t != failure_array.end(); t++)
+          {
+            failed_serials.push_back(t->asUInt());
+          }
 	    }
 
 
     void integration_payload::serialize(Json::Value& writer) const
 	    {
-        writer[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_BACKEND] = this->backend;
-        writer[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_DATABASE] = this->container.string();
+        writer[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_DATABASE]   = this->container.string();
+        writer[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FAILED]     = this->fail;
+        writer[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_WORKGROUP]  = this->workgroup_number;
+        writer[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_SEEDED]     = this->seeded;
+        writer[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_SEED_GROUP] = this->seed_group;
+        writer[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_STATISTICS] = this->statistics;
+
+        Json::Value failure_array(Json::arrayValue);
+        for(std::list<unsigned int>::const_iterator t = this->failed_serials.begin(); t != this->failed_serials.end(); t++)
+          {
+            Json::Value element = *t;
+            failure_array.append(element);
+          }
+        writer[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FAILED_SERIALS] = failure_array;
 
         this->metadata.serialize(writer);
 	    }
@@ -2072,7 +2251,6 @@ namespace transport
 
     void integration_payload::write(std::ostream& out) const
 	    {
-        out << __CPP_TRANSPORT_PAYLOAD_INTEGRATION_BACKEND << " " << this->backend << std::endl;
         out << __CPP_TRANSPORT_PAYLOAD_INTEGRATION_DATA << " = " << this->container << std::endl;
 	    }
 
@@ -2081,13 +2259,39 @@ namespace transport
 	    : metadata(reader),
 	      precomputed(reader)
 	    {
-        this->container = reader[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_DATABASE].asString();
+        container    = reader[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_DATABASE].asString();
+        fail         = reader[__CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_FAILED].asBool();
+        paired       = reader[__CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_PAIRED].asBool();
+        parent_group = reader[__CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_PARENT_GROUP].asString();
+        seeded       = reader[__CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_SEEDED].asBool();
+        seed_group   = reader[__CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_SEED_GROUP].asString();
+
+        Json::Value failure_array = reader[__CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_FAILED_SERIALS];
+        assert(failure_array.isArray());
+        failed_serials.clear();
+        for(Json::Value::iterator t = failure_array.begin(); t != failure_array.end(); t++)
+          {
+            failed_serials.push_back(t->asUInt());
+          }
 	    }
 
 
     void postintegration_payload::serialize(Json::Value& writer) const
 	    {
-		    writer[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_DATABASE] = this->container.string();
+        writer[__CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_DATABASE]     = this->container.string();
+        writer[__CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_FAILED]       = this->fail;
+        writer[__CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_PAIRED]       = this->paired;
+        writer[__CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_PARENT_GROUP] = this->parent_group;
+        writer[__CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_SEEDED]       = this->seeded;
+        writer[__CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_SEED_GROUP]   = this->seed_group;
+
+        Json::Value failure_array(Json::arrayValue);
+        for(std::list<unsigned int>::const_iterator t = this->failed_serials.begin(); t != this->failed_serials.end(); t++)
+          {
+            Json::Value element = *t;
+            failure_array.append(element);
+          }
+        writer[__CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_FAILED_SERIALS] = failure_array;
 
         this->metadata.serialize(writer);
         this->precomputed.serialize(writer);
@@ -2105,6 +2309,8 @@ namespace transport
     output_payload::output_payload(Json::Value& reader)
 	    : metadata(reader)
 	    {
+        fail = reader[__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_FAILED].asBool();
+
         Json::Value& content_array = reader[__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_ARRAY];
 		    assert(content_array.isArray());
 
@@ -2117,6 +2323,8 @@ namespace transport
 
     void output_payload::serialize(Json::Value& writer) const
 	    {
+        writer[__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_FAILED] = this->fail;
+
         Json::Value content_array(Json::arrayValue);
 
         for(std::list<derived_content>::const_iterator t = this->content.begin(); t != this->content.end(); t++)
@@ -2149,6 +2357,14 @@ namespace transport
         std::string ctime_string = reader[__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_CREATED].asString();
         created = boost::posix_time::from_iso_string(ctime_string);
 
+        Json::Value& content_groups_array = reader[__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_USED_GROUPS];
+        assert(content_groups_array.isArray());
+
+        for(Json::Value::iterator t = content_groups_array.begin(); t != content_groups_array.end(); t++)
+          {
+            this->content_groups.push_back(t->asString());
+          }
+
         Json::Value note_list = reader[__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_NOTES];
 		    assert(note_list.isArray());
 
@@ -2172,6 +2388,15 @@ namespace transport
         writer[__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_PRODUCT_NAME] = this->parent_product;
         writer[__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_FILENAME]     = this->filename.string();
         writer[__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_CREATED]      = boost::posix_time::to_iso_string(this->created);
+
+        Json::Value content_groups_array(Json::arrayValue);
+
+        for(std::list<std::string>::const_iterator t = this->content_groups.begin(); t != this->content_groups.end(); t++)
+          {
+            Json::Value element = *t;
+            content_groups_array.append(element);
+          }
+        writer[__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_USED_GROUPS] = content_groups_array;
 
         Json::Value note_list(Json::arrayValue);
 

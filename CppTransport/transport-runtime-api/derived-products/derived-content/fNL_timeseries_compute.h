@@ -178,13 +178,12 @@ namespace transport
 			    {
             this->validate();
 
-            const std::vector<threepf_kconfig>& raw_kconfigs = tk->get_threepf_kconfig_list();
+            const threepf_kconfig_database& threepf_db = tk->get_threepf_database();
 
             kconfig_sns.clear();
-            kconfig_sns.resize(raw_kconfigs.size());
-            for(unsigned int i = 0; i < raw_kconfigs.size(); i++)
+            for(threepf_kconfig_database::const_config_iterator t = threepf_db.config_begin(); t != threepf_db.config_end(); t++)
               {
-                kconfig_sns[i] = raw_kconfigs[i].serial;
+                kconfig_sns.push_back(t->serial);
               }
 			    }
 
@@ -259,7 +258,7 @@ namespace transport
 
             // pull 3pf k-configuration information from the database
             threepf_kconfig_tag<number> k_tag = h->pipe.new_threepf_kconfig_tag();
-            const typename std::vector< threepf_configuration > k_values = kc_handle.lookup_tag(k_tag);
+            const typename std::vector< threepf_kconfig > k_values = kc_handle.lookup_tag(k_tag);
 
             line_data.clear();
             line_data.resize(h->time_sample_sns.size());
@@ -272,9 +271,9 @@ namespace transport
                 // pull bispectrum information for this triangle
                 const std::vector<number> bispectrum = z_handle.lookup_tag(bsp_tag);
 
-                twopf_configuration k1;
-                twopf_configuration k2;
-                twopf_configuration k3;
+                twopf_kconfig k1;
+                twopf_kconfig k2;
+                twopf_kconfig k3;
 
                 k1.serial         = k_values[i].k1_serial;
                 k1.k_comoving     = k_values[i].k1_comoving;
@@ -305,8 +304,8 @@ namespace transport
                 // get integration measure from task
                 threepf_kconfig kcfg;
                 kcfg.serial = k_values[i].serial;
-                kcfg.k_t_comoving = k_values[i].kt_comoving;
-                kcfg.k_t_conventional = k_values[i].kt_conventional;
+                kcfg.kt_comoving = k_values[i].kt_comoving;
+                kcfg.kt_conventional = k_values[i].kt_conventional;
                 kcfg.k1_comoving      = k_values[i].k1_comoving;
                 kcfg.k1_conventional  = k_values[i].k1_conventional;
                 kcfg.k2_comoving      = k_values[i].k2_comoving;
@@ -334,7 +333,7 @@ namespace transport
 
             // pull 3pf k-configuration information from the database
             threepf_kconfig_tag<number> k_tag = h->pipe.new_threepf_kconfig_tag();
-            const typename std::vector< threepf_configuration > k_values = kc_handle.lookup_tag(k_tag);
+            const typename std::vector< threepf_kconfig > k_values = kc_handle.lookup_tag(k_tag);
 
             line_data.clear();
             line_data.resize(h->time_sample_sns.size());
@@ -342,9 +341,9 @@ namespace transport
             // loop over all sampled k-configurations, adding their contributions to the integral
             for(unsigned int i = 0; i < k_values.size(); i++)
               {
-                twopf_configuration k1;
-                twopf_configuration k2;
-                twopf_configuration k3;
+                twopf_kconfig k1;
+                twopf_kconfig k2;
+                twopf_kconfig k3;
 
                 k1.serial         = k_values[i].k1_serial;
                 k1.k_comoving     = k_values[i].k1_comoving;
@@ -373,8 +372,8 @@ namespace transport
                 // get integration measure from task
                 threepf_kconfig kcfg;
                 kcfg.serial = k_values[i].serial;
-                kcfg.k_t_comoving = k_values[i].kt_comoving;
-                kcfg.k_t_conventional = k_values[i].kt_conventional;
+                kcfg.kt_comoving = k_values[i].kt_comoving;
+                kcfg.kt_conventional = k_values[i].kt_conventional;
                 kcfg.k1_comoving      = k_values[i].k1_comoving;
                 kcfg.k1_conventional  = k_values[i].k1_conventional;
                 kcfg.k2_comoving      = k_values[i].k2_comoving;

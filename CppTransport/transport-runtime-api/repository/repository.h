@@ -174,24 +174,41 @@ namespace transport
       public:
 
 		    //! Generate a writer object for new integration output
-		    virtual std::shared_ptr< integration_writer<number> > new_integration_task_content(integration_task_record<number>* rec, const std::list<std::string>& tags, unsigned int worker);
+		    virtual std::shared_ptr< integration_writer<number> > new_integration_task_content(integration_task_record<number>* rec,
+                                                                                           const std::list<std::string>& tags,
+                                                                                           unsigned int worker, unsigned int workgroup, std::string suffix="");
 
 		    //! Generate a writer object for new derived-content output
-		    virtual std::shared_ptr< derived_content_writer<number> > new_output_task_content(output_task_record<number>* rec, const std::list<std::string>& tags, unsigned int worker);
+		    virtual std::shared_ptr< derived_content_writer<number> > new_output_task_content(output_task_record<number>* rec,
+                                                                                          const std::list<std::string>& tags,
+                                                                                          unsigned int worker, std::string suffix="");
 
         //! Generate a writer object for new postintegration output
-        virtual std::shared_ptr< postintegration_writer<number> > new_postintegration_task_content(postintegration_task_record<number>* rec, const std::list<std::string>& tags, unsigned int worker);
+        virtual std::shared_ptr< postintegration_writer<number> > new_postintegration_task_content(postintegration_task_record<number>* rec,
+                                                                                                   const std::list<std::string>& tags,
+                                                                                                   unsigned int worker, std::string suffix="");
 
       protected:
 
-        std::shared_ptr <integration_writer<number>> base_new_integration_task_content(integration_task_record<number>* rec, const std::list<std::string>& tags, unsigned int worker,
-                                                                                       typename integration_writer<number>::callback_group& callbacks);
+        virtual std::string reserve_content_name(boost::posix_time::ptime& now, const std::string& suffix) = 0;
 
-        std::shared_ptr <derived_content_writer<number>> base_new_output_task_content(output_task_record<number>* rec, const std::list<std::string>& tags, unsigned int worker,
-                                                                                      typename derived_content_writer<number>::callback_group& callbacks);
+        std::shared_ptr <integration_writer<number>> base_new_integration_task_content(integration_task_record<number>* rec,
+                                                                                       const std::list<std::string>& tags,
+                                                                                       unsigned int worker, unsigned int workgroup,
+                                                                                       typename integration_writer<number>::callback_group& callbacks,
+                                                                                       std::string suffix="");
 
-        std::shared_ptr <postintegration_writer<number>> base_new_postintegration_task_content(postintegration_task_record<number>* rec, const std::list<std::string>& tags, unsigned int worker,
-                                                                                               typename postintegration_writer<number>::callback_group& callbacks);
+        std::shared_ptr <derived_content_writer<number>> base_new_output_task_content(output_task_record<number>* rec,
+                                                                                      const std::list<std::string>& tags,
+                                                                                      unsigned int worker,
+                                                                                      typename derived_content_writer<number>::callback_group& callbacks,
+                                                                                      std::string suffix="");
+
+        std::shared_ptr <postintegration_writer<number>> base_new_postintegration_task_content(postintegration_task_record<number>* rec,
+                                                                                               const std::list<std::string>& tags,
+                                                                                               unsigned int worker,
+                                                                                               typename postintegration_writer<number>::callback_group& callbacks,
+                                                                                               std::string suffix="");
 
 
         // FIND AN OUTPUT GROUP MATCHING DEFINED TAGS
@@ -212,10 +229,6 @@ namespace transport
         //! Advise that an output group has been committed
         template <typename Payload>
         void advise_commit(output_group_record<Payload>* group);
-
-        //! Advise that postintegration products have been committed to an output group
-        template <typename Payload>
-        void advise_commit(postintegration_task_record<number>* rec, output_group_record<Payload>* group);
 
         //! Commit the products from an integration to the database
         void close_integration_writer(integration_writer<number>& writer);
@@ -258,11 +271,11 @@ namespace transport
 
 		    //! Create a new content group for an integration task
 		    virtual output_group_record<integration_payload>* integration_content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
-		                                                                                              bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg) = 0;
+                                                                                                   bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg) = 0;
 
 		    //! Create a new content group for a postintegration task
 		    virtual output_group_record<postintegration_payload>* postintegration_content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
-		                                                                                                      bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg) = 0;
+                                                                                                           bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg) = 0;
 
 		    //! Create a new content group for an output task
 		    virtual output_group_record<output_payload>* output_content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
@@ -313,6 +326,22 @@ namespace transport
         unsigned int transactions;
 
 	    };
+
+
+    template <typename Payload>
+    class OutputGroupFinder
+      {
+      public:
+        OutputGroupFinder(const std::string& n)
+          : name(n)
+          {
+          }
+
+        bool operator()(const std::shared_ptr< output_group_record<Payload> >& a) { return(a->get_name() == name); }
+
+      private:
+        std::string name;
+      };
 
 
     // ADMINISTRATION
@@ -374,52 +403,54 @@ namespace transport
 
     template <typename number>
     std::shared_ptr< integration_writer<number> >
-    repository<number>::new_integration_task_content(integration_task_record<number>* rec, const std::list<std::string>& tags, unsigned int worker)
+    repository<number>::new_integration_task_content(integration_task_record<number>* rec, const std::list<std::string>& tags,
+                                                     unsigned int worker, unsigned int workgroup, std::string suffix)
 	    {
         typename integration_writer<number>::callback_group callbacks;
         callbacks.commit = std::bind(&repository<number>::close_integration_writer, this, std::placeholders::_1);
         callbacks.abort  = std::bind(&repository<number>::abort_integration_writer, this, std::placeholders::_1);
 
-        return this->base_new_integration_task_content(rec, tags, worker, callbacks);
+        return this->base_new_integration_task_content(rec, tags, worker, workgroup, callbacks, suffix);
 	    }
 
 
     template <typename number>
     std::shared_ptr< derived_content_writer<number> >
-    repository<number>::new_output_task_content(output_task_record<number>* rec, const std::list<std::string>& tags, unsigned int worker)
+    repository<number>::new_output_task_content(output_task_record<number>* rec, const std::list<std::string>& tags,
+                                                unsigned int worker, std::string suffix)
 	    {
         typename derived_content_writer<number>::callback_group callbacks;
         callbacks.commit = std::bind(&repository<number>::close_derived_content_writer, this, std::placeholders::_1);
         callbacks.abort  = std::bind(&repository<number>::abort_derived_content_writer, this, std::placeholders::_1);
 
-        return this->base_new_output_task_content(rec, tags, worker, callbacks);
+        return this->base_new_output_task_content(rec, tags, worker, callbacks, suffix);
 	    }
 
 
     template <typename number>
     std::shared_ptr< postintegration_writer<number> >
-    repository<number>::new_postintegration_task_content(postintegration_task_record<number>* rec, const std::list<std::string>& tags, unsigned int worker)
+    repository<number>::new_postintegration_task_content(postintegration_task_record<number>* rec, const std::list<std::string>& tags,
+                                                         unsigned int worker, std::string suffix)
 	    {
         typename postintegration_writer<number>::callback_group callbacks;
         callbacks.commit        = std::bind(&repository<number>::close_postintegration_writer, this, std::placeholders::_1);
         callbacks.abort         = std::bind(&repository<number>::abort_postintegration_writer, this, std::placeholders::_1);
 
-        return this->base_new_postintegration_task_content(rec, tags, worker, callbacks);
+        return this->base_new_postintegration_task_content(rec, tags, worker, callbacks, suffix);
 	    }
 
 
 		template <typename number>
 		std::shared_ptr< integration_writer<number> >
-		repository<number>::base_new_integration_task_content(integration_task_record<number>* rec, const std::list<std::string>& tags, unsigned int worker,
-		                                                      typename integration_writer<number>::callback_group& callbacks)
+		repository<number>::base_new_integration_task_content(integration_task_record<number>* rec, const std::list<std::string>& tags,
+                                                          unsigned int worker, unsigned int workgroup,
+		                                                      typename integration_writer<number>::callback_group& callbacks, std::string suffix)
 			{
 		    // get current time
 		    boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
 
-		    // construct paths for the various output files and directories.
-		    // We use the ISO form of the current time to label the output group directory.
-		    // This means the repository directory structure will be human-readable if necessary.
-		    std::string output_leaf = boost::posix_time::to_iso_string(now);
+        // request a name for this content group
+        std::string output_leaf = this->reserve_content_name(now, suffix);
 
 		    boost::filesystem::path output_path = static_cast<boost::filesystem::path>(__CPP_TRANSPORT_REPO_TASKOUTPUT_LEAF) / rec->get_name() / output_leaf;
 		    boost::filesystem::path sql_path    = output_path / __CPP_TRANSPORT_REPO_DATABASE_LEAF;
@@ -445,22 +476,20 @@ namespace transport
 		    paths.temp   = temp_path;
 
 		    // integration_writer constructor takes a copy of the integration_task_record
-		    return std::shared_ptr< integration_writer<number> >(new integration_writer<number>(rec, callbacks, metadata, paths, worker));
+		    return std::shared_ptr< integration_writer<number> >(new integration_writer<number>(output_leaf, rec, callbacks, metadata, paths, worker, workgroup));
 			}
 
 
     template <typename number>
     std::shared_ptr< derived_content_writer<number> >
     repository<number>::base_new_output_task_content(output_task_record<number>* rec, const std::list<std::string>& tags, unsigned int worker,
-                                                     typename derived_content_writer<number>::callback_group& callbacks)
+                                                     typename derived_content_writer<number>::callback_group& callbacks, std::string suffix)
 	    {
         // get current time
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
 
-        // construct paths for output files and directories
-        // We use the ISO form of the current time to label the output group directory.
-        // This means the repository directory structure is human-readable if necessary.
-        std::string output_leaf = boost::posix_time::to_iso_string(now);
+        // request a name for this content group
+        std::string output_leaf = this->reserve_content_name(now, suffix);
 
         boost::filesystem::path output_path = static_cast<boost::filesystem::path>(__CPP_TRANSPORT_REPO_TASKOUTPUT_LEAF) / rec->get_name() / output_leaf;
 
@@ -483,20 +512,20 @@ namespace transport
         paths.log    = log_path;
         paths.temp   = temp_path;
 
-        return std::shared_ptr< derived_content_writer<number> >(new derived_content_writer<number>(rec, callbacks, metadata, paths, worker));
+        return std::shared_ptr< derived_content_writer<number> >(new derived_content_writer<number>(output_leaf, rec, callbacks, metadata, paths, worker));
 	    }
 
 
     template <typename number>
     std::shared_ptr< postintegration_writer<number> >
     repository<number>::base_new_postintegration_task_content(postintegration_task_record<number>* rec, const std::list<std::string>& tags, unsigned int worker,
-                                                              typename postintegration_writer<number>::callback_group& callbacks)
+                                                              typename postintegration_writer<number>::callback_group& callbacks, std::string suffix)
 	    {
         // get current time
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
 
-        // construct paths for output files and directories
-        std::string output_leaf = boost::posix_time::to_iso_string(now);
+        // request a name for this content group
+        std::string output_leaf = this->reserve_content_name(now, suffix);
 
         boost::filesystem::path output_path = static_cast<boost::filesystem::path>(__CPP_TRANSPORT_REPO_TASKOUTPUT_LEAF) / rec->get_name() / output_leaf;
         boost::filesystem::path sql_path     = output_path / __CPP_TRANSPORT_REPO_DATABASE_LEAF;
@@ -521,7 +550,7 @@ namespace transport
         paths.log    = log_path;
         paths.temp   = temp_path;
 
-        return std::shared_ptr< postintegration_writer<number> >(new postintegration_writer<number>(rec, callbacks, metadata, paths, worker));
+        return std::shared_ptr< postintegration_writer<number> >(new postintegration_writer<number>(output_leaf, rec, callbacks, metadata, paths, worker));
 	    }
 
 
@@ -534,24 +563,21 @@ namespace transport
 	    {
         std::ostringstream msg;
 
+        boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
+
         msg << __CPP_TRANSPORT_REPO_COMMITTING_OUTPUT_GROUP_A << " '" << group->get_name() << "' "
-	        << __CPP_TRANSPORT_REPO_COMMITTING_OUTPUT_GROUP_B << " '" << group->get_task_name() << "'";
+	        << __CPP_TRANSPORT_REPO_COMMITTING_OUTPUT_GROUP_B << " '" << group->get_task_name() << "' "
+	        << __CPP_TRANSPORT_REPO_COMMITTING_OUTPUT_GROUP_D << " " << boost::posix_time::to_simple_string(now);
 
         this->message(msg.str());
-	    }
 
-
-    template <typename number>
-    template <typename Payload>
-    void repository<number>::advise_commit(postintegration_task_record<number>* rec, output_group_record<Payload>* group)
-	    {
-        std::ostringstream msg;
-
-        msg << __CPP_TRANSPORT_REPO_WRITEBACK_POSTINT_GROUP_A << " '" << group->get_name() << "' "
-	        << __CPP_TRANSPORT_REPO_WRITEBACK_POSTINT_GROUP_B << " '" << rec->get_name() << "' ("
-	        << __CPP_TRANSPORT_REPO_WRITEBACK_POSTINT_GROUP_C << " '" << group->get_task_name() << "')";
-
-        this->message(msg.str());
+        if(group->get_payload().is_failed())
+          {
+            std::ostringstream warn;
+            warn << __CPP_TRANSPORT_REPO_WARN_OUTPUT_GROUP_A << " '" << group->get_name() << "' "
+              << __CPP_TRANSPORT_REPO_WARN_OUTPUT_GROUP_B;
+            this->warning(warn.str());
+          }
 	    }
 
 
@@ -577,12 +603,19 @@ namespace transport
 
         // stamp output group with the correct 'created' time stamp
         output_record->set_creation_time(writer.get_creation_time());
-        output_record->set_name_from_creation_time();
+        output_record->set_name(writer.get_name());
 
         // populate output group with content from the writer
-        output_record->get_payload().set_backend(rec->get_task()->get_model()->get_backend());
         output_record->get_payload().set_container_path(writer.get_relative_container_path());
         output_record->get_payload().set_metadata(writer.get_metadata());
+        output_record->get_payload().set_workgroup_number(writer.get_workgroup_number());
+
+        if(writer.is_seeded()) output_record->get_payload().set_seed(writer.get_seed_group());
+
+        output_record->get_payload().set_fail(writer.is_failed());
+        output_record->get_payload().set_failed_serials(writer.get_missing_serials());
+
+        output_record->get_payload().set_statistics(writer.collect_statistics());
 
         // commit new output record
         output_record->commit();
@@ -617,10 +650,8 @@ namespace transport
 
             std::ostringstream msg;
 
-            std::string group_name = boost::posix_time::to_iso_string(writer.get_creation_time());
-
             msg << __CPP_TRANSPORT_REPO_FAILED_OUTPUT_GROUP_A << " '" << writer.get_record()->get_task()->get_name() << "': "
-	            << __CPP_TRANSPORT_REPO_FAILED_OUTPUT_GROUP_B << " '" << group_name << "' "
+	            << __CPP_TRANSPORT_REPO_FAILED_OUTPUT_GROUP_B << " '" << writer.get_name() << "' "
 	            << __CPP_TRANSPORT_REPO_FAILED_OUTPUT_GROUP_C;
 
             this->message(msg.str());
@@ -651,11 +682,19 @@ namespace transport
 
         // stamp output group with the correct 'created' time stamp
         output_record->set_creation_time(writer.get_creation_time());
-        output_record->set_name_from_creation_time();
+        output_record->set_name(writer.get_name());
 
         // populate output group with content from the writer
         output_record->get_payload().set_container_path(writer.get_relative_container_path());
         output_record->get_payload().set_metadata(writer.get_metadata());
+
+        if(writer.is_seeded()) output_record->get_payload().set_seed(writer.get_seed_group());
+
+        output_record->get_payload().set_pair(writer.is_paired());
+        output_record->get_payload().set_parent_group(writer.get_parent_group());
+
+        output_record->get_payload().set_fail(writer.is_failed());
+        output_record->get_payload().set_failed_serials(writer.get_missing_serials());
 
         // tag this output group with its contents
         if(writer.get_products().get_zeta_twopf())   output_record->get_payload().get_precomputed_products().add_zeta_twopf();
@@ -699,10 +738,8 @@ namespace transport
 
             std::ostringstream msg;
 
-            std::string group_name = boost::posix_time::to_iso_string(writer.get_creation_time());
-
             msg << __CPP_TRANSPORT_REPO_FAILED_POSTINT_GROUP_A << " '" << writer.get_record()->get_task()->get_name() << "': "
-	            << __CPP_TRANSPORT_REPO_FAILED_POSTINT_GROUP_B << " '" << group_name << "' "
+	            << __CPP_TRANSPORT_REPO_FAILED_POSTINT_GROUP_B << " '" << writer.get_name() << "' "
 	            << __CPP_TRANSPORT_REPO_FAILED_POSTINT_GROUP_C;
 
             this->message(msg.str());
@@ -724,7 +761,7 @@ namespace transport
 
         // stamp output group with the correct 'created' time stamp
         output_record->set_creation_time(writer.get_creation_time());
-        output_record->set_name_from_creation_time();
+        output_record->set_name(writer.get_name());
 
         // populate output group with content from the writer
         const std::list<derived_content>& content = writer.get_content();
@@ -733,6 +770,7 @@ namespace transport
             output_record->get_payload().add_derived_content(*t);
 	        }
         output_record->get_payload().set_metadata(writer.get_metadata());
+        output_record->get_payload().set_fail(false);
 
         // commit new output record
         output_record->commit();
@@ -767,10 +805,8 @@ namespace transport
 
             std::ostringstream msg;
 
-            std::string group_name = boost::posix_time::to_iso_string(writer.get_creation_time());
-
             msg << __CPP_TRANSPORT_REPO_FAILED_CONTENT_GROUP_A << " '" << writer.get_record()->get_task()->get_name() << "': "
-	            << __CPP_TRANSPORT_REPO_FAILED_CONTENT_GROUP_B << " '" << group_name << "' "
+	            << __CPP_TRANSPORT_REPO_FAILED_CONTENT_GROUP_B << " '" << writer.get_name() << "' "
 	            << __CPP_TRANSPORT_REPO_FAILED_CONTENT_GROUP_C;
 
             this->message(msg.str());
@@ -789,8 +825,11 @@ namespace transport
         // search for output groups associated with this task
         std::list< std::shared_ptr< output_group_record<integration_payload> > > output = this->enumerate_integration_task_content(name);
 
+        // remove items which are marked as failed
+        output.remove_if( [&] (const std::shared_ptr< output_group_record<integration_payload> >& group) { return(group->get_payload().is_failed()); } );
+
         // remove items from the list which have mismatching tags
-        output.remove_if( [&] (const std::shared_ptr< output_group_record<integration_payload> > group) { return(group.get()->check_tags(tags)); } );
+        output.remove_if( [&] (const std::shared_ptr< output_group_record<integration_payload> >& group) { return(group->check_tags(tags)); } );
 
         if(output.empty())
 	        {
@@ -809,6 +848,9 @@ namespace transport
 	    {
         // search for output groups associated with this task
         std::list< std::shared_ptr< output_group_record<postintegration_payload> > > output = this->enumerate_postintegration_task_content(name);
+
+        // remove items which are marked as failed
+        output.remove_if( [&] (const std::shared_ptr< output_group_record<postintegration_payload> >& group) { return(group->get_payload().is_failed()); } );
 
         // remove items from the list which have mismatching tags
         output.remove_if( [&] (const std::shared_ptr< output_group_record<postintegration_payload> > group) { return(group.get()->check_tags(tags)); } );

@@ -18,11 +18,14 @@
 #include "transport-runtime-api/derived-products/derived-content/derived_line_helper.h"
 #include "transport-runtime-api/derived-products/data_line.h"
 
+#include "transport-runtime-api/defaults.h"
 #include "transport-runtime-api/messages.h"
 #include "transport-runtime-api/exceptions.h"
 
 #include "boost/filesystem/operations.hpp"
 
+
+#define __CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_ROOT       "line-collection"
 
 #define __CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LOGX       "log-x"
 #define __CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LOGY       "log-y"
@@ -178,7 +181,11 @@ namespace transport
 				  public:
 
 				    //! Add a line to the collection
-				    void add_line(const derived_line<number>& line);
+				    virtual void add_line(const derived_line<number>& line);
+
+						//! Get x-axis type
+						axis_value get_x_axis_value() const;
+
 
 				  protected:
 
@@ -196,6 +203,14 @@ namespace transport
             //! Collect a list of tasks which this derived product depends on;
             //! used by the repository to autocommit any necessary tasks
             virtual void get_task_list(typename std::vector< derivable_task<number>* >& list) const override;
+
+
+            // AGGREGATE OUTPUT GROUPS FROM A LIST OF LINES
+
+          public:
+
+            //! Collect a list of output groups used to derive content for this task
+            std::list<std::string> extract_output_groups(const std::list< data_line<number> >& list) const;
 
 
 						// GET AND SET BASIC LINE PROPERTIES
@@ -247,17 +262,6 @@ namespace transport
 				    std::list< derived_line<number>* > lines;
 
 
-						// ADMIN
-
-						//! Enforce maximum number of value types?
-						bool enforce_max_value_types;
-
-				    //! Maximum number of different value-types to allow
-				    unsigned int max_value_types;
-
-
-						// HANDLING DATA
-
 						// LINE HANDLING ATTRIBUTES
 
 				    //! logarithmic x-axis?
@@ -280,13 +284,13 @@ namespace transport
 					: derived_product<number>(name, reader)
 					{
 						// read in line management attributes
-				    log_x     = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LOGX].asBool();
-				    log_y     = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LOGY].asBool();
-				    abs_y     = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_ABSY].asBool();
-				    use_LaTeX = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LATEX].asBool();
+				    log_x     = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LOGX].asBool();
+				    log_y     = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LOGY].asBool();
+				    abs_y     = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_ABSY].asBool();
+				    use_LaTeX = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LATEX].asBool();
 
 						// read in line specifications
-				    Json::Value& line_array = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LINE_ARRAY];
+				    Json::Value& line_array = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LINE_ARRAY];
 						assert(line_array.isArray());
 
 				    lines.clear();
@@ -324,12 +328,27 @@ namespace transport
 				    // x-axis type (or be convertible to it)
 				    if(this->lines.size() > 0)
 					    {
-						    if(line.get_axis_type() != this->lines.front()->get_axis_type())
+						    if(line.get_current_x_axis_value() != this->lines.front()->get_current_x_axis_value())
 							    throw runtime_exception(runtime_exception::DERIVED_PRODUCT_ERROR, __CPP_TRANSPORT_PRODUCT_LINE_COLLECTION_AXIS_MISMATCH);
 					    }
 
 		        this->lines.push_back(line.clone());
 			    }
+
+
+				template <typename number>
+				axis_value line_collection<number>::get_x_axis_value() const
+					{
+						if(this->lines.size() > 0)
+							{
+						    return(this->lines.front()->get_current_x_axis_value());
+							}
+						else
+							{
+								return(unset_axis);
+							}
+
+					}
 
 
 		    template <typename number>
@@ -431,7 +450,7 @@ namespace transport
 		            if(!finished)
 			            {
 		                // find next point to add to merged x-axis (we work from the far right because std::vector can only pop from the end)
-		                double next_axis_point = -DBL_MAX;
+		                double next_axis_point = -std::numeric_limits<double>::max();
 		                for(unsigned int i = 0; i < output.size(); i++)
 			                {
 		                    if(data[i].size() > 0)
@@ -441,7 +460,7 @@ namespace transport
 			                    }
 			                }
 
-		                if(next_axis_point != -DBL_MAX)
+		                if(next_axis_point != -std::numeric_limits<double>::max())
 			                {
 		                    // push point to merged axis
 		                    axis.push_front(next_axis_point);
@@ -452,7 +471,7 @@ namespace transport
 		                        if(data[i].size() > 0)
 			                        {
 				                        const std::pair<double, number>& point = data[i].back();
-		                            if(point.first == next_axis_point)   // yes, this line has a match
+		                            if(fabs(point.first - next_axis_point) < __CPP_TRANSPORT_AXIS_MERGE_TOLERANCE)   // yes, this line has a match
 			                            {
 		                                output[i].push_front(output_value(data_absy[i] ? fabs(point.second) : point.second));
 
@@ -493,13 +512,31 @@ namespace transport
           }
 
 
+        template <typename number>
+        std::list<std::string> line_collection<number>::extract_output_groups(const std::list< data_line<number> >& list) const
+          {
+            std::list<std::string> groups;
+
+            for(typename std::list< data_line<number> >::const_iterator t = list.begin(); t != list.end(); t++)
+              {
+                std::list<std::string> line_groups = t->get_parent_groups();
+                groups.merge(line_groups);
+              }
+
+            groups.sort();
+            groups.unique();
+
+            return(groups);
+          }
+
+
 		    template <typename number>
 		    void line_collection<number>::serialize(Json::Value& writer) const
 			    {
-		        writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LOGX]  = this->log_x;
-		        writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LOGY]  = this->log_y;
-		        writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_ABSY]  = this->abs_y;
-		        writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LATEX] = this->use_LaTeX;
+		        writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LOGX]  = this->log_x;
+		        writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LOGY]  = this->log_y;
+		        writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_ABSY]  = this->abs_y;
+		        writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LATEX] = this->use_LaTeX;
 
 		        Json::Value line_array(Json::arrayValue);
 		        for(typename std::list< derived_line<number>* >::const_iterator t = this->lines.begin(); t != this->lines.end(); t++)
@@ -508,7 +545,7 @@ namespace transport
 		            (*t)->serialize(line_element);
 				        line_array.append(line_element);
 			        }
-		        writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LINE_ARRAY] = line_array;
+		        writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LINE_ARRAY] = line_array;
 
 		        // call next serialization
 		        this->derived_product<number>::serialize(writer);
@@ -518,12 +555,10 @@ namespace transport
 		    template <typename number>
 		    void line_collection<number>::write(std::ostream& out)
 			    {
-		        // call next writer
+		        // call derived_product writer
 		        this->derived_product<number>::write(out);
 
 		        unsigned int count = 0;
-
-		        out << __CPP_TRANSPORT_PRODUCT_LINE_COLLECTION_LABEL_TITLE_A << " '" << this->get_name() << "', " << __CPP_TRANSPORT_PRODUCT_LINE_COLLECTION_LABEL_TITLE_B << std::endl;
 
 		        this->wrapper.wrap_list_item(out, this->log_x, __CPP_TRANSPORT_PRODUCT_LINE_COLLECTION_LABEL_LOGX, count);
 		        this->wrapper.wrap_list_item(out, this->log_y, __CPP_TRANSPORT_PRODUCT_LINE_COLLECTION_LABEL_LOGY, count);
@@ -532,8 +567,12 @@ namespace transport
 
 						this->wrapper.wrap_newline(out);
 
-				    for(typename std::list< derived_line<number>* >::iterator t = this->lines.begin(); t != this->lines.end(); t++)
+		        out << __CPP_TRANSPORT_PRODUCT_LINE_COLLECTION_LABEL_TITLE_A << " '" << this->get_name() << "', " << __CPP_TRANSPORT_PRODUCT_LINE_COLLECTION_LABEL_TITLE_B << std::endl << std::endl;
+
+				    unsigned int line_counter = 1;
+				    for(typename std::list< derived_line<number>* >::iterator t = this->lines.begin(); t != this->lines.end(); t++, line_counter++)
 					    {
+						    out << __CPP_TRANSPORT_PRODUCT_LINE_COLLECTION_LABEL_LINE << " " << line_counter << ":" << std::endl;
 				        (*t)->write(out);
 				        this->wrapper.wrap_newline(out);
 					    }

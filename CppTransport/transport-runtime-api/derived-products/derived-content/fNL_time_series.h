@@ -53,13 +53,19 @@ namespace transport
             virtual void derive_lines(datapipe<number>& pipe, std::list<data_line<number> >& lines,
                                       const std::list<std::string>& tags) const override;
 
+            //! generate a LaTeX label
+            std::string get_LaTeX_label() const;
+
+            //! generate a non-LaTeX label
+            std::string get_non_LaTeX_label() const;
+
 
             // CLONE
 
           public:
 
             //! self-replicate
-            virtual derived_line<number>* clone() const override { return new fNL_time_series<number>(static_cast<const fNL_time_series<number>&>(*this)); }
+            virtual fNL_time_series<number>* clone() const override { return new fNL_time_series<number>(static_cast<const fNL_time_series<number>&>(*this)); }
 
 
             // WRITE TO A STREAM
@@ -85,7 +91,7 @@ namespace transport
         // We have to call it ourselves.
         template <typename number>
         fNL_time_series<number>::fNL_time_series(const fNL_task<number>& tk, filter::time_filter tfilter)
-          : derived_line<number>(tk, time_axis),
+          : derived_line<number>(tk, time_axis, std::list<axis_value>{ efolds_axis }),
             fNL_line<number>(tk),
             time_series<number>(tk, tfilter)
           {
@@ -109,7 +115,7 @@ namespace transport
                                                    const std::list<std::string>& tags) const
           {
             // attach datapipe to an output group
-            this->attach(pipe, tags);
+            std::string group = this->attach(pipe, tags);
 
             const std::vector<double> t_axis = this->pull_time_axis(pipe);
 
@@ -122,11 +128,7 @@ namespace transport
 		        // it's safe to take a reference here to avoid a copy; we don't need the cache data to survive over multiple calls to lookup_tag()
             const std::vector<number>& line_data = z_handle.lookup_tag(tag);
 
-            std::string latex_label = "$" + this->make_LaTeX_label() + "$";
-            std::string nonlatex_label = this->make_non_LaTeX_label();
-
-            data_line<number> line = data_line<number>(time_axis, fNL_value,
-                                                       t_axis, line_data, latex_label, nonlatex_label);
+            data_line<number> line = data_line<number>(group, this->x_type, fNL_value, t_axis, line_data, this->get_LaTeX_label(), this->get_non_LaTeX_label());
 
             lines.push_back(line);
 
@@ -135,14 +137,50 @@ namespace transport
           }
 
 
+        template <typename number>
+        std::string fNL_time_series<number>::get_LaTeX_label() const
+	        {
+            std::string label;
+
+            if(this->label_set)
+	            {
+                label = this->LaTeX_label;
+	            }
+            else
+	            {
+                label = "$" + this->make_LaTeX_label() + "$";
+	            }
+
+            return(label);
+	        }
+
+
+        template <typename number>
+        std::string fNL_time_series<number>::get_non_LaTeX_label() const
+	        {
+            std::string label;
+
+            if(this->label_set)
+	            {
+                label = this->non_LaTeX_label;
+	            }
+            else
+	            {
+                label = this->make_non_LaTeX_label();
+	            }
+
+            return(label);
+	        }
+
+
         // note that because time_series<> inherits virtually from derived_line<>, the write method for
         // derived_line<> is *not* called from time_series<>. We have to call it ourselves.
         template <typename number>
         void fNL_time_series<number>::write(std::ostream& out)
           {
-            this->derived_line<number>::write(out);
             this->fNL_line<number>::write(out);
             this->time_series<number>::write(out);
+            this->derived_line<number>::write(out);
           }
 
 

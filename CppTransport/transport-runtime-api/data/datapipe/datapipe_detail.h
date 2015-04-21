@@ -38,7 +38,7 @@
 #include "transport-runtime-api/data/batchers/integration_items.h"
 #include "transport-runtime-api/data/batchers/postintegration_items.h"
 
-#include "transport-runtime-api/data/datapipe/configurations.h"
+#include "transport-runtime-api/data/datapipe/specializations.h"
 
 #include "boost/filesystem/operations.hpp"
 #include "boost/timer/timer.hpp"
@@ -95,16 +95,16 @@ namespace transport
         typedef std::function<void(datapipe<number>*)> detach_callback;
 
         //! Push derived content
-        typedef std::function<void(datapipe<number>*, typename derived_data::derived_product<number>*)> dispatch_function;
+        typedef std::function<void(datapipe<number>*, typename derived_data::derived_product<number>*, const std::list<std::string>&)> dispatch_function;
 
         //! Extract a set of time sample-points from a datapipe
         typedef std::function<void(datapipe<number>*, const std::vector<unsigned int>&, std::vector<double>&)> time_config_callback;
 
         //! Extract a set of 2pf k-configuration sample points from a datapipe
-        typedef std::function<void(datapipe<number>*, const std::vector<unsigned int>&, std::vector<twopf_configuration>&)> kconfig_twopf_callback;
+        typedef std::function<void(datapipe<number>*, const std::vector<unsigned int>&, std::vector<twopf_kconfig>&)> kconfig_twopf_callback;
 
         //! Extract a set of 3pf k-configuration sample points from a datapipe
-        typedef std::function<void(datapipe<number>*, const std::vector<unsigned int>&, std::vector<threepf_configuration>&)> kconfig_threepf_callback;
+        typedef std::function<void(datapipe<number>*, const std::vector<unsigned int>&, std::vector<threepf_kconfig>&)> kconfig_threepf_callback;
 
         //! Extract a background field at a set of time sample-points
         typedef std::function<void(datapipe<number>*, unsigned int, const std::vector<unsigned int>&, std::vector<number>&)> background_time_callback;
@@ -268,7 +268,7 @@ namespace transport
       public:
 
         //! Commit an output
-        void commit(typename derived_data::derived_product<number>* product) { this->utilities.dispatch(this, product); }
+        void commit(typename derived_data::derived_product<number>* product, const std::list<std::string>& groups) { this->utilities.dispatch(this, product, groups); }
 
 
         // CACHE STATISTICS
@@ -330,8 +330,8 @@ namespace transport
 
       public:
 
-        //! Attach a content group to the datapipe, ready for reading
-        void attach(derivable_task<number>* tk, const std::list<std::string>& tags);
+        //! Attach a content group to the datapipe, ready for reading. Returns name of attached content group.
+        std::string attach(derivable_task<number>* tk, const std::list<std::string>& tags);
 
         //! Detach a content group from the datapipe
         void detach(void);
@@ -363,8 +363,8 @@ namespace transport
       public:
 
         typedef linecache::serial_group< std::vector<double>, time_config_tag<number>, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE > time_config_handle;
-        typedef linecache::serial_group< std::vector<twopf_configuration>, twopf_kconfig_tag<number>, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE > twopf_kconfig_handle;
-        typedef linecache::serial_group< std::vector<threepf_configuration>, threepf_kconfig_tag<number>, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE > threepf_kconfig_handle;
+        typedef linecache::serial_group< std::vector<twopf_kconfig>, twopf_kconfig_tag<number>, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE > twopf_kconfig_handle;
+        typedef linecache::serial_group< std::vector<threepf_kconfig>, threepf_kconfig_tag<number>, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE > threepf_kconfig_handle;
         typedef linecache::serial_group< std::vector<number>, data_tag<number>, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE > time_data_handle;
         typedef linecache::serial_group< std::vector<number>, data_tag<number>, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE > kconfig_data_handle;
         typedef linecache::serial_group< std::vector<number>, data_tag<number>, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE > time_zeta_handle;
@@ -415,13 +415,13 @@ namespace transport
         cf_kconfig_data_tag<number> new_cf_kconfig_data_tag(typename data_tag<number>::cf_data_type type, unsigned int id, unsigned int tserial);
 
         //! Generate a new zeta-correlation-function time tag
-        zeta_twopf_time_data_tag<number> new_zeta_twopf_time_data_tag(const twopf_configuration& kdata);
+        zeta_twopf_time_data_tag<number> new_zeta_twopf_time_data_tag(const twopf_kconfig& kdata);
 
         //! Generate a new zeta-correlationn-function time tag
-        zeta_threepf_time_data_tag<number> new_zeta_threepf_time_data_tag(const threepf_configuration& kdata);
+        zeta_threepf_time_data_tag<number> new_zeta_threepf_time_data_tag(const threepf_kconfig& kdata);
 
         //! Generate a new reduced bispectrum time tag
-        zeta_reduced_bispectrum_time_data_tag<number> new_zeta_reduced_bispectrum_time_data_tag(const threepf_configuration& kdata);
+        zeta_reduced_bispectrum_time_data_tag<number> new_zeta_reduced_bispectrum_time_data_tag(const threepf_kconfig& kdata);
 
         //! Generate a new zeta-correlation-function kconfig tag
         zeta_twopf_kconfig_data_tag<number> new_zeta_twopf_kconfig_data_tag(unsigned int tserial);
@@ -474,10 +474,10 @@ namespace transport
         linecache::cache<std::vector<double>, time_config_tag<number>, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE> time_config_cache;
 
         //! twopf k-config cache
-        linecache::cache<std::vector<twopf_configuration>, twopf_kconfig_tag<number>, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE> twopf_kconfig_cache;
+        linecache::cache<std::vector<twopf_kconfig>, twopf_kconfig_tag<number>, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE> twopf_kconfig_cache;
 
         //! threepf k-config cache
-        linecache::cache<std::vector<threepf_configuration>, threepf_kconfig_tag<number>, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE> threepf_kconfig_cache;
+        linecache::cache<std::vector<threepf_kconfig>, threepf_kconfig_tag<number>, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE> threepf_kconfig_cache;
 
         //! data cache
         linecache::cache<std::vector<number>, data_tag<number>, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE> data_cache;
@@ -492,10 +492,10 @@ namespace transport
         linecache::table<std::vector<number>, time_config_tag<number>, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE>* time_config_cache_table;
 
         //! twopf k-config cache table for currently-attached group; null if no group is attached
-        linecache::table<std::vector<twopf_configuration>, twopf_kconfig_tag<number>, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE>* twopf_kconfig_cache_table;
+        linecache::table<std::vector<twopf_kconfig>, twopf_kconfig_tag<number>, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE>* twopf_kconfig_cache_table;
 
         //! threepf k-config cache table for currently-attached group; null if no group is attached
-        linecache::table<std::vector<threepf_configuration>, threepf_kconfig_tag<number>, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE>* threepf_kconfig_cache_table;
+        linecache::table<std::vector<threepf_kconfig>, threepf_kconfig_tag<number>, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE>* threepf_kconfig_cache_table;
 
         //! data cache table for currently-attached group; null if no group is attached
         linecache::table<std::vector<number>, data_tag<number>, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE>* data_cache_table;
@@ -744,7 +744,7 @@ namespace transport
 
 
     template <typename number>
-    void datapipe<number>::attach(derivable_task<number>* tk, const std::list<std::string>& tags)
+    std::string datapipe<number>::attach(derivable_task<number>* tk, const std::list<std::string>& tags)
 	    {
         assert(this->validate_unattached());
         if(!this->validate_unattached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_ATTACH_PIPE_ALREADY_ATTACHED);
@@ -768,7 +768,9 @@ namespace transport
             this->attach_cache_tables(payload);
 
             BOOST_LOG_SEV(this->get_log(), normal) << "** ATTACH integration content group " << boost::posix_time::to_simple_string(this->attached_integration_group->get_creation_time())
-		            << " (from integration task '" << tk->get_name() << "', generated using integration backend '" << payload.get_backend() << "')";
+		            << " (from integration task '" << tk->get_name() << "')";
+
+            return(this->attached_integration_group->get_name());
 	        }
         else if((ptk = dynamic_cast< postintegration_task<number>* >(tk)) != nullptr)      // trying to attach to a postintegration content group
 	        {
@@ -782,13 +784,13 @@ namespace transport
 
             BOOST_LOG_SEV(this->get_log(), normal) << "** ATTACH postintegration content group " << boost::posix_time::to_simple_string(this->attached_postintegration_group->get_creation_time())
 		            << " (from postintegration task '" << tk->get_name() << "')";
+
+            return(this->attached_postintegration_group->get_name());
 	        }
-        else
-	        {
-            std::stringstream msg;
-            msg << __CPP_TRANSPORT_DATAMGR_UNKNOWN_DERIVABLE_TASK << " '" << tk->get_name() << "'";
-            throw runtime_exception(runtime_exception::DATAPIPE_ERROR, msg.str());
-	        }
+
+        std::stringstream msg;
+        msg << __CPP_TRANSPORT_DATAMGR_UNKNOWN_DERIVABLE_TASK << " '" << tk->get_name() << "'";
+        throw runtime_exception(runtime_exception::DATAPIPE_ERROR, msg.str());
 	    }
 
 
@@ -798,11 +800,11 @@ namespace transport
 			{
         // attach new cache tables for this container
 
-        this->time_config_cache_table = &(this->time_config_cache.get_table_handle(payload.get_container_path().string()));
-        this->twopf_kconfig_cache_table = &(this->twopf_kconfig_cache.get_table_handle(payload.get_container_path().string()));
+        this->time_config_cache_table     = &(this->time_config_cache.get_table_handle(payload.get_container_path().string()));
+        this->twopf_kconfig_cache_table   = &(this->twopf_kconfig_cache.get_table_handle(payload.get_container_path().string()));
         this->threepf_kconfig_cache_table = &(this->threepf_kconfig_cache.get_table_handle(payload.get_container_path().string()));
-        this->data_cache_table = &(this->data_cache.get_table_handle(payload.get_container_path().string()));
-        this->zeta_cache_table = &(this->zeta_cache.get_table_handle(payload.get_container_path().string()));
+        this->data_cache_table            = &(this->data_cache.get_table_handle(payload.get_container_path().string()));
+        this->zeta_cache_table            = &(this->zeta_cache.get_table_handle(payload.get_container_path().string()));
 	    }
 
 
@@ -832,11 +834,11 @@ namespace transport
 
 		    this->type = none_attached;
 
-        this->time_config_cache_table = nullptr;
-        this->twopf_kconfig_cache_table = nullptr;
+        this->time_config_cache_table     = nullptr;
+        this->twopf_kconfig_cache_table   = nullptr;
         this->threepf_kconfig_cache_table = nullptr;
-        this->data_cache_table = nullptr;
-        this->zeta_cache_table = nullptr;
+        this->data_cache_table            = nullptr;
+        this->zeta_cache_table            = nullptr;
 	    }
 
 
@@ -965,21 +967,21 @@ namespace transport
 
 
     template <typename number>
-    zeta_twopf_time_data_tag<number> datapipe<number>::new_zeta_twopf_time_data_tag(const twopf_configuration& kdata)
+    zeta_twopf_time_data_tag<number> datapipe<number>::new_zeta_twopf_time_data_tag(const twopf_kconfig& kdata)
 	    {
         return zeta_twopf_time_data_tag<number>(this, kdata);
 	    }
 
 
     template <typename number>
-    zeta_threepf_time_data_tag<number> datapipe<number>::new_zeta_threepf_time_data_tag(const threepf_configuration& kdata)
+    zeta_threepf_time_data_tag<number> datapipe<number>::new_zeta_threepf_time_data_tag(const threepf_kconfig& kdata)
 	    {
         return zeta_threepf_time_data_tag<number>(this, kdata);
 	    }
 
 
     template <typename number>
-    zeta_reduced_bispectrum_time_data_tag<number> datapipe<number>::new_zeta_reduced_bispectrum_time_data_tag(const threepf_configuration& kdata)
+    zeta_reduced_bispectrum_time_data_tag<number> datapipe<number>::new_zeta_reduced_bispectrum_time_data_tag(const threepf_kconfig& kdata)
 	    {
         return zeta_reduced_bispectrum_time_data_tag<number>(this, kdata);
 	    }

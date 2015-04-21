@@ -52,11 +52,17 @@ namespace transport
 		        virtual void derive_lines(datapipe<number>& pipe, std::list<data_line<number> >& lines,
 		                                  const std::list<std::string>& tags) const override;
 
+		        //! generate a LaTeX label
+		        std::string get_LaTeX_label(double t) const;
+
+		        //! generate a non-LaTeX label
+		        std::string get_non_LaTeX_label(double t) const;
+
 
 		        // CLONE
 
 		        //! self-replicate
-		        virtual derived_line<number>* clone() const override { return new r_wavenumber_series<number>(static_cast<const r_wavenumber_series<number>&>(*this)); }
+		        virtual r_wavenumber_series<number>* clone() const override { return new r_wavenumber_series<number>(static_cast<const r_wavenumber_series<number>&>(*this)); }
 
 
 		        // WRITE TO A STREAM
@@ -81,7 +87,7 @@ namespace transport
 				template <typename number>
 				r_wavenumber_series<number>::r_wavenumber_series(const zeta_twopf_list_task<number>& tk, filter::time_filter tfilter,
 				                                                 filter::twopf_kconfig_filter kfilter, unsigned int prec)
-					: derived_line<number>(tk, wavenumber_axis, prec),
+					: derived_line<number>(tk, wavenumber_axis, std::list<axis_value>{ k_axis, efolds_exit_axis }, prec),
 					  r_line<number>(tk, kfilter),
 					  wavenumber_series<number>(tk, tfilter)
 					{
@@ -104,12 +110,14 @@ namespace transport
 		    void r_wavenumber_series<number>::derive_lines(datapipe<number>& pipe, std::list<data_line<number> >& lines,
 		                                                   const std::list<std::string>& tags) const
 			    {
+            std::list<std::string> groups;
+
 						// attach datapipe to an output group for the zeta part of r
-				    this->attach(pipe, tags, this->parent_task);
+            std::string group = this->attach(pipe, tags, this->parent_task);
+            groups.push_back(group);
 
 				    // pull wavenumber-axis data
-		        std::vector<double> w_axis;
-				    this->pull_wavenumber_axis(pipe, w_axis);
+		        std::vector<double> w_axis = this->pull_twopf_kconfig_axis(pipe);
 
 				    // set up cache handles
 				    typename datapipe<number>::time_config_handle& tc_handle = pipe.new_time_config_handle(this->time_sample_sns);
@@ -137,7 +145,8 @@ namespace transport
 				    postintegration_task<number>* ptk = dynamic_cast< postintegration_task<number>* >(this->parent_task);
 				    assert(ptk != nullptr);
 
-				    this->attach(pipe, tags, ptk->get_parent_task());
+				    group = this->attach(pipe, tags, ptk->get_parent_task());
+            groups.push_back(group);
 
 				    // rebind handles
 		        typename datapipe<number>::kconfig_data_handle& k_handle = pipe.new_kconfig_zeta_handle(this->kconfig_sample_sns);
@@ -157,11 +166,8 @@ namespace transport
 				            line_data[j] = tensor_data[j] / zeta_data[i][j];
 					        }
 
-				        std::string latex_label = "$" + this->make_LaTeX_label() + "\\;" + this->make_LaTeX_tag(t_values[i]) + "$";
-				        std::string nonlatex_label = this->make_non_LaTeX_label() + " " + this->make_non_LaTeX_tag(t_values[i]);
-
-				        data_line<number> line = data_line<number>(wavenumber_axis, r_value,
-				                                                   w_axis, line_data, latex_label, nonlatex_label);
+				        data_line<number> line = data_line<number>(groups, this->x_type, r_value, w_axis, line_data,
+				                                                   this->get_LaTeX_label(t_values[i]), this->get_non_LaTeX_label(t_values[i]), this->is_spectral_index());
 
 				        lines.push_back(line);
 					    }
@@ -171,14 +177,60 @@ namespace transport
 			    }
 
 
+		    template <typename number>
+		    std::string r_wavenumber_series<number>::get_LaTeX_label(double t) const
+			    {
+		        std::string tag = this->make_LaTeX_tag(t);
+		        std::string label;
+
+		        if(this->label_set)
+			        {
+		            label = this->LaTeX_label;
+			        }
+		        else
+			        {
+		            label = "$" + this->make_LaTeX_label() + "$";
+			        }
+
+		        if(this->use_tags) label += " $" + tag + "$";
+		        return(label);
+			    }
+
+
+		    template <typename number>
+		    std::string r_wavenumber_series<number>::get_non_LaTeX_label(double t) const
+			    {
+		        std::string tag = this->make_non_LaTeX_tag(t);
+		        std::string label;
+
+		        if(this->label_set)
+			        {
+		            label = this->non_LaTeX_label;
+			        }
+		        else
+			        {
+		            label = this->make_non_LaTeX_label();
+			        }
+
+		        if(this->use_tags) label += " " + tag;
+		        return(label);
+			    }
+
+
 		    // note that because time_series<> inherits virtually from derived_line<>, the write method for
 		    // derived_line<> is *not* called from time_series<>. We have to call it ourselves.
 		    template <typename number>
 		    void r_wavenumber_series<number>::write(std::ostream& out)
 			    {
-		        this->derived_line<number>::write(out);
 		        this->r_line<number>::write(out);
 		        this->wavenumber_series<number>::write(out);
+		        this->derived_line<number>::write(out);
+
+		        zeta_twopf_list_task<number>* ptk = dynamic_cast< zeta_twopf_list_task<number>* >(this->get_parent_task());
+		        if(ptk != nullptr)
+			        {
+		            this->write_kconfig_list(out, ptk->get_twopf_database());
+			        }
 			    }
 
 

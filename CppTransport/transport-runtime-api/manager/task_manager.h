@@ -75,10 +75,10 @@ namespace transport
         void error(const std::string& msg) { std::cout << msg << std::endl; }
 
         //! Report a warning
-        void warn(const std::string& msg) { std::cout << msg << std::endl; }
+        void warn(const std::string& msg) { std::cout << __CPP_TRANSPORT_TASK_MANAGER_WARNING_LABEL << " " << msg << std::endl; }
 
         //! Report a message
-        void message(const std::string& msg) {std::cout << msg << std::endl; }
+        void message(const std::string& msg) { if(this->master.get_arguments().get_verbose()) std::cout << msg << std::endl; }
 
 
         // INTERNAL DATA

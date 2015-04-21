@@ -12,13 +12,39 @@
 #include "transport-runtime-api/exceptions.h"
 
 
+// axis classes
+#define __CPP_TRANSPORT_NODE_PRODUCT_AXIS_CLASS_TIME                  "time-axis"
+#define __CPP_TRANSPORT_NODE_PRODUCT_AXIS_CLASS_WAVENUMBER            "k-axis"
+#define __CPP_TRANSPORT_NODE_PRODUCT_AXIS_CLASS_THREEPF_CONFIGURATION "threepf-axis"
+
+#define __CPP_TRANSPORT_NODE_PRODUCT_AXIS_VALUE_EFOLDS                "efolds"
+#define __CPP_TRANSPORT_NODE_PRODUCT_AXIS_VALUE_WAVENUMBER            "k-value"
+#define __CPP_TRANSPORT_NODE_PRODUCT_AXIS_VALUE_EFOLDS_EXIT           "efolds-exit"
+#define __CPP_TRANSPORT_NODE_PRODUCT_AXIS_VALUE_ALPHA                 "alpha"
+#define __CPP_TRANSPORT_NODE_PRODUCT_AXIS_VALUE_BETA                  "beta"
+#define __CPP_TRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K1 "squeezing-fraction-k1"
+#define __CPP_TRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K2 "squeezing-fraction-k2"
+#define __CPP_TRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K3 "squeezing-fraction-k3"
+
+
 namespace transport
 	{
 
 		namespace derived_data
 			{
 
-		    typedef enum { time_axis, wavenumber_axis, angle_axis, squeezing_fraction_axis } axis_type;
+				//! derived lines are associated with one a three classes of axis
+				typedef enum { time_axis, wavenumber_axis, threepf_kconfig_axis } axis_class;
+
+				//! possible axis choices for a given derived line
+				typedef enum
+					{
+				    efolds_axis, k_axis, efolds_exit_axis, alpha_axis, beta_axis,
+				    squeezing_fraction_k1_axis,
+						squeezing_fraction_k2_axis,
+						squeezing_fraction_k3_axis,
+						unset_axis
+					} axis_value;
 
 		    typedef enum { field_value, momentum_value, correlation_function_value, fNL_value, r_value, spectral_index_value, dimensionless_value } value_type;
 

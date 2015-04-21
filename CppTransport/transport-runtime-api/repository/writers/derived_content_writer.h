@@ -49,7 +49,7 @@ namespace transport
         typedef std::function<void(derived_content_writer<number>&)> abort_callback;
 
         //! Define an aggregation callback object. Used to aggregate results from worker processes
-        typedef std::function<bool(derived_content_writer<number>&, const std::string&)> aggregate_callback;
+        typedef std::function<bool(derived_content_writer<number>&, const std::string&, const std::list<std::string>&)> aggregate_callback;
 
         class callback_group
 	        {
@@ -64,7 +64,7 @@ namespace transport
       public:
 
         //! Construct a derived-content writer object
-        derived_content_writer(output_task_record<number>* rec, const callback_group& c,
+        derived_content_writer(const std::string& n, output_task_record<number>* rec, const callback_group& c,
                                const typename generic_writer::metadata_group& m, const typename generic_writer::paths_group& p,
                                unsigned int w);
 
@@ -83,7 +83,7 @@ namespace transport
         void set_aggregation_handler(aggregate_callback c) { this->aggregator = c; }
 
         //! Aggregate a product
-        bool aggregate(const std::string& product);
+        bool aggregate(const std::string& product, const std::list<std::string>& used_groups);
 
 
         // DATABASE FUNCTIONS
@@ -112,7 +112,7 @@ namespace transport
       public:
 
         //! Push new item of derived content to the writer
-        void push_content(derived_data::derived_product<number>& product);
+        void push_content(derived_data::derived_product<number>& product, const std::list<std::string>& used_groups);
 
         //! Get content
         const std::list<derived_content>& get_content() const { return(this->content); }
@@ -142,6 +142,9 @@ namespace transport
         //! Get metadata
         const output_metadata& get_metadata() const { return(this->metadata); }
 
+        //! Merge list of failed serials reported by backend (not all backends may support this)
+        void merge_failure_list(const std::list<unsigned int>& failed) { throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_WRITER_FAILURE_UNSUPPORTED); }
+
 
         // INTERNAL DATA
 
@@ -161,6 +164,7 @@ namespace transport
 
         // CONTENT
 
+        //! List of derived content produced using this writer
         std::list<derived_content> content;
 
 
@@ -179,10 +183,11 @@ namespace transport
 
 
     template <typename number>
-    derived_content_writer<number>::derived_content_writer(output_task_record<number>* rec, const typename derived_content_writer<number>::callback_group& c,
+    derived_content_writer<number>::derived_content_writer(const std::string& n, output_task_record<number>* rec,
+                                                           const typename derived_content_writer<number>::callback_group& c,
                                                            const generic_writer::metadata_group& m, const generic_writer::paths_group& p,
                                                            unsigned int w)
-	    : generic_writer(m, p, w),
+	    : generic_writer(n, m, p, w),
 	      callbacks(c),
 	      aggregator(nullptr),
 	      parent_record(dynamic_cast< output_task_record<number>* >(rec->clone())),
@@ -206,7 +211,7 @@ namespace transport
 
 
     template <typename number>
-    bool derived_content_writer<number>::aggregate(const std::string& product)
+    bool derived_content_writer<number>::aggregate(const std::string& product, const std::list<std::string>& used_groups)
 	    {
         if(!this->aggregator)
 	        {
@@ -214,18 +219,18 @@ namespace transport
             throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_WRITER_AGGREGATOR_UNSET);
 	        }
 
-        return this->aggregator(*this, product);
+        return this->aggregator(*this, product, used_groups);
 	    }
 
 
 		template <typename number>
-    void derived_content_writer<number>::push_content(derived_data::derived_product<number>& product)
+    void derived_content_writer<number>::push_content(derived_data::derived_product<number>& product, const std::list<std::string>& used_groups)
 	    {
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
         std::list<std::string> notes;
         std::list<std::string> tags;
 
-        derived_content data(product.get_name(), product.get_filename().string(), now, notes, tags);
+        derived_content data(product.get_name(), product.get_filename().string(), now, used_groups, notes, tags);
 
         content.push_back(data);
 	    }
