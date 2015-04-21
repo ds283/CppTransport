@@ -44,6 +44,7 @@ include_directories(./ backends
 					${ODEINT_INCLUDE_PATH}
 					${Boost_INCLUDE_DIRS}
 					${MPI_CXX_INCLUDE_PATH}
+					${GSL_INCLUDE_DIRS}
 					${GINAC_INCLUDE_DIRS}
 					${OPENCL_INCLUDE_DIR})
 
