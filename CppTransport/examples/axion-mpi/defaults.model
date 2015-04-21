@@ -17,5 +17,5 @@ perturbations
  { abserr   = 1E-12;
    relerr   = 1E-12;
    stepsize = 1E-15;
-   stepper  = "bulirsch_stoer_dense_out";
+   stepper  = "bulirsch_stoer";
  };
