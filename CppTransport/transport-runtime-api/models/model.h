@@ -82,6 +82,10 @@ namespace transport
         virtual const std::string&              get_tag() const = 0;
         //! Return name of backend used to do the computation
         virtual const std::string&              get_backend() const = 0;
+        //! Return name of stepper used to do background evolution in the computation
+        virtual const std::string&              get_back_stepper() const = 0;
+        //! Return name of stepper used to do perturbation evolution in the computation
+        virtual const std::string&              get_pert_stepper() const = 0;
 
         //! Return number of fields belonging to the model implemented by this object
         virtual unsigned int                    get_N_fields() const = 0;
@@ -265,8 +269,7 @@ namespace transport
     void model<number>::offset_ics(const parameters<number>& params, const std::vector<number>& input, std::vector<number>& output,
                                    double Ninit, double Ncross, double Npre, double tolerance, unsigned int time_steps)
       {
-        assert(Ncross >= Ninit);
-				assert(Ncross - Npre > Ninit);
+				assert(Ncross - Npre >= Ninit);
 
         // we are guaranteed that the input ics 'input' are validated
 

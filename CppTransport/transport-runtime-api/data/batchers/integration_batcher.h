@@ -82,6 +82,12 @@ namespace transport
 		    //! Return backend identifier
 				const std::string& get_backend() const { return(this->mdl->get_backend()); }
 
+        //! Return stepper identifier - background evolution
+        const std::string& get_back_stepper() const { return(this->mdl->get_back_stepper()); }
+
+        //! Return stepper identifier - perturbations evolution
+        const std::string& get_pert_stepper() const { return(this->mdl->get_pert_stepper()); }
+
         //! Close this batcher -- called at the end of an integration
         virtual void close() override;
 

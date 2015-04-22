@@ -273,11 +273,7 @@ namespace transport
     template <typename number>
     std::vector<number> integration_task<number>::get_ics_vector(double Nstart) const
 	    {
-        if(Nstart < this->ics.get_N_initial())
-	        {
-            std::cout << "Nstart = " << Nstart << ", Ninit = " << this->ics.get_N_initial() << std::endl;
-            assert(false);
-	        }
+        assert(Nstart >= this->ics.get_N_initial());
 
         if(Nstart > this->ics.get_N_initial()) return this->ics.get_offset_vector(Nstart);
         else                                   return this->ics.get_vector();

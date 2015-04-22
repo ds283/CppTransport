@@ -171,6 +171,8 @@ namespace transport
 					    << "workgroup     INTEGER, "
 				      << "worker        INTEGER, "
 					    << "backend       TEXT, "
+              << "back_stepper  TEXT, "
+              << "pert_stepper  TEXT, "
 				      << "hostname      TEXT, "
 				      << "os_name       TEXT, "
 				      << "os_version    TEXT, "
@@ -429,7 +431,7 @@ namespace transport
 				    const host_information& host = batcher->get_host_information();
 
 		        std::ostringstream insert_stmt;
-				    insert_stmt << "INSERT INTO " << __CPP_TRANSPORT_SQLITE_WORKERS_TABLE << " VALUES (@workgroup, @worker, @backend, @hostname, @os_name, @os_version, @os_release, @architecture, @cpu_vendor_id)";
+				    insert_stmt << "INSERT INTO " << __CPP_TRANSPORT_SQLITE_WORKERS_TABLE << " VALUES (@workgroup, @worker, @backend, @back_stepper, @pert_stepper, @hostname, @os_name, @os_version, @os_release, @architecture, @cpu_vendor_id)";
 
 				    sqlite3_stmt* stmt;
 				    check_stmt(db, sqlite3_prepare_v2(db, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr));
@@ -448,12 +450,14 @@ namespace transport
 				    check_stmt(db, sqlite3_bind_int(stmt, 1, batcher->get_worker_group()));
 				    check_stmt(db, sqlite3_bind_int(stmt, 2, batcher->get_worker_number()));
 				    check_stmt(db, sqlite3_bind_text(stmt, 3, batcher->get_backend().c_str(), batcher->get_backend().length(), SQLITE_STATIC));
-				    check_stmt(db, sqlite3_bind_text(stmt, 4, host.get_host_name().c_str(), host.get_host_name().length(), SQLITE_STATIC));
-				    check_stmt(db, sqlite3_bind_text(stmt, 5, host.get_os_name().c_str(), host.get_os_name().length(), SQLITE_STATIC));
-				    check_stmt(db, sqlite3_bind_text(stmt, 6, host.get_os_version().c_str(), host.get_os_version().length(), SQLITE_STATIC));
-				    check_stmt(db, sqlite3_bind_text(stmt, 7, host.get_os_release().c_str(), host.get_os_release().length(), SQLITE_STATIC));
-				    check_stmt(db, sqlite3_bind_text(stmt, 8, host.get_architecture().c_str(), host.get_architecture().length(), SQLITE_STATIC));
-				    check_stmt(db, sqlite3_bind_text(stmt, 9, host.get_cpu_vendor_id().c_str(), host.get_cpu_vendor_id().length(), SQLITE_STATIC));
+            check_stmt(db, sqlite3_bind_text(stmt, 4, batcher->get_back_stepper().c_str(), batcher->get_back_stepper().length(), SQLITE_STATIC));
+            check_stmt(db, sqlite3_bind_text(stmt, 5, batcher->get_pert_stepper().c_str(), batcher->get_pert_stepper().length(), SQLITE_STATIC));
+				    check_stmt(db, sqlite3_bind_text(stmt, 6, host.get_host_name().c_str(), host.get_host_name().length(), SQLITE_STATIC));
+				    check_stmt(db, sqlite3_bind_text(stmt, 7, host.get_os_name().c_str(), host.get_os_name().length(), SQLITE_STATIC));
+				    check_stmt(db, sqlite3_bind_text(stmt, 8, host.get_os_version().c_str(), host.get_os_version().length(), SQLITE_STATIC));
+				    check_stmt(db, sqlite3_bind_text(stmt, 9, host.get_os_release().c_str(), host.get_os_release().length(), SQLITE_STATIC));
+				    check_stmt(db, sqlite3_bind_text(stmt, 10, host.get_architecture().c_str(), host.get_architecture().length(), SQLITE_STATIC));
+				    check_stmt(db, sqlite3_bind_text(stmt, 11, host.get_cpu_vendor_id().c_str(), host.get_cpu_vendor_id().length(), SQLITE_STATIC));
 
 				    check_stmt(db, sqlite3_step(stmt), __CPP_TRANSPORT_DATACTR_WORKER_INSERT_FAIL, SQLITE_DONE);
 
