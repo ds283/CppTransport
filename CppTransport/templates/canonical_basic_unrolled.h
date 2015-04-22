@@ -28,6 +28,8 @@ namespace transport
     namespace $$__MODEL_pool
       {
         const static std::string backend = "MPI";
+        const static std::string pert_stepper = "$$__PERT_STEPPER";
+        const static std::string back_stepper = "$$__BACKG_STEPPER";
       }
 
 
@@ -55,6 +57,10 @@ namespace transport
       public:
 
         virtual const std::string& get_backend() const override { return($$__MODEL_pool::backend); }
+
+        virtual const std::string& get_back_stepper() const override { return($$__MODEL_pool::back_stepper); }
+
+        virtual const std::string& get_pert_stepper() const override { return($$__MODEL_pool::pert_stepper); }
 
         // BACKEND INTERFACE
 
