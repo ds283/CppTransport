@@ -100,7 +100,7 @@ namespace transport
         virtual void report_integration_success(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching);
 
         //! Add integration details, plus report a k-configuration serial number and mesh refinement level for storing per-configuration statistics
-        virtual void report_integration_success(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching, unsigned int kserial, unsigned int refinement);
+        virtual void report_integration_success(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching, unsigned int kserial, size_t steps, unsigned int refinement);
 
         //! Report a failed integration
         virtual void report_integration_failure();
@@ -296,7 +296,7 @@ namespace transport
         virtual void report_integration_success(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching) override;
 
         //! Add integration details, plus report a k-configuration serial number and mesh refinement level for storing per-configuration statistics
-        virtual void report_integration_success(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching, unsigned int kserial, unsigned int refinement) override;
+        virtual void report_integration_success(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching, unsigned int kserial, size_t steps, unsigned int refinement) override;
 
         //! Report a failed integration
         virtual void report_integration_failure() override;
@@ -402,7 +402,7 @@ namespace transport
         virtual void report_integration_success(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching) override;
 
         //! Add integration details, plus report a k-configuration serial number and mesh refinement level for storing per-configuration statistics
-        virtual void report_integration_success(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching, unsigned int kserial, unsigned int refinement) override;
+        virtual void report_integration_success(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching, unsigned int kserial, size_t steps, unsigned int refinement) override;
 
         //! Report a failed integration
         virtual void report_integration_failure() override;
@@ -557,7 +557,7 @@ namespace transport
 
     template <typename number>
     void integration_batcher<number>::report_integration_success(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching,
-                                                                 unsigned int kserial, unsigned int refinements)
+                                                                 unsigned int kserial, size_t steps, unsigned int refinements)
 	    {
         this->report_integration_success(integration, batching);
 
@@ -567,6 +567,7 @@ namespace transport
         stats.integration = integration;
         stats.batching    = batching;
         stats.refinements = refinements;
+        stats.steps       = steps;
 
         this->stats_batch.push_back(stats);
 
@@ -823,9 +824,10 @@ namespace transport
 
 
     template <typename number>
-    void twopf_batcher<number>::report_integration_success(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching, unsigned int kserial, unsigned int refinement)
+    void twopf_batcher<number>::report_integration_success(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching,
+                                                           unsigned int kserial, size_t steps, unsigned int refinement)
       {
-        this->integration_batcher<number>::report_integration_success(integration, batching, kserial, refinement);
+        this->integration_batcher<number>::report_integration_success(integration, batching, kserial, steps, refinement);
         if(this->paired_batcher != nullptr) this->paired_batcher->report_finished_item(integration);
       }
 
@@ -1063,9 +1065,10 @@ namespace transport
 
 
     template <typename number>
-    void threepf_batcher<number>::report_integration_success(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching, unsigned int kserial, unsigned int refinement)
+    void threepf_batcher<number>::report_integration_success(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching,
+                                                             unsigned int kserial, size_t steps, unsigned int refinement)
       {
-        this->integration_batcher<number>::report_integration_success(integration, batching, kserial, refinement);
+        this->integration_batcher<number>::report_integration_success(integration, batching, kserial, steps, refinement);
         if(this->paired_batcher != nullptr) this->paired_batcher->report_finished_item(integration);
       }
 

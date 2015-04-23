@@ -195,6 +195,7 @@ namespace transport
               << "kserial           INTEGER PRIMARY KEY, "
               << "integration_time  DOUBLE, "
               << "batch_time        DOUBLE, "
+              << "steps             INTEGER, "
 	            << "refinements       INTEGER, "
               << "workgroup         INTEGER, "
 	            << "worker            INTEGER";
@@ -476,7 +477,7 @@ namespace transport
             batcher->get_manager_handle(&db);
 
             std::ostringstream insert_stmt;
-            insert_stmt << "INSERT INTO " << __CPP_TRANSPORT_SQLITE_STATS_TABLE << " VALUES (@kserial, @integration_time, @batch_time, @refinements, @workgroup, @worker);";
+            insert_stmt << "INSERT INTO " << __CPP_TRANSPORT_SQLITE_STATS_TABLE << " VALUES (@kserial, @integration_time, @batch_time, @steps, @refinements, @workgroup, @worker);";
 
             sqlite3_stmt* stmt;
             check_stmt(db, sqlite3_prepare_v2(db, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr));
@@ -488,9 +489,10 @@ namespace transport
                 check_stmt(db, sqlite3_bind_int(stmt, 1, t->serial));
                 check_stmt(db, sqlite3_bind_double(stmt, 2, t->integration));
                 check_stmt(db, sqlite3_bind_double(stmt, 3, t->batching));
-		            check_stmt(db, sqlite3_bind_int(stmt, 4, t->refinements));
-		            check_stmt(db, sqlite3_bind_int(stmt, 5, batcher->get_worker_group()));
-                check_stmt(db, sqlite3_bind_int(stmt, 6, batcher->get_worker_number()));
+                check_stmt(db, sqlite3_bind_int(stmt, 4, t->steps));
+		            check_stmt(db, sqlite3_bind_int(stmt, 5, t->refinements));
+		            check_stmt(db, sqlite3_bind_int(stmt, 6, batcher->get_worker_group()));
+                check_stmt(db, sqlite3_bind_int(stmt, 7, batcher->get_worker_number()));
 
                 check_stmt(db, sqlite3_step(stmt), __CPP_TRANSPORT_DATACTR_STATS_INSERT_FAIL, SQLITE_DONE);
 

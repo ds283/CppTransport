@@ -104,8 +104,11 @@ namespace transport
             //! time spent batching, in nanoseconds
             boost::timer::nanosecond_type batching;
 
-            //! number of mesh refinements needed for this configuration
+            //! number of stepsize refinements needed for this configuration
             unsigned int                  refinements;
+
+            //! number of steps taken by the stepper
+            size_t                        steps;
 	        };
 
 	    };
