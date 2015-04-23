@@ -297,6 +297,7 @@ namespace transport
         config.serial         = this->serial++;
         config.k_conventional = k_conventional;
         config.k_comoving     = k_conventional * this->comoving_normalization;
+		    config.t_exit         = 0.0;    // will be reset later
 
         if(k_conventional > this->kmax_conventional) this->kmax_conventional = k_conventional;
         if(k_conventional < this->kmin_conventional) this->kmin_conventional = k_conventional;

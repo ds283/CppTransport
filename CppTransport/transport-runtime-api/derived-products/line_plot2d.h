@@ -71,8 +71,6 @@ namespace transport
 		    class line_plot2d: public line_collection<number>
 			    {
 
-		      public:
-
 		        // LINE_PLOT: CONSTRUCTOR, DESTRUCTOR
 
 		      public:

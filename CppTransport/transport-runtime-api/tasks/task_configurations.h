@@ -65,9 +65,14 @@ namespace transport
         unsigned int serial;
         unsigned int get_serial() const { return(this->serial); }
 
-        //! comoving k-value
-        double       k_comoving;
-        double       k_conventional;
+        //! comoving-normalized k-value (normalized so that k = aH at horizon exit)
+        double k_comoving;
+
+		    //! conventionally normalized k-value (normalized so that k=1 at time N*)
+		    double k_conventional;
+
+		    //! time of horizon exit
+		    double t_exit;
 
         //! Output to a standard stream
         friend std::ostream& operator<<(std::ostream& out, const twopf_kconfig& obj);
@@ -78,7 +83,13 @@ namespace transport
 	    {
         std::ostringstream str;
         str << std::setprecision(__CPP_TRANSPORT_DEFAULT_K_PRECISION) << obj.k_comoving;
-        out << __CPP_TRANSPORT_KCONFIG_SERIAL << " " << obj.serial << ", " << __CPP_TRANSPORT_KCONFIG_KEQUALS << " " << str.str() << std::endl;
+
+        std::ostringstream exit_str;
+		    exit_str << std::setprecision(__CPP_TRANSPORT_DEFAULT_K_PRECISION) << obj.t_exit;
+
+        out << __CPP_TRANSPORT_KCONFIG_SERIAL << " " << obj.serial << ", "
+	        << __CPP_TRANSPORT_KCONFIG_KEQUALS << " " << str.str() << ", "
+	        << __CPP_TRANSPORT_KCONFIG_T_EXIT << " " << exit_str.str() << std::endl;
 
         return(out);
 	    }
@@ -99,18 +110,18 @@ namespace transport
 		    unsigned int k3_serial;
 
         //! (k1,k2,k3) coordinates for this k-configuration
-        double       k1_comoving;
-        double       k2_comoving;
-        double       k3_comoving;
-        double       k1_conventional;
-        double       k2_conventional;
-        double       k3_conventional;
+        double k1_comoving;
+        double k2_comoving;
+        double k3_comoving;
+        double k1_conventional;
+        double k2_conventional;
+        double k3_conventional;
 
         //! Fergusson-Shellard-Liguori coordinates for this k-configuration
-        double       kt_comoving;
-        double       kt_conventional;
-        double       alpha;
-        double       beta;
+        double kt_comoving;
+        double kt_conventional;
+        double alpha;
+        double beta;
 
         //! Output to a standard stream
         friend std::ostream& operator<<(std::ostream& out, const threepf_kconfig& obj);

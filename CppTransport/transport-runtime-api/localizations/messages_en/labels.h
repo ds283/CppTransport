@@ -29,6 +29,7 @@
 #define __CPP_TRANSPORT_KCONFIG_KTEQUALS                   "comoving k_t ="
 #define __CPP_TRANSPORT_KCONFIG_ALPHAEQUALS                "alpha ="
 #define __CPP_TRANSPORT_KCONFIG_BETAEQUALS                 "beta ="
+#define __CPP_TRANSPORT_KCONFIG_T_EXIT                     "t_exit ="
 
 #define __CPP_TRANSPORT_TIME_CONFIG_SERIAL                 "Serial ="
 #define __CPP_TRANSPORT_TIME_CONFIG_TEQUALS                "t ="

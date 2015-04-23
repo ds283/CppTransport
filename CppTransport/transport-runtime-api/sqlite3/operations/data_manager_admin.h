@@ -74,13 +74,14 @@ namespace transport
               << "CREATE TABLE " << __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE << "("
               << "serial       INTEGER PRIMARY KEY, "
               << "conventional DOUBLE, "
-              << "comoving     DOUBLE"
+              << "comoving     DOUBLE, "
+	            << "t_exit       DOUBLE"
               << ");";
 
             exec(db, stmt_text.str(), __CPP_TRANSPORT_DATACTR_TWOPFTAB_FAIL);
 
             std::stringstream insert_stmt;
-            insert_stmt << "INSERT INTO " << __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE << " VALUES (@serial, @conventional, @comoving);";
+            insert_stmt << "INSERT INTO " << __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE << " VALUES (@serial, @conventional, @comoving, @t_exit);";
 
             sqlite3_stmt* stmt;
             check_stmt(db, sqlite3_prepare_v2(db, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr));
@@ -92,6 +93,7 @@ namespace transport
                 check_stmt(db, sqlite3_bind_int(stmt, 1, t->serial));
                 check_stmt(db, sqlite3_bind_double(stmt, 2, t->k_conventional));
                 check_stmt(db, sqlite3_bind_double(stmt, 3, t->k_comoving));
+		            check_stmt(db, sqlite3_bind_double(stmt, 4, t->t_exit));
 
                 check_stmt(db, sqlite3_step(stmt), __CPP_TRANSPORT_DATACTR_TWOPFTAB_FAIL, SQLITE_DONE);
 

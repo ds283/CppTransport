@@ -149,7 +149,8 @@ namespace transport
             std::stringstream select_stmt;
             select_stmt
               << "SELECT " << __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE << ".conventional AS conventional,"
-              << " " << __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE << ".comoving AS comoving"
+              << " " << __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE << ".comoving AS comoving,"
+	            << " " << __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE << ".t_exit AS t_exit"
               << " FROM " << __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE
               << " INNER JOIN temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker
               << " ON " << __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE << ".serial=" << "temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker << ".serial"
@@ -172,6 +173,7 @@ namespace transport
                     value.serial         = *t;
                     value.k_conventional = sqlite3_column_double(stmt, 0);
                     value.k_comoving     = sqlite3_column_double(stmt, 1);
+		                value.t_exit         = sqlite3_column_double(stmt, 2);
 
                     sample.push_back(value);
                     t++;
