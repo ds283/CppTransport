@@ -279,7 +279,7 @@ namespace transport
 
         // we are guaranteed that the input ics 'input' are validated
 
-        if(fabs(Ncross-Npre) < tolerance)
+        if(fabs(Ncross-Npre-Ninit) < tolerance)
           {
             output = input;
           }
