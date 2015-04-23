@@ -164,28 +164,28 @@ namespace transport
 
       public:
 
-        record_iterator       record_begin()       { return record_iterator(this->database.begin()); }
-        record_iterator       record_end()         { return record_iterator(this->database.end()); }
+        record_iterator       record_begin()        { return record_iterator(this->database.begin()); }
+        record_iterator       record_end()          { return record_iterator(this->database.end()); }
 
-        const_record_iterator record_begin() const { return const_record_iterator(this->database.begin()); }
-        const_record_iterator record_end()   const { return const_record_iterator(this->database.end()); }
+        const_record_iterator record_begin()  const { return const_record_iterator(this->database.begin()); }
+        const_record_iterator record_end()    const { return const_record_iterator(this->database.end()); }
 
-        const_record_iterator crecord_begin()      { return const_record_iterator(this->database.cbegin()); }
-        const_record_iterator crecord_end()        { return const_record_iterator(this->database.cend()); }
+        const_record_iterator crecord_begin() const { return const_record_iterator(this->database.cbegin()); }
+        const_record_iterator crecord_end()   const { return const_record_iterator(this->database.cend()); }
 
 
         // CONFIG ITERATORS
 
       public:
 
-        config_iterator       config_begin()       { return config_iterator(this->database.begin()); }
-        config_iterator       config_end()         { return config_iterator(this->database.end()); }
+        config_iterator       config_begin()        { return config_iterator(this->database.begin()); }
+        config_iterator       config_end()          { return config_iterator(this->database.end()); }
 
-        const_config_iterator config_begin() const { return const_config_iterator(this->database.begin()); }
-        const_config_iterator config_end()   const { return const_config_iterator(this->database.end()); }
+        const_config_iterator config_begin()  const { return const_config_iterator(this->database.begin()); }
+        const_config_iterator config_end()    const { return const_config_iterator(this->database.end()); }
 
-        const_config_iterator cconfig_begin()      { return const_config_iterator(this->database.cbegin()); }
-        const_config_iterator cconfig_end()        { return const_config_iterator(this->database.cend()); }
+        const_config_iterator cconfig_begin() const { return const_config_iterator(this->database.cbegin()); }
+        const_config_iterator cconfig_end()   const { return const_config_iterator(this->database.cend()); }
 
 
         // INTERFACE -- GLOBAL OPERATIONS
@@ -280,24 +280,24 @@ namespace transport
             config.k2_serial = (*t)[__CPP_TRANSPORT_NODE_THREEPF_DATABASE_K2_SERIAL].asUInt();
             config.k3_serial = (*t)[__CPP_TRANSPORT_NODE_THREEPF_DATABASE_K3_SERIAL].asUInt();
 
-            const twopf_kconfig& k1 = *(twopf_db.lookup(config.k1_serial));
-            const twopf_kconfig& k2 = *(twopf_db.lookup(config.k2_serial));
-            const twopf_kconfig& k3 = *(twopf_db.lookup(config.k3_serial));
+		        twopf_kconfig_database::const_record_iterator k1 = twopf_db.lookup(config.k1_serial);
+            twopf_kconfig_database::const_record_iterator k2 = twopf_db.lookup(config.k2_serial);
+            twopf_kconfig_database::const_record_iterator k3 = twopf_db.lookup(config.k3_serial);
 
-            config.k1_conventional = k1.k_conventional;
-            config.k1_comoving     = k1.k_comoving;
+            config.k1_conventional = (*k1)->k_conventional;
+            config.k1_comoving     = (*k1)->k_comoving;
 
-            config.k2_conventional = k2.k_conventional;
-            config.k2_comoving     = k2.k_comoving;
+            config.k2_conventional = (*k2)->k_conventional;
+            config.k2_comoving     = (*k2)->k_comoving;
 
-            config.k3_conventional = k3.k_conventional;
-            config.k3_comoving     = k3.k_comoving;
+            config.k3_conventional = (*k3)->k_conventional;
+            config.k3_comoving     = (*k3)->k_comoving;
 
-            config.kt_conventional = k1.k_conventional + k2.k_conventional + k3.k_conventional;
-            config.kt_comoving = k1.k_comoving + k2.k_comoving + k3.k_comoving;
+            config.kt_conventional = (*k1)->k_conventional + (*k2)->k_conventional + (*k3)->k_conventional;
+            config.kt_comoving = (*k1)->k_comoving + (*k2)->k_comoving + (*k3)->k_comoving;
 
             config.beta  = 1.0 - 2.0 * config.k3_conventional / config.kt_conventional;
-            config.alpha = 4.0 * k2.k_conventional / config.kt_conventional - 1.0 - config.beta;
+            config.alpha = 4.0 * (*k2)->k_conventional / config.kt_conventional - 1.0 - config.beta;
 
             this->database.emplace(config.serial, threepf_kconfig_record(config,
                                                                            (*t)[__CPP_TRANSPORT_NODE_THREEPF_DATABASE_STORE_BACKGROUND].asBool(),

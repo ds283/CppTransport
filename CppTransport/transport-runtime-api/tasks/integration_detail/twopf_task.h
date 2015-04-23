@@ -69,8 +69,11 @@ namespace transport
 
         std::cout << "'" << this->get_name() << "': " << __CPP_TRANSPORT_TASK_TWOPF_ELEMENTS_A << " " << this->twopf_db.size() << " "
           <<__CPP_TRANSPORT_TASK_TWOPF_ELEMENTS_B << std::endl;
-        this->write_time_details();
 
+        this->compute_horizon_exit_times();
+
+		    // write_time_details() should come *after* compute_horizon_exit_times();
+        this->write_time_details();
         this->cache_stored_time_config_database();
 	    }
 

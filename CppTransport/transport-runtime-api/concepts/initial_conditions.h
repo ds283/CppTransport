@@ -87,11 +87,19 @@ namespace transport
 
       public:
 
+        //! Return name of this 'package'
+        const std::string& get_name() const { return(this->name); }
+
         //! Return parameters associated with these initial conditions
         const parameters<number>& get_params() const { return(this->params); }
 
         //! Return model associated with this package
         model<number>* get_model() const { return(this->mdl); }
+
+
+		    // INITIAL CONDITIONS HANDLING
+
+      public:
 
         //! Return std::vector of initial conditions
         const std::vector<number>& get_vector() const { return(this->ics); }
@@ -102,14 +110,16 @@ namespace transport
         //! Return relative time of horizon-crossing
         double get_N_subhorion_efolds() const { return(this->N_sub_horizon); }
 
+
+		    // SPECIAL TIMES
+
+      public:
+
         //! Return initial time
         double get_N_initial() const { return(this->N_init); }
 
         //! Return horizon-crossing time for the k=1 mode
         double get_N_horizon_crossing() const { return(this->N_init + this->N_sub_horizon); }
-
-        //! Return name of this 'package'
-        const std::string& get_name() const { return(this->name); }
 
 
         // SERIALIZATION -- implements a 'serializable' interface

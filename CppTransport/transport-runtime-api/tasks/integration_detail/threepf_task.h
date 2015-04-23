@@ -64,6 +64,7 @@ namespace transport
 
         // INTERFACE - INITIAL CONDITIONS AND INTEGRATION DETAILS
 
+      public:
 
         //! Get std::vector of initial conditions, offset using fast forwarding if enabled
         std::vector<number> get_ics_vector(const threepf_kconfig& kconfig) const;
@@ -73,6 +74,8 @@ namespace transport
 
 
         // INTERFACE - FAST FORWARD MANAGEMENT
+
+      public:
 
         //! Get start time for a threepf configuration
         double get_fast_forward_start(const threepf_kconfig& config) const;
@@ -146,7 +149,14 @@ namespace transport
       {
         double kmin = std::min(std::min(config.k1_conventional, config.k2_conventional), config.k3_conventional);
 
-        return(this->ics.get_N_horizon_crossing() + log(kmin) - this->ff_efolds);
+		    unsigned int serial;
+		    bool found = this->twopf_db.find(kmin, serial);
+		    assert(found);
+
+        twopf_kconfig_database::const_record_iterator t = this->twopf_db.lookup(serial);
+		    assert(t != this->twopf_db.crecord_end());
+
+        return((*t)->t_exit - this->ff_efolds);
       }
 
 
@@ -253,8 +263,11 @@ namespace transport
 
         std::cout << "'" << this->get_name() << "': " << __CPP_TRANSPORT_TASK_THREEPF_ELEMENTS_A << " " << this->threepf_db.size() << " "
           << __CPP_TRANSPORT_TASK_THREEPF_ELEMENTS_B << " " << this->twopf_db.size() << " " <<__CPP_TRANSPORT_TASK_THREEPF_ELEMENTS_C << std::endl;
-        this->write_time_details();
 
+        this->compute_horizon_exit_times();
+
+		    // write_time_details() should come *after* compute_horizon_exit_times();
+        this->write_time_details();
         this->cache_stored_time_config_database();
 	    }
 
@@ -377,8 +390,11 @@ namespace transport
 
         std::cout << "'" << this->get_name() << "': " << __CPP_TRANSPORT_TASK_THREEPF_ELEMENTS_A << " " << this->threepf_db.size() << " "
           << __CPP_TRANSPORT_TASK_THREEPF_ELEMENTS_B << " " << this->twopf_db.size() << " " <<__CPP_TRANSPORT_TASK_THREEPF_ELEMENTS_C << std::endl;
-        this->write_time_details();
 
+        this->compute_horizon_exit_times();
+
+		    // write_time_details() should come *after* compute_horizon_exit_times();
+        this->write_time_details();
         this->cache_stored_time_config_database();
 	    }
 

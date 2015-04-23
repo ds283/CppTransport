@@ -136,26 +136,26 @@ namespace transport
 
 		  public:
 
-		    record_iterator       record_begin()       { return record_iterator(this->database.begin()); }
-		    record_iterator       record_end()         { return record_iterator(this->database.end()); }
-		    const_record_iterator record_begin() const { return const_record_iterator(this->database.begin()); }
-		    const_record_iterator record_end()   const { return const_record_iterator(this->database.end()); }
+		    record_iterator       record_begin()        { return record_iterator(this->database.begin()); }
+		    record_iterator       record_end()          { return record_iterator(this->database.end()); }
+		    const_record_iterator record_begin()  const { return const_record_iterator(this->database.begin()); }
+		    const_record_iterator record_end()    const { return const_record_iterator(this->database.end()); }
 
-		    const_record_iterator crecord_begin()      { return const_record_iterator(this->database.cbegin()); }
-		    const_record_iterator crecord_end()        { return const_record_iterator(this->database.cend()); }
+		    const_record_iterator crecord_begin() const { return const_record_iterator(this->database.cbegin()); }
+		    const_record_iterator crecord_end()   const { return const_record_iterator(this->database.cend()); }
 
 
 		    // CONFIG ITERATORS
 
 		  public:
 
-		    config_iterator       config_begin()       { return config_iterator(this->database.begin()); }
-		    config_iterator       config_end()         { return config_iterator(this->database.end()); }
-		    const_config_iterator config_begin() const { return const_config_iterator(this->database.begin()); }
-		    const_config_iterator config_end()   const { return const_config_iterator(this->database.end()); }
+		    config_iterator       config_begin()        { return config_iterator(this->database.begin()); }
+		    config_iterator       config_end()          { return config_iterator(this->database.end()); }
+		    const_config_iterator config_begin()  const { return const_config_iterator(this->database.begin()); }
+		    const_config_iterator config_end()    const { return const_config_iterator(this->database.end()); }
 
-		    const_config_iterator cconfig_begin()      { return const_config_iterator(this->database.cbegin()); }
-		    const_config_iterator cconfig_end()        { return const_config_iterator(this->database.cend()); }
+		    const_config_iterator cconfig_begin() const { return const_config_iterator(this->database.cbegin()); }
+		    const_config_iterator cconfig_end()   const { return const_config_iterator(this->database.cend()); }
 
 
 		    // VALUE ITERATORS
@@ -188,14 +188,6 @@ namespace transport
 
 				//! add record to the database
 				void add_record(double t, bool store, unsigned int serial);
-
-
-				// INTERFACE -- REBASE TIMES
-
-			public:
-
-				//! rebase times so that the time N_init becomes time=0
-				void rebase_time_configurations(double N_init);
 
 
 		    // INTERNAL DATA
@@ -231,17 +223,6 @@ namespace transport
 
 				this->database.emplace(config.serial, time_config_record(config, store));
 			}
-
-
-			void time_config_database::rebase_time_configurations(double Ninit)
-				{
-					if(Ninit == 0.0) return;
-
-					for(database_type::iterator t = this->database.begin(); t != this->database.end(); ++t)
-						{
-							t->second->t -= Ninit;
-						}
-				}
 
 
   }   // namespace transport

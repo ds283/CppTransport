@@ -8,6 +8,8 @@
 #define __twopf_list_task_H_
 
 
+#include <functional>
+
 #include "transport-runtime-api/tasks/integration_detail/common.h"
 #include "transport-runtime-api/tasks/integration_detail/abstract.h"
 
@@ -15,6 +17,9 @@
 
 #include "transport-runtime-api/models/advisory_classes.h"
 
+#include "transport-runtime-api/utilities/spline1d.h"
+
+#include <boost/math/tools/roots.hpp>
 
 #define __CPP_TRANSPORT_NODE_TWOPF_LIST_DATABASE      "twopf-database"
 #define __CPP_TRANSPORT_NODE_TWOPF_LIST_NORMALIZATION "normalization"
@@ -56,6 +61,9 @@ namespace transport
 
         //! Provide access to twopf k-configuration database
         const twopf_kconfig_database& get_twopf_database() const { return(this->twopf_db); }
+
+		    //! Compute horizon-exit times for each mode in the database
+		    void compute_horizon_exit_times();
 
 
 		    // INTERFACE - INITIAL CONDITIONS AND INTEGRATION DETAILS
@@ -216,6 +224,9 @@ namespace transport
 
         // deserialize a* normalization
         astar_normalization = reader[__CPP_TRANSPORT_NODE_TWOPF_LIST_NORMALIZATION].asDouble();
+
+		    // reconstruct horizon-exit times; these aren't stored in the repository record to save space
+		    this->compute_horizon_exit_times();
 	    }
 
 
@@ -253,7 +264,7 @@ namespace transport
     template <typename number>
     double twopf_list_task<number>::get_fast_forward_start(const twopf_kconfig& config) const
       {
-        return(this->ics.get_N_horizon_crossing() + log(config.k_conventional) - this->ff_efolds);
+        return(config.t_exit - this->ff_efolds);
       }
 
 
@@ -275,25 +286,46 @@ namespace transport
     void twopf_list_task<number>::write_time_details()
       {
         // compute horizon-crossing time for earliest mode (the one with the smallest wavenumber) and the latest one (the one with the largest wavenumber)
-        double earliest_crossing = log(this->twopf_db.get_kmin_conventional());
-        double latest_crossing   = log(this->twopf_db.get_kmax_conventional());
+
+		    double earliest_crossing = std::numeric_limits<double>::max();
+		    double latest_crossing   = -std::numeric_limits<double>::max();
+
+        for(twopf_kconfig_database::const_config_iterator t = this->twopf_db.config_begin(); t != this->twopf_db.config_end(); ++t)
+	        {
+		        if(t->t_exit < earliest_crossing) earliest_crossing = t->t_exit;
+		        if(t->t_exit > latest_crossing)   latest_crossing = t->t_exit;
+	        }
+
+		    // these are measured relative to horizon crossing
+		    earliest_crossing -= this->get_N_horizon_crossing();
+		    latest_crossing   -= this->get_N_horizon_crossing();
 
         std::cout << "'" << this->get_name() << "': ";
         std::cout << __CPP_TRANSPORT_TASK_TWOPF_LIST_MODE_RANGE_A << this->twopf_db.get_kmin_conventional()
           << " " << __CPP_TRANSPORT_TASK_TWOPF_LIST_MODE_RANGE_B;
-        if(earliest_crossing > 0) std::cout << "+";
-        std::cout << earliest_crossing << ", ";
+
+        std::ostringstream early_time;
+		    early_time << std::setprecision(3);
+        if(earliest_crossing > 0) early_time << "+";
+		    early_time << earliest_crossing;
+
+        std::cout << early_time.str() << ", ";
+
         std::cout << __CPP_TRANSPORT_TASK_TWOPF_LIST_MODE_RANGE_C << this->twopf_db.get_kmax_conventional()
           << " " << __CPP_TRANSPORT_TASK_TWOPF_LIST_MODE_RANGE_D;
-        if(latest_crossing > 0) std::cout << "+";
-        std::cout << latest_crossing;
-        std::cout << std::endl;
+
+        std::ostringstream late_time;
+		    late_time << std::setprecision(3);
+        if(latest_crossing > 0) late_time << "+";
+        late_time << latest_crossing;
+
+        std::cout << late_time.str() << std::endl;
 
         this->validate_subhorizon_efolds();
 
         try
           {
-            double end_of_inflation = this->ics.get_model()->compute_end_of_inflation(this);
+            double end_of_inflation = this->get_N_end_of_inflation();
             std::cout << "'" << this->get_name() << "': " << __CPP_TRANSPORT_TASK_TWOPF_LIST_END_OF_INFLATION  << end_of_inflation << std::endl;
 
             // check if end time is after the end of inflation
@@ -313,9 +345,13 @@ namespace transport
     template <typename number>
     void twopf_list_task<number>::validate_subhorizon_efolds()
       {
-        double earliest_crossing = log(this->twopf_db.get_kmin_conventional());
+        double earliest_required = std::numeric_limits<double>::max();
 
-        double earliest_required = this->get_N_horizon_crossing() + earliest_crossing;
+        for(twopf_kconfig_database::const_config_iterator t = this->twopf_db.config_begin(); t != this->twopf_db.config_end(); ++t)
+	        {
+            if(t->t_exit < earliest_required) earliest_required = t->t_exit;
+	        }
+
         if(this->fast_forward) earliest_required -= this->ff_efolds;
 
         if(earliest_required < this->get_N_initial())
@@ -417,6 +453,50 @@ namespace transport
               }
           }
       }
+
+
+		template <typename number>
+		void twopf_list_task<number>::compute_horizon_exit_times()
+			{
+				double largest_k = this->twopf_db.get_kmax_conventional();
+
+		    std::vector<double> N;
+		    std::vector<number> aH;
+				this->get_model()->compute_aH(this, N, aH, largest_k);
+
+				spline1d<number> sp(N, aH);
+		    boost::uintmax_t max_iter = 500;
+
+				class TolerancePredicate
+					{
+				  public:
+						TolerancePredicate(double t)
+							: tol(t)
+							{
+							}
+
+						bool operator()(const double& a, const double& b)
+							{
+								return(fabs(a-b) < this->tol);
+							}
+
+				  private:
+						double tol;
+					};
+
+		    for(twopf_kconfig_database::config_iterator t = this->twopf_db.config_begin(); t != this->twopf_db.config_end(); ++t)
+			    {
+				    // set spline to evaluate aH-k and then solve for N
+				    sp.set_offset(t->k_comoving);
+
+				    // find root; note use of std::ref, because toms748_solve normally would take a copy of
+				    // its system function and this is slow -- we have to copy the whole spline
+		        std::pair< double, double > result = boost::math::tools::toms748_solve(std::ref(sp), sp.get_min_x(), sp.get_max_x(), TolerancePredicate(1E-5), max_iter);
+
+						t->t_exit = (result.first + result.second)/2.0;
+			    }
+
+			};
 
 
 		template <typename number>

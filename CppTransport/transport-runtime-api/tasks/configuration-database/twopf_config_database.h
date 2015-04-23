@@ -139,26 +139,26 @@ namespace transport
 
       public:
 
-        record_iterator       record_begin()       { return record_iterator(this->database.begin()); }
-        record_iterator       record_end()         { return record_iterator(this->database.end()); }
-        const_record_iterator record_begin() const { return const_record_iterator(this->database.begin()); }
-        const_record_iterator record_end()   const { return const_record_iterator(this->database.end()); }
+        record_iterator       record_begin()        { return record_iterator(this->database.begin()); }
+        record_iterator       record_end()          { return record_iterator(this->database.end()); }
+        const_record_iterator record_begin()  const { return const_record_iterator(this->database.begin()); }
+        const_record_iterator record_end()    const { return const_record_iterator(this->database.end()); }
 
-        const_record_iterator crecord_begin()      { return const_record_iterator(this->database.cbegin()); }
-        const_record_iterator crecord_end()        { return const_record_iterator(this->database.cend()); }
+        const_record_iterator crecord_begin() const { return const_record_iterator(this->database.cbegin()); }
+        const_record_iterator crecord_end()   const { return const_record_iterator(this->database.cend()); }
 
 
         // CONFIG ITERATORS
 
       public:
 
-        config_iterator       config_begin()       { return config_iterator(this->database.begin()); }
-        config_iterator       config_end()         { return config_iterator(this->database.end()); }
-        const_config_iterator config_begin() const { return const_config_iterator(this->database.begin()); }
-        const_config_iterator config_end()   const { return const_config_iterator(this->database.end()); }
+        config_iterator       config_begin()        { return config_iterator(this->database.begin()); }
+        config_iterator       config_end()          { return config_iterator(this->database.end()); }
+        const_config_iterator config_begin()  const { return const_config_iterator(this->database.begin()); }
+        const_config_iterator config_end()    const { return const_config_iterator(this->database.end()); }
 
-        const_config_iterator cconfig_begin()      { return const_config_iterator(this->database.cbegin()); }
-        const_config_iterator cconfig_end()        { return const_config_iterator(this->database.cend()); }
+        const_config_iterator cconfig_begin() const { return const_config_iterator(this->database.cbegin()); }
+        const_config_iterator cconfig_end()   const { return const_config_iterator(this->database.cend()); }
 
 
         // INTERFACE -- GLOBAL OPERATIONS
@@ -179,8 +179,11 @@ namespace transport
         //! add record to the database
         unsigned int add_record(double k_conventional);
 
-        //! lookup record with a given serial number
-        const twopf_kconfig_record& lookup(unsigned int serial) const;
+        //! lookup record with a given serial number -- non const version
+        record_iterator lookup(unsigned int serial);
+
+        //! lookup record with a given serial number -- const version
+        const_record_iterator lookup(unsigned int serial) const;
 
         //! check for existence of a record with a given conventionally-normalized k
         bool find(double k_conventional, unsigned int& serial) const;
@@ -309,31 +312,60 @@ namespace transport
       }
 
 
-    const twopf_kconfig_record& twopf_kconfig_database::lookup(unsigned int serial) const
+    class FindBySerial
+	    {
+      public:
+        FindBySerial(unsigned int s)
+	        : serial(s)
+	        {
+	        }
+
+        bool operator()(const std::pair<unsigned int, twopf_kconfig_record>& a)
+	        {
+            return(this->serial == a.second->serial);
+	        }
+
+      private:
+        unsigned int serial;
+	    };
+
+
+    twopf_kconfig_database::record_iterator twopf_kconfig_database::lookup(unsigned int serial)
       {
-        return this->database.at(serial);   // throws an exception if serial out of range
+        database_type::iterator t = std::find_if(this->database.begin(), this->database.end(), FindBySerial(serial));
+
+		    return twopf_kconfig_database::record_iterator(t);
       }
+
+
+    twopf_kconfig_database::const_record_iterator twopf_kconfig_database::lookup(unsigned int serial) const
+	    {
+        database_type::const_iterator t = std::find_if(this->database.begin(), this->database.end(), FindBySerial(serial));
+
+        return twopf_kconfig_database::const_record_iterator(t);
+	    }
+
+
+    class FindByKConventional
+	    {
+      public:
+        FindByKConventional(double k)
+	        : k_conventional(k)
+	        {
+	        }
+
+        bool operator()(const std::pair<unsigned int, twopf_kconfig_record>& a)
+	        {
+            return(fabs(this->k_conventional - a.second->k_conventional) < __CPP_TRANSPORT_DEFAULT_KCONFIG_SEARCH_PRECISION);
+	        }
+
+      private:
+        double k_conventional;
+	    };
 
 
     bool twopf_kconfig_database::find(double k_conventional, unsigned int& serial) const
       {
-        class FindByKConventional
-          {
-          public:
-            FindByKConventional(double k)
-              : k_conventional(k)
-              {
-              }
-
-            bool operator()(const std::pair<unsigned int, twopf_kconfig_record>& a)
-              {
-                return(fabs(this->k_conventional - a.second->k_conventional) < __CPP_TRANSPORT_DEFAULT_KCONFIG_SEARCH_PRECISION);
-              }
-
-          private:
-            double k_conventional;
-          };
-
         database_type::const_iterator t = std::find_if(this->database.begin(), this->database.end(), FindByKConventional(k_conventional));
 
         if(t != this->database.end())
