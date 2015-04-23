@@ -78,7 +78,7 @@ namespace transport
 		        this->set_y_label(false);
 		        this->set_title(false);
 		        this->set_legend(true);
-		        this->set_legend_position(line_plot2d<number>::top_right);
+		        this->set_legend_position(top_right);
 		        this->set_typeset_with_LaTeX(false);
 			    }
 

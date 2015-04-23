@@ -52,6 +52,9 @@ namespace transport
     namespace derived_data
 	    {
 
+        //! which type of twopf are we deriving from?
+        typedef enum { real, imaginary } twopf_type;
+
         //! general field twopf content producer, suitable
         //! for producing content usable in eg. a 2d plot or table.
 		    //! Note that we derive virtually from derived_line<> to solve the diamond
@@ -62,9 +65,6 @@ namespace transport
 	        {
 
           public:
-
-            //! which type of twopf are we deriving from?
-            typedef enum { real, imaginary } twopf_type;
 
 	          // CONSTRUCTOR, DESTRUCTOR
 
@@ -221,7 +221,7 @@ namespace transport
 
 		        const std::vector<std::string>& field_names = this->gadget.get_model()->get_f_latex_names();
 
-		        if(this->get_dot_meaning() == derived_line<number>::derivatives)
+		        if(this->get_dot_meaning() == derivatives)
 			        {
 		            label << field_names[m % N_fields] << (m >= N_fields ? "^{" __CPP_TRANSPORT_LATEX_PRIME_SYMBOL "}" : "") << " "
 			                << field_names[n % N_fields] << (n >= N_fields ? "^{" __CPP_TRANSPORT_LATEX_PRIME_SYMBOL "}" : "");
@@ -251,7 +251,7 @@ namespace transport
 
 		        const std::vector<std::string>& field_names = this->gadget.get_model()->get_field_names();
 
-		        if(this->get_dot_meaning() == derived_line<number>::derivatives)
+		        if(this->get_dot_meaning() == derivatives)
 			        {
 		            label << field_names[m % N_fields] << (m >= N_fields ? __CPP_TRANSPORT_NONLATEX_PRIME_SYMBOL : "") << ", "
 			                << field_names[n % N_fields] << (n >= N_fields ? __CPP_TRANSPORT_NONLATEX_PRIME_SYMBOL : "");

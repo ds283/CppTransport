@@ -193,8 +193,8 @@ namespace transport
 
             for(typename std::vector< twopf_kconfig >::const_iterator t = configs.begin(); t != configs.end(); t++)
 	            {
-                if(this->klabel_meaning == derived_line<number>::comoving) axis.push_back((*t).k_comoving);
-                else if(this->klabel_meaning == derived_line<number>::conventional) axis.push_back((*t).k_conventional);
+                if(this->klabel_meaning == comoving) axis.push_back((*t).k_comoving);
+                else if(this->klabel_meaning == conventional) axis.push_back((*t).k_conventional);
                 else
 	                {
                     assert(false);
@@ -224,8 +224,8 @@ namespace transport
 				            // axis consists of k_t values
 		                for(typename std::vector< threepf_kconfig >::const_iterator t = configs.begin(); t != configs.end(); t++)
 			                {
-		                    if(this->klabel_meaning == derived_line<number>::comoving) axis.push_back(t->kt_comoving);
-		                    else if(this->klabel_meaning == derived_line<number>::conventional) axis.push_back(t->kt_conventional);
+		                    if(this->klabel_meaning == comoving) axis.push_back(t->kt_comoving);
+		                    else if(this->klabel_meaning == conventional) axis.push_back(t->kt_conventional);
 		                    else
 			                    {
 		                        assert(false);

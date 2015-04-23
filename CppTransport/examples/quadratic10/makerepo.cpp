@@ -129,7 +129,7 @@ int main(int argc, char* argv[])
     transport::derived_data::time_series_plot<double> tk3_bg_plot("quadratic10.threepf-1.background", "background.pdf");
 		tk3_bg_plot.add_line(tk3_bg);
     tk3_bg_plot.set_title_text("Background fields");
-		tk3_bg_plot.set_legend_position(transport::derived_data::line_plot2d<double>::bottom_left);
+		tk3_bg_plot.set_legend_position(transport::derived_data::bottom_left);
 
     transport::derived_data::zeta_twopf_time_series<double> tk3_zeta_times(tk3,
                                                                                                                                      transport::derived_data::filter::time_filter(timeseries_filter),
@@ -138,7 +138,7 @@ int main(int argc, char* argv[])
     transport::derived_data::time_series_plot<double> tk3_zeta_timeplot("quadratic10.threepf-1.zeta-twopf", "zeta-twopf.pdf");
 		tk3_zeta_timeplot.add_line(tk3_zeta_times);
 		tk3_zeta_timeplot.set_title_text("$\\langle \\zeta \\zeta \\rangle$ time evolution");
-		tk3_zeta_timeplot.set_legend_position(transport::derived_data::line_plot2d<double>::bottom_right);
+		tk3_zeta_timeplot.set_legend_position(transport::derived_data::bottom_right);
 
     transport::derived_data::zeta_twopf_wavenumber_series<double> tk3_zeta_spec(tk3,
                                                                                                                                                 transport::derived_data::filter::time_filter(spectrum_timefilter),

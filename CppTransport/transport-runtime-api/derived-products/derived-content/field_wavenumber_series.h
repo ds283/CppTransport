@@ -389,7 +389,7 @@ namespace transport
 
 				                        // the integrator produces correlation functions involving the canonical momenta,
 				                        // not the derivatives. If the user wants derivatives then we have to shift.
-				                        if(this->get_dot_meaning() == derived_line<number>::derivatives)
+				                        if(this->get_dot_meaning() == derivatives)
 					                        this->shifter.shift(this->gadget.get_integration_task(), this->gadget.get_model(), pipe, background[i], configs, line_data, l, m, n, this->time_sample_sns[i], t_values[i]);
 
 		                            data_line<number> line = data_line<number>(group, this->x_type, correlation_function_value, w_axis, line_data,

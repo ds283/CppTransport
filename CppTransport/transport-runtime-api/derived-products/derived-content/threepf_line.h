@@ -191,7 +191,7 @@ namespace transport
 
 		        const std::vector<std::string>& field_names = this->gadget.get_model()->get_f_latex_names();
 
-		        if(this->get_dot_meaning() == derived_line<number>::derivatives)
+		        if(this->get_dot_meaning() == derivatives)
 			        {
 		            label << field_names[l % N_fields] << (l >= N_fields ? "^{" __CPP_TRANSPORT_LATEX_PRIME_SYMBOL "}" : "") << " "
 			                << field_names[m % N_fields] << (m >= N_fields ? "^{" __CPP_TRANSPORT_LATEX_PRIME_SYMBOL "}" : "") << " "
@@ -217,7 +217,7 @@ namespace transport
 
 		        const std::vector<std::string>& field_names = this->gadget.get_model()->get_field_names();
 
-		        if(this->get_dot_meaning() == derived_line<number>::derivatives)
+		        if(this->get_dot_meaning() == derivatives)
 			        {
 		            label << field_names[l % N_fields] << (l >= N_fields ? __CPP_TRANSPORT_NONLATEX_PRIME_SYMBOL : "") << ", "
 			                << field_names[m % N_fields] << (m >= N_fields ? __CPP_TRANSPORT_NONLATEX_PRIME_SYMBOL : "") << ", "

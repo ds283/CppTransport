@@ -103,15 +103,15 @@ namespace transport
 		namespace derived_data
 			{
 
+		    typedef enum { derivatives, momenta } dot_type;
+		    typedef enum { conventional, comoving } klabel_type;
+
 				//! content producer
 				template <typename number>
 				class derived_line: public serializable
 					{
 
 				  public:
-
-				    typedef enum { derivatives, momenta } dot_type;
-				    typedef enum { conventional, comoving } klabel_type;
 
 
 						// CONSTRUCTOR, DESTRUCTOR

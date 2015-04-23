@@ -60,6 +60,10 @@ namespace transport
 		namespace derived_data
 			{
 
+		    typedef enum { top_left, top_right, bottom_left, bottom_right,
+		                   right, centre_right, centre_left,
+		                   upper_centre, lower_centre, centre} legend_pos;
+
         //! A line_plot2d is a specialization of a line_collection that
 		    //! produces a plot of derived data lines against an axis.
 
@@ -68,11 +72,6 @@ namespace transport
 			    {
 
 		      public:
-
-				    typedef enum { top_left, top_right, bottom_left, bottom_right,
-					                 right, centre_right, centre_left,
-					                 upper_centre, lower_centre, centre} legend_pos;
-
 
 		        // LINE_PLOT: CONSTRUCTOR, DESTRUCTOR
 
