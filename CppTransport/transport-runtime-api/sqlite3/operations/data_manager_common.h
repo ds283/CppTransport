@@ -79,7 +79,7 @@ namespace transport
 
         typedef enum { real_twopf, imag_twopf } twopf_value_type;
 
-        typedef enum { twopf_configs, threepf_configs } statistics_configuration_type;
+        typedef enum { twopf_configs, threepf_configs } metadata_configuration_type;
 
 
         // sqlite has a default maximum number of columns, and a maximum number of

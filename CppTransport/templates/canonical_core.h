@@ -15,6 +15,8 @@
 #include <stdexcept>
 
 #include "boost/numeric/odeint.hpp"
+#include "boost/range/algorithm.hpp"
+
 #include "transport-runtime-api/transport.h"
 
 
@@ -211,9 +213,8 @@ namespace transport
 
       public:
 
-        $$__MODEL_background_functor(const parameters<number>& p, bool t=false)
-          : params(p),
-            trigger_on_epsilon(t)
+        $$__MODEL_background_functor(const parameters<number>& p)
+          : params(p)
           {
           }
 
@@ -222,8 +223,6 @@ namespace transport
       protected:
 
         const parameters<number> params;
-
-        bool trigger_on_epsilon;
 
       };
 
@@ -1057,30 +1056,33 @@ namespace transport
         backg_state<number> x($$__MODEL_pool::backg_state_size);
         x[this->flatten($$__A)] = $$// ics[$$__A];
 
-        using namespace boost::numeric::odeint;
-        integrate_times($$__MAKE_BACKG_STEPPER{backg_state<number>}, system, x, time_db.value_begin(), time_db.value_end(), $$__BACKG_STEP_SIZE, obs);
+        boost::numeric::odeint::integrate_times($$__MAKE_BACKG_STEPPER{backg_state<number>}, system, x, time_db.value_begin(), time_db.value_end(), $$__BACKG_STEP_SIZE, obs);
       }
 
 
-    class epsilon_unity_trigger: public std::exception
-      {
+		template <typename number>
+    class EpsilonUnityPredicate
+	    {
       public:
-        epsilon_unity_trigger(double t)
-          : time(t)
-          {
-            std::ostringstream msg;
-            msg << time;
-            message = msg.str();
-          }
+        EpsilonUnityPredicate(const parameters<number>& p)
+	        : params(p)
+	        {
+	        }
 
-        virtual const char* what() const noexcept override { return this->message.c_str(); }
+        bool operator()(const std::pair< backg_state<number>, double >& __x)
+	        {
+            const auto $$__PARAMETER[1]  = this->params.get_vector()[$$__1];
+            const auto $$__COORDINATE[A] = __x.first[$$__A];
+            const auto __Mp              = this->params.get_Mp();
 
-        double get_time() const { return(this->time); }
+            const auto __eps = $$__EPSILON;
+
+            return (__eps > 1.0);
+	        }
 
       private:
-        std::string message;
-        double time;
-      };
+        const parameters<number>& params;
+	    };
 
 
     template <typename number>
@@ -1089,25 +1091,25 @@ namespace transport
         assert(tk != nullptr);
 
         // set up a functor to evolve this system, triggering on epsilon=1
-        $$__MODEL_background_functor<number> system(tk->get_params(), true);
+        $$__MODEL_background_functor<number> system(tk->get_params());
 
         auto ics = tk->get_ics_vector();
 
         backg_state<number> x($$__MODEL_pool::backg_state_size);
         x[this->flatten($$__A)] = $$// ics[$$__A];
 
-        try
-          {
-            using namespace boost::numeric::odeint;
-            integrate_adaptive($$__MAKE_BACKG_STEPPER{backg_state<number>}, system, x, tk->get_N_initial(), tk->get_N_initial()+search_time, $$__BACKG_STEP_SIZE);
-          }
-        catch(epsilon_unity_trigger& trigger)
-          {
-            return(trigger.get_time());
-          }
+		    // find point where epsilon = 1
+        auto stepper = $$__MAKE_BACKG_STEPPER{backg_state<number>};
 
-        throw end_of_inflation_not_found();
-      }
+		    auto range = boost::numeric::odeint::make_adaptive_time_range(stepper, system, x, tk->get_N_initial(), tk->get_N_initial()+search_time, $$__BACKG_STEP_SIZE);
+
+        // returns the first iterator in 'range' for which the predicate EpsilonUnityPredicate() is satisfied
+        auto iter = boost::find_if(range, EpsilonUnityPredicate<number>(tk->get_params()));
+
+				if(iter == boost::end(range)) throw end_of_inflation_not_found();
+
+		    return ((*iter).second);
+      };
 
 
     // IMPLEMENTATION - FUNCTOR FOR BACKGROUND INTEGRATION
@@ -1124,8 +1126,6 @@ namespace transport
         const auto __eps             = $$__EPSILON;
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
-
-        if(this->trigger_on_epsilon && __eps >= 1.0) throw epsilon_unity_trigger(__t);
 
         __dxdt[this->flatten($$__A)] = $$__U1_PREDEF[A]{__Hsq,__eps};
       }

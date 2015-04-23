@@ -98,19 +98,19 @@ namespace cpp
 
         if(s.name == "runge_kutta_dopri5")
           {
-            out << "make_dense_output< runge_kutta_dopri5< " << state_name << " > >(" << s.abserr << ", " << s.relerr << ")";
+            out << "boost::numeric::odeint::make_dense_output< boost::numeric::odeint::runge_kutta_dopri5< " << state_name << " > >(" << s.abserr << ", " << s.relerr << ")";
           }
         else if(s.name == "bulirsch_stoer_dense_out")
           {
-            out << "bulirsch_stoer_dense_out< " << state_name << " >(" << s.abserr << ", " << s.relerr << ")";
+            out << "boost::numeric::odeint::bulirsch_stoer_dense_out< " << state_name << " >(" << s.abserr << ", " << s.relerr << ")";
           }
         else if(s.name == "bulirsch_stoer")
 	        {
-						out << "bulirsch_stoer< " << state_name << " >(" << s.abserr << ", " << s.relerr << ")";
+						out << "boost::numeric::odeint::bulirsch_stoer< " << state_name << " >(" << s.abserr << ", " << s.relerr << ")";
 	        }
         else if(s.name == "runge_kutta_fehlberg78")
           {
-            out << "make_controlled< runge_kutta_fehlberg78< " << state_name << " > >(" << s.abserr << ", " << s.relerr << ")";
+            out << "boost::numeric::odeint::make_controlled< boost::numeric::odeint::runge_kutta_fehlberg78< " << state_name << " > >(" << s.abserr << ", " << s.relerr << ")";
           }
         else
           {

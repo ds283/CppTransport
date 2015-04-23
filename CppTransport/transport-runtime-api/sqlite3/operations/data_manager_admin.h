@@ -187,7 +187,7 @@ namespace transport
 
 
         // Create table for statistics, if they are being collected
-        void create_stats_table(sqlite3* db, add_foreign_keys_type keys=no_foreign_keys, statistics_configuration_type type=twopf_configs)
+        void create_stats_table(sqlite3* db, add_foreign_keys_type keys=no_foreign_keys, metadata_configuration_type type=twopf_configs)
           {
             std::ostringstream create_stmt;
             create_stmt
