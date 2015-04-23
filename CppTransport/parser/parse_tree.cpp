@@ -109,11 +109,11 @@ script::~script()
   {
     // the only record of the various declarations which have been
     // set up is via our list, so we must delete them:
-    for(int i = 0; i < this->fields.size(); i++)
+    for(int i = 0; i < this->fields.size(); ++i)
       {
         delete this->fields[i];
       }
-    for(int i = 0; i < this->parameters.size(); i++)
+    for(int i = 0; i < this->parameters.size(); ++i)
       {
         delete this->parameters[i];
       }
@@ -222,7 +222,7 @@ void script::print(std::ostream& stream) const
     stream << "Fields:" << std::endl;
     stream << "=======" << std::endl;
     for(std::deque<field_declaration*>::const_iterator ptr = this->fields.begin();
-        ptr != this->fields.end(); ptr++)
+        ptr != this->fields.end(); ++ptr)
       {
         (*ptr)->print(stream);
       }
@@ -231,7 +231,7 @@ void script::print(std::ostream& stream) const
     stream << "Parameters:" << std::endl;
     stream << "===========" << std::endl;
     for(std::deque<parameter_declaration*>::const_iterator ptr = this->parameters.begin();
-        ptr != this->parameters.end(); ptr++)
+        ptr != this->parameters.end(); ++ptr)
       {
         (*ptr)->print(stream);
       }
@@ -356,7 +356,7 @@ std::vector<std::string> script::get_field_list() const
   {
     std::vector<std::string> rval;
 
-    for(int i = 0; i < this->fields.size(); i++)
+    for(int i = 0; i < this->fields.size(); ++i)
       {
         rval.push_back(this->fields[i]->get_quantity()->get_name());
       }
@@ -369,7 +369,7 @@ std::vector<std::string> script::get_latex_list() const
   {
     std::vector<std::string> rval;
 
-    for(int i = 0; i < this->fields.size(); i++)
+    for(int i = 0; i < this->fields.size(); ++i)
       {
         rval.push_back(this->fields[i]->get_quantity()->get_latex_name());
       }
@@ -382,7 +382,7 @@ std::vector<std::string> script::get_param_list() const
   {
     std::vector<std::string> rval;
 
-    for(int i = 0; i < this->parameters.size(); i++)
+    for(int i = 0; i < this->parameters.size(); ++i)
       {
         rval.push_back(this->parameters[i]->get_quantity()->get_name());
       }
@@ -395,7 +395,7 @@ std::vector<std::string> script::get_platx_list() const
   {
     std::vector<std::string> rval;
 
-    for(int i = 0; i < this->parameters.size(); i++)
+    for(int i = 0; i < this->parameters.size(); ++i)
       {
         rval.push_back(this->parameters[i]->get_quantity()->get_latex_name());
       }
@@ -408,7 +408,7 @@ std::vector<GiNaC::symbol> script::get_field_symbols() const
   {
     std::vector<GiNaC::symbol> rval;
 
-    for(int i = 0; i < this->fields.size(); i++)
+    for(int i = 0; i < this->fields.size(); ++i)
       {
         rval.push_back(this->fields[i]->get_quantity()->get_ginac_symbol());
       }
@@ -427,7 +427,7 @@ std::vector<GiNaC::symbol> script::get_param_symbols() const
   {
     std::vector<GiNaC::symbol> rval;
 
-    for(int i = 0; i < this->parameters.size(); i++)
+    for(int i = 0; i < this->parameters.size(); ++i)
       {
         rval.push_back(this->parameters[i]->get_quantity()->get_ginac_symbol());
       }

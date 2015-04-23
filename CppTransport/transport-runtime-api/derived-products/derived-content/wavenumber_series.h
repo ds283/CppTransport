@@ -191,7 +191,7 @@ namespace transport
 
             std::vector<double> axis;
 
-            for(typename std::vector< twopf_kconfig >::const_iterator t = configs.begin(); t != configs.end(); t++)
+            for(typename std::vector< twopf_kconfig >::const_iterator t = configs.begin(); t != configs.end(); ++t)
 	            {
                 if(this->klabel_meaning == comoving) axis.push_back((*t).k_comoving);
                 else if(this->klabel_meaning == conventional) axis.push_back((*t).k_conventional);
@@ -222,7 +222,7 @@ namespace transport
 		            case k_axis:
 			            {
 				            // axis consists of k_t values
-		                for(typename std::vector< threepf_kconfig >::const_iterator t = configs.begin(); t != configs.end(); t++)
+		                for(typename std::vector< threepf_kconfig >::const_iterator t = configs.begin(); t != configs.end(); ++t)
 			                {
 		                    if(this->klabel_meaning == comoving) axis.push_back(t->kt_comoving);
 		                    else if(this->klabel_meaning == conventional) axis.push_back(t->kt_conventional);
@@ -237,7 +237,7 @@ namespace transport
 
 		            case efolds_exit_axis:
 			            {
-		                for(typename std::vector< threepf_kconfig >::const_iterator t = configs.begin(); t != configs.end(); t++)
+		                for(typename std::vector< threepf_kconfig >::const_iterator t = configs.begin(); t != configs.end(); ++t)
 			                {
 				                axis.push_back(log(t->kt_conventional));
 			                }
@@ -246,7 +246,7 @@ namespace transport
 
 		            case alpha_axis:
 			            {
-		                for(typename std::vector< threepf_kconfig >::const_iterator t = configs.begin(); t != configs.end(); t++)
+		                for(typename std::vector< threepf_kconfig >::const_iterator t = configs.begin(); t != configs.end(); ++t)
 			                {
 		                    axis.push_back(t->alpha);
 			                }
@@ -255,7 +255,7 @@ namespace transport
 
 		            case beta_axis:
 			            {
-		                for(typename std::vector< threepf_kconfig >::const_iterator t = configs.begin(); t != configs.end(); t++)
+		                for(typename std::vector< threepf_kconfig >::const_iterator t = configs.begin(); t != configs.end(); ++t)
 			                {
 		                    axis.push_back(t->beta);
 			                }
@@ -264,7 +264,7 @@ namespace transport
 
 		            case squeezing_fraction_k1_axis:
 			            {
-		                for(typename std::vector< threepf_kconfig >::const_iterator t = configs.begin(); t != configs.end(); t++)
+		                for(typename std::vector< threepf_kconfig >::const_iterator t = configs.begin(); t != configs.end(); ++t)
 			                {
 		                    axis.push_back(t->k1_conventional/t->kt_conventional);
 			                }
@@ -273,7 +273,7 @@ namespace transport
 
 		            case squeezing_fraction_k2_axis:
 			            {
-		                for(typename std::vector< threepf_kconfig >::const_iterator t = configs.begin(); t != configs.end(); t++)
+		                for(typename std::vector< threepf_kconfig >::const_iterator t = configs.begin(); t != configs.end(); ++t)
 			                {
 		                    axis.push_back(t->k2_conventional/t->kt_conventional);
 			                }
@@ -282,7 +282,7 @@ namespace transport
 
 		            case squeezing_fraction_k3_axis:
 			            {
-		                for(typename std::vector< threepf_kconfig >::const_iterator t = configs.begin(); t != configs.end(); t++)
+		                for(typename std::vector< threepf_kconfig >::const_iterator t = configs.begin(); t != configs.end(); ++t)
 			                {
 		                    axis.push_back(t->k3_conventional/t->kt_conventional);
 			                }
@@ -348,7 +348,7 @@ namespace transport
 		        this->wrapper.set_left_margin(2);
 		        this->wrapper.wrap_newline(out);
 
-		        for(twopf_kconfig_database::const_config_iterator t = twopf_db.config_begin(); t != twopf_db.config_end(); t++)
+		        for(twopf_kconfig_database::const_config_iterator t = twopf_db.config_begin(); t != twopf_db.config_end(); ++t)
 			        {
 		            std::vector< unsigned int >::iterator s = std::find(this->kconfig_sample_sns.begin(), this->kconfig_sample_sns.end(), t->serial);
 
@@ -381,7 +381,7 @@ namespace transport
 				    this->wrapper.set_left_margin(2);
 				    this->wrapper.wrap_newline(out);
 
-				    for(threepf_kconfig_database::const_config_iterator t = threepf_db.config_begin(); t != threepf_db.config_end(); t++)
+				    for(threepf_kconfig_database::const_config_iterator t = threepf_db.config_begin(); t != threepf_db.config_end(); ++t)
 					    {
 				        std::vector< unsigned int >::iterator s = std::find(this->kconfig_sample_sns.begin(), this->kconfig_sample_sns.end(), t->serial);
 

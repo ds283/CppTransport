@@ -480,7 +480,7 @@ namespace transport
 								value_type this_value = cursor->get_value_type();
 						    cursor++;
 
-								for(; cursor != input.end(); cursor++)
+								for(; cursor != input.end(); ++cursor)
 									{
 										if(cursor->get_value_type() == this_value)
 											{
@@ -552,7 +552,7 @@ namespace transport
 				    out << "plt.figure()" << std::endl;
 
 				    out << "x = [ ";
-				    for(std::deque<double>::const_iterator t = axis.begin(); t != axis.end(); t++)
+				    for(std::deque<double>::const_iterator t = axis.begin(); t != axis.end(); ++t)
 					    {
 				        out << (t != axis.begin() ? ", " : "") << *t;
 					    }
@@ -565,7 +565,7 @@ namespace transport
 						// loop through all bins, writing out arrays
 						// representing the values in each line, and recording
 						// which arrays correspond to which bin
-						for(typename std::vector< std::vector< typename line_collection<number>::output_line > >::const_iterator t = data_bins.begin(); t != data_bins.end(); t++)
+						for(typename std::vector< std::vector< typename line_collection<number>::output_line > >::const_iterator t = data_bins.begin(); t != data_bins.end(); ++t)
 							{
 								line_ids.resize(line_ids.size()+1);
 						    std::vector< std::vector<unsigned int> >::iterator current_id_bin = --line_ids.end();
@@ -574,7 +574,7 @@ namespace transport
 						    std::vector< std::vector<std::string> >::iterator current_label_bin = --line_labels.end();
 
 								// loop through all lines in this bin
-								for(typename std::vector< typename line_collection<number>::output_line >::const_iterator u = t->begin(); u != t->end(); u++)
+								for(typename std::vector< typename line_collection<number>::output_line >::const_iterator u = t->begin(); u != t->end(); ++u)
 									{
 									  current_id_bin->push_back(current_id);
 										current_label_bin->push_back(u->get_label());
@@ -584,7 +584,7 @@ namespace transport
 								    const std::deque< typename line_collection<number>::output_value >& line_data = u->get_values();
 								    assert(line_data.size() == axis.size());
 
-										for(typename std::deque< typename line_collection<number>::output_value >::const_iterator w = line_data.begin(); w != line_data.end(); w++)
+										for(typename std::deque< typename line_collection<number>::output_value >::const_iterator w = line_data.begin(); w != line_data.end(); ++w)
 											{
 												out << (w > line_data.begin() ? ", " : "");
 												w->format_python(out);
@@ -602,7 +602,7 @@ namespace transport
 						unsigned int bin_count = 1;
 				    std::vector< std::vector<unsigned int> >::const_iterator t = line_ids.begin();
 				    std::vector< std::vector<std::string> >::const_iterator  u = line_labels.begin();
-						for(; t != line_ids.end() && u != line_labels.end(); t++, u++, bin_count++)
+						for(; t != line_ids.end() && u != line_labels.end(); ++t, ++u, ++bin_count)
 							{
 								if(bin_count == 1) out << "ax1 = plt.gca()" << std::endl;
 								if(bin_count == 2) out << "ax2 = ax1.twinx()" << std::endl;
@@ -610,7 +610,7 @@ namespace transport
 						    std::vector<unsigned int>::const_iterator tt = t->begin();
 						    std::vector<std::string>::const_iterator  uu = u->begin();
 
-								for(; tt != t->end() && uu != u->end(); tt++, uu++)
+								for(; tt != t->end() && uu != u->end(); ++tt, ++uu)
 									{
 								    out << "ln" << *tt << " = ax" << bin_count << ".errorbar(x, y" << *tt << ", label=r'" << *uu << "'";
 										if(bin_count == 2 && this->dash_second_axis)
@@ -624,7 +624,7 @@ namespace transport
 				    if(this->reverse_x) out << "ax1.set_xlim(ax.get_xlim()[::-1])" << std::endl;
 				    if(this->reverse_y)
 					    {
-						    for(unsigned int i = 1; i < bin_count; i++)
+						    for(unsigned int i = 1; i < bin_count; ++i)
 							    {
 						        out << "ax" << i << ".set_ylim(ax.get_ylim()[::-1])" << std::endl;
 							    }
@@ -632,7 +632,7 @@ namespace transport
 				    if(this->log_x) out << "ax1.set_xscale('log')" << std::endl;
 				    if(this->log_y)
 					    {
-				        for(unsigned int i = 1; i < bin_count; i++)
+				        for(unsigned int i = 1; i < bin_count; ++i)
 					        {
 				            out << "ax" << i << ".set_yscale('log')" << std::endl;
 					        }
@@ -640,7 +640,7 @@ namespace transport
 
 				    if(this->legend)
 					    {
-						    for(unsigned int i = 1; i < bin_count; i++)
+						    for(unsigned int i = 1; i < bin_count; ++i)
 							    {
 						        out << "handles" << i << ", labels" << i << " = ax" << i << ".get_legend_handles_labels()" << std::endl;
 
@@ -686,7 +686,7 @@ namespace transport
 				        else
 					        {
 						        unsigned int i = 1;
-				            for(std::vector<value_type>::const_iterator w = bin_types.begin(); w != bin_types.end() && i < bin_count; w++, i++)
+				            for(std::vector<value_type>::const_iterator w = bin_types.begin(); w != bin_types.end() && i < bin_count; w++, ++i)
 					            {
 				                std::string label = this->typeset_with_LaTeX ? value_type_to_string_LaTeX(*w) : value_type_to_string_non_LaTeX(*w);
 						            out << "ax" << i << ".set_ylabel(r'" << label << "')" << std::endl;

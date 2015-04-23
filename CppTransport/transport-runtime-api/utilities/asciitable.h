@@ -89,7 +89,7 @@ namespace transport
 
         assert(xs.size() == ys.size());
 
-        for(size_t i = 0; i < columns.size(); i++)
+        for(size_t i = 0; i < columns.size(); ++i)
 	        {
             size_t len;
             if((len = columns[i].size()) > max)
@@ -123,14 +123,14 @@ namespace transport
 
             // write out column headings
             this->stream << std::right << std::setw((unsigned int) max) << x_name;
-            for(size_t i = 0; i < columns_to_print; i++)
+            for(size_t i = 0; i < columns_to_print; ++i)
 	            {
                 this->stream << std::right << std::setw((unsigned int) max) << columns[columns_output + i];
 	            }
             this->stream << std::endl;
 
             // write out data
-            for(size_t i = 0; i < ys.size(); i++)
+            for(size_t i = 0; i < ys.size(); ++i)
 	            {
                 assert(columns.size() == ys[i].size());
 
@@ -139,7 +139,7 @@ namespace transport
 	                << std::scientific
 	                << std::setprecision(this->precision - 1) << xs[i];
 
-                for(int j = 0; j < columns_to_print; j++)
+                for(int j = 0; j < columns_to_print; ++j)
 	                {
 		                if(std::isnan((ys[i])[columns_output + j]))
 			                {

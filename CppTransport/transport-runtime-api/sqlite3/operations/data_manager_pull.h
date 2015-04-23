@@ -38,7 +38,7 @@ namespace transport
 
             exec(db, "BEGIN TRANSACTION;");
 
-            for(unsigned int i = 0; i < serial_numbers.size(); i++)
+            for(unsigned int i = 0; i < serial_numbers.size(); ++i)
               {
                 check_stmt(db, sqlite3_bind_int(stmt, 1, serial_numbers[i]));
 

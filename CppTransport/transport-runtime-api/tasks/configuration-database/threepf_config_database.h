@@ -271,7 +271,7 @@ namespace transport
         assert(db_array.isArray());
 
         database.clear();
-        for(Json::Value::iterator t = db_array.begin(); t != db_array.end(); t++)
+        for(Json::Value::iterator t = db_array.begin(); t != db_array.end(); ++t)
           {
             threepf_kconfig config;
 
@@ -408,7 +408,7 @@ namespace transport
         Json::Value db_array(Json::arrayValue);
 
         unsigned int count = 0;
-        for(database_type::const_iterator t = this->database.begin(); t != this->database.end(); t++, count++)
+        for(database_type::const_iterator t = this->database.begin(); t != this->database.end(); ++t, ++count)
           {
             assert(count == t->first);
             if(count != t->first) throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_THREEPF_DATABASE_OUT_OF_ORDER);

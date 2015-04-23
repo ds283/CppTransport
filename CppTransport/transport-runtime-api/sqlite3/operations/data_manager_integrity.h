@@ -196,7 +196,7 @@ namespace transport
         template <typename Database>
         void drop_statistics(sqlite3* db, const std::list<unsigned int>& drop_list, const Database& dbase)
           {
-            for(std::list<unsigned int>::const_iterator t = drop_list.begin(); t != drop_list.end(); t++)
+            for(std::list<unsigned int>::const_iterator t = drop_list.begin(); t != drop_list.end(); ++t)
               {
                 typename Database::const_config_iterator u = std::find_if(dbase.config_begin(), dbase.config_end(),
                                                                           ConfigurationFinder<typename Database::const_config_iterator::type>(*t));
@@ -215,7 +215,7 @@ namespace transport
         void drop_twopf_kconfigs(sqlite3* db, WriterObject& writer, const std::list<unsigned int>& drop_list, const twopf_kconfig_database& twopf_db,
                                        twopf_value_type type=real_twopf, bool silent=false)
           {
-            for(std::list<unsigned int>::const_iterator t = drop_list.begin(); t != drop_list.end(); t++)
+            for(std::list<unsigned int>::const_iterator t = drop_list.begin(); t != drop_list.end(); ++t)
               {
                 twopf_kconfig_database::const_config_iterator u = std::find_if(twopf_db.config_begin(), twopf_db.config_end(),
                                                                                ConfigurationFinder<twopf_kconfig_database::const_config_iterator::type>(*t));
@@ -236,7 +236,7 @@ namespace transport
         void drop_threepf_kconfigs(sqlite3* db, WriterObject& writer, const std::list<unsigned int>& drop_list, const threepf_kconfig_database& threepf_db,
                                          bool silent = false)
           {
-            for(std::list<unsigned int>::const_iterator t = drop_list.begin(); t != drop_list.end(); t++)
+            for(std::list<unsigned int>::const_iterator t = drop_list.begin(); t != drop_list.end(); ++t)
               {
                 threepf_kconfig_database::const_config_iterator u = std::find_if(threepf_db.config_begin(), threepf_db.config_end(),
                                                                                 ConfigurationFinder<threepf_kconfig_database::const_config_iterator::type>(*t));
@@ -257,7 +257,7 @@ namespace transport
         void drop_zeta_twopf_kconfigs(sqlite3* db, WriterObject& writer, const std::list<unsigned int>& drop_list, const twopf_kconfig_database& twopf_db,
                                             bool silent=false)
           {
-            for(std::list<unsigned int>::const_iterator t = drop_list.begin(); t != drop_list.end(); t++)
+            for(std::list<unsigned int>::const_iterator t = drop_list.begin(); t != drop_list.end(); ++t)
               {
                 twopf_kconfig_database::const_config_iterator u = std::find_if(twopf_db.config_begin(), twopf_db.config_end(),
                                                                                ConfigurationFinder<twopf_kconfig_database::const_config_iterator::type>(*t));
@@ -278,7 +278,7 @@ namespace transport
         void drop_zeta_threepf_kconfigs(sqlite3* db, WriterObject& writer, const std::list<unsigned int>& drop_list, const threepf_kconfig_database& threepf_db,
                                               bool silent = false)
           {
-            for(std::list<unsigned int>::const_iterator t = drop_list.begin(); t != drop_list.end(); t++)
+            for(std::list<unsigned int>::const_iterator t = drop_list.begin(); t != drop_list.end(); ++t)
               {
                 threepf_kconfig_database::const_config_iterator u = std::find_if(threepf_db.config_begin(), threepf_db.config_end(),
                                                                                  ConfigurationFinder<threepf_kconfig_database::const_config_iterator::type>(*t));
@@ -299,7 +299,7 @@ namespace transport
         void drop_zeta_redbsp_configurations(sqlite3* db, WriterObject& writer, const std::list<unsigned int>& drop_list, const threepf_kconfig_database& threepf_db,
                                              bool silent=false)
           {
-            for(std::list<unsigned int>::const_iterator t = drop_list.begin(); t != drop_list.end(); t++)
+            for(std::list<unsigned int>::const_iterator t = drop_list.begin(); t != drop_list.end(); ++t)
               {
                 threepf_kconfig_database::const_config_iterator u = std::find_if(threepf_db.config_begin(), threepf_db.config_end(),
                                                                                  ConfigurationFinder<threepf_kconfig_database::const_config_iterator::type>(*t));

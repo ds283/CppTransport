@@ -174,7 +174,7 @@ namespace transport
 	        {
             case linear_stepping:
 	            {
-                for(unsigned int i = 0; i <= this->steps; i++)
+                for(unsigned int i = 0; i <= this->steps; ++i)
 	                {
                     this->grid.push_back(min + (static_cast<double>(i)/this->steps)*(this->max-this->min));
 	                }
@@ -193,7 +193,7 @@ namespace transport
             case logarithmic_bottom_stepping:
 	            {
                 double shifted_max = this->max - (this->min-1.0);
-                for(unsigned int i = 0; i <= this->steps; i++)
+                for(unsigned int i = 0; i <= this->steps; ++i)
 	                {
                     grid.push_back(this->min-1.0 + static_cast<value>(pow(shifted_max, static_cast<double>(i)/this->steps)));
 	                }
@@ -205,7 +205,7 @@ namespace transport
             case logarithmic_top_stepping:
 	            {
                 double shifted_max = this->max - (this->min-1.0);
-                for(unsigned int i = 0; i <= this->steps; i++)
+                for(unsigned int i = 0; i <= this->steps; ++i)
 	                {
                     grid.push_back(this->min-1.0 + static_cast<value>(pow(shifted_max, 1.0 - static_cast<double>(i)/this->steps)));
 	                }
@@ -274,7 +274,7 @@ namespace transport
         out << __CPP_TRANSPORT_STEPPING_RANGE_C << obj.min << ", " << __CPP_TRANSPORT_STEPPING_RANGE_D << obj.max << std::endl;
 
         out << __CPP_TRANSPORT_STEPPING_RANGE_E << std::endl;
-        for(unsigned int i = 0; i < obj.grid.size(); i++)
+        for(unsigned int i = 0; i < obj.grid.size(); ++i)
 	        {
             out << i << ". " << obj.grid[i] << std::endl;
 	        }

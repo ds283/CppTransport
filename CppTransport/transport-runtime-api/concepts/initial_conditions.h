@@ -214,7 +214,7 @@ namespace transport
 		    assert(ics_array.isArray());
 
         std::vector< named_list::element<number> > temp;
-		    for(Json::Value::iterator t = ics_array.begin(); t != ics_array.end(); t++)
+		    for(Json::Value::iterator t = ics_array.begin(); t != ics_array.end(); ++t)
           {
             std::string field_name = (*t)[__CPP_TRANSPORT_NODE_ICS_NAME].asString();
             double field_value = (*t)[__CPP_TRANSPORT_NODE_ICS_VALUE].asDouble();
@@ -233,7 +233,7 @@ namespace transport
 
         std::vector<number> i;
         i.reserve(field_ordering.size());
-        for(unsigned int j = 0; j < temp.size(); j++)
+        for(unsigned int j = 0; j < temp.size(); ++j)
           {
             i.push_back((temp[j]).get_value());
           }
@@ -283,7 +283,7 @@ namespace transport
 		    const std::vector<std::string>& names = this->mdl->get_state_names();
 		    assert(names.size() == this->ics.size());
 
-        for(unsigned int i = 0; i < this->ics.size(); i++)
+        for(unsigned int i = 0; i < this->ics.size(); ++i)
           {
             Json::Value ics_element(Json::objectValue);
 		        ics_element[__CPP_TRANSPORT_NODE_ICS_NAME] = names[i];
@@ -307,7 +307,7 @@ namespace transport
         assert(obj.ics.size() == names.size());
 
         out << __CPP_TRANSPORT_ICS_TAG << std::endl;
-        for(unsigned int i = 0; i < obj.ics.size(); i++)
+        for(unsigned int i = 0; i < obj.ics.size(); ++i)
           {
             out << "  " << names[i] << " = " << obj.ics[i] << std::endl;
           }

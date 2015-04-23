@@ -34,7 +34,7 @@ int main(int argc, const char *argv[])
     unsigned int files_processed = 0;
     unsigned int replacements    = 0;
 
-    for(int i = 1; i < argc; i++)
+    for(int i = 1; i < argc; ++i)
       {
         if(strcmp(argv[i], "-I") == 0)
           {

@@ -71,11 +71,11 @@ void cse::parse(const GiNaC::ex& expr)
   {
 		timer.resume();
 
-    for(GiNaC::const_postorder_iterator it = expr.postorder_begin(); it != expr.postorder_end(); it++)
+    for(GiNaC::const_postorder_iterator t = expr.postorder_begin(); t != expr.postorder_end(); ++t)
       {
         symbol_f symf = std::bind(&cse::get_symbol_no_tag, this, std::placeholders::_1);
 
-        std::string e = this->print(*it, symf);
+        std::string e = this->print(*t, symf);
         symbol_record& record = this->symbols[e];
 
         if(record.filled == false)
@@ -116,7 +116,7 @@ std::string cse::temporaries(const std::string& t)
     if(ok)
       {
         // deposit each declaration into the output stream
-        for(size_t i = 0; i < this->decls.size(); i++)
+        for(size_t i = 0; i < this->decls.size(); ++i)
           {
             std::string line = t;
 
@@ -201,7 +201,7 @@ cse_map::cse_map(std::vector<GiNaC::ex>* l, cse* c)
     if(cse_worker->get_perform_cse())
       {
         // parse each component of the container
-        for(int i = 0; i < list->size(); i++)
+        for(int i = 0; i < list->size(); ++i)
           {
             cse_worker->parse((*list)[i]);
           }

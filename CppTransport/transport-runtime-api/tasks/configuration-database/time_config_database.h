@@ -237,7 +237,7 @@ namespace transport
 				{
 					if(Ninit == 0.0) return;
 
-					for(database_type::iterator t = this->database.begin(); t != this->database.end(); t++)
+					for(database_type::iterator t = this->database.begin(); t != this->database.end(); ++t)
 						{
 							t->second->t -= Ninit;
 						}

@@ -126,11 +126,11 @@ namespace transport
 		        const std::vector<double> t_values = tc_handle.lookup_tag(t_tag);
 
 		        // loop through all components of the tensor twopf, pulling data from the database for each t-component
-		        for(unsigned int i = 0; i < this->time_sample_sns.size(); i++)
+		        for(unsigned int i = 0; i < this->time_sample_sns.size(); ++i)
 			        {
-				        for(unsigned int m = 0; m < 2; m++)
+				        for(unsigned int m = 0; m < 2; ++m)
 					        {
-						        for(unsigned int n = 0; n < 2; n++)
+						        for(unsigned int n = 0; n < 2; ++n)
 							        {
 						            std::array<unsigned int, 2> index_set = { m, n };
 								        if(this->active_indices.is_on(index_set))

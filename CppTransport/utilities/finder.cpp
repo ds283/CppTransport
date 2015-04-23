@@ -40,7 +40,7 @@ void finder::add(std::string path)
     int i;
     bool match = false;
 
-    for(i = 0; i < this->paths.size() && match == false; i++)
+    for(i = 0; i < this->paths.size() && match == false; ++i)
       {
         if(this->paths[i] == path)
           {
@@ -58,7 +58,7 @@ bool finder::fqpn(std::string leaf, std::string& fqpn)
   {
     bool match = false;
 
-    for(int i = 0; match == false && i < this->paths.size(); i++)
+    for(int i = 0; match == false && i < this->paths.size(); ++i)
       {
         std::ostringstream filepath;
         filepath << this->paths[i] << "/" << leaf;

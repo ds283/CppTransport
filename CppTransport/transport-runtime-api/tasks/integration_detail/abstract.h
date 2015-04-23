@@ -242,7 +242,7 @@ namespace transport
 
         unsigned int serial = 0;
         bool first = true;
-		    for(std::vector<double>::const_iterator t = raw_times.begin(); t != raw_times.end(); t++, serial++)
+		    for(std::vector<double>::const_iterator t = raw_times.begin(); t != raw_times.end(); ++t, ++serial)
 			    {
             if(*t > this->get_N_initial())
               {

@@ -143,9 +143,9 @@ namespace transport
 
         if(!precomputed) this->mdl->compute_gauge_xfm_1(this->parent_task, bg, this->dN);
 
-        for(unsigned int m = 0; m < 2*this->Nfields; m++)
+        for(unsigned int m = 0; m < 2*this->Nfields; ++m)
           {
-            for(unsigned int n = 0; n < 2*this->Nfields; n++)
+            for(unsigned int n = 0; n < 2*this->Nfields; ++n)
               {
                 number component = dN[m]*dN[n]*twopf[this->mdl->flatten(m, n)];
                 zeta_twopf += component;
@@ -174,11 +174,11 @@ namespace transport
         this->mdl->compute_gauge_xfm_2(this->parent_task, bg, kconfig.k3_comoving, kconfig.k1_comoving, kconfig.k2_comoving, t, this->ddN312);
 
         // compute linear part of gauge transformation
-        for(unsigned int l = 0; l < 2*this->Nfields; l++)
+        for(unsigned int l = 0; l < 2*this->Nfields; ++l)
           {
-            for(unsigned int m = 0; m < 2*this->Nfields; m++)
+            for(unsigned int m = 0; m < 2*this->Nfields; ++m)
               {
-                for(unsigned int n = 0; n < 2*this->Nfields; n++)
+                for(unsigned int n = 0; n < 2*this->Nfields; ++n)
                   {
                     number tpf = threepf[this->mdl->flatten(l,m,n)];
 
@@ -193,13 +193,13 @@ namespace transport
           }
 
         // quadratic part of gauge transformation
-        for(unsigned int l = 0; l < 2*this->Nfields; l++)
+        for(unsigned int l = 0; l < 2*this->Nfields; ++l)
           {
-            for(unsigned int m = 0; m < 2*this->Nfields; m++)
+            for(unsigned int m = 0; m < 2*this->Nfields; ++m)
               {
-                for(unsigned int p = 0; p < 2*this->Nfields; p++)
+                for(unsigned int p = 0; p < 2*this->Nfields; ++p)
                   {
-                    for(unsigned int q = 0; q < 2*this->Nfields; q++)
+                    for(unsigned int q = 0; q < 2*this->Nfields; ++q)
                       {
                         number component1 = ddN123[l][m]*dN[p]*dN[q]*(k2_re[this->mdl->flatten(l,p)]*k3_re[this->mdl->flatten(m,q)] - k2_im[this->mdl->flatten(l,p)]*k3_im[this->mdl->flatten(m,q)]);
                         number component2 = ddN213[l][m]*dN[p]*dN[q]*(k1_re[this->mdl->flatten(l,p)]*k3_re[this->mdl->flatten(m,q)] - k1_im[this->mdl->flatten(l,p)]*k3_im[this->mdl->flatten(m,q)]);
@@ -283,9 +283,9 @@ namespace transport
               assert(false);
           }
 
-        for(unsigned int m = 0; m < this->Nfields; m++)
+        for(unsigned int m = 0; m < this->Nfields; ++m)
           {
-            for(unsigned int n = 0; n < this->Nfields; n++)
+            for(unsigned int n = 0; n < this->Nfields; ++n)
               {
                 unsigned int q_m_id = this->mdl->flatten((q_fixed == first_index ? q : m), (q_fixed == second_index ? q : m));
                 unsigned int q_n_id = this->mdl->flatten((q_fixed == first_index ? q : n), (q_fixed == second_index ? q : n));

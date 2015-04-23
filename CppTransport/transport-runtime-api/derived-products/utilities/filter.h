@@ -126,7 +126,7 @@ namespace transport
             assert(time_db.size() > 0);
 
 		        // scan through to find min and max values of time
-            for(time_config_database::const_value_iterator t = time_db.value_begin(); t != time_db.value_end(); t++)
+            for(time_config_database::const_value_iterator t = time_db.value_begin(); t != time_db.value_end(); ++t)
               {
 		            if(*t < t_min) { t_min = *t; }
 		            if(*t > t_max) { t_max = *t; }
@@ -134,7 +134,7 @@ namespace transport
 
 		        // ask filter to decide which values it wants
 		        t_serials.clear();
-            for(time_config_database::const_config_iterator t = time_db.config_begin(); t != time_db.config_end(); t++)
+            for(time_config_database::const_config_iterator t = time_db.config_begin(); t != time_db.config_end(); ++t)
 			        {
 		            time_filter_data data;
 
@@ -159,7 +159,7 @@ namespace transport
 		        double k_max = -std::numeric_limits<double>::max();
 
 		        // scan through to find min and max values of time
-            for(twopf_kconfig_database::const_config_iterator t = twopf_db.config_begin(); t != twopf_db.config_end(); t++)
+            for(twopf_kconfig_database::const_config_iterator t = twopf_db.config_begin(); t != twopf_db.config_end(); ++t)
 			        {
 		            if(t->k_conventional < k_min) { k_min = t->k_conventional; }
 		            if(t->k_conventional > k_max) { k_max = t->k_conventional; }
@@ -167,7 +167,7 @@ namespace transport
 
 		        // ask filter to decide which values it wants
 		        k_serials.clear();
-            for(twopf_kconfig_database::const_config_iterator t = twopf_db.config_begin(); t != twopf_db.config_end(); t++)
+            for(twopf_kconfig_database::const_config_iterator t = twopf_db.config_begin(); t != twopf_db.config_end(); ++t)
 			        {
 		            twopf_kconfig_filter_data data;
 
@@ -206,7 +206,7 @@ namespace transport
 		        double k3_max = -std::numeric_limits<double>::max();
 
 		        // scan through to find min and max values of time
-            for(threepf_kconfig_database::const_config_iterator t = threepf_db.config_begin(); t != threepf_db.config_end(); t++)
+            for(threepf_kconfig_database::const_config_iterator t = threepf_db.config_begin(); t != threepf_db.config_end(); ++t)
 			        {
 		            if(t->kt_conventional < kt_min) { kt_min = t->kt_conventional; }
 		            if(t->kt_conventional > kt_max) { kt_max = t->kt_conventional; }
@@ -229,7 +229,7 @@ namespace transport
 
 		        // ask filter to decide which values it wants
 		        k_serials.clear();
-            for(threepf_kconfig_database::const_config_iterator t = threepf_db.config_begin(); t != threepf_db.config_end(); t++)
+            for(threepf_kconfig_database::const_config_iterator t = threepf_db.config_begin(); t != threepf_db.config_end(); ++t)
 			        {
 		            threepf_kconfig_filter_data data;
 

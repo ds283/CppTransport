@@ -365,7 +365,7 @@ namespace transport
 
         bool first = true;
         unsigned int serial = 0;
-        for(std::vector<double>::const_iterator t = raw_times.begin(); t != raw_times.end(); t++, serial++)
+        for(std::vector<double>::const_iterator t = raw_times.begin(); t != raw_times.end(); ++t, ++serial)
           {
             if(*t >= Nbegin)
               {
@@ -409,7 +409,7 @@ namespace transport
         const std::vector<double> raw_times = this->times->get_grid();
 
         unsigned int serial = 0;
-        for(std::vector<double>::const_iterator t = raw_times.begin(); t != raw_times.end(); t++, serial++)
+        for(std::vector<double>::const_iterator t = raw_times.begin(); t != raw_times.end(); ++t, ++serial)
           {
             if(*t >= earliest_recordable)
               {

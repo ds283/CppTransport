@@ -358,7 +358,7 @@ namespace transport
 				    Json::Value supported_array = reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_SUPPORTED_X_AXES];
 						supported_x_axes.clear();
 						assert(supported_array.isArray());
-						for(Json::Value::iterator t = supported_array.begin(); t != supported_array.end(); t++)
+						for(Json::Value::iterator t = supported_array.begin(); t != supported_array.end(); ++t)
 							{
 								// decode this array element
 						    std::string value_string = t->asString();
@@ -435,7 +435,7 @@ namespace transport
 				    Json::Value& time_sns_list = reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_SERIAL_NUMBERS];
 						assert(time_sns_list.isArray());
 
-				    for(Json::Value::iterator t = time_sns_list.begin(); t != time_sns_list.end(); t++)
+				    for(Json::Value::iterator t = time_sns_list.begin(); t != time_sns_list.end(); ++t)
 					    {
 				        time_sample_sns.push_back(t->asUInt());
 					    }
@@ -444,7 +444,7 @@ namespace transport
 				    Json::Value& kconfig_sns_list = reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_SERIAL_NUMBERS];
 						assert(kconfig_sns_list.isArray());
 
-				    for(Json::Value::iterator t = kconfig_sns_list.begin(); t != kconfig_sns_list.end(); t++)
+				    for(Json::Value::iterator t = kconfig_sns_list.begin(); t != kconfig_sns_list.end(); ++t)
 					    {
 				        kconfig_sample_sns.push_back(t->asUInt());
 					    }
@@ -576,7 +576,7 @@ namespace transport
 
 						// Serialize: supported x-axis types
 				    Json::Value supported_array(Json::arrayValue);
-						for(std::list< axis_value >::const_iterator t = this->supported_x_axes.begin(); t != this->supported_x_axes.end(); t++)
+						for(std::list< axis_value >::const_iterator t = this->supported_x_axes.begin(); t != this->supported_x_axes.end(); ++t)
 							{
 								switch(*t)
 									{
@@ -694,7 +694,7 @@ namespace transport
 						// Serialize: list of time-configuration sample points
 				    Json::Value time_sns_list(Json::arrayValue);
 
-				    for(std::vector<unsigned int>::const_iterator t = this->time_sample_sns.begin(); t != this->time_sample_sns.end(); t++)
+				    for(std::vector<unsigned int>::const_iterator t = this->time_sample_sns.begin(); t != this->time_sample_sns.end(); ++t)
 					    {
 				        Json::Value sns_element = *t;
 						    time_sns_list.append(sns_element);
@@ -704,7 +704,7 @@ namespace transport
 						// Serialize: list of k-configuration sample points
 				    Json::Value kconfig_sns_list(Json::arrayValue);
 
-				    for(std::vector<unsigned int>::const_iterator t = this->kconfig_sample_sns.begin(); t != this->kconfig_sample_sns.end(); t++)
+				    for(std::vector<unsigned int>::const_iterator t = this->kconfig_sample_sns.begin(); t != this->kconfig_sample_sns.end(); ++t)
 					    {
 				        Json::Value kconfig_element = *t;
 						    kconfig_sns_list.append(kconfig_element);
@@ -753,7 +753,7 @@ namespace transport
 						unsigned int count = 0;
 
 						this->wrapper.wrap_out(out, "  " __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_X_AXIS_SUPPORTED " ");
-						for(std::list< axis_value >::const_iterator t = this->supported_x_axes.begin(); t != this->supported_x_axes.end() && count < __CPP_TRANSPORT_PRODUCT_MAX_SUPPORTED_AXES; t++)
+						for(std::list< axis_value >::const_iterator t = this->supported_x_axes.begin(); t != this->supported_x_axes.end() && count < __CPP_TRANSPORT_PRODUCT_MAX_SUPPORTED_AXES; ++t)
 							{
 								switch(*t)
 									{
@@ -873,7 +873,7 @@ namespace transport
 
 						this->wrapper.wrap_newline(out);
 				    this->wrapper.wrap_out(out, __CPP_TRANSPORT_PRODUCT_TIME_SERIES_TSAMPLE_SN_LABEL " ");
-				    for(std::vector<unsigned int>::const_iterator t = this->time_sample_sns.begin(); t != this->time_sample_sns.end() && count < __CPP_TRANSPORT_PRODUCT_MAX_SN; t++)
+				    for(std::vector<unsigned int>::const_iterator t = this->time_sample_sns.begin(); t != this->time_sample_sns.end() && count < __CPP_TRANSPORT_PRODUCT_MAX_SN; ++t)
 					    {
 				        std::ostringstream msg;
 				        msg << (*t);
@@ -885,7 +885,7 @@ namespace transport
 
 				    count = 0;
 				    this->wrapper.wrap_out(out, __CPP_TRANSPORT_PRODUCT_TIME_SERIES_KCONFIG_SN_LABEL " ");
-				    for(std::vector<unsigned int>::const_iterator t = this->kconfig_sample_sns.begin(); t != this->kconfig_sample_sns.end() && count < __CPP_TRANSPORT_PRODUCT_MAX_SN; t++)
+				    for(std::vector<unsigned int>::const_iterator t = this->kconfig_sample_sns.begin(); t != this->kconfig_sample_sns.end() && count < __CPP_TRANSPORT_PRODUCT_MAX_SN; ++t)
 					    {
 				        std::ostringstream msg;
 				        msg << (*t);

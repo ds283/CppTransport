@@ -227,11 +227,11 @@ namespace transport
 	    {
         // step through the lattice of k-modes, recording which are viable triangular configurations
         // we insist on ordering, so i <= j <= k
-        for(unsigned int j = 0; j < ks.size(); j++)
+        for(unsigned int j = 0; j < ks.size(); ++j)
 	        {
-            for(unsigned int k = 0; k <= j; k++)
+            for(unsigned int k = 0; k <= j; ++k)
 	            {
-                for(unsigned int l = 0; l <= k; l++)
+                for(unsigned int l = 0; l <= k; ++l)
 	                {
                     auto maxij  = (ks[j] > ks[k] ? ks[j] : ks[k]);
                     auto maxijk = (maxij > ks[l] ? maxij : ks[l]);
@@ -348,11 +348,11 @@ namespace transport
                                                StoragePolicy policy, bool ff, double smallest_squeezing)
 	    : threepf_task<number>(nm, i, t, ff)
 	    {
-        for(unsigned int j = 0; j < kts.size(); j++)
+        for(unsigned int j = 0; j < kts.size(); ++j)
 	        {
-            for(unsigned int k = 0; k < alphas.size(); k++)
+            for(unsigned int k = 0; k < alphas.size(); ++k)
 	            {
-                for(unsigned int l = 0; l < betas.size(); l++)
+                for(unsigned int l = 0; l < betas.size(); ++l)
 	                {
                     if(betas[l] >= 0.0 && betas[l] <= 1.0 && betas[l]-1.0 <= alphas[k] && alphas[k] <= 1.0-betas[l]  // impose triangle conditions,
 	                    && alphas[k] >= 0.0 && betas[l] >= (1.0+alphas[k])/3.0                                         // impose k1 >= k2 >= k3

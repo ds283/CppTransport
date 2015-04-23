@@ -303,7 +303,7 @@ namespace transport
         assert(queues.size() == 1);
         const work_queue<twopf_kconfig_record>::device_work_list list = queues[0];
 
-        for(unsigned int i = 0; i < list.size(); i++)
+        for(unsigned int i = 0; i < list.size(); ++i)
           {
             boost::timer::nanosecond_type int_time;
             boost::timer::nanosecond_type batch_time;
@@ -458,7 +458,7 @@ namespace transport
         const work_queue<threepf_kconfig_record>::device_work_list list = queues[0];
 
         // step through the queue, solving for the three-point functions in each case
-        for(unsigned int i = 0; i < list.size(); i++)
+        for(unsigned int i = 0; i < list.size(); ++i)
           {
             boost::timer::nanosecond_type int_time;
             boost::timer::nanosecond_type batch_time;

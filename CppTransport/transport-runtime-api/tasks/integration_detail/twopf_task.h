@@ -62,7 +62,7 @@ namespace transport
 	    : twopf_list_task<number>(nm, i, t, ff)
 	    {
         // the mapping from the provided list of ks to the work list is just one-to-one
-        for(unsigned int j = 0; j < ks.size(); j++)
+        for(unsigned int j = 0; j < ks.size(); ++j)
 	        {
             this->twopf_list_task<number>::twopf_db.add_record(ks[j]);
 	        }

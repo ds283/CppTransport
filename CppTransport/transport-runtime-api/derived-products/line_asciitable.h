@@ -209,7 +209,7 @@ namespace transport
 
 								// copy labels into vector of labels
 						    std::vector<std::string> labels;
-						    for(typename std::vector< typename line_collection<number>::output_line >::const_iterator t = data.begin(); t != data.end(); t++)
+						    for(typename std::vector< typename line_collection<number>::output_line >::const_iterator t = data.begin(); t != data.end(); ++t)
 							    {
 								    labels.push_back((*t).get_label());
 							    }
@@ -223,18 +223,18 @@ namespace transport
 								// the inner array runs over lines
 						    std::vector< std::vector<number> > ys(x.size());
 
-								for(unsigned int j = 0; j < ys.size(); j++)
+								for(unsigned int j = 0; j < ys.size(); ++j)
 									{
 										ys[j].resize(data.size());
 									}
 
-								for(unsigned int i = 0; i < data.size(); i++)
+								for(unsigned int i = 0; i < data.size(); ++i)
 									{
 								    typename std::deque< typename line_collection<number>::output_value > values = data[i].get_values();
 
 										assert(values.size() == x.size());
 
-										for(unsigned int j = 0; j < values.size(); j++)
+										for(unsigned int j = 0; j < values.size(); ++j)
 											{
 												ys[j][i] = values[j].format_number();
 											}

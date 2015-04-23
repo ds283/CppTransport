@@ -138,7 +138,7 @@ namespace transport
                 std::vector<double> new_axis(a.size());
                 std::vector<number> new_data(d.size());
 
-                for(unsigned int i = 0; i < zipped.size(); i++)
+                for(unsigned int i = 0; i < zipped.size(); ++i)
                   {
                     new_axis[i] = zipped[i].first;
                     new_data[i] = zipped[i].second;
@@ -147,7 +147,7 @@ namespace transport
                 spline1d<number> spline(new_axis, new_data);
 
                 // compute logarithmic derivative at each axis point
-                for(unsigned int i = 0; i < new_axis.size(); i++)
+                for(unsigned int i = 0; i < new_axis.size(); ++i)
                   {
                     number value = spline.eval_diff(new_axis[i]) * (new_axis[i]/new_data[i]);
                     new_data[i] = value;
@@ -164,7 +164,7 @@ namespace transport
             zipped.reserve(a.size());
 
             // push data points onto the axis
-            for(unsigned int i = 0; i < a.size(); i++)
+            for(unsigned int i = 0; i < a.size(); ++i)
 	            {
                 zipped.push_back(std::make_pair(a[i], d[i]));
 	            }

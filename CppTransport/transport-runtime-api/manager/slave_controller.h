@@ -755,7 +755,7 @@ namespace transport
 
 				            const typename work_queue< output_task_element<number> >::device_work_list list = queues[0];
 
-				            for(unsigned int i = 0; i < list.size(); i++)
+				            for(unsigned int i = 0; i < list.size(); ++i)
 					            {
 				                typename derived_data::derived_product<number>* product = list[i].get_product();
 

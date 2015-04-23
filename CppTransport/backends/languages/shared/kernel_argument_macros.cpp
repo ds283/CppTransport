@@ -53,7 +53,7 @@ namespace shared
         assert(rules.size() == names.size());
         assert(rules.size() == args.size());
 
-        for(int i = 0; i < rules.size(); i++)
+        for(int i = 0; i < rules.size(); ++i)
           {
             macro_packages::simple_rule rule;
 
@@ -93,7 +93,7 @@ namespace shared
 
         std::ostringstream out;
 
-        for(int i = 0; i < list.size(); i++)
+        for(int i = 0; i < list.size(); ++i)
           {
             out << (i > 0 ? ", " : "") << "double " << list[i];
           }
@@ -120,10 +120,10 @@ namespace shared
 
         std::vector< std::vector<struct index_assignment> > assignment = assigner.assign(indices);
 
-        for(std::vector< std::vector<struct index_assignment> >::iterator t = assignment.begin(); t != assignment.end(); t++)
+        for(std::vector< std::vector<struct index_assignment> >::iterator t = assignment.begin(); t != assignment.end(); ++t)
           {
             out << (t != assignment.begin() ? ", " : "") << this->qualifier << (this->qualifier != "" ? " " : "") << "double* " << name;
-            for(std::vector<struct index_assignment>::iterator u = (*t).begin(); u != (*t).end(); u++)
+            for(std::vector<struct index_assignment>::iterator u = (*t).begin(); u != (*t).end(); ++u)
               {
                 out << "_" << assigner.value(*u);
               }
@@ -155,10 +155,10 @@ namespace shared
 
         std::vector< std::vector<struct index_assignment> > assignment = assigner.assign(indices);
 
-        for(std::vector< std::vector<struct index_assignment> >::iterator t = assignment.begin(); t != assignment.end(); t++)
+        for(std::vector< std::vector<struct index_assignment> >::iterator t = assignment.begin(); t != assignment.end(); ++t)
           {
             out << (t != assignment.begin() ? ", " : "") << this->qualifier << (this->qualifier != "" ? " " : "") << "double* " << name;
-            for(std::vector<struct index_assignment>::iterator u = (*t).begin(); u != (*t).end(); u++)
+            for(std::vector<struct index_assignment>::iterator u = (*t).begin(); u != (*t).end(); ++u)
               {
                 out << "_" << assigner.value(*u);
               }
@@ -194,10 +194,10 @@ namespace shared
 
         std::vector< std::vector<struct index_assignment> > assignment = assigner.assign(indices);
 
-        for(std::vector< std::vector<struct index_assignment> >::iterator t = assignment.begin(); t != assignment.end(); t++)
+        for(std::vector< std::vector<struct index_assignment> >::iterator t = assignment.begin(); t != assignment.end(); ++t)
           {
             out << (t != assignment.begin() ? ", " : "") << this->qualifier << (this->qualifier != "" ? " " : "") << "double* " << name;
-            for(std::vector<struct index_assignment>::iterator u = (*t).begin(); u != (*t).end(); u++)
+            for(std::vector<struct index_assignment>::iterator u = (*t).begin(); u != (*t).end(); ++u)
               {
                 out << "_" << assigner.value(*u);
               }

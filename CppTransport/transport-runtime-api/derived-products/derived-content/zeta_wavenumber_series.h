@@ -130,7 +130,7 @@ namespace transport
 		        const typename std::vector< twopf_kconfig > k_values = kc_handle.lookup_tag(k_tag);
 
 		        // loop through all components of the twopf, for each t-configuration we use, pulling data from the database
-		        for(unsigned int i = 0; i < this->time_sample_sns.size(); i++)
+		        for(unsigned int i = 0; i < this->time_sample_sns.size(); ++i)
 			        {
 				        zeta_twopf_kconfig_data_tag<number> tag = pipe.new_zeta_twopf_kconfig_data_tag(this->time_sample_sns[i]);
 
@@ -139,7 +139,7 @@ namespace transport
 				        if(this->dimensionless)
 					        {
 						        assert(line_data.size() == k_values.size());
-						        for(unsigned int j = 0; j < line_data.size() && j <= k_values.size(); j++)
+						        for(unsigned int j = 0; j < line_data.size() && j <= k_values.size(); ++j)
 							        {
 								        line_data[j] *= k_values[j].k_comoving*k_values[j].k_comoving*k_values[j].k_comoving / (2.0*M_PI*M_PI);
 							        }
@@ -330,7 +330,7 @@ namespace transport
 		        const std::vector<double> t_values = tc_handle.lookup_tag(t_tag);
 
 		        // loop through all components of the twopf, for each t-configuration we use, pulling data from the database
-		        for(unsigned int i = 0; i < this->time_sample_sns.size(); i++)
+		        for(unsigned int i = 0; i < this->time_sample_sns.size(); ++i)
 			        {
 				        zeta_threepf_kconfig_data_tag<number> tag = pipe.new_zeta_threepf_kconfig_data_tag(this->time_sample_sns[i]);
 
@@ -517,7 +517,7 @@ namespace transport
 		        const std::vector<double> t_values = tc_handle.lookup_tag(t_tag);
 
 		        // loop through all components of the twopf, for each t-configuration we use, pulling data from the database
-		        for(unsigned int i = 0; i < this->time_sample_sns.size(); i++)
+		        for(unsigned int i = 0; i < this->time_sample_sns.size(); ++i)
 			        {
 				        zeta_reduced_bispectrum_kconfig_data_tag<number> tag = pipe.new_zeta_reduced_bispectrum_kconfig_data_tag(this->time_sample_sns[i]);
 

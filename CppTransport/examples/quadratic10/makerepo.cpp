@@ -118,7 +118,7 @@ int main(int argc, char* argv[])
 
     transport::index_selector<1> bg_sel(model->get_N_fields());
 		bg_sel.none();
-		for(unsigned int m = 0; m < model->get_N_fields(); m++)
+		for(unsigned int m = 0; m < model->get_N_fields(); ++m)
 			{
 		    std::array<unsigned int, 1> set = { m };
 				bg_sel.set_on(set);

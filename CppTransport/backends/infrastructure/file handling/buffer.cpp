@@ -68,7 +68,7 @@ buffer::~buffer()
 		    // presumably this was flagged on construction
 				if(this->out_stream.is_open())
 					{
-						for(std::list<std::string>::iterator t = this->buf.begin(); t != this->buf.end(); t++)
+						for(std::list<std::string>::iterator t = this->buf.begin(); t != this->buf.end(); ++t)
 							{
 								this->out_stream << (*t) << std::endl;
 							}
@@ -85,7 +85,7 @@ void buffer::write(std::string& line, std::list<std::string>::iterator insertion
     std::vector<std::string> lines;
     boost::split(lines, line, boost::is_any_of(NEWLINE_CHAR));
 
-    for(std::vector<std::string>::const_iterator t = lines.begin(); t != lines.end(); t++)
+    for(std::vector<std::string>::const_iterator t = lines.begin(); t != lines.end(); ++t)
       {
         bool write = true;
         if(this->skips.size() > 0)
@@ -144,7 +144,7 @@ void buffer::write_to_tag(std::string line)
 
 void buffer::delimit_line(std::string& item)
   {
-    for(std::list<struct delimiter>::iterator t = this->delimiters.begin(); t != this->delimiters.end(); t++)
+    for(std::list<struct delimiter>::iterator t = this->delimiters.begin(); t != this->delimiters.end(); ++t)
       {
         item.insert(0, (*t).left);
         item.append((*t).right);
@@ -228,7 +228,7 @@ void buffer::inherit_decoration(buffer& source)
 void buffer::print_lines(unsigned int lines)
 	{
 		unsigned int c = 0;
-		for(std::list<std::string>::iterator t = this->buf.begin(); t != this->buf.end() && c < lines; t++, c++)
+		for(std::list<std::string>::iterator t = this->buf.begin(); t != this->buf.end() && c < lines; ++t, ++c)
 			{
 		    std::cout << (*t) << std::endl;
 			}

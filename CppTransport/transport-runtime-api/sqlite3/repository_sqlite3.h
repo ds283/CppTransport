@@ -818,7 +818,7 @@ namespace transport
 
         // check whether derived products on which this task depends have already been committed to the database
         const typename std::vector< output_task_element<number> > elements = tk.get_elements();
-        for(typename std::vector< output_task_element<number> >::const_iterator t = elements.begin(); t != elements.end(); t++)
+        for(typename std::vector< output_task_element<number> >::const_iterator t = elements.begin(); t != elements.end(); ++t)
 	        {
             derived_data::derived_product<number>* product = (*t).get_product();
             unsigned int count = sqlite3_operations::count_products(this->db, product->get_name());
@@ -888,7 +888,7 @@ namespace transport
         typename std::vector< derivable_task<number>* > task_list;
         d.get_task_list(task_list);
 
-        for(typename std::vector< derivable_task<number>* >::iterator t = task_list.begin(); t != task_list.end(); t++)
+        for(typename std::vector< derivable_task<number>* >::iterator t = task_list.begin(); t != task_list.end(); ++t)
 	        {
             unsigned int count = sqlite3_operations::count_tasks(this->db, (*t)->get_name());
             if(count == 0)
@@ -1180,7 +1180,7 @@ namespace transport
 				// get list of group names associated with the task 'name'
 				sqlite3_operations::enumerate_content_groups<Payload>(this->db, name, group_names);
 
-				for(std::list<std::string>::iterator t = group_names.begin(); t != group_names.end(); t++)
+				for(std::list<std::string>::iterator t = group_names.begin(); t != group_names.end(); ++t)
 					{
 						boost::filesystem::path filename = sqlite3_operations::find_group<Payload>(this->db, *t, __CPP_TRANSPORT_REPO_OUTPUT_MISSING);
 						Json::Value root = this->deserialize_JSON_document(filename);

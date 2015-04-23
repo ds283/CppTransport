@@ -75,7 +75,7 @@ namespace transport
 #ifdef __CPP_TRANSPORT_LINECACHE_DEBUG
 				        std::cerr << "WARNING -- COPYING CACHE OBJECT, COUNT = " << copied << std::endl;
 #endif
-						    for(typename std::list< table<DataContainer, DataTag, SerialTag, HashSize> >::iterator t = this->tables.begin(); t != this->tables.end(); t++)
+						    for(typename std::list< table<DataContainer, DataTag, SerialTag, HashSize> >::iterator t = this->tables.begin(); t != this->tables.end(); ++t)
 							    {
 						        (*t).reset_parent_cache(this);
 							    }
@@ -201,7 +201,7 @@ namespace transport
 					    {
 						    assert(p != nullptr);
 						    this->parent_cache = p;
-						    for(typename std::list< serial_group<DataContainer, DataTag, SerialTag, HashSize> >::iterator t = this->groups.begin(); t != this->groups.end(); t++)
+						    for(typename std::list< serial_group<DataContainer, DataTag, SerialTag, HashSize> >::iterator t = this->groups.begin(); t != this->groups.end(); ++t)
 							    {
 						        (*t).reset_parent_cache(p);
 							    }
@@ -383,9 +383,9 @@ namespace transport
 #ifdef __CPP_TRANSPORT_LINECACHE_DEBUG
 								if(copied >= 2) std::cerr << "WARNING - COPYING SERIAL_GROUP OBJECT, COUNT = " << copied << std::endl;
 #endif
-						    for(unsigned int i = 0; i < HashSize; i++)
+						    for(unsigned int i = 0; i < HashSize; ++i)
 							    {
-								    for(typename std::list<data_item>::iterator t = cache[i].begin(); t != cache[i].end(); t++)
+								    for(typename std::list<data_item>::iterator t = cache[i].begin(); t != cache[i].end(); ++t)
 									    {
 								        (*t).reset_owner_list(&(cache[i]));
 									    }
@@ -476,7 +476,7 @@ namespace transport
 								// build a list of data items on which to run clean-up
 						    typename std::list< typename std::list< typename serial_group<DataContainer, DataTag, SerialTag, HashSize>::data_item >::iterator > clean_up_list;
 
-								for(typename std::list< table<DataContainer, DataTag, SerialTag, HashSize> >::iterator t = this->tables.begin(); t != this->tables.end(); t++)
+								for(typename std::list< table<DataContainer, DataTag, SerialTag, HashSize> >::iterator t = this->tables.begin(); t != this->tables.end(); ++t)
 									{
 								    (*t).gather_data_items(clean_up_list);
 									}
@@ -549,7 +549,7 @@ namespace transport
 		    serial_group<DataContainer, DataTag, SerialTag, HashSize>& table<DataContainer, DataTag, SerialTag, HashSize>::get_serial_handle(const std::vector<unsigned int>& serials, const SerialTag& tag)
 			    {
 		        typename std::list< serial_group<DataContainer, DataTag, SerialTag, HashSize > >::iterator t;
-				    for(t = this->groups.begin(); t != this->groups.end(); t++)
+				    for(t = this->groups.begin(); t != this->groups.end(); ++t)
 					    {
 						    if((*t).match(serials, tag)) break;
 					    }
@@ -572,7 +572,7 @@ namespace transport
 				void table<DataContainer, DataTag, SerialTag, HashSize>::gather_data_items(typename std::list< typename std::list< typename serial_group<DataContainer, DataTag, SerialTag, HashSize>::data_item >::iterator >& item_list)
 					{
 						// work through all serial groups owned by this table, pushing their data_items into item_list
-						for(typename std::list< serial_group<DataContainer, DataTag, SerialTag, HashSize> >::iterator t = this->groups.begin(); t != this->groups.end(); t++)
+						for(typename std::list< serial_group<DataContainer, DataTag, SerialTag, HashSize> >::iterator t = this->groups.begin(); t != this->groups.end(); ++t)
 							{
 						    (*t).gather_data_items(item_list);
 							}
@@ -645,9 +645,9 @@ namespace transport
 				template <typename DataContainer, typename DataTag, typename SerialTag, unsigned int HashSize>
 				void serial_group<DataContainer, DataTag, SerialTag, HashSize>::gather_data_items(typename std::list< typename std::list< typename serial_group<DataContainer, DataTag, SerialTag, HashSize>::data_item >::iterator >& item_list)
 					{
-						for(unsigned int i = 0; i < HashSize; i++)
+						for(unsigned int i = 0; i < HashSize; ++i)
 							{
-								for(typename std::list<data_item>::iterator t = this->cache[i].begin(); t != this->cache[i].end(); t++)
+								for(typename std::list<data_item>::iterator t = this->cache[i].begin(); t != this->cache[i].end(); ++t)
 									{
 										item_list.push_front(t);
 									}

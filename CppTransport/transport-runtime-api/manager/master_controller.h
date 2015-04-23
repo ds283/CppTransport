@@ -494,7 +494,7 @@ namespace transport
 
 		    std::list<std::string> tags;
 
-		    for(unsigned int i = 1; i < argc; i++)
+		    for(unsigned int i = 1; i < argc; ++i)
 			    {
 		        if(std::string(argv[i]) == __CPP_TRANSPORT_SWITCH_REPO)
 			        {
@@ -728,7 +728,7 @@ namespace transport
 		        this->initialize_workers();
 
 		        unsigned int database_tasks = 0;
-            for(typename std::list<job_descriptor>::const_iterator t = this->job_queue.begin(); t != this->job_queue.end(); t++)
+            for(typename std::list<job_descriptor>::const_iterator t = this->job_queue.begin(); t != this->job_queue.end(); ++t)
 	            {
                 switch((*t).get_type())
 	                {
@@ -1062,7 +1062,7 @@ namespace transport
 	        std::vector<boost::mpi::request> requests(this->world.size()-1);
 	        MPI::new_integration_payload payload(writer->get_record()->get_name(), tempdir_path, logdir_path, writer->get_workgroup_number());
 
-	        for(unsigned int i = 0; i < this->world.size()-1; i++)
+	        for(unsigned int i = 0; i < this->world.size()-1; ++i)
 		        {
 	            requests[i] = this->world.isend(this->worker_rank(i), MPI::NEW_INTEGRATION, payload);
 		        }
@@ -1235,7 +1235,7 @@ namespace transport
 	        std::vector<boost::mpi::request> requests(this->world.size()-1);
 	        MPI::new_derived_content_payload payload(writer->get_record()->get_name(), tempdir_path, logdir_path, tags);
 
-	        for(unsigned int i = 0; i < this->world.size()-1; i++)
+	        for(unsigned int i = 0; i < this->world.size()-1; ++i)
 		        {
 	            requests[i] = this->world.isend(this->worker_rank(i), MPI::NEW_DERIVED_CONTENT, payload);
 		        }
@@ -1663,7 +1663,7 @@ namespace transport
 	        std::vector<boost::mpi::request> requests(this->world.size()-1);
 	        MPI::new_postintegration_payload payload(writer->get_record()->get_name(), tempdir_path, logdir_path, tags);
 
-	        for(unsigned int i = 0; i < this->world.size()-1; i++)
+	        for(unsigned int i = 0; i < this->world.size()-1; ++i)
 		        {
 	            requests[i] = this->world.isend(this->worker_rank(i), MPI::NEW_POSTINTEGRATION, payload);
 		        }
@@ -1717,7 +1717,7 @@ namespace transport
           std::vector<boost::mpi::request> requests(this->world.size()-1);
           MPI::new_postintegration_payload payload(p_writer->get_record()->get_name(), p_tempdir_path, p_logdir_path, tags, i_tempdir_path, i_logdir_path, i_writer->get_workgroup_number());
 
-          for(unsigned int i = 0; i < this->world.size()-1; i++)
+          for(unsigned int i = 0; i < this->world.size()-1; ++i)
             {
               requests[i] = this->world.isend(this->worker_rank(i), MPI::NEW_POSTINTEGRATION, payload);
             }
@@ -1788,7 +1788,7 @@ namespace transport
 		    // request information from each worker, and pass all necessary setup details
         MPI::slave_setup_payload payload(this->repo->get_root_path(), this->batcher_capacity, this->pipe_data_capacity, this->pipe_zeta_capacity);
 
-        for(unsigned int i = 0; i < this->world.size()-1; i++)
+        for(unsigned int i = 0; i < this->world.size()-1; ++i)
 	        {
             requests[i] = this->world.isend(this->worker_rank(i), MPI::INFORMATION_REQUEST, payload);
 	        }
@@ -1842,7 +1842,7 @@ namespace transport
 			{
 		    BOOST_LOG_SEV(log, base_writer::normal) << "++ Notifying workers of end-of-work";
 
-				for(unsigned int i = 0; i < this->world.size()-1; i++)
+				for(unsigned int i = 0; i < this->world.size()-1; ++i)
 					{
 						this->world.isend(this->worker_rank(i), MPI::END_OF_WORK);
 					}
@@ -1879,7 +1879,7 @@ namespace transport
         std::vector<boost::mpi::request> msg_status(work.size());
 
         unsigned int c = 0;
-        for(std::list<master_scheduler::work_assignment>::const_iterator t = work.begin(); t != work.end(); t++, c++)
+        for(std::list<master_scheduler::work_assignment>::const_iterator t = work.begin(); t != work.end(); ++t, ++c)
 	        {
             MPI::work_assignment_payload payload(t->get_items());
 
@@ -1905,7 +1905,7 @@ namespace transport
 
         std::vector<boost::mpi::request> requests(this->world.size()-1);
 
-        for(unsigned int i = 0; i < this->world.size()-1; i++)
+        for(unsigned int i = 0; i < this->world.size()-1; ++i)
 	        {
             requests[i] = this->world.isend(this->worker_rank(i), MPI::TERMINATE);
 	        }

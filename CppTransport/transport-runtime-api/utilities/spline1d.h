@@ -80,7 +80,7 @@ namespace transport
         double* ys = new double[x.size()];
 
         // copy supplied data into our new arrays
-        for(unsigned int i = 0; i < x.size(); i++)
+        for(unsigned int i = 0; i < x.size(); ++i)
           {
             // assume 'number' is explicitly castable to 'double'
             xs[i] = static_cast<double>(x[i]);

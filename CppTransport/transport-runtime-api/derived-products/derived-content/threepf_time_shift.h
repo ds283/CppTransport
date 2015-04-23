@@ -115,14 +115,14 @@ namespace transport
 		        // ie., for each time step (outer vector) we have a group of field components (inner vector)
 		        std::vector< std::vector<number> > background(time_sample.size());
 
-		        for(unsigned int i = 0; i < 2*N_fields; i++)
+		        for(unsigned int i = 0; i < 2*N_fields; ++i)
 			        {
 		            background_time_data_tag<number> tag = pipe.new_background_time_data_tag(i); // DON'T flatten i, because we want to give the background to the model instance in the order it expects
                 // safe to take a reference here and avoid a copy
 		            const std::vector<number>& bg_line = handle.lookup_tag(tag);
 
 		            assert(bg_line.size() == background.size());
-		            for(unsigned int j = 0; j < time_sample.size(); j++)
+		            for(unsigned int j = 0; j < time_sample.size(); ++j)
 			            {
 		                background[j].push_back(bg_line[j]);
 			            }
@@ -193,7 +193,7 @@ namespace transport
 		        typename datapipe<number>::time_data_handle& t_handle = pipe.new_time_data_handle(time_sample);
 
 		        // pull out components of the two-pf that we need
-		        for(unsigned int i = 0; i < N_fields; i++)
+		        for(unsigned int i = 0; i < N_fields; ++i)
 			        {
 		            unsigned int q_id = mdl->flatten((q_fixed == first_index ? q : i), (q_fixed == second_index ? q : i));
 		            unsigned int r_id = mdl->flatten((r_fixed == first_index ? r : i), (r_fixed == second_index ? r : i));
@@ -219,7 +219,7 @@ namespace transport
 		            const std::vector<number> mom_r_line_re = t_handle.lookup_tag(mom_r_re_tag);
 		            const std::vector<number> mom_r_line_im = t_handle.lookup_tag(mom_r_im_tag);
 
-		            for(unsigned int j = 0; j < line_data.size(); j++)
+		            for(unsigned int j = 0; j < line_data.size(); ++j)
 			            {
 		                (sigma_q_re[j]).push_back(q_line_re[j]);
 		                (sigma_q_im[j]).push_back(q_line_im[j]);
@@ -233,7 +233,7 @@ namespace transport
 			        }
 
 		        // work through the time sample, shifting each value appropriately
-		        for(unsigned int i = 0; i < line_data.size(); i++)
+		        for(unsigned int i = 0; i < line_data.size(); ++i)
 			        {
 		            std::vector< std::vector< std::vector<number> > > B_qrp;
 		            std::vector< std::vector< std::vector<number> > > C_pqr;
@@ -248,9 +248,9 @@ namespace transport
 
 		            number shift = 0.0;
 
-		            for(unsigned int m = 0; m < N_fields; m++)
+		            for(unsigned int m = 0; m < N_fields; ++m)
 			            {
-		                for(unsigned int n = 0; n < N_fields; n++)
+		                for(unsigned int n = 0; n < N_fields; ++n)
 			                {
 		                    shift -= B_qrp[m][n][p_species] * ( sigma_q_re[i][m]*sigma_r_re[i][n] - sigma_q_im[i][m]*sigma_r_im[i][n] );
 

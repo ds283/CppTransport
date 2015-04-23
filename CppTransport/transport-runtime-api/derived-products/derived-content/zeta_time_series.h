@@ -129,7 +129,7 @@ namespace transport
 		        twopf_kconfig_tag<number> k_tag = pipe.new_twopf_kconfig_tag();
             const typename std::vector< twopf_kconfig > k_values = kc_handle.lookup_tag(k_tag);
 
-            for(unsigned int i = 0; i < this->kconfig_sample_sns.size(); i++)
+            for(unsigned int i = 0; i < this->kconfig_sample_sns.size(); ++i)
               {
 		            zeta_twopf_time_data_tag<number> tag = pipe.new_zeta_twopf_time_data_tag(k_values[i]);
 
@@ -137,7 +137,7 @@ namespace transport
 
 		            if(this->dimensionless)
 			            {
-				            for(unsigned int j = 0; j < line_data.size(); j++)
+				            for(unsigned int j = 0; j < line_data.size(); ++j)
 					            {
 						            line_data[j] *= k_values[i].k_comoving*k_values[i].k_comoving*k_values[i].k_comoving / (2.0*M_PI*M_PI);
 					            }
@@ -317,7 +317,7 @@ namespace transport
 		        threepf_kconfig_tag<number> k_tag = pipe.new_threepf_kconfig_tag();
             const typename std::vector< threepf_kconfig > k_values = kc_handle.lookup_tag(k_tag);
 
-            for(unsigned int i = 0; i < this->kconfig_sample_sns.size(); i++)
+            for(unsigned int i = 0; i < this->kconfig_sample_sns.size(); ++i)
               {
 		            zeta_threepf_time_data_tag<number> tag = pipe.new_zeta_threepf_time_data_tag(k_values[i]);
 
@@ -498,7 +498,7 @@ namespace transport
             threepf_kconfig_tag<number> k_tag = pipe.new_threepf_kconfig_tag();
             const typename std::vector< threepf_kconfig > k_values = kc_handle.lookup_tag(k_tag);
 
-            for(unsigned int i = 0; i < this->kconfig_sample_sns.size(); i++)
+            for(unsigned int i = 0; i < this->kconfig_sample_sns.size(); ++i)
               {
 		            zeta_reduced_bispectrum_time_data_tag<number> tag = pipe.new_zeta_reduced_bispectrum_time_data_tag(k_values[i]);
 

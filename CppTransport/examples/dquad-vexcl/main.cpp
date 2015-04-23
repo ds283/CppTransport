@@ -45,7 +45,7 @@ int main(int argc, char* argv[])
         transport::repository<double>* repo = mgr->get_repository();
         std::list<typename transport::repository<double>::output_group_record> output = repo->enumerate_integration_task_content("dquad.threepf-1");
 
-        for(std::list<typename transport::repository<double>::output_group_record>::iterator t = output.begin(); t != output.end(); t++)
+        for(std::list<typename transport::repository<double>::output_group_record>::iterator t = output.begin(); t != output.end(); ++t)
           {
             t->write(std::cout);
             std::cout << std::endl;
@@ -80,7 +80,7 @@ int main(int argc, char* argv[])
 //    const unsigned int  tN   = 5000;       // record 100 samples
 //
 //    std::vector<double> times;
-//    for(int i = 0; i < tN; i++)
+//    for(int i = 0; i < tN; ++i)
 //      {
 //        times.push_back(tmin + (tmax - tmin)*(double)i/(double)tN);
 //      }
@@ -93,7 +93,7 @@ int main(int argc, char* argv[])
 //    const unsigned int  kN   = 5;          // number of k-points
 //
 //    std::vector<double> ks;
-//    for(int i = 0; i < kN; i++)
+//    for(int i = 0; i < kN; ++i)
 //      {
 //        ks.push_back(kmin * pow(kmax/kmin, (double)i/(double)kN));
 //      }
@@ -245,7 +245,7 @@ void output_info(transport::canonical_model<double>* model, transport::integrati
     const std::vector<double> r_p    = tk->get_params().get_vector();
 
     std::cout << "Fields (" << model->get_N_fields() << "): ";
-    for(int i = 0; i < model->get_N_fields(); i++)
+    for(int i = 0; i < model->get_N_fields(); ++i)
       {
         if(i > 0)
           {
@@ -256,7 +256,7 @@ void output_info(transport::canonical_model<double>* model, transport::integrati
     std::cout << std::endl;
 
     std::cout << "Parameters (" << model->get_N_params() << "): ";
-    for(int i = 0; i < model->get_N_params(); i++)
+    for(int i = 0; i < model->get_N_params(); ++i)
       {
         if(i > 0)
           {

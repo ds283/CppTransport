@@ -169,7 +169,7 @@ namespace transport
 		    Json::Value array = reader[__CPP_TRANSPORT_NODE_SUBRANGE_ARRAY];
 				assert(array.isArray());
 
-				for(Json::Value::iterator t = array.begin(); t != array.end(); t++)
+				for(Json::Value::iterator t = array.begin(); t != array.end(); ++t)
 					{
 				    std::shared_ptr< range<value> > element(range_helper::deserialize<value>(*t));
 						this->subrange_list.push_back(element);
@@ -186,7 +186,7 @@ namespace transport
 
 		    Json::Value array(Json::arrayValue);
 
-				for(typename std::list< std::shared_ptr< range<value> > >::const_iterator t = this->subrange_list.begin(); t != this->subrange_list.end(); t++)
+				for(typename std::list< std::shared_ptr< range<value> > >::const_iterator t = this->subrange_list.begin(); t != this->subrange_list.end(); ++t)
 			    {
 				    Json::Value obj(Json::objectValue);
 				    (*t)->serialize(obj);
@@ -231,7 +231,7 @@ namespace transport
 		    this->steps = 0;
 
 				// splice all subranges together
-				for(typename std::list< std::shared_ptr< range<value> > >::const_iterator t = this->subrange_list.begin(); t != this->subrange_list.end(); t++)
+				for(typename std::list< std::shared_ptr< range<value> > >::const_iterator t = this->subrange_list.begin(); t != this->subrange_list.end(); ++t)
 			    {
 				    if((*t)->get_max() > this->max) this->max = (*t)->get_max();
 				    if((*t)->get_min() < this->min) this->min = (*t)->get_min();
@@ -257,7 +257,7 @@ namespace transport
         out << __CPP_TRANSPORT_AGGREGATION_RANGE_B << std::endl;
 
         out << __CPP_TRANSPORT_AGGREGATION_RANGE_C << std::endl;
-        for(unsigned int i = 0; i < obj.grid.size(); i++)
+        for(unsigned int i = 0; i < obj.grid.size(); ++i)
           {
             out << i << ". " << obj.grid[i] << std::endl;
           }

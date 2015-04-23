@@ -765,7 +765,7 @@ namespace transport
 
         // populate output group with content from the writer
         const std::list<derived_content>& content = writer.get_content();
-        for(std::list<derived_content>::const_iterator t = content.begin(); t != content.end(); t++)
+        for(std::list<derived_content>::const_iterator t = content.begin(); t != content.end(); ++t)
 	        {
             output_record->get_payload().add_derived_content(*t);
 	        }

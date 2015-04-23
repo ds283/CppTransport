@@ -226,7 +226,7 @@ namespace transport
 
         unsigned int count = 0;
         const std::list<std::string>& tags = obj.get_tags();
-        for (std::list<std::string>::const_iterator u = tags.begin(); u != tags.end(); u++)
+        for (std::list<std::string>::const_iterator u = tags.begin(); u != tags.end(); ++u)
           {
             if(count > 0) out << ", ";
             out << *u;

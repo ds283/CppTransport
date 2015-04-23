@@ -140,7 +140,7 @@ std::shared_ptr< std::vector<std::string> > macro_agent::apply_line(std::string&
 
 		if(LHS_assignments.size() > 0)
 			{
-				for(std::vector< std::vector<struct index_assignment> >::iterator t = LHS_assignments.begin(); t != LHS_assignments.end(); t++)
+				for(std::vector< std::vector<struct index_assignment> >::iterator t = LHS_assignments.begin(); t != LHS_assignments.end(); ++t)
 			    {
 				    // evaluate LHS macros on this index assignment
 				    counter += left_tokens.evaluate_macros(*t);
@@ -155,7 +155,7 @@ std::shared_ptr< std::vector<std::string> > macro_agent::apply_line(std::string&
 							    }
 
 						    // now generate a set of RHS evaluations for this LHS evaluation
-						    for(std::vector< std::vector<struct index_assignment> >::iterator u = RHS_assignments.begin(); u != RHS_assignments.end(); u++)
+						    for(std::vector< std::vector<struct index_assignment> >::iterator u = RHS_assignments.begin(); u != RHS_assignments.end(); ++u)
 							    {
 						        std::vector<index_assignment> LHS_RHS_assignment = assigner.merge(*t, *u);
 

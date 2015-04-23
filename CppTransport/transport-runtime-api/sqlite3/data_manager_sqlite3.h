@@ -383,7 +383,7 @@ namespace transport
     template <typename number>
     data_manager_sqlite3<number>::~data_manager_sqlite3()
       {
-        for(std::list<sqlite3*>::iterator t = this->open_containers.begin(); t != this->open_containers.end(); t++)
+        for(std::list<sqlite3*>::iterator t = this->open_containers.begin(); t != this->open_containers.end(); ++t)
           {
             int status = sqlite3_close(*t);
 
@@ -1311,7 +1311,7 @@ namespace transport
         std::list<unsigned int> advised_list = writer.get_missing_serials();
         if(advised_list.size() > 0) BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << "** Note: backend provided list of " << advised_list.size() << " missing items to cross-check";
 
-        for(typename std::list<unsigned int>::const_iterator t = serials.begin(); t != serials.end(); t++)
+        for(typename std::list<unsigned int>::const_iterator t = serials.begin(); t != serials.end(); ++t)
           {
             // find this configuration
             typename Database::const_config_iterator u = std::find_if(db.config_begin(), db.config_end(),
@@ -1342,7 +1342,7 @@ namespace transport
         std::list<unsigned int> drop_serials;
 
         // TODO: this is a O(N^2) algorithm; it would be nice if it could be replaced with something better
-        for(std::list<unsigned int>::const_iterator t = serials.begin(); t != serials.end(); t++)
+        for(std::list<unsigned int>::const_iterator t = serials.begin(); t != serials.end(); ++t)
           {
             threepf_kconfig_database::const_record_iterator u = std::find_if(threepf_db.record_begin(), threepf_db.record_end(),
                                                                              RecordFinder<threepf_kconfig_database::const_record_iterator::type>(*t));
@@ -1368,9 +1368,9 @@ namespace transport
         std::list<unsigned int> threepf_list;
 
         // TODO: this is a O(N^2) algorithm; it would be nice if it could be replaced with something better
-        for(std::list<unsigned int>::const_iterator t = twopf_list.begin(); t != twopf_list.end(); t++)
+        for(std::list<unsigned int>::const_iterator t = twopf_list.begin(); t != twopf_list.end(); ++t)
           {
-            for(threepf_kconfig_database::const_record_iterator u = threepf_db.record_begin(); u != threepf_db.record_end(); u++)
+            for(threepf_kconfig_database::const_record_iterator u = threepf_db.record_begin(); u != threepf_db.record_end(); ++u)
               {
                 if(u->is_twopf_k1_stored() && (*u)->k1_serial == *t)
                   {

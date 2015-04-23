@@ -112,7 +112,7 @@ lexstream<keywords, characters>::~lexstream(void)
 template <class keywords, class characters>
 void lexstream<keywords, characters>::print(std::ostream& stream)
   {
-    for(int i = 0; i < this->lexeme_list.size(); i++)
+    for(int i = 0; i < this->lexeme_list.size(); ++i)
       {
         this->lexeme_list[i].dump(stream);
       }

@@ -131,7 +131,7 @@ namespace transport
 				    zeta_data.resize(this->time_sample_sns.size());
 
 				    // for each t-configuration, pull data from the database
-				    for(unsigned int i = 0; i < this->time_sample_sns.size(); i++)
+				    for(unsigned int i = 0; i < this->time_sample_sns.size(); ++i)
 					    {
 						    zeta_twopf_kconfig_data_tag<number> zeta_tag = pipe.new_zeta_twopf_kconfig_data_tag(this->time_sample_sns[i]);
 
@@ -151,7 +151,7 @@ namespace transport
 				    // rebind handles
 		        typename datapipe<number>::kconfig_data_handle& k_handle = pipe.new_kconfig_zeta_handle(this->kconfig_sample_sns);
 
-				    for(unsigned int i = 0; i < this->time_sample_sns.size(); i++)
+				    for(unsigned int i = 0; i < this->time_sample_sns.size(); ++i)
 					    {
 				        cf_kconfig_data_tag<number> tensor_tag =
 					                                    pipe.new_cf_kconfig_data_tag(data_tag<number>::cf_tensor_twopf, this->gadget.get_model()->tensor_flatten(0,0), this->time_sample_sns[i]);
@@ -161,7 +161,7 @@ namespace transport
 
 				        std::vector<number> line_data(tensor_data.size());
 
-				        for(unsigned int j = 0; j < tensor_data.size(); j++)
+				        for(unsigned int j = 0; j < tensor_data.size(); ++j)
 					        {
 				            line_data[j] = tensor_data[j] / zeta_data[i][j];
 					        }

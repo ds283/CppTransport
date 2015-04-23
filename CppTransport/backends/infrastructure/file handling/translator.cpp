@@ -136,7 +136,7 @@ unsigned int translator::process(const std::string in, buffer& buf, enum process
                 continuation_tag << " " << package->get_comment_separator() << " " << MESSAGE_EXPANSION_OF_LINE << " " << os->get_line();
 
                 unsigned int c = 0;
-                for(std::vector<std::string>::const_iterator l = line_list->begin(); l != line_list->end(); l++, c++)
+                for(std::vector<std::string>::const_iterator l = line_list->begin(); l != line_list->end(); ++l, ++c)
                   {
                     std::string out_line = *l + (c > 0 ? continuation_tag.str() : "");
 
@@ -198,7 +198,7 @@ void translator::parse_header_line(const std::string in, const std::string line,
         error(msg.str());
       }
 
-    for(int i = 1; i < tokens.size(); i++)
+    for(int i = 1; i < tokens.size(); ++i)
       {
         if(boost::to_lower_copy(tokens[i]) == BACKEND_TOKEN)
           {
