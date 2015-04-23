@@ -129,7 +129,10 @@ namespace transport
 
         $$__MODEL_basic_twopf_functor(const twopf_list_task<number>* tk, const twopf_kconfig& k)
           : params(tk->get_params()),
+            param_vector(tk->get_params().get_vector()),
+            Mp(tk->get_params().get_Mp()),
             N_horizon_exit(tk->get_N_horizon_crossing()),
+            astar_normalization(tk->get_astar_normalization()),
             config(k)
           {
           }
@@ -143,7 +146,13 @@ namespace transport
 
         const parameters<number>& params;
 
+        const std::vector<number>& param_vector;
+
+        number Mp;
+
         double N_horizon_exit;
+
+        double astar_normalization;
 
         const twopf_kconfig config;
 
@@ -178,7 +187,10 @@ namespace transport
       public:
         $$__MODEL_basic_threepf_functor(const twopf_list_task<number>* tk, const threepf_kconfig& k)
           : params(tk->get_params()),
+            param_vector(tk->get_params().get_vector()),
+            Mp(tk->get_params().get_Mp()),
             N_horizon_exit(tk->get_N_horizon_crossing()),
+            astar_normalization(tk->get_astar_normalization()),
             config(k)
           {
           }
@@ -192,7 +204,13 @@ namespace transport
 
         const parameters<number>& params;
 
+        const std::vector<number>& param_vector;
+
+        number Mp;
+
         double N_horizon_exit;
+
+        double astar_normalization;
 
         const threepf_kconfig config;
 
@@ -568,11 +586,11 @@ namespace transport
     template <typename number>
     void $$__MODEL_basic_twopf_functor<number>::operator()(const twopf_state<number>& __x, twopf_state<number>& __dxdt, double __t)
       {
-        const auto $$__PARAMETER[1]  = this->params.get_vector()[$$__1];
+        const auto $$__PARAMETER[1]  = this->param_vector[$$__1];
         const auto $$__COORDINATE[A] = __x[FLATTEN($$__A)];
-        const auto __Mp              = this->params.get_Mp();
+        const auto __Mp              = this->Mp;
         const auto __k               = this->config.k_comoving;
-        const auto __a               = exp(__t - this->N_horizon_exit + __CPP_TRANSPORT_DEFAULT_ASTAR_NORMALIZATION);
+        const auto __a               = exp(__t - this->N_horizon_exit + this->astar_normalization);
         const auto __Hsq             = $$__HUBBLE_SQ;
         const auto __eps             = $$__EPSILON;
 
@@ -634,13 +652,13 @@ namespace transport
     template <typename number>
     void $$__MODEL_basic_threepf_functor<number>::operator()(const threepf_state<number>& __x, threepf_state<number>& __dxdt, double __t)
       {
-        const auto $$__PARAMETER[1]  = this->params.get_vector()[$$__1];
+        const auto $$__PARAMETER[1]  = this->param_vector[$$__1];
         const auto $$__COORDINATE[A] = __x[FLATTEN($$__A)];
-        const auto __Mp              = this->params.get_Mp();
+        const auto __Mp              = this->Mp;
         const auto __k1              = this->config.k1_comoving;
         const auto __k2              = this->config.k2_comoving;
         const auto __k3              = this->config.k3_comoving;
-        const auto __a               = exp(__t - this->N_horizon_exit + __CPP_TRANSPORT_DEFAULT_ASTAR_NORMALIZATION);
+        const auto __a               = exp(__t - this->N_horizon_exit + this->astar_normalization);
         const auto __Hsq             = $$__HUBBLE_SQ;
         const auto __eps             = $$__EPSILON;
 

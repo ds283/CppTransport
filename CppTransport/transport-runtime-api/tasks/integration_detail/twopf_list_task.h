@@ -16,7 +16,8 @@
 #include "transport-runtime-api/models/advisory_classes.h"
 
 
-#define __CPP_TRANSPORT_NODE_TWOPF_LIST_DATABASE "twopf-database"
+#define __CPP_TRANSPORT_NODE_TWOPF_LIST_DATABASE      "twopf-database"
+#define __CPP_TRANSPORT_NODE_TWOPF_LIST_NORMALIZATION "normalization"
 
 
 namespace transport
@@ -72,6 +73,12 @@ namespace transport
 
         //! Get horizon-crossing time
         double get_N_horizon_crossing() const { return(this->ics.get_N_horizon_crossing()); }
+
+        //! Get current a* normalization
+        double get_astar_normalization() const { return(this->astar_normalization); }
+
+        //! Set current a* normalization
+        void set_astar_normalization(double astar) { this->astar_normalization = astar; }
 
 
         // INTERFACE - FAST-FORWARD MANAGEMENT
@@ -156,6 +163,14 @@ namespace transport
         twopf_kconfig_database twopf_db;
 
 
+        // NORMALIZATION DURING INTEGRATION
+
+        //! during integration, we need to have a normalization for a* = a(t*).
+        //! In principle this can be anything (and could be set by the user's time choice),
+        //! but in practice the integrator performs best in a fairly narrow range of choices.
+        double astar_normalization;
+
+
         // FAST FORWARD INTEGRATION
 
         //! Whether to use fast-forward integration
@@ -179,7 +194,8 @@ namespace transport
         twopf_db(i.get_model()->compute_kstar(this)),
         fast_forward(ff),
         ff_efolds(__CPP_TRANSPORT_DEFAULT_FAST_FORWARD_EFOLDS),
-        max_refinements(__CPP_TRANSPORT_DEFAULT_MESH_REFINEMENTS)
+        max_refinements(__CPP_TRANSPORT_DEFAULT_MESH_REFINEMENTS),
+        astar_normalization(__CPP_TRANSPORT_DEFAULT_ASTAR_NORMALIZATION)
       {
 	    }
 
@@ -195,8 +211,11 @@ namespace transport
         // deserialize number of fast-forward efolds
         ff_efolds = reader[__CPP_TRANSPORT_NODE_FAST_FORWARD_EFOLDS].asDouble();
 
-        // deserialize max number of mesh refinements
+        // deserialize max number of stepsize refinements
         max_refinements = reader[__CPP_TRANSPORT_NODE_MESH_REFINEMENTS].asUInt();
+
+        // deserialize a* normalization
+        astar_normalization = reader[__CPP_TRANSPORT_NODE_TWOPF_LIST_NORMALIZATION].asDouble();
 	    }
 
 
@@ -209,8 +228,11 @@ namespace transport
         // store number of fast-forward efolds
         writer[__CPP_TRANSPORT_NODE_FAST_FORWARD_EFOLDS] = this->ff_efolds;
 
-        // store max number of mesh refinements
+        // store max number of stepsize refinements
         writer[__CPP_TRANSPORT_NODE_MESH_REFINEMENTS] = this->max_refinements;
+
+        // serialize a* normalization
+        writer[__CPP_TRANSPORT_NODE_TWOPF_LIST_NORMALIZATION] = this->astar_normalization;
 
 		    // serialize twopf configuration database
         Json::Value db;
