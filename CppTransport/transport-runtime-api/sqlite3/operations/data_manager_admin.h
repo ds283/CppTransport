@@ -127,6 +127,7 @@ namespace transport
               << "kt_conventional DOUBLE, "
               << "alpha           DOUBLE, "
               << "beta            DOUBLE, "
+	            << "t_exit          DOUBLE, "
               << "FOREIGN KEY(wavenumber1) REFERENCES twopf_samples(serial), "
               << "FOREIGN KEY(wavenumber2) REFERENCES twopf_samples(serial), "
               << "FOREIGN KEY(wavenumber3) REFERENCES twopf_samples(serial)"
@@ -135,7 +136,7 @@ namespace transport
             exec(db, stmt_text.str());
 
             std::stringstream insert_stmt;
-            insert_stmt << "INSERT INTO " << __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE << " VALUES (@serial, @wn1, @wn2, @wn3, @kt_com, @kt_conv, @alpha, @beta);";
+            insert_stmt << "INSERT INTO " << __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE << " VALUES (@serial, @wn1, @wn2, @wn3, @kt_com, @kt_conv, @alpha, @beta, @t_exit);";
 
             sqlite3_stmt* stmt;
             check_stmt(db, sqlite3_prepare_v2(db, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr));
@@ -152,6 +153,7 @@ namespace transport
                 check_stmt(db, sqlite3_bind_double(stmt, 6, t->kt_conventional));
                 check_stmt(db, sqlite3_bind_double(stmt, 7, t->alpha));
                 check_stmt(db, sqlite3_bind_double(stmt, 8, t->beta));
+		            check_stmt(db, sqlite3_bind_double(stmt, 9, t->t_exit));
 
                 check_stmt(db, sqlite3_step(stmt), __CPP_TRANSPORT_DATACTR_THREEPFTAB_FAIL, SQLITE_DONE);
 

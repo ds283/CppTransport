@@ -223,6 +223,9 @@ namespace transport
         //! serial number for next inserted item
         unsigned int serial;
 
+        //! keep track of whether the background has been stored
+        bool store_background;
+
 
         // COMOVING NORMALIZATION
 
@@ -239,9 +242,6 @@ namespace transport
         //! cache minimum stored wavenumber
         double kmin_conventional;
 				double kmin_comoving;
-
-        //! keep track of whether the background has been stored
-        bool store_background;
 
       };
 

@@ -123,6 +123,9 @@ namespace transport
         double alpha;
         double beta;
 
+		    //! horizon-exit time
+		    double t_exit;
+
         //! Output to a standard stream
         friend std::ostream& operator<<(std::ostream& out, const threepf_kconfig& obj);
 	    };

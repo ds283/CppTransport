@@ -225,7 +225,8 @@ namespace transport
               << " " << "tpf3.comoving AS comoving_k3,"
               << " " << __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE << ".wavenumber1,"
               << " " << __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE << ".wavenumber2,"
-              << " " << __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE << ".wavenumber3"
+              << " " << __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE << ".wavenumber3,"
+	            << " " << __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE << ".t_exit"
               << " FROM " << __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE
               << " INNER JOIN temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker
               << " ON " << __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE << ".serial=" << "temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker << ".serial"
@@ -271,6 +272,7 @@ namespace transport
                     value.k3_conventional = sqlite3_column_double(stmt, 8);
                     value.k3_comoving     = sqlite3_column_double(stmt, 9);
                     value.k3_serial       = static_cast<unsigned int>(sqlite3_column_int(stmt, 12));
+		                value.t_exit          = sqlite3_column_double(stmt, 13);
 
                     sample.push_back(value);
                     t++;

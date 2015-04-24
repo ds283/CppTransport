@@ -18,15 +18,34 @@
 #include "transport-runtime-api/models/advisory_classes.h"
 
 #include "transport-runtime-api/utilities/spline1d.h"
-
 #include <boost/math/tools/roots.hpp>
 
 #define __CPP_TRANSPORT_NODE_TWOPF_LIST_DATABASE      "twopf-database"
 #define __CPP_TRANSPORT_NODE_TWOPF_LIST_NORMALIZATION "normalization"
+#define __CPP_TRANSPORT_NODE_TWOPF_LIST_COLLECT_ICS   "collect-ics"
 
 
 namespace transport
 	{
+
+
+    class TolerancePredicate
+	    {
+      public:
+        TolerancePredicate(double t)
+	        : tol(t)
+	        {
+	        }
+
+        bool operator()(const double& a, const double& b)
+	        {
+            return(fabs(a-b) < this->tol);
+	        }
+
+      private:
+        double tol;
+	    };
+
 
     template <typename number> class twopf_list_task;
 
@@ -63,7 +82,13 @@ namespace transport
         const twopf_kconfig_database& get_twopf_database() const { return(this->twopf_db); }
 
 		    //! Compute horizon-exit times for each mode in the database
-		    void compute_horizon_exit_times();
+		    virtual void compute_horizon_exit_times();
+
+      protected:
+
+		    //! Compute horizon-exit times for each mode in the database -- use supplied spline
+		    template <typename SplineObject, typename TolerancePolicy>
+		    void twopf_compute_horizon_exit_times(SplineObject& sp, TolerancePolicy tol);
 
 
 		    // INTERFACE - INITIAL CONDITIONS AND INTEGRATION DETAILS
@@ -468,38 +493,29 @@ namespace transport
 				this->get_model()->compute_aH(this, N, aH, largest_k);
 
 				spline1d<number> sp(N, aH);
+
+				this->twopf_compute_horizon_exit_times(sp, TolerancePredicate(1E-7));
+			};
+
+
+		template <typename number>
+		template <typename SplineObject, typename TolerancePolicy>
+		void twopf_list_task<number>::twopf_compute_horizon_exit_times(SplineObject& sp, TolerancePolicy tol)
+			{
 		    boost::uintmax_t max_iter = 500;
-
-				class TolerancePredicate
-					{
-				  public:
-						TolerancePredicate(double t)
-							: tol(t)
-							{
-							}
-
-						bool operator()(const double& a, const double& b)
-							{
-								return(fabs(a-b) < this->tol);
-							}
-
-				  private:
-						double tol;
-					};
 
 		    for(twopf_kconfig_database::config_iterator t = this->twopf_db.config_begin(); t != this->twopf_db.config_end(); ++t)
 			    {
-				    // set spline to evaluate aH-k and then solve for N
-				    sp.set_offset(t->k_comoving);
+		        // set spline to evaluate aH-k and then solve for N
+		        sp.set_offset(t->k_comoving);
 
-				    // find root; note use of std::ref, because toms748_solve normally would take a copy of
-				    // its system function and this is slow -- we have to copy the whole spline
+		        // find root; note use of std::ref, because toms748_solve normally would take a copy of
+		        // its system function and this is slow -- we have to copy the whole spline
 		        std::pair< double, double > result = boost::math::tools::toms748_solve(std::ref(sp), sp.get_min_x(), sp.get_max_x(), TolerancePredicate(1E-7), max_iter);
 
-						t->t_exit = (result.first + result.second)/2.0;
+		        t->t_exit = (result.first + result.second)/2.0;
 			    }
-
-			};
+			}
 
 
 		template <typename number>

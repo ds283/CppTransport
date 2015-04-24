@@ -216,6 +216,19 @@ namespace transport
         int add_record(twopf_kconfig_database& twopf_db, threepf_kconfig config, StoragePolicy policy);
 
 
+        // INTERFACE -- LOOKUP META-INFORMATION
+
+      public:
+
+        //! get largest conventionally-normalized k-number committed to the database
+        double get_kmax_conventional() const { return(this->kmax_conventional); }
+        double get_kmax_comoving()     const { return(this->kmax_comoving); }
+
+        //! get smallest conventionally-normalized k-number committed to the database
+        double get_kmin_conventional() const { return(this->kmin_conventional); }
+        double get_kmin_comoving()     const { return(this->kmax_comoving); }
+
+
         // SERIALIZATION -- implements a 'serializable' interface
 
       public:
@@ -238,6 +251,9 @@ namespace transport
         //! serial number for next inserted item
         unsigned int serial;
 
+        //! keep track of whether the background has been stored
+        bool store_background;
+
 
         // COMOVING NORMALIZATION
 
@@ -245,9 +261,15 @@ namespace transport
         double comoving_normalization;
 
 
-        //! keep track of whether the background has been stored
-        bool store_background;
+				// META-INFORMATION
 
+		    //! cache maximum stored wavenumber
+		    double kmax_conventional;
+		    double kmax_comoving;
+
+		    //! cache minimum stored wavenumber
+		    double kmin_conventional;
+		    double kmin_comoving;
       };
 
 
@@ -299,6 +321,11 @@ namespace transport
             config.beta  = 1.0 - 2.0 * config.k3_conventional / config.kt_conventional;
             config.alpha = 4.0 * (*k2)->k_conventional / config.kt_conventional - 1.0 - config.beta;
 
+            if(config.kt_conventional > this->kmax_conventional) this->kmax_conventional = config.kt_conventional;
+            if(config.kt_conventional < this->kmin_conventional) this->kmin_conventional = config.kt_conventional;
+            if(config.kt_comoving > this->kmax_comoving)         this->kmax_comoving     = config.kt_comoving;
+            if(config.kt_comoving < this->kmin_comoving)         this->kmin_comoving     = config.kt_comoving;
+
             this->database.emplace(config.serial, threepf_kconfig_record(config,
                                                                            (*t)[__CPP_TRANSPORT_NODE_THREEPF_DATABASE_STORE_BACKGROUND].asBool(),
                                                                            (*t)[__CPP_TRANSPORT_NODE_THREEPF_DATABASE_STORE_TWOPF_K1].asBool(),
@@ -339,6 +366,8 @@ namespace transport
         config.beta             = 1.0 - 2.0 * k3_conventional / config.kt_conventional;
         config.alpha            = 4.0 * k2_conventional / config.kt_conventional - 1.0 - config.beta;
 
+        config.t_exit           = 0.0; // this will be updated later, once all k-configurations are known
+
         return(this->add_record(twopf_db, config, policy));
       }
 
@@ -366,6 +395,8 @@ namespace transport
         config.k3_conventional  = (kt_conventional / 4.0) * (1.0 - beta);
         config.k3_comoving      = config.k3_conventional * this->comoving_normalization;
 
+		    config.t_exit           = 0.0; // this will be updated later, once all k-configurations are known
+
         return(this->add_record(twopf_db, config, policy));
       }
 
@@ -389,6 +420,11 @@ namespace transport
 
             k3_stored = twopf_db.find(config.k3_conventional, config.k3_serial);
             if(!k3_stored) config.k3_serial = twopf_db.add_record(config.k3_conventional);
+
+            if(config.kt_conventional > this->kmax_conventional) this->kmax_conventional = config.kt_conventional;
+            if(config.kt_conventional < this->kmin_conventional) this->kmin_conventional = config.kt_conventional;
+            if(config.kt_comoving > this->kmax_comoving)         this->kmax_comoving     = config.kt_comoving;
+            if(config.kt_comoving < this->kmin_comoving)         this->kmin_comoving     = config.kt_comoving;
 
             this->database.emplace(config.serial, threepf_kconfig_record(config, this->store_background, !k1_stored, !k2_stored, !k3_stored));
             this->store_background = false;

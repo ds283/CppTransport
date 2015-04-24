@@ -13,6 +13,9 @@
 #include "transport-runtime-api/tasks/integration_detail/twopf_list_task.h"
 #include "transport-runtime-api/tasks/configuration-database/threepf_config_database.h"
 
+#include "transport-runtime-api/utilities/spline1d.h"
+#include <boost/math/tools/roots.hpp>
+
 
 #define __CPP_TRANSPORT_NODE_THREEPF_INTEGRABLE            "integrable"
 #define __CPP_TRANSPORT_NODE_THREEPF_LIST_DATABASE         "threepf-database"
@@ -52,6 +55,9 @@ namespace transport
         //! Provide access to threepf k-configuration database
         const threepf_kconfig_database& get_threepf_database() const { return(this->threepf_db); }
 
+        //! Compute horizon-exit times for each mode in the database
+        virtual void compute_horizon_exit_times() override;
+
         //! Determine whether this task is integrable
         bool is_integrable() const { return(this->integrable); }
 
@@ -60,6 +66,13 @@ namespace transport
 
         //! get measure at a particular k-configuration
         virtual number measure(const threepf_kconfig& config) const = 0;
+
+      protected:
+
+        //! Compute horizon-exit times for each mode in the database -- use supplied spline
+        template <typename SplineObject, typename TolerancePolicy>
+        void threepf_compute_horizon_exit_times(SplineObject& sp, TolerancePolicy tol);
+
 
 
         // INTERFACE - INITIAL CONDITIONS AND INTEGRATION DETAILS
@@ -172,6 +185,45 @@ namespace transport
             return this->ics.get_vector();
           }
 	    }
+
+
+    template <typename number>
+    void threepf_task<number>::compute_horizon_exit_times()
+	    {
+		    double largest_kt = this->threepf_db.get_kmax_comoving();
+        double largest_k = this->twopf_db.get_kmax_comoving();
+
+        std::vector<double> N;
+        std::vector<number> aH;
+        this->get_model()->compute_aH(this, N, aH, std::max(largest_k, largest_kt));
+
+        spline1d<number> sp(N, aH);
+
+		    this->threepf_compute_horizon_exit_times(sp, TolerancePredicate(1E-7));
+
+		    // forward to underlying twopf_list_task to also update its database
+		    this->twopf_list_task<number>::twopf_compute_horizon_exit_times(sp, TolerancePredicate(1E-7));
+	    };
+
+
+		template <typename number>
+		template <typename SplineObject, typename TolerancePolicy>
+		void threepf_task<number>::threepf_compute_horizon_exit_times(SplineObject& sp, TolerancePolicy tol)
+			{
+		    boost::uintmax_t max_iter = 500;
+
+		    for(threepf_kconfig_database::config_iterator t = this->threepf_db.config_begin(); t != this->threepf_db.config_end(); ++t)
+			    {
+		        // set spline to evaluate aH-k and then solve for N
+		        sp.set_offset(t->kt_comoving);
+
+		        // find root; note use of std::ref, because toms748_solve normally would take a copy of
+		        // its system function and this is slow -- we have to copy the whole spline
+		        std::pair< double, double > result = boost::math::tools::toms748_solve(std::ref(sp), sp.get_min_x(), sp.get_max_x(), tol, max_iter);
+
+		        t->t_exit = (result.first + result.second)/2.0;
+			    }
+			}
 
 
     template <typename number>
