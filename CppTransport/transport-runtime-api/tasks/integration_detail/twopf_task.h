@@ -83,6 +83,9 @@ namespace transport
     twopf_task<number>::twopf_task(const std::string& nm, Json::Value& reader, const initial_conditions<number>& i)
 	    : twopf_list_task<number>(nm, reader, i)
 	    {
+        // reconstruct horizon-exit times; these aren't stored in the repository record to save space
+        this->compute_horizon_exit_times();
+
         this->cache_stored_time_config_database();
 	    }
 

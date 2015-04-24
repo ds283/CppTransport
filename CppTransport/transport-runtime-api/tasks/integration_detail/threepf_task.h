@@ -132,6 +132,9 @@ namespace transport
         //! deserialize integrable status
         integrable = reader[__CPP_TRANSPORT_NODE_THREEPF_INTEGRABLE].asBool();
 
+        // reconstruct horizon-exit times; these aren't stored in the repository record to save space
+        this->compute_horizon_exit_times();
+
         this->cache_stored_time_config_database();
 	    }
 
