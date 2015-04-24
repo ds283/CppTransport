@@ -43,6 +43,7 @@
 #define __CPP_TRANSPORT_SQLITE_THREEPF_VALUE_TABLE                 "threepf"
 #define __CPP_TRANSPORT_SQLITE_WORKERS_TABLE                       "worker_data"
 #define __CPP_TRANSPORT_SQLITE_STATS_TABLE                         "integration_statistics"
+#define __CPP_TRANSPORT_SQLITE_ICS_TABLE                           "initial_conditions"
 #define __CPP_TRANSPORT_SQLITE_ZETA_TWOPF_VALUE_TABLE              "zeta_twopf"
 #define __CPP_TRANSPORT_SQLITE_ZETA_THREEPF_VALUE_TABLE            "zeta_threepf"
 #define __CPP_TRANSPORT_SQLITE_ZETA_REDUCED_BISPECTRUM_VALUE_TABLE "zeta_redbsp"

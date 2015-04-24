@@ -590,7 +590,7 @@ namespace transport
 
         // set up notes for the new output record, if it exists
         std::list<std::string> notes;
-        if(!writer.collect_statistics())
+        if(!writer.is_collecting_statistics())
 	        {
             std::ostringstream msg;
             msg << __CPP_TRANSPORT_REPO_NOTE_NO_STATISTICS << " '" << rec->get_task()->get_model()->get_backend() << "'";
@@ -615,7 +615,8 @@ namespace transport
         output_record->get_payload().set_fail(writer.is_failed());
         output_record->get_payload().set_failed_serials(writer.get_missing_serials());
 
-        output_record->get_payload().set_statistics(writer.collect_statistics());
+        output_record->get_payload().set_statistics(writer.is_collecting_statistics());
+		    output_record->get_payload().set_initial_conditions(writer.is_collecting_initial_conditions());
 
         // commit new output record
         output_record->commit();

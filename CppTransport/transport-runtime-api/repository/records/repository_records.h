@@ -78,6 +78,7 @@
 #define __CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_SEEDED             "seeded"
 #define __CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_SEED_GROUP         "seed-group"
 #define __CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_STATISTICS         "has-statistics"
+#define __CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_ICS                "has-ics"
 
 #define __CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_DATABASE       "database-path"
 #define __CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_FAILED         "failed"
@@ -1133,7 +1134,8 @@ namespace transport
             fail(false),
             workgroup_number(0),
             seeded(false),
-            statistics(false)
+            statistics(false),
+            initial_conditions(false)
 	        {
 	        }
 
@@ -1193,6 +1195,12 @@ namespace transport
         //! Get statistics flag
         bool has_statistics() const { return(this->statistics); }
 
+		    //! Set initial conditions flag
+		    void set_initial_conditions(bool g) { this->initial_conditions = g;}
+
+		    //! Get initial conditions flag
+		    bool has_initial_conditions() const { return(this->initial_conditions); }
+
 
         // GET AND SET PROPERTIES
 
@@ -1241,6 +1249,9 @@ namespace transport
 
         //! does this group have per-configuration statistics?
         bool statistics;
+
+		    //! does this group has initial conditions data?
+		    bool initial_conditions;
 
 	    };
 
@@ -2211,12 +2222,13 @@ namespace transport
     integration_payload::integration_payload(Json::Value& reader)
 	    : metadata(reader)
 	    {
-        container        = reader[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_DATABASE].asString();
-        fail             = reader[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FAILED].asBool();
-        workgroup_number = reader[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_WORKGROUP].asUInt();
-        seeded           = reader[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_SEEDED].asBool();
-        seed_group       = reader[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_SEED_GROUP].asString();
-        statistics       = reader[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_STATISTICS].asBool();
+        container          = reader[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_DATABASE].asString();
+        fail               = reader[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FAILED].asBool();
+        workgroup_number   = reader[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_WORKGROUP].asUInt();
+        seeded             = reader[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_SEEDED].asBool();
+        seed_group         = reader[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_SEED_GROUP].asString();
+        statistics         = reader[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_STATISTICS].asBool();
+        initial_conditions = reader[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_ICS].asBool();
 
         Json::Value failure_array = reader[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FAILED_SERIALS];
         assert(failure_array.isArray());
@@ -2236,6 +2248,7 @@ namespace transport
         writer[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_SEEDED]     = this->seeded;
         writer[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_SEED_GROUP] = this->seed_group;
         writer[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_STATISTICS] = this->statistics;
+		    writer[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_ICS]        = this->initial_conditions;
 
         Json::Value failure_array(Json::arrayValue);
         for(std::list<unsigned int>::const_iterator t = this->failed_serials.begin(); t != this->failed_serials.end(); ++t)

@@ -375,6 +375,7 @@ namespace transport
         // fix initial conditions - background
         const std::vector<number>& ics = tk->get_ics_vector(*kconfig);
         x[$$__MODEL_pool::backg_start + FLATTEN($$__A)] = $$// ics[$$__A];
+		    batcher.push_ics(kconfig->serial, ics);
 
         // fix initial conditions - tensors
         this->populate_tensor_ic(x, $$__MODEL_pool::tensor_start, kconfig->k_comoving, *(time_db.value_begin()), tk, ics);
@@ -534,6 +535,7 @@ namespace transport
         // (don't need explicit FLATTEN since it would appear on both sides)
         const std::vector<number>& ics = tk->get_ics_vector(*kconfig);
         x[$$__MODEL_pool::backg_start + $$__A] = $$// ics[$$__A];
+        batcher.push_ics(kconfig->serial, ics);
 
         // fix initial conditions - tensors
         this->populate_tensor_ic(x, $$__MODEL_pool::tensor_k1_start, kconfig->k1_comoving, *(time_db.value_begin()), tk, ics);

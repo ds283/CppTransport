@@ -105,13 +105,15 @@ namespace transport
         void check_integrity(integration_task<number>* tk) { if(this->integrity_checker) this->integrity_checker(*this, tk); }
 
 
-        // STATISTICS
+        // STATISTICS AND OTHER AUXILIARY INFORMATION
 
       public:
 
-        //! Return whether we're collecting per-configuration statistics
-        bool collect_statistics() const { return(this->supports_stats); }
+        //! Are we collecting per-configuration statistics
+        bool is_collecting_statistics() const { return(this->collect_statistics); }
 
+		    //! Are we collecting initial conditions data?
+				bool is_collecting_initial_conditions() const { return(this->collect_initial_conditions); }
 
         // METADATA
 
@@ -210,7 +212,10 @@ namespace transport
         // MISCELLANEOUS
 
         //! are we collecting per-configuration statistics?
-        bool supports_stats;
+        bool collect_statistics;
+
+		    //! are we collecting initial conditions data?
+		    bool collect_initial_conditions;
 
 	    };
 
@@ -230,10 +235,22 @@ namespace transport
 	      aggregator(nullptr),
         integrity_checker(nullptr),
 	      parent_record(dynamic_cast< integration_task_record<number>* >(rec->clone())),
-	      supports_stats(rec->get_task()->get_model()->supports_per_configuration_statistics()),
+	      collect_statistics(rec->get_task()->get_model()->supports_per_configuration_statistics()),
 	      metadata()
 	    {
         assert(this->parent_record != nullptr);
+
+	      twopf_list_task<number>* tk_as_twopf_list = dynamic_cast< twopf_list_task<number>* >(rec->get_task());
+	      assert(tk_as_twopf_list != nullptr);
+
+	      if(tk_as_twopf_list != nullptr)
+		      {
+			      collect_initial_conditions = tk_as_twopf_list->get_collect_initial_conditions();
+		      }
+	      else
+		      {
+			      collect_initial_conditions = false;
+		      }
 	    }
 
 

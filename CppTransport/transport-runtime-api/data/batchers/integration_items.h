@@ -111,6 +111,18 @@ namespace transport
             size_t                        steps;
 	        };
 
+		    //! Stores information about the initial conditions for each k-configuration
+		    class ics_item
+			    {
+		      public:
+
+				    //! kconfig serial number
+				    unsigned int        serial;
+
+		        //! values
+		        std::vector<number> coords;
+			    };
+
 	    };
 
 	}   // namespace transport

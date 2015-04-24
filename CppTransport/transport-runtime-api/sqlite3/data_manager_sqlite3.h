@@ -340,12 +340,12 @@ namespace transport
       protected:
 
         //! Replace a temporary twopf container with a new one
-        void replace_temp_twopf_container(const boost::filesystem::path& tempdir, unsigned int worker,
-                                          model<number>* m, generic_batcher* batcher, generic_batcher::replacement_action action);
+        void replace_temp_twopf_container(const boost::filesystem::path& tempdir, unsigned int worker, model<number>* m,
+                                          bool ics, generic_batcher* batcher, generic_batcher::replacement_action action);
 
         //! Replace a temporary threepf container with a new one
-        void replace_temp_threepf_container(const boost::filesystem::path& tempdir, unsigned int worker,
-                                            model<number>* m, generic_batcher* batcher, generic_batcher::replacement_action action);
+        void replace_temp_threepf_container(const boost::filesystem::path& tempdir, unsigned int worker, model<number>* m,
+                                            bool ics, generic_batcher* batcher, generic_batcher::replacement_action action);
 
         //! Replace a temporary zeta twopf container with a new one
         void replace_temp_zeta_twopf_container(const boost::filesystem::path& tempdir, unsigned int worker,
@@ -652,7 +652,9 @@ namespace transport
         sqlite3_operations::create_tensor_twopf_table(db, sqlite3_operations::foreign_keys);
 
         sqlite3_operations::create_worker_info_table(db, sqlite3_operations::foreign_keys);
-        if(writer->collect_statistics()) sqlite3_operations::create_stats_table(db, sqlite3_operations::foreign_keys, sqlite3_operations::twopf_configs);
+        if(writer->is_collecting_statistics()) sqlite3_operations::create_stats_table(db, sqlite3_operations::foreign_keys, sqlite3_operations::twopf_configs);
+
+		    if(writer->is_collecting_initial_conditions()) sqlite3_operations::create_ics_table(db, Nfields, sqlite3_operations::foreign_keys, sqlite3_operations::twopf_configs);
       }
 
 
@@ -674,7 +676,9 @@ namespace transport
         sqlite3_operations::create_threepf_table(db, Nfields, sqlite3_operations::foreign_keys);
 
         sqlite3_operations::create_worker_info_table(db, sqlite3_operations::foreign_keys);
-        if(writer->collect_statistics()) sqlite3_operations::create_stats_table(db, sqlite3_operations::foreign_keys, sqlite3_operations::threepf_configs);
+        if(writer->is_collecting_statistics()) sqlite3_operations::create_stats_table(db, sqlite3_operations::foreign_keys, sqlite3_operations::threepf_configs);
+
+        if(writer->is_collecting_initial_conditions()) sqlite3_operations::create_ics_table(db, Nfields, sqlite3_operations::foreign_keys, sqlite3_operations::threepf_configs);
       }
 
 
@@ -737,7 +741,9 @@ namespace transport
         sqlite3_operations::aggregate_tensor_twopf<number>(db, *writer, seed_container_path.string());
 
         sqlite3_operations::aggregate_workers<number>(db, *writer, seed_container_path.string());
-        if(writer->collect_statistics() && seed->get_payload().has_statistics()) sqlite3_operations::aggregate_statistics<number>(db, *writer, seed_container_path.string());
+        if(writer->is_collecting_statistics() && seed->get_payload().has_statistics()) sqlite3_operations::aggregate_statistics<number>(db, *writer, seed_container_path.string());
+
+        if(writer->is_collecting_initial_conditions() && seed->get_payload().has_initial_conditions()) sqlite3_operations::aggregate_ics<number>(db, *writer, seed_container_path.string());
 
         timer.stop();
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "** Seeding complete in time " << format_time(timer.elapsed().wall);
@@ -764,7 +770,9 @@ namespace transport
         sqlite3_operations::aggregate_threepf<number>(db, *writer, seed_container_path.string());
 
         sqlite3_operations::aggregate_workers<number>(db, *writer, seed_container_path.string());
-        if(writer->collect_statistics() && seed->get_payload().has_statistics()) sqlite3_operations::aggregate_statistics<number>(db, *writer, seed_container_path.string());
+        if(writer->is_collecting_statistics() && seed->get_payload().has_statistics()) sqlite3_operations::aggregate_statistics<number>(db, *writer, seed_container_path.string());
+
+        if(writer->is_collecting_initial_conditions() && seed->get_payload().has_initial_conditions()) sqlite3_operations::aggregate_ics<number>(db, *writer, seed_container_path.string());
 
         timer.stop();
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "** Seeding complete in time " << format_time(timer.elapsed().wall);
@@ -832,12 +840,13 @@ namespace transport
       {
         boost::filesystem::path container = this->generate_temporary_container_path(tempdir, worker);
 
-        sqlite3* db = sqlite3_operations::create_temp_twopf_container(container, m->get_N_fields(), m->supports_per_configuration_statistics());
+        sqlite3* db = sqlite3_operations::create_temp_twopf_container(container, m->get_N_fields(), m->supports_per_configuration_statistics(), tk->get_collect_initial_conditions());
 
         // set up writers
         typename twopf_batcher<number>::writer_group writers;
         writers.host_info    = std::bind(&sqlite3_operations::write_host_info<number>, std::placeholders::_1);
         writers.stats        = std::bind(&sqlite3_operations::write_stats<number>, std::placeholders::_1, std::placeholders::_2);
+		    writers.ics          = std::bind(&sqlite3_operations::write_ics<number>, std::placeholders::_1, std::placeholders::_2);
         writers.backg        = std::bind(&sqlite3_operations::write_backg<number>, std::placeholders::_1, std::placeholders::_2);
         writers.twopf        = std::bind(&sqlite3_operations::write_twopf<number>, sqlite3_operations::real_twopf, std::placeholders::_1, std::placeholders::_2);
         writers.tensor_twopf = std::bind(&sqlite3_operations::write_tensor_twopf<number>, std::placeholders::_1, std::placeholders::_2);
@@ -845,10 +854,10 @@ namespace transport
         // set up a replacement function
         generic_batcher::container_replacement_function replacer =
 	                                                        std::bind(&data_manager_sqlite3<number>::replace_temp_twopf_container,
-	                                                                  this, tempdir, worker, m, std::placeholders::_1, std::placeholders::_2);
+	                                                                  this, tempdir, worker, m, tk->get_collect_initial_conditions(), std::placeholders::_1, std::placeholders::_2);
 
         // set up batcher
-        twopf_batcher<number> batcher(this->batcher_capacity, m, tk, container, logdir, writers, dispatcher, replacer, db, worker, group, m->supports_per_configuration_statistics());
+        twopf_batcher<number> batcher(this->batcher_capacity, m, tk, container, logdir, writers, dispatcher, replacer, db, worker, group);
 
         BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << "** Created new temporary twopf container " << container;
 
@@ -867,12 +876,13 @@ namespace transport
       {
         boost::filesystem::path container = this->generate_temporary_container_path(tempdir, worker);
 
-        sqlite3* db = sqlite3_operations::create_temp_threepf_container(container, m->get_N_fields(), m->supports_per_configuration_statistics());
+        sqlite3* db = sqlite3_operations::create_temp_threepf_container(container, m->get_N_fields(), m->supports_per_configuration_statistics(), tk->get_collect_initial_conditions());
 
         // set up writers
         typename threepf_batcher<number>::writer_group writers;
 		    writers.host_info    = std::bind(&sqlite3_operations::write_host_info<number>, std::placeholders::_1);
         writers.stats        = std::bind(&sqlite3_operations::write_stats<number>, std::placeholders::_1, std::placeholders::_2);
+        writers.ics          = std::bind(&sqlite3_operations::write_ics<number>, std::placeholders::_1, std::placeholders::_2);
         writers.backg        = std::bind(&sqlite3_operations::write_backg<number>, std::placeholders::_1, std::placeholders::_2);
         writers.twopf_re     = std::bind(&sqlite3_operations::write_twopf<number>, sqlite3_operations::real_twopf, std::placeholders::_1, std::placeholders::_2);
         writers.twopf_im     = std::bind(&sqlite3_operations::write_twopf<number>, sqlite3_operations::imag_twopf, std::placeholders::_1, std::placeholders::_2);
@@ -882,11 +892,10 @@ namespace transport
         // set up a replacement function
         generic_batcher::container_replacement_function replacer =
 	                                                        std::bind(&data_manager_sqlite3<number>::replace_temp_threepf_container,
-	                                                                  this, tempdir, worker, m, std::placeholders::_1, std::placeholders::_2);
+	                                                                  this, tempdir, worker, m, tk->get_collect_initial_conditions(), std::placeholders::_1, std::placeholders::_2);
 
         // set up batcher
-        threepf_batcher<number> batcher(this->batcher_capacity, m, tk, container, logdir, writers, dispatcher, replacer, db, worker, group, m->supports_per_configuration_statistics());
-
+        threepf_batcher<number> batcher(this->batcher_capacity, m, tk, container, logdir, writers, dispatcher, replacer, db, worker, group);
         BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << "** Created new temporary threepf container " << container;
 
         // add this database to our list of open connections
@@ -989,8 +998,8 @@ namespace transport
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::replace_temp_twopf_container(const boost::filesystem::path& tempdir, unsigned int worker,
-                                                                    model<number>* m, generic_batcher* batcher, generic_batcher::replacement_action action)
+    void data_manager_sqlite3<number>::replace_temp_twopf_container(const boost::filesystem::path& tempdir, unsigned int worker, model<number>* m,
+                                                                    bool ics, generic_batcher* batcher, generic_batcher::replacement_action action)
       {
         sqlite3* db = nullptr;
 
@@ -1006,7 +1015,7 @@ namespace transport
           {
             boost::filesystem::path container = this->generate_temporary_container_path(tempdir, worker);
 
-            sqlite3* new_db = sqlite3_operations::create_temp_twopf_container(container, m->get_N_fields(), m->supports_per_configuration_statistics());
+            sqlite3* new_db = sqlite3_operations::create_temp_twopf_container(container, m->get_N_fields(), m->supports_per_configuration_statistics(), ics);
 
             batcher->set_container_path(container);
             batcher->set_manager_handle(new_db);
@@ -1017,8 +1026,8 @@ namespace transport
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::replace_temp_threepf_container(const boost::filesystem::path& tempdir, unsigned int worker,
-                                                                      model<number>* m, generic_batcher* batcher, generic_batcher::replacement_action action)
+    void data_manager_sqlite3<number>::replace_temp_threepf_container(const boost::filesystem::path& tempdir, unsigned int worker, model<number>* m,
+                                                                      bool ics, generic_batcher* batcher, generic_batcher::replacement_action action)
       {
         sqlite3* db = nullptr;
 
@@ -1038,7 +1047,7 @@ namespace transport
 
             BOOST_LOG_SEV(batcher->get_log(), generic_batcher::normal) << "** Opening new threepf container " << container;
 
-            sqlite3* new_db = sqlite3_operations::create_temp_threepf_container(container, m->get_N_fields(), m->supports_per_configuration_statistics());
+            sqlite3* new_db = sqlite3_operations::create_temp_threepf_container(container, m->get_N_fields(), m->supports_per_configuration_statistics(), ics);
 
             batcher->set_container_path(container);
             batcher->set_manager_handle(new_db);
@@ -1155,7 +1164,9 @@ namespace transport
         sqlite3_operations::aggregate_tensor_twopf<number>(db, writer, temp_ctr);
 
         sqlite3_operations::aggregate_workers<number>(db, writer, temp_ctr);
-        if(writer.collect_statistics()) sqlite3_operations::aggregate_statistics<number>(db, writer, temp_ctr);
+        if(writer.is_collecting_statistics()) sqlite3_operations::aggregate_statistics<number>(db, writer, temp_ctr);
+
+		    if(writer.is_collecting_initial_conditions()) sqlite3_operations::aggregate_ics<number>(db, writer, temp_ctr);
 
         return(true);
       }
@@ -1174,7 +1185,9 @@ namespace transport
         sqlite3_operations::aggregate_threepf<number>(db, writer, temp_ctr);
 
         sqlite3_operations::aggregate_workers<number>(db, writer, temp_ctr);
-        if(writer.collect_statistics()) sqlite3_operations::aggregate_statistics<number>(db, writer, temp_ctr);
+        if(writer.is_collecting_statistics()) sqlite3_operations::aggregate_statistics<number>(db, writer, temp_ctr);
+
+        if(writer.is_collecting_initial_conditions()) sqlite3_operations::aggregate_ics<number>(db, writer, temp_ctr);
 
         return(true);
       }
@@ -1425,7 +1438,8 @@ namespace transport
 		        // push list of missing serial numbers to writer
 		        writer.set_missing_serials(serials);
 
-            if(writer.collect_statistics()) sqlite3_operations::drop_statistics(db, serials, tk->get_twopf_database());
+            if(writer.is_collecting_statistics()) sqlite3_operations::drop_statistics(db, serials, tk->get_twopf_database());
+		        if(writer.is_collecting_initial_conditions()) sqlite3_operations::drop_ics(db, serials, tk->get_twopf_database());
           }
       }
 
@@ -1484,7 +1498,8 @@ namespace transport
         if(threepf_serials.size() > 0)
           {
             writer.set_missing_serials(threepf_serials);
-            if(writer.collect_statistics()) sqlite3_operations::drop_statistics(db, threepf_serials, tk->get_threepf_database());
+            if(writer.is_collecting_statistics()) sqlite3_operations::drop_statistics(db, threepf_serials, tk->get_threepf_database());
+		        if(writer.is_collecting_initial_conditions()) sqlite3_operations::drop_ics(db, threepf_serials, tk->get_threepf_database());
 
             // build list of twopf configurations which should be dropped for this entire set of threepf configurations
             std::list<unsigned int> twopf_drop = this->compute_twopf_drop_list(threepf_serials, tk->get_threepf_database());

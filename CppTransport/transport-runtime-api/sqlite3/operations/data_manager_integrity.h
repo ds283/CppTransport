@@ -211,6 +211,24 @@ namespace transport
           }
 
 
+        template <typename Database>
+        void drop_ics(sqlite3* db, const std::list<unsigned int>& drop_list, const Database& dbase)
+	        {
+            for(std::list<unsigned int>::const_iterator t = drop_list.begin(); t != drop_list.end(); ++t)
+	            {
+                typename Database::const_config_iterator u = std::find_if(dbase.config_begin(), dbase.config_end(),
+                                                                          ConfigurationFinder<typename Database::const_config_iterator::type>(*t));
+
+                if(u != dbase.config_end())
+	                {
+                    std::ostringstream drop_stmt;
+                    drop_stmt << "DELETE FROM " << __CPP_TRANSPORT_SQLITE_ICS_TABLE << " WHERE kserial=" << *t << ";";
+                    exec(db, drop_stmt.str());
+	                }
+	            }
+	        }
+
+
         template <typename WriterObject>
         void drop_twopf_kconfigs(sqlite3* db, WriterObject& writer, const std::list<unsigned int>& drop_list, const twopf_kconfig_database& twopf_db,
                                        twopf_value_type type=real_twopf, bool silent=false)

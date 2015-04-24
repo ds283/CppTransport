@@ -38,6 +38,7 @@
 #define __CPP_TRANSPORT_DATACTR_THREEPFTAB_FAIL                     "Data container error: Failed to create threepf-sample table in data container (backend code="
 
 #define __CPP_TRANSPORT_DATACTR_STATS_INSERT_FAIL                   "Data container error: Failed to create per-configuration statistics table in data container (backend code="
+#define __CPP_TRANSPORT_DATACTR_ICS_INSERT_FAIL                     "Data container error: Failed to create initial conditions table in data container (backend code="
 #define __CPP_TRANSPORT_DATACTR_WORKER_INSERT_FAIL                  "Data container error: Failed to create worker information table in data container (backend code="
 #define __CPP_TRANSPORT_DATACTR_BACKG_DATATAB_FAIL                  "Data container error: Failed to create background-value table in data container (backend code="
 #define __CPP_TRANSPORT_DATACTR_TWOPF_DATATAB_FAIL                  "Data container error: Failed to create twopf-value table in data container (backend code="
@@ -54,6 +55,7 @@
 #define __CPP_TRANSPORT_DATACTR_TWOPF_COPY                          "Data container error: Failed to copy twopf values from temporary container (backend code="
 #define __CPP_TRANSPORT_DATACTR_TENSOR_TWOPF_COPY                   "Data container error: Failed to copy tensor twopf values from temporary container (backend code="
 #define __CPP_TRANSPORT_DATACTR_STATISTICS_COPY                     "Data container error: Failed to copy per-configuration statistics from temporary container (backend code="
+#define __CPP_TRANSPORT_DATACTR_ICS_COPY                            "Data container error: Failed to copy initial conditions from temporary container (backend code="
 #define __CPP_TRANSPORT_DATACTR_WORKERS_COPY                        "Data container error: Failed to copy worker information from temporary container (backend code="
 #define __CPP_TRANSPORT_DATACTR_THREEPF_COPY                        "Data container error: Failed to copy threepf values from temporary container (backend code="
 #define __CPP_TRANSPORT_DATACTR_ZETA_TWOPF_COPY                     "Data container error: Failed to copy zeta twopf values from temporary container (backend code="

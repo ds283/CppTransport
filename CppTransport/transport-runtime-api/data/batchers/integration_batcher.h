@@ -50,6 +50,9 @@ namespace transport
 		    //! Per-configuration statistics writer function
 		    typedef std::function<void(integration_batcher<number>*, const std::vector<typename integration_items<number>::configuration_statistics>&)> stats_writer;
 
+				//! Per-configuration initial conditions writer function
+				typedef std::function<void(integration_batcher<number>*, const std::vector<typename integration_items<number>::ics_item>&)> ics_writer;
+
 		    //! Host information writer function
 		    typedef std::function<void(integration_batcher<number>*)> host_info_writer;
 			};
@@ -67,7 +70,7 @@ namespace transport
         integration_batcher(unsigned int cap, model<number>* m,
                             const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                             container_dispatch_function d, container_replacement_function r,
-                            handle_type h, unsigned int w, unsigned int g=0, bool s=true);
+                            handle_type h, unsigned int w, unsigned int g=0, bool ics=false);
 
         virtual ~integration_batcher() = default;
 
@@ -165,6 +168,9 @@ namespace transport
         //! Push a background sample
         void push_backg(unsigned int time_serial, unsigned int source_serial, const std::vector<number>& values);
 
+		    //! Push a set of initial conditions
+        void push_ics(unsigned int k_serial, const std::vector<number>& values);
+
 
         // UNBATCH
 
@@ -186,6 +192,9 @@ namespace transport
 
         //! Cache of per-configuration statistics
         std::vector< typename integration_items<number>::configuration_statistics > stats_batch;
+
+        //! initial conditions cache
+        std::vector< typename integration_items<number>::ics_item > ics_batch;
 
 
         // OTHER INTERNAL DATA
@@ -213,6 +222,9 @@ namespace transport
 
         //! Are we collecting per-configuration statistics?
         bool collect_statistics;
+
+		    //! Are we collecting initial conditions data?
+		    bool collect_initial_conditions;
 
         //! Number of integrations handled by this batcher
         unsigned int num_integrations;
@@ -251,6 +263,7 @@ namespace transport
             typename integration_writers<number>::twopf_writer        twopf;
             typename integration_writers<number>::tensor_twopf_writer tensor_twopf;
             typename integration_writers<number>::stats_writer        stats;
+            typename integration_writers<number>::ics_writer          ics;
             typename integration_writers<number>::host_info_writer    host_info;
 	        };
 
@@ -264,7 +277,7 @@ namespace transport
                       const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                       const writer_group& w,
                       generic_batcher::container_dispatch_function d, generic_batcher::container_replacement_function r,
-                      handle_type h, unsigned int wn, unsigned int wg, bool s);
+                      handle_type h, unsigned int wn, unsigned int wg);
 
 
         // ADMINISTRATION
@@ -376,6 +389,7 @@ namespace transport
             typename integration_writers<number>::tensor_twopf_writer tensor_twopf;
             typename integration_writers<number>::threepf_writer      threepf;
             typename integration_writers<number>::stats_writer        stats;
+		        typename integration_writers<number>::ics_writer          ics;
             typename integration_writers<number>::host_info_writer    host_info;
 	        };
 
@@ -391,7 +405,7 @@ namespace transport
                         const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                         const writer_group& w,
                         generic_batcher::container_dispatch_function d, generic_batcher::container_replacement_function r,
-                        handle_type h, unsigned int wn, unsigned int wg, bool s);
+                        handle_type h, unsigned int wn, unsigned int wg);
 
 
         // INTEGRATION MANAGEMENT
@@ -515,7 +529,7 @@ namespace transport
     integration_batcher<number>::integration_batcher(unsigned int cap, model<number>* m,
                                                      const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                                                      container_dispatch_function d, container_replacement_function r,
-                                                     handle_type h, unsigned int w, unsigned int g, bool s)
+                                                     handle_type h, unsigned int w, unsigned int g, bool ics)
 	    : generic_batcher(cap, cp, lp, d, r, h, w, g),
         Nfields(m->get_N_fields()),
         mdl(m),
@@ -526,7 +540,8 @@ namespace transport
 	      batching_time(0),
 	      max_batching_time(0),
 	      min_batching_time(0),
-	      collect_statistics(s),
+	      collect_statistics(m->supports_per_configuration_statistics()),
+	      collect_initial_conditions(ics),
 	      failures(0),
 	      refinements(0)
 	    {
@@ -561,15 +576,18 @@ namespace transport
 	    {
         this->report_integration_success(integration, batching);
 
-        typename integration_items<number>::configuration_statistics stats;
+		    if(this->collect_statistics)
+			    {
+		        typename integration_items<number>::configuration_statistics stats;
 
-        stats.serial      = kserial;
-        stats.integration = integration;
-        stats.batching    = batching;
-        stats.refinements = refinements;
-        stats.steps       = steps;
+		        stats.serial      = kserial;
+		        stats.integration = integration;
+		        stats.batching    = batching;
+		        stats.refinements = refinements;
+		        stats.steps       = steps;
 
-        this->stats_batch.push_back(stats);
+		        this->stats_batch.push_back(stats);
+			    }
 
         if(this->flush_due)
 	        {
@@ -593,6 +611,24 @@ namespace transport
         this->backg_batch.push_back(item);
         this->check_for_flush();
 	    }
+
+
+		template <typename number>
+		void integration_batcher<number>::push_ics(unsigned int k_serial, const std::vector<number>& values)
+			{
+		    if(values.size() != 2*this->Nfields) throw runtime_exception(runtime_exception::STORAGE_ERROR, __CPP_TRANSPORT_NFIELDS_BACKG);
+
+				if(this->collect_initial_conditions)
+					{
+						typename integration_items<number>::ics_item ics;
+
+						ics.serial = k_serial;
+						ics.coords = values;
+
+						this->ics_batch.push_back(ics);
+						this->check_for_flush();
+					}
+			}
 
 
     template <typename number>
@@ -682,8 +718,8 @@ namespace transport
     twopf_batcher<number>::twopf_batcher(unsigned int cap, model<number>* m, twopf_task<number>* tk,
                                          const boost::filesystem::path& cp, const boost::filesystem::path& lp, const writer_group& w,
                                          generic_batcher::container_dispatch_function d, generic_batcher::container_replacement_function r,
-                                         handle_type h, unsigned int wn, unsigned int wg, bool s)
-	    : integration_batcher<number>(cap, m, cp, lp, d, r, h, wn, wg, s),
+                                         handle_type h, unsigned int wn, unsigned int wg)
+	    : integration_batcher<number>(cap, m, cp, lp, d, r, h, wn, wg, tk->get_collect_initial_conditions()),
 	      writers(w),
         paired_batcher(nullptr),
         parent_task(tk),
@@ -750,7 +786,8 @@ namespace transport
         return((sizeof(unsigned int) + 2*this->Nfields*sizeof(number))*this->backg_batch.size()
 	        + (3*sizeof(unsigned int) + 4*sizeof(number))*this->tensor_twopf_batch.size()
 	        + (3*sizeof(unsigned int) + 2*this->Nfields*2*this->Nfields*sizeof(number))*this->twopf_batch.size()
-	        + (2*sizeof(unsigned int) + 2*sizeof(boost::timer::nanosecond_type))*this->stats_batch.size());
+	        + (2*sizeof(unsigned int) + sizeof(size_t) + 2*sizeof(boost::timer::nanosecond_type))*this->stats_batch.size()
+		      + (sizeof(unsigned int) + 2*this->Nfields*sizeof(number))*this->ics_batch.size());
 	    }
 
 
@@ -764,6 +801,7 @@ namespace transport
 
         this->writers.host_info(this);
         if(this->collect_statistics) this->writers.stats(this, this->stats_batch);
+		    if(this->collect_initial_conditions) this->writers.ics(this, this->ics_batch);
         this->writers.backg(this, this->backg_batch);
         this->writers.twopf(this, this->twopf_batch);
         this->writers.tensor_twopf(this, this->tensor_twopf_batch);
@@ -811,6 +849,12 @@ namespace transport
                                                       }),
                                        this->tensor_twopf_batch.end());
 
+        this->ics_batch.erase(std::remove_if(this->ics_batch.begin(), this->ics_batch.end(),
+                                             [ & ](const typename integration_items<number>::ics_item& item) -> bool {
+                                               return (item.serial == source_serial);
+                                             }),
+                              this->ics_batch.end());
+
         if(this->paired_batcher != nullptr) this->paired_batcher->unbatch(source_serial);
 	    }
 
@@ -856,8 +900,8 @@ namespace transport
     threepf_batcher<number>::threepf_batcher(unsigned int cap, model<number>* m, threepf_task<number>* tk,
                                              const boost::filesystem::path& cp, const boost::filesystem::path& lp, const writer_group& w,
                                              generic_batcher::container_dispatch_function d, generic_batcher::container_replacement_function r,
-                                             handle_type h, unsigned int wn, unsigned int wg, bool s)
-	    : integration_batcher<number>(cap, m, cp, lp, d, r, h, wn, wg, s),
+                                             handle_type h, unsigned int wn, unsigned int wg)
+	    : integration_batcher<number>(cap, m, cp, lp, d, r, h, wn, wg, tk->get_collect_initial_conditions()),
 	      writers(w),
         paired_batcher(nullptr),
         parent_task(tk),
@@ -973,7 +1017,8 @@ namespace transport
 	        + (3*sizeof(unsigned int) + 4*sizeof(number))*this->tensor_twopf_batch.size()
 	        + (3*sizeof(unsigned int) + 2*this->Nfields*2*this->Nfields*sizeof(number))*(this->twopf_re_batch.size() + this->twopf_im_batch.size())
 	        + (3*sizeof(unsigned int) + 2*this->Nfields*2*this->Nfields*2*this->Nfields*sizeof(number))*this->threepf_batch.size()
-	        + (2*sizeof(unsigned int) + 2*sizeof(boost::timer::nanosecond_type))*this->stats_batch.size());
+	        + (2*sizeof(unsigned int) + sizeof(size_t) + 2*sizeof(boost::timer::nanosecond_type))*this->stats_batch.size()
+	        + (sizeof(unsigned int) + 2*this->Nfields*sizeof(number))*this->ics_batch.size());
 	    }
 
 
@@ -987,6 +1032,7 @@ namespace transport
 
         this->writers.host_info(this);
         if(this->collect_statistics) this->writers.stats(this, this->stats_batch);
+		    if(this->collect_initial_conditions) this->writers.ics(this, this->ics_batch);
         this->writers.backg(this, this->backg_batch);
         this->writers.twopf_re(this, this->twopf_re_batch);
         this->writers.twopf_im(this, this->twopf_im_batch);
@@ -1051,6 +1097,12 @@ namespace transport
                                                    return (item.source_serial == source_serial);
                                                  }),
                                   this->threepf_batch.end());
+
+        this->ics_batch.erase(std::remove_if(this->ics_batch.begin(), this->ics_batch.end(),
+                                             [ & ](const typename integration_items<number>::ics_item& item) -> bool {
+                                               return (item.serial == source_serial);
+                                             }),
+                              this->ics_batch.end());
 
         if(this->paired_batcher != nullptr) this->paired_batcher->unbatch(source_serial);
 	    }

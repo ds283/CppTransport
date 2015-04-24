@@ -142,6 +142,17 @@ namespace transport
         void set_max_refinements(unsigned int max) { this->max_refinements = (max > 0 ? max : this->max_refinements); }
 
 
+		    // INTERFACE - COLLECTION OF INITIAL CONDITIONS
+
+      public:
+
+		    //! Get current collection status
+		    bool get_collect_initial_conditions() const { return(this->collect_initial_conditions); }
+
+		    //! Set current collection status
+		    void set_collect_initial_conditions(bool g) { this->collect_initial_conditions = g; }
+
+
         // TIME CONFIGURATION DATABASE
 
       protected:
@@ -213,6 +224,12 @@ namespace transport
         unsigned int max_refinements;
 
 
+		    // COLLECTION OF INITIAL CONDITIONS
+
+		    //! Write initial conditions into the container during integration?
+		    bool collect_initial_conditions;
+
+
 		    // K-CONFIGURATION DATABASE
 		    // (note this has to be declared *after* astar_normalization, so that astar_normalization will be set
 		    // when trying to compute k*)
@@ -231,6 +248,7 @@ namespace transport
         ff_efolds(__CPP_TRANSPORT_DEFAULT_FAST_FORWARD_EFOLDS),
         max_refinements(__CPP_TRANSPORT_DEFAULT_MESH_REFINEMENTS),
         astar_normalization(ast),
+        collect_initial_conditions(__CPP_TRANSPORT_DEFAULT_COLLECT_INITIAL_CONDITIONS),
 		    twopf_db(i.get_model()->compute_kstar(this))
       {
 	    }
@@ -241,37 +259,22 @@ namespace transport
 	    : integration_task<number>(nm, reader, i),
         twopf_db(reader[__CPP_TRANSPORT_NODE_TWOPF_LIST_DATABASE])
 	    {
-        // deserialize fast-forward integration setting
-        fast_forward = reader[__CPP_TRANSPORT_NODE_FAST_FORWARD].asBool();
-
-        // deserialize number of fast-forward efolds
-        ff_efolds = reader[__CPP_TRANSPORT_NODE_FAST_FORWARD_EFOLDS].asDouble();
-
-        // deserialize max number of stepsize refinements
-        max_refinements = reader[__CPP_TRANSPORT_NODE_MESH_REFINEMENTS].asUInt();
-
-        // deserialize a* normalization
-        astar_normalization = reader[__CPP_TRANSPORT_NODE_TWOPF_LIST_NORMALIZATION].asDouble();
-
-		    // reconstruct horizon-exit times; these aren't stored in the repository record to save space
-		    this->compute_horizon_exit_times();
+        fast_forward               = reader[__CPP_TRANSPORT_NODE_FAST_FORWARD].asBool();
+        ff_efolds                  = reader[__CPP_TRANSPORT_NODE_FAST_FORWARD_EFOLDS].asDouble();
+        max_refinements            = reader[__CPP_TRANSPORT_NODE_MESH_REFINEMENTS].asUInt();
+        astar_normalization        = reader[__CPP_TRANSPORT_NODE_TWOPF_LIST_NORMALIZATION].asDouble();
+        collect_initial_conditions = reader[__CPP_TRANSPORT_NODE_TWOPF_LIST_COLLECT_ICS].asBool();
 	    }
 
 
     template <typename number>
     void twopf_list_task<number>::serialize(Json::Value& writer) const
 	    {
-        // store fast-forward integration setting
-        writer[__CPP_TRANSPORT_NODE_FAST_FORWARD] = this->fast_forward;
-
-        // store number of fast-forward efolds
-        writer[__CPP_TRANSPORT_NODE_FAST_FORWARD_EFOLDS] = this->ff_efolds;
-
-        // store max number of stepsize refinements
-        writer[__CPP_TRANSPORT_NODE_MESH_REFINEMENTS] = this->max_refinements;
-
-        // serialize a* normalization
+        writer[__CPP_TRANSPORT_NODE_FAST_FORWARD]             = this->fast_forward;
+        writer[__CPP_TRANSPORT_NODE_FAST_FORWARD_EFOLDS]      = this->ff_efolds;
+        writer[__CPP_TRANSPORT_NODE_MESH_REFINEMENTS]         = this->max_refinements;
         writer[__CPP_TRANSPORT_NODE_TWOPF_LIST_NORMALIZATION] = this->astar_normalization;
+        writer[__CPP_TRANSPORT_NODE_TWOPF_LIST_COLLECT_ICS]   = this->collect_initial_conditions;
 
 		    // serialize twopf configuration database
         Json::Value db;
