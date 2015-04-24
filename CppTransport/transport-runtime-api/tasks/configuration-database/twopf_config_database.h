@@ -195,9 +195,11 @@ namespace transport
 
         //! get largest conventionally-normalized k-number committed to the database
         double get_kmax_conventional() const { return(this->kmax_conventional); }
+		    double get_kmax_comoving()     const { return(this->kmax_comoving); }
 
         //! get smallest conventionally-normalized k-number committed to the database
         double get_kmin_conventional() const { return(this->kmin_conventional); }
+		    double get_kmin_comoving()     const { return(this->kmax_comoving); }
 
 
         // SERIALIZATION -- implements a 'serializable' interface
@@ -232,10 +234,11 @@ namespace transport
 
         //! cache maximum stored wavenumber
         double kmax_conventional;
+		    double kmax_comoving;
 
         //! cache minimum stored wavenumber
         double kmin_conventional;
-
+				double kmin_comoving;
 
         //! keep track of whether the background has been stored
         bool store_background;
@@ -248,6 +251,8 @@ namespace transport
         serial(0),
         kmax_conventional(-std::numeric_limits<double>::max()),
         kmin_conventional(std::numeric_limits<double>::max()),
+        kmax_comoving(-std::numeric_limits<double>::max()),
+        kmin_comoving(std::numeric_limits<double>::max()),
         store_background(true)
       {
       }
@@ -257,6 +262,8 @@ namespace transport
       : serial(0),
         kmax_conventional(-std::numeric_limits<double>::max()),
         kmin_conventional(std::numeric_limits<double>::max()),
+        kmax_comoving(-std::numeric_limits<double>::max()),
+        kmin_comoving(std::numeric_limits<double>::max()),
         store_background(false)
       {
         // deserialize comoving normalization constant
@@ -277,6 +284,8 @@ namespace transport
 
             if(config.k_conventional > this->kmax_conventional) this->kmax_conventional = config.k_conventional;
             if(config.k_conventional < this->kmin_conventional) this->kmin_conventional = config.k_conventional;
+		        if(config.k_comoving > this->kmax_comoving)         this->kmax_comoving     = config.k_comoving;
+		        if(config.k_comoving < this->kmin_comoving)         this->kmin_comoving     = config.k_comoving;
 
             this->database.emplace(config.serial, twopf_kconfig_record(config, (*t)[__CPP_TRANSPORT_NODE_TWOPF_DATABASE_STORE].asBool()));
           }
@@ -302,8 +311,10 @@ namespace transport
         config.k_comoving     = k_conventional * this->comoving_normalization;
 		    config.t_exit         = 0.0;    // will be reset later
 
-        if(k_conventional > this->kmax_conventional) this->kmax_conventional = k_conventional;
-        if(k_conventional < this->kmin_conventional) this->kmin_conventional = k_conventional;
+        if(config.k_conventional > this->kmax_conventional) this->kmax_conventional = config.k_conventional;
+        if(config.k_conventional < this->kmin_conventional) this->kmin_conventional = config.k_conventional;
+        if(config.k_comoving > this->kmax_comoving)         this->kmax_comoving     = config.k_comoving;
+        if(config.k_comoving < this->kmin_comoving)         this->kmin_comoving     = config.k_comoving;
 
         this->database.emplace(config.serial, twopf_kconfig_record(config, this->store_background));
         this->store_background = false;

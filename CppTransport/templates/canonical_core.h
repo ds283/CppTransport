@@ -1123,7 +1123,8 @@ namespace transport
 		        N_vector(N),
 		        aH_vector(aH),
 		        largest_k(lk),
-						N_horizon_crossing(tk->get_N_horizon_crossing())
+						N_horizon_crossing(tk->get_N_horizon_crossing()),
+						astar_normalization(tk->get_astar_normalization())
 					{
 					}
 
@@ -1136,12 +1137,12 @@ namespace transport
 				    const auto __Hsq = $$__HUBBLE_SQ;
 						const auto __H   = sqrt(__Hsq);
 
-						const auto __a   = exp(__x.second - this->N_horizon_crossing );
+						const auto __a   = exp(__x.second - this->N_horizon_crossing + this->astar_normalization);
 
 						this->N_vector.push_back(__x.second);
 						this->aH_vector.push_back(__a*__H);
 
-						if(largest_k / (__a*__H) < 1.0) return(true);
+						if(largest_k / (__a*__H) < 0.5) return(true);
 						return(false);
 					}
 
@@ -1149,8 +1150,9 @@ namespace transport
 				const parameters<number>& params;
 				std::vector<double>& N_vector;
 				std::vector<number>& aH_vector;
-				double largest_k;
-				double N_horizon_crossing;
+				const double largest_k;
+				const double N_horizon_crossing;
+				const double astar_normalization;
 			};
 
 
@@ -1170,7 +1172,7 @@ namespace transport
 
 				auto stepper = $$__MAKE_BACKG_STEPPER{backg_state<number>};
 
-				auto range = boost::numeric::odeint::make_adaptive_time_range(stepper, system, x, tk->get_N_initial(), tk->get_N_initial()+tk->get_N_end_of_inflation(), $$__BACKG_STEP_SIZE);
+				auto range = boost::numeric::odeint::make_adaptive_time_range(stepper, system, x, tk->get_N_initial(), tk->get_N_end_of_inflation(), $$__BACKG_STEP_SIZE);
 
 				aHAggregatorPredicate<number> aggregator(tk, N, aH, largest_k);
 

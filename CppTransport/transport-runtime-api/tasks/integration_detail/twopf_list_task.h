@@ -47,7 +47,7 @@ namespace transport
       public:
 
         //! construct a twopf-list-task object
-        twopf_list_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t, bool ff);
+        twopf_list_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t, bool ff, double ast=__CPP_TRANSPORT_DEFAULT_ASTAR_NORMALIZATION);
 
         //! deserialization constructor
         twopf_list_task(const std::string& nm, Json::Value& reader, const initial_conditions<number>& i);
@@ -84,9 +84,6 @@ namespace transport
 
         //! Get current a* normalization
         double get_astar_normalization() const { return(this->astar_normalization); }
-
-        //! Set current a* normalization
-        void set_astar_normalization(double astar) { this->astar_normalization = astar; }
 
 
         // INTERFACE - FAST-FORWARD MANAGEMENT
@@ -167,9 +164,6 @@ namespace transport
 
       protected:
 
-        //! database of twopf k-configurations
-        twopf_kconfig_database twopf_db;
-
 
         // NORMALIZATION DURING INTEGRATION
 
@@ -193,17 +187,26 @@ namespace transport
         //! How many time step refinements to allow per triangle
         unsigned int max_refinements;
 
+
+		    // K-CONFIGURATION DATABASE
+		    // (note this has to be declared *after* astar_normalization, so that astar_normalization will be set
+		    // when trying to compute k*)
+
+        //! database of twopf k-configurations
+        twopf_kconfig_database twopf_db;
+
 	    };
 
 
     template <typename number>
-    twopf_list_task<number>::twopf_list_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t, bool ff)
+    twopf_list_task<number>::twopf_list_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t,
+                                             bool ff, double ast)
 	    : integration_task<number>(nm, i, t),
-        twopf_db(i.get_model()->compute_kstar(this)),
         fast_forward(ff),
         ff_efolds(__CPP_TRANSPORT_DEFAULT_FAST_FORWARD_EFOLDS),
         max_refinements(__CPP_TRANSPORT_DEFAULT_MESH_REFINEMENTS),
-        astar_normalization(__CPP_TRANSPORT_DEFAULT_ASTAR_NORMALIZATION)
+        astar_normalization(ast),
+		    twopf_db(i.get_model()->compute_kstar(this))
       {
 	    }
 
@@ -458,7 +461,7 @@ namespace transport
 		template <typename number>
 		void twopf_list_task<number>::compute_horizon_exit_times()
 			{
-				double largest_k = this->twopf_db.get_kmax_conventional();
+				double largest_k = this->twopf_db.get_kmax_comoving();
 
 		    std::vector<double> N;
 		    std::vector<number> aH;

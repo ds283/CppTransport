@@ -357,7 +357,7 @@ namespace transport
             // To avoid numbers becoming too large or small, and also because the integrator has
             // noticeably better performance for correlation-function amplitudes in a
             // certain range, use a fixed normalization which can be adjusted in twopf_list_task
-            return this->H(tk->get_params(), history.back()) * exp(tk->get_astar_normalization());
+            return( this->H(tk->get_params(), history.back()) * exp(tk->get_astar_normalization()) );
           }
         else
           {
