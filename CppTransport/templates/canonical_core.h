@@ -1172,7 +1172,7 @@ namespace transport
 
 				auto stepper = $$__MAKE_BACKG_STEPPER{backg_state<number>};
 
-				auto range = boost::numeric::odeint::make_adaptive_time_range(stepper, system, x, tk->get_N_initial(), tk->get_N_end_of_inflation(), $$__BACKG_STEP_SIZE);
+				auto range = boost::numeric::odeint::make_const_step_time_range(stepper, system, x, tk->get_N_initial(), tk->get_N_end_of_inflation(), 0.01);
 
 				aHAggregatorPredicate<number> aggregator(tk, N, aH, largest_k);
 

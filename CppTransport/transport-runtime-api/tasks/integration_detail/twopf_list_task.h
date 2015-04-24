@@ -494,7 +494,7 @@ namespace transport
 
 				    // find root; note use of std::ref, because toms748_solve normally would take a copy of
 				    // its system function and this is slow -- we have to copy the whole spline
-		        std::pair< double, double > result = boost::math::tools::toms748_solve(std::ref(sp), sp.get_min_x(), sp.get_max_x(), TolerancePredicate(1E-5), max_iter);
+		        std::pair< double, double > result = boost::math::tools::toms748_solve(std::ref(sp), sp.get_min_x(), sp.get_max_x(), TolerancePredicate(1E-7), max_iter);
 
 						t->t_exit = (result.first + result.second)/2.0;
 			    }

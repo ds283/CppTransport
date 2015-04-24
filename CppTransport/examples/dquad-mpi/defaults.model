@@ -12,7 +12,7 @@ background
  { abserr   = 1E-12;
    relerr   = 1E-12;
    stepsize = 1E-10;
-   stepper  = "runge_kutta_fehlberg78";
+   stepper  = "runge_kutta_dopri5";
  };
 
 perturbations
