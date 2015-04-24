@@ -191,16 +191,36 @@ namespace transport
 
             std::vector<double> axis;
 
-            for(typename std::vector< twopf_kconfig >::const_iterator t = configs.begin(); t != configs.end(); ++t)
-	            {
-                if(this->klabel_meaning == comoving) axis.push_back((*t).k_comoving);
-                else if(this->klabel_meaning == conventional) axis.push_back((*t).k_conventional);
-                else
-	                {
-                    assert(false);
-                    throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_KLABEL_TYPE_UNKNOWN);
-	                }
-	            }
+		        switch(this->x_type)
+			        {
+		            case k_axis:
+			            {
+		                for(typename std::vector< twopf_kconfig >::const_iterator t = configs.begin(); t != configs.end(); ++t)
+			                {
+		                    if(this->klabel_meaning == comoving) axis.push_back((*t).k_comoving);
+		                    else if(this->klabel_meaning == conventional) axis.push_back((*t).k_conventional);
+		                    else
+			                    {
+		                        assert(false);
+		                        throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_KLABEL_TYPE_UNKNOWN);
+			                    }
+			                }
+				            break;
+			            }
+
+		            case efolds_exit_axis:
+			            {
+		                for(typename std::vector< twopf_kconfig >::const_iterator t = configs.begin(); t != configs.end(); ++t)
+			                {
+		                    axis.push_back(t->t_exit);
+			                }
+		                break;
+			            }
+
+		            default:
+			            assert(false);
+
+			        }
 
 		        return(axis);
 	        }
@@ -239,7 +259,7 @@ namespace transport
 			            {
 		                for(typename std::vector< threepf_kconfig >::const_iterator t = configs.begin(); t != configs.end(); ++t)
 			                {
-				                axis.push_back(log(t->kt_conventional));
+				                axis.push_back(t->t_exit);
 			                }
 		                break;
 			            }
