@@ -98,6 +98,9 @@ namespace transport
         //! Get std::vector of initial conditions, offset using fast forwarding if enabled
         std::vector<number> get_ics_vector(const twopf_kconfig& kconfig) const;
 
+		    //! Get std::vector of initial conditions at horizon exit time for a k-configuration
+        std::vector<number> get_ics_exit_vector(const twopf_kconfig& config) const;
+
         //! Build sample-time database
         const time_config_database get_time_config_database(const twopf_kconfig& config) const;
 
@@ -311,6 +314,13 @@ namespace transport
             return this->ics.get_vector();
           }
 	    }
+
+
+		template <typename number>
+		std::vector<number> twopf_list_task<number>::get_ics_exit_vector(const twopf_kconfig& config) const
+			{
+				return this->integration_task<number>::get_ics_vector(config.t_exit);
+			}
 
 
     template <typename number>

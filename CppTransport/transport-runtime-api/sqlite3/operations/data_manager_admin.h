@@ -231,20 +231,23 @@ namespace transport
 
 
 		    // Create table for initial conditions, if they are being collected
-		    void create_ics_table(sqlite3* db, unsigned int Nfields, add_foreign_keys_type keys=no_foreign_keys, metadata_configuration_type type=twopf_configs)
+		    void create_ics_table(sqlite3* db, unsigned int Nfields, add_foreign_keys_type keys=no_foreign_keys,
+		                          metadata_configuration_type type=twopf_configs, ics_value_type ics=default_ics)
 			    {
 		        unsigned int num_cols = std::min(2*Nfields, max_columns);
 
 		        std::ostringstream create_stmt;
 		        create_stmt
-			        << "CREATE TABLE " << __CPP_TRANSPORT_SQLITE_ICS_TABLE << "("
-			        << "kserial INTEGER PRIMARY KEY, "
+			        << "CREATE TABLE " << (ics == default_ics ? __CPP_TRANSPORT_SQLITE_ICS_TABLE : __CPP_TRANSPORT_SQLITE_KT_ICS_TABLE) << "("
+			        << "kserial INTEGER, "
 			        << "page    INTEGER";
 
 		        for(unsigned int i = 0; i < num_cols; ++i)
 			        {
 		            create_stmt << ", coord" << i << " DOUBLE";
 			        }
+
+				    create_stmt << ", PRIMARY KEY (kserial, page)";
 
 		        if(keys == foreign_keys)
 			        {
@@ -253,11 +256,11 @@ namespace transport
 			            {
 		                case twopf_configs:
 			                create_stmt << __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE;
-		                break;
+			                break;
 
 		                case threepf_configs:
 			                create_stmt << __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE;
-		                break;
+			                break;
 
 		                default:
 			                assert(false);
@@ -278,13 +281,16 @@ namespace transport
             std::ostringstream create_stmt;
             create_stmt
 	            << "CREATE TABLE " << __CPP_TRANSPORT_SQLITE_BACKG_VALUE_TABLE << "("
-              << "tserial INTEGER PRIMARY KEY, "
+              << "tserial INTEGER, "
 	            << "page    INTEGER";
 
             for(unsigned int i = 0; i < num_cols; ++i)
               {
                 create_stmt << ", coord" << i << " DOUBLE";
               }
+
+		        create_stmt << ", PRIMARY KEY (tserial, page)";
+
             if(keys == foreign_keys) create_stmt << ", FOREIGN KEY(tserial) REFERENCES " << __CPP_TRANSPORT_SQLITE_TIME_SAMPLE_TABLE << "(serial)";
             create_stmt << ");";
 
@@ -552,7 +558,7 @@ namespace transport
 
 		    // Write a batch of initial-conditions information
 		    template <typename number>
-		    void write_ics(integration_batcher<number>* batcher,
+		    void write_ics(ics_value_type type, integration_batcher<number>* batcher,
 		                   const std::vector< typename integration_items<number>::ics_item >& batch)
 			    {
 		        sqlite3* db = nullptr;
@@ -567,7 +573,7 @@ namespace transport
 		        unsigned int num_pages = (2*Nfields-1)/num_cols + 1;
 
 		        std::ostringstream insert_stmt;
-		        insert_stmt << "INSERT INTO " << __CPP_TRANSPORT_SQLITE_ICS_TABLE << " VALUES (@kserial, @page";
+		        insert_stmt << "INSERT INTO " << (type == default_ics ? __CPP_TRANSPORT_SQLITE_ICS_TABLE : __CPP_TRANSPORT_SQLITE_KT_ICS_TABLE) << " VALUES (@kserial, @page";
 
 		        for(unsigned int i = 0; i < num_cols; ++i)
 			        {
@@ -1027,7 +1033,7 @@ namespace transport
             // create the necessary tables
 		        create_worker_info_table(db, no_foreign_keys);
             if(collect_stats) create_stats_table(db, no_foreign_keys, twopf_configs);
-		        if(collect_ics) create_ics_table(db, Nfields, no_foreign_keys, twopf_configs);
+		        if(collect_ics) create_ics_table(db, Nfields, no_foreign_keys, twopf_configs, default_ics);
             create_backg_table(db, Nfields, no_foreign_keys);
             create_twopf_table(db, Nfields, real_twopf, no_foreign_keys);
             create_tensor_twopf_table(db, no_foreign_keys);
@@ -1063,7 +1069,11 @@ namespace transport
             // create the necessary tables
 		        create_worker_info_table(db, no_foreign_keys);
             if(collect_stats) create_stats_table(db, no_foreign_keys, threepf_configs);
-            if(collect_ics) create_ics_table(db, Nfields, no_foreign_keys, threepf_configs);
+            if(collect_ics)
+	            {
+                create_ics_table(db, Nfields, no_foreign_keys, threepf_configs, default_ics);
+		            create_ics_table(db, Nfields, no_foreign_keys, threepf_configs, kt_ics);
+	            }
             create_backg_table(db, Nfields, no_foreign_keys);
             create_twopf_table(db, Nfields, real_twopf, no_foreign_keys);
             create_twopf_table(db, Nfields, imag_twopf, no_foreign_keys);

@@ -276,6 +276,10 @@ namespace transport
     threepf_kconfig_database::threepf_kconfig_database(double cn)
       : comoving_normalization(cn),
         serial(0),
+        kmax_conventional(-std::numeric_limits<double>::max()),
+        kmin_conventional(std::numeric_limits<double>::max()),
+        kmax_comoving(-std::numeric_limits<double>::max()),
+        kmin_comoving(std::numeric_limits<double>::max()),
         store_background(true)
       {
       }
@@ -283,6 +287,10 @@ namespace transport
 
     threepf_kconfig_database::threepf_kconfig_database(Json::Value& reader, twopf_kconfig_database& twopf_db)
       : serial(0),
+        kmax_conventional(-std::numeric_limits<double>::max()),
+        kmin_conventional(std::numeric_limits<double>::max()),
+        kmax_comoving(-std::numeric_limits<double>::max()),
+        kmin_comoving(std::numeric_limits<double>::max()),
         store_background(false)
       {
         // deserialize comoving normalization constant
@@ -316,10 +324,12 @@ namespace transport
             config.k3_comoving     = (*k3)->k_comoving;
 
             config.kt_conventional = (*k1)->k_conventional + (*k2)->k_conventional + (*k3)->k_conventional;
-            config.kt_comoving = (*k1)->k_comoving + (*k2)->k_comoving + (*k3)->k_comoving;
+            config.kt_comoving     = (*k1)->k_comoving + (*k2)->k_comoving + (*k3)->k_comoving;
 
             config.beta  = 1.0 - 2.0 * config.k3_conventional / config.kt_conventional;
             config.alpha = 4.0 * (*k2)->k_conventional / config.kt_conventional - 1.0 - config.beta;
+
+		        config.t_exit = 0.0;  // will be updated later
 
             if(config.kt_conventional > this->kmax_conventional) this->kmax_conventional = config.kt_conventional;
             if(config.kt_conventional < this->kmin_conventional) this->kmin_conventional = config.kt_conventional;

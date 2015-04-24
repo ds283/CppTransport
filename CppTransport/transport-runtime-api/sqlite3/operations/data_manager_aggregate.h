@@ -139,15 +139,15 @@ namespace transport
 
         // Aggregate an initial-conditions value table frmo a temporary container into a principal container
         template <typename number>
-        void aggregate_ics(sqlite3* db, integration_writer<number>& writer, const std::string& temp_ctr)
+        void aggregate_ics(sqlite3* db, integration_writer<number>& writer, const std::string& temp_ctr, ics_value_type type=default_ics)
 	        {
 //            BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << "   && Aggregating background values";
 
             std::ostringstream copy_stmt;
             copy_stmt
 	            << "ATTACH DATABASE '" << temp_ctr << "' AS " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << ";"
-	            << " INSERT INTO " << __CPP_TRANSPORT_SQLITE_ICS_TABLE
-	            << " SELECT * FROM " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << __CPP_TRANSPORT_SQLITE_ICS_TABLE << ";"
+	            << " INSERT INTO " << (type == default_ics ? __CPP_TRANSPORT_SQLITE_ICS_TABLE : __CPP_TRANSPORT_SQLITE_KT_ICS_TABLE)
+	            << " SELECT * FROM " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << (type == default_ics ? __CPP_TRANSPORT_SQLITE_ICS_TABLE : __CPP_TRANSPORT_SQLITE_KT_ICS_TABLE) << ";"
 	            << " DETACH DATABASE " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << ";";
 
 //		        BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << "   && Executing SQL statement: " << copy_stmt.str();

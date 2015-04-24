@@ -654,7 +654,7 @@ namespace transport
         sqlite3_operations::create_worker_info_table(db, sqlite3_operations::foreign_keys);
         if(writer->is_collecting_statistics()) sqlite3_operations::create_stats_table(db, sqlite3_operations::foreign_keys, sqlite3_operations::twopf_configs);
 
-		    if(writer->is_collecting_initial_conditions()) sqlite3_operations::create_ics_table(db, Nfields, sqlite3_operations::foreign_keys, sqlite3_operations::twopf_configs);
+		    if(writer->is_collecting_initial_conditions()) sqlite3_operations::create_ics_table(db, Nfields, sqlite3_operations::foreign_keys, sqlite3_operations::twopf_configs, sqlite3_operations::default_ics);
       }
 
 
@@ -678,7 +678,11 @@ namespace transport
         sqlite3_operations::create_worker_info_table(db, sqlite3_operations::foreign_keys);
         if(writer->is_collecting_statistics()) sqlite3_operations::create_stats_table(db, sqlite3_operations::foreign_keys, sqlite3_operations::threepf_configs);
 
-        if(writer->is_collecting_initial_conditions()) sqlite3_operations::create_ics_table(db, Nfields, sqlite3_operations::foreign_keys, sqlite3_operations::threepf_configs);
+        if(writer->is_collecting_initial_conditions())
+	        {
+            sqlite3_operations::create_ics_table(db, Nfields, sqlite3_operations::foreign_keys, sqlite3_operations::threepf_configs, sqlite3_operations::default_ics);
+            sqlite3_operations::create_ics_table(db, Nfields, sqlite3_operations::foreign_keys, sqlite3_operations::threepf_configs, sqlite3_operations::kt_ics);
+	        }
       }
 
 
@@ -772,7 +776,11 @@ namespace transport
         sqlite3_operations::aggregate_workers<number>(db, *writer, seed_container_path.string());
         if(writer->is_collecting_statistics() && seed->get_payload().has_statistics()) sqlite3_operations::aggregate_statistics<number>(db, *writer, seed_container_path.string());
 
-        if(writer->is_collecting_initial_conditions() && seed->get_payload().has_initial_conditions()) sqlite3_operations::aggregate_ics<number>(db, *writer, seed_container_path.string());
+        if(writer->is_collecting_initial_conditions() && seed->get_payload().has_initial_conditions())
+	        {
+            sqlite3_operations::aggregate_ics<number>(db, *writer, seed_container_path.string(), sqlite3_operations::default_ics);
+            sqlite3_operations::aggregate_ics<number>(db, *writer, seed_container_path.string(), sqlite3_operations::kt_ics);
+	        }
 
         timer.stop();
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "** Seeding complete in time " << format_time(timer.elapsed().wall);
@@ -846,7 +854,7 @@ namespace transport
         typename twopf_batcher<number>::writer_group writers;
         writers.host_info    = std::bind(&sqlite3_operations::write_host_info<number>, std::placeholders::_1);
         writers.stats        = std::bind(&sqlite3_operations::write_stats<number>, std::placeholders::_1, std::placeholders::_2);
-		    writers.ics          = std::bind(&sqlite3_operations::write_ics<number>, std::placeholders::_1, std::placeholders::_2);
+		    writers.ics          = std::bind(&sqlite3_operations::write_ics<number>, sqlite3_operations::default_ics, std::placeholders::_1, std::placeholders::_2);
         writers.backg        = std::bind(&sqlite3_operations::write_backg<number>, std::placeholders::_1, std::placeholders::_2);
         writers.twopf        = std::bind(&sqlite3_operations::write_twopf<number>, sqlite3_operations::real_twopf, std::placeholders::_1, std::placeholders::_2);
         writers.tensor_twopf = std::bind(&sqlite3_operations::write_tensor_twopf<number>, std::placeholders::_1, std::placeholders::_2);
@@ -882,7 +890,8 @@ namespace transport
         typename threepf_batcher<number>::writer_group writers;
 		    writers.host_info    = std::bind(&sqlite3_operations::write_host_info<number>, std::placeholders::_1);
         writers.stats        = std::bind(&sqlite3_operations::write_stats<number>, std::placeholders::_1, std::placeholders::_2);
-        writers.ics          = std::bind(&sqlite3_operations::write_ics<number>, std::placeholders::_1, std::placeholders::_2);
+        writers.ics          = std::bind(&sqlite3_operations::write_ics<number>, sqlite3_operations::default_ics, std::placeholders::_1, std::placeholders::_2);
+        writers.kt_ics       = std::bind(&sqlite3_operations::write_ics<number>, sqlite3_operations::kt_ics, std::placeholders::_1, std::placeholders::_2);
         writers.backg        = std::bind(&sqlite3_operations::write_backg<number>, std::placeholders::_1, std::placeholders::_2);
         writers.twopf_re     = std::bind(&sqlite3_operations::write_twopf<number>, sqlite3_operations::real_twopf, std::placeholders::_1, std::placeholders::_2);
         writers.twopf_im     = std::bind(&sqlite3_operations::write_twopf<number>, sqlite3_operations::imag_twopf, std::placeholders::_1, std::placeholders::_2);
@@ -1187,7 +1196,11 @@ namespace transport
         sqlite3_operations::aggregate_workers<number>(db, writer, temp_ctr);
         if(writer.is_collecting_statistics()) sqlite3_operations::aggregate_statistics<number>(db, writer, temp_ctr);
 
-        if(writer.is_collecting_initial_conditions()) sqlite3_operations::aggregate_ics<number>(db, writer, temp_ctr);
+        if(writer.is_collecting_initial_conditions())
+	        {
+            sqlite3_operations::aggregate_ics<number>(db, writer, temp_ctr, sqlite3_operations::default_ics);
+            sqlite3_operations::aggregate_ics<number>(db, writer, temp_ctr, sqlite3_operations::kt_ics);
+	        }
 
         return(true);
       }
@@ -1499,7 +1512,11 @@ namespace transport
           {
             writer.set_missing_serials(threepf_serials);
             if(writer.is_collecting_statistics()) sqlite3_operations::drop_statistics(db, threepf_serials, tk->get_threepf_database());
-		        if(writer.is_collecting_initial_conditions()) sqlite3_operations::drop_ics(db, threepf_serials, tk->get_threepf_database());
+		        if(writer.is_collecting_initial_conditions())
+			        {
+		            sqlite3_operations::drop_ics(db, threepf_serials, tk->get_threepf_database(), sqlite3_operations::default_ics);
+		            sqlite3_operations::drop_ics(db, threepf_serials, tk->get_threepf_database(), sqlite3_operations::kt_ics);
+			        }
 
             // build list of twopf configurations which should be dropped for this entire set of threepf configurations
             std::list<unsigned int> twopf_drop = this->compute_twopf_drop_list(threepf_serials, tk->get_threepf_database());

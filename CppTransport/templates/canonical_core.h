@@ -1178,7 +1178,11 @@ namespace transport
 
 				auto iter = boost::find_if(range, aggregator);
 
-				if(iter == boost::end(range)) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_FAIL_COMPUTE_T_EXIT);
+				if(iter == boost::end(range))
+					{
+						assert(false);
+				    throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_FAIL_COMPUTE_T_EXIT);
+					}
 			}
 
 

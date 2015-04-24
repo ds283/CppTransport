@@ -373,9 +373,14 @@ namespace transport
         x.resize($$__MODEL_pool::twopf_state_size);
 
         // fix initial conditions - background
-        const std::vector<number>& ics = tk->get_ics_vector(*kconfig);
+        const std::vector<number> ics = tk->get_ics_vector(*kconfig);
         x[$$__MODEL_pool::backg_start + FLATTEN($$__A)] = $$// ics[$$__A];
-		    batcher.push_ics(kconfig->serial, ics);
+
+		    if(batcher.is_collecting_initial_conditions())
+			    {
+				    const std::vector<number> ics_1 = tk->get_ics_exit_vector(*kconfig);
+		        batcher.push_ics(kconfig->serial, ics_1);
+			    }
 
         // fix initial conditions - tensors
         this->populate_tensor_ic(x, $$__MODEL_pool::tensor_start, kconfig->k_comoving, *(time_db.value_begin()), tk, ics);
@@ -533,9 +538,16 @@ namespace transport
         // fix initial conditions - background
 		    // use fast-forwarding if enabled
         // (don't need explicit FLATTEN since it would appear on both sides)
-        const std::vector<number>& ics = tk->get_ics_vector(*kconfig);
+        const std::vector<number> ics = tk->get_ics_vector(*kconfig);
         x[$$__MODEL_pool::backg_start + $$__A] = $$// ics[$$__A];
-        batcher.push_ics(kconfig->serial, ics);
+
+		    if(batcher.is_collecting_initial_conditions())
+			    {
+				    const std::vector<number> ics_1 = tk->get_ics_exit_vector(*kconfig, smallest_wavenumber_exit);
+				    const std::vector<number> ics_2 = tk->get_ics_exit_vector(*kconfig, kt_wavenumber_exit);
+				    batcher.push_ics(kconfig->serial, ics_1);
+				    batcher.push_kt_ics(kconfig->serial, ics_2);
+			    }
 
         // fix initial conditions - tensors
         this->populate_tensor_ic(x, $$__MODEL_pool::tensor_k1_start, kconfig->k1_comoving, *(time_db.value_begin()), tk, ics);

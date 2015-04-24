@@ -135,7 +135,18 @@ namespace transport
         void end_assignment();
 
 
-        // INTEGRATION STATISTICS
+		    // PER-CONFIGURATION STATISTICS AND AUXILIARY INFORMATION
+
+      public:
+
+		    //! are we collecting per-configuration statistics?
+		    bool is_collecting_statistics() const { return(this->collect_statistics); }
+
+		    //! are we collecting initial conditions?
+		    bool is_collecting_initial_conditions() const { return(this->collect_initial_conditions); }
+
+
+        // GLOBAL BATCHER STATISTICS
 
       public:
 
@@ -390,6 +401,7 @@ namespace transport
             typename integration_writers<number>::threepf_writer      threepf;
             typename integration_writers<number>::stats_writer        stats;
 		        typename integration_writers<number>::ics_writer          ics;
+		        typename integration_writers<number>::ics_writer          kt_ics;
             typename integration_writers<number>::host_info_writer    host_info;
 	        };
 
@@ -456,6 +468,8 @@ namespace transport
                                  const std::vector<number>& tpf_k2_re, const std::vector<number>& tpf_k2_im,
                                  const std::vector<number>& tpf_k3_re, const std::vector<number>& tpf_k3_im, const std::vector<number>& bg);
 
+		    void push_kt_ics(unsigned int k_serial, const std::vector<number>& values);
+
         virtual void unbatch(unsigned int source_serial) override;
 
 
@@ -502,6 +516,9 @@ namespace transport
 
         //! threeof cache
         std::vector< typename integration_items<number>::threepf_item >      threepf_batch;
+
+		    //! k_t initial conditions cache
+		    std::vector< typename integration_items<number>::ics_item >          kt_ics_batch;
 
 
         // PAIRING
@@ -810,6 +827,7 @@ namespace transport
         BOOST_LOG_SEV(this->get_log(), generic_batcher::normal) << "** Flushed in time " << format_time(flush_timer.elapsed().wall) << "; pushing to master process";
 
         this->stats_batch.clear();
+		    this->ics_batch.clear();
         this->backg_batch.clear();
         this->twopf_batch.clear();
         this->tensor_twopf_batch.clear();
@@ -1018,7 +1036,26 @@ namespace transport
 	        + (3*sizeof(unsigned int) + 2*this->Nfields*2*this->Nfields*sizeof(number))*(this->twopf_re_batch.size() + this->twopf_im_batch.size())
 	        + (3*sizeof(unsigned int) + 2*this->Nfields*2*this->Nfields*2*this->Nfields*sizeof(number))*this->threepf_batch.size()
 	        + (2*sizeof(unsigned int) + sizeof(size_t) + 2*sizeof(boost::timer::nanosecond_type))*this->stats_batch.size()
-	        + (sizeof(unsigned int) + 2*this->Nfields*sizeof(number))*this->ics_batch.size());
+	        + (sizeof(unsigned int) + 2*this->Nfields*sizeof(number))*this->ics_batch.size()
+          + (sizeof(unsigned int) + 2*this->Nfields*sizeof(number))*this->kt_ics_batch.size());
+	    }
+
+
+    template <typename number>
+    void threepf_batcher<number>::push_kt_ics(unsigned int k_serial, const std::vector<number>& values)
+	    {
+        if(values.size() != 2*this->Nfields) throw runtime_exception(runtime_exception::STORAGE_ERROR, __CPP_TRANSPORT_NFIELDS_BACKG);
+
+        if(this->collect_initial_conditions)
+	        {
+            typename integration_items<number>::ics_item ics;
+
+            ics.serial = k_serial;
+            ics.coords = values;
+
+            this->kt_ics_batch.push_back(ics);
+            this->check_for_flush();
+	        }
 	    }
 
 
@@ -1033,6 +1070,7 @@ namespace transport
         this->writers.host_info(this);
         if(this->collect_statistics) this->writers.stats(this, this->stats_batch);
 		    if(this->collect_initial_conditions) this->writers.ics(this, this->ics_batch);
+		    if(this->collect_initial_conditions) this->writers.kt_ics(this, this->kt_ics_batch);
         this->writers.backg(this, this->backg_batch);
         this->writers.twopf_re(this, this->twopf_re_batch);
         this->writers.twopf_im(this, this->twopf_im_batch);
@@ -1043,6 +1081,8 @@ namespace transport
         BOOST_LOG_SEV(this->get_log(), generic_batcher::normal) << "** Flushed in time " << format_time(flush_timer.elapsed().wall) << "; pushing to master process";
 
         this->stats_batch.clear();
+		    this->ics_batch.clear();
+		    this->kt_ics_batch.clear();
         this->backg_batch.clear();
         this->twopf_re_batch.clear();
         this->twopf_im_batch.clear();
@@ -1103,6 +1143,12 @@ namespace transport
                                                return (item.serial == source_serial);
                                              }),
                               this->ics_batch.end());
+
+        this->kt_ics_batch.erase(std::remove_if(this->kt_ics_batch.begin(), this->kt_ics_batch.end(),
+                                             [ & ](const typename integration_items<number>::ics_item& item) -> bool {
+                                               return (item.serial == source_serial);
+                                             }),
+                              this->kt_ics_batch.end());
 
         if(this->paired_batcher != nullptr) this->paired_batcher->unbatch(source_serial);
 	    }

@@ -278,9 +278,11 @@ namespace transport
           {
             twopf_kconfig config;
 
-            config.serial = serial++;
+            config.serial         = serial++;
             config.k_conventional = (*t)[__CPP_TRANSPORT_NODE_TWOPF_DATABASE_K].asDouble();
-            config.k_comoving = config.k_conventional * this->comoving_normalization;
+            config.k_comoving     = config.k_conventional * this->comoving_normalization;
+
+		        config.t_exit = 0.0;  // will be updated later
 
             if(config.k_conventional > this->kmax_conventional) this->kmax_conventional = config.k_conventional;
             if(config.k_conventional < this->kmin_conventional) this->kmin_conventional = config.k_conventional;
@@ -309,7 +311,7 @@ namespace transport
         config.serial         = this->serial++;
         config.k_conventional = k_conventional;
         config.k_comoving     = k_conventional * this->comoving_normalization;
-		    config.t_exit         = 0.0;    // will be reset later
+		    config.t_exit         = 0.0;    // will be updated later
 
         if(config.k_conventional > this->kmax_conventional) this->kmax_conventional = config.k_conventional;
         if(config.k_conventional < this->kmin_conventional) this->kmin_conventional = config.k_conventional;

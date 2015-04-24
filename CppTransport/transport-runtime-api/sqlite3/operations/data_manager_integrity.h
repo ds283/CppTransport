@@ -212,7 +212,7 @@ namespace transport
 
 
         template <typename Database>
-        void drop_ics(sqlite3* db, const std::list<unsigned int>& drop_list, const Database& dbase)
+        void drop_ics(sqlite3* db, const std::list<unsigned int>& drop_list, const Database& dbase, ics_value_type type=default_ics)
 	        {
             for(std::list<unsigned int>::const_iterator t = drop_list.begin(); t != drop_list.end(); ++t)
 	            {
@@ -222,7 +222,7 @@ namespace transport
                 if(u != dbase.config_end())
 	                {
                     std::ostringstream drop_stmt;
-                    drop_stmt << "DELETE FROM " << __CPP_TRANSPORT_SQLITE_ICS_TABLE << " WHERE kserial=" << *t << ";";
+                    drop_stmt << "DELETE FROM " << (type == default_ics ? __CPP_TRANSPORT_SQLITE_ICS_TABLE : __CPP_TRANSPORT_SQLITE_KT_ICS_TABLE) << " WHERE kserial=" << *t << ";";
                     exec(db, drop_stmt.str());
 	                }
 	            }

@@ -43,7 +43,8 @@
 #define __CPP_TRANSPORT_SQLITE_THREEPF_VALUE_TABLE                 "threepf"
 #define __CPP_TRANSPORT_SQLITE_WORKERS_TABLE                       "worker_data"
 #define __CPP_TRANSPORT_SQLITE_STATS_TABLE                         "integration_statistics"
-#define __CPP_TRANSPORT_SQLITE_ICS_TABLE                           "initial_conditions"
+#define __CPP_TRANSPORT_SQLITE_ICS_TABLE                           "horizon_exit_values"
+#define __CPP_TRANSPORT_SQLITE_KT_ICS_TABLE                        "kt_horizon_exit_values"
 #define __CPP_TRANSPORT_SQLITE_ZETA_TWOPF_VALUE_TABLE              "zeta_twopf"
 #define __CPP_TRANSPORT_SQLITE_ZETA_THREEPF_VALUE_TABLE            "zeta_threepf"
 #define __CPP_TRANSPORT_SQLITE_ZETA_REDUCED_BISPECTRUM_VALUE_TABLE "zeta_redbsp"
@@ -81,6 +82,8 @@ namespace transport
         typedef enum { real_twopf, imag_twopf } twopf_value_type;
 
         typedef enum { twopf_configs, threepf_configs } metadata_configuration_type;
+
+		    typedef enum { default_ics, kt_ics } ics_value_type;
 
 
         // sqlite has a default maximum number of columns, and a maximum number of

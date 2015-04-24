@@ -177,6 +177,7 @@ int main(int argc, char* argv[])
 
     // construct a threepf task
     transport::threepf_cubic_task<double> tk3("axion.threepf-1", ics, times, ks, ThreepfStoragePolicy());
+		tk3.set_collect_initial_conditions(true);
 
     // construct zeta threepf task
     transport::zeta_threepf_task<double> ztk3("axion.threepf-1.zeta", tk3);
