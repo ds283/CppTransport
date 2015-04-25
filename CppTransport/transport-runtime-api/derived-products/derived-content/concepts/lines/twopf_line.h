@@ -33,8 +33,8 @@
 #include "transport-runtime-api/derived-products/utilities/wrapper.h"
 #include "transport-runtime-api/derived-products/utilities/filter.h"
 
-#include "transport-runtime-api/derived-products/derived-content/derived_line.h"
-#include "transport-runtime-api/derived-products/derived-content/integration_task_gadget.h"
+#include "transport-runtime-api/derived-products/derived-content/concepts/lines/derived_line.h"
+#include "transport-runtime-api/derived-products/derived-content/utilities/integration_task_gadget.h"
 
 
 #define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_ROOT          "twopf-line-settings"

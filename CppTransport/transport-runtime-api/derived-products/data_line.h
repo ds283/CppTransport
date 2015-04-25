@@ -14,7 +14,7 @@
 #include "transport-runtime-api/messages.h"
 #include "transport-runtime-api/exceptions.h"
 
-#include "transport-runtime-api/derived-products/line_values.h"
+#include "transport-runtime-api/derived-products/line-collections/line_values.h"
 
 #include "transport-runtime-api/utilities/spline1d.h"
 

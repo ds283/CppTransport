@@ -35,7 +35,7 @@
 
 #include "transport-runtime-api/utilities/latex_output.h"
 
-#include "transport-runtime-api/derived-products/derived-content/threepf_kconfig_shift.h"
+#include "transport-runtime-api/derived-products/derived-content/correlation-functions/compute-gadgets/threepf_kconfig_shift.h"
 
 
 #define __CPP_TRANSPORT_NODE_PRODUCT_WAVENUMBER_SERIES_ROOT           "momentum-configuration-series"

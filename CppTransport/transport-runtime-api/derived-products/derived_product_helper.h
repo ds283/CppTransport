@@ -8,8 +8,9 @@
 #define __derived_product_helper_H_
 
 
-#include "transport-runtime-api/derived-products/line_plot2d.h"
-#include "transport-runtime-api/derived-products/line_asciitable.h"
+#include "transport-runtime-api/derived-products/line-collections/line_plot2d.h"
+#include "transport-runtime-api/derived-products/line-collections/line_asciitable.h"
+#include "transport-runtime-api/derived-products/integration_analysis.h"
 
 
 namespace transport
@@ -26,8 +27,9 @@ namespace transport
               {
                 std::string type = reader[__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_TYPE].asString();
 
-                if (type == __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_LINE_PLOT2D)         return new line_plot2d<number>(name, reader, finder);
-                else if(type == __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_LINE_ASCIITABLE) return new line_asciitable<number>(name, reader, finder);
+                if (type == __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_LINE_PLOT2D)              return new line_plot2d<number>(name, reader, finder);
+                else if(type == __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_LINE_ASCIITABLE)      return new line_asciitable<number>(name, reader, finder);
+		            else if(type == __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_INTEGRATION_ANALYSIS) return new integration_analysis<number>(name, reader, finder);
 
                 std::ostringstream msg;
                 msg << __CPP_TRANSPORT_PRODUCT_UNKNOWN_TYPE << " '" << type << "'";

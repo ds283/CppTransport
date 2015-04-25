@@ -35,7 +35,7 @@
 #include "transport-runtime-api/derived-products/utilities/wrapper.h"
 #include "transport-runtime-api/derived-products/utilities/filter.h"
 
-#include "transport-runtime-api/derived-products/line_values.h"
+#include "transport-runtime-api/derived-products/line-collections/line_values.h"
 
 
 #define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TASK_NAME                                 "task-name"

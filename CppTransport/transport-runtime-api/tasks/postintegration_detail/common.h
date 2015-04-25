@@ -24,7 +24,7 @@
 #include "transport-runtime-api/tasks/integration_tasks.h"
 #include "transport-runtime-api/tasks/task_configurations.h"
 
-#include "transport-runtime-api/derived-products/template_types.h"
+#include "transport-runtime-api/derived-products/derived-content/correlation-functions/template_types.h"
 
 #include "transport-runtime-api/messages.h"
 #include "transport-runtime-api/defaults.h"

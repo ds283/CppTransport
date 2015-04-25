@@ -17,8 +17,8 @@
 #include <stdexcept>
 
 #include "transport-runtime-api/derived-products/data_line.h"
-#include "transport-runtime-api/derived-products/derived-content/wavenumber_series.h"
-#include "transport-runtime-api/derived-products/derived-content/tensor_twopf_line.h"
+#include "transport-runtime-api/derived-products/derived-content/concepts/series/wavenumber_series.h"
+#include "transport-runtime-api/derived-products/derived-content/concepts/lines/tensor_twopf_line.h"
 
 
 namespace transport

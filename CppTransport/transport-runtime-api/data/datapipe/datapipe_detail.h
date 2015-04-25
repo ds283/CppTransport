@@ -27,10 +27,7 @@
 
 // forward-declare derived content if needed
 #include "transport-runtime-api/derived-products/derived_product_forward_declare.h"
-#include "transport-runtime-api/derived-products/template_types.h"
-
-// forward-declare compute gadgets if needed
-#include "transport-runtime-api/derived-products/derived-content/compute_forward_declare.h"
+#include "transport-runtime-api/derived-products/derived-content/correlation-functions/template_types.h"
 
 // forward declare tags if needed
 #include "transport-runtime-api/data/datapipe/tags_forward_declare.h"

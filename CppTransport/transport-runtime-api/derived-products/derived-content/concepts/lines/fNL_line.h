@@ -20,7 +20,7 @@
 // get details of datapipe<number>
 #include "transport-runtime-api/data/datapipe/datapipe.h"
 
-#include "transport-runtime-api/derived-products/derived-content/derived_line.h"
+#include "transport-runtime-api/derived-products/derived-content/concepts/lines/derived_line.h"
 
 // forward-declare model class if needed
 #include "transport-runtime-api/models/model_forward_declare.h"
@@ -32,7 +32,7 @@
 #include "transport-runtime-api/repository/records/repository_records_forward_declare.h"
 
 // template types
-#include "transport-runtime-api/derived-products/template_types.h"
+#include "transport-runtime-api/derived-products/derived-content/correlation-functions/template_types.h"
 
 #include "transport-runtime-api/derived-products/utilities/index_selector.h"
 #include "transport-runtime-api/derived-products/utilities/wrapper.h"

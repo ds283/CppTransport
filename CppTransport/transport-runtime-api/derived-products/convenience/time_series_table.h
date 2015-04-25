@@ -8,7 +8,7 @@
 #define __time_series_table_H_
 
 
-#include "transport-runtime-api/derived-products/line_asciitable.h"
+#include "transport-runtime-api/derived-products/line-collections/line_asciitable.h"
 
 #include "transport-runtime-api/derived-products/utilities/index_selector.h"
 #include "transport-runtime-api/derived-products/utilities/filter.h"

@@ -12,10 +12,10 @@
 #include <fstream>
 #include <functional>
 
-#include <boost/algorithm/string.hpp>
-
 #include "transport-runtime-api/derived-products/line_collection.h"
 #include "transport-runtime-api/derived-products/data_line.h"
+
+#include "transport-runtime-api/utilities/python_finder.h"
 
 #include "transport-runtime-api/messages.h"
 #include "transport-runtime-api/exceptions.h"
@@ -413,8 +413,8 @@ namespace transport
 		            throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
 			        }
 
-		        typeset_with_LaTeX = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_TYPESET_LATEX].asBool();
-            python_path = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_PYTHON_PATH].asString();
+				    typeset_with_LaTeX = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_TYPESET_LATEX].asBool();
+				    python_path        = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_PYTHON_PATH].asString();
 			    }
 
 
@@ -753,22 +753,7 @@ namespace transport
         template <typename number>
         void line_plot2d<number>::set_python_path()
           {
-            FILE* f = popen("which python", "r");
-
-            if(!f)
-              {
-                this->python_path = __CPP_TRANSPORT_DEFAULT_PYTHON_PATH;
-              }
-            else
-              {
-                char buffer[1024];
-                char* line = fgets(buffer, sizeof(buffer), f);
-                pclose(f);
-
-                std::string path(line);
-                boost::algorithm::trim_right(path);
-                this->python_path = path;
-              }
+		        this->python_path = find_python();
           }
 
 

@@ -17,8 +17,8 @@
 #include <stdexcept>
 
 #include "transport-runtime-api/derived-products/data_line.h"
-#include "transport-runtime-api/derived-products/derived-content/time_series.h"
-#include "transport-runtime-api/derived-products/derived-content/fNL_line.h"
+#include "transport-runtime-api/derived-products/derived-content/concepts/series/time_series.h"
+#include "transport-runtime-api/derived-products/derived-content/concepts/lines/fNL_line.h"
 
 
 namespace transport

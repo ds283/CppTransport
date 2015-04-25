@@ -16,10 +16,10 @@
 #include <stdexcept>
 
 #include "transport-runtime-api/derived-products/data_line.h"
-#include "transport-runtime-api/derived-products/derived-content/wavenumber_series.h"
-#include "transport-runtime-api/derived-products/derived-content/zeta_twopf_line.h"
-#include "transport-runtime-api/derived-products/derived-content/zeta_threepf_line.h"
-#include "transport-runtime-api/derived-products/derived-content/zeta_reduced_bispectrum_line.h"
+#include "transport-runtime-api/derived-products/derived-content/concepts/series/wavenumber_series.h"
+#include "transport-runtime-api/derived-products/derived-content/concepts/lines/zeta_twopf_line.h"
+#include "transport-runtime-api/derived-products/derived-content/concepts/lines/zeta_threepf_line.h"
+#include "transport-runtime-api/derived-products/derived-content/concepts/lines/zeta_reduced_bispectrum_line.h"
 
 
 namespace transport

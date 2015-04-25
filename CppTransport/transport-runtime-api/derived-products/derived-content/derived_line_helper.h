@@ -16,16 +16,16 @@
 #include <stdexcept>
 
 
-#include "transport-runtime-api/derived-products/derived-content/derived_line.h"
-#include "transport-runtime-api/derived-products/derived-content/field_time_series.h"
-#include "transport-runtime-api/derived-products/derived-content/tensor_time_series.h"
-#include "transport-runtime-api/derived-products/derived-content/tensor_wavenumber_series.h"
-#include "transport-runtime-api/derived-products/derived-content/zeta_time_series.h"
-#include "transport-runtime-api/derived-products/derived-content/field_wavenumber_series.h"
-#include "transport-runtime-api/derived-products/derived-content/zeta_wavenumber_series.h"
-#include "transport-runtime-api/derived-products/derived-content/fNL_time_series.h"
-#include "transport-runtime-api/derived-products/derived-content/r_time_series.h"
-#include "transport-runtime-api/derived-products/derived-content/r_wavenumber_series.h"
+#include "transport-runtime-api/derived-products/derived-content/concepts/lines/derived_line.h"
+#include "transport-runtime-api/derived-products/derived-content/correlation-functions/field_time_series.h"
+#include "transport-runtime-api/derived-products/derived-content/correlation-functions/tensor_time_series.h"
+#include "transport-runtime-api/derived-products/derived-content/correlation-functions/tensor_wavenumber_series.h"
+#include "transport-runtime-api/derived-products/derived-content/correlation-functions/zeta_time_series.h"
+#include "transport-runtime-api/derived-products/derived-content/correlation-functions/field_wavenumber_series.h"
+#include "transport-runtime-api/derived-products/derived-content/correlation-functions/zeta_wavenumber_series.h"
+#include "transport-runtime-api/derived-products/derived-content/correlation-functions/fNL_time_series.h"
+#include "transport-runtime-api/derived-products/derived-content/correlation-functions/r_time_series.h"
+#include "transport-runtime-api/derived-products/derived-content/correlation-functions/r_wavenumber_series.h"
 
 
 namespace transport

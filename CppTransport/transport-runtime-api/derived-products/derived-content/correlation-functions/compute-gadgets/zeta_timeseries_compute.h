@@ -16,7 +16,7 @@
 #include "transport-runtime-api/data/data_manager.h"
 
 // need 3pf shifter
-#include "transport-runtime-api/derived-products/derived-content/threepf_time_shift.h"
+#include "transport-runtime-api/derived-products/derived-content/correlation-functions/compute-gadgets/threepf_time_shift.h"
 
 
 namespace transport

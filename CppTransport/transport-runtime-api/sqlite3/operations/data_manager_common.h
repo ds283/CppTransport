@@ -14,7 +14,7 @@
 #include <sstream>
 
 #include "transport-runtime-api/tasks/task.h"
-#include "transport-runtime-api/derived-products/template_types.h"
+#include "transport-runtime-api/derived-products/derived-content/correlation-functions/template_types.h"
 #include "transport-runtime-api/scheduler/work_queue.h"
 #include "transport-runtime-api/models/model.h"
 

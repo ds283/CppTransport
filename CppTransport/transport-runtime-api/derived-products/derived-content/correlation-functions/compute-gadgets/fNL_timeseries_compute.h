@@ -11,7 +11,7 @@
 #include <vector>
 #include <memory>
 
-#include "transport-runtime-api/derived-products/template_types.h"
+#include "transport-runtime-api/derived-products/derived-content/correlation-functions/template_types.h"
 
 // need data_manager for datapipe
 #include "transport-runtime-api/data/data_manager.h"
