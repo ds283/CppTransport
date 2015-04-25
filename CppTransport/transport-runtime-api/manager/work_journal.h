@@ -10,13 +10,14 @@
 
 #include <list>
 
+#include "transport-runtime-api/utilities/python_finder.h"
+
 #include "transport-runtime-api/defaults.h"
 #include "transport-runtime-api/messages.h"
 #include "transport-runtime-api/exceptions.h"
 
 #include "boost/date_time.hpp"
 #include "boost/filesystem/operations.hpp"
-#include "boost/algorithm/string.hpp"
 
 
 // set default minimum time interval for instruments to be 1 second
@@ -356,22 +357,7 @@ namespace transport
 		work_journal::work_journal(unsigned int N)
 			: N_workers(N)
 			{
-		    FILE* f = popen("which python", "r");
-
-		    if(!f)
-			    {
-		        this->python_path = __CPP_TRANSPORT_DEFAULT_PYTHON_PATH;
-			    }
-		    else
-			    {
-		        char buffer[1024];
-		        char* line = fgets(buffer, sizeof(buffer), f);
-		        pclose(f);
-
-		        std::string path(line);
-		        boost::algorithm::trim_right(path);
-		        this->python_path = path;
-			    }
+				this->python_path = find_python();
 			}
 
 
