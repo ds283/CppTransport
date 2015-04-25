@@ -14,9 +14,9 @@
 #include <cmath>
 
 #include "transport-runtime-api/derived-products/derived_product.h"
-#include "transport-runtime-api/derived-products/derived-content/derived_line.h"
-#include "transport-runtime-api/derived-products/derived-content/derived_line_helper.h"
-#include "transport-runtime-api/derived-products/data_line.h"
+#include "transport-runtime-api/derived-products/derived-content/concepts/derived_line.h"
+#include "transport-runtime-api/derived-products/derived-content/concepts/derived_line_helper.h"
+#include "transport-runtime-api/derived-products/line-collections/data_line.h"
 
 #include "transport-runtime-api/defaults.h"
 #include "transport-runtime-api/messages.h"

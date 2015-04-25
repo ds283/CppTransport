@@ -20,7 +20,7 @@
 // get details of datapipe<number>
 #include "transport-runtime-api/data/datapipe/datapipe.h"
 
-#include "transport-runtime-api/derived-products/derived-content/concepts/lines/derived_line.h"
+#include "transport-runtime-api/derived-products/derived-content/concepts/derived_line.h"
 
 // forward-declare model class if needed
 #include "transport-runtime-api/models/model_forward_declare.h"

@@ -16,7 +16,7 @@
 #include <array>
 #include <stdexcept>
 
-#include "transport-runtime-api/derived-products/data_line.h"
+#include "transport-runtime-api/derived-products/line-collections/data_line.h"
 #include "transport-runtime-api/derived-products/derived-content/concepts/series/time_series.h"
 #include "transport-runtime-api/derived-products/derived-content/concepts/lines/zeta_twopf_line.h"
 #include "transport-runtime-api/derived-products/derived-content/concepts/lines/zeta_threepf_line.h"

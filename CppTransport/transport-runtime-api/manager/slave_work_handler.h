@@ -19,8 +19,8 @@
 #include "transport-runtime-api/tasks/output_tasks.h"
 
 #include "transport-runtime-api/data/data_manager.h"
-#include "transport-runtime-api/derived-products/derived-content/compute-gadgets/zeta_timeseries_compute.h"
-#include "transport-runtime-api/derived-products/derived-content/compute-gadgets/fNL_timeseries_compute.h"
+#include "transport-runtime-api/derived-products/derived-content/correlation-functions/compute-gadgets/zeta_timeseries_compute.h"
+#include "transport-runtime-api/derived-products/derived-content/correlation-functions/compute-gadgets/fNL_timeseries_compute.h"
 
 #include "boost/timer/timer.hpp"
 

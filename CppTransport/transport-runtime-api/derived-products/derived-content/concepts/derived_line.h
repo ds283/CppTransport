@@ -29,7 +29,7 @@
 // get details of datapipe<number>
 #include "transport-runtime-api/data/datapipe/datapipe.h"
 
-#include "transport-runtime-api/derived-products/data_line.h"
+#include "transport-runtime-api/derived-products/line-collections/data_line.h"
 
 #include "transport-runtime-api/derived-products/utilities/index_selector.h"
 #include "transport-runtime-api/derived-products/utilities/wrapper.h"

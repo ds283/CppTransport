@@ -15,8 +15,6 @@
 #include "transport-runtime-api/derived-products/convenience/wavenumber_series_plot.h"
 #include "transport-runtime-api/derived-products/convenience/wavenumber_series_table.h"
 
-#include "transport-runtime-api/derived-products/integration_analysis.h"
-
 #include "transport-runtime-api/derived-products/derived_product_helper.h"
 
 

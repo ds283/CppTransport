@@ -8,7 +8,7 @@
 #define __time_series_plot_H_
 
 
-#include "transport-runtime-api/derived-products/line_plot2d.h"
+#include "transport-runtime-api/derived-products/line-collections/line_plot2d.h"
 
 #include "transport-runtime-api/derived-products/utilities/index_selector.h"
 #include "transport-runtime-api/derived-products/utilities/filter.h"

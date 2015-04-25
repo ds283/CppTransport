@@ -12,8 +12,8 @@
 #include <fstream>
 #include <functional>
 
-#include "transport-runtime-api/derived-products/line_collection.h"
-#include "transport-runtime-api/derived-products/data_line.h"
+#include "transport-runtime-api/derived-products/line-collections/line_collection.h"
+#include "transport-runtime-api/derived-products/line-collections/data_line.h"
 
 #include "transport-runtime-api/utilities/python_finder.h"
 

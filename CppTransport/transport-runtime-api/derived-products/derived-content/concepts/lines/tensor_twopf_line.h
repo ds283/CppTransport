@@ -33,7 +33,7 @@
 #include "transport-runtime-api/derived-products/utilities/wrapper.h"
 #include "transport-runtime-api/derived-products/utilities/filter.h"
 
-#include "transport-runtime-api/derived-products/derived-content/concepts/lines/derived_line.h"
+#include "transport-runtime-api/derived-products/derived-content/concepts/derived_line.h"
 #include "transport-runtime-api/derived-products/derived-content/utilities/integration_task_gadget.h"
 
 
