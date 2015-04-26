@@ -51,7 +51,6 @@
 #define __CPP_TRANSPORT_SWITCH_CAPACITY          "--caches"
 #define __CPP_TRANSPORT_SWITCH_BATCHER_CAPACITY  "--batch-cache"
 #define __CPP_TRANSPORT_SWITCH_CACHE_CAPACITY    "--data-cache"
-#define __CPP_TRANSPORT_SWITCH_ZETA_CAPACITY     "--zeta-cache"
 #define __CPP_TRANSPORT_SWITCH_VERBOSE           "-v"
 #define __CPP_TRANSPORT_SWITCH_GANTT_CHART       "--gantt-chart"
 
@@ -177,16 +176,14 @@ namespace transport
 				master_controller(boost::mpi::environment& e, boost::mpi::communicator& w,
 				                  error_callback err, warning_callback warn, message_callback msg,
 				                  unsigned int bcp = __CPP_TRANSPORT_DEFAULT_BATCHER_STORAGE,
-				                  unsigned int pcp = __CPP_TRANSPORT_DEFAULT_PIPE_STORAGE,
-				                  unsigned int zcp = __CPP_TRANSPORT_DEFAULT_ZETA_CACHE_SIZE);
+				                  unsigned int pcp = __CPP_TRANSPORT_DEFAULT_PIPE_STORAGE);
 
 				//! construct a master controller object with a supplied repository
 				master_controller(boost::mpi::environment& e, boost::mpi::communicator& w,
 				                  json_repository<number>* r,
 				                  error_callback err, warning_callback warn, message_callback msg,
 				                  unsigned int bcp = __CPP_TRANSPORT_DEFAULT_BATCHER_STORAGE,
-				                  unsigned int pcp = __CPP_TRANSPORT_DEFAULT_PIPE_STORAGE,
-				                  unsigned int zcp = __CPP_TRANSPORT_DEFAULT_ZETA_CACHE_SIZE);
+				                  unsigned int pcp = __CPP_TRANSPORT_DEFAULT_PIPE_STORAGE);
 
 				//! destroy a master manager object
 				~master_controller();
@@ -413,10 +410,7 @@ namespace transport
 		    unsigned int batcher_capacity;
 
 		    //! Data cache capacity per datapipe
-		    unsigned int pipe_data_capacity;
-
-		    //! Zeta cache capacity per datapipe
-		    unsigned int pipe_zeta_capacity;
+		    unsigned int pipe_capacity;
 
 
 		    // ERROR CALLBACKS
@@ -435,16 +429,15 @@ namespace transport
 
     template <typename number>
     master_controller<number>::master_controller(boost::mpi::environment& e, boost::mpi::communicator& w,
-                                           error_callback err, warning_callback warn, message_callback msg,
-                                           unsigned int bcp, unsigned int pcp, unsigned int zcp)
+                                                 error_callback err, warning_callback warn, message_callback msg,
+                                                 unsigned int bcp, unsigned int pcp)
 	    : environment(e),
 	      world(w),
 	      repo(nullptr),
-	      data_mgr(data_manager_factory<number>(bcp, pcp, zcp)),
+	      data_mgr(data_manager_factory<number>(bcp, pcp)),
 	      journal(w.size()-1),
 	      batcher_capacity(bcp),
-	      pipe_data_capacity(pcp),
-	      pipe_zeta_capacity(zcp),
+	      pipe_capacity(pcp),
 	      error_handler(err),
 	      warning_handler(warn),
 	      message_handler(msg)
@@ -454,17 +447,16 @@ namespace transport
 
     template <typename number>
     master_controller<number>::master_controller(boost::mpi::environment& e, boost::mpi::communicator& w,
-                                           json_repository<number>* r,
-                                           error_callback err, warning_callback warn, message_callback msg,
-                                           unsigned int bcp, unsigned int pcp, unsigned int zcp)
+                                                 json_repository<number>* r,
+                                                 error_callback err, warning_callback warn, message_callback msg,
+                                                 unsigned int bcp, unsigned int pcp)
 	    : environment(e),
 	      world(w),
 	      repo(r),
-	      data_mgr(data_manager_factory<number>(bcp, pcp, zcp)),
+	      data_mgr(data_manager_factory<number>(bcp, pcp)),
 	      journal(w.size()-1),
 	      batcher_capacity(bcp),
-	      pipe_data_capacity(pcp),
-	      pipe_zeta_capacity(zcp),
+	      pipe_capacity(pcp),
 	      error_handler(err),
 	      warning_handler(warn),
 	      message_handler(msg)
@@ -548,9 +540,9 @@ namespace transport
 		                capacity = capacity * 1024*1024;
 		                if(capacity > 0)
 			                {
-		                    this->batcher_capacity = this->pipe_data_capacity = static_cast<unsigned int>(capacity);
+		                    this->batcher_capacity = this->pipe_capacity = static_cast<unsigned int>(capacity);
 		                    this->data_mgr->set_batcher_capacity(this->batcher_capacity);
-		                    this->data_mgr->set_data_capacity(this->pipe_data_capacity);
+                        this->data_mgr->set_pipe_capacity(this->pipe_capacity);
 			                }
 		                else
 			                {
@@ -593,35 +585,13 @@ namespace transport
 		                capacity = capacity * 1024*1024;
 		                if(capacity > 0)
 			                {
-		                    this->pipe_data_capacity = static_cast<unsigned int>(capacity);
-		                    this->data_mgr->set_data_capacity(this->pipe_data_capacity);
+		                    this->pipe_capacity = static_cast<unsigned int>(capacity);
+                        this->data_mgr->set_pipe_capacity(this->pipe_capacity);
 			                }
 		                else
 			                {
 		                    std::ostringstream msg;
 		                    msg << __CPP_TRANSPORT_EXPECTED_POSITIVE << " " << __CPP_TRANSPORT_SWITCH_CACHE_CAPACITY;
-		                    this->error_handler(msg.str());
-			                }
-			            }
-			        }
-		        else if(std::string(argv[i]) == __CPP_TRANSPORT_SWITCH_ZETA_CAPACITY)
-			        {
-		            if(i+1 >= argc) this->error_handler(__CPP_TRANSPORT_EXPECTED_CAPACITY);
-		            else
-			            {
-		                ++i;
-		                std::string capacity_str(argv[i]);
-		                int capacity = boost::lexical_cast<int>(capacity_str);
-		                capacity = capacity * 1024*1024;
-		                if(capacity > 0)
-			                {
-		                    this->pipe_zeta_capacity = static_cast<unsigned int>(capacity);
-		                    this->data_mgr->set_zeta_capacity(this->pipe_zeta_capacity);
-			                }
-		                else
-			                {
-		                    std::ostringstream msg;
-		                    msg << __CPP_TRANSPORT_EXPECTED_POSITIVE << " " << __CPP_TRANSPORT_SWITCH_ZETA_CAPACITY;
 		                    this->error_handler(msg.str());
 			                }
 			            }
@@ -1272,14 +1242,14 @@ namespace transport
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total time-configuration cache hits               = " << o_metadata.time_config_hits << ", unloads = " << o_metadata.time_config_unloads;
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total twopf k-config cache hits                   = " << o_metadata.twopf_kconfig_hits << ", unloads = " << o_metadata.twopf_kconfig_unloads;
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total threepf k-config cache hits                 = " << o_metadata.threepf_kconfig_hits << ", unloads = " << o_metadata.threepf_kconfig_unloads;
+        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total statistics cache hits                       = " << o_metadata.stats_hits << ", unloads = " << o_metadata.stats_unloads;
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total data cache hits                             = " << o_metadata.data_hits << ", unloads = " << o_metadata.data_unloads;
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total zeta cache hits                             = " << o_metadata.zeta_hits << ", unloads = " << o_metadata.zeta_unloads;
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "";
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total time config cache evictions                 = " << format_time(o_metadata.time_config_evictions);
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total twopf k-config cache evictions              = " << format_time(o_metadata.twopf_kconfig_evictions);
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total threepf k-config cache evictions            = " << format_time(o_metadata.threepf_kconfig_evictions);
+        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total statistics cache evictions                  = " << format_time(o_metadata.stats_evictions);
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total data cache evictions                        = " << format_time(o_metadata.data_evictions);
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total zeta cache evictions                        = " << format_time(o_metadata.zeta_evictions);
       }
 
 
@@ -1319,12 +1289,12 @@ namespace transport
         metadata.threepf_kconfig_hits      += payload.get_threepf_kconfig_hits();
         metadata.threepf_kconfig_unloads   += payload.get_threepf_kconfig_unloads();
         metadata.threepf_kconfig_evictions += payload.get_threepf_kconfig_evictions();
+        metadata.stats_hits                += payload.get_stats_hits();
+        metadata.stats_unloads             += payload.get_stats_unloads();
+        metadata.stats_evictions           += payload.get_stats_evictions();
         metadata.data_hits                 += payload.get_data_hits();
         metadata.data_unloads              += payload.get_data_unloads();
         metadata.data_evictions            += payload.get_data_evictions();
-        metadata.zeta_hits                 += payload.get_zeta_hits();
-        metadata.zeta_unloads              += payload.get_zeta_unloads();
-        metadata.zeta_evictions            += payload.get_zeta_evictions();
 	    }
 
 
@@ -1786,7 +1756,7 @@ namespace transport
 		    if(this->repo == nullptr) throw std::runtime_error(__CPP_TRANSPORT_REPO_NOT_SET);
 
 		    // request information from each worker, and pass all necessary setup details
-        MPI::slave_setup_payload payload(this->repo->get_root_path(), this->batcher_capacity, this->pipe_data_capacity, this->pipe_zeta_capacity);
+        MPI::slave_setup_payload payload(this->repo->get_root_path(), this->batcher_capacity, this->pipe_capacity);
 
         for(unsigned int i = 0; i < this->world.size()-1; ++i)
 	        {

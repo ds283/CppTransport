@@ -220,8 +220,7 @@ namespace transport
       public:
 
         //! Construct a datapipe
-        datapipe(unsigned int dcap, unsigned int zcap,
-                 const boost::filesystem::path& lp, const boost::filesystem::path& tp, unsigned int w,
+        datapipe(unsigned int cap, const boost::filesystem::path& lp, const boost::filesystem::path& tp, unsigned int w,
                  utility_callbacks& u, config_cache& cf, timeslice_cache& t, kslice_cache& k, stats_cache& s, bool no_log=false);
 
         //! Destroy a datapipe
@@ -297,8 +296,8 @@ namespace transport
         //! Get total data cache hits
         unsigned int get_data_cache_hits() const { return(this->data_cache.get_hits()); }
 
-        //! Get total zeta cache hits
-        unsigned int get_zeta_cache_hits() const { return(this->zeta_cache.get_hits()); }
+        //! Get total statistics cache hits
+        unsigned int get_stats_cache_hits() const { return(this->statistics_cache.get_hits()); }
 
 
         //! Get total time-config cache unloads
@@ -313,8 +312,8 @@ namespace transport
         //! Get total data cache unloads
         unsigned int get_data_cache_unloads() const { return(this->data_cache.get_unloads()); }
 
-        //! Get total zeta cache unloads
-        unsigned int get_zeta_cache_unloads() const { return(this->zeta_cache.get_unloads()); }
+        //! Get total statistics cache unloads
+        unsigned int get_stats_cache_unloads() const { return(this->statistics_cache.get_unloads()); }
 
 
         //! Get total eviction time for time-config cache
@@ -329,8 +328,8 @@ namespace transport
         //! Get total eviction time for data cache
         boost::timer::nanosecond_type get_data_cache_evictions() const { return(this->data_cache.get_eviction_timer()); }
 
-        //! Get total eviction time for zeta cache
-        boost::timer::nanosecond_type get_zeta_cache_evictions() const { return(this->zeta_cache.get_eviction_timer()); }
+        //! Get total eviction time for statistics cache
+        boost::timer::nanosecond_type get_stats_cache_evictions() const { return(this->statistics_cache.get_eviction_timer()); }
 
 
         // ATTACH, DETACH OUTPUT GROUPS
@@ -505,11 +504,6 @@ namespace transport
         //! data cache
         linecache::cache<std::vector<number>, data_tag<number>, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE> data_cache;
 
-        //! zeta cache (originally split out because zeta calculations were expensive, and
-		    //! a seperate cache prevented them being evicted to make space for
-		    //! fieldspace data)
-        linecache::cache<std::vector<number>, data_tag<number>, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE> zeta_cache;
-
 
         // CACHE TABLES
 
@@ -527,9 +521,6 @@ namespace transport
 
         //! data cache table for currently-attached group; null if no group is attached
         linecache::table<std::vector<number>, data_tag<number>, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE>* data_cache_table;
-
-        //! zeta cache table for currently-attached group; null if no group is attached
-        linecache::table<std::vector<number>, data_tag<number>, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE>* zeta_cache_table;
 
 
         // PROPERTIES
@@ -607,8 +598,7 @@ namespace transport
 
 
     template <typename number>
-    datapipe<number>::datapipe(unsigned int dcap, unsigned int zcap,
-                               const boost::filesystem::path& lp, const boost::filesystem::path& tp, unsigned int w,
+    datapipe<number>::datapipe(unsigned int cap, const boost::filesystem::path& lp, const boost::filesystem::path& tp, unsigned int w,
                                utility_callbacks& u, config_cache& cf, timeslice_cache& t, kslice_cache& k, stats_cache& s, bool no_log)
 	    : logdir_path(lp),
 	      temporary_path(tp),
@@ -623,13 +613,11 @@ namespace transport
 	      threepf_kconfig_cache_table(nullptr),
 	      statistics_cache_table(nullptr),
 	      data_cache_table(nullptr),
-	      zeta_cache_table(nullptr),
 	      time_config_cache(__CPP_TRANSPORT_DEFAULT_CONFIGURATION_CACHE_SIZE),
 	      twopf_kconfig_cache(__CPP_TRANSPORT_DEFAULT_CONFIGURATION_CACHE_SIZE),
 	      threepf_kconfig_cache(__CPP_TRANSPORT_DEFAULT_CONFIGURATION_CACHE_SIZE),
 	      statistics_cache(__CPP_TRANSPORT_DEFAULT_CONFIGURATION_CACHE_SIZE),
-	      data_cache(dcap),
-	      zeta_cache(zcap),
+	      data_cache(cap),
 	      type(none_attached),
         N_fields(0)
 	    {
@@ -665,7 +653,7 @@ namespace transport
             this->log_sink.reset();
 	        }
 
-        BOOST_LOG_SEV(this->log_source, normal) << "** Instantiated datapipe (main cache " << format_memory(dcap) << ", zeta cache " << format_memory(zcap) << ")"
+        BOOST_LOG_SEV(this->log_source, normal) << "** Instantiated datapipe (cache capacity " << format_memory(cap) << ")"
 	        << " on MPI host " << host_info.get_host_name()
 	        << ", OS = " << host_info.get_os_name()
 	        << ", Version = " << host_info.get_os_version()
@@ -693,14 +681,12 @@ namespace transport
         BOOST_LOG_SEV(this->log_source, normal) << "--   threepf k-configuration cache hits = " << this->threepf_kconfig_cache.get_hits() << " | unloads = " << this->threepf_kconfig_cache.get_unloads();
 		    BOOST_LOG_SEV(this->log_source, normal) << "--   statistics cache hits              = " << this->statistics_cache.get_hits() << " | unloads = " << this->statistics_cache.get_unloads();
         BOOST_LOG_SEV(this->log_source, normal) << "--   data cache hits:                   = " << this->data_cache.get_hits() << " | unloads = " << this->data_cache.get_unloads();
-        BOOST_LOG_SEV(this->log_source, normal) << "--   zeta cache hits:                   = " << this->zeta_cache.get_hits() << " | unloads = " << this->zeta_cache.get_unloads();
         BOOST_LOG_SEV(this->log_source, normal) << "";
         BOOST_LOG_SEV(this->log_source, normal) << "--   time-configuration evictions       = " << format_time(this->time_config_cache.get_eviction_timer());
         BOOST_LOG_SEV(this->log_source, normal) << "--   twopf k-configuration evictions    = " << format_time(this->twopf_kconfig_cache.get_eviction_timer());
         BOOST_LOG_SEV(this->log_source, normal) << "--   threepf k-configuration evictions  = " << format_time(this->threepf_kconfig_cache.get_eviction_timer());
 		    BOOST_LOG_SEV(this->log_source, normal) << "--   statistics cache evictions         = " << format_time(this->statistics_cache.get_eviction_timer());
         BOOST_LOG_SEV(this->log_source, normal) << "--   data evictions                     = " << format_time(this->data_cache.get_eviction_timer());
-        BOOST_LOG_SEV(this->log_source, normal) << "--   zeta evictions                     = " << format_time(this->zeta_cache.get_eviction_timer());
 
         // detach any attached output group, if necessary
 		    switch(this->type)
@@ -737,8 +723,8 @@ namespace transport
 		    if(this->time_config_cache_table != nullptr
 				    || this->twopf_kconfig_cache_table != nullptr
 				    || this->threepf_kconfig_cache_table != nullptr
-				    || this->data_cache_table != nullptr
-				    || this->zeta_cache_table != nullptr) return(false);
+            || this->statistics_cache_table != nullptr
+				    || this->data_cache_table != nullptr) return(false);
 
 		    return(true);
 	    }
@@ -764,8 +750,8 @@ namespace transport
 		    if(this->time_config_cache_table == nullptr
 			       || this->twopf_kconfig_cache_table == nullptr
 			       || this->threepf_kconfig_cache_table == nullptr
-			       || this->data_cache_table == nullptr
-			       || this->zeta_cache_table == nullptr) return(false);
+             || this->statistics_cache_table == nullptr
+			       || this->data_cache_table == nullptr) return(false);
 
 		    return(true);
 	    }
@@ -841,7 +827,6 @@ namespace transport
         this->threepf_kconfig_cache_table = &(this->threepf_kconfig_cache.get_table_handle(payload.get_container_path().string()));
 				this->statistics_cache_table      = &(this->statistics_cache.get_table_handle(payload.get_container_path().string()));
         this->data_cache_table            = &(this->data_cache.get_table_handle(payload.get_container_path().string()));
-        this->zeta_cache_table            = &(this->zeta_cache.get_table_handle(payload.get_container_path().string()));
 	    }
 
 
@@ -877,7 +862,6 @@ namespace transport
         this->threepf_kconfig_cache_table = nullptr;
 		    this->statistics_cache_table      = nullptr;
         this->data_cache_table            = nullptr;
-        this->zeta_cache_table            = nullptr;
 	    }
 
 
@@ -962,7 +946,7 @@ namespace transport
 
         assert(sns.size() > 0);
 
-        return(this->zeta_cache_table->get_serial_handle(sns, time_serial_group));
+        return(this->data_cache_table->get_serial_handle(sns, time_serial_group));
 	    }
 
 
@@ -974,7 +958,7 @@ namespace transport
 
         assert(sns.size() > 0);
 
-        return(this->zeta_cache_table->get_serial_handle(sns, kconfig_serial_group));
+        return(this->data_cache_table->get_serial_handle(sns, kconfig_serial_group));
 	    }
 
 

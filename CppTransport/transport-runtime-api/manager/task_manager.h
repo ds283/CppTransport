@@ -38,14 +38,12 @@ namespace transport
         //! Construct a task manager using command-line arguments. The repository must exist and be named on the command line.
         task_manager(int argc, char* argv[],
                      unsigned int bcp=__CPP_TRANSPORT_DEFAULT_BATCHER_STORAGE,
-                     unsigned int pcp=__CPP_TRANSPORT_DEFAULT_PIPE_STORAGE,
-                     unsigned int zcp=__CPP_TRANSPORT_DEFAULT_ZETA_CACHE_SIZE);
+                     unsigned int pcp=__CPP_TRANSPORT_DEFAULT_PIPE_STORAGE);
 
         //! Construct a task manager using a previously-constructed repository object. Usually this will be used only when creating a new repository.
         task_manager(int argc, char* argv[], json_repository<number>* r,
                      unsigned int bcp=__CPP_TRANSPORT_DEFAULT_BATCHER_STORAGE,
-                     unsigned int pcp=__CPP_TRANSPORT_DEFAULT_PIPE_STORAGE,
-                     unsigned int zcp=__CPP_TRANSPORT_DEFAULT_ZETA_CACHE_SIZE);
+                     unsigned int pcp=__CPP_TRANSPORT_DEFAULT_PIPE_STORAGE);
 
         //! Destroy a task manager object
         ~task_manager() = default;
@@ -107,7 +105,7 @@ namespace transport
 
 
     template <typename number>
-    task_manager<number>::task_manager(int argc, char* argv[], unsigned int bcp, unsigned int pcp, unsigned int zcp)
+    task_manager<number>::task_manager(int argc, char* argv[], unsigned int bcp, unsigned int pcp)
 	    : instance_manager<number>(),
 	      environment(argc, argv),
 	    // note it is safe to assume environment and world have been constructed when the constructor for
@@ -117,12 +115,12 @@ namespace transport
 	            std::bind(&task_manager<number>::error, this, std::placeholders::_1),
 	            std::bind(&task_manager<number>::warn, this, std::placeholders::_1),
 	            std::bind(&task_manager<number>::message, this, std::placeholders::_1),
-	            bcp, pcp, zcp),
+	            bcp, pcp),
 	      master(environment, world,
 	             std::bind(&task_manager<number>::error, this, std::placeholders::_1),
 	             std::bind(&task_manager<number>::warn, this, std::placeholders::_1),
 	             std::bind(&task_manager<number>::message, this, std::placeholders::_1),
-	             bcp, pcp, zcp)
+	             bcp, pcp)
       {
         if(world.rank() == MPI::RANK_MASTER)  // process command-line arguments if we are the master node
 	        {
@@ -132,7 +130,7 @@ namespace transport
 
 
     template <typename number>
-    task_manager<number>::task_manager(int argc, char* argv[], json_repository<number>* r, unsigned int bcp, unsigned int pcp, unsigned int zcp)
+    task_manager<number>::task_manager(int argc, char* argv[], json_repository<number>* r, unsigned int bcp, unsigned int pcp)
       : instance_manager<number>(),
         environment(argc, argv),
         // note it is safe to assume environment and world have been constructed when the constructor for
@@ -142,12 +140,12 @@ namespace transport
               std::bind(&task_manager<number>::error, this, std::placeholders::_1),
               std::bind(&task_manager<number>::warn, this, std::placeholders::_1),
               std::bind(&task_manager<number>::message, this, std::placeholders::_1),
-              bcp, pcp, zcp),
+              bcp, pcp),
         master(environment, world, r,
                std::bind(&task_manager<number>::error, this, std::placeholders::_1),
                std::bind(&task_manager<number>::warn, this, std::placeholders::_1),
                std::bind(&task_manager<number>::message, this, std::placeholders::_1),
-               bcp, pcp, zcp)
+               bcp, pcp)
       {
         assert(r != nullptr);
 

@@ -52,8 +52,9 @@ namespace transport
       public:
 
         //! Create a data_manager_sqlite3 instance
-        data_manager_sqlite3(unsigned int bcap, unsigned int dcap, unsigned int zcap)
-          : data_manager<number>(bcap, dcap, zcap), temporary_container_serial(0)
+        data_manager_sqlite3(unsigned int bcap, unsigned int dcap)
+          : data_manager<number>(bcap, dcap),
+            temporary_container_serial(0)
           {
           }
 
@@ -1783,8 +1784,7 @@ namespace transport
                                        std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
 
         // set up datapipe
-        datapipe<number> pipe(this->pipe_data_capacity, this->pipe_zeta_capacity,
-                              logdir, tempdir, worker, utilities, config, timeslice, kslice, stats, no_log);
+        datapipe<number> pipe(this->pipe_capacity, logdir, tempdir, worker, utilities, config, timeslice, kslice, stats, no_log);
 
         return(pipe);
 			}
@@ -2179,9 +2179,9 @@ namespace transport
 
 
     template <typename number>
-    data_manager<number>* data_manager_factory(unsigned int bcap, unsigned int dcap, unsigned int zcap)
+    data_manager<number>* data_manager_factory(unsigned int bcap, unsigned int dcap)
       {
-        return new data_manager_sqlite3<number>(bcap, dcap, zcap);
+        return new data_manager_sqlite3<number>(bcap, dcap);
       }
 
 

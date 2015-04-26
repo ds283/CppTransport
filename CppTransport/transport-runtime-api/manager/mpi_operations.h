@@ -62,11 +62,10 @@ namespace transport
                 slave_setup_payload() = default;
 
                 //! Value constructor (used for constructing messages to send)
-                slave_setup_payload(const boost::filesystem::path& rp, unsigned int bcp, unsigned int pcp, unsigned int zcp)
+                slave_setup_payload(const boost::filesystem::path& rp, unsigned int bcp, unsigned int pcp)
                   : repository(rp.string()),
                     batcher_capacity(bcp),
-                    data_capacity(pcp),
-                    zeta_capacity(zcp)
+                    data_capacity(pcp)
                   {
                   }
 
@@ -79,9 +78,6 @@ namespace transport
 		            //! Get datapipe main cache capacity
 		            unsigned int get_data_capacity()    const { return(this->data_capacity); }
 
-		            //! Get datapipe zeta cache capacity
-		            unsigned int get_zeta_capacity()    const { return(this->zeta_capacity); }
-
               private:
 
                 //! Pathname to repository
@@ -93,9 +89,6 @@ namespace transport
 		            //! Datapipe main cache capacity
 		            unsigned int data_capacity;
 
-		            //! Datapipe zeta cache capacity
-		            unsigned int zeta_capacity;
-
                 // enable boost::serialization support, and hence automated packing for transmission over MPI
                 friend class boost::serialization::access;
 
@@ -105,7 +98,6 @@ namespace transport
                     ar & repository;
 		                ar & batcher_capacity;
 		                ar & data_capacity;
-		                ar & zeta_capacity;
                   }
 
               };
@@ -561,11 +553,11 @@ namespace transport
 		                                     const unsigned int tc, const unsigned int tc_u,
 		                                     const unsigned int twopf_k, const unsigned int twopf_k_u,
 		                                     const unsigned int threepf_k, const unsigned int threepf_k_u,
+                                         const unsigned int ts, const unsigned int ts_u,
 		                                     const unsigned int td, const unsigned int td_u,
-                                         const unsigned int tz, const unsigned int tz_u,
 		                                     const boost::timer::nanosecond_type tce, const boost::timer::nanosecond_type twopf_e,
-		                                     const boost::timer::nanosecond_type threepf_e, const boost::timer::nanosecond_type de,
-                                         const boost::timer::nanosecond_type zeta_e)
+		                                     const boost::timer::nanosecond_type threepf_e, const boost::timer::nanosecond_type s_e,
+                                         const boost::timer::nanosecond_type de)
 			            : content_groups(cg),
                     database_time(db),
 			              cpu_time(cpu),
@@ -579,15 +571,15 @@ namespace transport
 			              twopf_kconfig_unloads(twopf_k_u),
 			              threepf_kconfig_hits(threepf_k),
 			              threepf_kconfig_unloads(threepf_k_u),
+                    stats_hits(ts),
+                    stats_unloads(ts_u),
 			              data_hits(td),
 			              data_unloads(td_u),
-                    zeta_hits(tz),
-			              zeta_unloads(tz_u),
 		                time_config_evictions(tce),
 			              twopf_kconfig_evictions(twopf_e),
 		                threepf_kconfig_evictions(threepf_e),
+                    stats_evictions(s_e),
 			              data_evictions(de),
-                    zeta_evictions(zeta_e),
 		                timestamp(boost::posix_time::second_clock::universal_time())
 			            {
 			            }
@@ -622,11 +614,11 @@ namespace transport
 				        //! Get threepf kconfig hits
 				        unsigned int                   get_threepf_kconfig_hits()      const { return(this->threepf_kconfig_hits); }
 
+                //! Get stats hits
+                unsigned int                   get_stats_hits()                const { return(this->stats_hits); }
+
 				        //! Get data hits
 				        unsigned int                   get_data_hits()                 const { return(this->data_hits); }
-
-                //! Get zeta hits
-                unsigned int                   get_zeta_hits()                 const { return(this->zeta_hits); }
 
 		            //! Get time config unloads
 		            unsigned int                   get_time_config_unloads()       const { return(this->time_config_unloads); }
@@ -637,11 +629,11 @@ namespace transport
 		            //! Get threepf kconfig unloads
 		            unsigned int                   get_threepf_kconfig_unloads()   const { return(this->threepf_kconfig_unloads); }
 
+                //! Get stats unloads
+                unsigned int                   get_stats_unloads()             const { return(this->stats_unloads); }
+
 		            //! Get data unloads
 		            unsigned int                   get_data_unloads()              const { return(this->data_unloads); }
-
-                //! Get zeta unloads
-                unsigned int                   get_zeta_unloads()              const { return(this->zeta_unloads); }
 
 				        //! Get time-config cache evictions
 				        boost::timer::nanosecond_type  get_time_config_evictions()     const { return(this->time_config_evictions); }
@@ -652,11 +644,11 @@ namespace transport
 				        //! Get threepf k-config cache evictions
 				        boost::timer::nanosecond_type  get_threepf_kconfig_evictions() const { return(this->threepf_kconfig_evictions); }
 
+                //! Get stats cache evictions
+                boost::timer::nanosecond_type  get_stats_evictions()           const { return(this->stats_evictions); }
+
 				        //! Get data cache evictions
 				        boost::timer::nanosecond_type  get_data_evictions()            const { return(this->data_evictions); }
-
-                //! Get zeta cache evictions
-                boost::timer::nanosecond_type  get_zeta_evictions()            const { return(this->zeta_evictions); }
 
 				        //! Get timestamp
 				        boost::posix_time::ptime       get_timestamp()                 const { return(this->timestamp); }
@@ -703,17 +695,17 @@ namespace transport
 				        //! Number of threepf-kconfig cache unloads
 				        unsigned int threepf_kconfig_unloads;
 
+                //! Number of stats cache hits
+                unsigned int stats_hits;
+
+                //! Number of stats cache unloads
+                unsigned int stats_unloads;
+
 				        //! Number of data cache hits
 				        unsigned int data_hits;
 
 				        //! Number of data cache unloads
 				        unsigned int data_unloads;
-
-                //! Number of zeta cache hits
-                unsigned int zeta_hits;
-
-                //! Number of zeta cache unloads
-                unsigned int zeta_unloads;
 
 				        //! Time spent doing time-config cache evictions
 				        boost::timer::nanosecond_type time_config_evictions;
@@ -724,11 +716,11 @@ namespace transport
 				        //! Time spent doing threepf k-config cache evictions
 				        boost::timer::nanosecond_type threepf_kconfig_evictions;
 
+                //! Time spent doing stats cache evictions
+                boost::timer::nanosecond_type stats_evictions;
+
 				        //! Time spent doing data cache evictions
 				        boost::timer::nanosecond_type data_evictions;
-
-                //! Time spent doing zeta cache evictions
-                boost::timer::nanosecond_type zeta_evictions;
 
 		            //! Timestamp
 		            boost::posix_time::ptime timestamp;
@@ -752,15 +744,15 @@ namespace transport
 				            ar & twopf_kconfig_unloads;
 				            ar & threepf_kconfig_hits;
 				            ar & threepf_kconfig_unloads;
+                    ar & stats_hits;
+                    ar & stats_unloads;
 				            ar & data_hits;
 				            ar & data_unloads;
-                    ar & zeta_hits;
-                    ar & zeta_unloads;
 				            ar & time_config_evictions;
 				            ar & twopf_kconfig_evictions;
 				            ar & threepf_kconfig_evictions;
+                    ar & stats_evictions;
 				            ar & data_evictions;
-                    ar & zeta_evictions;
 				            ar & timestamp;
 			            }
 
@@ -883,11 +875,11 @@ namespace transport
                                                  const unsigned int tc, const unsigned int tc_u,
                                                  const unsigned int twopf_k, const unsigned int twopf_k_u,
                                                  const unsigned int threepf_k, const unsigned int threepf_k_u,
+                                                 const unsigned int stats, const unsigned int stats_u,
                                                  const unsigned int td, const unsigned int td_u,
-                                                 const unsigned int tz, const unsigned int tz_u,
                                                  const boost::timer::nanosecond_type tce, const boost::timer::nanosecond_type twopf_e,
-                                                 const boost::timer::nanosecond_type threepf_e, const boost::timer::nanosecond_type de,
-                                                 const boost::timer::nanosecond_type zeta_e)
+                                                 const boost::timer::nanosecond_type threepf_e, const boost::timer::nanosecond_type stats_e,
+                                                 const boost::timer::nanosecond_type de)
                   : content_groups(std::list<std::string>{g}),
                     database_time(db),
                     cpu_time(cpu),
@@ -901,13 +893,14 @@ namespace transport
                     twopf_kconfig_unloads(twopf_k_u),
                     threepf_kconfig_hits(threepf_k),
                     threepf_kconfig_unloads(threepf_k_u),
+                    stats_hits(stats),
+                    stats_unloads(stats_u),
                     data_hits(td), data_unloads(td_u),
-                    zeta_hits(tz), zeta_unloads(tz_u),
                     time_config_evictions(tce),
                     twopf_kconfig_evictions(twopf_e),
                     threepf_kconfig_evictions(threepf_e),
+                    stats_evictions(stats_e),
                     data_evictions(de),
-                    zeta_evictions(zeta_e),
                     timestamp(boost::posix_time::second_clock::universal_time())
                   {
                   }
@@ -942,11 +935,11 @@ namespace transport
                 //! Get threepf kconfig hits
                 unsigned int                   get_threepf_kconfig_hits()      const { return(this->threepf_kconfig_hits); }
 
+                //! Get stats hits
+                unsigned int                   get_stats_hits()                 const { return(this->stats_hits); }
+
                 //! Get data hits
                 unsigned int                   get_data_hits()                 const { return(this->data_hits); }
-
-                //! Get zeta hits
-                unsigned int                   get_zeta_hits()                 const { return(this->zeta_hits); }
 
                 //! Get time config unloads
                 unsigned int                   get_time_config_unloads()       const { return(this->time_config_unloads); }
@@ -957,11 +950,11 @@ namespace transport
                 //! Get threepf kconfig unloads
                 unsigned int                   get_threepf_kconfig_unloads()   const { return(this->threepf_kconfig_unloads); }
 
+                //! Get stats unloads
+                unsigned int                   get_stats_unloads()             const { return(this->stats_unloads); }
+
                 //! Get data unloads
                 unsigned int                   get_data_unloads()              const { return(this->data_unloads); }
-
-                //! Get zeta unloads
-                unsigned int                   get_zeta_unloads()              const { return(this->zeta_unloads); }
 
                 //! Get time-config cache evictions
                 boost::timer::nanosecond_type  get_time_config_evictions()     const { return(this->time_config_evictions); }
@@ -972,11 +965,11 @@ namespace transport
                 //! Get threepf k-config cache evictions
                 boost::timer::nanosecond_type  get_threepf_kconfig_evictions() const { return(this->threepf_kconfig_evictions); }
 
+                //! Get stats cache evictions
+                boost::timer::nanosecond_type  get_stats_evictions()           const { return(this->stats_evictions); }
+
                 //! Get data cache evictions
                 boost::timer::nanosecond_type  get_data_evictions()            const { return(this->data_evictions); }
-
-                //! Get zeta cache evictions
-                boost::timer::nanosecond_type  get_zeta_evictions()            const { return(this->zeta_evictions); }
 
 		            //! Get timestamp
 		            boost::posix_time::ptime       get_timestamp()                 const { return(this->timestamp); }
@@ -1023,17 +1016,17 @@ namespace transport
                 //! Number of threepf-kconfig cache unloads
                 unsigned int threepf_kconfig_unloads;
 
+                //! Number of stats cache hits
+                unsigned int stats_hits;
+
+                //! Number of stats cache unloads
+                unsigned int stats_unloads;
+
                 //! Number of data cache hits
                 unsigned int data_hits;
 
                 //! Number of data cache unloads
                 unsigned int data_unloads;
-
-                //! Number of zeta cache hits
-                unsigned int zeta_hits;
-
-                //! Number of zeta cache unloads
-                unsigned int zeta_unloads;
 
                 //! Time spent doing time-config cache evictions
                 boost::timer::nanosecond_type time_config_evictions;
@@ -1044,11 +1037,11 @@ namespace transport
                 //! Time spent doing threepf k-config cache evictions
                 boost::timer::nanosecond_type threepf_kconfig_evictions;
 
+                //! Time spent doing stats cache evictions
+                boost::timer::nanosecond_type stats_evictions;
+
                 //! Time spent doing data cache evictions
                 boost::timer::nanosecond_type data_evictions;
-
-                //! Time spent doing zeta cache evictions
-                boost::timer::nanosecond_type zeta_evictions;
 
 		            //! Timestamp
 		            boost::posix_time::ptime timestamp;
@@ -1072,15 +1065,15 @@ namespace transport
                     ar & twopf_kconfig_unloads;
                     ar & threepf_kconfig_hits;
                     ar & threepf_kconfig_unloads;
+                    ar & stats_hits;
+                    ar & stats_unloads;
                     ar & data_hits;
                     ar & data_unloads;
-                    ar & zeta_hits;
-                    ar & zeta_unloads;
                     ar & time_config_evictions;
                     ar & twopf_kconfig_evictions;
                     ar & threepf_kconfig_evictions;
+                    ar & stats_evictions;
                     ar & data_evictions;
-                    ar & zeta_evictions;
 		                ar & timestamp;
                   }
 

@@ -41,10 +41,9 @@ namespace transport
       public:
 
         //! Create a data_manager instance with a nominated capacity per batcher
-        data_manager(unsigned int bcap, unsigned int dcap, unsigned int zcap)
+        data_manager(unsigned int bcap, unsigned int dcap)
           : batcher_capacity(bcap),
-            pipe_data_capacity(dcap),
-            pipe_zeta_capacity(zcap)
+            pipe_capacity(dcap)
           {
           }
 
@@ -63,16 +62,10 @@ namespace transport
         void set_batcher_capacity(size_t size) { this->batcher_capacity = size; }
 
         //! Return the maximum memory available for data cache on this worker
-        size_t get_data_capacity() const { return(this->pipe_data_capacity); }
+        size_t get_pipe_capacity() const { return(this->pipe_capacity); }
 
         //! Set capacity available for data cache on this worker
-        void set_data_capacity(size_t size) { this->pipe_data_capacity = size; }
-
-        //! Return the maximum memory available for zeta cache on this worker
-        size_t get_zeta_capacity() const { return(this->pipe_zeta_capacity); }
-
-        //! Set capacity available for zeta cache on this worker
-        void set_zeta_capacity(size_t size) { this->pipe_zeta_capacity = size; }
+        void set_pipe_capacity(size_t size) { this->pipe_capacity = size; }
 
 
         // WRITER HANDLING
@@ -267,13 +260,10 @@ namespace transport
       protected:
 
         //! Capacity available for batchers
-        unsigned int                                             batcher_capacity;
+        unsigned int batcher_capacity;
 
         //! Capacity available for data cache
-        unsigned int                                             pipe_data_capacity;
-
-        //! Capacity available for zeta cache
-        unsigned int                                             pipe_zeta_capacity;
+        unsigned int pipe_capacity;
 
       };
 
