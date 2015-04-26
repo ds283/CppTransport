@@ -984,6 +984,139 @@ namespace transport
 	    };
 
 
+    // k-configuration statistics tag
+    template <typename number>
+    class k_statistics_tag
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        k_statistics_tag(datapipe<number>* p)
+          : pipe(p)
+          {
+          }
+
+        ~k_statistics_tag() = default;
+
+
+        // INTERFACE
+
+      public:
+
+        //! check for tag equality
+        bool operator==(const k_statistics_tag<number>& obj) const { return(true); }    // nothing to check
+
+        //! pull data corresponding to this tag
+        void pull(const std::vector<unsigned int>& sns, std::vector<kconfiguration_statistics>& data);
+
+        //! emit a log item for this tag
+        void log(const std::string& log_item) const { BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::normal) << log_item; }
+
+        //! identify this tag
+        std::string name() const { return(std::string("k-configuration statistics")); }
+
+
+        // CLONE
+
+      public:
+
+        //! copy this object
+        k_statistics_tag<number>* clone() const { return new k_statistics_tag<number>(static_cast<const k_statistics_tag<number>&>(*this)); }
+
+
+        // HASH
+
+      public:
+
+        //! hash
+        unsigned int hash() const { return(0); }
+
+
+        // INTERNAL DATA
+
+      protected:
+
+        //! parent datapipe
+        datapipe<number>* pipe;
+
+      };
+
+
+
+    // TAG NAMES -- IMPLEMENTATION
+
+
+    template <typename number>
+    std::string cf_time_data_tag<number>::name() const
+      {
+        std::ostringstream msg;
+
+        switch(this->type)
+          {
+            case data_tag<number>::cf_twopf_re:
+              msg << "real twopf (time series)";
+            break;
+
+            case data_tag<number>::cf_twopf_im:
+              msg << "imaginary twopf (time series";
+            break;
+
+            case data_tag<number>::cf_threepf:
+              msg << "threepf (time series)";
+            break;
+
+            case data_tag<number>::cf_tensor_twopf:
+              msg << "tensor twopf (time series)";
+            break;
+
+            default:
+              msg << "unknown";
+          }
+
+        msg << ", element = " << this->id << ", kserial = " << this->kserial;
+        return(msg.str());
+      }
+
+
+    template <typename number>
+    std::string cf_kconfig_data_tag<number>::name() const
+      {
+        std::ostringstream msg;
+
+        switch(this->type)
+          {
+            case data_tag<number>::cf_twopf_re:
+              msg << "real twopf (kconfig series)";
+            break;
+
+            case data_tag<number>::cf_twopf_im:
+              msg << "imaginary twopf (kconfig series";
+            break;
+
+            case data_tag<number>::cf_threepf:
+              msg << "threepf (kconfig series)";
+            break;
+
+            case data_tag<number>::cf_tensor_twopf:
+              msg << "tensor twopf (kconfig series)";
+            break;
+
+            default:
+              msg << "unknown";
+          }
+
+        msg << ", element = " << this->id << ", tserial = " << this->tserial;
+        return(msg.str());
+      }
+
+
+
+    // TAG PULL -- IMPLEMENTATION
+
+
+
     template <typename number>
     void time_config_tag<number>::pull(const std::vector<unsigned int>& sns, std::vector<double>& data)
 	    {
@@ -1110,38 +1243,6 @@ namespace transport
 
 
     template <typename number>
-    std::string cf_time_data_tag<number>::name() const
-	    {
-        std::ostringstream msg;
-
-        switch(this->type)
-	        {
-            case data_tag<number>::cf_twopf_re:
-	            msg << "real twopf (time series)";
-            break;
-
-            case data_tag<number>::cf_twopf_im:
-	            msg << "imaginary twopf (time series";
-            break;
-
-            case data_tag<number>::cf_threepf:
-	            msg << "threepf (time series)";
-            break;
-
-            case data_tag<number>::cf_tensor_twopf:
-	            msg << "tensor twopf (time series)";
-            break;
-
-            default:
-	            msg << "unknown";
-	        }
-
-        msg << ", element = " << this->id << ", kserial = " << this->kserial;
-        return(msg.str());
-	    }
-
-
-    template <typename number>
     void cf_kconfig_data_tag<number>::pull(const std::vector<unsigned int>& sns, std::vector<number>& sample)
 	    {
         // check that we are attached to an integration content group
@@ -1192,38 +1293,6 @@ namespace transport
             assert(false);
             throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_UNKNOWN_CF_TYPE);
 	        }
-	    }
-
-
-    template <typename number>
-    std::string cf_kconfig_data_tag<number>::name() const
-	    {
-        std::ostringstream msg;
-
-        switch(this->type)
-	        {
-            case data_tag<number>::cf_twopf_re:
-	            msg << "real twopf (kconfig series)";
-            break;
-
-            case data_tag<number>::cf_twopf_im:
-	            msg << "imaginary twopf (kconfig series";
-            break;
-
-            case data_tag<number>::cf_threepf:
-	            msg << "threepf (kconfig series)";
-            break;
-
-            case data_tag<number>::cf_tensor_twopf:
-	            msg << "tensor twopf (kconfig series)";
-            break;
-
-            default:
-	            msg << "unknown";
-	        }
-
-        msg << ", element = " << this->id << ", tserial = " << this->tserial;
-        return(msg.str());
 	    }
 
 
@@ -1373,6 +1442,33 @@ namespace transport
 
 
     template <typename number>
+    void k_statistics_tag<number>::pull(const std::vector<unsigned int>& sns, std::vector<kconfiguration_statistics>& data)
+      {
+        assert(this->pipe->validate_attached(datapipe<number>::integration_attached));
+        if(!this->pipe->validate_attached(datapipe<number>::integration_attached)) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+
+        std::shared_ptr< output_group_record<integration_payload> > record = pipe->get_attached_integration_record();
+        if(!record) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+
+        if(!record->get_payload().has_statistics())
+          {
+            this->pipe->database_timer.resume();
+            this->pipe->pull_statistics.k_statistics(this->pipe, sns, data);
+            this->pipe->database_timer.stop();
+          }
+        else
+          {
+            data.clear();
+          }
+      }
+
+
+
+    // TAG EQUALITY -- IMPLEMENTATION
+
+
+
+    template <typename number>
     bool background_time_data_tag<number>::operator==(const data_tag<number>& obj) const
 	    {
         const background_time_data_tag<number>* bg_tag = dynamic_cast<const background_time_data_tag<number>*>(&obj);
@@ -1490,6 +1586,7 @@ namespace transport
         if(TT_tag == nullptr) return(false);
         return(this->type == TT_tag->type);
 	    }
+
 
 
 	}   // namespace transport

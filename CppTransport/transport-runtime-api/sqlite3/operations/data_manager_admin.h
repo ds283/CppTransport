@@ -197,8 +197,8 @@ namespace transport
             create_stmt
               << "CREATE TABLE " << __CPP_TRANSPORT_SQLITE_STATS_TABLE << "("
               << "kserial           INTEGER PRIMARY KEY, "
-              << "integration_time  DOUBLE, "
-              << "batch_time        DOUBLE, "
+              << "integration_time  INTEGER, "
+              << "batch_time        INTEGER, "
               << "steps             INTEGER, "
 	            << "refinements       INTEGER, "
               << "workgroup         INTEGER, "
@@ -538,8 +538,8 @@ namespace transport
             for(typename std::vector<typename integration_items<number>::configuration_statistics >::const_iterator t = batch.begin(); t != batch.end(); ++t)
               {
                 check_stmt(db, sqlite3_bind_int(stmt, 1, t->serial));
-                check_stmt(db, sqlite3_bind_double(stmt, 2, t->integration));
-                check_stmt(db, sqlite3_bind_double(stmt, 3, t->batching));
+                check_stmt(db, sqlite3_bind_int64(stmt, 2, t->integration));
+                check_stmt(db, sqlite3_bind_int64(stmt, 3, t->batching));
                 check_stmt(db, sqlite3_bind_int(stmt, 4, t->steps));
 		            check_stmt(db, sqlite3_bind_int(stmt, 5, t->refinements));
 		            check_stmt(db, sqlite3_bind_int(stmt, 6, batcher->get_worker_group()));

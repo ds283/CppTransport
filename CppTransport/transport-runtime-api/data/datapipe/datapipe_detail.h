@@ -72,7 +72,7 @@ namespace transport
 
       public:
 
-        typedef enum { time_config_group, twopf_kconfig_group, threepf_kconfig_group, time_serial_group, kconfig_serial_group } serial_group_tag;
+        typedef enum { time_config_group, twopf_kconfig_group, threepf_kconfig_group, time_serial_group, kconfig_serial_group, statistics_serial_group } serial_group_tag;
 
         typedef enum { twopf_real, twopf_imag } twopf_type;
 
@@ -102,6 +102,9 @@ namespace transport
 
         //! Extract a set of 3pf k-configuration sample points from a datapipe
         typedef std::function<void(datapipe<number>*, const std::vector<unsigned int>&, std::vector<threepf_kconfig>&)> kconfig_threepf_callback;
+
+		    //! Extract a set of per-configuration statistics records from a datapipe
+		    typedef std::function<void(datapipe<number>*, const std::vector<unsigned int>&, std::vector<kconfiguration_statistics>&)> statistics_callback;
 
         //! Extract a background field at a set of time sample-points
         typedef std::function<void(datapipe<number>*, unsigned int, const std::vector<unsigned int>&, std::vector<number>&)> background_time_callback;
@@ -173,6 +176,13 @@ namespace transport
 	        };
 
 
+		    class stats_cache
+			    {
+		      public:
+				    statistics_callback k_statistics;
+			    };
+
+
         class timeslice_cache
 	        {
           public:
@@ -212,7 +222,7 @@ namespace transport
         //! Construct a datapipe
         datapipe(unsigned int dcap, unsigned int zcap,
                  const boost::filesystem::path& lp, const boost::filesystem::path& tp, unsigned int w,
-                 utility_callbacks& u, config_cache& cf, timeslice_cache& t, kslice_cache& k, bool no_log=false);
+                 utility_callbacks& u, config_cache& cf, timeslice_cache& t, kslice_cache& k, stats_cache& s, bool no_log=false);
 
         //! Destroy a datapipe
         ~datapipe();
@@ -336,6 +346,12 @@ namespace transport
         //! Is this datapipe attached to an output group?
         bool is_attached() const { return(this->type != none_attached); }
 
+		    //! Is this datapipe attached to an integration output group?
+		    bool is_integration_attached() const { return(this->type == integration_attached); }
+
+		    //! Is this datapipe attached to a postintegration output group?
+		    bool is_postintegration_attached() const { return(this->type == postintegration_attached); }
+
       protected:
 
 		    //! set up cache tables for a newly-attached content group
@@ -350,6 +366,12 @@ namespace transport
         //! Get number of fields associated with currently attached group.
         //! Output is meaningful only when a group is attached.
         unsigned int get_N_fields() const { return(this->N_fields); }
+
+		    //! Get payload record if an integration group is attached; returns nullptr if an integration group is not attached
+		    std::shared_ptr< output_group_record<integration_payload> > get_attached_integration_record();
+
+		    //! Get payload record if a postintegration group is attached; returns nullptr if a postintegration group is not attached
+		    std::shared_ptr< output_group_record<postintegration_payload> > get_attached_postintegration_record();
 
 
         // PULL DATA
@@ -459,6 +481,7 @@ namespace transport
 		    friend class fNL_time_data_tag<number>;
 		    friend class BT_time_data_tag<number>;
 		    friend class TT_time_data_tag<number>;
+        friend class k_statistics_tag<number>;
 
 
         //! Host information
@@ -476,10 +499,15 @@ namespace transport
         //! threepf k-config cache
         linecache::cache<std::vector<threepf_kconfig>, threepf_kconfig_tag<number>, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE> threepf_kconfig_cache;
 
+		    //! statistics cache
+		    linecache::cache<std::vector<kconfiguration_statistics>, k_statistics_tag<number>, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE> statistics_cache;
+
         //! data cache
         linecache::cache<std::vector<number>, data_tag<number>, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE> data_cache;
 
-        //! zeta cache
+        //! zeta cache (originally split out because zeta calculations were expensive, and
+		    //! a seperate cache prevented them being evicted to make space for
+		    //! fieldspace data)
         linecache::cache<std::vector<number>, data_tag<number>, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE> zeta_cache;
 
 
@@ -493,6 +521,9 @@ namespace transport
 
         //! threepf k-config cache table for currently-attached group; null if no group is attached
         linecache::table<std::vector<threepf_kconfig>, threepf_kconfig_tag<number>, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE>* threepf_kconfig_cache_table;
+
+		    //! statistics cache table for currently-attached group; null if no group is attached
+		    linecache::table<std::vector<kconfiguration_statistics>, k_statistics_tag<number>, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE>* statistics_cache_table;
 
         //! data cache table for currently-attached group; null if no group is attached
         linecache::table<std::vector<number>, data_tag<number>, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE>* data_cache_table;
@@ -566,6 +597,9 @@ namespace transport
         //! Pull kconfig-series data from the cache
         kslice_cache pull_kslice;
 
+        //! Pull statistics from the cache
+        stats_cache pull_statistics;
+
 	    };
 
 
@@ -574,8 +608,8 @@ namespace transport
 
     template <typename number>
     datapipe<number>::datapipe(unsigned int dcap, unsigned int zcap,
-                                             const boost::filesystem::path& lp, const boost::filesystem::path& tp, unsigned int w,
-                                             utility_callbacks& u, config_cache& cf, timeslice_cache& t, kslice_cache& k, bool no_log)
+                               const boost::filesystem::path& lp, const boost::filesystem::path& tp, unsigned int w,
+                               utility_callbacks& u, config_cache& cf, timeslice_cache& t, kslice_cache& k, stats_cache& s, bool no_log)
 	    : logdir_path(lp),
 	      temporary_path(tp),
 	      worker_number(w),
@@ -583,14 +617,17 @@ namespace transport
 	      pull_config(cf),
 	      pull_timeslice(t),
 	      pull_kslice(k),
+        pull_statistics(s),
 	      time_config_cache_table(nullptr),
 	      twopf_kconfig_cache_table(nullptr),
 	      threepf_kconfig_cache_table(nullptr),
+	      statistics_cache_table(nullptr),
 	      data_cache_table(nullptr),
 	      zeta_cache_table(nullptr),
 	      time_config_cache(__CPP_TRANSPORT_DEFAULT_CONFIGURATION_CACHE_SIZE),
 	      twopf_kconfig_cache(__CPP_TRANSPORT_DEFAULT_CONFIGURATION_CACHE_SIZE),
 	      threepf_kconfig_cache(__CPP_TRANSPORT_DEFAULT_CONFIGURATION_CACHE_SIZE),
+	      statistics_cache(__CPP_TRANSPORT_DEFAULT_CONFIGURATION_CACHE_SIZE),
 	      data_cache(dcap),
 	      zeta_cache(zcap),
 	      type(none_attached),
@@ -654,12 +691,14 @@ namespace transport
         BOOST_LOG_SEV(this->log_source, normal) << "--   time-configuration cache hits      = " << this->time_config_cache.get_hits() << " | unloads = " << this->time_config_cache.get_unloads();
         BOOST_LOG_SEV(this->log_source, normal) << "--   twopf k-configuration cache hits   = " << this->twopf_kconfig_cache.get_hits() << " | unloads = " << this->twopf_kconfig_cache.get_unloads();
         BOOST_LOG_SEV(this->log_source, normal) << "--   threepf k-configuration cache hits = " << this->threepf_kconfig_cache.get_hits() << " | unloads = " << this->threepf_kconfig_cache.get_unloads();
+		    BOOST_LOG_SEV(this->log_source, normal) << "--   statistics cache hits              = " << this->statistics_cache.get_hits() << " | unloads = " << this->statistics_cache.get_unloads();
         BOOST_LOG_SEV(this->log_source, normal) << "--   data cache hits:                   = " << this->data_cache.get_hits() << " | unloads = " << this->data_cache.get_unloads();
         BOOST_LOG_SEV(this->log_source, normal) << "--   zeta cache hits:                   = " << this->zeta_cache.get_hits() << " | unloads = " << this->zeta_cache.get_unloads();
         BOOST_LOG_SEV(this->log_source, normal) << "";
         BOOST_LOG_SEV(this->log_source, normal) << "--   time-configuration evictions       = " << format_time(this->time_config_cache.get_eviction_timer());
         BOOST_LOG_SEV(this->log_source, normal) << "--   twopf k-configuration evictions    = " << format_time(this->twopf_kconfig_cache.get_eviction_timer());
         BOOST_LOG_SEV(this->log_source, normal) << "--   threepf k-configuration evictions  = " << format_time(this->threepf_kconfig_cache.get_eviction_timer());
+		    BOOST_LOG_SEV(this->log_source, normal) << "--   statistics cache evictions         = " << format_time(this->statistics_cache.get_eviction_timer());
         BOOST_LOG_SEV(this->log_source, normal) << "--   data evictions                     = " << format_time(this->data_cache.get_eviction_timer());
         BOOST_LOG_SEV(this->log_source, normal) << "--   zeta evictions                     = " << format_time(this->zeta_cache.get_eviction_timer());
 
@@ -800,6 +839,7 @@ namespace transport
         this->time_config_cache_table     = &(this->time_config_cache.get_table_handle(payload.get_container_path().string()));
         this->twopf_kconfig_cache_table   = &(this->twopf_kconfig_cache.get_table_handle(payload.get_container_path().string()));
         this->threepf_kconfig_cache_table = &(this->threepf_kconfig_cache.get_table_handle(payload.get_container_path().string()));
+				this->statistics_cache_table      = &(this->statistics_cache.get_table_handle(payload.get_container_path().string()));
         this->data_cache_table            = &(this->data_cache.get_table_handle(payload.get_container_path().string()));
         this->zeta_cache_table            = &(this->zeta_cache.get_table_handle(payload.get_container_path().string()));
 	    }
@@ -817,26 +857,43 @@ namespace transport
 			    {
 		        case integration_attached:
 			        BOOST_LOG_SEV(this->get_log(), datapipe<number>::normal) << "** DETACH output group " << boost::posix_time::to_simple_string(this->attached_integration_group->get_creation_time());
-			        this->attached_integration_group.reset();
 				      break;
 
 		        case postintegration_attached:
 			        BOOST_LOG_SEV(this->get_log(), datapipe<number>::normal) << "** DETACH output group " << boost::posix_time::to_simple_string(this->attached_postintegration_group->get_creation_time());
-			        this->attached_postintegration_group.reset();
 				      break;
 
 		        default:
 			        break;
 			    }
 
+        this->attached_integration_group.reset();
+        this->attached_postintegration_group.reset();
+
 		    this->type = none_attached;
 
         this->time_config_cache_table     = nullptr;
         this->twopf_kconfig_cache_table   = nullptr;
         this->threepf_kconfig_cache_table = nullptr;
+		    this->statistics_cache_table      = nullptr;
         this->data_cache_table            = nullptr;
         this->zeta_cache_table            = nullptr;
 	    }
+
+
+		template <typename number>
+		std::shared_ptr< output_group_record<integration_payload> > datapipe<number>::get_attached_integration_record()
+			{
+				return(this->attached_integration_group);   // is null if nothing attached
+			}
+
+
+    template <typename number>
+    std::shared_ptr< output_group_record<postintegration_payload> > datapipe<number>::get_attached_postintegration_record()
+	    {
+        return(this->attached_postintegration_group);
+	    }
+
 
 
     template <typename number>

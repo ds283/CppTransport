@@ -258,6 +258,10 @@ namespace transport
         virtual void pull_zeta_redbsp_kconfig_sample(datapipe<number>*, const std::vector<unsigned int>& k_serials,
                                                      unsigned int t_serial, std::vector<number>& sample) = 0;
 
+        //! Pull a sample of k-configuration statistics from a datapipe
+        virtual void pull_k_statistics_sample(datapipe<number>* pipe, const std::vector<unsigned int>& k_serials, std::vector<kconfiguration_statistics>& data) = 0;
+
+
         // INTERNAL DATA
 
       protected:

@@ -316,6 +316,9 @@ namespace transport
         virtual void pull_zeta_redbsp_kconfig_sample(datapipe<number>* pipe, const std::vector<unsigned int>& k_serials,
                                                      unsigned int t_serial, std::vector<number>& sample) override;
 
+        //! Pull a sample of k-configuration statistics from a datapipe
+        virtual void pull_k_statistics_sample(datapipe<number>* pipe, const std::vector<unsigned int>& k_serials, std::vector<kconfiguration_statistics>& data) override;
+
       protected:
 
         //! Attach a SQLite database to a datapipe
@@ -1690,8 +1693,8 @@ namespace transport
                                                                    typename datapipe<number>::dispatch_function dispatcher,
                                                                    unsigned int worker, bool no_log)
 			{
-		    // set up callback API
-		    typename datapipe<number>::utility_callbacks utilities;
+        // set up callback API
+        typename datapipe<number>::utility_callbacks utilities;
 
         utilities.integration_attach = std::bind(&data_manager_sqlite3<number>::datapipe_attach_integration_content, this,
                                                  std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
@@ -1699,86 +1702,91 @@ namespace transport
         utilities.postintegration_attach = std::bind(&data_manager_sqlite3<number>::datapipe_attach_postintegration_content, this,
                                                      std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
 
-		    utilities.detach = std::bind(&data_manager_sqlite3<number>::datapipe_detach, this, std::placeholders::_1);
+        utilities.detach = std::bind(&data_manager_sqlite3<number>::datapipe_detach, this, std::placeholders::_1);
 
         utilities.integration_finder     = integration_finder;
         utilities.postintegration_finder = postintegration_finder;
         utilities.dispatch               = dispatcher;
 
-		    typename datapipe<number>::config_cache config;
+        typename datapipe<number>::config_cache config;
 
-		    config.time = std::bind(&data_manager_sqlite3<number>::pull_time_config, this,
-		                            std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+        config.time = std::bind(&data_manager_sqlite3<number>::pull_time_config, this,
+                                std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
 
-		    config.twopf = std::bind(&data_manager_sqlite3<number>::pull_kconfig_twopf, this,
-		                             std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+        config.twopf = std::bind(&data_manager_sqlite3<number>::pull_kconfig_twopf, this,
+                                 std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
 
-		    config.threepf = std::bind(&data_manager_sqlite3<number>::pull_kconfig_threepf, this,
-		                               std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+        config.threepf = std::bind(&data_manager_sqlite3<number>::pull_kconfig_threepf, this,
+                                   std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
 
-		    typename datapipe<number>::timeslice_cache timeslice;
+        typename datapipe<number>::timeslice_cache timeslice;
 
-		    timeslice.background = std::bind(&data_manager_sqlite3<number>::pull_background_time_sample, this,
-		                                     std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
+        timeslice.background = std::bind(&data_manager_sqlite3<number>::pull_background_time_sample, this,
+                                         std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
 
-		    timeslice.twopf = std::bind(&data_manager_sqlite3<number>::pull_twopf_time_sample, this,
-		                                std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
-		                                std::placeholders::_4, std::placeholders::_5, std::placeholders::_6);
+        timeslice.twopf = std::bind(&data_manager_sqlite3<number>::pull_twopf_time_sample, this,
+                                    std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
+                                    std::placeholders::_4, std::placeholders::_5, std::placeholders::_6);
 
-		    timeslice.threepf = std::bind(&data_manager_sqlite3<number>::pull_threepf_time_sample, this,
-		                                  std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
-		                                  std::placeholders::_4, std::placeholders::_5);
+        timeslice.threepf = std::bind(&data_manager_sqlite3<number>::pull_threepf_time_sample, this,
+                                      std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
+                                      std::placeholders::_4, std::placeholders::_5);
 
         timeslice.tensor_twopf = std::bind(&data_manager_sqlite3<number>::pull_tensor_twopf_time_sample, this,
                                            std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
                                            std::placeholders::_4, std::placeholders::_5);
 
-		    timeslice.zeta_twopf = std::bind(&data_manager_sqlite3<number>::pull_zeta_twopf_time_sample, this,
-		                                     std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
+        timeslice.zeta_twopf = std::bind(&data_manager_sqlite3<number>::pull_zeta_twopf_time_sample, this,
+                                         std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
 
-		    timeslice.zeta_threepf = std::bind(&data_manager_sqlite3<number>::pull_zeta_threepf_time_sample, this,
-		                                       std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
+        timeslice.zeta_threepf = std::bind(&data_manager_sqlite3<number>::pull_zeta_threepf_time_sample, this,
+                                           std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
 
-		    timeslice.zeta_redbsp = std::bind(&data_manager_sqlite3<number>::pull_zeta_redbsp_time_sample, this,
-		                                      std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
+        timeslice.zeta_redbsp = std::bind(&data_manager_sqlite3<number>::pull_zeta_redbsp_time_sample, this,
+                                          std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
 
-		    timeslice.fNL = std::bind(&data_manager_sqlite3<number>::pull_fNL_time_sample, this,
-		                              std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
+        timeslice.fNL = std::bind(&data_manager_sqlite3<number>::pull_fNL_time_sample, this,
+                                  std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
 
-		    timeslice.BT = std::bind(&data_manager_sqlite3<number>::pull_BT_time_sample, this,
-		                             std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
+        timeslice.BT = std::bind(&data_manager_sqlite3<number>::pull_BT_time_sample, this,
+                                 std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
 
-		    timeslice.TT = std::bind(&data_manager_sqlite3<number>::pull_TT_time_sample, this,
-		                             std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
+        timeslice.TT = std::bind(&data_manager_sqlite3<number>::pull_TT_time_sample, this,
+                                 std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
 
-		    typename datapipe<number>::kslice_cache kslice;
+        typename datapipe<number>::kslice_cache kslice;
 
-		    kslice.twopf = std::bind(&data_manager_sqlite3<number>::pull_twopf_kconfig_sample, this,
-		                             std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
-		                             std::placeholders::_4, std::placeholders::_5, std::placeholders::_6);
+        kslice.twopf = std::bind(&data_manager_sqlite3<number>::pull_twopf_kconfig_sample, this,
+                                 std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
+                                 std::placeholders::_4, std::placeholders::_5, std::placeholders::_6);
 
-		    kslice.threepf = std::bind(&data_manager_sqlite3<number>::pull_threepf_kconfig_sample, this,
-		                               std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
-		                               std::placeholders::_4, std::placeholders::_5);
+        kslice.threepf = std::bind(&data_manager_sqlite3<number>::pull_threepf_kconfig_sample, this,
+                                   std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
+                                   std::placeholders::_4, std::placeholders::_5);
 
         kslice.tensor_twopf = std::bind(&data_manager_sqlite3<number>::pull_tensor_twopf_kconfig_sample, this,
                                         std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
                                         std::placeholders::_4, std::placeholders::_5);
 
-		    kslice.zeta_twopf = std::bind(&data_manager_sqlite3<number>::pull_zeta_twopf_kconfig_sample, this,
-		                                     std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
+        kslice.zeta_twopf = std::bind(&data_manager_sqlite3<number>::pull_zeta_twopf_kconfig_sample, this,
+                                      std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
 
-		    kslice.zeta_threepf = std::bind(&data_manager_sqlite3<number>::pull_zeta_threepf_kconfig_sample, this,
-		                                       std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
+        kslice.zeta_threepf = std::bind(&data_manager_sqlite3<number>::pull_zeta_threepf_kconfig_sample, this,
+                                        std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
 
-		    kslice.zeta_redbsp = std::bind(&data_manager_sqlite3<number>::pull_zeta_redbsp_kconfig_sample, this,
-		                                      std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
+        kslice.zeta_redbsp = std::bind(&data_manager_sqlite3<number>::pull_zeta_redbsp_kconfig_sample, this,
+                                       std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
+
+        typename datapipe<number>::stats_cache stats;
+
+        stats.k_statistics = std::bind(&data_manager_sqlite3<number>::pull_k_statistics_sample, this,
+                                       std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
 
         // set up datapipe
         datapipe<number> pipe(this->pipe_data_capacity, this->pipe_zeta_capacity,
-                              logdir, tempdir, worker, utilities, config, timeslice, kslice, no_log);
+                              logdir, tempdir, worker, utilities, config, timeslice, kslice, stats, no_log);
 
-				return(pipe);
+        return(pipe);
 			}
 
 
@@ -2051,6 +2059,19 @@ namespace transport
 
         sqlite3_operations::pull_zeta_redbsp_kconfig_sample(db, k_serials, t_serial, sample, pipe->get_worker_number());
 	    }
+
+
+    template <typename number>
+    void data_manager_sqlite3<number>::pull_k_statistics_sample(datapipe<number>* pipe, const std::vector<unsigned int>& k_serials, std::vector<kconfiguration_statistics>& data)
+      {
+        assert(pipe != nullptr);
+        if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_DATAMGR_NULL_DATAPIPE);
+
+        sqlite3* db = nullptr;
+        pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
+
+        sqlite3_operations::pull_k_statistics_sample(db, k_serials, data, pipe->get_worker_number());
+      }
 
 
 		template <typename number>

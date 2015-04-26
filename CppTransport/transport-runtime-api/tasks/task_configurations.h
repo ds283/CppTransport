@@ -150,6 +150,45 @@ namespace transport
 	    }
 
 
+		class kconfiguration_statistics
+			{
+		  public:
+
+		    //! serial number of this configuration
+		    unsigned int serial;
+
+		    //! time spent integrating, in nanoseconds
+		    boost::timer::nanosecond_type integration;
+
+		    //! time spent batching, in nanoseconds
+		    boost::timer::nanosecond_type batching;
+
+		    //! number of stepsize refinements needed for this configuration
+		    unsigned int refinements;
+
+		    //! number of steps taken by the stepper
+		    size_t steps;
+
+        //! workgroup which produced this configuration
+        unsigned int workgroup;
+
+        //! worker which produced this configuration
+        unsigned int worker;
+
+        //! backend which produced this configuration
+        std::string backend;
+
+        //! background stepper used
+        std::string background_stepper;
+
+        //! perturbation stepper used
+        std::string perturbation_stepper;
+
+        //! hostname of worker
+        std::string hostname;
+			};
+
+
     // OUTPUT DATA
 
 

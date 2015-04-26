@@ -1181,6 +1181,85 @@ namespace transport
           }
 
 
+        // Pull k-configuration statistics data for a set of k-configuration serial numbers
+        void pull_k_statistics_sample(sqlite3* db, const std::vector<unsigned int>& serials, std::vector<kconfiguration_statistics>& data, unsigned int worker)
+          {
+            assert(db != nullptr);
+
+            // set up a temporary table representing the serial numbers we want to use
+            create_temporary_serial_table(db, serials, worker);
+
+            // pull out matching k-statistics data
+            std::stringstream select_stmt;
+            select_stmt
+              << "SELECT "
+              << __CPP_TRANSPORT_SQLITE_STATS_TABLE << ".integration_time, "
+              << __CPP_TRANSPORT_SQLITE_STATS_TABLE << ".batch_time, "
+              << __CPP_TRANSPORT_SQLITE_STATS_TABLE << ".steps, "
+              << __CPP_TRANSPORT_SQLITE_STATS_TABLE << ".refinements, "
+              << __CPP_TRANSPORT_SQLITE_WORKERS_TABLE << ".workgroup, "
+              << __CPP_TRANSPORT_SQLITE_WORKERS_TABLE << ".worker, "
+              << __CPP_TRANSPORT_SQLITE_WORKERS_TABLE << ".backend, "
+              << __CPP_TRANSPORT_SQLITE_WORKERS_TABLE << ".back_stepper, "
+              << __CPP_TRANSPORT_SQLITE_WORKERS_TABLE << ".pert_stepper, "
+              << __CPP_TRANSPORT_SQLITE_WORKERS_TABLE << ".hostname"
+              << " FROM " << __CPP_TRANSPORT_SQLITE_STATS_TABLE
+              << " INNER JOIN temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker
+              << " ON " << __CPP_TRANSPORT_SQLITE_STATS_TABLE << ".kserial=" << "temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker << ".serial"
+              << " INNER JOIN " << __CPP_TRANSPORT_SQLITE_WORKERS_TABLE << " workers1"
+              << " ON " << __CPP_TRANSPORT_SQLITE_STATS_TABLE << ".workgroup=workers1.workgroup"
+              << " INNER JOIN " << __CPP_TRANSPORT_SQLITE_WORKERS_TABLE << " workers2"
+              << " ON " << __CPP_TRANSPORT_SQLITE_STATS_TABLE << ".worker=workers2.worker"
+              << " ORDER BY " << __CPP_TRANSPORT_SQLITE_STATS_TABLE << ".kserial;";
+
+            sqlite3_stmt* stmt;
+            check_stmt(db, sqlite3_prepare_v2(db, select_stmt.str().c_str(), select_stmt.str().length() + 1, &stmt, nullptr));
+
+            data.clear();
+            data.reserve(serials.size());
+
+            int status;
+            std::vector<unsigned int>::const_iterator t = serials.begin();
+            while((status = sqlite3_step(stmt)) != SQLITE_DONE)
+              {
+                if(status == SQLITE_ROW)
+                  {
+                    kconfiguration_statistics value;
+
+                    value.serial               = *t;
+                    value.integration          = sqlite3_column_int64(stmt, 0);
+                    value.batching             = sqlite3_column_int64(stmt, 1);
+                    value.steps                = static_cast<unsigned int>(sqlite3_column_int(stmt, 2));
+                    value.refinements          = static_cast<unsigned int>(sqlite3_column_int(stmt, 3));
+                    value.workgroup            = static_cast<unsigned int>(sqlite3_column_int(stmt, 4));
+                    value.worker               = static_cast<unsigned int>(sqlite3_column_int(stmt, 5));
+                    value.backend              = std::string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 6)), static_cast<unsigned int>(sqlite3_column_bytes(stmt, 6)));
+                    value.background_stepper   = std::string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 7)), static_cast<unsigned int>(sqlite3_column_bytes(stmt, 7)));
+                    value.perturbation_stepper = std::string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 8)), static_cast<unsigned int>(sqlite3_column_bytes(stmt, 8)));
+                    value.hostname             = std::string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 9)), static_cast<unsigned int>(sqlite3_column_bytes(stmt, 9)));
+
+                    data.push_back(value);
+                    t++;
+                  }
+                else
+                  {
+                    std::ostringstream msg;
+                    msg << __CPP_TRANSPORT_DATAMGR_KCONFIG_SERIAL_READ_FAIL << status << ": " << sqlite3_errmsg(db) << ")";
+                    sqlite3_finalize(stmt);
+                    throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, msg.str());
+                  }
+              }
+
+            check_stmt(db, sqlite3_finalize(stmt));
+
+            // drop temporary table of serial numbers
+            drop_temporary_timeserial_table(db, worker);
+
+            // check that we have as many values as we expect
+            if(data.size() != serials.size()) warn_kconfig_serial_too_few(serials.size(), data.size(), __func__);
+          }
+
+
       }   // namespace sqlite3_operations
 
   }   // namespace transport
