@@ -294,7 +294,7 @@ namespace transport
 						assert(line_array.isArray());
 
 				    lines.clear();
-						for(Json::Value::iterator t = line_array.begin(); t != line_array.end(); t++)
+						for(Json::Value::iterator t = line_array.begin(); t != line_array.end(); ++t)
 					    {
 				        derived_line<number>* data = derived_line_helper::deserialize<number>(*t, finder);
 				        lines.push_back(data);
@@ -312,7 +312,7 @@ namespace transport
 			    {
 		        lines.clear();
 
-		        for(typename std::list< derived_line<number>* >::const_iterator t = obj.lines.begin(); t != obj.lines.end(); t++)
+		        for(typename std::list< derived_line<number>* >::const_iterator t = obj.lines.begin(); t != obj.lines.end(); ++t)
 			        {
 		            lines.push_back((*t)->clone());
 			        }
@@ -354,7 +354,7 @@ namespace transport
 		    template <typename number>
 		    line_collection<number>::~line_collection()
 			    {
-		        for(typename std::list< derived_line<number>* >::const_iterator t = this->lines.begin(); t != this->lines.end(); t++)
+		        for(typename std::list< derived_line<number>* >::const_iterator t = this->lines.begin(); t != this->lines.end(); ++t)
 			        {
 		            delete *t;
 			        }
@@ -364,7 +364,7 @@ namespace transport
 		    template <typename number>
 		    void line_collection<number>::obtain_output(datapipe<number>& pipe, const std::list<std::string>& tags, std::list< data_line<number> >& derived_lines) const
 			    {
-		        for(typename std::list< derived_line<number>* >::const_iterator t = this->lines.begin(); t != this->lines.end(); t++)
+		        for(typename std::list< derived_line<number>* >::const_iterator t = this->lines.begin(); t != this->lines.end(); ++t)
 			        {
 		            (*t)->derive_lines(pipe, derived_lines, tags);
 			        }
@@ -384,7 +384,7 @@ namespace transport
 		        std::vector< std::vector< std::pair<double, number> > > data;
 		        std::vector<bool> data_absy;
 
-		        for(typename std::list< data_line<number> >::const_iterator t = input.begin(); t != input.end(); t++)
+		        for(typename std::list< data_line<number> >::const_iterator t = input.begin(); t != input.end(); ++t)
 			        {
 		            const std::vector< std::pair<double, number> >& line_data = t->get_data_points();
 
@@ -393,7 +393,7 @@ namespace transport
 
 		            if(this->log_y)
 			            {
-		                for(typename std::vector< std::pair<double, number> >::const_iterator u = line_data.begin(); (!need_abs_y || !nonzero_values) && u != line_data.end(); u++)
+		                for(typename std::vector< std::pair<double, number> >::const_iterator u = line_data.begin(); (!need_abs_y || !nonzero_values) && u != line_data.end(); ++u)
 			                {
 		                    if(u->second <= 0.0) need_abs_y = true;
 		                    if(u->second > 0.0 || u->second < 0.0) nonzero_values = true;
@@ -409,7 +409,7 @@ namespace transport
 				        bool nonzero_axis = true;
 				        if(this->log_x)
 					        {
-				            for(typename std::vector< std::pair<double, number> >::const_iterator u = line_data.begin(); nonzero_axis && u != line_data.end(); u++)
+				            for(typename std::vector< std::pair<double, number> >::const_iterator u = line_data.begin(); nonzero_axis && u != line_data.end(); ++u)
 					            {
 						            if(u->first <= 0.0) nonzero_axis = false;
 					            }
@@ -442,7 +442,7 @@ namespace transport
 		            finished = true;
 
 		            // any work left to do?
-		            for(unsigned int i = 0; finished && i < output.size(); i++)
+		            for(unsigned int i = 0; finished && i < output.size(); ++i)
 			            {
 		                if(data[i].size() > 0) finished = false;
 			            }
@@ -451,7 +451,7 @@ namespace transport
 			            {
 		                // find next point to add to merged x-axis (we work from the far right because std::vector can only pop from the end)
 		                double next_axis_point = -std::numeric_limits<double>::max();
-		                for(unsigned int i = 0; i < output.size(); i++)
+		                for(unsigned int i = 0; i < output.size(); ++i)
 			                {
 		                    if(data[i].size() > 0)
 			                    {
@@ -466,7 +466,7 @@ namespace transport
 		                    axis.push_front(next_axis_point);
 
 		                    // find data points on each line, if they exist, corresponding to this axis point
-		                    for(unsigned int i = 0; i < output.size(); i++)
+		                    for(unsigned int i = 0; i < output.size(); ++i)
 			                    {
 		                        if(data[i].size() > 0)
 			                        {
@@ -505,7 +505,7 @@ namespace transport
             list.clear();
 
             // collect data from each derived_line
-            for(typename std::list< derived_line<number>* >::const_iterator t = this->lines.begin(); t != this->lines.end(); t++)
+            for(typename std::list< derived_line<number>* >::const_iterator t = this->lines.begin(); t != this->lines.end(); ++t)
               {
                 list.push_back((*t)->get_parent_task());
               }
@@ -517,7 +517,7 @@ namespace transport
           {
             std::list<std::string> groups;
 
-            for(typename std::list< data_line<number> >::const_iterator t = list.begin(); t != list.end(); t++)
+            for(typename std::list< data_line<number> >::const_iterator t = list.begin(); t != list.end(); ++t)
               {
                 std::list<std::string> line_groups = t->get_parent_groups();
                 groups.merge(line_groups);
@@ -539,7 +539,7 @@ namespace transport
 		        writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LATEX] = this->use_LaTeX;
 
 		        Json::Value line_array(Json::arrayValue);
-		        for(typename std::list< derived_line<number>* >::const_iterator t = this->lines.begin(); t != this->lines.end(); t++)
+		        for(typename std::list< derived_line<number>* >::const_iterator t = this->lines.begin(); t != this->lines.end(); ++t)
 			        {
 		            Json::Value line_element(Json::objectValue);
 		            (*t)->serialize(line_element);
@@ -570,7 +570,7 @@ namespace transport
 		        out << __CPP_TRANSPORT_PRODUCT_LINE_COLLECTION_LABEL_TITLE_A << " '" << this->get_name() << "', " << __CPP_TRANSPORT_PRODUCT_LINE_COLLECTION_LABEL_TITLE_B << std::endl << std::endl;
 
 				    unsigned int line_counter = 1;
-				    for(typename std::list< derived_line<number>* >::iterator t = this->lines.begin(); t != this->lines.end(); t++, line_counter++)
+				    for(typename std::list< derived_line<number>* >::iterator t = this->lines.begin(); t != this->lines.end(); ++t, ++line_counter)
 					    {
 						    out << __CPP_TRANSPORT_PRODUCT_LINE_COLLECTION_LABEL_LINE << " " << line_counter << ":" << std::endl;
 				        (*t)->write(out);

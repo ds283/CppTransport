@@ -47,7 +47,7 @@ namespace transport
 
 		      public:
 
-		        typedef enum { left, middle, right } operator_position;
+		        typedef enum { left_pos, middle_pos, right_pos } operator_position;
 
 
 		        // CONSTRUCTOR, DESTRUCTOR
@@ -105,13 +105,13 @@ namespace transport
 						    // set up array of k-value extractors for the first operator
 						    std::vector< std::array<extractor<number>, 3> > extractors;
 
-						    for(typename std::vector<threepf_kconfig>::iterator t = configs.begin(); t != configs.end(); t++)
+						    for(typename std::vector<threepf_kconfig>::iterator t = configs.begin(); t != configs.end(); ++t)
 							    {
 						        std::array<extractor<number>, 3> elt = { extractor<number>(1, *t), extractor<number>(2, *t), extractor<number>(3, *t) };
 						        extractors.push_back(elt);
 							    }
 
-						    this->make_shift(tk, mdl, pipe, configs, extractors, line_data, t_serial, t_value, background, l, m, n, left);
+						    this->make_shift(tk, mdl, pipe, configs, extractors, line_data, t_serial, t_value, background, l, m, n, left_pos);
 							}
 
 						if(m >= N_fields)
@@ -119,13 +119,13 @@ namespace transport
 						    // set up array of k-value extractors for the first operator
 						    std::vector< std::array<extractor<number>, 3> > extractors;
 
-						    for(typename std::vector<threepf_kconfig>::iterator t = configs.begin(); t != configs.end(); t++)
+						    for(typename std::vector<threepf_kconfig>::iterator t = configs.begin(); t != configs.end(); ++t)
 							    {
 						        std::array<extractor<number>, 3> elt = { extractor<number>(2, *t), extractor<number>(1, *t), extractor<number>(3, *t) };
 						        extractors.push_back(elt);
 							    }
 
-						    this->make_shift(tk, mdl, pipe, configs, extractors, line_data, t_serial, t_value, background, m, l, n, middle);
+						    this->make_shift(tk, mdl, pipe, configs, extractors, line_data, t_serial, t_value, background, m, l, n, middle_pos);
 							}
 
 						if(n >= N_fields)
@@ -133,13 +133,13 @@ namespace transport
 						    // set up array of k-value extractors for the first operator
 						    std::vector< std::array<extractor<number>, 3> > extractors;
 
-						    for(typename std::vector<threepf_kconfig>::iterator t = configs.begin(); t != configs.end(); t++)
+						    for(typename std::vector<threepf_kconfig>::iterator t = configs.begin(); t != configs.end(); ++t)
 							    {
 						        std::array<extractor<number>, 3> elt = { extractor<number>(3, *t), extractor<number>(1, *t), extractor<number>(2, *t) };
 						        extractors.push_back(elt);
 							    }
 
-						    this->make_shift(tk, mdl, pipe, configs, extractors, line_data, t_serial, t_value, background, n, l, m, right);
+						    this->make_shift(tk, mdl, pipe, configs, extractors, line_data, t_serial, t_value, background, n, l, m, right_pos);
 							}
 					}
 
@@ -180,17 +180,17 @@ namespace transport
 
 		        switch(pos)
 			        {
-		            case left:    // our operator is on the far left-hand side, so is to the left of both the q and r operators
+		            case left_pos:    // our operator is on the far left-hand side, so is to the left of both the q and r operators
 			            q_fixed = second_index;
 		              r_fixed = second_index;
 		              break;
 
-		            case middle:  // our operator is in the middle, to the right of the q operator but to the left of the r operator
+		            case middle_pos:  // our operator is in the middle, to the right of the q operator but to the left of the r operator
 			            q_fixed = first_index;
 		              r_fixed = second_index;
 		              break;
 
-		            case right:   // our operator is on the right, to the right of both the q and r operators
+		            case right_pos:   // our operator is on the right, to the right of both the q and r operators
 			            q_fixed = first_index;
 		              r_fixed = first_index;
 		              break;
@@ -202,7 +202,7 @@ namespace transport
 				    // make a list of twopf serial numbers which we need
 		        std::vector<unsigned int> q_serials;
 		        std::vector<unsigned int> r_serials;
-				    for(typename std::vector< typename std::array< extractor<number>, 3 > >::iterator t = extractors.begin(); t != extractors.end(); t++)
+				    for(typename std::vector< typename std::array< extractor<number>, 3 > >::iterator t = extractors.begin(); t != extractors.end(); ++t)
 					    {
 						    q_serials.push_back((*t)[1].serial());
 						    r_serials.push_back((*t)[2].serial());
@@ -212,7 +212,7 @@ namespace transport
 				    typename datapipe<number>::kconfig_data_handle& q_handle = pipe.new_kconfig_data_handle(q_serials);
 				    typename datapipe<number>::kconfig_data_handle& r_handle = pipe.new_kconfig_data_handle(r_serials);
 
-				    for(unsigned int i = 0; i < N_fields; i++)
+				    for(unsigned int i = 0; i < N_fields; ++i)
 					    {
 				        unsigned int q_id = mdl->flatten((q_fixed == first_index ? q : i), (q_fixed == second_index ? q : i));
 				        unsigned int r_id = mdl->flatten((r_fixed == first_index ? r : i), (r_fixed == second_index ? r : i));
@@ -238,7 +238,7 @@ namespace transport
 				        const std::vector<number>& mom_r_line_re = r_handle.lookup_tag(mom_r_re_tag);
 				        const std::vector<number>& mom_r_line_im = r_handle.lookup_tag(mom_r_im_tag);
 
-						    for(unsigned int j = 0; j < line_data.size(); j++)
+						    for(unsigned int j = 0; j < line_data.size(); ++j)
 							    {
 						        (sigma_q_re[j]).push_back(q_line_re[j]);
 						        (sigma_q_im[j]).push_back(q_line_im[j]);
@@ -252,7 +252,7 @@ namespace transport
 					    }
 
 				    // work through the kconfig sample, shifting each value appropriately
-				    for(unsigned int i = 0; i < line_data.size(); i++)
+				    for(unsigned int i = 0; i < line_data.size(); ++i)
 					    {
 				        std::vector< std::vector< std::vector<number> > > B_qrp;
 				        std::vector< std::vector< std::vector<number> > > C_pqr;
@@ -265,9 +265,9 @@ namespace transport
 
 				        number shift = 0.0;
 
-				        for(unsigned int m = 0; m < N_fields; m++)
+				        for(unsigned int m = 0; m < N_fields; ++m)
 					        {
-				            for(unsigned int n = 0; n < N_fields; n++)
+				            for(unsigned int n = 0; n < N_fields; ++n)
 					            {
 				                shift -= B_qrp[m][n][p_species] * ( sigma_q_re[i][m]*sigma_r_re[i][n] - sigma_q_im[i][m]*sigma_r_im[i][n] );
 

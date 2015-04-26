@@ -78,7 +78,7 @@ int main(int argc, const char* argv[])
     const unsigned int  tN   = 5000;       // record 500 samples
 
     std::vector<double> times;
-    for(int i = 0; i < tN; i++)
+    for(int i = 0; i < tN; ++i)
       {
         times.push_back(tmin + (tmax - tmin)*(double)i/(double)tN);
       }
@@ -91,7 +91,7 @@ int main(int argc, const char* argv[])
     const unsigned int  kN   = 5;          // number of k-points
 
     std::vector<double> ks;
-    for(int i = 0; i < kN; i++)
+    for(int i = 0; i < kN; ++i)
       {
         ks.push_back(kmin * pow(kmax/kmin, (double)i/(double)kN));
       }
@@ -214,7 +214,7 @@ void output_info(transport::canonical_model<double>& model)
     const std::vector<double> r_p    = model.get_parameters();
 
     std::cout << "Fields (" << model.get_N_fields() << "): ";
-    for(int i = 0; i < fields.size(); i++)
+    for(int i = 0; i < fields.size(); ++i)
       {
         if(i > 0)
           {
@@ -225,7 +225,7 @@ void output_info(transport::canonical_model<double>& model)
     std::cout << "\n";
 
     std::cout << "Parameters (" << model.get_N_params() << "): ";
-    for(int i = 0; i < params.size(); i++)
+    for(int i = 0; i < params.size(); ++i)
       {
         if(i > 0)
           {

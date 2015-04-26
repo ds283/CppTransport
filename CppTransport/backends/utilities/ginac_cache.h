@@ -173,7 +173,7 @@ bool ginac_cache<ExpressionType, HashSize>::cache_element::compare(ExpressionTyp
 
     std::vector<GiNaC::ex>::const_iterator m;
     std::vector<GiNaC::ex>::const_iterator n;
-		for(m = this->args.begin(), n = a.begin(); m != this->args.end() && n != a.end(); m++, n++)
+		for(m = this->args.begin(), n = a.begin(); m != this->args.end() && n != a.end(); ++m, ++n)
 			{
 		    GiNaC::ex test = ((*m) - (*n)).eval();
 				bool equal = static_cast<bool>(test == 0);
@@ -197,7 +197,7 @@ bool ginac_cache<ExpressionType, HashSize>::cache_element::compare(ExpressionTyp
 
     std::vector<GiNaC::ex>::const_iterator m;
     std::vector<GiNaC::ex>::const_iterator n;
-    for(m = this->args.begin(), n = a.begin(); m != this->args.end() && n != a.end(); m++, n++)
+    for(m = this->args.begin(), n = a.begin(); m != this->args.end() && n != a.end(); ++m, ++n)
 	    {
         GiNaC::ex test = ((*m) - (*n)).eval();
         bool equal = static_cast<bool>(test == 0);
@@ -220,14 +220,14 @@ bool ginac_cache<ExpressionType, HashSize>::cache_element::compare(ExpressionTyp
 
         unsigned int count = 0;
         std::cout << "  Lookup argument list:" << std::endl;
-        for(std::vector<GiNaC::ex>::const_iterator u = this->args.begin(); u != this->args.end(); u++, count++)
+        for(std::vector<GiNaC::ex>::const_iterator u = this->args.begin(); u != this->args.end(); ++u, ++count)
 	        {
             std::cout << "  argument " << count << " = " << (*u) << std::endl;
 	        }
 
         count = 0;
         std::cout << "  Expected argument list:" << std::endl;
-        for(std::vector<GiNaC::ex>::const_iterator u = a.begin(); u != a.end(); u++, count++)
+        for(std::vector<GiNaC::ex>::const_iterator u = a.begin(); u != a.end(); ++u, ++count)
 	        {
             std::cout << "  argument " << count << " = " << (*u) << std::endl;
 	        }
@@ -264,7 +264,7 @@ void ginac_cache<ExpressionType, HashSize>::cache_element::write(std::ostream& o
 		out << "   Number of arguments = " << this->args.size() << std::endl;
 
 		unsigned int count = 0;
-		for(std::vector<GiNaC::ex>::const_iterator t = this->args.begin(); t != this->args.end(); t++, count++)
+		for(std::vector<GiNaC::ex>::const_iterator t = this->args.begin(); t != this->args.end(); ++t, ++count)
 			{
 				out << "   Argument " << count << " = " << (*t) << std::endl;
 			}
@@ -279,7 +279,7 @@ bool ginac_cache<ExpressionType, HashSize>::query(ExpressionType t, unsigned int
 
 		unsigned int hash = this->hash(t, i, a.size());
 
-		for(typename std::vector<cache_element>::iterator u = this->cache[hash].begin(); u != this->cache[hash].end(); u++)
+		for(typename std::vector<cache_element>::iterator u = this->cache[hash].begin(); u != this->cache[hash].end(); ++u)
 			{
 				if((*u).compare(t, i, a, e))
 					{
@@ -302,7 +302,7 @@ bool ginac_cache<ExpressionType, HashSize>::query(ExpressionType t, unsigned int
 
     unsigned int hash = this->hash(t, i, a.size());
 
-    for(typename std::vector<cache_element>::iterator u = this->cache[hash].begin(); u != this->cache[hash].end(); u++)
+    for(typename std::vector<cache_element>::iterator u = this->cache[hash].begin(); u != this->cache[hash].end(); ++u)
 	    {
 		    bool matched = true;
 
@@ -313,7 +313,7 @@ bool ginac_cache<ExpressionType, HashSize>::query(ExpressionType t, unsigned int
 		            std::cout << std::endl;
 		            std::cout << "Detected matching failure -- dumping diagnostics" << std::endl;
 		            std::cout << "  index = " << i << ", hash = " << hash << ", number of entries in hash table at this value = " << this->cache[hash].size() << std::endl;
-		            for(typename std::vector<cache_element>::iterator v = this->cache[hash].begin(); v != this->cache[hash].end(); v++)
+		            for(typename std::vector<cache_element>::iterator v = this->cache[hash].begin(); v != this->cache[hash].end(); ++v)
 			            {
 		                std::cout << std::endl;
 		                (*v).write(std::cout);
@@ -342,7 +342,7 @@ bool ginac_cache<ExpressionType, HashSize>::query(ExpressionType t, unsigned int
 
     unsigned int hash = this->hash(t, i, 0);
 
-    for(typename std::vector<cache_element>::iterator u = this->cache[hash].begin(); u != this->cache[hash].end(); u++)
+    for(typename std::vector<cache_element>::iterator u = this->cache[hash].begin(); u != this->cache[hash].end(); ++u)
 	    {
         if((*u).compare(t, i, e))
 	        {

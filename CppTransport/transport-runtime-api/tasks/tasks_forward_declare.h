@@ -23,7 +23,7 @@ namespace transport
     template <typename number> class integration_task;
 #endif
 
-#ifdef __twopf_list_task_H_
+#ifndef __twopf_list_task_H_
     template <typename number> class twopf_list_task;
 #endif
 

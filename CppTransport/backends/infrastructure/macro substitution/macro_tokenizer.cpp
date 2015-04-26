@@ -169,7 +169,7 @@ token_list::token_list(const std::string& input,
 
 token_list::~token_list()
 	{
-		for(std::list< generic_token* >::iterator t = this->tokens.begin(); t != this->tokens.end(); t++)
+		for(std::list< generic_token* >::iterator t = this->tokens.begin(); t != this->tokens.end(); ++t)
 			{
 				delete *t;
 			}
@@ -181,7 +181,7 @@ bool token_list::check_for_match(const std::string& candidate, const std::vector
 	{
 		bool found = false;
 
-		for(typename std::vector<Rule>::const_iterator t = rule_list.begin(); !found && t != rule_list.end(); t++)
+		for(typename std::vector<Rule>::const_iterator t = rule_list.begin(); !found && t != rule_list.end(); ++t)
 			{
 				if(candidate.length() <= (*t).name.length())
 					{
@@ -200,7 +200,7 @@ bool token_list::check_for_match(const std::string& candidate, const std::vector
 template <typename Rule>
 const Rule& token_list::find_match(const std::string& candidate, const std::vector<Rule>& rule_list)
 	{
-		for(typename std::vector<Rule>::const_iterator t = rule_list.begin(); t != rule_list.end(); t++)
+		for(typename std::vector<Rule>::const_iterator t = rule_list.begin(); t != rule_list.end(); ++t)
 			{
 				if(candidate == (*t).name)
 					{
@@ -370,7 +370,7 @@ void token_list::add_index(const index_abstract& index)
 	{
 		bool found = false;
 
-		for(std::vector<index_abstract>::iterator t = this->indices.begin(); !found && t != this->indices.end(); t++)
+		for(std::vector<index_abstract>::iterator t = this->indices.begin(); !found && t != this->indices.end(); ++t)
 			{
 				if((*t).label == index.label && (*t).range == index.range)
 					{
@@ -389,7 +389,7 @@ unsigned int token_list::evaluate_macros(simple_macro_token::macro_type type)
 	{
 		unsigned int replacements = 0;
 
-		for(std::list<generic_token*>::iterator t = this->tokens.begin(); t != this->tokens.end(); t++)
+		for(std::list<generic_token*>::iterator t = this->tokens.begin(); t != this->tokens.end(); ++t)
 			{
 				simple_macro_token* token;
 
@@ -411,7 +411,7 @@ unsigned int token_list::evaluate_macros(const std::vector<index_assignment>& a)
 	{
 		unsigned int replacements = 0;
 
-		for(std::list<generic_token*>::iterator t = this->tokens.begin(); t != this->tokens.end(); t++)
+		for(std::list<generic_token*>::iterator t = this->tokens.begin(); t != this->tokens.end(); ++t)
 			{
 				free_index_token* f_token;
 				index_macro_token* i_token;
@@ -436,7 +436,7 @@ std::string token_list::to_string()
 	{
     std::string output;
 
-		for(std::list<generic_token*>::iterator t = this->tokens.begin(); t != this->tokens.end(); t++)
+		for(std::list<generic_token*>::iterator t = this->tokens.begin(); t != this->tokens.end(); ++t)
 			{
 				output += (*t)->to_string();
 			}
@@ -471,7 +471,7 @@ void token_list::free_index_token::evaluate(const std::vector<index_assignment>&
 	{
     bool found = false;
 
-    for(std::vector<index_assignment>::const_iterator t = a.begin(); !found && t != a.end(); t++)
+    for(std::vector<index_assignment>::const_iterator t = a.begin(); !found && t != a.end(); ++t)
 	    {
         if((*t).label == this->index.label)
 	        {
@@ -535,10 +535,10 @@ void token_list::index_macro_token::evaluate(const std::vector<index_assignment>
 	{
     std::vector<struct index_assignment> index_values;
 
-		for(std::vector<index_abstract>::const_iterator t = this->indices.begin(); t != indices.end(); t++)
+		for(std::vector<index_abstract>::const_iterator t = this->indices.begin(); t != indices.end(); ++t)
 			{
 				bool found = false;
-				for(std::vector<index_assignment>::const_iterator u = a.begin(); !found && u != a.end(); u++)
+				for(std::vector<index_assignment>::const_iterator u = a.begin(); !found && u != a.end(); ++u)
 					{
 						if((*u).label == (*t).label)
 							{

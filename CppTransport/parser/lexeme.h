@@ -144,7 +144,7 @@ namespace lexeme    // package in a unique namespace to protect common words lik
 
                 context = binary_context; // unary minus can't follow an identifier
 
-                for (int i = 0; i < Nk; i++)
+                for (int i = 0; i < Nk; ++i)
                   {
                     if (buffer == ktable[i])
                       {
@@ -201,7 +201,7 @@ namespace lexeme    // package in a unique namespace to protect common words lik
               case buf_character:
                 type = unknown;
 
-                for(int i = 0; i < Nc; i++)
+                for(int i = 0; i < Nc; ++i)
                   {
                     bool unary  = false;
                     bool binary = false;

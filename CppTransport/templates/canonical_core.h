@@ -15,6 +15,8 @@
 #include <stdexcept>
 
 #include "boost/numeric/odeint.hpp"
+#include "boost/range/algorithm.hpp"
+
 #include "transport-runtime-api/transport.h"
 
 
@@ -181,7 +183,9 @@ namespace transport
 
         virtual void backend_process_backg(const background_task<number>* tk, typename model<number>::backg_history& solution, bool silent=false) override;
 
-        virtual double backend_compute_epsilon_unity(const integration_task<number>* tk, double search_time) override;
+        virtual double compute_end_of_inflation(const integration_task<number>* tk, double search_time=__CPP_TRANSPORT_DEFAULT_END_OF_INFLATION_SEARCH) override;
+
+		    virtual void compute_aH(const twopf_list_task<number>* tk, std::vector<double>& N, std::vector<number>& aH, double largest_k) override;
 
 
         // CALCULATE INITIAL CONDITIONS FOR N-POINT FUNCTIONS
@@ -211,9 +215,8 @@ namespace transport
 
       public:
 
-        $$__MODEL_background_functor(const parameters<number>& p, bool t=false)
-          : params(p),
-            trigger_on_epsilon(t)
+        $$__MODEL_background_functor(const parameters<number>& p)
+          : params(p)
           {
           }
 
@@ -222,8 +225,6 @@ namespace transport
       protected:
 
         const parameters<number> params;
-
-        bool trigger_on_epsilon;
 
       };
 
@@ -416,7 +417,7 @@ namespace transport
 
         const auto __Hsq             = $$__HUBBLE_SQ;
         const auto __eps             = $$__EPSILON;
-        const auto __a               = exp(__Ninit - __task->get_N_horizon_crossing() + __CPP_TRANSPORT_DEFAULT_ASTAR_NORMALIZATION);
+        const auto __a               = exp(__Ninit - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
         const auto __N               = log(__k/(__a*sqrt(__Hsq)));
 
@@ -503,7 +504,7 @@ namespace transport
 
       const auto __Hsq             = $$__HUBBLE_SQ;
       const auto __eps             = $$__EPSILON;
-      const auto __a               = exp(__Ninit - __task->get_N_horizon_crossing() + __CPP_TRANSPORT_DEFAULT_ASTAR_NORMALIZATION);
+      const auto __a               = exp(__Ninit - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
       const auto __N               = log(__k/(__a*sqrt(__Hsq)));
 
@@ -552,7 +553,7 @@ namespace transport
 
         const auto __Hsq             = $$__HUBBLE_SQ;
         const auto __eps             = $$__EPSILON;
-        const auto __a               = exp(__Ninit - __task->get_N_horizon_crossing() + __CPP_TRANSPORT_DEFAULT_ASTAR_NORMALIZATION);
+        const auto __a               = exp(__Ninit - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
         const auto __N               = log(__k/(__a*sqrt(__Hsq)));
 
@@ -599,7 +600,7 @@ namespace transport
 
         const auto __Hsq             = $$__HUBBLE_SQ;
         const auto __eps             = $$__EPSILON;
-        const auto __a               = exp(__Ninit - __task->get_N_horizon_crossing() + __CPP_TRANSPORT_DEFAULT_ASTAR_NORMALIZATION);
+        const auto __a               = exp(__Ninit - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
         const auto __kt              = __k1 + __k2 + __k3;
         const auto __Ksq             = __k1*__k2 + __k1*__k3 + __k2*__k3;
@@ -826,13 +827,13 @@ namespace transport
 
         const auto __Hsq             = $$__HUBBLE_SQ;
         const auto __eps             = $$__EPSILON;
-        const auto __a               = exp(__N - __task->get_N_horizon_crossing() + __CPP_TRANSPORT_DEFAULT_ASTAR_NORMALIZATION);
+        const auto __a               = exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
 	      __ddN.clear();
         __ddN.resize(2*$$__NUMBER_FIELDS);
-        for(int i = 0; i < 2*$$__NUMBER_FIELDS; i++)
+        for(int i = 0; i < 2*$$__NUMBER_FIELDS; ++i)
           {
             __ddN[i].resize(2*$$__NUMBER_FIELDS);
           }
@@ -871,7 +872,7 @@ namespace transport
 
 	      __ddN.clear();
         __ddN.resize(2*$$__NUMBER_FIELDS);
-        for(int i = 0; i < 2*$$__NUMBER_FIELDS; i++)
+        for(int i = 0; i < 2*$$__NUMBER_FIELDS; ++i)
 	        {
             __ddN[i].resize(2*$$__NUMBER_FIELDS);
 	        }
@@ -894,14 +895,14 @@ namespace transport
 
         const auto __Hsq             = $$__HUBBLE_SQ;
         const auto __eps             = $$__EPSILON;
-        const auto __a               = exp(__N - __task->get_N_horizon_crossing() + __CPP_TRANSPORT_DEFAULT_ASTAR_NORMALIZATION);
+        const auto __a               = exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
 	      __u2.clear();
         __u2.resize(2*$$__NUMBER_FIELDS);
 
-        for(int __i = 0; __i < 2*$$__NUMBER_FIELDS; __i++)
+        for(int __i = 0; __i < 2*$$__NUMBER_FIELDS; ++__i)
           {
             __u2[__i].resize(2*$$__NUMBER_FIELDS);
           }
@@ -921,17 +922,17 @@ namespace transport
 
         const auto __Hsq             = $$__HUBBLE_SQ;
         const auto __eps             = $$__EPSILON;
-        const auto __a               = exp(__N - __task->get_N_horizon_crossing() + __CPP_TRANSPORT_DEFAULT_ASTAR_NORMALIZATION);
+        const auto __a               = exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
 	      __u3.clear();
         __u3.resize(2*$$__NUMBER_FIELDS);
 
-        for(int __i = 0; __i < 2*$$__NUMBER_FIELDS; __i++)
+        for(int __i = 0; __i < 2*$$__NUMBER_FIELDS; ++__i)
           {
             __u3[__i].resize(2*$$__NUMBER_FIELDS);
-            for(int __j = 0; __j < 2*$$__NUMBER_FIELDS; __j++)
+            for(int __j = 0; __j < 2*$$__NUMBER_FIELDS; ++__j)
               {
                 __u3[__i][__j].resize(2*$$__NUMBER_FIELDS);
               }
@@ -952,17 +953,17 @@ namespace transport
 
         const auto __Hsq                  = $$__HUBBLE_SQ;
         const auto __eps                  = $$__EPSILON;
-        const auto __a                    = exp(__N - __task->get_N_horizon_crossing() + __CPP_TRANSPORT_DEFAULT_ASTAR_NORMALIZATION);
+        const auto __a                    = exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
 	      __A.clear();
         __A.resize($$__NUMBER_FIELDS);
 
-        for(int __i = 0; __i < $$__NUMBER_FIELDS; __i++)
+        for(int __i = 0; __i < $$__NUMBER_FIELDS; ++__i)
           {
             __A[__i].resize($$__NUMBER_FIELDS);
-            for(int __j = 0; __j < $$__NUMBER_FIELDS; __j++)
+            for(int __j = 0; __j < $$__NUMBER_FIELDS; ++__j)
               {
                 __A[__i][__j].resize($$__NUMBER_FIELDS);
               }
@@ -983,17 +984,17 @@ namespace transport
 
         const auto __Hsq                  = $$__HUBBLE_SQ;
         const auto __eps                  = $$__EPSILON;
-        const auto __a                    = exp(__N - __task->get_N_horizon_crossing() + __CPP_TRANSPORT_DEFAULT_ASTAR_NORMALIZATION);
+        const auto __a                    = exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
 	      __B.clear();
         __B.resize($$__NUMBER_FIELDS);
 
-        for(int __i = 0; __i < $$__NUMBER_FIELDS; __i++)
+        for(int __i = 0; __i < $$__NUMBER_FIELDS; ++__i)
           {
             __B[__i].resize($$__NUMBER_FIELDS);
-            for(int __j = 0; __j < $$__NUMBER_FIELDS; __j++)
+            for(int __j = 0; __j < $$__NUMBER_FIELDS; ++__j)
               {
                 __B[__i][__j].resize($$__NUMBER_FIELDS);
               }
@@ -1014,17 +1015,17 @@ namespace transport
 
         const auto __Hsq                  = $$__HUBBLE_SQ;
         const auto __eps                  = $$__EPSILON;
-        const auto __a                    = exp(__N - __task->get_N_horizon_crossing() + __CPP_TRANSPORT_DEFAULT_ASTAR_NORMALIZATION);
+        const auto __a                    = exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
 	      __C.clear();
         __C.resize($$__NUMBER_FIELDS);
 
-        for(int __i = 0; __i < $$__NUMBER_FIELDS; __i++)
+        for(int __i = 0; __i < $$__NUMBER_FIELDS; ++__i)
           {
             __C[__i].resize($$__NUMBER_FIELDS);
-            for(int __j = 0; __j < $$__NUMBER_FIELDS; __j++)
+            for(int __j = 0; __j < $$__NUMBER_FIELDS; ++__j)
               {
                 __C[__i][__j].resize($$__NUMBER_FIELDS);
               }
@@ -1057,57 +1058,132 @@ namespace transport
         backg_state<number> x($$__MODEL_pool::backg_state_size);
         x[this->flatten($$__A)] = $$// ics[$$__A];
 
-        using namespace boost::numeric::odeint;
-        integrate_times($$__MAKE_BACKG_STEPPER{backg_state<number>}, system, x, time_db.value_begin(), time_db.value_end(), $$__BACKG_STEP_SIZE, obs);
+        boost::numeric::odeint::integrate_times($$__MAKE_BACKG_STEPPER{backg_state<number>}, system, x, time_db.value_begin(), time_db.value_end(), $$__BACKG_STEP_SIZE, obs);
       }
 
 
-    class epsilon_unity_trigger: public std::exception
-      {
+		template <typename number>
+    class EpsilonUnityPredicate
+	    {
       public:
-        epsilon_unity_trigger(double t)
-          : time(t)
-          {
-            std::ostringstream msg;
-            msg << time;
-            message = msg.str();
-          }
+        EpsilonUnityPredicate(const parameters<number>& p)
+	        : params(p)
+	        {
+	        }
 
-        virtual const char* what() const noexcept override { return this->message.c_str(); }
+        bool operator()(const std::pair< backg_state<number>, double >& __x)
+	        {
+            const auto $$__PARAMETER[1]  = this->params.get_vector()[$$__1];
+            const auto $$__COORDINATE[A] = __x.first[$$__A];
+            const auto __Mp              = this->params.get_Mp();
 
-        double get_time() const { return(this->time); }
+            const auto __eps = $$__EPSILON;
+
+            return (__eps > 1.0);
+	        }
 
       private:
-        std::string message;
-        double time;
-      };
+        const parameters<number>& params;
+	    };
 
 
     template <typename number>
-    double $$__MODEL<number>::backend_compute_epsilon_unity(const integration_task<number>* tk, double search_time)
+    double $$__MODEL<number>::compute_end_of_inflation(const integration_task<number>* tk, double search_time)
       {
         assert(tk != nullptr);
 
-        // set up a functor to evolve this system, triggering on epsilon=1
-        $$__MODEL_background_functor<number> system(tk->get_params(), true);
+        // set up a functor to evolve this system
+        $$__MODEL_background_functor<number> system(tk->get_params());
 
         auto ics = tk->get_ics_vector();
 
         backg_state<number> x($$__MODEL_pool::backg_state_size);
         x[this->flatten($$__A)] = $$// ics[$$__A];
 
-        try
-          {
-            using namespace boost::numeric::odeint;
-            integrate_adaptive($$__MAKE_BACKG_STEPPER{backg_state<number>}, system, x, tk->get_N_initial(), tk->get_N_initial()+search_time, $$__BACKG_STEP_SIZE);
-          }
-        catch(epsilon_unity_trigger& trigger)
-          {
-            return(trigger.get_time());
-          }
+		    // find point where epsilon = 1
+        auto stepper = $$__MAKE_BACKG_STEPPER{backg_state<number>};
 
-        throw end_of_inflation_not_found();
-      }
+		    auto range = boost::numeric::odeint::make_adaptive_time_range(stepper, system, x, tk->get_N_initial(), tk->get_N_initial()+search_time, $$__BACKG_STEP_SIZE);
+
+        // returns the first iterator in 'range' for which the predicate EpsilonUnityPredicate() is satisfied
+        auto iter = boost::find_if(range, EpsilonUnityPredicate<number>(tk->get_params()));
+
+				if(iter == boost::end(range)) throw end_of_inflation_not_found();
+
+		    return ((*iter).second);
+      };
+
+
+		template <typename number>
+		class aHAggregatorPredicate
+			{
+		  public:
+				aHAggregatorPredicate(const twopf_list_task<number>* tk, std::vector<double>& N, std::vector<number>& aH, double lk)
+					: params(tk->get_params()),
+		        N_vector(N),
+		        aH_vector(aH),
+		        largest_k(lk),
+						N_horizon_crossing(tk->get_N_horizon_crossing()),
+						astar_normalization(tk->get_astar_normalization())
+					{
+					}
+
+				bool operator()(const std::pair< backg_state<number>, double >& __x)
+					{
+				    const auto $$__PARAMETER[1]  = this->params.get_vector()[$$__1];
+				    const auto $$__COORDINATE[A] = __x.first[$$__A];
+				    const auto __Mp              = this->params.get_Mp();
+
+				    const auto __Hsq = $$__HUBBLE_SQ;
+						const auto __H   = sqrt(__Hsq);
+
+						const auto __a   = exp(__x.second - this->N_horizon_crossing + this->astar_normalization);
+
+						this->N_vector.push_back(__x.second);
+						this->aH_vector.push_back(__a*__H);
+
+						if(largest_k / (__a*__H) < 0.5) return(true);
+						return(false);
+					}
+
+		  private:
+				const parameters<number>& params;
+				std::vector<double>& N_vector;
+				std::vector<number>& aH_vector;
+				const double largest_k;
+				const double N_horizon_crossing;
+				const double astar_normalization;
+			};
+
+
+		template <typename number>
+		void $$__MODEL<number>::compute_aH(const twopf_list_task<number>* tk, std::vector<double>& N, std::vector<number>& aH, double largest_k)
+			{
+				N.clear();
+				aH.clear();
+
+				// set up a functor to evolve the system
+				$$__MODEL_background_functor<number> system(tk->get_params());
+
+				auto ics = tk->integration_task<number>::get_ics_vector();
+
+				backg_state<number> x($$__MODEL_pool::backg_state_size);
+				x[this->flatten($$__A)] = $$// ics[$$__A];
+
+				auto stepper = $$__MAKE_BACKG_STEPPER{backg_state<number>};
+
+				auto range = boost::numeric::odeint::make_const_step_time_range(stepper, system, x, tk->get_N_initial(), tk->get_N_end_of_inflation(), 0.01);
+
+				aHAggregatorPredicate<number> aggregator(tk, N, aH, largest_k);
+
+				auto iter = boost::find_if(range, aggregator);
+
+				if(iter == boost::end(range))
+					{
+						assert(false);
+				    throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_FAIL_COMPUTE_T_EXIT);
+					}
+			}
 
 
     // IMPLEMENTATION - FUNCTOR FOR BACKGROUND INTEGRATION
@@ -1124,8 +1200,6 @@ namespace transport
         const auto __eps             = $$__EPSILON;
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
-
-        if(this->trigger_on_epsilon && __eps >= 1.0) throw epsilon_unity_trigger(__t);
 
         __dxdt[this->flatten($$__A)] = $$__U1_PREDEF[A]{__Hsq,__eps};
       }

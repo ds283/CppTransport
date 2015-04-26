@@ -181,7 +181,7 @@ namespace transport
             const threepf_kconfig_database& threepf_db = tk->get_threepf_database();
 
             kconfig_sns.clear();
-            for(threepf_kconfig_database::const_config_iterator t = threepf_db.config_begin(); t != threepf_db.config_end(); t++)
+            for(threepf_kconfig_database::const_config_iterator t = threepf_db.config_begin(); t != threepf_db.config_end(); ++t)
               {
                 kconfig_sns.push_back(t->serial);
               }
@@ -264,7 +264,7 @@ namespace transport
             line_data.resize(h->time_sample_sns.size());
 
             // loop over all sampled k-configurations, adding their contributions to the integral
-            for(unsigned int i = 0; i < k_values.size(); i++)
+            for(unsigned int i = 0; i < k_values.size(); ++i)
               {
                 zeta_threepf_time_data_tag<number> bsp_tag = h->pipe.new_zeta_threepf_time_data_tag(k_values[i]);
 
@@ -316,7 +316,7 @@ namespace transport
                 kcfg.beta             = k_values[i].beta;
 
                 number measure = h->tk->measure(kcfg);
-                for(unsigned int j = 0; j < h->time_sample_sns.size(); j++)
+                for(unsigned int j = 0; j < h->time_sample_sns.size(); ++j)
                   {
                     line_data[j] += measure * S_bispectrum[j] * S_template[j];
                   }
@@ -339,7 +339,7 @@ namespace transport
             line_data.resize(h->time_sample_sns.size());
 
             // loop over all sampled k-configurations, adding their contributions to the integral
-            for(unsigned int i = 0; i < k_values.size(); i++)
+            for(unsigned int i = 0; i < k_values.size(); ++i)
               {
                 twopf_kconfig k1;
                 twopf_kconfig k2;
@@ -384,7 +384,7 @@ namespace transport
                 kcfg.beta             = k_values[i].beta;
 
                 number measure = h->tk->measure(kcfg);
-                for(unsigned int j = 0; j < h->time_sample_sns.size(); j++)
+                for(unsigned int j = 0; j < h->time_sample_sns.size(); ++j)
                   {
                     line_data[j] += measure * S_template[j] * S_template[j];
                   }
@@ -403,7 +403,7 @@ namespace transport
 
 				    line_data.clear();
 				    line_data.resize(h->time_sample_sns.size());
-		        for(unsigned int j = 0; j < h->time_sample_sns.size(); j++)
+		        for(unsigned int j = 0; j < h->time_sample_sns.size(); ++j)
 			        {
 		            line_data[j] = (5.0/3.0) * BT_line[j]/TT_line[j];
 			        }
@@ -419,7 +419,7 @@ namespace transport
 		        shape.clear();
 		        shape.resize(bispectrum.size());
 
-		        for(unsigned int j = 0; j < bispectrum.size(); j++)
+		        for(unsigned int j = 0; j < bispectrum.size(); ++j)
 			        {
 		            number Bref = this->reference_bispectrum(twopf_k1[j], twopf_k2[j], twopf_k3[j]);
 
@@ -437,7 +437,7 @@ namespace transport
 		        shape.clear();
 		        shape.resize(twopf_k1.size());
 
-		        for(unsigned int j = 0; j < twopf_k1.size(); j++)
+		        for(unsigned int j = 0; j < twopf_k1.size(); ++j)
 			        {
 		            number T = 0.0;
 

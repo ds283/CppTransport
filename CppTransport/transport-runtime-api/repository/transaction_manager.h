@@ -164,7 +164,7 @@ namespace transport
 		    // rollback the transaction if it was not committed
 		    if(!this->committed) this->rollback();
 
-		    for(std::list< journal_record* >::iterator t = this->journal.begin(); t != this->journal.end(); t++)
+		    for(std::list< journal_record* >::iterator t = this->journal.begin(); t != this->journal.end(); ++t)
 			    {
 				    delete *t;
 			    }
@@ -177,7 +177,7 @@ namespace transport
 		void transaction_manager::commit()
 			{
 				// work through the journal, committing
-				for(std::list< journal_record* >::iterator t = this->journal.begin(); t != this->journal.end(); t++)
+				for(std::list< journal_record* >::iterator t = this->journal.begin(); t != this->journal.end(); ++t)
 					{
 				    (*t)->commit();
 					}
@@ -191,7 +191,7 @@ namespace transport
 		void transaction_manager::rollback()
 			{
 				// work through the journal, rolling back
-				for(std::list< journal_record* >::iterator t = this->journal.begin(); t != this->journal.end(); t++)
+				for(std::list< journal_record* >::iterator t = this->journal.begin(); t != this->journal.end(); ++t)
 					{
 				    (*t)->rollback();
 					}

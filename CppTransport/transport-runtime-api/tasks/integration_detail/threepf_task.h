@@ -13,6 +13,9 @@
 #include "transport-runtime-api/tasks/integration_detail/twopf_list_task.h"
 #include "transport-runtime-api/tasks/configuration-database/threepf_config_database.h"
 
+#include "transport-runtime-api/utilities/spline1d.h"
+#include <boost/math/tools/roots.hpp>
+
 
 #define __CPP_TRANSPORT_NODE_THREEPF_INTEGRABLE            "integrable"
 #define __CPP_TRANSPORT_NODE_THREEPF_LIST_DATABASE         "threepf-database"
@@ -25,6 +28,8 @@
 
 namespace transport
 	{
+
+		typedef enum { smallest_wavenumber_exit, kt_wavenumber_exit} threepf_ics_exit_type;
 
     // three-point function task
     template <typename number>
@@ -52,6 +57,9 @@ namespace transport
         //! Provide access to threepf k-configuration database
         const threepf_kconfig_database& get_threepf_database() const { return(this->threepf_db); }
 
+        //! Compute horizon-exit times for each mode in the database
+        virtual void compute_horizon_exit_times() override;
+
         //! Determine whether this task is integrable
         bool is_integrable() const { return(this->integrable); }
 
@@ -61,18 +69,31 @@ namespace transport
         //! get measure at a particular k-configuration
         virtual number measure(const threepf_kconfig& config) const = 0;
 
+      protected:
+
+        //! Compute horizon-exit times for each mode in the database -- use supplied spline
+        template <typename SplineObject, typename TolerancePolicy>
+        void threepf_compute_horizon_exit_times(SplineObject& sp, TolerancePolicy tol);
+
+
 
         // INTERFACE - INITIAL CONDITIONS AND INTEGRATION DETAILS
 
+      public:
 
         //! Get std::vector of initial conditions, offset using fast forwarding if enabled
         std::vector<number> get_ics_vector(const threepf_kconfig& kconfig) const;
+
+		    //! Get std::vector of initial conditions at horizon exit time for a k-configuration
+		    std::vector<number> get_ics_exit_vector(const threepf_kconfig& kconfig, threepf_ics_exit_type type=smallest_wavenumber_exit) const;
 
         //! Build time-sample database
         const time_config_database get_time_config_database(const threepf_kconfig& config) const;
 
 
         // INTERFACE - FAST FORWARD MANAGEMENT
+
+      public:
 
         //! Get start time for a threepf configuration
         double get_fast_forward_start(const threepf_kconfig& config) const;
@@ -116,6 +137,9 @@ namespace transport
         //! deserialize integrable status
         integrable = reader[__CPP_TRANSPORT_NODE_THREEPF_INTEGRABLE].asBool();
 
+        // reconstruct horizon-exit times; these aren't stored in the repository record to save space
+        this->compute_horizon_exit_times();
+
         this->cache_stored_time_config_database();
 	    }
 
@@ -146,7 +170,14 @@ namespace transport
       {
         double kmin = std::min(std::min(config.k1_conventional, config.k2_conventional), config.k3_conventional);
 
-        return(this->ics.get_N_horizon_crossing() + log(kmin) - this->ff_efolds);
+		    unsigned int serial;
+		    bool found = this->twopf_db.find(kmin, serial);
+		    assert(found);
+
+        twopf_kconfig_database::const_record_iterator t = this->twopf_db.lookup(serial);
+		    assert(t != this->twopf_db.crecord_end());
+
+        return((*t)->t_exit - this->ff_efolds);
       }
 
 
@@ -162,6 +193,81 @@ namespace transport
             return this->ics.get_vector();
           }
 	    }
+
+
+		template <typename number>
+		std::vector<number> threepf_task<number>::get_ics_exit_vector(const threepf_kconfig& config, threepf_ics_exit_type type) const
+			{
+				double time = config.t_exit;
+
+				switch(type)
+					{
+				    case smallest_wavenumber_exit:
+					    {
+						    double kmin = std::min(std::min(config.k1_conventional, config.k2_conventional), config.k3_conventional);
+
+				        unsigned int serial;
+				        bool found = this->twopf_db.find(kmin, serial);
+				        assert(found);
+
+				        twopf_kconfig_database::const_record_iterator t = this->twopf_db.lookup(serial);
+				        assert(t != this->twopf_db.crecord_end());
+
+						    time = (*t)->t_exit;
+						    break;
+					    }
+
+				    case kt_wavenumber_exit:
+					    {
+						    time = config.t_exit;
+						    break;
+					    };
+
+				    default:
+					    assert(false);
+					}
+
+				return this->integration_task<number>::get_ics_vector(time);
+			}
+
+
+    template <typename number>
+    void threepf_task<number>::compute_horizon_exit_times()
+	    {
+		    double largest_kt = this->threepf_db.get_kmax_comoving();
+        double largest_k = this->twopf_db.get_kmax_comoving();
+
+        std::vector<double> N;
+        std::vector<number> aH;
+        this->get_model()->compute_aH(this, N, aH, std::max(largest_k, largest_kt));
+
+        spline1d<number> sp(N, aH);
+
+		    this->threepf_compute_horizon_exit_times(sp, TolerancePredicate(1E-7));
+
+		    // forward to underlying twopf_list_task to also update its database
+		    this->twopf_list_task<number>::twopf_compute_horizon_exit_times(sp, TolerancePredicate(1E-7));
+	    };
+
+
+		template <typename number>
+		template <typename SplineObject, typename TolerancePolicy>
+		void threepf_task<number>::threepf_compute_horizon_exit_times(SplineObject& sp, TolerancePolicy tol)
+			{
+		    boost::uintmax_t max_iter = 500;
+
+		    for(threepf_kconfig_database::config_iterator t = this->threepf_db.config_begin(); t != this->threepf_db.config_end(); ++t)
+			    {
+		        // set spline to evaluate aH-k and then solve for N
+		        sp.set_offset(t->kt_comoving);
+
+		        // find root; note use of std::ref, because toms748_solve normally would take a copy of
+		        // its system function and this is slow -- we have to copy the whole spline
+		        std::pair< double, double > result = boost::math::tools::toms748_solve(std::ref(sp), sp.get_min_x(), sp.get_max_x(), tol, max_iter);
+
+		        t->t_exit = (result.first + result.second)/2.0;
+			    }
+			}
 
 
     template <typename number>
@@ -227,11 +333,11 @@ namespace transport
 	    {
         // step through the lattice of k-modes, recording which are viable triangular configurations
         // we insist on ordering, so i <= j <= k
-        for(unsigned int j = 0; j < ks.size(); j++)
+        for(unsigned int j = 0; j < ks.size(); ++j)
 	        {
-            for(unsigned int k = 0; k <= j; k++)
+            for(unsigned int k = 0; k <= j; ++k)
 	            {
-                for(unsigned int l = 0; l <= k; l++)
+                for(unsigned int l = 0; l <= k; ++l)
 	                {
                     auto maxij  = (ks[j] > ks[k] ? ks[j] : ks[k]);
                     auto maxijk = (maxij > ks[l] ? maxij : ks[l]);
@@ -253,8 +359,11 @@ namespace transport
 
         std::cout << "'" << this->get_name() << "': " << __CPP_TRANSPORT_TASK_THREEPF_ELEMENTS_A << " " << this->threepf_db.size() << " "
           << __CPP_TRANSPORT_TASK_THREEPF_ELEMENTS_B << " " << this->twopf_db.size() << " " <<__CPP_TRANSPORT_TASK_THREEPF_ELEMENTS_C << std::endl;
-        this->write_time_details();
 
+        this->compute_horizon_exit_times();
+
+		    // write_time_details() should come *after* compute_horizon_exit_times();
+        this->write_time_details();
         this->cache_stored_time_config_database();
 	    }
 
@@ -348,11 +457,11 @@ namespace transport
                                                StoragePolicy policy, bool ff, double smallest_squeezing)
 	    : threepf_task<number>(nm, i, t, ff)
 	    {
-        for(unsigned int j = 0; j < kts.size(); j++)
+        for(unsigned int j = 0; j < kts.size(); ++j)
 	        {
-            for(unsigned int k = 0; k < alphas.size(); k++)
+            for(unsigned int k = 0; k < alphas.size(); ++k)
 	            {
-                for(unsigned int l = 0; l < betas.size(); l++)
+                for(unsigned int l = 0; l < betas.size(); ++l)
 	                {
                     if(betas[l] >= 0.0 && betas[l] <= 1.0 && betas[l]-1.0 <= alphas[k] && alphas[k] <= 1.0-betas[l]  // impose triangle conditions,
 	                    && alphas[k] >= 0.0 && betas[l] >= (1.0+alphas[k])/3.0                                         // impose k1 >= k2 >= k3
@@ -377,8 +486,11 @@ namespace transport
 
         std::cout << "'" << this->get_name() << "': " << __CPP_TRANSPORT_TASK_THREEPF_ELEMENTS_A << " " << this->threepf_db.size() << " "
           << __CPP_TRANSPORT_TASK_THREEPF_ELEMENTS_B << " " << this->twopf_db.size() << " " <<__CPP_TRANSPORT_TASK_THREEPF_ELEMENTS_C << std::endl;
-        this->write_time_details();
 
+        this->compute_horizon_exit_times();
+
+		    // write_time_details() should come *after* compute_horizon_exit_times();
+        this->write_time_details();
         this->cache_stored_time_config_database();
 	    }
 

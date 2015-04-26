@@ -78,6 +78,7 @@
 #define __CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_SEEDED             "seeded"
 #define __CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_SEED_GROUP         "seed-group"
 #define __CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_STATISTICS         "has-statistics"
+#define __CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_ICS                "has-ics"
 
 #define __CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_DATABASE       "database-path"
 #define __CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_FAILED         "failed"
@@ -1133,7 +1134,8 @@ namespace transport
             fail(false),
             workgroup_number(0),
             seeded(false),
-            statistics(false)
+            statistics(false),
+            initial_conditions(false)
 	        {
 	        }
 
@@ -1193,6 +1195,12 @@ namespace transport
         //! Get statistics flag
         bool has_statistics() const { return(this->statistics); }
 
+		    //! Set initial conditions flag
+		    void set_initial_conditions(bool g) { this->initial_conditions = g;}
+
+		    //! Get initial conditions flag
+		    bool has_initial_conditions() const { return(this->initial_conditions); }
+
 
         // GET AND SET PROPERTIES
 
@@ -1241,6 +1249,9 @@ namespace transport
 
         //! does this group have per-configuration statistics?
         bool statistics;
+
+		    //! does this group has initial conditions data?
+		    bool initial_conditions;
 
 	    };
 
@@ -1710,7 +1721,7 @@ namespace transport
 		    Json::Value& group_list = reader[__CPP_TRANSPORT_NODE_TASK_OUTPUT_GROUPS];
 				assert(group_list.isArray());
 
-        for(Json::Value::iterator t = group_list.begin(); t != group_list.end(); t++)
+        for(Json::Value::iterator t = group_list.begin(); t != group_list.end(); ++t)
 	        {
             std::string name = t->asString();
             this->content_groups.push_back(name);
@@ -1723,7 +1734,7 @@ namespace transport
 	    {
 		    Json::Value group_list(Json::arrayValue);
 
-        for(std::list<std::string>::const_iterator t = this->content_groups.begin(); t != this->content_groups.end(); t++)
+        for(std::list<std::string>::const_iterator t = this->content_groups.begin(); t != this->content_groups.end(); ++t)
 	        {
             Json::Value group_element = *t;
 		        group_list.append(group_element);
@@ -2043,7 +2054,7 @@ namespace transport
 
         unsigned int count = 0;
 
-        for(std::list<std::string>::const_iterator t = this->notes.begin(); t != this->notes.end(); t++)
+        for(std::list<std::string>::const_iterator t = this->notes.begin(); t != this->notes.end(); ++t)
 	        {
             out << "  " << __CPP_TRANSPORT_OUTPUT_GROUP_NOTE << " " << count << std::endl;
             out << "    " << *t << std::endl;
@@ -2052,7 +2063,7 @@ namespace transport
 
         count = 0;
         out << "  " << __CPP_TRANSPORT_OUTPUT_GROUP_TAGS << ": ";
-        for(std::list<std::string>::const_iterator t = this->tags.begin(); t != this->tags.end(); t++)
+        for(std::list<std::string>::const_iterator t = this->tags.begin(); t != this->tags.end(); ++t)
 	        {
             if(count > 0) out << ", ";
             out << *t;
@@ -2071,7 +2082,7 @@ namespace transport
 	    {
         // remove all this group's tags from the matching set.
         // If any remain after this process, then the match set isn't a subset of the group's tags.
-        for(std::list<std::string>::const_iterator t = this->tags.begin(); t != this->tags.end(); t++)
+        for(std::list<std::string>::const_iterator t = this->tags.begin(); t != this->tags.end(); ++t)
 	        {
             match_tags.remove(*t);
 	        }
@@ -2095,7 +2106,7 @@ namespace transport
         Json::Value note_list = reader[__CPP_TRANSPORT_NODE_OUTPUTGROUP_NOTES];
 				assert(note_list.isArray());
 
-        for(Json::Value::iterator t = note_list.begin(); t != note_list.end(); t++)
+        for(Json::Value::iterator t = note_list.begin(); t != note_list.end(); ++t)
 	        {
             notes.push_back(t->asString());
 	        }
@@ -2103,7 +2114,7 @@ namespace transport
         Json::Value tag_list = reader[__CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS];
 		    assert(tag_list.isArray());
 
-        for(Json::Value::iterator t = tag_list.begin(); t != tag_list.end(); t++)
+        for(Json::Value::iterator t = tag_list.begin(); t != tag_list.end(); ++t)
 	        {
             tags.push_back(t->asString());
 	        }
@@ -2121,7 +2132,7 @@ namespace transport
 
         Json::Value note_list(Json::arrayValue);
 
-        for(std::list<std::string>::const_iterator t = this->notes.begin(); t != this->notes.end(); t++)
+        for(std::list<std::string>::const_iterator t = this->notes.begin(); t != this->notes.end(); ++t)
 	        {
             Json::Value note_element = *t;
 		        note_list.append(note_element);
@@ -2130,7 +2141,7 @@ namespace transport
 
         Json::Value tag_list(Json::arrayValue);
 
-        for(std::list<std::string>::const_iterator t = tags.begin(); t != tags.end(); t++)
+        for(std::list<std::string>::const_iterator t = tags.begin(); t != tags.end(); ++t)
 	        {
             Json::Value tag_element = *t;
 		        tag_list.append(tag_element);
@@ -2211,17 +2222,18 @@ namespace transport
     integration_payload::integration_payload(Json::Value& reader)
 	    : metadata(reader)
 	    {
-        container        = reader[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_DATABASE].asString();
-        fail             = reader[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FAILED].asBool();
-        workgroup_number = reader[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_WORKGROUP].asUInt();
-        seeded           = reader[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_SEEDED].asBool();
-        seed_group       = reader[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_SEED_GROUP].asString();
-        statistics       = reader[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_STATISTICS].asBool();
+        container          = reader[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_DATABASE].asString();
+        fail               = reader[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FAILED].asBool();
+        workgroup_number   = reader[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_WORKGROUP].asUInt();
+        seeded             = reader[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_SEEDED].asBool();
+        seed_group         = reader[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_SEED_GROUP].asString();
+        statistics         = reader[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_STATISTICS].asBool();
+        initial_conditions = reader[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_ICS].asBool();
 
         Json::Value failure_array = reader[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FAILED_SERIALS];
         assert(failure_array.isArray());
         failed_serials.clear();
-        for(Json::Value::iterator t = failure_array.begin(); t != failure_array.end(); t++)
+        for(Json::Value::iterator t = failure_array.begin(); t != failure_array.end(); ++t)
           {
             failed_serials.push_back(t->asUInt());
           }
@@ -2236,9 +2248,10 @@ namespace transport
         writer[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_SEEDED]     = this->seeded;
         writer[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_SEED_GROUP] = this->seed_group;
         writer[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_STATISTICS] = this->statistics;
+		    writer[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_ICS]        = this->initial_conditions;
 
         Json::Value failure_array(Json::arrayValue);
-        for(std::list<unsigned int>::const_iterator t = this->failed_serials.begin(); t != this->failed_serials.end(); t++)
+        for(std::list<unsigned int>::const_iterator t = this->failed_serials.begin(); t != this->failed_serials.end(); ++t)
           {
             Json::Value element = *t;
             failure_array.append(element);
@@ -2269,7 +2282,7 @@ namespace transport
         Json::Value failure_array = reader[__CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_FAILED_SERIALS];
         assert(failure_array.isArray());
         failed_serials.clear();
-        for(Json::Value::iterator t = failure_array.begin(); t != failure_array.end(); t++)
+        for(Json::Value::iterator t = failure_array.begin(); t != failure_array.end(); ++t)
           {
             failed_serials.push_back(t->asUInt());
           }
@@ -2286,7 +2299,7 @@ namespace transport
         writer[__CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_SEED_GROUP]   = this->seed_group;
 
         Json::Value failure_array(Json::arrayValue);
-        for(std::list<unsigned int>::const_iterator t = this->failed_serials.begin(); t != this->failed_serials.end(); t++)
+        for(std::list<unsigned int>::const_iterator t = this->failed_serials.begin(); t != this->failed_serials.end(); ++t)
           {
             Json::Value element = *t;
             failure_array.append(element);
@@ -2314,7 +2327,7 @@ namespace transport
         Json::Value& content_array = reader[__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_ARRAY];
 		    assert(content_array.isArray());
 
-        for(Json::Value::iterator t = content_array.begin(); t != content_array.end(); t++)
+        for(Json::Value::iterator t = content_array.begin(); t != content_array.end(); ++t)
 	        {
             this->content.push_back( derived_content(*t) );
 	        }
@@ -2327,7 +2340,7 @@ namespace transport
 
         Json::Value content_array(Json::arrayValue);
 
-        for(std::list<derived_content>::const_iterator t = this->content.begin(); t != this->content.end(); t++)
+        for(std::list<derived_content>::const_iterator t = this->content.begin(); t != this->content.end(); ++t)
 	        {
             Json::Value element(Json::objectValue);
             (*t).serialize(element);
@@ -2341,7 +2354,7 @@ namespace transport
 
     void output_payload::write(std::ostream& out) const
 	    {
-        for(std::list<derived_content>::const_iterator t = this->content.begin(); t != this->content.end(); t++)
+        for(std::list<derived_content>::const_iterator t = this->content.begin(); t != this->content.end(); ++t)
 	        {
             out << __CPP_TRANSPORT_PAYLOAD_OUTPUT_CONTENT_PRODUCT << " = " << (*t).get_parent_product() << ", "
 	            << __CPP_TRANSPORT_PAYLOAD_OUTPUT_CONTENT_PATH    << " = " << (*t).get_filename() << std::endl;
@@ -2360,7 +2373,7 @@ namespace transport
         Json::Value& content_groups_array = reader[__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_USED_GROUPS];
         assert(content_groups_array.isArray());
 
-        for(Json::Value::iterator t = content_groups_array.begin(); t != content_groups_array.end(); t++)
+        for(Json::Value::iterator t = content_groups_array.begin(); t != content_groups_array.end(); ++t)
           {
             this->content_groups.push_back(t->asString());
           }
@@ -2368,7 +2381,7 @@ namespace transport
         Json::Value note_list = reader[__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_NOTES];
 		    assert(note_list.isArray());
 
-        for(Json::Value::iterator t = note_list.begin(); t != note_list.end(); t++)
+        for(Json::Value::iterator t = note_list.begin(); t != note_list.end(); ++t)
 	        {
             notes.push_back(t->asString());
 	        }
@@ -2376,7 +2389,7 @@ namespace transport
         Json::Value tag_list = reader[__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_TAGS];
 		    assert(tag_list.isArray());
 
-        for(Json::Value::iterator t = tag_list.begin(); t != tag_list.end(); t++)
+        for(Json::Value::iterator t = tag_list.begin(); t != tag_list.end(); ++t)
 	        {
             tags.push_back(t->asString());
 	        }
@@ -2391,7 +2404,7 @@ namespace transport
 
         Json::Value content_groups_array(Json::arrayValue);
 
-        for(std::list<std::string>::const_iterator t = this->content_groups.begin(); t != this->content_groups.end(); t++)
+        for(std::list<std::string>::const_iterator t = this->content_groups.begin(); t != this->content_groups.end(); ++t)
           {
             Json::Value element = *t;
             content_groups_array.append(element);
@@ -2400,7 +2413,7 @@ namespace transport
 
         Json::Value note_list(Json::arrayValue);
 
-        for(std::list<std::string>::const_iterator t = this->notes.begin(); t != this->notes.end(); t++)
+        for(std::list<std::string>::const_iterator t = this->notes.begin(); t != this->notes.end(); ++t)
 	        {
             Json::Value note_element = *t;
 		        note_list.append(note_element);
@@ -2409,7 +2422,7 @@ namespace transport
 
         Json::Value tag_list(Json::arrayValue);
 
-        for(std::list<std::string>::const_iterator t = this->tags.begin(); t != this->tags.end(); t++)
+        for(std::list<std::string>::const_iterator t = this->tags.begin(); t != this->tags.end(); ++t)
 	        {
             Json::Value tag_element = *t;
 		        tag_list.append(tag_element);

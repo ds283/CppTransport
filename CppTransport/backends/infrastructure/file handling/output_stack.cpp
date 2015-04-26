@@ -113,7 +113,7 @@ std::string output_stack::write(size_t level) const
         out << this->inclusions[0].line << " " << OUTPUT_STACK_OF << " '" << this->inclusions[0].in << "'";
       }
 
-    for(int i = 1; i < level; i++)
+    for(int i = 1; i < level; ++i)
       {
         out << std::endl
             << OUTPUT_STACK_WRAP_PAD << OUTPUT_STACK_INCLUDED_FROM << " " << this->inclusions[i].line

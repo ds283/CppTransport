@@ -152,14 +152,14 @@ namespace transport
             background.clear();
             background.resize(tsample.size());
 
-            for(unsigned int i = 0; i < 2*N_fields; i++)
+            for(unsigned int i = 0; i < 2*N_fields; ++i)
               {
                 background_time_data_tag<number> tag = pipe.new_background_time_data_tag(i);
                 // safe to take a reference here and avoid a copy
                 const std::vector<number>& bg_line = t_handle.lookup_tag(tag);
                 assert(bg_line.size() == tsample.size());
 
-                for(unsigned int j = 0; j < tsample.size(); j++)
+                for(unsigned int j = 0; j < tsample.size(); ++j)
                   {
                     background[j].push_back(bg_line[j]);
                   }
@@ -198,16 +198,16 @@ namespace transport
 //            small.assign(h->kconfig_sample_sns.size(), +std::numeric_limits<double>::max());
 //            large.assign(h->kconfig_sample_sns.size(), -std::numeric_limits<double>::max());
 
-            for(unsigned int m = 0; m < 2*N_fields; m++)
+            for(unsigned int m = 0; m < 2*N_fields; ++m)
               {
-                for(unsigned int n = 0; n < 2*N_fields; n++)
+                for(unsigned int n = 0; n < 2*N_fields; ++n)
                   {
                     cf_kconfig_data_tag<number> tag =
                       h->pipe.new_cf_kconfig_data_tag(data_tag<number>::cf_twopf_re, h->mdl->flatten(m,n), h->time_sample_sns[tindex]);
 
                     const std::vector<number>& sigma_line = h->k_handle.lookup_tag(tag);
 
-                    for(unsigned int j = 0; j < h->kconfig_sample_sns.size(); j++)
+                    for(unsigned int j = 0; j < h->kconfig_sample_sns.size(); ++j)
                       {
                         number component = dN[m]*dN[n]*sigma_line[j];
 
@@ -220,7 +220,7 @@ namespace transport
 
 //            number global_small = +std::numeric_limits<double>::max();
 //            number global_large = -std::numeric_limits<double>::max();
-//            for(unsigned int j = 0; j < h->kconfig_sample_sns.size(); j++)
+//            for(unsigned int j = 0; j < h->kconfig_sample_sns.size(); ++j)
 //              {
 //                number large_fraction = fabs(large[j]/line_data[j]);
 //                number small_fraction = fabs(small[j]/line_data[j]);
@@ -261,7 +261,7 @@ namespace transport
             std::vector<unsigned int> k2_serials;
             std::vector<unsigned int> k3_serials;
 
-            for(typename std::vector< threepf_kconfig >::const_iterator t = configs.begin(); t != configs.end(); t++)
+            for(typename std::vector< threepf_kconfig >::const_iterator t = configs.begin(); t != configs.end(); ++t)
               {
                 k1_serials.push_back((*t).k1_serial);
                 k2_serials.push_back((*t).k2_serial);
@@ -279,7 +279,7 @@ namespace transport
             std::vector< std::vector< std::vector<number> > > ddN213(h->kconfig_sample_sns.size());
             std::vector< std::vector< std::vector<number> > > ddN312(h->kconfig_sample_sns.size());
 
-            for(unsigned int j = 0; j < h->kconfig_sample_sns.size(); j++)
+            for(unsigned int j = 0; j < h->kconfig_sample_sns.size(); ++j)
               {
                 h->mdl->compute_gauge_xfm_2(h->tk, h->background[tindex], configs[j].k1_comoving, configs[j].k2_comoving, configs[j].k3_comoving, h->time_values[tindex], ddN123[j]);
                 h->mdl->compute_gauge_xfm_2(h->tk, h->background[tindex], configs[j].k2_comoving, configs[j].k1_comoving, configs[j].k3_comoving, h->time_values[tindex], ddN213[j]);
@@ -292,11 +292,11 @@ namespace transport
 //            large.assign(h->kconfig_sample_sns.size(), -std::numeric_limits<double>::max());
 
             // linear part of the gauge transformation
-            for(unsigned int l = 0; l < 2*N_fields; l++)
+            for(unsigned int l = 0; l < 2*N_fields; ++l)
               {
-                for(unsigned int m = 0; m < 2*N_fields; m++)
+                for(unsigned int m = 0; m < 2*N_fields; ++m)
                   {
-                    for(unsigned int n = 0; n < 2*N_fields; n++)
+                    for(unsigned int n = 0; n < 2*N_fields; ++n)
                       {
                         cf_kconfig_data_tag<number> tag = h->pipe.new_cf_kconfig_data_tag(data_tag<number>::cf_threepf, h->mdl->flatten(l,m,n), h->time_sample_sns[tindex]);
 
@@ -305,7 +305,7 @@ namespace transport
                         // shift field so it represents a derivative correlation function, not a momentum one
                         this->shifter.shift(h->tk, h->mdl, h->pipe, h->background[tindex], configs, threepf_line, l, m, n, h->time_sample_sns[tindex], h->time_values[tindex]);
 
-                        for(unsigned int j = 0; j < h->kconfig_sample_sns.size(); j++)
+                        for(unsigned int j = 0; j < h->kconfig_sample_sns.size(); ++j)
                           {
                             number component = dN[l]*dN[m]*dN[n]*threepf_line[j];
 
@@ -318,13 +318,13 @@ namespace transport
               }
 
             // quadratic component of the gauge transformation
-            for(unsigned int l = 0; l < 2*N_fields; l++)
+            for(unsigned int l = 0; l < 2*N_fields; ++l)
               {
-                for(unsigned int m = 0; m < 2*N_fields; m++)
+                for(unsigned int m = 0; m < 2*N_fields; ++m)
                   {
-                    for(unsigned int p = 0; p < 2*N_fields; p++)
+                    for(unsigned int p = 0; p < 2*N_fields; ++p)
                       {
-                        for(unsigned int q = 0; q < 2*N_fields; q++)
+                        for(unsigned int q = 0; q < 2*N_fields; ++q)
                           {
                             // the indices are N_lm, N_p, N_q so the 2pfs we sum over are
                             // sigma_lp(k2)*sigma_mq(k3) etc.
@@ -350,7 +350,7 @@ namespace transport
                             const std::vector<number> k3_re_mq = k3_handle.lookup_tag(k3_re_mq_tag);
                             const std::vector<number> k3_im_mq = k3_handle.lookup_tag(k3_im_mq_tag);
 
-                            for(unsigned int j = 0; j < h->kconfig_sample_sns.size(); j++)
+                            for(unsigned int j = 0; j < h->kconfig_sample_sns.size(); ++j)
                               {
                                 number component1 = ddN123[j][l][m] * dN[p] * dN[q] * (k2_re_lp[j]*k3_re_mq[j] - k2_im_lp[j]*k3_im_mq[j]);
                                 number component2 = ddN213[j][l][m] * dN[p] * dN[q] * (k1_re_lp[j]*k3_re_mq[j] - k1_im_lp[j]*k3_im_mq[j]);
@@ -374,7 +374,7 @@ namespace transport
 
 //            number global_small = +std::numeric_limits<double>::max();
 //            number global_large = -std::numeric_limits<double>::max();
-//            for(unsigned int j = 0; j < h->kconfig_sample_sns.size(); j++)
+//            for(unsigned int j = 0; j < h->kconfig_sample_sns.size(); ++j)
 //              {
 //                number large_fraction = fabs(large[j]/line_data[j]);
 //                number small_fraction = fabs(small[j]/line_data[j]);
@@ -417,7 +417,7 @@ namespace transport
             std::vector<unsigned int> k2_serials;
             std::vector<unsigned int> k3_serials;
 
-            for(typename std::vector< threepf_kconfig >::const_iterator t = configs.begin(); t != configs.end(); t++)
+            for(typename std::vector< threepf_kconfig >::const_iterator t = configs.begin(); t != configs.end(); ++t)
               {
                 k1_serials.push_back((*t).k1_serial);
                 k2_serials.push_back((*t).k2_serial);
@@ -438,7 +438,7 @@ namespace transport
             this->twopf(k3_handle, twopf_k3, tindex);
 
             // Third, construct the reduced bispectrum
-            for(unsigned int j = 0; j < h->kconfig_sample_sns.size(); j++)
+            for(unsigned int j = 0; j < h->kconfig_sample_sns.size(); ++j)
               {
                 number form_factor = (6.0/5.0) * ( twopf_k1[j]*twopf_k2[j] + twopf_k1[j]*twopf_k3[j] + twopf_k2[j]*twopf_k3[j] );
 

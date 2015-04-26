@@ -42,7 +42,7 @@ namespace cpp
 
         if(n > 0)
           {
-            for(size_t i = 0; i < n; i++)
+            for(size_t i = 0; i < n; ++i)
               {
                 out << (i > 0 ? op : "") << symf(expr.op(i));
               }

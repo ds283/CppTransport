@@ -88,14 +88,14 @@ namespace transport
 
         // reslice to get a vector of serial numbers
         std::vector<unsigned int> time_sns;
-        for(time_config_database::const_config_iterator t = time_db.config_begin(); t != time_db.config_end(); t++)
+        for(time_config_database::const_config_iterator t = time_db.config_begin(); t != time_db.config_end(); ++t)
 	        {
             time_sns.push_back(t->serial);
 	        }
 
         // get list of kserial numbers
         std::vector<unsigned int> kconfig_sns(list.size());
-        for(unsigned int i = 0; i < list.size(); i++)
+        for(unsigned int i = 0; i < list.size(); ++i)
 	        {
             kconfig_sns[i] = list[i]->serial;
 	        }
@@ -117,12 +117,12 @@ namespace transport
 		    // buffer for computed values
         std::vector<number> sample;
 
-        for(unsigned int i = 0; i < list.size(); i++)
+        for(unsigned int i = 0; i < list.size(); ++i)
 	        {
             boost::timer::cpu_timer timer;
 
             this->zeta_computer.twopf(handle, sample, k_values[i]);
-            for(unsigned int j = 0; j < time_sns.size(); j++)
+            for(unsigned int j = 0; j < time_sns.size(); ++j)
 	            {
                 batcher.push_twopf(time_sns[j], kconfig_sns[i], sample[j]);
 	            }
@@ -153,14 +153,14 @@ namespace transport
 
         // reslice to get a vector of serial numbers
         std::vector<unsigned int> time_sns;
-        for(time_config_database::const_config_iterator t = time_db.config_begin(); t != time_db.config_end(); t++)
+        for(time_config_database::const_config_iterator t = time_db.config_begin(); t != time_db.config_end(); ++t)
           {
             time_sns.push_back(t->serial);
           }
 
         // get list of kserial numbers
         std::vector<unsigned int> kconfig_sns(list.size());
-        for(unsigned int i = 0; i < list.size(); i++)
+        for(unsigned int i = 0; i < list.size(); ++i)
 	        {
             kconfig_sns[i] = list[i]->serial;
 	        }
@@ -182,18 +182,18 @@ namespace transport
 		    // buffer for computed values
         std::vector<number> sample;
 
-        for(unsigned int i = 0; i < list.size(); i++)
+        for(unsigned int i = 0; i < list.size(); ++i)
 	        {
             boost::timer::cpu_timer timer;
 
             this->zeta_computer.threepf(handle, sample, k_values[i]);
-            for(unsigned int j = 0; j < time_sns.size(); j++)
+            for(unsigned int j = 0; j < time_sns.size(); ++j)
 	            {
                 batcher.push_threepf(time_sns[j], kconfig_sns[i], sample[j]);
 	            }
 
             this->zeta_computer.reduced_bispectrum(handle, sample, k_values[i]);
-            for(unsigned int j = 0; j < time_sns.size(); j++)
+            for(unsigned int j = 0; j < time_sns.size(); ++j)
 	            {
                 batcher.push_reduced_bispectrum(time_sns[j], kconfig_sns[i], sample[j]);
 	            }
@@ -207,7 +207,7 @@ namespace transport
                 k1.k_conventional = k_values[i].k1_conventional;
 
 		            this->zeta_computer.twopf(handle, sample, k1);
-                for(unsigned int j = 0; j < time_sns.size(); j++)
+                for(unsigned int j = 0; j < time_sns.size(); ++j)
 	                {
                     batcher.push_twopf(time_sns[j], k1.serial, sample[j]);
 	                }
@@ -222,7 +222,7 @@ namespace transport
                 k2.k_conventional = k_values[i].k2_conventional;
 
                 this->zeta_computer.twopf(handle, sample, k2);
-                for(unsigned int j = 0; j < time_sns.size(); j++)
+                for(unsigned int j = 0; j < time_sns.size(); ++j)
 	                {
                     batcher.push_twopf(time_sns[j], k2.serial, sample[j]);
 	                }
@@ -237,7 +237,7 @@ namespace transport
                 k3.k_conventional = k_values[i].k3_conventional;
 
                 this->zeta_computer.twopf(handle, sample, k3);
-                for(unsigned int j = 0; j < time_sns.size(); j++)
+                for(unsigned int j = 0; j < time_sns.size(); ++j)
 	                {
                     batcher.push_twopf(time_sns[j], k3.serial, sample[j]);
 	                }
@@ -271,14 +271,14 @@ namespace transport
 
         // reslice to get a vector of serial numbers
         std::vector<unsigned int> time_sns;
-        for(time_config_database::const_config_iterator t = time_db.config_begin(); t != time_db.config_end(); t++)
+        for(time_config_database::const_config_iterator t = time_db.config_begin(); t != time_db.config_end(); ++t)
           {
             time_sns.push_back(t->serial);
           }
 
         // get list of kserial numbers
         std::vector<unsigned int> kconfig_sns(list.size());
-        for(unsigned int i = 0; i < list.size(); i++)
+        for(unsigned int i = 0; i < list.size(); ++i)
 	        {
             kconfig_sns[i] = list[i]->serial;
 	        }
@@ -299,7 +299,7 @@ namespace transport
 
         this->fNL_computer.BT(handle, BT);
 		    this->fNL_computer.TT(handle, TT);
-        for(unsigned int j = 0; j < time_sns.size(); j++)
+        for(unsigned int j = 0; j < time_sns.size(); ++j)
 	        {
             batcher.push_fNL(time_sns[j], BT[j], TT[j]);
 	        }

@@ -50,6 +50,9 @@ namespace transport
 		    //! Per-configuration statistics writer function
 		    typedef std::function<void(integration_batcher<number>*, const std::vector<typename integration_items<number>::configuration_statistics>&)> stats_writer;
 
+				//! Per-configuration initial conditions writer function
+				typedef std::function<void(integration_batcher<number>*, const std::vector<typename integration_items<number>::ics_item>&)> ics_writer;
+
 		    //! Host information writer function
 		    typedef std::function<void(integration_batcher<number>*)> host_info_writer;
 			};
@@ -67,7 +70,7 @@ namespace transport
         integration_batcher(unsigned int cap, model<number>* m,
                             const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                             container_dispatch_function d, container_replacement_function r,
-                            handle_type h, unsigned int w, unsigned int g=0, bool s=true);
+                            handle_type h, unsigned int w, unsigned int g=0, bool ics=false);
 
         virtual ~integration_batcher() = default;
 
@@ -100,7 +103,7 @@ namespace transport
         virtual void report_integration_success(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching);
 
         //! Add integration details, plus report a k-configuration serial number and mesh refinement level for storing per-configuration statistics
-        virtual void report_integration_success(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching, unsigned int kserial, unsigned int refinement);
+        virtual void report_integration_success(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching, unsigned int kserial, size_t steps, unsigned int refinement);
 
         //! Report a failed integration
         virtual void report_integration_failure();
@@ -132,7 +135,18 @@ namespace transport
         void end_assignment();
 
 
-        // INTEGRATION STATISTICS
+		    // PER-CONFIGURATION STATISTICS AND AUXILIARY INFORMATION
+
+      public:
+
+		    //! are we collecting per-configuration statistics?
+		    bool is_collecting_statistics() const { return(this->collect_statistics); }
+
+		    //! are we collecting initial conditions?
+		    bool is_collecting_initial_conditions() const { return(this->collect_initial_conditions); }
+
+
+        // GLOBAL BATCHER STATISTICS
 
       public:
 
@@ -165,6 +179,9 @@ namespace transport
         //! Push a background sample
         void push_backg(unsigned int time_serial, unsigned int source_serial, const std::vector<number>& values);
 
+		    //! Push a set of initial conditions
+        void push_ics(unsigned int k_serial, const std::vector<number>& values);
+
 
         // UNBATCH
 
@@ -186,6 +203,9 @@ namespace transport
 
         //! Cache of per-configuration statistics
         std::vector< typename integration_items<number>::configuration_statistics > stats_batch;
+
+        //! initial conditions cache
+        std::vector< typename integration_items<number>::ics_item > ics_batch;
 
 
         // OTHER INTERNAL DATA
@@ -213,6 +233,9 @@ namespace transport
 
         //! Are we collecting per-configuration statistics?
         bool collect_statistics;
+
+		    //! Are we collecting initial conditions data?
+		    bool collect_initial_conditions;
 
         //! Number of integrations handled by this batcher
         unsigned int num_integrations;
@@ -251,6 +274,7 @@ namespace transport
             typename integration_writers<number>::twopf_writer        twopf;
             typename integration_writers<number>::tensor_twopf_writer tensor_twopf;
             typename integration_writers<number>::stats_writer        stats;
+            typename integration_writers<number>::ics_writer          ics;
             typename integration_writers<number>::host_info_writer    host_info;
 	        };
 
@@ -264,7 +288,7 @@ namespace transport
                       const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                       const writer_group& w,
                       generic_batcher::container_dispatch_function d, generic_batcher::container_replacement_function r,
-                      handle_type h, unsigned int wn, unsigned int wg, bool s);
+                      handle_type h, unsigned int wn, unsigned int wg);
 
 
         // ADMINISTRATION
@@ -296,7 +320,7 @@ namespace transport
         virtual void report_integration_success(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching) override;
 
         //! Add integration details, plus report a k-configuration serial number and mesh refinement level for storing per-configuration statistics
-        virtual void report_integration_success(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching, unsigned int kserial, unsigned int refinement) override;
+        virtual void report_integration_success(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching, unsigned int kserial, size_t steps, unsigned int refinement) override;
 
         //! Report a failed integration
         virtual void report_integration_failure() override;
@@ -376,6 +400,8 @@ namespace transport
             typename integration_writers<number>::tensor_twopf_writer tensor_twopf;
             typename integration_writers<number>::threepf_writer      threepf;
             typename integration_writers<number>::stats_writer        stats;
+		        typename integration_writers<number>::ics_writer          ics;
+		        typename integration_writers<number>::ics_writer          kt_ics;
             typename integration_writers<number>::host_info_writer    host_info;
 	        };
 
@@ -391,7 +417,7 @@ namespace transport
                         const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                         const writer_group& w,
                         generic_batcher::container_dispatch_function d, generic_batcher::container_replacement_function r,
-                        handle_type h, unsigned int wn, unsigned int wg, bool s);
+                        handle_type h, unsigned int wn, unsigned int wg);
 
 
         // INTEGRATION MANAGEMENT
@@ -402,7 +428,7 @@ namespace transport
         virtual void report_integration_success(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching) override;
 
         //! Add integration details, plus report a k-configuration serial number and mesh refinement level for storing per-configuration statistics
-        virtual void report_integration_success(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching, unsigned int kserial, unsigned int refinement) override;
+        virtual void report_integration_success(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching, unsigned int kserial, size_t steps, unsigned int refinement) override;
 
         //! Report a failed integration
         virtual void report_integration_failure() override;
@@ -441,6 +467,8 @@ namespace transport
                                  const std::vector<number>& tpf_k1_re, const std::vector<number>& tpf_k1_im,
                                  const std::vector<number>& tpf_k2_re, const std::vector<number>& tpf_k2_im,
                                  const std::vector<number>& tpf_k3_re, const std::vector<number>& tpf_k3_im, const std::vector<number>& bg);
+
+		    void push_kt_ics(unsigned int k_serial, const std::vector<number>& values);
 
         virtual void unbatch(unsigned int source_serial) override;
 
@@ -489,6 +517,9 @@ namespace transport
         //! threeof cache
         std::vector< typename integration_items<number>::threepf_item >      threepf_batch;
 
+		    //! k_t initial conditions cache
+		    std::vector< typename integration_items<number>::ics_item >          kt_ics_batch;
+
 
         // PAIRING
 
@@ -515,7 +546,7 @@ namespace transport
     integration_batcher<number>::integration_batcher(unsigned int cap, model<number>* m,
                                                      const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                                                      container_dispatch_function d, container_replacement_function r,
-                                                     handle_type h, unsigned int w, unsigned int g, bool s)
+                                                     handle_type h, unsigned int w, unsigned int g, bool ics)
 	    : generic_batcher(cap, cp, lp, d, r, h, w, g),
         Nfields(m->get_N_fields()),
         mdl(m),
@@ -526,7 +557,8 @@ namespace transport
 	      batching_time(0),
 	      max_batching_time(0),
 	      min_batching_time(0),
-	      collect_statistics(s),
+	      collect_statistics(m->supports_per_configuration_statistics()),
+	      collect_initial_conditions(ics),
 	      failures(0),
 	      refinements(0)
 	    {
@@ -557,18 +589,22 @@ namespace transport
 
     template <typename number>
     void integration_batcher<number>::report_integration_success(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching,
-                                                                 unsigned int kserial, unsigned int refinements)
+                                                                 unsigned int kserial, size_t steps, unsigned int refinements)
 	    {
         this->report_integration_success(integration, batching);
 
-        typename integration_items<number>::configuration_statistics stats;
+		    if(this->collect_statistics)
+			    {
+		        typename integration_items<number>::configuration_statistics stats;
 
-        stats.serial      = kserial;
-        stats.integration = integration;
-        stats.batching    = batching;
-        stats.refinements = refinements;
+		        stats.serial      = kserial;
+		        stats.integration = integration;
+		        stats.batching    = batching;
+		        stats.refinements = refinements;
+		        stats.steps       = steps;
 
-        this->stats_batch.push_back(stats);
+		        this->stats_batch.push_back(stats);
+			    }
 
         if(this->flush_due)
 	        {
@@ -592,6 +628,24 @@ namespace transport
         this->backg_batch.push_back(item);
         this->check_for_flush();
 	    }
+
+
+		template <typename number>
+		void integration_batcher<number>::push_ics(unsigned int k_serial, const std::vector<number>& values)
+			{
+		    if(values.size() != 2*this->Nfields) throw runtime_exception(runtime_exception::STORAGE_ERROR, __CPP_TRANSPORT_NFIELDS_BACKG);
+
+				if(this->collect_initial_conditions)
+					{
+						typename integration_items<number>::ics_item ics;
+
+						ics.serial = k_serial;
+						ics.coords = values;
+
+						this->ics_batch.push_back(ics);
+						this->check_for_flush();
+					}
+			}
 
 
     template <typename number>
@@ -681,8 +735,8 @@ namespace transport
     twopf_batcher<number>::twopf_batcher(unsigned int cap, model<number>* m, twopf_task<number>* tk,
                                          const boost::filesystem::path& cp, const boost::filesystem::path& lp, const writer_group& w,
                                          generic_batcher::container_dispatch_function d, generic_batcher::container_replacement_function r,
-                                         handle_type h, unsigned int wn, unsigned int wg, bool s)
-	    : integration_batcher<number>(cap, m, cp, lp, d, r, h, wn, wg, s),
+                                         handle_type h, unsigned int wn, unsigned int wg)
+	    : integration_batcher<number>(cap, m, cp, lp, d, r, h, wn, wg, tk->get_collect_initial_conditions()),
 	      writers(w),
         paired_batcher(nullptr),
         parent_task(tk),
@@ -749,7 +803,8 @@ namespace transport
         return((sizeof(unsigned int) + 2*this->Nfields*sizeof(number))*this->backg_batch.size()
 	        + (3*sizeof(unsigned int) + 4*sizeof(number))*this->tensor_twopf_batch.size()
 	        + (3*sizeof(unsigned int) + 2*this->Nfields*2*this->Nfields*sizeof(number))*this->twopf_batch.size()
-	        + (2*sizeof(unsigned int) + 2*sizeof(boost::timer::nanosecond_type))*this->stats_batch.size());
+	        + (2*sizeof(unsigned int) + sizeof(size_t) + 2*sizeof(boost::timer::nanosecond_type))*this->stats_batch.size()
+		      + (sizeof(unsigned int) + 2*this->Nfields*sizeof(number))*this->ics_batch.size());
 	    }
 
 
@@ -763,6 +818,7 @@ namespace transport
 
         this->writers.host_info(this);
         if(this->collect_statistics) this->writers.stats(this, this->stats_batch);
+		    if(this->collect_initial_conditions) this->writers.ics(this, this->ics_batch);
         this->writers.backg(this, this->backg_batch);
         this->writers.twopf(this, this->twopf_batch);
         this->writers.tensor_twopf(this, this->tensor_twopf_batch);
@@ -771,6 +827,7 @@ namespace transport
         BOOST_LOG_SEV(this->get_log(), generic_batcher::normal) << "** Flushed in time " << format_time(flush_timer.elapsed().wall) << "; pushing to master process";
 
         this->stats_batch.clear();
+		    this->ics_batch.clear();
         this->backg_batch.clear();
         this->twopf_batch.clear();
         this->tensor_twopf_batch.clear();
@@ -810,6 +867,12 @@ namespace transport
                                                       }),
                                        this->tensor_twopf_batch.end());
 
+        this->ics_batch.erase(std::remove_if(this->ics_batch.begin(), this->ics_batch.end(),
+                                             [ & ](const typename integration_items<number>::ics_item& item) -> bool {
+                                               return (item.serial == source_serial);
+                                             }),
+                              this->ics_batch.end());
+
         if(this->paired_batcher != nullptr) this->paired_batcher->unbatch(source_serial);
 	    }
 
@@ -823,9 +886,10 @@ namespace transport
 
 
     template <typename number>
-    void twopf_batcher<number>::report_integration_success(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching, unsigned int kserial, unsigned int refinement)
+    void twopf_batcher<number>::report_integration_success(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching,
+                                                           unsigned int kserial, size_t steps, unsigned int refinement)
       {
-        this->integration_batcher<number>::report_integration_success(integration, batching, kserial, refinement);
+        this->integration_batcher<number>::report_integration_success(integration, batching, kserial, steps, refinement);
         if(this->paired_batcher != nullptr) this->paired_batcher->report_finished_item(integration);
       }
 
@@ -854,8 +918,8 @@ namespace transport
     threepf_batcher<number>::threepf_batcher(unsigned int cap, model<number>* m, threepf_task<number>* tk,
                                              const boost::filesystem::path& cp, const boost::filesystem::path& lp, const writer_group& w,
                                              generic_batcher::container_dispatch_function d, generic_batcher::container_replacement_function r,
-                                             handle_type h, unsigned int wn, unsigned int wg, bool s)
-	    : integration_batcher<number>(cap, m, cp, lp, d, r, h, wn, wg, s),
+                                             handle_type h, unsigned int wn, unsigned int wg)
+	    : integration_batcher<number>(cap, m, cp, lp, d, r, h, wn, wg, tk->get_collect_initial_conditions()),
 	      writers(w),
         paired_batcher(nullptr),
         parent_task(tk),
@@ -971,7 +1035,27 @@ namespace transport
 	        + (3*sizeof(unsigned int) + 4*sizeof(number))*this->tensor_twopf_batch.size()
 	        + (3*sizeof(unsigned int) + 2*this->Nfields*2*this->Nfields*sizeof(number))*(this->twopf_re_batch.size() + this->twopf_im_batch.size())
 	        + (3*sizeof(unsigned int) + 2*this->Nfields*2*this->Nfields*2*this->Nfields*sizeof(number))*this->threepf_batch.size()
-	        + (2*sizeof(unsigned int) + 2*sizeof(boost::timer::nanosecond_type))*this->stats_batch.size());
+	        + (2*sizeof(unsigned int) + sizeof(size_t) + 2*sizeof(boost::timer::nanosecond_type))*this->stats_batch.size()
+	        + (sizeof(unsigned int) + 2*this->Nfields*sizeof(number))*this->ics_batch.size()
+          + (sizeof(unsigned int) + 2*this->Nfields*sizeof(number))*this->kt_ics_batch.size());
+	    }
+
+
+    template <typename number>
+    void threepf_batcher<number>::push_kt_ics(unsigned int k_serial, const std::vector<number>& values)
+	    {
+        if(values.size() != 2*this->Nfields) throw runtime_exception(runtime_exception::STORAGE_ERROR, __CPP_TRANSPORT_NFIELDS_BACKG);
+
+        if(this->collect_initial_conditions)
+	        {
+            typename integration_items<number>::ics_item ics;
+
+            ics.serial = k_serial;
+            ics.coords = values;
+
+            this->kt_ics_batch.push_back(ics);
+            this->check_for_flush();
+	        }
 	    }
 
 
@@ -985,6 +1069,8 @@ namespace transport
 
         this->writers.host_info(this);
         if(this->collect_statistics) this->writers.stats(this, this->stats_batch);
+		    if(this->collect_initial_conditions) this->writers.ics(this, this->ics_batch);
+		    if(this->collect_initial_conditions) this->writers.kt_ics(this, this->kt_ics_batch);
         this->writers.backg(this, this->backg_batch);
         this->writers.twopf_re(this, this->twopf_re_batch);
         this->writers.twopf_im(this, this->twopf_im_batch);
@@ -995,6 +1081,8 @@ namespace transport
         BOOST_LOG_SEV(this->get_log(), generic_batcher::normal) << "** Flushed in time " << format_time(flush_timer.elapsed().wall) << "; pushing to master process";
 
         this->stats_batch.clear();
+		    this->ics_batch.clear();
+		    this->kt_ics_batch.clear();
         this->backg_batch.clear();
         this->twopf_re_batch.clear();
         this->twopf_im_batch.clear();
@@ -1050,6 +1138,18 @@ namespace transport
                                                  }),
                                   this->threepf_batch.end());
 
+        this->ics_batch.erase(std::remove_if(this->ics_batch.begin(), this->ics_batch.end(),
+                                             [ & ](const typename integration_items<number>::ics_item& item) -> bool {
+                                               return (item.serial == source_serial);
+                                             }),
+                              this->ics_batch.end());
+
+        this->kt_ics_batch.erase(std::remove_if(this->kt_ics_batch.begin(), this->kt_ics_batch.end(),
+                                             [ & ](const typename integration_items<number>::ics_item& item) -> bool {
+                                               return (item.serial == source_serial);
+                                             }),
+                              this->kt_ics_batch.end());
+
         if(this->paired_batcher != nullptr) this->paired_batcher->unbatch(source_serial);
 	    }
 
@@ -1063,9 +1163,10 @@ namespace transport
 
 
     template <typename number>
-    void threepf_batcher<number>::report_integration_success(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching, unsigned int kserial, unsigned int refinement)
+    void threepf_batcher<number>::report_integration_success(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching,
+                                                             unsigned int kserial, size_t steps, unsigned int refinement)
       {
-        this->integration_batcher<number>::report_integration_success(integration, batching, kserial, refinement);
+        this->integration_batcher<number>::report_integration_success(integration, batching, kserial, steps, refinement);
         if(this->paired_batcher != nullptr) this->paired_batcher->report_finished_item(integration);
       }
 

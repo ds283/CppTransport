@@ -175,7 +175,7 @@ namespace transport
 
 		        typename datapipe<number>::time_data_handle& handle = pipe.new_time_data_handle(this->time_sample_sns);
 
-            for(unsigned int m = 0; m < 2 * this->gadget.get_N_fields(); m++)
+            for(unsigned int m = 0; m < 2 * this->gadget.get_N_fields(); ++m)
               {
                 std::array<unsigned int, 1> index_set = {m};
                 if(this->active_indices.is_on(index_set))
@@ -213,7 +213,7 @@ namespace transport
 				        const std::vector<std::string>& field_names = this->gadget.get_model()->get_f_latex_names();
 
 				        label << "$";
-				        if(this->get_dot_meaning() == derived_line<number>::derivatives)
+				        if(this->get_dot_meaning() == derivatives)
 					        {
 				            label << field_names[i % N_fields] << (i >= N_fields ? "^{" __CPP_TRANSPORT_LATEX_PRIME_SYMBOL "}" : "");
 					        }
@@ -243,7 +243,7 @@ namespace transport
 
 				        const std::vector<std::string>& field_names = this->gadget.get_model()->get_field_names();
 
-				        if(this->get_dot_meaning() == derived_line<number>::derivatives)
+				        if(this->get_dot_meaning() == derivatives)
 					        {
 				            label << field_names[i % N_fields] << (i >= N_fields ? __CPP_TRANSPORT_NONLATEX_PRIME_SYMBOL : "");
 					        }
@@ -356,11 +356,11 @@ namespace transport
 
 		        // loop through all components of the twopf, for each k-configuration we use,
 		        // pulling data from the database
-		        for(unsigned int i = 0; i < this->kconfig_sample_sns.size(); i++)
+		        for(unsigned int i = 0; i < this->kconfig_sample_sns.size(); ++i)
 			        {
-		            for(unsigned int m = 0; m < 2*this->gadget.get_N_fields(); m++)
+		            for(unsigned int m = 0; m < 2*this->gadget.get_N_fields(); ++m)
 			            {
-		                for(unsigned int n = 0; n < 2*this->gadget.get_N_fields(); n++)
+		                for(unsigned int n = 0; n < 2*this->gadget.get_N_fields(); ++n)
 			                {
 		                    std::array<unsigned int, 2> index_set = { m, n };
 		                    if(this->active_indices.is_on(index_set))
@@ -373,7 +373,7 @@ namespace transport
 
 		                        if(this->dimensionless)
 			                        {
-		                            for(unsigned int j = 0; j < line_data.size(); j++)
+		                            for(unsigned int j = 0; j < line_data.size(); ++j)
 			                            {
 		                                line_data[j] *= k_values[i].k_comoving*k_values[i].k_comoving*k_values[i].k_comoving / (2.0*M_PI*M_PI);
 			                            }
@@ -577,13 +577,13 @@ namespace transport
 		        // loop through all components of the threepf, for each k-configuration we use,
 		        // pulling data from the database
 
-		        for(unsigned int i = 0; i < this->kconfig_sample_sns.size(); i++)
+		        for(unsigned int i = 0; i < this->kconfig_sample_sns.size(); ++i)
 			        {
-		            for(unsigned int l = 0; l < 2*this->gadget.get_N_fields(); l++)
+		            for(unsigned int l = 0; l < 2*this->gadget.get_N_fields(); ++l)
 			            {
-		                for(unsigned int m = 0; m < 2*this->gadget.get_N_fields(); m++)
+		                for(unsigned int m = 0; m < 2*this->gadget.get_N_fields(); ++m)
 			                {
-		                    for(unsigned int n = 0; n < 2*this->gadget.get_N_fields(); n++)
+		                    for(unsigned int n = 0; n < 2*this->gadget.get_N_fields(); ++n)
 			                    {
 		                        std::array<unsigned int, 3> index_set = { l, m, n };
 		                        if(this->active_indices.is_on(index_set))
@@ -594,7 +594,7 @@ namespace transport
 
 		                            // the integrator produces correlation functions involving the canonical momenta,
 		                            // not the derivatives. If the user wants derivatives then we have to shift.
-		                            if(this->get_dot_meaning() == derived_line<number>::derivatives)
+		                            if(this->get_dot_meaning() == derivatives)
 			                            this->shifter.shift(this->gadget.get_integration_task(), this->gadget.get_model(), pipe, this->time_sample_sns, line_data, t_axis, l, m, n, k_values[i]);
 
 		                            data_line<number> line = data_line<number>(group, this->x_type, correlation_function_value, t_axis, line_data,

@@ -39,7 +39,7 @@ namespace macro_packages
         assert(rules.size() == names.size());
         assert(rules.size() == args.size());
 
-        for(int i = 0; i < rules.size(); i++)
+        for(int i = 0; i < rules.size(); ++i)
           {
             simple_rule rule;
 
@@ -107,7 +107,7 @@ namespace macro_packages
         assert(pres.size() == args.size());
         assert(pres.size() == ranges.size());
 
-        for(int i = 0; i < pres.size(); i++)
+        for(int i = 0; i < pres.size(); ++i)
           {
             index_rule rule;
 

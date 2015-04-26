@@ -129,7 +129,10 @@ namespace transport
 
         $$__MODEL_basic_twopf_functor(const twopf_list_task<number>* tk, const twopf_kconfig& k)
           : params(tk->get_params()),
+            param_vector(tk->get_params().get_vector()),
+            Mp(tk->get_params().get_Mp()),
             N_horizon_exit(tk->get_N_horizon_crossing()),
+            astar_normalization(tk->get_astar_normalization()),
             config(k)
           {
           }
@@ -143,7 +146,13 @@ namespace transport
 
         const parameters<number>& params;
 
+        const std::vector<number>& param_vector;
+
+        number Mp;
+
         double N_horizon_exit;
+
+        double astar_normalization;
 
         const twopf_kconfig config;
 
@@ -178,7 +187,10 @@ namespace transport
       public:
         $$__MODEL_basic_threepf_functor(const twopf_list_task<number>* tk, const threepf_kconfig& k)
           : params(tk->get_params()),
+            param_vector(tk->get_params().get_vector()),
+            Mp(tk->get_params().get_Mp()),
             N_horizon_exit(tk->get_N_horizon_crossing()),
+            astar_normalization(tk->get_astar_normalization()),
             config(k)
           {
           }
@@ -192,7 +204,13 @@ namespace transport
 
         const parameters<number>& params;
 
+        const std::vector<number>& param_vector;
+
+        number Mp;
+
         double N_horizon_exit;
+
+        double astar_normalization;
 
         const threepf_kconfig config;
 
@@ -285,7 +303,7 @@ namespace transport
         assert(queues.size() == 1);
         const work_queue<twopf_kconfig_record>::device_work_list list = queues[0];
 
-        for(unsigned int i = 0; i < list.size(); i++)
+        for(unsigned int i = 0; i < list.size(); ++i)
           {
             boost::timer::nanosecond_type int_time;
             boost::timer::nanosecond_type batch_time;
@@ -355,8 +373,14 @@ namespace transport
         x.resize($$__MODEL_pool::twopf_state_size);
 
         // fix initial conditions - background
-        const std::vector<number>& ics = tk->get_ics_vector(*kconfig);
+        const std::vector<number> ics = tk->get_ics_vector(*kconfig);
         x[$$__MODEL_pool::backg_start + FLATTEN($$__A)] = $$// ics[$$__A];
+
+		    if(batcher.is_collecting_initial_conditions())
+			    {
+				    const std::vector<number> ics_1 = tk->get_ics_exit_vector(*kconfig);
+		        batcher.push_ics(kconfig->serial, ics_1);
+			    }
 
         // fix initial conditions - tensors
         this->populate_tensor_ic(x, $$__MODEL_pool::tensor_start, kconfig->k_comoving, *(time_db.value_begin()), tk, ics);
@@ -371,10 +395,9 @@ namespace transport
         time_config_database::const_value_iterator begin_iterator = time_db.value_begin(tk->get_ics().get_N_initial());
         time_config_database::const_value_iterator end_iterator   = time_db.value_end(tk->get_ics().get_N_initial());
 
-        using namespace boost::numeric::odeint;
-        integrate_times($$__MAKE_PERT_STEPPER{twopf_state<number>}, rhs, x, begin_iterator, end_iterator, $$__PERT_STEP_SIZE/pow(4.0,refinement_level), obs);
+        size_t steps = boost::numeric::odeint::integrate_times($$__MAKE_PERT_STEPPER{twopf_state<number>}, rhs, x, begin_iterator, end_iterator, $$__PERT_STEP_SIZE/pow(4.0,refinement_level), obs);
 
-        obs.stop_timers(refinement_level);
+        obs.stop_timers(steps, refinement_level);
         int_time = obs.get_integration_time();
         batch_time = obs.get_batching_time();
       }
@@ -441,7 +464,7 @@ namespace transport
         const work_queue<threepf_kconfig_record>::device_work_list list = queues[0];
 
         // step through the queue, solving for the three-point functions in each case
-        for(unsigned int i = 0; i < list.size(); i++)
+        for(unsigned int i = 0; i < list.size(); ++i)
           {
             boost::timer::nanosecond_type int_time;
             boost::timer::nanosecond_type batch_time;
@@ -515,8 +538,16 @@ namespace transport
         // fix initial conditions - background
 		    // use fast-forwarding if enabled
         // (don't need explicit FLATTEN since it would appear on both sides)
-        const std::vector<number>& ics = tk->get_ics_vector(*kconfig);
+        const std::vector<number> ics = tk->get_ics_vector(*kconfig);
         x[$$__MODEL_pool::backg_start + $$__A] = $$// ics[$$__A];
+
+		    if(batcher.is_collecting_initial_conditions())
+			    {
+				    const std::vector<number> ics_1 = tk->get_ics_exit_vector(*kconfig, smallest_wavenumber_exit);
+				    const std::vector<number> ics_2 = tk->get_ics_exit_vector(*kconfig, kt_wavenumber_exit);
+				    batcher.push_ics(kconfig->serial, ics_1);
+				    batcher.push_kt_ics(kconfig->serial, ics_2);
+			    }
 
         // fix initial conditions - tensors
         this->populate_tensor_ic(x, $$__MODEL_pool::tensor_k1_start, kconfig->k1_comoving, *(time_db.value_begin()), tk, ics);
@@ -543,10 +574,9 @@ namespace transport
         time_config_database::const_value_iterator begin_iterator = time_db.value_begin(tk->get_ics().get_N_initial());
         time_config_database::const_value_iterator end_iterator   = time_db.value_end(tk->get_ics().get_N_initial());
 
-        using namespace boost::numeric::odeint;
-        integrate_times( $$__MAKE_PERT_STEPPER{threepf_state<number>}, rhs, x, begin_iterator, end_iterator, $$__PERT_STEP_SIZE/pow(4.0,refinement_level), obs);
+        size_t steps = boost::numeric::odeint::integrate_times( $$__MAKE_PERT_STEPPER{threepf_state<number>}, rhs, x, begin_iterator, end_iterator, $$__PERT_STEP_SIZE/pow(4.0,refinement_level), obs);
 
-        obs.stop_timers(refinement_level);
+        obs.stop_timers(steps, refinement_level);
         int_time = obs.get_integration_time();
         batch_time = obs.get_batching_time();
       }
@@ -570,11 +600,11 @@ namespace transport
     template <typename number>
     void $$__MODEL_basic_twopf_functor<number>::operator()(const twopf_state<number>& __x, twopf_state<number>& __dxdt, double __t)
       {
-        const auto $$__PARAMETER[1]  = this->params.get_vector()[$$__1];
+        const auto $$__PARAMETER[1]  = this->param_vector[$$__1];
         const auto $$__COORDINATE[A] = __x[FLATTEN($$__A)];
-        const auto __Mp              = this->params.get_Mp();
+        const auto __Mp              = this->Mp;
         const auto __k               = this->config.k_comoving;
-        const auto __a               = exp(__t - this->N_horizon_exit + __CPP_TRANSPORT_DEFAULT_ASTAR_NORMALIZATION);
+        const auto __a               = exp(__t - this->N_horizon_exit + this->astar_normalization);
         const auto __Hsq             = $$__HUBBLE_SQ;
         const auto __eps             = $$__EPSILON;
 
@@ -636,13 +666,13 @@ namespace transport
     template <typename number>
     void $$__MODEL_basic_threepf_functor<number>::operator()(const threepf_state<number>& __x, threepf_state<number>& __dxdt, double __t)
       {
-        const auto $$__PARAMETER[1]  = this->params.get_vector()[$$__1];
+        const auto $$__PARAMETER[1]  = this->param_vector[$$__1];
         const auto $$__COORDINATE[A] = __x[FLATTEN($$__A)];
-        const auto __Mp              = this->params.get_Mp();
+        const auto __Mp              = this->Mp;
         const auto __k1              = this->config.k1_comoving;
         const auto __k2              = this->config.k2_comoving;
         const auto __k3              = this->config.k3_comoving;
-        const auto __a               = exp(__t - this->N_horizon_exit + __CPP_TRANSPORT_DEFAULT_ASTAR_NORMALIZATION);
+        const auto __a               = exp(__t - this->N_horizon_exit + this->astar_normalization);
         const auto __Hsq             = $$__HUBBLE_SQ;
         const auto __eps             = $$__EPSILON;
 

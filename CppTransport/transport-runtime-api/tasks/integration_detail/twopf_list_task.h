@@ -8,6 +8,8 @@
 #define __twopf_list_task_H_
 
 
+#include <functional>
+
 #include "transport-runtime-api/tasks/integration_detail/common.h"
 #include "transport-runtime-api/tasks/integration_detail/abstract.h"
 
@@ -15,12 +17,35 @@
 
 #include "transport-runtime-api/models/advisory_classes.h"
 
+#include "transport-runtime-api/utilities/spline1d.h"
+#include <boost/math/tools/roots.hpp>
 
-#define __CPP_TRANSPORT_NODE_TWOPF_LIST_DATABASE "twopf-database"
+#define __CPP_TRANSPORT_NODE_TWOPF_LIST_DATABASE      "twopf-database"
+#define __CPP_TRANSPORT_NODE_TWOPF_LIST_NORMALIZATION "normalization"
+#define __CPP_TRANSPORT_NODE_TWOPF_LIST_COLLECT_ICS   "collect-ics"
 
 
 namespace transport
 	{
+
+
+    class TolerancePredicate
+	    {
+      public:
+        TolerancePredicate(double t)
+	        : tol(t)
+	        {
+	        }
+
+        bool operator()(const double& a, const double& b)
+	        {
+            return(fabs(a-b) < this->tol);
+	        }
+
+      private:
+        double tol;
+	    };
+
 
     template <typename number> class twopf_list_task;
 
@@ -41,7 +66,7 @@ namespace transport
       public:
 
         //! construct a twopf-list-task object
-        twopf_list_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t, bool ff);
+        twopf_list_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t, bool ff, double ast=__CPP_TRANSPORT_DEFAULT_ASTAR_NORMALIZATION);
 
         //! deserialization constructor
         twopf_list_task(const std::string& nm, Json::Value& reader, const initial_conditions<number>& i);
@@ -56,6 +81,15 @@ namespace transport
         //! Provide access to twopf k-configuration database
         const twopf_kconfig_database& get_twopf_database() const { return(this->twopf_db); }
 
+		    //! Compute horizon-exit times for each mode in the database
+		    virtual void compute_horizon_exit_times();
+
+      protected:
+
+		    //! Compute horizon-exit times for each mode in the database -- use supplied spline
+		    template <typename SplineObject, typename TolerancePolicy>
+		    void twopf_compute_horizon_exit_times(SplineObject& sp, TolerancePolicy tol);
+
 
 		    // INTERFACE - INITIAL CONDITIONS AND INTEGRATION DETAILS
 
@@ -63,6 +97,9 @@ namespace transport
 
         //! Get std::vector of initial conditions, offset using fast forwarding if enabled
         std::vector<number> get_ics_vector(const twopf_kconfig& kconfig) const;
+
+		    //! Get std::vector of initial conditions at horizon exit time for a k-configuration
+        std::vector<number> get_ics_exit_vector(const twopf_kconfig& config) const;
 
         //! Build sample-time database
         const time_config_database get_time_config_database(const twopf_kconfig& config) const;
@@ -72,6 +109,9 @@ namespace transport
 
         //! Get horizon-crossing time
         double get_N_horizon_crossing() const { return(this->ics.get_N_horizon_crossing()); }
+
+        //! Get current a* normalization
+        double get_astar_normalization() const { return(this->astar_normalization); }
 
 
         // INTERFACE - FAST-FORWARD MANAGEMENT
@@ -103,6 +143,17 @@ namespace transport
 
         //! Set number of allowed time step refinements
         void set_max_refinements(unsigned int max) { this->max_refinements = (max > 0 ? max : this->max_refinements); }
+
+
+		    // INTERFACE - COLLECTION OF INITIAL CONDITIONS
+
+      public:
+
+		    //! Get current collection status
+		    bool get_collect_initial_conditions() const { return(this->collect_initial_conditions); }
+
+		    //! Set current collection status
+		    void set_collect_initial_conditions(bool g) { this->collect_initial_conditions = g; }
 
 
         // TIME CONFIGURATION DATABASE
@@ -152,8 +203,13 @@ namespace transport
 
       protected:
 
-        //! database of twopf k-configurations
-        twopf_kconfig_database twopf_db;
+
+        // NORMALIZATION DURING INTEGRATION
+
+        //! during integration, we need to have a normalization for a* = a(t*).
+        //! In principle this can be anything (and could be set by the user's time choice),
+        //! but in practice the integrator performs best in a fairly narrow range of choices.
+        double astar_normalization;
 
 
         // FAST FORWARD INTEGRATION
@@ -170,16 +226,33 @@ namespace transport
         //! How many time step refinements to allow per triangle
         unsigned int max_refinements;
 
+
+		    // COLLECTION OF INITIAL CONDITIONS
+
+		    //! Write initial conditions into the container during integration?
+		    bool collect_initial_conditions;
+
+
+		    // K-CONFIGURATION DATABASE
+		    // (note this has to be declared *after* astar_normalization, so that astar_normalization will be set
+		    // when trying to compute k*)
+
+        //! database of twopf k-configurations
+        twopf_kconfig_database twopf_db;
+
 	    };
 
 
     template <typename number>
-    twopf_list_task<number>::twopf_list_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t, bool ff)
+    twopf_list_task<number>::twopf_list_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t,
+                                             bool ff, double ast)
 	    : integration_task<number>(nm, i, t),
-        twopf_db(i.get_model()->compute_kstar(this)),
         fast_forward(ff),
         ff_efolds(__CPP_TRANSPORT_DEFAULT_FAST_FORWARD_EFOLDS),
-        max_refinements(__CPP_TRANSPORT_DEFAULT_MESH_REFINEMENTS)
+        max_refinements(__CPP_TRANSPORT_DEFAULT_MESH_REFINEMENTS),
+        astar_normalization(ast),
+        collect_initial_conditions(__CPP_TRANSPORT_DEFAULT_COLLECT_INITIAL_CONDITIONS),
+		    twopf_db(i.get_model()->compute_kstar(this))
       {
 	    }
 
@@ -189,28 +262,22 @@ namespace transport
 	    : integration_task<number>(nm, reader, i),
         twopf_db(reader[__CPP_TRANSPORT_NODE_TWOPF_LIST_DATABASE])
 	    {
-        // deserialize fast-forward integration setting
-        fast_forward = reader[__CPP_TRANSPORT_NODE_FAST_FORWARD].asBool();
-
-        // deserialize number of fast-forward efolds
-        ff_efolds = reader[__CPP_TRANSPORT_NODE_FAST_FORWARD_EFOLDS].asDouble();
-
-        // deserialize max number of mesh refinements
-        max_refinements = reader[__CPP_TRANSPORT_NODE_MESH_REFINEMENTS].asUInt();
+        fast_forward               = reader[__CPP_TRANSPORT_NODE_FAST_FORWARD].asBool();
+        ff_efolds                  = reader[__CPP_TRANSPORT_NODE_FAST_FORWARD_EFOLDS].asDouble();
+        max_refinements            = reader[__CPP_TRANSPORT_NODE_MESH_REFINEMENTS].asUInt();
+        astar_normalization        = reader[__CPP_TRANSPORT_NODE_TWOPF_LIST_NORMALIZATION].asDouble();
+        collect_initial_conditions = reader[__CPP_TRANSPORT_NODE_TWOPF_LIST_COLLECT_ICS].asBool();
 	    }
 
 
     template <typename number>
     void twopf_list_task<number>::serialize(Json::Value& writer) const
 	    {
-        // store fast-forward integration setting
-        writer[__CPP_TRANSPORT_NODE_FAST_FORWARD] = this->fast_forward;
-
-        // store number of fast-forward efolds
-        writer[__CPP_TRANSPORT_NODE_FAST_FORWARD_EFOLDS] = this->ff_efolds;
-
-        // store max number of mesh refinements
-        writer[__CPP_TRANSPORT_NODE_MESH_REFINEMENTS] = this->max_refinements;
+        writer[__CPP_TRANSPORT_NODE_FAST_FORWARD]             = this->fast_forward;
+        writer[__CPP_TRANSPORT_NODE_FAST_FORWARD_EFOLDS]      = this->ff_efolds;
+        writer[__CPP_TRANSPORT_NODE_MESH_REFINEMENTS]         = this->max_refinements;
+        writer[__CPP_TRANSPORT_NODE_TWOPF_LIST_NORMALIZATION] = this->astar_normalization;
+        writer[__CPP_TRANSPORT_NODE_TWOPF_LIST_COLLECT_ICS]   = this->collect_initial_conditions;
 
 		    // serialize twopf configuration database
         Json::Value db;
@@ -231,7 +298,7 @@ namespace transport
     template <typename number>
     double twopf_list_task<number>::get_fast_forward_start(const twopf_kconfig& config) const
       {
-        return(this->ics.get_N_horizon_crossing() + log(config.k_conventional) - this->ff_efolds);
+        return(config.t_exit - this->ff_efolds);
       }
 
 
@@ -249,29 +316,57 @@ namespace transport
 	    }
 
 
+		template <typename number>
+		std::vector<number> twopf_list_task<number>::get_ics_exit_vector(const twopf_kconfig& config) const
+			{
+				return this->integration_task<number>::get_ics_vector(config.t_exit);
+			}
+
+
     template <typename number>
     void twopf_list_task<number>::write_time_details()
       {
         // compute horizon-crossing time for earliest mode (the one with the smallest wavenumber) and the latest one (the one with the largest wavenumber)
-        double earliest_crossing = log(this->twopf_db.get_kmin_conventional());
-        double latest_crossing   = log(this->twopf_db.get_kmax_conventional());
+
+		    double earliest_crossing = std::numeric_limits<double>::max();
+		    double latest_crossing   = -std::numeric_limits<double>::max();
+
+        for(twopf_kconfig_database::const_config_iterator t = this->twopf_db.config_begin(); t != this->twopf_db.config_end(); ++t)
+	        {
+		        if(t->t_exit < earliest_crossing) earliest_crossing = t->t_exit;
+		        if(t->t_exit > latest_crossing)   latest_crossing = t->t_exit;
+	        }
+
+		    // these are measured relative to horizon crossing
+		    earliest_crossing -= this->get_N_horizon_crossing();
+		    latest_crossing   -= this->get_N_horizon_crossing();
 
         std::cout << "'" << this->get_name() << "': ";
         std::cout << __CPP_TRANSPORT_TASK_TWOPF_LIST_MODE_RANGE_A << this->twopf_db.get_kmin_conventional()
           << " " << __CPP_TRANSPORT_TASK_TWOPF_LIST_MODE_RANGE_B;
-        if(earliest_crossing > 0) std::cout << "+";
-        std::cout << earliest_crossing << ", ";
+
+        std::ostringstream early_time;
+		    early_time << std::setprecision(3);
+        if(earliest_crossing > 0) early_time << "+";
+		    early_time << earliest_crossing;
+
+        std::cout << early_time.str() << ", ";
+
         std::cout << __CPP_TRANSPORT_TASK_TWOPF_LIST_MODE_RANGE_C << this->twopf_db.get_kmax_conventional()
           << " " << __CPP_TRANSPORT_TASK_TWOPF_LIST_MODE_RANGE_D;
-        if(latest_crossing > 0) std::cout << "+";
-        std::cout << latest_crossing;
-        std::cout << std::endl;
+
+        std::ostringstream late_time;
+		    late_time << std::setprecision(3);
+        if(latest_crossing > 0) late_time << "+";
+        late_time << latest_crossing;
+
+        std::cout << late_time.str() << std::endl;
 
         this->validate_subhorizon_efolds();
 
         try
           {
-            double end_of_inflation = this->ics.get_model()->compute_end_of_inflation(this);
+            double end_of_inflation = this->get_N_end_of_inflation();
             std::cout << "'" << this->get_name() << "': " << __CPP_TRANSPORT_TASK_TWOPF_LIST_END_OF_INFLATION  << end_of_inflation << std::endl;
 
             // check if end time is after the end of inflation
@@ -291,9 +386,13 @@ namespace transport
     template <typename number>
     void twopf_list_task<number>::validate_subhorizon_efolds()
       {
-        double earliest_crossing = log(this->twopf_db.get_kmin_conventional());
+        double earliest_required = std::numeric_limits<double>::max();
 
-        double earliest_required = this->get_N_horizon_crossing() + earliest_crossing;
+        for(twopf_kconfig_database::const_config_iterator t = this->twopf_db.config_begin(); t != this->twopf_db.config_end(); ++t)
+	        {
+            if(t->t_exit < earliest_required) earliest_required = t->t_exit;
+	        }
+
         if(this->fast_forward) earliest_required -= this->ff_efolds;
 
         if(earliest_required < this->get_N_initial())
@@ -343,7 +442,7 @@ namespace transport
 
         bool first = true;
         unsigned int serial = 0;
-        for(std::vector<double>::const_iterator t = raw_times.begin(); t != raw_times.end(); t++, serial++)
+        for(std::vector<double>::const_iterator t = raw_times.begin(); t != raw_times.end(); ++t, ++serial)
           {
             if(*t >= Nbegin)
               {
@@ -387,7 +486,7 @@ namespace transport
         const std::vector<double> raw_times = this->times->get_grid();
 
         unsigned int serial = 0;
-        for(std::vector<double>::const_iterator t = raw_times.begin(); t != raw_times.end(); t++, serial++)
+        for(std::vector<double>::const_iterator t = raw_times.begin(); t != raw_times.end(); ++t, ++serial)
           {
             if(*t >= earliest_recordable)
               {
@@ -395,6 +494,41 @@ namespace transport
               }
           }
       }
+
+
+		template <typename number>
+		void twopf_list_task<number>::compute_horizon_exit_times()
+			{
+				double largest_k = this->twopf_db.get_kmax_comoving();
+
+		    std::vector<double> N;
+		    std::vector<number> aH;
+				this->get_model()->compute_aH(this, N, aH, largest_k);
+
+				spline1d<number> sp(N, aH);
+
+				this->twopf_compute_horizon_exit_times(sp, TolerancePredicate(1E-7));
+			};
+
+
+		template <typename number>
+		template <typename SplineObject, typename TolerancePolicy>
+		void twopf_list_task<number>::twopf_compute_horizon_exit_times(SplineObject& sp, TolerancePolicy tol)
+			{
+		    boost::uintmax_t max_iter = 500;
+
+		    for(twopf_kconfig_database::config_iterator t = this->twopf_db.config_begin(); t != this->twopf_db.config_end(); ++t)
+			    {
+		        // set spline to evaluate aH-k and then solve for N
+		        sp.set_offset(t->k_comoving);
+
+		        // find root; note use of std::ref, because toms748_solve normally would take a copy of
+		        // its system function and this is slow -- we have to copy the whole spline
+		        std::pair< double, double > result = boost::math::tools::toms748_solve(std::ref(sp), sp.get_min_x(), sp.get_max_x(), TolerancePredicate(1E-7), max_iter);
+
+		        t->t_exit = (result.first + result.second)/2.0;
+			    }
+			}
 
 
 		template <typename number>

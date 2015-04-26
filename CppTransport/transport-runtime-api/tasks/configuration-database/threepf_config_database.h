@@ -164,28 +164,28 @@ namespace transport
 
       public:
 
-        record_iterator       record_begin()       { return record_iterator(this->database.begin()); }
-        record_iterator       record_end()         { return record_iterator(this->database.end()); }
+        record_iterator       record_begin()        { return record_iterator(this->database.begin()); }
+        record_iterator       record_end()          { return record_iterator(this->database.end()); }
 
-        const_record_iterator record_begin() const { return const_record_iterator(this->database.begin()); }
-        const_record_iterator record_end()   const { return const_record_iterator(this->database.end()); }
+        const_record_iterator record_begin()  const { return const_record_iterator(this->database.begin()); }
+        const_record_iterator record_end()    const { return const_record_iterator(this->database.end()); }
 
-        const_record_iterator crecord_begin()      { return const_record_iterator(this->database.cbegin()); }
-        const_record_iterator crecord_end()        { return const_record_iterator(this->database.cend()); }
+        const_record_iterator crecord_begin() const { return const_record_iterator(this->database.cbegin()); }
+        const_record_iterator crecord_end()   const { return const_record_iterator(this->database.cend()); }
 
 
         // CONFIG ITERATORS
 
       public:
 
-        config_iterator       config_begin()       { return config_iterator(this->database.begin()); }
-        config_iterator       config_end()         { return config_iterator(this->database.end()); }
+        config_iterator       config_begin()        { return config_iterator(this->database.begin()); }
+        config_iterator       config_end()          { return config_iterator(this->database.end()); }
 
-        const_config_iterator config_begin() const { return const_config_iterator(this->database.begin()); }
-        const_config_iterator config_end()   const { return const_config_iterator(this->database.end()); }
+        const_config_iterator config_begin()  const { return const_config_iterator(this->database.begin()); }
+        const_config_iterator config_end()    const { return const_config_iterator(this->database.end()); }
 
-        const_config_iterator cconfig_begin()      { return const_config_iterator(this->database.cbegin()); }
-        const_config_iterator cconfig_end()        { return const_config_iterator(this->database.cend()); }
+        const_config_iterator cconfig_begin() const { return const_config_iterator(this->database.cbegin()); }
+        const_config_iterator cconfig_end()   const { return const_config_iterator(this->database.cend()); }
 
 
         // INTERFACE -- GLOBAL OPERATIONS
@@ -216,6 +216,19 @@ namespace transport
         int add_record(twopf_kconfig_database& twopf_db, threepf_kconfig config, StoragePolicy policy);
 
 
+        // INTERFACE -- LOOKUP META-INFORMATION
+
+      public:
+
+        //! get largest conventionally-normalized k-number committed to the database
+        double get_kmax_conventional() const { return(this->kmax_conventional); }
+        double get_kmax_comoving()     const { return(this->kmax_comoving); }
+
+        //! get smallest conventionally-normalized k-number committed to the database
+        double get_kmin_conventional() const { return(this->kmin_conventional); }
+        double get_kmin_comoving()     const { return(this->kmax_comoving); }
+
+
         // SERIALIZATION -- implements a 'serializable' interface
 
       public:
@@ -238,6 +251,9 @@ namespace transport
         //! serial number for next inserted item
         unsigned int serial;
 
+        //! keep track of whether the background has been stored
+        bool store_background;
+
 
         // COMOVING NORMALIZATION
 
@@ -245,15 +261,25 @@ namespace transport
         double comoving_normalization;
 
 
-        //! keep track of whether the background has been stored
-        bool store_background;
+				// META-INFORMATION
 
+		    //! cache maximum stored wavenumber
+		    double kmax_conventional;
+		    double kmax_comoving;
+
+		    //! cache minimum stored wavenumber
+		    double kmin_conventional;
+		    double kmin_comoving;
       };
 
 
     threepf_kconfig_database::threepf_kconfig_database(double cn)
       : comoving_normalization(cn),
         serial(0),
+        kmax_conventional(-std::numeric_limits<double>::max()),
+        kmin_conventional(std::numeric_limits<double>::max()),
+        kmax_comoving(-std::numeric_limits<double>::max()),
+        kmin_comoving(std::numeric_limits<double>::max()),
         store_background(true)
       {
       }
@@ -261,6 +287,10 @@ namespace transport
 
     threepf_kconfig_database::threepf_kconfig_database(Json::Value& reader, twopf_kconfig_database& twopf_db)
       : serial(0),
+        kmax_conventional(-std::numeric_limits<double>::max()),
+        kmin_conventional(std::numeric_limits<double>::max()),
+        kmax_comoving(-std::numeric_limits<double>::max()),
+        kmin_comoving(std::numeric_limits<double>::max()),
         store_background(false)
       {
         // deserialize comoving normalization constant
@@ -271,7 +301,7 @@ namespace transport
         assert(db_array.isArray());
 
         database.clear();
-        for(Json::Value::iterator t = db_array.begin(); t != db_array.end(); t++)
+        for(Json::Value::iterator t = db_array.begin(); t != db_array.end(); ++t)
           {
             threepf_kconfig config;
 
@@ -280,24 +310,31 @@ namespace transport
             config.k2_serial = (*t)[__CPP_TRANSPORT_NODE_THREEPF_DATABASE_K2_SERIAL].asUInt();
             config.k3_serial = (*t)[__CPP_TRANSPORT_NODE_THREEPF_DATABASE_K3_SERIAL].asUInt();
 
-            const twopf_kconfig& k1 = *(twopf_db.lookup(config.k1_serial));
-            const twopf_kconfig& k2 = *(twopf_db.lookup(config.k2_serial));
-            const twopf_kconfig& k3 = *(twopf_db.lookup(config.k3_serial));
+		        twopf_kconfig_database::const_record_iterator k1 = twopf_db.lookup(config.k1_serial);
+            twopf_kconfig_database::const_record_iterator k2 = twopf_db.lookup(config.k2_serial);
+            twopf_kconfig_database::const_record_iterator k3 = twopf_db.lookup(config.k3_serial);
 
-            config.k1_conventional = k1.k_conventional;
-            config.k1_comoving     = k1.k_comoving;
+            config.k1_conventional = (*k1)->k_conventional;
+            config.k1_comoving     = (*k1)->k_comoving;
 
-            config.k2_conventional = k2.k_conventional;
-            config.k2_comoving     = k2.k_comoving;
+            config.k2_conventional = (*k2)->k_conventional;
+            config.k2_comoving     = (*k2)->k_comoving;
 
-            config.k3_conventional = k3.k_conventional;
-            config.k3_comoving     = k3.k_comoving;
+            config.k3_conventional = (*k3)->k_conventional;
+            config.k3_comoving     = (*k3)->k_comoving;
 
-            config.kt_conventional = k1.k_conventional + k2.k_conventional + k3.k_conventional;
-            config.kt_comoving = k1.k_comoving + k2.k_comoving + k3.k_comoving;
+            config.kt_conventional = (*k1)->k_conventional + (*k2)->k_conventional + (*k3)->k_conventional;
+            config.kt_comoving     = (*k1)->k_comoving + (*k2)->k_comoving + (*k3)->k_comoving;
 
             config.beta  = 1.0 - 2.0 * config.k3_conventional / config.kt_conventional;
-            config.alpha = 4.0 * k2.k_conventional / config.kt_conventional - 1.0 - config.beta;
+            config.alpha = 4.0 * (*k2)->k_conventional / config.kt_conventional - 1.0 - config.beta;
+
+		        config.t_exit = 0.0;  // will be updated later
+
+            if(config.kt_conventional > this->kmax_conventional) this->kmax_conventional = config.kt_conventional;
+            if(config.kt_conventional < this->kmin_conventional) this->kmin_conventional = config.kt_conventional;
+            if(config.kt_comoving > this->kmax_comoving)         this->kmax_comoving     = config.kt_comoving;
+            if(config.kt_comoving < this->kmin_comoving)         this->kmin_comoving     = config.kt_comoving;
 
             this->database.emplace(config.serial, threepf_kconfig_record(config,
                                                                            (*t)[__CPP_TRANSPORT_NODE_THREEPF_DATABASE_STORE_BACKGROUND].asBool(),
@@ -339,6 +376,8 @@ namespace transport
         config.beta             = 1.0 - 2.0 * k3_conventional / config.kt_conventional;
         config.alpha            = 4.0 * k2_conventional / config.kt_conventional - 1.0 - config.beta;
 
+        config.t_exit           = 0.0; // this will be updated later, once all k-configurations are known
+
         return(this->add_record(twopf_db, config, policy));
       }
 
@@ -366,6 +405,8 @@ namespace transport
         config.k3_conventional  = (kt_conventional / 4.0) * (1.0 - beta);
         config.k3_comoving      = config.k3_conventional * this->comoving_normalization;
 
+		    config.t_exit           = 0.0; // this will be updated later, once all k-configurations are known
+
         return(this->add_record(twopf_db, config, policy));
       }
 
@@ -390,6 +431,11 @@ namespace transport
             k3_stored = twopf_db.find(config.k3_conventional, config.k3_serial);
             if(!k3_stored) config.k3_serial = twopf_db.add_record(config.k3_conventional);
 
+            if(config.kt_conventional > this->kmax_conventional) this->kmax_conventional = config.kt_conventional;
+            if(config.kt_conventional < this->kmin_conventional) this->kmin_conventional = config.kt_conventional;
+            if(config.kt_comoving > this->kmax_comoving)         this->kmax_comoving     = config.kt_comoving;
+            if(config.kt_comoving < this->kmin_comoving)         this->kmin_comoving     = config.kt_comoving;
+
             this->database.emplace(config.serial, threepf_kconfig_record(config, this->store_background, !k1_stored, !k2_stored, !k3_stored));
             this->store_background = false;
             return(config.serial);
@@ -408,7 +454,7 @@ namespace transport
         Json::Value db_array(Json::arrayValue);
 
         unsigned int count = 0;
-        for(database_type::const_iterator t = this->database.begin(); t != this->database.end(); t++, count++)
+        for(database_type::const_iterator t = this->database.begin(); t != this->database.end(); ++t, ++count)
           {
             assert(count == t->first);
             if(count != t->first) throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_THREEPF_DATABASE_OUT_OF_ORDER);

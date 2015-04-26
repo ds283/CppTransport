@@ -21,7 +21,7 @@ void canonical_u_tensor_factory::compute_sr_u(std::vector<GiNaC::ex>& v, flatten
     v.resize(fl->get_flattened_size(1));
 
 #pragma omp parallel for schedule(dynamic)
-    for(int i = 0; i < this->num_fields; i++)
+    for(int i = 0; i < this->num_fields; ++i)
       {
 		    unsigned int index = fl->flatten(i);
 
@@ -56,7 +56,7 @@ void canonical_u_tensor_factory::compute_u1(GiNaC::ex& Hsq, GiNaC::ex& eps, std:
 		args.push_back(eps);
 
 #pragma omp parallel for schedule(dynamic)
-    for(int i = 0; i < 2*this->num_fields; i++)
+    for(int i = 0; i < 2*this->num_fields; ++i)
       {
 		    unsigned int index = fl->flatten(i);
 
@@ -105,9 +105,9 @@ void canonical_u_tensor_factory::compute_u2(GiNaC::symbol& k, GiNaC::symbol& a,
 		args.push_back(eps);
 
 #pragma omp parallel for schedule(dynamic)
-    for(int i = 0; i < 2*this->num_fields; i++)
+    for(int i = 0; i < 2*this->num_fields; ++i)
       {
-        for(int j = 0; j < 2*this->num_fields; j++)
+        for(int j = 0; j < 2*this->num_fields; ++j)
           {
 		        unsigned int index = fl->flatten(i,j);
 
@@ -182,11 +182,11 @@ void canonical_u_tensor_factory::compute_u3(GiNaC::symbol& k1,
     args.push_back(eps);
 
 #pragma omp parallel for schedule(dynamic)
-    for(int i = 0; i < 2*this->num_fields; i++)
+    for(int i = 0; i < 2*this->num_fields; ++i)
       {
-        for(int j = 0; j < 2*this->num_fields; j++)
+        for(int j = 0; j < 2*this->num_fields; ++j)
           {
-            for(int k = 0; k < 2*this->num_fields; k++)
+            for(int k = 0; k < 2*this->num_fields; ++k)
               {
 		            unsigned int index = fl->flatten(i,j,k);
 
@@ -270,11 +270,11 @@ void canonical_u_tensor_factory::compute_A(GiNaC::symbol& k1,
     v.resize(fl->get_flattened_size(3));
 
 #pragma omp parallel for schedule(dynamic)
-    for(int i = 0; i < this->num_fields; i++)
+    for(int i = 0; i < this->num_fields; ++i)
       {
-        for(int j = 0; j < this->num_fields; j++)
+        for(int j = 0; j < this->num_fields; ++j)
           {
-            for(int k = 0; k < this->num_fields; k++)
+            for(int k = 0; k < this->num_fields; ++k)
               {
                 v[fl->flatten(i,j,k)] = this->compute_A_component(i, k1, j, k2, k, k3, a, Hsq, eps);
               }
@@ -302,11 +302,11 @@ void canonical_u_tensor_factory::compute_B(GiNaC::symbol& k1,
     v.resize(fl->get_flattened_size(3));
 
 #pragma omp parallel for schedule(dynamic)
-    for(int i = 0; i < this->num_fields; i++)
+    for(int i = 0; i < this->num_fields; ++i)
       {
-        for(int j = 0; j < this->num_fields; j++)
+        for(int j = 0; j < this->num_fields; ++j)
           {
-            for(int k = 0; k < this->num_fields; k++)
+            for(int k = 0; k < this->num_fields; ++k)
               {
                 v[fl->flatten(i,j,k)] = this->compute_B_component(i, k1, j, k2, k, k3, a, Hsq, eps);
               }
@@ -334,11 +334,11 @@ void canonical_u_tensor_factory::compute_C(GiNaC::symbol& k1,
     v.resize(fl->get_flattened_size(3));
 
 #pragma omp parallel for schedule(dynamic)
-    for(int i = 0; i < this->num_fields; i++)
+    for(int i = 0; i < this->num_fields; ++i)
       {
-        for(int j = 0; j < this->num_fields; j++)
+        for(int j = 0; j < this->num_fields; ++j)
           {
-            for(int k = 0; k < this->num_fields; k++)
+            for(int k = 0; k < this->num_fields; ++k)
               {
                 v[fl->flatten(i,j,k)] = this->compute_C_component(i, k1, j, k2, k, k3, a, Hsq, eps);
               }
@@ -363,9 +363,9 @@ void canonical_u_tensor_factory::compute_M(GiNaC::ex& Hsq, GiNaC::ex& eps, std::
     v.resize(fl->get_flattened_size(2));
 
 #pragma omp parallel for schedule(dynamic)
-    for(int i = 0; i < this->num_fields; i++)
+    for(int i = 0; i < this->num_fields; ++i)
       {
-        for(int j = 0; j < this->num_fields; j++)
+        for(int j = 0; j < this->num_fields; ++j)
           {
             v[fl->flatten(i,j)] = this->compute_M_component(i, j, Hsq, eps);
           }
@@ -389,7 +389,7 @@ void canonical_u_tensor_factory::compute_zeta_xfm_1(GiNaC::ex& Hsq, GiNaC::ex& e
     // formulae from DS calculation '10 - UDG matrices summary', 19 April 2014
 
 #pragma omp parallel for schedule(dynamic)
-    for(int i = 0; i < 2*this->num_fields; i++)
+    for(int i = 0; i < 2*this->num_fields; ++i)
       {
 		    unsigned int index = fl->flatten(i);
 
@@ -431,9 +431,9 @@ void canonical_u_tensor_factory::compute_zeta_xfm_2(GiNaC::symbol& k, GiNaC::sym
     args.push_back(eps);
 
 #pragma omp parallel for schedule(dynamic)
-    for(int i = 0; i < 2*this->num_fields; i++)
+    for(int i = 0; i < 2*this->num_fields; ++i)
       {
-        for(int j = 0; j < 2*this->num_fields; j++)
+        for(int j = 0; j < 2*this->num_fields; ++j)
           {
 		        unsigned int index = fl->flatten(i,j);
 
@@ -485,7 +485,7 @@ GiNaC::ex canonical_u_tensor_factory::compute_zeta_xfm_2_ff(unsigned int m, unsi
 
     GiNaC::ex p = 0;
 
-		for(unsigned int i = 0; i < this->num_fields; i++)
+		for(unsigned int i = 0; i < this->num_fields; ++i)
 			{
 				p += diff(this->V, this->field_list[i])*this->deriv_list[i];
 			}
@@ -538,7 +538,7 @@ void canonical_u_tensor_factory::compute_deltaN_xfm_1(std::vector<GiNaC::ex>& v,
     GiNaC::ex dotH = -eps*Hsq;
 
 #pragma omp parallel for schedule(dynamic)
-    for(int i = 0; i < 2*this->num_fields; i++)
+    for(int i = 0; i < 2*this->num_fields; ++i)
 	    {
 		    unsigned int index = fl->flatten(i);
 
@@ -579,11 +579,11 @@ void canonical_u_tensor_factory::compute_deltaN_xfm_2(std::vector<GiNaC::ex>& v,
 
 		this->compute_timer.resume();
     GiNaC::ex p_sum(0);
-    for(int i = 0; i < this->num_fields; i++)
+    for(int i = 0; i < this->num_fields; ++i)
 	    {
         p_sum += diff(1/(2*dotH), this->field_list[i]) * this->deriv_list[i];
 	    }
-    for(int i = 0; i < this->num_fields; i++)
+    for(int i = 0; i < this->num_fields; ++i)
 	    {
         GiNaC::ex dXdN  = (eps-3)*this->deriv_list[i] - diff(this->V, this->field_list[i])/Hsq;
         p_sum          += diff(1/(2*dotH), this->deriv_list[i]) * dXdN;
@@ -591,9 +591,9 @@ void canonical_u_tensor_factory::compute_deltaN_xfm_2(std::vector<GiNaC::ex>& v,
 		this->compute_timer.stop();
 
 #pragma omp parallel for schedule(dynamic)
-    for(int i = 0; i < 2*this->num_fields; i++)
+    for(int i = 0; i < 2*this->num_fields; ++i)
 	    {
-        for(int j = 0; j < 2*this->num_fields; j++)
+        for(int j = 0; j < 2*this->num_fields; ++j)
 	        {
 		        unsigned int index = fl->flatten(i,j);
 
@@ -629,7 +629,7 @@ GiNaC::ex canonical_u_tensor_factory::compute_eps()
   {
     GiNaC::ex sum_momenta_sq(0);
 
-    for(int i = 0; i < this->deriv_list.size(); i++)
+    for(int i = 0; i < this->deriv_list.size(); ++i)
       {
         sum_momenta_sq += GiNaC::pow(this->deriv_list[i], 2);
       }

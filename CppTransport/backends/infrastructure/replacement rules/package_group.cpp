@@ -73,7 +73,7 @@ void package_group::build_pre_ruleset()
   {
     this->pre_ruleset.clear();
 
-    for(std::list<macro_packages::replacement_rule_package*>::iterator t = this->packages.begin(); t != this->packages.end(); t++)
+    for(std::list<macro_packages::replacement_rule_package*>::iterator t = this->packages.begin(); t != this->packages.end(); ++t)
       {
         std::vector<macro_packages::simple_rule> rules = (*t)->get_pre_rules();
         this->pre_ruleset.reserve(this->pre_ruleset.size() + rules.size());
@@ -92,7 +92,7 @@ void package_group::build_post_ruleset()
   {
     this->post_ruleset.clear();
 
-    for(std::list<macro_packages::replacement_rule_package*>::iterator t = this->packages.begin(); t != this->packages.end(); t++)
+    for(std::list<macro_packages::replacement_rule_package*>::iterator t = this->packages.begin(); t != this->packages.end(); ++t)
       {
         std::vector<macro_packages::simple_rule> rules = (*t)->get_post_rules();
         this->post_ruleset.reserve(this->post_ruleset.size() + rules.size());
@@ -111,7 +111,7 @@ void package_group::build_index_ruleset()
   {
     this->index_ruleset.clear();
 
-    for(std::list<macro_packages::replacement_rule_package*>::iterator t = this->packages.begin(); t != this->packages.end(); t++)
+    for(std::list<macro_packages::replacement_rule_package*>::iterator t = this->packages.begin(); t != this->packages.end(); ++t)
       {
         std::vector<macro_packages::index_rule> rules = (*t)->get_index_rules();
         this->index_ruleset.reserve(this->index_ruleset.size() + rules.size());

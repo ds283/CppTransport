@@ -153,7 +153,7 @@ namespace transport
     std::ostream& operator<<(std::ostream& out, const output_task<number>& obj)
 	    {
         out << __CPP_TRANSPORT_OUTPUT_ELEMENTS << std::endl;
-        for(typename std::vector< output_task_element<number> >::const_iterator t = obj.elements.begin(); t != obj.elements.end(); t++)
+        for(typename std::vector< output_task_element<number> >::const_iterator t = obj.elements.begin(); t != obj.elements.end(); ++t)
 	        {
             out << *t;
 	        }
@@ -171,7 +171,7 @@ namespace transport
         Json::Value& element_list = reader[__CPP_TRANSPORT_NODE_OUTPUT_ARRAY];
 		    assert(element_list.isArray());
 
-        for(Json::Value::iterator t = element_list.begin(); t != element_list.end(); t++)
+        for(Json::Value::iterator t = element_list.begin(); t != element_list.end(); ++t)
           {
             std::string  product_name = (*t)[__CPP_TRANSPORT_NODE_OUTPUT_DERIVED_PRODUCT].asString();
             unsigned int sn           = (*t)[__CPP_TRANSPORT_NODE_OUTPUT_SERIAL].asUInt();
@@ -179,7 +179,7 @@ namespace transport
             std::list<std::string> tags;
             Json::Value& tag_list = (*t)[__CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS];
 
-            for(Json::Value::iterator u = tag_list.begin(); u != tag_list.end(); u++)
+            for(Json::Value::iterator u = tag_list.begin(); u != tag_list.end(); ++u)
               {
 		            tags.push_back(u->asString());
               }
@@ -204,7 +204,7 @@ namespace transport
         // serialize array of task elements
         Json::Value element_list(Json::arrayValue);
 
-        for(typename std::vector< output_task_element<number> >::const_iterator t = this->elements.begin(); t != this->elements.end(); t++)
+        for(typename std::vector< output_task_element<number> >::const_iterator t = this->elements.begin(); t != this->elements.end(); ++t)
 	        {
             Json::Value elem(Json::objectValue);
 
@@ -215,7 +215,7 @@ namespace transport
 
             Json::Value tag_list(Json::objectValue);
 
-            for(std::list<std::string>::const_iterator u = tags.begin(); u != tags.end(); u++)
+            for(std::list<std::string>::const_iterator u = tags.begin(); u != tags.end(); ++u)
 	            {
                 Json::Value tag_element = *u;
                 tag_list.append(tag_element);
@@ -234,7 +234,7 @@ namespace transport
 	    {
         // check that this derived product has a distinct filename
 
-        for(typename std::vector< output_task_element<number> >::const_iterator t = this->elements.begin(); t != this->elements.end(); t++)
+        for(typename std::vector< output_task_element<number> >::const_iterator t = this->elements.begin(); t != this->elements.end(); ++t)
 	        {
             if(t->get_product()->get_filename() == prod.get_filename())
 	            {
@@ -272,7 +272,7 @@ namespace transport
 			{
 		    derived_data::derived_product<number>* rval = nullptr;
 
-				for(typename std::vector< output_task_element<number> >::const_iterator t = this->elements.begin(); t != this->elements.end(); t++)
+				for(typename std::vector< output_task_element<number> >::const_iterator t = this->elements.begin(); t != this->elements.end(); ++t)
 					{
 						if(t->get_product_name() == name)
 							{

@@ -28,7 +28,7 @@ namespace
 	        {
             ordering order_map;
 
-            for(unsigned int i = 0; i < order.size(); i++)
+            for(unsigned int i = 0; i < order.size(); ++i)
 	            {
                 order_map.insert(std::make_pair(order[i], i));
 	            }

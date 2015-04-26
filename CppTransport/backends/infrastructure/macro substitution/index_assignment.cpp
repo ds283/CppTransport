@@ -41,7 +41,7 @@ std::vector< std::vector<index_assignment> > assignment_package::assign(const st
 
     // generate the size of the set of all index assignments
     unsigned int limit = 1;
-    for(int i = 0; i < indices.size(); i++)
+    for(int i = 0; i < indices.size(); ++i)
       {
         if(indices[i].range == INDEX_RANGE_PARAMETER)
           {
@@ -57,7 +57,7 @@ std::vector< std::vector<index_assignment> > assignment_package::assign(const st
     // keeping track of which ones are correctly ordered (if necessary)
     std::deque<unsigned int> assignment;
     std::vector<index_assignment> index_assignment;
-    for(unsigned int i = 0; i < limit; i++)
+    for(unsigned int i = 0; i < limit; ++i)
       {
 		    assignment.clear();
         make_assignment(this->num_fields, this->num_parameters, indices, i, this->order, assignment);
@@ -153,7 +153,7 @@ static void make_assignment(unsigned int fields, unsigned int parameters,
                             const std::vector<index_abstract>& indices, unsigned int i,
                             enum indexorder order, std::deque<unsigned int>& assignment)
 	{
-    for(int j = 0; j < indices.size(); j++)
+    for(int j = 0; j < indices.size(); ++j)
 	    {
         unsigned int size = 1;
 
@@ -192,7 +192,7 @@ static void make_index_assignment(unsigned int fields, unsigned int parameters,
     assert(assigned_numbers.size() == indices.size());
 		assert(assignment.size() == 0);
 
-    for(unsigned int i = 0; i < assigned_numbers.size(); i++)
+    for(unsigned int i = 0; i < assigned_numbers.size(); ++i)
 	    {
          index_assignment index;
 
@@ -241,7 +241,7 @@ static bool is_ordered(std::deque<unsigned int>& a, const std::vector<index_abst
 
     assert(a.size() == indices.size());
 
-    for(int i = 0; i < a.size(); i++)
+    for(int i = 0; i < a.size(); ++i)
 	    {
 	      // UNCOMMENT TO ENFORCE ONLY ORDERED INDEX PAIRS
 	      // (that's not usually what we want; we want full summation convention expressions)
@@ -291,11 +291,11 @@ std::vector<index_assignment> assignment_package::merge(const std::vector<index_
 	{
     std::vector<index_assignment> merged = l;
 
-		for(std::vector<index_assignment>::const_iterator t = r.begin(); t != r.end(); t++)
+		for(std::vector<index_assignment>::const_iterator t = r.begin(); t != r.end(); ++t)
 			{
 				bool found = false;
 
-				for(std::vector<index_assignment>::const_iterator u = l.begin(); !found && u != l.end(); u++)
+				for(std::vector<index_assignment>::const_iterator u = l.begin(); !found && u != l.end(); ++u)
 					{
 						if((*u).label == (*t).label)
 							{
@@ -319,11 +319,11 @@ std::vector<index_abstract> assignment_package::difference(const std::vector<ind
 	{
     std::vector<index_abstract> diffed;
 
-		for(std::vector<index_abstract>::const_iterator t = l.begin(); t != l.end(); t++)
+		for(std::vector<index_abstract>::const_iterator t = l.begin(); t != l.end(); ++t)
 			{
 				bool found = false;
 
-				for(std::vector<index_abstract>::const_iterator u = r.begin(); !found && u != r.end(); u++)
+				for(std::vector<index_abstract>::const_iterator u = r.begin(); !found && u != r.end(); ++u)
 					{
 						if((*u).label == (*t).label)
 							{

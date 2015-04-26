@@ -503,7 +503,7 @@ namespace transport
 				this->queue.clear();
 
 				// build a queue of work items from the serial numbers of each work item
-				for(typename std::vector<WorkItem>::const_iterator t = q.begin(); t != q.end(); t++)
+				for(typename std::vector<WorkItem>::const_iterator t = q.begin(); t != q.end(); ++t)
 					{
 						this->queue.push_back(t->get_serial());
 					}
@@ -530,7 +530,7 @@ namespace transport
         this->queue.clear();
 
         // build a queue of work items from the serial numbers of each work item
-        for(typename Database::const_config_iterator t = db.config_begin(); t != db.config_end(); t++)
+        for(typename Database::const_config_iterator t = db.config_begin(); t != db.config_end(); ++t)
           {
             this->queue.push_back(t->get_serial());
           }
@@ -614,7 +614,7 @@ namespace transport
 				this->unassigned--;
 
 				// remove assigned work items from the queue
-				for(std::list<unsigned int>::const_iterator t = assignment.get_items().begin(); t != assignment.get_items().end(); t++)
+				for(std::list<unsigned int>::const_iterator t = assignment.get_items().begin(); t != assignment.get_items().end(); ++t)
 					{
 						// we're guaranteed only one instance of this work item exists in the queue
 				    std::list<unsigned int>::iterator u = std::find(this->queue.begin(), this->queue.end(), *t);
@@ -780,7 +780,7 @@ namespace transport
 		    // but we won't be amending it within this function
 		    std::list< std::vector<master_scheduler::worker_information>::iterator > workers;
 
-		    for(std::vector<master_scheduler::worker_information>::iterator t = this->worker_data.begin(); t != this->worker_data.end(); t++)
+		    for(std::vector<master_scheduler::worker_information>::iterator t = this->worker_data.begin(); t != this->worker_data.end(); ++t)
 			    {
 		        if(!t->is_assigned()) workers.push_back(t);
 			    }
@@ -815,7 +815,7 @@ namespace transport
 #ifdef __CPP_TRANSPORT_DEBUG_SCHEDULER
 				BOOST_LOG_SEV(log, generic_writer::normal) << "%% BEGIN NEW SCHEDULE (max work allocation=" << this->max_work_allocation << ", max allocation per worker=" << max_allocation_per_worker << ")";
 #endif
-				for(typename std::list< std::vector<master_scheduler::worker_information>::iterator >::iterator t = workers.begin(); next_item != this->queue.end() && t != workers.end(); t++)
+				for(typename std::list< std::vector<master_scheduler::worker_information>::iterator >::iterator t = workers.begin(); next_item != this->queue.end() && t != workers.end(); ++t)
 					{
 				    std::list<unsigned int> items;
 
@@ -848,7 +848,7 @@ namespace transport
 										<< ". Allocated " << num_work_items << " items";
 #endif
 
-								for(unsigned int i = 0; next_item != this->queue.end() && i < num_work_items; i++)
+								for(unsigned int i = 0; next_item != this->queue.end() && i < num_work_items; ++i)
 									{
 										items.push_back(*next_item);
 										next_item++;
@@ -872,7 +872,7 @@ namespace transport
 				// but we won't be amending it within this function
 		    std::list< std::vector<master_scheduler::worker_information>::iterator > workers;
 
-				for(std::vector<master_scheduler::worker_information>::iterator t = this->worker_data.begin(); t != this->worker_data.end(); t++)
+				for(std::vector<master_scheduler::worker_information>::iterator t = this->worker_data.begin(); t != this->worker_data.end(); ++t)
 					{
 						if(!t->is_assigned()) workers.push_back(t);
 					}
@@ -888,11 +888,11 @@ namespace transport
 				unsigned int c = 0;
 		    std::list<unsigned int>::iterator next_item = this->queue.begin();
 
-				for(typename std::list< std::vector<master_scheduler::worker_information>::iterator >::iterator t = workers.begin(); next_item != this->queue.end() && t != workers.end(); t++, c++)
+				for(typename std::list< std::vector<master_scheduler::worker_information>::iterator >::iterator t = workers.begin(); next_item != this->queue.end() && t != workers.end(); ++t, ++c)
 					{
 				    std::list<unsigned int> items;
 
-						for(unsigned int i = 0; next_item != this->queue.end() && i < items_per_worker + (c < items_left_over ? 1 : 0); i++)
+						for(unsigned int i = 0; next_item != this->queue.end() && i < items_per_worker + (c < items_left_over ? 1 : 0); ++i)
 							{
 								items.push_back(*next_item);
 								next_item++;

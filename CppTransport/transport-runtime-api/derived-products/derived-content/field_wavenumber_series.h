@@ -132,11 +132,11 @@ namespace transport
 		        const typename std::vector< twopf_kconfig > k_values = kc_handle.lookup_tag(k_tag);
 
 				    // loop through all components of the twopf, for each t-configuration we use, pulling data from the database
-				    for(unsigned int i = 0; i < this->time_sample_sns.size(); i++)
+				    for(unsigned int i = 0; i < this->time_sample_sns.size(); ++i)
 					    {
-						    for(unsigned int m = 0; m < 2*N_fields; m++)
+						    for(unsigned int m = 0; m < 2*N_fields; ++m)
 							    {
-								    for(unsigned int n = 0; n < 2*N_fields; n++)
+								    for(unsigned int n = 0; n < 2*N_fields; ++n)
 									    {
 								        std::array<unsigned int, 2> index_set = { m, n };
 								        if(this->active_indices.is_on(index_set))
@@ -149,7 +149,7 @@ namespace transport
 								            if(this->dimensionless)
 									            {
 								                assert(line_data.size() == k_values.size());
-								                for(unsigned int j = 0; j < line_data.size() && j <= k_values.size(); j++)
+								                for(unsigned int j = 0; j < line_data.size() && j <= k_values.size(); ++j)
 									                {
 								                    line_data[j] *= k_values[j].k_comoving*k_values[j].k_comoving*k_values[j].k_comoving / (2.0*M_PI*M_PI);
 									                }
@@ -355,13 +355,13 @@ namespace transport
 
             // pull the background field configuration for each time sample point
             std::vector< std::vector<number> > background(this->time_sample_sns.size());
-            for(unsigned int i = 0; i < 2*N_fields; i++)
+            for(unsigned int i = 0; i < 2*N_fields; ++i)
 	            {
                 background_time_data_tag<number> tag = pipe.new_background_time_data_tag(i);
                 const std::vector<number> bg_line = t_handle.lookup_tag(tag);
                 assert(bg_line.size() == this->time_sample_sns.size());
 
-                for(unsigned int j = 0; j < this->time_sample_sns.size(); j++)
+                for(unsigned int j = 0; j < this->time_sample_sns.size(); ++j)
 	                {
                     background[j].push_back(bg_line[j]);
 	                }
@@ -372,13 +372,13 @@ namespace transport
             std::vector< threepf_kconfig > configs = kc_handle.lookup_tag(k_tag);
 
             // loop through all components of the twopf, for each t-configuration we use, pulling data from the database
-            for(unsigned int i = 0; i < this->time_sample_sns.size(); i++)
+            for(unsigned int i = 0; i < this->time_sample_sns.size(); ++i)
 	            {
-                for(unsigned int l = 0; l < 2*N_fields; l++)
+                for(unsigned int l = 0; l < 2*N_fields; ++l)
 	                {
-                    for(unsigned int m = 0; m < 2*N_fields; m++)
+                    for(unsigned int m = 0; m < 2*N_fields; ++m)
 	                    {
-		                    for(unsigned int n = 0; n < 2*N_fields; n++)
+		                    for(unsigned int n = 0; n < 2*N_fields; ++n)
 			                    {
 		                        std::array<unsigned int, 3> index_set = { l, m, n };
 		                        if(this->active_indices.is_on(index_set))
@@ -389,7 +389,7 @@ namespace transport
 
 				                        // the integrator produces correlation functions involving the canonical momenta,
 				                        // not the derivatives. If the user wants derivatives then we have to shift.
-				                        if(this->get_dot_meaning() == derived_line<number>::derivatives)
+				                        if(this->get_dot_meaning() == derivatives)
 					                        this->shifter.shift(this->gadget.get_integration_task(), this->gadget.get_model(), pipe, background[i], configs, line_data, l, m, n, this->time_sample_sns[i], t_values[i]);
 
 		                            data_line<number> line = data_line<number>(group, this->x_type, correlation_function_value, w_axis, line_data,

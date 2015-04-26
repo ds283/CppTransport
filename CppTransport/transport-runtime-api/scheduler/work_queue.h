@@ -223,7 +223,7 @@ namespace transport
         // set up queue for the number of devices in our context
         this->device_list.clear();
 
-        for(unsigned int i = 0; i < this->ctx.size(); i++)
+        for(unsigned int i = 0; i < this->ctx.size(); ++i)
           {
             this->device_list.push_back(device_queue(this->ctx[i], this->state_size));
           }
@@ -234,7 +234,7 @@ namespace transport
     void work_queue<ItemType>::enqueue_work_item(const ItemType& item)
       {
         bool inserted = false;
-        for(typename std::vector<device_queue>::iterator t = this->device_list.begin(); t != this->device_list.end(); t++)
+        for(typename std::vector<device_queue>::iterator t = this->device_list.begin(); t != this->device_list.end(); ++t)
           {
             // compute difference between current weight and desired weight
             // is positive if queue is too short, negative if queue is too long
@@ -265,7 +265,7 @@ namespace transport
             << std::endl << std::endl;
 
         unsigned int d = 0;
-        for(typename std::vector<typename work_queue<ItemType>::device_queue>::const_iterator t = obj.device_list.begin(); t != obj.device_list.end(); t++, d++)
+        for(typename std::vector<typename work_queue<ItemType>::device_queue>::const_iterator t = obj.device_list.begin(); t != obj.device_list.end(); ++t, ++d)
           {
             out << d << ". " << (*t).get_device().get_name() << " (" << __CPP_TRANSPORT_WORK_QUEUE_WEIGHT << " = " << (*t).get_weight() << "), ";
             if((*t).get_device().get_mem_type() == context::device::bounded)
@@ -283,12 +283,12 @@ namespace transport
                 << ((*t).size() > 1 ? __CPP_TRANSPORT_WORK_QUEUE_QUEUES : __CPP_TRANSPORT_WORK_QUEUE_QUEUE)
                 << std::endl << std::endl;
 
-            for(unsigned int i = 0; i < (*t).size(); i++)
+            for(unsigned int i = 0; i < (*t).size(); ++i)
               {
                 const typename work_queue<ItemType>::device_work_list& work = (*t)[i];
 
                 out << "   ** " << __CPP_TRANSPORT_WORK_QUEUE_QUEUE_NAME << " " << i << std::endl;
-                for(unsigned int j = 0; j < work.size(); j++)
+                for(unsigned int j = 0; j < work.size(); ++j)
                   {
                     out << "     " << work[j];
                   }

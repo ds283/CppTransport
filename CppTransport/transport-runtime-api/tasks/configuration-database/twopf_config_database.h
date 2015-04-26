@@ -139,26 +139,26 @@ namespace transport
 
       public:
 
-        record_iterator       record_begin()       { return record_iterator(this->database.begin()); }
-        record_iterator       record_end()         { return record_iterator(this->database.end()); }
-        const_record_iterator record_begin() const { return const_record_iterator(this->database.begin()); }
-        const_record_iterator record_end()   const { return const_record_iterator(this->database.end()); }
+        record_iterator       record_begin()        { return record_iterator(this->database.begin()); }
+        record_iterator       record_end()          { return record_iterator(this->database.end()); }
+        const_record_iterator record_begin()  const { return const_record_iterator(this->database.begin()); }
+        const_record_iterator record_end()    const { return const_record_iterator(this->database.end()); }
 
-        const_record_iterator crecord_begin()      { return const_record_iterator(this->database.cbegin()); }
-        const_record_iterator crecord_end()        { return const_record_iterator(this->database.cend()); }
+        const_record_iterator crecord_begin() const { return const_record_iterator(this->database.cbegin()); }
+        const_record_iterator crecord_end()   const { return const_record_iterator(this->database.cend()); }
 
 
         // CONFIG ITERATORS
 
       public:
 
-        config_iterator       config_begin()       { return config_iterator(this->database.begin()); }
-        config_iterator       config_end()         { return config_iterator(this->database.end()); }
-        const_config_iterator config_begin() const { return const_config_iterator(this->database.begin()); }
-        const_config_iterator config_end()   const { return const_config_iterator(this->database.end()); }
+        config_iterator       config_begin()        { return config_iterator(this->database.begin()); }
+        config_iterator       config_end()          { return config_iterator(this->database.end()); }
+        const_config_iterator config_begin()  const { return const_config_iterator(this->database.begin()); }
+        const_config_iterator config_end()    const { return const_config_iterator(this->database.end()); }
 
-        const_config_iterator cconfig_begin()      { return const_config_iterator(this->database.cbegin()); }
-        const_config_iterator cconfig_end()        { return const_config_iterator(this->database.cend()); }
+        const_config_iterator cconfig_begin() const { return const_config_iterator(this->database.cbegin()); }
+        const_config_iterator cconfig_end()   const { return const_config_iterator(this->database.cend()); }
 
 
         // INTERFACE -- GLOBAL OPERATIONS
@@ -179,8 +179,11 @@ namespace transport
         //! add record to the database
         unsigned int add_record(double k_conventional);
 
-        //! lookup record with a given serial number
-        const twopf_kconfig_record& lookup(unsigned int serial) const;
+        //! lookup record with a given serial number -- non const version
+        record_iterator lookup(unsigned int serial);
+
+        //! lookup record with a given serial number -- const version
+        const_record_iterator lookup(unsigned int serial) const;
 
         //! check for existence of a record with a given conventionally-normalized k
         bool find(double k_conventional, unsigned int& serial) const;
@@ -192,9 +195,11 @@ namespace transport
 
         //! get largest conventionally-normalized k-number committed to the database
         double get_kmax_conventional() const { return(this->kmax_conventional); }
+		    double get_kmax_comoving()     const { return(this->kmax_comoving); }
 
         //! get smallest conventionally-normalized k-number committed to the database
         double get_kmin_conventional() const { return(this->kmin_conventional); }
+		    double get_kmin_comoving()     const { return(this->kmax_comoving); }
 
 
         // SERIALIZATION -- implements a 'serializable' interface
@@ -218,6 +223,9 @@ namespace transport
         //! serial number for next inserted item
         unsigned int serial;
 
+        //! keep track of whether the background has been stored
+        bool store_background;
+
 
         // COMOVING NORMALIZATION
 
@@ -229,13 +237,11 @@ namespace transport
 
         //! cache maximum stored wavenumber
         double kmax_conventional;
+		    double kmax_comoving;
 
         //! cache minimum stored wavenumber
         double kmin_conventional;
-
-
-        //! keep track of whether the background has been stored
-        bool store_background;
+				double kmin_comoving;
 
       };
 
@@ -245,6 +251,8 @@ namespace transport
         serial(0),
         kmax_conventional(-std::numeric_limits<double>::max()),
         kmin_conventional(std::numeric_limits<double>::max()),
+        kmax_comoving(-std::numeric_limits<double>::max()),
+        kmin_comoving(std::numeric_limits<double>::max()),
         store_background(true)
       {
       }
@@ -254,6 +262,8 @@ namespace transport
       : serial(0),
         kmax_conventional(-std::numeric_limits<double>::max()),
         kmin_conventional(std::numeric_limits<double>::max()),
+        kmax_comoving(-std::numeric_limits<double>::max()),
+        kmin_comoving(std::numeric_limits<double>::max()),
         store_background(false)
       {
         // deserialize comoving normalization constant
@@ -264,16 +274,20 @@ namespace transport
         assert(db_array.isArray());
 
         database.clear();
-        for(Json::Value::iterator t = db_array.begin(); t != db_array.end(); t++)
+        for(Json::Value::iterator t = db_array.begin(); t != db_array.end(); ++t)
           {
             twopf_kconfig config;
 
-            config.serial = serial++;
+            config.serial         = serial++;
             config.k_conventional = (*t)[__CPP_TRANSPORT_NODE_TWOPF_DATABASE_K].asDouble();
-            config.k_comoving = config.k_conventional * this->comoving_normalization;
+            config.k_comoving     = config.k_conventional * this->comoving_normalization;
+
+		        config.t_exit = 0.0;  // will be updated later
 
             if(config.k_conventional > this->kmax_conventional) this->kmax_conventional = config.k_conventional;
             if(config.k_conventional < this->kmin_conventional) this->kmin_conventional = config.k_conventional;
+		        if(config.k_comoving > this->kmax_comoving)         this->kmax_comoving     = config.k_comoving;
+		        if(config.k_comoving < this->kmin_comoving)         this->kmin_comoving     = config.k_comoving;
 
             this->database.emplace(config.serial, twopf_kconfig_record(config, (*t)[__CPP_TRANSPORT_NODE_TWOPF_DATABASE_STORE].asBool()));
           }
@@ -297,9 +311,12 @@ namespace transport
         config.serial         = this->serial++;
         config.k_conventional = k_conventional;
         config.k_comoving     = k_conventional * this->comoving_normalization;
+		    config.t_exit         = 0.0;    // will be updated later
 
-        if(k_conventional > this->kmax_conventional) this->kmax_conventional = k_conventional;
-        if(k_conventional < this->kmin_conventional) this->kmin_conventional = k_conventional;
+        if(config.k_conventional > this->kmax_conventional) this->kmax_conventional = config.k_conventional;
+        if(config.k_conventional < this->kmin_conventional) this->kmin_conventional = config.k_conventional;
+        if(config.k_comoving > this->kmax_comoving)         this->kmax_comoving     = config.k_comoving;
+        if(config.k_comoving < this->kmin_comoving)         this->kmin_comoving     = config.k_comoving;
 
         this->database.emplace(config.serial, twopf_kconfig_record(config, this->store_background));
         this->store_background = false;
@@ -308,31 +325,60 @@ namespace transport
       }
 
 
-    const twopf_kconfig_record& twopf_kconfig_database::lookup(unsigned int serial) const
+    class FindBySerial
+	    {
+      public:
+        FindBySerial(unsigned int s)
+	        : serial(s)
+	        {
+	        }
+
+        bool operator()(const std::pair<unsigned int, twopf_kconfig_record>& a)
+	        {
+            return(this->serial == a.second->serial);
+	        }
+
+      private:
+        unsigned int serial;
+	    };
+
+
+    twopf_kconfig_database::record_iterator twopf_kconfig_database::lookup(unsigned int serial)
       {
-        return this->database.at(serial);   // throws an exception if serial out of range
+        database_type::iterator t = std::find_if(this->database.begin(), this->database.end(), FindBySerial(serial));
+
+		    return twopf_kconfig_database::record_iterator(t);
       }
+
+
+    twopf_kconfig_database::const_record_iterator twopf_kconfig_database::lookup(unsigned int serial) const
+	    {
+        database_type::const_iterator t = std::find_if(this->database.begin(), this->database.end(), FindBySerial(serial));
+
+        return twopf_kconfig_database::const_record_iterator(t);
+	    }
+
+
+    class FindByKConventional
+	    {
+      public:
+        FindByKConventional(double k)
+	        : k_conventional(k)
+	        {
+	        }
+
+        bool operator()(const std::pair<unsigned int, twopf_kconfig_record>& a)
+	        {
+            return(fabs(this->k_conventional - a.second->k_conventional) < __CPP_TRANSPORT_DEFAULT_KCONFIG_SEARCH_PRECISION);
+	        }
+
+      private:
+        double k_conventional;
+	    };
 
 
     bool twopf_kconfig_database::find(double k_conventional, unsigned int& serial) const
       {
-        class FindByKConventional
-          {
-          public:
-            FindByKConventional(double k)
-              : k_conventional(k)
-              {
-              }
-
-            bool operator()(const std::pair<unsigned int, twopf_kconfig_record>& a)
-              {
-                return(fabs(this->k_conventional - a.second->k_conventional) < __CPP_TRANSPORT_DEFAULT_KCONFIG_SEARCH_PRECISION);
-              }
-
-          private:
-            double k_conventional;
-          };
-
         database_type::const_iterator t = std::find_if(this->database.begin(), this->database.end(), FindByKConventional(k_conventional));
 
         if(t != this->database.end())
@@ -354,7 +400,7 @@ namespace transport
         Json::Value db_array(Json::arrayValue);
 
         unsigned int count = 0;
-        for(database_type::const_iterator t = this->database.begin(); t != this->database.end(); t++, count++)
+        for(database_type::const_iterator t = this->database.begin(); t != this->database.end(); ++t, ++count)
           {
             assert(count == t->first);
             if(count != t->first) throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_TWOPF_DATABASE_OUT_OF_ORDER);

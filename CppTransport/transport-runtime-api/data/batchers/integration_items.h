@@ -104,9 +104,24 @@ namespace transport
             //! time spent batching, in nanoseconds
             boost::timer::nanosecond_type batching;
 
-            //! number of mesh refinements needed for this configuration
+            //! number of stepsize refinements needed for this configuration
             unsigned int                  refinements;
+
+            //! number of steps taken by the stepper
+            size_t                        steps;
 	        };
+
+		    //! Stores information about the initial conditions for each k-configuration
+		    class ics_item
+			    {
+		      public:
+
+				    //! kconfig serial number
+				    unsigned int        serial;
+
+		        //! values
+		        std::vector<number> coords;
+			    };
 
 	    };
 

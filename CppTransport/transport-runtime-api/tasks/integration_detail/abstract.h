@@ -17,6 +17,7 @@
 #define __CPP_TRANSPORT_NODE_FAST_FORWARD                  "fast-forward"
 #define __CPP_TRANSPORT_NODE_FAST_FORWARD_EFOLDS           "ff-efolds"
 #define __CPP_TRANSPORT_NODE_MESH_REFINEMENTS              "mesh-refinements"
+#define __CPP_TRANSPORT_NODE_END_OF_INFLATION              "end-of-inflation"
 
 #define __CPP_TRANSPORT_NODE_TIME_RANGE                    "integration-range"
 
@@ -106,6 +107,12 @@ namespace transport
 		    //! Get std::vector of initial conditions at time Ninit
 		    std::vector<number> get_ics_vector(void) const;
 
+		    //! Get time of end of inflation -- non-const version which caches its result
+		    double get_N_end_of_inflation();
+
+        //! Get time of end of inflation -- const version; cannot cache result
+        double get_N_end_of_inflation() const;
+
 
         // TIME CONFIGURATION DATABASE
 
@@ -146,6 +153,12 @@ namespace transport
 		    //! k-range changes
         range<double>*                   times;
 
+		    //! time of end-of-inflation
+		    double                           end_of_inflation;
+
+		    //! flag to indicate whether end-of-inflation time has been cached
+		    bool                             cached_end_of_inflation;
+
 
         // STORED TIME CONFIGURATION DATABASE
 
@@ -158,7 +171,9 @@ namespace transport
     integration_task<number>::integration_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t)
 	    : derivable_task<number>(nm),
 	      ics(i),
-	      times(t.clone())
+	      times(t.clone()),
+        end_of_inflation(0.0),
+        cached_end_of_inflation(false)
 	    {
         // validate relation between Nstar and the sampling time
         assert(times->get_steps() > 0);
@@ -187,8 +202,10 @@ namespace transport
     integration_task<number>::integration_task(const std::string& nm, Json::Value& reader, const initial_conditions<number>& i)
 	    : derivable_task<number>(nm, reader),
 	      ics(i),
-	      times(range_helper::deserialize<double>(reader[__CPP_TRANSPORT_NODE_TIME_RANGE]))
+	      times(range_helper::deserialize<double>(reader[__CPP_TRANSPORT_NODE_TIME_RANGE])),
+        cached_end_of_inflation(true)
 	    {
+		    end_of_inflation = reader[__CPP_TRANSPORT_NODE_END_OF_INFLATION].asDouble();
 	    }
 
 
@@ -197,7 +214,9 @@ namespace transport
 	    : derivable_task<number>(obj),
 	      ics(obj.ics),
 	      times(obj.times->clone()),
-        stored_time_db(obj.stored_time_db)
+        stored_time_db(obj.stored_time_db),
+        end_of_inflation(obj.end_of_inflation),
+        cached_end_of_inflation(obj.cached_end_of_inflation)
 	    {
 	    }
 
@@ -217,6 +236,16 @@ namespace transport
         // store name of package
         writer[__CPP_TRANSPORT_NODE_PACKAGE_NAME] = this->ics.get_name();
 
+		    if(this->cached_end_of_inflation)
+			    {
+		        writer[__CPP_TRANSPORT_NODE_END_OF_INFLATION] = this->end_of_inflation;
+			    }
+		    else
+			    {
+				    // can't use get_N_end_of_inflation() because it is not const
+				    writer[__CPP_TRANSPORT_NODE_END_OF_INFLATION] = this->ics.get_model()->compute_end_of_inflation(this);
+			    }
+
         Json::Value time_data(Json::objectValue);
         this->times->serialize(time_data);
         writer[__CPP_TRANSPORT_NODE_TIME_RANGE] = time_data;
@@ -226,6 +255,28 @@ namespace transport
 
         // call next serializers in the queue
         this->derivable_task<number>::serialize(writer);
+	    }
+
+
+    template <typename number>
+    double integration_task<number>::get_N_end_of_inflation()
+	    {
+        if(this->cached_end_of_inflation) return(this->end_of_inflation);
+
+		    this->end_of_inflation = this->ics.get_model()->compute_end_of_inflation(this);
+		    this->cached_end_of_inflation = true;
+
+		    return(this->end_of_inflation);
+	    }
+
+
+    template <typename number>
+    double integration_task<number>::get_N_end_of_inflation() const
+	    {
+        if(this->cached_end_of_inflation) return(this->end_of_inflation);
+
+        double end_of_inflation = this->ics.get_model()->compute_end_of_inflation(this);
+        return(end_of_inflation);
 	    }
 
 
@@ -242,7 +293,7 @@ namespace transport
 
         unsigned int serial = 0;
         bool first = true;
-		    for(std::vector<double>::const_iterator t = raw_times.begin(); t != raw_times.end(); t++, serial++)
+		    for(std::vector<double>::const_iterator t = raw_times.begin(); t != raw_times.end(); ++t, ++serial)
 			    {
             if(*t > this->get_N_initial())
               {

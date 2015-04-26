@@ -129,11 +129,19 @@ namespace transport
                         double tolerance = __CPP_TRANSPORT_DEFAULT_ICS_GAP_TOLERANCE,
                         unsigned int time_steps = __CPP_TRANSPORT_DEFAULT_ICS_TIME_STEPS);
 
+
+		    // WAVENUMBER NORMALIZATION
+
+      public:
+
         //! Get value of H at horizon crossing, which can be used to normalize the comoving waveumbers
-        double compute_kstar(const twopf_list_task<number>* tk, unsigned int time_steps= __CPP_TRANSPORT_DEFAULT_ICS_TIME_STEPS);
+        double compute_kstar(const twopf_list_task<number>* tk, unsigned int time_steps=__CPP_TRANSPORT_DEFAULT_ICS_TIME_STEPS);
 
         //! Compute when the end of inflation occurs relative to the initial conditions
-        double compute_end_of_inflation(const integration_task<number>* tk, double search_time=__CPP_TRANSPORT_DEFAULT_END_OF_INFLATION_SEARCH);
+        virtual double compute_end_of_inflation(const integration_task<number>* tk, double search_time=__CPP_TRANSPORT_DEFAULT_END_OF_INFLATION_SEARCH) = 0;
+
+		    //! Compute aH as a function of N up to the horizon-exit time of some wavenumber
+		    virtual void compute_aH(const twopf_list_task<number>* tk, std::vector<double>& N, std::vector<number>& aH, double largest_k) = 0;
 
 
         // INTERFACE - PARAMETER HANDLING
@@ -195,9 +203,6 @@ namespace transport
         // suitable storage is passed in soln
         virtual void backend_process_backg(const background_task<number>* tk, std::vector< std::vector<number> >& solution, bool silent=false) = 0;
 
-        // process a background computation, triggering when epsilon=1
-        virtual double backend_compute_epsilon_unity(const integration_task<number>* tk, double search_time) = 0;
-
         // process a work list of twopf items
         // must be over-ridden by a derived implementation class
         virtual void backend_process_queue(work_queue<twopf_kconfig_record>& work, const twopf_list_task<number>* tk,
@@ -237,6 +242,7 @@ namespace transport
 
         //! copy of translator version used to produce this model, used for registration
         const unsigned int tver;
+
       };
 
 
@@ -273,7 +279,7 @@ namespace transport
 
         // we are guaranteed that the input ics 'input' are validated
 
-        if(fabs(Ncross-Npre) < tolerance)
+        if(fabs(Ncross-Npre-Ninit) < tolerance)
           {
             output = input;
           }
@@ -350,22 +356,14 @@ namespace transport
             // This wavenumber should have comoving value k=aH
             // To avoid numbers becoming too large or small, and also because the integrator has
             // noticeably better performance for correlation-function amplitudes in a
-            // certain range, we normalize a=exp(__CPP_TRANSPORT_DEFAULT_ASTAR_NORMALIZATION) for this mode.
-            return this->H(tk->get_params(), history.back()) * exp(__CPP_TRANSPORT_DEFAULT_ASTAR_NORMALIZATION);
+            // certain range, use a fixed normalization which can be adjusted in twopf_list_task
+            return( this->H(tk->get_params(), history.back()) * exp(tk->get_astar_normalization()) );
           }
         else
           {
             assert(false);
             throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_INTEGRATION_FAIL);
           }
-      }
-
-
-    template <typename number>
-    double model<number>::compute_end_of_inflation(const integration_task<number>* tk, double search_time)
-      {
-        // integrate to find where the end of inflation occurs
-        return(this->backend_compute_epsilon_unity(tk, search_time));
       }
 
 

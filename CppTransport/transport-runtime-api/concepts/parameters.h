@@ -132,7 +132,7 @@ namespace transport
 		    assert(param_array.isArray());
 
         std::vector< named_list::element<number> > temp;
-		    for(Json::Value::iterator t = param_array.begin(); t != param_array.end(); t++)
+		    for(Json::Value::iterator t = param_array.begin(); t != param_array.end(); ++t)
           {
             std::string param_name = (*t)[__CPP_TRANSPORT_NODE_PARAMS_NAME].asString();
             double param_value = (*t)[__CPP_TRANSPORT_NODE_PARAMS_VALUE].asDouble();
@@ -148,7 +148,7 @@ namespace transport
         std::sort(temp.begin(), temp.end(), cmp);
 
         std::vector<number> p;
-        for(unsigned int i = 0; i < temp.size(); i++)
+        for(unsigned int i = 0; i < temp.size(); ++i)
           {
             p.push_back((temp[i]).get_value());
           }
@@ -175,7 +175,7 @@ namespace transport
           {
             Json::Value param_array(Json::arrayValue);
 
-            for(unsigned int i = 0; i < this->params.size(); i++)
+            for(unsigned int i = 0; i < this->params.size(); ++i)
               {
                 Json::Value param_element(Json::objectValue);
 		            param_element[__CPP_TRANSPORT_NODE_PARAMS_NAME] = names[i];
@@ -197,7 +197,7 @@ namespace transport
 		    const std::vector<std::string>& names = obj.mdl->get_param_names();
         assert(obj.params.size() == names.size());
 
-        for(unsigned int i = 0; i < obj.params.size(); i++)
+        for(unsigned int i = 0; i < obj.params.size(); ++i)
           {
             out << "  " << names[i] << " = " << obj.params[i] << std::endl;
           }

@@ -133,11 +133,11 @@ namespace transport
 		        const typename std::vector< twopf_kconfig > k_values = k_handle.lookup_tag(k_tag);
 
 		        // for each k-configuration, loop through all components of the tensor twopf and pull data from the database
-		        for(unsigned int i = 0; i < this->kconfig_sample_sns.size(); i++)
+		        for(unsigned int i = 0; i < this->kconfig_sample_sns.size(); ++i)
 			        {
-				        for(unsigned int m = 0; m < 2; m++)
+				        for(unsigned int m = 0; m < 2; ++m)
 					        {
-						        for(unsigned int n = 0; n < 2; n++)
+						        for(unsigned int n = 0; n < 2; ++n)
 							        {
 						            std::array<unsigned int, 2> index_set = { m, n };
 								        if(this->active_indices.is_on(index_set))

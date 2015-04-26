@@ -115,7 +115,7 @@ namespace transport
 					{
 				    out << std::endl;
 
-						for(unsigned int i = 0; i < this->left_margin; i++)
+						for(unsigned int i = 0; i < this->left_margin; ++i)
 							{
 								out << " ";
 							}

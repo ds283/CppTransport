@@ -162,7 +162,7 @@ namespace transport
 				    label << std::setprecision(this->precision);
 
 				    label << __CPP_TRANSPORT_NONLATEX_K_SYMBOL << "=";
-				    if(this->get_klabel_meaning() == derived_line<number>::conventional) label << config.k_conventional;
+				    if(this->get_klabel_meaning() == conventional) label << config.k_conventional;
 				    else label << config.k_comoving;
 
 				    return(label.str());
@@ -175,7 +175,7 @@ namespace transport
 				    std::ostringstream label;
 
 				    label << __CPP_TRANSPORT_LATEX_K_SYMBOL << "=";
-				    if(this->get_klabel_meaning() == derived_line<number>::conventional) label << output_latex_number(config.k_conventional, this->precision);
+				    if(this->get_klabel_meaning() == conventional) label << output_latex_number(config.k_conventional, this->precision);
 				    else label << output_latex_number(config.k_comoving, this->precision);
 
             return(label.str());
@@ -192,7 +192,7 @@ namespace transport
 		        if(use_kt)
 			        {
 		            label << (count > 0 ? ",\\, " : "") << __CPP_TRANSPORT_LATEX_KT_SYMBOL << "=";
-		            if(this->get_klabel_meaning() == derived_line<number>::conventional) label << output_latex_number(config.kt_conventional, this->precision);
+		            if(this->get_klabel_meaning() == conventional) label << output_latex_number(config.kt_conventional, this->precision);
 		            else label << output_latex_number(config.kt_comoving, this->precision);
 		            count++;
 			        }
@@ -221,7 +221,7 @@ namespace transport
 				    if(use_kt)
 					    {
 				        label << (count > 0 ? ", " : "") << __CPP_TRANSPORT_NONLATEX_KT_SYMBOL << "=";
-				        if(this->get_klabel_meaning() == derived_line<number>::conventional) label << config.kt_conventional;
+				        if(this->get_klabel_meaning() == conventional) label << config.kt_conventional;
 				        else label << config.kt_comoving;
 				        count++;
 					    }

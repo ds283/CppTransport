@@ -62,15 +62,18 @@ namespace transport
 	    : twopf_list_task<number>(nm, i, t, ff)
 	    {
         // the mapping from the provided list of ks to the work list is just one-to-one
-        for(unsigned int j = 0; j < ks.size(); j++)
+        for(unsigned int j = 0; j < ks.size(); ++j)
 	        {
             this->twopf_list_task<number>::twopf_db.add_record(ks[j]);
 	        }
 
         std::cout << "'" << this->get_name() << "': " << __CPP_TRANSPORT_TASK_TWOPF_ELEMENTS_A << " " << this->twopf_db.size() << " "
           <<__CPP_TRANSPORT_TASK_TWOPF_ELEMENTS_B << std::endl;
-        this->write_time_details();
 
+        this->compute_horizon_exit_times();
+
+		    // write_time_details() should come *after* compute_horizon_exit_times();
+        this->write_time_details();
         this->cache_stored_time_config_database();
 	    }
 
@@ -80,6 +83,9 @@ namespace transport
     twopf_task<number>::twopf_task(const std::string& nm, Json::Value& reader, const initial_conditions<number>& i)
 	    : twopf_list_task<number>(nm, reader, i)
 	    {
+        // reconstruct horizon-exit times; these aren't stored in the repository record to save space
+        this->compute_horizon_exit_times();
+
         this->cache_stored_time_config_database();
 	    }
 

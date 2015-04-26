@@ -99,7 +99,7 @@ namespace transport
         void stop_batching();
 
         //! Stop the running timers - should only be called at the end of an integration
-        virtual void stop_timers(unsigned int refinement);
+        virtual void stop_timers(size_t steps, unsigned int refinement);
 
         //! Get the total elapsed integration time
         boost::timer::nanosecond_type get_integration_time() const { return(this->integration_timer.elapsed().wall); }
@@ -184,7 +184,7 @@ namespace transport
 
 
     template <typename number>
-    void timing_observer<number>::stop_timers(unsigned int refinement)
+    void timing_observer<number>::stop_timers(size_t steps, unsigned int refinement)
       {
         this->batching_timer.stop();
         this->integration_timer.stop();
@@ -224,7 +224,7 @@ namespace transport
       public:
 
         //! Stop timers and report timing details to the batcher
-        virtual void stop_timers(unsigned int refinement) override;
+        virtual void stop_timers(size_t steps, unsigned int refinement) override;
 
 
         // INTERNAL DATA
@@ -266,13 +266,13 @@ namespace transport
         if(this->store_time_step())
           {
             std::vector<number> bg_x(this->backg_size);
-            for(unsigned int i = 0; i < this->backg_size; i++) bg_x[i] = x[this->backg_start + i];
+            for(unsigned int i = 0; i < this->backg_size; ++i) bg_x[i] = x[this->backg_start + i];
 
             std::vector<number> tensor_tpf_x(this->tensor_size);
-            for(unsigned int i = 0; i < this->tensor_size; i++) tensor_tpf_x[i] = x[this->tensor_start + i];
+            for(unsigned int i = 0; i < this->tensor_size; ++i) tensor_tpf_x[i] = x[this->tensor_start + i];
 
             std::vector<number> tpf_x(this->twopf_size);
-            for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x[i] = x[this->twopf_start + i];
+            for(unsigned int i = 0; i < this->twopf_size; ++i) tpf_x[i] = x[this->twopf_start + i];
 
             if(this->k_config.is_background_stored())
               {
@@ -287,10 +287,10 @@ namespace transport
 
 
     template <typename number>
-    void twopf_singleconfig_batch_observer<number>::stop_timers(unsigned int refinement)
+    void twopf_singleconfig_batch_observer<number>::stop_timers(size_t steps, unsigned int refinement)
       {
-        this->timing_observer<number>::stop_timers(refinement);
-        this->batcher.report_integration_success(this->get_integration_time(), this->get_batching_time(), this->k_config->serial, refinement);
+        this->timing_observer<number>::stop_timers(steps, refinement);
+        this->batcher.report_integration_success(this->get_integration_time(), this->get_batching_time(), this->k_config->serial, steps, refinement);
       }
 
 
@@ -332,7 +332,7 @@ namespace transport
       public:
 
         //! Stop timers and report timing details to the batcher
-        virtual void stop_timers(unsigned int refinement) override;
+        virtual void stop_timers(size_t steps, unsigned int refinement) override;
 
 
         // INTERNAL DATA
@@ -394,34 +394,34 @@ namespace transport
         if(this->store_time_step())
           {
             std::vector<number> bg_x(this->backg_size);
-            for(unsigned int i = 0; i < this->backg_size; i++) bg_x[i] = x[this->backg_start + i];
+            for(unsigned int i = 0; i < this->backg_size; ++i) bg_x[i] = x[this->backg_start + i];
 
             std::vector<number> tensor_tpf_x1(this->tensor_size);
-            for(unsigned int i = 0; i < this->tensor_size; i++) tensor_tpf_x1[i] = x[this->tensor_k1_start + i];
+            for(unsigned int i = 0; i < this->tensor_size; ++i) tensor_tpf_x1[i] = x[this->tensor_k1_start + i];
 
             std::vector<number> tpf_x1_re(this->twopf_size);
-            for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x1_re[i] = x[this->twopf_re_k1_start + i];
+            for(unsigned int i = 0; i < this->twopf_size; ++i) tpf_x1_re[i] = x[this->twopf_re_k1_start + i];
             std::vector<number> tpf_x1_im(this->twopf_size);
-            for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x1_im[i] = x[this->twopf_im_k1_start + i];
+            for(unsigned int i = 0; i < this->twopf_size; ++i) tpf_x1_im[i] = x[this->twopf_im_k1_start + i];
 
             std::vector<number> tensor_tpf_x2(this->tensor_size);
-            for(unsigned int i = 0; i < this->tensor_size; i++) tensor_tpf_x2[i] = x[this->tensor_k2_start + i];
+            for(unsigned int i = 0; i < this->tensor_size; ++i) tensor_tpf_x2[i] = x[this->tensor_k2_start + i];
 
             std::vector<number> tpf_x2_re(this->twopf_size);
-            for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x2_re[i] = x[this->twopf_re_k2_start + i];
+            for(unsigned int i = 0; i < this->twopf_size; ++i) tpf_x2_re[i] = x[this->twopf_re_k2_start + i];
             std::vector<number> tpf_x2_im(this->twopf_size);
-            for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x2_im[i] = x[this->twopf_im_k2_start + i];
+            for(unsigned int i = 0; i < this->twopf_size; ++i) tpf_x2_im[i] = x[this->twopf_im_k2_start + i];
 
             std::vector<number> tensor_tpf_x3(this->tensor_size);
-            for(unsigned int i = 0; i < this->tensor_size; i++) tensor_tpf_x3[i] = x[this->tensor_k3_start + i];
+            for(unsigned int i = 0; i < this->tensor_size; ++i) tensor_tpf_x3[i] = x[this->tensor_k3_start + i];
 
             std::vector<number> tpf_x3_re(this->twopf_size);
-            for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x3_re[i] = x[this->twopf_re_k3_start + i];
+            for(unsigned int i = 0; i < this->twopf_size; ++i) tpf_x3_re[i] = x[this->twopf_re_k3_start + i];
             std::vector<number> tpf_x3_im(this->twopf_size);
-            for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x3_im[i] = x[this->twopf_im_k3_start + i];
+            for(unsigned int i = 0; i < this->twopf_size; ++i) tpf_x3_im[i] = x[this->twopf_im_k3_start + i];
 
             std::vector<number> thpf_x(this->threepf_size);
-            for(unsigned int i = 0; i < this->threepf_size; i++) thpf_x[i] = x[this->threepf_start + i];
+            for(unsigned int i = 0; i < this->threepf_size; ++i) thpf_x[i] = x[this->threepf_start + i];
 
             if(this->k_config.is_background_stored())
               {
@@ -457,10 +457,10 @@ namespace transport
 
 
     template <typename number>
-    void threepf_singleconfig_batch_observer<number>::stop_timers(unsigned int refinement)
+    void threepf_singleconfig_batch_observer<number>::stop_timers(size_t steps, unsigned int refinement)
       {
-        this->timing_observer<number>::stop_timers(refinement);
-        this->batcher.report_integration_success(this->get_integration_time(), this->get_batching_time(), this->k_config->serial, refinement);
+        this->timing_observer<number>::stop_timers(steps, refinement);
+        this->batcher.report_integration_success(this->get_integration_time(), this->get_batching_time(), this->k_config->serial, steps, refinement);
       }
 
 
@@ -501,7 +501,7 @@ namespace transport
       public:
 
         //! Stop timers and report timing details to the batcher
-        virtual void stop_timers(unsigned int refinement) override;
+        virtual void stop_timers(size_t steps, unsigned int refinement) override;
 
 
         // INTERNAL DATA
@@ -546,16 +546,16 @@ namespace transport
             unsigned int n = work_list.size();
 
             // loop through all k-configurations
-            for(unsigned int c = 0; c < n; c++)
+            for(unsigned int c = 0; c < n; ++c)
               {
                 std::vector<number> bg_x(this->backg_size);
-                for(unsigned int i = 0; i < this->backg_size; i++) bg_x[i] = x[(this->backg_start + i)*n + c];
+                for(unsigned int i = 0; i < this->backg_size; ++i) bg_x[i] = x[(this->backg_start + i)*n + c];
 
                 std::vector<number> tensor_tpf_x(this->tensor_size);
-                for(unsigned int i = 0; i < this->tensor_size; i++) tensor_tpf_x[i] = x[(this->tensor_start + i)*n + c];
+                for(unsigned int i = 0; i < this->tensor_size; ++i) tensor_tpf_x[i] = x[(this->tensor_start + i)*n + c];
 
                 std::vector<number> tpf_x(this->twopf_size);
-                for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x[i] = x[(this->twopf_start + i)*n + c];
+                for(unsigned int i = 0; i < this->twopf_size; ++i) tpf_x[i] = x[(this->twopf_start + i)*n + c];
 
                 if(this->work_list[c].is_background_stored())
                   {
@@ -571,10 +571,10 @@ namespace transport
 
 
     template <typename number>
-    void twopf_groupconfig_batch_observer<number>::stop_timers(unsigned int refinement)
+    void twopf_groupconfig_batch_observer<number>::stop_timers(size_t steps, unsigned int refinement)
       {
-        this->timing_observer<number>::stop_timers(refinement);
-        this->batcher.report_integration_success(this->get_integration_time(), this->get_batching_time(), refinement);
+        this->timing_observer<number>::stop_timers(steps, refinement);
+        this->batcher.report_integration_success(this->get_integration_time(), this->get_batching_time(), steps, refinement);
       }
 
 
@@ -620,7 +620,7 @@ namespace transport
       public:
 
         //! Stop timers and report timing details to the batcher
-        virtual void stop_timers(unsigned int refinement) override;
+        virtual void stop_timers(size_t steps, unsigned int refinement) override;
 
 
         // INTERNAL DATA
@@ -684,37 +684,37 @@ namespace transport
             unsigned int n = this->work_list.size();
 
             // loop through all k-configurations
-            for(unsigned int c = 0; c < n; c++)
+            for(unsigned int c = 0; c < n; ++c)
               {
                 std::vector<number> bg_x(this->backg_size);
-                for(unsigned int i = 0; i < this->backg_size; i++) bg_x[i] = x[(this->backg_start + i)*n + c];
+                for(unsigned int i = 0; i < this->backg_size; ++i) bg_x[i] = x[(this->backg_start + i)*n + c];
 
                 std::vector<number> tensor_tpf_x1(this->tensor_size);
-                for(unsigned int i = 0; i < this->tensor_size; i++) tensor_tpf_x1[i] = x[(this->tensor_k1_start + i)*n + c];
+                for(unsigned int i = 0; i < this->tensor_size; ++i) tensor_tpf_x1[i] = x[(this->tensor_k1_start + i)*n + c];
 
                 std::vector<number> tpf_x1_re(this->twopf_size);
-                for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x1_re[i] = x[(this->twopf_re_k1_start + i)*n + c];
+                for(unsigned int i = 0; i < this->twopf_size; ++i) tpf_x1_re[i] = x[(this->twopf_re_k1_start + i)*n + c];
                 std::vector<number> tpf_x1_im(this->twopf_size);
-                for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x1_im[i] = x[(this->twopf_im_k1_start + i)*n + c];
+                for(unsigned int i = 0; i < this->twopf_size; ++i) tpf_x1_im[i] = x[(this->twopf_im_k1_start + i)*n + c];
 
                 std::vector<number> tensor_tpf_x2(this->tensor_size);
-                for(unsigned int i = 0; i < this->tensor_size; i++) tensor_tpf_x2[i] = x[(this->tensor_k2_start + i)*n + c];
+                for(unsigned int i = 0; i < this->tensor_size; ++i) tensor_tpf_x2[i] = x[(this->tensor_k2_start + i)*n + c];
 
                 std::vector<number> tpf_x2_re(this->twopf_size);
-                for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x2_re[i] = x[(this->twopf_re_k2_start + i)*n + c];
+                for(unsigned int i = 0; i < this->twopf_size; ++i) tpf_x2_re[i] = x[(this->twopf_re_k2_start + i)*n + c];
                 std::vector<number> tpf_x2_im(this->twopf_size);
-                for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x2_im[i] = x[(this->twopf_im_k2_start + i)*n + c];
+                for(unsigned int i = 0; i < this->twopf_size; ++i) tpf_x2_im[i] = x[(this->twopf_im_k2_start + i)*n + c];
 
                 std::vector<number> tensor_tpf_x3(this->tensor_size);
-                for(unsigned int i = 0; i < this->tensor_size; i++) tensor_tpf_x3[i] = x[(this->tensor_k3_start + i)*n + c];
+                for(unsigned int i = 0; i < this->tensor_size; ++i) tensor_tpf_x3[i] = x[(this->tensor_k3_start + i)*n + c];
 
                 std::vector<number> tpf_x3_re(this->twopf_size);
-                for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x3_re[i] = x[(this->twopf_re_k3_start + i)*n + c];
+                for(unsigned int i = 0; i < this->twopf_size; ++i) tpf_x3_re[i] = x[(this->twopf_re_k3_start + i)*n + c];
                 std::vector<number> tpf_x3_im(this->twopf_size);
-                for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x3_im[i] = x[(this->twopf_im_k3_start + i)*n + c];
+                for(unsigned int i = 0; i < this->twopf_size; ++i) tpf_x3_im[i] = x[(this->twopf_im_k3_start + i)*n + c];
 
                 std::vector<number> thpf_x(this->threepf_size);
-                for(unsigned int i = 0; i < this->threepf_size; i++) thpf_x[i] = x[(this->threepf_start + i)*n + c];
+                for(unsigned int i = 0; i < this->threepf_size; ++i) thpf_x[i] = x[(this->threepf_start + i)*n + c];
 
                 if(this->work_list[c].is_background_stored())
                   {
@@ -751,10 +751,10 @@ namespace transport
 
 
     template <typename number>
-    void threepf_groupconfig_batch_observer<number>::stop_timers(unsigned int refinement)
+    void threepf_groupconfig_batch_observer<number>::stop_timers(size_t steps, unsigned int refinement)
       {
-        this->timing_observer<number>::stop_timers(refinement);
-        this->batcher.report_integration_success(this->get_integration_time(), this->get_batching_time(), refinement);
+        this->timing_observer<number>::stop_timers(steps, refinement);
+        this->batcher.report_integration_success(this->get_integration_time(), this->get_batching_time(), steps, refinement);
       }
 
 

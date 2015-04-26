@@ -377,7 +377,7 @@ namespace transport
 
 		work_journal::~work_journal()
 			{
-				for(std::list< work_event* >::iterator t = this->journal.begin(); t != this->journal.end(); t++)
+				for(std::list< work_event* >::iterator t = this->journal.begin(); t != this->journal.end(); ++t)
 					{
 						delete *t;
 					}
@@ -405,7 +405,7 @@ namespace transport
 
 				// strip out master events and sort them in order
 		    std::list< master_work_event* > master_events;
-				for(std::list< work_event* >::iterator t = this->journal.begin(); t != this->journal.end(); t++)
+				for(std::list< work_event* >::iterator t = this->journal.begin(); t != this->journal.end(); ++t)
 					{
 						if((*t)->is_master())
 							{
@@ -418,7 +418,7 @@ namespace transport
 		    std::list< std::list< work_item > >::iterator current_bin = --list.end();
 
 				// work through master events, pairing them up
-				for(std::list< master_work_event* >::const_iterator t = master_events.begin(); t != master_events.end(); t++)
+				for(std::list< master_work_event* >::const_iterator t = master_events.begin(); t != master_events.end(); ++t)
 					{
 						switch((*t)->get_type())
 							{
@@ -459,10 +459,10 @@ namespace transport
 
 				// strip out events for each worker, and sort them likewise
 		    std::list< slave_work_event* > worker_events;
-				for(unsigned int i = 0; i < this->N_workers; i++)
+				for(unsigned int i = 0; i < this->N_workers; ++i)
 					{
 				    worker_events.clear();
-						for(std::list< work_event* >::iterator t = this->journal.begin(); t != this->journal.end(); t++)
+						for(std::list< work_event* >::iterator t = this->journal.begin(); t != this->journal.end(); ++t)
 							{
 								if(!(*t)->is_master())
 									{
@@ -476,7 +476,7 @@ namespace transport
 				    current_bin = --list.end();
 
 						// work through events, pairing them up
-						for(std::list< slave_work_event* >::const_iterator t = worker_events.begin(); t != worker_events.end(); t++)
+						for(std::list< slave_work_event* >::const_iterator t = worker_events.begin(); t != worker_events.end(); ++t)
 							{
 								switch((*t)->get_type())
 									{
@@ -647,7 +647,7 @@ namespace transport
 				    out << "ylabels = []" << std::endl;
 				    out << "ylabels.append('Master')" << std::endl;
 
-				    for(unsigned int i = 0; i < this->N_workers; i++)
+				    for(unsigned int i = 0; i < this->N_workers; ++i)
 					    {
 				        out << "ylabels.append('Worker " << i+1 << "')" << std::endl;
 					    }

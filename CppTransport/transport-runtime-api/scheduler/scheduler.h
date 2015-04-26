@@ -90,7 +90,7 @@ namespace transport
     std::ostream& operator<<(std::ostream& out, const work_item_filter<work_element>& filter)
       {
         std::cerr << __CPP_TRANSPORT_FILTER_TAG;
-        for(std::set<unsigned int>::iterator t = filter.items.begin(); t != filter.items.end(); t++)
+        for(std::set<unsigned int>::iterator t = filter.items.begin(); t != filter.items.end(); ++t)
           {
             std::cerr << (t != filter.items.begin() ? ", " : " ") << *t;
           }
@@ -150,7 +150,7 @@ namespace transport
         work_queue<twopf_kconfig_record> work(this->ctx, size);
 
         const twopf_kconfig_database& twopf_db = task.get_twopf_database();
-        for(twopf_kconfig_database::const_record_iterator t = twopf_db.record_begin(); t != twopf_db.record_end(); t++)
+        for(twopf_kconfig_database::const_record_iterator t = twopf_db.record_begin(); t != twopf_db.record_end(); ++t)
           {
             if(F.filter(*(*t))) work.enqueue_work_item(*t);
           }
@@ -165,7 +165,7 @@ namespace transport
         work_queue<threepf_kconfig_record> work(this->ctx, size);
 
         const threepf_kconfig_database& threepf_db = task.get_threepf_database();
-        for(threepf_kconfig_database::const_record_iterator t = threepf_db.record_begin(); t != threepf_db.record_end(); t++)
+        for(threepf_kconfig_database::const_record_iterator t = threepf_db.record_begin(); t != threepf_db.record_end(); ++t)
           {
             if(F.filter(*(*t))) work.enqueue_work_item(*t);
           }
@@ -180,7 +180,7 @@ namespace transport
         work_queue<threepf_kconfig_record> work(this->ctx, size);
 
         const threepf_kconfig_database& threepf_db = task.get_threepf_database();
-        for(threepf_kconfig_database::const_record_iterator t = threepf_db.record_begin(); t != threepf_db.record_end(); t++)
+        for(threepf_kconfig_database::const_record_iterator t = threepf_db.record_begin(); t != threepf_db.record_end(); ++t)
           {
             if(F.filter(*(*t))) work.enqueue_work_item(*t);
           }
@@ -195,7 +195,7 @@ namespace transport
 				work_queue< output_task_element<number> > work(this->ctx, 1);
 
 				const typename std::vector< output_task_element<number> >& config_list = task.get_elements();
-				for(typename std::vector< output_task_element<number> >::const_iterator t = config_list.begin(); t != config_list.end(); t++)
+				for(typename std::vector< output_task_element<number> >::const_iterator t = config_list.begin(); t != config_list.end(); ++t)
 					{
 						if(F.filter(*t)) work.enqueue_work_item(*t);
 					}

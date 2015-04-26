@@ -104,7 +104,7 @@ namespace transport
         size = 1;
 		    unsigned int scale_factor = (r == all_range ? 2 : 1);
 
-        for(int i = 0; i < indices; i++)
+        for(int i = 0; i < indices; ++i)
           {
             size *= scale_factor * N_fields;
           }
@@ -112,7 +112,7 @@ namespace transport
 
         displacements.resize(indices);
         unsigned int count = 1;
-        for(int i = 0; i < indices; i++)
+        for(int i = 0; i < indices; ++i)
           {
             displacements[indices-i-1] = count;
             count *= scale_factor * this->N_fields;
@@ -139,7 +139,7 @@ namespace transport
       {
         unsigned int index = 0;
 
-        for(unsigned int i = 0; i < indices; i++)
+        for(unsigned int i = 0; i < indices; ++i)
 	        {
             assert(which[i] < (this->range == all_range ? 2 : 1) * this->N_fields);  // basic sanity check: TODO: add error handling
 
@@ -156,7 +156,7 @@ namespace transport
       {
         unsigned int index = 0;
 
-        for(unsigned int i = 0; i < indices; i++)
+        for(unsigned int i = 0; i < indices; ++i)
 	        {
             assert(which[i] < (this->range == all_range ? 2 : 1) * this->N_fields);  // basic sanity check: TODO: add error handling
 
@@ -173,7 +173,7 @@ namespace transport
 	    {
         unsigned int index = 0;
 
-        for(unsigned int i = 0; i < indices; i++)
+        for(unsigned int i = 0; i < indices; ++i)
 	        {
             assert(which[i] < (this->range == all_range ? 2 : 1) * this->N_fields); // basic sanity check: TODO: add error handling
 
@@ -192,7 +192,7 @@ namespace transport
 		    writer[__CPP_TRANSPORT_NODE_INDEX_ROOT][__CPP_TRANSPORT_NODE_INDEX_FIELDS] = this->N_fields;
 
 		    Json::Value toggle_array(Json::arrayValue);
-				for(unsigned int i = 0; i < this->size; i++)
+				for(unsigned int i = 0; i < this->size; ++i)
 					{
 				    Json::Value elt = static_cast<bool>(this->enabled[i]);
 						toggle_array.append(elt);
@@ -222,7 +222,7 @@ namespace transport
 		    Json::Value toggle_array = reader[__CPP_TRANSPORT_NODE_INDEX_ROOT][__CPP_TRANSPORT_NODE_INDEX_TOGGLES];
 				assert(toggle_array.isArray());
 
-				for(Json::Value::iterator t = toggle_array.begin(); t != toggle_array.end(); t++)
+				for(Json::Value::iterator t = toggle_array.begin(); t != toggle_array.end(); ++t)
 			    {
 						enabled.push_back(t->asBool());
 			    }
@@ -231,7 +231,7 @@ namespace transport
 		    size = 1;
 		    unsigned int scale_factor = (range == all_range ? 2 : 1);
 
-		    for(int i = 0; i < indices; i++)
+		    for(int i = 0; i < indices; ++i)
 			    {
 		        size *= scale_factor * N_fields;
 			    }
@@ -246,7 +246,7 @@ namespace transport
 
 		    displacements.resize(indices);
 		    unsigned int count = 1;
-		    for(int i = 0; i < indices; i++)
+		    for(int i = 0; i < indices; ++i)
 			    {
 		        displacements[indices-i-1] = count;
 		        count *= scale_factor * this->N_fields;
@@ -264,17 +264,17 @@ namespace transport
 
 				unsigned int count = 0;
 
-				for(unsigned int i = 0; i < this->size; i++)
+				for(unsigned int i = 0; i < this->size; ++i)
 					{
 						if(this->enabled[i])
 							{
 								if(count > 0) out << ", ";
 								if(indices > 1) out << "(";
 
-								for(unsigned int j = 0; j < indices; j++)
+								for(unsigned int j = 0; j < indices; ++j)
 									{
 										unsigned int remainder = i;
-										for(unsigned int k = 0; k < j; k++) remainder = remainder % this->displacements[k];
+										for(unsigned int k = 0; k < j; ++k) remainder = remainder % this->displacements[k];
 
 										unsigned int index = remainder / this->displacements[j];
 

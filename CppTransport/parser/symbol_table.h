@@ -60,13 +60,13 @@ void symbol_table<container>::print(std::ostream& stream)
   {
     stream << "Symbol table size = " << this->size << std::endl;
 
-    for(int i = 0; i < this->size; i++)
+    for(int i = 0; i < this->size; ++i)
       {
         if(this->table[i].size() > 0)
           {
             stream << "Hash table entry " << i << " is not empty:" << std::endl;
             for(typename std::deque<container>::iterator ptr = this->table[i].begin();
-                ptr != this->table[i].end(); ptr++)
+                ptr != this->table[i].end(); ++ptr)
               {
                 (*ptr).print(stream);
               }
@@ -88,7 +88,7 @@ bool symbol_table<container>::find(std::string const name, container*& obj)
       {
         typename std::deque<container>::iterator ptr;
 
-        for(ptr = this->table[h].begin(); found == false && ptr != this->table[h].end(); ptr++)
+        for(ptr = this->table[h].begin(); found == false && ptr != this->table[h].end(); ++ptr)
           {
             if((*ptr).get_name() == name)
               {
