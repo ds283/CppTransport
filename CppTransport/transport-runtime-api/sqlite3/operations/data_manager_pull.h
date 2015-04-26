@@ -210,9 +210,8 @@ namespace transport
             // create a temporary table which contains the set of configuration-sample points
             // matching serial numbers in the temporary table, together with the looked-up
             // values of the corresponding 2pf k-configurations
-            std::stringstream create_stmt;
-            create_stmt
-              << "CREATE TEMP TABLE " << __CPP_TRANSPORT_SQLITE_TEMP_THREEPF_TABLE << "_" << worker << " AS"
+            std::stringstream select_stmt;
+            select_stmt
               << " SELECT " << __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE << ".kt_conventional AS kt_conventional,"
               << " " << __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE << ".kt_comoving AS kt_comoving,"
               << " " << __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE << ".alpha AS alpha,"
@@ -237,12 +236,6 @@ namespace transport
               << " INNER JOIN " << __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE << " AS tpf3"
               << " ON " << __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE << ".wavenumber3=tpf3.serial"
               << " ORDER BY temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker << ".ROWID;";
-
-            exec(db, create_stmt.str(), __CPP_TRANSPORT_DATAMGR_TEMP_THREEPF_CREATE_FAIL);
-
-            // now select the individual components of the threepf configuration out of this temporary table
-            std::stringstream select_stmt;
-            select_stmt << "SELECT * FROM " << __CPP_TRANSPORT_SQLITE_TEMP_THREEPF_TABLE << "_" << worker << ";";
 
             sqlite3_stmt* stmt;
             check_stmt(db, sqlite3_prepare_v2(db, select_stmt.str().c_str(), select_stmt.str().length()+1, &stmt, nullptr));
@@ -290,11 +283,6 @@ namespace transport
 
             // drop temporary table of serial numbers
             drop_temporary_timeserial_table(db, worker);
-
-            // drop temporary threepf query tables
-            std::stringstream drop_stmt;
-            drop_stmt << "DROP TABLE temp." << __CPP_TRANSPORT_SQLITE_TEMP_THREEPF_TABLE << "_" << worker << ";";
-            exec(db, drop_stmt.str(), __CPP_TRANSPORT_DATAMGR_TEMP_THREEPF_DROP_FAIL);
 
             // check that we have as many values as we expect
             if(sample.size() != serial_numbers.size()) warn_kconfig_serial_too_few(serial_numbers.size(), sample.size(), __func__);

@@ -53,9 +53,7 @@
 #define __CPP_TRANSPORT_SQLITE_FNL_ORTHO_VALUE_TABLE               "fNL_ortho"
 #define __CPP_TRANSPORT_SQLITE_FNL_DBI_VALUE_TABLE                 "fNL_DBI"
 
-#define __CPP_TRANSPORT_SQLITE_TASKLIST_TABLE                      "task_list"
 #define __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE                   "serial_search"
-#define __CPP_TRANSPORT_SQLITE_TEMP_THREEPF_TABLE                  "threepf_search"
 #define __CPP_TRANSPORT_SQLITE_TEMP_FNL_TABLE                      "fNL_update"
 #define __CPP_TRANSPORT_SQLITE_INSERT_FNL_TABLE                    "fNL_insert"
 
