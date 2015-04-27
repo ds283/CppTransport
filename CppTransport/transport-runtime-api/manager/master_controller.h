@@ -99,6 +99,7 @@ namespace transport
 				//! Labels for types of job
 		    typedef enum { job_task, job_get_package, job_get_task, job_get_product, job_get_content } job_type;
 
+
 				//! Job descriptor class
 		    class job_descriptor
 			    {
@@ -164,6 +165,91 @@ namespace transport
 				    //! seed group, if used
 				    std::string            seed_group;
 
+			    };
+
+
+				class aggregation_record
+					{
+				  public:
+						aggregation_record(unsigned int i)
+							: id(i)
+							{
+							}
+
+						virtual ~aggregation_record() = default;
+
+						virtual void aggregate() = 0;
+
+						unsigned int get_id() const { return(this->id); }
+
+				  private:
+						unsigned int id;
+					};
+
+
+				class integration_aggregation_record: public aggregation_record
+					{
+				  public:
+						integration_aggregation_record(unsigned int id, integration_aggregator& agg, integration_metadata& m, MPI::data_ready_payload& p)
+							: aggregation_record(id),
+							  handler(agg),
+				        payload(p),
+								metadata(m)
+							{
+							}
+
+						virtual ~integration_aggregation_record() = default;
+
+						virtual void aggregate() { this->handler(payload, metadata); }
+
+				  private:
+						integration_aggregator& handler;
+						integration_metadata& metadata;
+						MPI::data_ready_payload payload;
+					};
+
+
+		    class postintegration_aggregation_record: public aggregation_record
+			    {
+		      public:
+		        postintegration_aggregation_record(unsigned int id, postintegration_aggregator& agg, output_metadata& m, MPI::data_ready_payload& p)
+			        : aggregation_record(id),
+			          handler(agg),
+			          payload(p),
+			          metadata(m)
+			        {
+			        }
+
+		        virtual ~postintegration_aggregation_record() = default;
+
+		        virtual void aggregate() { this->handler(payload, metadata); }
+
+		      private:
+		        postintegration_aggregator& handler;
+		        output_metadata& metadata;
+		        MPI::data_ready_payload payload;
+			    };
+
+
+		    class derived_content_aggregation_record: public aggregation_record
+			    {
+		      public:
+		        derived_content_aggregation_record(unsigned int id, derived_content_aggregator& agg, output_metadata& m, MPI::content_ready_payload& p)
+			        : aggregation_record(id),
+			          handler(agg),
+			          payload(p),
+			          metadata(m)
+			        {
+			        }
+
+		        virtual ~derived_content_aggregation_record() = default;
+
+		        virtual void aggregate() { this->handler(payload, metadata); }
+
+		      private:
+		        derived_content_aggregator& handler;
+		        output_metadata& metadata;
+		        MPI::content_ready_payload payload;
 			    };
 
 
@@ -260,7 +346,8 @@ namespace transport
 				void assign_work_to_workers(boost::log::sources::severity_logger< base_writer::log_severity_level >& log);
 
         //! Master node: print progress update if it is required
-        void check_for_progress_update(void);
+				template <typename WriterObject>
+        void check_for_progress_update(WriterObject& writer);
 
 
 		    // MASTER INTEGRATION TASKS
@@ -1820,7 +1907,8 @@ namespace transport
 
 
     template <typename number>
-    void master_controller<number>::check_for_progress_update(void)
+    template <typename WriterObject>
+    void master_controller<number>::check_for_progress_update(WriterObject& writer)
       {
         // emit update message giving current status if required
         std::string msg;
@@ -1830,6 +1918,8 @@ namespace transport
             std::ostringstream update_msg;
             update_msg << __CPP_TRANSPORT_TASK_MANAGER_LABEL << " " << msg;
             this->message_handler(update_msg.str());
+
+						BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "±± Console advisory message: " << update_msg.str();
           }
       }
 
@@ -1896,9 +1986,8 @@ namespace transport
         boost::log::sources::severity_logger <base_writer::log_severity_level>& log = writer->get_log();
 
         // set up aggregation queues
-        std::list<MPI::data_ready_payload>    int_agg_queue;
-        std::list<MPI::data_ready_payload>    post_agg_queue;
-        std::list<MPI::content_ready_payload> derived_agg_queue;
+		    unsigned int aggregation_counter = 0;
+        std::list< std::shared_ptr<aggregation_record> > aggregation_queue;
 
         // wait for workers to report their characteristics
         this->set_up_workers(log);
@@ -1921,7 +2010,7 @@ namespace transport
             // generate new work assignments if needed, and push them to the workers
             if(this->work_scheduler.assignable())
               {
-                this->check_for_progress_update();
+                this->check_for_progress_update(writer);
                 this->assign_work_to_workers(log);
               }
 
@@ -1942,7 +2031,7 @@ namespace transport
                           {
                             MPI::data_ready_payload payload;
                             this->world.recv(stat->source(), MPI::INTEGRATION_DATA_READY, payload);
-                            int_agg_queue.push_back(payload);
+		                        aggregation_queue.push_back(std::shared_ptr<integration_aggregation_record>(new integration_aggregation_record(aggregation_counter++, int_agg, int_metadata, payload)));
                             BOOST_LOG_SEV(log, base_writer::normal) << "++ Worker " << stat->source() << " sent aggregation notification for container '" << payload.get_container_path() << "'";
                           }
                         else
@@ -1958,7 +2047,7 @@ namespace transport
                           {
                             MPI::content_ready_payload payload;
                             this->world.recv(stat->source(), MPI::DERIVED_CONTENT_READY, payload);
-                            derived_agg_queue.push_back(payload);
+		                        aggregation_queue.push_back(std::shared_ptr<derived_content_aggregation_record>(new derived_content_aggregation_record(aggregation_counter++, derived_agg, out_metadata, payload)));
                             BOOST_LOG_SEV(log, base_writer::normal) << "++ Worker " << stat->source() << " sent content-ready notification";
                           }
                         else
@@ -1974,7 +2063,7 @@ namespace transport
                           {
                             MPI::data_ready_payload payload;
                             this->world.recv(stat->source(), MPI::POSTINTEGRATION_DATA_READY, payload);
-                            post_agg_queue.push_back(payload);
+		                        aggregation_queue.push_back(std::shared_ptr<postintegration_aggregation_record>(new postintegration_aggregation_record(aggregation_counter++, post_agg, out_metadata, payload)));
                             BOOST_LOG_SEV(log, base_writer::normal) << "++ Worker " << stat->source() << " sent aggregation notification for container '" << payload.get_container_path() << "'";
                           }
                         else
@@ -2108,7 +2197,7 @@ namespace transport
             // we arrive at this point only when no more messages are available to be received
 
             // check whether any aggregations are in the queue, and process them if we have been idle for sufficiently long
-            if(int_agg_queue.size() > 0 || post_agg_queue.size() > 0 || derived_agg_queue.size() > 0)
+            if(aggregation_queue.size() > 0)
               {
                 boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
                 boost::posix_time::time_duration idle_time = now - last_msg;
@@ -2120,48 +2209,22 @@ namespace transport
                         emit_agg_queue_msg = false;
                       }
 
-                    if(int_agg_queue.size() > 0)
-                      {
-                        if(int_agg) int_agg(int_agg_queue.front(), int_metadata);
-                        int_agg_queue.pop_front();
-                      }
-                    else if(post_agg_queue.size() > 0)
-                      {
-                        if(post_agg) post_agg(post_agg_queue.front(), out_metadata);
-                        post_agg_queue.pop_front();
-                      }
-                    else if(derived_agg_queue.size() > 0)
-                      {
-                        if(derived_agg) success = derived_agg(derived_agg_queue.front(), out_metadata);
-                        derived_agg_queue.pop_front();
-                      }
+		                aggregation_queue.front()->aggregate();
+		                aggregation_queue.pop_front();
                   }
               }
 	        }
 
-        this->check_for_progress_update();
+        this->check_for_progress_update(writer);
 
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
         BOOST_LOG_SEV(log, base_writer::warning) << "++ Work completed at " << boost::posix_time::to_simple_string(now);
 
         // process any remaining aggregations
-        while(int_agg_queue.size() > 0 || post_agg_queue.size() > 0 || derived_agg_queue.size() > 0)
+        while(aggregation_queue.size() > 0)
           {
-            if(int_agg_queue.size() > 0)
-              {
-                if(int_agg) int_agg(int_agg_queue.front(), int_metadata);
-                int_agg_queue.pop_front();
-              }
-            else if(post_agg_queue.size() > 0)
-              {
-                if(post_agg) post_agg(post_agg_queue.front(), out_metadata);
-                post_agg_queue.pop_front();
-              }
-            else if(derived_agg_queue.size() > 0)
-              {
-                if(derived_agg) success = derived_agg(derived_agg_queue.front(), out_metadata);
-                derived_agg_queue.pop_front();
-              }
+            aggregation_queue.front()->aggregate();
+            aggregation_queue.pop_front();
           }
 
         return(success);

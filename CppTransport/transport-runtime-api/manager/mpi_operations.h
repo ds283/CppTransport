@@ -286,16 +286,24 @@ namespace transport
 
                 //! Value constructor (used for sending messages)
                 data_ready_payload(const std::string& p)
-                : container_path(p)
+                : container_path(p),
+                  timestamp(boost::posix_time::second_clock::universal_time())
                   {
                   }
 
                 //! Get container path
-                const std::string& get_container_path() const { return(this->container_path); }
+                const std::string&       get_container_path() const { return(this->container_path); }
+
+                //! Get timestamp
+                boost::posix_time::ptime get_timestamp()      const { return(this->timestamp); }
 
               private:
+
                 //! Path to container
                 std::string container_path;
+
+                //! Timestamp
+                boost::posix_time::ptime timestamp;
 
                 // enable boost::serialization support, and hence automated packing for transmission over MPI
                 friend class boost::serialization::access;
@@ -304,6 +312,7 @@ namespace transport
                 void serialize(Archive& ar, unsigned int version)
                   {
                     ar & container_path;
+                    ar & timestamp;
                   }
               };
 
