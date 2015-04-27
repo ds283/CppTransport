@@ -19,6 +19,7 @@ namespace transport
 			{
 
 		    // Create a temporary container for a twopf integration
+				template <typename number>
 		    sqlite3* create_temp_twopf_container(const boost::filesystem::path& container, unsigned int Nfields, bool collect_stats, bool collect_ics)
 			    {
 		        sqlite3* db = nullptr;
@@ -45,9 +46,9 @@ namespace transport
 		        // create the necessary tables
 		        create_worker_info_table(db, no_foreign_keys);
 		        if(collect_stats) create_stats_table(db, no_foreign_keys, twopf_configs);
-		        if(collect_ics) create_ics_table(db, Nfields, no_foreign_keys, twopf_configs, default_ics);
+		        if(collect_ics) create_ics_table<number, typename integration_items<number>::ics_item>(db, Nfields, no_foreign_keys, twopf_configs);
 		        create_backg_table(db, Nfields, no_foreign_keys);
-		        create_twopf_table(db, Nfields, real_twopf, no_foreign_keys);
+		        create_twopf_table<number, typename integration_items<number>::twopf_re_item>(db, Nfields, no_foreign_keys);
 		        create_tensor_twopf_table(db, no_foreign_keys);
 
 		        return(db);
@@ -55,6 +56,7 @@ namespace transport
 
 
 		    // Create a temporary container for a threepf integration
+				template <typename number>
 		    sqlite3* create_temp_threepf_container(const boost::filesystem::path& container, unsigned int Nfields, bool collect_stats, bool collect_ics)
 			    {
 		        sqlite3* db = nullptr;
@@ -83,12 +85,12 @@ namespace transport
 		        if(collect_stats) create_stats_table(db, no_foreign_keys, threepf_configs);
 		        if(collect_ics)
 			        {
-		            create_ics_table(db, Nfields, no_foreign_keys, threepf_configs, default_ics);
-		            create_ics_table(db, Nfields, no_foreign_keys, threepf_configs, kt_ics);
+		            create_ics_table<number, typename integration_items<number>::ics_item>(db, Nfields, no_foreign_keys, threepf_configs);
+		            create_ics_table<number, typename integration_items<number>::ics_kt_item>(db, Nfields, no_foreign_keys, threepf_configs);
 			        }
 		        create_backg_table(db, Nfields, no_foreign_keys);
-		        create_twopf_table(db, Nfields, real_twopf, no_foreign_keys);
-		        create_twopf_table(db, Nfields, imag_twopf, no_foreign_keys);
+		        create_twopf_table<number, typename integration_items<number>::twopf_re_item>(db, Nfields, no_foreign_keys);
+		        create_twopf_table<number, typename integration_items<number>::twopf_im_item>(db, Nfields, no_foreign_keys);
 		        create_tensor_twopf_table(db, no_foreign_keys);
 		        create_threepf_table(db, Nfields, no_foreign_keys);
 

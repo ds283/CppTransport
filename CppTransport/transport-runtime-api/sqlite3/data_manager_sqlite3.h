@@ -652,13 +652,13 @@ namespace transport
         sqlite3_operations::create_time_sample_table(db, tk);
         sqlite3_operations::create_twopf_sample_table(db, tk);
         sqlite3_operations::create_backg_table(db, Nfields, sqlite3_operations::foreign_keys);
-        sqlite3_operations::create_twopf_table(db, Nfields, sqlite3_operations::real_twopf, sqlite3_operations::foreign_keys);
+        sqlite3_operations::create_twopf_table<number, typename integration_items<number>::twopf_re_item>(db, Nfields, sqlite3_operations::foreign_keys);
         sqlite3_operations::create_tensor_twopf_table(db, sqlite3_operations::foreign_keys);
 
         sqlite3_operations::create_worker_info_table(db, sqlite3_operations::foreign_keys);
         if(writer->is_collecting_statistics()) sqlite3_operations::create_stats_table(db, sqlite3_operations::foreign_keys, sqlite3_operations::twopf_configs);
 
-		    if(writer->is_collecting_initial_conditions()) sqlite3_operations::create_ics_table(db, Nfields, sqlite3_operations::foreign_keys, sqlite3_operations::twopf_configs, sqlite3_operations::default_ics);
+		    if(writer->is_collecting_initial_conditions()) sqlite3_operations::create_ics_table<number, typename integration_items<number>::ics_item>(db, Nfields, sqlite3_operations::foreign_keys, sqlite3_operations::twopf_configs);
       }
 
 
@@ -674,8 +674,8 @@ namespace transport
         sqlite3_operations::create_twopf_sample_table(db, tk);
         sqlite3_operations::create_threepf_sample_table(db, tk);
         sqlite3_operations::create_backg_table(db, Nfields, sqlite3_operations::foreign_keys);
-        sqlite3_operations::create_twopf_table(db, Nfields, sqlite3_operations::real_twopf, sqlite3_operations::foreign_keys);
-        sqlite3_operations::create_twopf_table(db, Nfields, sqlite3_operations::imag_twopf, sqlite3_operations::foreign_keys);
+        sqlite3_operations::create_twopf_table<number, typename integration_items<number>::twopf_re_item>(db, Nfields, sqlite3_operations::foreign_keys);
+        sqlite3_operations::create_twopf_table<number, typename integration_items<number>::twopf_im_item>(db, Nfields, sqlite3_operations::foreign_keys);
         sqlite3_operations::create_tensor_twopf_table(db, sqlite3_operations::foreign_keys);
         sqlite3_operations::create_threepf_table(db, Nfields, sqlite3_operations::foreign_keys);
 
@@ -684,8 +684,8 @@ namespace transport
 
         if(writer->is_collecting_initial_conditions())
 	        {
-            sqlite3_operations::create_ics_table(db, Nfields, sqlite3_operations::foreign_keys, sqlite3_operations::threepf_configs, sqlite3_operations::default_ics);
-            sqlite3_operations::create_ics_table(db, Nfields, sqlite3_operations::foreign_keys, sqlite3_operations::threepf_configs, sqlite3_operations::kt_ics);
+            sqlite3_operations::create_ics_table<number, typename integration_items<number>::ics_item>(db, Nfields, sqlite3_operations::foreign_keys, sqlite3_operations::threepf_configs);
+            sqlite3_operations::create_ics_table<number, typename integration_items<number>::ics_kt_item>(db, Nfields, sqlite3_operations::foreign_keys, sqlite3_operations::threepf_configs);
 	        }
       }
 
@@ -745,13 +745,15 @@ namespace transport
         boost::filesystem::path seed_container_path = seed->get_abs_repo_path() / seed->get_payload().get_container_path();
 
         sqlite3_operations::aggregate_backg<number>(db, *writer, seed_container_path.string());
-        sqlite3_operations::aggregate_twopf<number>(db, *writer, seed_container_path.string(), sqlite3_operations::real_twopf);
-        sqlite3_operations::aggregate_tensor_twopf<number>(db, *writer, seed_container_path.string());
+        sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::twopf_re_item>(db, *writer, seed_container_path.string());
+        sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::tensor_twopf_item>(db, *writer, seed_container_path.string());
 
         sqlite3_operations::aggregate_workers<number>(db, *writer, seed_container_path.string());
-        if(writer->is_collecting_statistics() && seed->get_payload().has_statistics()) sqlite3_operations::aggregate_statistics<number>(db, *writer, seed_container_path.string());
+        if(writer->is_collecting_statistics() && seed->get_payload().has_statistics())
+	        sqlite3_operations::aggregate_statistics<number>(db, *writer, seed_container_path.string());
 
-        if(writer->is_collecting_initial_conditions() && seed->get_payload().has_initial_conditions()) sqlite3_operations::aggregate_ics<number>(db, *writer, seed_container_path.string());
+        if(writer->is_collecting_initial_conditions() && seed->get_payload().has_initial_conditions())
+	        sqlite3_operations::aggregate_ics<number, typename integration_items<number>::ics_item>(db, *writer, seed_container_path.string());
 
         timer.stop();
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "** Seeding complete in time " << format_time(timer.elapsed().wall);
@@ -772,18 +774,18 @@ namespace transport
         boost::filesystem::path seed_container_path = seed->get_abs_repo_path() / seed->get_payload().get_container_path();
 
         sqlite3_operations::aggregate_backg<number>(db, *writer, seed_container_path.string());
-        sqlite3_operations::aggregate_twopf<number>(db, *writer, seed_container_path.string(), sqlite3_operations::real_twopf);
-        sqlite3_operations::aggregate_twopf<number>(db, *writer, seed_container_path.string(), sqlite3_operations::imag_twopf);
-        sqlite3_operations::aggregate_tensor_twopf<number>(db, *writer, seed_container_path.string());
-        sqlite3_operations::aggregate_threepf<number>(db, *writer, seed_container_path.string());
+        sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::twopf_re_item>(db, *writer, seed_container_path.string());
+        sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::twopf_im_item>(db, *writer, seed_container_path.string());
+        sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::tensor_twopf_item>(db, *writer, seed_container_path.string());
+        sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::threepf_item>(db, *writer, seed_container_path.string());
 
         sqlite3_operations::aggregate_workers<number>(db, *writer, seed_container_path.string());
         if(writer->is_collecting_statistics() && seed->get_payload().has_statistics()) sqlite3_operations::aggregate_statistics<number>(db, *writer, seed_container_path.string());
 
         if(writer->is_collecting_initial_conditions() && seed->get_payload().has_initial_conditions())
 	        {
-            sqlite3_operations::aggregate_ics<number>(db, *writer, seed_container_path.string(), sqlite3_operations::default_ics);
-            sqlite3_operations::aggregate_ics<number>(db, *writer, seed_container_path.string(), sqlite3_operations::kt_ics);
+            sqlite3_operations::aggregate_ics<number, typename integration_items<number>::ics_item>(db, *writer, seed_container_path.string());
+            sqlite3_operations::aggregate_ics<number, typename integration_items<number>::ics_kt_item>(db, *writer, seed_container_path.string());
 	        }
 
         timer.stop();
@@ -804,7 +806,7 @@ namespace transport
         boost::timer::cpu_timer timer;
         boost::filesystem::path seed_container_path = seed->get_abs_repo_path() / seed->get_payload().get_container_path();
 
-        sqlite3_operations::aggregate_zeta_twopf<number>(db, *writer, seed_container_path.string());
+        sqlite3_operations::aggregate_table<number, postintegration_writer<number>, typename postintegration_items<number>::zeta_twopf_item>(db, *writer, seed_container_path.string());
 
         timer.stop();
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "** Seeding complete in time " << format_time(timer.elapsed().wall);
@@ -824,9 +826,9 @@ namespace transport
         boost::timer::cpu_timer timer;
         boost::filesystem::path seed_container_path = seed->get_abs_repo_path() / seed->get_payload().get_container_path();
 
-        sqlite3_operations::aggregate_zeta_twopf<number>(db, *writer, seed_container_path.string());
-        sqlite3_operations::aggregate_zeta_threepf<number>(db, *writer, seed_container_path.string());
-        sqlite3_operations::aggregate_zeta_reduced_bispectrum<number>(db, *writer, seed_container_path.string());
+        sqlite3_operations::aggregate_table<number, postintegration_writer<number>, typename postintegration_items<number>::zeta_twopf_item>(db, *writer, seed_container_path.string());
+        sqlite3_operations::aggregate_table<number, postintegration_writer<number>, typename postintegration_items<number>::zeta_threepf_item>(db, *writer, seed_container_path.string());
+        sqlite3_operations::aggregate_table<number, postintegration_writer<number>, typename postintegration_items<number>::zeta_redbsp_item>(db, *writer, seed_container_path.string());
 
         timer.stop();
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "** Seeding complete in time " << format_time(timer.elapsed().wall);
@@ -852,14 +854,14 @@ namespace transport
       {
         boost::filesystem::path container = this->generate_temporary_container_path(tempdir, worker);
 
-        sqlite3* db = sqlite3_operations::create_temp_twopf_container(container, m->get_N_fields(), m->supports_per_configuration_statistics(), tk->get_collect_initial_conditions());
+        sqlite3* db = sqlite3_operations::create_temp_twopf_container<number>(container, m->get_N_fields(), m->supports_per_configuration_statistics(), tk->get_collect_initial_conditions());
 
         // set up writers
         typename twopf_batcher<number>::writer_group writers;
         writers.host_info    = std::bind(&sqlite3_operations::write_host_info<number>, std::placeholders::_1);
         writers.stats        = std::bind(&sqlite3_operations::write_stats<number>, std::placeholders::_1, std::placeholders::_2);
-		    writers.ics          = std::bind(&sqlite3_operations::write_ics<number>, sqlite3_operations::default_ics, std::placeholders::_1, std::placeholders::_2);
-        writers.backg        = std::bind(&sqlite3_operations::write_backg<number>, std::placeholders::_1, std::placeholders::_2);
+		    writers.ics          = std::bind(&sqlite3_operations::write_coordinate_output<number, typename integration_items<number>::ics_item>, std::placeholders::_1, std::placeholders::_2);
+        writers.backg        = std::bind(&sqlite3_operations::write_coordinate_output<number, typename integration_items<number>::backg_item>, std::placeholders::_1, std::placeholders::_2);
         writers.twopf        = std::bind(&sqlite3_operations::write_paged_output<number, integration_batcher<number>, typename integration_items<number>::twopf_re_item>, std::placeholders::_1, std::placeholders::_2);
         writers.tensor_twopf = std::bind(&sqlite3_operations::write_paged_output<number, integration_batcher<number>, typename integration_items<number>::tensor_twopf_item>, std::placeholders::_1, std::placeholders::_2);
 
@@ -888,15 +890,15 @@ namespace transport
       {
         boost::filesystem::path container = this->generate_temporary_container_path(tempdir, worker);
 
-        sqlite3* db = sqlite3_operations::create_temp_threepf_container(container, m->get_N_fields(), m->supports_per_configuration_statistics(), tk->get_collect_initial_conditions());
+        sqlite3* db = sqlite3_operations::create_temp_threepf_container<number>(container, m->get_N_fields(), m->supports_per_configuration_statistics(), tk->get_collect_initial_conditions());
 
         // set up writers
         typename threepf_batcher<number>::writer_group writers;
 		    writers.host_info    = std::bind(&sqlite3_operations::write_host_info<number>, std::placeholders::_1);
         writers.stats        = std::bind(&sqlite3_operations::write_stats<number>, std::placeholders::_1, std::placeholders::_2);
-        writers.ics          = std::bind(&sqlite3_operations::write_ics<number>, sqlite3_operations::default_ics, std::placeholders::_1, std::placeholders::_2);
-        writers.kt_ics       = std::bind(&sqlite3_operations::write_ics<number>, sqlite3_operations::kt_ics, std::placeholders::_1, std::placeholders::_2);
-        writers.backg        = std::bind(&sqlite3_operations::write_backg<number>, std::placeholders::_1, std::placeholders::_2);
+        writers.ics          = std::bind(&sqlite3_operations::write_coordinate_output<number, typename integration_items<number>::ics_item>, std::placeholders::_1, std::placeholders::_2);
+        writers.kt_ics       = std::bind(&sqlite3_operations::write_coordinate_output<number, typename integration_items<number>::ics_kt_item>, std::placeholders::_1, std::placeholders::_2);
+        writers.backg        = std::bind(&sqlite3_operations::write_coordinate_output<number, typename integration_items<number>::backg_item>, std::placeholders::_1, std::placeholders::_2);
         writers.twopf_re     = std::bind(&sqlite3_operations::write_paged_output<number, integration_batcher<number>, typename integration_items<number>::twopf_re_item>, std::placeholders::_1, std::placeholders::_2);
         writers.twopf_im     = std::bind(&sqlite3_operations::write_paged_output<number, integration_batcher<number>, typename integration_items<number>::twopf_im_item>, std::placeholders::_1, std::placeholders::_2);
         writers.tensor_twopf = std::bind(&sqlite3_operations::write_paged_output<number, integration_batcher<number>, typename integration_items<number>::tensor_twopf_item>, std::placeholders::_1, std::placeholders::_2);
@@ -1028,7 +1030,7 @@ namespace transport
           {
             boost::filesystem::path container = this->generate_temporary_container_path(tempdir, worker);
 
-            sqlite3* new_db = sqlite3_operations::create_temp_twopf_container(container, m->get_N_fields(), m->supports_per_configuration_statistics(), ics);
+            sqlite3* new_db = sqlite3_operations::create_temp_twopf_container<number>(container, m->get_N_fields(), m->supports_per_configuration_statistics(), ics);
 
             batcher->set_container_path(container);
             batcher->set_manager_handle(new_db);
@@ -1060,7 +1062,7 @@ namespace transport
 
             BOOST_LOG_SEV(batcher->get_log(), generic_batcher::normal) << "** Opening new threepf container " << container;
 
-            sqlite3* new_db = sqlite3_operations::create_temp_threepf_container(container, m->get_N_fields(), m->supports_per_configuration_statistics(), ics);
+            sqlite3* new_db = sqlite3_operations::create_temp_threepf_container<number>(container, m->get_N_fields(), m->supports_per_configuration_statistics(), ics);
 
             batcher->set_container_path(container);
             batcher->set_manager_handle(new_db);
@@ -1173,13 +1175,14 @@ namespace transport
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
         sqlite3_operations::aggregate_backg<number>(db, writer, temp_ctr);
-        sqlite3_operations::aggregate_twopf<number>(db, writer, temp_ctr, sqlite3_operations::real_twopf);
-        sqlite3_operations::aggregate_tensor_twopf<number>(db, writer, temp_ctr);
+        sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::twopf_re_item>(db, writer, temp_ctr);
+        sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::tensor_twopf_item>(db, writer, temp_ctr);
 
         sqlite3_operations::aggregate_workers<number>(db, writer, temp_ctr);
         if(writer.is_collecting_statistics()) sqlite3_operations::aggregate_statistics<number>(db, writer, temp_ctr);
 
-		    if(writer.is_collecting_initial_conditions()) sqlite3_operations::aggregate_ics<number>(db, writer, temp_ctr);
+		    if(writer.is_collecting_initial_conditions())
+			    sqlite3_operations::aggregate_ics<number, typename integration_items<number>::ics_item>(db, writer, temp_ctr);
 
         return(true);
       }
@@ -1192,18 +1195,18 @@ namespace transport
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
         sqlite3_operations::aggregate_backg<number>(db, writer, temp_ctr);
-        sqlite3_operations::aggregate_twopf<number>(db, writer, temp_ctr, sqlite3_operations::real_twopf);
-        sqlite3_operations::aggregate_twopf<number>(db, writer, temp_ctr, sqlite3_operations::imag_twopf);
-        sqlite3_operations::aggregate_tensor_twopf<number>(db, writer, temp_ctr);
-        sqlite3_operations::aggregate_threepf<number>(db, writer, temp_ctr);
+        sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::twopf_re_item>(db, writer, temp_ctr);
+        sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::twopf_im_item>(db, writer, temp_ctr);
+        sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::tensor_twopf_item>(db, writer, temp_ctr);
+        sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::threepf_item>(db, writer, temp_ctr);
 
         sqlite3_operations::aggregate_workers<number>(db, writer, temp_ctr);
         if(writer.is_collecting_statistics()) sqlite3_operations::aggregate_statistics<number>(db, writer, temp_ctr);
 
         if(writer.is_collecting_initial_conditions())
 	        {
-            sqlite3_operations::aggregate_ics<number>(db, writer, temp_ctr, sqlite3_operations::default_ics);
-            sqlite3_operations::aggregate_ics<number>(db, writer, temp_ctr, sqlite3_operations::kt_ics);
+            sqlite3_operations::aggregate_ics<number, typename integration_items<number>::ics_item>(db, writer, temp_ctr);
+            sqlite3_operations::aggregate_ics<number, typename integration_items<number>::ics_kt_item>(db, writer, temp_ctr);
 	        }
 
         return(true);
@@ -1216,7 +1219,7 @@ namespace transport
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        sqlite3_operations::aggregate_zeta_twopf<number>(db, writer, temp_ctr);
+        sqlite3_operations::aggregate_table<number, postintegration_writer<number>, typename postintegration_items<number>::zeta_twopf_item>(db, writer, temp_ctr);
 
         return(true);
       }
@@ -1228,9 +1231,9 @@ namespace transport
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        sqlite3_operations::aggregate_zeta_twopf<number>(db, writer, temp_ctr);
-        sqlite3_operations::aggregate_zeta_threepf<number>(db, writer, temp_ctr);
-        sqlite3_operations::aggregate_zeta_reduced_bispectrum<number>(db, writer, temp_ctr);
+        sqlite3_operations::aggregate_table<number, postintegration_writer<number>, typename postintegration_items<number>::zeta_twopf_item>(db, writer, temp_ctr);
+        sqlite3_operations::aggregate_table<number, postintegration_writer<number>, typename postintegration_items<number>::zeta_threepf_item>(db, writer, temp_ctr);
+        sqlite3_operations::aggregate_table<number, postintegration_writer<number>, typename postintegration_items<number>::zeta_redbsp_item>(db, writer, temp_ctr);
 
         return(true);
       }
@@ -1439,7 +1442,7 @@ namespace transport
 
         BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << std::endl << "** Performing integrity check for container '" << writer.get_abs_container_path().string() << "'";
 
-        std::list<unsigned int> serials = sqlite3_operations::get_missing_twopf_serials(db);
+        std::list<unsigned int> serials = sqlite3_operations::get_missing_serials<number, typename integration_items<number>::twopf_re_item>(db);
 
         if(serials.size() > 0)
           {
@@ -1448,7 +1451,8 @@ namespace transport
             if(remainder.size() > 0)
               {
                 BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << "** Dropping extra configurations not missing from container, but advised by backend:";
-                sqlite3_operations::drop_twopf_kconfigs(db, writer, remainder, tk->get_twopf_database());
+                sqlite3_operations::drop_k_configurations(db, writer, remainder, tk->get_twopf_database(),
+                                                          sqlite3_operations::data_traits<number, typename integration_items<number>::twopf_re_item>::sqlite_table());
                 serials.merge(remainder);
               }
 
@@ -1456,7 +1460,7 @@ namespace transport
 		        writer.set_missing_serials(serials);
 
             if(writer.is_collecting_statistics()) sqlite3_operations::drop_statistics(db, serials, tk->get_twopf_database());
-		        if(writer.is_collecting_initial_conditions()) sqlite3_operations::drop_ics(db, serials, tk->get_twopf_database());
+		        if(writer.is_collecting_initial_conditions()) sqlite3_operations::drop_ics<number, typename integration_items<number>::ics_item, twopf_kconfig_database>(db, serials, tk->get_twopf_database());
           }
       }
 
@@ -1474,9 +1478,9 @@ namespace transport
         BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << std::endl << "** Performing integrity check for container '" << writer.get_abs_container_path().string() << "'";
 
         // get lists of missing serial numbers for threepf, real twopf and imaginary twopf
-        std::list<unsigned int> twopf_re_serials = sqlite3_operations::get_missing_twopf_serials(db, sqlite3_operations::real_twopf);
-        std::list<unsigned int> twopf_im_serials = sqlite3_operations::get_missing_twopf_serials(db, sqlite3_operations::imag_twopf);
-        std::list<unsigned int> threepf_serials  = sqlite3_operations::get_missing_threepf_serials(db);
+        std::list<unsigned int> twopf_re_serials = sqlite3_operations::get_missing_serials<number, typename integration_items<number>::twopf_re_item>(db);
+        std::list<unsigned int> twopf_im_serials = sqlite3_operations::get_missing_serials<number, typename integration_items<number>::twopf_im_item>(db);
+        std::list<unsigned int> threepf_serials  = sqlite3_operations::get_missing_serials<number, typename integration_items<number>::threepf_item>(db);
 
         // merge missing twopf lists into a single one
         std::list<unsigned int> twopf_total_serials = twopf_re_serials;
@@ -1495,7 +1499,8 @@ namespace transport
             if(remainder.size() > 0)
               {
                 BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << std::endl << "** Dropping extra threepf configurations not missing from container, but advised by backend:";
-                sqlite3_operations::drop_threepf_kconfigs(db, writer, remainder, tk->get_threepf_database());
+                sqlite3_operations::drop_k_configurations(db, writer, remainder, tk->get_threepf_database(),
+                                                          sqlite3_operations::data_traits<number, typename integration_items<number>::threepf_item>::sqlite_table());
                 threepf_serials.merge(remainder);   // not necessary to remove duplicates, since there should not be any; result is sorted
               }
           }
@@ -1508,7 +1513,8 @@ namespace transport
         if(undropped.size() > 0)
           {
             BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << "** Dropping extra threepf configurations not missing from container, but implied by missing twopf configurations:";
-            sqlite3_operations::drop_threepf_kconfigs(db, writer, undropped, tk->get_threepf_database());
+            sqlite3_operations::drop_k_configurations(db, writer, undropped, tk->get_threepf_database(),
+                                                      sqlite3_operations::data_traits<number, typename integration_items<number>::threepf_item>::sqlite_table());
             threepf_serials.merge(undropped);   // not necessary to remove duplicates, since there should be any; result is sorted
           }
 
@@ -1518,8 +1524,8 @@ namespace transport
             if(writer.is_collecting_statistics()) sqlite3_operations::drop_statistics(db, threepf_serials, tk->get_threepf_database());
 		        if(writer.is_collecting_initial_conditions())
 			        {
-		            sqlite3_operations::drop_ics(db, threepf_serials, tk->get_threepf_database(), sqlite3_operations::default_ics);
-		            sqlite3_operations::drop_ics(db, threepf_serials, tk->get_threepf_database(), sqlite3_operations::kt_ics);
+		            sqlite3_operations::drop_ics<number, typename integration_items<number>::ics_item, threepf_kconfig_database>(db, threepf_serials, tk->get_threepf_database());
+		            sqlite3_operations::drop_ics<number, typename integration_items<number>::ics_kt_item, threepf_kconfig_database>(db, threepf_serials, tk->get_threepf_database());
 			        }
 
             // build list of twopf configurations which should be dropped for this entire set of threepf configurations
@@ -1533,7 +1539,8 @@ namespace transport
             if(undropped.size() > 0)
               {
                 BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << std::endl << "** Dropping real twopf configurations entailed by these threepf configurations, but present in the container";
-                sqlite3_operations::drop_twopf_kconfigs(db, writer, undropped, tk->get_twopf_database(), sqlite3_operations::real_twopf);
+                sqlite3_operations::drop_k_configurations(db, writer, undropped, tk->get_twopf_database(),
+                                                          sqlite3_operations::data_traits<number, typename integration_items<number>::twopf_re_item>::sqlite_table());
               }
 
             // compute imaginary twopf configurations which should be dropped
@@ -1544,7 +1551,8 @@ namespace transport
             if(undropped.size() > 0)
               {
                 BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << std::endl << "** Dropping real twopf configurations entailed by these threepf configurations, but present in the container";
-                sqlite3_operations::drop_twopf_kconfigs(db, writer, undropped, tk->get_twopf_database(), sqlite3_operations::imag_twopf);
+                sqlite3_operations::drop_k_configurations(db, writer, undropped, tk->get_twopf_database(),
+                                                          sqlite3_operations::data_traits<number, typename integration_items<number>::twopf_im_item>::sqlite_table());
               }
           }
       }
@@ -1562,7 +1570,7 @@ namespace transport
 
         BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << std::endl << "** Performing integrity check for container '" << writer.get_abs_container_path().string() << "'";
 
-        std::list<unsigned int> serials = sqlite3_operations::get_missing_zeta_twopf_serials(db);
+        std::list<unsigned int> serials = sqlite3_operations::get_missing_serials<number, typename postintegration_items<number>::zeta_twopf_item>(db);
 
         if(serials.size() > 0)
           {
@@ -1571,7 +1579,8 @@ namespace transport
             if(remainder.size() > 0)
               {
                 BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << std::endl << "** Dropping extra configurations not missing from container, but advised by backend:";
-                sqlite3_operations::drop_zeta_twopf_kconfigs(db, writer, remainder, tk->get_twopf_database());
+                sqlite3_operations::drop_k_configurations(db, writer, remainder, tk->get_twopf_database(),
+                                                          sqlite3_operations::data_traits<number, typename postintegration_items<number>::zeta_twopf_item>::sqlite_table());
               }
 
             // push list of missing serial numbers to writer
@@ -1595,9 +1604,9 @@ namespace transport
         BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << std::endl << "** Performing integrity check for container '" << writer.get_abs_container_path().string() << "'";
 
         // get lists of missing serial numbers for threepf, redbsp and twopf
-        std::list<unsigned int> threepf_serials = sqlite3_operations::get_missing_zeta_threepf_serials(db);
-        std::list<unsigned int> redbsp_serials  = sqlite3_operations::get_missing_zeta_redbsp_serials(db);
-        std::list<unsigned int> twopf_serials   = sqlite3_operations::get_missing_zeta_twopf_serials(db);
+        std::list<unsigned int> threepf_serials = sqlite3_operations::get_missing_serials<number, typename postintegration_items<number>::zeta_threepf_item>(db);
+        std::list<unsigned int> redbsp_serials  = sqlite3_operations::get_missing_serials<number, typename postintegration_items<number>::zeta_redbsp_item>(db);
+        std::list<unsigned int> twopf_serials   = sqlite3_operations::get_missing_serials<number, typename postintegration_items<number>::zeta_twopf_item>(db);
 
         // map missing twopf serials into threepf serials
         std::list<unsigned int> twopf_to_threepf_map = this->map_twopf_to_threepf_serials(twopf_serials, tk->get_threepf_database());
@@ -1613,7 +1622,8 @@ namespace transport
                             threepf_serials.begin(), threepf_serials.end(), std::back_inserter(undropped));
         if(undropped.size() > 0)
           {
-            sqlite3_operations::drop_zeta_threepf_kconfigs(db, writer, undropped, tk->get_threepf_database(), true);
+            sqlite3_operations::drop_k_configurations(db, writer, undropped, tk->get_threepf_database(),
+                                                      sqlite3_operations::data_traits<number, typename postintegration_items<number>::zeta_threepf_item>::sqlite_table(), true);
           }
 
         undropped.clear();
@@ -1621,7 +1631,8 @@ namespace transport
                             redbsp_serials.begin(), redbsp_serials.end(), std::back_inserter(undropped));
         if(undropped.size() > 0)
           {
-            sqlite3_operations::drop_zeta_redbsp_configurations(db, writer, undropped, tk->get_threepf_database(), true);
+            sqlite3_operations::drop_k_configurations(db, writer, undropped, tk->get_threepf_database(),
+                                                      sqlite3_operations::data_traits<number, typename postintegration_items<number>::zeta_redbsp_item>::sqlite_table(), true);
           }
 
         // threepf and redbsp are now missing the same configurations, so log these:
@@ -1633,8 +1644,10 @@ namespace transport
             if(remainder.size() > 0)
               {
                 BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << std::endl << "** Dropping extra configurations not missing from container, but advised by backend:";
-                sqlite3_operations::drop_zeta_threepf_kconfigs(db, writer, remainder, tk->get_threepf_database());
-                sqlite3_operations::drop_zeta_redbsp_configurations(db, writer, remainder, tk->get_threepf_database(), true);
+                sqlite3_operations::drop_k_configurations(db, writer, remainder, tk->get_threepf_database(),
+                                                          sqlite3_operations::data_traits<number, typename postintegration_items<number>::zeta_threepf_item>::sqlite_table());
+                sqlite3_operations::drop_k_configurations(db, writer, remainder, tk->get_threepf_database(),
+                                                          sqlite3_operations::data_traits<number, typename postintegration_items<number>::zeta_redbsp_item>::sqlite_table(), true);
                 threepf_total_serials.merge(remainder);
               }
           }
@@ -1647,8 +1660,10 @@ namespace transport
         if(undropped.size() > 0)
           {
             BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << "** Dropping extra threepf configurations not missing from container, but implied by missing twopf configurations:";
-            sqlite3_operations::drop_zeta_threepf_kconfigs(db, writer, undropped, tk->get_threepf_database());
-            sqlite3_operations::drop_zeta_redbsp_configurations(db, writer, undropped, tk->get_threepf_database(), true);
+            sqlite3_operations::drop_k_configurations(db, writer, undropped, tk->get_threepf_database(),
+                                                      sqlite3_operations::data_traits<number, typename postintegration_items<number>::zeta_threepf_item>::sqlite_table());
+            sqlite3_operations::drop_k_configurations(db, writer, undropped, tk->get_threepf_database(),
+                                                      sqlite3_operations::data_traits<number, typename postintegration_items<number>::zeta_redbsp_item>::sqlite_table(), true);
             threepf_total_serials.merge(undropped);   // not necessary to remove duplicates, since there should be any; result is sorted
           }
 
@@ -1667,7 +1682,8 @@ namespace transport
             if(undropped.size() > 0)
               {
                 BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << std::endl << "** Dropping twopf configurations entailed by these threepf configurations, but present in the container";
-                sqlite3_operations::drop_zeta_twopf_kconfigs(db, writer, undropped, tk->get_twopf_database());
+                sqlite3_operations::drop_k_configurations(db, writer, undropped, tk->get_twopf_database(),
+                                                          sqlite3_operations::data_traits<number, typename postintegration_items<number>::zeta_twopf_item>::sqlite_table());
               }
           }
       }
@@ -1799,7 +1815,7 @@ namespace transport
         sqlite3* db = nullptr;
 		    pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
-        sqlite3_operations::pull_time_sample(db, serial_numbers, sample, pipe->get_worker_number());
+        sqlite3_operations::pull_time_config_sample(db, serial_numbers, sample, pipe->get_worker_number());
 	    }
 
 
@@ -1856,9 +1872,17 @@ namespace transport
         sqlite3* db = nullptr;
         pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
-        sqlite3_operations::pull_twopf_time_sample(db, id, t_serials, k_serial, sample,
-                                                   (type == datapipe<number>::twopf_real ? sqlite3_operations::real_twopf : sqlite3_operations::imag_twopf),
-                                                   pipe->get_worker_number(), pipe->get_N_fields());
+		    if(type == datapipe<number>::twopf_real)
+			    {
+		        sqlite3_operations::pull_paged_time_sample<number, typename integration_items<number>::twopf_re_item>(db, id, t_serials, k_serial, sample,
+		                                                                                                              pipe->get_worker_number(), pipe->get_N_fields());
+			    }
+		    else if(type == datapipe<number>::twopf_imag)
+			    {
+		        sqlite3_operations::pull_paged_time_sample<number, typename integration_items<number>::twopf_im_item>(db, id, t_serials, k_serial, sample,
+		                                                                                                              pipe->get_worker_number(), pipe->get_N_fields());
+			    }
+		    else assert(false);
 	    }
 
 
@@ -1872,7 +1896,8 @@ namespace transport
         sqlite3* db = nullptr;
         pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
-        sqlite3_operations::pull_threepf_time_sample(db, id, t_serials, k_serial, sample, pipe->get_worker_number(), pipe->get_N_fields());
+        sqlite3_operations::pull_paged_time_sample<number, typename integration_items<number>::threepf_item>(db, id, t_serials, k_serial, sample,
+                                                                                                             pipe->get_worker_number(), pipe->get_N_fields());
 	    }
 
 
@@ -1886,7 +1911,8 @@ namespace transport
         sqlite3* db = nullptr;
         pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
-        sqlite3_operations::pull_tensor_twopf_time_sample(db, id, t_serials, k_serial, sample, pipe->get_worker_number());
+        sqlite3_operations::pull_paged_time_sample<number, typename integration_items<number>::tensor_twopf_item>(db, id, t_serials, k_serial, sample,
+                                                                                                                  pipe->get_worker_number(), pipe->get_N_fields());
       }
 
 
@@ -1900,7 +1926,8 @@ namespace transport
 		    sqlite3* db = nullptr;
 		    pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
-        sqlite3_operations::pull_zeta_twopf_time_sample(db, t_serials, k_serial, sample, pipe->get_worker_number());
+        sqlite3_operations::pull_unpaged_time_sample<number, typename postintegration_items<number>::zeta_twopf_item>(db, t_serials, k_serial, sample,
+                                                                                                                      pipe->get_worker_number());
 	    }
 
 
@@ -1914,7 +1941,8 @@ namespace transport
 		    sqlite3* db = nullptr;
 		    pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
-        sqlite3_operations::pull_zeta_threepf_time_sample(db, t_serials, k_serial, sample, pipe->get_worker_number());
+        sqlite3_operations::pull_unpaged_time_sample<number, typename postintegration_items<number>::zeta_threepf_item>(db, t_serials, k_serial, sample,
+                                                                                                                        pipe->get_worker_number());
 	    }
 
 
@@ -1928,7 +1956,8 @@ namespace transport
 		    sqlite3* db = nullptr;
 		    pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
-        sqlite3_operations::pull_zeta_redbsp_time_sample(db, t_serials, k_serial, sample, pipe->get_worker_number());
+        sqlite3_operations::pull_unpaged_time_sample<number, typename postintegration_items<number>::zeta_redbsp_item>(db, t_serials, k_serial, sample,
+                                                                                                                        pipe->get_worker_number());
 	    }
 
 
@@ -1985,9 +2014,17 @@ namespace transport
 		    sqlite3* db = nullptr;
 		    pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
-        sqlite3_operations::pull_twopf_kconfig_sample(db, id, k_serials, t_serial, sample,
-                                                      (type == datapipe<number>::twopf_real ? sqlite3_operations::real_twopf : sqlite3_operations::imag_twopf),
-                                                      pipe->get_worker_number(), pipe->get_N_fields());
+		    if(type == datapipe<number>::twopf_real)
+			    {
+		        sqlite3_operations::pull_paged_kconfig_sample<number, typename integration_items<number>::twopf_re_item>(db, id, k_serials, t_serial, sample,
+		                                                                                                                 pipe->get_worker_number(), pipe->get_N_fields());
+			    }
+		    else if(type == datapipe<number>::twopf_imag)
+			    {
+		        sqlite3_operations::pull_paged_kconfig_sample<number, typename integration_items<number>::twopf_im_item>(db, id, k_serials, t_serial, sample,
+		                                                                                                                 pipe->get_worker_number(), pipe->get_N_fields());
+			    }
+		    else assert(false);
 	    }
 
 
@@ -2001,7 +2038,8 @@ namespace transport
         sqlite3* db = nullptr;
         pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
-        sqlite3_operations::pull_threepf_kconfig_sample(db, id, k_serials, t_serial, sample, pipe->get_worker_number(), pipe->get_N_fields());
+        sqlite3_operations::pull_paged_kconfig_sample<number, typename integration_items<number>::threepf_item>(db, id, k_serials, t_serial, sample,
+                                                                                                                pipe->get_worker_number(), pipe->get_N_fields());
 	    }
 
 
@@ -2015,7 +2053,8 @@ namespace transport
         sqlite3* db = nullptr;
         pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
-        sqlite3_operations::pull_tensor_twopf_kconfig_sample(db, id, k_serials, t_serial, sample, pipe->get_worker_number());
+        sqlite3_operations::pull_paged_kconfig_sample<number, typename integration_items<number>::tensor_twopf_item>(db, id, k_serials, t_serial, sample,
+                                                                                                                     pipe->get_worker_number(), pipe->get_N_fields());
       }
 
 
@@ -2029,7 +2068,8 @@ namespace transport
         sqlite3* db = nullptr;
         pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
-        sqlite3_operations::pull_zeta_twopf_kconfig_sample(db, k_serials, t_serial, sample, pipe->get_worker_number());
+        sqlite3_operations::pull_unpaged_kconfig_sample<number, typename postintegration_items<number>::zeta_twopf_item>(db, k_serials, t_serial, sample,
+                                                                                                                         pipe->get_worker_number());
 	    }
 
 
@@ -2043,7 +2083,8 @@ namespace transport
         sqlite3* db = nullptr;
         pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
-        sqlite3_operations::pull_zeta_threepf_kconfig_sample(db, k_serials, t_serial, sample, pipe->get_worker_number());
+        sqlite3_operations::pull_unpaged_kconfig_sample<number, typename postintegration_items<number>::zeta_threepf_item>(db, k_serials, t_serial, sample,
+                                                                                                                           pipe->get_worker_number());
 	    }
 
 
@@ -2057,7 +2098,8 @@ namespace transport
         sqlite3* db = nullptr;
         pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
-        sqlite3_operations::pull_zeta_redbsp_kconfig_sample(db, k_serials, t_serial, sample, pipe->get_worker_number());
+        sqlite3_operations::pull_unpaged_kconfig_sample<number, typename postintegration_items<number>::zeta_threepf_item>(db, k_serials, t_serial, sample,
+                                                                                                                           pipe->get_worker_number());
 	    }
 
 

@@ -39,11 +39,6 @@
 #define __CPP_TRANSPORT_SQLITE_TENSOR_TWOPF_VALUE_TABLE            "tensor_twopf"
 #define __CPP_TRANSPORT_SQLITE_TWOPF_RE_VALUE_TABLE                "twopf_re"
 #define __CPP_TRANSPORT_SQLITE_TWOPF_IM_VALUE_TABLE                "twopf_im"
-
-#define __CPP_TRANSPORT_SQLITE_TWOPF_VALUE_TABLE                   "twopf"
-#define __CPP_TRANSPORT_SQLITE_TWOPF_REAL_TAG                      "re"
-#define __CPP_TRANSPORT_SQLITE_TWOPF_IMAGINARY_TAG                 "im"
-
 #define __CPP_TRANSPORT_SQLITE_THREEPF_VALUE_TABLE                 "threepf"
 #define __CPP_TRANSPORT_SQLITE_WORKERS_TABLE                       "worker_data"
 #define __CPP_TRANSPORT_SQLITE_STATS_TABLE                         "integration_statistics"
@@ -81,11 +76,7 @@ namespace transport
 
         typedef enum { foreign_keys, no_foreign_keys } add_foreign_keys_type;
 
-        typedef enum { real_twopf, imag_twopf } twopf_value_type;
-
         typedef enum { twopf_configs, threepf_configs } metadata_configuration_type;
-
-		    typedef enum { default_ics, kt_ics } ics_value_type;
 
 
         // sqlite has a default maximum number of columns, and a maximum number of
@@ -94,13 +85,6 @@ namespace transport
         // to set a limit on the number of columns per row
         constexpr unsigned int max_columns = (__CPP_TRANSPORT_DEFAULT_SQLITE_MAX_VARIABLE_NUMBER < __CPP_TRANSPORT_DEFAULT_SQLITE_MAX_COLUMN ? __CPP_TRANSPORT_DEFAULT_SQLITE_MAX_VARIABLE_NUMBER : __CPP_TRANSPORT_DEFAULT_SQLITE_MAX_COLUMN) - __CPP_TRANSPORT_DEFAULT_SQLITE_COLUMN_OVERHEAD;
 
-
-        // construct the name of a twopf table
-        inline std::string twopf_table_name(twopf_value_type type)
-          {
-            return(static_cast<std::string>(__CPP_TRANSPORT_SQLITE_TWOPF_VALUE_TABLE) + "_"
-              + (type == real_twopf ? __CPP_TRANSPORT_SQLITE_TWOPF_REAL_TAG : __CPP_TRANSPORT_SQLITE_TWOPF_IMAGINARY_TAG));
-          }
 
         // construct the name of an fNL table
         inline std::string fNL_table_name(derived_data::template_type type)

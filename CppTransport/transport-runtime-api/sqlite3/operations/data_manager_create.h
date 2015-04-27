@@ -9,6 +9,7 @@
 
 
 #include "transport-runtime-api/sqlite3/operations/data_manager_common.h"
+#include "transport-runtime-api/sqlite3/operations/data_traits.h"
 
 
 namespace transport
@@ -231,14 +232,15 @@ namespace transport
 
 
 		    // Create table for initial conditions, if they are being collected
+				template <typename number, typename ValueType>
 		    void create_ics_table(sqlite3* db, unsigned int Nfields, add_foreign_keys_type keys=no_foreign_keys,
-		                          metadata_configuration_type type=twopf_configs, ics_value_type ics=default_ics)
+		                          metadata_configuration_type type=twopf_configs)
 			    {
 		        unsigned int num_cols = std::min(2*Nfields, max_columns);
 
 		        std::ostringstream create_stmt;
 		        create_stmt
-			        << "CREATE TABLE " << (ics == default_ics ? __CPP_TRANSPORT_SQLITE_ICS_TABLE : __CPP_TRANSPORT_SQLITE_KT_ICS_TABLE) << "("
+			        << "CREATE TABLE " << data_traits<number, ValueType>::sqlite_table() << "("
 			        << "kserial INTEGER, "
 			        << "page    INTEGER";
 
@@ -299,13 +301,14 @@ namespace transport
 
 
 		    // Create table for twopf values
-		    void create_twopf_table(sqlite3* db, unsigned int Nfields, twopf_value_type type=real_twopf, add_foreign_keys_type keys=no_foreign_keys)
+				template <typename number, typename ValueType>
+		    void create_twopf_table(sqlite3* db, unsigned int Nfields, add_foreign_keys_type keys=no_foreign_keys)
 			    {
 		        unsigned int num_cols = std::min(2*Nfields * 2*Nfields, max_columns);
 
 		        std::ostringstream create_stmt;
 		        create_stmt
-			        << "CREATE TABLE " << twopf_table_name(type) << "("
+			        << "CREATE TABLE " << data_traits<number, ValueType>::sqlite_table() << "("
 			        << "tserial INTEGER, "
 			        << "kserial INTEGER, "
 			        << "page    INTEGER";

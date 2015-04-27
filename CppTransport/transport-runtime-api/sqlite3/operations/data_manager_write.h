@@ -101,65 +101,8 @@ namespace transport
           }
 
 
-		    // Write a batch of initial-conditions information
-		    template <typename number>
-		    void write_ics(ics_value_type type, integration_batcher<number>* batcher, const std::vector< typename integration_items<number>::ics_item >& batch)
-			    {
-		        sqlite3* db = nullptr;
-		        batcher->get_manager_handle(&db);
-
-		        unsigned int Nfields = batcher->get_number_fields();
-
-		        // work out how many columns we have, and how many pages
-		        // we need to fit in our number of columns.
-		        // num_pages will be 1 or greater
-		        unsigned int num_cols = std::min(2*Nfields, max_columns);
-		        unsigned int num_pages = (2*Nfields-1)/num_cols + 1;
-
-		        std::ostringstream insert_stmt;
-		        insert_stmt << "INSERT INTO " << (type == default_ics ? __CPP_TRANSPORT_SQLITE_ICS_TABLE : __CPP_TRANSPORT_SQLITE_KT_ICS_TABLE) << " VALUES (@kserial, @page";
-
-		        for(unsigned int i = 0; i < num_cols; ++i)
-			        {
-		            insert_stmt << ", @coord" << i;
-			        }
-		        insert_stmt << ");";
-
-		        sqlite3_stmt* stmt;
-		        check_stmt(db, sqlite3_prepare_v2(db, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr));
-
-		        exec(db, "BEGIN TRANSACTION;");
-
-		        for(typename std::vector< typename integration_items<number>::ics_item >::const_iterator t = batch.begin(); t != batch.end(); ++t)
-			        {
-		            for(unsigned int page = 0; page < num_pages; ++page)
-			            {
-		                check_stmt(db, sqlite3_bind_int(stmt, 1, t->source_serial));
-		                check_stmt(db, sqlite3_bind_int(stmt, 2, page));
-
-		                for(unsigned int i = 0; i < num_cols; ++i)
-			                {
-		                    unsigned int index = page*num_cols + i;
-		                    number       value = index < 2*Nfields ? t->coords[index] : 0.0;
-
-		                    check_stmt(db, sqlite3_bind_double(stmt, i+3, static_cast<double>(value)));    // 'number' must be castable to double
-			                }
-
-		                check_stmt(db, sqlite3_step(stmt), __CPP_TRANSPORT_DATACTR_ICS_INSERT_FAIL, SQLITE_DONE);
-
-		                check_stmt(db, sqlite3_clear_bindings(stmt));
-		                check_stmt(db, sqlite3_reset(stmt));
-			            }
-			        }
-
-		        exec(db, "END TRANSACTION;");
-		        check_stmt(db, sqlite3_finalize(stmt));
-			    }
-
-
-        // Write a batch of background values
-        template <typename number>
-        void write_backg(integration_batcher<number>* batcher, const std::vector< typename integration_items<number>::backg_item >& batch)
+        template <typename number, typename ValueType>
+        void write_coordinate_output(integration_batcher<number>* batcher, const std::vector<ValueType>& batch)
           {
             sqlite3* db = nullptr;
             batcher->get_manager_handle(&db);
@@ -169,11 +112,15 @@ namespace transport
             // work out how many columns we have, and how many pages
             // we need to fit in our number of columns.
             // num_pages will be 1 or greater
+		        unsigned int num_elements = data_traits<number, ValueType>::number_elements(Nfields);
+
 		        unsigned int num_cols = std::min(2*Nfields, max_columns);
             unsigned int num_pages = (2*Nfields-1)/num_cols + 1;
 
             std::ostringstream insert_stmt;
-            insert_stmt << "INSERT INTO " << __CPP_TRANSPORT_SQLITE_BACKG_VALUE_TABLE << " VALUES (@tserial, @page";
+            insert_stmt
+	            << "INSERT INTO " << data_traits<number, ValueType>::sqlite_table()
+	            << " VALUES (@" << data_traits<number, ValueType>::sqlite_serial_column() << ", @page";
 
             for(unsigned int i = 0; i < num_cols; ++i)
               {
@@ -186,11 +133,11 @@ namespace transport
 
             exec(db, "BEGIN TRANSACTION;");
 
-            for(typename std::vector< typename integration_items<number>::backg_item >::const_iterator t = batch.begin(); t != batch.end(); ++t)
+            for(typename std::vector<ValueType>::const_iterator t = batch.begin(); t != batch.end(); ++t)
               {
                 for(unsigned int page = 0; page < num_pages; ++page)
 	                {
-                    check_stmt(db, sqlite3_bind_int(stmt, 1, t->time_serial));
+                    check_stmt(db, sqlite3_bind_int(stmt, 1, t->get_serial()));
 		                check_stmt(db, sqlite3_bind_int(stmt, 2, page));
 
 		                for(unsigned int i = 0; i < num_cols; ++i)
@@ -201,7 +148,7 @@ namespace transport
 		                    check_stmt(db, sqlite3_bind_double(stmt, i+3, static_cast<double>(value)));    // 'number' must be castable to double
 			                }
 
-		                check_stmt(db, sqlite3_step(stmt), __CPP_TRANSPORT_DATACTR_BACKG_DATATAB_FAIL, SQLITE_DONE);
+		                check_stmt(db, sqlite3_step(stmt), data_traits<number, ValueType>::write_error_msg(), SQLITE_DONE);
 
 		                check_stmt(db, sqlite3_clear_bindings(stmt));
 		                check_stmt(db, sqlite3_reset(stmt));
@@ -259,7 +206,7 @@ namespace transport
 		                    check_stmt(db, sqlite3_bind_double(stmt, i+4, static_cast<double>(value)));    // 'number' must be castable to double
 			                }
 
-		                check_stmt(db, sqlite3_step(stmt), data_traits<number, ValueType>::error_msg(), SQLITE_DONE);
+		                check_stmt(db, sqlite3_step(stmt), data_traits<number, ValueType>::write_error_msg(), SQLITE_DONE);
 
 		                check_stmt(db, sqlite3_clear_bindings(stmt));
 		                check_stmt(db, sqlite3_reset(stmt));
@@ -292,7 +239,7 @@ namespace transport
                 check_stmt(db, sqlite3_bind_int(stmt, 2, t->kconfig_serial));
                 check_stmt(db, sqlite3_bind_double(stmt, 3, static_cast<double>(t->value)));
 
-                check_stmt(db, sqlite3_step(stmt), data_traits<number, ValueType>::error_msg(), SQLITE_DONE);
+                check_stmt(db, sqlite3_step(stmt), data_traits<number, ValueType>::write_error_msg(), SQLITE_DONE);
 
                 check_stmt(db, sqlite3_clear_bindings(stmt));
                 check_stmt(db, sqlite3_reset(stmt));

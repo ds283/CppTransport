@@ -56,6 +56,9 @@ namespace transport
 				//! Per-configuration initial conditions writer function
 				typedef std::function<void(integration_batcher<number>*, const std::vector<typename integration_items<number>::ics_item>&)> ics_writer;
 
+		    //! Per-configuration initial conditions writer function - kt variant
+		    typedef std::function<void(integration_batcher<number>*, const std::vector<typename integration_items<number>::ics_kt_item>&)> ics_kt_writer;
+
 		    //! Host information writer function
 		    typedef std::function<void(integration_batcher<number>*)> host_info_writer;
 			};
@@ -404,7 +407,7 @@ namespace transport
             typename integration_writers<number>::threepf_writer      threepf;
             typename integration_writers<number>::stats_writer        stats;
 		        typename integration_writers<number>::ics_writer          ics;
-		        typename integration_writers<number>::ics_writer          kt_ics;
+		        typename integration_writers<number>::ics_kt_writer       kt_ics;
             typename integration_writers<number>::host_info_writer    host_info;
 	        };
 
@@ -521,7 +524,7 @@ namespace transport
         std::vector< typename integration_items<number>::threepf_item >      threepf_batch;
 
 		    //! k_t initial conditions cache
-		    std::vector< typename integration_items<number>::ics_item >          kt_ics_batch;
+		    std::vector< typename integration_items<number>::ics_kt_item >       kt_ics_batch;
 
 
         // PAIRING
@@ -1053,7 +1056,7 @@ namespace transport
 
         if(this->collect_initial_conditions)
 	        {
-            typename integration_items<number>::ics_item ics;
+            typename integration_items<number>::ics_kt_item ics;
 
             ics.source_serial = k_serial;
             ics.coords        = values;
@@ -1133,7 +1136,7 @@ namespace transport
                               this->ics_batch.end());
 
         this->kt_ics_batch.erase(std::remove_if(this->kt_ics_batch.begin(), this->kt_ics_batch.end(),
-                                                UnbatchPredicate<typename integration_items<number>::ics_item>(source_serial)),
+                                                UnbatchPredicate<typename integration_items<number>::ics_kt_item>(source_serial)),
                               this->kt_ics_batch.end());
 
         if(this->paired_batcher != nullptr) this->paired_batcher->unbatch(source_serial);

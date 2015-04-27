@@ -27,6 +27,7 @@ namespace transport
 
             //! time serial number for this configuration
             unsigned int        time_serial;
+            unsigned int        get_serial() const { return(this->time_serial); }
 
             //! values
             std::vector<number> coords;
@@ -141,16 +142,33 @@ namespace transport
 
 
 		    //! Stores information about the initial conditions for each k-configuration
+		    //! (there are separate types for ics_item and ics_kt_item so we can adjust template behaviour via type traits)
 		    class ics_item
 			    {
 		      public:
 
 				    //! kconfig serial number
 				    unsigned int        source_serial;
+				    unsigned int        get_serial() const { return(this->source_serial); }
 
 		        //! values
 		        std::vector<number> coords;
 			    };
+
+
+        //! Stores information about the initial conditions for each k-configuration
+        //! (there are separate types for ics_item and ics_kt_item so we can adjust template behaviour via type traits)
+        class ics_kt_item
+	        {
+          public:
+
+            //! kconfig serial number
+            unsigned int        source_serial;
+            unsigned int        get_serial() const { return(this->source_serial); }
+
+            //! values
+            std::vector<number> coords;
+	        };
 
 	    };
 
