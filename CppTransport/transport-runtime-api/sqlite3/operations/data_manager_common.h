@@ -37,9 +37,13 @@
 #define __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE                "threepf_samples"
 #define __CPP_TRANSPORT_SQLITE_BACKG_VALUE_TABLE                   "backg"
 #define __CPP_TRANSPORT_SQLITE_TENSOR_TWOPF_VALUE_TABLE            "tensor_twopf"
+#define __CPP_TRANSPORT_SQLITE_TWOPF_RE_VALUE_TABLE                "twopf_re"
+#define __CPP_TRANSPORT_SQLITE_TWOPF_IM_VALUE_TABLE                "twopf_im"
+
 #define __CPP_TRANSPORT_SQLITE_TWOPF_VALUE_TABLE                   "twopf"
 #define __CPP_TRANSPORT_SQLITE_TWOPF_REAL_TAG                      "re"
 #define __CPP_TRANSPORT_SQLITE_TWOPF_IMAGINARY_TAG                 "im"
+
 #define __CPP_TRANSPORT_SQLITE_THREEPF_VALUE_TABLE                 "threepf"
 #define __CPP_TRANSPORT_SQLITE_WORKERS_TABLE                       "worker_data"
 #define __CPP_TRANSPORT_SQLITE_STATS_TABLE                         "integration_statistics"

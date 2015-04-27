@@ -289,6 +289,26 @@ namespace transport
 	        }
 	    }
 
+
+    template <typename Item>
+    class UnbatchPredicate
+	    {
+      public:
+        UnbatchPredicate(unsigned int s)
+	        : source_serial(s)
+	        {
+	        }
+
+        bool operator()(const Item& it)
+	        {
+            return(it.source_serial == this->source_serial);
+	        }
+
+      private:
+        unsigned int source_serial;
+	    };
+
+
 	}   // namespace transport
 
 

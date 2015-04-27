@@ -860,8 +860,8 @@ namespace transport
         writers.stats        = std::bind(&sqlite3_operations::write_stats<number>, std::placeholders::_1, std::placeholders::_2);
 		    writers.ics          = std::bind(&sqlite3_operations::write_ics<number>, sqlite3_operations::default_ics, std::placeholders::_1, std::placeholders::_2);
         writers.backg        = std::bind(&sqlite3_operations::write_backg<number>, std::placeholders::_1, std::placeholders::_2);
-        writers.twopf        = std::bind(&sqlite3_operations::write_twopf<number>, sqlite3_operations::real_twopf, std::placeholders::_1, std::placeholders::_2);
-        writers.tensor_twopf = std::bind(&sqlite3_operations::write_tensor_twopf<number>, std::placeholders::_1, std::placeholders::_2);
+        writers.twopf        = std::bind(&sqlite3_operations::write_paged_output<number, integration_batcher<number>, typename integration_items<number>::twopf_re_item>, std::placeholders::_1, std::placeholders::_2);
+        writers.tensor_twopf = std::bind(&sqlite3_operations::write_paged_output<number, integration_batcher<number>, typename integration_items<number>::tensor_twopf_item>, std::placeholders::_1, std::placeholders::_2);
 
         // set up a replacement function
         generic_batcher::container_replacement_function replacer =
@@ -897,10 +897,10 @@ namespace transport
         writers.ics          = std::bind(&sqlite3_operations::write_ics<number>, sqlite3_operations::default_ics, std::placeholders::_1, std::placeholders::_2);
         writers.kt_ics       = std::bind(&sqlite3_operations::write_ics<number>, sqlite3_operations::kt_ics, std::placeholders::_1, std::placeholders::_2);
         writers.backg        = std::bind(&sqlite3_operations::write_backg<number>, std::placeholders::_1, std::placeholders::_2);
-        writers.twopf_re     = std::bind(&sqlite3_operations::write_twopf<number>, sqlite3_operations::real_twopf, std::placeholders::_1, std::placeholders::_2);
-        writers.twopf_im     = std::bind(&sqlite3_operations::write_twopf<number>, sqlite3_operations::imag_twopf, std::placeholders::_1, std::placeholders::_2);
-        writers.tensor_twopf = std::bind(&sqlite3_operations::write_tensor_twopf<number>, std::placeholders::_1, std::placeholders::_2);
-        writers.threepf      = std::bind(&sqlite3_operations::write_threepf<number>, std::placeholders::_1, std::placeholders::_2);
+        writers.twopf_re     = std::bind(&sqlite3_operations::write_paged_output<number, integration_batcher<number>, typename integration_items<number>::twopf_re_item>, std::placeholders::_1, std::placeholders::_2);
+        writers.twopf_im     = std::bind(&sqlite3_operations::write_paged_output<number, integration_batcher<number>, typename integration_items<number>::twopf_im_item>, std::placeholders::_1, std::placeholders::_2);
+        writers.tensor_twopf = std::bind(&sqlite3_operations::write_paged_output<number, integration_batcher<number>, typename integration_items<number>::tensor_twopf_item>, std::placeholders::_1, std::placeholders::_2);
+        writers.threepf      = std::bind(&sqlite3_operations::write_paged_output<number, integration_batcher<number>, typename integration_items<number>::threepf_item>, std::placeholders::_1, std::placeholders::_2);
 
         // set up a replacement function
         generic_batcher::container_replacement_function replacer =
@@ -929,7 +929,7 @@ namespace transport
 
         // set up writers
         typename zeta_twopf_batcher<number>::writer_group writers;
-        writers.twopf = std::bind(&sqlite3_operations::write_zeta_twopf<number>, std::placeholders::_1, std::placeholders::_2);
+        writers.twopf = std::bind(&sqlite3_operations::write_unpaged<number, postintegration_batcher, typename postintegration_items<number>::zeta_twopf_item>, std::placeholders::_1, std::placeholders::_2);
 
         // set up replacement function
         generic_batcher::container_replacement_function replacer =
@@ -959,9 +959,9 @@ namespace transport
 
         // set up writers
         typename zeta_threepf_batcher<number>::writer_group writers;
-        writers.twopf   = std::bind(&sqlite3_operations::write_zeta_twopf<number>, std::placeholders::_1, std::placeholders::_2);
-        writers.threepf = std::bind(&sqlite3_operations::write_zeta_threepf<number>, std::placeholders::_1, std::placeholders::_2);
-        writers.redbsp  = std::bind(&sqlite3_operations::write_zeta_redbsp<number>, std::placeholders::_1, std::placeholders::_2);
+        writers.twopf   = std::bind(&sqlite3_operations::write_unpaged<number, postintegration_batcher, typename postintegration_items<number>::zeta_twopf_item>, std::placeholders::_1, std::placeholders::_2);
+        writers.threepf = std::bind(&sqlite3_operations::write_unpaged<number, postintegration_batcher, typename postintegration_items<number>::zeta_threepf_item>, std::placeholders::_1, std::placeholders::_2);
+        writers.redbsp  = std::bind(&sqlite3_operations::write_unpaged<number, postintegration_batcher, typename postintegration_items<number>::zeta_redbsp_item>, std::placeholders::_1, std::placeholders::_2);
 
         // set up replacement function
         generic_batcher::container_replacement_function replacer =

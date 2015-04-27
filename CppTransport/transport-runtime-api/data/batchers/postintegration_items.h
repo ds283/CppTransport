@@ -19,6 +19,7 @@ namespace transport
 
       public:
 
+
         //! Stores a zeta twopf configuration
         class zeta_twopf_item
 	        {
@@ -37,7 +38,10 @@ namespace transport
             number value;
 	        };
 
+
         //! Stores a zeta threepf configuration
+		    //! (we distinguish between threepf configurations and reduced bispectrum configurations, whose classes
+		    //! carry the same data, so we can adjust template behaviour using type traits)
         class zeta_threepf_item
 	        {
           public:
@@ -54,6 +58,28 @@ namespace transport
             // value
             number value;
 	        };
+
+
+        //! Stores a zeta reduced bispectrum configuration
+        //! (we distinguish between threepf configurations and reduced bispectrum configurations, whose classes
+        //! carry the same data, so we can adjust template behaviour using type traits)
+        class zeta_redbsp_item
+	        {
+          public:
+
+            //! time serial number for this configuration
+            unsigned int time_serial;
+
+            //! kconfig serial number of this configuration
+            unsigned int kconfig_serial;
+
+            //! kconfig serial number for the integration which produced these values. Used when unwinding a batch.
+            unsigned int source_serial;
+
+            // value
+            number value;
+	        };
+
 
         //! Stores an fNL configuration
         class fNL_item
