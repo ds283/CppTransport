@@ -27,11 +27,11 @@
 namespace transport
 	{
 
-		class work_item
+		class work_duration
 			{
 		  public:
 
-				work_item(boost::posix_time::ptime b, boost::posix_time::ptime e, std::string c)
+				work_duration(boost::posix_time::ptime b, boost::posix_time::ptime e, std::string c)
 					: begin_time(b),
 		        end_time(e),
 		        colour(c),
@@ -83,7 +83,7 @@ namespace transport
 			};
 
 
-    std::string work_item::format_gantt_bar(unsigned int unique_id, double y) const
+    std::string work_duration::format_gantt_bar(unsigned int unique_id, double y) const
 	    {
         std::ostringstream begin_label;
         std::ostringstream end_label;
@@ -116,8 +116,8 @@ namespace transport
 				//! Create a work event for a given worker
 				work_event();
 
-				//! Create a work event for a given number, and a given timestamp
-				work_event(boost::posix_time::ptime& t);
+				//! Create a work event for a given number, and a given timestamp and id
+				work_event(boost::posix_time::ptime& t, unsigned int i);
 
 				virtual ~work_event() = default;
 
@@ -131,6 +131,12 @@ namespace transport
 
 				//! Get timestamp
 				boost::posix_time::ptime get_timestamp() const { return(this->timestamp); }
+
+				//! Set id
+				void set_id(unsigned int i) { this->id = i; }
+
+				//! Get id
+				unsigned int get_id() const { return(this->id); }
 
 
 				// CLONE
@@ -148,17 +154,22 @@ namespace transport
 				//! cache time this work event was journaled
 				boost::posix_time::ptime timestamp;
 
+				//! internal ID number (interpretation depends on concrete class)
+				unsigned int id;
+
 			};
 
 
 		work_event::work_event()
-			: timestamp(boost::posix_time::second_clock::universal_time())
+			: timestamp(boost::posix_time::second_clock::universal_time()),
+				id(0)
 			{
 			}
 
 
-		work_event::work_event(boost::posix_time::ptime& t)
-			: timestamp(t)
+		work_event::work_event(boost::posix_time::ptime& t, unsigned int i)
+			: timestamp(t),
+				id(i)
 			{
 			}
 
@@ -182,7 +193,7 @@ namespace transport
 
 				master_work_event(event_type t);
 
-				master_work_event(event_type t, boost::posix_time::ptime ts);
+				master_work_event(event_type t, boost::posix_time::ptime ts, unsigned int id=0);
 
 				virtual ~master_work_event() = default;
 
@@ -221,10 +232,29 @@ namespace transport
 			}
 
 
-		master_work_event::master_work_event(typename master_work_event::event_type t, boost::posix_time::ptime ts)
-			: work_event(ts),
+		master_work_event::master_work_event(typename master_work_event::event_type t, boost::posix_time::ptime ts, unsigned int id)
+			: work_event(ts, id),
 				type(t)
 			{
+			}
+
+
+		inline bool is_duration_delimiter(master_work_event::event_type type)
+			{
+				if(type == master_work_event::aggregate_begin
+					|| type == master_work_event::aggregate_end
+					|| type == master_work_event::MPI_begin
+					|| type == master_work_event::MPI_end
+					|| type == master_work_event::database_begin
+					|| type == master_work_event::database_end) return(true);
+
+				return(false);
+			}
+
+
+		inline bool is_milestone(master_work_event::event_type type)
+			{
+				return(false);
 			}
 
 
@@ -241,7 +271,8 @@ namespace transport
 						begin_zeta_twopf_assignment, end_zeta_twopf_assignment,
 						begin_zeta_threepf_assignment, end_zeta_threepf_assignment,
 						begin_fNL_assignment, end_fNL_assignment,
-						begin_output_assignment, end_output_assignment
+						begin_output_assignment, end_output_assignment,
+						integration_aggregation, postintegration_aggregation, derived_content_aggregation
 					} event_type;
 
 				// CONSTRUCTOR, DESTRUCTOR
@@ -250,7 +281,7 @@ namespace transport
 
 				slave_work_event(unsigned int w, event_type t);
 
-				slave_work_event(unsigned int w, event_type t, boost::posix_time::ptime ts);
+				slave_work_event(unsigned int w, event_type t, boost::posix_time::ptime ts, unsigned int id=0);
 
 				virtual ~slave_work_event() = default;
 
@@ -286,6 +317,29 @@ namespace transport
 			};
 
 
+		inline bool is_duration_delimiter(slave_work_event::event_type type)
+			{
+				if(type == slave_work_event::begin_twopf_assignment || type == slave_work_event::end_twopf_assignment) return(true);
+		    if(type == slave_work_event::begin_threepf_assignment || type == slave_work_event::end_threepf_assignment) return(true);
+		    if(type == slave_work_event::begin_zeta_twopf_assignment || type == slave_work_event::end_zeta_twopf_assignment) return(true);
+		    if(type == slave_work_event::begin_zeta_threepf_assignment || type == slave_work_event::end_zeta_threepf_assignment) return(true);
+		    if(type == slave_work_event::begin_fNL_assignment || type == slave_work_event::end_fNL_assignment) return(true);
+		    if(type == slave_work_event::begin_output_assignment || type == slave_work_event::end_output_assignment) return(true);
+
+				return(false);
+			}
+
+
+		inline bool is_milestone(slave_work_event::event_type type)
+			{
+				if(type == slave_work_event::integration_aggregation
+					|| type == slave_work_event::postintegration_aggregation
+					|| type == slave_work_event::derived_content_aggregation) return(true);
+
+				return(false);
+			}
+
+
 		slave_work_event::slave_work_event(unsigned int w, typename slave_work_event::event_type t)
 			: work_event(),
 				type(t),
@@ -294,8 +348,8 @@ namespace transport
 			}
 
 
-    slave_work_event::slave_work_event(unsigned int w, typename slave_work_event::event_type t, boost::posix_time::ptime ts)
-	    : work_event(ts),
+    slave_work_event::slave_work_event(unsigned int w, typename slave_work_event::event_type t, boost::posix_time::ptime ts, unsigned int id)
+	    : work_event(ts, id),
 	      type(t),
 	      worker_number(w)
 	    {
@@ -335,7 +389,11 @@ namespace transport
 
 		  protected:
 
-				void bin_work(std::list< std::list< work_item > >& list);
+				void bin_durations(std::list< std::list<work_duration> >& list);
+
+				void bin_master_durations(std::list< std::list<work_duration> >& list);
+
+				void bin_slave_durations(std::list< std::list<work_duration> >& list);
 
 
 				// PRIVATE DATA
@@ -376,32 +434,41 @@ namespace transport
 			}
 
 
-		void work_journal::bin_work(std::list< std::list< work_item > >& list)
+		void work_journal::bin_durations(std::list< std::list<work_duration> >& list)
 			{
-				list.clear();
+		    list.clear();
 
-				class WorkItemSorter
-					{
-				  public:
-						bool operator()(const work_event* A, const work_event* B)
-							{
-								return(A->get_timestamp() < B->get_timestamp());
-							}
-					};
+		    this->bin_master_durations(list);
+		    this->bin_slave_durations(list);
+			}
 
-				// strip out master events and sort them in order
+
+    class WorkItemSorter
+	    {
+      public:
+        bool operator()(const work_event* A, const work_event* B)
+	        {
+            return(A->get_timestamp() < B->get_timestamp());
+	        }
+	    };
+
+
+		void work_journal::bin_master_durations(std::list< std::list<work_duration> >& list)
+			{
+				// strip out master duration-bracketing events and sort them in order
 		    std::list< master_work_event* > master_events;
 				for(std::list< work_event* >::iterator t = this->journal.begin(); t != this->journal.end(); ++t)
 					{
 						if((*t)->is_master())
 							{
-								master_events.push_back(dynamic_cast< master_work_event* >(*t));
+								master_work_event* event = dynamic_cast< master_work_event* >(*t);
+								if(is_duration_delimiter(event->get_type())) master_events.push_back(event);
 							}
 					}
 				master_events.sort(WorkItemSorter());
 
 				list.resize(list.size()+1);
-		    std::list< std::list< work_item > >::iterator current_bin = --list.end();
+		    std::list< std::list<work_duration> >::iterator current_bin = --list.end();
 
 				// work through master events, pairing them up
 				for(std::list< master_work_event* >::const_iterator t = master_events.begin(); t != master_events.end(); ++t)
@@ -414,7 +481,7 @@ namespace transport
 						        t++;
 						        if(t == master_events.end()) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_AGGREGATE_TOO_FEW);
 						        if((*t)->get_type() != master_work_event::aggregate_end) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_AGGREGATE_END_MISSING);
-						        current_bin->push_back(work_item(begin_time, (*t)->get_timestamp(), "black"));
+						        current_bin->push_back(work_duration(begin_time, (*t)->get_timestamp(), "black"));
 						        break;
 							    }
 
@@ -424,7 +491,7 @@ namespace transport
 								    t++;
 								    if(t == master_events.end()) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_MPI_TOO_FEW);
 								    if((*t)->get_type() != master_work_event::MPI_end) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_MPI_END_MISSING);
-								    current_bin->push_back(work_item(begin_time, (*t)->get_timestamp(), "darkgoldenrod"));
+								    current_bin->push_back(work_duration(begin_time, (*t)->get_timestamp(), "darkgoldenrod"));
 								    break;
 							    }
 
@@ -434,7 +501,7 @@ namespace transport
                     t++;
                     if(t == master_events.end()) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_DATABASE_TOO_FEW);
                     if((*t)->get_type() != master_work_event::database_end) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_DATABASE_END_MISSING);
-                    current_bin->push_back(work_item(begin_time, (*t)->get_timestamp(), "aquamarine"));
+                    current_bin->push_back(work_duration(begin_time, (*t)->get_timestamp(), "aquamarine"));
                     break;
                   }
 
@@ -442,7 +509,11 @@ namespace transport
 							    throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_UNEXPECTED_EVENT);
 							};
 					}
+			}
 
+
+		void work_journal::bin_slave_durations(std::list< std::list<work_duration> >& list)
+			{
 				// strip out events for each worker, and sort them likewise
 		    std::list< slave_work_event* > worker_events;
 				for(unsigned int i = 0; i < this->N_workers; ++i)
@@ -453,13 +524,13 @@ namespace transport
 								if(!(*t)->is_master())
 									{
 										slave_work_event* event = dynamic_cast< slave_work_event* >(*t);
-								    if(event->get_worker_number() == i) worker_events.push_back(event);
+								    if(event->get_worker_number() == i && is_duration_delimiter(event->get_type())) worker_events.push_back(event);
 									}
 							}
 						worker_events.sort(WorkItemSorter());
 
 				    list.resize(list.size()+1);
-				    current_bin = --list.end();
+				    std::list< std::list<work_duration> >::iterator current_bin = --list.end();
 
 						// work through events, pairing them up
 						for(std::list< slave_work_event* >::const_iterator t = worker_events.begin(); t != worker_events.end(); ++t)
@@ -472,7 +543,7 @@ namespace transport
 								        t++;
 								        if(t == worker_events.end()) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_TWOPF_TOO_FEW);
 								        if((*t)->get_type() != slave_work_event::end_twopf_assignment) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_TWOPF_END_MISSING);
-								        current_bin->push_back(work_item(begin_time, (*t)->get_timestamp(), "red"));
+								        current_bin->push_back(work_duration(begin_time, (*t)->get_timestamp(), "red"));
 								        break;
 									    }
 
@@ -482,7 +553,7 @@ namespace transport
 								        t++;
 								        if(t == worker_events.end()) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_THREEPF_TOO_FEW);
 								        if((*t)->get_type() != slave_work_event::end_threepf_assignment) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_THREEPF_END_MISSING);
-										    current_bin->push_back(work_item(begin_time, (*t)->get_timestamp(), "orangered"));
+										    current_bin->push_back(work_duration(begin_time, (*t)->get_timestamp(), "orangered"));
 								        break;
 									    }
 
@@ -492,7 +563,7 @@ namespace transport
 										    t++;
 										    if(t == worker_events.end()) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_ZETA_TWOPF_TOO_FEW);
 										    if((*t)->get_type() != slave_work_event::end_zeta_twopf_assignment) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_ZETA_TWOPF_END_MISSING);
-										    current_bin->push_back(work_item(begin_time, (*t)->get_timestamp(), "green"));
+										    current_bin->push_back(work_duration(begin_time, (*t)->get_timestamp(), "green"));
 										    break;
 									    }
 
@@ -502,7 +573,7 @@ namespace transport
 										    t++;
 										    if(t == worker_events.end()) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_ZETA_THREEPF_TOO_FEW);
 										    if((*t)->get_type() != slave_work_event::end_zeta_threepf_assignment) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_ZETA_THREEPF_END_MISSING);
-										    current_bin->push_back(work_item(begin_time, (*t)->get_timestamp(), "limegreen"));
+										    current_bin->push_back(work_duration(begin_time, (*t)->get_timestamp(), "limegreen"));
 										    break;
 									    }
 
@@ -512,7 +583,7 @@ namespace transport
 										    t++;
 										    if(t == worker_events.end()) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_FNL_TOO_FEW);
 										    if((*t)->get_type() != slave_work_event::end_fNL_assignment) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_FNL_END_MISSING);
-										    current_bin->push_back(work_item(begin_time, (*t)->get_timestamp(), "royalblue"));
+										    current_bin->push_back(work_duration(begin_time, (*t)->get_timestamp(), "royalblue"));
 										    break;
 									    }
 
@@ -522,7 +593,7 @@ namespace transport
 										    t++;
 										    if(t == worker_events.end()) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_OUTPUT_TOO_FEW);
 										    if((*t)->get_type() != slave_work_event::end_output_assignment) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_OUTPUT_END_MISSING);
-										    current_bin->push_back(work_item(begin_time, (*t)->get_timestamp(), "orchid"));
+										    current_bin->push_back(work_duration(begin_time, (*t)->get_timestamp(), "orchid"));
 										    break;
 									    }
 
@@ -536,8 +607,8 @@ namespace transport
 
 		void work_journal::make_gantt_chart(const std::string& filename)
 			{
-		    std::list< std::list< work_item > > work_list;
-				this->bin_work(work_list);
+		    std::list< std::list<work_duration> > work_list;
+		    this->bin_durations(work_list);
 
 				assert(work_list.size() == this->N_workers+1);
 
@@ -590,7 +661,7 @@ namespace transport
 				out << "fig = plt.figure()" << std::endl;
 				out << "ax = plt.gca()" << std::endl;
 
-		    std::list< std::list< work_item > >::const_iterator t = work_list.begin();
+		    std::list< std::list<work_duration> >::const_iterator t = work_list.begin();
 				unsigned int bar_count = 0;
 				unsigned int total_count = 0;
 
@@ -598,7 +669,7 @@ namespace transport
 				if(t != work_list.end())
 					{
 						// format master bar
-				    std::list< work_item >::const_iterator u = t->begin();
+				    std::list<work_duration>::const_iterator u = t->begin();
 				    while(u != t->end())
 					    {
 						    out << u->format_gantt_bar(total_count, static_cast<double>(bar_count)*1.0) << std::endl;
@@ -683,8 +754,8 @@ namespace transport
       public:
 
         journal_instrument(work_journal& j,
-                           master_work_event::event_type b, master_work_event::event_type ,
-                           unsigned int m = __CPP_TRANSPORT_JOURNAL_MINIMUM_TIMESPAN);
+                           master_work_event::event_type b, master_work_event::event_type,
+                           unsigned int i = 0, unsigned int m = __CPP_TRANSPORT_JOURNAL_MINIMUM_TIMESPAN);
 
         ~journal_instrument();
 
@@ -718,16 +789,20 @@ namespace transport
 		    //! label for end journal item
 		    master_work_event::event_type end_label;
 
-		    //! minimum interval which will be journaled, measured in seconds
+		    //! minimum interval which will be journalled, measured in seconds
 		    unsigned int minimum_interval;
+
+		    //! id of events
+		    unsigned int id;
 
 	    };
 
 
-    journal_instrument::journal_instrument(work_journal& j, master_work_event::event_type b, master_work_event::event_type e, unsigned int m)
+    journal_instrument::journal_instrument(work_journal& j, master_work_event::event_type b, master_work_event::event_type e, unsigned int i, unsigned int m)
 	    : journal(j),
 	      begin_label(b),
 	      end_label(e),
+	      id(i),
 	      minimum_interval(m),
 	      stopped(false)
 	    {
@@ -744,8 +819,8 @@ namespace transport
 
 				if(duration.total_seconds() > this->minimum_interval)
 					{
-						this->journal.add_entry(master_work_event(this->begin_label, this->start_time));
-						this->journal.add_entry(master_work_event(this->end_label, this->stop_time));
+						this->journal.add_entry(master_work_event(this->begin_label, this->start_time, this->id));
+						this->journal.add_entry(master_work_event(this->end_label, this->stop_time, this->id));
 					}
 			}
 

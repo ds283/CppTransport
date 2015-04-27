@@ -515,7 +515,8 @@ namespace transport
                 //! Value constructor (used for sending messages)
                 content_ready_payload(const std::string& dp, const std::list<std::string>& g)
 	                : product(dp),
-                    content_groups(g)
+                    content_groups(g),
+                    timestamp(boost::posix_time::second_clock::universal_time())
 	                {
 	                }
 
@@ -524,6 +525,9 @@ namespace transport
 
                 //! Get content groups used
                 const std::list<std::string>& get_content_groups() const { return(this->content_groups); }
+
+                //! Get timestamp
+                boost::posix_time::ptime      get_timestamp()      const { return(this->timestamp); }
 
 
               private:
@@ -534,6 +538,9 @@ namespace transport
                 //! Content groups used to create it
                 std::list<std::string> content_groups;
 
+                //! Timestamp
+                boost::posix_time::ptime timestamp;
+
                 // enable boost::serialization support, and hence automated packing for transmission over MPI
                 friend class boost::serialization::access;
 
@@ -542,6 +549,7 @@ namespace transport
 	                {
                     ar & product;
                     ar & content_groups;
+		                ar & timestamp;
 	                }
 
 	            };
