@@ -88,13 +88,13 @@ namespace transport
 		    typedef std::function<void(const std::string&)> message_callback;
 
 				//! Integration-task aggregation handler
-				typedef std::function<void(MPI::data_ready_payload&,integration_metadata&)> integration_aggregator;
+				typedef std::function<void(unsigned int,unsigned int,MPI::data_ready_payload&,integration_metadata&)> integration_aggregator;
 
 				//! Postintegration-task aggregation handler
-				typedef std::function<void(MPI::data_ready_payload&,output_metadata&)> postintegration_aggregator;
+				typedef std::function<void(unsigned int,unsigned int,MPI::data_ready_payload&,output_metadata&)> postintegration_aggregator;
 
 				//! Output-task aggregation handler
-				typedef std::function<bool(MPI::content_ready_payload&,output_metadata&)> derived_content_aggregator;
+				typedef std::function<bool(unsigned int,unsigned int,MPI::content_ready_payload&,output_metadata&)> derived_content_aggregator;
 
 				//! Labels for types of job
 		    typedef enum { job_task, job_get_package, job_get_task, job_get_product, job_get_content } job_type;
@@ -171,8 +171,10 @@ namespace transport
 				class aggregation_record
 					{
 				  public:
-						aggregation_record(unsigned int i)
-							: id(i)
+						aggregation_record(unsigned int w, unsigned int i)
+							: worker(w),
+
+							  id(i)
 							{
 							}
 
@@ -182,7 +184,10 @@ namespace transport
 
 						unsigned int get_id() const { return(this->id); }
 
+						unsigned int get_worker() const { return(this->worker); }
+
 				  private:
+						unsigned int worker;
 						unsigned int id;
 					};
 
@@ -190,8 +195,8 @@ namespace transport
 				class integration_aggregation_record: public aggregation_record
 					{
 				  public:
-						integration_aggregation_record(unsigned int id, integration_aggregator& agg, integration_metadata& m, MPI::data_ready_payload& p)
-							: aggregation_record(id),
+						integration_aggregation_record(unsigned int w, unsigned int id, integration_aggregator& agg, integration_metadata& m, MPI::data_ready_payload& p)
+							: aggregation_record(w, id),
 							  handler(agg),
 				        payload(p),
 								metadata(m)
@@ -200,7 +205,7 @@ namespace transport
 
 						virtual ~integration_aggregation_record() = default;
 
-						virtual void aggregate() { this->handler(payload, metadata); }
+						virtual void aggregate() { this->handler(this->get_worker(), this->get_id(), payload, metadata); }
 
 				  private:
 						integration_aggregator& handler;
@@ -212,8 +217,8 @@ namespace transport
 		    class postintegration_aggregation_record: public aggregation_record
 			    {
 		      public:
-		        postintegration_aggregation_record(unsigned int id, postintegration_aggregator& agg, output_metadata& m, MPI::data_ready_payload& p)
-			        : aggregation_record(id),
+		        postintegration_aggregation_record(unsigned int w, unsigned int id, postintegration_aggregator& agg, output_metadata& m, MPI::data_ready_payload& p)
+			        : aggregation_record(w, id),
 			          handler(agg),
 			          payload(p),
 			          metadata(m)
@@ -222,7 +227,7 @@ namespace transport
 
 		        virtual ~postintegration_aggregation_record() = default;
 
-		        virtual void aggregate() { this->handler(payload, metadata); }
+		        virtual void aggregate() { this->handler(this->get_worker(), this->get_id(), payload, metadata); }
 
 		      private:
 		        postintegration_aggregator& handler;
@@ -234,8 +239,8 @@ namespace transport
 		    class derived_content_aggregation_record: public aggregation_record
 			    {
 		      public:
-		        derived_content_aggregation_record(unsigned int id, derived_content_aggregator& agg, output_metadata& m, MPI::content_ready_payload& p)
-			        : aggregation_record(id),
+		        derived_content_aggregation_record(unsigned int w, unsigned int id, derived_content_aggregator& agg, output_metadata& m, MPI::content_ready_payload& p)
+			        : aggregation_record(w, id),
 			          handler(agg),
 			          payload(p),
 			          metadata(m)
@@ -244,7 +249,7 @@ namespace transport
 
 		        virtual ~derived_content_aggregation_record() = default;
 
-		        virtual void aggregate() { this->handler(payload, metadata); }
+		        virtual void aggregate() { this->handler(this->get_worker(), this->get_id(), payload, metadata); }
 
 		      private:
 		        derived_content_aggregator& handler;
@@ -379,7 +384,8 @@ namespace transport
                                  integration_metadata& i_metadata, boost::timer::cpu_timer& wallclock_timer);
 
 		    //! Master node: respond to an aggregation request
-		    void aggregate_integration(std::shared_ptr<integration_writer<number> > &writer, MPI::data_ready_payload& payload, integration_metadata &metadata);
+		    void aggregate_integration(std::shared_ptr<integration_writer<number> > &writer, unsigned int worker, unsigned int id,
+		                               MPI::data_ready_payload& payload, integration_metadata &metadata);
 
 		    //! Master node: update integration metadata after a worker has finished its tasks
 		    void update_integration_metadata(MPI::finished_integration_payload& payload, integration_metadata& metadata);
@@ -426,7 +432,8 @@ namespace transport
                                                     slave_work_event::event_type begin_label, slave_work_event::event_type end_label);
 
 		    //! Master node: respond to an aggregation request
-		    void aggregate_postprocess(std::shared_ptr< postintegration_writer<number> >& writer, MPI::data_ready_payload& payload, output_metadata& metadata);
+		    void aggregate_postprocess(std::shared_ptr< postintegration_writer<number> >& writer, unsigned int worker, unsigned int id,
+		                               MPI::data_ready_payload& payload, output_metadata& metadata);
 
 
 		    // MASTER OUTPUT TASKS
@@ -446,7 +453,8 @@ namespace transport
         void debrief_output(WriterObject& writer, output_metadata& i_metadata, boost::timer::cpu_timer& wallclock_timer);
 
 		    //! Master node: respond to a notification of new derived content
-		    bool aggregate_content(std::shared_ptr< derived_content_writer<number> >& writer, MPI::content_ready_payload& payload, output_metadata& metadata);
+		    bool aggregate_content(std::shared_ptr< derived_content_writer<number> >& writer, unsigned int worker, unsigned int id,
+		                           MPI::content_ready_payload& payload, output_metadata& metadata);
 
 		    //! Master node: update output metadata after a worker has finished its tasks
 		    template <typename PayloadObject>
@@ -1034,7 +1042,7 @@ namespace transport
         if(seeded) this->seed_writer(writer, tk, seed_group);
 
         // set up aggregators
-        integration_aggregator     i_agg = std::bind(&master_controller<number>::aggregate_integration, this, writer, std::placeholders::_1, std::placeholders::_2);
+        integration_aggregator     i_agg = std::bind(&master_controller<number>::aggregate_integration, this, writer, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
         postintegration_aggregator p_agg;
         derived_content_aggregator d_agg;
 
@@ -1164,10 +1172,10 @@ namespace transport
 
 
     template <typename number>
-    void master_controller<number>::aggregate_integration(std::shared_ptr<integration_writer<number> > &writer,
+    void master_controller<number>::aggregate_integration(std::shared_ptr<integration_writer<number> > &writer, unsigned int worker, unsigned int id,
                                                           MPI::data_ready_payload& payload, integration_metadata &metadata)
 	    {
-        journal_instrument instrument(this->journal, master_work_event::aggregate_begin, master_work_event::aggregate_end);
+        journal_instrument instrument(this->journal, master_work_event::aggregate_begin, master_work_event::aggregate_end, id);
 
         // set up a timer to measure how long we spend aggregating
         boost::timer::cpu_timer aggregate_timer;
@@ -1246,7 +1254,7 @@ namespace transport
         // set up aggregators
         integration_aggregator     i_agg;
         postintegration_aggregator p_agg;
-        derived_content_aggregator d_agg = std::bind(&master_controller<number>::aggregate_content, this, writer, std::placeholders::_1, std::placeholders::_2);
+        derived_content_aggregator d_agg = std::bind(&master_controller<number>::aggregate_content, this, writer, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
 
         // write log header
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
@@ -1341,10 +1349,10 @@ namespace transport
 
 
     template <typename number>
-    bool master_controller<number>::aggregate_content(std::shared_ptr< derived_content_writer<number> >& writer,
+    bool master_controller<number>::aggregate_content(std::shared_ptr< derived_content_writer<number> >& writer, unsigned int worker, unsigned int id,
                                                       MPI::content_ready_payload& payload, output_metadata& metadata)
 	    {
-        journal_instrument instrument(this->journal, master_work_event::aggregate_begin, master_work_event::aggregate_end);
+        journal_instrument instrument(this->journal, master_work_event::aggregate_begin, master_work_event::aggregate_end, id);
 
         // set up a timer to measure how long we spend aggregating
         boost::timer::cpu_timer aggregate_timer;
@@ -1518,7 +1526,7 @@ namespace transport
 
         // set up aggregators
         integration_aggregator     i_agg;
-        postintegration_aggregator p_agg = std::bind(&master_controller<number>::aggregate_postprocess, this, writer, std::placeholders::_1, std::placeholders::_2);
+        postintegration_aggregator p_agg = std::bind(&master_controller<number>::aggregate_postprocess, this, writer, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
         derived_content_aggregator d_agg;
 
         // write log header
@@ -1574,8 +1582,8 @@ namespace transport
         if(seeded) this->seed_writer_pair(i_writer, p_writer, tk, ptk, seed_group);
 
         // set up aggregators
-        integration_aggregator     i_agg = std::bind(&master_controller<number>::aggregate_integration, this, i_writer, std::placeholders::_1, std::placeholders::_2);
-        postintegration_aggregator p_agg = std::bind(&master_controller<number>::aggregate_postprocess, this, p_writer, std::placeholders::_1, std::placeholders::_2);
+        integration_aggregator     i_agg = std::bind(&master_controller<number>::aggregate_integration, this, i_writer, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
+        postintegration_aggregator p_agg = std::bind(&master_controller<number>::aggregate_postprocess, this, p_writer, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
         derived_content_aggregator d_agg;
 
         // write log header
@@ -1799,10 +1807,10 @@ namespace transport
 
 
     template <typename number>
-    void master_controller<number>::aggregate_postprocess(std::shared_ptr< postintegration_writer<number> >& writer,
+    void master_controller<number>::aggregate_postprocess(std::shared_ptr< postintegration_writer<number> >& writer, unsigned int worker, unsigned int id,
                                                           MPI::data_ready_payload& payload, output_metadata& metadata)
 	    {
-		    journal_instrument instrument(this->journal, master_work_event::aggregate_begin, master_work_event::aggregate_end);
+		    journal_instrument instrument(this->journal, master_work_event::aggregate_begin, master_work_event::aggregate_end, id);
 
         // set up a timer to measure how long we spend batching
         boost::timer::cpu_timer aggregate_timer;
@@ -2031,7 +2039,8 @@ namespace transport
                           {
                             MPI::data_ready_payload payload;
                             this->world.recv(stat->source(), MPI::INTEGRATION_DATA_READY, payload);
-		                        aggregation_queue.push_back(std::shared_ptr<integration_aggregation_record>(new integration_aggregation_record(aggregation_counter++, int_agg, int_metadata, payload)));
+                            this->journal.add_entry(slave_work_event(this->worker_number(stat->source()), slave_work_event::integration_aggregation, payload.get_timestamp(), aggregation_counter));
+		                        aggregation_queue.push_back(std::shared_ptr<integration_aggregation_record>(new integration_aggregation_record(this->worker_number(stat->source()), aggregation_counter++, int_agg, int_metadata, payload)));
                             BOOST_LOG_SEV(log, base_writer::normal) << "++ Worker " << stat->source() << " sent aggregation notification for container '" << payload.get_container_path() << "'";
                           }
                         else
@@ -2047,7 +2056,8 @@ namespace transport
                           {
                             MPI::content_ready_payload payload;
                             this->world.recv(stat->source(), MPI::DERIVED_CONTENT_READY, payload);
-		                        aggregation_queue.push_back(std::shared_ptr<derived_content_aggregation_record>(new derived_content_aggregation_record(aggregation_counter++, derived_agg, out_metadata, payload)));
+                            this->journal.add_entry(slave_work_event(this->worker_number(stat->source()), slave_work_event::derived_content_aggregation, payload.get_timestamp(), aggregation_counter));
+		                        aggregation_queue.push_back(std::shared_ptr<derived_content_aggregation_record>(new derived_content_aggregation_record(this->worker_number(stat->source()), aggregation_counter++, derived_agg, out_metadata, payload)));
                             BOOST_LOG_SEV(log, base_writer::normal) << "++ Worker " << stat->source() << " sent content-ready notification";
                           }
                         else
@@ -2063,7 +2073,8 @@ namespace transport
                           {
                             MPI::data_ready_payload payload;
                             this->world.recv(stat->source(), MPI::POSTINTEGRATION_DATA_READY, payload);
-		                        aggregation_queue.push_back(std::shared_ptr<postintegration_aggregation_record>(new postintegration_aggregation_record(aggregation_counter++, post_agg, out_metadata, payload)));
+                            this->journal.add_entry(slave_work_event(this->worker_number(stat->source()), slave_work_event::postintegration_aggregation, payload.get_timestamp(), aggregation_counter));
+		                        aggregation_queue.push_back(std::shared_ptr<postintegration_aggregation_record>(new postintegration_aggregation_record(this->worker_number(stat->source()), aggregation_counter++, post_agg, out_metadata, payload)));
                             BOOST_LOG_SEV(log, base_writer::normal) << "++ Worker " << stat->source() << " sent aggregation notification for container '" << payload.get_container_path() << "'";
                           }
                         else
