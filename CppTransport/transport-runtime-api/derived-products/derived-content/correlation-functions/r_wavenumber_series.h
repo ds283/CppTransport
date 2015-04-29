@@ -37,7 +37,8 @@ namespace transport
 		      public:
 
 		        //! construct an r_line wavenumber-series object
-		        r_wavenumber_series(const zeta_twopf_list_task<number>& tk, filter::time_filter tfilter, filter::twopf_kconfig_filter kfilter,
+		        r_wavenumber_series(const zeta_twopf_list_task<number>& tk,
+                                SQL_time_config_query tq, SQL_twopf_kconfig_query kq,
 		                            unsigned int prec = __CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
 
 		        //! deserialization constructor
@@ -78,6 +79,17 @@ namespace transport
 		        //! serialize this object
 		        virtual void serialize(Json::Value& writer) const override;
 
+
+            // INTERNAL DATA
+
+          protected:
+
+            //! SQL query representing x-axis
+            SQL_twopf_kconfig_query kquery;
+
+            //! SQL query representing different lines
+            SQL_time_config_query tquery;
+
 			    };
 
 
@@ -85,11 +97,13 @@ namespace transport
 				// derived_line<> is not called automatically during construction of time_series<>.
 				// We have to call it ourselves.
 				template <typename number>
-				r_wavenumber_series<number>::r_wavenumber_series(const zeta_twopf_list_task<number>& tk, filter::time_filter tfilter,
-				                                                 filter::twopf_kconfig_filter kfilter, unsigned int prec)
+				r_wavenumber_series<number>::r_wavenumber_series(const zeta_twopf_list_task<number>& tk,
+				                                                 SQL_time_config_query tq, SQL_twopf_kconfig_query kq, unsigned int prec)
 					: derived_line<number>(tk, wavenumber_axis, std::list<axis_value>{ k_axis, efolds_exit_axis }, prec),
-					  r_line<number>(tk, kfilter),
-					  wavenumber_series<number>(tk, tfilter)
+					  r_line<number>(tk),
+					  wavenumber_series<number>(tk),
+            tquery(tq),
+            kquery(kq)
 					{
 					}
 
@@ -101,7 +115,9 @@ namespace transport
 				r_wavenumber_series<number>::r_wavenumber_series(Json::Value& reader, typename repository_finder<number>::task_finder& finder)
 					: derived_line<number>(reader, finder),
 		        r_line<number>(reader, finder),
-		        wavenumber_series<number>(reader)
+		        wavenumber_series<number>(reader),
+            tquery(reader),
+            kquery(reader)
 			    {
 			    }
 
@@ -117,23 +133,24 @@ namespace transport
             groups.push_back(group);
 
 				    // pull wavenumber-axis data
-		        std::vector<double> w_axis = this->pull_twopf_kconfig_axis(pipe);
+		        std::vector<double> w_axis = this->pull_twopf_kconfig_axis(pipe, this->kquery);
 
 				    // set up cache handles
-				    typename datapipe<number>::time_config_handle& tc_handle = pipe.new_time_config_handle(this->time_sample_sns);
-				    typename datapipe<number>::kconfig_zeta_handle& z_handle = pipe.new_kconfig_zeta_handle(this->kconfig_sample_sns);
+				    typename datapipe<number>::time_config_handle& tc_handle = pipe.new_time_config_handle(this->tquery);
+				    typename datapipe<number>::kconfig_zeta_handle& z_handle = pipe.new_kconfig_zeta_handle(this->kquery);
 
 				    // pull time-configuration data from the database
 				    time_config_tag<number> t_tag = pipe.new_time_config_tag();
-				    const std::vector<double> t_values = tc_handle.lookup_tag(t_tag);
+				    const std::vector< time_config > t_values = tc_handle.lookup_tag(t_tag);
 
 		        std::vector< std::vector<number> > zeta_data;
-				    zeta_data.resize(this->time_sample_sns.size());
+				    zeta_data.resize(t_values.size());
 
-				    // for each t-configuration, pull data from the database
-				    for(unsigned int i = 0; i < this->time_sample_sns.size(); ++i)
+				    // for each t-configuration, pull zeta data from the database and cache it
+            unsigned int i = 0;
+				    for(std::vector<time_config>::const_iterator t = t_values.begin(); t != t_values.end(); ++t, ++i)
 					    {
-						    zeta_twopf_kconfig_data_tag<number> zeta_tag = pipe.new_zeta_twopf_kconfig_data_tag(this->time_sample_sns[i]);
+						    zeta_twopf_kconfig_data_tag<number> zeta_tag = pipe.new_zeta_twopf_kconfig_data_tag(t->serial);
 
 						    // this time we can take a reference
 						    zeta_data[i] = z_handle.lookup_tag(zeta_tag);
@@ -149,15 +166,18 @@ namespace transport
             groups.push_back(group);
 
 				    // rebind handles
-		        typename datapipe<number>::kconfig_data_handle& k_handle = pipe.new_kconfig_zeta_handle(this->kconfig_sample_sns);
+		        typename datapipe<number>::kconfig_data_handle& k_handle = pipe.new_kconfig_zeta_handle(this->kquery);
 
-				    for(unsigned int i = 0; i < this->time_sample_sns.size(); ++i)
+				    // for each t-configuration, pull tensor data from the database and create a data_line<> for r
+				    i = 0; // reset counter
+				    for(std::vector<time_config>::const_iterator t = t_values.begin(); t != t_values.end(); ++t, ++i)
 					    {
 				        cf_kconfig_data_tag<number> tensor_tag =
-					                                    pipe.new_cf_kconfig_data_tag(data_tag<number>::cf_tensor_twopf, this->gadget.get_model()->tensor_flatten(0,0), this->time_sample_sns[i]);
+					                                    pipe.new_cf_kconfig_data_tag(data_tag<number>::cf_tensor_twopf, this->gadget.get_model()->tensor_flatten(0,0), t->serial);
 
 				        // can take a reference here to avoid a copy
 				        const std::vector<number>& tensor_data = k_handle.lookup_tag(tensor_tag);
+						    assert(tensor_data.size() == zeta_data[i].size());
 
 				        std::vector<number> line_data(tensor_data.size());
 
@@ -167,7 +187,7 @@ namespace transport
 					        }
 
 				        data_line<number> line = data_line<number>(groups, this->x_type, r_value, w_axis, line_data,
-				                                                   this->get_LaTeX_label(t_values[i]), this->get_non_LaTeX_label(t_values[i]), this->is_spectral_index());
+				                                                   this->get_LaTeX_label(t->t), this->get_non_LaTeX_label(t->t), this->is_spectral_index());
 
 				        lines.push_back(line);
 					    }
@@ -225,12 +245,6 @@ namespace transport
 		        this->r_line<number>::write(out);
 		        this->wavenumber_series<number>::write(out);
 		        this->derived_line<number>::write(out);
-
-		        zeta_twopf_list_task<number>* ptk = dynamic_cast< zeta_twopf_list_task<number>* >(this->get_parent_task());
-		        if(ptk != nullptr)
-			        {
-		            this->write_kconfig_list(out, ptk->get_twopf_database());
-			        }
 			    }
 
 
@@ -240,6 +254,9 @@ namespace transport
 		    void r_wavenumber_series<number>::serialize(Json::Value& writer) const
 			    {
 		        writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_R_WAVENUMBER_SERIES);
+
+            this->tquery.serialize(writer);
+            this->kquery.serialize(writer);
 
 		        this->derived_line<number>::serialize(writer);
 		        this->r_line<number>::serialize(writer);

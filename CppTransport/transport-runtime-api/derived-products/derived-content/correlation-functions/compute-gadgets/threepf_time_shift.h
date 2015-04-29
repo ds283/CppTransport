@@ -14,6 +14,7 @@
 #include <list>
 #include <vector>
 #include <stdexcept>
+#include <array>
 
 #include "transport-runtime-api/serialization/serializable.h"
 
@@ -31,8 +32,10 @@
 
 #include "transport-runtime-api/derived-products/utilities/index_selector.h"
 #include "transport-runtime-api/derived-products/utilities/wrapper.h"
-#include "transport-runtime-api/derived-products/utilities/filter.h"
 #include "transport-runtime-api/derived-products/utilities/extractor.h"
+
+#include "transport-runtime-api/derived-products/derived-content/SQL_query/SQL_query.h"
+
 
 namespace transport
 	{
@@ -53,8 +56,10 @@ namespace transport
 
           public:
 
+						//! constructor is default
 		        threepf_time_shift() = default;
 
+						//! destructor is default
 		        virtual ~threepf_time_shift() = default;
 
 
@@ -63,27 +68,22 @@ namespace transport
           public:
 
             //! shift a threepf timeline for coordinate labels (l,m,n)
-            //! and supplied 2pf k-configuration serial numbers
-            void shift(twopf_list_task<number>* tk, model<number>* mdl,
-                       datapipe<number>& pipe,
-                       const std::vector<unsigned int>& time_sample, std::vector<number>& line_data,
-                       const std::vector<double>& time_axis,
-                       unsigned int l, unsigned int m, unsigned int n,
-                       const threepf_kconfig& config) const;
+            //! and supplied 3pf k-configuration
+            void shift(twopf_list_task<number>* tk, model<number>* mdl, datapipe<number>& pipe,
+                       const SQL_time_config_query& tquery, std::vector<number>& line_data, const std::vector<time_config>& t_axis,
+                       unsigned int l, unsigned int m, unsigned int n, const threepf_kconfig& config) const;
 
           protected:
 
             //! apply the derivative shift to a threepf-timeline for a specific
             //! configuration
-            void make_shift(twopf_list_task<number>* tk, model<number>* mdl,
-                            datapipe<number>& pipe,
-                            const std::vector<unsigned int>& time_sample, std::vector<number>& line_data,
-                            const std::vector<double>& time_axis,
-                            const std::vector<typename std::vector<number> >& background,
-                            unsigned int p, const extractor<number>& p_config,
-                            unsigned int q, const extractor<number>& q_config,
-                            unsigned int r, const extractor<number>& r_config,
-                            operator_position pos) const;
+            void make_shift(twopf_list_task<number>* tk, model<number>* mdl, datapipe<number>& pipe,
+                            const SQL_time_config_query& tquery, std::vector<number>& line_data,
+                            const std::vector<time_config>& t_axis, const std::vector<typename std::vector<number> >& background,
+                            unsigned int p, const extractor& p_extract,
+                            unsigned int q, const extractor& q_extract,
+                            unsigned int r, const extractor& r_extract,
+                            const threepf_kconfig& config, operator_position pos) const;
 
 
 		        // INTERNAL DATA
@@ -96,69 +96,70 @@ namespace transport
 
 
         template <typename number>
-        void threepf_time_shift<number>::shift(twopf_list_task<number>* tk, model<number>* mdl,
-                                               datapipe<number>& pipe,
-                                               const std::vector<unsigned int>& time_sample, std::vector<number>& line_data,
-                                               const std::vector<double>& time_axis,
-                                               unsigned int l, unsigned int m, unsigned int n,
-                                               const threepf_kconfig& config) const
+        void threepf_time_shift<number>::shift(twopf_list_task<number>* tk, model<number>* mdl, datapipe<number>& pipe,
+                                               const SQL_time_config_query& tquery, std::vector<number>& line_data, const std::vector<time_config>& t_axis,
+                                               unsigned int l, unsigned int m, unsigned int n, const threepf_kconfig& config) const
 			    {
 						assert(mdl != nullptr);
 		        assert(tk != nullptr);
 
+		        assert(t_axis.size() == line_data.size());
+
 		        unsigned int N_fields = mdl->get_N_fields();
 
-		        typename datapipe<number>::time_data_handle& handle = pipe.new_time_data_handle(time_sample);
+		        typename datapipe<number>::time_data_handle& handle = pipe.new_time_data_handle(tquery);
 
 		        // pull the background time evolution from the database for the time_sample we are using.
 		        // for future convenience we want this to be a vector of vectors-representing-field-components,
 		        // ie., for each time step (outer vector) we have a group of field components (inner vector)
-		        std::vector< std::vector<number> > background(time_sample.size());
+		        std::vector< std::vector<number> > background(t_axis.size());
 
 		        for(unsigned int i = 0; i < 2*N_fields; ++i)
 			        {
 		            background_time_data_tag<number> tag = pipe.new_background_time_data_tag(i); // DON'T flatten i, because we want to give the background to the model instance in the order it expects
+
                 // safe to take a reference here and avoid a copy
 		            const std::vector<number>& bg_line = handle.lookup_tag(tag);
 
 		            assert(bg_line.size() == background.size());
-		            for(unsigned int j = 0; j < time_sample.size(); ++j)
+				        for(unsigned int j = 0; j < background.size(); ++j)
 			            {
-		                background[j].push_back(bg_line[j]);
+						        background[j].push_back(bg_line[j]);
 			            }
 			        }
 
-		        if(l >= N_fields) this->make_shift(tk, mdl, pipe, time_sample, line_data, time_axis, background, l, extractor<number>(1, config), m, extractor<number>(2, config), n, extractor<number>(3, config), left);
-		        if(m >= N_fields) this->make_shift(tk, mdl, pipe, time_sample, line_data, time_axis, background, m, extractor<number>(2, config), l, extractor<number>(1, config), n, extractor<number>(3, config), middle);
-		        if(n >= N_fields) this->make_shift(tk, mdl, pipe, time_sample, line_data, time_axis, background, n, extractor<number>(3, config), l, extractor<number>(1, config), m, extractor<number>(2, config), right);
+		        if(mdl->is_momentum(l)) this->make_shift(tk, mdl, pipe, tquery, line_data, t_axis, background,
+		                                                 l, extractor(1), m, extractor(2), n, extractor(3), config, left);
+		        if(mdl->is_momentum(m)) this->make_shift(tk, mdl, pipe, tquery, line_data, t_axis, background,
+		                                                 m, extractor(2), l, extractor(1), n, extractor(3), config, middle);
+		        if(mdl->is_momentum(n)) this->make_shift(tk, mdl, pipe, tquery, line_data, t_axis, background,
+		                                                 n, extractor(3), l, extractor(1), m, extractor(2), config, right);
 			    }
 
 
         template <typename number>
-        void threepf_time_shift<number>::make_shift(twopf_list_task<number>* tk, model<number>* mdl,
-                                                    datapipe<number>& pipe,
-                                                    const std::vector<unsigned int>& time_sample, std::vector<number>& line_data,
-                                                    const std::vector<double>& time_axis, const std::vector<std::vector<number> >& background,
-                                                    unsigned int p, const extractor<number>& p_config,
-                                                    unsigned int q, const extractor<number>& q_config,
-                                                    unsigned int r, const extractor<number>& r_config,
-                                                    operator_position pos) const
+        void threepf_time_shift<number>::make_shift(twopf_list_task<number>* tk, model<number>* mdl, datapipe<number>& pipe,
+                                                    const SQL_time_config_query& tquery, std::vector<number>& line_data,
+                                                    const std::vector<time_config>& t_axis, const std::vector<std::vector<number> >& background,
+                                                    unsigned int p, const extractor& p_extract,
+                                                    unsigned int q, const extractor& q_extract,
+                                                    unsigned int r, const extractor& r_extract,
+                                                    const threepf_kconfig& config, operator_position pos) const
 			    {
-		        assert(time_sample.size() == line_data.size());
 		        assert(mdl != nullptr);
 		        assert(tk != nullptr);
 
 		        unsigned int N_fields = mdl->get_N_fields();
 
 		        // need multiple components of the 2pf at different k-configurations; allocate space to store them
-		        std::vector< std::vector<number> > sigma_q_re(time_sample.size());
-		        std::vector< std::vector<number> > sigma_r_re(time_sample.size());
-		        std::vector< std::vector<number> > mom_sigma_q_re(time_sample.size());
-		        std::vector< std::vector<number> > mom_sigma_r_re(time_sample.size());
-		        std::vector< std::vector<number> > sigma_q_im(time_sample.size());
-		        std::vector< std::vector<number> > sigma_r_im(time_sample.size());
-		        std::vector< std::vector<number> > mom_sigma_q_im(time_sample.size());
-		        std::vector< std::vector<number> > mom_sigma_r_im(time_sample.size());
+		        std::vector< std::vector<number> > sigma_q_re(t_axis.size());
+		        std::vector< std::vector<number> > sigma_r_re(t_axis.size());
+		        std::vector< std::vector<number> > mom_sigma_q_re(t_axis.size());
+		        std::vector< std::vector<number> > mom_sigma_r_re(t_axis.size());
+		        std::vector< std::vector<number> > sigma_q_im(t_axis.size());
+		        std::vector< std::vector<number> > sigma_r_im(t_axis.size());
+		        std::vector< std::vector<number> > mom_sigma_q_im(t_axis.size());
+		        std::vector< std::vector<number> > mom_sigma_r_im(t_axis.size());
 
 		        // p is guaranteed to be a momentum label, but we will want to know what field species it corresponds to
 		        unsigned int p_species = mdl->species(p);
@@ -190,7 +191,7 @@ namespace transport
 			            throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_TIME_SERIES_UNKNOWN_OPPOS);
 			        }
 
-		        typename datapipe<number>::time_data_handle& t_handle = pipe.new_time_data_handle(time_sample);
+		        typename datapipe<number>::time_data_handle& t_handle = pipe.new_time_data_handle(tquery);
 
 		        // pull out components of the two-pf that we need
 		        for(unsigned int i = 0; i < N_fields; ++i)
@@ -200,15 +201,15 @@ namespace transport
 		            unsigned int mom_q_id = mdl->flatten((q_fixed == first_index ? q : mdl->momentum(i)), (q_fixed == second_index ? q : mdl->momentum(i)));
 		            unsigned int mom_r_id = mdl->flatten((r_fixed == first_index ? r : mdl->momentum(i)), (r_fixed == second_index ? r : mdl->momentum(i)));
 
-		            cf_time_data_tag<number> q_re_tag     = pipe.new_cf_time_data_tag(data_tag<number>::cf_twopf_re, q_id,     q_config.serial());
-		            cf_time_data_tag<number> q_im_tag     = pipe.new_cf_time_data_tag(data_tag<number>::cf_twopf_im, q_id,     q_config.serial());
-		            cf_time_data_tag<number> mom_q_re_tag = pipe.new_cf_time_data_tag(data_tag<number>::cf_twopf_re, mom_q_id, q_config.serial());
-		            cf_time_data_tag<number> mom_q_im_tag = pipe.new_cf_time_data_tag(data_tag<number>::cf_twopf_im, mom_q_id, q_config.serial());
+		            cf_time_data_tag<number> q_re_tag     = pipe.new_cf_time_data_tag(data_tag<number>::cf_twopf_re, q_id,     q_extract.serial(config));
+		            cf_time_data_tag<number> q_im_tag     = pipe.new_cf_time_data_tag(data_tag<number>::cf_twopf_im, q_id,     q_extract.serial(config));
+		            cf_time_data_tag<number> mom_q_re_tag = pipe.new_cf_time_data_tag(data_tag<number>::cf_twopf_re, mom_q_id, q_extract.serial(config));
+		            cf_time_data_tag<number> mom_q_im_tag = pipe.new_cf_time_data_tag(data_tag<number>::cf_twopf_im, mom_q_id, q_extract.serial(config));
 
-		            cf_time_data_tag<number> r_re_tag     = pipe.new_cf_time_data_tag(data_tag<number>::cf_twopf_re, r_id,     r_config.serial());
-		            cf_time_data_tag<number> r_im_tag     = pipe.new_cf_time_data_tag(data_tag<number>::cf_twopf_im, r_id,     r_config.serial());
-		            cf_time_data_tag<number> mom_r_re_tag = pipe.new_cf_time_data_tag(data_tag<number>::cf_twopf_re, mom_r_id, r_config.serial());
-		            cf_time_data_tag<number> mom_r_im_tag = pipe.new_cf_time_data_tag(data_tag<number>::cf_twopf_im, mom_r_id, r_config.serial());
+		            cf_time_data_tag<number> r_re_tag     = pipe.new_cf_time_data_tag(data_tag<number>::cf_twopf_re, r_id,     r_extract.serial(config));
+		            cf_time_data_tag<number> r_im_tag     = pipe.new_cf_time_data_tag(data_tag<number>::cf_twopf_im, r_id,     r_extract.serial(config));
+		            cf_time_data_tag<number> mom_r_re_tag = pipe.new_cf_time_data_tag(data_tag<number>::cf_twopf_re, mom_r_id, r_extract.serial(config));
+		            cf_time_data_tag<number> mom_r_im_tag = pipe.new_cf_time_data_tag(data_tag<number>::cf_twopf_im, mom_r_id, r_extract.serial(config));
 
 		            const std::vector<number> q_line_re     = t_handle.lookup_tag(q_re_tag);
 		            const std::vector<number> q_line_im     = t_handle.lookup_tag(q_im_tag);
@@ -242,9 +243,9 @@ namespace transport
 		            // evaluate B and C tensors for this time step
 		            // B is symmetric on its first two indices, which are the ones we sum over, so we only need a single copy of that.
 		            // C is symmetric on its first two indices but we sum over the last two. So we need to symmetrize the momenta.
-		            mdl->B(tk, background[i], q_config.comoving(), r_config.comoving(), p_config.comoving(), time_axis[i], B_qrp);
-		            mdl->C(tk, background[i], p_config.comoving(), q_config.comoving(), r_config.comoving(), time_axis[i], C_pqr);
-		            mdl->C(tk, background[i], p_config.comoving(), r_config.comoving(), q_config.comoving(), time_axis[i], C_prq);
+		            mdl->B(tk, background[i], q_extract.comoving(config), r_extract.comoving(config), p_extract.comoving(config), t_axis[i].t, B_qrp);
+		            mdl->C(tk, background[i], p_extract.comoving(config), q_extract.comoving(config), r_extract.comoving(config), t_axis[i].t, C_pqr);
+		            mdl->C(tk, background[i], p_extract.comoving(config), r_extract.comoving(config), q_extract.comoving(config), t_axis[i].t, C_prq);
 
 		            number shift = 0.0;
 

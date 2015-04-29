@@ -243,82 +243,83 @@ namespace transport
                                                  unsigned int worker, bool no_log = false) override;
 
         //! Pull a set of time sample-points from a datapipe
-        virtual void pull_time_config(datapipe<number>* pipe, const std::vector<unsigned int>& serial_numbers, std::vector<double>& sample) override;
+        virtual void pull_time_config(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_time_config_query>& tquery, std::vector<time_config>& sample) override;
 
         //! Pull a set of 2pf k-configuration serial numbers from a datapipe
-        void pull_kconfig_twopf(datapipe<number>* pipe, const std::vector<unsigned int>& serial_numbers, std::vector<twopf_kconfig>& sample) override;
+        void pull_kconfig_twopf(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_twopf_kconfig_query>& kquery, std::vector<twopf_kconfig>& sample) override;
 
         //! Pull a set of 3pd k-configuration serial numbesr from a datapipe
         //! Simultaneously, populates three lists (k1, k2, k3) with serial numbers for the 2pf k-configurations
         //! corresponding to k1, k2, k3
-        void pull_kconfig_threepf(datapipe<number>* pipe, const std::vector<unsigned int>& serial_numbers, std::vector<threepf_kconfig>& sample) override;
+        void pull_kconfig_threepf(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_threepf_kconfig_query>& query, std::vector<threepf_kconfig>& sample) override;
 
         //! Pull a time sample of a background field from a datapipe
-        virtual void pull_background_time_sample(datapipe<number>* pipe, unsigned int id, const std::vector<unsigned int>& t_serials, std::vector<number>& sample) override;
+        virtual void pull_background_time_sample(datapipe<number>* pipe, unsigned int id, const std::shared_ptr<derived_data::SQL_query>& query, std::vector<number>& sample) override;
 
         //! Pull a time sample of a twopf component at fixed k-configuration from a datapipe
-        virtual void pull_twopf_time_sample(datapipe<number>* pipe, unsigned int id, const std::vector<unsigned int>& t_serials,
+        virtual void pull_twopf_time_sample(datapipe<number>* pipe, unsigned int id, const std::shared_ptr<derived_data::SQL_query>& query,
                                             unsigned int k_serial, std::vector<number>& sample, typename datapipe<number>::twopf_type type) override;
 
         //! Pull a sample of a threepf at fixed k-configuration from a datapipe
-        virtual void pull_threepf_time_sample(datapipe<number>* pipe, unsigned int id, const std::vector<unsigned int>& t_serials,
+        virtual void pull_threepf_time_sample(datapipe<number>* pipe, unsigned int id, const std::shared_ptr<derived_data::SQL_query>& query,
                                               unsigned int k_serial, std::vector<number>& sample) override;
 
         //! Pull a sample of a tensor twopf component at fixed k-configuration from a datapipe
-        virtual void pull_tensor_twopf_time_sample(datapipe<number>* pipe, unsigned int id, const std::vector<unsigned int>& t_serials,
+        virtual void pull_tensor_twopf_time_sample(datapipe<number>* pipe, unsigned int id, const std::shared_ptr<derived_data::SQL_query>& query,
                                                    unsigned int k_serial, std::vector<number>& sample) override;
 
         //! Pull a sample of the zeta twopf at fixed k-configuration from a datapipe
-        virtual void pull_zeta_twopf_time_sample(datapipe<number>* pipe, const std::vector<unsigned int>& t_serials,
+        virtual void pull_zeta_twopf_time_sample(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_query>& query,
                                                  unsigned int k_serial, std::vector<number>& sample) override;
 
         //! Pull a sample of the zeta threepf at fixed k-configuration from a datapipe
-        virtual void pull_zeta_threepf_time_sample(datapipe<number>* pipe, const std::vector<unsigned int>& t_serials,
+        virtual void pull_zeta_threepf_time_sample(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_query>& query,
                                                    unsigned int k_serial, std::vector<number>& sample) override;
 
         //! Pull a sample of the zeta reduced bispectrum at fixed k-configuration from a datapipe
-        virtual void pull_zeta_redbsp_time_sample(datapipe<number>* pipe, const std::vector<unsigned int>& t_serials,
+        virtual void pull_zeta_redbsp_time_sample(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_query>& query,
                                                   unsigned int k_serial, std::vector<number>& sample) override;
 
         //! Pull a sample of fNL from a datapipe
-        virtual void pull_fNL_time_sample(datapipe<number>* pipe, const std::vector<unsigned int>& t_serials,
+        virtual void pull_fNL_time_sample(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_query>& query,
                                           std::vector<number>& sample, derived_data::template_type type) override;
 
         //! Pull a sample of bispectrum.template from a datapipe
-        virtual void pull_BT_time_sample(datapipe<number>* pipe, const std::vector<unsigned int>& t_serials,
+        virtual void pull_BT_time_sample(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_query>& query,
                                           std::vector<number>& sample, derived_data::template_type type) override;
 
         //! Pull a sample of template.template from a datapipe
-        virtual void pull_TT_time_sample(datapipe<number>* pipe, const std::vector<unsigned int>& t_serials,
+        virtual void pull_TT_time_sample(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_query>& query,
                                           std::vector<number>& sample, derived_data::template_type type) override;
 
         //! Pull a kconfig sample of a twopf component at fixed time from a datapipe
-        virtual void pull_twopf_kconfig_sample(datapipe<number>* pipe, unsigned int id, const std::vector<unsigned int>& k_serials,
+        virtual void pull_twopf_kconfig_sample(datapipe<number>* pipe, unsigned int id, const std::shared_ptr<derived_data::SQL_query>& query,
                                                unsigned int t_serial, std::vector<number>& sample, typename datapipe<number>::twopf_type type) override;
 
         //! Pull a kconfig sample of a threepf at fixed time from a datapipe
         virtual void pull_threepf_kconfig_sample(datapipe<number>* pipe, unsigned int id,
-                                                 const std::vector<unsigned int>& k_serials,
+                                                 const std::shared_ptr<derived_data::SQL_query>& query,
                                                  unsigned int t_serial, std::vector<number>& sample) override;
 
         //! Pull a kconfig sample of a tensor twopf component at fixed time from a datapipe
-        virtual void pull_tensor_twopf_kconfig_sample(datapipe<number>* pipe, unsigned int id, const std::vector<unsigned int>& k_serials,
+        virtual void pull_tensor_twopf_kconfig_sample(datapipe<number>* pipe, unsigned int id, const std::shared_ptr<derived_data::SQL_query>& query,
                                                       unsigned int t_serial, std::vector<number>& sample) override;
 
         //! Pull a kconfig sample of the zeta twopf at fixed time from a datapipe
-        virtual void pull_zeta_twopf_kconfig_sample(datapipe<number>* pipe, const std::vector<unsigned int>& k_serials,
+        virtual void pull_zeta_twopf_kconfig_sample(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_query>& query,
                                                     unsigned int t_serial, std::vector<number>& sample) override;
 
         //! Pull a kconfig sample of the zeta threepf at fixed time from a datapipe
-        virtual void pull_zeta_threepf_kconfig_sample(datapipe<number>* pipe, const std::vector<unsigned int>& k_serials,
+        virtual void pull_zeta_threepf_kconfig_sample(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_query>& query,
                                                       unsigned int t_serial, std::vector<number>& sample) override;
 
         //! Pull a kconfig sample of the zeta reduced bispectrum at fixed time from a datapipe
-        virtual void pull_zeta_redbsp_kconfig_sample(datapipe<number>* pipe, const std::vector<unsigned int>& k_serials,
+        virtual void pull_zeta_redbsp_kconfig_sample(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_query>& query,
                                                      unsigned int t_serial, std::vector<number>& sample) override;
 
         //! Pull a sample of k-configuration statistics from a datapipe
-        virtual void pull_k_statistics_sample(datapipe<number>* pipe, const std::vector<unsigned int>& k_serials, std::vector<kconfiguration_statistics>& data) override;
+        virtual void pull_k_statistics_sample(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_query>& query,
+                                              std::vector<kconfiguration_statistics>& data) override;
 
       protected:
 
@@ -1807,7 +1808,8 @@ namespace transport
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_time_config(datapipe<number>* pipe, const std::vector<unsigned int>& serial_numbers, std::vector<double>& sample)
+    void data_manager_sqlite3<number>::pull_time_config(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_time_config_query>& query,
+                                                        std::vector<time_config>& sample)
 	    {
         assert(pipe != nullptr);
         if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_DATAMGR_NULL_DATAPIPE);
@@ -1815,12 +1817,12 @@ namespace transport
         sqlite3* db = nullptr;
 		    pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
-        sqlite3_operations::pull_time_config_sample(db, serial_numbers, sample, pipe->get_worker_number());
+        sqlite3_operations::pull_time_config_sample(db, query, sample, pipe->get_worker_number());
 	    }
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_kconfig_twopf(datapipe<number>* pipe, const std::vector<unsigned int>& serial_numbers,
+    void data_manager_sqlite3<number>::pull_kconfig_twopf(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_twopf_kconfig_query>& query,
                                                           std::vector<twopf_kconfig>& sample)
 			{
 		    assert(pipe != nullptr);
@@ -1829,12 +1831,12 @@ namespace transport
 		    sqlite3* db = nullptr;
 		    pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
-		    sqlite3_operations::pull_twopf_kconfig_sample<number>(db, serial_numbers, sample, pipe->get_worker_number());
+		    sqlite3_operations::pull_twopf_kconfig_sample<number>(db, query, sample, pipe->get_worker_number());
 			}
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_kconfig_threepf(datapipe<number>* pipe, const std::vector<unsigned int>& serial_numbers,
+    void data_manager_sqlite3<number>::pull_kconfig_threepf(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_threepf_kconfig_query>& query,
                                                             std::vector<threepf_kconfig>& sample)
 	    {
         assert(pipe != nullptr);
@@ -1843,12 +1845,13 @@ namespace transport
         sqlite3* db = nullptr;
         pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
-        sqlite3_operations::pull_threepf_kconfig_sample<number>(db, serial_numbers, sample, pipe->get_worker_number());
+        sqlite3_operations::pull_threepf_kconfig_sample<number>(db, query, sample, pipe->get_worker_number());
 	    }
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_background_time_sample(datapipe<number>* pipe, unsigned int id, const std::vector<unsigned int>& t_serials,
+    void data_manager_sqlite3<number>::pull_background_time_sample(datapipe<number>* pipe, unsigned int id,
+                                                                   const std::shared_ptr<derived_data::SQL_query>& query,
                                                                    std::vector<number>& sample)
 	    {
         assert(pipe != nullptr);
@@ -1857,12 +1860,13 @@ namespace transport
         sqlite3* db = nullptr;
         pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
-        sqlite3_operations::pull_background_time_sample(db, id, t_serials, sample, pipe->get_worker_number(), pipe->get_N_fields());
+        sqlite3_operations::pull_background_time_sample(db, id, query, sample, pipe->get_worker_number(), pipe->get_N_fields());
 	    }
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_twopf_time_sample(datapipe<number>* pipe, unsigned int id, const std::vector<unsigned int>& t_serials,
+    void data_manager_sqlite3<number>::pull_twopf_time_sample(datapipe<number>* pipe, unsigned int id,
+                                                              const std::shared_ptr<derived_data::SQL_query>& query,
                                                               unsigned int k_serial, std::vector<number>& sample,
                                                               typename datapipe<number>::twopf_type type)
 	    {
@@ -1874,12 +1878,12 @@ namespace transport
 
 		    if(type == datapipe<number>::twopf_real)
 			    {
-		        sqlite3_operations::pull_paged_time_sample<number, typename integration_items<number>::twopf_re_item>(db, id, t_serials, k_serial, sample,
+		        sqlite3_operations::pull_paged_time_sample<number, typename integration_items<number>::twopf_re_item>(db, id, query, k_serial, sample,
 		                                                                                                              pipe->get_worker_number(), pipe->get_N_fields());
 			    }
 		    else if(type == datapipe<number>::twopf_imag)
 			    {
-		        sqlite3_operations::pull_paged_time_sample<number, typename integration_items<number>::twopf_im_item>(db, id, t_serials, k_serial, sample,
+		        sqlite3_operations::pull_paged_time_sample<number, typename integration_items<number>::twopf_im_item>(db, id, query, k_serial, sample,
 		                                                                                                              pipe->get_worker_number(), pipe->get_N_fields());
 			    }
 		    else assert(false);
@@ -1887,7 +1891,8 @@ namespace transport
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_threepf_time_sample(datapipe<number>* pipe, unsigned int id, const std::vector<unsigned int>& t_serials,
+    void data_manager_sqlite3<number>::pull_threepf_time_sample(datapipe<number>* pipe, unsigned int id,
+                                                                const std::shared_ptr<derived_data::SQL_query>& query,
                                                                 unsigned int k_serial, std::vector<number>& sample)
 	    {
         assert(pipe != nullptr);
@@ -1896,13 +1901,14 @@ namespace transport
         sqlite3* db = nullptr;
         pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
-        sqlite3_operations::pull_paged_time_sample<number, typename integration_items<number>::threepf_item>(db, id, t_serials, k_serial, sample,
+        sqlite3_operations::pull_paged_time_sample<number, typename integration_items<number>::threepf_item>(db, id, query, k_serial, sample,
                                                                                                              pipe->get_worker_number(), pipe->get_N_fields());
 	    }
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_tensor_twopf_time_sample(datapipe<number>* pipe, unsigned int id, const std::vector<unsigned int>& t_serials,
+    void data_manager_sqlite3<number>::pull_tensor_twopf_time_sample(datapipe<number>* pipe, unsigned int id,
+                                                                     const std::shared_ptr<derived_data::SQL_query>& query,
                                                                      unsigned int k_serial, std::vector<number>& sample)
       {
         assert(pipe != nullptr);
@@ -1911,13 +1917,13 @@ namespace transport
         sqlite3* db = nullptr;
         pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
-        sqlite3_operations::pull_paged_time_sample<number, typename integration_items<number>::tensor_twopf_item>(db, id, t_serials, k_serial, sample,
+        sqlite3_operations::pull_paged_time_sample<number, typename integration_items<number>::tensor_twopf_item>(db, id, query, k_serial, sample,
                                                                                                                   pipe->get_worker_number(), pipe->get_N_fields());
       }
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_zeta_twopf_time_sample(datapipe<number>* pipe, const std::vector<unsigned int>& t_serials,
+    void data_manager_sqlite3<number>::pull_zeta_twopf_time_sample(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_query>& query,
                                                                    unsigned int k_serial, std::vector<number>& sample)
 	    {
 		    assert(pipe != nullptr);
@@ -1926,13 +1932,13 @@ namespace transport
 		    sqlite3* db = nullptr;
 		    pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
-        sqlite3_operations::pull_unpaged_time_sample<number, typename postintegration_items<number>::zeta_twopf_item>(db, t_serials, k_serial, sample,
+        sqlite3_operations::pull_unpaged_time_sample<number, typename postintegration_items<number>::zeta_twopf_item>(db, query, k_serial, sample,
                                                                                                                       pipe->get_worker_number());
 	    }
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_zeta_threepf_time_sample(datapipe<number>* pipe, const std::vector<unsigned int>& t_serials,
+    void data_manager_sqlite3<number>::pull_zeta_threepf_time_sample(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_query>& query,
                                                                      unsigned int k_serial, std::vector<number>& sample)
 	    {
 		    assert(pipe != nullptr);
@@ -1941,13 +1947,13 @@ namespace transport
 		    sqlite3* db = nullptr;
 		    pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
-        sqlite3_operations::pull_unpaged_time_sample<number, typename postintegration_items<number>::zeta_threepf_item>(db, t_serials, k_serial, sample,
+        sqlite3_operations::pull_unpaged_time_sample<number, typename postintegration_items<number>::zeta_threepf_item>(db, query, k_serial, sample,
                                                                                                                         pipe->get_worker_number());
 	    }
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_zeta_redbsp_time_sample(datapipe<number>* pipe, const std::vector<unsigned int>& t_serials,
+    void data_manager_sqlite3<number>::pull_zeta_redbsp_time_sample(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_query>& query,
                                                                     unsigned int k_serial, std::vector<number>& sample)
 	    {
 		    assert(pipe != nullptr);
@@ -1956,13 +1962,13 @@ namespace transport
 		    sqlite3* db = nullptr;
 		    pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
-        sqlite3_operations::pull_unpaged_time_sample<number, typename postintegration_items<number>::zeta_redbsp_item>(db, t_serials, k_serial, sample,
+        sqlite3_operations::pull_unpaged_time_sample<number, typename postintegration_items<number>::zeta_redbsp_item>(db, query, k_serial, sample,
                                                                                                                         pipe->get_worker_number());
 	    }
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_fNL_time_sample(datapipe<number>* pipe, const std::vector<unsigned int>& t_serials,
+    void data_manager_sqlite3<number>::pull_fNL_time_sample(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_query>& query,
                                                             std::vector<number>& sample, derived_data::template_type type)
 	    {
 		    assert(pipe != nullptr);
@@ -1971,12 +1977,12 @@ namespace transport
 		    sqlite3* db = nullptr;
 		    pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
-        sqlite3_operations::pull_fNL_time_sample(db, t_serials, sample, pipe->get_worker_number(), type);
+        sqlite3_operations::pull_fNL_time_sample(db, query, sample, pipe->get_worker_number(), type);
 	    }
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_BT_time_sample(datapipe<number>* pipe, const std::vector<unsigned int>& t_serials,
+    void data_manager_sqlite3<number>::pull_BT_time_sample(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_query>& query,
                                                            std::vector<number>& sample, derived_data::template_type type)
 	    {
 		    assert(pipe != nullptr);
@@ -1985,12 +1991,12 @@ namespace transport
 		    sqlite3* db = nullptr;
 		    pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
-        sqlite3_operations::pull_BT_time_sample(db, t_serials, sample, pipe->get_worker_number(), type);
+        sqlite3_operations::pull_BT_time_sample(db, query, sample, pipe->get_worker_number(), type);
 	    }
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_TT_time_sample(datapipe<number>* pipe, const std::vector<unsigned int>& t_serials,
+    void data_manager_sqlite3<number>::pull_TT_time_sample(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_query>& query,
                                                            std::vector<number>& sample, derived_data::template_type type)
 	    {
 		    assert(pipe != nullptr);
@@ -1999,12 +2005,13 @@ namespace transport
 		    sqlite3* db = nullptr;
 		    pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
-        sqlite3_operations::pull_TT_time_sample(db, t_serials, sample, pipe->get_worker_number(), type);
+        sqlite3_operations::pull_TT_time_sample(db, query, sample, pipe->get_worker_number(), type);
 	    }
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_twopf_kconfig_sample(datapipe<number>* pipe, unsigned int id, const std::vector<unsigned int>& k_serials,
+    void data_manager_sqlite3<number>::pull_twopf_kconfig_sample(datapipe<number>* pipe, unsigned int id,
+                                                                 const std::shared_ptr<derived_data::SQL_query>& query,
                                                                  unsigned int t_serial, std::vector<number>& sample,
                                                                  typename datapipe<number>::twopf_type type)
 	    {
@@ -2016,12 +2023,12 @@ namespace transport
 
 		    if(type == datapipe<number>::twopf_real)
 			    {
-		        sqlite3_operations::pull_paged_kconfig_sample<number, typename integration_items<number>::twopf_re_item>(db, id, k_serials, t_serial, sample,
+		        sqlite3_operations::pull_paged_kconfig_sample<number, typename integration_items<number>::twopf_re_item>(db, id, query, t_serial, sample,
 		                                                                                                                 pipe->get_worker_number(), pipe->get_N_fields());
 			    }
 		    else if(type == datapipe<number>::twopf_imag)
 			    {
-		        sqlite3_operations::pull_paged_kconfig_sample<number, typename integration_items<number>::twopf_im_item>(db, id, k_serials, t_serial, sample,
+		        sqlite3_operations::pull_paged_kconfig_sample<number, typename integration_items<number>::twopf_im_item>(db, id, query, t_serial, sample,
 		                                                                                                                 pipe->get_worker_number(), pipe->get_N_fields());
 			    }
 		    else assert(false);
@@ -2029,7 +2036,8 @@ namespace transport
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_threepf_kconfig_sample(datapipe<number>* pipe, unsigned int id, const std::vector<unsigned int>& k_serials,
+    void data_manager_sqlite3<number>::pull_threepf_kconfig_sample(datapipe<number>* pipe, unsigned int id,
+                                                                   const std::shared_ptr<derived_data::SQL_query>& query,
                                                                    unsigned int t_serial, std::vector<number>& sample)
 	    {
         assert(pipe != nullptr);
@@ -2038,13 +2046,14 @@ namespace transport
         sqlite3* db = nullptr;
         pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
-        sqlite3_operations::pull_paged_kconfig_sample<number, typename integration_items<number>::threepf_item>(db, id, k_serials, t_serial, sample,
+        sqlite3_operations::pull_paged_kconfig_sample<number, typename integration_items<number>::threepf_item>(db, id, query, t_serial, sample,
                                                                                                                 pipe->get_worker_number(), pipe->get_N_fields());
 	    }
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_tensor_twopf_kconfig_sample(datapipe<number>* pipe, unsigned int id, const std::vector<unsigned int>& k_serials,
+    void data_manager_sqlite3<number>::pull_tensor_twopf_kconfig_sample(datapipe<number>* pipe, unsigned int id,
+                                                                        const std::shared_ptr<derived_data::SQL_query>& query,
                                                                         unsigned int t_serial, std::vector<number>& sample)
       {
         assert(pipe != nullptr);
@@ -2053,13 +2062,13 @@ namespace transport
         sqlite3* db = nullptr;
         pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
-        sqlite3_operations::pull_paged_kconfig_sample<number, typename integration_items<number>::tensor_twopf_item>(db, id, k_serials, t_serial, sample,
+        sqlite3_operations::pull_paged_kconfig_sample<number, typename integration_items<number>::tensor_twopf_item>(db, id, query, t_serial, sample,
                                                                                                                      pipe->get_worker_number(), pipe->get_N_fields());
       }
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_zeta_twopf_kconfig_sample(datapipe<number>* pipe, const std::vector<unsigned int>& k_serials,
+    void data_manager_sqlite3<number>::pull_zeta_twopf_kconfig_sample(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_query>& query,
                                                                       unsigned int t_serial, std::vector<number>& sample)
 	    {
         assert(pipe != nullptr);
@@ -2068,13 +2077,13 @@ namespace transport
         sqlite3* db = nullptr;
         pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
-        sqlite3_operations::pull_unpaged_kconfig_sample<number, typename postintegration_items<number>::zeta_twopf_item>(db, k_serials, t_serial, sample,
+        sqlite3_operations::pull_unpaged_kconfig_sample<number, typename postintegration_items<number>::zeta_twopf_item>(db, query, t_serial, sample,
                                                                                                                          pipe->get_worker_number());
 	    }
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_zeta_threepf_kconfig_sample(datapipe<number>* pipe, const std::vector<unsigned int>& k_serials,
+    void data_manager_sqlite3<number>::pull_zeta_threepf_kconfig_sample(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_query>& query,
                                                                         unsigned int t_serial, std::vector<number>& sample)
 	    {
         assert(pipe != nullptr);
@@ -2083,13 +2092,13 @@ namespace transport
         sqlite3* db = nullptr;
         pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
-        sqlite3_operations::pull_unpaged_kconfig_sample<number, typename postintegration_items<number>::zeta_threepf_item>(db, k_serials, t_serial, sample,
+        sqlite3_operations::pull_unpaged_kconfig_sample<number, typename postintegration_items<number>::zeta_threepf_item>(db, query, t_serial, sample,
                                                                                                                            pipe->get_worker_number());
 	    }
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_zeta_redbsp_kconfig_sample(datapipe<number>* pipe, const std::vector<unsigned int>& k_serials,
+    void data_manager_sqlite3<number>::pull_zeta_redbsp_kconfig_sample(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_query>& query,
                                                                        unsigned int t_serial, std::vector<number>& sample)
 	    {
         assert(pipe != nullptr);
@@ -2098,13 +2107,14 @@ namespace transport
         sqlite3* db = nullptr;
         pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
-        sqlite3_operations::pull_unpaged_kconfig_sample<number, typename postintegration_items<number>::zeta_threepf_item>(db, k_serials, t_serial, sample,
+        sqlite3_operations::pull_unpaged_kconfig_sample<number, typename postintegration_items<number>::zeta_threepf_item>(db, query, t_serial, sample,
                                                                                                                            pipe->get_worker_number());
 	    }
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_k_statistics_sample(datapipe<number>* pipe, const std::vector<unsigned int>& k_serials, std::vector<kconfiguration_statistics>& data)
+    void data_manager_sqlite3<number>::pull_k_statistics_sample(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_query>& query,
+                                                                std::vector<kconfiguration_statistics>& data)
       {
         assert(pipe != nullptr);
         if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_DATAMGR_NULL_DATAPIPE);
@@ -2112,7 +2122,7 @@ namespace transport
         sqlite3* db = nullptr;
         pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
-        sqlite3_operations::pull_k_statistics_sample(db, k_serials, data, pipe->get_worker_number());
+        sqlite3_operations::pull_k_statistics_sample(db, query, data, pipe->get_worker_number());
       }
 
 

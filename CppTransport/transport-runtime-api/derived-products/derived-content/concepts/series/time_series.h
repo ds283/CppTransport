@@ -31,9 +31,11 @@
 
 #include "transport-runtime-api/derived-products/utilities/index_selector.h"
 #include "transport-runtime-api/derived-products/utilities/wrapper.h"
-#include "transport-runtime-api/derived-products/utilities/filter.h"
 
 #include "transport-runtime-api/utilities/latex_output.h"
+
+#include "transport-runtime-api/derived-products/derived-content/correlation-functions/compute-gadgets/threepf_time_shift.h"
+#include "transport-runtime-api/derived-products/derived-content/SQL_query/SQL_query.h"
 
 
 namespace transport
@@ -56,7 +58,7 @@ namespace transport
 		      public:
 
 		        //! Basic user-facing constructor
-		        time_series(const derivable_task<number>& tk, filter::time_filter tfilter);
+		        time_series(const derivable_task<number>& tk);
 
 		        //! Deserialization constructor
 		        time_series(Json::Value& reader);
@@ -69,7 +71,7 @@ namespace transport
 		      public:
 
 		        //! extract axis data, corresponding to our sample times, from datapipe
-		        std::vector<double> pull_time_axis(datapipe<number>& pipe) const;
+		        std::vector<double> pull_time_axis(datapipe<number>& pipe, const SQL_time_config_query& tquery) const;
 
 
 				    // LABELLING SERVICES
@@ -106,51 +108,51 @@ namespace transport
 		        //! Serialize this object
 		        virtual void serialize(Json::Value& writer) const override;
 
+
+            // INTERNAL DATA
+
+          protected:
+
+            //! 3pf shift delegate
+            threepf_time_shift<number> shifter;
+
 			    };
 
 
 		    template <typename number>
-		    time_series<number>::time_series(const derivable_task<number>& tk, filter::time_filter tfilter)
-		      : derived_line<number>(tk)
+		    time_series<number>::time_series(const derivable_task<number>& tk)
+		      : derived_line<number>(tk)  // not called because of virtual inheritance; here to silence Intel compiler warning
 			    {
-		        // set up a list of serial numbers corresponding to the sample times for this derived line
-            try
-              {
-                this->f.filter_time_sample(tfilter, tk.get_stored_time_config_database(), this->time_sample_sns);
-              }
-            catch(runtime_exception& xe)
-              {
-                if(xe.get_exception_code() == runtime_exception::FILTER_EMPTY)
-                  {
-                    std::ostringstream msg;
-                    msg << __CPP_TRANSPORT_PRODUCT_TIME_SERIES_EMPTY_FILTER << " '" << this->get_parent_task()->get_name() << "'";
-                    throw runtime_exception(runtime_exception::DERIVED_PRODUCT_ERROR, msg.str());
-                  }
-                else throw xe;
-              }
           }
 
 
-				// Deserialization constructor DOESN'T CALL derived_line<> deserialization constructor
-				// because of virtual inheritance; concrete classes must call it themselves
 		    template <typename number>
 		    time_series<number>::time_series(Json::Value& reader)
-					: derived_line<number>(reader)
+					: derived_line<number>(reader)  // not called because of virtual inheritance; here to silence Intel compiler warning
 			    {
 			    }
 
 
 		    template <typename number>
-		    std::vector<double> time_series<number>::pull_time_axis(datapipe<number>& pipe) const
+		    std::vector<double> time_series<number>::pull_time_axis(datapipe<number>& pipe, const SQL_time_config_query& tquery) const
 			    {
 				    assert(this->x_type == efolds_axis);
 		        if(!pipe.validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_PRODUCT_TIME_SERIES_NULL_DATAPIPE);
 
 		        // set-up time sample data
-				    typename datapipe<number>::time_config_handle& handle = pipe.new_time_config_handle(this->time_sample_sns);
+				    typename datapipe<number>::time_config_handle& handle = pipe.new_time_config_handle(tquery);
 				    time_config_tag<number> tag = pipe.new_time_config_tag();
 
-				    return handle.lookup_tag(tag);
+            const std::vector< time_config >& t_values = handle.lookup_tag(tag);
+
+            std::vector<double> t_axis(t_values.size());
+            unsigned int i = 0;
+            for(std::vector<time_config>::const_iterator t = t_values.begin(); t != t_values.end(); ++t, ++i)
+              {
+                t_axis[i] = t->t;
+              }
+
+				    return(t_axis);
 			    }
 
 
@@ -243,8 +245,6 @@ namespace transport
 		    template <typename number>
 		    void time_series<number>::serialize(Json::Value& writer) const
 			    {
-				    // DON'T CALL derived_line<> serialization because of virtual inheritance;
-				    // concrete classes must call it themselves
 			    }
 
 

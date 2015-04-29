@@ -21,7 +21,7 @@
 #include "transport-runtime-api/derived-products/derived-content/concepts/lines/twopf_line.h"
 #include "transport-runtime-api/derived-products/derived-content/concepts/lines/threepf_line.h"
 
-#include "transport-runtime-api/derived-products/derived-content/correlation-functions/compute-gadgets/threepf_time_shift.h"
+#include "transport-runtime-api/derived-products/derived-content/SQL_query/SQL_query.h"
 
 
 namespace transport
@@ -41,7 +41,7 @@ namespace transport
 
             //! construct a background time-data object
             background_time_series(const twopf_list_task<number>& tk, index_selector<1>& sel,
-                                   filter::time_filter tfilter, unsigned int prec = __CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
+                                   SQL_time_config_query tq, unsigned int prec = __CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
 
 		        //! deserialization constructor.
 		        background_time_series(Json::Value& reader, typename repository_finder<number>::task_finder& finder);
@@ -96,6 +96,9 @@ namespace transport
 		        //! record which indices are active in this group
 		        index_selector<1> active_indices;
 
+		        //! query representing x-axis
+		        SQL_time_config_query tquery;
+
 			    };
 
 
@@ -103,11 +106,12 @@ namespace transport
 				// derived_line<> is *not* called from time_series<>. We have to call it ourselves.
 		    template <typename number>
 		    background_time_series<number>::background_time_series(const twopf_list_task<number>& tk, index_selector<1>& sel,
-		                                                           filter::time_filter tfilter, unsigned int prec)
+		                                                           SQL_time_config_query tq, unsigned int prec)
 			    : derived_line<number>(tk, time_axis, std::list<axis_value>{ efolds_axis }, prec),
-			      time_series<number>(tk, tfilter),
+			      time_series<number>(tk),
 			      gadget(tk),
-			      active_indices(sel)
+			      active_indices(sel),
+			      tquery(tq)
 			    {
 		        if(active_indices.get_number_fields() != gadget.get_N_fields())
 			        {
@@ -126,7 +130,8 @@ namespace transport
 			    : derived_line<number>(reader, finder),
 			      time_series<number>(reader),
 			      gadget(),
-			      active_indices(reader)
+			      active_indices(reader),
+			      tquery(reader)
 			    {
 				    assert(this->parent_task != nullptr);
 		        gadget.set_task(this->parent_task, finder);
@@ -156,6 +161,7 @@ namespace transport
 		        writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_BACKGROUND);
 
 		        this->active_indices.serialize(writer);
+		        this->tquery.serialize(writer);
 
 		        this->time_series<number>::serialize(writer);
 				    this->derived_line<number>::serialize(writer);
@@ -169,11 +175,11 @@ namespace transport
             // attach our datapipe to an output group
             std::string group = this->attach(pipe, tags);
 
-            const std::vector<double> t_axis = this->pull_time_axis(pipe);
+            const std::vector<double> t_axis = this->pull_time_axis(pipe, this->tquery);
 
             // loop through all the fields, pulling data from the database for those which are enabled
 
-		        typename datapipe<number>::time_data_handle& handle = pipe.new_time_data_handle(this->time_sample_sns);
+		        typename datapipe<number>::time_data_handle& handle = pipe.new_time_data_handle(this->tquery);
 
             for(unsigned int m = 0; m < 2 * this->gadget.get_N_fields(); ++m)
               {
@@ -268,7 +274,7 @@ namespace transport
 
 		        //! construct a twopf time-series object
 		        twopf_time_series(const twopf_list_task<number>& tk, index_selector<2>& sel,
-		                          filter::time_filter tfilter, filter::twopf_kconfig_filter kfilter,
+		                          SQL_time_config_query tq, SQL_twopf_kconfig_query kq,
 		                          unsigned int prec = __CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
 
 		        //! deserialization constuctor.
@@ -309,6 +315,17 @@ namespace transport
 		        //! serialize this object
 		        virtual void serialize(Json::Value& writer) const override;
 
+
+		        // INTERNAL DATA
+
+		        protected:
+
+		        //! SQL query representing x-axis
+		        SQL_time_config_query tquery;
+
+		        //! SQL query representing different lines
+		        SQL_twopf_kconfig_query kquery;
+
 			    };
 
 
@@ -316,10 +333,12 @@ namespace transport
 		    // derived_line<> is *not* called from time_series<>. We have to call it ourselves.
 		    template <typename number>
 		    twopf_time_series<number>::twopf_time_series(const twopf_list_task<number>& tk, index_selector<2>& sel,
-		                                                 filter::time_filter tfilter, filter::twopf_kconfig_filter kfilter, unsigned int prec)
+		                                                 SQL_time_config_query tq, SQL_twopf_kconfig_query kq, unsigned int prec)
 			    : derived_line<number>(tk, time_axis, std::list<axis_value>{ efolds_axis }, prec),
-			      twopf_line<number>(tk, sel, kfilter),
-			      time_series<number>(tk, tfilter)
+			      twopf_line<number>(tk, sel),
+			      time_series<number>(tk),
+			      tquery(tq),
+			      kquery(kq)
 			    {
 			    }
 
@@ -330,7 +349,9 @@ namespace transport
 		    twopf_time_series<number>::twopf_time_series(Json::Value& reader, typename repository_finder<number>::task_finder& finder)
 			    : derived_line<number>(reader, finder),
 			      twopf_line<number>(reader, finder),
-			      time_series<number>(reader)
+			      time_series<number>(reader),
+			      tquery(reader),
+			      kquery(reader)
 			    {
 			    }
 
@@ -343,11 +364,11 @@ namespace transport
             std::string group = this->attach(pipe, tags);
 
 		        // pull time-axis data
-            const std::vector<double> t_axis = this->pull_time_axis(pipe);
+            const std::vector<double> t_axis = this->pull_time_axis(pipe, this->tquery);
 
 		        // set up cache handles
-		        typename datapipe<number>::twopf_kconfig_handle& k_handle = pipe.new_twopf_kconfig_handle(this->kconfig_sample_sns);
-		        typename datapipe<number>::time_data_handle& t_handle = pipe.new_time_data_handle(this->time_sample_sns);
+		        typename datapipe<number>::twopf_kconfig_handle& k_handle = pipe.new_twopf_kconfig_handle(this->kquery);
+		        typename datapipe<number>::time_data_handle& t_handle = pipe.new_time_data_handle(this->tquery);
 
 		        // pull k-configuration information from the database
 		        twopf_kconfig_tag<number> k_tag = pipe.new_twopf_kconfig_tag();
@@ -356,7 +377,7 @@ namespace transport
 
 		        // loop through all components of the twopf, for each k-configuration we use,
 		        // pulling data from the database
-		        for(unsigned int i = 0; i < this->kconfig_sample_sns.size(); ++i)
+		        for(std::vector<twopf_kconfig>::const_iterator t = k_values.begin(); t != k_values.end(); ++t)
 			        {
 		            for(unsigned int m = 0; m < 2*this->gadget.get_N_fields(); ++m)
 			            {
@@ -367,7 +388,7 @@ namespace transport
 			                    {
 		                        cf_time_data_tag<number> tag =
 			                                                 pipe.new_cf_time_data_tag(this->is_real_twopf() ? data_tag<number>::cf_twopf_re : data_tag<number>::cf_twopf_im,
-			                                                                           this->gadget.get_model()->flatten(m, n), this->kconfig_sample_sns[i]);
+			                                                                           this->gadget.get_model()->flatten(m, n), t->serial);
 
 		                        std::vector<number> line_data = t_handle.lookup_tag(tag);
 
@@ -375,17 +396,17 @@ namespace transport
 			                        {
 		                            for(unsigned int j = 0; j < line_data.size(); ++j)
 			                            {
-		                                line_data[j] *= k_values[i].k_comoving*k_values[i].k_comoving*k_values[i].k_comoving / (2.0*M_PI*M_PI);
+		                                line_data[j] *= t->k_comoving * t->k_comoving * t->k_comoving / (2.0*M_PI*M_PI);
 			                            }
 
 		                            data_line<number> line = data_line<number>(group, this->x_type, dimensionless_value, t_axis, line_data,
-		                                                                       this->get_LaTeX_label(m,n,k_values[i]), this->get_non_LaTeX_label(m,n,k_values[i]));
+		                                                                       this->get_LaTeX_label(m,n,*t), this->get_non_LaTeX_label(m,n,*t));
 		                            lines.push_back(line);
 			                        }
 		                        else
 			                        {
 		                            data_line<number> line = data_line<number>(group, this->x_type, correlation_function_value, t_axis, line_data,
-		                                                                       this->get_LaTeX_label(m,n,k_values[i]), this->get_non_LaTeX_label(m,n,k_values[i]));
+		                                                                       this->get_LaTeX_label(m,n,*t), this->get_non_LaTeX_label(m,n,*t));
 		                            lines.push_back(line);
 			                        }
 			                    }
@@ -456,6 +477,9 @@ namespace transport
 			    {
 		        writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TWOPF_TIME_SERIES);
 
+		        this->tquery.serialize(writer);
+		        this->kquery.serialize(writer);
+
 				    this->derived_line<number>::serialize(writer);
 				    this->twopf_line<number>::serialize(writer);
 		        this->time_series<number>::serialize(writer);
@@ -473,7 +497,7 @@ namespace transport
 
             //! construct a threepf time-data object
             threepf_time_series(const threepf_task<number>& tk, index_selector<3>& sel,
-                                filter::time_filter tfilter, filter::threepf_kconfig_filter kfilter,
+                                SQL_time_config_query tq, SQL_threepf_kconfig_query kq,
                                 unsigned int prec = __CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
 
 		        //! deserialization constructor.
@@ -525,8 +549,11 @@ namespace transport
 
           protected:
 
-            //! 3pf shift delegate
-            threepf_time_shift<number> shifter;
+            //! SQL query representing x-axis
+            SQL_time_config_query tquery;
+
+            //! SQL query representing different lines
+            SQL_threepf_kconfig_query kquery;
 
 			    };
 
@@ -535,11 +562,13 @@ namespace transport
 		    // derived_line<> is *not* called from time_series<>. We have to call it ourselves.
 		    template <typename number>
 		    threepf_time_series<number>::threepf_time_series(const threepf_task<number>& tk, index_selector<3>& sel,
-		                                                     filter::time_filter tfilter, filter::threepf_kconfig_filter kfilter,
+		                                                     SQL_time_config_query tq, SQL_threepf_kconfig_query kq,
 		                                                     unsigned int prec)
 			    : derived_line<number>(tk, time_axis, std::list<axis_value>{ efolds_axis }, prec),
-			      threepf_line<number>(tk, sel, kfilter),
-			      time_series<number>(tk, tfilter)
+			      threepf_line<number>(tk, sel),
+			      time_series<number>(tk),
+			      tquery(tq),
+			      kquery(kq)
 			    {
 			    }
 
@@ -550,7 +579,9 @@ namespace transport
 		    threepf_time_series<number>::threepf_time_series(Json::Value& reader, typename repository_finder<number>::task_finder& finder)
 			    : derived_line<number>(reader, finder),
 		        threepf_line<number>(reader, finder),
-		        time_series<number>(reader)
+		        time_series<number>(reader),
+		        tquery(reader),
+		        kquery(reader)
 			    {
 			    }
 
@@ -563,21 +594,24 @@ namespace transport
             std::string group = this->attach(pipe, tags);
 
 		        // pull time-axis data
-            const std::vector<double> t_axis = this->pull_time_axis(pipe);
+            const std::vector<double> t_axis = this->pull_time_axis(pipe, this->tquery);
 
 		        // set up cache handles
-		        typename datapipe<number>::threepf_kconfig_handle& k_handle = pipe.new_threepf_kconfig_handle(this->kconfig_sample_sns);
-		        typename datapipe<number>::time_data_handle& t_handle = pipe.new_time_data_handle(this->time_sample_sns);
+            typename datapipe<number>::threepf_kconfig_handle& kc_handle = pipe.new_threepf_kconfig_handle(this->kquery);
+		        typename datapipe<number>::time_config_handle&     tc_handle = pipe.new_time_config_handle(this->tquery);
+            typename datapipe<number>::time_data_handle&       t_handle  = pipe.new_time_data_handle(this->tquery);
 
-		        // pull k-configuration information from the database
-		        threepf_kconfig_tag<number> k_tag = pipe.new_threepf_kconfig_tag();
+		        // pull time- and k-configuration information from the database
+		        threepf_kconfig_tag<number> kc_tag = pipe.new_threepf_kconfig_tag();
+		        time_config_tag<number>     tc_tag = pipe.new_time_config_tag();
 
-		        const typename std::vector< threepf_kconfig > k_values = k_handle.lookup_tag(k_tag);
+		        const std::vector< threepf_kconfig > k_values = kc_handle.lookup_tag(kc_tag);
+            const std::vector< time_config >     t_values = tc_handle.lookup_tag(tc_tag);
 
 		        // loop through all components of the threepf, for each k-configuration we use,
 		        // pulling data from the database
 
-		        for(unsigned int i = 0; i < this->kconfig_sample_sns.size(); ++i)
+		        for(std::vector<threepf_kconfig>::const_iterator t = k_values.begin(); t != k_values.end(); ++t)
 			        {
 		            for(unsigned int l = 0; l < 2*this->gadget.get_N_fields(); ++l)
 			            {
@@ -588,17 +622,17 @@ namespace transport
 		                        std::array<unsigned int, 3> index_set = { l, m, n };
 		                        if(this->active_indices.is_on(index_set))
 			                        {
-				                        cf_time_data_tag<number> tag = pipe.new_cf_time_data_tag(data_tag<number>::cf_threepf, this->gadget.get_model()->flatten(l,m,n), this->kconfig_sample_sns[i]);
+				                        cf_time_data_tag<number> tag = pipe.new_cf_time_data_tag(data_tag<number>::cf_threepf, this->gadget.get_model()->flatten(l,m,n), t->serial);
 
 		                            std::vector<number> line_data = t_handle.lookup_tag(tag);
 
 		                            // the integrator produces correlation functions involving the canonical momenta,
 		                            // not the derivatives. If the user wants derivatives then we have to shift.
 		                            if(this->get_dot_meaning() == derivatives)
-			                            this->shifter.shift(this->gadget.get_integration_task(), this->gadget.get_model(), pipe, this->time_sample_sns, line_data, t_axis, l, m, n, k_values[i]);
+			                            this->shifter.shift(this->gadget.get_integration_task(), this->gadget.get_model(), pipe, this->tquery, line_data, t_values, l, m, n, *t);
 
 		                            data_line<number> line = data_line<number>(group, this->x_type, correlation_function_value, t_axis, line_data,
-		                                                                       this->get_LaTeX_label(l, m, n, k_values[i]), this->get_non_LaTeX_label(l, m, n, k_values[i]));
+		                                                                       this->get_LaTeX_label(l, m, n, *t), this->get_non_LaTeX_label(l, m, n, *t));
 
 		                            lines.push_back(line);
 			                        }
@@ -669,6 +703,9 @@ namespace transport
 		    void threepf_time_series<number>::serialize(Json::Value& writer) const
 			    {
 		        writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_TIME_SERIES);
+
+		        this->tquery.serialize(writer);
+		        this->kquery.serialize(writer);
 
 		        this->derived_line<number>::serialize(writer);
 				    this->threepf_line<number>::serialize(writer);

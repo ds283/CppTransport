@@ -20,6 +20,8 @@
 #include "transport-runtime-api/derived-products/derived-content/concepts/series/time_series.h"
 #include "transport-runtime-api/derived-products/derived-content/concepts/lines/tensor_twopf_line.h"
 
+#include "transport-runtime-api/derived-products/derived-content/SQL_query/SQL_query.h"
+
 
 namespace transport
 	{
@@ -38,7 +40,7 @@ namespace transport
 
 				    //! construct a tensor two-point function time series data object
 				    tensor_twopf_time_series(const twopf_list_task<number>& tk, index_selector<2>& sel,
-				                             filter::time_filter tfilter, filter::twopf_kconfig_filter kfilter,
+				                             SQL_time_config_query tq, SQL_twopf_kconfig_query kq,
 				                             unsigned int prec = __CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
 
 				    //! deserialization constructor
@@ -85,6 +87,17 @@ namespace transport
 				    //! serialize this object
 				    virtual void serialize(Json::Value& writer) const override;
 
+
+            // INTERNAL DATA
+
+          protected:
+
+            //! SQL query representing x axis
+            SQL_time_config_query tquery;
+
+            //! SQL query representing different lines
+            SQL_twopf_kconfig_query kquery;
+
 			    };
 
 
@@ -93,10 +106,12 @@ namespace transport
 		    // We have to call it ourselves
 		    template <typename number>
 		    tensor_twopf_time_series<number>::tensor_twopf_time_series(const twopf_list_task<number>& tk, index_selector<2>& sel,
-		                                                               filter::time_filter tfilter, filter::twopf_kconfig_filter kfilter, unsigned int prec)
+		                                                               SQL_time_config_query tq, SQL_twopf_kconfig_query kq, unsigned int prec)
 			    : derived_line<number>(tk, time_axis, std::list<axis_value>{ efolds_axis }, prec),
-            tensor_twopf_line<number>(tk, sel, kfilter),
-            time_series<number>(tk, tfilter)
+            tensor_twopf_line<number>(tk, sel),
+            time_series<number>(tk),
+            tquery(tq),
+            kquery(kq)
 			    {
 			    }
 
@@ -108,7 +123,9 @@ namespace transport
 		    tensor_twopf_time_series<number>::tensor_twopf_time_series(Json::Value& reader, typename repository_finder<number>::task_finder& finder)
 			    : derived_line<number>(reader, finder),
 			      tensor_twopf_line<number>(reader, finder),
-			      time_series<number>(reader)
+			      time_series<number>(reader),
+            tquery(reader),
+            kquery(reader)
 			    {
 			    }
 
@@ -121,11 +138,11 @@ namespace transport
             std::string group = this->attach(pipe, tags);
 
 		        // pull time-axis data
-		        const std::vector<double> t_axis = this->pull_time_axis(pipe);
+		        const std::vector<double> t_axis = this->pull_time_axis(pipe, this->tquery);
 
 		        // set up cache handles
-		        typename datapipe<number>::twopf_kconfig_handle& k_handle = pipe.new_twopf_kconfig_handle(this->kconfig_sample_sns);
-		        typename datapipe<number>::time_data_handle& t_handle = pipe.new_time_data_handle(this->time_sample_sns);
+		        typename datapipe<number>::twopf_kconfig_handle& k_handle = pipe.new_twopf_kconfig_handle(this->kquery);
+		        typename datapipe<number>::time_data_handle& t_handle = pipe.new_time_data_handle(this->tquery);
 
 		        // pull k-configuration information from the database
 		        twopf_kconfig_tag<number> k_tag = pipe.new_twopf_kconfig_tag();
@@ -133,7 +150,7 @@ namespace transport
 		        const typename std::vector< twopf_kconfig > k_values = k_handle.lookup_tag(k_tag);
 
 		        // for each k-configuration, loop through all components of the tensor twopf and pull data from the database
-		        for(unsigned int i = 0; i < this->kconfig_sample_sns.size(); ++i)
+		        for(std::vector<twopf_kconfig>::const_iterator t = k_values.begin(); t != k_values.end(); ++t)
 			        {
 				        for(unsigned int m = 0; m < 2; ++m)
 					        {
@@ -142,13 +159,13 @@ namespace transport
 						            std::array<unsigned int, 2> index_set = { m, n };
 								        if(this->active_indices.is_on(index_set))
 									        {
-								            cf_time_data_tag<number> tag = pipe.new_cf_time_data_tag(data_tag<number>::cf_tensor_twopf, this->gadget.get_model()->tensor_flatten(m, n), this->kconfig_sample_sns[i]);
+								            cf_time_data_tag<number> tag = pipe.new_cf_time_data_tag(data_tag<number>::cf_tensor_twopf, this->gadget.get_model()->tensor_flatten(m, n), t->serial);
 
 								            // it's safe to take a reference here to avoid a copy; we don't need the cache data to survive over multiple calls to lookup_tag()
 								            const std::vector<number>& line_data = t_handle.lookup_tag(tag);
 
 								            data_line<number> line = data_line<number>(group, this->x_type, correlation_function_value, t_axis, line_data,
-								                                                       this->get_LaTeX_label(m,n,k_values[i]), this->get_non_LaTeX_label(m,n,k_values[i]));
+								                                                       this->get_LaTeX_label(m,n,*t), this->get_non_LaTeX_label(m,n,*t));
 
 								            lines.push_back(line);
 									        }
@@ -218,6 +235,9 @@ namespace transport
 		    void tensor_twopf_time_series<number>::serialize(Json::Value& writer) const
 			    {
 				    writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TENSOR_TWOPF_TIME_SERIES);
+
+            this->tquery.serialize(writer);
+            this->kquery.serialize(writer);
 
 				    this->derived_line<number>::serialize(writer);
 				    this->tensor_twopf_line<number>::serialize(writer);

@@ -33,7 +33,6 @@
 
 #include "transport-runtime-api/derived-products/utilities/index_selector.h"
 #include "transport-runtime-api/derived-products/utilities/wrapper.h"
-#include "transport-runtime-api/derived-products/utilities/filter.h"
 
 #include "transport-runtime-api/derived-products/line-collections/line_values.h"
 
@@ -119,8 +118,7 @@ namespace transport
 				  public:
 
 						//! Basic user-facing constructor
-						derived_line(const derivable_task<number>& tk,
-						             axis_class at, std::list< axis_value > sax,
+						derived_line(const derivable_task<number>& tk, axis_class at, std::list< axis_value > sax,
 						             unsigned int prec=__CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
 
 						//! Dummy constructor, should not be used.
@@ -275,14 +273,11 @@ namespace transport
 				    //! Wrapped output utility
 				    wrapped_output wrapper;
 
-				    //! gadget for performing t- or k-sample filtration
-				    filter f;
-
-				    //! List of time configuration serial numbers associated with this derived product
-				    std::vector<unsigned int> time_sample_sns;
-
-						//! List of k-configuration serial numbers associated with this derived product
-						std::vector<unsigned int> kconfig_sample_sns;
+//				    //! List of time configuration serial numbers associated with this derived product
+//				    std::vector<unsigned int> time_sample_sns;
+//
+//						//! List of k-configuration serial numbers associated with this derived product
+//						std::vector<unsigned int> kconfig_sample_sns;
 
 					};
 
@@ -430,24 +425,6 @@ namespace transport
 				        msg << __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_KLABEL_TYPE_UNKNOWN << " '" << label_meaning_value << "'";
 				        throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
 					    }
-
-						// Deserialize: list of time configuration sample points
-				    Json::Value& time_sns_list = reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_SERIAL_NUMBERS];
-						assert(time_sns_list.isArray());
-
-				    for(Json::Value::iterator t = time_sns_list.begin(); t != time_sns_list.end(); ++t)
-					    {
-				        time_sample_sns.push_back(t->asUInt());
-					    }
-
-				    // Deserialize: list of k-configuration sample points
-				    Json::Value& kconfig_sns_list = reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_SERIAL_NUMBERS];
-						assert(kconfig_sns_list.isArray());
-
-				    for(Json::Value::iterator t = kconfig_sns_list.begin(); t != kconfig_sns_list.end(); ++t)
-					    {
-				        kconfig_sample_sns.push_back(t->asUInt());
-					    }
 					}
 
 
@@ -463,8 +440,6 @@ namespace transport
 					  non_LaTeX_label(obj.non_LaTeX_label),
 					  use_tags(obj.use_tags),
             precision(obj.precision),
-            time_sample_sns(obj.time_sample_sns),
-            kconfig_sample_sns(obj.kconfig_sample_sns),
 		        parent_task(dynamic_cast<derivable_task<number>*>(obj.parent_task->clone()))
 					{
 						assert(this->parent_task != nullptr);
@@ -690,26 +665,6 @@ namespace transport
 					        assert(false);
 					        throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_KLABEL_TYPE_UNKNOWN);
 					    }
-
-						// Serialize: list of time-configuration sample points
-				    Json::Value time_sns_list(Json::arrayValue);
-
-				    for(std::vector<unsigned int>::const_iterator t = this->time_sample_sns.begin(); t != this->time_sample_sns.end(); ++t)
-					    {
-				        Json::Value sns_element = *t;
-						    time_sns_list.append(sns_element);
-					    }
-				    writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_SERIAL_NUMBERS] = time_sns_list;
-
-						// Serialize: list of k-configuration sample points
-				    Json::Value kconfig_sns_list(Json::arrayValue);
-
-				    for(std::vector<unsigned int>::const_iterator t = this->kconfig_sample_sns.begin(); t != this->kconfig_sample_sns.end(); ++t)
-					    {
-				        Json::Value kconfig_element = *t;
-						    kconfig_sns_list.append(kconfig_element);
-					    }
-				    writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_SERIAL_NUMBERS] = kconfig_sns_list;
 					}
 
 
@@ -872,28 +827,28 @@ namespace transport
 				    count = 0;
 
 						this->wrapper.wrap_newline(out);
-				    this->wrapper.wrap_out(out, __CPP_TRANSPORT_PRODUCT_TIME_SERIES_TSAMPLE_SN_LABEL " ");
-				    for(std::vector<unsigned int>::const_iterator t = this->time_sample_sns.begin(); t != this->time_sample_sns.end() && count < __CPP_TRANSPORT_PRODUCT_MAX_SN; ++t)
-					    {
-				        std::ostringstream msg;
-				        msg << (*t);
-
-				        this->wrapper.wrap_list_item(out, true, msg.str(), count);
-					    }
-				    if(count == __CPP_TRANSPORT_PRODUCT_MAX_SN) this->wrapper.wrap_list_item(out, true, "...", count);
-				    this->wrapper.wrap_newline(out);
-
-				    count = 0;
-				    this->wrapper.wrap_out(out, __CPP_TRANSPORT_PRODUCT_TIME_SERIES_KCONFIG_SN_LABEL " ");
-				    for(std::vector<unsigned int>::const_iterator t = this->kconfig_sample_sns.begin(); t != this->kconfig_sample_sns.end() && count < __CPP_TRANSPORT_PRODUCT_MAX_SN; ++t)
-					    {
-				        std::ostringstream msg;
-				        msg << (*t);
-
-				        this->wrapper.wrap_list_item(out, true, msg.str(), count);
-					    }
-				    if(count == __CPP_TRANSPORT_PRODUCT_MAX_SN) this->wrapper.wrap_list_item(out, true, "...", count);
-				    this->wrapper.wrap_newline(out);
+//				    this->wrapper.wrap_out(out, __CPP_TRANSPORT_PRODUCT_TIME_SERIES_TSAMPLE_SN_LABEL " ");
+//				    for(std::vector<unsigned int>::const_iterator t = this->time_sample_sns.begin(); t != this->time_sample_sns.end() && count < __CPP_TRANSPORT_PRODUCT_MAX_SN; ++t)
+//					    {
+//				        std::ostringstream msg;
+//				        msg << (*t);
+//
+//				        this->wrapper.wrap_list_item(out, true, msg.str(), count);
+//					    }
+//				    if(count == __CPP_TRANSPORT_PRODUCT_MAX_SN) this->wrapper.wrap_list_item(out, true, "...", count);
+//				    this->wrapper.wrap_newline(out);
+//
+//				    count = 0;
+//				    this->wrapper.wrap_out(out, __CPP_TRANSPORT_PRODUCT_TIME_SERIES_KCONFIG_SN_LABEL " ");
+//				    for(std::vector<unsigned int>::const_iterator t = this->kconfig_sample_sns.begin(); t != this->kconfig_sample_sns.end() && count < __CPP_TRANSPORT_PRODUCT_MAX_SN; ++t)
+//					    {
+//				        std::ostringstream msg;
+//				        msg << (*t);
+//
+//				        this->wrapper.wrap_list_item(out, true, msg.str(), count);
+//					    }
+//				    if(count == __CPP_TRANSPORT_PRODUCT_MAX_SN) this->wrapper.wrap_list_item(out, true, "...", count);
+//				    this->wrapper.wrap_newline(out);
 
 						this->wrapper.set_left_margin(saved_left_margin);
 					}

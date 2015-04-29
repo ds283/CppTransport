@@ -31,11 +31,11 @@
 
 #include "transport-runtime-api/derived-products/utilities/index_selector.h"
 #include "transport-runtime-api/derived-products/utilities/wrapper.h"
-#include "transport-runtime-api/derived-products/utilities/filter.h"
 
 #include "transport-runtime-api/utilities/latex_output.h"
 
 #include "transport-runtime-api/derived-products/derived-content/correlation-functions/compute-gadgets/threepf_kconfig_shift.h"
+#include "transport-runtime-api/derived-products/derived-content/SQL_query/SQL_query.h"
 
 
 #define __CPP_TRANSPORT_NODE_PRODUCT_WAVENUMBER_SERIES_ROOT           "momentum-configuration-series"
@@ -62,7 +62,7 @@ namespace transport
           public:
 
 		        //! Basic user-facing constructor
-		        wavenumber_series(const derivable_task<number>& tk, filter::time_filter tfilter);
+		        wavenumber_series(const derivable_task<number>& tk);
 
 		        //! Deserialization constructor
 		        wavenumber_series(Json::Value& reader);
@@ -86,10 +86,10 @@ namespace transport
           public:
 
             //! extract axis data, corresponding to our sample wavenumbers, from datapipe
-            std::vector<double> pull_twopf_kconfig_axis(datapipe<number>& pipe) const;
+            std::vector<double> pull_twopf_kconfig_axis(datapipe<number>& pipe, const SQL_twopf_kconfig_query& kquery) const;
 
             //! extract axis data, corresponding to our sample wavenumbers, from datapipe
-            std::vector<double> pull_threepf_kconfig_axis(datapipe<number>& pipe) const;
+            std::vector<double> pull_threepf_kconfig_axis(datapipe<number>& pipe, const SQL_threepf_kconfig_query& kquery) const;
 
 
 		        // LABELLING SERVICES
@@ -109,12 +109,6 @@ namespace transport
 
 		        //! Write self-details to a stream
 		        virtual void write(std::ostream& out);
-
-		        //! Write details of the k-configurations included in this product - twopf version
-		        void write_kconfig_list(std::ostream& out, const twopf_kconfig_database& twopf_db);
-
-		        //! Write details of the k-configurations included in this product - threepf version
-		        void write_kconfig_list(std::ostream& out, const threepf_kconfig_database& threepf_db);
 
 
 		        // SERIALIZATION -- implements a 'serializable' interface
@@ -145,32 +139,16 @@ namespace transport
 
         // constructor DOESN'T CALL the correct derived_line<> constructor; concrete classes must call it for themselves
 		    template <typename number>
-		    wavenumber_series<number>::wavenumber_series(const derivable_task<number>& tk, filter::time_filter tfilter)
-          : derived_line<number>(tk),
+		    wavenumber_series<number>::wavenumber_series(const derivable_task<number>& tk)
+          : derived_line<number>(tk),  // not called because of virtual inheritance; here to silence Intel compiler warning
             compute_index(false)
 			    {
-				    // set up list of serial numbers corresponding to the sample times for this derived line
-            try
-              {
-                this->f.filter_time_sample(tfilter, tk.get_stored_time_config_database(), this->time_sample_sns);
-              }
-            catch(runtime_exception& xe)
-              {
-                if(xe.get_exception_code() == runtime_exception::FILTER_EMPTY)
-                  {
-                    std::ostringstream msg;
-                    msg << __CPP_TRANSPORT_PRODUCT_TIME_SERIES_EMPTY_FILTER << " '" << this->get_parent_task()->get_name() << "'";
-                    throw runtime_exception(runtime_exception::DERIVED_PRODUCT_ERROR, msg.str());
-                  }
-                else throw xe;
-              }
           }
 
 
-        // constructor DOESN'T CALL the correct derived_line<> constructor; concrete classes must call it for themselves
 		    template <typename number>
 		    wavenumber_series<number>::wavenumber_series(Json::Value& reader)
-          : derived_line<number>(reader)
+          : derived_line<number>(reader)  // not called because of virtual inheritance; here to silence Intel compiler warning
 			    {
 		        compute_index = reader[__CPP_TRANSPORT_NODE_PRODUCT_WAVENUMBER_SERIES_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_WAVENUMBER_SERIES_SPECTRAL_INDEX].asBool();
 			    }
@@ -179,11 +157,11 @@ namespace transport
 
 
         template <typename number>
-        std::vector<double> wavenumber_series<number>::pull_twopf_kconfig_axis(datapipe<number>& pipe) const
+        std::vector<double> wavenumber_series<number>::pull_twopf_kconfig_axis(datapipe<number>& pipe, const SQL_twopf_kconfig_query& kquery) const
 	        {
 		        assert(this->x_type == k_axis);
 
-            typename datapipe<number>::twopf_kconfig_handle& handle = pipe.new_twopf_kconfig_handle(this->kconfig_sample_sns);
+            typename datapipe<number>::twopf_kconfig_handle& handle = pipe.new_twopf_kconfig_handle(kquery);
             twopf_kconfig_tag<number> tag = pipe.new_twopf_kconfig_tag();
 
             // safe to take a reference here and avoid a copy
@@ -227,9 +205,9 @@ namespace transport
 
 
         template <typename number>
-        std::vector<double> wavenumber_series<number>::pull_threepf_kconfig_axis(datapipe<number>& pipe) const
+        std::vector<double> wavenumber_series<number>::pull_threepf_kconfig_axis(datapipe<number>& pipe, const SQL_threepf_kconfig_query& kquery) const
 	        {
-            typename datapipe<number>::threepf_kconfig_handle& handle = pipe.new_threepf_kconfig_handle(this->kconfig_sample_sns);
+            typename datapipe<number>::threepf_kconfig_handle& handle = pipe.new_threepf_kconfig_handle(kquery);
             threepf_kconfig_tag<number> tag = pipe.new_threepf_kconfig_tag();
 
             // safe to take a reference here
@@ -356,77 +334,6 @@ namespace transport
 		    template <typename number>
 		    void wavenumber_series<number>::write(std::ostream& out)
 			    {
-			    }
-
-
-		    template <typename number>
-		    void wavenumber_series<number>::write_kconfig_list(std::ostream& out, const twopf_kconfig_database& twopf_db)
-			    {
-		        unsigned int count = 0;
-
-		        unsigned int saved_left_margin = this->wrapper.get_left_margin();
-		        this->wrapper.set_left_margin(2);
-		        this->wrapper.wrap_newline(out);
-
-		        for(twopf_kconfig_database::const_config_iterator t = twopf_db.config_begin(); t != twopf_db.config_end(); ++t)
-			        {
-		            std::vector< unsigned int >::iterator s = std::find(this->kconfig_sample_sns.begin(), this->kconfig_sample_sns.end(), t->serial);
-
-		            if(s != this->kconfig_sample_sns.end())
-			            {
-		                std::ostringstream line;
-		                line << std::setprecision(4);
-
-		                line << count << ". ";
-				            line << "serial = " << t->serial << ", ";
-		                line << "k = " << t->k_conventional;
-
-		                this->wrapper.wrap_out(out, line.str());
-		                this->wrapper.wrap_newline(out);
-
-				            count++;
-			            }
-			        }
-
-		        this->wrapper.set_left_margin(saved_left_margin);
-			    }
-
-
-		    template <typename number>
-		    void wavenumber_series<number>::write_kconfig_list(std::ostream& out, const threepf_kconfig_database& threepf_db)
-			    {
-				    unsigned int count = 0;
-
-				    unsigned int saved_left_margin = this->wrapper.get_left_margin();
-				    this->wrapper.set_left_margin(2);
-				    this->wrapper.wrap_newline(out);
-
-				    for(threepf_kconfig_database::const_config_iterator t = threepf_db.config_begin(); t != threepf_db.config_end(); ++t)
-					    {
-				        std::vector< unsigned int >::iterator s = std::find(this->kconfig_sample_sns.begin(), this->kconfig_sample_sns.end(), t->serial);
-
-						    if(s != this->kconfig_sample_sns.end())
-							    {
-						        std::ostringstream line;
-						        line << std::setprecision(4);
-
-						        line << count << ". ";
-								    line << "serial = " << t->serial << ", ";
-						        line << "k_t = " << t->kt_conventional << ", ";
-						        line << "alpha = " << t->alpha << ", ";
-						        line << "beta = " << t->beta << ", ";
-						        line << "k1/k_t = " << t->k1_conventional/t->kt_conventional << ", ";
-						        line << "k2/k_t = " << t->k2_conventional/t->kt_conventional << ", ";
-						        line << "k3/k_t = " << t->k3_conventional/t->kt_conventional;
-
-						        this->wrapper.wrap_out(out, line.str());
-						        this->wrapper.wrap_newline(out);
-
-								    count++;
-							    }
-					    }
-
-				    this->wrapper.set_left_margin(saved_left_margin);
 			    }
 
 

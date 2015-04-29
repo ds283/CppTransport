@@ -65,6 +65,8 @@ namespace transport
 			        {
 		            std::ostringstream msg;
 		            msg << __CPP_TRANSPORT_SQLITE_UTILITY_ERROR << " " << sqlite3_errmsg(db) << " [status=" << status << "]";
+		            std::cerr << msg.str() << std::endl;
+				        assert(false);
 		            throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
 			        }
 			    }

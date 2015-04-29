@@ -20,6 +20,8 @@
 #include "transport-runtime-api/derived-products/derived-content/concepts/series/time_series.h"
 #include "transport-runtime-api/derived-products/derived-content/concepts/lines/fNL_line.h"
 
+#include "transport-runtime-api/derived-products/derived-content/SQL_query/SQL_query.h"
+
 
 namespace transport
   {
@@ -37,7 +39,7 @@ namespace transport
           public:
 
             //! construct an fNL time series data object
-            fNL_time_series(const fNL_task<number>& tk, filter::time_filter tfilter);
+            fNL_time_series(const fNL_task<number>& tk, SQL_time_config_query tq);
 
             //! deserialization constructor
             fNL_time_series(Json::Value& reader, typename repository_finder<number>::task_finder& finder);
@@ -83,6 +85,14 @@ namespace transport
             //! serialize this object
             virtual void serialize(Json::Value& writer) const override;
 
+
+            // INTERNAL DATA
+
+          protected:
+
+            //! SQL query representing x-axis
+            SQL_time_config_query tquery;
+
           };
 
 
@@ -90,10 +100,11 @@ namespace transport
         // for derived_line<> is not called automatically when constructing time_series<>.
         // We have to call it ourselves.
         template <typename number>
-        fNL_time_series<number>::fNL_time_series(const fNL_task<number>& tk, filter::time_filter tfilter)
+        fNL_time_series<number>::fNL_time_series(const fNL_task<number>& tk, SQL_time_config_query tq)
           : derived_line<number>(tk, time_axis, std::list<axis_value>{ efolds_axis }),
             fNL_line<number>(tk),
-            time_series<number>(tk, tfilter)
+            time_series<number>(tk),
+            tquery(tq)
           {
           }
 
@@ -105,7 +116,8 @@ namespace transport
         fNL_time_series<number>::fNL_time_series(Json::Value& reader, typename repository_finder<number>::task_finder& finder)
           : derived_line<number>(reader, finder),
             fNL_line<number>(reader),
-            time_series<number>(reader)
+            time_series<number>(reader),
+            tquery(reader)
           {
           }
 
@@ -117,10 +129,10 @@ namespace transport
             // attach datapipe to an output group
             std::string group = this->attach(pipe, tags);
 
-            const std::vector<double> t_axis = this->pull_time_axis(pipe);
+            const std::vector<double> t_axis = this->pull_time_axis(pipe, this->tquery);
 
 		        // set up cache handles
-		        typename datapipe<number>::time_zeta_handle& z_handle = pipe.new_time_zeta_handle(this->time_sample_sns);
+		        typename datapipe<number>::time_zeta_handle& z_handle = pipe.new_time_zeta_handle(this->tquery);
 
 		        // set up tag for our fNL template
 		        fNL_time_data_tag<number> tag = pipe.new_fNL_time_data_tag(this->type);
@@ -190,6 +202,8 @@ namespace transport
         void fNL_time_series<number>::serialize(Json::Value& writer) const
           {
             writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_FNL_TIME_SERIES);
+
+            this->tquery.serialize(writer);
 
             this->derived_line<number>::serialize(writer);
             this->fNL_line<number>::serialize(writer);

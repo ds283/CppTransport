@@ -11,7 +11,6 @@
 #include "transport-runtime-api/derived-products/line-collections/line_asciitable.h"
 
 #include "transport-runtime-api/derived-products/utilities/index_selector.h"
-#include "transport-runtime-api/derived-products/utilities/filter.h"
 #include "transport-runtime-api/derived-products/utilities/wrapper.h"
 
 #include "transport-runtime-api/defaults.h"

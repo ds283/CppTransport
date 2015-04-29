@@ -31,7 +31,6 @@
 
 #include "transport-runtime-api/derived-products/utilities/index_selector.h"
 #include "transport-runtime-api/derived-products/utilities/wrapper.h"
-#include "transport-runtime-api/derived-products/utilities/filter.h"
 
 
 namespace transport
@@ -54,7 +53,7 @@ namespace transport
 		      public:
 
 				    //! Basic user-facing constructor
-				    zeta_threepf_line(const zeta_threepf_task<number>& tk, filter::threepf_kconfig_filter& kfilter);
+				    zeta_threepf_line(const zeta_threepf_task<number>& tk);
 
 				    //! Deserialization constructor
 				    zeta_threepf_line(Json::Value& reader);
@@ -123,37 +122,17 @@ namespace transport
 			    };
 
 
-        // note that because time_series<> inherits virtually from derived_line<>, the correct constructor for
-        // derived_line<> is *not* called from time_series<>.
-        // Concrete classes must call it themselves
 		    template <typename number>
-		    zeta_threepf_line<number>::zeta_threepf_line(const zeta_threepf_task<number>& tk, filter::threepf_kconfig_filter& kfilter)
-		      : derived_line<number>(tk),
+		    zeta_threepf_line<number>::zeta_threepf_line(const zeta_threepf_task<number>& tk)
+		      : derived_line<number>(tk),  // not called because of virtual inheritance; here to silence Intel compiler warning
 		        use_kt_label(true), use_alpha_label(false), use_beta_label(false)
 			    {
-            try
-              {
-                this->f.filter_threepf_kconfig_sample(kfilter, tk.get_threepf_database(), this->kconfig_sample_sns);
-              }
-            catch(runtime_exception& xe)
-              {
-                if(xe.get_exception_code() == runtime_exception::FILTER_EMPTY)
-                  {
-                    std::ostringstream msg;
-                    msg << __CPP_TRANSPORT_PRODUCT_WAVENUMBER_SERIES_EMPTY_FILTER << " '" << this->get_parent_task()->get_name() << "'";
-                    throw runtime_exception(runtime_exception::DERIVED_PRODUCT_ERROR, msg.str());
-                  }
-                else throw xe;
-              }
           }
 
 
-        // note that because time_series<> inherits virtually from derived_line<>, the correct constructor for
-        // derived_line<> is *not* called from time_series<>.
-        // Concrete classes must call it themselves
 				template <typename number>
 				zeta_threepf_line<number>::zeta_threepf_line(Json::Value& reader)
-          : derived_line<number>(reader)
+          : derived_line<number>(reader)  // not called because of virtual inheritance; here to silence Intel compiler warning
 					{
             use_kt_label    = reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_KT].asBool();
             use_alpha_label = reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_ALPHA].asBool();

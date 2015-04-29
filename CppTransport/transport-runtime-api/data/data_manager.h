@@ -178,81 +178,86 @@ namespace transport
 		                                             unsigned int worker, bool no_log = false) = 0;
 
         //! Pull a set of time sample-points from a datapipe
-        virtual void pull_time_config(datapipe<number>* pipe, const std::vector<unsigned int>& serial_numbers, std::vector<double>& sample) = 0;
+        virtual void pull_time_config(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_time_config_query>& tquery,
+                                      std::vector<time_config>& sample) = 0;
 
         //! Pull a set of 2pf k-configuration serial numbers from a datapipe
-        virtual void pull_kconfig_twopf(datapipe<number>* pipe, const std::vector<unsigned int>& serial_numbers, std::vector<twopf_kconfig>& sample) = 0;
+        virtual void pull_kconfig_twopf(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_twopf_kconfig_query>& kquery,
+                                        std::vector<twopf_kconfig>& sample) = 0;
 
         //! Pull a set of 3pd k-configuration serial numbesr from a datapipe
         //! Simultaneously, populates three lists (k1, k2, k3) with serial numbers for the 2pf k-configurations
         //! corresponding to k1, k2, k3
-        virtual void pull_kconfig_threepf(datapipe<number>* pipe, const std::vector<unsigned int>& serial_numbers, std::vector<threepf_kconfig>& sample) = 0;
+        virtual void pull_kconfig_threepf(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_threepf_kconfig_query>& kquery,
+                                          std::vector<threepf_kconfig>& sample) = 0;
 
         //! Pull a time sample of a background field from a datapipe
-        virtual void pull_background_time_sample(datapipe<number>* pipe, unsigned int id, const std::vector<unsigned int>& t_serials, std::vector<number>& sample) = 0;
+        virtual void pull_background_time_sample(datapipe<number>* pipe, unsigned int id, const std::shared_ptr<derived_data::SQL_query>& query,
+                                                 std::vector<number>& sample) = 0;
 
         //! Pull a time sample of a twopf component at fixed k-configuration from a datapipe
-        virtual void pull_twopf_time_sample(datapipe<number>* pipe, unsigned int id, const std::vector<unsigned int>& t_serials,
+        virtual void pull_twopf_time_sample(datapipe<number>* pipe, unsigned int id, const std::shared_ptr<derived_data::SQL_query>& query,
                                             unsigned int k_serial, std::vector<number>& sample, typename datapipe<number>::twopf_type type) = 0;
 
         //! Pull a sample of a threepf at fixed k-configuration from a datapipe
-        virtual void pull_threepf_time_sample(datapipe<number>* pipe, unsigned int id, const std::vector<unsigned int>& t_serials,
+        virtual void pull_threepf_time_sample(datapipe<number>* pipe, unsigned int id, const std::shared_ptr<derived_data::SQL_query>& query,
                                               unsigned int k_serial, std::vector<number>& sample) = 0;
 
         //! Pull a sample of a tensor twopf at fixed k-configuration from a datapipe
-        virtual void pull_tensor_twopf_time_sample(datapipe<number>* pipe, unsigned int id, const std::vector<unsigned int>& t_serials,
+        virtual void pull_tensor_twopf_time_sample(datapipe<number>* pipe, unsigned int id, const std::shared_ptr<derived_data::SQL_query>& query,
                                                    unsigned int k_serial, std::vector<number>& sample) = 0;
 
         //! Pull a sample of the zeta twopf at fixed k-configuration from a datapipe
-        virtual void pull_zeta_twopf_time_sample(datapipe<number>*, const std::vector<unsigned int>& t_serials,
+        virtual void pull_zeta_twopf_time_sample(datapipe<number>*, const std::shared_ptr<derived_data::SQL_query>& query,
                                                  unsigned int k_serial, std::vector<number>& sample) = 0;
 
         //! Pull a sample of the zeta threepf at fixed k-configuration from a datapipe
-        virtual void pull_zeta_threepf_time_sample(datapipe<number>*, const std::vector<unsigned int>& t_serials,
+        virtual void pull_zeta_threepf_time_sample(datapipe<number>*, const std::shared_ptr<derived_data::SQL_query>& query,
                                                    unsigned int k_serial, std::vector<number>& sample) = 0;
 
         //! Pull a sample of the zeta reduced bispectrum at fixed k-configuration from a datapipe
-        virtual void pull_zeta_redbsp_time_sample(datapipe<number>*, const std::vector<unsigned int>& t_serials,
+        virtual void pull_zeta_redbsp_time_sample(datapipe<number>*, const std::shared_ptr<derived_data::SQL_query>& query,
                                                   unsigned int k_serial, std::vector<number>& sample) = 0;
 
         //! Pull a sample of fNL from a datapipe
-        virtual void pull_fNL_time_sample(datapipe<number>*, const std::vector<unsigned int>& t_serials,
+        virtual void pull_fNL_time_sample(datapipe<number>*, const std::shared_ptr<derived_data::SQL_query>& query,
                                           std::vector<number>& sample, derived_data::template_type type) = 0;
 
         //! Pull a sample of bispectrum.template from a datapipe
-        virtual void pull_BT_time_sample(datapipe<number>*, const std::vector<unsigned int>& t_serials,
+        virtual void pull_BT_time_sample(datapipe<number>*, const std::shared_ptr<derived_data::SQL_query>& query,
                                          std::vector<number>& sample, derived_data::template_type type) = 0;
 
         //! Pull a sample of template.template from a datapipe
-        virtual void pull_TT_time_sample(datapipe<number>*, const std::vector<unsigned int>& t_serials,
+        virtual void pull_TT_time_sample(datapipe<number>*, const std::shared_ptr<derived_data::SQL_query>& query,
                                          std::vector<number>& sample, derived_data::template_type type) = 0;
 
         //! Pull a kconfig sample of a twopf component at fixed time from a datapipe
-        virtual void pull_twopf_kconfig_sample(datapipe<number>* pipe, unsigned int id, const std::vector<unsigned int>& k_serials,
+        virtual void pull_twopf_kconfig_sample(datapipe<number>* pipe, unsigned int id, const std::shared_ptr<derived_data::SQL_query>& query,
                                                unsigned int t_serial, std::vector<number>& sample, typename datapipe<number>::twopf_type type) = 0;
 
         //! Pull a kconfig sample of a threepf at fixed time from a datapipe
-        virtual void pull_threepf_kconfig_sample(datapipe<number>* pipe, unsigned int id, const std::vector<unsigned int>& k_serials,
+        virtual void pull_threepf_kconfig_sample(datapipe<number>* pipe, unsigned int id, const std::shared_ptr<derived_data::SQL_query>& query,
                                                  unsigned int t_serial, std::vector<number>& sample) = 0;
 
         //! Pull a kconfig sample of a tensor twopf component at fixed time from a datapipe
-        virtual void pull_tensor_twopf_kconfig_sample(datapipe<number>* pipe, unsigned int id, const std::vector<unsigned int>& k_serials,
+        virtual void pull_tensor_twopf_kconfig_sample(datapipe<number>* pipe, unsigned int id, const std::shared_ptr<derived_data::SQL_query>& query,
                                                       unsigned int t_serial, std::vector<number>& sample) = 0;
 
         //! Pull a kconfig sample of the zeta twopf at fixed time from a datapipe
-        virtual void pull_zeta_twopf_kconfig_sample(datapipe<number>*, const std::vector<unsigned int>& k_serials,
+        virtual void pull_zeta_twopf_kconfig_sample(datapipe<number>*, const std::shared_ptr<derived_data::SQL_query>& query,
                                                     unsigned int t_serial, std::vector<number>& sample) = 0;
 
         //! Pull a kconfig sample of the zeta threepf at fixed time from a datapipe
-        virtual void pull_zeta_threepf_kconfig_sample(datapipe<number>*, const std::vector<unsigned int>& k_serials,
+        virtual void pull_zeta_threepf_kconfig_sample(datapipe<number>*, const std::shared_ptr<derived_data::SQL_query>& query,
                                                       unsigned int t_serial, std::vector<number>& sample) = 0;
 
         //! Pull a kconfig sample of the zeta reduced bispectrum at fixed time from a datapipe
-        virtual void pull_zeta_redbsp_kconfig_sample(datapipe<number>*, const std::vector<unsigned int>& k_serials,
+        virtual void pull_zeta_redbsp_kconfig_sample(datapipe<number>*, const std::shared_ptr<derived_data::SQL_query>& query,
                                                      unsigned int t_serial, std::vector<number>& sample) = 0;
 
         //! Pull a sample of k-configuration statistics from a datapipe
-        virtual void pull_k_statistics_sample(datapipe<number>* pipe, const std::vector<unsigned int>& k_serials, std::vector<kconfiguration_statistics>& data) = 0;
+        virtual void pull_k_statistics_sample(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_query>& query,
+                                              std::vector<kconfiguration_statistics>& data) = 0;
 
 
         // INTERNAL DATA

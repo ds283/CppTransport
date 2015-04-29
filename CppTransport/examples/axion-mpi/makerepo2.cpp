@@ -28,62 +28,6 @@ const double chi_init = f/2.0 - 0.0001*M_Planck;
 // ****************************************************************************
 
 
-// filter to determine which time values are included on time-series plots - we just use them all
-bool timeseries_axis_filter(const transport::derived_data::filter::time_filter_data& data)
-	{
-    return(true); // plot all points
-	}
-
-// filter to determine which twopf-kconfigs are plotted - we use the largest and smallest
-bool timeseries_twopf_kconfig_filter(const transport::derived_data::filter::twopf_kconfig_filter_data& data)
-	{
-		return(data.min);
-	}
-
-// filter for near-squeezed 3pf k-configurations -- just pick a few lines (eg. for time history plots)
-bool threepf_kconfig_near_squeezed(const transport::derived_data::filter::threepf_kconfig_filter_data& data)
-	{
-    // use highly squeezed value of beta, restrict to isosceles triangles with alpha=0
-    return(fabs(data.beta-0.999) < 0.0001 && fabs(data.alpha) < 0.001 && (data.kt_min || data.kt_max));
-	}
-
-// filter for near-squeezed 3pf k-configurations -- all lines (eg. for spectrum plots)
-bool threepf_kconfig_all_near_squeezed(const transport::derived_data::filter::threepf_kconfig_filter_data& data)
-	{
-    // use highly squeezed value of beta, restrict to isosceles triangles with alpha=0
-    return(fabs(data.beta-0.999) < 0.0001 && fabs(data.alpha) < 0.001);
-	}
-
-bool threepf_kconfig_fixed_kt_lo(const transport::derived_data::filter::threepf_kconfig_filter_data& data)
-	{
-		// use low value of k_t, restrict to isosceles triangles which have alpha=0
-		return(fabs(data.kt-exp(3.0)) < 0.001 && fabs(data.alpha) < 0.001);
-	}
-
-bool threepf_kconfig_fixed_kt_hi(const transport::derived_data::filter::threepf_kconfig_filter_data& data)
-	{
-    // use high value of k_t, restrict to isosceles triangles which have alpha=0
-    return(fabs(data.kt-exp(7.0)) < 0.001 && fabs(data.alpha) < 0.001);
-	}
-
-bool twopf_kseries_axis_filter(const transport::derived_data::filter::twopf_kconfig_filter_data& data)
-	{
-		return(true);   // plot all 2pf configuraitons
-	}
-
-bool kseries_last_time(const transport::derived_data::filter::time_filter_data& data)
-	{
-		return(data.max);
-	}
-
-// filter for near-equilateral 3pf k configurations - pick the smallest kt
-bool threepf_kconfig_equilateral(const transport::derived_data::filter::threepf_kconfig_filter_data& data)
-  {
-    return(fabs(data.alpha) < 0.01 && fabs(data.beta-(1.0/3.0)) < 0.01 && (data.kt_min));
-  }
-
-
-
 int main(int argc, char* argv[])
   {
 		if(argc != 2)
@@ -169,6 +113,33 @@ int main(int argc, char* argv[])
     ztk3.set_paired(true);
 
 
+    // SET UP SQL QUERIES
+
+    // filter for all times
+    transport::derived_data::SQL_time_config_query all_times("1=1");
+
+		// filter: latest time
+    transport::derived_data::SQL_time_config_query last_time("time IN (SELECT MAX(time) FROM time_samples)");
+
+    // filter for all twopf wavenumbers
+    transport::derived_data::SQL_twopf_kconfig_query all_twopfs("1=1");
+
+    // filter: twopf with largest k
+    transport::derived_data::SQL_twopf_kconfig_query largest_twopf("conventional IN (SELECT MAX(conventional) FROM twopf_samples)");
+
+    // filter: equilateral threepf with smallest k_t
+    transport::derived_data::SQL_threepf_kconfig_query equilateral_smallest_threepf("ABS(alpha) < 0.01 AND ABS(beta - 1.0/3.0) < 0.01 AND kt_conventional IN (SELECT MIN(kt_conventional) FROM threepf_samples)");
+
+    // filter: squeezed, equilateral threepf
+    transport::derived_data::SQL_threepf_kconfig_query equilateral_squeezed_threepf("ABS(beta-0.999)<0.0001 AND ABS(alpha)<0.01 AND (kt_conventional IN (SELECT MAX(kt_conventional) FROM threepf_samples) OR kt_conventional IN (SELECT MIN(kt_conventional) FROM threepf_samples))");
+
+		// filter: equilateral with high k_t
+    transport::derived_data::SQL_threepf_kconfig_query equilateral_hi_kt("ABS(alpha) < 0.001 AND ABS(kt_conventional-EXP(1096.63158)) < 0.001");
+
+    // filter: equilateral with lo k_t
+    transport::derived_data::SQL_threepf_kconfig_query equilateral_lo_kt("ABS(alpha) < 0.001 AND ABS(kt_conventional-20.085536) < 0.001");
+
+
     // PLOTS
 
 
@@ -184,9 +155,7 @@ int main(int argc, char* argv[])
     twopf_fields.set_on(index_set_b);
     twopf_fields.set_on(index_set_c);
 
-    transport::derived_data::twopf_time_series<double> tk3_twopf_group(tk3, twopf_fields,
-                                                                       transport::derived_data::filter::time_filter(timeseries_axis_filter),
-                                                                       transport::derived_data::filter::twopf_kconfig_filter(timeseries_twopf_kconfig_filter));
+    transport::derived_data::twopf_time_series<double> tk3_twopf_group(tk3, twopf_fields, all_times, largest_twopf);
     tk3_twopf_group.set_klabel_meaning(transport::derived_data::conventional);
 
     transport::derived_data::time_series_plot<double> tk3_twopf_plot("axion.threepf-1.twopf-time", "twopf-time.pdf");
@@ -209,9 +178,7 @@ int main(int argc, char* argv[])
     threepf_fields.set_on(sq_set_e);
     threepf_fields.set_on(sq_set_f);
 
-    transport::derived_data::threepf_time_series<double> tk3_threepf_group(tk3, threepf_fields,
-                                                                           transport::derived_data::filter::time_filter(timeseries_axis_filter),
-                                                                           transport::derived_data::filter::threepf_kconfig_filter(threepf_kconfig_equilateral));
+    transport::derived_data::threepf_time_series<double> tk3_threepf_group(tk3, threepf_fields, all_times, equilateral_smallest_threepf);
     tk3_twopf_group.set_klabel_meaning(transport::derived_data::conventional);
 
     transport::derived_data::time_series_plot<double> tk3_threepf_plot("axion.threepf-1.threepf-time", "threepf-time.pdf");
@@ -223,9 +190,7 @@ int main(int argc, char* argv[])
     // 1. TIME EVOLUTION OF THE ZETA TWOPF
 
     // check the zeta twopf
-    transport::derived_data::zeta_twopf_time_series<double> tk3_zeta_twopf_group(ztk3,
-                                                                                 transport::derived_data::filter::time_filter(timeseries_axis_filter),
-                                                                                 transport::derived_data::filter::twopf_kconfig_filter(timeseries_twopf_kconfig_filter));
+    transport::derived_data::zeta_twopf_time_series<double> tk3_zeta_twopf_group(ztk3, all_times, largest_twopf);
     tk3_zeta_twopf_group.set_dimensionless(true);
 
     transport::derived_data::time_series_plot<double> tk3_zeta_twopf("axion.threepf-1.zeta-twopf", "zeta-twopf-time.pdf");
@@ -238,9 +203,7 @@ int main(int argc, char* argv[])
     // 2. TIME EVOLUTION OF THE ZETA THREEPF
 
     // check the zeta threepf
-    transport::derived_data::zeta_threepf_time_series<double> tk3_zeta_sq_group(ztk3,
-                                                                                transport::derived_data::filter::time_filter(timeseries_axis_filter),
-                                                                                transport::derived_data::filter::threepf_kconfig_filter(threepf_kconfig_near_squeezed));
+    transport::derived_data::zeta_threepf_time_series<double> tk3_zeta_sq_group(ztk3, all_times, equilateral_squeezed_threepf);
     tk3_zeta_sq_group.set_klabel_meaning(transport::derived_data::comoving);
     tk3_zeta_sq_group.set_use_beta_label(true);
 
@@ -256,9 +219,7 @@ int main(int argc, char* argv[])
     // 3. TIME EVOLUTION OF THE REDUCED BISPECTRUM
 
     // compute the reduced bispectrum in a few squeezed configurations
-    transport::derived_data::zeta_reduced_bispectrum_time_series<double> tk3_zeta_redbsp(ztk3,
-                                                                                         transport::derived_data::filter::time_filter(timeseries_axis_filter),
-                                                                                         transport::derived_data::filter::threepf_kconfig_filter(threepf_kconfig_near_squeezed));
+    transport::derived_data::zeta_reduced_bispectrum_time_series<double> tk3_zeta_redbsp(ztk3, all_times, equilateral_squeezed_threepf);
     tk3_zeta_redbsp.set_klabel_meaning(transport::derived_data::comoving);
     tk3_zeta_redbsp.set_use_beta_label(true);
 
@@ -275,9 +236,7 @@ int main(int argc, char* argv[])
 
     // 4. LATE-TIME ZETA TWO POINT FUNCTION
 
-    transport::derived_data::zeta_twopf_wavenumber_series<double> tk3_zeta_2spec(ztk3,
-                                                                                 transport::derived_data::filter::time_filter(kseries_last_time),
-                                                                                 transport::derived_data::filter::twopf_kconfig_filter(twopf_kseries_axis_filter));
+    transport::derived_data::zeta_twopf_wavenumber_series<double> tk3_zeta_2spec(ztk3, last_time, all_twopfs);
     tk3_zeta_2spec.set_klabel_meaning(transport::derived_data::conventional);
     tk3_zeta_2spec.set_dimensionless(true);
 
@@ -293,9 +252,7 @@ int main(int argc, char* argv[])
 
     // 5. LATE-TIME ZETA REDUCED BISPECTRUM -- FIXED k3/k_t, ISOSCELES TRIANGLES, VARYING k_t
 
-    transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_spec(ztk3,
-                                                                                                    transport::derived_data::filter::time_filter(kseries_last_time),
-                                                                                                    transport::derived_data::filter::threepf_kconfig_filter(threepf_kconfig_all_near_squeezed));
+    transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_spec(ztk3, last_time, equilateral_squeezed_threepf);
 		tk3_zeta_redbsp_spec.set_klabel_meaning(transport::derived_data::conventional);
 		tk3_zeta_redbsp_spec.set_label_text("$k_3/k_t = 0.9999$", "k3/k_t = 0.9999");
 
@@ -315,15 +272,11 @@ int main(int argc, char* argv[])
     // 6. LATE TIME ZETA REDUCED BISPECTRUM -- FIXED k_t, ISOSCELES TRIANGLES, VARYING k3/k_t
     // x-axis is beta
 
-    transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_beta_lo(ztk3,
-                                                                                                       transport::derived_data::filter::time_filter(kseries_last_time),
-                                                                                                       transport::derived_data::filter::threepf_kconfig_filter(threepf_kconfig_fixed_kt_lo));
+    transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_beta_lo(ztk3, last_time, equilateral_lo_kt);
     tk3_zeta_redbsp_beta_lo.set_klabel_meaning(transport::derived_data::conventional);
     tk3_zeta_redbsp_beta_lo.set_current_x_axis_value(transport::derived_data::beta_axis);
 		tk3_zeta_redbsp_beta_lo.set_label_text("$k_t/k_\\star = \\mathrm{e}^3$", "k_t/k* = exp(3)");
-    transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_beta_hi(ztk3,
-                                                                                                       transport::derived_data::filter::time_filter(kseries_last_time),
-                                                                                                       transport::derived_data::filter::threepf_kconfig_filter(threepf_kconfig_fixed_kt_hi));
+    transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_beta_hi(ztk3, last_time, equilateral_hi_kt);
     tk3_zeta_redbsp_beta_hi.set_klabel_meaning(transport::derived_data::conventional);
     tk3_zeta_redbsp_beta_hi.set_current_x_axis_value(transport::derived_data::beta_axis);
 		tk3_zeta_redbsp_beta_hi.set_label_text("$k_t/k_\\star = \\mathrm{e}^7", "k_t/k* = exp(7)");
@@ -341,16 +294,12 @@ int main(int argc, char* argv[])
     // 7. LATE TIME ZETA REDUCED BISPECTRUM -- FIXED k_t, ISOSCELES TRIANGLES, VARYING k3/k_t (SAME AS 6)
     // x-axis is squeezing ratio k3/k_t
 
-    transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_sqk3_lo(ztk3,
-                                                                                                       transport::derived_data::filter::time_filter(kseries_last_time),
-                                                                                                       transport::derived_data::filter::threepf_kconfig_filter(threepf_kconfig_fixed_kt_lo));
+    transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_sqk3_lo(ztk3, last_time, equilateral_lo_kt);
     tk3_zeta_redbsp_sqk3_lo.set_klabel_meaning(transport::derived_data::conventional);
     tk3_zeta_redbsp_sqk3_lo.set_current_x_axis_value(transport::derived_data::squeezing_fraction_k3_axis);
 		tk3_zeta_redbsp_sqk3_lo.set_label_text("$k_t/k_\\star = \\mathrm{e}^3$", "k_t/k* = exp(3)");
 
-    transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_sqk3_hi(ztk3,
-                                                                                                       transport::derived_data::filter::time_filter(kseries_last_time),
-                                                                                                       transport::derived_data::filter::threepf_kconfig_filter(threepf_kconfig_fixed_kt_hi));
+    transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_sqk3_hi(ztk3, last_time, equilateral_hi_kt);
     tk3_zeta_redbsp_sqk3_hi.set_klabel_meaning(transport::derived_data::conventional);
     tk3_zeta_redbsp_sqk3_hi.set_current_x_axis_value(transport::derived_data::squeezing_fraction_k3_axis);
     tk3_zeta_redbsp_sqk3_hi.set_label_text("$k_t/k_\\star = \\mathrm{e}^7$", "k_t/k* = exp(7)");
@@ -368,17 +317,13 @@ int main(int argc, char* argv[])
 
     // 8. SPECTRAL INDEX OF LATE TIME REDUCED BISPECTRUM -- FIXED k_t, ISOSCELES TRIANGLES, VARYING k3/k_t
 
-    transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_sqk3_lo_index(ztk3,
-                                                                                                             transport::derived_data::filter::time_filter(kseries_last_time),
-                                                                                                             transport::derived_data::filter::threepf_kconfig_filter(threepf_kconfig_fixed_kt_lo));
+    transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_sqk3_lo_index(ztk3, last_time, equilateral_lo_kt);
     tk3_zeta_redbsp_sqk3_lo_index.set_klabel_meaning(transport::derived_data::conventional);
     tk3_zeta_redbsp_sqk3_lo_index.set_current_x_axis_value(transport::derived_data::squeezing_fraction_k3_axis);
     tk3_zeta_redbsp_sqk3_lo_index.set_spectral_index(true);
     tk3_zeta_redbsp_sqk3_lo_index.set_label_text("$n_{f_{\\mathrm{NL}}} \\;\\; k_t/k_\\star = \\mathrm{e}^3$", "n_fNL k_t/k* = exp(3)");
 
-    transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_sqk3_hi_index(ztk3,
-                                                                                                             transport::derived_data::filter::time_filter(kseries_last_time),
-                                                                                                             transport::derived_data::filter::threepf_kconfig_filter(threepf_kconfig_fixed_kt_hi));
+    transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_sqk3_hi_index(ztk3, last_time, equilateral_hi_kt);
     tk3_zeta_redbsp_sqk3_hi_index.set_klabel_meaning(transport::derived_data::conventional);
     tk3_zeta_redbsp_sqk3_hi_index.set_current_x_axis_value(transport::derived_data::squeezing_fraction_k3_axis);
     tk3_zeta_redbsp_sqk3_hi_index.set_spectral_index(true);
@@ -397,9 +342,7 @@ int main(int argc, char* argv[])
 
     // 9. SPECTRAL INDEX OF LATE-TIME ZETA REDUCED BISPECTRUM -- FIXED k3/k_t, ISOSCELES TRIANGLES, VARYING k_t
 
-    transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_spec_index(ztk3,
-                                                                                                          transport::derived_data::filter::time_filter(kseries_last_time),
-                                                                                                          transport::derived_data::filter::threepf_kconfig_filter(threepf_kconfig_all_near_squeezed));
+    transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_spec_index(ztk3, last_time, equilateral_squeezed_threepf);
     tk3_zeta_redbsp_spec_index.set_klabel_meaning(transport::derived_data::conventional);
     tk3_zeta_redbsp_spec_index.set_label_text("$n_{f_{\\mathrm{NL}}} \\;\\; k_3/k_t = 0.999$", "k3/k_t = 0.999");
     tk3_zeta_redbsp_spec_index.set_spectral_index(true);
@@ -416,9 +359,7 @@ int main(int argc, char* argv[])
 
     // 10. SPECTRAL INDEX OF LATE-TIME ZETA TWO POINT FUNCTION
 
-    transport::derived_data::zeta_twopf_wavenumber_series<double> tk3_zeta_2spec_index(ztk3,
-                                                                                       transport::derived_data::filter::time_filter(kseries_last_time),
-                                                                                       transport::derived_data::filter::twopf_kconfig_filter(twopf_kseries_axis_filter));
+    transport::derived_data::zeta_twopf_wavenumber_series<double> tk3_zeta_2spec_index(ztk3, last_time, all_twopfs);
     tk3_zeta_2spec_index.set_klabel_meaning(transport::derived_data::conventional);
     tk3_zeta_2spec_index.set_dimensionless(true);
     tk3_zeta_2spec_index.set_spectral_index(true);

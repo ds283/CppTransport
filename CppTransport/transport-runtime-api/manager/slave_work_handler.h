@@ -83,48 +83,36 @@ namespace transport
 
         const typename work_queue<twopf_kconfig_record>::device_work_list list = queues[0];
 
-        // get list of time values at which to sample
-        const time_config_database& time_db = ptk->get_stored_time_config_database();
+		    // set up query representing time values at which to sample; we just want all of them,
+		    // so we need a condition which always evaluates to TRUE.
+		    // SQL has no boolean literals, so use 1=1 instead
+		    const derived_data::SQL_time_config_query tquery("1=1");
 
-        // reslice to get a vector of serial numbers
-        std::vector<unsigned int> time_sns;
-        for(time_config_database::const_config_iterator t = time_db.config_begin(); t != time_db.config_end(); ++t)
-	        {
-            time_sns.push_back(t->serial);
-	        }
+        // pull time configuration information from the database
+        typename datapipe<number>::time_config_handle& tc_handle   = pipe.new_time_config_handle(tquery);
+        time_config_tag<number>                        tc_tag      = pipe.new_time_config_tag();
+        const std::vector<time_config>                 time_values = tc_handle.lookup_tag(tc_tag);
 
-        // get list of kserial numbers
-        std::vector<unsigned int> kconfig_sns(list.size());
-        for(unsigned int i = 0; i < list.size(); ++i)
-	        {
-            kconfig_sns[i] = list[i]->serial;
-	        }
-
-        // set up cache handles
-        typename datapipe<number>::time_config_handle& tc_handle = pipe.new_time_config_handle(time_sns);
-        typename datapipe<number>::twopf_kconfig_handle& kc_handle = pipe.new_twopf_kconfig_handle(kconfig_sns);
-        typename datapipe<number>::time_zeta_handle& z_handle = pipe.new_time_zeta_handle(time_sns);
-
-        time_config_tag<number> tc_tag = pipe.new_time_config_tag();
-        const std::vector<double> time_values = tc_handle.lookup_tag(tc_tag);
-
-        twopf_kconfig_tag<number> k_tag = pipe.new_twopf_kconfig_tag();
-        const std::vector< twopf_kconfig > k_values = kc_handle.lookup_tag(k_tag);
+		    // get list of k-configurations
+		    const twopf_kconfig_database& twopf_db = ptk->get_twopf_database();
 
         // set up handle for compute delegate
-        std::shared_ptr<typename derived_data::zeta_timeseries_compute<number>::handle> handle = this->zeta_computer.make_handle(pipe, ptk, time_sns, time_values, ptk->get_model()->get_N_fields());
+        std::shared_ptr<typename derived_data::zeta_timeseries_compute<number>::handle> handle = this->zeta_computer.make_handle(pipe, ptk, tquery, ptk->get_model()->get_N_fields());
 
-		    // buffer for computed values
+        // buffer for computed values
         std::vector<number> sample;
 
         for(unsigned int i = 0; i < list.size(); ++i)
 	        {
             boost::timer::cpu_timer timer;
 
-            this->zeta_computer.twopf(handle, sample, k_values[i]);
-            for(unsigned int j = 0; j < time_sns.size(); ++j)
-	            {
-                batcher.push_twopf(time_sns[j], kconfig_sns[i], sample[j]);
+		        // compute zeta twopf
+            this->zeta_computer.twopf(handle, sample, *(list[i]));
+						assert(sample.size() == time_values.size());
+
+		        for(unsigned int j = 0; j < time_values.size(); ++j)
+			        {
+                batcher.push_twopf(time_values[j].serial, list[i]->serial, sample[j]);
 	            }
 
             timer.stop();
@@ -148,36 +136,16 @@ namespace transport
 
         const typename work_queue<threepf_kconfig_record>::device_work_list list = queues[0];
 
-        // get list of time values at which to sample
-        const time_config_database& time_db = ptk->get_stored_time_config_database();
+        // set up query representing time values at which to sample
+        const derived_data::SQL_time_config_query tquery("1=1");
 
-        // reslice to get a vector of serial numbers
-        std::vector<unsigned int> time_sns;
-        for(time_config_database::const_config_iterator t = time_db.config_begin(); t != time_db.config_end(); ++t)
-          {
-            time_sns.push_back(t->serial);
-          }
-
-        // get list of kserial numbers
-        std::vector<unsigned int> kconfig_sns(list.size());
-        for(unsigned int i = 0; i < list.size(); ++i)
-	        {
-            kconfig_sns[i] = list[i]->serial;
-	        }
-
-        // set up cache handles
-        typename datapipe<number>::time_config_handle& tc_handle = pipe.new_time_config_handle(time_sns);
-        typename datapipe<number>::threepf_kconfig_handle& kc_handle = pipe.new_threepf_kconfig_handle(kconfig_sns);
-        typename datapipe<number>::time_zeta_handle& z_handle = pipe.new_time_zeta_handle(time_sns);
-
-        time_config_tag<number> tc_tag = pipe.new_time_config_tag();
-        const std::vector<double> time_values = tc_handle.lookup_tag(tc_tag);
-
-        threepf_kconfig_tag<number> k_tag = pipe.new_threepf_kconfig_tag();
-        const std::vector< threepf_kconfig > k_values = kc_handle.lookup_tag(k_tag);
+        // pull time configuration information from the database
+        typename datapipe<number>::time_config_handle& tc_handle   = pipe.new_time_config_handle(tquery);
+        time_config_tag<number>                        tc_tag      = pipe.new_time_config_tag();
+        const std::vector<time_config>                 time_values = tc_handle.lookup_tag(tc_tag);
 
         // set up handle for compute delegate
-        std::shared_ptr<typename derived_data::zeta_timeseries_compute<number>::handle> handle = this->zeta_computer.make_handle(pipe, ptk, time_sns, time_values, ptk->get_model()->get_N_fields());
+        std::shared_ptr<typename derived_data::zeta_timeseries_compute<number>::handle> handle = this->zeta_computer.make_handle(pipe, ptk, tquery, ptk->get_model()->get_N_fields());
 
 		    // buffer for computed values
         std::vector<number> sample;
@@ -186,30 +154,33 @@ namespace transport
 	        {
             boost::timer::cpu_timer timer;
 
-            this->zeta_computer.threepf(handle, sample, k_values[i]);
-            for(unsigned int j = 0; j < time_sns.size(); ++j)
+            this->zeta_computer.threepf(handle, sample, *(list[i]));
+		        assert(sample.size() == time_values.size());
+
+            for(unsigned int j = 0; j < time_values.size(); ++j)
 	            {
-                batcher.push_threepf(time_sns[j], kconfig_sns[i], sample[j]);
+                batcher.push_threepf(time_values[j].serial, list[i]->serial, sample[j]);
 	            }
 
-            this->zeta_computer.reduced_bispectrum(handle, sample, k_values[i]);
-            for(unsigned int j = 0; j < time_sns.size(); ++j)
+            this->zeta_computer.reduced_bispectrum(handle, sample, *(list[i]));
+
+            for(unsigned int j = 0; j < time_values.size(); ++j)
 	            {
-                batcher.push_reduced_bispectrum(time_sns[j], kconfig_sns[i], sample[j]);
+                batcher.push_reduced_bispectrum(time_values[j].serial, list[i]->serial, sample[j]);
 	            }
 
             if(list[i].is_twopf_k1_stored())
 	            {
                 twopf_kconfig k1;
 
-                k1.serial         = k_values[i].k1_serial;
-                k1.k_comoving     = k_values[i].k1_comoving;
-                k1.k_conventional = k_values[i].k1_conventional;
+                k1.serial         = list[i]->k1_serial;
+                k1.k_comoving     = list[i]->k1_comoving;
+                k1.k_conventional = list[i]->k1_conventional;
 
 		            this->zeta_computer.twopf(handle, sample, k1);
-                for(unsigned int j = 0; j < time_sns.size(); ++j)
+                for(unsigned int j = 0; j < time_values.size(); ++j)
 	                {
-                    batcher.push_twopf(time_sns[j], k1.serial, sample[j]);
+                    batcher.push_twopf(time_values[j].serial, k1.serial, sample[j]);
 	                }
 	            }
 
@@ -217,14 +188,14 @@ namespace transport
 	            {
                 twopf_kconfig k2;
 
-                k2.serial         = k_values[i].k2_serial;
-                k2.k_comoving     = k_values[i].k2_comoving;
-                k2.k_conventional = k_values[i].k2_conventional;
+                k2.serial         = list[i]->k2_serial;
+                k2.k_comoving     = list[i]->k2_comoving;
+                k2.k_conventional = list[i]->k2_conventional;
 
                 this->zeta_computer.twopf(handle, sample, k2);
-                for(unsigned int j = 0; j < time_sns.size(); ++j)
+                for(unsigned int j = 0; j < time_values.size(); ++j)
 	                {
-                    batcher.push_twopf(time_sns[j], k2.serial, sample[j]);
+                    batcher.push_twopf(time_values[j].serial, k2.serial, sample[j]);
 	                }
 	            }
 
@@ -232,14 +203,14 @@ namespace transport
 	            {
                 twopf_kconfig k3;
 
-                k3.serial         = k_values[i].k3_serial;
-                k3.k_comoving     = k_values[i].k3_comoving;
-                k3.k_conventional = k_values[i].k3_conventional;
+                k3.serial         = list[i]->k3_serial;
+                k3.k_comoving     = list[i]->k3_comoving;
+                k3.k_conventional = list[i]->k3_conventional;
 
                 this->zeta_computer.twopf(handle, sample, k3);
-                for(unsigned int j = 0; j < time_sns.size(); ++j)
+                for(unsigned int j = 0; j < time_values.size(); ++j)
 	                {
-                    batcher.push_twopf(time_sns[j], k3.serial, sample[j]);
+                    batcher.push_twopf(time_values[j].serial, k3.serial, sample[j]);
 	                }
 	            }
 
@@ -266,42 +237,26 @@ namespace transport
 
         boost::timer::cpu_timer timer;
 
-        // get list of time values at which to sample
-        const time_config_database& time_db = ptk->get_stored_time_config_database();
+        // set up query representing time values at which to sample
+        const derived_data::SQL_time_config_query tquery("1=1");
 
-        // reslice to get a vector of serial numbers
-        std::vector<unsigned int> time_sns;
-        for(time_config_database::const_config_iterator t = time_db.config_begin(); t != time_db.config_end(); ++t)
-          {
-            time_sns.push_back(t->serial);
-          }
-
-        // get list of kserial numbers
-        std::vector<unsigned int> kconfig_sns(list.size());
-        for(unsigned int i = 0; i < list.size(); ++i)
-	        {
-            kconfig_sns[i] = list[i]->serial;
-	        }
-
-        // set up cache handles
-        // look up time values corresponding to these serial numbers
-        typename datapipe<number>::time_config_handle& tc_handle = pipe.new_time_config_handle(time_sns);
-
-        time_config_tag<number> tc_tag = pipe.new_time_config_tag();
-        const std::vector<double> time_values = tc_handle.lookup_tag(tc_tag);
+        // pull time configuration information from the database
+        typename datapipe<number>::time_config_handle& tc_handle   = pipe.new_time_config_handle(tquery);
+		    time_config_tag<number>                        tc_tag      = pipe.new_time_config_tag();
+        const std::vector<time_config>                 time_values = tc_handle.lookup_tag(tc_tag);
 
 		    // buffer for computed values
         std::vector<number> BT;
         std::vector<number> TT;
 
 		    // set up handle for compute delegate
-        std::shared_ptr<typename derived_data::fNL_timeseries_compute<number>::handle> handle = this->fNL_computer.make_handle(pipe, ptk, time_sns, time_values, tk->get_template(), kconfig_sns);
+        std::shared_ptr<typename derived_data::fNL_timeseries_compute<number>::handle> handle = this->fNL_computer.make_handle(pipe, ptk, tquery, tk->get_template(), list);
 
         this->fNL_computer.BT(handle, BT);
 		    this->fNL_computer.TT(handle, TT);
-        for(unsigned int j = 0; j < time_sns.size(); ++j)
+        for(unsigned int j = 0; j < time_values.size(); ++j)
 	        {
-            batcher.push_fNL(time_sns[j], BT[j], TT[j]);
+            batcher.push_fNL(time_values[j].serial, BT[j], TT[j]);
 	        }
 
         timer.stop();

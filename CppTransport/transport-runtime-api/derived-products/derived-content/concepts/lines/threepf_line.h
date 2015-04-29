@@ -31,7 +31,6 @@
 
 #include "transport-runtime-api/derived-products/utilities/index_selector.h"
 #include "transport-runtime-api/derived-products/utilities/wrapper.h"
-#include "transport-runtime-api/derived-products/utilities/filter.h"
 
 #include "transport-runtime-api/derived-products/derived-content/concepts/derived_line.h"
 #include "transport-runtime-api/derived-products/derived-content/utilities/integration_task_gadget.h"
@@ -57,7 +56,7 @@ namespace transport
           public:
 
 		        //! Basic user-facing constructor
-		        threepf_line(const threepf_task<number>& tk, index_selector<3>& sel, filter::threepf_kconfig_filter& kfilter);
+		        threepf_line(const threepf_task<number>& tk, index_selector<3>& sel);
 
 		        //! Deserialization constructor
 		        threepf_line(Json::Value& reader, typename repository_finder<number>::task_finder& finder);
@@ -128,10 +127,9 @@ namespace transport
 	        };
 
 
-        // constructor DOESN'T CALL the correct derived_line<> constructor; concrete classes must call it for themselves
         template <typename number>
-        threepf_line<number>::threepf_line(const threepf_task<number>& tk, index_selector<3>& sel, filter::threepf_kconfig_filter& kfilter)
-	        : derived_line<number>(tk),
+        threepf_line<number>::threepf_line(const threepf_task<number>& tk, index_selector<3>& sel)
+	        : derived_line<number>(tk),  // not called because of virtual inheritance; here to silence Intel compiler warning
 	          gadget(tk),
 	          active_indices(sel),
 	          use_kt_label(true),
@@ -146,30 +144,12 @@ namespace transport
 	                << __CPP_TRANSPORT_PRODUCT_INDEX_MISMATCH_B << " " << this->gadget.get_N_fields() << ")";
                 throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
 	            }
-
-            // set up a list of serial numbers corresponding to the sample kconfigs for this derived line
-            try
-              {
-                this->f.filter_threepf_kconfig_sample(kfilter, tk.get_threepf_database(), this->kconfig_sample_sns);
-              }
-            catch(runtime_exception& xe)
-              {
-                if(xe.get_exception_code() == runtime_exception::FILTER_EMPTY)
-                  {
-                    std::ostringstream msg;
-                    msg << __CPP_TRANSPORT_PRODUCT_WAVENUMBER_SERIES_EMPTY_FILTER << " '" << this->get_parent_task()->get_name() << "'";
-                    throw runtime_exception(runtime_exception::DERIVED_PRODUCT_ERROR, msg.str());
-                  }
-                else throw xe;
-              }
 	        }
 
 
-		    // Deserialization constructor DOESN'T CALL the correct derived_line<> deserialization constructor
-		    // because of virtual inheritance; concrete classes must call it themselves
 		    template <typename number>
 		    threepf_line<number>::threepf_line(Json::Value& reader, typename repository_finder<number>::task_finder& finder)
-			    : derived_line<number>(reader),
+			    : derived_line<number>(reader),  // not called because of virtual inheritance; here to silence Intel compiler warning
 			      gadget(),
 			      active_indices(reader)
 			    {

@@ -39,9 +39,10 @@ namespace transport
 
               public:
 
-                handle(datapipe<number>& pipe, twopf_list_task<number>* tk,
-                       const std::vector<unsigned int>& tsample, const std::vector<double>& taxis, unsigned int Nf);
+		            //! constructor
+                handle(datapipe<number>& pipe, twopf_list_task<number>* tk, const SQL_time_config_query& tq, unsigned int Nf);
 
+		            //! destructor is default
                 ~handle() = default;
 
                 // INTERNAL DATA
@@ -57,17 +58,17 @@ namespace transport
                 //! task pointer
                 twopf_list_task<number>* tk;
 
-                //! set of time serial numbers for which we are computing
-                const std::vector<unsigned int>& time_sample_sns;
-
-                //! cache of time axis
-                const std::vector<double>& time_axis;
+		            //! database SQL query for time axis
+		            const SQL_time_config_query tquery;
 
                 //! datapipe handle for this set of serial numbers
                 typename datapipe<number>::time_data_handle& t_handle;
 
+                //! time configuration data corresponding to this SQL query, pulled from the datapipe
+                std::vector<time_config> t_axis;
+
                 //! number of fields
-                unsigned int N_fields;
+                const unsigned int N_fields;
 
                 //! cache background evolution
                 std::vector< std::vector<number> > background;
@@ -95,8 +96,7 @@ namespace transport
           public:
 
             //! make a handle
-            std::shared_ptr<handle> make_handle(datapipe<number>& pipe, twopf_list_task<number>* tk,
-                                                const std::vector<unsigned int>& tsample, const std::vector<double>& taxis, unsigned int Nf) const;
+            std::shared_ptr<handle> make_handle(datapipe<number>& pipe, twopf_list_task<number>* tk, const SQL_time_config_query& tq, unsigned int Nf) const;
 
 
             // COMPUTE ZETA PRODUCTS
@@ -126,13 +126,11 @@ namespace transport
 
 
         template <typename number>
-        zeta_timeseries_compute<number>::handle::handle(datapipe<number>& p, twopf_list_task<number>* t,
-                                                        const std::vector<unsigned int>& tsample, const std::vector<double>& taxis, unsigned int Nf)
+        zeta_timeseries_compute<number>::handle::handle(datapipe<number>& p, twopf_list_task<number>* t, const SQL_time_config_query& tq, unsigned int Nf)
           : pipe(p),
             tk(t),
-            time_sample_sns(tsample),
-            time_axis(taxis),
-            t_handle(p.new_time_data_handle(tsample)),
+            tquery(tq),
+            t_handle(p.new_time_data_handle(tq)),
             N_fields(Nf)
           {
             assert(tk != nullptr);
@@ -140,10 +138,15 @@ namespace transport
             mdl = tk->get_model();
             assert(mdl != nullptr);
 
+		        // look up timeline
+		        typename datapipe<number>::time_config_handle& tc_handle = pipe.new_time_config_handle(tq);
+            time_config_tag<number> t_tag = p.new_time_config_tag();
+            t_axis = tc_handle.lookup_tag(t_tag);
+
             // pull background data for the time_sample we are using,
             // and slice it up by time in an array 'background'
             background.clear();
-            background.resize(tsample.size());
+            background.resize(t_axis.size());
 
             for(unsigned int i = 0; i < 2*N_fields; ++i)
               {
@@ -151,20 +154,20 @@ namespace transport
 
                 // safe to take a reference here and avoid a copy
                 const std::vector<number>& bg_line = t_handle.lookup_tag(tag);
-
                 assert(bg_line.size() == background.size());
-                for(unsigned int j = 0; j < tsample.size(); ++j)
-                  {
-                    background[j].push_back(bg_line[j]);
-                  }
+
+		            for(unsigned int j = 0; j < background.size(); ++j)
+			            {
+				            background[j].push_back(bg_line[j]);
+			            }
               }
 
             // cache gauge transformation coefficients
-            dN.resize(tsample.size());
-            for(unsigned int j = 0; j < tsample.size(); ++j)
+            dN.resize(t_axis.size());
+
+		        for(unsigned int j = 0; j < background.size(); ++j)
               {
                 mdl->compute_gauge_xfm_1(tk, background[j], dN[j]);
-//                mdl->compute_deltaN_xfm_1(tk->get_params(), background[j], dN[j]);
               }
           }
 
@@ -174,10 +177,9 @@ namespace transport
 
         template <typename number>
         std::shared_ptr<typename zeta_timeseries_compute<number>::handle>
-        zeta_timeseries_compute<number>::make_handle(datapipe<number>& pipe, twopf_list_task<number>* t,
-                                                     const std::vector<unsigned int>& tsample, const std::vector<double>& taxis, unsigned int Nf) const
+        zeta_timeseries_compute<number>::make_handle(datapipe<number>& pipe, twopf_list_task<number>* t, const SQL_time_config_query& tq, unsigned int Nf) const
           {
-            return std::shared_ptr<handle>(new handle(pipe, t, tsample, taxis, Nf));
+            return std::shared_ptr<handle>(new handle(pipe, t, tq, Nf));
           }
 
 
@@ -188,12 +190,7 @@ namespace transport
             unsigned int N_fields = h->N_fields;
 
             line_data.clear();
-            line_data.assign(h->time_sample_sns.size(), 0.0);
-
-//            std::vector<number> small;
-//            std::vector<number> large;
-//            small.assign(h->time_sample_sns.size(), +std::numeric_limits<double>::max());
-//            large.assign(h->time_sample_sns.size(), -std::numeric_limits<double>::max());
+            line_data.assign(h->t_axis.size(), 0.0);
 
             for(unsigned int m = 0; m < 2*N_fields; ++m)
               {
@@ -205,32 +202,13 @@ namespace transport
                     // pull twopf data for this component
                     const std::vector<number>& sigma_line = h->t_handle.lookup_tag(tag);
 
-                    for(unsigned int j = 0; j < h->time_sample_sns.size(); ++j)
+                    for(unsigned int j = 0; j < h->t_axis.size(); ++j)
                       {
                         number component = h->dN[j][m]*h->dN[j][n]*sigma_line[j];
-
-//                        if(fabs(component) > large[j]) large[j] = fabs(component);
-//                        if(fabs(component) < small[j]) small[j] = fabs(component);
                         line_data[j] += component;
                       }
                   }
               }
-
-//            number global_small = +std::numeric_limits<double>::max();
-//            number global_large = -std::numeric_limits<double>::max();
-//            for(unsigned int j = 0; j < h->time_sample_sns.size(); ++j)
-//              {
-//                number large_fraction = fabs(large[j]/line_data[j]);
-//                number small_fraction = fabs(small[j]/line_data[j]);
-//
-//                if(large_fraction > global_large) global_large = large_fraction;
-//                if(small_fraction < global_small) global_small = small_fraction;
-//              }
-
-//            std::ostringstream msg;
-//            msg << std::setprecision(2) << "-- zeta twopf time series: serial " << k.serial << ": smallest intermediate = " << global_small*100.0 << "%, largest intermediate = " << global_large*100.0 << "%";
-//            BOOST_LOG_SEV(h->pipe.get_log(), datapipe<number>::normal) << msg.str();
-//            std::cout << msg.str() << std::endl;
           }
 
 
@@ -241,29 +219,23 @@ namespace transport
             unsigned int N_fields = h->N_fields;
 
             line_data.clear();
-            line_data.assign(h->time_sample_sns.size(), 0.0);
+            line_data.assign(h->t_axis.size(), 0.0);
 
             // cache gauge transformation coefficients
             // these have to be recomputed for each k-configuration, because they are time and shape-dependent
-            std::vector< std::vector< std::vector<number> > > ddN123(h->time_sample_sns.size());
-            std::vector< std::vector< std::vector<number> > > ddN213(h->time_sample_sns.size());
-            std::vector< std::vector< std::vector<number> > > ddN312(h->time_sample_sns.size());
-            for(unsigned int j = 0; j < h->time_sample_sns.size(); ++j)
+            std::vector< std::vector< std::vector<number> > > ddN123(h->t_axis.size());
+            std::vector< std::vector< std::vector<number> > > ddN213(h->t_axis.size());
+            std::vector< std::vector< std::vector<number> > > ddN312(h->t_axis.size());
+
+		        for(unsigned int j = 0; j < h->t_axis.size(); ++j)
               {
-              h->mdl->compute_gauge_xfm_2(h->tk, h->background[j], k.k1_comoving, k.k2_comoving, k.k3_comoving, h->time_axis[j], ddN123[j]);
-              h->mdl->compute_gauge_xfm_2(h->tk, h->background[j], k.k2_comoving, k.k1_comoving, k.k3_comoving, h->time_axis[j], ddN213[j]);
-              h->mdl->compute_gauge_xfm_2(h->tk, h->background[j], k.k3_comoving, k.k1_comoving, k.k2_comoving, h->time_axis[j], ddN312[j]);
-//                h->mdl->compute_deltaN_xfm_2(h->tk, h->background[j], ddN123[j]);
-//                h->mdl->compute_deltaN_xfm_2(h->tk, h->background[j], ddN213[j]);
-//                h->mdl->compute_deltaN_xfm_2(h->tk, h->background[j], ddN312[j]);
+	              h->mdl->compute_gauge_xfm_2(h->tk, h->background[j], k.k1_comoving, k.k2_comoving, k.k3_comoving, h->t_axis[j].t, ddN123[j]);
+	              h->mdl->compute_gauge_xfm_2(h->tk, h->background[j], k.k2_comoving, k.k1_comoving, k.k3_comoving, h->t_axis[j].t, ddN213[j]);
+	              h->mdl->compute_gauge_xfm_2(h->tk, h->background[j], k.k3_comoving, k.k1_comoving, k.k2_comoving, h->t_axis[j].t, ddN312[j]);
               }
 
-//            std::vector<number> small;
-//            std::vector<number> large;
-//            small.assign(h->time_sample_sns.size(), +std::numeric_limits<double>::max());
-//            large.assign(h->time_sample_sns.size(), -std::numeric_limits<double>::max());
-
             // linear component of the gauge transformation
+            derived_data::SQL_time_config_query tquery("1=1");
             for(unsigned int l = 0; l < 2*N_fields; ++l)
               {
                 for(unsigned int m = 0; m < 2*N_fields; ++m)
@@ -277,14 +249,11 @@ namespace transport
                         std::vector<number> threepf_line = h->t_handle.lookup_tag(tag);
 
                         // shift field so it represents a derivative correlation function, not a momentum one
-                        this->shifter.shift(h->tk, h->mdl, h->pipe, h->time_sample_sns, threepf_line, h->time_axis, l, m, n, k);
+                        this->shifter.shift(h->tk, h->mdl, h->pipe, tquery, threepf_line, h->t_axis, l, m, n, k);
 
-                        for(unsigned int j = 0; j < h->time_sample_sns.size(); ++j)
+                        for(unsigned int j = 0; j < h->t_axis.size(); ++j)
                           {
                             number component = h->dN[j][l]*h->dN[j][m]*h->dN[j][n]*threepf_line[j];
-
-//                            if(fabs(component) > large[j])  large[j]  = fabs(component);
-//                            if(fabs(component) < small[j]) small[j] = fabs(component);
                             line_data[j] += component;
                           }
                       }
@@ -324,18 +293,11 @@ namespace transport
                             const std::vector<number>& k3_re_mq = h->t_handle.lookup_tag(k3_re_mq_tag);
                             const std::vector<number>& k3_im_mq = h->t_handle.lookup_tag(k3_im_mq_tag);
 
-                            for(unsigned int j = 0; j < h->time_sample_sns.size(); ++j)
+                            for(unsigned int j = 0; j < h->t_axis.size(); ++j)
                               {
                                 number component1 = ddN123[j][l][m] * h->dN[j][p] * h->dN[j][q] * (k2_re_lp[j]*k3_re_mq[j] - k2_im_lp[j]*k3_im_mq[j]);
                                 number component2 = ddN213[j][l][m] * h->dN[j][p] * h->dN[j][q] * (k1_re_lp[j]*k3_re_mq[j] - k1_im_lp[j]*k3_im_mq[j]);
                                 number component3 = ddN312[j][l][m] * h->dN[j][p] * h->dN[j][q] * (k1_re_lp[j]*k2_re_mq[j] - k1_im_lp[j]*k2_im_mq[j]);
-
-//                                if(fabs(component1) > large[j]) large[j] = fabs(component1);
-//                                if(fabs(component1) < small[j]) small[j] = fabs(component1);
-//                                if(fabs(component2) > large[j]) large[j] = fabs(component2);
-//                                if(fabs(component2) < small[j]) small[j] = fabs(component2);
-//                                if(fabs(component3) > large[j]) large[j] = fabs(component3);
-//                                if(fabs(component3) < small[j]) small[j] = fabs(component3);
 
                                 line_data[j] += component1;
                                 line_data[j] += component2;
@@ -345,22 +307,6 @@ namespace transport
                       }
                   }
               }
-
-//            number global_small = +std::numeric_limits<double>::max();
-//            number global_large = -std::numeric_limits<double>::max();
-//            for(unsigned int j = 0; j < h->time_sample_sns.size(); ++j)
-//              {
-//                number large_fraction = fabs(large[j]/line_data[j]);
-//                number small_fraction = fabs(small[j]/line_data[j]);
-//
-//                if(large_fraction > global_large) global_large = large_fraction;
-//                if(small_fraction < global_small) global_small = small_fraction;
-//              }
-
-//            std::ostringstream msg;
-//            msg << std::setprecision(2) << "-- zeta threepf time series: serial " << k.serial << ": smallest intermediate = " << global_small*100.0 << "%, largest intermediate = " << global_large*100.0 << "%";
-//            BOOST_LOG_SEV(h->pipe.get_log(), datapipe<number>::normal) << msg.str();
-//            std::cout << msg.str() << std::endl;
           }
 
 
@@ -369,7 +315,7 @@ namespace transport
                                                                  std::vector<number>& line_data, const threepf_kconfig& k) const
           {
             line_data.clear();
-            line_data.assign(h->time_sample_sns.size(), 0.0);
+            line_data.assign(h->t_axis.size(), 0.0);
 
             // First, obtain the bispectrum
             std::vector<number> threepf_line;
@@ -400,7 +346,7 @@ namespace transport
             this->twopf(h, twopf_k3, k3);
 
             // Third, build the reduced bispectrum
-            for(unsigned int j = 0; j < h->time_sample_sns.size(); ++j)
+            for(unsigned int j = 0; j < h->t_axis.size(); ++j)
               {
                 number form_factor = (6.0/5.0) * ( twopf_k1[j]*twopf_k2[j] + twopf_k1[j]*twopf_k3[j] + twopf_k2[j]*twopf_k3[j] );
 

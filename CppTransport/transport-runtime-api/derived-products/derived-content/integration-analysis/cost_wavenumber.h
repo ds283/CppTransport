@@ -23,6 +23,8 @@
 #include "transport-runtime-api/derived-products/derived-content/concepts/series/wavenumber_series.h"
 #include "transport-runtime-api/derived-products/derived-content/utilities/integration_task_gadget.h"
 
+#include "transport-runtime-api/derived-products/derived-content/SQL_query/SQL_query.h"
+
 
 namespace transport
 	{
@@ -31,7 +33,7 @@ namespace transport
 			{
 
 				template <typename number>
-				class cost_wavenumber: public virtual derived_line<number>
+				class cost_wavenumber: public virtual wavenumber_series<number>
 					{
 
 						typedef enum { twopf_analysis, threepf_analysis } analysis_type;
@@ -41,11 +43,11 @@ namespace transport
 				  public:
 
 						//! basic user-facing constructor -- 2pf task version
-						cost_wavenumber(const twopf_task<number>& tk, filter::twopf_kconfig_filter& kfilter, cost_metric m=time_cost,
+						cost_wavenumber(const twopf_task<number>& tk, SQL_twopf_kconfig_query kq, cost_metric m=time_cost,
 						                unsigned int prec = __CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
 
 						//! basic user-facing constructor -- 3pf task version
-						cost_wavenumber(const threepf_task<number>& tk, filter::threepf_kconfig_filter& kfilter, cost_metric m=time_cost,
+						cost_wavenumber(const threepf_task<number>& tk, SQL_threepf_kconfig_query kq, cost_metric m=time_cost,
 						                unsigned int prec = __CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
 
 						//! override copy constructor to
@@ -90,7 +92,8 @@ namespace transport
 
 
 				template <typename number>
-				cost_wavenumber<number>::cost_wavenumber(const twopf_task<number>& tk, filter::twopf_kconfig_filter& kfilter, cost_metric m, unsigned int prec)
+				cost_wavenumber<number>::cost_wavenumber(const twopf_task<number>& tk, SQL_twopf_kconfig_query kq,
+				                                         cost_metric m, unsigned int prec)
 					: derived_line<number>(tk, wavenumber_axis, std::list<axis_value>{ k_axis, efolds_exit_axis }, prec),
 					  wavenumber_series<number>(tk),
 					  type(twopf_analysis),
@@ -101,7 +104,8 @@ namespace transport
 
 
 		    template <typename number>
-		    cost_wavenumber<number>::cost_wavenumber(const threepf_task<number>& tk, filter::threepf_kconfig_filter& kfilter, cost_metric m, unsigned int prec)
+		    cost_wavenumber<number>::cost_wavenumber(const threepf_task<number>& tk, SQL_threepf_kconfig_query kq,
+		                                             cost_metric m, unsigned int prec)
 			    : derived_line<number>(tk, wavenumber_axis, std::list<axis_value>{ k_axis, efolds_exit_axis, alpha_axis, beta_axis, squeezing_fraction_k1_axis, squeezing_fraction_k2_axis, squeezing_fraction_k3_axis }, prec),
 			      wavenumber_series<number>(tk),
 			      type(threepf_analysis),

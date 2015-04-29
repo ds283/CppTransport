@@ -14,6 +14,7 @@
 #include <list>
 #include <vector>
 #include <stdexcept>
+#include <array>
 
 #include "transport-runtime-api/serialization/serializable.h"
 
@@ -31,8 +32,9 @@
 
 #include "transport-runtime-api/derived-products/utilities/index_selector.h"
 #include "transport-runtime-api/derived-products/utilities/wrapper.h"
-#include "transport-runtime-api/derived-products/utilities/filter.h"
 #include "transport-runtime-api/derived-products/utilities/extractor.h"
+
+#include "transport-runtime-api/derived-products/derived-content/SQL_query/SQL_query.h"
 
 
 namespace transport
@@ -54,8 +56,10 @@ namespace transport
 
 		      public:
 
+				    //! constructor is default
 				    threepf_kconfig_shift() = default;
 
+				    //! destructor is default
 				    virtual ~threepf_kconfig_shift() = default;
 
 
@@ -65,35 +69,32 @@ namespace transport
 
 		        //! shift a threepf kconfig-line for coordinate labels (l,m,n)
 		        //! and supplied time configuration
-		        void shift(twopf_list_task<number>* tk, model<number>* mdl,
-		                   datapipe<number>& pipe,
-		                   const std::vector<number>& background, std::vector< threepf_kconfig>& configs,
-		                   std::vector<number>& line_data,
-		                   unsigned int l, unsigned int m, unsigned int n,
-		                   unsigned int t_serial, double t_value) const;
+		        void shift(twopf_list_task<number>* tk, model<number>* mdl, datapipe<number>& pipe,
+		                   const SQL_threepf_kconfig_query& kquery, std::vector<threepf_kconfig>& configs,
+		                   const std::vector<number>& background, std::vector<number>& line_data,
+		                   unsigned int l, unsigned int m, unsigned int n, const time_config& t_config) const;
 
 		      protected:
 
 		        //! apply the derivative shift to a particular operator
-		        void make_shift(twopf_list_task<number>* tk, model<number>* mdl,
-		                        datapipe<number>& pipe,
-		                        const std::vector< threepf_kconfig >& configs,
-		                        std::vector< std::array<extractor<number>, 3> >& extractors,
-		                        std::vector<number>& line_data,
-		                        unsigned int t_serial, double t_value,
-		                        const std::vector<number>& bg_config,
-		                        unsigned int p, unsigned int q, unsigned int r, operator_position pos) const;
+		        void make_shift(twopf_list_task<number>* tk, model<number>* mdl, datapipe<number>& pipe,
+		                        const SQL_threepf_kconfig_query& kquery, const std::vector< threepf_kconfig >& configs,
+		                        const std::vector<number>& background, std::vector<number>& line_data,
+		                        const SQL_threepf_kconfig_query& q_query, const SQL_threepf_kconfig_query& r_query,
+		                        const time_config& t_config,
+		                        unsigned int p, const extractor& p_extract,
+		                        unsigned int q, const extractor& q_extract,
+		                        unsigned int r, const extractor& r_extract,
+		                        operator_position pos) const;
 
 			    };
 
 
 				template <typename number>
-				void threepf_kconfig_shift<number>::shift(twopf_list_task<number>* tk, model<number>* mdl,
-				                                          datapipe<number>& pipe,
-				                                          const std::vector<number>& background, std::vector< threepf_kconfig>& configs,
-				                                          std::vector<number>& line_data,
-				                                          unsigned int l, unsigned int m, unsigned int n,
-				                                          unsigned int t_serial, double t_value) const
+				void threepf_kconfig_shift<number>::shift(twopf_list_task<number>* tk, model<number>* mdl, datapipe<number>& pipe,
+				                                          const SQL_threepf_kconfig_query& kquery, std::vector<threepf_kconfig>& configs,
+				                                          const std::vector<number>& background, std::vector<number>& line_data,
+				                                          unsigned int l, unsigned int m, unsigned int n, const time_config& t_config) const
 					{
 						assert(mdl != nullptr);
 						assert(tk != nullptr);
@@ -102,57 +103,49 @@ namespace transport
 
 						if(l >= N_fields)
 							{
-						    // set up array of k-value extractors for the first operator
-						    std::vector< std::array<extractor<number>, 3> > extractors;
+								SQL_threepf_kconfig_query q_query(kquery);
+								SQL_threepf_kconfig_query r_query(kquery);
+								q_query.set_config_type(SQL_threepf_kconfig_query::k2_config);
+						    r_query.set_config_type(SQL_threepf_kconfig_query::k3_config);
 
-						    for(typename std::vector<threepf_kconfig>::iterator t = configs.begin(); t != configs.end(); ++t)
-							    {
-						        std::array<extractor<number>, 3> elt = { extractor<number>(1, *t), extractor<number>(2, *t), extractor<number>(3, *t) };
-						        extractors.push_back(elt);
-							    }
-
-						    this->make_shift(tk, mdl, pipe, configs, extractors, line_data, t_serial, t_value, background, l, m, n, left_pos);
+						    this->make_shift(tk, mdl, pipe, kquery, configs, background, line_data, q_query, r_query, t_config,
+						                     l, extractor(1), m, extractor(2), n, extractor(3), left_pos);
 							}
 
 						if(m >= N_fields)
 							{
-						    // set up array of k-value extractors for the first operator
-						    std::vector< std::array<extractor<number>, 3> > extractors;
+						    SQL_threepf_kconfig_query q_query(kquery);
+						    SQL_threepf_kconfig_query r_query(kquery);
+						    q_query.set_config_type(SQL_threepf_kconfig_query::k1_config);
+						    r_query.set_config_type(SQL_threepf_kconfig_query::k3_config);
 
-						    for(typename std::vector<threepf_kconfig>::iterator t = configs.begin(); t != configs.end(); ++t)
-							    {
-						        std::array<extractor<number>, 3> elt = { extractor<number>(2, *t), extractor<number>(1, *t), extractor<number>(3, *t) };
-						        extractors.push_back(elt);
-							    }
-
-						    this->make_shift(tk, mdl, pipe, configs, extractors, line_data, t_serial, t_value, background, m, l, n, middle_pos);
+						    this->make_shift(tk, mdl, pipe, kquery, configs, background, line_data, q_query, r_query, t_config,
+						                     m, extractor(2), m, extractor(1), n, extractor(3), middle_pos);
 							}
 
 						if(n >= N_fields)
 							{
-						    // set up array of k-value extractors for the first operator
-						    std::vector< std::array<extractor<number>, 3> > extractors;
+						    SQL_threepf_kconfig_query q_query(kquery);
+						    SQL_threepf_kconfig_query r_query(kquery);
+						    q_query.set_config_type(SQL_threepf_kconfig_query::k1_config);
+						    r_query.set_config_type(SQL_threepf_kconfig_query::k2_config);
 
-						    for(typename std::vector<threepf_kconfig>::iterator t = configs.begin(); t != configs.end(); ++t)
-							    {
-						        std::array<extractor<number>, 3> elt = { extractor<number>(3, *t), extractor<number>(1, *t), extractor<number>(2, *t) };
-						        extractors.push_back(elt);
-							    }
-
-						    this->make_shift(tk, mdl, pipe, configs, extractors, line_data, t_serial, t_value, background, n, l, m, right_pos);
+						    this->make_shift(tk, mdl, pipe, kquery, configs, background, line_data, q_query, r_query, t_config,
+						                     n, extractor(3), m, extractor(1), n, extractor(2), right_pos);
 							}
 					}
 
 
 		    template <typename number>
-		    void threepf_kconfig_shift<number>::make_shift(twopf_list_task<number>* tk, model<number>* mdl,
-		                                                   datapipe<number>& pipe,
-		                                                   const std::vector<threepf_kconfig>& configs,
-		                                                   std::vector< std::array<extractor<number>, 3> >& extractors,
-		                                                   std::vector<number>& line_data,
-		                                                   unsigned int t_serial, double t_value,
-		                                                   const std::vector<number>& bg_config,
-		                                                   unsigned int p, unsigned int q, unsigned int r, operator_position pos) const
+		    void threepf_kconfig_shift<number>::make_shift(twopf_list_task<number>* tk, model<number>* mdl, datapipe<number>& pipe,
+		                                                   const SQL_threepf_kconfig_query& kquery, const std::vector<threepf_kconfig>& configs,
+		                                                   const std::vector<number>& background, std::vector<number>& line_data,
+		                                                   const SQL_threepf_kconfig_query& q_query, const SQL_threepf_kconfig_query& r_query,
+		                                                   const time_config& t_config,
+		                                                   unsigned int p, const extractor& p_extract,
+		                                                   unsigned int q, const extractor& q_extract,
+		                                                   unsigned int r, const extractor& r_extract,
+		                                                   operator_position pos) const
 			    {
 						assert(tk != nullptr);
 				    assert(mdl != nullptr);
@@ -199,18 +192,9 @@ namespace transport
 			            throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_TIME_SERIES_UNKNOWN_OPPOS);
 			        }
 
-				    // make a list of twopf serial numbers which we need
-		        std::vector<unsigned int> q_serials;
-		        std::vector<unsigned int> r_serials;
-				    for(typename std::vector< typename std::array< extractor<number>, 3 > >::iterator t = extractors.begin(); t != extractors.end(); ++t)
-					    {
-						    q_serials.push_back((*t)[1].serial());
-						    r_serials.push_back((*t)[2].serial());
-					    }
-
 				    // pull out the components of the twopf which we will need
-				    typename datapipe<number>::kconfig_data_handle& q_handle = pipe.new_kconfig_data_handle(q_serials);
-				    typename datapipe<number>::kconfig_data_handle& r_handle = pipe.new_kconfig_data_handle(r_serials);
+				    typename datapipe<number>::kconfig_data_handle& q_handle = pipe.new_kconfig_data_handle(q_query);
+				    typename datapipe<number>::kconfig_data_handle& r_handle = pipe.new_kconfig_data_handle(r_query);
 
 				    for(unsigned int i = 0; i < N_fields; ++i)
 					    {
@@ -219,15 +203,15 @@ namespace transport
 				        unsigned int mom_q_id = mdl->flatten((q_fixed == first_index ? q : mdl->momentum(i)), (q_fixed == second_index ? q : mdl->momentum(i)));
 				        unsigned int mom_r_id = mdl->flatten((r_fixed == first_index ? r : mdl->momentum(i)), (r_fixed == second_index ? r : mdl->momentum(i)));
 
-						    cf_kconfig_data_tag<number> q_re_tag     = pipe.new_cf_kconfig_data_tag(data_tag<number>::cf_twopf_re, q_id,     t_serial);
-				        cf_kconfig_data_tag<number> q_im_tag     = pipe.new_cf_kconfig_data_tag(data_tag<number>::cf_twopf_im, q_id,     t_serial);
-				        cf_kconfig_data_tag<number> mom_q_re_tag = pipe.new_cf_kconfig_data_tag(data_tag<number>::cf_twopf_re, mom_q_id, t_serial);
-				        cf_kconfig_data_tag<number> mom_q_im_tag = pipe.new_cf_kconfig_data_tag(data_tag<number>::cf_twopf_im, mom_q_id, t_serial);
+						    cf_kconfig_data_tag<number> q_re_tag     = pipe.new_cf_kconfig_data_tag(data_tag<number>::cf_twopf_re, q_id,     t_config.serial);
+				        cf_kconfig_data_tag<number> q_im_tag     = pipe.new_cf_kconfig_data_tag(data_tag<number>::cf_twopf_im, q_id,     t_config.serial);
+				        cf_kconfig_data_tag<number> mom_q_re_tag = pipe.new_cf_kconfig_data_tag(data_tag<number>::cf_twopf_re, mom_q_id, t_config.serial);
+				        cf_kconfig_data_tag<number> mom_q_im_tag = pipe.new_cf_kconfig_data_tag(data_tag<number>::cf_twopf_im, mom_q_id, t_config.serial);
 
-				        cf_kconfig_data_tag<number> r_re_tag     = pipe.new_cf_kconfig_data_tag(data_tag<number>::cf_twopf_re, r_id,     t_serial);
-				        cf_kconfig_data_tag<number> r_im_tag     = pipe.new_cf_kconfig_data_tag(data_tag<number>::cf_twopf_im, r_id,     t_serial);
-				        cf_kconfig_data_tag<number> mom_r_re_tag = pipe.new_cf_kconfig_data_tag(data_tag<number>::cf_twopf_re, mom_r_id, t_serial);
-				        cf_kconfig_data_tag<number> mom_r_im_tag = pipe.new_cf_kconfig_data_tag(data_tag<number>::cf_twopf_im, mom_r_id, t_serial);
+				        cf_kconfig_data_tag<number> r_re_tag     = pipe.new_cf_kconfig_data_tag(data_tag<number>::cf_twopf_re, r_id,     t_config.serial);
+				        cf_kconfig_data_tag<number> r_im_tag     = pipe.new_cf_kconfig_data_tag(data_tag<number>::cf_twopf_im, r_id,     t_config.serial);
+				        cf_kconfig_data_tag<number> mom_r_re_tag = pipe.new_cf_kconfig_data_tag(data_tag<number>::cf_twopf_re, mom_r_id, t_config.serial);
+				        cf_kconfig_data_tag<number> mom_r_im_tag = pipe.new_cf_kconfig_data_tag(data_tag<number>::cf_twopf_im, mom_r_id, t_config.serial);
 
 				        const std::vector<number>& q_line_re     = q_handle.lookup_tag(q_re_tag);
 				        const std::vector<number>& q_line_im     = q_handle.lookup_tag(q_im_tag);
@@ -259,9 +243,9 @@ namespace transport
 				        std::vector< std::vector< std::vector<number> > > C_prq;
 
 				        // evaluate B and C tensors for this configuration
-				        mdl->B(tk, bg_config, extractors[i][1].comoving(), extractors[i][2].comoving(), extractors[i][0].comoving(), t_value, B_qrp);
-				        mdl->C(tk, bg_config, extractors[i][0].comoving(), extractors[i][1].comoving(), extractors[i][2].comoving(), t_value, C_pqr);
-				        mdl->C(tk, bg_config, extractors[i][0].comoving(), extractors[i][2].comoving(), extractors[i][1].comoving(), t_value, C_prq);
+				        mdl->B(tk, background, q_extract.comoving(configs[i]), r_extract.comoving(configs[i]), p_extract.comoving(configs[i]), t_config.t, B_qrp);
+				        mdl->C(tk, background, p_extract.comoving(configs[i]), q_extract.comoving(configs[i]), r_extract.comoving(configs[i]), t_config.t, C_pqr);
+				        mdl->C(tk, background, p_extract.comoving(configs[i]), r_extract.comoving(configs[i]), q_extract.comoving(configs[i]), t_config.t, C_prq);
 
 				        number shift = 0.0;
 

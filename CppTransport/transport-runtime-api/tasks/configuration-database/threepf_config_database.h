@@ -215,6 +215,12 @@ namespace transport
         template <typename StoragePolicy>
         int add_record(twopf_kconfig_database& twopf_db, threepf_kconfig config, StoragePolicy policy);
 
+		    //! lookup record with a given serial number -- non const version
+		    record_iterator lookup(unsigned int serial);
+
+		    //! lookup record with a given serial number -- const version
+		    const_record_iterator lookup(unsigned int serial) const;
+
 
         // INTERFACE -- LOOKUP META-INFORMATION
 
@@ -473,6 +479,45 @@ namespace transport
           }
         writer[__CPP_TRANSPORT_NODE_THREEPF_DATABASE_STORE] = db_array;
       }
+
+
+		namespace threepf_kconfig_database_impl
+			{
+
+		    class FindBySerial
+			    {
+		      public:
+		        FindBySerial(unsigned int s)
+			        : serial(s)
+			        {
+			        }
+
+		        bool operator()(const std::pair<unsigned int, threepf_kconfig_record>& a)
+			        {
+		            return(this->serial == a.second->serial);
+			        }
+
+		      private:
+		        unsigned int serial;
+			    };
+
+			}
+
+
+    threepf_kconfig_database::record_iterator threepf_kconfig_database::lookup(unsigned int serial)
+	    {
+        database_type::iterator t = std::find_if(this->database.begin(), this->database.end(), threepf_kconfig_database_impl::FindBySerial(serial));
+
+        return threepf_kconfig_database::record_iterator(t);
+	    }
+
+
+    threepf_kconfig_database::const_record_iterator threepf_kconfig_database::lookup(unsigned int serial) const
+	    {
+        database_type::const_iterator t = std::find_if(this->database.begin(), this->database.end(), threepf_kconfig_database_impl::FindBySerial(serial));
+
+        return threepf_kconfig_database::const_record_iterator(t);
+	    }
 
 
   }   // namespace transport

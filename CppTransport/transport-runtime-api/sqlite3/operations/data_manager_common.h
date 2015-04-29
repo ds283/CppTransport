@@ -22,7 +22,7 @@
 #include "transport-runtime-api/messages.h"
 
 #include "transport-runtime-api/repository/writers/writers.h"
-#include "transport-runtime-api/data/datapipe/specializations.h"
+#include "transport-runtime-api/data/datapipe/linecache_specializations.h"
 #include "transport-runtime-api/data/batchers/batchers.h"
 
 #include "boost/lexical_cast.hpp"

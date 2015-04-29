@@ -31,7 +31,6 @@
 
 #include "transport-runtime-api/derived-products/utilities/index_selector.h"
 #include "transport-runtime-api/derived-products/utilities/wrapper.h"
-#include "transport-runtime-api/derived-products/utilities/filter.h"
 
 #include "transport-runtime-api/derived-products/derived-content/concepts/derived_line.h"
 #include "transport-runtime-api/derived-products/derived-content/utilities/integration_task_gadget.h"
@@ -57,7 +56,7 @@ namespace transport
 		      public:
 
 				    //! Basic user-facing constructor
-				    r_line(const zeta_twopf_list_task<number>& tk, filter::twopf_kconfig_filter& kfilter);
+				    r_line(const zeta_twopf_list_task<number>& tk);
 
 				    //! Deserialization constructor
 				    r_line(Json::Value& reader, typename repository_finder<number>::task_finder& finder);
@@ -102,35 +101,17 @@ namespace transport
 			    };
 
 
-				// constructor DOESN'T CALL the correct derived_line<> constructor; concrete classes must call it for themselves
 				template <typename number>
-				r_line<number>::r_line(const zeta_twopf_list_task<number>& tk, filter::twopf_kconfig_filter& kfilter)
-					: derived_line<number>(tk),
+				r_line<number>::r_line(const zeta_twopf_list_task<number>& tk)
+					: derived_line<number>(tk),  // not called because of virtual inheritance; here to silence Intel compiler warning
 						gadget(dynamic_cast< twopf_list_task<number>& >(*(tk.get_parent_task())))
 					{
-						// set up a list of serial numbers corresponding to the k-configurations for this derived line
-				    try
-					    {
-				        this->f.filter_twopf_kconfig_sample(kfilter, tk.get_twopf_database(), this->kconfig_sample_sns);
-					    }
-				    catch(runtime_exception& xe)
-					    {
-						    if(xe.get_exception_code() == runtime_exception::FILTER_EMPTY)
-							    {
-						        std::ostringstream msg;
-						        msg << __CPP_TRANSPORT_PRODUCT_WAVENUMBER_SERIES_EMPTY_FILTER << " '" << this->get_parent_task()->get_name() << "'";
-						        throw runtime_exception(runtime_exception::DERIVED_PRODUCT_ERROR, msg.str());
-							    }
-						    else throw xe;
-					    }
 					}
 
 
-				// deserialization constructor DOESN'T CALL the correct derived_line<> deserialization constructor
-				// because of virtual inheritance; concrete classes must call it for themselves
 				template <typename number>
 				r_line<number>::r_line(Json::Value& reader, typename repository_finder<number>::task_finder& finder)
-					: derived_line<number>(reader),
+					: derived_line<number>(reader),  // not called because of virtual inheritance; here to silence Intel compiler warning
 						gadget()
 					{
 						assert(this->parent_task != nullptr);

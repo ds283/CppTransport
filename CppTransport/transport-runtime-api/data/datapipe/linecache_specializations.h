@@ -29,6 +29,12 @@ namespace transport
         unsigned int elementsof_container(const std::vector<threepf_kconfig>& container) { return(container.size()); }
 
         template<>
+        unsigned int sizeof_container_element< std::vector<time_config> >() { return(sizeof(time_config)); }
+
+        template<>
+        unsigned int elementsof_container(const std::vector<time_config>& container) { return(container.size()); }
+
+        template<>
         unsigned int sizeof_container_element< std::vector<double> >() { return(sizeof(double)); }
 
         template<>

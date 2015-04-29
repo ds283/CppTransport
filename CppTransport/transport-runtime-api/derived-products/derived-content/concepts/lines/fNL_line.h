@@ -36,7 +36,6 @@
 
 #include "transport-runtime-api/derived-products/utilities/index_selector.h"
 #include "transport-runtime-api/derived-products/utilities/wrapper.h"
-#include "transport-runtime-api/derived-products/utilities/filter.h"
 
 
 #define __CPP_TRANSPORT_NODE_PRODUCT_FNL_TEMPLATE             "template"
@@ -110,21 +109,17 @@ namespace transport
           };
 
 
-        // constructor DOESN'T CALL the correct derived_line<> constructor; concrete classes must call it for themselves
         template <typename number>
         fNL_line<number>::fNL_line(const fNL_task<number>& tk)
-          : derived_line<number>(tk),
+          : derived_line<number>(tk),  // not called because of virtual inheritance; here to silence Intel compiler warning
             type(tk.get_template())
           {
-            // we could store all kconfiguration numbers we're going to use, but it's
-            // more space efficient to just recover them at runtime
           }
 
 
-        // constructor DOESN'T CALL the correct derived_line<> constructor; concrete classes must call it for themselves
         template <typename number>
         fNL_line<number>::fNL_line(Json::Value& reader)
-          : derived_line<number>(reader),
+          : derived_line<number>(reader),  // not called because of virtual inheritance; here to silence Intel compiler warning
             type(fNL_local_template)
           {
             std::string type_str = reader[__CPP_TRANSPORT_NODE_PRODUCT_FNL_TEMPLATE].asString();
