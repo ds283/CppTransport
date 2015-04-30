@@ -27,20 +27,21 @@
 namespace transport
 	{
 
-		class work_duration
+		//! Policy object representing information about the environment while formatting bars
+		class Gantt_environment
 			{
+
+				// CONSTRUCTOR, DESTRUCTOR
+
 		  public:
 
-				work_duration(boost::posix_time::ptime b, boost::posix_time::ptime e, std::string c)
-					: begin_time(b),
-		        end_time(e),
-		        colour(c),
-						height(1.0),
-						alpha(0.6),
-						axes_object("ax"),
-						mplt_date_namespace("mdt"),
-						dt_namespace("dt"),
-						dateutil_namespace("dateutil.parser")
+				//! constructor
+				Gantt_environment(std::string ao, std::string d_n, std::string dt_n, std::string du_n, double h)
+		      : axes_object_str(ao),
+		        date_namespace_str(d_n),
+		        dt_namespace_str(dt_n),
+		        dateutil_namespace_str(du_n),
+						height_val(h)
 					{
 					}
 
@@ -49,7 +50,62 @@ namespace transport
 
 		  public:
 
-				std::string format_gantt_bar(unsigned int unique_id, double y) const;
+				const std::string& axes_object() const { return(this->axes_object_str); }
+
+				const std::string& date_namespace() const { return(this->date_namespace_str); }
+
+				const std::string& dt_namespace() const { return(this->dt_namespace_str); }
+
+				const std::string& dateutil_namespace() const { return(this->dateutil_namespace_str); }
+
+				const double height() const { return(this->height_val); }
+
+
+				// INTERNAL DATA
+
+		  protected:
+
+				//! name of axes object
+				std::string axes_object_str;
+
+				//! name of date namespace
+				std::string date_namespace_str;
+
+				//! name of dt namespace
+				std::string dt_namespace_str;
+
+				//! name of dateutil namespace
+				std::string dateutil_namespace_str;
+
+				//! height of bars
+				double height_val;
+
+			};
+
+		//! Gantt_bar represents a time duration on a Gantt chart
+		class Gantt_bar
+			{
+
+				// CONSTRUCTOR, DESTRUCTOR
+
+		  public:
+
+				//! constructor
+				Gantt_bar(boost::posix_time::ptime b, boost::posix_time::ptime e, std::string c)
+					: begin_time(b),
+		        end_time(e),
+		        colour(c),
+						alpha(0.6)
+					{
+					}
+
+
+				// INTERFACE
+
+		  public:
+
+				//! Produce a std::string representing Python code to format the Gantt chart bar
+				std::string format(unsigned int unique_id, double y, Gantt_environment& env) const;
 
 		  private:
 
@@ -68,22 +124,10 @@ namespace transport
 				//! alpha channel
 				double alpha;
 
-				//! name of axes object
-				std::string axes_object;
-
-				//! namespace for Matplotlib dates module
-				std::string mplt_date_namespace;
-
-				//! namespace for Python datetime module
-				std::string dt_namespace;
-
-				//! namespace for Python dateutil module
-				std::string dateutil_namespace;
-
 			};
 
 
-    std::string work_duration::format_gantt_bar(unsigned int unique_id, double y) const
+    std::string Gantt_bar::format(unsigned int unique_id, double y, Gantt_environment& env) const
 	    {
         std::ostringstream begin_label;
         std::ostringstream end_label;
@@ -92,17 +136,70 @@ namespace transport
 		    begin_label << "time_begin" << unique_id;
 		    end_label << "time_end" << unique_id;
 
-		    insn << begin_label.str() << " = " << this->mplt_date_namespace << ".date2num(" << this->dateutil_namespace << ".parse('" << this->begin_time << "'))" << std::endl;
-		    insn << end_label.str()   << " = " << this->mplt_date_namespace << ".date2num(" << this->dateutil_namespace << ".parse('" << this->end_time << "'))" << std::endl;
+		    insn << begin_label.str() << " = " << env.date_namespace() << ".date2num(" << env.dateutil_namespace() << ".parse('" << this->begin_time << "'))" << std::endl;
+		    insn << end_label.str()   << " = " << env.date_namespace() << ".date2num(" << env.dateutil_namespace() << ".parse('" << this->end_time << "'))" << std::endl;
 
-		    double bar_height = 0.8*this->height;
-		    double bar_pad    = 0.1*this->height;
+		    double bar_height = 0.8*env.height();
+		    double bar_pad    = 0.1*env.height();
 
-        insn << this->axes_object << ".barh(" << y+bar_pad << ", " << end_label.str() << "-" << begin_label.str()
+        insn << env.axes_object() << ".barh(" << y+bar_pad << ", " << end_label.str() << "-" << begin_label.str()
 	        << ", height=" << bar_height << ", left=" << begin_label.str() << ", color='" << this->colour << "', alpha=" << this->alpha << ", align='edge', linewidth=0)";
 
 		    return(insn.str());
 	    }
+
+
+		//! Gantt_milestone represents a time on a Gantt chart
+		class Gantt_milestone
+			{
+
+				// CONSTRUCTOR, DESTRUCTOR
+
+		  public:
+
+				//! constructor
+				Gantt_milestone(boost::posix_time::ptime m, std::string c)
+		      : milestone_time(m),
+						colour(c)
+					{
+					}
+
+
+				// INTERFACE
+
+		  public:
+
+				//! Produce a std::string representing Python code to format the milestone
+				std::string format(unsigned int unique_id, double y, Gantt_environment& env) const;
+
+		  private:
+
+				//! colour of this milestone
+				std::string colour;
+
+				//! milestone time
+				boost::posix_time::ptime milestone_time;
+
+			};
+
+
+		std::string Gantt_milestone::format(unsigned int unique_id, double y, Gantt_environment& env) const
+			{
+		    std::ostringstream time_label;
+		    std::ostringstream insn;
+
+				time_label << "milestone" << unique_id;
+
+				insn << time_label.str() << " = " << env.date_namespace() << ".date2num(" << env.dateutil_namespace() << ".parse('" << this->milestone_time << "'))" << std::endl;
+
+				double bar_height = 0.8*env.height();
+				double size       = bar_height/3.0;
+				double bar_pad    = 0.1*env.height();
+
+				insn << env.axes_object() << ".plot([" << time_label.str() << "], [" << y+bar_pad+bar_height/2.0 << "], marker='D')";
+
+				return(insn.str());
+			}
 
 
 		//! work_events record events
@@ -378,6 +475,7 @@ namespace transport
 
 		  public:
 
+				//! add a work event to the journal
 				void add_entry(const work_event& w);
 
 
@@ -385,16 +483,28 @@ namespace transport
 
 		  public:
 
+				//! construct a Gantt chart from the journal entries
 				void make_gantt_chart(const std::string& filename);
 
 		  protected:
 
-				void bin_durations(std::list< std::list<work_duration> >& list);
+				//! bin journal entries into Gantt bars
+				void bin_bars(std::list<std::list<Gantt_bar> >& list);
 
-				void bin_master_durations(std::list< std::list<work_duration> >& list);
+				//! bin journal entries for master events into Gantt bars
+				void bin_master_bars(std::list<std::list<Gantt_bar> >& list);
 
-				void bin_slave_durations(std::list< std::list<work_duration> >& list);
+				//! bin journal entries for slave events into Gantt bars
+				void bin_slave_bars(std::list<std::list<Gantt_bar> >& list);
 
+				//! bin journal entries into Gantt milestones
+				void bin_milestones(std::list<std::list<Gantt_milestone> >& list);
+
+				//! bin journal entries for master events into Gantt milestones
+				void bin_master_milestones(std::list<std::list<Gantt_milestone> >& list);
+
+				//! bin journal entries for slave events into Gantt milestones
+				void bin_slave_milestones(std::list<std::list<Gantt_milestone> >& list);
 
 				// PRIVATE DATA
 
@@ -434,26 +544,31 @@ namespace transport
 			}
 
 
-		void work_journal::bin_durations(std::list< std::list<work_duration> >& list)
+		void work_journal::bin_bars(std::list<std::list<Gantt_bar> >& list)
 			{
 		    list.clear();
 
-		    this->bin_master_durations(list);
-		    this->bin_slave_durations(list);
+		    this->bin_master_bars(list);
+		    this->bin_slave_bars(list);
 			}
 
 
-    class WorkItemSorter
-	    {
-      public:
-        bool operator()(const work_event* A, const work_event* B)
-	        {
-            return(A->get_timestamp() < B->get_timestamp());
-	        }
-	    };
+		namespace work_journal_impl
+			{
+
+		    class WorkItemSorter
+			    {
+		      public:
+		        bool operator()(const work_event* A, const work_event* B)
+			        {
+		            return(A->get_timestamp() < B->get_timestamp());
+			        }
+			    };
+
+			}
 
 
-		void work_journal::bin_master_durations(std::list< std::list<work_duration> >& list)
+		void work_journal::bin_master_bars(std::list<std::list<Gantt_bar> >& list)
 			{
 				// strip out master duration-bracketing events and sort them in order
 		    std::list< master_work_event* > master_events;
@@ -465,10 +580,10 @@ namespace transport
 								if(is_duration_delimiter(event->get_type())) master_events.push_back(event);
 							}
 					}
-				master_events.sort(WorkItemSorter());
+				master_events.sort(work_journal_impl::WorkItemSorter());
 
 				list.resize(list.size()+1);
-		    std::list< std::list<work_duration> >::iterator current_bin = --list.end();
+		    std::list< std::list<Gantt_bar> >::iterator current_bin = --list.end();
 
 				// work through master events, pairing them up
 				for(std::list< master_work_event* >::const_iterator t = master_events.begin(); t != master_events.end(); ++t)
@@ -481,7 +596,7 @@ namespace transport
 						        t++;
 						        if(t == master_events.end()) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_AGGREGATE_TOO_FEW);
 						        if((*t)->get_type() != master_work_event::aggregate_end) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_AGGREGATE_END_MISSING);
-						        current_bin->push_back(work_duration(begin_time, (*t)->get_timestamp(), "black"));
+						        current_bin->push_back(Gantt_bar(begin_time, (*t)->get_timestamp(), "black"));
 						        break;
 							    }
 
@@ -491,7 +606,7 @@ namespace transport
 								    t++;
 								    if(t == master_events.end()) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_MPI_TOO_FEW);
 								    if((*t)->get_type() != master_work_event::MPI_end) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_MPI_END_MISSING);
-								    current_bin->push_back(work_duration(begin_time, (*t)->get_timestamp(), "darkgoldenrod"));
+								    current_bin->push_back(Gantt_bar(begin_time, (*t)->get_timestamp(), "darkgoldenrod"));
 								    break;
 							    }
 
@@ -501,20 +616,21 @@ namespace transport
                     t++;
                     if(t == master_events.end()) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_DATABASE_TOO_FEW);
                     if((*t)->get_type() != master_work_event::database_end) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_DATABASE_END_MISSING);
-                    current_bin->push_back(work_duration(begin_time, (*t)->get_timestamp(), "aquamarine"));
+                    current_bin->push_back(Gantt_bar(begin_time, (*t)->get_timestamp(), "aquamarine"));
                     break;
                   }
 
 						    default:
+							    assert(false);
 							    throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_UNEXPECTED_EVENT);
 							};
 					}
 			}
 
 
-		void work_journal::bin_slave_durations(std::list< std::list<work_duration> >& list)
+		void work_journal::bin_slave_bars(std::list<std::list<Gantt_bar> >& list)
 			{
-				// strip out events for each worker, and sort them likewise
+				// strip out events for each worker
 		    std::list< slave_work_event* > worker_events;
 				for(unsigned int i = 0; i < this->N_workers; ++i)
 					{
@@ -527,10 +643,10 @@ namespace transport
 								    if(event->get_worker_number() == i && is_duration_delimiter(event->get_type())) worker_events.push_back(event);
 									}
 							}
-						worker_events.sort(WorkItemSorter());
+						worker_events.sort(work_journal_impl::WorkItemSorter());
 
 				    list.resize(list.size()+1);
-				    std::list< std::list<work_duration> >::iterator current_bin = --list.end();
+				    std::list< std::list<Gantt_bar> >::iterator current_bin = --list.end();
 
 						// work through events, pairing them up
 						for(std::list< slave_work_event* >::const_iterator t = worker_events.begin(); t != worker_events.end(); ++t)
@@ -543,7 +659,7 @@ namespace transport
 								        t++;
 								        if(t == worker_events.end()) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_TWOPF_TOO_FEW);
 								        if((*t)->get_type() != slave_work_event::end_twopf_assignment) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_TWOPF_END_MISSING);
-								        current_bin->push_back(work_duration(begin_time, (*t)->get_timestamp(), "red"));
+								        current_bin->push_back(Gantt_bar(begin_time, (*t)->get_timestamp(), "red"));
 								        break;
 									    }
 
@@ -553,7 +669,7 @@ namespace transport
 								        t++;
 								        if(t == worker_events.end()) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_THREEPF_TOO_FEW);
 								        if((*t)->get_type() != slave_work_event::end_threepf_assignment) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_THREEPF_END_MISSING);
-										    current_bin->push_back(work_duration(begin_time, (*t)->get_timestamp(), "orangered"));
+										    current_bin->push_back(Gantt_bar(begin_time, (*t)->get_timestamp(), "orangered"));
 								        break;
 									    }
 
@@ -563,7 +679,7 @@ namespace transport
 										    t++;
 										    if(t == worker_events.end()) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_ZETA_TWOPF_TOO_FEW);
 										    if((*t)->get_type() != slave_work_event::end_zeta_twopf_assignment) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_ZETA_TWOPF_END_MISSING);
-										    current_bin->push_back(work_duration(begin_time, (*t)->get_timestamp(), "green"));
+										    current_bin->push_back(Gantt_bar(begin_time, (*t)->get_timestamp(), "green"));
 										    break;
 									    }
 
@@ -573,7 +689,7 @@ namespace transport
 										    t++;
 										    if(t == worker_events.end()) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_ZETA_THREEPF_TOO_FEW);
 										    if((*t)->get_type() != slave_work_event::end_zeta_threepf_assignment) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_ZETA_THREEPF_END_MISSING);
-										    current_bin->push_back(work_duration(begin_time, (*t)->get_timestamp(), "limegreen"));
+										    current_bin->push_back(Gantt_bar(begin_time, (*t)->get_timestamp(), "limegreen"));
 										    break;
 									    }
 
@@ -583,7 +699,7 @@ namespace transport
 										    t++;
 										    if(t == worker_events.end()) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_FNL_TOO_FEW);
 										    if((*t)->get_type() != slave_work_event::end_fNL_assignment) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_FNL_END_MISSING);
-										    current_bin->push_back(work_duration(begin_time, (*t)->get_timestamp(), "royalblue"));
+										    current_bin->push_back(Gantt_bar(begin_time, (*t)->get_timestamp(), "royalblue"));
 										    break;
 									    }
 
@@ -593,7 +709,7 @@ namespace transport
 										    t++;
 										    if(t == worker_events.end()) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_OUTPUT_TOO_FEW);
 										    if((*t)->get_type() != slave_work_event::end_output_assignment) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_OUTPUT_END_MISSING);
-										    current_bin->push_back(work_duration(begin_time, (*t)->get_timestamp(), "orchid"));
+										    current_bin->push_back(Gantt_bar(begin_time, (*t)->get_timestamp(), "orchid"));
 										    break;
 									    }
 
@@ -605,12 +721,98 @@ namespace transport
 			}
 
 
+    void work_journal::bin_milestones(std::list<std::list<Gantt_milestone> >& list)
+	    {
+        list.clear();
+
+        this->bin_master_milestones(list);
+        this->bin_slave_milestones(list);
+	    }
+
+
+		void work_journal::bin_master_milestones(std::list< std::list<Gantt_milestone> >& list)
+			{
+				// strip out milestones from master list
+		    std::list< master_work_event* > master_events;
+				for(std::list< work_event* >::iterator t = this->journal.begin(); t != this->journal.end(); ++t)
+					{
+						if((*t)->is_master())
+							{
+						    master_work_event* event = dynamic_cast< master_work_event* >(*t);
+						    if(is_milestone(event->get_type())) master_events.push_back(event);
+							}
+					}
+		    master_events.sort(work_journal_impl::WorkItemSorter());
+
+				list.resize(list.size()+1);
+		    std::list< std::list<Gantt_milestone> >::iterator current_bin = --list.end();
+
+				for(std::list< master_work_event* >::const_iterator t = master_events.begin(); t != master_events.end(); ++t)
+					{
+						switch((*t)->get_type())
+							{
+						    default:
+							    assert(false);
+							    throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_UNEXPECTED_EVENT);
+							}
+					}
+			}
+
+
+		void work_journal::bin_slave_milestones(std::list< std::list<Gantt_milestone> >& list)
+			{
+				// strip out events for each worker
+		    std::list< slave_work_event* > worker_events;
+				for(unsigned int i = 0; i < this->N_workers; ++i)
+					{
+						worker_events.clear();
+						for(std::list< work_event* >::iterator t = this->journal.begin(); t != this->journal.end(); ++t)
+							{
+								if(!(*t)->is_master())
+									{
+										slave_work_event* event = dynamic_cast< slave_work_event* >(*t);
+										if(event->get_worker_number() == i && is_milestone(event->get_type())) worker_events.push_back(event);
+									}
+							}
+						worker_events.sort(work_journal_impl::WorkItemSorter());
+
+						list.resize(list.size()+1);
+				    std::list< std::list<Gantt_milestone> >::iterator current_bin = --list.end();
+
+						for(std::list< slave_work_event* >::const_iterator t = worker_events.begin(); t != worker_events.end(); ++t)
+							{
+								switch((*t)->get_type())
+									{
+								    case slave_work_event::integration_aggregation:
+									    current_bin->push_back(Gantt_milestone((*t)->get_timestamp(), "red"));
+												break;
+
+								    case slave_work_event::postintegration_aggregation:
+									    current_bin->push_back(Gantt_milestone((*t)->get_timestamp(), "green"));
+									    break;
+
+								    case slave_work_event::derived_content_aggregation:
+									    current_bin->push_back(Gantt_milestone((*t)->get_timestamp(), "orchid"));
+									    break;
+
+								    default:
+									    assert(false);
+									    throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_UNEXPECTED_EVENT);
+									};
+							}
+					}
+			}
+
+
 		void work_journal::make_gantt_chart(const std::string& filename)
 			{
-		    std::list< std::list<work_duration> > work_list;
-		    this->bin_durations(work_list);
+		    std::list< std::list<Gantt_bar> > bars_list;
+		    this->bin_bars(bars_list);
 
-				assert(work_list.size() == this->N_workers+1);
+		    std::list< std::list<Gantt_milestone> > milestones_list;
+				this->bin_milestones(milestones_list);
+
+				assert(bars_list.size() == this->N_workers+1);
 
 				// set up BOOST path to output file
 		    boost::filesystem::path out_file(filename);
@@ -661,42 +863,47 @@ namespace transport
 				out << "fig = plt.figure()" << std::endl;
 				out << "ax = plt.gca()" << std::endl;
 
-		    std::list< std::list<work_duration> >::const_iterator t = work_list.begin();
-				unsigned int bar_count = 0;
-				unsigned int total_count = 0;
+				Gantt_environment env("ax", "mdt", "dt", "dateutil.parser", 1.0);
 
-				// output the bar-chart part of the gantt chart
-				if(t != work_list.end())
+		    // output the bar-chart part of the gantt chart
+
+		    std::list< std::list<Gantt_bar> >::const_iterator t = bars_list.begin();
+				unsigned int process_count = 0;       // number of processes appearing on the chart
+				unsigned int total_count = 0;         // number of individual bars appearing on the chart (each process may have several bars)
+
+		    while(t != bars_list.end())
+			    {
+		        std::list<Gantt_bar>::const_iterator u = t->begin();
+		        while(u != t->end())
+			        {
+		            out << u->format(total_count, static_cast<double>(process_count) * 1.0, env) << std::endl;
+		            ++u;
+		            ++total_count;
+			        }
+
+		        ++process_count;
+		        ++t;
+			    }
+
+				// output milestones
+
+		    std::list< std::list<Gantt_milestone> >::const_iterator v = milestones_list.begin();
+				process_count = 0;
+				total_count = 0;
+
+				while(v != milestones_list.end())
 					{
-						// format master bar
-				    std::list<work_duration>::const_iterator u = t->begin();
-				    while(u != t->end())
-					    {
-						    out << u->format_gantt_bar(total_count, static_cast<double>(bar_count)*1.0) << std::endl;
-						    u++;
-						    total_count++;
-					    }
-
-						bar_count++;
-						t++;
-
-						while(t != work_list.end())
+				    std::list<Gantt_milestone>::const_iterator w = v->begin();
+						while(w != v->end())
 							{
-								u = t->begin();
-						    while(u != t->end())
-							    {
-						        out << u->format_gantt_bar(total_count, static_cast<double>(bar_count)*1.0) << std::endl;
-						        u++;
-								    total_count++;
-							    }
-
-								bar_count++;
-								t++;
+								out << w->format(total_count, static_cast<double>(process_count) * 1.0, env) << std::endl;
+								++w;
+								++total_count;
 							}
+
+						++process_count;
+						++v;
 					}
-
-				// format the x-axis
-
 
 				// label y-axis by worker if there are not too many labels
 				if(this->N_workers <= 20)
@@ -709,12 +916,13 @@ namespace transport
 				        out << "ylabels.append('Worker " << i+1 << "')" << std::endl;
 					    }
 
-				    out << "pos = np.arange(0.5, " << 0.5 + static_cast<double>(bar_count)*1.0 << ", 1.0)" << std::endl;
+				    out << "pos = np.arange(0.5, " << 0.5 + static_cast<double>(process_count)*1.0 << ", 1.0)" << std::endl;
 				    out << "locsy, labelsy = plt.yticks(pos, ylabels)" << std::endl;
 				    out << "plt.setp(labelsy, fontsize=12)" << std::endl;
 					}
 
-				out << "ax.xaxis_date()" << std::endl;
+		    // format the x-axis
+		    out << "ax.xaxis_date()" << std::endl;
 				out << "ax.axis('tight')" << std::endl;
 
 				out << "ax.invert_yaxis()" << std::endl;
@@ -748,6 +956,11 @@ namespace transport
 			}
 
 
+		//! journal_instrument is a class representing an instrument which automatically journals the
+		//! time consumed by a block of code.
+		//! It stores its creation time, and on destruction it generates a pair of journal entries
+		//! recording when it was created and when it was destroyed.
+		//! An optional resolution can be supplied which is the minimum timespan that is actually journalled.
     class journal_instrument
 	    {
 
