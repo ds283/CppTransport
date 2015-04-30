@@ -75,6 +75,14 @@ namespace transport
 				        ~output_value() = default;
 
 
+						    // INTERFACE
+
+				      public:
+
+						    //! check whether this is a real value
+						    bool is_present() const { return(this->exists); }
+
+
 				        // FORMAT VALUE
 
 				      public:
