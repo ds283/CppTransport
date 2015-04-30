@@ -18,7 +18,7 @@
 #include "transport-runtime-api/exceptions.h"
 #include "transport-runtime-api/localizations/messages_en.h"
 
-#include "transport-runtime-api/derived-products/template_types.h"
+#include "transport-runtime-api/derived-products/derived-content/correlation-functions/template_types.h"
 
 #include "transport-runtime-api/repository/records/repository_records.h"
 #include "transport-runtime-api/repository/writers/generic_writer.h"

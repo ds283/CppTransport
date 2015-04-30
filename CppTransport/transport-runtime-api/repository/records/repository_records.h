@@ -135,13 +135,13 @@
 #define __CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_UNLOADS       "threepf-cache-unloads"
 #define __CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_HITS             "data-cache-hits"
 #define __CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_UNLOADS          "data-cache-unloads"
-#define __CPP_TRANSPORT_NODE_OUTPUTDATA_ZETA_CACHE_HITS             "zeta-cache-hits"
-#define __CPP_TRANSPORT_NODE_OUTPUTDATA_ZETA_CACHE_UNLOADS          "zeta-cache-unloads"
+#define __CPP_TRANSPORT_NODE_OUTPUTDATA_STATS_CACHE_HITS            "stats-cache-hits"
+#define __CPP_TRANSPORT_NODE_OUTPUTDATA_STATS_CACHE_UNLOADS         "stats-cache-unloads"
 #define __CPP_TRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_EVICTIONS        "time-cache-evictions"
 #define __CPP_TRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_EVICTIONS       "twopf-cache-evictions"
 #define __CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_EVICTIONS     "threepf-cache-evictions"
 #define __CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_EVICTIONS        "data-cache-evictions"
-#define __CPP_TRANSPORT_NODE_OUTPUTDATA_ZETA_CACHE_EVICTIONS        "zeta-cache-evictions"
+#define __CPP_TRANSPORT_NODE_OUTPUTDATA_STATS_CACHE_EVICTIONS       "stats-cache-evictions"
 
 
 namespace transport
@@ -823,15 +823,24 @@ namespace transport
 
         //! null constructor - set all fields to zero
         output_metadata(void)
-	        : work_time(0), db_time(0), aggregation_time(0),
-	          time_config_hits(0), time_config_unloads(0),
-	          twopf_kconfig_hits(0), twopf_kconfig_unloads(0),
-	          threepf_kconfig_hits(0), threepf_kconfig_unloads(0),
-	          data_hits(0), data_unloads(0),
-	          zeta_hits(0), zeta_unloads(0),
-	          time_config_evictions(0), twopf_kconfig_evictions(0),
-	          threepf_kconfig_evictions(0), data_evictions(0),
-	          zeta_evictions(0)
+	        : work_time(0),
+            db_time(0),
+            aggregation_time(0),
+	          time_config_hits(0),
+            time_config_unloads(0),
+	          twopf_kconfig_hits(0),
+            twopf_kconfig_unloads(0),
+	          threepf_kconfig_hits(0),
+            threepf_kconfig_unloads(0),
+            stats_hits(0),
+            stats_unloads(0),
+	          data_hits(0),
+            data_unloads(0),
+	          time_config_evictions(0),
+            twopf_kconfig_evictions(0),
+	          threepf_kconfig_evictions(0),
+            stats_evictions(0),
+            data_evictions(0)
 	        {
 	        }
 
@@ -840,20 +849,29 @@ namespace transport
                         unsigned int tc_h, unsigned int tc_u,
                         unsigned int tw_k_h, unsigned int tw_k_u,
                         unsigned int th_k_h, unsigned int th_k_u,
+                        unsigned int sc_h, unsigned int sc_u,
                         unsigned int dc_h, unsigned int dc_u,
-                        unsigned int zc_h, unsigned int zc_u,
                         boost::timer::nanosecond_type tc_e, boost::timer::nanosecond_type tw_e,
-                        boost::timer::nanosecond_type th_e, boost::timer::nanosecond_type d_e,
-                        boost::timer::nanosecond_type zc_e)
-	        : work_time(wt), db_time(dt), aggregation_time(ag),
-	          time_config_hits(tc_h), time_config_unloads(tc_u),
-	          twopf_kconfig_hits(tw_k_h), twopf_kconfig_unloads(tw_k_u),
-	          threepf_kconfig_hits(th_k_h), threepf_kconfig_unloads(th_k_u),
-	          data_hits(dc_h), data_unloads(dc_u),
-	          zeta_hits(zc_h), zeta_unloads(zc_u),
-	          time_config_evictions(tc_e), twopf_kconfig_evictions(tw_e),
-	          threepf_kconfig_evictions(th_e), data_evictions(d_e),
-	          zeta_evictions(zc_e)
+                        boost::timer::nanosecond_type th_e, boost::timer::nanosecond_type s_e,
+                        boost::timer::nanosecond_type d_e)
+	        : work_time(wt),
+            db_time(dt),
+            aggregation_time(ag),
+	          time_config_hits(tc_h),
+            time_config_unloads(tc_u),
+	          twopf_kconfig_hits(tw_k_h),
+            twopf_kconfig_unloads(tw_k_u),
+	          threepf_kconfig_hits(th_k_h),
+            threepf_kconfig_unloads(th_k_u),
+            stats_hits(sc_h),
+            stats_unloads(sc_u),
+	          data_hits(dc_h),
+            data_unloads(dc_u),
+	          time_config_evictions(tc_e),
+            twopf_kconfig_evictions(tw_e),
+	          threepf_kconfig_evictions(th_e),
+            stats_evictions(s_e),
+            data_evictions(d_e)
 	        {
 	        }
 
@@ -891,11 +909,11 @@ namespace transport
         //! total number of threepf k-configuration cache hits
         unsigned int threepf_kconfig_hits;
 
+        //! total number of stats cache hits
+        unsigned int stats_hits;
+
         //! total number of data cache hits
         unsigned int data_hits;
-
-        //! total number of zeta cache hits
-        unsigned int zeta_hits;
 
         //! total number of time-configuration cache unloads
         unsigned int time_config_unloads;
@@ -906,11 +924,11 @@ namespace transport
         //! total number of threepf k-configuration cache unloads
         unsigned int threepf_kconfig_unloads;
 
+        // total number of stats cache unloads
+        unsigned int stats_unloads;
+
         // total number of data cache unloads
         unsigned int data_unloads;
-
-        // total number of zeta cache unloads
-        unsigned int zeta_unloads;
 
         // total time spent doing time-config cache evictions
         boost::timer::nanosecond_type time_config_evictions;
@@ -921,11 +939,11 @@ namespace transport
         //! total time spent doing threepf k-config cache evictions
         boost::timer::nanosecond_type threepf_kconfig_evictions;
 
+        //! total time spent doing stats cache evictions
+        boost::timer::nanosecond_type stats_evictions;
+
         //! total time spent doing data cache evictions
         boost::timer::nanosecond_type data_evictions;
-
-        //! total time spent doing zeta cache evictions
-        boost::timer::nanosecond_type zeta_evictions;
 
 	    };
 
@@ -1951,13 +1969,13 @@ namespace transport
         threepf_kconfig_unloads   = reader[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_UNLOADS].asUInt();
         data_hits                 = reader[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_HITS].asUInt();
         data_unloads              = reader[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_UNLOADS].asUInt();
-        zeta_hits                 = reader[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_ZETA_CACHE_HITS].asUInt();
-        zeta_unloads              = reader[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_ZETA_CACHE_UNLOADS].asUInt();
+        stats_hits                = reader[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_STATS_CACHE_HITS].asUInt();
+        stats_unloads             = reader[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_STATS_CACHE_UNLOADS].asUInt();
         time_config_evictions     = reader[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_EVICTIONS].asLargestInt();
         twopf_kconfig_evictions   = reader[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_EVICTIONS].asLargestInt();
         threepf_kconfig_evictions = reader[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_EVICTIONS].asLargestInt();
         data_evictions            = reader[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_EVICTIONS].asLargestInt();
-        zeta_evictions            = reader[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_ZETA_CACHE_EVICTIONS].asLargestInt();
+        stats_evictions           = reader[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_STATS_CACHE_EVICTIONS].asLargestInt();
 	    }
 
 
@@ -1972,15 +1990,15 @@ namespace transport
         writer[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_UNLOADS]     = this->twopf_kconfig_unloads;
         writer[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_HITS]      = this->threepf_kconfig_hits;
         writer[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_UNLOADS]   = this->threepf_kconfig_unloads;
+        writer[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_STATS_CACHE_HITS]        = this->stats_hits;
+        writer[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_STATS_CACHE_UNLOADS]     = this->stats_unloads;
         writer[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_HITS]         = this->data_hits;
         writer[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_UNLOADS]      = this->data_unloads;
-        writer[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_ZETA_CACHE_HITS]         = this->zeta_hits;
-        writer[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_ZETA_CACHE_UNLOADS]      = this->zeta_unloads;
         writer[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_EVICTIONS]    = static_cast<Json::LargestInt>(this->time_config_evictions);
         writer[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_EVICTIONS]   = static_cast<Json::LargestInt>(this->twopf_kconfig_evictions);
         writer[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_EVICTIONS] = static_cast<Json::LargestInt>(this->threepf_kconfig_evictions);
+        writer[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_STATS_CACHE_EVICTIONS]   = static_cast<Json::LargestInt>(this->stats_evictions);
         writer[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_EVICTIONS]    = static_cast<Json::LargestInt>(this->data_evictions);
-        writer[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_ZETA_CACHE_EVICTIONS]    = static_cast<Json::LargestInt>(this->zeta_evictions);
 	    }
 
 

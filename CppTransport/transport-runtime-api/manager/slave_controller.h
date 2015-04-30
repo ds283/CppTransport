@@ -74,8 +74,7 @@ namespace transport
 		                     const typename instance_manager<number>::model_finder& f,
 		                     error_callback err, warning_callback warn, message_callback msg,
 		                     unsigned int bcp = __CPP_TRANSPORT_DEFAULT_BATCHER_STORAGE,
-		                     unsigned int pcp = __CPP_TRANSPORT_DEFAULT_PIPE_STORAGE,
-		                     unsigned int zcp = __CPP_TRANSPORT_DEFAULT_ZETA_CACHE_SIZE);
+		                     unsigned int pcp = __CPP_TRANSPORT_DEFAULT_PIPE_STORAGE);
 
 		    //! destroy a slave manager object
 		    ~slave_controller();
@@ -212,10 +211,7 @@ namespace transport
 		    unsigned int batcher_capacity;
 
 		    //! Data cache capacity per datapipe
-		    unsigned int pipe_data_capacity;
-
-		    //! Zeta cache capacity per datapipe
-		    unsigned int pipe_zeta_capacity;
+		    unsigned int pipe_capacity;
 
 
 				// ERROR CALLBACKS
@@ -236,15 +232,14 @@ namespace transport
     slave_controller<number>::slave_controller(boost::mpi::environment& e, boost::mpi::communicator& w,
                                                const typename instance_manager<number>::model_finder& f,
                                                error_callback err, warning_callback warn, message_callback msg,
-                                               unsigned int bcp, unsigned int pcp, unsigned int zcp)
+                                               unsigned int bcp, unsigned int pcp)
 	    : environment(e),
 	      world(w),
 	      model_finder(f),
 	      repo(nullptr),
-	      data_mgr(data_manager_factory<number>(bcp, pcp, zcp)),
+	      data_mgr(data_manager_factory<number>(bcp, pcp)),
 	      batcher_capacity(bcp),
-	      pipe_data_capacity(pcp),
-	      pipe_zeta_capacity(zcp),
+	      pipe_capacity(pcp),
 	      error_handler(err),
 	      warning_handler(warn),
 	      message_handler(msg)
@@ -335,8 +330,7 @@ namespace transport
             this->repo->set_model_finder(this->model_finder);
 
 		        this->data_mgr->set_batcher_capacity(payload.get_batcher_capacity());
-		        this->data_mgr->set_data_capacity(payload.get_data_capacity());
-		        this->data_mgr->set_zeta_capacity(payload.get_zeta_capacity());
+            this->data_mgr->set_pipe_capacity(payload.get_data_capacity());
 	        }
         catch (runtime_exception& xe)
 	        {
@@ -821,11 +815,11 @@ namespace transport
 				                                                         pipe.get_time_config_cache_hits(), pipe.get_time_config_cache_unloads(),
 				                                                         pipe.get_twopf_kconfig_cache_hits(), pipe.get_twopf_kconfig_cache_unloads(),
 				                                                         pipe.get_threepf_kconfig_cache_hits(), pipe.get_threepf_kconfig_cache_unloads(),
+                                                                 pipe.get_stats_cache_hits(), pipe.get_stats_cache_unloads(),
 				                                                         pipe.get_data_cache_hits(), pipe.get_data_cache_unloads(),
-				                                                         pipe.get_zeta_cache_hits(), pipe.get_zeta_cache_unloads(),
 				                                                         pipe.get_time_config_cache_evictions(), pipe.get_twopf_kconfig_cache_evictions(),
-				                                                         pipe.get_threepf_kconfig_cache_evictions(), pipe.get_data_cache_evictions(),
-				                                                         pipe.get_zeta_cache_evictions());
+				                                                         pipe.get_threepf_kconfig_cache_evictions(), pipe.get_stats_cache_evictions(),
+                                                                 pipe.get_data_cache_evictions());
 
 				            this->world.isend(MPI::RANK_MASTER, success ? MPI::FINISHED_DERIVED_CONTENT : MPI::DERIVED_CONTENT_FAIL, finish_payload);
 
@@ -1169,11 +1163,11 @@ namespace transport
 				                                                                   pipe.get_time_config_cache_hits(), pipe.get_time_config_cache_unloads(),
 				                                                                   pipe.get_twopf_kconfig_cache_hits(), pipe.get_twopf_kconfig_cache_unloads(),
 				                                                                   pipe.get_threepf_kconfig_cache_hits(), pipe.get_threepf_kconfig_cache_unloads(),
+                                                                           pipe.get_stats_cache_hits(), pipe.get_stats_cache_unloads(),
 				                                                                   pipe.get_data_cache_hits(), pipe.get_data_cache_unloads(),
-				                                                                   pipe.get_zeta_cache_hits(), pipe.get_zeta_cache_unloads(),
 				                                                                   pipe.get_time_config_cache_evictions(), pipe.get_twopf_kconfig_cache_evictions(),
-				                                                                   pipe.get_threepf_kconfig_cache_evictions(), pipe.get_data_cache_evictions(),
-				                                                                   pipe.get_zeta_cache_evictions());
+				                                                                   pipe.get_threepf_kconfig_cache_evictions(), pipe.get_stats_cache_evictions(),
+                                                                           pipe.get_data_cache_evictions());
 
 				            this->world.isend(MPI::RANK_MASTER, success ? MPI::FINISHED_POSTINTEGRATION : MPI::POSTINTEGRATION_FAIL, outgoing_payload);
 

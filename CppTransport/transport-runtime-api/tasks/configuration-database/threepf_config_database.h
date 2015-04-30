@@ -215,6 +215,12 @@ namespace transport
         template <typename StoragePolicy>
         int add_record(twopf_kconfig_database& twopf_db, threepf_kconfig config, StoragePolicy policy);
 
+		    //! lookup record with a given serial number -- non const version
+		    record_iterator lookup(unsigned int serial);
+
+		    //! lookup record with a given serial number -- const version
+		    const_record_iterator lookup(unsigned int serial) const;
+
 
         // INTERFACE -- LOOKUP META-INFORMATION
 
@@ -392,9 +398,9 @@ namespace transport
         config.k1_serial = config.k2_serial = config.k3_serial = 0;
 
         config.kt_conventional = kt_conventional;
-        config.kt_comoving = kt_conventional * this->comoving_normalization;
-        config.alpha            = alpha;
-        config.beta             = beta;
+        config.kt_comoving     = kt_conventional * this->comoving_normalization;
+        config.alpha           = alpha;
+        config.beta            = beta;
 
         config.k1_conventional  = (kt_conventional / 4.0) * (1.0 + alpha + beta);
         config.k1_comoving      = config.k1_conventional * this->comoving_normalization;
@@ -402,7 +408,7 @@ namespace transport
         config.k2_conventional  = (kt_conventional / 4.0) * (1.0 - alpha + beta);
         config.k2_comoving      = config.k2_conventional * this->comoving_normalization;
 
-        config.k3_conventional  = (kt_conventional / 4.0) * (1.0 - beta);
+        config.k3_conventional  = (kt_conventional / 2.0) * (1.0 - beta);
         config.k3_comoving      = config.k3_conventional * this->comoving_normalization;
 
 		    config.t_exit           = 0.0; // this will be updated later, once all k-configurations are known
@@ -473,6 +479,45 @@ namespace transport
           }
         writer[__CPP_TRANSPORT_NODE_THREEPF_DATABASE_STORE] = db_array;
       }
+
+
+		namespace threepf_kconfig_database_impl
+			{
+
+		    class FindBySerial
+			    {
+		      public:
+		        FindBySerial(unsigned int s)
+			        : serial(s)
+			        {
+			        }
+
+		        bool operator()(const std::pair<unsigned int, threepf_kconfig_record>& a)
+			        {
+		            return(this->serial == a.second->serial);
+			        }
+
+		      private:
+		        unsigned int serial;
+			    };
+
+			}
+
+
+    threepf_kconfig_database::record_iterator threepf_kconfig_database::lookup(unsigned int serial)
+	    {
+        database_type::iterator t = std::find_if(this->database.begin(), this->database.end(), threepf_kconfig_database_impl::FindBySerial(serial));
+
+        return threepf_kconfig_database::record_iterator(t);
+	    }
+
+
+    threepf_kconfig_database::const_record_iterator threepf_kconfig_database::lookup(unsigned int serial) const
+	    {
+        database_type::const_iterator t = std::find_if(this->database.begin(), this->database.end(), threepf_kconfig_database_impl::FindBySerial(serial));
+
+        return threepf_kconfig_database::const_record_iterator(t);
+	    }
 
 
   }   // namespace transport

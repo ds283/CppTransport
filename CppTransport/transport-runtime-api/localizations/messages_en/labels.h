@@ -114,5 +114,10 @@
 #define __CPP_TRANSPORT_NONLATEX_FNL_DBI_SYMBOL            "fNL_DBI"
 #define __CPP_TRANSPORT_FNL_DBI                            "fNL_DBI"
 
+#define __CPP_TRANSPORT_LATEX_TIME_SYMBOL                  "\\textrm{integration time}"
+#define __CPP_TRANSPORT_NONLATEX_TIME_SYMBOL               "integration time"
+#define __CPP_TRANSPORT_LATEX_STEPS_SYMBOL                 "\\textrm{integration steps}"
+#define __CPP_TRANSPORT_NONLATEX_STEPS_SYMBOL              "integration steps"
+
 
 #endif // __CPP_TRANSPORT_MESSAGES_EN_LABELS_H

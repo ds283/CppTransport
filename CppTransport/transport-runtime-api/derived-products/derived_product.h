@@ -35,12 +35,12 @@
 #include "boost/filesystem/operations.hpp"
 
 
-#define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_TYPE              "derived-product-type"
+#define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_TYPE                 "derived-product-type"
 
-#define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_LINE_PLOT2D       "line-plot2d"
-#define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_LINE_ASCIITABLE   "line-asciitable"
+#define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_LINE_PLOT2D          "line-plot2d"
+#define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_LINE_ASCIITABLE      "line-asciitable"
 
-#define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_FILENAME          "filename"
+#define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_FILENAME             "filename"
 
 
 namespace transport

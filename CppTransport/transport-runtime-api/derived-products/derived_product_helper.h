@@ -8,8 +8,8 @@
 #define __derived_product_helper_H_
 
 
-#include "transport-runtime-api/derived-products/line_plot2d.h"
-#include "transport-runtime-api/derived-products/line_asciitable.h"
+#include "transport-runtime-api/derived-products/line-collections/line_plot2d.h"
+#include "transport-runtime-api/derived-products/line-collections/line_asciitable.h"
 
 
 namespace transport

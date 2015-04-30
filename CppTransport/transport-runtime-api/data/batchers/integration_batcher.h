@@ -39,7 +39,10 @@ namespace transport
 		    typedef std::function<void(integration_batcher<number>*, const std::vector<typename integration_items<number>::backg_item>&)> backg_writer;
 
 		    //! Two-point function writer function
-		    typedef std::function<void(integration_batcher<number>*, const std::vector<typename integration_items<number>::twopf_item>&)> twopf_writer;
+		    typedef std::function<void(integration_batcher<number>*, const std::vector<typename integration_items<number>::twopf_re_item>&)> twopf_re_writer;
+
+		    //! Two-point function writer function
+		    typedef std::function<void(integration_batcher<number>*, const std::vector<typename integration_items<number>::twopf_im_item>&)> twopf_im_writer;
 
 		    //! Tensor two-point function writer function
 		    typedef std::function<void(integration_batcher<number>*, const std::vector<typename integration_items<number>::tensor_twopf_item>&)> tensor_twopf_writer;
@@ -52,6 +55,9 @@ namespace transport
 
 				//! Per-configuration initial conditions writer function
 				typedef std::function<void(integration_batcher<number>*, const std::vector<typename integration_items<number>::ics_item>&)> ics_writer;
+
+		    //! Per-configuration initial conditions writer function - kt variant
+		    typedef std::function<void(integration_batcher<number>*, const std::vector<typename integration_items<number>::ics_kt_item>&)> ics_kt_writer;
 
 		    //! Host information writer function
 		    typedef std::function<void(integration_batcher<number>*)> host_info_writer;
@@ -271,7 +277,7 @@ namespace transport
 	        {
           public:
             typename integration_writers<number>::backg_writer        backg;
-            typename integration_writers<number>::twopf_writer        twopf;
+            typename integration_writers<number>::twopf_re_writer     twopf;
             typename integration_writers<number>::tensor_twopf_writer tensor_twopf;
             typename integration_writers<number>::stats_writer        stats;
             typename integration_writers<number>::ics_writer          ics;
@@ -362,7 +368,7 @@ namespace transport
         const writer_group writers;
 
         //! twopf cache
-        std::vector< typename integration_items<number>::twopf_item >        twopf_batch;
+        std::vector< typename integration_items<number>::twopf_re_item >     twopf_batch;
 
         //! tensor twopf cache
         std::vector< typename integration_items<number>::tensor_twopf_item > tensor_twopf_batch;
@@ -395,13 +401,13 @@ namespace transport
 	        {
           public:
             typename integration_writers<number>::backg_writer        backg;
-            typename integration_writers<number>::twopf_writer        twopf_re;
-            typename integration_writers<number>::twopf_writer        twopf_im;
+            typename integration_writers<number>::twopf_re_writer     twopf_re;
+            typename integration_writers<number>::twopf_im_writer     twopf_im;
             typename integration_writers<number>::tensor_twopf_writer tensor_twopf;
             typename integration_writers<number>::threepf_writer      threepf;
             typename integration_writers<number>::stats_writer        stats;
 		        typename integration_writers<number>::ics_writer          ics;
-		        typename integration_writers<number>::ics_writer          kt_ics;
+		        typename integration_writers<number>::ics_kt_writer       kt_ics;
             typename integration_writers<number>::host_info_writer    host_info;
 	        };
 
@@ -506,10 +512,10 @@ namespace transport
         const writer_group writers;
 
         //! real twopf cache
-        std::vector< typename integration_items<number>::twopf_item >        twopf_re_batch;
+        std::vector< typename integration_items<number>::twopf_re_item >     twopf_re_batch;
 
         //! imaginary twopf cache
-        std::vector< typename integration_items<number>::twopf_item >        twopf_im_batch;
+        std::vector< typename integration_items<number>::twopf_im_item >     twopf_im_batch;
 
         //! tensor twopf cache
         std::vector< typename integration_items<number>::tensor_twopf_item > tensor_twopf_batch;
@@ -518,7 +524,7 @@ namespace transport
         std::vector< typename integration_items<number>::threepf_item >      threepf_batch;
 
 		    //! k_t initial conditions cache
-		    std::vector< typename integration_items<number>::ics_item >          kt_ics_batch;
+		    std::vector< typename integration_items<number>::ics_kt_item >       kt_ics_batch;
 
 
         // PAIRING
@@ -639,8 +645,8 @@ namespace transport
 					{
 						typename integration_items<number>::ics_item ics;
 
-						ics.serial = k_serial;
-						ics.coords = values;
+				    ics.source_serial = k_serial;
+				    ics.coords        = values;
 
 						this->ics_batch.push_back(ics);
 						this->check_for_flush();
@@ -752,7 +758,7 @@ namespace transport
 	    {
         if(values.size() != 2*this->Nfields*2*this->Nfields) throw runtime_exception(runtime_exception::STORAGE_ERROR, __CPP_TRANSPORT_NFIELDS_TWOPF);
 
-        typename integration_items<number>::twopf_item item;
+        typename integration_items<number>::twopf_re_item item;
 
         item.time_serial    = time_serial;
         item.kconfig_serial = k_serial;
@@ -847,30 +853,19 @@ namespace transport
     void twopf_batcher<number>::unbatch(unsigned int source_serial)
 	    {
         this->backg_batch.erase(std::remove_if(this->backg_batch.begin(), this->backg_batch.end(),
-                                               [ & ](const typename integration_items<number>::backg_item& item) -> bool
-                                               {
-                                                 return(item.source_serial == source_serial);
-                                               }),
+                                               UnbatchPredicate<typename integration_items<number>::backg_item>(source_serial)),
                                 this->backg_batch.end());
 
         this->twopf_batch.erase(std::remove_if(this->twopf_batch.begin(), this->twopf_batch.end(),
-                                               [ & ](const typename integration_items<number>::twopf_item& item) -> bool
-                                               {
-                                                 return(item.source_serial == source_serial);
-                                               }),
+                                               UnbatchPredicate<typename integration_items<number>::twopf_re_item>(source_serial)),
                                 this->twopf_batch.end());
 
         this->tensor_twopf_batch.erase(std::remove_if(this->tensor_twopf_batch.begin(), this->tensor_twopf_batch.end(),
-                                                      [ & ](const typename integration_items<number>::tensor_twopf_item& item) -> bool
-                                                      {
-                                                        return(item.source_serial == source_serial);
-                                                      }),
+                                                      UnbatchPredicate<typename integration_items<number>::tensor_twopf_item>(source_serial)),
                                        this->tensor_twopf_batch.end());
 
         this->ics_batch.erase(std::remove_if(this->ics_batch.begin(), this->ics_batch.end(),
-                                             [ & ](const typename integration_items<number>::ics_item& item) -> bool {
-                                               return (item.serial == source_serial);
-                                             }),
+                                             UnbatchPredicate<typename integration_items<number>::ics_item>(source_serial)),
                               this->ics_batch.end());
 
         if(this->paired_batcher != nullptr) this->paired_batcher->unbatch(source_serial);
@@ -935,15 +930,28 @@ namespace transport
 	    {
         if(values.size() != 2*this->Nfields*2*this->Nfields) throw runtime_exception(runtime_exception::STORAGE_ERROR, __CPP_TRANSPORT_NFIELDS_TWOPF);
 
-        typename integration_items<number>::twopf_item item;
+		    if(t == real_twopf)
+			    {
+		        typename integration_items<number>::twopf_re_item item;
 
-        item.time_serial    = time_serial;
-        item.kconfig_serial = k_serial;
-        item.source_serial  = source_serial;
-        item.elements       = values;
+		        item.time_serial    = time_serial;
+		        item.kconfig_serial = k_serial;
+		        item.source_serial  = source_serial;
+		        item.elements       = values;
 
-        if(t == real_twopf) this->twopf_re_batch.push_back(item);
-        else                this->twopf_im_batch.push_back(item);
+				    this->twopf_re_batch.push_back(item);
+			    }
+		    else
+			    {
+		        typename integration_items<number>::twopf_im_item item;
+
+		        item.time_serial    = time_serial;
+		        item.kconfig_serial = k_serial;
+		        item.source_serial  = source_serial;
+		        item.elements       = values;
+
+		        this->twopf_im_batch.push_back(item);
+			    }
 
         if(t == real_twopf && this->paired_batcher != nullptr) this->push_paired_twopf(time_serial, k_serial, source_serial, values, backg);
 
@@ -1048,10 +1056,10 @@ namespace transport
 
         if(this->collect_initial_conditions)
 	        {
-            typename integration_items<number>::ics_item ics;
+            typename integration_items<number>::ics_kt_item ics;
 
-            ics.serial = k_serial;
-            ics.coords = values;
+            ics.source_serial = k_serial;
+            ics.coords        = values;
 
             this->kt_ics_batch.push_back(ics);
             this->check_for_flush();
@@ -1104,50 +1112,31 @@ namespace transport
     void threepf_batcher<number>::unbatch(unsigned int source_serial)
 	    {
         this->backg_batch.erase(std::remove_if(this->backg_batch.begin(), this->backg_batch.end(),
-                                               [ & ](const typename integration_items<number>::backg_item& item) -> bool
-                                               {
-                                                 return (item.source_serial == source_serial);
-                                               }),
+                                               UnbatchPredicate<typename integration_items<number>::backg_item>(source_serial)),
                                 this->backg_batch.end());
 
         this->twopf_re_batch.erase(std::remove_if(this->twopf_re_batch.begin(), this->twopf_re_batch.end(),
-                                                  [ & ](const typename integration_items<number>::twopf_item& item) -> bool
-                                                  {
-                                                    return (item.source_serial == source_serial);
-                                                  }),
+                                                  UnbatchPredicate<typename integration_items<number>::twopf_re_item>(source_serial)),
                                    this->twopf_re_batch.end());
 
         this->twopf_im_batch.erase(std::remove_if(this->twopf_im_batch.begin(), this->twopf_im_batch.end(),
-                                                  [ & ](const typename integration_items<number>::twopf_item& item) -> bool
-                                                  {
-                                                    return (item.source_serial == source_serial);
-                                                  }),
+                                                  UnbatchPredicate<typename integration_items<number>::twopf_im_item>(source_serial)),
                                    this->twopf_im_batch.end());
 
         this->tensor_twopf_batch.erase(std::remove_if(this->tensor_twopf_batch.begin(), this->tensor_twopf_batch.end(),
-                                                      [ & ](const typename integration_items<number>::tensor_twopf_item& item) -> bool
-                                                      {
-                                                        return (item.source_serial == source_serial);
-                                                      }),
+                                                      UnbatchPredicate<typename integration_items<number>::tensor_twopf_item>(source_serial)),
                                        this->tensor_twopf_batch.end());
 
         this->threepf_batch.erase(std::remove_if(this->threepf_batch.begin(), this->threepf_batch.end(),
-                                                 [ & ](const typename integration_items<number>::threepf_item& item) -> bool
-                                                 {
-                                                   return (item.source_serial == source_serial);
-                                                 }),
+                                                 UnbatchPredicate<typename integration_items<number>::threepf_item>(source_serial)),
                                   this->threepf_batch.end());
 
         this->ics_batch.erase(std::remove_if(this->ics_batch.begin(), this->ics_batch.end(),
-                                             [ & ](const typename integration_items<number>::ics_item& item) -> bool {
-                                               return (item.serial == source_serial);
-                                             }),
+                                             UnbatchPredicate<typename integration_items<number>::ics_item>(source_serial)),
                               this->ics_batch.end());
 
         this->kt_ics_batch.erase(std::remove_if(this->kt_ics_batch.begin(), this->kt_ics_batch.end(),
-                                             [ & ](const typename integration_items<number>::ics_item& item) -> bool {
-                                               return (item.serial == source_serial);
-                                             }),
+                                                UnbatchPredicate<typename integration_items<number>::ics_kt_item>(source_serial)),
                               this->kt_ics_batch.end());
 
         if(this->paired_batcher != nullptr) this->paired_batcher->unbatch(source_serial);

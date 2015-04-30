@@ -12,7 +12,7 @@
 #include <set>
 #include <functional>
 
-#include "transport-runtime-api/derived-products/template_types.h"
+#include "transport-runtime-api/derived-products/derived-content/correlation-functions/template_types.h"
 
 #include "transport-runtime-api/data/batchers/generic_batcher.h"
 #include "transport-runtime-api/data/batchers/postintegration_items.h"
@@ -37,6 +37,9 @@ namespace transport
 
 		    //! Zeta 3pf writer function
 		    typedef std::function<void(postintegration_batcher*, const std::vector< typename postintegration_items<number>::zeta_threepf_item >&)> zeta_threepf_writer;
+
+		    //! Zeta reduced bispectrum writer function
+		    typedef std::function<void(postintegration_batcher*, const std::vector< typename postintegration_items<number>::zeta_redbsp_item >&)> zeta_redbsp_writer;
 
 		    //! fNL writer function
 		    typedef std::function<void(postintegration_batcher*, const std::set< typename postintegration_items<number>::fNL_item, typename postintegration_items<number>::fNL_item_comparator >&, derived_data::template_type)> fNL_writer;
@@ -175,7 +178,7 @@ namespace transport
           public:
             typename postintegration_writers<number>::zeta_twopf_writer   twopf;
             typename postintegration_writers<number>::zeta_threepf_writer threepf;
-            typename postintegration_writers<number>::zeta_threepf_writer redbsp;
+            typename postintegration_writers<number>::zeta_redbsp_writer  redbsp;
 	        };
 
 
@@ -226,7 +229,7 @@ namespace transport
         std::vector< typename postintegration_items<number>::zeta_threepf_item > threepf_batch;
 
         //! zeta reduced bispectrum cache
-        std::vector< typename postintegration_items<number>::zeta_threepf_item > redbsp_batch;
+        std::vector< typename postintegration_items<number>::zeta_redbsp_item > redbsp_batch;
 
 	    };
 
@@ -405,10 +408,7 @@ namespace transport
     void zeta_twopf_batcher<number>::unbatch(unsigned int source_serial)
       {
         this->twopf_batch.erase(std::remove_if(this->twopf_batch.begin(), this->twopf_batch.end(),
-                                               [ & ](const typename postintegration_items<number>::zeta_twopf_item& item) -> bool
-                                               {
-                                                 return (item.source_serial == source_serial);
-                                               }),
+                                               UnbatchPredicate<typename postintegration_items<number>::zeta_twopf_item>(source_serial)),
                                 this->twopf_batch.end());
       }
 
@@ -460,7 +460,7 @@ namespace transport
     template <typename number>
     void zeta_threepf_batcher<number>::push_reduced_bispectrum(unsigned int time_serial, unsigned int k_serial, number value, unsigned int source_serial)
 	    {
-        typename postintegration_items<number>::zeta_threepf_item item;
+        typename postintegration_items<number>::zeta_redbsp_item item;
 
         item.time_serial    = time_serial;
         item.kconfig_serial = k_serial;
@@ -515,24 +515,15 @@ namespace transport
     void zeta_threepf_batcher<number>::unbatch(unsigned int source_serial)
       {
         this->twopf_batch.erase(std::remove_if(this->twopf_batch.begin(), this->twopf_batch.end(),
-                                               [ & ](const typename postintegration_items<number>::zeta_twopf_item& item) -> bool
-                                               {
-                                                 return (item.source_serial == source_serial);
-                                               }),
+                                               UnbatchPredicate<typename postintegration_items<number>::zeta_twopf_item>(source_serial)),
                                 this->twopf_batch.end());
 
         this->threepf_batch.erase(std::remove_if(this->threepf_batch.begin(), this->threepf_batch.end(),
-                                               [ & ](const typename postintegration_items<number>::zeta_threepf_item& item) -> bool
-                                               {
-                                                 return (item.source_serial == source_serial);
-                                               }),
+                                                 UnbatchPredicate<typename postintegration_items<number>::zeta_threepf_item>(source_serial)),
                                 this->threepf_batch.end());
 
         this->redbsp_batch.erase(std::remove_if(this->redbsp_batch.begin(), this->redbsp_batch.end(),
-                                               [ & ](const typename postintegration_items<number>::zeta_threepf_item& item) -> bool
-                                               {
-                                                 return (item.source_serial == source_serial);
-                                               }),
+                                                UnbatchPredicate<typename postintegration_items<number>::zeta_redbsp_item>(source_serial)),
                                 this->redbsp_batch.end());
       }
 

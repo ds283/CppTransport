@@ -58,6 +58,7 @@
 #include "transport-runtime-api/localizations/messages_en/derived-products/wavenumber_series_convenience.h"
 #include "transport-runtime-api/localizations/messages_en/derived-products/fNL_line.h"
 #include "transport-runtime-api/localizations/messages_en/derived-products/line_values.h"
+#include "transport-runtime-api/localizations/messages_en/derived-products/SQL_query.h"
 
 
 #endif // __CPP_TRANSPORT_MESSAGES_EN_H_

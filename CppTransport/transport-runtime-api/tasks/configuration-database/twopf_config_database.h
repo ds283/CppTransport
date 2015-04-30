@@ -325,27 +325,33 @@ namespace transport
       }
 
 
-    class FindBySerial
-	    {
-      public:
-        FindBySerial(unsigned int s)
-	        : serial(s)
-	        {
-	        }
+		namespace twopf_config_database_impl
+			{
 
-        bool operator()(const std::pair<unsigned int, twopf_kconfig_record>& a)
-	        {
-            return(this->serial == a.second->serial);
-	        }
+		    class FindBySerial
+			    {
+		      public:
+		        FindBySerial(unsigned int s)
+			        : serial(s)
+			        {
+			        }
 
-      private:
-        unsigned int serial;
-	    };
+		        bool operator()(const std::pair<unsigned int, twopf_kconfig_record>& a)
+			        {
+		            return(this->serial == a.second->serial);
+			        }
+
+		      private:
+		        unsigned int serial;
+			    };
+
+			}
+
 
 
     twopf_kconfig_database::record_iterator twopf_kconfig_database::lookup(unsigned int serial)
       {
-        database_type::iterator t = std::find_if(this->database.begin(), this->database.end(), FindBySerial(serial));
+        database_type::iterator t = std::find_if(this->database.begin(), this->database.end(), twopf_config_database_impl::FindBySerial(serial));
 
 		    return twopf_kconfig_database::record_iterator(t);
       }
@@ -353,33 +359,38 @@ namespace transport
 
     twopf_kconfig_database::const_record_iterator twopf_kconfig_database::lookup(unsigned int serial) const
 	    {
-        database_type::const_iterator t = std::find_if(this->database.begin(), this->database.end(), FindBySerial(serial));
+        database_type::const_iterator t = std::find_if(this->database.begin(), this->database.end(), twopf_config_database_impl::FindBySerial(serial));
 
         return twopf_kconfig_database::const_record_iterator(t);
 	    }
 
 
-    class FindByKConventional
-	    {
-      public:
-        FindByKConventional(double k)
-	        : k_conventional(k)
-	        {
-	        }
+		namespace twopf_config_database_impl
+			{
 
-        bool operator()(const std::pair<unsigned int, twopf_kconfig_record>& a)
-	        {
-            return(fabs(this->k_conventional - a.second->k_conventional) < __CPP_TRANSPORT_DEFAULT_KCONFIG_SEARCH_PRECISION);
-	        }
+		    class FindByKConventional
+			    {
+		      public:
+		        FindByKConventional(double k)
+			        : k_conventional(k)
+			        {
+			        }
 
-      private:
-        double k_conventional;
-	    };
+		        bool operator()(const std::pair<unsigned int, twopf_kconfig_record>& a)
+			        {
+		            return(fabs((this->k_conventional - a.second->k_conventional)/this->k_conventional) < __CPP_TRANSPORT_DEFAULT_KCONFIG_SEARCH_PRECISION);
+			        }
+
+		      private:
+		        double k_conventional;
+			    };
+
+			}
 
 
     bool twopf_kconfig_database::find(double k_conventional, unsigned int& serial) const
       {
-        database_type::const_iterator t = std::find_if(this->database.begin(), this->database.end(), FindByKConventional(k_conventional));
+        database_type::const_iterator t = std::find_if(this->database.begin(), this->database.end(), twopf_config_database_impl::FindByKConventional(k_conventional));
 
         if(t != this->database.end())
           {

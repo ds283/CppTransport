@@ -14,7 +14,7 @@
 #include <sstream>
 
 #include "transport-runtime-api/tasks/task.h"
-#include "transport-runtime-api/derived-products/template_types.h"
+#include "transport-runtime-api/derived-products/derived-content/correlation-functions/template_types.h"
 #include "transport-runtime-api/scheduler/work_queue.h"
 #include "transport-runtime-api/models/model.h"
 
@@ -22,7 +22,7 @@
 #include "transport-runtime-api/messages.h"
 
 #include "transport-runtime-api/repository/writers/writers.h"
-#include "transport-runtime-api/data/datapipe/specializations.h"
+#include "transport-runtime-api/data/datapipe/linecache_specializations.h"
 #include "transport-runtime-api/data/batchers/batchers.h"
 
 #include "boost/lexical_cast.hpp"
@@ -37,9 +37,8 @@
 #define __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE                "threepf_samples"
 #define __CPP_TRANSPORT_SQLITE_BACKG_VALUE_TABLE                   "backg"
 #define __CPP_TRANSPORT_SQLITE_TENSOR_TWOPF_VALUE_TABLE            "tensor_twopf"
-#define __CPP_TRANSPORT_SQLITE_TWOPF_VALUE_TABLE                   "twopf"
-#define __CPP_TRANSPORT_SQLITE_TWOPF_REAL_TAG                      "re"
-#define __CPP_TRANSPORT_SQLITE_TWOPF_IMAGINARY_TAG                 "im"
+#define __CPP_TRANSPORT_SQLITE_TWOPF_RE_VALUE_TABLE                "twopf_re"
+#define __CPP_TRANSPORT_SQLITE_TWOPF_IM_VALUE_TABLE                "twopf_im"
 #define __CPP_TRANSPORT_SQLITE_THREEPF_VALUE_TABLE                 "threepf"
 #define __CPP_TRANSPORT_SQLITE_WORKERS_TABLE                       "worker_data"
 #define __CPP_TRANSPORT_SQLITE_STATS_TABLE                         "integration_statistics"
@@ -53,9 +52,7 @@
 #define __CPP_TRANSPORT_SQLITE_FNL_ORTHO_VALUE_TABLE               "fNL_ortho"
 #define __CPP_TRANSPORT_SQLITE_FNL_DBI_VALUE_TABLE                 "fNL_DBI"
 
-#define __CPP_TRANSPORT_SQLITE_TASKLIST_TABLE                      "task_list"
 #define __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE                   "serial_search"
-#define __CPP_TRANSPORT_SQLITE_TEMP_THREEPF_TABLE                  "threepf_search"
 #define __CPP_TRANSPORT_SQLITE_TEMP_FNL_TABLE                      "fNL_update"
 #define __CPP_TRANSPORT_SQLITE_INSERT_FNL_TABLE                    "fNL_insert"
 
@@ -79,11 +76,7 @@ namespace transport
 
         typedef enum { foreign_keys, no_foreign_keys } add_foreign_keys_type;
 
-        typedef enum { real_twopf, imag_twopf } twopf_value_type;
-
         typedef enum { twopf_configs, threepf_configs } metadata_configuration_type;
-
-		    typedef enum { default_ics, kt_ics } ics_value_type;
 
 
         // sqlite has a default maximum number of columns, and a maximum number of
@@ -92,13 +85,6 @@ namespace transport
         // to set a limit on the number of columns per row
         constexpr unsigned int max_columns = (__CPP_TRANSPORT_DEFAULT_SQLITE_MAX_VARIABLE_NUMBER < __CPP_TRANSPORT_DEFAULT_SQLITE_MAX_COLUMN ? __CPP_TRANSPORT_DEFAULT_SQLITE_MAX_VARIABLE_NUMBER : __CPP_TRANSPORT_DEFAULT_SQLITE_MAX_COLUMN) - __CPP_TRANSPORT_DEFAULT_SQLITE_COLUMN_OVERHEAD;
 
-
-        // construct the name of a twopf table
-        inline std::string twopf_table_name(twopf_value_type type)
-          {
-            return(static_cast<std::string>(__CPP_TRANSPORT_SQLITE_TWOPF_VALUE_TABLE) + "_"
-              + (type == real_twopf ? __CPP_TRANSPORT_SQLITE_TWOPF_REAL_TAG : __CPP_TRANSPORT_SQLITE_TWOPF_IMAGINARY_TAG));
-          }
 
         // construct the name of an fNL table
         inline std::string fNL_table_name(derived_data::template_type type)

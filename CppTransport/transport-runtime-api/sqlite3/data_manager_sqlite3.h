@@ -52,8 +52,9 @@ namespace transport
       public:
 
         //! Create a data_manager_sqlite3 instance
-        data_manager_sqlite3(unsigned int bcap, unsigned int dcap, unsigned int zcap)
-          : data_manager<number>(bcap, dcap, zcap), temporary_container_serial(0)
+        data_manager_sqlite3(unsigned int bcap, unsigned int dcap)
+          : data_manager<number>(bcap, dcap),
+            temporary_container_serial(0)
           {
           }
 
@@ -242,79 +243,83 @@ namespace transport
                                                  unsigned int worker, bool no_log = false) override;
 
         //! Pull a set of time sample-points from a datapipe
-        virtual void pull_time_config(datapipe<number>* pipe, const std::vector<unsigned int>& serial_numbers, std::vector<double>& sample) override;
+        virtual void pull_time_config(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_time_config_query>& tquery, std::vector<time_config>& sample) override;
 
         //! Pull a set of 2pf k-configuration serial numbers from a datapipe
-        void pull_kconfig_twopf(datapipe<number>* pipe, const std::vector<unsigned int>& serial_numbers, std::vector<twopf_kconfig>& sample) override;
+        void pull_kconfig_twopf(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_twopf_kconfig_query>& kquery, std::vector<twopf_kconfig>& sample) override;
 
         //! Pull a set of 3pd k-configuration serial numbesr from a datapipe
         //! Simultaneously, populates three lists (k1, k2, k3) with serial numbers for the 2pf k-configurations
         //! corresponding to k1, k2, k3
-        void pull_kconfig_threepf(datapipe<number>* pipe, const std::vector<unsigned int>& serial_numbers, std::vector<threepf_kconfig>& sample) override;
+        void pull_kconfig_threepf(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_threepf_kconfig_query>& query, std::vector<threepf_kconfig>& sample) override;
 
         //! Pull a time sample of a background field from a datapipe
-        virtual void pull_background_time_sample(datapipe<number>* pipe, unsigned int id, const std::vector<unsigned int>& t_serials, std::vector<number>& sample) override;
+        virtual void pull_background_time_sample(datapipe<number>* pipe, unsigned int id, const std::shared_ptr<derived_data::SQL_query>& query, std::vector<number>& sample) override;
 
         //! Pull a time sample of a twopf component at fixed k-configuration from a datapipe
-        virtual void pull_twopf_time_sample(datapipe<number>* pipe, unsigned int id, const std::vector<unsigned int>& t_serials,
+        virtual void pull_twopf_time_sample(datapipe<number>* pipe, unsigned int id, const std::shared_ptr<derived_data::SQL_query>& query,
                                             unsigned int k_serial, std::vector<number>& sample, typename datapipe<number>::twopf_type type) override;
 
         //! Pull a sample of a threepf at fixed k-configuration from a datapipe
-        virtual void pull_threepf_time_sample(datapipe<number>* pipe, unsigned int id, const std::vector<unsigned int>& t_serials,
+        virtual void pull_threepf_time_sample(datapipe<number>* pipe, unsigned int id, const std::shared_ptr<derived_data::SQL_query>& query,
                                               unsigned int k_serial, std::vector<number>& sample) override;
 
         //! Pull a sample of a tensor twopf component at fixed k-configuration from a datapipe
-        virtual void pull_tensor_twopf_time_sample(datapipe<number>* pipe, unsigned int id, const std::vector<unsigned int>& t_serials,
+        virtual void pull_tensor_twopf_time_sample(datapipe<number>* pipe, unsigned int id, const std::shared_ptr<derived_data::SQL_query>& query,
                                                    unsigned int k_serial, std::vector<number>& sample) override;
 
         //! Pull a sample of the zeta twopf at fixed k-configuration from a datapipe
-        virtual void pull_zeta_twopf_time_sample(datapipe<number>* pipe, const std::vector<unsigned int>& t_serials,
+        virtual void pull_zeta_twopf_time_sample(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_query>& query,
                                                  unsigned int k_serial, std::vector<number>& sample) override;
 
         //! Pull a sample of the zeta threepf at fixed k-configuration from a datapipe
-        virtual void pull_zeta_threepf_time_sample(datapipe<number>* pipe, const std::vector<unsigned int>& t_serials,
+        virtual void pull_zeta_threepf_time_sample(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_query>& query,
                                                    unsigned int k_serial, std::vector<number>& sample) override;
 
         //! Pull a sample of the zeta reduced bispectrum at fixed k-configuration from a datapipe
-        virtual void pull_zeta_redbsp_time_sample(datapipe<number>* pipe, const std::vector<unsigned int>& t_serials,
+        virtual void pull_zeta_redbsp_time_sample(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_query>& query,
                                                   unsigned int k_serial, std::vector<number>& sample) override;
 
         //! Pull a sample of fNL from a datapipe
-        virtual void pull_fNL_time_sample(datapipe<number>* pipe, const std::vector<unsigned int>& t_serials,
+        virtual void pull_fNL_time_sample(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_query>& query,
                                           std::vector<number>& sample, derived_data::template_type type) override;
 
         //! Pull a sample of bispectrum.template from a datapipe
-        virtual void pull_BT_time_sample(datapipe<number>* pipe, const std::vector<unsigned int>& t_serials,
+        virtual void pull_BT_time_sample(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_query>& query,
                                           std::vector<number>& sample, derived_data::template_type type) override;
 
         //! Pull a sample of template.template from a datapipe
-        virtual void pull_TT_time_sample(datapipe<number>* pipe, const std::vector<unsigned int>& t_serials,
+        virtual void pull_TT_time_sample(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_query>& query,
                                           std::vector<number>& sample, derived_data::template_type type) override;
 
         //! Pull a kconfig sample of a twopf component at fixed time from a datapipe
-        virtual void pull_twopf_kconfig_sample(datapipe<number>* pipe, unsigned int id, const std::vector<unsigned int>& k_serials,
+        virtual void pull_twopf_kconfig_sample(datapipe<number>* pipe, unsigned int id, const std::shared_ptr<derived_data::SQL_query>& query,
                                                unsigned int t_serial, std::vector<number>& sample, typename datapipe<number>::twopf_type type) override;
 
         //! Pull a kconfig sample of a threepf at fixed time from a datapipe
         virtual void pull_threepf_kconfig_sample(datapipe<number>* pipe, unsigned int id,
-                                                 const std::vector<unsigned int>& k_serials,
+                                                 const std::shared_ptr<derived_data::SQL_query>& query,
                                                  unsigned int t_serial, std::vector<number>& sample) override;
 
         //! Pull a kconfig sample of a tensor twopf component at fixed time from a datapipe
-        virtual void pull_tensor_twopf_kconfig_sample(datapipe<number>* pipe, unsigned int id, const std::vector<unsigned int>& k_serials,
+        virtual void pull_tensor_twopf_kconfig_sample(datapipe<number>* pipe, unsigned int id, const std::shared_ptr<derived_data::SQL_query>& query,
                                                       unsigned int t_serial, std::vector<number>& sample) override;
 
         //! Pull a kconfig sample of the zeta twopf at fixed time from a datapipe
-        virtual void pull_zeta_twopf_kconfig_sample(datapipe<number>* pipe, const std::vector<unsigned int>& k_serials,
+        virtual void pull_zeta_twopf_kconfig_sample(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_query>& query,
                                                     unsigned int t_serial, std::vector<number>& sample) override;
 
         //! Pull a kconfig sample of the zeta threepf at fixed time from a datapipe
-        virtual void pull_zeta_threepf_kconfig_sample(datapipe<number>* pipe, const std::vector<unsigned int>& k_serials,
+        virtual void pull_zeta_threepf_kconfig_sample(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_query>& query,
                                                       unsigned int t_serial, std::vector<number>& sample) override;
 
         //! Pull a kconfig sample of the zeta reduced bispectrum at fixed time from a datapipe
-        virtual void pull_zeta_redbsp_kconfig_sample(datapipe<number>* pipe, const std::vector<unsigned int>& k_serials,
+        virtual void pull_zeta_redbsp_kconfig_sample(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_query>& query,
                                                      unsigned int t_serial, std::vector<number>& sample) override;
+
+        //! Pull a sample of k-configuration statistics from a datapipe
+        virtual void pull_k_statistics_sample(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_query>& query,
+                                              std::vector<kconfiguration_statistics>& data) override;
 
       protected:
 
@@ -648,13 +653,13 @@ namespace transport
         sqlite3_operations::create_time_sample_table(db, tk);
         sqlite3_operations::create_twopf_sample_table(db, tk);
         sqlite3_operations::create_backg_table(db, Nfields, sqlite3_operations::foreign_keys);
-        sqlite3_operations::create_twopf_table(db, Nfields, sqlite3_operations::real_twopf, sqlite3_operations::foreign_keys);
+        sqlite3_operations::create_twopf_table<number, typename integration_items<number>::twopf_re_item>(db, Nfields, sqlite3_operations::foreign_keys);
         sqlite3_operations::create_tensor_twopf_table(db, sqlite3_operations::foreign_keys);
 
         sqlite3_operations::create_worker_info_table(db, sqlite3_operations::foreign_keys);
         if(writer->is_collecting_statistics()) sqlite3_operations::create_stats_table(db, sqlite3_operations::foreign_keys, sqlite3_operations::twopf_configs);
 
-		    if(writer->is_collecting_initial_conditions()) sqlite3_operations::create_ics_table(db, Nfields, sqlite3_operations::foreign_keys, sqlite3_operations::twopf_configs, sqlite3_operations::default_ics);
+		    if(writer->is_collecting_initial_conditions()) sqlite3_operations::create_ics_table<number, typename integration_items<number>::ics_item>(db, Nfields, sqlite3_operations::foreign_keys, sqlite3_operations::twopf_configs);
       }
 
 
@@ -670,8 +675,8 @@ namespace transport
         sqlite3_operations::create_twopf_sample_table(db, tk);
         sqlite3_operations::create_threepf_sample_table(db, tk);
         sqlite3_operations::create_backg_table(db, Nfields, sqlite3_operations::foreign_keys);
-        sqlite3_operations::create_twopf_table(db, Nfields, sqlite3_operations::real_twopf, sqlite3_operations::foreign_keys);
-        sqlite3_operations::create_twopf_table(db, Nfields, sqlite3_operations::imag_twopf, sqlite3_operations::foreign_keys);
+        sqlite3_operations::create_twopf_table<number, typename integration_items<number>::twopf_re_item>(db, Nfields, sqlite3_operations::foreign_keys);
+        sqlite3_operations::create_twopf_table<number, typename integration_items<number>::twopf_im_item>(db, Nfields, sqlite3_operations::foreign_keys);
         sqlite3_operations::create_tensor_twopf_table(db, sqlite3_operations::foreign_keys);
         sqlite3_operations::create_threepf_table(db, Nfields, sqlite3_operations::foreign_keys);
 
@@ -680,8 +685,8 @@ namespace transport
 
         if(writer->is_collecting_initial_conditions())
 	        {
-            sqlite3_operations::create_ics_table(db, Nfields, sqlite3_operations::foreign_keys, sqlite3_operations::threepf_configs, sqlite3_operations::default_ics);
-            sqlite3_operations::create_ics_table(db, Nfields, sqlite3_operations::foreign_keys, sqlite3_operations::threepf_configs, sqlite3_operations::kt_ics);
+            sqlite3_operations::create_ics_table<number, typename integration_items<number>::ics_item>(db, Nfields, sqlite3_operations::foreign_keys, sqlite3_operations::threepf_configs);
+            sqlite3_operations::create_ics_table<number, typename integration_items<number>::ics_kt_item>(db, Nfields, sqlite3_operations::foreign_keys, sqlite3_operations::threepf_configs);
 	        }
       }
 
@@ -741,13 +746,15 @@ namespace transport
         boost::filesystem::path seed_container_path = seed->get_abs_repo_path() / seed->get_payload().get_container_path();
 
         sqlite3_operations::aggregate_backg<number>(db, *writer, seed_container_path.string());
-        sqlite3_operations::aggregate_twopf<number>(db, *writer, seed_container_path.string(), sqlite3_operations::real_twopf);
-        sqlite3_operations::aggregate_tensor_twopf<number>(db, *writer, seed_container_path.string());
+        sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::twopf_re_item>(db, *writer, seed_container_path.string());
+        sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::tensor_twopf_item>(db, *writer, seed_container_path.string());
 
         sqlite3_operations::aggregate_workers<number>(db, *writer, seed_container_path.string());
-        if(writer->is_collecting_statistics() && seed->get_payload().has_statistics()) sqlite3_operations::aggregate_statistics<number>(db, *writer, seed_container_path.string());
+        if(writer->is_collecting_statistics() && seed->get_payload().has_statistics())
+	        sqlite3_operations::aggregate_statistics<number>(db, *writer, seed_container_path.string());
 
-        if(writer->is_collecting_initial_conditions() && seed->get_payload().has_initial_conditions()) sqlite3_operations::aggregate_ics<number>(db, *writer, seed_container_path.string());
+        if(writer->is_collecting_initial_conditions() && seed->get_payload().has_initial_conditions())
+	        sqlite3_operations::aggregate_ics<number, typename integration_items<number>::ics_item>(db, *writer, seed_container_path.string());
 
         timer.stop();
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "** Seeding complete in time " << format_time(timer.elapsed().wall);
@@ -768,18 +775,18 @@ namespace transport
         boost::filesystem::path seed_container_path = seed->get_abs_repo_path() / seed->get_payload().get_container_path();
 
         sqlite3_operations::aggregate_backg<number>(db, *writer, seed_container_path.string());
-        sqlite3_operations::aggregate_twopf<number>(db, *writer, seed_container_path.string(), sqlite3_operations::real_twopf);
-        sqlite3_operations::aggregate_twopf<number>(db, *writer, seed_container_path.string(), sqlite3_operations::imag_twopf);
-        sqlite3_operations::aggregate_tensor_twopf<number>(db, *writer, seed_container_path.string());
-        sqlite3_operations::aggregate_threepf<number>(db, *writer, seed_container_path.string());
+        sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::twopf_re_item>(db, *writer, seed_container_path.string());
+        sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::twopf_im_item>(db, *writer, seed_container_path.string());
+        sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::tensor_twopf_item>(db, *writer, seed_container_path.string());
+        sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::threepf_item>(db, *writer, seed_container_path.string());
 
         sqlite3_operations::aggregate_workers<number>(db, *writer, seed_container_path.string());
         if(writer->is_collecting_statistics() && seed->get_payload().has_statistics()) sqlite3_operations::aggregate_statistics<number>(db, *writer, seed_container_path.string());
 
         if(writer->is_collecting_initial_conditions() && seed->get_payload().has_initial_conditions())
 	        {
-            sqlite3_operations::aggregate_ics<number>(db, *writer, seed_container_path.string(), sqlite3_operations::default_ics);
-            sqlite3_operations::aggregate_ics<number>(db, *writer, seed_container_path.string(), sqlite3_operations::kt_ics);
+            sqlite3_operations::aggregate_ics<number, typename integration_items<number>::ics_item>(db, *writer, seed_container_path.string());
+            sqlite3_operations::aggregate_ics<number, typename integration_items<number>::ics_kt_item>(db, *writer, seed_container_path.string());
 	        }
 
         timer.stop();
@@ -800,7 +807,7 @@ namespace transport
         boost::timer::cpu_timer timer;
         boost::filesystem::path seed_container_path = seed->get_abs_repo_path() / seed->get_payload().get_container_path();
 
-        sqlite3_operations::aggregate_zeta_twopf<number>(db, *writer, seed_container_path.string());
+        sqlite3_operations::aggregate_table<number, postintegration_writer<number>, typename postintegration_items<number>::zeta_twopf_item>(db, *writer, seed_container_path.string());
 
         timer.stop();
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "** Seeding complete in time " << format_time(timer.elapsed().wall);
@@ -820,9 +827,9 @@ namespace transport
         boost::timer::cpu_timer timer;
         boost::filesystem::path seed_container_path = seed->get_abs_repo_path() / seed->get_payload().get_container_path();
 
-        sqlite3_operations::aggregate_zeta_twopf<number>(db, *writer, seed_container_path.string());
-        sqlite3_operations::aggregate_zeta_threepf<number>(db, *writer, seed_container_path.string());
-        sqlite3_operations::aggregate_zeta_reduced_bispectrum<number>(db, *writer, seed_container_path.string());
+        sqlite3_operations::aggregate_table<number, postintegration_writer<number>, typename postintegration_items<number>::zeta_twopf_item>(db, *writer, seed_container_path.string());
+        sqlite3_operations::aggregate_table<number, postintegration_writer<number>, typename postintegration_items<number>::zeta_threepf_item>(db, *writer, seed_container_path.string());
+        sqlite3_operations::aggregate_table<number, postintegration_writer<number>, typename postintegration_items<number>::zeta_redbsp_item>(db, *writer, seed_container_path.string());
 
         timer.stop();
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "** Seeding complete in time " << format_time(timer.elapsed().wall);
@@ -848,16 +855,16 @@ namespace transport
       {
         boost::filesystem::path container = this->generate_temporary_container_path(tempdir, worker);
 
-        sqlite3* db = sqlite3_operations::create_temp_twopf_container(container, m->get_N_fields(), m->supports_per_configuration_statistics(), tk->get_collect_initial_conditions());
+        sqlite3* db = sqlite3_operations::create_temp_twopf_container<number>(container, m->get_N_fields(), m->supports_per_configuration_statistics(), tk->get_collect_initial_conditions());
 
         // set up writers
         typename twopf_batcher<number>::writer_group writers;
         writers.host_info    = std::bind(&sqlite3_operations::write_host_info<number>, std::placeholders::_1);
         writers.stats        = std::bind(&sqlite3_operations::write_stats<number>, std::placeholders::_1, std::placeholders::_2);
-		    writers.ics          = std::bind(&sqlite3_operations::write_ics<number>, sqlite3_operations::default_ics, std::placeholders::_1, std::placeholders::_2);
-        writers.backg        = std::bind(&sqlite3_operations::write_backg<number>, std::placeholders::_1, std::placeholders::_2);
-        writers.twopf        = std::bind(&sqlite3_operations::write_twopf<number>, sqlite3_operations::real_twopf, std::placeholders::_1, std::placeholders::_2);
-        writers.tensor_twopf = std::bind(&sqlite3_operations::write_tensor_twopf<number>, std::placeholders::_1, std::placeholders::_2);
+		    writers.ics          = std::bind(&sqlite3_operations::write_coordinate_output<number, typename integration_items<number>::ics_item>, std::placeholders::_1, std::placeholders::_2);
+        writers.backg        = std::bind(&sqlite3_operations::write_coordinate_output<number, typename integration_items<number>::backg_item>, std::placeholders::_1, std::placeholders::_2);
+        writers.twopf        = std::bind(&sqlite3_operations::write_paged_output<number, integration_batcher<number>, typename integration_items<number>::twopf_re_item>, std::placeholders::_1, std::placeholders::_2);
+        writers.tensor_twopf = std::bind(&sqlite3_operations::write_paged_output<number, integration_batcher<number>, typename integration_items<number>::tensor_twopf_item>, std::placeholders::_1, std::placeholders::_2);
 
         // set up a replacement function
         generic_batcher::container_replacement_function replacer =
@@ -884,19 +891,19 @@ namespace transport
       {
         boost::filesystem::path container = this->generate_temporary_container_path(tempdir, worker);
 
-        sqlite3* db = sqlite3_operations::create_temp_threepf_container(container, m->get_N_fields(), m->supports_per_configuration_statistics(), tk->get_collect_initial_conditions());
+        sqlite3* db = sqlite3_operations::create_temp_threepf_container<number>(container, m->get_N_fields(), m->supports_per_configuration_statistics(), tk->get_collect_initial_conditions());
 
         // set up writers
         typename threepf_batcher<number>::writer_group writers;
 		    writers.host_info    = std::bind(&sqlite3_operations::write_host_info<number>, std::placeholders::_1);
         writers.stats        = std::bind(&sqlite3_operations::write_stats<number>, std::placeholders::_1, std::placeholders::_2);
-        writers.ics          = std::bind(&sqlite3_operations::write_ics<number>, sqlite3_operations::default_ics, std::placeholders::_1, std::placeholders::_2);
-        writers.kt_ics       = std::bind(&sqlite3_operations::write_ics<number>, sqlite3_operations::kt_ics, std::placeholders::_1, std::placeholders::_2);
-        writers.backg        = std::bind(&sqlite3_operations::write_backg<number>, std::placeholders::_1, std::placeholders::_2);
-        writers.twopf_re     = std::bind(&sqlite3_operations::write_twopf<number>, sqlite3_operations::real_twopf, std::placeholders::_1, std::placeholders::_2);
-        writers.twopf_im     = std::bind(&sqlite3_operations::write_twopf<number>, sqlite3_operations::imag_twopf, std::placeholders::_1, std::placeholders::_2);
-        writers.tensor_twopf = std::bind(&sqlite3_operations::write_tensor_twopf<number>, std::placeholders::_1, std::placeholders::_2);
-        writers.threepf      = std::bind(&sqlite3_operations::write_threepf<number>, std::placeholders::_1, std::placeholders::_2);
+        writers.ics          = std::bind(&sqlite3_operations::write_coordinate_output<number, typename integration_items<number>::ics_item>, std::placeholders::_1, std::placeholders::_2);
+        writers.kt_ics       = std::bind(&sqlite3_operations::write_coordinate_output<number, typename integration_items<number>::ics_kt_item>, std::placeholders::_1, std::placeholders::_2);
+        writers.backg        = std::bind(&sqlite3_operations::write_coordinate_output<number, typename integration_items<number>::backg_item>, std::placeholders::_1, std::placeholders::_2);
+        writers.twopf_re     = std::bind(&sqlite3_operations::write_paged_output<number, integration_batcher<number>, typename integration_items<number>::twopf_re_item>, std::placeholders::_1, std::placeholders::_2);
+        writers.twopf_im     = std::bind(&sqlite3_operations::write_paged_output<number, integration_batcher<number>, typename integration_items<number>::twopf_im_item>, std::placeholders::_1, std::placeholders::_2);
+        writers.tensor_twopf = std::bind(&sqlite3_operations::write_paged_output<number, integration_batcher<number>, typename integration_items<number>::tensor_twopf_item>, std::placeholders::_1, std::placeholders::_2);
+        writers.threepf      = std::bind(&sqlite3_operations::write_paged_output<number, integration_batcher<number>, typename integration_items<number>::threepf_item>, std::placeholders::_1, std::placeholders::_2);
 
         // set up a replacement function
         generic_batcher::container_replacement_function replacer =
@@ -925,7 +932,7 @@ namespace transport
 
         // set up writers
         typename zeta_twopf_batcher<number>::writer_group writers;
-        writers.twopf = std::bind(&sqlite3_operations::write_zeta_twopf<number>, std::placeholders::_1, std::placeholders::_2);
+        writers.twopf = std::bind(&sqlite3_operations::write_unpaged<number, postintegration_batcher, typename postintegration_items<number>::zeta_twopf_item>, std::placeholders::_1, std::placeholders::_2);
 
         // set up replacement function
         generic_batcher::container_replacement_function replacer =
@@ -955,9 +962,9 @@ namespace transport
 
         // set up writers
         typename zeta_threepf_batcher<number>::writer_group writers;
-        writers.twopf   = std::bind(&sqlite3_operations::write_zeta_twopf<number>, std::placeholders::_1, std::placeholders::_2);
-        writers.threepf = std::bind(&sqlite3_operations::write_zeta_threepf<number>, std::placeholders::_1, std::placeholders::_2);
-        writers.redbsp  = std::bind(&sqlite3_operations::write_zeta_redbsp<number>, std::placeholders::_1, std::placeholders::_2);
+        writers.twopf   = std::bind(&sqlite3_operations::write_unpaged<number, postintegration_batcher, typename postintegration_items<number>::zeta_twopf_item>, std::placeholders::_1, std::placeholders::_2);
+        writers.threepf = std::bind(&sqlite3_operations::write_unpaged<number, postintegration_batcher, typename postintegration_items<number>::zeta_threepf_item>, std::placeholders::_1, std::placeholders::_2);
+        writers.redbsp  = std::bind(&sqlite3_operations::write_unpaged<number, postintegration_batcher, typename postintegration_items<number>::zeta_redbsp_item>, std::placeholders::_1, std::placeholders::_2);
 
         // set up replacement function
         generic_batcher::container_replacement_function replacer =
@@ -1024,7 +1031,7 @@ namespace transport
           {
             boost::filesystem::path container = this->generate_temporary_container_path(tempdir, worker);
 
-            sqlite3* new_db = sqlite3_operations::create_temp_twopf_container(container, m->get_N_fields(), m->supports_per_configuration_statistics(), ics);
+            sqlite3* new_db = sqlite3_operations::create_temp_twopf_container<number>(container, m->get_N_fields(), m->supports_per_configuration_statistics(), ics);
 
             batcher->set_container_path(container);
             batcher->set_manager_handle(new_db);
@@ -1056,7 +1063,7 @@ namespace transport
 
             BOOST_LOG_SEV(batcher->get_log(), generic_batcher::normal) << "** Opening new threepf container " << container;
 
-            sqlite3* new_db = sqlite3_operations::create_temp_threepf_container(container, m->get_N_fields(), m->supports_per_configuration_statistics(), ics);
+            sqlite3* new_db = sqlite3_operations::create_temp_threepf_container<number>(container, m->get_N_fields(), m->supports_per_configuration_statistics(), ics);
 
             batcher->set_container_path(container);
             batcher->set_manager_handle(new_db);
@@ -1169,13 +1176,14 @@ namespace transport
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
         sqlite3_operations::aggregate_backg<number>(db, writer, temp_ctr);
-        sqlite3_operations::aggregate_twopf<number>(db, writer, temp_ctr, sqlite3_operations::real_twopf);
-        sqlite3_operations::aggregate_tensor_twopf<number>(db, writer, temp_ctr);
+        sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::twopf_re_item>(db, writer, temp_ctr);
+        sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::tensor_twopf_item>(db, writer, temp_ctr);
 
         sqlite3_operations::aggregate_workers<number>(db, writer, temp_ctr);
         if(writer.is_collecting_statistics()) sqlite3_operations::aggregate_statistics<number>(db, writer, temp_ctr);
 
-		    if(writer.is_collecting_initial_conditions()) sqlite3_operations::aggregate_ics<number>(db, writer, temp_ctr);
+		    if(writer.is_collecting_initial_conditions())
+			    sqlite3_operations::aggregate_ics<number, typename integration_items<number>::ics_item>(db, writer, temp_ctr);
 
         return(true);
       }
@@ -1188,18 +1196,18 @@ namespace transport
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
         sqlite3_operations::aggregate_backg<number>(db, writer, temp_ctr);
-        sqlite3_operations::aggregate_twopf<number>(db, writer, temp_ctr, sqlite3_operations::real_twopf);
-        sqlite3_operations::aggregate_twopf<number>(db, writer, temp_ctr, sqlite3_operations::imag_twopf);
-        sqlite3_operations::aggregate_tensor_twopf<number>(db, writer, temp_ctr);
-        sqlite3_operations::aggregate_threepf<number>(db, writer, temp_ctr);
+        sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::twopf_re_item>(db, writer, temp_ctr);
+        sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::twopf_im_item>(db, writer, temp_ctr);
+        sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::tensor_twopf_item>(db, writer, temp_ctr);
+        sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::threepf_item>(db, writer, temp_ctr);
 
         sqlite3_operations::aggregate_workers<number>(db, writer, temp_ctr);
         if(writer.is_collecting_statistics()) sqlite3_operations::aggregate_statistics<number>(db, writer, temp_ctr);
 
         if(writer.is_collecting_initial_conditions())
 	        {
-            sqlite3_operations::aggregate_ics<number>(db, writer, temp_ctr, sqlite3_operations::default_ics);
-            sqlite3_operations::aggregate_ics<number>(db, writer, temp_ctr, sqlite3_operations::kt_ics);
+            sqlite3_operations::aggregate_ics<number, typename integration_items<number>::ics_item>(db, writer, temp_ctr);
+            sqlite3_operations::aggregate_ics<number, typename integration_items<number>::ics_kt_item>(db, writer, temp_ctr);
 	        }
 
         return(true);
@@ -1212,7 +1220,7 @@ namespace transport
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        sqlite3_operations::aggregate_zeta_twopf<number>(db, writer, temp_ctr);
+        sqlite3_operations::aggregate_table<number, postintegration_writer<number>, typename postintegration_items<number>::zeta_twopf_item>(db, writer, temp_ctr);
 
         return(true);
       }
@@ -1224,9 +1232,9 @@ namespace transport
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        sqlite3_operations::aggregate_zeta_twopf<number>(db, writer, temp_ctr);
-        sqlite3_operations::aggregate_zeta_threepf<number>(db, writer, temp_ctr);
-        sqlite3_operations::aggregate_zeta_reduced_bispectrum<number>(db, writer, temp_ctr);
+        sqlite3_operations::aggregate_table<number, postintegration_writer<number>, typename postintegration_items<number>::zeta_twopf_item>(db, writer, temp_ctr);
+        sqlite3_operations::aggregate_table<number, postintegration_writer<number>, typename postintegration_items<number>::zeta_threepf_item>(db, writer, temp_ctr);
+        sqlite3_operations::aggregate_table<number, postintegration_writer<number>, typename postintegration_items<number>::zeta_redbsp_item>(db, writer, temp_ctr);
 
         return(true);
       }
@@ -1435,7 +1443,7 @@ namespace transport
 
         BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << std::endl << "** Performing integrity check for container '" << writer.get_abs_container_path().string() << "'";
 
-        std::list<unsigned int> serials = sqlite3_operations::get_missing_twopf_serials(db);
+        std::list<unsigned int> serials = sqlite3_operations::get_missing_serials<number, typename integration_items<number>::twopf_re_item>(db);
 
         if(serials.size() > 0)
           {
@@ -1444,7 +1452,8 @@ namespace transport
             if(remainder.size() > 0)
               {
                 BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << "** Dropping extra configurations not missing from container, but advised by backend:";
-                sqlite3_operations::drop_twopf_kconfigs(db, writer, remainder, tk->get_twopf_database());
+                sqlite3_operations::drop_k_configurations(db, writer, remainder, tk->get_twopf_database(),
+                                                          sqlite3_operations::data_traits<number, typename integration_items<number>::twopf_re_item>::sqlite_table());
                 serials.merge(remainder);
               }
 
@@ -1452,7 +1461,7 @@ namespace transport
 		        writer.set_missing_serials(serials);
 
             if(writer.is_collecting_statistics()) sqlite3_operations::drop_statistics(db, serials, tk->get_twopf_database());
-		        if(writer.is_collecting_initial_conditions()) sqlite3_operations::drop_ics(db, serials, tk->get_twopf_database());
+		        if(writer.is_collecting_initial_conditions()) sqlite3_operations::drop_ics<number, typename integration_items<number>::ics_item, twopf_kconfig_database>(db, serials, tk->get_twopf_database());
           }
       }
 
@@ -1470,9 +1479,9 @@ namespace transport
         BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << std::endl << "** Performing integrity check for container '" << writer.get_abs_container_path().string() << "'";
 
         // get lists of missing serial numbers for threepf, real twopf and imaginary twopf
-        std::list<unsigned int> twopf_re_serials = sqlite3_operations::get_missing_twopf_serials(db, sqlite3_operations::real_twopf);
-        std::list<unsigned int> twopf_im_serials = sqlite3_operations::get_missing_twopf_serials(db, sqlite3_operations::imag_twopf);
-        std::list<unsigned int> threepf_serials  = sqlite3_operations::get_missing_threepf_serials(db);
+        std::list<unsigned int> twopf_re_serials = sqlite3_operations::get_missing_serials<number, typename integration_items<number>::twopf_re_item>(db);
+        std::list<unsigned int> twopf_im_serials = sqlite3_operations::get_missing_serials<number, typename integration_items<number>::twopf_im_item>(db);
+        std::list<unsigned int> threepf_serials  = sqlite3_operations::get_missing_serials<number, typename integration_items<number>::threepf_item>(db);
 
         // merge missing twopf lists into a single one
         std::list<unsigned int> twopf_total_serials = twopf_re_serials;
@@ -1491,7 +1500,8 @@ namespace transport
             if(remainder.size() > 0)
               {
                 BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << std::endl << "** Dropping extra threepf configurations not missing from container, but advised by backend:";
-                sqlite3_operations::drop_threepf_kconfigs(db, writer, remainder, tk->get_threepf_database());
+                sqlite3_operations::drop_k_configurations(db, writer, remainder, tk->get_threepf_database(),
+                                                          sqlite3_operations::data_traits<number, typename integration_items<number>::threepf_item>::sqlite_table());
                 threepf_serials.merge(remainder);   // not necessary to remove duplicates, since there should not be any; result is sorted
               }
           }
@@ -1504,7 +1514,8 @@ namespace transport
         if(undropped.size() > 0)
           {
             BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << "** Dropping extra threepf configurations not missing from container, but implied by missing twopf configurations:";
-            sqlite3_operations::drop_threepf_kconfigs(db, writer, undropped, tk->get_threepf_database());
+            sqlite3_operations::drop_k_configurations(db, writer, undropped, tk->get_threepf_database(),
+                                                      sqlite3_operations::data_traits<number, typename integration_items<number>::threepf_item>::sqlite_table());
             threepf_serials.merge(undropped);   // not necessary to remove duplicates, since there should be any; result is sorted
           }
 
@@ -1514,8 +1525,8 @@ namespace transport
             if(writer.is_collecting_statistics()) sqlite3_operations::drop_statistics(db, threepf_serials, tk->get_threepf_database());
 		        if(writer.is_collecting_initial_conditions())
 			        {
-		            sqlite3_operations::drop_ics(db, threepf_serials, tk->get_threepf_database(), sqlite3_operations::default_ics);
-		            sqlite3_operations::drop_ics(db, threepf_serials, tk->get_threepf_database(), sqlite3_operations::kt_ics);
+		            sqlite3_operations::drop_ics<number, typename integration_items<number>::ics_item, threepf_kconfig_database>(db, threepf_serials, tk->get_threepf_database());
+		            sqlite3_operations::drop_ics<number, typename integration_items<number>::ics_kt_item, threepf_kconfig_database>(db, threepf_serials, tk->get_threepf_database());
 			        }
 
             // build list of twopf configurations which should be dropped for this entire set of threepf configurations
@@ -1529,7 +1540,8 @@ namespace transport
             if(undropped.size() > 0)
               {
                 BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << std::endl << "** Dropping real twopf configurations entailed by these threepf configurations, but present in the container";
-                sqlite3_operations::drop_twopf_kconfigs(db, writer, undropped, tk->get_twopf_database(), sqlite3_operations::real_twopf);
+                sqlite3_operations::drop_k_configurations(db, writer, undropped, tk->get_twopf_database(),
+                                                          sqlite3_operations::data_traits<number, typename integration_items<number>::twopf_re_item>::sqlite_table());
               }
 
             // compute imaginary twopf configurations which should be dropped
@@ -1540,7 +1552,8 @@ namespace transport
             if(undropped.size() > 0)
               {
                 BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << std::endl << "** Dropping real twopf configurations entailed by these threepf configurations, but present in the container";
-                sqlite3_operations::drop_twopf_kconfigs(db, writer, undropped, tk->get_twopf_database(), sqlite3_operations::imag_twopf);
+                sqlite3_operations::drop_k_configurations(db, writer, undropped, tk->get_twopf_database(),
+                                                          sqlite3_operations::data_traits<number, typename integration_items<number>::twopf_im_item>::sqlite_table());
               }
           }
       }
@@ -1558,7 +1571,7 @@ namespace transport
 
         BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << std::endl << "** Performing integrity check for container '" << writer.get_abs_container_path().string() << "'";
 
-        std::list<unsigned int> serials = sqlite3_operations::get_missing_zeta_twopf_serials(db);
+        std::list<unsigned int> serials = sqlite3_operations::get_missing_serials<number, typename postintegration_items<number>::zeta_twopf_item>(db);
 
         if(serials.size() > 0)
           {
@@ -1567,7 +1580,8 @@ namespace transport
             if(remainder.size() > 0)
               {
                 BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << std::endl << "** Dropping extra configurations not missing from container, but advised by backend:";
-                sqlite3_operations::drop_zeta_twopf_kconfigs(db, writer, remainder, tk->get_twopf_database());
+                sqlite3_operations::drop_k_configurations(db, writer, remainder, tk->get_twopf_database(),
+                                                          sqlite3_operations::data_traits<number, typename postintegration_items<number>::zeta_twopf_item>::sqlite_table());
               }
 
             // push list of missing serial numbers to writer
@@ -1591,9 +1605,9 @@ namespace transport
         BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << std::endl << "** Performing integrity check for container '" << writer.get_abs_container_path().string() << "'";
 
         // get lists of missing serial numbers for threepf, redbsp and twopf
-        std::list<unsigned int> threepf_serials = sqlite3_operations::get_missing_zeta_threepf_serials(db);
-        std::list<unsigned int> redbsp_serials  = sqlite3_operations::get_missing_zeta_redbsp_serials(db);
-        std::list<unsigned int> twopf_serials   = sqlite3_operations::get_missing_zeta_twopf_serials(db);
+        std::list<unsigned int> threepf_serials = sqlite3_operations::get_missing_serials<number, typename postintegration_items<number>::zeta_threepf_item>(db);
+        std::list<unsigned int> redbsp_serials  = sqlite3_operations::get_missing_serials<number, typename postintegration_items<number>::zeta_redbsp_item>(db);
+        std::list<unsigned int> twopf_serials   = sqlite3_operations::get_missing_serials<number, typename postintegration_items<number>::zeta_twopf_item>(db);
 
         // map missing twopf serials into threepf serials
         std::list<unsigned int> twopf_to_threepf_map = this->map_twopf_to_threepf_serials(twopf_serials, tk->get_threepf_database());
@@ -1609,7 +1623,8 @@ namespace transport
                             threepf_serials.begin(), threepf_serials.end(), std::back_inserter(undropped));
         if(undropped.size() > 0)
           {
-            sqlite3_operations::drop_zeta_threepf_kconfigs(db, writer, undropped, tk->get_threepf_database(), true);
+            sqlite3_operations::drop_k_configurations(db, writer, undropped, tk->get_threepf_database(),
+                                                      sqlite3_operations::data_traits<number, typename postintegration_items<number>::zeta_threepf_item>::sqlite_table(), true);
           }
 
         undropped.clear();
@@ -1617,7 +1632,8 @@ namespace transport
                             redbsp_serials.begin(), redbsp_serials.end(), std::back_inserter(undropped));
         if(undropped.size() > 0)
           {
-            sqlite3_operations::drop_zeta_redbsp_configurations(db, writer, undropped, tk->get_threepf_database(), true);
+            sqlite3_operations::drop_k_configurations(db, writer, undropped, tk->get_threepf_database(),
+                                                      sqlite3_operations::data_traits<number, typename postintegration_items<number>::zeta_redbsp_item>::sqlite_table(), true);
           }
 
         // threepf and redbsp are now missing the same configurations, so log these:
@@ -1629,8 +1645,10 @@ namespace transport
             if(remainder.size() > 0)
               {
                 BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << std::endl << "** Dropping extra configurations not missing from container, but advised by backend:";
-                sqlite3_operations::drop_zeta_threepf_kconfigs(db, writer, remainder, tk->get_threepf_database());
-                sqlite3_operations::drop_zeta_redbsp_configurations(db, writer, remainder, tk->get_threepf_database(), true);
+                sqlite3_operations::drop_k_configurations(db, writer, remainder, tk->get_threepf_database(),
+                                                          sqlite3_operations::data_traits<number, typename postintegration_items<number>::zeta_threepf_item>::sqlite_table());
+                sqlite3_operations::drop_k_configurations(db, writer, remainder, tk->get_threepf_database(),
+                                                          sqlite3_operations::data_traits<number, typename postintegration_items<number>::zeta_redbsp_item>::sqlite_table(), true);
                 threepf_total_serials.merge(remainder);
               }
           }
@@ -1643,8 +1661,10 @@ namespace transport
         if(undropped.size() > 0)
           {
             BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << "** Dropping extra threepf configurations not missing from container, but implied by missing twopf configurations:";
-            sqlite3_operations::drop_zeta_threepf_kconfigs(db, writer, undropped, tk->get_threepf_database());
-            sqlite3_operations::drop_zeta_redbsp_configurations(db, writer, undropped, tk->get_threepf_database(), true);
+            sqlite3_operations::drop_k_configurations(db, writer, undropped, tk->get_threepf_database(),
+                                                      sqlite3_operations::data_traits<number, typename postintegration_items<number>::zeta_threepf_item>::sqlite_table());
+            sqlite3_operations::drop_k_configurations(db, writer, undropped, tk->get_threepf_database(),
+                                                      sqlite3_operations::data_traits<number, typename postintegration_items<number>::zeta_redbsp_item>::sqlite_table(), true);
             threepf_total_serials.merge(undropped);   // not necessary to remove duplicates, since there should be any; result is sorted
           }
 
@@ -1663,7 +1683,8 @@ namespace transport
             if(undropped.size() > 0)
               {
                 BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << std::endl << "** Dropping twopf configurations entailed by these threepf configurations, but present in the container";
-                sqlite3_operations::drop_zeta_twopf_kconfigs(db, writer, undropped, tk->get_twopf_database());
+                sqlite3_operations::drop_k_configurations(db, writer, undropped, tk->get_twopf_database(),
+                                                          sqlite3_operations::data_traits<number, typename postintegration_items<number>::zeta_twopf_item>::sqlite_table());
               }
           }
       }
@@ -1690,8 +1711,8 @@ namespace transport
                                                                    typename datapipe<number>::dispatch_function dispatcher,
                                                                    unsigned int worker, bool no_log)
 			{
-		    // set up callback API
-		    typename datapipe<number>::utility_callbacks utilities;
+        // set up callback API
+        typename datapipe<number>::utility_callbacks utilities;
 
         utilities.integration_attach = std::bind(&data_manager_sqlite3<number>::datapipe_attach_integration_content, this,
                                                  std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
@@ -1699,91 +1720,96 @@ namespace transport
         utilities.postintegration_attach = std::bind(&data_manager_sqlite3<number>::datapipe_attach_postintegration_content, this,
                                                      std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
 
-		    utilities.detach = std::bind(&data_manager_sqlite3<number>::datapipe_detach, this, std::placeholders::_1);
+        utilities.detach = std::bind(&data_manager_sqlite3<number>::datapipe_detach, this, std::placeholders::_1);
 
         utilities.integration_finder     = integration_finder;
         utilities.postintegration_finder = postintegration_finder;
         utilities.dispatch               = dispatcher;
 
-		    typename datapipe<number>::config_cache config;
+        typename datapipe<number>::config_cache config;
 
-		    config.time = std::bind(&data_manager_sqlite3<number>::pull_time_config, this,
-		                            std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+        config.time = std::bind(&data_manager_sqlite3<number>::pull_time_config, this,
+                                std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
 
-		    config.twopf = std::bind(&data_manager_sqlite3<number>::pull_kconfig_twopf, this,
-		                             std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+        config.twopf = std::bind(&data_manager_sqlite3<number>::pull_kconfig_twopf, this,
+                                 std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
 
-		    config.threepf = std::bind(&data_manager_sqlite3<number>::pull_kconfig_threepf, this,
-		                               std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+        config.threepf = std::bind(&data_manager_sqlite3<number>::pull_kconfig_threepf, this,
+                                   std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
 
-		    typename datapipe<number>::timeslice_cache timeslice;
+        typename datapipe<number>::timeslice_cache timeslice;
 
-		    timeslice.background = std::bind(&data_manager_sqlite3<number>::pull_background_time_sample, this,
-		                                     std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
+        timeslice.background = std::bind(&data_manager_sqlite3<number>::pull_background_time_sample, this,
+                                         std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
 
-		    timeslice.twopf = std::bind(&data_manager_sqlite3<number>::pull_twopf_time_sample, this,
-		                                std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
-		                                std::placeholders::_4, std::placeholders::_5, std::placeholders::_6);
+        timeslice.twopf = std::bind(&data_manager_sqlite3<number>::pull_twopf_time_sample, this,
+                                    std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
+                                    std::placeholders::_4, std::placeholders::_5, std::placeholders::_6);
 
-		    timeslice.threepf = std::bind(&data_manager_sqlite3<number>::pull_threepf_time_sample, this,
-		                                  std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
-		                                  std::placeholders::_4, std::placeholders::_5);
+        timeslice.threepf = std::bind(&data_manager_sqlite3<number>::pull_threepf_time_sample, this,
+                                      std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
+                                      std::placeholders::_4, std::placeholders::_5);
 
         timeslice.tensor_twopf = std::bind(&data_manager_sqlite3<number>::pull_tensor_twopf_time_sample, this,
                                            std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
                                            std::placeholders::_4, std::placeholders::_5);
 
-		    timeslice.zeta_twopf = std::bind(&data_manager_sqlite3<number>::pull_zeta_twopf_time_sample, this,
-		                                     std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
+        timeslice.zeta_twopf = std::bind(&data_manager_sqlite3<number>::pull_zeta_twopf_time_sample, this,
+                                         std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
 
-		    timeslice.zeta_threepf = std::bind(&data_manager_sqlite3<number>::pull_zeta_threepf_time_sample, this,
-		                                       std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
+        timeslice.zeta_threepf = std::bind(&data_manager_sqlite3<number>::pull_zeta_threepf_time_sample, this,
+                                           std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
 
-		    timeslice.zeta_redbsp = std::bind(&data_manager_sqlite3<number>::pull_zeta_redbsp_time_sample, this,
-		                                      std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
+        timeslice.zeta_redbsp = std::bind(&data_manager_sqlite3<number>::pull_zeta_redbsp_time_sample, this,
+                                          std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
 
-		    timeslice.fNL = std::bind(&data_manager_sqlite3<number>::pull_fNL_time_sample, this,
-		                              std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
+        timeslice.fNL = std::bind(&data_manager_sqlite3<number>::pull_fNL_time_sample, this,
+                                  std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
 
-		    timeslice.BT = std::bind(&data_manager_sqlite3<number>::pull_BT_time_sample, this,
-		                             std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
+        timeslice.BT = std::bind(&data_manager_sqlite3<number>::pull_BT_time_sample, this,
+                                 std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
 
-		    timeslice.TT = std::bind(&data_manager_sqlite3<number>::pull_TT_time_sample, this,
-		                             std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
+        timeslice.TT = std::bind(&data_manager_sqlite3<number>::pull_TT_time_sample, this,
+                                 std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
 
-		    typename datapipe<number>::kslice_cache kslice;
+        typename datapipe<number>::kslice_cache kslice;
 
-		    kslice.twopf = std::bind(&data_manager_sqlite3<number>::pull_twopf_kconfig_sample, this,
-		                             std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
-		                             std::placeholders::_4, std::placeholders::_5, std::placeholders::_6);
+        kslice.twopf = std::bind(&data_manager_sqlite3<number>::pull_twopf_kconfig_sample, this,
+                                 std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
+                                 std::placeholders::_4, std::placeholders::_5, std::placeholders::_6);
 
-		    kslice.threepf = std::bind(&data_manager_sqlite3<number>::pull_threepf_kconfig_sample, this,
-		                               std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
-		                               std::placeholders::_4, std::placeholders::_5);
+        kslice.threepf = std::bind(&data_manager_sqlite3<number>::pull_threepf_kconfig_sample, this,
+                                   std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
+                                   std::placeholders::_4, std::placeholders::_5);
 
         kslice.tensor_twopf = std::bind(&data_manager_sqlite3<number>::pull_tensor_twopf_kconfig_sample, this,
                                         std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
                                         std::placeholders::_4, std::placeholders::_5);
 
-		    kslice.zeta_twopf = std::bind(&data_manager_sqlite3<number>::pull_zeta_twopf_kconfig_sample, this,
-		                                     std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
+        kslice.zeta_twopf = std::bind(&data_manager_sqlite3<number>::pull_zeta_twopf_kconfig_sample, this,
+                                      std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
 
-		    kslice.zeta_threepf = std::bind(&data_manager_sqlite3<number>::pull_zeta_threepf_kconfig_sample, this,
-		                                       std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
+        kslice.zeta_threepf = std::bind(&data_manager_sqlite3<number>::pull_zeta_threepf_kconfig_sample, this,
+                                        std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
 
-		    kslice.zeta_redbsp = std::bind(&data_manager_sqlite3<number>::pull_zeta_redbsp_kconfig_sample, this,
-		                                      std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
+        kslice.zeta_redbsp = std::bind(&data_manager_sqlite3<number>::pull_zeta_redbsp_kconfig_sample, this,
+                                       std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
+
+        typename datapipe<number>::stats_cache stats;
+
+        stats.k_statistics = std::bind(&data_manager_sqlite3<number>::pull_k_statistics_sample, this,
+                                       std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
 
         // set up datapipe
-        datapipe<number> pipe(this->pipe_data_capacity, this->pipe_zeta_capacity,
-                              logdir, tempdir, worker, utilities, config, timeslice, kslice, no_log);
+        datapipe<number> pipe(this->pipe_capacity, logdir, tempdir, worker, utilities, config, timeslice, kslice, stats, no_log);
 
-				return(pipe);
+        return(pipe);
 			}
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_time_config(datapipe<number>* pipe, const std::vector<unsigned int>& serial_numbers, std::vector<double>& sample)
+    void data_manager_sqlite3<number>::pull_time_config(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_time_config_query>& query,
+                                                        std::vector<time_config>& sample)
 	    {
         assert(pipe != nullptr);
         if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_DATAMGR_NULL_DATAPIPE);
@@ -1791,12 +1817,12 @@ namespace transport
         sqlite3* db = nullptr;
 		    pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
-        sqlite3_operations::pull_time_sample(db, serial_numbers, sample, pipe->get_worker_number());
+        sqlite3_operations::pull_time_config_sample(db, query, sample, pipe->get_worker_number());
 	    }
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_kconfig_twopf(datapipe<number>* pipe, const std::vector<unsigned int>& serial_numbers,
+    void data_manager_sqlite3<number>::pull_kconfig_twopf(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_twopf_kconfig_query>& query,
                                                           std::vector<twopf_kconfig>& sample)
 			{
 		    assert(pipe != nullptr);
@@ -1805,12 +1831,12 @@ namespace transport
 		    sqlite3* db = nullptr;
 		    pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
-		    sqlite3_operations::pull_twopf_kconfig_sample<number>(db, serial_numbers, sample, pipe->get_worker_number());
+		    sqlite3_operations::pull_twopf_kconfig_sample<number>(db, query, sample, pipe->get_worker_number());
 			}
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_kconfig_threepf(datapipe<number>* pipe, const std::vector<unsigned int>& serial_numbers,
+    void data_manager_sqlite3<number>::pull_kconfig_threepf(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_threepf_kconfig_query>& query,
                                                             std::vector<threepf_kconfig>& sample)
 	    {
         assert(pipe != nullptr);
@@ -1819,12 +1845,13 @@ namespace transport
         sqlite3* db = nullptr;
         pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
-        sqlite3_operations::pull_threepf_kconfig_sample<number>(db, serial_numbers, sample, pipe->get_worker_number());
+        sqlite3_operations::pull_threepf_kconfig_sample<number>(db, query, sample, pipe->get_worker_number());
 	    }
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_background_time_sample(datapipe<number>* pipe, unsigned int id, const std::vector<unsigned int>& t_serials,
+    void data_manager_sqlite3<number>::pull_background_time_sample(datapipe<number>* pipe, unsigned int id,
+                                                                   const std::shared_ptr<derived_data::SQL_query>& query,
                                                                    std::vector<number>& sample)
 	    {
         assert(pipe != nullptr);
@@ -1833,12 +1860,13 @@ namespace transport
         sqlite3* db = nullptr;
         pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
-        sqlite3_operations::pull_background_time_sample(db, id, t_serials, sample, pipe->get_worker_number(), pipe->get_N_fields());
+        sqlite3_operations::pull_background_time_sample(db, id, query, sample, pipe->get_worker_number(), pipe->get_N_fields());
 	    }
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_twopf_time_sample(datapipe<number>* pipe, unsigned int id, const std::vector<unsigned int>& t_serials,
+    void data_manager_sqlite3<number>::pull_twopf_time_sample(datapipe<number>* pipe, unsigned int id,
+                                                              const std::shared_ptr<derived_data::SQL_query>& query,
                                                               unsigned int k_serial, std::vector<number>& sample,
                                                               typename datapipe<number>::twopf_type type)
 	    {
@@ -1848,14 +1876,23 @@ namespace transport
         sqlite3* db = nullptr;
         pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
-        sqlite3_operations::pull_twopf_time_sample(db, id, t_serials, k_serial, sample,
-                                                   (type == datapipe<number>::twopf_real ? sqlite3_operations::real_twopf : sqlite3_operations::imag_twopf),
-                                                   pipe->get_worker_number(), pipe->get_N_fields());
+		    if(type == datapipe<number>::twopf_real)
+			    {
+		        sqlite3_operations::pull_paged_time_sample<number, typename integration_items<number>::twopf_re_item>(db, id, query, k_serial, sample,
+		                                                                                                              pipe->get_worker_number(), pipe->get_N_fields());
+			    }
+		    else if(type == datapipe<number>::twopf_imag)
+			    {
+		        sqlite3_operations::pull_paged_time_sample<number, typename integration_items<number>::twopf_im_item>(db, id, query, k_serial, sample,
+		                                                                                                              pipe->get_worker_number(), pipe->get_N_fields());
+			    }
+		    else assert(false);
 	    }
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_threepf_time_sample(datapipe<number>* pipe, unsigned int id, const std::vector<unsigned int>& t_serials,
+    void data_manager_sqlite3<number>::pull_threepf_time_sample(datapipe<number>* pipe, unsigned int id,
+                                                                const std::shared_ptr<derived_data::SQL_query>& query,
                                                                 unsigned int k_serial, std::vector<number>& sample)
 	    {
         assert(pipe != nullptr);
@@ -1864,12 +1901,14 @@ namespace transport
         sqlite3* db = nullptr;
         pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
-        sqlite3_operations::pull_threepf_time_sample(db, id, t_serials, k_serial, sample, pipe->get_worker_number(), pipe->get_N_fields());
+        sqlite3_operations::pull_paged_time_sample<number, typename integration_items<number>::threepf_item>(db, id, query, k_serial, sample,
+                                                                                                             pipe->get_worker_number(), pipe->get_N_fields());
 	    }
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_tensor_twopf_time_sample(datapipe<number>* pipe, unsigned int id, const std::vector<unsigned int>& t_serials,
+    void data_manager_sqlite3<number>::pull_tensor_twopf_time_sample(datapipe<number>* pipe, unsigned int id,
+                                                                     const std::shared_ptr<derived_data::SQL_query>& query,
                                                                      unsigned int k_serial, std::vector<number>& sample)
       {
         assert(pipe != nullptr);
@@ -1878,12 +1917,13 @@ namespace transport
         sqlite3* db = nullptr;
         pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
-        sqlite3_operations::pull_tensor_twopf_time_sample(db, id, t_serials, k_serial, sample, pipe->get_worker_number());
+        sqlite3_operations::pull_paged_time_sample<number, typename integration_items<number>::tensor_twopf_item>(db, id, query, k_serial, sample,
+                                                                                                                  pipe->get_worker_number(), pipe->get_N_fields());
       }
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_zeta_twopf_time_sample(datapipe<number>* pipe, const std::vector<unsigned int>& t_serials,
+    void data_manager_sqlite3<number>::pull_zeta_twopf_time_sample(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_query>& query,
                                                                    unsigned int k_serial, std::vector<number>& sample)
 	    {
 		    assert(pipe != nullptr);
@@ -1892,12 +1932,13 @@ namespace transport
 		    sqlite3* db = nullptr;
 		    pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
-        sqlite3_operations::pull_zeta_twopf_time_sample(db, t_serials, k_serial, sample, pipe->get_worker_number());
+        sqlite3_operations::pull_unpaged_time_sample<number, typename postintegration_items<number>::zeta_twopf_item>(db, query, k_serial, sample,
+                                                                                                                      pipe->get_worker_number());
 	    }
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_zeta_threepf_time_sample(datapipe<number>* pipe, const std::vector<unsigned int>& t_serials,
+    void data_manager_sqlite3<number>::pull_zeta_threepf_time_sample(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_query>& query,
                                                                      unsigned int k_serial, std::vector<number>& sample)
 	    {
 		    assert(pipe != nullptr);
@@ -1906,12 +1947,13 @@ namespace transport
 		    sqlite3* db = nullptr;
 		    pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
-        sqlite3_operations::pull_zeta_threepf_time_sample(db, t_serials, k_serial, sample, pipe->get_worker_number());
+        sqlite3_operations::pull_unpaged_time_sample<number, typename postintegration_items<number>::zeta_threepf_item>(db, query, k_serial, sample,
+                                                                                                                        pipe->get_worker_number());
 	    }
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_zeta_redbsp_time_sample(datapipe<number>* pipe, const std::vector<unsigned int>& t_serials,
+    void data_manager_sqlite3<number>::pull_zeta_redbsp_time_sample(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_query>& query,
                                                                     unsigned int k_serial, std::vector<number>& sample)
 	    {
 		    assert(pipe != nullptr);
@@ -1920,12 +1962,13 @@ namespace transport
 		    sqlite3* db = nullptr;
 		    pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
-        sqlite3_operations::pull_zeta_redbsp_time_sample(db, t_serials, k_serial, sample, pipe->get_worker_number());
+        sqlite3_operations::pull_unpaged_time_sample<number, typename postintegration_items<number>::zeta_redbsp_item>(db, query, k_serial, sample,
+                                                                                                                        pipe->get_worker_number());
 	    }
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_fNL_time_sample(datapipe<number>* pipe, const std::vector<unsigned int>& t_serials,
+    void data_manager_sqlite3<number>::pull_fNL_time_sample(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_query>& query,
                                                             std::vector<number>& sample, derived_data::template_type type)
 	    {
 		    assert(pipe != nullptr);
@@ -1934,12 +1977,12 @@ namespace transport
 		    sqlite3* db = nullptr;
 		    pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
-        sqlite3_operations::pull_fNL_time_sample(db, t_serials, sample, pipe->get_worker_number(), type);
+        sqlite3_operations::pull_fNL_time_sample(db, query, sample, pipe->get_worker_number(), type);
 	    }
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_BT_time_sample(datapipe<number>* pipe, const std::vector<unsigned int>& t_serials,
+    void data_manager_sqlite3<number>::pull_BT_time_sample(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_query>& query,
                                                            std::vector<number>& sample, derived_data::template_type type)
 	    {
 		    assert(pipe != nullptr);
@@ -1948,12 +1991,12 @@ namespace transport
 		    sqlite3* db = nullptr;
 		    pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
-        sqlite3_operations::pull_BT_time_sample(db, t_serials, sample, pipe->get_worker_number(), type);
+        sqlite3_operations::pull_BT_time_sample(db, query, sample, pipe->get_worker_number(), type);
 	    }
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_TT_time_sample(datapipe<number>* pipe, const std::vector<unsigned int>& t_serials,
+    void data_manager_sqlite3<number>::pull_TT_time_sample(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_query>& query,
                                                            std::vector<number>& sample, derived_data::template_type type)
 	    {
 		    assert(pipe != nullptr);
@@ -1962,12 +2005,13 @@ namespace transport
 		    sqlite3* db = nullptr;
 		    pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
-        sqlite3_operations::pull_TT_time_sample(db, t_serials, sample, pipe->get_worker_number(), type);
+        sqlite3_operations::pull_TT_time_sample(db, query, sample, pipe->get_worker_number(), type);
 	    }
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_twopf_kconfig_sample(datapipe<number>* pipe, unsigned int id, const std::vector<unsigned int>& k_serials,
+    void data_manager_sqlite3<number>::pull_twopf_kconfig_sample(datapipe<number>* pipe, unsigned int id,
+                                                                 const std::shared_ptr<derived_data::SQL_query>& query,
                                                                  unsigned int t_serial, std::vector<number>& sample,
                                                                  typename datapipe<number>::twopf_type type)
 	    {
@@ -1977,14 +2021,23 @@ namespace transport
 		    sqlite3* db = nullptr;
 		    pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
-        sqlite3_operations::pull_twopf_kconfig_sample(db, id, k_serials, t_serial, sample,
-                                                      (type == datapipe<number>::twopf_real ? sqlite3_operations::real_twopf : sqlite3_operations::imag_twopf),
-                                                      pipe->get_worker_number(), pipe->get_N_fields());
+		    if(type == datapipe<number>::twopf_real)
+			    {
+		        sqlite3_operations::pull_paged_kconfig_sample<number, typename integration_items<number>::twopf_re_item>(db, id, query, t_serial, sample,
+		                                                                                                                 pipe->get_worker_number(), pipe->get_N_fields());
+			    }
+		    else if(type == datapipe<number>::twopf_imag)
+			    {
+		        sqlite3_operations::pull_paged_kconfig_sample<number, typename integration_items<number>::twopf_im_item>(db, id, query, t_serial, sample,
+		                                                                                                                 pipe->get_worker_number(), pipe->get_N_fields());
+			    }
+		    else assert(false);
 	    }
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_threepf_kconfig_sample(datapipe<number>* pipe, unsigned int id, const std::vector<unsigned int>& k_serials,
+    void data_manager_sqlite3<number>::pull_threepf_kconfig_sample(datapipe<number>* pipe, unsigned int id,
+                                                                   const std::shared_ptr<derived_data::SQL_query>& query,
                                                                    unsigned int t_serial, std::vector<number>& sample)
 	    {
         assert(pipe != nullptr);
@@ -1993,12 +2046,14 @@ namespace transport
         sqlite3* db = nullptr;
         pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
-        sqlite3_operations::pull_threepf_kconfig_sample(db, id, k_serials, t_serial, sample, pipe->get_worker_number(), pipe->get_N_fields());
+        sqlite3_operations::pull_paged_kconfig_sample<number, typename integration_items<number>::threepf_item>(db, id, query, t_serial, sample,
+                                                                                                                pipe->get_worker_number(), pipe->get_N_fields());
 	    }
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_tensor_twopf_kconfig_sample(datapipe<number>* pipe, unsigned int id, const std::vector<unsigned int>& k_serials,
+    void data_manager_sqlite3<number>::pull_tensor_twopf_kconfig_sample(datapipe<number>* pipe, unsigned int id,
+                                                                        const std::shared_ptr<derived_data::SQL_query>& query,
                                                                         unsigned int t_serial, std::vector<number>& sample)
       {
         assert(pipe != nullptr);
@@ -2007,12 +2062,13 @@ namespace transport
         sqlite3* db = nullptr;
         pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
-        sqlite3_operations::pull_tensor_twopf_kconfig_sample(db, id, k_serials, t_serial, sample, pipe->get_worker_number());
+        sqlite3_operations::pull_paged_kconfig_sample<number, typename integration_items<number>::tensor_twopf_item>(db, id, query, t_serial, sample,
+                                                                                                                     pipe->get_worker_number(), pipe->get_N_fields());
       }
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_zeta_twopf_kconfig_sample(datapipe<number>* pipe, const std::vector<unsigned int>& k_serials,
+    void data_manager_sqlite3<number>::pull_zeta_twopf_kconfig_sample(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_query>& query,
                                                                       unsigned int t_serial, std::vector<number>& sample)
 	    {
         assert(pipe != nullptr);
@@ -2021,12 +2077,13 @@ namespace transport
         sqlite3* db = nullptr;
         pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
-        sqlite3_operations::pull_zeta_twopf_kconfig_sample(db, k_serials, t_serial, sample, pipe->get_worker_number());
+        sqlite3_operations::pull_unpaged_kconfig_sample<number, typename postintegration_items<number>::zeta_twopf_item>(db, query, t_serial, sample,
+                                                                                                                         pipe->get_worker_number());
 	    }
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_zeta_threepf_kconfig_sample(datapipe<number>* pipe, const std::vector<unsigned int>& k_serials,
+    void data_manager_sqlite3<number>::pull_zeta_threepf_kconfig_sample(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_query>& query,
                                                                         unsigned int t_serial, std::vector<number>& sample)
 	    {
         assert(pipe != nullptr);
@@ -2035,12 +2092,13 @@ namespace transport
         sqlite3* db = nullptr;
         pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
-        sqlite3_operations::pull_zeta_threepf_kconfig_sample(db, k_serials, t_serial, sample, pipe->get_worker_number());
+        sqlite3_operations::pull_unpaged_kconfig_sample<number, typename postintegration_items<number>::zeta_threepf_item>(db, query, t_serial, sample,
+                                                                                                                           pipe->get_worker_number());
 	    }
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_zeta_redbsp_kconfig_sample(datapipe<number>* pipe, const std::vector<unsigned int>& k_serials,
+    void data_manager_sqlite3<number>::pull_zeta_redbsp_kconfig_sample(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_query>& query,
                                                                        unsigned int t_serial, std::vector<number>& sample)
 	    {
         assert(pipe != nullptr);
@@ -2049,8 +2107,23 @@ namespace transport
         sqlite3* db = nullptr;
         pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
-        sqlite3_operations::pull_zeta_redbsp_kconfig_sample(db, k_serials, t_serial, sample, pipe->get_worker_number());
+        sqlite3_operations::pull_unpaged_kconfig_sample<number, typename postintegration_items<number>::zeta_redbsp_item>(db, query, t_serial, sample,
+                                                                                                                          pipe->get_worker_number());
 	    }
+
+
+    template <typename number>
+    void data_manager_sqlite3<number>::pull_k_statistics_sample(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_query>& query,
+                                                                std::vector<kconfiguration_statistics>& data)
+      {
+        assert(pipe != nullptr);
+        if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_DATAMGR_NULL_DATAPIPE);
+
+        sqlite3* db = nullptr;
+        pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
+
+        sqlite3_operations::pull_k_statistics_sample(db, query, data, pipe->get_worker_number());
+      }
 
 
 		template <typename number>
@@ -2158,9 +2231,9 @@ namespace transport
 
 
     template <typename number>
-    data_manager<number>* data_manager_factory(unsigned int bcap, unsigned int dcap, unsigned int zcap)
+    data_manager<number>* data_manager_factory(unsigned int bcap, unsigned int dcap)
       {
-        return new data_manager_sqlite3<number>(bcap, dcap, zcap);
+        return new data_manager_sqlite3<number>(bcap, dcap);
       }
 
 
