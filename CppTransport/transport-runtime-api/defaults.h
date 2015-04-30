@@ -27,6 +27,7 @@
 
 #define __CPP_TRANSPORT_DEFAULT_COLLECT_INITIAL_CONDITIONS (false)
 
+// store wavenumbers to a relative precision of 1 part in 1E5
 #define __CPP_TRANSPORT_DEFAULT_KCONFIG_SEARCH_PRECISION   (1E-5)
 
 #define __CPP_TRANSPORT_DEFAULT_PYTHON_PATH                "/usr/bin/python"

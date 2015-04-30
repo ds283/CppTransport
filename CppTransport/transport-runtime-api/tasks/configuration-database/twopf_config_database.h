@@ -378,7 +378,7 @@ namespace transport
 
 		        bool operator()(const std::pair<unsigned int, twopf_kconfig_record>& a)
 			        {
-		            return(fabs(this->k_conventional - a.second->k_conventional) < __CPP_TRANSPORT_DEFAULT_KCONFIG_SEARCH_PRECISION);
+		            return(fabs((this->k_conventional - a.second->k_conventional)/this->k_conventional) < __CPP_TRANSPORT_DEFAULT_KCONFIG_SEARCH_PRECISION);
 			        }
 
 		      private:
