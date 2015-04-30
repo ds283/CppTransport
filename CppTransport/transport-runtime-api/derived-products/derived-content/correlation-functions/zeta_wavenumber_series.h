@@ -118,8 +118,8 @@ namespace transport
 			    : derived_line<number>(reader, finder),
 			      zeta_twopf_line<number>(reader),
 			      wavenumber_series<number>(reader),
-            tquery(reader),
-            kquery(reader)
+            tquery(reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]),
+            kquery(reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY])
 			    {
 			    }
 
@@ -140,12 +140,12 @@ namespace transport
 		        typename datapipe<number>::kconfig_zeta_handle&  z_handle  = pipe.new_kconfig_zeta_handle(this->kquery);
 
             // pull time-configuration information from the database
-		        time_config_tag<number> t_tag = pipe.new_time_config_tag();
-		        const std::vector< time_config > t_values = tc_handle.lookup_tag(t_tag);
+		        time_config_tag<number>        t_tag    = pipe.new_time_config_tag();
+		        const std::vector<time_config> t_values = tc_handle.lookup_tag(t_tag);
 
 		        // pull k-configuration information from the database
-		        twopf_kconfig_tag<number> k_tag = pipe.new_twopf_kconfig_tag();
-		        const typename std::vector< twopf_kconfig > k_values = kc_handle.lookup_tag(k_tag);
+		        twopf_kconfig_tag<number>                 k_tag    = pipe.new_twopf_kconfig_tag();
+		        const typename std::vector<twopf_kconfig> k_values = kc_handle.lookup_tag(k_tag);
 
 		        // loop through all components of the twopf, for each t-configuration we use, pulling data from the database
 		        for(std::vector<time_config>::const_iterator t = t_values.begin(); t != t_values.end(); ++t)
@@ -157,8 +157,8 @@ namespace transport
 				        if(this->dimensionless)
 					        {
 						        assert(line_data.size() == k_values.size());
-                    typename std::vector<number>::iterator l_pos = line_data.begin();
-                    std::vector<twopf_kconfig>::const_iterator k_pos = k_values.begin();
+				            typename std::vector<number>::iterator     l_pos = line_data.begin();
+				            std::vector<twopf_kconfig>::const_iterator k_pos = k_values.begin();
 						        for(; l_pos != line_data.end() && k_pos != k_values.end(); ++l_pos, ++k_pos)
 							        {
 								        *l_pos *= k_pos->k_comoving * k_pos->k_comoving * k_pos->k_comoving / (2.0*M_PI*M_PI);
@@ -239,8 +239,8 @@ namespace transport
 			    {
 		        writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_TWOPF_WAVENUMBER_SERIES);
 
-            this->tquery.serialize(writer);
-            this->kquery.serialize(writer);
+            this->tquery.serialize(writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]);
+            this->kquery.serialize(writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY]);
 
 		        this->derived_line<number>::serialize(writer);
 		        this->zeta_twopf_line<number>::serialize(writer);
@@ -338,8 +338,8 @@ namespace transport
 			    : derived_line<number>(reader, finder),
 			      zeta_threepf_line<number>(reader),
 			      wavenumber_series<number>(reader),
-            tquery(reader),
-            kquery(reader)
+            tquery(reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]),
+            kquery(reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY])
 			    {
 			    }
 
@@ -441,8 +441,8 @@ namespace transport
 			    {
 		        writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_THREEPF_WAVENUMBER_SERIES);
 
-            this->tquery.serialize(writer);
-            this->kquery.serialize(writer);
+            this->tquery.serialize(writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]);
+            this->kquery.serialize(writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY]);
 
 		        this->derived_line<number>::serialize(writer);
 		        this->zeta_threepf_line<number>::serialize(writer);
@@ -540,8 +540,8 @@ namespace transport
 			    : derived_line<number>(reader, finder),
 			      zeta_reduced_bispectrum_line<number>(reader),
 			      wavenumber_series<number>(reader),
-            tquery(reader),
-            kquery(reader)
+            tquery(reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]),
+            kquery(reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY])
 			    {
 			    }
 
@@ -641,8 +641,8 @@ namespace transport
 			    {
 		        writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_REDUCED_BISPECTRUM_WAVENUMBER_SERIES);
 
-            this->tquery.serialize(writer);
-            this->kquery.serialize(writer);
+            this->tquery.serialize(writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]);
+            this->kquery.serialize(writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY]);
 
 		        this->derived_line<number>::serialize(writer);
 		        this->zeta_reduced_bispectrum_line<number>::serialize(writer);

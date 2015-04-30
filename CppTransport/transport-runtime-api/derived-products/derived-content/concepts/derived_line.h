@@ -79,12 +79,13 @@
 #define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_FNL_TIME_SERIES                           "fNL-time-series"
 #define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_R_TIME_SERIES                             "r-time-series"
 #define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_R_WAVENUMBER_SERIES                       "r-k-series"
+#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_INTEGRATION_COST                          "integration-cost"
 
 
 // common serialization groups used by derived products
-#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_SERIAL_NUMBERS                          "kconfig-serial-numbers"
+#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY                                   "kconfig-query"
 
-#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_SERIAL_NUMBERS                          "time-serial-numbers"
+#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY                                   "time-query"
 
 #define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_KT                          "use-kt-label"
 #define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_ALPHA                       "use-alpha-label"

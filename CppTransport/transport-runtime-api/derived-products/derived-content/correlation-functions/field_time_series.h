@@ -131,7 +131,7 @@ namespace transport
 			      time_series<number>(reader),
 			      gadget(),
 			      active_indices(reader),
-			      tquery(reader)
+			      tquery(reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY])
 			    {
 				    assert(this->parent_task != nullptr);
 		        gadget.set_task(this->parent_task, finder);
@@ -161,7 +161,7 @@ namespace transport
 		        writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_BACKGROUND);
 
 		        this->active_indices.serialize(writer);
-		        this->tquery.serialize(writer);
+		        this->tquery.serialize(writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]);
 
 		        this->time_series<number>::serialize(writer);
 				    this->derived_line<number>::serialize(writer);
@@ -350,8 +350,8 @@ namespace transport
 			    : derived_line<number>(reader, finder),
 			      twopf_line<number>(reader, finder),
 			      time_series<number>(reader),
-			      tquery(reader),
-			      kquery(reader)
+			      tquery(reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]),
+			      kquery(reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY])
 			    {
 			    }
 
@@ -477,8 +477,8 @@ namespace transport
 			    {
 		        writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TWOPF_TIME_SERIES);
 
-		        this->tquery.serialize(writer);
-		        this->kquery.serialize(writer);
+		        this->tquery.serialize(writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]);
+		        this->kquery.serialize(writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY]);
 
 				    this->derived_line<number>::serialize(writer);
 				    this->twopf_line<number>::serialize(writer);
@@ -580,8 +580,8 @@ namespace transport
 			    : derived_line<number>(reader, finder),
 		        threepf_line<number>(reader, finder),
 		        time_series<number>(reader),
-		        tquery(reader),
-		        kquery(reader)
+		        tquery(reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]),
+		        kquery(reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY])
 			    {
 			    }
 
@@ -704,8 +704,8 @@ namespace transport
 			    {
 		        writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_TIME_SERIES);
 
-		        this->tquery.serialize(writer);
-		        this->kquery.serialize(writer);
+		        this->tquery.serialize(writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]);
+		        this->kquery.serialize(writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY]);
 
 		        this->derived_line<number>::serialize(writer);
 				    this->threepf_line<number>::serialize(writer);

@@ -13,7 +13,7 @@
 #include "transport-runtime-api/derived-products/derived-content/SQL_query/detail/SQL_query.h"
 
 
-#define __CPP_TRANSPORT_NODE_SQL_TIME_QUERY_ROOT "time-query"
+#define __CPP_TRANSPORT_NODE_SQL_TIME_QUERY_TYPE "time-query"
 #define __CPP_TRANSPORT_NODE_SQL_TIME_QUERY      "sql"
 
 
@@ -84,14 +84,15 @@ namespace transport
 
 
         SQL_time_config_query::SQL_time_config_query(Json::Value& reader)
-	        : query(reader[__CPP_TRANSPORT_NODE_SQL_TIME_QUERY_ROOT][__CPP_TRANSPORT_NODE_SQL_TIME_QUERY].asString())
 	        {
+		        query = reader[__CPP_TRANSPORT_NODE_SQL_TIME_QUERY].asString();
 	        }
 
 
         void SQL_time_config_query::serialize(Json::Value& writer) const
 	        {
-            writer[__CPP_TRANSPORT_NODE_SQL_TIME_QUERY_ROOT][__CPP_TRANSPORT_NODE_SQL_TIME_QUERY] = this->query;
+            writer[__CPP_TRANSPORT_NODE_SQL_QUERY_TYPE] = std::string(__CPP_TRANSPORT_NODE_SQL_TIME_QUERY_TYPE);
+            writer[__CPP_TRANSPORT_NODE_SQL_TIME_QUERY] = this->query;
 	        }
 
 

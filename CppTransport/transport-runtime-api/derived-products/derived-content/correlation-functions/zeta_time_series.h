@@ -123,8 +123,8 @@ namespace transport
           : derived_line<number>(reader, finder),
             zeta_twopf_line<number>(reader),
             time_series<number>(reader),
-            tquery(reader),
-            kquery(reader)
+            tquery(reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]),
+            kquery(reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY])
           {
           }
 
@@ -234,8 +234,8 @@ namespace transport
           {
             writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_TWOPF_TIME_SERIES);
 
-            this->tquery.serialize(writer);
-            this->kquery.serialize(writer);
+            this->tquery.serialize(writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]);
+            this->kquery.serialize(writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY]);
 
             this->derived_line<number>::serialize(writer);
             this->zeta_twopf_line<number>::serialize(writer);
@@ -331,8 +331,8 @@ namespace transport
           : derived_line<number>(reader, finder),
             zeta_threepf_line<number>(reader),
             time_series<number>(reader),
-            tquery(reader),
-            kquery(reader)
+            tquery(reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]),
+            kquery(reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY])
           {
           }
 
@@ -433,8 +433,8 @@ namespace transport
           {
             writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_THREEPF_TIME_SERIES);
 
-            this->tquery.serialize(writer);
-            this->kquery.serialize(writer);
+            this->tquery.serialize(writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]);
+            this->kquery.serialize(writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY]);
 
             this->derived_line<number>::serialize(writer);
             this->zeta_threepf_line<number>::serialize(writer);
@@ -530,8 +530,8 @@ namespace transport
           : derived_line<number>(reader, finder),
             zeta_reduced_bispectrum_line<number>(reader),
             time_series<number>(reader),
-            tquery(reader),
-            kquery(reader)
+            tquery(reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]),
+            kquery(reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY])
           {
           }
 
@@ -629,8 +629,8 @@ namespace transport
           {
             writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_REDUCED_BISPECTRUM_TIME_SERIES);
 
-            this->tquery.serialize(writer);
-            this->kquery.serialize(writer);
+            this->tquery.serialize(writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]);
+            this->kquery.serialize(writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY]);
 
             this->derived_line<number>::serialize(writer);
             this->zeta_reduced_bispectrum_line<number>::serialize(writer);

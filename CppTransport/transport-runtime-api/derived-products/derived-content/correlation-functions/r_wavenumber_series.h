@@ -116,8 +116,8 @@ namespace transport
 					: derived_line<number>(reader, finder),
 		        r_line<number>(reader, finder),
 		        wavenumber_series<number>(reader),
-            tquery(reader),
-            kquery(reader)
+            tquery(reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]),
+            kquery(reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY])
 			    {
 			    }
 
@@ -136,12 +136,12 @@ namespace transport
 		        std::vector<double> w_axis = this->pull_kconfig_axis(pipe, this->kquery);
 
 				    // set up cache handles
-				    typename datapipe<number>::time_config_handle& tc_handle = pipe.new_time_config_handle(this->tquery);
-				    typename datapipe<number>::kconfig_zeta_handle& z_handle = pipe.new_kconfig_zeta_handle(this->kquery);
+		        typename datapipe<number>::time_config_handle & tc_handle = pipe.new_time_config_handle(this->tquery);
+		        typename datapipe<number>::kconfig_zeta_handle& z_handle  = pipe.new_kconfig_zeta_handle(this->kquery);
 
 				    // pull time-configuration data from the database
-				    time_config_tag<number> t_tag = pipe.new_time_config_tag();
-				    const std::vector< time_config > t_values = tc_handle.lookup_tag(t_tag);
+		        time_config_tag<number>        t_tag    = pipe.new_time_config_tag();
+		        const std::vector<time_config> t_values = tc_handle.lookup_tag(t_tag);
 
 		        std::vector< std::vector<number> > zeta_data;
 				    zeta_data.resize(t_values.size());
@@ -255,8 +255,8 @@ namespace transport
 			    {
 		        writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_R_WAVENUMBER_SERIES);
 
-            this->tquery.serialize(writer);
-            this->kquery.serialize(writer);
+            this->tquery.serialize(writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]);
+            this->kquery.serialize(writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY]);
 
 		        this->derived_line<number>::serialize(writer);
 		        this->r_line<number>::serialize(writer);

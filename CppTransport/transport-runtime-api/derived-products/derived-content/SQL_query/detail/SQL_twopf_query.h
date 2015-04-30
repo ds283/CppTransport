@@ -13,7 +13,7 @@
 #include "transport-runtime-api/derived-products/derived-content/SQL_query/detail/SQL_query.h"
 
 
-#define __CPP_TRANSPORT_NODE_SQL_TWOPF_KCONFIG_QUERY_ROOT "twopf-query"
+#define __CPP_TRANSPORT_NODE_SQL_TWOPF_KCONFIG_QUERY_TYPE "twopf-query"
 #define __CPP_TRANSPORT_NODE_SQL_TWOPF_KCONFIG_QUERY      "sql"
 
 
@@ -84,14 +84,15 @@ namespace transport
 
 
         SQL_twopf_kconfig_query::SQL_twopf_kconfig_query(Json::Value& reader)
-	        : query(reader[__CPP_TRANSPORT_NODE_SQL_TWOPF_KCONFIG_QUERY_ROOT][__CPP_TRANSPORT_NODE_SQL_TWOPF_KCONFIG_QUERY].asString())
 	        {
+            query = reader[__CPP_TRANSPORT_NODE_SQL_TWOPF_KCONFIG_QUERY].asString();
 	        }
 
 
         void SQL_twopf_kconfig_query::serialize(Json::Value& writer) const
 	        {
-            writer[__CPP_TRANSPORT_NODE_SQL_TWOPF_KCONFIG_QUERY_ROOT][__CPP_TRANSPORT_NODE_SQL_TWOPF_KCONFIG_QUERY] = this->query;
+            writer[__CPP_TRANSPORT_NODE_SQL_QUERY_TYPE]          = std::string(__CPP_TRANSPORT_NODE_SQL_TWOPF_KCONFIG_QUERY_TYPE);
+            writer[__CPP_TRANSPORT_NODE_SQL_TWOPF_KCONFIG_QUERY] = this->query;
 	        }
 
 

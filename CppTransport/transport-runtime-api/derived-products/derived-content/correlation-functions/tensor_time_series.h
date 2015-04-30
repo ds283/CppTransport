@@ -124,8 +124,8 @@ namespace transport
 			    : derived_line<number>(reader, finder),
 			      tensor_twopf_line<number>(reader, finder),
 			      time_series<number>(reader),
-            tquery(reader),
-            kquery(reader)
+            tquery(reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]),
+            kquery(reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY])
 			    {
 			    }
 
@@ -141,8 +141,8 @@ namespace transport
 		        const std::vector<double> t_axis = this->pull_time_axis(pipe, this->tquery);
 
 		        // set up cache handles
-		        typename datapipe<number>::twopf_kconfig_handle& k_handle = pipe.new_twopf_kconfig_handle(this->kquery);
-		        typename datapipe<number>::time_data_handle& t_handle = pipe.new_time_data_handle(this->tquery);
+            typename datapipe<number>::twopf_kconfig_handle& k_handle = pipe.new_twopf_kconfig_handle(this->kquery);
+            typename datapipe<number>::time_data_handle    & t_handle = pipe.new_time_data_handle(this->tquery);
 
 		        // pull k-configuration information from the database
 		        twopf_kconfig_tag<number> k_tag = pipe.new_twopf_kconfig_tag();
@@ -236,8 +236,8 @@ namespace transport
 			    {
 				    writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TENSOR_TWOPF_TIME_SERIES);
 
-            this->tquery.serialize(writer);
-            this->kquery.serialize(writer);
+            this->tquery.serialize(writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]);
+            this->kquery.serialize(writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY]);
 
 				    this->derived_line<number>::serialize(writer);
 				    this->tensor_twopf_line<number>::serialize(writer);

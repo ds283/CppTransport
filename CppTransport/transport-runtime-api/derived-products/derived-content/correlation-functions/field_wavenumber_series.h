@@ -52,6 +52,8 @@ namespace transport
 
             // DERIVE LINES -- implements a 'derived_line' interface
 
+          public:
+
             //! generate data lines for plotting
             virtual void derive_lines(datapipe<number>& pipe, std::list<data_line<number> >& lines,
                                       const std::list<std::string>& tags) const override;
@@ -64,6 +66,8 @@ namespace transport
 
 
             // CLONE
+
+          public:
 
             //! self-replicate
             virtual twopf_wavenumber_series<number>* clone() const override { return new twopf_wavenumber_series<number>(static_cast<const twopf_wavenumber_series<number>&>(*this)); }
@@ -117,8 +121,8 @@ namespace transport
 	        : derived_line<number>(reader, finder),
 	          twopf_line<number>(reader, finder),
 	          wavenumber_series<number>(reader),
-	          tquery(reader),
-	          kquery(reader)
+	          tquery(reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]),
+	          kquery(reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY])
 	        {
 	        }
 
@@ -251,8 +255,8 @@ namespace transport
 	        {
             writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TWOPF_WAVENUMBER_SERIES);
 
-            this->tquery.serialize(writer);
-            this->kquery.serialize(writer);
+            this->tquery.serialize(writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]);
+            this->kquery.serialize(writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY]);
 
             this->derived_line<number>::serialize(writer);
             this->twopf_line<number>::serialize(writer);
@@ -356,8 +360,8 @@ namespace transport
 	        : derived_line<number>(reader, finder),
 	          threepf_line<number>(reader, finder),
 	          wavenumber_series<number>(reader),
-	          tquery(reader),
-	          kquery(reader)
+	          tquery(reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]),
+	          kquery(reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY])
 	        {
 	        }
 
@@ -375,14 +379,14 @@ namespace transport
             std::vector<double> w_axis = this->pull_kconfig_axis(pipe, this->kquery);
 
             // set up cache handles
-            typename datapipe<number>::time_config_handle& tc_handle = pipe.new_time_config_handle(this->tquery);
-            typename datapipe<number>::time_data_handle& t_handle = pipe.new_time_data_handle(this->tquery);
+            typename datapipe<number>::time_config_handle    & tc_handle = pipe.new_time_config_handle(this->tquery);
+            typename datapipe<number>::time_data_handle      & t_handle  = pipe.new_time_data_handle(this->tquery);
             typename datapipe<number>::threepf_kconfig_handle& kc_handle = pipe.new_threepf_kconfig_handle(this->kquery);
-            typename datapipe<number>::kconfig_data_handle& k_handle = pipe.new_kconfig_data_handle(this->kquery);
+            typename datapipe<number>::kconfig_data_handle   & k_handle  = pipe.new_kconfig_data_handle(this->kquery);
 
             // pull time-configuration information from the database
-            time_config_tag<number> t_tag = pipe.new_time_config_tag();
-            const std::vector< time_config > t_values = tc_handle.lookup_tag(t_tag);
+            time_config_tag<number>        t_tag    = pipe.new_time_config_tag();
+            const std::vector<time_config> t_values = tc_handle.lookup_tag(t_tag);
 
             // pull the background field configuration for each time sample point
             std::vector< std::vector<number> > background(t_values.size());
@@ -392,8 +396,8 @@ namespace transport
                 const std::vector<number> bg_line = t_handle.lookup_tag(tag);
                 assert(bg_line.size() == t_values.size());
 
-                typename std::vector< std::vector<number> >::iterator bg_pos = background.begin();
-                typename std::vector<number>::const_iterator l_pos = bg_line.begin();
+                typename std::vector<std::vector<number> >::iterator bg_pos = background.begin();
+                typename std::vector<number>::const_iterator         l_pos  = bg_line.begin();
                 for(; bg_pos != background.end() && l_pos != bg_line.end(); ++bg_pos, ++l_pos)
 	                {
                     bg_pos->push_back(*l_pos);
@@ -401,8 +405,8 @@ namespace transport
 	            }
 
             // extract k-configuration data
-            threepf_kconfig_tag<number> k_tag = pipe.new_threepf_kconfig_tag();
-            std::vector< threepf_kconfig > configs = kc_handle.lookup_tag(k_tag);
+            threepf_kconfig_tag<number>  k_tag   = pipe.new_threepf_kconfig_tag();
+            std::vector<threepf_kconfig> configs = kc_handle.lookup_tag(k_tag);
 
             // loop through all components of the twopf, for each t-configuration we use, pulling data from the database
             typename std::vector< std::vector<number> >::const_iterator bg_pos = background.begin();
@@ -499,8 +503,8 @@ namespace transport
 	        {
             writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_WAVENUMBER_SERIES);
 
-            this->tquery.serialize(writer);
-            this->kquery.serialize(writer);
+            this->tquery.serialize(writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]);
+            this->kquery.serialize(writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY]);
 
             this->derived_line<number>::serialize(writer);
             this->threepf_line<number>::serialize(writer);
