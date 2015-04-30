@@ -46,7 +46,9 @@ namespace transport
 						unset_axis
 					} axis_value;
 
-		    typedef enum { field_value, momentum_value, correlation_function_value, fNL_value, r_value, spectral_index_value, dimensionless_value } value_type;
+		    typedef enum { field_value, momentum_value, correlation_function_value, fNL_value,
+		                   r_value, spectral_index_value, dimensionless_value,
+			                 time_value, steps_value } value_type;
 
 				inline std::string value_type_to_string_non_LaTeX(value_type type)
 					{
@@ -59,6 +61,8 @@ namespace transport
 						    case r_value:                    return std::string(__CPP_TRANSPORT_VALUE_NON_LATEX_R);
 						    case spectral_index_value:       return std::string(__CPP_TRANSPORT_VALUE_NON_LATEX_SPECTRAL_INDEX);
 						    case dimensionless_value:        return std::string("");
+						    case time_value:                 return std::string(__CPP_TRANSPORT_VALUE_NON_LATEX_SECONDS);
+						    case steps_value:                return std::string(__CPP_TRANSPORT_VALUE_NON_LATEX_STEPS);
 						    default:
 							    {
 						        std::stringstream msg;
@@ -79,6 +83,8 @@ namespace transport
 		            case r_value:                    return std::string(__CPP_TRANSPORT_VALUE_LATEX_R);
 		            case spectral_index_value:       return std::string(__CPP_TRANSPORT_VALUE_LATEX_SPECTRAL_INDEX);
 		            case dimensionless_value:        return std::string("");
+		            case time_value:                 return std::string(__CPP_TRANSPORT_VALUE_LATEX_SECONDS);
+		            case steps_value:                return std::string(__CPP_TRANSPORT_VALUE_LATEX_STEPS);
 		            default:
 			            {
 		                std::stringstream msg;

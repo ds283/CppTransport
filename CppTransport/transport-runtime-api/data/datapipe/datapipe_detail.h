@@ -383,6 +383,7 @@ namespace transport
         typedef linecache::serial_group< std::vector<time_config>, time_config_tag<number>, derived_data::SQL_time_config_query, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE > time_config_handle;
         typedef linecache::serial_group< std::vector<twopf_kconfig>, twopf_kconfig_tag<number>, derived_data::SQL_twopf_kconfig_query, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE > twopf_kconfig_handle;
         typedef linecache::serial_group< std::vector<threepf_kconfig>, threepf_kconfig_tag<number>, derived_data::SQL_threepf_kconfig_query, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE > threepf_kconfig_handle;
+		    typedef linecache::serial_group< std::vector<kconfiguration_statistics>, k_statistics_tag<number>, derived_data::SQL_query, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE > k_statistics_handle;
         typedef linecache::serial_group< std::vector<number>, data_tag<number>, derived_data::SQL_query, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE > time_data_handle;
         typedef linecache::serial_group< std::vector<number>, data_tag<number>, derived_data::SQL_query, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE > kconfig_data_handle;
         typedef linecache::serial_group< std::vector<number>, data_tag<number>, derived_data::SQL_query, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE > time_zeta_handle;
@@ -396,6 +397,10 @@ namespace transport
 
         //! Generate a serial-group handle for a set of threepf-kconfiguration serial numbers
         threepf_kconfig_handle& new_threepf_kconfig_handle(const derived_data::SQL_threepf_kconfig_query& query) const;
+
+		    //! Generate a serial-group handle for a set of k-configuration statistics; accepts any SQL_query object, but
+		    //! it needs to be a query over k-modes otherwise the result will be garbage
+		    k_statistics_handle& new_k_statistics_handle(const derived_data::SQL_query& query) const;
 
         //! Generate a serial-group handle for a set of time-data serial numbers
         time_data_handle& new_time_data_handle(const derived_data::SQL_time_config_query& query) const;
@@ -423,6 +428,9 @@ namespace transport
 
         //! Generate a new threepf-kconfiguration tag
         threepf_kconfig_tag<number> new_threepf_kconfig_tag();
+
+		    //! Generate a new k-configuration statistics tag
+		    k_statistics_tag<number> new_k_statistics_tag();
 
         //! Generate a new background tag
         background_time_data_tag<number> new_background_time_data_tag(unsigned int id);
@@ -911,6 +919,16 @@ namespace transport
 	    }
 
 
+		template <typename number>
+		typename datapipe<number>::k_statistics_handle& datapipe<number>::new_k_statistics_handle(const derived_data::SQL_query& query) const
+			{
+		    assert(this->validate_attached());
+		    if(!this->validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+
+		    return(this->statistics_cache_table->get_serial_handle(query));
+			}
+
+
     template <typename number>
     typename datapipe<number>::time_data_handle& datapipe<number>::new_time_data_handle(const derived_data::SQL_time_config_query& query) const
 	    {
@@ -990,6 +1008,13 @@ namespace transport
 	    {
         return threepf_kconfig_tag<number>(this);
 	    }
+
+
+		template <typename number>
+		k_statistics_tag<number> datapipe<number>::new_k_statistics_tag()
+			{
+				return k_statistics_tag<number>(this);
+			}
 
 
     template <typename number>

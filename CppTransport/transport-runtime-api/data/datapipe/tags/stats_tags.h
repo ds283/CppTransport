@@ -101,7 +101,7 @@ namespace transport
         std::shared_ptr< output_group_record<integration_payload> > record = pipe->get_attached_integration_record();
         if(!record) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
-        if(!record->get_payload().has_statistics())
+        if(record->get_payload().has_statistics())
 	        {
             this->pipe->database_timer.resume();
             this->pipe->pull_statistics.k_statistics(this->pipe, query, data);

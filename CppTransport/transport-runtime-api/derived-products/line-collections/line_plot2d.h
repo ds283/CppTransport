@@ -554,8 +554,9 @@ namespace transport
 				    out << "plt.figure()" << std::endl;
 
 						unsigned int current_id = 0;
-				    std::vector< std::vector<unsigned int> > line_ids;      // records the unique id number for each line; used later when allocating lines to axes
-				    std::vector< std::vector<std::string> >  line_labels;   // records the label for each line
+				    std::vector<std::vector<unsigned int> >   line_ids;       // records the unique id number for each line; used later when allocating lines to axes
+				    std::vector<std::vector<std::string> >    line_labels;    // records the label for each line
+				    std::vector<std::vector<data_line_type> > line_types;     // records the type for each line
 
 						// loop through all bins, writing out arrays
 						// representing the values in each line, and recording
@@ -568,15 +569,18 @@ namespace transport
 								line_labels.resize(line_labels.size()+1);
 						    std::vector< std::vector<std::string> >::iterator current_label_bin = --line_labels.end();
 
+								line_types.resize(line_types.size()+1);
+						    std::vector< std::vector<data_line_type> >::iterator current_type_bin = --line_types.end();
+
 								// loop through all lines in this bin
 								for(typename std::vector< typename line_collection<number>::output_line >::const_iterator u = t->begin(); u != t->end(); ++u)
 									{
 									  current_id_bin->push_back(current_id);
 										current_label_bin->push_back(u->get_label());
+										current_type_bin->push_back(u->get_data_line_type());
 
 								    const std::deque< typename line_collection<number>::output_value >& line_data = u->get_values();
 								    assert(line_data.size() == axis.size());
-
 
 										out << "x" << current_id << " = [ ";
 
@@ -613,19 +617,37 @@ namespace transport
 
 						// now allocate lines to axes
 						unsigned int bin_count = 1;
-				    std::vector< std::vector<unsigned int> >::const_iterator t = line_ids.begin();
-				    std::vector< std::vector<std::string> >::const_iterator  u = line_labels.begin();
+				    std::vector<std::vector<unsigned int> >::const_iterator   t = line_ids.begin();
+				    std::vector<std::vector<std::string> >::const_iterator    u = line_labels.begin();
+				    std::vector<std::vector<data_line_type> >::const_iterator v = line_types.begin();
 						for(; t != line_ids.end() && u != line_labels.end(); ++t, ++u, ++bin_count)
 							{
 								if(bin_count == 1) out << "ax1 = plt.gca()" << std::endl;
 								if(bin_count == 2) out << "ax2 = ax1.twinx()" << std::endl;
 
-						    std::vector<unsigned int>::const_iterator tt = t->begin();
-						    std::vector<std::string>::const_iterator  uu = u->begin();
+						    std::vector<unsigned int>::const_iterator   tt = t->begin();
+						    std::vector<std::string>::const_iterator    uu = u->begin();
+						    std::vector<data_line_type>::const_iterator vv = v->begin();
 
-								for(; tt != t->end() && uu != u->end(); ++tt, ++uu)
+								for(; tt != t->end() && uu != u->end() && vv != v->end(); ++tt, ++uu, ++vv)
 									{
-								    out << "ln" << *tt << " = ax" << bin_count << ".errorbar(x" << *tt << ", y" << *tt << ", label=r'" << *uu << "'";
+								    out << "ln" << *tt << " = ax" << bin_count << ".";
+										switch(*vv)
+											{
+										    case continuous_data:
+											    out << "errorbar";
+													break;
+
+										    case scattered_data:
+											    out << "plot";
+													break;
+
+										    default:
+											    assert(false);
+											}
+								    out << "(x" << *tt << ", y" << *tt;
+										if(*vv == scattered_data) out << ", 'o'";
+								    out << ", label=r'" << *uu << "'";
 										if(bin_count == 2 && this->dash_second_axis)
 											{
 												out << ", linestyle='--'";

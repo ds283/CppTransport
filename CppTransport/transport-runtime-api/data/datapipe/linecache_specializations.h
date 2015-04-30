@@ -35,6 +35,12 @@ namespace transport
         unsigned int elementsof_container(const std::vector<time_config>& container) { return(container.size()); }
 
         template<>
+        unsigned int sizeof_container_element< std::vector<kconfiguration_statistics> >() { return(sizeof(kconfiguration_statistics)); }
+
+        template<>
+        unsigned int elementsof_container(const std::vector<kconfiguration_statistics>& container) { return(container.size()); }
+
+        template<>
         unsigned int sizeof_container_element< std::vector<double> >() { return(sizeof(double)); }
 
         template<>

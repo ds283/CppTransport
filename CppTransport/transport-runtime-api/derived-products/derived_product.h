@@ -39,7 +39,6 @@
 
 #define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_LINE_PLOT2D          "line-plot2d"
 #define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_LINE_ASCIITABLE      "line-asciitable"
-#define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_INTEGRATION_ANALYSIS "integration-analysis"
 
 #define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_FILENAME             "filename"
 

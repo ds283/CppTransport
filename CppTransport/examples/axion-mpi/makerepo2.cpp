@@ -100,9 +100,10 @@ int main(int argc, char* argv[])
     transport::stepping_range<double> kts   (ktmin, ktmax, k_samples, transport::linear_stepping);
     transport::stepping_range<double> alphas(alphamin, alphamax, a_samples, transport::linear_stepping);
 
-    transport::stepping_range<double> betas_lo(betamin, betamid, lo_b_samples, transport::linear_stepping);
-    transport::stepping_range<double> betas_hi(betamid, betamax, hi_b_samples, transport::logarithmic_top_stepping);
-    transport::aggregation_range<double> betas(betas_lo, betas_hi);
+//    transport::stepping_range<double> betas_lo(betamin, betamid, lo_b_samples, transport::linear_stepping);
+//    transport::stepping_range<double> betas_hi(betamid, betamax, hi_b_samples, transport::logarithmic_top_stepping);
+//    transport::aggregation_range<double> betas(betas_lo, betas_hi);
+    transport::stepping_range<double> betas(betamin, betamax, 100, transport::logarithmic_top_stepping);
 
     // construct a threepf task
     transport::threepf_fls_task<double> tk3("axion.threepf-1", ics, times, kts, alphas, betas, ThreepfStoragePolicy(), false);
@@ -315,7 +316,8 @@ int main(int argc, char* argv[])
 		tk3_redbsp_sqk3_plot.set_legend_position(transport::derived_data::centre_right);
 
 
-    // 8. SPECTRAL INDEX OF LATE TIME REDUCED BISPECTRUM -- FIXED k_t, ISOSCELES TRIANGLES, VARYING k3/k_t
+    // 8. SPECTRAL INDEX OF LATE TIME REDUCED BISPECTRUM -- FIXED k_t, ISOSCELES TRIANGLES, VARYING k3/k_t (SAME AS 6,7)
+		// spectral index of 7
 
     transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_sqk3_lo_index(ztk3, last_time, equilateral_lo_kt);
     tk3_zeta_redbsp_sqk3_lo_index.set_klabel_meaning(transport::derived_data::conventional);
@@ -337,7 +339,7 @@ int main(int argc, char* argv[])
     tk3_redbsp_sqk3_index_plot.set_log_x(true);
     tk3_redbsp_sqk3_index_plot.set_log_y(false);
     tk3_redbsp_sqk3_index_plot.set_abs_y(false);
-    tk3_redbsp_sqk3_index_plot.set_legend_position(transport::derived_data::centre_right);
+    tk3_redbsp_sqk3_index_plot.set_legend_position(transport::derived_data::bottom_left);
 
 
     // 9. SPECTRAL INDEX OF LATE-TIME ZETA REDUCED BISPECTRUM -- FIXED k3/k_t, ISOSCELES TRIANGLES, VARYING k_t
@@ -371,6 +373,18 @@ int main(int argc, char* argv[])
     tk3_zeta_2spec_index_plot.set_log_x(true);
     tk3_zeta_2spec_index_plot.set_abs_y(false);
 
+
+		// 11. INTEGRATION COST ANALYSIS
+
+    transport::derived_data::cost_wavenumber<double> tk3_cost(tk3, equilateral_squeezed_threepf);
+		tk3_cost.set_current_x_axis_value(transport::derived_data::squeezing_fraction_k3_axis);
+
+    transport::derived_data::wavenumber_series_plot<double> tk3_cost_plot("axion.threepf-1.sqk3-cost", "sqk3-cost.pdf");
+		tk3_cost_plot.add_line(tk3_cost);
+		tk3_cost_plot.set_typeset_with_LaTeX(true);
+		tk3_cost_plot.set_log_x(true);
+		tk3_cost_plot.set_log_y(true);
+
     // OUTPUT TASKS
 
 
@@ -386,6 +400,7 @@ int main(int argc, char* argv[])
     threepf_output.add_element(tk3_redbsp_sqk3_index_plot);
     threepf_output.add_element(tk3_redbsp_spec_index_plot);
     threepf_output.add_element(tk3_zeta_2spec_index_plot);
+		threepf_output.add_element(tk3_cost_plot);
 
     std::cout << "axion.threepf-1 output task:" << std::endl << threepf_output << std::endl;
 

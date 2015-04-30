@@ -26,6 +26,7 @@
 #include "transport-runtime-api/derived-products/derived-content/correlation-functions/fNL_time_series.h"
 #include "transport-runtime-api/derived-products/derived-content/correlation-functions/r_time_series.h"
 #include "transport-runtime-api/derived-products/derived-content/correlation-functions/r_wavenumber_series.h"
+#include "transport-runtime-api/derived-products/derived-content/integration-analysis/cost_wavenumber.h"
 
 
 namespace transport
@@ -61,6 +62,7 @@ namespace transport
                     else if(type == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_FNL_TIME_SERIES)                           return new fNL_time_series<number>(reader, finder);
 		                else if(type == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_R_TIME_SERIES)                             return new r_time_series<number>(reader, finder);
 		                else if(type == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_R_WAVENUMBER_SERIES)                       return new r_wavenumber_series<number>(reader, finder);
+				            else if(type == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_INTEGRATION_COST)                          return new cost_wavenumber<number>(reader, finder);
 
                     std::ostringstream msg;
                     msg << __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_CONTENT_TYPE_UNKNOWN << " '" << type << "'";

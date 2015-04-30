@@ -114,9 +114,10 @@ namespace transport
 
 				      public:
 
-				        output_line(const std::string& l, value_type v)
+				        output_line(const std::string& l, value_type v, data_line_type d)
 					        : label(l),
-				            value(v)
+				            value(v),
+				            data_type(d)
 					        {
 					        }
 
@@ -142,8 +143,12 @@ namespace transport
 				        //! Get label
 				        const std::string& get_label() const { return(this->label); }
 
-						    //! Get type
+						    //! Get value type (inherited from parent line)
 						    value_type get_value_type() const { return(this->value); }
+
+						    //! Get data line type (inherited from parent line)
+						    data_line_type get_data_line_type() const { return(this->data_type); }
+
 
 				        // INTERNAL DATA
 
@@ -154,6 +159,9 @@ namespace transport
 
 						    //! this line's value, inherited from its parent
 						    value_type value;
+
+						    //! this line's data type, inherited from its parent
+						    data_line_type data_type;
 
 				        //! this line's data points
 				        std::deque<output_value> values;
@@ -433,7 +441,7 @@ namespace transport
 				        //    ** the x-axis is logarithmic but there are some nonpositive points
 		            if((!this->log_x || (this->log_x && nonzero_axis)) && (!this->log_y || (this->log_y && nonzero_values)))
 			            {
-		                output.push_back(output_line(this->use_LaTeX ? t->get_LaTeX_label() : t->get_non_LaTeX_label(), t->get_value_type()));
+		                output.push_back(output_line(this->use_LaTeX ? t->get_LaTeX_label() : t->get_non_LaTeX_label(), t->get_value_type(), t->get_data_line_type()));
 		                data_absy.push_back(this->abs_y || need_abs_y);
 
 				            data.push_back(t->get_data_points());
@@ -479,7 +487,7 @@ namespace transport
 		                        if(data[i].size() > 0)
 			                        {
 				                        const std::pair<double, number>& point = data[i].back();
-		                            if(fabs(point.first - next_axis_point) < __CPP_TRANSPORT_AXIS_MERGE_TOLERANCE)   // yes, this line has a match
+		                            if(fabs((point.first - next_axis_point)/point.first) < __CPP_TRANSPORT_AXIS_MERGE_TOLERANCE)   // yes, this line has a match
 			                            {
 		                                output[i].push_front(output_value(data_absy[i] ? fabs(point.second) : point.second));
 

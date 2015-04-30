@@ -259,7 +259,7 @@ namespace transport
 	            << "SELECT"
 	            << " temp.kserial AS kserial,"
 	            << " temp.integration_time AS integration_time,"
-	            << " temp.batch_time AS batch-time,"
+	            << " temp.batch_time AS batch_time,"
 	            << " temp.steps AS steps,"
 	            << " temp.refinements AS refinements,"
 	            << " temp.workgroup AS workgroup,"
@@ -268,10 +268,10 @@ namespace transport
 	            << " workers.back_stepper AS back_stepper,"
 	            << " workers.pert_stepper AS pert_stepper,"
 	            << " workers.hostname AS hostname"
-	            << " FROM (SELECT * FROM" << __CPP_TRANSPORT_SQLITE_STATS_TABLE
+	            << " FROM (SELECT * FROM " << __CPP_TRANSPORT_SQLITE_STATS_TABLE
 	            << " INNER JOIN (" << query->make_query(policy, true) << ") tpf"
 	            << " ON " << __CPP_TRANSPORT_SQLITE_STATS_TABLE << ".kserial=tpf.serial) temp"
-	            << " INNER JOIN " << __CPP_TRANSPORT_SQLITE_WORKERS_TABLE << "workers ON workers.workgroup=temp.workgroup"
+	            << " INNER JOIN " << __CPP_TRANSPORT_SQLITE_WORKERS_TABLE << " workers ON workers.workgroup=temp.workgroup"
 	            << " WHERE temp.worker=workers.worker"
 	            << " ORDER BY temp.kserial;";
 
