@@ -131,13 +131,13 @@ int main(int argc, char* argv[])
     transport::derived_data::SQL_threepf_kconfig_query equilateral_smallest_threepf("ABS(alpha) < 0.01 AND ABS(beta - 1.0/3.0) < 0.01 AND kt_conventional IN (SELECT MIN(kt_conventional) FROM threepf_samples)");
 
     // filter: squeezed, equilateral threepf
-    transport::derived_data::SQL_threepf_kconfig_query equilateral_squeezed_threepf("ABS(beta-0.999)<0.0001 AND ABS(alpha)<0.01 AND (kt_conventional IN (SELECT MAX(kt_conventional) FROM threepf_samples) OR kt_conventional IN (SELECT MIN(kt_conventional) FROM threepf_samples))");
+    transport::derived_data::SQL_threepf_kconfig_query equilateral_squeezed_threepf("ABS(beta-0.999)<0.0001 AND ABS(alpha)<0.01");
 
 		// filter: equilateral with high k_t
-    transport::derived_data::SQL_threepf_kconfig_query equilateral_hi_kt("ABS(alpha) < 0.001 AND ABS(kt_conventional-EXP(1096.63158)) < 0.001");
+    transport::derived_data::SQL_threepf_kconfig_query equilateral_hi_kt("ABS(alpha) < 0.001 AND ABS(kt_conventional-1096.63) < 0.01");
 
     // filter: equilateral with lo k_t
-    transport::derived_data::SQL_threepf_kconfig_query equilateral_lo_kt("ABS(alpha) < 0.001 AND ABS(kt_conventional-20.085536) < 0.001");
+    transport::derived_data::SQL_threepf_kconfig_query equilateral_lo_kt("ABS(alpha) < 0.001 AND ABS(kt_conventional-20.0855) < 0.001");
 
 
     // PLOTS
