@@ -2107,8 +2107,8 @@ namespace transport
         sqlite3* db = nullptr;
         pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
-        sqlite3_operations::pull_unpaged_kconfig_sample<number, typename postintegration_items<number>::zeta_threepf_item>(db, query, t_serial, sample,
-                                                                                                                           pipe->get_worker_number());
+        sqlite3_operations::pull_unpaged_kconfig_sample<number, typename postintegration_items<number>::zeta_redbsp_item>(db, query, t_serial, sample,
+                                                                                                                          pipe->get_worker_number());
 	    }
 
 
