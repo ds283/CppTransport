@@ -426,7 +426,9 @@ namespace transport
 						this->obtain_output(pipe, tags, derived_lines);
 
 						// merge this output onto a single axis
-						// this turns out collection of data_lines into a collection of output_lines
+						// this turns our collection of data_lines into a collection of output_lines.
+						// The functionality isn't really needed for line_plot2d (we don't have to plot every line
+						// using the same x-axis), so later we'll strip out any masked values this generates
 				    std::deque<double> axis;
 				    typename std::vector< typename line_collection<number>::output_line > output_lines;
 						this->merge_lines(pipe, derived_lines, axis, output_lines);
@@ -551,16 +553,9 @@ namespace transport
 
 				    out << "plt.figure()" << std::endl;
 
-				    out << "x = [ ";
-				    for(std::deque<double>::const_iterator t = axis.begin(); t != axis.end(); ++t)
-					    {
-				        out << (t != axis.begin() ? ", " : "") << *t;
-					    }
-				    out << " ]" << std::endl;
-
 						unsigned int current_id = 0;
-				    std::vector< std::vector<unsigned int> > line_ids;
-				    std::vector< std::vector<std::string> >  line_labels;
+				    std::vector< std::vector<unsigned int> > line_ids;      // records the unique id number for each line; used later when allocating lines to axes
+				    std::vector< std::vector<std::string> >  line_labels;   // records the label for each line
 
 						// loop through all bins, writing out arrays
 						// representing the values in each line, and recording
@@ -579,20 +574,38 @@ namespace transport
 									  current_id_bin->push_back(current_id);
 										current_label_bin->push_back(u->get_label());
 
-								    out << "y" << current_id << "_premask = [ ";
-
 								    const std::deque< typename line_collection<number>::output_value >& line_data = u->get_values();
 								    assert(line_data.size() == axis.size());
 
+
+										out << "x" << current_id << " = [ ";
+
+										bool first = true;
+								    std::deque<double>::const_iterator x = axis.begin();
+										for(typename std::deque< typename line_collection<number>::output_value >::const_iterator w = line_data.begin(); w != line_data.end() && x != axis.end(); ++w, ++x)
+											{
+												if(w->is_present())
+													{
+														out << (first ? "" : ", ") << *x;
+														first = false;
+													}
+											}
+										out << " ]" << std::endl;
+
+								    out << "y" << current_id << " = [ ";
+
+										first = true;
 										for(typename std::deque< typename line_collection<number>::output_value >::const_iterator w = line_data.begin(); w != line_data.end(); ++w)
 											{
-												out << (w > line_data.begin() ? ", " : "");
-												w->format_python(out);
+												if(w->is_present())
+													{
+												    out << (first ? "" : ", ");
+												    w->format_python(out);
+												    first = false;
+													}
 											}
 
 								    out << " ]" << std::endl;
-
-								    out << "y" << current_id << " = np.ma.array(y" << current_id << "_premask)" << std::endl;
 
 										current_id++;
 									}
@@ -612,7 +625,7 @@ namespace transport
 
 								for(; tt != t->end() && uu != u->end(); ++tt, ++uu)
 									{
-								    out << "ln" << *tt << " = ax" << bin_count << ".errorbar(x, y" << *tt << ", label=r'" << *uu << "'";
+								    out << "ln" << *tt << " = ax" << bin_count << ".errorbar(x" << *tt << ", y" << *tt << ", label=r'" << *uu << "'";
 										if(bin_count == 2 && this->dash_second_axis)
 											{
 												out << ", linestyle='--'";
