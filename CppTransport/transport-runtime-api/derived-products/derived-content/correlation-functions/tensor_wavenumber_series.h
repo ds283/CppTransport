@@ -133,7 +133,7 @@ namespace transport
             std::string group = this->attach(pipe, tags);
 
 		        // pull wavenumber-axis data
-            std::vector<double> w_axis = this->pull_twopf_kconfig_axis(pipe, this->kquery);
+            std::vector<double> w_axis = this->pull_kconfig_axis(pipe, this->kquery);
 
 		        // set up cache handles
 		        typename datapipe<number>::time_config_handle& tc_handle = pipe.new_time_config_handle(this->tquery);
