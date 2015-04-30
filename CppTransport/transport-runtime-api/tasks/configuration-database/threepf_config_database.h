@@ -398,9 +398,9 @@ namespace transport
         config.k1_serial = config.k2_serial = config.k3_serial = 0;
 
         config.kt_conventional = kt_conventional;
-        config.kt_comoving = kt_conventional * this->comoving_normalization;
-        config.alpha            = alpha;
-        config.beta             = beta;
+        config.kt_comoving     = kt_conventional * this->comoving_normalization;
+        config.alpha           = alpha;
+        config.beta            = beta;
 
         config.k1_conventional  = (kt_conventional / 4.0) * (1.0 + alpha + beta);
         config.k1_comoving      = config.k1_conventional * this->comoving_normalization;
@@ -408,7 +408,7 @@ namespace transport
         config.k2_conventional  = (kt_conventional / 4.0) * (1.0 - alpha + beta);
         config.k2_comoving      = config.k2_conventional * this->comoving_normalization;
 
-        config.k3_conventional  = (kt_conventional / 4.0) * (1.0 - beta);
+        config.k3_conventional  = (kt_conventional / 2.0) * (1.0 - beta);
         config.k3_comoving      = config.k3_conventional * this->comoving_normalization;
 
 		    config.t_exit           = 0.0; // this will be updated later, once all k-configurations are known
