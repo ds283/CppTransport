@@ -376,7 +376,7 @@ int main(int argc, char* argv[])
 
 		// 11. INTEGRATION COST ANALYSIS
 
-    transport::derived_data::cost_wavenumber<double> tk3_cost(tk3, equilateral_squeezed_threepf);
+    transport::derived_data::cost_wavenumber<double> tk3_cost(tk3, equilateral_hi_kt);
 		tk3_cost.set_current_x_axis_value(transport::derived_data::squeezing_fraction_k3_axis);
 
     transport::derived_data::wavenumber_series_plot<double> tk3_cost_plot("axion.threepf-1.sqk3-cost", "sqk3-cost.pdf");
