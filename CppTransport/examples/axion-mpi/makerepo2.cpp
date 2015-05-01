@@ -103,11 +103,16 @@ int main(int argc, char* argv[])
 //    transport::stepping_range<double> betas_lo(betamin, betamid, lo_b_samples, transport::linear_stepping);
 //    transport::stepping_range<double> betas_hi(betamid, betamax, hi_b_samples, transport::logarithmic_top_stepping);
 //    transport::aggregation_range<double> betas(betas_lo, betas_hi);
-    transport::stepping_range<double> betas(betamin, betamax, 100, transport::logarithmic_top_stepping);
+    transport::stepping_range<double> betas_lo(0, 0.9, 50, transport::logarithmic_top_stepping);
+    transport::stepping_range<double> betas_mid(0.9, 0.99, 50, transport::logarithmic_top_stepping);
+    transport::stepping_range<double> betas_hi(0.99, 0.999, 50, transport::logarithmic_top_stepping);
+    transport::aggregation_range<double> betas(betas_lo, betas_mid);
+		betas.add_subrange(betas_hi);
 
     // construct a threepf task
     transport::threepf_fls_task<double> tk3("axion.threepf-1", ics, times, kts, alphas, betas, ThreepfStoragePolicy(), false);
 		tk3.set_fast_forward_efolds(4.0);
+		tk3.set_collect_initial_conditions(true);
 
 		// construct a zeta threepf task, paired with the primary integration task
     transport::zeta_threepf_task<double> ztk3("axion.threepf-1.zeta", tk3);
