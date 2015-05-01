@@ -222,6 +222,30 @@ namespace transport
 	    }
 
 
+		namespace aggregation_range_impl
+			{
+
+				template <typename value>
+				class DuplicateRemovalPredicate
+					{
+				  public:
+						DuplicateRemovalPredicate(value t)
+							: tol(t)
+							{
+							}
+
+						bool operator()(value& a, value& b)
+							{
+								return(fabs((a-b)/a) < tol);
+							}
+
+				  private:
+						value tol;
+					};
+
+			}
+
+
 		template <typename value>
 		void aggregation_range<value>::populate_grid()
 			{
@@ -243,7 +267,7 @@ namespace transport
 
 				// sort resulting grid into order and remove duplicates
 		    std::sort(this->grid.begin(), this->grid.end());
-        auto last = std::unique(this->grid.begin(), this->grid.end());
+        auto last = std::unique(this->grid.begin(), this->grid.end(), aggregation_range_impl::DuplicateRemovalPredicate<value>(1E-10));
 		    this->grid.erase(last, this->grid.end());
 
 				this->steps = this->grid.size()+1;
