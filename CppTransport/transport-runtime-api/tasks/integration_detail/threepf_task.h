@@ -480,9 +480,9 @@ namespace transport
 
         // need linear spacing to be integrable
         if(!kts.is_simple_linear() || !alphas.is_simple_linear() || !betas.is_simple_linear()) this->threepf_task<number>::integrable = false;
-        kt_spacing = (kts.get_max() - kts.get_min())/kts.get_steps();
-        alpha_spacing = (alphas.get_max() - alphas.get_min())/alphas.get_steps();
-        beta_spacing = (betas.get_max() - betas.get_min())/betas.get_steps();
+        kt_spacing    = (kts.get_max() - kts.get_min()) / kts.get_steps();
+        alpha_spacing = (alphas.get_max() - alphas.get_min()) / alphas.get_steps();
+        beta_spacing  = (betas.get_max() - betas.get_min()) / betas.get_steps();
 
         std::cout << "'" << this->get_name() << "': " << __CPP_TRANSPORT_TASK_THREEPF_ELEMENTS_A << " " << this->threepf_db.size() << " "
           << __CPP_TRANSPORT_TASK_THREEPF_ELEMENTS_B << " " << this->twopf_db.size() << " " <<__CPP_TRANSPORT_TASK_THREEPF_ELEMENTS_C << std::endl;
