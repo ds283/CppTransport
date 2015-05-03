@@ -23,11 +23,8 @@
 #include "transport-runtime-api/messages.h"
 #include "transport-runtime-api/exceptions.h"
 
-
-#define __CPP_TRANSPORT_NODE_TWOPF_DATABASE_KSTAR            "kstar"
-#define __CPP_TRANSPORT_NODE_TWOPF_DATABASE_STORE            "database"
-#define __CPP_TRANSPORT_NODE_TWOPF_DATABASE_K                "k"
-#define __CPP_TRANSPORT_NODE_TWOPF_DATABASE_STORE_BACKGROUND "b"
+#include "sqlite3.h"
+#include "transport-runtime-api/sqlite3/operations/sqlite3_utility.h"
 
 
 namespace transport
@@ -94,7 +91,7 @@ namespace transport
 
 
     //! database of twopf k-configurations
-    class twopf_kconfig_database: public serializable
+    class twopf_kconfig_database
       {
 
       private:
@@ -129,7 +126,7 @@ namespace transport
         twopf_kconfig_database(double cn);
 
         //! deserialization constructor
-        twopf_kconfig_database(Json::Value& reader);
+        twopf_kconfig_database(double cn, sqlite3* handle);
 
         //! destructor is default
         ~twopf_kconfig_database() = default;
@@ -202,12 +199,12 @@ namespace transport
 		    double get_kmin_comoving()     const { return(this->kmax_comoving); }
 
 
-        // SERIALIZATION -- implements a 'serializable' interface
+        // SERIALIZATION
 
       public:
 
-        //! Serialize this object
-        virtual void serialize(Json::Value& writer) const override;
+        //! Write database out to SQLite
+        void write(sqlite3* handle) const;
 
 
         // INTERNAL DATA
@@ -258,39 +255,62 @@ namespace transport
       }
 
 
-    twopf_kconfig_database::twopf_kconfig_database(Json::Value& reader)
-      : serial(0),
+    twopf_kconfig_database::twopf_kconfig_database(double cn, sqlite3* handle)
+      : comoving_normalization(cn),
+        serial(0),
         kmax_conventional(-std::numeric_limits<double>::max()),
         kmin_conventional(std::numeric_limits<double>::max()),
         kmax_comoving(-std::numeric_limits<double>::max()),
         kmin_comoving(std::numeric_limits<double>::max()),
         store_background(false)
       {
-        // deserialize comoving normalization constant
-        comoving_normalization = reader[__CPP_TRANSPORT_NODE_TWOPF_DATABASE_KSTAR].asDouble();
+        std::ostringstream query_stmt;
 
-        // deserialize database of twopf k-configurations
-        Json::Value& db_array = reader[__CPP_TRANSPORT_NODE_TWOPF_DATABASE_STORE];
-        assert(db_array.isArray());
+		    query_stmt
+		      << "SELECT "
+          << "twopf_kconfig.serial       AS serial, "
+		      << "twopf_kconfig.conventional AS conventional, "
+		      << "twopf_kconfig.comoving     AS comoving, "
+		      << "twopf_kconfig.t_exit       AS t_exit, "
+		      << "twopf_kconfig.store_bg     AS store_bg "
+		      << "FROM twopf_kconfig;";
+
+		    sqlite3_stmt* stmt;
+        sqlite3_operations::check_stmt(handle, sqlite3_prepare_v2(handle, query_stmt.str().c_str(), query_stmt.str().length()+1, &stmt, nullptr));
 
         database.clear();
-        for(Json::Value::iterator t = db_array.begin(); t != db_array.end(); ++t)
-          {
-            twopf_kconfig config;
 
-            config.serial         = serial++;
-            config.k_conventional = (*t)[__CPP_TRANSPORT_NODE_TWOPF_DATABASE_K].asDouble();
-            config.k_comoving     = config.k_conventional * this->comoving_normalization;
+        int status;
+		    while((status = sqlite3_step(stmt)) != SQLITE_DONE)
+			    {
+				    if(status == SQLITE_ROW)
+					    {
+				        twopf_kconfig config;
 
-		        config.t_exit = 0.0;  // will be updated later
+				        config.serial         = static_cast<unsigned int>(sqlite3_column_int(stmt, 0));
+				        config.k_conventional = sqlite3_column_double(stmt, 1);
+				        config.k_comoving     = sqlite3_column_double(stmt, 2);
+						    config.t_exit         = sqlite3_column_double(stmt, 3);
 
-            if(config.k_conventional > this->kmax_conventional) this->kmax_conventional = config.k_conventional;
-            if(config.k_conventional < this->kmin_conventional) this->kmin_conventional = config.k_conventional;
-		        if(config.k_comoving > this->kmax_comoving)         this->kmax_comoving     = config.k_comoving;
-		        if(config.k_comoving < this->kmin_comoving)         this->kmin_comoving     = config.k_comoving;
+				        if(config.serial+1 > serial)                        this->serial            = config.serial+1;
+				        if(config.k_conventional > this->kmax_conventional) this->kmax_conventional = config.k_conventional;
+				        if(config.k_conventional < this->kmin_conventional) this->kmin_conventional = config.k_conventional;
+				        if(config.k_comoving > this->kmax_comoving)         this->kmax_comoving     = config.k_comoving;
+				        if(config.k_comoving < this->kmin_comoving)         this->kmin_comoving     = config.k_comoving;
 
-            this->database.emplace(config.serial, twopf_kconfig_record(config, (*t)[__CPP_TRANSPORT_NODE_TWOPF_DATABASE_STORE].asBool()));
-          }
+						    bool store = (sqlite3_column_int(stmt, 4) != 0);
+				        this->database.emplace(config.serial, twopf_kconfig_record(config, store));
+					    }
+				    else
+					    {
+				        std::ostringstream msg;
+				        msg << __CPP_TRANSPORT_TWOPF_DATABASE_READ_FAIL << status << ": " << sqlite3_errmsg(handle) << ")";
+				        sqlite3_finalize(stmt);
+				        throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
+					    }
+			    }
+
+        sqlite3_operations::check_stmt(handle, sqlite3_finalize(stmt));
       }
 
 
@@ -402,28 +422,48 @@ namespace transport
       }
 
 
-    void twopf_kconfig_database::serialize(Json::Value& writer) const
+    void twopf_kconfig_database::write(sqlite3* handle) const
       {
-        // serialize comoving normalization constant
-        writer[__CPP_TRANSPORT_NODE_TWOPF_DATABASE_KSTAR] = this->comoving_normalization;
+        std::ostringstream create_stmt;
 
-        // serialize database of twopf configurations
-        Json::Value db_array(Json::arrayValue);
+		    create_stmt
+		      << "CREATE TABLE twopf_kconfig("
+		      << "serial       INTEGER PRIMARY KEY, "
+		      << "conventional DOUBLE, "
+			    << "comoving     DOUBLE, "
+          << "t_exit       DOUBLE, "
+          << "store_bg     INTEGER);";
 
-        unsigned int count = 0;
+        sqlite3_operations::exec(handle, create_stmt.str(), __CPP_TRANSPORT_TWOPF_DATABASE_WRITE_FAIL);
+
+        std::ostringstream insert_stmt;
+		    insert_stmt << "INSERT INTO twopf_kconfig VALUES (@serial, @conventional, @comoving, @t_exit, @store_bg);";
+
+		    sqlite3_stmt* stmt;
+        sqlite3_operations::check_stmt(handle, sqlite3_prepare_v2(handle, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr));
+
+        sqlite3_operations::exec(handle, "BEGIN TRANSACTION");
+
+		    unsigned int count = 0;
         for(database_type::const_iterator t = this->database.begin(); t != this->database.end(); ++t, ++count)
           {
             assert(count == t->first);
             if(count != t->first) throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_TWOPF_DATABASE_OUT_OF_ORDER);
 
-            Json::Value record(Json::objectValue);
-            record[__CPP_TRANSPORT_NODE_TWOPF_DATABASE_K] = t->second->k_conventional;
+            sqlite3_operations::check_stmt(handle, sqlite3_bind_int(stmt, 1, t->second->serial));
+            sqlite3_operations::check_stmt(handle, sqlite3_bind_double(stmt, 2, t->second->k_conventional));
+            sqlite3_operations::check_stmt(handle, sqlite3_bind_double(stmt, 3, t->second->k_comoving));
+            sqlite3_operations::check_stmt(handle, sqlite3_bind_double(stmt, 4, t->second->t_exit));
+            sqlite3_operations::check_stmt(handle, sqlite3_bind_int(stmt, 5, t->second.is_background_stored()));
 
-            if(t->second.is_background_stored()) record[__CPP_TRANSPORT_NODE_TWOPF_DATABASE_STORE_BACKGROUND] = true;
+            sqlite3_operations::check_stmt(handle, sqlite3_step(stmt), __CPP_TRANSPORT_TWOPF_DATABASE_WRITE_FAIL, SQLITE_DONE);
 
-            db_array.append(record);
+            sqlite3_operations::check_stmt(handle, sqlite3_clear_bindings(stmt));
+            sqlite3_operations::check_stmt(handle, sqlite3_reset(stmt));
           }
-        writer[__CPP_TRANSPORT_NODE_TWOPF_DATABASE_STORE] = db_array;
+
+        sqlite3_operations::exec(handle, "END TRANSACTION");
+        sqlite3_operations::check_stmt(handle, sqlite3_finalize(stmt));
       }
 
 

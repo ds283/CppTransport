@@ -21,6 +21,7 @@
 #include <boost/math/tools/roots.hpp>
 
 #define __CPP_TRANSPORT_NODE_TWOPF_LIST_DATABASE      "twopf-database"
+#define __CPP_TRANSPORT_NODE_TWOPF_LIST_KSTAR         "kstar"
 #define __CPP_TRANSPORT_NODE_TWOPF_LIST_NORMALIZATION "normalization"
 #define __CPP_TRANSPORT_NODE_TWOPF_LIST_COLLECT_ICS   "collect-ics"
 
@@ -69,7 +70,7 @@ namespace transport
         twopf_list_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t, bool ff, double ast=__CPP_TRANSPORT_DEFAULT_ASTAR_NORMALIZATION);
 
         //! deserialization constructor
-        twopf_list_task(const std::string& nm, Json::Value& reader, const initial_conditions<number>& i);
+        twopf_list_task(const std::string& nm, Json::Value& reader, sqlite3* handle, const initial_conditions<number>& i);
 
         virtual ~twopf_list_task() = default;
 
@@ -83,6 +84,9 @@ namespace transport
 
 		    //! Compute horizon-exit times for each mode in the database
 		    virtual void compute_horizon_exit_times();
+
+        //! Write k-configuration database to disk
+        virtual void write_kconfiguration_database(sqlite3* handle) const override;
 
       protected:
 
@@ -237,6 +241,9 @@ namespace transport
 		    // (note this has to be declared *after* astar_normalization, so that astar_normalization will be set
 		    // when trying to compute k*)
 
+		    //! comoving wavenumber normalization constant
+		    double kstar;
+
         //! database of twopf k-configurations
         twopf_kconfig_database twopf_db;
 
@@ -252,15 +259,17 @@ namespace transport
         max_refinements(__CPP_TRANSPORT_DEFAULT_MESH_REFINEMENTS),
         astar_normalization(ast),
         collect_initial_conditions(__CPP_TRANSPORT_DEFAULT_COLLECT_INITIAL_CONDITIONS),
-		    twopf_db(i.get_model()->compute_kstar(this))
+        kstar(i.get_model()->compute_kstar(this)),
+		    twopf_db(kstar)     // kstar guaranteed to be initialized first if it is declared before twopf_db
       {
 	    }
 
 
     template <typename number>
-    twopf_list_task<number>::twopf_list_task(const std::string& nm, Json::Value& reader, const initial_conditions<number>& i)
+    twopf_list_task<number>::twopf_list_task(const std::string& nm, Json::Value& reader, sqlite3* handle, const initial_conditions<number>& i)
 	    : integration_task<number>(nm, reader, i),
-        twopf_db(reader[__CPP_TRANSPORT_NODE_TWOPF_LIST_DATABASE])
+	      kstar(reader[__CPP_TRANSPORT_NODE_TWOPF_LIST_KSTAR].asDouble()),      // will be constructed before twopf_db, because declared first in class declaration above
+        twopf_db(kstar, handle)                                               // OK since kstar constructed first
 	    {
         fast_forward               = reader[__CPP_TRANSPORT_NODE_FAST_FORWARD].asBool();
         ff_efolds                  = reader[__CPP_TRANSPORT_NODE_FAST_FORWARD_EFOLDS].asDouble();
@@ -278,13 +287,18 @@ namespace transport
         writer[__CPP_TRANSPORT_NODE_MESH_REFINEMENTS]         = this->max_refinements;
         writer[__CPP_TRANSPORT_NODE_TWOPF_LIST_NORMALIZATION] = this->astar_normalization;
         writer[__CPP_TRANSPORT_NODE_TWOPF_LIST_COLLECT_ICS]   = this->collect_initial_conditions;
+		    writer[__CPP_TRANSPORT_NODE_TWOPF_LIST_KSTAR]         = this->kstar;
 
-		    // serialize twopf configuration database
-        Json::Value db;
-        this->twopf_db.serialize(db);
-        writer[__CPP_TRANSPORT_NODE_TWOPF_LIST_DATABASE] = db;
+		    // twopf database is serialized separately into an SQLite database
 
         this->integration_task<number>::serialize(writer);
+	    }
+
+
+    template <typename number>
+    void twopf_list_task<number>::write_kconfiguration_database(sqlite3* handle) const
+	    {
+        this->twopf_db.write(handle);
 	    }
 
 

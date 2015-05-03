@@ -32,6 +32,7 @@ namespace transport
 			        }
 			    }
 
+
 		    // error-check an exec statement
 		    inline void exec(sqlite3* db, const std::string& stmt)
 			    {
@@ -47,6 +48,7 @@ namespace transport
 			        }
 			    }
 
+
 		    // error-check a non-exec statement
 		    inline void check_stmt(sqlite3* db, int status, const std::string& err, int check_code=SQLITE_OK)
 			    {
@@ -57,6 +59,7 @@ namespace transport
 		            throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
 			        }
 			    }
+
 
 		    // error-check a non-exec statement
 		    inline void check_stmt(sqlite3* db, int status, int check_code=SQLITE_OK)

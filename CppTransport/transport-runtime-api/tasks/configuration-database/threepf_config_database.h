@@ -22,16 +22,8 @@
 #include "transport-runtime-api/messages.h"
 #include "transport-runtime-api/exceptions.h"
 
-
-#define __CPP_TRANSPORT_NODE_THREEPF_DATABASE_KSTAR            "kstar"
-#define __CPP_TRANSPORT_NODE_THREEPF_DATABASE_STORE            "database"
-#define __CPP_TRANSPORT_NODE_THREEPF_DATABASE_K1_SERIAL        "1"
-#define __CPP_TRANSPORT_NODE_THREEPF_DATABASE_K2_SERIAL        "2"
-#define __CPP_TRANSPORT_NODE_THREEPF_DATABASE_K3_SERIAL        "3"
-#define __CPP_TRANSPORT_NODE_THREEPF_DATABASE_STORE_BACKGROUND "b"
-#define __CPP_TRANSPORT_NODE_THREEPF_DATABASE_STORE_TWOPF_K1   "t1"
-#define __CPP_TRANSPORT_NODE_THREEPF_DATABASE_STORE_TWOPF_K2   "t2"
-#define __CPP_TRANSPORT_NODE_THREEPF_DATABASE_STORE_TWOPF_K3   "t3"
+#include "sqlite3.h"
+#include "transport-runtime-api/sqlite3/operations/sqlite3_utility.h"
 
 
 namespace transport
@@ -119,7 +111,7 @@ namespace transport
 
 
     //! database of threepf k-configurations
-    class threepf_kconfig_database: public serializable
+    class threepf_kconfig_database
       {
 
       private:
@@ -154,7 +146,7 @@ namespace transport
         threepf_kconfig_database(double cn);
 
         //! deserialization constructor
-        threepf_kconfig_database(Json::Value& reader, twopf_kconfig_database& twopf_db);
+        threepf_kconfig_database(double cn, sqlite3* handle, twopf_kconfig_database& twopf_db);
 
         //! destructor is default
         ~threepf_kconfig_database() = default;
@@ -240,7 +232,7 @@ namespace transport
       public:
 
         //! Serialize this object
-        virtual void serialize(Json::Value& writer) const override;
+        void write(sqlite3* handle) const;
 
 
         // INTERNAL DATA
@@ -291,63 +283,92 @@ namespace transport
       }
 
 
-    threepf_kconfig_database::threepf_kconfig_database(Json::Value& reader, twopf_kconfig_database& twopf_db)
-      : serial(0),
+    threepf_kconfig_database::threepf_kconfig_database(double cn, sqlite3* handle, twopf_kconfig_database& twopf_db)
+      : comoving_normalization(cn),
+        serial(0),
         kmax_conventional(-std::numeric_limits<double>::max()),
         kmin_conventional(std::numeric_limits<double>::max()),
         kmax_comoving(-std::numeric_limits<double>::max()),
         kmin_comoving(std::numeric_limits<double>::max()),
         store_background(false)
       {
-        // deserialize comoving normalization constant
-        comoving_normalization = reader[__CPP_TRANSPORT_NODE_THREEPF_DATABASE_KSTAR].asDouble();
+        std::ostringstream query_stmt;
 
-        // deserialize database of threepf k-configurations
-        Json::Value& db_array = reader[__CPP_TRANSPORT_NODE_THREEPF_DATABASE_STORE];
-        assert(db_array.isArray());
+        query_stmt
+	        << "SELECT "
+	        << "threepf_kconfig.serial          AS serial, "
+	        << "threepf_kconfig.kt_conventional AS kt_conventional, "
+	        << "threepf_kconfig.kt_comoving     AS kt_comoving, "
+	        << "threepf_kconfig.alpha           AS alpha, "
+	        << "threepf_kconfig.beta            AS beta, "
+	        << "threepf_kconfig.wavenumber1     AS wavenumber1, "
+	        << "threepf_kconfig.wavenumber2     AS wavenumber2, "
+	        << "threepf_kconfig.wavenumber3     AS wavenumber3, "
+	        << "threepf_kconfig.t_exit          AS t_exit, "
+	        << "threepf_kconfig.store_bg        AS store_bg, "
+	        << "threepf_kconfig.store_k1        AS store_k1, "
+	        << "threepf_kconfig.store_k2        AS store_k2, "
+	        << "threepf_kconfig.store_k3        AS store_k3 "
+	        << "FROM threepf_kconfig;";
+
+        sqlite3_stmt* stmt;
+        sqlite3_operations::check_stmt(handle, sqlite3_prepare_v2(handle, query_stmt.str().c_str(), query_stmt.str().length()+1, &stmt, nullptr));
 
         database.clear();
-        for(Json::Value::iterator t = db_array.begin(); t != db_array.end(); ++t)
-          {
-            threepf_kconfig config;
 
-            config.serial = serial++;
-            config.k1_serial = (*t)[__CPP_TRANSPORT_NODE_THREEPF_DATABASE_K1_SERIAL].asUInt();
-            config.k2_serial = (*t)[__CPP_TRANSPORT_NODE_THREEPF_DATABASE_K2_SERIAL].asUInt();
-            config.k3_serial = (*t)[__CPP_TRANSPORT_NODE_THREEPF_DATABASE_K3_SERIAL].asUInt();
+        int status;
+        while((status = sqlite3_step(stmt)) != SQLITE_DONE)
+	        {
+            if(status == SQLITE_ROW)
+	            {
+		            threepf_kconfig config;
 
-		        twopf_kconfig_database::const_record_iterator k1 = twopf_db.lookup(config.k1_serial);
-            twopf_kconfig_database::const_record_iterator k2 = twopf_db.lookup(config.k2_serial);
-            twopf_kconfig_database::const_record_iterator k3 = twopf_db.lookup(config.k3_serial);
+                config.serial          = static_cast<unsigned int>(sqlite3_column_int(stmt, 0));
+                config.kt_conventional = sqlite3_column_double(stmt, 1);
+                config.kt_comoving     = sqlite3_column_double(stmt, 2);
+                config.alpha           = sqlite3_column_double(stmt, 3);
+                config.beta            = sqlite3_column_double(stmt, 4);
+		            config.t_exit          = sqlite3_column_double(stmt, 8);
 
-            config.k1_conventional = (*k1)->k_conventional;
-            config.k1_comoving     = (*k1)->k_comoving;
+		            config.k1_serial = static_cast<unsigned int>(sqlite3_column_int(stmt, 5));
+		            config.k2_serial = static_cast<unsigned int>(sqlite3_column_int(stmt, 6));
+		            config.k3_serial = static_cast<unsigned int>(sqlite3_column_int(stmt, 7));
 
-            config.k2_conventional = (*k2)->k_conventional;
-            config.k2_comoving     = (*k2)->k_comoving;
+				        twopf_kconfig_database::const_record_iterator k1 = twopf_db.lookup(config.k1_serial);
+		            twopf_kconfig_database::const_record_iterator k2 = twopf_db.lookup(config.k2_serial);
+		            twopf_kconfig_database::const_record_iterator k3 = twopf_db.lookup(config.k3_serial);
 
-            config.k3_conventional = (*k3)->k_conventional;
-            config.k3_comoving     = (*k3)->k_comoving;
+		            config.k1_conventional = (*k1)->k_conventional;
+		            config.k1_comoving     = (*k1)->k_comoving;
 
-            config.kt_conventional = (*k1)->k_conventional + (*k2)->k_conventional + (*k3)->k_conventional;
-            config.kt_comoving     = (*k1)->k_comoving + (*k2)->k_comoving + (*k3)->k_comoving;
+		            config.k2_conventional = (*k2)->k_conventional;
+		            config.k2_comoving     = (*k2)->k_comoving;
 
-            config.beta  = 1.0 - 2.0 * config.k3_conventional / config.kt_conventional;
-            config.alpha = 4.0 * (*k2)->k_conventional / config.kt_conventional - 1.0 - config.beta;
+		            config.k3_conventional = (*k3)->k_conventional;
+		            config.k3_comoving     = (*k3)->k_comoving;
 
-		        config.t_exit = 0.0;  // will be updated later
+		            if(config.serial+1 > serial)                         this->serial            = config.serial+1;
+		            if(config.kt_conventional > this->kmax_conventional) this->kmax_conventional = config.kt_conventional;
+		            if(config.kt_conventional < this->kmin_conventional) this->kmin_conventional = config.kt_conventional;
+		            if(config.kt_comoving > this->kmax_comoving)         this->kmax_comoving     = config.kt_comoving;
+		            if(config.kt_comoving < this->kmin_comoving)         this->kmin_comoving     = config.kt_comoving;
 
-            if(config.kt_conventional > this->kmax_conventional) this->kmax_conventional = config.kt_conventional;
-            if(config.kt_conventional < this->kmin_conventional) this->kmin_conventional = config.kt_conventional;
-            if(config.kt_comoving > this->kmax_comoving)         this->kmax_comoving     = config.kt_comoving;
-            if(config.kt_comoving < this->kmin_comoving)         this->kmin_comoving     = config.kt_comoving;
-
-            this->database.emplace(config.serial, threepf_kconfig_record(config,
-                                                                           (*t)[__CPP_TRANSPORT_NODE_THREEPF_DATABASE_STORE_BACKGROUND].asBool(),
-                                                                           (*t)[__CPP_TRANSPORT_NODE_THREEPF_DATABASE_STORE_TWOPF_K1].asBool(),
-                                                                           (*t)[__CPP_TRANSPORT_NODE_THREEPF_DATABASE_STORE_TWOPF_K2].asBool(),
-                                                                           (*t)[__CPP_TRANSPORT_NODE_THREEPF_DATABASE_STORE_TWOPF_K3].asBool()));
+		            bool store_bg = (sqlite3_column_int(stmt, 9) > 0);
+		            bool store_k1 = (sqlite3_column_int(stmt, 10) > 0);
+		            bool store_k2 = (sqlite3_column_int(stmt, 11) > 0);
+		            bool store_k3 = (sqlite3_column_int(stmt, 12) > 0);
+		            this->database.emplace(config.serial, threepf_kconfig_record(config, store_bg, store_k1, store_k2, store_k3));
+	            }
+            else
+	            {
+                std::ostringstream msg;
+                msg << __CPP_TRANSPORT_THREEPF_DATABASE_READ_FAIL << status << ": " << sqlite3_errmsg(handle) << ")";
+                sqlite3_finalize(stmt);
+                throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
+	            }
           }
+
+        sqlite3_operations::check_stmt(handle, sqlite3_finalize(stmt));
       }
 
 
@@ -451,13 +472,38 @@ namespace transport
       }
 
 
-    void threepf_kconfig_database::serialize(Json::Value& writer) const
+    void threepf_kconfig_database::write(sqlite3* handle) const
       {
-        // serialize comoving normalization constant
-        writer[__CPP_TRANSPORT_NODE_THREEPF_DATABASE_KSTAR] = this->comoving_normalization;
+        std::ostringstream create_stmt;
 
-        // serialize database of threepf configurations
-        Json::Value db_array(Json::arrayValue);
+		    create_stmt
+		      << "CREATE TABLE threepf_kconfig("
+		      << "serial          INTEGER PRIMARY KEY, "
+		      << "kt_conventional DOUBLE, "
+		      << "kt_comoving     DOUBLE, "
+		      << "alpha           DOUBLE, "
+		      << "beta            DOUBLE, "
+		      << "wavenumber1     INTEGER, "
+		      << "wavenumber2     INTEGER, "
+		      << "wavenumber3     INTEGER, "
+		      << "t_exit          DOUBLE, "
+		      << "store_bg        INTEGER, "
+		      << "store_k1        INTEGER, "
+		      << "store_k2        INTEGER, "
+		      << "store_k3        INTEGER, "
+		      << "FOREIGN KEY(wavenumber1) REFERENCES twopf_kconfig(serial), "
+		      << "FOREIGN KEY(wavenumber2) REFERENCES twopf_kconfig(serial), "
+		      << "FOREIGN KEY(wavenumber3) REFERENCES twopf_kconfig(serial));";
+
+        sqlite3_operations::exec(handle, create_stmt.str(), __CPP_TRANSPORT_THREEPF_DATABASE_WRITE_FAIL);
+
+        std::ostringstream insert_stmt;
+		    insert_stmt << "INSERT INTO threepf_kconfig VALUES (@serial, @kt_conventional, @kt_comoving, @alpha, @beta, @wavenumber1, @wavenumber2, @wavenumber3, @t_exit, @store_bg, @store_k1, @store_k2, @store_k3);";
+
+        sqlite3_stmt* stmt;
+        sqlite3_operations::check_stmt(handle, sqlite3_prepare_v2(handle, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr));
+
+        sqlite3_operations::exec(handle, "BEGIN TRANSACTION");
 
         unsigned int count = 0;
         for(database_type::const_iterator t = this->database.begin(); t != this->database.end(); ++t, ++count)
@@ -465,19 +511,28 @@ namespace transport
             assert(count == t->first);
             if(count != t->first) throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_THREEPF_DATABASE_OUT_OF_ORDER);
 
-            Json::Value record(Json::objectValue);
-            record[__CPP_TRANSPORT_NODE_THREEPF_DATABASE_K1_SERIAL] = t->second->k1_serial;
-            record[__CPP_TRANSPORT_NODE_THREEPF_DATABASE_K2_SERIAL] = t->second->k2_serial;
-            record[__CPP_TRANSPORT_NODE_THREEPF_DATABASE_K3_SERIAL] = t->second->k3_serial;
+            sqlite3_operations::check_stmt(handle, sqlite3_bind_int(stmt, 1, t->second->serial));
+            sqlite3_operations::check_stmt(handle, sqlite3_bind_double(stmt, 2, t->second->kt_conventional));
+            sqlite3_operations::check_stmt(handle, sqlite3_bind_double(stmt, 3, t->second->kt_comoving));
+            sqlite3_operations::check_stmt(handle, sqlite3_bind_double(stmt, 4, t->second->alpha));
+            sqlite3_operations::check_stmt(handle, sqlite3_bind_double(stmt, 5, t->second->beta));
+            sqlite3_operations::check_stmt(handle, sqlite3_bind_int(stmt, 6, t->second->k1_serial));
+            sqlite3_operations::check_stmt(handle, sqlite3_bind_int(stmt, 7, t->second->k2_serial));
+            sqlite3_operations::check_stmt(handle, sqlite3_bind_int(stmt, 8, t->second->k3_serial));
+            sqlite3_operations::check_stmt(handle, sqlite3_bind_double(stmt, 9, t->second->t_exit));
+            sqlite3_operations::check_stmt(handle, sqlite3_bind_int(stmt, 10, t->second.is_background_stored()));
+            sqlite3_operations::check_stmt(handle, sqlite3_bind_int(stmt, 11, t->second.is_twopf_k1_stored()));
+            sqlite3_operations::check_stmt(handle, sqlite3_bind_int(stmt, 12, t->second.is_twopf_k2_stored()));
+            sqlite3_operations::check_stmt(handle, sqlite3_bind_int(stmt, 13, t->second.is_twopf_k3_stored()));
 
-            if(t->second.is_background_stored()) record[__CPP_TRANSPORT_NODE_THREEPF_DATABASE_STORE_BACKGROUND] = true;
-            if(t->second.is_twopf_k1_stored())   record[__CPP_TRANSPORT_NODE_THREEPF_DATABASE_STORE_TWOPF_K1]   = true;
-            if(t->second.is_twopf_k2_stored())   record[__CPP_TRANSPORT_NODE_THREEPF_DATABASE_STORE_TWOPF_K2]   = true;
-            if(t->second.is_twopf_k3_stored())   record[__CPP_TRANSPORT_NODE_THREEPF_DATABASE_STORE_TWOPF_K3]   = true;
+            sqlite3_operations::check_stmt(handle, sqlite3_step(stmt), __CPP_TRANSPORT_THREEPF_DATABASE_WRITE_FAIL, SQLITE_DONE);
 
-            db_array.append(record);
-          }
-        writer[__CPP_TRANSPORT_NODE_THREEPF_DATABASE_STORE] = db_array;
+            sqlite3_operations::check_stmt(handle, sqlite3_clear_bindings(stmt));
+            sqlite3_operations::check_stmt(handle, sqlite3_reset(stmt));
+	        }
+
+        sqlite3_operations::exec(handle, "END TRANSACTION");
+        sqlite3_operations::check_stmt(handle, sqlite3_finalize(stmt));
       }
 
 
