@@ -31,7 +31,7 @@ namespace transport
                    const range<double>& t, const range<double>& ks, bool ff=true);
 
         //! deserialization constructor
-        twopf_task(const std::string& nm, Json::Value& reader, const initial_conditions<number>& i);
+        twopf_task(const std::string& nm, Json::Value& reader, sqlite3* handle, const initial_conditions<number>& i);
 
         //! Destroy a two-point function task
         ~twopf_task() = default;
@@ -80,12 +80,9 @@ namespace transport
 
     // deserialization constructor
     template <typename number>
-    twopf_task<number>::twopf_task(const std::string& nm, Json::Value& reader, const initial_conditions<number>& i)
-	    : twopf_list_task<number>(nm, reader, i)
+    twopf_task<number>::twopf_task(const std::string& nm, Json::Value& reader, sqlite3* handle, const initial_conditions<number>& i)
+	    : twopf_list_task<number>(nm, reader, handle, i)
 	    {
-        // reconstruct horizon-exit times; these aren't stored in the repository record to save space
-        this->compute_horizon_exit_times();
-
         this->cache_stored_time_config_database();
 	    }
 

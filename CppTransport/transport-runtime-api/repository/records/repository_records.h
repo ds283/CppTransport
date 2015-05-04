@@ -44,104 +44,109 @@
 #include "boost/log/utility/setup/common_attributes.hpp"
 #include "boost/date_time/posix_time/posix_time.hpp"
 
+#include "sqlite3.h"
+#include "transport-runtime-api/sqlite3/operations/sqlite3_utility.h"
+
 
 // JSON node names
 
-#define __CPP_TRANSPORT_NODE_RECORD_NAME                            "name"
-#define __CPP_TRANSPORT_NODE_RECORD_TYPE                            "record-type"
-#define __CPP_TRANSPORT_NODE_RECORD_PACKAGE                         "package"
-#define __CPP_TRANSPORT_NODE_RECORD_INTEGRATION_TASK                "integration-task"
-#define __CPP_TRANSPORT_NODE_RECORD_POSTINTEGRATION_TASK            "postintegration-task"
-#define __CPP_TRANSPORT_NODE_RECORD_OUTPUT_TASK                     "output-task"
-#define __CPP_TRANSPORT_NODE_RECORD_DERIVED_PRODUCT                 "derived-product"
-#define __CPP_TRANSPORT_NODE_RECORD_CONTENT                         "content-group"
+#define __CPP_TRANSPORT_NODE_RECORD_NAME                              "name"
+#define __CPP_TRANSPORT_NODE_RECORD_TYPE                              "record-type"
+#define __CPP_TRANSPORT_NODE_RECORD_PACKAGE                           "package"
+#define __CPP_TRANSPORT_NODE_RECORD_INTEGRATION_TASK                  "integration-task"
+#define __CPP_TRANSPORT_NODE_RECORD_POSTINTEGRATION_TASK              "postintegration-task"
+#define __CPP_TRANSPORT_NODE_RECORD_OUTPUT_TASK                       "output-task"
+#define __CPP_TRANSPORT_NODE_RECORD_DERIVED_PRODUCT                   "derived-product"
+#define __CPP_TRANSPORT_NODE_RECORD_CONTENT                           "content-group"
 
-#define __CPP_TRANSPORT_NODE_INITIAL_CONDITIONS                     "package-data"
+#define __CPP_TRANSPORT_NODE_INITIAL_CONDITIONS                       "package-data"
 
-#define __CPP_TRANSPORT_NODE_METADATA_GROUP                         "metadata"
-#define __CPP_TRANSPORT_NODE_METADATA_CREATED                       "created"
-#define __CPP_TRANSPORT_NODE_METADATA_EDITED                        "edited"
-#define __CPP_TRANSPORT_NODE_METADATA_RUNTIME_API                   "api"
+#define __CPP_TRANSPORT_NODE_METADATA_GROUP                           "metadata"
+#define __CPP_TRANSPORT_NODE_METADATA_CREATED                         "created"
+#define __CPP_TRANSPORT_NODE_METADATA_EDITED                          "edited"
+#define __CPP_TRANSPORT_NODE_METADATA_RUNTIME_API                     "api"
 
-#define __CPP_TRANSPORT_NODE_TASK_OUTPUT_GROUPS                     "output-groups"
+#define __CPP_TRANSPORT_NODE_TASK_OUTPUT_GROUPS                       "output-groups"
 
-#define __CPP_TRANSPORT_NODE_OUTPUTGROUP_TASK_NAME                  "parent-task"
-#define __CPP_TRANSPORT_NODE_OUTPUTGROUP_DATA_ROOT                  "output-path"
-#define __CPP_TRANSPORT_NODE_OUTPUTGROUP_LOCKED                     "locked"
-#define __CPP_TRANSPORT_NODE_OUTPUTGROUP_NOTES                      "notes"
-#define __CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS                       "tags"
+#define __CPP_TRANSPORT_NODE_OUTPUTGROUP_TASK_NAME                    "parent-task"
+#define __CPP_TRANSPORT_NODE_OUTPUTGROUP_DATA_ROOT                    "output-path"
+#define __CPP_TRANSPORT_NODE_OUTPUTGROUP_LOCKED                       "locked"
+#define __CPP_TRANSPORT_NODE_OUTPUTGROUP_NOTES                        "notes"
+#define __CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS                         "tags"
 
-#define __CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_DATABASE           "database-path"
-#define __CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FAILED             "failed"
-#define __CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_WORKGROUP          "workgroup"
-#define __CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FAILED_SERIALS     "failed-serials"
-#define __CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_SEEDED             "seeded"
-#define __CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_SEED_GROUP         "seed-group"
-#define __CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_STATISTICS         "has-statistics"
-#define __CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_ICS                "has-ics"
+#define __CPP_TRANSPORT_NODE_RECORD_INTEGRATION_TASK_KCONFIG_DATABASE "kconfig-database"
 
-#define __CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_DATABASE       "database-path"
-#define __CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_FAILED         "failed"
-#define __CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_PAIRED         "paired"
-#define __CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_PARENT_GROUP   "parent-group"
-#define __CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_SEEDED         "seeded"
-#define __CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_SEED_GROUP     "seed-group"
-#define __CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_FAILED_SERIALS "failed-serials"
+#define __CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_DATABASE             "database-path"
+#define __CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FAILED               "failed"
+#define __CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_WORKGROUP            "workgroup"
+#define __CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FAILED_SERIALS       "failed-serials"
+#define __CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_SEEDED               "seeded"
+#define __CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_SEED_GROUP           "seed-group"
+#define __CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_STATISTICS           "has-statistics"
+#define __CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_ICS                  "has-ics"
 
-#define __CPP_TRANSPORT_NODE_PRECOMPUTED_ROOT                       "contains-products"
-#define __CPP_TRANSPORT_NODE_PRECOMPUTED_ZETA_TWOPF                 "zeta-twopf"
-#define __CPP_TRANSPORT_NODE_PRECOMPUTED_ZETA_THREEPF               "zeta-threepf"
-#define __CPP_TRANSPORT_NODE_PRECOMPUTED_ZETA_REDBSP                "zeta-redbsp"
-#define __CPP_TRANSPORT_NODE_PRECOMPUTED_FNL_LOCAL                  "fNL_local"
-#define __CPP_TRANSPORT_NODE_PRECOMPUTED_FNL_EQUI                   "fNL_equi"
-#define __CPP_TRANSPORT_NODE_PRECOMPUTED_FNL_ORTHO                  "fNL_ortho"
-#define __CPP_TRANSPORT_NODE_PRECOMPUTED_FNL_DBI                    "fNL_DBI"
+#define __CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_DATABASE         "database-path"
+#define __CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_FAILED           "failed"
+#define __CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_PAIRED           "paired"
+#define __CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_PARENT_GROUP     "parent-group"
+#define __CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_SEEDED           "seeded"
+#define __CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_SEED_GROUP       "seed-group"
+#define __CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_FAILED_SERIALS   "failed-serials"
 
-#define __CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_FAILED                 "failed"
-#define __CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_ARRAY                  "generated-products"
-#define __CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_USED_GROUPS            "used-content-groups"
-#define __CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_PRODUCT_NAME           "parent-product"
-#define __CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_FILENAME               "filename"
-#define __CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_CREATED                "creation-time"
-#define __CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_NOTES                  "notes"
-#define __CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_TAGS                   "tags"
+#define __CPP_TRANSPORT_NODE_PRECOMPUTED_ROOT                         "contains-products"
+#define __CPP_TRANSPORT_NODE_PRECOMPUTED_ZETA_TWOPF                   "zeta-twopf"
+#define __CPP_TRANSPORT_NODE_PRECOMPUTED_ZETA_THREEPF                 "zeta-threepf"
+#define __CPP_TRANSPORT_NODE_PRECOMPUTED_ZETA_REDBSP                  "zeta-redbsp"
+#define __CPP_TRANSPORT_NODE_PRECOMPUTED_FNL_LOCAL                    "fNL_local"
+#define __CPP_TRANSPORT_NODE_PRECOMPUTED_FNL_EQUI                     "fNL_equi"
+#define __CPP_TRANSPORT_NODE_PRECOMPUTED_FNL_ORTHO                    "fNL_ortho"
+#define __CPP_TRANSPORT_NODE_PRECOMPUTED_FNL_DBI                      "fNL_DBI"
 
-#define __CPP_TRANSPORT_NODE_TIMINGDATA_GROUP                       "integration-metadata"
-#define __CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_WALLCLOCK_TIME        "total-wallclock-time"
-#define __CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_AGG_TIME              "total-aggregation-time"
-#define __CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_INT_TIME              "total-integration-time"
-#define __CPP_TRANSPORT_NODE_TIMINGDATA_MIN_MEAN_INT_TIME           "min-mean-integration-time"
-#define __CPP_TRANSPORT_NODE_TIMINGDATA_MAX_MEAN_INT_TIME           "max-mean-integration-time"
-#define __CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MIN_INT_TIME         "global-min-integration-time"
-#define __CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MAX_INT_TIME         "global-max-integration-time"
-#define __CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_BATCH_TIME            "total-batching-time"
-#define __CPP_TRANSPORT_NODE_TIMINGDATA_MIN_MEAN_BATCH_TIME         "min-mean-batching-time"
-#define __CPP_TRANSPORT_NODE_TIMINGDATA_MAX_MEAN_BATCH_TIME         "max-mean-batching-time"
-#define __CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MIN_BATCH_TIME       "global-min-batching-time"
-#define __CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MAX_BATCH_TIME       "global-max-batching-time"
-#define __CPP_TRANSPORT_NODE_TIMINGDATA_NUM_CONFIGURATIONS          "configurations-processed"
-#define __CPP_TRANSPORT_NODE_TIMINGDATA_NUM_FAILURES                "configurations-failed"
-#define __CPP_TRANSPORT_NODE_TIMINGDATA_NUM_REFINED                 "configurations-refined"
+#define __CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_FAILED                   "failed"
+#define __CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_ARRAY                    "generated-products"
+#define __CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_USED_GROUPS              "used-content-groups"
+#define __CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_PRODUCT_NAME             "parent-product"
+#define __CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_FILENAME                 "filename"
+#define __CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_CREATED                  "creation-time"
+#define __CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_NOTES                    "notes"
+#define __CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_TAGS                     "tags"
 
-#define __CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP                       "output-metadata"
-#define __CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_WALLCLOCK_TIME        "total-wallclock-time"
-#define __CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_DB_TIME               "total-db-time"
-#define __CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_AGG_TIME              "total-aggregation-time"
-#define __CPP_TRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_HITS             "time-cache-hits"
-#define __CPP_TRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_UNLOADS          "time-cache-unloads"
-#define __CPP_TRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_HITS            "twopf-cache-hits"
-#define __CPP_TRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_UNLOADS         "twopf-cache-unloads"
-#define __CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_HITS          "threepf-cache-hits"
-#define __CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_UNLOADS       "threepf-cache-unloads"
-#define __CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_HITS             "data-cache-hits"
-#define __CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_UNLOADS          "data-cache-unloads"
-#define __CPP_TRANSPORT_NODE_OUTPUTDATA_STATS_CACHE_HITS            "stats-cache-hits"
-#define __CPP_TRANSPORT_NODE_OUTPUTDATA_STATS_CACHE_UNLOADS         "stats-cache-unloads"
-#define __CPP_TRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_EVICTIONS        "time-cache-evictions"
-#define __CPP_TRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_EVICTIONS       "twopf-cache-evictions"
-#define __CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_EVICTIONS     "threepf-cache-evictions"
-#define __CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_EVICTIONS        "data-cache-evictions"
-#define __CPP_TRANSPORT_NODE_OUTPUTDATA_STATS_CACHE_EVICTIONS       "stats-cache-evictions"
+#define __CPP_TRANSPORT_NODE_TIMINGDATA_GROUP                         "integration-metadata"
+#define __CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_WALLCLOCK_TIME          "total-wallclock-time"
+#define __CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_AGG_TIME                "total-aggregation-time"
+#define __CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_INT_TIME                "total-integration-time"
+#define __CPP_TRANSPORT_NODE_TIMINGDATA_MIN_MEAN_INT_TIME             "min-mean-integration-time"
+#define __CPP_TRANSPORT_NODE_TIMINGDATA_MAX_MEAN_INT_TIME             "max-mean-integration-time"
+#define __CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MIN_INT_TIME           "global-min-integration-time"
+#define __CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MAX_INT_TIME           "global-max-integration-time"
+#define __CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_BATCH_TIME              "total-batching-time"
+#define __CPP_TRANSPORT_NODE_TIMINGDATA_MIN_MEAN_BATCH_TIME           "min-mean-batching-time"
+#define __CPP_TRANSPORT_NODE_TIMINGDATA_MAX_MEAN_BATCH_TIME           "max-mean-batching-time"
+#define __CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MIN_BATCH_TIME         "global-min-batching-time"
+#define __CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MAX_BATCH_TIME         "global-max-batching-time"
+#define __CPP_TRANSPORT_NODE_TIMINGDATA_NUM_CONFIGURATIONS            "configurations-processed"
+#define __CPP_TRANSPORT_NODE_TIMINGDATA_NUM_FAILURES                  "configurations-failed"
+#define __CPP_TRANSPORT_NODE_TIMINGDATA_NUM_REFINED                   "configurations-refined"
+
+#define __CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP                         "output-metadata"
+#define __CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_WALLCLOCK_TIME          "total-wallclock-time"
+#define __CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_DB_TIME                 "total-db-time"
+#define __CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_AGG_TIME                "total-aggregation-time"
+#define __CPP_TRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_HITS               "time-cache-hits"
+#define __CPP_TRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_UNLOADS            "time-cache-unloads"
+#define __CPP_TRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_HITS              "twopf-cache-hits"
+#define __CPP_TRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_UNLOADS           "twopf-cache-unloads"
+#define __CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_HITS            "threepf-cache-hits"
+#define __CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_UNLOADS         "threepf-cache-unloads"
+#define __CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_HITS               "data-cache-hits"
+#define __CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_UNLOADS            "data-cache-unloads"
+#define __CPP_TRANSPORT_NODE_OUTPUTDATA_STATS_CACHE_HITS              "stats-cache-hits"
+#define __CPP_TRANSPORT_NODE_OUTPUTDATA_STATS_CACHE_UNLOADS           "stats-cache-unloads"
+#define __CPP_TRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_EVICTIONS          "time-cache-evictions"
+#define __CPP_TRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_EVICTIONS         "twopf-cache-evictions"
+#define __CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_EVICTIONS       "threepf-cache-evictions"
+#define __CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_EVICTIONS          "data-cache-evictions"
+#define __CPP_TRANSPORT_NODE_OUTPUTDATA_STATS_CACHE_EVICTIONS         "stats-cache-evictions"
 
 
 namespace transport
@@ -450,12 +455,13 @@ namespace transport
         integration_task_record(const integration_task_record& obj);
 
         //! deserialization constructor
-        integration_task_record(Json::Value& reader, typename repository_finder<number>::package_finder& f, repository_record::handler_package& pkg);
+        integration_task_record(Json::Value& reader, const boost::filesystem::path& repo_root,
+                                typename repository_finder<number>::package_finder& f, repository_record::handler_package& pkg);
 
         virtual ~integration_task_record();
 
 
-        // GET CONTENTS
+        // INTERFACE
 
       public:
 
@@ -464,6 +470,20 @@ namespace transport
 
 		    //! Get abstract task
 		    virtual task<number>* get_abstract_task() const override { return(this->tk); }
+
+
+		    // K-CONFIGURATION DATABASE HANDLING
+
+      public:
+
+        //! Get relative path to kconfiguration database
+        const boost::filesystem::path& get_relative_kconfig_database_path() const { return(this->kconfig_db); }
+
+        //! Set relative path to kconfiguration database
+        void set_relative_kconfig_database_path(const boost::filesystem::path& p) { this->kconfig_db = p; }
+
+		    //! Write kconfiguration database
+		    void write_kconfig_database(const boost::filesystem::path& db_path) const;
 
 
         // ADMINISTRATION
@@ -496,6 +516,9 @@ namespace transport
 
         //! Task associated with this record
         integration_task<number>* tk;
+
+		    //! k-configuration database associated with this record
+		    boost::filesystem::path kconfig_db;
 
 	    };
 
@@ -1778,17 +1801,34 @@ namespace transport
     template <typename number>
     integration_task_record<number>::integration_task_record(const integration_task_record<number>& obj)
 	    : task_record<number>(obj),
-	      tk(dynamic_cast<integration_task<number>*>(obj.tk->clone()))
+	      tk(dynamic_cast<integration_task<number>*>(obj.tk->clone())),
+        kconfig_db(obj.kconfig_db)
 	    {
         assert(tk != nullptr);
 	    }
 
 
     template <typename number>
-    integration_task_record<number>::integration_task_record(Json::Value& reader, typename repository_finder<number>::package_finder& f, repository_record::handler_package& pkg)
-	    : task_record<number>(reader, pkg),
-	      tk(integration_task_helper::deserialize<number>(this->name, reader, f))
+    integration_task_record<number>::integration_task_record(Json::Value& reader, const boost::filesystem::path& repo_root,
+                                                             typename repository_finder<number>::package_finder& f, repository_record::handler_package& pkg)
+	    : task_record<number>(reader, pkg)
 	    {
+		    // deserialize location of database
+        kconfig_db = reader[__CPP_TRANSPORT_NODE_RECORD_INTEGRATION_TASK_KCONFIG_DATABASE].asString();
+
+        boost::filesystem::path abs_database = repo_root / kconfig_db;
+
+        // open database
+        sqlite3* handle;
+        if(sqlite3_open_v2(abs_database.c_str(), &handle, SQLITE_OPEN_READONLY, nullptr) != SQLITE_OK)
+	        {
+            std::ostringstream msg;
+            msg << __CPP_TRANSPORT_REPO_FAIL_KCONFIG_DATABASE_OPEN << " '" << this->get_name() << "'";
+            throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, msg.str());
+	        }
+
+        tk = integration_task_helper::deserialize<number>(this->name, reader, handle, f);
+
         assert(tk != nullptr);
         if(tk == nullptr) throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_REPO_TASK_DESERIALIZE_FAIL);
 	    }
@@ -1805,9 +1845,31 @@ namespace transport
     void integration_task_record<number>::serialize(Json::Value& writer) const
 	    {
         writer[__CPP_TRANSPORT_NODE_RECORD_TYPE] = std::string(__CPP_TRANSPORT_NODE_RECORD_INTEGRATION_TASK);
+
+		    writer[__CPP_TRANSPORT_NODE_RECORD_INTEGRATION_TASK_KCONFIG_DATABASE] = this->kconfig_db.string();
+
         this->tk->serialize(writer);
         this->task_record<number>::serialize(writer);
 	    }
+
+
+		template <typename number>
+		void integration_task_record<number>::write_kconfig_database(const boost::filesystem::path& db_path) const
+			{
+		    // create database
+		    sqlite3* handle;
+		    if(sqlite3_open_v2(db_path.c_str(), &handle, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nullptr) != SQLITE_OK)
+			    {
+		        std::ostringstream msg;
+		        msg << __CPP_TRANSPORT_REPO_FAIL_KCONFIG_DATABASE_OPEN << " '" << this->get_name() << "'";
+		        throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, msg.str());
+			    }
+
+		    this->tk->write_kconfig_database(handle);
+
+		    sqlite3_operations::exec(handle, "VACUUM;");
+		    sqlite3_close(handle);
+			}
 
 
     // POSTINTEGRATION TASK RECORD

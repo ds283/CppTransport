@@ -7,6 +7,8 @@
 #ifndef __tasks_forward_declare_H_
 #define __tasks_forward_declare_H_
 
+#include "sqlite3.h"
+
 
 namespace transport
 	{
@@ -39,7 +41,7 @@ namespace transport
     namespace integration_task_helper
 	    {
         template <typename number>
-        integration_task<number>* deserialize(const std::string& nm, Json::Value& reader, typename repository_finder<number>::package_finder& f);
+        integration_task<number>* deserialize(const std::string& nm, Json::Value& reader, sqlite3* handle, typename repository_finder<number>::package_finder& f);
 	    }
 #endif
 

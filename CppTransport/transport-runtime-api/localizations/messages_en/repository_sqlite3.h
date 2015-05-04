@@ -9,6 +9,7 @@
 
 
 #define __CPP_TRANSPORT_REPO_FAIL_DATABASE_OPEN           "Repository error: failed to open repository database"
+#define __CPP_TRANSPORT_REPO_FAIL_KCONFIG_DATABASE_OPEN   "Repository error: failed to open kconfiguration database for task"
 
 #define __CPP_TRANSPORT_REPO_DATABASES_OPEN               "Repository error: SQLite database handles unexpectedly open"
 #define __CPP_TRANSPORT_REPO_DATABASES_CLOSED             "Repository error: SQLite database handles unexpectedly closed"

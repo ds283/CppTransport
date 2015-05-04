@@ -21,6 +21,30 @@
 #include "transport-runtime-api/exceptions.h"
 
 
+namespace aggregation_range_impl
+	{
+
+    template <typename value>
+    class DuplicateRemovalPredicate
+	    {
+      public:
+        DuplicateRemovalPredicate(value t)
+	        : tol(t)
+	        {
+	        }
+
+        bool operator()(value& a, value& b)
+	        {
+            return(fabs((a-b)/a) < tol);
+	        }
+
+      private:
+        value tol;
+	    };
+
+	}
+
+
 #define __CPP_TRANSPORT_NODE_RANGE_TYPE          "range-type"
 #define __CPP_TRANSPORT_NODE_RANGE_STEPPING      "stepping-range"
 #define __CPP_TRANSPORT_NODE_RANGE_AGGREGATE     "aggregation-type"

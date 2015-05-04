@@ -13,6 +13,8 @@
 
 #include "transport-runtime-api/utilities/random_string.h"
 
+#include "sqlite3.h"
+
 
 #define __CPP_TRANSPORT_NODE_FAST_FORWARD                  "fast-forward"
 #define __CPP_TRANSPORT_NODE_FAST_FORWARD_EFOLDS           "ff-efolds"
@@ -123,6 +125,17 @@ namespace transport
 
         //! build and cache stored time database -- only includes records for times which are committed to the database
         virtual void cache_stored_time_config_database();
+
+
+		    // K-CONFIGURATION DATABASE
+
+      public:
+
+		    //! write k-configuration database to disk
+		    virtual void write_kconfig_database(sqlite3* handle) = 0;
+
+		    //! check whether databases have been modified
+		    virtual bool is_kconfig_database_modified() const = 0;
 
 
         // SERIALIZE - implements a 'serializable' interface

@@ -294,6 +294,15 @@ namespace transport
 		    //! Commit callback: replacement commit to database
 		    void commit_replace(repository_record& record, find_function finder);
 
+		    //! Commit callback: commit integration task to database for the first time (need special treatment)
+		    void commit_integration_first(repository_record& record, count_function counter, store_function storer, std::string store_root, std::string exists_err);
+
+		    //! Commit callback: replacement commit to database for integration tasks (need special treatment)
+		    void commit_integration_replace(repository_record& record, find_function finder);
+
+				//! Commit k-configuration databases
+				void commit_kconfig_database(transaction_manager& mgr, integration_task_record <number>& record);
+
 
         // CONTENT GROUP MANAGEMENT
 
@@ -553,6 +562,52 @@ namespace transport
 	    }
 
 
+		template <typename number>
+		void repository_sqlite3<number>::commit_integration_first(repository_record& record,
+		                                                          typename repository_sqlite3<number>::count_function counter,
+		                                                          typename repository_sqlite3<number>::store_function storer,
+		                                                          std::string store_root, std::string exists_err)
+			{
+		    integration_task_record<number>& task_record = dynamic_cast<integration_task_record<number>&>(record);
+
+		    // check that no package with this name already exists
+		    unsigned int count = counter(this->db, task_record.get_name());
+		    if(count > 0)
+			    {
+		        std::ostringstream msg;
+		        msg << exists_err << " '" << task_record.get_name() << "'";
+		        throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
+			    }
+
+		    // commit entry to the database
+
+				// set up path to repository record
+		    boost::filesystem::path document_path = boost::filesystem::path(store_root) / task_record.get_name();
+		    document_path += ".json";   // add json extension
+
+				// set up path to kconfig-database
+		    boost::filesystem::path kconfig_database_path = boost::filesystem::path(store_root) / task_record.get_name();
+		    kconfig_database_path += ".kconfig-db.sqlite";    // add extension
+				task_record.set_relative_kconfig_database_path(kconfig_database_path);
+
+		    // obtain a lock on the database
+		    // the transaction manager will roll back any changes if it is not committed
+		    transaction_manager transaction = this->transaction_factory();
+
+		    // store record in database
+		    storer(transaction, this->db, task_record.get_name(), document_path.string());
+
+		    // store package on disk
+		    this->commit_JSON_document(transaction, document_path, task_record);
+
+				// store kconfiguration database on disk
+		    this->commit_kconfig_database(transaction, task_record);
+
+		    // commit
+		    transaction.commit();
+			}
+
+
     template <typename number>
     void repository_sqlite3<number>::commit_replace(repository_record& record, typename repository_sqlite3<number>::find_function finder)
 	    {
@@ -569,6 +624,51 @@ namespace transport
 		    // commit
 		    transaction.commit();
 	    }
+
+
+    template <typename number>
+    void repository_sqlite3<number>::commit_integration_replace(repository_record& record, typename repository_sqlite3<number>::find_function finder)
+	    {
+		    integration_task_record<number>& task_record = dynamic_cast<integration_task_record<number>&>(record);
+
+        // find existing record in the database
+        boost::filesystem::path document_path = finder(this->db, task_record.get_name());
+
+        // obtain a lock on the database
+        // the transaction manager will roll back any changes if it is not committed
+        transaction_manager transaction = this->transaction_factory();
+
+        // replace package on disk
+        this->commit_JSON_document(transaction, document_path, task_record);
+
+		    // replace kconfiguration database on disk
+        this->commit_kconfig_database(transaction, task_record);
+
+        // commit
+        transaction.commit();
+	    }
+
+
+		template <typename number>
+		void repository_sqlite3<number>::commit_kconfig_database(transaction_manager& mgr, integration_task_record <number>& record)
+			{
+		    // write out database to a temporary file
+		    boost::filesystem::path filename = record.get_relative_kconfig_database_path().filename();
+		    boost::filesystem::path parent   = record.get_relative_kconfig_database_path();
+		    parent.remove_filename();
+		    boost::filesystem::path temp_filename = boost::filesystem::path(filename.string() + "-temp");
+
+		    boost::filesystem::path abs_database  = this->get_root_path() / record.get_relative_kconfig_database_path();
+		    boost::filesystem::path abs_temporary = this->get_root_path() / (parent / temp_filename);
+
+				if(record.get_task()->is_kconfig_database_modified())   // only write out the full database if it is needed
+					{
+				    record.write_kconfig_database(abs_temporary);
+
+				    // if this succeeded, add this record to the transaction journal
+				    mgr.journal_deposit(abs_temporary, abs_database);
+					}
+			}
 
 
     // REPOSITORY RECORD FACTORIES -- USED TO OBTAIN REPOSITORY RECORD CLASSES FROM OTHER REPRESENTATIONS
@@ -607,7 +707,7 @@ namespace transport
         repository_record::handler_package pkg;
         count_function counter = std::bind(&sqlite3_operations::count_tasks, std::placeholders::_1, std::placeholders::_2);
         store_function storer  = std::bind(&sqlite3_operations::store_integration_task, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, tk.get_ics().get_name());
-        pkg.commit = std::bind(&repository_sqlite3<number>::commit_first, this, std::placeholders::_1, counter, storer, this->task_store.string(), __CPP_TRANSPORT_REPO_TASK_EXISTS);
+        pkg.commit = std::bind(&repository_sqlite3<number>::commit_integration_first, this, std::placeholders::_1, counter, storer, this->task_store.string(), __CPP_TRANSPORT_REPO_TASK_EXISTS);
 
         return new integration_task_record<number>(tk, pkg);
 	    }
@@ -618,9 +718,9 @@ namespace transport
 	    {
         repository_record::handler_package pkg;
         find_function finder = std::bind(&sqlite3_operations::find_integration_task, std::placeholders::_1, std::placeholders::_2, __CPP_TRANSPORT_REPO_TASK_MISSING);
-        pkg.commit = std::bind(&repository_sqlite3<number>::commit_replace, this, std::placeholders::_1, finder);
+        pkg.commit = std::bind(&repository_sqlite3<number>::commit_integration_replace, this, std::placeholders::_1, finder);
 
-        return new integration_task_record<number>(reader, this->pkg_finder, pkg);
+        return new integration_task_record<number>(reader, this->root_path, this->pkg_finder, pkg);
 	    }
 
 

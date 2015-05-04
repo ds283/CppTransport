@@ -14,7 +14,10 @@
 #include "transport-runtime-api/tasks/configuration-database/threepf_config_database.h"
 
 #include "transport-runtime-api/utilities/spline1d.h"
-#include <boost/math/tools/roots.hpp>
+
+#include "boost/math/tools/roots.hpp"
+
+#include "sqlite3.h"
 
 
 #define __CPP_TRANSPORT_NODE_THREEPF_INTEGRABLE            "integrable"
@@ -44,7 +47,7 @@ namespace transport
         threepf_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t, bool ff);
 
         //! deserialization constructor
-        threepf_task(const std::string& n, Json::Value& reader, const initial_conditions<number>& i);
+        threepf_task(const std::string& n, Json::Value& reader, sqlite3* handle, const initial_conditions<number>& i);
 
         //! Destroy a three-point function task
         virtual ~threepf_task() = default;
@@ -107,6 +110,17 @@ namespace transport
         virtual void serialize(Json::Value& writer) const override;
 
 
+        // WRITE K-CONFIGURATION DATABASE
+
+      public:
+
+        //! Write k-configuration database to disk
+        virtual void write_kconfig_database(sqlite3* handle) override;
+
+		    //! Check whether k-configuration databases have been modified
+		    virtual bool is_kconfig_database_modified() const override { return(this->threepf_db.is_modified() || this->twopf_list_task<number>::is_kconfig_database_modified()); }
+
+
         // INTERNAL DATA
 
       protected:
@@ -123,22 +137,19 @@ namespace transport
     template <typename number>
     threepf_task<number>::threepf_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t, bool ff)
 	    : twopf_list_task<number>(nm, i, t, ff),
-        threepf_db(i.get_model()->compute_kstar(this)),
+        threepf_db(this->twopf_list_task<number>::kstar),
 	      integrable(true)
 	    {
 	    }
 
 
     template <typename number>
-    threepf_task<number>::threepf_task(const std::string& nm, Json::Value& reader, const initial_conditions<number>& i)
-	    : twopf_list_task<number>(nm, reader, i),
-        threepf_db(reader[__CPP_TRANSPORT_NODE_THREEPF_LIST_DATABASE], this->twopf_list_task<number>::twopf_db)
+    threepf_task<number>::threepf_task(const std::string& nm, Json::Value& reader, sqlite3* handle, const initial_conditions<number>& i)
+	    : twopf_list_task<number>(nm, reader, handle, i),
+        threepf_db(this->twopf_list_task<number>::kstar, handle, this->twopf_list_task<number>::twopf_db)
 	    {
         //! deserialize integrable status
         integrable = reader[__CPP_TRANSPORT_NODE_THREEPF_INTEGRABLE].asBool();
-
-        // reconstruct horizon-exit times; these aren't stored in the repository record to save space
-        this->compute_horizon_exit_times();
 
         this->cache_stored_time_config_database();
 	    }
@@ -150,12 +161,18 @@ namespace transport
         // serialize integrable status
         writer[__CPP_TRANSPORT_NODE_THREEPF_INTEGRABLE] = this->integrable;
 
-        Json::Value db;
-        this->threepf_db.serialize(db);
-        writer[__CPP_TRANSPORT_NODE_THREEPF_LIST_DATABASE] = db;
+		    // threepf database is serialized separately to a SQLite database
 
         this->twopf_list_task<number>::serialize(writer);
 	    }
+
+
+		template <typename number>
+		void threepf_task<number>::write_kconfig_database(sqlite3* handle)
+			{
+		    this->twopf_list_task<number>::write_kconfig_database(handle);
+				this->threepf_db.write(handle);
+			}
 
 
     template <typename number>
@@ -285,7 +302,7 @@ namespace transport
                            const range<double>& t, const range<double>& ks, StoragePolicy policy, bool ff=true);
 
         //! Deserialization constructor
-        threepf_cubic_task(const std::string& nm, Json::Value& reader, const initial_conditions<number>& i);
+        threepf_cubic_task(const std::string& nm, Json::Value& reader, sqlite3* handle, const initial_conditions<number>& i);
 
 
         // INTERFACE
@@ -369,8 +386,8 @@ namespace transport
 
 
     template <typename number>
-    threepf_cubic_task<number>::threepf_cubic_task(const std::string& nm, Json::Value& reader, const initial_conditions<number>& i)
-	    : threepf_task<number>(nm, reader, i)
+    threepf_cubic_task<number>::threepf_cubic_task(const std::string& nm, Json::Value& reader, sqlite3* handle, const initial_conditions<number>& i)
+	    : threepf_task<number>(nm, reader, handle, i)
 	    {
         spacing = reader[__CPP_TRANSPORT_NODE_THREEPF_CUBIC_SPACING].asDouble();
 	    }
@@ -403,7 +420,7 @@ namespace transport
                          StoragePolicy kp, bool ff=true, double smallest_squeezing=__CPP_TRANSPORT_DEFAULT_SMALLEST_SQUEEZING);
 
         //! Deserialization constructor
-        threepf_fls_task(const std::string& nm, Json::Value& reader, const initial_conditions<number>& i);
+        threepf_fls_task(const std::string& nm, Json::Value& reader, sqlite3* handle, const initial_conditions<number>& i);
 
 
         // INTERFACE
@@ -496,8 +513,8 @@ namespace transport
 
 
     template <typename number>
-    threepf_fls_task<number>::threepf_fls_task(const std::string& nm, Json::Value& reader, const initial_conditions<number>& i)
-	    : threepf_task<number>(nm, reader, i)
+    threepf_fls_task<number>::threepf_fls_task(const std::string& nm, Json::Value& reader, sqlite3* handle, const initial_conditions<number>& i)
+	    : threepf_task<number>(nm, reader, handle, i)
 	    {
         kt_spacing    = reader[__CPP_TRANSPORT_NODE_THREEPF_FLS_KT_SPACING].asDouble();
         alpha_spacing = reader[__CPP_TRANSPORT_NODE_THREEPF_FLS_ALPHA_SPACING].asDouble();

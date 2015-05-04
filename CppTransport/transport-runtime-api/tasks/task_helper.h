@@ -21,6 +21,8 @@
 
 #include "transport-runtime-api/messages.h"
 
+#include "sqlite3.h"
+
 
 namespace transport
   {
@@ -29,7 +31,7 @@ namespace transport
       {
 
         template <typename number>
-        integration_task<number>* deserialize(const std::string& nm, Json::Value& reader, typename repository_finder<number>::package_finder& f)
+        integration_task<number>* deserialize(const std::string& nm, Json::Value& reader, sqlite3* handle, typename repository_finder<number>::package_finder& f)
           {
             std::string type = reader[__CPP_TRANSPORT_NODE_TASK_TYPE].asString();
 
@@ -38,9 +40,9 @@ namespace transport
             std::unique_ptr< package_record<number> > record(f(pkg_name));
             initial_conditions<number> ics = record->get_ics();
 
-            if(type == __CPP_TRANSPORT_NODE_TASK_TYPE_TWOPF)              return new twopf_task<number>(nm, reader, ics);
-            else if(type == __CPP_TRANSPORT_NODE_TASK_TYPE_THREEPF_CUBIC) return new threepf_cubic_task<number>(nm, reader, ics);
-            else if(type == __CPP_TRANSPORT_NODE_TASK_TYPE_THREEPF_FLS)   return new threepf_fls_task<number>(nm, reader, ics);
+            if(type == __CPP_TRANSPORT_NODE_TASK_TYPE_TWOPF)              return new twopf_task<number>(nm, reader, handle, ics);
+            else if(type == __CPP_TRANSPORT_NODE_TASK_TYPE_THREEPF_CUBIC) return new threepf_cubic_task<number>(nm, reader, handle, ics);
+            else if(type == __CPP_TRANSPORT_NODE_TASK_TYPE_THREEPF_FLS)   return new threepf_fls_task<number>(nm, reader, handle, ics);
 
             std::ostringstream msg;
             msg << __CPP_TRANSPORT_TASK_TYPE_UNKNOWN << " '" << type << "'";

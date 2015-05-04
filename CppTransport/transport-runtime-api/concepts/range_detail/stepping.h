@@ -220,15 +220,10 @@ namespace transport
 	            }
 	        }
 
-        struct GridSorter
-	        {
-            bool operator()(const value& a, const value& b)
-	            {
-                return(a < b);
-	            }
-	        };
-
-        std::sort(this->grid.begin(), this->grid.end(), GridSorter());
+        // sort grid into order and remove duplicates, eg. if user (accidentally) set top and bottom limits to be the same
+        std::sort(this->grid.begin(), this->grid.end());
+        auto last = std::unique(this->grid.begin(), this->grid.end(), aggregation_range_impl::DuplicateRemovalPredicate<value>(1E-10));
+        this->grid.erase(last, this->grid.end());
 	    }
 
     template <typename value>
