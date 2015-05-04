@@ -301,7 +301,7 @@ namespace transport
 		    void commit_integration_replace(repository_record& record, find_function finder);
 
 				//! Commit k-configuration databases
-				void commit_kconfiguration_database(transaction_manager& mgr, const boost::filesystem::path& db_path, integration_task_record<number>& record);
+				void commit_kconfig_database(transaction_manager& mgr, integration_task_record <number>& record);
 
 
         // CONTENT GROUP MANAGEMENT
@@ -601,7 +601,7 @@ namespace transport
 		    this->commit_JSON_document(transaction, document_path, task_record);
 
 				// store kconfiguration database on disk
-				this->commit_kconfiguration_database(transaction, kconfig_database_path, task_record);
+		    this->commit_kconfig_database(transaction, task_record);
 
 		    // commit
 		    transaction.commit();
@@ -642,7 +642,7 @@ namespace transport
         this->commit_JSON_document(transaction, document_path, task_record);
 
 		    // replace kconfiguration database on disk
-		    this->commit_kconfiguration_database(transaction, task_record.get_relative_kconfig_database_path(), task_record);
+        this->commit_kconfig_database(transaction, task_record);
 
         // commit
         transaction.commit();
@@ -650,21 +650,24 @@ namespace transport
 
 
 		template <typename number>
-		void repository_sqlite3<number>::commit_kconfiguration_database(transaction_manager& mgr, const boost::filesystem::path& db_path, integration_task_record<number>& record)
+		void repository_sqlite3<number>::commit_kconfig_database(transaction_manager& mgr, integration_task_record <number>& record)
 			{
 		    // write out database to a temporary file
-		    boost::filesystem::path filename = db_path.filename();
-		    boost::filesystem::path parent   = db_path;
+		    boost::filesystem::path filename = record.get_relative_kconfig_database_path().filename();
+		    boost::filesystem::path parent   = record.get_relative_kconfig_database_path();
 		    parent.remove_filename();
 		    boost::filesystem::path temp_filename = boost::filesystem::path(filename.string() + "-temp");
 
-		    boost::filesystem::path abs_database  = this->get_root_path() / db_path;
+		    boost::filesystem::path abs_database  = this->get_root_path() / record.get_relative_kconfig_database_path();
 		    boost::filesystem::path abs_temporary = this->get_root_path() / (parent / temp_filename);
 
-				record.write_kconfiguration_database(abs_temporary);
+				if(record.get_task()->is_kconfig_database_modified())   // only write out the full database if it is needed
+					{
+				    record.write_kconfig_database(abs_temporary);
 
-		    // if this succeeded, add this record to the transaction journal
-		    mgr.journal_deposit(abs_temporary, abs_database);
+				    // if this succeeded, add this record to the transaction journal
+				    mgr.journal_deposit(abs_temporary, abs_database);
+					}
 			}
 
 

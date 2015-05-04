@@ -86,7 +86,10 @@ namespace transport
 		    virtual void compute_horizon_exit_times();
 
         //! Write k-configuration database to disk
-        virtual void write_kconfiguration_database(sqlite3* handle) const override;
+        virtual void write_kconfig_database(sqlite3* handle) override;
+
+		    //! Check whether twopf database has been modified
+		    virtual bool is_kconfig_database_modified() const override { return(this->twopf_db.is_modified()); }
 
       protected:
 
@@ -296,7 +299,7 @@ namespace transport
 
 
     template <typename number>
-    void twopf_list_task<number>::write_kconfiguration_database(sqlite3* handle) const
+    void twopf_list_task<number>::write_kconfig_database(sqlite3* handle)
 	    {
         this->twopf_db.write(handle);
 	    }

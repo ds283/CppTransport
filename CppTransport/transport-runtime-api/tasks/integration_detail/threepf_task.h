@@ -115,7 +115,10 @@ namespace transport
       public:
 
         //! Write k-configuration database to disk
-        virtual void write_kconfiguration_database(sqlite3* handle) const override;
+        virtual void write_kconfig_database(sqlite3* handle) override;
+
+		    //! Check whether k-configuration databases have been modified
+		    virtual bool is_kconfig_database_modified() const override { return(this->threepf_db.is_modified() || this->twopf_list_task<number>::is_kconfig_database_modified()); }
 
 
         // INTERNAL DATA
@@ -165,9 +168,9 @@ namespace transport
 
 
 		template <typename number>
-		void threepf_task<number>::write_kconfiguration_database(sqlite3* handle) const
+		void threepf_task<number>::write_kconfig_database(sqlite3* handle)
 			{
-				this->twopf_list_task<number>::write_kconfiguration_database(handle);
+		    this->twopf_list_task<number>::write_kconfig_database(handle);
 				this->threepf_db.write(handle);
 			}
 

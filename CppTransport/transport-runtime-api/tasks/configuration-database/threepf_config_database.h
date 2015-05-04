@@ -190,6 +190,9 @@ namespace transport
         //! get number of records in database
         size_t size() const { return(this->database.size()); }
 
+		    //! is the database in a modified (ie. unsaved) state?
+		    bool is_modified() const { return(this->modified); }
+
 
         // INTERFACE -- ADD AND LOOKUP RECORDS
 
@@ -232,7 +235,7 @@ namespace transport
       public:
 
         //! Serialize this object
-        void write(sqlite3* handle) const;
+        void write(sqlite3* handle);
 
 
         // INTERNAL DATA
@@ -248,6 +251,9 @@ namespace transport
 
         //! serial number for next inserted item
         unsigned int serial;
+
+		    //! is the database in a modified (unsaved) state?
+		    bool modified;
 
         //! keep track of whether the background has been stored
         bool store_background;
@@ -278,7 +284,8 @@ namespace transport
         kmin_conventional(std::numeric_limits<double>::max()),
         kmax_comoving(-std::numeric_limits<double>::max()),
         kmin_comoving(std::numeric_limits<double>::max()),
-        store_background(true)
+        store_background(true),
+        modified(true)
       {
       }
 
@@ -290,7 +297,8 @@ namespace transport
         kmin_conventional(std::numeric_limits<double>::max()),
         kmax_comoving(-std::numeric_limits<double>::max()),
         kmin_comoving(std::numeric_limits<double>::max()),
-        store_background(false)
+        store_background(false),
+        modified(false)
       {
         std::ostringstream query_stmt;
 
@@ -465,6 +473,9 @@ namespace transport
 
             this->database.emplace(config.serial, threepf_kconfig_record(config, this->store_background, !k1_stored, !k2_stored, !k3_stored));
             this->store_background = false;
+
+		        this->modified = true;
+
             return(config.serial);
           }
 
@@ -472,7 +483,7 @@ namespace transport
       }
 
 
-    void threepf_kconfig_database::write(sqlite3* handle) const
+    void threepf_kconfig_database::write(sqlite3* handle)
       {
         std::ostringstream create_stmt;
 
@@ -533,6 +544,8 @@ namespace transport
 
         sqlite3_operations::exec(handle, "END TRANSACTION");
         sqlite3_operations::check_stmt(handle, sqlite3_finalize(stmt));
+
+		    this->modified = false;
       }
 
 

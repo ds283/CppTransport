@@ -483,7 +483,7 @@ namespace transport
         void set_relative_kconfig_database_path(const boost::filesystem::path& p) { this->kconfig_db = p; }
 
 		    //! Write kconfiguration database
-		    void write_kconfiguration_database(const boost::filesystem::path& db_path) const;
+		    void write_kconfig_database(const boost::filesystem::path& db_path) const;
 
 
         // ADMINISTRATION
@@ -1854,7 +1854,7 @@ namespace transport
 
 
 		template <typename number>
-		void integration_task_record<number>::write_kconfiguration_database(const boost::filesystem::path& db_path) const
+		void integration_task_record<number>::write_kconfig_database(const boost::filesystem::path& db_path) const
 			{
 		    // create database
 		    sqlite3* handle;
@@ -1865,7 +1865,7 @@ namespace transport
 		        throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, msg.str());
 			    }
 
-				this->tk->write_kconfiguration_database(handle);
+		    this->tk->write_kconfig_database(handle);
 
 		    sqlite3_operations::exec(handle, "VACUUM;");
 		    sqlite3_close(handle);

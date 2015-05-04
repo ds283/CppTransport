@@ -43,7 +43,10 @@ namespace transport
         virtual void serialize(Json::Value& writer) const override { throw std::runtime_error(__CPP_TRANSPORT_SERIALIZE_BACKGROUND_TASK); }
 
 		    //! Throw an exception if an attempt is made to write a background k-configuration database
-		    virtual void write_kconfiguration_database(sqlite3* handle) const override { throw std::runtime_error(__CPP_TRANSPORT_SERIALIZE_BACKGROUND_TASK); }
+		    virtual void write_kconfig_database(sqlite3* handle) override { throw std::runtime_error(__CPP_TRANSPORT_SERIALIZE_BACKGROUND_TASK); }
+
+        //! Throw an exception if an attempt is made to write a background k-configuration database
+		    virtual bool is_kconfig_database_modified() const override { throw std::runtime_error(__CPP_TRANSPORT_SERIALIZE_BACKGROUND_TASK); }
 
 
         // CLONE

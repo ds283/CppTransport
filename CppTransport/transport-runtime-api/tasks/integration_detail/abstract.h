@@ -132,7 +132,10 @@ namespace transport
       public:
 
 		    //! write k-configuration database to disk
-		    virtual void write_kconfiguration_database(sqlite3* handle) const = 0;
+		    virtual void write_kconfig_database(sqlite3* handle) = 0;
+
+		    //! check whether databases have been modified
+		    virtual bool is_kconfig_database_modified() const = 0;
 
 
         // SERIALIZE - implements a 'serializable' interface
