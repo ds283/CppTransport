@@ -1801,7 +1801,8 @@ namespace transport
     template <typename number>
     integration_task_record<number>::integration_task_record(const integration_task_record<number>& obj)
 	    : task_record<number>(obj),
-	      tk(dynamic_cast<integration_task<number>*>(obj.tk->clone()))
+	      tk(dynamic_cast<integration_task<number>*>(obj.tk->clone())),
+        kconfig_db(obj.kconfig_db)
 	    {
         assert(tk != nullptr);
 	    }
