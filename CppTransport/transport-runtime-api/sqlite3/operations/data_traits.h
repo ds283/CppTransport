@@ -68,6 +68,7 @@ namespace transport
 				    static const std::string sqlite_table()          { return(__CPP_TRANSPORT_SQLITE_ICS_TABLE); }
 				    static const std::string write_error_msg()       { return(__CPP_TRANSPORT_DATACTR_ICS_INSERT_FAIL); }
 				    static const std::string sqlite_serial_column()  { return("kserial"); }
+				    static const bool has_texit = true;
 			    };
 
 
@@ -77,6 +78,7 @@ namespace transport
 		        static const std::string sqlite_table()          { return(__CPP_TRANSPORT_SQLITE_KT_ICS_TABLE); }
 		        static const std::string write_error_msg()       { return(__CPP_TRANSPORT_DATACTR_ICS_INSERT_FAIL); }
 		        static const std::string sqlite_serial_column()  { return("kserial"); }
+				    static const bool has_texit = true;
 			    };
 
 
@@ -86,6 +88,7 @@ namespace transport
 						static const std::string sqlite_table()          { return(__CPP_TRANSPORT_SQLITE_BACKG_VALUE_TABLE); }
 						static const std::string write_error_msg()       { return(__CPP_TRANSPORT_DATACTR_BACKG_DATATAB_FAIL); }
 				    static const std::string sqlite_serial_column()  { return("tserial"); }
+						static const bool has_texit = false;
 					};
 
 

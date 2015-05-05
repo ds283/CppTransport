@@ -186,7 +186,7 @@ namespace transport
         void push_backg(unsigned int time_serial, unsigned int source_serial, const std::vector<number>& values);
 
 		    //! Push a set of initial conditions
-        void push_ics(unsigned int k_serial, const std::vector<number>& values);
+        void push_ics(unsigned int k_serial, double t_exit, const std::vector<number>& values);
 
 
         // UNBATCH
@@ -474,7 +474,7 @@ namespace transport
                                  const std::vector<number>& tpf_k2_re, const std::vector<number>& tpf_k2_im,
                                  const std::vector<number>& tpf_k3_re, const std::vector<number>& tpf_k3_im, const std::vector<number>& bg);
 
-		    void push_kt_ics(unsigned int k_serial, const std::vector<number>& values);
+		    void push_kt_ics(unsigned int k_serial, double t_exit, const std::vector<number>& values);
 
         virtual void unbatch(unsigned int source_serial) override;
 
@@ -637,7 +637,7 @@ namespace transport
 
 
 		template <typename number>
-		void integration_batcher<number>::push_ics(unsigned int k_serial, const std::vector<number>& values)
+		void integration_batcher<number>::push_ics(unsigned int k_serial, double t_exit, const std::vector<number>& values)
 			{
 		    if(values.size() != 2*this->Nfields) throw runtime_exception(runtime_exception::STORAGE_ERROR, __CPP_TRANSPORT_NFIELDS_BACKG);
 
@@ -646,6 +646,7 @@ namespace transport
 						typename integration_items<number>::ics_item ics;
 
 				    ics.source_serial = k_serial;
+						ics.texit         = t_exit;
 				    ics.coords        = values;
 
 						this->ics_batch.push_back(ics);
@@ -1050,7 +1051,7 @@ namespace transport
 
 
     template <typename number>
-    void threepf_batcher<number>::push_kt_ics(unsigned int k_serial, const std::vector<number>& values)
+    void threepf_batcher<number>::push_kt_ics(unsigned int k_serial, double t_exit, const std::vector<number>& values)
 	    {
         if(values.size() != 2*this->Nfields) throw runtime_exception(runtime_exception::STORAGE_ERROR, __CPP_TRANSPORT_NFIELDS_BACKG);
 
@@ -1059,6 +1060,7 @@ namespace transport
             typename integration_items<number>::ics_kt_item ics;
 
             ics.source_serial = k_serial;
+		        ics.texit         = t_exit;
             ics.coords        = values;
 
             this->kt_ics_batch.push_back(ics);

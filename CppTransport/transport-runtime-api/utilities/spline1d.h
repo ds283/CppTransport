@@ -14,8 +14,9 @@
 
 #include <assert.h>
 
-#include "gsl/gsl_spline.h"
-
+#include "datatable.h"
+#include "bspline.h"
+#include "pspline.h"
 
 namespace transport
   {
@@ -31,12 +32,8 @@ namespace transport
         //! set up a 1d spline object with given data points
         spline1d(const std::vector<double>& x, const std::vector<number>& y);
 
-		    //! prevent copying
-		    spline1d(const spline1d<number>& obj);
-
-        //! destroy object, releasing
-        ~spline1d();
-
+        //! destructor is default
+        ~spline1d() = default;
 
 		    // INTERFACE -- OFFSETS
 
@@ -84,20 +81,22 @@ namespace transport
 
       protected:
 
-        //! pointer to GSL spline object
-        gsl_spline*       spline;
+        //! pointer to spline object; its lifetime is managed by std::shared_ptr,
+        //! which also deals correctly with taking copies.
+        //! This is a raw BSpline, meaning that it goes through each of the data points.
+        //! We use it to interpolate values.
+        std::shared_ptr<Splinter::BSpline> b_spline;
 
-        //! pointer to GSL accelerator cache
-        gsl_interp_accel* accel;
+        //! pointer to penalized-B spline object.
+        //! This is smoothed, so it need not go through every data point.
+        //! We use it to interpolate derivatives
+        std::shared_ptr<Splinter::PSpline> p_spline;
+
+        //! DataTable instance
+        Splinter::DataTable table;
 
 		    //! offset to apply on evaluation
 		    number offset;
-
-		    //! pointer to array of xs
-		    double* xs;
-
-		    //! pointer to array of ys;
-		    double* ys;
 
 		    //! number of points
 		    unsigned int N;
@@ -121,74 +120,37 @@ namespace transport
 
         N  = x.size();
 
-        spline = gsl_spline_alloc(gsl_interp_cspline, N);
-        accel  = gsl_interp_accel_alloc();
-
-        // allocate new arrays for x and y values
-        xs = new double[N];
-        ys = new double[N];
-
-        // copy supplied data into our new arrays
+        // copy supplied data into Splinter DataTable
         for(unsigned int i = 0; i < N; ++i)
           {
-            // assume 'number' is explicitly castable to 'double'
-            xs[i] = static_cast<double>(x[i]);
-            ys[i] = (double)y[i];
+            table.addSample(x[i], y[i]);
 
-		        if(xs[i] < min_x) min_x = xs[i];
-		        if(xs[i] > max_x) max_x = xs[i];
+		        if(x[i] < min_x) min_x = x[i];
+		        if(x[i] > max_x) max_x = x[i];
           }
 
-        // build GSL spline object and cache it
-        gsl_spline_init(spline, xs, ys, N);
-      }
-
-
-		template <typename number>
-		spline1d<number>::spline1d(const spline1d<number>& obj)
-			: offset(obj.offset),
-			  min_x(obj.min_x),
-			  max_x(obj.max_x),
-				N(obj.N)
-			{
-		    spline = gsl_spline_alloc(gsl_interp_cspline, N);
-		    accel  = gsl_interp_accel_alloc();
-
-				xs = new double[N];
-				ys = new double[N];
-
-				for(unsigned int i = 0; i < N; i++)
-					{
-						xs[i] = obj.xs[i];
-						ys[i] = obj.ys[i];
-					}
-
-				gsl_spline_init(spline, xs, ys, N);
-			}
-
-
-    template <typename number>
-    spline1d<number>::~spline1d()
-      {
-        gsl_spline_free(this->spline);
-        gsl_interp_accel_free(this->accel);
-
-        delete xs;
-        delete ys;
+        b_spline = std::make_shared<Splinter::BSpline>(table, Splinter::BSplineType::CUBIC_FREE);
+        p_spline = std::make_shared<Splinter::PSpline>(table, 0.03);
       }
 
 
     template <typename number>
     number spline1d<number>::eval(double x)
       {
-        return( static_cast<number>(gsl_spline_eval(this->spline, x, this->accel)) - this->offset );
+        Splinter::DenseVector xv(1);
+        xv(0) = x;
+
+        return( static_cast<number>(this->b_spline->eval(xv)) - this->offset );
       }
 
 
     template <typename number>
     number spline1d<number>::eval_diff(double x)
       {
-        return( static_cast<number>(gsl_spline_eval_deriv(this->spline, x, this->accel)) );
+        Splinter::DenseVector xv(1);
+        xv(0) = x;
+
+        return( static_cast<number>((this->p_spline->evalJacobian(xv))(0)) );
       }
 
 
