@@ -4,9 +4,9 @@ project(CppTransport)
 
 SET ( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/" )
 
-SET ( ODEINT_INCLUDE_PATH "/Users/david/Documents/Code/odeint-v2-ds283/include" )
-SET ( SPLINTER_INCLUDE_PATH "/Users/david/Documents/Code/splinter-ds283/install/include" )
-SET ( SPLINTER_LIBRARY_PATH "/Users/david/Documents/Code/splinter-ds283/install/lib" )
+SET ( ODEINT_INCLUDE_PATH "~/Documents/Code/odeint-v2-ds283/include" )
+SET ( SPLINTER_INCLUDE_PATH "~/Documents/Code/splinter-ds283/install/include" )
+SET ( SPLINTER_LIBRARY_PATH "~/Documents/Code/splinter-ds283/install/lib" )
 SET ( SPLINTER_LIBRARIES "${SPLINTER_LIBRARY_PATH}/libsplinter-static-1-2.a" )
 
 find_package(MPI REQUIRED)
