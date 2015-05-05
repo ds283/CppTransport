@@ -212,11 +212,11 @@ namespace transport
 			            {
 		                case twopf_configs:
 			                create_stmt << __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE;
-		                break;
+		                  break;
 
 		                case threepf_configs:
 			                create_stmt << __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE;
-		                break;
+		                  break;
 
 		                default:
 			                assert(false);
@@ -259,11 +259,11 @@ namespace transport
 			            {
 		                case twopf_configs:
 			                create_stmt << __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE;
-		                break;
+		                  break;
 
 		                case threepf_configs:
 			                create_stmt << __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE;
-		                break;
+		                  break;
 
 		                default:
 			                assert(false);
