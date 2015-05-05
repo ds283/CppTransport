@@ -58,7 +58,7 @@ namespace transport
 
 				const std::string& dateutil_namespace() const { return(this->dateutil_namespace_str); }
 
-				const double height() const { return(this->height_val); }
+				double height() const { return(this->height_val); }
 
 
 				// INTERNAL DATA
@@ -118,10 +118,7 @@ namespace transport
 				//! end time
 				boost::posix_time::ptime end_time;
 
-				//! height of bar
-				double height;
-
-				//! alpha channel
+		    //! alpha channel
 				double alpha;
 
 			};
