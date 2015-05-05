@@ -122,6 +122,8 @@ namespace transport
 	            << "INSERT INTO " << data_traits<number, ValueType>::sqlite_table()
 	            << " VALUES (@" << data_traits<number, ValueType>::sqlite_serial_column() << ", @page";
 
+		        if(data_traits<number, ValueType>::has_texit) insert_stmt << ", @t_exit";
+
             for(unsigned int i = 0; i < num_cols; ++i)
               {
                 insert_stmt << ", @coord" << i;
@@ -140,12 +142,14 @@ namespace transport
                     check_stmt(db, sqlite3_bind_int(stmt, 1, t->get_serial()));
 		                check_stmt(db, sqlite3_bind_int(stmt, 2, page));
 
+		                if(data_traits<number, ValueType>::has_texit) check_stmt(db, sqlite3_bind_double(stmt, 3, t->get_texit()));
+
 		                for(unsigned int i = 0; i < num_cols; ++i)
 			                {
 				                unsigned int index = page*num_cols + i;
 				                number       value = index < 2*Nfields ? t->coords[index] : 0.0;
 
-		                    check_stmt(db, sqlite3_bind_double(stmt, i+3, static_cast<double>(value)));    // 'number' must be castable to double
+		                    check_stmt(db, sqlite3_bind_double(stmt, i+3+(data_traits<number, ValueType>::has_texit ? 1 : 0), static_cast<double>(value)));    // 'number' must be castable to double
 			                }
 
 		                check_stmt(db, sqlite3_step(stmt), data_traits<number, ValueType>::write_error_msg(), SQLITE_DONE);

@@ -379,7 +379,8 @@ namespace transport
 		    if(batcher.is_collecting_initial_conditions())
 			    {
 				    const std::vector<number> ics_1 = tk->get_ics_exit_vector(*kconfig);
-		        batcher.push_ics(kconfig->serial, ics_1);
+		        double t_exit = tk->get_ics_exit_time(*kconfig);
+		        batcher.push_ics(kconfig->serial, t_exit, ics_1);
 			    }
 
         // fix initial conditions - tensors
@@ -545,8 +546,10 @@ namespace transport
 			    {
 				    const std::vector<number> ics_1 = tk->get_ics_exit_vector(*kconfig, smallest_wavenumber_exit);
 				    const std::vector<number> ics_2 = tk->get_ics_exit_vector(*kconfig, kt_wavenumber_exit);
-				    batcher.push_ics(kconfig->serial, ics_1);
-				    batcher.push_kt_ics(kconfig->serial, ics_2);
+		        double t_exit_1 = tk->get_ics_exit_time(*kconfig, smallest_wavenumber_exit);
+		        double t_exit_2 = tk->get_ics_exit_time(*kconfig, kt_wavenumber_exit);
+		        batcher.push_ics(kconfig->serial, t_exit_1, ics_1);
+		        batcher.push_kt_ics(kconfig->serial, t_exit_2, ics_2);
 			    }
 
         // fix initial conditions - tensors

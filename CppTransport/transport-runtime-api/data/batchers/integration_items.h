@@ -35,6 +35,10 @@ namespace transport
             //! kconfig serial number for the integration which produced this. Used when unwinding a batch.
             unsigned int        source_serial;
 
+		        //! get_texit() not needed for backg_item but allowed here to prevent template specialization failure
+		        //! TODO: would be nice to simplify this
+		        double get_texit() const { return(0.0); }
+
 	        };
 
 
@@ -151,6 +155,10 @@ namespace transport
 				    unsigned int        source_serial;
 				    unsigned int        get_serial() const { return(this->source_serial); }
 
+				    //! time of horizon exit
+				    double              texit;
+				    double              get_texit() const { return(this->texit); }
+
 		        //! values
 		        std::vector<number> coords;
 			    };
@@ -165,6 +173,10 @@ namespace transport
             //! kconfig serial number
             unsigned int        source_serial;
             unsigned int        get_serial() const { return(this->source_serial); }
+
+            //! time of horizon exit
+            double              texit;
+            double              get_texit() const { return(this->texit); }
 
             //! values
             std::vector<number> coords;
