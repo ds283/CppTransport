@@ -87,6 +87,9 @@ namespace transport
         //! Get std::vector of initial conditions, offset using fast forwarding if enabled
         std::vector<number> get_ics_vector(const threepf_kconfig& kconfig) const;
 
+        //! Get time of horizon exit for a k-configuration
+        double get_ics_exit_time(const threepf_kconfig& kconfig, threepf_ics_exit_type type=smallest_wavenumber_exit) const;
+
 		    //! Get std::vector of initial conditions at horizon exit time for a k-configuration
 		    std::vector<number> get_ics_exit_vector(const threepf_kconfig& kconfig, threepf_ics_exit_type type=smallest_wavenumber_exit) const;
 
@@ -213,38 +216,46 @@ namespace transport
 
 
 		template <typename number>
+		double threepf_task<number>::get_ics_exit_time(const threepf_kconfig& config, threepf_ics_exit_type type) const
+			{
+		    double time = config.t_exit;
+
+		    switch(type)
+			    {
+		        case smallest_wavenumber_exit:
+			        {
+		            double kmin = std::min(std::min(config.k1_conventional, config.k2_conventional), config.k3_conventional);
+
+		            unsigned int serial;
+		            bool found = this->twopf_db.find(kmin, serial);
+		            assert(found);
+
+		            twopf_kconfig_database::const_record_iterator t = this->twopf_db.lookup(serial);
+		            assert(t != this->twopf_db.crecord_end());
+
+		            time = (*t)->t_exit;
+		            break;
+			        }
+
+		        case kt_wavenumber_exit:
+			        {
+		            time = config.t_exit;
+		            break;
+			        };
+
+		        default:
+			        assert(false);
+			    }
+
+				return(time);
+			}
+
+
+		template <typename number>
 		std::vector<number> threepf_task<number>::get_ics_exit_vector(const threepf_kconfig& config, threepf_ics_exit_type type) const
 			{
-				double time = config.t_exit;
 
-				switch(type)
-					{
-				    case smallest_wavenumber_exit:
-					    {
-						    double kmin = std::min(std::min(config.k1_conventional, config.k2_conventional), config.k3_conventional);
-
-				        unsigned int serial;
-				        bool found = this->twopf_db.find(kmin, serial);
-				        assert(found);
-
-				        twopf_kconfig_database::const_record_iterator t = this->twopf_db.lookup(serial);
-				        assert(t != this->twopf_db.crecord_end());
-
-						    time = (*t)->t_exit;
-						    break;
-					    }
-
-				    case kt_wavenumber_exit:
-					    {
-						    time = config.t_exit;
-						    break;
-					    };
-
-				    default:
-					    assert(false);
-					}
-
-				return this->integration_task<number>::get_ics_vector(time);
+				return this->integration_task<number>::get_ics_vector(this->get_ics_exit_time(config, type));
 			}
 
 
