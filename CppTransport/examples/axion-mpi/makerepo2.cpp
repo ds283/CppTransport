@@ -103,15 +103,17 @@ int main(int argc, char* argv[])
 //    transport::stepping_range<double> betas_lo(betamin, betamid, lo_b_samples, transport::linear_stepping);
 //    transport::stepping_range<double> betas_hi(betamid, betamax, hi_b_samples, transport::logarithmic_top_stepping);
 //    transport::aggregation_range<double> betas(betas_lo, betas_hi);
-    transport::stepping_range<double> betas_lo(0, 0.9, 50, transport::logarithmic_top_stepping);
+    transport::stepping_range<double> betas_equi(1.0/3.0, 1.0/3.0, 0, transport::linear_stepping);    // add dedicated equilateral configuration
+    transport::stepping_range<double> betas_lo(0.0, 0.9, 60, transport::linear_stepping);
     transport::stepping_range<double> betas_mid(0.9, 0.99, 50, transport::logarithmic_top_stepping);
     transport::stepping_range<double> betas_hi(0.99, 0.999, 50, transport::logarithmic_top_stepping);
     transport::aggregation_range<double> betas(betas_lo, betas_mid);
 		betas.add_subrange(betas_hi);
+		betas.add_subrange(betas_equi);
 
     // construct a threepf task
     transport::threepf_fls_task<double> tk3("axion.threepf-1", ics, times, kts, alphas, betas, ThreepfStoragePolicy(), false);
-		tk3.set_fast_forward_efolds(4.5);
+		tk3.set_fast_forward_efolds(4.0);
 		tk3.set_collect_initial_conditions(true);
 
 		// construct a zeta threepf task, paired with the primary integration task
@@ -134,7 +136,7 @@ int main(int argc, char* argv[])
     transport::derived_data::SQL_twopf_kconfig_query largest_twopf("conventional IN (SELECT MAX(conventional) FROM twopf_samples)");
 
     // filter: (closest to) equilateral threepf with smallest k_t
-    transport::derived_data::SQL_threepf_kconfig_query equilateral_smallest_threepf("ABS(alpha) < 0.01 AND beta IN (SELECT MIN(beta) FROM threepf_samples) < 0.01 AND kt_conventional IN (SELECT MIN(kt_conventional) FROM threepf_samples)");
+    transport::derived_data::SQL_threepf_kconfig_query equilateral_smallest_threepf("ABS(alpha) < 0.01 AND ABS(beta-1.0/3.0) < 0.01 AND kt_conventional IN (SELECT MIN(kt_conventional) FROM threepf_samples)");
 
     // filter: squeezed, equilateral threepf
     transport::derived_data::SQL_threepf_kconfig_query isosceles_squeezed_threepf("ABS(beta-0.999)<0.0001 AND ABS(alpha)<0.01");
