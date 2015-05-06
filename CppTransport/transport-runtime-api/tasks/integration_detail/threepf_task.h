@@ -310,7 +310,8 @@ namespace transport
         //! with specified policies
         template <typename StoragePolicy>
         threepf_cubic_task(const std::string& nm, const initial_conditions<number>& i,
-                           const range<double>& t, const range<double>& ks, StoragePolicy policy, bool ff=true);
+                           const range<double>& t, const range<double>& ks, StoragePolicy policy,
+                           bool ff=true, double tol=__CPP_TRANSPORT_DEFAULT_KCONFIG_TOLERANCE);
 
         //! Deserialization constructor
         threepf_cubic_task(const std::string& nm, Json::Value& reader, sqlite3* handle, const initial_conditions<number>& i);
@@ -356,7 +357,8 @@ namespace transport
     template <typename number>
     template <typename StoragePolicy>
     threepf_cubic_task<number>::threepf_cubic_task(const std::string& nm, const initial_conditions<number>& i,
-                                                   const range<double>& t, const range<double>& ks, StoragePolicy policy, bool ff)
+                                                   const range<double>& t, const range<double>& ks, StoragePolicy policy,
+                                                   bool ff, double tol)
 	    : threepf_task<number>(nm, i, t, ff)
 	    {
         // step through the lattice of k-modes, recording which are viable triangular configurations
@@ -370,7 +372,7 @@ namespace transport
                     auto maxij  = (ks[j] > ks[k] ? ks[j] : ks[k]);
                     auto maxijk = (maxij > ks[l] ? maxij : ks[l]);
 
-                    if(ks[j] + ks[k] + ks[l] >= 2.0 * maxijk)   // impose the triangle conditions
+                    if(ks[j] + ks[k] + ks[l] - 2.0*maxijk >= -fabs(tol))   // impose the triangle conditions
 	                    {
                         if(this->threepf_task<number>::threepf_db.add_k1k2k3_record(this->twopf_list_task<number>::twopf_db, ks[j], ks[k], ks[l], policy) < 0)
                           {
@@ -428,7 +430,9 @@ namespace transport
         template <typename StoragePolicy>
         threepf_fls_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t,
                          const range<double>& kts, const range<double>& alphas, const range<double>& betas,
-                         StoragePolicy kp, bool ff=true, double smallest_squeezing=__CPP_TRANSPORT_DEFAULT_SMALLEST_SQUEEZING);
+                         StoragePolicy kp, bool ff=true,
+                         double smallest_squeezing=__CPP_TRANSPORT_DEFAULT_SMALLEST_SQUEEZING,
+                         double tol=__CPP_TRANSPORT_DEFAULT_KCONFIG_TOLERANCE);
 
         //! Deserialization constructor
         threepf_fls_task(const std::string& nm, Json::Value& reader, sqlite3* handle, const initial_conditions<number>& i);
@@ -482,7 +486,7 @@ namespace transport
     template <typename StoragePolicy>
     threepf_fls_task<number>::threepf_fls_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t,
                                                const range<double>& kts, const range<double>& alphas, const range<double>& betas,
-                                               StoragePolicy policy, bool ff, double smallest_squeezing)
+                                               StoragePolicy policy, bool ff, double smallest_squeezing, double tol)
 	    : threepf_task<number>(nm, i, t, ff)
 	    {
         for(unsigned int j = 0; j < kts.size(); ++j)
@@ -491,11 +495,15 @@ namespace transport
 	            {
                 for(unsigned int l = 0; l < betas.size(); ++l)
 	                {
-                    if(betas[l] >= 0.0 && betas[l] <= 1.0 && betas[l]-1.0 <= alphas[k] && alphas[k] <= 1.0-betas[l]  // impose triangle conditions,
-	                    && alphas[k] >= 0.0 && betas[l] >= (1.0+alphas[k])/3.0                                         // impose k1 >= k2 >= k3
-	                    && fabs(1.0 - betas[l]) > smallest_squeezing                                                   // impose maximum squeezing on k3
-	                    && fabs(1.0 + alphas[k] + betas[l]) > smallest_squeezing
-	                    && fabs(1.0 - alphas[k] + betas[l]) > smallest_squeezing)                                      // impose maximum squeezing on k1, k2
+                    if(betas[l] >= 0.0
+	                     && betas[l] <= 1.0
+	                     && betas[l]-1.0 - alphas[k] <= fabs(tol)
+	                     && alphas[k] - (1.0-betas[l]) < fabs(tol)                   // impose triangle conditions,
+	                     && alphas[k] >= 0.0
+	                     && betas[l] - (1.0+alphas[k])/3.0 >= -fabs(tol)             // impose k1 >= k2 >= k3
+	                     && fabs(1.0 - betas[l]) > smallest_squeezing                // impose maximum squeezing on k3
+	                     && fabs(1.0 + alphas[k] + betas[l]) > smallest_squeezing
+	                     && fabs(1.0 - alphas[k] + betas[l]) > smallest_squeezing)   // impose maximum squeezing on k1, k2
 	                    {
                         if(this->threepf_task<number>::threepf_db.add_FLS_record(this->threepf_task<number>::twopf_db, kts[j], alphas[k], betas[l], policy) < 0)
                           {

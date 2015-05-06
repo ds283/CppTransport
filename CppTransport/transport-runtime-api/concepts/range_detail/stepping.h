@@ -174,10 +174,18 @@ namespace transport
 	        {
             case linear_stepping:
 	            {
-                for(unsigned int i = 0; i <= this->steps; ++i)
-	                {
-                    this->grid.push_back(min + (static_cast<double>(i)/this->steps)*(this->max-this->min));
-	                }
+		            if(this->steps == 0)
+			            {
+				            this->grid.push_back(min);
+			            }
+		            else
+			            {
+		                for(unsigned int i = 0; i <= this->steps; ++i)
+			                {
+				                value v = this->min + (static_cast<double>(i)/this->steps)*(this->max-this->min);
+		                    if(!std::isnan(v)) this->grid.push_back(v);
+			                }
+			            }
                 break;
 	            }
 
@@ -192,11 +200,19 @@ namespace transport
 
             case logarithmic_bottom_stepping:
 	            {
-                double shifted_max = this->max - (this->min-1.0);
-                for(unsigned int i = 0; i <= this->steps; ++i)
-	                {
-                    grid.push_back(this->min-1.0 + static_cast<value>(pow(shifted_max, static_cast<double>(i)/this->steps)));
-	                }
+		            if(this->steps == 0)
+			            {
+				            this->grid.push_back(min);
+			            }
+		            else
+			            {
+		                double shifted_max = this->max - (this->min-1.0);
+		                for(unsigned int i = 0; i <= this->steps; ++i)
+			                {
+				                value v = this->min-1.0 + static_cast<value>(pow(shifted_max, static_cast<double>(i)/this->steps));
+		                    if(!std::isnan(v)) this->grid.push_back(v);
+			                }
+			            }
                 break;
 	            }
 
@@ -204,12 +220,20 @@ namespace transport
 
             case logarithmic_top_stepping:
 	            {
-                double shifted_max = this->max - (this->min-1.0);
-                for(unsigned int i = 0; i <= this->steps; ++i)
-	                {
-                    grid.push_back(this->max+1.0 - static_cast<value>(pow(shifted_max, static_cast<double>(i)/this->steps)));
-	                }
-                // the result is out-of-order, but it will be sorted below
+		            if(this->steps == 0)
+			            {
+				            this->grid.push_back(min);
+			            }
+		            else
+			            {
+		                double shifted_max = this->max - (this->min-1.0);
+		                for(unsigned int i = 0; i <= this->steps; ++i)
+			                {
+				                value v = this->max+1.0 - static_cast<value>(pow(shifted_max, static_cast<double>(i)/this->steps));
+		                    if(!std::isnan(v)) this->grid.push_back(v);
+			                }
+		                // the result is out-of-order, but it will be sorted below
+			            }
                 break;
 	            };
 

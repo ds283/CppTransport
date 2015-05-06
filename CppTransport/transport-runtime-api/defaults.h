@@ -49,6 +49,9 @@
 // current 1E-8, which allows about |ln(1E-8)| ~ 18 e-folds of squeezing
 #define __CPP_TRANSPORT_DEFAULT_SMALLEST_SQUEEZING         (1E-8)
 
+// tolerance to use when testing whether kc-configurations match our constrints
+#define __CPP_TRANSPORT_DEFAULT_KCONFIG_TOLERANCE          (1E-10)
+
 // log file name
 #define __CPP_TRANSPORT_LOG_FILENAME_A                     "worker_"
 #define __CPP_TRANSPORT_LOG_FILENAME_B                     "_%3N.log"
