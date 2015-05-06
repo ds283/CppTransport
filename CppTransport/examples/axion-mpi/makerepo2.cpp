@@ -390,8 +390,8 @@ int main(int argc, char* argv[])
 		tk3_lo_cost.set_label_text("$k_t = \\mathrm{e}^3$", "k_t = exp(3)");
 
     transport::derived_data::wavenumber_series_plot<double> tk3_cost_plot("axion.threepf-1.sqk3-cost", "sqk3-cost.pdf");
-		tk3_cost_plot.add_line(tk3_hi_cost);
 		tk3_cost_plot.add_line(tk3_lo_cost);
+    tk3_cost_plot.add_line(tk3_hi_cost);
 		tk3_cost_plot.set_typeset_with_LaTeX(true);
 		tk3_cost_plot.set_log_x(true);
 		tk3_cost_plot.set_log_y(true);
