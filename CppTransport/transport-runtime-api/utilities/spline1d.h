@@ -99,7 +99,7 @@ namespace transport
 		    number offset;
 
 		    //! number of points
-		    unsigned int N;
+		    size_t N;
 
 		    //! minimum x value
 		    double min_x;
@@ -129,8 +129,15 @@ namespace transport
 		        if(x[i] > max_x) max_x = x[i];
           }
 
-        b_spline = std::make_shared<Splinter::BSpline>(table, Splinter::BSplineType::CUBIC_FREE);
-        p_spline = std::make_shared<Splinter::PSpline>(table, 0.03);
+        try
+	        {
+            b_spline = std::make_shared<Splinter::BSpline>(table, Splinter::BSplineType::CUBIC_FREE);
+            p_spline = std::make_shared<Splinter::PSpline>(table, 0.03);
+	        }
+				catch(Splinter::Exception& xe)
+					{
+						throw runtime_exception(runtime_exception::SPLINE_ERROR, xe.what());
+					}
       }
 
 

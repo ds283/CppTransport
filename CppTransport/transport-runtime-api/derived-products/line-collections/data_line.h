@@ -157,15 +157,33 @@ namespace transport
                     new_data[i] = zipped[i].second;
                   }
 
-                spline1d<number> spline(new_axis, new_data);
+		            try
+			            {
+		                spline1d<number> spline(new_axis, new_data);
 
-                // compute logarithmic derivative at each axis point
-                for(unsigned int i = 0; i < new_axis.size(); ++i)
-                  {
-                    number value = spline.eval_diff(new_axis[i]) * (new_axis[i]/new_data[i]);
-                    new_data[i] = value;
-                  }
-                this->zip(new_axis, new_data, data);
+		                // compute logarithmic derivative at each axis point
+		                for(unsigned int i = 0; i < new_axis.size(); ++i)
+			                {
+		                    number value = spline.eval_diff(new_axis[i]) * (new_axis[i]/new_data[i]);
+		                    new_data[i] = value;
+			                }
+		                this->zip(new_axis, new_data, data);
+			            }
+		            catch(runtime_exception& xe)
+			            {
+		                if(xe.get_exception_code() == runtime_exception::SPLINE_ERROR)
+			                {
+		                    std::cout << "** SPLINE ERROR: axis data" << std::endl;
+				                for(unsigned int i = 0; i < a.size(); ++i)
+					                {
+				                    std::cout << i << ". x=" << a[i] << ", y=" << d[i] << std::endl;
+					                }
+		                    std::cout << "** LaTeX label = " << Ll << ", non-LaTeX label = " << nLl << std::endl;
+
+				                this->zip(a, d, data);
+			                }
+		                else throw xe;
+			            }
               }
           }
 
