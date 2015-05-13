@@ -138,14 +138,18 @@ int main(int argc, char* argv[])
     // filter: (closest to) equilateral threepf with smallest k_t
     transport::derived_data::SQL_threepf_kconfig_query equilateral_smallest_threepf("ABS(alpha) < 0.01 AND ABS(beta-1.0/3.0) < 0.01 AND kt_conventional IN (SELECT MIN(kt_conventional) FROM threepf_samples)");
 
-    // filter: squeezed, equilateral threepf
+    // filter: squeezed, isosceles threepf
     transport::derived_data::SQL_threepf_kconfig_query isosceles_squeezed_threepf("ABS(beta-0.999)<0.0001 AND ABS(alpha)<0.01");
 
 		// filter: equilateral with high k_t
-    transport::derived_data::SQL_threepf_kconfig_query isosceles_hi_kt("ABS(alpha) < 0.001 AND ABS(kt_conventional-1096.63) < 0.01");
+    std::ostringstream hi_kt_query;
+		hi_kt_query << std::setprecision(10) << "ABS(alpha) < 0.001 AND ABS(kt_conventional-" << exp(3.0) << ") < 0.01";
+    transport::derived_data::SQL_threepf_kconfig_query isosceles_hi_kt(hi_kt_query.str());
 
     // filter: equilateral with lo k_t
-    transport::derived_data::SQL_threepf_kconfig_query isosceles_lo_kt("ABS(alpha) < 0.001 AND ABS(kt_conventional-20.0855) < 0.001");
+    std::ostringstream lo_kt_query;
+		lo_kt_query << std::setprecision(10) << "ABS(alpha) < 0.001 AND ABS(kt_conventional-" << exp(7.0) << ") < 0.001";
+    transport::derived_data::SQL_threepf_kconfig_query isosceles_lo_kt(lo_kt_query.str());
 
 
     // PLOTS
@@ -287,7 +291,7 @@ int main(int argc, char* argv[])
     transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_beta_hi(ztk3, last_time, isosceles_hi_kt);
     tk3_zeta_redbsp_beta_hi.set_klabel_meaning(transport::derived_data::conventional);
     tk3_zeta_redbsp_beta_hi.set_current_x_axis_value(transport::derived_data::beta_axis);
-		tk3_zeta_redbsp_beta_hi.set_label_text("$k_t/k_\\star = \\mathrm{e}^7", "k_t/k* = exp(7)");
+		tk3_zeta_redbsp_beta_hi.set_label_text("$k_t/k_\\star = \\mathrm{e}^7$", "k_t/k* = exp(7)");
 
     transport::derived_data::wavenumber_series_plot<double> tk3_redbsp_beta_plot("axion.threepf-1.redbsp-beta", "redbsp-beta.pdf");
 		tk3_redbsp_beta_plot.add_line(tk3_zeta_redbsp_beta_lo);
