@@ -262,7 +262,7 @@ namespace transport
     template <typename number>
     void threepf_task<number>::compute_horizon_exit_times()
 	    {
-		    double largest_kt = this->threepf_db.get_kmax_comoving();
+		    double largest_kt = this->threepf_db.get_kmax_comoving()/3.0;
         double largest_k = this->twopf_db.get_kmax_comoving();
 
         std::vector<double> N;
@@ -287,7 +287,7 @@ namespace transport
 		    for(threepf_kconfig_database::config_iterator t = this->threepf_db.config_begin(); t != this->threepf_db.config_end(); ++t)
 			    {
 		        // set spline to evaluate aH-k and then solve for N
-		        sp.set_offset(t->kt_comoving);
+		        sp.set_offset(t->kt_comoving/3.0);
 
 		        // find root; note use of std::ref, because toms748_solve normally would take a copy of
 		        // its system function and this is slow -- we have to copy the whole spline
