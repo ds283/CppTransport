@@ -189,13 +189,6 @@ namespace transport
                 break;
 	            }
 
-            // the logarithmically-spaced interval isn't translation-invariant
-            // (logarithmic spacing between 10 and 20 isn't the same as logarithmic
-            // spacing between 110 and 120)
-            // to standardize, and also to allow log-spacing for ranges that contain 0,
-            // we shift the range to begin at 1, perform the log-spacing, and then
-            // reverse the shift
-
             // logarithmic-bottom is log-spaced at the bottom end of the interval
 
             case logarithmic_bottom_stepping:
@@ -206,12 +199,27 @@ namespace transport
 			            }
 		            else
 			            {
-		                double shifted_max = this->max - (this->min-1.0);
-		                for(unsigned int i = 0; i <= this->steps; ++i)
-			                {
-				                value v = this->min-1.0 + static_cast<value>(pow(shifted_max, static_cast<double>(i)/this->steps));
-		                    if(!std::isnan(v)) this->grid.push_back(v);
-			                }
+                    // if max and min are both positive, perform log-spacing as we expect
+                    if(this->max > 0.0 && this->min > 0.0)
+                      {
+                        for(unsigned int i = 0; i <= this->steps; ++i)
+                          {
+                            value v = this->min * static_cast<value>(pow(this->max/this->min, static_cast<double>(i)/this->steps));
+                            if(!std::isnan(v)) this->grid.push_back(v);
+                          }
+                      }
+                    else
+                    // otherwise, need to think of something else.
+                    // we shift the range to begin at 1, perform the log-spacing, and then
+                    // reverse the shift
+                      {
+                        double shifted_max = this->max - (this->min-1.0);
+                        for(unsigned int i = 0; i <= this->steps; ++i)
+                          {
+                            value v = this->min-1.0 + static_cast<value>(pow(shifted_max, static_cast<double>(i)/this->steps));
+                            if(!std::isnan(v)) this->grid.push_back(v);
+                          }
+                      }
 			            }
                 break;
 	            }
@@ -226,16 +234,26 @@ namespace transport
 			            }
 		            else
 			            {
-		                double shifted_max = this->max - (this->min-1.0);
-		                for(unsigned int i = 0; i <= this->steps; ++i)
-			                {
-				                value v = this->max+1.0 - static_cast<value>(pow(shifted_max, static_cast<double>(i)/this->steps));
-		                    if(!std::isnan(v)) this->grid.push_back(v);
-			                }
+                    if(this->max > 0.0 && this->min > 0.0)
+                      {
+                        for(unsigned int i = 0; i <= this->steps; ++i)
+                          {
+                            value v = this->max + this->min - this->min * static_cast<value>(pow(this->max/this->min, static_cast<double>(i)/this->steps));
+                          }
+                      }
+                    else
+                      {
+                        double shifted_max = this->max - (this->min-1.0);
+                        for(unsigned int i = 0; i <= this->steps; ++i)
+                          {
+                            value v = this->max+1.0 - static_cast<value>(pow(shifted_max, static_cast<double>(i)/this->steps));
+                            if(!std::isnan(v)) this->grid.push_back(v);
+                          }
+                      }
 		                // the result is out-of-order, but it will be sorted below
 			            }
                 break;
-	            };
+	            }
 
             default:
 	            {
