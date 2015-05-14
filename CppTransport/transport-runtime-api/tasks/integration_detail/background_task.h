@@ -29,7 +29,7 @@ namespace transport
       public:
 
         //! construct a background task
-        background_task(const initial_conditions<number>& i, const range<double>& t);
+        background_task(const initial_conditions<number>& i, range<double>& t);
 
         virtual ~background_task() = default;
 
@@ -60,7 +60,7 @@ namespace transport
 
 
     template <typename number>
-    background_task<number>::background_task(const initial_conditions<number>& i, const range<double>& t)
+    background_task<number>::background_task(const initial_conditions<number>& i, range<double>& t)
 	    : integration_task<number>(i, t)
 	    {
         this->build_time_config_database();

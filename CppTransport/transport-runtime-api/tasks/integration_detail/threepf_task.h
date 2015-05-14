@@ -44,7 +44,7 @@ namespace transport
       public:
 
         //! Construct a threepf-task
-        threepf_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t, bool ff);
+        threepf_task(const std::string& nm, const initial_conditions<number>& i, range<double>& t, bool ff);
 
         //! deserialization constructor
         threepf_task(const std::string& n, Json::Value& reader, sqlite3* handle, const initial_conditions<number>& i);
@@ -138,7 +138,7 @@ namespace transport
 
 
     template <typename number>
-    threepf_task<number>::threepf_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t, bool ff)
+    threepf_task<number>::threepf_task(const std::string& nm, const initial_conditions<number>& i, range<double>& t, bool ff)
 	    : twopf_list_task<number>(nm, i, t, ff),
         threepf_db(this->twopf_list_task<number>::kstar),
 	      integrable(true)
@@ -311,7 +311,7 @@ namespace transport
         //! with specified policies
         template <typename StoragePolicy>
         threepf_cubic_task(const std::string& nm, const initial_conditions<number>& i,
-                           const range<double>& t, const range<double>& ks, StoragePolicy policy,
+                           range<double>& t, range<double>& ks, StoragePolicy policy,
                            bool ff=true, double tol=__CPP_TRANSPORT_DEFAULT_KCONFIG_TOLERANCE);
 
         //! Deserialization constructor
@@ -358,7 +358,7 @@ namespace transport
     template <typename number>
     template <typename StoragePolicy>
     threepf_cubic_task<number>::threepf_cubic_task(const std::string& nm, const initial_conditions<number>& i,
-                                                   const range<double>& t, const range<double>& ks, StoragePolicy policy,
+                                                   range<double>& t, range<double>& ks, StoragePolicy policy,
                                                    bool ff, double tol)
 	    : threepf_task<number>(nm, i, t, ff)
 	    {
@@ -429,8 +429,8 @@ namespace transport
         //! the Fergusson-Shellard-Liguori parameters k_t, alpha and beta,
         //! with specified storage policies
         template <typename StoragePolicy>
-        threepf_fls_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t,
-                         const range<double>& kts, const range<double>& alphas, const range<double>& betas,
+        threepf_fls_task(const std::string& nm, const initial_conditions<number>& i, range<double>& t,
+                         range<double>& kts, range<double>& alphas, range<double>& betas,
                          StoragePolicy kp, bool ff=true,
                          double smallest_squeezing=__CPP_TRANSPORT_DEFAULT_SMALLEST_SQUEEZING,
                          double tol=__CPP_TRANSPORT_DEFAULT_KCONFIG_TOLERANCE);
@@ -485,8 +485,8 @@ namespace transport
     // build a threepf task from sampling at specific values of the Fergusson-Shellard-Liguori parameters k_t, alpha, beta
     template <typename number>
     template <typename StoragePolicy>
-    threepf_fls_task<number>::threepf_fls_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t,
-                                               const range<double>& kts, const range<double>& alphas, const range<double>& betas,
+    threepf_fls_task<number>::threepf_fls_task(const std::string& nm, const initial_conditions<number>& i, range<double>& t,
+                                               range<double>& kts, range<double>& alphas, range<double>& betas,
                                                StoragePolicy policy, bool ff, double smallest_squeezing, double tol)
 	    : threepf_task<number>(nm, i, t, ff)
 	    {

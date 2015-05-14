@@ -52,24 +52,24 @@ namespace transport
       public:
 
         //! Get minimum entry
-        virtual value get_min()                      const override { return(this->min); }
+        virtual value get_min()                      override       { return(this->min); }
 
         //! Get maximum entry
-        virtual value get_max()                      const override { return(this->max); }
+        virtual value get_max()                      override       { return(this->max); }
 
         //! Get number of steps
-        virtual unsigned int get_steps()             const override { return(this->steps); }
+        virtual unsigned int get_steps()             override       { return(this->steps); }
 
         //! Get number of entries
-        virtual unsigned int size()                  const override { return(this->grid.size()); }
+        virtual unsigned int size()                  override       { return(this->grid.size()); }
 
         //! Is a simple, linear range?
         virtual bool is_simple_linear()              const override { return(this->spacing == linear_stepping); }
 
         //! Get grid of entries
-        virtual const std::vector<value>& get_grid() const override { return(this->grid); }
+        virtual const std::vector<value>& get_grid() override       { return(this->grid); }
 
-        value operator[](unsigned int d)             const override;
+        value operator[](unsigned int d)             override;
 
 
         // POPULATE GRID
@@ -150,7 +150,7 @@ namespace transport
 
 
     template <typename value>
-    value stepping_range<value>::operator[](unsigned int d) const
+    value stepping_range<value>::operator[](unsigned int d)
 	    {
         assert(d < this->grid.size());
         if(d < this->grid.size())
@@ -239,6 +239,7 @@ namespace transport
                         for(unsigned int i = 0; i <= this->steps; ++i)
                           {
                             value v = this->max + this->min - this->min * static_cast<value>(pow(this->max/this->min, static_cast<double>(i)/this->steps));
+		                        if(!std::isnan(v)) this->grid.push_back(v);
                           }
                       }
                     else

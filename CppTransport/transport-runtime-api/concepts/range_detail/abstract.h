@@ -23,24 +23,24 @@ namespace transport
       public:
 
         //! Get minimum entry
-        virtual value get_min() const = 0;
+        virtual value get_min() = 0;
 
         //! Get maximum entry
-        virtual value get_max() const = 0;
+        virtual value get_max() = 0;
 
         //! Get number of steps
-        virtual unsigned int get_steps() const = 0;
+        virtual unsigned int get_steps() = 0;
 
         //! Get number of entries
-        virtual unsigned int size() const = 0;
+        virtual unsigned int size() = 0;
 
         //! Is a simple, linear range?
         virtual bool is_simple_linear() const = 0;
 
         //! Get grid of entries
-        virtual const std::vector<value>& get_grid() const = 0;
+        virtual const std::vector<value>& get_grid() = 0;
 
-        virtual value operator[](unsigned int d) const = 0;
+        virtual value operator[](unsigned int d) = 0;
 
 
 		    // CLONE

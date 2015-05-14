@@ -50,13 +50,13 @@ namespace transport
       public:
 
         //! Construct a named integration task with supplied initial conditions and sample times
-        integration_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t);
+        integration_task(const std::string& nm, const initial_conditions<number>& i, range<double>& t);
 
         //! Construct an anonymized integration task with supplied initial conditions.
         //! Anonymized tasks are used for things like constructing initial conditions,
         //! integrating the background only, finding H at horizon-crossing etc.
         //! Science output is expected to be generated using named tasks.
-        integration_task(const initial_conditions<number>& i, const range<double>& t)
+        integration_task(const initial_conditions<number>& i, range<double>& t)
 	        : integration_task(random_string(), i, t)
 	        {
 	        }
@@ -181,7 +181,7 @@ namespace transport
 
 
     template <typename number>
-    integration_task<number>::integration_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t)
+    integration_task<number>::integration_task(const std::string& nm, const initial_conditions<number>& i, range<double>& t)
 	    : derivable_task<number>(nm),
 	      ics(i),
 	      times(t.clone()),

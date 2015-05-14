@@ -67,7 +67,7 @@ namespace transport
       public:
 
         //! construct a twopf-list-task object
-        twopf_list_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t, bool ff, double ast=__CPP_TRANSPORT_DEFAULT_ASTAR_NORMALIZATION);
+        twopf_list_task(const std::string& nm, const initial_conditions<number>& i, range<double>& t, bool ff, double ast=__CPP_TRANSPORT_DEFAULT_ASTAR_NORMALIZATION);
 
         //! deserialization constructor
         twopf_list_task(const std::string& nm, Json::Value& reader, sqlite3* handle, const initial_conditions<number>& i);
@@ -257,7 +257,7 @@ namespace transport
 
 
     template <typename number>
-    twopf_list_task<number>::twopf_list_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t,
+    twopf_list_task<number>::twopf_list_task(const std::string& nm, const initial_conditions<number>& i, range<double>& t,
                                              bool ff, double ast)
 	    : integration_task<number>(nm, i, t),
         fast_forward(ff),

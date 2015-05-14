@@ -22,7 +22,13 @@ namespace transport
     template <typename value> class aggregation_range;
 
     template <typename value>
-    std::ostream& operator<<(std::ostream& out, const aggregation_range<value>& obj);
+    std::ostream& operator<<(std::ostream& out, aggregation_range<value>& obj);
+
+		template <typename value>
+		aggregation_range<value> operator+(const aggregation_range<value>& lhs, const range<value>& rhs);
+
+		template <typename value>
+		aggregation_range<value> operator+(const range<value>& lhs, const range<value>& rhs);
 
 		// forward-declare helper
 		namespace range_helper
@@ -42,36 +48,49 @@ namespace transport
 				aggregation_range();
 
 				//! Construct an aggregation range from a given subrange
-				aggregation_range(range<value>& a);
+				aggregation_range(const range<value>& a);
 
 				//! Construct an aggregation range from a pair of subranges
-				aggregation_range(range<value>& a, range<value>& b);
+				aggregation_range(const range<value>& a, const range<value>& b);
 
 				//! Deserialization constructor
 				aggregation_range(Json::Value& reader);
 
 
+				// OVERLOAD ARITHMETIC OPERATORS FOR CONVENIENCE
+
+				//! assignment
+				aggregation_range<value>& operator=(const range<value>& rhs) { this->subrange_list.clear(); this->add_subrange(rhs); return(*this); }
+
+				//! compound addition
+				aggregation_range<value>& operator+=(const range<value>& rhs) { this->add_subrange(rhs); return(*this); }
+
+				//! addition
+				friend aggregation_range<value> operator+ <>(const aggregation_range<value>& lhs, const range<value>& rhs);
+				friend aggregation_range<value> operator+ <>(const range<value>& lhs, const range<value>& rhs);
+
+
 				// INTERFACE
 
 		    //! Get minimum entry
-		    virtual value get_min()                      const override { return(this->min); }
+		    virtual value get_min()                      override       { if(this->dirty) this->populate_grid(); return(this->min); }
 
 		    //! Get maximum entry
-		    virtual value get_max()                      const override { return(this->max); }
+		    virtual value get_max()                      override       { if(this->dirty) this->populate_grid(); return(this->max); }
 
 		    //! Get number of steps
-		    virtual unsigned int get_steps()             const override { return(this->steps); }
+		    virtual unsigned int get_steps()             override       { if(this->dirty) this->populate_grid(); return(this->steps); }
 
 		    //! Get number of entries
-		    virtual unsigned int size()                  const override { return(this->grid.size()); }
+		    virtual unsigned int size()                  override       { if(this->dirty) this->populate_grid(); return(this->grid.size()); }
 
 		    //! Is a simple, linear range?
 		    virtual bool is_simple_linear()              const override { return(false); }
 
 		    //! Get grid of entries
-		    virtual const std::vector<value>& get_grid() const override { return(this->grid); }
+		    virtual const std::vector<value>& get_grid() override       { if(this->dirty) this->populate_grid(); return(this->grid); }
 
-		    value operator[](unsigned int d)             const override;
+		    value operator[](unsigned int d)             override;
 
 
 				// ADD RANGES TO THE AGGREGATION
@@ -79,7 +98,7 @@ namespace transport
 		  public:
 
 				//! add a subrange
-				void add_subrange(range<value>& s);
+				void add_subrange(const range<value>& s);
 
 
 		    // POPULATE GRID
@@ -104,12 +123,15 @@ namespace transport
 		    //! Serialize this object
 		    virtual void serialize(Json::Value& writer) const override;
 
-        friend std::ostream& operator<< <>(std::ostream& out, const aggregation_range<value>& obj);
+        friend std::ostream& operator<< <>(std::ostream& out, aggregation_range<value>& obj);
 
 
 				// INTERNAL DATA
 
 		  protected:
+
+				//! dirty flag - if set, grid requires recalculation
+				bool dirty;
 
 				//! Minimium value
 				value min;
@@ -130,27 +152,40 @@ namespace transport
 
 
 		template <typename value>
+		aggregation_range<value> operator+(const aggregation_range<value>& lhs, const range<value>& rhs)
+			{
+		    return(aggregation_range<value>(lhs) += rhs);
+			}
+
+
+		template <typename value>
+		aggregation_range<value> operator+(const range<value>& lhs, const range<value>& rhs)
+			{
+				return aggregation_range<value>(lhs, rhs);
+			}
+
+
+		template <typename value>
 		aggregation_range<value>::aggregation_range()
 			: min(std::numeric_limits<double>::max()),
         max(-std::numeric_limits<double>::max()),
-        steps(0)
+        steps(0),
+				dirty(true)
 			{
 			}
 
 
 		template <typename value>
-		aggregation_range<value>::aggregation_range(range<value>& a)
+		aggregation_range<value>::aggregation_range(const range<value>& a)
 			: aggregation_range<value>()
 			{
 		    std::shared_ptr< range<value> > element(a.clone());
 		    this->subrange_list.push_back(element);
-
-		    this->populate_grid();
 			}
 
 
     template <typename value>
-    aggregation_range<value>::aggregation_range(range<value>& a, range<value>& b)
+    aggregation_range<value>::aggregation_range(const range<value>& a, const range<value>& b)
 	    : aggregation_range<value>()
 	    {
         std::shared_ptr< range<value> > element_a(a.clone());
@@ -158,13 +193,12 @@ namespace transport
 
         std::shared_ptr< range<value> > element_b(b.clone());
         this->subrange_list.push_back(element_b);
-
-        this->populate_grid();
 	    }
 
 
 		template <typename value>
 		aggregation_range<value>::aggregation_range(Json::Value& reader)
+			: aggregation_range<value>()
 			{
 		    Json::Value array = reader[__CPP_TRANSPORT_NODE_SUBRANGE_ARRAY];
 				assert(array.isArray());
@@ -198,18 +232,19 @@ namespace transport
 
 
 		template <typename value>
-		void aggregation_range<value>::add_subrange(range<value>& s)
+		void aggregation_range<value>::add_subrange(const range<value>& s)
 			{
 		    std::shared_ptr< range<value> > element(s.clone());
 				this->subrange_list.push_back(element);
-
-				this->populate_grid();
+				this->dirty = true;
 			}
 
 
     template <typename value>
-    value aggregation_range<value>::operator[](unsigned int d) const
+    value aggregation_range<value>::operator[](unsigned int d)
 	    {
+		    if(this->dirty) this->populate_grid();
+
         assert(d < this->grid.size());
         if(d < this->grid.size())
 	        {
@@ -247,12 +282,15 @@ namespace transport
 		    this->grid.erase(last, this->grid.end());
 
 				this->steps = this->grid.size()+1;
+				this->dirty = false;
 			}
 
 
     template <typename value>
-    std::ostream& operator<<(std::ostream& out, const aggregation_range<value>& obj)
+    std::ostream& operator<<(std::ostream& out, aggregation_range<value>& obj)
       {
+		    if(obj.dirty) obj.populate_grid();
+
         out << __CPP_TRANSPORT_AGGREGATION_RANGE_A << obj.subrange_list.size() << " ";
         out << __CPP_TRANSPORT_AGGREGATION_RANGE_B << std::endl;
 
