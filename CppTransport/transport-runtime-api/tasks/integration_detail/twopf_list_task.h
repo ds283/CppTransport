@@ -40,7 +40,7 @@ namespace transport
 
         bool operator()(const double& a, const double& b)
 	        {
-            return(fabs(a-b) < this->tol);
+            return(fabs((a-b)/a) < this->tol);
 	        }
 
       private:
@@ -529,12 +529,13 @@ namespace transport
 				double largest_k = this->twopf_db.get_kmax_comoving();
 
 		    std::vector<double> N;
-		    std::vector<number> aH;
-				this->get_model()->compute_aH(this, N, aH, largest_k);
+		    std::vector<number> log_aH;
+				this->get_model()->compute_aH(this, N, log_aH, largest_k);
+		    assert(N.size() == log_aH.size());
 
-				spline1d<number> sp(N, aH);
+				spline1d<number> sp(N, log_aH);
 
-				this->twopf_compute_horizon_exit_times(sp, TolerancePredicate(1E-7));
+				this->twopf_compute_horizon_exit_times(sp, TolerancePredicate(1E-5));
 			};
 
 
@@ -547,11 +548,11 @@ namespace transport
 		    for(twopf_kconfig_database::config_iterator t = this->twopf_db.config_begin(); t != this->twopf_db.config_end(); ++t)
 			    {
 		        // set spline to evaluate aH-k and then solve for N
-		        sp.set_offset(t->k_comoving);
+		        sp.set_offset(log(t->k_comoving));
 
 		        // find root; note use of std::ref, because toms748_solve normally would take a copy of
 		        // its system function and this is slow -- we have to copy the whole spline
-		        std::pair< double, double > result = boost::math::tools::toms748_solve(std::ref(sp), sp.get_min_x(), sp.get_max_x(), TolerancePredicate(1E-7), max_iter);
+		        std::pair< double, double > result = boost::math::tools::toms748_solve(std::ref(sp), sp.get_min_x(), sp.get_max_x(), tol, max_iter);
 
 		        t->t_exit = (result.first + result.second)/2.0;
 			    }

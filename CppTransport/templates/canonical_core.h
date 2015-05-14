@@ -1118,10 +1118,10 @@ namespace transport
 		class aHAggregatorPredicate
 			{
 		  public:
-				aHAggregatorPredicate(const twopf_list_task<number>* tk, std::vector<double>& N, std::vector<number>& aH, double lk)
+				aHAggregatorPredicate(const twopf_list_task<number>* tk, std::vector<double>& N, std::vector<number>& log_aH, double lk)
 					: params(tk->get_params()),
 		        N_vector(N),
-		        aH_vector(aH),
+		        log_aH_vector(log_aH),
 		        largest_k(lk),
 						N_horizon_crossing(tk->get_N_horizon_crossing()),
 						astar_normalization(tk->get_astar_normalization())
@@ -1140,16 +1140,17 @@ namespace transport
 						const auto __a   = exp(__x.second - this->N_horizon_crossing + this->astar_normalization);
 
 						this->N_vector.push_back(__x.second);
-						this->aH_vector.push_back(__a*__H);
+						this->log_aH_vector.push_back(log(__a*__H));
 
-						if(largest_k / (__a*__H) < 0.5) return(true);
+						// are we now at a point where we have comfortably covered the horizon crossing time for largest_k?
+						if(largest_k / (__a*__H) < 0.01) return(true);
 						return(false);
 					}
 
 		  private:
 				const parameters<number>& params;
 				std::vector<double>& N_vector;
-				std::vector<number>& aH_vector;
+				std::vector<number>& log_aH_vector;
 				const double largest_k;
 				const double N_horizon_crossing;
 				const double astar_normalization;
@@ -1157,10 +1158,10 @@ namespace transport
 
 
 		template <typename number>
-		void $$__MODEL<number>::compute_aH(const twopf_list_task<number>* tk, std::vector<double>& N, std::vector<number>& aH, double largest_k)
+		void $$__MODEL<number>::compute_aH(const twopf_list_task<number>* tk, std::vector<double>& N, std::vector<number>& log_aH, double largest_k)
 			{
 				N.clear();
-				aH.clear();
+				log_aH.clear();
 
 				// set up a functor to evolve the system
 				$$__MODEL_background_functor<number> system(tk->get_params());
@@ -1174,10 +1175,15 @@ namespace transport
 
 				auto range = boost::numeric::odeint::make_const_step_time_range(stepper, system, x, tk->get_N_initial(), tk->get_N_end_of_inflation(), 0.01);
 
-				aHAggregatorPredicate<number> aggregator(tk, N, aH, largest_k);
+				aHAggregatorPredicate<number> aggregator(tk, N, log_aH, largest_k);
 
+				// step through iterators, finding first point which is comfortably after time when largest_k has left
+				// the horizon
+				// aggregator writes N and log_aH into the output vectors at each iteration
 				auto iter = boost::find_if(range, aggregator);
 
+				// if we got to the end of the range, then we didn't cover all exit times up to largest_k
+				// so something has gone wrong
 				if(iter == boost::end(range))
 					{
 						assert(false);

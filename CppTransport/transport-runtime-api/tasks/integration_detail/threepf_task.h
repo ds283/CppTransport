@@ -266,15 +266,16 @@ namespace transport
         double largest_k = this->twopf_db.get_kmax_comoving();
 
         std::vector<double> N;
-        std::vector<number> aH;
-        this->get_model()->compute_aH(this, N, aH, std::max(largest_k, largest_kt));
+        std::vector<number> log_aH;
+        this->get_model()->compute_aH(this, N, log_aH, std::max(largest_k, largest_kt));
+		    assert(N.size() == log_aH.size());
 
-        spline1d<number> sp(N, aH);
+        spline1d<number> sp(N, log_aH);
 
-		    this->threepf_compute_horizon_exit_times(sp, TolerancePredicate(1E-7));
+		    this->threepf_compute_horizon_exit_times(sp, TolerancePredicate(1E-5));
 
 		    // forward to underlying twopf_list_task to also update its database
-		    this->twopf_list_task<number>::twopf_compute_horizon_exit_times(sp, TolerancePredicate(1E-7));
+		    this->twopf_list_task<number>::twopf_compute_horizon_exit_times(sp, TolerancePredicate(1E-5));
 	    };
 
 
@@ -287,7 +288,7 @@ namespace transport
 		    for(threepf_kconfig_database::config_iterator t = this->threepf_db.config_begin(); t != this->threepf_db.config_end(); ++t)
 			    {
 		        // set spline to evaluate aH-k and then solve for N
-		        sp.set_offset(t->kt_comoving/3.0);
+		        sp.set_offset(log(t->kt_comoving/3.0));
 
 		        // find root; note use of std::ref, because toms748_solve normally would take a copy of
 		        // its system function and this is slow -- we have to copy the whole spline
