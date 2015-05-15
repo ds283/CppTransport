@@ -243,7 +243,7 @@ namespace transport
 			        << "CREATE TABLE " << data_traits<number, ValueType>::sqlite_table() << "("
 			        << "kserial INTEGER, "
 			        << "page    INTEGER, "
-			        << "t_texit DOUBLE";
+			        << "t_exit  DOUBLE";
 
 		        for(unsigned int i = 0; i < num_cols; ++i)
 			        {
