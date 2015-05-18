@@ -157,13 +157,10 @@ int main(int argc, char* argv[])
 
 
     transport::index_selector<2> twopf_fields(model->get_N_fields());
-    std::array<unsigned int, 2> index_set_a = { 0, 0 };
-    std::array<unsigned int, 2> index_set_b = { 0, 1 };
-    std::array<unsigned int, 2> index_set_c = { 1, 1 };
     twopf_fields.none();
-    twopf_fields.set_on(index_set_a);
-    twopf_fields.set_on(index_set_b);
-    twopf_fields.set_on(index_set_c);
+    twopf_fields.set_on(std::array<unsigned int, 2>{ 0, 0 });
+    twopf_fields.set_on(std::array<unsigned int, 2>{ 0, 1 });
+    twopf_fields.set_on(std::array<unsigned int, 2>{ 1, 1 });
 
     transport::derived_data::twopf_time_series<double> tk3_twopf_group(tk3, twopf_fields, all_times, largest_twopf);
     tk3_twopf_group.set_klabel_meaning(transport::derived_data::conventional);
@@ -174,19 +171,13 @@ int main(int argc, char* argv[])
     tk3_twopf_plot.set_legend_position(transport::derived_data::bottom_left);
 
     transport::index_selector<3> threepf_fields(model->get_N_fields());
-    std::array<unsigned int, 3> sq_set_a    = { 0, 0, 0 };
-    std::array<unsigned int, 3> sq_set_b    = { 0, 1, 0 };
-    std::array<unsigned int, 3> sq_set_c    = { 1, 1, 0 };
-    std::array<unsigned int, 3> sq_set_d    = { 0, 0, 1 };
-    std::array<unsigned int, 3> sq_set_e    = { 0, 1, 1 };
-    std::array<unsigned int, 3> sq_set_f    = { 1, 1, 1 };
     threepf_fields.none();
-    threepf_fields.set_on(sq_set_a);
-    threepf_fields.set_on(sq_set_b);
-    threepf_fields.set_on(sq_set_c);
-    threepf_fields.set_on(sq_set_d);
-    threepf_fields.set_on(sq_set_e);
-    threepf_fields.set_on(sq_set_f);
+    threepf_fields.set_on(std::array<unsigned int, 3>{ 0, 0, 0 });
+    threepf_fields.set_on(std::array<unsigned int, 3>{ 0, 1, 0 });
+    threepf_fields.set_on(std::array<unsigned int, 3>{ 1, 1, 0 });
+    threepf_fields.set_on(std::array<unsigned int, 3>{ 0, 0, 1 });
+    threepf_fields.set_on(std::array<unsigned int, 3>{ 0, 1, 1 });
+    threepf_fields.set_on(std::array<unsigned int, 3>{ 1, 1, 1 });
 
     transport::derived_data::threepf_time_series<double> tk3_threepf_group(tk3, threepf_fields, all_times, equilateral_smallest_threepf);
     tk3_twopf_group.set_klabel_meaning(transport::derived_data::conventional);
@@ -250,13 +241,13 @@ int main(int argc, char* argv[])
     tk3_zeta_2spec.set_klabel_meaning(transport::derived_data::conventional);
     tk3_zeta_2spec.set_dimensionless(true);
 
-    transport::derived_data::wavenumber_series_plot<double> tk3_zeta_2spec_plot = transport::derived_data::wavenumber_series_plot<double>("axion.threepf-1.zeta-2spec", "zeta-2spec.pdf");
+    transport::derived_data::wavenumber_series_plot<double> tk3_zeta_2spec_plot("axion.threepf-1.zeta-2spec", "zeta-2spec.pdf");
     tk3_zeta_2spec_plot.add_line(tk3_zeta_2spec);
 		tk3_zeta_2spec_plot.set_typeset_with_LaTeX(true);
     tk3_zeta_2spec_plot.set_log_x(true);
     tk3_zeta_2spec_plot.set_title_text("$\\langle \\zeta \\zeta \\rangle$ power spectrum");
 
-    transport::derived_data::wavenumber_series_table<double> tk3_zeta_2spec_table = transport::derived_data::wavenumber_series_table<double>("axion.threepf-1.zeta-2spec.table", "zeta-2spec-table.txt");
+    transport::derived_data::wavenumber_series_table<double> tk3_zeta_2spec_table("axion.threepf-1.zeta-2spec.table", "zeta-2spec-table.txt");
     tk3_zeta_2spec_table.add_line(tk3_zeta_2spec);
 
 
@@ -375,7 +366,7 @@ int main(int argc, char* argv[])
     tk3_zeta_2spec_index.set_dimensionless(true);
     tk3_zeta_2spec_index.set_spectral_index(true);
 
-    transport::derived_data::wavenumber_series_plot<double> tk3_zeta_2spec_index_plot = transport::derived_data::wavenumber_series_plot<double>("axion.threepf-1.zeta-2spec-index", "zeta-2spec-index.pdf");
+    transport::derived_data::wavenumber_series_plot<double> tk3_zeta_2spec_index_plot("axion.threepf-1.zeta-2spec-index", "zeta-2spec-index.pdf");
     tk3_zeta_2spec_index_plot.add_line(tk3_zeta_2spec_index);
     tk3_zeta_2spec_index_plot.set_typeset_with_LaTeX(true);
     tk3_zeta_2spec_index_plot.set_title_text("$\\langle \\zeta \\zeta \\rangle$ spectral index");
