@@ -28,6 +28,7 @@
 #include "transport-runtime-api/derived-products/derived-content/correlation-functions/r_wavenumber_series.h"
 #include "transport-runtime-api/derived-products/derived-content/integration-analysis/cost_wavenumber.h"
 #include "transport-runtime-api/derived-products/derived-content/background-quantites/background_line.h"
+#include "transport-runtime-api/derived-products/derived-content/background-quantites/u2_line.h"
 
 
 namespace transport
@@ -65,6 +66,7 @@ namespace transport
 		                else if(type == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_R_WAVENUMBER_SERIES)                       return new r_wavenumber_series<number>(reader, finder);
 				            else if(type == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_INTEGRATION_COST)                          return new cost_wavenumber<number>(reader, finder);
 				            else if(type == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_BACKGROUND_LINE)                           return new background_line<number>(reader, finder);
+                    else if(type == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_U2_LINE)                                   return new u2_line<number>(reader, finder);
 
                     std::ostringstream msg;
                     msg << __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_CONTENT_TYPE_UNKNOWN << " '" << type << "'";

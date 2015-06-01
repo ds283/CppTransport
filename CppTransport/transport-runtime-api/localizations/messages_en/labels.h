@@ -126,5 +126,10 @@
 #define __CPP_TRANSPORT_LATEX_A_HUBBLE_SYMBOL              "aH"
 #define __CPP_TRANSPORT_NONLATEX_A_HUBBLE_SYMBOL           "aH"
 
+#define __CPP_TRANSPORT_LATEX_U2_SYMBOL                    "u"
+#define __CPP_TRANSPORT_NONLATEX_U2_SYMBOL                 "u"
+#define __CPP_TRANSPORT_LATEX_U3_SYMBOL                    "u"
+#define __CPP_TRANSPORT_NONLATEX_U3_SYMBOL                 "u"
+
 
 #endif // __CPP_TRANSPORT_MESSAGES_EN_LABELS_H
