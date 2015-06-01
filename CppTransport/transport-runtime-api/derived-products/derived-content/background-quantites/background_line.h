@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __epsilon_H_
-#define __epsilon_H_
+#ifndef __background_line_H_
+#define __background_line_H_
 
 
 #include <iostream>
@@ -278,11 +278,15 @@ namespace transport
 		        model<number>* mdl = this->gadget.get_model();
 		        assert(mdl != nullptr);
 
+            typename datapipe<number>::time_config_handle& tc_handle = pipe.new_time_config_handle(this->tquery);
+            time_config_tag<number>  tc_tag                          = pipe.new_time_config_tag();
+            std::vector<time_config> t_configs                       = tc_handle.lookup_tag(tc_tag);
+
 		        std::vector<number> line_data(t_axis.size());
 
 		        for(unsigned int j = 0; j < line_data.size(); ++j)
 			        {
-		            number a = exp(t_axis[j] - this->gadget.get_integration_task()->get_N_horizon_crossing());
+		            number a = exp(t_configs[j].t - this->gadget.get_integration_task()->get_N_horizon_crossing());
 		            line_data[j] = a * mdl->H(this->gadget.get_integration_task()->get_params(), bg_data[j]) / this->gadget.get_integration_task()->get_params().get_Mp();
 			        }
 
@@ -374,4 +378,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__epsilon_H_
+#endif //__background_line_H_
