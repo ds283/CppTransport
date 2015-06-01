@@ -207,14 +207,18 @@ namespace transport
 
         //! Construct an output task element: requires a derived product and a list of tags to match.
         output_task_element(const derived_data::derived_product<number>& dp, const std::list<std::string>& tgs, unsigned int sn)
-          : product(dp.clone()), tags(tgs), serial(sn)
+          : product(dp.clone()),
+            tags(tgs),
+            serial(sn)
           {
             assert(product != nullptr);
           }
 
         //! Override the default copy constructor to perform a deep copy of the stored derived_product<>
         output_task_element(const output_task_element<number>& obj)
-          : product(obj.product->clone()), tags(obj.tags), serial(obj.serial)
+          : product(obj.product->clone()),
+            tags(obj.tags),
+            serial(obj.serial)
           {
           }
 
@@ -257,6 +261,7 @@ namespace transport
 
         //! Internal serial number
         unsigned int serial;
+
       };
 
 

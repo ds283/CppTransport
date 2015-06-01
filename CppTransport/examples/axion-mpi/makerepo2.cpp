@@ -104,9 +104,9 @@ int main(int argc, char* argv[])
 //    transport::stepping_range<double> betas_hi(betamid, betamax, hi_b_samples, transport::logarithmic_top_stepping);
 //    transport::aggregation_range<double> betas(betas_lo, betas_hi);
     transport::stepping_range<double> betas_equi(1.0/3.0, 1.0/3.0, 0, transport::linear_stepping);    // add dedicated equilateral configuration
-    transport::stepping_range<double> betas_lo(0.0, 0.9, 60, transport::linear_stepping);
-    transport::stepping_range<double> betas_mid(0.9, 0.99, 50, transport::logarithmic_top_stepping);
-    transport::stepping_range<double> betas_hi(0.99, 0.999, 50, transport::logarithmic_top_stepping);
+    transport::stepping_range<double> betas_lo(0.0, 0.9, 5, transport::linear_stepping);
+    transport::stepping_range<double> betas_mid(0.9, 0.99, 5, transport::logarithmic_top_stepping);
+    transport::stepping_range<double> betas_hi(0.99, 0.999, 5, transport::logarithmic_top_stepping);
     transport::aggregation_range<double> betas = betas_lo + betas_mid + betas_hi + betas_equi;
 
     // construct a threepf task
@@ -158,9 +158,9 @@ int main(int argc, char* argv[])
 
     transport::index_selector<2> twopf_fields(model->get_N_fields());
     twopf_fields.none();
-    twopf_fields.set_on(std::array<unsigned int, 2>{ 0, 0 });
-    twopf_fields.set_on(std::array<unsigned int, 2>{ 0, 1 });
-    twopf_fields.set_on(std::array<unsigned int, 2>{ 1, 1 });
+		twopf_fields = twopf_fields + std::array<unsigned int, 2>{ 0, 0 }
+																+ std::array<unsigned int, 2>{ 0, 1 }
+																+ std::array<unsigned int, 2>{ 1, 1 };
 
     transport::derived_data::twopf_time_series<double> tk3_twopf_group(tk3, twopf_fields, all_times, largest_twopf);
     tk3_twopf_group.set_klabel_meaning(transport::derived_data::conventional);
@@ -172,12 +172,12 @@ int main(int argc, char* argv[])
 
     transport::index_selector<3> threepf_fields(model->get_N_fields());
     threepf_fields.none();
-    threepf_fields.set_on(std::array<unsigned int, 3>{ 0, 0, 0 });
-    threepf_fields.set_on(std::array<unsigned int, 3>{ 0, 1, 0 });
-    threepf_fields.set_on(std::array<unsigned int, 3>{ 1, 1, 0 });
-    threepf_fields.set_on(std::array<unsigned int, 3>{ 0, 0, 1 });
-    threepf_fields.set_on(std::array<unsigned int, 3>{ 0, 1, 1 });
-    threepf_fields.set_on(std::array<unsigned int, 3>{ 1, 1, 1 });
+    threepf_fields = threepf_fields + std::array<unsigned int, 3>{ 0, 0, 0 }
+	                                  + std::array<unsigned int, 3>{ 0, 1, 0 }
+	                                  + std::array<unsigned int, 3>{ 1, 1, 0 }
+	                                  + std::array<unsigned int, 3>{ 0, 0, 1 }
+	                                  + std::array<unsigned int, 3>{ 0, 1, 1 }
+	                                  + std::array<unsigned int, 3>{ 1, 1, 1 };
 
     transport::derived_data::threepf_time_series<double> tk3_threepf_group(tk3, threepf_fields, all_times, equilateral_smallest_threepf);
     tk3_twopf_group.set_klabel_meaning(transport::derived_data::conventional);
@@ -395,18 +395,18 @@ int main(int argc, char* argv[])
 
 
     transport::output_task<double> threepf_output = transport::output_task<double>("axion.threepf-1.output", tk3_twopf_plot);
-    threepf_output.add_element(tk3_threepf_plot);
-    threepf_output.add_element(tk3_zeta_twopf);
-    threepf_output.add_element(tk3_zeta_sq);
-    threepf_output.add_element(tk3_redbsp);
-    threepf_output.add_element(tk3_zeta_2spec_plot);
-		threepf_output.add_element(tk3_redbsp_spec_plot);
-		threepf_output.add_element(tk3_redbsp_beta_plot);
-    threepf_output.add_element(tk3_redbsp_sqk3_plot);
-    threepf_output.add_element(tk3_redbsp_sqk3_index_plot);
-    threepf_output.add_element(tk3_redbsp_spec_index_plot);
-    threepf_output.add_element(tk3_zeta_2spec_index_plot);
-		threepf_output.add_element(tk3_cost_plot);
+		threepf_output = threepf_output + tk3_threepf_plot
+                                    + tk3_zeta_twopf
+                                    + tk3_zeta_sq
+                                    + tk3_redbsp
+                                    + tk3_zeta_2spec_plot
+																		+ tk3_redbsp_spec_plot
+																		+ tk3_redbsp_beta_plot
+                                    + tk3_redbsp_sqk3_plot
+                                    + tk3_redbsp_sqk3_index_plot
+                                    + tk3_redbsp_spec_index_plot
+                                    + tk3_zeta_2spec_index_plot
+																		+ tk3_cost_plot;
 
     std::cout << "axion.threepf-1 output task:" << std::endl << threepf_output << std::endl;
 

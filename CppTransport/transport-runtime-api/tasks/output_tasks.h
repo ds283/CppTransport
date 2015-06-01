@@ -52,6 +52,10 @@ namespace transport
     template <typename number>
     std::ostream& operator<<(std::ostream& out, const output_task<number>& obj);
 
+		template <typename number>
+		output_task<number> operator+(const output_task<number>& lhs, const derived_data::derived_product<number>& rhs);
+
+
     //! An 'output_task' is a specialization of 'task' which generates a set of derived products.
     template <typename number>
     class output_task: public task<number>
@@ -95,6 +99,17 @@ namespace transport
 
         //! Write to a standard output stream
         friend std::ostream& operator<< <>(std::ostream& out, const output_task<number>& obj);
+
+
+		    // OVERLOAD ARITHMETIC OPERATORS FOR CONVENIENCE
+
+      public:
+
+		    //! += operator is the same as add_element()
+		    output_task<number>& operator+=(const derived_data::derived_product<number>& prod) { this->add_element(prod); return(*this); }
+
+		    //! + operator
+		    friend output_task<number> operator+ <>(const output_task<number>& lhs, const derived_data::derived_product<number>& rhs);
 
 
         // INTERFACE
@@ -283,6 +298,13 @@ namespace transport
 
 				return(rval);
 			}
+
+
+    template <typename number>
+    output_task<number> operator+(const output_task<number>& lhs, const derived_data::derived_product<number>& rhs)
+	    {
+		    return(output_task<number>(lhs) += rhs);
+	    }
 
 
 	}   // namespace transport

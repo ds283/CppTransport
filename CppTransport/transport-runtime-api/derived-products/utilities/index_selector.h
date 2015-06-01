@@ -32,6 +32,14 @@
 namespace transport
   {
 
+		template <unsigned int indices> class index_selector;
+
+		template <unsigned int indices>
+		index_selector<indices> operator+(const index_selector<indices>& lhs, const std::array<unsigned int, indices>& rhs);
+
+    template <unsigned int indices>
+    index_selector<indices> operator-(const index_selector<indices>& lhs, const std::array<unsigned int, indices>& rhs);
+
 		//! Select active indices for a d-component object in an N_f-field model
     template <unsigned int indices>
     class index_selector: public serializable
@@ -51,16 +59,33 @@ namespace transport
 
 		    ~index_selector() = default;
 
+
+		    // OVERLOAD ARITHMETIC OEPRATORS FOR CONVENIENCE
+
+		    //! compound addition is synonymous with set_on()
+		    index_selector<indices>& operator+=(const std::array<unsigned int, indices>& rhs) { this->set_on(rhs); return(*this); }
+
+		    //! compound subtraction is synonymous with set_off()
+		    index_selector<indices>& operator-=(const std::array<unsigned int, indices>& rhs) { this->set_off(rhs); return(*this); }
+
+		    //! addition, subtraction
+		    friend index_selector<indices> operator+ <>(const index_selector<indices>& lhs, const std::array<unsigned int, indices>& rhs);
+		    friend index_selector<indices> operator- <>(const index_selector<indices>& lhs, const std::array<unsigned int, indices>& rhs);
+
 		    //! Disable all indices
         void none   ();
+
 				//! Activate all indices
         void all    ();
+
 		    //! Set a specific index combination on
-        void set_on (std::array<unsigned int, indices>& which);
+        void set_on (const std::array<unsigned int, indices>& which);
+
 		    //! Set a specific index combination off
-        void set_off(std::array<unsigned int, indices>& which);
+        void set_off(const std::array<unsigned int, indices>& which);
+
 		    //! Check whether a specific combination is active
-        bool is_on  (std::array<unsigned int, indices>& which) const;
+        bool is_on  (const std::array<unsigned int, indices>& which) const;
 
 		    //! Get range -- do the indices cover fields, or field+momenta?
         range_type get_range() const { return(this->range); }
@@ -84,15 +109,19 @@ namespace transport
 
 		    //! Number of fields
         unsigned int              N_fields;
+
 		    //! Range -- do the indices cover fields only, or fields+momenta?
         range_type                range;
 
 		    //! Total number of on/of toggles
         unsigned int              size;           // total number of components
+
 		    //! Vector representing the state of each on/off toggle
         std::vector<bool>         enabled;
+
 		    //! Look-up table of displacements into the vector of on/off toggles
         std::vector<unsigned int> displacements;
+
       };
 
 
@@ -135,7 +164,7 @@ namespace transport
 
 
     template <unsigned int indices>
-    void index_selector<indices>::set_on(std::array<unsigned int, indices>& which)
+    void index_selector<indices>::set_on(const std::array<unsigned int, indices>& which)
       {
         unsigned int index = 0;
 
@@ -152,7 +181,7 @@ namespace transport
 
 
     template <unsigned int indices>
-    void index_selector<indices>::set_off(std::array<unsigned int, indices>& which)
+    void index_selector<indices>::set_off(const std::array<unsigned int, indices>& which)
       {
         unsigned int index = 0;
 
@@ -169,7 +198,7 @@ namespace transport
 
 
     template <unsigned int indices>
-    bool index_selector<indices>::is_on(std::array<unsigned int, indices>& which) const
+    bool index_selector<indices>::is_on(const std::array<unsigned int, indices>& which) const
 	    {
         unsigned int index = 0;
 
@@ -291,6 +320,20 @@ namespace transport
 			}
 
 
-  }  // namespace transport
+		template <unsigned int indices>
+		index_selector<indices> operator+(const index_selector<indices>& lhs, const std::array<unsigned int, indices>& rhs)
+			{
+				return(index_selector<indices>(lhs) += rhs);
+			}
+
+
+    template <unsigned int indices>
+    index_selector<indices> operator-(const index_selector<indices>& lhs, const std::array<unsigned int, indices>& rhs)
+	    {
+				return(index_selector<indices>(lhs) -= rhs);
+	    }
+
+
+	}  // namespace transport
 
 #endif // __CPP_TRANSPORT_INDEX_SELECTOR_H_
