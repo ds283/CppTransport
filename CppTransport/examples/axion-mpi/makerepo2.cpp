@@ -209,7 +209,14 @@ int main(int argc, char* argv[])
 
     transport::derived_data::time_series_plot<double> tk3_u2_plot("axion.threepf-1.u2", "u2.pdf");
     tk3_u2_plot.add_line(tk3_u2);
-    tk3_epsilon_plot.set_log_y(true);
+    tk3_u2_plot.set_log_y(true);
+
+
+    transport::derived_data::u3_line<double> tk3_u3(tk3, threepf_fields, all_times, equilateral_smallest_threepf);
+
+    transport::derived_data::time_series_plot<double> tk3_u3_plot("axion.threepf-1.u3", "u3.pdf");
+    tk3_u3_plot.add_line(tk3_u3);
+    tk3_u3_plot.set_log_y(true);
 
 
     // 1. TIME EVOLUTION OF THE ZETA TWOPF
