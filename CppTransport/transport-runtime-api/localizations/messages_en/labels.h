@@ -131,5 +131,10 @@
 #define __CPP_TRANSPORT_LATEX_U3_SYMBOL                    "u"
 #define __CPP_TRANSPORT_NONLATEX_U3_SYMBOL                 "u"
 
+#define __CPP_TRANSPORT_LATEX_LARGEST_U2_SYMBOL            "\\textrm{max} u_2"
+#define __CPP_TRANSPORT_NONLATEX_LARGEST_U2_SYMBOL         "max u_2"
+#define __CPP_TRANSPORT_LATEX_LARGEST_U3_SYMBOL            "\\textrm{max} u_3"
+#define __CPP_TRANSPORT_NONLATEX_LARGEST_U3_SYMBOL         "max u_3"
+
 
 #endif // __CPP_TRANSPORT_MESSAGES_EN_LABELS_H

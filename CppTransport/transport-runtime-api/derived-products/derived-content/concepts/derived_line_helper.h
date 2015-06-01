@@ -30,6 +30,8 @@
 #include "transport-runtime-api/derived-products/derived-content/background-quantites/background_line.h"
 #include "transport-runtime-api/derived-products/derived-content/background-quantites/u2_line.h"
 #include "transport-runtime-api/derived-products/derived-content/background-quantites/u3_line.h"
+#include "transport-runtime-api/derived-products/derived-content/background-quantites/largest_u2_line.h"
+#include "transport-runtime-api/derived-products/derived-content/background-quantites/largest_u3_line.h"
 
 
 namespace transport
@@ -69,6 +71,8 @@ namespace transport
 				            else if(type == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_BACKGROUND_LINE)                           return new background_line<number>(reader, finder);
                     else if(type == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_U2_LINE)                                   return new u2_line<number>(reader, finder);
                     else if(type == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_U3_LINE)                                   return new u3_line<number>(reader, finder);
+                    else if(type == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_LARGEST_U2_LINE)                           return new largest_u2_line<number>(reader, finder);
+                    else if(type == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_LARGEST_U3_LINE)                           return new largest_u3_line<number>(reader, finder);
 
                     std::ostringstream msg;
                     msg << __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_CONTENT_TYPE_UNKNOWN << " '" << type << "'";
