@@ -195,11 +195,21 @@ int main(int argc, char* argv[])
     transport::derived_data::background_line<double> tk3_Hubble(tk3, all_times, transport::derived_data::Hubble);
     transport::derived_data::background_line<double> tk3_aHubble(tk3, all_times, transport::derived_data::aHubble);
 
-    transport::derived_data::time_series_plot<double> tk3_bg_data_plot("axion.threepf-1.bg_data", "bg_data.pdf");
-		tk3_bg_data_plot.add_line(tk3_epsilon);
-		tk3_bg_data_plot.add_line(tk3_Hubble);
-		tk3_bg_data_plot.add_line(tk3_aHubble);
-		tk3_bg_data_plot.set_log_y(true);
+    transport::derived_data::time_series_plot<double> tk3_epsilon_plot("axion.threepf-1.epsilon", "epsilon.pdf");
+		tk3_epsilon_plot.add_line(tk3_epsilon);
+    tk3_epsilon_plot.set_log_y(true);
+
+    transport::derived_data::time_series_plot<double> tk3_Hubble_plot("axion.threepf-1.Hubble", "Hubble.pdf");
+		tk3_Hubble_plot.add_line(tk3_Hubble);
+		tk3_Hubble_plot.add_line(tk3_aHubble);
+		tk3_Hubble_plot.set_log_y(true);
+
+
+    transport::derived_data::u2_line<double> tk3_u2(tk3, twopf_fields, all_times, largest_twopf);
+
+    transport::derived_data::time_series_plot<double> tk3_u2_plot("axion.threepf-1.u2", "u2.pdf");
+    tk3_u2_plot.add_line(tk3_u2);
+    tk3_epsilon_plot.set_log_y(true);
 
 
     // 1. TIME EVOLUTION OF THE ZETA TWOPF
@@ -410,7 +420,9 @@ int main(int argc, char* argv[])
 
     transport::output_task<double> threepf_output = transport::output_task<double>("axion.threepf-1.output", tk3_twopf_plot);
 		threepf_output = threepf_output + tk3_threepf_plot
-																		+ tk3_bg_data_plot
+																		+ tk3_epsilon_plot
+                                    + tk3_Hubble_plot
+                                    + tk3_u2_plot
                                     + tk3_zeta_twopf
                                     + tk3_zeta_sq
                                     + tk3_redbsp
