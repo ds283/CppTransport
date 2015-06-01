@@ -119,5 +119,12 @@
 #define __CPP_TRANSPORT_LATEX_STEPS_SYMBOL                 "\\textrm{integration steps}"
 #define __CPP_TRANSPORT_NONLATEX_STEPS_SYMBOL              "integration steps"
 
+#define __CPP_TRANSPORT_LATEX_EPSILON_SYMBOL               "\epsilon"
+#define __CPP_TRANSPORT_NONLATEX_EPSILON_SYMBOL            "epsilon"
+#define __CPP_TRANSPORT_LATEX_HUBBLE_SYMBOL                "H"
+#define __CPP_TRANSPORT_NONLATEX_HUBBLE_SYMBOL             "H"
+#define __CPP_TRANSPORT_LATEX_A_HUBBLE_SYMBOL              "aH"
+#define __CPP_TRANSPORT_NONLATEX_A_HUBBLE_SYMBOL           "aH"
+
 
 #endif // __CPP_TRANSPORT_MESSAGES_EN_LABELS_H
