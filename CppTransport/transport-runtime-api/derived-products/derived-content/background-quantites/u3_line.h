@@ -176,6 +176,8 @@ namespace transport
 						this->tquery.serialize(writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]);
             this->kquery.serialize(writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY]);
 
+            this->active_indices.serialize(writer);
+
             writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_KT]    = this->use_kt_label;
             writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_ALPHA] = this->use_alpha_label;
             writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_BETA]  = this->use_beta_label;
@@ -274,7 +276,7 @@ namespace transport
 							{
                 std::ostringstream lbl;
 
-                lbl << __CPP_TRANSPORT_LATEX_U2_SYMBOL << "_{";
+                lbl << __CPP_TRANSPORT_LATEX_U3_SYMBOL << "_{";
 
                 lbl << field_names[l % N_fields] << (l >= N_fields ? "^{" __CPP_TRANSPORT_LATEX_PRIME_SYMBOL "}" : "") << " "
                     << field_names[m % N_fields] << (m >= N_fields ? "^{" __CPP_TRANSPORT_LATEX_PRIME_SYMBOL "}" : "") << " "
@@ -307,7 +309,7 @@ namespace transport
               {
                 std::ostringstream lbl;
 
-                lbl << __CPP_TRANSPORT_NONLATEX_U2_SYMBOL << "[";
+                lbl << __CPP_TRANSPORT_NONLATEX_U3_SYMBOL << "[";
 
                 lbl << field_names[l % N_fields] << (m >= N_fields ? __CPP_TRANSPORT_NONLATEX_PRIME_SYMBOL : "") << " "
                     << field_names[m % N_fields] << (m >= N_fields ? __CPP_TRANSPORT_NONLATEX_PRIME_SYMBOL : "") << " "

@@ -144,6 +144,8 @@ namespace transport
 						this->tquery.serialize(writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]);
             this->kquery.serialize(writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY]);
 
+            this->active_indices.serialize(writer);
+
 						this->time_series<number>::serialize(writer);
 						this->derived_line<number>::serialize(writer);
 					}
