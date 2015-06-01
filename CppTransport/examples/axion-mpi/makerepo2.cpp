@@ -192,12 +192,18 @@ int main(int argc, char* argv[])
 
 
     transport::derived_data::background_line<double> tk3_epsilon(tk3, all_times, transport::derived_data::epsilon);
+    transport::derived_data::largest_u2_line<double> tk3_largest_u2(tk3, all_times, largest_twopf);
+    transport::derived_data::largest_u3_line<double> tk3_largest_u3(tk3, all_times, equilateral_smallest_threepf);
+
+    transport::derived_data::time_series_plot<double> tk3_SR_objects_plot("axion.threepf-1.SR_objects", "SR_objects.pdf");
+    tk3_SR_objects_plot.add_line(tk3_epsilon);
+    tk3_SR_objects_plot.add_line(tk3_largest_u2);
+    tk3_SR_objects_plot.add_line(tk3_largest_u3);
+    tk3_SR_objects_plot.set_log_y(true);
+
+
     transport::derived_data::background_line<double> tk3_Hubble(tk3, all_times, transport::derived_data::Hubble);
     transport::derived_data::background_line<double> tk3_aHubble(tk3, all_times, transport::derived_data::aHubble);
-
-    transport::derived_data::time_series_plot<double> tk3_epsilon_plot("axion.threepf-1.epsilon", "epsilon.pdf");
-		tk3_epsilon_plot.add_line(tk3_epsilon);
-    tk3_epsilon_plot.set_log_y(true);
 
     transport::derived_data::time_series_plot<double> tk3_Hubble_plot("axion.threepf-1.Hubble", "Hubble.pdf");
 		tk3_Hubble_plot.add_line(tk3_Hubble);
@@ -427,9 +433,10 @@ int main(int argc, char* argv[])
 
     transport::output_task<double> threepf_output = transport::output_task<double>("axion.threepf-1.output", tk3_twopf_plot);
 		threepf_output = threepf_output + tk3_threepf_plot
-																		+ tk3_epsilon_plot
+																		+ tk3_SR_objects_plot
                                     + tk3_Hubble_plot
                                     + tk3_u2_plot
+                                    + tk3_u3_plot
                                     + tk3_zeta_twopf
                                     + tk3_zeta_sq
                                     + tk3_redbsp
