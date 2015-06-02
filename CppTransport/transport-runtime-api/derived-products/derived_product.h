@@ -28,6 +28,10 @@
 // forward-declare repository records if needed
 #include "transport-runtime-api/repository/records/repository_records_forward_declare.h"
 
+// get enviornment object
+#include "transport-runtime-api/manager/environment.h"
+
+
 #include "transport-runtime-api/defaults.h"
 #include "transport-runtime-api/messages.h"
 #include "transport-runtime-api/exceptions.h"
@@ -87,7 +91,7 @@ namespace transport
 				    const boost::filesystem::path& get_filename() const { return(this->filename); }
 
 		        //! Apply the analysis represented by this derived product to a given output group
-		        virtual std::list<std::string> derive(datapipe<number>& pipe, const std::list<std::string>& tags) = 0;
+		        virtual std::list<std::string> derive(datapipe<number>& pipe, const std::list<std::string>& tags, local_environment& env) = 0;
 
 
             // DERIVED PRODUCTS -- AGGREGATE CONSTITUENT TASKS

@@ -81,7 +81,7 @@ namespace transport
 		      public:
 
 						//! Generate our derived output
-		        virtual std::list<std::string> derive(datapipe<number>& pipe, const std::list<std::string>& tags) override;
+		        virtual std::list<std::string> derive(datapipe<number>& pipe, const std::list<std::string>& tags, local_environment& env) override;
 
 
 		      protected:
@@ -165,7 +165,7 @@ namespace transport
 
 
 				template <typename number>
-				std::list<std::string> line_asciitable<number>::derive(datapipe<number>& pipe, const std::list<std::string>& tags)
+				std::list<std::string> line_asciitable<number>::derive(datapipe<number>& pipe, const std::list<std::string>& tags, local_environment& env)
 					{
 						// generate output from our constituent lines
 				    std::list< data_line<number> > derived_lines;

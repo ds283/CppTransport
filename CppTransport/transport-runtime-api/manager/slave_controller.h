@@ -24,6 +24,7 @@
 #include "transport-runtime-api/repository/repository.h"
 #include "transport-runtime-api/data/data_manager.h"
 #include "transport-runtime-api/manager/slave_work_handler.h"
+#include "transport-runtime-api/manager/environment.h"
 
 #include "transport-runtime-api/scheduler/context.h"
 #include "transport-runtime-api/scheduler/scheduler.h"
@@ -188,6 +189,10 @@ namespace transport
 
 		    //! BOOST::MPI world communicator
 		    boost::mpi::communicator& world;
+
+
+        // LOCAL ENVIRONMENT
+        local_environment local_env;
 
 
 				// MODEL FINDER REFERENCE
@@ -774,7 +779,7 @@ namespace transport
 				                try
 					                {
 				                    boost::timer::cpu_timer derive_timer;
-				                    this_groups = product->derive(pipe, task_tags);
+				                    this_groups = product->derive(pipe, task_tags, this->local_env);
                             content_groups.merge(this_groups);
 						                derive_timer.stop();
 						                processing_time += derive_timer.elapsed().wall;

@@ -28,6 +28,7 @@
 #include "transport-runtime-api/manager/master_scheduler.h"
 #include "transport-runtime-api/manager/work_journal.h"
 #include "transport-runtime-api/manager/argument_cache.h"
+#include "transport-runtime-api/manager/environment.h"
 
 #include "transport-runtime-api/scheduler/context.h"
 #include "transport-runtime-api/scheduler/scheduler.h"
@@ -478,6 +479,10 @@ namespace transport
 		    boost::mpi::communicator& world;
 
 
+        // LOCAL ENVIRONMENT
+        local_environment local_env;
+
+
 		    // RUNTIME AGENTS
 
 		    //! Repository manager instance
@@ -845,7 +850,7 @@ namespace transport
         // and then exit ourselves
         this->terminate_workers();
 
-		    if(this->arg_cache.get_gantt_chart()) this->journal.make_gantt_chart(this->arg_cache.get_gantt_filename());
+		    if(this->arg_cache.get_gantt_chart()) this->journal.make_gantt_chart(this->arg_cache.get_gantt_filename(), this->local_env);
 	    }
 
 
