@@ -12,7 +12,7 @@ SET ( SPLINTER_LIBRARIES "${SPLINTER_LIBRARY_PATH}/libsplinter-static-1-2.a" )
 find_package(MPI REQUIRED)
 find_package(Boost REQUIRED COMPONENTS system filesystem random timer date_time mpi log_setup log serialization thread)
 find_package(GiNaC REQUIRED)
-find_package(EIGEN3 REQUIRED)
+find_package(Eigen3 REQUIRED)
 #find_package(CUDA REQUIRED)
 #find_package(OpenCL REQUIRED)
 
