@@ -158,9 +158,9 @@ int main(int argc, char* argv[])
 
     transport::index_selector<2> twopf_fields(model->get_N_fields());
     twopf_fields.none();
-		twopf_fields = twopf_fields + std::array<unsigned int, 2>{ 0, 0 }
-																+ std::array<unsigned int, 2>{ 0, 1 }
-																+ std::array<unsigned int, 2>{ 1, 1 };
+		twopf_fields.set_on(std::array<unsigned int, 2>{ 0, 0 });
+		twopf_fields.set_on(std::array<unsigned int, 2>{ 0, 1 });
+		twopf_fields.set_on(std::array<unsigned int, 2>{ 1, 1 });
 
     transport::derived_data::twopf_time_series<double> tk3_twopf_group(tk3, twopf_fields, all_times, largest_twopf);
     tk3_twopf_group.set_klabel_meaning(transport::derived_data::conventional);
@@ -172,12 +172,12 @@ int main(int argc, char* argv[])
 
     transport::index_selector<3> threepf_fields(model->get_N_fields());
     threepf_fields.none();
-    threepf_fields = threepf_fields + std::array<unsigned int, 3>{ 0, 0, 0 }
-	                                  + std::array<unsigned int, 3>{ 0, 1, 0 }
-	                                  + std::array<unsigned int, 3>{ 1, 1, 0 }
-	                                  + std::array<unsigned int, 3>{ 0, 0, 1 }
-	                                  + std::array<unsigned int, 3>{ 0, 1, 1 }
-	                                  + std::array<unsigned int, 3>{ 1, 1, 1 };
+    threepf_fields.set_on(std::array<unsigned int, 3>{ 0, 0, 0 });
+	  threepf_fields.set_on(std::array<unsigned int, 3>{ 0, 1, 0 });
+	  threepf_fields.set_on(std::array<unsigned int, 3>{ 1, 1, 0 });
+	  threepf_fields.set_on(std::array<unsigned int, 3>{ 0, 0, 1 });
+	  threepf_fields.set_on(std::array<unsigned int, 3>{ 0, 1, 1 });
+	  threepf_fields.set_on(std::array<unsigned int, 3>{ 1, 1, 1 });
 
     transport::derived_data::threepf_time_series<double> tk3_threepf_group(tk3, threepf_fields, all_times, equilateral_smallest_threepf);
     tk3_twopf_group.set_klabel_meaning(transport::derived_data::conventional);
@@ -213,10 +213,10 @@ int main(int argc, char* argv[])
 
     transport::index_selector<2> twopf_mf(model->get_N_fields());
     twopf_mf.none();
-    twopf_mf = twopf_mf + std::array<unsigned int, 2>{ 2, 0 }
-                        + std::array<unsigned int, 2>{ 2, 1 }
-                        + std::array<unsigned int, 2>{ 3, 0 }
-                        + std::array<unsigned int, 2>{ 3, 1 };
+    twopf_mf.set_on(std::array<unsigned int, 2>{ 2, 0 });
+    twopf_mf.set_on(std::array<unsigned int, 2>{ 2, 1 });
+    twopf_mf.set_on(std::array<unsigned int, 2>{ 3, 0 });
+    twopf_mf.set_on(std::array<unsigned int, 2>{ 3, 1 });
     transport::derived_data::u2_line<double> tk3_u2(tk3, twopf_mf, all_times, largest_twopf);
 
     transport::derived_data::time_series_plot<double> tk3_u2_plot("axion.threepf-1.u2", "u2.pdf");

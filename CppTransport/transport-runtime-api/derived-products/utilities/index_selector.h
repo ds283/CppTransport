@@ -34,11 +34,11 @@ namespace transport
 
 		template <unsigned int indices> class index_selector;
 
-		template <unsigned int indices>
-		index_selector<indices> operator+(const index_selector<indices>& lhs, const std::array<unsigned int, indices>& rhs);
+//		template <unsigned int indices>
+//		index_selector<indices> operator+(const index_selector<indices>& lhs, const std::array<unsigned int, indices>& rhs);
 
-    template <unsigned int indices>
-    index_selector<indices> operator-(const index_selector<indices>& lhs, const std::array<unsigned int, indices>& rhs);
+//    template <unsigned int indices>
+//    index_selector<indices> operator-(const index_selector<indices>& lhs, const std::array<unsigned int, indices>& rhs);
 
 		//! Select active indices for a d-component object in an N_f-field model
     template <unsigned int indices>
@@ -69,14 +69,14 @@ namespace transport
 		    index_selector<indices>& operator-=(const std::array<unsigned int, indices>& rhs) { this->set_off(rhs); return(*this); }
 
 		    //! addition, subtraction
-		    friend index_selector<indices> operator+ <>(const index_selector<indices>& lhs, const std::array<unsigned int, indices>& rhs);
-		    friend index_selector<indices> operator- <>(const index_selector<indices>& lhs, const std::array<unsigned int, indices>& rhs);
+//		    friend index_selector<indices> operator+ <>(const index_selector<indices>& lhs, const std::array<unsigned int, indices>& rhs);
+//		    friend index_selector<indices> operator- <>(const index_selector<indices>& lhs, const std::array<unsigned int, indices>& rhs);
 
 		    //! Disable all indices
-        void none   ();
+        void none();
 
 				//! Activate all indices
-        void all    ();
+        void all();
 
 		    //! Set a specific index combination on
         void set_on (const std::array<unsigned int, indices>& which);
@@ -89,6 +89,7 @@ namespace transport
 
 		    //! Get range -- do the indices cover fields, or field+momenta?
         range_type get_range() const { return(this->range); }
+
 		    //! Get number of fields
         unsigned int get_number_fields() const { return(this->N_fields); }
 
@@ -320,18 +321,18 @@ namespace transport
 			}
 
 
-		template <unsigned int indices>
-		index_selector<indices> operator+(const index_selector<indices>& lhs, const std::array<unsigned int, indices>& rhs)
-			{
-				return(index_selector<indices>(lhs) += rhs);
-			}
+//		template <unsigned int indices>
+//		index_selector<indices> operator+(const index_selector<indices>& lhs, const std::array<unsigned int, indices>& rhs)
+//			{
+//				return(index_selector<indices>(lhs) += rhs);
+//			}
 
 
-    template <unsigned int indices>
-    index_selector<indices> operator-(const index_selector<indices>& lhs, const std::array<unsigned int, indices>& rhs)
-	    {
-				return(index_selector<indices>(lhs) -= rhs);
-	    }
+//    template <unsigned int indices>
+//    index_selector<indices> operator-(const index_selector<indices>& lhs, const std::array<unsigned int, indices>& rhs)
+//	    {
+//				return(index_selector<indices>(lhs) -= rhs);
+//	    }
 
 
 	}  // namespace transport
