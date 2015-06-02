@@ -211,7 +211,13 @@ int main(int argc, char* argv[])
 		tk3_Hubble_plot.set_log_y(true);
 
 
-    transport::derived_data::u2_line<double> tk3_u2(tk3, twopf_fields, all_times, largest_twopf);
+    transport::index_selector<2> twopf_mf(model->get_N_fields());
+    twopf_mf.none();
+    twopf_mf = twopf_mf + std::array<unsigned int, 2>{ 2, 0 }
+                        + std::array<unsigned int, 2>{ 2, 1 }
+                        + std::array<unsigned int, 2>{ 3, 0 }
+                        + std::array<unsigned int, 2>{ 3, 1 };
+    transport::derived_data::u2_line<double> tk3_u2(tk3, twopf_mf, all_times, largest_twopf);
 
     transport::derived_data::time_series_plot<double> tk3_u2_plot("axion.threepf-1.u2", "u2.pdf");
     tk3_u2_plot.add_line(tk3_u2);
