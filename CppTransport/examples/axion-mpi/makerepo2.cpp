@@ -104,9 +104,9 @@ int main(int argc, char* argv[])
 //    transport::stepping_range<double> betas_hi(betamid, betamax, hi_b_samples, transport::logarithmic_top_stepping);
 //    transport::aggregation_range<double> betas(betas_lo, betas_hi);
     transport::stepping_range<double> betas_equi(1.0/3.0, 1.0/3.0, 0, transport::linear_stepping);    // add dedicated equilateral configuration
-    transport::stepping_range<double> betas_lo(0.0, 0.9, 60, transport::linear_stepping);
-    transport::stepping_range<double> betas_mid(0.9, 0.99, 50, transport::logarithmic_top_stepping);
-    transport::stepping_range<double> betas_hi(0.99, 0.999, 50, transport::logarithmic_top_stepping);
+    transport::stepping_range<double> betas_lo(0.0, 0.9, 5, transport::linear_stepping);
+    transport::stepping_range<double> betas_mid(0.9, 0.99, 5, transport::logarithmic_top_stepping);
+    transport::stepping_range<double> betas_hi(0.99, 0.999, 5, transport::logarithmic_top_stepping);
     transport::aggregation_range<double> betas = betas_lo + betas_mid + betas_hi + betas_equi;
 
     // construct a threepf task
@@ -157,13 +157,10 @@ int main(int argc, char* argv[])
 
 
     transport::index_selector<2> twopf_fields(model->get_N_fields());
-    std::array<unsigned int, 2> index_set_a = { 0, 0 };
-    std::array<unsigned int, 2> index_set_b = { 0, 1 };
-    std::array<unsigned int, 2> index_set_c = { 1, 1 };
     twopf_fields.none();
-    twopf_fields.set_on(index_set_a);
-    twopf_fields.set_on(index_set_b);
-    twopf_fields.set_on(index_set_c);
+		twopf_fields = twopf_fields + std::array<unsigned int, 2>{ 0, 0 }
+																+ std::array<unsigned int, 2>{ 0, 1 }
+																+ std::array<unsigned int, 2>{ 1, 1 };
 
     transport::derived_data::twopf_time_series<double> tk3_twopf_group(tk3, twopf_fields, all_times, largest_twopf);
     tk3_twopf_group.set_klabel_meaning(transport::derived_data::conventional);
@@ -174,19 +171,13 @@ int main(int argc, char* argv[])
     tk3_twopf_plot.set_legend_position(transport::derived_data::bottom_left);
 
     transport::index_selector<3> threepf_fields(model->get_N_fields());
-    std::array<unsigned int, 3> sq_set_a    = { 0, 0, 0 };
-    std::array<unsigned int, 3> sq_set_b    = { 0, 1, 0 };
-    std::array<unsigned int, 3> sq_set_c    = { 1, 1, 0 };
-    std::array<unsigned int, 3> sq_set_d    = { 0, 0, 1 };
-    std::array<unsigned int, 3> sq_set_e    = { 0, 1, 1 };
-    std::array<unsigned int, 3> sq_set_f    = { 1, 1, 1 };
     threepf_fields.none();
-    threepf_fields.set_on(sq_set_a);
-    threepf_fields.set_on(sq_set_b);
-    threepf_fields.set_on(sq_set_c);
-    threepf_fields.set_on(sq_set_d);
-    threepf_fields.set_on(sq_set_e);
-    threepf_fields.set_on(sq_set_f);
+    threepf_fields = threepf_fields + std::array<unsigned int, 3>{ 0, 0, 0 }
+	                                  + std::array<unsigned int, 3>{ 0, 1, 0 }
+	                                  + std::array<unsigned int, 3>{ 1, 1, 0 }
+	                                  + std::array<unsigned int, 3>{ 0, 0, 1 }
+	                                  + std::array<unsigned int, 3>{ 0, 1, 1 }
+	                                  + std::array<unsigned int, 3>{ 1, 1, 1 };
 
     transport::derived_data::threepf_time_series<double> tk3_threepf_group(tk3, threepf_fields, all_times, equilateral_smallest_threepf);
     tk3_twopf_group.set_klabel_meaning(transport::derived_data::conventional);
@@ -195,6 +186,49 @@ int main(int argc, char* argv[])
     tk3_threepf_plot.add_line(tk3_threepf_group);
     tk3_threepf_plot.set_title_text("Time evolution of three-point function");
     tk3_threepf_plot.set_legend_position(transport::derived_data::bottom_left);
+
+
+		// b. TIME EVOLUTION OF BACKGROUND QUANTITIES
+
+
+    transport::derived_data::background_line<double> tk3_epsilon(tk3, all_times, transport::derived_data::epsilon);
+    transport::derived_data::largest_u2_line<double> tk3_largest_u2(tk3, all_times, largest_twopf);
+    transport::derived_data::largest_u3_line<double> tk3_largest_u3(tk3, all_times, equilateral_smallest_threepf);
+
+    transport::derived_data::time_series_plot<double> tk3_SR_objects_plot("axion.threepf-1.SR_objects", "SR_objects.pdf");
+    tk3_SR_objects_plot.add_line(tk3_epsilon);
+    tk3_SR_objects_plot.add_line(tk3_largest_u2);
+    tk3_SR_objects_plot.add_line(tk3_largest_u3);
+    tk3_SR_objects_plot.set_log_y(true);
+
+
+    transport::derived_data::background_line<double> tk3_Hubble(tk3, all_times, transport::derived_data::Hubble);
+    transport::derived_data::background_line<double> tk3_aHubble(tk3, all_times, transport::derived_data::aHubble);
+
+    transport::derived_data::time_series_plot<double> tk3_Hubble_plot("axion.threepf-1.Hubble", "Hubble.pdf");
+		tk3_Hubble_plot.add_line(tk3_Hubble);
+		tk3_Hubble_plot.add_line(tk3_aHubble);
+		tk3_Hubble_plot.set_log_y(true);
+
+
+    transport::index_selector<2> twopf_mf(model->get_N_fields());
+    twopf_mf.none();
+    twopf_mf = twopf_mf + std::array<unsigned int, 2>{ 2, 0 }
+                        + std::array<unsigned int, 2>{ 2, 1 }
+                        + std::array<unsigned int, 2>{ 3, 0 }
+                        + std::array<unsigned int, 2>{ 3, 1 };
+    transport::derived_data::u2_line<double> tk3_u2(tk3, twopf_mf, all_times, largest_twopf);
+
+    transport::derived_data::time_series_plot<double> tk3_u2_plot("axion.threepf-1.u2", "u2.pdf");
+    tk3_u2_plot.add_line(tk3_u2);
+    tk3_u2_plot.set_log_y(true);
+
+
+    transport::derived_data::u3_line<double> tk3_u3(tk3, threepf_fields, all_times, equilateral_smallest_threepf);
+
+    transport::derived_data::time_series_plot<double> tk3_u3_plot("axion.threepf-1.u3", "u3.pdf");
+    tk3_u3_plot.add_line(tk3_u3);
+    tk3_u3_plot.set_log_y(true);
 
 
     // 1. TIME EVOLUTION OF THE ZETA TWOPF
@@ -250,13 +284,13 @@ int main(int argc, char* argv[])
     tk3_zeta_2spec.set_klabel_meaning(transport::derived_data::conventional);
     tk3_zeta_2spec.set_dimensionless(true);
 
-    transport::derived_data::wavenumber_series_plot<double> tk3_zeta_2spec_plot = transport::derived_data::wavenumber_series_plot<double>("axion.threepf-1.zeta-2spec", "zeta-2spec.pdf");
+    transport::derived_data::wavenumber_series_plot<double> tk3_zeta_2spec_plot("axion.threepf-1.zeta-2spec", "zeta-2spec.pdf");
     tk3_zeta_2spec_plot.add_line(tk3_zeta_2spec);
 		tk3_zeta_2spec_plot.set_typeset_with_LaTeX(true);
     tk3_zeta_2spec_plot.set_log_x(true);
     tk3_zeta_2spec_plot.set_title_text("$\\langle \\zeta \\zeta \\rangle$ power spectrum");
 
-    transport::derived_data::wavenumber_series_table<double> tk3_zeta_2spec_table = transport::derived_data::wavenumber_series_table<double>("axion.threepf-1.zeta-2spec.table", "zeta-2spec-table.txt");
+    transport::derived_data::wavenumber_series_table<double> tk3_zeta_2spec_table("axion.threepf-1.zeta-2spec.table", "zeta-2spec-table.txt");
     tk3_zeta_2spec_table.add_line(tk3_zeta_2spec);
 
 
@@ -375,7 +409,7 @@ int main(int argc, char* argv[])
     tk3_zeta_2spec_index.set_dimensionless(true);
     tk3_zeta_2spec_index.set_spectral_index(true);
 
-    transport::derived_data::wavenumber_series_plot<double> tk3_zeta_2spec_index_plot = transport::derived_data::wavenumber_series_plot<double>("axion.threepf-1.zeta-2spec-index", "zeta-2spec-index.pdf");
+    transport::derived_data::wavenumber_series_plot<double> tk3_zeta_2spec_index_plot("axion.threepf-1.zeta-2spec-index", "zeta-2spec-index.pdf");
     tk3_zeta_2spec_index_plot.add_line(tk3_zeta_2spec_index);
     tk3_zeta_2spec_index_plot.set_typeset_with_LaTeX(true);
     tk3_zeta_2spec_index_plot.set_title_text("$\\langle \\zeta \\zeta \\rangle$ spectral index");
@@ -404,18 +438,22 @@ int main(int argc, char* argv[])
 
 
     transport::output_task<double> threepf_output = transport::output_task<double>("axion.threepf-1.output", tk3_twopf_plot);
-    threepf_output.add_element(tk3_threepf_plot);
-    threepf_output.add_element(tk3_zeta_twopf);
-    threepf_output.add_element(tk3_zeta_sq);
-    threepf_output.add_element(tk3_redbsp);
-    threepf_output.add_element(tk3_zeta_2spec_plot);
-		threepf_output.add_element(tk3_redbsp_spec_plot);
-		threepf_output.add_element(tk3_redbsp_beta_plot);
-    threepf_output.add_element(tk3_redbsp_sqk3_plot);
-    threepf_output.add_element(tk3_redbsp_sqk3_index_plot);
-    threepf_output.add_element(tk3_redbsp_spec_index_plot);
-    threepf_output.add_element(tk3_zeta_2spec_index_plot);
-		threepf_output.add_element(tk3_cost_plot);
+		threepf_output = threepf_output + tk3_threepf_plot
+																		+ tk3_SR_objects_plot
+                                    + tk3_Hubble_plot
+                                    + tk3_u2_plot
+                                    + tk3_u3_plot
+                                    + tk3_zeta_twopf
+                                    + tk3_zeta_sq
+                                    + tk3_redbsp
+                                    + tk3_zeta_2spec_plot
+																		+ tk3_redbsp_spec_plot
+																		+ tk3_redbsp_beta_plot
+                                    + tk3_redbsp_sqk3_plot
+                                    + tk3_redbsp_sqk3_index_plot
+                                    + tk3_redbsp_spec_index_plot
+                                    + tk3_zeta_2spec_index_plot
+																		+ tk3_cost_plot;
 
     std::cout << "axion.threepf-1 output task:" << std::endl << threepf_output << std::endl;
 

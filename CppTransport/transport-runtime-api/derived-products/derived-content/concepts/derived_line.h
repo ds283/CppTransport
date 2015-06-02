@@ -64,6 +64,11 @@
 // derived content types
 #define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE                                      "derived-line-type"
 #define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_BACKGROUND                                "background"
+#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_BACKGROUND_LINE                           "background-line"
+#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_U2_LINE                                   "u2-line"
+#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_U3_LINE                                   "u3-line"
+#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_LARGEST_U2_LINE                           "largest-u2-line"
+#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_LARGEST_U3_LINE                           "largest-u3-line"
 #define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TWOPF_TIME_SERIES                         "twopf-time-series"
 #define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_TIME_SERIES                       "threepf-time-series"
 #define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TENSOR_TWOPF_TIME_SERIES                  "tensor-twopf-time-series"

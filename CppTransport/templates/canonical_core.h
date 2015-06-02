@@ -907,7 +907,7 @@ namespace transport
             __u2[__i].resize(2*$$__NUMBER_FIELDS);
           }
 
-        __u2[$$__a][$$__b] = $$__U2_PREDEF[ab]{__k, __a, __Hsq, __eps};
+        __u2[$$__A][$$__B] = $$__U2_PREDEF[AB]{__k, __a, __Hsq, __eps};
       }
 
 
@@ -938,7 +938,7 @@ namespace transport
               }
           }
 
-        __u3[$$__a][$$__b][$$__c] = $$__U3_PREDEF[abc]{__k1, __k1, __k3, __a, __Hsq, __eps};
+        __u3[$$__A][$$__B][$$__C] = $$__U3_PREDEF[ABC]{__k1, __k1, __k3, __a, __Hsq, __eps};
       }
 
 

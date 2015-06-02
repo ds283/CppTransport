@@ -70,7 +70,7 @@ namespace transport
 						virtual ~cost_wavenumber() = default;
 
 
-				    // DERIVE LINES -- implements a 'time_series' interface
+				    // DERIVE LINES -- implements a 'derived_line' interface
 
 				  public:
 
@@ -181,13 +181,13 @@ namespace transport
 						type = twopf_analysis;
 						if(type_string == __CPP_TRANSPORT_NODE_PRODUCT_INTEGRATION_COST_TWOPF)        type = twopf_analysis;
 						else if(type_string == __CPP_TRANSPORT_NODE_PRODUCT_INTEGRATION_COST_THREEPF) type = threepf_analysis;
-						else assert(false);
+						else assert(false); // TODO: raise exception
 
 				    std::string metric_string = reader[__CPP_TRANSPORT_NODE_PRODUCT_INTEGRATION_COST_METRIC].asString();
 						metric = time_cost;
 						if(metric_string == __CPP_TRANSPORT_NODE_PRODUCT_INTEGRATION_COST_TIME)       metric = time_cost;
 						else if(metric_string == __CPP_TRANSPORT_NODE_PRODUCT_INTEGRATION_COST_STEPS) metric = steps_cost;
-						else assert(false);
+						else assert(false); // TODO: raise exception
 					}
 
 
@@ -210,6 +210,7 @@ namespace transport
 
 				        default:
 					        assert(false);
+						      // TODO: raise exception
 					    }
 
 				    switch(this->metric)
@@ -224,6 +225,7 @@ namespace transport
 
 				        default:
 					        assert(false);
+						      // TODO: raise exception
 					    }
 
 				    this->wavenumber_series<number>::serialize(writer);
@@ -232,7 +234,7 @@ namespace transport
 
 
 		    template <typename number>
-		    void cost_wavenumber<number>::derive_lines(datapipe<number>& pipe, std::list<data_line<number>>& lines, const std::list<std::string>& tags) const
+		    void cost_wavenumber<number>::derive_lines(datapipe<number>& pipe, std::list< data_line<number> >& lines, const std::list<std::string>& tags) const
 			    {
 		        // attach our datapipe to an output group
 		        std::string group = this->attach(pipe, tags);
@@ -253,6 +255,7 @@ namespace transport
 				                case twopf_analysis:
 					                {
 						                SQL_twopf_kconfig_query* kquery_as_twopf = dynamic_cast<SQL_twopf_kconfig_query*>(this->kquery);
+						                assert(kquery_as_twopf != nullptr);   // TODO: raise exception
 						                w_axis = this->pull_kconfig_axis(pipe, *kquery_as_twopf);
 						                break;
 					                };
@@ -260,6 +263,7 @@ namespace transport
 				                case threepf_analysis:
 					                {
 						                SQL_threepf_kconfig_query* kquery_as_threepf = dynamic_cast<SQL_threepf_kconfig_query*>(this->kquery);
+						                assert(kquery_as_threepf != nullptr);   // TODO: raise exception
 						                w_axis = this->pull_kconfig_axis(pipe, *kquery_as_threepf);
 						                break;
 					                };
@@ -298,8 +302,8 @@ namespace transport
 			                    }
 			                }
 
-		                data_line<number> line = data_line<number>(group, this->x_type, this_value, w_axis, line_data,
-		                                                           this->get_LaTeX_label(), this->get_non_LaTeX_label(), this->is_spectral_index());
+		                data_line<number> line(group, this->x_type, this_value, w_axis, line_data,
+		                                       this->get_LaTeX_label(), this->get_non_LaTeX_label(), this->is_spectral_index());
 				            line.set_data_line_type(scattered_data);
 
 		                lines.push_back(line);
