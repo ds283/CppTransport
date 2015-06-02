@@ -106,9 +106,6 @@ namespace transport
 										msg << __CPP_TRANSPORT_PRODUCT_LINE_PLOT2D_UNSUPPORTED_FORMAT << " " << filename.extension();
 										throw runtime_exception(runtime_exception::DERIVED_PRODUCT_ERROR, msg.str());
 									}
-
-								// find location of Python interpreter
-                this->set_python_path();
 			        }
 
 				    //! Deserialization constructor
@@ -141,7 +138,7 @@ namespace transport
 		      public:
 
 				    //! Generate our derived output
-				    virtual std::list<std::string> derive(datapipe<number>& pipe, const std::list<std::string>& tags) override;
+				    virtual std::list<std::string> derive(datapipe<number>& pipe, const std::list<std::string>& tags, local_environment& env) override;
 
 
 		      protected:
@@ -154,7 +151,7 @@ namespace transport
 				    //! Make plot
 				    bool make_plot(datapipe<number>& pipe, const std::deque<double>& axis,
 				                   const typename std::vector< std::vector< typename line_collection<number>::output_line > >& data_bins,
-				                   const std::vector< value_type >& bin_types) const;
+				                   const std::vector< value_type >& bin_types, local_environment& env) const;
 
 
 		        // GET AND SET BASIC PLOT ATTRIBUTES
@@ -282,23 +279,6 @@ namespace transport
 				    void set_dash_second_axis(bool g) { this->dash_second_axis = g; }
 
 
-            // GET AND SET RUNTIME ENVIRONMENT
-
-          public:
-
-            //! get path to Python interpreter
-            const boost::filesystem::path& get_python_interpreter() const { return(this->python_path); }
-
-            //! set path to Python interpreter
-            void set_python_interpreter(const boost::filesystem::path& p);
-
-
-          protected:
-
-            //! auto-detect path to Python interpreter
-            void set_python_path();
-
-
 				    // CLONE
 
 		      public:
@@ -362,12 +342,6 @@ namespace transport
 				    //! uses dashes for lines plotted on second y-axis?
 				    bool dash_second_axis;
 
-
-            // OTHER DATA
-
-            //! path to Python interpreter
-            boost::filesystem::path python_path;
-
 				    //! which labels have been explicitly set?
 				    bool x_label_set;
 				    bool y_label_set;
@@ -414,12 +388,11 @@ namespace transport
 			        }
 
 				    typeset_with_LaTeX = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_TYPESET_LATEX].asBool();
-				    python_path        = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_PYTHON_PATH].asString();
 			    }
 
 
 				template <typename number>
-				std::list<std::string> line_plot2d<number>::derive(datapipe<number>& pipe, const std::list<std::string>& tags)
+				std::list<std::string> line_plot2d<number>::derive(datapipe<number>& pipe, const std::list<std::string>& tags, local_environment& env)
 					{
 						// generate output from our constituent lines
 				    std::list< data_line<number> > derived_lines;
@@ -446,7 +419,7 @@ namespace transport
 							}
 
 						// generate plot
-				    bool success = this->make_plot(pipe, axis, binned_lines, bin_types);
+				    bool success = this->make_plot(pipe, axis, binned_lines, bin_types, env);
 
             // get output groups which were used
             std::list<std::string> used_groups = this->extract_output_groups(derived_lines);
@@ -517,7 +490,7 @@ namespace transport
 				template <typename number>
 				bool line_plot2d<number>::make_plot(datapipe<number>& pipe, const std::deque<double>& axis,
 				                                    const typename std::vector< std::vector< typename line_collection<number>::output_line > >& data_bins,
-																						const std::vector< value_type >& bin_types) const
+																						const std::vector< value_type >& bin_types, local_environment& env) const
 					{
 						// extract paths from the datapipe
             boost::filesystem::path temp_root = pipe.get_abs_tempdir_path();
@@ -751,7 +724,7 @@ namespace transport
 						if(plot_file.extension() != ".py")
 							{
 						    std::ostringstream command;
-						    command << "source ~/.profile; " << this->python_path.string() << " \"" << script_file.string() << "\"";
+						    command << "source ~/.profile; " << env.get_python_location() << " \"" << script_file.string() << "\"";
 						    int rc = system(command.str().c_str());
 
 						    // remove python script if worked ok, otherwise move script to destination and throw an exception
@@ -769,27 +742,6 @@ namespace transport
 
 						return(rval);
 					}
-
-
-        template <typename number>
-        void line_plot2d<number>::set_python_interpreter(const boost::filesystem::path& p)
-          {
-            if(!boost::filesystem::exists(p))
-              {
-                std::ostringstream msg;
-                msg << __CPP_TRANSPORT_PRODUCT_LINE_PLOT2D_INTERPRETER_NOT_FOUND << " " << p;
-                throw runtime_exception(runtime_exception::DERIVED_PRODUCT_ERROR, msg.str());
-              }
-
-            this->python_path = p;
-          }
-
-
-        template <typename number>
-        void line_plot2d<number>::set_python_path()
-          {
-		        this->python_path = find_python();
-          }
 
 
 		    template <typename number>
@@ -859,7 +811,6 @@ namespace transport
 			        }
 
 		        writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_TYPESET_LATEX] = this->typeset_with_LaTeX;
-            writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_PYTHON_PATH] = this->python_path.string();
 
 		        // call next serialization
 		        this->line_collection<number>::serialize(writer);

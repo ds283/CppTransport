@@ -10,7 +10,7 @@
 
 #include <list>
 
-#include "transport-runtime-api/utilities/python_finder.h"
+#include "transport-runtime-api/manager/environment.h"
 
 #include "transport-runtime-api/defaults.h"
 #include "transport-runtime-api/messages.h"
@@ -481,7 +481,7 @@ namespace transport
 		  public:
 
 				//! construct a Gantt chart from the journal entries
-				void make_gantt_chart(const std::string& filename);
+				void make_gantt_chart(const std::string& filename, local_environment& env);
 
 		  protected:
 
@@ -513,16 +513,12 @@ namespace transport
 				//! journal
 				std::list< work_event* > journal;
 
-				//! Path to Python executable
-				boost::filesystem::path python_path;
-
-			};
+      };
 
 
 		work_journal::work_journal(unsigned int N)
 			: N_workers(N)
 			{
-				this->python_path = find_python();
 			}
 
 
@@ -801,7 +797,7 @@ namespace transport
 			}
 
 
-		void work_journal::make_gantt_chart(const std::string& filename)
+		void work_journal::make_gantt_chart(const std::string& filename, local_environment& local_env)
 			{
 		    std::list< std::list<Gantt_bar> > bars_list;
 		    this->bin_bars(bars_list);
@@ -860,7 +856,7 @@ namespace transport
 				out << "fig = plt.figure()" << std::endl;
 				out << "ax = plt.gca()" << std::endl;
 
-				Gantt_environment env("ax", "mdt", "dt", "dateutil.parser", 1.0);
+				Gantt_environment gantt_env("ax", "mdt", "dt", "dateutil.parser", 1.0);
 
 		    // output the bar-chart part of the gantt chart
 
@@ -873,7 +869,7 @@ namespace transport
 		        std::list<Gantt_bar>::const_iterator u = t->begin();
 		        while(u != t->end())
 			        {
-		            out << u->format(total_count, static_cast<double>(process_count) * 1.0, env) << std::endl;
+		            out << u->format(total_count, static_cast<double>(process_count) * 1.0, gantt_env) << std::endl;
 		            ++u;
 		            ++total_count;
 			        }
@@ -893,7 +889,7 @@ namespace transport
 				    std::list<Gantt_milestone>::const_iterator w = v->begin();
 						while(w != v->end())
 							{
-								out << w->format(total_count, static_cast<double>(process_count) * 1.0, env) << std::endl;
+								out << w->format(total_count, static_cast<double>(process_count) * 1.0, gantt_env) << std::endl;
 								++w;
 								++total_count;
 							}
@@ -941,7 +937,7 @@ namespace transport
 				if(out_file.extension() != ".py")
 					{
 				    std::ostringstream command;
-				    command << "source ~/.profile; " << this->python_path.string() << " \"" << script_file.string() << "\"";
+				    command << "source ~/.profile; " << local_env.get_python_location() << " \"" << script_file.string() << "\"";
 				    int rc = system(command.str().c_str());
 
 				    // remove python script if worked ok
