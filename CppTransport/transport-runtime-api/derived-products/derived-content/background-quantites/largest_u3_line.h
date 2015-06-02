@@ -165,7 +165,7 @@ namespace transport
 				template <typename number>
 				void largest_u3_line<number>::serialize(Json::Value& writer) const
 					{
-						writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_U3_LINE);
+						writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_LARGEST_U3_LINE);
 
 						this->tquery.serialize(writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]);
             this->kquery.serialize(writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY]);
@@ -240,6 +240,8 @@ namespace transport
                               }
                           }
                       }
+
+                    line_data[j] = val;
                   }
 
                 data_line<number> line(group, this->x_type, dimensionless_value, t_axis, line_data,

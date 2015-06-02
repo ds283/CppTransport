@@ -197,10 +197,15 @@ namespace transport
                       {
                         for(unsigned int n = 0; n < 2 * this->gadget.get_N_fields(); ++n)
                           {
-                            number value = fabs(u2_tensor[m][n]);
-                            if(value > val) val = value;
+                            if(mdl->is_momentum(m) && mdl->is_field(n)) // only look at the momentum-field block, which is M/H^2; the other blocks aren't relate to SR
+                              {
+                                number value = fabs(u2_tensor[m][n]);
+                                if(value > val) val = value;
+                              }
                           }
                       }
+
+                    line_data[j] = val;
                   }
 
                 data_line<number> line(group, this->x_type, dimensionless_value, t_axis, line_data,
