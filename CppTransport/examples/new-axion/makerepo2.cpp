@@ -104,9 +104,9 @@ int main(int argc, char* argv[])
 //    transport::stepping_range<double> betas_hi(betamid, betamax, hi_b_samples, transport::logarithmic_top_stepping);
 //    transport::aggregation_range<double> betas(betas_lo, betas_hi);
     transport::stepping_range<double> betas_equi(1.0/3.0, 1.0/3.0, 0, transport::linear_stepping);    // add dedicated equilateral configuration
-    transport::stepping_range<double> betas_lo(0.0, 0.9, 5, transport::linear_stepping);
-    transport::stepping_range<double> betas_mid(0.9, 0.99, 5, transport::logarithmic_top_stepping);
-    transport::stepping_range<double> betas_hi(0.99, 0.999, 5, transport::logarithmic_top_stepping);
+    transport::stepping_range<double> betas_lo(0.0, 0.9, 60, transport::linear_stepping);
+    transport::stepping_range<double> betas_mid(0.9, 0.99, 50, transport::logarithmic_top_stepping);
+    transport::stepping_range<double> betas_hi(0.99, 0.999, 50, transport::logarithmic_top_stepping);
     transport::aggregation_range<double> betas = betas_lo + betas_mid + betas_hi + betas_equi;
 
     // construct a threepf task
