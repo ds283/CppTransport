@@ -83,6 +83,9 @@ namespace transport
         const twopf_kconfig_database& get_twopf_database() const { return(this->twopf_db); }
 
 		    //! Compute horizon-exit times for each mode in the database
+
+		    //! Should be called once the database has been populated.
+		    //! Horizon exit times are stored when the database is serialized, so does not need to be called again.
 		    virtual void compute_horizon_exit_times();
 
         //! Write k-configuration database to disk

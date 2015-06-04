@@ -83,6 +83,7 @@ namespace transport
     twopf_task<number>::twopf_task(const std::string& nm, Json::Value& reader, sqlite3* handle, const initial_conditions<number>& i)
 	    : twopf_list_task<number>(nm, reader, handle, i)
 	    {
+		    // rebuild database of stored times; this isn't serialized but recomputed on-the-fly
         this->cache_stored_time_config_database();
 	    }
 

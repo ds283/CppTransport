@@ -61,6 +61,9 @@ namespace transport
         const threepf_kconfig_database& get_threepf_database() const { return(this->threepf_db); }
 
         //! Compute horizon-exit times for each mode in the database
+
+        //! Should be called once the database has been populated.
+        //! Horizon exit times are stored when the database is serialized, so does not need to be called again.
         virtual void compute_horizon_exit_times() override;
 
         //! Determine whether this task is integrable
@@ -74,7 +77,7 @@ namespace transport
 
       protected:
 
-        //! Compute horizon-exit times for each mode in the database -- use supplied spline
+        //! Compute horizon-exit times for each mode in the database -- using a supplied spline
         template <typename SplineObject, typename TolerancePolicy>
         void threepf_compute_horizon_exit_times(SplineObject& sp, TolerancePolicy tol);
 
