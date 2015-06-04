@@ -487,9 +487,9 @@ namespace transport
 		                        if(data[i].size() > 0)
 			                        {
 				                        const std::pair<double, number>& point = data[i].back();
-		                            if(fabs((point.first - next_axis_point)/point.first) < __CPP_TRANSPORT_AXIS_MERGE_TOLERANCE)   // yes, this line has a match
+		                            if(std::abs((point.first - next_axis_point)/point.first) < __CPP_TRANSPORT_AXIS_MERGE_TOLERANCE)   // yes, this line has a match
 			                            {
-		                                output[i].push_front(output_value(data_absy[i] ? fabs(point.second) : point.second));
+		                                output[i].push_front(output_value(data_absy[i] ? std::abs(point.second) : point.second));
 
 		                                // remove point from this line
 		                                data[i].pop_back();

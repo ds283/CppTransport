@@ -35,7 +35,7 @@ namespace aggregation_range_impl
 
         bool operator()(value& a, value& b)
 	        {
-            return(fabs((a-b)/a) < tol);
+            return(std::abs((a-b)/a) < tol);
 	        }
 
       private:

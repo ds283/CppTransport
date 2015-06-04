@@ -40,7 +40,7 @@ namespace transport
 
         bool operator()(const double& a, const double& b)
 	        {
-            return(fabs((a-b)/a) < this->tol);
+            return(std::abs((a-b)/a) < this->tol);
 	        }
 
       private:

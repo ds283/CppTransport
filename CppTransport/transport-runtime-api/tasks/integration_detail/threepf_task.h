@@ -154,6 +154,7 @@ namespace transport
         //! deserialize integrable status
         integrable = reader[__CPP_TRANSPORT_NODE_THREEPF_INTEGRABLE].asBool();
 
+        // rebuild database of stored times; this isn't serialized but recomputed on-the-fly
         this->cache_stored_time_config_database();
 	    }
 
@@ -373,7 +374,7 @@ namespace transport
                     auto maxij  = (ks[j] > ks[k] ? ks[j] : ks[k]);
                     auto maxijk = (maxij > ks[l] ? maxij : ks[l]);
 
-                    if(ks[j] + ks[k] + ks[l] - 2.0*maxijk >= -fabs(tol))   // impose the triangle conditions
+                    if(ks[j] + ks[k] + ks[l] - 2.0*maxijk >= -std::abs(tol))   // impose the triangle conditions
 	                    {
                         if(this->threepf_task<number>::threepf_db.add_k1k2k3_record(this->twopf_list_task<number>::twopf_db, ks[j], ks[k], ks[l], policy) < 0)
                           {
@@ -498,13 +499,13 @@ namespace transport
 	                {
                     if(betas[l] >= 0.0
 	                     && betas[l] <= 1.0
-	                     && betas[l]-1.0 - alphas[k] <= fabs(tol)
-	                     && alphas[k] - (1.0-betas[l]) < fabs(tol)                   // impose triangle conditions,
+	                     && betas[l]-1.0 - alphas[k] <= std::abs(tol)
+	                     && alphas[k] - (1.0-betas[l]) < std::abs(tol)                   // impose triangle conditions,
 	                     && alphas[k] >= 0.0
-	                     && betas[l] - (1.0+alphas[k])/3.0 >= -fabs(tol)             // impose k1 >= k2 >= k3
-	                     && fabs(1.0 - betas[l]) > smallest_squeezing                // impose maximum squeezing on k3
-	                     && fabs(1.0 + alphas[k] + betas[l]) > smallest_squeezing
-	                     && fabs(1.0 - alphas[k] + betas[l]) > smallest_squeezing)   // impose maximum squeezing on k1, k2
+	                     && betas[l] - (1.0+alphas[k])/3.0 >= -std::abs(tol)             // impose k1 >= k2 >= k3
+	                     && std::abs(1.0 - betas[l]) > smallest_squeezing                // impose maximum squeezing on k3
+	                     && std::abs(1.0 + alphas[k] + betas[l]) > smallest_squeezing
+	                     && std::abs(1.0 - alphas[k] + betas[l]) > smallest_squeezing)   // impose maximum squeezing on k1, k2
 	                    {
                         if(this->threepf_task<number>::threepf_db.add_FLS_record(this->threepf_task<number>::twopf_db, kts[j], alphas[k], betas[l], policy) < 0)
                           {

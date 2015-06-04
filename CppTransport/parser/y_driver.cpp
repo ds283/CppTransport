@@ -118,7 +118,7 @@ namespace y
 
         if(ok)
 	        {
-            s->abserr = fabs(d);
+            s->abserr = std::abs(d);
 	        }
         else
 	        {
@@ -135,7 +135,7 @@ namespace y
 
         if(ok)
 	        {
-            s->relerr = fabs(d);
+            s->relerr = std::abs(d);
 	        }
         else
 	        {
