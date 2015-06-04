@@ -199,7 +199,7 @@ namespace transport
                           {
                             if(mdl->is_momentum(m) && mdl->is_field(n)) // only look at the momentum-field block, which is M/H^2; the other blocks aren't relate to SR
                               {
-                                number value = fabs(u2_tensor[m][n]);
+                                number value = std::abs(u2_tensor[m][n]);
                                 if(value > val) val = value;
                               }
                           }

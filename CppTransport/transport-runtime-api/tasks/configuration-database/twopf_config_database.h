@@ -90,6 +90,26 @@ namespace transport
       }
 
 
+    namespace twopf_config_database_impl
+	    {
+
+        class ReverseKLookupComparator
+	        {
+
+          public:
+
+		        // should return true if a < b
+		        // elements considered equal if !(a<b) and !(b<a)
+		        bool operator()(const double& a, const double& b) const
+			        {
+				        return((b-a)/std::abs(a) > __CPP_TRANSPORT_DEFAULT_KCONFIG_SEARCH_PRECISION);
+			        }
+
+	        };
+
+	    }
+
+
     //! database of twopf k-configurations
     class twopf_kconfig_database
       {
@@ -98,6 +118,11 @@ namespace transport
 
         //! alias for database data structure
         typedef std::map< unsigned int, twopf_kconfig_record > database_type;
+
+		    //! alias for reverse index -- we want to be able to lookup elements in the database
+		    //! by their k-value efficiently
+		    //! To do that we use a map with a custom comparator, and use the k-value as a key
+		    typedef std::map< double, database_type::iterator, twopf_config_database_impl::ReverseKLookupComparator > index_type;
 
 
         // RECORD VALUED ITERATOR
@@ -177,6 +202,8 @@ namespace transport
       public:
 
         //! add record to the database
+
+		    //! The record shouldn't already exist. No checks are made to test for duplicates
         unsigned int add_record(double k_conventional);
 
         //! lookup record with a given serial number -- non const version
@@ -186,7 +213,7 @@ namespace transport
         const_record_iterator lookup(unsigned int serial) const;
 
         //! check for existence of a record with a given conventionally-normalized k
-        bool find(double k_conventional, unsigned int& serial) const;
+        bool find(double k_conventional, twopf_kconfig_database::record_iterator&) const;
 
 
         // INTERFACE -- LOOKUP META-INFORMATION
@@ -219,6 +246,9 @@ namespace transport
 
         //! database of k-configurations
         database_type database;
+
+		    //! index database by k-value
+		    index_type index_on_k;
 
         //! serial number for next inserted item
         unsigned int serial;
@@ -307,7 +337,12 @@ namespace transport
 				        if(config.k_comoving < this->kmin_comoving)         this->kmin_comoving     = config.k_comoving;
 
 						    bool store = (sqlite3_column_int(stmt, 4) != 0);
-				        this->database.emplace(config.serial, twopf_kconfig_record(config, store));
+
+				        std::pair<database_type::iterator, bool> emplaced_value = this->database.emplace(config.serial, twopf_kconfig_record(config, store));
+						    assert(emplaced_value.second);
+
+						    // insert index record
+						    this->index_on_k.emplace(config.k_conventional, emplaced_value.first);
 					    }
 				    else
 					    {
@@ -346,42 +381,22 @@ namespace transport
         if(config.k_comoving > this->kmax_comoving)         this->kmax_comoving     = config.k_comoving;
         if(config.k_comoving < this->kmin_comoving)         this->kmin_comoving     = config.k_comoving;
 
-        this->database.emplace(config.serial, twopf_kconfig_record(config, this->store_background));
-        this->store_background = false;
+        std::pair<database_type::iterator, bool> emplaced_value = this->database.emplace(config.serial, twopf_kconfig_record(config, this->store_background));
+        assert(emplaced_value.second);
 
+        // insert index record
+        this->index_on_k.emplace(config.k_conventional, emplaced_value.first);
+
+        this->store_background = false;
 		    this->modified = true;
 
         return(config.serial);
       }
 
 
-		namespace twopf_config_database_impl
-			{
-
-		    class FindBySerial
-			    {
-		      public:
-		        FindBySerial(unsigned int s)
-			        : serial(s)
-			        {
-			        }
-
-		        bool operator()(const std::pair<unsigned int, twopf_kconfig_record>& a)
-			        {
-		            return(this->serial == a.second->serial);
-			        }
-
-		      private:
-		        unsigned int serial;
-			    };
-
-			}
-
-
-
     twopf_kconfig_database::record_iterator twopf_kconfig_database::lookup(unsigned int serial)
       {
-        database_type::iterator t = std::find_if(this->database.begin(), this->database.end(), twopf_config_database_impl::FindBySerial(serial));
+        database_type::iterator t = this->database.find(serial);        // find has logarithmic complexity
 
 		    return twopf_kconfig_database::record_iterator(t);
       }
@@ -389,46 +404,23 @@ namespace transport
 
     twopf_kconfig_database::const_record_iterator twopf_kconfig_database::lookup(unsigned int serial) const
 	    {
-        database_type::const_iterator t = std::find_if(this->database.begin(), this->database.end(), twopf_config_database_impl::FindBySerial(serial));
+        database_type::const_iterator t = this->database.find(serial);  // find has logarithmic complexity
 
         return twopf_kconfig_database::const_record_iterator(t);
 	    }
 
 
-		namespace twopf_config_database_impl
-			{
-
-		    class FindByKConventional
-			    {
-		      public:
-		        FindByKConventional(double k)
-			        : k_conventional(k)
-			        {
-			        }
-
-		        bool operator()(const std::pair<unsigned int, twopf_kconfig_record>& a)
-			        {
-		            return(fabs((this->k_conventional - a.second->k_conventional)/this->k_conventional) < __CPP_TRANSPORT_DEFAULT_KCONFIG_SEARCH_PRECISION);
-			        }
-
-		      private:
-		        double k_conventional;
-			    };
-
-			}
-
-
-    bool twopf_kconfig_database::find(double k_conventional, unsigned int& serial) const
+    bool twopf_kconfig_database::find(double k_conventional, twopf_kconfig_database::record_iterator& rec) const
       {
-        database_type::const_iterator t = std::find_if(this->database.begin(), this->database.end(), twopf_config_database_impl::FindByKConventional(k_conventional));
+        index_type::const_iterator t = this->index_on_k.find(k_conventional);   // find has logarithmic complexity
 
-        if(t != this->database.end())
-          {
-            serial = t->first;
-            return(true);
-          }
+		    if(t != this->index_on_k.end())
+			    {
+				    rec = twopf_kconfig_database::record_iterator(t->second);
+				    return(true);
+			    }
 
-        return(false);
+		    return(false);
       }
 
 

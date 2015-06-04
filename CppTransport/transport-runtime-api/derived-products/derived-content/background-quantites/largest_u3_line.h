@@ -235,7 +235,7 @@ namespace transport
                           {
                             for(unsigned int n = 0; n < 2 * this->gadget.get_N_fields(); ++n)
                               {
-                                number value = fabs(u3_tensor[l][m][n]);
+                                number value = std::abs(u3_tensor[l][m][n]);
                                 if(value > val) val = value;
                               }
                           }

@@ -211,8 +211,8 @@ namespace transport
                       {
                         number component = dN[m]*dN[n]*sigma_line[j];
 
-//                        if(fabs(component) > large[j]) large[j] = fabs(component);
-//                        if(fabs(component) < small[j]) small[j] = fabs(component);
+//                        if(std::abs(component) > large[j]) large[j] = std::abs(component);
+//                        if(std::abs(component) < small[j]) small[j] = std::abs(component);
                         line_data[j] += component;
                       }
                   }
@@ -222,8 +222,8 @@ namespace transport
 //            number global_large = -std::numeric_limits<double>::max();
 //            for(unsigned int j = 0; j < h->kconfig_sample_sns.size(); ++j)
 //              {
-//                number large_fraction = fabs(large[j]/line_data[j]);
-//                number small_fraction = fabs(small[j]/line_data[j]);
+//                number large_fraction = std::abs(large[j]/line_data[j]);
+//                number small_fraction = std::abs(small[j]/line_data[j]);
 //
 //                if(large_fraction > global_large) global_large = large_fraction;
 //                if(small_fraction < global_small) global_small = small_fraction;
@@ -309,8 +309,8 @@ namespace transport
                           {
                             number component = dN[l]*dN[m]*dN[n]*threepf_line[j];
 
-//                            if(fabs(component) > large[j]) large[j] = fabs(component);
-//                            if(fabs(component) < small[j]) small[j] = fabs(component);
+//                            if(std::abs(component) > large[j]) large[j] = std::abs(component);
+//                            if(std::abs(component) < small[j]) small[j] = std::abs(component);
                             line_data[j] += component;
                           }
                       }
@@ -356,12 +356,12 @@ namespace transport
                                 number component2 = ddN213[j][l][m] * dN[p] * dN[q] * (k1_re_lp[j]*k3_re_mq[j] - k1_im_lp[j]*k3_im_mq[j]);
                                 number component3 = ddN312[j][l][m] * dN[p] * dN[q] * (k1_re_lp[j]*k2_re_mq[j] - k1_im_lp[j]*k2_im_mq[j]);
 
-//                                if(fabs(component1) > large[j]) large[j] = fabs(component1);
-//                                if(fabs(component1) < small[j]) small[j] = fabs(component1);
-//                                if(fabs(component2) > large[j]) large[j] = fabs(component2);
-//                                if(fabs(component2) < small[j]) small[j] = fabs(component2);
-//                                if(fabs(component3) > large[j]) large[j] = fabs(component3);
-//                                if(fabs(component3) < small[j]) small[j] = fabs(component3);
+//                                if(std::abs(component1) > large[j]) large[j] = std::abs(component1);
+//                                if(std::abs(component1) < small[j]) small[j] = std::abs(component1);
+//                                if(std::abs(component2) > large[j]) large[j] = std::abs(component2);
+//                                if(std::abs(component2) < small[j]) small[j] = std::abs(component2);
+//                                if(std::abs(component3) > large[j]) large[j] = std::abs(component3);
+//                                if(std::abs(component3) < small[j]) small[j] = std::abs(component3);
 
                                 line_data[j] += component1;
                                 line_data[j] += component2;
@@ -376,8 +376,8 @@ namespace transport
 //            number global_large = -std::numeric_limits<double>::max();
 //            for(unsigned int j = 0; j < h->kconfig_sample_sns.size(); ++j)
 //              {
-//                number large_fraction = fabs(large[j]/line_data[j]);
-//                number small_fraction = fabs(small[j]/line_data[j]);
+//                number large_fraction = std::abs(large[j]/line_data[j]);
+//                number small_fraction = std::abs(small[j]/line_data[j]);
 //
 //                if(large_fraction > global_large) global_large = large_fraction;
 //                if(small_fraction < global_small) global_small = small_fraction;
