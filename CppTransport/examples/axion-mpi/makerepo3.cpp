@@ -64,8 +64,8 @@ int main(int argc, char* argv[])
     // The resulting initial conditions apply at time Ncross-Npre
     transport::initial_conditions<double> ics("axion-1", model, params, init_values, Ninit, Ncross, Npre);
 
-    const unsigned int early_t_samples = 200;
-    const unsigned int late_t_samples  = 100;
+    const unsigned int early_t_samples = 10;
+    const unsigned int late_t_samples  = 10;
 
     transport::stepping_range<double> early_times(Ncross-Npre, Ncross+Nsplit, early_t_samples, transport::logarithmic_bottom_stepping);
     transport::stepping_range<double> late_times(Ncross+Nsplit, Ncross+Nmax, late_t_samples, transport::linear_stepping);
