@@ -137,6 +137,10 @@ add_executable(axion-makerepo2 examples/axion-mpi/makerepo2.cpp jsoncpp/jsoncpp.
 target_link_libraries(axion-makerepo2 sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARIES})
 
 
+add_executable(axion-makerepo3 examples/axion-mpi/makerepo3.cpp jsoncpp/jsoncpp.cpp)
+target_link_libraries(axion-makerepo3 sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARIES})
+
+
 add_executable(new-axion-mpi examples/new-axion/main.cpp jsoncpp/jsoncpp.cpp)
 target_link_libraries(new-axion-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARIES})
 
