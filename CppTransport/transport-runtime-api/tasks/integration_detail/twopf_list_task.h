@@ -20,7 +20,6 @@
 #include "transport-runtime-api/utilities/spline1d.h"
 #include <boost/math/tools/roots.hpp>
 
-#define __CPP_TRANSPORT_NODE_TWOPF_LIST_DATABASE      "twopf-database"
 #define __CPP_TRANSPORT_NODE_TWOPF_LIST_KSTAR         "kstar"
 #define __CPP_TRANSPORT_NODE_TWOPF_LIST_NORMALIZATION "normalization"
 #define __CPP_TRANSPORT_NODE_TWOPF_LIST_COLLECT_ICS   "collect-ics"
