@@ -194,14 +194,11 @@ namespace transport
       {
         double kmin = std::min(std::min(config.k1_conventional, config.k2_conventional), config.k3_conventional);
 
-		    unsigned int serial;
-		    bool found = this->twopf_db.find(kmin, serial);
+        twopf_kconfig_database::record_iterator rec;
+		    bool found = this->twopf_db.find(kmin, rec);
 		    assert(found);
 
-        twopf_kconfig_database::const_record_iterator t = this->twopf_db.lookup(serial);
-		    assert(t != this->twopf_db.crecord_end());
-
-        return((*t)->t_exit - this->ff_efolds);
+        return((*rec)->t_exit - this->ff_efolds);
       }
 
 
@@ -230,14 +227,11 @@ namespace transport
 			        {
 		            double kmin = std::min(std::min(config.k1_conventional, config.k2_conventional), config.k3_conventional);
 
-		            unsigned int serial;
-		            bool found = this->twopf_db.find(kmin, serial);
+		            twopf_kconfig_database::record_iterator rec;
+		            bool found = this->twopf_db.find(kmin, rec);
 		            assert(found);
 
-		            twopf_kconfig_database::const_record_iterator t = this->twopf_db.lookup(serial);
-		            assert(t != this->twopf_db.crecord_end());
-
-		            time = (*t)->t_exit;
+		            time = (*rec)->t_exit;
 		            break;
 			        }
 

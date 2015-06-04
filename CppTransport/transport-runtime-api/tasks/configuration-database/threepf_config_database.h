@@ -457,14 +457,19 @@ namespace transport
             bool k2_stored;
             bool k3_stored;
 
-            k1_stored = twopf_db.find(config.k1_conventional, config.k1_serial);
-            if(!k1_stored) config.k1_serial = twopf_db.add_record(config.k1_conventional);
+		        // perform reverse-lookup to find whether twopf kconfig database records already exist for these k_i
+            twopf_kconfig_database::record_iterator rec;
+            k1_stored = twopf_db.find(config.k1_conventional, rec);
+		        if(k1_stored) config.k1_serial = (*rec)->serial;
+		        else          config.k1_serial = twopf_db.add_record(config.k1_conventional);
 
-            k2_stored = twopf_db.find(config.k2_conventional, config.k2_serial);
-            if(!k2_stored) config.k2_serial = twopf_db.add_record(config.k2_conventional);
+            k2_stored = twopf_db.find(config.k2_conventional, rec);
+            if(k2_stored) config.k2_serial = (*rec)->serial;
+            else          config.k2_serial = twopf_db.add_record(config.k2_conventional);
 
-            k3_stored = twopf_db.find(config.k3_conventional, config.k3_serial);
-            if(!k3_stored) config.k3_serial = twopf_db.add_record(config.k3_conventional);
+            k3_stored = twopf_db.find(config.k3_conventional, rec);
+            if(k3_stored) config.k3_serial = (*rec)->serial;
+            else          config.k3_serial = twopf_db.add_record(config.k3_conventional);
 
             if(config.kt_conventional > this->kmax_conventional) this->kmax_conventional = config.kt_conventional;
             if(config.kt_conventional < this->kmin_conventional) this->kmin_conventional = config.kt_conventional;
@@ -549,32 +554,9 @@ namespace transport
       }
 
 
-		namespace threepf_kconfig_database_impl
-			{
-
-		    class FindBySerial
-			    {
-		      public:
-		        FindBySerial(unsigned int s)
-			        : serial(s)
-			        {
-			        }
-
-		        bool operator()(const std::pair<unsigned int, threepf_kconfig_record>& a)
-			        {
-		            return(this->serial == a.second->serial);
-			        }
-
-		      private:
-		        unsigned int serial;
-			    };
-
-			}
-
-
     threepf_kconfig_database::record_iterator threepf_kconfig_database::lookup(unsigned int serial)
 	    {
-        database_type::iterator t = std::find_if(this->database.begin(), this->database.end(), threepf_kconfig_database_impl::FindBySerial(serial));
+        database_type::iterator t = this->database.find(serial);          // find has logarithmic complexity
 
         return threepf_kconfig_database::record_iterator(t);
 	    }
@@ -582,7 +564,7 @@ namespace transport
 
     threepf_kconfig_database::const_record_iterator threepf_kconfig_database::lookup(unsigned int serial) const
 	    {
-        database_type::const_iterator t = std::find_if(this->database.begin(), this->database.end(), threepf_kconfig_database_impl::FindBySerial(serial));
+        database_type::const_iterator t = this->database.find(serial);    // find has logarithmic complexity
 
         return threepf_kconfig_database::const_record_iterator(t);
 	    }
