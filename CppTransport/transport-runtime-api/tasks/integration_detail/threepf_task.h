@@ -8,6 +8,8 @@
 #define __threepf_task_H_
 
 
+#include <memory>
+
 #include "transport-runtime-api/tasks/integration_detail/common.h"
 #include "transport-runtime-api/tasks/integration_detail/abstract.h"
 #include "transport-runtime-api/tasks/integration_detail/twopf_list_task.h"
@@ -21,7 +23,6 @@
 
 
 #define __CPP_TRANSPORT_NODE_THREEPF_INTEGRABLE            "integrable"
-#define __CPP_TRANSPORT_NODE_THREEPF_LIST_DATABASE         "threepf-database"
 
 #define __CPP_TRANSPORT_NODE_THREEPF_CUBIC_SPACING         "k-spacing"
 #define __CPP_TRANSPORT_NODE_THREEPF_FLS_KT_SPACING        "kt-spacing"
@@ -58,7 +59,7 @@ namespace transport
       public:
 
         //! Provide access to threepf k-configuration database
-        const threepf_kconfig_database& get_threepf_database() const { return(this->threepf_db); }
+        const threepf_kconfig_database& get_threepf_database() const { return(*(this->threepf_db)); }
 
         //! Compute horizon-exit times for each mode in the database
 
@@ -124,7 +125,7 @@ namespace transport
         virtual void write_kconfig_database(sqlite3* handle) override;
 
 		    //! Check whether k-configuration databases have been modified
-		    virtual bool is_kconfig_database_modified() const override { return(this->threepf_db.is_modified() || this->twopf_list_task<number>::is_kconfig_database_modified()); }
+		    virtual bool is_kconfig_database_modified() const override { return(this->threepf_db->is_modified() || this->twopf_list_task<number>::is_kconfig_database_modified()); }
 
 
         // INTERNAL DATA
@@ -132,7 +133,12 @@ namespace transport
       protected:
 
         //! database of threepf k-configurations
-        threepf_kconfig_database threepf_db;
+
+		    //! Use std::shared_ptr<> to manage the lifetime of the database.
+		    //! This avoids costly copy operations when the database is large.
+		    //! When a task is cloned, it simply inherits a reference to the
+		    //! shared database
+        std::shared_ptr<threepf_kconfig_database> threepf_db;
 
         //! Is this threepf task integrable? ie., have we dropped any configurations, and is the spacing linear?
         bool integrable;
@@ -143,17 +149,18 @@ namespace transport
     template <typename number>
     threepf_task<number>::threepf_task(const std::string& nm, const initial_conditions<number>& i, range<double>& t, bool ff)
 	    : twopf_list_task<number>(nm, i, t, ff),
-        threepf_db(this->twopf_list_task<number>::kstar),
 	      integrable(true)
 	    {
+        threepf_db = std::make_shared<threepf_kconfig_database>(this->twopf_list_task<number>::kstar);
 	    }
 
 
     template <typename number>
     threepf_task<number>::threepf_task(const std::string& nm, Json::Value& reader, sqlite3* handle, const initial_conditions<number>& i)
-	    : twopf_list_task<number>(nm, reader, handle, i),
-        threepf_db(this->twopf_list_task<number>::kstar, handle, this->twopf_list_task<number>::twopf_db)
+	    : twopf_list_task<number>(nm, reader, handle, i)
 	    {
+		    threepf_db = std::make_shared<threepf_kconfig_database>(this->twopf_list_task<number>::kstar, handle, this->twopf_list_task<number>::twopf_db);
+
         //! deserialize integrable status
         integrable = reader[__CPP_TRANSPORT_NODE_THREEPF_INTEGRABLE].asBool();
 
@@ -169,6 +176,7 @@ namespace transport
         writer[__CPP_TRANSPORT_NODE_THREEPF_INTEGRABLE] = this->integrable;
 
 		    // threepf database is serialized separately to a SQLite database
+        // this serialization is handled by the repository layer via write_kconfig_database() below
 
         this->twopf_list_task<number>::serialize(writer);
 	    }
@@ -178,7 +186,7 @@ namespace transport
 		void threepf_task<number>::write_kconfig_database(sqlite3* handle)
 			{
 		    this->twopf_list_task<number>::write_kconfig_database(handle);
-				this->threepf_db.write(handle);
+				this->threepf_db->write(handle);
 			}
 
 
@@ -195,7 +203,7 @@ namespace transport
         double kmin = std::min(std::min(config.k1_conventional, config.k2_conventional), config.k3_conventional);
 
         twopf_kconfig_database::record_iterator rec;
-		    bool found = this->twopf_db.find(kmin, rec);
+		    bool found = this->twopf_db->find(kmin, rec);
 		    assert(found);
 
         return((*rec)->t_exit - this->ff_efolds);
@@ -228,7 +236,7 @@ namespace transport
 		            double kmin = std::min(std::min(config.k1_conventional, config.k2_conventional), config.k3_conventional);
 
 		            twopf_kconfig_database::record_iterator rec;
-		            bool found = this->twopf_db.find(kmin, rec);
+		            bool found = this->twopf_db->find(kmin, rec);
 		            assert(found);
 
 		            time = (*rec)->t_exit;
@@ -260,8 +268,8 @@ namespace transport
     template <typename number>
     void threepf_task<number>::compute_horizon_exit_times()
 	    {
-		    double largest_kt = this->threepf_db.get_kmax_comoving()/3.0;
-        double largest_k = this->twopf_db.get_kmax_comoving();
+		    double largest_kt = this->threepf_db->get_kmax_comoving()/3.0;
+        double largest_k = this->twopf_db->get_kmax_comoving();
 
         std::vector<double> N;
         std::vector<number> log_aH;
@@ -283,7 +291,7 @@ namespace transport
 			{
 		    boost::uintmax_t max_iter = 500;
 
-		    for(threepf_kconfig_database::config_iterator t = this->threepf_db.config_begin(); t != this->threepf_db.config_end(); ++t)
+		    for(threepf_kconfig_database::config_iterator t = this->threepf_db->config_begin(); t != this->threepf_db->config_end(); ++t)
 			    {
 		        // set spline to evaluate aH-k and then solve for N
 		        sp.set_offset(log(t->kt_comoving/3.0));
@@ -373,7 +381,7 @@ namespace transport
 
                     if(ks[j] + ks[k] + ks[l] - 2.0*maxijk >= -std::abs(tol))   // impose the triangle conditions
 	                    {
-                        if(this->threepf_task<number>::threepf_db.add_k1k2k3_record(this->twopf_list_task<number>::twopf_db, ks[j], ks[k], ks[l], policy) < 0)
+                        if(this->threepf_task<number>::threepf_db->add_k1k2k3_record(this->twopf_list_task<number>::twopf_db, ks[j], ks[k], ks[l], policy) < 0)
                           {
                             this->threepf_task<number>::integrable = false;    // can't integrate any task which has dropped configurations, because the points may be scattered over the integration region
                           }
@@ -386,7 +394,7 @@ namespace transport
         if(!ks.is_simple_linear()) this->threepf_task<number>::integrable = false;
         spacing = (ks.get_max() - ks.get_min())/ks.get_steps();
 
-        std::cout << "'" << this->get_name() << "': " << __CPP_TRANSPORT_TASK_THREEPF_ELEMENTS_A << " " << this->threepf_db.size() << " "
+        std::cout << "'" << this->get_name() << "': " << __CPP_TRANSPORT_TASK_THREEPF_ELEMENTS_A << " " << this->threepf_db->size() << " "
           << __CPP_TRANSPORT_TASK_THREEPF_ELEMENTS_B << " " << this->twopf_db.size() << " " <<__CPP_TRANSPORT_TASK_THREEPF_ELEMENTS_C << std::endl;
 
         this->compute_horizon_exit_times();
@@ -504,7 +512,7 @@ namespace transport
 	                     && std::abs(1.0 + alphas[k] + betas[l]) > smallest_squeezing
 	                     && std::abs(1.0 - alphas[k] + betas[l]) > smallest_squeezing)   // impose maximum squeezing on k1, k2
 	                    {
-                        if(this->threepf_task<number>::threepf_db.add_FLS_record(this->threepf_task<number>::twopf_db, kts[j], alphas[k], betas[l], policy) < 0)
+                        if(this->threepf_task<number>::threepf_db->add_FLS_record(this->threepf_task<number>::twopf_db, kts[j], alphas[k], betas[l], policy) < 0)
                           {
                             this->threepf_task<number>::integrable = false;    // can't integrate any task which has dropped configurations, because the points may be scattered over the integration region
                           }
@@ -519,8 +527,8 @@ namespace transport
         alpha_spacing = (alphas.get_max() - alphas.get_min()) / alphas.get_steps();
         beta_spacing  = (betas.get_max() - betas.get_min()) / betas.get_steps();
 
-        std::cout << "'" << this->get_name() << "': " << __CPP_TRANSPORT_TASK_THREEPF_ELEMENTS_A << " " << this->threepf_db.size() << " "
-          << __CPP_TRANSPORT_TASK_THREEPF_ELEMENTS_B << " " << this->twopf_db.size() << " " <<__CPP_TRANSPORT_TASK_THREEPF_ELEMENTS_C << std::endl;
+        std::cout << "'" << this->get_name() << "': " << __CPP_TRANSPORT_TASK_THREEPF_ELEMENTS_A << " " << this->threepf_db->size() << " "
+          << __CPP_TRANSPORT_TASK_THREEPF_ELEMENTS_B << " " << this->twopf_db->size() << " " <<__CPP_TRANSPORT_TASK_THREEPF_ELEMENTS_C << std::endl;
 
         this->compute_horizon_exit_times();
 

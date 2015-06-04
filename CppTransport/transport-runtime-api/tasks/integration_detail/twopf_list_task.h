@@ -80,7 +80,7 @@ namespace transport
       public:
 
         //! Provide access to twopf k-configuration database
-        const twopf_kconfig_database& get_twopf_database() const { return(this->twopf_db); }
+        const twopf_kconfig_database& get_twopf_database() const { return(*(this->twopf_db)); }
 
 		    //! Compute horizon-exit times for each mode in the database
 
@@ -92,7 +92,7 @@ namespace transport
         virtual void write_kconfig_database(sqlite3* handle) override;
 
 		    //! Check whether twopf database has been modified
-		    virtual bool is_kconfig_database_modified() const override { return(this->twopf_db.is_modified()); }
+		    virtual bool is_kconfig_database_modified() const override { return(this->twopf_db->is_modified()); }
 
       protected:
 
@@ -254,7 +254,12 @@ namespace transport
 		    double kstar;
 
         //! database of twopf k-configurations
-        twopf_kconfig_database twopf_db;
+
+        //! Use std::shared_ptr<> to manage the lifetime of the database.
+        //! This avoids costly copy operations when the database is large.
+        //! When a task is cloned, it simply inherits a reference to the
+        //! shared database
+        std::shared_ptr<twopf_kconfig_database> twopf_db;
 
 	    };
 
@@ -268,18 +273,19 @@ namespace transport
         max_refinements(__CPP_TRANSPORT_DEFAULT_MESH_REFINEMENTS),
         astar_normalization(ast),
         collect_initial_conditions(__CPP_TRANSPORT_DEFAULT_COLLECT_INITIAL_CONDITIONS),
-        kstar(i.get_model()->compute_kstar(this)),
-		    twopf_db(kstar)     // kstar guaranteed to be initialized first if it is declared before twopf_db
+        kstar(i.get_model()->compute_kstar(this))
       {
+		    twopf_db = std::make_shared<twopf_kconfig_database>(kstar);
 	    }
 
 
     template <typename number>
     twopf_list_task<number>::twopf_list_task(const std::string& nm, Json::Value& reader, sqlite3* handle, const initial_conditions<number>& i)
-	    : integration_task<number>(nm, reader, i),
-	      kstar(reader[__CPP_TRANSPORT_NODE_TWOPF_LIST_KSTAR].asDouble()),      // will be constructed before twopf_db, because declared first in class declaration above
-        twopf_db(kstar, handle)                                               // OK since kstar constructed first
+	    : integration_task<number>(nm, reader, i)
 	    {
+        kstar    = reader[__CPP_TRANSPORT_NODE_TWOPF_LIST_KSTAR].asDouble();
+        twopf_db = std::make_shared<twopf_kconfig_database>(kstar, handle);
+
         fast_forward               = reader[__CPP_TRANSPORT_NODE_FAST_FORWARD].asBool();
         ff_efolds                  = reader[__CPP_TRANSPORT_NODE_FAST_FORWARD_EFOLDS].asDouble();
         max_refinements            = reader[__CPP_TRANSPORT_NODE_MESH_REFINEMENTS].asUInt();
@@ -299,6 +305,7 @@ namespace transport
 		    writer[__CPP_TRANSPORT_NODE_TWOPF_LIST_KSTAR]         = this->kstar;
 
 		    // twopf database is serialized separately into an SQLite database
+        // this serialization is handled by the repository layer via write_kconfig_database() below
 
         this->integration_task<number>::serialize(writer);
 	    }
@@ -307,7 +314,7 @@ namespace transport
     template <typename number>
     void twopf_list_task<number>::write_kconfig_database(sqlite3* handle)
 	    {
-        this->twopf_db.write(handle);
+        this->twopf_db->write(handle);
 	    }
 
 
@@ -361,7 +368,7 @@ namespace transport
 		    double earliest_crossing = std::numeric_limits<double>::max();
 		    double latest_crossing   = -std::numeric_limits<double>::max();
 
-        for(twopf_kconfig_database::const_config_iterator t = this->twopf_db.config_begin(); t != this->twopf_db.config_end(); ++t)
+        for(twopf_kconfig_database::const_config_iterator t = this->twopf_db->config_begin(); t != this->twopf_db->config_end(); ++t)
 	        {
 		        if(t->t_exit < earliest_crossing) earliest_crossing = t->t_exit;
 		        if(t->t_exit > latest_crossing)   latest_crossing = t->t_exit;
@@ -372,7 +379,7 @@ namespace transport
 		    latest_crossing   -= this->get_N_horizon_crossing();
 
         std::cout << "'" << this->get_name() << "': ";
-        std::cout << __CPP_TRANSPORT_TASK_TWOPF_LIST_MODE_RANGE_A << this->twopf_db.get_kmin_conventional()
+        std::cout << __CPP_TRANSPORT_TASK_TWOPF_LIST_MODE_RANGE_A << this->twopf_db->get_kmin_conventional()
           << " " << __CPP_TRANSPORT_TASK_TWOPF_LIST_MODE_RANGE_B;
 
         std::ostringstream early_time;
@@ -382,7 +389,7 @@ namespace transport
 
         std::cout << early_time.str() << ", ";
 
-        std::cout << __CPP_TRANSPORT_TASK_TWOPF_LIST_MODE_RANGE_C << this->twopf_db.get_kmax_conventional()
+        std::cout << __CPP_TRANSPORT_TASK_TWOPF_LIST_MODE_RANGE_C << this->twopf_db->get_kmax_conventional()
           << " " << __CPP_TRANSPORT_TASK_TWOPF_LIST_MODE_RANGE_D;
 
         std::ostringstream late_time;
@@ -418,7 +425,7 @@ namespace transport
       {
         double earliest_required = std::numeric_limits<double>::max();
 
-        for(twopf_kconfig_database::const_config_iterator t = this->twopf_db.config_begin(); t != this->twopf_db.config_end(); ++t)
+        for(twopf_kconfig_database::const_config_iterator t = this->twopf_db->config_begin(); t != this->twopf_db->config_end(); ++t)
 	        {
             if(t->t_exit < earliest_required) earliest_required = t->t_exit;
 	        }
@@ -450,7 +457,7 @@ namespace transport
 
 				// check for fast-forward integration, and push only those sample times which are
 				// guaranteed to be available for all k-configurations into the database
-        double latest_crossing = log(this->twopf_db.get_kmax_conventional());
+        double latest_crossing = log(this->twopf_db->get_kmax_conventional());
 
         double earliest_recordable;
         if(this->fast_forward) earliest_recordable = this->get_N_horizon_crossing() + latest_crossing - this->ff_efolds;
@@ -506,7 +513,7 @@ namespace transport
 
         // check for fast-forward integration, and push only those sample times which are
         // guaranteed to be available for all k-configurations into the database
-        double latest_crossing = log(this->twopf_db.get_kmax_conventional());
+        double latest_crossing = log(this->twopf_db->get_kmax_conventional());
 
         double earliest_recordable;
         if(this->fast_forward) earliest_recordable = this->get_N_horizon_crossing() + latest_crossing - this->ff_efolds;
@@ -529,7 +536,7 @@ namespace transport
 		template <typename number>
 		void twopf_list_task<number>::compute_horizon_exit_times()
 			{
-				double largest_k = this->twopf_db.get_kmax_comoving();
+				double largest_k = this->twopf_db->get_kmax_comoving();
 
 		    std::vector<double> N;
 		    std::vector<number> log_aH;
@@ -548,7 +555,7 @@ namespace transport
 			{
 		    boost::uintmax_t max_iter = 500;
 
-		    for(twopf_kconfig_database::config_iterator t = this->twopf_db.config_begin(); t != this->twopf_db.config_end(); ++t)
+		    for(twopf_kconfig_database::config_iterator t = this->twopf_db->config_begin(); t != this->twopf_db->config_end(); ++t)
 			    {
 		        // set spline to evaluate aH-k and then solve for N
 		        sp.set_offset(log(t->k_comoving));
