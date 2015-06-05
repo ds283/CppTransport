@@ -165,6 +165,14 @@ add_executable(quadratic10-mpi examples/quadratic10/main.cpp jsoncpp/jsoncpp.cpp
 target_link_libraries(quadratic10-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARIES})
 
 
+add_executable(powerlaw-makerepo2 examples/powerlaw/makerepo2.cpp jsoncpp/jsoncpp.cpp)
+target_link_libraries(powerlaw-makerepo2 sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARIES})
+
+
+add_executable(powerlaw-mpi examples/powerlaw/main.cpp jsoncpp/jsoncpp.cpp)
+target_link_libraries(powerlaw-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARIES})
+
+
 # cuda_add_executable(dquad-cuda examples/dquad-vexcl/main.cpp jsoncpp/jsoncpp.cpp)
 # target_link_libraries(dquad-cuda sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES}  ${SPLINTER_LIBRARIES} /usr/local/CUDA/lib/libcuda.dylib)
 
