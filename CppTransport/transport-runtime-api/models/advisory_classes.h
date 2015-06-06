@@ -25,6 +25,28 @@ namespace transport
         std::string message{"EMPTY"};
       };
 
+
+    //! advisory class thrown when Hsq is negative
+    class Hsq_is_negative: public std::exception
+      {
+      public:
+        virtual const char* what() const noexcept override { return(this->message.c_str()); }
+
+      private:
+        std::string message{"EMPTY"};
+      };
+
+
+    //! advisory class thrown is backend produces a NAN during integration
+    class integration_produced_nan: public std::exception
+      {
+      public:
+        virtual const char* what() const noexcept override { return(this->message.c_str()); }
+
+      private:
+        std::string message{"EMPTY"};
+      };
+
   }
 
 
