@@ -465,7 +465,7 @@ int main(int argc, char* argv[])
 		tk3_sigma_bsp_spec_plot.add_line(tk3_sigma_bsp_spec);
 		tk3_sigma_bsp_spec_plot.set_typeset_with_LaTeX(true);
 		tk3_sigma_bsp_spec_plot.set_x_label_text("$k_t$");
-		tk3_sigma_bsp_spec_plot.set_title_text("Scale-dependence of $\\sigma$ 3pf on isosceles triangles at fixed $k_t$");
+		tk3_sigma_bsp_spec_plot.set_title_text("Scale-dependence of $\\sigma$ 3pf on isosceles triangles at fixed $k_3/k_t$");
 		tk3_sigma_bsp_spec_plot.set_log_x(true);
 		tk3_sigma_bsp_spec_plot.set_log_y(true);
 		tk3_sigma_bsp_spec_plot.set_abs_y(true);
@@ -487,7 +487,7 @@ int main(int argc, char* argv[])
 		tk3_sigma_bsp_sqk3_plot.add_line(tk3_sigma_bsp_sqk3spec_lo);
     tk3_sigma_bsp_sqk3_plot.add_line(tk3_sigma_bsp_sqk3spec_hi);
 		tk3_sigma_bsp_sqk3_plot.set_typeset_with_LaTeX(true);
-    tk3_sigma_bsp_sqk3_plot.set_title_text("Shape-dependence of $\\sigma$ 3pf on isosceles triangles at fixed $k_3/k_t$");
+    tk3_sigma_bsp_sqk3_plot.set_title_text("Shape-dependence of $\\sigma$ 3pf on isosceles triangles at fixed $k_t$");
 		tk3_sigma_bsp_sqk3_plot.set_log_x(true);
     tk3_sigma_bsp_sqk3_plot.set_log_y(true);
     tk3_sigma_bsp_sqk3_plot.set_abs_y(true);
@@ -516,10 +516,10 @@ int main(int argc, char* argv[])
     tk3_sigma_bsp_spec_index.set_spectral_index(true);
 
     transport::derived_data::wavenumber_series_plot<double> tk3_sigma_bsp_spec_index_plot("powerlaw.threepf-1.sigma-bsp-spec-index", "sigma-bsp-spec-index.pdf");
-    tk3_sigma_bsp_spec_index_plot.add_line(tk3_sigma_bsp_spec);
+    tk3_sigma_bsp_spec_index_plot.add_line(tk3_sigma_bsp_spec_index);
     tk3_sigma_bsp_spec_index_plot.set_typeset_with_LaTeX(true);
     tk3_sigma_bsp_spec_index_plot.set_x_label_text("$k_t$");
-    tk3_sigma_bsp_spec_index_plot.set_title_text("Spectral index of $\\sigma$ 3pf on isosceles triangles at fixed $k_t$");
+    tk3_sigma_bsp_spec_index_plot.set_title_text("Spectral index of $\\sigma$ 3pf on isosceles triangles at fixed $k_3/k_t$");
     tk3_sigma_bsp_spec_index_plot.set_log_x(true);
     tk3_sigma_bsp_spec_index_plot.set_log_y(false);
     tk3_sigma_bsp_spec_index_plot.set_abs_y(false);
