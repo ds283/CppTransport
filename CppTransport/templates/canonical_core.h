@@ -1173,7 +1173,18 @@ namespace transport
 
 				auto stepper = $$__MAKE_BACKG_STEPPER{backg_state<number>};
 
-				auto range = boost::numeric::odeint::make_const_step_time_range(stepper, system, x, tk->get_N_initial(), tk->get_N_end_of_inflation(), 0.01);
+        double N_range = 0.0;
+        try
+          {
+            N_range = tk->get_N_end_of_inflation();
+          }
+        catch (end_of_inflation_not_found& xe)
+          {
+            // try to fall back on a sensible default
+            N_range = tk->get_N_initial() + __CPP_TRANSPORT_DEFAULT_END_OF_INFLATION_SEARCH;
+          }
+
+        auto range = boost::numeric::odeint::make_const_step_time_range(stepper, system, x, tk->get_N_initial(), N_range, 0.01);
 
 				aHAggregatorPredicate<number> aggregator(tk, N, log_aH, largest_k);
 

@@ -742,17 +742,19 @@ namespace transport
 	    }
 
 
+
+
     template <typename number>
     class EpsilonUnityPredicate
-	    {
+      {
       public:
         EpsilonUnityPredicate(const parameters<number>& p)
-	        : params(p)
-	        {
-	        }
+          : params(p)
+          {
+          }
 
         bool operator()(const std::pair< backg_state<number>, double >& __x)
-	        {
+          {
             const auto $$__PARAMETER[1]  = this->params.get_vector()[$$__1];
             const auto $$__COORDINATE[A] = __x.first[$$__A];
             const auto __Mp              = this->params.get_Mp();
@@ -760,19 +762,19 @@ namespace transport
             const auto __eps = $$__EPSILON;
 
             return (__eps > 1.0);
-	        }
+          }
 
       private:
         const parameters<number>& params;
-	    };
+      };
 
 
     template <typename number>
-    double $$__MODEL<number>::backend_compute_epsilon_unity(const integration_task<number>* tk, double search_time)
-	    {
+    double $$__MODEL<number>::compute_end_of_inflation(const integration_task<number>* tk, double search_time)
+      {
         assert(tk != nullptr);
 
-        // set up a functor to evolve this system, triggering on epsilon=1
+        // set up a functor to evolve this system
         $$__MODEL_background_functor<number> system(tk->get_params());
 
         auto ics = tk->get_ics_vector();
@@ -791,7 +793,96 @@ namespace transport
         if(iter == boost::end(range)) throw end_of_inflation_not_found();
 
         return ((*iter).second);
-	    };
+      };
+
+
+    template <typename number>
+    class aHAggregatorPredicate
+      {
+      public:
+        aHAggregatorPredicate(const twopf_list_task<number>* tk, std::vector<double>& N, std::vector<number>& log_aH, double lk)
+          : params(tk->get_params()),
+            N_vector(N),
+            log_aH_vector(log_aH),
+            largest_k(lk),
+            N_horizon_crossing(tk->get_N_horizon_crossing()),
+            astar_normalization(tk->get_astar_normalization())
+          {
+          }
+
+        bool operator()(const std::pair< backg_state<number>, double >& __x)
+          {
+            const auto $$__PARAMETER[1]  = this->params.get_vector()[$$__1];
+            const auto $$__COORDINATE[A] = __x.first[$$__A];
+            const auto __Mp              = this->params.get_Mp();
+
+            const auto __Hsq = $$__HUBBLE_SQ;
+            const auto __H   = sqrt(__Hsq);
+
+            const auto __a   = exp(__x.second - this->N_horizon_crossing + this->astar_normalization);
+
+            this->N_vector.push_back(__x.second);
+            this->log_aH_vector.push_back(log(__a*__H));
+
+            // are we now at a point where we have comfortably covered the horizon crossing time for largest_k?
+            if(largest_k / (__a*__H) < 0.01) return(true);
+            return(false);
+          }
+
+      private:
+        const parameters<number>& params;
+        std::vector<double>& N_vector;
+        std::vector<number>& log_aH_vector;
+        const double largest_k;
+        const double N_horizon_crossing;
+        const double astar_normalization;
+      };
+
+
+    template <typename number>
+    void $$__MODEL<number>::compute_aH(const twopf_list_task<number>* tk, std::vector<double>& N, std::vector<number>& log_aH, double largest_k)
+      {
+        N.clear();
+        log_aH.clear();
+
+        // set up a functor to evolve the system
+        $$__MODEL_background_functor<number> system(tk->get_params());
+
+        auto ics = tk->integration_task<number>::get_ics_vector();
+
+        backg_state<number> x($$__MODEL_pool::backg_state_size);
+        x[this->flatten($$__A)] = $$// ics[$$__A];
+
+        auto stepper = $$__MAKE_BACKG_STEPPER{backg_state<number>};
+
+        double N_range = 0.0;
+        try
+          {
+            N_range = tk->get_N_end_of_inflation();
+          }
+        catch (end_of_inflation_not_found& xe)
+          {
+            // try to fall back on a sensible default
+            N_range = tk->get_N_initial() + __CPP_TRANSPORT_DEFAULT_END_OF_INFLATION_SEARCH;
+          }
+
+        auto range = boost::numeric::odeint::make_const_step_time_range(stepper, system, x, tk->get_N_initial(), N_range, 0.01);
+
+        aHAggregatorPredicate<number> aggregator(tk, N, log_aH, largest_k);
+
+        // step through iterators, finding first point which is comfortably after time when largest_k has left
+        // the horizon
+        // aggregator writes N and log_aH into the output vectors at each iteration
+        auto iter = boost::find_if(range, aggregator);
+
+        // if we got to the end of the range, then we didn't cover all exit times up to largest_k
+        // so something has gone wrong
+        if(iter == boost::end(range))
+          {
+            assert(false);
+            throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_FAIL_COMPUTE_T_EXIT);
+          }
+      }
 
 
     // IMPLEMENTATION - FUNCTOR FOR BACKGROUND INTEGRATION
