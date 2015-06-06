@@ -446,9 +446,12 @@ int main(int argc, char* argv[])
     transport::derived_data::wavenumber_series_plot<double> tk3_sigma_spec_plot("powerlaw.threepf-1.sigma-spec", "sigma-spec.pdf");
 		tk3_sigma_spec_plot.add_line(tk3_sigma_spec);
     tk3_sigma_spec_plot.set_typeset_with_LaTeX(true);
+    tk3_sigma_spec_plot.set_log_x(true);
+    tk3_sigma_spec_plot.set_log_y(true);
+    tk3_sigma_spec_plot.set_abs_y(true);
 
 
-		// 12. LATE TIME SIGMA BISPECTRUM -- FIXED k3/k_t, ISOSCELES TRIANGLES, VARYINGk_t
+		// 12. LATE TIME SIGMA BISPECTRUM -- FIXED k3/k_t, ISOSCELES TRIANGLES, VARYING k_t
 
     transport::index_selector<3> sigma_sigma_sigma(2);
     sigma_sigma_sigma.none();
@@ -490,6 +493,38 @@ int main(int argc, char* argv[])
     tk3_sigma_bsp_sqk3_plot.set_abs_y(true);
 
 
+    // 14. LATE TIME SIGMA SPECTRAL INDEX
+
+    transport::derived_data::twopf_wavenumber_series<double> tk3_sigma_spec_index(tk3, sigma_sigma, last_time, all_twopfs);
+    tk3_sigma_spec_index.set_klabel_meaning(transport::derived_data::conventional);
+    tk3_sigma_spec_index.set_spectral_index(true);
+
+    transport::derived_data::wavenumber_series_plot<double> tk3_sigma_spec_index_plot("powerlaw.threepf-1.sigma-spec-index", "sigma-spec-index.pdf");
+    tk3_sigma_spec_index_plot.add_line(tk3_sigma_spec_index);
+    tk3_sigma_spec_index_plot.set_typeset_with_LaTeX(true);
+    tk3_sigma_spec_index_plot.set_log_x(true);
+    tk3_sigma_spec_index_plot.set_log_y(false);
+    tk3_sigma_spec_index_plot.set_abs_y(false);
+
+
+    // 15. LATE TIME SIGMA BISPECTRUM INDEX - FIXED k3/kt, ISOSCELES TRIANGLES, VARYING k_t
+
+
+    transport::derived_data::threepf_wavenumber_series<double> tk3_sigma_bsp_spec_index(tk3, sigma_sigma_sigma, last_time, isosceles_squeezed_threepf);
+    tk3_sigma_bsp_spec_index.set_klabel_meaning(transport::derived_data::conventional);
+    tk3_sigma_bsp_spec_index.set_label_text("$k_3/k_t = 0.999$", "k3/k_t = 0.999");
+    tk3_sigma_bsp_spec_index.set_spectral_index(true);
+
+    transport::derived_data::wavenumber_series_plot<double> tk3_sigma_bsp_spec_index_plot("powerlaw.threepf-1.sigma-bsp-spec-index", "sigma-bsp-spec-index.pdf");
+    tk3_sigma_bsp_spec_index_plot.add_line(tk3_sigma_bsp_spec);
+    tk3_sigma_bsp_spec_index_plot.set_typeset_with_LaTeX(true);
+    tk3_sigma_bsp_spec_index_plot.set_x_label_text("$k_t$");
+    tk3_sigma_bsp_spec_index_plot.set_title_text("Spectral index of $\\sigma$ 3pf on isosceles triangles at fixed $k_t$");
+    tk3_sigma_bsp_spec_index_plot.set_log_x(true);
+    tk3_sigma_bsp_spec_index_plot.set_log_y(false);
+    tk3_sigma_bsp_spec_index_plot.set_abs_y(false);
+
+
     // OUTPUT TASKS
 
 
@@ -512,7 +547,9 @@ int main(int argc, char* argv[])
 																		+ tk3_cost_plot
 																		+ tk3_sigma_spec_plot
 																		+ tk3_sigma_bsp_spec_plot
-																		+ tk3_sigma_bsp_sqk3_plot;
+																		+ tk3_sigma_bsp_sqk3_plot
+                                    + tk3_sigma_spec_index_plot
+                                    + tk3_sigma_bsp_spec_index_plot;
 
     std::cout << "powerlaw.threepf-1 output task:" << std::endl << threepf_output << std::endl;
 
