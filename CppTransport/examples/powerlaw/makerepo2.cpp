@@ -18,7 +18,7 @@
 
 const double M_Planck = 1.0;
 const double m        = 1e-5;
-const double Lambda   = pow(0.02*0.02/3.0/100.0, 1.0/4.0) * M_Planck;
+const double Lambda   = pow(1.125E-8 / 100, 1.0/4.0) * M_Planck;
 
 const double phi_init = 15.0  * M_Planck;
 const double chi_init = 0.001 * M_Planck;
@@ -56,7 +56,7 @@ int main(int argc, char* argv[])
     const double Ncross = 13;   // horizon-crossing occurs at N=13
     const double Npre   = 9.5;    // number of e-folds of subhorizon evolution
     const double Nsplit = 32.0; // split point between early and late
-    const double Nmax   = 47.0; // how many e-folds to integrate after horizon crossing
+    const double Nmax   = 42.0; // how many e-folds to integrate after horizon crossing
 
     // set up initial conditions with the specified horizon-crossing time Ncross and Npre
     // e-folds of subhorizon evolution.
