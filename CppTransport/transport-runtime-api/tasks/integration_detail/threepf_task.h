@@ -395,7 +395,7 @@ namespace transport
         spacing = (ks.get_max() - ks.get_min())/ks.get_steps();
 
         std::cout << "'" << this->get_name() << "': " << __CPP_TRANSPORT_TASK_THREEPF_ELEMENTS_A << " " << this->threepf_db->size() << " "
-          << __CPP_TRANSPORT_TASK_THREEPF_ELEMENTS_B << " " << this->twopf_db.size() << " " <<__CPP_TRANSPORT_TASK_THREEPF_ELEMENTS_C << std::endl;
+          << __CPP_TRANSPORT_TASK_THREEPF_ELEMENTS_B << " " << this->twopf_db->size() << " " <<__CPP_TRANSPORT_TASK_THREEPF_ELEMENTS_C << std::endl;
 
         this->compute_horizon_exit_times();
 
