@@ -678,6 +678,7 @@ int main(int argc, char* argv[])
 
     // write output tasks to the database
 //		repo->commit_task(twopf_output);
+		repo->commit_task(ztk2);
     repo->commit_task(ztk3);
     repo->commit_task(ztk3_fNL_local);
     repo->commit_task(ztk3_fNL_equi);
