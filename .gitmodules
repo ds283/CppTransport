@@ -1,0 +1,3 @@
+[submodule "CppTransport/splinter"]
+	path = CppTransport/splinter
+	url = https://github.com/bgrimstad/splinter.git
