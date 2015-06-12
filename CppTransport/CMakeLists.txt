@@ -7,8 +7,6 @@ SET ( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/splinter/cmake
 
 ADD_SUBDIRECTORY ( "splinter" "splinter-build" )
 
-SET ( ODEINT_INCLUDE_PATH "$ENV{HOME}/Documents/Code/odeint-v2-ds283/include" )
-
 find_package(MPI REQUIRED)
 find_package(Boost REQUIRED COMPONENTS system filesystem random timer date_time mpi log_setup log serialization thread)
 find_package(GiNaC REQUIRED)
@@ -43,9 +41,9 @@ include_directories(./ backends
 					   transport-runtime-api
 					   jsoncpp
 					   splinter/include
+					   odeint/include
 					/usr/include
 					/usr/local/include
-					${ODEINT_INCLUDE_PATH}
 					${EIGEN3_INCLUDE_DIR}
 					${Boost_INCLUDE_DIRS}
 					${MPI_CXX_INCLUDE_PATH}
