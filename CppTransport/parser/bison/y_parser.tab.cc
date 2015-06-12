@@ -49,7 +49,7 @@
 
 #line 51 "y_parser.tab.cc" // lalr1.cc:412
 // Unqualified %code blocks.
-#line 27 "y_parser.yy" // lalr1.cc:413
+#line 29 "y_parser.yy" // lalr1.cc:413
 
     #include <iostream>
     #include <cstdlib>
@@ -156,6 +156,44 @@
 #line 5 "y_parser.yy" // lalr1.cc:479
 namespace y {
 #line 159 "y_parser.tab.cc" // lalr1.cc:479
+
+  /* Return YYSTR after stripping away unnecessary quotes and
+     backslashes, so that it's suitable for yyerror.  The heuristic is
+     that double-quoting is unnecessary unless the string contains an
+     apostrophe, a comma, or backslash (other than backslash-backslash).
+     YYSTR is taken from yytname.  */
+  std::string
+  y_parser::yytnamerr_ (const char *yystr)
+  {
+    if (*yystr == '"')
+      {
+        std::string yyr = "";
+        char const *yyp = yystr;
+
+        for (;;)
+          switch (*++yyp)
+            {
+            case '\'':
+            case ',':
+              goto do_not_strip_quotes;
+
+            case '\\':
+              if (*++yyp != '\\')
+                goto do_not_strip_quotes;
+              // Fall through.
+            default:
+              yyr += *yyp;
+              break;
+
+            case '"':
+              return yyr;
+            }
+      do_not_strip_quotes: ;
+      }
+
+    return yystr;
+  }
+
 
   /// Build a parser object.
   y_parser::y_parser (y_lexer*  lexer_yyarg, y_driver* driver_yyarg)
@@ -596,439 +634,439 @@ namespace y {
           switch (yyn)
             {
   case 3:
-#line 148 "y_parser.yy" // lalr1.cc:859
+#line 150 "y_parser.yy" // lalr1.cc:859
     { driver->set_potential((yystack_[1].value.x)); }
-#line 602 "y_parser.tab.cc" // lalr1.cc:859
+#line 640 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 4:
-#line 149 "y_parser.yy" // lalr1.cc:859
+#line 151 "y_parser.yy" // lalr1.cc:859
     { driver->set_name((yystack_[1].value.lex)); }
-#line 608 "y_parser.tab.cc" // lalr1.cc:859
+#line 646 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 5:
-#line 150 "y_parser.yy" // lalr1.cc:859
+#line 152 "y_parser.yy" // lalr1.cc:859
     { driver->set_author((yystack_[1].value.lex)); }
-#line 614 "y_parser.tab.cc" // lalr1.cc:859
+#line 652 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 6:
-#line 151 "y_parser.yy" // lalr1.cc:859
+#line 153 "y_parser.yy" // lalr1.cc:859
     { driver->set_tag((yystack_[1].value.lex)); }
-#line 620 "y_parser.tab.cc" // lalr1.cc:859
+#line 658 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 7:
-#line 152 "y_parser.yy" // lalr1.cc:859
+#line 154 "y_parser.yy" // lalr1.cc:859
     { driver->set_core((yystack_[1].value.lex)); }
-#line 626 "y_parser.tab.cc" // lalr1.cc:859
+#line 664 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 8:
-#line 153 "y_parser.yy" // lalr1.cc:859
+#line 155 "y_parser.yy" // lalr1.cc:859
     { driver->set_implementation((yystack_[1].value.lex)); }
-#line 632 "y_parser.tab.cc" // lalr1.cc:859
+#line 670 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 9:
-#line 154 "y_parser.yy" // lalr1.cc:859
+#line 156 "y_parser.yy" // lalr1.cc:859
     { driver->set_model((yystack_[1].value.lex)); }
-#line 638 "y_parser.tab.cc" // lalr1.cc:859
+#line 676 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 10:
-#line 155 "y_parser.yy" // lalr1.cc:859
+#line 157 "y_parser.yy" // lalr1.cc:859
     { driver->set_indexorder_left(); }
-#line 644 "y_parser.tab.cc" // lalr1.cc:859
+#line 682 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 11:
-#line 156 "y_parser.yy" // lalr1.cc:859
+#line 158 "y_parser.yy" // lalr1.cc:859
     { driver->set_indexorder_right(); }
-#line 650 "y_parser.tab.cc" // lalr1.cc:859
+#line 688 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 12:
-#line 157 "y_parser.yy" // lalr1.cc:859
+#line 159 "y_parser.yy" // lalr1.cc:859
     { driver->add_field((yystack_[1].value.lex), (yystack_[2].value.a)); }
-#line 656 "y_parser.tab.cc" // lalr1.cc:859
+#line 694 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 13:
-#line 158 "y_parser.yy" // lalr1.cc:859
+#line 160 "y_parser.yy" // lalr1.cc:859
     { driver->add_parameter((yystack_[1].value.lex), (yystack_[2].value.a)); }
-#line 662 "y_parser.tab.cc" // lalr1.cc:859
+#line 700 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 14:
-#line 159 "y_parser.yy" // lalr1.cc:859
+#line 161 "y_parser.yy" // lalr1.cc:859
     { driver->set_background_stepper((yystack_[1].value.s)); }
-#line 668 "y_parser.tab.cc" // lalr1.cc:859
+#line 706 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 15:
-#line 160 "y_parser.yy" // lalr1.cc:859
+#line 162 "y_parser.yy" // lalr1.cc:859
     { driver->set_perturbations_stepper((yystack_[1].value.s)); }
-#line 674 "y_parser.tab.cc" // lalr1.cc:859
+#line 712 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 17:
-#line 164 "y_parser.yy" // lalr1.cc:859
+#line 166 "y_parser.yy" // lalr1.cc:859
     { (yylhs.value.a) = (yystack_[1].value.a); }
-#line 680 "y_parser.tab.cc" // lalr1.cc:859
+#line 718 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 18:
-#line 165 "y_parser.yy" // lalr1.cc:859
+#line 167 "y_parser.yy" // lalr1.cc:859
     { (yylhs.value.a) = new attributes; }
-#line 686 "y_parser.tab.cc" // lalr1.cc:859
+#line 724 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 19:
-#line 168 "y_parser.yy" // lalr1.cc:859
+#line 170 "y_parser.yy" // lalr1.cc:859
     { driver->add_latex_attribute((yystack_[3].value.a), (yystack_[1].value.lex)); (yylhs.value.a) = (yystack_[3].value.a); }
-#line 692 "y_parser.tab.cc" // lalr1.cc:859
+#line 730 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 20:
-#line 169 "y_parser.yy" // lalr1.cc:859
+#line 171 "y_parser.yy" // lalr1.cc:859
     { (yylhs.value.a) = new attributes; }
-#line 698 "y_parser.tab.cc" // lalr1.cc:859
+#line 736 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 21:
-#line 172 "y_parser.yy" // lalr1.cc:859
+#line 174 "y_parser.yy" // lalr1.cc:859
     { (yylhs.value.s) = (yystack_[1].value.s); }
-#line 704 "y_parser.tab.cc" // lalr1.cc:859
+#line 742 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 22:
-#line 174 "y_parser.yy" // lalr1.cc:859
+#line 176 "y_parser.yy" // lalr1.cc:859
     { driver->set_abserr((yystack_[4].value.s), (yystack_[1].value.lex)); (yylhs.value.s) = (yystack_[4].value.s); }
-#line 710 "y_parser.tab.cc" // lalr1.cc:859
+#line 748 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 23:
-#line 175 "y_parser.yy" // lalr1.cc:859
+#line 177 "y_parser.yy" // lalr1.cc:859
     { driver->set_relerr((yystack_[4].value.s), (yystack_[1].value.lex)); (yylhs.value.s) = (yystack_[4].value.s); }
-#line 716 "y_parser.tab.cc" // lalr1.cc:859
+#line 754 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 24:
-#line 176 "y_parser.yy" // lalr1.cc:859
+#line 178 "y_parser.yy" // lalr1.cc:859
     { driver->set_stepper((yystack_[4].value.s), (yystack_[1].value.lex)); (yylhs.value.s) = (yystack_[4].value.s); }
-#line 722 "y_parser.tab.cc" // lalr1.cc:859
+#line 760 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 25:
-#line 177 "y_parser.yy" // lalr1.cc:859
+#line 179 "y_parser.yy" // lalr1.cc:859
     { driver->set_stepsize((yystack_[4].value.s), (yystack_[1].value.lex)); (yylhs.value.s) = (yystack_[4].value.s); }
-#line 728 "y_parser.tab.cc" // lalr1.cc:859
+#line 766 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 26:
-#line 178 "y_parser.yy" // lalr1.cc:859
+#line 180 "y_parser.yy" // lalr1.cc:859
     { (yylhs.value.s) = new stepper; }
-#line 734 "y_parser.tab.cc" // lalr1.cc:859
+#line 772 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 27:
-#line 181 "y_parser.yy" // lalr1.cc:859
+#line 183 "y_parser.yy" // lalr1.cc:859
     { (yylhs.value.x) = (yystack_[0].value.x); }
-#line 740 "y_parser.tab.cc" // lalr1.cc:859
+#line 778 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 28:
-#line 182 "y_parser.yy" // lalr1.cc:859
+#line 184 "y_parser.yy" // lalr1.cc:859
     { (yylhs.value.x) = driver->add((yystack_[2].value.x), (yystack_[0].value.x)); }
-#line 746 "y_parser.tab.cc" // lalr1.cc:859
+#line 784 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 29:
-#line 183 "y_parser.yy" // lalr1.cc:859
+#line 185 "y_parser.yy" // lalr1.cc:859
     { (yylhs.value.x) = driver->sub((yystack_[2].value.x), (yystack_[0].value.x)); }
-#line 752 "y_parser.tab.cc" // lalr1.cc:859
+#line 790 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 30:
-#line 186 "y_parser.yy" // lalr1.cc:859
+#line 188 "y_parser.yy" // lalr1.cc:859
     { (yylhs.value.x) = (yystack_[0].value.x); }
-#line 758 "y_parser.tab.cc" // lalr1.cc:859
+#line 796 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 31:
-#line 187 "y_parser.yy" // lalr1.cc:859
+#line 189 "y_parser.yy" // lalr1.cc:859
     { (yylhs.value.x) = driver->mul((yystack_[2].value.x), (yystack_[0].value.x)); }
-#line 764 "y_parser.tab.cc" // lalr1.cc:859
+#line 802 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 32:
-#line 188 "y_parser.yy" // lalr1.cc:859
+#line 190 "y_parser.yy" // lalr1.cc:859
     { (yylhs.value.x) = driver->div((yystack_[2].value.x), (yystack_[0].value.x)); }
-#line 770 "y_parser.tab.cc" // lalr1.cc:859
+#line 808 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 33:
-#line 191 "y_parser.yy" // lalr1.cc:859
+#line 193 "y_parser.yy" // lalr1.cc:859
     { (yylhs.value.x) = (yystack_[0].value.x); }
-#line 776 "y_parser.tab.cc" // lalr1.cc:859
+#line 814 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 34:
-#line 192 "y_parser.yy" // lalr1.cc:859
+#line 194 "y_parser.yy" // lalr1.cc:859
     { (yylhs.value.x) = driver->pow((yystack_[2].value.x), (yystack_[0].value.x)); }
-#line 782 "y_parser.tab.cc" // lalr1.cc:859
+#line 820 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 35:
-#line 195 "y_parser.yy" // lalr1.cc:859
+#line 197 "y_parser.yy" // lalr1.cc:859
     { (yylhs.value.x) = driver->get_integer((yystack_[0].value.lex)); }
-#line 788 "y_parser.tab.cc" // lalr1.cc:859
+#line 826 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 36:
-#line 196 "y_parser.yy" // lalr1.cc:859
+#line 198 "y_parser.yy" // lalr1.cc:859
     { (yylhs.value.x) = driver->get_decimal((yystack_[0].value.lex)); }
-#line 794 "y_parser.tab.cc" // lalr1.cc:859
+#line 832 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 37:
-#line 197 "y_parser.yy" // lalr1.cc:859
+#line 199 "y_parser.yy" // lalr1.cc:859
     { (yylhs.value.x) = driver->get_identifier((yystack_[0].value.lex)); }
-#line 800 "y_parser.tab.cc" // lalr1.cc:859
+#line 838 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 38:
-#line 198 "y_parser.yy" // lalr1.cc:859
+#line 200 "y_parser.yy" // lalr1.cc:859
     { (yylhs.value.x) = (yystack_[0].value.x); }
-#line 806 "y_parser.tab.cc" // lalr1.cc:859
+#line 844 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 39:
-#line 199 "y_parser.yy" // lalr1.cc:859
+#line 201 "y_parser.yy" // lalr1.cc:859
     { (yylhs.value.x) = (yystack_[1].value.x); }
-#line 812 "y_parser.tab.cc" // lalr1.cc:859
+#line 850 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 40:
-#line 200 "y_parser.yy" // lalr1.cc:859
+#line 202 "y_parser.yy" // lalr1.cc:859
     { (yylhs.value.x) = driver->unary_minus((yystack_[0].value.x)); }
-#line 818 "y_parser.tab.cc" // lalr1.cc:859
+#line 856 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 41:
-#line 203 "y_parser.yy" // lalr1.cc:859
+#line 205 "y_parser.yy" // lalr1.cc:859
     { (yylhs.value.x) = driver->abs((yystack_[1].value.x)); }
-#line 824 "y_parser.tab.cc" // lalr1.cc:859
+#line 862 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 42:
-#line 204 "y_parser.yy" // lalr1.cc:859
+#line 206 "y_parser.yy" // lalr1.cc:859
     { (yylhs.value.x) = driver->step((yystack_[1].value.x)); }
-#line 830 "y_parser.tab.cc" // lalr1.cc:859
+#line 868 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 43:
-#line 205 "y_parser.yy" // lalr1.cc:859
+#line 207 "y_parser.yy" // lalr1.cc:859
     { (yylhs.value.x) = driver->sqrt((yystack_[1].value.x)); }
-#line 836 "y_parser.tab.cc" // lalr1.cc:859
+#line 874 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 44:
-#line 206 "y_parser.yy" // lalr1.cc:859
+#line 208 "y_parser.yy" // lalr1.cc:859
     { (yylhs.value.x) = driver->sin((yystack_[1].value.x)); }
-#line 842 "y_parser.tab.cc" // lalr1.cc:859
+#line 880 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 45:
-#line 207 "y_parser.yy" // lalr1.cc:859
+#line 209 "y_parser.yy" // lalr1.cc:859
     { (yylhs.value.x) = driver->cos((yystack_[1].value.x)); }
-#line 848 "y_parser.tab.cc" // lalr1.cc:859
+#line 886 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 46:
-#line 208 "y_parser.yy" // lalr1.cc:859
+#line 210 "y_parser.yy" // lalr1.cc:859
     { (yylhs.value.x) = driver->tan((yystack_[1].value.x)); }
-#line 854 "y_parser.tab.cc" // lalr1.cc:859
+#line 892 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 47:
-#line 209 "y_parser.yy" // lalr1.cc:859
+#line 211 "y_parser.yy" // lalr1.cc:859
     { (yylhs.value.x) = driver->asin((yystack_[1].value.x)); }
-#line 860 "y_parser.tab.cc" // lalr1.cc:859
+#line 898 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 48:
-#line 210 "y_parser.yy" // lalr1.cc:859
+#line 212 "y_parser.yy" // lalr1.cc:859
     { (yylhs.value.x) = driver->acos((yystack_[1].value.x)); }
-#line 866 "y_parser.tab.cc" // lalr1.cc:859
+#line 904 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 49:
-#line 211 "y_parser.yy" // lalr1.cc:859
+#line 213 "y_parser.yy" // lalr1.cc:859
     { (yylhs.value.x) = driver->atan((yystack_[1].value.x)); }
-#line 872 "y_parser.tab.cc" // lalr1.cc:859
+#line 910 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 50:
-#line 212 "y_parser.yy" // lalr1.cc:859
+#line 214 "y_parser.yy" // lalr1.cc:859
     { (yylhs.value.x) = driver->atan2((yystack_[3].value.x), (yystack_[1].value.x)); }
-#line 878 "y_parser.tab.cc" // lalr1.cc:859
+#line 916 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 51:
-#line 213 "y_parser.yy" // lalr1.cc:859
+#line 215 "y_parser.yy" // lalr1.cc:859
     { (yylhs.value.x) = driver->sinh((yystack_[1].value.x)); }
-#line 884 "y_parser.tab.cc" // lalr1.cc:859
+#line 922 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 52:
-#line 214 "y_parser.yy" // lalr1.cc:859
+#line 216 "y_parser.yy" // lalr1.cc:859
     { (yylhs.value.x) = driver->cosh((yystack_[1].value.x)); }
-#line 890 "y_parser.tab.cc" // lalr1.cc:859
+#line 928 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 53:
-#line 215 "y_parser.yy" // lalr1.cc:859
+#line 217 "y_parser.yy" // lalr1.cc:859
     { (yylhs.value.x) = driver->tanh((yystack_[1].value.x)); }
-#line 896 "y_parser.tab.cc" // lalr1.cc:859
+#line 934 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 54:
-#line 216 "y_parser.yy" // lalr1.cc:859
+#line 218 "y_parser.yy" // lalr1.cc:859
     { (yylhs.value.x) = driver->asinh((yystack_[1].value.x)); }
-#line 902 "y_parser.tab.cc" // lalr1.cc:859
+#line 940 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 55:
-#line 217 "y_parser.yy" // lalr1.cc:859
+#line 219 "y_parser.yy" // lalr1.cc:859
     { (yylhs.value.x) = driver->acosh((yystack_[1].value.x)); }
-#line 908 "y_parser.tab.cc" // lalr1.cc:859
+#line 946 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 56:
-#line 218 "y_parser.yy" // lalr1.cc:859
+#line 220 "y_parser.yy" // lalr1.cc:859
     { (yylhs.value.x) = driver->atanh((yystack_[1].value.x)); }
-#line 914 "y_parser.tab.cc" // lalr1.cc:859
+#line 952 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 57:
-#line 219 "y_parser.yy" // lalr1.cc:859
+#line 221 "y_parser.yy" // lalr1.cc:859
     { (yylhs.value.x) = driver->exp((yystack_[1].value.x)); }
-#line 920 "y_parser.tab.cc" // lalr1.cc:859
+#line 958 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 58:
-#line 220 "y_parser.yy" // lalr1.cc:859
+#line 222 "y_parser.yy" // lalr1.cc:859
     { (yylhs.value.x) = driver->log((yystack_[1].value.x)); }
-#line 926 "y_parser.tab.cc" // lalr1.cc:859
+#line 964 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 59:
-#line 221 "y_parser.yy" // lalr1.cc:859
+#line 223 "y_parser.yy" // lalr1.cc:859
     { (yylhs.value.x) = driver->pow((yystack_[3].value.x), (yystack_[1].value.x)); }
-#line 932 "y_parser.tab.cc" // lalr1.cc:859
+#line 970 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 60:
-#line 222 "y_parser.yy" // lalr1.cc:859
+#line 224 "y_parser.yy" // lalr1.cc:859
     { (yylhs.value.x) = driver->Li2((yystack_[1].value.x)); }
-#line 938 "y_parser.tab.cc" // lalr1.cc:859
+#line 976 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 61:
-#line 223 "y_parser.yy" // lalr1.cc:859
+#line 225 "y_parser.yy" // lalr1.cc:859
     { (yylhs.value.x) = driver->Li((yystack_[3].value.x), (yystack_[1].value.x)); }
-#line 944 "y_parser.tab.cc" // lalr1.cc:859
+#line 982 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 62:
-#line 224 "y_parser.yy" // lalr1.cc:859
+#line 226 "y_parser.yy" // lalr1.cc:859
     { (yylhs.value.x) = driver->G((yystack_[3].value.x), (yystack_[1].value.x)); }
-#line 950 "y_parser.tab.cc" // lalr1.cc:859
+#line 988 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 63:
-#line 225 "y_parser.yy" // lalr1.cc:859
+#line 227 "y_parser.yy" // lalr1.cc:859
     { (yylhs.value.x) = driver->G((yystack_[5].value.x), (yystack_[3].value.x), (yystack_[1].value.x)); }
-#line 956 "y_parser.tab.cc" // lalr1.cc:859
+#line 994 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 64:
-#line 226 "y_parser.yy" // lalr1.cc:859
+#line 228 "y_parser.yy" // lalr1.cc:859
     { (yylhs.value.x) = driver->S((yystack_[5].value.x), (yystack_[3].value.x), (yystack_[1].value.x)); }
-#line 962 "y_parser.tab.cc" // lalr1.cc:859
+#line 1000 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 65:
-#line 227 "y_parser.yy" // lalr1.cc:859
+#line 229 "y_parser.yy" // lalr1.cc:859
     { (yylhs.value.x) = driver->H((yystack_[3].value.x), (yystack_[1].value.x)); }
-#line 968 "y_parser.tab.cc" // lalr1.cc:859
+#line 1006 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 66:
-#line 228 "y_parser.yy" // lalr1.cc:859
+#line 230 "y_parser.yy" // lalr1.cc:859
     { (yylhs.value.x) = driver->zeta((yystack_[1].value.x)); }
-#line 974 "y_parser.tab.cc" // lalr1.cc:859
+#line 1012 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 67:
-#line 229 "y_parser.yy" // lalr1.cc:859
+#line 231 "y_parser.yy" // lalr1.cc:859
     { (yylhs.value.x) = driver->zeta((yystack_[3].value.x), (yystack_[1].value.x)); }
-#line 980 "y_parser.tab.cc" // lalr1.cc:859
+#line 1018 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 68:
-#line 230 "y_parser.yy" // lalr1.cc:859
+#line 232 "y_parser.yy" // lalr1.cc:859
     { (yylhs.value.x) = driver->zetaderiv((yystack_[3].value.x), (yystack_[1].value.x)); }
-#line 986 "y_parser.tab.cc" // lalr1.cc:859
+#line 1024 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 69:
-#line 231 "y_parser.yy" // lalr1.cc:859
+#line 233 "y_parser.yy" // lalr1.cc:859
     { (yylhs.value.x) = driver->tgamma((yystack_[1].value.x)); }
-#line 992 "y_parser.tab.cc" // lalr1.cc:859
+#line 1030 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 70:
-#line 232 "y_parser.yy" // lalr1.cc:859
+#line 234 "y_parser.yy" // lalr1.cc:859
     { (yylhs.value.x) = driver->lgamma((yystack_[1].value.x)); }
-#line 998 "y_parser.tab.cc" // lalr1.cc:859
+#line 1036 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 71:
-#line 233 "y_parser.yy" // lalr1.cc:859
+#line 235 "y_parser.yy" // lalr1.cc:859
     { (yylhs.value.x) = driver->beta((yystack_[3].value.x), (yystack_[1].value.x)); }
-#line 1004 "y_parser.tab.cc" // lalr1.cc:859
+#line 1042 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 72:
-#line 234 "y_parser.yy" // lalr1.cc:859
+#line 236 "y_parser.yy" // lalr1.cc:859
     { (yylhs.value.x) = driver->psi((yystack_[1].value.x)); }
-#line 1010 "y_parser.tab.cc" // lalr1.cc:859
+#line 1048 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 73:
-#line 235 "y_parser.yy" // lalr1.cc:859
+#line 237 "y_parser.yy" // lalr1.cc:859
     { (yylhs.value.x) = driver->psi((yystack_[3].value.x), (yystack_[1].value.x)); }
-#line 1016 "y_parser.tab.cc" // lalr1.cc:859
+#line 1054 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 74:
-#line 236 "y_parser.yy" // lalr1.cc:859
+#line 238 "y_parser.yy" // lalr1.cc:859
     { (yylhs.value.x) = driver->factorial((yystack_[1].value.x)); }
-#line 1022 "y_parser.tab.cc" // lalr1.cc:859
+#line 1060 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 75:
-#line 237 "y_parser.yy" // lalr1.cc:859
+#line 239 "y_parser.yy" // lalr1.cc:859
     { (yylhs.value.x) = driver->binomial((yystack_[3].value.x), (yystack_[1].value.x)); }
-#line 1028 "y_parser.tab.cc" // lalr1.cc:859
+#line 1066 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
 
-#line 1032 "y_parser.tab.cc" // lalr1.cc:859
+#line 1070 "y_parser.tab.cc" // lalr1.cc:859
             default:
               break;
             }
@@ -1188,9 +1226,98 @@ namespace y {
 
   // Generate an error message.
   std::string
-  y_parser::yysyntax_error_ (state_type, const symbol_type&) const
+  y_parser::yysyntax_error_ (state_type yystate, const symbol_type& yyla) const
   {
-    return YY_("syntax error");
+    // Number of reported tokens (one for the "unexpected", one per
+    // "expected").
+    size_t yycount = 0;
+    // Its maximum.
+    enum { YYERROR_VERBOSE_ARGS_MAXIMUM = 5 };
+    // Arguments of yyformat.
+    char const *yyarg[YYERROR_VERBOSE_ARGS_MAXIMUM];
+
+    /* There are many possibilities here to consider:
+       - If this state is a consistent state with a default action, then
+         the only way this function was invoked is if the default action
+         is an error action.  In that case, don't check for expected
+         tokens because there are none.
+       - The only way there can be no lookahead present (in yyla) is
+         if this state is a consistent state with a default action.
+         Thus, detecting the absence of a lookahead is sufficient to
+         determine that there is no unexpected or expected token to
+         report.  In that case, just report a simple "syntax error".
+       - Don't assume there isn't a lookahead just because this state is
+         a consistent state with a default action.  There might have
+         been a previous inconsistent state, consistent state with a
+         non-default action, or user semantic action that manipulated
+         yyla.  (However, yyla is currently not documented for users.)
+       - Of course, the expected token list depends on states to have
+         correct lookahead information, and it depends on the parser not
+         to perform extra reductions after fetching a lookahead from the
+         scanner and before detecting a syntax error.  Thus, state
+         merging (from LALR or IELR) and default reductions corrupt the
+         expected token list.  However, the list is correct for
+         canonical LR with one exception: it will still contain any
+         token that will not be accepted due to an error action in a
+         later state.
+    */
+    if (!yyla.empty ())
+      {
+        int yytoken = yyla.type_get ();
+        yyarg[yycount++] = yytname_[yytoken];
+        int yyn = yypact_[yystate];
+        if (!yy_pact_value_is_default_ (yyn))
+          {
+            /* Start YYX at -YYN if negative to avoid negative indexes in
+               YYCHECK.  In other words, skip the first -YYN actions for
+               this state because they are default actions.  */
+            int yyxbegin = yyn < 0 ? -yyn : 0;
+            // Stay within bounds of both yycheck and yytname.
+            int yychecklim = yylast_ - yyn + 1;
+            int yyxend = yychecklim < yyntokens_ ? yychecklim : yyntokens_;
+            for (int yyx = yyxbegin; yyx < yyxend; ++yyx)
+              if (yycheck_[yyx + yyn] == yyx && yyx != yyterror_
+                  && !yy_table_value_is_error_ (yytable_[yyx + yyn]))
+                {
+                  if (yycount == YYERROR_VERBOSE_ARGS_MAXIMUM)
+                    {
+                      yycount = 1;
+                      break;
+                    }
+                  else
+                    yyarg[yycount++] = yytname_[yyx];
+                }
+          }
+      }
+
+    char const* yyformat = YY_NULLPTR;
+    switch (yycount)
+      {
+#define YYCASE_(N, S)                         \
+        case N:                               \
+          yyformat = S;                       \
+        break
+        YYCASE_(0, YY_("syntax error"));
+        YYCASE_(1, YY_("syntax error, unexpected %s"));
+        YYCASE_(2, YY_("syntax error, unexpected %s, expecting %s"));
+        YYCASE_(3, YY_("syntax error, unexpected %s, expecting %s or %s"));
+        YYCASE_(4, YY_("syntax error, unexpected %s, expecting %s or %s or %s"));
+        YYCASE_(5, YY_("syntax error, unexpected %s, expecting %s or %s or %s or %s"));
+#undef YYCASE_
+      }
+
+    std::string yyres;
+    // Argument number.
+    size_t yyi = 0;
+    for (char const* yyp = yyformat; *yyp; ++yyp)
+      if (yyp[0] == '%' && yyp[1] == 's' && yyi < yycount)
+        {
+          yyres += yytnamerr_ (yyarg[yyi++]);
+          ++yyp;
+        }
+      else
+        yyres += *yyp;
+    return yyres;
   }
 
 
@@ -1409,7 +1536,7 @@ namespace y {
   };
 
 
-#if YYDEBUG
+
   // YYTNAME[SYMBOL-NUM] -- String name of the symbol SYMBOL-NUM.
   // First, the terminals, then, starting at \a yyntokens_, nonterminals.
   const char*
@@ -1432,18 +1559,18 @@ namespace y {
   "built_in_function", YY_NULLPTR
   };
 
-
+#if YYDEBUG
   const unsigned char
   y_parser::yyrline_[] =
   {
-       0,   145,   145,   148,   149,   150,   151,   152,   153,   154,
-     155,   156,   157,   158,   159,   160,   161,   164,   165,   168,
-     169,   172,   174,   175,   176,   177,   178,   181,   182,   183,
-     186,   187,   188,   191,   192,   195,   196,   197,   198,   199,
-     200,   203,   204,   205,   206,   207,   208,   209,   210,   211,
-     212,   213,   214,   215,   216,   217,   218,   219,   220,   221,
-     222,   223,   224,   225,   226,   227,   228,   229,   230,   231,
-     232,   233,   234,   235,   236,   237
+       0,   147,   147,   150,   151,   152,   153,   154,   155,   156,
+     157,   158,   159,   160,   161,   162,   163,   166,   167,   170,
+     171,   174,   176,   177,   178,   179,   180,   183,   184,   185,
+     188,   189,   190,   193,   194,   197,   198,   199,   200,   201,
+     202,   205,   206,   207,   208,   209,   210,   211,   212,   213,
+     214,   215,   216,   217,   218,   219,   220,   221,   222,   223,
+     224,   225,   226,   227,   228,   229,   230,   231,   232,   233,
+     234,   235,   236,   237,   238,   239
   };
 
   // Print the state stack on the debug stream.
@@ -1532,12 +1659,25 @@ namespace y {
 
 #line 5 "y_parser.yy" // lalr1.cc:1167
 } // y
-#line 1536 "y_parser.tab.cc" // lalr1.cc:1167
-#line 239 "y_parser.yy" // lalr1.cc:1168
+#line 1663 "y_parser.tab.cc" // lalr1.cc:1167
+#line 241 "y_parser.yy" // lalr1.cc:1168
 
 
 void y::y_parser::error(const y::y_parser::location_type &l,
                         const std::string& err_message)
   {
-    this->driver->error(err_message);
+    std::ostringstream msg;
+    lexeme::lexeme<enum keyword_type, enum character_type>* current_lexeme = this->lexer->get_current_lexeme();
+
+		if(current_lexeme != nullptr)
+			{
+				const filestack* path = current_lexeme->get_path();
+				msg << ERROR_MESSAGE_AT_LINE << " " << path->write() << std::endl << ERROR_MESSAGE_WRAP_PAD << err_message;
+			}
+		else
+			{
+		    msg << err_message;
+			}
+
+    this->driver->error(msg.str());
   }

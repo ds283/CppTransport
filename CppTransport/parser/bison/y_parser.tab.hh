@@ -40,7 +40,7 @@
 #ifndef YY_YY_Y_PARSER_TAB_HH_INCLUDED
 # define YY_YY_Y_PARSER_TAB_HH_INCLUDED
 // //                    "%code requires" blocks.
-#line 8 "y_parser.yy" // lalr1.cc:377
+#line 10 "y_parser.yy" // lalr1.cc:377
 
     #include "lexeme.h"
     #include "parse_tree.h"
@@ -120,7 +120,7 @@
 
 /* Debug traces.  */
 #ifndef YYDEBUG
-# define YYDEBUG 0
+# define YYDEBUG 1
 #endif
 
 #line 5 "y_parser.yy" // lalr1.cc:377
@@ -139,7 +139,7 @@ namespace y {
     /// Symbol semantic values.
     union semantic_type
     {
-    #line 47 "y_parser.yy" // lalr1.cc:377
+    #line 49 "y_parser.yy" // lalr1.cc:377
 
     lexeme::lexeme<enum keyword_type, enum character_type>* lex;
     attributes*                                             a;
@@ -444,10 +444,13 @@ namespace y {
   static const unsigned char yyr2_[];
 
 
-#if YYDEBUG
+    /// Convert the symbol name \a n to a form suitable for a diagnostic.
+    static std::string yytnamerr_ (const char *n);
+
+
     /// For a symbol, its name in clear.
     static const char* const yytname_[];
-
+#if YYDEBUG
   // YYRLINE[YYN] -- Source line where rule number YYN was defined.
   static const unsigned char yyrline_[];
     /// Report on the debug stream that the rule \a r is going to be reduced.
@@ -565,7 +568,7 @@ namespace y {
 
 #line 5 "y_parser.yy" // lalr1.cc:377
 } // y
-#line 569 "y_parser.tab.hh" // lalr1.cc:377
+#line 572 "y_parser.tab.hh" // lalr1.cc:377
 
 
 

@@ -98,9 +98,10 @@ namespace y
     y_lexer::y_lexer(lexstream<enum keyword_type, enum character_type>* s)
       : stream(s)
       {
-        assert(s != NULL);
+        assert(s != nullptr);
 
         stream->reset();
+		    current_lex = nullptr;
       }
 
     y_lexer::~y_lexer()
@@ -110,14 +111,14 @@ namespace y
 
     int y_lexer::yylex(y::y_parser::semantic_type* lval)
       {
-        assert(lval != NULL);
+        assert(lval != nullptr);
 
-        lval->lex = this->stream->get();
+        lval->lex = this->current_lex = this->stream->get();
         this->stream->eat();
 
         int     rval = 0;
 
-        if(lval->lex != NULL)
+        if(lval->lex != nullptr)
           {
             enum lexeme::lexeme_type type = lval->lex->get_type();
 

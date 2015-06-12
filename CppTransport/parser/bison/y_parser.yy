@@ -4,6 +4,8 @@
 %defines
 %define api.namespace{y}
 %define parser_class_name{y_parser}
+%define parse.trace
+%define parse.error verbose
 
 %code requires {
     #include "lexeme.h"
@@ -241,5 +243,18 @@ built_in_function: abs open_bracket expression close_bracket                    
 void y::y_parser::error(const y::y_parser::location_type &l,
                         const std::string& err_message)
   {
-    this->driver->error(err_message);
+    std::ostringstream msg;
+    lexeme::lexeme<enum keyword_type, enum character_type>* current_lexeme = this->lexer->get_current_lexeme();
+
+		if(current_lexeme != nullptr)
+			{
+				const filestack* path = current_lexeme->get_path();
+				msg << ERROR_MESSAGE_AT_LINE << " " << path->write() << std::endl << ERROR_MESSAGE_WRAP_PAD << err_message;
+			}
+		else
+			{
+		    msg << err_message;
+			}
+
+    this->driver->error(msg.str());
   }
