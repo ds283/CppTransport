@@ -64,10 +64,10 @@ namespace transport
         // the mapping from the provided list of ks to the work list is just one-to-one
         for(unsigned int j = 0; j < ks.size(); ++j)
 	        {
-            this->twopf_list_task<number>::twopf_db.add_record(ks[j]);
+            this->twopf_list_task<number>::twopf_db->add_record(ks[j]);
 	        }
 
-        std::cout << "'" << this->get_name() << "': " << __CPP_TRANSPORT_TASK_TWOPF_ELEMENTS_A << " " << this->twopf_db.size() << " "
+        std::cout << "'" << this->get_name() << "': " << __CPP_TRANSPORT_TASK_TWOPF_ELEMENTS_A << " " << this->twopf_db->size() << " "
           <<__CPP_TRANSPORT_TASK_TWOPF_ELEMENTS_B << std::endl;
 
         this->compute_horizon_exit_times();
