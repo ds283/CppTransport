@@ -20,7 +20,7 @@ const double M_Planck = 1.0;
 const double m        = 1e-5;
 const double Lambda   = pow(1.125E-8 / 100, 1.0/4.0) * M_Planck;
 
-const double phi_init = 15.0  * M_Planck;
+const double phi_init = 10.0  * M_Planck;
 const double chi_init = 0.001 * M_Planck;
 
 
@@ -53,10 +53,10 @@ int main(int argc, char* argv[])
     const std::vector<double> init_values = { phi_init, chi_init };
 
     const double Ninit  = 0.0;  // start counting from N=0 at the beginning of the integration
-    const double Ncross = 13;   // horizon-crossing occurs at N=13
-    const double Npre   = 9.5;    // number of e-folds of subhorizon evolution
-    const double Nsplit = 32.0; // split point between early and late
-    const double Nmax   = 42.0; // how many e-folds to integrate after horizon crossing
+    const double Ncross = 9.5;  // horizon-crossing occurs at N=13
+    const double Npre   = 9.5;  // number of e-folds of subhorizon evolution
+    const double Nsplit = 1.5;  // split point between early and late
+    const double Nmax   = 11.5; // how many e-folds to integrate after horizon crossing
 
     // set up initial conditions with the specified horizon-crossing time Ncross and Npre
     // e-folds of subhorizon evolution.
