@@ -3,11 +3,11 @@ cmake_minimum_required(VERSION 2.6)
 project(CppTransport)
 
 SET ( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/" )
+SET ( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/splinter/cmake/" )
+
+ADD_SUBDIRECTORY ( "splinter" "splinter-build" )
 
 SET ( ODEINT_INCLUDE_PATH "$ENV{HOME}/Documents/Code/odeint-v2-ds283/include" )
-SET ( SPLINTER_INCLUDE_PATH "$ENV{HOME}/Documents/Code/splinter-ds283/install/include" )
-SET ( SPLINTER_LIBRARY_PATH "$ENV{HOME}/Documents/Code/splinter-ds283/install/lib" )
-SET ( SPLINTER_LIBRARIES "${SPLINTER_LIBRARY_PATH}/libsplinter-static-1-2.a" )
 
 find_package(MPI REQUIRED)
 find_package(Boost REQUIRED COMPONENTS system filesystem random timer date_time mpi log_setup log serialization thread)
@@ -42,10 +42,10 @@ include_directories(./ backends
 					   utilities
 					   transport-runtime-api
 					   jsoncpp
+					   splinter/include
 					/usr/include
 					/usr/local/include
 					${ODEINT_INCLUDE_PATH}
-					${SPLINTER_INCLUDE_PATH}
 					${EIGEN3_INCLUDE_DIR}
 					${Boost_INCLUDE_DIRS}
 					${MPI_CXX_INCLUDE_PATH}
@@ -106,68 +106,68 @@ target_link_libraries(CppTransport ${GINAC_LIBRARIES} ${Boost_LIBRARIES})
 
 
 add_executable(dquad-mpi examples/dquad-mpi/main.cpp jsoncpp/jsoncpp.cpp)
-target_link_libraries(dquad-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARIES})
+target_link_libraries(dquad-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} splinter-static-1-2)
 
 
 add_executable(dquad-makerepo examples/dquad-mpi/makerepo.cpp jsoncpp/jsoncpp.cpp)
-target_link_libraries(dquad-makerepo sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARIES})
+target_link_libraries(dquad-makerepo sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} splinter-static-1-2)
 
 
 add_executable(dquad-makerepo2 examples/dquad-mpi/makerepo2.cpp jsoncpp/jsoncpp.cpp)
-target_link_libraries(dquad-makerepo2 sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARIES})
+target_link_libraries(dquad-makerepo2 sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} splinter-static-1-2)
 
 
 add_executable(quadratic-mpi examples/quadratic/main.cpp jsoncpp/jsoncpp.cpp)
-target_link_libraries(quadratic-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARIES})
+target_link_libraries(quadratic-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} splinter-static-1-2)
 
 
 add_executable(quadratic-makerepo examples/quadratic/makerepo.cpp jsoncpp/jsoncpp.cpp)
-target_link_libraries(quadratic-makerepo sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARIES})
+target_link_libraries(quadratic-makerepo sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} splinter-static-1-2)
 
 
 add_executable(axion-mpi examples/axion-mpi/main.cpp jsoncpp/jsoncpp.cpp)
-target_link_libraries(axion-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARIES})
+target_link_libraries(axion-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} splinter-static-1-2)
 
 
 add_executable(axion-makerepo examples/axion-mpi/makerepo.cpp jsoncpp/jsoncpp.cpp)
-target_link_libraries(axion-makerepo sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARIES})
+target_link_libraries(axion-makerepo sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} splinter-static-1-2)
 
 
 add_executable(axion-makerepo2 examples/axion-mpi/makerepo2.cpp jsoncpp/jsoncpp.cpp)
-target_link_libraries(axion-makerepo2 sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARIES})
+target_link_libraries(axion-makerepo2 sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} splinter-static-1-2)
 
 
 add_executable(axion-makerepo3 examples/axion-mpi/makerepo3.cpp jsoncpp/jsoncpp.cpp)
-target_link_libraries(axion-makerepo3 sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARIES})
+target_link_libraries(axion-makerepo3 sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} splinter-static-1-2)
 
 
 add_executable(new-axion-mpi examples/new-axion/main.cpp jsoncpp/jsoncpp.cpp)
-target_link_libraries(new-axion-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARIES})
+target_link_libraries(new-axion-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} splinter-static-1-2)
 
 
 add_executable(new-axion-makerepo2 examples/new-axion/makerepo2.cpp jsoncpp/jsoncpp.cpp)
-target_link_libraries(new-axion-makerepo2 sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARIES})
+target_link_libraries(new-axion-makerepo2 sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} splinter-static-1-2)
 
 
 add_executable(mafalda40-makerepo examples/mafalda40/makerepo.cpp jsoncpp/jsoncpp.cpp)
-target_link_libraries(mafalda40-makerepo sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARIES})
+target_link_libraries(mafalda40-makerepo sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} splinter-static-1-2)
 
 
 add_executable(mafalda40-mpi examples/mafalda40/main.cpp jsoncpp/jsoncpp.cpp)
-target_link_libraries(mafalda40-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARIES})
+target_link_libraries(mafalda40-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} splinter-static-1-2)
 
 
 add_executable(quadratic10-makerepo examples/quadratic10/makerepo.cpp jsoncpp/jsoncpp.cpp)
-target_link_libraries(quadratic10-makerepo sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARIES})
+target_link_libraries(quadratic10-makerepo sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} splinter-static-1-2)
 
 
 add_executable(quadratic10-mpi examples/quadratic10/main.cpp jsoncpp/jsoncpp.cpp)
-target_link_libraries(quadratic10-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARIES})
+target_link_libraries(quadratic10-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} splinter-static-1-2)
 
 
 # cuda_add_executable(dquad-cuda examples/dquad-vexcl/main.cpp jsoncpp/jsoncpp.cpp)
-# target_link_libraries(dquad-cuda sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES}  ${SPLINTER_LIBRARIES} /usr/local/CUDA/lib/libcuda.dylib)
+# target_link_libraries(dquad-cuda sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} splinter-static-1-2 /usr/local/CUDA/lib/libcuda.dylib)
 
 
 # add_executable(dquad-opencl examples/dquad-vexcl/main.cpp jsoncpp/jsoncpp.cpp)
-# target_link_libraries(dquad-opencl sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${OPENCL_LIBRARIES} ${SPLINTER_LIBRARIES})
+# target_link_libraries(dquad-opencl sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${OPENCL_LIBRARIES} splinter-static-1-2)
