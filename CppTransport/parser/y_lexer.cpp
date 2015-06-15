@@ -165,7 +165,6 @@ namespace y
           }
         else
           {
-		        assert(false);
             /* return eof? */
           }
 
