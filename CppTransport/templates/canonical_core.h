@@ -1217,12 +1217,12 @@ namespace transport
         const auto __eps             = $$__EPSILON;
 
         // check whether Hsq is positive
-        if(__Hsq < 0) throw Hsq_is_negative();
+        if(__Hsq < 0) throw Hsq_is_negative(__t);
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
         // check for nan being produced
-        if(std::isnan($$__COORDINATE[A])) throw integration_produced_nan();
+        if(std::isnan($$__COORDINATE[A])) throw integration_produced_nan(__t);
 
         __dxdt[this->flatten($$__A)] = $$__U1_PREDEF[A]{__Hsq,__eps};
       }
