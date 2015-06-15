@@ -6,7 +6,7 @@
 
 #include "core.h"
 #include "translation_unit.h"
-#include "parse_tree.h"
+#include "script.h"
 #include "output_stack.h"
 
 #include "boost/algorithm/string.hpp"
@@ -24,7 +24,7 @@
 
 const std::string keyword_table[] =
                     {
-                      "name", "author", "tag", "field", "potential",
+                      "name", "author", "tag", "field", "potential", "subexpr", "value",
                       "parameter", "latex", "core", "implementation", "model",
                       "abserr", "relerr", "stepper", "stepsize",
                       "background", "perturbations",
@@ -37,7 +37,7 @@ const std::string keyword_table[] =
 
 const enum keyword_type keyword_map[] =
                           {
-                            k_name, k_author, k_tag, k_field, k_potential,
+                            k_name, k_author, k_tag, k_field, k_potential, k_subexpr, k_value,
                             k_parameter, k_latex, k_core, k_implementation, k_model,
                             k_abserr, k_relerr, k_stepper, k_stepsize,
                             k_background, k_perturbations,
@@ -85,19 +85,19 @@ static std::string  strip_dot_h(const std::string& pathname);
 static std::string  leafname   (const std::string& pathname);
 
 
-translation_unit::translation_unit(std::string file, finder* p, std::string core_out, std::string implementation_out, bool cse, bool v)
+translation_unit::translation_unit(std::string file, std::shared_ptr<finder>& p, std::string core_out, std::string implementation_out, bool cse, bool v)
   : name(file), do_cse(cse), verbose(v), path(p)
   {
     // lexicalize this input file
-    stream = new lexstream<keyword_type, character_type>(name, path,
-                                                         keyword_table, keyword_map, NUMBER_KEYWORDS,
-                                                         character_table, character_map, character_unary_context, NUMBER_CHARACTERS);
+    stream = std::make_shared<y::lexstream_type>(name, path,
+                                                 keyword_table, keyword_map, NUMBER_KEYWORDS,
+                                                 character_table, character_map, character_unary_context, NUMBER_CHARACTERS);
 //    stream->print(std::cerr);
 
     // now pass to the parser for syntactic analysis
-    lexer  = new y::y_lexer(stream);
-    driver = new y::y_driver(sym_factory);
-    parser = new y::y_parser(lexer, driver);
+    lexer  = std::make_shared<y::y_lexer>(stream);
+    driver = std::make_shared<y::y_driver>(sym_factory);
+    parser = std::make_shared<y::y_parser>(lexer, driver);
 
     if(parser->parse() == FAIL) warn(WARNING_PARSING_FAILED + (std::string)(" '") + name + (std::string)("'"));
     // in.driver->get_script()->print(std::cerr);
@@ -125,30 +125,8 @@ translation_unit::translation_unit(std::string file, finder* p, std::string core
     implementation_guard = boost::to_upper_copy(leafname(implementation_output));
     implementation_guard.erase(boost::remove_if(implementation_guard, boost::is_any_of(INVALID_GUARD_CHARACTERS)), implementation_guard.end());
 
-    stack = new output_stack;
-    outstream = new translator(this);
-  }
-
-
-translation_unit::~translation_unit()
-  {
-    // deallocate storage
-
-    assert(this->stream != nullptr);
-    assert(this->parser != nullptr);
-    assert(this->lexer != nullptr);
-    assert(this->driver != nullptr);
-
-    delete this->stream;
-    delete this->parser;
-    delete this->lexer;
-    delete this->driver;
-
-    assert(this->stack != nullptr);
-    assert(this->outstream != nullptr);
-
-    delete this->stack;
-    delete this->outstream;
+    stack     = std::make_shared<output_stack>();
+    outstream = std::make_shared<translator>(this);
   }
 
 
@@ -328,24 +306,6 @@ const struct stepper& translation_unit::get_background_stepper() const
 const struct stepper& translation_unit::get_perturbations_stepper() const
   {
     return(this->driver->get_script()->get_perturbations_stepper());
-  }
-
-
-finder* translation_unit::get_finder()
-  {
-    return(this->path);
-  }
-
-
-output_stack* translation_unit::get_stack()
-  {
-    return(this->stack);
-  }
-
-
-translator* translation_unit::get_translator()
-  {
-    return(this->outstream);
   }
 
 

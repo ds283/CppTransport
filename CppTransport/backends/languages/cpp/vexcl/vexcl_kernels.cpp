@@ -85,8 +85,8 @@ namespace cpp
           {
             std::string kernel_file = args[0];
 
-            output_stack* os  = this->unit->get_stack();
-            translator*   t   = this->unit->get_translator();
+            std::shared_ptr<output_stack> os  = this->unit->get_stack();
+            std::shared_ptr<translator>   t   = this->unit->get_translator();
 
             if(os != nullptr && t != nullptr)
               {

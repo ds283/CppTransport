@@ -17,6 +17,8 @@ enum y::y_parser::token::yytokentype keyword_tokens[] =
       y::y_parser::token::tag,
       y::y_parser::token::field,
       y::y_parser::token::potential,
+      y::y_parser::token::subexpr,
+      y::y_parser::token::value,
       y::y_parser::token::parameter,
       y::y_parser::token::latex,
       y::y_parser::token::core,
@@ -95,18 +97,13 @@ enum y::y_parser::token::yytokentype symbol_tokens[] =
 namespace y
   {
 
-    y_lexer::y_lexer(lexstream<enum keyword_type, enum character_type>* s)
+    y_lexer::y_lexer(std::shared_ptr<lexstream_type> s)
       : stream(s)
       {
-        assert(s != nullptr);
+        assert(s);
 
         stream->reset();
 		    current_lex = nullptr;
-      }
-
-    y_lexer::~y_lexer()
-      {
-        return;
       }
 
     int y_lexer::yylex(y::y_parser::semantic_type* lval)
@@ -168,6 +165,7 @@ namespace y
           }
         else
           {
+		        assert(false);
             /* return eof? */
           }
 

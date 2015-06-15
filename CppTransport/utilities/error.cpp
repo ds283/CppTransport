@@ -28,19 +28,19 @@ void error(std::string const msg)
   }
 
 
-void warn(std::string const msg, const filestack* path)
+void warn(std::string const msg, std::shared_ptr<filestack> path)
   {
     warn(msg, path, WARN_PATH_LEVEL);
   }
 
 
-void error(std::string const msg, const filestack* path)
+void error(std::string const msg, std::shared_ptr<filestack> path)
   {
     error(msg, path, ERROR_PATH_LEVEL);
   }
 
 
-void warn(std::string const msg, const filestack* path, unsigned int level)
+void warn(std::string const msg, std::shared_ptr<filestack> path, unsigned int level)
   {
     std::ostringstream out;
 
@@ -51,7 +51,7 @@ void warn(std::string const msg, const filestack* path, unsigned int level)
   }
 
 
-void error(std::string const msg, const filestack* path, unsigned int level)
+void error(std::string const msg, std::shared_ptr<filestack> path, unsigned int level)
   {
     std::ostringstream out;
 

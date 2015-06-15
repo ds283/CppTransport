@@ -14,7 +14,7 @@
 
 enum keyword_type
   {
-      k_name, k_author, k_tag, k_field, k_potential,
+      k_name, k_author, k_tag, k_field, k_potential, k_subexpr, k_value,
       k_parameter, k_latex, k_core, k_implementation, k_model,
       k_abserr, k_relerr, k_stepper, k_stepsize,
       k_background, k_perturbations,

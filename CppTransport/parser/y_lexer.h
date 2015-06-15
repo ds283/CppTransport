@@ -20,6 +20,7 @@
 #include "lexeme.h"
 #include "lexstream.h"
 
+#include "y_common.h"
 #include "y_parser.tab.hh"
 
 
@@ -34,22 +35,22 @@ namespace y
       public:
 
         //! constructor
-        y_lexer(lexstream<enum keyword_type, enum character_type>* s);
+        y_lexer(std::shared_ptr<lexstream_type> s);
 
         //! destructor
-        ~y_lexer();
+        ~y_lexer() = default;
 
         //! get next lexeme
         int yylex(y::y_parser::semantic_type* lval);
 
 		    //! return current lexeme
-		    lexeme::lexeme<enum keyword_type, enum character_type>* get_current_lexeme() { return(this->current_lex); }
+		    lexeme_type* get_current_lexeme() { return(this->current_lex); }
 
       private:
 
-        lexstream<enum keyword_type, enum character_type>* stream;
+        std::shared_ptr<lexstream_type> stream;
 
-		    lexeme::lexeme<enum keyword_type, enum character_type>* current_lex;
+		    lexeme_type* current_lex;
 
 	    };
 

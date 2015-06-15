@@ -20,10 +20,10 @@ SET ( CMAKE_C_FLAGS "-Ofast -mavx" CACHE STRING "compile flags" FORCE )
 
 include_directories(./ backends
 					   backends/infrastructure
-					   "backends/infrastructure/file handling"
-					   "backends/infrastructure/language concepts"
-					   "backends/infrastructure/macro substitution"
-					   "backends/infrastructure/replacement rules"
+					   "backends/infrastructure/file_handling"
+					   "backends/infrastructure/language_concepts"
+					   "backends/infrastructure/macro_substitution"
+					   "backends/infrastructure/replacement_rules"
 					   backends/languages
 					   backends/languages/cpp
 					   backends/languages/cpp/core
@@ -36,7 +36,7 @@ include_directories(./ backends
 					   concepts
 					   parser
 					   parser/bison
-					   "transport objects"
+					   transport_objects
 					   utilities
 					   transport-runtime-api
 					   jsoncpp
@@ -52,17 +52,17 @@ include_directories(./ backends
 
 
 add_executable(CppTransport main.cpp
-							"backends/infrastructure/file handling/buffer.cpp"
-							"backends/infrastructure/file handling/output_stack.cpp"
-							"backends/infrastructure/file handling/translation_unit.cpp"
-							"backends/infrastructure/file handling/translator.cpp"
-							"backends/infrastructure/language concepts/cse.cpp"
-							"backends/infrastructure/macro substitution/index_assignment.cpp"
-							"backends/infrastructure/macro substitution/macro.cpp"
-							"backends/infrastructure/macro substitution/macro_tokenizer.cpp"
-							"backends/infrastructure/replacement rules/package_group.cpp"
-							"backends/infrastructure/replacement rules/package_group_factory.cpp"
-							"backends/infrastructure/replacement rules/replacement_rule_package.cpp"
+							"backends/infrastructure/file_handling/buffer.cpp"
+							"backends/infrastructure/file_handling/output_stack.cpp"
+							"backends/infrastructure/file_handling/translation_unit.cpp"
+							"backends/infrastructure/file_handling/translator.cpp"
+							"backends/infrastructure/language_concepts/cse.cpp"
+							"backends/infrastructure/macro_substitution/index_assignment.cpp"
+							"backends/infrastructure/macro_substitution/macro.cpp"
+							"backends/infrastructure/macro_substitution/macro_tokenizer.cpp"
+							"backends/infrastructure/replacement_rules/package_group.cpp"
+							"backends/infrastructure/replacement_rules/package_group_factory.cpp"
+							"backends/infrastructure/replacement_rules/replacement_rule_package.cpp"
 							backends/languages/cpp/core/core_group.cpp
 							backends/languages/cpp/core/core_macros.cpp
 							backends/languages/cpp/vexcl/vexcl_group.cpp
@@ -88,12 +88,12 @@ add_executable(CppTransport main.cpp
 							parser/bison/y_parser.tab.cc
 							parser/input_stack.cpp
 							parser/lexfile.cpp
-							parser/parse_tree.cpp
-							parser/quantity.cpp
+							parser/script.cpp
+							parser/semantic_data.cpp
 							parser/y_driver.cpp
 							parser/y_lexer.cpp
-							"transport objects/canonical_u_tensor_factory.cpp"
-							"transport objects/u_tensor_factory.cpp"
+							"transport_objects/canonical_u_tensor_factory.cpp"
+							"transport_objects/u_tensor_factory.cpp"
 							utilities/basic_error.cpp
 							utilities/error.cpp
 							utilities/finder.cpp
