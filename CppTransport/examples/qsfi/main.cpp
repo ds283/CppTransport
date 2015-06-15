@@ -1,8 +1,8 @@
 //
-//  main.cpp (powerlaw-mpi)
-//  powerlaw
+//  main.cpp (qsfi-mpi)
+//  qsfi
 //
-//  Created by David Seery on 05/05/2015.
+//  Created by David Seery on 12/06/2015.
 //  Copyright (c) 2013-15 University of Sussex. All rights reserved.
 //
 
@@ -15,7 +15,7 @@
 #include <boost/timer/timer.hpp>
 #include <boost/filesystem/operations.hpp>
 
-#include "powerlaw_basic_unrolled.h"
+#include "qsfi_basic_unrolled.h"
 
 
 // ****************************************************************************
@@ -34,7 +34,7 @@ int main(int argc, char* argv[])
 
     // set up an instance of the double quadratic model,
     // using doubles, with given parameter choices
-    transport::powerlaw_basic<double>* model = new transport::powerlaw_basic<double>(mgr);
+    transport::QSFI_basic<double>* model = new transport::QSFI_basic<double>(mgr);
 
 		mgr->process();
 

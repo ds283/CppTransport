@@ -147,6 +147,14 @@ add_executable(new-axion-makerepo2 examples/new-axion/makerepo2.cpp jsoncpp/json
 target_link_libraries(new-axion-makerepo2 sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} splinter-static-1-2)
 
 
+add_executable(qsfi-mpi examples/qsfi/main.cpp jsoncpp/jsoncpp.cpp)
+target_link_libraries(qsfi-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} splinter-static-1-2)
+
+
+add_executable(qsfi-makerepo2 examples/qsfi/makerepo2.cpp jsoncpp/jsoncpp.cpp)
+target_link_libraries(qsfi-makerepo2 sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} splinter-static-1-2)
+
+
 add_executable(mafalda40-makerepo examples/mafalda40/makerepo.cpp jsoncpp/jsoncpp.cpp)
 target_link_libraries(mafalda40-makerepo sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} splinter-static-1-2)
 
