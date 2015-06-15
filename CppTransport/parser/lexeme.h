@@ -131,9 +131,15 @@ namespace lexeme    // package in a unique namespace to protect common words lik
                                          std::shared_ptr<filestack> p, unsigned int u,
                                          const std::string* kt, const keywords* km, unsigned int num_k,
                                          const std::string* ct, const characters* cm, const bool* ctx, unsigned int num_c)
-	    : path(p), unique(u),
-	      ktable(kt), kmap(km), Nk(num_k),
-	      ctable(ct), cmap(cm), ccontext(ctx), Nc(num_c)
+	    : path(p->clone()),    // use clone to take a copy; otherwise, there is only one filestack object and after processing it is empty! so all file location data is lost
+	      unique(u),
+	      ktable(kt),
+	      kmap(km),
+	      Nk(num_k),
+	      ctable(ct),
+	      cmap(cm),
+	      ccontext(ctx),
+	      Nc(num_c)
 	    {
         bool ok     = false;
         int  offset = 0;
