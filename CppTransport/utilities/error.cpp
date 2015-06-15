@@ -44,8 +44,8 @@ void warn(std::string const msg, std::shared_ptr<filestack> path, unsigned int l
   {
     std::ostringstream out;
 
-    out << ERROR_MESSAGE_AT_LINE << " " << path->write(level) << std::endl;
-    out << ERROR_MESSAGE_WRAP_PAD << msg;
+    if(path) out << ERROR_MESSAGE_AT_LINE << " " << path->write(level) << std::endl << ERROR_MESSAGE_WRAP_PAD;
+    out << msg;
 
     basic_warn(out.str());
   }
@@ -55,8 +55,8 @@ void error(std::string const msg, std::shared_ptr<filestack> path, unsigned int 
   {
     std::ostringstream out;
 
-    out << ERROR_MESSAGE_AT_LINE << " " << path->write(level) << std::endl;
-    out << ERROR_MESSAGE_WRAP_PAD << msg;
+    if(path) out << ERROR_MESSAGE_AT_LINE << " " << path->write(level) << std::endl << ERROR_MESSAGE_WRAP_PAD;
+    out << msg;
 
     basic_error(out.str());
   }

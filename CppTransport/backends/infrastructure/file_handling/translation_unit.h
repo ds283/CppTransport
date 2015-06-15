@@ -117,6 +117,7 @@ class translation_unit
     std::string                                        name;                    // name of input script
     bool                                               do_cse;
 		bool                                               verbose;
+		bool                                               parse_failed;
 
     std::shared_ptr<finder>                            path;
     std::shared_ptr<output_stack>                      stack;

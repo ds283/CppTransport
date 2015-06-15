@@ -86,7 +86,7 @@ static std::string  leafname   (const std::string& pathname);
 
 
 translation_unit::translation_unit(std::string file, std::shared_ptr<finder>& p, std::string core_out, std::string implementation_out, bool cse, bool v)
-  : name(file), do_cse(cse), verbose(v), path(p)
+  : name(file), do_cse(cse), verbose(v), path(p), parse_failed(false)
   {
     // lexicalize this input file
     stream = std::make_shared<y::lexstream_type>(name, path,
@@ -99,7 +99,11 @@ translation_unit::translation_unit(std::string file, std::shared_ptr<finder>& p,
     driver = std::make_shared<y::y_driver>(sym_factory);
     parser = std::make_shared<y::y_parser>(lexer, driver);
 
-    if(parser->parse() == FAIL) warn(WARNING_PARSING_FAILED + (std::string)(" '") + name + (std::string)("'"));
+    if(parser->parse() == FAIL)
+	    {
+        warn(WARNING_PARSING_FAILED + (std::string)(" '") + name + (std::string)("'"));
+		    parse_failed = true;
+	    }
     // in.driver->get_script()->print(std::cerr);
 
     // cache details about this translation unit
@@ -136,6 +140,8 @@ translation_unit::translation_unit(std::string file, std::shared_ptr<finder>& p,
 unsigned int translation_unit::apply()
   {
     unsigned int rval = 0;
+
+		if(this->parse_failed) return rval;
 
     const script* s = this->driver->get_script();
 
