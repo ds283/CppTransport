@@ -494,7 +494,7 @@ void script::set_potential(GiNaC::ex V)
     this->potential     = V;
     this->potential_set = true;
 
-//    std::cerr << "Set potential to be V = " << *this->potential << std::endl;
+//    std::cerr << "Set potential to be V = " << this->potential << std::endl;
   }
 
 
