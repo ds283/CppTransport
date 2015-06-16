@@ -8,8 +8,11 @@
 #define __CPP_TRANSPORT_MESSAGES_EN_INTERGRATION_H
 
 
-#define __CPP_TRANSPORT_OBSERVER_TIME             "Integration in progress: time N"
-#define __CPP_TRANSPORT_OBSERVER_ELAPSED          "| time elapsed since last report"
+#define __CPP_TRANSPORT_OBSERVER_SLOW_INTEGRATION "Detected slow integration in progress"
+#define __CPP_TRANSPORT_OBSERVER_UPDATE           "Progress update"
+#define __CPP_TRANSPORT_OBSERVER_TIME             ": current stepper position at time N"
+#define __CPP_TRANSPORT_OBSERVER_ELAPSED_FIRST    "| time elapsed since beginning of integration"
+#define __CPP_TRANSPORT_OBSERVER_ELAPSED_LATER    "| time elapsed since last report"
 
 #define __CPP_TRANSPORT_NO_TIMES                  "Fatal: no times specified for integration"
 
