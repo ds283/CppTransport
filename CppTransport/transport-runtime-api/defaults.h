@@ -8,6 +8,9 @@
 #define __defaults_H_
 
 
+#include <boost/timer/timer.hpp>
+
+
 #define __CPP_TRANSPORT_DEFAULT_WRAP_WIDTH                 (135)
 #define __CPP_TRANSPORT_DEFAULT_PLOT_PRECISION             (3)
 #define __CPP_TRANSPORT_DEFAULT_TABLE_PRECISION            (17)
@@ -55,6 +58,9 @@
 // log file name
 #define __CPP_TRANSPORT_LOG_FILENAME_A                     "worker_"
 #define __CPP_TRANSPORT_LOG_FILENAME_B                     "_%3N.log"
+
+// notification delay for slow integrations; default is 10 minutes
+#define __CPP_TRANSPORT_DEFAULT_SLOW_INTEGRATION_NOTIFY    (boost::timer::nanosecond_type(10)*60*1000*1000*1000)
 
 
 #endif //__defaults_H_

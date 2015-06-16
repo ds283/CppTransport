@@ -12,6 +12,7 @@
 #include <iomanip>
 #include <sstream>
 
+#include "transport-runtime-api/defaults.h"
 #include "transport-runtime-api/messages.h"
 #include "transport-runtime-api/data/data_manager.h"
 #include "transport-runtime-api/tasks/task_configurations.h"
@@ -84,7 +85,9 @@ namespace transport
       public:
 
         //! Create a timing observer object
-        timing_observer(const time_config_database& t, double t_int=1.0, bool s=false, unsigned int p=3);
+        timing_observer(const time_config_database& t,
+                        boost::timer::nanosecond_type t_int=__CPP_TRANSPORT_DEFAULT_SLOW_INTEGRATION_NOTIFY,
+                        bool s=false, unsigned int p=3);
 
 
         // INTERFACE
@@ -113,37 +116,44 @@ namespace transport
       private:
 
         //! Do we generate output during observations?
-        bool                    silent;
+        bool                          silent;
 
         //! Is this the first batching step? Used to decide whether to issue output
-        bool                    first_step;
+        bool first_output;
 
         //! Last time at which output was emitted;
         //! used to decide whether to emit output during
         //! the next observation
-        double                  t_last;
+        boost::timer::nanosecond_type last_output;
 
         //! Time interval at which to issue updates
-        double                  t_interval;
+        boost::timer::nanosecond_type output_interval;
 
         //! Numerical precision to be used when issuing updates
-        unsigned int            precision;
+        unsigned int                  precision;
 
         //! Timer for the integration
-        boost::timer::cpu_timer integration_timer;
+        boost::timer::cpu_timer       integration_timer;
 
         //! Timer for batching
-        boost::timer::cpu_timer batching_timer;
+        boost::timer::cpu_timer       batching_timer;
+
       };
 
 
     template <typename number>
-    timing_observer<number>::timing_observer(const time_config_database& t, double t_int, bool s, unsigned int p)
-      : stepping_observer<number>(t), t_interval(t_int), silent(s), first_step(true), t_last(0), precision(p)
+    timing_observer<number>::timing_observer(const time_config_database& t, boost::timer::nanosecond_type t_int, bool s, unsigned int p)
+      : stepping_observer<number>(t),
+        output_interval(t_int),
+        silent(s),
+        first_output(true),
+        precision(p)
       {
         batching_timer.stop();
         // leave the integration timer running, so it also records start-up time associated with the integration,
         // eg. setting up initial conditions or copying data to an offload device such as a GPU
+
+        last_output = integration_timer.elapsed().wall;
       }
 
 
@@ -157,20 +167,36 @@ namespace transport
         this->batching_timer.start();
 
         // should we emit output?
-        // only do so if: not silent, and: either, first step, or enough time has elapsed
-        if(!this->silent && (this->first_step || t > this->t_last + this->t_interval))
+        // only do so if not in silent mode and enough time has elapsed since the last update
+        if(!this->silent && (this->integration_timer.elapsed().wall - this->last_output > this->output_interval))
 	        {
-            this->t_last = t;
+            this->last_output = this->integration_timer.elapsed().wall;
 
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_OBSERVER_TIME << " = " << std::scientific << std::setprecision(this->precision) << t;
-            if(first_step)
-	            {
-                msg << " " << __CPP_TRANSPORT_OBSERVER_ELAPSED << " =" << this->integration_timer.format();
-	            }
+		        if(this->first_output)
+			        {
+				        msg << __CPP_TRANSPORT_OBSERVER_SLOW_INTEGRATION;
+			        }
+		        else
+			        {
+				        msg << __CPP_TRANSPORT_OBSERVER_UPDATE;
+			        }
+
+            msg << __CPP_TRANSPORT_OBSERVER_TIME << " = " << std::scientific << std::setprecision(this->precision) << t << " ";
+
+		        if(this->first_output)
+			        {
+				        msg << __CPP_TRANSPORT_OBSERVER_ELAPSED_FIRST;
+			        }
+		        else
+			        {
+		            msg << __CPP_TRANSPORT_OBSERVER_ELAPSED_LATER;
+			        }
+
+            msg << " =" << this->integration_timer.format();
             BOOST_LOG_SEV(logger, lev) << msg.str();
 
-            first_step = false;
+		        this->first_output = false;
 	        }
 	    }
 
@@ -204,7 +230,8 @@ namespace transport
                                           const time_config_database& t,
                                           unsigned int bg_sz, unsigned int ten_sz, unsigned int tw_sz,
                                           unsigned int bg_st, unsigned int ten_st, unsigned int tw_st,
-                                          double t_int = 1.0, bool s = true, unsigned int p = 3);
+                                          boost::timer::nanosecond_type t_int = __CPP_TRANSPORT_DEFAULT_SLOW_INTEGRATION_NOTIFY,
+                                          bool s = false, unsigned int p = 3);
 
 
         // INTERFACE
@@ -250,7 +277,7 @@ namespace transport
                                                                                  const time_config_database& t,
                                                                                  unsigned int bg_sz, unsigned int ten_sz, unsigned int tw_sz,
                                                                                  unsigned int bg_st, unsigned int ten_st, unsigned int tw_st,
-                                                                                 double t_int, bool s, unsigned int p)
+                                                                                 boost::timer::nanosecond_type t_int, bool s, unsigned int p)
       : timing_observer<number>(t, t_int, s, p),
         batcher(b), k_config(c),
         backg_size(bg_sz), tensor_size(ten_sz), twopf_size(tw_sz),
@@ -312,7 +339,8 @@ namespace transport
                                             unsigned int tw_re_k2_st, unsigned int tw_im_k2_st,
                                             unsigned int tw_re_k3_st, unsigned int tw_im_k3_st,
                                             unsigned int th_st,
-                                            double t_int = 1.0, bool s = true, unsigned int p = 3);
+                                            boost::timer::nanosecond_type t_int = __CPP_TRANSPORT_DEFAULT_SLOW_INTEGRATION_NOTIFY,
+                                            bool s = false, unsigned int p = 3);
 
 
         // INTERFACE
@@ -373,7 +401,7 @@ namespace transport
                                                                                      unsigned int tw_re_k2_st, unsigned int tw_im_k2_st,
                                                                                      unsigned int tw_re_k3_st, unsigned int tw_im_k3_st,
                                                                                      unsigned int th_st,
-                                                                                     double t_int, bool s, unsigned int p)
+                                                                                     boost::timer::nanosecond_type t_int, bool s, unsigned int p)
       : timing_observer<number>(t, t_int, s, p),
         batcher(b), k_config(c),
         backg_size(bg_sz), tensor_size(ten_sz), twopf_size(tw_sz), threepf_size(th_sz),
@@ -478,7 +506,8 @@ namespace transport
                                          const time_config_database& t,
                                          unsigned int bg_sz, unsigned int ten_sz, unsigned int tw_sz,
                                          unsigned int bg_st, unsigned int ten_st, unsigned int tw_st,
-                                         double t_int = 1.0, bool s = false, unsigned int p = 3);
+                                         boost::timer::nanosecond_type t_int = __CPP_TRANSPORT_DEFAULT_SLOW_INTEGRATION_NOTIFY,
+                                         bool s = false, unsigned int p = 3);
 
 
         // INTERFACE
@@ -528,7 +557,7 @@ namespace transport
                                                                                const time_config_database& t,
                                                                                unsigned int bg_sz, unsigned int ten_sz, unsigned int tw_sz,
                                                                                unsigned int bg_st, unsigned int ten_st, unsigned int tw_st,
-                                                                               double t_int, bool s, unsigned int p)
+                                                                               boost::timer::nanosecond_type t_int, bool s, unsigned int p)
       : timing_observer<number>(t, t_int, s, p),
         batcher(b), work_list(c),
         backg_size(bg_sz), tensor_size(ten_sz), twopf_size(tw_sz),
@@ -597,7 +626,8 @@ namespace transport
                                                    unsigned int tw_re_k2_st, unsigned int tw_im_k2_st,
                                                    unsigned int tw_re_k3_st, unsigned int tw_im_k3_st,
                                                    unsigned int th_st,
-                                                   double t_int=1.0, bool s=false, unsigned int p=3);
+                                                   boost::timer::nanosecond_type t_int=__CPP_TRANSPORT_DEFAULT_SLOW_INTEGRATION_NOTIFY,
+                                                   bool s=false, unsigned int p=3);
 
 
         // INTERFACE
@@ -661,7 +691,7 @@ namespace transport
                                                                                    unsigned int tw_re_k2_st, unsigned int tw_im_k2_st,
                                                                                    unsigned int tw_re_k3_st, unsigned int tw_im_k3_st,
                                                                                    unsigned int th_st,
-                                                                                   double t_int, bool s, unsigned int p)
+                                                                                   boost::timer::nanosecond_type t_int, bool s, unsigned int p)
       : timing_observer<number>(t, t_int, s, p),
         batcher(b), work_list(c),
         backg_size(bg_sz), tensor_size(ten_sz), twopf_size(tw_sz), threepf_size(th_sz),
