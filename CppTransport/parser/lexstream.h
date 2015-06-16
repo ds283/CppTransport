@@ -14,6 +14,7 @@
 #include <fstream>
 #include <sstream>
 #include <cctype>
+#include <memory>
 
 #include "lexeme.h"
 #include "finder.h"
@@ -30,11 +31,11 @@ class lexstream
 
   public:
 
-    lexstream(const std::string filename, finder* s,
+    lexstream(const std::string filename, std::shared_ptr<finder>& s,
               const std::string* kt, const keywords* km, unsigned int num_k,
               const std::string* ct, const characters* cm, const bool* ctx, unsigned int num_c);
 
-    ~lexstream();
+    ~lexstream() = default;
 
 
     // INTERFACE
@@ -59,8 +60,8 @@ class lexstream
 
     std::string get_lexeme(lexfile& input, enum lexeme::lexeme_buffer_type& type);
 
-    finder     * search;      // finder
-    input_stack* stack;       // stack of included files
+    std::shared_ptr<finder>      search;      // finder
+    std::shared_ptr<input_stack> stack;       // stack of included files
 
     std::deque<lexeme::lexeme<keywords, characters> > lexeme_list; // list of lexemes obtained from the file
 
@@ -90,7 +91,7 @@ class lexstream
 // convert the contents of 'filename' to a string of lexemes, descending into
 // included files as necessary
 template <class keywords, class characters>
-lexstream<keywords, characters>::lexstream(const std::string filename, finder* s,
+lexstream<keywords, characters>::lexstream(const std::string filename, std::shared_ptr<finder>& s,
                                            const std::string* kt, const keywords* km, unsigned int num_k,
                                            const std::string*ct, const characters*cm, const bool* ctx, unsigned int num_c)
   : ptr_valid(false), ktable(kt), kmap(km), Nk(num_k), ctable(ct), cmap(cm), Nc(num_c), ccontext(ctx), search(s)
@@ -101,7 +102,7 @@ lexstream<keywords, characters>::lexstream(const std::string filename, finder* s
     assert(ctable != NULL);
     assert(cmap != NULL);
 
-    stack = new input_stack;
+    stack = std::make_shared<input_stack>();
 
     if(parse(filename) == false)
       {
@@ -109,14 +110,6 @@ lexstream<keywords, characters>::lexstream(const std::string filename, finder* s
         msg << ERROR_OPEN_TOPLEVEL << " '" << filename << "'";
         error(msg.str());
       }
-  }
-
-// destroy lexeme stream
-template <class keywords, class characters>
-lexstream<keywords, characters>::~lexstream()
-  {
-    assert(stack != nullptr);
-    delete this->stack;
   }
 
 

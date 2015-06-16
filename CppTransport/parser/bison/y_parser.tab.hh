@@ -43,7 +43,7 @@
 #line 10 "y_parser.yy" // lalr1.cc:377
 
     #include "lexeme.h"
-    #include "parse_tree.h"
+    #include "script.h"
     #include "lexical.h"
 
     #include "ginac/ginac.h"
@@ -144,9 +144,10 @@ namespace y {
     lexeme::lexeme<enum keyword_type, enum character_type>* lex;
     attributes*                                             a;
     stepper*                                                s;
+		subexpr*                                                e;
     GiNaC::ex*                                              x;
 
-#line 150 "y_parser.tab.hh" // lalr1.cc:377
+#line 151 "y_parser.tab.hh" // lalr1.cc:377
     };
 #else
     typedef YYSTYPE semantic_type;
@@ -171,79 +172,81 @@ namespace y {
         tag = 260,
         field = 261,
         potential = 262,
-        parameter = 263,
-        latex = 264,
-        core = 265,
-        implementation = 266,
-        abserr = 267,
-        relerr = 268,
-        stepper = 269,
-        stepsize = 270,
-        background = 271,
-        perturbations = 272,
-        indexorder = 273,
-        left = 274,
-        right = 275,
-        model = 276,
-        abs = 277,
-        step = 278,
-        sqrt = 279,
-        sin = 280,
-        cos = 281,
-        tan = 282,
-        asin = 283,
-        acos = 284,
-        atan = 285,
-        atan2 = 286,
-        sinh = 287,
-        cosh = 288,
-        tanh = 289,
-        asinh = 290,
-        acosh = 291,
-        atanh = 292,
-        exp = 293,
-        log = 294,
-        pow = 295,
-        Li2 = 296,
-        Li = 297,
-        G = 298,
-        S = 299,
-        H = 300,
-        zeta = 301,
-        zetaderiv = 302,
-        tgamma = 303,
-        lgamma = 304,
-        beta = 305,
-        psi = 306,
-        factorial = 307,
-        binomial = 308,
-        open_brace = 309,
-        close_brace = 310,
-        open_bracket = 311,
-        close_bracket = 312,
-        open_square = 313,
-        close_square = 314,
-        comma = 315,
-        period = 316,
-        colon = 317,
-        semicolon = 318,
-        equals = 319,
-        plus = 320,
-        binary_minus = 321,
-        unary_minus = 322,
-        star = 323,
-        backslash = 324,
-        foreslash = 325,
-        tilde = 326,
-        ampersand = 327,
-        circumflex = 328,
-        ampersat = 329,
-        ellipsis = 330,
-        rightarrow = 331,
-        identifier = 332,
-        integer = 333,
-        decimal = 334,
-        string = 335
+        subexpr = 263,
+        value = 264,
+        parameter = 265,
+        latex = 266,
+        core = 267,
+        implementation = 268,
+        abserr = 269,
+        relerr = 270,
+        stepper = 271,
+        stepsize = 272,
+        background = 273,
+        perturbations = 274,
+        indexorder = 275,
+        left = 276,
+        right = 277,
+        model = 278,
+        abs = 279,
+        step = 280,
+        sqrt = 281,
+        sin = 282,
+        cos = 283,
+        tan = 284,
+        asin = 285,
+        acos = 286,
+        atan = 287,
+        atan2 = 288,
+        sinh = 289,
+        cosh = 290,
+        tanh = 291,
+        asinh = 292,
+        acosh = 293,
+        atanh = 294,
+        exp = 295,
+        log = 296,
+        pow = 297,
+        Li2 = 298,
+        Li = 299,
+        G = 300,
+        S = 301,
+        H = 302,
+        zeta = 303,
+        zetaderiv = 304,
+        tgamma = 305,
+        lgamma = 306,
+        beta = 307,
+        psi = 308,
+        factorial = 309,
+        binomial = 310,
+        open_brace = 311,
+        close_brace = 312,
+        open_bracket = 313,
+        close_bracket = 314,
+        open_square = 315,
+        close_square = 316,
+        comma = 317,
+        period = 318,
+        colon = 319,
+        semicolon = 320,
+        equals = 321,
+        plus = 322,
+        binary_minus = 323,
+        unary_minus = 324,
+        star = 325,
+        backslash = 326,
+        foreslash = 327,
+        tilde = 328,
+        ampersand = 329,
+        circumflex = 330,
+        ampersat = 331,
+        ellipsis = 332,
+        rightarrow = 333,
+        identifier = 334,
+        integer = 335,
+        decimal = 336,
+        string = 337
       };
     };
 
@@ -348,7 +351,7 @@ namespace y {
 
 
     /// Build a parser object.
-    y_parser (y_lexer*  lexer_yyarg, y_driver* driver_yyarg);
+    y_parser (std::shared_ptr<y_lexer>  lexer_yyarg, std::shared_ptr<y_driver> driver_yyarg);
     virtual ~y_parser ();
 
     /// Parse.
@@ -429,7 +432,7 @@ namespace y {
   // YYTABLE[YYPACT[STATE-NUM]] -- What to do in state STATE-NUM.  If
   // positive, shift that token.  If negative, reduce the rule whose
   // number is the opposite.  If YYTABLE_NINF, syntax error.
-  static const unsigned char yytable_[];
+  static const unsigned short int yytable_[];
 
   static const short int yycheck_[];
 
@@ -551,24 +554,24 @@ namespace y {
     enum
     {
       yyeof_ = 0,
-      yylast_ = 341,     ///< Last index in yytable_.
-      yynnts_ = 12,  ///< Number of nonterminal symbols.
+      yylast_ = 360,     ///< Last index in yytable_.
+      yynnts_ = 14,  ///< Number of nonterminal symbols.
       yyfinal_ = 3, ///< Termination state number.
       yyterror_ = 1,
       yyerrcode_ = 256,
-      yyntokens_ = 81  ///< Number of tokens.
+      yyntokens_ = 83  ///< Number of tokens.
     };
 
 
     // User arguments.
-    y_lexer*  lexer;
-    y_driver* driver;
+    std::shared_ptr<y_lexer>  lexer;
+    std::shared_ptr<y_driver> driver;
   };
 
 
 #line 5 "y_parser.yy" // lalr1.cc:377
 } // y
-#line 572 "y_parser.tab.hh" // lalr1.cc:377
+#line 575 "y_parser.tab.hh" // lalr1.cc:377
 
 
 

@@ -24,7 +24,7 @@ int main(int argc, const char *argv[])
     boost::timer::auto_cpu_timer timer;
 
     // set up the initial search path to consist only of CWD
-    finder path;
+    std::shared_ptr<finder> path = std::make_shared<finder>();
 
     std::string current_core           = "";
     std::string current_implementation = "";
@@ -38,7 +38,7 @@ int main(int argc, const char *argv[])
       {
         if(strcmp(argv[i], "-I") == 0)
           {
-            if(i + 1 < argc) path.add(std::string(argv[++i]));
+            if(i + 1 < argc) path->add(std::string(argv[++i]));
             else
               {
                 std::ostringstream msg;
@@ -84,7 +84,7 @@ int main(int argc, const char *argv[])
           }
         else // assume to be an input file we are processing
           {
-            translation_unit unit((std::string)argv[i], &path, current_core, current_implementation, cse, verbose);
+            translation_unit unit((std::string)argv[i], path, current_core, current_implementation, cse, verbose);
 
             replacements += unit.apply();
             files_processed++;
