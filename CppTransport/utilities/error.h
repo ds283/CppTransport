@@ -10,6 +10,7 @@
 
 #include <string>
 #include <deque>
+#include <memory>
 
 #include "core.h"
 #include "filestack.h"
