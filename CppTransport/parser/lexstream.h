@@ -14,6 +14,7 @@
 #include <fstream>
 #include <sstream>
 #include <cctype>
+#include <memory>
 
 #include "lexeme.h"
 #include "finder.h"
@@ -24,46 +25,61 @@
 
 template <class keywords, class characters>
 class lexstream
-  {
-    public:
-      lexstream(const std::string filename, finder* s,
-								const std::string* kt, const keywords* km, unsigned int num_k,
-								const std::string* ct, const characters* cm, const bool* ctx, unsigned int num_c);
-      ~lexstream();
+	{
 
-      void							                    reset();
-      lexeme::lexeme<keywords, characters>* get();
-      bool							                    eat();
-      bool							                    state();
+    // CONSTRUCTOR, DESTRUCTOR
 
-      void								                  print(std::ostream& stream);
+  public:
 
-    private:
-		  bool                                  parse     (std::string file);
+    lexstream(const std::string filename, std::shared_ptr<finder>& s,
+              const std::string* kt, const keywords* km, unsigned int num_k,
+              const std::string* ct, const characters* cm, const bool* ctx, unsigned int num_c);
 
-		  void                                  lexicalize(lexfile& input);
+    ~lexstream() = default;
 
-		  std::string                           get_lexeme(lexfile& input, enum lexeme::lexeme_buffer_type& type);
 
-      finder*                                                               search;      // finder
-      input_stack*                                                          stack;       // stack of included files
+    // INTERFACE
 
-      std::deque< lexeme::lexeme<keywords, characters> >                    lexeme_list; // list of lexemes obtained from the file
+  public:
 
-      typename std::deque< lexeme::lexeme<keywords, characters> >::iterator ptr;         // pointer to current lexeme position (when reading)
-      bool                                                                  ptr_valid;   // sentry - validity of ptr?
+    void reset();
 
-		  unsigned int															                            unique;
+    lexeme::lexeme<keywords, characters>* get();
 
-      const std::string*                                                    ktable;      // table of keywords
-      const keywords*                                                       kmap;        // table of keyword token types
-      const unsigned int                                                    Nk;          // number of keywords
+    bool eat();
 
-      const std::string*                                                    ctable;      // table of 'characters'
-      const characters*                                                     cmap;        // table of character token types
-      const bool*                                                           ccontext;    // keeps track of 'unary' context; true if can precede a unary minus
-      const unsigned int                                                    Nc;          // number of characters
-  };
+    bool state();
+
+    void print(std::ostream& stream);
+
+  private:
+
+    bool parse(std::string file);
+
+    void lexicalize(lexfile& input);
+
+    std::string get_lexeme(lexfile& input, enum lexeme::lexeme_buffer_type& type);
+
+    std::shared_ptr<finder>      search;      // finder
+    std::shared_ptr<input_stack> stack;       // stack of included files
+
+    std::deque<lexeme::lexeme<keywords, characters> > lexeme_list; // list of lexemes obtained from the file
+
+    typename std::deque<lexeme::lexeme<keywords, characters> >::iterator ptr;         // pointer to current lexeme position (when reading)
+    bool                                                                 ptr_valid;   // sentry - validity of ptr?
+
+    unsigned int unique;
+
+    const std::string* ktable;      // table of keywords
+    const keywords   * kmap;        // table of keyword token types
+    const unsigned int Nk;          // number of keywords
+
+    const std::string* ctable;      // table of 'characters'
+    const characters * cmap;        // table of character token types
+    const bool       * ccontext;    // keeps track of 'unary' context; true if can precede a unary minus
+    const unsigned int Nc;          // number of characters
+
+	};
 
 
 // IMPLEMENTATION
@@ -75,7 +91,7 @@ class lexstream
 // convert the contents of 'filename' to a string of lexemes, descending into
 // included files as necessary
 template <class keywords, class characters>
-lexstream<keywords, characters>::lexstream(const std::string filename, finder* s,
+lexstream<keywords, characters>::lexstream(const std::string filename, std::shared_ptr<finder>& s,
                                            const std::string* kt, const keywords* km, unsigned int num_k,
                                            const std::string*ct, const characters*cm, const bool* ctx, unsigned int num_c)
   : ptr_valid(false), ktable(kt), kmap(km), Nk(num_k), ctable(ct), cmap(cm), Nc(num_c), ccontext(ctx), search(s)
@@ -86,7 +102,7 @@ lexstream<keywords, characters>::lexstream(const std::string filename, finder* s
     assert(ctable != NULL);
     assert(cmap != NULL);
 
-    stack = new input_stack;
+    stack = std::make_shared<input_stack>();
 
     if(parse(filename) == false)
       {
@@ -94,14 +110,6 @@ lexstream<keywords, characters>::lexstream(const std::string filename, finder* s
         msg << ERROR_OPEN_TOPLEVEL << " '" << filename << "'";
         error(msg.str());
       }
-  }
-
-// destroy lexeme stream
-template <class keywords, class characters>
-lexstream<keywords, characters>::~lexstream(void)
-  {
-    assert(stack != nullptr);
-    delete this->stack;
   }
 
 

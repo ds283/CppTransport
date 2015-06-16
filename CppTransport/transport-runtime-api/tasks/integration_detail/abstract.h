@@ -10,6 +10,7 @@
 
 #include "transport-runtime-api/tasks/integration_detail/common.h"
 #include "transport-runtime-api/tasks/configuration-database/time_config_database.h"
+#include "transport-runtime-api/models/advisory_classes.h"
 
 #include "transport-runtime-api/utilities/random_string.h"
 
@@ -218,7 +219,15 @@ namespace transport
 	      times(range_helper::deserialize<double>(reader[__CPP_TRANSPORT_NODE_TIME_RANGE])),
         cached_end_of_inflation(true)
 	    {
-		    end_of_inflation = reader[__CPP_TRANSPORT_NODE_END_OF_INFLATION].asDouble();
+		    if(reader.isMember(__CPP_TRANSPORT_NODE_END_OF_INFLATION))
+			    {
+		        end_of_inflation = reader[__CPP_TRANSPORT_NODE_END_OF_INFLATION].asDouble();
+						cached_end_of_inflation = true;
+			    }
+		    else
+			    {
+				    cached_end_of_inflation = false;
+			    }
 	    }
 
 
@@ -255,8 +264,15 @@ namespace transport
 			    }
 		    else
 			    {
-				    // can't use get_N_end_of_inflation() because it is not const
-				    writer[__CPP_TRANSPORT_NODE_END_OF_INFLATION] = this->ics.get_model()->compute_end_of_inflation(this);
+				    try
+					    {
+				        // can't use get_N_end_of_inflation() because it is not const
+				        writer[__CPP_TRANSPORT_NODE_END_OF_INFLATION] = this->ics.get_model()->compute_end_of_inflation(this);
+					    }
+						catch (end_of_inflation_not_found& xe)
+							{
+								// need do nothing
+							}
 			    }
 
         Json::Value time_data(Json::objectValue);

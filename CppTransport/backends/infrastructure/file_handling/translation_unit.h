@@ -9,6 +9,7 @@
 #define __input_H_
 
 #include "lexstream.h"
+#include "y_common.h"
 #include "y_lexer.h"
 #include "y_driver.h"
 #include "y_parser.tab.hh"
@@ -26,10 +27,10 @@ class translation_unit
 
   public:
 
-    translation_unit(std::string file, finder* p,
+    translation_unit(std::string file, std::shared_ptr<finder>& p,
                      std::string core_out="", std::string implementation_out="", bool cse=true, bool v=false);
 
-    ~translation_unit();
+    ~translation_unit() = default;
 
 
 		// INTERFACE
@@ -92,9 +93,9 @@ class translation_unit
     const struct stepper&                              get_background_stepper() const;
     const struct stepper&                              get_perturbations_stepper() const;
 
-    finder*                                            get_finder();
-    output_stack*                                      get_stack();
-    translator*                                        get_translator();
+    std::shared_ptr<finder>                            get_finder() const { return(this->path); }
+    std::shared_ptr<output_stack>                      get_stack() const { return(this->stack); }
+    std::shared_ptr<translator>                        get_translator() const { return(this->outstream); }
 
 		symbol_factory&                                    get_symbol_factory();
 
@@ -105,10 +106,10 @@ class translation_unit
 
   private:
 
-    lexstream<enum keyword_type, enum character_type>* stream;
-    y::y_lexer*                                        lexer;
-    y::y_driver*                                       driver;
-    y::y_parser*                                       parser;
+    std::shared_ptr<y::lexstream_type> stream;
+    std::shared_ptr<y::y_lexer>     lexer;
+    std::shared_ptr<y::y_driver>    driver;
+    std::shared_ptr<y::y_parser>    parser;
 
 		// GiNaC symbol factory
 		symbol_factory                                     sym_factory;
@@ -116,10 +117,11 @@ class translation_unit
     std::string                                        name;                    // name of input script
     bool                                               do_cse;
 		bool                                               verbose;
+		bool                                               parse_failed;
 
-    finder*                                            path;
-    output_stack*                                      stack;
-    translator*                                        outstream;
+    std::shared_ptr<finder>                            path;
+    std::shared_ptr<output_stack>                      stack;
+    std::shared_ptr<translator>                        outstream;
 
     // cached details about the translation unit
     std::string                                        core_output;             // name of core .h file

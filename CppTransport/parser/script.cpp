@@ -8,72 +8,113 @@
 #include <sstream>
 #include <assert.h>
 
-#include "parse_tree.h"
+#include "script.h"
 
 #define DEFAULT_MODEL_NAME "inflationary_model"
 #define DERIV_PREFIX       "__d"
 
+
 // ******************************************************************
 
 
-declaration::declaration(const quantity& o, const filestack* p)
-  : path(p)
-  {
-    assert(path != nullptr);
-    this->obj = new quantity(o);
-  }
-
-
-quantity* declaration::get_quantity() const
-  {
-    return(this->obj);
-  }
-
-
-field_declaration::field_declaration(const quantity& o, const filestack* p)
-  : declaration(o, p)
+declaration::declaration(const std::string& n, GiNaC::symbol& s, std::shared_ptr<filestack> p)
+  : name(n), symbol(s), path(p)
   {
   }
 
 
-field_declaration::~field_declaration()
-  {
-    delete this->obj;
+// ******************************************************************
 
-    return;
+
+field_declaration::field_declaration(const std::string& n, GiNaC::symbol& s, std::shared_ptr<filestack> p, attributes* a)
+  : declaration(n, s, p)
+  {
+		attrs = std::make_shared<attributes>(*a);
   }
+
+
+std::string field_declaration::get_latex_name() const
+	{
+    std::string latex_name = this->attrs->get_latex();
+
+    if(latex_name.length() == 0) latex_name = this->name;
+
+    return(latex_name);
+	}
 
 
 void field_declaration::print(std::ostream& stream) const
   {
-    stream << "Field declaration for symbol '" << this->obj->get_name()
-           << "', GiNaC symbol '" << this->obj->get_ginac_symbol() << "'" << std::endl;
+    stream << "Field declaration for symbol '" << this->get_name()
+           << "', GiNaC symbol '" << this->get_ginac_symbol() << "'" << std::endl;
 
     stream << "  defined at line " << this->path->write();
   }
 
 
-parameter_declaration::parameter_declaration(const quantity& o, const filestack* p)
-  : declaration(o, p)
+// ******************************************************************
+
+
+parameter_declaration::parameter_declaration(const std::string& n, GiNaC::symbol& s, std::shared_ptr<filestack> p, attributes* a)
+  : declaration(n, s, p)
   {
+		attrs = std::make_shared<attributes>(*a);
   }
 
 
-parameter_declaration::~parameter_declaration()
-  {
-    delete this->obj;
+std::string parameter_declaration::get_latex_name() const
+	{
+    std::string latex_name = this->attrs->get_latex();
 
-    return;
-  }
+    if(latex_name.length() == 0) latex_name = this->name;
+
+    return(latex_name);
+	}
 
 
 void parameter_declaration::print(std::ostream& stream) const
   {
-    stream << "Parameter declaration for symbol '" << this->obj->get_name()
-      << "', GiNaC symbol '" << this->obj->get_ginac_symbol() << "'" << std::endl;
+    stream << "Parameter declaration for symbol '" << this->get_name()
+      << "', GiNaC symbol '" << this->get_ginac_symbol() << "'" << std::endl;
 
     stream << "  defined at line " << this->path->write();
   }
+
+
+// ******************************************************************
+
+
+subexpr_declaration::subexpr_declaration(const std::string& n, GiNaC::symbol& s, std::shared_ptr<filestack> p, subexpr* e)
+	: declaration(n, s, p)
+	{
+		sexpr = std::make_shared<subexpr>(*e);
+	}
+
+
+std::string subexpr_declaration::get_latex_name() const
+	{
+    std::string latex_name = this->sexpr->get_latex();
+
+    if(latex_name.length() == 0) latex_name = this->name;
+
+    return(latex_name);
+	}
+
+
+GiNaC::ex subexpr_declaration::get_value() const
+	{
+		return this->sexpr->get_value();
+	}
+
+
+void subexpr_declaration::print(std::ostream& stream) const
+	{
+    stream << "Subexpression declaration for symbol '" << this->get_name()
+	    << "', GiNaC symbol '" << this->get_ginac_symbol() << "'" << std::endl;
+
+    stream << "  defined at line " << this->path->write();
+	}
+
 
 
 // ******************************************************************
@@ -85,42 +126,43 @@ script::script(symbol_factory& s)
     order(indexorder_right),
 		sym_factory(s)
   {
-    this->table = new symbol_table<quantity>(SYMBOL_TABLE_SIZE);
-
-    // insert M_Planck symbol into the symbol table
-    attributes attrs;
-    attrs.set_latex(MPLANCK_LATEX_SYMBOL);
-
+		// set up reserved symbols
     M_Planck = sym_factory.get_symbol(MPLANCK_SYMBOL, MPLANCK_LATEX_SYMBOL);
-    quantity Mp(MPLANCK_TEXT_NAME, attrs, nullptr, M_Planck);
 
-    this->table->insert(&Mp);
+		attributes Mp_attrs;
+		Mp_attrs.set_latex(MPLANCK_LATEX_SYMBOL);
+		reserved.emplace(std::make_pair(MPLANCK_SYMBOL, std::make_shared<parameter_declaration>(parameter_declaration(MPLANCK_SYMBOL, M_Planck, std::shared_ptr<filestack>(), &Mp_attrs))));
 
     // set up default values for the steppers
     this->background_stepper.abserr    = DEFAULT_ABS_ERR;
     this->background_stepper.relerr    = DEFAULT_REL_ERR;
     this->background_stepper.name      = DEFAULT_STEPPER;
+
     this->perturbations_stepper.abserr = DEFAULT_ABS_ERR;
     this->perturbations_stepper.relerr = DEFAULT_REL_ERR;
     this->perturbations_stepper.name   = DEFAULT_STEPPER;
   }
 
-script::~script()
-  {
-    // the only record of the various declarations which have been
-    // set up is via our list, so we must delete them:
-    for(int i = 0; i < this->fields.size(); ++i)
-      {
-        delete this->fields[i];
-      }
-    for(int i = 0; i < this->parameters.size(); ++i)
-      {
-        delete this->parameters[i];
-      }
 
-    // delete symbol table
-    delete this->table;
-  }
+std::shared_ptr<declaration> script::check_symbol_exists(const std::string& nm) const
+	{
+		// check user-defined symbols
+
+    field_symbol_table::const_iterator f_it = this->fields.find(nm);
+		if(f_it != this->fields.end()) return f_it->second;
+
+    parameter_symbol_table::const_iterator p_it = this->parameters.find(nm);
+		if(p_it != this->parameters.end()) return p_it->second;
+
+		p_it = this->reserved.find(nm);
+		if(p_it != this->reserved.end()) return p_it->second;
+
+    subexpr_symbol_table::const_iterator s_it = this->subexprs.find(nm);
+		if(s_it != this->subexprs.end()) return s_it->second;
+
+		// didn't find anything
+		return std::shared_ptr<declaration>();
+	}
 
 
 void script::set_name(const std::string n)
@@ -221,26 +263,26 @@ void script::print(std::ostream& stream) const
 
     stream << "Fields:" << std::endl;
     stream << "=======" << std::endl;
-    for(std::deque<field_declaration*>::const_iterator ptr = this->fields.begin();
-        ptr != this->fields.end(); ++ptr)
+    for(field_symbol_table::const_iterator ptr = this->fields.begin(); ptr != this->fields.end(); ++ptr)
       {
-        (*ptr)->print(stream);
+        ptr->second->print(stream);
       }
     stream << std::endl;
 
     stream << "Parameters:" << std::endl;
     stream << "===========" << std::endl;
-    for(std::deque<parameter_declaration*>::const_iterator ptr = this->parameters.begin();
-        ptr != this->parameters.end(); ++ptr)
+    for(parameter_symbol_table::const_iterator ptr = this->parameters.begin(); ptr != this->parameters.end(); ++ptr)
       {
-        (*ptr)->print(stream);
+        ptr->second->print(stream);
       }
     stream << std::endl;
 
-    stream << "Symbol table:" << std::endl;
-    stream << "=============" << std::endl;
-    this->table->print(stream);
-    stream << std::endl;
+		stream << "Subexpressions:" << std::endl;
+		stream << "===============" << std::endl;
+		for(subexpr_symbol_table::const_iterator ptr = this->subexprs.begin(); ptr != this->subexprs.end(); ++ptr)
+			{
+		    ptr->second->print(stream);
+			}
 
     if(this->potential_set)
       {
@@ -254,60 +296,71 @@ void script::print(std::ostream& stream) const
   }
 
 
-bool script::add_field(field_declaration* d)
+bool script::add_field(field_declaration d)
   {
     // search for an existing entry in the symbol table
-    quantity* p;
-    bool      exists = this->table->find(d->get_quantity()->get_name(), p);
+    std::shared_ptr<declaration> record = this->check_symbol_exists(d.get_name());
 
-    if(exists)
+    if(record)
       {
         std::ostringstream msg;
-
-        msg << ERROR_SYMBOL_EXISTS << " '" << d->get_quantity()->get_name() << "'";
+        msg << ERROR_SYMBOL_EXISTS << " '" << d.get_name() << "'";
         error(msg.str());
       }
     else
       {
-        // insert symbol in symbol table
-        this->table->insert(d->get_quantity());
-
         // add declaration to list
-        this->fields.push_back(d);
+        this->fields.emplace(std::make_pair(d.get_name(), std::make_shared<field_declaration>(d)));
 
         // also need to generate a symbol for the momentum corresponding to this field
-        GiNaC::symbol deriv_symbol(DERIV_PREFIX + d->get_quantity()->get_ginac_symbol().get_name());
+        GiNaC::symbol deriv_symbol(DERIV_PREFIX + d.get_ginac_symbol().get_name());
         this->deriv_symbols.push_back(deriv_symbol);
       }
 
-    return(!exists);  // caller must delete d explicitly if returns false
+    return(!record);
   }
 
 
-bool script::add_parameter(parameter_declaration* d)
+bool script::add_parameter(parameter_declaration d)
   {
     // search for an existing entry in the symbol table
-    quantity* p;
-    bool      exists = this->table->find(d->get_quantity()->get_name(), p);
+    std::shared_ptr<declaration> record = this->check_symbol_exists(d.get_name());
 
-    if(exists)
+    if(record)
       {
         std::ostringstream msg;
-
-        msg << ERROR_SYMBOL_EXISTS << " '" << d->get_quantity()->get_name() << "'";
+        msg << ERROR_SYMBOL_EXISTS << " '" << d.get_name() << "'";
         error(msg.str());
       }
     else
       {
-        // insert symbol in symbol table
-        this->table->insert(d->get_quantity());
-
         // add declaration to list
-        this->parameters.push_back(d);
+        this->parameters.emplace(std::make_pair(d.get_name(), std::make_shared<parameter_declaration>(d)));
       }
 
-    return(!exists);  // caller must delete d explicitly if returns false
+    return(!record);
   }
+
+
+bool script::add_subexpr(subexpr_declaration d)
+	{
+		// search for an existing entry in the symbol table
+    std::shared_ptr<declaration> record = this->check_symbol_exists(d.get_name());
+
+		if(record)
+			{
+		    std::ostringstream msg;
+				msg << ERROR_SYMBOL_EXISTS << " '" << d.get_name() << "'";
+				error(msg.str());
+			}
+		else
+			{
+				// add declaration to list
+				this->subexprs.emplace(std::make_pair(d.get_name(), std::make_shared<subexpr_declaration>(d)));
+			}
+
+		return(!record);
+	}
 
 
 void script::set_background_stepper(stepper*s)
@@ -334,12 +387,6 @@ const struct stepper& script::get_perturbations_stepper() const
   }
 
 
-bool script::lookup_symbol(std::string id, quantity*& s) const
-  {
-    return(this->table->find(id, s));
-  }
-
-
 unsigned int script::get_number_fields() const
   {
     return(static_cast<unsigned int>(this->fields.size()));
@@ -356,9 +403,9 @@ std::vector<std::string> script::get_field_list() const
   {
     std::vector<std::string> rval;
 
-    for(int i = 0; i < this->fields.size(); ++i)
+		for(field_symbol_table::const_iterator t = this->fields.begin(); t != this->fields.end(); ++t)
       {
-        rval.push_back(this->fields[i]->get_quantity()->get_name());
+        rval.push_back(t->second->get_name());
       }
 
     return(rval);
@@ -369,9 +416,9 @@ std::vector<std::string> script::get_latex_list() const
   {
     std::vector<std::string> rval;
 
-    for(int i = 0; i < this->fields.size(); ++i)
+		for(field_symbol_table::const_iterator t = this->fields.begin(); t != this->fields.end(); ++t)
       {
-        rval.push_back(this->fields[i]->get_quantity()->get_latex_name());
+        rval.push_back(t->second->get_latex_name());
       }
 
     return(rval);
@@ -382,9 +429,9 @@ std::vector<std::string> script::get_param_list() const
   {
     std::vector<std::string> rval;
 
-    for(int i = 0; i < this->parameters.size(); ++i)
+		for(parameter_symbol_table::const_iterator t = this->parameters.begin(); t != this->parameters.end(); ++t)
       {
-        rval.push_back(this->parameters[i]->get_quantity()->get_name());
+        rval.push_back(t->second->get_name());
       }
 
     return(rval);
@@ -395,9 +442,9 @@ std::vector<std::string> script::get_platx_list() const
   {
     std::vector<std::string> rval;
 
-    for(int i = 0; i < this->parameters.size(); ++i)
+		for(parameter_symbol_table::const_iterator t = this->parameters.begin(); t != this->parameters.end(); ++t)
       {
-        rval.push_back(this->parameters[i]->get_quantity()->get_latex_name());
+        rval.push_back(t->second->get_latex_name());
       }
 
     return(rval);
@@ -408,9 +455,9 @@ std::vector<GiNaC::symbol> script::get_field_symbols() const
   {
     std::vector<GiNaC::symbol> rval;
 
-    for(int i = 0; i < this->fields.size(); ++i)
+    for(field_symbol_table::const_iterator t = this->fields.begin(); t != this->fields.end(); ++t)
       {
-        rval.push_back(this->fields[i]->get_quantity()->get_ginac_symbol());
+        rval.push_back(t->second->get_ginac_symbol());
       }
 
     return(rval);
@@ -427,9 +474,9 @@ std::vector<GiNaC::symbol> script::get_param_symbols() const
   {
     std::vector<GiNaC::symbol> rval;
 
-    for(int i = 0; i < this->parameters.size(); ++i)
+    for(parameter_symbol_table::const_iterator t = this->parameters.begin(); t != this->parameters.end(); ++t)
       {
-        rval.push_back(this->parameters[i]->get_quantity()->get_ginac_symbol());
+        rval.push_back(t->second->get_ginac_symbol());
       }
 
     return(rval);
@@ -447,7 +494,7 @@ void script::set_potential(GiNaC::ex V)
     this->potential     = V;
     this->potential_set = true;
 
-//    std::cerr << "Set potential to be V = " << *this->potential << std::endl;
+//    std::cerr << "Set potential to be V = " << this->potential << std::endl;
   }
 
 

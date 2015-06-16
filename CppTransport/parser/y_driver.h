@@ -16,10 +16,12 @@
 
 #include "lexeme.h"
 #include "lexical.h"
-#include "quantity.h"
-#include "parse_tree.h"
+#include "semantic_data.h"
+#include "script.h"
 
 #include "symbol_factory.h"
+
+#include "y_common.h"
 
 
 namespace y
@@ -45,21 +47,23 @@ namespace y
 
         const script* get_script();
 
-        void add_field(lexeme::lexeme<keyword_type, character_type>* lex, attributes* a);
+        void add_field(lexeme_type* lex, attributes* a);
 
-        void add_parameter(lexeme::lexeme<keyword_type, character_type>* lex, attributes* a);
+        void add_parameter(lexeme_type* lex, attributes* a);
 
-        void set_name(lexeme::lexeme<keyword_type, character_type>* lex);
+		    void add_subexpr(lexeme_type* lex, subexpr* e);
 
-        void set_author(lexeme::lexeme<keyword_type, character_type>* lex);
+        void set_name(lexeme_type* lex);
 
-        void set_tag(lexeme::lexeme<keyword_type, character_type>* lex);
+        void set_author(lexeme_type* lex);
 
-        void set_core(lexeme::lexeme<keyword_type, character_type>* lex);
+        void set_tag(lexeme_type* lex);
 
-        void set_implementation(lexeme::lexeme<keyword_type, character_type>* lex);
+        void set_core(lexeme_type* lex);
 
-        void set_model(lexeme::lexeme<keyword_type, character_type>* lex);
+        void set_implementation(lexeme_type* lex);
+
+        void set_model(lexeme_type* lex);
 
         void set_potential(GiNaC::ex* V);
 
@@ -67,25 +71,29 @@ namespace y
 
         void set_indexorder_right();
 
-        void add_latex_attribute(attributes* a, lexeme::lexeme<keyword_type, character_type>* lex);
+        void add_latex_attribute(attributes* a, lexeme_type* lex);
+		    
+		    void add_latex_attribute(subexpr* e, lexeme_type* lex);
 
-        void set_abserr(struct stepper* s, lexeme::lexeme<keyword_type, character_type>* lex);
+		    void add_value_attribute(subexpr* e, GiNaC::ex* v);
 
-        void set_relerr(struct stepper* s, lexeme::lexeme<keyword_type, character_type>* lex);
+        void set_abserr(struct stepper* s, lexeme_type* lex);
 
-        void set_stepper(struct stepper* s, lexeme::lexeme<keyword_type, character_type>* lex);
+        void set_relerr(struct stepper* s, lexeme_type* lex);
 
-        void set_stepsize(struct stepper* s, lexeme::lexeme<keyword_type, character_type>* lex);
+        void set_stepper(struct stepper* s, lexeme_type* lex);
+
+        void set_stepsize(struct stepper* s, lexeme_type* lex);
 
         void set_background_stepper(struct stepper* s);
 
         void set_perturbations_stepper(struct stepper* s);
 
-        GiNaC::ex* get_integer(lexeme::lexeme<keyword_type, character_type>* lex);
+        GiNaC::ex* get_integer(lexeme_type* lex);
 
-        GiNaC::ex* get_decimal(lexeme::lexeme<keyword_type, character_type>* lex);
+        GiNaC::ex* get_decimal(lexeme_type* lex);
 
-        GiNaC::ex* get_identifier(lexeme::lexeme<keyword_type, character_type>* lex);
+        GiNaC::ex* get_identifier(lexeme_type* lex);
 
         GiNaC::ex* add(GiNaC::ex* l, GiNaC::ex* r);
 

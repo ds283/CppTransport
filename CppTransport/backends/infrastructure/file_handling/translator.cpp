@@ -59,7 +59,7 @@ unsigned int translator::translate(const std::string& in, buffer& buf, enum proc
     unsigned int rval = 0;
     std::string  template_in;
 
-    finder* path = this->unit->get_finder();
+    std::shared_ptr<finder> path = this->unit->get_finder();
 
 		// try to find a template corresponding to the input filename
     if(path->fqpn(in + ".h", template_in))    // leaves fully qualified pathname in template_in if it exists
@@ -117,7 +117,7 @@ unsigned int translator::process(const std::string in, buffer& buf, enum process
             macro_agent agent(this->unit, package, BACKEND_MACRO_PREFIX, BACKEND_LINE_SPLIT);
 
             // push this input file to the top of the filestack
-            output_stack* os  = this->unit->get_stack();
+            std::shared_ptr<output_stack> os  = this->unit->get_stack();
             os->push(in, buf, agent, type);  // current line number is automatically set to 1
 
             while(!inf.eof() && !inf.fail())

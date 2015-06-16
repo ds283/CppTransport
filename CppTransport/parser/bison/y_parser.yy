@@ -4,10 +4,12 @@
 %defines
 %define api.namespace{y}
 %define parser_class_name{y_parser}
+%define parse.trace
+%define parse.error verbose
 
 %code requires {
     #include "lexeme.h"
-    #include "parse_tree.h"
+    #include "script.h"
     #include "lexical.h"
 
     #include "ginac/ginac.h"
@@ -18,11 +20,11 @@
     }
 }
 
-%lex-param   { y_lexer*  lexer }
-%parse-param { y_lexer*  lexer }
+%lex-param   { std::shared_ptr<y_lexer>  lexer }
+%parse-param { std::shared_ptr<y_lexer>  lexer }
 
-%lex-param   { y_driver* driver }
-%parse-param { y_driver* driver }
+%lex-param   { std::shared_ptr<y_driver> driver }
+%parse-param { std::shared_ptr<y_driver> driver }
 
 %code {
     #include <iostream>
@@ -37,8 +39,8 @@
 
     static int yylex(y::y_parser::semantic_type* yylval,
                      y::y_parser::location_type* yyloc,
-                     y::y_lexer* lexer,
-                     y::y_driver* driver)
+                     std::shared_ptr<y::y_lexer> lexer,
+                     std::shared_ptr<y::y_driver> driver)
       {
         return(lexer->yylex(yylval));
       }
@@ -48,6 +50,7 @@
     lexeme::lexeme<enum keyword_type, enum character_type>* lex;
     attributes*                                             a;
     stepper*                                                s;
+		subexpr*                                                e;
     GiNaC::ex*                                              x;
 }
 
@@ -56,6 +59,8 @@
 %token          tag
 %token          field
 %token          potential
+%token          subexpr
+%token          value
 %token          parameter
 %token          latex
 %token          core
@@ -134,6 +139,8 @@
 %type  <a>      attributes
 %type  <s>      stepper_block
 %type  <s>      stepper_attributes
+%type  <e>      subexpr_block
+%type  <e>      subexpr_def
 %type  <x>      expression
 %type  <x>      term
 %type  <x>      factor
@@ -145,7 +152,7 @@
 program: script
         ;
 
-script: script potential expression semicolon                                           { driver->set_potential($3); }
+script: script potential equals expression semicolon                                    { driver->set_potential($4); }
         | script name string semicolon                                                  { driver->set_name($3); }
         | script author string semicolon                                                { driver->set_author($3); }
         | script tag string semicolon                                                   { driver->set_tag($3); }
@@ -158,6 +165,7 @@ script: script potential expression semicolon                                   
         | script parameter attribute_block identifier semicolon                         { driver->add_parameter($4, $3); }
         | script background stepper_block semicolon                                     { driver->set_background_stepper($3); }
         | script perturbations stepper_block semicolon                                  { driver->set_perturbations_stepper($3); }
+				| script subexpr subexpr_block identifier semicolon                             { driver->add_subexpr($4, $3); }
         |
         ;
 
@@ -176,6 +184,15 @@ stepper_attributes: stepper_attributes abserr equals decimal semicolon          
         | stepper_attributes stepper equals string semicolon                            { driver->set_stepper($1, $4); $$ = $1; }
         | stepper_attributes stepsize equals decimal semicolon                          { driver->set_stepsize($1, $4); $$ = $1; }
         |                                                                               { $$ = new stepper; }
+        ;
+
+subexpr_block: open_brace subexpr_def close_brace                                       { $$ = $2; }
+        |                                                                               { $$ = new subexpr; }
+				;
+
+subexpr_def: subexpr_def latex string semicolon                                         { driver->add_latex_attribute($1, $3); $$ = $1; }
+        | subexpr_def value equals expression semicolon                                 { driver->add_value_attribute($1, $4); $$ = $1; }
+        |                                                                               { $$ = new subexpr; }
         ;
 
 expression: term                                                                        { $$ = $1; }
@@ -241,5 +258,18 @@ built_in_function: abs open_bracket expression close_bracket                    
 void y::y_parser::error(const y::y_parser::location_type &l,
                         const std::string& err_message)
   {
-    this->driver->error(err_message);
+    std::ostringstream msg;
+    lexeme::lexeme<enum keyword_type, enum character_type>* current_lexeme = this->lexer->get_current_lexeme();
+
+		if(current_lexeme != nullptr)
+			{
+		    std::shared_ptr<filestack> path = current_lexeme->get_path();
+				msg << ERROR_MESSAGE_AT_LINE << " " << path->write() << std::endl << ERROR_MESSAGE_WRAP_PAD << err_message;
+			}
+		else
+			{
+		    msg << err_message;
+			}
+
+    this->driver->error(msg.str());
   }
