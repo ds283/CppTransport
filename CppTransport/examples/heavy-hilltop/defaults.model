@@ -1,0 +1,21 @@
+author         "Chris Byrnes, Donough Regan, David Seery and Ewan Tarrant";
+tag            "please cite arXiv:XXXX.YYYY";
+
+% specify which class template should be used with this model
+core           "canonical_core";
+implementation "canonical_basic_unrolled";
+
+% fix properties of the steppers
+background
+ { abserr   = 1E-12;
+   relerr   = 1E-12;
+   stepsize = 1E-10;
+   stepper  = "runge_kutta_dopri5";
+ };
+
+perturbations
+ { abserr   = 1E-12;
+   relerr   = 1E-12;
+   stepsize = 1E-15;
+   stepper  = "runge_kutta_dopri5";
+ };
