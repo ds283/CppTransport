@@ -36,19 +36,23 @@ namespace transport
 				template <typename Container> unsigned int elementsof_container(const Container& c);
 
 				// forward declare constituent classes
-				template <typename DataContainer, typename DataTag, typename SerialTag, unsigned int HashSize>
+				template <typename DataContainer, typename DataTag, typename QueryObject, unsigned int HashSize>
 				class table;
 
-				template <typename DataContainer, typename DataTag, typename SerialTag, unsigned int HashSize>
+				template <typename DataContainer, typename DataTag, typename QueryObject, unsigned int HashSize>
 				class serial_group;
 
 		    //! 'cache' implements an in-memory cache for the database backends.
 		    //! The cache tries to manage itself to fit within a certain capacity
 		    //! (although the calculations used to achieve this are approximate)
 
-		    template <typename DataContainer, typename DataTag, typename SerialTag, unsigned int HashSize>
+		    template <typename DataContainer, typename DataTag, typename QueryObject, unsigned int HashSize>
 		    class cache
 			    {
+
+		      public:
+
+			      typedef std::list< table<DataContainer, DataTag, QueryObject, HashSize> > data_table_list;
 
 		        // CONSTRUCTOR, DESTRUCTOR
 
@@ -66,16 +70,23 @@ namespace transport
 
 				    //! Copy a cache object. After copying all of our contents we have to reset the
 				    //! point to ourselves which they contain
-				    cache(const cache<DataContainer, DataTag, SerialTag, HashSize>& obj)
-					    : capacity(obj.capacity), data_size(obj.data_size), hit_counter(obj.hit_counter), tables(obj.tables)
+				    cache(const cache<DataContainer, DataTag, QueryObject, HashSize>& obj)
+					    : capacity(obj.capacity),
+					      data_size(obj.data_size),
+					      hit_counter(obj.hit_counter),
+					      tables(obj.tables)
+
 #ifdef __CPP_TRANSPORT_LINECACHE_DEBUG
 					    , copied(obj.copied+1)
 #endif
+
 						    {
+
 #ifdef __CPP_TRANSPORT_LINECACHE_DEBUG
 				        std::cerr << "WARNING -- COPYING CACHE OBJECT, COUNT = " << copied << std::endl;
 #endif
-						    for(typename std::list< table<DataContainer, DataTag, SerialTag, HashSize> >::iterator t = this->tables.begin(); t != this->tables.end(); t++)
+
+						    for(typename data_table_list::iterator t = this->tables.begin(); t != this->tables.end(); ++t)
 							    {
 						        (*t).reset_parent_cache(this);
 							    }
@@ -122,7 +133,7 @@ namespace transport
 		        //! Get a cache table handle for a named file. A new table is not necessarily created;
 		        //! if an existing cache table exists for this file (from some earlier sequence
 		        //! of read operations) then it is re-used.
-		        table<DataContainer, DataTag, SerialTag, HashSize>& get_table_handle(const std::string& fnam);
+		        table<DataContainer, DataTag, QueryObject, HashSize>& get_table_handle(const std::string& fnam);
 
 
 		        // INTERNAL DATA
@@ -148,7 +159,7 @@ namespace transport
 		        //! List of tables belonging to this cache.
 				    //! We use a list because iterators pointing to list elements
 				    //! are not invalidated by insertion or removal operations.
-		        std::list< table<DataContainer, DataTag, SerialTag, HashSize> > tables;
+		        data_table_list tables;
 
 #ifdef __CPP_TRANSPORT_LINECACHE_DEBUG
 		        //! Copy counter
@@ -162,19 +173,23 @@ namespace transport
 		    //! A 'cache' instance will keep data in memory even after the
 		    //! database has closed on the assumption that it will not be modified.
 		    //! This helps minimize the amount of reloading which has to occur.
-		    template <typename DataContainer, typename DataTag, typename SerialTag, unsigned int HashSize>
+		    template <typename DataContainer, typename DataTag, typename QueryObject, unsigned int HashSize>
 		    class table
 			    {
+
+		      public:
+
+			      typedef std::list< serial_group<DataContainer, DataTag, QueryObject, HashSize> > serial_group_list;
 
 		        // CONSTRUCTOR, DESTRUCTOR
 
 		      public:
 
 		        //! Create a table object
-		        table(const std::string& fnam, cache<DataContainer, DataTag, SerialTag, HashSize>* p);
+		        table(const std::string& fnam, cache<DataContainer, DataTag, QueryObject, HashSize>* p);
 
 				    //! Override default copy constructor
-				    table(const table<DataContainer, DataTag, SerialTag, HashSize>& obj)
+				    table(const table<DataContainer, DataTag, QueryObject, HashSize>& obj)
 				      : filename(obj.filename), parent_cache(obj.parent_cache), groups(obj.groups)
 #ifdef __CPP_TRANSPORT_LINECACHE_DEBUG
 					    , copied(obj.copied+1)
@@ -191,17 +206,17 @@ namespace transport
 		        // ADMIN
 
 		        //! Gather all data_items belonging to this table
-		        void gather_data_items(typename std::list< typename std::list< typename serial_group<DataContainer, DataTag, SerialTag, HashSize>::data_item >::iterator >& item_list);
+		        void gather_data_items(std::list< typename serial_group<DataContainer, DataTag, QueryObject, HashSize>::cache_line::iterator >& item_list);
 
 				    //! Check for equality with a given filename
 				    bool operator==(const std::string& fnam) const { return(this->filename == fnam); }
 
 				    //! Reset parent cache
-				    void reset_parent_cache(linecache::cache<DataContainer, DataTag, SerialTag, HashSize>* p)
+				    void reset_parent_cache(linecache::cache<DataContainer, DataTag, QueryObject, HashSize>* p)
 					    {
 						    assert(p != nullptr);
 						    this->parent_cache = p;
-						    for(typename std::list< serial_group<DataContainer, DataTag, SerialTag, HashSize> >::iterator t = this->groups.begin(); t != this->groups.end(); t++)
+						    for(typename serial_group_list::iterator t = this->groups.begin(); t != this->groups.end(); ++t)
 							    {
 						        (*t).reset_parent_cache(p);
 							    }
@@ -215,7 +230,7 @@ namespace transport
 		        //! Get a serial group handle. A new handle is not necessarily created;
 		        //! if an existing handle exists for the same group of serial numbers
 		        //! then it is re-used
-		        serial_group<DataContainer, DataTag, SerialTag, HashSize>& get_serial_handle(const std::vector<unsigned int>& serials, const SerialTag& tag);
+		        serial_group<DataContainer, DataTag, QueryObject, HashSize>& get_serial_handle(const QueryObject& q);
 
 
 		        // INTERNAL DATA
@@ -226,12 +241,12 @@ namespace transport
 				    const std::string filename;
 
 				    //! Parent 'cache' object
-				    cache<DataContainer, DataTag, SerialTag, HashSize>* parent_cache;
+				    cache<DataContainer, DataTag, QueryObject, HashSize>* parent_cache;
 
 		        //! List of serial-group handles.
 				    //! Held in a std::list so that iterators pointing to serial groups
 				    //! remain valid after insertion or removal of elements
-		        std::list< serial_group<DataContainer, DataTag, SerialTag, HashSize> > groups;
+		        serial_group_list groups;
 
 #ifdef __CPP_TRANSPORT_LINECACHE_DEBUG
 				    //! Copy counter
@@ -243,7 +258,7 @@ namespace transport
 
 				//! 'serial_group' represents the data entries which
 				//! have been cached for a particular group of serial numbers
-				template <typename DataContainer, typename DataTag, typename SerialTag, unsigned int HashSize>
+				template <typename DataContainer, typename DataTag, typename QueryObject, unsigned int HashSize>
 				class serial_group
 					{
 
@@ -359,13 +374,15 @@ namespace transport
 
 							};
 
+						typedef std::list< data_item > cache_line;
+				    typedef std::array< cache_line, HashSize > line_array;
 
 						// CONSTRUCTOR, DESTRUCTOR
 
 				  public:
 
 						//! Create a serial_group object
-						serial_group(const std::vector<unsigned int>& sns, const SerialTag& t, typename linecache::cache<DataContainer, DataTag, SerialTag, HashSize>* p
+						serial_group(const QueryObject& q, typename linecache::cache<DataContainer, DataTag, QueryObject, HashSize>* p
 #ifdef __CPP_TRANSPORT_LINECACHE_DEBUG
 							, const std::string& tn
 #endif
@@ -374,8 +391,12 @@ namespace transport
 						//! Copy a serial_group object. We need to perform a deep copy, in the sense that
 						//! individual data_items contain references back to their owning std::list<> object.
 						//! Those references will be meaningless after the copy, and need to be reset.
-						serial_group(const serial_group<DataContainer, DataTag, SerialTag, HashSize>& obj)
-				      : parent_cache(obj.parent_cache), serial_numbers(obj.serial_numbers), tag(obj.tag), cache(obj.cache)
+						//! We also have to copy the query object, but its lifetime is managed with std::shared_ptr
+						//! so this is easier.
+						serial_group(const serial_group<DataContainer, DataTag, QueryObject, HashSize>& obj)
+				      : parent_cache(obj.parent_cache),
+				        query(obj.query),
+				        cache(obj.cache)
 #ifdef __CPP_TRANSPORT_LINECACHE_DEBUG
 							, copied(obj.copied+1), table_name(obj.table_name)
 #endif
@@ -383,9 +404,9 @@ namespace transport
 #ifdef __CPP_TRANSPORT_LINECACHE_DEBUG
 								if(copied >= 2) std::cerr << "WARNING - COPYING SERIAL_GROUP OBJECT, COUNT = " << copied << std::endl;
 #endif
-						    for(unsigned int i = 0; i < HashSize; i++)
+						    for(unsigned int i = 0; i < HashSize; ++i)
 							    {
-								    for(typename std::list<data_item>::iterator t = cache[i].begin(); t != cache[i].end(); t++)
+								    for(typename cache_line::iterator t = cache[i].begin(); t != cache[i].end(); ++t)
 									    {
 								        (*t).reset_owner_list(&(cache[i]));
 									    }
@@ -396,13 +417,13 @@ namespace transport
 						// ADMIN
 
 						//! Reset parent cache
-						void reset_parent_cache(linecache::cache<DataContainer, DataTag, SerialTag, HashSize>* c) { assert(c != nullptr); this->parent_cache = c; }
+						void reset_parent_cache(linecache::cache<DataContainer, DataTag, QueryObject, HashSize>* c) { assert(c != nullptr); this->parent_cache = c; }
 
 						//! Gather all data_items belonging to this group
-						void gather_data_items(typename std::list< typename std::list< typename serial_group<DataContainer, DataTag, SerialTag, HashSize>::data_item >::iterator >& item_list);
+						void gather_data_items(typename std::list< typename cache_line::iterator >& item_list);
 
 						//! Check for equality of serial groups
-						bool match(const std::vector<unsigned int>& sns, const SerialTag& t) { return(this->serial_numbers == sns && this->tag == t); }
+						bool match(const QueryObject& q) { return(*(this->query) == q); }
 
 						// CACHE LOOKUP
 
@@ -419,13 +440,11 @@ namespace transport
 				  protected:
 
 						//! Parent 'cache' object
-						linecache::cache<DataContainer, DataTag, SerialTag, HashSize>* parent_cache;
+						linecache::cache<DataContainer, DataTag, QueryObject, HashSize>* parent_cache;
 
-						//! Serial numbers identifying this group
-						const std::vector<unsigned int> serial_numbers;
-
-						//! tag identifying this group
-						const SerialTag tag;
+						//! QueryObject identifying this group; we take it to be a pointer so it can
+						//! be polymorphic if required and use std::shared_ptr to manage its lifetime
+						std::shared_ptr<QueryObject> query;
 
 						//! Hash table of cached data lines.
 						//! Each element in the has table is a std::list of data items.
@@ -433,7 +452,7 @@ namespace transport
 						//! are not invalidated by insertion or removal.
 						//! This is very important in order that cache evictions can be
 						//! carried out efficiently.
-						std::array< std::list< data_item >, HashSize > cache;
+						line_array cache;
 
 #ifdef __CPP_TRANSPORT_LINECACHE_DEBUG
 						//! Copy count
@@ -449,14 +468,14 @@ namespace transport
 		    // CACHE METHODS
 
 
-		    template <typename DataContainer, typename DataTag, typename SerialTag, unsigned int HashSize>
-		    table<DataContainer, DataTag, SerialTag, HashSize>& cache<DataContainer, DataTag, SerialTag, HashSize>::get_table_handle(const std::string& name)
+		    template <typename DataContainer, typename DataTag, typename QueryObject, unsigned int HashSize>
+		    table<DataContainer, DataTag, QueryObject, HashSize>& cache<DataContainer, DataTag, QueryObject, HashSize>::get_table_handle(const std::string& name)
 			    {
-		        typename std::list< table<DataContainer, DataTag, SerialTag, HashSize> >::iterator t;
+		        typename data_table_list::iterator t;
 
 		        if((t = std::find(this->tables.begin(), this->tables.end(), name)) == this->tables.end())   // table doesn't already exist
 			        {
-		            this->tables.push_front( table<DataContainer, DataTag, SerialTag, HashSize>(name, this) );
+		            this->tables.push_front( table<DataContainer, DataTag, QueryObject, HashSize>(name, this) );
 		            t = this->tables.begin();
 			        }
 
@@ -464,8 +483,8 @@ namespace transport
 			    }
 
 
-				template <typename DataContainer, typename DataTag, typename SerialTag, unsigned int HashSize>
-				void cache<DataContainer, DataTag, SerialTag, HashSize>::advise_size_increase(unsigned int bytes)
+				template <typename DataContainer, typename DataTag, typename QueryObject, unsigned int HashSize>
+				void cache<DataContainer, DataTag, QueryObject, HashSize>::advise_size_increase(unsigned int bytes)
 					{
 						this->data_size += bytes;
 
@@ -474,9 +493,9 @@ namespace transport
 								this->eviction_timer.start();
 
 								// build a list of data items on which to run clean-up
-						    typename std::list< typename std::list< typename serial_group<DataContainer, DataTag, SerialTag, HashSize>::data_item >::iterator > clean_up_list;
+						    typename std::list< typename serial_group<DataContainer, DataTag, QueryObject, HashSize>::cache_line::iterator > clean_up_list;
 
-								for(typename std::list< table<DataContainer, DataTag, SerialTag, HashSize> >::iterator t = this->tables.begin(); t != this->tables.end(); t++)
+								for(typename data_table_list::iterator t = this->tables.begin(); t != this->tables.end(); ++t)
 									{
 								    (*t).gather_data_items(clean_up_list);
 									}
@@ -484,8 +503,8 @@ namespace transport
 								// set up a lambda to sort the list is data items into ascending least-recently used
 						    struct DataItemSorter
 							    {
-						        bool operator()(const typename std::list< typename serial_group<DataContainer, DataTag, SerialTag, HashSize>::data_item >::iterator& a,
-						                        const typename std::list< typename serial_group<DataContainer, DataTag, SerialTag, HashSize>::data_item >::iterator& b)
+						        bool operator()(const typename serial_group<DataContainer, DataTag, QueryObject, HashSize>::cache_line::iterator& a,
+						                        const typename serial_group<DataContainer, DataTag, QueryObject, HashSize>::cache_line::iterator& b)
 							        {
 								        // older items go nearer the front of the queue
 						            return (*a).get_last_access_time() > (*b).get_last_access_time();
@@ -499,13 +518,13 @@ namespace transport
                 // Because there is an overhead in building the clean-up list (and sorting it),
                 // we evict more items than are necessary in order that repeated requests
                 // for cache line of a similar size don't all result in clean_up operations
-						    typename std::list< typename std::list< typename serial_group<DataContainer, DataTag, SerialTag, HashSize>::data_item >::iterator >::iterator t = clean_up_list.begin();
+						    typename std::list< typename serial_group<DataContainer, DataTag, QueryObject, HashSize>::cache_line::iterator >::iterator t = clean_up_list.begin();
                 unsigned int target_size = static_cast<unsigned int>(std::max(static_cast<int>(this->capacity) - 10*static_cast<int>(this->data_size), 0));
 								while(this->data_size > target_size && t != clean_up_list.end())
 									{
 								    if(!(*(*t)).get_locked())   // can't evict this item if it is locked
 									    {
-								        std::list< typename serial_group<DataContainer, DataTag, SerialTag, HashSize>::data_item >* list = (*(*t)).get_parent_list();
+								        std::list< typename serial_group<DataContainer, DataTag, QueryObject, HashSize>::data_item >* list = (*(*t)).get_parent_list();
 
 								        // reduce size of
 								        this->data_size -= (*(*t)).get_size();
@@ -534,8 +553,8 @@ namespace transport
 				// TABLE METHODS
 
 
-		    template <typename DataContainer, typename DataTag, typename SerialTag, unsigned int HashSize>
-		    table<DataContainer, DataTag, SerialTag, HashSize>::table(const std::string& fnam, cache<DataContainer, DataTag, SerialTag, HashSize>* p)
+		    template <typename DataContainer, typename DataTag, typename QueryObject, unsigned int HashSize>
+		    table<DataContainer, DataTag, QueryObject, HashSize>::table(const std::string& fnam, cache<DataContainer, DataTag, QueryObject, HashSize>* p)
 			    : filename(fnam), parent_cache(p)
 #ifdef __CPP_TRANSPORT_LINECACHE_DEBUG
 			    , copied(0)
@@ -545,18 +564,18 @@ namespace transport
 			    }
 
 
-		    template <typename DataContainer, typename DataTag, typename SerialTag, unsigned int HashSize>
-		    serial_group<DataContainer, DataTag, SerialTag, HashSize>& table<DataContainer, DataTag, SerialTag, HashSize>::get_serial_handle(const std::vector<unsigned int>& serials, const SerialTag& tag)
+		    template <typename DataContainer, typename DataTag, typename QueryObject, unsigned int HashSize>
+		    serial_group<DataContainer, DataTag, QueryObject, HashSize>& table<DataContainer, DataTag, QueryObject, HashSize>::get_serial_handle(const QueryObject& q)
 			    {
-		        typename std::list< serial_group<DataContainer, DataTag, SerialTag, HashSize > >::iterator t;
-				    for(t = this->groups.begin(); t != this->groups.end(); t++)
+		        typename std::list< serial_group<DataContainer, DataTag, QueryObject, HashSize > >::iterator t;
+				    for(t = this->groups.begin(); t != this->groups.end(); ++t)
 					    {
-						    if((*t).match(serials, tag)) break;
+						    if((*t).match(q)) break;
 					    }
 
 				    if(t == this->groups.end())
 					    {
-						    this->groups.push_front( serial_group<DataContainer, DataTag, SerialTag, HashSize>(serials, tag, this->parent_cache
+						    this->groups.push_front( serial_group<DataContainer, DataTag, QueryObject, HashSize>(q, this->parent_cache
 #ifdef __CPP_TRANSPORT_LINECACHE_DEBUG
 							    , this->filename
 #endif
@@ -568,11 +587,11 @@ namespace transport
 			    }
 
 
-				template <typename DataContainer, typename DataTag, typename SerialTag, unsigned int HashSize>
-				void table<DataContainer, DataTag, SerialTag, HashSize>::gather_data_items(typename std::list< typename std::list< typename serial_group<DataContainer, DataTag, SerialTag, HashSize>::data_item >::iterator >& item_list)
+				template <typename DataContainer, typename DataTag, typename QueryObject, unsigned int HashSize>
+				void table<DataContainer, DataTag, QueryObject, HashSize>::gather_data_items(typename std::list< typename serial_group<DataContainer, DataTag, QueryObject, HashSize>::cache_line::iterator >& item_list)
 					{
 						// work through all serial groups owned by this table, pushing their data_items into item_list
-						for(typename std::list< serial_group<DataContainer, DataTag, SerialTag, HashSize> >::iterator t = this->groups.begin(); t != this->groups.end(); t++)
+						for(typename serial_group_list::iterator t = this->groups.begin(); t != this->groups.end(); ++t)
 							{
 						    (*t).gather_data_items(item_list);
 							}
@@ -582,14 +601,15 @@ namespace transport
 				// SERIAL GROUP METHODS
 
 
-        template <typename DataContainer, typename DataTag, typename SerialTag, unsigned int HashSize>
-        serial_group<DataContainer, DataTag, SerialTag, HashSize>::serial_group(const std::vector<unsigned int>& sns, const SerialTag& t,
-                                                                                linecache::cache<DataContainer, DataTag, SerialTag, HashSize>* p
+        template <typename DataContainer, typename DataTag, typename QueryObject, unsigned int HashSize>
+        serial_group<DataContainer, DataTag, QueryObject, HashSize>::serial_group(const QueryObject& q,
+                                                                                  linecache::cache<DataContainer, DataTag, QueryObject, HashSize>* p
 #ifdef __CPP_TRANSPORT_LINECACHE_DEBUG
 	        , const std::string& tn
 #endif
         )
-	        : serial_numbers(sns), tag(t), parent_cache(p)
+	        : query(q.clone()),
+	          parent_cache(p)
 #ifdef __CPP_TRANSPORT_LINECACHE_DEBUG
 	        , copied(0), table_name(tn)
 #endif
@@ -598,19 +618,18 @@ namespace transport
 	        }
 
 
-				template <typename DataContainer, typename DataTag, typename SerialTag, unsigned int HashSize>
-				const DataContainer& serial_group<DataContainer, DataTag, SerialTag, HashSize>::lookup_tag(DataTag& tag)
+				template <typename DataContainer, typename DataTag, typename QueryObject, unsigned int HashSize>
+				const DataContainer& serial_group<DataContainer, DataTag, QueryObject, HashSize>::lookup_tag(DataTag& tag)
 					{
 						unsigned int hash = tag.hash();
 
 						assert(hash < HashSize);
 
-				    typename std::list< serial_group<DataContainer, DataTag, SerialTag, HashSize>::data_item >::iterator t;
+				    typename std::list< serial_group<DataContainer, DataTag, QueryObject, HashSize>::data_item >::iterator t;
 						if((t = std::find(this->cache[hash].begin(), this->cache[hash].end(), tag)) == this->cache[hash].end())     // data item doesn't already exist
 							{
 								DataContainer data;
-						    tag.pull(this->serial_numbers, data);
-								assert(::transport::linecache::elementsof_container(data) == this->serial_numbers.size());
+						    tag.pull(this->query, data);
 
 								this->cache[hash].push_front( data_item(data, tag, &(this->cache[hash])
 #ifdef __CPP_TRANSPORT_LINECACHE_DEBUG
@@ -642,12 +661,12 @@ namespace transport
 						return((*t).get_data());
 					}
 
-				template <typename DataContainer, typename DataTag, typename SerialTag, unsigned int HashSize>
-				void serial_group<DataContainer, DataTag, SerialTag, HashSize>::gather_data_items(typename std::list< typename std::list< typename serial_group<DataContainer, DataTag, SerialTag, HashSize>::data_item >::iterator >& item_list)
+				template <typename DataContainer, typename DataTag, typename QueryObject, unsigned int HashSize>
+				void serial_group<DataContainer, DataTag, QueryObject, HashSize>::gather_data_items(typename std::list< typename std::list< typename serial_group<DataContainer, DataTag, QueryObject, HashSize>::data_item >::iterator >& item_list)
 					{
-						for(unsigned int i = 0; i < HashSize; i++)
+						for(unsigned int i = 0; i < HashSize; ++i)
 							{
-								for(typename std::list<data_item>::iterator t = this->cache[i].begin(); t != this->cache[i].end(); t++)
+								for(typename std::list<data_item>::iterator t = this->cache[i].begin(); t != this->cache[i].end(); ++t)
 									{
 										item_list.push_front(t);
 									}

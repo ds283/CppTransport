@@ -68,7 +68,7 @@ int main(int argc, const char* argv[])
     const double       tmax = 50;         // end at time t = 50
     const unsigned int tN   = 1000;       // record 1000 samples
     std::vector<double> times;
-    for(int i = 0; i <= tN; i++)
+    for(int i = 0; i <= tN; ++i)
       {
         times.push_back(tmin + ((tmax-tmin)/tN)*i);
       }
@@ -94,7 +94,7 @@ int main(int argc, const char* argv[])
     const double       kmax = exp(2.0);   // end with the mode which exited the horizon 2 e-folds later
     const unsigned int kN   = 3;          // number of k-points
     std::vector<double> ks;
-    for(int i = 0; i <= kN; i++)
+    for(int i = 0; i <= kN; ++i)
       {
         ks.push_back(kmin * pow(kmax/kmin, ((double)i/(double)kN)));
       }
@@ -136,7 +136,7 @@ void output_info(transport::canonical_model<double>& model)
     const std::vector<double> r_p    = model.get_parameters();
 
     std::cout << "Fields (" << model.get_N_fields() << "): ";
-    for(int i = 0; i < fields.size(); i++)
+    for(int i = 0; i < fields.size(); ++i)
       {
         if(i > 0)
           {
@@ -147,7 +147,7 @@ void output_info(transport::canonical_model<double>& model)
     std::cout << "\n";
 
     std::cout << "Parameters (" << model.get_N_params() << "): ";
-    for(int i = 0; i < params.size(); i++)
+    for(int i = 0; i < params.size(); ++i)
       {
         if(i > 0)
           {

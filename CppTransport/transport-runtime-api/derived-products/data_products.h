@@ -8,8 +8,8 @@
 #define __data_products_H_
 
 
-#include "transport-runtime-api/derived-products/line_plot2d.h"
-#include "transport-runtime-api/derived-products/line_asciitable.h"
+#include "transport-runtime-api/derived-products/line-collections/line_plot2d.h"
+#include "transport-runtime-api/derived-products/line-collections/line_asciitable.h"
 #include "transport-runtime-api/derived-products/convenience/time_series_plot.h"
 #include "transport-runtime-api/derived-products/convenience/time_series_table.h"
 #include "transport-runtime-api/derived-products/convenience/wavenumber_series_plot.h"

@@ -18,7 +18,7 @@
 #include "transport-runtime-api/exceptions.h"
 #include "transport-runtime-api/localizations/messages_en.h"
 
-#include "transport-runtime-api/derived-products/template_types.h"
+#include "transport-runtime-api/derived-products/derived-content/correlation-functions/template_types.h"
 
 #include "transport-runtime-api/repository/records/repository_records.h"
 #include "transport-runtime-api/repository/writers/generic_writer.h"
@@ -53,26 +53,14 @@ namespace transport
         //! Define an aggregation callback object. Used to aggregate results from worker processes
         typedef std::function<bool(postintegration_writer<number>&, const std::string&)> aggregate_callback;
 
-        //! Callback for merging postintegration correlation-function output between data containers
-        typedef std::function<void(const boost::filesystem::path&, const boost::filesystem::path&)> merge_callback;
-
-        //! Callback for merging postintegration fNL output between data containers
-        typedef std::function<void(const boost::filesystem::path&, const boost::filesystem::path&, derived_data::template_type)> fNL_merge_callback;
+        //! Define an integrity check callback object.
+        typedef std::function<void(postintegration_writer<number>&, postintegration_task<number>*)> integrity_callback;
 
         class callback_group
 	        {
           public:
             commit_callback commit;
             abort_callback  abort;
-	        };
-
-        class merge_group
-	        {
-          public:
-            merge_callback     zeta_twopf;
-            merge_callback     zeta_threepf;
-            merge_callback     zeta_redbsp;
-            fNL_merge_callback fNL;
 	        };
 
 
@@ -82,7 +70,7 @@ namespace transport
 
         //! Construct a postintegration writer object.
         //! After creation it must be initialized by a suitable data_manager
-        postintegration_writer(postintegration_task_record<number>* rec, const callback_group& c,
+        postintegration_writer(const std::string& n, postintegration_task_record<number>* rec, const callback_group& c,
                                const typename generic_writer::metadata_group& m, const typename generic_writer::paths_group& p,
                                unsigned int w);
 
@@ -111,23 +99,28 @@ namespace transport
         //! Commit contents of this integration_writer to the database
         void commit() { this->callbacks.commit(*this); this->committed = true; }
 
+        //! Set integrity check callback
+        void set_integrity_check_handler(integrity_callback c) { this->integrity_checker = c; }
 
-        // MERGE CONTAINER OUTPUT
+        //! Check integrity
+        void check_integrity(postintegration_task<number>* tk) { if(this->integrity_checker) this->integrity_checker(*this, tk); }
 
-        //! assign merge handlers
-        void set_merge_handlers(const merge_group& d) { this->mergers = d; }
 
-        //! merge zeta twopf
-        void merge_zeta_twopf(const boost::filesystem::path& source, const boost::filesystem::path& dest);
+        // PAIRING
 
-        //! merge zeta threepf
-        void merge_zeta_threepf(const boost::filesystem::path& source, const boost::filesystem::path& dest);
+      public:
 
-        //! merge zeta reduced bispectrum
-        void merge_zeta_redbsp(const boost::filesystem::path& source, const boost::filesystem::path& dest);
+        //! pair with a named integration output group
+        void set_pair(bool g) { this->paired = g; }
 
-        //! merge fNL_local
-        void merge_fNL(const boost::filesystem::path& source, const boost::filesystem::path& dest, derived_data::template_type type);
+        //! query pairing status
+        bool is_paired() const { return(this->paired); }
+
+        //! set parent group
+        void set_parent_group(const std::string& p) { this->parent_group = p; }
+
+        //! query paired group
+        const std::string& get_parent_group() const { return(this->parent_group); }
 
 
         // METADATA
@@ -142,6 +135,37 @@ namespace transport
 
         //! Get metadata
         const output_metadata& get_metadata() const { return(this->metadata); }
+
+        //! Merge list of failed serials reported by backend or paired integrator (not all backends may support this)
+        void merge_failure_list(const std::list<unsigned int>& failed) { std::list<unsigned int> temp = failed; this->set_fail(true); temp.sort(); this->failed_serials.merge(temp); }
+
+        //! Set seed
+        void set_seed(const std::string& g) { this->seeded = true; this->seed_group = g; }
+
+        //! Query seeded status
+        bool is_seeded() const { return(this->seeded); }
+
+        //! Query seeded group name
+        const std::string& get_seed_group() const { return(this->seed_group); }
+
+
+        // INTEGRITY CHECK
+
+      public:
+
+        //! get list of missing k-configuration serials
+        const std::list<unsigned int>& get_missing_serials() const { return(this->missing_serials); }
+
+        //! set list of missing k-configuration serials
+        void set_missing_serials(const std::list<unsigned int>& s) { this->missing_serials = s; this->missing_serials.sort(); }
+
+
+		    // CONTENT
+
+      public:
+
+		    //! Return contents
+		    precomputed_products& get_products() { return(this->contents); }
 
 
         // INTERNAL DATA
@@ -159,6 +183,9 @@ namespace transport
         //! Aggregate callback
         aggregate_callback aggregator;
 
+        //! Integrity check callback
+        integrity_callback integrity_checker;
+
 
         // METADATA
 
@@ -168,11 +195,40 @@ namespace transport
         //! output metadata for this task
         output_metadata metadata;
 
+        //! was this writer seeded?
+        bool seeded;
 
-        // MERGE CALLBACKS
+        //! name of seed group, if so
+        std::string seed_group;
 
-        //! merge callbacks
-        merge_group mergers;
+
+        // PARENT CONTENT
+
+        //! is this a paired postintegration
+        bool paired;
+
+        //! name of parent integration group
+        std::string parent_group;
+
+
+        // FAILURE STATUS
+
+        //! List of failed serial numbers
+        std::list<unsigned int> failed_serials;
+
+
+        // INTEGRITY STATUS
+
+        //! List of missing serial numbers
+        //! (this isn't the same as the list of failed serials reported by the backend; we compute this by testing the
+        //! integrity of the database directly and cross-check with failures reported by the backend)
+        std::list<unsigned int> missing_serials;
+
+
+		    // CONTENT TAGS
+
+		    //! record products associated with this writer
+		    precomputed_products contents;
 
 	    };
 
@@ -181,12 +237,15 @@ namespace transport
 
 
     template <typename number>
-    postintegration_writer<number>::postintegration_writer(postintegration_task_record<number>* rec, const typename postintegration_writer<number>::callback_group& c,
-                                                           const generic_writer::metadata_group& m, const generic_writer::paths_group& p,
-                                                           unsigned int w)
-	    : generic_writer(m, p, w),
+    postintegration_writer<number>::postintegration_writer(const std::string& n, postintegration_task_record<number>* rec,
+                                                           const typename postintegration_writer<number>::callback_group& c,
+                                                           const generic_writer::metadata_group& m, const generic_writer::paths_group& p, unsigned int w)
+	    : generic_writer(n, m, p, w),
+        paired(false),
+        seeded(false),
 	      callbacks(c),
 	      aggregator(nullptr),
+        integrity_checker(nullptr),
 	      parent_record(dynamic_cast< postintegration_task_record<number>* >(rec->clone())),
 	      metadata()
 	    {
@@ -217,58 +276,6 @@ namespace transport
 	        }
 
         return this->aggregator(*this, product);
-	    }
-
-
-		template <typename number>
-    void postintegration_writer<number>::merge_zeta_twopf(const boost::filesystem::path& source, const boost::filesystem::path& dest)
-	    {
-        if(!this->mergers.zeta_twopf)
-	        {
-            assert(false);
-            throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_WRITER_TWOPF_MERGER_UNSET);
-	        }
-
-        this->mergers.zeta_twopf(source, dest);
-	    }
-
-
-		template <typename number>
-    void postintegration_writer<number>::merge_zeta_threepf(const boost::filesystem::path& source, const boost::filesystem::path& dest)
-	    {
-        if(!this->mergers.zeta_threepf)
-	        {
-            assert(false);
-            throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_WRITER_THREEPF_MERGER_UNSET);
-	        }
-
-        this->mergers.zeta_threepf(source, dest);
-	    }
-
-
-		template <typename number>
-    void postintegration_writer<number>::merge_zeta_redbsp(const boost::filesystem::path& source, const boost::filesystem::path& dest)
-	    {
-        if(!this->mergers.zeta_redbsp)
-	        {
-            assert(false);
-            throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_WRITER_REDBSP_MERGER_UNSET);
-	        }
-
-        this->mergers.zeta_redbsp(source, dest);
-	    }
-
-
-		template <typename number>
-    void postintegration_writer<number>::merge_fNL(const boost::filesystem::path& source, const boost::filesystem::path& dest, derived_data::template_type type)
-	    {
-        if(!this->mergers.fNL)
-	        {
-            assert(false);
-            throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_WRITER_FNL_MERGER_UNSET);
-	        }
-
-        this->mergers.fNL(source, dest, type);
 	    }
 
 	}

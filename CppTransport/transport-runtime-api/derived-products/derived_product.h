@@ -13,11 +13,11 @@
 
 #include "transport-runtime-api/serialization/serializable.h"
 
-// need data_manager in order to get the details of a data_manager<number>>data_pipe
-// (can't forward-declare because it is a nested class)
-#include "transport-runtime-api/data/data_manager.h"
 
 #include "transport-runtime-api/derived-products/utilities/wrapper.h"
+
+// forward-declare datapipe if needed
+#include "transport-runtime-api/data/datapipe/datapipe_forward_declare.h"
 
 // forward-declare model class if needed
 #include "transport-runtime-api/models/model_forward_declare.h"
@@ -28,6 +28,10 @@
 // forward-declare repository records if needed
 #include "transport-runtime-api/repository/records/repository_records_forward_declare.h"
 
+// get enviornment object
+#include "transport-runtime-api/manager/environment.h"
+
+
 #include "transport-runtime-api/defaults.h"
 #include "transport-runtime-api/messages.h"
 #include "transport-runtime-api/exceptions.h"
@@ -35,12 +39,12 @@
 #include "boost/filesystem/operations.hpp"
 
 
-#define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_TYPE              "derived-product-type"
+#define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_TYPE                 "derived-product-type"
 
-#define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_LINE_PLOT2D       "line-plot2d"
-#define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_LINE_ASCIITABLE   "line-asciitable"
+#define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_LINE_PLOT2D          "line-plot2d"
+#define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_LINE_ASCIITABLE      "line-asciitable"
 
-#define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_FILENAME          "filename"
+#define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_FILENAME             "filename"
 
 
 namespace transport
@@ -87,7 +91,7 @@ namespace transport
 				    const boost::filesystem::path& get_filename() const { return(this->filename); }
 
 		        //! Apply the analysis represented by this derived product to a given output group
-		        virtual void derive(datapipe<number>& pipe, const std::list<std::string>& tags) = 0;
+		        virtual std::list<std::string> derive(datapipe<number>& pipe, const std::list<std::string>& tags, local_environment& env) = 0;
 
 
             // DERIVED PRODUCTS -- AGGREGATE CONSTITUENT TASKS
@@ -95,8 +99,8 @@ namespace transport
           public:
 
             //! Collect a list of tasks which this derived product depends on;
-            //! used by the repository to autocommit any necessary integration tasks
-            virtual void get_task_list(typename std::vector< integration_task<number>* >& list) const = 0;
+            //! used by the repository to autocommit any necessary tasks
+            virtual void get_task_list(typename std::vector< derivable_task<number>* >& list) const = 0;
 
 
 				    // SERIALIZATION -- implements a 'serializable' interface
@@ -145,7 +149,7 @@ namespace transport
 				template <typename number>
 				void derived_product<number>::write(std::ostream& out)
 					{
-						out << this->filename << std::endl;
+						out << __CPP_TRANSPORT_DERIVED_PRODUCT_FILENAME << ": " << this->filename << std::endl;
 					}
 
 

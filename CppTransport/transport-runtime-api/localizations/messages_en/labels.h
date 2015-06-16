@@ -29,6 +29,7 @@
 #define __CPP_TRANSPORT_KCONFIG_KTEQUALS                   "comoving k_t ="
 #define __CPP_TRANSPORT_KCONFIG_ALPHAEQUALS                "alpha ="
 #define __CPP_TRANSPORT_KCONFIG_BETAEQUALS                 "beta ="
+#define __CPP_TRANSPORT_KCONFIG_T_EXIT                     "t_exit ="
 
 #define __CPP_TRANSPORT_TIME_CONFIG_SERIAL                 "Serial ="
 #define __CPP_TRANSPORT_TIME_CONFIG_TEQUALS                "t ="
@@ -89,6 +90,11 @@
 #define __CPP_TRANSPORT_LATEX_R_SYMBOL                     "r"
 #define __CPP_TRANSPORT_NONLATEX_R_SYMBOL                  "r"
 
+#define __CPP_TRANSPORT_LATEX_DIMENSIONLESS_PZETA          "\\mathcal{P}_{\\zeta}"
+#define __CPP_TRANSPORT_NONLATEX_DIMENSIONLESS_PZETA       "cal(P)_zeta"
+#define __CPP_TRANSPORT_LATEX_DIMENSIONLESS_TWOPF          "\\Delta"
+#define __CPP_TRANSPORT_NONLATEX_DIMENSIONLESS_TWOPF       "Delta"
+
 #define __CPP_TRANSPORT_LATEX_REDUCED_BISPECTRUM_SYMBOL    "f_{\\mathrm{NL}}(k_1, k_2, k_3)"
 #define __CPP_TRANSPORT_NONLATEX_REDUCED_BISPECTRUM_SYMBOL "fNL(k1, k2, k3)"
 
@@ -107,6 +113,28 @@
 #define __CPP_TRANSPORT_LATEX_FNL_DBI_SYMBOL               "f_{\\mathrm{NL}}^{\\mathrm{DBI}}"
 #define __CPP_TRANSPORT_NONLATEX_FNL_DBI_SYMBOL            "fNL_DBI"
 #define __CPP_TRANSPORT_FNL_DBI                            "fNL_DBI"
+
+#define __CPP_TRANSPORT_LATEX_TIME_SYMBOL                  "\\mathrm{integration time}"
+#define __CPP_TRANSPORT_NONLATEX_TIME_SYMBOL               "integration time"
+#define __CPP_TRANSPORT_LATEX_STEPS_SYMBOL                 "\\mathrm{integration steps}"
+#define __CPP_TRANSPORT_NONLATEX_STEPS_SYMBOL              "integration steps"
+
+#define __CPP_TRANSPORT_LATEX_EPSILON_SYMBOL               "\\epsilon"
+#define __CPP_TRANSPORT_NONLATEX_EPSILON_SYMBOL            "epsilon"
+#define __CPP_TRANSPORT_LATEX_HUBBLE_SYMBOL                "H"
+#define __CPP_TRANSPORT_NONLATEX_HUBBLE_SYMBOL             "H"
+#define __CPP_TRANSPORT_LATEX_A_HUBBLE_SYMBOL              "aH"
+#define __CPP_TRANSPORT_NONLATEX_A_HUBBLE_SYMBOL           "aH"
+
+#define __CPP_TRANSPORT_LATEX_U2_SYMBOL                    "u"
+#define __CPP_TRANSPORT_NONLATEX_U2_SYMBOL                 "u"
+#define __CPP_TRANSPORT_LATEX_U3_SYMBOL                    "u"
+#define __CPP_TRANSPORT_NONLATEX_U3_SYMBOL                 "u"
+
+#define __CPP_TRANSPORT_LATEX_LARGEST_U2_SYMBOL            "\\mathrm{max} (u_{\\bar{\\alpha}\\beta})"
+#define __CPP_TRANSPORT_NONLATEX_LARGEST_U2_SYMBOL         "max u_ij"
+#define __CPP_TRANSPORT_LATEX_LARGEST_U3_SYMBOL            "\\mathrm{max} (u_{abc})"
+#define __CPP_TRANSPORT_NONLATEX_LARGEST_U3_SYMBOL         "max u_ijk"
 
 
 #endif // __CPP_TRANSPORT_MESSAGES_EN_LABELS_H

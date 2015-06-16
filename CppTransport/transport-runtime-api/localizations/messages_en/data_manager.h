@@ -38,6 +38,7 @@
 #define __CPP_TRANSPORT_DATACTR_THREEPFTAB_FAIL                     "Data container error: Failed to create threepf-sample table in data container (backend code="
 
 #define __CPP_TRANSPORT_DATACTR_STATS_INSERT_FAIL                   "Data container error: Failed to create per-configuration statistics table in data container (backend code="
+#define __CPP_TRANSPORT_DATACTR_ICS_INSERT_FAIL                     "Data container error: Failed to create initial conditions table in data container (backend code="
 #define __CPP_TRANSPORT_DATACTR_WORKER_INSERT_FAIL                  "Data container error: Failed to create worker information table in data container (backend code="
 #define __CPP_TRANSPORT_DATACTR_BACKG_DATATAB_FAIL                  "Data container error: Failed to create background-value table in data container (backend code="
 #define __CPP_TRANSPORT_DATACTR_TWOPF_DATATAB_FAIL                  "Data container error: Failed to create twopf-value table in data container (backend code="
@@ -54,6 +55,7 @@
 #define __CPP_TRANSPORT_DATACTR_TWOPF_COPY                          "Data container error: Failed to copy twopf values from temporary container (backend code="
 #define __CPP_TRANSPORT_DATACTR_TENSOR_TWOPF_COPY                   "Data container error: Failed to copy tensor twopf values from temporary container (backend code="
 #define __CPP_TRANSPORT_DATACTR_STATISTICS_COPY                     "Data container error: Failed to copy per-configuration statistics from temporary container (backend code="
+#define __CPP_TRANSPORT_DATACTR_ICS_COPY                            "Data container error: Failed to copy initial conditions from temporary container (backend code="
 #define __CPP_TRANSPORT_DATACTR_WORKERS_COPY                        "Data container error: Failed to copy worker information from temporary container (backend code="
 #define __CPP_TRANSPORT_DATACTR_THREEPF_COPY                        "Data container error: Failed to copy threepf values from temporary container (backend code="
 #define __CPP_TRANSPORT_DATACTR_ZETA_TWOPF_COPY                     "Data container error: Failed to copy zeta twopf values from temporary container (backend code="
@@ -65,7 +67,9 @@
 
 #define __CPP_TRANSPORT_DATAMGR_NULL_DATAPIPE                       "Data manager error: Null datapipe specifier"
 #define __CPP_TRANSPORT_DATAMGR_DETACH_PIPE_NOT_ATTACHED            "Data manager error: Attempt to detach datapipe, but no output group is attached"
+#define __CPP_TRANSPORT_DATAMGR_PIPE_WRONG_CONTENT                  "Data manager error: Datapipe attached to wrong type of content group"
 #define __CPP_TRANSPORT_DATAMGR_ATTACH_PIPE_ALREADY_ATTACHED        "Data manager error: Attempt to attach datapipe, but output group already attached"
+#define __CPP_TRANSPORT_DATAMGR_UNKNOWN_DERIVABLE_TASK              "Data manager error: Attempt to attach datapipe to derivable task of unknown type: task name"
 #define __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED                   "Data manager error: Attempt to use datapipe when no output group is attached"
 #define __CPP_TRANSPORT_DATAMGR_PIPE_NULL_TASK                      "Data manager error: Null task supplied when attaching datapipe"
 #define __CPP_TRANSPORT_DATAMGR_UNKNOWN_CF_TYPE                     "Data manager error: Datapipe pull request for unknown correlation function type"
@@ -81,12 +85,17 @@
 #define __CPP_TRANSPORT_DATAMGR_TEMP_SERIAL_INSERT_FAIL             "Data manager error: Failed to insert value in temporary table of serial numbers (backend code="
 #define __CPP_TRANSPORT_DATAMGR_TEMP_SERIAL_DROP_FAIL               "Data manager error: Failed to drop temporary table of serial numbers (backend code="
 #define __CPP_TRANSPORT_DATAMGR_TIME_SERIAL_READ_FAIL               "Data manager error: Failed to select time sample (backend code="
-#define __CPP_TRANSPORT_DATAMGR_TIME_SERIAL_TOO_FEW                 "Data manager error: Read fewer time samples from the container than expected"
+#define __CPP_TRANSPORT_DATAMGR_TIME_SERIAL_TOO_FEW_A               "Data manager error: Read too few time samples from the container: expected"
+#define __CPP_TRANSPORT_DATAMGR_TIME_SERIAL_TOO_FEW_B               "received"
 #define __CPP_TRANSPORT_DATAMGR_KCONFIG_SERIAL_READ_FAIL            "Data manager error: Failed to select k-configuration sample (backend code="
-#define __CPP_TRANSPORT_DATAMGR_KCONFIG_SERIAL_TOO_FEW              "Data manager error: Read fewer k-configuration samples from the container than expected"
+#define __CPP_TRANSPORT_DATAMGR_KCONFIG_SERIAL_TOO_FEW_A            "Data manager error: Read too few k-configuration samples from the container: expected"
+#define __CPP_TRANSPORT_DATAMGR_KCONFIG_SERIAL_TOO_FEW_B            "received"
 #define __CPP_TRANSPORT_DATAMGR_TEMP_THREEPF_CREATE_FAIL            "Data manager error: Failed to create temporary table of threepf configurations (backend code="
 #define __CPP_TRANSPORT_DATAMGR_TEMP_THREEPF_DROP_FAIL              "Data manager error: Failed to drop temporary table of threepf configurations (backend code="
 
 #define __CPP_TRANSPORT_DATAMGR_UNKNOWN_FNL_TEMPLATE                "Data manager error: Unknown fNL template type"
+
+#define __CPP_TRANSPORT_DATAMGR_INTEGRITY_READ_FAIL                 "Data manager error: Failure while performing integrity check (backend code="
+
 
 #endif // __CPP_TRANSPORT_MESSAGES_EN_DATA_MANAGER_H

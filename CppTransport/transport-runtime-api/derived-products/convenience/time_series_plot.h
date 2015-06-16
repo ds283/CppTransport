@@ -8,10 +8,9 @@
 #define __time_series_plot_H_
 
 
-#include "transport-runtime-api/derived-products/line_plot2d.h"
+#include "transport-runtime-api/derived-products/line-collections/line_plot2d.h"
 
 #include "transport-runtime-api/derived-products/utilities/index_selector.h"
-#include "transport-runtime-api/derived-products/utilities/filter.h"
 #include "transport-runtime-api/derived-products/utilities/wrapper.h"
 
 #include "transport-runtime-api/defaults.h"
@@ -46,10 +45,10 @@ namespace transport
 		      public:
 
 		        //! (re-)set a default set of labels; should account for the LaTeX setting if desired
-		        void apply_default_labels();
+		        virtual void apply_default_labels(bool x_label_set=true, bool y_label_set=true, bool title_set=true) override;
 
 		        //! (re-)set a default list of settings
-		        void apply_default_settings();
+		        virtual void apply_default_settings() override;
 
 			    };
 
@@ -78,21 +77,36 @@ namespace transport
 		        this->set_y_label(false);
 		        this->set_title(false);
 		        this->set_legend(true);
-		        this->set_legend_position(line_plot2d<number>::top_right);
+		        this->set_legend_position(top_right);
 		        this->set_typeset_with_LaTeX(false);
 			    }
 
 
 		    template <typename number>
-		    void time_series_plot<number>::apply_default_labels()
+		    void time_series_plot<number>::apply_default_labels(bool x_label_set, bool y_label_set, bool title_set)
 			    {
 		        // default label set is: no y-axis label, x-axis label is time in e-folds; no title
+		        // only use LaTeX x-label if typesetting with LaTeX; otherwise it doesn't work
 
-		        if(this->get_use_LaTeX()) this->set_x_label_text(__CPP_TRANSPORT_PRODUCT_TIME_SERIES_PLOT_X_LABEL_LATEX);
-		        else                      this->set_x_label_text(__CPP_TRANSPORT_PRODUCT_TIME_SERIES_PLOT_X_LABEL_NOLATEX);
+				    axis_value x_axis = this->get_x_axis_value();
 
-		        this->clear_y_label_text();
-		        this->clear_title_text();
+		        if(x_label_set)
+			        {
+						    switch(x_axis)
+							    {
+						        case unset_axis:
+						        case efolds_axis:
+			                if(this->typeset_with_LaTeX) this->internal_set_x_label_text(__CPP_TRANSPORT_PRODUCT_TIME_SERIES_PLOT_X_LABEL_LATEX);
+			                else                         this->internal_set_x_label_text(__CPP_TRANSPORT_PRODUCT_TIME_SERIES_PLOT_X_LABEL_NOLATEX);
+							        break;
+
+						        default:
+							        assert(false);
+							    }
+			        }
+
+		        if(y_label_set) this->internal_clear_y_label_text();
+		        if(title_set)   this->internal_clear_title_text();
 			    }
 
 

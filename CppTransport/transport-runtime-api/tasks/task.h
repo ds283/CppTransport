@@ -86,8 +86,8 @@ namespace transport
 
 		  protected:
 
-		    //! Name of this task
-		    const std::string name;
+		    //! Name of this task (left without const qualifier because we want to allow copy assignment)
+		    std::string name;
 
 			};
 

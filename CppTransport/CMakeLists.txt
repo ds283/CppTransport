@@ -3,10 +3,14 @@ cmake_minimum_required(VERSION 2.6)
 project(CppTransport)
 
 SET ( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/" )
+SET ( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/splinter/cmake/" )
+
+ADD_SUBDIRECTORY ( "splinter" "splinter-build" )
 
 find_package(MPI REQUIRED)
 find_package(Boost REQUIRED COMPONENTS system filesystem random timer date_time mpi log_setup log serialization thread)
 find_package(GiNaC REQUIRED)
+find_package(Eigen3 REQUIRED)
 #find_package(CUDA REQUIRED)
 #find_package(OpenCL REQUIRED)
 
@@ -16,10 +20,10 @@ SET ( CMAKE_C_FLAGS "-Ofast -mavx" CACHE STRING "compile flags" FORCE )
 
 include_directories(./ backends
 					   backends/infrastructure
-					   "backends/infrastructure/file handling"
-					   "backends/infrastructure/language concepts"
-					   "backends/infrastructure/macro substitution"
-					   "backends/infrastructure/replacement rules"
+					   "backends/infrastructure/file_handling"
+					   "backends/infrastructure/language_concepts"
+					   "backends/infrastructure/macro_substitution"
+					   "backends/infrastructure/replacement_rules"
 					   backends/languages
 					   backends/languages/cpp
 					   backends/languages/cpp/core
@@ -32,12 +36,15 @@ include_directories(./ backends
 					   concepts
 					   parser
 					   parser/bison
-					   "transport objects"
+					   transport_objects
 					   utilities
 					   transport-runtime-api
 					   jsoncpp
+					   splinter/include
+					   odeint/include
 					/usr/include
 					/usr/local/include
+					${EIGEN3_INCLUDE_DIR}
 					${Boost_INCLUDE_DIRS}
 					${MPI_CXX_INCLUDE_PATH}
 					${GINAC_INCLUDE_DIRS}
@@ -45,17 +52,17 @@ include_directories(./ backends
 
 
 add_executable(CppTransport main.cpp
-							"backends/infrastructure/file handling/buffer.cpp"
-							"backends/infrastructure/file handling/output_stack.cpp"
-							"backends/infrastructure/file handling/translation_unit.cpp"
-							"backends/infrastructure/file handling/translator.cpp"
-							"backends/infrastructure/language concepts/cse.cpp"
-							"backends/infrastructure/macro substitution/index_assignment.cpp"
-							"backends/infrastructure/macro substitution/macro.cpp"
-							"backends/infrastructure/macro substitution/macro_tokenizer.cpp"
-							"backends/infrastructure/replacement rules/package_group.cpp"
-							"backends/infrastructure/replacement rules/package_group_factory.cpp"
-							"backends/infrastructure/replacement rules/replacement_rule_package.cpp"
+							"backends/infrastructure/file_handling/buffer.cpp"
+							"backends/infrastructure/file_handling/output_stack.cpp"
+							"backends/infrastructure/file_handling/translation_unit.cpp"
+							"backends/infrastructure/file_handling/translator.cpp"
+							"backends/infrastructure/language_concepts/cse.cpp"
+							"backends/infrastructure/macro_substitution/index_assignment.cpp"
+							"backends/infrastructure/macro_substitution/macro.cpp"
+							"backends/infrastructure/macro_substitution/macro_tokenizer.cpp"
+							"backends/infrastructure/replacement_rules/package_group.cpp"
+							"backends/infrastructure/replacement_rules/package_group_factory.cpp"
+							"backends/infrastructure/replacement_rules/replacement_rule_package.cpp"
 							backends/languages/cpp/core/core_group.cpp
 							backends/languages/cpp/core/core_macros.cpp
 							backends/languages/cpp/vexcl/vexcl_group.cpp
@@ -81,12 +88,12 @@ add_executable(CppTransport main.cpp
 							parser/bison/y_parser.tab.cc
 							parser/input_stack.cpp
 							parser/lexfile.cpp
-							parser/parse_tree.cpp
-							parser/quantity.cpp
+							parser/script.cpp
+							parser/semantic_data.cpp
 							parser/y_driver.cpp
 							parser/y_lexer.cpp
-							"transport objects/canonical_u_tensor_factory.cpp"
-							"transport objects/u_tensor_factory.cpp"
+							"transport_objects/canonical_u_tensor_factory.cpp"
+							"transport_objects/u_tensor_factory.cpp"
 							utilities/basic_error.cpp
 							utilities/error.cpp
 							utilities/finder.cpp
@@ -97,52 +104,84 @@ target_link_libraries(CppTransport ${GINAC_LIBRARIES} ${Boost_LIBRARIES})
 
 
 add_executable(dquad-mpi examples/dquad-mpi/main.cpp jsoncpp/jsoncpp.cpp)
-target_link_libraries(dquad-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(dquad-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} splinter-static-1-2)
 
 
 add_executable(dquad-makerepo examples/dquad-mpi/makerepo.cpp jsoncpp/jsoncpp.cpp)
-target_link_libraries(dquad-makerepo sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(dquad-makerepo sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} splinter-static-1-2)
+
+
+add_executable(dquad-makerepo2 examples/dquad-mpi/makerepo2.cpp jsoncpp/jsoncpp.cpp)
+target_link_libraries(dquad-makerepo2 sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} splinter-static-1-2)
 
 
 add_executable(quadratic-mpi examples/quadratic/main.cpp jsoncpp/jsoncpp.cpp)
-target_link_libraries(quadratic-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(quadratic-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} splinter-static-1-2)
 
 
 add_executable(quadratic-makerepo examples/quadratic/makerepo.cpp jsoncpp/jsoncpp.cpp)
-target_link_libraries(quadratic-makerepo sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(quadratic-makerepo sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} splinter-static-1-2)
 
 
 add_executable(axion-mpi examples/axion-mpi/main.cpp jsoncpp/jsoncpp.cpp)
-target_link_libraries(axion-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(axion-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} splinter-static-1-2)
 
 
 add_executable(axion-makerepo examples/axion-mpi/makerepo.cpp jsoncpp/jsoncpp.cpp)
-target_link_libraries(axion-makerepo sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(axion-makerepo sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} splinter-static-1-2)
 
 
 add_executable(axion-makerepo2 examples/axion-mpi/makerepo2.cpp jsoncpp/jsoncpp.cpp)
-target_link_libraries(axion-makerepo2 sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(axion-makerepo2 sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} splinter-static-1-2)
+
+
+add_executable(axion-makerepo3 examples/axion-mpi/makerepo3.cpp jsoncpp/jsoncpp.cpp)
+target_link_libraries(axion-makerepo3 sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} splinter-static-1-2)
+
+
+add_executable(new-axion-mpi examples/new-axion/main.cpp jsoncpp/jsoncpp.cpp)
+target_link_libraries(new-axion-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} splinter-static-1-2)
+
+
+add_executable(new-axion-makerepo2 examples/new-axion/makerepo2.cpp jsoncpp/jsoncpp.cpp)
+target_link_libraries(new-axion-makerepo2 sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} splinter-static-1-2)
+
+
+add_executable(qsfi-mpi examples/qsfi/main.cpp jsoncpp/jsoncpp.cpp)
+target_link_libraries(qsfi-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} splinter-static-1-2)
+
+
+add_executable(qsfi-makerepo2 examples/qsfi/makerepo2.cpp jsoncpp/jsoncpp.cpp)
+target_link_libraries(qsfi-makerepo2 sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} splinter-static-1-2)
 
 
 add_executable(mafalda40-makerepo examples/mafalda40/makerepo.cpp jsoncpp/jsoncpp.cpp)
-target_link_libraries(mafalda40-makerepo sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(mafalda40-makerepo sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} splinter-static-1-2)
 
 
 add_executable(mafalda40-mpi examples/mafalda40/main.cpp jsoncpp/jsoncpp.cpp)
-target_link_libraries(mafalda40-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(mafalda40-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} splinter-static-1-2)
 
 
 add_executable(quadratic10-makerepo examples/quadratic10/makerepo.cpp jsoncpp/jsoncpp.cpp)
-target_link_libraries(quadratic10-makerepo sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(quadratic10-makerepo sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} splinter-static-1-2)
 
 
 add_executable(quadratic10-mpi examples/quadratic10/main.cpp jsoncpp/jsoncpp.cpp)
-target_link_libraries(quadratic10-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(quadratic10-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} splinter-static-1-2)
+
+
+add_executable(powerlaw-makerepo2 examples/powerlaw/makerepo2.cpp jsoncpp/jsoncpp.cpp)
+target_link_libraries(powerlaw-makerepo2 sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} splinter-static-1-2)
+
+
+add_executable(powerlaw-mpi examples/powerlaw/main.cpp jsoncpp/jsoncpp.cpp)
+target_link_libraries(powerlaw-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} splinter-static-1-2)
 
 
 # cuda_add_executable(dquad-cuda examples/dquad-vexcl/main.cpp jsoncpp/jsoncpp.cpp)
-# target_link_libraries(dquad-cuda sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} /usr/local/CUDA/lib/libcuda.dylib)
+# target_link_libraries(dquad-cuda sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} splinter-static-1-2 /usr/local/CUDA/lib/libcuda.dylib)
 
 
 # add_executable(dquad-opencl examples/dquad-vexcl/main.cpp jsoncpp/jsoncpp.cpp)
-# target_link_libraries(dquad-opencl sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${OPENCL_LIBRARIES})
+# target_link_libraries(dquad-opencl sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${OPENCL_LIBRARIES} splinter-static-1-2)

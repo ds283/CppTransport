@@ -90,7 +90,7 @@ namespace transport
     std::ostream& operator<<(std::ostream& out, const work_item_filter<work_element>& filter)
       {
         std::cerr << __CPP_TRANSPORT_FILTER_TAG;
-        for(std::set<unsigned int>::iterator t = filter.items.begin(); t != filter.items.end(); t++)
+        for(std::set<unsigned int>::iterator t = filter.items.begin(); t != filter.items.end(); ++t)
           {
             std::cerr << (t != filter.items.begin() ? ", " : " ") << *t;
           }
@@ -109,11 +109,15 @@ namespace transport
 
         //! set up a work queue for a two-point function task, using a user-provided filter function
         template <typename number>
-        work_queue<twopf_kconfig> make_queue(unsigned int size, const twopf_task<number>& task, const abstract_filter<twopf_kconfig>& F);
+        work_queue<twopf_kconfig_record> make_queue(unsigned int size, const twopf_task<number>& task, const abstract_filter<twopf_kconfig>& F);
 
         //! set up a work queue for a three-point function task, using a user-provided filter function
         template <typename number>
-        work_queue<threepf_kconfig> make_queue(unsigned int size, const threepf_task<number>& task, const abstract_filter<threepf_kconfig>& F);
+        work_queue<threepf_kconfig_record> make_queue(unsigned int size, const threepf_task<number>& task, const abstract_filter<threepf_kconfig>& F);
+
+        //! set up a work queue for a zeta three-point function task, using a user-provided filter function
+        template <typename number>
+        work_queue<threepf_kconfig_record> make_queue(unsigned int size, const zeta_threepf_task<number>& task, const abstract_filter<threepf_kconfig>& F);
 
 		    //! set up a work queue for an output task, using a user-provided filter function
 		    template <typename number>
@@ -121,11 +125,11 @@ namespace transport
 
         //! set up a work queue for a two-point function task, using no filter
         template <typename number>
-        work_queue<twopf_kconfig> make_queue(unsigned int size, const twopf_task<number>& task);
+        work_queue<twopf_kconfig_record> make_queue(unsigned int size, const twopf_task<number>& task);
 
         //! set up a work queue for a three-point function task, using no filter
         template <typename number>
-        work_queue<threepf_kconfig> make_queue(unsigned int size, const threepf_task<number>& task);
+        work_queue<threepf_kconfig_record> make_queue(unsigned int size, const threepf_task<number>& task);
 
 		    //! set up a work queue for an output task, using no filter
 		    template <typename number>
@@ -138,16 +142,17 @@ namespace transport
 
     // QUEUE-MAKING FUNCTIONS -- with a filter
 
+
     template <typename number>
-    work_queue<twopf_kconfig> scheduler::make_queue(unsigned int size, const twopf_task<number>& task, const abstract_filter<twopf_kconfig>& F)
+    work_queue<twopf_kconfig_record> scheduler::make_queue(unsigned int size, const twopf_task<number>& task, const abstract_filter<twopf_kconfig>& F)
       {
         // set up an empty queue
-        work_queue<twopf_kconfig> work(this->ctx, size);
+        work_queue<twopf_kconfig_record> work(this->ctx, size);
 
-        const std::vector<twopf_kconfig>& config_list = task.get_twopf_kconfig_list();
-        for(std::vector<twopf_kconfig>::const_iterator t = config_list.begin(); t != config_list.end(); t++)
+        const twopf_kconfig_database& twopf_db = task.get_twopf_database();
+        for(twopf_kconfig_database::const_record_iterator t = twopf_db.record_begin(); t != twopf_db.record_end(); ++t)
           {
-            if(F.filter(*t)) work.enqueue_work_item(*t);
+            if(F.filter(*(*t))) work.enqueue_work_item(*t);
           }
 
         return(work);
@@ -155,18 +160,33 @@ namespace transport
 
 
     template <typename number>
-    work_queue<threepf_kconfig> scheduler::make_queue(unsigned int size, const threepf_task<number>& task, const abstract_filter<threepf_kconfig>& F)
+    work_queue<threepf_kconfig_record> scheduler::make_queue(unsigned int size, const threepf_task<number>& task, const abstract_filter<threepf_kconfig>& F)
       {
-        work_queue<threepf_kconfig> work(this->ctx, size);
+        work_queue<threepf_kconfig_record> work(this->ctx, size);
 
-        const std::vector<threepf_kconfig>& config_list = task.get_threepf_kconfig_list();
-        for(std::vector<threepf_kconfig>::const_iterator t = config_list.begin(); t != config_list.end(); t++)
+        const threepf_kconfig_database& threepf_db = task.get_threepf_database();
+        for(threepf_kconfig_database::const_record_iterator t = threepf_db.record_begin(); t != threepf_db.record_end(); ++t)
           {
-            if(F.filter(*t)) work.enqueue_work_item(*t);
+            if(F.filter(*(*t))) work.enqueue_work_item(*t);
           }
 
         return(work);
       }
+
+
+    template <typename number>
+    work_queue<threepf_kconfig_record> scheduler::make_queue(unsigned int size, const zeta_threepf_task<number>& task, const abstract_filter<threepf_kconfig>& F)
+	    {
+        work_queue<threepf_kconfig_record> work(this->ctx, size);
+
+        const threepf_kconfig_database& threepf_db = task.get_threepf_database();
+        for(threepf_kconfig_database::const_record_iterator t = threepf_db.record_begin(); t != threepf_db.record_end(); ++t)
+          {
+            if(F.filter(*(*t))) work.enqueue_work_item(*t);
+          }
+
+        return(work);
+	    }
 
 
 		template <typename number>
@@ -175,7 +195,7 @@ namespace transport
 				work_queue< output_task_element<number> > work(this->ctx, 1);
 
 				const typename std::vector< output_task_element<number> >& config_list = task.get_elements();
-				for(typename std::vector< output_task_element<number> >::const_iterator t = config_list.begin(); t != config_list.end(); t++)
+				for(typename std::vector< output_task_element<number> >::const_iterator t = config_list.begin(); t != config_list.end(); ++t)
 					{
 						if(F.filter(*t)) work.enqueue_work_item(*t);
 					}
@@ -188,14 +208,14 @@ namespace transport
 
 
     template <typename number>
-    work_queue<twopf_kconfig> scheduler::make_queue(unsigned int size, const twopf_task<number>& task)
+    work_queue<twopf_kconfig_record> scheduler::make_queue(unsigned int size, const twopf_task<number>& task)
       {
         return(this->make_queue(size, task, trivial_filter<twopf_kconfig>()));
       }
 
 
     template <typename number>
-    work_queue<threepf_kconfig> scheduler::make_queue(unsigned int size, const threepf_task<number>& task)
+    work_queue<threepf_kconfig_record> scheduler::make_queue(unsigned int size, const threepf_task<number>& task)
       {
         return(this->make_queue(size, task, trivial_filter<threepf_kconfig>()));
       }

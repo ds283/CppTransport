@@ -15,6 +15,7 @@
 #include <math.h>
 
 #include "transport-runtime-api/messages.h"
+#include "transport-runtime-api/defaults.h"
 
 #include "transport-runtime-api/concepts/flattener.h"
 #include "transport-runtime-api/concepts/initial_conditions.h"
@@ -28,6 +29,8 @@
 #include "transport-runtime-api/manager/instance_manager.h"
 #include "transport-runtime-api/data/data_manager.h"
 
+#include "transport-runtime-api/models/advisory_classes.h"
+
 #include "boost/log/core.hpp"
 #include "boost/log/trivial.hpp"
 #include "boost/log/sources/severity_feature.hpp"
@@ -37,12 +40,9 @@
 #include "boost/log/utility/setup/common_attributes.hpp"
 
 
-#define __CPP_TRANSPORT_DEFAULT_ICS_GAP_TOLERANCE (1E-8)
-#define __CPP_TRANSPORT_DEFAULT_ICS_TIME_STEPS    (50)
-
-
 namespace transport
   {
+
     // MODEL OBJECTS -- objects representing inflationary models
 
     // basic class from which all other model representations are derived
@@ -82,6 +82,10 @@ namespace transport
         virtual const std::string&              get_tag() const = 0;
         //! Return name of backend used to do the computation
         virtual const std::string&              get_backend() const = 0;
+        //! Return name of stepper used to do background evolution in the computation
+        virtual const std::string&              get_back_stepper() const = 0;
+        //! Return name of stepper used to do perturbation evolution in the computation
+        virtual const std::string&              get_pert_stepper() const = 0;
 
         //! Return number of fields belonging to the model implemented by this object
         virtual unsigned int                    get_N_fields() const = 0;
@@ -117,15 +121,27 @@ namespace transport
 		    //! Validate initial conditions
 		    virtual void validate_ics(const parameters<number>& params, const std::vector<number>& input, std::vector<number>& output) = 0;
 
-        //! Compute initial conditions which give horizon-crossing at Nstar, if we allow Npre e-folds before horizon-crossing.
+        //! Compute initial conditions which give horizon-crossing at time Ncross,
+        //! if we allow Npre e-folds before horizon-crossing.
         //! The supplied parameters should be validated.
         void offset_ics(const parameters<number>& params, const std::vector<number>& input, std::vector<number>& output,
                         double Ninit, double Ncross, double Npre,
                         double tolerance = __CPP_TRANSPORT_DEFAULT_ICS_GAP_TOLERANCE,
                         unsigned int time_steps = __CPP_TRANSPORT_DEFAULT_ICS_TIME_STEPS);
 
+
+		    // WAVENUMBER NORMALIZATION
+
+      public:
+
         //! Get value of H at horizon crossing, which can be used to normalize the comoving waveumbers
-        double compute_kstar(const integration_task<number>* tk, unsigned int time_steps= __CPP_TRANSPORT_DEFAULT_ICS_TIME_STEPS);
+        double compute_kstar(const twopf_list_task<number>* tk, unsigned int time_steps=__CPP_TRANSPORT_DEFAULT_ICS_TIME_STEPS);
+
+        //! Compute when the end of inflation occurs relative to the initial conditions
+        virtual double compute_end_of_inflation(const integration_task<number>* tk, double search_time=__CPP_TRANSPORT_DEFAULT_END_OF_INFLATION_SEARCH) = 0;
+
+		    //! Compute aH as a function of N up to the horizon-exit time of some wavenumber
+		    virtual void compute_aH(const twopf_list_task<number>* tk, std::vector<double>& N, std::vector<number>& aH, double largest_k) = 0;
 
 
         // INTERFACE - PARAMETER HANDLING
@@ -141,27 +157,27 @@ namespace transport
 
         // calculate shape-dependent gauge transformations using full cosmological perturbation theory
         // pure virtual, so must be implemented by derived class
-        virtual void compute_gauge_xfm_1(const parameters<number>& __params, const std::vector<number>& __state, std::vector<number>& __dN) = 0;
+        virtual void compute_gauge_xfm_1(const twopf_list_task<number>* __task, const std::vector<number>& __state, std::vector<number>& __dN) = 0;
 
-        virtual void compute_gauge_xfm_2(const parameters<number>& __params, const std::vector<number>& __state, double __k, double __k1, double __k2, double __N, std::vector< std::vector<number> >& __ddN) = 0;
+        virtual void compute_gauge_xfm_2(const twopf_list_task<number>* __task, const std::vector<number>& __state, double __k, double __k1, double __k2, double __N, std::vector< std::vector<number> >& __ddN) = 0;
 
 		    // calculate 'deltaN' gauge transformations using separate-universe methods
 		    // pure virtual, so must be implemented by derived class
-		    virtual void compute_deltaN_xfm_1(const parameters<number>& __params, const std::vector<number>& __state, std::vector<number>& __dN) = 0;
+		    virtual void compute_deltaN_xfm_1(const twopf_list_task<number>* __task, const std::vector<number>& __state, std::vector<number>& __dN) = 0;
 
-		    virtual void compute_deltaN_xfm_2(const parameters<number>& __params, const std::vector<number>& __state, std::vector< std::vector<number> >& __ddN) = 0;
+		    virtual void compute_deltaN_xfm_2(const twopf_list_task<number>* __task, const std::vector<number>& __state, std::vector< std::vector<number> >& __ddN) = 0;
 
         // calculate tensor quantities, including the 'flow' tensors u2, u3 and the basic tensors A, B, C from which u3 is built
 		    // pure virtual, so must be implemented by derived class
-        virtual void u2(const parameters<number>& __params, const std::vector<number>& __fields, double __k, double __N, std::vector< std::vector<number> >& __u2) = 0;
+        virtual void u2(const twopf_list_task<number>* __task, const std::vector<number>& __fields, double __k, double __N, std::vector< std::vector<number> >& __u2) = 0;
 
-        virtual void u3(const parameters<number>& __params, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __u3) = 0;
+        virtual void u3(const twopf_list_task<number>* __task, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __u3) = 0;
 
-        virtual void A(const parameters<number>& __params, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __A) = 0;
+        virtual void A(const twopf_list_task<number>* __task, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __A) = 0;
 
-        virtual void B(const parameters<number>& __params, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __B) = 0;
+        virtual void B(const twopf_list_task<number>* __task, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __B) = 0;
 
-        virtual void C(const parameters<number>& __params, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __C) = 0;
+        virtual void C(const twopf_list_task<number>* __task, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __C) = 0;
 
 
         // BACKEND
@@ -189,15 +205,13 @@ namespace transport
 
         // process a work list of twopf items
         // must be over-ridden by a derived implementation class
-        virtual void backend_process_queue(work_queue<twopf_kconfig>& work, const integration_task<number>* tk,
-                                           twopf_batcher<number>& batcher,
-                                           bool silent = false) = 0;
+        virtual void backend_process_queue(work_queue<twopf_kconfig_record>& work, const twopf_list_task<number>* tk,
+                                           twopf_batcher<number>& batcher, bool silent = false) = 0;
 
         // process a work list of threepf items
         // must be over-ridden by a derived implementation class
-        virtual void backend_process_queue(work_queue<threepf_kconfig>& work, const integration_task<number>* tk,
-                                           threepf_batcher<number>& batcher,
-                                           bool silent = false) = 0;
+        virtual void backend_process_queue(work_queue<threepf_kconfig_record>& work, const threepf_task<number>* tk,
+                                           threepf_batcher<number>& batcher, bool silent = false) = 0;
 
         // return size of state vectors
         virtual unsigned int backend_twopf_state_size(void) const = 0;
@@ -228,6 +242,7 @@ namespace transport
 
         //! copy of translator version used to produce this model, used for registration
         const unsigned int tver;
+
       };
 
 
@@ -258,14 +273,13 @@ namespace transport
 
     template <typename number>
     void model<number>::offset_ics(const parameters<number>& params, const std::vector<number>& input, std::vector<number>& output,
-                                   double Ninit, double Ncross, double Npre,
-                                   double tolerance, unsigned int time_steps)
+                                   double Ninit, double Ncross, double Npre, double tolerance, unsigned int time_steps)
       {
-        assert(Ncross >= Npre);
+				assert(Ncross - Npre >= Ninit);
 
         // we are guaranteed that the input ics 'input' are validated
 
-        if(fabs(Ncross-Npre) < tolerance)
+        if(std::abs(Ncross-Npre-Ninit) < tolerance)
           {
             output = input;
           }
@@ -279,12 +293,10 @@ namespace transport
             std::vector< std::vector<number> > history;
 
             // set up times at which we wish to sample -- we just need a few
-            range<double> times(Ninit, Ncross-Npre, time_steps);
+            stepping_range<double> times(Ninit, Ncross-Npre, time_steps);
 
             // set up initial conditions
-            // Npre is irrelevant, provided it falls between the beginning and end times
-            double temp_Nstar = (Ninit + Ncross - Npre)/2.0;
-            initial_conditions<double> ics(params.get_model(), params, input, temp_Nstar);
+            initial_conditions<double> ics(params.get_model(), params, input, Ninit, Ncross-Ninit);
 
             // set up a new task object for this integration
             background_task<double> tk(ics, times);
@@ -297,7 +309,8 @@ namespace transport
               }
             else
               {
-                throw std::logic_error(__CPP_TRANSPORT_INTEGRATION_FAIL);
+                assert(false);
+                throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_INTEGRATION_FAIL);
               }
           }
       }
@@ -320,18 +333,17 @@ namespace transport
 
 
     template <typename number>
-    double model<number>::compute_kstar(const integration_task<number>* tk, unsigned int time_steps)
+    double model<number>::compute_kstar(const twopf_list_task<number>* tk, unsigned int time_steps)
       {
         // integrate for a small interval up to horizon-crossing,
         // and extract the value of H there
 
         std::vector< std::vector<number> > history;
 
-        // set up times at which we wish to sample -- we just need a few
-        range<double> times(tk->get_Ninit(), tk->get_Nstar(), time_steps);
+        // set up times at which we wish to sample -- we just need a few scattered between the initial time and the horizon-crossing time
+        stepping_range<double> times(tk->get_N_initial(), tk->get_N_horizon_crossing(), time_steps);
 
-        double new_Npre = (tk->get_Ninit() + tk->get_Nstar()) / 2.0;
-        initial_conditions<double> new_ics(tk->get_model(), tk->get_params(), tk->get_ics().get_vector(), new_Npre);
+        initial_conditions<double> new_ics(tk->get_model(), tk->get_params(), tk->get_ics().get_vector(), tk->get_N_initial(), tk->get_N_subhorizon_efolds());
 
         background_task<double> new_task(new_ics, times);
 
@@ -342,12 +354,15 @@ namespace transport
             // the wavenumbers supplied to the twopf, threepf integration routines
             // use k=1 for the wavenumber which crosses the horizon at time Nstar.
             // This wavenumber should have comoving value k=aH
-            // Here, we return the normalization constant aH
-            return this->H(tk->get_params(), history.back()) * exp(tk->get_Nstar());
+            // To avoid numbers becoming too large or small, and also because the integrator has
+            // noticeably better performance for correlation-function amplitudes in a
+            // certain range, use a fixed normalization which can be adjusted in twopf_list_task
+            return( this->H(tk->get_params(), history.back()) * exp(tk->get_astar_normalization()) );
           }
         else
           {
-            throw std::logic_error(__CPP_TRANSPORT_INTEGRATION_FAIL);
+            assert(false);
+            throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_INTEGRATION_FAIL);
           }
       }
 

@@ -142,7 +142,7 @@ namespace transport
         // to handle this, take a copy first
         std::list< model_instance<number> > models_copy = this->models;
 
-        for(typename std::list< model_instance<number> >::iterator t = models_copy.begin(); t != models_copy.end(); t++)
+        for(typename std::list< model_instance<number> >::iterator t = models_copy.begin(); t != models_copy.end(); ++t)
           {
             (*t).delete_model();
           }

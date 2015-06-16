@@ -13,29 +13,47 @@
 #undef  YY_DECL
 #define YY_DECL int y::y_lexer::yylex()
 
+
 #include <iostream>
 
 #include "lexical.h"
 #include "lexeme.h"
 #include "lexstream.h"
 
+#include "y_common.h"
 #include "y_parser.tab.hh"
 
+
 namespace y
-  {
+	{
 
     class y_lexer
-      {
-        public:
-          y_lexer(lexstream<enum keyword_type, enum character_type>* s);
-          ~y_lexer();
+	    {
 
-          int yylex(y::y_parser::semantic_type* lval);
+        // CONSTRUCTOR, DESTRUCTOR
 
-        private:
-			    lexstream<enum keyword_type, enum character_type>* stream;
-      };
+      public:
 
-  }
+        //! constructor
+        y_lexer(std::shared_ptr<lexstream_type> s);
+
+        //! destructor
+        ~y_lexer() = default;
+
+        //! get next lexeme
+        int yylex(y::y_parser::semantic_type* lval);
+
+		    //! return current lexeme
+		    lexeme_type* get_current_lexeme() { return(this->current_lex); }
+
+      private:
+
+        std::shared_ptr<lexstream_type> stream;
+
+		    lexeme_type* current_lex;
+
+	    };
+
+	}
 
 #endif //__y_lexer_H_

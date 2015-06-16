@@ -307,14 +307,14 @@ namespace transport
 
         // there may be more than one queue if there are too many configurations to integrate
         // with our current GPU memory capacity
-        for(unsigned int i = 0; i < queues.size(); i++)
+        for(unsigned int i = 0; i < queues.size(); ++i)
           {
             try
               {
                 const work_queue<twopf_kconfig>::device_work_list list = queues[i];
 
 		            // set up list of time steps, and storage list
-                std::vector<typename integration_task<number>::time_storage_record> slist;
+                std::vector<time_storage_record> slist;
                 const std::vector<double>& times = tk->get_raw_integration_step_times(slist);
 
                 // set up a functor to observe this system
@@ -335,7 +335,7 @@ namespace transport
                 vex::vector<double> dev_ks(this->ctx.queue(), list.size());
 
                 std::vector<double> hst_ks(list.size());
-                for(unsigned int j = 0; j < list.size(); j++)
+                for(unsigned int j = 0; j < list.size(); ++j)
                   {
                     hst_ks[j] = list[j].k_comoving;
                   }
@@ -346,7 +346,7 @@ namespace transport
 
                 // fix initial conditions - background
                 const std::vector<number> ics = tk->get_ics_vector();
-                for(unsigned int j = 0; j < list.size(); j++)
+                for(unsigned int j = 0; j < list.size(); ++j)
                   {
                     __TWOPF_BACKG(hst_x, $$__A, j, list.size()) = $$// ics[$$__A];
                   }
@@ -420,14 +420,14 @@ namespace transport
 
         // there may be more than one work list if there are too many configurations to integrate
         // with our current GPU memory capacity
-        for(unsigned int i = 0; i < queues.size(); i++)
+        for(unsigned int i = 0; i < queues.size(); ++i)
           {
             try
               {
                 const work_queue<threepf_kconfig>::device_work_list list = queues[i];
 
 		            // get list of time steps, and storage list
-                std::vector<typename integration_task<number>::time_storage_record> slist;
+                std::vector<time_storage_record> slist;
                 const std::vector<double>& times = tk->get_raw_integration_step_times(slist);
 
                 // set up a functor to observe this system
@@ -448,7 +448,7 @@ namespace transport
                 std::vector<double> hst_k1s(list.size());
                 std::vector<double> hst_k2s(list.size());
                 std::vector<double> hst_k3s(list.size());
-                for(unsigned int j = 0; j < list.size(); j++)
+                for(unsigned int j = 0; j < list.size(); ++j)
                   {
                     hst_k1s[j] = list[j].k1_comoving;
                     hst_k2s[j] = list[j].k2_comoving;
@@ -471,7 +471,7 @@ namespace transport
 
                 // fix initial conditions - background
                 const std::vector<number> ics = tk->get_ics_vector();
-                for(unsigned int j = 0; j < list.size(); j++)
+                for(unsigned int j = 0; j < list.size(); ++j)
                   {
                     __TWOPF_BACKG(hst_x, $$__A, j, list.size()) = $$// ics[$$__A];
                   }

@@ -29,7 +29,9 @@ namespace transport
 		        // CONSTRUCTOR, DESTRUCTOR
 
 		        wrapped_output(unsigned int width=__CPP_TRANSPORT_DEFAULT_WRAP_WIDTH)
-			        : wrap_width(width), cpos(0)
+			        : wrap_width(width),
+			          cpos(0),
+		            left_margin(0)
 			        {
 			        }
 
@@ -44,6 +46,12 @@ namespace transport
 		        //! Set wrap width
 		        void set_wrap_width(unsigned int w) { if(w > 0) this->wrap_width = w; }
 
+				    //! Get left margin
+				    unsigned int get_left_margin() const { return(this->left_margin); }
+
+				    //! Set left margin
+				    void set_left_margin(unsigned int w) { this->left_margin = w; }
+
 		        //! Output a string to a stream
 		        void wrap_out(std::ostream& out, const std::string& text);
 
@@ -54,7 +62,7 @@ namespace transport
 		        void wrap_value(std::ostream& out, const std::string& value, const std::string& label, unsigned int& count);
 
 		        //! Output a new line
-		        void wrap_newline(std::ostream& out) { this->cpos = 0; out << std::endl; }
+		        void wrap_newline(std::ostream& out);
 
 		        // INTERNAL DATA
 
@@ -65,6 +73,10 @@ namespace transport
 
 		        //! Current line position
 		        unsigned int cpos;
+
+				    //! Current left-margin value
+				    unsigned int left_margin;
+
 			    };
 
 
@@ -80,8 +92,8 @@ namespace transport
 			    {
 		        if(value)
 			        {
-		            if(this->cpos + label.length() + 2 >= this->wrap_width) this->wrap_newline(out);
 		            if(count > 0) out << ", ";
+		            if(this->cpos + label.length() + 2 >= this->wrap_width) this->wrap_newline(out);
 		            out << label;
 		            count++;
 		            this->cpos += label.length() + 2;
@@ -91,12 +103,24 @@ namespace transport
 
 		    void wrapped_output::wrap_value(std::ostream& out, const std::string& value, const std::string& label, unsigned int& count)
 			    {
-		        if(this->cpos + value.length() + label.length() + 5 >= this->wrap_width) this->wrap_newline(out);
 		        if(count > 0) out << ", ";
+		        if(this->cpos + value.length() + label.length() + 5 >= this->wrap_width) this->wrap_newline(out);
 		        out << label << " = \"" << value << "\"";
 		        count++;
 		        this->cpos += value.length() + label.length() + 5;
 			    }
+
+
+				void wrapped_output::wrap_newline(std::ostream& out)
+					{
+				    out << std::endl;
+
+						for(unsigned int i = 0; i < this->left_margin; ++i)
+							{
+								out << " ";
+							}
+				    this->cpos = this->left_margin;
+					}
 
 
 			}   // namespace derived data

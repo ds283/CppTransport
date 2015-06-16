@@ -60,7 +60,7 @@ namespace macro_packages
         assert(rules.size() == names.size());
         assert(rules.size() == args.size());
 
-        for(int i = 0; i < rules.size(); i++)
+        for(int i = 0; i < rules.size(); ++i)
           {
             simple_rule rule;
 
@@ -94,7 +94,7 @@ namespace macro_packages
         assert(rules.size() == names.size());
         assert(rules.size() == args.size());
 
-        for(int i = 0; i < rules.size(); i++)
+        for(int i = 0; i < rules.size(); ++i)
           {
             simple_rule rule;
 
@@ -126,7 +126,7 @@ namespace macro_packages
 
         out << this->list_start + this->list_pad;
 
-        for(int i = 0; i < list.size(); i++)
+        for(int i = 0; i < list.size(); ++i)
           {
             if(i > 0)
               {
@@ -302,11 +302,11 @@ namespace macro_packages
 
         std::vector<std::string> list;
 
-        for(int i = 0; i < f_list.size(); i++)
+        for(int i = 0; i < f_list.size(); ++i)
           {
             list.push_back(f_list[i].get_name());
           }
-        for(int i = 0; i < d_list.size(); i++)
+        for(int i = 0; i < d_list.size(); ++i)
           {
             list.push_back(d_list[i].get_name());
           }

@@ -110,7 +110,7 @@ int main(int argc, char* argv[])
     const double        kmax      = exp(10.0);   // end with the mode which exits the horizon at N=N*+3
     const unsigned int  k_samples = 100;         // number of k-points
 
-    transport::range<double> ks = transport::range<double>(kmin, kmax, k_samples, transport::range<double>::logarithmic);
+    transport::range<double> ks = transport::range<double>(kmin, kmax, k_samples, transport::logarithmic_bottom_stepping);
 
     // construct a twopf task
     transport::twopf_task<double> tk2 = transport::twopf_task<double>("mafalda40.twopf-1", ics, times, ks, TimeStoragePolicy());
@@ -135,7 +135,7 @@ int main(int argc, char* argv[])
     transport::derived_data::time_series_plot<double> tk2_zeta_timeplot = transport::derived_data::time_series_plot<double>("mafalda40.twopf-1.zeta-twopf", "zeta-twopf.pdf");
 		tk2_zeta_timeplot.add_line(tk2_zeta_times);
 		tk2_zeta_timeplot.set_title_text("$\\langle \\zeta \\zeta \\rangle$ time evolution");
-		tk2_zeta_timeplot.set_legend_position(transport::derived_data::line_plot2d<double>::bottom_right);
+		tk2_zeta_timeplot.set_legend_position(transport::derived_data::bottom_right);
 
     transport::derived_data::zeta_twopf_wavenumber_series<double> tk2_zeta_spec = transport::derived_data::zeta_twopf_wavenumber_series<double>(tk2,
                                                                                                                                                 transport::derived_data::filter::time_filter(spectrum_timefilter),

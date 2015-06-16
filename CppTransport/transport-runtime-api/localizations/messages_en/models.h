@@ -39,5 +39,9 @@
 #define __CPP_TRANSPORT_REFINEMENT_LEVEL      "mesh refinement level"
 #define __CPP_TRANSPORT_REFINEMENT_INTERNAL   "internal exception="
 
+#define __CPP_TRANSPORT_REFINEMENT_TOO_DEEP   "Integration error: too many levels of mesh refinement were required; decrease the underlying time step"
+
+#define __CPP_TRANSPORT_FAIL_COMPUTE_T_EXIT   "Error: failed to compute time of horizon exit for all k-modes"
+
 
 #endif // __CPP_TRANSPORT_MESSAGES_EN_MODELS_H

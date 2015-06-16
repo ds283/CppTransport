@@ -8,6 +8,9 @@
 #define __sqlite3_utility_H_
 
 
+#include "transport-runtime-api/messages.h"
+
+
 namespace transport
 	{
 
@@ -29,6 +32,7 @@ namespace transport
 			        }
 			    }
 
+
 		    // error-check an exec statement
 		    inline void exec(sqlite3* db, const std::string& stmt)
 			    {
@@ -39,10 +43,11 @@ namespace transport
 		        if(status != SQLITE_OK)
 			        {
 		            std::ostringstream msg;
-		            msg << errmsg << " [status=" << status << "]";
+		            msg << __CPP_TRANSPORT_SQLITE_UTILITY_ERROR << " " << errmsg << " [status=" << status << "]";
 		            throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
 			        }
 			    }
+
 
 		    // error-check a non-exec statement
 		    inline void check_stmt(sqlite3* db, int status, const std::string& err, int check_code=SQLITE_OK)
@@ -55,13 +60,16 @@ namespace transport
 			        }
 			    }
 
+
 		    // error-check a non-exec statement
 		    inline void check_stmt(sqlite3* db, int status, int check_code=SQLITE_OK)
 			    {
 		        if(status != check_code)
 			        {
 		            std::ostringstream msg;
-		            msg << sqlite3_errmsg(db) << " [status=" << status << "]";
+		            msg << __CPP_TRANSPORT_SQLITE_UTILITY_ERROR << " " << sqlite3_errmsg(db) << " [status=" << status << "]";
+		            std::cerr << msg.str() << std::endl;
+				        assert(false);
 		            throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
 			        }
 			    }

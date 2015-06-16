@@ -50,7 +50,7 @@ namespace macro_packages
         assert(rules.size() == names.size());
         assert(rules.size() == args.size());
 
-        for(int i = 0; i < rules.size(); i++)
+        for(int i = 0; i < rules.size(); ++i)
           {
             simple_rule rule;
 
@@ -117,7 +117,7 @@ namespace macro_packages
             label << OUTPUT_TEMPORARY_POOL_START << " (" << OUTPUT_TEMPORARY_POOL_SEQUENCE << "=" << this->unique++ << ")";
             buf.write_to_tag(this->printer.comment(label.str()));
 
-            for(std::vector<std::string>::const_iterator l = r_list->begin(); l != r_list->end(); l++)
+            for(std::vector<std::string>::const_iterator l = r_list->begin(); l != r_list->end(); ++l)
 	            {
                 if(temps != "") buf.write_to_tag(*l);
 	            }

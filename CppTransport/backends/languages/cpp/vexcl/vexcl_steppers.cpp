@@ -42,7 +42,7 @@ namespace cpp
         assert(rules.size() == names.size());
         assert(rules.size() == args.size());
 
-        for(int i = 0; i < rules.size(); i++)
+        for(int i = 0; i < rules.size(); ++i)
           {
             macro_packages::simple_rule rule;
 

@@ -27,6 +27,7 @@ namespace transport
 		template <typename number> class fNL_time_data_tag;
 		template <typename number> class BT_time_data_tag;
 		template <typename number> class TT_time_data_tag;
+    template <typename number> class k_statistics_tag;
 
 	}   // namespace transport
 

@@ -28,5 +28,20 @@
 #define __CPP_TRANSPORT_SCHEDULING_UNASSIGNED_MISMATCH  "Internal error: mismatch in number of unassigned workers"
 #define __CPP_TRANSPORT_SCHEDULING_ALREADY_INACTIVE     "Internal error: attempt to deactivate a worker which is already inactive"
 
+#define __CPP_TRANSPORT_SEED_GROUP_NOT_FOUND_A          "Could not find a matching content group"
+#define __CPP_TRANSPORT_SEED_GROUP_NOT_FOUND_B          "to seed task"
+
+#define __CPP_TRANSPORT_SEED_GROUP_MISMATCHED_SERIALS_A "Paired groups"
+#define __CPP_TRANSPORT_SEED_GROUP_MISMATCHED_SERIALS_B "and"
+#define __CPP_TRANSPORT_SEED_GROUP_MISMATCHED_SERIALS_C "do not have the same missing k-configurations and cannot be used to seed a paired integration"
+
+#define __CPP_TRANSPORT_PROCESSED_TASKS_A               "Task manager: processed"
+#define __CPP_TRANSPORT_PROCESSED_TASKS_B_SINGULAR      "database task"
+#define __CPP_TRANSPORT_PROCESSED_TASKS_B_PLURAL        "database tasks"
+#define __CPP_TRANSPORT_PROCESSED_TASKS_C               "in wallclock time"
+#define __CPP_TRANSPORT_PROCESSED_TASKS_D               "time now"
+
+#define __CPP_TRANSPORT_TASK_MANAGER_LABEL              "Task manager:"
+#define __CPP_TRANSPORT_TASK_MANAGER_WARNING_LABEL      "Warning:"
 
 #endif // __CPP_TRANSPORT_MESSAGES_EN_TASK_MANAGER_H

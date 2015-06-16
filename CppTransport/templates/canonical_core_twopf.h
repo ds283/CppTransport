@@ -15,6 +15,8 @@
 #include <stdexcept>
 
 #include "boost/numeric/odeint.hpp"
+#include "boost/range/algorithm.hpp"
+
 #include "transport-runtime-api/transport.h"
 
 
@@ -160,19 +162,19 @@ namespace transport
       public:
 
         // calculate gauge transformations to zeta
-        virtual void compute_gauge_xfm_1(const parameters<number>& params, const std::vector<number>& __state, std::vector<number>& __dN) override;
-        virtual void compute_gauge_xfm_2(const parameters<number>& params, const std::vector<number>& __state, double __k, double __k1, double __k2, double __N, std::vector< std::vector<number> >& __ddN) override;
+        virtual void compute_gauge_xfm_1(const twopf_list_task<number>* __task, const std::vector<number>& __state, std::vector<number>& __dN) override;
+        virtual void compute_gauge_xfm_2(const twopf_list_task<number>* __task, const std::vector<number>& __state, double __k, double __k1, double __k2, double __N, std::vector< std::vector<number> >& __ddN) override;
 
-        virtual void compute_deltaN_xfm_1(const parameters<number>& __params, const std::vector<number>& __state, std::vector<number>& __dN) override;
-        virtual void compute_deltaN_xfm_2(const parameters<number>& __params, const std::vector<number>& __state, std::vector< std::vector<number> >& __ddN) override;
+        virtual void compute_deltaN_xfm_1(const twopf_list_task<number>* __task, const std::vector<number>& __state, std::vector<number>& __dN) override;
+        virtual void compute_deltaN_xfm_2(const twopf_list_task<number>* __task, const std::vector<number>& __state, std::vector< std::vector<number> >& __ddN) override;
 
         // calculate tensor quantities, including the 'flow' tensors u2, u3 and the basic tensors A, B, C from which u3 is built
-        virtual void u2(const parameters<number>& params, const std::vector<number>& __fields, double __k, double __N, std::vector< std::vector<number> >& __u2) override;
-        virtual void u3(const parameters<number>& params, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __u3) override;
+        virtual void u2(const twopf_list_task<number>* __task, const std::vector<number>& __fields, double __k, double __N, std::vector< std::vector<number> >& __u2) override;
+        virtual void u3(const twopf_list_task<number>* __task, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __u3) override;
 
-        virtual void A(const parameters<number>& params, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __A) override;
-        virtual void B(const parameters<number>& params, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __B) override;
-        virtual void C(const parameters<number>& params, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __C) override;
+        virtual void A(const twopf_list_task<number>* __task, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __A) override;
+        virtual void B(const twopf_list_task<number>* __task, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __B) override;
+        virtual void C(const twopf_list_task<number>* __task, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __C) override;
 
 
         // BACKEND INTERFACE (PARTIAL IMPLEMENTATION -- WE PROVIDE A COMMON BACKGROUND INTEGRATOR)
@@ -181,19 +183,26 @@ namespace transport
 
         virtual void backend_process_backg(const background_task<number>* tk, typename model<number>::backg_history& solution, bool silent=false) override;
 
+        virtual double backend_compute_epsilon_unity(const integration_task<number>* tk, double search_time) override;
+
 
         // CALCULATE INITIAL CONDITIONS FOR N-POINT FUNCTIONS
 
       protected:
 
-        number make_twopf_re_ic(unsigned int __i, unsigned int __j, double __k, double __Ninit, const parameters<number>& __params, const std::vector<number>& __fields);
+        number make_twopf_re_ic(unsigned int __i, unsigned int __j, double __k, double __Ninit,
+                                const twopf_list_task<number>* __task, const std::vector<number>& __fields);
 
-        number make_twopf_im_ic(unsigned int __i, unsigned int __j, double __k, double __Ninit, const parameters<number>& __params, const std::vector<number>& __fields);
+        number make_twopf_im_ic(unsigned int __i, unsigned int __j, double __k, double __Ninit,
+                                const twopf_list_task<number>* __task, const std::vector<number>& __fields);
 
-        number make_twopf_tensor_ic(unsigned int __i, unsigned int __j, double __k, double __Ninit, const parameters<number>& __params, const std::vector<number>& __fields);
+        number make_twopf_tensor_ic(unsigned int __i, unsigned int __j, double __k, double __Ninit,
+                                    const twopf_list_task<number>* __task, const std::vector<number>& __fields);
 
         number make_threepf_ic(unsigned int __i, unsigned int __j, unsigned int __k,
-                               double kmode_1, double kmode_2, double kmode_3, double __Ninit, const parameters<number>& __params, const std::vector<number>& __fields);
+                               double kmode_1, double kmode_2, double kmode_3, double __Ninit,
+                               const twopf_list_task<number>* __task, const std::vector<number>& __fields);
+
 	    };
 
 
@@ -211,6 +220,8 @@ namespace transport
 
         void operator ()(const backg_state<number>& __x, backg_state<number>& __dxdt, double __t);
 
+      protected:
+
         const parameters<number> params;
 
 	    };
@@ -223,10 +234,11 @@ namespace transport
 
       public:
 
-        $$__MODEL_background_observer(typename model<number>::backg_history& h, const std::vector<time_config>& l)
-	        : history(h), storage_list(l), serial(0)
+        $$__MODEL_background_observer(typename model<number>::backg_history& h, const time_config_database& t)
+	        : history(h),
+	          time_db(t)
 	        {
-            current_config = storage_list.begin();
+            current_step = time_db.record_begin();
 	        }
 
         void operator ()(const backg_state<number>& x, double t);
@@ -235,11 +247,9 @@ namespace transport
 
         typename model<number>::backg_history& history;
 
-        const std::vector<time_config>& storage_list;
+        const time_config_database& time_db;
 
-        std::vector<time_config>::const_iterator current_config;
-
-        unsigned int serial;
+        time_config_database::const_record_iterator current_step;
 
 	    };
 
@@ -396,20 +406,18 @@ namespace transport
     // __Ninit  -- initial time
     // __fields -- vector of initial conditions for the background fields (or fields+momenta)
     template <typename number>
-    number $$__MODEL<number>::make_twopf_re_ic(unsigned int __i, unsigned int __j,
-                                               double __k, double __Ninit,
-                                               const parameters<number>& __params,
-                                               const std::vector<number>& __fields)
+    number $$__MODEL<number>::make_twopf_re_ic(unsigned int __i, unsigned int __j, double __k, double __Ninit,
+                                               const twopf_list_task<number>* __task, const std::vector<number>& __fields)
 	    {
-        const auto $$__PARAMETER[1]  = __params.get_vector()[$$__1];
+        const auto $$__PARAMETER[1]  = __task->get_params().get_vector()[$$__1];
         const auto $$__COORDINATE[A] = __fields[$$__A];
-        const auto __Mp              = __params.get_Mp();
+        const auto __Mp              = __task->get_params().get_Mp();
 
         const auto __Hsq             = $$__HUBBLE_SQ;
         const auto __eps             = $$__EPSILON;
-        const auto __ainit           = exp(__Ninit);
+        const auto __a               = exp(__Ninit - __task->get_N_horizon_crossing() + __CPP_TRANSPORT_DEFAULT_ASTAR_NORMALIZATION);
 
-        const auto __N               = log(__k/(__ainit*sqrt(__Hsq)));
+        const auto __N               = log(__k/(__a*sqrt(__Hsq)));
 
         number     __tpf             = 0.0;
 
@@ -436,9 +444,9 @@ namespace transport
 //                               + (3.0/2.0)*__M[SPECIES(__i)][SPECIES(__j)];
 //              auto __subsubl = (9.0/4.0)*__M[SPECIES(__i)][SPECIES(__j)];
 
-            __tpf = + __leading                             / (2.0*__k*__ainit*__ainit)
+            __tpf = + __leading                             / (2.0*__k*__a*__a)
 	            + __subl*__Hsq                          / (2.0*__k*__k*__k)
-	            + __subsubl*__Hsq*__Hsq*__ainit*__ainit / (2.0*__k*__k*__k*__k*__k);
+	            + __subsubl*__Hsq*__Hsq*__a*__a / (2.0*__k*__k*__k*__k*__k);
 	        }
         else if((IS_FIELD(__i) && IS_MOMENTUM(__j))     // field-momentum or momentum-field correlation function
 	        || (IS_MOMENTUM(__i) && IS_FIELD(__j)))
@@ -453,9 +461,9 @@ namespace transport
 //              auto __subl    = (SPECIES(__i) == SPECIES(__j) ? 1.0 : 0.0) * (- __eps);
 //              auto __subsubl = (9.0/4.0)*__M[SPECIES(__i)][SPECIES(__j)];
 
-            __tpf = + __leading                             / (2.0*__k*__ainit*__ainit)
+            __tpf = + __leading                             / (2.0*__k*__a*__a)
 	            + __subl*__Hsq                          / (2.0*__k*__k*__k)
-	            + __subsubl*__Hsq*__Hsq*__ainit*__ainit / (2.0*__k*__k*__k*__k*__k);
+	            + __subsubl*__Hsq*__Hsq*__a*__a / (2.0*__k*__k*__k*__k*__k);
 	        }
         else if(IS_MOMENTUM(__i) && IS_MOMENTUM(__j))   // momentum-momentum correlation function
 	        {
@@ -470,8 +478,8 @@ namespace transport
 //                               - (3.0/2.0)*__M[SPECIES(__i)][SPECIES(__j)];
 //              auto __subsubl = - (3.0/4.0)*__M[SPECIES(__i)][SPECIES(__j)];
 
-            __tpf = + __k*__leading   / (2.0*__Hsq*__ainit*__ainit*__ainit*__ainit)
-	            + __subl          / (2.0*__k*__ainit*__ainit)
+            __tpf = + __k*__leading   / (2.0*__Hsq*__a*__a*__a*__a)
+	            + __subl          / (2.0*__k*__a*__a)
 	            + __subsubl*__Hsq / (2.0*__k*__k*__k);
 	        }
         else
@@ -485,20 +493,18 @@ namespace transport
 
     // set up initial conditions for the imaginary part of the equal-time two-point function
     template <typename number>
-    number $$__MODEL<number>::make_twopf_im_ic(unsigned int __i, unsigned int __j,
-                                               double __k, double __Ninit,
-                                               const parameters<number>& __params,
-                                               const std::vector<number>& __fields)
+    number $$__MODEL<number>::make_twopf_im_ic(unsigned int __i, unsigned int __j, double __k, double __Ninit,
+                                               const twopf_list_task<number>* __task, const std::vector<number>& __fields)
 	    {
-        const auto $$__PARAMETER[1]  = __params.get_vector()[$$__1];
+        const auto $$__PARAMETER[1]  = __task->get_params().get_vector()[$$__1];
         const auto $$__COORDINATE[A] = __fields[$$__A];
-        const auto __Mp              = __params.get_Mp();
+        const auto __Mp              = __task->get_params().get_Mp();
 
         const auto __Hsq             = $$__HUBBLE_SQ;
         const auto __eps             = $$__EPSILON;
-        const auto __ainit           = exp(__Ninit);
+        const auto __a               = exp(__Ninit - __task->get_N_horizon_crossing() + __CPP_TRANSPORT_DEFAULT_ASTAR_NORMALIZATION);
 
-        const auto __N               = log(__k/(__ainit*sqrt(__Hsq)));
+        const auto __N               = log(__k/(__a*sqrt(__Hsq)));
 
         number     __tpf             = 0.0;
 
@@ -517,7 +523,7 @@ namespace transport
             // NEXT-ORDER INITIAL CONDITION
 //            auto __leading = (SPECIES(__i) == SPECIES(__j) ? 1.0 : 0.0) * (1.0 - 2.0*__eps*(1.0-__N));
 
-            __tpf = + __leading / (2.0*sqrt(__Hsq)*__ainit*__ainit*__ainit);
+            __tpf = + __leading / (2.0*sqrt(__Hsq)*__a*__a*__a);
 	        }
         else if(IS_MOMENTUM(__i) && IS_FIELD(__j))
 	        {
@@ -527,7 +533,7 @@ namespace transport
             // NEXT-ORDER INITIAL CONDITION
 //            auto __leading = (SPECIES(__i) == SPECIES(__j) ? 1.0 : 0.0) * (1.0 - 2.0*__eps*(1.0-__N));
 
-            __tpf = - __leading / (2.0*sqrt(__Hsq)*__ainit*__ainit*__ainit);
+            __tpf = - __leading / (2.0*sqrt(__Hsq)*__a*__a*__a);
 	        }
 
         return(__tpf);
@@ -536,17 +542,18 @@ namespace transport
 
     // set up initial conditions for the real part of the equal-time tensor two-point function
     template <typename number>
-    number $$__MODEL<number>::make_twopf_tensor_ic(unsigned int __i, unsigned int __j, double __k, double __Ninit, const parameters<number>& __params, const std::vector<number>& __fields)
+    number $$__MODEL<number>::make_twopf_tensor_ic(unsigned int __i, unsigned int __j, double __k, double __Ninit,
+                                                   const twopf_list_task<number>* __task, const std::vector<number>& __fields)
 	    {
-        const auto $$__PARAMETER[1]  = __params.get_vector()[$$__1];
+        const auto $$__PARAMETER[1]  = __task->get_params().get_vector()[$$__1];
         const auto $$__COORDINATE[A] = __fields[$$__A];
-        const auto __Mp              = __params.get_Mp();
+        const auto __Mp              = __task->get_params().get_Mp();
 
         const auto __Hsq             = $$__HUBBLE_SQ;
         const auto __eps             = $$__EPSILON;
-        const auto __ainit           = exp(__Ninit);
+        const auto __a               = exp(__Ninit - __task->get_N_horizon_crossing() + __CPP_TRANSPORT_DEFAULT_ASTAR_NORMALIZATION);
 
-        const auto __N               = log(__k/(__ainit*sqrt(__Hsq)));
+        const auto __N               = log(__k/(__a*sqrt(__Hsq)));
 
         number     __tpf             = 0.0;
 
@@ -555,20 +562,20 @@ namespace transport
         if(__i == 0 && __j == 0)                                      // h-h correlation function
 	        {
             // LEADING-ORDER INITIAL CONDITION
-            __tpf = 1.0 / (__Mp*__Mp*__k*__ainit*__ainit);
-//            __tpf = 1.0 / (2.0*__k*__ainit*__ainit);
+            __tpf = 1.0 / (__Mp*__Mp*__k*__a*__a);
+//            __tpf = 1.0 / (2.0*__k*__a*__a);
 	        }
-        else if((__i == 0 && __j == 1) || (__i == 1 && __j == 0))     // h-dh or dh-h corelation function
+        else if((__i == 0 && __j == 1) || (__i == 1 && __j == 0))     // h-dh or dh-h correlation function
 	        {
             // LEADING ORDER INITIAL CONDITION
-            __tpf = -1.0 / (__Mp*__Mp*__k*__ainit*__ainit);
-//            __tpf = -1.0 / (2.0*__k*__ainit*__ainit);
+            __tpf = -1.0 / (__Mp*__Mp*__k*__a*__a);
+//            __tpf = -1.0 / (2.0*__k*__a*__a);
 	        }
         else if(__i == 1 && __j == 1)                                 // dh-dh correlation function
 	        {
             // LEADING ORDER INITIAL CONDITION
-            __tpf = __k / (__Mp*__Mp*__Hsq*__ainit*__ainit*__ainit*__ainit);
-//            __tpf = __k / (2.0*__Hsq*__ainit*__ainit*__ainit*__ainit);
+            __tpf = __k / (__Mp*__Mp*__Hsq*__a*__a*__a*__a);
+//            __tpf = __k / (2.0*__Hsq*__a*__a*__a*__a);
 	        }
         else
 	        {
@@ -582,12 +589,10 @@ namespace transport
     // set up initial conditions for the real part of the equal-time three-point function
     template <typename number>
     number $$__MODEL<number>::make_threepf_ic(unsigned int __i, unsigned int __j, unsigned int __k,
-                                              double __kmode_1, double __kmode_2, double __kmode_3, double __Ninit,
-                                              const parameters<number>& __params,
-                                              const std::vector<number>& __fields)
+                                              double __k1, double __k2, double __k3, double __Ninit,
+                                              const twopf_list_task<number>* __task, const std::vector<number>& __fields)
 	    {
-        number     __tpf             = 0.0;
-        return(__tpf);
+		    return(0.0);
 	    }
 
 
@@ -595,13 +600,13 @@ namespace transport
 
 
     template <typename number>
-    void $$__MODEL<number>::compute_gauge_xfm_1(const parameters<number>& __params,
+    void $$__MODEL<number>::compute_gauge_xfm_1(const twopf_list_task<number>* __task,
                                                 const std::vector<number>& __state,
                                                 std::vector<number>& __dN)
 	    {
-        const auto $$__PARAMETER[1]  = __params.get_vector()[$$__1];
+        const auto $$__PARAMETER[1]  = __task->get_params().get_vector()[$$__1];
         const auto $$__COORDINATE[A] = __state[$$__A];
-        const auto __Mp              = __params.get_Mp();
+        const auto __Mp              = __task->get_params().get_Mp();
 
         const auto __Hsq             = $$__HUBBLE_SQ;
         const auto __eps             = $$__EPSILON;
@@ -615,7 +620,7 @@ namespace transport
 
 
     template <typename number>
-    void $$__MODEL<number>::compute_gauge_xfm_2(const parameters<number>& __params,
+    void $$__MODEL<number>::compute_gauge_xfm_2(const twopf_list_task<number>* __task,
                                                 const std::vector<number>& __state,
                                                 double __k, double __k1, double __k2, double __N,
                                                 std::vector< std::vector<number> >& __ddN)
@@ -624,13 +629,13 @@ namespace transport
 
 
     template <typename number>
-    void $$__MODEL<number>::compute_deltaN_xfm_1(const parameters<number>& __params,
+    void $$__MODEL<number>::compute_deltaN_xfm_1(const twopf_list_task<number>* __task,
                                                  const std::vector<number>& __state,
                                                  std::vector<number>& __dN)
 	    {
-        const auto $$__PARAMETER[1]  = __params.get_vector()[$$__1];
+        const auto $$__PARAMETER[1]  = __task->get_params().get_vector()[$$__1];
         const auto $$__COORDINATE[A] = __state[$$__A];
-        const auto __Mp              = __params.get_Mp();
+        const auto __Mp              = __task->get_params().get_Mp();
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
@@ -641,7 +646,7 @@ namespace transport
 
 
     template <typename number>
-    void $$__MODEL<number>::compute_deltaN_xfm_2(const parameters<number>& __params,
+    void $$__MODEL<number>::compute_deltaN_xfm_2(const twopf_list_task<number>* __task,
                                                  const std::vector<number>& __state,
                                                  std::vector< std::vector<number> >& __ddN)
 	    {
@@ -652,24 +657,24 @@ namespace transport
 
 
     template <typename number>
-    void $$__MODEL<number>::u2(const parameters<number>& __params,
+    void $$__MODEL<number>::u2(const twopf_list_task<number>* __task,
                                const std::vector<number>& __fields, double __k, double __N,
                                std::vector< std::vector<number> >& __u2)
 	    {
-        const auto $$__PARAMETER[1]  = __params.get_vector()[$$__1];
+        const auto $$__PARAMETER[1]  = __task->get_params().get_vector()[$$__1];
         const auto $$__COORDINATE[A] = __fields[$$__A];
-        const auto __Mp              = __params.get_Mp();
+        const auto __Mp              = __task->get_params().get_Mp();
 
         const auto __Hsq             = $$__HUBBLE_SQ;
         const auto __eps             = $$__EPSILON;
-        const auto __a               = exp(__N);
+        const auto __a               = exp(__N - __task->get_N_horizon_crossing() + __CPP_TRANSPORT_DEFAULT_ASTAR_NORMALIZATION);
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
         __u2.clear();
         __u2.resize(2*$$__NUMBER_FIELDS);
 
-        for(int __i = 0; __i < 2*$$__NUMBER_FIELDS; __i++)
+        for(int __i = 0; __i < 2*$$__NUMBER_FIELDS; ++__i)
 	        {
             __u2[__i].resize(2*$$__NUMBER_FIELDS);
 	        }
@@ -679,32 +684,32 @@ namespace transport
 
 
     template <typename number>
-    void $$__MODEL<number>::u3(const parameters<number>& __params,
-                               const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N,
+    void $$__MODEL<number>::u3(const twopf_list_task<number>* __task,
+                               const std::vector<number>& __fields, double __k1, double __k2, double __k3, double __N,
                                std::vector< std::vector< std::vector<number> > >& __u3)
 	    {
 	    }
 
 
     template <typename number>
-    void $$__MODEL<number>::A(const parameters<number>& __params,
-                              const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N,
+    void $$__MODEL<number>::A(const twopf_list_task<number>* __task,
+                              const std::vector<number>& __fields, double __k1, double __k2, double __k3, double __N,
                               std::vector< std::vector< std::vector<number> > >& __A)
 	    {
 	    }
 
 
     template <typename number>
-    void $$__MODEL<number>::B(const parameters<number>& __params,
-                              const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N,
+    void $$__MODEL<number>::B(const twopf_list_task<number>* __task,
+                              const std::vector<number>& __fields, double __k1, double __k2, double __k3, double __N,
                               std::vector< std::vector< std::vector<number> > >& __B)
 	    {
 	    }
 
 
     template <typename number>
-    void $$__MODEL<number>::C(const parameters<number>& __params,
-                              const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N,
+    void $$__MODEL<number>::C(const twopf_list_task<number>* __task,
+                              const std::vector<number>& __fields, double __k1, double __k2, double __k3, double __N,
                               std::vector< std::vector< std::vector<number> > >& __C)
 	    {
 	    }
@@ -715,13 +720,15 @@ namespace transport
 	    {
         assert(tk != nullptr);
 
-//        if(!silent) this->write_task_data(tk, std::cout, $$__BACKG_ABS_ERR, $$__BACKG_REL_ERR, $$__BACKG_STEP_SIZE, "$$__BACKG_STEPPER");
+        const time_config_database time_db = tk->get_time_config_database();
 
         solution.clear();
-        solution.reserve(tk->get_time_config_list().size());
+        solution.reserve(time_db.size());
+
+//        if(!silent) this->write_task_data(tk, std::cout, $$__BACKG_ABS_ERR, $$__BACKG_REL_ERR, $$__BACKG_STEP_SIZE, "$$__BACKG_STEPPER");
 
         // set up an observer which writes to this history vector
-        $$__MODEL_background_observer<number> obs(solution, tk->get_time_config_list());
+        $$__MODEL_background_observer<number> obs(solution, time_db);
 
         // set up a functor to evolve this system
         $$__MODEL_background_functor<number> system(tk->get_params());
@@ -731,11 +738,151 @@ namespace transport
         backg_state<number> x($$__MODEL_pool::backg_state_size);
         x[this->flatten($$__A)] = $$// ics[$$__A];
 
-        auto times = tk->get_integration_step_times();
-
-        using namespace boost::numeric::odeint;
-        integrate_times($$__MAKE_BACKG_STEPPER{backg_state<number>}, system, x, times.begin(), times.end(), $$__BACKG_STEP_SIZE, obs);
+        boost::numeric::odeint::integrate_times($$__MAKE_BACKG_STEPPER{backg_state<number>}, system, x, time_db.value_begin(), time_db.value_end(), $$__BACKG_STEP_SIZE, obs);
 	    }
+
+
+
+
+    template <typename number>
+    class EpsilonUnityPredicate
+      {
+      public:
+        EpsilonUnityPredicate(const parameters<number>& p)
+          : params(p)
+          {
+          }
+
+        bool operator()(const std::pair< backg_state<number>, double >& __x)
+          {
+            const auto $$__PARAMETER[1]  = this->params.get_vector()[$$__1];
+            const auto $$__COORDINATE[A] = __x.first[$$__A];
+            const auto __Mp              = this->params.get_Mp();
+
+            const auto __eps = $$__EPSILON;
+
+            return (__eps > 1.0);
+          }
+
+      private:
+        const parameters<number>& params;
+      };
+
+
+    template <typename number>
+    double $$__MODEL<number>::compute_end_of_inflation(const integration_task<number>* tk, double search_time)
+      {
+        assert(tk != nullptr);
+
+        // set up a functor to evolve this system
+        $$__MODEL_background_functor<number> system(tk->get_params());
+
+        auto ics = tk->get_ics_vector();
+
+        backg_state<number> x($$__MODEL_pool::backg_state_size);
+        x[this->flatten($$__A)] = $$// ics[$$__A];
+
+        // find point where epsilon = 1
+        auto stepper = $$__MAKE_BACKG_STEPPER{backg_state<number>};
+
+        auto range = boost::numeric::odeint::make_adaptive_time_range(stepper, system, x, tk->get_N_initial(), tk->get_N_initial()+search_time, $$__BACKG_STEP_SIZE);
+
+        // returns the first iterator in 'range' for which the predicate EpsilonUnityPredicate() is satisfied
+        auto iter = boost::find_if(range, EpsilonUnityPredicate<number>(tk->get_params()));
+
+        if(iter == boost::end(range)) throw end_of_inflation_not_found();
+
+        return ((*iter).second);
+      };
+
+
+    template <typename number>
+    class aHAggregatorPredicate
+      {
+      public:
+        aHAggregatorPredicate(const twopf_list_task<number>* tk, std::vector<double>& N, std::vector<number>& log_aH, double lk)
+          : params(tk->get_params()),
+            N_vector(N),
+            log_aH_vector(log_aH),
+            largest_k(lk),
+            N_horizon_crossing(tk->get_N_horizon_crossing()),
+            astar_normalization(tk->get_astar_normalization())
+          {
+          }
+
+        bool operator()(const std::pair< backg_state<number>, double >& __x)
+          {
+            const auto $$__PARAMETER[1]  = this->params.get_vector()[$$__1];
+            const auto $$__COORDINATE[A] = __x.first[$$__A];
+            const auto __Mp              = this->params.get_Mp();
+
+            const auto __Hsq = $$__HUBBLE_SQ;
+            const auto __H   = sqrt(__Hsq);
+
+            const auto __a   = exp(__x.second - this->N_horizon_crossing + this->astar_normalization);
+
+            this->N_vector.push_back(__x.second);
+            this->log_aH_vector.push_back(log(__a*__H));
+
+            // are we now at a point where we have comfortably covered the horizon crossing time for largest_k?
+            if(largest_k / (__a*__H) < 0.01) return(true);
+            return(false);
+          }
+
+      private:
+        const parameters<number>& params;
+        std::vector<double>& N_vector;
+        std::vector<number>& log_aH_vector;
+        const double largest_k;
+        const double N_horizon_crossing;
+        const double astar_normalization;
+      };
+
+
+    template <typename number>
+    void $$__MODEL<number>::compute_aH(const twopf_list_task<number>* tk, std::vector<double>& N, std::vector<number>& log_aH, double largest_k)
+      {
+        N.clear();
+        log_aH.clear();
+
+        // set up a functor to evolve the system
+        $$__MODEL_background_functor<number> system(tk->get_params());
+
+        auto ics = tk->integration_task<number>::get_ics_vector();
+
+        backg_state<number> x($$__MODEL_pool::backg_state_size);
+        x[this->flatten($$__A)] = $$// ics[$$__A];
+
+        auto stepper = $$__MAKE_BACKG_STEPPER{backg_state<number>};
+
+        double N_range = 0.0;
+        try
+          {
+            N_range = tk->get_N_end_of_inflation();
+          }
+        catch (end_of_inflation_not_found& xe)
+          {
+            // try to fall back on a sensible default
+            N_range = tk->get_N_initial() + __CPP_TRANSPORT_DEFAULT_END_OF_INFLATION_SEARCH;
+          }
+
+        auto range = boost::numeric::odeint::make_const_step_time_range(stepper, system, x, tk->get_N_initial(), N_range, 0.01);
+
+        aHAggregatorPredicate<number> aggregator(tk, N, log_aH, largest_k);
+
+        // step through iterators, finding first point which is comfortably after time when largest_k has left
+        // the horizon
+        // aggregator writes N and log_aH into the output vectors at each iteration
+        auto iter = boost::find_if(range, aggregator);
+
+        // if we got to the end of the range, then we didn't cover all exit times up to largest_k
+        // so something has gone wrong
+        if(iter == boost::end(range))
+          {
+            assert(false);
+            throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_FAIL_COMPUTE_T_EXIT);
+          }
+      }
 
 
     // IMPLEMENTATION - FUNCTOR FOR BACKGROUND INTEGRATION
@@ -751,7 +898,13 @@ namespace transport
         const auto __Hsq             = $$__HUBBLE_SQ;
         const auto __eps             = $$__EPSILON;
 
+        // check whether Hsq is positive
+        if(__Hsq < 0) throw Hsq_is_negative();
+
         $$__TEMP_POOL{"const auto $1 = $2;"}
+
+        // check for nan being produced
+        if(std::isnan($$__COORDINATE[A])) throw integration_produced_nan();
 
         __dxdt[this->flatten($$__A)] = $$__U1_PREDEF[A]{__Hsq,__eps};
 	    }
@@ -763,16 +916,15 @@ namespace transport
     template <typename number>
     void $$__MODEL_background_observer<number>::operator()(const backg_state<number>& x, double t)
 	    {
-        if(this->current_config != this->storage_list.end() && (*(this->current_config)).serial == this->serial)
+        if(this->current_step != this->time_db.record_end() && this->current_step->is_stored())
 	        {
             this->history.push_back(x);
-            this->current_config++;
 	        }
-        this->serial++;
+        this->current_step++;
 	    }
 
 
-	}   // namespace transport
+	};   // namespace transport
 
 
 #endif  // $$__GUARD

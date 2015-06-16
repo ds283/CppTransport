@@ -44,18 +44,11 @@ namespace y
         // extract identifier name from lexeme
         std::string id;
         bool        ok = lex->get_identifier(id);
-        field_declaration* d = nullptr;
 
         if(ok)
 	        {
             GiNaC::symbol sym = this->sym_factory.get_symbol(id, a->get_latex());
-            quantity      s(id, *a, lex->get_path(), sym);
-
-            d = new field_declaration(s, lex->get_path());
-            if(this->root->add_field(d) == false)
-	            {
-                delete d;
-	            }
+            this->root->add_field(field_declaration(id, sym, lex->get_path(), a));
 	        }
         else
 	        {
@@ -69,20 +62,13 @@ namespace y
     void y_driver::add_parameter(lexeme::lexeme<enum keyword_type, enum character_type>* lex, attributes* a)
 	    {
         // extract identifier name from lexeme
-        std::string id;
-        bool        ok = lex->get_identifier(id);
-        parameter_declaration* d = nullptr;
+        std::string            id;
+        bool                   ok = lex->get_identifier(id);
 
         if(ok)
 	        {
             GiNaC::symbol sym = this->sym_factory.get_symbol(id, a->get_latex());
-            quantity      s(id, *a, lex->get_path(), sym);
-
-            d = new parameter_declaration(s, lex->get_path());
-            if(this->root->add_parameter(d) == false)
-	            {
-                delete d;
-	            }
+		        this->root->add_parameter(parameter_declaration(id, sym, lex->get_path(), a));
 	        }
         else
 	        {
@@ -93,7 +79,29 @@ namespace y
 	    }
 
 
-    void y_driver::add_latex_attribute(attributes* a, lexeme::lexeme<keyword_type, character_type>* lex)
+		void y_driver::add_subexpr(lexeme_type* lex, subexpr* e)
+			{
+				// extract identifier name from lexeme
+		    std::string id;
+		    bool        ok = lex->get_identifier(id);
+
+				subexpr_declaration* d = nullptr;
+
+				if(ok)
+					{
+				    GiNaC::symbol sym = this->sym_factory.get_symbol(id, e->get_latex());
+						this->root->add_subexpr(subexpr_declaration(id, sym, lex->get_path(), e));
+					}
+				else
+					{
+				    ::error(ERROR_IDENTIFIER_LOOKUP, lex->get_path());
+					}
+
+				delete e;
+			}
+
+
+    void y_driver::add_latex_attribute(attributes* a, lexeme_type* lex)
 	    {
         // extract string name from lexeme
         std::string latex_name;
@@ -110,7 +118,30 @@ namespace y
 	    }
 
 
-    void y_driver::set_abserr(struct stepper* s, lexeme::lexeme<keyword_type, character_type>* lex)
+		void y_driver::add_latex_attribute(subexpr* e, lexeme_type* lex)
+			{
+				// extract string name from lexeme
+		    std::string latex_name;
+				bool ok = lex->get_string(latex_name);
+
+				if(ok)
+					{
+						e->set_latex(latex_name);
+					}
+				else
+					{
+						::error(ERROR_STRING_LOOKUP, lex->get_path());
+					}
+			}
+
+
+		void y_driver::add_value_attribute(subexpr* e, GiNaC::ex* v)
+			{
+				e->set_value(*v);
+			}
+
+
+    void y_driver::set_abserr(struct stepper* s, lexeme_type* lex)
 	    {
         // extract decimal value from lexeme
         double d  = DEFAULT_ABS_ERR;
@@ -118,7 +149,7 @@ namespace y
 
         if(ok)
 	        {
-            s->abserr = fabs(d);
+            s->abserr = std::abs(d);
 	        }
         else
 	        {
@@ -127,7 +158,7 @@ namespace y
 	    }
 
 
-    void y_driver::set_relerr(struct stepper* s, lexeme::lexeme<keyword_type, character_type>* lex)
+    void y_driver::set_relerr(struct stepper* s, lexeme_type* lex)
 	    {
         // extract decimal value from lexeme
         double d  = DEFAULT_REL_ERR;
@@ -135,7 +166,7 @@ namespace y
 
         if(ok)
 	        {
-            s->relerr = fabs(d);
+            s->relerr = std::abs(d);
 	        }
         else
 	        {
@@ -144,7 +175,7 @@ namespace y
 	    }
 
 
-    void y_driver::set_stepper(struct stepper* s, lexeme::lexeme<keyword_type, character_type>* lex)
+    void y_driver::set_stepper(struct stepper* s, lexeme_type* lex)
 	    {
         // extract string name from lexeme
         std::string stepper_name = DEFAULT_STEPPER;
@@ -161,7 +192,7 @@ namespace y
 	    }
 
 
-    void y_driver::set_stepsize(struct stepper* s, lexeme::lexeme<keyword_type, character_type>* lex)
+    void y_driver::set_stepsize(struct stepper* s, lexeme_type* lex)
 	    {
         // extract decimal value from lexeme
         double d  = DEFAULT_STEP_SIZE;
@@ -194,7 +225,7 @@ namespace y
 	    }
 
 
-    void y_driver::set_name(lexeme::lexeme<keyword_type, character_type>* lex)
+    void y_driver::set_name(lexeme_type* lex)
 	    {
         std::string str;
         bool        ok = lex->get_string(str);
@@ -210,7 +241,7 @@ namespace y
 	    }
 
 
-    void y_driver::set_author(lexeme::lexeme<keyword_type, character_type>* lex)
+    void y_driver::set_author(lexeme_type* lex)
 	    {
         std::string str;
         bool        ok = lex->get_string(str);
@@ -226,7 +257,7 @@ namespace y
 	    }
 
 
-    void y_driver::set_tag(lexeme::lexeme<keyword_type, character_type>* lex)
+    void y_driver::set_tag(lexeme_type* lex)
 	    {
         std::string str;
         bool        ok = lex->get_string(str);
@@ -242,7 +273,7 @@ namespace y
 	    }
 
 
-    void y_driver::set_core(lexeme::lexeme<keyword_type, character_type>* lex)
+    void y_driver::set_core(lexeme_type* lex)
 	    {
         std::string str;
         bool        ok = lex->get_string(str);
@@ -258,7 +289,7 @@ namespace y
 	    }
 
 
-    void y_driver::set_implementation(lexeme::lexeme<keyword_type, character_type>* lex)
+    void y_driver::set_implementation(lexeme_type* lex)
 	    {
         std::string str;
         bool        ok = lex->get_string(str);
@@ -274,7 +305,7 @@ namespace y
 	    }
 
 
-    void y_driver::set_model(lexeme::lexeme<keyword_type, character_type>* lex)
+    void y_driver::set_model(lexeme_type* lex)
 	    {
         std::string str;
         bool        ok = lex->get_string(str);
@@ -728,7 +759,7 @@ namespace y
 	    }
 
 
-    GiNaC::ex* y_driver::get_integer(lexeme::lexeme<keyword_type, character_type>* lex)
+    GiNaC::ex* y_driver::get_integer(lexeme_type* lex)
 	    {
         int  i  = 1;
         bool ok = lex->get_integer(i);
@@ -744,7 +775,7 @@ namespace y
 	    }
 
 
-    GiNaC::ex* y_driver::get_decimal(lexeme::lexeme<keyword_type, character_type>* lex)
+    GiNaC::ex* y_driver::get_decimal(lexeme_type* lex)
 	    {
         double d  = 1.0;
         bool   ok = lex->get_decimal(d);
@@ -760,7 +791,7 @@ namespace y
 	    }
 
 
-    GiNaC::ex* y_driver::get_identifier(lexeme::lexeme<keyword_type, character_type>* lex)
+    GiNaC::ex* y_driver::get_identifier(lexeme_type* lex)
 	    {
         std::string id;
         bool        ok = lex->get_identifier(id);
@@ -769,13 +800,11 @@ namespace y
 
         if(ok)
 	        {
-            quantity* s = nullptr;
+            std::shared_ptr<declaration> record = this->root->check_symbol_exists(id);
 
-            bool exists = this->root->lookup_symbol(id, s);
-
-            if(exists)
+            if(record)
 	            {
-                rval = new GiNaC::ex(s->get_ginac_symbol());
+                rval = new GiNaC::ex(record->get_expression());
 	            }
             else
 	            {

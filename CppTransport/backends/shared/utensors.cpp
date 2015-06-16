@@ -82,7 +82,7 @@ namespace macro_packages
         assert(pres.size() == args.size());
         assert(pres.size() == ranges.size());
 
-        for(int i = 0; i < pres.size(); i++)
+        for(int i = 0; i < pres.size(); ++i)
           {
             index_rule rule;
 

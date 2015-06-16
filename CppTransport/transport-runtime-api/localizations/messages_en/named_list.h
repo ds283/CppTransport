@@ -8,7 +8,7 @@
 #define __CPP_TRANSPORT_MESSAGES_EN_NAMED_LIST_H
 
 
-#define __CPP_TRANSPORT_NAMED_LIST_FAIL       "Internal error: Lookup failed in dbxml_helper::named_list"
+#define __CPP_TRANSPORT_NAMED_LIST_FAIL       "Internal error: Lookup failed in named_list"
 
 
 #endif // __CPP_TRANSPORT_MESSAGES_EN_NAMED_LIST_H

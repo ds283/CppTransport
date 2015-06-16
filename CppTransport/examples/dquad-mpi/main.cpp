@@ -15,7 +15,7 @@
 #include <boost/timer/timer.hpp>
 #include <boost/filesystem/operations.hpp>
 
-#include "dq_basic.h"
+#include "dq_basic_unrolled.h"
 
 
 // ****************************************************************************
@@ -60,7 +60,7 @@ void output_info(transport::canonical_model<double>* model, transport::integrati
     const std::vector<double> r_p    = tk->get_params().get_vector();
 
     std::cout << "Fields (" << model->get_N_fields() << "): ";
-    for(int i = 0; i < model->get_N_fields(); i++)
+    for(int i = 0; i < model->get_N_fields(); ++i)
       {
         if(i > 0)
           {
@@ -71,7 +71,7 @@ void output_info(transport::canonical_model<double>* model, transport::integrati
     std::cout << std::endl;
 
     std::cout << "Parameters (" << model->get_N_params() << "): ";
-    for(int i = 0; i < model->get_N_params(); i++)
+    for(int i = 0; i < model->get_N_params(); ++i)
       {
         if(i > 0)
           {

@@ -2,7 +2,6 @@
 // Created by David Seery on 13/08/2013.
 // Copyright (c) 2013-15 University of Sussex. All rights reserved.
 //
-// To change the template use AppCode | Preferences | File Templates.
 //
 
 #ifndef __CPP_TRANSPORT_SPLINE_H_
@@ -11,9 +10,13 @@
 
 #include <vector>
 #include <array>
+#include <limits>
 
-#include "gsl/gsl_spline.h"
+#include <assert.h>
 
+#include "datatable.h"
+#include "bspline.h"
+#include "pspline.h"
 
 namespace transport
   {
@@ -21,12 +24,31 @@ namespace transport
     template <typename number>
     class spline1d
       {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
       public:
+
         //! set up a 1d spline object with given data points
         spline1d(const std::vector<double>& x, const std::vector<number>& y);
 
-        //! destroy object
-        ~spline1d();
+        //! destructor is default
+        ~spline1d() = default;
+
+		    // INTERFACE -- OFFSETS
+
+      public:
+
+		    //! get current offset
+		    number get_offset() const { return(this->offset); }
+
+		    //! set new offset
+		    void set_offset(number o) { this->offset = o; }
+
+
+        // INTERFACE -- EVALUATE VALUES
+
+      public:
 
         //! evaluate the spline at a given value of x
         number eval(double x);
@@ -34,46 +56,108 @@ namespace transport
         //! evaluate the spline at a given value of x
         number operator()(double x) { return(this->eval(x)); }
 
+
+        // INTERFACE -- EVALUATE DERIVATIVES
+
+      public:
+
+        //! evaluate the derivative of the spline at a given value of x
+        number eval_diff(double x);
+
+
+		    // INTERFACE -- MISC DATA
+
+      public:
+
+		    //! get minimum x value
+		    double get_min_x() const { return(this->min_x); }
+
+		    //! get maximum x value
+		    double get_max_x() const { return(this->max_x); }
+
+
+        // INTERNAL DATA
+
+
       protected:
-        gsl_spline*       spline;
-        gsl_interp_accel* accel;
+
+        //! pointer to spline object; its lifetime is managed by std::shared_ptr,
+        //! which also deals correctly with taking copies.
+        //! This is a raw BSpline, meaning that it goes through each of the data points.
+        //! We use it to interpolate values.
+        std::shared_ptr<Splinter::BSpline> b_spline;
+
+        //! pointer to penalized-B spline object.
+        //! This is smoothed, so it need not go through every data point.
+        //! We use it to interpolate derivatives
+        std::shared_ptr<Splinter::PSpline> p_spline;
+
+        //! DataTable instance
+        Splinter::DataTable table;
+
+		    //! offset to apply on evaluation
+		    number offset;
+
+		    //! number of points
+		    size_t N;
+
+		    //! minimum x value
+		    double min_x;
+
+		    //! maximum x value
+		    double max_x;
+
       };
 
 
     template <typename number>
     spline1d<number>::spline1d(const std::vector<double>& x, const std::vector<number>& y)
+      : offset(0.0),
+        min_x(std::numeric_limits<double>::max()),
+        max_x(-std::numeric_limits<double>::max())
       {
         assert(x.size() == y.size());
 
-        spline = gsl_spline_alloc(gsl_interp_cspline, x.size());
-        accel  = gsl_interp_accel_alloc();
+        N  = x.size();
 
-        double* xs = new double[x.size()];
-        double* ys = new double[x.size()];
-
-        for(unsigned int i = 0; i < x.size(); i++)
+        // copy supplied data into Splinter DataTable
+        for(unsigned int i = 0; i < N; ++i)
           {
-            // assume 'number' is explicitly castable to 'double'
-            xs[i] = static_cast<double>(x[i]);
-            ys[i] = (double)y[i];
+            table.addSample(x[i], y[i]);
+
+		        if(x[i] < min_x) min_x = x[i];
+		        if(x[i] > max_x) max_x = x[i];
           }
 
-        gsl_spline_init(spline, xs, ys, x.size());
-      }
-
-
-    template <typename number>
-    spline1d<number>::~spline1d()
-      {
-        gsl_spline_free(this->spline);
-        gsl_interp_accel_free(this->accel);
+        try
+	        {
+            b_spline = std::make_shared<Splinter::BSpline>(table, Splinter::BSplineType::CUBIC_FREE);
+            p_spline = std::make_shared<Splinter::PSpline>(table, 0.03);
+	        }
+				catch(Splinter::Exception& xe)
+					{
+						throw runtime_exception(runtime_exception::SPLINE_ERROR, xe.what());
+					}
       }
 
 
     template <typename number>
     number spline1d<number>::eval(double x)
       {
-        return((number)gsl_spline_eval(this->spline, x, this->accel));
+        Splinter::DenseVector xv(1);
+        xv(0) = x;
+
+        return( static_cast<number>(this->b_spline->eval(xv)) - this->offset );
+      }
+
+
+    template <typename number>
+    number spline1d<number>::eval_diff(double x)
+      {
+        Splinter::DenseVector xv(1);
+        xv(0) = x;
+
+        return( static_cast<number>((this->p_spline->evalJacobian(xv))(0)) );
       }
 
 

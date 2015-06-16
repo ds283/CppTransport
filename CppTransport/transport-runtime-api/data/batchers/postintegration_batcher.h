@@ -12,7 +12,7 @@
 #include <set>
 #include <functional>
 
-#include "transport-runtime-api/derived-products/template_types.h"
+#include "transport-runtime-api/derived-products/derived-content/correlation-functions/template_types.h"
 
 #include "transport-runtime-api/data/batchers/generic_batcher.h"
 #include "transport-runtime-api/data/batchers/postintegration_items.h"
@@ -37,6 +37,9 @@ namespace transport
 
 		    //! Zeta 3pf writer function
 		    typedef std::function<void(postintegration_batcher*, const std::vector< typename postintegration_items<number>::zeta_threepf_item >&)> zeta_threepf_writer;
+
+		    //! Zeta reduced bispectrum writer function
+		    typedef std::function<void(postintegration_batcher*, const std::vector< typename postintegration_items<number>::zeta_redbsp_item >&)> zeta_redbsp_writer;
 
 		    //! fNL writer function
 		    typedef std::function<void(postintegration_batcher*, const std::set< typename postintegration_items<number>::fNL_item, typename postintegration_items<number>::fNL_item_comparator >&, derived_data::template_type)> fNL_writer;
@@ -120,6 +123,9 @@ namespace transport
             typename postintegration_writers<number>::zeta_twopf_writer twopf;
 	        };
 
+
+        // CONSTRUCTOR, DESTRUCTOR
+
       public:
 
         template <typename handle_type>
@@ -127,7 +133,19 @@ namespace transport
                            const writer_group& w, generic_batcher::container_dispatch_function d, generic_batcher::container_replacement_function r,
                            handle_type h, unsigned int wn);
 
-        void push_twopf(unsigned int time_serial, unsigned int k_serial, number value);
+
+        // BATCH, UNBATCH
+
+      public:
+
+        //! batch twopf value
+        void push_twopf(unsigned int time_serial, unsigned int k_serial, number value, unsigned int source_serial=0);
+
+        //! unbatch a k-configuration serial number
+        void unbatch(unsigned int source_serial);
+
+
+        // INTERNAL API
 
       protected:
 
@@ -135,10 +153,15 @@ namespace transport
 
         virtual void flush(generic_batcher::replacement_action action) override;
 
+
+        // INTERNAL DATA
+
       protected:
 
+        //! writer group
         const writer_group writers;
 
+        //! zeta twopf cache
         std::vector< typename postintegration_items<number>::zeta_twopf_item > twopf_batch;
 
 	    };
@@ -155,8 +178,11 @@ namespace transport
           public:
             typename postintegration_writers<number>::zeta_twopf_writer   twopf;
             typename postintegration_writers<number>::zeta_threepf_writer threepf;
-            typename postintegration_writers<number>::zeta_threepf_writer redbsp;
+            typename postintegration_writers<number>::zeta_redbsp_writer  redbsp;
 	        };
+
+
+        // CONSTRUCTOR, DESTRUCTOR
 
       public:
 
@@ -165,11 +191,22 @@ namespace transport
                              const writer_group& w, container_dispatch_function d, container_replacement_function r,
                              handle_type h, unsigned int wn);
 
-        void push_twopf(unsigned int time_serial, unsigned int k_serial, number value);
 
-        void push_threepf(unsigned int time_serial, unsigned int k_serial, number value);
+        // BATCH, UNBATCH
 
-        void push_reduced_bispectrum(unsigned int time_serial, unsigned int k_serial, number value);
+      public:
+
+        void push_twopf(unsigned int time_serial, unsigned int k_serial, number value, unsigned int source_serial=0);
+
+        void push_threepf(unsigned int time_serial, unsigned int k_serial, number value, unsigned int source_serial=0);
+
+        void push_reduced_bispectrum(unsigned int time_serial, unsigned int k_serial, number value, unsigned int source_serial=0);
+
+        //! unbatch a k-configuration serial number
+        void unbatch(unsigned int source_serial);
+
+
+        // INTERNAL API
 
       protected:
 
@@ -177,13 +214,22 @@ namespace transport
 
         virtual void flush(replacement_action action) override;
 
+
+        // INTERNAL DATA
+
       protected:
 
+        //! writer group
         const writer_group writers;
 
+        //! zeta twopf cache
         std::vector< typename postintegration_items<number>::zeta_twopf_item > twopf_batch;
+
+        //! zeta threepf cache
         std::vector< typename postintegration_items<number>::zeta_threepf_item > threepf_batch;
-        std::vector< typename postintegration_items<number>::zeta_threepf_item > redbsp_batch;
+
+        //! zeta reduced bispectrum cache
+        std::vector< typename postintegration_items<number>::zeta_redbsp_item > redbsp_batch;
 
 	    };
 
@@ -200,6 +246,9 @@ namespace transport
             typename postintegration_writers<number>::fNL_writer fNL;
 	        };
 
+
+        // CONSTRUCTOR, DESTRUCTOR
+
       public:
 
         template <typename handle_type>
@@ -207,7 +256,15 @@ namespace transport
                     const writer_group& w, container_dispatch_function d, container_replacement_function r,
                     handle_type h, unsigned int wn, derived_data::template_type t);
 
+
+        // BATCH, UNBATCH
+
+      public:
+
         void push_fNL(unsigned int time_serial, number BT, number TT);
+
+
+        // INTERNAL API
 
       protected:
 
@@ -215,12 +272,18 @@ namespace transport
 
         virtual void flush(replacement_action action) override;
 
+
+        // INTERNAL DATA
+
       protected:
 
+        //! writer group
         const writer_group writers;
 
+        //! fNL cache
         std::set< typename postintegration_items<number>::fNL_item, typename postintegration_items<number>::fNL_item_comparator > fNL_batch;
 
+        //! template being used by this batcher
         derived_data::template_type type;
 
 	    };
@@ -249,6 +312,12 @@ namespace transport
 
         if(this->longest_time == 0 || time > this->longest_time) this->longest_time = time;
         if(this->shortest_time == 0 || time < this->shortest_time) this->shortest_time = time;
+
+        if(this->flush_due)
+          {
+            this->flush_due = false;
+            this->flush(action_replace);
+          }
 	    }
 
 
@@ -266,7 +335,7 @@ namespace transport
         BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "";
         BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "-- Finished assignment: final statistics";
         BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "--   processed " << this->items_processed << " individual work items in " << format_time(this->total_time);
-        BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "--   mean processing time                = " << format_time(this->total_time/this->items_processed);
+        BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "--   mean processing time                = " << format_time(this->total_time/(this->items_processed > 0 ? this->items_processed : 1));
         BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "--   longest individual processing time  = " << format_time(this->longest_time);
         BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "--   shortest individual processing time = " << format_time(this->shortest_time);
 
@@ -288,12 +357,13 @@ namespace transport
 
 
     template <typename number>
-    void zeta_twopf_batcher<number>::push_twopf(unsigned int time_serial, unsigned int k_serial, number value)
+    void zeta_twopf_batcher<number>::push_twopf(unsigned int time_serial, unsigned int k_serial, number value, unsigned int source_serial)
 	    {
         typename postintegration_items<number>::zeta_twopf_item item;
 
         item.time_serial    = time_serial;
         item.kconfig_serial = k_serial;
+        item.source_serial  = source_serial;
         item.value          = value;
 
         this->twopf_batch.push_back(item);
@@ -334,6 +404,15 @@ namespace transport
 	    }
 
 
+    template <typename number>
+    void zeta_twopf_batcher<number>::unbatch(unsigned int source_serial)
+      {
+        this->twopf_batch.erase(std::remove_if(this->twopf_batch.begin(), this->twopf_batch.end(),
+                                               UnbatchPredicate<typename postintegration_items<number>::zeta_twopf_item>(source_serial)),
+                                this->twopf_batch.end());
+      }
+
+
     // ZETA THREEPF BATCHER METHODS
 
 
@@ -349,12 +428,13 @@ namespace transport
 
 
     template <typename number>
-    void zeta_threepf_batcher<number>::push_twopf(unsigned int time_serial, unsigned int k_serial, number value)
+    void zeta_threepf_batcher<number>::push_twopf(unsigned int time_serial, unsigned int k_serial, number value, unsigned int source_serial)
 	    {
         typename postintegration_items<number>::zeta_twopf_item item;
 
         item.time_serial    = time_serial;
         item.kconfig_serial = k_serial;
+        item.source_serial  = source_serial;
         item.value          = value;
 
         this->twopf_batch.push_back(item);
@@ -363,12 +443,13 @@ namespace transport
 
 
     template <typename number>
-    void zeta_threepf_batcher<number>::push_threepf(unsigned int time_serial, unsigned int k_serial, number value)
+    void zeta_threepf_batcher<number>::push_threepf(unsigned int time_serial, unsigned int k_serial, number value, unsigned int source_serial)
 	    {
         typename postintegration_items<number>::zeta_threepf_item item;
 
         item.time_serial    = time_serial;
         item.kconfig_serial = k_serial;
+        item.source_serial  = source_serial;
         item.value          = value;
 
         this->threepf_batch.push_back(item);
@@ -377,12 +458,13 @@ namespace transport
 
 
     template <typename number>
-    void zeta_threepf_batcher<number>::push_reduced_bispectrum(unsigned int time_serial, unsigned int k_serial, number value)
+    void zeta_threepf_batcher<number>::push_reduced_bispectrum(unsigned int time_serial, unsigned int k_serial, number value, unsigned int source_serial)
 	    {
-        typename postintegration_items<number>::zeta_threepf_item item;
+        typename postintegration_items<number>::zeta_redbsp_item item;
 
         item.time_serial    = time_serial;
         item.kconfig_serial = k_serial;
+        item.source_serial  = source_serial;
         item.value          = value;
 
         this->redbsp_batch.push_back(item);
@@ -427,6 +509,23 @@ namespace transport
         // close current container, and replace with a new one if required
         this->replacer(this, action);
 	    }
+
+
+    template <typename number>
+    void zeta_threepf_batcher<number>::unbatch(unsigned int source_serial)
+      {
+        this->twopf_batch.erase(std::remove_if(this->twopf_batch.begin(), this->twopf_batch.end(),
+                                               UnbatchPredicate<typename postintegration_items<number>::zeta_twopf_item>(source_serial)),
+                                this->twopf_batch.end());
+
+        this->threepf_batch.erase(std::remove_if(this->threepf_batch.begin(), this->threepf_batch.end(),
+                                                 UnbatchPredicate<typename postintegration_items<number>::zeta_threepf_item>(source_serial)),
+                                this->threepf_batch.end());
+
+        this->redbsp_batch.erase(std::remove_if(this->redbsp_batch.begin(), this->redbsp_batch.end(),
+                                                UnbatchPredicate<typename postintegration_items<number>::zeta_redbsp_item>(source_serial)),
+                                this->redbsp_batch.end());
+      }
 
 
     // FNL BATCHER METHODS

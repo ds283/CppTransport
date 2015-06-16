@@ -8,10 +8,9 @@
 #define __time_series_table_H_
 
 
-#include "transport-runtime-api/derived-products/line_asciitable.h"
+#include "transport-runtime-api/derived-products/line-collections/line_asciitable.h"
 
 #include "transport-runtime-api/derived-products/utilities/index_selector.h"
-#include "transport-runtime-api/derived-products/utilities/filter.h"
 #include "transport-runtime-api/derived-products/utilities/wrapper.h"
 
 #include "transport-runtime-api/defaults.h"
@@ -45,8 +44,8 @@ namespace transport
 
 		      public:
 
-				    //! (re-)set a default set of labels
-				    void apply_default_labels();
+		        //! (re-)set a default set of labels; should account for the LaTeX setting if desired
+		        virtual void apply_default_labels(bool x_label_set=true) override;
 
 			    };
 
@@ -60,9 +59,24 @@ namespace transport
 
 
 				template <typename number>
-				void time_series_table<number>::apply_default_labels()
+				void time_series_table<number>::apply_default_labels(bool x_label_set)
 					{
-						this->set_x_label(__CPP_TRANSPORT_PRODUCT_TIME_SERIES_TABLE_X_LABEL_NOLATEX);
+				    axis_value x_axis = this->get_x_axis_value();
+
+						if(x_label_set)
+							{
+						    switch(x_axis)
+							    {
+						        case unset_axis:
+						        case efolds_axis:
+							        this->internal_set_x_label(__CPP_TRANSPORT_PRODUCT_TIME_SERIES_TABLE_X_LABEL_NOLATEX);
+							        break;
+
+						        default:
+							        assert(false);
+							    }
+
+							}
 					}
 
 			}   // namespace derived_data

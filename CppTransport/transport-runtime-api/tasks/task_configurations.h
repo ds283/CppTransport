@@ -15,8 +15,7 @@
 // forward-declare derived products if needed
 #include "transport-runtime-api/derived-products/derived_product_forward_declare.h"
 
-
-#define __CPP_TRANSPORT_DEFAULT_K_PRECISION (2)
+#define __CPP_TRANSPORT_DEFAULT_K_PRECISION (6)
 #define __CPP_TRANSPORT_DEFAULT_T_PRECISION (2)
 
 
@@ -34,10 +33,14 @@ namespace transport
 
 				//! serial number
 				unsigned int serial;
-				unsigned int get_serial() const { return(this->serial); }
+
+				unsigned int  get_serial() const { return(this->serial); }
+
+				double&       get_value()        { return(this->t); }
+				const double& get_value()  const { return(this->t); }
 
 				//! Output to a standard stream
-				friend std::ostream& operator<<(std::ostream& out, time_config& obj);
+				friend std::ostream& operator<<(std::ostream& out, const time_config& obj);
 			};
 
 
@@ -62,15 +65,17 @@ namespace transport
         unsigned int serial;
         unsigned int get_serial() const { return(this->serial); }
 
-        //! comoving k-value
-        double       k_comoving;
-        double       k_conventional;
+        //! comoving-normalized k-value (normalized so that k = aH at horizon exit)
+        double k_comoving;
 
-        //! flag which indicates to the integrator whether to store the background
-        bool         store_background;
+		    //! conventionally normalized k-value (normalized so that k=1 at time N*)
+		    double k_conventional;
+
+		    //! time of horizon exit
+		    double t_exit;
 
         //! Output to a standard stream
-        friend std::ostream& operator<<(std::ostream& out, twopf_kconfig& obj);
+        friend std::ostream& operator<<(std::ostream& out, const twopf_kconfig& obj);
 	    };
 
 
@@ -78,7 +83,13 @@ namespace transport
 	    {
         std::ostringstream str;
         str << std::setprecision(__CPP_TRANSPORT_DEFAULT_K_PRECISION) << obj.k_comoving;
-        out << __CPP_TRANSPORT_KCONFIG_SERIAL << " " << obj.serial << ", " << __CPP_TRANSPORT_KCONFIG_KEQUALS << " " << str.str() << std::endl;
+
+        std::ostringstream exit_str;
+		    exit_str << std::setprecision(__CPP_TRANSPORT_DEFAULT_K_PRECISION) << obj.t_exit;
+
+        out << __CPP_TRANSPORT_KCONFIG_SERIAL << " " << obj.serial << ", "
+	        << __CPP_TRANSPORT_KCONFIG_KEQUALS << " " << str.str() << ", "
+	        << __CPP_TRANSPORT_KCONFIG_T_EXIT << " " << exit_str.str() << std::endl;
 
         return(out);
 	    }
@@ -89,36 +100,34 @@ namespace transport
       public:
 
         //! serial number of this k-configuration
-        unsigned int                serial;
-        unsigned int                get_serial() const { return(this->serial); }
+        unsigned int serial;
+        unsigned int get_serial() const { return(this->serial); }
 
         //! serial numbers of k1, k2, k3 into list of twopf-kconfigurations
         //! eg. used to look up appropriate values of the power spectrum when constructing reduced 3pfs
-        std::array<unsigned int, 3> index;
+		    unsigned int k1_serial;
+		    unsigned int k2_serial;
+		    unsigned int k3_serial;
 
         //! (k1,k2,k3) coordinates for this k-configuration
-        double                      k1_comoving;
-        double                      k2_comoving;
-        double                      k3_comoving;
-        double                      k1_conventional;
-        double                      k2_conventional;
-        double                      k3_conventional;
+        double k1_comoving;
+        double k2_comoving;
+        double k3_comoving;
+        double k1_conventional;
+        double k2_conventional;
+        double k3_conventional;
 
         //! Fergusson-Shellard-Liguori coordinates for this k-configuration
-        double                      k_t_comoving;     // comoving normalize k_t
-        double                      k_t_conventional; // conventionally normalized k_t
-        double                      alpha;
-        double                      beta;
+        double kt_comoving;
+        double kt_conventional;
+        double alpha;
+        double beta;
 
-        //! flags which indicate to the integrator whether to
-        //! store the background and twopf results from this integration
-        bool                        store_background;
-        bool                        store_twopf_k1;
-        bool                        store_twopf_k2;
-        bool                        store_twopf_k3;
+		    //! horizon-exit time
+		    double t_exit;
 
         //! Output to a standard stream
-        friend std::ostream& operator<<(std::ostream& out, threepf_kconfig& obj);
+        friend std::ostream& operator<<(std::ostream& out, const threepf_kconfig& obj);
 	    };
 
 
@@ -128,7 +137,7 @@ namespace transport
         std::ostringstream alpha_str;
         std::ostringstream beta_str;
 
-        kt_str    << std::setprecision(__CPP_TRANSPORT_DEFAULT_K_PRECISION) << obj.k_t_comoving;
+        kt_str    << std::setprecision(__CPP_TRANSPORT_DEFAULT_K_PRECISION) << obj.kt_comoving;
         alpha_str << std::setprecision(__CPP_TRANSPORT_DEFAULT_K_PRECISION) << obj.alpha;
         beta_str  << std::setprecision(__CPP_TRANSPORT_DEFAULT_K_PRECISION) << obj.beta;
 
@@ -139,6 +148,45 @@ namespace transport
 
         return(out);
 	    }
+
+
+		class kconfiguration_statistics
+			{
+		  public:
+
+		    //! serial number of this configuration
+		    unsigned int serial;
+
+		    //! time spent integrating, in nanoseconds
+		    boost::timer::nanosecond_type integration;
+
+		    //! time spent batching, in nanoseconds
+		    boost::timer::nanosecond_type batching;
+
+		    //! number of stepsize refinements needed for this configuration
+		    unsigned int refinements;
+
+		    //! number of steps taken by the stepper
+		    size_t steps;
+
+        //! workgroup which produced this configuration
+        unsigned int workgroup;
+
+        //! worker which produced this configuration
+        unsigned int worker;
+
+        //! backend which produced this configuration
+        std::string backend;
+
+        //! background stepper used
+        std::string background_stepper;
+
+        //! perturbation stepper used
+        std::string perturbation_stepper;
+
+        //! hostname of worker
+        std::string hostname;
+			};
 
 
     // OUTPUT DATA
@@ -159,14 +207,18 @@ namespace transport
 
         //! Construct an output task element: requires a derived product and a list of tags to match.
         output_task_element(const derived_data::derived_product<number>& dp, const std::list<std::string>& tgs, unsigned int sn)
-          : product(dp.clone()), tags(tgs), serial(sn)
+          : product(dp.clone()),
+            tags(tgs),
+            serial(sn)
           {
             assert(product != nullptr);
           }
 
         //! Override the default copy constructor to perform a deep copy of the stored derived_product<>
         output_task_element(const output_task_element<number>& obj)
-          : product(obj.product->clone()), tags(obj.tags), serial(obj.serial)
+          : product(obj.product->clone()),
+            tags(obj.tags),
+            serial(obj.serial)
           {
           }
 
@@ -209,6 +261,7 @@ namespace transport
 
         //! Internal serial number
         unsigned int serial;
+
       };
 
 
@@ -220,7 +273,7 @@ namespace transport
 
         unsigned int count = 0;
         const std::list<std::string>& tags = obj.get_tags();
-        for (std::list<std::string>::const_iterator u = tags.begin(); u != tags.end(); u++)
+        for (std::list<std::string>::const_iterator u = tags.begin(); u != tags.end(); ++u)
           {
             if(count > 0) out << ", ";
             out << *u;

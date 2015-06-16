@@ -19,14 +19,13 @@ namespace transport
 		namespace derived_data
 			{
 
-				template <typename number>
 		    class extractor
 			    {
 
 		      public:
 
-		        extractor(unsigned int n, const threepf_configuration& c)
-			        : num(n), config(c)
+		        extractor(unsigned int n)
+			        : num(n)
 			        {
 		            if(this->num < 1) this->num = 1;
 		            if(this->num > 3) this->num = 3;
@@ -36,33 +35,33 @@ namespace transport
 		        ~extractor() = default;
 
 
-		        double comoving() const
+		        double comoving(const threepf_kconfig& c) const
 			        {
-		            if(this->num == 1) return (this->config.k1_comoving);
-		            if(this->num == 2) return (this->config.k2_comoving);
-		            if(this->num == 3) return (this->config.k3_comoving);
+		            if(this->num == 1) return (c.k1_comoving);
+		            if(this->num == 2) return (c.k2_comoving);
+		            if(this->num == 3) return (c.k3_comoving);
 
 		            assert(false);
 		            return (0.0);
 			        }
 
 
-		        double conventional() const
+		        double conventional(const threepf_kconfig& c) const
 			        {
-		            if(this->num == 1) return (this->config.k1_conventional);
-		            if(this->num == 2) return (this->config.k2_conventional);
-		            if(this->num == 3) return (this->config.k3_conventional);
+		            if(this->num == 1) return (c.k1_conventional);
+		            if(this->num == 2) return (c.k2_conventional);
+		            if(this->num == 3) return (c.k3_conventional);
 
 		            assert(false);
 		            return (0.0);
 			        }
 
 
-		        unsigned int serial() const
+		        unsigned int serial(const threepf_kconfig& c) const
 			        {
-		            if(this->num == 1) return (this->config.k1_serial);
-		            if(this->num == 2) return (this->config.k2_serial);
-		            if(this->num == 3) return (this->config.k3_serial);
+		            if(this->num == 1) return (c.k1_serial);
+		            if(this->num == 2) return (c.k2_serial);
+		            if(this->num == 3) return (c.k3_serial);
 
 		            assert(false);
 		            return (0);
@@ -72,8 +71,6 @@ namespace transport
 		      private:
 
 		        unsigned int num;
-
-		        const threepf_configuration& config;
 
 			    };
 

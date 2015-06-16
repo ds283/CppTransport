@@ -72,7 +72,7 @@ namespace transport
         generic_batcher(unsigned int cap,
                         const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                         container_dispatch_function d, container_replacement_function r,
-                        handle_type h, unsigned int w, bool no_log=false);
+                        handle_type h, unsigned int w, unsigned int g=0, bool no_log=false);
 
         virtual ~generic_batcher();
 
@@ -97,6 +97,9 @@ namespace transport
         //! Return an implementation-dependent handle
         template <typename handle_type>
         void get_manager_handle(handle_type* h) const { *h = static_cast<handle_type>(this->manager_handle); }
+
+		    //! Return worker group
+		    unsigned int get_worker_group() const { return(this->worker_group); }
 
         //! Return worker numbers
         unsigned int get_worker_number() const { return(this->worker_number); }
@@ -124,7 +127,10 @@ namespace transport
         flush_mode get_flush_mode() const { return(this->mode); }
 
         //! Set flush mode
-        void set_flush_mode(flush_mode f) { this->mode = f; }
+        virtual void set_flush_mode(flush_mode f) { this->mode = f; }
+
+
+        // INTERNAL API
 
       protected:
 
@@ -144,6 +150,11 @@ namespace transport
 
         //! Host information
         host_information                                         host_info;
+
+		    //! Worker group associated with this batcher;
+		    //! usually zero unless we are doing parallel batching.
+		    //! Later, groups identify different integrations which have been chained together
+		    unsigned int                                             worker_group;
 
         //! Worker number associated with this batcher
         unsigned int                                             worker_number;
@@ -197,12 +208,13 @@ namespace transport
     generic_batcher::generic_batcher(unsigned int cap,
                                      const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                                      container_dispatch_function d, container_replacement_function r,
-                                     handle_type h, unsigned int w, bool no_log)
+                                     handle_type h, unsigned int w, unsigned int g, bool no_log)
 	    : capacity(cap),
 	      container_path(cp),
 	      logdir_path(lp),
 	      dispatcher(d),
 	      replacer(r),
+	      worker_group(g),
 	      worker_number(w),
 	      manager_handle(static_cast<void*>(h)),
 	      mode(flush_immediate),
@@ -276,6 +288,26 @@ namespace transport
             else                              this->flush_due = true;
 	        }
 	    }
+
+
+    template <typename Item>
+    class UnbatchPredicate
+	    {
+      public:
+        UnbatchPredicate(unsigned int s)
+	        : source_serial(s)
+	        {
+	        }
+
+        bool operator()(const Item& it)
+	        {
+            return(it.source_serial == this->source_serial);
+	        }
+
+      private:
+        unsigned int source_serial;
+	    };
+
 
 	}   // namespace transport
 
