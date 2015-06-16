@@ -7,6 +7,7 @@
 
 #include <sstream>
 #include <assert.h>
+#include <algorithm>
 
 #include "script.h"
 
@@ -18,9 +19,15 @@
 
 
 declaration::declaration(const std::string& n, GiNaC::symbol& s, std::shared_ptr<filestack> p)
-  : name(n), symbol(s), path(p)
+  : name(n),
+    symbol(s),
+    path(p),
+		my_id(current_id++)
   {
   }
+
+// initialize static member
+unsigned int declaration::current_id = 0;
 
 
 // ******************************************************************
@@ -399,14 +406,46 @@ unsigned int script::get_number_params() const
   }
 
 
+namespace script_impl
+	{
+		typedef std::vector< std::pair<unsigned int, std::string> > zipped_string_list;
+
+		struct zipped_string_sorter
+			{
+				bool operator()(const std::pair<unsigned int, std::string>& a, const std::pair<unsigned int, std::string>& b)
+					{
+						return(a.first < b.first);
+					}
+			};
+
+    typedef std::vector< std::pair<unsigned int, GiNaC::symbol> > zipped_symbol_list;
+
+    struct zipped_symbol_sorter
+	    {
+        bool operator()(const std::pair<unsigned int, GiNaC::symbol>& a, const std::pair<unsigned int, GiNaC::symbol>& b)
+	        {
+            return(a.first < b.first);
+	        }
+	    };
+	}
+
+
 std::vector<std::string> script::get_field_list() const
   {
+    script_impl::zipped_string_list zipped_list;
     std::vector<std::string> rval;
 
 		for(field_symbol_table::const_iterator t = this->fields.begin(); t != this->fields.end(); ++t)
       {
-        rval.push_back(t->second->get_name());
+        zipped_list.push_back(std::make_pair(t->second->get_unique_id(), t->second->get_name()));
       }
+
+    std::sort(zipped_list.begin(), zipped_list.end(), script_impl::zipped_string_sorter());
+
+		for(script_impl::zipped_string_list::const_iterator t = zipped_list.begin(); t != zipped_list.end(); ++t)
+			{
+				rval.push_back(t->second);
+			}
 
     return(rval);
   }
@@ -414,12 +453,20 @@ std::vector<std::string> script::get_field_list() const
 
 std::vector<std::string> script::get_latex_list() const
   {
+    script_impl::zipped_string_list zipped_list;
     std::vector<std::string> rval;
 
-		for(field_symbol_table::const_iterator t = this->fields.begin(); t != this->fields.end(); ++t)
-      {
-        rval.push_back(t->second->get_latex_name());
-      }
+    for(field_symbol_table::const_iterator t = this->fields.begin(); t != this->fields.end(); ++t)
+	    {
+        zipped_list.push_back(std::make_pair(t->second->get_unique_id(), t->second->get_latex_name()));
+	    }
+
+    std::sort(zipped_list.begin(), zipped_list.end(), script_impl::zipped_string_sorter());
+
+    for(script_impl::zipped_string_list::const_iterator t = zipped_list.begin(); t != zipped_list.end(); ++t)
+	    {
+        rval.push_back(t->second);
+	    }
 
     return(rval);
   }
@@ -427,12 +474,20 @@ std::vector<std::string> script::get_latex_list() const
 
 std::vector<std::string> script::get_param_list() const
   {
+    script_impl::zipped_string_list zipped_list;
     std::vector<std::string> rval;
 
-		for(parameter_symbol_table::const_iterator t = this->parameters.begin(); t != this->parameters.end(); ++t)
-      {
-        rval.push_back(t->second->get_name());
-      }
+    for(parameter_symbol_table::const_iterator t = this->parameters.begin(); t != this->parameters.end(); ++t)
+	    {
+        zipped_list.push_back(std::make_pair(t->second->get_unique_id(), t->second->get_name()));
+	    }
+
+    std::sort(zipped_list.begin(), zipped_list.end(), script_impl::zipped_string_sorter());
+
+    for(script_impl::zipped_string_list::const_iterator t = zipped_list.begin(); t != zipped_list.end(); ++t)
+	    {
+        rval.push_back(t->second);
+	    }
 
     return(rval);
   }
@@ -440,12 +495,20 @@ std::vector<std::string> script::get_param_list() const
 
 std::vector<std::string> script::get_platx_list() const
   {
+    script_impl::zipped_string_list zipped_list;
     std::vector<std::string> rval;
 
-		for(parameter_symbol_table::const_iterator t = this->parameters.begin(); t != this->parameters.end(); ++t)
-      {
-        rval.push_back(t->second->get_latex_name());
-      }
+    for(parameter_symbol_table::const_iterator t = this->parameters.begin(); t != this->parameters.end(); ++t)
+	    {
+        zipped_list.push_back(std::make_pair(t->second->get_unique_id(), t->second->get_latex_name()));
+	    }
+
+    std::sort(zipped_list.begin(), zipped_list.end(), script_impl::zipped_string_sorter());
+
+    for(script_impl::zipped_string_list::const_iterator t = zipped_list.begin(); t != zipped_list.end(); ++t)
+	    {
+        rval.push_back(t->second);
+	    }
 
     return(rval);
   }
@@ -453,12 +516,20 @@ std::vector<std::string> script::get_platx_list() const
 
 std::vector<GiNaC::symbol> script::get_field_symbols() const
   {
+    script_impl::zipped_symbol_list zipped_list;
     std::vector<GiNaC::symbol> rval;
 
     for(field_symbol_table::const_iterator t = this->fields.begin(); t != this->fields.end(); ++t)
-      {
-        rval.push_back(t->second->get_ginac_symbol());
-      }
+	    {
+        zipped_list.push_back(std::make_pair(t->second->get_unique_id(), t->second->get_ginac_symbol()));
+	    }
+
+    std::sort(zipped_list.begin(), zipped_list.end(), script_impl::zipped_symbol_sorter());
+
+    for(script_impl::zipped_symbol_list::const_iterator t = zipped_list.begin(); t != zipped_list.end(); ++t)
+	    {
+        rval.push_back(t->second);
+	    }
 
     return(rval);
   }
@@ -472,12 +543,20 @@ std::vector<GiNaC::symbol> script::get_deriv_symbols() const
 
 std::vector<GiNaC::symbol> script::get_param_symbols() const
   {
+    script_impl::zipped_symbol_list zipped_list;
     std::vector<GiNaC::symbol> rval;
 
     for(parameter_symbol_table::const_iterator t = this->parameters.begin(); t != this->parameters.end(); ++t)
-      {
-        rval.push_back(t->second->get_ginac_symbol());
-      }
+	    {
+        zipped_list.push_back(std::make_pair(t->second->get_unique_id(), t->second->get_ginac_symbol()));
+	    }
+
+    std::sort(zipped_list.begin(), zipped_list.end(), script_impl::zipped_symbol_sorter());
+
+    for(script_impl::zipped_symbol_list::const_iterator t = zipped_list.begin(); t != zipped_list.end(); ++t)
+	    {
+        rval.push_back(t->second);
+	    }
 
     return(rval);
   }

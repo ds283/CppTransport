@@ -7,12 +7,13 @@
 
 
 
-#ifndef __parse_tree_H_
-#define __parse_tree_H_
+#ifndef __script_H_
+#define __script_H_
 
 
 #include <iostream>
 #include <memory>
+#include <unordered_map>
 
 #include "stepper.h"
 #include "indexorder.h"
@@ -45,19 +46,29 @@ class declaration    // is an abstract class
 
   public:
 
+		//! get text name of declaration/symbol
     const std::string& get_name() const { return(this->name); }
 
+		//! get GiNaC symbol association with declaration/symbol
     const GiNaC::symbol& get_ginac_symbol() const { return(this->symbol); }
 
+		//! get filestack object representing definition point
     std::shared_ptr<filestack> get_path() const { return(this->path); }
 
+		//! return GiNaC expression to be substituted when this declaration is used;
+		//! often this will just be the GiNaC symbol, but may be more complex
+		//! eg. for a subexpression declaration
 		virtual GiNaC::ex get_expression() const = 0;
+
+		//! return unique identifier representing order of declarations
+		unsigned int get_unique_id() const { return(this->my_id); }
 
 
 		// PRINT TO STANDARD STREAM
 
   public:
 
+		//! write self-details to standard output
     virtual void print(std::ostream& stream) const = 0;
 
 
@@ -65,11 +76,21 @@ class declaration    // is an abstract class
 
   protected:
 
+		//! text name of declaration
 		std::string name;
 
+		//! GiNaC symbol for declaration
 		GiNaC::symbol symbol;
 
+		//! filestack representing definition point;
+		//! lifetime is managed with std::shared_ptr<>
     std::shared_ptr<filestack> path;
+
+		//! class id; used to record the order in which declarations have been made
+		unsigned int my_id;
+
+		//! global id counter; initialized in script.cpp
+		static unsigned int current_id;
 
 	};
 
@@ -312,9 +333,9 @@ class script
     struct stepper background_stepper;
     struct stepper perturbations_stepper;
 
-    typedef std::map< std::string, std::shared_ptr<field_declaration> >     field_symbol_table;
-    typedef std::map< std::string, std::shared_ptr<parameter_declaration> > parameter_symbol_table;
-    typedef std::map< std::string, std::shared_ptr<subexpr_declaration> >   subexpr_symbol_table;
+    typedef std::unordered_map< std::string, std::shared_ptr<field_declaration> >     field_symbol_table;
+    typedef std::unordered_map< std::string, std::shared_ptr<parameter_declaration> > parameter_symbol_table;
+    typedef std::unordered_map< std::string, std::shared_ptr<subexpr_declaration> >   subexpr_symbol_table;
 
     field_symbol_table     fields;
     parameter_symbol_table parameters;
@@ -337,4 +358,4 @@ class script
 	};
 
 
-#endif //__parse_tree_H_
+#endif //__script_H_
