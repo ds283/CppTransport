@@ -51,16 +51,16 @@ int main(int argc, char* argv[])
     transport::QSFI_basic<double>* model = new transport::QSFI_basic<double>(mgr);
 
     // set up parameter choices
-    const std::vector<double>     init_params = { M, mphi, deltaTheta, phi0, s, pi };
+    const std::vector<double>     init_params = { M, deltaTheta, mphi, phi0, pi, s };
     transport::parameters<double> params(M_Planck, init_params, model);
 
-    const std::vector<double> init_values = { phi_init, chi_init };
+    const std::vector<double> init_values = { chi_init, phi_init };
 
-    const double Ninit  = 0.0;  // start counting from N=0 at the beginning of the integration
-    const double Ncross = 15.0; // horizon-crossing occurs at N=13
+    const double Ninit  = 0.0;   // start counting from N=0 at the beginning of the integration
+    const double Ncross = 251.0; // horizon-crossing occurs at N=251. The turn occurs just after 252 e-folds, so this allows the legs of the bispecturm to span a sensible range around the turn
     const double Npre   = 15.0;  // number of e-folds of subhorizon evolution
-    const double Nsplit = 5.0;  // split point between early and late
-    const double Nmax   = 30.0; // how many e-folds to integrate after horizon crossing
+    const double Nsplit = 5.0;   // split point between early and late
+    const double Nmax   = 30.0;  // how many e-folds to integrate after horizon crossing
 
     // set up initial conditions with the specified horizon-crossing time Ncross and Npre
     // e-folds of subhorizon evolution.
