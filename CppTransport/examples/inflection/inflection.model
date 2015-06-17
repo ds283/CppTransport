@@ -1,5 +1,5 @@
-model          "powerlaw";
-name           "Power-law bispectrum";
+model          "inflection";
+name           "Inflection-point model";
 
 % include details of library tags, stepper definitions, etc.
 #include "defaults.model"
@@ -10,19 +10,19 @@ field
  } phi;
  
 field
- { latex "\sigma";
- } sigma;
+ { latex "\chi";
+ } chi;
 
 % set up the parameters of the model
 parameter
- { latex "m";
- } m;
+ { latex "m_\phi";
+ } mphi;
  
 parameter
- { latex "\Lambda";
- } Lambda;
+ { latex "\lambda";
+ } lambda;
 
 % set up the potential
 % note that 'M_P' is a predefined symbol which resolves to the (user-specified) Planck mass at runtime
 
-potential = (1/2)*m^2*phi^2 + Lambda^4*exp(10*sigma/M_P);
+potential = (1/2) * mphi^2 * phi^2 + (1/6) * lambda * chi^2;

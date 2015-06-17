@@ -179,6 +179,22 @@ add_executable(powerlaw-mpi examples/powerlaw/main.cpp jsoncpp/jsoncpp.cpp)
 target_link_libraries(powerlaw-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} splinter-static-1-2)
 
 
+add_executable(heavy-hilltop-makerepo2 examples/heavy-hilltop/makerepo2.cpp jsoncpp/jsoncpp.cpp)
+target_link_libraries(heavy-hilltop-makerepo2 sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} splinter-static-1-2)
+
+
+add_executable(heavy-hilltop-mpi examples/heavy-hilltop/main.cpp jsoncpp/jsoncpp.cpp)
+target_link_libraries(heavy-hilltop-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} splinter-static-1-2)
+
+
+add_executable(inflection-makerepo2 examples/inflection/makerepo2.cpp jsoncpp/jsoncpp.cpp)
+target_link_libraries(inflection-makerepo2 sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} splinter-static-1-2)
+
+
+add_executable(inflection-mpi examples/inflection/main.cpp jsoncpp/jsoncpp.cpp)
+target_link_libraries(inflection-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} splinter-static-1-2)
+
+
 # cuda_add_executable(dquad-cuda examples/dquad-vexcl/main.cpp jsoncpp/jsoncpp.cpp)
 # target_link_libraries(dquad-cuda sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} splinter-static-1-2 /usr/local/CUDA/lib/libcuda.dylib)
 

@@ -1,5 +1,5 @@
-model          "powerlaw";
-name           "Power-law bispectrum";
+model          "heavy_hilltop";
+name           "Hilltop model with one heavy field";
 
 % include details of library tags, stepper definitions, etc.
 #include "defaults.model"
@@ -15,14 +15,18 @@ field
 
 % set up the parameters of the model
 parameter
- { latex "m";
- } m;
+ { latex "V_0";
+ } V0;
  
 parameter
- { latex "\Lambda";
- } Lambda;
+ { latex "\eta_\phi";
+ } eta_phi;
+
+parameter
+ { latex "\eta_\sigma";
+ } eta_sigma;
 
 % set up the potential
 % note that 'M_P' is a predefined symbol which resolves to the (user-specified) Planck mass at runtime
 
-potential = (1/2)*m^2*phi^2 + Lambda^4*exp(10*sigma/M_P);
+potential = V0*(1 + (1/2)*eta_phi*(phi/M_P)^2 + (1/2)*eta_sigma*(sigma/M_P)^2);

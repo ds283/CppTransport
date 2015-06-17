@@ -138,7 +138,7 @@ script::script(symbol_factory& s)
 
 		attributes Mp_attrs;
 		Mp_attrs.set_latex(MPLANCK_LATEX_SYMBOL);
-		reserved.emplace(std::make_pair(MPLANCK_SYMBOL, std::make_shared<parameter_declaration>(parameter_declaration(MPLANCK_SYMBOL, M_Planck, std::shared_ptr<filestack>(), &Mp_attrs))));
+		reserved.emplace(std::make_pair(MPLANCK_TEXT_NAME, std::make_shared<parameter_declaration>(parameter_declaration(MPLANCK_TEXT_NAME, M_Planck, std::shared_ptr<filestack>(), &Mp_attrs))));
 
     // set up default values for the steppers
     this->background_stepper.abserr    = DEFAULT_ABS_ERR;
