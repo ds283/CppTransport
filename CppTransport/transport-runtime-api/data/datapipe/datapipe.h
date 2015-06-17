@@ -9,7 +9,7 @@
 
 
 // default size of line cache hash table
-#define __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE (1024)
+#define CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE (1024)
 
 
 #include "transport-runtime-api/data/datapipe/datapipe_detail.h"

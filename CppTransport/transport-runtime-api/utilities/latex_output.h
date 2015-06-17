@@ -5,8 +5,8 @@
 // To change the template use AppCode | Preferences | File Templates.
 //
 
-#ifndef __CPP_TRANSPORT_LATEX_OUTPUT_H_
-#define __CPP_TRANSPORT_LATEX_OUTPUT_H_
+#ifndef CPPTRANSPORT_LATEX_OUTPUT_H_
+#define CPPTRANSPORT_LATEX_OUTPUT_H_
 
 #include <iostream>
 #include <iomanip>
@@ -53,4 +53,4 @@ inline std::string output_latex_number(double number, unsigned int sf)
     return(output.str());
   }
 
-#endif // __CPP_TRANSPORT_LATEX_OUTPUT_H_
+#endif // CPPTRANSPORT_LATEX_OUTPUT_H_

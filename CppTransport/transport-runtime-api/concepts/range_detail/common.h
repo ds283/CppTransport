@@ -45,9 +45,9 @@ namespace aggregation_range_impl
 	}
 
 
-#define __CPP_TRANSPORT_NODE_RANGE_TYPE          "range-type"
-#define __CPP_TRANSPORT_NODE_RANGE_STEPPING      "stepping-range"
-#define __CPP_TRANSPORT_NODE_RANGE_AGGREGATE     "aggregation-type"
+#define CPPTRANSPORT_NODE_RANGE_TYPE          "range-type"
+#define CPPTRANSPORT_NODE_RANGE_STEPPING      "stepping-range"
+#define CPPTRANSPORT_NODE_RANGE_AGGREGATE     "aggregation-type"
 
 
 #endif //__range_common_H_

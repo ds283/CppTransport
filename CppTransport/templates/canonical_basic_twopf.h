@@ -319,10 +319,10 @@ namespace transport
 	                refinement_level++;
 
 	                BOOST_LOG_SEV(batcher.get_log(), generic_batcher::warning)
-		                << "** " << __CPP_TRANSPORT_RETRY_CONFIG << " " << list[i]->serial << " (" << i+1
-			                << " " __CPP_TRANSPORT_OF << " " << list.size() << "), "
-			                << __CPP_TRANSPORT_REFINEMENT_LEVEL << " = " << refinement_level
-			                << " (" << __CPP_TRANSPORT_REFINEMENT_INTERNAL << xe.what() << ")";
+		                << "** " << CPPTRANSPORT_RETRY_CONFIG << " " << list[i]->serial << " (" << i+1
+			                << " " CPPTRANSPORT_OF << " " << list.size() << "), "
+			                << CPPTRANSPORT_REFINEMENT_LEVEL << " = " << refinement_level
+			                << " (" << CPPTRANSPORT_REFINEMENT_INTERNAL << xe.what() << ")";
 		            }
 	            catch(runtime_exception& xe)
 		            {
@@ -330,8 +330,8 @@ namespace transport
 	                batcher.unbatch(list[i]->serial);
 
 	                BOOST_LOG_SEV(batcher.get_log(), generic_batcher::error)
-		                << "!! " __CPP_TRANSPORT_FAILED_CONFIG << " " << list[i]->serial << " (" << i+1
-			                << " " __CPP_TRANSPORT_OF << " " << list.size() << ") | " << list[i];
+		                << "!! " CPPTRANSPORT_FAILED_CONFIG << " " << list[i]->serial << " (" << i+1
+			                << " " CPPTRANSPORT_OF << " " << list.size() << ") | " << list[i];
 		            }
 	        }
 	    }
@@ -341,7 +341,7 @@ namespace transport
     void $$__MODEL_basic<number>::twopf_kmode(const twopf_kconfig_record& kconfig, const twopf_list_task<number>* tk,
                                               twopf_batcher<number>& batcher, unsigned int refinement_level)
 	    {
-        if(refinement_level > tk->get_max_refinements()) throw runtime_exception(runtime_exception::REFINEMENT_FAILURE, __CPP_TRANSPORT_REFINEMENT_TOO_DEEP);
+        if(refinement_level > tk->get_max_refinements()) throw runtime_exception(runtime_exception::REFINEMENT_FAILURE, CPPTRANSPORT_REFINEMENT_TOO_DEEP);
 
         // get time configuration database
         const time_config_database time_db = tk->get_time_config_database(*kconfig);

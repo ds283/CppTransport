@@ -25,10 +25,10 @@
 #include "transport-runtime-api/derived-products/derived-content/SQL_query/SQL_query_helper.h"
 
 
-#define __CPP_TRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_TYPE       "type"
-#define __CPP_TRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_EPSILON    "epsilon"
-#define __CPP_TRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_HUBBLE     "hubble"
-#define __CPP_TRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_A_HUBBLE   "a-hubble"
+#define CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_TYPE       "type"
+#define CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_EPSILON    "epsilon"
+#define CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_HUBBLE     "hubble"
+#define CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_A_HUBBLE   "a-hubble"
 
 
 namespace transport
@@ -48,7 +48,7 @@ namespace transport
 		      public:
 
 				    //! basic user-facing constructor
-				    background_line(const twopf_list_task<number>& tk, SQL_time_config_query tq, background_line_type t, unsigned int prec = __CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
+				    background_line(const twopf_list_task<number>& tk, SQL_time_config_query tq, background_line_type t, unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
 				    //! deserialization constructor
 				    background_line(Json::Value& reader, typename repository_finder<number>::task_finder& finder);
@@ -141,16 +141,16 @@ namespace transport
 					: derived_line<number>(reader, finder),
 		        time_series<number>(reader),
 						gadget(),
-						tquery(reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY])
+						tquery(reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY])
 					{
 						assert(this->parent_task != nullptr);
 						gadget.set_task(this->parent_task, finder);
 
-				    std::string type_string = reader[__CPP_TRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_TYPE].asString();
+				    std::string type_string = reader[CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_TYPE].asString();
 						type = epsilon;
-						if(type_string == __CPP_TRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_EPSILON)         type = epsilon;
-						else if(type_string == __CPP_TRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_HUBBLE)     type = Hubble;
-						else if(type_string == __CPP_TRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_A_HUBBLE)   type = aHubble;
+						if(type_string == CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_EPSILON)         type = epsilon;
+						else if(type_string == CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_HUBBLE)     type = Hubble;
+						else if(type_string == CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_A_HUBBLE)   type = aHubble;
 						else assert(false); // TODO: raise exception
 					}
 
@@ -158,22 +158,22 @@ namespace transport
 				template <typename number>
 				void background_line<number>::serialize(Json::Value& writer) const
 					{
-						writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_BACKGROUND_LINE);
+						writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_BACKGROUND_LINE);
 
-						this->tquery.serialize(writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]);
+						this->tquery.serialize(writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]);
 
 				    switch(this->type)
 					    {
 				        case epsilon:
-					        writer[__CPP_TRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_TYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_EPSILON);
+					        writer[CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_TYPE] = std::string(CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_EPSILON);
 						      break;
 
 				        case Hubble:
-					        writer[__CPP_TRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_TYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_HUBBLE);
+					        writer[CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_TYPE] = std::string(CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_HUBBLE);
 						      break;
 
 				        case aHubble:
-					        writer[__CPP_TRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_TYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_A_HUBBLE);
+					        writer[CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_TYPE] = std::string(CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_A_HUBBLE);
 						      break;
 
 				        default:
@@ -310,15 +310,15 @@ namespace transport
 								switch(this->type)
 									{
 								    case epsilon:
-									    label = "$" + std::string(__CPP_TRANSPORT_LATEX_EPSILON_SYMBOL) + "$";
+									    label = "$" + std::string(CPPTRANSPORT_LATEX_EPSILON_SYMBOL) + "$";
 											break;
 
 								    case Hubble:
-									    label = "$" + std::string(__CPP_TRANSPORT_LATEX_HUBBLE_SYMBOL) + "$";
+									    label = "$" + std::string(CPPTRANSPORT_LATEX_HUBBLE_SYMBOL) + "$";
 											break;
 
 								    case aHubble:
-									    label = "$" + std::string(__CPP_TRANSPORT_LATEX_A_HUBBLE_SYMBOL) + "$";
+									    label = "$" + std::string(CPPTRANSPORT_LATEX_A_HUBBLE_SYMBOL) + "$";
 											break;
 
 								    default:
@@ -345,15 +345,15 @@ namespace transport
 		            switch(this->type)
 			            {
 		                case epsilon:
-			                label = "$" + std::string(__CPP_TRANSPORT_NONLATEX_EPSILON_SYMBOL) + "$";
+			                label = "$" + std::string(CPPTRANSPORT_NONLATEX_EPSILON_SYMBOL) + "$";
 		                break;
 
 		                case Hubble:
-			                label = "$" + std::string(__CPP_TRANSPORT_NONLATEX_HUBBLE_SYMBOL) + "$";
+			                label = "$" + std::string(CPPTRANSPORT_NONLATEX_HUBBLE_SYMBOL) + "$";
 		                break;
 
 		                case aHubble:
-			                label = "$" + std::string(__CPP_TRANSPORT_NONLATEX_A_HUBBLE_SYMBOL) + "$";
+			                label = "$" + std::string(CPPTRANSPORT_NONLATEX_A_HUBBLE_SYMBOL) + "$";
 		                break;
 
 		                default:

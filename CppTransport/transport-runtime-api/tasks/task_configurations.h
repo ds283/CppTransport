@@ -15,8 +15,8 @@
 // forward-declare derived products if needed
 #include "transport-runtime-api/derived-products/derived_product_forward_declare.h"
 
-#define __CPP_TRANSPORT_DEFAULT_K_PRECISION (6)
-#define __CPP_TRANSPORT_DEFAULT_T_PRECISION (2)
+#define CPPTRANSPORT_DEFAULT_K_PRECISION (6)
+#define CPPTRANSPORT_DEFAULT_T_PRECISION (2)
 
 
 namespace transport
@@ -47,8 +47,8 @@ namespace transport
 		std::ostream& operator<<(std::ostream& out, const time_config& obj)
 			{
 		    std::ostringstream str;
-				str << std::setprecision(__CPP_TRANSPORT_DEFAULT_T_PRECISION) << obj.t;
-				out << __CPP_TRANSPORT_TIME_CONFIG_SERIAL << " " << obj.serial << ", " << __CPP_TRANSPORT_TIME_CONFIG_TEQUALS << " " << str.str() << std::endl;
+				str << std::setprecision(CPPTRANSPORT_DEFAULT_T_PRECISION) << obj.t;
+				out << CPPTRANSPORT_TIME_CONFIG_SERIAL << " " << obj.serial << ", " << CPPTRANSPORT_TIME_CONFIG_TEQUALS << " " << str.str() << std::endl;
 
 				return(out);
 			}
@@ -82,14 +82,14 @@ namespace transport
     std::ostream& operator<<(std::ostream& out, const twopf_kconfig& obj)
 	    {
         std::ostringstream str;
-        str << std::setprecision(__CPP_TRANSPORT_DEFAULT_K_PRECISION) << obj.k_comoving;
+        str << std::setprecision(CPPTRANSPORT_DEFAULT_K_PRECISION) << obj.k_comoving;
 
         std::ostringstream exit_str;
-		    exit_str << std::setprecision(__CPP_TRANSPORT_DEFAULT_K_PRECISION) << obj.t_exit;
+		    exit_str << std::setprecision(CPPTRANSPORT_DEFAULT_K_PRECISION) << obj.t_exit;
 
-        out << __CPP_TRANSPORT_KCONFIG_SERIAL << " " << obj.serial << ", "
-	        << __CPP_TRANSPORT_KCONFIG_KEQUALS << " " << str.str() << ", "
-	        << __CPP_TRANSPORT_KCONFIG_T_EXIT << " " << exit_str.str() << std::endl;
+        out << CPPTRANSPORT_KCONFIG_SERIAL << " " << obj.serial << ", "
+	        << CPPTRANSPORT_KCONFIG_KEQUALS << " " << str.str() << ", "
+	        << CPPTRANSPORT_KCONFIG_T_EXIT << " " << exit_str.str() << std::endl;
 
         return(out);
 	    }
@@ -137,13 +137,13 @@ namespace transport
         std::ostringstream alpha_str;
         std::ostringstream beta_str;
 
-        kt_str    << std::setprecision(__CPP_TRANSPORT_DEFAULT_K_PRECISION) << obj.kt_comoving;
-        alpha_str << std::setprecision(__CPP_TRANSPORT_DEFAULT_K_PRECISION) << obj.alpha;
-        beta_str  << std::setprecision(__CPP_TRANSPORT_DEFAULT_K_PRECISION) << obj.beta;
+        kt_str    << std::setprecision(CPPTRANSPORT_DEFAULT_K_PRECISION) << obj.kt_comoving;
+        alpha_str << std::setprecision(CPPTRANSPORT_DEFAULT_K_PRECISION) << obj.alpha;
+        beta_str  << std::setprecision(CPPTRANSPORT_DEFAULT_K_PRECISION) << obj.beta;
 
-        out << __CPP_TRANSPORT_KCONFIG_SERIAL << " " << obj.serial << ", " << __CPP_TRANSPORT_KCONFIG_KTEQUALS << " " << kt_str.str()
-	        << ", " << __CPP_TRANSPORT_KCONFIG_ALPHAEQUALS << " " << alpha_str.str()
-	        << ", " << __CPP_TRANSPORT_KCONFIG_BETAEQUALS << " " << beta_str.str()
+        out << CPPTRANSPORT_KCONFIG_SERIAL << " " << obj.serial << ", " << CPPTRANSPORT_KCONFIG_KTEQUALS << " " << kt_str.str()
+	        << ", " << CPPTRANSPORT_KCONFIG_ALPHAEQUALS << " " << alpha_str.str()
+	        << ", " << CPPTRANSPORT_KCONFIG_BETAEQUALS << " " << beta_str.str()
 	        << std::endl;
 
         return(out);
@@ -268,8 +268,8 @@ namespace transport
     template <typename number>
     std::ostream& operator<<(std::ostream& out, const output_task_element<number>& obj)
       {
-        out << "  " << __CPP_TRANSPORT_OUTPUT_ELEMENT_OUTPUT << " " << obj.get_product_name() << ",";
-        out << " " << __CPP_TRANSPORT_OUTPUT_ELEMENT_TAGS  << ": ";
+        out << "  " << CPPTRANSPORT_OUTPUT_ELEMENT_OUTPUT << " " << obj.get_product_name() << ",";
+        out << " " << CPPTRANSPORT_OUTPUT_ELEMENT_TAGS  << ": ";
 
         unsigned int count = 0;
         const std::list<std::string>& tags = obj.get_tags();

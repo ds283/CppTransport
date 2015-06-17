@@ -47,22 +47,22 @@
 
 
 
-#define __CPP_TRANSPORT_SWITCH_REPO              "--repo"
-#define __CPP_TRANSPORT_SWITCH_TAG               "--tag"
-#define __CPP_TRANSPORT_SWITCH_CAPACITY          "--caches"
-#define __CPP_TRANSPORT_SWITCH_BATCHER_CAPACITY  "--batch-cache"
-#define __CPP_TRANSPORT_SWITCH_CACHE_CAPACITY    "--data-cache"
-#define __CPP_TRANSPORT_SWITCH_VERBOSE           "-v"
-#define __CPP_TRANSPORT_SWITCH_GANTT_CHART       "--gantt-chart"
+#define CPPTRANSPORT_SWITCH_REPO              "--repo"
+#define CPPTRANSPORT_SWITCH_TAG               "--tag"
+#define CPPTRANSPORT_SWITCH_CAPACITY          "--caches"
+#define CPPTRANSPORT_SWITCH_BATCHER_CAPACITY  "--batch-cache"
+#define CPPTRANSPORT_SWITCH_CACHE_CAPACITY    "--data-cache"
+#define CPPTRANSPORT_SWITCH_VERBOSE           "-v"
+#define CPPTRANSPORT_SWITCH_GANTT_CHART       "--gantt-chart"
 
-#define __CPP_TRANSPORT_VERB_TASK                "task"
-#define __CPP_TRANSPORT_VERB_GET                 "get"
-#define __CPP_TRANSPORT_VERB_SEED                "seed"
+#define CPPTRANSPORT_VERB_TASK                "task"
+#define CPPTRANSPORT_VERB_GET                 "get"
+#define CPPTRANSPORT_VERB_SEED                "seed"
 
-#define __CPP_TRANSPORT_NOUN_TASK                "task"
-#define __CPP_TRANSPORT_NOUN_PACKAGE             "package"
-#define __CPP_TRANSPORT_NOUN_PRODUCT             "product"
-#define __CPP_TRANSPORT_NOUN_CONTENT             "content"
+#define CPPTRANSPORT_NOUN_TASK                "task"
+#define CPPTRANSPORT_NOUN_PACKAGE             "package"
+#define CPPTRANSPORT_NOUN_PRODUCT             "product"
+#define CPPTRANSPORT_NOUN_CONTENT             "content"
 
 
 
@@ -267,15 +267,15 @@ namespace transport
 				//! (one has to be provided in the command line arguments later)
 				master_controller(boost::mpi::environment& e, boost::mpi::communicator& w,
 				                  error_callback err, warning_callback warn, message_callback msg,
-				                  unsigned int bcp = __CPP_TRANSPORT_DEFAULT_BATCHER_STORAGE,
-				                  unsigned int pcp = __CPP_TRANSPORT_DEFAULT_PIPE_STORAGE);
+				                  unsigned int bcp = CPPTRANSPORT_DEFAULT_BATCHER_STORAGE,
+				                  unsigned int pcp = CPPTRANSPORT_DEFAULT_PIPE_STORAGE);
 
 				//! construct a master controller object with a supplied repository
 				master_controller(boost::mpi::environment& e, boost::mpi::communicator& w,
 				                  json_repository<number>* r,
 				                  error_callback err, warning_callback warn, message_callback msg,
-				                  unsigned int bcp = __CPP_TRANSPORT_DEFAULT_BATCHER_STORAGE,
-				                  unsigned int pcp = __CPP_TRANSPORT_DEFAULT_PIPE_STORAGE);
+				                  unsigned int bcp = CPPTRANSPORT_DEFAULT_BATCHER_STORAGE,
+				                  unsigned int pcp = CPPTRANSPORT_DEFAULT_PIPE_STORAGE);
 
 				//! destroy a master manager object
 				~master_controller();
@@ -588,18 +588,18 @@ namespace transport
 
 		    for(unsigned int i = 1; i < argc; ++i)
 			    {
-		        if(std::string(argv[i]) == __CPP_TRANSPORT_SWITCH_REPO)
+		        if(std::string(argv[i]) == CPPTRANSPORT_SWITCH_REPO)
 			        {
 		            if(repo != nullptr)
 			            {
 		                ++i;
 		                if(!multiple_repo_warn)
 			                {
-		                    this->warning_handler(__CPP_TRANSPORT_MULTIPLE_SET_REPO);
+		                    this->warning_handler(CPPTRANSPORT_MULTIPLE_SET_REPO);
 		                    multiple_repo_warn = true;
 			                }
 			            }
-		            else if(i+1 >= argc) this->error_handler(__CPP_TRANSPORT_EXPECTED_REPO);
+		            else if(i+1 >= argc) this->error_handler(CPPTRANSPORT_EXPECTED_REPO);
 		            else
 			            {
 		                ++i;
@@ -624,14 +624,14 @@ namespace transport
 			                }
 			            }
 			        }
-		        else if(std::string(argv[i]) == __CPP_TRANSPORT_SWITCH_TAG)
+		        else if(std::string(argv[i]) == CPPTRANSPORT_SWITCH_TAG)
 			        {
-		            if(i+1 >= argc) this->error_handler(__CPP_TRANSPORT_EXPECTED_TAG);
+		            if(i+1 >= argc) this->error_handler(CPPTRANSPORT_EXPECTED_TAG);
 		            else            tags.push_back(std::string(argv[++i]));
 			        }
-		        else if(std::string(argv[i]) == __CPP_TRANSPORT_SWITCH_CAPACITY)
+		        else if(std::string(argv[i]) == CPPTRANSPORT_SWITCH_CAPACITY)
 			        {
-		            if(i+1 >= argc) this->error_handler(__CPP_TRANSPORT_EXPECTED_CAPACITY);
+		            if(i+1 >= argc) this->error_handler(CPPTRANSPORT_EXPECTED_CAPACITY);
 		            else
 			            {
 		                ++i;
@@ -647,14 +647,14 @@ namespace transport
 		                else
 			                {
 		                    std::ostringstream msg;
-		                    msg << __CPP_TRANSPORT_EXPECTED_POSITIVE << " " << __CPP_TRANSPORT_SWITCH_CAPACITY;
+		                    msg << CPPTRANSPORT_EXPECTED_POSITIVE << " " << CPPTRANSPORT_SWITCH_CAPACITY;
 		                    this->error_handler(msg.str());
 			                }
 			            }
 			        }
-		        else if(std::string(argv[i]) == __CPP_TRANSPORT_SWITCH_BATCHER_CAPACITY)
+		        else if(std::string(argv[i]) == CPPTRANSPORT_SWITCH_BATCHER_CAPACITY)
 			        {
-		            if(i+1 >= argc) this->error_handler(__CPP_TRANSPORT_EXPECTED_CAPACITY);
+		            if(i+1 >= argc) this->error_handler(CPPTRANSPORT_EXPECTED_CAPACITY);
 		            else
 			            {
 		                ++i;
@@ -669,14 +669,14 @@ namespace transport
 		                else
 			                {
 		                    std::ostringstream msg;
-		                    msg << __CPP_TRANSPORT_EXPECTED_POSITIVE << " " << __CPP_TRANSPORT_SWITCH_BATCHER_CAPACITY;
+		                    msg << CPPTRANSPORT_EXPECTED_POSITIVE << " " << CPPTRANSPORT_SWITCH_BATCHER_CAPACITY;
 		                    this->error_handler(msg.str());
 			                }
 			            }
 			        }
-		        else if(std::string(argv[i]) == __CPP_TRANSPORT_SWITCH_CACHE_CAPACITY)
+		        else if(std::string(argv[i]) == CPPTRANSPORT_SWITCH_CACHE_CAPACITY)
 			        {
-		            if(i+1 >= argc) this->error_handler(__CPP_TRANSPORT_EXPECTED_CAPACITY);
+		            if(i+1 >= argc) this->error_handler(CPPTRANSPORT_EXPECTED_CAPACITY);
 		            else
 			            {
 		                ++i;
@@ -691,14 +691,14 @@ namespace transport
 		                else
 			                {
 		                    std::ostringstream msg;
-		                    msg << __CPP_TRANSPORT_EXPECTED_POSITIVE << " " << __CPP_TRANSPORT_SWITCH_CACHE_CAPACITY;
+		                    msg << CPPTRANSPORT_EXPECTED_POSITIVE << " " << CPPTRANSPORT_SWITCH_CACHE_CAPACITY;
 		                    this->error_handler(msg.str());
 			                }
 			            }
 			        }
-		        else if(std::string(argv[i]) == __CPP_TRANSPORT_SWITCH_GANTT_CHART)
+		        else if(std::string(argv[i]) == CPPTRANSPORT_SWITCH_GANTT_CHART)
 			        {
-				        if(i+1 >= argc) this->error_handler(__CPP_TRANSPORT_EXPECTED_GANTT_FILENAME);
+				        if(i+1 >= argc) this->error_handler(CPPTRANSPORT_EXPECTED_GANTT_FILENAME);
 				        else
 					        {
 						        ++i;
@@ -706,13 +706,13 @@ namespace transport
 						        this->arg_cache.set_gantt_filename(argv[i]);
 					        }
 			        }
-		        else if(std::string(argv[i]) == __CPP_TRANSPORT_SWITCH_VERBOSE)
+		        else if(std::string(argv[i]) == CPPTRANSPORT_SWITCH_VERBOSE)
 			        {
 				        this->arg_cache.set_verbose(true);
 			        }
-		        else if(std::string(argv[i]) == __CPP_TRANSPORT_VERB_SEED)
+		        else if(std::string(argv[i]) == CPPTRANSPORT_VERB_SEED)
 			        {
-								if(i+1 >= argc) this->error_handler(__CPP_TRANSPORT_EXPECTED_SEED_GROUP);
+								if(i+1 >= argc) this->error_handler(CPPTRANSPORT_EXPECTED_SEED_GROUP);
 								else
 									{
 								    ++i;
@@ -720,9 +720,9 @@ namespace transport
 								    seed = true;
 									}
 			        }
-		        else if(std::string(argv[i]) == __CPP_TRANSPORT_VERB_TASK)
+		        else if(std::string(argv[i]) == CPPTRANSPORT_VERB_TASK)
 			        {
-		            if(i+1 >= argc) this->error_handler(__CPP_TRANSPORT_EXPECTED_TASK_ID);
+		            if(i+1 >= argc) this->error_handler(CPPTRANSPORT_EXPECTED_TASK_ID);
 		            else
 			            {
 		                ++i;
@@ -734,32 +734,32 @@ namespace transport
 				            seed = false;
 			            }
 			        }
-		        else if(std::string(argv[i]) == __CPP_TRANSPORT_VERB_GET)
+		        else if(std::string(argv[i]) == CPPTRANSPORT_VERB_GET)
 			        {
-		            if(i+1 >= argc) this->error_handler(__CPP_TRANSPORT_EXPECTED_GET_TYPE);
+		            if(i+1 >= argc) this->error_handler(CPPTRANSPORT_EXPECTED_GET_TYPE);
 				        else
 			            {
 		                ++i;
 
 		                job_type type;
-		                if(std::string(argv[i]) == __CPP_TRANSPORT_NOUN_PACKAGE)      type = job_get_package;
-		                else if(std::string(argv[i]) == __CPP_TRANSPORT_NOUN_TASK)    type = job_get_task;
-		                else if(std::string(argv[i]) == __CPP_TRANSPORT_NOUN_PRODUCT) type = job_get_product;
-		                else if(std::string(argv[i]) == __CPP_TRANSPORT_NOUN_CONTENT) type = job_get_content;
+		                if(std::string(argv[i]) == CPPTRANSPORT_NOUN_PACKAGE)      type = job_get_package;
+		                else if(std::string(argv[i]) == CPPTRANSPORT_NOUN_TASK)    type = job_get_task;
+		                else if(std::string(argv[i]) == CPPTRANSPORT_NOUN_PRODUCT) type = job_get_product;
+		                else if(std::string(argv[i]) == CPPTRANSPORT_NOUN_CONTENT) type = job_get_content;
 		                else
 			                {
 		                    std::ostringstream msg;
-		                    msg << __CPP_TRANSPORT_UNKNOWN_GET_TYPE << " '" << argv[i] << "'";
+		                    msg << CPPTRANSPORT_UNKNOWN_GET_TYPE << " '" << argv[i] << "'";
 		                    this->error_handler(msg.str());
 			                }
 
-		                if(i+1 >= argc) this->error_handler(__CPP_TRANSPORT_EXPECTED_GET_NAME);
+		                if(i+1 >= argc) this->error_handler(CPPTRANSPORT_EXPECTED_GET_NAME);
 		                else
 			                {
 		                    ++i;
 		                    std::string name = argv[i];
 
-		                    if(i+1 >= argc) this->error_handler(__CPP_TRANSPORT_EXPECTED_GET_OUTPUT);
+		                    if(i+1 >= argc) this->error_handler(CPPTRANSPORT_EXPECTED_GET_OUTPUT);
 				                else
 			                    {
 		                        ++i;
@@ -774,7 +774,7 @@ namespace transport
 		        else
 			        {
 		            std::ostringstream msg;
-		            msg << __CPP_TRANSPORT_UNKNOWN_SWITCH << " '" << argv[i] << "'";
+		            msg << CPPTRANSPORT_UNKNOWN_SWITCH << " '" << argv[i] << "'";
 		            this->error_handler(msg.str());
 			        }
 			    }
@@ -784,11 +784,11 @@ namespace transport
     template <typename number>
     void master_controller<number>::execute_tasks(void)
 	    {
-        if(!(this->get_rank() == 0)) throw runtime_exception(runtime_exception::MPI_ERROR, __CPP_TRANSPORT_EXEC_SLAVE);
+        if(!(this->get_rank() == 0)) throw runtime_exception(runtime_exception::MPI_ERROR, CPPTRANSPORT_EXEC_SLAVE);
 
         if(this->repo == nullptr)
 	        {
-            this->error_handler(__CPP_TRANSPORT_REPO_NONE);
+            this->error_handler(CPPTRANSPORT_REPO_NONE);
 	        }
         else
 	        {
@@ -819,7 +819,7 @@ namespace transport
 	                    }
 
                     default:
-	                    throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_UNKNOWN_JOB_TYPE);
+	                    throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_UNKNOWN_JOB_TYPE);
 	                }
 	            }
 
@@ -827,17 +827,17 @@ namespace transport
 		        if(database_tasks > 0)
 			        {
 		            std::ostringstream msg;
-		            msg << __CPP_TRANSPORT_PROCESSED_TASKS_A << " " << database_tasks << " ";
+		            msg << CPPTRANSPORT_PROCESSED_TASKS_A << " " << database_tasks << " ";
 				        if(database_tasks > 1)
 					        {
-						        msg << __CPP_TRANSPORT_PROCESSED_TASKS_B_PLURAL;
+						        msg << CPPTRANSPORT_PROCESSED_TASKS_B_PLURAL;
 					        }
 				        else
 					        {
-						        msg << __CPP_TRANSPORT_PROCESSED_TASKS_B_SINGULAR;
+						        msg << CPPTRANSPORT_PROCESSED_TASKS_B_SINGULAR;
 					        }
-		            msg << " " << __CPP_TRANSPORT_PROCESSED_TASKS_C << " " << format_time(timer.elapsed().wall);
-				        msg << " | " << __CPP_TRANSPORT_PROCESSED_TASKS_D << " ";
+		            msg << " " << CPPTRANSPORT_PROCESSED_TASKS_C << " " << format_time(timer.elapsed().wall);
+				        msg << " | " << CPPTRANSPORT_PROCESSED_TASKS_D << " ";
 
 		            boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
 				        msg << boost::posix_time::to_simple_string(now);
@@ -900,7 +900,7 @@ namespace transport
             else
 	            {
                 std::ostringstream msg;
-                msg << __CPP_TRANSPORT_OPEN_OUTPUT_FAIL << " '" << job.get_output() << "'";
+                msg << CPPTRANSPORT_OPEN_OUTPUT_FAIL << " '" << job.get_output() << "'";
                 throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
 	            }
             out.close();
@@ -927,7 +927,7 @@ namespace transport
                     integration_task_record<number>* int_rec = dynamic_cast< integration_task_record<number>* >(record.get());
 
                     assert(int_rec != nullptr);
-                    if(int_rec == nullptr) throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_RECORD_CAST_FAILED);
+                    if(int_rec == nullptr) throw runtime_exception(runtime_exception::REPOSITORY_ERROR, CPPTRANSPORT_REPO_RECORD_CAST_FAILED);
 
                     this->dispatch_integration_task(int_rec, job.is_seeded(), job.get_seed_group(), job.get_tags());
                     break;
@@ -938,7 +938,7 @@ namespace transport
                     output_task_record<number>* out_rec = dynamic_cast< output_task_record<number>* >(record.get());
 
                     assert(out_rec != nullptr);
-                    if(out_rec == nullptr) throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_RECORD_CAST_FAILED);
+                    if(out_rec == nullptr) throw runtime_exception(runtime_exception::REPOSITORY_ERROR, CPPTRANSPORT_REPO_RECORD_CAST_FAILED);
 
                     this->dispatch_output_task(out_rec, job.get_tags());
                     break;
@@ -949,7 +949,7 @@ namespace transport
                     postintegration_task_record<number>* pint_rec = dynamic_cast< postintegration_task_record<number>* >(record.get());
 
                     assert(pint_rec != nullptr);
-                    if(pint_rec == nullptr) throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_RECORD_CAST_FAILED);
+                    if(pint_rec == nullptr) throw runtime_exception(runtime_exception::REPOSITORY_ERROR, CPPTRANSPORT_REPO_RECORD_CAST_FAILED);
 
                     this->dispatch_postintegration_task(pint_rec, job.is_seeded(), job.get_seed_group(), job.get_tags());
                     break;
@@ -960,7 +960,7 @@ namespace transport
                     assert(false);
 
                     std::ostringstream msg;
-                    msg << __CPP_TRANSPORT_REPO_UNKNOWN_RECORD_TYPE << " '" << job.get_name() << "'";
+                    msg << CPPTRANSPORT_REPO_UNKNOWN_RECORD_TYPE << " '" << job.get_name() << "'";
                     throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
 	                }
 	            }
@@ -970,14 +970,14 @@ namespace transport
             if(xe.get_exception_code() == runtime_exception::RECORD_NOT_FOUND)
 	            {
                 std::ostringstream msg;
-                msg << __CPP_TRANSPORT_REPO_MISSING_RECORD << " '" << xe.what() << "'" << __CPP_TRANSPORT_REPO_SKIPPING_TASK;
+                msg << CPPTRANSPORT_REPO_MISSING_RECORD << " '" << xe.what() << "'" << CPPTRANSPORT_REPO_SKIPPING_TASK;
                 this->error_handler(msg.str());
 	            }
             else if(xe.get_exception_code() == runtime_exception::MISSING_MODEL_INSTANCE
 	            || xe.get_exception_code() == runtime_exception::REPOSITORY_BACKEND_ERROR)
 	            {
                 std::ostringstream msg;
-                msg << xe.what() << " " << __CPP_TRANSPORT_REPO_FOR_TASK << " '" << job.get_name() << "'" << __CPP_TRANSPORT_REPO_SKIPPING_TASK;
+                msg << xe.what() << " " << CPPTRANSPORT_REPO_FOR_TASK << " '" << job.get_name() << "'" << CPPTRANSPORT_REPO_SKIPPING_TASK;
                 this->error_handler(msg.str());
 	            }
             else throw xe;
@@ -995,7 +995,7 @@ namespace transport
         assert(rec != nullptr);
 
         // can't process a task if there are no workers
-        if(this->world.size() == 1) throw runtime_exception(runtime_exception::MPI_ERROR, __CPP_TRANSPORT_TOO_FEW_WORKERS);
+        if(this->world.size() == 1) throw runtime_exception(runtime_exception::MPI_ERROR, CPPTRANSPORT_TOO_FEW_WORKERS);
 
         integration_task<number>* tk = rec->get_task();
         model<number>* m = rec->get_task()->get_model();
@@ -1018,7 +1018,7 @@ namespace transport
         else
 	        {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_UNKNOWN_DERIVED_TASK << " '" << rec->get_name() << "'";
+            msg << CPPTRANSPORT_UNKNOWN_DERIVED_TASK << " '" << rec->get_name() << "'";
             throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
 	        }
 	    }
@@ -1087,7 +1087,7 @@ namespace transport
         if(t == list.end())   // no record found
           {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_SEED_GROUP_NOT_FOUND_A << " '" << seed_group << "' " << __CPP_TRANSPORT_SEED_GROUP_NOT_FOUND_B << " '" << tk->get_name() << "'";
+            msg << CPPTRANSPORT_SEED_GROUP_NOT_FOUND_A << " '" << seed_group << "' " << CPPTRANSPORT_SEED_GROUP_NOT_FOUND_B << " '" << tk->get_name() << "'";
             this->warning_handler(msg.str());
             return std::list<unsigned int>{};
           }
@@ -1199,7 +1199,7 @@ namespace transport
         if(!boost::filesystem::remove(payload.get_container_path()))
 	        {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_DATACTR_REMOVE_TEMP << " '" << payload.get_container_path() << "'";
+            msg << CPPTRANSPORT_DATACTR_REMOVE_TEMP << " '" << payload.get_container_path() << "'";
             this->error_handler(msg.str());
 	        }
 	    }
@@ -1241,7 +1241,7 @@ namespace transport
 		    assert(rec != nullptr);
 
         // can't process a task if there are no workers
-        if(this->world.size() <= 1) throw runtime_exception(runtime_exception::MPI_ERROR, __CPP_TRANSPORT_TOO_FEW_WORKERS);
+        if(this->world.size() <= 1) throw runtime_exception(runtime_exception::MPI_ERROR, CPPTRANSPORT_TOO_FEW_WORKERS);
 
         output_task<number>* tk = rec->get_task();
 
@@ -1420,7 +1420,7 @@ namespace transport
         assert(rec != nullptr);
 
         // can't process a task if there are no workers
-        if(this->world.size() <= 1) throw runtime_exception(runtime_exception::MPI_ERROR, __CPP_TRANSPORT_TOO_FEW_WORKERS);
+        if(this->world.size() <= 1) throw runtime_exception(runtime_exception::MPI_ERROR, CPPTRANSPORT_TOO_FEW_WORKERS);
 
         postintegration_task<number>* tk = rec->get_task();
 
@@ -1436,7 +1436,7 @@ namespace transport
             if(ptk == nullptr)
 	            {
                 std::ostringstream msg;
-                msg << __CPP_TRANSPORT_EXPECTED_TWOPF_TASK << " '" << z2pf->get_parent_task()->get_name() << "'";
+                msg << CPPTRANSPORT_EXPECTED_TWOPF_TASK << " '" << z2pf->get_parent_task()->get_name() << "'";
                 throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
 	            }
 
@@ -1463,7 +1463,7 @@ namespace transport
             if(ptk == nullptr)
 	            {
                 std::ostringstream msg;
-                msg << __CPP_TRANSPORT_EXPECTED_THREEPF_TASK << " '" << z3pf->get_parent_task()->get_name() << "'";
+                msg << CPPTRANSPORT_EXPECTED_THREEPF_TASK << " '" << z3pf->get_parent_task()->get_name() << "'";
                 throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
 	            }
 
@@ -1490,7 +1490,7 @@ namespace transport
             if(ptk == nullptr)
 	            {
                 std::ostringstream msg;
-                msg << __CPP_TRANSPORT_EXPECTED_THREEPF_TASK << " '" << zfNL->get_parent_task()->get_name() << "'";
+                msg << CPPTRANSPORT_EXPECTED_THREEPF_TASK << " '" << zfNL->get_parent_task()->get_name() << "'";
                 throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
 	            }
 
@@ -1501,7 +1501,7 @@ namespace transport
         else
 	        {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_UNKNOWN_DERIVED_TASK << " '" << rec->get_name() << "'";
+            msg << CPPTRANSPORT_UNKNOWN_DERIVED_TASK << " '" << rec->get_name() << "'";
             throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
 	        }
 	    }
@@ -1567,7 +1567,7 @@ namespace transport
         integration_task_record<number>* prec = dynamic_cast< integration_task_record<number>* >(pre_prec.get());
 
         assert(prec != nullptr);
-        if(prec == nullptr) throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_RECORD_CAST_FAILED);
+        if(prec == nullptr) throw runtime_exception(runtime_exception::REPOSITORY_ERROR, CPPTRANSPORT_REPO_RECORD_CAST_FAILED);
 
         // create an output writer for the postintegration task
         std::shared_ptr< postintegration_writer<number> > p_writer = this->repo->new_postintegration_task_content(rec, tags, this->get_rank());
@@ -1632,7 +1632,7 @@ namespace transport
         if(t == list.end())   // no record found
           {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_SEED_GROUP_NOT_FOUND_A << " '" << seed_group << "' " << __CPP_TRANSPORT_SEED_GROUP_NOT_FOUND_B << " '" << tk->get_name() << "'";
+            msg << CPPTRANSPORT_SEED_GROUP_NOT_FOUND_A << " '" << seed_group << "' " << CPPTRANSPORT_SEED_GROUP_NOT_FOUND_B << " '" << tk->get_name() << "'";
             this->warning_handler(msg.str());
             return std::list<unsigned int>{};
           };
@@ -1663,7 +1663,7 @@ namespace transport
         if(t == list.end())   // no record found
           {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_SEED_GROUP_NOT_FOUND_A << " '" << seed_group << "' " << __CPP_TRANSPORT_SEED_GROUP_NOT_FOUND_B << " '" << tk->get_name() << "'";
+            msg << CPPTRANSPORT_SEED_GROUP_NOT_FOUND_A << " '" << seed_group << "' " << CPPTRANSPORT_SEED_GROUP_NOT_FOUND_B << " '" << tk->get_name() << "'";
             this->warning_handler(msg.str());
             return std::list<unsigned int>{};
           }
@@ -1680,9 +1680,9 @@ namespace transport
             if(postintegration_serials.size() != integration_serials.size())
               {
                 std::ostringstream msg;
-                msg << __CPP_TRANSPORT_SEED_GROUP_MISMATCHED_SERIALS_A << " '" << (*t)->get_name() << "' "
-                  << __CPP_TRANSPORT_SEED_GROUP_MISMATCHED_SERIALS_B << " '" << parent_seed_name << "' "
-                  << __CPP_TRANSPORT_SEED_GROUP_MISMATCHED_SERIALS_C;
+                msg << CPPTRANSPORT_SEED_GROUP_MISMATCHED_SERIALS_A << " '" << (*t)->get_name() << "' "
+                  << CPPTRANSPORT_SEED_GROUP_MISMATCHED_SERIALS_B << " '" << parent_seed_name << "' "
+                  << CPPTRANSPORT_SEED_GROUP_MISMATCHED_SERIALS_C;
                 throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
               }
 
@@ -1693,9 +1693,9 @@ namespace transport
             if(diff.size() > 0)
               {
                 std::ostringstream msg;
-                msg << __CPP_TRANSPORT_SEED_GROUP_MISMATCHED_SERIALS_A << " '" << (*t)->get_name() << "' "
-                  << __CPP_TRANSPORT_SEED_GROUP_MISMATCHED_SERIALS_B << " '" << parent_seed_name << "' "
-                  << __CPP_TRANSPORT_SEED_GROUP_MISMATCHED_SERIALS_C;
+                msg << CPPTRANSPORT_SEED_GROUP_MISMATCHED_SERIALS_A << " '" << (*t)->get_name() << "' "
+                  << CPPTRANSPORT_SEED_GROUP_MISMATCHED_SERIALS_B << " '" << parent_seed_name << "' "
+                  << CPPTRANSPORT_SEED_GROUP_MISMATCHED_SERIALS_C;
                 throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
               }
 
@@ -1745,7 +1745,7 @@ namespace transport
 
 		    bool success = this->poll_workers(i_agg, p_agg, d_agg, i_metadata, o_metadata, content_groups, writer, begin_label, end_label);
 
-        if(content_groups.size() > 1) throw runtime_exception(runtime_exception::RUNTIME_ERROR,  __CPP_TRANSPORT_POSTINTEGRATION_MULTIPLE_GROUPS);
+        if(content_groups.size() > 1) throw runtime_exception(runtime_exception::RUNTIME_ERROR,  CPPTRANSPORT_POSTINTEGRATION_MULTIPLE_GROUPS);
 
         writer->set_parent_group(content_groups.front());
         writer->set_metadata(o_metadata);
@@ -1799,7 +1799,7 @@ namespace transport
 
         bool success = this->poll_workers(i_agg, p_agg, d_agg, i_metadata, o_metadata, content_groups, i_writer, begin_label, end_label);
 
-        if(content_groups.size() > 1) throw runtime_exception(runtime_exception::RUNTIME_ERROR,  __CPP_TRANSPORT_POSTINTEGRATION_MULTIPLE_GROUPS);
+        if(content_groups.size() > 1) throw runtime_exception(runtime_exception::RUNTIME_ERROR,  CPPTRANSPORT_POSTINTEGRATION_MULTIPLE_GROUPS);
 
         i_writer->set_metadata(i_metadata);
         p_writer->set_metadata(o_metadata);
@@ -1834,7 +1834,7 @@ namespace transport
         if(!boost::filesystem::remove(payload.get_container_path()))
 	        {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_DATACTR_REMOVE_TEMP << " '" << payload.get_container_path() << "'";
+            msg << CPPTRANSPORT_DATACTR_REMOVE_TEMP << " '" << payload.get_container_path() << "'";
             this->error_handler(msg.str());
 	        }
 	    }
@@ -1853,7 +1853,7 @@ namespace transport
 
         // we require this->repo not to be null
         assert(this->repo != nullptr);
-		    if(this->repo == nullptr) throw std::runtime_error(__CPP_TRANSPORT_REPO_NOT_SET);
+		    if(this->repo == nullptr) throw std::runtime_error(CPPTRANSPORT_REPO_NOT_SET);
 
 		    // request information from each worker, and pass all necessary setup details
         MPI::slave_setup_payload payload(this->repo->get_root_path(), this->batcher_capacity, this->pipe_capacity);
@@ -1929,7 +1929,7 @@ namespace transport
         if(print_msg)
           {
             std::ostringstream update_msg;
-            update_msg << __CPP_TRANSPORT_TASK_MANAGER_LABEL << " " << msg;
+            update_msg << CPPTRANSPORT_TASK_MANAGER_LABEL << " " << msg;
             this->message_handler(update_msg.str());
 
 						BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "±± Console advisory message: " << update_msg.str();

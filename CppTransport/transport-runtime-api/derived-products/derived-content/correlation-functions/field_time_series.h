@@ -41,7 +41,7 @@ namespace transport
 
             //! construct a background time-data object
             background_time_series(const twopf_list_task<number>& tk, index_selector<1>& sel,
-                                   SQL_time_config_query tq, unsigned int prec = __CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
+                                   SQL_time_config_query tq, unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
 		        //! deserialization constructor.
 		        background_time_series(Json::Value& reader, typename repository_finder<number>::task_finder& finder);
@@ -116,9 +116,9 @@ namespace transport
 		        if(active_indices.get_number_fields() != gadget.get_N_fields())
 			        {
 		            std::ostringstream msg;
-		            msg << __CPP_TRANSPORT_PRODUCT_INDEX_MISMATCH << " ("
-			              << __CPP_TRANSPORT_PRODUCT_INDEX_MISMATCH_A << " " << active_indices.get_number_fields() << ", "
-			              << __CPP_TRANSPORT_PRODUCT_INDEX_MISMATCH_B << " " << gadget.get_N_fields() << ")";
+		            msg << CPPTRANSPORT_PRODUCT_INDEX_MISMATCH << " ("
+			              << CPPTRANSPORT_PRODUCT_INDEX_MISMATCH_A << " " << active_indices.get_number_fields() << ", "
+			              << CPPTRANSPORT_PRODUCT_INDEX_MISMATCH_B << " " << gadget.get_N_fields() << ")";
 		            throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
 			        }
 			    }
@@ -131,7 +131,7 @@ namespace transport
 			      time_series<number>(reader),
 			      gadget(),
 			      active_indices(reader),
-			      tquery(reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY])
+			      tquery(reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY])
 			    {
 				    assert(this->parent_task != nullptr);
 		        gadget.set_task(this->parent_task, finder);
@@ -142,8 +142,8 @@ namespace transport
 		    template <typename number>
 		    void background_time_series<number>::write(std::ostream& out)
 			    {
-		        out << "  " << __CPP_TRANSPORT_PRODUCT_TIME_SERIES_LABEL_BACKGROUND << std::endl;
-		        out << "  " << __CPP_TRANSPORT_PRODUCT_LINE_COLLECTION_LABEL_INDICES << " ";
+		        out << "  " << CPPTRANSPORT_PRODUCT_TIME_SERIES_LABEL_BACKGROUND << std::endl;
+		        out << "  " << CPPTRANSPORT_PRODUCT_LINE_COLLECTION_LABEL_INDICES << " ";
 
 		        integration_task<number>* itk = dynamic_cast< integration_task<number>* >(this->get_parent_task());
 		        this->active_indices.write(out, itk->get_model()->get_state_names());
@@ -158,10 +158,10 @@ namespace transport
 		    template <typename number>
 		    void background_time_series<number>::serialize(Json::Value& writer) const
 			    {
-		        writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_BACKGROUND);
+		        writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_BACKGROUND);
 
 		        this->active_indices.serialize(writer);
-		        this->tquery.serialize(writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]);
+		        this->tquery.serialize(writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]);
 
 		        this->time_series<number>::serialize(writer);
 				    this->derived_line<number>::serialize(writer);
@@ -221,7 +221,7 @@ namespace transport
 				        label << "$";
 				        if(this->get_dot_meaning() == derivatives)
 					        {
-				            label << field_names[i % N_fields] << (i >= N_fields ? "^{" __CPP_TRANSPORT_LATEX_PRIME_SYMBOL "}" : "");
+				            label << field_names[i % N_fields] << (i >= N_fields ? "^{" CPPTRANSPORT_LATEX_PRIME_SYMBOL "}" : "");
 					        }
 				        else
 					        {
@@ -251,7 +251,7 @@ namespace transport
 
 				        if(this->get_dot_meaning() == derivatives)
 					        {
-				            label << field_names[i % N_fields] << (i >= N_fields ? __CPP_TRANSPORT_NONLATEX_PRIME_SYMBOL : "");
+				            label << field_names[i % N_fields] << (i >= N_fields ? CPPTRANSPORT_NONLATEX_PRIME_SYMBOL : "");
 					        }
 				        else
 					        {
@@ -275,7 +275,7 @@ namespace transport
 		        //! construct a twopf time-series object
 		        twopf_time_series(const twopf_list_task<number>& tk, index_selector<2>& sel,
 		                          SQL_time_config_query tq, SQL_twopf_kconfig_query kq,
-		                          unsigned int prec = __CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
+		                          unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
 		        //! deserialization constuctor.
 		        twopf_time_series(Json::Value& reader, typename repository_finder<number>::task_finder& finder);
@@ -350,8 +350,8 @@ namespace transport
 			    : derived_line<number>(reader, finder),
 			      twopf_line<number>(reader, finder),
 			      time_series<number>(reader),
-			      tquery(reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]),
-			      kquery(reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY])
+			      tquery(reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]),
+			      kquery(reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY])
 			    {
 			    }
 
@@ -475,10 +475,10 @@ namespace transport
 		    template <typename number>
 		    void twopf_time_series<number>::serialize(Json::Value& writer) const
 			    {
-		        writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TWOPF_TIME_SERIES);
+		        writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TWOPF_TIME_SERIES);
 
-		        this->tquery.serialize(writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]);
-		        this->kquery.serialize(writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY]);
+		        this->tquery.serialize(writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]);
+		        this->kquery.serialize(writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY]);
 
 				    this->derived_line<number>::serialize(writer);
 				    this->twopf_line<number>::serialize(writer);
@@ -498,7 +498,7 @@ namespace transport
             //! construct a threepf time-data object
             threepf_time_series(const threepf_task<number>& tk, index_selector<3>& sel,
                                 SQL_time_config_query tq, SQL_threepf_kconfig_query kq,
-                                unsigned int prec = __CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
+                                unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
 		        //! deserialization constructor.
 		        threepf_time_series(Json::Value& reader, typename repository_finder<number>::task_finder& finder);
@@ -580,8 +580,8 @@ namespace transport
 			    : derived_line<number>(reader, finder),
 		        threepf_line<number>(reader, finder),
 		        time_series<number>(reader),
-		        tquery(reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]),
-		        kquery(reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY])
+		        tquery(reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]),
+		        kquery(reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY])
 			    {
 			    }
 
@@ -702,10 +702,10 @@ namespace transport
 		    template <typename number>
 		    void threepf_time_series<number>::serialize(Json::Value& writer) const
 			    {
-		        writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_TIME_SERIES);
+		        writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_TIME_SERIES);
 
-		        this->tquery.serialize(writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]);
-		        this->kquery.serialize(writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY]);
+		        this->tquery.serialize(writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]);
+		        this->kquery.serialize(writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY]);
 
 		        this->derived_line<number>::serialize(writer);
 				    this->threepf_line<number>::serialize(writer);

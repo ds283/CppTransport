@@ -285,7 +285,7 @@ namespace transport
         else
 	        {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_WRONG_ICS_A << __coords.size() << __CPP_TRANSPORT_WRONG_ICS_B << 2*$$__NUMBER_FIELDS << ")";
+            msg << CPPTRANSPORT_WRONG_ICS_A << __coords.size() << CPPTRANSPORT_WRONG_ICS_B << 2*$$__NUMBER_FIELDS << ")";
             throw std::out_of_range(msg.str());
 	        }
 	    }
@@ -309,7 +309,7 @@ namespace transport
         else
 	        {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_WRONG_ICS_A << __coords.size() << __CPP_TRANSPORT_WRONG_ICS_B << 2*$$__NUMBER_FIELDS << ")";
+            msg << CPPTRANSPORT_WRONG_ICS_A << __coords.size() << CPPTRANSPORT_WRONG_ICS_B << 2*$$__NUMBER_FIELDS << ")";
             throw std::out_of_range(msg.str());
 	        }
 	    }
@@ -333,7 +333,7 @@ namespace transport
         else
 	        {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_WRONG_ICS_A << __coords.size() << __CPP_TRANSPORT_WRONG_ICS_B << 2*$$__NUMBER_FIELDS << ")";
+            msg << CPPTRANSPORT_WRONG_ICS_A << __coords.size() << CPPTRANSPORT_WRONG_ICS_B << 2*$$__NUMBER_FIELDS << ")";
             throw std::out_of_range(msg.str());
 	        }
 	    }
@@ -368,9 +368,9 @@ namespace transport
 	        {
             std::ostringstream msg;
 
-            msg << __CPP_TRANSPORT_WRONG_ICS_A << __input.size() << "]"
-	            << __CPP_TRANSPORT_WRONG_ICS_B << $$__NUMBER_FIELDS
-	            << __CPP_TRANSPORT_WRONG_ICS_C << 2*$$__NUMBER_FIELDS << "]";
+            msg << CPPTRANSPORT_WRONG_ICS_A << __input.size() << "]"
+	            << CPPTRANSPORT_WRONG_ICS_B << $$__NUMBER_FIELDS
+	            << CPPTRANSPORT_WRONG_ICS_C << 2*$$__NUMBER_FIELDS << "]";
 
             throw std::out_of_range(msg.str());
 	        }
@@ -393,7 +393,7 @@ namespace transport
 	        {
             std::ostringstream msg;
 
-            msg << __CPP_TRANSPORT_WRONG_PARAMS_A << input.size() << __CPP_TRANSPORT_WRONG_PARAMS_B << $$__NUMBER_PARAMS << ")";
+            msg << CPPTRANSPORT_WRONG_PARAMS_A << input.size() << CPPTRANSPORT_WRONG_PARAMS_B << $$__NUMBER_PARAMS << ")";
 
             throw std::out_of_range(msg.str());
 	        }
@@ -415,7 +415,7 @@ namespace transport
 
         const auto __Hsq             = $$__HUBBLE_SQ;
         const auto __eps             = $$__EPSILON;
-        const auto __a               = exp(__Ninit - __task->get_N_horizon_crossing() + __CPP_TRANSPORT_DEFAULT_ASTAR_NORMALIZATION);
+        const auto __a               = exp(__Ninit - __task->get_N_horizon_crossing() + CPPTRANSPORT_DEFAULT_ASTAR_NORMALIZATION);
 
         const auto __N               = log(__k/(__a*sqrt(__Hsq)));
 
@@ -502,7 +502,7 @@ namespace transport
 
         const auto __Hsq             = $$__HUBBLE_SQ;
         const auto __eps             = $$__EPSILON;
-        const auto __a               = exp(__Ninit - __task->get_N_horizon_crossing() + __CPP_TRANSPORT_DEFAULT_ASTAR_NORMALIZATION);
+        const auto __a               = exp(__Ninit - __task->get_N_horizon_crossing() + CPPTRANSPORT_DEFAULT_ASTAR_NORMALIZATION);
 
         const auto __N               = log(__k/(__a*sqrt(__Hsq)));
 
@@ -551,7 +551,7 @@ namespace transport
 
         const auto __Hsq             = $$__HUBBLE_SQ;
         const auto __eps             = $$__EPSILON;
-        const auto __a               = exp(__Ninit - __task->get_N_horizon_crossing() + __CPP_TRANSPORT_DEFAULT_ASTAR_NORMALIZATION);
+        const auto __a               = exp(__Ninit - __task->get_N_horizon_crossing() + CPPTRANSPORT_DEFAULT_ASTAR_NORMALIZATION);
 
         const auto __N               = log(__k/(__a*sqrt(__Hsq)));
 
@@ -667,7 +667,7 @@ namespace transport
 
         const auto __Hsq             = $$__HUBBLE_SQ;
         const auto __eps             = $$__EPSILON;
-        const auto __a               = exp(__N - __task->get_N_horizon_crossing() + __CPP_TRANSPORT_DEFAULT_ASTAR_NORMALIZATION);
+        const auto __a               = exp(__N - __task->get_N_horizon_crossing() + CPPTRANSPORT_DEFAULT_ASTAR_NORMALIZATION);
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
@@ -863,7 +863,7 @@ namespace transport
         catch (end_of_inflation_not_found& xe)
           {
             // try to fall back on a sensible default
-            N_range = tk->get_N_initial() + __CPP_TRANSPORT_DEFAULT_END_OF_INFLATION_SEARCH;
+            N_range = tk->get_N_initial() + CPPTRANSPORT_DEFAULT_END_OF_INFLATION_SEARCH;
           }
 
         auto range = boost::numeric::odeint::make_const_step_time_range(stepper, system, x, tk->get_N_initial(), N_range, 0.01);
@@ -880,7 +880,7 @@ namespace transport
         if(iter == boost::end(range))
           {
             assert(false);
-            throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_FAIL_COMPUTE_T_EXIT);
+            throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_FAIL_COMPUTE_T_EXIT);
           }
       }
 

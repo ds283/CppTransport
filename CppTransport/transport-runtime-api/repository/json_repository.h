@@ -151,7 +151,7 @@ namespace transport
         if(!out.is_open() || out.fail())
 	        {
             std::stringstream msg;
-            msg << __CPP_TRANSPORT_REPO_COMMIT_FAILURE << " '" << record.get_name() << "'";
+            msg << CPPTRANSPORT_REPO_COMMIT_FAILURE << " '" << record.get_name() << "'";
             throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
 	        }
 
@@ -173,7 +173,7 @@ namespace transport
         if(!boost::filesystem::is_regular_file(abs_record))
 	        {
             std::stringstream msg;
-            msg << __CPP_TRANSPORT_REPO_DESERIALIZE_FAILURE << " '" << path << "'";
+            msg << CPPTRANSPORT_REPO_DESERIALIZE_FAILURE << " '" << path << "'";
             throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
 	        }
 
@@ -186,7 +186,7 @@ namespace transport
         else
 	        {
             std::stringstream msg;
-            msg << __CPP_TRANSPORT_REPO_DESERIALIZE_FAILURE << " '" << path << "'";
+            msg << CPPTRANSPORT_REPO_DESERIALIZE_FAILURE << " '" << path << "'";
             throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
 	        }
 

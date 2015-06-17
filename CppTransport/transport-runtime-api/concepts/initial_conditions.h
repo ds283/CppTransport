@@ -27,13 +27,13 @@
 #include "transport-runtime-api/concepts/initial_conditions_forward_declare.h"
 
 
-#define __CPP_TRANSPORT_NODE_ICS_VALUE         "value"
-#define __CPP_TRANSPORT_NODE_ICS_MODEL_UID     "model-uid"
-#define __CPP_TRANSPORT_NODE_ICS_NAME          "name"
-#define __CPP_TRANSPORT_NODE_ICS_N_SUB_HORIZON "sub-horizon-efolds"
-#define __CPP_TRANSPORT_NODE_ICS_N_INIT        "initial-time"
-#define __CPP_TRANSPORT_NODE_ICS_VALUES        "values"
-#define __CPP_TRANSPORT_NODE_ICS_PARAMETERS    "parameters"
+#define CPPTRANSPORT_NODE_ICS_VALUE         "value"
+#define CPPTRANSPORT_NODE_ICS_MODEL_UID     "model-uid"
+#define CPPTRANSPORT_NODE_ICS_NAME          "name"
+#define CPPTRANSPORT_NODE_ICS_N_SUB_HORIZON "sub-horizon-efolds"
+#define CPPTRANSPORT_NODE_ICS_N_INIT        "initial-time"
+#define CPPTRANSPORT_NODE_ICS_VALUES        "values"
+#define CPPTRANSPORT_NODE_ICS_PARAMETERS    "parameters"
 
 
 namespace transport
@@ -170,13 +170,13 @@ namespace transport
       : name(nm), mdl(m), params(p), N_init(Nini), N_sub_horizon(Npre)
       {
 		    assert(m != nullptr);
-		    if(m == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_ICS_NULL_MODEL);
+		    if(m == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_ICS_NULL_MODEL);
 
         // check model matches the one supplied with parameters
         if(m->get_identity_string() != p.get_model()->get_identity_string())
           {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_ICS_MODEL_MISMATCH << " '" << nm << "'";
+            msg << CPPTRANSPORT_ICS_MODEL_MISMATCH << " '" << nm << "'";
             throw runtime_exception(runtime_exception::TASK_STRUCTURE_ERROR, msg.str());
           }
 
@@ -194,7 +194,7 @@ namespace transport
       : name(nm), mdl(m), params(p), N_init(Ncross-Npre), N_sub_horizon(Npre)
       {
         assert(m != nullptr);
-        if(m == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_ICS_NULL_MODEL);
+        if(m == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_ICS_NULL_MODEL);
 
         std::vector<number> validated_ics;
 
@@ -209,25 +209,25 @@ namespace transport
     template <typename number>
     initial_conditions<number>::initial_conditions(const std::string& nm, Json::Value& reader,
                                                    typename instance_manager<number>::model_finder f)
-      : name(nm), params(reader[__CPP_TRANSPORT_NODE_ICS_PARAMETERS], f)
+      : name(nm), params(reader[CPPTRANSPORT_NODE_ICS_PARAMETERS], f)
       {
 		    // construct model object
-        std::string uid = reader[__CPP_TRANSPORT_NODE_ICS_MODEL_UID].asString();
+        std::string uid = reader[CPPTRANSPORT_NODE_ICS_MODEL_UID].asString();
 		    mdl = f(uid);
 
         // deserialize time parameters
-        N_init        = reader[__CPP_TRANSPORT_NODE_ICS_N_INIT].asDouble();
-        N_sub_horizon = reader[__CPP_TRANSPORT_NODE_ICS_N_SUB_HORIZON].asDouble();
+        N_init        = reader[CPPTRANSPORT_NODE_ICS_N_INIT].asDouble();
+        N_sub_horizon = reader[CPPTRANSPORT_NODE_ICS_N_SUB_HORIZON].asDouble();
 
         // deserialize array of initial values
-        Json::Value& ics_array = reader[__CPP_TRANSPORT_NODE_ICS_VALUES];
+        Json::Value& ics_array = reader[CPPTRANSPORT_NODE_ICS_VALUES];
 		    assert(ics_array.isArray());
 
         std::vector< named_list::element<number> > temp;
 		    for(Json::Value::iterator t = ics_array.begin(); t != ics_array.end(); ++t)
           {
-            std::string field_name = (*t)[__CPP_TRANSPORT_NODE_ICS_NAME].asString();
-            double field_value = (*t)[__CPP_TRANSPORT_NODE_ICS_VALUE].asDouble();
+            std::string field_name = (*t)[CPPTRANSPORT_NODE_ICS_NAME].asString();
+            double field_value = (*t)[CPPTRANSPORT_NODE_ICS_VALUE].asDouble();
 
             temp.push_back(named_list::element<number>(field_name, static_cast<number>(field_value)));
           }
@@ -235,7 +235,7 @@ namespace transport
 		    // sort into order required by model object
         const std::vector<std::string>& field_ordering = mdl->get_state_names();
 
-        if(temp.size() != field_ordering.size()) throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_BADLY_FORMED_ICS);
+        if(temp.size() != field_ordering.size()) throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, CPPTRANSPORT_BADLY_FORMED_ICS);
 
         named_list::ordering order_map = named_list::make_ordering(field_ordering);
         named_list::comparator<number> cmp(order_map);
@@ -281,11 +281,11 @@ namespace transport
     void initial_conditions<number>::serialize(Json::Value& writer) const
       {
 		    // serialize model UID
-		    writer[__CPP_TRANSPORT_NODE_ICS_MODEL_UID] = this->mdl->get_identity_string();
+		    writer[CPPTRANSPORT_NODE_ICS_MODEL_UID] = this->mdl->get_identity_string();
 
         // serialize time parameters
-        writer[__CPP_TRANSPORT_NODE_ICS_N_SUB_HORIZON] = this->N_sub_horizon;
-        writer[__CPP_TRANSPORT_NODE_ICS_N_INIT]        = this->N_init;
+        writer[CPPTRANSPORT_NODE_ICS_N_SUB_HORIZON] = this->N_sub_horizon;
+        writer[CPPTRANSPORT_NODE_ICS_N_INIT]        = this->N_init;
 
         // serialize array of initial values
         Json::Value ics(Json::arrayValue);
@@ -296,15 +296,15 @@ namespace transport
         for(unsigned int i = 0; i < this->ics.size(); ++i)
           {
             Json::Value ics_element(Json::objectValue);
-		        ics_element[__CPP_TRANSPORT_NODE_ICS_NAME] = names[i];
-		        ics_element[__CPP_TRANSPORT_NODE_ICS_VALUE] = static_cast<double>(this->ics[i]);
+		        ics_element[CPPTRANSPORT_NODE_ICS_NAME] = names[i];
+		        ics_element[CPPTRANSPORT_NODE_ICS_VALUE] = static_cast<double>(this->ics[i]);
 		        ics.append(ics_element);
           }
-		    writer[__CPP_TRANSPORT_NODE_ICS_VALUES] = ics;
+		    writer[CPPTRANSPORT_NODE_ICS_VALUES] = ics;
 
         Json::Value params_serialize(Json::objectValue);
         this->params.serialize(params_serialize);
-        writer[__CPP_TRANSPORT_NODE_ICS_PARAMETERS] = params_serialize;
+        writer[CPPTRANSPORT_NODE_ICS_PARAMETERS] = params_serialize;
       }
 
 
@@ -316,7 +316,7 @@ namespace transport
 		    const std::vector<std::string>& names = obj.mdl->get_state_names();
         assert(obj.ics.size() == names.size());
 
-        out << __CPP_TRANSPORT_ICS_TAG << std::endl;
+        out << CPPTRANSPORT_ICS_TAG << std::endl;
         for(unsigned int i = 0; i < obj.ics.size(); ++i)
           {
             out << "  " << names[i] << " = " << obj.ics[i] << std::endl;

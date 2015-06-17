@@ -30,12 +30,12 @@
 #include "transport-runtime-api/sqlite3/operations/repository_admin.h"
 
 
-#define __CPP_TRANSPORT_REPO_REPOSITORY_LEAF "database.sqlite"
-#define __CPP_TRANSPORT_REPO_STORE_LEAF      "repository"
-#define __CPP_TRANSPORT_REPO_PACKAGES_LEAF   "packages"
-#define __CPP_TRANSPORT_REPO_TASKS_LEAF      "tasks"
-#define __CPP_TRANSPORT_REPO_PRODUCTS_LEAF   "products"
-#define __CPP_TRANSPORT_REPO_OUTPUT_LEAF     "output"
+#define CPPTRANSPORT_REPO_REPOSITORY_LEAF "database.sqlite"
+#define CPPTRANSPORT_REPO_STORE_LEAF      "repository"
+#define CPPTRANSPORT_REPO_PACKAGES_LEAF   "packages"
+#define CPPTRANSPORT_REPO_TASKS_LEAF      "tasks"
+#define CPPTRANSPORT_REPO_PRODUCTS_LEAF   "products"
+#define CPPTRANSPORT_REPO_OUTPUT_LEAF     "output"
 
 
 namespace transport
@@ -360,52 +360,52 @@ namespace transport
 		    if(!boost::filesystem::is_directory(path))
 			    {
 		        std::ostringstream msg;
-		        msg << __CPP_TRANSPORT_REPO_MISSING_ROOT << " '" << path << "'";
+		        msg << CPPTRANSPORT_REPO_MISSING_ROOT << " '" << path << "'";
 		        throw runtime_exception(runtime_exception::REPO_NOT_FOUND, msg.str());
 			    }
 
 		    // database should be present in an existing directory
-		    db_path = this->get_root_path() / __CPP_TRANSPORT_REPO_REPOSITORY_LEAF;
+		    db_path = this->get_root_path() / CPPTRANSPORT_REPO_REPOSITORY_LEAF;
 		    if(!boost::filesystem::is_regular_file(db_path))
 			    {
 		        std::ostringstream msg;
-		        msg << __CPP_TRANSPORT_REPO_MISSING_DATABASE << " '" << path << "'";
+		        msg << CPPTRANSPORT_REPO_MISSING_DATABASE << " '" << path << "'";
 		        throw runtime_exception(runtime_exception::REPO_NOT_FOUND, msg.str());
 			    }
 
 				// package store should be present
-				package_store = boost::filesystem::path(__CPP_TRANSPORT_REPO_STORE_LEAF) / __CPP_TRANSPORT_REPO_PACKAGES_LEAF;
+				package_store = boost::filesystem::path(CPPTRANSPORT_REPO_STORE_LEAF) / CPPTRANSPORT_REPO_PACKAGES_LEAF;
 		    if(!boost::filesystem::is_directory(this->get_root_path() / package_store))
 			    {
 		        std::ostringstream msg;
-		        msg << __CPP_TRANSPORT_REPO_MISSING_PACKAGE_STORE << " '" << path << "'";
+		        msg << CPPTRANSPORT_REPO_MISSING_PACKAGE_STORE << " '" << path << "'";
 		        throw runtime_exception(runtime_exception::REPO_NOT_FOUND, msg.str());
 			    }
 
 				// task store should be present
-				task_store = boost::filesystem::path(__CPP_TRANSPORT_REPO_STORE_LEAF) / __CPP_TRANSPORT_REPO_TASKS_LEAF;
+				task_store = boost::filesystem::path(CPPTRANSPORT_REPO_STORE_LEAF) / CPPTRANSPORT_REPO_TASKS_LEAF;
 		    if(!boost::filesystem::is_directory(this->get_root_path() / task_store))
 			    {
 		        std::ostringstream msg;
-		        msg << __CPP_TRANSPORT_REPO_MISSING_TASK_STORE << " '" << path << "'";
+		        msg << CPPTRANSPORT_REPO_MISSING_TASK_STORE << " '" << path << "'";
 		        throw runtime_exception(runtime_exception::REPO_NOT_FOUND, msg.str());
 			    }
 
 		    // product store should be present
-		    product_store = boost::filesystem::path(__CPP_TRANSPORT_REPO_STORE_LEAF) / __CPP_TRANSPORT_REPO_PRODUCTS_LEAF;
+		    product_store = boost::filesystem::path(CPPTRANSPORT_REPO_STORE_LEAF) / CPPTRANSPORT_REPO_PRODUCTS_LEAF;
 		    if(!boost::filesystem::is_directory(this->get_root_path() / product_store))
 			    {
 		        std::ostringstream msg;
-		        msg << __CPP_TRANSPORT_REPO_MISSING_PRODUCT_STORE << " '" << path << "'";
+		        msg << CPPTRANSPORT_REPO_MISSING_PRODUCT_STORE << " '" << path << "'";
 		        throw runtime_exception(runtime_exception::REPO_NOT_FOUND, msg.str());
 			    }
 
 		    // output store should be present
-		    output_store = boost::filesystem::path(__CPP_TRANSPORT_REPO_STORE_LEAF) / __CPP_TRANSPORT_REPO_OUTPUT_LEAF;
+		    output_store = boost::filesystem::path(CPPTRANSPORT_REPO_STORE_LEAF) / CPPTRANSPORT_REPO_OUTPUT_LEAF;
 		    if(!boost::filesystem::is_directory(this->get_root_path() / output_store))
 			    {
 		        std::ostringstream msg;
-		        msg << __CPP_TRANSPORT_REPO_MISSING_OUTPUT_STORE << " '" << path << "'";
+		        msg << CPPTRANSPORT_REPO_MISSING_OUTPUT_STORE << " '" << path << "'";
 		        throw runtime_exception(runtime_exception::REPO_NOT_FOUND, msg.str());
 			    }
 
@@ -413,7 +413,7 @@ namespace transport
 				if(sqlite3_open_v2(db_path.string().c_str(), &db, sqlite_mode, nullptr) != SQLITE_OK)
 					{
 				    std::ostringstream msg;
-				    msg << __CPP_TRANSPORT_REPO_FAIL_DATABASE_OPEN << " " << db_path;
+				    msg << CPPTRANSPORT_REPO_FAIL_DATABASE_OPEN << " " << db_path;
 				    throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, msg.str());
 					}
 
@@ -437,15 +437,15 @@ namespace transport
 		    if(boost::filesystem::exists(path))
 			    {
 		        std::ostringstream msg;
-		        msg << __CPP_TRANSPORT_REPO_ROOT_EXISTS << " '" << path << "'";
+		        msg << CPPTRANSPORT_REPO_ROOT_EXISTS << " '" << path << "'";
 		        throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
 			    }
 
-		    db_path       = this->get_root_path() / __CPP_TRANSPORT_REPO_REPOSITORY_LEAF;
-		    package_store = boost::filesystem::path(__CPP_TRANSPORT_REPO_STORE_LEAF) / __CPP_TRANSPORT_REPO_PACKAGES_LEAF;
-		    task_store    = boost::filesystem::path(__CPP_TRANSPORT_REPO_STORE_LEAF) / __CPP_TRANSPORT_REPO_TASKS_LEAF;
-		    product_store = boost::filesystem::path(__CPP_TRANSPORT_REPO_STORE_LEAF) / __CPP_TRANSPORT_REPO_PRODUCTS_LEAF;
-		    output_store  = boost::filesystem::path(__CPP_TRANSPORT_REPO_STORE_LEAF) / __CPP_TRANSPORT_REPO_OUTPUT_LEAF;
+		    db_path       = this->get_root_path() / CPPTRANSPORT_REPO_REPOSITORY_LEAF;
+		    package_store = boost::filesystem::path(CPPTRANSPORT_REPO_STORE_LEAF) / CPPTRANSPORT_REPO_PACKAGES_LEAF;
+		    task_store    = boost::filesystem::path(CPPTRANSPORT_REPO_STORE_LEAF) / CPPTRANSPORT_REPO_TASKS_LEAF;
+		    product_store = boost::filesystem::path(CPPTRANSPORT_REPO_STORE_LEAF) / CPPTRANSPORT_REPO_PRODUCTS_LEAF;
+		    output_store  = boost::filesystem::path(CPPTRANSPORT_REPO_STORE_LEAF) / CPPTRANSPORT_REPO_OUTPUT_LEAF;
 
 		    // create directory structure
 		    boost::filesystem::create_directories(this->get_root_path());
@@ -458,7 +458,7 @@ namespace transport
 		    if(sqlite3_open_v2(db_path.c_str(), &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nullptr) != SQLITE_OK)
 			    {
 		        std::ostringstream msg;
-		        msg << __CPP_TRANSPORT_REPO_FAIL_DATABASE_OPEN << " " << db_path;
+		        msg << CPPTRANSPORT_REPO_FAIL_DATABASE_OPEN << " " << db_path;
 		        throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, msg.str());
 			    }
 
@@ -684,7 +684,7 @@ namespace transport
         repository_record::handler_package pkg;
 		    count_function counter = std::bind(&sqlite3_operations::count_packages, std::placeholders::_1, std::placeholders::_2);
 		    store_function storer  = std::bind(&sqlite3_operations::store_package, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
-        pkg.commit = std::bind(&repository_sqlite3<number>::commit_first, this, std::placeholders::_1, counter, storer, this->package_store.string(), __CPP_TRANSPORT_REPO_PACKAGE_EXISTS);
+        pkg.commit = std::bind(&repository_sqlite3<number>::commit_first, this, std::placeholders::_1, counter, storer, this->package_store.string(), CPPTRANSPORT_REPO_PACKAGE_EXISTS);
 
         return new package_record<number>(ics, pkg);
 	    }
@@ -694,7 +694,7 @@ namespace transport
     package_record<number>* repository_sqlite3<number>::package_record_factory(Json::Value& reader)
 	    {
         repository_record::handler_package pkg;
-        find_function finder = std::bind(&sqlite3_operations::find_package, std::placeholders::_1, std::placeholders::_2, __CPP_TRANSPORT_REPO_PACKAGE_MISSING);
+        find_function finder = std::bind(&sqlite3_operations::find_package, std::placeholders::_1, std::placeholders::_2, CPPTRANSPORT_REPO_PACKAGE_MISSING);
         pkg.commit = std::bind(&repository_sqlite3<number>::commit_replace, this, std::placeholders::_1, finder);
 
         return new package_record<number>(reader, this->model_finder, pkg);
@@ -707,7 +707,7 @@ namespace transport
         repository_record::handler_package pkg;
         count_function counter = std::bind(&sqlite3_operations::count_tasks, std::placeholders::_1, std::placeholders::_2);
         store_function storer  = std::bind(&sqlite3_operations::store_integration_task, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, tk.get_ics().get_name());
-        pkg.commit = std::bind(&repository_sqlite3<number>::commit_integration_first, this, std::placeholders::_1, counter, storer, this->task_store.string(), __CPP_TRANSPORT_REPO_TASK_EXISTS);
+        pkg.commit = std::bind(&repository_sqlite3<number>::commit_integration_first, this, std::placeholders::_1, counter, storer, this->task_store.string(), CPPTRANSPORT_REPO_TASK_EXISTS);
 
         return new integration_task_record<number>(tk, pkg);
 	    }
@@ -717,7 +717,7 @@ namespace transport
     integration_task_record<number>* repository_sqlite3<number>::integration_task_record_factory(Json::Value& reader)
 	    {
         repository_record::handler_package pkg;
-        find_function finder = std::bind(&sqlite3_operations::find_integration_task, std::placeholders::_1, std::placeholders::_2, __CPP_TRANSPORT_REPO_TASK_MISSING);
+        find_function finder = std::bind(&sqlite3_operations::find_integration_task, std::placeholders::_1, std::placeholders::_2, CPPTRANSPORT_REPO_TASK_MISSING);
         pkg.commit = std::bind(&repository_sqlite3<number>::commit_integration_replace, this, std::placeholders::_1, finder);
 
         return new integration_task_record<number>(reader, this->root_path, this->pkg_finder, pkg);
@@ -730,7 +730,7 @@ namespace transport
         repository_record::handler_package pkg;
         count_function counter = std::bind(&sqlite3_operations::count_tasks, std::placeholders::_1, std::placeholders::_2);
         store_function storer  = std::bind(&sqlite3_operations::store_output_task, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
-        pkg.commit = std::bind(&repository_sqlite3<number>::commit_first, this, std::placeholders::_1, counter, storer, this->task_store.string(), __CPP_TRANSPORT_REPO_TASK_EXISTS);
+        pkg.commit = std::bind(&repository_sqlite3<number>::commit_first, this, std::placeholders::_1, counter, storer, this->task_store.string(), CPPTRANSPORT_REPO_TASK_EXISTS);
 
         return new output_task_record<number>(tk, pkg);
 	    }
@@ -740,7 +740,7 @@ namespace transport
     output_task_record<number>* repository_sqlite3<number>::output_task_record_factory(Json::Value& reader)
 	    {
         repository_record::handler_package pkg;
-        find_function finder = std::bind(&sqlite3_operations::find_output_task, std::placeholders::_1, std::placeholders::_2, __CPP_TRANSPORT_REPO_TASK_MISSING);
+        find_function finder = std::bind(&sqlite3_operations::find_output_task, std::placeholders::_1, std::placeholders::_2, CPPTRANSPORT_REPO_TASK_MISSING);
         pkg.commit = std::bind(&repository_sqlite3<number>::commit_replace, this, std::placeholders::_1, finder);
 
         return new output_task_record<number>(reader, this->dprod_finder, pkg);
@@ -753,7 +753,7 @@ namespace transport
         repository_record::handler_package pkg;
         count_function counter = std::bind(&sqlite3_operations::count_tasks, std::placeholders::_1, std::placeholders::_2);
         store_function storer  = std::bind(&sqlite3_operations::store_postintegration_task, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, tk.get_parent_task()->get_name());
-        pkg.commit = std::bind(&repository_sqlite3<number>::commit_first, this, std::placeholders::_1, counter, storer, this->task_store.string(), __CPP_TRANSPORT_REPO_TASK_EXISTS);
+        pkg.commit = std::bind(&repository_sqlite3<number>::commit_first, this, std::placeholders::_1, counter, storer, this->task_store.string(), CPPTRANSPORT_REPO_TASK_EXISTS);
 
         return new postintegration_task_record<number>(tk, pkg);
 	    }
@@ -763,7 +763,7 @@ namespace transport
     postintegration_task_record<number>* repository_sqlite3<number>::postintegration_task_record_factory(Json::Value& reader)
 	    {
         repository_record::handler_package pkg;
-        find_function finder = std::bind(&sqlite3_operations::find_postintegration_task, std::placeholders::_1, std::placeholders::_2, __CPP_TRANSPORT_REPO_TASK_MISSING);
+        find_function finder = std::bind(&sqlite3_operations::find_postintegration_task, std::placeholders::_1, std::placeholders::_2, CPPTRANSPORT_REPO_TASK_MISSING);
         pkg.commit = std::bind(&repository_sqlite3<number>::commit_replace, this, std::placeholders::_1, finder);
 
         return new postintegration_task_record<number>(reader, this->tk_finder, pkg);
@@ -776,7 +776,7 @@ namespace transport
         repository_record::handler_package pkg;
         count_function counter = std::bind(&sqlite3_operations::count_products, std::placeholders::_1, std::placeholders::_2);
         store_function storer  = std::bind(&sqlite3_operations::store_product, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
-        pkg.commit = std::bind(&repository_sqlite3<number>::commit_first, this, std::placeholders::_1, counter, storer, this->product_store.string(), __CPP_TRANSPORT_REPO_PRODUCT_EXISTS);
+        pkg.commit = std::bind(&repository_sqlite3<number>::commit_first, this, std::placeholders::_1, counter, storer, this->product_store.string(), CPPTRANSPORT_REPO_PRODUCT_EXISTS);
 
         return new derived_product_record<number>(prod, pkg);
 	    }
@@ -786,7 +786,7 @@ namespace transport
     derived_product_record<number>* repository_sqlite3<number>::derived_product_record_factory(Json::Value& reader)
 	    {
         repository_record::handler_package pkg;
-        find_function finder = std::bind(&sqlite3_operations::find_product, std::placeholders::_1, std::placeholders::_2, __CPP_TRANSPORT_REPO_PRODUCT_MISSING);
+        find_function finder = std::bind(&sqlite3_operations::find_product, std::placeholders::_1, std::placeholders::_2, CPPTRANSPORT_REPO_PRODUCT_MISSING);
         pkg.commit = std::bind(&repository_sqlite3<number>::commit_replace, this, std::placeholders::_1, finder);
 
         return new derived_product_record<number>(reader, this->tk_finder, pkg);
@@ -846,7 +846,7 @@ namespace transport
         repository_record::handler_package pkg;
         count_function counter = std::bind(&sqlite3_operations::count_groups, std::placeholders::_1, std::placeholders::_2);
         store_function storer  = std::bind(&sqlite3_operations::store_group<Payload>, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, tn);
-        pkg.commit = std::bind(&repository_sqlite3<number>::commit_first, this, std::placeholders::_1, counter, storer, this->output_store.string(), __CPP_TRANSPORT_REPO_OUTPUT_EXISTS);
+        pkg.commit = std::bind(&repository_sqlite3<number>::commit_first, this, std::placeholders::_1, counter, storer, this->output_store.string(), CPPTRANSPORT_REPO_OUTPUT_EXISTS);
 
         typename output_group_record<Payload>::paths_group paths;
         paths.root   = this->get_root_path();
@@ -861,7 +861,7 @@ namespace transport
     output_group_record<Payload>* repository_sqlite3<number>::content_group_record_factory(Json::Value& reader)
 	    {
         repository_record::handler_package pkg;
-        find_function finder = std::bind(&sqlite3_operations::find_group<Payload>, std::placeholders::_1, std::placeholders::_2, __CPP_TRANSPORT_REPO_OUTPUT_MISSING);
+        find_function finder = std::bind(&sqlite3_operations::find_group<Payload>, std::placeholders::_1, std::placeholders::_2, CPPTRANSPORT_REPO_OUTPUT_MISSING);
         pkg.commit = std::bind(&repository_sqlite3<number>::commit_replace, this, std::placeholders::_1, finder);
 
         return new output_group_record<Payload>(reader, this->root_path, pkg);
@@ -898,8 +898,8 @@ namespace transport
         if(count == 0)
 	        {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_REPO_AUTOCOMMIT_INTEGRATION_A << " '" << tk.get_name() << "' "
-	            << __CPP_TRANSPORT_REPO_AUTOCOMMIT_INTEGRATION_B << " '" << tk.get_ics().get_name() << "'";
+            msg << CPPTRANSPORT_REPO_AUTOCOMMIT_INTEGRATION_A << " '" << tk.get_name() << "' "
+	            << CPPTRANSPORT_REPO_AUTOCOMMIT_INTEGRATION_B << " '" << tk.get_ics().get_name() << "'";
             this->message(msg.str());
             this->commit_package(tk.get_ics());
 	        }
@@ -925,8 +925,8 @@ namespace transport
             if(count == 0)
 	            {
                 std::ostringstream msg;
-                msg << __CPP_TRANSPORT_REPO_AUTOCOMMIT_OUTPUT_A << " '" << tk.get_name() << "' "
-	                << __CPP_TRANSPORT_REPO_AUTOCOMMIT_OUTPUT_B << " '" << product->get_name() << "'";
+                msg << CPPTRANSPORT_REPO_AUTOCOMMIT_OUTPUT_A << " '" << tk.get_name() << "' "
+	                << CPPTRANSPORT_REPO_AUTOCOMMIT_OUTPUT_B << " '" << product->get_name() << "'";
                 this->message(msg.str());
                 this->commit_derived_product(*product);
 	            }
@@ -957,16 +957,16 @@ namespace transport
 		        if((Itk = dynamic_cast< integration_task<number>* >(ptk)) != nullptr)
 			        {
 		            std::ostringstream msg;
-		            msg << __CPP_TRANSPORT_REPO_AUTOCOMMIT_POSTINTEGR_A << " '" << tk.get_name() << "' "
-			            << __CPP_TRANSPORT_REPO_AUTOCOMMIT_POSTINTEGR_B << " '" << tk.get_parent_task()->get_name() << "'";
+		            msg << CPPTRANSPORT_REPO_AUTOCOMMIT_POSTINTEGR_A << " '" << tk.get_name() << "' "
+			            << CPPTRANSPORT_REPO_AUTOCOMMIT_POSTINTEGR_B << " '" << tk.get_parent_task()->get_name() << "'";
 		            this->message(msg.str());
 		            this->commit_task(*Itk);
 			        }
 		        else if((Ptk = dynamic_cast< postintegration_task<number>* >(ptk)) != nullptr)
 			        {
 		            std::ostringstream msg;
-		            msg << __CPP_TRANSPORT_REPO_AUTOCOMMIT_POSTINTEGR_C << " '" << tk.get_name() << "' "
-			            << __CPP_TRANSPORT_REPO_AUTOCOMMIT_POSTINTEGR_D << " '" << tk.get_parent_task()->get_name() << "'";
+		            msg << CPPTRANSPORT_REPO_AUTOCOMMIT_POSTINTEGR_C << " '" << tk.get_name() << "' "
+			            << CPPTRANSPORT_REPO_AUTOCOMMIT_POSTINTEGR_D << " '" << tk.get_parent_task()->get_name() << "'";
 		            this->message(msg.str());
 		            this->commit_task(*Ptk);
 			        }
@@ -999,16 +999,16 @@ namespace transport
                 if((Itk = dynamic_cast< integration_task<number>* >(*t)) != nullptr)
 	                {
                     std::ostringstream msg;
-                    msg << __CPP_TRANSPORT_REPO_AUTOCOMMIT_PRODUCT_A << " '" << d.get_name() << "' "
-	                    << __CPP_TRANSPORT_REPO_AUTOCOMMIT_PRODUCT_B << " '" << Itk->get_name() << "'";
+                    msg << CPPTRANSPORT_REPO_AUTOCOMMIT_PRODUCT_A << " '" << d.get_name() << "' "
+	                    << CPPTRANSPORT_REPO_AUTOCOMMIT_PRODUCT_B << " '" << Itk->get_name() << "'";
                     this->message(msg.str());
                     this->commit_task(*Itk);
 	                }
                 else if((Ptk = dynamic_cast< postintegration_task<number>* >(*t)) != nullptr)
 	                {
                     std::ostringstream msg;
-                    msg << __CPP_TRANSPORT_REPO_AUTOCOMMIT_PRODUCT_C << " '" << d.get_name() << "' "
-	                    << __CPP_TRANSPORT_REPO_AUTOCOMMIT_PRODUCT_D << " '" << Ptk->get_name() << "'";
+                    msg << CPPTRANSPORT_REPO_AUTOCOMMIT_PRODUCT_C << " '" << d.get_name() << "' "
+	                    << CPPTRANSPORT_REPO_AUTOCOMMIT_PRODUCT_D << " '" << Ptk->get_name() << "'";
                     this->message(msg.str());
                     this->commit_task(*Ptk);
 	                }
@@ -1024,7 +1024,7 @@ namespace transport
 		template <typename number>
 		package_record<number>* repository_sqlite3<number>::query_package(const std::string& name)
 			{
-		    boost::filesystem::path filename = sqlite3_operations::find_package(this->db, name, __CPP_TRANSPORT_REPO_PACKAGE_MISSING);
+		    boost::filesystem::path filename = sqlite3_operations::find_package(this->db, name, CPPTRANSPORT_REPO_PACKAGE_MISSING);
 		    Json::Value root = this->deserialize_JSON_document(filename);
 				return this->package_record_factory(root);
 			}
@@ -1036,19 +1036,19 @@ namespace transport
 			{
 				if(sqlite3_operations::count_integration_tasks(this->db, name) > 0)
 					{
-				    boost::filesystem::path filename = sqlite3_operations::find_integration_task(this->db, name, __CPP_TRANSPORT_REPO_TASK_MISSING);
+				    boost::filesystem::path filename = sqlite3_operations::find_integration_task(this->db, name, CPPTRANSPORT_REPO_TASK_MISSING);
 				    Json::Value root = this->deserialize_JSON_document(filename);
 						return this->integration_task_record_factory(root);
 					}
 				else if(sqlite3_operations::count_postintegration_tasks(this->db, name) > 0)
 					{
-				    boost::filesystem::path filename = sqlite3_operations::find_postintegration_task(this->db, name, __CPP_TRANSPORT_REPO_TASK_MISSING);
+				    boost::filesystem::path filename = sqlite3_operations::find_postintegration_task(this->db, name, CPPTRANSPORT_REPO_TASK_MISSING);
 				    Json::Value root = this->deserialize_JSON_document(filename);
 						return this->postintegration_task_record_factory(root);
 					}
 				else if(sqlite3_operations::count_output_tasks(this->db, name) > 0)
 					{
-				    boost::filesystem::path filename = sqlite3_operations::find_output_task(this->db, name, __CPP_TRANSPORT_REPO_TASK_MISSING);
+				    boost::filesystem::path filename = sqlite3_operations::find_output_task(this->db, name, CPPTRANSPORT_REPO_TASK_MISSING);
 				    Json::Value root = this->deserialize_JSON_document(filename);
 						return this->output_task_record_factory(root);
 					}
@@ -1061,7 +1061,7 @@ namespace transport
 		template <typename number>
 		derived_product_record<number>* repository_sqlite3<number>::query_derived_product(const std::string& name)
 			{
-		    boost::filesystem::path filename = sqlite3_operations::find_product(this->db, name, __CPP_TRANSPORT_REPO_PRODUCT_MISSING);
+		    boost::filesystem::path filename = sqlite3_operations::find_product(this->db, name, CPPTRANSPORT_REPO_PRODUCT_MISSING);
 		    Json::Value root = this->deserialize_JSON_document(filename);
 				return this->derived_product_record_factory(root);
 			}
@@ -1077,12 +1077,12 @@ namespace transport
 				if(record->get_type() != task_record<number>::integration)
 					{
 				    std::ostringstream msg;
-				    msg << __CPP_TRANSPORT_REPO_EXTRACT_DERIVED_NOT_INTGRTN << " '" << name << "'";
+				    msg << CPPTRANSPORT_REPO_EXTRACT_DERIVED_NOT_INTGRTN << " '" << name << "'";
 				    throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
 					}
 
 		    std::list< std::shared_ptr< output_group_record<integration_payload> > > list;
-				find_function finder = std::bind(sqlite3_operations::find_integration_task, std::placeholders::_1, std::placeholders::_2, __CPP_TRANSPORT_REPO_TASK_MISSING);
+				find_function finder = std::bind(sqlite3_operations::find_integration_task, std::placeholders::_1, std::placeholders::_2, CPPTRANSPORT_REPO_TASK_MISSING);
 				this->enumerate_content_groups<integration_payload>(name, list, finder);
 
 				list.sort(&output_group_helper::comparator<integration_payload>);
@@ -1100,12 +1100,12 @@ namespace transport
         if(record->get_type() != task_record<number>::postintegration)
 	        {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_REPO_EXTRACT_DERIVED_NOT_POSTINT << " '" << name << "'";
+            msg << CPPTRANSPORT_REPO_EXTRACT_DERIVED_NOT_POSTINT << " '" << name << "'";
             throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
 	        }
 
         std::list< std::shared_ptr< output_group_record<postintegration_payload> > > list;
-        find_function finder = std::bind(sqlite3_operations::find_postintegration_task, std::placeholders::_1, std::placeholders::_2, __CPP_TRANSPORT_REPO_TASK_MISSING);
+        find_function finder = std::bind(sqlite3_operations::find_postintegration_task, std::placeholders::_1, std::placeholders::_2, CPPTRANSPORT_REPO_TASK_MISSING);
         this->enumerate_content_groups<postintegration_payload>(name, list, finder);
 
         list.sort(&output_group_helper::comparator<postintegration_payload>);
@@ -1123,12 +1123,12 @@ namespace transport
 				if(record->get_type() != task_record<number>::output)
 					{
 				    std::ostringstream msg;
-				    msg << __CPP_TRANSPORT_REPO_EXTRACT_DERIVED_NOT_OUTPUT << " '" << name << "'";
+				    msg << CPPTRANSPORT_REPO_EXTRACT_DERIVED_NOT_OUTPUT << " '" << name << "'";
 				    throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
 					}
 
 		    std::list< std::shared_ptr< output_group_record<output_payload> > > list;
-		    find_function finder = std::bind(sqlite3_operations::find_output_task, std::placeholders::_1, std::placeholders::_2, __CPP_TRANSPORT_REPO_OUTPUT_MISSING);
+		    find_function finder = std::bind(sqlite3_operations::find_output_task, std::placeholders::_1, std::placeholders::_2, CPPTRANSPORT_REPO_OUTPUT_MISSING);
 		    this->enumerate_content_groups<output_payload>(name, list, finder);
 
 		    list.sort(&output_group_helper::comparator<output_payload>);
@@ -1142,7 +1142,7 @@ namespace transport
 		template <typename number>
 		std::string repository_sqlite3<number>::export_JSON_package_record(const std::string& name)
 			{
-		    boost::filesystem::path filename = sqlite3_operations::find_package(this->db, name, __CPP_TRANSPORT_REPO_PACKAGE_MISSING);
+		    boost::filesystem::path filename = sqlite3_operations::find_package(this->db, name, CPPTRANSPORT_REPO_PACKAGE_MISSING);
 		    Json::Value root = this->deserialize_JSON_document(filename);
 
 		    Json::StreamWriterBuilder builder;
@@ -1155,7 +1155,7 @@ namespace transport
 	    {
         if(sqlite3_operations::count_integration_tasks(this->db, name) > 0)
 	        {
-            boost::filesystem::path filename = sqlite3_operations::find_integration_task(this->db, name, __CPP_TRANSPORT_REPO_TASK_MISSING);
+            boost::filesystem::path filename = sqlite3_operations::find_integration_task(this->db, name, CPPTRANSPORT_REPO_TASK_MISSING);
             Json::Value root = this->deserialize_JSON_document(filename);
 
             Json::StreamWriterBuilder builder;
@@ -1163,7 +1163,7 @@ namespace transport
 	        }
         else if(sqlite3_operations::count_postintegration_tasks(this->db, name) > 0)
 	        {
-            boost::filesystem::path filename = sqlite3_operations::find_postintegration_task(this->db, name, __CPP_TRANSPORT_REPO_TASK_MISSING);
+            boost::filesystem::path filename = sqlite3_operations::find_postintegration_task(this->db, name, CPPTRANSPORT_REPO_TASK_MISSING);
             Json::Value root = this->deserialize_JSON_document(filename);
 
             Json::StreamWriterBuilder builder;
@@ -1171,7 +1171,7 @@ namespace transport
 	        }
         else if(sqlite3_operations::count_output_tasks(this->db, name) > 0)
 	        {
-            boost::filesystem::path filename = sqlite3_operations::find_output_task(this->db, name, __CPP_TRANSPORT_REPO_TASK_MISSING);
+            boost::filesystem::path filename = sqlite3_operations::find_output_task(this->db, name, CPPTRANSPORT_REPO_TASK_MISSING);
             Json::Value root = this->deserialize_JSON_document(filename);
 
             Json::StreamWriterBuilder builder;
@@ -1179,7 +1179,7 @@ namespace transport
 	        }
 
         std::stringstream msg;
-        msg << __CPP_TRANSPORT_REPO_TASK_MISSING << " '" << name << "'";
+        msg << CPPTRANSPORT_REPO_TASK_MISSING << " '" << name << "'";
         throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
 	    }
 
@@ -1187,7 +1187,7 @@ namespace transport
     template <typename number>
     std::string repository_sqlite3<number>::export_JSON_product_record(const std::string& name)
 	    {
-        boost::filesystem::path filename = sqlite3_operations::find_product(this->db, name, __CPP_TRANSPORT_REPO_PRODUCT_MISSING);
+        boost::filesystem::path filename = sqlite3_operations::find_product(this->db, name, CPPTRANSPORT_REPO_PRODUCT_MISSING);
         Json::Value root = this->deserialize_JSON_document(filename);
 
         Json::StreamWriterBuilder builder;
@@ -1200,7 +1200,7 @@ namespace transport
 			{
 		    if(sqlite3_operations::count_integration_groups(this->db, name) > 0)
 			    {
-		        boost::filesystem::path filename = sqlite3_operations::find_group<integration_payload>(this->db, name, __CPP_TRANSPORT_REPO_OUTPUT_MISSING);
+		        boost::filesystem::path filename = sqlite3_operations::find_group<integration_payload>(this->db, name, CPPTRANSPORT_REPO_OUTPUT_MISSING);
 		        Json::Value root = this->deserialize_JSON_document(filename);
 
 		        Json::StreamWriterBuilder builder;
@@ -1208,7 +1208,7 @@ namespace transport
 			    }
 		    else if(sqlite3_operations::count_postintegration_groups(this->db, name) > 0)
 			    {
-		        boost::filesystem::path filename = sqlite3_operations::find_group<postintegration_payload>(this->db, name, __CPP_TRANSPORT_REPO_OUTPUT_MISSING);
+		        boost::filesystem::path filename = sqlite3_operations::find_group<postintegration_payload>(this->db, name, CPPTRANSPORT_REPO_OUTPUT_MISSING);
 		        Json::Value root = this->deserialize_JSON_document(filename);
 
 		        Json::StreamWriterBuilder builder;
@@ -1216,7 +1216,7 @@ namespace transport
 			    }
 		    else if(sqlite3_operations::count_output_groups(this->db, name) > 0)
 			    {
-		        boost::filesystem::path filename = sqlite3_operations::find_group<output_payload>(this->db, name, __CPP_TRANSPORT_REPO_OUTPUT_MISSING);
+		        boost::filesystem::path filename = sqlite3_operations::find_group<output_payload>(this->db, name, CPPTRANSPORT_REPO_OUTPUT_MISSING);
 		        Json::Value root = this->deserialize_JSON_document(filename);
 
 		        Json::StreamWriterBuilder builder;
@@ -1224,7 +1224,7 @@ namespace transport
 			    }
 
 		    std::stringstream msg;
-		    msg << __CPP_TRANSPORT_REPO_OUTPUT_MISSING << " '" << name << "'";
+		    msg << CPPTRANSPORT_REPO_OUTPUT_MISSING << " '" << name << "'";
 		    throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
 			}
 
@@ -1239,7 +1239,7 @@ namespace transport
         if(sqlite3_operations::count_packages(this->db, name) > 0) // should always =1, because primary key constraints in the database prevent duplicates
 	        {
             std::ostringstream msg;
-            msg <<  __CPP_TRANSPORT_REPO_PACKAGE_DUPLICATE << " '" << name << "'";
+            msg <<  CPPTRANSPORT_REPO_PACKAGE_DUPLICATE << " '" << name << "'";
             throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
 	        }
 	    }
@@ -1252,7 +1252,7 @@ namespace transport
         if(sqlite3_operations::count_tasks(this->db, name) > 0) // should always =1, because primary key constraints in the database prevent duplicates
 	        {
             std::ostringstream msg;
-            msg <<  __CPP_TRANSPORT_REPO_TASK_DUPLICATE << " '" << name << "'";
+            msg <<  CPPTRANSPORT_REPO_TASK_DUPLICATE << " '" << name << "'";
             throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
 	        }
 	    }
@@ -1265,7 +1265,7 @@ namespace transport
         if(sqlite3_operations::count_products(this->db, name) > 0) // should always =1, because primary key constraints in the database prevent duplicates
 	        {
             std::ostringstream msg;
-            msg <<  __CPP_TRANSPORT_REPO_PRODUCT_DUPLICATE << " '" << name << "'";
+            msg <<  CPPTRANSPORT_REPO_PRODUCT_DUPLICATE << " '" << name << "'";
             throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
 	        }
 	    }
@@ -1282,7 +1282,7 @@ namespace transport
 
 				for(std::list<std::string>::iterator t = group_names.begin(); t != group_names.end(); ++t)
 					{
-						boost::filesystem::path filename = sqlite3_operations::find_group<Payload>(this->db, *t, __CPP_TRANSPORT_REPO_OUTPUT_MISSING);
+						boost::filesystem::path filename = sqlite3_operations::find_group<Payload>(this->db, *t, CPPTRANSPORT_REPO_OUTPUT_MISSING);
 						Json::Value root = this->deserialize_JSON_document(filename);
 						list.push_back(std::shared_ptr< output_group_record<Payload> >(this->template content_group_record_factory<Payload>(root)));
 					}

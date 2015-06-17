@@ -40,7 +40,7 @@ namespace transport
 				    //! construct an r_line time series data object
 				    r_time_series(const zeta_twopf_list_task<number>& tk,
                           SQL_time_config_query tq, SQL_twopf_kconfig_query kq,
-				                  unsigned int prec = __CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
+				                  unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
 				    //! deserialization constructor
 				    r_time_series(Json::Value& reader, typename repository_finder<number>::task_finder& finder);
@@ -123,8 +123,8 @@ namespace transport
 					: derived_line<number>(reader, finder),
 		        r_line<number>(reader, finder),
 		        time_series<number>(reader),
-            tquery(reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]),
-            kquery(reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY])
+            tquery(reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]),
+            kquery(reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY])
 					{
 					}
 
@@ -258,10 +258,10 @@ namespace transport
 				template <typename number>
 				void r_time_series<number>::serialize(Json::Value& writer) const
 					{
-				    writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_R_TIME_SERIES);
+				    writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_R_TIME_SERIES);
 
-            this->tquery.serialize(writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]);
-            this->kquery.serialize(writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY]);
+            this->tquery.serialize(writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]);
+            this->kquery.serialize(writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY]);
 
 				    this->derived_line<number>::serialize(writer);
 				    this->r_line<number>::serialize(writer);

@@ -38,8 +38,8 @@
 #include "transport-runtime-api/derived-products/derived-content/SQL_query/SQL_query.h"
 
 
-#define __CPP_TRANSPORT_NODE_PRODUCT_WAVENUMBER_SERIES_ROOT           "momentum-configuration-series"
-#define __CPP_TRANSPORT_NODE_PRODUCT_WAVENUMBER_SERIES_SPECTRAL_INDEX "spectral-index"
+#define CPPTRANSPORT_NODE_PRODUCT_WAVENUMBER_SERIES_ROOT           "momentum-configuration-series"
+#define CPPTRANSPORT_NODE_PRODUCT_WAVENUMBER_SERIES_SPECTRAL_INDEX "spectral-index"
 
 
 namespace transport
@@ -150,7 +150,7 @@ namespace transport
 		    wavenumber_series<number>::wavenumber_series(Json::Value& reader)
           : derived_line<number>(reader)  // not called because of virtual inheritance; here to silence Intel compiler warning
 			    {
-		        compute_index = reader[__CPP_TRANSPORT_NODE_PRODUCT_WAVENUMBER_SERIES_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_WAVENUMBER_SERIES_SPECTRAL_INDEX].asBool();
+		        compute_index = reader[CPPTRANSPORT_NODE_PRODUCT_WAVENUMBER_SERIES_ROOT][CPPTRANSPORT_NODE_PRODUCT_WAVENUMBER_SERIES_SPECTRAL_INDEX].asBool();
 			    }
 
 
@@ -180,7 +180,7 @@ namespace transport
 		                    else
 			                    {
 		                        assert(false);
-		                        throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_KLABEL_TYPE_UNKNOWN);
+		                        throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_PRODUCT_DERIVED_LINE_KLABEL_TYPE_UNKNOWN);
 			                    }
 			                }
 				            break;
@@ -227,7 +227,7 @@ namespace transport
 		                    else
 			                    {
 		                        assert(false);
-		                        throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_KLABEL_TYPE_UNKNOWN);
+		                        throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_PRODUCT_DERIVED_LINE_KLABEL_TYPE_UNKNOWN);
 			                    }
 			                }
 				            break;
@@ -302,7 +302,7 @@ namespace transport
 			    {
 		        std::ostringstream label;
 
-				    label << __CPP_TRANSPORT_LATEX_T_SYMBOL << "=" << output_latex_number(config, this->precision);
+				    label << CPPTRANSPORT_LATEX_T_SYMBOL << "=" << output_latex_number(config, this->precision);
 
 				    return(label.str());
 			    }
@@ -315,7 +315,7 @@ namespace transport
 
 				    label << std::setprecision(this->precision);
 
-				    label << __CPP_TRANSPORT_NONLATEX_T_SYMBOL << "=" << config;
+				    label << CPPTRANSPORT_NONLATEX_T_SYMBOL << "=" << config;
 
 				    return(label.str());
 			    }
@@ -327,7 +327,7 @@ namespace transport
 				    // DON'T CALL derived_line<> serialization because of virtual inheritance;
 				    // concrete classes must call it themselves
 
-		        writer[__CPP_TRANSPORT_NODE_PRODUCT_WAVENUMBER_SERIES_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_WAVENUMBER_SERIES_SPECTRAL_INDEX] = this->compute_index;
+		        writer[CPPTRANSPORT_NODE_PRODUCT_WAVENUMBER_SERIES_ROOT][CPPTRANSPORT_NODE_PRODUCT_WAVENUMBER_SERIES_SPECTRAL_INDEX] = this->compute_index;
 			    }
 
 

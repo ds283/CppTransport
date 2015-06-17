@@ -139,7 +139,7 @@ namespace transport
       public:
 
         //! hash
-        virtual unsigned int hash() const override { return((this->id*2141) % __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE); }
+        virtual unsigned int hash() const override { return((this->id*2141) % CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE); }
 
 
         // INTERNAL DATA
@@ -199,7 +199,7 @@ namespace transport
       public:
 
         //! hash
-        virtual unsigned int hash() const override { return((this->kserial*8761 + this->id*2141) % __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE); }
+        virtual unsigned int hash() const override { return((this->kserial*8761 + this->id*2141) % CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE); }
 
 
         // INTERNAL DATA
@@ -265,7 +265,7 @@ namespace transport
       public:
 
         //! hash
-        virtual unsigned int hash() const override { return((this->tserial*8761 + this->id*2131) % __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE); }
+        virtual unsigned int hash() const override { return((this->tserial*8761 + this->id*2131) % CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE); }
 
 
         // INTERNAL DATA
@@ -359,9 +359,9 @@ namespace transport
 	    {
         // check that we are attached to an integration content group
         assert(this->pipe->validate_attached(datapipe<number>::integration_attached));
-        if(!this->pipe->validate_attached(datapipe<number>::integration_attached)) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+        if(!this->pipe->validate_attached(datapipe<number>::integration_attached)) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
-#ifdef __CPP_TRANSPORT_DEBUG_DATAPIPE
+#ifdef CPPTRANSPORT_DEBUG_DATAPIPE
 		    BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::datapipe_pull) << "** PULL background time sample request for element " << this->id;
 #endif
 
@@ -376,11 +376,11 @@ namespace transport
 	    {
         // check that we are attached to an integration content group
         assert(this->pipe->validate_attached(datapipe<number>::integration_attached));
-        if(!this->pipe->validate_attached(datapipe<number>::integration_attached)) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+        if(!this->pipe->validate_attached(datapipe<number>::integration_attached)) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
         if(this->type == data_tag<number>::cf_twopf_re)
 	        {
-#ifdef __CPP_TRANSPORT_DEBUG_DATAPIPE
+#ifdef CPPTRANSPORT_DEBUG_DATAPIPE
 				    BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::datapipe_pull) << "** PULL twopf time sample request, type = real, for element " << this->id << ", k-configuration " << this->kserial;
 #endif
 
@@ -390,7 +390,7 @@ namespace transport
 	        }
         else if(this->type == data_tag<number>::cf_twopf_im)
 	        {
-#ifdef __CPP_TRANSPORT_DEBUG_DATAPIPE
+#ifdef CPPTRANSPORT_DEBUG_DATAPIPE
 				    BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::datapipe_pull) << "** PULL twopf time sample request, type = imaginary, for element " << this->id << ", k-configuration " << this->kserial;
 #endif
 
@@ -400,7 +400,7 @@ namespace transport
 	        }
         else if(this->type == data_tag<number>::cf_threepf)
 	        {
-#ifdef __CPP_TRANSPORT_DEBUG_DATAPIPE
+#ifdef CPPTRANSPORT_DEBUG_DATAPIPE
 				    BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::datapipe_pull) << "** PULL threepf time sample request for element " << this->id << ", k-configuration " << this->kserial;
 #endif
 
@@ -410,7 +410,7 @@ namespace transport
 	        }
         else if(this->type == data_tag<number>::cf_tensor_twopf)
 	        {
-#ifdef __CPP_TRANSPORT_DEBUG_DATAPIPE
+#ifdef CPPTRANSPORT_DEBUG_DATAPIPE
             BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::datapipe_pull) << "** PULL tensor twopf time sample request for element " << this->id << ", k-configuration " << this->kserial;
 #endif
 
@@ -421,7 +421,7 @@ namespace transport
         else
 	        {
             assert(false);
-            throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_UNKNOWN_CF_TYPE);
+            throw runtime_exception(runtime_exception::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_UNKNOWN_CF_TYPE);
 	        }
 	    }
 
@@ -431,11 +431,11 @@ namespace transport
 	    {
         // check that we are attached to an integration content group
         assert(this->pipe->validate_attached(datapipe<number>::integration_attached));
-        if(!this->pipe->validate_attached(datapipe<number>::integration_attached)) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+        if(!this->pipe->validate_attached(datapipe<number>::integration_attached)) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
         if(this->type == data_tag<number>::cf_twopf_re)
 	        {
-#ifdef __CPP_TRANSPORT_DEBUG_DATAPIPE
+#ifdef CPPTRANSPORT_DEBUG_DATAPIPE
             BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::datapipe_pull) << "** PULL twopf kconfig sample request, type = real, for element " << this->id << ", t-serial " << this->tserial;
 #endif
 
@@ -445,7 +445,7 @@ namespace transport
 	        }
         else if(this->type == data_tag<number>::cf_twopf_im)
 	        {
-#ifdef __CPP_TRANSPORT_DEBUG_DATAPIPE
+#ifdef CPPTRANSPORT_DEBUG_DATAPIPE
             BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::datapipe_pull) << "** PULL twopf kconfig sample request, type = imaginary, for element " << this->id << ", t-serial " << this->tserial;
 #endif
 
@@ -455,7 +455,7 @@ namespace transport
 	        }
         else if(this->type == data_tag<number>::cf_threepf)
 	        {
-#ifdef __CPP_TRANSPORT_DEBUG_DATAPIPE
+#ifdef CPPTRANSPORT_DEBUG_DATAPIPE
             BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::datapipe_pull) << "** PULL threepf kconfig sample request for element " << this->id << ", t-serial " << this->tserial;
 #endif
 
@@ -465,7 +465,7 @@ namespace transport
 	        }
         else if(this->type == data_tag<number>::cf_tensor_twopf)
 	        {
-#ifdef __CPP_TRANSPORT_DEBUG_DATAPIPE
+#ifdef CPPTRANSPORT_DEBUG_DATAPIPE
             BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::datapipe_pull) << "** PULL tensor twopf kconfig sample request for element " << this->id << ", t-serial " << this->tserial;
 #endif
             this->pipe->database_timer.resume();
@@ -475,7 +475,7 @@ namespace transport
         else
 	        {
             assert(false);
-            throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_UNKNOWN_CF_TYPE);
+            throw runtime_exception(runtime_exception::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_UNKNOWN_CF_TYPE);
 	        }
 	    }
 

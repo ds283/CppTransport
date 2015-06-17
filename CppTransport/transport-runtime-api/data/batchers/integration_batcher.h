@@ -623,7 +623,7 @@ namespace transport
     template <typename number>
     void integration_batcher<number>::push_backg(unsigned int time_serial, unsigned int source_serial, const std::vector<number>& values)
 	    {
-        if(values.size() != 2*this->Nfields) throw runtime_exception(runtime_exception::STORAGE_ERROR, __CPP_TRANSPORT_NFIELDS_BACKG);
+        if(values.size() != 2*this->Nfields) throw runtime_exception(runtime_exception::STORAGE_ERROR, CPPTRANSPORT_NFIELDS_BACKG);
 
         typename integration_items<number>::backg_item item;
 
@@ -639,7 +639,7 @@ namespace transport
 		template <typename number>
 		void integration_batcher<number>::push_ics(unsigned int k_serial, double t_exit, const std::vector<number>& values)
 			{
-		    if(values.size() != 2*this->Nfields) throw runtime_exception(runtime_exception::STORAGE_ERROR, __CPP_TRANSPORT_NFIELDS_BACKG);
+		    if(values.size() != 2*this->Nfields) throw runtime_exception(runtime_exception::STORAGE_ERROR, CPPTRANSPORT_NFIELDS_BACKG);
 
 				if(this->collect_initial_conditions)
 					{
@@ -757,7 +757,7 @@ namespace transport
     void twopf_batcher<number>::push_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial,
                                            const std::vector<number>& values, const std::vector<number>& backg)
 	    {
-        if(values.size() != 2*this->Nfields*2*this->Nfields) throw runtime_exception(runtime_exception::STORAGE_ERROR, __CPP_TRANSPORT_NFIELDS_TWOPF);
+        if(values.size() != 2*this->Nfields*2*this->Nfields) throw runtime_exception(runtime_exception::STORAGE_ERROR, CPPTRANSPORT_NFIELDS_TWOPF);
 
         typename integration_items<number>::twopf_re_item item;
 
@@ -790,7 +790,7 @@ namespace transport
     void twopf_batcher<number>::push_tensor_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial,
                                                   const std::vector<number>& values)
 	    {
-        if(values.size() != 4) throw runtime_exception(runtime_exception::STORAGE_ERROR, __CPP_TRANSPORT_NFIELDS_TENSOR_TWOPF);
+        if(values.size() != 4) throw runtime_exception(runtime_exception::STORAGE_ERROR, CPPTRANSPORT_NFIELDS_TENSOR_TWOPF);
 
         typename integration_items<number>::tensor_twopf_item item;
 
@@ -929,7 +929,7 @@ namespace transport
     void threepf_batcher<number>::push_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial,
                                              const std::vector<number>& values, const std::vector<number>& backg, twopf_type t)
 	    {
-        if(values.size() != 2*this->Nfields*2*this->Nfields) throw runtime_exception(runtime_exception::STORAGE_ERROR, __CPP_TRANSPORT_NFIELDS_TWOPF);
+        if(values.size() != 2*this->Nfields*2*this->Nfields) throw runtime_exception(runtime_exception::STORAGE_ERROR, CPPTRANSPORT_NFIELDS_TWOPF);
 
 		    if(t == real_twopf)
 			    {
@@ -979,7 +979,7 @@ namespace transport
                                                const std::vector<number>& tpf_k2_re, const std::vector<number>& tpf_k2_im,
                                                const std::vector<number>& tpf_k3_re, const std::vector<number>& tpf_k3_im, const std::vector<number>& bg)
 	    {
-        if(values.size() != 2*this->Nfields*2*this->Nfields*2*this->Nfields) throw runtime_exception(runtime_exception::STORAGE_ERROR, __CPP_TRANSPORT_NFIELDS_THREEPF);
+        if(values.size() != 2*this->Nfields*2*this->Nfields*2*this->Nfields) throw runtime_exception(runtime_exception::STORAGE_ERROR, CPPTRANSPORT_NFIELDS_THREEPF);
 
         typename integration_items<number>::threepf_item item;
 
@@ -1023,7 +1023,7 @@ namespace transport
     void threepf_batcher<number>::push_tensor_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial,
                                                     const std::vector<number>& values)
 	    {
-        if(values.size() != 4) throw runtime_exception(runtime_exception::STORAGE_ERROR, __CPP_TRANSPORT_NFIELDS_TENSOR_TWOPF);
+        if(values.size() != 4) throw runtime_exception(runtime_exception::STORAGE_ERROR, CPPTRANSPORT_NFIELDS_TENSOR_TWOPF);
 
         typename integration_items<number>::tensor_twopf_item item;
 
@@ -1053,7 +1053,7 @@ namespace transport
     template <typename number>
     void threepf_batcher<number>::push_kt_ics(unsigned int k_serial, double t_exit, const std::vector<number>& values)
 	    {
-        if(values.size() != 2*this->Nfields) throw runtime_exception(runtime_exception::STORAGE_ERROR, __CPP_TRANSPORT_NFIELDS_BACKG);
+        if(values.size() != 2*this->Nfields) throw runtime_exception(runtime_exception::STORAGE_ERROR, CPPTRANSPORT_NFIELDS_BACKG);
 
         if(this->collect_initial_conditions)
 	        {

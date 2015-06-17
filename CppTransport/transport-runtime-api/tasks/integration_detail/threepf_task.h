@@ -22,12 +22,12 @@
 #include "sqlite3.h"
 
 
-#define __CPP_TRANSPORT_NODE_THREEPF_INTEGRABLE            "integrable"
+#define CPPTRANSPORT_NODE_THREEPF_INTEGRABLE            "integrable"
 
-#define __CPP_TRANSPORT_NODE_THREEPF_CUBIC_SPACING         "k-spacing"
-#define __CPP_TRANSPORT_NODE_THREEPF_FLS_KT_SPACING        "kt-spacing"
-#define __CPP_TRANSPORT_NODE_THREEPF_FLS_ALPHA_SPACING     "alpha-spacing"
-#define __CPP_TRANSPORT_NODE_THREEPF_FLS_BETA_SPACING      "beta-spacing"
+#define CPPTRANSPORT_NODE_THREEPF_CUBIC_SPACING         "k-spacing"
+#define CPPTRANSPORT_NODE_THREEPF_FLS_KT_SPACING        "kt-spacing"
+#define CPPTRANSPORT_NODE_THREEPF_FLS_ALPHA_SPACING     "alpha-spacing"
+#define CPPTRANSPORT_NODE_THREEPF_FLS_BETA_SPACING      "beta-spacing"
 
 
 namespace transport
@@ -162,7 +162,7 @@ namespace transport
 		    threepf_db = std::make_shared<threepf_kconfig_database>(this->twopf_list_task<number>::kstar, handle, this->twopf_list_task<number>::twopf_db);
 
         //! deserialize integrable status
-        integrable = reader[__CPP_TRANSPORT_NODE_THREEPF_INTEGRABLE].asBool();
+        integrable = reader[CPPTRANSPORT_NODE_THREEPF_INTEGRABLE].asBool();
 
         // rebuild database of stored times; this isn't serialized but recomputed on-the-fly
         this->cache_stored_time_config_database();
@@ -173,7 +173,7 @@ namespace transport
     void threepf_task<number>::serialize(Json::Value& writer) const
 	    {
         // serialize integrable status
-        writer[__CPP_TRANSPORT_NODE_THREEPF_INTEGRABLE] = this->integrable;
+        writer[CPPTRANSPORT_NODE_THREEPF_INTEGRABLE] = this->integrable;
 
 		    // threepf database is serialized separately to a SQLite database
         // this serialization is handled by the repository layer via write_kconfig_database() below
@@ -318,7 +318,7 @@ namespace transport
         template <typename StoragePolicy>
         threepf_cubic_task(const std::string& nm, const initial_conditions<number>& i,
                            range<double>& t, range<double>& ks, StoragePolicy policy,
-                           bool ff=true, double tol=__CPP_TRANSPORT_DEFAULT_KCONFIG_TOLERANCE);
+                           bool ff=true, double tol=CPPTRANSPORT_DEFAULT_KCONFIG_TOLERANCE);
 
         //! Deserialization constructor
         threepf_cubic_task(const std::string& nm, Json::Value& reader, sqlite3* handle, const initial_conditions<number>& i);
@@ -394,8 +394,8 @@ namespace transport
         if(!ks.is_simple_linear()) this->threepf_task<number>::integrable = false;
         spacing = (ks.get_max() - ks.get_min())/ks.get_steps();
 
-        std::cout << "'" << this->get_name() << "': " << __CPP_TRANSPORT_TASK_THREEPF_ELEMENTS_A << " " << this->threepf_db->size() << " "
-          << __CPP_TRANSPORT_TASK_THREEPF_ELEMENTS_B << " " << this->twopf_db->size() << " " <<__CPP_TRANSPORT_TASK_THREEPF_ELEMENTS_C << std::endl;
+        std::cout << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_THREEPF_ELEMENTS_A << " " << this->threepf_db->size() << " "
+          << CPPTRANSPORT_TASK_THREEPF_ELEMENTS_B << " " << this->twopf_db->size() << " " <<CPPTRANSPORT_TASK_THREEPF_ELEMENTS_C << std::endl;
 
         this->compute_horizon_exit_times();
 
@@ -409,15 +409,15 @@ namespace transport
     threepf_cubic_task<number>::threepf_cubic_task(const std::string& nm, Json::Value& reader, sqlite3* handle, const initial_conditions<number>& i)
 	    : threepf_task<number>(nm, reader, handle, i)
 	    {
-        spacing = reader[__CPP_TRANSPORT_NODE_THREEPF_CUBIC_SPACING].asDouble();
+        spacing = reader[CPPTRANSPORT_NODE_THREEPF_CUBIC_SPACING].asDouble();
 	    }
 
 
     template <typename number>
     void threepf_cubic_task<number>::serialize(Json::Value& writer) const
 	    {
-        writer[__CPP_TRANSPORT_NODE_TASK_TYPE]             = std::string(__CPP_TRANSPORT_NODE_TASK_TYPE_THREEPF_CUBIC);
-        writer[__CPP_TRANSPORT_NODE_THREEPF_CUBIC_SPACING] = this->spacing;
+        writer[CPPTRANSPORT_NODE_TASK_TYPE]             = std::string(CPPTRANSPORT_NODE_TASK_TYPE_THREEPF_CUBIC);
+        writer[CPPTRANSPORT_NODE_THREEPF_CUBIC_SPACING] = this->spacing;
 
         this->threepf_task<number>::serialize(writer);
 	    }
@@ -438,8 +438,8 @@ namespace transport
         threepf_fls_task(const std::string& nm, const initial_conditions<number>& i, range<double>& t,
                          range<double>& kts, range<double>& alphas, range<double>& betas,
                          StoragePolicy kp, bool ff=true,
-                         double smallest_squeezing=__CPP_TRANSPORT_DEFAULT_SMALLEST_SQUEEZING,
-                         double tol=__CPP_TRANSPORT_DEFAULT_KCONFIG_TOLERANCE);
+                         double smallest_squeezing=CPPTRANSPORT_DEFAULT_SMALLEST_SQUEEZING,
+                         double tol=CPPTRANSPORT_DEFAULT_KCONFIG_TOLERANCE);
 
         //! Deserialization constructor
         threepf_fls_task(const std::string& nm, Json::Value& reader, sqlite3* handle, const initial_conditions<number>& i);
@@ -527,8 +527,8 @@ namespace transport
         alpha_spacing = (alphas.get_max() - alphas.get_min()) / alphas.get_steps();
         beta_spacing  = (betas.get_max() - betas.get_min()) / betas.get_steps();
 
-        std::cout << "'" << this->get_name() << "': " << __CPP_TRANSPORT_TASK_THREEPF_ELEMENTS_A << " " << this->threepf_db->size() << " "
-          << __CPP_TRANSPORT_TASK_THREEPF_ELEMENTS_B << " " << this->twopf_db->size() << " " <<__CPP_TRANSPORT_TASK_THREEPF_ELEMENTS_C << std::endl;
+        std::cout << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_THREEPF_ELEMENTS_A << " " << this->threepf_db->size() << " "
+          << CPPTRANSPORT_TASK_THREEPF_ELEMENTS_B << " " << this->twopf_db->size() << " " <<CPPTRANSPORT_TASK_THREEPF_ELEMENTS_C << std::endl;
 
         this->compute_horizon_exit_times();
 
@@ -542,20 +542,20 @@ namespace transport
     threepf_fls_task<number>::threepf_fls_task(const std::string& nm, Json::Value& reader, sqlite3* handle, const initial_conditions<number>& i)
 	    : threepf_task<number>(nm, reader, handle, i)
 	    {
-        kt_spacing    = reader[__CPP_TRANSPORT_NODE_THREEPF_FLS_KT_SPACING].asDouble();
-        alpha_spacing = reader[__CPP_TRANSPORT_NODE_THREEPF_FLS_ALPHA_SPACING].asDouble();
-        beta_spacing  = reader[__CPP_TRANSPORT_NODE_THREEPF_FLS_BETA_SPACING].asDouble();
+        kt_spacing    = reader[CPPTRANSPORT_NODE_THREEPF_FLS_KT_SPACING].asDouble();
+        alpha_spacing = reader[CPPTRANSPORT_NODE_THREEPF_FLS_ALPHA_SPACING].asDouble();
+        beta_spacing  = reader[CPPTRANSPORT_NODE_THREEPF_FLS_BETA_SPACING].asDouble();
 	    }
 
 
     template <typename number>
     void threepf_fls_task<number>::serialize(Json::Value& writer) const
 	    {
-        writer[__CPP_TRANSPORT_NODE_TASK_TYPE] = std::string(__CPP_TRANSPORT_NODE_TASK_TYPE_THREEPF_FLS);
+        writer[CPPTRANSPORT_NODE_TASK_TYPE] = std::string(CPPTRANSPORT_NODE_TASK_TYPE_THREEPF_FLS);
 
-        writer[__CPP_TRANSPORT_NODE_THREEPF_FLS_KT_SPACING]    = this->kt_spacing;
-        writer[__CPP_TRANSPORT_NODE_THREEPF_FLS_ALPHA_SPACING] = this->alpha_spacing;
-        writer[__CPP_TRANSPORT_NODE_THREEPF_FLS_BETA_SPACING]  = this->beta_spacing;
+        writer[CPPTRANSPORT_NODE_THREEPF_FLS_KT_SPACING]    = this->kt_spacing;
+        writer[CPPTRANSPORT_NODE_THREEPF_FLS_ALPHA_SPACING] = this->alpha_spacing;
+        writer[CPPTRANSPORT_NODE_THREEPF_FLS_BETA_SPACING]  = this->beta_spacing;
 
         this->threepf_task<number>::serialize(writer);
 	    }

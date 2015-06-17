@@ -5,8 +5,8 @@
 // To change the template use AppCode | Preferences | File Templates.
 //
 
-#ifndef __CPP_TRANSPORT_TRANSPORT_H_
-#define __CPP_TRANSPORT_TRANSPORT_H_
+#ifndef CPPTRANSPORT_TRANSPORT_H_
+#define CPPTRANSPORT_TRANSPORT_H_
 
 #define BOOST_ALL_DYN_LINK
 #define FUSION_MAX_VECTOR_SIZE 20
@@ -31,4 +31,4 @@
 #include "transport-runtime-api/manager/task_manager.h"
 
 
-#endif // __CPP_TRANSPORT_TRANSPORT_H_
+#endif // CPPTRANSPORT_TRANSPORT_H_

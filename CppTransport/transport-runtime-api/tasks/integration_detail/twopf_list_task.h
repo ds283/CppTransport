@@ -20,9 +20,9 @@
 #include "transport-runtime-api/utilities/spline1d.h"
 #include <boost/math/tools/roots.hpp>
 
-#define __CPP_TRANSPORT_NODE_TWOPF_LIST_KSTAR         "kstar"
-#define __CPP_TRANSPORT_NODE_TWOPF_LIST_NORMALIZATION "normalization"
-#define __CPP_TRANSPORT_NODE_TWOPF_LIST_COLLECT_ICS   "collect-ics"
+#define CPPTRANSPORT_NODE_TWOPF_LIST_KSTAR         "kstar"
+#define CPPTRANSPORT_NODE_TWOPF_LIST_NORMALIZATION "normalization"
+#define CPPTRANSPORT_NODE_TWOPF_LIST_COLLECT_ICS   "collect-ics"
 
 
 namespace transport
@@ -66,7 +66,7 @@ namespace transport
       public:
 
         //! construct a twopf-list-task object
-        twopf_list_task(const std::string& nm, const initial_conditions<number>& i, range<double>& t, bool ff, double ast=__CPP_TRANSPORT_DEFAULT_ASTAR_NORMALIZATION);
+        twopf_list_task(const std::string& nm, const initial_conditions<number>& i, range<double>& t, bool ff, double ast=CPPTRANSPORT_DEFAULT_ASTAR_NORMALIZATION);
 
         //! deserialization constructor
         twopf_list_task(const std::string& nm, Json::Value& reader, sqlite3* handle, const initial_conditions<number>& i);
@@ -268,10 +268,10 @@ namespace transport
                                              bool ff, double ast)
 	    : integration_task<number>(nm, i, t),
         fast_forward(ff),
-        ff_efolds(__CPP_TRANSPORT_DEFAULT_FAST_FORWARD_EFOLDS),
-        max_refinements(__CPP_TRANSPORT_DEFAULT_MESH_REFINEMENTS),
+        ff_efolds(CPPTRANSPORT_DEFAULT_FAST_FORWARD_EFOLDS),
+        max_refinements(CPPTRANSPORT_DEFAULT_MESH_REFINEMENTS),
         astar_normalization(ast),
-        collect_initial_conditions(__CPP_TRANSPORT_DEFAULT_COLLECT_INITIAL_CONDITIONS),
+        collect_initial_conditions(CPPTRANSPORT_DEFAULT_COLLECT_INITIAL_CONDITIONS),
         kstar(i.get_model()->compute_kstar(this))
       {
 		    twopf_db = std::make_shared<twopf_kconfig_database>(kstar);
@@ -282,26 +282,26 @@ namespace transport
     twopf_list_task<number>::twopf_list_task(const std::string& nm, Json::Value& reader, sqlite3* handle, const initial_conditions<number>& i)
 	    : integration_task<number>(nm, reader, i)
 	    {
-        kstar    = reader[__CPP_TRANSPORT_NODE_TWOPF_LIST_KSTAR].asDouble();
+        kstar    = reader[CPPTRANSPORT_NODE_TWOPF_LIST_KSTAR].asDouble();
         twopf_db = std::make_shared<twopf_kconfig_database>(kstar, handle);
 
-        fast_forward               = reader[__CPP_TRANSPORT_NODE_FAST_FORWARD].asBool();
-        ff_efolds                  = reader[__CPP_TRANSPORT_NODE_FAST_FORWARD_EFOLDS].asDouble();
-        max_refinements            = reader[__CPP_TRANSPORT_NODE_MESH_REFINEMENTS].asUInt();
-        astar_normalization        = reader[__CPP_TRANSPORT_NODE_TWOPF_LIST_NORMALIZATION].asDouble();
-        collect_initial_conditions = reader[__CPP_TRANSPORT_NODE_TWOPF_LIST_COLLECT_ICS].asBool();
+        fast_forward               = reader[CPPTRANSPORT_NODE_FAST_FORWARD].asBool();
+        ff_efolds                  = reader[CPPTRANSPORT_NODE_FAST_FORWARD_EFOLDS].asDouble();
+        max_refinements            = reader[CPPTRANSPORT_NODE_MESH_REFINEMENTS].asUInt();
+        astar_normalization        = reader[CPPTRANSPORT_NODE_TWOPF_LIST_NORMALIZATION].asDouble();
+        collect_initial_conditions = reader[CPPTRANSPORT_NODE_TWOPF_LIST_COLLECT_ICS].asBool();
 	    }
 
 
     template <typename number>
     void twopf_list_task<number>::serialize(Json::Value& writer) const
 	    {
-        writer[__CPP_TRANSPORT_NODE_FAST_FORWARD]             = this->fast_forward;
-        writer[__CPP_TRANSPORT_NODE_FAST_FORWARD_EFOLDS]      = this->ff_efolds;
-        writer[__CPP_TRANSPORT_NODE_MESH_REFINEMENTS]         = this->max_refinements;
-        writer[__CPP_TRANSPORT_NODE_TWOPF_LIST_NORMALIZATION] = this->astar_normalization;
-        writer[__CPP_TRANSPORT_NODE_TWOPF_LIST_COLLECT_ICS]   = this->collect_initial_conditions;
-		    writer[__CPP_TRANSPORT_NODE_TWOPF_LIST_KSTAR]         = this->kstar;
+        writer[CPPTRANSPORT_NODE_FAST_FORWARD]             = this->fast_forward;
+        writer[CPPTRANSPORT_NODE_FAST_FORWARD_EFOLDS]      = this->ff_efolds;
+        writer[CPPTRANSPORT_NODE_MESH_REFINEMENTS]         = this->max_refinements;
+        writer[CPPTRANSPORT_NODE_TWOPF_LIST_NORMALIZATION] = this->astar_normalization;
+        writer[CPPTRANSPORT_NODE_TWOPF_LIST_COLLECT_ICS]   = this->collect_initial_conditions;
+		    writer[CPPTRANSPORT_NODE_TWOPF_LIST_KSTAR]         = this->kstar;
 
 		    // twopf database is serialized separately into an SQLite database
         // this serialization is handled by the repository layer via write_kconfig_database() below
@@ -378,8 +378,8 @@ namespace transport
 		    latest_crossing   -= this->get_N_horizon_crossing();
 
         std::cout << "'" << this->get_name() << "': ";
-        std::cout << __CPP_TRANSPORT_TASK_TWOPF_LIST_MODE_RANGE_A << this->twopf_db->get_kmin_conventional()
-          << " " << __CPP_TRANSPORT_TASK_TWOPF_LIST_MODE_RANGE_B;
+        std::cout << CPPTRANSPORT_TASK_TWOPF_LIST_MODE_RANGE_A << this->twopf_db->get_kmin_conventional()
+          << " " << CPPTRANSPORT_TASK_TWOPF_LIST_MODE_RANGE_B;
 
         std::ostringstream early_time;
 		    early_time << std::setprecision(3);
@@ -388,8 +388,8 @@ namespace transport
 
         std::cout << early_time.str() << ", ";
 
-        std::cout << __CPP_TRANSPORT_TASK_TWOPF_LIST_MODE_RANGE_C << this->twopf_db->get_kmax_conventional()
-          << " " << __CPP_TRANSPORT_TASK_TWOPF_LIST_MODE_RANGE_D;
+        std::cout << CPPTRANSPORT_TASK_TWOPF_LIST_MODE_RANGE_C << this->twopf_db->get_kmax_conventional()
+          << " " << CPPTRANSPORT_TASK_TWOPF_LIST_MODE_RANGE_D;
 
         std::ostringstream late_time;
 		    late_time << std::setprecision(3);
@@ -403,18 +403,18 @@ namespace transport
         try
           {
             double end_of_inflation = this->get_N_end_of_inflation();
-            std::cout << "'" << this->get_name() << "': " << __CPP_TRANSPORT_TASK_TWOPF_LIST_END_OF_INFLATION  << end_of_inflation << std::endl;
+            std::cout << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_TWOPF_LIST_END_OF_INFLATION  << end_of_inflation << std::endl;
 
             // check if end time is after the end of inflation
             double end_time = this->times->get_grid().back();
             if(end_time > end_of_inflation)
               {
-                std::cout << "'" << this->get_name() << "': " << __CPP_TRANSPORT_TASK_TWOPF_LIST_WARN_LATE_END << std::endl;
+                std::cout << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_TWOPF_LIST_WARN_LATE_END << std::endl;
               }
           }
         catch(end_of_inflation_not_found& xe)
           {
-            std::cout << "'" << this->get_name() << "': " << __CPP_TRANSPORT_TASK_TWOPF_LIST_NO_END_INFLATION << std::endl;
+            std::cout << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_TWOPF_LIST_NO_END_INFLATION << std::endl;
           }
       }
 
@@ -434,16 +434,16 @@ namespace transport
         if(earliest_required < this->get_N_initial())
           {
             std::ostringstream msg;
-            msg << "'" << this->get_name() << "': " << __CPP_TRANSPORT_TASK_TWOPF_LIST_TOO_EARLY_A << earliest_required << " "
-              << __CPP_TRANSPORT_TASK_TWOPF_LIST_TOO_EARLY_B << this->get_N_initial();
+            msg << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_TWOPF_LIST_TOO_EARLY_A << earliest_required << " "
+              << CPPTRANSPORT_TASK_TWOPF_LIST_TOO_EARLY_B << this->get_N_initial();
             throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
           }
 
-        if(!this->fast_forward && earliest_required - this->get_N_initial() < __CPP_TRANSPORT_DEFAULT_RECOMMENDED_EFOLDS)
+        if(!this->fast_forward && earliest_required - this->get_N_initial() < CPPTRANSPORT_DEFAULT_RECOMMENDED_EFOLDS)
           {
-            std::cout << "'" << this->get_name() << "': " << __CPP_TRANSPORT_TASK_TWOPF_LIST_CROSS_WARN_A << this->get_N_initial() << " "
-              << __CPP_TRANSPORT_TASK_TWOPF_LIST_CROSS_WARN_B << " " << earliest_required-this->get_N_initial() << " "
-              << __CPP_TRANSPORT_TASK_TWOPF_LIST_CROSS_WARN_C << std::endl;
+            std::cout << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_TWOPF_LIST_CROSS_WARN_A << this->get_N_initial() << " "
+              << CPPTRANSPORT_TASK_TWOPF_LIST_CROSS_WARN_B << " " << earliest_required-this->get_N_initial() << " "
+              << CPPTRANSPORT_TASK_TWOPF_LIST_CROSS_WARN_C << std::endl;
           }
       }
 
@@ -472,7 +472,7 @@ namespace transport
         if(raw_times.size() == 0)
           {
             std::ostringstream msg;
-            msg << "'" << this->get_name() << "': " << __CPP_TRANSPORT_TASK_TWOPF_LIST_NO_TIMES;
+            msg << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_TWOPF_LIST_NO_TIMES;
             throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
           }
 
@@ -571,8 +571,8 @@ namespace transport
 		template <typename number>
 		std::ostream& operator<<(std::ostream& out, const twopf_list_task<number>& obj)
 	    {
-        out << __CPP_TRANSPORT_FAST_FORWARD     << ": " << (obj.fast_forward ? __CPP_TRANSPORT_YES : __CPP_TRANSPORT_NO) << ", ";
-        out << __CPP_TRANSPORT_MESH_REFINEMENTS << ": " << obj.max_refinements << std::endl;
+        out << CPPTRANSPORT_FAST_FORWARD     << ": " << (obj.fast_forward ? CPPTRANSPORT_YES : CPPTRANSPORT_NO) << ", ";
+        out << CPPTRANSPORT_MESH_REFINEMENTS << ": " << obj.max_refinements << std::endl;
 				out << static_cast< const integration_task<number>& >(obj);
         return(out);
 	    };

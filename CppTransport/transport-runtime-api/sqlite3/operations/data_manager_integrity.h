@@ -38,7 +38,7 @@ namespace transport
                     else
 	                    {
                         std::ostringstream msg;
-                        msg << __CPP_TRANSPORT_DATAMGR_INTEGRITY_READ_FAIL << status << ": " << sqlite3_errmsg(db) << ") [" << __func__ << "]";
+                        msg << CPPTRANSPORT_DATAMGR_INTEGRITY_READ_FAIL << status << ": " << sqlite3_errmsg(db) << ") [" << __func__ << "]";
                         sqlite3_finalize(stmt);
                         throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, msg.str());
 	                    }
@@ -102,7 +102,7 @@ namespace transport
                 if(u != dbase.config_end())
 	                {
                     std::ostringstream drop_stmt;
-                    drop_stmt << "DELETE FROM " << __CPP_TRANSPORT_SQLITE_STATS_TABLE << " WHERE kserial=" << *t << ";";
+                    drop_stmt << "DELETE FROM " << CPPTRANSPORT_SQLITE_STATS_TABLE << " WHERE kserial=" << *t << ";";
                     exec(db, drop_stmt.str());
 	                }
 	            }

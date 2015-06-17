@@ -29,15 +29,15 @@ namespace transport
 
 		        // set up a table
 		        std::stringstream create_stmt;
-		        create_stmt << "CREATE TABLE " << __CPP_TRANSPORT_SQLITE_TIME_SAMPLE_TABLE << "("
+		        create_stmt << "CREATE TABLE " << CPPTRANSPORT_SQLITE_TIME_SAMPLE_TABLE << "("
 			        << "serial INTEGER PRIMARY KEY,"
 			        << "time   DOUBLE"
 			        << ");";
 
-		        exec(db, create_stmt.str(), __CPP_TRANSPORT_DATACTR_TIMETAB_FAIL);
+		        exec(db, create_stmt.str(), CPPTRANSPORT_DATACTR_TIMETAB_FAIL);
 
 		        std::stringstream insert_stmt;
-		        insert_stmt << "INSERT INTO " << __CPP_TRANSPORT_SQLITE_TIME_SAMPLE_TABLE << " VALUES (@serial, @time)";
+		        insert_stmt << "INSERT INTO " << CPPTRANSPORT_SQLITE_TIME_SAMPLE_TABLE << " VALUES (@serial, @time)";
 
 		        sqlite3_stmt* stmt;
 		        check_stmt(db, sqlite3_prepare_v2(db, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr));
@@ -49,7 +49,7 @@ namespace transport
 		            check_stmt(db, sqlite3_bind_int(stmt, 1, t->serial));
 		            check_stmt(db, sqlite3_bind_double(stmt, 2, t->t));
 
-		            check_stmt(db, sqlite3_step(stmt), __CPP_TRANSPORT_DATACTR_TIMETAB_FAIL, SQLITE_DONE);
+		            check_stmt(db, sqlite3_step(stmt), CPPTRANSPORT_DATACTR_TIMETAB_FAIL, SQLITE_DONE);
 
 		            check_stmt(db, sqlite3_clear_bindings(stmt));
 		            check_stmt(db, sqlite3_reset(stmt));
@@ -72,17 +72,17 @@ namespace transport
 		        // set up a table
 		        std::stringstream stmt_text;
 		        stmt_text
-			        << "CREATE TABLE " << __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE << "("
+			        << "CREATE TABLE " << CPPTRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE << "("
 			        << "serial       INTEGER PRIMARY KEY, "
 			        << "conventional DOUBLE, "
 			        << "comoving     DOUBLE, "
 			        << "t_exit       DOUBLE"
 			        << ");";
 
-		        exec(db, stmt_text.str(), __CPP_TRANSPORT_DATACTR_TWOPFTAB_FAIL);
+		        exec(db, stmt_text.str(), CPPTRANSPORT_DATACTR_TWOPFTAB_FAIL);
 
 		        std::stringstream insert_stmt;
-		        insert_stmt << "INSERT INTO " << __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE << " VALUES (@serial, @conventional, @comoving, @t_exit);";
+		        insert_stmt << "INSERT INTO " << CPPTRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE << " VALUES (@serial, @conventional, @comoving, @t_exit);";
 
 		        sqlite3_stmt* stmt;
 		        check_stmt(db, sqlite3_prepare_v2(db, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr));
@@ -96,7 +96,7 @@ namespace transport
 		            check_stmt(db, sqlite3_bind_double(stmt, 3, t->k_comoving));
 		            check_stmt(db, sqlite3_bind_double(stmt, 4, t->t_exit));
 
-		            check_stmt(db, sqlite3_step(stmt), __CPP_TRANSPORT_DATACTR_TWOPFTAB_FAIL, SQLITE_DONE);
+		            check_stmt(db, sqlite3_step(stmt), CPPTRANSPORT_DATACTR_TWOPFTAB_FAIL, SQLITE_DONE);
 
 		            check_stmt(db, sqlite3_clear_bindings(stmt));
 		            check_stmt(db, sqlite3_reset(stmt));
@@ -119,7 +119,7 @@ namespace transport
 		        // set up a table
 		        std::stringstream stmt_text;
 		        stmt_text
-			        << "CREATE TABLE " << __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE << "("
+			        << "CREATE TABLE " << CPPTRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE << "("
 			        << "serial          INTEGER PRIMARY KEY, "
 			        << "wavenumber1     INTEGER, "
 			        << "wavenumber2     INTEGER, "
@@ -137,7 +137,7 @@ namespace transport
 		        exec(db, stmt_text.str());
 
 		        std::stringstream insert_stmt;
-		        insert_stmt << "INSERT INTO " << __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE << " VALUES (@serial, @wn1, @wn2, @wn3, @kt_com, @kt_conv, @alpha, @beta, @t_exit);";
+		        insert_stmt << "INSERT INTO " << CPPTRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE << " VALUES (@serial, @wn1, @wn2, @wn3, @kt_com, @kt_conv, @alpha, @beta, @t_exit);";
 
 		        sqlite3_stmt* stmt;
 		        check_stmt(db, sqlite3_prepare_v2(db, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr));
@@ -156,7 +156,7 @@ namespace transport
 		            check_stmt(db, sqlite3_bind_double(stmt, 8, t->beta));
 		            check_stmt(db, sqlite3_bind_double(stmt, 9, t->t_exit));
 
-		            check_stmt(db, sqlite3_step(stmt), __CPP_TRANSPORT_DATACTR_THREEPFTAB_FAIL, SQLITE_DONE);
+		            check_stmt(db, sqlite3_step(stmt), CPPTRANSPORT_DATACTR_THREEPFTAB_FAIL, SQLITE_DONE);
 
 		            check_stmt(db, sqlite3_clear_bindings(stmt));
 		            check_stmt(db, sqlite3_reset(stmt));
@@ -172,7 +172,7 @@ namespace transport
 			    {
 		        std::ostringstream create_stmt;
 		        create_stmt
-			        << "CREATE TABLE " << __CPP_TRANSPORT_SQLITE_WORKERS_TABLE << "("
+			        << "CREATE TABLE " << CPPTRANSPORT_SQLITE_WORKERS_TABLE << "("
 			        << "workgroup     INTEGER, "
 			        << "worker        INTEGER, "
 			        << "backend       TEXT, "
@@ -196,7 +196,7 @@ namespace transport
 			    {
 		        std::ostringstream create_stmt;
 		        create_stmt
-			        << "CREATE TABLE " << __CPP_TRANSPORT_SQLITE_STATS_TABLE << "("
+			        << "CREATE TABLE " << CPPTRANSPORT_SQLITE_STATS_TABLE << "("
 			        << "kserial           INTEGER PRIMARY KEY, "
 			        << "integration_time  INTEGER, "
 			        << "batch_time        INTEGER, "
@@ -211,11 +211,11 @@ namespace transport
 		            switch(type)
 			            {
 		                case twopf_configs:
-			                create_stmt << __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE;
+			                create_stmt << CPPTRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE;
 		                  break;
 
 		                case threepf_configs:
-			                create_stmt << __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE;
+			                create_stmt << CPPTRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE;
 		                  break;
 
 		                default:
@@ -223,7 +223,7 @@ namespace transport
 			            }
 		            create_stmt << "(serial)";
 
-		            create_stmt << ", FOREIGN KEY(workgroup, worker) REFERENCES " << __CPP_TRANSPORT_SQLITE_WORKERS_TABLE << "(workgroup, worker)";
+		            create_stmt << ", FOREIGN KEY(workgroup, worker) REFERENCES " << CPPTRANSPORT_SQLITE_WORKERS_TABLE << "(workgroup, worker)";
 			        }
 		        create_stmt << ");";
 
@@ -258,11 +258,11 @@ namespace transport
 		            switch(type)
 			            {
 		                case twopf_configs:
-			                create_stmt << __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE;
+			                create_stmt << CPPTRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE;
 		                  break;
 
 		                case threepf_configs:
-			                create_stmt << __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE;
+			                create_stmt << CPPTRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE;
 		                  break;
 
 		                default:
@@ -283,7 +283,7 @@ namespace transport
 
 		        std::ostringstream create_stmt;
 		        create_stmt
-			        << "CREATE TABLE " << __CPP_TRANSPORT_SQLITE_BACKG_VALUE_TABLE << "("
+			        << "CREATE TABLE " << CPPTRANSPORT_SQLITE_BACKG_VALUE_TABLE << "("
 			        << "tserial INTEGER, "
 			        << "page    INTEGER";
 
@@ -294,7 +294,7 @@ namespace transport
 
 		        create_stmt << ", PRIMARY KEY (tserial, page)";
 
-		        if(keys == foreign_keys) create_stmt << ", FOREIGN KEY(tserial) REFERENCES " << __CPP_TRANSPORT_SQLITE_TIME_SAMPLE_TABLE << "(serial)";
+		        if(keys == foreign_keys) create_stmt << ", FOREIGN KEY(tserial) REFERENCES " << CPPTRANSPORT_SQLITE_TIME_SAMPLE_TABLE << "(serial)";
 		        create_stmt << ");";
 
 		        exec(db, create_stmt.str());
@@ -322,8 +322,8 @@ namespace transport
 		        create_stmt << ", PRIMARY KEY (tserial, kserial, page)";
 		        if(keys == foreign_keys)
 			        {
-		            create_stmt << ", FOREIGN KEY(tserial) REFERENCES " << __CPP_TRANSPORT_SQLITE_TIME_SAMPLE_TABLE << "(serial)"
-			            << ", FOREIGN KEY(kserial) REFERENCES " << __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE << "(serial)";
+		            create_stmt << ", FOREIGN KEY(tserial) REFERENCES " << CPPTRANSPORT_SQLITE_TIME_SAMPLE_TABLE << "(serial)"
+			            << ", FOREIGN KEY(kserial) REFERENCES " << CPPTRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE << "(serial)";
 			        }
 		        create_stmt << ");";
 
@@ -338,7 +338,7 @@ namespace transport
 
 		        std::ostringstream create_stmt;
 		        create_stmt
-			        << "CREATE TABLE " << __CPP_TRANSPORT_SQLITE_TENSOR_TWOPF_VALUE_TABLE << "("
+			        << "CREATE TABLE " << CPPTRANSPORT_SQLITE_TENSOR_TWOPF_VALUE_TABLE << "("
 			        << "tserial INTEGER, "
 			        << "kserial INTEGER, "
 			        << "page    INTEGER";
@@ -351,8 +351,8 @@ namespace transport
 		        create_stmt << ", PRIMARY KEY (tserial, kserial, page)";
 		        if(keys == foreign_keys)
 			        {
-		            create_stmt << ", FOREIGN KEY(tserial) REFERENCES " << __CPP_TRANSPORT_SQLITE_TIME_SAMPLE_TABLE << "(serial)"
-			            << ", FOREIGN KEY(kserial) REFERENCES " << __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE << "(serial)";
+		            create_stmt << ", FOREIGN KEY(tserial) REFERENCES " << CPPTRANSPORT_SQLITE_TIME_SAMPLE_TABLE << "(serial)"
+			            << ", FOREIGN KEY(kserial) REFERENCES " << CPPTRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE << "(serial)";
 			        }
 		        create_stmt << ");";
 
@@ -367,7 +367,7 @@ namespace transport
 
 		        std::ostringstream create_stmt;
 		        create_stmt
-			        << "CREATE TABLE " << __CPP_TRANSPORT_SQLITE_THREEPF_VALUE_TABLE << "("
+			        << "CREATE TABLE " << CPPTRANSPORT_SQLITE_THREEPF_VALUE_TABLE << "("
 			        << "tserial INTEGER, "
 			        << "kserial INTEGER, "
 			        << "page    INTEGER";
@@ -380,8 +380,8 @@ namespace transport
 		        create_stmt << ", PRIMARY KEY (tserial, kserial, page)";
 		        if(keys == foreign_keys)
 			        {
-		            create_stmt << ", FOREIGN KEY(tserial) REFERENCES " << __CPP_TRANSPORT_SQLITE_TIME_SAMPLE_TABLE << "(serial)"
-			            << ", FOREIGN KEY(kserial) REFERENCES " << __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE << "(serial)";
+		            create_stmt << ", FOREIGN KEY(tserial) REFERENCES " << CPPTRANSPORT_SQLITE_TIME_SAMPLE_TABLE << "(serial)"
+			            << ", FOREIGN KEY(kserial) REFERENCES " << CPPTRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE << "(serial)";
 			        }
 		        create_stmt << ");";
 
@@ -394,7 +394,7 @@ namespace transport
 			    {
 		        std::ostringstream create_stmt;
 		        create_stmt
-			        << "CREATE TABLE " << __CPP_TRANSPORT_SQLITE_ZETA_TWOPF_VALUE_TABLE << "("
+			        << "CREATE TABLE " << CPPTRANSPORT_SQLITE_ZETA_TWOPF_VALUE_TABLE << "("
 			        << "tserial INTEGER, "
 			        << "kserial INTEGER, "
 			        << "ele     DOUBLE, "
@@ -402,8 +402,8 @@ namespace transport
 
 		        if(keys == foreign_keys)
 			        {
-		            create_stmt << ", FOREIGN KEY(tserial) REFERENCES " << __CPP_TRANSPORT_SQLITE_TIME_SAMPLE_TABLE << "(serial)"
-			            << ", FOREIGN KEY(kserial) REFERENCES " << __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE << "(serial)";
+		            create_stmt << ", FOREIGN KEY(tserial) REFERENCES " << CPPTRANSPORT_SQLITE_TIME_SAMPLE_TABLE << "(serial)"
+			            << ", FOREIGN KEY(kserial) REFERENCES " << CPPTRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE << "(serial)";
 			        }
 		        create_stmt << ");";
 
@@ -416,7 +416,7 @@ namespace transport
 			    {
 		        std::ostringstream create_stmt;
 		        create_stmt
-			        << "CREATE TABLE " << __CPP_TRANSPORT_SQLITE_ZETA_THREEPF_VALUE_TABLE << "("
+			        << "CREATE TABLE " << CPPTRANSPORT_SQLITE_ZETA_THREEPF_VALUE_TABLE << "("
 			        << "tserial INTEGER, "
 			        << "kserial INTEGER, "
 			        << "ele     DOUBLE, "
@@ -424,8 +424,8 @@ namespace transport
 
 		        if(keys == foreign_keys)
 			        {
-		            create_stmt << ", FOREIGN KEY(tserial) REFERENCES " << __CPP_TRANSPORT_SQLITE_TIME_SAMPLE_TABLE << "(serial)"
-			            << ", FOREIGN KEY(kserial) REFERENCES " << __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE << "(serial)";
+		            create_stmt << ", FOREIGN KEY(tserial) REFERENCES " << CPPTRANSPORT_SQLITE_TIME_SAMPLE_TABLE << "(serial)"
+			            << ", FOREIGN KEY(kserial) REFERENCES " << CPPTRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE << "(serial)";
 			        }
 		        create_stmt << ");";
 
@@ -438,7 +438,7 @@ namespace transport
 			    {
 		        std::ostringstream create_stmt;
 		        create_stmt
-			        << "CREATE TABLE " << __CPP_TRANSPORT_SQLITE_ZETA_REDUCED_BISPECTRUM_VALUE_TABLE << "("
+			        << "CREATE TABLE " << CPPTRANSPORT_SQLITE_ZETA_REDUCED_BISPECTRUM_VALUE_TABLE << "("
 			        << "tserial INTEGER, "
 			        << "kserial INTEGER, "
 			        << "ele     DOUBLE, "
@@ -446,8 +446,8 @@ namespace transport
 
 		        if(keys == foreign_keys)
 			        {
-		            create_stmt << ", FOREIGN KEY(tserial) REFERENCES " << __CPP_TRANSPORT_SQLITE_TIME_SAMPLE_TABLE << "(serial)"
-			            << ", FOREIGN KEY(kserial) REFERENCES " << __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE << "(serial)";
+		            create_stmt << ", FOREIGN KEY(tserial) REFERENCES " << CPPTRANSPORT_SQLITE_TIME_SAMPLE_TABLE << "(serial)"
+			            << ", FOREIGN KEY(kserial) REFERENCES " << CPPTRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE << "(serial)";
 			        }
 		        create_stmt << ");";
 
@@ -468,7 +468,7 @@ namespace transport
 
 		        if(keys == foreign_keys)
 			        {
-		            create_stmt << ", FOREIGN KEY(tserial) REFERENCES " << __CPP_TRANSPORT_SQLITE_TIME_SAMPLE_TABLE << "(serial)";
+		            create_stmt << ", FOREIGN KEY(tserial) REFERENCES " << CPPTRANSPORT_SQLITE_TIME_SAMPLE_TABLE << "(serial)";
 			        }
 		        create_stmt << ");";
 

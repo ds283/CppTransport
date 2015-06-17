@@ -102,7 +102,7 @@ namespace transport
 		        // elements considered equal if !(a<b) and !(b<a)
 		        bool operator()(const double& a, const double& b) const
 			        {
-				        return((b-a)/std::abs(a) > __CPP_TRANSPORT_DEFAULT_KCONFIG_SEARCH_PRECISION);
+				        return((b-a)/std::abs(a) > CPPTRANSPORT_DEFAULT_KCONFIG_SEARCH_PRECISION);
 			        }
 
 	        };
@@ -347,7 +347,7 @@ namespace transport
 				    else
 					    {
 				        std::ostringstream msg;
-				        msg << __CPP_TRANSPORT_TWOPF_DATABASE_READ_FAIL << status << ": " << sqlite3_errmsg(handle) << ")";
+				        msg << CPPTRANSPORT_TWOPF_DATABASE_READ_FAIL << status << ": " << sqlite3_errmsg(handle) << ")";
 				        sqlite3_finalize(stmt);
 				        throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
 					    }
@@ -436,7 +436,7 @@ namespace transport
           << "t_exit       DOUBLE, "
           << "store_bg     INTEGER);";
 
-        sqlite3_operations::exec(handle, create_stmt.str(), __CPP_TRANSPORT_TWOPF_DATABASE_WRITE_FAIL);
+        sqlite3_operations::exec(handle, create_stmt.str(), CPPTRANSPORT_TWOPF_DATABASE_WRITE_FAIL);
 
         std::ostringstream insert_stmt;
 		    insert_stmt << "INSERT INTO twopf_kconfig VALUES (@serial, @conventional, @comoving, @t_exit, @store_bg);";
@@ -450,7 +450,7 @@ namespace transport
         for(database_type::const_iterator t = this->database.begin(); t != this->database.end(); ++t, ++count)
           {
             assert(count == t->first);
-            if(count != t->first) throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_TWOPF_DATABASE_OUT_OF_ORDER);
+            if(count != t->first) throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, CPPTRANSPORT_TWOPF_DATABASE_OUT_OF_ORDER);
 
             sqlite3_operations::check_stmt(handle, sqlite3_bind_int(stmt, 1, t->second->serial));
             sqlite3_operations::check_stmt(handle, sqlite3_bind_double(stmt, 2, t->second->k_conventional));
@@ -458,7 +458,7 @@ namespace transport
             sqlite3_operations::check_stmt(handle, sqlite3_bind_double(stmt, 4, t->second->t_exit));
             sqlite3_operations::check_stmt(handle, sqlite3_bind_int(stmt, 5, t->second.is_background_stored()));
 
-            sqlite3_operations::check_stmt(handle, sqlite3_step(stmt), __CPP_TRANSPORT_TWOPF_DATABASE_WRITE_FAIL, SQLITE_DONE);
+            sqlite3_operations::check_stmt(handle, sqlite3_step(stmt), CPPTRANSPORT_TWOPF_DATABASE_WRITE_FAIL, SQLITE_DONE);
 
             sqlite3_operations::check_stmt(handle, sqlite3_clear_bindings(stmt));
             sqlite3_operations::check_stmt(handle, sqlite3_reset(stmt));

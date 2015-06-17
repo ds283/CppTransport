@@ -219,9 +219,9 @@ namespace transport
         // time configuration data can be extracted from any container, so it doesn't matter what sort of group
         // we are attached to
         assert(this->pipe->validate_attached());
-        if(!this->pipe->validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+        if(!this->pipe->validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
-#ifdef __CPP_TRANSPORT_DEBUG_DATAPIPE
+#ifdef CPPTRANSPORT_DEBUG_DATAPIPE
 		    BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::datapipe_pull) << "** PULL time sample request";
 #endif
 
@@ -236,9 +236,9 @@ namespace transport
 	    {
         // TODO: should work out whether this content group can serve twopf configuration data?
         assert(this->pipe->validate_attached());
-        if(!this->pipe->validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+        if(!this->pipe->validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
-#ifdef __CPP_TRANSPORT_DEBUG_DATAPIPE
+#ifdef CPPTRANSPORT_DEBUG_DATAPIPE
 		    BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::datapipe_pull) << "** PULL 2pf k-configuration sample request";
 #endif
 
@@ -253,9 +253,9 @@ namespace transport
 	    {
         // TODO: should work out whether this content group can serve threepf configuration data?
         assert(this->pipe->validate_attached());
-        if(!this->pipe->validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+        if(!this->pipe->validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
-#ifdef __CPP_TRANSPORT_DEBUG_DATAPIPE
+#ifdef CPPTRANSPORT_DEBUG_DATAPIPE
 		    BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::datapipe_pull) << "** PULL 3pf k-configuration sample request";
 #endif
 

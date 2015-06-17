@@ -95,38 +95,38 @@ namespace transport
 									{
 								    case unset_axis:
 								    case k_axis:
-									    if(this->typeset_with_LaTeX) this->internal_set_x_label_text(__CPP_TRANSPORT_PRODUCT_K_VALUE_AXIS_LABEL_LATEX);
-									    else                         this->internal_set_x_label_text(__CPP_TRANSPORT_PRODUCT_K_VALUE_AXIS_LABEL_NOLATEX);
+									    if(this->typeset_with_LaTeX) this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_K_VALUE_AXIS_LABEL_LATEX);
+									    else                         this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_K_VALUE_AXIS_LABEL_NOLATEX);
 											break;
 
 								    case efolds_axis:
-									    if(this->typeset_with_LaTeX) this->internal_set_x_label_text(__CPP_TRANSPORT_PRODUCT_EFOLDS_EXIT_AXIS_LABEL_LATEX);
-									    else                         this->internal_set_x_label_text(__CPP_TRANSPORT_PRODUCT_EFOLDS_EXIT_AXIS_LABEL_NOLATEX);
+									    if(this->typeset_with_LaTeX) this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_EFOLDS_EXIT_AXIS_LABEL_LATEX);
+									    else                         this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_EFOLDS_EXIT_AXIS_LABEL_NOLATEX);
 									    break;
 
 								    case alpha_axis:
-									    if(this->typeset_with_LaTeX) this->internal_set_x_label_text(__CPP_TRANSPORT_PRODUCT_ALPHA_AXIS_LABEL_LATEX);
-									    else                         this->internal_set_x_label_text(__CPP_TRANSPORT_PRODUCT_ALPHA_AXIS_LABEL_NOLATEX);
+									    if(this->typeset_with_LaTeX) this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_ALPHA_AXIS_LABEL_LATEX);
+									    else                         this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_ALPHA_AXIS_LABEL_NOLATEX);
 								      break;
 
 								    case beta_axis:
-									    if(this->typeset_with_LaTeX) this->internal_set_x_label_text(__CPP_TRANSPORT_PRODUCT_BETA_AXIS_LABEL_LATEX);
-									    else                         this->internal_set_x_label_text(__CPP_TRANSPORT_PRODUCT_BETA_AXIS_LABEL_NOLATEX);
+									    if(this->typeset_with_LaTeX) this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_BETA_AXIS_LABEL_LATEX);
+									    else                         this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_BETA_AXIS_LABEL_NOLATEX);
 								      break;
 
 								    case squeezing_fraction_k1_axis:
-									    if(this->typeset_with_LaTeX) this->internal_set_x_label_text(__CPP_TRANSPORT_PRODUCT_SQUEEZING_FRACTION_K1_AXIS_LABEL_LATEX);
-									    else                         this->internal_set_x_label_text(__CPP_TRANSPORT_PRODUCT_SQUEEZING_FRACTION_K1_AXIS_LABEL_NOLATEX);
+									    if(this->typeset_with_LaTeX) this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_SQUEEZING_FRACTION_K1_AXIS_LABEL_LATEX);
+									    else                         this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_SQUEEZING_FRACTION_K1_AXIS_LABEL_NOLATEX);
 								      break;
 
 								    case squeezing_fraction_k2_axis:
-									    if(this->typeset_with_LaTeX) this->internal_set_x_label_text(__CPP_TRANSPORT_PRODUCT_SQUEEZING_FRACTION_K2_AXIS_LABEL_LATEX);
-									    else                         this->internal_set_x_label_text(__CPP_TRANSPORT_PRODUCT_SQUEEZING_FRACTION_K2_AXIS_LABEL_NOLATEX);
+									    if(this->typeset_with_LaTeX) this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_SQUEEZING_FRACTION_K2_AXIS_LABEL_LATEX);
+									    else                         this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_SQUEEZING_FRACTION_K2_AXIS_LABEL_NOLATEX);
 								      break;
 
 								    case squeezing_fraction_k3_axis:
-									    if(this->typeset_with_LaTeX) this->internal_set_x_label_text(__CPP_TRANSPORT_PRODUCT_SQUEEZING_FRACTION_K3_AXIS_LABEL_LATEX);
-									    else                         this->internal_set_x_label_text(__CPP_TRANSPORT_PRODUCT_SQUEEZING_FRACTION_K3_AXIS_LABEL_NOLATEX);
+									    if(this->typeset_with_LaTeX) this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_SQUEEZING_FRACTION_K3_AXIS_LABEL_LATEX);
+									    else                         this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_SQUEEZING_FRACTION_K3_AXIS_LABEL_NOLATEX);
 								      break;
 
 								    default:

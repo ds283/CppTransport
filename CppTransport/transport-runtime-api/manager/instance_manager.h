@@ -154,11 +154,11 @@ namespace transport
       {
         assert(m != nullptr);
 
-        if(version > __CPP_TRANSPORT_RUNTIME_API_VERSION)
+        if(version > CPPTRANSPORT_RUNTIME_API_VERSION)
           {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_OLD_RUNTIMEAPI_A << " (" << __CPP_TRANSPORT_RUNTIME_API_VERSION << ") "
-                << __CPP_TRANSPORT_OLD_RUNTIMEAPI_B << " " << uid << " " __CPP_TRANSPORT_OLD_RUNTIMEAPI_C << " " << version;
+            msg << CPPTRANSPORT_OLD_RUNTIMEAPI_A << " (" << CPPTRANSPORT_RUNTIME_API_VERSION << ") "
+                << CPPTRANSPORT_OLD_RUNTIMEAPI_B << " " << uid << " " CPPTRANSPORT_OLD_RUNTIMEAPI_C << " " << version;
             throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
           }
 
@@ -170,7 +170,7 @@ namespace transport
           }
         else
           {
-            throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_INSTANCES_MULTIPLE);
+            throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_INSTANCES_MULTIPLE);
           }
       }
 
@@ -190,7 +190,7 @@ namespace transport
           }
         else
           {
-            throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_INSTANCES_DELETE);
+            throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_INSTANCES_DELETE);
           }
       }
 
@@ -203,7 +203,7 @@ namespace transport
         if((t = std::find(this->models.begin(), this->models.end(), instance)) == this->models.end())
           {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_INSTANCES_MISSING << " '" << i << "'";
+            msg << CPPTRANSPORT_INSTANCES_MISSING << " '" << i << "'";
             throw runtime_exception(runtime_exception::MISSING_MODEL_INSTANCE, msg.str());
           }
         else

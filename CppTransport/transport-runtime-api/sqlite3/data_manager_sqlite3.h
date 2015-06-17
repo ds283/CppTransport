@@ -26,8 +26,8 @@
 #include "transport-runtime-api/sqlite3/operations/data_manager.h"
 
 
-#define __CPP_TRANSPORT_TEMPORARY_CONTAINER_STEM "worker"
-#define __CPP_TRANSPORT_TEMPORARY_CONTAINER_XTN  ".sqlite"
+#define CPPTRANSPORT_TEMPORARY_CONTAINER_STEM "worker"
+#define CPPTRANSPORT_TEMPORARY_CONTAINER_XTN  ".sqlite"
 
 
 namespace transport
@@ -36,8 +36,8 @@ namespace transport
     namespace
       {
 
-        const std::string default_excpt_a = __CPP_TRANSPORT_DATACTR_OPEN_A;
-        const std::string default_excpt_b = __CPP_TRANSPORT_DATACTR_OPEN_B;
+        const std::string default_excpt_a = CPPTRANSPORT_DATACTR_OPEN_A;
+        const std::string default_excpt_b = CPPTRANSPORT_DATACTR_OPEN_B;
 
       }   // unnamed namespace
 
@@ -394,11 +394,11 @@ namespace transport
 
             if(status != SQLITE_OK)
               {
-                if(status == SQLITE_BUSY) throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, __CPP_TRANSPORT_DATACTR_NOT_CLOSED);
+                if(status == SQLITE_BUSY) throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, CPPTRANSPORT_DATACTR_NOT_CLOSED);
                 else
                   {
                     std::ostringstream msg;
-                    msg << __CPP_TRANSPORT_DATACTR_CLOSE << status << ")";
+                    msg << CPPTRANSPORT_DATACTR_CLOSE << status << ")";
                     throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
                   }
               }
@@ -423,12 +423,12 @@ namespace transport
             std::ostringstream msg;
             if(db != nullptr)
 	            {
-                msg << __CPP_TRANSPORT_DATACTR_CREATE_A << " '" << ctr_path.string() << "' " << __CPP_TRANSPORT_DATACTR_CREATE_B << status << ": " << sqlite3_errmsg(db) << ")";
+                msg << CPPTRANSPORT_DATACTR_CREATE_A << " '" << ctr_path.string() << "' " << CPPTRANSPORT_DATACTR_CREATE_B << status << ": " << sqlite3_errmsg(db) << ")";
                 sqlite3_close(db);
 	            }
             else
 	            {
-                msg << __CPP_TRANSPORT_DATACTR_CREATE_A << " '" << ctr_path.string() << "' " << __CPP_TRANSPORT_DATACTR_CREATE_B << status << ")";
+                msg << CPPTRANSPORT_DATACTR_CREATE_A << " '" << ctr_path.string() << "' " << CPPTRANSPORT_DATACTR_CREATE_B << status << ")";
 	            }
             throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
 	        }
@@ -472,7 +472,7 @@ namespace transport
         else
           {
             assert(false);
-            throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_DATACTR_AGGREGATION_HANDLER_NOT_SET);
+            throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_DATACTR_AGGREGATION_HANDLER_NOT_SET);
           }
       }
 
@@ -536,12 +536,12 @@ namespace transport
             std::ostringstream msg;
             if(db != nullptr)
               {
-                msg << __CPP_TRANSPORT_DATACTR_CREATE_A << " '" << ctr_path.string() << "' " << __CPP_TRANSPORT_DATACTR_CREATE_B << status << ": " << sqlite3_errmsg(db) << ")";
+                msg << CPPTRANSPORT_DATACTR_CREATE_A << " '" << ctr_path.string() << "' " << CPPTRANSPORT_DATACTR_CREATE_B << status << ": " << sqlite3_errmsg(db) << ")";
                 sqlite3_close(db);
               }
             else
               {
-                msg << __CPP_TRANSPORT_DATACTR_CREATE_A << " '" << ctr_path.string() << "' " << __CPP_TRANSPORT_DATACTR_CREATE_B << status << ")";
+                msg << CPPTRANSPORT_DATACTR_CREATE_A << " '" << ctr_path.string() << "' " << CPPTRANSPORT_DATACTR_CREATE_B << status << ")";
               }
             throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
           }
@@ -611,7 +611,7 @@ namespace transport
         else
           {
             assert(false);
-            throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_DATACTR_AGGREGATION_HANDLER_NOT_SET);
+            throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_DATACTR_AGGREGATION_HANDLER_NOT_SET);
           }
       }
 
@@ -1161,7 +1161,7 @@ namespace transport
     boost::filesystem::path data_manager_sqlite3<number>::generate_temporary_container_path(const boost::filesystem::path& tempdir, unsigned int worker)
       {
         std::ostringstream container_name;
-        container_name << __CPP_TRANSPORT_TEMPORARY_CONTAINER_STEM << worker << "_" << this->temporary_container_serial++ << __CPP_TRANSPORT_TEMPORARY_CONTAINER_XTN;
+        container_name << CPPTRANSPORT_TEMPORARY_CONTAINER_STEM << worker << "_" << this->temporary_container_serial++ << CPPTRANSPORT_TEMPORARY_CONTAINER_XTN;
 
         boost::filesystem::path container = tempdir / container_name.str();
 
@@ -1812,7 +1812,7 @@ namespace transport
                                                         std::vector<time_config>& sample)
 	    {
         assert(pipe != nullptr);
-        if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_DATAMGR_NULL_DATAPIPE);
+        if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
 
         sqlite3* db = nullptr;
 		    pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
@@ -1826,7 +1826,7 @@ namespace transport
                                                           std::vector<twopf_kconfig>& sample)
 			{
 		    assert(pipe != nullptr);
-		    if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_DATAMGR_NULL_DATAPIPE);
+		    if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
 
 		    sqlite3* db = nullptr;
 		    pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
@@ -1840,7 +1840,7 @@ namespace transport
                                                             std::vector<threepf_kconfig>& sample)
 	    {
         assert(pipe != nullptr);
-        if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_DATAMGR_NULL_DATAPIPE);
+        if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
 
         sqlite3* db = nullptr;
         pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
@@ -1855,7 +1855,7 @@ namespace transport
                                                                    std::vector<number>& sample)
 	    {
         assert(pipe != nullptr);
-        if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_DATAMGR_NULL_DATAPIPE);
+        if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
 
         sqlite3* db = nullptr;
         pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
@@ -1871,7 +1871,7 @@ namespace transport
                                                               typename datapipe<number>::twopf_type type)
 	    {
         assert(pipe != nullptr);
-        if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_DATAMGR_NULL_DATAPIPE);
+        if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
 
         sqlite3* db = nullptr;
         pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
@@ -1896,7 +1896,7 @@ namespace transport
                                                                 unsigned int k_serial, std::vector<number>& sample)
 	    {
         assert(pipe != nullptr);
-        if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_DATAMGR_NULL_DATAPIPE);
+        if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
 
         sqlite3* db = nullptr;
         pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
@@ -1912,7 +1912,7 @@ namespace transport
                                                                      unsigned int k_serial, std::vector<number>& sample)
       {
         assert(pipe != nullptr);
-        if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_DATAMGR_NULL_DATAPIPE);
+        if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
 
         sqlite3* db = nullptr;
         pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
@@ -1927,7 +1927,7 @@ namespace transport
                                                                    unsigned int k_serial, std::vector<number>& sample)
 	    {
 		    assert(pipe != nullptr);
-		    if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_DATAMGR_NULL_DATAPIPE);
+		    if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
 
 		    sqlite3* db = nullptr;
 		    pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
@@ -1942,7 +1942,7 @@ namespace transport
                                                                      unsigned int k_serial, std::vector<number>& sample)
 	    {
 		    assert(pipe != nullptr);
-		    if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_DATAMGR_NULL_DATAPIPE);
+		    if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
 
 		    sqlite3* db = nullptr;
 		    pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
@@ -1957,7 +1957,7 @@ namespace transport
                                                                     unsigned int k_serial, std::vector<number>& sample)
 	    {
 		    assert(pipe != nullptr);
-		    if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_DATAMGR_NULL_DATAPIPE);
+		    if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
 
 		    sqlite3* db = nullptr;
 		    pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
@@ -1972,7 +1972,7 @@ namespace transport
                                                             std::vector<number>& sample, derived_data::template_type type)
 	    {
 		    assert(pipe != nullptr);
-		    if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_DATAMGR_NULL_DATAPIPE);
+		    if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
 
 		    sqlite3* db = nullptr;
 		    pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
@@ -1986,7 +1986,7 @@ namespace transport
                                                            std::vector<number>& sample, derived_data::template_type type)
 	    {
 		    assert(pipe != nullptr);
-		    if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_DATAMGR_NULL_DATAPIPE);
+		    if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
 
 		    sqlite3* db = nullptr;
 		    pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
@@ -2000,7 +2000,7 @@ namespace transport
                                                            std::vector<number>& sample, derived_data::template_type type)
 	    {
 		    assert(pipe != nullptr);
-		    if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_DATAMGR_NULL_DATAPIPE);
+		    if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
 
 		    sqlite3* db = nullptr;
 		    pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
@@ -2016,7 +2016,7 @@ namespace transport
                                                                  typename datapipe<number>::twopf_type type)
 	    {
 				assert(pipe != nullptr);
-		    if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_DATAMGR_NULL_DATAPIPE);
+		    if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
 
 		    sqlite3* db = nullptr;
 		    pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
@@ -2041,7 +2041,7 @@ namespace transport
                                                                    unsigned int t_serial, std::vector<number>& sample)
 	    {
         assert(pipe != nullptr);
-        if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_DATAMGR_NULL_DATAPIPE);
+        if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
 
         sqlite3* db = nullptr;
         pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
@@ -2057,7 +2057,7 @@ namespace transport
                                                                         unsigned int t_serial, std::vector<number>& sample)
       {
         assert(pipe != nullptr);
-        if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_DATAMGR_NULL_DATAPIPE);
+        if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
 
         sqlite3* db = nullptr;
         pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
@@ -2072,7 +2072,7 @@ namespace transport
                                                                       unsigned int t_serial, std::vector<number>& sample)
 	    {
         assert(pipe != nullptr);
-        if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_DATAMGR_NULL_DATAPIPE);
+        if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
 
         sqlite3* db = nullptr;
         pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
@@ -2087,7 +2087,7 @@ namespace transport
                                                                         unsigned int t_serial, std::vector<number>& sample)
 	    {
         assert(pipe != nullptr);
-        if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_DATAMGR_NULL_DATAPIPE);
+        if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
 
         sqlite3* db = nullptr;
         pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
@@ -2102,7 +2102,7 @@ namespace transport
                                                                        unsigned int t_serial, std::vector<number>& sample)
 	    {
         assert(pipe != nullptr);
-        if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_DATAMGR_NULL_DATAPIPE);
+        if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
 
         sqlite3* db = nullptr;
         pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
@@ -2117,7 +2117,7 @@ namespace transport
                                                                 std::vector<kconfiguration_statistics>& data)
       {
         assert(pipe != nullptr);
-        if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_DATAMGR_NULL_DATAPIPE);
+        if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
 
         sqlite3* db = nullptr;
         pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
@@ -2138,12 +2138,12 @@ namespace transport
 		        std::ostringstream msg;
 		        if(db != nullptr)
 			        {
-		            msg << __CPP_TRANSPORT_DATACTR_OPEN_A << " '" << ctr_path.string() << "' " << __CPP_TRANSPORT_DATACTR_OPEN_B << status << ": " << sqlite3_errmsg(db) << ")";
+		            msg << CPPTRANSPORT_DATACTR_OPEN_A << " '" << ctr_path.string() << "' " << CPPTRANSPORT_DATACTR_OPEN_B << status << ": " << sqlite3_errmsg(db) << ")";
 		            sqlite3_close(db);
 			        }
 		        else
 			        {
-		            msg << __CPP_TRANSPORT_DATACTR_OPEN_A << " '" << ctr_path.string() << "' " << __CPP_TRANSPORT_DATACTR_OPEN_B << status << ")";
+		            msg << CPPTRANSPORT_DATACTR_OPEN_A << " '" << ctr_path.string() << "' " << CPPTRANSPORT_DATACTR_OPEN_B << status << ")";
 			        }
 		        throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
 			    }
@@ -2174,7 +2174,7 @@ namespace transport
                                                                       const std::string& name, const std::list<std::string>& tags)
 			{
 				assert(pipe != nullptr);
-				if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_DATAMGR_NULL_DATAPIPE);
+				if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
 
         // find a suitable output group for this task
         std::shared_ptr< output_group_record<integration_payload> > group = finder(name, tags);
@@ -2196,7 +2196,7 @@ namespace transport
                                                                           const std::string& name, const std::list<std::string>& tags)
 	    {
         assert(pipe != nullptr);
-        if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_DATAMGR_NULL_DATAPIPE);
+        if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
 
         // find a suitable output group for this task
         std::shared_ptr< output_group_record<postintegration_payload> > group = finder(name, tags);
@@ -2216,7 +2216,7 @@ namespace transport
 		void data_manager_sqlite3<number>::datapipe_detach(datapipe<number>* pipe)
 			{
 		    assert(pipe != nullptr);
-		    if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_DATAMGR_NULL_DATAPIPE);
+		    if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
 
 				sqlite3* db = nullptr;
 				pipe->get_manager_handle(&db);

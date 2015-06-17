@@ -29,7 +29,7 @@ namespace transport
 
 		    if(!f)
 			    {
-		        path = __CPP_TRANSPORT_DEFAULT_PYTHON_PATH;
+		        path = CPPTRANSPORT_DEFAULT_PYTHON_PATH;
 			    }
 		    else
 			    {

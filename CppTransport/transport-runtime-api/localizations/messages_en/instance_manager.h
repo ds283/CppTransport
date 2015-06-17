@@ -4,13 +4,13 @@
 //
 
 
-#ifndef __CPP_TRANSPORT_MESSAGES_EN_INSTANCE_MANAGER_H
-#define __CPP_TRANSPORT_MESSAGES_EN_INSTANCE_MANAGER_H
+#ifndef CPPTRANSPORT_MESSAGES_EN_INSTANCE_MANAGER_H
+#define CPPTRANSPORT_MESSAGES_EN_INSTANCE_MANAGER_H
 
 
-#define __CPP_TRANSPORT_INSTANCES_MULTIPLE    "Internal error: Attempt to add multiple instances of the same 'model' object"
-#define __CPP_TRANSPORT_INSTANCES_DELETE      "Internal error: Attempt to delete unregistered 'model' object"
-#define __CPP_TRANSPORT_INSTANCES_MISSING     "Internal error: No registered instance of model with uid"
+#define CPPTRANSPORT_INSTANCES_MULTIPLE    "Internal error: Attempt to add multiple instances of the same 'model' object"
+#define CPPTRANSPORT_INSTANCES_DELETE      "Internal error: Attempt to delete unregistered 'model' object"
+#define CPPTRANSPORT_INSTANCES_MISSING     "Internal error: No registered instance of model with uid"
 
 
-#endif // __CPP_TRANSPORT_MESSAGES_EN_INSTANCE_MANAGER_H
+#endif // CPPTRANSPORT_MESSAGES_EN_INSTANCE_MANAGER_H

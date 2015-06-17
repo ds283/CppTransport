@@ -13,14 +13,14 @@
 #include "transport-runtime-api/derived-products/derived-content/SQL_query/detail/SQL_query.h"
 
 
-#define __CPP_TRANSPORT_NODE_SQL_THREEPF_KCONFIG_QUERY_TYPE      "threepf-query"
-#define __CPP_TRANSPORT_NODE_SQL_THREEPF_KCONFIG_QUERY           "sql"
+#define CPPTRANSPORT_NODE_SQL_THREEPF_KCONFIG_QUERY_TYPE      "threepf-query"
+#define CPPTRANSPORT_NODE_SQL_THREEPF_KCONFIG_QUERY           "sql"
 
-#define __CPP_TRANSPORT_NODE_SQL_THREEPF_KCONFIG_QUERY_CONFIG    "config"
-#define __CPP_TRANSPORT_NODE_SQL_THREEPF_KCONFIG_QUERY_KCONFIG   "threepf"
-#define __CPP_TRANSPORT_NODE_SQL_THREEPF_KCONFIG_QUERY_K1_CONFIG "k1"
-#define __CPP_TRANSPORT_NODE_SQL_THREEPF_KCONFIG_QUERY_K2_CONFIG "k2"
-#define __CPP_TRANSPORT_NODE_SQL_THREEPF_KCONFIG_QUERY_K3_CONFIG "k3"
+#define CPPTRANSPORT_NODE_SQL_THREEPF_KCONFIG_QUERY_CONFIG    "config"
+#define CPPTRANSPORT_NODE_SQL_THREEPF_KCONFIG_QUERY_KCONFIG   "threepf"
+#define CPPTRANSPORT_NODE_SQL_THREEPF_KCONFIG_QUERY_K1_CONFIG "k1"
+#define CPPTRANSPORT_NODE_SQL_THREEPF_KCONFIG_QUERY_K2_CONFIG "k2"
+#define CPPTRANSPORT_NODE_SQL_THREEPF_KCONFIG_QUERY_K3_CONFIG "k3"
 
 namespace transport
 	{
@@ -121,40 +121,40 @@ namespace transport
 		    SQL_threepf_kconfig_query::SQL_threepf_kconfig_query(Json::Value& reader)
 		      : my_id(current_id++)
 			    {
-		        query = reader[__CPP_TRANSPORT_NODE_SQL_THREEPF_KCONFIG_QUERY].asString();
+		        query = reader[CPPTRANSPORT_NODE_SQL_THREEPF_KCONFIG_QUERY].asString();
 
-		        std::string type = reader[__CPP_TRANSPORT_NODE_SQL_THREEPF_KCONFIG_QUERY_CONFIG].asString();\
+		        std::string type = reader[CPPTRANSPORT_NODE_SQL_THREEPF_KCONFIG_QUERY_CONFIG].asString();\
 
 				    config = kconfig;
-				    if(type == __CPP_TRANSPORT_NODE_SQL_THREEPF_KCONFIG_QUERY_KCONFIG)        config = kconfig;
-				    else if(type == __CPP_TRANSPORT_NODE_SQL_THREEPF_KCONFIG_QUERY_K1_CONFIG) config = k1_config;
-				    else if(type == __CPP_TRANSPORT_NODE_SQL_THREEPF_KCONFIG_QUERY_K2_CONFIG) config = k2_config;
-				    else if(type == __CPP_TRANSPORT_NODE_SQL_THREEPF_KCONFIG_QUERY_K3_CONFIG) config = k3_config;
+				    if(type == CPPTRANSPORT_NODE_SQL_THREEPF_KCONFIG_QUERY_KCONFIG)        config = kconfig;
+				    else if(type == CPPTRANSPORT_NODE_SQL_THREEPF_KCONFIG_QUERY_K1_CONFIG) config = k1_config;
+				    else if(type == CPPTRANSPORT_NODE_SQL_THREEPF_KCONFIG_QUERY_K2_CONFIG) config = k2_config;
+				    else if(type == CPPTRANSPORT_NODE_SQL_THREEPF_KCONFIG_QUERY_K3_CONFIG) config = k3_config;
 				    else assert(false);
 			    }
 
 
 		    void SQL_threepf_kconfig_query::serialize(Json::Value& writer) const
 			    {
-		        writer[__CPP_TRANSPORT_NODE_SQL_QUERY_TYPE]            = std::string(__CPP_TRANSPORT_NODE_SQL_THREEPF_KCONFIG_QUERY_TYPE);
-		        writer[__CPP_TRANSPORT_NODE_SQL_THREEPF_KCONFIG_QUERY] = this->query;
+		        writer[CPPTRANSPORT_NODE_SQL_QUERY_TYPE]            = std::string(CPPTRANSPORT_NODE_SQL_THREEPF_KCONFIG_QUERY_TYPE);
+		        writer[CPPTRANSPORT_NODE_SQL_THREEPF_KCONFIG_QUERY] = this->query;
 
 				    switch(this->config)
 					    {
 				        case kconfig:
-					        writer[__CPP_TRANSPORT_NODE_SQL_THREEPF_KCONFIG_QUERY_CONFIG] = std::string(__CPP_TRANSPORT_NODE_SQL_THREEPF_KCONFIG_QUERY_KCONFIG);
+					        writer[CPPTRANSPORT_NODE_SQL_THREEPF_KCONFIG_QUERY_CONFIG] = std::string(CPPTRANSPORT_NODE_SQL_THREEPF_KCONFIG_QUERY_KCONFIG);
 					        break;
 
 				        case k1_config:
-					        writer[__CPP_TRANSPORT_NODE_SQL_THREEPF_KCONFIG_QUERY_CONFIG] = std::string(__CPP_TRANSPORT_NODE_SQL_THREEPF_KCONFIG_QUERY_K1_CONFIG);
+					        writer[CPPTRANSPORT_NODE_SQL_THREEPF_KCONFIG_QUERY_CONFIG] = std::string(CPPTRANSPORT_NODE_SQL_THREEPF_KCONFIG_QUERY_K1_CONFIG);
 							    break;
 
 				        case k2_config:
-					        writer[__CPP_TRANSPORT_NODE_SQL_THREEPF_KCONFIG_QUERY_CONFIG] = std::string(__CPP_TRANSPORT_NODE_SQL_THREEPF_KCONFIG_QUERY_K2_CONFIG);
+					        writer[CPPTRANSPORT_NODE_SQL_THREEPF_KCONFIG_QUERY_CONFIG] = std::string(CPPTRANSPORT_NODE_SQL_THREEPF_KCONFIG_QUERY_K2_CONFIG);
 					        break;
 
 				        case k3_config:
-					        writer[__CPP_TRANSPORT_NODE_SQL_THREEPF_KCONFIG_QUERY_CONFIG] = std::string(__CPP_TRANSPORT_NODE_SQL_THREEPF_KCONFIG_QUERY_K3_CONFIG);
+					        writer[CPPTRANSPORT_NODE_SQL_THREEPF_KCONFIG_QUERY_CONFIG] = std::string(CPPTRANSPORT_NODE_SQL_THREEPF_KCONFIG_QUERY_K3_CONFIG);
 					        break;
 
 				        default:

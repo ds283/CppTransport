@@ -52,7 +52,7 @@
 #include "boost/log/utility/setup/common_attributes.hpp"
 
 
-//#define __CPP_TRANSPORT_DEBUG_DATAPIPE
+//#define CPPTRANSPORT_DEBUG_DATAPIPE
 
 
 namespace transport
@@ -380,14 +380,14 @@ namespace transport
 
       public:
 
-        typedef linecache::serial_group< std::vector<time_config>, time_config_tag<number>, derived_data::SQL_time_config_query, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE > time_config_handle;
-        typedef linecache::serial_group< std::vector<twopf_kconfig>, twopf_kconfig_tag<number>, derived_data::SQL_twopf_kconfig_query, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE > twopf_kconfig_handle;
-        typedef linecache::serial_group< std::vector<threepf_kconfig>, threepf_kconfig_tag<number>, derived_data::SQL_threepf_kconfig_query, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE > threepf_kconfig_handle;
-		    typedef linecache::serial_group< std::vector<kconfiguration_statistics>, k_statistics_tag<number>, derived_data::SQL_query, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE > k_statistics_handle;
-        typedef linecache::serial_group< std::vector<number>, data_tag<number>, derived_data::SQL_query, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE > time_data_handle;
-        typedef linecache::serial_group< std::vector<number>, data_tag<number>, derived_data::SQL_query, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE > kconfig_data_handle;
-        typedef linecache::serial_group< std::vector<number>, data_tag<number>, derived_data::SQL_query, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE > time_zeta_handle;
-        typedef linecache::serial_group< std::vector<number>, data_tag<number>, derived_data::SQL_query, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE > kconfig_zeta_handle;
+        typedef linecache::serial_group< std::vector<time_config>, time_config_tag<number>, derived_data::SQL_time_config_query, CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE > time_config_handle;
+        typedef linecache::serial_group< std::vector<twopf_kconfig>, twopf_kconfig_tag<number>, derived_data::SQL_twopf_kconfig_query, CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE > twopf_kconfig_handle;
+        typedef linecache::serial_group< std::vector<threepf_kconfig>, threepf_kconfig_tag<number>, derived_data::SQL_threepf_kconfig_query, CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE > threepf_kconfig_handle;
+		    typedef linecache::serial_group< std::vector<kconfiguration_statistics>, k_statistics_tag<number>, derived_data::SQL_query, CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE > k_statistics_handle;
+        typedef linecache::serial_group< std::vector<number>, data_tag<number>, derived_data::SQL_query, CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE > time_data_handle;
+        typedef linecache::serial_group< std::vector<number>, data_tag<number>, derived_data::SQL_query, CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE > kconfig_data_handle;
+        typedef linecache::serial_group< std::vector<number>, data_tag<number>, derived_data::SQL_query, CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE > time_zeta_handle;
+        typedef linecache::serial_group< std::vector<number>, data_tag<number>, derived_data::SQL_query, CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE > kconfig_zeta_handle;
 
         //! Generate a serial-group handle for a set of time-configuration serial numbers
         time_config_handle& new_time_config_handle(const derived_data::SQL_time_config_query& query) const;
@@ -499,37 +499,37 @@ namespace transport
         // CACHES
 
         //! time configuration cache
-        linecache::cache<std::vector<time_config>, time_config_tag<number>, derived_data::SQL_time_config_query, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE> time_config_cache;
+        linecache::cache<std::vector<time_config>, time_config_tag<number>, derived_data::SQL_time_config_query, CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE> time_config_cache;
 
         //! twopf k-config cache
-        linecache::cache<std::vector<twopf_kconfig>, twopf_kconfig_tag<number>, derived_data::SQL_twopf_kconfig_query, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE> twopf_kconfig_cache;
+        linecache::cache<std::vector<twopf_kconfig>, twopf_kconfig_tag<number>, derived_data::SQL_twopf_kconfig_query, CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE> twopf_kconfig_cache;
 
         //! threepf k-config cache
-        linecache::cache<std::vector<threepf_kconfig>, threepf_kconfig_tag<number>, derived_data::SQL_threepf_kconfig_query, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE> threepf_kconfig_cache;
+        linecache::cache<std::vector<threepf_kconfig>, threepf_kconfig_tag<number>, derived_data::SQL_threepf_kconfig_query, CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE> threepf_kconfig_cache;
 
 		    //! statistics cache
-		    linecache::cache<std::vector<kconfiguration_statistics>, k_statistics_tag<number>, derived_data::SQL_query, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE> statistics_cache;
+		    linecache::cache<std::vector<kconfiguration_statistics>, k_statistics_tag<number>, derived_data::SQL_query, CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE> statistics_cache;
 
         //! data cache
-        linecache::cache<std::vector<number>, data_tag<number>, derived_data::SQL_query, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE> data_cache;
+        linecache::cache<std::vector<number>, data_tag<number>, derived_data::SQL_query, CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE> data_cache;
 
 
         // CACHE TABLES
 
         //! Time configuration cache table for currently-attached group; null if no group is attached
-        linecache::table<std::vector<time_config>, time_config_tag<number>, derived_data::SQL_time_config_query, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE>* time_config_cache_table;
+        linecache::table<std::vector<time_config>, time_config_tag<number>, derived_data::SQL_time_config_query, CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE>* time_config_cache_table;
 
         //! twopf k-config cache table for currently-attached group; null if no group is attached
-        linecache::table<std::vector<twopf_kconfig>, twopf_kconfig_tag<number>, derived_data::SQL_twopf_kconfig_query, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE>* twopf_kconfig_cache_table;
+        linecache::table<std::vector<twopf_kconfig>, twopf_kconfig_tag<number>, derived_data::SQL_twopf_kconfig_query, CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE>* twopf_kconfig_cache_table;
 
         //! threepf k-config cache table for currently-attached group; null if no group is attached
-        linecache::table<std::vector<threepf_kconfig>, threepf_kconfig_tag<number>, derived_data::SQL_threepf_kconfig_query, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE>* threepf_kconfig_cache_table;
+        linecache::table<std::vector<threepf_kconfig>, threepf_kconfig_tag<number>, derived_data::SQL_threepf_kconfig_query, CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE>* threepf_kconfig_cache_table;
 
 		    //! statistics cache table for currently-attached group; null if no group is attached
-		    linecache::table<std::vector<kconfiguration_statistics>, k_statistics_tag<number>, derived_data::SQL_query, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE>* statistics_cache_table;
+		    linecache::table<std::vector<kconfiguration_statistics>, k_statistics_tag<number>, derived_data::SQL_query, CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE>* statistics_cache_table;
 
         //! data cache table for currently-attached group; null if no group is attached
-        linecache::table<std::vector<number>, data_tag<number>, derived_data::SQL_query, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE>* data_cache_table;
+        linecache::table<std::vector<number>, data_tag<number>, derived_data::SQL_query, CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE>* data_cache_table;
 
 
         // PROPERTIES
@@ -622,10 +622,10 @@ namespace transport
 	      threepf_kconfig_cache_table(nullptr),
 	      statistics_cache_table(nullptr),
 	      data_cache_table(nullptr),
-	      time_config_cache(__CPP_TRANSPORT_DEFAULT_CONFIGURATION_CACHE_SIZE),
-	      twopf_kconfig_cache(__CPP_TRANSPORT_DEFAULT_CONFIGURATION_CACHE_SIZE),
-	      threepf_kconfig_cache(__CPP_TRANSPORT_DEFAULT_CONFIGURATION_CACHE_SIZE),
-	      statistics_cache(__CPP_TRANSPORT_DEFAULT_CONFIGURATION_CACHE_SIZE),
+	      time_config_cache(CPPTRANSPORT_DEFAULT_CONFIGURATION_CACHE_SIZE),
+	      twopf_kconfig_cache(CPPTRANSPORT_DEFAULT_CONFIGURATION_CACHE_SIZE),
+	      threepf_kconfig_cache(CPPTRANSPORT_DEFAULT_CONFIGURATION_CACHE_SIZE),
+	      statistics_cache(CPPTRANSPORT_DEFAULT_CONFIGURATION_CACHE_SIZE),
 	      data_cache(cap),
 	      type(none_attached),
         N_fields(0)
@@ -633,7 +633,7 @@ namespace transport
         this->database_timer.stop();
 
         std::ostringstream log_file;
-        log_file << __CPP_TRANSPORT_LOG_FILENAME_A << worker_number << __CPP_TRANSPORT_LOG_FILENAME_B;
+        log_file << CPPTRANSPORT_LOG_FILENAME_A << worker_number << CPPTRANSPORT_LOG_FILENAME_B;
 
         boost::filesystem::path log_path = logdir_path / log_file.str();
 
@@ -769,7 +769,7 @@ namespace transport
 		template <typename number>
 		bool datapipe<number>::validate_attached(attachment_type t) const
 			{
-				if(this->type != t) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_WRONG_CONTENT);
+				if(this->type != t) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_WRONG_CONTENT);
 				return(this->validate_attached());
 			}
 
@@ -778,10 +778,10 @@ namespace transport
     std::string datapipe<number>::attach(derivable_task<number>* tk, const std::list<std::string>& tags)
 	    {
         assert(this->validate_unattached());
-        if(!this->validate_unattached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_ATTACH_PIPE_ALREADY_ATTACHED);
+        if(!this->validate_unattached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_ATTACH_PIPE_ALREADY_ATTACHED);
 
         assert(tk != nullptr);
-        if(tk == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NULL_TASK);
+        if(tk == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NULL_TASK);
 
         // work out what sort of content group we are trying to attach
         integration_task<number>* itk     = nullptr;
@@ -820,7 +820,7 @@ namespace transport
 	        }
 
         std::stringstream msg;
-        msg << __CPP_TRANSPORT_DATAMGR_UNKNOWN_DERIVABLE_TASK << " '" << tk->get_name() << "'";
+        msg << CPPTRANSPORT_DATAMGR_UNKNOWN_DERIVABLE_TASK << " '" << tk->get_name() << "'";
         throw runtime_exception(runtime_exception::DATAPIPE_ERROR, msg.str());
 	    }
 
@@ -843,7 +843,7 @@ namespace transport
     void datapipe<number>::detach(void)
 	    {
         assert(this->validate_attached());
-        if(!this->validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_DETACH_PIPE_NOT_ATTACHED);
+        if(!this->validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_DETACH_PIPE_NOT_ATTACHED);
 
         this->utilities.detach(this);
 
@@ -893,7 +893,7 @@ namespace transport
     typename datapipe<number>::time_config_handle& datapipe<number>::new_time_config_handle(const derived_data::SQL_time_config_query& query) const
 	    {
         assert(this->validate_attached());
-        if(!this->validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+        if(!this->validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
         return(this->time_config_cache_table->get_serial_handle(query));
 	    }
@@ -903,7 +903,7 @@ namespace transport
     typename datapipe<number>::twopf_kconfig_handle& datapipe<number>::new_twopf_kconfig_handle(const derived_data::SQL_twopf_kconfig_query& query) const
 	    {
         assert(this->validate_attached());
-        if(!this->validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+        if(!this->validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
         return(this->twopf_kconfig_cache_table->get_serial_handle(query));
 	    }
@@ -913,7 +913,7 @@ namespace transport
     typename datapipe<number>::threepf_kconfig_handle& datapipe<number>::new_threepf_kconfig_handle(const derived_data::SQL_threepf_kconfig_query& query) const
 	    {
         assert(this->validate_attached());
-        if(!this->validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+        if(!this->validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
         return(this->threepf_kconfig_cache_table->get_serial_handle(query));
 	    }
@@ -923,7 +923,7 @@ namespace transport
 		typename datapipe<number>::k_statistics_handle& datapipe<number>::new_k_statistics_handle(const derived_data::SQL_query& query) const
 			{
 		    assert(this->validate_attached());
-		    if(!this->validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+		    if(!this->validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
 		    return(this->statistics_cache_table->get_serial_handle(query));
 			}
@@ -933,7 +933,7 @@ namespace transport
     typename datapipe<number>::time_data_handle& datapipe<number>::new_time_data_handle(const derived_data::SQL_time_config_query& query) const
 	    {
         assert(this->validate_attached());
-        if(!this->validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+        if(!this->validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
         return(this->data_cache_table->get_serial_handle(query));
 	    }
@@ -943,7 +943,7 @@ namespace transport
     typename datapipe<number>::kconfig_data_handle& datapipe<number>::new_kconfig_data_handle(const derived_data::SQL_twopf_kconfig_query& query) const
 	    {
         assert(this->validate_attached());
-        if(!this->validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+        if(!this->validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
         return(this->data_cache_table->get_serial_handle(query));
 	    }
@@ -953,7 +953,7 @@ namespace transport
     typename datapipe<number>::kconfig_data_handle& datapipe<number>::new_kconfig_data_handle(const derived_data::SQL_threepf_kconfig_query& query) const
 	    {
         assert(this->validate_attached());
-        if(!this->validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+        if(!this->validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
         return(this->data_cache_table->get_serial_handle(query));
 	    }
@@ -963,7 +963,7 @@ namespace transport
     typename datapipe<number>::time_zeta_handle& datapipe<number>::new_time_zeta_handle(const derived_data::SQL_time_config_query& query) const
 	    {
         assert(this->validate_attached());
-        if(!this->validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+        if(!this->validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
         return(this->data_cache_table->get_serial_handle(query));
 	    }
@@ -973,7 +973,7 @@ namespace transport
     typename datapipe<number>::kconfig_zeta_handle& datapipe<number>::new_kconfig_zeta_handle(const derived_data::SQL_twopf_kconfig_query& query) const
 	    {
         assert(this->validate_attached());
-        if(!this->validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+        if(!this->validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
         return(this->data_cache_table->get_serial_handle(query));
 	    }
@@ -983,7 +983,7 @@ namespace transport
     typename datapipe<number>::kconfig_zeta_handle& datapipe<number>::new_kconfig_zeta_handle(const derived_data::SQL_threepf_kconfig_query& query) const
 	    {
         assert(this->validate_attached());
-        if(!this->validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+        if(!this->validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
         return(this->data_cache_table->get_serial_handle(query));
 	    }

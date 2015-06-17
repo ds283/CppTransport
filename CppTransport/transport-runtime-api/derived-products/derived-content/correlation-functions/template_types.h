@@ -22,13 +22,13 @@ namespace transport
 					{
 						switch(type)
 							{
-						    case fNL_local_template: return(std::string(__CPP_TRANSPORT_FNL_LOCAL));
-						    case fNL_equi_template:  return(std::string(__CPP_TRANSPORT_FNL_EQUI));
-						    case fNL_ortho_template: return(std::string(__CPP_TRANSPORT_FNL_ORTHO));
-						    case fNL_DBI_template:   return(std::string(__CPP_TRANSPORT_FNL_DBI));
+						    case fNL_local_template: return(std::string(CPPTRANSPORT_FNL_LOCAL));
+						    case fNL_equi_template:  return(std::string(CPPTRANSPORT_FNL_EQUI));
+						    case fNL_ortho_template: return(std::string(CPPTRANSPORT_FNL_ORTHO));
+						    case fNL_DBI_template:   return(std::string(CPPTRANSPORT_FNL_DBI));
 						    default:
 							    assert(false);
-									throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_FNL_LINE_UNKNOWN_TEMPLATE);
+									throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_PRODUCT_FNL_LINE_UNKNOWN_TEMPLATE);
 							}
 					}
 

@@ -5,8 +5,8 @@
 // To change the template use AppCode | Preferences | File Templates.
 //
 
-#ifndef __CPP_TRANSPORT_DEFAULT_SYMBOLS_H_
-#define __CPP_TRANSPORT_DEFAULT_SYMBOLS_H_
+#ifndef CPPTRANSPORT_DEFAULT_SYMBOLS_H_
+#define CPPTRANSPORT_DEFAULT_SYMBOLS_H_
 
 
 #define ZETA_SYMBOL                "\\zeta"
@@ -73,4 +73,4 @@
 #define DEFAULT_OUTPUT_DOTPHI      (true)
 
 
-#endif // __CPP_TRANSPORT_DEFAULT_SYMBOLS
+#endif // CPPTRANSPORT_DEFAULT_SYMBOLS

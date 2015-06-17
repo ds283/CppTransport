@@ -21,7 +21,7 @@
 
 
 // set default minimum time interval for instruments to be 1 second
-#define __CPP_TRANSPORT_JOURNAL_MINIMUM_TIMESPAN (1)
+#define CPPTRANSPORT_JOURNAL_MINIMUM_TIMESPAN (1)
 
 
 namespace transport
@@ -587,8 +587,8 @@ namespace transport
 							    {
 						        boost::posix_time::ptime begin_time = (*t)->get_timestamp();
 						        t++;
-						        if(t == master_events.end()) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_AGGREGATE_TOO_FEW);
-						        if((*t)->get_type() != master_work_event::aggregate_end) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_AGGREGATE_END_MISSING);
+						        if(t == master_events.end()) throw runtime_exception(runtime_exception::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_AGGREGATE_TOO_FEW);
+						        if((*t)->get_type() != master_work_event::aggregate_end) throw runtime_exception(runtime_exception::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_AGGREGATE_END_MISSING);
 						        current_bin->push_back(Gantt_bar(begin_time, (*t)->get_timestamp(), "black"));
 						        break;
 							    }
@@ -597,8 +597,8 @@ namespace transport
 							    {
 						        boost::posix_time::ptime begin_time = (*t)->get_timestamp();
 								    t++;
-								    if(t == master_events.end()) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_MPI_TOO_FEW);
-								    if((*t)->get_type() != master_work_event::MPI_end) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_MPI_END_MISSING);
+								    if(t == master_events.end()) throw runtime_exception(runtime_exception::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_MPI_TOO_FEW);
+								    if((*t)->get_type() != master_work_event::MPI_end) throw runtime_exception(runtime_exception::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_MPI_END_MISSING);
 								    current_bin->push_back(Gantt_bar(begin_time, (*t)->get_timestamp(), "darkgoldenrod"));
 								    break;
 							    }
@@ -607,15 +607,15 @@ namespace transport
                   {
                     boost::posix_time::ptime begin_time = (*t)->get_timestamp();
                     t++;
-                    if(t == master_events.end()) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_DATABASE_TOO_FEW);
-                    if((*t)->get_type() != master_work_event::database_end) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_DATABASE_END_MISSING);
+                    if(t == master_events.end()) throw runtime_exception(runtime_exception::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_DATABASE_TOO_FEW);
+                    if((*t)->get_type() != master_work_event::database_end) throw runtime_exception(runtime_exception::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_DATABASE_END_MISSING);
                     current_bin->push_back(Gantt_bar(begin_time, (*t)->get_timestamp(), "aquamarine"));
                     break;
                   }
 
 						    default:
 							    assert(false);
-							    throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_UNEXPECTED_EVENT);
+							    throw runtime_exception(runtime_exception::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_UNEXPECTED_EVENT);
 							};
 					}
 			}
@@ -650,8 +650,8 @@ namespace transport
 									    {
 								        boost::posix_time::ptime begin_time = (*t)->get_timestamp();
 								        t++;
-								        if(t == worker_events.end()) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_TWOPF_TOO_FEW);
-								        if((*t)->get_type() != slave_work_event::end_twopf_assignment) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_TWOPF_END_MISSING);
+								        if(t == worker_events.end()) throw runtime_exception(runtime_exception::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_TWOPF_TOO_FEW);
+								        if((*t)->get_type() != slave_work_event::end_twopf_assignment) throw runtime_exception(runtime_exception::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_TWOPF_END_MISSING);
 								        current_bin->push_back(Gantt_bar(begin_time, (*t)->get_timestamp(), "red"));
 								        break;
 									    }
@@ -660,8 +660,8 @@ namespace transport
 									    {
 								        boost::posix_time::ptime begin_time = (*t)->get_timestamp();
 								        t++;
-								        if(t == worker_events.end()) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_THREEPF_TOO_FEW);
-								        if((*t)->get_type() != slave_work_event::end_threepf_assignment) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_THREEPF_END_MISSING);
+								        if(t == worker_events.end()) throw runtime_exception(runtime_exception::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_THREEPF_TOO_FEW);
+								        if((*t)->get_type() != slave_work_event::end_threepf_assignment) throw runtime_exception(runtime_exception::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_THREEPF_END_MISSING);
 										    current_bin->push_back(Gantt_bar(begin_time, (*t)->get_timestamp(), "orangered"));
 								        break;
 									    }
@@ -670,8 +670,8 @@ namespace transport
 									    {
 								        boost::posix_time::ptime begin_time = (*t)->get_timestamp();
 										    t++;
-										    if(t == worker_events.end()) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_ZETA_TWOPF_TOO_FEW);
-										    if((*t)->get_type() != slave_work_event::end_zeta_twopf_assignment) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_ZETA_TWOPF_END_MISSING);
+										    if(t == worker_events.end()) throw runtime_exception(runtime_exception::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_ZETA_TWOPF_TOO_FEW);
+										    if((*t)->get_type() != slave_work_event::end_zeta_twopf_assignment) throw runtime_exception(runtime_exception::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_ZETA_TWOPF_END_MISSING);
 										    current_bin->push_back(Gantt_bar(begin_time, (*t)->get_timestamp(), "green"));
 										    break;
 									    }
@@ -680,8 +680,8 @@ namespace transport
 									    {
 								        boost::posix_time::ptime begin_time = (*t)->get_timestamp();
 										    t++;
-										    if(t == worker_events.end()) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_ZETA_THREEPF_TOO_FEW);
-										    if((*t)->get_type() != slave_work_event::end_zeta_threepf_assignment) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_ZETA_THREEPF_END_MISSING);
+										    if(t == worker_events.end()) throw runtime_exception(runtime_exception::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_ZETA_THREEPF_TOO_FEW);
+										    if((*t)->get_type() != slave_work_event::end_zeta_threepf_assignment) throw runtime_exception(runtime_exception::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_ZETA_THREEPF_END_MISSING);
 										    current_bin->push_back(Gantt_bar(begin_time, (*t)->get_timestamp(), "limegreen"));
 										    break;
 									    }
@@ -690,8 +690,8 @@ namespace transport
 									    {
 								        boost::posix_time::ptime begin_time = (*t)->get_timestamp();
 										    t++;
-										    if(t == worker_events.end()) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_FNL_TOO_FEW);
-										    if((*t)->get_type() != slave_work_event::end_fNL_assignment) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_FNL_END_MISSING);
+										    if(t == worker_events.end()) throw runtime_exception(runtime_exception::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_FNL_TOO_FEW);
+										    if((*t)->get_type() != slave_work_event::end_fNL_assignment) throw runtime_exception(runtime_exception::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_FNL_END_MISSING);
 										    current_bin->push_back(Gantt_bar(begin_time, (*t)->get_timestamp(), "royalblue"));
 										    break;
 									    }
@@ -700,14 +700,14 @@ namespace transport
 									    {
 								        boost::posix_time::ptime begin_time = (*t)->get_timestamp();
 										    t++;
-										    if(t == worker_events.end()) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_OUTPUT_TOO_FEW);
-										    if((*t)->get_type() != slave_work_event::end_output_assignment) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_OUTPUT_END_MISSING);
+										    if(t == worker_events.end()) throw runtime_exception(runtime_exception::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_OUTPUT_TOO_FEW);
+										    if((*t)->get_type() != slave_work_event::end_output_assignment) throw runtime_exception(runtime_exception::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_OUTPUT_END_MISSING);
 										    current_bin->push_back(Gantt_bar(begin_time, (*t)->get_timestamp(), "orchid"));
 										    break;
 									    }
 
 								    default:
-									    throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_UNEXPECTED_EVENT);
+									    throw runtime_exception(runtime_exception::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_UNEXPECTED_EVENT);
 									};
 							}
 					}
@@ -746,7 +746,7 @@ namespace transport
 							{
 						    default:
 							    assert(false);
-							    throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_UNEXPECTED_EVENT);
+							    throw runtime_exception(runtime_exception::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_UNEXPECTED_EVENT);
 							}
 					}
 			}
@@ -790,7 +790,7 @@ namespace transport
 
 								    default:
 									    assert(false);
-									    throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_UNEXPECTED_EVENT);
+									    throw runtime_exception(runtime_exception::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_UNEXPECTED_EVENT);
 									};
 							}
 					}
@@ -843,7 +843,7 @@ namespace transport
 				if(!out.is_open() || out.fail())
 					{
 				    std::ostringstream msg;
-						msg << __CPP_TRANSPORT_JOURNAL_OPEN_FAIL << " " << script_file;
+						msg << CPPTRANSPORT_JOURNAL_OPEN_FAIL << " " << script_file;
 						throw runtime_exception(runtime_exception::JOURNAL_ERROR, msg.str());
 					}
 
@@ -961,7 +961,7 @@ namespace transport
 
         journal_instrument(work_journal& j,
                            master_work_event::event_type b, master_work_event::event_type,
-                           unsigned int i = 0, unsigned int m = __CPP_TRANSPORT_JOURNAL_MINIMUM_TIMESPAN);
+                           unsigned int i = 0, unsigned int m = CPPTRANSPORT_JOURNAL_MINIMUM_TIMESPAN);
 
         ~journal_instrument();
 

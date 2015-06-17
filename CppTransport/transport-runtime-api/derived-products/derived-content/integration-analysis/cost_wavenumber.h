@@ -27,13 +27,13 @@
 #include "transport-runtime-api/derived-products/derived-content/SQL_query/SQL_query_helper.h"
 
 
-#define __CPP_TRANSPORT_NODE_PRODUCT_INTEGRATION_COST_TYPE    "type"
-#define __CPP_TRANSPORT_NODE_PRODUCT_INTEGRATION_COST_TWOPF   "twopf"
-#define __CPP_TRANSPORT_NODE_PRODUCT_INTEGRATION_COST_THREEPF "threepf"
+#define CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_TYPE    "type"
+#define CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_TWOPF   "twopf"
+#define CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_THREEPF "threepf"
 
-#define __CPP_TRANSPORT_NODE_PRODUCT_INTEGRATION_COST_METRIC  "metric"
-#define __CPP_TRANSPORT_NODE_PRODUCT_INTEGRATION_COST_TIME    "time"
-#define __CPP_TRANSPORT_NODE_PRODUCT_INTEGRATION_COST_STEPS   "steps"
+#define CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_METRIC  "metric"
+#define CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_TIME    "time"
+#define CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_STEPS   "steps"
 
 
 namespace transport
@@ -54,11 +54,11 @@ namespace transport
 
 						//! basic user-facing constructor -- 2pf task version
 						cost_wavenumber(const twopf_task<number>& tk, SQL_twopf_kconfig_query kq, cost_metric m=time_cost,
-						                unsigned int prec = __CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
+						                unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
 						//! basic user-facing constructor -- 3pf task version
 						cost_wavenumber(const threepf_task<number>& tk, SQL_threepf_kconfig_query kq, cost_metric m=time_cost,
-						                unsigned int prec = __CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
+						                unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
 						//! override copy constructor to provide deep copy of SQL_query object
 						cost_wavenumber(const cost_wavenumber<number>& obj);
@@ -175,18 +175,18 @@ namespace transport
 						assert(this->parent_task != nullptr);
 						gadget.set_task(this->parent_task, finder);
 
-						kquery = SQL_query_helper::deserialize(reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY]);
+						kquery = SQL_query_helper::deserialize(reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY]);
 
-				    std::string type_string = reader[__CPP_TRANSPORT_NODE_PRODUCT_INTEGRATION_COST_TYPE].asString();
+				    std::string type_string = reader[CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_TYPE].asString();
 						type = twopf_analysis;
-						if(type_string == __CPP_TRANSPORT_NODE_PRODUCT_INTEGRATION_COST_TWOPF)        type = twopf_analysis;
-						else if(type_string == __CPP_TRANSPORT_NODE_PRODUCT_INTEGRATION_COST_THREEPF) type = threepf_analysis;
+						if(type_string == CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_TWOPF)        type = twopf_analysis;
+						else if(type_string == CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_THREEPF) type = threepf_analysis;
 						else assert(false); // TODO: raise exception
 
-				    std::string metric_string = reader[__CPP_TRANSPORT_NODE_PRODUCT_INTEGRATION_COST_METRIC].asString();
+				    std::string metric_string = reader[CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_METRIC].asString();
 						metric = time_cost;
-						if(metric_string == __CPP_TRANSPORT_NODE_PRODUCT_INTEGRATION_COST_TIME)       metric = time_cost;
-						else if(metric_string == __CPP_TRANSPORT_NODE_PRODUCT_INTEGRATION_COST_STEPS) metric = steps_cost;
+						if(metric_string == CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_TIME)       metric = time_cost;
+						else if(metric_string == CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_STEPS) metric = steps_cost;
 						else assert(false); // TODO: raise exception
 					}
 
@@ -194,18 +194,18 @@ namespace transport
 				template <typename number>
 				void cost_wavenumber<number>::serialize(Json::Value& writer) const
 					{
-				    writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_INTEGRATION_COST);
+				    writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_INTEGRATION_COST);
 
-				    this->kquery->serialize(writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY]);
+				    this->kquery->serialize(writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY]);
 
 				    switch(this->type)
 					    {
 				        case twopf_analysis:
-					        writer[__CPP_TRANSPORT_NODE_PRODUCT_INTEGRATION_COST_TYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_INTEGRATION_COST_TWOPF);
+					        writer[CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_TYPE] = std::string(CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_TWOPF);
 					        break;
 
 				        case threepf_analysis:
-				        writer[__CPP_TRANSPORT_NODE_PRODUCT_INTEGRATION_COST_TYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_INTEGRATION_COST_THREEPF);
+				        writer[CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_TYPE] = std::string(CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_THREEPF);
 					        break;
 
 				        default:
@@ -216,11 +216,11 @@ namespace transport
 				    switch(this->metric)
 					    {
 				        case time_cost:
-					        writer[__CPP_TRANSPORT_NODE_PRODUCT_INTEGRATION_COST_METRIC] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_INTEGRATION_COST_TIME);
+					        writer[CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_METRIC] = std::string(CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_TIME);
 					        break;
 
 				        case steps_cost:
-					        writer[__CPP_TRANSPORT_NODE_PRODUCT_INTEGRATION_COST_METRIC] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_INTEGRATION_COST_STEPS);
+					        writer[CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_METRIC] = std::string(CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_STEPS);
 					        break;
 
 				        default:
@@ -326,7 +326,7 @@ namespace transport
 					    }
 				    else
 					    {
-				        label = "$" + (this->metric == time_cost ? std::string(__CPP_TRANSPORT_LATEX_TIME_SYMBOL) : std::string(__CPP_TRANSPORT_LATEX_STEPS_SYMBOL)) + "$";
+				        label = "$" + (this->metric == time_cost ? std::string(CPPTRANSPORT_LATEX_TIME_SYMBOL) : std::string(CPPTRANSPORT_LATEX_STEPS_SYMBOL)) + "$";
 					    }
 
 				    return(label);
@@ -344,7 +344,7 @@ namespace transport
 			        }
 		        else
 			        {
-		            label = (this->metric == time_cost ? std::string(__CPP_TRANSPORT_NONLATEX_TIME_SYMBOL) : std::string(__CPP_TRANSPORT_NONLATEX_STEPS_SYMBOL));
+		            label = (this->metric == time_cost ? std::string(CPPTRANSPORT_NONLATEX_TIME_SYMBOL) : std::string(CPPTRANSPORT_NONLATEX_STEPS_SYMBOL));
 			        }
 
 		        return(label);

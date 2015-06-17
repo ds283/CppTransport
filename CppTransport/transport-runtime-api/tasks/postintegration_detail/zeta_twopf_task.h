@@ -84,15 +84,15 @@ namespace transport
     zeta_twopf_task<number>::zeta_twopf_task(const std::string& nm, Json::Value& reader, typename repository_finder<number>::task_finder& finder)
 	    : zeta_twopf_list_task<number>(nm, reader, finder)
 	    {
-        this->paired = reader[__CPP_TRANSPORT_NODE_POSTINTEGRATION_TASK_PAIRED].asBool();
+        this->paired = reader[CPPTRANSPORT_NODE_POSTINTEGRATION_TASK_PAIRED].asBool();
 	    }
 
 
     template <typename number>
     void zeta_twopf_task<number>::serialize(Json::Value& writer) const
 	    {
-        writer[__CPP_TRANSPORT_NODE_TASK_TYPE]                   = std::string(__CPP_TRANSPORT_NODE_TASK_TYPE_ZETA_TWOPF);
-        writer[__CPP_TRANSPORT_NODE_POSTINTEGRATION_TASK_PAIRED] = this->paired;
+        writer[CPPTRANSPORT_NODE_TASK_TYPE]                   = std::string(CPPTRANSPORT_NODE_TASK_TYPE_ZETA_TWOPF);
+        writer[CPPTRANSPORT_NODE_POSTINTEGRATION_TASK_PAIRED] = this->paired;
 
         this->zeta_twopf_list_task<number>::serialize(writer);
 	    }

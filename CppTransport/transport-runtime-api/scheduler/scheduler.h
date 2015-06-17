@@ -89,7 +89,7 @@ namespace transport
 		template <typename work_element>
     std::ostream& operator<<(std::ostream& out, const work_item_filter<work_element>& filter)
       {
-        std::cerr << __CPP_TRANSPORT_FILTER_TAG;
+        std::cerr << CPPTRANSPORT_FILTER_TAG;
         for(std::set<unsigned int>::iterator t = filter.items.begin(); t != filter.items.end(); ++t)
           {
             std::cerr << (t != filter.items.begin() ? ", " : " ") << *t;

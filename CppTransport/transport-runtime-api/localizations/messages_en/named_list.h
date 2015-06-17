@@ -4,11 +4,11 @@
 //
 
 
-#ifndef __CPP_TRANSPORT_MESSAGES_EN_NAMED_LIST_H
-#define __CPP_TRANSPORT_MESSAGES_EN_NAMED_LIST_H
+#ifndef CPPTRANSPORT_MESSAGES_EN_NAMED_LIST_H
+#define CPPTRANSPORT_MESSAGES_EN_NAMED_LIST_H
 
 
-#define __CPP_TRANSPORT_NAMED_LIST_FAIL       "Internal error: Lookup failed in named_list"
+#define CPPTRANSPORT_NAMED_LIST_FAIL       "Internal error: Lookup failed in named_list"
 
 
-#endif // __CPP_TRANSPORT_MESSAGES_EN_NAMED_LIST_H
+#endif // CPPTRANSPORT_MESSAGES_EN_NAMED_LIST_H

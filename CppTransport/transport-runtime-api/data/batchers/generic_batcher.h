@@ -223,7 +223,7 @@ namespace transport
         // set up logging
 
         std::ostringstream log_file;
-        log_file << __CPP_TRANSPORT_LOG_FILENAME_A << worker_number << __CPP_TRANSPORT_LOG_FILENAME_B;
+        log_file << CPPTRANSPORT_LOG_FILENAME_A << worker_number << CPPTRANSPORT_LOG_FILENAME_B;
 
         boost::filesystem::path log_path = logdir_path / log_file.str();
 

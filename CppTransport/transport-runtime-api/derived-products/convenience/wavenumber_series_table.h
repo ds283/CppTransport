@@ -69,31 +69,31 @@ namespace transport
 					        {
 				            case unset_axis:
 				            case k_axis:
-					            this->internal_set_x_label(__CPP_TRANSPORT_PRODUCT_K_VALUE_TABLE_LABEL_NOLATEX);
+					            this->internal_set_x_label(CPPTRANSPORT_PRODUCT_K_VALUE_TABLE_LABEL_NOLATEX);
 					            break;
 
 				            case efolds_exit_axis:
-					            this->internal_set_x_label(__CPP_TRANSPORT_PRODUCT_EFOLDS_EXIT_TABLE_LABEL_NOLATEX);
+					            this->internal_set_x_label(CPPTRANSPORT_PRODUCT_EFOLDS_EXIT_TABLE_LABEL_NOLATEX);
 				              break;
 
 				            case alpha_axis:
-					            this->internal_set_x_label(__CPP_TRANSPORT_PRODUCT_ALPHA_TABLE_LABEL_NOLATEX);
+					            this->internal_set_x_label(CPPTRANSPORT_PRODUCT_ALPHA_TABLE_LABEL_NOLATEX);
 				              break;
 
 				            case beta_axis:
-					            this->internal_set_x_label(__CPP_TRANSPORT_PRODUCT_BETA_TABLE_LABEL_NOLATEX);
+					            this->internal_set_x_label(CPPTRANSPORT_PRODUCT_BETA_TABLE_LABEL_NOLATEX);
 				              break;
 
 				            case squeezing_fraction_k1_axis:
-					            this->internal_set_x_label(__CPP_TRANSPORT_PRODUCT_SQUEEZING_FRACTION_K1_TABLE_LABEL_NOLATEX);
+					            this->internal_set_x_label(CPPTRANSPORT_PRODUCT_SQUEEZING_FRACTION_K1_TABLE_LABEL_NOLATEX);
 				              break;
 
 				            case squeezing_fraction_k2_axis:
-					            this->internal_set_x_label(__CPP_TRANSPORT_PRODUCT_SQUEEZING_FRACTION_K2_TABLE_LABEL_NOLATEX);
+					            this->internal_set_x_label(CPPTRANSPORT_PRODUCT_SQUEEZING_FRACTION_K2_TABLE_LABEL_NOLATEX);
 				              break;
 
 				            case squeezing_fraction_k3_axis:
-					            this->internal_set_x_label(__CPP_TRANSPORT_PRODUCT_SQUEEZING_FRACTION_K3_TABLE_LABEL_NOLATEX);
+					            this->internal_set_x_label(CPPTRANSPORT_PRODUCT_SQUEEZING_FRACTION_K3_TABLE_LABEL_NOLATEX);
 				              break;
 
 				            default:

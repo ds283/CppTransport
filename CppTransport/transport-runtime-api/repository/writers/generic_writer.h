@@ -32,8 +32,8 @@
 
 
 // log file name
-#define __CPP_TRANSPORT_LOG_FILENAME_A "worker_"
-#define __CPP_TRANSPORT_LOG_FILENAME_B "_%3N.log"
+#define CPPTRANSPORT_LOG_FILENAME_A "worker_"
+#define CPPTRANSPORT_LOG_FILENAME_B "_%3N.log"
 
 
 namespace transport
@@ -235,7 +235,7 @@ namespace transport
         // set up logging
 
         std::ostringstream log_file;
-        log_file << __CPP_TRANSPORT_LOG_FILENAME_A << worker_number << __CPP_TRANSPORT_LOG_FILENAME_B;
+        log_file << CPPTRANSPORT_LOG_FILENAME_A << worker_number << CPPTRANSPORT_LOG_FILENAME_B;
         boost::filesystem::path logfile_path = paths.root / paths.log / log_file.str();
 
         boost::shared_ptr<boost::log::core> core = boost::log::core::get();
@@ -277,7 +277,7 @@ namespace transport
     template <typename data_manager_type>
     void generic_writer::get_data_manager_handle(data_manager_type* data)
 	    {
-        if(this->data_manager_handle == nullptr) throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_OUTPUT_WRITER_UNSETHANDLE);
+        if(this->data_manager_handle == nullptr) throw runtime_exception(runtime_exception::REPOSITORY_ERROR, CPPTRANSPORT_REPO_OUTPUT_WRITER_UNSETHANDLE);
         *data = static_cast<data_manager_type>(this->data_manager_handle);
 	    }
 

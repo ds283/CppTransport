@@ -205,7 +205,7 @@ namespace transport
             if(this->tk == nullptr)
               {
                 std::ostringstream msg;
-                msg << __CPP_TRANSPORT_PRODUCT_FNL_TASK_NOT_THREEPF;
+                msg << CPPTRANSPORT_PRODUCT_FNL_TASK_NOT_THREEPF;
                 throw runtime_exception(runtime_exception::DERIVED_PRODUCT_ERROR, msg.str());
               }
 
@@ -213,7 +213,7 @@ namespace transport
             if(!this->tk->is_integrable())
               {
                 std::ostringstream msg;
-                msg << __CPP_TRANSPORT_FNL_TASK_NOT_INTEGRABLE << " " << this->tk->get_name();
+                msg << CPPTRANSPORT_FNL_TASK_NOT_INTEGRABLE << " " << this->tk->get_name();
                 throw runtime_exception(runtime_exception::DERIVED_PRODUCT_ERROR, msg.str());
               }
           }
@@ -414,7 +414,7 @@ namespace transport
 
 		                default:
 			                assert(false);
-		                  throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_FNL_LINE_UNKNOWN_TEMPLATE);
+		                  throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_PRODUCT_FNL_LINE_UNKNOWN_TEMPLATE);
 			            }
 
 		            number Bref = this->reference_bispectrum(twopf_k1[j], twopf_k2[j], twopf_k3[j]);
