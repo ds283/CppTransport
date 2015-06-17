@@ -99,14 +99,10 @@ namespace transport
       protected:
 
         void twopf_kmode(const twopf_kconfig_record& kconfig, const twopf_list_task<number>* tk,
-                         twopf_batcher<number>& batcher,
-                         boost::timer::nanosecond_type& int_time, boost::timer::nanosecond_type& batch_time,
-                         unsigned int refinement_level);
+                         twopf_batcher<number>& batcher, unsigned int refinement_level);
 
         void threepf_kmode(const threepf_kconfig_record&, const threepf_task<number>* tk,
-                           threepf_batcher<number>& batcher,
-                           boost::timer::nanosecond_type& int_time, boost::timer::nanosecond_type& batch_time,
-                           unsigned int refinement_level);
+                           threepf_batcher<number>& batcher, unsigned int refinement_level);
 
         void populate_twopf_ic(twopf_state<number>& x, unsigned int start, double kmode, double Ninit,
                                const twopf_list_task<number>* tk, const std::vector<number>& ic, bool imaginary = false);
@@ -305,9 +301,6 @@ namespace transport
 
         for(unsigned int i = 0; i < list.size(); ++i)
           {
-            boost::timer::nanosecond_type int_time;
-            boost::timer::nanosecond_type batch_time;
-
             bool success = false;
             unsigned int refinement_level = 0;
 
@@ -315,14 +308,8 @@ namespace transport
             try
               {
                 // write the time history for this k-configuration
-                this->twopf_kmode(list[i], tk, batcher, int_time, batch_time, refinement_level);
-
+                this->twopf_kmode(list[i], tk, batcher, refinement_level);    // logging and report of successful integration are wrapped up in the observer stop_timers() method
 		            success = true;
-                BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal)
-                    << "** " << __CPP_TRANSPORT_SOLVING_CONFIG << " " << list[i]->serial << " (" << i+1
-                    << " " __CPP_TRANSPORT_OF << " " << list.size() << "), "
-                    << __CPP_TRANSPORT_INTEGRATION_TIME << " = " << format_time(int_time) << " | "
-                    << __CPP_TRANSPORT_BATCHING_TIME << " = " << format_time(batch_time);
                }
 	          catch(std::overflow_error& xe)
 		          {
@@ -352,9 +339,7 @@ namespace transport
 
     template <typename number>
     void $$__MODEL_basic<number>::twopf_kmode(const twopf_kconfig_record& kconfig, const twopf_list_task<number>* tk,
-                                              twopf_batcher<number>& batcher,
-                                              boost::timer::nanosecond_type& int_time, boost::timer::nanosecond_type& batch_time,
-                                              unsigned int refinement_level)
+                                              twopf_batcher<number>& batcher, unsigned int refinement_level)
       {
         if(refinement_level > tk->get_max_refinements()) throw runtime_exception(runtime_exception::REFINEMENT_FAILURE, __CPP_TRANSPORT_REFINEMENT_TOO_DEEP);
 
@@ -399,8 +384,6 @@ namespace transport
         size_t steps = boost::numeric::odeint::integrate_times($$__MAKE_PERT_STEPPER{twopf_state<number>}, rhs, x, begin_iterator, end_iterator, $$__PERT_STEP_SIZE/pow(4.0,refinement_level), obs);
 
         obs.stop_timers(steps, refinement_level);
-        int_time = obs.get_integration_time();
-        batch_time = obs.get_batching_time();
       }
 
 
@@ -467,9 +450,6 @@ namespace transport
         // step through the queue, solving for the three-point functions in each case
         for(unsigned int i = 0; i < list.size(); ++i)
           {
-            boost::timer::nanosecond_type int_time;
-            boost::timer::nanosecond_type batch_time;
-
             bool success = false;
 		        unsigned int refinement_level = 0;
 
@@ -477,14 +457,8 @@ namespace transport
             try
               {
                 // write the time history for this k-configuration
-                this->threepf_kmode(list[i], tk, batcher, int_time, batch_time, refinement_level);
-
+                this->threepf_kmode(list[i], tk, batcher, refinement_level);    // logging and report of successful integration are wrapped up in the observer stop_timers() method
                 success = true;
-                BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal)
-                    << "** " << __CPP_TRANSPORT_SOLVING_CONFIG << " " << list[i]->serial << " (" << i + 1
-                    << " " << __CPP_TRANSPORT_OF << " " << list.size() << "), "
-                    << __CPP_TRANSPORT_INTEGRATION_TIME << " = " << format_time(int_time) << " | "
-                    << __CPP_TRANSPORT_BATCHING_TIME << " = " << format_time(batch_time);
               }
             catch(std::overflow_error& xe)
               {
@@ -516,9 +490,7 @@ namespace transport
 
     template <typename number>
     void $$__MODEL_basic<number>::threepf_kmode(const threepf_kconfig_record& kconfig, const threepf_task<number>* tk,
-                                                threepf_batcher<number>& batcher,
-                                                boost::timer::nanosecond_type& int_time, boost::timer::nanosecond_type& batch_time,
-                                                unsigned int refinement_level)
+                                                threepf_batcher<number>& batcher, unsigned int refinement_level)
       {
         if(refinement_level > tk->get_max_refinements()) throw runtime_exception(runtime_exception::REFINEMENT_FAILURE, __CPP_TRANSPORT_REFINEMENT_TOO_DEEP);
 
@@ -580,8 +552,6 @@ namespace transport
         size_t steps = boost::numeric::odeint::integrate_times( $$__MAKE_PERT_STEPPER{threepf_state<number>}, rhs, x, begin_iterator, end_iterator, $$__PERT_STEP_SIZE/pow(4.0,refinement_level), obs);
 
         obs.stop_timers(steps, refinement_level);
-        int_time = obs.get_integration_time();
-        batch_time = obs.get_batching_time();
       }
 
 
