@@ -25,4 +25,4 @@ parameter
 % set up the potential
 % note that 'M_P' is a predefined symbol which resolves to the (user-specified) Planck mass at runtime
 
-potential (1/2)*m^2*phi^2 + Lambda^4*exp(10*sigma/M_P);
+potential = (1/2)*m^2*phi^2 + Lambda^4*exp(10*sigma/M_P);
