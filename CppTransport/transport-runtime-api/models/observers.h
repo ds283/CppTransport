@@ -159,7 +159,7 @@ namespace transport
 
     template <typename number>
     template <typename Level>
-    void timing_observer<number>::start_batching(double t, boost::log::sources::severity_logger <Level>& logger, Level lev)
+    void timing_observer<number>::start_batching(double t, boost::log::sources::severity_logger<Level>& logger, Level lev)
 	    {
         std::string rval = "";
 
@@ -173,6 +173,7 @@ namespace transport
             this->last_output = this->integration_timer.elapsed().wall;
 
             std::ostringstream msg;
+		        msg << "-- ";
 		        if(this->first_output)
 			        {
 				        msg << __CPP_TRANSPORT_OBSERVER_SLOW_INTEGRATION;
@@ -318,6 +319,12 @@ namespace transport
       {
         this->timing_observer<number>::stop_timers(steps, refinement);
         this->batcher.report_integration_success(this->get_integration_time(), this->get_batching_time(), this->k_config->serial, steps, refinement);
+
+        boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
+        BOOST_LOG_SEV(this->batcher.get_log(), generic_batcher::normal)
+	        << "** " << boost::posix_time::to_simple_string(now) << ": "
+	        << __CPP_TRANSPORT_SOLVING_CONFIG << " " << this->k_config->serial << ", "
+	        << __CPP_TRANSPORT_INTEGRATION_TIME << " = " << format_time(this->get_integration_time());
       }
 
 
@@ -489,6 +496,12 @@ namespace transport
       {
         this->timing_observer<number>::stop_timers(steps, refinement);
         this->batcher.report_integration_success(this->get_integration_time(), this->get_batching_time(), this->k_config->serial, steps, refinement);
+
+        boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
+        BOOST_LOG_SEV(this->batcher.get_log(), generic_batcher::normal)
+	        << "** " << boost::posix_time::to_simple_string(now) << ": "
+		        << __CPP_TRANSPORT_SOLVING_CONFIG << " " << this->k_config->serial << ", "
+		        << __CPP_TRANSPORT_INTEGRATION_TIME << " = " << format_time(this->get_integration_time());
       }
 
 
