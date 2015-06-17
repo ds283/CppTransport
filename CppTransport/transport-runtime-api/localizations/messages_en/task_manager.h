@@ -22,11 +22,13 @@
 
 #define __CPP_TRANSPORT_SCHEDULING_ALREADY_ASSIGNED     "Internal error: attempt to schedule work to an already-assigned worker process"
 #define __CPP_TRANSPORT_SCHEDULING_NOT_ALREADY_ASSIGNED "Internal error: attempt to de-assign a worker which is not already assigned"
+#define __CPP_TRANSPORT_SCHEDULING_OVERRELEASE_INFLIGHT "Internal error: over-release of number of in-flight work items"
 #define __CPP_TRANSPORT_SCHEDULING_NO_UNASSIGNED        "Internal error: attempt to schedule work, but no unassigned workers"
 #define __CPP_TRANSPORT_SCHEDULING_ASSIGN_NOT_EXIST     "Internal error: attempt to assign non-existent work item"
 #define __CPP_TRANSPORT_SCHEDULING_ASSIGN_WORKER        "to worker"
 #define __CPP_TRANSPORT_SCHEDULING_UNASSIGNED_MISMATCH  "Internal error: mismatch in number of unassigned workers"
 #define __CPP_TRANSPORT_SCHEDULING_ALREADY_INACTIVE     "Internal error: attempt to deactivate a worker which is already inactive"
+#define __CPP_TRANSPORT_SCHEDULING_UNDER_INFLIGHT       "Internal error: under-release of number of in-flight work items"
 
 #define __CPP_TRANSPORT_SEED_GROUP_NOT_FOUND_A          "Could not find a matching content group"
 #define __CPP_TRANSPORT_SEED_GROUP_NOT_FOUND_B          "to seed task"

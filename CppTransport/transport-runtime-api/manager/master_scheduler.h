@@ -203,7 +203,8 @@ namespace transport
 		        total_aggregation_time(0),
 		        number_aggregations(0),
 		        total_work_time(0),
-		        number_work(0),
+		        work_items_completed(0),
+		        work_items_in_flight(0),
             finished(false)
 			    {
 			    }
@@ -379,8 +380,11 @@ namespace transport
 		    //! Keep track of total time spent doing work, to estimate a time-to-completion
 		    boost::timer::nanosecond_type total_work_time;
 
-		    //! Keep track of total number of work items, to estimate a time-to-complation
-		    unsigned number_work;
+		    //! Keep track of total number of work items which have been fully processed, to estimate a time-to-complation
+		    unsigned int work_items_completed;
+
+		    //! Keep track of total number of work items which are still in-flight
+		    unsigned int work_items_in_flight;
 
 		    //! Points at which to emit updates
 		    std::list< unsigned int > update_stack;
@@ -410,7 +414,8 @@ namespace transport
 				this->total_aggregation_time = 0;
 				this->total_work_time = 0;
 				this->number_aggregations = 0;
-				this->number_work = 0;
+				this->work_items_completed = 0;
+				this->work_items_in_flight = 0;
 				this->timer.start();
 			}
 
@@ -628,6 +633,7 @@ namespace transport
 						else
 							{
 								this->queue.erase(u);
+								this->work_items_in_flight++;
 							}
 					}
 			}
@@ -642,7 +648,16 @@ namespace transport
 				this->worker_data[worker].mark_assigned(false);
 				this->unassigned++;
 
-				this->number_work += items;
+				this->work_items_completed += items;
+		    if(this->work_items_in_flight >= items)
+			    {
+		        this->work_items_in_flight -= items;
+			    }
+		    else
+			    {
+				    throw runtime_exception(runtime_exception::SCHEDULING_ERROR, __CPP_TRANSPORT_SCHEDULING_OVERRELEASE_INFLIGHT);
+			    }
+
 				this->total_work_time += time;
 			}
 
@@ -654,6 +669,8 @@ namespace transport
 
 				this->worker_data[worker].mark_active(false);
 				this->active--;
+
+				if(this->active == 0 && this->work_items_in_flight > 0) throw runtime_exception(runtime_exception::SCHEDULING_ERROR, __CPP_TRANSPORT_SCHEDULING_UNDER_INFLIGHT);
 			}
 
 
@@ -690,36 +707,41 @@ namespace transport
 
 				if(this->timer.elapsed().wall > __CPP_TRANSPORT_SCHEDULER_MINIMUM_UPDATE_TIME)
 					{
-						if(this->update_stack.size() > 0)
+						if(this->update_stack.size() > 0)     // any updates remaining in the queue?
 							{
-								if(this->update_stack.front() > this->queue.size())
+								if(this->update_stack.front() > this->queue.size() + this->work_items_in_flight)   // wait until items remaining (including those in flight) is small enough
 									{
 										result = true;
-										while(this->update_stack.size() > 0 && this->update_stack.front() > this->queue.size())
+										while(this->update_stack.size() > 0 && this->update_stack.front() > this->queue.size() + this->work_items_in_flight)
 											{
 												this->update_stack.pop_front();
 											}
 
 								    std::ostringstream percent_stream;
 										percent_stream << std::setprecision(3);
-										percent_stream << 100.0 * (static_cast<double>(this->number_work) / (static_cast<double>(this->number_work + this->queue.size()))) << "%";
+										percent_stream << 100.0 * (static_cast<double>(this->work_items_completed)
+											/ (static_cast<double>(this->work_items_completed + this->work_items_in_flight + this->queue.size()))) << "%";
 
 								    std::ostringstream msg_stream;
-										msg_stream << this->number_work << " " << __CPP_TRANSPORT_MASTER_SCHEDULER_WORK_ITEMS_PROCESSED
+
+								    boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
+										msg_stream << boost::posix_time::to_simple_string(now) << ": ";
+
+										msg_stream << this->work_items_completed << " " << __CPP_TRANSPORT_MASTER_SCHEDULER_WORK_ITEMS_PROCESSED
+											<< ", " << this->work_items_in_flight << " " << __CPP_TRANSPORT_MASTER_SCHEDULER_WORK_ITEMS_INFLIGHT
 											<< ", " << this->queue.size() << " " << __CPP_TRANSPORT_MASTER_SCHEDULER_REMAIN
 											<< " (~" << percent_stream.str() << " " << __CPP_TRANSPORT_MASTER_SCHEDULER_COMPLETE << ")";
 
-								    boost::timer::nanosecond_type mean_time_per_item = this->total_work_time / this->number_work;
+								    boost::timer::nanosecond_type mean_time_per_item = this->total_work_time / this->work_items_completed;
 										msg_stream << " | " << __CPP_TRANSPORT_MASTER_SCHEDULER_MEAN_TIME_PER_ITEM << " " << format_time(mean_time_per_item);
 
 										msg_stream << " | " << __CPP_TRANSPORT_MASTER_SCHEDULER_TARGET_DURATION << " " << format_time(this->current_granularity);
 
 								    boost::timer::nanosecond_type total_wallclock_time         = this->timer.elapsed().wall;
-								    boost::timer::nanosecond_type mean_wallclock_time_per_item = total_wallclock_time / this->number_work;
-								    boost::timer::nanosecond_type estimated_time_remaining     = mean_wallclock_time_per_item * static_cast<unsigned int>(this->queue.size()) + this->current_granularity;
+								    boost::timer::nanosecond_type mean_wallclock_time_per_item = total_wallclock_time / this->work_items_completed;
+								    boost::timer::nanosecond_type estimated_time_remaining     = mean_wallclock_time_per_item * static_cast<unsigned int>(this->queue.size() + this->work_items_in_flight);
 
 								    boost::posix_time::time_duration duration        = boost::posix_time::seconds(estimated_time_remaining / (1000 * 1000 * 1000));
-								    boost::posix_time::ptime         now             = boost::posix_time::second_clock::local_time();
 								    boost::posix_time::ptime         completion_time = now + duration;
 
 										msg_stream << " | " << __CPP_TRANSPORT_MASTER_SCHEDULER_COMPLETION_ESTIMATE << " "
