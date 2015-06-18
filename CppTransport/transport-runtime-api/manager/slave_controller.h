@@ -74,8 +74,8 @@ namespace transport
 		    slave_controller(boost::mpi::environment& e, boost::mpi::communicator& w,
 		                     const typename instance_manager<number>::model_finder& f,
 		                     error_callback err, warning_callback warn, message_callback msg,
-		                     unsigned int bcp = __CPP_TRANSPORT_DEFAULT_BATCHER_STORAGE,
-		                     unsigned int pcp = __CPP_TRANSPORT_DEFAULT_PIPE_STORAGE);
+		                     unsigned int bcp = CPPTRANSPORT_DEFAULT_BATCHER_STORAGE,
+		                     unsigned int pcp = CPPTRANSPORT_DEFAULT_PIPE_STORAGE);
 
 		    //! destroy a slave manager object
 		    ~slave_controller();
@@ -266,7 +266,7 @@ namespace transport
     template <typename number>
     void slave_controller<number>::wait_for_tasks(void)
 	    {
-        if(this->get_rank() == 0) throw runtime_exception(runtime_exception::MPI_ERROR, __CPP_TRANSPORT_WAIT_MASTER);
+        if(this->get_rank() == 0) throw runtime_exception(runtime_exception::MPI_ERROR, CPPTRANSPORT_WAIT_MASTER);
 
         bool finished = false;
 
@@ -317,7 +317,7 @@ namespace transport
 	                }
 
                 default:
-	                throw runtime_exception(runtime_exception::MPI_ERROR, __CPP_TRANSPORT_UNEXPECTED_MPI);
+	                throw runtime_exception(runtime_exception::MPI_ERROR, CPPTRANSPORT_UNEXPECTED_MPI);
 	            }
 	        }
 	    }
@@ -382,7 +382,7 @@ namespace transport
     void slave_controller<number>::process_task(const MPI::new_integration_payload& payload)
 	    {
         // ensure that a valid repository object has been constructed
-        if(this->repo == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NOT_SET);
+        if(this->repo == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_REPO_NOT_SET);
 
         // extract our task from the database
         // much of this is boiler-plate which is similar to master_process_task()
@@ -399,7 +399,7 @@ namespace transport
                     integration_task_record<number>* int_rec = dynamic_cast< integration_task_record<number>* >(record.get());
 
                     assert(int_rec != nullptr);
-                    if(int_rec == nullptr) throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_RECORD_CAST_FAILED);
+                    if(int_rec == nullptr) throw runtime_exception(runtime_exception::REPOSITORY_ERROR, CPPTRANSPORT_REPO_RECORD_CAST_FAILED);
 
                     integration_task<number>* tk = int_rec->get_task();
                     this->dispatch_integration_task(tk, payload);
@@ -421,7 +421,7 @@ namespace transport
                     assert(false);
 
                     std::ostringstream msg;
-                    msg << __CPP_TRANSPORT_REPO_UNKNOWN_RECORD_TYPE << " '" << payload.get_task_name() << "'";
+                    msg << CPPTRANSPORT_REPO_UNKNOWN_RECORD_TYPE << " '" << payload.get_task_name() << "'";
                     throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
 	                }
 	            }
@@ -431,14 +431,14 @@ namespace transport
             if(xe.get_exception_code() == runtime_exception::RECORD_NOT_FOUND)
 	            {
                 std::ostringstream msg;
-                msg << __CPP_TRANSPORT_REPO_MISSING_RECORD << " '" << xe.what() << "'" << __CPP_TRANSPORT_REPO_SKIPPING_TASK;
+                msg << CPPTRANSPORT_REPO_MISSING_RECORD << " '" << xe.what() << "'" << CPPTRANSPORT_REPO_SKIPPING_TASK;
                 this->error_handler(msg.str());
 	            }
             else if(xe.get_exception_code() == runtime_exception::MISSING_MODEL_INSTANCE
 	                  || xe.get_exception_code() == runtime_exception::REPOSITORY_BACKEND_ERROR)
 	            {
                 std::ostringstream msg;
-                msg << xe.what() << " " << __CPP_TRANSPORT_REPO_FOR_TASK << " '" << payload.get_task_name() << "'" << __CPP_TRANSPORT_REPO_SKIPPING_TASK;
+                msg << xe.what() << " " << CPPTRANSPORT_REPO_FOR_TASK << " '" << payload.get_task_name() << "'" << CPPTRANSPORT_REPO_SKIPPING_TASK;
                 this->error_handler(msg.str());
 	            }
             else
@@ -500,7 +500,7 @@ namespace transport
         else
 	        {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_UNKNOWN_DERIVED_TASK << " '" << tk->get_name() << "'";
+            msg << CPPTRANSPORT_UNKNOWN_DERIVED_TASK << " '" << tk->get_name() << "'";
             throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
 	        }
 	    }
@@ -614,7 +614,7 @@ namespace transport
     void slave_controller<number>::process_task(const MPI::new_derived_content_payload& payload)
 	    {
         // ensure that a valid repository object has been constructed
-        if(this->repo == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NOT_SET);
+        if(this->repo == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_REPO_NOT_SET);
 
         // extract our task from the database
         // much of this is boiler-plate which is similar to master_process_task()
@@ -636,7 +636,7 @@ namespace transport
                     output_task_record<number>* out_rec = dynamic_cast< output_task_record<number>* >(record.get());
 
                     assert(out_rec != nullptr);
-                    if(out_rec == nullptr) throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_RECORD_CAST_FAILED);
+                    if(out_rec == nullptr) throw runtime_exception(runtime_exception::REPOSITORY_ERROR, CPPTRANSPORT_REPO_RECORD_CAST_FAILED);
 
                     output_task<number>* tk = out_rec->get_task();
                     this->schedule_output(tk, payload);
@@ -653,7 +653,7 @@ namespace transport
                     assert(false);
 
                     std::ostringstream msg;
-                    msg << __CPP_TRANSPORT_REPO_UNKNOWN_RECORD_TYPE << " '" << payload.get_task_name() << "'";
+                    msg << CPPTRANSPORT_REPO_UNKNOWN_RECORD_TYPE << " '" << payload.get_task_name() << "'";
                     throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
 	                }
 	            }
@@ -664,14 +664,14 @@ namespace transport
             if(xe.get_exception_code() == runtime_exception::RECORD_NOT_FOUND)
 	            {
                 std::ostringstream msg;
-                msg << __CPP_TRANSPORT_REPO_MISSING_RECORD << " '" << xe.what() << "'" << __CPP_TRANSPORT_REPO_SKIPPING_TASK;
+                msg << CPPTRANSPORT_REPO_MISSING_RECORD << " '" << xe.what() << "'" << CPPTRANSPORT_REPO_SKIPPING_TASK;
                 this->error_handler(msg.str());
 	            }
             else if(xe.get_exception_code() == runtime_exception::MISSING_MODEL_INSTANCE
 	                  || xe.get_exception_code() == runtime_exception::REPOSITORY_BACKEND_ERROR)
 	            {
                 std::ostringstream msg;
-                msg << xe.what() << " " << __CPP_TRANSPORT_REPO_FOR_TASK << " '" << payload.get_task_name() << "'" << __CPP_TRANSPORT_REPO_SKIPPING_TASK;
+                msg << xe.what() << " " << CPPTRANSPORT_REPO_FOR_TASK << " '" << payload.get_task_name() << "'" << CPPTRANSPORT_REPO_SKIPPING_TASK;
                 this->error_handler(msg.str());
 	            }
             else
@@ -762,7 +762,7 @@ namespace transport
 				                if(product == nullptr)
 					                {
 				                    std::ostringstream msg;
-				                    msg << __CPP_TRANSPORT_TASK_NULL_DERIVED_PRODUCT << " '" << tk->get_name() << "'";
+				                    msg << CPPTRANSPORT_TASK_NULL_DERIVED_PRODUCT << " '" << tk->get_name() << "'";
 				                    throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
 					                }
 
@@ -864,7 +864,7 @@ namespace transport
     void slave_controller<number>::process_task(const MPI::new_postintegration_payload& payload)
 	    {
         // ensure that a valid repository object has been constructed
-        if(this->repo == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NOT_SET);
+        if(this->repo == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_REPO_NOT_SET);
 
         // extract our task from the database
         try
@@ -877,14 +877,14 @@ namespace transport
                 case task_record<number>::integration:
 	                {
 //                    std::ostringstream msg;
-//                    msg << __CPP_TRANSPORT_REPO_TASK_IS_INTEGRATION << " '" << payload.get_task_name() << "'";
+//                    msg << CPPTRANSPORT_REPO_TASK_IS_INTEGRATION << " '" << payload.get_task_name() << "'";
                     throw runtime_exception(runtime_exception::RECORD_NOT_FOUND, payload.get_task_name());    // RECORD_NOT_FOUND expects task name in message
 	                }
 
                 case task_record<number>::output:
 	                {
 //                    std::ostringstream msg;
-//                    msg << __CPP_TRANSPORT_REPO_TASK_IS_OUTPUT << " '" << payload.get_task_name() << "'";
+//                    msg << CPPTRANSPORT_REPO_TASK_IS_OUTPUT << " '" << payload.get_task_name() << "'";
                     throw runtime_exception(runtime_exception::RECORD_NOT_FOUND, payload.get_task_name());    // RECORD_NOT_FOUND expects task name in message
 	                }
 
@@ -893,7 +893,7 @@ namespace transport
                     postintegration_task_record<number>* pint_rec = dynamic_cast< postintegration_task_record<number>* >(record.get());
 
                     assert(pint_rec != nullptr);
-                    if(pint_rec == nullptr) throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_RECORD_CAST_FAILED);
+                    if(pint_rec == nullptr) throw runtime_exception(runtime_exception::REPOSITORY_ERROR, CPPTRANSPORT_REPO_RECORD_CAST_FAILED);
 
                     postintegration_task<number>* tk = pint_rec->get_task();
                     this->dispatch_postintegration_task(tk, payload);
@@ -905,7 +905,7 @@ namespace transport
                     assert(false);
 
                     std::ostringstream msg;
-                    msg << __CPP_TRANSPORT_REPO_UNKNOWN_RECORD_TYPE << " '" << payload.get_task_name() << "'";
+                    msg << CPPTRANSPORT_REPO_UNKNOWN_RECORD_TYPE << " '" << payload.get_task_name() << "'";
                     throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
 	                }
 	            }
@@ -915,14 +915,14 @@ namespace transport
             if(xe.get_exception_code() == runtime_exception::RECORD_NOT_FOUND)
 	            {
                 std::ostringstream msg;
-                msg << __CPP_TRANSPORT_REPO_MISSING_RECORD << " '" << xe.what() << "'" << __CPP_TRANSPORT_REPO_SKIPPING_TASK;
+                msg << CPPTRANSPORT_REPO_MISSING_RECORD << " '" << xe.what() << "'" << CPPTRANSPORT_REPO_SKIPPING_TASK;
                 this->error_handler(msg.str());
 	            }
             else if(xe.get_exception_code() == runtime_exception::MISSING_MODEL_INSTANCE
 	                  || xe.get_exception_code() == runtime_exception::REPOSITORY_BACKEND_ERROR)
 	            {
                 std::ostringstream msg;
-                msg << xe.what() << " " << __CPP_TRANSPORT_REPO_FOR_TASK << " '" << payload.get_task_name() << "'" << __CPP_TRANSPORT_REPO_SKIPPING_TASK;
+                msg << xe.what() << " " << CPPTRANSPORT_REPO_FOR_TASK << " '" << payload.get_task_name() << "'" << CPPTRANSPORT_REPO_SKIPPING_TASK;
                 this->error_handler(msg.str());
 	            }
             else
@@ -955,7 +955,7 @@ namespace transport
             if(ptk == nullptr)
 	            {
                 std::ostringstream msg;
-                msg << __CPP_TRANSPORT_EXPECTED_TWOPF_TASK << " '" << z2pf->get_parent_task()->get_name() << "'";
+                msg << CPPTRANSPORT_EXPECTED_TWOPF_TASK << " '" << z2pf->get_parent_task()->get_name() << "'";
                 throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
 	            }
 
@@ -1007,7 +1007,7 @@ namespace transport
             if(ptk == nullptr)
 	            {
                 std::ostringstream msg;
-                msg << __CPP_TRANSPORT_EXPECTED_TWOPF_TASK << " '" << z3pf->get_parent_task()->get_name() << "'";
+                msg << CPPTRANSPORT_EXPECTED_TWOPF_TASK << " '" << z3pf->get_parent_task()->get_name() << "'";
                 throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
 	            }
 
@@ -1058,7 +1058,7 @@ namespace transport
             if(ptk == nullptr)
 	            {
                 std::ostringstream msg;
-                msg << __CPP_TRANSPORT_EXPECTED_TWOPF_TASK << " '" << zfNL->get_parent_task()->get_name() << "'";
+                msg << CPPTRANSPORT_EXPECTED_TWOPF_TASK << " '" << zfNL->get_parent_task()->get_name() << "'";
                 throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
 	            }
 
@@ -1074,7 +1074,7 @@ namespace transport
         else
 	        {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_UNKNOWN_DERIVED_TASK << " '" << tk->get_name() << "'";
+            msg << CPPTRANSPORT_UNKNOWN_DERIVED_TASK << " '" << tk->get_name() << "'";
             throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
 	        }
 	    }
@@ -1211,7 +1211,7 @@ namespace transport
     void slave_controller<number>::push_temp_container(generic_batcher* batcher, unsigned int message, std::string log_message)
 	    {
         assert(batcher != nullptr);
-        if(batcher == nullptr) throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, __CPP_TRANSPORT_DATAMGR_NULL_BATCHER);
+        if(batcher == nullptr) throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, CPPTRANSPORT_DATAMGR_NULL_BATCHER);
 
         BOOST_LOG_SEV(batcher->get_log(), generic_batcher::normal) << "-- Sending " << log_message << " message for container " << batcher->get_container_path();
 
@@ -1230,8 +1230,8 @@ namespace transport
         assert(product != nullptr);
 
         // FIXME: error message tag is possibly in the wrong namespace (but error message namespaces are totally confused anyway)
-        if(pipe == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_NULL_DATAPIPE);
-        if(product == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_NULL_DERIVED_PRODUCT);
+        if(pipe == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
+        if(product == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_NULL_DERIVED_PRODUCT);
 
         BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::normal) << "-- Sending DERIVED_CONTENT_READY message for derived product '" << product->get_name() << "'";
 
@@ -1244,7 +1244,7 @@ namespace transport
         else
 	        {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_DATAMGR_DERIVED_PRODUCT_MISSING << " " << product_filename;
+            msg << CPPTRANSPORT_DATAMGR_DERIVED_PRODUCT_MISSING << " " << product_filename;
             throw runtime_exception(runtime_exception::DATAPIPE_ERROR, msg.str());
 	        }
 	    }

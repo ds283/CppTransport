@@ -8,7 +8,7 @@
 #define __SQL_query_H_
 
 
-#define __CPP_TRANSPORT_NODE_SQL_QUERY_TYPE "sql-query-type"
+#define CPPTRANSPORT_NODE_SQL_QUERY_TYPE "sql-query-type"
 
 
 #include "transport-runtime-api/derived-products/derived-content/SQL_query/SQL_policy.h"

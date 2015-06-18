@@ -189,7 +189,7 @@ namespace transport
 		              break;
 
 		            default:
-			            throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_TIME_SERIES_UNKNOWN_OPPOS);
+			            throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_PRODUCT_TIME_SERIES_UNKNOWN_OPPOS);
 			        }
 
 				    // pull out the components of the twopf which we will need

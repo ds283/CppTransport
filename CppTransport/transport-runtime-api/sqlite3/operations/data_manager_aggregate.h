@@ -30,12 +30,12 @@ namespace transport
             // duplicate background entries may be inserted, but we assume this to be harmless
             std::ostringstream copy_stmt;
             copy_stmt
-              << "ATTACH DATABASE '" << temp_ctr << "' AS " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << ";"
-              << " INSERT OR IGNORE INTO " << __CPP_TRANSPORT_SQLITE_BACKG_VALUE_TABLE
-              << " SELECT * FROM " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << __CPP_TRANSPORT_SQLITE_BACKG_VALUE_TABLE << ";"
-              << " DETACH DATABASE " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << ";";
+              << "ATTACH DATABASE '" << temp_ctr << "' AS " << CPPTRANSPORT_SQLITE_TEMPORARY_DBNAME << ";"
+              << " INSERT OR IGNORE INTO " << CPPTRANSPORT_SQLITE_BACKG_VALUE_TABLE
+              << " SELECT * FROM " << CPPTRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << CPPTRANSPORT_SQLITE_BACKG_VALUE_TABLE << ";"
+              << " DETACH DATABASE " << CPPTRANSPORT_SQLITE_TEMPORARY_DBNAME << ";";
 
-            exec(db, copy_stmt.str(), __CPP_TRANSPORT_DATACTR_BACKGROUND_COPY);
+            exec(db, copy_stmt.str(), CPPTRANSPORT_DATACTR_BACKGROUND_COPY);
           }
 
 
@@ -44,10 +44,10 @@ namespace transport
 			    {
 		        std::ostringstream copy_stmt;
 				    copy_stmt
-				      << "ATTACH DATABASE '" << temp_ctr << "' AS " __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << ";"
+				      << "ATTACH DATABASE '" << temp_ctr << "' AS " CPPTRANSPORT_SQLITE_TEMPORARY_DBNAME << ";"
 		          << " INSERT INTO " << data_traits<number, ValueType>::sqlite_table()
-			        << " SELECT * FROM " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << data_traits<number, ValueType>::sqlite_table() << ";"
-			        << " DETACH DATABASE " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << ";";
+			        << " SELECT * FROM " << CPPTRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << data_traits<number, ValueType>::sqlite_table() << ";"
+			        << " DETACH DATABASE " << CPPTRANSPORT_SQLITE_TEMPORARY_DBNAME << ";";
 
 				    exec(db, copy_stmt.str(), data_traits<number, ValueType>::copy_error_msg());
 			    }
@@ -63,16 +63,16 @@ namespace transport
             // create a temporary table with updated values
             std::stringstream create_stmt;
             create_stmt
-              << "ATTACH DATABASE '" << temp_ctr << "' AS " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << ";"
-              << " CREATE TEMP TABLE " << __CPP_TRANSPORT_SQLITE_TEMP_FNL_TABLE << " AS"
-              << " SELECT " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << fNL_table_name(type) << ".tserial AS tserial,"
-              << " " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << fNL_table_name(type) << ".BT + COALESCE(main." << fNL_table_name(type) << ".BT, 0.0) AS new_BT,"
-              << " " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << fNL_table_name(type) << ".TT + COALESCE(main." << fNL_table_name(type) << ".TT, 0.0) AS new_TT"
-              << " FROM " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << fNL_table_name(type)
+              << "ATTACH DATABASE '" << temp_ctr << "' AS " << CPPTRANSPORT_SQLITE_TEMPORARY_DBNAME << ";"
+              << " CREATE TEMP TABLE " << CPPTRANSPORT_SQLITE_TEMP_FNL_TABLE << " AS"
+              << " SELECT " << CPPTRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << fNL_table_name(type) << ".tserial AS tserial,"
+              << " " << CPPTRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << fNL_table_name(type) << ".BT + COALESCE(main." << fNL_table_name(type) << ".BT, 0.0) AS new_BT,"
+              << " " << CPPTRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << fNL_table_name(type) << ".TT + COALESCE(main." << fNL_table_name(type) << ".TT, 0.0) AS new_TT"
+              << " FROM " << CPPTRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << fNL_table_name(type)
               << " LEFT JOIN " << fNL_table_name(type)
-              << " ON " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << fNL_table_name(type) << ".tserial=main." << fNL_table_name(type) << ".tserial;";
+              << " ON " << CPPTRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << fNL_table_name(type) << ".tserial=main." << fNL_table_name(type) << ".tserial;";
 
-            exec(db, create_stmt.str(), __CPP_TRANSPORT_DATACTR_FNL_COPY);
+            exec(db, create_stmt.str(), CPPTRANSPORT_DATACTR_FNL_COPY);
 
             std::ostringstream copy_stmt;
             copy_stmt
@@ -80,14 +80,14 @@ namespace transport
               << " SELECT tserial AS tserial,"
               << " new_BT AS BT,"
               << " new_TT AS TT"
-              << " FROM temp." << __CPP_TRANSPORT_SQLITE_TEMP_FNL_TABLE << ";"
-              << " DETACH DATABASE " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << ";";
+              << " FROM temp." << CPPTRANSPORT_SQLITE_TEMP_FNL_TABLE << ";"
+              << " DETACH DATABASE " << CPPTRANSPORT_SQLITE_TEMPORARY_DBNAME << ";";
 
-            exec(db, copy_stmt.str(), __CPP_TRANSPORT_DATACTR_FNL_COPY);
+            exec(db, copy_stmt.str(), CPPTRANSPORT_DATACTR_FNL_COPY);
 
             std::stringstream drop_stmt;
-            drop_stmt << "DROP TABLE temp." << __CPP_TRANSPORT_SQLITE_TEMP_FNL_TABLE << ";";
-            exec(db, drop_stmt.str(), __CPP_TRANSPORT_DATACTR_FNL_COPY);
+            drop_stmt << "DROP TABLE temp." << CPPTRANSPORT_SQLITE_TEMP_FNL_TABLE << ";";
+            exec(db, drop_stmt.str(), CPPTRANSPORT_DATACTR_FNL_COPY);
           }
 
 
@@ -97,12 +97,12 @@ namespace transport
 	        {
             std::ostringstream copy_stmt;
             copy_stmt
-	            << "ATTACH DATABASE '" << temp_ctr << "' AS " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << ";"
-	            << " INSERT OR IGNORE INTO " << __CPP_TRANSPORT_SQLITE_WORKERS_TABLE
-	            << " SELECT * FROM " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << __CPP_TRANSPORT_SQLITE_WORKERS_TABLE << ";"
-	            << " DETACH DATABASE " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << ";";
+	            << "ATTACH DATABASE '" << temp_ctr << "' AS " << CPPTRANSPORT_SQLITE_TEMPORARY_DBNAME << ";"
+	            << " INSERT OR IGNORE INTO " << CPPTRANSPORT_SQLITE_WORKERS_TABLE
+	            << " SELECT * FROM " << CPPTRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << CPPTRANSPORT_SQLITE_WORKERS_TABLE << ";"
+	            << " DETACH DATABASE " << CPPTRANSPORT_SQLITE_TEMPORARY_DBNAME << ";";
 
-            exec(db, copy_stmt.str(), __CPP_TRANSPORT_DATACTR_WORKERS_COPY);
+            exec(db, copy_stmt.str(), CPPTRANSPORT_DATACTR_WORKERS_COPY);
 	        }
 
 
@@ -112,12 +112,12 @@ namespace transport
 	        {
             std::ostringstream copy_stmt;
             copy_stmt
-	            << "ATTACH DATABASE '" << temp_ctr << "' AS " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << ";"
-	            << " INSERT INTO " << __CPP_TRANSPORT_SQLITE_STATS_TABLE
-	            << " SELECT * FROM " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << __CPP_TRANSPORT_SQLITE_STATS_TABLE << ";"
-	            << " DETACH DATABASE " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << ";";
+	            << "ATTACH DATABASE '" << temp_ctr << "' AS " << CPPTRANSPORT_SQLITE_TEMPORARY_DBNAME << ";"
+	            << " INSERT INTO " << CPPTRANSPORT_SQLITE_STATS_TABLE
+	            << " SELECT * FROM " << CPPTRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << CPPTRANSPORT_SQLITE_STATS_TABLE << ";"
+	            << " DETACH DATABASE " << CPPTRANSPORT_SQLITE_TEMPORARY_DBNAME << ";";
 
-            exec(db, copy_stmt.str(), __CPP_TRANSPORT_DATACTR_STATISTICS_COPY);
+            exec(db, copy_stmt.str(), CPPTRANSPORT_DATACTR_STATISTICS_COPY);
 	        }
 
 
@@ -127,12 +127,12 @@ namespace transport
 	        {
             std::ostringstream copy_stmt;
             copy_stmt
-	            << "ATTACH DATABASE '" << temp_ctr << "' AS " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << ";"
+	            << "ATTACH DATABASE '" << temp_ctr << "' AS " << CPPTRANSPORT_SQLITE_TEMPORARY_DBNAME << ";"
 	            << " INSERT INTO " << data_traits<number, ValueType>::sqlite_table()
-	            << " SELECT * FROM " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << data_traits<number, ValueType>::sqlite_table() << ";"
-	            << " DETACH DATABASE " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << ";";
+	            << " SELECT * FROM " << CPPTRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << data_traits<number, ValueType>::sqlite_table() << ";"
+	            << " DETACH DATABASE " << CPPTRANSPORT_SQLITE_TEMPORARY_DBNAME << ";";
 
-            exec(db, copy_stmt.str(), __CPP_TRANSPORT_DATACTR_ICS_COPY);
+            exec(db, copy_stmt.str(), CPPTRANSPORT_DATACTR_ICS_COPY);
 	        }
 
 

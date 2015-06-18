@@ -5,8 +5,8 @@
 // To change the template use AppCode | Preferences | File Templates.
 //
 
-#ifndef __CPP_TRANSPORT_ASCIITABLE_H_
-#define __CPP_TRANSPORT_ASCIITABLE_H_
+#ifndef CPPTRANSPORT_ASCIITABLE_H_
+#define CPPTRANSPORT_ASCIITABLE_H_
 
 #include <iostream>
 #include <iomanip>
@@ -203,4 +203,4 @@ namespace transport
 
   }   // namespace transport
 
-#endif //__CPP_TRANSPORT_ASCIITABLE_H_
+#endif //CPPTRANSPORT_ASCIITABLE_H_

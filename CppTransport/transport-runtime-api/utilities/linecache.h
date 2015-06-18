@@ -21,7 +21,7 @@
 #include "boost/date_time/posix_time/posix_time.hpp"
 
 
-//#define __CPP_TRANSPORT_LINECACHE_DEBUG
+//#define CPPTRANSPORT_LINECACHE_DEBUG
 
 
 namespace transport
@@ -61,7 +61,7 @@ namespace transport
 		        //! Create a cache object
 		        cache(unsigned int cap)
 		          : capacity(cap), data_size(0), hit_counter(0), unload_counter(0)
-#ifdef __CPP_TRANSPORT_LINECACHE_DEBUG
+#ifdef CPPTRANSPORT_LINECACHE_DEBUG
 			        , copied(0)
 #endif
 			        {
@@ -76,13 +76,13 @@ namespace transport
 					      hit_counter(obj.hit_counter),
 					      tables(obj.tables)
 
-#ifdef __CPP_TRANSPORT_LINECACHE_DEBUG
+#ifdef CPPTRANSPORT_LINECACHE_DEBUG
 					    , copied(obj.copied+1)
 #endif
 
 						    {
 
-#ifdef __CPP_TRANSPORT_LINECACHE_DEBUG
+#ifdef CPPTRANSPORT_LINECACHE_DEBUG
 				        std::cerr << "WARNING -- COPYING CACHE OBJECT, COUNT = " << copied << std::endl;
 #endif
 
@@ -161,7 +161,7 @@ namespace transport
 				    //! are not invalidated by insertion or removal operations.
 		        data_table_list tables;
 
-#ifdef __CPP_TRANSPORT_LINECACHE_DEBUG
+#ifdef CPPTRANSPORT_LINECACHE_DEBUG
 		        //! Copy counter
 		        unsigned int copied;
 #endif
@@ -191,11 +191,11 @@ namespace transport
 				    //! Override default copy constructor
 				    table(const table<DataContainer, DataTag, QueryObject, HashSize>& obj)
 				      : filename(obj.filename), parent_cache(obj.parent_cache), groups(obj.groups)
-#ifdef __CPP_TRANSPORT_LINECACHE_DEBUG
+#ifdef CPPTRANSPORT_LINECACHE_DEBUG
 					    , copied(obj.copied+1)
 #endif
 					    {
-#ifdef __CPP_TRANSPORT_LINECACHE_DEBUG
+#ifdef CPPTRANSPORT_LINECACHE_DEBUG
 						    if(copied >= 2) std::cerr << "WARNING -- COPYING TABLE OBJECT, COUNT = " << copied << std::endl;
 #endif
 					    }
@@ -248,7 +248,7 @@ namespace transport
 				    //! remain valid after insertion or removal of elements
 		        serial_group_list groups;
 
-#ifdef __CPP_TRANSPORT_LINECACHE_DEBUG
+#ifdef CPPTRANSPORT_LINECACHE_DEBUG
 				    //! Copy counter
 				    unsigned int copied;
 #endif
@@ -273,12 +273,12 @@ namespace transport
 
 								//! construct a new data item
 								data_item(const DataContainer& d, DataTag& t, std::list<data_item>* p
-#ifdef __CPP_TRANSPORT_LINECACHE_DEBUG
+#ifdef CPPTRANSPORT_LINECACHE_DEBUG
 									, const std::string& tn
 #endif
 								)
 						      : data(d), tag(t.clone()), parent_list(p), last_access(boost::posix_time::microsec_clock::universal_time()), locked(true)
-#ifdef __CPP_TRANSPORT_LINECACHE_DEBUG
+#ifdef CPPTRANSPORT_LINECACHE_DEBUG
 									, table_name(tn), copied(0)
 #endif
 							    {
@@ -287,11 +287,11 @@ namespace transport
 								//! perform deep copy
 								data_item(const data_item& obj)
 									: data(obj.data), tag(obj.tag->clone()), parent_list(obj.parent_list), last_access(obj.last_access), locked(obj.locked)
-#ifdef __CPP_TRANSPORT_LINECACHE_DEBUG
+#ifdef CPPTRANSPORT_LINECACHE_DEBUG
 									, copied(obj.copied+1), table_name(obj.table_name)
 #endif
 									{
-#ifdef __CPP_TRANSPORT_LINECACHE_DEBUG
+#ifdef CPPTRANSPORT_LINECACHE_DEBUG
 										if(copied >= 2) std::cerr << "WARNING - COPYING DATA_ITEM OBJECT, COUNT = " << copied << std::endl;
 #endif
 									}
@@ -331,7 +331,7 @@ namespace transport
 								//! Return this item's access time
 								const boost::posix_time::ptime& get_last_access_time() const { return(this->last_access); }
 
-#ifdef __CPP_TRANSPORT_LINECACHE_DEBUG
+#ifdef CPPTRANSPORT_LINECACHE_DEBUG
 								//! Return this item's owning table
 								const std::string& get_table_name() const { return(this->table_name); }
 #endif
@@ -364,7 +364,7 @@ namespace transport
 								//! 'Locked' flag marks this data item as not-evictable. Prevents eviction before the client has even seen the data!
 								bool locked;
 
-#ifdef __CPP_TRANSPORT_LINECACHE_DEBUG
+#ifdef CPPTRANSPORT_LINECACHE_DEBUG
 								//! Copy count
 								unsigned int copied;
 
@@ -383,7 +383,7 @@ namespace transport
 
 						//! Create a serial_group object
 						serial_group(const QueryObject& q, typename linecache::cache<DataContainer, DataTag, QueryObject, HashSize>* p
-#ifdef __CPP_TRANSPORT_LINECACHE_DEBUG
+#ifdef CPPTRANSPORT_LINECACHE_DEBUG
 							, const std::string& tn
 #endif
 						);
@@ -397,11 +397,11 @@ namespace transport
 				      : parent_cache(obj.parent_cache),
 				        query(obj.query),
 				        cache(obj.cache)
-#ifdef __CPP_TRANSPORT_LINECACHE_DEBUG
+#ifdef CPPTRANSPORT_LINECACHE_DEBUG
 							, copied(obj.copied+1), table_name(obj.table_name)
 #endif
 							{
-#ifdef __CPP_TRANSPORT_LINECACHE_DEBUG
+#ifdef CPPTRANSPORT_LINECACHE_DEBUG
 								if(copied >= 2) std::cerr << "WARNING - COPYING SERIAL_GROUP OBJECT, COUNT = " << copied << std::endl;
 #endif
 						    for(unsigned int i = 0; i < HashSize; ++i)
@@ -454,7 +454,7 @@ namespace transport
 						//! carried out efficiently.
 						line_array cache;
 
-#ifdef __CPP_TRANSPORT_LINECACHE_DEBUG
+#ifdef CPPTRANSPORT_LINECACHE_DEBUG
 						//! Copy count
 						unsigned int copied;
 
@@ -529,7 +529,7 @@ namespace transport
 								        // reduce size of
 								        this->data_size -= (*(*t)).get_size();
 
-#ifdef __CPP_TRANSPORT_LINECACHE_DEBUG
+#ifdef CPPTRANSPORT_LINECACHE_DEBUG
 												std::ostringstream msg;
 												msg << "@@ Cache table '" << (*(*t)).get_table_name() << "': unloaded cache line '" << (*(*t)).get_tag()->name() << "' of size " << format_memory((*(*t)).get_size()) << ", last accessed " << boost::posix_time::to_simple_string((*(*t)).get_last_access_time())
 														<< ". Cache size now " << format_memory(this->data_size) << " (capacity " << format_memory(this->capacity) << ")";
@@ -556,7 +556,7 @@ namespace transport
 		    template <typename DataContainer, typename DataTag, typename QueryObject, unsigned int HashSize>
 		    table<DataContainer, DataTag, QueryObject, HashSize>::table(const std::string& fnam, cache<DataContainer, DataTag, QueryObject, HashSize>* p)
 			    : filename(fnam), parent_cache(p)
-#ifdef __CPP_TRANSPORT_LINECACHE_DEBUG
+#ifdef CPPTRANSPORT_LINECACHE_DEBUG
 			    , copied(0)
 #endif
 			    {
@@ -576,7 +576,7 @@ namespace transport
 				    if(t == this->groups.end())
 					    {
 						    this->groups.push_front( serial_group<DataContainer, DataTag, QueryObject, HashSize>(q, this->parent_cache
-#ifdef __CPP_TRANSPORT_LINECACHE_DEBUG
+#ifdef CPPTRANSPORT_LINECACHE_DEBUG
 							    , this->filename
 #endif
 						    ) );
@@ -604,13 +604,13 @@ namespace transport
         template <typename DataContainer, typename DataTag, typename QueryObject, unsigned int HashSize>
         serial_group<DataContainer, DataTag, QueryObject, HashSize>::serial_group(const QueryObject& q,
                                                                                   linecache::cache<DataContainer, DataTag, QueryObject, HashSize>* p
-#ifdef __CPP_TRANSPORT_LINECACHE_DEBUG
+#ifdef CPPTRANSPORT_LINECACHE_DEBUG
 	        , const std::string& tn
 #endif
         )
 	        : query(q.clone()),
 	          parent_cache(p)
-#ifdef __CPP_TRANSPORT_LINECACHE_DEBUG
+#ifdef CPPTRANSPORT_LINECACHE_DEBUG
 	        , copied(0), table_name(tn)
 #endif
 	        {
@@ -632,7 +632,7 @@ namespace transport
 						    tag.pull(this->query, data);
 
 								this->cache[hash].push_front( data_item(data, tag, &(this->cache[hash])
-#ifdef __CPP_TRANSPORT_LINECACHE_DEBUG
+#ifdef CPPTRANSPORT_LINECACHE_DEBUG
 									, this->table_name
 #endif
 								) );
@@ -643,7 +643,7 @@ namespace transport
 								// default -- until we explicitly unlock it below
 								this->parent_cache->advise_size_increase((*t).get_size());
 
-#ifdef __CPP_TRANSPORT_LINECACHE_DEBUG
+#ifdef CPPTRANSPORT_LINECACHE_DEBUG
 								std::ostringstream msg;
 								msg << "@@ Cache table '" << this->table_name << "': loaded cache line '" << tag.name() << "' of size " << format_memory((*t).get_size()) << ". Cache size now " << format_memory(this->parent_cache->get_size()) << " (capacity " << format_memory(this->parent_cache->get_capacity()) << ")";
 								tag.log(msg.str());

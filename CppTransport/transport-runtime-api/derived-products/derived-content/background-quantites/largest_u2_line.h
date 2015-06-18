@@ -41,7 +41,7 @@ namespace transport
 
 				    //! basic user-facing constructor
 				    largest_u2_line(const twopf_list_task<number>& tk, SQL_time_config_query tq, SQL_twopf_kconfig_query,
-                            unsigned int prec = __CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
+                            unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
 				    //! deserialization constructor
 				    largest_u2_line(Json::Value& reader, typename repository_finder<number>::task_finder& finder);
@@ -122,8 +122,8 @@ namespace transport
 					: derived_line<number>(reader, finder),
 		        time_series<number>(reader),
 						gadget(),
-						tquery(reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]),
-            kquery(reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY])
+						tquery(reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]),
+            kquery(reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY])
 					{
 						assert(this->parent_task != nullptr);
 						gadget.set_task(this->parent_task, finder);
@@ -133,10 +133,10 @@ namespace transport
 				template <typename number>
 				void largest_u2_line<number>::serialize(Json::Value& writer) const
 					{
-						writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_LARGEST_U2_LINE);
+						writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_LARGEST_U2_LINE);
 
-						this->tquery.serialize(writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]);
-            this->kquery.serialize(writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY]);
+						this->tquery.serialize(writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]);
+            this->kquery.serialize(writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY]);
 
 						this->time_series<number>::serialize(writer);
 						this->derived_line<number>::serialize(writer);
@@ -228,7 +228,7 @@ namespace transport
 							}
 						else
 							{
-                label = "$" + std::string(__CPP_TRANSPORT_LATEX_LARGEST_U2_SYMBOL) + "$";
+                label = "$" + std::string(CPPTRANSPORT_LATEX_LARGEST_U2_SYMBOL) + "$";
 
                 if(this->use_tags) label += " $" + this->make_LaTeX_tag(k) + "$";
 							}
@@ -251,7 +251,7 @@ namespace transport
               }
             else
               {
-                label = __CPP_TRANSPORT_NONLATEX_LARGEST_U2_SYMBOL;
+                label = CPPTRANSPORT_NONLATEX_LARGEST_U2_SYMBOL;
 
                 if(this->use_tags) label += " " + this->make_non_LaTeX_tag(k);
               }

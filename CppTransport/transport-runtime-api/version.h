@@ -8,7 +8,7 @@
 #define __version_H_
 
 
-#define __CPP_TRANSPORT_RUNTIME_API_VERSION (12)
+#define CPPTRANSPORT_RUNTIME_API_VERSION (12)
 
 
 #endif //__version_H_

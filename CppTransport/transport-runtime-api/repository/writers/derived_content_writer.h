@@ -143,7 +143,7 @@ namespace transport
         const output_metadata& get_metadata() const { return(this->metadata); }
 
         //! Merge list of failed serials reported by backend (not all backends may support this)
-        void merge_failure_list(const std::list<unsigned int>& failed) { throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_WRITER_FAILURE_UNSUPPORTED); }
+        void merge_failure_list(const std::list<unsigned int>& failed) { throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_REPO_WRITER_FAILURE_UNSUPPORTED); }
 
 
         // INTERNAL DATA
@@ -216,7 +216,7 @@ namespace transport
         if(!this->aggregator)
 	        {
             assert(false);
-            throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_WRITER_AGGREGATOR_UNSET);
+            throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_REPO_WRITER_AGGREGATOR_UNSET);
 	        }
 
         return this->aggregator(*this, product, used_groups);

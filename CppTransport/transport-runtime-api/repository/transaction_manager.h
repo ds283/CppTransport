@@ -207,8 +207,8 @@ namespace transport
 
 		void transaction_manager::journal_deposit(const boost::filesystem::path& journal, const boost::filesystem::path& target)
 			{
-				if(this->committed) throw runtime_exception(runtime_exception::REPOSITORY_TRANSACTION_ERROR, __CPP_TRANSPORT_REPO_TRANSACTION_COMMITTED);
-				if(this->dead)      throw runtime_exception(runtime_exception::REPOSITORY_TRANSACTION_ERROR, __CPP_TRANSPORT_REPO_TRANSACTION_DEAD);
+				if(this->committed) throw runtime_exception(runtime_exception::REPOSITORY_TRANSACTION_ERROR, CPPTRANSPORT_REPO_TRANSACTION_COMMITTED);
+				if(this->dead)      throw runtime_exception(runtime_exception::REPOSITORY_TRANSACTION_ERROR, CPPTRANSPORT_REPO_TRANSACTION_DEAD);
 
 				this->journal.push_back(new rename_record(journal, target));
 			}

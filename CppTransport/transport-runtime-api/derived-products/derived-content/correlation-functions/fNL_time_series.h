@@ -117,7 +117,7 @@ namespace transport
           : derived_line<number>(reader, finder),
             fNL_line<number>(reader),
             time_series<number>(reader),
-            tquery(reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY])
+            tquery(reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY])
           {
           }
 
@@ -201,9 +201,9 @@ namespace transport
         template <typename number>
         void fNL_time_series<number>::serialize(Json::Value& writer) const
           {
-            writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_FNL_TIME_SERIES);
+            writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_FNL_TIME_SERIES);
 
-            this->tquery.serialize(writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]);
+            this->tquery.serialize(writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]);
 
             this->derived_line<number>::serialize(writer);
             this->fNL_line<number>::serialize(writer);

@@ -4,7 +4,7 @@
 //
 
 
-#if !defined(__model_forward_declare_H_) && !defined(__CPP_TRANSPORT_MODEL_H_)
+#if !defined(__model_forward_declare_H_) && !defined(CPPTRANSPORT_MODEL_H_)
 #define __model_forward_declare_H_
 
 

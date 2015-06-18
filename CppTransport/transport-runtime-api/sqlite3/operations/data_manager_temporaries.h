@@ -31,14 +31,14 @@ namespace transport
 		            std::ostringstream msg;
 		            if(db != nullptr)
 			            {
-		                msg << __CPP_TRANSPORT_DATACTR_TEMPCTR_FAIL_A << " '" << container.string() << "' "
-			                << __CPP_TRANSPORT_DATACTR_TEMPCTR_FAIL_B << status << ": " << sqlite3_errmsg(db) << ")";
+		                msg << CPPTRANSPORT_DATACTR_TEMPCTR_FAIL_A << " '" << container.string() << "' "
+			                << CPPTRANSPORT_DATACTR_TEMPCTR_FAIL_B << status << ": " << sqlite3_errmsg(db) << ")";
 		                sqlite3_close(db);
 			            }
 		            else
 			            {
-		                msg << __CPP_TRANSPORT_DATACTR_TEMPCTR_FAIL_A << " '" << container.string() << "' "
-			                << __CPP_TRANSPORT_DATACTR_TEMPCTR_FAIL_B << status << ")";
+		                msg << CPPTRANSPORT_DATACTR_TEMPCTR_FAIL_A << " '" << container.string() << "' "
+			                << CPPTRANSPORT_DATACTR_TEMPCTR_FAIL_B << status << ")";
 			            }
 		            throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
 			        }
@@ -68,14 +68,14 @@ namespace transport
 		            std::ostringstream msg;
 		            if(db != nullptr)
 			            {
-		                msg << __CPP_TRANSPORT_DATACTR_TEMPCTR_FAIL_A << " '" << container.string() << "' "
-			                << __CPP_TRANSPORT_DATACTR_TEMPCTR_FAIL_B << status << ": " << sqlite3_errmsg(db) << ")";
+		                msg << CPPTRANSPORT_DATACTR_TEMPCTR_FAIL_A << " '" << container.string() << "' "
+			                << CPPTRANSPORT_DATACTR_TEMPCTR_FAIL_B << status << ": " << sqlite3_errmsg(db) << ")";
 		                sqlite3_close(db);
 			            }
 		            else
 			            {
-		                msg << __CPP_TRANSPORT_DATACTR_TEMPCTR_FAIL_A << " '" << container.string() << "' "
-			                << __CPP_TRANSPORT_DATACTR_TEMPCTR_FAIL_B << status << ")";
+		                msg << CPPTRANSPORT_DATACTR_TEMPCTR_FAIL_A << " '" << container.string() << "' "
+			                << CPPTRANSPORT_DATACTR_TEMPCTR_FAIL_B << status << ")";
 			            }
 		            throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
 			        }
@@ -110,14 +110,14 @@ namespace transport
 		            std::ostringstream msg;
 		            if(db != nullptr)
 			            {
-		                msg << __CPP_TRANSPORT_DATACTR_TEMPCTR_FAIL_A << " '" << container.string() << "' "
-			                << __CPP_TRANSPORT_DATACTR_TEMPCTR_FAIL_B << status << ": " << sqlite3_errmsg(db) << ")";
+		                msg << CPPTRANSPORT_DATACTR_TEMPCTR_FAIL_A << " '" << container.string() << "' "
+			                << CPPTRANSPORT_DATACTR_TEMPCTR_FAIL_B << status << ": " << sqlite3_errmsg(db) << ")";
 		                sqlite3_close(db);
 			            }
 		            else
 			            {
-		                msg << __CPP_TRANSPORT_DATACTR_TEMPCTR_FAIL_A << " '" << container.string() << "' "
-			                << __CPP_TRANSPORT_DATACTR_TEMPCTR_FAIL_B << status << ")";
+		                msg << CPPTRANSPORT_DATACTR_TEMPCTR_FAIL_A << " '" << container.string() << "' "
+			                << CPPTRANSPORT_DATACTR_TEMPCTR_FAIL_B << status << ")";
 			            }
 		            throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
 			        }
@@ -141,14 +141,14 @@ namespace transport
 		            std::ostringstream msg;
 		            if(db != nullptr)
 			            {
-		                msg << __CPP_TRANSPORT_DATACTR_TEMPCTR_FAIL_A << " '" << container.string() << "' "
-			                << __CPP_TRANSPORT_DATACTR_TEMPCTR_FAIL_B << status << ": " << sqlite3_errmsg(db) << ")";
+		                msg << CPPTRANSPORT_DATACTR_TEMPCTR_FAIL_A << " '" << container.string() << "' "
+			                << CPPTRANSPORT_DATACTR_TEMPCTR_FAIL_B << status << ": " << sqlite3_errmsg(db) << ")";
 		                sqlite3_close(db);
 			            }
 		            else
 			            {
-		                msg << __CPP_TRANSPORT_DATACTR_TEMPCTR_FAIL_A << " '" << container.string() << "' "
-			                << __CPP_TRANSPORT_DATACTR_TEMPCTR_FAIL_B << status << ")";
+		                msg << CPPTRANSPORT_DATACTR_TEMPCTR_FAIL_A << " '" << container.string() << "' "
+			                << CPPTRANSPORT_DATACTR_TEMPCTR_FAIL_B << status << ")";
 			            }
 		            throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
 			        }
@@ -174,14 +174,14 @@ namespace transport
 		            std::ostringstream msg;
 		            if(db != nullptr)
 			            {
-		                msg << __CPP_TRANSPORT_DATACTR_TEMPCTR_FAIL_A << " '" << container.string() << "' "
-			                << __CPP_TRANSPORT_DATACTR_TEMPCTR_FAIL_B << status << ": " << sqlite3_errmsg(db) << ")";
+		                msg << CPPTRANSPORT_DATACTR_TEMPCTR_FAIL_A << " '" << container.string() << "' "
+			                << CPPTRANSPORT_DATACTR_TEMPCTR_FAIL_B << status << ": " << sqlite3_errmsg(db) << ")";
 		                sqlite3_close(db);
 			            }
 		            else
 			            {
-		                msg << __CPP_TRANSPORT_DATACTR_TEMPCTR_FAIL_A << " '" << container.string() << "' "
-			                << __CPP_TRANSPORT_DATACTR_TEMPCTR_FAIL_B << status << ")";
+		                msg << CPPTRANSPORT_DATACTR_TEMPCTR_FAIL_A << " '" << container.string() << "' "
+			                << CPPTRANSPORT_DATACTR_TEMPCTR_FAIL_B << status << ")";
 			            }
 		            throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
 			        }

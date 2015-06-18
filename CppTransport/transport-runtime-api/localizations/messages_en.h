@@ -5,8 +5,8 @@
 // To change the template use AppCode | Preferences | File Templates.
 //
 
-#ifndef __CPP_TRANSPORT_MESSAGES_EN_H_
-#define __CPP_TRANSPORT_MESSAGES_EN_H_
+#ifndef CPPTRANSPORT_MESSAGES_EN_H_
+#define CPPTRANSPORT_MESSAGES_EN_H_
 
 
 #include "transport-runtime-api/localizations/messages_en/runtimeapi.h"
@@ -61,4 +61,4 @@
 #include "transport-runtime-api/localizations/messages_en/derived-products/SQL_query.h"
 
 
-#endif // __CPP_TRANSPORT_MESSAGES_EN_H_
+#endif // CPPTRANSPORT_MESSAGES_EN_H_

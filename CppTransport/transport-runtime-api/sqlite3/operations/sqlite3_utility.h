@@ -43,7 +43,7 @@ namespace transport
 		        if(status != SQLITE_OK)
 			        {
 		            std::ostringstream msg;
-		            msg << __CPP_TRANSPORT_SQLITE_UTILITY_ERROR << " " << errmsg << " [status=" << status << "]";
+		            msg << CPPTRANSPORT_SQLITE_UTILITY_ERROR << " " << errmsg << " [status=" << status << "]";
 		            throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
 			        }
 			    }
@@ -67,7 +67,7 @@ namespace transport
 		        if(status != check_code)
 			        {
 		            std::ostringstream msg;
-		            msg << __CPP_TRANSPORT_SQLITE_UTILITY_ERROR << " " << sqlite3_errmsg(db) << " [status=" << status << "]";
+		            msg << CPPTRANSPORT_SQLITE_UTILITY_ERROR << " " << sqlite3_errmsg(db) << " [status=" << status << "]";
 		            std::cerr << msg.str() << std::endl;
 				        assert(false);
 		            throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());

@@ -17,14 +17,14 @@
 #include "sqlite3.h"
 
 
-#define __CPP_TRANSPORT_NODE_FAST_FORWARD                  "fast-forward"
-#define __CPP_TRANSPORT_NODE_FAST_FORWARD_EFOLDS           "ff-efolds"
-#define __CPP_TRANSPORT_NODE_MESH_REFINEMENTS              "mesh-refinements"
-#define __CPP_TRANSPORT_NODE_END_OF_INFLATION              "end-of-inflation"
+#define CPPTRANSPORT_NODE_FAST_FORWARD                  "fast-forward"
+#define CPPTRANSPORT_NODE_FAST_FORWARD_EFOLDS           "ff-efolds"
+#define CPPTRANSPORT_NODE_MESH_REFINEMENTS              "mesh-refinements"
+#define CPPTRANSPORT_NODE_END_OF_INFLATION              "end-of-inflation"
 
-#define __CPP_TRANSPORT_NODE_TIME_RANGE                    "integration-range"
+#define CPPTRANSPORT_NODE_TIME_RANGE                    "integration-range"
 
-#define __CPP_TRANSPORT_NODE_PACKAGE_NAME                  "package"
+#define CPPTRANSPORT_NODE_PACKAGE_NAME                  "package"
 
 
 namespace transport
@@ -196,7 +196,7 @@ namespace transport
         if(times->get_steps() == 0)
 	        {
             std::ostringstream msg;
-            msg << "'" << this->get_name() << "': " << __CPP_TRANSPORT_NO_TIMES;
+            msg << "'" << this->get_name() << "': " << CPPTRANSPORT_NO_TIMES;
             throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
 	        }
 
@@ -204,9 +204,9 @@ namespace transport
         if(times->get_min() < ics.get_N_initial())
 	        {
             std::ostringstream msg;
-            msg << "'" << this->get_name() << "': " << __CPP_TRANSPORT_SAMPLES_START_TOO_EARLY_A << " ("
-              << __CPP_TRANSPORT_SAMPLES_START_TOO_EARLY_B << "=" << times->get_min() << ", "
-              << __CPP_TRANSPORT_SAMPLES_START_TOO_EARLY_C << "=" << i.get_N_initial() << ")";
+            msg << "'" << this->get_name() << "': " << CPPTRANSPORT_SAMPLES_START_TOO_EARLY_A << " ("
+              << CPPTRANSPORT_SAMPLES_START_TOO_EARLY_B << "=" << times->get_min() << ", "
+              << CPPTRANSPORT_SAMPLES_START_TOO_EARLY_C << "=" << i.get_N_initial() << ")";
             throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
 	        }
 	    }
@@ -216,12 +216,12 @@ namespace transport
     integration_task<number>::integration_task(const std::string& nm, Json::Value& reader, const initial_conditions<number>& i)
 	    : derivable_task<number>(nm, reader),
 	      ics(i),
-	      times(range_helper::deserialize<double>(reader[__CPP_TRANSPORT_NODE_TIME_RANGE])),
+	      times(range_helper::deserialize<double>(reader[CPPTRANSPORT_NODE_TIME_RANGE])),
         cached_end_of_inflation(true)
 	    {
-		    if(reader.isMember(__CPP_TRANSPORT_NODE_END_OF_INFLATION))
+		    if(reader.isMember(CPPTRANSPORT_NODE_END_OF_INFLATION))
 			    {
-		        end_of_inflation = reader[__CPP_TRANSPORT_NODE_END_OF_INFLATION].asDouble();
+		        end_of_inflation = reader[CPPTRANSPORT_NODE_END_OF_INFLATION].asDouble();
 						cached_end_of_inflation = true;
 			    }
 		    else
@@ -256,18 +256,18 @@ namespace transport
     void integration_task<number>::serialize(Json::Value& writer) const
 	    {
         // store name of package
-        writer[__CPP_TRANSPORT_NODE_PACKAGE_NAME] = this->ics.get_name();
+        writer[CPPTRANSPORT_NODE_PACKAGE_NAME] = this->ics.get_name();
 
 		    if(this->cached_end_of_inflation)
 			    {
-		        writer[__CPP_TRANSPORT_NODE_END_OF_INFLATION] = this->end_of_inflation;
+		        writer[CPPTRANSPORT_NODE_END_OF_INFLATION] = this->end_of_inflation;
 			    }
 		    else
 			    {
 				    try
 					    {
 				        // can't use get_N_end_of_inflation() because it is not const
-				        writer[__CPP_TRANSPORT_NODE_END_OF_INFLATION] = this->ics.get_model()->compute_end_of_inflation(this);
+				        writer[CPPTRANSPORT_NODE_END_OF_INFLATION] = this->ics.get_model()->compute_end_of_inflation(this);
 					    }
 						catch (end_of_inflation_not_found& xe)
 							{
@@ -277,7 +277,7 @@ namespace transport
 
         Json::Value time_data(Json::objectValue);
         this->times->serialize(time_data);
-        writer[__CPP_TRANSPORT_NODE_TIME_RANGE] = time_data;
+        writer[CPPTRANSPORT_NODE_TIME_RANGE] = time_data;
 
         // note that we do not serialize the initial conditions;
         // these are handled separately by the repository layer
@@ -371,7 +371,7 @@ namespace transport
     std::ostream& operator<<(std::ostream& out, const integration_task<number>& obj)
 	    {
         out << obj.ics << std::endl;
-//        out << __CPP_TRANSPORT_TASK_TIMES << obj.times;
+//        out << CPPTRANSPORT_TASK_TIMES << obj.times;
         return(out);
 	    }
 

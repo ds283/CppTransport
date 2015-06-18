@@ -13,7 +13,7 @@
 #include "transport-runtime-api/concepts/range_detail/common.h"
 #include "transport-runtime-api/concepts/range_detail/abstract.h"
 
-#define __CPP_TRANSPORT_NODE_SUBRANGE_ARRAY "subranges"
+#define CPPTRANSPORT_NODE_SUBRANGE_ARRAY "subranges"
 
 
 namespace transport
@@ -200,7 +200,7 @@ namespace transport
 		aggregation_range<value>::aggregation_range(Json::Value& reader)
 			: aggregation_range<value>()
 			{
-		    Json::Value array = reader[__CPP_TRANSPORT_NODE_SUBRANGE_ARRAY];
+		    Json::Value array = reader[CPPTRANSPORT_NODE_SUBRANGE_ARRAY];
 				assert(array.isArray());
 
 				for(Json::Value::iterator t = array.begin(); t != array.end(); ++t)
@@ -216,7 +216,7 @@ namespace transport
 		template <typename value>
 		void aggregation_range<value>::serialize(Json::Value& writer) const
 			{
-				writer[__CPP_TRANSPORT_NODE_RANGE_TYPE] = std::string(__CPP_TRANSPORT_NODE_RANGE_AGGREGATE);
+				writer[CPPTRANSPORT_NODE_RANGE_TYPE] = std::string(CPPTRANSPORT_NODE_RANGE_AGGREGATE);
 
 		    Json::Value array(Json::arrayValue);
 
@@ -227,7 +227,7 @@ namespace transport
 				    array.append(obj);
 			    }
 
-				writer[__CPP_TRANSPORT_NODE_SUBRANGE_ARRAY] = array;
+				writer[CPPTRANSPORT_NODE_SUBRANGE_ARRAY] = array;
 			}
 
 
@@ -252,7 +252,7 @@ namespace transport
 	        }
         else
 	        {
-            throw std::out_of_range(__CPP_TRANSPORT_RANGE_RANGE);
+            throw std::out_of_range(CPPTRANSPORT_RANGE_RANGE);
 	        }
 	    }
 
@@ -291,10 +291,10 @@ namespace transport
       {
 		    if(obj.dirty) obj.populate_grid();
 
-        out << __CPP_TRANSPORT_AGGREGATION_RANGE_A << obj.subrange_list.size() << " ";
-        out << __CPP_TRANSPORT_AGGREGATION_RANGE_B << std::endl;
+        out << CPPTRANSPORT_AGGREGATION_RANGE_A << obj.subrange_list.size() << " ";
+        out << CPPTRANSPORT_AGGREGATION_RANGE_B << std::endl;
 
-        out << __CPP_TRANSPORT_AGGREGATION_RANGE_C << std::endl;
+        out << CPPTRANSPORT_AGGREGATION_RANGE_C << std::endl;
         for(unsigned int i = 0; i < obj.grid.size(); ++i)
           {
             out << i << ". " << obj.grid[i] << std::endl;

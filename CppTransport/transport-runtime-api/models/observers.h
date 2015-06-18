@@ -86,7 +86,7 @@ namespace transport
 
         //! Create a timing observer object
         timing_observer(const time_config_database& t,
-                        boost::timer::nanosecond_type t_int=__CPP_TRANSPORT_DEFAULT_SLOW_INTEGRATION_NOTIFY,
+                        boost::timer::nanosecond_type t_int=CPPTRANSPORT_DEFAULT_SLOW_INTEGRATION_NOTIFY,
                         bool s=false, unsigned int p=3);
 
 
@@ -176,22 +176,22 @@ namespace transport
 		        msg << "-- ";
 		        if(this->first_output)
 			        {
-				        msg << __CPP_TRANSPORT_OBSERVER_SLOW_INTEGRATION;
+				        msg << CPPTRANSPORT_OBSERVER_SLOW_INTEGRATION;
 			        }
 		        else
 			        {
-				        msg << __CPP_TRANSPORT_OBSERVER_UPDATE;
+				        msg << CPPTRANSPORT_OBSERVER_UPDATE;
 			        }
 
-            msg << __CPP_TRANSPORT_OBSERVER_TIME << " = " << std::scientific << std::setprecision(this->precision) << t << " ";
+            msg << CPPTRANSPORT_OBSERVER_TIME << " = " << std::scientific << std::setprecision(this->precision) << t << " ";
 
 		        if(this->first_output)
 			        {
-				        msg << __CPP_TRANSPORT_OBSERVER_ELAPSED_FIRST;
+				        msg << CPPTRANSPORT_OBSERVER_ELAPSED_FIRST;
 			        }
 		        else
 			        {
-		            msg << __CPP_TRANSPORT_OBSERVER_ELAPSED_LATER;
+		            msg << CPPTRANSPORT_OBSERVER_ELAPSED_LATER;
 			        }
 
             msg << " =" << this->integration_timer.format();
@@ -231,7 +231,7 @@ namespace transport
                                           const time_config_database& t,
                                           unsigned int bg_sz, unsigned int ten_sz, unsigned int tw_sz,
                                           unsigned int bg_st, unsigned int ten_st, unsigned int tw_st,
-                                          boost::timer::nanosecond_type t_int = __CPP_TRANSPORT_DEFAULT_SLOW_INTEGRATION_NOTIFY,
+                                          boost::timer::nanosecond_type t_int = CPPTRANSPORT_DEFAULT_SLOW_INTEGRATION_NOTIFY,
                                           bool s = false, unsigned int p = 3);
 
 
@@ -323,8 +323,8 @@ namespace transport
         boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
         BOOST_LOG_SEV(this->batcher.get_log(), generic_batcher::normal)
 	        << "** " << boost::posix_time::to_simple_string(now) << ": "
-	        << __CPP_TRANSPORT_SOLVING_CONFIG << " " << this->k_config->serial << ", "
-	        << __CPP_TRANSPORT_INTEGRATION_TIME << " = " << format_time(this->get_integration_time());
+	        << CPPTRANSPORT_SOLVING_CONFIG << " " << this->k_config->serial << ", "
+	        << CPPTRANSPORT_INTEGRATION_TIME << " = " << format_time(this->get_integration_time());
       }
 
 
@@ -346,7 +346,7 @@ namespace transport
                                             unsigned int tw_re_k2_st, unsigned int tw_im_k2_st,
                                             unsigned int tw_re_k3_st, unsigned int tw_im_k3_st,
                                             unsigned int th_st,
-                                            boost::timer::nanosecond_type t_int = __CPP_TRANSPORT_DEFAULT_SLOW_INTEGRATION_NOTIFY,
+                                            boost::timer::nanosecond_type t_int = CPPTRANSPORT_DEFAULT_SLOW_INTEGRATION_NOTIFY,
                                             bool s = false, unsigned int p = 3);
 
 
@@ -500,8 +500,8 @@ namespace transport
         boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
         BOOST_LOG_SEV(this->batcher.get_log(), generic_batcher::normal)
 	        << "** " << boost::posix_time::to_simple_string(now) << ": "
-		        << __CPP_TRANSPORT_SOLVING_CONFIG << " " << this->k_config->serial << ", "
-		        << __CPP_TRANSPORT_INTEGRATION_TIME << " = " << format_time(this->get_integration_time());
+		        << CPPTRANSPORT_SOLVING_CONFIG << " " << this->k_config->serial << ", "
+		        << CPPTRANSPORT_INTEGRATION_TIME << " = " << format_time(this->get_integration_time());
       }
 
 
@@ -519,7 +519,7 @@ namespace transport
                                          const time_config_database& t,
                                          unsigned int bg_sz, unsigned int ten_sz, unsigned int tw_sz,
                                          unsigned int bg_st, unsigned int ten_st, unsigned int tw_st,
-                                         boost::timer::nanosecond_type t_int = __CPP_TRANSPORT_DEFAULT_SLOW_INTEGRATION_NOTIFY,
+                                         boost::timer::nanosecond_type t_int = CPPTRANSPORT_DEFAULT_SLOW_INTEGRATION_NOTIFY,
                                          bool s = false, unsigned int p = 3);
 
 
@@ -639,7 +639,7 @@ namespace transport
                                                    unsigned int tw_re_k2_st, unsigned int tw_im_k2_st,
                                                    unsigned int tw_re_k3_st, unsigned int tw_im_k3_st,
                                                    unsigned int th_st,
-                                                   boost::timer::nanosecond_type t_int=__CPP_TRANSPORT_DEFAULT_SLOW_INTEGRATION_NOTIFY,
+                                                   boost::timer::nanosecond_type t_int=CPPTRANSPORT_DEFAULT_SLOW_INTEGRATION_NOTIFY,
                                                    bool s=false, unsigned int p=3);
 
 

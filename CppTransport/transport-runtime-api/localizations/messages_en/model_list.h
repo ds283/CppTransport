@@ -4,12 +4,12 @@
 //
 
 
-#ifndef __CPP_TRANSPORT_MESSAGES_EN_MODEL_LIST_H
-#define __CPP_TRANSPORT_MESSAGES_EN_MODEL_LIST_H
+#ifndef CPPTRANSPORT_MESSAGES_EN_MODEL_LIST_H
+#define CPPTRANSPORT_MESSAGES_EN_MODEL_LIST_H
 
 
-#define __CPP_TRANSPORT_MODEL_LIST_RANGE    "Internal error: Out of range when accessing 'model_list' object"
-#define __CPP_TRANSPORT_MODEL_LIST_MISMATCH "Internal error: Unexpected number of models supplied with task"
+#define CPPTRANSPORT_MODEL_LIST_RANGE    "Internal error: Out of range when accessing 'model_list' object"
+#define CPPTRANSPORT_MODEL_LIST_MISMATCH "Internal error: Unexpected number of models supplied with task"
 
 
-#endif // __CPP_TRANSPORT_MESSAGES_EN_RANGE_H
+#endif // CPPTRANSPORT_MESSAGES_EN_RANGE_H

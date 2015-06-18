@@ -5,8 +5,8 @@
 // To change the template use AppCode | Preferences | File Templates.
 //
 
-#ifndef __CPP_TRANSPORT_MODEL_H_
-#define __CPP_TRANSPORT_MODEL_H_
+#ifndef CPPTRANSPORT_MODEL_H_
+#define CPPTRANSPORT_MODEL_H_
 
 #include <string>
 #include <vector>
@@ -126,8 +126,8 @@ namespace transport
         //! The supplied parameters should be validated.
         void offset_ics(const parameters<number>& params, const std::vector<number>& input, std::vector<number>& output,
                         double Ninit, double Ncross, double Npre,
-                        double tolerance = __CPP_TRANSPORT_DEFAULT_ICS_GAP_TOLERANCE,
-                        unsigned int time_steps = __CPP_TRANSPORT_DEFAULT_ICS_TIME_STEPS);
+                        double tolerance = CPPTRANSPORT_DEFAULT_ICS_GAP_TOLERANCE,
+                        unsigned int time_steps = CPPTRANSPORT_DEFAULT_ICS_TIME_STEPS);
 
 
 		    // WAVENUMBER NORMALIZATION
@@ -135,10 +135,10 @@ namespace transport
       public:
 
         //! Get value of H at horizon crossing, which can be used to normalize the comoving waveumbers
-        double compute_kstar(const twopf_list_task<number>* tk, unsigned int time_steps=__CPP_TRANSPORT_DEFAULT_ICS_TIME_STEPS);
+        double compute_kstar(const twopf_list_task<number>* tk, unsigned int time_steps=CPPTRANSPORT_DEFAULT_ICS_TIME_STEPS);
 
         //! Compute when the end of inflation occurs relative to the initial conditions
-        virtual double compute_end_of_inflation(const integration_task<number>* tk, double search_time=__CPP_TRANSPORT_DEFAULT_END_OF_INFLATION_SEARCH) = 0;
+        virtual double compute_end_of_inflation(const integration_task<number>* tk, double search_time=CPPTRANSPORT_DEFAULT_END_OF_INFLATION_SEARCH) = 0;
 
 		    //! Compute aH as a function of N up to the horizon-exit time of some wavenumber
 		    virtual void compute_aH(const twopf_list_task<number>* tk, std::vector<double>& N, std::vector<number>& aH, double largest_k) = 0;
@@ -310,7 +310,7 @@ namespace transport
             else
               {
                 assert(false);
-                throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_INTEGRATION_FAIL);
+                throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_INTEGRATION_FAIL);
               }
           }
       }
@@ -320,15 +320,15 @@ namespace transport
     void model<number>::write_task_data(const integration_task<number>* task, generic_batcher& batcher,
                                         double abs_err, double rel_err, double step_size, std::string stepper_name)
       {
-        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << __CPP_TRANSPORT_SOLVING_ICS_MESSAGE;
+        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << CPPTRANSPORT_SOLVING_ICS_MESSAGE;
 
         BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << *task;
 
         BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal)
-          << __CPP_TRANSPORT_STEPPER_MESSAGE    << " '"  << stepper_name
-          << "', " << __CPP_TRANSPORT_ABS_ERR   << " = " << abs_err
-          << ", "  << __CPP_TRANSPORT_REL_ERR   << " = " << rel_err
-          << ", "  << __CPP_TRANSPORT_STEP_SIZE << " = " << step_size;
+          << CPPTRANSPORT_STEPPER_MESSAGE    << " '"  << stepper_name
+          << "', " << CPPTRANSPORT_ABS_ERR   << " = " << abs_err
+          << ", "  << CPPTRANSPORT_REL_ERR   << " = " << rel_err
+          << ", "  << CPPTRANSPORT_STEP_SIZE << " = " << step_size;
       }
 
 
@@ -362,11 +362,11 @@ namespace transport
         else
           {
             assert(false);
-            throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_INTEGRATION_FAIL);
+            throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_INTEGRATION_FAIL);
           }
       }
 
 
   }    // namespace transport
 
-#endif // __CPP_TRANSPORT_MODEL_H_
+#endif // CPPTRANSPORT_MODEL_H_

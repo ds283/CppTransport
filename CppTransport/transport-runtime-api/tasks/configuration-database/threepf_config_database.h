@@ -370,7 +370,7 @@ namespace transport
             else
 	            {
                 std::ostringstream msg;
-                msg << __CPP_TRANSPORT_THREEPF_DATABASE_READ_FAIL << status << ": " << sqlite3_errmsg(handle) << ")";
+                msg << CPPTRANSPORT_THREEPF_DATABASE_READ_FAIL << status << ": " << sqlite3_errmsg(handle) << ")";
                 sqlite3_finalize(stmt);
                 throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
 	            }
@@ -511,7 +511,7 @@ namespace transport
 		      << "FOREIGN KEY(wavenumber2) REFERENCES twopf_kconfig(serial), "
 		      << "FOREIGN KEY(wavenumber3) REFERENCES twopf_kconfig(serial));";
 
-        sqlite3_operations::exec(handle, create_stmt.str(), __CPP_TRANSPORT_THREEPF_DATABASE_WRITE_FAIL);
+        sqlite3_operations::exec(handle, create_stmt.str(), CPPTRANSPORT_THREEPF_DATABASE_WRITE_FAIL);
 
         std::ostringstream insert_stmt;
 		    insert_stmt << "INSERT INTO threepf_kconfig VALUES (@serial, @kt_conventional, @kt_comoving, @alpha, @beta, @wavenumber1, @wavenumber2, @wavenumber3, @t_exit, @store_bg, @store_k1, @store_k2, @store_k3);";
@@ -525,7 +525,7 @@ namespace transport
         for(database_type::const_iterator t = this->database.begin(); t != this->database.end(); ++t, ++count)
           {
             assert(count == t->first);
-            if(count != t->first) throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_THREEPF_DATABASE_OUT_OF_ORDER);
+            if(count != t->first) throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, CPPTRANSPORT_THREEPF_DATABASE_OUT_OF_ORDER);
 
             sqlite3_operations::check_stmt(handle, sqlite3_bind_int(stmt, 1, t->second->serial));
             sqlite3_operations::check_stmt(handle, sqlite3_bind_double(stmt, 2, t->second->kt_conventional));
@@ -541,7 +541,7 @@ namespace transport
             sqlite3_operations::check_stmt(handle, sqlite3_bind_int(stmt, 12, t->second.is_twopf_k2_stored()));
             sqlite3_operations::check_stmt(handle, sqlite3_bind_int(stmt, 13, t->second.is_twopf_k3_stored()));
 
-            sqlite3_operations::check_stmt(handle, sqlite3_step(stmt), __CPP_TRANSPORT_THREEPF_DATABASE_WRITE_FAIL, SQLITE_DONE);
+            sqlite3_operations::check_stmt(handle, sqlite3_step(stmt), CPPTRANSPORT_THREEPF_DATABASE_WRITE_FAIL, SQLITE_DONE);
 
             sqlite3_operations::check_stmt(handle, sqlite3_clear_bindings(stmt));
             sqlite3_operations::check_stmt(handle, sqlite3_reset(stmt));

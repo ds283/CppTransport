@@ -73,7 +73,7 @@ namespace transport
       public:
 
         //! hash
-        virtual unsigned int hash() const override { return((this->kdata.serial*2141) % __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE); }
+        virtual unsigned int hash() const override { return((this->kdata.serial*2141) % CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE); }
 
 
         // INTERNAL DATA
@@ -131,7 +131,7 @@ namespace transport
       public:
 
         //! hash
-        virtual unsigned int hash() const override { return((this->kdata.serial*2141) % __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE); }
+        virtual unsigned int hash() const override { return((this->kdata.serial*2141) % CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE); }
 
 
         // INTERNAL DATA
@@ -189,7 +189,7 @@ namespace transport
       public:
 
         //! hash
-        virtual unsigned int hash() const override { return((this->kdata.serial*2141) % __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE); }
+        virtual unsigned int hash() const override { return((this->kdata.serial*2141) % CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE); }
 
 
         // INTERNAL DATA
@@ -247,7 +247,7 @@ namespace transport
       public:
 
         //! hash
-        virtual unsigned int hash() const override { return((this->tserial*2131) % __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE); }
+        virtual unsigned int hash() const override { return((this->tserial*2131) % CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE); }
 
 
         // INTERNAL DATA
@@ -305,7 +305,7 @@ namespace transport
       public:
 
         //! hash
-        virtual unsigned int hash() const override { return((this->tserial*2131) % __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE); }
+        virtual unsigned int hash() const override { return((this->tserial*2131) % CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE); }
 
 
         // INTERNAL DATA
@@ -363,7 +363,7 @@ namespace transport
       public:
 
         //! hash
-        virtual unsigned int hash() const override { return((this->tserial*2131) % __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE); }
+        virtual unsigned int hash() const override { return((this->tserial*2131) % CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE); }
 
 
         // INTERNAL DATA
@@ -384,9 +384,9 @@ namespace transport
 	    {
         // check that we are attached to a content group
         assert(this->pipe->validate_attached(datapipe<number>::postintegration_attached));
-        if(!this->pipe->validate_attached(datapipe<number>::postintegration_attached)) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+        if(!this->pipe->validate_attached(datapipe<number>::postintegration_attached)) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
-#ifdef __CPP_TRANSPORT_DEBUG_DATAPIPE
+#ifdef CPPTRANSPORT_DEBUG_DATAPIPE
 		    BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::datapipe_pull) << "** PULL zeta twopf time sample request, k-configuration " << this->kdata.kserial;
 #endif
 
@@ -400,9 +400,9 @@ namespace transport
     void zeta_threepf_time_data_tag<number>::pull(std::shared_ptr<derived_data::SQL_query>& query, std::vector<number>& sample)
 	    {
         assert(this->pipe->validate_attached(datapipe<number>::postintegration_attached));
-        if(!this->pipe->validate_attached(datapipe<number>::postintegration_attached)) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+        if(!this->pipe->validate_attached(datapipe<number>::postintegration_attached)) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
-#ifdef __CPP_TRANSPORT_DEBUG_DATAPIPE
+#ifdef CPPTRANSPORT_DEBUG_DATAPIPE
 		    BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::datapipe_pull) << "** PULL zeta threepf time sample request, type = real, k-configuration " << this->kdata.kserial;
 #endif
 
@@ -416,9 +416,9 @@ namespace transport
     void zeta_reduced_bispectrum_time_data_tag<number>::pull(std::shared_ptr<derived_data::SQL_query>& query, std::vector<number>& sample)
 	    {
         assert(this->pipe->validate_attached(datapipe<number>::postintegration_attached));
-        if(!this->pipe->validate_attached(datapipe<number>::postintegration_attached)) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+        if(!this->pipe->validate_attached(datapipe<number>::postintegration_attached)) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
-#ifdef __CPP_TRANSPORT_DEBUG_DATAPIPE
+#ifdef CPPTRANSPORT_DEBUG_DATAPIPE
 		    BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::datapipe_pull) << "** PULL zeta reduced bispectrum time sample request, type = real, k-configuration " << this->kdata.kserial;
 #endif
 
@@ -432,9 +432,9 @@ namespace transport
     void zeta_twopf_kconfig_data_tag<number>::pull(std::shared_ptr<derived_data::SQL_query>& query, std::vector<number>& sample)
 	    {
         assert(this->pipe->validate_attached(datapipe<number>::postintegration_attached));
-        if(!this->pipe->validate_attached(datapipe<number>::postintegration_attached)) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+        if(!this->pipe->validate_attached(datapipe<number>::postintegration_attached)) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
-#ifdef __CPP_TRANSPORT_DEBUG_DATAPIPE
+#ifdef CPPTRANSPORT_DEBUG_DATAPIPE
 		    BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::datapipe_pull) << "** PULL zeta twopf kconfig sample request, t-serial " << this->tserial;
 #endif
 
@@ -448,9 +448,9 @@ namespace transport
     void zeta_threepf_kconfig_data_tag<number>::pull(std::shared_ptr<derived_data::SQL_query>& query, std::vector<number>& sample)
 	    {
         assert(this->pipe->validate_attached(datapipe<number>::postintegration_attached));
-        if(!this->pipe->validate_attached(datapipe<number>::postintegration_attached)) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+        if(!this->pipe->validate_attached(datapipe<number>::postintegration_attached)) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
-#ifdef __CPP_TRANSPORT_DEBUG_DATAPIPE
+#ifdef CPPTRANSPORT_DEBUG_DATAPIPE
 		    BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::datapipe_pull) << "** PULL zeta threepf kconfig sample request, t-serial " << this->tserial;
 #endif
 
@@ -464,9 +464,9 @@ namespace transport
     void zeta_reduced_bispectrum_kconfig_data_tag<number>::pull(std::shared_ptr<derived_data::SQL_query>& query, std::vector<number>& sample)
 	    {
         assert(this->pipe->validate_attached(datapipe<number>::postintegration_attached));
-        if(!this->pipe->validate_attached(datapipe<number>::postintegration_attached)) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+        if(!this->pipe->validate_attached(datapipe<number>::postintegration_attached)) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
-#ifdef __CPP_TRANSPORT_DEBUG_DATAPIPE
+#ifdef CPPTRANSPORT_DEBUG_DATAPIPE
 		    BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::datapipe_pull) << "** PULL zeta reduced bispectrum kconfig sample request, t-serial " << this->tserial;
 #endif
 

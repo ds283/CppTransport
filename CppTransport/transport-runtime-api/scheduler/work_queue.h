@@ -66,7 +66,7 @@ namespace transport
                   }
                 else
                   {
-                    throw std::out_of_range(__CPP_TRANSPORT_WORK_LIST_RANGE);
+                    throw std::out_of_range(CPPTRANSPORT_WORK_LIST_RANGE);
                   }
               }
 
@@ -112,7 +112,7 @@ namespace transport
                   }
                 else
                   {
-                    throw std::out_of_range(__CPP_TRANSPORT_DEVICE_QUEUE_RANGE);
+                    throw std::out_of_range(CPPTRANSPORT_DEVICE_QUEUE_RANGE);
                   }
               }
 
@@ -176,7 +176,7 @@ namespace transport
               }
             else
               {
-                throw std::out_of_range(__CPP_TRANSPORT_WORK_QUEUE_RANGE);
+                throw std::out_of_range(CPPTRANSPORT_WORK_QUEUE_RANGE);
               }
           }
 
@@ -212,7 +212,7 @@ namespace transport
 
         if(ctx.size() == 0)
           {
-            throw std::logic_error(__CPP_TRANSPORT_NO_DEVICES);
+            throw std::logic_error(CPPTRANSPORT_NO_DEVICES);
           }
       }
 
@@ -260,34 +260,34 @@ namespace transport
     template <typename ItemType>
     std::ostream& operator<<(std::ostream& out, work_queue<ItemType>& obj)
       {
-        out << __CPP_TRANSPORT_WORK_QUEUE_OUTPUT_A << " " << obj.ctx.size() << " "
-            << (obj.ctx.size() > 1 ? __CPP_TRANSPORT_WORK_QUEUE_OUTPUT_B : __CPP_TRANSPORT_WORK_QUEUE_OUTPUT_C)
+        out << CPPTRANSPORT_WORK_QUEUE_OUTPUT_A << " " << obj.ctx.size() << " "
+            << (obj.ctx.size() > 1 ? CPPTRANSPORT_WORK_QUEUE_OUTPUT_B : CPPTRANSPORT_WORK_QUEUE_OUTPUT_C)
             << std::endl << std::endl;
 
         unsigned int d = 0;
         for(typename std::vector<typename work_queue<ItemType>::device_queue>::const_iterator t = obj.device_list.begin(); t != obj.device_list.end(); ++t, ++d)
           {
-            out << d << ". " << (*t).get_device().get_name() << " (" << __CPP_TRANSPORT_WORK_QUEUE_WEIGHT << " = " << (*t).get_weight() << "), ";
+            out << d << ". " << (*t).get_device().get_name() << " (" << CPPTRANSPORT_WORK_QUEUE_WEIGHT << " = " << (*t).get_weight() << "), ";
             if((*t).get_device().get_mem_type() == context::device::bounded)
               {
-                out << __CPP_TRANSPORT_WORK_QUEUE_MAXMEM << " = " << format_memory((*t).get_device().get_mem_size());
+                out << CPPTRANSPORT_WORK_QUEUE_MAXMEM << " = " << format_memory((*t).get_device().get_mem_size());
               }
             else
               {
-                out << __CPP_TRANSPORT_WORK_QUEUE_UNBOUNDED;
+                out << CPPTRANSPORT_WORK_QUEUE_UNBOUNDED;
               }
             out << std::endl;
 
             // loop through the queues on this device, emitting them:
             out << "   " << (*t).size() << " "
-                << ((*t).size() > 1 ? __CPP_TRANSPORT_WORK_QUEUE_QUEUES : __CPP_TRANSPORT_WORK_QUEUE_QUEUE)
+                << ((*t).size() > 1 ? CPPTRANSPORT_WORK_QUEUE_QUEUES : CPPTRANSPORT_WORK_QUEUE_QUEUE)
                 << std::endl << std::endl;
 
             for(unsigned int i = 0; i < (*t).size(); ++i)
               {
                 const typename work_queue<ItemType>::device_work_list& work = (*t)[i];
 
-                out << "   ** " << __CPP_TRANSPORT_WORK_QUEUE_QUEUE_NAME << " " << i << std::endl;
+                out << "   ** " << CPPTRANSPORT_WORK_QUEUE_QUEUE_NAME << " " << i << std::endl;
                 for(unsigned int j = 0; j < work.size(); ++j)
                   {
                     out << "     " << work[j];

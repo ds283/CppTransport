@@ -8,7 +8,7 @@
 #define __sqlite3_utility_messages_H_
 
 
-#define __CPP_TRANSPORT_SQLITE_UTILITY_ERROR "SQLite error:"
+#define CPPTRANSPORT_SQLITE_UTILITY_ERROR "SQLite error:"
 
 
 #endif //__sqlite3_utility_messages_H_

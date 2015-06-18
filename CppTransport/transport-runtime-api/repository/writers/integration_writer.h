@@ -274,7 +274,7 @@ namespace transport
         if(!this->aggregator)
 	        {
             assert(false);
-            throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_WRITER_AGGREGATOR_UNSET);
+            throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_REPO_WRITER_AGGREGATOR_UNSET);
 	        }
 
         return this->aggregator(*this, product);

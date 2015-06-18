@@ -37,13 +37,13 @@ namespace transport
 
         //! Construct a task manager using command-line arguments. The repository must exist and be named on the command line.
         task_manager(int argc, char* argv[],
-                     unsigned int bcp=__CPP_TRANSPORT_DEFAULT_BATCHER_STORAGE,
-                     unsigned int pcp=__CPP_TRANSPORT_DEFAULT_PIPE_STORAGE);
+                     unsigned int bcp=CPPTRANSPORT_DEFAULT_BATCHER_STORAGE,
+                     unsigned int pcp=CPPTRANSPORT_DEFAULT_PIPE_STORAGE);
 
         //! Construct a task manager using a previously-constructed repository object. Usually this will be used only when creating a new repository.
         task_manager(int argc, char* argv[], json_repository<number>* r,
-                     unsigned int bcp=__CPP_TRANSPORT_DEFAULT_BATCHER_STORAGE,
-                     unsigned int pcp=__CPP_TRANSPORT_DEFAULT_PIPE_STORAGE);
+                     unsigned int bcp=CPPTRANSPORT_DEFAULT_BATCHER_STORAGE,
+                     unsigned int pcp=CPPTRANSPORT_DEFAULT_PIPE_STORAGE);
 
         //! Destroy a task manager object
         ~task_manager() = default;
@@ -73,7 +73,7 @@ namespace transport
         void error(const std::string& msg) { std::cout << msg << std::endl; }
 
         //! Report a warning
-        void warn(const std::string& msg) { std::cout << __CPP_TRANSPORT_TASK_MANAGER_WARNING_LABEL << " " << msg << std::endl; }
+        void warn(const std::string& msg) { std::cout << CPPTRANSPORT_TASK_MANAGER_WARNING_LABEL << " " << msg << std::endl; }
 
         //! Report a message
         void message(const std::string& msg) { if(this->master.get_arguments().get_verbose()) std::cout << msg << std::endl; }
@@ -177,7 +177,7 @@ namespace transport
 			{
 				assert(this->repo != nullptr);
 
-				if(this->repo == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NOT_SET);
+				if(this->repo == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_REPO_NOT_SET);
 
 				return(this->repo);
 			}

@@ -67,8 +67,8 @@ namespace transport
             this->twopf_list_task<number>::twopf_db->add_record(ks[j]);
 	        }
 
-        std::cout << "'" << this->get_name() << "': " << __CPP_TRANSPORT_TASK_TWOPF_ELEMENTS_A << " " << this->twopf_db->size() << " "
-          <<__CPP_TRANSPORT_TASK_TWOPF_ELEMENTS_B << std::endl;
+        std::cout << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_TWOPF_ELEMENTS_A << " " << this->twopf_db->size() << " "
+          <<CPPTRANSPORT_TASK_TWOPF_ELEMENTS_B << std::endl;
 
         this->compute_horizon_exit_times();
 
@@ -92,7 +92,7 @@ namespace transport
     template <typename number>
     void twopf_task<number>::serialize(Json::Value& writer) const
 	    {
-        writer[__CPP_TRANSPORT_NODE_TASK_TYPE] = std::string(__CPP_TRANSPORT_NODE_TASK_TYPE_TWOPF);
+        writer[CPPTRANSPORT_NODE_TASK_TYPE] = std::string(CPPTRANSPORT_NODE_TASK_TYPE_TWOPF);
 
         this->twopf_list_task<number>::serialize(writer);
 	    }

@@ -28,7 +28,7 @@ namespace transport
 
 		        // CONSTRUCTOR, DESTRUCTOR
 
-		        wrapped_output(unsigned int width=__CPP_TRANSPORT_DEFAULT_WRAP_WIDTH)
+		        wrapped_output(unsigned int width=CPPTRANSPORT_DEFAULT_WRAP_WIDTH)
 			        : wrap_width(width),
 			          cpos(0),
 		            left_margin(0)

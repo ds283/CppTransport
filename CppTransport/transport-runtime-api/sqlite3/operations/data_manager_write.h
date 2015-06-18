@@ -28,7 +28,7 @@ namespace transport
 				    const host_information& host = batcher->get_host_information();
 
 		        std::ostringstream insert_stmt;
-				    insert_stmt << "INSERT INTO " << __CPP_TRANSPORT_SQLITE_WORKERS_TABLE << " VALUES (@workgroup, @worker, @backend, @back_stepper, @pert_stepper, @hostname, @os_name, @os_version, @os_release, @architecture, @cpu_vendor_id)";
+				    insert_stmt << "INSERT INTO " << CPPTRANSPORT_SQLITE_WORKERS_TABLE << " VALUES (@workgroup, @worker, @backend, @back_stepper, @pert_stepper, @hostname, @os_name, @os_version, @os_release, @architecture, @cpu_vendor_id)";
 
 				    sqlite3_stmt* stmt;
 				    check_stmt(db, sqlite3_prepare_v2(db, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr));
@@ -56,7 +56,7 @@ namespace transport
 		        check_stmt(db, sqlite3_bind_text(stmt, 10, host.get_architecture().c_str(), host.get_architecture().length(), SQLITE_STATIC));
 		        check_stmt(db, sqlite3_bind_text(stmt, 11, host.get_cpu_vendor_id().c_str(), host.get_cpu_vendor_id().length(), SQLITE_STATIC));
 
-				    check_stmt(db, sqlite3_step(stmt), __CPP_TRANSPORT_DATACTR_WORKER_INSERT_FAIL, SQLITE_DONE);
+				    check_stmt(db, sqlite3_step(stmt), CPPTRANSPORT_DATACTR_WORKER_INSERT_FAIL, SQLITE_DONE);
 
 				    exec(db, "END TRANSACTION");
 
@@ -73,7 +73,7 @@ namespace transport
             batcher->get_manager_handle(&db);
 
             std::ostringstream insert_stmt;
-            insert_stmt << "INSERT INTO " << __CPP_TRANSPORT_SQLITE_STATS_TABLE << " VALUES (@kserial, @integration_time, @batch_time, @steps, @refinements, @workgroup, @worker);";
+            insert_stmt << "INSERT INTO " << CPPTRANSPORT_SQLITE_STATS_TABLE << " VALUES (@kserial, @integration_time, @batch_time, @steps, @refinements, @workgroup, @worker);";
 
             sqlite3_stmt* stmt;
             check_stmt(db, sqlite3_prepare_v2(db, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr));
@@ -90,7 +90,7 @@ namespace transport
 		            check_stmt(db, sqlite3_bind_int(stmt, 6, batcher->get_worker_group()));
                 check_stmt(db, sqlite3_bind_int(stmt, 7, batcher->get_worker_number()));
 
-                check_stmt(db, sqlite3_step(stmt), __CPP_TRANSPORT_DATACTR_STATS_INSERT_FAIL, SQLITE_DONE);
+                check_stmt(db, sqlite3_step(stmt), CPPTRANSPORT_DATACTR_STATS_INSERT_FAIL, SQLITE_DONE);
 
                 check_stmt(db, sqlite3_clear_bindings(stmt));
                 check_stmt(db, sqlite3_reset(stmt));
@@ -269,16 +269,16 @@ namespace transport
 
 		        // first, inject all new BT and TT values into a temporary table
             std::stringstream create_stmt;
-		        create_stmt << "CREATE TEMP TABLE " << __CPP_TRANSPORT_SQLITE_INSERT_FNL_TABLE << " ("
+		        create_stmt << "CREATE TEMP TABLE " << CPPTRANSPORT_SQLITE_INSERT_FNL_TABLE << " ("
 			        << "tserial INTEGER, "
 		          << "BT      DOUBLE, "
 			        << "TT      DOUBLE, "
 		          << "PRIMARY KEY (tserial)"
 		          << ");";
-		        exec(db, create_stmt.str(), __CPP_TRANSPORT_DATACTR_FNL_DATATAB_FAIL);
+		        exec(db, create_stmt.str(), CPPTRANSPORT_DATACTR_FNL_DATATAB_FAIL);
 
             std::ostringstream insert_stmt;
-            insert_stmt << "INSERT INTO temp." << __CPP_TRANSPORT_SQLITE_INSERT_FNL_TABLE << " VALUES (@tserial, @BT, @TT);";
+            insert_stmt << "INSERT INTO temp." << CPPTRANSPORT_SQLITE_INSERT_FNL_TABLE << " VALUES (@tserial, @BT, @TT);";
 
             sqlite3_stmt* stmt;
             check_stmt(db, sqlite3_prepare_v2(db, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr));
@@ -289,7 +289,7 @@ namespace transport
                 check_stmt(db, sqlite3_bind_double(stmt, 2, static_cast<double>(t->BT)));
                 check_stmt(db, sqlite3_bind_double(stmt, 3, static_cast<double>(t->TT)));
 
-                check_stmt(db, sqlite3_step(stmt), __CPP_TRANSPORT_DATACTR_FNL_DATATAB_FAIL, SQLITE_DONE);
+                check_stmt(db, sqlite3_step(stmt), CPPTRANSPORT_DATACTR_FNL_DATATAB_FAIL, SQLITE_DONE);
 
                 check_stmt(db, sqlite3_clear_bindings(stmt));
                 check_stmt(db, sqlite3_reset(stmt));
@@ -298,13 +298,13 @@ namespace transport
 		        // now create a second temporary table which merges results from the existing fNL table
 		        // and the new one we have just constructed
             std::stringstream create_stmt2;
-		        create_stmt2 << "CREATE TEMP TABLE " << __CPP_TRANSPORT_SQLITE_TEMP_FNL_TABLE << " AS"
-		          << " SELECT temp." << __CPP_TRANSPORT_SQLITE_INSERT_FNL_TABLE << ".tserial AS tserial,"
-		          << " temp." << __CPP_TRANSPORT_SQLITE_INSERT_FNL_TABLE << ".BT + COALESCE(" << fNL_table_name(type) << ".BT, 0.0) AS new_BT,"
-		          << " temp." << __CPP_TRANSPORT_SQLITE_INSERT_FNL_TABLE << ".TT + COALESCE(" << fNL_table_name(type) << ".TT, 0.0) AS new_TT"
-		          << " FROM temp." << __CPP_TRANSPORT_SQLITE_INSERT_FNL_TABLE << " LEFT JOIN " << fNL_table_name(type)
-		          << " ON temp." << __CPP_TRANSPORT_SQLITE_INSERT_FNL_TABLE << ".tserial=" << fNL_table_name(type) << ".tserial;";
-		        exec(db, create_stmt2.str(), __CPP_TRANSPORT_DATACTR_FNL_DATATAB_FAIL);
+		        create_stmt2 << "CREATE TEMP TABLE " << CPPTRANSPORT_SQLITE_TEMP_FNL_TABLE << " AS"
+		          << " SELECT temp." << CPPTRANSPORT_SQLITE_INSERT_FNL_TABLE << ".tserial AS tserial,"
+		          << " temp." << CPPTRANSPORT_SQLITE_INSERT_FNL_TABLE << ".BT + COALESCE(" << fNL_table_name(type) << ".BT, 0.0) AS new_BT,"
+		          << " temp." << CPPTRANSPORT_SQLITE_INSERT_FNL_TABLE << ".TT + COALESCE(" << fNL_table_name(type) << ".TT, 0.0) AS new_TT"
+		          << " FROM temp." << CPPTRANSPORT_SQLITE_INSERT_FNL_TABLE << " LEFT JOIN " << fNL_table_name(type)
+		          << " ON temp." << CPPTRANSPORT_SQLITE_INSERT_FNL_TABLE << ".tserial=" << fNL_table_name(type) << ".tserial;";
+		        exec(db, create_stmt2.str(), CPPTRANSPORT_DATACTR_FNL_DATATAB_FAIL);
 
 		        // finally, copy or update values back into the main table
             std::stringstream copy_stmt;
@@ -313,13 +313,13 @@ namespace transport
 			        << " SELECT tserial AS tserial,"
 		          << " new_BT AS BT,"
 			        << " new_TT AS TT"
-		          << " FROM temp." << __CPP_TRANSPORT_SQLITE_TEMP_FNL_TABLE << ";";
-		        exec(db, copy_stmt.str(), __CPP_TRANSPORT_DATACTR_FNL_DATATAB_FAIL);
+		          << " FROM temp." << CPPTRANSPORT_SQLITE_TEMP_FNL_TABLE << ";";
+		        exec(db, copy_stmt.str(), CPPTRANSPORT_DATACTR_FNL_DATATAB_FAIL);
 
             std::stringstream drop_stmt;
-		        drop_stmt << "DROP TABLE temp." << __CPP_TRANSPORT_SQLITE_INSERT_FNL_TABLE << ";"
-		          << " DROP TABLE temp." << __CPP_TRANSPORT_SQLITE_TEMP_FNL_TABLE << ";";
-		        exec(db, drop_stmt.str(), __CPP_TRANSPORT_DATACTR_FNL_DATATAB_FAIL);
+		        drop_stmt << "DROP TABLE temp." << CPPTRANSPORT_SQLITE_INSERT_FNL_TABLE << ";"
+		          << " DROP TABLE temp." << CPPTRANSPORT_SQLITE_TEMP_FNL_TABLE << ";";
+		        exec(db, drop_stmt.str(), CPPTRANSPORT_DATACTR_FNL_DATATAB_FAIL);
 
             exec(db, "END TRANSACTION;");
             check_stmt(db, sqlite3_finalize(stmt));

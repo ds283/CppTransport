@@ -137,7 +137,7 @@ namespace transport
             data_type(continuous_data)
           {
             if(a.size() != d.size())
-              throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_DATALINE_AXIS_MISMATCH);
+              throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_PRODUCT_DATALINE_AXIS_MISMATCH);
 
             if(!spectral_index)
               {

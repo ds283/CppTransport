@@ -98,7 +98,7 @@ namespace transport
         ptk_as_threepf = dynamic_cast< threepf_task<number>* >(this->ptk);
         assert(ptk_as_threepf != nullptr);
 
-        if(ptk_as_threepf == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_ZETA_THREEPF_CAST_FAIL);
+        if(ptk_as_threepf == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_ZETA_THREEPF_CAST_FAIL);
 	    }
 
 
@@ -110,9 +110,9 @@ namespace transport
         ptk_as_threepf = dynamic_cast< threepf_task<number>* >(this->ptk);
         assert(ptk_as_threepf != nullptr);
 
-        if(ptk_as_threepf == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_ZETA_THREEPF_CAST_FAIL);
+        if(ptk_as_threepf == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_ZETA_THREEPF_CAST_FAIL);
 
-        this->paired = reader[__CPP_TRANSPORT_NODE_POSTINTEGRATION_TASK_PAIRED].asBool();
+        this->paired = reader[CPPTRANSPORT_NODE_POSTINTEGRATION_TASK_PAIRED].asBool();
 	    }
 
 
@@ -125,15 +125,15 @@ namespace transport
         ptk_as_threepf = dynamic_cast< threepf_task<number>* >(this->ptk);
         assert(ptk_as_threepf != nullptr);
 
-        if(ptk_as_threepf == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_ZETA_THREEPF_CAST_FAIL);
+        if(ptk_as_threepf == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_ZETA_THREEPF_CAST_FAIL);
 	    }
 
 
     template <typename number>
     void zeta_threepf_task<number>::serialize(Json::Value& writer) const
 	    {
-        writer[__CPP_TRANSPORT_NODE_TASK_TYPE]                   = std::string(__CPP_TRANSPORT_NODE_TASK_TYPE_ZETA_THREEPF);
-        writer[__CPP_TRANSPORT_NODE_POSTINTEGRATION_TASK_PAIRED] = this->paired;
+        writer[CPPTRANSPORT_NODE_TASK_TYPE]                   = std::string(CPPTRANSPORT_NODE_TASK_TYPE_ZETA_THREEPF);
+        writer[CPPTRANSPORT_NODE_POSTINTEGRATION_TASK_PAIRED] = this->paired;
 
         this->zeta_twopf_list_task<number>::serialize(writer);
 	    }

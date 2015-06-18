@@ -188,7 +188,7 @@ namespace transport
 		              break;
 
 		            default:
-			            throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_TIME_SERIES_UNKNOWN_OPPOS);
+			            throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_PRODUCT_TIME_SERIES_UNKNOWN_OPPOS);
 			        }
 
 		        typename datapipe<number>::time_data_handle& t_handle = pipe.new_time_data_handle(tquery);

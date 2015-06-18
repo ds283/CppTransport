@@ -96,8 +96,8 @@ namespace transport
 							    {
 						        case unset_axis:
 						        case efolds_axis:
-			                if(this->typeset_with_LaTeX) this->internal_set_x_label_text(__CPP_TRANSPORT_PRODUCT_TIME_SERIES_PLOT_X_LABEL_LATEX);
-			                else                         this->internal_set_x_label_text(__CPP_TRANSPORT_PRODUCT_TIME_SERIES_PLOT_X_LABEL_NOLATEX);
+			                if(this->typeset_with_LaTeX) this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_TIME_SERIES_PLOT_X_LABEL_LATEX);
+			                else                         this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_TIME_SERIES_PLOT_X_LABEL_NOLATEX);
 							        break;
 
 						        default:

@@ -183,7 +183,7 @@ namespace transport
 
         virtual void backend_process_backg(const background_task<number>* tk, typename model<number>::backg_history& solution, bool silent=false) override;
 
-        virtual double compute_end_of_inflation(const integration_task<number>* tk, double search_time=__CPP_TRANSPORT_DEFAULT_END_OF_INFLATION_SEARCH) override;
+        virtual double compute_end_of_inflation(const integration_task<number>* tk, double search_time=CPPTRANSPORT_DEFAULT_END_OF_INFLATION_SEARCH) override;
 
 		    virtual void compute_aH(const twopf_list_task<number>* tk, std::vector<double>& N, std::vector<number>& aH, double largest_k) override;
 
@@ -287,7 +287,7 @@ namespace transport
         else
           {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_WRONG_ICS_A << __coords.size() << __CPP_TRANSPORT_WRONG_ICS_B << 2*$$__NUMBER_FIELDS << ")";
+            msg << CPPTRANSPORT_WRONG_ICS_A << __coords.size() << CPPTRANSPORT_WRONG_ICS_B << 2*$$__NUMBER_FIELDS << ")";
             throw std::out_of_range(msg.str());
           }
       }
@@ -311,7 +311,7 @@ namespace transport
         else
           {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_WRONG_ICS_A << __coords.size() << __CPP_TRANSPORT_WRONG_ICS_B << 2*$$__NUMBER_FIELDS << ")";
+            msg << CPPTRANSPORT_WRONG_ICS_A << __coords.size() << CPPTRANSPORT_WRONG_ICS_B << 2*$$__NUMBER_FIELDS << ")";
             throw std::out_of_range(msg.str());
           }
       }
@@ -335,7 +335,7 @@ namespace transport
         else
           {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_WRONG_ICS_A << __coords.size() << __CPP_TRANSPORT_WRONG_ICS_B << 2*$$__NUMBER_FIELDS << ")";
+            msg << CPPTRANSPORT_WRONG_ICS_A << __coords.size() << CPPTRANSPORT_WRONG_ICS_B << 2*$$__NUMBER_FIELDS << ")";
             throw std::out_of_range(msg.str());
           }
       }
@@ -370,9 +370,9 @@ namespace transport
           {
             std::ostringstream msg;
 
-            msg << __CPP_TRANSPORT_WRONG_ICS_A << __input.size() << "]"
-                << __CPP_TRANSPORT_WRONG_ICS_B << $$__NUMBER_FIELDS
-                << __CPP_TRANSPORT_WRONG_ICS_C << 2*$$__NUMBER_FIELDS << "]";
+            msg << CPPTRANSPORT_WRONG_ICS_A << __input.size() << "]"
+                << CPPTRANSPORT_WRONG_ICS_B << $$__NUMBER_FIELDS
+                << CPPTRANSPORT_WRONG_ICS_C << 2*$$__NUMBER_FIELDS << "]";
 
             throw std::out_of_range(msg.str());
           }
@@ -395,7 +395,7 @@ namespace transport
           {
             std::ostringstream msg;
 
-            msg << __CPP_TRANSPORT_WRONG_PARAMS_A << input.size() << __CPP_TRANSPORT_WRONG_PARAMS_B << $$__NUMBER_PARAMS << ")";
+            msg << CPPTRANSPORT_WRONG_PARAMS_A << input.size() << CPPTRANSPORT_WRONG_PARAMS_B << $$__NUMBER_PARAMS << ")";
 
             throw std::out_of_range(msg.str());
           }
@@ -1181,7 +1181,7 @@ namespace transport
         catch (end_of_inflation_not_found& xe)
           {
             // try to fall back on a sensible default
-            N_range = tk->get_N_initial() + __CPP_TRANSPORT_DEFAULT_END_OF_INFLATION_SEARCH;
+            N_range = tk->get_N_initial() + CPPTRANSPORT_DEFAULT_END_OF_INFLATION_SEARCH;
           }
 
         auto range = boost::numeric::odeint::make_const_step_time_range(stepper, system, x, tk->get_N_initial(), N_range, 0.01);
@@ -1198,7 +1198,7 @@ namespace transport
 				if(iter == boost::end(range))
 					{
 						assert(false);
-				    throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_FAIL_COMPUTE_T_EXIT);
+				    throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_FAIL_COMPUTE_T_EXIT);
 					}
 			}
 

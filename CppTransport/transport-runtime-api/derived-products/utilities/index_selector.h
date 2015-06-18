@@ -5,8 +5,8 @@
 // To change the template use AppCode | Preferences | File Templates.
 //
 
-#ifndef __CPP_TRANSPORT_INDEX_SELECTOR_H_
-#define __CPP_TRANSPORT_INDEX_SELECTOR_H_
+#ifndef CPPTRANSPORT_INDEX_SELECTOR_H_
+#define CPPTRANSPORT_INDEX_SELECTOR_H_
 
 
 #include <array>
@@ -20,13 +20,13 @@
 #include "transport-runtime-api/exceptions.h"
 
 
-#define __CPP_TRANSPORT_NODE_INDEX_ROOT        "index-selection"
+#define CPPTRANSPORT_NODE_INDEX_ROOT        "index-selection"
 
-#define __CPP_TRANSPORT_NODE_INDEX_RANGE       "index-range"
-#define __CPP_TRANSPORT_NODE_INDEX_FIELDS      "num-fields"
-#define __CPP_TRANSPORT_NODE_INDEX_RANGE_ALL   "all"
-#define __CPP_TRANSPORT_NODE_INDEX_RANGE_FIELD "field"
-#define __CPP_TRANSPORT_NODE_INDEX_TOGGLES     "enabled-indices"
+#define CPPTRANSPORT_NODE_INDEX_RANGE       "index-range"
+#define CPPTRANSPORT_NODE_INDEX_FIELDS      "num-fields"
+#define CPPTRANSPORT_NODE_INDEX_RANGE_ALL   "all"
+#define CPPTRANSPORT_NODE_INDEX_RANGE_FIELD "field"
+#define CPPTRANSPORT_NODE_INDEX_TOGGLES     "enabled-indices"
 
 
 namespace transport
@@ -218,8 +218,8 @@ namespace transport
 		template <unsigned int indices>
 		void index_selector<indices>::serialize(Json::Value& writer) const
 			{
-		    writer[__CPP_TRANSPORT_NODE_INDEX_ROOT][__CPP_TRANSPORT_NODE_INDEX_RANGE]  = this->range == all_range ? std::string(__CPP_TRANSPORT_NODE_INDEX_RANGE_ALL) : std::string(__CPP_TRANSPORT_NODE_INDEX_RANGE_FIELD);
-		    writer[__CPP_TRANSPORT_NODE_INDEX_ROOT][__CPP_TRANSPORT_NODE_INDEX_FIELDS] = this->N_fields;
+		    writer[CPPTRANSPORT_NODE_INDEX_ROOT][CPPTRANSPORT_NODE_INDEX_RANGE]  = this->range == all_range ? std::string(CPPTRANSPORT_NODE_INDEX_RANGE_ALL) : std::string(CPPTRANSPORT_NODE_INDEX_RANGE_FIELD);
+		    writer[CPPTRANSPORT_NODE_INDEX_ROOT][CPPTRANSPORT_NODE_INDEX_FIELDS] = this->N_fields;
 
 		    Json::Value toggle_array(Json::arrayValue);
 				for(unsigned int i = 0; i < this->size; ++i)
@@ -227,29 +227,29 @@ namespace transport
 				    Json::Value elt = static_cast<bool>(this->enabled[i]);
 						toggle_array.append(elt);
 					}
-				writer[__CPP_TRANSPORT_NODE_INDEX_ROOT][__CPP_TRANSPORT_NODE_INDEX_TOGGLES] = toggle_array;
+				writer[CPPTRANSPORT_NODE_INDEX_ROOT][CPPTRANSPORT_NODE_INDEX_TOGGLES] = toggle_array;
 			}
 
 
 		template <unsigned int indices>
 		index_selector<indices>::index_selector(Json::Value& reader)
 			{
-		    std::string range_string = reader[__CPP_TRANSPORT_NODE_INDEX_ROOT][__CPP_TRANSPORT_NODE_INDEX_RANGE].asString();
-		    N_fields                 = reader[__CPP_TRANSPORT_NODE_INDEX_ROOT][__CPP_TRANSPORT_NODE_INDEX_FIELDS].asUInt();
+		    std::string range_string = reader[CPPTRANSPORT_NODE_INDEX_ROOT][CPPTRANSPORT_NODE_INDEX_RANGE].asString();
+		    N_fields                 = reader[CPPTRANSPORT_NODE_INDEX_ROOT][CPPTRANSPORT_NODE_INDEX_FIELDS].asUInt();
 
-		    if(range_string == __CPP_TRANSPORT_NODE_INDEX_RANGE_ALL)        range = index_selector<indices>::all_range;
-		    else if(range_string == __CPP_TRANSPORT_NODE_INDEX_RANGE_FIELD) range = index_selector<indices>::field_range;
+		    if(range_string == CPPTRANSPORT_NODE_INDEX_RANGE_ALL)        range = index_selector<indices>::all_range;
+		    else if(range_string == CPPTRANSPORT_NODE_INDEX_RANGE_FIELD) range = index_selector<indices>::field_range;
 		    else
 			    {
 		        std::ostringstream msg;
-		        msg << __CPP_TRANSPORT_INDEX_UNKNOWN_RANGE_TYPE << " '" << range_string << "'";
+		        msg << CPPTRANSPORT_INDEX_UNKNOWN_RANGE_TYPE << " '" << range_string << "'";
 		        throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
 			    }
 
 		    // read array of toggles
 
 				enabled.clear();
-		    Json::Value toggle_array = reader[__CPP_TRANSPORT_NODE_INDEX_ROOT][__CPP_TRANSPORT_NODE_INDEX_TOGGLES];
+		    Json::Value toggle_array = reader[CPPTRANSPORT_NODE_INDEX_ROOT][CPPTRANSPORT_NODE_INDEX_TOGGLES];
 				assert(toggle_array.isArray());
 
 				for(Json::Value::iterator t = toggle_array.begin(); t != toggle_array.end(); ++t)
@@ -269,8 +269,8 @@ namespace transport
 		    if(size != enabled.size())
 			    {
 		        std::ostringstream msg;
-		        msg << __CPP_TRANSPORT_INDEX_PRESET_MISMATCH << size << ", "
-			        << __CPP_TRANSPORT_INDEX_PRESET_MISMATCH_A << enabled.size();
+		        msg << CPPTRANSPORT_INDEX_PRESET_MISMATCH << size << ", "
+			        << CPPTRANSPORT_INDEX_PRESET_MISMATCH_A << enabled.size();
 		        throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
 			    }
 
@@ -337,4 +337,4 @@ namespace transport
 
 	}  // namespace transport
 
-#endif // __CPP_TRANSPORT_INDEX_SELECTOR_H_
+#endif // CPPTRANSPORT_INDEX_SELECTOR_H_

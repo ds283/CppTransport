@@ -4,8 +4,8 @@
 //
 //
 
-#ifndef __CPP_TRANSPORT_SPLINE_H_
-#define __CPP_TRANSPORT_SPLINE_H_
+#ifndef CPPTRANSPORT_SPLINE_H_
+#define CPPTRANSPORT_SPLINE_H_
 
 
 #include <vector>
@@ -164,4 +164,4 @@ namespace transport
   }   // namespace transport
 
 
-#endif // __CPP_TRANSPORT_SPLINE_H_
+#endif // CPPTRANSPORT_SPLINE_H_

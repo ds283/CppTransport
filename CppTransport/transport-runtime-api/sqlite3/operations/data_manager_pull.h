@@ -58,9 +58,9 @@ namespace transport
           {
             assert(db != nullptr);
 
-            derived_data::SQL_policy policy(__CPP_TRANSPORT_SQLITE_TIME_SAMPLE_TABLE, "serial",
-                                            __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE, "serial",
-                                            __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE, "serial",
+            derived_data::SQL_policy policy(CPPTRANSPORT_SQLITE_TIME_SAMPLE_TABLE, "serial",
+                                            CPPTRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE, "serial",
+                                            CPPTRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE, "serial",
                                             "wavenumber1", "wavenumber2", "wavenumber3");
 
             // pull out the set of time-sample points matching serial numbers in the temporary table
@@ -92,7 +92,7 @@ namespace transport
                 else
                   {
                     std::ostringstream msg;
-                    msg << __CPP_TRANSPORT_DATAMGR_TIME_SERIAL_READ_FAIL << status << ": " << sqlite3_errmsg(db) << ")";
+                    msg << CPPTRANSPORT_DATAMGR_TIME_SERIAL_READ_FAIL << status << ": " << sqlite3_errmsg(db) << ")";
                     sqlite3_finalize(stmt);
                     throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, msg.str());
                   }
@@ -109,9 +109,9 @@ namespace transport
           {
             assert(db != nullptr);
 
-            derived_data::SQL_policy policy(__CPP_TRANSPORT_SQLITE_TIME_SAMPLE_TABLE, "serial",
-                                            __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE, "serial",
-                                            __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE, "serial",
+            derived_data::SQL_policy policy(CPPTRANSPORT_SQLITE_TIME_SAMPLE_TABLE, "serial",
+                                            CPPTRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE, "serial",
+                                            CPPTRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE, "serial",
                                             "wavenumber1", "wavenumber2", "wavenumber3");
 
             // pull out the set of k-sample points matching serial numbers in the temporary table
@@ -147,7 +147,7 @@ namespace transport
                 else
                   {
                     std::ostringstream msg;
-                    msg << __CPP_TRANSPORT_DATAMGR_KCONFIG_SERIAL_READ_FAIL << status << ": " << sqlite3_errmsg(db) << ")";
+                    msg << CPPTRANSPORT_DATAMGR_KCONFIG_SERIAL_READ_FAIL << status << ": " << sqlite3_errmsg(db) << ")";
                     sqlite3_finalize(stmt);
                     throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, msg.str());
                   }
@@ -164,9 +164,9 @@ namespace transport
           {
             assert(db != nullptr);
 
-            derived_data::SQL_policy policy(__CPP_TRANSPORT_SQLITE_TIME_SAMPLE_TABLE, "serial",
-                                            __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE, "serial",
-                                            __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE, "serial",
+            derived_data::SQL_policy policy(CPPTRANSPORT_SQLITE_TIME_SAMPLE_TABLE, "serial",
+                                            CPPTRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE, "serial",
+                                            CPPTRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE, "serial",
                                             "wavenumber1", "wavenumber2", "wavenumber3");
 
             // create a temporary table which contains the set of configuration-sample points
@@ -191,11 +191,11 @@ namespace transport
               << " temp.wavenumber3 AS wavenumber1,"
 	            << " temp.t_exit AS t_exit"
               << " FROM (" << query->make_query(policy, false) << ") temp"
-              << " INNER JOIN " << __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE << " AS tpf1"
+              << " INNER JOIN " << CPPTRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE << " AS tpf1"
               << " ON temp.wavenumber1=tpf1.serial"
-              << " INNER JOIN " << __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE << " AS tpf2"
+              << " INNER JOIN " << CPPTRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE << " AS tpf2"
               << " ON temp.wavenumber2=tpf2.serial"
-              << " INNER JOIN " << __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE << " AS tpf3"
+              << " INNER JOIN " << CPPTRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE << " AS tpf3"
               << " ON temp.wavenumber3=tpf3.serial"
               << " ORDER BY temp.serial;";
 
@@ -232,7 +232,7 @@ namespace transport
                 else
                   {
                     std::ostringstream msg;
-                    msg << __CPP_TRANSPORT_DATAMGR_KCONFIG_SERIAL_READ_FAIL << status << ": " << sqlite3_errmsg(db) << ")";
+                    msg << CPPTRANSPORT_DATAMGR_KCONFIG_SERIAL_READ_FAIL << status << ": " << sqlite3_errmsg(db) << ")";
                     sqlite3_finalize(stmt);
                     throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, msg.str());
                   }
@@ -248,9 +248,9 @@ namespace transport
 	        {
             assert(db != nullptr);
 
-            derived_data::SQL_policy policy(__CPP_TRANSPORT_SQLITE_TIME_SAMPLE_TABLE, "serial",
-                                            __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE, "serial",
-                                            __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE, "serial",
+            derived_data::SQL_policy policy(CPPTRANSPORT_SQLITE_TIME_SAMPLE_TABLE, "serial",
+                                            CPPTRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE, "serial",
+                                            CPPTRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE, "serial",
                                             "wavenumber1", "wavenumber2", "wavenumber3");
 
             // pull out matching k-statistics data
@@ -268,10 +268,10 @@ namespace transport
 	            << " workers.back_stepper AS back_stepper,"
 	            << " workers.pert_stepper AS pert_stepper,"
 	            << " workers.hostname AS hostname"
-	            << " FROM (SELECT * FROM " << __CPP_TRANSPORT_SQLITE_STATS_TABLE
+	            << " FROM (SELECT * FROM " << CPPTRANSPORT_SQLITE_STATS_TABLE
 	            << " INNER JOIN (" << query->make_query(policy, true) << ") tpf"
-	            << " ON " << __CPP_TRANSPORT_SQLITE_STATS_TABLE << ".kserial=tpf.serial) temp"
-	            << " INNER JOIN " << __CPP_TRANSPORT_SQLITE_WORKERS_TABLE << " workers ON workers.workgroup=temp.workgroup"
+	            << " ON " << CPPTRANSPORT_SQLITE_STATS_TABLE << ".kserial=tpf.serial) temp"
+	            << " INNER JOIN " << CPPTRANSPORT_SQLITE_WORKERS_TABLE << " workers ON workers.workgroup=temp.workgroup"
 	            << " WHERE temp.worker=workers.worker"
 	            << " ORDER BY temp.kserial;";
 
@@ -304,7 +304,7 @@ namespace transport
                 else
 	                {
                     std::ostringstream msg;
-                    msg << __CPP_TRANSPORT_DATAMGR_KCONFIG_SERIAL_READ_FAIL << status << ": " << sqlite3_errmsg(db) << ")";
+                    msg << CPPTRANSPORT_DATAMGR_KCONFIG_SERIAL_READ_FAIL << status << ": " << sqlite3_errmsg(db) << ")";
                     sqlite3_finalize(stmt);
                     throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, msg.str());
 	                }
@@ -321,9 +321,9 @@ namespace transport
           {
             assert(db != nullptr);
 
-            derived_data::SQL_policy policy(__CPP_TRANSPORT_SQLITE_TIME_SAMPLE_TABLE, "serial",
-                                            __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE, "serial",
-                                            __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE, "serial",
+            derived_data::SQL_policy policy(CPPTRANSPORT_SQLITE_TIME_SAMPLE_TABLE, "serial",
+                                            CPPTRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE, "serial",
+                                            CPPTRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE, "serial",
                                             "wavenumber1", "wavenumber2", "wavenumber3");
 
             unsigned int num_cols = std::min(2*Nfields, max_columns);
@@ -335,15 +335,15 @@ namespace transport
             std::stringstream select_stmt;
             select_stmt
               << "SELECT"
-	            << " " << __CPP_TRANSPORT_SQLITE_BACKG_VALUE_TABLE << ".coord" << col
-              << " FROM " << __CPP_TRANSPORT_SQLITE_BACKG_VALUE_TABLE
+	            << " " << CPPTRANSPORT_SQLITE_BACKG_VALUE_TABLE << ".coord" << col
+              << " FROM " << CPPTRANSPORT_SQLITE_BACKG_VALUE_TABLE
               << " INNER JOIN (" << tquery->make_query(policy, true) << ") tsample"
-	            << " ON " << __CPP_TRANSPORT_SQLITE_BACKG_VALUE_TABLE << ".tserial=tsample.serial"
-              << " WHERE " __CPP_TRANSPORT_SQLITE_BACKG_VALUE_TABLE << ".page=" << page
+	            << " ON " << CPPTRANSPORT_SQLITE_BACKG_VALUE_TABLE << ".tserial=tsample.serial"
+              << " WHERE " CPPTRANSPORT_SQLITE_BACKG_VALUE_TABLE << ".page=" << page
               << " ORDER BY tsample.serial;";
 
             sample.clear();
-            pull_implementation::pull_number_list(db, sample, select_stmt.str(), __CPP_TRANSPORT_DATAMGR_TIME_SERIAL_READ_FAIL);
+            pull_implementation::pull_number_list(db, sample, select_stmt.str(), CPPTRANSPORT_DATAMGR_TIME_SERIAL_READ_FAIL);
           }
 
 
@@ -353,9 +353,9 @@ namespace transport
 			    {
 				    assert(db != nullptr);
 
-		        derived_data::SQL_policy policy(__CPP_TRANSPORT_SQLITE_TIME_SAMPLE_TABLE, "serial",
-		                                        __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE, "serial",
-		                                        __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE, "serial",
+		        derived_data::SQL_policy policy(CPPTRANSPORT_SQLITE_TIME_SAMPLE_TABLE, "serial",
+		                                        CPPTRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE, "serial",
+		                                        CPPTRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE, "serial",
 		                                        "wavenumber1", "wavenumber2", "wavenumber3");
 
 		        unsigned int num_elements = data_traits<number, ValueType>::number_elements(Nfields);
@@ -378,7 +378,7 @@ namespace transport
 			        << " ORDER BY tsample.serial;";
 
 						sample.clear();
-		        pull_implementation::pull_number_list(db, sample, select_stmt.str(), __CPP_TRANSPORT_DATAMGR_TIME_SERIAL_READ_FAIL);
+		        pull_implementation::pull_number_list(db, sample, select_stmt.str(), CPPTRANSPORT_DATAMGR_TIME_SERIAL_READ_FAIL);
 			    }
 
 
@@ -388,9 +388,9 @@ namespace transport
 	        {
             assert(db != nullptr);
 
-            derived_data::SQL_policy policy(__CPP_TRANSPORT_SQLITE_TIME_SAMPLE_TABLE, "serial",
-                                            __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE, "serial",
-                                            __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE, "serial",
+            derived_data::SQL_policy policy(CPPTRANSPORT_SQLITE_TIME_SAMPLE_TABLE, "serial",
+                                            CPPTRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE, "serial",
+                                            CPPTRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE, "serial",
                                             "wavenumber1", "wavenumber2", "wavenumber3");
 
             unsigned int num_elements = data_traits<number, ValueType>::number_elements(Nfields);
@@ -413,7 +413,7 @@ namespace transport
 	            << " ORDER BY ksample.serial;";
 
             sample.clear();
-            pull_implementation::pull_number_list(db, sample, select_stmt.str(), __CPP_TRANSPORT_DATAMGR_TIME_SERIAL_READ_FAIL);
+            pull_implementation::pull_number_list(db, sample, select_stmt.str(), CPPTRANSPORT_DATAMGR_TIME_SERIAL_READ_FAIL);
 	        }
 
 
@@ -423,9 +423,9 @@ namespace transport
 	        {
             assert(db != nullptr);
 
-            derived_data::SQL_policy policy(__CPP_TRANSPORT_SQLITE_TIME_SAMPLE_TABLE, "serial",
-                                            __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE, "serial",
-                                            __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE, "serial",
+            derived_data::SQL_policy policy(CPPTRANSPORT_SQLITE_TIME_SAMPLE_TABLE, "serial",
+                                            CPPTRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE, "serial",
+                                            CPPTRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE, "serial",
                                             "wavenumber1", "wavenumber2", "wavenumber3");
 
             std::string table_name = data_traits<number, ValueType>::sqlite_table();
@@ -442,7 +442,7 @@ namespace transport
 	            << " ORDER BY tsample.serial;";
 
             sample.clear();
-            pull_implementation::pull_number_list(db, sample, select_stmt.str(), __CPP_TRANSPORT_DATAMGR_TIME_SERIAL_READ_FAIL);
+            pull_implementation::pull_number_list(db, sample, select_stmt.str(), CPPTRANSPORT_DATAMGR_TIME_SERIAL_READ_FAIL);
 	        }
 
 
@@ -452,9 +452,9 @@ namespace transport
 	        {
             assert(db != nullptr);
 
-            derived_data::SQL_policy policy(__CPP_TRANSPORT_SQLITE_TIME_SAMPLE_TABLE, "serial",
-                                            __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE, "serial",
-                                            __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE, "serial",
+            derived_data::SQL_policy policy(CPPTRANSPORT_SQLITE_TIME_SAMPLE_TABLE, "serial",
+                                            CPPTRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE, "serial",
+                                            CPPTRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE, "serial",
                                             "wavenumber1", "wavenumber2", "wavenumber3");
 
             std::string table_name = data_traits<number, ValueType>::sqlite_table();
@@ -471,7 +471,7 @@ namespace transport
 	            << " ORDER BY ksample.serial;";
 
             sample.clear();
-            pull_implementation::pull_number_list(db, sample, select_stmt.str(), __CPP_TRANSPORT_DATAMGR_TIME_SERIAL_READ_FAIL);
+            pull_implementation::pull_number_list(db, sample, select_stmt.str(), CPPTRANSPORT_DATAMGR_TIME_SERIAL_READ_FAIL);
 	        }
 
 
@@ -482,9 +482,9 @@ namespace transport
           {
             assert(db != nullptr);
 
-            derived_data::SQL_policy policy(__CPP_TRANSPORT_SQLITE_TIME_SAMPLE_TABLE, "serial",
-                                            __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE, "serial",
-                                            __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE, "serial",
+            derived_data::SQL_policy policy(CPPTRANSPORT_SQLITE_TIME_SAMPLE_TABLE, "serial",
+                                            CPPTRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE, "serial",
+                                            CPPTRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE, "serial",
                                             "wavenumber1", "wavenumber2", "wavenumber3");
 
             // pull out the fNL component matching serial numbers in the temporary table
@@ -497,7 +497,7 @@ namespace transport
               << " ORDER BY tsample.serial;";
 
             sample.clear();
-            pull_implementation::pull_number_list(db, sample, select_stmt.str(), __CPP_TRANSPORT_DATAMGR_TIME_SERIAL_READ_FAIL);
+            pull_implementation::pull_number_list(db, sample, select_stmt.str(), CPPTRANSPORT_DATAMGR_TIME_SERIAL_READ_FAIL);
           }
 
 
@@ -508,9 +508,9 @@ namespace transport
           {
             assert(db != nullptr);
 
-            derived_data::SQL_policy policy(__CPP_TRANSPORT_SQLITE_TIME_SAMPLE_TABLE, "serial",
-                                            __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE, "serial",
-                                            __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE, "serial",
+            derived_data::SQL_policy policy(CPPTRANSPORT_SQLITE_TIME_SAMPLE_TABLE, "serial",
+                                            CPPTRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE, "serial",
+                                            CPPTRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE, "serial",
                                             "wavenumber1", "wavenumber2", "wavenumber3");
 
             // pull out the bispectrum.template component matching serial numbers in the temporary table
@@ -523,7 +523,7 @@ namespace transport
 	            << " ORDER BY tsample.serial;";
 
             sample.clear();
-            pull_implementation::pull_number_list(db, sample, select_stmt.str(), __CPP_TRANSPORT_DATAMGR_TIME_SERIAL_READ_FAIL);
+            pull_implementation::pull_number_list(db, sample, select_stmt.str(), CPPTRANSPORT_DATAMGR_TIME_SERIAL_READ_FAIL);
           }
 
 
@@ -534,9 +534,9 @@ namespace transport
           {
             assert(db != nullptr);
 
-            derived_data::SQL_policy policy(__CPP_TRANSPORT_SQLITE_TIME_SAMPLE_TABLE, "serial",
-                                            __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE, "serial",
-                                            __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE, "serial",
+            derived_data::SQL_policy policy(CPPTRANSPORT_SQLITE_TIME_SAMPLE_TABLE, "serial",
+                                            CPPTRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE, "serial",
+                                            CPPTRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE, "serial",
                                             "wavenumber1", "wavenumber2", "wavenumber3");
 
             // pull out the template.template component matching serial numbers in the temporary table
@@ -549,7 +549,7 @@ namespace transport
 	            << " ORDER BY tsample.serial;";
 
             sample.clear();
-            pull_implementation::pull_number_list(db, sample, select_stmt.str(), __CPP_TRANSPORT_DATAMGR_TIME_SERIAL_READ_FAIL);
+            pull_implementation::pull_number_list(db, sample, select_stmt.str(), CPPTRANSPORT_DATAMGR_TIME_SERIAL_READ_FAIL);
           }
 
 

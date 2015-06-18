@@ -41,7 +41,7 @@ namespace transport
 
 				    //! basic user-facing constructor
 				    u2_line(const twopf_list_task<number>& tk, index_selector<2>& sel, SQL_time_config_query tq, SQL_twopf_kconfig_query,
-                    unsigned int prec = __CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
+                    unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
 				    //! deserialization constructor
 				    u2_line(Json::Value& reader, typename repository_finder<number>::task_finder& finder);
@@ -128,8 +128,8 @@ namespace transport
 		        time_series<number>(reader),
 						gadget(),
             active_indices(reader),
-						tquery(reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]),
-            kquery(reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY])
+						tquery(reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]),
+            kquery(reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY])
 					{
 						assert(this->parent_task != nullptr);
 						gadget.set_task(this->parent_task, finder);
@@ -139,10 +139,10 @@ namespace transport
 				template <typename number>
 				void u2_line<number>::serialize(Json::Value& writer) const
 					{
-						writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_U2_LINE);
+						writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_U2_LINE);
 
-						this->tquery.serialize(writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]);
-            this->kquery.serialize(writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY]);
+						this->tquery.serialize(writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]);
+            this->kquery.serialize(writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY]);
 
             this->active_indices.serialize(writer);
 
@@ -237,10 +237,10 @@ namespace transport
 							{
                 std::ostringstream lbl;
 
-                lbl << __CPP_TRANSPORT_LATEX_U2_SYMBOL << "_{";
+                lbl << CPPTRANSPORT_LATEX_U2_SYMBOL << "_{";
 
-                lbl << field_names[m % N_fields] << (m >= N_fields ? "^{" __CPP_TRANSPORT_LATEX_PRIME_SYMBOL "}" : "") << " "
-                    << field_names[n % N_fields] << (n >= N_fields ? "^{" __CPP_TRANSPORT_LATEX_PRIME_SYMBOL "}" : "");
+                lbl << field_names[m % N_fields] << (m >= N_fields ? "^{" CPPTRANSPORT_LATEX_PRIME_SYMBOL "}" : "") << " "
+                    << field_names[n % N_fields] << (n >= N_fields ? "^{" CPPTRANSPORT_LATEX_PRIME_SYMBOL "}" : "");
 
                 lbl << "}";
 
@@ -269,10 +269,10 @@ namespace transport
               {
                 std::ostringstream lbl;
 
-                lbl << __CPP_TRANSPORT_NONLATEX_U2_SYMBOL << "[";
+                lbl << CPPTRANSPORT_NONLATEX_U2_SYMBOL << "[";
 
-                lbl << field_names[m % N_fields] << (m >= N_fields ? __CPP_TRANSPORT_NONLATEX_PRIME_SYMBOL : "") << " "
-                    << field_names[n % N_fields] << (n >= N_fields ? __CPP_TRANSPORT_NONLATEX_PRIME_SYMBOL : "");
+                lbl << field_names[m % N_fields] << (m >= N_fields ? CPPTRANSPORT_NONLATEX_PRIME_SYMBOL : "") << " "
+                    << field_names[n % N_fields] << (n >= N_fields ? CPPTRANSPORT_NONLATEX_PRIME_SYMBOL : "");
 
                 lbl << "]";
 

@@ -137,7 +137,7 @@ namespace transport
 		    std::vector<double> time_series<number>::pull_time_axis(datapipe<number>& pipe, const SQL_time_config_query& tquery) const
 			    {
 				    assert(this->x_type == efolds_axis);
-		        if(!pipe.validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_PRODUCT_TIME_SERIES_NULL_DATAPIPE);
+		        if(!pipe.validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, CPPTRANSPORT_PRODUCT_TIME_SERIES_NULL_DATAPIPE);
 
 		        // set-up time sample data
 				    typename datapipe<number>::time_config_handle& handle = pipe.new_time_config_handle(tquery);
@@ -163,7 +163,7 @@ namespace transport
 
 				    label << std::setprecision(this->precision);
 
-				    label << __CPP_TRANSPORT_NONLATEX_K_SYMBOL << "=";
+				    label << CPPTRANSPORT_NONLATEX_K_SYMBOL << "=";
 				    if(this->get_klabel_meaning() == conventional) label << config.k_conventional;
 				    else label << config.k_comoving;
 
@@ -176,7 +176,7 @@ namespace transport
 					{
 				    std::ostringstream label;
 
-				    label << __CPP_TRANSPORT_LATEX_K_SYMBOL << "=";
+				    label << CPPTRANSPORT_LATEX_K_SYMBOL << "=";
 				    if(this->get_klabel_meaning() == conventional) label << output_latex_number(config.k_conventional, this->precision);
 				    else label << output_latex_number(config.k_comoving, this->precision);
 
@@ -193,19 +193,19 @@ namespace transport
 		        unsigned int count = 0;
 		        if(use_kt)
 			        {
-		            label << (count > 0 ? ",\\, " : "") << __CPP_TRANSPORT_LATEX_KT_SYMBOL << "=";
+		            label << (count > 0 ? ",\\, " : "") << CPPTRANSPORT_LATEX_KT_SYMBOL << "=";
 		            if(this->get_klabel_meaning() == conventional) label << output_latex_number(config.kt_conventional, this->precision);
 		            else label << output_latex_number(config.kt_comoving, this->precision);
 		            count++;
 			        }
 		        if(use_alpha)
 			        {
-		            label << (count > 0 ? ",\\, " : "") << __CPP_TRANSPORT_LATEX_ALPHA_SYMBOL << "=" << output_latex_number(config.alpha, this->precision);
+		            label << (count > 0 ? ",\\, " : "") << CPPTRANSPORT_LATEX_ALPHA_SYMBOL << "=" << output_latex_number(config.alpha, this->precision);
 		            count++;
 			        }
 		        if(use_beta)
 			        {
-		            label << (count > 0 ? ",\\, " : "") << __CPP_TRANSPORT_LATEX_BETA_SYMBOL << "=" << output_latex_number(config.beta, this->precision);
+		            label << (count > 0 ? ",\\, " : "") << CPPTRANSPORT_LATEX_BETA_SYMBOL << "=" << output_latex_number(config.beta, this->precision);
 		            count++;
 			        }
 
@@ -222,19 +222,19 @@ namespace transport
 				    unsigned int count = 0;
 				    if(use_kt)
 					    {
-				        label << (count > 0 ? ", " : "") << __CPP_TRANSPORT_NONLATEX_KT_SYMBOL << "=";
+				        label << (count > 0 ? ", " : "") << CPPTRANSPORT_NONLATEX_KT_SYMBOL << "=";
 				        if(this->get_klabel_meaning() == conventional) label << config.kt_conventional;
 				        else label << config.kt_comoving;
 				        count++;
 					    }
 				    if(use_alpha)
 					    {
-				        label << (count > 0 ? ", " : "") << __CPP_TRANSPORT_NONLATEX_ALPHA_SYMBOL << "=" << config.alpha;
+				        label << (count > 0 ? ", " : "") << CPPTRANSPORT_NONLATEX_ALPHA_SYMBOL << "=" << config.alpha;
 				        count++;
 					    }
 				    if(use_beta)
 					    {
-				        label << (count > 0 ? ", " : "") << __CPP_TRANSPORT_NONLATEX_BETA_SYMBOL << "=" << config.beta;
+				        label << (count > 0 ? ", " : "") << CPPTRANSPORT_NONLATEX_BETA_SYMBOL << "=" << config.beta;
 				        count++;
 					    }
 

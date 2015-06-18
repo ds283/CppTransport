@@ -26,15 +26,15 @@
 #include "boost/lexical_cast.hpp"
 
 
-#define __CPP_TRANSPORT_SQLITE_PACKAGE_TABLE                "packages"
-#define __CPP_TRANSPORT_SQLITE_INTEGRATION_TASKS_TABLE      "integration_tasks"
-#define __CPP_TRANSPORT_SQLITE_POSTINTEGRATION_TASKS_TABLE  "postintegration_tasks"
-#define __CPP_TRANSPORT_SQLITE_OUTPUT_TASKS_TABLE           "output_tasks"
-#define __CPP_TRANSPORT_SQLITE_DERIVED_PRODUCTS_TABLE       "derived_products"
-#define __CPP_TRANSPORT_SQLITE_INTEGRATION_GROUPS_TABLE     "integration_groups"
-#define __CPP_TRANSPORT_SQLITE_POSTINTEGRATION_GROUPS_TABLE "postintegration_groups"
-#define __CPP_TRANSPORT_SQLITE_OUTPUT_GROUPS_TABLE          "output_groups"
-#define __CPP_TRANSPORT_SQLITE_RESERVED_CONTENT_NAMES_TABLE "reserved_content"
+#define CPPTRANSPORT_SQLITE_PACKAGE_TABLE                "packages"
+#define CPPTRANSPORT_SQLITE_INTEGRATION_TASKS_TABLE      "integration_tasks"
+#define CPPTRANSPORT_SQLITE_POSTINTEGRATION_TASKS_TABLE  "postintegration_tasks"
+#define CPPTRANSPORT_SQLITE_OUTPUT_TASKS_TABLE           "output_tasks"
+#define CPPTRANSPORT_SQLITE_DERIVED_PRODUCTS_TABLE       "derived_products"
+#define CPPTRANSPORT_SQLITE_INTEGRATION_GROUPS_TABLE     "integration_groups"
+#define CPPTRANSPORT_SQLITE_POSTINTEGRATION_GROUPS_TABLE "postintegration_groups"
+#define CPPTRANSPORT_SQLITE_OUTPUT_GROUPS_TABLE          "output_groups"
+#define CPPTRANSPORT_SQLITE_RESERVED_CONTENT_NAMES_TABLE "reserved_content"
 
 
 namespace transport
@@ -46,65 +46,65 @@ namespace transport
 				void create_repository_tables(sqlite3* db)
 					{
 				    std::ostringstream packages_stmt;
-						packages_stmt << "CREATE TABLE " << __CPP_TRANSPORT_SQLITE_PACKAGE_TABLE << "("
+						packages_stmt << "CREATE TABLE " << CPPTRANSPORT_SQLITE_PACKAGE_TABLE << "("
 							<< "name TEXT PRIMARY KEY, "
 							<< "path TEXT)";
 						exec(db, packages_stmt.str());
 
 				    std::ostringstream i_tasks_stmt;
-						i_tasks_stmt << "CREATE TABLE " << __CPP_TRANSPORT_SQLITE_INTEGRATION_TASKS_TABLE << "("
+						i_tasks_stmt << "CREATE TABLE " << CPPTRANSPORT_SQLITE_INTEGRATION_TASKS_TABLE << "("
 							<< "name    TEXT PRIMARY KEY, "
 							<< "package TEXT, "
 							<< "path    TEXT, "
-							<< "FOREIGN KEY(package) REFERENCES " << __CPP_TRANSPORT_SQLITE_PACKAGE_TABLE << "(name));";
+							<< "FOREIGN KEY(package) REFERENCES " << CPPTRANSPORT_SQLITE_PACKAGE_TABLE << "(name));";
 						exec(db, i_tasks_stmt.str());
 
 				    std::ostringstream p_tasks_stmt;
-				    p_tasks_stmt << "CREATE TABLE " << __CPP_TRANSPORT_SQLITE_POSTINTEGRATION_TASKS_TABLE << "("
+				    p_tasks_stmt << "CREATE TABLE " << CPPTRANSPORT_SQLITE_POSTINTEGRATION_TASKS_TABLE << "("
 					    << "name   TEXT PRIMARY KEY, "
 					    << "parent TEXT, "
 					    << "path   TEXT, "
-					    << "FOREIGN KEY(parent) REFERENCES " << __CPP_TRANSPORT_SQLITE_INTEGRATION_TASKS_TABLE << "(name));";
+					    << "FOREIGN KEY(parent) REFERENCES " << CPPTRANSPORT_SQLITE_INTEGRATION_TASKS_TABLE << "(name));";
 				    exec(db, p_tasks_stmt.str());
 
 				    std::ostringstream o_tasks_stmt;
-				    o_tasks_stmt << "CREATE TABLE " << __CPP_TRANSPORT_SQLITE_OUTPUT_TASKS_TABLE << "("
+				    o_tasks_stmt << "CREATE TABLE " << CPPTRANSPORT_SQLITE_OUTPUT_TASKS_TABLE << "("
 					    << "name   TEXT PRIMARY KEY, "
 					    << "path   TEXT);";
 				    exec(db, o_tasks_stmt.str());
 
 				    std::ostringstream products_stmt;
-						products_stmt << "CREATE TABLE " << __CPP_TRANSPORT_SQLITE_DERIVED_PRODUCTS_TABLE << "("
+						products_stmt << "CREATE TABLE " << CPPTRANSPORT_SQLITE_DERIVED_PRODUCTS_TABLE << "("
 							<< "name TEXT PRIMARY KEY, "
 							<< "path TEXT);";
 						exec(db, products_stmt.str());
 
 				    std::ostringstream i_groups_stmt;
-						i_groups_stmt << "CREATE TABLE " << __CPP_TRANSPORT_SQLITE_INTEGRATION_GROUPS_TABLE << "("
+						i_groups_stmt << "CREATE TABLE " << CPPTRANSPORT_SQLITE_INTEGRATION_GROUPS_TABLE << "("
 							<< "name TEXT PRIMARY KEY, "
 							<< "task TEXT, "
 							<< "path TEXT, "
-							<< "FOREIGN KEY(task) REFERENCES " << __CPP_TRANSPORT_SQLITE_INTEGRATION_TASKS_TABLE << "(name));";
+							<< "FOREIGN KEY(task) REFERENCES " << CPPTRANSPORT_SQLITE_INTEGRATION_TASKS_TABLE << "(name));";
 						exec(db, i_groups_stmt.str());
 
 				    std::ostringstream p_groups_stmt;
-				    p_groups_stmt << "CREATE TABLE " << __CPP_TRANSPORT_SQLITE_POSTINTEGRATION_GROUPS_TABLE << "("
+				    p_groups_stmt << "CREATE TABLE " << CPPTRANSPORT_SQLITE_POSTINTEGRATION_GROUPS_TABLE << "("
 					    << "name TEXT PRIMARY KEY, "
 					    << "task TEXT, "
 					    << "path TEXT, "
-					    << "FOREIGN KEY(task) REFERENCES " << __CPP_TRANSPORT_SQLITE_POSTINTEGRATION_TASKS_TABLE << "(name));";
+					    << "FOREIGN KEY(task) REFERENCES " << CPPTRANSPORT_SQLITE_POSTINTEGRATION_TASKS_TABLE << "(name));";
 				    exec(db, p_groups_stmt.str());
 
 				    std::ostringstream o_groups_stmt;
-				    o_groups_stmt << "CREATE TABLE " << __CPP_TRANSPORT_SQLITE_OUTPUT_GROUPS_TABLE << "("
+				    o_groups_stmt << "CREATE TABLE " << CPPTRANSPORT_SQLITE_OUTPUT_GROUPS_TABLE << "("
 					    << "name TEXT PRIMARY KEY, "
 					    << "task TEXT, "
 					    << "path TEXT, "
-					    << "FOREIGN KEY(task) REFERENCES " << __CPP_TRANSPORT_SQLITE_OUTPUT_TASKS_TABLE << "(name));";
+					    << "FOREIGN KEY(task) REFERENCES " << CPPTRANSPORT_SQLITE_OUTPUT_TASKS_TABLE << "(name));";
 				    exec(db, o_groups_stmt.str());
 
             std::ostringstream o_reserved_stmt;
-            o_reserved_stmt << "CREATE TABLE " << __CPP_TRANSPORT_SQLITE_RESERVED_CONTENT_NAMES_TABLE << "("
+            o_reserved_stmt << "CREATE TABLE " << CPPTRANSPORT_SQLITE_RESERVED_CONTENT_NAMES_TABLE << "("
               << "name       TEXT PRIMARY KEY, "
               << "posix_time TEXT);";
             exec(db, o_reserved_stmt.str());
@@ -133,7 +133,7 @@ namespace transport
 								else
 									{
 								    std::ostringstream msg;
-										msg << __CPP_TRANSPORT_REPO_COUNT_FAIL << status << ": " << sqlite3_errmsg(db) << ")";
+										msg << CPPTRANSPORT_REPO_COUNT_FAIL << status << ": " << sqlite3_errmsg(db) << ")";
 										throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, msg.str());
 									}
 							}
@@ -143,7 +143,7 @@ namespace transport
 						if(num_rows != 1)
 							{
 						    std::stringstream msg;
-								msg << __CPP_TRANSPORT_REPO_COUNT_MULTIPLE_RETURN << " (" << num_rows << ")";
+								msg << CPPTRANSPORT_REPO_COUNT_MULTIPLE_RETURN << " (" << num_rows << ")";
 								throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, msg.str());
 							}
 
@@ -153,25 +153,25 @@ namespace transport
 
 				unsigned int count_packages(sqlite3* db, const std::string& name)
 					{
-						return internal_count(db, name, __CPP_TRANSPORT_SQLITE_PACKAGE_TABLE, "name");
+						return internal_count(db, name, CPPTRANSPORT_SQLITE_PACKAGE_TABLE, "name");
 					}
 
 
 				unsigned int count_integration_tasks(sqlite3* db, const std::string& name)
 					{
-						return internal_count(db, name, __CPP_TRANSPORT_SQLITE_INTEGRATION_TASKS_TABLE, "name");
+						return internal_count(db, name, CPPTRANSPORT_SQLITE_INTEGRATION_TASKS_TABLE, "name");
 					}
 
 
 		    unsigned int count_postintegration_tasks(sqlite3* db, const std::string& name)
 			    {
-		        return internal_count(db, name, __CPP_TRANSPORT_SQLITE_POSTINTEGRATION_TASKS_TABLE, "name");
+		        return internal_count(db, name, CPPTRANSPORT_SQLITE_POSTINTEGRATION_TASKS_TABLE, "name");
 			    }
 
 
 		    unsigned int count_output_tasks(sqlite3* db, const std::string& name)
 			    {
-		        return internal_count(db, name, __CPP_TRANSPORT_SQLITE_OUTPUT_TASKS_TABLE, "name");
+		        return internal_count(db, name, CPPTRANSPORT_SQLITE_OUTPUT_TASKS_TABLE, "name");
 			    }
 
 
@@ -187,25 +187,25 @@ namespace transport
 
 				unsigned int count_products(sqlite3* db, const std::string& name)
 					{
-						return internal_count(db, name, __CPP_TRANSPORT_SQLITE_DERIVED_PRODUCTS_TABLE, "name");
+						return internal_count(db, name, CPPTRANSPORT_SQLITE_DERIVED_PRODUCTS_TABLE, "name");
 					}
 
 
 				unsigned int count_integration_groups(sqlite3* db, const std::string& name)
 					{
-						return internal_count(db, name, __CPP_TRANSPORT_SQLITE_INTEGRATION_GROUPS_TABLE, "name");
+						return internal_count(db, name, CPPTRANSPORT_SQLITE_INTEGRATION_GROUPS_TABLE, "name");
 					}
 
 
 		    unsigned int count_postintegration_groups(sqlite3* db, const std::string& name)
 			    {
-		        return internal_count(db, name, __CPP_TRANSPORT_SQLITE_POSTINTEGRATION_GROUPS_TABLE, "name");
+		        return internal_count(db, name, CPPTRANSPORT_SQLITE_POSTINTEGRATION_GROUPS_TABLE, "name");
 			    }
 
 
 		    unsigned int count_output_groups(sqlite3* db, const std::string& name)
 			    {
-		        return internal_count(db, name, __CPP_TRANSPORT_SQLITE_OUTPUT_GROUPS_TABLE, "name");
+		        return internal_count(db, name, CPPTRANSPORT_SQLITE_OUTPUT_GROUPS_TABLE, "name");
 			    }
 
 
@@ -222,7 +222,7 @@ namespace transport
 				void store_package(transaction_manager& mgr, sqlite3* db, const std::string& name, const std::string& filename)
 					{
 				    std::stringstream store_stmt;
-						store_stmt << "INSERT INTO " << __CPP_TRANSPORT_SQLITE_PACKAGE_TABLE << " VALUES (@name, @path)";
+						store_stmt << "INSERT INTO " << CPPTRANSPORT_SQLITE_PACKAGE_TABLE << " VALUES (@name, @path)";
 
 						sqlite3_stmt* stmt;
 						check_stmt(db, sqlite3_prepare_v2(db, store_stmt.str().c_str(), store_stmt.str().length()+1, &stmt, nullptr));
@@ -230,7 +230,7 @@ namespace transport
 						check_stmt(db, sqlite3_bind_text(stmt, 1, name.c_str(), name.length(), SQLITE_STATIC));
 						check_stmt(db, sqlite3_bind_text(stmt, 2, filename.c_str(), filename.length(), SQLITE_STATIC));
 
-						check_stmt(db, sqlite3_step(stmt), __CPP_TRANSPORT_REPO_STORE_PACKAGE_FAIL, SQLITE_DONE);
+						check_stmt(db, sqlite3_step(stmt), CPPTRANSPORT_REPO_STORE_PACKAGE_FAIL, SQLITE_DONE);
 
 						check_stmt(db, sqlite3_clear_bindings(stmt));
 						check_stmt(db, sqlite3_finalize(stmt));
@@ -240,7 +240,7 @@ namespace transport
 		    void store_integration_task(transaction_manager& mgr, sqlite3* db, const std::string& name, const std::string& filename, const std::string& pkg)
 			    {
 		        std::stringstream store_stmt;
-		        store_stmt << "INSERT INTO " << __CPP_TRANSPORT_SQLITE_INTEGRATION_TASKS_TABLE << " VALUES (@name, @package, @path)";
+		        store_stmt << "INSERT INTO " << CPPTRANSPORT_SQLITE_INTEGRATION_TASKS_TABLE << " VALUES (@name, @package, @path)";
 
 		        sqlite3_stmt* stmt;
 		        check_stmt(db, sqlite3_prepare_v2(db, store_stmt.str().c_str(), store_stmt.str().length()+1, &stmt, nullptr));
@@ -249,7 +249,7 @@ namespace transport
 				    check_stmt(db, sqlite3_bind_text(stmt, 2, pkg.c_str(), pkg.length(), SQLITE_STATIC));
 		        check_stmt(db, sqlite3_bind_text(stmt, 3, filename.c_str(), filename.length(), SQLITE_STATIC));
 
-		        check_stmt(db, sqlite3_step(stmt), __CPP_TRANSPORT_REPO_STORE_PACKAGE_FAIL, SQLITE_DONE);
+		        check_stmt(db, sqlite3_step(stmt), CPPTRANSPORT_REPO_STORE_PACKAGE_FAIL, SQLITE_DONE);
 
 		        check_stmt(db, sqlite3_clear_bindings(stmt));
 		        check_stmt(db, sqlite3_finalize(stmt));
@@ -259,7 +259,7 @@ namespace transport
 		    void store_postintegration_task(transaction_manager& mgr, sqlite3* db, const std::string& name, const std::string& filename, const std::string& parent)
 			    {
 		        std::stringstream store_stmt;
-		        store_stmt << "INSERT INTO " << __CPP_TRANSPORT_SQLITE_POSTINTEGRATION_TASKS_TABLE << " VALUES (@name, @parent, @path)";
+		        store_stmt << "INSERT INTO " << CPPTRANSPORT_SQLITE_POSTINTEGRATION_TASKS_TABLE << " VALUES (@name, @parent, @path)";
 
 		        sqlite3_stmt* stmt;
 		        check_stmt(db, sqlite3_prepare_v2(db, store_stmt.str().c_str(), store_stmt.str().length()+1, &stmt, nullptr));
@@ -268,7 +268,7 @@ namespace transport
 		        check_stmt(db, sqlite3_bind_text(stmt, 2, parent.c_str(), parent.length(), SQLITE_STATIC));
 		        check_stmt(db, sqlite3_bind_text(stmt, 3, filename.c_str(), filename.length(), SQLITE_STATIC));
 
-		        check_stmt(db, sqlite3_step(stmt), __CPP_TRANSPORT_REPO_STORE_PACKAGE_FAIL, SQLITE_DONE);
+		        check_stmt(db, sqlite3_step(stmt), CPPTRANSPORT_REPO_STORE_PACKAGE_FAIL, SQLITE_DONE);
 
 		        check_stmt(db, sqlite3_clear_bindings(stmt));
 		        check_stmt(db, sqlite3_finalize(stmt));
@@ -278,7 +278,7 @@ namespace transport
 		    void store_output_task(transaction_manager& mgr, sqlite3* db, const std::string& name, const std::string& filename)
 			    {
 		        std::stringstream store_stmt;
-		        store_stmt << "INSERT INTO " << __CPP_TRANSPORT_SQLITE_OUTPUT_TASKS_TABLE << " VALUES (@name, @path)";
+		        store_stmt << "INSERT INTO " << CPPTRANSPORT_SQLITE_OUTPUT_TASKS_TABLE << " VALUES (@name, @path)";
 
 		        sqlite3_stmt* stmt;
 		        check_stmt(db, sqlite3_prepare_v2(db, store_stmt.str().c_str(), store_stmt.str().length()+1, &stmt, nullptr));
@@ -286,7 +286,7 @@ namespace transport
 		        check_stmt(db, sqlite3_bind_text(stmt, 1, name.c_str(), name.length(), SQLITE_STATIC));
 		        check_stmt(db, sqlite3_bind_text(stmt, 2, filename.c_str(), filename.length(), SQLITE_STATIC));
 
-		        check_stmt(db, sqlite3_step(stmt), __CPP_TRANSPORT_REPO_STORE_PACKAGE_FAIL, SQLITE_DONE);
+		        check_stmt(db, sqlite3_step(stmt), CPPTRANSPORT_REPO_STORE_PACKAGE_FAIL, SQLITE_DONE);
 
 		        check_stmt(db, sqlite3_clear_bindings(stmt));
 		        check_stmt(db, sqlite3_finalize(stmt));
@@ -296,7 +296,7 @@ namespace transport
 		    void store_product(transaction_manager& mgr, sqlite3* db, const std::string& name, const std::string& filename)
 			    {
 		        std::stringstream store_stmt;
-		        store_stmt << "INSERT INTO " << __CPP_TRANSPORT_SQLITE_DERIVED_PRODUCTS_TABLE << " VALUES (@name, @path)";
+		        store_stmt << "INSERT INTO " << CPPTRANSPORT_SQLITE_DERIVED_PRODUCTS_TABLE << " VALUES (@name, @path)";
 
 		        sqlite3_stmt* stmt;
 		        check_stmt(db, sqlite3_prepare_v2(db, store_stmt.str().c_str(), store_stmt.str().length()+1, &stmt, nullptr));
@@ -304,7 +304,7 @@ namespace transport
 		        check_stmt(db, sqlite3_bind_text(stmt, 1, name.c_str(), name.length(), SQLITE_STATIC));
 		        check_stmt(db, sqlite3_bind_text(stmt, 2, filename.c_str(), filename.length(), SQLITE_STATIC));
 
-		        check_stmt(db, sqlite3_step(stmt), __CPP_TRANSPORT_REPO_STORE_PACKAGE_FAIL, SQLITE_DONE);
+		        check_stmt(db, sqlite3_step(stmt), CPPTRANSPORT_REPO_STORE_PACKAGE_FAIL, SQLITE_DONE);
 
 		        check_stmt(db, sqlite3_clear_bindings(stmt));
 		        check_stmt(db, sqlite3_finalize(stmt));
@@ -318,16 +318,16 @@ namespace transport
 				template <>
 				void store_group<integration_payload>(transaction_manager& mgr, sqlite3* db, const std::string& name, const std::string& filename, const std::string& task)
 					{
-            unsigned int count = internal_count(db, name, __CPP_TRANSPORT_SQLITE_RESERVED_CONTENT_NAMES_TABLE, "name");
+            unsigned int count = internal_count(db, name, CPPTRANSPORT_SQLITE_RESERVED_CONTENT_NAMES_TABLE, "name");
             if(count != 1)
               {
                 std::ostringstream msg;
-                msg << __CPP_TRANSPORT_REPO_COMMIT_OUTPUT_NOT_RESERVED << " '" << name << "'";
+                msg << CPPTRANSPORT_REPO_COMMIT_OUTPUT_NOT_RESERVED << " '" << name << "'";
                 throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, msg.str());
               }
 
 				    std::stringstream store_stmt;
-				    store_stmt << "INSERT INTO " << __CPP_TRANSPORT_SQLITE_INTEGRATION_GROUPS_TABLE << " VALUES (@name, @task, @path)";
+				    store_stmt << "INSERT INTO " << CPPTRANSPORT_SQLITE_INTEGRATION_GROUPS_TABLE << " VALUES (@name, @task, @path)";
 
 				    sqlite3_stmt* stmt;
 				    check_stmt(db, sqlite3_prepare_v2(db, store_stmt.str().c_str(), store_stmt.str().length()+1, &stmt, nullptr));
@@ -336,13 +336,13 @@ namespace transport
 				    check_stmt(db, sqlite3_bind_text(stmt, 2, task.c_str(), task.length(), SQLITE_STATIC));
 				    check_stmt(db, sqlite3_bind_text(stmt, 3, filename.c_str(), filename.length(), SQLITE_STATIC));
 
-				    check_stmt(db, sqlite3_step(stmt), __CPP_TRANSPORT_REPO_STORE_PACKAGE_FAIL, SQLITE_DONE);
+				    check_stmt(db, sqlite3_step(stmt), CPPTRANSPORT_REPO_STORE_PACKAGE_FAIL, SQLITE_DONE);
 
 				    check_stmt(db, sqlite3_clear_bindings(stmt));
 				    check_stmt(db, sqlite3_finalize(stmt));
 
             std::stringstream drop_stmt;
-            drop_stmt << "DELETE FROM " << __CPP_TRANSPORT_SQLITE_RESERVED_CONTENT_NAMES_TABLE << " WHERE name='" << name << "'";
+            drop_stmt << "DELETE FROM " << CPPTRANSPORT_SQLITE_RESERVED_CONTENT_NAMES_TABLE << " WHERE name='" << name << "'";
             exec(db, drop_stmt.str());
 					}
 
@@ -350,16 +350,16 @@ namespace transport
 		    template <>
 		    void store_group<postintegration_payload>(transaction_manager& mgr, sqlite3* db, const std::string& name, const std::string& filename, const std::string& task)
 			    {
-            unsigned int count = internal_count(db, name, __CPP_TRANSPORT_SQLITE_RESERVED_CONTENT_NAMES_TABLE, "name");
+            unsigned int count = internal_count(db, name, CPPTRANSPORT_SQLITE_RESERVED_CONTENT_NAMES_TABLE, "name");
             if(count != 1)
               {
                 std::ostringstream msg;
-                msg << __CPP_TRANSPORT_REPO_COMMIT_OUTPUT_NOT_RESERVED << " '" << name << "'";
+                msg << CPPTRANSPORT_REPO_COMMIT_OUTPUT_NOT_RESERVED << " '" << name << "'";
                 throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, msg.str());
               }
 
 		        std::stringstream store_stmt;
-		        store_stmt << "INSERT INTO " << __CPP_TRANSPORT_SQLITE_POSTINTEGRATION_GROUPS_TABLE << " VALUES (@name, @task, @path)";
+		        store_stmt << "INSERT INTO " << CPPTRANSPORT_SQLITE_POSTINTEGRATION_GROUPS_TABLE << " VALUES (@name, @task, @path)";
 
 		        sqlite3_stmt* stmt;
 		        check_stmt(db, sqlite3_prepare_v2(db, store_stmt.str().c_str(), store_stmt.str().length()+1, &stmt, nullptr));
@@ -368,13 +368,13 @@ namespace transport
 		        check_stmt(db, sqlite3_bind_text(stmt, 2, task.c_str(), task.length(), SQLITE_STATIC));
 		        check_stmt(db, sqlite3_bind_text(stmt, 3, filename.c_str(), filename.length(), SQLITE_STATIC));
 
-		        check_stmt(db, sqlite3_step(stmt), __CPP_TRANSPORT_REPO_STORE_PACKAGE_FAIL, SQLITE_DONE);
+		        check_stmt(db, sqlite3_step(stmt), CPPTRANSPORT_REPO_STORE_PACKAGE_FAIL, SQLITE_DONE);
 
 		        check_stmt(db, sqlite3_clear_bindings(stmt));
 		        check_stmt(db, sqlite3_finalize(stmt));
 
             std::stringstream drop_stmt;
-            drop_stmt << "DELETE FROM " << __CPP_TRANSPORT_SQLITE_RESERVED_CONTENT_NAMES_TABLE << " WHERE name='" << name << "'";
+            drop_stmt << "DELETE FROM " << CPPTRANSPORT_SQLITE_RESERVED_CONTENT_NAMES_TABLE << " WHERE name='" << name << "'";
             exec(db, drop_stmt.str());
 			    }
 
@@ -382,16 +382,16 @@ namespace transport
 		    template <>
 		    void store_group<output_payload>(transaction_manager& mgr, sqlite3* db, const std::string& name, const std::string& filename, const std::string& task)
 			    {
-            unsigned int count = internal_count(db, name, __CPP_TRANSPORT_SQLITE_RESERVED_CONTENT_NAMES_TABLE, "name");
+            unsigned int count = internal_count(db, name, CPPTRANSPORT_SQLITE_RESERVED_CONTENT_NAMES_TABLE, "name");
             if(count != 1)
               {
                 std::ostringstream msg;
-                msg << __CPP_TRANSPORT_REPO_COMMIT_OUTPUT_NOT_RESERVED << " '" << name << "'";
+                msg << CPPTRANSPORT_REPO_COMMIT_OUTPUT_NOT_RESERVED << " '" << name << "'";
                 throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, msg.str());
               }
 
 		        std::stringstream store_stmt;
-		        store_stmt << "INSERT INTO " << __CPP_TRANSPORT_SQLITE_OUTPUT_GROUPS_TABLE << " VALUES (@name, @task, @path)";
+		        store_stmt << "INSERT INTO " << CPPTRANSPORT_SQLITE_OUTPUT_GROUPS_TABLE << " VALUES (@name, @task, @path)";
 
 		        sqlite3_stmt* stmt;
 		        check_stmt(db, sqlite3_prepare_v2(db, store_stmt.str().c_str(), store_stmt.str().length()+1, &stmt, nullptr));
@@ -400,13 +400,13 @@ namespace transport
 		        check_stmt(db, sqlite3_bind_text(stmt, 2, task.c_str(), task.length(), SQLITE_STATIC));
 		        check_stmt(db, sqlite3_bind_text(stmt, 3, filename.c_str(), filename.length(), SQLITE_STATIC));
 
-		        check_stmt(db, sqlite3_step(stmt), __CPP_TRANSPORT_REPO_STORE_PACKAGE_FAIL, SQLITE_DONE);
+		        check_stmt(db, sqlite3_step(stmt), CPPTRANSPORT_REPO_STORE_PACKAGE_FAIL, SQLITE_DONE);
 
 		        check_stmt(db, sqlite3_clear_bindings(stmt));
 		        check_stmt(db, sqlite3_finalize(stmt));
 
             std::stringstream drop_stmt;
-            drop_stmt << "DELETE FROM " << __CPP_TRANSPORT_SQLITE_RESERVED_CONTENT_NAMES_TABLE << " WHERE name='" << name << "'";
+            drop_stmt << "DELETE FROM " << CPPTRANSPORT_SQLITE_RESERVED_CONTENT_NAMES_TABLE << " WHERE name='" << name << "'";
             exec(db, drop_stmt.str());
 			    }
 
@@ -434,7 +434,7 @@ namespace transport
 				        else
 					        {
 				            std::ostringstream msg;
-				            msg << __CPP_TRANSPORT_REPO_SEARCH_FAIL << status << ": " << sqlite3_errmsg(db) << ")";
+				            msg << CPPTRANSPORT_REPO_SEARCH_FAIL << status << ": " << sqlite3_errmsg(db) << ")";
 				            throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, msg.str());
 					        }
 					    }
@@ -448,7 +448,7 @@ namespace transport
 						else if(num_rows > 1)
 					    {
 				        std::stringstream msg;
-						    msg << __CPP_TRANSPORT_REPO_SEARCH_MULTIPLE_RETURN << " (" << num_rows << ")";
+						    msg << CPPTRANSPORT_REPO_SEARCH_MULTIPLE_RETURN << " (" << num_rows << ")";
 						    throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, msg.str());
 					    }
 
@@ -458,31 +458,31 @@ namespace transport
 
 				std::string find_package(sqlite3* db, const std::string& name, const std::string& missing_msg)
 					{
-						return internal_find(db, name, __CPP_TRANSPORT_SQLITE_PACKAGE_TABLE, "name", "path", missing_msg);
+						return internal_find(db, name, CPPTRANSPORT_SQLITE_PACKAGE_TABLE, "name", "path", missing_msg);
 					}
 
 
 				std::string find_integration_task(sqlite3* db, const std::string& name, const std::string& missing_msg)
 					{
-						return internal_find(db, name, __CPP_TRANSPORT_SQLITE_INTEGRATION_TASKS_TABLE, "name", "path", missing_msg);
+						return internal_find(db, name, CPPTRANSPORT_SQLITE_INTEGRATION_TASKS_TABLE, "name", "path", missing_msg);
 					}
 
 
 				std::string find_postintegration_task(sqlite3* db, const std::string& name, const std::string& missing_msg)
 					{
-						return internal_find(db, name, __CPP_TRANSPORT_SQLITE_POSTINTEGRATION_TASKS_TABLE, "name", "path", missing_msg);
+						return internal_find(db, name, CPPTRANSPORT_SQLITE_POSTINTEGRATION_TASKS_TABLE, "name", "path", missing_msg);
 					}
 
 
 				std::string find_output_task(sqlite3* db, const std::string& name, const std::string& missing_msg)
 					{
-						return internal_find(db, name, __CPP_TRANSPORT_SQLITE_OUTPUT_TASKS_TABLE, "name", "path", missing_msg);
+						return internal_find(db, name, CPPTRANSPORT_SQLITE_OUTPUT_TASKS_TABLE, "name", "path", missing_msg);
 					}
 
 
 				std::string find_product(sqlite3* db, const std::string& name, const std::string& missing_msg)
 					{
-						return internal_find(db, name, __CPP_TRANSPORT_SQLITE_DERIVED_PRODUCTS_TABLE, "name", "path", missing_msg);
+						return internal_find(db, name, CPPTRANSPORT_SQLITE_DERIVED_PRODUCTS_TABLE, "name", "path", missing_msg);
 					}
 
 
@@ -493,21 +493,21 @@ namespace transport
 				template <>
 				std::string find_group<integration_payload>(sqlite3* db, const std::string& name, const std::string& missing_msg)
 					{
-						return internal_find(db, name, __CPP_TRANSPORT_SQLITE_INTEGRATION_GROUPS_TABLE, "name", "path", missing_msg);
+						return internal_find(db, name, CPPTRANSPORT_SQLITE_INTEGRATION_GROUPS_TABLE, "name", "path", missing_msg);
 					}
 
 
 		    template <>
 		    std::string find_group<postintegration_payload>(sqlite3* db, const std::string& name, const std::string& missing_msg)
 					{
-				    return internal_find(db, name, __CPP_TRANSPORT_SQLITE_POSTINTEGRATION_GROUPS_TABLE, "name", "path", missing_msg);
+				    return internal_find(db, name, CPPTRANSPORT_SQLITE_POSTINTEGRATION_GROUPS_TABLE, "name", "path", missing_msg);
 					}
 
 
 		    template <>
 		    std::string find_group<output_payload>(sqlite3* db, const std::string& name, const std::string& missing_msg)
 			    {
-		        return internal_find(db, name, __CPP_TRANSPORT_SQLITE_OUTPUT_GROUPS_TABLE, "name", "path", missing_msg);
+		        return internal_find(db, name, CPPTRANSPORT_SQLITE_OUTPUT_GROUPS_TABLE, "name", "path", missing_msg);
 			    }
 
 
@@ -531,7 +531,7 @@ namespace transport
 				        else
 					        {
 				            std::ostringstream msg;
-				            msg << __CPP_TRANSPORT_REPO_SEARCH_FAIL << status << ": " << sqlite3_errmsg(db) << ")";
+				            msg << CPPTRANSPORT_REPO_SEARCH_FAIL << status << ": " << sqlite3_errmsg(db) << ")";
 				            throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, msg.str());
 					        }
 					    }
@@ -547,21 +547,21 @@ namespace transport
 				template <>
 				void enumerate_content_groups<integration_payload>(sqlite3* db, const std::string& name, std::list<std::string>& groups)
 					{
-						internal_enumerate_content_groups(db, name, groups, __CPP_TRANSPORT_SQLITE_INTEGRATION_GROUPS_TABLE);
+						internal_enumerate_content_groups(db, name, groups, CPPTRANSPORT_SQLITE_INTEGRATION_GROUPS_TABLE);
 					}
 
 
 		    template <>
 		    void enumerate_content_groups<postintegration_payload>(sqlite3* db, const std::string& name, std::list<std::string>& groups)
 			    {
-		        internal_enumerate_content_groups(db, name, groups, __CPP_TRANSPORT_SQLITE_POSTINTEGRATION_GROUPS_TABLE);
+		        internal_enumerate_content_groups(db, name, groups, CPPTRANSPORT_SQLITE_POSTINTEGRATION_GROUPS_TABLE);
 			    }
 
 
 		    template <>
 		    void enumerate_content_groups<output_payload>(sqlite3* db, const std::string& name, std::list<std::string>& groups)
 			    {
-		        internal_enumerate_content_groups(db, name, groups, __CPP_TRANSPORT_SQLITE_OUTPUT_GROUPS_TABLE);
+		        internal_enumerate_content_groups(db, name, groups, CPPTRANSPORT_SQLITE_OUTPUT_GROUPS_TABLE);
 			    }
 
 
@@ -571,12 +571,12 @@ namespace transport
             if(suffix.length() > 0) filename += "-" + suffix;
 
             // check if a content group with this filename already exists
-            unsigned int count = internal_count(db, filename, __CPP_TRANSPORT_SQLITE_RESERVED_CONTENT_NAMES_TABLE, "name");
+            unsigned int count = internal_count(db, filename, CPPTRANSPORT_SQLITE_RESERVED_CONTENT_NAMES_TABLE, "name");
 
             if(count > 0)
               {
                 // a content group has already been reserved, so build a new unique name
-                count = internal_count(db, posix_time_string, __CPP_TRANSPORT_SQLITE_RESERVED_CONTENT_NAMES_TABLE, "posix_time");
+                count = internal_count(db, posix_time_string, CPPTRANSPORT_SQLITE_RESERVED_CONTENT_NAMES_TABLE, "posix_time");
 
                 std::string filename = posix_time_string;
                 if(count > 0) filename += "-" + boost::lexical_cast<std::string>(count);
@@ -584,7 +584,7 @@ namespace transport
               }
 
             std::stringstream store_stmt;
-            store_stmt << "INSERT INTO " << __CPP_TRANSPORT_SQLITE_RESERVED_CONTENT_NAMES_TABLE << " VALUES (@name, @posix_time)";
+            store_stmt << "INSERT INTO " << CPPTRANSPORT_SQLITE_RESERVED_CONTENT_NAMES_TABLE << " VALUES (@name, @posix_time)";
 
             sqlite3_stmt* stmt;
             check_stmt(db, sqlite3_prepare_v2(db, store_stmt.str().c_str(), store_stmt.str().length()+1, &stmt, nullptr));
@@ -592,7 +592,7 @@ namespace transport
             check_stmt(db, sqlite3_bind_text(stmt, 1, filename.c_str(), filename.length(), SQLITE_STATIC));
             check_stmt(db, sqlite3_bind_text(stmt, 2, posix_time_string.c_str(), posix_time_string.length(), SQLITE_STATIC));
 
-            check_stmt(db, sqlite3_step(stmt), __CPP_TRANSPORT_REPO_STORE_RESERVE_FAIL, SQLITE_DONE);
+            check_stmt(db, sqlite3_step(stmt), CPPTRANSPORT_REPO_STORE_RESERVE_FAIL, SQLITE_DONE);
 
             check_stmt(db, sqlite3_clear_bindings(stmt));
             check_stmt(db, sqlite3_finalize(stmt));
