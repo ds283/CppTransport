@@ -199,6 +199,10 @@ add_executable(chris-makerepo2 examples/chris-mpi/makerepo2.cpp jsoncpp/jsoncpp.
 target_link_libraries(chris-makerepo2 sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} splinter-static-1-2)
 
 
+add_executable(chris-makerepo3 examples/chris-mpi/makerepo3.cpp jsoncpp/jsoncpp.cpp)
+target_link_libraries(chris-makerepo3 sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} splinter-static-1-2)
+
+
 add_executable(chris-mpi examples/chris-mpi/main.cpp jsoncpp/jsoncpp.cpp)
 target_link_libraries(chris-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} splinter-static-1-2)
 
