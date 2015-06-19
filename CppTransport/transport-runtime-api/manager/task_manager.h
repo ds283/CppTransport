@@ -59,11 +59,6 @@ namespace transport
 
         // INTERFACE -- REPOSITORY MANAGEMENT
 
-      public:
-
-		    //! Return handle to repository
-		    json_repository<number>* get_repository();
-
 
         // INTERFACE -- ERROR REPORTING
 
@@ -168,19 +163,6 @@ namespace transport
 					}
 			}
 
-
-    // REPOSITORY INTERFACE
-
-
-		template <typename number>
-		json_repository<number>* task_manager<number>::get_repository()
-			{
-				assert(this->repo != nullptr);
-
-				if(this->repo == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_REPO_NOT_SET);
-
-				return(this->repo);
-			}
 
   } // namespace transport
 
