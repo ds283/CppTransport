@@ -197,7 +197,7 @@ namespace transport
 		            msg << CPPTRANSPORT_OBSERVER_ELAPSED_LATER;
 			        }
 
-            msg << " = " << format_time(this->integration_timer.elapsed().wall);
+            msg << " = " << format_time(this->integration_timer.elapsed().wall - this->last_output);
             BOOST_LOG_SEV(logger, lev) << msg.str();
 
 		        this->first_output = false;
