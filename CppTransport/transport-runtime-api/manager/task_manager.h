@@ -119,7 +119,7 @@ namespace transport
       {
         if(world.rank() == MPI::RANK_MASTER)  // process command-line arguments if we are the master node
 	        {
-            master.process_arguments(argc, argv, this->model_finder_factory());
+            master.process_arguments(argc, argv, *this);
 	        }
       }
 
@@ -155,6 +155,7 @@ namespace transport
 			{
 				if(this->world.rank() == MPI::RANK_MASTER)
 					{
+            if(this->master.get_arguments().get_model_list()) this->write_models(std::cout);
 						this->master.execute_tasks();
 					}
 				else

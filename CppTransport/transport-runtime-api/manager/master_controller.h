@@ -267,7 +267,7 @@ namespace transport
 		  public:
 
 				//! interpret command-line arguments
-				void process_arguments(int argc, char* argv[], const typename instance_manager<number>::model_finder& finder);
+				void process_arguments(int argc, char* argv[], instance_manager<number>& instance_mgr);
 				
 		    //! execute any queued tasks
 		    void execute_tasks(void);
@@ -555,18 +555,14 @@ namespace transport
 		
 		
 		template <typename number>
-		void master_controller<number>::process_arguments(int argc, char* argv[], const typename instance_manager<number>::model_finder& finder)
+		void master_controller<number>::process_arguments(int argc, char* argv[], instance_manager<number>& instance_mgr)
 			{
-		    bool multiple_repo_warn = false;
-
-				bool seed = false;
-		    std::string seed_group;
-
         // set up Boost::program_options descriptors for command-line arguments
         boost::program_options::options_description generic("Generic options");
         generic.add_options()
           (CPPTRANSPORT_SWITCH_HELP,    CPPTRANSPORT_HELP_HELP)
-          (CPPTRANSPORT_SWITCH_VERSION, CPPTRANSPORT_HELP_VERSION);
+          (CPPTRANSPORT_SWITCH_VERSION, CPPTRANSPORT_HELP_VERSION)
+          (CPPTRANSPORT_SWITCH_MODELS,  CPPTRANSPORT_HELP_MODELS);
 
         boost::program_options::options_description configuration("Configuration options");
         configuration.add_options()
@@ -604,14 +600,19 @@ namespace transport
             std::cout << cmdline_options << std::endl;
           }
 
+        if(option_map.count(CPPTRANSPORT_SWITCH_MODELS))
+          {
+            this->arg_cache.set_model_list(true);
+          }
+
         if(option_map.count(CPPTRANSPORT_SWITCH_REPO))
           {
             try
               {
-                repo = repository_factory<number>(option_map[CPPTRANSPORT_SWITCH_REPO].as<std::string>(),
-                                                  repository<number>::access_type::readwrite,
-                                                  this->error_handler, this->warning_handler, this->message_handler);
-                this->repo->set_model_finder(finder);
+                this->repo = repository_factory<number>(option_map[CPPTRANSPORT_SWITCH_REPO].as<std::string>(),
+                                                        repository<number>::access_type::readwrite,
+                                                        this->error_handler, this->warning_handler, this->message_handler);
+                this->repo->set_model_finder(instance_mgr.model_finder_factory());
               }
             catch(runtime_exception& xe)
               {

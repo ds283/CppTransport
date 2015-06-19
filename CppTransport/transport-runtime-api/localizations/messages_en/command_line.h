@@ -41,5 +41,8 @@
 #define CPPTRANSPORT_SWITCH_TASK              "task"
 #define CPPTRANSPORT_HELP_TASK                "add named task to list of jobs"
 
+#define CPPTRANSPORT_SWITCH_MODELS            "models"
+#define CPPTRANSPORT_HELP_MODELS              "list models baked into this executable"
+
 
 #endif //CPPTRANSPORT_COMMAND_LINE_H

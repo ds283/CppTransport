@@ -37,6 +37,12 @@ namespace transport
         //! Set verbose status
         void set_verbose(bool g)                       { this->verbose = g; }
 
+        //! Get model list status
+        bool get_model_list() const                    { return(this->list_models); }
+
+        //! Set model list status
+        void set_model_list(bool g)                    { this->list_models = g; }
+
 
         // MPI VISUALIZATION OPTIONS
 
@@ -65,12 +71,16 @@ namespace transport
         //! verbose output?
         bool verbose;
 
+        //! write out model information?
+        bool list_models;
+
 	    };
 
 
     argument_cache::argument_cache()
 	    : gantt_chart(false),
-	      verbose(false)
+	      verbose(false),
+        list_models(false)
 	    {
 	    }
 
