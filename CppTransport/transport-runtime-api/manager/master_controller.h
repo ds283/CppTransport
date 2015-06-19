@@ -44,26 +44,7 @@
 #include "boost/serialization/string.hpp"
 #include "boost/timer/timer.hpp"
 #include "boost/lexical_cast.hpp"
-
-
-
-#define CPPTRANSPORT_SWITCH_REPO              "--repo"
-#define CPPTRANSPORT_SWITCH_TAG               "--tag"
-#define CPPTRANSPORT_SWITCH_CAPACITY          "--caches"
-#define CPPTRANSPORT_SWITCH_BATCHER_CAPACITY  "--batch-cache"
-#define CPPTRANSPORT_SWITCH_CACHE_CAPACITY    "--data-cache"
-#define CPPTRANSPORT_SWITCH_VERBOSE           "-v"
-#define CPPTRANSPORT_SWITCH_GANTT_CHART       "--gantt-chart"
-
-#define CPPTRANSPORT_VERB_TASK                "task"
-#define CPPTRANSPORT_VERB_GET                 "get"
-#define CPPTRANSPORT_VERB_SEED                "seed"
-
-#define CPPTRANSPORT_NOUN_TASK                "task"
-#define CPPTRANSPORT_NOUN_PACKAGE             "package"
-#define CPPTRANSPORT_NOUN_PRODUCT             "product"
-#define CPPTRANSPORT_NOUN_CONTENT             "content"
-
+#include "boost/program_options.hpp"
 
 
 namespace transport
@@ -316,10 +297,7 @@ namespace transport
 
 		  protected:
 
-		    //! Master node: Process a 'get' job
-		    void process_get(const job_descriptor& job);
-
-		    //! Master node: Process a 'task' job.
+        //! Master node: Process a 'task' job.
 		    //! Some tasks are integrations, others process the numerical output from an integration to product
 		    //! a derived data product (like fNL).
 		    //! This function schedules workers to process the task.
@@ -584,201 +562,157 @@ namespace transport
 				bool seed = false;
 		    std::string seed_group;
 
-		    std::list<std::string> tags;
+        // set up Boost::program_options descriptors for command-line arguments
+        boost::program_options::options_description generic("Generic options");
+        generic.add_options()
+          (CPPTRANSPORT_SWITCH_HELP,    CPPTRANSPORT_HELP_HELP)
+          (CPPTRANSPORT_SWITCH_VERSION, CPPTRANSPORT_HELP_VERSION);
 
-		    for(unsigned int i = 1; i < argc; ++i)
-			    {
-		        if(std::string(argv[i]) == CPPTRANSPORT_SWITCH_REPO)
-			        {
-		            if(repo != nullptr)
-			            {
-		                ++i;
-		                if(!multiple_repo_warn)
-			                {
-		                    this->warning_handler(CPPTRANSPORT_MULTIPLE_SET_REPO);
-		                    multiple_repo_warn = true;
-			                }
-			            }
-		            else if(i+1 >= argc) this->error_handler(CPPTRANSPORT_EXPECTED_REPO);
-		            else
-			            {
-		                ++i;
-		                std::string repo_path = std::string(argv[i]);
-		                try
-			                {
-		                    repo = repository_factory<number>(repo_path, repository<number>::access_type::readwrite,
-		                                                      this->error_handler, this->warning_handler, this->message_handler);
-		                    this->repo->set_model_finder(finder);
-			                }
-		                catch (runtime_exception& xe)
-			                {
-		                    if(xe.get_exception_code() == runtime_exception::REPO_NOT_FOUND)
-			                    {
-		                        this->error_handler(xe.what());
-		                        repo = nullptr;
-			                    }
-		                    else
-			                    {
-		                        throw xe;
-			                    }
-			                }
-			            }
-			        }
-		        else if(std::string(argv[i]) == CPPTRANSPORT_SWITCH_TAG)
-			        {
-		            if(i+1 >= argc) this->error_handler(CPPTRANSPORT_EXPECTED_TAG);
-		            else            tags.push_back(std::string(argv[++i]));
-			        }
-		        else if(std::string(argv[i]) == CPPTRANSPORT_SWITCH_CAPACITY)
-			        {
-		            if(i+1 >= argc) this->error_handler(CPPTRANSPORT_EXPECTED_CAPACITY);
-		            else
-			            {
-		                ++i;
-		                std::string capacity_str(argv[i]);
-		                int capacity = boost::lexical_cast<int>(capacity_str);
-		                capacity = capacity * 1024*1024;
-		                if(capacity > 0)
-			                {
-		                    this->batcher_capacity = this->pipe_capacity = static_cast<unsigned int>(capacity);
-		                    this->data_mgr->set_batcher_capacity(this->batcher_capacity);
-                        this->data_mgr->set_pipe_capacity(this->pipe_capacity);
-			                }
-		                else
-			                {
-		                    std::ostringstream msg;
-		                    msg << CPPTRANSPORT_EXPECTED_POSITIVE << " " << CPPTRANSPORT_SWITCH_CAPACITY;
-		                    this->error_handler(msg.str());
-			                }
-			            }
-			        }
-		        else if(std::string(argv[i]) == CPPTRANSPORT_SWITCH_BATCHER_CAPACITY)
-			        {
-		            if(i+1 >= argc) this->error_handler(CPPTRANSPORT_EXPECTED_CAPACITY);
-		            else
-			            {
-		                ++i;
-		                std::string capacity_str(argv[i]);
-		                int capacity = boost::lexical_cast<int>(capacity_str);
-		                capacity = capacity * 1024*1024;
-		                if(capacity > 0)
-			                {
-		                    this->batcher_capacity = static_cast<unsigned int>(capacity);
-		                    this->data_mgr->set_batcher_capacity(this->batcher_capacity);
-			                }
-		                else
-			                {
-		                    std::ostringstream msg;
-		                    msg << CPPTRANSPORT_EXPECTED_POSITIVE << " " << CPPTRANSPORT_SWITCH_BATCHER_CAPACITY;
-		                    this->error_handler(msg.str());
-			                }
-			            }
-			        }
-		        else if(std::string(argv[i]) == CPPTRANSPORT_SWITCH_CACHE_CAPACITY)
-			        {
-		            if(i+1 >= argc) this->error_handler(CPPTRANSPORT_EXPECTED_CAPACITY);
-		            else
-			            {
-		                ++i;
-		                std::string capacity_str(argv[i]);
-		                int capacity = boost::lexical_cast<int>(capacity_str);
-		                capacity = capacity * 1024*1024;
-		                if(capacity > 0)
-			                {
-		                    this->pipe_capacity = static_cast<unsigned int>(capacity);
-                        this->data_mgr->set_pipe_capacity(this->pipe_capacity);
-			                }
-		                else
-			                {
-		                    std::ostringstream msg;
-		                    msg << CPPTRANSPORT_EXPECTED_POSITIVE << " " << CPPTRANSPORT_SWITCH_CACHE_CAPACITY;
-		                    this->error_handler(msg.str());
-			                }
-			            }
-			        }
-		        else if(std::string(argv[i]) == CPPTRANSPORT_SWITCH_GANTT_CHART)
-			        {
-				        if(i+1 >= argc) this->error_handler(CPPTRANSPORT_EXPECTED_GANTT_FILENAME);
-				        else
-					        {
-						        ++i;
-						        this->arg_cache.set_gantt_chart(true);
-						        this->arg_cache.set_gantt_filename(argv[i]);
-					        }
-			        }
-		        else if(std::string(argv[i]) == CPPTRANSPORT_SWITCH_VERBOSE)
-			        {
-				        this->arg_cache.set_verbose(true);
-			        }
-		        else if(std::string(argv[i]) == CPPTRANSPORT_VERB_SEED)
-			        {
-								if(i+1 >= argc) this->error_handler(CPPTRANSPORT_EXPECTED_SEED_GROUP);
-								else
-									{
-								    ++i;
-										seed_group = std::string(argv[i]);
-								    seed = true;
-									}
-			        }
-		        else if(std::string(argv[i]) == CPPTRANSPORT_VERB_TASK)
-			        {
-		            if(i+1 >= argc) this->error_handler(CPPTRANSPORT_EXPECTED_TASK_ID);
-		            else
-			            {
-		                ++i;
-		                job_queue.push_back(job_descriptor(job_task, argv[i], tags));
-		                tags.clear();
+        boost::program_options::options_description configuration("Configuration options");
+        configuration.add_options()
+          (CPPTRANSPORT_SWITCH_VERBOSE,                                                                                      CPPTRANSPORT_HELP_VERBOSE)
+          (CPPTRANSPORT_SWITCH_REPO,             boost::program_options::value< std::string >(),                             CPPTRANSPORT_HELP_REPO)
+          (CPPTRANSPORT_SWITCH_TAG,              boost::program_options::value< std::vector<std::string> >(),                CPPTRANSPORT_HELP_TAG)
+          (CPPTRANSPORT_SWITCH_CAPACITY,         boost::program_options::value< int >(),                                     CPPTRANSPORT_HELP_CAPACITY)
+          (CPPTRANSPORT_SWITCH_BATCHER_CAPACITY, boost::program_options::value< int >(),                                     CPPTRANSPORT_HELP_BATCHER_CAPACITY)
+          (CPPTRANSPORT_SWITCH_CACHE_CAPACITY,   boost::program_options::value< int >(),                                     CPPTRANSPORT_HELP_CACHE_CAPACITY)
+          (CPPTRANSPORT_SWITCH_GANTT_CHART,      boost::program_options::value< std::string >(),                             CPPTRANSPORT_HELP_GANTT_CHART);
 
-				            if(seed) job_queue.back().set_seed(seed_group);
-				            seed_group.clear();
-				            seed = false;
-			            }
-			        }
-		        else if(std::string(argv[i]) == CPPTRANSPORT_VERB_GET)
-			        {
-		            if(i+1 >= argc) this->error_handler(CPPTRANSPORT_EXPECTED_GET_TYPE);
-				        else
-			            {
-		                ++i;
+        boost::program_options::options_description job_options("Job specification");
+        job_options.add_options()
+          (CPPTRANSPORT_SWITCH_TASK,             boost::program_options::value< std::vector< std::string > >()->composing(), CPPTRANSPORT_HELP_TASK)
+          (CPPTRANSPORT_SWITCH_SEED,             boost::program_options::value< std::string >(),                             CPPTRANSPORT_HELP_SEED);
 
-		                job_type type;
-		                if(std::string(argv[i]) == CPPTRANSPORT_NOUN_PACKAGE)      type = job_get_package;
-		                else if(std::string(argv[i]) == CPPTRANSPORT_NOUN_TASK)    type = job_get_task;
-		                else if(std::string(argv[i]) == CPPTRANSPORT_NOUN_PRODUCT) type = job_get_product;
-		                else if(std::string(argv[i]) == CPPTRANSPORT_NOUN_CONTENT) type = job_get_content;
-		                else
-			                {
-		                    std::ostringstream msg;
-		                    msg << CPPTRANSPORT_UNKNOWN_GET_TYPE << " '" << argv[i] << "'";
-		                    this->error_handler(msg.str());
-			                }
+        boost::program_options::options_description cmdline_options;
+        cmdline_options.add(generic).add(configuration).add(job_options);
 
-		                if(i+1 >= argc) this->error_handler(CPPTRANSPORT_EXPECTED_GET_NAME);
-		                else
-			                {
-		                    ++i;
-		                    std::string name = argv[i];
+        boost::program_options::variables_map option_map;
+        boost::program_options::store(boost::program_options::parse_command_line(argc, argv, cmdline_options), option_map);
+        boost::program_options::notify(option_map);
 
-		                    if(i+1 >= argc) this->error_handler(CPPTRANSPORT_EXPECTED_GET_OUTPUT);
-				                else
-			                    {
-		                        ++i;
-		                        std::string output = argv[i];
+        bool emitted_version = false;
 
-		                        job_queue.push_back(job_descriptor(type, name, tags, output));
-		                        tags.clear();
-			                    }
-			                }
-			            }
-			        }
-		        else
-			        {
-		            std::ostringstream msg;
-		            msg << CPPTRANSPORT_UNKNOWN_SWITCH << " '" << argv[i] << "'";
-		            this->error_handler(msg.str());
-			        }
-			    }
-			}
+        if(option_map.count(CPPTRANSPORT_SWITCH_VERSION))
+          {
+            std::cout << CPPTRANSPORT_NAME << " " << CPPTRANSPORT_VERSION << " " << CPPTRANSPORT_COPYRIGHT << " | " << CPPTRANSPORT_RUNTIME_API << std::endl;
+            emitted_version = true;
+          }
+
+        if(option_map.count(CPPTRANSPORT_SWITCH_HELP))
+          {
+            if(!emitted_version) std::cout << CPPTRANSPORT_NAME << " " << CPPTRANSPORT_VERSION << " " << CPPTRANSPORT_COPYRIGHT << " | " << CPPTRANSPORT_RUNTIME_API << std::endl;
+            std::cout << cmdline_options << std::endl;
+          }
+
+        if(option_map.count(CPPTRANSPORT_SWITCH_REPO))
+          {
+            try
+              {
+                repo = repository_factory<number>(option_map[CPPTRANSPORT_SWITCH_REPO].as<std::string>(),
+                                                  repository<number>::access_type::readwrite,
+                                                  this->error_handler, this->warning_handler, this->message_handler);
+                this->repo->set_model_finder(finder);
+              }
+            catch(runtime_exception& xe)
+              {
+                if(xe.get_exception_code() == runtime_exception::REPO_NOT_FOUND)
+                  {
+                    this->error_handler(xe.what());
+                    repo = nullptr;
+                  }
+                else
+                  {
+                    throw xe;
+                  }
+              }
+          }
+
+        // populate list of tags
+        std::list<std::string> tags;
+        if(option_map.count(CPPTRANSPORT_SWITCH_TAG) > 0)
+          {
+            std::vector<std::string> tmp = option_map[CPPTRANSPORT_SWITCH_TAG].as<std::vector<std::string> >();
+
+            // copy tags into std::list tags
+            // Boost::program_arguments doesn't support lists, so we have to do it this way
+            std::copy(tmp.begin(), tmp.end(), std::back_inserter(tags));
+          }
+
+        if(option_map.count(CPPTRANSPORT_SWITCH_CAPACITY))
+          {
+            int capacity = option_map[CPPTRANSPORT_SWITCH_CAPACITY].as<int>() * 1024*1024;
+            if(capacity > 0)
+              {
+                this->batcher_capacity = this->pipe_capacity = static_cast<unsigned int>(capacity);
+                this->data_mgr->set_batcher_capacity(this->batcher_capacity);
+                this->data_mgr->set_pipe_capacity(this->pipe_capacity);
+              }
+            else
+              {
+                std::ostringstream msg;
+                msg << CPPTRANSPORT_EXPECTED_POSITIVE << " " << CPPTRANSPORT_SWITCH_CAPACITY;
+                this->error_handler(msg.str());
+              }
+          }
+
+        if(option_map.count(CPPTRANSPORT_SWITCH_CACHE_CAPACITY))
+          {
+            int capacity = option_map[CPPTRANSPORT_SWITCH_CACHE_CAPACITY].as<int>() * 1024*1024;
+            if(capacity > 0)
+              {
+                this->pipe_capacity = static_cast<unsigned int>(capacity);
+                this->data_mgr->set_pipe_capacity(this->pipe_capacity);
+              }
+            else
+              {
+                std::ostringstream msg;
+                msg << CPPTRANSPORT_EXPECTED_POSITIVE << " " << CPPTRANSPORT_SWITCH_CACHE_CAPACITY;
+                this->error_handler(msg.str());
+              }
+          }
+
+        if(option_map.count(CPPTRANSPORT_SWITCH_BATCHER_CAPACITY))
+          {
+            int capacity = option_map[CPPTRANSPORT_SWITCH_BATCHER_CAPACITY].as<int>() * 1024*1024;
+            if(capacity > 0)
+              {
+                this->batcher_capacity = static_cast<unsigned int>(capacity);
+                this->data_mgr->set_batcher_capacity(this->batcher_capacity);
+              }
+            else
+              {
+                std::ostringstream msg;
+                msg << CPPTRANSPORT_EXPECTED_POSITIVE << " " << CPPTRANSPORT_SWITCH_BATCHER_CAPACITY;
+                this->error_handler(msg.str());
+              }
+          }
+
+        if(option_map.count(CPPTRANSPORT_SWITCH_GANTT_CHART))
+          {
+            this->arg_cache.set_gantt_chart(true);
+            this->arg_cache.set_gantt_filename(option_map[CPPTRANSPORT_SWITCH_GANTT_CHART].as<std::string>());
+          }
+
+        if(option_map.count(CPPTRANSPORT_SWITCH_VERBOSE_LONG))
+          {
+            this->arg_cache.set_verbose(true);
+          }
+
+        if(option_map.count(CPPTRANSPORT_SWITCH_TASK))
+          {
+            std::vector<std::string> tasks = option_map[CPPTRANSPORT_SWITCH_TASK].as< std::vector<std::string> >();
+
+            for(std::vector<std::string>::const_iterator t = tasks.begin(); t != tasks.end(); ++t)
+              {
+                job_queue.push_back(job_descriptor(job_task, *t, tags));
+
+                if(option_map.count(CPPTRANSPORT_SWITCH_SEED))
+                  {
+                    job_queue.back().set_seed(option_map[CPPTRANSPORT_SWITCH_SEED].as<std::string>());
+                  }
+              }
+          }
+      }
 		
 
     template <typename number>
@@ -806,15 +740,6 @@ namespace transport
 	                    {
                         this->process_task(*t);
 		                    database_tasks++;
-                        break;
-	                    }
-
-                    case job_get_product:
-                    case job_get_task:
-                    case job_get_package:
-                    case job_get_content:
-	                    {
-                        this->process_get(*t);
                         break;
 	                    }
 
@@ -851,64 +776,6 @@ namespace transport
         this->terminate_workers();
 
 		    if(this->arg_cache.get_gantt_chart()) this->journal.make_gantt_chart(this->arg_cache.get_gantt_filename(), this->local_env);
-	    }
-
-
-    template <typename number>
-    void master_controller<number>::process_get(const job_descriptor& job)
-	    {
-        try
-	        {
-            std::string document;
-
-            switch(job.get_type())
-	            {
-                case job_get_package:
-	                {
-                    document = this->repo->export_JSON_package_record(job.get_name());
-                    break;
-	                }
-
-                case job_get_task:
-	                {
-                    document = this->repo->export_JSON_task_record(job.get_name());
-                    break;
-	                }
-
-                case job_get_product:
-	                {
-                    document = this->repo->export_JSON_product_record(job.get_name());
-                    break;
-	                }
-
-                case job_get_content:
-	                {
-                    document = this->repo->export_JSON_content_record(job.get_name());
-                    break;
-	                }
-
-                default:
-	                assert(false);
-	            }
-
-            std::ofstream out;
-            out.open(job.get_output().c_str());
-            if(out.is_open() && !out.fail())
-	            {
-                out << document;
-	            }
-            else
-	            {
-                std::ostringstream msg;
-                msg << CPPTRANSPORT_OPEN_OUTPUT_FAIL << " '" << job.get_output() << "'";
-                throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
-	            }
-            out.close();
-	        }
-        catch(runtime_exception& xe)
-	        {
-            this->error_handler(xe.what());
-	        }
 	    }
 
 

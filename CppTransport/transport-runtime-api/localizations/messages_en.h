@@ -10,6 +10,7 @@
 
 
 #include "transport-runtime-api/localizations/messages_en/runtimeapi.h"
+#include "transport-runtime-api/localizations/messages_en/command_line.h"
 
 #include "transport-runtime-api/localizations/messages_en/serialization.h"
 
