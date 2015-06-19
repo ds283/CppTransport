@@ -54,7 +54,7 @@ int main(int argc, const char *argv[])
     boost::program_options::options_description config_file_options;
     config_file_options.add(configuration);
 
-    boost::program_options::options_description visible("Command-line options");
+    boost::program_options::options_description visible;
     visible.add(generic).add(configuration);
 
     boost::program_options::variables_map option_map;
