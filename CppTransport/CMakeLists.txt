@@ -8,7 +8,7 @@ SET ( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/splinter/cmake
 ADD_SUBDIRECTORY ( "splinter" "splinter-build" )
 
 find_package(MPI REQUIRED)
-find_package(Boost REQUIRED COMPONENTS system filesystem random timer date_time mpi log_setup log serialization thread)
+find_package(Boost REQUIRED COMPONENTS system filesystem random timer date_time mpi log_setup log serialization thread program_options)
 find_package(GiNaC REQUIRED)
 find_package(Eigen3 REQUIRED)
 #find_package(CUDA REQUIRED)
