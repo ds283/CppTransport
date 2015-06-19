@@ -155,6 +155,7 @@ namespace transport
 			{
 				if(this->world.rank() == MPI::RANK_MASTER)
 					{
+            // output model list if it has been asked for (have to wait until this point to be sure all models have registered)
             if(this->master.get_arguments().get_model_list()) this->write_models(std::cout);
 						this->master.execute_tasks();
 					}

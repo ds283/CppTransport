@@ -20,7 +20,7 @@
 #define CPPTRANSPORT_HELP_TAG                 "add tag"
 
 #define CPPTRANSPORT_SWITCH_CAPACITY          "caches"
-#define CPPTRANSPORT_HELP_CAPACITY            "set global cache (batcher, datapipe) capacity, measured in Mb"
+#define CPPTRANSPORT_HELP_CAPACITY            "set capacity for all caches, measured in Mb"
 
 #define CPPTRANSPORT_SWITCH_BATCHER_CAPACITY  "batch-cache"
 #define CPPTRANSPORT_HELP_BATCHER_CAPACITY    "set batcher cache capacity, measured in Mb"
@@ -33,7 +33,7 @@
 #define CPPTRANSPORT_HELP_VERBOSE             "enable verbose output"
 
 #define CPPTRANSPORT_SWITCH_GANTT_CHART       "gantt-chart"
-#define CPPTRANSPORT_HELP_GANTT_CHART         "ouput Gantt chart describing worker activity"
+#define CPPTRANSPORT_HELP_GANTT_CHART         "output Gantt chart describing worker activity"
 
 #define CPPTRANSPORT_SWITCH_SEED              "seed"
 #define CPPTRANSPORT_HELP_SEED                "specify named output group to use as a seed"
