@@ -162,7 +162,7 @@ namespace transport
     void timing_observer<number>::start_batching(double t, boost::log::sources::severity_logger<Level>& logger, Level lev)
 	    {
         this->integration_timer.stop();
-        this->batching_timer.start();
+        this->batching_timer.resume();
 
         // should we emit output?
         // only do so if not in silent mode and enough time has elapsed since the last update
@@ -204,7 +204,7 @@ namespace transport
     void timing_observer<number>::stop_batching()
       {
         this->batching_timer.stop();
-        this->integration_timer.start();
+        this->integration_timer.resume();
       }
 
 
