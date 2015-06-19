@@ -99,7 +99,7 @@ namespace transport
 									    else                         this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_K_VALUE_AXIS_LABEL_NOLATEX);
 											break;
 
-								    case efolds_axis:
+								    case efolds_exit_axis:
 									    if(this->typeset_with_LaTeX) this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_EFOLDS_EXIT_AXIS_LABEL_LATEX);
 									    else                         this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_EFOLDS_EXIT_AXIS_LABEL_NOLATEX);
 									    break;
