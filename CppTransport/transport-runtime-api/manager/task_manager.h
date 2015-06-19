@@ -59,11 +59,6 @@ namespace transport
 
         // INTERFACE -- REPOSITORY MANAGEMENT
 
-      public:
-
-		    //! Return handle to repository
-		    json_repository<number>* get_repository();
-
 
         // INTERFACE -- ERROR REPORTING
 
@@ -124,7 +119,7 @@ namespace transport
       {
         if(world.rank() == MPI::RANK_MASTER)  // process command-line arguments if we are the master node
 	        {
-            master.process_arguments(argc, argv, this->model_finder_factory());
+            master.process_arguments(argc, argv, *this);
 	        }
       }
 
@@ -160,6 +155,8 @@ namespace transport
 			{
 				if(this->world.rank() == MPI::RANK_MASTER)
 					{
+            // output model list if it has been asked for (have to wait until this point to be sure all models have registered)
+            if(this->master.get_arguments().get_model_list()) this->write_models(std::cout);
 						this->master.execute_tasks();
 					}
 				else
@@ -168,19 +165,6 @@ namespace transport
 					}
 			}
 
-
-    // REPOSITORY INTERFACE
-
-
-		template <typename number>
-		json_repository<number>* task_manager<number>::get_repository()
-			{
-				assert(this->repo != nullptr);
-
-				if(this->repo == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_REPO_NOT_SET);
-
-				return(this->repo);
-			}
 
   } // namespace transport
 

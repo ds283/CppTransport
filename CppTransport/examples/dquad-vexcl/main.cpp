@@ -40,18 +40,6 @@ int main(int argc, char* argv[])
 
 		mgr->process();
 
-    if(mgr->is_master())
-      {
-        transport::repository<double>* repo = mgr->get_repository();
-        std::list<typename transport::repository<double>::output_group_record> output = repo->enumerate_integration_task_content("dquad.threepf-1");
-
-        for(std::list<typename transport::repository<double>::output_group_record>::iterator t = output.begin(); t != output.end(); ++t)
-          {
-            t->write(std::cout);
-            std::cout << std::endl;
-          }
-      }
-
 //    transport::python_plot_gadget<double>     py_plt(python);
 //    transport::asciitable_plot_gadget<double> text_plt;
 ////    gnuplot_plot_gadget<double> plt;

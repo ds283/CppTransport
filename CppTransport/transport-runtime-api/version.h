@@ -8,7 +8,13 @@
 #define __version_H_
 
 
-#define CPPTRANSPORT_RUNTIME_API_VERSION (12)
+#define CPPTRANSPORT_NAME                 "built using CppTransport"
+#define CPPTRANSPORT_VERSION              "0.12"
+#define CPPTRANSPORT_NUMERIC_VERSION      (0.12)
+#define CPPTRANSPORT_COPYRIGHT            "(c) University of Sussex 2013-15"
+
+#define CPPTRANSPORT_RUNTIME_API          "runtime version 0.12"
+#define CPPTRANSPORT_RUNTIME_API_VERSION  (12)
 
 
 #endif //__version_H_

@@ -32,10 +32,16 @@ namespace transport
       public:
 
         //! Get verbose status
-        bool get_verbose() const                      { return(this->verbose); }
+        bool get_verbose() const                       { return(this->verbose); }
 
         //! Set verbose status
-        void set_verbose(bool g)                      { this->verbose = g; }
+        void set_verbose(bool g)                       { this->verbose = g; }
+
+        //! Get model list status
+        bool get_model_list() const                    { return(this->list_models); }
+
+        //! Set model list status
+        void set_model_list(bool g)                    { this->list_models = g; }
 
 
         // MPI VISUALIZATION OPTIONS
@@ -43,16 +49,16 @@ namespace transport
       public:
 
         //! Set Gantt chart status
-        void set_gantt_chart(bool g)                  { this->gantt_chart = g; }
+        void set_gantt_chart(bool g)                   { this->gantt_chart = g; }
 
         //! Get Gantt chart status
-        bool get_gantt_chart() const                  { return(this->gantt_chart); }
+        bool get_gantt_chart() const                   { return(this->gantt_chart); }
 
         //! Set Gantt chart filename
-        void set_gantt_filename(const std::string f)  { this->gantt_filename = f; }
+        void set_gantt_filename(const std::string& f)  { this->gantt_filename = f; }
 
         //! Get Gantt chart filename
-        const std::string& get_gantt_filename() const { return(this->gantt_filename); }
+        const std::string& get_gantt_filename() const  { return(this->gantt_filename); }
 
       private:
 
@@ -65,12 +71,16 @@ namespace transport
         //! verbose output?
         bool verbose;
 
+        //! write out model information?
+        bool list_models;
+
 	    };
 
 
     argument_cache::argument_cache()
 	    : gantt_chart(false),
-	      verbose(false)
+	      verbose(false),
+        list_models(false)
 	    {
 	    }
 

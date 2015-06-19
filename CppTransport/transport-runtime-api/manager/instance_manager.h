@@ -40,6 +40,7 @@ namespace transport
         // CONSTRUCTOR
 
       public:
+
         model_instance(model<number>* m, const std::string& i, unsigned int v)
           : m_ptr(m), uid(i), tver(v)
           {
@@ -57,6 +58,9 @@ namespace transport
         //! Delete stored model
         void delete_model() { delete(this->m_ptr); }
 
+        //! Get uid of stored model
+        const std::string& get_uid() const { return(this->uid); }
+
         // COMPARISON OPERATOR
 
       public:
@@ -71,6 +75,7 @@ namespace transport
         model<number>*    m_ptr;
         const std::string uid;
         unsigned int      tver;
+
       };
 
 
@@ -111,6 +116,7 @@ namespace transport
         //! Deregister an instance of a model.
         void deregister_model(model<number>* m, const std::string& uid, unsigned int version);
 
+
         // INTERFACE -- MODEL ACCESS
 
       protected:
@@ -125,6 +131,14 @@ namespace transport
           {
             return(std::bind(&instance_manager<number>::find_model, this, std::placeholders::_1));
           }
+
+
+        // INTERFACE -- WRITE DETAILS TO STREAM
+
+      public:
+
+        void write_models(std::ostream& stream);
+
 
         // INTERNAL DATA
 
@@ -194,6 +208,7 @@ namespace transport
           }
       }
 
+
     template <typename number>
     model<number>* instance_manager<number>::find_model(const std::string& i)
       {
@@ -209,6 +224,23 @@ namespace transport
         else
           {
             return((*t).get_model());
+          }
+      }
+
+
+    template <typename number>
+    void instance_manager<number>::write_models(std::ostream& stream)
+      {
+        unsigned int c = 0;
+
+        for(typename std::list< model_instance<number> >::const_iterator t = this->models.begin(); t != this->models.end(); ++t)
+          {
+            model<number>* mdl = t->get_model();
+            c++;
+
+            stream << c << ". " << mdl->get_name() << " [" << mdl->get_author() << "]" << std::endl;
+            stream << "   backend = " << mdl->get_backend() << " [bg=" << mdl->get_back_stepper() << ", pert=" << mdl->get_pert_stepper() << "]" << std::endl;
+            stream << "   UID = " << t->get_uid() << " | built using CppTransport " << static_cast<double>(mdl->get_translator_version())/100.0 << std::endl;
           }
       }
 

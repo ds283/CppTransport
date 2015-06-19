@@ -9,7 +9,8 @@
 #include <iostream>
 #include <deque>
 
-#include <boost/timer/timer.hpp>
+#include "boost/program_options.hpp"
+#include "boost/timer/timer.hpp"
 
 #include "core.h"
 #include "translation_unit.h"
@@ -26,65 +27,76 @@ int main(int argc, const char *argv[])
     // set up the initial search path to consist only of CWD
     std::shared_ptr<finder> path = std::make_shared<finder>();
 
-    std::string current_core           = "";
-    std::string current_implementation = "";
-    bool        cse                    = true;
-		bool        verbose                = false;
+    // set up Boost::program_options descriptors for command-line arguments
+    boost::program_options::options_description generic("Generic options");
+    generic.add_options()
+      ("version", "output version information")
+      ("help",    "obtain brief descrption of command line options");
+
+    boost::program_options::options_description configuration("Configuration options");
+    configuration.add_options()
+      ("verbose,v",                                                                                       "enable verbose output")
+      ("include,I",             boost::program_options::value< std::vector<std::string> >()->composing(), "add specified path to search list")
+      ("core-output",           boost::program_options::value< std::string >()->default_value(""),        "specify name of core header")
+      ("implementation-output", boost::program_options::value< std::string >()->default_value(""),        "specify name of implementation header")
+      ("no-cse",                                                                                          "disable common sub-expression elimination");
+
+    boost::program_options::options_description hidden("Hidden options");
+    hidden.add_options()
+      ("input-file", boost::program_options::value< std::vector<std::string> >(), "input file");
+
+    boost::program_options::positional_options_description positional_options;
+    positional_options.add("input-file", -1);
+
+    boost::program_options::options_description cmdline_options;
+    cmdline_options.add(generic).add(configuration).add(hidden);
+
+    boost::program_options::options_description config_file_options;
+    config_file_options.add(configuration);
+
+    boost::program_options::options_description visible;
+    visible.add(generic).add(configuration);
+
+    boost::program_options::variables_map option_map;
+    boost::program_options::store(boost::program_options::command_line_parser(argc, argv).options(cmdline_options).positional(positional_options).run(), option_map);
+    boost::program_options::notify(option_map);
+
+    bool emitted_version = false;
+
+    if(option_map.count("version"))
+      {
+        std::cout << CPPTRANSPORT_NAME << " " << CPPTRANSPORT_VERSION << " " << CPPTRANSPORT_COPYRIGHT << std::endl;
+        emitted_version = true;
+      }
+
+    if(option_map.count("help"))
+      {
+        if(!emitted_version) std::cout << CPPTRANSPORT_NAME << " " << CPPTRANSPORT_VERSION << " " << CPPTRANSPORT_COPYRIGHT << std::endl;
+        std::cout << visible << std::endl;
+      }
+
+    if(option_map.count("include") > 0)
+      {
+        std::vector<std::string> include_paths = option_map["include"].as< std::vector<std::string> >();
+        for(std::vector<std::string>::const_iterator t = include_paths.begin(); t != include_paths.end(); ++t)
+          {
+            path->add(*t);
+          }
+      }
 
     unsigned int files_processed = 0;
     unsigned int replacements    = 0;
 
-    for(int i = 1; i < argc; ++i)
+    if(option_map.count("input-file") > 0)
       {
-        if(strcmp(argv[i], "-I") == 0)
+        std::vector<std::string> input_files = option_map["input-file"].as< std::vector<std::string> >();
+        for(std::vector<std::string>::const_iterator t = input_files.begin(); t != input_files.end(); ++t)
           {
-            if(i + 1 < argc) path->add(std::string(argv[++i]));
-            else
-              {
-                std::ostringstream msg;
-                msg << ERROR_MISSING_PATHNAME << " -I";
-                error(msg.str());
-              }
-          }
-        else if(strcmp(argv[i], "--core-output") == 0)
-          {
-            if(i + 1 < argc) current_core = (std::string)argv[++i];
-            else
-              {
-                std::ostringstream msg;
-                msg << ERROR_MISSING_PATHNAME << " --core-output";
-                error(msg.str());
-              }
-          }
-        else if(strcmp(argv[i], "--implementation-output") == 0)
-          {
-            if(i + 1 < argc) current_implementation = (std::string)argv[++i];
-            else
-              {
-                std::ostringstream msg;
-                msg << ERROR_MISSING_PATHNAME << " --implementation-output";
-                error(msg.str());
-              }
-          }
-        else if(strcmp(argv[i], "--cse") == 0)    cse = true;
-        else if(strcmp(argv[i], "--no-cse") == 0) cse = false;
-        else if((strcmp(argv[i], "--verbose") == 0) || (strcmp(argv[i], "-v") == 0))
-	        {
-		        if(!verbose)
-			        {
-		            std::cout << CPPTRANSPORT_NAME << " " << CPPTRANSPORT_VERSION << " " << CPPTRANSPORT_COPYRIGHT << std::endl;
-			        }
-            verbose = true;
-	        }
-        else if((argv[i])[0] == '-')  // assume to be a switch we don't know about
-          {
-            std::ostringstream msg;
-            msg << WARNING_UNKNOWN_SWITCH << " " << argv[i];
-            warn(msg.str());
-          }
-        else // assume to be an input file we are processing
-          {
-            translation_unit unit((std::string)argv[i], path, current_core, current_implementation, cse, verbose);
+            translation_unit unit(*t, path,
+                                  option_map["core-output"].as<std::string>(),
+                                  option_map["implementation-output"].as<std::string>(),
+                                  option_map.count("no-cse")==0,
+                                  option_map.count("verbose")>0);
 
             replacements += unit.apply();
             files_processed++;
@@ -93,7 +105,7 @@ int main(int argc, const char *argv[])
 
     timer.stop();
 
-		if(verbose)
+		if(option_map.count("verbose"))
 			{
 		    std::cout << CPPTRANSPORT_NAME << ": " << MESSAGE_PROCESSING_COMPLETE_A
 			    << " " << files_processed << " "
