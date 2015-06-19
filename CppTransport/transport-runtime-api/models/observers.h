@@ -14,12 +14,17 @@
 
 #include "transport-runtime-api/defaults.h"
 #include "transport-runtime-api/messages.h"
+
 #include "transport-runtime-api/data/data_manager.h"
+
 #include "transport-runtime-api/tasks/task_configurations.h"
 #include "transport-runtime-api/tasks/configuration-database/time_config_database.h"
 #include "transport-runtime-api/tasks/configuration-database/twopf_config_database.h"
 #include "transport-runtime-api/tasks/configuration-database/threepf_config_database.h"
+
 #include "transport-runtime-api/scheduler/work_queue.h"
+
+#include "transport-runtime-api/utilities/formatter.h"
 
 #include <boost/timer/timer.hpp>
 
@@ -162,7 +167,7 @@ namespace transport
     void timing_observer<number>::start_batching(double t, boost::log::sources::severity_logger<Level>& logger, Level lev)
 	    {
         this->integration_timer.stop();
-        this->batching_timer.start();
+        this->batching_timer.resume();
 
         // should we emit output?
         // only do so if not in silent mode and enough time has elapsed since the last update
@@ -192,7 +197,7 @@ namespace transport
 		            msg << CPPTRANSPORT_OBSERVER_ELAPSED_LATER;
 			        }
 
-            msg << " =" << this->integration_timer.format();
+            msg << " = " << format_time(this->integration_timer.elapsed().wall);
             BOOST_LOG_SEV(logger, lev) << msg.str();
 
 		        this->first_output = false;
@@ -204,7 +209,7 @@ namespace transport
     void timing_observer<number>::stop_batching()
       {
         this->batching_timer.stop();
-        this->integration_timer.start();
+        this->integration_timer.resume();
       }
 
 
