@@ -161,8 +161,6 @@ namespace transport
     template <typename Level>
     void timing_observer<number>::start_batching(double t, boost::log::sources::severity_logger<Level>& logger, Level lev)
 	    {
-        std::string rval = "";
-
         this->integration_timer.stop();
         this->batching_timer.start();
 
