@@ -51,13 +51,12 @@
 #define OUTPUT_STACK_INCLUDED_FROM            "included from line"
 #define OUTPUT_STACK_OF_FILE                  "of file"
 
-#define ERROR_FILESTACK_PUSH                  "Internal error: call to push() method of abstract filestack"
+#define ERROR_MESSAGE_TAG                     "error:"
+#define WARNING_MESSAGE_TAG                   "warning:"
 
 #define ERROR_OPEN_TOPLEVEL                   "Could not open top-level file"
 #define ERROR_INCLUDE_FILE                    "Could not open included file"
 #define ERROR_INCLUDE_DIRECTIVE               "Expected filename following #include directive"
-
-#define ERROR_MISSING_PATHNAME                "Too few arguments: expected pathname following"
 
 #define ERROR_CPP_BUFFER_WRITE                "Error opening output file"
 
