@@ -84,7 +84,6 @@ add_executable(CppTransport main.cpp
 							backends/shared/temporary_pool.cpp
 							backends/shared/utensors.cpp
 							backends/utilities/symbol_factory.cpp
-							concepts/filestack.cpp
 							parser/bison/y_parser.tab.cc
 							parser/input_stack.cpp
 							parser/lexfile.cpp
@@ -94,7 +93,6 @@ add_executable(CppTransport main.cpp
 							parser/y_lexer.cpp
 							"transport_objects/canonical_u_tensor_factory.cpp"
 							"transport_objects/u_tensor_factory.cpp"
-							utilities/basic_error.cpp
 							utilities/error.cpp
 							utilities/finder.cpp
 							utilities/formatter.cpp

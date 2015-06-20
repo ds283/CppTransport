@@ -94,17 +94,25 @@ template <class keywords, class characters>
 lexstream<keywords, characters>::lexstream(const std::string filename, std::shared_ptr<finder>& s,
                                            const std::string* kt, const keywords* km, unsigned int num_k,
                                            const std::string*ct, const characters*cm, const bool* ctx, unsigned int num_c)
-  : ptr_valid(false), ktable(kt), kmap(km), Nk(num_k), ctable(ct), cmap(cm), Nc(num_c), ccontext(ctx), search(s)
+  : ptr_valid(false),
+    ktable(kt),
+    kmap(km),
+    Nk(num_k),
+    ctable(ct),
+    cmap(cm),
+    Nc(num_c),
+    ccontext(ctx),
+    search(s)
   {
-    assert(search != NULL);
-    assert(ktable != NULL);
-    assert(kmap   != NULL);
-    assert(ctable != NULL);
-    assert(cmap != NULL);
+    assert(search);
+    assert(ktable != nullptr);
+    assert(kmap != nullptr);
+    assert(ctable != nullptr);
+    assert(cmap != nullptr);
 
     stack = std::make_shared<input_stack>();
 
-    if(parse(filename) == false)
+    if(!this->parse(filename))
       {
         std::ostringstream msg;
         msg << ERROR_OPEN_TOPLEVEL << " '" << filename << "'";
@@ -147,7 +155,7 @@ void lexstream<keywords, characters>::reset()
 template <class keywords, class characters>
 lexeme::lexeme<keywords, characters>* lexstream<keywords, characters>::get()
   {
-    lexeme::lexeme<keywords, characters>* rval = NULL;
+    lexeme::lexeme<keywords, characters>* rval = nullptr;
 
     if(this->ptr_valid)
       {
@@ -189,17 +197,17 @@ bool lexstream<keywords, characters>::state()
 template <class keywords, class characters>
 bool lexstream<keywords, characters>::parse(std::string file)
   {
-    assert(search != NULL);
+    assert(this->search);
 
     std::string path = "";
-    bool        found = search->fqpn(file, path);
+    bool        found = this->search->fqpn(file, path);
 
     if(found)
       {
         lexfile input(path, this->stack);
 
         this->stack->push(path);
-        lexicalize(input);
+        this->lexicalize(input);
         this->stack->pop();
       }
 
@@ -214,7 +222,7 @@ void lexstream<keywords, characters>::lexicalize(lexfile& input)
     while(input.current_state() == lex_ok)
       {
         enum lexeme::lexeme_buffer_type   type;
-        std::string word = get_lexeme(input, type);
+        std::string word = this->get_lexeme(input, type);
 
         if(word != "")
           {
@@ -223,23 +231,23 @@ void lexstream<keywords, characters>::lexicalize(lexfile& input)
                 case lexeme::buf_character:
                   if(word == "#")                                               // treat as a preprocessor directive
                     {
-                      word = get_lexeme(input, type);                           // get next lexeme
+                      word = this->get_lexeme(input, type);                     // get next lexeme
 
                       if(word == "include")                                     // inclusion directive
                         {
-                          word = get_lexeme(input, type);
+                          word = this->get_lexeme(input, type);
 
                           if(type != lexeme::buf_string_literal)
                             {
-                              error(ERROR_INCLUDE_DIRECTIVE, this->stack);
+                              error(ERROR_INCLUDE_DIRECTIVE, this->stack, input.get_current_line(), input.get_current_char_pos());
                             }
                           else
                             {
-                              if(parse(word) == false)
+                              if(!this->parse(word))
                                 {
                                   std::ostringstream msg;
                                   msg << ERROR_INCLUDE_FILE << " '" << word << "'";
-                                  error(msg.str(), this->stack);
+                                  error(msg.str(), this->stack, input.get_current_line(), input.get_current_char_pos());
                                 }
                             }
                         }
@@ -248,9 +256,10 @@ void lexstream<keywords, characters>::lexicalize(lexfile& input)
                     {
                       // note: this updates context, depending what the lexeme is recognized as
                       this->lexeme_list.push_back(lexeme::lexeme<keywords, characters>
-                        (word, type, context, this->stack, this->unique++,
-                          this->ktable, this->kmap, this->Nk,
-                          this->ctable, this->cmap, this->ccontext, this->Nc));
+                                                    (word, type, context, this->stack, this->unique++,
+                                                     input.get_current_line(), input.get_current_char_pos(),
+                                                     this->ktable, this->kmap, this->Nk,
+                                                     this->ctable, this->cmap, this->ccontext, this->Nc));
                     }
                   break;
 
@@ -259,10 +268,11 @@ void lexstream<keywords, characters>::lexicalize(lexfile& input)
                 case lexeme::buf_string_literal:
                   // note: this updates context, depending what the lexeme is recognized as
                   this->lexeme_list.push_back(lexeme::lexeme<keywords, characters>
-                    (word, type, context, this->stack, this->unique++,
-                      this->ktable, this->kmap, this->Nk,
-                      this->ctable, this->cmap, this->ccontext, this->Nc));
-                break;
+                                                (word, type, context, this->stack, this->unique++,
+                                                 input.get_current_line(), input.get_current_char_pos(),
+                                                 this->ktable, this->kmap, this->Nk,
+                                                 this->ctable, this->cmap, this->ccontext, this->Nc));
+                  break;
 
                 default:
                   assert(false);                          // should never get here
@@ -366,7 +376,7 @@ std::string lexstream<keywords, characters>::get_lexeme(lexfile& input, enum lex
                       }
                     else
                       {
-                        error(ERROR_EXPECTED_ELLIPSIS, this->stack);
+                        error(ERROR_EXPECTED_ELLIPSIS, this->stack, input.get_current_line(), input.get_current_char_pos());
                         word += '.';                          // make up to a proper ellipsis anyway
                       }
                   }
@@ -388,7 +398,7 @@ std::string lexstream<keywords, characters>::get_lexeme(lexfile& input, enum lex
                   }
                 else
                   {
-                    error(ERROR_EXPECTED_CLOSE_QUOTE, this->stack);
+                    error(ERROR_EXPECTED_CLOSE_QUOTE, this->stack, input.get_current_line(), input.get_current_char_pos());
                   }
                 type = lexeme::buf_string_literal;
               }

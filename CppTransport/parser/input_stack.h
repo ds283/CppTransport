@@ -17,6 +17,7 @@
 class input_stack: public filestack_derivation_helper<input_stack>
   {
   public:
+
     // data structure for tracking the source of any lexeme
     struct inclusion
       {
@@ -24,21 +25,23 @@ class input_stack: public filestack_derivation_helper<input_stack>
         unsigned int line;
       };
 
-    ~input_stack();
+    virtual ~input_stack() = default;
 
-    void         push          (const std::string name);
+    void         push                  (const std::string name);
 
-    void         set_line      (unsigned int line);
-    unsigned int increment_line();
-    unsigned int get_line      () const;
+    virtual void         set_line      (unsigned int line) override;
+    virtual unsigned int increment_line() override;
+    virtual unsigned int get_line      () const override;
 
-    void         pop           ();
+    virtual void         pop           () override;
 
-    std::string  write         (size_t level) const;
-    std::string  write         () const;
+    virtual std::string  write         (size_t level) const override;
+    virtual std::string  write         () const override;
 
   protected:
+
     std::deque<struct inclusion> inclusions;
+
   };
 
 

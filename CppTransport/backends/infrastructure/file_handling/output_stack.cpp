@@ -10,27 +10,14 @@
 
 #include "output_stack.h"
 #include "msg_en.h"
-#include "basic_error.h"
 #include "macro.h"
 #include "package_group.h"
 #include "error.h"
 
 
-output_stack::~output_stack()
-  {
-  }
-
-
-void output_stack::push(const std::string name)
-  {
-    error(ERROR_FILESTACK_PUSH);
-    exit(1);
-  }
-
-
 void output_stack::push(const std::string& in, buffer& buf, macro_agent& agent, enum process_type type)
   {
-		// NOTE ms and package elements shoul dbe updated later with push_top_data()
+		// NOTE ms and package elements should be updated later with push_top_data()
     this->inclusions.push_front(inclusion(in, 1, buf, agent, type));
   }
 
@@ -39,7 +26,7 @@ void output_stack::set_line(unsigned int line)
   {
     if(inclusions.size() == 0)
       {
-        basic_error(ERROR_FILESTACK_EMPTY);
+        error(ERROR_FILESTACK_EMPTY);
       }
     else
       {
@@ -54,7 +41,7 @@ unsigned int output_stack::increment_line()
 
     if(inclusions.size() == 0)
       {
-        basic_error(ERROR_FILESTACK_EMPTY);
+        error(ERROR_FILESTACK_EMPTY);
       }
     else
       {
@@ -70,7 +57,7 @@ unsigned int output_stack::get_line() const
 
     if(inclusions.size() == 0)
       {
-        basic_error(ERROR_FILESTACK_EMPTY);
+        error(ERROR_FILESTACK_EMPTY);
       }
     else
       {
@@ -88,7 +75,7 @@ void output_stack::pop()
       }
     else
       {
-        basic_error(ERROR_FILESTACK_TOO_SHORT);
+        error(ERROR_FILESTACK_TOO_SHORT);
       }
   }
 

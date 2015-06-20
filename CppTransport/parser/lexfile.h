@@ -13,7 +13,7 @@
 
 #include <iostream>
 #include <memory>
-
+#include <vector>
 
 #include "filestack.h"
 
@@ -57,24 +57,47 @@ class lexfile
 
   public:
 
+    //! return next character in the input. Can be called as many times as required
+    //! without advancing our position in the file
     char get(enum lexfile_outcome& state);
 
+    //! move past current character
     void eat();
 
+    //! get current state of the file
     enum lexfile_outcome current_state() const;
 
+    //! get (shared) pointer to current line
+    std::shared_ptr<std::string> get_current_line() const;
+
+    //! get current character position within current line
+    unsigned int get_current_char_pos() const { return(this->char_pos); }
 
 		// INTERNAL DATA
 
   private:
 
-    std::string   file;
+    //! filename
+    std::string file;
+
+    //! stream representing the input
     std::ifstream stream;
 
+    //! filestack representing our current position in processing the input file hierarchy
     std::shared_ptr<filestack> stack;
 
-    char               c;
+    //! char read from the file
+    char c;
+
+    //! current state of the file
     enum lexfile_state state;
+
+    //! current character position in the line
+    unsigned int char_pos;
+
+    //! vector of lines; we use these to attach to lexemes, so they have a local context eg. for error messages
+    std::vector< std::shared_ptr<std::string> > line_array;
+
 	};
 
 

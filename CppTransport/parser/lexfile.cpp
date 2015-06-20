@@ -17,11 +17,26 @@
 
 
 lexfile::lexfile(std::string fnam, std::shared_ptr<filestack> s)
-  : file(fnam), stack(s), state(lexfile_unready)
+  : file(fnam),
+    stack(s),
+    state(lexfile_unready),
+    char_pos(0)
   {
     stream.open(fnam.c_str());    // when building with GCC LLVM 4.2, stream.open() doesn't accept std::string
+
+    // build up array of lines
+    std::string line;
+    while(std::getline(stream, line))
+      {
+        line_array.push_back(std::make_shared<std::string>(line));
+      }
+
+    // reset to the beginning of the stream
+    stream.clear();
+    stream.seekg(0, std::ios::beg);
+
     assert(stream.is_open());
-    assert(stack != nullptr);
+    assert(stack);
   }
 
 lexfile::~lexfile()
@@ -41,12 +56,14 @@ char lexfile::get(enum lexfile_outcome& state)
     switch(this->state)
       {
         case lexfile_unready:                       // this will be the most common case; we need to read a new char
+
           if(this->stream.eof())
             {
               this->state = lexfile_eof;
               this->c     = 0;
               break;
             }
+
           while(this->state == lexfile_unready)
             {
               assert(this->stream.is_open());
@@ -66,9 +83,14 @@ char lexfile::get(enum lexfile_outcome& state)
               else                                  // can assume this character is valid
                 {
                   this->state = lexfile_ready;
-                  if(this->c == '\n') this->stack->increment_line();
+                  if(this->c == '\n')
+                    {
+                      this->stack->increment_line();
+                      this->char_pos = 0;
+                    }
                 }
             }
+
           break;
 
         case lexfile_ready:
@@ -103,6 +125,7 @@ void lexfile::eat()
     assert(this->stream.is_open());
 
     this->state = lexfile_unready;
+    this->char_pos++;
   }
 
 enum lexfile_outcome lexfile::current_state() const
@@ -119,4 +142,17 @@ enum lexfile_outcome lexfile::current_state() const
       }
 
     return(rval);
+  }
+
+
+std::shared_ptr<std::string> lexfile::get_current_line() const
+  {
+    unsigned int cline = this->stack->get_line();
+
+    if(cline <= this->line_array.size())
+      {
+        return this->line_array[cline-1];
+      }
+
+    return std::make_shared<std::string>("EMPTY");
   }

@@ -21,16 +21,12 @@ class filestack
 
   public:
 
-    virtual ~filestack();
+    virtual ~filestack() = default;
 
 
 		// INTERFACE
 
   public:
-
-    // push a new filename to the top of the stack, included from line current_line
-    // of the file which is *currently* on top of the stack
-    virtual void push(const std::string name) = 0;
 
     // set line number information for the item on top of the stack
     virtual void set_line(unsigned int line) = 0;
@@ -56,7 +52,7 @@ class filestack
 
   protected:
 
-    bool                         locked;
+    bool locked;
 
   };
 
