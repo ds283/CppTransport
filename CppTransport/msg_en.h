@@ -34,6 +34,12 @@
 #define NO_CSE_SWITCH                 "no-cse"
 #define NO_CSE_HELP                   "disable common sub-expression elimination"
 
+#define NO_COLOUR_SWITCH              "no-colour"
+#define NO_COLOUR_HELP                "disable colourized output"
+
+#define NO_COLOR_SWITCH               "no-color"
+#define NO_COLOR_HELP                 "disable colourized output"
+
 #define INPUT_FILE_SWITCH             "input-file"
 #define INPUT_FILE_HELP               "do not use"
 
@@ -51,8 +57,8 @@
 #define OUTPUT_STACK_INCLUDED_FROM            "included from line"
 #define OUTPUT_STACK_OF_FILE                  "of file"
 
-#define ERROR_MESSAGE_TAG                     "error:"
-#define WARNING_MESSAGE_TAG                   "warning:"
+#define WARNING_TOKEN                         "warning: "
+#define ERROR_TOKEN                           "error: "
 
 #define ERROR_OPEN_TOPLEVEL                   "Could not open top-level file"
 #define ERROR_INCLUDE_FILE                    "Could not open included file"

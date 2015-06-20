@@ -156,7 +156,7 @@ unsigned int translation_unit::apply()
       }
     else
       {
-        error(ERROR_NO_CORE_TEMPLATE);
+        this->error(ERROR_NO_CORE_TEMPLATE);
         exit(EXIT_FAILURE);
       }
 
@@ -167,7 +167,7 @@ unsigned int translation_unit::apply()
       }
     else
       {
-        error(ERROR_NO_IMPLEMENTATION_TEMPLATE);
+        this->error(ERROR_NO_IMPLEMENTATION_TEMPLATE);
         exit(EXIT_FAILURE);
       }
 

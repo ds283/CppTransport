@@ -9,7 +9,7 @@
 
 
 #include "msg_en.h"
-#include "basic_error.h"
+#include "error.h"
 #include "input_stack.h"
 
 
@@ -28,7 +28,7 @@ void input_stack::set_line(unsigned int line)
   {
     if(inclusions.size() == 0)
       {
-        basic_error(ERROR_FILESTACK_EMPTY);
+        error(ERROR_FILESTACK_EMPTY);
       }
     else
       {
@@ -43,7 +43,7 @@ unsigned int input_stack::increment_line()
 
     if(inclusions.size() == 0)
       {
-        basic_error(ERROR_FILESTACK_EMPTY);
+        error(ERROR_FILESTACK_EMPTY);
       }
     else
       {
@@ -59,7 +59,7 @@ unsigned int input_stack::get_line() const
 
     if(inclusions.size() == 0)
       {
-        basic_error(ERROR_FILESTACK_EMPTY);
+        error(ERROR_FILESTACK_EMPTY);
       }
     else
       {
@@ -77,7 +77,7 @@ void input_stack::pop()
       }
     else
       {
-        basic_error(ERROR_FILESTACK_TOO_SHORT);
+        error(ERROR_FILESTACK_TOO_SHORT);
       }
   }
 

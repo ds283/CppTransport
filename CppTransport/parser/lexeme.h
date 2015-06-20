@@ -61,6 +61,7 @@ namespace lexeme    // package in a unique namespace to protect common words lik
         lexeme(const std::string buffer, const enum lexeme_buffer_type t,
                enum lexeme_minus_context& context,
                std::shared_ptr<filestack> p, unsigned int u,
+               std::shared_ptr<std::string> ln, unsigned int cpos,
                const std::string* kt, const keywords* km, unsigned int num_k,
                const std::string* ct, const characters* cm, const bool* ctx, unsigned int num_c);
 
@@ -93,7 +94,11 @@ namespace lexeme    // package in a unique namespace to protect common words lik
 
         bool get_string(std::string& str);
 
-        std::shared_ptr<filestack> get_path() { return(this->path); }
+        std::shared_ptr<filestack> get_path()   const { return(this->path); }
+
+        std::shared_ptr<std::string> get_line() const { return(this->line); }
+
+        unsigned int get_char_pos()             const { return(this->char_pos); }
 
 
         // INTERNAL DATA
@@ -112,6 +117,9 @@ namespace lexeme    // package in a unique namespace to protect common words lik
 
         std::shared_ptr<filestack> path;
 
+        std::shared_ptr<std::string> line;
+        unsigned int char_pos;
+
         const std::string* ktable;
         const keywords   * kmap;
         const unsigned int Nk;
@@ -129,6 +137,7 @@ namespace lexeme    // package in a unique namespace to protect common words lik
     lexeme<keywords, characters>::lexeme(const std::string buffer, const enum lexeme_buffer_type t,
                                          enum lexeme_minus_context& context,
                                          std::shared_ptr<filestack> p, unsigned int u,
+                                         std::shared_ptr<std::string> ln, unsigned int cpos,
                                          const std::string* kt, const keywords* km, unsigned int num_k,
                                          const std::string* ct, const characters* cm, const bool* ctx, unsigned int num_c)
 	    : path(p->clone()),    // use clone to take a copy; otherwise, there is only one filestack object and after processing it is empty! so all file location data is lost
@@ -139,12 +148,15 @@ namespace lexeme    // package in a unique namespace to protect common words lik
 	      ctable(ct),
 	      cmap(cm),
 	      ccontext(ctx),
-	      Nc(num_c)
+	      Nc(num_c),
+        line(ln),
+        char_pos(cpos)
 	    {
         bool ok     = false;
         int  offset = 0;
 
         assert(path);
+        assert(line);
 
         assert(kmap != nullptr);
         assert(ktable != nullptr);
@@ -195,20 +207,20 @@ namespace lexeme    // package in a unique namespace to protect common words lik
 	            {
                 std::ostringstream msg;
                 msg << ERROR_UNRECOGNIZED_NUMBER << " '" << buffer << "'";
-                error(msg.str(), path);
+                error(msg.str(), path, line, char_pos);
 	            }
 
             if(type == integer && buffer[0] == '0' && buffer[1] == 'x')
 	            {
                 std::ostringstream msg;
                 msg << WARNING_HEX_CONVERSION_A << " '" << buffer << "' " << WARNING_HEX_CONVERSION_B;
-                warn(msg.str(), path);
+                warn(msg.str(), path, line, char_pos);
 	            }
             else if(type == integer && buffer[0] == '0')
 	            {
                 std::ostringstream msg;
                 msg << WARNING_OCTAL_CONVERSION_A << " '" << buffer << "' " << WARNING_OCTAL_CONVERSION_B;
-                warn(msg.str(), path);
+                warn(msg.str(), path, line, char_pos);
 	            }
 
             context = binary_context; // unary minus can't follow a number
@@ -249,7 +261,7 @@ namespace lexeme    // package in a unique namespace to protect common words lik
 	            {
                 std::ostringstream msg;
                 msg << ERROR_UNRECOGNIZED_SYMBOL << " '" << buffer << "'";
-                error(msg.str(), p);
+                error(msg.str(), p, line, char_pos);
                 context = unary_context; // reset the context
 	            }
             break;

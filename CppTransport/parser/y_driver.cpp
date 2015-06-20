@@ -52,7 +52,7 @@ namespace y
 	        }
         else
 	        {
-            ::error(ERROR_IDENTIFIER_LOOKUP, lex->get_path());
+            ::error(ERROR_IDENTIFIER_LOOKUP, lex->get_path(), lex->get_line(), lex->get_char_pos());
 	        }
 
         delete a; // otherwise, attributes block would never be deallocated
@@ -72,7 +72,7 @@ namespace y
 	        }
         else
 	        {
-            ::error(ERROR_IDENTIFIER_LOOKUP, lex->get_path());
+            ::error(ERROR_IDENTIFIER_LOOKUP, lex->get_path(), lex->get_line(), lex->get_char_pos());
 	        }
 
         delete a; // otherwise, attributes block would never be deallocated
@@ -94,7 +94,7 @@ namespace y
 					}
 				else
 					{
-				    ::error(ERROR_IDENTIFIER_LOOKUP, lex->get_path());
+				    ::error(ERROR_IDENTIFIER_LOOKUP, lex->get_path(), lex->get_line(), lex->get_char_pos());
 					}
 
 				delete e;
@@ -113,7 +113,7 @@ namespace y
 	        }
         else
 	        {
-            ::error(ERROR_STRING_LOOKUP, lex->get_path());
+            ::error(ERROR_STRING_LOOKUP, lex->get_path(), lex->get_line(), lex->get_char_pos());
 	        }
 	    }
 
@@ -130,7 +130,7 @@ namespace y
 					}
 				else
 					{
-						::error(ERROR_STRING_LOOKUP, lex->get_path());
+						::error(ERROR_STRING_LOOKUP, lex->get_path(), lex->get_line(), lex->get_char_pos());
 					}
 			}
 
@@ -153,7 +153,7 @@ namespace y
 	        }
         else
 	        {
-            ::error(ERROR_DECIMAL_LOOKUP, lex->get_path());
+            ::error(ERROR_DECIMAL_LOOKUP, lex->get_path(), lex->get_line(), lex->get_char_pos());
 	        }
 	    }
 
@@ -170,7 +170,7 @@ namespace y
 	        }
         else
 	        {
-            ::error(ERROR_DECIMAL_LOOKUP, lex->get_path());
+            ::error(ERROR_DECIMAL_LOOKUP, lex->get_path(), lex->get_line(), lex->get_char_pos());
 	        }
 	    }
 
@@ -187,7 +187,7 @@ namespace y
 	        }
         else
 	        {
-            ::error(ERROR_STRING_LOOKUP, lex->get_path());
+            ::error(ERROR_STRING_LOOKUP, lex->get_path(), lex->get_line(), lex->get_char_pos());
 	        }
 	    }
 
@@ -204,7 +204,7 @@ namespace y
 	        }
         else
 	        {
-            ::error(ERROR_DECIMAL_LOOKUP, lex->get_path());
+            ::error(ERROR_DECIMAL_LOOKUP, lex->get_path(), lex->get_line(), lex->get_char_pos());
 	        }
 	    }
 
@@ -236,7 +236,7 @@ namespace y
 	        }
         else
 	        {
-            ::error(ERROR_STRING_LOOKUP, lex->get_path());
+            ::error(ERROR_STRING_LOOKUP, lex->get_path(), lex->get_line(), lex->get_char_pos());
 	        }
 	    }
 
@@ -252,7 +252,7 @@ namespace y
 	        }
         else
 	        {
-            ::error(ERROR_STRING_LOOKUP, lex->get_path());
+            ::error(ERROR_STRING_LOOKUP, lex->get_path(), lex->get_line(), lex->get_char_pos());
 	        }
 	    }
 
@@ -268,7 +268,7 @@ namespace y
 	        }
         else
 	        {
-            ::error(ERROR_STRING_LOOKUP, lex->get_path());
+            ::error(ERROR_STRING_LOOKUP, lex->get_path(), lex->get_line(), lex->get_char_pos());
 	        }
 	    }
 
@@ -284,7 +284,7 @@ namespace y
 	        }
         else
 	        {
-            ::error(ERROR_STRING_LOOKUP, lex->get_path());
+            ::error(ERROR_STRING_LOOKUP, lex->get_path(), lex->get_line(), lex->get_char_pos());
 	        }
 	    }
 
@@ -300,7 +300,7 @@ namespace y
 	        }
         else
 	        {
-            ::error(ERROR_STRING_LOOKUP, lex->get_path());
+            ::error(ERROR_STRING_LOOKUP, lex->get_path(), lex->get_line(), lex->get_char_pos());
 	        }
 	    }
 
@@ -316,7 +316,7 @@ namespace y
 	        }
         else
 	        {
-            ::error(ERROR_STRING_LOOKUP, lex->get_path());
+            ::error(ERROR_STRING_LOOKUP, lex->get_path(), lex->get_line(), lex->get_char_pos());
 	        }
 	    }
 
@@ -768,7 +768,7 @@ namespace y
 
         if(!ok)
 	        {
-            ::error(ERROR_INTEGER_LOOKUP, lex->get_path());
+            ::error(ERROR_INTEGER_LOOKUP, lex->get_path(), lex->get_line(), lex->get_char_pos());
 	        }
 
         return (rval);
@@ -784,7 +784,7 @@ namespace y
 
         if(!ok)
 	        {
-            ::error(ERROR_DECIMAL_LOOKUP, lex->get_path());
+            ::error(ERROR_DECIMAL_LOOKUP, lex->get_path(), lex->get_line(), lex->get_char_pos());
 	        }
 
         return (rval);
@@ -811,12 +811,12 @@ namespace y
                 std::ostringstream msg;
 
                 msg << ERROR_UNKNOWN_IDENTIFIER << " '" << id << "'";
-                ::error(msg.str(), lex->get_path());
+                ::error(msg.str(), lex->get_path(), lex->get_line(), lex->get_char_pos());
 	            }
 	        }
         else
 	        {
-            ::error(ERROR_IDENTIFIER_LOOKUP, lex->get_path());
+            ::error(ERROR_IDENTIFIER_LOOKUP, lex->get_path(), lex->get_line(), lex->get_char_pos());
 	        }
 
         if(rval == nullptr)

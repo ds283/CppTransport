@@ -222,7 +222,7 @@ void lexstream<keywords, characters>::lexicalize(lexfile& input)
     while(input.current_state() == lex_ok)
       {
         enum lexeme::lexeme_buffer_type   type;
-        std::string word = get_lexeme(input, type);
+        std::string word = this->get_lexeme(input, type);
 
         if(word != "")
           {
@@ -231,23 +231,23 @@ void lexstream<keywords, characters>::lexicalize(lexfile& input)
                 case lexeme::buf_character:
                   if(word == "#")                                               // treat as a preprocessor directive
                     {
-                      word = get_lexeme(input, type);                           // get next lexeme
+                      word = this->get_lexeme(input, type);                     // get next lexeme
 
                       if(word == "include")                                     // inclusion directive
                         {
-                          word = get_lexeme(input, type);
+                          word = this->get_lexeme(input, type);
 
                           if(type != lexeme::buf_string_literal)
                             {
-                              error(ERROR_INCLUDE_DIRECTIVE, this->stack);
+                              error(ERROR_INCLUDE_DIRECTIVE, this->stack, input.get_current_line(), input.get_current_char_pos());
                             }
                           else
                             {
-                              if(parse(word) == false)
+                              if(!this->parse(word))
                                 {
                                   std::ostringstream msg;
                                   msg << ERROR_INCLUDE_FILE << " '" << word << "'";
-                                  error(msg.str(), this->stack);
+                                  error(msg.str(), this->stack, input.get_current_line(), input.get_current_char_pos());
                                 }
                             }
                         }
@@ -257,6 +257,7 @@ void lexstream<keywords, characters>::lexicalize(lexfile& input)
                       // note: this updates context, depending what the lexeme is recognized as
                       this->lexeme_list.push_back(lexeme::lexeme<keywords, characters>
                                                     (word, type, context, this->stack, this->unique++,
+                                                     input.get_current_line(), input.get_current_char_pos(),
                                                      this->ktable, this->kmap, this->Nk,
                                                      this->ctable, this->cmap, this->ccontext, this->Nc));
                     }
@@ -268,6 +269,7 @@ void lexstream<keywords, characters>::lexicalize(lexfile& input)
                   // note: this updates context, depending what the lexeme is recognized as
                   this->lexeme_list.push_back(lexeme::lexeme<keywords, characters>
                                                 (word, type, context, this->stack, this->unique++,
+                                                 input.get_current_line(), input.get_current_char_pos(),
                                                  this->ktable, this->kmap, this->Nk,
                                                  this->ctable, this->cmap, this->ccontext, this->Nc));
                   break;
@@ -374,7 +376,7 @@ std::string lexstream<keywords, characters>::get_lexeme(lexfile& input, enum lex
                       }
                     else
                       {
-                        error(ERROR_EXPECTED_ELLIPSIS, this->stack);
+                        error(ERROR_EXPECTED_ELLIPSIS, this->stack, input.get_current_line(), input.get_current_char_pos());
                         word += '.';                          // make up to a proper ellipsis anyway
                       }
                   }
@@ -396,7 +398,7 @@ std::string lexstream<keywords, characters>::get_lexeme(lexfile& input, enum lex
                   }
                 else
                   {
-                    error(ERROR_EXPECTED_CLOSE_QUOTE, this->stack);
+                    error(ERROR_EXPECTED_CLOSE_QUOTE, this->stack, input.get_current_line(), input.get_current_char_pos());
                   }
                 type = lexeme::buf_string_literal;
               }

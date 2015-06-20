@@ -13,9 +13,7 @@
 #include "boost/timer/timer.hpp"
 
 #include "core.h"
-#include "msg_en.h"
 #include "translation_unit.h"
-#include "formatter.h"
 
 
 // ******************************************************************
@@ -24,6 +22,8 @@
 int main(int argc, const char *argv[])
   {
     boost::timer::auto_cpu_timer timer;
+
+    set_up_error_environment();
 
     // set up the initial search path to consist only of CWD
     std::shared_ptr<finder> path = std::make_shared<finder>();
@@ -40,11 +40,13 @@ int main(int argc, const char *argv[])
       (INCLUDE_SWITCH,               boost::program_options::value< std::vector<std::string> >()->composing(), INCLUDE_HELP)
       (CORE_OUTPUT_SWITCH,           boost::program_options::value< std::string >()->default_value(""),        CORE_OUTPUT_HELP)
       (IMPLEMENTATION_OUTPUT_SWITCH, boost::program_options::value< std::string >()->default_value(""),        IMPLEMENTATION_OUTPUT_HELP)
-      (NO_CSE_SWITCH,                                                                                          NO_CSE_HELP);
+      (NO_CSE_SWITCH,                                                                                          NO_CSE_HELP)
+      (NO_COLOUR_SWITCH,                                                                                       NO_COLOUR_HELP);
 
     boost::program_options::options_description hidden(HIDDEN_OPTIONS);
     hidden.add_options()
-      (INPUT_FILE_SWITCH, boost::program_options::value< std::vector<std::string> >(), INPUT_FILE_HELP);
+      (INPUT_FILE_SWITCH, boost::program_options::value< std::vector<std::string> >(), INPUT_FILE_HELP)
+      (NO_COLOR_SWITCH,                                                                NO_COLOR_HELP);
 
     boost::program_options::positional_options_description positional_options;
     positional_options.add(INPUT_FILE_SWITCH, -1);
@@ -75,6 +77,8 @@ int main(int argc, const char *argv[])
         if(!emitted_version) std::cout << CPPTRANSPORT_NAME << " " << CPPTRANSPORT_VERSION << " " << CPPTRANSPORT_COPYRIGHT << std::endl;
         std::cout << visible << std::endl;
       }
+
+    if(option_map.count(NO_COLOUR_SWITCH) || option_map.count(NO_COLOR_SWITCH)) disable_colour_errors();
 
     if(option_map.count(INCLUDE_SWITCH_LONG) > 0)
       {

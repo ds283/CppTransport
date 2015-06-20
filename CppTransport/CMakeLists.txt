@@ -93,7 +93,6 @@ add_executable(CppTransport main.cpp
 							parser/y_lexer.cpp
 							"transport_objects/canonical_u_tensor_factory.cpp"
 							"transport_objects/u_tensor_factory.cpp"
-							utilities/basic_error.cpp
 							utilities/error.cpp
 							utilities/finder.cpp
 							utilities/formatter.cpp

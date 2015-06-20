@@ -10,7 +10,6 @@
 
 #include "output_stack.h"
 #include "msg_en.h"
-#include "basic_error.h"
 #include "macro.h"
 #include "package_group.h"
 #include "error.h"
@@ -27,7 +26,7 @@ void output_stack::set_line(unsigned int line)
   {
     if(inclusions.size() == 0)
       {
-        basic_error(ERROR_FILESTACK_EMPTY);
+        error(ERROR_FILESTACK_EMPTY);
       }
     else
       {
@@ -42,7 +41,7 @@ unsigned int output_stack::increment_line()
 
     if(inclusions.size() == 0)
       {
-        basic_error(ERROR_FILESTACK_EMPTY);
+        error(ERROR_FILESTACK_EMPTY);
       }
     else
       {
@@ -58,7 +57,7 @@ unsigned int output_stack::get_line() const
 
     if(inclusions.size() == 0)
       {
-        basic_error(ERROR_FILESTACK_EMPTY);
+        error(ERROR_FILESTACK_EMPTY);
       }
     else
       {
@@ -76,7 +75,7 @@ void output_stack::pop()
       }
     else
       {
-        basic_error(ERROR_FILESTACK_TOO_SHORT);
+        error(ERROR_FILESTACK_TOO_SHORT);
       }
   }
 
