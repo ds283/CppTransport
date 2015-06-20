@@ -263,13 +263,10 @@ void y::y_parser::error(const y::y_parser::location_type &l,
 
 		if(current_lexeme != nullptr)
 			{
-		    std::shared_ptr<filestack> path = current_lexeme->get_path();
-				msg << ERROR_MESSAGE_AT_LINE << " " << path->write() << std::endl << ERROR_MESSAGE_WRAP_PAD << err_message;
+        ::error(err_message, current_lexeme->get_path(), current_lexeme->get_line(), current_lexeme->get_char_pos());
 			}
 		else
 			{
-		    msg << err_message;
+		    ::error(err_message);
 			}
-
-    this->driver->error(msg.str());
   }
