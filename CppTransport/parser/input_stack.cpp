@@ -13,11 +13,6 @@
 #include "input_stack.h"
 
 
-input_stack::~input_stack()
-  {
-  }
-
-
 void input_stack::push(const std::string name)
   {
     struct inclusion incl;

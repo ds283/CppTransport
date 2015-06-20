@@ -20,8 +20,9 @@ lexfile::lexfile(std::string fnam, std::shared_ptr<filestack> s)
   : file(fnam), stack(s), state(lexfile_unready)
   {
     stream.open(fnam.c_str());    // when building with GCC LLVM 4.2, stream.open() doesn't accept std::string
+
     assert(stream.is_open());
-    assert(stack != nullptr);
+    assert(stack);
   }
 
 lexfile::~lexfile()

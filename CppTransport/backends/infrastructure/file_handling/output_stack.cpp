@@ -16,21 +16,9 @@
 #include "error.h"
 
 
-output_stack::~output_stack()
-  {
-  }
-
-
-void output_stack::push(const std::string name)
-  {
-    error(ERROR_FILESTACK_PUSH);
-    exit(1);
-  }
-
-
 void output_stack::push(const std::string& in, buffer& buf, macro_agent& agent, enum process_type type)
   {
-		// NOTE ms and package elements shoul dbe updated later with push_top_data()
+		// NOTE ms and package elements should be updated later with push_top_data()
     this->inclusions.push_front(inclusion(in, 1, buf, agent, type));
   }
 

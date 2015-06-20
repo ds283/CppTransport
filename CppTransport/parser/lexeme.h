@@ -119,7 +119,7 @@ namespace lexeme    // package in a unique namespace to protect common words lik
         const std::string* ctable;
         const characters * cmap;
         const bool       * ccontext;
-        unsigned int Nc;
+        unsigned int       Nc;
 	    };
 
 

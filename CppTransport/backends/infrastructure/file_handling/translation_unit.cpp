@@ -86,7 +86,11 @@ static std::string  leafname   (const std::string& pathname);
 
 
 translation_unit::translation_unit(std::string file, std::shared_ptr<finder>& p, std::string core_out, std::string implementation_out, bool cse, bool v)
-  : name(file), do_cse(cse), verbose(v), path(p), parse_failed(false)
+  : name(file),
+    do_cse(cse),
+    verbose(v),
+    path(p),
+    parse_failed(false)
   {
     // lexicalize this input file
     stream = std::make_shared<y::lexstream_type>(name, path,
