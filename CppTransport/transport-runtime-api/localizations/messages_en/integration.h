@@ -10,7 +10,7 @@
 
 #define CPPTRANSPORT_OBSERVER_SLOW_INTEGRATION "Detected slow integration in progress"
 #define CPPTRANSPORT_OBSERVER_UPDATE           "Progress update"
-#define CPPTRANSPORT_OBSERVER_TIME             ": current stepper position at time N"
+#define CPPTRANSPORT_OBSERVER_TIME             ": current stepper position is N"
 #define CPPTRANSPORT_OBSERVER_ELAPSED_FIRST    "| time elapsed since beginning of integration"
 #define CPPTRANSPORT_OBSERVER_ELAPSED_LATER    "| time elapsed since last report"
 

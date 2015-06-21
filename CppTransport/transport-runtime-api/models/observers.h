@@ -173,8 +173,6 @@ namespace transport
         // only do so if not in silent mode and enough time has elapsed since the last update
         if(!this->silent && (this->integration_timer.elapsed().wall - this->last_output > this->output_interval))
 	        {
-            this->last_output = this->integration_timer.elapsed().wall;
-
             std::ostringstream msg;
 		        msg << "-- ";
 		        if(this->first_output)
@@ -201,7 +199,8 @@ namespace transport
             BOOST_LOG_SEV(logger, lev) << msg.str();
 
 		        this->first_output = false;
-	        }
+            this->last_output = this->integration_timer.elapsed().wall;
+          }
 	    }
 
 
