@@ -595,11 +595,16 @@ namespace transport
         std::cout << CPPTRANSPORT_TASK_SEARCH_RECORDED << " " << xe.get_N_samples() << " " << CPPTRANSPORT_TASK_SEARCH_SAMPLES;
         std::cout << ", " << CPPTRANSPORT_TASK_SEARCH_LAST_SAMPLE << xe.get_last_log_aH() << " ";
         std::cout << CPPTRANSPORT_TASK_SEARCH_LAST_SAMPLE_TIME << xe.get_last_N();
-        std::cout << ", " << CPPTRANSPORT_TASK_SEARCH_LARGEST_K << std::log(xe.get_largest_k()) << std::endl;
+        std::cout << ", " << CPPTRANSPORT_TASK_SEARCH_LARGEST_K << std::log(xe.get_largest_k());
+        std::cout << ", " << CPPTRANSPORT_TASK_SEARCH_KAH << xe.get_largest_k()/std::exp(xe.get_last_log_aH()) << std::endl;
 
-        if(xe.get_found_end() && xe.get_N_samples() > 1 && xe.get_last_log_aH() > std::log(xe.get_largest_k()))
+        if(xe.get_found_end() && xe.get_N_samples() > 1 && xe.get_last_log_aH() < std::log(xe.get_largest_k()))
           {
             std::cout << CPPTRANSPORT_TASK_SEARCH_GUESS_FAIL << std::endl;
+          }
+        else if(xe.get_found_end() && xe.get_N_samples() > 1 && xe.get_last_log_aH() > std::log(xe.get_largest_k()))
+          {
+            std::cout << CPPTRANSPORT_TASK_SEARCH_TOO_CLOSE_FAIL << std::endl;
           }
       }
 

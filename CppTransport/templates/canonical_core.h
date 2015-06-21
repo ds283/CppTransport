@@ -1151,7 +1151,7 @@ namespace transport
                 this->log_aH_vector.push_back(log(__a*__H));
 
                 // are we now at a point where we have comfortably covered the horizon crossing time for largest_k?
-                if(largest_k / (__a*__H) < 0.01) return(true);
+                if(std::log(largest_k) - std::log(__a*__H) < -0.5) return(true);
                 return(false);
               }
 
@@ -1223,7 +1223,6 @@ namespace transport
 				if(iter == boost::end(range))
 					{
             throw failed_to_compute_horizon_exit(tk->get_N_initial(), N_range, found_end, log_aH.size(), (N.size() > 0 ? N.back() : 0.0), (log_aH.size() > 0 ? log_aH.back() : 0.0), largest_k);
-//				    throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_FAIL_COMPUTE_T_EXIT);
 					}
 			}
 
