@@ -9,7 +9,7 @@
 #define $$__GUARD
 
 #include <assert.h>
-#include <math.h>
+#include <cmath>
 #include <iomanip>
 #include <sstream>
 #include <stdexcept>
@@ -282,7 +282,7 @@ namespace transport
 
             $$__TEMP_POOL{"const auto $1 = $2;"}
 
-            return(sqrt($$__HUBBLE_SQ));
+            return(std::sqrt($$__HUBBLE_SQ));
           }
         else
           {
@@ -417,9 +417,9 @@ namespace transport
 
         const auto __Hsq             = $$__HUBBLE_SQ;
         const auto __eps             = $$__EPSILON;
-        const auto __a               = exp(__Ninit - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
+        const auto __a               = std::exp(__Ninit - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
-        const auto __N               = log(__k/(__a*sqrt(__Hsq)));
+        const auto __N               = std::log(__k/(__a*std::sqrt(__Hsq)));
 
         number     __tpf             = 0.0;
 
@@ -504,9 +504,9 @@ namespace transport
 
       const auto __Hsq             = $$__HUBBLE_SQ;
       const auto __eps             = $$__EPSILON;
-      const auto __a               = exp(__Ninit - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
+      const auto __a               = std::exp(__Ninit - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
-      const auto __N               = log(__k/(__a*sqrt(__Hsq)));
+      const auto __N               = std::log(__k/(__a*std::sqrt(__Hsq)));
 
       number     __tpf             = 0.0;
 
@@ -525,7 +525,7 @@ namespace transport
           // NEXT-ORDER INITIAL CONDITION
 //            auto __leading = (SPECIES(__i) == SPECIES(__j) ? 1.0 : 0.0) * (1.0 - 2.0*__eps*(1.0-__N));
 
-          __tpf = + __leading / (2.0*sqrt(__Hsq)*__a*__a*__a);
+          __tpf = + __leading / (2.0*std::sqrt(__Hsq)*__a*__a*__a);
         }
       else if(IS_MOMENTUM(__i) && IS_FIELD(__j))
         {
@@ -535,7 +535,7 @@ namespace transport
           // NEXT-ORDER INITIAL CONDITION
 //            auto __leading = (SPECIES(__i) == SPECIES(__j) ? 1.0 : 0.0) * (1.0 - 2.0*__eps*(1.0-__N));
 
-          __tpf = - __leading / (2.0*sqrt(__Hsq)*__a*__a*__a);
+          __tpf = - __leading / (2.0*std::sqrt(__Hsq)*__a*__a*__a);
         }
 
       return(__tpf);
@@ -553,9 +553,9 @@ namespace transport
 
         const auto __Hsq             = $$__HUBBLE_SQ;
         const auto __eps             = $$__EPSILON;
-        const auto __a               = exp(__Ninit - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
+        const auto __a               = std::exp(__Ninit - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
-        const auto __N               = log(__k/(__a*sqrt(__Hsq)));
+        const auto __N               = std::log(__k/(__a*std::sqrt(__Hsq)));
 
         number     __tpf             = 0.0;
 
@@ -600,7 +600,7 @@ namespace transport
 
         const auto __Hsq             = $$__HUBBLE_SQ;
         const auto __eps             = $$__EPSILON;
-        const auto __a               = exp(__Ninit - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
+        const auto __a               = std::exp(__Ninit - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
         const auto __kt              = __k1 + __k2 + __k3;
         const auto __Ksq             = __k1*__k2 + __k1*__k3 + __k2*__k3;
@@ -827,7 +827,7 @@ namespace transport
 
         const auto __Hsq             = $$__HUBBLE_SQ;
         const auto __eps             = $$__EPSILON;
-        const auto __a               = exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
+        const auto __a               = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
@@ -895,7 +895,7 @@ namespace transport
 
         const auto __Hsq             = $$__HUBBLE_SQ;
         const auto __eps             = $$__EPSILON;
-        const auto __a               = exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
+        const auto __a               = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
@@ -922,7 +922,7 @@ namespace transport
 
         const auto __Hsq             = $$__HUBBLE_SQ;
         const auto __eps             = $$__EPSILON;
-        const auto __a               = exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
+        const auto __a               = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
@@ -953,7 +953,7 @@ namespace transport
 
         const auto __Hsq                  = $$__HUBBLE_SQ;
         const auto __eps                  = $$__EPSILON;
-        const auto __a                    = exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
+        const auto __a                    = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
@@ -984,7 +984,7 @@ namespace transport
 
         const auto __Hsq                  = $$__HUBBLE_SQ;
         const auto __eps                  = $$__EPSILON;
-        const auto __a                    = exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
+        const auto __a                    = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
@@ -1015,7 +1015,7 @@ namespace transport
 
         const auto __Hsq                  = $$__HUBBLE_SQ;
         const auto __eps                  = $$__EPSILON;
-        const auto __a                    = exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
+        const auto __a                    = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
@@ -1143,12 +1143,12 @@ namespace transport
                 const auto __Mp              = this->params.get_Mp();
 
                 const auto __Hsq = $$__HUBBLE_SQ;
-                const auto __H   = sqrt(__Hsq);
+                const auto __H   = std::sqrt(__Hsq);
 
-                const auto __a   = exp(__x.second - this->N_horizon_crossing + this->astar_normalization);
+                const auto __a   = std::exp(__x.second - this->N_horizon_crossing + this->astar_normalization);
 
                 this->N_vector.push_back(__x.second);
-                this->log_aH_vector.push_back(log(__a*__H));
+                this->log_aH_vector.push_back(std::log(__a*__H));
 
                 // are we now at a point where we have comfortably covered the horizon crossing time for largest_k?
                 if(std::log(largest_k) - std::log(__a*__H) < -0.5) return(true);

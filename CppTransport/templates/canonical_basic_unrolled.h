@@ -577,7 +577,7 @@ namespace transport
         const auto $$__COORDINATE[A] = __x[FLATTEN($$__A)];
         const auto __Mp              = this->Mp;
         const auto __k               = this->config.k_comoving;
-        const auto __a               = exp(__t - this->N_horizon_exit + this->astar_normalization);
+        const auto __a               = std::exp(__t - this->N_horizon_exit + this->astar_normalization);
         const auto __Hsq             = $$__HUBBLE_SQ;
         const auto __eps             = $$__EPSILON;
 
@@ -645,7 +645,7 @@ namespace transport
         const auto __k1              = this->config.k1_comoving;
         const auto __k2              = this->config.k2_comoving;
         const auto __k3              = this->config.k3_comoving;
-        const auto __a               = exp(__t - this->N_horizon_exit + this->astar_normalization);
+        const auto __a               = std::exp(__t - this->N_horizon_exit + this->astar_normalization);
         const auto __Hsq             = $$__HUBBLE_SQ;
         const auto __eps             = $$__EPSILON;
 
