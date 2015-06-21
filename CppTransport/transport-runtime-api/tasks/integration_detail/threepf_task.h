@@ -273,15 +273,24 @@ namespace transport
 
         std::vector<double> N;
         std::vector<number> log_aH;
-        this->get_model()->compute_aH(this, N, log_aH, std::max(largest_k, largest_kt));
-		    assert(N.size() == log_aH.size());
 
-        spline1d<number> sp(N, log_aH);
+        try
+          {
+            this->get_model()->compute_aH(this, N, log_aH, std::max(largest_k, largest_kt));
+            assert(N.size() == log_aH.size());
 
-		    this->threepf_compute_horizon_exit_times(sp, TolerancePredicate(1E-5));
+            spline1d<number> sp(N, log_aH);
 
-		    // forward to underlying twopf_list_task to also update its database
-		    this->twopf_list_task<number>::twopf_compute_horizon_exit_times(sp, TolerancePredicate(1E-5));
+            this->threepf_compute_horizon_exit_times(sp, TolerancePredicate(1E-5));
+
+            // forward to underlying twopf_list_task to also update its database
+            this->twopf_list_task<number>::twopf_compute_horizon_exit_times(sp, TolerancePredicate(1E-5));
+          }
+        catch(failed_to_compute_horizon_exit& xe)
+          {
+            this->compute_horizon_exit_times_fail(xe);
+            exit(EXIT_FAILURE);
+          }
 	    };
 
 

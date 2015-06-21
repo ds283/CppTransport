@@ -60,5 +60,17 @@
 
 #define CPPTRANSPORT_TASK_TWOPF_LIST_NO_TIMES         "no times to be stored"
 
+#define CPPTRANSPORT_TASK_FAIL_COMPUTE_HEXIT          "error: failed to compute horizon exit times for all k-configurations"
+#define CPPTRANSPORT_TASK_SEARCH_FROM                 "searched from N="
+#define CPPTRANSPORT_TASK_SEARCH_TO                   "to N="
+#define CPPTRANSPORT_TASK_SEARCH_FOUND_END            "[end-of-search fixed by end of inflation]"
+#define CPPTRANSPORT_TASK_SEARCH_NO_FOUND_END         "[did not find end of inflation: end-of-search is a fixed window]"
+#define CPPTRANSPORT_TASK_SEARCH_RECORDED             "search recorded"
+#define CPPTRANSPORT_TASK_SEARCH_SAMPLES              "samples"
+#define CPPTRANSPORT_TASK_SEARCH_LAST_SAMPLE          "last sample log(aH)="
+#define CPPTRANSPORT_TASK_SEARCH_LAST_SAMPLE_TIME     "at N="
+#define CPPTRANSPORT_TASK_SEARCH_LARGEST_K            "largest k-mode log(k)="
+#define CPPTRANSPORT_TASK_SEARCH_GUESS_FAIL           "(search ended before last k-configuration left the horizon, probably because inflation ended before that could occur)"
+
 
 #endif // CPPTRANSPORT_MESSAGES_EN_TASKS_H

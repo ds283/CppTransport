@@ -99,6 +99,9 @@ namespace transport
 		    template <typename SplineObject, typename TolerancePolicy>
 		    void twopf_compute_horizon_exit_times(SplineObject& sp, TolerancePolicy tol);
 
+        //! Issue advisory messages if failed to compute horizon exit times
+        void compute_horizon_exit_times_fail(failed_to_compute_horizon_exit& xe);
+
 
 		    // INTERFACE - INITIAL CONDITIONS AND INTEGRATION DETAILS
 
@@ -539,12 +542,21 @@ namespace transport
 
 		    std::vector<double> N;
 		    std::vector<number> log_aH;
-				this->get_model()->compute_aH(this, N, log_aH, largest_k);
-		    assert(N.size() == log_aH.size());
 
-				spline1d<number> sp(N, log_aH);
+        try
+          {
+            this->get_model()->compute_aH(this, N, log_aH, largest_k);
+            assert(N.size() == log_aH.size());
 
-				this->twopf_compute_horizon_exit_times(sp, TolerancePredicate(1E-5));
+            spline1d<number> sp(N, log_aH);
+
+            this->twopf_compute_horizon_exit_times(sp, TolerancePredicate(1E-5));
+          }
+        catch(failed_to_compute_horizon_exit& xe)
+          {
+            this->compute_horizon_exit_times_fail(xe);
+            exit(EXIT_FAILURE);
+          }
 			};
 
 
@@ -566,6 +578,30 @@ namespace transport
 		        t->t_exit = (result.first + result.second)/2.0;
 			    }
 			}
+
+
+    template <typename number>
+    void twopf_list_task<number>::compute_horizon_exit_times_fail(failed_to_compute_horizon_exit& xe)
+      {
+        std::cout << "'" << this->get_name() << "': ";
+        std::cout << CPPTRANSPORT_TASK_FAIL_COMPUTE_HEXIT << std::endl;
+
+        std::cout << CPPTRANSPORT_TASK_SEARCH_FROM << xe.get_search_begin() << " " << CPPTRANSPORT_TASK_SEARCH_TO << xe.get_search_end() << " ";
+
+        if(xe.get_found_end()) std::cout << CPPTRANSPORT_TASK_SEARCH_FOUND_END;
+        else std::cout << CPPTRANSPORT_TASK_SEARCH_NO_FOUND_END;
+        std::cout << std::endl;
+
+        std::cout << CPPTRANSPORT_TASK_SEARCH_RECORDED << " " << xe.get_N_samples() << " " << CPPTRANSPORT_TASK_SEARCH_SAMPLES;
+        std::cout << ", " << CPPTRANSPORT_TASK_SEARCH_LAST_SAMPLE << xe.get_last_log_aH() << " ";
+        std::cout << CPPTRANSPORT_TASK_SEARCH_LAST_SAMPLE_TIME << xe.get_last_N();
+        std::cout << ", " << CPPTRANSPORT_TASK_SEARCH_LARGEST_K << std::log(xe.get_largest_k()) << std::endl;
+
+        if(xe.get_found_end() && xe.get_N_samples() > 1 && xe.get_last_log_aH() > std::log(xe.get_largest_k()))
+          {
+            std::cout << CPPTRANSPORT_TASK_SEARCH_GUESS_FAIL << std::endl;
+          }
+      }
 
 
 		template <typename number>
