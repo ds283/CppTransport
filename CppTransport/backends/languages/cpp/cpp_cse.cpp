@@ -29,7 +29,7 @@ namespace cpp
         else if(name == "add")     out << this->print_operands(expr, "+", symf);
         else if(name == "mul")     out << this->print_operands(expr, "*", symf);
         else if(name == "power")   out << this->print_power(expr, symf);
-        else                       out << name << "(" << this->print_operands(expr, ",", symf) << ")";
+        else                       out << this->printer.ginac(expr);
 
         return(out.str());
       }
@@ -66,7 +66,7 @@ namespace cpp
         if(n != 2)
           {
             error(ERROR_CSE_POWER_ARGUMENTS);
-            out << "pow(" << this->print_operands(expr, ",", symf) << ")";
+            out << "std::pow(" << this->print_operands(expr, ",", symf) << ")";
           }
         else
           {
@@ -85,7 +85,7 @@ namespace cpp
                         else if (exp_numeric.to_int() == 2) out << symf(expr.op(0)) << "*" << symf(expr.op(0));
                         else if (exp_numeric.to_int() == 3) out << symf(expr.op(0)) << "*" << symf(expr.op(0)) << "*" << symf(expr.op(0));
                         else if (exp_numeric.to_int() == 4) out << symf(expr.op(0)) << "*" << symf(expr.op(0)) << "*" << symf(expr.op(0)) << "*" << symf(expr.op(0));
-                        else                                out << "pow(" << symf(expr.op(0)) << "," << exp_numeric.to_int() << ")";
+                        else                                out << "std::pow(" << symf(expr.op(0)) << "," << exp_numeric.to_int() << ")";
                       }
                     else  // negative integer
                       {
@@ -95,12 +95,12 @@ namespace cpp
                         else if (exp_numeric.to_int() == -2) out << "(" << symf(expr.op(0)) << "*" << symf(expr.op(0)) << ")";
                         else if (exp_numeric.to_int() == -3) out << "(" << symf(expr.op(0)) << "*" << symf(expr.op(0)) << "*" << symf(expr.op(0)) << ")";
                         else if (exp_numeric.to_int() == -4) out << "(" << symf(expr.op(0)) << "*" << symf(expr.op(0)) << "*" << symf(expr.op(0)) << "*" << symf(expr.op(0)) << ")";
-                        else                                 out << "pow(" << symf(expr.op(0)) << "," << -exp_numeric.to_int() << ")";
+                        else                                 out << "std::pow(" << symf(expr.op(0)) << "," << -exp_numeric.to_int() << ")";
                       }
                   }
                 else  // not an integer
                   {
-                    out << "pow(" << symf(expr.op(0)) << "," << symf(expr.op(1)) << ")";
+                    out << "std::pow(" << symf(expr.op(0)) << "," << symf(expr.op(1)) << ")";
                   }
               }
           }
