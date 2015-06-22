@@ -45,6 +45,9 @@
 // default size of the k-configuration caches - 1 Mb
 #define CPPTRANSPORT_DEFAULT_CONFIGURATION_CACHE_SIZE   (1*1024*1024)
 
+// default checkpointing interval measured in seconds. 0 indicates that checkpointing is disabled
+#define CPPTRANSPORT_DEFAULT_CHECKPOINT_INTERVAL        (0)
+
 // tolerance when merging axis points; points closer than this are considered equivalent
 #define CPPTRANSPORT_AXIS_MERGE_TOLERANCE               (1E-8)
 

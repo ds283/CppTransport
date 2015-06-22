@@ -19,6 +19,8 @@
 #include "transport-runtime-api/exceptions.h"
 #include "transport-runtime-api/localizations/messages_en.h"
 
+#include "transport-runtime-api/utilities/host_information.h"
+
 #include "boost/filesystem.hpp"
 #include "boost/log/core.hpp"
 #include "boost/log/trivial.hpp"
@@ -175,8 +177,12 @@ namespace transport
 
       protected:
 
+        //! Host information
+        host_information host_info;
+
         //! name of output group we are writing to
         std::string name;
+
 
         // SUCCESS FLAG - USED TO DETERMINE WHETHER TO ABORT/ROLLBACK WHEN WINDING UP
 
@@ -255,6 +261,14 @@ namespace transport
         core->add_sink(this->log_sink);
 
         boost::log::add_common_attributes();
+
+        BOOST_LOG_SEV(this->log_source, normal) << "** Instantiated writer on MPI host " << host_info.get_host_name();
+
+        BOOST_LOG_SEV(this->log_source, normal) << "** Host details: OS = " << host_info.get_os_name()
+            << ", version = " << host_info.get_os_version()
+            << " (release = " << host_info.get_os_release()
+            << ") | " << host_info.get_architecture()
+            << " | CPU vendor = " << host_info.get_cpu_vendor_id();
 	    }
 
 

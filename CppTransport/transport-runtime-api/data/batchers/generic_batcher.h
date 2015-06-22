@@ -69,7 +69,7 @@ namespace transport
       public:
 
         template <typename handle_type>
-        generic_batcher(unsigned int cap,
+        generic_batcher(unsigned int cap, unsigned int ckp,
                         const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                         container_dispatch_function d, container_replacement_function r,
                         handle_type h, unsigned int w, unsigned int g=0, bool no_log=false);
@@ -138,7 +138,7 @@ namespace transport
         virtual size_t storage() const = 0;
 
         //! Flush currently-batched results into the database, and then send to the master process
-        virtual void flush(replacement_action action) = 0;
+        virtual void flush(replacement_action action);
 
         //! Check if the batcher is ready for flush
         void check_for_flush();
@@ -189,6 +189,12 @@ namespace transport
         //! Flushing mode
         flush_mode                                               mode;
 
+        //! checkpoint interval in nanoseconds; 0 indicates that checkpointing is disabled
+        boost::timer::nanosecond_type                            checkpoint_interval;
+
+        //! checkpoint timer
+        boost::timer::cpu_timer                                  checkpoint_timer;
+
 
         // LOGGING
 
@@ -205,11 +211,12 @@ namespace transport
 
 
     template <typename handle_type>
-    generic_batcher::generic_batcher(unsigned int cap,
+    generic_batcher::generic_batcher(unsigned int cap, unsigned int ckp,
                                      const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                                      container_dispatch_function d, container_replacement_function r,
                                      handle_type h, unsigned int w, unsigned int g, bool no_log)
 	    : capacity(cap),
+        checkpoint_interval(boost::timer::nanosecond_type(ckp)*1000*1000*1000),
 	      container_path(cp),
 	      logdir_path(lp),
 	      dispatcher(d),
@@ -255,12 +262,22 @@ namespace transport
 	        }
 
         BOOST_LOG_SEV(this->log_source, normal) << "** Instantiated batcher (capacity " << format_memory(capacity) << ")"
-	        << " on MPI host " << host_info.get_host_name()
-	        << ", OS = " << host_info.get_os_name()
-	        << ", Version = " << host_info.get_os_version()
-	        << " (Release = " << host_info.get_os_release()
+	        << " on MPI host " << host_info.get_host_name();
+
+        BOOST_LOG_SEV(this->log_source, normal) << "** Host details: OS = " << host_info.get_os_name()
+	        << ", version = " << host_info.get_os_version()
+	        << " (release = " << host_info.get_os_release()
 	        << ") | " << host_info.get_architecture()
-	        << " | CPU vendor = " << host_info.get_cpu_vendor_id() << std::endl;
+	        << " | CPU vendor = " << host_info.get_cpu_vendor_id();
+
+        if(this->checkpoint_interval == 0)
+          {
+            BOOST_LOG_SEV(this->log_source, normal) << "** Checkpointing disabled";
+          }
+        else
+          {
+            BOOST_LOG_SEV(this->log_source, normal) << "** Checkpoint interval = " << format_time(this->checkpoint_interval);
+          }
 	    }
 
 
@@ -288,6 +305,14 @@ namespace transport
             else                              this->flush_due = true;
 	        }
 	    }
+
+
+    void generic_batcher::flush(replacement_action action)
+      {
+        // reset checkpoint timer
+        this->checkpoint_timer.stop();
+        this->checkpoint_timer.start();
+      }
 
 
     template <typename Item>

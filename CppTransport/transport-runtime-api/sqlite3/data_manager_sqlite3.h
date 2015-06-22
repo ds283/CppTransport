@@ -52,8 +52,8 @@ namespace transport
       public:
 
         //! Create a data_manager_sqlite3 instance
-        data_manager_sqlite3(unsigned int bcap, unsigned int dcap)
-          : data_manager<number>(bcap, dcap),
+        data_manager_sqlite3(unsigned int bcap, unsigned int dcap, unsigned int ckp)
+          : data_manager<number>(bcap, dcap, ckp),
             temporary_container_serial(0)
           {
           }
@@ -872,7 +872,7 @@ namespace transport
 	                                                                  this, tempdir, worker, m, tk->get_collect_initial_conditions(), std::placeholders::_1, std::placeholders::_2);
 
         // set up batcher
-        twopf_batcher<number> batcher(this->batcher_capacity, m, tk, container, logdir, writers, dispatcher, replacer, db, worker, group);
+        twopf_batcher<number> batcher(this->batcher_capacity, this->checkpoint_interval, m, tk, container, logdir, writers, dispatcher, replacer, db, worker, group);
 
         BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << "** Created new temporary twopf container " << container;
 
@@ -911,7 +911,7 @@ namespace transport
 	                                                                  this, tempdir, worker, m, tk->get_collect_initial_conditions(), std::placeholders::_1, std::placeholders::_2);
 
         // set up batcher
-        threepf_batcher<number> batcher(this->batcher_capacity, m, tk, container, logdir, writers, dispatcher, replacer, db, worker, group);
+        threepf_batcher<number> batcher(this->batcher_capacity, this->checkpoint_interval, m, tk, container, logdir, writers, dispatcher, replacer, db, worker, group);
         BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << "** Created new temporary threepf container " << container;
 
         // add this database to our list of open connections
@@ -940,7 +940,7 @@ namespace transport
 	                                                                  this, tempdir, worker, std::placeholders::_1, std::placeholders::_2);
 
         // set up batcher
-        zeta_twopf_batcher<number> batcher(this->batcher_capacity, container, logdir, writers, dispatcher, replacer, db, worker);
+        zeta_twopf_batcher<number> batcher(this->batcher_capacity, this->checkpoint_interval, container, logdir, writers, dispatcher, replacer, db, worker);
 
         BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << "** Created new temporary zeta twopf container " << container;
 
@@ -972,7 +972,7 @@ namespace transport
 	                                                                  this, tempdir, worker, std::placeholders::_1, std::placeholders::_2);
 
         // set up batcher
-        zeta_threepf_batcher<number> batcher(this->batcher_capacity, container, logdir, writers, dispatcher, replacer, db, worker);
+        zeta_threepf_batcher<number> batcher(this->batcher_capacity, this->checkpoint_interval, container, logdir, writers, dispatcher, replacer, db, worker);
 
         BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << "** Created new temporary zeta threepf container " << container;
 
@@ -1002,7 +1002,7 @@ namespace transport
 	                                                                  this, tempdir, worker, type, std::placeholders::_1, std::placeholders::_2);
 
         // set up batcher
-        fNL_batcher<number> batcher(this->batcher_capacity, container, logdir, writers, dispatcher, replacer, db, worker, type);
+        fNL_batcher<number> batcher(this->batcher_capacity, this->checkpoint_interval, container, logdir, writers, dispatcher, replacer, db, worker, type);
 
         BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << "** Created new temporary " << derived_data::template_name(type) << " container " << container;
 
@@ -2231,9 +2231,9 @@ namespace transport
 
 
     template <typename number>
-    data_manager<number>* data_manager_factory(unsigned int bcap, unsigned int dcap)
+    data_manager<number>* data_manager_factory(unsigned int bcap, unsigned int dcap, unsigned int ckp)
       {
-        return new data_manager_sqlite3<number>(bcap, dcap);
+        return new data_manager_sqlite3<number>(bcap, dcap, ckp);
       }
 
 

@@ -37,6 +37,13 @@ namespace transport
         std::string get_python_location() const { return(this->python_location.string()); }
 
 
+        // TERMINAL PROPERTIES
+
+      public:
+
+        bool get_terminal_colour_support() const { return(this->colour_output); }
+
+
         // INTERNAL DATA
 
       protected:
@@ -46,12 +53,37 @@ namespace transport
         //! Python executable
         boost::filesystem::path python_location;
 
+
+        // TERMINAL PROPERTIES
+
+        //! terminal supports colour output?
+        bool colour_output;
+
       };
 
 
     local_environment::local_environment()
       {
+        // set up python path
         python_location = find_python();
+
+        // determine if terminal supports colour output
+        char* term_type_cstr = std::getenv("TERM");
+
+        if(term_type_cstr == nullptr)
+          {
+            colour_output = false;
+            return;
+          }
+
+        std::string term_type(term_type_cstr);
+
+        colour_output = term_type == "xterm"
+          || term_type == "xterm-color"
+          || term_type == "xterm-256color"
+          || term_type == "screen"
+          || term_type == "linux"
+          || term_type == "cygwin";
       }
 
 

@@ -41,9 +41,10 @@ namespace transport
       public:
 
         //! Create a data_manager instance with a nominated capacity per batcher
-        data_manager(unsigned int bcap, unsigned int dcap)
+        data_manager(unsigned int bcap, unsigned int dcap, unsigned int ckp)
           : batcher_capacity(bcap),
-            pipe_capacity(dcap)
+            pipe_capacity(dcap),
+            checkpoint_interval(ckp)
           {
           }
 
@@ -66,6 +67,17 @@ namespace transport
 
         //! Set capacity available for data cache on this worker
         void set_pipe_capacity(size_t size) { this->pipe_capacity = size; }
+
+
+        // CHECKPOINTING ADMIN
+
+      public:
+
+        //! Return checkpointing interval, measured in seconds
+        unsigned int get_checkpoint_interval() const { return(this->checkpoint_interval); }
+
+        //! Set checkpointing interval in seconds. Setting a value of 0 disables checkpointing
+        void set_checkpoint_interval(unsigned int interval) { this->checkpoint_interval = interval; }
 
 
         // WRITER HANDLING
@@ -269,6 +281,9 @@ namespace transport
 
         //! Capacity available for data cache
         unsigned int pipe_capacity;
+
+        //! Checkpointing interval. 0 indicates that checkpointing is disabled
+        unsigned int checkpoint_interval;
 
       };
 

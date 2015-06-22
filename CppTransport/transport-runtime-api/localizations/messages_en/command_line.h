@@ -36,13 +36,13 @@
 #define CPPTRANSPORT_HELP_GANTT_CHART         "output Gantt chart describing worker activity"
 
 #define CPPTRANSPORT_SWITCH_CHECKPOINT        "checkpoint"
-#define CPPTRANSPORT_HELP_CHECKPOINT          "flush all data after a given interval, measured in minutes"
+#define CPPTRANSPORT_HELP_CHECKPOINT          "flush data after given interval, measured in minutes"
 
 #define CPPTRANSPORT_SWITCH_RECOVER           "recover"
-#define CPPTRANSPORT_HELP_RECOVER             "recover crashed output groups"
+#define CPPTRANSPORT_HELP_RECOVER             "attempt to recover crashed output groups"
 
 #define CPPTRANSPORT_SWITCH_SEED              "seed"
-#define CPPTRANSPORT_HELP_SEED                "specify named output group to use as a seed"
+#define CPPTRANSPORT_HELP_SEED                "use named output group as a seed"
 
 #define CPPTRANSPORT_SWITCH_TASK              "task"
 #define CPPTRANSPORT_HELP_TASK                "add named task to list of jobs"
