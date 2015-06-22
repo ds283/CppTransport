@@ -13,14 +13,4 @@
 namespace cpp
   {
 
-    std::string cpp_printer::ginac(const GiNaC::ex& expr)
-      {
-        return(this->C_style_printer::ginac(expr));
-      }
-
-    std::string cpp_printer::comment(const std::string tag)
-      {
-        return(this->C_style_printer::comment(tag));
-      }
-
   } // namespace cpp

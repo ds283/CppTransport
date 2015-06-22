@@ -26,10 +26,9 @@ namespace cpp
 
         virtual ~cpp_printer() = default;
 
-      public:
 
-        std::string ginac  (const GiNaC::ex& expr);
-        std::string comment(const std::string tag);
+        // no need to override ginac() and comment() methods, which can
+        // pass directly through to those inherited from C_style_printer
 
       };
 
