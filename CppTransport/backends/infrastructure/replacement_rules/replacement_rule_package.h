@@ -30,14 +30,27 @@ namespace macro_packages
     // abstract replacement_rule_package class
     class replacement_rule_package
       {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
       public:
+
         replacement_rule_package(translation_unit* u, language_printer& p)
-          : unit(u), printer(p), u_factory(nullptr), fl(nullptr), cse_worker(nullptr)
+          : unit(u),
+            printer(p),
+            u_factory(nullptr),
+            fl(nullptr),
+            cse_worker(nullptr)
           {
           }
 
         // provide virtual destructor so that derived classes delete correctly
         virtual ~replacement_rule_package();
+
+
+        // INTERFACE
+
+      public:
 
         // these methods must be overridden by derived classes which implement the replacement_rule_package concept
         virtual const std::vector<simple_rule> get_pre_rules  () = 0;
@@ -52,6 +65,7 @@ namespace macro_packages
         void                                   warn           (std::string const msg);
 
       protected:
+
         translation_unit* unit;
         language_printer& printer;
 
@@ -70,6 +84,7 @@ namespace macro_packages
         void              generic_post_hook          (void* state);
 
         unsigned int      get_index_label            (struct index_assignment& index);
+
       };
 
   }

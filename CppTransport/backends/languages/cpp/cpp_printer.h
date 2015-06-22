@@ -19,9 +19,18 @@ namespace cpp
 
     class cpp_printer: public C_style_printer
       {
+
       public:
+
+        cpp_printer() = default;
+
+        virtual ~cpp_printer() = default;
+
+      public:
+
         std::string ginac  (const GiNaC::ex& expr);
         std::string comment(const std::string tag);
+
       };
 
   } // namespace cpp
