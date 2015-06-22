@@ -171,7 +171,7 @@ field
 % set up the potential
 % note that 'M_P' is a predefined symbol which resolves to the (user-specified) Planck mass at runtime
 
-potential (0.09999999999999996*pow(phi1,2)
+potential = (0.09999999999999996*pow(phi1,2)
            + 0.17640596649360385*pow(phi10,2)
            + 0.19713493868620416*pow(phi11,2)
            + 0.21394225948732082*pow(phi12,2)
