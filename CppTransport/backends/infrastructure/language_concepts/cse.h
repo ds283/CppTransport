@@ -44,7 +44,7 @@
 #define __cse_H_
 
 #include <string>
-#include <map>
+#include <unordered_map>
 #include <utility>
 
 #include "ginac/ginac.h"
@@ -212,7 +212,7 @@ class cse
 
     std::string temporary_name_kernel;
 
-    std::map<std::string, symbol_record>              symbols;
+    std::unordered_map<std::string, symbol_record>    symbols;
     std::vector<std::pair<std::string, std::string> > decls;
 
 		// timer
