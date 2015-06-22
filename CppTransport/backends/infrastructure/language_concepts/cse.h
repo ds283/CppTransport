@@ -100,16 +100,33 @@ class cse
 
     class symbol_record
       {
+
       public:
-        symbol_record()
-          : target(""), written(false), filled(false)
+
+        symbol_record(const std::string& t, const std::string& s)
+          : target(t),
+            symbol(s),
+            written(false)
           {
           }
+
+
+      public:
+
+        const std::string get_target() const { return(this->target); }
+
+        const std::string get_symbol() const { return(this->symbol); }
+
+        bool is_written() const { return(this->written); }
+
+        void set_written() { this->written = true; }
+
+      protected:
 
         std::string target;
         std::string symbol;
         bool        written;
-        bool        filled;
+
       };
 
 
@@ -118,7 +135,11 @@ class cse
   public:
 
     cse(unsigned int s, language_printer& p, bool d=true, std::string k=OUTPUT_DEFAULT_CPP_CSE_TEMPORARY_NAME)
-      : serial_number(s), printer(p), perform_cse(d), temporary_name_kernel(k), symbol_counter(0)
+      : serial_number(s),
+        printer(p),
+        perform_cse(d),
+        temporary_name_kernel(k),
+        symbol_counter(0)
       {
 		    // pause timer
 		    timer.stop();
@@ -136,10 +157,10 @@ class cse
     std::string        temporaries(const std::string& t);
 
     // two methods for getting the symbol corresponding to a GiNaC expression
-    // get_symbol_no_tag() just returns the symbol and is used during the parsing phase
-    // get_symbol_and_tag() marks each temporary as 'used', and injects it into the declarations.
+    // get_symbol_without_use_count() just returns the symbol and is used during the parsing phase
+    // get_symbol_with_use_count() marks each temporary as 'used', and injects it into the declarations.
     // This method is used when actually outputting symbols
-    std::string        get_symbol_and_tag(const GiNaC::ex &expr);
+    std::string        get_symbol_with_use_count(const GiNaC::ex& expr);
 
     void               clear();
 
@@ -191,10 +212,10 @@ class cse
 
     // these functions are abstract and must be implemented by any derived classes
     // typically they will vary depending on the target language
-    virtual std::string print           (const GiNaC::ex& expr, symbol_f symf) = 0;
-    virtual std::string print_operands  (const GiNaC::ex& expr, std::string op, symbol_f symf) = 0;
+    virtual std::string print(const GiNaC::ex& expr, symbol_f symf)                          = 0;
+    virtual std::string print_operands(const GiNaC::ex& expr, std::string op, symbol_f symf) = 0;
 
-    std::string get_symbol_no_tag(const GiNaC::ex& expr);
+    std::string get_symbol_without_use_count(const GiNaC::ex& expr);
 
 		// make a temporary symbol
     std::string make_symbol();
@@ -212,8 +233,11 @@ class cse
 
     std::string temporary_name_kernel;
 
-    std::unordered_map<std::string, symbol_record>    symbols;
-    std::vector<std::pair<std::string, std::string> > decls;
+    typedef std::unordered_map< std::string, symbol_record >   symbol_lookup_table;
+    typedef std::vector< std::pair<std::string, std::string> > declaration_table;
+
+    symbol_lookup_table symbols;
+    declaration_table   decls;
 
 		// timer
 		boost::timer::cpu_timer timer;

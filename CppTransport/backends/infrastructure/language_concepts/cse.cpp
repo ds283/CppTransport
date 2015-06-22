@@ -73,16 +73,18 @@ void cse::parse(const GiNaC::ex& expr)
 
     for(GiNaC::const_postorder_iterator t = expr.postorder_begin(); t != expr.postorder_end(); ++t)
       {
-        symbol_f symf = std::bind(&cse::get_symbol_no_tag, this, std::placeholders::_1);
+        symbol_f symf = std::bind(&cse::get_symbol_without_use_count, this, std::placeholders::_1);
 
+        // print this expression without use counting
         std::string e = this->print(*t, symf);
-        symbol_record& record = this->symbols[e];
 
-        if(record.filled == false)
+        // does this expression already exist in the lookup table?
+        symbol_lookup_table::iterator u = this->symbols.find(e);
+
+        // if not, we should insert it
+        if(u == this->symbols.end())
           {
-            record.filled = true;
-            record.symbol = this->make_symbol();
-            record.target = e;
+            this->symbols.emplace(std::make_pair( e, symbol_record( e, this->make_symbol() ) ));
           }
       }
 
@@ -138,42 +140,47 @@ std::string cse::temporaries(const std::string& t)
 // **********************************************************************
 
 
-std::string cse::get_symbol_no_tag(const GiNaC::ex& expr)
+std::string cse::get_symbol_without_use_count(const GiNaC::ex& expr)
   {
-    symbol_f symf = std::bind(&cse::get_symbol_no_tag, this, std::placeholders::_1);
+    symbol_f symf = std::bind(&cse::get_symbol_without_use_count, this, std::placeholders::_1);
 
+    // print expression using ourselves as the lookup function
     std::string e = this->print(expr, symf);
-    symbol_record& record = this->symbols[e];
 
-    std::string rval = e;
-    if(record.filled)
-      {
-        rval = record.symbol;
-      }
+    // search for this expression in the lookup table
+    symbol_lookup_table::iterator t = this->symbols.find(e);
 
-    return(rval);
+    // was it present? if not, return the plain expression
+    if(t == this->symbols.end()) return e;
+
+    // otherwise, return whatever the expression resolves to
+    return t->second.get_symbol();
   }
 
 
-std::string cse::get_symbol_and_tag(const GiNaC::ex& expr)
+std::string cse::get_symbol_with_use_count(const GiNaC::ex& expr)
   {
-    symbol_f symf = std::bind(&cse::get_symbol_and_tag, this, std::placeholders::_1);
+    symbol_f symf = std::bind(&cse::get_symbol_with_use_count, this, std::placeholders::_1);
 
+    // print expression using ourselves as the lookup function
     std::string e = this->print(expr, symf);
-    symbol_record& record = this->symbols[e];
 
-    std::string rval = e;
-    if(record.filled)
+    // search for this expression in the lookup table
+    symbol_lookup_table::iterator t = this->symbols.find(e);
+
+    // was it present? if not, return the plain expression
+    if(t == this->symbols.end()) return e;
+
+    // if it was present, check whether this symbol has been written into the list
+    // of declarations
+
+    if(!t->second.is_written())
       {
-        rval = record.symbol;
-        if(!record.written)
-          {
-            this->decls.push_back(std::make_pair(record.symbol, record.target));
-            record.written = true;
-          }
+        this->decls.push_back(std::make_pair(t->second.get_symbol(), t->second.get_target()));
+        t->second.set_written();
       }
 
-    return(rval);
+    return t->second.get_symbol();
   }
 
 
@@ -223,7 +230,7 @@ std::string cse_map::operator[](unsigned int index)
       {
         if(this->cse_worker->get_perform_cse())
           {
-            rval = this->cse_worker->get_symbol_and_tag((*this->list)[index]);
+            rval = this->cse_worker->get_symbol_with_use_count((*this->list)[index]);
           }
         else
           {
