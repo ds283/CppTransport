@@ -89,4 +89,4 @@ parameter
 % set up the potential
 % note that 'M_P' is a predefined symbol which resolves to the (user-specified) Planck mass at runtime
 
-potential (1/2)*(m1^2*phi1^2 + m2^2*phi2^2 + m3^2*phi3^2 + m4^2*phi4^2 + m5^2*phi5^2 + m6^2*phi6^2 + m7^2*phi7^2 + m8^2*phi8^2 + m9^2*phi9^2 + m10^10*phi10^2);
+potential = (1/2)*(m1^2*phi1^2 + m2^2*phi2^2 + m3^2*phi3^2 + m4^2*phi4^2 + m5^2*phi5^2 + m6^2*phi6^2 + m7^2*phi7^2 + m8^2*phi8^2 + m9^2*phi9^2 + m10^10*phi10^2);

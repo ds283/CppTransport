@@ -9,7 +9,7 @@
 #define $$__GUARD
 
 #include <assert.h>
-#include <math.h>
+#include <cmath>
 #include <iomanip>
 #include <sstream>
 #include <stdexcept>
@@ -282,7 +282,7 @@ namespace transport
 
             $$__TEMP_POOL{"const auto $1 = $2;"}
 
-            return(sqrt($$__HUBBLE_SQ));
+            return(std::sqrt($$__HUBBLE_SQ));
           }
         else
           {
@@ -417,9 +417,9 @@ namespace transport
 
         const auto __Hsq             = $$__HUBBLE_SQ;
         const auto __eps             = $$__EPSILON;
-        const auto __a               = exp(__Ninit - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
+        const auto __a               = std::exp(__Ninit - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
-        const auto __N               = log(__k/(__a*sqrt(__Hsq)));
+        const auto __N               = std::log(__k/(__a*std::sqrt(__Hsq)));
 
         number     __tpf             = 0.0;
 
@@ -504,9 +504,9 @@ namespace transport
 
       const auto __Hsq             = $$__HUBBLE_SQ;
       const auto __eps             = $$__EPSILON;
-      const auto __a               = exp(__Ninit - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
+      const auto __a               = std::exp(__Ninit - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
-      const auto __N               = log(__k/(__a*sqrt(__Hsq)));
+      const auto __N               = std::log(__k/(__a*std::sqrt(__Hsq)));
 
       number     __tpf             = 0.0;
 
@@ -525,7 +525,7 @@ namespace transport
           // NEXT-ORDER INITIAL CONDITION
 //            auto __leading = (SPECIES(__i) == SPECIES(__j) ? 1.0 : 0.0) * (1.0 - 2.0*__eps*(1.0-__N));
 
-          __tpf = + __leading / (2.0*sqrt(__Hsq)*__a*__a*__a);
+          __tpf = + __leading / (2.0*std::sqrt(__Hsq)*__a*__a*__a);
         }
       else if(IS_MOMENTUM(__i) && IS_FIELD(__j))
         {
@@ -535,7 +535,7 @@ namespace transport
           // NEXT-ORDER INITIAL CONDITION
 //            auto __leading = (SPECIES(__i) == SPECIES(__j) ? 1.0 : 0.0) * (1.0 - 2.0*__eps*(1.0-__N));
 
-          __tpf = - __leading / (2.0*sqrt(__Hsq)*__a*__a*__a);
+          __tpf = - __leading / (2.0*std::sqrt(__Hsq)*__a*__a*__a);
         }
 
       return(__tpf);
@@ -553,9 +553,9 @@ namespace transport
 
         const auto __Hsq             = $$__HUBBLE_SQ;
         const auto __eps             = $$__EPSILON;
-        const auto __a               = exp(__Ninit - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
+        const auto __a               = std::exp(__Ninit - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
-        const auto __N               = log(__k/(__a*sqrt(__Hsq)));
+        const auto __N               = std::log(__k/(__a*std::sqrt(__Hsq)));
 
         number     __tpf             = 0.0;
 
@@ -600,7 +600,7 @@ namespace transport
 
         const auto __Hsq             = $$__HUBBLE_SQ;
         const auto __eps             = $$__EPSILON;
-        const auto __a               = exp(__Ninit - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
+        const auto __a               = std::exp(__Ninit - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
         const auto __kt              = __k1 + __k2 + __k3;
         const auto __Ksq             = __k1*__k2 + __k1*__k3 + __k2*__k3;
@@ -827,7 +827,7 @@ namespace transport
 
         const auto __Hsq             = $$__HUBBLE_SQ;
         const auto __eps             = $$__EPSILON;
-        const auto __a               = exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
+        const auto __a               = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
@@ -895,7 +895,7 @@ namespace transport
 
         const auto __Hsq             = $$__HUBBLE_SQ;
         const auto __eps             = $$__EPSILON;
-        const auto __a               = exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
+        const auto __a               = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
@@ -922,7 +922,7 @@ namespace transport
 
         const auto __Hsq             = $$__HUBBLE_SQ;
         const auto __eps             = $$__EPSILON;
-        const auto __a               = exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
+        const auto __a               = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
@@ -953,7 +953,7 @@ namespace transport
 
         const auto __Hsq                  = $$__HUBBLE_SQ;
         const auto __eps                  = $$__EPSILON;
-        const auto __a                    = exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
+        const auto __a                    = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
@@ -984,7 +984,7 @@ namespace transport
 
         const auto __Hsq                  = $$__HUBBLE_SQ;
         const auto __eps                  = $$__EPSILON;
-        const auto __a                    = exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
+        const auto __a                    = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
@@ -1015,7 +1015,7 @@ namespace transport
 
         const auto __Hsq                  = $$__HUBBLE_SQ;
         const auto __eps                  = $$__EPSILON;
-        const auto __a                    = exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
+        const auto __a                    = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
@@ -1062,29 +1062,34 @@ namespace transport
       }
 
 
-		template <typename number>
-    class EpsilonUnityPredicate
-	    {
-      public:
-        EpsilonUnityPredicate(const parameters<number>& p)
-	        : params(p)
-	        {
-	        }
+    namespace $$__MODEL_impl
+      {
 
-        bool operator()(const std::pair< backg_state<number>, double >& __x)
-	        {
-            const auto $$__PARAMETER[1]  = this->params.get_vector()[$$__1];
-            const auto $$__COORDINATE[A] = __x.first[$$__A];
-            const auto __Mp              = this->params.get_Mp();
+        template <typename number>
+        class EpsilonUnityPredicate
+          {
+          public:
+            EpsilonUnityPredicate(const parameters<number>& p)
+              : params(p)
+              {
+              }
 
-            const auto __eps = $$__EPSILON;
+            bool operator()(const std::pair< backg_state<number>, double >& __x)
+              {
+                const auto $$__PARAMETER[1]  = this->params.get_vector()[$$__1];
+                const auto $$__COORDINATE[A] = __x.first[$$__A];
+                const auto __Mp              = this->params.get_Mp();
 
-            return (__eps > 1.0);
-	        }
+                const auto __eps = $$__EPSILON;
 
-      private:
-        const parameters<number>& params;
-	    };
+                return (__eps > 1.0);
+              }
+
+          private:
+            const parameters<number>& params;
+          };
+
+      }   // namespace $$__MODEL_impl
 
 
     template <typename number>
@@ -1106,7 +1111,7 @@ namespace transport
 		    auto range = boost::numeric::odeint::make_adaptive_time_range(stepper, system, x, tk->get_N_initial(), tk->get_N_initial()+search_time, $$__BACKG_STEP_SIZE);
 
         // returns the first iterator in 'range' for which the predicate EpsilonUnityPredicate() is satisfied
-        auto iter = boost::find_if(range, EpsilonUnityPredicate<number>(tk->get_params()));
+        auto iter = boost::find_if(range, $$__MODEL_impl::EpsilonUnityPredicate<number>(tk->get_params()));
 
 				if(iter == boost::end(range)) throw end_of_inflation_not_found();
 
@@ -1114,47 +1119,65 @@ namespace transport
       };
 
 
-		template <typename number>
-		class aHAggregatorPredicate
-			{
-		  public:
-				aHAggregatorPredicate(const twopf_list_task<number>* tk, std::vector<double>& N, std::vector<number>& log_aH, double lk)
-					: params(tk->get_params()),
-		        N_vector(N),
-		        log_aH_vector(log_aH),
-		        largest_k(lk),
-						N_horizon_crossing(tk->get_N_horizon_crossing()),
-						astar_normalization(tk->get_astar_normalization())
-					{
-					}
+    namespace $$__MODEL_impl
+      {
 
-				bool operator()(const std::pair< backg_state<number>, double >& __x)
-					{
-				    const auto $$__PARAMETER[1]  = this->params.get_vector()[$$__1];
-				    const auto $$__COORDINATE[A] = __x.first[$$__A];
-				    const auto __Mp              = this->params.get_Mp();
+        template <typename number>
+        class aHAggregatorPredicate
+          {
+          public:
+            aHAggregatorPredicate(const twopf_list_task<number>* tk, std::vector<double>& N, std::vector<number>& log_aH, double lk)
+              : params(tk->get_params()),
+                N_vector(N),
+                log_aH_vector(log_aH),
+                largest_k(lk),
+                N_horizon_crossing(tk->get_N_horizon_crossing()),
+                astar_normalization(tk->get_astar_normalization())
+              {
+              }
 
-				    const auto __Hsq = $$__HUBBLE_SQ;
-						const auto __H   = sqrt(__Hsq);
+            bool operator()(const std::pair< backg_state<number>, double >& __x)
+              {
+                const auto $$__PARAMETER[1]  = this->params.get_vector()[$$__1];
+                const auto $$__COORDINATE[A] = __x.first[$$__A];
+                const auto __Mp              = this->params.get_Mp();
 
-						const auto __a   = exp(__x.second - this->N_horizon_crossing + this->astar_normalization);
+                const auto __Hsq = $$__HUBBLE_SQ;
+                const auto __H   = std::sqrt(__Hsq);
 
-						this->N_vector.push_back(__x.second);
-						this->log_aH_vector.push_back(log(__a*__H));
+                const auto __a   = std::exp(__x.second - this->N_horizon_crossing + this->astar_normalization);
 
-						// are we now at a point where we have comfortably covered the horizon crossing time for largest_k?
-						if(largest_k / (__a*__H) < 0.01) return(true);
-						return(false);
-					}
+                this->N_vector.push_back(__x.second);
+                this->log_aH_vector.push_back(std::log(__a*__H));
 
-		  private:
-				const parameters<number>& params;
-				std::vector<double>& N_vector;
-				std::vector<number>& log_aH_vector;
-				const double largest_k;
-				const double N_horizon_crossing;
-				const double astar_normalization;
-			};
+                // are we now at a point where we have comfortably covered the horizon crossing time for largest_k?
+                if(std::log(largest_k) - std::log(__a*__H) < -0.5) return(true);
+                return(false);
+              }
+
+          private:
+
+            //! parameters for the model in use
+            const parameters<number>& params;
+
+            //! output vector for times N
+            std::vector<double>& N_vector;
+
+            //! output vector for values log(aH)
+            std::vector<number>& log_aH_vector;
+
+            //! largest k-mode for which we are trying to find a horizon-exit time
+            const double largest_k;
+
+            //! time of horizon crossing
+            const double N_horizon_crossing;
+
+            //! normalization of ln(a) at horizon crossing time
+            const double astar_normalization;
+
+          };
+
+      }   // namespace $$__MODEL_impl
 
 
 		template <typename number>
@@ -1174,9 +1197,11 @@ namespace transport
 				auto stepper = $$__MAKE_BACKG_STEPPER{backg_state<number>};
 
         double N_range = 0.0;
+        bool found_end = false;
         try
           {
-            N_range = tk->get_N_end_of_inflation();
+            N_range   = tk->get_N_end_of_inflation();
+            found_end = true;
           }
         catch (end_of_inflation_not_found& xe)
           {
@@ -1186,7 +1211,7 @@ namespace transport
 
         auto range = boost::numeric::odeint::make_const_step_time_range(stepper, system, x, tk->get_N_initial(), N_range, 0.01);
 
-				aHAggregatorPredicate<number> aggregator(tk, N, log_aH, largest_k);
+        $$__MODEL_impl::aHAggregatorPredicate<number> aggregator(tk, N, log_aH, largest_k);
 
 				// step through iterators, finding first point which is comfortably after time when largest_k has left
 				// the horizon
@@ -1197,8 +1222,7 @@ namespace transport
 				// so something has gone wrong
 				if(iter == boost::end(range))
 					{
-						assert(false);
-				    throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_FAIL_COMPUTE_T_EXIT);
+            throw failed_to_compute_horizon_exit(tk->get_N_initial(), N_range, found_end, log_aH.size(), (N.size() > 0 ? N.back() : 0.0), (log_aH.size() > 0 ? log_aH.back() : 0.0), largest_k);
 					}
 			}
 

@@ -17,11 +17,14 @@
 // we could choose something different
 
 const double M_Planck  = 1.0;
-const double m_phi     = 1e-5 * M_Planck;
-const double lambda    = (1.0/100.0) * sqrt(pow(m_phi*(15.0*M_Planck), 2.0)/2.0 / (3.0*M_Planck*M_Planck));
+const double lambda_1  = -pow(10.0, -37.1) * M_Planck*M_Planck*M_Planck;
+const double lambda_3  = -1E-17 * M_Planck;
+const double gamma_1   = -pow(10.0, -37.11) * M_Planck*M_Planck*M_Planck;
+const double gamma_3   = -1E-17 * M_Planck;
+const double V0        = 1E-26 * M_Planck;
 
-const double phi_init  = 15.0 * M_Planck;
-const double chi_init  = -1e-4 * M_Planck;
+const double phi_init  = -1.763E-10 * M_Planck;
+const double chi_init  = -1.618E-10 * M_Planck;
 
 
 // ****************************************************************************
@@ -47,16 +50,16 @@ int main(int argc, char* argv[])
     transport::inflection_basic<double>* model = new transport::inflection_basic<double>(mgr);
 
     // set up parameter choices
-    const std::vector<double>     init_params = { m_phi, lambda };
+    const std::vector<double>     init_params = { lambda_1, lambda_3, gamma_1, gamma_3, V0 };
     transport::parameters<double> params(M_Planck, init_params, model);
 
     const std::vector<double> init_values = { phi_init, chi_init };
 
     const double Ninit  = 0.0;  // start counting from N=0 at the beginning of the integration
-    const double Ncross = 10.0; // horizon-crossing occurs at N=13
+    const double Ncross = 9.0; // horizon-crossing occurs at N=13
     const double Npre   = 9.0;  // number of e-folds of subhorizon evolution
-    const double Nsplit = 5.0;  // split point between early and late
-    const double Nmax   = 20.0; // how many e-folds to integrate after horizon crossing
+    const double Nsplit = 1.0;  // split point between early and late
+    const double Nmax   = 10.0; // how many e-folds to integrate after horizon crossing
 
     // set up initial conditions with the specified horizon-crossing time Ncross and Npre
     // e-folds of subhorizon evolution.
@@ -73,8 +76,8 @@ int main(int argc, char* argv[])
     // the conventions for k-numbers are as follows:
     // k=1 is the mode which crosses the horizon at time N*,
     // where N* is the 'offset' we pass to the integration method (see below)
-    const double        ktmin         = exp(3.0);
-    const double        ktmax         = exp(10.0);
+    const double        ktmin         = exp(6.5);
+    const double        ktmax         = exp(9.0);
     const unsigned int  k_samples     = 80;
 
 		const double        alphamin      = 0.0;

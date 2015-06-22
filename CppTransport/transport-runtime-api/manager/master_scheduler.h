@@ -13,6 +13,7 @@
 #include <functional>
 #include <algorithm>
 #include <cmath>
+#include <random>
 
 #include "transport-runtime-api/manager/mpi_operations.h"
 
@@ -207,6 +208,8 @@ namespace transport
 		        work_items_in_flight(0),
             finished(false)
 			    {
+            // set up the random number generator
+            urng.seed(rng());
 			    }
 
 		    ~master_scheduler() = default;
@@ -392,6 +395,13 @@ namespace transport
         //! work complete?
         bool finished;
 
+
+        // RANDOM NUMBER GENERATORS
+
+        std::random_device rng;
+
+        std::mt19937 urng;
+
 	    };
 
 
@@ -524,7 +534,7 @@ namespace transport
         // shuffling attempt to alleviate that problem a bit
         std::vector<unsigned int> temp(this->queue.size());
         std::copy(this->queue.begin(), this->queue.end(), temp.begin());
-        std::random_shuffle(temp.begin(), temp.end());
+        std::shuffle(temp.begin(), temp.end(), this->urng);
         std::copy(temp.begin(), temp.end(), this->queue.begin());
 			}
 
@@ -551,7 +561,7 @@ namespace transport
         // shuffling attempt to alleviate that problem a bit
         std::vector<unsigned int> temp(this->queue.size());
         std::copy(this->queue.begin(), this->queue.end(), temp.begin());
-        std::random_shuffle(temp.begin(), temp.end());
+        std::shuffle(temp.begin(), temp.end(), this->urng);
         std::copy(temp.begin(), temp.end(), this->queue.begin());
       }
 
@@ -565,7 +575,7 @@ namespace transport
 
         std::vector<unsigned int> temp(this->queue.size());
         std::copy(this->queue.begin(), this->queue.end(), temp.begin());
-        std::random_shuffle(temp.begin(), temp.end());
+        std::shuffle(temp.begin(), temp.end(), this->urng);
         std::copy(temp.begin(), temp.end(), this->queue.begin());
       }
 

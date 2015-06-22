@@ -31,9 +31,9 @@ namespace cpp
 
       protected:
 
-        virtual std::string print         (const GiNaC::ex& expr, symbol_f symf) override;
-        virtual std::string print_operands(const GiNaC::ex& expr, std::string op, symbol_f symf) override;
-        std::string print_power           (const GiNaC::ex& expr, symbol_f symf);
+        virtual std::string print         (const GiNaC::ex& expr, bool use_count) override;
+        virtual std::string print_operands(const GiNaC::ex& expr, std::string op, bool use_count) override;
+        std::string print_power           (const GiNaC::ex& expr, bool use_count);
 
       };
 

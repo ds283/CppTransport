@@ -173,10 +173,10 @@ namespace transport
         // only do so if not in silent mode and enough time has elapsed since the last update
         if(!this->silent && (this->integration_timer.elapsed().wall - this->last_output > this->output_interval))
 	        {
-            this->last_output = this->integration_timer.elapsed().wall;
+            boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
 
             std::ostringstream msg;
-		        msg << "-- ";
+		        msg << "-- " << boost::posix_time::to_simple_string(now) << ": ";
 		        if(this->first_output)
 			        {
 				        msg << CPPTRANSPORT_OBSERVER_SLOW_INTEGRATION;
@@ -201,7 +201,8 @@ namespace transport
             BOOST_LOG_SEV(logger, lev) << msg.str();
 
 		        this->first_output = false;
-	        }
+            this->last_output = this->integration_timer.elapsed().wall;
+          }
 	    }
 
 

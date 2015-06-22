@@ -20,13 +20,35 @@
 
 class language_printer
   {
+
+    // CONSTRUCTOR, DESTRUCTOR
+
   public:
-    virtual ~language_printer()
+
+    language_printer()
+      : debug(false)
       {
       }
 
+    virtual ~language_printer() = default;
+
+
+    // INTERFACE
+
+  public:
+
     virtual std::string ginac  (const GiNaC::ex& expr) = 0;
     virtual std::string comment(const std::string tag) = 0;
+
+    void set_debug_output(bool g) { this->debug = g; }
+
+
+    // INTERNAL DATA
+
+  protected:
+
+    bool debug;
+
   };
 
 

@@ -18,8 +18,7 @@
 
 #include "transport-runtime-api/localizations/messages_en/models.h"
 #include "transport-runtime-api/localizations/messages_en/integration.h"
-
-#include "transport-runtime-api/localizations/messages_en/plotgadgets.h"
+#include "transport-runtime-api/localizations/messages_en/advisory_classes.h"
 
 #include "transport-runtime-api/localizations/messages_en/parameters.h"
 #include "transport-runtime-api/localizations/messages_en/initial_conditions.h"

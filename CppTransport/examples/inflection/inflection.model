@@ -15,14 +15,26 @@ field
 
 % set up the parameters of the model
 parameter
- { latex "m_\phi";
- } mphi;
+ { latex "\lambda_1";
+ } lambda1;
  
 parameter
- { latex "\lambda";
- } lambda;
+ { latex "\lambda_3";
+ } lambda3;
+
+parameter
+ { latex "\gamma_1";
+ } gamma1;
+
+parameter
+ { latex "\gamma_3";
+ } gamma3;
+
+parameter
+ { latex "V_0";
+ } V0;
 
 % set up the potential
 % note that 'M_P' is a predefined symbol which resolves to the (user-specified) Planck mass at runtime
 
-potential = (1/2) * mphi^2 * phi^2 + (1/6) * lambda * chi^3;
+potential = V0 + lambda1 * phi + lambda3 * phi^3 + gamma1 * chi + gamma3 * chi^3;
