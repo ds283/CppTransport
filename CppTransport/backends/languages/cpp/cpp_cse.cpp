@@ -38,18 +38,13 @@ namespace cpp
     std::string cpp_cse::print_operands(const GiNaC::ex& expr, std::string op, symbol_f symf)
       {
         std::ostringstream out;
-        size_t             n = expr.nops();
 
-        if(n > 0)
+        unsigned int c = 0;
+        for(GiNaC::const_iterator t = expr.begin(); t != expr.end(); ++t)
           {
-            for(size_t i = 0; i < n; ++i)
-              {
-                out << (i > 0 ? op : "") << symf(expr.op(i));
-              }
-          }
-        else
-          {
-            out << this->printer.ginac(expr);
+            if(c > 0) out << op;
+            out << symf(*t);
+            c++;
           }
 
         return(out.str());
