@@ -52,7 +52,7 @@
 #include "language_printer.h"
 #include "msg_en.h"
 
-#include <boost/timer/timer.hpp>
+#include "boost/timer/timer.hpp"
 
 // to be defined below; need a forward reference here
 class cse;
@@ -88,9 +88,6 @@ class cse_map
     std::vector<GiNaC::ex>* list;
 
   };
-
-
-typedef std::function<std::string(const GiNaC::ex&)> symbol_f;
 
 
 class cse
@@ -212,8 +209,8 @@ class cse
 
     // these functions are abstract and must be implemented by any derived classes
     // typically they will vary depending on the target language
-    virtual std::string print(const GiNaC::ex& expr, symbol_f symf)                          = 0;
-    virtual std::string print_operands(const GiNaC::ex& expr, std::string op, symbol_f symf) = 0;
+    virtual std::string print(const GiNaC::ex& expr, bool use_count)                          = 0;
+    virtual std::string print_operands(const GiNaC::ex& expr, std::string op, bool use_count) = 0;
 
     std::string get_symbol_without_use_count(const GiNaC::ex& expr);
 

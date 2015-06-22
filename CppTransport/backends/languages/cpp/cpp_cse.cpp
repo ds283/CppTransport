@@ -16,7 +16,7 @@
 namespace cpp
   {
 
-    std::string cpp_cse::print(const GiNaC::ex& expr, symbol_f symf)
+    std::string cpp_cse::print(const GiNaC::ex& expr, bool use_count)
       {
         std::ostringstream out;
         std::string        name;
@@ -26,16 +26,16 @@ namespace cpp
 
         if     (name == "numeric") out << this->printer.ginac(expr);
         else if(name == "symbol")  out << this->printer.ginac(expr);
-        else if(name == "add")     out << this->print_operands(expr, "+", symf);
-        else if(name == "mul")     out << this->print_operands(expr, "*", symf);
-        else if(name == "power")   out << this->print_power(expr, symf);
+        else if(name == "add")     out << this->print_operands(expr, "+", use_count);
+        else if(name == "mul")     out << this->print_operands(expr, "*", use_count);
+        else if(name == "power")   out << this->print_power(expr, use_count);
         else                       out << this->printer.ginac(expr);
 
         return(out.str());
       }
 
 
-    std::string cpp_cse::print_operands(const GiNaC::ex& expr, std::string op, symbol_f symf)
+    std::string cpp_cse::print_operands(const GiNaC::ex& expr, std::string op, bool use_count)
       {
         std::ostringstream out;
 
@@ -43,7 +43,10 @@ namespace cpp
         for(GiNaC::const_iterator t = expr.begin(); t != expr.end(); ++t)
           {
             if(c > 0) out << op;
-            out << symf(*t);
+
+            if(use_count) out << this->get_symbol_with_use_count(*t);
+            else          out << this->get_symbol_without_use_count(*t);
+
             c++;
           }
 
@@ -53,7 +56,7 @@ namespace cpp
 
     // treat powers specially, because it's better to unroll them and
     // avoid a function call if we have an exact integral power
-    std::string cpp_cse::print_power(const GiNaC::ex& expr, symbol_f symf)
+    std::string cpp_cse::print_power(const GiNaC::ex& expr, bool use_count)
       {
         std::ostringstream out;
         size_t             n = expr.nops();
@@ -61,7 +64,7 @@ namespace cpp
         if(n != 2)
           {
             error(ERROR_CSE_POWER_ARGUMENTS);
-            out << "std::pow(" << this->print_operands(expr, ",", symf) << ")";
+            out << "std::pow(" << this->print_operands(expr, ",", use_count) << ")";
           }
         else
           {
@@ -71,31 +74,41 @@ namespace cpp
               {
                 const GiNaC::numeric& exp_numeric = GiNaC::ex_to<GiNaC::numeric>(exp_generic);
 
+                std::string sym;
+                if(use_count) sym = this->get_symbol_with_use_count(expr.op(0));
+                else          sym = this->get_symbol_without_use_count(expr.op(0));
+
                 if(GiNaC::is_integer(exp_numeric))
                   {
+
                     if(GiNaC::is_nonneg_integer(exp_numeric))
                       {
                         if      (exp_numeric.to_int() == 0) out << "1.0";
-                        else if (exp_numeric.to_int() == 1) out << symf(expr.op(0));
-                        else if (exp_numeric.to_int() == 2) out << symf(expr.op(0)) << "*" << symf(expr.op(0));
-                        else if (exp_numeric.to_int() == 3) out << symf(expr.op(0)) << "*" << symf(expr.op(0)) << "*" << symf(expr.op(0));
-                        else if (exp_numeric.to_int() == 4) out << symf(expr.op(0)) << "*" << symf(expr.op(0)) << "*" << symf(expr.op(0)) << "*" << symf(expr.op(0));
-                        else                                out << "std::pow(" << symf(expr.op(0)) << "," << exp_numeric.to_int() << ")";
+                        else if (exp_numeric.to_int() == 1) out << sym;
+                        else if (exp_numeric.to_int() == 2) out << sym << "*" << sym;
+                        else if (exp_numeric.to_int() == 3) out << sym << "*" << sym << "*" << sym;
+                        else if (exp_numeric.to_int() == 4) out << sym << "*" << sym << "*" << sym << "*" << sym;
+                        else                                out << "std::pow(" << sym << "," << exp_numeric.to_int() << ")";
                       }
                     else  // negative integer
                       {
                         out << "1.0/";
                         if      (exp_numeric.to_int() == -0) out << "1.0";
-                        else if (exp_numeric.to_int() == -1) out << symf(expr.op(0));
-                        else if (exp_numeric.to_int() == -2) out << "(" << symf(expr.op(0)) << "*" << symf(expr.op(0)) << ")";
-                        else if (exp_numeric.to_int() == -3) out << "(" << symf(expr.op(0)) << "*" << symf(expr.op(0)) << "*" << symf(expr.op(0)) << ")";
-                        else if (exp_numeric.to_int() == -4) out << "(" << symf(expr.op(0)) << "*" << symf(expr.op(0)) << "*" << symf(expr.op(0)) << "*" << symf(expr.op(0)) << ")";
-                        else                                 out << "std::pow(" << symf(expr.op(0)) << "," << -exp_numeric.to_int() << ")";
+                        else if (exp_numeric.to_int() == -1) out << sym;
+                        else if (exp_numeric.to_int() == -2) out << "(" << sym << "*" << sym << ")";
+                        else if (exp_numeric.to_int() == -3) out << "(" << sym << "*" << sym << "*" << sym << ")";
+                        else if (exp_numeric.to_int() == -4) out << "(" << sym << "*" << sym << "*" << sym << "*" << sym << ")";
+                        else                                 out << "std::pow(" << sym << "," << -exp_numeric.to_int() << ")";
                       }
                   }
                 else  // not an integer
                   {
-                    out << "std::pow(" << symf(expr.op(0)) << "," << symf(expr.op(1)) << ")";
+                    std::string sym1;
+
+                    if(use_count) sym1 = this->get_symbol_with_use_count(expr.op(1));
+                    else          sym1 = this->get_symbol_without_use_count(expr.op(1));
+
+                    out << "std::pow(" << sym << "," << sym1 << ")";
                   }
               }
           }

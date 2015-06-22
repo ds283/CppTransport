@@ -73,10 +73,8 @@ void cse::parse(const GiNaC::ex& expr)
 
     for(GiNaC::const_postorder_iterator t = expr.postorder_begin(); t != expr.postorder_end(); ++t)
       {
-        symbol_f symf = std::bind(&cse::get_symbol_without_use_count, this, std::placeholders::_1);
-
-        // print this expression without use counting
-        std::string e = this->print(*t, symf);
+        // print this expression without use counting (false means that print will use get_symbol_without_use_count)
+        std::string e = this->print(*t, false);
 
         // does this expression already exist in the lookup table?
         symbol_lookup_table::iterator u = this->symbols.find(e);
@@ -142,10 +140,8 @@ std::string cse::temporaries(const std::string& t)
 
 std::string cse::get_symbol_without_use_count(const GiNaC::ex& expr)
   {
-    symbol_f symf = std::bind(&cse::get_symbol_without_use_count, this, std::placeholders::_1);
-
-    // print expression using ourselves as the lookup function
-    std::string e = this->print(expr, symf);
+    // print expression using ourselves as the lookup function (false means that print doesn't count uses via recursively calling ourselves)
+    std::string e = this->print(expr, false);
 
     // search for this expression in the lookup table
     symbol_lookup_table::iterator t = this->symbols.find(e);
@@ -160,10 +156,8 @@ std::string cse::get_symbol_without_use_count(const GiNaC::ex& expr)
 
 std::string cse::get_symbol_with_use_count(const GiNaC::ex& expr)
   {
-    symbol_f symf = std::bind(&cse::get_symbol_with_use_count, this, std::placeholders::_1);
-
-    // print expression using ourselves as the lookup function
-    std::string e = this->print(expr, symf);
+    // print expression using ourselves as the lookup function (true means that print will count uses via recursively calling ourselves)
+    std::string e = this->print(expr, true);
 
     // search for this expression in the lookup table
     symbol_lookup_table::iterator t = this->symbols.find(e);
