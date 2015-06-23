@@ -112,8 +112,14 @@ namespace transport
         //! Are we collecting per-configuration statistics
         bool is_collecting_statistics() const { return(this->collect_statistics); }
 
+        //! Set collecting-statistics mode
+        void set_collecting_statistics(bool g) { this->collect_statistics = g; }
+
 		    //! Are we collecting initial conditions data?
 				bool is_collecting_initial_conditions() const { return(this->collect_initial_conditions); }
+
+        //! Set initial-conditions collection mode
+        void set_collecting_initial_conditions(bool g) { this->collect_initial_conditions = g; }
 
 
         // METADATA

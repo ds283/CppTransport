@@ -41,7 +41,7 @@ namespace transport
                      unsigned int pcp=CPPTRANSPORT_DEFAULT_PIPE_STORAGE);
 
         //! Construct a task manager using a previously-constructed repository object. Usually this will be used only when creating a new repository.
-        task_manager(int argc, char* argv[], json_repository<number>* r,
+        task_manager(int argc, char* argv[], std::shared_ptr< json_repository<number> > r,
                      unsigned int bcp=CPPTRANSPORT_DEFAULT_BATCHER_STORAGE,
                      unsigned int pcp=CPPTRANSPORT_DEFAULT_PIPE_STORAGE);
 
@@ -125,7 +125,7 @@ namespace transport
 
 
     template <typename number>
-    task_manager<number>::task_manager(int argc, char* argv[], json_repository<number>* r, unsigned int bcp, unsigned int pcp)
+    task_manager<number>::task_manager(int argc, char* argv[], std::shared_ptr< json_repository<number> > r, unsigned int bcp, unsigned int pcp)
       : instance_manager<number>(),
         environment(argc, argv),
         // note it is safe to assume environment and world have been constructed when the constructor for
@@ -142,7 +142,7 @@ namespace transport
                std::bind(&task_manager<number>::message, this, std::placeholders::_1),
                bcp, pcp)
       {
-        assert(r != nullptr);
+        assert(r);
 
 		    // set model finder for the repository
 		    // (this is a function which, given a model ID, returns the model* instance representing it)

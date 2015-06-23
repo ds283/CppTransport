@@ -68,7 +68,7 @@ namespace transport
 
         //! Initialize a new integration_writer object, including the data container.
         //! Never overwrites existing data; if the container already exists, an exception is thrown
-        virtual void initialize_writer(std::shared_ptr< integration_writer<number> >& writer) override;
+        virtual void initialize_writer(std::shared_ptr< integration_writer<number> >& writer, bool recover_mode = false) override;
 
         //! Close an open integration_writer object.
 
@@ -77,7 +77,7 @@ namespace transport
         virtual void close_writer(std::shared_ptr< integration_writer<number> >& writer) override;
 
 		    //! Initialize a new derived_content_writer object.
-		    virtual void initialize_writer(std::shared_ptr< derived_content_writer<number> >& writer) override;
+		    virtual void initialize_writer(std::shared_ptr< derived_content_writer<number> >& writer, bool recover_mode = false) override;
 
 		    //! Close an open derived_content_writer object.
 
@@ -86,7 +86,7 @@ namespace transport
 		    virtual void close_writer(std::shared_ptr< derived_content_writer<number> >& writer) override;
 
         //! Initialize a new postintegration_writer object.
-        virtual void initialize_writer(std::shared_ptr< postintegration_writer<number> >& writer) override;
+        virtual void initialize_writer(std::shared_ptr< postintegration_writer<number> >& writer, bool recover_mode = false) override;
 
         //! Close an open postintegration_writer object
         virtual void close_writer(std::shared_ptr< postintegration_writer<number> >& writer) override;
@@ -408,7 +408,7 @@ namespace transport
 
     // Create data files for a new integration_writer object
     template <typename number>
-    void data_manager_sqlite3<number>::initialize_writer(std::shared_ptr< integration_writer<number> >& writer)
+    void data_manager_sqlite3<number>::initialize_writer(std::shared_ptr< integration_writer<number> >& writer, bool recovery_mode)
       {
         sqlite3* db = nullptr;
 
@@ -416,7 +416,8 @@ namespace transport
         boost::filesystem::path ctr_path = writer->get_abs_container_path();
 
         // open the main container
-        int status = sqlite3_open_v2(ctr_path.string().c_str(), &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nullptr);
+        int mode = recovery_mode ? SQLITE_OPEN_READWRITE : SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE;
+        int status = sqlite3_open_v2(ctr_path.string().c_str(), &db, mode, nullptr);
 
         if(status != SQLITE_OK)
 	        {
@@ -497,13 +498,13 @@ namespace transport
         sqlite3_close(db);
 
         // physically remove the tempfiles directory
-        boost::filesystem::remove(writer->get_abs_tempdir_path());
+        boost::filesystem::remove_all(writer->get_abs_tempdir_path());
       }
 
 
 		// Create data files for a new derived_content_writer object
 		template <typename number>
-		void data_manager_sqlite3<number>::initialize_writer(std::shared_ptr< derived_content_writer<number> >& writer)
+		void data_manager_sqlite3<number>::initialize_writer(std::shared_ptr< derived_content_writer<number> >& writer, bool recovery_mode)
 			{
         // set up aggregation handler
         writer->set_aggregation_handler(std::bind(&data_manager_sqlite3<number>::aggregate_derived_product, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
@@ -515,13 +516,13 @@ namespace transport
 		void data_manager_sqlite3<number>::close_writer(std::shared_ptr< derived_content_writer<number> >& writer)
 			{
 				// physically remove the tempfiles directory
-		    boost::filesystem::remove(writer->get_abs_tempdir_path());
+		    boost::filesystem::remove_all(writer->get_abs_tempdir_path());
 			}
 
 
     // Initialize a new postintegration_writer object
     template <typename number>
-    void data_manager_sqlite3<number>::initialize_writer(std::shared_ptr< postintegration_writer<number> >& writer)
+    void data_manager_sqlite3<number>::initialize_writer(std::shared_ptr< postintegration_writer<number> >& writer, bool recovery_mode)
       {
         sqlite3* db = nullptr;
 
@@ -529,7 +530,8 @@ namespace transport
         boost::filesystem::path ctr_path = writer->get_abs_container_path();
 
         // open the main container
-        int status = sqlite3_open_v2(ctr_path.string().c_str(), &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nullptr);
+        int mode = recovery_mode ? SQLITE_OPEN_READWRITE : SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE;
+        int status = sqlite3_open_v2(ctr_path.string().c_str(), &db, mode, nullptr);
 
         if(status != SQLITE_OK)
           {
@@ -636,7 +638,7 @@ namespace transport
         sqlite3_close(db);
 
         // physically remove the tempfiles directory
-        boost::filesystem::remove(writer->get_abs_tempdir_path());
+        boost::filesystem::remove_all(writer->get_abs_tempdir_path());
       }
 
 
@@ -1457,8 +1459,9 @@ namespace transport
                 serials.merge(remainder);
               }
 
-		        // push list of missing serial numbers to writer
+		        // push list of missing serial numbers to writer and mark as a fail
 		        writer.set_missing_serials(serials);
+            writer.set_fail(true);
 
             if(writer.is_collecting_statistics()) sqlite3_operations::drop_statistics(db, serials, tk->get_twopf_database());
 		        if(writer.is_collecting_initial_conditions()) sqlite3_operations::drop_ics<number, typename integration_items<number>::ics_item, twopf_kconfig_database>(db, serials, tk->get_twopf_database());
@@ -1522,6 +1525,8 @@ namespace transport
         if(threepf_serials.size() > 0)
           {
             writer.set_missing_serials(threepf_serials);
+            writer.set_fail(true);
+
             if(writer.is_collecting_statistics()) sqlite3_operations::drop_statistics(db, threepf_serials, tk->get_threepf_database());
 		        if(writer.is_collecting_initial_conditions())
 			        {
@@ -1587,7 +1592,9 @@ namespace transport
             // push list of missing serial numbers to writer
             std::list<unsigned int> merged_missing = serials;
             merged_missing.merge(remainder);
+
             writer.set_missing_serials(merged_missing);
+            writer.set_fail(true);
           }
       }
 
@@ -1671,6 +1678,7 @@ namespace transport
         if(threepf_total_serials.size() > 0)
           {
             writer.set_missing_serials(threepf_total_serials);
+            writer.set_fail(true);
 
             // build list of twopf configurations which should be dropped for this entire set of threepf configurations
             std::list<unsigned int> twopf_drop = this->compute_twopf_drop_list(threepf_total_serials, tk->get_threepf_database());
@@ -2231,9 +2239,9 @@ namespace transport
 
 
     template <typename number>
-    data_manager<number>* data_manager_factory(unsigned int bcap, unsigned int dcap, unsigned int ckp)
+    std::shared_ptr< data_manager<number> > data_manager_factory(unsigned int bcap, unsigned int dcap, unsigned int ckp)
       {
-        return new data_manager_sqlite3<number>(bcap, dcap, ckp);
+        return std::make_shared< data_manager_sqlite3<number> >(bcap, dcap, ckp);
       }
 
 

@@ -254,14 +254,14 @@ namespace transport
 
 				//! construct a master controller object with a supplied repository
 				master_controller(boost::mpi::environment& e, boost::mpi::communicator& w,
-				                  json_repository<number>* r,
+				                  std::shared_ptr< json_repository<number> > r,
 				                  error_callback err, warning_callback warn, message_callback msg,
 				                  unsigned int bcp = CPPTRANSPORT_DEFAULT_BATCHER_STORAGE,
 				                  unsigned int pcp = CPPTRANSPORT_DEFAULT_PIPE_STORAGE,
                           unsigned int ckp = CPPTRANSPORT_DEFAULT_CHECKPOINT_INTERVAL);
 
 				//! destroy a master manager object
-				~master_controller();
+				~master_controller() = default;
 
 
 				// INTERFACE
@@ -466,10 +466,10 @@ namespace transport
 		    // RUNTIME AGENTS
 
 		    //! Repository manager instance
-		    json_repository<number>* repo;
+		    std::shared_ptr< json_repository<number> > repo;
 
 		    //! Data manager instance
-		    data_manager<number>* data_mgr;
+		    std::shared_ptr< data_manager<number> > data_mgr;
 
 				//! Event journal
 				work_journal journal;
@@ -515,7 +515,6 @@ namespace transport
                                                  unsigned int bcp, unsigned int pcp, unsigned int ckp)
 	    : environment(e),
 	      world(w),
-	      repo(nullptr),
 	      data_mgr(data_manager_factory<number>(bcp, pcp, ckp)),
 	      journal(w.size()-1),
 	      batcher_capacity(bcp),
@@ -530,7 +529,7 @@ namespace transport
 
     template <typename number>
     master_controller<number>::master_controller(boost::mpi::environment& e, boost::mpi::communicator& w,
-                                                 json_repository<number>* r,
+                                                 std::shared_ptr< json_repository<number> > r,
                                                  error_callback err, warning_callback warn, message_callback msg,
                                                  unsigned int bcp, unsigned int pcp, unsigned int ckp)
 	    : environment(e),
@@ -548,17 +547,6 @@ namespace transport
 		    assert(repo != nullptr);
 	    }
 
-		
-    template <typename number>
-    master_controller<number>::~master_controller()
-	    {
-		    // delete repository instance, if it is set
-        if(this->repo != nullptr)
-	        {
-            delete this->repo;
-	        }
-	    }
-		
 		
 		template <typename number>
 		void master_controller<number>::process_arguments(int argc, char* argv[], instance_manager<number>& instance_mgr)
@@ -758,7 +746,7 @@ namespace transport
             boost::timer::cpu_timer timer;
 
             // perform recovery if requested
-            if(this->arg_cache.get_recovery_mode()) this->repo->perform_recovery();
+            if(this->arg_cache.get_recovery_mode()) this->repo->perform_recovery(this->data_mgr, this->get_rank());
 
 		        // set up workers
 		        this->initialize_workers();

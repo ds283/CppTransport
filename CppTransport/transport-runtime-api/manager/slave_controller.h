@@ -79,7 +79,7 @@ namespace transport
                          unsigned int ckp = CPPTRANSPORT_DEFAULT_CHECKPOINT_INTERVAL);
 
 		    //! destroy a slave manager object
-		    ~slave_controller();
+		    ~slave_controller() = default;
 
 
 				// INTERFACE
@@ -202,10 +202,10 @@ namespace transport
 		    // RUNTIME AGENTS
 
 		    //! Repository manager instance
-		    json_repository<number>* repo;
+		    std::shared_ptr< json_repository<number> > repo;
 
 		    //! Data manager instance
-		    data_manager<number>* data_mgr;
+		    std::shared_ptr< data_manager<number> > data_mgr;
 
 				//! Handler for postintegration and output tasks
 				slave_work_handler<number> work_handler;
@@ -245,7 +245,6 @@ namespace transport
 	    : environment(e),
 	      world(w),
 	      model_finder(f),
-	      repo(nullptr),
 	      data_mgr(data_manager_factory<number>(bcp, pcp, ckp)),
 	      batcher_capacity(bcp),
 	      pipe_capacity(pcp),
@@ -255,17 +254,6 @@ namespace transport
 	      message_handler(msg)
 	    {
 	    }
-
-
-		template <typename number>
-		slave_controller<number>::~slave_controller()
-			{
-				// delete repository instance, if it is set
-				if(this->repo != nullptr)
-					{
-						delete this->repo;
-					}
-			}
 
 
     template <typename number>

@@ -90,6 +90,8 @@ namespace transport
               << "task             TEXT, "
               << "output           TEXT, "
               << "container        TEXT, "
+              << "logdir           TEXT, "
+              << "tempdir          TEXT, "
               << "workgroup_number INTEGER, "
               << "seeded           INTEGER, "
               << "seed_group       TEXT, "
@@ -106,6 +108,8 @@ namespace transport
               << "task             TEXT, "
               << "output           TEXT, "
               << "container        TEXT, "
+              << "logdir           TEXT, "
+              << "tempdir          TEXT, "
               << "paired           INTEGER, "
               << "parent           TEXT, "        // parent integration group, or paired integration group if this is a paired writer
               << "seeded           INTEGER, "
@@ -120,6 +124,8 @@ namespace transport
               << "content_group TEXT PRIMARY KEY, "
               << "task          TEXT, "
               << "output        TEXT, "
+              << "logdir        TEXT, "
+              << "tempdir       TEXT, "
               << "FOREIGN KEY(content_group) REFERENCES " << CPPTRANSPORT_SQLITE_RESERVED_CONTENT_NAMES_TABLE << "(name), "
               << "FOREIGN KEY(task) REFERENCES " << CPPTRANSPORT_SQLITE_OUTPUT_TASKS_TABLE << "(name));";
             exec(db, o_out_writer_stmt.str());

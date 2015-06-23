@@ -164,6 +164,12 @@ namespace transport
         //! Return path to data container
         boost::filesystem::path get_relative_container_path() const { return(this->paths.data); }
 
+        //! Return path to log directory
+        boost::filesystem::path get_relative_logdir_path() const { return(this->paths.log); }
+
+        //! Return path to temporary directory
+        boost::filesystem::path get_relative_tempdir_path() const { return(this->paths.temp); }
+
 
         // LOGGING
 

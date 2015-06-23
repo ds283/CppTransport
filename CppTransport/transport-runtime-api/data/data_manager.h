@@ -86,19 +86,19 @@ namespace transport
 
         //! Initialize an integration_writer object.
         //! Never overwrites existing data; if the container already exists, an exception is thrown
-        virtual void initialize_writer(std::shared_ptr< integration_writer<number> >& writer) = 0;
+        virtual void initialize_writer(std::shared_ptr< integration_writer<number> >& writer, bool recovery_mode = false) = 0;
 
         //! Close an integration_writer object.
         virtual void close_writer(std::shared_ptr< integration_writer<number> >& writer) = 0;
 
         //! Initialize a derived_content_writer object.
-        virtual void initialize_writer(std::shared_ptr< derived_content_writer<number> >& writer) = 0;
+        virtual void initialize_writer(std::shared_ptr< derived_content_writer<number> >& writer, bool recovery_mode = false) = 0;
 
         //! Close an open derived_content_writer object.
         virtual void close_writer(std::shared_ptr< derived_content_writer<number> >& writer) = 0;
 
         //! Initialize a postintegration_writer object.
-        virtual void initialize_writer(std::shared_ptr< postintegration_writer<number> >& writer) = 0;
+        virtual void initialize_writer(std::shared_ptr< postintegration_writer<number> >& writer, bool recovery_mode = false) = 0;
 
         //! Close an open postintegration_writer object.
         virtual void close_writer(std::shared_ptr< postintegration_writer<number> >& writer) = 0;
