@@ -27,7 +27,7 @@
 #include "boost/date_time/posix_time/posix_time.hpp"
 
 #include "sqlite3.h"
-#include "transport-runtime-api/sqlite3/operations/repository_admin.h"
+#include "transport-runtime-api/sqlite3/operations/repository.h"
 
 
 #define CPPTRANSPORT_REPO_REPOSITORY_LEAF "database.sqlite"
