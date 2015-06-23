@@ -36,7 +36,7 @@
 #define CPPTRANSPORT_SQLITE_RESERVED_CONTENT_NAMES_TABLE  "inflight_content"
 #define CPPTRANSPORT_SQLITE_INTEGRATION_WRITERS_TABLE     "integration_writers"
 #define CPPTRANSPORT_SQLITE_POSTINTEGRATION_WRITERS_TABLE "postintegration_writers"
-#define CPPTRANSPORT_SQLITE_OUTPUT_WRITERS_TABLE          "output_writers"
+#define CPPTRANSPORT_SQLITE_DERIVED_WRITERS_TABLE         "output_writers"
 
 
 namespace transport

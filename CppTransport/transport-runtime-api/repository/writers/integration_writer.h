@@ -73,7 +73,7 @@ namespace transport
                            const typename generic_writer::metadata_group& m, const typename generic_writer::paths_group& p,
                            unsigned int w, unsigned int wg);
 
-        //! disallow copying to ensure consistency of RAII idiom
+        //! disallow copying to ensure consistency of RAII idiom (writers abort when they go out of scope unless explicitly committed)
         integration_writer(const integration_writer<number>& obj) = delete;
 
         //! Destroy an integration container object
@@ -114,6 +114,7 @@ namespace transport
 
 		    //! Are we collecting initial conditions data?
 				bool is_collecting_initial_conditions() const { return(this->collect_initial_conditions); }
+
 
         // METADATA
 

@@ -83,6 +83,46 @@ namespace transport
               << "path       TEXT, "
               << "posix_time TEXT);";   // no obvious way to implement constraint on task names
             exec(db, o_reserved_stmt.str());
+
+            std::ostringstream o_int_writer_stmt;
+            o_int_writer_stmt << "CREATE TABLE " << CPPTRANSPORT_SQLITE_INTEGRATION_WRITERS_TABLE << "("
+              << "content_group    TEXT PRIMARY KEY, "
+              << "task             TEXT, "
+              << "output           TEXT, "
+              << "container        TEXT, "
+              << "workgroup_number INTEGER, "
+              << "seeded           INTEGER, "
+              << "seed_group       TEXT, "
+              << "collect_stats    INTEGER, "
+              << "collect_ics      INTEGER, "
+              << "FOREIGN KEY(content_group) REFERENCES " << CPPTRANSPORT_SQLITE_RESERVED_CONTENT_NAMES_TABLE << "(name), "
+              << "FOREIGN KEY(task) REFERENCES " << CPPTRANSPORT_SQLITE_INTEGRATION_TASKS_TABLE << "(name), "
+              << "FOREIGN KEY(seed_group) REFERENCES " << CPPTRANSPORT_SQLITE_INTEGRATION_GROUPS_TABLE << "(name));";
+            exec(db, o_int_writer_stmt.str());
+
+            std::ostringstream o_pint_writer_stmt;
+            o_pint_writer_stmt << "CREATE TABLE " << CPPTRANSPORT_SQLITE_POSTINTEGRATION_WRITERS_TABLE << "("
+              << "content_group    TEXT PRIMARY KEY, "
+              << "task             TEXT, "
+              << "output           TEXT, "
+              << "container        TEXT, "
+              << "paired           INTEGER, "
+              << "parent           TEXT, "        // parent integration group, or paired integration group if this is a paired writer
+              << "seeded           INTEGER, "
+              << "seed_group       TEXT, "
+              << "FOREIGN KEY(content_group) REFERENCES " << CPPTRANSPORT_SQLITE_RESERVED_CONTENT_NAMES_TABLE << "(name), "
+              << "FOREIGN KEY(task) REFERENCES " << CPPTRANSPORT_SQLITE_POSTINTEGRATION_TASKS_TABLE << "(name), "
+              << "FOREIGN KEY(seed_group) REFERENCES " << CPPTRANSPORT_SQLITE_POSTINTEGRATION_GROUPS_TABLE << "(name));";
+            exec(db, o_pint_writer_stmt.str());
+
+            std::ostringstream o_out_writer_stmt;
+            o_out_writer_stmt << "CREATE TABLE " << CPPTRANSPORT_SQLITE_DERIVED_WRITERS_TABLE << "("
+              << "content_group TEXT PRIMARY KEY, "
+              << "task          TEXT, "
+              << "output        TEXT, "
+              << "FOREIGN KEY(content_group) REFERENCES " << CPPTRANSPORT_SQLITE_RESERVED_CONTENT_NAMES_TABLE << "(name), "
+              << "FOREIGN KEY(task) REFERENCES " << CPPTRANSPORT_SQLITE_OUTPUT_TASKS_TABLE << "(name));";
+            exec(db, o_out_writer_stmt.str());
           }
 
       }   // namespace sqlite3_operations

@@ -138,6 +138,12 @@ namespace transport
             check_stmt(db, sqlite3_clear_bindings(stmt));
             check_stmt(db, sqlite3_finalize(stmt));
 
+            // remove the integration writer associated with this content group from the list of in-flight writers
+            std::stringstream drop_writer_stmt;
+            drop_writer_stmt << "DELETE FROM " << CPPTRANSPORT_SQLITE_INTEGRATION_WRITERS_TABLE << " WHERE content_group='" << name << "'";
+            exec(db, drop_writer_stmt.str());
+
+            // remove this content group from the list of in-flight groups
             std::stringstream drop_stmt;
             drop_stmt << "DELETE FROM " << CPPTRANSPORT_SQLITE_RESERVED_CONTENT_NAMES_TABLE << " WHERE name='" << name << "'";
             exec(db, drop_stmt.str());
@@ -170,6 +176,13 @@ namespace transport
             check_stmt(db, sqlite3_clear_bindings(stmt));
             check_stmt(db, sqlite3_finalize(stmt));
 
+            // remove the postintegration writer associated with this content group from the list of in-flight writers
+            std::stringstream drop_writer_stmt;
+            drop_writer_stmt << "DELETE FROM " << CPPTRANSPORT_SQLITE_POSTINTEGRATION_WRITERS_TABLE << " WHERE content_group='" << name << "'";
+            exec(db, drop_writer_stmt.str());
+
+            // remove this content group from the list of in-flight groups
+
             std::stringstream drop_stmt;
             drop_stmt << "DELETE FROM " << CPPTRANSPORT_SQLITE_RESERVED_CONTENT_NAMES_TABLE << " WHERE name='" << name << "'";
             exec(db, drop_stmt.str());
@@ -201,6 +214,13 @@ namespace transport
 
             check_stmt(db, sqlite3_clear_bindings(stmt));
             check_stmt(db, sqlite3_finalize(stmt));
+
+            // remove the derived content writer associated with this content group from the list of in-flight writers
+            std::stringstream drop_writer_stmt;
+            drop_writer_stmt << "DELETE FROM " << CPPTRANSPORT_SQLITE_DERIVED_WRITERS_TABLE << " WHERE content_group='" << name << "'";
+            exec(db, drop_writer_stmt.str());
+
+            // remove this content group from the list of in-flight groups
 
             std::stringstream drop_stmt;
             drop_stmt << "DELETE FROM " << CPPTRANSPORT_SQLITE_RESERVED_CONTENT_NAMES_TABLE << " WHERE name='" << name << "'";

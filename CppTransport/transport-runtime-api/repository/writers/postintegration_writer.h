@@ -74,7 +74,7 @@ namespace transport
                                const typename generic_writer::metadata_group& m, const typename generic_writer::paths_group& p,
                                unsigned int w);
 
-        //! disallow copying to ensure consistency of RAII idiom
+        //! disallow copying to ensure consistency of RAII idiom (writers abort when they go out of scope unless explicitly committed)
         postintegration_writer(const postintegration_writer<number>& obj) = delete;
 
         //! Destroy a postintegration writer object
@@ -110,7 +110,7 @@ namespace transport
 
       public:
 
-        //! pair with a named integration output group
+        //! pair with a named integration output group; if paired, then the parent group is the partner
         void set_pair(bool g) { this->paired = g; }
 
         //! query pairing status
@@ -119,7 +119,7 @@ namespace transport
         //! set parent group
         void set_parent_group(const std::string& p) { this->parent_group = p; }
 
-        //! query paired group
+        //! query parent group
         const std::string& get_parent_group() const { return(this->parent_group); }
 
 
@@ -204,7 +204,7 @@ namespace transport
 
         // PARENT CONTENT
 
-        //! is this a paired postintegration
+        //! is this a paired postintegration?
         bool paired;
 
         //! name of parent integration group

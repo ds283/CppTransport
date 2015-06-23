@@ -757,6 +757,9 @@ namespace transport
 	        {
             boost::timer::cpu_timer timer;
 
+            // perform recovery if requested
+            if(this->arg_cache.get_recovery_mode()) this->repo->perform_recovery();
+
 		        // set up workers
 		        this->initialize_workers();
 
@@ -939,8 +942,11 @@ namespace transport
         // write the various tables needed in the database
         this->data_mgr->create_tables(writer, tk);
 
-        // seed writer if a group has been provided
+        // seed writer if a group has been provided; resets the work queue if required
         if(seeded) this->seed_writer(writer, tk, seed_group);
+
+        // register writer with the repository -- allows its debris to be recovered later if a crash occurs
+        this->repo->register_writer(writer);
 
         // set up aggregators
         integration_aggregator     i_agg = std::bind(&master_controller<number>::aggregate_integration, this, writer, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
@@ -958,13 +964,13 @@ namespace transport
 
         journal_instrument instrument(this->journal, master_work_event::database_begin, master_work_event::database_end);
 
-        // perform integrity check
+        // perform integrity check; updates writer with a list of missing serial numbers, if needed
         writer->check_integrity(tk);
 
         // close the writer
         this->data_mgr->close_writer(writer);
 
-        // commit output if successful
+        // commit output if successful; integrity failures are ignored, so containers can subsequently be used as a seed
         if(success) writer->commit();
 	    }
 
@@ -1151,6 +1157,9 @@ namespace transport
 
         // set up the writer for us
         this->data_mgr->initialize_writer(writer);
+
+        // register writer with the repository -- allows its debris to be recovered later if a crash occurs
+        this->repo->register_writer(writer);
 
         // set up aggregators
         integration_aggregator     i_agg;
@@ -1422,8 +1431,11 @@ namespace transport
         // create new tables needed in the database
         this->data_mgr->create_tables(writer, tk);
 
-        // seed writer if a group has been provided
+        // seed writer if a group has been provided; resets the work queue if required
         if(seeded) this->seed_writer(writer, tk, seed_group);
+
+        // register writer with the repository -- allows its debris to be recovered later if a crash occurs
+        this->repo->register_writer(writer);
 
         // set up aggregators
         integration_aggregator     i_agg;
@@ -1440,13 +1452,13 @@ namespace transport
 
         journal_instrument instrument(this->journal, master_work_event::database_begin, master_work_event::database_end);
 
-        // perform integrity check
+        // perform integrity check; updates writer with a valid list of missing serial numbers if needed
         writer->check_integrity(tk);
 
         // close the writer
         this->data_mgr->close_writer(writer);
 
-        // commit output if successful
+        // commit output if successful; integrity failures are ignored, so containers can subsequently be used as a seed
         if(success) writer->commit();
 	    }
 
@@ -1479,8 +1491,12 @@ namespace transport
         p_writer->set_pair(true);
         p_writer->set_parent_group(i_writer->get_name());
 
-        // seed writers if a group has been provided
+        // seed writers if a group has been provided; resets the work queue if required
         if(seeded) this->seed_writer_pair(i_writer, p_writer, tk, ptk, seed_group);
+
+        // register writers with the repository -- allows their debris to be recovered later if a crash occurs
+        this->repo->register_writer(i_writer);
+        this->repo->register_writer(p_writer);
 
         // set up aggregators
         integration_aggregator     i_agg = std::bind(&master_controller<number>::aggregate_integration, this, i_writer, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
@@ -1497,7 +1513,11 @@ namespace transport
 
         journal_instrument instrument(this->journal, master_work_event::database_begin, master_work_event::database_end);
 
-        // perform integrity check
+        // perform integrity check.
+        // these checks are independent -- we don't check that the same k-configurations are missing
+        // from both containers, although if this pair is used later as a seed
+        // that is a requirement.
+        // the integrity check updates each writer with a valid list of missing serial numbers, if needed
         i_writer->check_integrity(ptk);
         p_writer->check_integrity(tk);
 
@@ -1505,7 +1525,7 @@ namespace transport
         this->data_mgr->close_writer(i_writer);
         this->data_mgr->close_writer(p_writer);
 
-        // commit output if successful
+        // commit output if successful; integrity failures are ignored, so containers can subsequently be used as a seed
         if(success)
           {
             i_writer->commit();
@@ -1567,12 +1587,16 @@ namespace transport
         // find parent content group for the seed
         std::string parent_seed_name = (*t)->get_payload().get_parent_group();
 
+        // check that same k-configurations are missing from both content groups in the pair
+        // currently we assume this to be true, although the integrity check for paired writers
+        // doesn't enforce it (yet)
         std::list<unsigned int> integration_serials = this->seed_writer(i_writer, ptk, parent_seed_name);
 
         if(i_writer->is_seeded())
           {
             std::list<unsigned int> postintegration_serials = (*t)->get_payload().get_failed_serials();
 
+            // minimal check is that each content group is missing the same number of serial numbers
             if(postintegration_serials.size() != integration_serials.size())
               {
                 std::ostringstream msg;
@@ -1582,6 +1606,7 @@ namespace transport
                 throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
               }
 
+            // now check more carefully that the missing serial numbers are the same
             std::list<unsigned int> diff;
             std::set_difference(integration_serials.begin(), integration_serials.end(),
                                 postintegration_serials.begin(), postintegration_serials.end(), std::back_inserter(diff));

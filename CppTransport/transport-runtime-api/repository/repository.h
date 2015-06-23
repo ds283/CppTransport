@@ -190,25 +190,43 @@ namespace transport
 
       protected:
 
-        virtual std::string reserve_content_name(boost::posix_time::ptime& now, const std::string& suffix) = 0;
+        // register an in-flight content group
+        virtual std::string reserve_content_name(const std::string& tk, boost::filesystem::path& parent_path, boost::posix_time::ptime& now, const std::string& suffix) = 0;
 
-        std::shared_ptr <integration_writer<number>> base_new_integration_task_content(integration_task_record<number>* rec,
+        std::shared_ptr< integration_writer<number> > base_new_integration_task_content(integration_task_record<number>* rec,
+                                                                                        const std::list<std::string>& tags,
+                                                                                        unsigned int worker, unsigned int workgroup,
+                                                                                        typename integration_writer<number>::callback_group& callbacks,
+                                                                                        std::string suffix="");
+
+        std::shared_ptr< derived_content_writer<number> > base_new_output_task_content(output_task_record<number>* rec,
                                                                                        const std::list<std::string>& tags,
-                                                                                       unsigned int worker, unsigned int workgroup,
-                                                                                       typename integration_writer<number>::callback_group& callbacks,
+                                                                                       unsigned int worker,
+                                                                                       typename derived_content_writer<number>::callback_group& callbacks,
                                                                                        std::string suffix="");
 
-        std::shared_ptr <derived_content_writer<number>> base_new_output_task_content(output_task_record<number>* rec,
-                                                                                      const std::list<std::string>& tags,
-                                                                                      unsigned int worker,
-                                                                                      typename derived_content_writer<number>::callback_group& callbacks,
-                                                                                      std::string suffix="");
+        std::shared_ptr< postintegration_writer<number> > base_new_postintegration_task_content(postintegration_task_record<number>* rec,
+                                                                                                const std::list<std::string>& tags,
+                                                                                                unsigned int worker,
+                                                                                                typename postintegration_writer<number>::callback_group& callbacks,
+                                                                                                std::string suffix="");
 
-        std::shared_ptr <postintegration_writer<number>> base_new_postintegration_task_content(postintegration_task_record<number>* rec,
-                                                                                               const std::list<std::string>& tags,
-                                                                                               unsigned int worker,
-                                                                                               typename postintegration_writer<number>::callback_group& callbacks,
-                                                                                               std::string suffix="");
+
+        // PERFORM RECOVERY ON CRASHED WRITERS
+
+      public:
+
+        //! recover crashed writers
+        virtual void perform_recovery() = 0;
+
+        //! register an integration writer
+        virtual void register_writer(std::shared_ptr< integration_writer<number> >& writer) = 0;
+
+        //! register a postintegration writer
+        virtual void register_writer(std::shared_ptr< postintegration_writer<number> >& writer) = 0;
+
+        //! register a derived-content writer
+        virtual void register_writer(std::shared_ptr< derived_content_writer<number> >& writer) = 0;
 
 
         // FIND AN OUTPUT GROUP MATCHING DEFINED TAGS
@@ -450,9 +468,10 @@ namespace transport
 		    boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
 
         // request a name for this content group
-        std::string output_leaf = this->reserve_content_name(now, suffix);
+        boost::filesystem::path parent_path = static_cast<boost::filesystem::path>(CPPTRANSPORT_REPO_TASKOUTPUT_LEAF) / rec->get_name();
+        std::string output_leaf = this->reserve_content_name(rec->get_name(), parent_path, now, suffix);
 
-		    boost::filesystem::path output_path = static_cast<boost::filesystem::path>(CPPTRANSPORT_REPO_TASKOUTPUT_LEAF) / rec->get_name() / output_leaf;
+		    boost::filesystem::path output_path = parent_path / output_leaf;
 		    boost::filesystem::path sql_path    = output_path / CPPTRANSPORT_REPO_DATABASE_LEAF;
 
 		    // temporary stuff, location not recorded in the database
@@ -489,9 +508,10 @@ namespace transport
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
 
         // request a name for this content group
-        std::string output_leaf = this->reserve_content_name(now, suffix);
+        boost::filesystem::path parent_path = static_cast<boost::filesystem::path>(CPPTRANSPORT_REPO_TASKOUTPUT_LEAF) / rec->get_name();
+        std::string output_leaf = this->reserve_content_name(rec->get_name(), parent_path, now, suffix);
 
-        boost::filesystem::path output_path = static_cast<boost::filesystem::path>(CPPTRANSPORT_REPO_TASKOUTPUT_LEAF) / rec->get_name() / output_leaf;
+        boost::filesystem::path output_path = parent_path / output_leaf;
 
         // temporary stuff, location not recorded in the database
         boost::filesystem::path log_path  = output_path / CPPTRANSPORT_REPO_LOGDIR_LEAF;
@@ -525,10 +545,11 @@ namespace transport
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
 
         // request a name for this content group
-        std::string output_leaf = this->reserve_content_name(now, suffix);
+        boost::filesystem::path parent_path = static_cast<boost::filesystem::path>(CPPTRANSPORT_REPO_TASKOUTPUT_LEAF) / rec->get_name();
+        std::string output_leaf = this->reserve_content_name(rec->get_name(), parent_path, now, suffix);
 
-        boost::filesystem::path output_path = static_cast<boost::filesystem::path>(CPPTRANSPORT_REPO_TASKOUTPUT_LEAF) / rec->get_name() / output_leaf;
-        boost::filesystem::path sql_path     = output_path / CPPTRANSPORT_REPO_DATABASE_LEAF;
+        boost::filesystem::path output_path = parent_path / output_leaf;
+        boost::filesystem::path sql_path    = output_path / CPPTRANSPORT_REPO_DATABASE_LEAF;
 
         // temporary stuff, location not recorded in the database
         boost::filesystem::path log_path    = output_path / CPPTRANSPORT_REPO_LOGDIR_LEAF;

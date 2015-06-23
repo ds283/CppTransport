@@ -308,7 +308,23 @@ namespace transport
 
       protected:
 
-        virtual std::string reserve_content_name(boost::posix_time::ptime& now, const std::string& suffix) override;
+        virtual std::string reserve_content_name(const std::string& tk, boost::filesystem::path& parent_path, boost::posix_time::ptime& now, const std::string& suffix) override;
+
+
+        // REGISTER AND RECOVER WRITERS
+
+      public:
+
+        virtual void perform_recovery() override;
+
+        //! register an integration writer
+        virtual void register_writer(std::shared_ptr< integration_writer<number> >& writer) override;
+
+        //! register a postintegration writer
+        virtual void register_writer(std::shared_ptr< postintegration_writer<number> >& writer) override;
+
+        //! register a derived-content writer
+        virtual void register_writer(std::shared_ptr< derived_content_writer<number> >& writer) override;
 
 
 		    // INTERNAL DATA
@@ -1293,15 +1309,75 @@ namespace transport
 
 
     template <typename number>
-    std::string repository_sqlite3<number>::reserve_content_name(boost::posix_time::ptime& now, const std::string& suffix)
+    std::string repository_sqlite3<number>::reserve_content_name(const std::string& tk, boost::filesystem::path& parent_path, boost::posix_time::ptime& now, const std::string& suffix)
       {
         std::string posix_time_string = boost::posix_time::to_iso_string(now);
 
         transaction_manager transaction = this->transaction_factory();
-        std::string name = sqlite3_operations::reserve_content_name(transaction, this->db, posix_time_string, suffix);
+        std::string name = sqlite3_operations::reserve_content_name(transaction, this->db, tk, parent_path, posix_time_string, suffix);
         transaction.commit();
 
         return(name);
+      }
+
+
+    template <typename number>
+    void repository_sqlite3<number>::perform_recovery()
+      {
+
+      }
+
+
+    template <typename number>
+    void repository_sqlite3<number>::register_writer(std::shared_ptr< integration_writer<number> >& writer)
+      {
+        transaction_manager transaction = this->transaction_factory();
+
+        sqlite3_operations::register_integration_writer(transaction, this->db,
+                                                        writer->get_name(),
+                                                        writer->get_record()->get_task()->get_name(),
+                                                        writer->get_relative_output_path(),
+                                                        writer->get_relative_container_path(),
+                                                        writer->get_workgroup_number(),
+                                                        writer->is_seeded(),
+                                                        writer->get_seed_group(),
+                                                        writer->is_collecting_statistics(),
+                                                        writer->is_collecting_initial_conditions());
+
+        transaction.commit();
+      }
+
+
+    template <typename number>
+    void repository_sqlite3<number>::register_writer(std::shared_ptr< postintegration_writer<number> >& writer)
+      {
+        transaction_manager transaction = this->transaction_factory();
+
+        sqlite3_operations::register_postintegration_writer(transaction, this->db,
+                                                            writer->get_name(),
+                                                            writer->get_record()->get_task()->get_name(),
+                                                            writer->get_relative_output_path(),
+                                                            writer->get_relative_container_path(),
+                                                            writer->is_paired(),
+                                                            writer->get_parent_group(),
+                                                            writer->is_seeded(),
+                                                            writer->get_seed_group());
+
+        transaction.commit();
+      }
+
+
+    template <typename number>
+    void repository_sqlite3<number>::register_writer(std::shared_ptr< derived_content_writer<number> >& writer)
+      {
+        transaction_manager transaction = this->transaction_factory();
+
+        sqlite3_operations::register_derived_content_writer(transaction, this->db,
+                                                            writer->get_name(),
+                                                            writer->get_record()->get_task()->get_name(),
+                                                            writer->get_relative_output_path());
+
+        transaction.commit();
       }
 
 

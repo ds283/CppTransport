@@ -102,6 +102,81 @@ namespace transport
             check_stmt(db, sqlite3_finalize(stmt));
           }
 
+
+        void register_integration_writer(transaction_manager& mgr, sqlite3* db, const std::string& name, const std::string& task,
+                                         const boost::filesystem::path& output_path, const boost::filesystem::path& container,
+                                         unsigned int workgroup_number, bool is_seeded, const std::string& seed_group,
+                                         bool is_collecting_stats, bool is_collecting_ics)
+          {
+            std::stringstream store_stmt;
+            store_stmt << "INSERT INTO " << CPPTRANSPORT_SQLITE_INTEGRATION_WRITERS_TABLE << " VALUES (@content_group, @task, @output, @container, @workgroup_number, @seeded, @seed_group, @collect_stats, @collect_ics)";
+
+            sqlite3_stmt* stmt;
+            check_stmt(db, sqlite3_prepare_v2(db, store_stmt.str().c_str(), store_stmt.str().length()+1, &stmt, nullptr));
+
+            check_stmt(db, sqlite3_bind_text(stmt, 1, name.c_str(), name.length(), SQLITE_STATIC));
+            check_stmt(db, sqlite3_bind_text(stmt, 2, task.c_str(), task.length(), SQLITE_STATIC));
+            check_stmt(db, sqlite3_bind_text(stmt, 3, output_path.string().c_str(), output_path.string().length(), SQLITE_STATIC));
+            check_stmt(db, sqlite3_bind_text(stmt, 4, container.string().c_str(), container.string().length(), SQLITE_STATIC));
+            check_stmt(db, sqlite3_bind_int(stmt, 5, workgroup_number));
+            check_stmt(db, sqlite3_bind_int(stmt, 6, static_cast<int>(is_seeded)));
+            check_stmt(db, sqlite3_bind_text(stmt, 7, seed_group.c_str(), seed_group.length(), SQLITE_STATIC));
+            check_stmt(db, sqlite3_bind_int(stmt, 8, static_cast<int>(is_collecting_stats)));
+            check_stmt(db, sqlite3_bind_int(stmt, 9, static_cast<int>(is_collecting_ics)));
+
+            check_stmt(db, sqlite3_step(stmt), CPPTRANSPORT_REPO_STORE_INTEGRATION_WRITER_FAIL, SQLITE_DONE);
+
+            check_stmt(db, sqlite3_clear_bindings(stmt));
+            check_stmt(db, sqlite3_finalize(stmt));
+          }
+
+
+        void register_postintegration_writer(transaction_manager& mgr, sqlite3* db, const std::string& name, const std::string& task,
+                                             const boost::filesystem::path& output_path, const boost::filesystem::path& container,
+                                             bool is_paired, const std::string& parent_group,
+                                             bool is_seeded, const std::string& seed_group)
+          {
+            std::stringstream store_stmt;
+            store_stmt << "INSERT INTO " << CPPTRANSPORT_SQLITE_POSTINTEGRATION_WRITERS_TABLE << " VALUES (@content_group, @task, @output, @container, @paired, @parent, @seeded, @seed_group)";
+
+            sqlite3_stmt* stmt;
+            check_stmt(db, sqlite3_prepare_v2(db, store_stmt.str().c_str(), store_stmt.str().length()+1, &stmt, nullptr));
+
+            check_stmt(db, sqlite3_bind_text(stmt, 1, name.c_str(), name.length(), SQLITE_STATIC));
+            check_stmt(db, sqlite3_bind_text(stmt, 2, task.c_str(), task.length(), SQLITE_STATIC));
+            check_stmt(db, sqlite3_bind_text(stmt, 3, output_path.string().c_str(), output_path.string().length(), SQLITE_STATIC));
+            check_stmt(db, sqlite3_bind_text(stmt, 4, container.string().c_str(), container.string().length(), SQLITE_STATIC));
+            check_stmt(db, sqlite3_bind_int(stmt, 5, static_cast<int>(is_paired)));
+            check_stmt(db, sqlite3_bind_text(stmt, 6, parent_group.c_str(), parent_group.length(), SQLITE_STATIC));
+            check_stmt(db, sqlite3_bind_int(stmt, 7, static_cast<int>(is_seeded)));
+            check_stmt(db, sqlite3_bind_text(stmt, 8, seed_group.c_str(), seed_group.length(), SQLITE_STATIC));
+
+            check_stmt(db, sqlite3_step(stmt), CPPTRANSPORT_REPO_STORE_POSTINTEGRATION_WRITER_FAIL, SQLITE_DONE);
+
+            check_stmt(db, sqlite3_clear_bindings(stmt));
+            check_stmt(db, sqlite3_finalize(stmt));
+          }
+
+
+        void register_derived_content_writer(transaction_manager& mgr, sqlite3* db, const std::string& name, const std::string& task,
+                                             const boost::filesystem::path& output_path)
+          {
+            std::stringstream store_stmt;
+            store_stmt << "INSERT INTO " << CPPTRANSPORT_SQLITE_DERIVED_WRITERS_TABLE << " VALUES (@content_group, @task, @output)";
+
+            sqlite3_stmt* stmt;
+            check_stmt(db, sqlite3_prepare_v2(db, store_stmt.str().c_str(), store_stmt.str().length()+1, &stmt, nullptr));
+
+            check_stmt(db, sqlite3_bind_text(stmt, 1, name.c_str(), name.length(), SQLITE_STATIC));
+            check_stmt(db, sqlite3_bind_text(stmt, 2, task.c_str(), task.length(), SQLITE_STATIC));
+            check_stmt(db, sqlite3_bind_text(stmt, 3, output_path.string().c_str(), output_path.string().length(), SQLITE_STATIC));
+
+            check_stmt(db, sqlite3_step(stmt), CPPTRANSPORT_REPO_STORE_DERIVED_CONTENT_WRITER_FAIL, SQLITE_DONE);
+
+            check_stmt(db, sqlite3_clear_bindings(stmt));
+            check_stmt(db, sqlite3_finalize(stmt));
+          }
+
       }   // namespace sqlite3_operations
 
   }   // namespace transport
