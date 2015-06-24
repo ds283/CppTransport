@@ -19,8 +19,6 @@
 #include "transport-runtime-api/exceptions.h"
 
 #include "boost/filesystem/operations.hpp"
-#include "boost/timer/timer.hpp"
-#include "boost/algorithm/string.hpp"
 
 #include "sqlite3.h"
 #include "transport-runtime-api/sqlite3/operations/data_manager.h"
@@ -214,20 +212,6 @@ namespace transport
 
         //! Check integrity for an fNL container
         void check_fNL_integrity_handler(postintegration_writer<number>& writer, postintegration_task<number>* tk);
-
-
-      protected:
-
-        //! log missing data from a container, checking against a list provided by the backend if one is provided.
-        //! returns: serial numbers of any further configurations that should be dropped (they were in the list provided by the backend, but not already missing)
-        template <typename WriterObject, typename Database>
-        std::list<unsigned int> advise_missing_content(WriterObject& writer, const std::list<unsigned int>& serials, const Database& db);
-
-        //! compute the twopf configurations which should be dropped to match a give list of threepf serials
-        std::list<unsigned int> compute_twopf_drop_list(const std::list<unsigned int>& serials, const threepf_kconfig_database& configs);
-
-        //! map a list of twopf configuration serial numbers to corresponding threepf configuration serial numbers
-        std::list<unsigned int> map_twopf_to_threepf_serials(const std::list<unsigned int>& twopf_list, const threepf_kconfig_database& threepf_db);
 
 
         // DATA PIPES -- implements a 'data_manager' interface
@@ -1303,134 +1287,6 @@ namespace transport
 
 
     // INTEGRITY CHECK
-
-
-    template <typename ConfigurationType>
-    class ConfigurationFinder
-	    {
-      public:
-        ConfigurationFinder(unsigned int s)
-	        : serial(s)
-	        {
-	        }
-
-        bool operator()(const ConfigurationType& a) { return(a.serial == this->serial); }
-
-      private:
-        unsigned int serial;
-	    };
-
-
-    template <typename RecordData>
-    class RecordFinder
-      {
-      public:
-        RecordFinder(unsigned int s)
-          : serial(s)
-          {
-          }
-
-        bool operator()(const RecordData& a) { return((*a).serial == this->serial); }
-
-      private:
-        unsigned int serial;
-      };
-
-
-    template <typename number>
-    template <typename WriterObject, typename Database>
-    std::list<unsigned int> data_manager_sqlite3<number>::advise_missing_content(WriterObject& writer, const std::list<unsigned int>& serials, const Database& db)
-      {
-        BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << "** Detected missing data in container";
-        writer.set_fail(true);
-
-        std::list<unsigned int> advised_list = writer.get_missing_serials();
-        if(advised_list.size() > 0) BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << "** Note: backend provided list of " << advised_list.size() << " missing items to cross-check";
-
-        for(typename std::list<unsigned int>::const_iterator t = serials.begin(); t != serials.end(); ++t)
-          {
-            // find this configuration
-            typename Database::const_config_iterator u = std::find_if(db.config_begin(), db.config_end(),
-                                                                      ConfigurationFinder<typename Database::const_config_iterator::type>(*t));
-
-            // emit configuration information
-            std::ostringstream msg;
-            msg << *u;
-            std::string msg_str = msg.str();
-            boost::algorithm::trim_right(msg_str);
-            BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << "** " << msg_str;
-
-            // search for this element in the advised list
-            std::list<unsigned int>::iterator ad = std::find(advised_list.begin(), advised_list.end(), *t);
-
-            // was this an item on the list we already knew would be missing?
-            if(ad != advised_list.end()) advised_list.erase(ad);
-          }
-
-        // return any remainder
-        return(advised_list);
-      }
-
-
-    template <typename number>
-    std::list<unsigned int> data_manager_sqlite3<number>::compute_twopf_drop_list(const std::list<unsigned int>& serials, const threepf_kconfig_database& threepf_db)
-      {
-        std::list<unsigned int> drop_serials;
-
-        // TODO: this is a O(N^2) algorithm; it would be nice if it could be replaced with something better
-        for(std::list<unsigned int>::const_iterator t = serials.begin(); t != serials.end(); ++t)
-          {
-            threepf_kconfig_database::const_record_iterator u = std::find_if(threepf_db.record_begin(), threepf_db.record_end(),
-                                                                             RecordFinder<threepf_kconfig_database::const_record_iterator::type>(*t));
-
-            if(u != threepf_db.record_end())
-              {
-                if(u->is_twopf_k1_stored()) drop_serials.push_back((*u)->k1_serial);
-                if(u->is_twopf_k2_stored()) drop_serials.push_back((*u)->k2_serial);
-                if(u->is_twopf_k3_stored()) drop_serials.push_back((*u)->k3_serial);
-              }
-          }
-
-        drop_serials.sort();
-        drop_serials.unique();
-
-        return(drop_serials);
-      }
-
-
-    template <typename number>
-    std::list<unsigned int> data_manager_sqlite3<number>::map_twopf_to_threepf_serials(const std::list<unsigned int>& twopf_list, const threepf_kconfig_database& threepf_db)
-      {
-        std::list<unsigned int> threepf_list;
-
-        // TODO: this is a O(N^2) algorithm; it would be nice if it could be replaced with something better
-        for(std::list<unsigned int>::const_iterator t = twopf_list.begin(); t != twopf_list.end(); ++t)
-          {
-            for(threepf_kconfig_database::const_record_iterator u = threepf_db.record_begin(); u != threepf_db.record_end(); ++u)
-              {
-                if(u->is_twopf_k1_stored() && (*u)->k1_serial == *t)
-                  {
-                    threepf_list.push_back((*u)->serial);
-                    break;
-                  }
-                if(u->is_twopf_k2_stored() && (*u)->k2_serial == *t)
-                  {
-                    threepf_list.push_back((*u)->serial);
-                    break;
-                  }
-                if(u->is_twopf_k3_stored() && (*u)->k3_serial == *t)
-                  {
-                    threepf_list.push_back((*u)->serial);
-                    break;
-                  }
-              }
-          }
-
-        threepf_list.sort();
-        threepf_list.unique();
-
-        return(threepf_list);
-      }
 
 
     template <typename number>
