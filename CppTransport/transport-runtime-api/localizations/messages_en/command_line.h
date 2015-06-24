@@ -50,5 +50,11 @@
 #define CPPTRANSPORT_SWITCH_MODELS            "models"
 #define CPPTRANSPORT_HELP_MODELS              "list models baked into this executable"
 
+#define CPPTRANSPORT_SWITCH_NO_COLOUR         "no-colour"
+#define CPPTRANSPORT_HELP_NO_COLOUR           "disable colourized output"
+
+#define CPPTRANSPORT_SWITCH_NO_COLOR          "no-color"
+#define CPPTRANSPORT_HELP_NO_COLOR            "disable colourized output"
+
 
 #endif //CPPTRANSPORT_COMMAND_LINE_H

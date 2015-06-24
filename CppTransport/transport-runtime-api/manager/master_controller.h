@@ -277,6 +277,9 @@ namespace transport
 				//! expose arguments
 				const argument_cache& get_arguments(void) { return(this->arg_cache); }
 
+        //! expose environment
+        const local_environment& get_environment(void) { return(this->local_env); }
+
 
 		    // MPI FUNCTIONS
 
@@ -554,9 +557,10 @@ namespace transport
         // set up Boost::program_options descriptors for command-line arguments
         boost::program_options::options_description generic("Generic options");
         generic.add_options()
-          (CPPTRANSPORT_SWITCH_HELP,    CPPTRANSPORT_HELP_HELP)
-          (CPPTRANSPORT_SWITCH_VERSION, CPPTRANSPORT_HELP_VERSION)
-          (CPPTRANSPORT_SWITCH_MODELS,  CPPTRANSPORT_HELP_MODELS);
+          (CPPTRANSPORT_SWITCH_HELP,      CPPTRANSPORT_HELP_HELP)
+          (CPPTRANSPORT_SWITCH_VERSION,   CPPTRANSPORT_HELP_VERSION)
+          (CPPTRANSPORT_SWITCH_MODELS,    CPPTRANSPORT_HELP_MODELS)
+          (CPPTRANSPORT_SWITCH_NO_COLOUR, CPPTRANSPORT_HELP_NO_COLOUR);
 
         boost::program_options::options_description configuration("Configuration options");
         configuration.add_options()
@@ -575,8 +579,15 @@ namespace transport
           (CPPTRANSPORT_SWITCH_TASK,             boost::program_options::value< std::vector< std::string > >()->composing(), CPPTRANSPORT_HELP_TASK)
           (CPPTRANSPORT_SWITCH_SEED,             boost::program_options::value< std::string >(),                             CPPTRANSPORT_HELP_SEED);
 
+        boost::program_options::options_description hidden_options;
+        hidden_options.add_options()
+          (CPPTRANSPORT_SWITCH_NO_COLOR, CPPTRANSPORT_HELP_NO_COLOR);
+
         boost::program_options::options_description cmdline_options;
-        cmdline_options.add(generic).add(configuration).add(job_options);
+        cmdline_options.add(generic).add(configuration).add(job_options).add(hidden_options);
+
+        boost::program_options::options_description output_options;
+        output_options.add(generic).add(configuration).add(job_options);
 
         boost::program_options::variables_map option_map;
         boost::program_options::store(boost::program_options::parse_command_line(argc, argv, cmdline_options), option_map);
@@ -593,7 +604,7 @@ namespace transport
         if(option_map.count(CPPTRANSPORT_SWITCH_HELP))
           {
             if(!emitted_version) std::cout << CPPTRANSPORT_NAME << " " << CPPTRANSPORT_VERSION << " " << CPPTRANSPORT_COPYRIGHT << " | " << CPPTRANSPORT_RUNTIME_API << std::endl;
-            std::cout << cmdline_options << std::endl;
+            std::cout << output_options << std::endl;
           }
 
         if(option_map.count(CPPTRANSPORT_SWITCH_MODELS))
@@ -711,8 +722,9 @@ namespace transport
             this->arg_cache.set_gantt_filename(option_map[CPPTRANSPORT_SWITCH_GANTT_CHART].as<std::string>());
           }
 
-        if(option_map.count(CPPTRANSPORT_SWITCH_VERBOSE_LONG)) this->arg_cache.set_verbose(true);
-        if(option_map.count(CPPTRANSPORT_SWITCH_RECOVER))      this->arg_cache.set_recovery_mode(true);
+        if(option_map.count(CPPTRANSPORT_SWITCH_VERBOSE_LONG))                                                this->arg_cache.set_verbose(true);
+        if(option_map.count(CPPTRANSPORT_SWITCH_RECOVER))                                                     this->arg_cache.set_recovery_mode(true);
+        if(option_map.count(CPPTRANSPORT_SWITCH_NO_COLOUR) || option_map.count(CPPTRANSPORT_SWITCH_NO_COLOR)) this->arg_cache.set_colour_output(false);
 
         // process task specification
         if(option_map.count(CPPTRANSPORT_SWITCH_TASK))

@@ -43,6 +43,12 @@ namespace transport
         //! Set model list status
         void set_model_list(bool g)                    { this->list_models = g; }
 
+        //! Get colourized output status
+        bool get_colour_output() const                 { return(this->colour_output); }
+
+        //! Set colourized output status
+        void set_colour_output(bool g)                 { this->colour_output = g; }
+
 
         // CHECKPOINTING AND RECOVERY
 
@@ -92,6 +98,9 @@ namespace transport
         //! recovery mode?
         bool recovery;
 
+        //! colour output?
+        bool colour_output;
+
 	    };
 
 
@@ -99,7 +108,8 @@ namespace transport
 	    : gantt_chart(false),
 	      verbose(false),
         list_models(false),
-        recovery(false)
+        recovery(false),
+        colour_output(true)
 	    {
 	    }
 
