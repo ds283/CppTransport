@@ -59,7 +59,7 @@ int main(int argc, char* argv[])
     const double Ncross = 9.0; // horizon-crossing occurs at N=13
     const double Npre   = 9.0;  // number of e-folds of subhorizon evolution
     const double Nsplit = 1.0;  // split point between early and late
-    const double Nmax   = 10.0; // how many e-folds to integrate after horizon crossing
+    const double Nmax   = 9.0; // how many e-folds to integrate after horizon crossing
 
     // set up initial conditions with the specified horizon-crossing time Ncross and Npre
     // e-folds of subhorizon evolution.
@@ -143,12 +143,12 @@ int main(int argc, char* argv[])
 
 		// filter: equilateral with high k_t
     std::ostringstream hi_kt_query;
-		hi_kt_query << std::setprecision(10) << "ABS(alpha) < 0.001 AND ABS(kt_conventional-" << exp(3.0) << ") < 0.01";
+		hi_kt_query << std::setprecision(10) << "ABS(alpha) < 0.001 AND ABS(kt_conventional-" << exp(6.5) << ") < 0.01";
     transport::derived_data::SQL_threepf_kconfig_query isosceles_hi_kt(hi_kt_query.str());
 
     // filter: equilateral with lo k_t
     std::ostringstream lo_kt_query;
-		lo_kt_query << std::setprecision(10) << "ABS(alpha) < 0.001 AND ABS(kt_conventional-" << exp(7.0) << ") < 0.001";
+		lo_kt_query << std::setprecision(10) << "ABS(alpha) < 0.001 AND ABS(kt_conventional-" << exp(9.0) << ") < 0.001";
     transport::derived_data::SQL_threepf_kconfig_query isosceles_lo_kt(lo_kt_query.str());
 
 
@@ -321,11 +321,11 @@ int main(int argc, char* argv[])
     transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_beta_lo(ztk3, last_time, isosceles_lo_kt);
     tk3_zeta_redbsp_beta_lo.set_klabel_meaning(transport::derived_data::conventional);
     tk3_zeta_redbsp_beta_lo.set_current_x_axis_value(transport::derived_data::beta_axis);
-		tk3_zeta_redbsp_beta_lo.set_label_text("$k_t/k_\\star = \\mathrm{e}^3$", "k_t/k* = exp(3)");
+		tk3_zeta_redbsp_beta_lo.set_label_text("$k_t/k_\\star = \\mathrm{e}^{6.5}$", "k_t/k* = exp(6.5)");
     transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_beta_hi(ztk3, last_time, isosceles_hi_kt);
     tk3_zeta_redbsp_beta_hi.set_klabel_meaning(transport::derived_data::conventional);
     tk3_zeta_redbsp_beta_hi.set_current_x_axis_value(transport::derived_data::beta_axis);
-		tk3_zeta_redbsp_beta_hi.set_label_text("$k_t/k_\\star = \\mathrm{e}^7$", "k_t/k* = exp(7)");
+		tk3_zeta_redbsp_beta_hi.set_label_text("$k_t/k_\\star = \\mathrm{e}^{9.0}$", "k_t/k* = exp(9.0)");
 
     transport::derived_data::wavenumber_series_plot<double> tk3_redbsp_beta_plot("inflection.threepf-1.redbsp-beta", "redbsp-beta.pdf");
 		tk3_redbsp_beta_plot.add_line(tk3_zeta_redbsp_beta_lo);
@@ -343,12 +343,12 @@ int main(int argc, char* argv[])
     transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_sqk3_lo(ztk3, last_time, isosceles_lo_kt);
     tk3_zeta_redbsp_sqk3_lo.set_klabel_meaning(transport::derived_data::conventional);
     tk3_zeta_redbsp_sqk3_lo.set_current_x_axis_value(transport::derived_data::squeezing_fraction_k3_axis);
-		tk3_zeta_redbsp_sqk3_lo.set_label_text("$k_t/k_\\star = \\mathrm{e}^3$", "k_t/k* = exp(3)");
+		tk3_zeta_redbsp_sqk3_lo.set_label_text("$k_t/k_\\star = \\mathrm{e}^{6.5}$", "k_t/k* = exp(6.5)");
 
     transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_sqk3_hi(ztk3, last_time, isosceles_hi_kt);
     tk3_zeta_redbsp_sqk3_hi.set_klabel_meaning(transport::derived_data::conventional);
     tk3_zeta_redbsp_sqk3_hi.set_current_x_axis_value(transport::derived_data::squeezing_fraction_k3_axis);
-    tk3_zeta_redbsp_sqk3_hi.set_label_text("$k_t/k_\\star = \\mathrm{e}^7$", "k_t/k* = exp(7)");
+    tk3_zeta_redbsp_sqk3_hi.set_label_text("$k_t/k_\\star = \\mathrm{e}^{9.0}$", "k_t/k* = exp(9.0)");
 
     transport::derived_data::wavenumber_series_plot<double> tk3_redbsp_sqk3_plot("inflection.threepf-1.redbsp-sqk3", "redbsp-sqk3.pdf");
     tk3_redbsp_sqk3_plot.add_line(tk3_zeta_redbsp_sqk3_lo);
@@ -368,13 +368,13 @@ int main(int argc, char* argv[])
     tk3_zeta_redbsp_sqk3_lo_index.set_klabel_meaning(transport::derived_data::conventional);
     tk3_zeta_redbsp_sqk3_lo_index.set_current_x_axis_value(transport::derived_data::squeezing_fraction_k3_axis);
     tk3_zeta_redbsp_sqk3_lo_index.set_spectral_index(true);
-    tk3_zeta_redbsp_sqk3_lo_index.set_label_text("$n_{f_{\\mathrm{NL}}} \\;\\; k_t/k_\\star = \\mathrm{e}^3$", "n_fNL k_t/k* = exp(3)");
+    tk3_zeta_redbsp_sqk3_lo_index.set_label_text("$n_{f_{\\mathrm{NL}}} \\;\\; k_t/k_\\star = \\mathrm{e}^{6.5}$", "n_fNL k_t/k* = exp(6.5)");
 
     transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_sqk3_hi_index(ztk3, last_time, isosceles_hi_kt);
     tk3_zeta_redbsp_sqk3_hi_index.set_klabel_meaning(transport::derived_data::conventional);
     tk3_zeta_redbsp_sqk3_hi_index.set_current_x_axis_value(transport::derived_data::squeezing_fraction_k3_axis);
     tk3_zeta_redbsp_sqk3_hi_index.set_spectral_index(true);
-    tk3_zeta_redbsp_sqk3_hi_index.set_label_text("$n_{f_{\\mathrm{NL}}} \\;\\; k_t/k_\\star = \\mathrm{e}^7$", "n_fNL k_t/k* = exp(7)");
+    tk3_zeta_redbsp_sqk3_hi_index.set_label_text("$n_{f_{\\mathrm{NL}}} \\;\\; k_t/k_\\star = \\mathrm{e}^{9.0}$", "n_fNL k_t/k* = exp(9.0)");
 
     transport::derived_data::wavenumber_series_plot<double> tk3_redbsp_sqk3_index_plot("inflection.threepf-1.redbsp-sqk3-index", "redbsp-sqk3-index.pdf");
     tk3_redbsp_sqk3_index_plot.add_line(tk3_zeta_redbsp_sqk3_lo_index);
@@ -423,11 +423,11 @@ int main(int argc, char* argv[])
 
     transport::derived_data::cost_wavenumber<double> tk3_hi_cost(tk3, isosceles_hi_kt);
 		tk3_hi_cost.set_current_x_axis_value(transport::derived_data::squeezing_fraction_k3_axis);
-		tk3_hi_cost.set_label_text("$k_t = \\mathrm{e}^7$", "k_t = exp(7)");
+		tk3_hi_cost.set_label_text("$k_t = \\mathrm{e}^{9.0}$", "k_t = exp(9.0)");
 
     transport::derived_data::cost_wavenumber<double> tk3_lo_cost(tk3, isosceles_lo_kt);
 		tk3_lo_cost.set_current_x_axis_value(transport::derived_data::squeezing_fraction_k3_axis);
-		tk3_lo_cost.set_label_text("$k_t = \\mathrm{e}^3$", "k_t = exp(3)");
+		tk3_lo_cost.set_label_text("$k_t = \\mathrm{e}^{6.5}$", "k_t = exp(6.5)");
 
     transport::derived_data::wavenumber_series_plot<double> tk3_cost_plot("inflection.threepf-1.sqk3-cost", "sqk3-cost.pdf");
 		tk3_cost_plot.add_line(tk3_lo_cost);
@@ -479,12 +479,12 @@ int main(int argc, char* argv[])
     transport::derived_data::threepf_wavenumber_series<double> tk3_sigma_bsp_sqk3spec_lo(tk3, sigma_sigma_sigma, last_time, isosceles_lo_kt);
 		tk3_sigma_bsp_sqk3spec_lo.set_klabel_meaning(transport::derived_data::conventional);
 		tk3_sigma_bsp_sqk3spec_lo.set_current_x_axis_value(transport::derived_data::squeezing_fraction_k3_axis);
-		tk3_sigma_bsp_sqk3spec_lo.set_label_text("$k_3/k_\\star = \\mathrm{e}^3$", "k_t/k* = exp(3)");
+		tk3_sigma_bsp_sqk3spec_lo.set_label_text("$k_3/k_\\star = \\mathrm{e}^{6.5}$", "k_t/k* = exp(6.5)");
 
     transport::derived_data::threepf_wavenumber_series<double> tk3_sigma_bsp_sqk3spec_hi(tk3, sigma_sigma_sigma, last_time, isosceles_hi_kt);
     tk3_sigma_bsp_sqk3spec_hi.set_klabel_meaning(transport::derived_data::conventional);
     tk3_sigma_bsp_sqk3spec_hi.set_current_x_axis_value(transport::derived_data::squeezing_fraction_k3_axis);
-    tk3_sigma_bsp_sqk3spec_hi.set_label_text("$k_3/k_\\star = \\mathrm{e}^7$", "k_t/k* = exp(7)");
+    tk3_sigma_bsp_sqk3spec_hi.set_label_text("$k_3/k_\\star = \\mathrm{e}^{9.0}$", "k_t/k* = exp(9.0)");
 
     transport::derived_data::wavenumber_series_plot<double> tk3_sigma_bsp_sqk3_plot("inflection.threepf-1.sigma-bsp-sqk3", "sigma-bsp-sqk3.pdf");
 		tk3_sigma_bsp_sqk3_plot.add_line(tk3_sigma_bsp_sqk3spec_lo);
