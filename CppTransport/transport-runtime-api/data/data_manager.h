@@ -114,22 +114,22 @@ namespace transport
 
         //! Initialize an integration_writer object.
         //! Never overwrites existing data; if the container already exists, an exception is thrown
-        virtual void initialize_writer(std::shared_ptr <integration_writer<number>>& writer, bool recovery_mode = false) = 0;
+        virtual void initialize_writer(std::shared_ptr< integration_writer<number> >& writer, bool recovery_mode = false) = 0;
 
         //! Close an integration_writer object.
-        virtual void close_writer(std::shared_ptr <integration_writer<number>>& writer) = 0;
+        virtual void close_writer(std::shared_ptr< integration_writer<number> >& writer) = 0;
 
         //! Initialize a derived_content_writer object.
-        virtual void initialize_writer(std::shared_ptr <derived_content_writer<number>>& writer, bool recovery_mode = false) = 0;
+        virtual void initialize_writer(std::shared_ptr< derived_content_writer<number> >& writer, bool recovery_mode = false) = 0;
 
         //! Close an open derived_content_writer object.
-        virtual void close_writer(std::shared_ptr <derived_content_writer<number>>& writer) = 0;
+        virtual void close_writer(std::shared_ptr< derived_content_writer<number> >& writer) = 0;
 
         //! Initialize a postintegration_writer object.
-        virtual void initialize_writer(std::shared_ptr <postintegration_writer<number>>& writer, bool recovery_mode = false) = 0;
+        virtual void initialize_writer(std::shared_ptr< postintegration_writer<number> >& writer, bool recovery_mode = false) = 0;
 
         //! Close an open postintegration_writer object.
-        virtual void close_writer(std::shared_ptr <postintegration_writer<number>>& writer) = 0;
+        virtual void close_writer(std::shared_ptr< postintegration_writer<number> >& writer) = 0;
 
 
         // WRITE TABLES FOR A DATA CONTAINER
@@ -137,19 +137,19 @@ namespace transport
       public:
 
         //! Create tables needed for a twopf container
-        virtual void create_tables(std::shared_ptr <integration_writer<number>>& writer, twopf_task<number>* tk) = 0;
+        virtual void create_tables(std::shared_ptr< integration_writer<number> >& writer, twopf_task<number>* tk) = 0;
 
         //! Create tables needed for a threepf container
-        virtual void create_tables(std::shared_ptr <integration_writer<number>>& writer, threepf_task<number>* tk) = 0;
+        virtual void create_tables(std::shared_ptr< integration_writer<number> >& writer, threepf_task<number>* tk) = 0;
 
         //! Create tables needed for a zeta twopf container
-        virtual void create_tables(std::shared_ptr <postintegration_writer<number>>& writer, zeta_twopf_task<number>* tk) = 0;
+        virtual void create_tables(std::shared_ptr< postintegration_writer<number> >& writer, zeta_twopf_task<number>* tk) = 0;
 
         //! Create tables needed for a zeta threepf container
-        virtual void create_tables(std::shared_ptr <postintegration_writer<number>>& writer, zeta_threepf_task<number>* tk) = 0;
+        virtual void create_tables(std::shared_ptr< postintegration_writer<number> >& writer, zeta_threepf_task<number>* tk) = 0;
 
         //! Create tables needed for an fNL container
-        virtual void create_tables(std::shared_ptr <postintegration_writer<number>>& writer, fNL_task<number>* tk) = 0;
+        virtual void create_tables(std::shared_ptr< postintegration_writer<number> >& writer, fNL_task<number>* tk) = 0;
 
 
         // SEEDING
@@ -157,24 +157,24 @@ namespace transport
       public:
 
         //! Seed a writer for a twopf task
-        virtual void seed_writer(std::shared_ptr <integration_writer<number>>& writer, twopf_task<number>* tk,
-                                 const std::shared_ptr <output_group_record<integration_payload>>& seed) = 0;
+        virtual void seed_writer(std::shared_ptr< integration_writer<number> >& writer, twopf_task<number>* tk,
+                                 const std::shared_ptr< output_group_record<integration_payload> >& seed) = 0;
 
         //! Seed a writer for a threepf task
-        virtual void seed_writer(std::shared_ptr <integration_writer<number>>& writer, threepf_task<number>* tk,
-                                 const std::shared_ptr <output_group_record<integration_payload>>& seed) = 0;
+        virtual void seed_writer(std::shared_ptr< integration_writer<number> >& writer, threepf_task<number>* tk,
+                                 const std::shared_ptr< output_group_record<integration_payload> >& seed) = 0;
 
         //! Seed a writer for a zeta twopf task
-        virtual void seed_writer(std::shared_ptr <postintegration_writer<number>>& writer, zeta_twopf_task<number>* tk,
-                                 const std::shared_ptr <output_group_record<postintegration_payload>>& seed) = 0;
+        virtual void seed_writer(std::shared_ptr< postintegration_writer<number> >& writer, zeta_twopf_task<number>* tk,
+                                 const std::shared_ptr< output_group_record<postintegration_payload> >& seed) = 0;
 
         //! Seed a writer for a zeta threepf task
-        virtual void seed_writer(std::shared_ptr <postintegration_writer<number>>& writer, zeta_threepf_task<number>* tk,
-                                 const std::shared_ptr <output_group_record<postintegration_payload>>& seed) = 0;
+        virtual void seed_writer(std::shared_ptr< postintegration_writer<number> >& writer, zeta_threepf_task<number>* tk,
+                                 const std::shared_ptr< output_group_record<postintegration_payload> >& seed) = 0;
 
         //! Seed a writer for an fNL task
-        virtual void seed_writer(std::shared_ptr <postintegration_writer<number>>& writer, fNL_task<number>* tk,
-                                 const std::shared_ptr <output_group_record<postintegration_payload>>& seed) = 0;
+        virtual void seed_writer(std::shared_ptr< postintegration_writer<number> >& writer, fNL_task<number>* tk,
+                                 const std::shared_ptr< output_group_record<postintegration_payload> >& seed) = 0;
 
 
         // CONSTRUCT BATCHERS
@@ -208,6 +208,77 @@ namespace transport
 
         // INTEGRITY CHECK
 
+      public:   // have to be public so we can use std::bind
+
+        //! Check integrity for a twopf container
+        void check_twopf_integrity_handler(integration_writer<number>& writer, integration_task<number>* tk);
+
+        //! Check integrity for a threepf container
+        void check_threepf_integrity_handler(integration_writer<number>& writer, integration_task<number>* tk);
+
+        //! Check integrity for a zeta twopf container
+        void check_zeta_twopf_integrity_handler(postintegration_writer<number>& writer, postintegration_task<number>* tk);
+
+        //! Check integrity for a zeta threepf container
+        void check_zeta_threepf_integrity_handler(postintegration_writer<number>& writer, postintegration_task<number>* tk);
+
+        //! Check integrity for an fNL container
+        void check_fNL_integrity_handler(postintegration_writer<number>& writer, postintegration_task<number>* tk);
+
+        // CALCULATE MISSING SERIAL NUMBERS
+
+      protected:
+
+        //! get missing serial numbers from a twopf-re table; should be provided by implementation
+        virtual std::list<unsigned int> get_missing_twopf_re_serials(integration_writer<number>& writer) = 0;
+
+        //! get missing serial numbers from a twopf-im table; should be provided by implementation
+        virtual std::list<unsigned int> get_missing_twopf_im_serials(integration_writer<number>& writer) = 0;
+
+        //! get missing serial numbers from a threepf table; should be provided by implementation
+        virtual std::list<unsigned int> get_missing_threepf_serials(integration_writer<number>& writer) = 0;
+
+        //! get missing serial numbers from a zeta twopf table; should be provided by implementation
+        virtual std::list<unsigned int> get_missing_zeta_twopf_serials(postintegration_writer<number>& writer) = 0;
+
+        //! get missing serial numbers from a zeta threepf table; should be provided by implementation
+        virtual std::list<unsigned int> get_missing_zeta_threepf_serials(postintegration_writer<number>& writer) = 0;
+
+        //! get missing serial numbers from a zeta reduced bispectrum table; should be provided by implementation
+        virtual std::list<unsigned int> get_missing_zeta_redbsp_serials(postintegration_writer<number>& writer) = 0;
+
+        // DROP GROUPS OF SERIAL NUMBERS
+
+      protected:
+
+        //! drop a set of k-configurations from a twopf-re table; should be provided by implementation
+        virtual void drop_twopf_re_configurations(integration_writer<number>& writer, const std::list<unsigned int>& serials, const twopf_kconfig_database& db) = 0;
+
+        //! drop a set of k-configurations from a twopf-im table; should be provided by implementation
+        virtual void drop_twopf_im_configurations(integration_writer<number>& writer, const std::list<unsigned int>& serials, const twopf_kconfig_database& db) = 0;
+
+        //! drop a set of k-configurations from a threepf table; should be provided by implementation
+        virtual void drop_threepf_configurations(integration_writer<number>& writer, const std::list<unsigned int>& serials, const threepf_kconfig_database& db) = 0;
+
+        //! drop a set of k-configurations from a zeta twopf table; should be provided by implementation
+        virtual void drop_zeta_twopf_configurations(postintegration_writer<number>& writer, const std::list<unsigned int>& serials, const twopf_kconfig_database& db) = 0;
+
+        //! drop a set of k-configurations from a zeta threepf table; should be provided by implementation
+        virtual void drop_zeta_threepf_configurations(postintegration_writer<number>& writer, const std::list<unsigned int>& serials, const threepf_kconfig_database& db) = 0;
+
+        //! drop a set of k-configurations from a zeta reduced bispectrum table; should be provided by implementation
+        virtual void drop_zeta_redbsp_configurations(postintegration_writer<number>& writer, const std::list<unsigned int>& serials, const threepf_kconfig_database& db) = 0;
+
+        //! drop statistics for a set of k-configurations; should be provided by implementation
+        virtual void drop_statistics_configurations(integration_writer<number>& writer, const std::list<unsigned int>& serials, const twopf_kconfig_database& db) = 0;
+        virtual void drop_statistics_configurations(integration_writer<number>& writer, const std::list<unsigned int>& serials, const threepf_kconfig_database& db) = 0;
+
+        //! drop initial conditions for a set of k-configurations; should be provided by implementation
+        virtual void drop_initial_conditions_configurations(integration_writer<number>& writer, const std::list<unsigned int>& serials, const twopf_kconfig_database& db) = 0;
+        virtual void drop_initial_conditions_configurations(integration_writer<number>& writer, const std::list<unsigned int>& serials, const threepf_kconfig_database& db) = 0;
+
+        // UTILITY FUNCTIONS
+
       protected:
 
         //! log missing data from a container, checking against a list provided by the backend if one is provided.
@@ -234,85 +305,85 @@ namespace transport
                                                  unsigned int worker, bool no_log = false) = 0;
 
         //! Pull a set of time sample-points from a datapipe
-        virtual void pull_time_config(datapipe<number>* pipe, const std::shared_ptr <derived_data::SQL_time_config_query>& tquery,
+        virtual void pull_time_config(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_time_config_query>& tquery,
                                       std::vector<time_config>& sample) = 0;
 
         //! Pull a set of 2pf k-configuration serial numbers from a datapipe
-        virtual void pull_kconfig_twopf(datapipe<number>* pipe, const std::shared_ptr <derived_data::SQL_twopf_kconfig_query>& kquery,
+        virtual void pull_kconfig_twopf(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_twopf_kconfig_query>& kquery,
                                         std::vector<twopf_kconfig>& sample) = 0;
 
         //! Pull a set of 3pd k-configuration serial numbesr from a datapipe
         //! Simultaneously, populates three lists (k1, k2, k3) with serial numbers for the 2pf k-configurations
         //! corresponding to k1, k2, k3
-        virtual void pull_kconfig_threepf(datapipe<number>* pipe, const std::shared_ptr <derived_data::SQL_threepf_kconfig_query>& kquery,
+        virtual void pull_kconfig_threepf(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_threepf_kconfig_query>& kquery,
                                           std::vector<threepf_kconfig>& sample) = 0;
 
         //! Pull a time sample of a background field from a datapipe
-        virtual void pull_background_time_sample(datapipe<number>* pipe, unsigned int id, const std::shared_ptr <derived_data::SQL_query>& query,
+        virtual void pull_background_time_sample(datapipe<number>* pipe, unsigned int id, const std::shared_ptr<derived_data::SQL_query>& query,
                                                  std::vector<number>& sample) = 0;
 
         //! Pull a time sample of a twopf component at fixed k-configuration from a datapipe
-        virtual void pull_twopf_time_sample(datapipe<number>* pipe, unsigned int id, const std::shared_ptr <derived_data::SQL_query>& query,
+        virtual void pull_twopf_time_sample(datapipe<number>* pipe, unsigned int id, const std::shared_ptr<derived_data::SQL_query>& query,
                                             unsigned int k_serial, std::vector<number>& sample, typename datapipe<number>::twopf_type type) = 0;
 
         //! Pull a sample of a threepf at fixed k-configuration from a datapipe
-        virtual void pull_threepf_time_sample(datapipe<number>* pipe, unsigned int id, const std::shared_ptr <derived_data::SQL_query>& query,
+        virtual void pull_threepf_time_sample(datapipe<number>* pipe, unsigned int id, const std::shared_ptr<derived_data::SQL_query>& query,
                                               unsigned int k_serial, std::vector<number>& sample) = 0;
 
         //! Pull a sample of a tensor twopf at fixed k-configuration from a datapipe
-        virtual void pull_tensor_twopf_time_sample(datapipe<number>* pipe, unsigned int id, const std::shared_ptr <derived_data::SQL_query>& query,
+        virtual void pull_tensor_twopf_time_sample(datapipe<number>* pipe, unsigned int id, const std::shared_ptr<derived_data::SQL_query>& query,
                                                    unsigned int k_serial, std::vector<number>& sample) = 0;
 
         //! Pull a sample of the zeta twopf at fixed k-configuration from a datapipe
-        virtual void pull_zeta_twopf_time_sample(datapipe<number>*, const std::shared_ptr <derived_data::SQL_query>& query,
+        virtual void pull_zeta_twopf_time_sample(datapipe<number>*, const std::shared_ptr<derived_data::SQL_query>& query,
                                                  unsigned int k_serial, std::vector<number>& sample) = 0;
 
         //! Pull a sample of the zeta threepf at fixed k-configuration from a datapipe
-        virtual void pull_zeta_threepf_time_sample(datapipe<number>*, const std::shared_ptr <derived_data::SQL_query>& query,
+        virtual void pull_zeta_threepf_time_sample(datapipe<number>*, const std::shared_ptr<derived_data::SQL_query>& query,
                                                    unsigned int k_serial, std::vector<number>& sample) = 0;
 
         //! Pull a sample of the zeta reduced bispectrum at fixed k-configuration from a datapipe
-        virtual void pull_zeta_redbsp_time_sample(datapipe<number>*, const std::shared_ptr <derived_data::SQL_query>& query,
+        virtual void pull_zeta_redbsp_time_sample(datapipe<number>*, const std::shared_ptr<derived_data::SQL_query>& query,
                                                   unsigned int k_serial, std::vector<number>& sample) = 0;
 
         //! Pull a sample of fNL from a datapipe
-        virtual void pull_fNL_time_sample(datapipe<number>*, const std::shared_ptr <derived_data::SQL_query>& query,
+        virtual void pull_fNL_time_sample(datapipe<number>*, const std::shared_ptr<derived_data::SQL_query>& query,
                                           std::vector<number>& sample, derived_data::template_type type) = 0;
 
         //! Pull a sample of bispectrum.template from a datapipe
-        virtual void pull_BT_time_sample(datapipe<number>*, const std::shared_ptr <derived_data::SQL_query>& query,
+        virtual void pull_BT_time_sample(datapipe<number>*, const std::shared_ptr<derived_data::SQL_query>& query,
                                          std::vector<number>& sample, derived_data::template_type type) = 0;
 
         //! Pull a sample of template.template from a datapipe
-        virtual void pull_TT_time_sample(datapipe<number>*, const std::shared_ptr <derived_data::SQL_query>& query,
+        virtual void pull_TT_time_sample(datapipe<number>*, const std::shared_ptr<derived_data::SQL_query>& query,
                                          std::vector<number>& sample, derived_data::template_type type) = 0;
 
         //! Pull a kconfig sample of a twopf component at fixed time from a datapipe
-        virtual void pull_twopf_kconfig_sample(datapipe<number>* pipe, unsigned int id, const std::shared_ptr <derived_data::SQL_query>& query,
+        virtual void pull_twopf_kconfig_sample(datapipe<number>* pipe, unsigned int id, const std::shared_ptr<derived_data::SQL_query>& query,
                                                unsigned int t_serial, std::vector<number>& sample, typename datapipe<number>::twopf_type type) = 0;
 
         //! Pull a kconfig sample of a threepf at fixed time from a datapipe
-        virtual void pull_threepf_kconfig_sample(datapipe<number>* pipe, unsigned int id, const std::shared_ptr <derived_data::SQL_query>& query,
+        virtual void pull_threepf_kconfig_sample(datapipe<number>* pipe, unsigned int id, const std::shared_ptr<derived_data::SQL_query>& query,
                                                  unsigned int t_serial, std::vector<number>& sample) = 0;
 
         //! Pull a kconfig sample of a tensor twopf component at fixed time from a datapipe
-        virtual void pull_tensor_twopf_kconfig_sample(datapipe<number>* pipe, unsigned int id, const std::shared_ptr <derived_data::SQL_query>& query,
+        virtual void pull_tensor_twopf_kconfig_sample(datapipe<number>* pipe, unsigned int id, const std::shared_ptr<derived_data::SQL_query>& query,
                                                       unsigned int t_serial, std::vector<number>& sample) = 0;
 
         //! Pull a kconfig sample of the zeta twopf at fixed time from a datapipe
-        virtual void pull_zeta_twopf_kconfig_sample(datapipe<number>*, const std::shared_ptr <derived_data::SQL_query>& query,
+        virtual void pull_zeta_twopf_kconfig_sample(datapipe<number>*, const std::shared_ptr<derived_data::SQL_query>& query,
                                                     unsigned int t_serial, std::vector<number>& sample) = 0;
 
         //! Pull a kconfig sample of the zeta threepf at fixed time from a datapipe
-        virtual void pull_zeta_threepf_kconfig_sample(datapipe<number>*, const std::shared_ptr <derived_data::SQL_query>& query,
+        virtual void pull_zeta_threepf_kconfig_sample(datapipe<number>*, const std::shared_ptr<derived_data::SQL_query>& query,
                                                       unsigned int t_serial, std::vector<number>& sample) = 0;
 
         //! Pull a kconfig sample of the zeta reduced bispectrum at fixed time from a datapipe
-        virtual void pull_zeta_redbsp_kconfig_sample(datapipe<number>*, const std::shared_ptr <derived_data::SQL_query>& query,
+        virtual void pull_zeta_redbsp_kconfig_sample(datapipe<number>*, const std::shared_ptr<derived_data::SQL_query>& query,
                                                      unsigned int t_serial, std::vector<number>& sample) = 0;
 
         //! Pull a sample of k-configuration statistics from a datapipe
-        virtual void pull_k_statistics_sample(datapipe<number>* pipe, const std::shared_ptr <derived_data::SQL_query>& query,
+        virtual void pull_k_statistics_sample(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_query>& query,
                                               std::vector<kconfiguration_statistics>& data) = 0;
 
 
@@ -475,6 +546,239 @@ namespace transport
         threepf_list.unique();
 
         return (threepf_list);
+      }
+
+
+    template <typename number>
+    void data_manager<number>::check_twopf_integrity_handler(integration_writer<number>& writer, integration_task<number>* itk)
+      {
+        twopf_task<number>* tk = dynamic_cast< twopf_task<number>* >(itk);
+        assert(tk != nullptr);
+
+        BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << std::endl << "** Performing integrity check for container '" << writer.get_abs_container_path().string() << "'";
+
+        std::list<unsigned int> serials = this->get_missing_twopf_re_serials(writer);
+
+        if(serials.size() > 0)
+          {
+            std::list<unsigned int> remainder = this->advise_missing_content(writer, serials, tk->get_twopf_database());
+
+            if(remainder.size() > 0)
+              {
+                BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << "** Dropping extra configurations not missing from container, but advised by backend:";
+                this->drop_twopf_re_configurations(writer, remainder, tk->get_twopf_database());
+                serials.merge(remainder);
+              }
+
+            // push list of missing serial numbers to writer and mark as a fail
+            writer.set_missing_serials(serials);
+            writer.set_fail(true);
+
+            if(writer.is_collecting_statistics()) this->drop_statistics_configurations(writer, serials, tk->get_twopf_database());
+            if(writer.is_collecting_initial_conditions()) this->drop_initial_conditions_configurations(writer, serials, tk->get_twopf_database());
+          }
+      }
+
+
+    template <typename number>
+    void data_manager<number>::check_threepf_integrity_handler(integration_writer<number>& writer, integration_task<number>* itk)
+      {
+        threepf_task<number>* tk = dynamic_cast< threepf_task<number>* >(itk);
+        assert(tk != nullptr);
+
+        BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << std::endl << "** Performing integrity check for container '" << writer.get_abs_container_path().string() << "'";
+
+        // get lists of missing serial numbers for threepf, real twopf and imaginary twopf
+        std::list<unsigned int> twopf_re_serials = this->get_missing_twopf_re_serials(writer);
+        std::list<unsigned int> twopf_im_serials = this->get_missing_twopf_im_serials(writer);
+        std::list<unsigned int> threepf_serials  = this->get_missing_threepf_serials(writer);
+
+        // merge missing twopf lists into a single one
+        std::list<unsigned int> twopf_total_serials = twopf_re_serials;
+        std::list<unsigned int> temp = twopf_im_serials;
+        twopf_total_serials.merge(temp);
+        twopf_total_serials.unique();
+
+        // map missing twopf serials into threepf serials
+        std::list<unsigned int> twopf_to_threepf_map = this->map_twopf_to_threepf_serials(twopf_total_serials, tk->get_threepf_database());
+
+        // advise missing threepf serials
+        if(threepf_serials.size() > 0)
+          {
+            std::list<unsigned int> remainder = this->advise_missing_content(writer, threepf_serials, tk->get_threepf_database());
+
+            if(remainder.size() > 0)
+              {
+                BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << std::endl << "** Dropping extra threepf configurations not missing from container, but advised by backend:";
+                this->drop_threepf_configurations(writer, remainder, tk->get_threepf_database());
+                threepf_serials.merge(remainder);   // not necessary to remove duplicates, since there should not be any; result is sorted
+              }
+          }
+
+        // check if any twopf configurations require dropping even more threepfs
+        std::list<unsigned int> undropped;
+        std::set_difference(twopf_to_threepf_map.begin(), twopf_to_threepf_map.end(),
+                            threepf_serials.begin(), threepf_serials.end(), std::back_inserter(undropped));
+
+        if(undropped.size() > 0)
+          {
+            BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << "** Dropping extra threepf configurations not missing from container, but implied by missing twopf configurations:";
+            this->drop_threepf_configurations(writer, undropped, tk->get_threepf_database());
+            threepf_serials.merge(undropped);   // not necessary to remove duplicates, since there should be any; result is sorted
+          }
+
+        if(threepf_serials.size() > 0)
+          {
+            writer.set_missing_serials(threepf_serials);
+            writer.set_fail(true);
+
+            if(writer.is_collecting_statistics())         this->drop_statistics_configurations(writer, threepf_serials, tk->get_threepf_database());
+            if(writer.is_collecting_initial_conditions()) this->drop_initial_conditions_configurations(writer, threepf_serials, tk->get_threepf_database());
+
+            // build list of twopf configurations which should be dropped for this entire set of threepf configurations
+            std::list<unsigned int> twopf_drop = this->compute_twopf_drop_list(threepf_serials, tk->get_threepf_database());
+
+            // compute real twopf configurations which should be dropped.
+            undropped.clear();
+            std::set_difference(twopf_drop.begin(), twopf_drop.end(),
+                                twopf_re_serials.begin(), twopf_re_serials.end(), std::back_inserter(undropped));
+
+            if(undropped.size() > 0)
+              {
+                BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << std::endl << "** Dropping real twopf configurations entailed by these threepf configurations, but present in the container";
+                this->drop_twopf_re_configurations(writer, undropped, tk->get_twopf_database());
+              }
+
+            // compute imaginary twopf configurations which should be dropped
+            undropped.clear();
+            std::set_difference(twopf_drop.begin(), twopf_drop.end(),
+                                twopf_im_serials.begin(), twopf_im_serials.end(), std::back_inserter(undropped));
+
+            if(undropped.size() > 0)
+              {
+                BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << std::endl << "** Dropping imaginary twopf configurations entailed by these threepf configurations, but present in the container";
+                this->drop_twopf_im_configurations(writer, undropped, tk->get_twopf_database());
+              }
+          }
+      }
+
+
+    template <typename number>
+    void data_manager<number>::check_zeta_twopf_integrity_handler(postintegration_writer<number>& writer, postintegration_task<number>* ptk)
+      {
+        zeta_twopf_task<number>* tk = dynamic_cast< zeta_twopf_task<number>* >(ptk);
+        assert(tk != nullptr);
+
+        BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << std::endl << "** Performing integrity check for container '" << writer.get_abs_container_path().string() << "'";
+
+        std::list<unsigned int> serials = this->get_missing_zeta_twopf_serials(writer);
+
+        if(serials.size() > 0)
+          {
+            std::list<unsigned int> remainder = this->advise_missing_content(writer, serials, tk->get_twopf_database());
+
+            if(remainder.size() > 0)
+              {
+                BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << std::endl << "** Dropping extra configurations not missing from container, but advised by backend:";
+                this->drop_zeta_twopf_configurations(writer, remainder, tk->get_twopf_database());
+              }
+
+            // push list of missing serial numbers to writer
+            std::list<unsigned int> merged_missing = serials;
+            merged_missing.merge(remainder);
+
+            writer.set_missing_serials(merged_missing);
+            writer.set_fail(true);
+          }
+      }
+
+
+    template <typename number>
+    void data_manager<number>::check_zeta_threepf_integrity_handler(postintegration_writer<number>& writer, postintegration_task<number>* ptk)
+      {
+        zeta_threepf_task<number>* tk = dynamic_cast< zeta_threepf_task<number>* >(ptk);
+        assert(tk != nullptr);
+
+        BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << std::endl << "** Performing integrity check for container '" << writer.get_abs_container_path().string() << "'";
+
+        // get lists of missing serial numbers for threepf, redbsp and twopf
+        std::list<unsigned int> threepf_serials = this->get_missing_zeta_threepf_serials(writer);
+        std::list<unsigned int> redbsp_serials  = this->get_missing_zeta_redbsp_serials(writer);
+        std::list<unsigned int> twopf_serials   = this->get_missing_zeta_twopf_serials(writer);
+
+        // map missing twopf serials into threepf serials
+        std::list<unsigned int> twopf_to_threepf_map = this->map_twopf_to_threepf_serials(twopf_serials, tk->get_threepf_database());
+
+        // merge threepf and redbsp serials into a single list
+        std::list<unsigned int> threepf_total_serials = threepf_serials;
+        std::list<unsigned int> temp = redbsp_serials;
+        threepf_serials.merge(temp);
+
+        // drop any threepf configurations which are present but have no matching redbsp configuraitons, and vice versa
+        std::list<unsigned int> undropped;
+        std::set_difference(threepf_total_serials.begin(), threepf_total_serials.end(),
+                            threepf_serials.begin(), threepf_serials.end(), std::back_inserter(undropped));
+        if(undropped.size() > 0) this->drop_zeta_threepf_configurations(writer, undropped, tk->get_threepf_database());
+
+        undropped.clear();
+        std::set_difference(threepf_total_serials.begin(), threepf_total_serials.end(),
+                            redbsp_serials.begin(), redbsp_serials.end(), std::back_inserter(undropped));
+        if(undropped.size() > 0) this->drop_zeta_redbsp_configurations(writer, undropped, tk->get_threepf_database());
+
+        // threepf and redbsp are now missing the same configurations, so log these:
+
+        if(threepf_total_serials.size() > 0)
+          {
+            std::list<unsigned int> remainder = this->advise_missing_content(writer, threepf_total_serials, tk->get_threepf_database());
+
+            if(remainder.size() > 0)
+              {
+                BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << std::endl << "** Dropping extra configurations not missing from container, but advised by backend:";
+                this->drop_zeta_threepf_configurations(writer, remainder, tk->get_threepf_database());
+                this->drop_zeta_redbsp_configurations(writer, remainder, tk->get_threepf_database());
+                threepf_total_serials.merge(remainder);
+              }
+          }
+
+        // check if any twopf configurations require dropping even more threepfs
+        undropped.clear();
+        std::set_difference(twopf_to_threepf_map.begin(), twopf_to_threepf_map.end(),
+                            threepf_total_serials.begin(), threepf_total_serials.end(), std::back_inserter(undropped));
+
+        if(undropped.size() > 0)
+          {
+            BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << "** Dropping extra threepf configurations not missing from container, but implied by missing twopf configurations:";
+            this->drop_zeta_threepf_configurations(writer, undropped, tk->get_threepf_database());
+            this->drop_zeta_redbsp_configurations(writer, undropped, tk->get_threepf_database());
+            threepf_total_serials.merge(undropped);   // not necessary to remove duplicates, since there should be any; result is sorted
+          }
+
+        if(threepf_total_serials.size() > 0)
+          {
+            writer.set_missing_serials(threepf_total_serials);
+            writer.set_fail(true);
+
+            // build list of twopf configurations which should be dropped for this entire set of threepf configurations
+            std::list<unsigned int> twopf_drop = this->compute_twopf_drop_list(threepf_total_serials, tk->get_threepf_database());
+
+            // compute twopf configurations which should be dropped
+            undropped.clear();
+            std::set_difference(twopf_drop.begin(), twopf_drop.end(),
+                                twopf_serials.begin(), twopf_serials.end(), std::back_inserter(undropped));
+
+            if(undropped.size() > 0)
+              {
+                BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << std::endl << "** Dropping twopf configurations entailed by these threepf configurations, but present in the container";
+                this->drop_zeta_twopf_configurations(writer, undropped, tk->get_twopf_database());
+              }
+          }
+      }
+
+
+    template <typename number>
+    void data_manager<number>::check_fNL_integrity_handler(postintegration_writer<number>& writer, postintegration_task<number>* tk)
+      {
+        BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << std::endl << "** Performing integrity check for container '" << writer.get_abs_container_path().string() << "'";
       }
 
 
