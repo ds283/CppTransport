@@ -241,7 +241,8 @@ namespace transport
 //		    core->set_filter(boost::log::trivial::severity >= normal);
 
             boost::shared_ptr<boost::log::sinks::text_file_backend> backend =
-	                                                                    boost::make_shared<boost::log::sinks::text_file_backend>(boost::log::keywords::file_name = log_path.string());
+	                                                                    boost::make_shared<boost::log::sinks::text_file_backend>(boost::log::keywords::file_name = log_path.string(),
+                                                                                                                               boost::log::keywords::open_mode = std::ios::app);
 
             // enable auto-flushing of log entries
             // this degrades performance, but we are not writing many entries and they
