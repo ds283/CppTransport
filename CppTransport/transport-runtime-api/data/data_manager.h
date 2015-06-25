@@ -225,6 +225,13 @@ namespace transport
         //! Check integrity for an fNL container
         void check_fNL_integrity_handler(postintegration_writer<number>& writer, postintegration_task<number>* tk);
 
+      public:
+
+        //! Synchronize missing serial numbers between an integration writer and a postintegration writer
+        void synchronize_missing_serials(std::shared_ptr< integration_writer<number> > i_writer, std::shared_ptr< postintegration_writer<number> > p_writer,
+                                         integration_task<number>* i_tk, postintegration_task<number>* p_tk);
+
+
         // CALCULATE MISSING SERIAL NUMBERS
 
       protected:
@@ -555,7 +562,7 @@ namespace transport
         twopf_task<number>* tk = dynamic_cast< twopf_task<number>* >(itk);
         assert(tk != nullptr);
 
-        BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << std::endl << "** Performing integrity check for container '" << writer.get_abs_container_path().string() << "'";
+        BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << std::endl << "** Performing integrity check for twopf container '" << writer.get_abs_container_path().string() << "'";
 
         std::list<unsigned int> serials = this->get_missing_twopf_re_serials(writer);
 
@@ -585,7 +592,7 @@ namespace transport
         threepf_task<number>* tk = dynamic_cast< threepf_task<number>* >(itk);
         assert(tk != nullptr);
 
-        BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << std::endl << "** Performing integrity check for container '" << writer.get_abs_container_path().string() << "'";
+        BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << std::endl << "** Performing integrity check for threepf container '" << writer.get_abs_container_path().string() << "'";
 
         // get lists of missing serial numbers for threepf, real twopf and imaginary twopf
         std::list<unsigned int> twopf_re_serials = this->get_missing_twopf_re_serials(writer);
@@ -667,7 +674,7 @@ namespace transport
         zeta_twopf_task<number>* tk = dynamic_cast< zeta_twopf_task<number>* >(ptk);
         assert(tk != nullptr);
 
-        BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << std::endl << "** Performing integrity check for container '" << writer.get_abs_container_path().string() << "'";
+        BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << std::endl << "** Performing integrity check for zeta twopf container '" << writer.get_abs_container_path().string() << "'";
 
         std::list<unsigned int> serials = this->get_missing_zeta_twopf_serials(writer);
 
@@ -696,7 +703,7 @@ namespace transport
         zeta_threepf_task<number>* tk = dynamic_cast< zeta_threepf_task<number>* >(ptk);
         assert(tk != nullptr);
 
-        BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << std::endl << "** Performing integrity check for container '" << writer.get_abs_container_path().string() << "'";
+        BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << std::endl << "** Performing integrity check for zeta threepf container '" << writer.get_abs_container_path().string() << "'";
 
         // get lists of missing serial numbers for threepf, redbsp and twopf
         std::list<unsigned int> threepf_serials = this->get_missing_zeta_threepf_serials(writer);
@@ -774,7 +781,46 @@ namespace transport
     template <typename number>
     void data_manager<number>::check_fNL_integrity_handler(postintegration_writer<number>& writer, postintegration_task<number>* tk)
       {
-        BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << std::endl << "** Performing integrity check for container '" << writer.get_abs_container_path().string() << "'";
+        BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << std::endl << "** Performing integrity check for fNL container '" << writer.get_abs_container_path().string() << "'";
+      }
+
+
+    template <typename number>
+    void data_manager<number>::synchronize_missing_serials(std::shared_ptr< integration_writer<number> > i_writer, std::shared_ptr< postintegration_writer<number> > p_writer,
+                                                           integration_task<number>* i_tk, postintegration_task<number>* p_tk)
+      {
+        // get serial numbers missing individually from each writer
+        std::list<unsigned int> integration_missing = i_writer->get_missing_serials();
+        std::list<unsigned int> postintegration_missing = p_writer->get_missing_serials();
+
+        // merge into a single list
+        std::list<unsigned int> total_missing = integration_missing;
+        std::list<unsigned int> temp = postintegration_missing;
+        total_missing.merge(temp);
+        total_missing.unique();
+
+        // check for discrepancies
+        std::list<unsigned int> integration_discrepant;
+        std::set_difference(total_missing.begin(), total_missing.end(),
+                            integration_missing.begin(), integration_missing.end(), std::back_inserter(integration_discrepant));
+
+        if(integration_discrepant.size() > 0)
+          {
+            BOOST_LOG_SEV(i_writer->get_log(), base_writer::normal) << std::endl << "** Synchronizing " << integration_discrepant.size() << " configurations in integration container which are missing in postintegration container";
+            i_writer->merge_failure_list(integration_discrepant);
+            i_writer->check_integrity(i_tk);
+          }
+
+        std::list<unsigned int> postintegration_discrepant;
+        std::set_difference(total_missing.begin(), total_missing.end(),
+                            postintegration_missing.begin(), postintegration_missing.end(), std::back_inserter(postintegration_discrepant));
+
+        if(postintegration_discrepant.size() > 0)
+          {
+            BOOST_LOG_SEV(p_writer->get_log(), base_writer::normal) << std::endl << "** Synchronizing " << postintegration_discrepant.size() << " configurations in postintegration container which are missing in integration container";
+            p_writer->merge_failure_list(postintegration_discrepant);
+            p_writer->check_integrity(p_tk);
+          }
       }
 
 

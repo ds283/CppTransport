@@ -1513,13 +1513,13 @@ namespace transport
 
         journal_instrument instrument(this->journal, master_work_event::database_begin, master_work_event::database_end);
 
-        // perform integrity check.
-        // these checks are independent -- we don't check that the same k-configurations are missing
-        // from both containers, although if this pair is used later as a seed
-        // that is a requirement.
+        // perform integrity check
         // the integrity check updates each writer with a valid list of missing serial numbers, if needed
         i_writer->check_integrity(ptk);
         p_writer->check_integrity(tk);
+
+        // ensure missing serial numbers are synchronized
+        this->data_mgr->synchronize_missing_serials(i_writer, p_writer, ptk, tk);
 
         // close both writers
         this->data_mgr->close_writer(i_writer);
