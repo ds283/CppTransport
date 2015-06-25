@@ -460,7 +460,7 @@ namespace transport
         BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << "** Detected missing data in container";
         writer.set_fail(true);
 
-        std::list<unsigned int> advised_list = writer.get_missing_serials();
+        std::list<unsigned int> advised_list = writer.get_failed_serials();
         if(advised_list.size() > 0) BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << "** Note: backend provided list of " << advised_list.size() << " missing items to cross-check";
 
         for(typename std::list<unsigned int>::const_iterator t = serials.begin(); t != serials.end(); ++t)
@@ -561,7 +561,7 @@ namespace transport
 
         if(serials.size() > 0)
           {
-            std::list<unsigned int> remainder = this->advise_missing_content(writer, serials, tk->get_twopf_database());
+            std::list<unsigned int> remainder = this->advise_missing_content(writer, serials, tk->get_twopf_database());  // marks set_fail() for writer
 
             if(remainder.size() > 0)
               {
@@ -572,7 +572,6 @@ namespace transport
 
             // push list of missing serial numbers to writer and mark as a fail
             writer.set_missing_serials(serials);
-            writer.set_fail(true);
 
             if(writer.is_collecting_statistics()) this->drop_statistics_configurations(writer, serials, tk->get_twopf_database());
             if(writer.is_collecting_initial_conditions()) this->drop_initial_conditions_configurations(writer, serials, tk->get_twopf_database());
@@ -605,7 +604,7 @@ namespace transport
         // advise missing threepf serials
         if(threepf_serials.size() > 0)
           {
-            std::list<unsigned int> remainder = this->advise_missing_content(writer, threepf_serials, tk->get_threepf_database());
+            std::list<unsigned int> remainder = this->advise_missing_content(writer, threepf_serials, tk->get_threepf_database());  // marks set_fail() for writer
 
             if(remainder.size() > 0)
               {
@@ -630,7 +629,6 @@ namespace transport
         if(threepf_serials.size() > 0)
           {
             writer.set_missing_serials(threepf_serials);
-            writer.set_fail(true);
 
             if(writer.is_collecting_statistics())         this->drop_statistics_configurations(writer, threepf_serials, tk->get_threepf_database());
             if(writer.is_collecting_initial_conditions()) this->drop_initial_conditions_configurations(writer, threepf_serials, tk->get_threepf_database());
@@ -675,7 +673,7 @@ namespace transport
 
         if(serials.size() > 0)
           {
-            std::list<unsigned int> remainder = this->advise_missing_content(writer, serials, tk->get_twopf_database());
+            std::list<unsigned int> remainder = this->advise_missing_content(writer, serials, tk->get_twopf_database());  // marks set_fail() for writer
 
             if(remainder.size() > 0)
               {
@@ -688,7 +686,6 @@ namespace transport
             merged_missing.merge(remainder);
 
             writer.set_missing_serials(merged_missing);
-            writer.set_fail(true);
           }
       }
 
@@ -729,7 +726,7 @@ namespace transport
 
         if(threepf_total_serials.size() > 0)
           {
-            std::list<unsigned int> remainder = this->advise_missing_content(writer, threepf_total_serials, tk->get_threepf_database());
+            std::list<unsigned int> remainder = this->advise_missing_content(writer, threepf_total_serials, tk->get_threepf_database());  // marks set_fail() for writer
 
             if(remainder.size() > 0)
               {
@@ -756,7 +753,6 @@ namespace transport
         if(threepf_total_serials.size() > 0)
           {
             writer.set_missing_serials(threepf_total_serials);
-            writer.set_fail(true);
 
             // build list of twopf configurations which should be dropped for this entire set of threepf configurations
             std::list<unsigned int> twopf_drop = this->compute_twopf_drop_list(threepf_total_serials, tk->get_threepf_database());
