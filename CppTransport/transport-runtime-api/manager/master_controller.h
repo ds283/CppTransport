@@ -249,17 +249,19 @@ namespace transport
 				master_controller(boost::mpi::environment& e, boost::mpi::communicator& w,
 				                  error_callback err, warning_callback warn, message_callback msg,
 				                  unsigned int bcp = CPPTRANSPORT_DEFAULT_BATCHER_STORAGE,
-				                  unsigned int pcp = CPPTRANSPORT_DEFAULT_PIPE_STORAGE);
+				                  unsigned int pcp = CPPTRANSPORT_DEFAULT_PIPE_STORAGE,
+                          unsigned int ckp = CPPTRANSPORT_DEFAULT_CHECKPOINT_INTERVAL);
 
 				//! construct a master controller object with a supplied repository
 				master_controller(boost::mpi::environment& e, boost::mpi::communicator& w,
-				                  json_repository<number>* r,
+				                  std::shared_ptr< json_repository<number> > r,
 				                  error_callback err, warning_callback warn, message_callback msg,
 				                  unsigned int bcp = CPPTRANSPORT_DEFAULT_BATCHER_STORAGE,
-				                  unsigned int pcp = CPPTRANSPORT_DEFAULT_PIPE_STORAGE);
+				                  unsigned int pcp = CPPTRANSPORT_DEFAULT_PIPE_STORAGE,
+                          unsigned int ckp = CPPTRANSPORT_DEFAULT_CHECKPOINT_INTERVAL);
 
 				//! destroy a master manager object
-				~master_controller();
+				~master_controller() = default;
 
 
 				// INTERFACE
@@ -274,6 +276,9 @@ namespace transport
 
 				//! expose arguments
 				const argument_cache& get_arguments(void) { return(this->arg_cache); }
+
+        //! expose environment
+        const local_environment& get_environment(void) { return(this->local_env); }
 
 
 		    // MPI FUNCTIONS
@@ -464,10 +469,10 @@ namespace transport
 		    // RUNTIME AGENTS
 
 		    //! Repository manager instance
-		    json_repository<number>* repo;
+		    std::shared_ptr< json_repository<number> > repo;
 
 		    //! Data manager instance
-		    data_manager<number>* data_mgr;
+		    std::shared_ptr< data_manager<number> > data_mgr;
 
 				//! Event journal
 				work_journal journal;
@@ -490,6 +495,8 @@ namespace transport
 		    //! Data cache capacity per datapipe
 		    unsigned int pipe_capacity;
 
+        //! checkpoint interval in seconds. Zero indicates that checkpointing is disabled
+        unsigned int checkpoint_interval;
 
 		    // ERROR CALLBACKS
 
@@ -508,14 +515,14 @@ namespace transport
     template <typename number>
     master_controller<number>::master_controller(boost::mpi::environment& e, boost::mpi::communicator& w,
                                                  error_callback err, warning_callback warn, message_callback msg,
-                                                 unsigned int bcp, unsigned int pcp)
+                                                 unsigned int bcp, unsigned int pcp, unsigned int ckp)
 	    : environment(e),
 	      world(w),
-	      repo(nullptr),
-	      data_mgr(data_manager_factory<number>(bcp, pcp)),
+	      data_mgr(data_manager_factory<number>(bcp, pcp, ckp)),
 	      journal(w.size()-1),
 	      batcher_capacity(bcp),
 	      pipe_capacity(pcp),
+        checkpoint_interval(ckp),
 	      error_handler(err),
 	      warning_handler(warn),
 	      message_handler(msg)
@@ -525,16 +532,17 @@ namespace transport
 
     template <typename number>
     master_controller<number>::master_controller(boost::mpi::environment& e, boost::mpi::communicator& w,
-                                                 json_repository<number>* r,
+                                                 std::shared_ptr< json_repository<number> > r,
                                                  error_callback err, warning_callback warn, message_callback msg,
-                                                 unsigned int bcp, unsigned int pcp)
+                                                 unsigned int bcp, unsigned int pcp, unsigned int ckp)
 	    : environment(e),
 	      world(w),
 	      repo(r),
-	      data_mgr(data_manager_factory<number>(bcp, pcp)),
+	      data_mgr(data_manager_factory<number>(bcp, pcp, ckp)),
 	      journal(w.size()-1),
 	      batcher_capacity(bcp),
 	      pipe_capacity(pcp),
+        checkpoint_interval(ckp),
 	      error_handler(err),
 	      warning_handler(warn),
 	      message_handler(msg)
@@ -543,32 +551,24 @@ namespace transport
 	    }
 
 		
-    template <typename number>
-    master_controller<number>::~master_controller()
-	    {
-		    // delete repository instance, if it is set
-        if(this->repo != nullptr)
-	        {
-            delete this->repo;
-	        }
-	    }
-		
-		
 		template <typename number>
 		void master_controller<number>::process_arguments(int argc, char* argv[], instance_manager<number>& instance_mgr)
 			{
         // set up Boost::program_options descriptors for command-line arguments
         boost::program_options::options_description generic("Generic options");
         generic.add_options()
-          (CPPTRANSPORT_SWITCH_HELP,    CPPTRANSPORT_HELP_HELP)
-          (CPPTRANSPORT_SWITCH_VERSION, CPPTRANSPORT_HELP_VERSION)
-          (CPPTRANSPORT_SWITCH_MODELS,  CPPTRANSPORT_HELP_MODELS);
+          (CPPTRANSPORT_SWITCH_HELP,      CPPTRANSPORT_HELP_HELP)
+          (CPPTRANSPORT_SWITCH_VERSION,   CPPTRANSPORT_HELP_VERSION)
+          (CPPTRANSPORT_SWITCH_MODELS,    CPPTRANSPORT_HELP_MODELS)
+          (CPPTRANSPORT_SWITCH_NO_COLOUR, CPPTRANSPORT_HELP_NO_COLOUR);
 
         boost::program_options::options_description configuration("Configuration options");
         configuration.add_options()
           (CPPTRANSPORT_SWITCH_VERBOSE,                                                                                      CPPTRANSPORT_HELP_VERBOSE)
           (CPPTRANSPORT_SWITCH_REPO,             boost::program_options::value< std::string >(),                             CPPTRANSPORT_HELP_REPO)
           (CPPTRANSPORT_SWITCH_TAG,              boost::program_options::value< std::vector<std::string> >(),                CPPTRANSPORT_HELP_TAG)
+          (CPPTRANSPORT_SWITCH_CHECKPOINT,       boost::program_options::value< int >(),                                     CPPTRANSPORT_HELP_CHECKPOINT)
+          (CPPTRANSPORT_SWITCH_RECOVER,                                                                                      CPPTRANSPORT_HELP_RECOVER)
           (CPPTRANSPORT_SWITCH_CAPACITY,         boost::program_options::value< int >(),                                     CPPTRANSPORT_HELP_CAPACITY)
           (CPPTRANSPORT_SWITCH_BATCHER_CAPACITY, boost::program_options::value< int >(),                                     CPPTRANSPORT_HELP_BATCHER_CAPACITY)
           (CPPTRANSPORT_SWITCH_CACHE_CAPACITY,   boost::program_options::value< int >(),                                     CPPTRANSPORT_HELP_CACHE_CAPACITY)
@@ -579,8 +579,15 @@ namespace transport
           (CPPTRANSPORT_SWITCH_TASK,             boost::program_options::value< std::vector< std::string > >()->composing(), CPPTRANSPORT_HELP_TASK)
           (CPPTRANSPORT_SWITCH_SEED,             boost::program_options::value< std::string >(),                             CPPTRANSPORT_HELP_SEED);
 
+        boost::program_options::options_description hidden_options;
+        hidden_options.add_options()
+          (CPPTRANSPORT_SWITCH_NO_COLOR, CPPTRANSPORT_HELP_NO_COLOR);
+
         boost::program_options::options_description cmdline_options;
-        cmdline_options.add(generic).add(configuration).add(job_options);
+        cmdline_options.add(generic).add(configuration).add(job_options).add(hidden_options);
+
+        boost::program_options::options_description output_options;
+        output_options.add(generic).add(configuration).add(job_options);
 
         boost::program_options::variables_map option_map;
         boost::program_options::store(boost::program_options::parse_command_line(argc, argv, cmdline_options), option_map);
@@ -597,7 +604,7 @@ namespace transport
         if(option_map.count(CPPTRANSPORT_SWITCH_HELP))
           {
             if(!emitted_version) std::cout << CPPTRANSPORT_NAME << " " << CPPTRANSPORT_VERSION << " " << CPPTRANSPORT_COPYRIGHT << " | " << CPPTRANSPORT_RUNTIME_API << std::endl;
-            std::cout << cmdline_options << std::endl;
+            std::cout << output_options << std::endl;
           }
 
         if(option_map.count(CPPTRANSPORT_SWITCH_MODELS))
@@ -639,14 +646,15 @@ namespace transport
             std::copy(tmp.begin(), tmp.end(), std::back_inserter(tags));
           }
 
+        // process global capacity specification, if provided
         if(option_map.count(CPPTRANSPORT_SWITCH_CAPACITY))
           {
-            int capacity = option_map[CPPTRANSPORT_SWITCH_CAPACITY].as<int>() * 1024*1024;
+            int capacity = option_map[CPPTRANSPORT_SWITCH_CAPACITY].as<int>() * 1024*1024;            // argument size interpreted in Mb
             if(capacity > 0)
               {
                 this->batcher_capacity = this->pipe_capacity = static_cast<unsigned int>(capacity);
-                this->data_mgr->set_batcher_capacity(this->batcher_capacity);
-                this->data_mgr->set_pipe_capacity(this->pipe_capacity);
+                this->data_mgr->set_batcher_capacity(this->batcher_capacity);                         // probably not required; only slaves need these values set
+                this->data_mgr->set_pipe_capacity(this->pipe_capacity);                               // probably not required; only slaves need these values set
               }
             else
               {
@@ -656,13 +664,14 @@ namespace transport
               }
           }
 
+        // process datapipe capacity specification, if provided
         if(option_map.count(CPPTRANSPORT_SWITCH_CACHE_CAPACITY))
           {
-            int capacity = option_map[CPPTRANSPORT_SWITCH_CACHE_CAPACITY].as<int>() * 1024*1024;
+            int capacity = option_map[CPPTRANSPORT_SWITCH_CACHE_CAPACITY].as<int>() * 1024*1024;      // argument size interpreted in Mb
             if(capacity > 0)
               {
                 this->pipe_capacity = static_cast<unsigned int>(capacity);
-                this->data_mgr->set_pipe_capacity(this->pipe_capacity);
+                this->data_mgr->set_pipe_capacity(this->pipe_capacity);                               // probably not required; only slaves need these values set
               }
             else
               {
@@ -672,13 +681,14 @@ namespace transport
               }
           }
 
+        // process batcher capacity specification, if provided
         if(option_map.count(CPPTRANSPORT_SWITCH_BATCHER_CAPACITY))
           {
-            int capacity = option_map[CPPTRANSPORT_SWITCH_BATCHER_CAPACITY].as<int>() * 1024*1024;
+            int capacity = option_map[CPPTRANSPORT_SWITCH_BATCHER_CAPACITY].as<int>() * 1024*1024;    // argument size interpreted in Mb
             if(capacity > 0)
               {
                 this->batcher_capacity = static_cast<unsigned int>(capacity);
-                this->data_mgr->set_batcher_capacity(this->batcher_capacity);
+                this->data_mgr->set_batcher_capacity(this->batcher_capacity);                         // probably not required; only slaves need these values set
               }
             else
               {
@@ -688,17 +698,35 @@ namespace transport
               }
           }
 
+        // process checkpoint timer specification, if provided
+        if(option_map.count(CPPTRANSPORT_SWITCH_CHECKPOINT))
+          {
+            int interval = option_map[CPPTRANSPORT_SWITCH_CHECKPOINT].as<int>() * 60;                 // argument size interpreted in minutes; convert value to seconds
+            if(interval > 0)
+              {
+                this->checkpoint_interval = static_cast<unsigned int>(interval);
+                this->data_mgr->set_checkpoint_interval(this->checkpoint_interval);                   // probably not required; only slaves need these values set
+              }
+            else
+              {
+                std::ostringstream msg;
+                msg << CPPTRANSPORT_EXPECTED_POSITIVE << " " CPPTRANSPORT_SWITCH_CHECKPOINT;
+                this->error_handler(msg.str());
+              }
+          }
+
+        // process Gantt chart specification, if provided
         if(option_map.count(CPPTRANSPORT_SWITCH_GANTT_CHART))
           {
             this->arg_cache.set_gantt_chart(true);
             this->arg_cache.set_gantt_filename(option_map[CPPTRANSPORT_SWITCH_GANTT_CHART].as<std::string>());
           }
 
-        if(option_map.count(CPPTRANSPORT_SWITCH_VERBOSE_LONG))
-          {
-            this->arg_cache.set_verbose(true);
-          }
+        if(option_map.count(CPPTRANSPORT_SWITCH_VERBOSE_LONG))                                                this->arg_cache.set_verbose(true);
+        if(option_map.count(CPPTRANSPORT_SWITCH_RECOVER))                                                     this->arg_cache.set_recovery_mode(true);
+        if(option_map.count(CPPTRANSPORT_SWITCH_NO_COLOUR) || option_map.count(CPPTRANSPORT_SWITCH_NO_COLOR)) this->arg_cache.set_colour_output(false);
 
+        // process task specification
         if(option_map.count(CPPTRANSPORT_SWITCH_TASK))
           {
             std::vector<std::string> tasks = option_map[CPPTRANSPORT_SWITCH_TASK].as< std::vector<std::string> >();
@@ -728,6 +756,9 @@ namespace transport
         else
 	        {
             boost::timer::cpu_timer timer;
+
+            // perform recovery if requested
+            if(this->arg_cache.get_recovery_mode()) this->repo->perform_recovery(this->data_mgr, this->get_rank());
 
 		        // set up workers
 		        this->initialize_workers();
@@ -911,8 +942,11 @@ namespace transport
         // write the various tables needed in the database
         this->data_mgr->create_tables(writer, tk);
 
-        // seed writer if a group has been provided
+        // seed writer if a group has been provided; resets the work queue if required
         if(seeded) this->seed_writer(writer, tk, seed_group);
+
+        // register writer with the repository -- allows its debris to be recovered later if a crash occurs
+        this->repo->register_writer(writer);
 
         // set up aggregators
         integration_aggregator     i_agg = std::bind(&master_controller<number>::aggregate_integration, this, writer, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
@@ -930,13 +964,13 @@ namespace transport
 
         journal_instrument instrument(this->journal, master_work_event::database_begin, master_work_event::database_end);
 
-        // perform integrity check
+        // perform integrity check; updates writer with a list of missing serial numbers, if needed
         writer->check_integrity(tk);
 
         // close the writer
         this->data_mgr->close_writer(writer);
 
-        // commit output if successful
+        // commit output if successful; integrity failures are ignored, so containers can subsequently be used as a seed
         if(success) writer->commit();
 	    }
 
@@ -1123,6 +1157,9 @@ namespace transport
 
         // set up the writer for us
         this->data_mgr->initialize_writer(writer);
+
+        // register writer with the repository -- allows its debris to be recovered later if a crash occurs
+        this->repo->register_writer(writer);
 
         // set up aggregators
         integration_aggregator     i_agg;
@@ -1394,8 +1431,11 @@ namespace transport
         // create new tables needed in the database
         this->data_mgr->create_tables(writer, tk);
 
-        // seed writer if a group has been provided
+        // seed writer if a group has been provided; resets the work queue if required
         if(seeded) this->seed_writer(writer, tk, seed_group);
+
+        // register writer with the repository -- allows its debris to be recovered later if a crash occurs
+        this->repo->register_writer(writer);
 
         // set up aggregators
         integration_aggregator     i_agg;
@@ -1412,13 +1452,13 @@ namespace transport
 
         journal_instrument instrument(this->journal, master_work_event::database_begin, master_work_event::database_end);
 
-        // perform integrity check
+        // perform integrity check; updates writer with a valid list of missing serial numbers if needed
         writer->check_integrity(tk);
 
         // close the writer
         this->data_mgr->close_writer(writer);
 
-        // commit output if successful
+        // commit output if successful; integrity failures are ignored, so containers can subsequently be used as a seed
         if(success) writer->commit();
 	    }
 
@@ -1451,8 +1491,12 @@ namespace transport
         p_writer->set_pair(true);
         p_writer->set_parent_group(i_writer->get_name());
 
-        // seed writers if a group has been provided
+        // seed writers if a group has been provided; resets the work queue if required
         if(seeded) this->seed_writer_pair(i_writer, p_writer, tk, ptk, seed_group);
+
+        // register writers with the repository -- allows their debris to be recovered later if a crash occurs
+        this->repo->register_writer(i_writer);
+        this->repo->register_writer(p_writer);
 
         // set up aggregators
         integration_aggregator     i_agg = std::bind(&master_controller<number>::aggregate_integration, this, i_writer, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
@@ -1470,14 +1514,18 @@ namespace transport
         journal_instrument instrument(this->journal, master_work_event::database_begin, master_work_event::database_end);
 
         // perform integrity check
+        // the integrity check updates each writer with a valid list of missing serial numbers, if needed
         i_writer->check_integrity(ptk);
         p_writer->check_integrity(tk);
+
+        // ensure missing serial numbers are synchronized
+        this->data_mgr->synchronize_missing_serials(i_writer, p_writer, ptk, tk);
 
         // close both writers
         this->data_mgr->close_writer(i_writer);
         this->data_mgr->close_writer(p_writer);
 
-        // commit output if successful
+        // commit output if successful; integrity failures are ignored, so containers can subsequently be used as a seed
         if(success)
           {
             i_writer->commit();
@@ -1539,12 +1587,16 @@ namespace transport
         // find parent content group for the seed
         std::string parent_seed_name = (*t)->get_payload().get_parent_group();
 
+        // check that same k-configurations are missing from both content groups in the pair
+        // currently we assume this to be true, although the integrity check for paired writers
+        // doesn't enforce it (yet)
         std::list<unsigned int> integration_serials = this->seed_writer(i_writer, ptk, parent_seed_name);
 
         if(i_writer->is_seeded())
           {
             std::list<unsigned int> postintegration_serials = (*t)->get_payload().get_failed_serials();
 
+            // minimal check is that each content group is missing the same number of serial numbers
             if(postintegration_serials.size() != integration_serials.size())
               {
                 std::ostringstream msg;
@@ -1554,6 +1606,7 @@ namespace transport
                 throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
               }
 
+            // now check more carefully that the missing serial numbers are the same
             std::list<unsigned int> diff;
             std::set_difference(integration_serials.begin(), integration_serials.end(),
                                 postintegration_serials.begin(), postintegration_serials.end(), std::back_inserter(diff));
@@ -1724,7 +1777,7 @@ namespace transport
 		    if(this->repo == nullptr) throw std::runtime_error(CPPTRANSPORT_REPO_NOT_SET);
 
 		    // request information from each worker, and pass all necessary setup details
-        MPI::slave_setup_payload payload(this->repo->get_root_path(), this->batcher_capacity, this->pipe_capacity);
+        MPI::slave_setup_payload payload(this->repo->get_root_path(), this->batcher_capacity, this->pipe_capacity, this->checkpoint_interval);
 
         for(unsigned int i = 0; i < this->world.size()-1; ++i)
 	        {

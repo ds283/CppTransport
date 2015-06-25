@@ -43,6 +43,24 @@ namespace transport
         //! Set model list status
         void set_model_list(bool g)                    { this->list_models = g; }
 
+        //! Get colourized output status
+        bool get_colour_output() const                 { return(this->colour_output); }
+
+        //! Set colourized output status
+        void set_colour_output(bool g)                 { this->colour_output = g; }
+
+
+        // CHECKPOINTING AND RECOVERY
+
+        public:
+
+        //! Set recovery mode
+        void set_recovery_mode(bool g)                 { this->recovery = g; }
+
+        //! Get recovery mode status
+        bool get_recovery_mode() const                 { return(this->recovery); }
+
+
 
         // MPI VISUALIZATION OPTIONS
 
@@ -60,6 +78,9 @@ namespace transport
         //! Get Gantt chart filename
         const std::string& get_gantt_filename() const  { return(this->gantt_filename); }
 
+
+        // INTERNAL DATA
+
       private:
 
         //! produce Gantt chart?
@@ -74,13 +95,21 @@ namespace transport
         //! write out model information?
         bool list_models;
 
+        //! recovery mode?
+        bool recovery;
+
+        //! colour output?
+        bool colour_output;
+
 	    };
 
 
     argument_cache::argument_cache()
 	    : gantt_chart(false),
 	      verbose(false),
-        list_models(false)
+        list_models(false),
+        recovery(false),
+        colour_output(true)
 	    {
 	    }
 

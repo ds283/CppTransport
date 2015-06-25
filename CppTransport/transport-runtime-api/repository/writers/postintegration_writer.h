@@ -74,7 +74,7 @@ namespace transport
                                const typename generic_writer::metadata_group& m, const typename generic_writer::paths_group& p,
                                unsigned int w);
 
-        //! disallow copying to ensure consistency of RAII idiom
+        //! disallow copying to ensure consistency of RAII idiom (writers abort when they go out of scope unless explicitly committed)
         postintegration_writer(const postintegration_writer<number>& obj) = delete;
 
         //! Destroy a postintegration writer object
@@ -110,7 +110,7 @@ namespace transport
 
       public:
 
-        //! pair with a named integration output group
+        //! pair with a named integration output group; if paired, then the parent group is the partner
         void set_pair(bool g) { this->paired = g; }
 
         //! query pairing status
@@ -119,7 +119,7 @@ namespace transport
         //! set parent group
         void set_parent_group(const std::string& p) { this->parent_group = p; }
 
-        //! query paired group
+        //! query parent group
         const std::string& get_parent_group() const { return(this->parent_group); }
 
 
@@ -136,9 +136,6 @@ namespace transport
         //! Get metadata
         const output_metadata& get_metadata() const { return(this->metadata); }
 
-        //! Merge list of failed serials reported by backend or paired integrator (not all backends may support this)
-        void merge_failure_list(const std::list<unsigned int>& failed) { std::list<unsigned int> temp = failed; this->set_fail(true); temp.sort(); this->failed_serials.merge(temp); }
-
         //! Set seed
         void set_seed(const std::string& g) { this->seeded = true; this->seed_group = g; }
 
@@ -153,11 +150,17 @@ namespace transport
 
       public:
 
+        //! Add list of serial numbers which the backend (or a paired integrator) advises have failed (not all backends may support this)
+        void merge_failure_list(const std::list<unsigned int>& failed) { std::list<unsigned int> temp = failed; this->set_fail(true); temp.sort(); this->failed_serials.merge(temp); this->failed_serials.unique(); }
+
+        //! Get list of serial numbers which the backend (or a paired integrator) advises have failed
+        const std::list<unsigned int>& get_failed_serials() const { return(this->failed_serials); }
+
         //! get list of missing k-configuration serials
         const std::list<unsigned int>& get_missing_serials() const { return(this->missing_serials); }
 
         //! set list of missing k-configuration serials
-        void set_missing_serials(const std::list<unsigned int>& s) { this->missing_serials = s; this->missing_serials.sort(); }
+        void set_missing_serials(const std::list<unsigned int>& s) { this->missing_serials = s; this->missing_serials.sort(); this->missing_serials.unique(); }
 
 
 		    // CONTENT
@@ -204,7 +207,7 @@ namespace transport
 
         // PARENT CONTENT
 
-        //! is this a paired postintegration
+        //! is this a paired postintegration?
         bool paired;
 
         //! name of parent integration group

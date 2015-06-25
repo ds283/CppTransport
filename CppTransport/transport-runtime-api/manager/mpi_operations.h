@@ -62,10 +62,11 @@ namespace transport
                 slave_setup_payload() = default;
 
                 //! Value constructor (used for constructing messages to send)
-                slave_setup_payload(const boost::filesystem::path& rp, unsigned int bcp, unsigned int pcp)
+                slave_setup_payload(const boost::filesystem::path& rp, unsigned int bcp, unsigned int pcp, unsigned int ckp)
                   : repository(rp.string()),
                     batcher_capacity(bcp),
-                    data_capacity(pcp)
+                    data_capacity(pcp),
+                    checkpoint_interval(ckp)
                   {
                   }
 
@@ -73,10 +74,13 @@ namespace transport
                 boost::filesystem::path get_repository_path() const { return(boost::filesystem::path(this->repository)); }
 
 		            //! Get batcher capacity
-		            unsigned int get_batcher_capacity() const { return(this->batcher_capacity); }
+		            unsigned int get_batcher_capacity()           const { return(this->batcher_capacity); }
 
 		            //! Get datapipe main cache capacity
-		            unsigned int get_data_capacity()    const { return(this->data_capacity); }
+		            unsigned int get_data_capacity()              const { return(this->data_capacity); }
+
+                //! Get checkpointing interval
+                unsigned int get_checkpoint_interval()        const { return(this->checkpoint_interval); }
 
               private:
 
@@ -89,6 +93,9 @@ namespace transport
 		            //! Datapipe main cache capacity
 		            unsigned int data_capacity;
 
+                //! Checkpoint interval
+                unsigned int checkpoint_interval;
+
                 // enable boost::serialization support, and hence automated packing for transmission over MPI
                 friend class boost::serialization::access;
 
@@ -98,6 +105,7 @@ namespace transport
                     ar & repository;
 		                ar & batcher_capacity;
 		                ar & data_capacity;
+                    ar & checkpoint_interval;
                   }
 
               };

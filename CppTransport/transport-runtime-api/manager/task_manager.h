@@ -10,15 +10,15 @@
 #include <functional>
 
 #include "transport-runtime-api/manager/instance_manager.h"
-
 #include "transport-runtime-api/repository/json_repository.h"
 
-#include "master_controller.h"
-#include "slave_controller.h"
+#include "transport-runtime-api/manager/master_controller.h"
+#include "transport-runtime-api/manager/slave_controller.h"
 
 #include "transport-runtime-api/defaults.h"
 #include "transport-runtime-api/messages.h"
 #include "transport-runtime-api/exceptions.h"
+#include "transport-runtime-api/ansi_colour_codes.h"
 
 
 namespace transport
@@ -41,7 +41,7 @@ namespace transport
                      unsigned int pcp=CPPTRANSPORT_DEFAULT_PIPE_STORAGE);
 
         //! Construct a task manager using a previously-constructed repository object. Usually this will be used only when creating a new repository.
-        task_manager(int argc, char* argv[], json_repository<number>* r,
+        task_manager(int argc, char* argv[], std::shared_ptr< json_repository<number> > r,
                      unsigned int bcp=CPPTRANSPORT_DEFAULT_BATCHER_STORAGE,
                      unsigned int pcp=CPPTRANSPORT_DEFAULT_PIPE_STORAGE);
 
@@ -65,13 +65,13 @@ namespace transport
       protected:
 
         //! Report an error
-        void error(const std::string& msg) { std::cout << msg << std::endl; }
+        void error(const std::string& msg);
 
         //! Report a warning
-        void warn(const std::string& msg) { std::cout << CPPTRANSPORT_TASK_MANAGER_WARNING_LABEL << " " << msg << std::endl; }
+        void warn(const std::string& msg);
 
         //! Report a message
-        void message(const std::string& msg) { if(this->master.get_arguments().get_verbose()) std::cout << msg << std::endl; }
+        void message(const std::string& msg);
 
 
         // INTERNAL DATA
@@ -125,7 +125,7 @@ namespace transport
 
 
     template <typename number>
-    task_manager<number>::task_manager(int argc, char* argv[], json_repository<number>* r, unsigned int bcp, unsigned int pcp)
+    task_manager<number>::task_manager(int argc, char* argv[], std::shared_ptr< json_repository<number> > r, unsigned int bcp, unsigned int pcp)
       : instance_manager<number>(),
         environment(argc, argv),
         // note it is safe to assume environment and world have been constructed when the constructor for
@@ -142,7 +142,7 @@ namespace transport
                std::bind(&task_manager<number>::message, this, std::placeholders::_1),
                bcp, pcp)
       {
-        assert(r != nullptr);
+        assert(r);
 
 		    // set model finder for the repository
 		    // (this is a function which, given a model ID, returns the model* instance representing it)
@@ -164,6 +164,44 @@ namespace transport
 						this->slave.wait_for_tasks();
 					}
 			}
+
+
+    template <typename number>
+    void task_manager<number>::error(const std::string& msg)
+      {
+        bool colour = this->master.get_environment().get_terminal_colour_support() && this->master.get_arguments().get_colour_output();
+
+        if(colour) std::cout << ANSI_BOLD_RED;
+        std::cout << msg << '\n';
+        if(colour) std::cout << ANSI_NORMAL;
+      }
+
+
+    template <typename number>
+    void task_manager<number>::warn(const std::string& msg)
+      {
+        bool colour = this->master.get_environment().get_terminal_colour_support() && this->master.get_arguments().get_colour_output();
+
+        if(colour) std::cout << ANSI_BOLD_MAGENTA;
+        std::cout << CPPTRANSPORT_TASK_MANAGER_WARNING_LABEL << " ";
+        if(colour) std::cout << ANSI_NORMAL;
+        std::cout << msg << '\n';
+
+      }
+
+
+    template <typename number>
+    void task_manager<number>::message(const std::string& msg)
+      {
+        bool colour = this->master.get_environment().get_terminal_colour_support() && this->master.get_arguments().get_colour_output();
+
+        if(this->master.get_arguments().get_verbose())
+          {
+//            if(colour) std::cout << ANSI_GREEN;
+            std::cout << msg << '\n';
+//            if(colour) std::cout << ANSI_NORMAL;
+          }
+      }
 
 
   } // namespace transport

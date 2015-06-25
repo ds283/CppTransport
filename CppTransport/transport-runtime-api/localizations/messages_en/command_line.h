@@ -35,14 +35,26 @@
 #define CPPTRANSPORT_SWITCH_GANTT_CHART       "gantt-chart"
 #define CPPTRANSPORT_HELP_GANTT_CHART         "output Gantt chart describing worker activity"
 
+#define CPPTRANSPORT_SWITCH_CHECKPOINT        "checkpoint"
+#define CPPTRANSPORT_HELP_CHECKPOINT          "flush data after given interval, measured in minutes"
+
+#define CPPTRANSPORT_SWITCH_RECOVER           "recover"
+#define CPPTRANSPORT_HELP_RECOVER             "attempt to recover crashed output groups"
+
 #define CPPTRANSPORT_SWITCH_SEED              "seed"
-#define CPPTRANSPORT_HELP_SEED                "specify named output group to use as a seed"
+#define CPPTRANSPORT_HELP_SEED                "use named output group as a seed"
 
 #define CPPTRANSPORT_SWITCH_TASK              "task"
 #define CPPTRANSPORT_HELP_TASK                "add named task to list of jobs"
 
 #define CPPTRANSPORT_SWITCH_MODELS            "models"
 #define CPPTRANSPORT_HELP_MODELS              "list models baked into this executable"
+
+#define CPPTRANSPORT_SWITCH_NO_COLOUR         "no-colour"
+#define CPPTRANSPORT_HELP_NO_COLOUR           "disable colourized output"
+
+#define CPPTRANSPORT_SWITCH_NO_COLOR          "no-color"
+#define CPPTRANSPORT_HELP_NO_COLOR            "disable colourized output"
 
 
 #endif //CPPTRANSPORT_COMMAND_LINE_H

@@ -12,6 +12,7 @@
 #include <list>
 #include <string>
 #include <vector>
+#include <memory>
 
 #include "transport-runtime-api/data/data_manager.h"
 
@@ -19,8 +20,6 @@
 #include "transport-runtime-api/exceptions.h"
 
 #include "boost/filesystem/operations.hpp"
-#include "boost/timer/timer.hpp"
-#include "boost/algorithm/string.hpp"
 
 #include "sqlite3.h"
 #include "transport-runtime-api/sqlite3/operations/data_manager.h"
@@ -52,8 +51,8 @@ namespace transport
       public:
 
         //! Create a data_manager_sqlite3 instance
-        data_manager_sqlite3(unsigned int bcap, unsigned int dcap)
-          : data_manager<number>(bcap, dcap),
+        data_manager_sqlite3(unsigned int bcap, unsigned int dcap, unsigned int ckp)
+          : data_manager<number>(bcap, dcap, ckp),
             temporary_container_serial(0)
           {
           }
@@ -68,7 +67,7 @@ namespace transport
 
         //! Initialize a new integration_writer object, including the data container.
         //! Never overwrites existing data; if the container already exists, an exception is thrown
-        virtual void initialize_writer(std::shared_ptr< integration_writer<number> >& writer) override;
+        virtual void initialize_writer(std::shared_ptr< integration_writer<number> >& writer, bool recover_mode = false) override;
 
         //! Close an open integration_writer object.
 
@@ -77,7 +76,7 @@ namespace transport
         virtual void close_writer(std::shared_ptr< integration_writer<number> >& writer) override;
 
 		    //! Initialize a new derived_content_writer object.
-		    virtual void initialize_writer(std::shared_ptr< derived_content_writer<number> >& writer) override;
+		    virtual void initialize_writer(std::shared_ptr< derived_content_writer<number> >& writer, bool recover_mode = false) override;
 
 		    //! Close an open derived_content_writer object.
 
@@ -86,7 +85,7 @@ namespace transport
 		    virtual void close_writer(std::shared_ptr< derived_content_writer<number> >& writer) override;
 
         //! Initialize a new postintegration_writer object.
-        virtual void initialize_writer(std::shared_ptr< postintegration_writer<number> >& writer) override;
+        virtual void initialize_writer(std::shared_ptr< postintegration_writer<number> >& writer, bool recover_mode = false) override;
 
         //! Close an open postintegration_writer object
         virtual void close_writer(std::shared_ptr< postintegration_writer<number> >& writer) override;
@@ -197,37 +196,55 @@ namespace transport
 
 
         // INTEGRITY CHECK HANDLERS
-
       protected:
 
-        //! Check integrity for a twopf container
-        void check_twopf_integrity_handler(integration_writer<number>& writer, integration_task<number>* tk);
+        // CALCULATE MISSING SERIAL NUMBERS
 
-        //! Check integrity for a threepf container
-        void check_threepf_integrity_handler(integration_writer<number>& writer, integration_task<number>* tk);
+        //! get missing serial numbers from a twopf-re table; should be provided by implementation
+        virtual std::list<unsigned int> get_missing_twopf_re_serials(integration_writer<number>& writer) override;
 
-        //! Check integrity for a zeta twopf container
-        void check_zeta_twopf_integrity_handler(postintegration_writer<number>& writer, postintegration_task<number>* tk);
+        //! get missing serial numbers from a twopf-im table; should be provided by implementation
+        virtual std::list<unsigned int> get_missing_twopf_im_serials(integration_writer<number>& writer) override;
 
-        //! Check integrity for a zeta threepf container
-        void check_zeta_threepf_integrity_handler(postintegration_writer<number>& writer, postintegration_task<number>* tk);
+        //! get missing serial numbers from a threepf table; should be provided by implementation
+        virtual std::list<unsigned int> get_missing_threepf_serials(integration_writer<number>& writer) override;
 
-        //! Check integrity for an fNL container
-        void check_fNL_integrity_handler(postintegration_writer<number>& writer, postintegration_task<number>* tk);
+        //! get missing serial numbers from a zeta twopf table; should be provided by implementation
+        virtual std::list<unsigned int> get_missing_zeta_twopf_serials(postintegration_writer<number>& writer) override;
 
+        //! get missing serial numbers from a zeta threepf table; should be provided by implementation
+        virtual std::list<unsigned int> get_missing_zeta_threepf_serials(postintegration_writer<number>& writer) override;
 
-      protected:
+        //! get missing serial numbers from a zeta reduced bispecturm table; should be provided by implementation
+        virtual std::list<unsigned int> get_missing_zeta_redbsp_serials(postintegration_writer<number>& writer) override;
 
-        //! log missing data from a container, checking against a list provided by the backend if one is provided.
-        //! returns: serial numbers of any further configurations that should be dropped (they were in the list provided by the backend, but not already missing)
-        template <typename WriterObject, typename Database>
-        std::list<unsigned int> advise_missing_content(WriterObject& writer, const std::list<unsigned int>& serials, const Database& db);
+        // DROP GROUPS OF SERIAL NUMBERS
 
-        //! compute the twopf configurations which should be dropped to match a give list of threepf serials
-        std::list<unsigned int> compute_twopf_drop_list(const std::list<unsigned int>& serials, const threepf_kconfig_database& configs);
+        //! drop a set of k-configurations from a twopf-re table; should be provided by implementation
+        virtual void drop_twopf_re_configurations(integration_writer<number>& writer, const std::list<unsigned int>& serials, const twopf_kconfig_database& db) override;
 
-        //! map a list of twopf configuration serial numbers to corresponding threepf configuration serial numbers
-        std::list<unsigned int> map_twopf_to_threepf_serials(const std::list<unsigned int>& twopf_list, const threepf_kconfig_database& threepf_db);
+        //! drop a set of k-configurations from a twopf-im table; should be provided by implementation
+        virtual void drop_twopf_im_configurations(integration_writer<number>& writer, const std::list<unsigned int>& serials, const twopf_kconfig_database& db) override;
+
+        //! drop a set of k-configurations from a threepf table; should be provided by implementation
+        virtual void drop_threepf_configurations(integration_writer<number>& writer, const std::list<unsigned int>& serials, const threepf_kconfig_database& db) override;
+
+        //! drop a set of k-configurations from a zeta twopf table; should be provided by implementation
+        virtual void drop_zeta_twopf_configurations(postintegration_writer<number>& writer, const std::list<unsigned int>& serials, const twopf_kconfig_database& db) override;
+
+        //! drop a set of k-configurations from a zeta threepf table; should be provided by implementation
+        virtual void drop_zeta_threepf_configurations(postintegration_writer<number>& writer, const std::list<unsigned int>& serials, const threepf_kconfig_database& db) override;
+
+        //! drop a set of k-configurations from a zeta reduced bispectrum table; should be provided by implementation
+        virtual void drop_zeta_redbsp_configurations(postintegration_writer<number>& writer, const std::list<unsigned int>& serials, const threepf_kconfig_database& db) override;
+
+        //! drop statistics for a set of k-configurations
+        virtual void drop_statistics_configurations(integration_writer<number>& writer, const std::list<unsigned int>& serials, const twopf_kconfig_database& db) override;
+        virtual void drop_statistics_configurations(integration_writer<number>& writer, const std::list<unsigned int>& serials, const threepf_kconfig_database& db) override;
+
+        //! drop initial conditions for a sset of k-configurations
+        virtual void drop_initial_conditions_configurations(integration_writer<number>& writer, const std::list<unsigned int>& serials, const twopf_kconfig_database& db) override;
+        virtual void drop_initial_conditions_configurations(integration_writer<number>& writer, const std::list<unsigned int>& serials, const threepf_kconfig_database& db) override;
 
 
         // DATA PIPES -- implements a 'data_manager' interface
@@ -408,7 +425,7 @@ namespace transport
 
     // Create data files for a new integration_writer object
     template <typename number>
-    void data_manager_sqlite3<number>::initialize_writer(std::shared_ptr< integration_writer<number> >& writer)
+    void data_manager_sqlite3<number>::initialize_writer(std::shared_ptr< integration_writer<number> >& writer, bool recovery_mode)
       {
         sqlite3* db = nullptr;
 
@@ -416,7 +433,8 @@ namespace transport
         boost::filesystem::path ctr_path = writer->get_abs_container_path();
 
         // open the main container
-        int status = sqlite3_open_v2(ctr_path.string().c_str(), &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nullptr);
+        int mode = recovery_mode ? SQLITE_OPEN_READWRITE : SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE;
+        int status = sqlite3_open_v2(ctr_path.string().c_str(), &db, mode, nullptr);
 
         if(status != SQLITE_OK)
 	        {
@@ -462,12 +480,12 @@ namespace transport
         if((tk2 = dynamic_cast<twopf_task<number>*>(tk)) != nullptr)
           {
             writer->set_aggregation_handler(std::bind(&data_manager_sqlite3<number>::aggregate_twopf_batch, this, std::placeholders::_1, std::placeholders::_2));
-            writer->set_integrity_check_handler(std::bind(&data_manager_sqlite3<number>::check_twopf_integrity_handler, this, std::placeholders::_1, std::placeholders::_2));
+            writer->set_integrity_check_handler(std::bind(&data_manager<number>::check_twopf_integrity_handler, this, std::placeholders::_1, std::placeholders::_2));
           }
         else if((tk3 = dynamic_cast<threepf_task<number>*>(tk)) != nullptr)
           {
             writer->set_aggregation_handler(std::bind(&data_manager_sqlite3<number>::aggregate_threepf_batch, this, std::placeholders::_1, std::placeholders::_2));
-            writer->set_integrity_check_handler(std::bind(&data_manager_sqlite3<number>::check_threepf_integrity_handler, this, std::placeholders::_1, std::placeholders::_2));
+            writer->set_integrity_check_handler(std::bind(&data_manager<number>::check_threepf_integrity_handler, this, std::placeholders::_1, std::placeholders::_2));
           }
         else
           {
@@ -497,13 +515,13 @@ namespace transport
         sqlite3_close(db);
 
         // physically remove the tempfiles directory
-        boost::filesystem::remove(writer->get_abs_tempdir_path());
+        boost::filesystem::remove_all(writer->get_abs_tempdir_path());
       }
 
 
 		// Create data files for a new derived_content_writer object
 		template <typename number>
-		void data_manager_sqlite3<number>::initialize_writer(std::shared_ptr< derived_content_writer<number> >& writer)
+		void data_manager_sqlite3<number>::initialize_writer(std::shared_ptr< derived_content_writer<number> >& writer, bool recovery_mode)
 			{
         // set up aggregation handler
         writer->set_aggregation_handler(std::bind(&data_manager_sqlite3<number>::aggregate_derived_product, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
@@ -515,13 +533,13 @@ namespace transport
 		void data_manager_sqlite3<number>::close_writer(std::shared_ptr< derived_content_writer<number> >& writer)
 			{
 				// physically remove the tempfiles directory
-		    boost::filesystem::remove(writer->get_abs_tempdir_path());
+		    boost::filesystem::remove_all(writer->get_abs_tempdir_path());
 			}
 
 
     // Initialize a new postintegration_writer object
     template <typename number>
-    void data_manager_sqlite3<number>::initialize_writer(std::shared_ptr< postintegration_writer<number> >& writer)
+    void data_manager_sqlite3<number>::initialize_writer(std::shared_ptr< postintegration_writer<number> >& writer, bool recovery_mode)
       {
         sqlite3* db = nullptr;
 
@@ -529,7 +547,8 @@ namespace transport
         boost::filesystem::path ctr_path = writer->get_abs_container_path();
 
         // open the main container
-        int status = sqlite3_open_v2(ctr_path.string().c_str(), &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nullptr);
+        int mode = recovery_mode ? SQLITE_OPEN_READWRITE : SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE;
+        int status = sqlite3_open_v2(ctr_path.string().c_str(), &db, mode, nullptr);
 
         if(status != SQLITE_OK)
           {
@@ -574,13 +593,13 @@ namespace transport
         if((z2pf = dynamic_cast<zeta_twopf_task<number>*>(tk)) != nullptr)
           {
             writer->set_aggregation_handler(std::bind(&data_manager_sqlite3<number>::aggregate_zeta_twopf_batch, this, std::placeholders::_1, std::placeholders::_2));
-            writer->set_integrity_check_handler(std::bind(&data_manager_sqlite3<number>::check_zeta_twopf_integrity_handler, this, std::placeholders::_1, std::placeholders::_2));
+            writer->set_integrity_check_handler(std::bind(&data_manager<number>::check_zeta_twopf_integrity_handler, this, std::placeholders::_1, std::placeholders::_2));
 		        writer->get_products().add_zeta_twopf();
           }
         else if((z3pf = dynamic_cast<zeta_threepf_task<number>*>(tk)) != nullptr)
           {
             writer->set_aggregation_handler(std::bind(&data_manager_sqlite3<number>::aggregate_zeta_threepf_batch, this, std::placeholders::_1, std::placeholders::_2));
-            writer->set_integrity_check_handler(std::bind(&data_manager_sqlite3<number>::check_zeta_threepf_integrity_handler, this, std::placeholders::_1, std::placeholders::_2));
+            writer->set_integrity_check_handler(std::bind(&data_manager<number>::check_zeta_threepf_integrity_handler, this, std::placeholders::_1, std::placeholders::_2));
 		        writer->get_products().add_zeta_twopf();
 		        writer->get_products().add_zeta_threepf();
 		        writer->get_products().add_zeta_redbsp();
@@ -588,7 +607,7 @@ namespace transport
         else if((zfNL = dynamic_cast<fNL_task<number>*>(tk)) != nullptr)
           {
             writer->set_aggregation_handler(std::bind(&data_manager_sqlite3<number>::aggregate_fNL_batch, this, std::placeholders::_1, std::placeholders::_2, zfNL->get_template()));
-            writer->set_integrity_check_handler(std::bind(&data_manager_sqlite3<number>::check_fNL_integrity_handler, this, std::placeholders::_1, std::placeholders::_2));
+            writer->set_integrity_check_handler(std::bind(&data_manager<number>::check_fNL_integrity_handler, this, std::placeholders::_1, std::placeholders::_2));
 		        switch(zfNL->get_template())
 			        {
 		            case derived_data::fNL_local_template:
@@ -636,7 +655,7 @@ namespace transport
         sqlite3_close(db);
 
         // physically remove the tempfiles directory
-        boost::filesystem::remove(writer->get_abs_tempdir_path());
+        boost::filesystem::remove_all(writer->get_abs_tempdir_path());
       }
 
 
@@ -872,7 +891,7 @@ namespace transport
 	                                                                  this, tempdir, worker, m, tk->get_collect_initial_conditions(), std::placeholders::_1, std::placeholders::_2);
 
         // set up batcher
-        twopf_batcher<number> batcher(this->batcher_capacity, m, tk, container, logdir, writers, dispatcher, replacer, db, worker, group);
+        twopf_batcher<number> batcher(this->batcher_capacity, this->checkpoint_interval, m, tk, container, logdir, writers, dispatcher, replacer, db, worker, group);
 
         BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << "** Created new temporary twopf container " << container;
 
@@ -911,7 +930,7 @@ namespace transport
 	                                                                  this, tempdir, worker, m, tk->get_collect_initial_conditions(), std::placeholders::_1, std::placeholders::_2);
 
         // set up batcher
-        threepf_batcher<number> batcher(this->batcher_capacity, m, tk, container, logdir, writers, dispatcher, replacer, db, worker, group);
+        threepf_batcher<number> batcher(this->batcher_capacity, this->checkpoint_interval, m, tk, container, logdir, writers, dispatcher, replacer, db, worker, group);
         BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << "** Created new temporary threepf container " << container;
 
         // add this database to our list of open connections
@@ -940,7 +959,7 @@ namespace transport
 	                                                                  this, tempdir, worker, std::placeholders::_1, std::placeholders::_2);
 
         // set up batcher
-        zeta_twopf_batcher<number> batcher(this->batcher_capacity, container, logdir, writers, dispatcher, replacer, db, worker);
+        zeta_twopf_batcher<number> batcher(this->batcher_capacity, this->checkpoint_interval, container, logdir, writers, dispatcher, replacer, db, worker);
 
         BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << "** Created new temporary zeta twopf container " << container;
 
@@ -972,7 +991,7 @@ namespace transport
 	                                                                  this, tempdir, worker, std::placeholders::_1, std::placeholders::_2);
 
         // set up batcher
-        zeta_threepf_batcher<number> batcher(this->batcher_capacity, container, logdir, writers, dispatcher, replacer, db, worker);
+        zeta_threepf_batcher<number> batcher(this->batcher_capacity, this->checkpoint_interval, container, logdir, writers, dispatcher, replacer, db, worker);
 
         BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << "** Created new temporary zeta threepf container " << container;
 
@@ -1002,7 +1021,7 @@ namespace transport
 	                                                                  this, tempdir, worker, type, std::placeholders::_1, std::placeholders::_2);
 
         // set up batcher
-        fNL_batcher<number> batcher(this->batcher_capacity, container, logdir, writers, dispatcher, replacer, db, worker, type);
+        fNL_batcher<number> batcher(this->batcher_capacity, this->checkpoint_interval, container, logdir, writers, dispatcher, replacer, db, worker, type);
 
         BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << "** Created new temporary " << derived_data::template_name(type) << " container " << container;
 
@@ -1303,401 +1322,186 @@ namespace transport
     // INTEGRITY CHECK
 
 
-    template <typename ConfigurationType>
-    class ConfigurationFinder
-	    {
-      public:
-        ConfigurationFinder(unsigned int s)
-	        : serial(s)
-	        {
-	        }
-
-        bool operator()(const ConfigurationType& a) { return(a.serial == this->serial); }
-
-      private:
-        unsigned int serial;
-	    };
-
-
-    template <typename RecordData>
-    class RecordFinder
-      {
-      public:
-        RecordFinder(unsigned int s)
-          : serial(s)
-          {
-          }
-
-        bool operator()(const RecordData& a) { return((*a).serial == this->serial); }
-
-      private:
-        unsigned int serial;
-      };
-
-
     template <typename number>
-    template <typename WriterObject, typename Database>
-    std::list<unsigned int> data_manager_sqlite3<number>::advise_missing_content(WriterObject& writer, const std::list<unsigned int>& serials, const Database& db)
-      {
-        BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << "** Detected missing data in container";
-        writer.set_fail(true);
-
-        std::list<unsigned int> advised_list = writer.get_missing_serials();
-        if(advised_list.size() > 0) BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << "** Note: backend provided list of " << advised_list.size() << " missing items to cross-check";
-
-        for(typename std::list<unsigned int>::const_iterator t = serials.begin(); t != serials.end(); ++t)
-          {
-            // find this configuration
-            typename Database::const_config_iterator u = std::find_if(db.config_begin(), db.config_end(),
-                                                                      ConfigurationFinder<typename Database::const_config_iterator::type>(*t));
-
-            // emit configuration information
-            std::ostringstream msg;
-            msg << *u;
-            std::string msg_str = msg.str();
-            boost::algorithm::trim_right(msg_str);
-            BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << "** " << msg_str;
-
-            // search for this element in the advised list
-            std::list<unsigned int>::iterator ad = std::find(advised_list.begin(), advised_list.end(), *t);
-
-            // was this an item on the list we already knew would be missing?
-            if(ad != advised_list.end()) advised_list.erase(ad);
-          }
-
-        // return any remainder
-        return(advised_list);
-      }
-
-
-    template <typename number>
-    std::list<unsigned int> data_manager_sqlite3<number>::compute_twopf_drop_list(const std::list<unsigned int>& serials, const threepf_kconfig_database& threepf_db)
-      {
-        std::list<unsigned int> drop_serials;
-
-        // TODO: this is a O(N^2) algorithm; it would be nice if it could be replaced with something better
-        for(std::list<unsigned int>::const_iterator t = serials.begin(); t != serials.end(); ++t)
-          {
-            threepf_kconfig_database::const_record_iterator u = std::find_if(threepf_db.record_begin(), threepf_db.record_end(),
-                                                                             RecordFinder<threepf_kconfig_database::const_record_iterator::type>(*t));
-
-            if(u != threepf_db.record_end())
-              {
-                if(u->is_twopf_k1_stored()) drop_serials.push_back((*u)->k1_serial);
-                if(u->is_twopf_k2_stored()) drop_serials.push_back((*u)->k2_serial);
-                if(u->is_twopf_k3_stored()) drop_serials.push_back((*u)->k3_serial);
-              }
-          }
-
-        drop_serials.sort();
-        drop_serials.unique();
-
-        return(drop_serials);
-      }
-
-
-    template <typename number>
-    std::list<unsigned int> data_manager_sqlite3<number>::map_twopf_to_threepf_serials(const std::list<unsigned int>& twopf_list, const threepf_kconfig_database& threepf_db)
-      {
-        std::list<unsigned int> threepf_list;
-
-        // TODO: this is a O(N^2) algorithm; it would be nice if it could be replaced with something better
-        for(std::list<unsigned int>::const_iterator t = twopf_list.begin(); t != twopf_list.end(); ++t)
-          {
-            for(threepf_kconfig_database::const_record_iterator u = threepf_db.record_begin(); u != threepf_db.record_end(); ++u)
-              {
-                if(u->is_twopf_k1_stored() && (*u)->k1_serial == *t)
-                  {
-                    threepf_list.push_back((*u)->serial);
-                    break;
-                  }
-                if(u->is_twopf_k2_stored() && (*u)->k2_serial == *t)
-                  {
-                    threepf_list.push_back((*u)->serial);
-                    break;
-                  }
-                if(u->is_twopf_k3_stored() && (*u)->k3_serial == *t)
-                  {
-                    threepf_list.push_back((*u)->serial);
-                    break;
-                  }
-              }
-          }
-
-        threepf_list.sort();
-        threepf_list.unique();
-
-        return(threepf_list);
-      }
-
-
-    template <typename number>
-    void data_manager_sqlite3<number>::check_twopf_integrity_handler(integration_writer<number>& writer, integration_task<number>* itk)
+    std::list<unsigned int> data_manager_sqlite3<number>::get_missing_twopf_re_serials(integration_writer<number>& writer)
       {
         // get sqlite3 handle to principal database
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        twopf_task<number>* tk = dynamic_cast< twopf_task<number>* >(itk);
-        assert(tk != nullptr);
-
-        BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << std::endl << "** Performing integrity check for container '" << writer.get_abs_container_path().string() << "'";
-
-        std::list<unsigned int> serials = sqlite3_operations::get_missing_serials<number, typename integration_items<number>::twopf_re_item>(db);
-
-        if(serials.size() > 0)
-          {
-            std::list<unsigned int> remainder = this->advise_missing_content(writer, serials, tk->get_twopf_database());
-
-            if(remainder.size() > 0)
-              {
-                BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << "** Dropping extra configurations not missing from container, but advised by backend:";
-                sqlite3_operations::drop_k_configurations(db, writer, remainder, tk->get_twopf_database(),
-                                                          sqlite3_operations::data_traits<number, typename integration_items<number>::twopf_re_item>::sqlite_table());
-                serials.merge(remainder);
-              }
-
-		        // push list of missing serial numbers to writer
-		        writer.set_missing_serials(serials);
-
-            if(writer.is_collecting_statistics()) sqlite3_operations::drop_statistics(db, serials, tk->get_twopf_database());
-		        if(writer.is_collecting_initial_conditions()) sqlite3_operations::drop_ics<number, typename integration_items<number>::ics_item, twopf_kconfig_database>(db, serials, tk->get_twopf_database());
-          }
+        return sqlite3_operations::get_missing_serials<number, typename integration_items<number>::twopf_re_item>(db);
       }
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::check_threepf_integrity_handler(integration_writer<number>& writer, integration_task<number>* itk)
+    std::list<unsigned int> data_manager_sqlite3<number>::get_missing_twopf_im_serials(integration_writer<number>& writer)
       {
         // get sqlite3 handle to principal database
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        threepf_task<number>* tk = dynamic_cast< threepf_task<number>* >(itk);
-        assert(tk != nullptr);
-
-        BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << std::endl << "** Performing integrity check for container '" << writer.get_abs_container_path().string() << "'";
-
-        // get lists of missing serial numbers for threepf, real twopf and imaginary twopf
-        std::list<unsigned int> twopf_re_serials = sqlite3_operations::get_missing_serials<number, typename integration_items<number>::twopf_re_item>(db);
-        std::list<unsigned int> twopf_im_serials = sqlite3_operations::get_missing_serials<number, typename integration_items<number>::twopf_im_item>(db);
-        std::list<unsigned int> threepf_serials  = sqlite3_operations::get_missing_serials<number, typename integration_items<number>::threepf_item>(db);
-
-        // merge missing twopf lists into a single one
-        std::list<unsigned int> twopf_total_serials = twopf_re_serials;
-        std::list<unsigned int> temp = twopf_im_serials;
-        twopf_total_serials.merge(temp);
-        twopf_total_serials.unique();
-
-        // map missing twopf serials into threepf serials
-        std::list<unsigned int> twopf_to_threepf_map = this->map_twopf_to_threepf_serials(twopf_total_serials, tk->get_threepf_database());
-
-        // advise missing threepf serials
-        if(threepf_serials.size() > 0)
-          {
-            std::list<unsigned int> remainder = this->advise_missing_content(writer, threepf_serials, tk->get_threepf_database());
-
-            if(remainder.size() > 0)
-              {
-                BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << std::endl << "** Dropping extra threepf configurations not missing from container, but advised by backend:";
-                sqlite3_operations::drop_k_configurations(db, writer, remainder, tk->get_threepf_database(),
-                                                          sqlite3_operations::data_traits<number, typename integration_items<number>::threepf_item>::sqlite_table());
-                threepf_serials.merge(remainder);   // not necessary to remove duplicates, since there should not be any; result is sorted
-              }
-          }
-
-        // check if any twopf configurations require dropping even more threepfs
-        std::list<unsigned int> undropped;
-        std::set_difference(twopf_to_threepf_map.begin(), twopf_to_threepf_map.end(),
-                            threepf_serials.begin(), threepf_serials.end(), std::back_inserter(undropped));
-
-        if(undropped.size() > 0)
-          {
-            BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << "** Dropping extra threepf configurations not missing from container, but implied by missing twopf configurations:";
-            sqlite3_operations::drop_k_configurations(db, writer, undropped, tk->get_threepf_database(),
-                                                      sqlite3_operations::data_traits<number, typename integration_items<number>::threepf_item>::sqlite_table());
-            threepf_serials.merge(undropped);   // not necessary to remove duplicates, since there should be any; result is sorted
-          }
-
-        if(threepf_serials.size() > 0)
-          {
-            writer.set_missing_serials(threepf_serials);
-            if(writer.is_collecting_statistics()) sqlite3_operations::drop_statistics(db, threepf_serials, tk->get_threepf_database());
-		        if(writer.is_collecting_initial_conditions())
-			        {
-		            sqlite3_operations::drop_ics<number, typename integration_items<number>::ics_item, threepf_kconfig_database>(db, threepf_serials, tk->get_threepf_database());
-		            sqlite3_operations::drop_ics<number, typename integration_items<number>::ics_kt_item, threepf_kconfig_database>(db, threepf_serials, tk->get_threepf_database());
-			        }
-
-            // build list of twopf configurations which should be dropped for this entire set of threepf configurations
-            std::list<unsigned int> twopf_drop = this->compute_twopf_drop_list(threepf_serials, tk->get_threepf_database());
-
-            // compute real twopf configurations which should be dropped.
-            undropped.clear();
-            std::set_difference(twopf_drop.begin(), twopf_drop.end(),
-                                twopf_re_serials.begin(), twopf_re_serials.end(), std::back_inserter(undropped));
-
-            if(undropped.size() > 0)
-              {
-                BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << std::endl << "** Dropping real twopf configurations entailed by these threepf configurations, but present in the container";
-                sqlite3_operations::drop_k_configurations(db, writer, undropped, tk->get_twopf_database(),
-                                                          sqlite3_operations::data_traits<number, typename integration_items<number>::twopf_re_item>::sqlite_table());
-              }
-
-            // compute imaginary twopf configurations which should be dropped
-            undropped.clear();
-            std::set_difference(twopf_drop.begin(), twopf_drop.end(),
-                                twopf_im_serials.begin(), twopf_im_serials.end(), std::back_inserter(undropped));
-
-            if(undropped.size() > 0)
-              {
-                BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << std::endl << "** Dropping real twopf configurations entailed by these threepf configurations, but present in the container";
-                sqlite3_operations::drop_k_configurations(db, writer, undropped, tk->get_twopf_database(),
-                                                          sqlite3_operations::data_traits<number, typename integration_items<number>::twopf_im_item>::sqlite_table());
-              }
-          }
+        return sqlite3_operations::get_missing_serials<number, typename integration_items<number>::twopf_im_item>(db);
       }
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::check_zeta_twopf_integrity_handler(postintegration_writer<number>& writer, postintegration_task<number>* ptk)
+    std::list<unsigned int> data_manager_sqlite3<number>::get_missing_threepf_serials(integration_writer<number>& writer)
       {
         // get sqlite3 handle to principal database
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        zeta_twopf_task<number>* tk = dynamic_cast< zeta_twopf_task<number>* >(ptk);
-        assert(tk != nullptr);
-
-        BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << std::endl << "** Performing integrity check for container '" << writer.get_abs_container_path().string() << "'";
-
-        std::list<unsigned int> serials = sqlite3_operations::get_missing_serials<number, typename postintegration_items<number>::zeta_twopf_item>(db);
-
-        if(serials.size() > 0)
-          {
-            std::list<unsigned int> remainder = this->advise_missing_content(writer, serials, tk->get_twopf_database());
-
-            if(remainder.size() > 0)
-              {
-                BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << std::endl << "** Dropping extra configurations not missing from container, but advised by backend:";
-                sqlite3_operations::drop_k_configurations(db, writer, remainder, tk->get_twopf_database(),
-                                                          sqlite3_operations::data_traits<number, typename postintegration_items<number>::zeta_twopf_item>::sqlite_table());
-              }
-
-            // push list of missing serial numbers to writer
-            std::list<unsigned int> merged_missing = serials;
-            merged_missing.merge(remainder);
-            writer.set_missing_serials(merged_missing);
-          }
+        return sqlite3_operations::get_missing_serials<number, typename integration_items<number>::threepf_item>(db);
       }
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::check_zeta_threepf_integrity_handler(postintegration_writer<number>& writer, postintegration_task<number>* ptk)
+    std::list<unsigned int> data_manager_sqlite3<number>::get_missing_zeta_twopf_serials(postintegration_writer<number>& writer)
       {
         // get sqlite3 handle to principal database
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        zeta_threepf_task<number>* tk = dynamic_cast< zeta_threepf_task<number>* >(ptk);
-        assert(tk != nullptr);
-
-        BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << std::endl << "** Performing integrity check for container '" << writer.get_abs_container_path().string() << "'";
-
-        // get lists of missing serial numbers for threepf, redbsp and twopf
-        std::list<unsigned int> threepf_serials = sqlite3_operations::get_missing_serials<number, typename postintegration_items<number>::zeta_threepf_item>(db);
-        std::list<unsigned int> redbsp_serials  = sqlite3_operations::get_missing_serials<number, typename postintegration_items<number>::zeta_redbsp_item>(db);
-        std::list<unsigned int> twopf_serials   = sqlite3_operations::get_missing_serials<number, typename postintegration_items<number>::zeta_twopf_item>(db);
-
-        // map missing twopf serials into threepf serials
-        std::list<unsigned int> twopf_to_threepf_map = this->map_twopf_to_threepf_serials(twopf_serials, tk->get_threepf_database());
-
-        // merge threepf and redbsp serials into a single list
-        std::list<unsigned int> threepf_total_serials = threepf_serials;
-        std::list<unsigned int> temp = redbsp_serials;
-        threepf_serials.merge(temp);
-
-        // drop any threepf configurations which are present but have no matching redbsp configuraitons, and vice versa
-        std::list<unsigned int> undropped;
-        std::set_difference(threepf_total_serials.begin(), threepf_total_serials.end(),
-                            threepf_serials.begin(), threepf_serials.end(), std::back_inserter(undropped));
-        if(undropped.size() > 0)
-          {
-            sqlite3_operations::drop_k_configurations(db, writer, undropped, tk->get_threepf_database(),
-                                                      sqlite3_operations::data_traits<number, typename postintegration_items<number>::zeta_threepf_item>::sqlite_table(), true);
-          }
-
-        undropped.clear();
-        std::set_difference(threepf_total_serials.begin(), threepf_total_serials.end(),
-                            redbsp_serials.begin(), redbsp_serials.end(), std::back_inserter(undropped));
-        if(undropped.size() > 0)
-          {
-            sqlite3_operations::drop_k_configurations(db, writer, undropped, tk->get_threepf_database(),
-                                                      sqlite3_operations::data_traits<number, typename postintegration_items<number>::zeta_redbsp_item>::sqlite_table(), true);
-          }
-
-        // threepf and redbsp are now missing the same configurations, so log these:
-
-        if(threepf_total_serials.size() > 0)
-          {
-            std::list<unsigned int> remainder = this->advise_missing_content(writer, threepf_total_serials, tk->get_threepf_database());
-
-            if(remainder.size() > 0)
-              {
-                BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << std::endl << "** Dropping extra configurations not missing from container, but advised by backend:";
-                sqlite3_operations::drop_k_configurations(db, writer, remainder, tk->get_threepf_database(),
-                                                          sqlite3_operations::data_traits<number, typename postintegration_items<number>::zeta_threepf_item>::sqlite_table());
-                sqlite3_operations::drop_k_configurations(db, writer, remainder, tk->get_threepf_database(),
-                                                          sqlite3_operations::data_traits<number, typename postintegration_items<number>::zeta_redbsp_item>::sqlite_table(), true);
-                threepf_total_serials.merge(remainder);
-              }
-          }
-
-        // check if any twopf configurations require dropping even more threepfs
-        undropped.clear();
-        std::set_difference(twopf_to_threepf_map.begin(), twopf_to_threepf_map.end(),
-                            threepf_total_serials.begin(), threepf_total_serials.end(), std::back_inserter(undropped));
-
-        if(undropped.size() > 0)
-          {
-            BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << "** Dropping extra threepf configurations not missing from container, but implied by missing twopf configurations:";
-            sqlite3_operations::drop_k_configurations(db, writer, undropped, tk->get_threepf_database(),
-                                                      sqlite3_operations::data_traits<number, typename postintegration_items<number>::zeta_threepf_item>::sqlite_table());
-            sqlite3_operations::drop_k_configurations(db, writer, undropped, tk->get_threepf_database(),
-                                                      sqlite3_operations::data_traits<number, typename postintegration_items<number>::zeta_redbsp_item>::sqlite_table(), true);
-            threepf_total_serials.merge(undropped);   // not necessary to remove duplicates, since there should be any; result is sorted
-          }
-
-        if(threepf_total_serials.size() > 0)
-          {
-            writer.set_missing_serials(threepf_total_serials);
-
-            // build list of twopf configurations which should be dropped for this entire set of threepf configurations
-            std::list<unsigned int> twopf_drop = this->compute_twopf_drop_list(threepf_total_serials, tk->get_threepf_database());
-
-            // compute twopf configurations which should be dropped
-            undropped.clear();
-            std::set_difference(twopf_drop.begin(), twopf_drop.end(),
-                                twopf_serials.begin(), twopf_serials.end(), std::back_inserter(undropped));
-
-            if(undropped.size() > 0)
-              {
-                BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << std::endl << "** Dropping twopf configurations entailed by these threepf configurations, but present in the container";
-                sqlite3_operations::drop_k_configurations(db, writer, undropped, tk->get_twopf_database(),
-                                                          sqlite3_operations::data_traits<number, typename postintegration_items<number>::zeta_twopf_item>::sqlite_table());
-              }
-          }
+        return sqlite3_operations::get_missing_serials<number, typename postintegration_items<number>::zeta_twopf_item>(db);
       }
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::check_fNL_integrity_handler(postintegration_writer<number>& writer, postintegration_task<number>* tk)
+    std::list<unsigned int> data_manager_sqlite3<number>::get_missing_zeta_threepf_serials(postintegration_writer<number>& writer)
       {
         // get sqlite3 handle to principal database
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << std::endl << "** Performing integrity check for container '" << writer.get_abs_container_path().string() << "'";
+        return sqlite3_operations::get_missing_serials<number, typename postintegration_items<number>::zeta_threepf_item>(db);
+      }
+
+
+    template <typename number>
+    std::list<unsigned int> data_manager_sqlite3<number>::get_missing_zeta_redbsp_serials(postintegration_writer<number>& writer)
+      {
+        // get sqlite3 handle to principal database
+        sqlite3* db = nullptr;
+        writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
+
+        return sqlite3_operations::get_missing_serials<number, typename postintegration_items<number>::zeta_redbsp_item>(db);
+      }
+
+
+    template <typename number>
+    void data_manager_sqlite3<number>::drop_twopf_re_configurations(integration_writer<number>& writer, const std::list<unsigned int>& serials, const twopf_kconfig_database& dbase)
+      {
+        // get sqlite3 handle to principal database
+        sqlite3* db = nullptr;
+        writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
+
+        sqlite3_operations::drop_k_configurations(db, writer, serials, dbase,
+                                                  sqlite3_operations::data_traits<number, typename integration_items<number>::twopf_re_item>::sqlite_table());
+      }
+
+
+    template <typename number>
+    void data_manager_sqlite3<number>::drop_twopf_im_configurations(integration_writer<number>& writer, const std::list<unsigned int>& serials, const twopf_kconfig_database& dbase)
+      {
+        // get sqlite3 handle to principal database
+        sqlite3* db = nullptr;
+        writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
+
+        sqlite3_operations::drop_k_configurations(db, writer, serials, dbase,
+                                                  sqlite3_operations::data_traits<number, typename integration_items<number>::twopf_im_item>::sqlite_table());
+      }
+
+
+    template <typename number>
+    void data_manager_sqlite3<number>::drop_threepf_configurations(integration_writer<number>& writer, const std::list<unsigned int>& serials, const threepf_kconfig_database& dbase)
+      {
+        // get sqlite3 handle to principal database
+        sqlite3* db = nullptr;
+        writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
+
+        sqlite3_operations::drop_k_configurations(db, writer, serials, dbase,
+                                                  sqlite3_operations::data_traits<number, typename integration_items<number>::threepf_item>::sqlite_table());
+      }
+
+
+    template <typename number>
+    void data_manager_sqlite3<number>::drop_zeta_twopf_configurations(postintegration_writer<number>& writer, const std::list<unsigned int>& serials, const twopf_kconfig_database& dbase)
+      {
+        // get sqlite3 handle to principal database
+        sqlite3* db = nullptr;
+        writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
+
+        sqlite3_operations::drop_k_configurations(db, writer, serials, dbase,
+                                                  sqlite3_operations::data_traits<number, typename postintegration_items<number>::zeta_twopf_item>::sqlite_table());
+      }
+
+
+    template <typename number>
+    void data_manager_sqlite3<number>::drop_zeta_threepf_configurations(postintegration_writer<number>& writer, const std::list<unsigned int>& serials, const threepf_kconfig_database& dbase)
+      {
+        // get sqlite3 handle to principal database
+        sqlite3* db = nullptr;
+        writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
+
+        sqlite3_operations::drop_k_configurations(db, writer, serials, dbase,
+                                                  sqlite3_operations::data_traits<number, typename postintegration_items<number>::zeta_threepf_item>::sqlite_table());
+      }
+
+
+    template <typename number>
+    void data_manager_sqlite3<number>::drop_zeta_redbsp_configurations(postintegration_writer<number>& writer, const std::list<unsigned int>& serials, const threepf_kconfig_database& dbase)
+      {
+        // get sqlite3 handle to principal database
+        sqlite3* db = nullptr;
+        writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
+
+        sqlite3_operations::drop_k_configurations(db, writer, serials, dbase,
+                                                  sqlite3_operations::data_traits<number, typename postintegration_items<number>::zeta_redbsp_item>::sqlite_table());
+      }
+
+
+    template <typename number>
+    void data_manager_sqlite3<number>::drop_statistics_configurations(integration_writer<number>& writer, const std::list<unsigned int>& serials, const twopf_kconfig_database& dbase)
+      {
+        // get sqlite3 handle to principal database
+        sqlite3* db = nullptr;
+        writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
+
+        sqlite3_operations::drop_statistics(db, serials, dbase);
+      }
+
+
+    template <typename number>
+    void data_manager_sqlite3<number>::drop_statistics_configurations(integration_writer<number>& writer, const std::list<unsigned int>& serials, const threepf_kconfig_database& dbase)
+      {
+        // get sqlite3 handle to principal database
+        sqlite3* db = nullptr;
+        writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
+
+        sqlite3_operations::drop_statistics(db, serials, dbase);
+      }
+
+
+    template <typename number>
+    void data_manager_sqlite3<number>::drop_initial_conditions_configurations(integration_writer<number>& writer, const std::list<unsigned int>& serials, const twopf_kconfig_database& dbase)
+      {
+        // get sqlite3 handle to principal database
+        sqlite3* db = nullptr;
+        writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
+
+        sqlite3_operations::drop_ics<number, typename integration_items<number>::ics_item, twopf_kconfig_database>(db, serials, dbase);
+      }
+
+
+    template <typename number>
+    void data_manager_sqlite3<number>::drop_initial_conditions_configurations(integration_writer<number>& writer, const std::list<unsigned int>& serials, const threepf_kconfig_database& dbase)
+      {
+        // get sqlite3 handle to principal database
+        sqlite3* db = nullptr;
+        writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
+
+        sqlite3_operations::drop_ics<number, typename integration_items<number>::ics_item, threepf_kconfig_database>(db, serials, dbase);
+        sqlite3_operations::drop_ics<number, typename integration_items<number>::ics_kt_item, threepf_kconfig_database>(db, serials, dbase);
       }
 
 
@@ -2231,9 +2035,9 @@ namespace transport
 
 
     template <typename number>
-    data_manager<number>* data_manager_factory(unsigned int bcap, unsigned int dcap)
+    std::shared_ptr< data_manager<number> > data_manager_factory(unsigned int bcap, unsigned int dcap, unsigned int ckp)
       {
-        return new data_manager_sqlite3<number>(bcap, dcap);
+        return std::make_shared< data_manager_sqlite3<number> >(bcap, dcap, ckp);
       }
 
 

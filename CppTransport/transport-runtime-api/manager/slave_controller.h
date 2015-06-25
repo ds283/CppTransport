@@ -75,10 +75,11 @@ namespace transport
 		                     const typename instance_manager<number>::model_finder& f,
 		                     error_callback err, warning_callback warn, message_callback msg,
 		                     unsigned int bcp = CPPTRANSPORT_DEFAULT_BATCHER_STORAGE,
-		                     unsigned int pcp = CPPTRANSPORT_DEFAULT_PIPE_STORAGE);
+		                     unsigned int pcp = CPPTRANSPORT_DEFAULT_PIPE_STORAGE,
+                         unsigned int ckp = CPPTRANSPORT_DEFAULT_CHECKPOINT_INTERVAL);
 
 		    //! destroy a slave manager object
-		    ~slave_controller();
+		    ~slave_controller() = default;
 
 
 				// INTERFACE
@@ -201,10 +202,10 @@ namespace transport
 		    // RUNTIME AGENTS
 
 		    //! Repository manager instance
-		    json_repository<number>* repo;
+		    std::shared_ptr< json_repository<number> > repo;
 
 		    //! Data manager instance
-		    data_manager<number>* data_mgr;
+		    std::shared_ptr< data_manager<number> > data_mgr;
 
 				//! Handler for postintegration and output tasks
 				slave_work_handler<number> work_handler;
@@ -217,6 +218,9 @@ namespace transport
 
 		    //! Data cache capacity per datapipe
 		    unsigned int pipe_capacity;
+
+        //! Checkpointing interval in seconds. 0 means that checkpointing is disabled
+        unsigned int checkpoint_interval;
 
 
 				// ERROR CALLBACKS
@@ -237,30 +241,19 @@ namespace transport
     slave_controller<number>::slave_controller(boost::mpi::environment& e, boost::mpi::communicator& w,
                                                const typename instance_manager<number>::model_finder& f,
                                                error_callback err, warning_callback warn, message_callback msg,
-                                               unsigned int bcp, unsigned int pcp)
+                                               unsigned int bcp, unsigned int pcp, unsigned int ckp)
 	    : environment(e),
 	      world(w),
 	      model_finder(f),
-	      repo(nullptr),
-	      data_mgr(data_manager_factory<number>(bcp, pcp)),
+	      data_mgr(data_manager_factory<number>(bcp, pcp, ckp)),
 	      batcher_capacity(bcp),
 	      pipe_capacity(pcp),
+        checkpoint_interval(ckp),
 	      error_handler(err),
 	      warning_handler(warn),
 	      message_handler(msg)
 	    {
 	    }
-
-
-		template <typename number>
-		slave_controller<number>::~slave_controller()
-			{
-				// delete repository instance, if it is set
-				if(this->repo != nullptr)
-					{
-						delete this->repo;
-					}
-			}
 
 
     template <typename number>
@@ -336,6 +329,7 @@ namespace transport
 
 		        this->data_mgr->set_batcher_capacity(payload.get_batcher_capacity());
             this->data_mgr->set_pipe_capacity(payload.get_data_capacity());
+            this->data_mgr->set_checkpoint_interval(payload.get_checkpoint_interval());
 	        }
         catch (runtime_exception& xe)
 	        {

@@ -73,7 +73,7 @@ namespace transport
       public:
 
         template <typename handle_type>
-        integration_batcher(unsigned int cap, model<number>* m,
+        integration_batcher(unsigned int cap, unsigned int ckp, model<number>* m,
                             const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                             container_dispatch_function d, container_replacement_function r,
                             handle_type h, unsigned int w, unsigned int g=0, bool ics=false);
@@ -290,7 +290,7 @@ namespace transport
       public:
 
         template <typename handle_type>
-        twopf_batcher(unsigned int cap, model<number>* m, twopf_task<number>* tk,
+        twopf_batcher(unsigned int cap, unsigned int ckp, model<number>* m, twopf_task<number>* tk,
                       const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                       const writer_group& w,
                       generic_batcher::container_dispatch_function d, generic_batcher::container_replacement_function r,
@@ -419,7 +419,7 @@ namespace transport
       public:
 
         template <typename handle_type>
-        threepf_batcher(unsigned int cap, model<number>* m, threepf_task<number>* tk,
+        threepf_batcher(unsigned int cap, unsigned int ckp, model<number>* m, threepf_task<number>* tk,
                         const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                         const writer_group& w,
                         generic_batcher::container_dispatch_function d, generic_batcher::container_replacement_function r,
@@ -549,11 +549,11 @@ namespace transport
 
     template <typename number>
     template <typename handle_type>
-    integration_batcher<number>::integration_batcher(unsigned int cap, model<number>* m,
+    integration_batcher<number>::integration_batcher(unsigned int cap, unsigned int ckp, model<number>* m,
                                                      const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                                                      container_dispatch_function d, container_replacement_function r,
                                                      handle_type h, unsigned int w, unsigned int g, bool ics)
-	    : generic_batcher(cap, cp, lp, d, r, h, w, g),
+	    : generic_batcher(cap, ckp, cp, lp, d, r, h, w, g),
         Nfields(m->get_N_fields()),
         mdl(m),
 	      num_integrations(0),
@@ -590,6 +590,13 @@ namespace transport
             this->flush_due = false;
             this->flush(action_replace);
 	        }
+        else if(this->checkpoint_interval > 0 && this->checkpoint_timer.elapsed().wall > this->checkpoint_interval)
+          {
+            BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "** Lifetime of " << format_time(this->checkpoint_timer.elapsed().wall)
+                << " exceeds checkpoint interval " << format_time(this->checkpoint_interval)
+                << "; forcing flush";
+            this->flush(action_replace);
+          }
 	    }
 
 
@@ -617,6 +624,13 @@ namespace transport
             this->flush_due = false;
             this->flush(action_replace);
 	        }
+        else if(this->checkpoint_interval > 0 && this->checkpoint_timer.elapsed().wall > this->checkpoint_interval)
+          {
+            BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "** Lifetime of " << format_time(this->checkpoint_timer.elapsed().wall)
+                << " exceeds checkpoint interval " << format_time(this->checkpoint_interval)
+                << "; forcing flush";
+            this->flush(action_replace);
+          }
 	    }
 
 
@@ -666,6 +680,13 @@ namespace transport
             this->flush_due = false;
             this->flush(action_replace);
 	        }
+        else if(this->checkpoint_interval > 0 && this->checkpoint_timer.elapsed().wall > this->checkpoint_interval)
+          {
+            BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "** Lifetime of " << format_time(this->checkpoint_timer.elapsed().wall)
+                << " exceeds checkpoint interval " << format_time(this->checkpoint_interval)
+                << "; forcing flush";
+            this->flush(action_replace);
+          }
 	    }
 
 
@@ -739,11 +760,11 @@ namespace transport
 
     template <typename number>
     template <typename handle_type>
-    twopf_batcher<number>::twopf_batcher(unsigned int cap, model<number>* m, twopf_task<number>* tk,
+    twopf_batcher<number>::twopf_batcher(unsigned int cap, unsigned int ckp, model<number>* m, twopf_task<number>* tk,
                                          const boost::filesystem::path& cp, const boost::filesystem::path& lp, const writer_group& w,
                                          generic_batcher::container_dispatch_function d, generic_batcher::container_replacement_function r,
                                          handle_type h, unsigned int wn, unsigned int wg)
-	    : integration_batcher<number>(cap, m, cp, lp, d, r, h, wn, wg, tk->get_collect_initial_conditions()),
+	    : integration_batcher<number>(cap, ckp, m, cp, lp, d, r, h, wn, wg, tk->get_collect_initial_conditions()),
 	      writers(w),
         paired_batcher(nullptr),
         parent_task(tk),
@@ -847,6 +868,9 @@ namespace transport
 
         // close current container, and replace with a new one if required
         this->replacer(this, action);
+
+        // pass flush notification down to generic batcher (eg. resets checkpoint timer)
+        this->generic_batcher::flush(action);
 	    }
 
 
@@ -911,11 +935,11 @@ namespace transport
 
     template <typename number>
     template <typename handle_type>
-    threepf_batcher<number>::threepf_batcher(unsigned int cap, model<number>* m, threepf_task<number>* tk,
+    threepf_batcher<number>::threepf_batcher(unsigned int cap, unsigned int ckp, model<number>* m, threepf_task<number>* tk,
                                              const boost::filesystem::path& cp, const boost::filesystem::path& lp, const writer_group& w,
                                              generic_batcher::container_dispatch_function d, generic_batcher::container_replacement_function r,
                                              handle_type h, unsigned int wn, unsigned int wg)
-	    : integration_batcher<number>(cap, m, cp, lp, d, r, h, wn, wg, tk->get_collect_initial_conditions()),
+	    : integration_batcher<number>(cap, ckp, m, cp, lp, d, r, h, wn, wg, tk->get_collect_initial_conditions()),
 	      writers(w),
         paired_batcher(nullptr),
         parent_task(tk),
@@ -1107,6 +1131,9 @@ namespace transport
 
         // close current container, and replace with a new one if required
         this->replacer(this, action);
+
+        // pass flush notification down to generic batcher (eg. resets checkpoint timer)
+        this->generic_batcher::flush(action);
 	    }
 
 

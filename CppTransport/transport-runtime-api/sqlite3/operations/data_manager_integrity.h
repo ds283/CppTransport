@@ -52,6 +52,9 @@ namespace transport
 	        }   // namespace integrity_detail
 
 
+        // at the moment we only check for missing k-configuration serial numbers
+        // we don't check that k-configuration serial numbers which are *present* have their full complement
+        // of time samples
 		    template <typename number, typename ValueType>
 		    std::list<unsigned int> get_missing_serials(sqlite3* db)
 			    {

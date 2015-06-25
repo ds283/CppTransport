@@ -55,7 +55,7 @@ namespace transport
       public:
 
         template <typename handle_type>
-        postintegration_batcher(unsigned int cap, const boost::filesystem::path& cp, const boost::filesystem::path& lp,
+        postintegration_batcher(unsigned int cap, unsigned int ckp, const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                                 container_dispatch_function d, container_replacement_function r,
                                 handle_type h, unsigned int w);
 
@@ -129,7 +129,7 @@ namespace transport
       public:
 
         template <typename handle_type>
-        zeta_twopf_batcher(unsigned int cap, const boost::filesystem::path& cp, const boost::filesystem::path& lp,
+        zeta_twopf_batcher(unsigned int cap, unsigned int ckp, const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                            const writer_group& w, generic_batcher::container_dispatch_function d, generic_batcher::container_replacement_function r,
                            handle_type h, unsigned int wn);
 
@@ -187,7 +187,7 @@ namespace transport
       public:
 
         template <typename handle_type>
-        zeta_threepf_batcher(unsigned int cap, const boost::filesystem::path& cp, const boost::filesystem::path& lp,
+        zeta_threepf_batcher(unsigned int cap, unsigned int ckp, const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                              const writer_group& w, container_dispatch_function d, container_replacement_function r,
                              handle_type h, unsigned int wn);
 
@@ -252,7 +252,7 @@ namespace transport
       public:
 
         template <typename handle_type>
-        fNL_batcher(unsigned int cap, const boost::filesystem::path& cp, const boost::filesystem::path& lp,
+        fNL_batcher(unsigned int cap, unsigned int ckp, const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                     const writer_group& w, container_dispatch_function d, container_replacement_function r,
                     handle_type h, unsigned int wn, derived_data::template_type t);
 
@@ -293,10 +293,10 @@ namespace transport
 
 
     template <typename handle_type>
-    postintegration_batcher::postintegration_batcher(unsigned int cap, const boost::filesystem::path& cp, const boost::filesystem::path& lp,
+    postintegration_batcher::postintegration_batcher(unsigned int cap, unsigned int ckp, const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                                                      container_dispatch_function d, container_replacement_function r,
                                                      handle_type h, unsigned int w)
-	    : generic_batcher(cap, cp, lp, d, r, h, w),
+	    : generic_batcher(cap, ckp, cp, lp, d, r, h, w),
 	      items_processed(0),
 	      total_time(0),
 	      longest_time(0),
@@ -316,6 +316,13 @@ namespace transport
         if(this->flush_due)
           {
             this->flush_due = false;
+            this->flush(action_replace);
+          }
+        else if(this->checkpoint_interval > 0 && this->checkpoint_timer.elapsed().wall > this->checkpoint_interval)
+          {
+            BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "** Lifetime of " << format_time(this->checkpoint_timer.elapsed().wall)
+                << " exceeds checkpoint interval " << format_time(this->checkpoint_interval)
+                << "; forcing flush";
             this->flush(action_replace);
           }
 	    }
@@ -347,10 +354,10 @@ namespace transport
 
     template <typename number>
     template <typename handle_type>
-    zeta_twopf_batcher<number>::zeta_twopf_batcher(unsigned int cap, const boost::filesystem::path& cp, const boost::filesystem::path& lp,
+    zeta_twopf_batcher<number>::zeta_twopf_batcher(unsigned int cap, unsigned int ckp, const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                                                    const writer_group& w, container_dispatch_function d, container_replacement_function r,
                                                    handle_type h, unsigned int wn)
-	    : postintegration_batcher(cap, cp, lp, d, r, h, wn),
+	    : postintegration_batcher(cap, ckp, cp, lp, d, r, h, wn),
 	      writers(w)
 	    {
 	    }
@@ -401,6 +408,9 @@ namespace transport
 
         // close current container, and replace with a new one if required
         this->replacer(this, action);
+
+        // pass flush notification down to generic batcher (eg. resets checkpoint timer)
+        this->generic_batcher::flush(action);
 	    }
 
 
@@ -418,10 +428,10 @@ namespace transport
 
     template <typename number>
     template <typename handle_type>
-    zeta_threepf_batcher<number>::zeta_threepf_batcher(unsigned int cap, const boost::filesystem::path& cp, const boost::filesystem::path& lp,
+    zeta_threepf_batcher<number>::zeta_threepf_batcher(unsigned int cap, unsigned int ckp, const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                                                        const writer_group& w, container_dispatch_function d, container_replacement_function r,
                                                        handle_type h, unsigned int wn)
-	    : postintegration_batcher(cap, cp, lp, d, r, h, wn),
+	    : postintegration_batcher(cap, ckp, cp, lp, d, r, h, wn),
 	      writers(w)
 	    {
 	    }
@@ -508,6 +518,9 @@ namespace transport
 
         // close current container, and replace with a new one if required
         this->replacer(this, action);
+
+        // pass flush notification down to generic batcher (eg. resets checkpoint timer)
+        this->generic_batcher::flush(action);
 	    }
 
 
@@ -532,10 +545,10 @@ namespace transport
 
     template <typename number>
     template <typename handle_type>
-    fNL_batcher<number>::fNL_batcher(unsigned int cap, const boost::filesystem::path& cp, const boost::filesystem::path& lp,
+    fNL_batcher<number>::fNL_batcher(unsigned int cap, unsigned int ckp, const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                                      const writer_group& w, container_dispatch_function d, container_replacement_function r,
                                      handle_type h, unsigned int wn, derived_data::template_type t)
-	    : postintegration_batcher(cap, cp, lp, d, r, h, wn),
+	    : postintegration_batcher(cap, ckp, cp, lp, d, r, h, wn),
 	      writers(w),
 	      type(t)
 	    {
@@ -599,6 +612,9 @@ namespace transport
 
         // close current container, and replace with a new one if required
         this->replacer(this, action);
+
+        // pass flush notification down to generic batcher (eg. resets checkpoint timer)
+        this->generic_batcher::flush(action);
 	    }
 
 	}   // namespace transport

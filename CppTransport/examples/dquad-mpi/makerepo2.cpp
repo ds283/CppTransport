@@ -39,7 +39,7 @@ int main(int argc, char* argv[])
 
     transport::repository_creation_key key;
 
-    transport::json_repository<double>* repo = transport::repository_factory<double>(argv[1], key);
+    std::shared_ptr< transport::json_repository<double> > repo = transport::repository_factory<double>(argv[1], key);
 
     // set up an instance of a manager
     transport::task_manager<double>* mgr = new transport::task_manager<double>(0, nullptr, repo);

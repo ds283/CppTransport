@@ -19,6 +19,8 @@
 #include "transport-runtime-api/exceptions.h"
 #include "transport-runtime-api/localizations/messages_en.h"
 
+#include "transport-runtime-api/utilities/host_information.h"
+
 #include "boost/filesystem.hpp"
 #include "boost/log/core.hpp"
 #include "boost/log/trivial.hpp"
@@ -162,6 +164,12 @@ namespace transport
         //! Return path to data container
         boost::filesystem::path get_relative_container_path() const { return(this->paths.data); }
 
+        //! Return path to log directory
+        boost::filesystem::path get_relative_logdir_path() const { return(this->paths.log); }
+
+        //! Return path to temporary directory
+        boost::filesystem::path get_relative_tempdir_path() const { return(this->paths.temp); }
+
 
         // LOGGING
 
@@ -175,8 +183,12 @@ namespace transport
 
       protected:
 
+        //! Host information
+        host_information host_info;
+
         //! name of output group we are writing to
         std::string name;
+
 
         // SUCCESS FLAG - USED TO DETERMINE WHETHER TO ABORT/ROLLBACK WHEN WINDING UP
 
@@ -241,7 +253,8 @@ namespace transport
         boost::shared_ptr<boost::log::core> core = boost::log::core::get();
 
         boost::shared_ptr<boost::log::sinks::text_file_backend> backend =
-	                                                                boost::make_shared<boost::log::sinks::text_file_backend>(boost::log::keywords::file_name = logfile_path.string());
+                                                                  boost::make_shared<boost::log::sinks::text_file_backend>(boost::log::keywords::file_name = logfile_path.string(),
+                                                                                                                           boost::log::keywords::open_mode = std::ios::app);
 
         // enable auto-flushing of log entries
         // this degrades performance, but we are not writing many entries and they
@@ -255,6 +268,14 @@ namespace transport
         core->add_sink(this->log_sink);
 
         boost::log::add_common_attributes();
+
+        BOOST_LOG_SEV(this->log_source, normal) << "** Instantiated writer on MPI host " << host_info.get_host_name();
+
+        BOOST_LOG_SEV(this->log_source, normal) << "** Host details: OS = " << host_info.get_os_name()
+            << ", version = " << host_info.get_os_version()
+            << " (release = " << host_info.get_os_release()
+            << ") | " << host_info.get_architecture()
+            << " | CPU vendor = " << host_info.get_cpu_vendor_id();
 	    }
 
 

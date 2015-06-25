@@ -73,7 +73,7 @@ namespace transport
                            const typename generic_writer::metadata_group& m, const typename generic_writer::paths_group& p,
                            unsigned int w, unsigned int wg);
 
-        //! disallow copying to ensure consistency of RAII idiom
+        //! disallow copying to ensure consistency of RAII idiom (writers abort when they go out of scope unless explicitly committed)
         integration_writer(const integration_writer<number>& obj) = delete;
 
         //! Destroy an integration container object
@@ -112,8 +112,15 @@ namespace transport
         //! Are we collecting per-configuration statistics
         bool is_collecting_statistics() const { return(this->collect_statistics); }
 
+        //! Set collecting-statistics mode
+        void set_collecting_statistics(bool g) { this->collect_statistics = g; }
+
 		    //! Are we collecting initial conditions data?
 				bool is_collecting_initial_conditions() const { return(this->collect_initial_conditions); }
+
+        //! Set initial-conditions collection mode
+        void set_collecting_initial_conditions(bool g) { this->collect_initial_conditions = g; }
+
 
         // METADATA
 
@@ -134,9 +141,6 @@ namespace transport
         //! Get metadata
         const integration_metadata& get_metadata() const { return(this->metadata); }
 
-        //! Merge list of failed serials reported by backend (not all backends may support this)
-        void merge_failure_list(const std::list<unsigned int>& failed) { std::list<unsigned int> temp = failed; this->set_fail(true); temp.sort(); this->failed_serials.merge(temp); }
-
         //! Set seed
         void set_seed(const std::string& g) { this->seeded = true; this->seed_group = g; }
 
@@ -151,11 +155,17 @@ namespace transport
 
       public:
 
+        //! Add list of serial numbers which the backend advises have failed (not all backends may support this)
+        void merge_failure_list(const std::list<unsigned int>& failed) { std::list<unsigned int> temp = failed; this->set_fail(true); temp.sort(); this->failed_serials.merge(temp); this->failed_serials.unique(); }
+
+        //! Get list of serial numbers which the backend advises have failed
+        const std::list<unsigned int>& get_failed_serials() const { return(this->failed_serials); }
+
         //! get list of missing k-configuration serials
         const std::list<unsigned int>& get_missing_serials() const { return(this->missing_serials); }
 
 		    //! set list of missing k-configuration serials
-		    void set_missing_serials(const std::list<unsigned int>& s) { this->missing_serials = s; this->missing_serials.sort(); }
+		    void set_missing_serials(const std::list<unsigned int>& s) { this->missing_serials = s; this->missing_serials.sort(); this->missing_serials.unique(); }
 
 
         // INTERNAL DATA
