@@ -62,6 +62,10 @@ namespace transport
 
         virtual const std::string& get_pert_stepper() const override { return($$__MODEL_pool::pert_stepper); }
 
+        virtual std::pair< double, double > get_back_tol() const override { return std::make_pair($$__BACKG_ABS_ERR, $$__BACKG_REL_ERR); }
+
+        virtual std::pair< double, double > get_pert_tol() const override { return std::make_pair($$__PERT_ABS_ERR, $$__PERT_REL_ERR); }
+
         // BACKEND INTERFACE
 
       public:

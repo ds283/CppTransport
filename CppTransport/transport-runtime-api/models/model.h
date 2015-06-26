@@ -87,6 +87,10 @@ namespace transport
         virtual const std::string&              get_back_stepper() const = 0;
         //! Return name of stepper used to do perturbation evolution in the computation
         virtual const std::string&              get_pert_stepper() const = 0;
+        //! Return (abs, rel) tolerance of stepper used to do background evolution
+        virtual std::pair< double, double >     get_back_tol() const = 0;
+        //! Return (abs, rel) tolerance of stepper used to do perturbation evolution
+        virtual std::pair< double, double >     get_pert_tol() const = 0;
 
         //! Return number of fields belonging to the model implemented by this object
         virtual unsigned int                    get_N_fields() const = 0;
