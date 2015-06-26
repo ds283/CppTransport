@@ -72,11 +72,9 @@ namespace transport
 		    //! unlike a master controller, there is no option to supply a repository;
 		    //! one has to be provided by a master controller over MPI later
 		    slave_controller(boost::mpi::environment& e, boost::mpi::communicator& w,
+                         local_environment& le, argument_cache& ac,
 		                     const typename instance_manager<number>::model_finder& f,
-		                     error_callback err, warning_callback warn, message_callback msg,
-		                     unsigned int bcp = CPPTRANSPORT_DEFAULT_BATCHER_STORAGE,
-		                     unsigned int pcp = CPPTRANSPORT_DEFAULT_PIPE_STORAGE,
-                         unsigned int ckp = CPPTRANSPORT_DEFAULT_CHECKPOINT_INTERVAL);
+		                     error_callback err, warning_callback warn, message_callback msg);
 
 		    //! destroy a slave manager object
 		    ~slave_controller() = default;
@@ -193,7 +191,12 @@ namespace transport
 
 
         // LOCAL ENVIRONMENT
-        local_environment local_env;
+
+        //! environment data
+        local_environment& local_env;
+
+        //! Argument cache
+        argument_cache& arg_cache;
 
 
 				// MODEL FINDER REFERENCE
@@ -209,18 +212,6 @@ namespace transport
 
 				//! Handler for postintegration and output tasks
 				slave_work_handler<number> work_handler;
-
-
-		    // DATA AND STATE
-
-		    //! Storage capacity per batcher
-		    unsigned int batcher_capacity;
-
-		    //! Data cache capacity per datapipe
-		    unsigned int pipe_capacity;
-
-        //! Checkpointing interval in seconds. 0 means that checkpointing is disabled
-        unsigned int checkpoint_interval;
 
 
 				// ERROR CALLBACKS
@@ -239,16 +230,15 @@ namespace transport
 
     template <typename number>
     slave_controller<number>::slave_controller(boost::mpi::environment& e, boost::mpi::communicator& w,
+                                               local_environment& le, argument_cache& ac,
                                                const typename instance_manager<number>::model_finder& f,
-                                               error_callback err, warning_callback warn, message_callback msg,
-                                               unsigned int bcp, unsigned int pcp, unsigned int ckp)
+                                               error_callback err, warning_callback warn, message_callback msg)
 	    : environment(e),
 	      world(w),
+        local_env(le),
+        arg_cache(ac),
 	      model_finder(f),
-	      data_mgr(data_manager_factory<number>(bcp, pcp, ckp)),
-	      batcher_capacity(bcp),
-	      pipe_capacity(pcp),
-        checkpoint_interval(ckp),
+	      data_mgr(data_manager_factory<number>(ac.get_batcher_capacity(), ac.get_datapipe_capacity(), ac.get_checkpoint_interval())),
 	      error_handler(err),
 	      warning_handler(warn),
 	      message_handler(msg)
@@ -327,9 +317,11 @@ namespace transport
                                                     this->error_handler, this->warning_handler, this->message_handler);
             this->repo->set_model_finder(this->model_finder);
 
-		        this->data_mgr->set_batcher_capacity(payload.get_batcher_capacity());
-            this->data_mgr->set_pipe_capacity(payload.get_data_capacity());
-            this->data_mgr->set_checkpoint_interval(payload.get_checkpoint_interval());
+            this->arg_cache = payload.get_argument_cache();
+
+		        this->data_mgr->set_batcher_capacity(this->arg_cache.get_batcher_capacity());
+            this->data_mgr->set_pipe_capacity(this->arg_cache.get_datapipe_capacity());
+            this->data_mgr->set_checkpoint_interval(this->arg_cache.get_checkpoint_interval());
 	        }
         catch (runtime_exception& xe)
 	        {
@@ -376,7 +368,7 @@ namespace transport
     void slave_controller<number>::process_task(const MPI::new_integration_payload& payload)
 	    {
         // ensure that a valid repository object has been constructed
-        if(this->repo == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_REPO_NOT_SET);
+        if(!this->repo) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_REPO_NOT_SET);
 
         // extract our task from the database
         // much of this is boiler-plate which is similar to master_process_task()
@@ -608,7 +600,7 @@ namespace transport
     void slave_controller<number>::process_task(const MPI::new_derived_content_payload& payload)
 	    {
         // ensure that a valid repository object has been constructed
-        if(this->repo == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_REPO_NOT_SET);
+        if(!this->repo) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_REPO_NOT_SET);
 
         // extract our task from the database
         // much of this is boiler-plate which is similar to master_process_task()
@@ -858,7 +850,7 @@ namespace transport
     void slave_controller<number>::process_task(const MPI::new_postintegration_payload& payload)
 	    {
         // ensure that a valid repository object has been constructed
-        if(this->repo == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_REPO_NOT_SET);
+        if(!this->repo) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_REPO_NOT_SET);
 
         // extract our task from the database
         try

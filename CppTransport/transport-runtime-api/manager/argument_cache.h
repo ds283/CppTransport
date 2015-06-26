@@ -10,6 +10,11 @@
 
 #include <string>
 
+#include "boost/serialization/string.hpp"
+#include "boost/serialization/list.hpp"
+
+#include "transport-runtime-api/defaults.h"
+
 
 namespace transport
 	{
@@ -52,7 +57,7 @@ namespace transport
 
         // CHECKPOINTING AND RECOVERY
 
-        public:
+      public:
 
         //! Set recovery mode
         void set_recovery_mode(bool g)                 { this->recovery = g; }
@@ -60,6 +65,28 @@ namespace transport
         //! Get recovery mode status
         bool get_recovery_mode() const                 { return(this->recovery); }
 
+        //! Set checkpoint interval
+        void set_checkpoint_interval(unsigned int i)   { this->checkpoint_interval = i; }
+
+        //! Get checkpoint interval
+        unsigned int get_checkpoint_interval() const   { return(this->checkpoint_interval); }
+
+
+        // CACHE CAPACITIES
+
+      public:
+
+        //! Set batcher capacity
+        void set_batcher_capacity(unsigned int c)      { this->batcher_capacity = c; }
+
+        //! Get batcher capacity
+        unsigned int get_batcher_capacity() const      { return(this->batcher_capacity); }
+
+        //! Set datapipe capacity
+        void set_datapipe_capacity(unsigned int c)     { this->pipe_capacity = c; }
+
+        //! Get datapipe capacity
+        unsigned int get_datapipe_capacity() const     { return(this->pipe_capacity); }
 
 
         // MPI VISUALIZATION OPTIONS
@@ -101,6 +128,32 @@ namespace transport
         //! colour output?
         bool colour_output;
 
+        //! Storage capacity per batcher
+        unsigned int batcher_capacity;
+
+        //! Data cache capacity per datapipe
+        unsigned int pipe_capacity;
+
+        //! checkpoint interval in seconds. Zero indicates that checkpointing is disabled
+        unsigned int checkpoint_interval;
+
+        // enable boost::serialization support, and hence automated packing for transmission over MPI
+        friend class boost::serialization::access;
+
+        template <typename Archive>
+        void serialize(Archive& ar, unsigned int version)
+          {
+            ar & gantt_chart;
+            ar & gantt_filename;
+            ar & verbose;
+            ar & list_models;
+            ar & recovery;
+            ar & colour_output;
+            ar & batcher_capacity;
+            ar & pipe_capacity;
+            ar & checkpoint_interval;
+          }
+
 	    };
 
 
@@ -109,7 +162,10 @@ namespace transport
 	      verbose(false),
         list_models(false),
         recovery(false),
-        colour_output(true)
+        colour_output(true),
+        batcher_capacity(CPPTRANSPORT_DEFAULT_BATCHER_STORAGE),
+        pipe_capacity(CPPTRANSPORT_DEFAULT_PIPE_STORAGE),
+        checkpoint_interval(CPPTRANSPORT_DEFAULT_CHECKPOINT_INTERVAL)
 	    {
 	    }
 

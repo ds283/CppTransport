@@ -247,18 +247,14 @@ namespace transport
 				//! construct a master controller object with no supplied repository
 				//! (one has to be provided in the command line arguments later)
 				master_controller(boost::mpi::environment& e, boost::mpi::communicator& w,
-				                  error_callback err, warning_callback warn, message_callback msg,
-				                  unsigned int bcp = CPPTRANSPORT_DEFAULT_BATCHER_STORAGE,
-				                  unsigned int pcp = CPPTRANSPORT_DEFAULT_PIPE_STORAGE,
-                          unsigned int ckp = CPPTRANSPORT_DEFAULT_CHECKPOINT_INTERVAL);
+                          local_environment& le, argument_cache& ac,
+				                  error_callback err, warning_callback warn, message_callback msg);
 
 				//! construct a master controller object with a supplied repository
 				master_controller(boost::mpi::environment& e, boost::mpi::communicator& w,
+                          local_environment& le, argument_cache& ac,
 				                  std::shared_ptr< json_repository<number> > r,
-				                  error_callback err, warning_callback warn, message_callback msg,
-				                  unsigned int bcp = CPPTRANSPORT_DEFAULT_BATCHER_STORAGE,
-				                  unsigned int pcp = CPPTRANSPORT_DEFAULT_PIPE_STORAGE,
-                          unsigned int ckp = CPPTRANSPORT_DEFAULT_CHECKPOINT_INTERVAL);
+				                  error_callback err, warning_callback warn, message_callback msg);
 
 				//! destroy a master manager object
 				~master_controller() = default;
@@ -273,12 +269,6 @@ namespace transport
 				
 		    //! execute any queued tasks
 		    void execute_tasks(void);
-
-				//! expose arguments
-				const argument_cache& get_arguments(void) { return(this->arg_cache); }
-
-        //! expose environment
-        const local_environment& get_environment(void) { return(this->local_env); }
 
 
 		    // MPI FUNCTIONS
@@ -463,7 +453,12 @@ namespace transport
 
 
         // LOCAL ENVIRONMENT
-        local_environment local_env;
+
+        //! environment data
+        local_environment& local_env;
+
+        //! Argument cache
+        argument_cache& arg_cache;
 
 
 		    // RUNTIME AGENTS
@@ -477,9 +472,6 @@ namespace transport
 				//! Event journal
 				work_journal journal;
 
-				//! Argument cache
-				argument_cache arg_cache;
-
 
 		    // DATA AND STATE
 
@@ -489,14 +481,6 @@ namespace transport
 		    //! Queue of tasks to process
 		    std::list<job_descriptor> job_queue;
 
-		    //! Storage capacity per batcher
-		    unsigned int batcher_capacity;
-
-		    //! Data cache capacity per datapipe
-		    unsigned int pipe_capacity;
-
-        //! checkpoint interval in seconds. Zero indicates that checkpointing is disabled
-        unsigned int checkpoint_interval;
 
 		    // ERROR CALLBACKS
 
@@ -514,15 +498,14 @@ namespace transport
 
     template <typename number>
     master_controller<number>::master_controller(boost::mpi::environment& e, boost::mpi::communicator& w,
-                                                 error_callback err, warning_callback warn, message_callback msg,
-                                                 unsigned int bcp, unsigned int pcp, unsigned int ckp)
+                                                 local_environment& le, argument_cache& ac,
+                                                 error_callback err, warning_callback warn, message_callback msg)
 	    : environment(e),
 	      world(w),
-	      data_mgr(data_manager_factory<number>(bcp, pcp, ckp)),
+        local_env(le),
+        arg_cache(ac),
+	      data_mgr(data_manager_factory<number>(ac.get_batcher_capacity(), ac.get_datapipe_capacity(), ac.get_checkpoint_interval())),
 	      journal(w.size()-1),
-	      batcher_capacity(bcp),
-	      pipe_capacity(pcp),
-        checkpoint_interval(ckp),
 	      error_handler(err),
 	      warning_handler(warn),
 	      message_handler(msg)
@@ -532,22 +515,21 @@ namespace transport
 
     template <typename number>
     master_controller<number>::master_controller(boost::mpi::environment& e, boost::mpi::communicator& w,
+                                                 local_environment& le, argument_cache& ac,
                                                  std::shared_ptr< json_repository<number> > r,
-                                                 error_callback err, warning_callback warn, message_callback msg,
-                                                 unsigned int bcp, unsigned int pcp, unsigned int ckp)
+                                                 error_callback err, warning_callback warn, message_callback msg)
 	    : environment(e),
 	      world(w),
+        local_env(le),
+        arg_cache(ac),
 	      repo(r),
-	      data_mgr(data_manager_factory<number>(bcp, pcp, ckp)),
+	      data_mgr(data_manager_factory<number>(ac.get_batcher_capacity(), ac.get_datapipe_capacity(), ac.get_checkpoint_interval())),
 	      journal(w.size()-1),
-	      batcher_capacity(bcp),
-	      pipe_capacity(pcp),
-        checkpoint_interval(ckp),
 	      error_handler(err),
 	      warning_handler(warn),
 	      message_handler(msg)
 	    {
-		    assert(repo != nullptr);
+		    assert(repo);
 	    }
 
 		
@@ -652,9 +634,13 @@ namespace transport
             int capacity = option_map[CPPTRANSPORT_SWITCH_CAPACITY].as<int>() * 1024*1024;            // argument size interpreted in Mb
             if(capacity > 0)
               {
-                this->batcher_capacity = this->pipe_capacity = static_cast<unsigned int>(capacity);
-                this->data_mgr->set_batcher_capacity(this->batcher_capacity);                         // probably not required; only slaves need these values set
-                this->data_mgr->set_pipe_capacity(this->pipe_capacity);                               // probably not required; only slaves need these values set
+                unsigned int cp = static_cast<unsigned int>(capacity);
+
+                this->arg_cache.set_batcher_capacity(cp);
+                this->arg_cache.set_datapipe_capacity(cp);
+
+                this->data_mgr->set_batcher_capacity(cp);                         // probably not required; only slaves need these values set
+                this->data_mgr->set_pipe_capacity(cp);                            // probably not required; only slaves need these values set
               }
             else
               {
@@ -670,8 +656,11 @@ namespace transport
             int capacity = option_map[CPPTRANSPORT_SWITCH_CACHE_CAPACITY].as<int>() * 1024*1024;      // argument size interpreted in Mb
             if(capacity > 0)
               {
-                this->pipe_capacity = static_cast<unsigned int>(capacity);
-                this->data_mgr->set_pipe_capacity(this->pipe_capacity);                               // probably not required; only slaves need these values set
+                unsigned int cp = static_cast<unsigned int>(capacity);
+
+                this->arg_cache.set_datapipe_capacity(cp);
+
+                this->data_mgr->set_pipe_capacity(cp);                            // probably not required; only slaves need these values set
               }
             else
               {
@@ -687,8 +676,11 @@ namespace transport
             int capacity = option_map[CPPTRANSPORT_SWITCH_BATCHER_CAPACITY].as<int>() * 1024*1024;    // argument size interpreted in Mb
             if(capacity > 0)
               {
-                this->batcher_capacity = static_cast<unsigned int>(capacity);
-                this->data_mgr->set_batcher_capacity(this->batcher_capacity);                         // probably not required; only slaves need these values set
+                unsigned int cp = static_cast<unsigned int>(capacity);
+
+                this->arg_cache.set_batcher_capacity(cp);
+
+                this->data_mgr->set_batcher_capacity(cp);                         // probably not required; only slaves need these values set
               }
             else
               {
@@ -704,8 +696,10 @@ namespace transport
             int interval = option_map[CPPTRANSPORT_SWITCH_CHECKPOINT].as<int>() * 60;                 // argument size interpreted in minutes; convert value to seconds
             if(interval > 0)
               {
-                this->checkpoint_interval = static_cast<unsigned int>(interval);
-                this->data_mgr->set_checkpoint_interval(this->checkpoint_interval);                   // probably not required; only slaves need these values set
+                unsigned int ck = static_cast<unsigned int>(interval);
+
+                this->arg_cache.set_checkpoint_interval(ck);
+                this->data_mgr->set_checkpoint_interval(ck);                   // probably not required; only slaves need these values set
               }
             else
               {
@@ -749,7 +743,7 @@ namespace transport
 	    {
         if(!(this->get_rank() == 0)) throw runtime_exception(runtime_exception::MPI_ERROR, CPPTRANSPORT_EXEC_SLAVE);
 
-        if(this->repo == nullptr)
+        if(!this->repo)
 	        {
             this->error_handler(CPPTRANSPORT_REPO_NONE);
 	        }
@@ -1773,11 +1767,11 @@ namespace transport
         std::vector<boost::mpi::request> requests(this->world.size()-1);
 
         // we require this->repo not to be null
-        assert(this->repo != nullptr);
-		    if(this->repo == nullptr) throw std::runtime_error(CPPTRANSPORT_REPO_NOT_SET);
+        assert(this->repo);
+		    if(!this->repo) throw std::runtime_error(CPPTRANSPORT_REPO_NOT_SET);
 
 		    // request information from each worker, and pass all necessary setup details
-        MPI::slave_setup_payload payload(this->repo->get_root_path(), this->batcher_capacity, this->pipe_capacity, this->checkpoint_interval);
+        MPI::slave_setup_payload payload(this->repo->get_root_path(), this->arg_cache);
 
         for(unsigned int i = 0; i < this->world.size()-1; ++i)
 	        {
