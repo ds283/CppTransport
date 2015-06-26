@@ -13,6 +13,7 @@
 #include <iomanip>
 #include <sstream>
 #include <stdexcept>
+#include <memory>
 
 #include "boost/numeric/odeint.hpp"
 #include "boost/range/algorithm.hpp"
@@ -82,7 +83,7 @@ namespace transport
 
       public:
 
-        $$__MODEL(instance_manager<number>* mgr);
+        $$__MODEL(std::shared_ptr< instance_manager<number> >& mgr);
 		    ~$$__MODEL() = default;
 
 
@@ -260,7 +261,7 @@ namespace transport
 
 
     template <typename number>
-    $$__MODEL<number>::$$__MODEL(instance_manager<number>* mgr)
+    $$__MODEL<number>::$$__MODEL(std::shared_ptr< instance_manager<number> >& mgr)
       : canonical_model<number>(mgr, "$$__UNIQUE_ID", static_cast<unsigned int>(100*$$__VERSION))
       {
       }

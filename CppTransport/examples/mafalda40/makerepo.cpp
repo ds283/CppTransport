@@ -72,7 +72,7 @@ int main(int argc, char* argv[])
     transport::json_interface_repository<double>* repo = transport::repository_factory<double>(argv[1], key);
 
     // set up an instance of a manager
-    transport::task_manager<double>* mgr = new transport::task_manager<double>(0, nullptr, repo);
+    std::shared_ptr< transport::task_manager<double> > mgr = std::make_shared< transport::task_manager<double> >(0, nullptr, repo);
 
     // set up an instance of the double quadratic model,
     // using doubles, with given parameter choices
@@ -156,8 +156,6 @@ int main(int argc, char* argv[])
 
 		// write output tasks to the database
 		repo->commit_task(twopf_output);
-
-    delete mgr;     // task_manager adopts its repository and destroys it silently; also destroys any registered models
 
     return(EXIT_SUCCESS);
   }

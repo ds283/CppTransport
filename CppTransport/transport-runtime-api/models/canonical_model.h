@@ -10,6 +10,7 @@
 
 #include <string>
 #include <vector>
+#include <memory>
 
 #include "transport-runtime-api/models/model.h"
 
@@ -23,7 +24,7 @@ namespace transport
     class canonical_model : public model<number>
       {
       public:
-        canonical_model(instance_manager<number>* mgr, const std::string& uid, unsigned int tver)
+        canonical_model(std::shared_ptr< instance_manager<number> >& mgr, const std::string& uid, unsigned int tver)
           : model<number>(mgr, uid, tver)
           {
           }

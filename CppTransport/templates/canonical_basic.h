@@ -45,7 +45,7 @@ namespace transport
 
       public:
 
-        $$__MODEL_basic(instance_manager<number>* mgr)
+        $$__MODEL_basic(std::shared_ptr< instance_manager<number> > mgr)    // don't take my reference; we are likely to be passed a std::shared_ptr< task_manager<> >, which needs conversion
 	        : $$__MODEL<number>(mgr)
 	        {
 	        }

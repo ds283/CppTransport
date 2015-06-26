@@ -11,6 +11,7 @@
 #include <string>
 #include <vector>
 #include <functional>
+#include <memory>
 
 #include <math.h>
 
@@ -61,7 +62,7 @@ namespace transport
 
       public:
 
-        model(instance_manager<number>* m, const std::string& u, unsigned int v);
+        model(std::shared_ptr< instance_manager<number> >& m, const std::string& u, unsigned int v);
 		    ~model();
 
 
@@ -234,8 +235,8 @@ namespace transport
 
       private:
 
-        //! copy of instance manager, used for deregistration
-        instance_manager<number>* mgr;
+        //! copy of instance manager, used for deregistration; we use std::shared_ptr<> to manage its lifetime
+        std::shared_ptr< instance_manager<number> > mgr;
 
         //! copy of unique id, used for deregistration
         const std::string uid;
@@ -252,7 +253,7 @@ namespace transport
     // EXTRACT MODEL INFORMATION
 
     template <typename number>
-    model<number>::model(instance_manager<number>* m, const std::string& u, unsigned int v)
+    model<number>::model(std::shared_ptr< instance_manager<number> >& m, const std::string& u, unsigned int v)
       : mgr(m), uid(u), tver(v)
       {
         // Register ourselves with the instance manager
@@ -263,7 +264,7 @@ namespace transport
     template <typename number>
     model<number>::~model()
       {
-        assert(this->mgr != nullptr);
+        assert(this->mgr);
         mgr->deregister_model(this, this->uid, tver);
       }
 

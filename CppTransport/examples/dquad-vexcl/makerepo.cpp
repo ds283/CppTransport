@@ -38,7 +38,7 @@ int main(int argc, char* argv[])
 //    transport::repository<double>* repo = transport::repository_factory<double>("/Volumes/sulis/CppTransport-repository/test", key);
 
     // set up an instance of a manager
-    transport::task_manager<double>* mgr = new transport::task_manager<double>(argc, argv, repo);
+    std::shared_ptr< transport::task_manager<double> > mgr = std::make_shared< transport::task_manager<double> >(0, nullptr, repo);
 
     // set up an instance of the double quadratic model,
     // using doubles, with given parameter choices
@@ -95,8 +95,6 @@ int main(int argc, char* argv[])
 
     std::string task3_xml = repo->extract_integration_document(tk3.get_name());
     std::cout << "3pf integration XML document:" << std::endl << task3_xml << std::endl << std::endl;
-
-    delete mgr;     // task_manager adopts its repository and destroys it silently; also destroys any registered models
 
     return(EXIT_SUCCESS);
   }
