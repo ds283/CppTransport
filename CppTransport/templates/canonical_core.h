@@ -1073,21 +1073,34 @@ namespace transport
             EpsilonUnityPredicate(const parameters<number>& p)
               : params(p)
               {
+                param_vector = params.get_vector();
+                Mp = params.get_Mp();
               }
 
             bool operator()(const std::pair< backg_state<number>, double >& __x)
               {
-                const auto $$__PARAMETER[1]  = this->params.get_vector()[$$__1];
+                const auto $$__PARAMETER[1]  = this->param_vector[$$__1];
                 const auto $$__COORDINATE[A] = __x.first[$$__A];
-                const auto __Mp              = this->params.get_Mp();
+                const auto __Mp              = this->Mp;
 
                 const auto __eps = $$__EPSILON;
 
-                return (__eps > 1.0);
+                std::cout << "time N = " << __x.second << ", epsilon = " << __eps << std::endl;
+
+                return (__eps >= 1.0 || __eps < 0.0);
               }
 
           private:
+
+            //! parameters for the model in use
             const parameters<number>& params;
+
+            //! cache parameters vectors
+            std::vector<number> param_vector;
+
+            //! cache Planck mass
+            number Mp;
+
           };
 
       }   // namespace $$__MODEL_impl
@@ -1108,8 +1121,8 @@ namespace transport
 
 		    // find point where epsilon = 1
         auto stepper = $$__MAKE_BACKG_STEPPER{backg_state<number>};
-
-		    auto range = boost::numeric::odeint::make_adaptive_time_range(stepper, system, x, tk->get_N_initial(), tk->get_N_initial()+search_time, $$__BACKG_STEP_SIZE);
+        
+        auto range = boost::numeric::odeint::make_adaptive_time_range(stepper, system, x, tk->get_N_initial(), tk->get_N_initial()+search_time, $$__BACKG_STEP_SIZE);
 
         // returns the first iterator in 'range' for which the predicate EpsilonUnityPredicate() is satisfied
         auto iter = boost::find_if(range, $$__MODEL_impl::EpsilonUnityPredicate<number>(tk->get_params()));
@@ -1135,13 +1148,15 @@ namespace transport
                 N_horizon_crossing(tk->get_N_horizon_crossing()),
                 astar_normalization(tk->get_astar_normalization())
               {
+                param_vector = params.get_vector();
+                Mp = params.get_Mp();
               }
 
             bool operator()(const std::pair< backg_state<number>, double >& __x)
               {
-                const auto $$__PARAMETER[1]  = this->params.get_vector()[$$__1];
+                const auto $$__PARAMETER[1]  = this->param_vector[$$__1];
                 const auto $$__COORDINATE[A] = __x.first[$$__A];
-                const auto __Mp              = this->params.get_Mp();
+                const auto __Mp              = this->Mp;
 
                 const auto __Hsq = $$__HUBBLE_SQ;
                 const auto __H   = std::sqrt(__Hsq);
@@ -1160,6 +1175,12 @@ namespace transport
 
             //! parameters for the model in use
             const parameters<number>& params;
+
+            //! cache parameters vectors
+            std::vector<number> param_vector;
+
+            //! cache Planck mass
+            number Mp;
 
             //! output vector for times N
             std::vector<double>& N_vector;
@@ -1210,7 +1231,7 @@ namespace transport
             N_range = tk->get_N_initial() + CPPTRANSPORT_DEFAULT_END_OF_INFLATION_SEARCH;
           }
 
-        auto range = boost::numeric::odeint::make_adaptive_time_range(stepper, system, x, tk->get_N_initial(), N_range, 0.01);
+        auto range = boost::numeric::odeint::make_adaptive_time_range(stepper, system, x, tk->get_N_initial(), N_range, $$__BACKG_STEP_SIZE);
 
         $$__MODEL_impl::aHAggregatorPredicate<number> aggregator(tk, N, log_aH, largest_k);
 
