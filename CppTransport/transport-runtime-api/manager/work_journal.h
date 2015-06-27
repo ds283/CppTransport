@@ -9,6 +9,7 @@
 
 
 #include <list>
+#include <cstdlib>
 
 #include "transport-runtime-api/manager/environment.h"
 
@@ -938,7 +939,7 @@ namespace transport
 					{
 				    std::ostringstream command;
 				    command << "source ~/.profile; " << local_env.get_python_location() << " \"" << script_file.string() << "\"";
-				    int rc = system(command.str().c_str());
+				    int rc = std::system(command.str().c_str());
 
 				    // remove python script if worked ok
 				    if(rc == 0)

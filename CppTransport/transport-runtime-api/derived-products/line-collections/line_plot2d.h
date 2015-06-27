@@ -11,6 +11,7 @@
 #include <iostream>
 #include <fstream>
 #include <functional>
+#include <cstdlib>
 
 #include "transport-runtime-api/derived-products/line-collections/line_collection.h"
 #include "transport-runtime-api/derived-products/line-collections/data_line.h"
@@ -725,7 +726,7 @@ namespace transport
 							{
 						    std::ostringstream command;
 						    command << "source ~/.profile; " << env.get_python_location() << " \"" << script_file.string() << "\"";
-						    int rc = system(command.str().c_str());
+						    int rc = std::system(command.str().c_str());
 
 						    // remove python script if worked ok, otherwise move script to destination and throw an exception
 						    if(rc == 0)
