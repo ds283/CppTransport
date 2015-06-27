@@ -239,8 +239,9 @@ namespace transport
 
       private:
 
-        //! copy of instance manager, used for deregistration; we use std::shared_ptr<> to manage its lifetime
-        std::shared_ptr< instance_manager<number> > mgr;
+        //! copy of instance manager, used for deregistration; we use std::shared_ptr<> to manage its lifetime,
+        //! but to avoid a dependency cycle we need to store a weak pointer
+        std::weak_ptr< instance_manager<number> > mgr;
 
         //! copy of unique id, used for deregistration
         const std::string uid;
@@ -261,15 +262,17 @@ namespace transport
       : mgr(m), uid(u), tver(v)
       {
         // Register ourselves with the instance manager
-        mgr->register_model(this, uid, tver);
+        m->register_model(this, uid, tver);
       }
 
 
     template <typename number>
     model<number>::~model()
       {
-        assert(this->mgr);
-        mgr->deregister_model(this, this->uid, tver);
+        std::shared_ptr< instance_manager<number> > mgr_instance = this->mgr.lock();
+
+        // mgr_instance may not get a usable reference if the task_manger is beging destroyed, but in that case we don't need to de-register
+        if(mgr_instance) mgr_instance->deregister_model(this, this->uid, tver);
       }
 
 
