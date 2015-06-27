@@ -97,6 +97,12 @@ namespace transport
         //! Return stepper identifier - perturbations evolution
         const std::string& get_pert_stepper() const { return(this->mdl->get_pert_stepper()); }
 
+        //! Return stepper tolerance - background evolution
+        std::pair< double, double > get_back_tol() const { return(this->mdl->get_back_tol()); }
+
+        //! Return stepper tolerance - perturbations evolution
+        std::pair< double, double > get_pert_tol() const { return(this->mdl->get_pert_tol()); }
+
         //! Close this batcher -- called at the end of an integration
         virtual void close() override;
 

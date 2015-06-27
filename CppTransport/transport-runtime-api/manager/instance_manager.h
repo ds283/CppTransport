@@ -42,7 +42,9 @@ namespace transport
       public:
 
         model_instance(model<number>* m, const std::string& i, unsigned int v)
-          : m_ptr(m), uid(i), tver(v)
+          : m_ptr(m),
+            uid(i),
+            tver(v)
           {
             assert(m != nullptr);
           }
@@ -152,13 +154,9 @@ namespace transport
     template <typename number>
     instance_manager<number>::~instance_manager()
       {
-        // when deleted, models deregister themselves and therefore change iterators into the list.
-        // to handle this, take a copy first
-        std::list< model_instance<number> > models_copy = this->models;
-
-        for(typename std::list< model_instance<number> >::iterator t = models_copy.begin(); t != models_copy.end(); ++t)
+        for(typename std::list< model_instance<number> >::iterator t = this->models.begin(); t != this->models.end(); ++t)
           {
-            (*t).delete_model();
+            t->delete_model();
           }
       }
 

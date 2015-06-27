@@ -82,7 +82,7 @@ namespace transport
 
       public:
 
-        $$__MODEL(instance_manager<number>* mgr);
+        $$__MODEL(std::shared_ptr< instance_manager<number> >& mgr);
         ~$$__MODEL() = default;
 
 
@@ -260,7 +260,7 @@ namespace transport
 
 
     template <typename number>
-    $$__MODEL<number>::$$__MODEL(instance_manager<number>* mgr)
+    $$__MODEL<number>::$$__MODEL(std::shared_ptr< instance_manager<number> >& mgr)
       : canonical_model<number>(mgr, "$$__UNIQUE_ID", static_cast<unsigned int>(100*$$__VERSION))
       {
       }
@@ -891,7 +891,7 @@ namespace transport
             N_range = tk->get_N_initial() + CPPTRANSPORT_DEFAULT_END_OF_INFLATION_SEARCH;
           }
 
-        auto range = boost::numeric::odeint::make_const_step_time_range(stepper, system, x, tk->get_N_initial(), N_range, 0.01);
+        auto range = boost::numeric::odeint::make_adaptive_time_range(stepper, system, x, tk->get_N_initial(), N_range, 0.01);
 
         $$__MODEL_impl::aHAggregatorPredicate<number> aggregator(tk, N, log_aH, largest_k);
 

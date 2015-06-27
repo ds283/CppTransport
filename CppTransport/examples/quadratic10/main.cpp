@@ -30,16 +30,13 @@ static void output_info(transport::canonical_model<double>* model, transport::in
 int main(int argc, char* argv[])
   {
     // set up an instance of a manager
-    transport::task_manager<double>* mgr = new transport::task_manager<double>(argc, argv);
+    std::shared_ptr< transport::task_manager<double> > mgr = std::make_shared< transport::task_manager<double> >(argc, argv);
 
     // set up an instance of the double quadratic model,
     // using doubles, with given parameter choices
     transport::quadratic10_basic<double>* model = new transport::quadratic10_basic<double>(mgr);
 
 		mgr->process();
-
-    // models must all be destroyed before the corresponding manager
-    delete mgr;   // task manager adopts and destroys its repository, and any registered models
 
     return(EXIT_SUCCESS);
   }

@@ -45,7 +45,7 @@ namespace transport
 
       public:
 
-        $$__MODEL_basic(instance_manager<number>* mgr)
+        $$__MODEL_basic(std::shared_ptr< instance_manager<number> > mgr)    // don't take my reference; we are likely to be passed a std::shared_ptr< task_manager<> >, which needs conversion
 	        : $$__MODEL<number>(mgr)
 	        {
 	        }
@@ -61,6 +61,10 @@ namespace transport
         virtual const std::string& get_back_stepper() const override { return($$__MODEL_pool::back_stepper); }
 
         virtual const std::string& get_pert_stepper() const override { return($$__MODEL_pool::pert_stepper); }
+
+        virtual std::pair< double, double > get_back_tol() const override { return std::make_pair($$__BACKG_ABS_ERR, $$__BACKG_REL_ERR); }
+
+        virtual std::pair< double, double > get_pert_tol() const override { return std::make_pair($$__PERT_ABS_ERR, $$__PERT_REL_ERR); }
 
         // BACKEND INTERFACE
 
