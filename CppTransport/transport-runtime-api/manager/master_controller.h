@@ -553,8 +553,12 @@ namespace transport
           (CPPTRANSPORT_SWITCH_RECOVER,                                                                                      CPPTRANSPORT_HELP_RECOVER)
           (CPPTRANSPORT_SWITCH_CAPACITY,         boost::program_options::value< int >(),                                     CPPTRANSPORT_HELP_CAPACITY)
           (CPPTRANSPORT_SWITCH_BATCHER_CAPACITY, boost::program_options::value< int >(),                                     CPPTRANSPORT_HELP_BATCHER_CAPACITY)
-          (CPPTRANSPORT_SWITCH_CACHE_CAPACITY,   boost::program_options::value< int >(),                                     CPPTRANSPORT_HELP_CACHE_CAPACITY)
-          (CPPTRANSPORT_SWITCH_GANTT_CHART,      boost::program_options::value< std::string >(),                             CPPTRANSPORT_HELP_GANTT_CHART);
+          (CPPTRANSPORT_SWITCH_CACHE_CAPACITY,   boost::program_options::value< int >(),                                     CPPTRANSPORT_HELP_CACHE_CAPACITY);
+
+        boost::program_options::options_description journaling("Journaling options");
+        journaling.add_options()
+          (CPPTRANSPORT_SWITCH_GANTT_CHART,      boost::program_options::value< std::string >(),                             CPPTRANSPORT_HELP_GANTT_CHART)
+          (CPPTRANSPORT_SWITCH_JOURNAL,          boost::program_options::value< std::string >(),                             CPPTRANSPORT_HELP_JOURNAL);
 
         boost::program_options::options_description job_options("Job specification");
         job_options.add_options()
@@ -566,10 +570,10 @@ namespace transport
           (CPPTRANSPORT_SWITCH_NO_COLOR, CPPTRANSPORT_HELP_NO_COLOR);
 
         boost::program_options::options_description cmdline_options;
-        cmdline_options.add(generic).add(configuration).add(job_options).add(hidden_options);
+        cmdline_options.add(generic).add(configuration).add(journaling).add(job_options).add(hidden_options);
 
         boost::program_options::options_description output_options;
-        output_options.add(generic).add(configuration).add(job_options);
+        output_options.add(generic).add(configuration).add(journaling).add(job_options);
 
         boost::program_options::variables_map option_map;
         boost::program_options::store(boost::program_options::parse_command_line(argc, argv, cmdline_options), option_map);
@@ -716,6 +720,13 @@ namespace transport
             this->arg_cache.set_gantt_filename(option_map[CPPTRANSPORT_SWITCH_GANTT_CHART].as<std::string>());
           }
 
+        // process journal specification, if provided
+        if(option_map.count(CPPTRANSPORT_SWITCH_JOURNAL))
+          {
+            this->arg_cache.set_journal(true);
+            this->arg_cache.set_journal_filename(option_map[CPPTRANSPORT_SWITCH_JOURNAL].as<std::string>());
+          }
+
         if(option_map.count(CPPTRANSPORT_SWITCH_VERBOSE_LONG))                                                this->arg_cache.set_verbose(true);
         if(option_map.count(CPPTRANSPORT_SWITCH_RECOVER))                                                     this->arg_cache.set_recovery_mode(true);
         if(option_map.count(CPPTRANSPORT_SWITCH_NO_COLOUR) || option_map.count(CPPTRANSPORT_SWITCH_NO_COLOR)) this->arg_cache.set_colour_output(false);
@@ -802,6 +813,7 @@ namespace transport
         this->terminate_workers();
 
 		    if(this->arg_cache.get_gantt_chart()) this->journal.make_gantt_chart(this->arg_cache.get_gantt_filename(), this->local_env);
+        if(this->arg_cache.get_journal())     this->journal.make_journal(this->arg_cache.get_journal_filename(), this->local_env);
 	    }
 
 
