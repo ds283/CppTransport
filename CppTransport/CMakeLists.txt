@@ -2,6 +2,32 @@ cmake_minimum_required(VERSION 2.6)
 
 project(CppTransport)
 
+SET( CMAKE_CXX_FLAGS_COVERAGE "-prof-gen=srcpos -prof-dir /Users/ds283/Documents/Code/CppTransport/profiled" CACHE STRING
+    "Flags used by the C++ compiler during code coverage builds."
+    FORCE )
+SET( CMAKE_C_FLAGS_COVERAGE "-prof-gen=srcpos -prof-dir /Users/ds283/Documents/Code/CppTransport/profiled" CACHE STRING
+    "Flags used by the C compiler during code coverage builds."
+    FORCE )
+SET( CMAKE_EXE_LINKER_FLAGS_COVERAGE
+    "-prof-gen=srcpos -prof-dir /Users/ds283/Documents/Code/CppTransport/profiled" CACHE STRING
+    "Flags used for linking binaries during code coverage builds."
+    FORCE )
+SET( CMAKE_SHARED_LINKER_FLAGS_COVERAGE
+    "-prof-gen=srcpos -prof-dir /Users/ds283/Documents/Code/CppTransport/profiled" CACHE STRING
+    "Flags used by the shared libraries linker during code coverage builds."
+    FORCE )
+
+MARK_AS_ADVANCED(
+    CMAKE_CXX_FLAGS_COVERAGE
+    CMAKE_C_FLAGS_COVERAGE
+    CMAKE_EXE_LINKER_FLAGS_COVERAGE
+    CMAKE_SHARED_LINKER_FLAGS_COVERAGE )
+
+# Update the documentation string of CMAKE_BUILD_TYPE for GUIs
+SET( CMAKE_BUILD_TYPE "${CMAKE_BUILD_TYPE}" CACHE STRING
+    "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel Coverage."
+    FORCE )
+
 SET ( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/" )
 SET ( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/splinter/cmake/" )
 
