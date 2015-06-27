@@ -1085,8 +1085,6 @@ namespace transport
 
                 const auto __eps = $$__EPSILON;
 
-                std::cout << "time N = " << __x.second << ", epsilon = " << __eps << std::endl;
-
                 return (__eps >= 1.0 || __eps < 0.0);
               }
 
