@@ -891,7 +891,7 @@ namespace transport
             N_range = tk->get_N_initial() + CPPTRANSPORT_DEFAULT_END_OF_INFLATION_SEARCH;
           }
 
-        auto range = boost::numeric::odeint::make_const_step_time_range(stepper, system, x, tk->get_N_initial(), N_range, 0.01);
+        auto range = boost::numeric::odeint::make_adaptive_time_range(stepper, system, x, tk->get_N_initial(), N_range, 0.01);
 
         $$__MODEL_impl::aHAggregatorPredicate<number> aggregator(tk, N, log_aH, largest_k);
 
