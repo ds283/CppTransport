@@ -79,7 +79,7 @@ namespace transport
 				typedef std::function<bool(unsigned int,unsigned int,MPI::content_ready_payload&,output_metadata&)> derived_content_aggregator;
 
 				//! Labels for types of job
-		    typedef enum { job_task, job_get_package, job_get_task, job_get_product, job_get_content } job_type;
+		    typedef enum { job_task } job_type;
 
 
 				//! Job descriptor class
