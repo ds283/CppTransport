@@ -23,9 +23,60 @@ MARK_AS_ADVANCED(
     CMAKE_EXE_LINKER_FLAGS_COVERAGE
     CMAKE_SHARED_LINKER_FLAGS_COVERAGE )
 
+SET( CMAKE_CXX_FLAGS_PROFILE "-g -Ofast" CACHE STRING
+    "Flags used by the C++ compiler during profiling builds."
+    FORCE )
+SET( CMAKE_C_FLAGS_PROFILE "-g -Ofast" CACHE STRING
+    "Flags used by the C compiler during profiling builds."
+    FORCE )
+SET( CMAKE_EXE_LINKER_FLAGS_PROFILE
+    "-g -Ofast" CACHE STRING
+    "Flags used for linking binaries during profiling builds."
+    FORCE )
+SET( CMAKE_SHARED_LINKER_FLAGS_PROFILE
+    "-g -Ofast" CACHE STRING
+    "Flags used by the shared libraries linker during profiling builds."
+    FORCE )
+
+MARK_AS_ADVANCED(
+    CMAKE_CXX_FLAGS_PROFILE
+    CMAKE_C_FLAGS_PROFILE
+    CMAKE_EXE_LINKER_FLAGS_PROFILE
+    CMAKE_SHARED_LINKER_FLAGS_PROFILE )
+
+SET( CMAKE_CXX_FLAGS_DEBUG "-g" CACHE STRING
+    "Flags used by the C++ compiler during debug builds."
+    FORCE )
+SET( CMAKE_C_FLAGS_DEBUG "-g" CACHE STRING
+    "Flags used by the C compiler during debug builds."
+    FORCE )
+SET( CMAKE_EXE_LINKER_FLAGS_DEBUG
+    "-g" CACHE STRING
+    "Flags used for linking binaries during debug builds."
+    FORCE )
+SET( CMAKE_SHARED_LINKER_FLAGS_DEBUG
+    "-g" CACHE STRING
+    "Flags used by the shared libraries linker during debug builds."
+    FORCE )
+
+SET( CMAKE_CXX_FLAGS_RELEASE "-Ofast" CACHE STRING
+    "Flags used by the C++ compiler during release builds."
+    FORCE )
+SET( CMAKE_C_FLAGS_RELEASE "-Ofast" CACHE STRING
+    "Flags used by the C compiler during release builds."
+    FORCE )
+SET( CMAKE_EXE_LINKER_FLAGS_RELEASE
+    "-Ofast" CACHE STRING
+    "Flags used for linking binaries during release builds."
+    FORCE )
+SET( CMAKE_SHARED_LINKER_FLAGS_RELEASE
+    "-Ofast" CACHE STRING
+    "Flags used by the shared libraries linker during release builds."
+    FORCE )
+
 # Update the documentation string of CMAKE_BUILD_TYPE for GUIs
 SET( CMAKE_BUILD_TYPE "${CMAKE_BUILD_TYPE}" CACHE STRING
-    "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel Coverage."
+    "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel Coverage Profile."
     FORCE )
 
 SET ( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/" )
@@ -40,16 +91,16 @@ find_package(Eigen3 REQUIRED)
 #find_package(CUDA REQUIRED)
 #find_package(OpenCL REQUIRED)
 
-SET ( CMAKE_CXX_FLAGS "-std=c++11 -Ofast -mavx" CACHE STRING "compile flags" FORCE )
+SET ( CMAKE_CXX_FLAGS "-std=c++11 -mavx" CACHE STRING "compile flags" FORCE )
 #SET ( CMAKE_CXX_FLAGS "-std=c++11 -O1" CACHE STRING "compile flags" FORCE )
-SET ( CMAKE_C_FLAGS "-Ofast -mavx" CACHE STRING "compile flags" FORCE )
+SET ( CMAKE_C_FLAGS " -mavx" CACHE STRING "compile flags" FORCE )
 
 include_directories(./ backends
 					   backends/infrastructure
-					   "backends/infrastructure/file_handling"
-					   "backends/infrastructure/language_concepts"
-					   "backends/infrastructure/macro_substitution"
-					   "backends/infrastructure/replacement_rules"
+					   backends/infrastructure/file_handling
+					   backends/infrastructure/language_concepts
+					   backends/infrastructure/macro_substitution
+					   backends/infrastructure/replacement_rules
 					   backends/languages
 					   backends/languages/cpp
 					   backends/languages/cpp/core
@@ -78,17 +129,17 @@ include_directories(./ backends
 
 
 add_executable(CppTransport main.cpp
-							"backends/infrastructure/file_handling/buffer.cpp"
-							"backends/infrastructure/file_handling/output_stack.cpp"
-							"backends/infrastructure/file_handling/translation_unit.cpp"
-							"backends/infrastructure/file_handling/translator.cpp"
-							"backends/infrastructure/language_concepts/cse.cpp"
-							"backends/infrastructure/macro_substitution/index_assignment.cpp"
-							"backends/infrastructure/macro_substitution/macro.cpp"
-							"backends/infrastructure/macro_substitution/macro_tokenizer.cpp"
-							"backends/infrastructure/replacement_rules/package_group.cpp"
-							"backends/infrastructure/replacement_rules/package_group_factory.cpp"
-							"backends/infrastructure/replacement_rules/replacement_rule_package.cpp"
+							backends/infrastructure/file_handling/buffer.cpp
+							backends/infrastructure/file_handling/output_stack.cpp
+							backends/infrastructure/file_handling/translation_unit.cpp
+							backends/infrastructure/file_handling/translator.cpp
+							backends/infrastructure/language_concepts/cse.cpp
+							backends/infrastructure/macro_substitution/index_assignment.cpp
+							backends/infrastructure/macro_substitution/macro.cpp
+							backends/infrastructure/macro_substitution/macro_tokenizer.cpp
+							backends/infrastructure/replacement_rules/package_group.cpp
+							backends/infrastructure/replacement_rules/package_group_factory.cpp
+							backends/infrastructure/replacement_rules/replacement_rule_package.cpp
 							backends/languages/cpp/core/core_group.cpp
 							backends/languages/cpp/core/core_macros.cpp
 							backends/languages/cpp/vexcl/vexcl_group.cpp
@@ -117,8 +168,8 @@ add_executable(CppTransport main.cpp
 							parser/semantic_data.cpp
 							parser/y_driver.cpp
 							parser/y_lexer.cpp
-							"transport_objects/canonical_u_tensor_factory.cpp"
-							"transport_objects/u_tensor_factory.cpp"
+							transport_objects/canonical_u_tensor_factory.cpp
+							transport_objects/u_tensor_factory.cpp
 							utilities/error.cpp
 							utilities/finder.cpp
 							utilities/formatter.cpp
