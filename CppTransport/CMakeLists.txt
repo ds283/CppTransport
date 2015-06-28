@@ -127,7 +127,7 @@ include_directories(./ backends
 					   concepts
 					   parser
 					   parser/bison
-					   transport_objects
+					   transport-objects
 					   utilities
 					   transport-runtime-api
 					   transport-runtime-api/thirdparty/jsoncpp
@@ -182,8 +182,8 @@ add_executable(CppTransport main.cpp
 							parser/semantic_data.cpp
 							parser/y_driver.cpp
 							parser/y_lexer.cpp
-							transport_objects/canonical_u_tensor_factory.cpp
-							transport_objects/u_tensor_factory.cpp
+							transport-objects/canonical_u_tensor_factory.cpp
+							transport-objects/u_tensor_factory.cpp
 							utilities/error.cpp
 							utilities/finder.cpp
 							utilities/formatter.cpp
