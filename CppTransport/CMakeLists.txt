@@ -88,6 +88,7 @@ SET ( CMAKE_C_FLAGS "-mavx" CACHE STRING "compile flags" FORCE )
 
 SET ( JSONCPP_AMALGAMATED "transport-runtime-api/thirdparty/jsoncpp/jsoncpp.cpp" )
 SET ( SPLINTER_LIBRARY    "splinter-static-1-3" )
+SET ( JSONCPP_LIBRARY     "jsoncpp_lib_static" )
 
 # use version of Eigen3 bundled with SPLINTER
 SET ( EIGEN3_INCLUDE_DIR  "transport-runtime-api/thirdparty/splinter/thirdparty/Eigen" )
@@ -103,6 +104,10 @@ string(TOUPPER ${CMAKE_BUILD_TYPE} CMAKE_BUILD_TYPE)
 # pull in bundled SPLINTER sources; on most platforms will need to switch default build to 64-bit
 set ( BITNESS "64" )
 ADD_SUBDIRECTORY ( "transport-runtime-api/thirdparty/splinter" "splinter-build" )
+
+# pull in bundles libjsoncpp sources
+set ( BUILD_STATIC_LIBS )
+ADD_SUBDIRECTORY ( "transport-runtime-api/thirdparty/jsoncpp"  "jsoncpp-build" )
 
 find_package(MPI REQUIRED)
 find_package(Boost REQUIRED COMPONENTS system filesystem random timer date_time mpi log_setup log serialization thread program_options)
@@ -132,7 +137,7 @@ include_directories(./ backends
 					   transport-objects
 					   utilities
 					   transport-runtime-api
-					   transport-runtime-api/thirdparty/jsoncpp
+					   transport-runtime-api/thirdparty/jsoncpp/include
 					   transport-runtime-api/thirdparty/splinter/include
 					   transport-runtime-api/thirdparty/odeint/include
 					/usr/include
@@ -194,113 +199,113 @@ add_executable(CppTransport main.cpp
 target_link_libraries(CppTransport ${GINAC_LIBRARIES} ${Boost_LIBRARIES})
 
 
-add_executable(dquad-mpi examples/dquad-mpi/main.cpp ${JSONCPP_AMALGAMATED})
-target_link_libraries(dquad-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY})
+add_executable(dquad-mpi examples/dquad-mpi/main.cpp )
+target_link_libraries(dquad-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
 
 
-add_executable(dquad-makerepo examples/dquad-mpi/makerepo.cpp ${JSONCPP_AMALGAMATED})
-target_link_libraries(dquad-makerepo sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY})
+add_executable(dquad-makerepo examples/dquad-mpi/makerepo.cpp )
+target_link_libraries(dquad-makerepo sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
 
 
-add_executable(dquad-makerepo2 examples/dquad-mpi/makerepo2.cpp ${JSONCPP_AMALGAMATED})
-target_link_libraries(dquad-makerepo2 sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY})
+add_executable(dquad-makerepo2 examples/dquad-mpi/makerepo2.cpp )
+target_link_libraries(dquad-makerepo2 sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
 
 
-add_executable(quadratic-mpi examples/quadratic/main.cpp ${JSONCPP_AMALGAMATED})
-target_link_libraries(quadratic-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY})
+add_executable(quadratic-mpi examples/quadratic/main.cpp )
+target_link_libraries(quadratic-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
 
 
-add_executable(quadratic-makerepo examples/quadratic/makerepo.cpp ${JSONCPP_AMALGAMATED})
-target_link_libraries(quadratic-makerepo sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY})
+add_executable(quadratic-makerepo examples/quadratic/makerepo.cpp )
+target_link_libraries(quadratic-makerepo sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
 
 
-add_executable(axion-mpi examples/axion-mpi/main.cpp ${JSONCPP_AMALGAMATED})
-target_link_libraries(axion-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY})
+add_executable(axion-mpi examples/axion-mpi/main.cpp )
+target_link_libraries(axion-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
 
 
-add_executable(axion-makerepo examples/axion-mpi/makerepo.cpp ${JSONCPP_AMALGAMATED})
-target_link_libraries(axion-makerepo sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY})
+add_executable(axion-makerepo examples/axion-mpi/makerepo.cpp )
+target_link_libraries(axion-makerepo sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
 
 
-add_executable(axion-makerepo2 examples/axion-mpi/makerepo2.cpp ${JSONCPP_AMALGAMATED})
-target_link_libraries(axion-makerepo2 sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY})
+add_executable(axion-makerepo2 examples/axion-mpi/makerepo2.cpp )
+target_link_libraries(axion-makerepo2 sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
 
 
-add_executable(axion-makerepo3 examples/axion-mpi/makerepo3.cpp ${JSONCPP_AMALGAMATED})
-target_link_libraries(axion-makerepo3 sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY})
+add_executable(axion-makerepo3 examples/axion-mpi/makerepo3.cpp )
+target_link_libraries(axion-makerepo3 sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
 
 
-add_executable(new-axion-mpi examples/new-axion/main.cpp ${JSONCPP_AMALGAMATED})
-target_link_libraries(new-axion-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY})
+add_executable(new-axion-mpi examples/new-axion/main.cpp )
+target_link_libraries(new-axion-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
 
 
-add_executable(new-axion-makerepo2 examples/new-axion/makerepo2.cpp ${JSONCPP_AMALGAMATED})
-target_link_libraries(new-axion-makerepo2 sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY})
+add_executable(new-axion-makerepo2 examples/new-axion/makerepo2.cpp )
+target_link_libraries(new-axion-makerepo2 sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
 
 
-add_executable(qsfi-mpi examples/qsfi/main.cpp ${JSONCPP_AMALGAMATED})
-target_link_libraries(qsfi-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY})
+add_executable(qsfi-mpi examples/qsfi/main.cpp )
+target_link_libraries(qsfi-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
 
 
-add_executable(qsfi-makerepo2 examples/qsfi/makerepo2.cpp ${JSONCPP_AMALGAMATED})
-target_link_libraries(qsfi-makerepo2 sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY})
+add_executable(qsfi-makerepo2 examples/qsfi/makerepo2.cpp )
+target_link_libraries(qsfi-makerepo2 sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
 
 
-add_executable(mafalda40-makerepo examples/mafalda40/makerepo.cpp ${JSONCPP_AMALGAMATED})
-target_link_libraries(mafalda40-makerepo sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY})
+add_executable(mafalda40-makerepo examples/mafalda40/makerepo.cpp )
+target_link_libraries(mafalda40-makerepo sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
 
 
-add_executable(mafalda40-mpi examples/mafalda40/main.cpp ${JSONCPP_AMALGAMATED})
-target_link_libraries(mafalda40-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY})
+add_executable(mafalda40-mpi examples/mafalda40/main.cpp )
+target_link_libraries(mafalda40-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
 
 
-add_executable(quadratic10-makerepo examples/quadratic10/makerepo.cpp ${JSONCPP_AMALGAMATED})
-target_link_libraries(quadratic10-makerepo sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY})
+add_executable(quadratic10-makerepo examples/quadratic10/makerepo.cpp )
+target_link_libraries(quadratic10-makerepo sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
 
 
-add_executable(quadratic10-mpi examples/quadratic10/main.cpp ${JSONCPP_AMALGAMATED})
-target_link_libraries(quadratic10-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY})
+add_executable(quadratic10-mpi examples/quadratic10/main.cpp )
+target_link_libraries(quadratic10-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
 
 
-add_executable(powerlaw-makerepo2 examples/powerlaw/makerepo2.cpp ${JSONCPP_AMALGAMATED})
-target_link_libraries(powerlaw-makerepo2 sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY})
+add_executable(powerlaw-makerepo2 examples/powerlaw/makerepo2.cpp )
+target_link_libraries(powerlaw-makerepo2 sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
 
 
-add_executable(powerlaw-mpi examples/powerlaw/main.cpp ${JSONCPP_AMALGAMATED})
-target_link_libraries(powerlaw-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY})
+add_executable(powerlaw-mpi examples/powerlaw/main.cpp )
+target_link_libraries(powerlaw-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
 
 
-add_executable(heavy-hilltop-makerepo2 examples/heavy-hilltop/makerepo2.cpp ${JSONCPP_AMALGAMATED})
-target_link_libraries(heavy-hilltop-makerepo2 sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY})
+add_executable(heavy-hilltop-makerepo2 examples/heavy-hilltop/makerepo2.cpp )
+target_link_libraries(heavy-hilltop-makerepo2 sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
 
 
-add_executable(heavy-hilltop-mpi examples/heavy-hilltop/main.cpp ${JSONCPP_AMALGAMATED})
-target_link_libraries(heavy-hilltop-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY})
+add_executable(heavy-hilltop-mpi examples/heavy-hilltop/main.cpp )
+target_link_libraries(heavy-hilltop-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
 
 
-add_executable(inflection-makerepo2 examples/inflection/makerepo2.cpp ${JSONCPP_AMALGAMATED})
-target_link_libraries(inflection-makerepo2 sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY})
+add_executable(inflection-makerepo2 examples/inflection/makerepo2.cpp )
+target_link_libraries(inflection-makerepo2 sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
 
 
-add_executable(inflection-mpi examples/inflection/main.cpp ${JSONCPP_AMALGAMATED})
-target_link_libraries(inflection-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY})
+add_executable(inflection-mpi examples/inflection/main.cpp )
+target_link_libraries(inflection-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
 
 
-add_executable(chris-makerepo2 examples/chris-mpi/makerepo2.cpp ${JSONCPP_AMALGAMATED})
-target_link_libraries(chris-makerepo2 sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY})
+add_executable(chris-makerepo2 examples/chris-mpi/makerepo2.cpp )
+target_link_libraries(chris-makerepo2 sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
 
 
-add_executable(chris-makerepo3 examples/chris-mpi/makerepo3.cpp ${JSONCPP_AMALGAMATED})
-target_link_libraries(chris-makerepo3 sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY})
+add_executable(chris-makerepo3 examples/chris-mpi/makerepo3.cpp )
+target_link_libraries(chris-makerepo3 sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
 
 
-add_executable(chris-mpi examples/chris-mpi/main.cpp ${JSONCPP_AMALGAMATED})
-target_link_libraries(chris-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY})
+add_executable(chris-mpi examples/chris-mpi/main.cpp )
+target_link_libraries(chris-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
 
 
-# cuda_add_executable(dquad-cuda examples/dquad-vexcl/main.cpp ${JSONCPP_AMALGAMATED})
-# target_link_libraries(dquad-cuda sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} /usr/local/CUDA/lib/libcuda.dylib)
+# cuda_add_executable(dquad-cuda examples/dquad-vexcl/main.cpp )
+# target_link_libraries(dquad-cuda sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY} /usr/local/CUDA/lib/libcuda.dylib)
 
 
-# add_executable(dquad-opencl examples/dquad-vexcl/main.cpp ${JSONCPP_AMALGAMATED})
-# target_link_libraries(dquad-opencl sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${OPENCL_LIBRARIES} ${SPLINTER_LIBRARY})
+# add_executable(dquad-opencl examples/dquad-vexcl/main.cpp )
+# target_link_libraries(dquad-opencl sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${OPENCL_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
