@@ -82,17 +82,9 @@ SET( CMAKE_BUILD_TYPE "${CMAKE_BUILD_TYPE}" CACHE STRING
 SET ( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/" )
 SET ( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/splinter/cmake/" )
 
-ADD_SUBDIRECTORY ( "transport-runtime-api/thirdparty/splinter" "splinter-build" )
-
-find_package(MPI REQUIRED)
-find_package(Boost REQUIRED COMPONENTS system filesystem random timer date_time mpi log_setup log serialization thread program_options)
-find_package(GiNaC REQUIRED)
-#find_package(CUDA REQUIRED)
-#find_package(OpenCL REQUIRED)
-
 SET ( CMAKE_CXX_FLAGS "-std=c++11 -mavx" CACHE STRING "compile flags" FORCE )
 #SET ( CMAKE_CXX_FLAGS "-std=c++11 -O1" CACHE STRING "compile flags" FORCE )
-SET ( CMAKE_C_FLAGS " -mavx" CACHE STRING "compile flags" FORCE )
+SET ( CMAKE_C_FLAGS "-mavx" CACHE STRING "compile flags" FORCE )
 
 SET ( JSONCPP_AMALGAMATED "transport-runtime-api/thirdparty/jsoncpp/jsoncpp.cpp" )
 SET ( SPLINTER_LIBRARY    "splinter-static-1-3" )
@@ -107,6 +99,16 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE ${DEFAULT_BUILD_TYPE})
 endif()
 string(TOUPPER ${CMAKE_BUILD_TYPE} CMAKE_BUILD_TYPE)
+
+# pull in bundled SPLINTER sources; on most platforms will need to switch default build to 64-bit
+set ( BITNESS "64" )
+ADD_SUBDIRECTORY ( "transport-runtime-api/thirdparty/splinter" "splinter-build" )
+
+find_package(MPI REQUIRED)
+find_package(Boost REQUIRED COMPONENTS system filesystem random timer date_time mpi log_setup log serialization thread program_options)
+find_package(GiNaC REQUIRED)
+#find_package(CUDA REQUIRED)
+#find_package(OpenCL REQUIRED)
 
 
 include_directories(./ backends
