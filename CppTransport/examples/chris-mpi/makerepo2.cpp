@@ -61,7 +61,7 @@ int main(int argc, char* argv[])
     // set up initial conditions with the specified horizon-crossing time Ncross and Npre
     // e-folds of subhorizon evolution.
     // The resulting initial conditions apply at time Ncross-Npre
-    transport::initial_conditions<double> ics("powerlaw-1", model, params, init_values, Ninit, Ncross, Npre);
+    transport::initial_conditions<double> ics("chris-1", model, params, init_values, Ninit, Ncross, Npre);
 
     const unsigned int early_t_samples = 200;
     const unsigned int late_t_samples  = 100;
