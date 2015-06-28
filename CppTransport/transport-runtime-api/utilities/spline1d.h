@@ -85,15 +85,15 @@ namespace transport
         //! which also deals correctly with taking copies.
         //! This is a raw BSpline, meaning that it goes through each of the data points.
         //! We use it to interpolate values.
-        std::shared_ptr<Splinter::BSpline> b_spline;
+        std::shared_ptr<SPLINTER::BSpline> b_spline;
 
         //! pointer to penalized-B spline object.
         //! This is smoothed, so it need not go through every data point.
         //! We use it to interpolate derivatives
-        std::shared_ptr<Splinter::PSpline> p_spline;
+        std::shared_ptr<SPLINTER::PSpline> p_spline;
 
         //! DataTable instance
-        Splinter::DataTable table;
+        SPLINTER::DataTable table;
 
 		    //! offset to apply on evaluation
 		    number offset;
@@ -131,10 +131,10 @@ namespace transport
 
         try
 	        {
-            b_spline = std::make_shared<Splinter::BSpline>(table, Splinter::BSplineType::CUBIC_FREE);
-            p_spline = std::make_shared<Splinter::PSpline>(table, 0.03);
+            b_spline = std::make_shared<SPLINTER::BSpline>(table, SPLINTER::BSplineType::CUBIC);
+            p_spline = std::make_shared<SPLINTER::PSpline>(table, 0.03);
 	        }
-				catch(Splinter::Exception& xe)
+				catch(SPLINTER::Exception& xe)
 					{
 						throw runtime_exception(runtime_exception::SPLINE_ERROR, xe.what());
 					}
@@ -144,7 +144,7 @@ namespace transport
     template <typename number>
     number spline1d<number>::eval(double x)
       {
-        Splinter::DenseVector xv(1);
+        SPLINTER::DenseVector xv(1);
         xv(0) = x;
 
         return( static_cast<number>(this->b_spline->eval(xv)) - this->offset );
@@ -154,7 +154,7 @@ namespace transport
     template <typename number>
     number spline1d<number>::eval_diff(double x)
       {
-        Splinter::DenseVector xv(1);
+        SPLINTER::DenseVector xv(1);
         xv(0) = x;
 
         return( static_cast<number>((this->p_spline->evalJacobian(xv))(0)) );

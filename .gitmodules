@@ -1,6 +1,9 @@
 [submodule "CppTransport/splinter"]
-	path = CppTransport/splinter
+	path = CppTransport/transport-runtime-api/thirdparty/splinter
 	url = https://github.com/bgrimstad/splinter.git
 [submodule "CppTransport/odeint"]
-	path = CppTransport/odeint
+	path = CppTransport/transport-runtime-api/thirdparty/odeint
 	url = https://github.com/headmyshoulder/odeint-v2.git
+[submodule "CppTransport/transport-runtime-api/thirdparty/jsoncpp"]
+	path = CppTransport/transport-runtime-api/thirdparty/jsoncpp
+	url = https://github.com/open-source-parsers/jsoncpp.git
