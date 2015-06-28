@@ -82,9 +82,8 @@ SET( CMAKE_BUILD_TYPE "${CMAKE_BUILD_TYPE}" CACHE STRING
 SET ( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/" )
 SET ( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/splinter/cmake/" )
 
-SET ( CMAKE_CXX_FLAGS "-std=c++11 -mavx" CACHE STRING "compile flags" FORCE )
-#SET ( CMAKE_CXX_FLAGS "-std=c++11 -O1" CACHE STRING "compile flags" FORCE )
-SET ( CMAKE_C_FLAGS "-mavx" CACHE STRING "compile flags" FORCE )
+SET ( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -mavx" CACHE STRING "compile flags" FORCE )
+SET ( CMAKE_C_FLAGS   "${CMAKE_C_FLAGS} -mavx"              CACHE STRING "compile flags" FORCE )
 
 SET ( JSONCPP_AMALGAMATED "transport-runtime-api/thirdparty/jsoncpp/jsoncpp.cpp" )
 SET ( SPLINTER_LIBRARY    "splinter-static-1-3" )
