@@ -1,6 +1,6 @@
 [submodule "CppTransport/splinter"]
-	path = CppTransport/splinter
+	path = CppTransport/thirdparty/splinter
 	url = https://github.com/bgrimstad/splinter.git
 [submodule "CppTransport/odeint"]
-	path = CppTransport/odeint
+	path = CppTransport/thirdparty/odeint
 	url = https://github.com/headmyshoulder/odeint-v2.git
