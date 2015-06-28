@@ -136,6 +136,9 @@ int main(int argc, char* argv[])
     // filter: (closest to) equilateral threepf with smallest k_t
     transport::derived_data::SQL_threepf_kconfig_query equilateral_smallest_threepf("ABS(alpha) < 0.01 AND ABS(beta-1.0/3.0) < 0.01 AND kt_conventional IN (SELECT MIN(kt_conventional) FROM threepf_samples)");
 
+    // filter: (closest to) equilateral threepf with largest k_t
+    transport::derived_data::SQL_threepf_kconfig_query equilateral_largest_threepf("ABS(alpha) < 0.01 AND ABS(beta-1.0/3.0) < 0.01 AND kt_conventional IN (SELECT MAX(kt_conventional) FROM threepf_samples)");
+
     // filter: squeezed, isosceles threepf
     transport::derived_data::SQL_threepf_kconfig_query isosceles_squeezed_threepf("ABS(beta-0.96)<0.0001 AND ABS(alpha)<0.01");
 
@@ -182,13 +185,21 @@ int main(int argc, char* argv[])
 	  threepf_fields.set_on(std::array<unsigned int, 3>{ 0, 1, 1 });
 	  threepf_fields.set_on(std::array<unsigned int, 3>{ 1, 1, 1 });
 
-    transport::derived_data::threepf_time_series<double> tk3_threepf_group(tk3, threepf_fields, all_times, equilateral_smallest_threepf);
-    tk3_twopf_group.set_klabel_meaning(transport::derived_data::conventional);
+    transport::derived_data::threepf_time_series<double> tk3_threepf_lo_group(tk3, threepf_fields, all_times, equilateral_smallest_threepf);
+    tk3_threepf_lo_group.set_klabel_meaning(transport::derived_data::conventional);
 
-    transport::derived_data::time_series_plot<double> tk3_threepf_plot("chris.threepf-1.threepf-time", "threepf-time.pdf");
-    tk3_threepf_plot.add_line(tk3_threepf_group);
-    tk3_threepf_plot.set_title_text("Time evolution of three-point function");
-    tk3_threepf_plot.set_legend_position(transport::derived_data::bottom_left);
+    transport::derived_data::time_series_plot<double> tk3_threepf_lo_plot("chris.threepf-1.threepf-time-lo", "threepf-time-lo.pdf");
+    tk3_threepf_lo_plot.add_line(tk3_threepf_lo_group);
+    tk3_threepf_lo_plot.set_title_text("Time evolution of three-point function");
+    tk3_threepf_lo_plot.set_legend_position(transport::derived_data::bottom_left);
+
+    transport::derived_data::threepf_time_series<double> tk3_threepf_hi_group(tk3, threepf_fields, all_times, equilateral_largest_threepf);
+    tk3_threepf_hi_group.set_klabel_meaning(transport::derived_data::conventional);
+
+    transport::derived_data::time_series_plot<double> tk3_threepf_hi_plot("chris.threepf-1.threepf-time-hi", "threepf-time-hi.pdf");
+    tk3_threepf_hi_plot.add_line(tk3_threepf_hi_group);
+    tk3_threepf_hi_plot.set_title_text("Time evolution of three-point function");
+    tk3_threepf_hi_plot.set_legend_position(transport::derived_data::bottom_left);
 
 
 		// b. TIME EVOLUTION OF BACKGROUND QUANTITIES
@@ -250,35 +261,47 @@ int main(int argc, char* argv[])
     // 2. TIME EVOLUTION OF THE ZETA THREEPF
 
     // check the zeta threepf
-    transport::derived_data::zeta_threepf_time_series<double> tk3_zeta_sq_group(ztk3, all_times, equilateral_smallest_threepf);
-    tk3_zeta_sq_group.set_klabel_meaning(transport::derived_data::comoving);
-    tk3_zeta_sq_group.set_use_beta_label(true);
+    transport::derived_data::zeta_threepf_time_series<double> tk3_zeta_eq_lo(ztk3, all_times, equilateral_smallest_threepf);
+    tk3_zeta_eq_lo.set_klabel_meaning(transport::derived_data::comoving);
+    tk3_zeta_eq_lo.set_use_beta_label(true);
+
+    transport::derived_data::zeta_threepf_time_series<double> tk3_zeta_eq_hi(ztk3, all_times, equilateral_largest_threepf);
+    tk3_zeta_eq_hi.set_klabel_meaning(transport::derived_data::comoving);
+    tk3_zeta_eq_hi.set_use_beta_label(true);
 
     transport::derived_data::time_series_plot<double> tk3_zeta_sq("chris.threepf-1.zeta-eq", "zeta-eq.pdf");
-    tk3_zeta_sq.add_line(tk3_zeta_sq_group);
+    tk3_zeta_sq.add_line(tk3_zeta_eq_lo);
+    tk3_zeta_sq.add_line(tk3_zeta_eq_hi);
     tk3_zeta_sq.set_title_text("3pf of $\\zeta$ near equilateral configurations");
 
 		// set up a table too
     transport::derived_data::time_series_table<double> tk3_zeta_sq_table("chris.threepf-1.zeta-eq.table", "zeta-eq-table.txt");
-		tk3_zeta_sq_table.add_line(tk3_zeta_sq_group);
+		tk3_zeta_sq_table.add_line(tk3_zeta_eq_lo);
+    tk3_zeta_sq_table.add_line(tk3_zeta_eq_hi);
 
 
     // 3. TIME EVOLUTION OF THE REDUCED BISPECTRUM
 
-    // compute the reduced bispectrum in a few squeezed configurations
-    transport::derived_data::zeta_reduced_bispectrum_time_series<double> tk3_zeta_redbsp(ztk3, all_times, equilateral_smallest_threepf);
-    tk3_zeta_redbsp.set_klabel_meaning(transport::derived_data::comoving);
-    tk3_zeta_redbsp.set_use_beta_label(true);
+    // compute the reduced bispectrum in a few equilateral configurations
+    transport::derived_data::zeta_reduced_bispectrum_time_series<double> tk3_zeta_redbsp_lo(ztk3, all_times, equilateral_smallest_threepf);
+    tk3_zeta_redbsp_lo.set_klabel_meaning(transport::derived_data::comoving);
+    tk3_zeta_redbsp_lo.set_use_beta_label(true);
+
+    transport::derived_data::zeta_reduced_bispectrum_time_series<double> tk3_zeta_redbsp_hi(ztk3, all_times, equilateral_largest_threepf);
+    tk3_zeta_redbsp_hi.set_klabel_meaning(transport::derived_data::comoving);
+    tk3_zeta_redbsp_hi.set_use_beta_label(true);
 
     transport::derived_data::time_series_plot<double> tk3_redbsp("chris.threepf-1.redbsp-eq", "redbsp-eq.pdf");
-    tk3_redbsp.set_log_y(false);
-    tk3_redbsp.set_abs_y(false);
-    tk3_redbsp.add_line(tk3_zeta_redbsp);
+//    tk3_redbsp.set_log_y(false);
+//    tk3_redbsp.set_abs_y(false);
+    tk3_redbsp.add_line(tk3_zeta_redbsp_lo);
+    tk3_redbsp.add_line(tk3_zeta_redbsp_hi);
     tk3_redbsp.set_legend_position(transport::derived_data::bottom_right);
     tk3_redbsp.set_title_text("Reduced bispectrum near equilateral configurations");
 
     transport::derived_data::time_series_table<double> tk3_redbsp_table = transport::derived_data::time_series_table<double>("chris.threepf-1.redbsp-eq.table", "redbsp-eq-table.txt");
-    tk3_redbsp_table.add_line(tk3_zeta_redbsp);
+    tk3_redbsp_table.add_line(tk3_zeta_redbsp_lo);
+    tk3_redbsp_table.add_line(tk3_zeta_redbsp_hi);
 
 
     // 4. LATE-TIME ZETA TWO POINT FUNCTION
@@ -464,7 +487,8 @@ int main(int argc, char* argv[])
 
 
     transport::output_task<double> threepf_output = transport::output_task<double>("chris.threepf-1.output", tk3_twopf_plot);
-		threepf_output = threepf_output + tk3_threepf_plot
+		threepf_output = threepf_output + tk3_threepf_lo_plot
+                                    + tk3_threepf_hi_plot
 																		+ tk3_SR_objects_plot
                                     + tk3_Hubble_plot
                                     + tk3_u2_plot
