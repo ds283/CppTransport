@@ -198,10 +198,10 @@ namespace transport
 			    {
 		        std::vector<std::string> names = { CPPTRANSPORT_NONLATEX_TENSOR_SYMBOL, CPPTRANSPORT_NONLATEX_TENSOR_MOMENTUM_SYMBOL };
 
-				    out << " " << CPPTRANSPORT_PRODUCT_WAVENUMBER_SERIES_LABEL_TENSOR_TWOPF << std::endl;
+				    out << " " << CPPTRANSPORT_PRODUCT_WAVENUMBER_SERIES_LABEL_TENSOR_TWOPF << '\n';
 		        out << "  " << CPPTRANSPORT_PRODUCT_LINE_COLLECTION_LABEL_INDICES << " ";
 		        this->active_indices.write(out, names);
-		        out << std::endl;
+		        out << '\n';
 			    }
 
 	    }

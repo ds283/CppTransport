@@ -142,7 +142,7 @@ namespace transport
 		    template <typename number>
 		    void background_time_series<number>::write(std::ostream& out)
 			    {
-		        out << "  " << CPPTRANSPORT_PRODUCT_TIME_SERIES_LABEL_BACKGROUND << std::endl;
+		        out << "  " << CPPTRANSPORT_PRODUCT_TIME_SERIES_LABEL_BACKGROUND << '\n';
 		        out << "  " << CPPTRANSPORT_PRODUCT_LINE_COLLECTION_LABEL_INDICES << " ";
 
 		        integration_task<number>* itk = dynamic_cast< integration_task<number>* >(this->get_parent_task());

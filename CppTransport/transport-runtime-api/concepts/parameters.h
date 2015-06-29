@@ -191,15 +191,15 @@ namespace transport
     template <typename number>
     std::ostream& operator<<(std::ostream& out, const parameters<number>& obj)
       {
-        out << CPPTRANSPORT_PARAMS_TAG << std::endl;
-        out << "  " << CPPTRANSPORT_MPLANCK_TAG << obj.M_Planck << std::endl;
+        out << CPPTRANSPORT_PARAMS_TAG << '\n';
+        out << "  " << CPPTRANSPORT_MPLANCK_TAG << obj.M_Planck << '\n';
 
 		    const std::vector<std::string>& names = obj.mdl->get_param_names();
         assert(obj.params.size() == names.size());
 
         for(unsigned int i = 0; i < obj.params.size(); ++i)
           {
-            out << "  " << names[i] << " = " << obj.params[i] << std::endl;
+            out << "  " << names[i] << " = " << obj.params[i] << '\n';
           }
 
         return(out);

@@ -63,7 +63,7 @@ namespace transport
           public:
             void operator()(const std::string& msg)
               {
-                std::cerr << msg << std::endl;
+                std::cerr << msg << '\n';
               }
           };
 
@@ -73,7 +73,7 @@ namespace transport
           public:
             void operator()(const std::string& msg)
               {
-                std::cout << msg << std::endl;
+                std::cout << msg << '\n';
               }
           };
 
@@ -83,7 +83,7 @@ namespace transport
           public:
             void operator()(const std::string& msg)
               {
-                std::cout << msg << std::endl;
+                std::cout << msg << '\n';
               }
           };
 

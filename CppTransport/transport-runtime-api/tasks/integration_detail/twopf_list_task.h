@@ -399,25 +399,25 @@ namespace transport
         if(latest_crossing > 0) late_time << "+";
         late_time << latest_crossing;
 
-        std::cout << late_time.str() << std::endl;
+        std::cout << late_time.str() << '\n';
 
         this->validate_subhorizon_efolds();
 
         try
           {
             double end_of_inflation = this->get_N_end_of_inflation();
-            std::cout << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_TWOPF_LIST_END_OF_INFLATION  << end_of_inflation << std::endl;
+            std::cout << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_TWOPF_LIST_END_OF_INFLATION  << end_of_inflation << '\n';
 
             // check if end time is after the end of inflation
             double end_time = this->times->get_grid().back();
             if(end_time > end_of_inflation)
               {
-                std::cout << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_TWOPF_LIST_WARN_LATE_END << std::endl;
+                std::cout << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_TWOPF_LIST_WARN_LATE_END << '\n';
               }
           }
         catch(end_of_inflation_not_found& xe)
           {
-            std::cout << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_TWOPF_LIST_NO_END_INFLATION << std::endl;
+            std::cout << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_TWOPF_LIST_NO_END_INFLATION << '\n';
           }
       }
 
@@ -446,7 +446,7 @@ namespace transport
           {
             std::cout << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_TWOPF_LIST_CROSS_WARN_A << this->get_N_initial() << " "
               << CPPTRANSPORT_TASK_TWOPF_LIST_CROSS_WARN_B << " " << earliest_required-this->get_N_initial() << " "
-              << CPPTRANSPORT_TASK_TWOPF_LIST_CROSS_WARN_C << std::endl;
+              << CPPTRANSPORT_TASK_TWOPF_LIST_CROSS_WARN_C << '\n';
           }
       }
 
@@ -584,27 +584,27 @@ namespace transport
     void twopf_list_task<number>::compute_horizon_exit_times_fail(failed_to_compute_horizon_exit& xe)
       {
         std::cout << "'" << this->get_name() << "': ";
-        std::cout << CPPTRANSPORT_TASK_FAIL_COMPUTE_HEXIT << std::endl;
+        std::cout << CPPTRANSPORT_TASK_FAIL_COMPUTE_HEXIT << '\n';
 
         std::cout << CPPTRANSPORT_TASK_SEARCH_FROM << xe.get_search_begin() << " " << CPPTRANSPORT_TASK_SEARCH_TO << xe.get_search_end() << " ";
 
         if(xe.get_found_end()) std::cout << CPPTRANSPORT_TASK_SEARCH_FOUND_END;
         else std::cout << CPPTRANSPORT_TASK_SEARCH_NO_FOUND_END;
-        std::cout << std::endl;
+        std::cout << '\n';
 
         std::cout << CPPTRANSPORT_TASK_SEARCH_RECORDED << " " << xe.get_N_samples() << " " << CPPTRANSPORT_TASK_SEARCH_SAMPLES;
         std::cout << ", " << CPPTRANSPORT_TASK_SEARCH_LAST_SAMPLE << xe.get_last_log_aH() << " ";
         std::cout << CPPTRANSPORT_TASK_SEARCH_LAST_SAMPLE_TIME << xe.get_last_N();
         std::cout << ", " << CPPTRANSPORT_TASK_SEARCH_LARGEST_K << std::log(xe.get_largest_k());
-        std::cout << ", " << CPPTRANSPORT_TASK_SEARCH_KAH << xe.get_largest_k()/std::exp(xe.get_last_log_aH()) << std::endl;
+        std::cout << ", " << CPPTRANSPORT_TASK_SEARCH_KAH << xe.get_largest_k()/std::exp(xe.get_last_log_aH()) << '\n';
 
         if(xe.get_found_end() && xe.get_N_samples() > 1 && xe.get_last_log_aH() < std::log(xe.get_largest_k()))
           {
-            std::cout << CPPTRANSPORT_TASK_SEARCH_GUESS_FAIL << std::endl;
+            std::cout << CPPTRANSPORT_TASK_SEARCH_GUESS_FAIL << '\n';
           }
         else if(xe.get_found_end() && xe.get_N_samples() > 1 && xe.get_last_log_aH() > std::log(xe.get_largest_k()))
           {
-            std::cout << CPPTRANSPORT_TASK_SEARCH_TOO_CLOSE_FAIL << std::endl;
+            std::cout << CPPTRANSPORT_TASK_SEARCH_TOO_CLOSE_FAIL << '\n';
           }
       }
 
@@ -613,7 +613,7 @@ namespace transport
 		std::ostream& operator<<(std::ostream& out, const twopf_list_task<number>& obj)
 	    {
         out << CPPTRANSPORT_FAST_FORWARD     << ": " << (obj.fast_forward ? CPPTRANSPORT_YES : CPPTRANSPORT_NO) << ", ";
-        out << CPPTRANSPORT_MESH_REFINEMENTS << ": " << obj.max_refinements << std::endl;
+        out << CPPTRANSPORT_MESH_REFINEMENTS << ": " << obj.max_refinements << '\n';
 				out << static_cast< const integration_task<number>& >(obj);
         return(out);
 	    };

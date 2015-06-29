@@ -60,7 +60,7 @@ void warn(std::string const msg)
     std::ostringstream out;
 
     out << CPPTRANSPORT_NAME << ": " << (colour_output ? ANSI_BOLD_MAGENTA : "") << WARNING_TOKEN << (colour_output ? ANSI_NORMAL : "") << msg;
-    std::cout << out.str() << std::endl;
+    std::cout << out.str() << '\n';
   }
 
 
@@ -69,7 +69,7 @@ void error(std::string const msg)
     std::ostringstream out;
 
     out << CPPTRANSPORT_NAME << ": " << (colour_output ? ANSI_BOLD_MAGENTA : "") << ERROR_TOKEN << (colour_output ? ANSI_NORMAL : "") << msg;
-    std::cout << out.str() << std::endl;
+    std::cout << out.str() << '\n';
   }
 
 
@@ -89,7 +89,7 @@ void warn(std::string const msg, std::shared_ptr<filestack> path, unsigned int l
   {
     std::ostringstream out;
 
-    if(path) out << ERROR_MESSAGE_AT_LINE << " " << path->write(level) << std::endl << ERROR_MESSAGE_WRAP_PAD;
+    if(path) out << ERROR_MESSAGE_AT_LINE << " " << path->write(level) << '\n' << ERROR_MESSAGE_WRAP_PAD;
     out << msg;
 
     warn(out.str());
@@ -100,7 +100,7 @@ void error(std::string const msg, std::shared_ptr<filestack> path, unsigned int 
   {
     std::ostringstream out;
 
-    if(path) out << ERROR_MESSAGE_AT_LINE << " " << path->write(level) << std::endl << ERROR_MESSAGE_WRAP_PAD;
+    if(path) out << ERROR_MESSAGE_AT_LINE << " " << path->write(level) << '\n' << ERROR_MESSAGE_WRAP_PAD;
     out << msg;
 
     error(out.str());
@@ -123,10 +123,10 @@ void warn(std::string const msg, std::shared_ptr<filestack> path, std::shared_pt
   {
     std::ostringstream out;
 
-    if(path) out << ERROR_MESSAGE_AT_LINE << " " << path->write(level) << std::endl;
-    out << ERROR_MESSAGE_WRAP_PAD << (colour_output ? ANSI_BOLD_RED : "") << msg << (colour_output ? ANSI_NORMAL : "") << std::endl;
+    if(path) out << ERROR_MESSAGE_AT_LINE << " " << path->write(level) << '\n';
+    out << ERROR_MESSAGE_WRAP_PAD << (colour_output ? ANSI_BOLD_RED : "") << msg << (colour_output ? ANSI_NORMAL : "") << '\n';
 
-    out << ERROR_MESSAGE_WRAP_PAD << *line << std::endl;
+    out << ERROR_MESSAGE_WRAP_PAD << *line << '\n';
 
     out << ERROR_MESSAGE_WRAP_PAD;
     for(unsigned int i = 0; i < char_pos; ++i)
@@ -143,9 +143,9 @@ void error(std::string const msg, std::shared_ptr<filestack> path, std::shared_p
   {
     std::ostringstream out;
 
-    if(path) out << ERROR_MESSAGE_AT_LINE << " " << path->write(level) << std::endl;
-    out << ERROR_MESSAGE_WRAP_PAD << (colour_output ? ANSI_BOLD_RED : "") << msg << (colour_output ? ANSI_NORMAL : "") << std::endl;
-    out << ERROR_MESSAGE_WRAP_PAD << *line << std::endl;
+    if(path) out << ERROR_MESSAGE_AT_LINE << " " << path->write(level) << '\n';
+    out << ERROR_MESSAGE_WRAP_PAD << (colour_output ? ANSI_BOLD_RED : "") << msg << (colour_output ? ANSI_NORMAL : "") << '\n';
+    out << ERROR_MESSAGE_WRAP_PAD << *line << '\n';
 
     out << ERROR_MESSAGE_WRAP_PAD;
     for(unsigned int i = 0; i < char_pos; ++i)

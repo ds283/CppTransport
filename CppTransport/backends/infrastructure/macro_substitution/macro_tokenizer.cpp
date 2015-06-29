@@ -216,7 +216,7 @@ void token_list::check_no_index_list(const std::string& input, const std::string
 	{
     if(position < input.length() && input[position] == '[')
 	    {
-        std::cout << "ERROR: didn't expect index list following simple macro '" << candidate << "'; skipping" << std::endl;
+        std::cout << "ERROR: didn't expect index list following simple macro '" << candidate << "'; skipping" << '\n';
         position++;
         while(position < input.length() && input[position] != ']')
 	        {
@@ -290,7 +290,7 @@ std::vector<std::string> token_list::get_argument_list(const std::string& input,
 
 		if(arg_list.size() != expected_args)
 			{
-		    std::cout << ERROR_WRONG_ARGUMENT_COUNT << " '" << candidate << "' (" << ERROR_EXPECTED_ARGUMENT_COUNT << " " << expected_args << ")" << std::endl;
+		    std::cout << ERROR_WRONG_ARGUMENT_COUNT << " '" << candidate << "' (" << ERROR_EXPECTED_ARGUMENT_COUNT << " " << expected_args << ")" << '\n';
 
 		    while(arg_list.size() < expected_args)
 			    {
@@ -326,7 +326,7 @@ std::vector<index_abstract> token_list::get_index_list(const std::string& input,
 							}
 						else
 							{
-						    std::cout << ERROR_EXPECTED_INDEX_LABEL_A << " '" << candidate << "', " << ERROR_EXPECTED_INDEX_LABEL_B << " '" << input[position] << "'" << std::endl;
+						    std::cout << ERROR_EXPECTED_INDEX_LABEL_A << " '" << candidate << "', " << ERROR_EXPECTED_INDEX_LABEL_B << " '" << input[position] << "'" << '\n';
 							}
 
 						position++;
@@ -334,7 +334,7 @@ std::vector<index_abstract> token_list::get_index_list(const std::string& input,
 
 				if(!(position < input.length() && input[position] == ']'))
 					{
-				    std::cout << ERROR_EXPECTED_CLOSE_ARGUMENT_LIST << " '" << candidate << "'" << std::endl;
+				    std::cout << ERROR_EXPECTED_CLOSE_ARGUMENT_LIST << " '" << candidate << "'" << '\n';
 					}
 				else
 					{
@@ -343,7 +343,7 @@ std::vector<index_abstract> token_list::get_index_list(const std::string& input,
 			}
 		else    // expected to find an index list
 			{
-		    std::cout << ERROR_EXPECTED_OPEN_INDEX_LIST << " '" << candidate << "'" << std::endl;
+		    std::cout << ERROR_EXPECTED_OPEN_INDEX_LIST << " '" << candidate << "'" << '\n';
 			}
 
 		if(idx_list.size() != expected_indices)

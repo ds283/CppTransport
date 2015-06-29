@@ -65,7 +65,7 @@ void output_info(transport::canonical_model<double>* model, transport::integrati
           }
         std::cout << fields[i];
       }
-    std::cout << std::endl;
+    std::cout << '\n';
 
     std::cout << "Parameters (" << model->get_N_params() << "): ";
     for(int i = 0; i < model->get_N_params(); ++i)
@@ -76,9 +76,9 @@ void output_info(transport::canonical_model<double>* model, transport::integrati
           }
         std::cout << params[i] << " = " << r_p[i];
       }
-    std::cout << std::endl;
+    std::cout << '\n';
 
-    std::cout << "V* = " << model->V(tk->get_params(), tk->get_ics().get_vector()) << std::endl;
+    std::cout << "V* = " << model->V(tk->get_params(), tk->get_ics().get_vector()) << '\n';
 
-    std::cout << std::endl;
+    std::cout << '\n';
   }

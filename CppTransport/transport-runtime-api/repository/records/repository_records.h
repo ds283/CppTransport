@@ -2128,16 +2128,16 @@ namespace transport
 	    {
         out << CPPTRANSPORT_OUTPUT_GROUP;
         if(this->locked) out << ", " << CPPTRANSPORT_OUTPUT_GROUP_LOCKED;
-        out << std::endl;
-        out << "  " << CPPTRANSPORT_OUTPUT_GROUP_REPO_ROOT << " = " << this->paths.root << std::endl;
-        out << "  " << CPPTRANSPORT_OUTPUT_GROUP_DATA_ROOT << " = " << this->paths.output << std::endl;
+        out << '\n';
+        out << "  " << CPPTRANSPORT_OUTPUT_GROUP_REPO_ROOT << " = " << this->paths.root << '\n';
+        out << "  " << CPPTRANSPORT_OUTPUT_GROUP_DATA_ROOT << " = " << this->paths.output << '\n';
 
         unsigned int count = 0;
 
         for(std::list<std::string>::const_iterator t = this->notes.begin(); t != this->notes.end(); ++t)
 	        {
-            out << "  " << CPPTRANSPORT_OUTPUT_GROUP_NOTE << " " << count << std::endl;
-            out << "    " << *t << std::endl;
+            out << "  " << CPPTRANSPORT_OUTPUT_GROUP_NOTE << " " << count << '\n';
+            out << "    " << *t << '\n';
             count++;
 	        }
 
@@ -2149,11 +2149,11 @@ namespace transport
             out << *t;
             count++;
 	        }
-        out << std::endl;
+        out << '\n';
 
         this->payload.write(out);
 
-        out << std::endl;
+        out << '\n';
 	    }
 
 
@@ -2289,13 +2289,13 @@ namespace transport
 
     void precomputed_products::write(std::ostream& out) const
 	    {
-        out << CPPTRANSPORT_PAYLOAD_HAS_ZETA_TWO << ": " << (this->zeta_twopf ? CPPTRANSPORT_YES : CPPTRANSPORT_NO) << std::endl;
-        out << CPPTRANSPORT_PAYLOAD_HAS_ZETA_THREE << ": " << (this->zeta_threepf ? CPPTRANSPORT_YES : CPPTRANSPORT_NO) << std::endl;
-        out << CPPTRANSPORT_PAYLOAD_HAS_ZETA_REDBSP << ": " << (this->zeta_redbsp ? CPPTRANSPORT_YES : CPPTRANSPORT_NO) << std::endl;
-        out << CPPTRANSPORT_PAYLOAD_HAS_FNL_LOCAL << ": " << (this->fNL_local ? CPPTRANSPORT_YES : CPPTRANSPORT_NO) << std::endl;
-        out << CPPTRANSPORT_PAYLOAD_HAS_FNL_EQUI << ": " << (this->fNL_equi ? CPPTRANSPORT_YES : CPPTRANSPORT_NO) << std::endl;
-        out << CPPTRANSPORT_PAYLOAD_HAS_FNL_ORTHO << ": " << (this->fNL_ortho ? CPPTRANSPORT_YES : CPPTRANSPORT_NO) << std::endl;
-        out << CPPTRANSPORT_PAYLOAD_HAS_FNL_DBI << ": " << (this->fNL_DBI ? CPPTRANSPORT_YES : CPPTRANSPORT_NO) << std::endl;
+        out << CPPTRANSPORT_PAYLOAD_HAS_ZETA_TWO << ": " << (this->zeta_twopf ? CPPTRANSPORT_YES : CPPTRANSPORT_NO) << '\n';
+        out << CPPTRANSPORT_PAYLOAD_HAS_ZETA_THREE << ": " << (this->zeta_threepf ? CPPTRANSPORT_YES : CPPTRANSPORT_NO) << '\n';
+        out << CPPTRANSPORT_PAYLOAD_HAS_ZETA_REDBSP << ": " << (this->zeta_redbsp ? CPPTRANSPORT_YES : CPPTRANSPORT_NO) << '\n';
+        out << CPPTRANSPORT_PAYLOAD_HAS_FNL_LOCAL << ": " << (this->fNL_local ? CPPTRANSPORT_YES : CPPTRANSPORT_NO) << '\n';
+        out << CPPTRANSPORT_PAYLOAD_HAS_FNL_EQUI << ": " << (this->fNL_equi ? CPPTRANSPORT_YES : CPPTRANSPORT_NO) << '\n';
+        out << CPPTRANSPORT_PAYLOAD_HAS_FNL_ORTHO << ": " << (this->fNL_ortho ? CPPTRANSPORT_YES : CPPTRANSPORT_NO) << '\n';
+        out << CPPTRANSPORT_PAYLOAD_HAS_FNL_DBI << ": " << (this->fNL_DBI ? CPPTRANSPORT_YES : CPPTRANSPORT_NO) << '\n';
 	    }
 
 
@@ -2344,7 +2344,7 @@ namespace transport
 
     void integration_payload::write(std::ostream& out) const
 	    {
-        out << CPPTRANSPORT_PAYLOAD_INTEGRATION_DATA << " = " << this->container << std::endl;
+        out << CPPTRANSPORT_PAYLOAD_INTEGRATION_DATA << " = " << this->container << '\n';
 	    }
 
 
@@ -2393,7 +2393,7 @@ namespace transport
 
     void postintegration_payload::write(std::ostream& out) const
 	    {
-        out << CPPTRANSPORT_PAYLOAD_INTEGRATION_DATA << " = " << this->container << std::endl;
+        out << CPPTRANSPORT_PAYLOAD_INTEGRATION_DATA << " = " << this->container << '\n';
 
         this->precomputed.write(out);
 	    }
@@ -2437,7 +2437,7 @@ namespace transport
         for(std::list<derived_content>::const_iterator t = this->content.begin(); t != this->content.end(); ++t)
 	        {
             out << CPPTRANSPORT_PAYLOAD_OUTPUT_CONTENT_PRODUCT << " = " << (*t).get_parent_product() << ", "
-	            << CPPTRANSPORT_PAYLOAD_OUTPUT_CONTENT_PATH    << " = " << (*t).get_filename() << std::endl;
+	            << CPPTRANSPORT_PAYLOAD_OUTPUT_CONTENT_PATH    << " = " << (*t).get_filename() << '\n';
 	        }
 	    }
 

@@ -94,7 +94,7 @@ namespace transport
           {
             std::cerr << (t != filter.items.begin() ? ", " : " ") << *t;
           }
-        std::cerr << std::endl;
+        std::cerr << '\n';
         return(out);
       }
 

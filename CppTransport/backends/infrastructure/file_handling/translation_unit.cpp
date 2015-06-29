@@ -359,7 +359,7 @@ void translation_unit::print_advisory(const std::string& msg)
 	{
 		if(this->verbose)
 			{
-		    std::cout << CPPTRANSPORT_NAME << ": " << msg << std::endl;
+		    std::cout << CPPTRANSPORT_NAME << ": " << msg << '\n';
 			}
 	}
 

@@ -32,7 +32,7 @@ int main(int argc, char* argv[])
   {
 		if(argc != 2)
 			{
-		    std::cerr << "makerepo: Too few arguments. Expected repository name" << std::endl;
+		    std::cerr << "makerepo: Too few arguments. Expected repository name" << '\n';
 		    exit(EXIT_FAILURE);
 			}
 
@@ -552,7 +552,7 @@ int main(int argc, char* argv[])
                                     + tk3_sigma_spec_index_plot
                                     + tk3_sigma_bsp_spec_index_plot;
 
-    std::cout << "hilltop.threepf-1 output task:" << std::endl << threepf_output << std::endl;
+    std::cout << "hilltop.threepf-1 output task:" << '\n' << threepf_output << '\n';
 
 		// write output tasks to the database
     repo->commit_task(threepf_output);

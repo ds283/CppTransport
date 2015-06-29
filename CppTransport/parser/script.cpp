@@ -53,7 +53,7 @@ std::string field_declaration::get_latex_name() const
 void field_declaration::print(std::ostream& stream) const
   {
     stream << "Field declaration for symbol '" << this->get_name()
-           << "', GiNaC symbol '" << this->get_ginac_symbol() << "'" << std::endl;
+           << "', GiNaC symbol '" << this->get_ginac_symbol() << "'" << '\n';
 
     stream << "  defined at line " << this->path->write();
   }
@@ -82,7 +82,7 @@ std::string parameter_declaration::get_latex_name() const
 void parameter_declaration::print(std::ostream& stream) const
   {
     stream << "Parameter declaration for symbol '" << this->get_name()
-      << "', GiNaC symbol '" << this->get_ginac_symbol() << "'" << std::endl;
+      << "', GiNaC symbol '" << this->get_ginac_symbol() << "'" << '\n';
 
     stream << "  defined at line " << this->path->write();
   }
@@ -117,7 +117,7 @@ GiNaC::ex subexpr_declaration::get_value() const
 void subexpr_declaration::print(std::ostream& stream) const
 	{
     stream << "Subexpression declaration for symbol '" << this->get_name()
-	    << "', GiNaC symbol '" << this->get_ginac_symbol() << "'" << std::endl;
+	    << "', GiNaC symbol '" << this->get_ginac_symbol() << "'" << '\n';
 
     stream << "  defined at line " << this->path->write();
 	}
@@ -258,34 +258,34 @@ enum indexorder script::get_indexorder() const
 
 void script::print(std::ostream& stream) const
   {
-    stream << "Script summary:" << std::endl;
-    stream << "===============" << std::endl;
-    stream << "  Name           = '" << this->name << "'" << std::endl;
-    stream << "  Model          = '" << this->model << "'" << std::endl;
-    stream << "  Author         = '" << this->author << "'" << std::endl;
-    stream << "  Tag            = '" << this->tag << "'" << std::endl;
-    stream << "  Core           = '" << this->core << "'" << std::endl;
-    stream << "  Implementation = '" << this->implementation << "'" << std::endl;
-    stream << std::endl;
+    stream << "Script summary:" << '\n';
+    stream << "===============" << '\n';
+    stream << "  Name           = '" << this->name << "'" << '\n';
+    stream << "  Model          = '" << this->model << "'" << '\n';
+    stream << "  Author         = '" << this->author << "'" << '\n';
+    stream << "  Tag            = '" << this->tag << "'" << '\n';
+    stream << "  Core           = '" << this->core << "'" << '\n';
+    stream << "  Implementation = '" << this->implementation << "'" << '\n';
+    stream << '\n';
 
-    stream << "Fields:" << std::endl;
-    stream << "=======" << std::endl;
+    stream << "Fields:" << '\n';
+    stream << "=======" << '\n';
     for(field_symbol_table::const_iterator ptr = this->fields.begin(); ptr != this->fields.end(); ++ptr)
       {
         ptr->second->print(stream);
       }
-    stream << std::endl;
+    stream << '\n';
 
-    stream << "Parameters:" << std::endl;
-    stream << "===========" << std::endl;
+    stream << "Parameters:" << '\n';
+    stream << "===========" << '\n';
     for(parameter_symbol_table::const_iterator ptr = this->parameters.begin(); ptr != this->parameters.end(); ++ptr)
       {
         ptr->second->print(stream);
       }
-    stream << std::endl;
+    stream << '\n';
 
-		stream << "Subexpressions:" << std::endl;
-		stream << "===============" << std::endl;
+		stream << "Subexpressions:" << '\n';
+		stream << "===============" << '\n';
 		for(subexpr_symbol_table::const_iterator ptr = this->subexprs.begin(); ptr != this->subexprs.end(); ++ptr)
 			{
 		    ptr->second->print(stream);
@@ -293,13 +293,13 @@ void script::print(std::ostream& stream) const
 
     if(this->potential_set)
       {
-        stream << "** Potential = " << this->potential << std::endl;
+        stream << "** Potential = " << this->potential << '\n';
       }
     else
       {
-        stream << "Potential unset" << std::endl;
+        stream << "Potential unset" << '\n';
       }
-    stream << std::endl;
+    stream << '\n';
   }
 
 
@@ -573,7 +573,7 @@ void script::set_potential(GiNaC::ex V)
     this->potential     = V;
     this->potential_set = true;
 
-//    std::cerr << "Set potential to be V = " << this->potential << std::endl;
+//    std::cerr << "Set potential to be V = " << this->potential << '\n';
   }
 
 

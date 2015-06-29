@@ -109,7 +109,7 @@ int main(int argc, char* argv[])
 	{
     if(argc != 2)
 	    {
-        std::cerr << "makerepo: Too few arguments. Expected repository name" << std::endl;
+        std::cerr << "makerepo: Too few arguments. Expected repository name" << '\n';
         exit(EXIT_FAILURE);
 	    }
 
@@ -592,9 +592,9 @@ int main(int argc, char* argv[])
     transport::derived_data::wavenumber_series_table<double> tk3_redbsp_spec_table = transport::derived_data::wavenumber_series_table<double>("quadratic.threepf-1.redbsp-spec-table", "redbsp-spec-table.txt");
 		tk3_redbsp_spec_table.add_line(tk3_zeta_redbsp_spec);
 
-    std::cout << "3pf equilateral plot:" << std::endl << tk3_zeta_equi << std::endl;
+    std::cout << "3pf equilateral plot:" << '\n' << tk3_zeta_equi << '\n';
 
-    std::cout << "3pf squeezed plot:" << std::endl<< tk3_zeta_sq << std::endl;
+    std::cout << "3pf squeezed plot:" << '\n'<< tk3_zeta_sq << '\n';
 
 
     // construct output tasks
@@ -642,7 +642,7 @@ int main(int argc, char* argv[])
 		threepf_output.add_element(tk3_redbsp_spec_plot);
 		threepf_output.add_element(tk3_redbsp_spec_table);
 
-    std::cout << "quadratic.threepf-1 output task:" << std::endl << threepf_output << std::endl;
+    std::cout << "quadratic.threepf-1 output task:" << '\n' << threepf_output << '\n';
 
     // write output tasks to the database
 //		repo->commit_task(twopf_output);

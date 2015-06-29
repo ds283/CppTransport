@@ -548,11 +548,11 @@ namespace transport
 
           assert(this->ctx.size() == 1);
 
-          std::cerr << "Emplacing kernel ..." << std::endl;
+          std::cerr << "Emplacing kernel ..." << '\n';
           // build a kernel to evolve the twopf and background combined
           twopf_kernel.emplace_back(this->ctx.queue(0),
                                     $$__IMPORT_KERNEL{vexcl-opencl/twopf.cl, twopffused, );}
-          std::cerr << "... done" << std::endl;
+          std::cerr << "... done" << '\n';
 
           struct
             {

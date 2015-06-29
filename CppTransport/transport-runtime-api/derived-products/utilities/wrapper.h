@@ -113,7 +113,7 @@ namespace transport
 
 				void wrapped_output::wrap_newline(std::ostream& out)
 					{
-				    out << std::endl;
+				    out << '\n';
 
 						for(unsigned int i = 0; i < this->left_margin; ++i)
 							{

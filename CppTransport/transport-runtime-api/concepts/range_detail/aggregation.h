@@ -292,12 +292,12 @@ namespace transport
 		    if(obj.dirty) obj.populate_grid();
 
         out << CPPTRANSPORT_AGGREGATION_RANGE_A << obj.subrange_list.size() << " ";
-        out << CPPTRANSPORT_AGGREGATION_RANGE_B << std::endl;
+        out << CPPTRANSPORT_AGGREGATION_RANGE_B << '\n';
 
-        out << CPPTRANSPORT_AGGREGATION_RANGE_C << std::endl;
+        out << CPPTRANSPORT_AGGREGATION_RANGE_C << '\n';
         for(unsigned int i = 0; i < obj.grid.size(); ++i)
           {
-            out << i << ". " << obj.grid[i] << std::endl;
+            out << i << ". " << obj.grid[i] << '\n';
           }
 
         return(out);

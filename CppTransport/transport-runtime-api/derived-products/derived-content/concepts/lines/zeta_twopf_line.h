@@ -167,7 +167,7 @@ namespace transport
 				template <typename number>
 				void zeta_twopf_line<number>::write(std::ostream& out)
 					{
-				    out << "  " << CPPTRANSPORT_PRODUCT_WAVENUMBER_SERIES_LABEL_ZETA_TWOPF << std::endl;
+				    out << "  " << CPPTRANSPORT_PRODUCT_WAVENUMBER_SERIES_LABEL_ZETA_TWOPF << '\n';
 					}
 
 			}   // namespace derived_data

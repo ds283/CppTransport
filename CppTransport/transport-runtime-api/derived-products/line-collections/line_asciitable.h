@@ -270,7 +270,7 @@ namespace transport
 						// call next writer
 						this->line_collection<number>::write(out);
 
-						out << CPPTRANSPORT_PRODUCT_LINE_ASCIITABLE_LABEL_PRECISION << " " << this->precision << std::endl;
+						out << CPPTRANSPORT_PRODUCT_LINE_ASCIITABLE_LABEL_PRECISION << " " << this->precision << '\n';
 					}
 
 

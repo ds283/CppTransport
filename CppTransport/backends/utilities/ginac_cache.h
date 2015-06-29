@@ -213,23 +213,23 @@ bool ginac_cache<ExpressionType, HashSize>::cache_element::compare(ExpressionTyp
     bool equal = static_cast<bool>(diff == 0);
     if(!equal)
 	    {
-        std::cout << "Detected mismatching expression: type = " << t << ", index = " << index << std::endl;
-        std::cout << "  Lookup expression = " << e << std::endl;
-        std::cout << "  Expected expression = " << expected << std::endl;
-        std::cout << "  Difference = " << diff << std::endl;
+        std::cout << "Detected mismatching expression: type = " << t << ", index = " << index << '\n';
+        std::cout << "  Lookup expression = " << e << '\n';
+        std::cout << "  Expected expression = " << expected << '\n';
+        std::cout << "  Difference = " << diff << '\n';
 
         unsigned int count = 0;
-        std::cout << "  Lookup argument list:" << std::endl;
+        std::cout << "  Lookup argument list:" << '\n';
         for(std::vector<GiNaC::ex>::const_iterator u = this->args.begin(); u != this->args.end(); ++u, ++count)
 	        {
-            std::cout << "  argument " << count << " = " << (*u) << std::endl;
+            std::cout << "  argument " << count << " = " << (*u) << '\n';
 	        }
 
         count = 0;
-        std::cout << "  Expected argument list:" << std::endl;
+        std::cout << "  Expected argument list:" << '\n';
         for(std::vector<GiNaC::ex>::const_iterator u = a.begin(); u != a.end(); ++u, ++count)
 	        {
-            std::cout << "  argument " << count << " = " << (*u) << std::endl;
+            std::cout << "  argument " << count << " = " << (*u) << '\n';
 	        }
 
 		    matched = false;
@@ -258,17 +258,17 @@ bool ginac_cache<ExpressionType, HashSize>::cache_element::compare(ExpressionTyp
 template <typename ExpressionType, unsigned int HashSize>
 void ginac_cache<ExpressionType, HashSize>::cache_element::write(std::ostream& out)
 	{
-		out << "== Cache element" << std::endl;
-		out << "   Type = " << this->type << std::endl;
-		out << "   Index = " << this->index << std::endl;
-		out << "   Number of arguments = " << this->args.size() << std::endl;
+		out << "== Cache element" << '\n';
+		out << "   Type = " << this->type << '\n';
+		out << "   Index = " << this->index << '\n';
+		out << "   Number of arguments = " << this->args.size() << '\n';
 
 		unsigned int count = 0;
 		for(std::vector<GiNaC::ex>::const_iterator t = this->args.begin(); t != this->args.end(); ++t, ++count)
 			{
-				out << "   Argument " << count << " = " << (*t) << std::endl;
+				out << "   Argument " << count << " = " << (*t) << '\n';
 			}
-		out << "   Expression = " << this->expr << std::endl;
+		out << "   Expression = " << this->expr << '\n';
 	}
 
 
@@ -310,17 +310,17 @@ bool ginac_cache<ExpressionType, HashSize>::query(ExpressionType t, unsigned int
 	        {
 		        if(!matched)
 			        {
-		            std::cout << std::endl;
-		            std::cout << "Detected matching failure -- dumping diagnostics" << std::endl;
-		            std::cout << "  index = " << i << ", hash = " << hash << ", number of entries in hash table at this value = " << this->cache[hash].size() << std::endl;
+		            std::cout << '\n';
+		            std::cout << "Detected matching failure -- dumping diagnostics" << '\n';
+		            std::cout << "  index = " << i << ", hash = " << hash << ", number of entries in hash table at this value = " << this->cache[hash].size() << '\n';
 		            for(typename std::vector<cache_element>::iterator v = this->cache[hash].begin(); v != this->cache[hash].end(); ++v)
 			            {
-		                std::cout << std::endl;
+		                std::cout << '\n';
 		                (*v).write(std::cout);
-		                std::cout << std::endl;
-		                std::cout << "Match to this cache element = " << (*v).compare(t, i, a, e) << std::endl;
+		                std::cout << '\n';
+		                std::cout << "Match to this cache element = " << (*v).compare(t, i, a, e) << '\n';
 			            }
-		            std::cout << std::endl;
+		            std::cout << '\n';
 			        }
 
             hits++;
