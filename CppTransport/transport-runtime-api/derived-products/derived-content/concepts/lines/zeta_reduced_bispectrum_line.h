@@ -168,7 +168,7 @@ namespace transport
 				template <typename number>
 				void zeta_reduced_bispectrum_line<number>::write(std::ostream& out)
 					{
-				    out << "  " << CPPTRANSPORT_PRODUCT_WAVENUMBER_SERIES_LABEL_REDUCED_BISPECTRUM << std::endl;
+				    out << "  " << CPPTRANSPORT_PRODUCT_WAVENUMBER_SERIES_LABEL_REDUCED_BISPECTRUM << '\n';
 					}
 
 			}   // namespace derived_data

@@ -236,9 +236,9 @@ namespace transport
             model<number>* mdl = t->get_model();
             c++;
 
-            stream << c << ". " << mdl->get_name() << " [" << mdl->get_author() << "]" << std::endl;
-            stream << "   backend = " << mdl->get_backend() << " [bg=" << mdl->get_back_stepper() << ", pert=" << mdl->get_pert_stepper() << "]" << std::endl;
-            stream << "   UID = " << t->get_uid() << " | built using CppTransport " << static_cast<double>(mdl->get_translator_version())/100.0 << std::endl;
+            stream << c << ". " << mdl->get_name() << " [" << mdl->get_author() << "]" << '\n';
+            stream << "   backend = " << mdl->get_backend() << " [bg=" << mdl->get_back_stepper() << ", pert=" << mdl->get_pert_stepper() << "]" << '\n';
+            stream << "   UID = " << t->get_uid() << " | built using CppTransport " << static_cast<double>(mdl->get_translator_version())/100.0 << '\n';
           }
       }
 

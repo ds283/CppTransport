@@ -311,15 +311,15 @@ namespace transport
     template <typename number>
     std::ostream& operator<<(std::ostream& out, const initial_conditions<number>& obj)
       {
-        out << obj.params << std::endl;
+        out << obj.params << '\n';
 
 		    const std::vector<std::string>& names = obj.mdl->get_state_names();
         assert(obj.ics.size() == names.size());
 
-        out << CPPTRANSPORT_ICS_TAG << std::endl;
+        out << CPPTRANSPORT_ICS_TAG << '\n';
         for(unsigned int i = 0; i < obj.ics.size(); ++i)
           {
-            out << "  " << names[i] << " = " << obj.ics[i] << std::endl;
+            out << "  " << names[i] << " = " << obj.ics[i] << '\n';
           }
 
         return(out);

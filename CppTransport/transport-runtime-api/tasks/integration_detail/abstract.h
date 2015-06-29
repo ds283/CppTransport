@@ -370,7 +370,7 @@ namespace transport
     template <typename number>
     std::ostream& operator<<(std::ostream& out, const integration_task<number>& obj)
 	    {
-        out << obj.ics << std::endl;
+        out << obj.ics << '\n';
 //        out << CPPTRANSPORT_TASK_TIMES << obj.times;
         return(out);
 	    }

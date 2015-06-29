@@ -168,7 +168,7 @@ namespace y
             /* return eof? */
           }
 
-        // std::cerr << "Returning token number " << rval << std::endl;
+        // std::cerr << "Returning token number " << rval << '\n';
 
         return(rval);
       }

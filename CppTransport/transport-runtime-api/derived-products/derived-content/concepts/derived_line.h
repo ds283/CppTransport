@@ -680,15 +680,15 @@ namespace transport
 						unsigned int saved_left_margin = this->wrapper.get_left_margin();
 						this->wrapper.set_left_margin(2);
 
-//						out << "  " << CPPTRANSPORT_PRODUCT_DERIVED_LINE_LABEL << std::endl;
-						out << "  " << CPPTRANSPORT_PRODUCT_DERIVED_LINE_TASK_NAME << " '" << this->parent_task->get_name() << "'" << std::endl;
+//						out << "  " << CPPTRANSPORT_PRODUCT_DERIVED_LINE_LABEL << '\n';
+						out << "  " << CPPTRANSPORT_PRODUCT_DERIVED_LINE_TASK_NAME << " '" << this->parent_task->get_name() << "'" << '\n';
 
 						// output model details if this derived line is directly associated with an integration task
 						integration_task<number>* itk = dynamic_cast< integration_task<number>* >(this->parent_task);
 						if(itk != nullptr)
 							{
 						    out << ", " <<CPPTRANSPORT_PRODUCT_DERIVED_LINE_MODEL_NAME << " '" << itk->get_model()->get_name()
-							    << " [" << itk->get_model()->get_author() << " | " << itk->get_model()->get_tag() << "]" << std::endl;
+							    << " [" << itk->get_model()->get_author() << " | " << itk->get_model()->get_tag() << "]" << '\n';
 
 							}
 
@@ -696,15 +696,15 @@ namespace transport
 						switch(this->x_class)
 							{
 						    case time_axis:
-							    out << CPPTRANSPORT_PRODUCT_DERIVED_LINE_CLASS_TIME_LABEL << std::endl;
+							    out << CPPTRANSPORT_PRODUCT_DERIVED_LINE_CLASS_TIME_LABEL << '\n';
 									break;
 
 						    case wavenumber_axis:
-									out << CPPTRANSPORT_PRODUCT_DERIVED_LINE_CLASS_WAVENUMBER_LABEL << std::endl;
+									out << CPPTRANSPORT_PRODUCT_DERIVED_LINE_CLASS_WAVENUMBER_LABEL << '\n';
 									break;
 
 						    case threepf_kconfig_axis:
-							    out << CPPTRANSPORT_PRODUCT_DERIVED_LINE_CLASS_THREEPF_CONFIGURATION_LABEL << std::endl;
+							    out << CPPTRANSPORT_PRODUCT_DERIVED_LINE_CLASS_THREEPF_CONFIGURATION_LABEL << '\n';
 
 						    default:
 							    assert(false);
@@ -762,35 +762,35 @@ namespace transport
 				    switch(this->x_type)
 					    {
 				        case efolds_axis:
-					        out << CPPTRANSPORT_PRODUCT_DERIVED_LINE_X_AXIS_VALUE_EFOLDS << std::endl;
+					        out << CPPTRANSPORT_PRODUCT_DERIVED_LINE_X_AXIS_VALUE_EFOLDS << '\n';
 				          break;
 
 				        case k_axis:
-					        out << CPPTRANSPORT_PRODUCT_DERIVED_LINE_X_AXIS_VALUE_K << std::endl;
+					        out << CPPTRANSPORT_PRODUCT_DERIVED_LINE_X_AXIS_VALUE_K << '\n';
 				          break;
 
 				        case efolds_exit_axis:
-					        out << CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_EFOLDS_EXIT << std::endl;
+					        out << CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_EFOLDS_EXIT << '\n';
 				          break;
 
 				        case alpha_axis:
-					        out << CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_ALPHA << std::endl;
+					        out << CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_ALPHA << '\n';
 				          break;
 
 				        case beta_axis:
-					        out << CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_BETA << std::endl;
+					        out << CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_BETA << '\n';
 				          break;
 
 				        case squeezing_fraction_k1_axis:
-					        out << CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K1 << std::endl;
+					        out << CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K1 << '\n';
 				          break;
 
 				        case squeezing_fraction_k2_axis:
-					        out << CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K2 << std::endl;
+					        out << CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K2 << '\n';
 				          break;
 
 				        case squeezing_fraction_k3_axis:
-					        out << CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K3 << std::endl;
+					        out << CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K3 << '\n';
 				          break;
 
 				        default:

@@ -309,12 +309,12 @@ namespace transport
         else if(obj.spacing == logarithmic_bottom_stepping) out << CPPTRANSPORT_STEPPING_RANGE_LOGARITHMIC_BOTTOM;
         else if(obj.spacing == logarithmic_top_stepping)    out << CPPTRANSPORT_STEPPING_RANGE_LOGARITHMIC_TOP;
 
-        out << CPPTRANSPORT_STEPPING_RANGE_C << obj.min << ", " << CPPTRANSPORT_STEPPING_RANGE_D << obj.max << std::endl;
+        out << CPPTRANSPORT_STEPPING_RANGE_C << obj.min << ", " << CPPTRANSPORT_STEPPING_RANGE_D << obj.max << '\n';
 
-        out << CPPTRANSPORT_STEPPING_RANGE_E << std::endl;
+        out << CPPTRANSPORT_STEPPING_RANGE_E << '\n';
         for(unsigned int i = 0; i < obj.grid.size(); ++i)
 	        {
-            out << i << ". " << obj.grid[i] << std::endl;
+            out << i << ". " << obj.grid[i] << '\n';
 	        }
 
         return(out);

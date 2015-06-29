@@ -152,7 +152,7 @@ namespace transport
     template <typename number>
     void postintegration_task<number>::write(std::ostream& out) const
 	    {
-        out << CPPTRANSPORT_PARENT_TASK << ": '" << this->ptk->get_name() << "'" << std::endl;
+        out << CPPTRANSPORT_PARENT_TASK << ": '" << this->ptk->get_name() << "'" << '\n';
 	    }
 
 	}   // namespace transport

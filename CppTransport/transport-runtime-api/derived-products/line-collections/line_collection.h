@@ -583,12 +583,12 @@ namespace transport
 
 						this->wrapper.wrap_newline(out);
 
-		        out << CPPTRANSPORT_PRODUCT_LINE_COLLECTION_LABEL_TITLE_A << " '" << this->get_name() << "', " << CPPTRANSPORT_PRODUCT_LINE_COLLECTION_LABEL_TITLE_B << std::endl << std::endl;
+		        out << CPPTRANSPORT_PRODUCT_LINE_COLLECTION_LABEL_TITLE_A << " '" << this->get_name() << "', " << CPPTRANSPORT_PRODUCT_LINE_COLLECTION_LABEL_TITLE_B << '\n' << '\n';
 
 				    unsigned int line_counter = 1;
 				    for(typename std::list< derived_line<number>* >::iterator t = this->lines.begin(); t != this->lines.end(); ++t, ++line_counter)
 					    {
-						    out << CPPTRANSPORT_PRODUCT_LINE_COLLECTION_LABEL_LINE << " " << line_counter << ":" << std::endl;
+						    out << CPPTRANSPORT_PRODUCT_LINE_COLLECTION_LABEL_LINE << " " << line_counter << ":" << '\n';
 				        (*t)->write(out);
 				        this->wrapper.wrap_newline(out);
 					    }

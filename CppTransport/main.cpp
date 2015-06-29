@@ -68,14 +68,14 @@ int main(int argc, const char *argv[])
 
     if(option_map.count(VERSION_SWITCH))
       {
-        std::cout << CPPTRANSPORT_NAME << " " << CPPTRANSPORT_VERSION << " " << CPPTRANSPORT_COPYRIGHT << std::endl;
+        std::cout << CPPTRANSPORT_NAME << " " << CPPTRANSPORT_VERSION << " " << CPPTRANSPORT_COPYRIGHT << '\n';
         emitted_version = true;
       }
 
     if(option_map.count(HELP_SWITCH))
       {
-        if(!emitted_version) std::cout << CPPTRANSPORT_NAME << " " << CPPTRANSPORT_VERSION << " " << CPPTRANSPORT_COPYRIGHT << std::endl;
-        std::cout << visible << std::endl;
+        if(!emitted_version) std::cout << CPPTRANSPORT_NAME << " " << CPPTRANSPORT_VERSION << " " << CPPTRANSPORT_COPYRIGHT << '\n';
+        std::cout << visible << '\n';
       }
 
     if(option_map.count(NO_COLOUR_SWITCH) || option_map.count(NO_COLOR_SWITCH)) disable_colour_errors();
@@ -115,9 +115,9 @@ int main(int argc, const char *argv[])
 		    std::cout << CPPTRANSPORT_NAME << ": " << MESSAGE_PROCESSING_COMPLETE_A
 			    << " " << files_processed << " "
 			    << (files_processed != 1 ? MESSAGE_PROCESSING_PLURAL : MESSAGE_PROCESSING_SINGULAR)
-			    << " " << MESSAGE_PROCESSING_COMPLETE_B << " " << format_time(timer.elapsed().wall) << std::endl;
+			    << " " << MESSAGE_PROCESSING_COMPLETE_B << " " << format_time(timer.elapsed().wall) << '\n';
 
-//		    std::cout << CPPTRANSPORT_NAME << ": " << replacements << " " << MESSAGE_MACRO_REPLACEMENTS << std::endl;
+//		    std::cout << CPPTRANSPORT_NAME << ": " << replacements << " " << MESSAGE_MACRO_REPLACEMENTS << '\n';
 			}
 
     return 0;

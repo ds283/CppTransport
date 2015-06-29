@@ -68,7 +68,7 @@ namespace transport
 	        }
 
         std::cout << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_TWOPF_ELEMENTS_A << " " << this->twopf_db->size() << " "
-          <<CPPTRANSPORT_TASK_TWOPF_ELEMENTS_B << std::endl;
+          <<CPPTRANSPORT_TASK_TWOPF_ELEMENTS_B << '\n';
 
         this->compute_horizon_exit_times();
 

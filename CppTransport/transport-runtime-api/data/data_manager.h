@@ -562,7 +562,7 @@ namespace transport
         twopf_task<number>* tk = dynamic_cast< twopf_task<number>* >(itk);
         assert(tk != nullptr);
 
-        BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << std::endl << "** Performing integrity check for twopf container '" << writer.get_abs_container_path().string() << "'";
+        BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << '\n' << "** Performing integrity check for twopf container '" << writer.get_abs_container_path().string() << "'";
 
         std::list<unsigned int> serials = this->get_missing_twopf_re_serials(writer);
 
@@ -592,7 +592,7 @@ namespace transport
         threepf_task<number>* tk = dynamic_cast< threepf_task<number>* >(itk);
         assert(tk != nullptr);
 
-        BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << std::endl << "** Performing integrity check for threepf container '" << writer.get_abs_container_path().string() << "'";
+        BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << '\n' << "** Performing integrity check for threepf container '" << writer.get_abs_container_path().string() << "'";
 
         // get lists of missing serial numbers for threepf, real twopf and imaginary twopf
         std::list<unsigned int> twopf_re_serials = this->get_missing_twopf_re_serials(writer);
@@ -615,7 +615,7 @@ namespace transport
 
             if(remainder.size() > 0)
               {
-                BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << std::endl << "** Dropping extra threepf configurations not missing from container, but advised by backend:";
+                BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << '\n' << "** Dropping extra threepf configurations not missing from container, but advised by backend:";
                 this->drop_threepf_configurations(writer, remainder, tk->get_threepf_database());
                 threepf_serials.merge(remainder);   // not necessary to remove duplicates, since there should not be any; result is sorted
               }
@@ -650,7 +650,7 @@ namespace transport
 
             if(undropped.size() > 0)
               {
-                BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << std::endl << "** Dropping real twopf configurations entailed by these threepf configurations, but present in the container";
+                BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << '\n' << "** Dropping real twopf configurations entailed by these threepf configurations, but present in the container";
                 this->drop_twopf_re_configurations(writer, undropped, tk->get_twopf_database());
               }
 
@@ -661,7 +661,7 @@ namespace transport
 
             if(undropped.size() > 0)
               {
-                BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << std::endl << "** Dropping imaginary twopf configurations entailed by these threepf configurations, but present in the container";
+                BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << '\n' << "** Dropping imaginary twopf configurations entailed by these threepf configurations, but present in the container";
                 this->drop_twopf_im_configurations(writer, undropped, tk->get_twopf_database());
               }
           }
@@ -674,7 +674,7 @@ namespace transport
         zeta_twopf_task<number>* tk = dynamic_cast< zeta_twopf_task<number>* >(ptk);
         assert(tk != nullptr);
 
-        BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << std::endl << "** Performing integrity check for zeta twopf container '" << writer.get_abs_container_path().string() << "'";
+        BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << '\n' << "** Performing integrity check for zeta twopf container '" << writer.get_abs_container_path().string() << "'";
 
         std::list<unsigned int> serials = this->get_missing_zeta_twopf_serials(writer);
 
@@ -684,7 +684,7 @@ namespace transport
 
             if(remainder.size() > 0)
               {
-                BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << std::endl << "** Dropping extra configurations not missing from container, but advised by backend:";
+                BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << '\n' << "** Dropping extra configurations not missing from container, but advised by backend:";
                 this->drop_zeta_twopf_configurations(writer, remainder, tk->get_twopf_database());
               }
 
@@ -703,7 +703,7 @@ namespace transport
         zeta_threepf_task<number>* tk = dynamic_cast< zeta_threepf_task<number>* >(ptk);
         assert(tk != nullptr);
 
-        BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << std::endl << "** Performing integrity check for zeta threepf container '" << writer.get_abs_container_path().string() << "'";
+        BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << '\n' << "** Performing integrity check for zeta threepf container '" << writer.get_abs_container_path().string() << "'";
 
         // get lists of missing serial numbers for threepf, redbsp and twopf
         std::list<unsigned int> threepf_serials = this->get_missing_zeta_threepf_serials(writer);
@@ -737,7 +737,7 @@ namespace transport
 
             if(remainder.size() > 0)
               {
-                BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << std::endl << "** Dropping extra configurations not missing from container, but advised by backend:";
+                BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << '\n' << "** Dropping extra configurations not missing from container, but advised by backend:";
                 this->drop_zeta_threepf_configurations(writer, remainder, tk->get_threepf_database());
                 this->drop_zeta_redbsp_configurations(writer, remainder, tk->get_threepf_database());
                 threepf_total_serials.merge(remainder);
@@ -771,7 +771,7 @@ namespace transport
 
             if(undropped.size() > 0)
               {
-                BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << std::endl << "** Dropping twopf configurations entailed by these threepf configurations, but present in the container";
+                BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << '\n' << "** Dropping twopf configurations entailed by these threepf configurations, but present in the container";
                 this->drop_zeta_twopf_configurations(writer, undropped, tk->get_twopf_database());
               }
           }
@@ -781,7 +781,7 @@ namespace transport
     template <typename number>
     void data_manager<number>::check_fNL_integrity_handler(postintegration_writer<number>& writer, postintegration_task<number>* tk)
       {
-        BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << std::endl << "** Performing integrity check for fNL container '" << writer.get_abs_container_path().string() << "'";
+        BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << '\n' << "** Performing integrity check for fNL container '" << writer.get_abs_container_path().string() << "'";
       }
 
 
@@ -806,7 +806,7 @@ namespace transport
 
         if(integration_discrepant.size() > 0)
           {
-            BOOST_LOG_SEV(i_writer->get_log(), base_writer::normal) << std::endl << "** Synchronizing " << integration_discrepant.size() << " configurations in integration container which are missing in postintegration container";
+            BOOST_LOG_SEV(i_writer->get_log(), base_writer::normal) << '\n' << "** Synchronizing " << integration_discrepant.size() << " configurations in integration container which are missing in postintegration container";
             i_writer->merge_failure_list(integration_discrepant);
             i_writer->check_integrity(i_tk);
           }
@@ -817,7 +817,7 @@ namespace transport
 
         if(postintegration_discrepant.size() > 0)
           {
-            BOOST_LOG_SEV(p_writer->get_log(), base_writer::normal) << std::endl << "** Synchronizing " << postintegration_discrepant.size() << " configurations in postintegration container which are missing in integration container";
+            BOOST_LOG_SEV(p_writer->get_log(), base_writer::normal) << '\n' << "** Synchronizing " << postintegration_discrepant.size() << " configurations in postintegration container which are missing in integration container";
             p_writer->merge_failure_list(postintegration_discrepant);
             p_writer->check_integrity(p_tk);
           }

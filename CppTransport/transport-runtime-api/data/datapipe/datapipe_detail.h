@@ -668,7 +668,7 @@ namespace transport
 	        << ", Version = " << host_info.get_os_version()
 	        << " (Release = " << host_info.get_os_release()
 	        << ") | " << host_info.get_architecture()
-	        << " | CPU vendor = " << host_info.get_cpu_vendor_id() << std::endl;
+	        << " | CPU vendor = " << host_info.get_cpu_vendor_id() << '\n';
 	    }
 
 

@@ -294,7 +294,7 @@ namespace lexeme    // package in a unique namespace to protect common words lik
             assert(this->k >= 0);
             assert(this->k < this->Nk);
 
-            stream << "'" << this->ktable[(int) this->k] << "'" << std::endl;
+            stream << "'" << this->ktable[(int) this->k] << "'" << '\n';
             break;
 
             case character:
@@ -303,27 +303,27 @@ namespace lexeme    // package in a unique namespace to protect common words lik
             assert(this->s >= 0);
             assert(this->s < this->Nc);
 
-            stream << "'" << this->ctable[(int) this->s] << "'" << std::endl;
+            stream << "'" << this->ctable[(int) this->s] << "'" << '\n';
             break;
 
             case ident:
-	            stream << "identifier '" << this->str << "'" << std::endl;
+	            stream << "identifier '" << this->str << "'" << '\n';
             break;
 
             case integer:
-	            stream << "integer literal '" << this->z << "'" << std::endl;
+	            stream << "integer literal '" << this->z << "'" << '\n';
             break;
 
             case decimal:
-	            stream << "decimal literal '" << this->d << "'" << std::endl;
+	            stream << "decimal literal '" << this->d << "'" << '\n';
             break;
 
             case string:
-	            stream << "string literal '" << this->str << "'" << std::endl;
+	            stream << "string literal '" << this->str << "'" << '\n';
             break;
 
             case unknown:
-	            stream << "UNKNOWN LEXEME" << std::endl;
+	            stream << "UNKNOWN LEXEME" << '\n';
             break;
 
             default:

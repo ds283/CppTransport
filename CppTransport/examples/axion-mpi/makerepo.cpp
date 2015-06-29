@@ -31,7 +31,7 @@ int main(int argc, char* argv[])
 	{
     if(argc != 2)
 	    {
-        std::cerr << "makerepo: Too few arguments. Expected repository name" << std::endl;
+        std::cerr << "makerepo: Too few arguments. Expected repository name" << '\n';
         exit(EXIT_FAILURE);
 	    }
 
@@ -615,9 +615,9 @@ int main(int argc, char* argv[])
     fNL_table.add_line(fNLequi_time_series);
     fNL_table.add_line(fNLortho_time_series);
 
-    std::cout << "3pf equilateral plot:" << std::endl << tk3_zeta_equi << std::endl;
+    std::cout << "3pf equilateral plot:" << '\n' << tk3_zeta_equi << '\n';
 
-    std::cout << "3pf squeezed plot:" << std::endl << tk3_zeta_sq << std::endl;
+    std::cout << "3pf squeezed plot:" << '\n' << tk3_zeta_sq << '\n';
 
 
     // construct output tasks
@@ -674,7 +674,7 @@ int main(int argc, char* argv[])
     transport::output_task<double> fNLloc_task("axion.threepf-1.fNL", fNL_plot);
     fNLloc_task.add_element(fNL_table);
 
-    std::cout << "axion.threepf-1 output task:" << std::endl << threepf_output << std::endl;
+    std::cout << "axion.threepf-1 output task:" << '\n' << threepf_output << '\n';
 
     // write output tasks to the database
 //		repo->commit_task(twopf_output);

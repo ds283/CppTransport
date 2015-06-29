@@ -70,7 +70,7 @@ buffer::~buffer()
 					{
 						for(std::list<std::string>::iterator t = this->buf.begin(); t != this->buf.end(); ++t)
 							{
-								this->out_stream << (*t) << std::endl;
+								this->out_stream << (*t) << '\n';
 							}
 
 						this->out_stream.close();
@@ -118,7 +118,7 @@ void buffer::write(std::string& line, std::list<std::string>::iterator insertion
 			    {
 		        if(this->out_stream.is_open() && !this->out_stream.fail())
 			        {
-		            this->out_stream << *(this->buf.begin()) << std::endl;
+		            this->out_stream << *(this->buf.begin()) << '\n';
 			        }
 
 		        // remove line from front of buffer, and decrease size accordingly
@@ -230,7 +230,7 @@ void buffer::print_lines(unsigned int lines)
 		unsigned int c = 0;
 		for(std::list<std::string>::iterator t = this->buf.begin(); t != this->buf.end() && c < lines; ++t, ++c)
 			{
-		    std::cout << (*t) << std::endl;
+		    std::cout << (*t) << '\n';
 			}
-		if(c == lines) std::cout << "..." << std::endl;
+		if(c == lines) std::cout << "..." << '\n';
 	}

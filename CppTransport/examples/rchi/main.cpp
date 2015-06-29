@@ -52,7 +52,7 @@ int main(int argc, const char* argv[])
 
     if(argc != 3)
       {
-        std::cerr << "syntax: rchi-openmp <output directory> <python interpreter>" << std::endl;
+        std::cerr << "syntax: rchi-openmp <output directory> <python interpreter>" << '\n';
       }
 
     std::string output(argv[1]);
@@ -73,7 +73,7 @@ int main(int argc, const char* argv[])
         times.push_back(tmin + ((tmax-tmin)/tN)*i);
       }
 
-    std::cout << "Integrating background" << std::endl;
+    std::cout << "Integrating background" << '\n';
     {
       boost::timer::auto_cpu_timer timer;
 
@@ -99,8 +99,8 @@ int main(int argc, const char* argv[])
         ks.push_back(kmin * pow(kmax/kmin, ((double)i/(double)kN)));
       }
 
-    std::cout << std::endl;
-    std::cout << "Integrating two-point function" << std::endl;
+    std::cout << '\n';
+    std::cout << "Integrating two-point function" << '\n';
     {
       boost::timer::auto_cpu_timer timer;
 

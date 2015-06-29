@@ -167,7 +167,7 @@ namespace transport
     template <typename number>
     std::ostream& operator<<(std::ostream& out, const output_task<number>& obj)
 	    {
-        out << CPPTRANSPORT_OUTPUT_ELEMENTS << std::endl;
+        out << CPPTRANSPORT_OUTPUT_ELEMENTS << '\n';
         for(typename std::vector< output_task_element<number> >::const_iterator t = obj.elements.begin(); t != obj.elements.end(); ++t)
 	        {
             out << *t;

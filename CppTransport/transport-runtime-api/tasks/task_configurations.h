@@ -48,7 +48,7 @@ namespace transport
 			{
 		    std::ostringstream str;
 				str << std::setprecision(CPPTRANSPORT_DEFAULT_T_PRECISION) << obj.t;
-				out << CPPTRANSPORT_TIME_CONFIG_SERIAL << " " << obj.serial << ", " << CPPTRANSPORT_TIME_CONFIG_TEQUALS << " " << str.str() << std::endl;
+				out << CPPTRANSPORT_TIME_CONFIG_SERIAL << " " << obj.serial << ", " << CPPTRANSPORT_TIME_CONFIG_TEQUALS << " " << str.str() << '\n';
 
 				return(out);
 			}
@@ -89,7 +89,7 @@ namespace transport
 
         out << CPPTRANSPORT_KCONFIG_SERIAL << " " << obj.serial << ", "
 	        << CPPTRANSPORT_KCONFIG_KEQUALS << " " << str.str() << ", "
-	        << CPPTRANSPORT_KCONFIG_T_EXIT << " " << exit_str.str() << std::endl;
+	        << CPPTRANSPORT_KCONFIG_T_EXIT << " " << exit_str.str() << '\n';
 
         return(out);
 	    }
@@ -144,7 +144,7 @@ namespace transport
         out << CPPTRANSPORT_KCONFIG_SERIAL << " " << obj.serial << ", " << CPPTRANSPORT_KCONFIG_KTEQUALS << " " << kt_str.str()
 	        << ", " << CPPTRANSPORT_KCONFIG_ALPHAEQUALS << " " << alpha_str.str()
 	        << ", " << CPPTRANSPORT_KCONFIG_BETAEQUALS << " " << beta_str.str()
-	        << std::endl;
+	        << '\n';
 
         return(out);
 	    }
@@ -278,7 +278,7 @@ namespace transport
             if(count > 0) out << ", ";
             out << *u;
           }
-        out << std::endl;
+        out << '\n';
 
         return(out);
       }

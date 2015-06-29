@@ -170,8 +170,8 @@ namespace transport
 		    begin_label << "time_begin" << unique_id;
 		    end_label << "time_end" << unique_id;
 
-		    insn << begin_label.str() << " = " << env.date_namespace() << ".date2num(" << env.dateutil_namespace() << ".parse('" << this->begin_time << "'))" << std::endl;
-		    insn << end_label.str()   << " = " << env.date_namespace() << ".date2num(" << env.dateutil_namespace() << ".parse('" << this->end_time << "'))" << std::endl;
+		    insn << begin_label.str() << " = " << env.date_namespace() << ".date2num(" << env.dateutil_namespace() << ".parse('" << this->begin_time << "'))" << '\n';
+		    insn << end_label.str()   << " = " << env.date_namespace() << ".date2num(" << env.dateutil_namespace() << ".parse('" << this->end_time << "'))" << '\n';
 
 		    double bar_height = 0.8*env.height();
 		    double bar_pad    = 0.1*env.height();
@@ -224,7 +224,7 @@ namespace transport
 
 				time_label << "milestone" << unique_id;
 
-				insn << time_label.str() << " = " << env.date_namespace() << ".date2num(" << env.dateutil_namespace() << ".parse('" << this->milestone_time << "'))" << std::endl;
+				insn << time_label.str() << " = " << env.date_namespace() << ".date2num(" << env.dateutil_namespace() << ".parse('" << this->milestone_time << "'))" << '\n';
 
 				double bar_height = 0.8*env.height();
 				double size       = bar_height/3.0;
@@ -1023,14 +1023,14 @@ namespace transport
 						throw runtime_exception(runtime_exception::JOURNAL_ERROR, msg.str());
 					}
 
-				out << "import numpy as np" << std::endl;
-				out << "import matplotlib.pyplot as plt" << std::endl;
-				out << "import matplotlib.dates as mdt" << std::endl;
-				out << "import datetime as dt" << std::endl;
-				out << "import dateutil.parser" << std::endl;
+				out << "import numpy as np" << '\n';
+				out << "import matplotlib.pyplot as plt" << '\n';
+				out << "import matplotlib.dates as mdt" << '\n';
+				out << "import datetime as dt" << '\n';
+				out << "import dateutil.parser" << '\n';
 
-				out << "fig = plt.figure()" << std::endl;
-				out << "ax = plt.gca()" << std::endl;
+				out << "fig = plt.figure()" << '\n';
+				out << "ax = plt.gca()" << '\n';
 
 				Gantt_environment gantt_env("ax", "mdt", "dt", "dateutil.parser", 1.0);
 
@@ -1045,7 +1045,7 @@ namespace transport
 		        std::list<Gantt_bar>::const_iterator u = t->begin();
 		        while(u != t->end())
 			        {
-		            out << u->format(total_count, static_cast<double>(process_count) * 1.0, gantt_env) << std::endl;
+		            out << u->format(total_count, static_cast<double>(process_count) * 1.0, gantt_env) << '\n';
 		            ++u;
 		            ++total_count;
 			        }
@@ -1065,7 +1065,7 @@ namespace transport
 				    std::list<Gantt_milestone>::const_iterator w = v->begin();
 						while(w != v->end())
 							{
-								out << w->format(total_count, static_cast<double>(process_count) * 1.0, gantt_env) << std::endl;
+								out << w->format(total_count, static_cast<double>(process_count) * 1.0, gantt_env) << '\n';
 								++w;
 								++total_count;
 							}
@@ -1077,34 +1077,34 @@ namespace transport
 				// label y-axis by worker if there are not too many labels
 				if(this->N_workers <= 20)
 					{
-				    out << "ylabels = []" << std::endl;
-				    out << "ylabels.append('Master')" << std::endl;
+				    out << "ylabels = []" << '\n';
+				    out << "ylabels.append('Master')" << '\n';
 
 				    for(unsigned int i = 0; i < this->N_workers; ++i)
 					    {
-				        out << "ylabels.append('Worker " << i+1 << "')" << std::endl;
+				        out << "ylabels.append('Worker " << i+1 << "')" << '\n';
 					    }
 
-				    out << "pos = np.arange(0.5, " << 0.5 + static_cast<double>(process_count)*1.0 << ", 1.0)" << std::endl;
-				    out << "locsy, labelsy = plt.yticks(pos, ylabels)" << std::endl;
-				    out << "plt.setp(labelsy, fontsize=12)" << std::endl;
+				    out << "pos = np.arange(0.5, " << 0.5 + static_cast<double>(process_count)*1.0 << ", 1.0)" << '\n';
+				    out << "locsy, labelsy = plt.yticks(pos, ylabels)" << '\n';
+				    out << "plt.setp(labelsy, fontsize=12)" << '\n';
 					}
 
 		    // format the x-axis
-		    out << "ax.xaxis_date()" << std::endl;
-				out << "ax.axis('tight')" << std::endl;
+		    out << "ax.xaxis_date()" << '\n';
+				out << "ax.axis('tight')" << '\n';
 
-				out << "ax.invert_yaxis()" << std::endl;
-				out << "fig.autofmt_xdate()" << std::endl;
+				out << "ax.invert_yaxis()" << '\n';
+				out << "fig.autofmt_xdate()" << '\n';
 				if(out_file.extension() != ".py")
 					{
-				    out << "plt.savefig(" << out_file << ")" << std::endl;
+				    out << "plt.savefig(" << out_file << ")" << '\n';
 					}
 				else
 					{
 				    boost::filesystem::path temp = out_file;
 						temp.replace_extension(".pdf");
-						out << "plt.savefig(" << temp << ")" << std::endl;
+						out << "plt.savefig(" << temp << ")" << '\n';
 					}
 
 				out.close();

@@ -173,12 +173,12 @@ namespace transport
 			            {
 		                if(xe.get_exception_code() == runtime_exception::SPLINE_ERROR)
 			                {
-		                    std::cout << "** SPLINE ERROR: axis data" << std::endl;
+		                    std::cout << "** SPLINE ERROR: axis data" << '\n';
 				                for(unsigned int i = 0; i < a.size(); ++i)
 					                {
-				                    std::cout << i << ". x=" << a[i] << ", y=" << d[i] << std::endl;
+				                    std::cout << i << ". x=" << a[i] << ", y=" << d[i] << '\n';
 					                }
-		                    std::cout << "** LaTeX label = " << Ll << ", non-LaTeX label = " << nLl << std::endl;
+		                    std::cout << "** LaTeX label = " << Ll << ", non-LaTeX label = " << nLl << '\n';
 
 				                this->zip(a, d, data);
 			                }

@@ -232,7 +232,7 @@ namespace transport
         template <typename number>
         void fNL_line<number>::write(std::ostream& out)
           {
-            out << "FIXME" << std::endl;
+            out << "FIXME" << '\n';
           }
 
       }   // namespace derived_data

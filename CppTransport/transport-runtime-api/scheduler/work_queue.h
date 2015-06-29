@@ -262,7 +262,7 @@ namespace transport
       {
         out << CPPTRANSPORT_WORK_QUEUE_OUTPUT_A << " " << obj.ctx.size() << " "
             << (obj.ctx.size() > 1 ? CPPTRANSPORT_WORK_QUEUE_OUTPUT_B : CPPTRANSPORT_WORK_QUEUE_OUTPUT_C)
-            << std::endl << std::endl;
+            << '\n' << '\n';
 
         unsigned int d = 0;
         for(typename std::vector<typename work_queue<ItemType>::device_queue>::const_iterator t = obj.device_list.begin(); t != obj.device_list.end(); ++t, ++d)
@@ -276,23 +276,23 @@ namespace transport
               {
                 out << CPPTRANSPORT_WORK_QUEUE_UNBOUNDED;
               }
-            out << std::endl;
+            out << '\n';
 
             // loop through the queues on this device, emitting them:
             out << "   " << (*t).size() << " "
                 << ((*t).size() > 1 ? CPPTRANSPORT_WORK_QUEUE_QUEUES : CPPTRANSPORT_WORK_QUEUE_QUEUE)
-                << std::endl << std::endl;
+                << '\n' << '\n';
 
             for(unsigned int i = 0; i < (*t).size(); ++i)
               {
                 const typename work_queue<ItemType>::device_work_list& work = (*t)[i];
 
-                out << "   ** " << CPPTRANSPORT_WORK_QUEUE_QUEUE_NAME << " " << i << std::endl;
+                out << "   ** " << CPPTRANSPORT_WORK_QUEUE_QUEUE_NAME << " " << i << '\n';
                 for(unsigned int j = 0; j < work.size(); ++j)
                   {
                     out << "     " << work[j];
                   }
-                out << std::endl;
+                out << '\n';
               }
           }
         

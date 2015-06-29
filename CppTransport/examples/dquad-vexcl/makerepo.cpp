@@ -88,13 +88,13 @@ int main(int argc, char* argv[])
     mgr->write_integration(tk3, model);
 
     std::string package_xml = repo->extract_package_document(ics.get_name());
-    std::cout << "Package XML document:" << std::endl << package_xml << std::endl << std::endl;
+    std::cout << "Package XML document:" << '\n' << package_xml << '\n' << '\n';
 
     std::string task2_xml = repo->extract_integration_document(tk2.get_name());
-    std::cout << "2pf integration XML document:" << std::endl << task2_xml << std::endl << std::endl;
+    std::cout << "2pf integration XML document:" << '\n' << task2_xml << '\n' << '\n';
 
     std::string task3_xml = repo->extract_integration_document(tk3.get_name());
-    std::cout << "3pf integration XML document:" << std::endl << task3_xml << std::endl << std::endl;
+    std::cout << "3pf integration XML document:" << '\n' << task3_xml << '\n' << '\n';
 
     return(EXIT_SUCCESS);
   }

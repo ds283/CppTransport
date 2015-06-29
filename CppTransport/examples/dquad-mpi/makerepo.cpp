@@ -116,7 +116,7 @@ int main(int argc, char* argv[])
   {
     if(argc != 2)
       {
-        std::cerr << "makerepo: Too few arguments. Expected repository name" << std::endl;
+        std::cerr << "makerepo: Too few arguments. Expected repository name" << '\n';
         exit(EXIT_FAILURE);
       }
 

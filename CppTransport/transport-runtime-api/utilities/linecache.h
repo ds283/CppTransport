@@ -83,7 +83,7 @@ namespace transport
 						    {
 
 #ifdef CPPTRANSPORT_LINECACHE_DEBUG
-				        std::cerr << "WARNING -- COPYING CACHE OBJECT, COUNT = " << copied << std::endl;
+				        std::cerr << "WARNING -- COPYING CACHE OBJECT, COUNT = " << copied << '\n';
 #endif
 
 						    for(typename data_table_list::iterator t = this->tables.begin(); t != this->tables.end(); ++t)
@@ -196,7 +196,7 @@ namespace transport
 #endif
 					    {
 #ifdef CPPTRANSPORT_LINECACHE_DEBUG
-						    if(copied >= 2) std::cerr << "WARNING -- COPYING TABLE OBJECT, COUNT = " << copied << std::endl;
+						    if(copied >= 2) std::cerr << "WARNING -- COPYING TABLE OBJECT, COUNT = " << copied << '\n';
 #endif
 					    }
 
@@ -292,7 +292,7 @@ namespace transport
 #endif
 									{
 #ifdef CPPTRANSPORT_LINECACHE_DEBUG
-										if(copied >= 2) std::cerr << "WARNING - COPYING DATA_ITEM OBJECT, COUNT = " << copied << std::endl;
+										if(copied >= 2) std::cerr << "WARNING - COPYING DATA_ITEM OBJECT, COUNT = " << copied << '\n';
 #endif
 									}
 
@@ -402,7 +402,7 @@ namespace transport
 #endif
 							{
 #ifdef CPPTRANSPORT_LINECACHE_DEBUG
-								if(copied >= 2) std::cerr << "WARNING - COPYING SERIAL_GROUP OBJECT, COUNT = " << copied << std::endl;
+								if(copied >= 2) std::cerr << "WARNING - COPYING SERIAL_GROUP OBJECT, COUNT = " << copied << '\n';
 #endif
 						    for(unsigned int i = 0; i < HashSize; ++i)
 							    {

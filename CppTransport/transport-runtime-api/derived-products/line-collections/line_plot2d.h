@@ -515,17 +515,17 @@ namespace transport
 						    throw runtime_exception(runtime_exception::DERIVED_PRODUCT_ERROR, msg.str());
 					    }
 
-				    out << "import numpy as np" << std::endl;
-				    out << "import matplotlib.pyplot as plt" << std::endl;
+				    out << "import numpy as np" << '\n';
+				    out << "import matplotlib.pyplot as plt" << '\n';
 
 				    if(this->typeset_with_LaTeX)
 					    {
-				        out << "plt.rc('text', usetex=True)" << std::endl;
-				        out << "plt.rc('font',**{'family':'serif','serif':['Computer Modern Roman']})" << std::endl;
-						    out << "plt.rc('font',**{'family':'sans-serif','sans-serif':['Computer Modern Sans serif']})" << std::endl;
+				        out << "plt.rc('text', usetex=True)" << '\n';
+				        out << "plt.rc('font',**{'family':'serif','serif':['Computer Modern Roman']})" << '\n';
+						    out << "plt.rc('font',**{'family':'sans-serif','sans-serif':['Computer Modern Sans serif']})" << '\n';
 					    }
 
-				    out << "plt.figure()" << std::endl;
+				    out << "plt.figure()" << '\n';
 
 						unsigned int current_id = 0;
 				    std::vector<std::vector<unsigned int> >   line_ids;       // records the unique id number for each line; used later when allocating lines to axes
@@ -568,7 +568,7 @@ namespace transport
 														first = false;
 													}
 											}
-										out << " ]" << std::endl;
+										out << " ]" << '\n';
 
 								    out << "y" << current_id << " = [ ";
 
@@ -583,7 +583,7 @@ namespace transport
 													}
 											}
 
-								    out << " ]" << std::endl;
+								    out << " ]" << '\n';
 
 										current_id++;
 									}
@@ -596,8 +596,8 @@ namespace transport
 				    std::vector<std::vector<data_line_type> >::const_iterator v = line_types.begin();
 						for(; t != line_ids.end() && u != line_labels.end(); ++t, ++u, ++bin_count)
 							{
-								if(bin_count == 1) out << "ax1 = plt.gca()" << std::endl;
-								if(bin_count == 2) out << "ax2 = ax1.twinx()" << std::endl;
+								if(bin_count == 1) out << "ax1 = plt.gca()" << '\n';
+								if(bin_count == 2) out << "ax2 = ax1.twinx()" << '\n';
 
 						    std::vector<unsigned int>::const_iterator   tt = t->begin();
 						    std::vector<std::string>::const_iterator    uu = u->begin();
@@ -626,24 +626,24 @@ namespace transport
 											{
 												out << ", linestyle='--'";
 											}
-								    out << ")" << std::endl;
+								    out << ")" << '\n';
 									}
 							}
 
-				    if(this->reverse_x) out << "ax1.set_xlim(ax.get_xlim()[::-1])" << std::endl;
+				    if(this->reverse_x) out << "ax1.set_xlim(ax.get_xlim()[::-1])" << '\n';
 				    if(this->reverse_y)
 					    {
 						    for(unsigned int i = 1; i < bin_count; ++i)
 							    {
-						        out << "ax" << i << ".set_ylim(ax.get_ylim()[::-1])" << std::endl;
+						        out << "ax" << i << ".set_ylim(ax.get_ylim()[::-1])" << '\n';
 							    }
 					    }
-				    if(this->log_x) out << "ax1.set_xscale('log')" << std::endl;
+				    if(this->log_x) out << "ax1.set_xscale('log')" << '\n';
 				    if(this->log_y)
 					    {
 				        for(unsigned int i = 1; i < bin_count; ++i)
 					        {
-				            out << "ax" << i << ".set_yscale('log')" << std::endl;
+				            out << "ax" << i << ".set_yscale('log')" << '\n';
 					        }
 					    }
 
@@ -651,15 +651,15 @@ namespace transport
 					    {
 						    for(unsigned int i = 1; i < bin_count; ++i)
 							    {
-						        out << "handles" << i << ", labels" << i << " = ax" << i << ".get_legend_handles_labels()" << std::endl;
+						        out << "handles" << i << ", labels" << i << " = ax" << i << ".get_legend_handles_labels()" << '\n';
 
 								    out << "handles = ";
 								    if(i > 1) out << "handles + ";
-								    out << "handles" << i << std::endl;
+								    out << "handles" << i << '\n';
 
 								    out << "labels = ";
 								    if(i > 1) out << "labels + ";
-								    out << "labels" << i << std::endl;
+								    out << "labels" << i << '\n';
 							    }
 
 				        out << "ax" << bin_count-1 << ".legend(handles, labels, frameon=False, loc=";
@@ -679,10 +679,10 @@ namespace transport
 					            assert(false);
 				            throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, CPPTRANSPORT_PRODUCT_LINE_PLOT2D_INVALID_LEGEND_POSITION);
 					        }
-				        out << ")" << std::endl;
+				        out << ")" << '\n';
 					    }
 
-				    if(this->x_label) out << "ax1.set_xlabel(r'" << this->x_label_text << "')" << std::endl;
+				    if(this->x_label) out << "ax1.set_xlabel(r'" << this->x_label_text << "')" << '\n';
 
 				    if(this->y_label)
 					    {
@@ -690,7 +690,7 @@ namespace transport
 				        // otherwise, use default labels for each value axis
 				        if(this->y_label_text.length() > 0)
 					        {
-				            out << "ax1.set_ylabel(r'" << this->y_label_text << "')" << std::endl;
+				            out << "ax1.set_ylabel(r'" << this->y_label_text << "')" << '\n';
 					        }
 				        else
 					        {
@@ -698,24 +698,24 @@ namespace transport
 				            for(std::vector<value_type>::const_iterator w = bin_types.begin(); w != bin_types.end() && i < bin_count; w++, ++i)
 					            {
 				                std::string label = this->typeset_with_LaTeX ? value_type_to_string_LaTeX(*w) : value_type_to_string_non_LaTeX(*w);
-						            out << "ax" << i << ".set_ylabel(r'" << label << "')" << std::endl;
+						            out << "ax" << i << ".set_ylabel(r'" << label << "')" << '\n';
 					            }
 					        }
 					    }
 
-				    if(this->title) out << "plt.title(r'" << this->title_text << "')" << std::endl;
+				    if(this->title) out << "plt.title(r'" << this->title_text << "')" << '\n';
 
 						if(plot_file.extension() != ".py")
 							{
-						    out << "plt.savefig('" << plot_file.string() << "')" << std::endl;
+						    out << "plt.savefig('" << plot_file.string() << "')" << '\n';
 							}
 						else
 							{
 						    boost::filesystem::path temp = plot_file;
 								temp.replace_extension(".pdf");
-								out << "plt.savefig('" << temp.string() << "')" << std::endl;
+								out << "plt.savefig('" << temp.string() << "')" << '\n';
 							}
-				    out << "plt.close()" << std::endl;
+				    out << "plt.close()" << '\n';
 
 				    out.close();
 

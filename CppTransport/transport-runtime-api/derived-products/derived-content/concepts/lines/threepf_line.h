@@ -228,10 +228,10 @@ namespace transport
 		    template <typename number>
 		    void threepf_line<number>::write(std::ostream& out)
 			    {
-		        out << "  " << CPPTRANSPORT_PRODUCT_WAVENUMBER_SERIES_LABEL_THREEPF << std::endl;
+		        out << "  " << CPPTRANSPORT_PRODUCT_WAVENUMBER_SERIES_LABEL_THREEPF << '\n';
 		        out << "  " << CPPTRANSPORT_PRODUCT_LINE_COLLECTION_LABEL_INDICES << " ";
 		        this->active_indices.write(out, this->gadget.get_model()->get_state_names());
-		        out << std::endl;
+		        out << '\n';
 			    }
 
 	    }   // namespace derived_data

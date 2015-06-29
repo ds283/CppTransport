@@ -123,12 +123,12 @@ std::string cse::temporaries(const std::string& t)
             // replace LHS and RHS macros in the template
             if((lhs_pos = line.find("$1")) != std::string::npos) line.replace(lhs_pos, (size_t)2, this->decls[i].first);
             if((rhs_pos = line.find("$2")) != std::string::npos) line.replace(rhs_pos, (size_t)2, this->decls[i].second);
-            out << line << std::endl;
+            out << line << '\n';
           }
       }
     else
       {
-        out << t << std::endl;
+        out << t << '\n';
       }
 
     return(out.str());
