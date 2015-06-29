@@ -26,4 +26,4 @@ parameter
 
 % potential (1/2)*M_phi^2*phi^2 + (1/2)*M_chi^2*chi^2 + (1E-10)*(M_P^4)*cos((chi/M_P)^3);
 
-potential (1/2)*M_phi^2*phi^2 + (1/2)*M_chi^2*chi^2;
+potential = (1/2)*M_phi^2*phi^2 + (1/2)*M_chi^2*chi^2;
