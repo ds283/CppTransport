@@ -90,7 +90,7 @@ void buffer::write(std::string& line, std::list<std::string>::iterator insertion
         bool write = true;
         if(this->skips.size() > 0)
           {
-            if(this->skips.front() && *t == "") write = false;
+            if(this->skips.front() && t->length() == 0) write = false;
           }
 
         if(write)
