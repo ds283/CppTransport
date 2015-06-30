@@ -379,6 +379,9 @@ namespace transport
         //! tensor twopf cache
         std::vector< typename integration_items<number>::tensor_twopf_item > tensor_twopf_batch;
 
+        //! cache for linear part of gauge transformation
+        std::vector<number> gauge_xfm1;
+
 
         // PAIRING
 
@@ -531,6 +534,18 @@ namespace transport
 
 		    //! k_t initial conditions cache
 		    std::vector< typename integration_items<number>::ics_kt_item >       kt_ics_batch;
+
+        //! cache for linear part of gauge transformation
+        std::vector<number> gauge_xfm1;
+
+        //! cache for quadratic part of gauge transformation, 123 permutation
+        std::vector<number> gauge_xfm2_123;
+
+        //! cache for quadratic part of gauge transformation, 213 permutation
+        std::vector<number> gauge_xfm2_213;
+
+        //! cache for quadratic part of gauge transformation, 312 permutation
+        std::vector<number> gauge_xfm2_312;
 
 
         // PAIRING
@@ -777,6 +792,8 @@ namespace transport
         zeta_agent(m, tk)
 	    {
         assert(this->parent_task != nullptr);
+
+        gauge_xfm1.resize(2*this->Nfields);
 	    }
 
 
@@ -809,11 +826,10 @@ namespace transport
         assert(this->parent_task != nullptr);
 
         number zeta_twopf = 0.0;
-        std::vector<number> gauge_xfm1;
 
-        this->zeta_agent.zeta_twopf(twopf, backg, zeta_twopf, gauge_xfm1);
+        this->zeta_agent.zeta_twopf(twopf, backg, zeta_twopf, this->gauge_xfm1);
         this->paired_batcher->push_twopf(time_serial, k_serial, zeta_twopf, source_serial);
-        this->paired_batcher->push_gauge_xfm1(time_serial, k_serial, gauge_xfm1, source_serial);
+        this->paired_batcher->push_gauge_xfm1(time_serial, k_serial, this->gauge_xfm1, source_serial);
       }
 
 
@@ -956,6 +972,12 @@ namespace transport
         zeta_agent(m, tk)
 	    {
         assert(this->parent_task != nullptr);
+
+        gauge_xfm1.resize(2*this->Nfields);
+
+        gauge_xfm2_123.resize(2*this->Nfields * 2*this->Nfields);
+        gauge_xfm2_213.resize(2*this->Nfields * 2*this->Nfields);
+        gauge_xfm2_312.resize(2*this->Nfields * 2*this->Nfields);
 	    }
 
 
@@ -1002,11 +1024,10 @@ namespace transport
         assert(this->parent_task != nullptr);
 
         number zeta_twopf = 0.0;
-        std::vector<number> gauge_xfm1;
 
-        this->zeta_agent.zeta_twopf(twopf, backg, zeta_twopf, gauge_xfm1);
+        this->zeta_agent.zeta_twopf(twopf, backg, zeta_twopf, this->gauge_xfm1);
         this->paired_batcher->push_twopf(time_serial, k_serial, zeta_twopf, source_serial);
-        this->paired_batcher->push_gauge_xfm1(time_serial, k_serial, gauge_xfm1, source_serial);
+        this->paired_batcher->push_gauge_xfm1(time_serial, k_serial, this->gauge_xfm1, source_serial);
       }
 
 
@@ -1049,17 +1070,14 @@ namespace transport
 
         number              zeta_threepf = 0.0;
         number              redbsp       = 0.0;
-        std::vector<number> gauge_xfm2_123;
-        std::vector<number> gauge_xfm2_213;
-        std::vector<number> gauge_xfm2_312;
 
         this->zeta_agent.zeta_threepf(kconfig, t, threepf, tpf_k1_re, tpf_k1_im, tpf_k2_re, tpf_k2_im, tpf_k3_re, tpf_k3_im, bg, zeta_threepf, redbsp,
-                                      gauge_xfm2_123, gauge_xfm2_213, gauge_xfm2_312);
+                                      this->gauge_xfm1, this->gauge_xfm2_123, this->gauge_xfm2_213, this->gauge_xfm2_312);
 
         this->paired_batcher->push_threepf(time_serial, kconfig.serial, zeta_threepf, redbsp, source_serial);
-        this->paired_batcher->push_gauge_xfm2_123(time_serial, kconfig.serial, gauge_xfm2_123, source_serial);
-        this->paired_batcher->push_gauge_xfm2_213(time_serial, kconfig.serial, gauge_xfm2_213, source_serial);
-        this->paired_batcher->push_gauge_xfm2_312(time_serial, kconfig.serial, gauge_xfm2_312, source_serial);
+        this->paired_batcher->push_gauge_xfm2_123(time_serial, kconfig.serial, this->gauge_xfm2_123, source_serial);
+        this->paired_batcher->push_gauge_xfm2_213(time_serial, kconfig.serial, this->gauge_xfm2_213, source_serial);
+        this->paired_batcher->push_gauge_xfm2_312(time_serial, kconfig.serial, this->gauge_xfm2_312, source_serial);
       }
 
 

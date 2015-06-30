@@ -104,10 +104,17 @@ namespace transport
           public:
 
             //! compute a time series for the zeta two-point function
-            void twopf(std::shared_ptr<handle>& h, std::vector<number>& zeta_twopf, const twopf_kconfig& k) const;
+            void twopf(std::shared_ptr<handle>& h, std::vector<number>& zeta_twopf, std::vector< std::vector<number> >& gauge_xfm1, const twopf_kconfig& k) const;
 
             //! compute a time series for the zeta three-point function
-            void threepf(std::shared_ptr<handle>& h, std::vector<number>& zeta_threepf, std::vector<number>& redbsp, const threepf_kconfig& k) const;
+            void threepf(std::shared_ptr<handle>& h, std::vector<number>& zeta_threepf, std::vector<number>& redbsp,
+                         std::vector< std::vector<number> >& gauge_xfm2_123, std::vector< std::vector<number> >& gauge_xfm_213,
+                         std::vector< std::vector<number> >& gauge_xfm2_312, const threepf_kconfig& k) const;
+
+          protected:
+
+            //! compute a time series for the zeta two-point function (don't copy gauge xfms)
+            void twopf(std::shared_ptr<handle>& h, std::vector<number>& zeta_twopf, const twopf_kconfig& k) const;
 
 
             // INTERNAL DATA
@@ -161,9 +168,9 @@ namespace transport
 
             // cache gauge transformation coefficients
             dN.resize(t_axis.size());
-
 		        for(unsigned int j = 0; j < background.size(); ++j)
               {
+                dN[j].resize(2*N_fields);
                 mdl->compute_gauge_xfm_1(tk, background[j], dN[j]);
               }
           }
@@ -195,7 +202,7 @@ namespace transport
                 for(unsigned int n = 0; n < 2*N_fields; ++n)
                   {
                     cf_time_data_tag<number> tag =
-                      h->pipe.new_cf_time_data_tag(data_tag<number>::cf_twopf_re, h->mdl->flatten(m,n), k.serial);
+                                               h->pipe.new_cf_time_data_tag(data_tag<number>::cf_twopf_re, h->mdl->flatten(m,n), k.serial);
 
                     // pull twopf data for this component; can use a reference to avoid copying
                     const std::vector<number>& sigma_line = h->t_handle.lookup_tag(tag);
@@ -211,8 +218,21 @@ namespace transport
 
 
         template <typename number>
+        void zeta_timeseries_compute<number>::twopf(std::shared_ptr<typename zeta_timeseries_compute<number>::handle>& h,
+                                                    std::vector<number>& zeta_twopf, std::vector< std::vector<number> >& gauge_xfm1, const twopf_kconfig& k) const
+          {
+            this->twopf(h, zeta_twopf, k);
+
+            // copy gauge xfm into return list
+            gauge_xfm1 = h->dN;
+          }
+
+
+        template <typename number>
         void zeta_timeseries_compute<number>::threepf(std::shared_ptr<typename zeta_timeseries_compute<number>::handle>& h,
-                                                      std::vector<number>& zeta_threepf, std::vector<number>& redbsp, const threepf_kconfig& k) const
+                                                      std::vector<number>& zeta_threepf, std::vector<number>& redbsp,
+                                                      std::vector< std::vector<number> >& gauge_xfm2_123, std::vector< std::vector<number> >& gauge_xfm2_213,
+                                                      std::vector< std::vector<number> >& gauge_xfm2_312, const threepf_kconfig& k) const
           {
             unsigned int N_fields = h->N_fields;
 
@@ -223,15 +243,13 @@ namespace transport
 
             // cache gauge transformation coefficients
             // these have to be recomputed for each k-configuration, because they are time and shape-dependent
-            std::vector< std::vector< std::vector<number> > > ddN123(h->t_axis.size());
-            std::vector< std::vector< std::vector<number> > > ddN213(h->t_axis.size());
-            std::vector< std::vector< std::vector<number> > > ddN312(h->t_axis.size());
+            // we take advantage of the caller-provided caches to store them; they should be correctly sized
 
-		        for(unsigned int j = 0; j < h->t_axis.size(); ++j)
+            for(unsigned int j = 0; j < h->t_axis.size(); ++j)
               {
-	              h->mdl->compute_gauge_xfm_2(h->tk, h->background[j], k.k1_comoving, k.k2_comoving, k.k3_comoving, h->t_axis[j].t, ddN123[j]);
-	              h->mdl->compute_gauge_xfm_2(h->tk, h->background[j], k.k2_comoving, k.k1_comoving, k.k3_comoving, h->t_axis[j].t, ddN213[j]);
-	              h->mdl->compute_gauge_xfm_2(h->tk, h->background[j], k.k3_comoving, k.k1_comoving, k.k2_comoving, h->t_axis[j].t, ddN312[j]);
+                h->mdl->compute_gauge_xfm_2(h->tk, h->background[j], k.k1_comoving, k.k2_comoving, k.k3_comoving, h->t_axis[j].t, gauge_xfm2_123[j]);
+                h->mdl->compute_gauge_xfm_2(h->tk, h->background[j], k.k2_comoving, k.k1_comoving, k.k3_comoving, h->t_axis[j].t, gauge_xfm2_213[j]);
+                h->mdl->compute_gauge_xfm_2(h->tk, h->background[j], k.k3_comoving, k.k1_comoving, k.k2_comoving, h->t_axis[j].t, gauge_xfm2_312[j]);
               }
 
             // linear component of the gauge transformation
@@ -296,9 +314,9 @@ namespace transport
 
                             for(unsigned int j = 0; j < h->t_axis.size(); ++j)
                               {
-                                number component1 = ddN123[j][l][m] * h->dN[j][p] * h->dN[j][q] * (k2_re_lp[j]*k3_re_mq[j] - k2_im_lp[j]*k3_im_mq[j]);
-                                number component2 = ddN213[j][l][m] * h->dN[j][p] * h->dN[j][q] * (k1_re_lp[j]*k3_re_mq[j] - k1_im_lp[j]*k3_im_mq[j]);
-                                number component3 = ddN312[j][l][m] * h->dN[j][p] * h->dN[j][q] * (k1_re_lp[j]*k2_re_mq[j] - k1_im_lp[j]*k2_im_mq[j]);
+                                number component1 = gauge_xfm2_123[j][h->mdl->flatten(l,m)] * h->dN[j][p] * h->dN[j][q] * (k2_re_lp[j]*k3_re_mq[j] - k2_im_lp[j]*k3_im_mq[j]);
+                                number component2 = gauge_xfm2_213[j][h->mdl->flatten(l,m)] * h->dN[j][p] * h->dN[j][q] * (k1_re_lp[j]*k3_re_mq[j] - k1_im_lp[j]*k3_im_mq[j]);
+                                number component3 = gauge_xfm2_312[j][h->mdl->flatten(l,m)] * h->dN[j][p] * h->dN[j][q] * (k1_re_lp[j]*k2_re_mq[j] - k1_im_lp[j]*k2_im_mq[j]);
 
                                 zeta_threepf[j] += component1;
                                 zeta_threepf[j] += component2;

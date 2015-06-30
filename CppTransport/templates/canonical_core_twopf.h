@@ -13,6 +13,7 @@
 #include <iomanip>
 #include <sstream>
 #include <stdexcept>
+#include <memory>
 
 #include "boost/numeric/odeint.hpp"
 #include "boost/range/algorithm.hpp"
@@ -163,10 +164,10 @@ namespace transport
 
         // calculate gauge transformations to zeta
         virtual void compute_gauge_xfm_1(const twopf_list_task<number>* __task, const std::vector<number>& __state, std::vector<number>& __dN) override;
-        virtual void compute_gauge_xfm_2(const twopf_list_task<number>* __task, const std::vector<number>& __state, double __k, double __k1, double __k2, double __N, std::vector< std::vector<number> >& __ddN) override;
+        virtual void compute_gauge_xfm_2(const twopf_list_task<number>* __task, const std::vector<number>& __state, double __k, double __k1, double __k2, double __N, std::vector<number>& __ddN) override;
 
         virtual void compute_deltaN_xfm_1(const twopf_list_task<number>* __task, const std::vector<number>& __state, std::vector<number>& __dN) override;
-        virtual void compute_deltaN_xfm_2(const twopf_list_task<number>* __task, const std::vector<number>& __state, std::vector< std::vector<number> >& __ddN) override;
+        virtual void compute_deltaN_xfm_2(const twopf_list_task<number>* __task, const std::vector<number>& __state, std::vector<number>& __ddN) override;
 
         // calculate tensor quantities, including the 'flow' tensors u2, u3 and the basic tensors A, B, C from which u3 is built
         virtual void u2(const twopf_list_task<number>* __task, const std::vector<number>& __fields, double __k, double __N, std::vector< std::vector<number> >& __u2) override;
@@ -615,9 +616,7 @@ namespace transport
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
-        __dN.clear();
-        __dN.resize(2*$$__NUMBER_FIELDS); // ensure enough space
-        __dN[$$__A] = $$__ZETA_XFM_1[A]{__Hsq, __eps};
+        __dN[this->flatten($$__A)] = $$__ZETA_XFM_1[A]{__Hsq, __eps};
       }
 
 
@@ -625,7 +624,7 @@ namespace transport
     void $$__MODEL<number>::compute_gauge_xfm_2(const twopf_list_task<number>* __task,
                                                 const std::vector<number>& __state,
                                                 double __k, double __k1, double __k2, double __N,
-                                                std::vector< std::vector<number> >& __ddN)
+                                                std::vector<number>& __ddN)
       {
       }
 
@@ -641,16 +640,14 @@ namespace transport
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
-        __dN.clear();
-        __dN.resize(2*$$__NUMBER_FIELDS); // ensure enough space
-        __dN[$$__A] = $$__DELTAN_XFM_1[A];
+        __dN[this->flatten($$__A)] = $$__DELTAN_XFM_1[A];
       }
 
 
     template <typename number>
     void $$__MODEL<number>::compute_deltaN_xfm_2(const twopf_list_task<number>* __task,
                                                  const std::vector<number>& __state,
-                                                 std::vector< std::vector<number> >& __ddN)
+                                                 std::vector<number>& __ddN)
       {
       }
 
@@ -754,21 +751,32 @@ namespace transport
             EpsilonUnityPredicate(const parameters<number>& p)
               : params(p)
               {
+                param_vector = params.get_vector();
+                Mp = params.get_Mp();
               }
 
             bool operator()(const std::pair< backg_state<number>, double >& __x)
               {
-                const auto $$__PARAMETER[1]  = this->params.get_vector()[$$__1];
+                const auto $$__PARAMETER[1]  = this->param_vector[$$__1];
                 const auto $$__COORDINATE[A] = __x.first[$$__A];
-                const auto __Mp              = this->params.get_Mp();
+                const auto __Mp              = this->Mp;
 
                 const auto __eps = $$__EPSILON;
 
-                return (__eps > 1.0);
+                return (__eps >= 1.0 || __eps < 0.0);
               }
 
           private:
+
+            //! parameters for the model in use
             const parameters<number>& params;
+
+            //! cache parameters vectors
+            std::vector<number> param_vector;
+
+            //! cache Planck mass
+            number Mp;
+
           };
 
       }   // namespace $$__MODEL_impl
@@ -816,13 +824,15 @@ namespace transport
                 N_horizon_crossing(tk->get_N_horizon_crossing()),
                 astar_normalization(tk->get_astar_normalization())
               {
+                param_vector = params.get_vector();
+                Mp = params.get_Mp();
               }
 
             bool operator()(const std::pair< backg_state<number>, double >& __x)
               {
-                const auto $$__PARAMETER[1]  = this->params.get_vector()[$$__1];
+                const auto $$__PARAMETER[1]  = this->param_vector[$$__1];
                 const auto $$__COORDINATE[A] = __x.first[$$__A];
-                const auto __Mp              = this->params.get_Mp();
+                const auto __Mp              = this->Mp;
 
                 const auto __Hsq = $$__HUBBLE_SQ;
                 const auto __H   = std::sqrt(__Hsq);
@@ -841,6 +851,12 @@ namespace transport
 
             //! parameters for the model in use
             const parameters<number>& params;
+
+            //! cache parameters vectors
+            std::vector<number> param_vector;
+
+            //! cache Planck mass
+            number Mp;
 
             //! output vector for times N
             std::vector<double>& N_vector;
@@ -891,7 +907,7 @@ namespace transport
             N_range = tk->get_N_initial() + CPPTRANSPORT_DEFAULT_END_OF_INFLATION_SEARCH;
           }
 
-        auto range = boost::numeric::odeint::make_adaptive_time_range(stepper, system, x, tk->get_N_initial(), N_range, 0.01);
+        auto range = boost::numeric::odeint::make_adaptive_time_range(stepper, system, x, tk->get_N_initial(), N_range, $$__BACKG_STEP_SIZE);
 
         $$__MODEL_impl::aHAggregatorPredicate<number> aggregator(tk, N, log_aH, largest_k);
 

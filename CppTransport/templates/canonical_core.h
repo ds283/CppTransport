@@ -164,10 +164,10 @@ namespace transport
 
         // calculate gauge transformations to zeta
         virtual void compute_gauge_xfm_1(const twopf_list_task<number>* __task, const std::vector<number>& __state, std::vector<number>& __dN) override;
-        virtual void compute_gauge_xfm_2(const twopf_list_task<number>* __task, const std::vector<number>& __state, double __k, double __k1, double __k2, double __N, std::vector< std::vector<number> >& __ddN) override;
+        virtual void compute_gauge_xfm_2(const twopf_list_task<number>* __task, const std::vector<number>& __state, double __k, double __k1, double __k2, double __N, std::vector<number>& __ddN) override;
 
         virtual void compute_deltaN_xfm_1(const twopf_list_task<number>* __task, const std::vector<number>& __state, std::vector<number>& __dN) override;
-        virtual void compute_deltaN_xfm_2(const twopf_list_task<number>* __task, const std::vector<number>& __state, std::vector< std::vector<number> >& __ddN) override;
+        virtual void compute_deltaN_xfm_2(const twopf_list_task<number>* __task, const std::vector<number>& __state, std::vector<number>& __ddN) override;
 
         // calculate tensor quantities, including the 'flow' tensors u2, u3 and the basic tensors A, B, C from which u3 is built
         virtual void u2(const twopf_list_task<number>* __task, const std::vector<number>& __fields, double __k, double __N, std::vector< std::vector<number> >& __u2) override;
@@ -810,9 +810,7 @@ namespace transport
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
-	      __dN.clear();
-        __dN.resize(2*$$__NUMBER_FIELDS); // ensure enough space
-        __dN[$$__A] = $$__ZETA_XFM_1[A]{__Hsq, __eps};
+        __dN[this->flatten($$__A)] = $$__ZETA_XFM_1[A]{__Hsq, __eps};
       }
 
 
@@ -820,7 +818,7 @@ namespace transport
     void $$__MODEL<number>::compute_gauge_xfm_2(const twopf_list_task<number>* __task,
                                                 const std::vector<number>& __state,
                                                 double __k, double __k1, double __k2, double __N,
-                                                std::vector< std::vector<number> >& __ddN)
+                                                std::vector<number>& __ddN)
       {
         const auto $$__PARAMETER[1]  = __task->get_params().get_vector()[$$__1];
         const auto $$__COORDINATE[A] = __state[$$__A];
@@ -832,14 +830,7 @@ namespace transport
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
-	      __ddN.clear();
-        __ddN.resize(2*$$__NUMBER_FIELDS);
-        for(int i = 0; i < 2*$$__NUMBER_FIELDS; ++i)
-          {
-            __ddN[i].resize(2*$$__NUMBER_FIELDS);
-          }
-
-        __ddN[$$__A][$$__B] = $$__ZETA_XFM_2[AB]{__k, __k1, __k2, __a, __Hsq, __eps};
+        __ddN[this->flatten($$__A,$$__B)] = $$__ZETA_XFM_2[AB]{__k, __k1, __k2, __a, __Hsq, __eps};
       }
 
 
@@ -854,16 +845,14 @@ namespace transport
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
-	      __dN.clear();
-        __dN.resize(2*$$__NUMBER_FIELDS); // ensure enough space
-        __dN[$$__A] = $$__DELTAN_XFM_1[A];
+        __dN[this->flatten($$__A)] = $$__DELTAN_XFM_1[A];
 	    }
 
 
     template <typename number>
     void $$__MODEL<number>::compute_deltaN_xfm_2(const twopf_list_task<number>* __task,
                                                  const std::vector<number>& __state,
-                                                 std::vector< std::vector<number> >& __ddN)
+                                                 std::vector<number>& __ddN)
 	    {
         const auto $$__PARAMETER[1]  = __task->get_params().get_vector()[$$__1];
         const auto $$__COORDINATE[A] = __state[$$__A];
@@ -871,14 +860,7 @@ namespace transport
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
-	      __ddN.clear();
-        __ddN.resize(2*$$__NUMBER_FIELDS);
-        for(int i = 0; i < 2*$$__NUMBER_FIELDS; ++i)
-	        {
-            __ddN[i].resize(2*$$__NUMBER_FIELDS);
-	        }
-
-        __ddN[$$__A][$$__B] = $$__DELTAN_XFM_2[AB];
+        __ddN[this->flatten($$__A,$$__B)] = $$__DELTAN_XFM_2[AB];
 	    }
 
 
