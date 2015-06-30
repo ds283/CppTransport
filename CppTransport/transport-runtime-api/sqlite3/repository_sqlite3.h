@@ -1369,7 +1369,7 @@ std::string repository_sqlite3<number>::reserve_content_name(const std::string& 
     std::string         name        = sqlite3_operations::reserve_content_name(transaction, this->db, tk, parent_path, posix_time_string, suffix);
     transaction.commit();
 
-    return (name);
+    return(name);
   }
 
 
