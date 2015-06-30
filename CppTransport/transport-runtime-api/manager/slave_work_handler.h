@@ -100,19 +100,20 @@ namespace transport
         std::shared_ptr<typename derived_data::zeta_timeseries_compute<number>::handle> handle = this->zeta_computer.make_handle(pipe, ptk, tquery, ptk->get_model()->get_N_fields());
 
         // buffer for computed values
-        std::vector<number> sample;
+        std::vector<number> zeta_npf;
+        std::vector<number> single_src;
 
         for(unsigned int i = 0; i < list.size(); ++i)
 	        {
             boost::timer::cpu_timer timer;
 
 		        // compute zeta twopf
-            this->zeta_computer.twopf(handle, sample, *(list[i]));
-						assert(sample.size() == time_values.size());
+            this->zeta_computer.twopf(handle, zeta_npf, single_src, *(list[i]));
+						assert(zeta_npf.size() == time_values.size());
 
 		        for(unsigned int j = 0; j < time_values.size(); ++j)
 			        {
-                batcher.push_twopf(time_values[j].serial, list[i]->serial, sample[j]);
+                batcher.push_twopf(time_values[j].serial, list[i]->serial, zeta_npf[j], single_src[j]);
 	            }
 
             timer.stop();
@@ -148,25 +149,20 @@ namespace transport
         std::shared_ptr<typename derived_data::zeta_timeseries_compute<number>::handle> handle = this->zeta_computer.make_handle(pipe, ptk, tquery, ptk->get_model()->get_N_fields());
 
 		    // buffer for computed values
-        std::vector<number> sample;
+        std::vector<number> zeta_npf;
+        std::vector<number> redbsp;
+        std::vector<number> single_src;
 
         for(unsigned int i = 0; i < list.size(); ++i)
 	        {
             boost::timer::cpu_timer timer;
 
-            this->zeta_computer.threepf(handle, sample, *(list[i]));
-		        assert(sample.size() == time_values.size());
+            this->zeta_computer.threepf(handle, zeta_npf, redbsp, single_src, *(list[i]));
+		        assert(zeta_npf.size() == time_values.size());
 
             for(unsigned int j = 0; j < time_values.size(); ++j)
 	            {
-                batcher.push_threepf(time_values[j].serial, list[i]->serial, sample[j]);
-	            }
-
-            this->zeta_computer.reduced_bispectrum(handle, sample, *(list[i]));
-
-            for(unsigned int j = 0; j < time_values.size(); ++j)
-	            {
-                batcher.push_reduced_bispectrum(time_values[j].serial, list[i]->serial, sample[j]);
+                batcher.push_threepf(time_values[j].serial, list[i]->serial, zeta_npf[j], redbsp[j], single_src[j]);
 	            }
 
             if(list[i].is_twopf_k1_stored())
@@ -177,10 +173,10 @@ namespace transport
                 k1.k_comoving     = list[i]->k1_comoving;
                 k1.k_conventional = list[i]->k1_conventional;
 
-		            this->zeta_computer.twopf(handle, sample, k1);
+		            this->zeta_computer.twopf(handle, zeta_npf, single_src, k1);
                 for(unsigned int j = 0; j < time_values.size(); ++j)
 	                {
-                    batcher.push_twopf(time_values[j].serial, k1.serial, sample[j]);
+                    batcher.push_twopf(time_values[j].serial, k1.serial, zeta_npf[j], single_src[j]);
 	                }
 	            }
 
@@ -192,10 +188,10 @@ namespace transport
                 k2.k_comoving     = list[i]->k2_comoving;
                 k2.k_conventional = list[i]->k2_conventional;
 
-                this->zeta_computer.twopf(handle, sample, k2);
+                this->zeta_computer.twopf(handle, zeta_npf, single_src, k2);
                 for(unsigned int j = 0; j < time_values.size(); ++j)
 	                {
-                    batcher.push_twopf(time_values[j].serial, k2.serial, sample[j]);
+                    batcher.push_twopf(time_values[j].serial, k2.serial, zeta_npf[j], single_src[j]);
 	                }
 	            }
 
@@ -207,10 +203,10 @@ namespace transport
                 k3.k_comoving     = list[i]->k3_comoving;
                 k3.k_conventional = list[i]->k3_conventional;
 
-                this->zeta_computer.twopf(handle, sample, k3);
+                this->zeta_computer.twopf(handle, zeta_npf, single_src, k3);
                 for(unsigned int j = 0; j < time_values.size(); ++j)
 	                {
-                    batcher.push_twopf(time_values[j].serial, k3.serial, sample[j]);
+                    batcher.push_twopf(time_values[j].serial, k3.serial, zeta_npf[j], single_src[j]);
 	                }
 	            }
 
@@ -246,17 +242,17 @@ namespace transport
         const std::vector<time_config>                 time_values = tc_handle.lookup_tag(tc_tag);
 
 		    // buffer for computed values
+        std::vector<number> BB;
         std::vector<number> BT;
         std::vector<number> TT;
 
 		    // set up handle for compute delegate
         std::shared_ptr<typename derived_data::fNL_timeseries_compute<number>::handle> handle = this->fNL_computer.make_handle(pipe, ptk, tquery, tk->get_template(), list);
 
-        this->fNL_computer.BT(handle, BT);
-		    this->fNL_computer.TT(handle, TT);
+		    this->fNL_computer.components(handle, BB, BT, TT);
         for(unsigned int j = 0; j < time_values.size(); ++j)
 	        {
-            batcher.push_fNL(time_values[j].serial, BT[j], TT[j]);
+            batcher.push_fNL(time_values[j].serial, BB[j], BT[j], TT[j]);
 	        }
 
         timer.stop();

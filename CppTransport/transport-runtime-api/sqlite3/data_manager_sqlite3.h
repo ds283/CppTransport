@@ -215,9 +215,6 @@ namespace transport
         //! get missing serial numbers from a zeta threepf table; should be provided by implementation
         virtual std::list<unsigned int> get_missing_zeta_threepf_serials(postintegration_writer<number>& writer) override;
 
-        //! get missing serial numbers from a zeta reduced bispecturm table; should be provided by implementation
-        virtual std::list<unsigned int> get_missing_zeta_redbsp_serials(postintegration_writer<number>& writer) override;
-
         // DROP GROUPS OF SERIAL NUMBERS
 
         //! drop a set of k-configurations from a twopf-re table; should be provided by implementation
@@ -234,9 +231,6 @@ namespace transport
 
         //! drop a set of k-configurations from a zeta threepf table; should be provided by implementation
         virtual void drop_zeta_threepf_configurations(postintegration_writer<number>& writer, const std::list<unsigned int>& serials, const threepf_kconfig_database& db) override;
-
-        //! drop a set of k-configurations from a zeta reduced bispectrum table; should be provided by implementation
-        virtual void drop_zeta_redbsp_configurations(postintegration_writer<number>& writer, const std::list<unsigned int>& serials, const threepf_kconfig_database& db) override;
 
         //! drop statistics for a set of k-configurations
         virtual void drop_statistics_configurations(integration_writer<number>& writer, const std::list<unsigned int>& serials, const twopf_kconfig_database& db) override;
@@ -733,7 +727,6 @@ namespace transport
         sqlite3_operations::create_threepf_sample_table(db, tk);
         sqlite3_operations::create_zeta_twopf_table(db, sqlite3_operations::foreign_keys);
         sqlite3_operations::create_zeta_threepf_table(db, sqlite3_operations::foreign_keys);
-        sqlite3_operations::create_zeta_reduced_bispectrum_table(db, sqlite3_operations::foreign_keys);
       }
 
 
@@ -848,7 +841,6 @@ namespace transport
 
         sqlite3_operations::aggregate_table<number, postintegration_writer<number>, typename postintegration_items<number>::zeta_twopf_item>(db, *writer, seed_container_path.string());
         sqlite3_operations::aggregate_table<number, postintegration_writer<number>, typename postintegration_items<number>::zeta_threepf_item>(db, *writer, seed_container_path.string());
-        sqlite3_operations::aggregate_table<number, postintegration_writer<number>, typename postintegration_items<number>::zeta_redbsp_item>(db, *writer, seed_container_path.string());
 
         timer.stop();
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "** Seeding complete in time " << format_time(timer.elapsed().wall);
@@ -983,7 +975,6 @@ namespace transport
         typename zeta_threepf_batcher<number>::writer_group writers;
         writers.twopf   = std::bind(&sqlite3_operations::write_unpaged<number, postintegration_batcher, typename postintegration_items<number>::zeta_twopf_item>, std::placeholders::_1, std::placeholders::_2);
         writers.threepf = std::bind(&sqlite3_operations::write_unpaged<number, postintegration_batcher, typename postintegration_items<number>::zeta_threepf_item>, std::placeholders::_1, std::placeholders::_2);
-        writers.redbsp  = std::bind(&sqlite3_operations::write_unpaged<number, postintegration_batcher, typename postintegration_items<number>::zeta_redbsp_item>, std::placeholders::_1, std::placeholders::_2);
 
         // set up replacement function
         generic_batcher::container_replacement_function replacer =
@@ -1253,7 +1244,6 @@ namespace transport
 
         sqlite3_operations::aggregate_table<number, postintegration_writer<number>, typename postintegration_items<number>::zeta_twopf_item>(db, writer, temp_ctr);
         sqlite3_operations::aggregate_table<number, postintegration_writer<number>, typename postintegration_items<number>::zeta_threepf_item>(db, writer, temp_ctr);
-        sqlite3_operations::aggregate_table<number, postintegration_writer<number>, typename postintegration_items<number>::zeta_redbsp_item>(db, writer, temp_ctr);
 
         return(true);
       }
@@ -1378,17 +1368,6 @@ namespace transport
 
 
     template <typename number>
-    std::list<unsigned int> data_manager_sqlite3<number>::get_missing_zeta_redbsp_serials(postintegration_writer<number>& writer)
-      {
-        // get sqlite3 handle to principal database
-        sqlite3* db = nullptr;
-        writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
-
-        return sqlite3_operations::get_missing_serials<number, typename postintegration_items<number>::zeta_redbsp_item>(db);
-      }
-
-
-    template <typename number>
     void data_manager_sqlite3<number>::drop_twopf_re_configurations(integration_writer<number>& writer, const std::list<unsigned int>& serials, const twopf_kconfig_database& dbase)
       {
         // get sqlite3 handle to principal database
@@ -1445,18 +1424,6 @@ namespace transport
 
         sqlite3_operations::drop_k_configurations(db, writer, serials, dbase,
                                                   sqlite3_operations::data_traits<number, typename postintegration_items<number>::zeta_threepf_item>::sqlite_table());
-      }
-
-
-    template <typename number>
-    void data_manager_sqlite3<number>::drop_zeta_redbsp_configurations(postintegration_writer<number>& writer, const std::list<unsigned int>& serials, const threepf_kconfig_database& dbase)
-      {
-        // get sqlite3 handle to principal database
-        sqlite3* db = nullptr;
-        writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
-
-        sqlite3_operations::drop_k_configurations(db, writer, serials, dbase,
-                                                  sqlite3_operations::data_traits<number, typename postintegration_items<number>::zeta_redbsp_item>::sqlite_table());
       }
 
 

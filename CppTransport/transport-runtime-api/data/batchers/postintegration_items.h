@@ -34,8 +34,14 @@ namespace transport
             //! kconfig serial number for the integration which produced these values. Used when unwinding a batch.
             unsigned int source_serial;
 
-            // value
+            //! twopf value
             number value;
+
+            //! reduced bispectrum not used, but included here to prevent template specialization failure
+            number redbsp;
+
+            //! fraction attributable to a single source
+            number single_src;
 	        };
 
 
@@ -55,29 +61,21 @@ namespace transport
             //! kconfig serial number for the integration which produced these values. Used when unwinding a batch.
             unsigned int source_serial;
 
-            // value
+            //! threepf
             number value;
+
+            //! reduced bispectrum
+            number redbsp;
+
+            //! fraction of threepf attributable to a single source
+            number single_src;
 	        };
 
 
-        //! Stores a zeta reduced bispectrum configuration
-        //! (we distinguish between threepf configurations and reduced bispectrum configurations, whose classes
-        //! carry the same data, so we can adjust template behaviour using type traits)
+        //! Used to tag a zeta bispectrum contribution via data traits, but has no meaning beyond this
         class zeta_redbsp_item
 	        {
           public:
-
-            //! time serial number for this configuration
-            unsigned int time_serial;
-
-            //! kconfig serial number of this configuration
-            unsigned int kconfig_serial;
-
-            //! kconfig serial number for the integration which produced these values. Used when unwinding a batch.
-            unsigned int source_serial;
-
-            // value
-            number value;
 	        };
 
 
@@ -89,8 +87,13 @@ namespace transport
             //! time serial number for this configuration
             unsigned int time_serial;
 
-            // value
+            // bispectrum.bispectrum
+            number BB;
+
+            // bispectrum.template
             number BT;
+
+            // template.template
             number TT;
 	        };
 

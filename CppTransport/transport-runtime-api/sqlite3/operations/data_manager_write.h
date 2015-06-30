@@ -236,7 +236,9 @@ namespace transport
             batcher->get_manager_handle(&db);
 
             std::ostringstream insert_stmt;
-            insert_stmt << "INSERT INTO " << data_traits<number, ValueType>::sqlite_table() << " VALUES (@tserial, @kserial, @ele);";
+            insert_stmt << "INSERT INTO " << data_traits<number, ValueType>::sqlite_table() << " VALUES (@tserial, @kserial, @" << data_traits<number, ValueType>::column_name();
+            if(data_traits<number, ValueType>::has_redbsp) insert_stmt << ", @redbsp";
+            insert_stmt << ", @single_src);";
 
             sqlite3_stmt* stmt;
             check_stmt(db, sqlite3_prepare_v2(db, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr));
@@ -248,6 +250,8 @@ namespace transport
                 check_stmt(db, sqlite3_bind_int(stmt, 1, t->time_serial));
                 check_stmt(db, sqlite3_bind_int(stmt, 2, t->kconfig_serial));
                 check_stmt(db, sqlite3_bind_double(stmt, 3, static_cast<double>(t->value)));
+                if(data_traits<number, ValueType>::has_redbsp) check_stmt(db, sqlite3_bind_double(stmt, 4, static_cast<double>(t->redbsp)));
+                check_stmt(db, sqlite3_bind_double(stmt, 4 + (data_traits<number, ValueType>::has_redbsp ? 1 : 0), static_cast<double>(t->single_src)));
 
                 check_stmt(db, sqlite3_step(stmt), data_traits<number, ValueType>::write_error_msg(), SQLITE_DONE);
 
@@ -277,6 +281,7 @@ namespace transport
             std::stringstream create_stmt;
 		        create_stmt << "CREATE TEMP TABLE " << CPPTRANSPORT_SQLITE_INSERT_FNL_TABLE << " ("
 			        << "tserial INTEGER, "
+              << "BB      DOUBLE, "
 		          << "BT      DOUBLE, "
 			        << "TT      DOUBLE, "
 		          << "PRIMARY KEY (tserial)"
@@ -292,8 +297,9 @@ namespace transport
             for(typename std::set< typename postintegration_items<number>::fNL_item, typename postintegration_items<number>::fNL_item_comparator >::const_iterator t = batch.begin(); t != batch.end(); ++t)
               {
                 check_stmt(db, sqlite3_bind_int(stmt, 1, t->time_serial));
-                check_stmt(db, sqlite3_bind_double(stmt, 2, static_cast<double>(t->BT)));
-                check_stmt(db, sqlite3_bind_double(stmt, 3, static_cast<double>(t->TT)));
+                check_stmt(db, sqlite3_bind_double(stmt, 2, static_cast<double>(t->BB)));
+                check_stmt(db, sqlite3_bind_double(stmt, 3, static_cast<double>(t->BT)));
+                check_stmt(db, sqlite3_bind_double(stmt, 4, static_cast<double>(t->TT)));
 
                 check_stmt(db, sqlite3_step(stmt), CPPTRANSPORT_DATACTR_FNL_DATATAB_FAIL, SQLITE_DONE);
 
@@ -306,6 +312,7 @@ namespace transport
             std::stringstream create_stmt2;
 		        create_stmt2 << "CREATE TEMP TABLE " << CPPTRANSPORT_SQLITE_TEMP_FNL_TABLE << " AS"
 		          << " SELECT temp." << CPPTRANSPORT_SQLITE_INSERT_FNL_TABLE << ".tserial AS tserial,"
+              << " temp." << CPPTRANSPORT_SQLITE_INSERT_FNL_TABLE << ".BB + COALESCE(" << fNL_table_name(type) << ".BB, 0.0) AS new_BB,"
 		          << " temp." << CPPTRANSPORT_SQLITE_INSERT_FNL_TABLE << ".BT + COALESCE(" << fNL_table_name(type) << ".BT, 0.0) AS new_BT,"
 		          << " temp." << CPPTRANSPORT_SQLITE_INSERT_FNL_TABLE << ".TT + COALESCE(" << fNL_table_name(type) << ".TT, 0.0) AS new_TT"
 		          << " FROM temp." << CPPTRANSPORT_SQLITE_INSERT_FNL_TABLE << " LEFT JOIN " << fNL_table_name(type)
@@ -317,6 +324,7 @@ namespace transport
 		        copy_stmt
 		          << " INSERT OR REPLACE INTO " << fNL_table_name(type)
 			        << " SELECT tserial AS tserial,"
+              << " new_BB AS BB,"
 		          << " new_BT AS BT,"
 			        << " new_TT AS TT"
 		          << " FROM temp." << CPPTRANSPORT_SQLITE_TEMP_FNL_TABLE << ";";

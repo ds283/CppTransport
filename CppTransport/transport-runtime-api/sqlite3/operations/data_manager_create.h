@@ -399,9 +399,10 @@ namespace transport
 		        std::ostringstream create_stmt;
 		        create_stmt
 			        << "CREATE TABLE " << CPPTRANSPORT_SQLITE_ZETA_TWOPF_VALUE_TABLE << "("
-			        << "tserial INTEGER, "
-			        << "kserial INTEGER, "
-			        << "ele     DOUBLE, "
+			        << "tserial       INTEGER, "
+			        << "kserial       INTEGER, "
+			        << "twopf         DOUBLE, "
+              << "single_source DOUBLE, "
 			        << "PRIMARY KEY (tserial, kserial)";
 
 		        if(keys == foreign_keys)
@@ -421,31 +422,11 @@ namespace transport
 		        std::ostringstream create_stmt;
 		        create_stmt
 			        << "CREATE TABLE " << CPPTRANSPORT_SQLITE_ZETA_THREEPF_VALUE_TABLE << "("
-			        << "tserial INTEGER, "
-			        << "kserial INTEGER, "
-			        << "ele     DOUBLE, "
-			        << "PRIMARY KEY (tserial, kserial)";
-
-		        if(keys == foreign_keys)
-			        {
-		            create_stmt << ", FOREIGN KEY(tserial) REFERENCES " << CPPTRANSPORT_SQLITE_TIME_SAMPLE_TABLE << "(serial)"
-			            << ", FOREIGN KEY(kserial) REFERENCES " << CPPTRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE << "(serial)";
-			        }
-		        create_stmt << ");";
-
-		        exec(db, create_stmt.str());
-			    }
-
-
-		    // Create table for zeta twopf values
-		    void create_zeta_reduced_bispectrum_table(sqlite3* db, add_foreign_keys_type keys=no_foreign_keys)
-			    {
-		        std::ostringstream create_stmt;
-		        create_stmt
-			        << "CREATE TABLE " << CPPTRANSPORT_SQLITE_ZETA_REDUCED_BISPECTRUM_VALUE_TABLE << "("
-			        << "tserial INTEGER, "
-			        << "kserial INTEGER, "
-			        << "ele     DOUBLE, "
+			        << "tserial       INTEGER, "
+			        << "kserial       INTEGER, "
+			        << "threepf       DOUBLE, "
+              << "redbsp        DOUBLE, "
+              << "single_source DOUBLE, "
 			        << "PRIMARY KEY (tserial, kserial)";
 
 		        if(keys == foreign_keys)
@@ -466,6 +447,7 @@ namespace transport
 		        create_stmt
 			        << "CREATE TABLE " << fNL_table_name(type) << "("
 			        << "tserial INTEGER, "
+              << "BB      DOUBLE, "
 			        << "BT      DOUBLE, "
 			        << "TT      DOUBLE, "
 			        << "PRIMARY KEY (tserial)";

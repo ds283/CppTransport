@@ -434,7 +434,7 @@ namespace transport
             std::stringstream select_stmt;
             select_stmt
 	            << "SELECT"
-	            << " " << table_name << ".ele"
+	            << " " << table_name << "." << data_traits<number, ValueType>::column_name()
 	            << " FROM " << table_name
 	            << " INNER JOIN (" << tquery->make_query(policy, true) << ") tsample"
 	            << " ON " << table_name << ".tserial=tsample.serial"
@@ -463,7 +463,7 @@ namespace transport
             std::stringstream select_stmt;
             select_stmt
 	            << "SELECT"
-	            << " " << table_name << ".ele"
+	            << " " << table_name << "." << data_traits<number, ValueType>::column_name()
 	            << " FROM " << table_name
 	            << " INNER JOIN (" << kquery->make_query(policy, true) << ") ksample"
 	            << " ON " << table_name << ".kserial=ksample.serial"

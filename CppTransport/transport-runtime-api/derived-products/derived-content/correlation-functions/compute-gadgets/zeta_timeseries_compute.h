@@ -104,13 +104,10 @@ namespace transport
           public:
 
             //! compute a time series for the zeta two-point function
-            void twopf(std::shared_ptr<handle>& h, std::vector<number>& line_data, const twopf_kconfig& k) const;
+            void twopf(std::shared_ptr<handle>& h, std::vector<number>& zeta_twopf, std::vector<number>& single_src, const twopf_kconfig& k) const;
 
             //! compute a time series for the zeta three-point function
-            void threepf(std::shared_ptr<handle>& h, std::vector<number>& line_data, const threepf_kconfig& k) const;
-
-            //! compute a time series for the zeta reduced bispectrum
-            void reduced_bispectrum(std::shared_ptr<handle>& h, std::vector<number>& line_data, const threepf_kconfig& k) const;
+            void threepf(std::shared_ptr<handle>& h, std::vector<number>& zeta_threepf, std::vector<number>& redbsp, std::vector<number>& single_src, const threepf_kconfig& k) const;
 
 
             // INTERNAL DATA
@@ -185,13 +182,16 @@ namespace transport
 
         template <typename number>
         void zeta_timeseries_compute<number>::twopf(std::shared_ptr<typename zeta_timeseries_compute<number>::handle>& h,
-                                                    std::vector<number>& line_data, const twopf_kconfig& k) const
+                                                    std::vector<number>& zeta_twopf, std::vector<number>& single_src, const twopf_kconfig& k) const
           {
             unsigned int N_fields = h->N_fields;
 
-            line_data.clear();
-            line_data.assign(h->t_axis.size(), 0.0);
+            zeta_twopf.clear();
+            zeta_twopf.assign(h->t_axis.size(), 0.0);
+            single_src.clear();
+            single_src.assign(h->t_axis.size(), 0.0);
 
+            // compute zeta twopf
             for(unsigned int m = 0; m < 2*N_fields; ++m)
               {
                 for(unsigned int n = 0; n < 2*N_fields; ++n)
@@ -199,14 +199,37 @@ namespace transport
                     cf_time_data_tag<number> tag =
                       h->pipe.new_cf_time_data_tag(data_tag<number>::cf_twopf_re, h->mdl->flatten(m,n), k.serial);
 
-                    // pull twopf data for this component
+                    // pull twopf data for this component; can use a reference to avoid copying
                     const std::vector<number>& sigma_line = h->t_handle.lookup_tag(tag);
 
                     for(unsigned int j = 0; j < h->t_axis.size(); ++j)
                       {
                         number component = h->dN[j][m]*h->dN[j][n]*sigma_line[j];
-                        line_data[j] += component;
+                        zeta_twopf[j] += component;
                       }
+                  }
+              }
+
+            // compute contribution attributable to a single field
+            for(unsigned int m = 0; m < N_fields; ++m)
+              {
+                unsigned int species  = h->mdl->species(m);
+                unsigned int momentum = h->mdl->momentum(m);
+
+                cf_time_data_tag<number> species_tag =
+                  h->pipe.new_cf_time_data_tag(data_tag<number>::cf_twopf_re, h->mdl->flatten(species,species), k.serial);
+                cf_time_data_tag<number> momentum_tag =
+                  h->pipe.new_cf_time_data_tag(data_tag<number>::cf_twopf_re, h->mdl->flatten(momentum,momentum), k.serial);
+
+                // pull twopf data; can use a reference only for the last pull
+                const std::vector<number>  species_line  = h->t_handle.lookup_tag(species_tag);
+                const std::vector<number>& momentum_line = h->t_handle.lookup_tag(momentum_tag);
+
+                for(unsigned int j = 0; j < h->t_axis.size(); ++j)
+                  {
+                    number field_contrib = h->dN[j][species]*h->dN[j][species]*species_line[j]
+                                           + h->dN[j][momentum]*h->dN[j][momentum]*momentum_line[j];
+                    if(field_contrib/zeta_twopf[j] > single_src[j]) single_src[j] = field_contrib/zeta_twopf[j];
                   }
               }
           }
@@ -214,12 +237,17 @@ namespace transport
 
         template <typename number>
         void zeta_timeseries_compute<number>::threepf(std::shared_ptr<typename zeta_timeseries_compute<number>::handle>& h,
-                                                      std::vector<number>& line_data, const threepf_kconfig& k) const
+                                                      std::vector<number>& zeta_threepf, std::vector<number>& redbsp, std::vector<number>& single_src,
+                                                      const threepf_kconfig& k) const
           {
             unsigned int N_fields = h->N_fields;
 
-            line_data.clear();
-            line_data.assign(h->t_axis.size(), 0.0);
+            zeta_threepf.clear();
+            zeta_threepf.assign(h->t_axis.size(), 0.0);
+            redbsp.clear();
+            redbsp.assign(h->t_axis.size(), 0.0);
+            single_src.clear();
+            single_src.assign(h->t_axis.size(), 0.0);
 
             // cache gauge transformation coefficients
             // these have to be recomputed for each k-configuration, because they are time and shape-dependent
@@ -235,7 +263,7 @@ namespace transport
               }
 
             // linear component of the gauge transformation
-            derived_data::SQL_time_config_query tquery("1=1");
+            derived_data::SQL_time_config_query tquery("1=1");    // no filtering on time configurations
             for(unsigned int l = 0; l < 2*N_fields; ++l)
               {
                 for(unsigned int m = 0; m < 2*N_fields; ++m)
@@ -254,7 +282,7 @@ namespace transport
                         for(unsigned int j = 0; j < h->t_axis.size(); ++j)
                           {
                             number component = h->dN[j][l]*h->dN[j][m]*h->dN[j][n]*threepf_line[j];
-                            line_data[j] += component;
+                            zeta_threepf[j] += component;
                           }
                       }
                   }
@@ -284,13 +312,14 @@ namespace transport
                             cf_time_data_tag<number> k3_re_mq_tag = h->pipe.new_cf_time_data_tag(data_tag<number>::cf_twopf_re, h->mdl->flatten(m,q), k.k3_serial);
                             cf_time_data_tag<number> k3_im_mq_tag = h->pipe.new_cf_time_data_tag(data_tag<number>::cf_twopf_im, h->mdl->flatten(m,q), k.k3_serial);
 
-                            const std::vector<number>& k1_re_lp = h->t_handle.lookup_tag(k1_re_lp_tag);
-                            const std::vector<number>& k1_im_lp = h->t_handle.lookup_tag(k1_im_lp_tag);
-                            const std::vector<number>& k2_re_lp = h->t_handle.lookup_tag(k2_re_lp_tag);
-                            const std::vector<number>& k2_im_lp = h->t_handle.lookup_tag(k2_im_lp_tag);
-                            const std::vector<number>& k2_re_mq = h->t_handle.lookup_tag(k2_re_mq_tag);
-                            const std::vector<number>& k2_im_mq = h->t_handle.lookup_tag(k2_im_mq_tag);
-                            const std::vector<number>& k3_re_mq = h->t_handle.lookup_tag(k3_re_mq_tag);
+                            // can only take reference for the last lookup, because previous items may be evited
+                            const std::vector<number>  k1_re_lp = h->t_handle.lookup_tag(k1_re_lp_tag);
+                            const std::vector<number>  k1_im_lp = h->t_handle.lookup_tag(k1_im_lp_tag);
+                            const std::vector<number>  k2_re_lp = h->t_handle.lookup_tag(k2_re_lp_tag);
+                            const std::vector<number>  k2_im_lp = h->t_handle.lookup_tag(k2_im_lp_tag);
+                            const std::vector<number>  k2_re_mq = h->t_handle.lookup_tag(k2_re_mq_tag);
+                            const std::vector<number>  k2_im_mq = h->t_handle.lookup_tag(k2_im_mq_tag);
+                            const std::vector<number>  k3_re_mq = h->t_handle.lookup_tag(k3_re_mq_tag);
                             const std::vector<number>& k3_im_mq = h->t_handle.lookup_tag(k3_im_mq_tag);
 
                             for(unsigned int j = 0; j < h->t_axis.size(); ++j)
@@ -299,32 +328,20 @@ namespace transport
                                 number component2 = ddN213[j][l][m] * h->dN[j][p] * h->dN[j][q] * (k1_re_lp[j]*k3_re_mq[j] - k1_im_lp[j]*k3_im_mq[j]);
                                 number component3 = ddN312[j][l][m] * h->dN[j][p] * h->dN[j][q] * (k1_re_lp[j]*k2_re_mq[j] - k1_im_lp[j]*k2_im_mq[j]);
 
-                                line_data[j] += component1;
-                                line_data[j] += component2;
-                                line_data[j] += component3;
+                                zeta_threepf[j] += component1;
+                                zeta_threepf[j] += component2;
+                                zeta_threepf[j] += component3;
                               }
                           }
                       }
                   }
               }
-          }
 
-
-        template <typename number>
-        void zeta_timeseries_compute<number>::reduced_bispectrum(std::shared_ptr<typename zeta_timeseries_compute::handle>& h,
-                                                                 std::vector<number>& line_data, const threepf_kconfig& k) const
-          {
-            line_data.clear();
-            line_data.assign(h->t_axis.size(), 0.0);
-
-            // First, obtain the bispectrum
-            std::vector<number> threepf_line;
-            this->threepf(h, threepf_line, k);
-
-            // Second, compute the three copies of the spectra which we need
+            // compute reduced bispectrum
             std::vector<number> twopf_k1;
             std::vector<number> twopf_k2;
             std::vector<number> twopf_k3;
+            std::vector<number> scratch;
 
             twopf_kconfig k1;
             k1.serial         = k.k1_serial;
@@ -341,19 +358,91 @@ namespace transport
             k3.k_comoving     = k.k3_comoving;
             k3.k_conventional = k.k3_conventional;
 
-            this->twopf(h, twopf_k1, k1);
-            this->twopf(h, twopf_k2, k2);
-            this->twopf(h, twopf_k3, k3);
+            this->twopf(h, twopf_k1, scratch, k1);
+            this->twopf(h, twopf_k2, scratch, k2);
+            this->twopf(h, twopf_k3, scratch, k3);
 
-            // Third, build the reduced bispectrum
+            // build the reduced bispectrum
             for(unsigned int j = 0; j < h->t_axis.size(); ++j)
               {
                 number form_factor = (6.0/5.0) * ( twopf_k1[j]*twopf_k2[j] + twopf_k1[j]*twopf_k3[j] + twopf_k2[j]*twopf_k3[j] );
 
-                line_data[j] = threepf_line[j] / form_factor;
+                redbsp[j] = zeta_threepf[j] / form_factor;
+              }
+
+            // finally, compute fraction of threepf attributable to a single source
+            std::vector<number> field_contrib;
+            field_contrib.assign(h->t_axis.size(), 0.0);
+            for(unsigned int m = 0; m < N_fields; ++m)
+              {
+                unsigned int species  = h->mdl->species(m);
+                unsigned int momentum = h->mdl->momentum(m);
+
+                cf_time_data_tag<number> species_tag  = h->pipe.new_cf_time_data_tag(data_tag<number>::cf_threepf, h->mdl->flatten(species,species,species), k.serial);
+                cf_time_data_tag<number> momentum_tag = h->pipe.new_cf_time_data_tag(data_tag<number>::cf_threepf, h->mdl->flatten(momentum,momentum,momentum), k.serial);
+
+                std::vector<number> species_line  = h->t_handle.lookup_tag(species_tag);
+                std::vector<number> momentum_line = h->t_handle.lookup_tag(momentum_tag);
+
+                this->shifter.shift(h->tk, h->mdl, h->pipe, tquery, momentum_line, h->t_axis, momentum, momentum, momentum, k);
+
+                for(unsigned int j = 0; j < h->t_axis.size(); ++j)
+                  {
+                    field_contrib[j] += h->dN[j][species]*h->dN[j][species]*h->dN[j][species]*species_line[j];
+                    field_contrib[j] += h->dN[j][momentum]*h->dN[j][momentum]*h->dN[j][momentum]*momentum_line[j];
+                  }
+
+                cf_time_data_tag<number> k1_re_ss_tag = h->pipe.new_cf_time_data_tag(data_tag<number>::cf_twopf_re, h->mdl->flatten(species,species), k.k1_serial);
+                cf_time_data_tag<number> k1_im_ss_tag = h->pipe.new_cf_time_data_tag(data_tag<number>::cf_twopf_im, h->mdl->flatten(species,species), k.k1_serial);
+
+                cf_time_data_tag<number> k1_re_mm_tag = h->pipe.new_cf_time_data_tag(data_tag<number>::cf_twopf_re, h->mdl->flatten(momentum,momentum), k.k1_serial);
+                cf_time_data_tag<number> k1_im_mm_tag = h->pipe.new_cf_time_data_tag(data_tag<number>::cf_twopf_im, h->mdl->flatten(momentum,momentum), k.k1_serial);
+
+                cf_time_data_tag<number> k2_re_ss_tag = h->pipe.new_cf_time_data_tag(data_tag<number>::cf_twopf_re, h->mdl->flatten(species,species), k.k2_serial);
+                cf_time_data_tag<number> k2_im_ss_tag = h->pipe.new_cf_time_data_tag(data_tag<number>::cf_twopf_im, h->mdl->flatten(species,species), k.k2_serial);
+
+                cf_time_data_tag<number> k2_re_mm_tag = h->pipe.new_cf_time_data_tag(data_tag<number>::cf_twopf_re, h->mdl->flatten(momentum,momentum), k.k2_serial);
+                cf_time_data_tag<number> k2_im_mm_tag = h->pipe.new_cf_time_data_tag(data_tag<number>::cf_twopf_im, h->mdl->flatten(momentum,momentum), k.k2_serial);
+
+                cf_time_data_tag<number> k3_re_ss_tag = h->pipe.new_cf_time_data_tag(data_tag<number>::cf_twopf_re, h->mdl->flatten(species,species), k.k3_serial);
+                cf_time_data_tag<number> k3_im_ss_tag = h->pipe.new_cf_time_data_tag(data_tag<number>::cf_twopf_im, h->mdl->flatten(species,species), k.k3_serial);
+
+                cf_time_data_tag<number> k3_re_mm_tag = h->pipe.new_cf_time_data_tag(data_tag<number>::cf_twopf_re, h->mdl->flatten(momentum,momentum), k.k3_serial);
+                cf_time_data_tag<number> k3_im_mm_tag = h->pipe.new_cf_time_data_tag(data_tag<number>::cf_twopf_im, h->mdl->flatten(momentum,momentum), k.k3_serial);
+
+                const std::vector<number>  k1_re_ss = h->t_handle.lookup_tag(k1_re_ss_tag);
+                const std::vector<number>  k1_im_ss = h->t_handle.lookup_tag(k1_im_ss_tag);
+                const std::vector<number>  k1_re_mm = h->t_handle.lookup_tag(k1_re_mm_tag);
+                const std::vector<number>  k1_im_mm = h->t_handle.lookup_tag(k1_im_mm_tag);
+
+                const std::vector<number>  k2_re_ss = h->t_handle.lookup_tag(k2_re_ss_tag);
+                const std::vector<number>  k2_im_ss = h->t_handle.lookup_tag(k2_im_ss_tag);
+                const std::vector<number>  k2_re_mm = h->t_handle.lookup_tag(k2_re_mm_tag);
+                const std::vector<number>  k2_im_mm = h->t_handle.lookup_tag(k2_im_mm_tag);
+
+                const std::vector<number>  k3_re_ss = h->t_handle.lookup_tag(k3_re_ss_tag);
+                const std::vector<number>  k3_im_ss = h->t_handle.lookup_tag(k3_im_ss_tag);
+                const std::vector<number>  k3_re_mm = h->t_handle.lookup_tag(k3_re_mm_tag);
+                const std::vector<number>& k3_im_mm = h->t_handle.lookup_tag(k3_im_mm_tag);
+
+                for(unsigned int j = 0; j < h->t_axis.size(); ++j)
+                  {
+                    number component1 = ddN123[j][species][species] * h->dN[j][species] * h->dN[j][species] * (k2_re_ss[j]*k3_re_ss[j] - k2_im_ss[j]*k3_im_ss[j]);
+                    number component2 = ddN213[j][species][species] * h->dN[j][species] * h->dN[j][species] * (k1_re_ss[j]*k3_re_ss[j] - k1_im_ss[j]*k3_im_ss[j]);
+                    number component3 = ddN312[j][species][species] * h->dN[j][species] * h->dN[j][species] * (k1_re_ss[j]*k2_re_ss[j] - k1_im_ss[j]*k2_im_ss[j]);
+
+                    number component4 = ddN123[j][momentum][momentum] * h->dN[j][momentum] * h->dN[j][momentum] * (k2_re_mm[j]*k3_re_mm[j] - k2_im_mm[j]*k3_im_mm[j]);
+                    number component5 = ddN213[j][momentum][momentum] * h->dN[j][momentum] * h->dN[j][momentum] * (k1_re_mm[j]*k3_re_mm[j] - k1_im_mm[j]*k3_im_mm[j]);
+                    number component6 = ddN312[j][momentum][momentum] * h->dN[j][momentum] * h->dN[j][momentum] * (k1_re_mm[j]*k2_re_mm[j] - k1_im_mm[j]*k2_im_mm[j]);
+
+                    field_contrib[j] += component1 + component2 + component3 + component4 + component5 + component6;
+
+                    number field_fraction = field_contrib[j]/zeta_threepf[j];
+
+                    if(field_fraction > single_src[j]) single_src[j] = field_fraction;
+                  }
               }
           }
-
 
       }   // namespace derived_data
 

@@ -428,10 +428,9 @@ namespace transport
 						// CACHE LOOKUP
 
 						//! Lookup data in the cache.
-            //! Returns a reference, but client code *must* take a copy, but just link to the reference - the referenced data
+            //! Returns a reference, but client code *must* take a copy, *not* just link to the reference - the referenced data
             //! is not guaranteed to persist after a subsequent call to lookup_tag(), because it might be
             //! unloaded from the cache before that point.
-            //! The reference is valid to remain valid between calls to lookup_tag().
 						const DataContainer& lookup_tag(DataTag& tag);
 
 

@@ -98,6 +98,8 @@ namespace transport
 						static const std::string write_error_msg()       { return(CPPTRANSPORT_DATACTR_ZETA_TWOPF_DATATAB_FAIL); }
 				    static const std::string sqlite_sample_table()   { return(CPPTRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE); }
 				    static const std::string copy_error_msg()        { return(CPPTRANSPORT_DATACTR_ZETA_TWOPF_COPY); }
+            static const std::string column_name()           { return("twopf"); }
+            static const bool has_redbsp = false;
 					};
 
 
@@ -107,15 +109,15 @@ namespace transport
 						static const std::string write_error_msg()       { return(CPPTRANSPORT_DATACTR_ZETA_THREEPF_DATATAB_FAIL); }
 				    static const std::string sqlite_sample_table()   { return(CPPTRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE); }
 				    static const std::string copy_error_msg()        { return(CPPTRANSPORT_DATACTR_ZETA_THREEPF_COPY); }
+            static const std::string column_name()           { return("threepf"); }
+            static const bool has_redbsp = true;
 					};
 
 
 				template<typename number> struct data_traits<number, typename postintegration_items<number>::zeta_redbsp_item>
 					{
-						static const std::string sqlite_table()          { return(CPPTRANSPORT_SQLITE_ZETA_REDUCED_BISPECTRUM_VALUE_TABLE); }
-						static const std::string write_error_msg()       { return(CPPTRANSPORT_DATACTR_ZETA_REDBSP_DATATAB_FAIL); }
-				    static const std::string sqlite_sample_table()   { return(CPPTRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE); }
-				    static const std::string copy_error_msg()        { return(CPPTRANSPORT_DATACTR_ZETA_REDUCED_BISPECTRUM_COPY); }
+            static const std::string sqlite_table()          { return(CPPTRANSPORT_SQLITE_ZETA_THREEPF_VALUE_TABLE); }
+            static const std::string column_name()           { return("redbsp"); }
 					};
 
 

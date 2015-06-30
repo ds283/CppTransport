@@ -156,7 +156,6 @@ namespace transport
 		        // create the necessary tables
 		        create_zeta_twopf_table(db, no_foreign_keys);
 		        create_zeta_threepf_table(db, no_foreign_keys);
-		        create_zeta_reduced_bispectrum_table(db, no_foreign_keys);
 
 		        return(db);
 			    }

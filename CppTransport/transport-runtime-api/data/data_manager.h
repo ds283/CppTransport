@@ -251,9 +251,6 @@ namespace transport
         //! get missing serial numbers from a zeta threepf table; should be provided by implementation
         virtual std::list<unsigned int> get_missing_zeta_threepf_serials(postintegration_writer<number>& writer) = 0;
 
-        //! get missing serial numbers from a zeta reduced bispectrum table; should be provided by implementation
-        virtual std::list<unsigned int> get_missing_zeta_redbsp_serials(postintegration_writer<number>& writer) = 0;
-
         // DROP GROUPS OF SERIAL NUMBERS
 
       protected:
@@ -272,9 +269,6 @@ namespace transport
 
         //! drop a set of k-configurations from a zeta threepf table; should be provided by implementation
         virtual void drop_zeta_threepf_configurations(postintegration_writer<number>& writer, const std::list<unsigned int>& serials, const threepf_kconfig_database& db) = 0;
-
-        //! drop a set of k-configurations from a zeta reduced bispectrum table; should be provided by implementation
-        virtual void drop_zeta_redbsp_configurations(postintegration_writer<number>& writer, const std::list<unsigned int>& serials, const threepf_kconfig_database& db) = 0;
 
         //! drop statistics for a set of k-configurations; should be provided by implementation
         virtual void drop_statistics_configurations(integration_writer<number>& writer, const std::list<unsigned int>& serials, const twopf_kconfig_database& db) = 0;
@@ -707,62 +701,41 @@ namespace transport
 
         // get lists of missing serial numbers for threepf, redbsp and twopf
         std::list<unsigned int> threepf_serials = this->get_missing_zeta_threepf_serials(writer);
-        std::list<unsigned int> redbsp_serials  = this->get_missing_zeta_redbsp_serials(writer);
         std::list<unsigned int> twopf_serials   = this->get_missing_zeta_twopf_serials(writer);
 
         // map missing twopf serials into threepf serials
         std::list<unsigned int> twopf_to_threepf_map = this->map_twopf_to_threepf_serials(twopf_serials, tk->get_threepf_database());
 
-        // merge threepf and redbsp serials into a single list
-        std::list<unsigned int> threepf_total_serials = threepf_serials;
-        std::list<unsigned int> temp = redbsp_serials;
-        threepf_serials.merge(temp);
-
-        // drop any threepf configurations which are present but have no matching redbsp configuraitons, and vice versa
-        std::list<unsigned int> undropped;
-        std::set_difference(threepf_total_serials.begin(), threepf_total_serials.end(),
-                            threepf_serials.begin(), threepf_serials.end(), std::back_inserter(undropped));
-        if(undropped.size() > 0) this->drop_zeta_threepf_configurations(writer, undropped, tk->get_threepf_database());
-
-        undropped.clear();
-        std::set_difference(threepf_total_serials.begin(), threepf_total_serials.end(),
-                            redbsp_serials.begin(), redbsp_serials.end(), std::back_inserter(undropped));
-        if(undropped.size() > 0) this->drop_zeta_redbsp_configurations(writer, undropped, tk->get_threepf_database());
-
-        // threepf and redbsp are now missing the same configurations, so log these:
-
-        if(threepf_total_serials.size() > 0)
+        if(threepf_serials.size() > 0)
           {
-            std::list<unsigned int> remainder = this->advise_missing_content(writer, threepf_total_serials, tk->get_threepf_database());  // marks set_fail() for writer
+            std::list<unsigned int> remainder = this->advise_missing_content(writer, threepf_serials, tk->get_threepf_database());  // marks set_fail() for writer
 
             if(remainder.size() > 0)
               {
                 BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << '\n' << "** Dropping extra configurations not missing from container, but advised by backend:";
                 this->drop_zeta_threepf_configurations(writer, remainder, tk->get_threepf_database());
-                this->drop_zeta_redbsp_configurations(writer, remainder, tk->get_threepf_database());
-                threepf_total_serials.merge(remainder);
+                threepf_serials.merge(remainder);
               }
           }
 
         // check if any twopf configurations require dropping even more threepfs
-        undropped.clear();
+        std::list<unsigned int> undropped;
         std::set_difference(twopf_to_threepf_map.begin(), twopf_to_threepf_map.end(),
-                            threepf_total_serials.begin(), threepf_total_serials.end(), std::back_inserter(undropped));
+                            threepf_serials.begin(), threepf_serials.end(), std::back_inserter(undropped));
 
         if(undropped.size() > 0)
           {
             BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << "** Dropping extra threepf configurations not missing from container, but implied by missing twopf configurations:";
             this->drop_zeta_threepf_configurations(writer, undropped, tk->get_threepf_database());
-            this->drop_zeta_redbsp_configurations(writer, undropped, tk->get_threepf_database());
-            threepf_total_serials.merge(undropped);   // not necessary to remove duplicates, since there should be any; result is sorted
+            threepf_serials.merge(undropped);   // not necessary to remove duplicates, since there should be any; result is sorted
           }
 
-        if(threepf_total_serials.size() > 0)
+        if(threepf_serials.size() > 0)
           {
-            writer.set_missing_serials(threepf_total_serials);
+            writer.set_missing_serials(threepf_serials);
 
             // build list of twopf configurations which should be dropped for this entire set of threepf configurations
-            std::list<unsigned int> twopf_drop = this->compute_twopf_drop_list(threepf_total_serials, tk->get_threepf_database());
+            std::list<unsigned int> twopf_drop = this->compute_twopf_drop_list(threepf_serials, tk->get_threepf_database());
 
             // compute twopf configurations which should be dropped
             undropped.clear();

@@ -41,7 +41,7 @@ namespace transport
       public:
 
         //! compute the zeta twopf
-        number zeta_twopf(const std::vector<number>& twopf, const std::vector<number>& bg);
+        void zeta_twopf(const std::vector<number>& twopf, const std::vector<number>& bg, number& zeta_twopf, number& single_src);
 
         //! compute the zeta threepf and reduced bispectrum
         void zeta_threepf(const threepf_kconfig& kconfig, double t, const std::vector<number>& threepf,
@@ -49,13 +49,14 @@ namespace transport
                           const std::vector<number>& k2_re, const std::vector<number>& k2_im,
                           const std::vector<number>& k3_re, const std::vector<number>& k3_im,
                           const std::vector<number>& bg,
-                          number& zeta_threepf, number& redbsp);
+                          number& zeta_threepf, number& redbsp, number& single_src);
 
       protected:
 
         //! compute the zeta twopf -- internal version
 		    //! if 'precomputed' is set, we avoid computing the gauge transformation and use a cached version
-        number zeta_twopf(const std::vector<number>& twopf, const std::vector<number>& bg, bool precomputed);
+        void zeta_twopf(const std::vector<number>& twopf, const std::vector<number>& bg,
+                        number& zeta_twopf, number& single_src, bool precomputed);
 
 
         // INTERNAL API
@@ -130,19 +131,20 @@ namespace transport
 
 
 		template <typename number>
-		number zeta_compute<number>::zeta_twopf(const std::vector<number>& twopf, const std::vector<number>& bg)
+		void zeta_compute<number>::zeta_twopf(const std::vector<number>& twopf, const std::vector<number>& bg, number& zeta_twopf, number& single_src)
 			{
-				return(this->zeta_twopf(twopf, bg, false));
+        this->zeta_twopf(twopf, bg, zeta_twopf, single_src, false);
 			}
 
 
     template <typename number>
-    number zeta_compute<number>::zeta_twopf(const std::vector<number>& twopf, const std::vector<number>& bg, bool precomputed)
+    void zeta_compute<number>::zeta_twopf(const std::vector<number>& twopf, const std::vector<number>& bg, number& zeta_twopf, number& single_src, bool precomputed)
       {
-        number zeta_twopf = 0.0;
+        zeta_twopf = 0.0;
 
         if(!precomputed) this->mdl->compute_gauge_xfm_1(this->parent_task, bg, this->dN);
 
+        // compute twopf
         for(unsigned int m = 0; m < 2*this->Nfields; ++m)
           {
             for(unsigned int n = 0; n < 2*this->Nfields; ++n)
@@ -152,7 +154,18 @@ namespace transport
               }
           }
 
-        return(zeta_twopf);
+        // compute fraction attributable to a single field
+        single_src = 0.0;
+        for(unsigned int m = 0; m < this->Nfields; ++m)
+          {
+            unsigned int species  = this->mdl->species(m);
+            unsigned int momentum = this->mdl->momentum(m);
+            number field_contrib  = dN[species]*dN[species]*twopf[this->mdl->flatten(species,species)]
+                                    + dN[momentum]*dN[momentum]*twopf[this->mdl->flatten(momentum,momentum)];
+            number field_fraction = field_contrib/zeta_twopf;
+
+            if(field_fraction > single_src) single_src = field_fraction;
+          }
       }
 
 
@@ -162,7 +175,7 @@ namespace transport
                                             const std::vector<number>& k2_re, const std::vector<number>& k2_im,
                                             const std::vector<number>& k3_re, const std::vector<number>& k3_im,
                                             const std::vector<number>& bg,
-                                            number& zeta_threepf, number& redbsp)
+                                            number& zeta_threepf, number& redbsp, number& single_src)
       {
         zeta_threepf = 0.0;
 
@@ -182,7 +195,7 @@ namespace transport
                   {
                     number tpf = threepf[this->mdl->flatten(l,m,n)];
 
-                    // shift field so it represents a derivative correlation functions, not a momentum one
+                    // shift tpf so it represents a derivative correlation function (if any of l, m, n are momenta), not a momentum one
                     this->shift(l, m, n, kconfig, t, threepf, k1_re, k1_im, k2_re, k2_im, k3_re, k3_im, bg, tpf);
 
                     number component = dN[l]*dN[m]*dN[n]*tpf;
@@ -214,12 +227,49 @@ namespace transport
           }
 
         // compute reduced bispectrum
-        number z_tpf_k1 = this->zeta_twopf(k1_re, bg, true);  // 'true' flags that the gauge transformation is precomputed, so there is no need to recompute it
-        number z_tpf_k2 = this->zeta_twopf(k2_re, bg, true);  // 'true' flags that the gauge transformation is precomputed, so there is no need to recompute it
-        number z_tpf_k3 = this->zeta_twopf(k3_re, bg, true);  // 'true' flags that the gauge transformation is precomputed, so there is no need to recompute it
+        number z_tpf_k1;
+        number z_tpf_k2;
+        number z_tpf_k3;
+        number scratch;
+        this->zeta_twopf(k1_re, bg, z_tpf_k1, scratch, true);  // 'true' flags that the gauge transformation is precomputed, so there is no need to recompute it
+        this->zeta_twopf(k2_re, bg, z_tpf_k2, scratch, true);  // 'true' flags that the gauge transformation is precomputed, so there is no need to recompute it
+        this->zeta_twopf(k3_re, bg, z_tpf_k3, scratch, true);  // 'true' flags that the gauge transformation is precomputed, so there is no need to recompute it
 
         number form_factor = (6.0/5.0) * (z_tpf_k1*z_tpf_k2 + z_tpf_k1*z_tpf_k3 + z_tpf_k2*z_tpf_k3);
         redbsp = zeta_threepf / form_factor;
+
+        // compute fraction attributable to a single field
+        single_src = 0.0;
+        for(unsigned int m = 0; m < this->Nfields; ++m)
+          {
+            unsigned int species  = this->mdl->species(m);
+            unsigned int momentum = this->mdl->momentum(m);
+
+            number tpf_field   = threepf[this->mdl->flatten(species,species,species)];
+            number tpf_momenta = threepf[this->mdl->flatten(momentum,momentum,momentum)];
+
+            // shift tpf_momenta so it represents a derivative correlation function, not a momentum one
+            this->shift(momentum, momentum, momentum, kconfig, t, threepf, k1_re, k1_im, k2_re, k2_im, k3_re, k3_im, bg, tpf_momenta);
+
+            // first, contribution from linear part of the gauge transformation
+            number field_contrib  = dN[species]*dN[species]*dN[species]*tpf_field
+                                    + dN[momentum]*dN[momentum]*dN[momentum]*tpf_momenta;
+
+            // second, contribution from quadratic part of the gauge transformation
+            number component1 = ddN123[species][species]*dN[species]*dN[species]*(k2_re[this->mdl->flatten(species,species)]*k3_re[this->mdl->flatten(species,species)] - k2_im[this->mdl->flatten(species,species)]*k3_im[this->mdl->flatten(species,species)]);
+            number component2 = ddN213[species][species]*dN[species]*dN[species]*(k1_re[this->mdl->flatten(species,species)]*k3_re[this->mdl->flatten(species,species)] - k1_im[this->mdl->flatten(species,species)]*k3_im[this->mdl->flatten(species,species)]);
+            number component3 = ddN312[species][species]*dN[species]*dN[species]*(k1_re[this->mdl->flatten(species,species)]*k2_re[this->mdl->flatten(species,species)] - k1_im[this->mdl->flatten(species,species)]*k2_im[this->mdl->flatten(species,species)]);
+
+            number component4 = ddN123[momentum][momentum]*dN[momentum]*dN[momentum]*(k2_re[this->mdl->flatten(momentum,momentum)]*k3_re[this->mdl->flatten(momentum,momentum)] - k2_im[this->mdl->flatten(momentum,momentum)]*k3_im[this->mdl->flatten(momentum,momentum)]);
+            number component5 = ddN213[momentum][momentum]*dN[momentum]*dN[momentum]*(k1_re[this->mdl->flatten(momentum,momentum)]*k3_re[this->mdl->flatten(momentum,momentum)] - k1_im[this->mdl->flatten(momentum,momentum)]*k3_im[this->mdl->flatten(momentum,momentum)]);
+            number component6 = ddN312[momentum][momentum]*dN[momentum]*dN[momentum]*(k1_re[this->mdl->flatten(momentum,momentum)]*k2_re[this->mdl->flatten(momentum,momentum)] - k1_im[this->mdl->flatten(momentum,momentum)]*k2_im[this->mdl->flatten(momentum,momentum)]);
+
+            field_contrib += component1 + component2 + component3 + component4 + component5 + component6;
+
+            number field_fraction = field_contrib/zeta_threepf;
+
+            if(field_fraction > single_src) single_src = field_fraction;
+          }
       }
 
 
