@@ -19,6 +19,7 @@
 
 #define CPPTRANSPORT_EXPECTED_TWOPF_TASK             "Internal error: expected postintegration parent task to be of type twopf_task, but instead found task"
 #define CPPTRANSPORT_EXPECTED_THREEPF_TASK           "Internal error: expected postintegration parent task to be of type threepf_task, but instead found task"
+#define CPPTRANSPORT_EXPECTED_ZETA_THREEPF_TASK      "Internal error: expected postintegration parent task to be of type zeta_threepf_task, but instead found task"
 
 #define CPPTRANSPORT_SCHEDULING_ALREADY_ASSIGNED     "Internal error: attempt to schedule work to an already-assigned worker process"
 #define CPPTRANSPORT_SCHEDULING_NOT_ALREADY_ASSIGNED "Internal error: attempt to de-assign a worker which is not already assigned"

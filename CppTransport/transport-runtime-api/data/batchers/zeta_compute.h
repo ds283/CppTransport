@@ -41,7 +41,7 @@ namespace transport
       public:
 
         //! compute the zeta twopf
-        void zeta_twopf(const std::vector<number>& twopf, const std::vector<number>& bg, number& zeta_twopf);
+        void zeta_twopf(const std::vector<number>& twopf, const std::vector<number>& bg, number& zeta_twopf, std::vector<number>& gauge_xfm1);
 
         //! compute the zeta threepf and reduced bispectrum
         void zeta_threepf(const threepf_kconfig& kconfig, double t, const std::vector<number>& threepf,
@@ -49,7 +49,8 @@ namespace transport
                           const std::vector<number>& k2_re, const std::vector<number>& k2_im,
                           const std::vector<number>& k3_re, const std::vector<number>& k3_im,
                           const std::vector<number>& bg,
-                          number& zeta_threepf, number& redbsp);
+                          number& zeta_threepf, number& redbsp,
+                          std::vector<number>& gauge_xfm2_123, std::vector<number>& gauge_xfm2_213, std::vector<number>& gauge_xfm2_312);
 
       protected:
 
@@ -130,9 +131,12 @@ namespace transport
 
 
 		template <typename number>
-		void zeta_compute<number>::zeta_twopf(const std::vector<number>& twopf, const std::vector<number>& bg, number& zeta_twopf)
+		void zeta_compute<number>::zeta_twopf(const std::vector<number>& twopf, const std::vector<number>& bg, number& zeta_twopf, std::vector<number>& gauge_xfm)
 			{
         this->zeta_twopf(twopf, bg, zeta_twopf, false);
+
+        // copy gauge xfm to return list
+        gauge_xfm = this->dN;
 			}
 
 
@@ -161,7 +165,8 @@ namespace transport
                                             const std::vector<number>& k2_re, const std::vector<number>& k2_im,
                                             const std::vector<number>& k3_re, const std::vector<number>& k3_im,
                                             const std::vector<number>& bg,
-                                            number& zeta_threepf, number& redbsp)
+                                            number& zeta_threepf, number& redbsp,
+                                            std::vector<number>& gauge_xfm_123, std::vector<number>& gauge_xfm_213, std::vector<number>& gauge_xfm_312)
       {
         zeta_threepf = 0.0;
 
@@ -171,6 +176,23 @@ namespace transport
         this->mdl->compute_gauge_xfm_2(this->parent_task, bg, kconfig.k1_comoving, kconfig.k2_comoving, kconfig.k3_comoving, t, this->ddN123);
         this->mdl->compute_gauge_xfm_2(this->parent_task, bg, kconfig.k2_comoving, kconfig.k1_comoving, kconfig.k3_comoving, t, this->ddN213);
         this->mdl->compute_gauge_xfm_2(this->parent_task, bg, kconfig.k3_comoving, kconfig.k1_comoving, kconfig.k2_comoving, t, this->ddN312);
+
+        // copy gauge xfms to return list
+        gauge_xfm_123.clear();
+        gauge_xfm_213.clear();
+        gauge_xfm_312.clear();
+        gauge_xfm_123.resize(2*this->Nfields * 2*this->Nfields);
+        gauge_xfm_213.resize(2*this->Nfields * 2*this->Nfields);
+        gauge_xfm_312.resize(2*this->Nfields * 2*this->Nfields);
+        for(unsigned int m = 0; m < 2*this->Nfields; ++m)
+          {
+            for(unsigned int n = 0; n < 2*this->Nfields; ++n)
+              {
+                gauge_xfm_123[this->mdl->flatten(m,n)] = this->ddN123[m][n];
+                gauge_xfm_213[this->mdl->flatten(m,n)] = this->ddN213[m][n];
+                gauge_xfm_312[this->mdl->flatten(m,n)] = this->ddN312[m][n];
+              }
+          }
 
         // compute linear part of gauge transformation
         for(unsigned int l = 0; l < 2*this->Nfields; ++l)
@@ -184,9 +206,7 @@ namespace transport
                     // shift tpf so it represents a derivative correlation function (if any of l, m, n are momenta), not a momentum one
                     this->shift(l, m, n, kconfig, t, threepf, k1_re, k1_im, k2_re, k2_im, k3_re, k3_im, bg, tpf);
 
-                    number component = dN[l]*dN[m]*dN[n]*tpf;
-
-                    zeta_threepf += component;
+                    zeta_threepf += dN[l]*dN[m]*dN[n]*tpf;
                   }
               }
           }

@@ -160,7 +160,9 @@ namespace transport
 		        create_zeta_twopf_table(db, no_foreign_keys);
 		        create_zeta_threepf_table(db, no_foreign_keys);
             create_paged_table<number, typename postintegration_items<number>::gauge_xfm1_item>(db, Nfields, no_foreign_keys);
-            create_paged_table<number, typename postintegration_items<number>::gauge_xfm2_item>(db, Nfields, no_foreign_keys);
+            create_paged_table<number, typename postintegration_items<number>::gauge_xfm2_123_item>(db, Nfields, no_foreign_keys);
+            create_paged_table<number, typename postintegration_items<number>::gauge_xfm2_213_item>(db, Nfields, no_foreign_keys);
+            create_paged_table<number, typename postintegration_items<number>::gauge_xfm2_312_item>(db, Nfields, no_foreign_keys);
 
 		        return(db);
 			    }

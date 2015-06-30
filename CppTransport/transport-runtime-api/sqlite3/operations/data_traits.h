@@ -131,10 +131,30 @@ namespace transport
           };
 
 
-        template <typename number> struct data_traits<number, typename postintegration_items<number>::gauge_xfm2_item>
+        template <typename number> struct data_traits<number, typename postintegration_items<number>::gauge_xfm2_123_item>
           {
             static int number_elements(unsigned int Nfields) { return(2*Nfields * 2*Nfields); }
-            static const std::string sqlite_table()          { return(CPPTRANSPORT_SQLITE_GAUGE_XFM2_VALUE_TABLE); }
+            static const std::string sqlite_table()          { return(CPPTRANSPORT_SQLITE_GAUGE_XFM2_123_VALUE_TABLE); }
+            static const std::string write_error_msg()       { return(CPPTRANSPORT_DATACTR_GAUGE2_DATATAB_FAIL); }
+            static const std::string sqlite_sample_table()   { return(CPPTRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE); }
+            static const std::string copy_error_msg()        { return(CPPTRANSPORT_DATACTR_GAUGE_XFM2_COPY); }
+          };
+
+
+        template <typename number> struct data_traits<number, typename postintegration_items<number>::gauge_xfm2_213_item>
+          {
+            static int number_elements(unsigned int Nfields) { return(2*Nfields * 2*Nfields); }
+            static const std::string sqlite_table()          { return(CPPTRANSPORT_SQLITE_GAUGE_XFM2_213_VALUE_TABLE); }
+            static const std::string write_error_msg()       { return(CPPTRANSPORT_DATACTR_GAUGE2_DATATAB_FAIL); }
+            static const std::string sqlite_sample_table()   { return(CPPTRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE); }
+            static const std::string copy_error_msg()        { return(CPPTRANSPORT_DATACTR_GAUGE_XFM2_COPY); }
+          };
+
+
+        template <typename number> struct data_traits<number, typename postintegration_items<number>::gauge_xfm2_312_item>
+          {
+            static int number_elements(unsigned int Nfields) { return(2*Nfields * 2*Nfields); }
+            static const std::string sqlite_table()          { return(CPPTRANSPORT_SQLITE_GAUGE_XFM2_312_VALUE_TABLE); }
             static const std::string write_error_msg()       { return(CPPTRANSPORT_DATACTR_GAUGE2_DATATAB_FAIL); }
             static const std::string sqlite_sample_table()   { return(CPPTRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE); }
             static const std::string copy_error_msg()        { return(CPPTRANSPORT_DATACTR_GAUGE_XFM2_COPY); }

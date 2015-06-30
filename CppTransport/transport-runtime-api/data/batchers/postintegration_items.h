@@ -111,8 +111,8 @@ namespace transport
           };
 
 
-        //! Stores a quadratic gauge transformation
-        class gauge_xfm2_item
+        //! Stores a quadratic gauge transformation in the 123 permutation
+        class gauge_xfm2_123_item
           {
           public:
 
@@ -128,6 +128,45 @@ namespace transport
             // values
             std::vector<number> elements;
           };
+
+
+        //! Stores a quadratic gauge transformation in the 123 permutation
+        class gauge_xfm2_213_item
+          {
+          public:
+
+            //! time serial number for this configuration
+            unsigned int        time_serial;
+
+            //! kconfig serial number for this configuration
+            unsigned int        kconfig_serial;
+
+            //! kconfig serial number for the integration which produced these values. Used when unwinding a batch.
+            unsigned int        source_serial;
+
+            // values
+            std::vector<number> elements;
+          };
+
+
+        //! Stores a quadratic gauge transformation in the 312 permutation
+        class gauge_xfm2_312_item
+          {
+          public:
+
+            //! time serial number for this configuration
+            unsigned int        time_serial;
+
+            //! kconfig serial number for this configuration
+            unsigned int        kconfig_serial;
+
+            //! kconfig serial number for the integration which produced these values. Used when unwinding a batch.
+            unsigned int        source_serial;
+
+            // values
+            std::vector<number> elements;
+          };
+
 
 		    struct fNL_item_comparator
 			    {

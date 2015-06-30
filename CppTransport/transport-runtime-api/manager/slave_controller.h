@@ -993,7 +993,7 @@ namespace transport
             if(ptk == nullptr)
 	            {
                 std::ostringstream msg;
-                msg << CPPTRANSPORT_EXPECTED_TWOPF_TASK << " '" << z3pf->get_parent_task()->get_name() << "'";
+                msg << CPPTRANSPORT_EXPECTED_THREEPF_TASK << " '" << z3pf->get_parent_task()->get_name() << "'";
                 throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
 	            }
 
@@ -1044,16 +1044,29 @@ namespace transport
             if(ptk == nullptr)
 	            {
                 std::ostringstream msg;
-                msg << CPPTRANSPORT_EXPECTED_TWOPF_TASK << " '" << zfNL->get_parent_task()->get_name() << "'";
+                msg << CPPTRANSPORT_EXPECTED_ZETA_THREEPF_TASK << " '" << zfNL->get_parent_task()->get_name() << "'";
                 throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
 	            }
+
+            // get parent^2 task
+            threepf_task<number>* pptk = dynamic_cast<threepf_task<number>*>(ptk->get_parent_task());
+
+            assert(pptk != nullptr);
+            if(pptk == nullptr)
+              {
+                std::ostringstream msg;
+                msg << CPPTRANSPORT_EXPECTED_THREEPF_TASK << " '" << ptk->get_parent_task()->get_name() << "'";
+                throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
+              }
+
+            model<number>* m = pptk->get_model();
 
             // construct a callback for the integrator to push new batches to the master
             generic_batcher::container_dispatch_function dispatcher = std::bind(&slave_controller<number>::push_temp_container, this, std::placeholders::_1,
                                                                                 MPI::POSTINTEGRATION_DATA_READY, std::string("POSTINTEGRATION_DATA_READY"));
 
             // construct batcher to hold output
-            fNL_batcher<number> batcher = this->data_mgr->create_temp_fNL_container(payload.get_tempdir_path(), payload.get_logdir_path(), this->get_rank(), dispatcher, zfNL->get_template());
+            fNL_batcher<number> batcher = this->data_mgr->create_temp_fNL_container(payload.get_tempdir_path(), payload.get_logdir_path(), this->get_rank(), m, dispatcher, zfNL->get_template());
 
             this->schedule_postintegration(zfNL, ptk, payload, batcher);
 	        }

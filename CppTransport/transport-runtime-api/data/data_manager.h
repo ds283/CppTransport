@@ -205,7 +205,8 @@ namespace transport
 
         //! Create a temporary container for fNL data. Returns a batcher which can be used for writing to the container.
         virtual fNL_batcher<number> create_temp_fNL_container(const boost::filesystem::path& tempdir, const boost::filesystem::path& logdir,
-                                                              unsigned int worker, generic_batcher::container_dispatch_function dispatcher, derived_data::template_type type) = 0;
+                                                              unsigned int worker, model<number>* m,
+                                                              generic_batcher::container_dispatch_function dispatcher, derived_data::template_type type) = 0;
 
 
         // INTEGRITY CHECK

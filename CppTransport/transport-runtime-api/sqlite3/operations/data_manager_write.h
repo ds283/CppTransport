@@ -268,7 +268,8 @@ namespace transport
 		    // tserial then we want to add our new value to it.
 		    // For that purpose we use COALESCE.
         template <typename number>
-        void write_fNL(postintegration_batcher* batcher, const std::set< typename postintegration_items<number>::fNL_item, typename postintegration_items<number>::fNL_item_comparator >& batch,
+        void write_fNL(postintegration_batcher<number>* batcher,
+                       const std::set< typename postintegration_items<number>::fNL_item, typename postintegration_items<number>::fNL_item_comparator >& batch,
                        derived_data::template_type type)
           {
             sqlite3* db = nullptr;
