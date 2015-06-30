@@ -101,19 +101,18 @@ namespace transport
 
         // buffer for computed values
         std::vector<number> zeta_npf;
-        std::vector<number> single_src;
 
         for(unsigned int i = 0; i < list.size(); ++i)
 	        {
             boost::timer::cpu_timer timer;
 
 		        // compute zeta twopf
-            this->zeta_computer.twopf(handle, zeta_npf, single_src, *(list[i]));
+            this->zeta_computer.twopf(handle, zeta_npf, *(list[i]));
 						assert(zeta_npf.size() == time_values.size());
 
 		        for(unsigned int j = 0; j < time_values.size(); ++j)
 			        {
-                batcher.push_twopf(time_values[j].serial, list[i]->serial, zeta_npf[j], single_src[j]);
+                batcher.push_twopf(time_values[j].serial, list[i]->serial, zeta_npf[j]);
 	            }
 
             timer.stop();
@@ -151,18 +150,17 @@ namespace transport
 		    // buffer for computed values
         std::vector<number> zeta_npf;
         std::vector<number> redbsp;
-        std::vector<number> single_src;
 
         for(unsigned int i = 0; i < list.size(); ++i)
 	        {
             boost::timer::cpu_timer timer;
 
-            this->zeta_computer.threepf(handle, zeta_npf, redbsp, single_src, *(list[i]));
+            this->zeta_computer.threepf(handle, zeta_npf, redbsp, *(list[i]));
 		        assert(zeta_npf.size() == time_values.size());
 
             for(unsigned int j = 0; j < time_values.size(); ++j)
 	            {
-                batcher.push_threepf(time_values[j].serial, list[i]->serial, zeta_npf[j], redbsp[j], single_src[j]);
+                batcher.push_threepf(time_values[j].serial, list[i]->serial, zeta_npf[j], redbsp[j]);
 	            }
 
             if(list[i].is_twopf_k1_stored())
@@ -173,10 +171,10 @@ namespace transport
                 k1.k_comoving     = list[i]->k1_comoving;
                 k1.k_conventional = list[i]->k1_conventional;
 
-		            this->zeta_computer.twopf(handle, zeta_npf, single_src, k1);
+		            this->zeta_computer.twopf(handle, zeta_npf, k1);
                 for(unsigned int j = 0; j < time_values.size(); ++j)
 	                {
-                    batcher.push_twopf(time_values[j].serial, k1.serial, zeta_npf[j], single_src[j]);
+                    batcher.push_twopf(time_values[j].serial, k1.serial, zeta_npf[j]);
 	                }
 	            }
 
@@ -188,10 +186,10 @@ namespace transport
                 k2.k_comoving     = list[i]->k2_comoving;
                 k2.k_conventional = list[i]->k2_conventional;
 
-                this->zeta_computer.twopf(handle, zeta_npf, single_src, k2);
+                this->zeta_computer.twopf(handle, zeta_npf, k2);
                 for(unsigned int j = 0; j < time_values.size(); ++j)
 	                {
-                    batcher.push_twopf(time_values[j].serial, k2.serial, zeta_npf[j], single_src[j]);
+                    batcher.push_twopf(time_values[j].serial, k2.serial, zeta_npf[j]);
 	                }
 	            }
 
@@ -203,10 +201,10 @@ namespace transport
                 k3.k_comoving     = list[i]->k3_comoving;
                 k3.k_conventional = list[i]->k3_conventional;
 
-                this->zeta_computer.twopf(handle, zeta_npf, single_src, k3);
+                this->zeta_computer.twopf(handle, zeta_npf, k3);
                 for(unsigned int j = 0; j < time_values.size(); ++j)
 	                {
-                    batcher.push_twopf(time_values[j].serial, k3.serial, zeta_npf[j], single_src[j]);
+                    batcher.push_twopf(time_values[j].serial, k3.serial, zeta_npf[j]);
 	                }
 	            }
 

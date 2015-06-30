@@ -402,7 +402,6 @@ namespace transport
 			        << "tserial       INTEGER, "
 			        << "kserial       INTEGER, "
 			        << "twopf         DOUBLE, "
-              << "single_source DOUBLE, "
 			        << "PRIMARY KEY (tserial, kserial)";
 
 		        if(keys == foreign_keys)
@@ -426,7 +425,6 @@ namespace transport
 			        << "kserial       INTEGER, "
 			        << "threepf       DOUBLE, "
               << "redbsp        DOUBLE, "
-              << "single_source DOUBLE, "
 			        << "PRIMARY KEY (tserial, kserial)";
 
 		        if(keys == foreign_keys)

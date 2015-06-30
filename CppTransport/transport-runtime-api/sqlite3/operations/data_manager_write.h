@@ -238,7 +238,7 @@ namespace transport
             std::ostringstream insert_stmt;
             insert_stmt << "INSERT INTO " << data_traits<number, ValueType>::sqlite_table() << " VALUES (@tserial, @kserial, @" << data_traits<number, ValueType>::column_name();
             if(data_traits<number, ValueType>::has_redbsp) insert_stmt << ", @redbsp";
-            insert_stmt << ", @single_src);";
+            insert_stmt << ");";
 
             sqlite3_stmt* stmt;
             check_stmt(db, sqlite3_prepare_v2(db, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr));
@@ -251,7 +251,6 @@ namespace transport
                 check_stmt(db, sqlite3_bind_int(stmt, 2, t->kconfig_serial));
                 check_stmt(db, sqlite3_bind_double(stmt, 3, static_cast<double>(t->value)));
                 if(data_traits<number, ValueType>::has_redbsp) check_stmt(db, sqlite3_bind_double(stmt, 4, static_cast<double>(t->redbsp)));
-                check_stmt(db, sqlite3_bind_double(stmt, 4 + (data_traits<number, ValueType>::has_redbsp ? 1 : 0), static_cast<double>(t->single_src)));
 
                 check_stmt(db, sqlite3_step(stmt), data_traits<number, ValueType>::write_error_msg(), SQLITE_DONE);
 

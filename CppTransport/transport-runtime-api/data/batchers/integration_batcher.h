@@ -808,12 +808,10 @@ namespace transport
         assert(this->mdl != nullptr);
         assert(this->parent_task != nullptr);
 
-        // compute zeta twopf (.first) and the single-source fraction (.second)
         number zeta_twopf = 0.0;
-        number single_src = 0.0;
 
-        this->zeta_agent.zeta_twopf(twopf, backg, zeta_twopf, single_src);
-        this->paired_batcher->push_twopf(time_serial, k_serial, zeta_twopf, single_src, source_serial);
+        this->zeta_agent.zeta_twopf(twopf, backg, zeta_twopf);
+        this->paired_batcher->push_twopf(time_serial, k_serial, zeta_twopf, source_serial);
       }
 
 
@@ -1002,10 +1000,9 @@ namespace transport
         assert(this->parent_task != nullptr);
 
         number zeta_twopf = 0.0;
-        number single_src = 0.0;
 
-        this->zeta_agent.zeta_twopf(twopf, backg, zeta_twopf, single_src);
-        this->paired_batcher->push_twopf(time_serial, k_serial, zeta_twopf, single_src, source_serial);
+        this->zeta_agent.zeta_twopf(twopf, backg, zeta_twopf);
+        this->paired_batcher->push_twopf(time_serial, k_serial, zeta_twopf, source_serial);
       }
 
 
@@ -1048,11 +1045,10 @@ namespace transport
 
         number zeta_threepf = 0.0;
         number redbsp = 0.0;
-        number single_src = 0.0;
 
-        this->zeta_agent.zeta_threepf(kconfig, t, threepf, tpf_k1_re, tpf_k1_im, tpf_k2_re, tpf_k2_im, tpf_k3_re, tpf_k3_im, bg, zeta_threepf, redbsp, single_src);
+        this->zeta_agent.zeta_threepf(kconfig, t, threepf, tpf_k1_re, tpf_k1_im, tpf_k2_re, tpf_k2_im, tpf_k3_re, tpf_k3_im, bg, zeta_threepf, redbsp);
 
-        this->paired_batcher->push_threepf(time_serial, kconfig.serial, zeta_threepf, redbsp, single_src, source_serial);
+        this->paired_batcher->push_threepf(time_serial, kconfig.serial, zeta_threepf, redbsp, source_serial);
       }
 
 

@@ -138,7 +138,7 @@ namespace transport
       public:
 
         //! batch twopf value
-        void push_twopf(unsigned int time_serial, unsigned int k_serial, number zeta_twopf, number single_src, unsigned int source_serial=0);
+        void push_twopf(unsigned int time_serial, unsigned int k_serial, number zeta_twopf, unsigned int source_serial=0);
 
         //! unbatch a k-configuration serial number
         void unbatch(unsigned int source_serial);
@@ -194,9 +194,9 @@ namespace transport
 
       public:
 
-        void push_twopf(unsigned int time_serial, unsigned int k_serial, number zeta_twopf, number single_src, unsigned int source_serial=0);
+        void push_twopf(unsigned int time_serial, unsigned int k_serial, number zeta_twopf, unsigned int source_serial=0);
 
-        void push_threepf(unsigned int time_serial, unsigned int k_serial, number zeta_threepf, number redbsp, number single_src, unsigned int source_serial=0);
+        void push_threepf(unsigned int time_serial, unsigned int k_serial, number zeta_threepf, number redbsp, unsigned int source_serial=0);
 
         //! unbatch a k-configuration serial number
         void unbatch(unsigned int source_serial);
@@ -361,7 +361,7 @@ namespace transport
 
 
     template <typename number>
-    void zeta_twopf_batcher<number>::push_twopf(unsigned int time_serial, unsigned int k_serial, number zeta_twopf, number single_src, unsigned int source_serial)
+    void zeta_twopf_batcher<number>::push_twopf(unsigned int time_serial, unsigned int k_serial, number zeta_twopf, unsigned int source_serial)
 	    {
         typename postintegration_items<number>::zeta_twopf_item item;
 
@@ -369,7 +369,6 @@ namespace transport
         item.kconfig_serial = k_serial;
         item.source_serial  = source_serial;
         item.value          = zeta_twopf;
-        item.single_src     = single_src;
 
         this->twopf_batch.push_back(item);
         this->check_for_flush();
@@ -436,7 +435,7 @@ namespace transport
 
 
     template <typename number>
-    void zeta_threepf_batcher<number>::push_twopf(unsigned int time_serial, unsigned int k_serial, number zeta_twopf, number single_src, unsigned int source_serial)
+    void zeta_threepf_batcher<number>::push_twopf(unsigned int time_serial, unsigned int k_serial, number zeta_twopf, unsigned int source_serial)
 	    {
         typename postintegration_items<number>::zeta_twopf_item item;
 
@@ -444,7 +443,6 @@ namespace transport
         item.kconfig_serial = k_serial;
         item.source_serial  = source_serial;
         item.value          = zeta_twopf;
-        item.single_src     = single_src;
 
         this->twopf_batch.push_back(item);
         this->check_for_flush();
@@ -452,7 +450,7 @@ namespace transport
 
 
     template <typename number>
-    void zeta_threepf_batcher<number>::push_threepf(unsigned int time_serial, unsigned int k_serial, number zeta_threepf, number redbsp, number single_src, unsigned int source_serial)
+    void zeta_threepf_batcher<number>::push_threepf(unsigned int time_serial, unsigned int k_serial, number zeta_threepf, number redbsp, unsigned int source_serial)
 	    {
         typename postintegration_items<number>::zeta_threepf_item item;
 
@@ -461,7 +459,6 @@ namespace transport
         item.source_serial  = source_serial;
         item.value          = zeta_threepf;
         item.redbsp         = redbsp;
-        item.single_src     = single_src;
 
         this->threepf_batch.push_back(item);
         this->check_for_flush();
