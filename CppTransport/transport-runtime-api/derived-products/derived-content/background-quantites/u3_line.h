@@ -228,7 +228,7 @@ namespace transport
 		        model<number>* mdl = this->gadget.get_model();
 		        assert(mdl != nullptr);
 
-            std::vector<number> u3_tensor;
+            std::vector<number> u3_tensor(2*Nfields * 2*Nfields * 2*Nfields);
 
             for(std::vector<threepf_kconfig>::iterator t = k_configs.begin(); t != k_configs.end(); ++t)
               {

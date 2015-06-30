@@ -192,7 +192,7 @@ namespace transport
 		        model<number>* mdl = this->gadget.get_model();
 		        assert(mdl != nullptr);
 
-            std::vector<number> u2_tensor;
+            std::vector<number> u2_tensor(2*Nfields * 2*Nfields);
 
             for(std::vector<twopf_kconfig>::iterator t = k_configs.begin(); t != k_configs.end(); ++t)
               {
