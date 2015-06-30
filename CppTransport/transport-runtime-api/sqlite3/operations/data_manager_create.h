@@ -281,13 +281,15 @@ namespace transport
 
 
 		    // Create table for background values
+        template <typename number, typename ValueType>
 		    void create_backg_table(sqlite3* db, unsigned int Nfields, add_foreign_keys_type keys=no_foreign_keys)
 			    {
-		        unsigned int num_cols = std::min(2*Nfields, max_columns);
+            unsigned int num_elements = data_traits<number, ValueType>::number_elements(Nfields);
+            unsigned int num_cols = std::min(num_elements, max_columns);
 
 		        std::ostringstream create_stmt;
 		        create_stmt
-			        << "CREATE TABLE " << CPPTRANSPORT_SQLITE_BACKG_VALUE_TABLE << "("
+			        << "CREATE TABLE " << data_traits<number, ValueType>::sqlite_table() << "("
 			        << "tserial INTEGER, "
 			        << "page    INTEGER";
 
@@ -305,92 +307,35 @@ namespace transport
 			    }
 
 
-		    // Create table for twopf values
-				template <typename number, typename ValueType>
-		    void create_twopf_table(sqlite3* db, unsigned int Nfields, add_foreign_keys_type keys=no_foreign_keys)
-			    {
-		        unsigned int num_cols = std::min(2*Nfields * 2*Nfields, max_columns);
+        // Create table for paged values
+        template <typename number, typename ValueType>
+        void create_paged_table(sqlite3* db, unsigned int Nfields, add_foreign_keys_type keys=no_foreign_keys)
+          {
+            unsigned int num_elements = data_traits<number, ValueType>::number_elements(Nfields);
+            unsigned int num_cols = std::min(num_elements, max_columns);
 
-		        std::ostringstream create_stmt;
-		        create_stmt
-			        << "CREATE TABLE " << data_traits<number, ValueType>::sqlite_table() << "("
-			        << "tserial INTEGER, "
-			        << "kserial INTEGER, "
-			        << "page    INTEGER";
+            std::ostringstream create_stmt;
+            create_stmt
+              << "CREATE TABLE " << data_traits<number, ValueType>::sqlite_table() << "("
+              << "tserial INTEGER, "
+              << "kserial INTEGER, "
+              << "page    INTEGER";
 
-		        for(unsigned int i = 0; i < num_cols; ++i)
-			        {
-		            create_stmt << ", ele" << i << " DOUBLE";
-			        }
+            for(unsigned int i = 0; i < num_cols; ++i)
+              {
+                create_stmt << ", ele" << i << " DOUBLE";
+              }
 
-		        create_stmt << ", PRIMARY KEY (tserial, kserial, page)";
-		        if(keys == foreign_keys)
-			        {
-		            create_stmt << ", FOREIGN KEY(tserial) REFERENCES " << CPPTRANSPORT_SQLITE_TIME_SAMPLE_TABLE << "(serial)"
-			            << ", FOREIGN KEY(kserial) REFERENCES " << CPPTRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE << "(serial)";
-			        }
-		        create_stmt << ");";
+            create_stmt << ", PRIMARY KEY (tserial, kserial, page)";
+            if(keys == foreign_keys)
+              {
+                create_stmt << ", FOREIGN KEY(tserial) REFERENCES " << CPPTRANSPORT_SQLITE_TIME_SAMPLE_TABLE << "(serial)"
+                  << ", FOREIGN KEY(kserial) REFERENCES " << CPPTRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE << "(serial)";
+              }
+            create_stmt << ");";
 
-		        exec(db, create_stmt.str());
-			    }
-
-
-		    // Create table for tensor twopf values
-		    void create_tensor_twopf_table(sqlite3* db, add_foreign_keys_type keys=no_foreign_keys)
-			    {
-		        unsigned int num_cols = std::min(static_cast<unsigned int>(4), max_columns);
-
-		        std::ostringstream create_stmt;
-		        create_stmt
-			        << "CREATE TABLE " << CPPTRANSPORT_SQLITE_TENSOR_TWOPF_VALUE_TABLE << "("
-			        << "tserial INTEGER, "
-			        << "kserial INTEGER, "
-			        << "page    INTEGER";
-
-		        for(unsigned int i = 0; i < num_cols; ++i)
-			        {
-		            create_stmt << ", ele" << i << " DOUBLE";
-			        }
-
-		        create_stmt << ", PRIMARY KEY (tserial, kserial, page)";
-		        if(keys == foreign_keys)
-			        {
-		            create_stmt << ", FOREIGN KEY(tserial) REFERENCES " << CPPTRANSPORT_SQLITE_TIME_SAMPLE_TABLE << "(serial)"
-			            << ", FOREIGN KEY(kserial) REFERENCES " << CPPTRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE << "(serial)";
-			        }
-		        create_stmt << ");";
-
-		        exec(db, create_stmt.str());
-			    }
-
-
-		    // Create table for threepf values
-		    void create_threepf_table(sqlite3* db, unsigned int Nfields, add_foreign_keys_type keys=no_foreign_keys)
-			    {
-		        unsigned int num_cols = std::min(2*Nfields * 2*Nfields * 2*Nfields, max_columns);
-
-		        std::ostringstream create_stmt;
-		        create_stmt
-			        << "CREATE TABLE " << CPPTRANSPORT_SQLITE_THREEPF_VALUE_TABLE << "("
-			        << "tserial INTEGER, "
-			        << "kserial INTEGER, "
-			        << "page    INTEGER";
-
-		        for(unsigned int i = 0; i < num_cols; ++i)
-			        {
-		            create_stmt << ", ele" << i << " DOUBLE";
-			        }
-
-		        create_stmt << ", PRIMARY KEY (tserial, kserial, page)";
-		        if(keys == foreign_keys)
-			        {
-		            create_stmt << ", FOREIGN KEY(tserial) REFERENCES " << CPPTRANSPORT_SQLITE_TIME_SAMPLE_TABLE << "(serial)"
-			            << ", FOREIGN KEY(kserial) REFERENCES " << CPPTRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE << "(serial)";
-			        }
-		        create_stmt << ");";
-
-		        exec(db, create_stmt.str());
-			    }
+            exec(db, create_stmt.str());
+          }
 
 
 		    // Create table for zeta twopf values
@@ -415,7 +360,7 @@ namespace transport
 			    }
 
 
-		    // Create table for zeta twopf values
+		    // Create table for zeta threepf values
 		    void create_zeta_threepf_table(sqlite3* db, add_foreign_keys_type keys=no_foreign_keys)
 			    {
 		        std::ostringstream create_stmt;
@@ -438,7 +383,7 @@ namespace transport
 			    }
 
 
-		    // Create table for zeta twopf values
+		    // Create table for fNL values
 		    void create_fNL_table(sqlite3* db, derived_data::template_type type, add_foreign_keys_type keys=no_foreign_keys)
 			    {
 		        std::ostringstream create_stmt;
@@ -458,6 +403,9 @@ namespace transport
 
 		        exec(db, create_stmt.str());
 			    }
+
+
+        // Create table for gauge-xfm
 
 			}   // namespace sqlite3_operations
 

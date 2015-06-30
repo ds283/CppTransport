@@ -47,9 +47,9 @@ namespace transport
 		        create_worker_info_table(db, no_foreign_keys);
 		        if(collect_stats) create_stats_table(db, no_foreign_keys, twopf_configs);
 		        if(collect_ics) create_ics_table<number, typename integration_items<number>::ics_item>(db, Nfields, no_foreign_keys, twopf_configs);
-		        create_backg_table(db, Nfields, no_foreign_keys);
-		        create_twopf_table<number, typename integration_items<number>::twopf_re_item>(db, Nfields, no_foreign_keys);
-		        create_tensor_twopf_table(db, no_foreign_keys);
+		        create_backg_table<number, typename integration_items<number>::backg_item>(db, Nfields, no_foreign_keys);
+		        create_paged_table<number, typename integration_items<number>::twopf_re_item>(db, Nfields, no_foreign_keys);
+            create_paged_table<number, typename integration_items<number>::tensor_twopf_item>(db, Nfields, no_foreign_keys);
 
 		        return(db);
 			    }
@@ -88,18 +88,19 @@ namespace transport
 		            create_ics_table<number, typename integration_items<number>::ics_item>(db, Nfields, no_foreign_keys, threepf_configs);
 		            create_ics_table<number, typename integration_items<number>::ics_kt_item>(db, Nfields, no_foreign_keys, threepf_configs);
 			        }
-		        create_backg_table(db, Nfields, no_foreign_keys);
-		        create_twopf_table<number, typename integration_items<number>::twopf_re_item>(db, Nfields, no_foreign_keys);
-		        create_twopf_table<number, typename integration_items<number>::twopf_im_item>(db, Nfields, no_foreign_keys);
-		        create_tensor_twopf_table(db, no_foreign_keys);
-		        create_threepf_table(db, Nfields, no_foreign_keys);
+		        create_backg_table<number, typename integration_items<number>::backg_item>(db, Nfields, no_foreign_keys);
+		        create_paged_table<number, typename integration_items<number>::twopf_re_item>(db, Nfields, no_foreign_keys);
+		        create_paged_table<number, typename integration_items<number>::twopf_im_item>(db, Nfields, no_foreign_keys);
+            create_paged_table<number, typename integration_items<number>::tensor_twopf_item>(db, Nfields, no_foreign_keys);
+            create_paged_table<number, typename integration_items<number>::threepf_item>(db, Nfields, no_foreign_keys);
 
 		        return(db);
 			    }
 
 
 		    // Create a temporary container for a zeta twopf
-		    sqlite3* create_temp_zeta_twopf_container(const boost::filesystem::path& container)
+        template <typename number>
+		    sqlite3* create_temp_zeta_twopf_container(const boost::filesystem::path& container, unsigned int Nfields)
 			    {
 		        sqlite3* db = nullptr;
 
@@ -124,13 +125,15 @@ namespace transport
 
 		        // create the necessary tables
 		        create_zeta_twopf_table(db, no_foreign_keys);
+            create_paged_table<number, typename postintegration_items<number>::gauge_xfm1_item>(db, Nfields, no_foreign_keys);
 
 		        return(db);
 			    }
 
 
 		    // Create a temporary container for a zeta threepf
-		    sqlite3* create_temp_zeta_threepf_container(const boost::filesystem::path& container)
+        template <typename number>
+		    sqlite3* create_temp_zeta_threepf_container(const boost::filesystem::path& container, unsigned int Nfields)
 			    {
 		        sqlite3* db = nullptr;
 
@@ -156,6 +159,8 @@ namespace transport
 		        // create the necessary tables
 		        create_zeta_twopf_table(db, no_foreign_keys);
 		        create_zeta_threepf_table(db, no_foreign_keys);
+            create_paged_table<number, typename postintegration_items<number>::gauge_xfm1_item>(db, Nfields, no_foreign_keys);
+            create_paged_table<number, typename postintegration_items<number>::gauge_xfm2_item>(db, Nfields, no_foreign_keys);
 
 		        return(db);
 			    }

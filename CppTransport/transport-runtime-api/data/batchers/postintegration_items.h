@@ -39,9 +39,6 @@ namespace transport
 
             //! reduced bispectrum not used, but included here to prevent template specialization failure
             number redbsp;
-
-            //! fraction attributable to a single source
-            number single_src;
 	        };
 
 
@@ -66,9 +63,6 @@ namespace transport
 
             //! reduced bispectrum
             number redbsp;
-
-            //! fraction of threepf attributable to a single source
-            number single_src;
 	        };
 
 
@@ -97,6 +91,43 @@ namespace transport
             number TT;
 	        };
 
+
+        //! Stores a linear gauge transformation
+        class gauge_xfm1_item
+          {
+          public:
+
+            //! time serial number for this configuration
+            unsigned int        time_serial;
+
+            //! kconfig serial number for this configuration
+            unsigned int        kconfig_serial;
+
+            //! kconfig serial number for the integration which produced these values. Used when unwinding a batch.
+            unsigned int        source_serial;
+
+            // values
+            std::vector<number> elements;
+          };
+
+
+        //! Stores a quadratic gauge transformation
+        class gauge_xfm2_item
+          {
+          public:
+
+            //! time serial number for this configuration
+            unsigned int        time_serial;
+
+            //! kconfig serial number for this configuration
+            unsigned int        kconfig_serial;
+
+            //! kconfig serial number for the integration which produced these values. Used when unwinding a batch.
+            unsigned int        source_serial;
+
+            // values
+            std::vector<number> elements;
+          };
 
 		    struct fNL_item_comparator
 			    {

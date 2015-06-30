@@ -195,11 +195,13 @@ namespace transport
 
         //! Create a temporary container for zeta twopf data. Returns a batcher which can be used for writing to the container.
         virtual zeta_twopf_batcher<number> create_temp_zeta_twopf_container(const boost::filesystem::path& tempdir, const boost::filesystem::path& logdir,
-                                                                            unsigned int worker, generic_batcher::container_dispatch_function dispatcher) = 0;
+                                                                            unsigned int worker, model<number>* m,
+                                                                            generic_batcher::container_dispatch_function dispatcher) = 0;
 
         //! Create a temporary container for zeta threepf data. Returns a batcher which can be used for writing to the container.
         virtual zeta_threepf_batcher<number> create_temp_zeta_threepf_container(const boost::filesystem::path& tempdir, const boost::filesystem::path& logdir,
-                                                                                unsigned int worker, generic_batcher::container_dispatch_function dispatcher) = 0;
+                                                                                unsigned int worker, model<number>* m,
+                                                                                generic_batcher::container_dispatch_function dispatcher) = 0;
 
         //! Create a temporary container for fNL data. Returns a batcher which can be used for writing to the container.
         virtual fNL_batcher<number> create_temp_fNL_container(const boost::filesystem::path& tempdir, const boost::filesystem::path& logdir,

@@ -121,6 +121,26 @@ namespace transport
 					};
 
 
+        template <typename number> struct data_traits<number, typename postintegration_items<number>::gauge_xfm1_item>
+          {
+            static int number_elements(unsigned int Nfields) { return(2*Nfields); }
+            static const std::string sqlite_table()          { return(CPPTRANSPORT_SQLITE_GAUGE_XFM1_VALUE_TABLE); }
+            static const std::string write_error_msg()       { return(CPPTRANSPORT_DATACTR_GAUGE1_DATATAB_FAIL); }
+            static const std::string sqlite_sample_table()   { return(CPPTRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE); }
+            static const std::string copy_error_msg()        { return(CPPTRANSPORT_DATACTR_GAUGE_XFM1_COPY); }
+          };
+
+
+        template <typename number> struct data_traits<number, typename postintegration_items<number>::gauge_xfm2_item>
+          {
+            static int number_elements(unsigned int Nfields) { return(2*Nfields * 2*Nfields); }
+            static const std::string sqlite_table()          { return(CPPTRANSPORT_SQLITE_GAUGE_XFM2_VALUE_TABLE); }
+            static const std::string write_error_msg()       { return(CPPTRANSPORT_DATACTR_GAUGE2_DATATAB_FAIL); }
+            static const std::string sqlite_sample_table()   { return(CPPTRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE); }
+            static const std::string copy_error_msg()        { return(CPPTRANSPORT_DATACTR_GAUGE_XFM2_COPY); }
+          };
+
+
 			}   // namespace sqlite3_operations
 
 	}   // namespace transport

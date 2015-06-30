@@ -155,13 +155,13 @@ namespace transport
         //! Create a temporary container for zeta twopf data. Returns a batcher which can be used for writing to the container.
         virtual zeta_twopf_batcher<number> create_temp_zeta_twopf_container(const boost::filesystem::path& tempdir,
                                                                             const boost::filesystem::path& logdir,
-                                                                            unsigned int worker,
+                                                                            unsigned int worker, model<number>* m,
                                                                             generic_batcher::container_dispatch_function dispatcher) override;
 
         //! Create a temporary container for zeta threepf data. Returns a batcher which can be used for writing to the container.
         virtual zeta_threepf_batcher<number> create_temp_zeta_threepf_container(const boost::filesystem::path& tempdir,
                                                                                 const boost::filesystem::path& logdir,
-                                                                                unsigned int worker,
+                                                                                unsigned int worker, model<number>* m,
                                                                                 generic_batcher::container_dispatch_function dispatcher) override;
 
         //! Create a temporary container for fNL data. Returns a batcher which can be used for writing to the container.
@@ -364,11 +364,11 @@ namespace transport
                                             bool ics, generic_batcher* batcher, generic_batcher::replacement_action action);
 
         //! Replace a temporary zeta twopf container with a new one
-        void replace_temp_zeta_twopf_container(const boost::filesystem::path& tempdir, unsigned int worker,
+        void replace_temp_zeta_twopf_container(const boost::filesystem::path& tempdir, unsigned int worker, model<number>* m,
                                                generic_batcher* batcher, generic_batcher::replacement_action action);
 
         //! Replace a temporary zeta threepf container with a new one
-        void replace_temp_zeta_threepf_container(const boost::filesystem::path& tempdir, unsigned int worker,
+        void replace_temp_zeta_threepf_container(const boost::filesystem::path& tempdir, unsigned int worker, model<number>* m,
                                                  generic_batcher* batcher, generic_batcher::replacement_action action);
 
         //! Replace a temporary fNL container with a new one
@@ -665,9 +665,9 @@ namespace transport
 
         sqlite3_operations::create_time_sample_table(db, tk);
         sqlite3_operations::create_twopf_sample_table(db, tk);
-        sqlite3_operations::create_backg_table(db, Nfields, sqlite3_operations::foreign_keys);
-        sqlite3_operations::create_twopf_table<number, typename integration_items<number>::twopf_re_item>(db, Nfields, sqlite3_operations::foreign_keys);
-        sqlite3_operations::create_tensor_twopf_table(db, sqlite3_operations::foreign_keys);
+        sqlite3_operations::create_backg_table<number, typename integration_items<number>::backg_item>(db, Nfields, sqlite3_operations::foreign_keys);
+        sqlite3_operations::create_paged_table<number, typename integration_items<number>::twopf_re_item>(db, Nfields, sqlite3_operations::foreign_keys);
+        sqlite3_operations::create_paged_table<number, typename integration_items<number>::tensor_twopf_item>(db, Nfields, sqlite3_operations::foreign_keys);
 
         sqlite3_operations::create_worker_info_table(db, sqlite3_operations::foreign_keys);
         if(writer->is_collecting_statistics()) sqlite3_operations::create_stats_table(db, sqlite3_operations::foreign_keys, sqlite3_operations::twopf_configs);
@@ -687,11 +687,11 @@ namespace transport
         sqlite3_operations::create_time_sample_table(db, tk);
         sqlite3_operations::create_twopf_sample_table(db, tk);
         sqlite3_operations::create_threepf_sample_table(db, tk);
-        sqlite3_operations::create_backg_table(db, Nfields, sqlite3_operations::foreign_keys);
-        sqlite3_operations::create_twopf_table<number, typename integration_items<number>::twopf_re_item>(db, Nfields, sqlite3_operations::foreign_keys);
-        sqlite3_operations::create_twopf_table<number, typename integration_items<number>::twopf_im_item>(db, Nfields, sqlite3_operations::foreign_keys);
-        sqlite3_operations::create_tensor_twopf_table(db, sqlite3_operations::foreign_keys);
-        sqlite3_operations::create_threepf_table(db, Nfields, sqlite3_operations::foreign_keys);
+        sqlite3_operations::create_backg_table<number, typename integration_items<number>::backg_item>(db, Nfields, sqlite3_operations::foreign_keys);
+        sqlite3_operations::create_paged_table<number, typename integration_items<number>::twopf_re_item>(db, Nfields, sqlite3_operations::foreign_keys);
+        sqlite3_operations::create_paged_table<number, typename integration_items<number>::twopf_im_item>(db, Nfields, sqlite3_operations::foreign_keys);
+        sqlite3_operations::create_paged_table<number, typename integration_items<number>::tensor_twopf_item>(db, Nfields, sqlite3_operations::foreign_keys);
+        sqlite3_operations::create_paged_table<number, typename integration_items<number>::threepf_item>(db, Nfields, sqlite3_operations::foreign_keys);
 
         sqlite3_operations::create_worker_info_table(db, sqlite3_operations::foreign_keys);
         if(writer->is_collecting_statistics()) sqlite3_operations::create_stats_table(db, sqlite3_operations::foreign_keys, sqlite3_operations::threepf_configs);
@@ -710,9 +710,17 @@ namespace transport
         sqlite3* db = nullptr;
         writer->get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
+        derivable_task<number>* d_ptk = tk->get_parent_task();
+        integration_task<number>* i_ptk = dynamic_cast< integration_task<number>* >(d_ptk);
+        assert(i_ptk != nullptr);
+        if(i_ptk == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_ZETA_INTEGRATION_CAST_FAIL);
+
+        unsigned int Nfields = i_ptk->get_model()->get_N_fields();
+
         sqlite3_operations::create_time_sample_table(db, tk);
         sqlite3_operations::create_twopf_sample_table(db, tk);
         sqlite3_operations::create_zeta_twopf_table(db, sqlite3_operations::foreign_keys);
+        sqlite3_operations::create_paged_table<number, typename postintegration_items<number>::gauge_xfm1_item>(db, Nfields, sqlite3_operations::foreign_keys);
       }
 
 
@@ -722,11 +730,20 @@ namespace transport
         sqlite3* db = nullptr;
         writer->get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
+        derivable_task<number>* d_ptk = tk->get_parent_task();
+        integration_task<number>* i_ptk = dynamic_cast< integration_task<number>* >(d_ptk);
+        assert(i_ptk != nullptr);
+        if(i_ptk == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_ZETA_INTEGRATION_CAST_FAIL);
+
+        unsigned int Nfields = i_ptk->get_model()->get_N_fields();
+
         sqlite3_operations::create_time_sample_table(db, tk);
         sqlite3_operations::create_twopf_sample_table(db, tk);
         sqlite3_operations::create_threepf_sample_table(db, tk);
         sqlite3_operations::create_zeta_twopf_table(db, sqlite3_operations::foreign_keys);
         sqlite3_operations::create_zeta_threepf_table(db, sqlite3_operations::foreign_keys);
+        sqlite3_operations::create_paged_table<number, typename postintegration_items<number>::gauge_xfm1_item>(db, Nfields, sqlite3_operations::foreign_keys);
+        sqlite3_operations::create_paged_table<number, typename postintegration_items<number>::gauge_xfm2_item>(db, Nfields, sqlite3_operations::foreign_keys);
       }
 
 
@@ -935,11 +952,11 @@ namespace transport
     template <typename number>
     zeta_twopf_batcher<number>
     data_manager_sqlite3<number>::create_temp_zeta_twopf_container(const boost::filesystem::path& tempdir, const boost::filesystem::path& logdir, unsigned int worker,
-                                                                   generic_batcher::container_dispatch_function dispatcher)
+                                                                   model<number>* m, generic_batcher::container_dispatch_function dispatcher)
       {
         boost::filesystem::path container = this->generate_temporary_container_path(tempdir, worker);
 
-        sqlite3* db = sqlite3_operations::create_temp_zeta_twopf_container(container);
+        sqlite3* db = sqlite3_operations::create_temp_zeta_twopf_container<number>(container, m->get_N_fields());
 
         // set up writers
         typename zeta_twopf_batcher<number>::writer_group writers;
@@ -948,7 +965,7 @@ namespace transport
         // set up replacement function
         generic_batcher::container_replacement_function replacer =
 	                                                        std::bind(&data_manager_sqlite3<number>::replace_temp_zeta_twopf_container,
-	                                                                  this, tempdir, worker, std::placeholders::_1, std::placeholders::_2);
+	                                                                  this, tempdir, worker, m, std::placeholders::_1, std::placeholders::_2);
 
         // set up batcher
         zeta_twopf_batcher<number> batcher(this->batcher_capacity, this->checkpoint_interval, container, logdir, writers, dispatcher, replacer, db, worker);
@@ -965,11 +982,11 @@ namespace transport
     template <typename number>
     zeta_threepf_batcher<number>
     data_manager_sqlite3<number>::create_temp_zeta_threepf_container(const boost::filesystem::path& tempdir, const boost::filesystem::path& logdir, unsigned int worker,
-                                                                     generic_batcher::container_dispatch_function dispatcher)
+                                                                     model<number>* m, generic_batcher::container_dispatch_function dispatcher)
       {
         boost::filesystem::path container = this->generate_temporary_container_path(tempdir, worker);
 
-        sqlite3* db = sqlite3_operations::create_temp_zeta_threepf_container(container);
+        sqlite3* db = sqlite3_operations::create_temp_zeta_threepf_container<number>(container, m->get_N_fields());
 
         // set up writers
         typename zeta_threepf_batcher<number>::writer_group writers;
@@ -979,7 +996,7 @@ namespace transport
         // set up replacement function
         generic_batcher::container_replacement_function replacer =
 	                                                        std::bind(&data_manager_sqlite3<number>::replace_temp_zeta_threepf_container,
-	                                                                  this, tempdir, worker, std::placeholders::_1, std::placeholders::_2);
+	                                                                  this, tempdir, worker, m, std::placeholders::_1, std::placeholders::_2);
 
         // set up batcher
         zeta_threepf_batcher<number> batcher(this->batcher_capacity, this->checkpoint_interval, container, logdir, writers, dispatcher, replacer, db, worker);
@@ -1084,7 +1101,7 @@ namespace transport
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::replace_temp_zeta_twopf_container(const boost::filesystem::path& tempdir, unsigned int worker,
+    void data_manager_sqlite3<number>::replace_temp_zeta_twopf_container(const boost::filesystem::path& tempdir, unsigned int worker, model<number>* m,
                                                                          generic_batcher* batcher, generic_batcher::replacement_action action)
       {
         sqlite3* db = nullptr;
@@ -1101,7 +1118,7 @@ namespace transport
           {
             boost::filesystem::path container = this->generate_temporary_container_path(tempdir, worker);
 
-            sqlite3* new_db = sqlite3_operations::create_temp_zeta_twopf_container(container);
+            sqlite3* new_db = sqlite3_operations::create_temp_zeta_twopf_container<number>(container, m->get_N_fields());
 
             batcher->set_container_path(container);
             batcher->set_manager_handle(new_db);
@@ -1112,7 +1129,7 @@ namespace transport
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::replace_temp_zeta_threepf_container(const boost::filesystem::path& tempdir, unsigned int worker,
+    void data_manager_sqlite3<number>::replace_temp_zeta_threepf_container(const boost::filesystem::path& tempdir, unsigned int worker, model<number>* m,
                                                                            generic_batcher* batcher, generic_batcher::replacement_action action)
       {
         sqlite3* db = nullptr;
@@ -1129,7 +1146,7 @@ namespace transport
           {
             boost::filesystem::path container = this->generate_temporary_container_path(tempdir, worker);
 
-            sqlite3* new_db = sqlite3_operations::create_temp_zeta_threepf_container(container);
+            sqlite3* new_db = sqlite3_operations::create_temp_zeta_threepf_container<number>(container, m->get_N_fields());
 
             batcher->set_container_path(container);
             batcher->set_manager_handle(new_db);

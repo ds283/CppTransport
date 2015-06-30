@@ -945,18 +945,18 @@ namespace transport
                 throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
 	            }
 
+            model<number>* m = ptk->get_model();
+
             // construct a callback for the postintegrator to push new batches to the master
             generic_batcher::container_dispatch_function dispatcher = std::bind(&slave_controller<number>::push_temp_container, this, std::placeholders::_1,
                                                                                 MPI::POSTINTEGRATION_DATA_READY, std::string("POSTINTEGRATION_DATA_READY"));
 
             // construct batcher to hold postintegration output
-            zeta_twopf_batcher<number> batcher = this->data_mgr->create_temp_zeta_twopf_container(payload.get_tempdir_path(), payload.get_logdir_path(), this->get_rank(), dispatcher);
+            zeta_twopf_batcher<number> batcher = this->data_mgr->create_temp_zeta_twopf_container(payload.get_tempdir_path(), payload.get_logdir_path(), this->get_rank(), m, dispatcher);
 
             // is this 2pf task paired?
             if(z2pf->is_paired())
               {
-                model<number>* m = ptk->get_model();
-
                 // also need a callback for the paired integrator
                 generic_batcher::container_dispatch_function i_dispatcher = std::bind(&slave_controller<number>::push_temp_container, this, std::placeholders::_1,
                                                                                       MPI::INTEGRATION_DATA_READY, std::string("INTEGRATION_DATA_READY"));
@@ -997,17 +997,17 @@ namespace transport
                 throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
 	            }
 
+            model<number>* m = ptk->get_model();
+
             // construct a callback for the integrator to push new batches to the master
             generic_batcher::container_dispatch_function dispatcher = std::bind(&slave_controller<number>::push_temp_container, this, std::placeholders::_1,
                                                                                 MPI::POSTINTEGRATION_DATA_READY, std::string("POSTINTEGRATION_DATA_READY"));
 
             // construct batcher to hold output
-            zeta_threepf_batcher<number> batcher = this->data_mgr->create_temp_zeta_threepf_container(payload.get_tempdir_path(), payload.get_logdir_path(), this->get_rank(), dispatcher);
+            zeta_threepf_batcher<number> batcher = this->data_mgr->create_temp_zeta_threepf_container(payload.get_tempdir_path(), payload.get_logdir_path(), this->get_rank(), m, dispatcher);
 
             if(z3pf->is_paired())
               {
-                model<number>* m = ptk->get_model();
-
                 // also need a callback for the paired integrator
                 generic_batcher::container_dispatch_function i_dispatcher = std::bind(&slave_controller<number>::push_temp_container, this, std::placeholders::_1,
                                                                                       MPI::INTEGRATION_DATA_READY, std::string("INTEGRATION_DATA_READY"));

@@ -46,13 +46,13 @@
 #define CPPTRANSPORT_SQLITE_KT_ICS_TABLE                        "kt_horizon_exit_values"
 #define CPPTRANSPORT_SQLITE_ZETA_TWOPF_VALUE_TABLE              "zeta_twopf"
 #define CPPTRANSPORT_SQLITE_ZETA_THREEPF_VALUE_TABLE            "zeta_threepf"
-#define CPPTRANSPORT_SQLITE_ZETA_REDUCED_BISPECTRUM_VALUE_TABLE "zeta_redbsp"
+#define CPPTRANSPORT_SQLITE_GAUGE_XFM1_VALUE_TABLE              "gauge_xfm1"
+#define CPPTRANSPORT_SQLITE_GAUGE_XFM2_VALUE_TABLE              "gauge_xfm2"
 #define CPPTRANSPORT_SQLITE_FNL_LOCAL_VALUE_TABLE               "fNL_local"
 #define CPPTRANSPORT_SQLITE_FNL_EQUI_VALUE_TABLE                "fNL_equi"
 #define CPPTRANSPORT_SQLITE_FNL_ORTHO_VALUE_TABLE               "fNL_ortho"
 #define CPPTRANSPORT_SQLITE_FNL_DBI_VALUE_TABLE                 "fNL_DBI"
 
-#define CPPTRANSPORT_SQLITE_TEMP_SERIAL_TABLE                   "serial_search"
 #define CPPTRANSPORT_SQLITE_TEMP_FNL_TABLE                      "fNL_update"
 #define CPPTRANSPORT_SQLITE_INSERT_FNL_TABLE                    "fNL_insert"
 
