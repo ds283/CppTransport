@@ -61,9 +61,6 @@ namespace transport
 						    //! SQL query representing time sample
 						    const SQL_time_config_query tquery;
 
-						    //! datapipe handle for this set of serial numbers
-						    typename datapipe<number>::time_data_handle& t_handle;
-
                 //! time configuration data corresponding to this SQL query, pulled from the datapipe
                 std::vector<time_config> t_axis;
 
@@ -160,15 +157,16 @@ namespace transport
 			    : pipe(p),
 			      tk(dynamic_cast<zeta_threepf_task<number>*>(t)),
 			      tquery(tq),
-			      t_handle(p.new_time_data_handle(tq)),
 			      type(ty),
             restrict_triangles(false)
 			    {
             this->validate();
 
             // lookup time configuration data from the database
-            time_config_tag<number> t_tag = p.new_time_config_tag();
-            t_axis = t_handle.lookup_tag(t_tag);
+            typename datapipe<number>::time_config_handle& tc_handle = pipe.new_time_config_handle(tquery);
+            time_config_tag<number>                        tc_tag    = pipe.new_time_config_tag();
+
+            t_axis = tc_handle.lookup_tag(tc_tag);
 
 				    // set up a work list for all threepf k-configurations
             const threepf_kconfig_database& threepf_db = tk->get_threepf_database();
@@ -186,12 +184,17 @@ namespace transport
           : pipe(p),
             tk(dynamic_cast<zeta_threepf_task<number>*>(t)),
             tquery(tq),
-            t_handle(p.new_time_data_handle(tq)),
             type(ty),
             restrict_triangles(true),
             work_list(wl)
           {
             this->validate();
+
+            // lookup time configuration data from the database
+            typename datapipe<number>::time_config_handle& tc_handle = pipe.new_time_config_handle(tquery);
+            time_config_tag<number>                        tc_tag    = pipe.new_time_config_tag();
+
+            t_axis = tc_handle.lookup_tag(tc_tag);
           }
 
 
@@ -223,7 +226,7 @@ namespace transport
 		    std::shared_ptr<typename fNL_timeseries_compute<number>::handle>
 		    fNL_timeseries_compute<number>::make_handle(datapipe<number>& pipe, postintegration_task<number>* tk, const SQL_time_config_query& tq, template_type ty) const
 			    {
-		        return std::shared_ptr<handle>(new handle(pipe, tk, tq, ty));
+		        return std::make_shared<handle>(pipe, tk, tq, ty);
 			    }
 
 
@@ -232,7 +235,7 @@ namespace transport
         fNL_timeseries_compute<number>::make_handle(datapipe<number>& pipe, postintegration_task<number>* tk, const SQL_time_config_query& tq,
                                                     template_type ty, const typename work_queue<threepf_kconfig_record>::device_work_list& wl) const
           {
-            return std::shared_ptr<handle>(new handle(pipe, tk, tq, ty, wl));
+            return std::make_shared<handle>(pipe, tk, tq, ty, wl);
           }
 
 
@@ -244,11 +247,11 @@ namespace transport
             typename datapipe<number>::time_zeta_handle& z_handle = h->pipe.new_time_zeta_handle(h->tquery);
 
             BB.clear();
-            BB.resize(h->t_axis.size());
+            BB.assign(h->t_axis.size(), 0.0);
             BT.clear();
-            BT.resize(h->t_axis.size());
+            BT.assign(h->t_axis.size(), 0.0);
             TT.clear();
-            TT.resize(h->t_axis.size());
+            TT.assign(h->t_axis.size(), 0.0);
 
             // loop over all sampled k-configurations, adding their contributions to the integral
             for(unsigned int i = 0; i < h->work_list.size(); ++i)

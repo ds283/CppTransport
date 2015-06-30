@@ -250,6 +250,10 @@ namespace transport
         std::shared_ptr<typename derived_data::fNL_timeseries_compute<number>::handle> handle = this->fNL_computer.make_handle(pipe, ptk, tquery, tk->get_template(), list);
 
 		    this->fNL_computer.components(handle, BB, BT, TT);
+        assert(BB.size() == time_values.size());
+        assert(BT.size() == time_values.size());
+        assert(TT.size() == time_values.size());
+
         for(unsigned int j = 0; j < time_values.size(); ++j)
 	        {
             batcher.push_fNL(time_values[j].serial, BB[j], BT[j], TT[j]);
@@ -257,6 +261,7 @@ namespace transport
 
         timer.stop();
         batcher.report_finished_item(timer.elapsed().wall);
+        batcher.set_items_processed(list.size());   // mark number of k-configurations processed, so in-flight items are correctly accounted for
 
         BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << "-- Processed " << list.size() << " k-configurations in time = " << format_time(timer.elapsed().wall);
 	    }

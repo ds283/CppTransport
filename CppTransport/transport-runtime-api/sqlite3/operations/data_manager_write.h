@@ -289,7 +289,7 @@ namespace transport
 		        exec(db, create_stmt.str(), CPPTRANSPORT_DATACTR_FNL_DATATAB_FAIL);
 
             std::ostringstream insert_stmt;
-            insert_stmt << "INSERT INTO temp." << CPPTRANSPORT_SQLITE_INSERT_FNL_TABLE << " VALUES (@tserial, @BT, @TT);";
+            insert_stmt << "INSERT INTO temp." << CPPTRANSPORT_SQLITE_INSERT_FNL_TABLE << " VALUES (@tserial, @BB, @BT, @TT);";
 
             sqlite3_stmt* stmt;
             check_stmt(db, sqlite3_prepare_v2(db, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr));

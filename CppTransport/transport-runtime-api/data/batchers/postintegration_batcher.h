@@ -91,10 +91,12 @@ namespace transport
 
         // INTERNAL DATA
 
-      private:
+      protected:
 
         //! Number of work items processed
         unsigned int items_processed;
+
+      private:
 
         //! Aggregate processing time
         boost::timer::nanosecond_type total_time;
@@ -252,7 +254,11 @@ namespace transport
 
       public:
 
+        //! push bispectrum.bispectrum, bispectrum.template, template.template values to the batcher
         void push_fNL(unsigned int time_serial, number BB, number BT, number TT);
+
+        //! set number of k-configurations processed, so can be correctly reported to account for in-flight items
+        void set_items_processed(unsigned int N) { this->items_processed = N; }
 
 
         // INTERNAL API
