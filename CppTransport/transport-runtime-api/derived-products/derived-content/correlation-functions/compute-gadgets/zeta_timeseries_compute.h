@@ -176,7 +176,7 @@ namespace transport
         std::shared_ptr<typename zeta_timeseries_compute<number>::handle>
         zeta_timeseries_compute<number>::make_handle(datapipe<number>& pipe, twopf_list_task<number>* t, const SQL_time_config_query& tq, unsigned int Nf) const
           {
-            return std::shared_ptr<handle>(new handle(pipe, t, tq, Nf));
+            return std::make_shared<handle>(pipe, t, tq, Nf);
           }
 
 
