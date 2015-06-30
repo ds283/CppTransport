@@ -165,7 +165,9 @@ namespace transport
 				    typename datapipe<number>::time_data_handle& handle = pipe.new_time_data_handle(this->tquery);
 				    std::vector<std::vector<number> > bg_data(t_axis.size());
 
-				    for(unsigned int m = 0; m < 2 * this->gadget.get_N_fields(); ++m)
+            unsigned int Nfields = this->gadget.get_N_fields();
+
+				    for(unsigned int m = 0; m < 2*Nfields; ++m)
 					    {
 				        std::array<unsigned int, 1>      index_set = { m };
 				        background_time_data_tag<number> tag       = pipe.new_background_time_data_tag(this->gadget.get_model()->flatten(m));
@@ -182,7 +184,7 @@ namespace transport
 		        model<number>* mdl = this->gadget.get_model();
 		        assert(mdl != nullptr);
 
-            std::vector< std::vector<number> > u2_tensor;
+            std::vector<number> u2_tensor(2*Nfields * 2*Nfields);
 
             for(std::vector<twopf_kconfig>::iterator t = k_configs.begin(); t != k_configs.end(); ++t)
               {
@@ -193,13 +195,13 @@ namespace transport
                     mdl->u2(this->gadget.get_integration_task(), bg_data[j], t->k_comoving, t_configs[j].t, u2_tensor);
                     number val = -std::numeric_limits<number>::max();
 
-                    for(unsigned int m = 0; m < 2 * this->gadget.get_N_fields(); ++m)
+                    for(unsigned int m = 0; m < 2*Nfields; ++m)
                       {
-                        for(unsigned int n = 0; n < 2 * this->gadget.get_N_fields(); ++n)
+                        for(unsigned int n = 0; n < 2*Nfields; ++n)
                           {
                             if(mdl->is_momentum(m) && mdl->is_field(n)) // only look at the momentum-field block, which is M/H^2; the other blocks aren't relate to SR
                               {
-                                number value = std::abs(u2_tensor[m][n]);
+                                number value = std::abs(u2_tensor[mdl->flatten(m,n)]);
                                 if(value > val) val = value;
                               }
                           }

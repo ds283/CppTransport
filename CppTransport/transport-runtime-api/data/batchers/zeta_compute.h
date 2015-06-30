@@ -89,13 +89,13 @@ namespace transport
         twopf_list_task<number>* parent_task;
 
         //! B-tensor cache
-        std::vector< std::vector< std::vector<number> > > B_qrp;
+        std::vector<number> B_qrp;
 
         //! C-tensor cache (need two, because need two different index arrangements)
-        std::vector< std::vector< std::vector<number> > > C_pqr;
+        std::vector<number> C_pqr;
 
         //! C-tensor cache (need two, because need two different index arrangements)
-        std::vector< std::vector< std::vector<number> > > C_prq;
+        std::vector<number> C_prq;
 
       };
 
@@ -108,6 +108,10 @@ namespace transport
       {
         assert(this->mdl != nullptr);
         assert(this->parent_task != nullptr);
+
+        B_qrp.resize(Nfields*Nfields*Nfields);
+        C_pqr.resize(Nfields*Nfields*Nfields);
+        C_prq.resize(Nfields*Nfields*Nfields);
       }
 
 
@@ -272,10 +276,10 @@ namespace transport
                 unsigned int mom_q_m_id = this->mdl->flatten((q_fixed == first_index ? this->mdl->momentum(q) : m), (q_fixed == second_index ? this->mdl->momentum(q) : m));
                 unsigned int mom_r_m_id = this->mdl->flatten((r_fixed == first_index ? this->mdl->momentum(r) : m), (r_fixed == second_index ? this->mdl->momentum(r) : m));
 
-                shift -= this->B_qrp[m][n][p_species] * ( q_re[q_m_id]*r_re[r_n_id] - q_im[q_m_id]*r_im[r_n_id] );
+                shift -= this->B_qrp[this->mdl->fields_flatten(m,n,p_species)] * ( q_re[q_m_id]*r_re[r_n_id] - q_im[q_m_id]*r_im[r_n_id] );
 
-                shift -= this->C_pqr[p_species][m][n] * ( q_re[mom_q_m_id]*r_re[r_n_id] - q_im[mom_q_m_id]*r_im[r_n_id] );
-                shift -= this->C_prq[p_species][m][n] * ( q_re[q_n_id]*r_re[mom_r_m_id] - q_im[q_n_id]*r_re[mom_r_m_id] );
+                shift -= this->C_pqr[this->mdl->fields_flatten(p_species,m,n)] * ( q_re[mom_q_m_id]*r_re[r_n_id] - q_im[mom_q_m_id]*r_im[r_n_id] );
+                shift -= this->C_prq[this->mdl->fields_flatten(p_species,m,n)] * ( q_re[q_n_id]*r_re[mom_r_m_id] - q_im[q_n_id]*r_re[mom_r_m_id] );
               }
           }
 

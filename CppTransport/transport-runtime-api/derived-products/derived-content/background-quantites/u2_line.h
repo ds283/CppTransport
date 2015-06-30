@@ -173,7 +173,9 @@ namespace transport
 				    typename datapipe<number>::time_data_handle& handle = pipe.new_time_data_handle(this->tquery);
 				    std::vector<std::vector<number> > bg_data(t_axis.size());
 
-				    for(unsigned int m = 0; m < 2 * this->gadget.get_N_fields(); ++m)
+            unsigned int Nfields = this->gadget.get_N_fields();
+
+				    for(unsigned int m = 0; m < 2*Nfields; ++m)
 					    {
 				        std::array<unsigned int, 1>      index_set = { m };
 				        background_time_data_tag<number> tag       = pipe.new_background_time_data_tag(this->gadget.get_model()->flatten(m));
@@ -190,13 +192,13 @@ namespace transport
 		        model<number>* mdl = this->gadget.get_model();
 		        assert(mdl != nullptr);
 
-            std::vector< std::vector<number> > u2_tensor;
+            std::vector<number> u2_tensor;
 
             for(std::vector<twopf_kconfig>::iterator t = k_configs.begin(); t != k_configs.end(); ++t)
               {
-                for(unsigned int m = 0; m < 2*this->gadget.get_N_fields(); ++m)
+                for(unsigned int m = 0; m < 2*Nfields; ++m)
                   {
-                    for(unsigned int n = 0; n < 2*this->gadget.get_N_fields(); ++n)
+                    for(unsigned int n = 0; n < 2*Nfields; ++n)
                       {
                         std::array<unsigned int, 2> index_set = { m, n };
                         if(this->active_indices.is_on(index_set))
@@ -206,7 +208,7 @@ namespace transport
                             for(unsigned int j = 0; j < line_data.size(); ++j)
                               {
                                 mdl->u2(this->gadget.get_integration_task(), bg_data[j], t->k_comoving, t_configs[j].t, u2_tensor);
-                                line_data[j] = u2_tensor[m][n];
+                                line_data[j] = u2_tensor[mdl->flatten(m,n)];
                               }
 
                             data_line<number> line(group, this->x_type, dimensionless_value, t_axis, line_data,

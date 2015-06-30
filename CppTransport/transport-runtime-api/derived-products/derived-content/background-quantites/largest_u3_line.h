@@ -201,7 +201,9 @@ namespace transport
 				    typename datapipe<number>::time_data_handle& handle = pipe.new_time_data_handle(this->tquery);
 				    std::vector<std::vector<number> > bg_data(t_axis.size());
 
-				    for(unsigned int m = 0; m < 2 * this->gadget.get_N_fields(); ++m)
+            unsigned int Nfields = this->gadget.get_N_fields();
+
+				    for(unsigned int m = 0; m < 2*Nfields; ++m)
 					    {
 				        std::array<unsigned int, 1>      index_set = { m };
 				        background_time_data_tag<number> tag       = pipe.new_background_time_data_tag(this->gadget.get_model()->flatten(m));
@@ -218,7 +220,7 @@ namespace transport
 		        model<number>* mdl = this->gadget.get_model();
 		        assert(mdl != nullptr);
 
-            std::vector< std::vector< std::vector<number> > > u3_tensor;
+            std::vector<number> u3_tensor(2*Nfields * 2*Nfields * 2*Nfields);
 
             for(std::vector<threepf_kconfig>::iterator t = k_configs.begin(); t != k_configs.end(); ++t)
               {
@@ -229,13 +231,13 @@ namespace transport
                     mdl->u3(this->gadget.get_integration_task(), bg_data[j], t->k1_comoving, t->k2_comoving, t->k3_comoving, t_configs[j].t, u3_tensor);
                     number val = -std::numeric_limits<number>::max();
 
-                    for(unsigned int l = 0; l < 2 * this->gadget.get_N_fields(); ++l)
+                    for(unsigned int l = 0; l < 2*Nfields; ++l)
                       {
-                        for(unsigned int m = 0; m < 2 * this->gadget.get_N_fields(); ++m)
+                        for(unsigned int m = 0; m < 2*Nfields; ++m)
                           {
-                            for(unsigned int n = 0; n < 2 * this->gadget.get_N_fields(); ++n)
+                            for(unsigned int n = 0; n < 2*Nfields; ++n)
                               {
-                                number value = std::abs(u3_tensor[l][m][n]);
+                                number value = std::abs(u3_tensor[mdl->flatten(l,m,n)]);
                                 if(value > val) val = value;
                               }
                           }
