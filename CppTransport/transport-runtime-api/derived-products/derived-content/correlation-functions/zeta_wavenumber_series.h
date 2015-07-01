@@ -154,6 +154,7 @@ namespace transport
 
                 std::vector<number> line_data = z_handle.lookup_tag(tag);
 
+                value_type value = correlation_function_value;
 				        if(this->dimensionless)
 					        {
 						        assert(line_data.size() == k_values.size());
@@ -163,17 +164,11 @@ namespace transport
 							        {
 								        *l_pos *= k_pos->k_comoving * k_pos->k_comoving * k_pos->k_comoving / (2.0*M_PI*M_PI);
 							        }
-
-				            data_line<number> line = data_line<number>(group, this->x_type, dimensionless_value, w_axis, line_data,
-				                                                       this->get_LaTeX_label(t->t), this->get_non_LaTeX_label(t->t), this->is_spectral_index());
-				            lines.push_back(line);
+                    value = dimensionless_value;
 					        }
-				        else
-					        {
-				            data_line<number> line = data_line<number>(group, this->x_type, correlation_function_value, w_axis, line_data,
-				                                                       this->get_LaTeX_label(t->t), this->get_non_LaTeX_label(t->t), this->is_spectral_index());
-				            lines.push_back(line);
-					        }
+                data_line<number> line = data_line<number>(group, this->x_type, value, w_axis, line_data,
+                                                           this->get_LaTeX_label(t->t), this->get_non_LaTeX_label(t->t), this->is_spectral_index());
+                lines.push_back(line);
 			        }
 
 		        // detach pipe from output group
@@ -355,26 +350,41 @@ namespace transport
 		        std::vector<double> w_axis = this->pull_kconfig_axis(pipe, this->kquery);
 
 		        // set up cache handles
-		        typename datapipe<number>::time_config_handle& tc_handle = pipe.new_time_config_handle(this->tquery);
-				    typename datapipe<number>::kconfig_zeta_handle& z_handle = pipe.new_kconfig_zeta_handle(this->kquery);
+            typename datapipe<number>::time_config_handle    & tc_handle = pipe.new_time_config_handle(this->tquery);
+            typename datapipe<number>::kconfig_zeta_handle   & z_handle  = pipe.new_kconfig_zeta_handle(this->kquery);
+            typename datapipe<number>::threepf_kconfig_handle& kc_handle = pipe.new_threepf_kconfig_handle(this->kquery);
 
             // pull time-configuration information from the database
 		        time_config_tag<number> t_tag = pipe.new_time_config_tag();
 		        const std::vector< time_config > t_values = tc_handle.lookup_tag(t_tag);
+
+            // pull k-configuration information from the database
+            threepf_kconfig_tag<number>                 k_tag    = pipe.new_threepf_kconfig_tag();
+            const typename std::vector<threepf_kconfig> k_values = kc_handle.lookup_tag(k_tag);
 
 		        // loop through all components of the twopf, for each t-configuration we use, pulling data from the database
 		        for(std::vector<time_config>::const_iterator t = t_values.begin(); t != t_values.end(); ++t)
 			        {
 				        zeta_threepf_kconfig_data_tag<number> tag = pipe.new_zeta_threepf_kconfig_data_tag(t->serial);
 
-                // it's safe to take a reference here to avoid a copy; we don't need the cache data to survive over multiple calls to lookup_tag()
-                const std::vector<number>& line_data = z_handle.lookup_tag(tag);
-
+                std::vector<number> line_data = z_handle.lookup_tag(tag);
 				        assert(line_data.size() == w_axis.size());
 
-		            data_line<number> line = data_line<number>(group, this->x_type, correlation_function_value, w_axis, line_data,
-		                                                       this->get_LaTeX_label(t->t), this->get_non_LaTeX_label(t->t), this->is_spectral_index());
+                value_type value = correlation_function_value;
+                if(this->dimensionless)
+                  {
+                    assert(line_data.size() == k_values.size());
+                    typename std::vector<number>::iterator       l_pos = line_data.begin();
+                    std::vector<threepf_kconfig>::const_iterator k_pos = k_values.begin();
+                    for(; l_pos != line_data.end() && k_pos != k_values.end(); ++l_pos, ++k_pos)
+                      {
+                        *l_pos *= k_pos->kt_comoving * k_pos->kt_comoving * k_pos->kt_comoving * k_pos->kt_comoving * k_pos->kt_comoving * k_pos->kt_comoving;
+                      }
+                    value = dimensionless_value;
+                  }
 
+		            data_line<number> line = data_line<number>(group, this->x_type, value, w_axis, line_data,
+		                                                       this->get_LaTeX_label(t->t), this->get_non_LaTeX_label(t->t), this->is_spectral_index());
 		            lines.push_back(line);
 			        }
 

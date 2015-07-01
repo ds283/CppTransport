@@ -25,6 +25,9 @@
 #include "transport-runtime-api/derived-products/derived-content/SQL_query/SQL_query_helper.h"
 
 
+#define CPPTRANSPORT_NODE_PRODUCT_DERIVED_LARGEST_U3_LINE_ROOT          "u3-line-settings"
+
+
 namespace transport
 	{
 
@@ -156,9 +159,9 @@ namespace transport
 						assert(this->parent_task != nullptr);
 						gadget.set_task(this->parent_task, finder);
 
-            use_kt_label    = reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_KT].asBool();
-            use_alpha_label = reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_ALPHA].asBool();
-            use_beta_label  = reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_BETA].asBool();
+            use_kt_label    = reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LARGEST_U3_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_KT].asBool();
+            use_alpha_label = reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LARGEST_U3_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_ALPHA].asBool();
+            use_beta_label  = reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LARGEST_U3_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_BETA].asBool();
 					}
 
 
@@ -170,9 +173,9 @@ namespace transport
 						this->tquery.serialize(writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]);
             this->kquery.serialize(writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY]);
 
-            writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_KT]    = this->use_kt_label;
-            writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_ALPHA] = this->use_alpha_label;
-            writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_BETA]  = this->use_beta_label;
+            writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LARGEST_U3_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_KT]    = this->use_kt_label;
+            writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LARGEST_U3_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_ALPHA] = this->use_alpha_label;
+            writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LARGEST_U3_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_BETA]  = this->use_beta_label;
 
 						this->time_series<number>::serialize(writer);
 						this->derived_line<number>::serialize(writer);

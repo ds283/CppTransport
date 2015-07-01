@@ -392,23 +392,19 @@ namespace transport
 
 		                        std::vector<number> line_data = t_handle.lookup_tag(tag);
 
+                            value_type value = correlation_function_value;
 		                        if(this->dimensionless)
 			                        {
 		                            for(unsigned int j = 0; j < line_data.size(); ++j)
 			                            {
 		                                line_data[j] *= t->k_comoving * t->k_comoving * t->k_comoving / (2.0*M_PI*M_PI);
 			                            }
+                                value = dimensionless_value;
+			                        }
 
-		                            data_line<number> line = data_line<number>(group, this->x_type, dimensionless_value, t_axis, line_data,
-		                                                                       this->get_LaTeX_label(m,n,*t), this->get_non_LaTeX_label(m,n,*t));
-		                            lines.push_back(line);
-			                        }
-		                        else
-			                        {
-		                            data_line<number> line = data_line<number>(group, this->x_type, correlation_function_value, t_axis, line_data,
-		                                                                       this->get_LaTeX_label(m,n,*t), this->get_non_LaTeX_label(m,n,*t));
-		                            lines.push_back(line);
-			                        }
+                            data_line<number> line = data_line<number>(group, this->x_type, value, t_axis, line_data,
+                                                                       this->get_LaTeX_label(m,n,*t), this->get_non_LaTeX_label(m,n,*t));
+                            lines.push_back(line);
 			                    }
 			                }
 			            }
@@ -631,10 +627,19 @@ namespace transport
 		                            if(this->get_dot_meaning() == derivatives)
 			                            this->shifter.shift(this->gadget.get_integration_task(), this->gadget.get_model(), pipe, this->tquery, line_data, t_values, l, m, n, *t);
 
-		                            data_line<number> line = data_line<number>(group, this->x_type, correlation_function_value, t_axis, line_data,
-		                                                                       this->get_LaTeX_label(l, m, n, *t), this->get_non_LaTeX_label(l, m, n, *t));
+                                value_type value = correlation_function_value;
+                                if(this->dimensionless)
+                                  {
+                                    for(unsigned int j = 0; j < line_data.size(); ++j)
+                                      {
+                                        line_data[j] *= t->kt_comoving * t->kt_comoving * t->kt_comoving * t->kt_comoving * t->kt_comoving * t->kt_comoving;
+                                      }
+                                    value = dimensionless_value;
+                                  }
 
-		                            lines.push_back(line);
+                                data_line<number> line = data_line<number>(group, this->x_type, value, t_axis, line_data,
+                                                                           this->get_LaTeX_label(l, m, n, *t), this->get_non_LaTeX_label(l, m, n, *t));
+                                lines.push_back(line);
 			                        }
 			                    }
 			                }

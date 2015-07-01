@@ -167,27 +167,23 @@ namespace transport
 
 								            std::vector<number> line_data = k_handle.lookup_tag(tag);
 
+                            value_type value = correlation_function_value;
 								            if(this->dimensionless)
 									            {
 								                assert(line_data.size() == k_values.size());
-                                typename std::vector<number>::iterator l_pos = line_data.begin();
+                                typename std::vector<number>::iterator     l_pos = line_data.begin();
                                 std::vector<twopf_kconfig>::const_iterator k_pos = k_values.begin();
 								                for(; l_pos != line_data.end() && k_pos != k_values.end(); ++l_pos, ++k_pos)
 									                {
 								                    *l_pos *= k_pos->k_comoving * k_pos->k_comoving * k_pos->k_comoving / (2.0*M_PI*M_PI);
 									                }
+                                value = dimensionless_value;
+									            }
 
-								                data_line<number> line = data_line<number>(group, this->x_type, dimensionless_value, w_axis, line_data,
-								                                                           this->get_LaTeX_label(m,n,t->t), this->get_non_LaTeX_label(m,n,t->t), this->is_spectral_index());
-								                lines.push_back(line);
-									            }
-								            else
-									            {
-								                data_line<number> line = data_line<number>(group, this->x_type, correlation_function_value, w_axis, line_data,
-								                                                           this->get_LaTeX_label(m,n,t->t), this->get_non_LaTeX_label(m,n,t->t), this->is_spectral_index());
-								                lines.push_back(line);
-									            }
-									        }
+                            data_line<number> line = data_line<number>(group, this->x_type, value, w_axis, line_data,
+                                                                       this->get_LaTeX_label(m,n,t->t), this->get_non_LaTeX_label(m,n,t->t), this->is_spectral_index());
+                            lines.push_back(line);
+                          }
 									    }
 							    }
 					    }
@@ -405,8 +401,8 @@ namespace transport
 	            }
 
             // extract k-configuration data
-            threepf_kconfig_tag<number>  k_tag   = pipe.new_threepf_kconfig_tag();
-            std::vector<threepf_kconfig> configs = kc_handle.lookup_tag(k_tag);
+            threepf_kconfig_tag<number>  k_tag    = pipe.new_threepf_kconfig_tag();
+            std::vector<threepf_kconfig> k_values = kc_handle.lookup_tag(k_tag);
 
             // loop through all components of the twopf, for each t-configuration we use, pulling data from the database
             typename std::vector< std::vector<number> >::const_iterator bg_pos = background.begin();
@@ -424,15 +420,28 @@ namespace transport
 		                            cf_kconfig_data_tag<number> tag = pipe.new_cf_kconfig_data_tag(data_tag<number>::cf_threepf, this->gadget.get_model()->flatten(l,m,n), t->serial);
 
 		                            std::vector<number> line_data = k_handle.lookup_tag(tag);
+                                assert(line_data.size() == w_axis.size());
 
 				                        // the integrator produces correlation functions involving the canonical momenta,
 				                        // not the derivatives. If the user wants derivatives then we have to shift.
 				                        if(this->get_dot_meaning() == derivatives)
-					                        this->shifter.shift(this->gadget.get_integration_task(), this->gadget.get_model(), pipe, this->kquery, configs, *bg_pos, line_data, l, m, n, *t);
+					                        this->shifter.shift(this->gadget.get_integration_task(), this->gadget.get_model(), pipe, this->kquery, k_values, *bg_pos, line_data, l, m, n, *t);
 
-		                            data_line<number> line = data_line<number>(group, this->x_type, correlation_function_value, w_axis, line_data,
+                                value_type value = correlation_function_value;
+                                if(this->dimensionless)
+                                  {
+                                    assert(line_data.size() == k_values.size());
+                                    typename std::vector<number>::iterator       l_pos = line_data.begin();
+                                    std::vector<threepf_kconfig>::const_iterator k_pos = k_values.begin();
+                                    for(; l_pos != line_data.end() && k_pos != k_values.end(); ++l_pos, ++k_pos)
+                                      {
+                                        *l_pos *= k_pos->kt_comoving * k_pos->kt_comoving * k_pos->kt_comoving * k_pos->kt_comoving * k_pos->kt_comoving * k_pos->kt_comoving;
+                                      }
+                                    value = dimensionless_value;
+                                  }
+
+		                            data_line<number> line = data_line<number>(group, this->x_type, value, w_axis, line_data,
 		                                                                       this->get_LaTeX_label(l,m,n,t->t), this->get_non_LaTeX_label(l,m,n,t->t), this->is_spectral_index());
-
 		                            lines.push_back(line);
 			                        }
 			                    }
