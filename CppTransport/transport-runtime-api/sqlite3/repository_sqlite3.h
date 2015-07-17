@@ -1330,31 +1330,21 @@ namespace transport
 
     template <typename number>
     template <typename Payload>
-    void repository_sqlite3<number>::enumerate_content_groups(const std::string& name, std::list<std::shared_ptr < output_group_record<Payload> >
+    void repository_sqlite3<number>::enumerate_content_groups(const std::string& name, std::list< std::shared_ptr< output_group_record<Payload> > >& list,
+                                                              find_function finder)
+      {
+        std::list<std::string> group_names;
 
-    >& list,
-    find_function finder
-    )
-  {
-    std::list<std::string> group_names;
+        // get list of group names associated with the task 'name'
+        sqlite3_operations::enumerate_content_groups<Payload>(this->db, name, group_names);
 
-    // get list of group names associated with the task 'name'
-    sqlite3_operations::enumerate_content_groups<Payload>(this->db, name, group_names);
-
-    for(
-    std::list<std::string>::iterator t = group_names.begin();
-    t != group_names.
-
-    end();
-
-    ++t)
-  {
-    boost::filesystem::path filename = sqlite3_operations::find_group<Payload>(this->db, *t, CPPTRANSPORT_REPO_OUTPUT_MISSING);
-    Json::Value             root     = this->deserialize_JSON_document(filename);
-    list.
-    push_back(std::shared_ptr<output_group_record<Payload> >(this->template content_group_record_factory<Payload>(root)));
-  }
-}
+        for(std::list<std::string>::iterator t = group_names.begin(); t != group_names.end(); ++t)
+          {
+            boost::filesystem::path filename = sqlite3_operations::find_group<Payload>(this->db, *t, CPPTRANSPORT_REPO_OUTPUT_MISSING);
+            Json::Value             root     = this->deserialize_JSON_document(filename);
+            list.push_back(std::shared_ptr<output_group_record<Payload> >(this->template content_group_record_factory<Payload>(root)));
+          }
+      }
 
 
 // CONTENT GROUP MANAGEMENT
