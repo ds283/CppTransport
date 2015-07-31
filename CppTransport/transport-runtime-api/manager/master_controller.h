@@ -155,7 +155,6 @@ namespace transport
 				  public:
 						aggregation_record(unsigned int w, unsigned int i)
 							: worker(w),
-
 							  id(i)
 							{
 							}
