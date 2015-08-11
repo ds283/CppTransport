@@ -238,9 +238,9 @@ namespace transport
 				    // work through the kconfig sample, shifting each value appropriately
 				    for(unsigned int i = 0; i < line_data.size(); ++i)
 					    {
-				        std::vector< std::vector< std::vector<number> > > B_qrp;
-				        std::vector< std::vector< std::vector<number> > > C_pqr;
-				        std::vector< std::vector< std::vector<number> > > C_prq;
+				        std::vector<number> B_qrp(N_fields*N_fields*N_fields);
+				        std::vector<number> C_pqr(N_fields*N_fields*N_fields);
+				        std::vector<number> C_prq(N_fields*N_fields*N_fields);
 
 				        // evaluate B and C tensors for this configuration
 				        mdl->B(tk, background, q_extract.comoving(configs[i]), r_extract.comoving(configs[i]), p_extract.comoving(configs[i]), t_config.t, B_qrp);
@@ -253,10 +253,10 @@ namespace transport
 					        {
 				            for(unsigned int n = 0; n < N_fields; ++n)
 					            {
-				                shift -= B_qrp[m][n][p_species] * ( sigma_q_re[i][m]*sigma_r_re[i][n] - sigma_q_im[i][m]*sigma_r_im[i][n] );
+				                shift -= B_qrp[mdl->fields_flatten(m,n,p_species)] * ( sigma_q_re[i][m]*sigma_r_re[i][n] - sigma_q_im[i][m]*sigma_r_im[i][n] );
 
-				                shift -= C_pqr[p_species][m][n] * ( mom_sigma_q_re[i][m]*sigma_r_re[i][n] - mom_sigma_q_im[i][m]*sigma_r_im[i][n] );
-				                shift -= C_prq[p_species][m][n] * ( sigma_q_re[i][n]*mom_sigma_r_re[i][m] - sigma_q_im[i][n]*mom_sigma_r_im[i][m] );
+				                shift -= C_pqr[mdl->fields_flatten(p_species,m,n)] * ( mom_sigma_q_re[i][m]*sigma_r_re[i][n] - mom_sigma_q_im[i][m]*sigma_r_im[i][n] );
+				                shift -= C_prq[mdl->fields_flatten(p_species,m,n)] * ( sigma_q_re[i][n]*mom_sigma_r_re[i][m] - sigma_q_im[i][n]*mom_sigma_r_im[i][m] );
 					            }
 					        }
 

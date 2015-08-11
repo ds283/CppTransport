@@ -25,8 +25,10 @@ namespace transport
 
       public:
 
+        //! constructor detects properties of environment
         local_environment();
 
+        //! destructor is default
         ~local_environment() = default;
 
 

@@ -263,16 +263,16 @@ namespace transport
 
       private:
 
-        const twopf_kconfig_record&                   k_config;
-        twopf_batcher<number>& batcher;
+        const twopf_kconfig_record& k_config;
+        twopf_batcher<number>     & batcher;
 
-        unsigned int                                  backg_size;
-        unsigned int                                  tensor_size;
-        unsigned int                                  twopf_size;
+        unsigned int backg_size;
+        unsigned int tensor_size;
+        unsigned int twopf_size;
 
-        unsigned int                                  backg_start;
-        unsigned int                                  tensor_start;
-        unsigned int                                  twopf_start;
+        unsigned int backg_start;
+        unsigned int tensor_start;
+        unsigned int twopf_start;
 
       };
 
@@ -379,25 +379,25 @@ namespace transport
 
       private:
 
-        const threepf_kconfig_record&                   k_config;
-        threepf_batcher<number>& batcher;
+        const threepf_kconfig_record& k_config;
+        threepf_batcher<number>     & batcher;
 
-        unsigned int                                    backg_size;
-        unsigned int                                    tensor_size;
-        unsigned int                                    twopf_size;
-        unsigned int                                    threepf_size;
+        unsigned int backg_size;
+        unsigned int tensor_size;
+        unsigned int twopf_size;
+        unsigned int threepf_size;
 
-        unsigned int                                    backg_start;
-        unsigned int                                    tensor_k1_start;
-        unsigned int                                    tensor_k2_start;
-        unsigned int                                    tensor_k3_start;
-        unsigned int                                    twopf_re_k1_start;
-        unsigned int                                    twopf_im_k1_start;
-        unsigned int                                    twopf_re_k2_start;
-        unsigned int                                    twopf_im_k2_start;
-        unsigned int                                    twopf_re_k3_start;
-        unsigned int                                    twopf_im_k3_start;
-        unsigned int                                    threepf_start;
+        unsigned int backg_start;
+        unsigned int tensor_k1_start;
+        unsigned int tensor_k2_start;
+        unsigned int tensor_k3_start;
+        unsigned int twopf_re_k1_start;
+        unsigned int twopf_im_k1_start;
+        unsigned int twopf_re_k2_start;
+        unsigned int twopf_im_k2_start;
+        unsigned int twopf_re_k3_start;
+        unsigned int twopf_im_k3_start;
+        unsigned int threepf_start;
 
       };
 
@@ -555,15 +555,15 @@ namespace transport
       private:
 
         const work_queue<twopf_kconfig_record>::device_work_list& work_list;
-        twopf_batcher<number>&                                    batcher;
+        twopf_batcher<number>                                   & batcher;
 
-        unsigned int                                              backg_size;
-        unsigned int                                              tensor_size;
-        unsigned int                                              twopf_size;
+        unsigned int backg_size;
+        unsigned int tensor_size;
+        unsigned int twopf_size;
 
-        unsigned int                                              backg_start;
-        unsigned int                                              tensor_start;
-        unsigned int                                              twopf_start;
+        unsigned int backg_start;
+        unsigned int tensor_start;
+        unsigned int twopf_start;
 
       };
 
@@ -675,24 +675,24 @@ namespace transport
       private:
 
         const work_queue<threepf_kconfig_record>::device_work_list& work_list;
-        threepf_batcher<number>&                                    batcher;
+        threepf_batcher<number>                                   & batcher;
 
-        unsigned int                                                backg_size;
-        unsigned int                                                tensor_size;
-        unsigned int                                                twopf_size;
-        unsigned int                                                threepf_size;
+        unsigned int backg_size;
+        unsigned int tensor_size;
+        unsigned int twopf_size;
+        unsigned int threepf_size;
 
-        unsigned int                                                backg_start;
-        unsigned int                                                tensor_k1_start;
-        unsigned int                                                tensor_k2_start;
-        unsigned int                                                tensor_k3_start;
-        unsigned int                                                twopf_re_k1_start;
-        unsigned int                                                twopf_im_k1_start;
-        unsigned int                                                twopf_re_k2_start;
-        unsigned int                                                twopf_im_k2_start;
-        unsigned int                                                twopf_re_k3_start;
-        unsigned int                                                twopf_im_k3_start;
-        unsigned int                                                threepf_start;
+        unsigned int backg_start;
+        unsigned int tensor_k1_start;
+        unsigned int tensor_k2_start;
+        unsigned int tensor_k3_start;
+        unsigned int twopf_re_k1_start;
+        unsigned int twopf_im_k1_start;
+        unsigned int twopf_re_k2_start;
+        unsigned int twopf_im_k2_start;
+        unsigned int twopf_re_k3_start;
+        unsigned int twopf_im_k3_start;
+        unsigned int threepf_start;
 
       };
 

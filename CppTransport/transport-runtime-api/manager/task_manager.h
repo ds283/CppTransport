@@ -187,7 +187,6 @@ namespace transport
         std::cout << CPPTRANSPORT_TASK_MANAGER_WARNING_LABEL << " ";
         if(colour) std::cout << ANSI_NORMAL;
         std::cout << msg << '\n';
-
       }
 
 

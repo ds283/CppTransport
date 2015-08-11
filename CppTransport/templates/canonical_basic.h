@@ -135,11 +135,7 @@ namespace transport
 	          astar_normalization(tk->get_astar_normalization()),
 	          config(k)
 	        {
-		        this->u2.resize(2*$$__NUMBER_FIELDS);
-
-		        for(unsigned int i = 0; i < 2*$$__NUMBER_FIELDS; ++i)
-			        {
-				        this->u2[i].resize(2*$$__NUMBER_FIELDS);
+		        this->u2.resize(2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS);
 	        }
 
         void operator ()(const twopf_state<number>& __x, twopf_state<number>& __dxdt, double __t);
@@ -161,7 +157,7 @@ namespace transport
 
         const twopf_kconfig config;
 
-        std::vector< std::vector<number> > u2;
+        std::vector<number> u2;
 
 	    };
 
@@ -200,34 +196,13 @@ namespace transport
 	          astar_normalization(tk->get_astar_normalization()),
 	          config(k)
 	        {
-		        this->u2_k1.resize(2*$$__NUMBER_FIELDS);
-		        this->u2_k2.resize(2*$$__NUMBER_FIELDS);
-		        this->u2_k3.resize(2*$$__NUMBER_FIELDS);
+		        this->u2_k1.resize(2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS);
+		        this->u2_k2.resize(2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS);
+		        this->u2_k3.resize(2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS);
 
-		        for(unsigned int i = 0; i < 2*$$__NUMBER_FIELDS; ++i)
-			        {
-				        this->u2_k1[i].resize(2*$$__NUMBER_FIELDS);
-				        this->u2_k2[i].resize(2*$$__NUMBER_FIELDS);
-				        this->u2_k3[i].resize(2*$$__NUMBER_FIELDS);
-	        }
-
-		        this->u3_k1k2k3.resize(2*$$__NUMBER_FIELDS);
-		        this->u3_k2k1k3.resize(2*$$__NUMBER_FIELDS);
-		        this->u3_k3k1k2.resize(2*$$__NUMBER_FIELDS);
-
-		        for(unsigned int i = 0; i < 2*$$__NUMBER_FIELDS; ++i)
-			        {
-				        this->u3_k1k2k3[i].resize(2*$$__NUMBER_FIELDS);
-				        this->u3_k2k1k3[i].resize(2*$$__NUMBER_FIELDS);
-				        this->u3_k3k1k2[i].resize(2*$$__NUMBER_FIELDS);
-
-				        for(unsigned int j = 0; j < 2*$$__NUMBER_FIELDS; j++)
-					        {
-						        this->u3_k1k2k3[i][j].resize(2*$$__NUMBER_FIELDS);
-						        this->u3_k2k1k3[i][j].resize(2*$$__NUMBER_FIELDS);
-						        this->u3_k3k1k2[i][j].resize(2*$$__NUMBER_FIELDS);
-					        }
-			        }
+		        this->u3_k1k2k3.resize(2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS);
+		        this->u3_k2k1k3.resize(2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS);
+		        this->u3_k3k1k2.resize(2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS);
           }
 
         void operator ()(const threepf_state<number>& __x, threepf_state<number>& __dxdt, double __dt);
@@ -249,13 +224,13 @@ namespace transport
 
         const threepf_kconfig config;
 
-        std::vector< std::vector<number> > u2_k1;
-        std::vector< std::vector<number> > u2_k2;
-        std::vector< std::vector<number> > u2_k3;
+        std::vector<number> u2_k1;
+        std::vector<number> u2_k2;
+        std::vector<number> u2_k3;
 
-        std::vector< std::vector< std::vector<number> > > u3_k1k2k3;
-        std::vector< std::vector< std::vector<number> > > u3_k2k1k3;
-        std::vector< std::vector< std::vector<number> > > u3_k3k1k2;
+        std::vector<number> u3_k1k2k3;
+        std::vector<number> u3_k2k1k3;
+        std::vector<number> u3_k3k1k2;
 
 	    };
 
@@ -661,7 +636,7 @@ namespace transport
         __dtwopf_tensor(1,1) = __pf*__tensor_twopf_fp + __pp*__tensor_twopf_pp + __pf*__tensor_twopf_pf + __pp*__tensor_twopf_pp;
 
         // set up components of the u2 tensor
-        this->u2[$$__A][$$__B] = $$__U2_PREDEF[AB]{__k, __a, __Hsq, __eps};
+        this->u2[FLATTEN($$__A,$$__B)] = $$__U2_PREDEF[AB]{__k, __a, __Hsq, __eps};
 
         // evolve the 2pf
         // here, we are dealing only with the real part - which is symmetric.
@@ -672,8 +647,8 @@ namespace transport
 		        {
 	            __dtwopf(__i,__j) = 0;
 
-	            __dtwopf(__i,__j) += this->u2[__i][$$__K]*__twopf($$__K,__j);
-	            __dtwopf(__i,__j) += this->u2[__j][$$__K]*__twopf(__i,$$__K);
+	            __dtwopf(__i,__j) += this->u2[FLATTEN(__i,$$__K)]*__twopf($$__K,__j);
+	            __dtwopf(__i,__j) += this->u2[FLATTEN(__j,$$__K)]*__twopf(__i,$$__K);
 		        }
         }
 	    }
@@ -792,14 +767,14 @@ namespace transport
         __dtwopf_k3_tensor(1,1) = __pf*__tensor_k3_twopf_fp + __pp*__tensor_k3_twopf_pp + __pf*__tensor_k3_twopf_pf + __pp*__tensor_k3_twopf_pp;
 
         // set up components of the u2 tensor for k1, k2, k3
-        this->u2_k1[$$__A][$$__B] = $$__U2_PREDEF[AB]{__k1, __a, __Hsq, __eps};
-        this->u2_k2[$$__A][$$__B] = $$__U2_PREDEF[AB]{__k2, __a, __Hsq, __eps};
-        this->u2_k3[$$__A][$$__B] = $$__U2_PREDEF[AB]{__k3, __a, __Hsq, __eps};
+        this->u2_k1[FLATTEN($$__A,$$__B)] = $$__U2_PREDEF[AB]{__k1, __a, __Hsq, __eps};
+        this->u2_k2[FLATTEN($$__A,$$__B)] = $$__U2_PREDEF[AB]{__k2, __a, __Hsq, __eps};
+        this->u2_k3[FLATTEN($$__A,$$__B)] = $$__U2_PREDEF[AB]{__k3, __a, __Hsq, __eps};
 
         // set up components of the u3 tensor
-        this->u3_k1k2k3[$$__A][$$__B][$$__C] = $$__U3_PREDEF[ABC]{__k1, __k2, __k3, __a, __Hsq, __eps};
-        this->u3_k2k1k3[$$__A][$$__B][$$__C] = $$__U3_PREDEF[ABC]{__k2, __k1, __k3, __a, __Hsq, __eps};
-        this->u3_k3k1k2[$$__A][$$__B][$$__C] = $$__U3_PREDEF[ABC]{__k3, __k1, __k2, __a, __Hsq, __eps};
+        this->u3_k1k2k3[FLATTEN($$__A,$$__B,$$__C)] = $$__U3_PREDEF[ABC]{__k1, __k2, __k3, __a, __Hsq, __eps};
+        this->u3_k2k1k3[FLATTEN($$__A,$$__B,$$__C)] = $$__U3_PREDEF[ABC]{__k2, __k1, __k3, __a, __Hsq, __eps};
+        this->u3_k3k1k2[FLATTEN($$__A,$$__B,$$__C)] = $$__U3_PREDEF[ABC]{__k3, __k1, __k2, __a, __Hsq, __eps};
 
         for(unsigned int __i = 0; __i < 2*$$__NUMBER_FIELDS; ++__i)
         {
@@ -818,23 +793,23 @@ namespace transport
 	                // evolve the real and imaginary components of the 2pf
 	                // for the imaginary parts, index placement *does* matter so we must take care
 
-	                __dtwopf_re_k1(__i,__j) += this->u2_k1[__i][__k]*__twopf_re_k1(__k,__j);
-	                __dtwopf_re_k1(__i,__j) += this->u2_k1[__j][__k]*__twopf_re_k1(__i,__k);
+	                __dtwopf_re_k1(__i,__j) += this->u2_k1[FLATTEN(__i,__k)]*__twopf_re_k1(__k,__j);
+	                __dtwopf_re_k1(__i,__j) += this->u2_k1[FLATTEN(__j,__k)]*__twopf_re_k1(__i,__k);
 
-	                __dtwopf_im_k1(__i,__j) += this->u2_k1[__i][__k]*__twopf_im_k1(__k,__j);
-	                __dtwopf_im_k1(__i,__j) += this->u2_k1[__j][__k]*__twopf_im_k1(__i,__k);
+	                __dtwopf_im_k1(__i,__j) += this->u2_k1[FLATTEN(__i,__k)]*__twopf_im_k1(__k,__j);
+	                __dtwopf_im_k1(__i,__j) += this->u2_k1[FLATTEN(__j,__k)]*__twopf_im_k1(__i,__k);
 
-	                __dtwopf_re_k2(__i,__j) += this->u2_k2[__i][__k]*__twopf_re_k2(__k,__j);
-	                __dtwopf_re_k2(__i,__j) += this->u2_k2[__j][__k]*__twopf_re_k2(__i,__k);
+	                __dtwopf_re_k2(__i,__j) += this->u2_k2[FLATTEN(__i,__k)]*__twopf_re_k2(__k,__j);
+	                __dtwopf_re_k2(__i,__j) += this->u2_k2[FLATTEN(__j,__k)]*__twopf_re_k2(__i,__k);
 
-	                __dtwopf_im_k2(__i,__j) += this->u2_k2[__i][__k]*__twopf_im_k2(__k,__j);
-	                __dtwopf_im_k2(__i,__j) += this->u2_k2[__j][__k]*__twopf_im_k2(__i,__k);
+	                __dtwopf_im_k2(__i,__j) += this->u2_k2[FLATTEN(__i,__k)]*__twopf_im_k2(__k,__j);
+	                __dtwopf_im_k2(__i,__j) += this->u2_k2[FLATTEN(__j,__k)]*__twopf_im_k2(__i,__k);
 
-	                __dtwopf_re_k3(__i,__j) += this->u2_k3[__i][__k]*__twopf_re_k3(__k,__j);
-	                __dtwopf_re_k3(__i,__j) += this->u2_k3[__j][__k]*__twopf_re_k3(__i,__k);
+	                __dtwopf_re_k3(__i,__j) += this->u2_k3[FLATTEN(__i,__k)]*__twopf_re_k3(__k,__j);
+	                __dtwopf_re_k3(__i,__j) += this->u2_k3[FLATTEN(__j,__k)]*__twopf_re_k3(__i,__k);
 
-	                __dtwopf_im_k3(__i,__j) += this->u2_k3[__i][__k]*__twopf_im_k3(__k,__j);
-	                __dtwopf_im_k3(__i,__j) += this->u2_k3[__j][__k]*__twopf_im_k3(__i,__k);
+	                __dtwopf_im_k3(__i,__j) += this->u2_k3[FLATTEN(__i,__k)]*__twopf_im_k3(__k,__j);
+	                __dtwopf_im_k3(__i,__j) += this->u2_k3[FLATTEN(__j,__k)]*__twopf_im_k3(__i,__k);
 
 	                // evolve the components of the 3pf
 	                // index placement matters, partly because of the k-dependence
@@ -842,18 +817,18 @@ namespace transport
 
 	                __dthreepf(__i,__j,__k) = 0;
 
-	                __dthreepf(__i,__j,__k) += 0 $$// + this->u2_k1[__i][$$__M]*__threepf($$__M,__j,__k);
-	                __dthreepf(__i,__j,__k) += 0 $$// + this->u2_k2[__j][$$__M]*__threepf(__i,$$__M,__k);
-	                __dthreepf(__i,__j,__k) += 0 $$// + this->u2_k3[__k][$$__M]*__threepf(__i,__j,$$__M);
+	                __dthreepf(__i,__j,__k) += 0 $$// + this->u2_k1[FLATTEN(__i,$$__M)]*__threepf($$__M,__j,__k);
+	                __dthreepf(__i,__j,__k) += 0 $$// + this->u2_k2[FLATTEN(__j,$$__M)]*__threepf(__i,$$__M,__k);
+	                __dthreepf(__i,__j,__k) += 0 $$// + this->u2_k3[FLATTEN(__k,$$__M)]*__threepf(__i,__j,$$__M);
 
-	                __dthreepf(__i,__j,__k) += 0 $$// + this->u3_k1k2k3[__i][$$__M][$$__N]*__twopf_re_k2($$__M,__j)*__twopf_re_k3($$__N,__k);
-	                __dthreepf(__i,__j,__k) += 0 $$// - this->u3_k1k2k3[__i][$$__M][$$__N]*__twopf_im_k2($$__M,__j)*__twopf_im_k3($$__N,__k);
+	                __dthreepf(__i,__j,__k) += 0 $$// + this->u3_k1k2k3[FLATTEN(__i,$$__M,$$__N)]*__twopf_re_k2($$__M,__j)*__twopf_re_k3($$__N,__k);
+	                __dthreepf(__i,__j,__k) += 0 $$// - this->u3_k1k2k3[FLATTEN(__i,$$__M,$$__N)]*__twopf_im_k2($$__M,__j)*__twopf_im_k3($$__N,__k);
 
-	                __dthreepf(__i,__j,__k) += 0 $$// + this->u3_k2k1k3[__j][$$__M][$$__N]*__twopf_re_k1(__i,$$__M)*__twopf_re_k3($$__N,__k);
-	                __dthreepf(__i,__j,__k) += 0 $$// - this->u3_k2k1k3[__j][$$__M][$$__N]*__twopf_im_k1(__i,$$__M)*__twopf_im_k3($$__N,__k);
+	                __dthreepf(__i,__j,__k) += 0 $$// + this->u3_k2k1k3[FLATTEN(__j,$$__M,$$__N)]*__twopf_re_k1(__i,$$__M)*__twopf_re_k3($$__N,__k);
+	                __dthreepf(__i,__j,__k) += 0 $$// - this->u3_k2k1k3[FLATTEN(__j,$$__M,$$__N)]*__twopf_im_k1(__i,$$__M)*__twopf_im_k3($$__N,__k);
 
-	                __dthreepf(__i,__j,__k) += 0 $$// + this->u3_k3k1k2[__k][$$__M][$$__N]*__twopf_re_k1(__i,$$__M)*__twopf_re_k2(__j,$$__N);
-	                __dthreepf(__i,__j,__k) += 0 $$// - this->u3_k3k1k2[__k][$$__M][$$__N]*__twopf_im_k1(__i,$$__M)*__twopf_im_k2(__j,$$__N);
+	                __dthreepf(__i,__j,__k) += 0 $$// + this->u3_k3k1k2[FLATTEN(__k,$$__M,$$__N)]*__twopf_re_k1(__i,$$__M)*__twopf_re_k2(__j,$$__N);
+	                __dthreepf(__i,__j,__k) += 0 $$// - this->u3_k3k1k2[FLATTEN(__k,$$__M,$$__N)]*__twopf_im_k1(__i,$$__M)*__twopf_im_k2(__j,$$__N);
 		            }
 		        }
         }

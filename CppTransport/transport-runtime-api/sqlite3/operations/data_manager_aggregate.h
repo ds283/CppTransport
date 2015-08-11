@@ -66,6 +66,7 @@ namespace transport
               << "ATTACH DATABASE '" << temp_ctr << "' AS " << CPPTRANSPORT_SQLITE_TEMPORARY_DBNAME << ";"
               << " CREATE TEMP TABLE " << CPPTRANSPORT_SQLITE_TEMP_FNL_TABLE << " AS"
               << " SELECT " << CPPTRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << fNL_table_name(type) << ".tserial AS tserial,"
+              << " " << CPPTRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << fNL_table_name(type) << ".BB + COALESCE(main." << fNL_table_name(type) << ".BB, 0.0) AS new_BB,"
               << " " << CPPTRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << fNL_table_name(type) << ".BT + COALESCE(main." << fNL_table_name(type) << ".BT, 0.0) AS new_BT,"
               << " " << CPPTRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << fNL_table_name(type) << ".TT + COALESCE(main." << fNL_table_name(type) << ".TT, 0.0) AS new_TT"
               << " FROM " << CPPTRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << fNL_table_name(type)
@@ -78,6 +79,7 @@ namespace transport
             copy_stmt
               << " INSERT OR REPLACE INTO main." << fNL_table_name(type)
               << " SELECT tserial AS tserial,"
+              << " new_BB AS BB,"
               << " new_BT AS BT,"
               << " new_TT AS TT"
               << " FROM temp." << CPPTRANSPORT_SQLITE_TEMP_FNL_TABLE << ";"

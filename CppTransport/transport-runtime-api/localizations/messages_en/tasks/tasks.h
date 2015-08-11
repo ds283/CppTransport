@@ -26,6 +26,7 @@
 #define CPPTRANSPORT_OUTPUT_ELEMENT_OUTPUT            "output"
 #define CPPTRANSPORT_OUTPUT_ELEMENT_TAGS              "tags"
 
+#define CPPTRANSPORT_ZETA_INTEGRATION_CAST_FAIL       "Internal error: expected postintegration task parent to be castable to integration task, but dynamic cast failed"
 #define CPPTRANSPORT_ZETA_TWOPF_LIST_CAST_FAIL        "Internal error: expected zeta_twopf_list_task parent to be castable to twopf_list_task, but dynamic cast failed"
 #define CPPTRANSPORT_ZETA_THREEPF_CAST_FAIL           "Internal error: expected zeta_threepf_task parent to be castable to threepf_task, but dynamic cast failed"
 

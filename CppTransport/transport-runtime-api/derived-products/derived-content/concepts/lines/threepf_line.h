@@ -36,6 +36,11 @@
 #include "transport-runtime-api/derived-products/derived-content/utilities/integration_task_gadget.h"
 
 
+#define CPPTRANSPORT_NODE_PRODUCT_DERIVED_THREEPF_LINE_ROOT          "threepf-line-settings"
+
+#define CPPTRANSPORT_NODE_PRODUCT_DERIVED_THREEPF_LINE_DIMENSIONLESS "dimensionless"
+
+
 namespace transport
 	{
 
@@ -64,18 +69,31 @@ namespace transport
 		        virtual ~threepf_line() = default;
 
 
+            // MANAGE SETTING
+
+            //! is this dimensionles?
+            bool is_dimensionless() const { return(this->dimensionless); }
+
+            //! set dimensionless
+            void set_dimensionless(bool g) { this->dimensionless = g; }
+
             // MANAGE LABEL OPTIONS
 
             //! get k_t label setting
             bool get_use_kt_label() const { return(this->use_kt_label); }
+
             //! set k_t label setting
             void set_use_kt_label(bool g) { this->use_kt_label = g; }
+
             //! get alpha label setting
             bool get_use_alpha_label() const { return(this->use_alpha_label); }
+
             //! set alpha label setting
             void set_use_alpha_label(bool g) { this->use_alpha_label = g; }
+
             //! get beta label setting
             bool get_use_beta_label() const { return(this->use_beta_label); }
+
             //! set beta label setting
             void set_use_beta_label(bool g) { this->use_beta_label = g; }
 
@@ -124,6 +142,9 @@ namespace transport
             //! use beta on line labels?
             bool use_beta_label;
 
+            //! compute the dimensionless threepf (ie. kt^6 * threepf)
+            bool dimensionless;
+
 	        };
 
 
@@ -156,9 +177,11 @@ namespace transport
 				    assert(this->parent_task != nullptr);
 		        gadget.set_task(this->parent_task, finder);
 
-		        use_kt_label    = reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_KT].asBool();
-		        use_alpha_label = reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_ALPHA].asBool();
-		        use_beta_label  = reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_BETA].asBool();
+		        use_kt_label    = reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_THREEPF_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_KT].asBool();
+		        use_alpha_label = reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_THREEPF_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_ALPHA].asBool();
+		        use_beta_label  = reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_THREEPF_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_BETA].asBool();
+
+            dimensionless   = reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_THREEPF_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_THREEPF_LINE_DIMENSIONLESS].asBool();
 			    }
 
 
@@ -170,6 +193,8 @@ namespace transport
 		        unsigned int N_fields = this->gadget.get_N_fields();
 
 		        const std::vector<std::string>& field_names = this->gadget.get_model()->get_f_latex_names();
+
+            if(this->dimensionless) label << CPPTRANSPORT_LATEX_KT_SIX << " ";
 
 		        if(this->get_dot_meaning() == derivatives)
 			        {
@@ -195,6 +220,8 @@ namespace transport
 
 		        unsigned int N_fields = this->gadget.get_N_fields();
 
+            if(this->dimensionless) label << CPPTRANSPORT_NONLATEX_KT_SIX << " ";
+
 		        const std::vector<std::string>& field_names = this->gadget.get_model()->get_field_names();
 
 		        if(this->get_dot_meaning() == derivatives)
@@ -219,9 +246,11 @@ namespace transport
 			    {
 				    this->active_indices.serialize(writer);
 
-            writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_KT]    = this->use_kt_label;
-            writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_ALPHA] = this->use_alpha_label;
-            writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_BETA]  = this->use_beta_label;
+            writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_THREEPF_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_KT]      = this->use_kt_label;
+            writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_THREEPF_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_ALPHA]   = this->use_alpha_label;
+            writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_THREEPF_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_BETA]    = this->use_beta_label;
+
+            writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_THREEPF_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_THREEPF_LINE_DIMENSIONLESS] = this->dimensionless;
 			    }
 
 

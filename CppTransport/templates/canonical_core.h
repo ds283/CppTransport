@@ -116,20 +116,25 @@ namespace transport
 
       public:
 
-        virtual unsigned int flatten(unsigned int a)                                  const override { return(a); };
-        virtual unsigned int flatten(unsigned int a, unsigned int b)                  const override { return(2*$$__NUMBER_FIELDS*a + b); };
-        virtual unsigned int flatten(unsigned int a, unsigned int b, unsigned int c)  const override { return(2*$$__NUMBER_FIELDS*2*$$__NUMBER_FIELDS*a + 2*$$__NUMBER_FIELDS*b + c); };
-        virtual unsigned int tensor_flatten(unsigned int a, unsigned int b)           const override { return(2*a + b); }
+        virtual unsigned int flatten(unsigned int a)                                         const override { return(a); };
+        virtual unsigned int flatten(unsigned int a, unsigned int b)                         const override { return(2*$$__NUMBER_FIELDS*a + b); };
+        virtual unsigned int flatten(unsigned int a, unsigned int b, unsigned int c)         const override { return(2*$$__NUMBER_FIELDS*2*$$__NUMBER_FIELDS*a + 2*$$__NUMBER_FIELDS*b + c); };
+
+        virtual unsigned int fields_flatten(unsigned int a)                                  const override { return(a); };
+        virtual unsigned int fields_flatten(unsigned int a, unsigned int b)                  const override { return($$__NUMBER_FIELDS*a + b); };
+        virtual unsigned int fields_flatten(unsigned int a, unsigned int b, unsigned int c)  const override { return($$__NUMBER_FIELDS*$$__NUMBER_FIELDS*a + $$__NUMBER_FIELDS*b + c); };
+
+        virtual unsigned int tensor_flatten(unsigned int a, unsigned int b)                  const override { return(2*a + b); }
 
 
         // INDEX TRAITS -- implements an 'abstract_flattener' interface
 
       public:
 
-        virtual unsigned int species(unsigned int a)      const override { return((a >= $$__NUMBER_FIELDS) ? a-$$__NUMBER_FIELDS : a); };
-        virtual unsigned int momentum(unsigned int a)     const override { return((a >= $$__NUMBER_FIELDS) ? a : a+$$__NUMBER_FIELDS); };
-        virtual unsigned int is_field(unsigned int a)     const override { return(a < $$__NUMBER_FIELDS); }
-        virtual unsigned int is_momentum(unsigned int a)  const override { return(a >= $$__NUMBER_FIELDS && a <= 2*$$__NUMBER_FIELDS); }
+        virtual unsigned int species(unsigned int a)                                         const override { return((a >= $$__NUMBER_FIELDS) ? a-$$__NUMBER_FIELDS : a); };
+        virtual unsigned int momentum(unsigned int a)                                        const override { return((a >= $$__NUMBER_FIELDS) ? a : a+$$__NUMBER_FIELDS); };
+        virtual unsigned int is_field(unsigned int a)                                        const override { return(a < $$__NUMBER_FIELDS); }
+        virtual unsigned int is_momentum(unsigned int a)                                     const override { return(a >= $$__NUMBER_FIELDS && a <= 2*$$__NUMBER_FIELDS); }
 
 
         // COMPUTE BASIC PHYSICAL QUANTITIES -- implements a 'model'/'canonical_model' interface
@@ -164,18 +169,18 @@ namespace transport
 
         // calculate gauge transformations to zeta
         virtual void compute_gauge_xfm_1(const twopf_list_task<number>* __task, const std::vector<number>& __state, std::vector<number>& __dN) override;
-        virtual void compute_gauge_xfm_2(const twopf_list_task<number>* __task, const std::vector<number>& __state, double __k, double __k1, double __k2, double __N, std::vector< std::vector<number> >& __ddN) override;
+        virtual void compute_gauge_xfm_2(const twopf_list_task<number>* __task, const std::vector<number>& __state, double __k, double __k1, double __k2, double __N, std::vector<number>& __ddN) override;
 
         virtual void compute_deltaN_xfm_1(const twopf_list_task<number>* __task, const std::vector<number>& __state, std::vector<number>& __dN) override;
-        virtual void compute_deltaN_xfm_2(const twopf_list_task<number>* __task, const std::vector<number>& __state, std::vector< std::vector<number> >& __ddN) override;
+        virtual void compute_deltaN_xfm_2(const twopf_list_task<number>* __task, const std::vector<number>& __state, std::vector<number>& __ddN) override;
 
         // calculate tensor quantities, including the 'flow' tensors u2, u3 and the basic tensors A, B, C from which u3 is built
-        virtual void u2(const twopf_list_task<number>* __task, const std::vector<number>& __fields, double __k, double __N, std::vector< std::vector<number> >& __u2) override;
-        virtual void u3(const twopf_list_task<number>* __task, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __u3) override;
+        virtual void u2(const twopf_list_task<number>* __task, const std::vector<number>& __fields, double __k, double __N, std::vector<number>& __u2) override;
+        virtual void u3(const twopf_list_task<number>* __task, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector<number>& __u3) override;
 
-        virtual void A(const twopf_list_task<number>* __task, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __A) override;
-        virtual void B(const twopf_list_task<number>* __task, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __B) override;
-        virtual void C(const twopf_list_task<number>* __task, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __C) override;
+        virtual void A(const twopf_list_task<number>* __task, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector<number>& __A) override;
+        virtual void B(const twopf_list_task<number>* __task, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector<number>& __B) override;
+        virtual void C(const twopf_list_task<number>* __task, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector<number>& __C) override;
 
 
         // BACKEND INTERFACE (PARTIAL IMPLEMENTATION -- WE PROVIDE A COMMON BACKGROUND INTEGRATOR)
@@ -810,9 +815,7 @@ namespace transport
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
-	      __dN.clear();
-        __dN.resize(2*$$__NUMBER_FIELDS); // ensure enough space
-        __dN[$$__A] = $$__ZETA_XFM_1[A]{__Hsq, __eps};
+        __dN[FLATTEN($$__A)] = $$__ZETA_XFM_1[A]{__Hsq, __eps};
       }
 
 
@@ -820,7 +823,7 @@ namespace transport
     void $$__MODEL<number>::compute_gauge_xfm_2(const twopf_list_task<number>* __task,
                                                 const std::vector<number>& __state,
                                                 double __k, double __k1, double __k2, double __N,
-                                                std::vector< std::vector<number> >& __ddN)
+                                                std::vector<number>& __ddN)
       {
         const auto $$__PARAMETER[1]  = __task->get_params().get_vector()[$$__1];
         const auto $$__COORDINATE[A] = __state[$$__A];
@@ -832,14 +835,7 @@ namespace transport
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
-	      __ddN.clear();
-        __ddN.resize(2*$$__NUMBER_FIELDS);
-        for(int i = 0; i < 2*$$__NUMBER_FIELDS; ++i)
-          {
-            __ddN[i].resize(2*$$__NUMBER_FIELDS);
-          }
-
-        __ddN[$$__A][$$__B] = $$__ZETA_XFM_2[AB]{__k, __k1, __k2, __a, __Hsq, __eps};
+        __ddN[FLATTEN($$__A,$$__B)] = $$__ZETA_XFM_2[AB]{__k, __k1, __k2, __a, __Hsq, __eps};
       }
 
 
@@ -854,16 +850,14 @@ namespace transport
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
-	      __dN.clear();
-        __dN.resize(2*$$__NUMBER_FIELDS); // ensure enough space
-        __dN[$$__A] = $$__DELTAN_XFM_1[A];
+        __dN[FLATTEN($$__A)] = $$__DELTAN_XFM_1[A];
 	    }
 
 
     template <typename number>
     void $$__MODEL<number>::compute_deltaN_xfm_2(const twopf_list_task<number>* __task,
                                                  const std::vector<number>& __state,
-                                                 std::vector< std::vector<number> >& __ddN)
+                                                 std::vector<number>& __ddN)
 	    {
         const auto $$__PARAMETER[1]  = __task->get_params().get_vector()[$$__1];
         const auto $$__COORDINATE[A] = __state[$$__A];
@@ -871,14 +865,7 @@ namespace transport
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
-	      __ddN.clear();
-        __ddN.resize(2*$$__NUMBER_FIELDS);
-        for(int i = 0; i < 2*$$__NUMBER_FIELDS; ++i)
-	        {
-            __ddN[i].resize(2*$$__NUMBER_FIELDS);
-	        }
-
-        __ddN[$$__A][$$__B] = $$__DELTAN_XFM_2[AB];
+        __ddN[FLATTEN($$__A,$$__B)] = $$__DELTAN_XFM_2[AB];
 	    }
 
 
@@ -888,7 +875,7 @@ namespace transport
     template <typename number>
     void $$__MODEL<number>::u2(const twopf_list_task<number>* __task,
                                const std::vector<number>& __fields, double __k, double __N,
-                               std::vector< std::vector<number> >& __u2)
+                               std::vector<number>& __u2)
       {
         const auto $$__PARAMETER[1]  = __task->get_params().get_vector()[$$__1];
         const auto $$__COORDINATE[A] = __fields[$$__A];
@@ -900,22 +887,14 @@ namespace transport
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
-	      __u2.clear();
-        __u2.resize(2*$$__NUMBER_FIELDS);
-
-        for(int __i = 0; __i < 2*$$__NUMBER_FIELDS; ++__i)
-          {
-            __u2[__i].resize(2*$$__NUMBER_FIELDS);
-          }
-
-        __u2[$$__A][$$__B] = $$__U2_PREDEF[AB]{__k, __a, __Hsq, __eps};
+        __u2[FLATTEN($$__A,$$__B)] = $$__U2_PREDEF[AB]{__k, __a, __Hsq, __eps};
       }
 
 
     template <typename number>
     void $$__MODEL<number>::u3(const twopf_list_task<number>* __task,
                                const std::vector<number>& __fields, double __k1, double __k2, double __k3, double __N,
-                               std::vector< std::vector< std::vector<number> > >& __u3)
+                               std::vector<number>& __u3)
       {
         const auto $$__PARAMETER[1]  = __task->get_params().get_vector()[$$__1];
         const auto $$__COORDINATE[A] = __fields[$$__A];
@@ -927,26 +906,14 @@ namespace transport
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
-	      __u3.clear();
-        __u3.resize(2*$$__NUMBER_FIELDS);
-
-        for(int __i = 0; __i < 2*$$__NUMBER_FIELDS; ++__i)
-          {
-            __u3[__i].resize(2*$$__NUMBER_FIELDS);
-            for(int __j = 0; __j < 2*$$__NUMBER_FIELDS; ++__j)
-              {
-                __u3[__i][__j].resize(2*$$__NUMBER_FIELDS);
-              }
-          }
-
-        __u3[$$__A][$$__B][$$__C] = $$__U3_PREDEF[ABC]{__k1, __k1, __k3, __a, __Hsq, __eps};
+        __u3[FLATTEN($$__A,$$__B,$$__C)] = $$__U3_PREDEF[ABC]{__k1, __k1, __k3, __a, __Hsq, __eps};
       }
 
 
     template <typename number>
     void $$__MODEL<number>::A(const twopf_list_task<number>* __task,
                               const std::vector<number>& __fields, double __k1, double __k2, double __k3, double __N,
-                              std::vector< std::vector< std::vector<number> > >& __A)
+                              std::vector<number>& __A)
       {
         const auto $$__PARAMETER[1]       = __task->get_params().get_vector()[$$__1];
         const auto $$__COORDINATE[A]      = __fields[$$__A];
@@ -958,26 +925,14 @@ namespace transport
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
-	      __A.clear();
-        __A.resize($$__NUMBER_FIELDS);
-
-        for(int __i = 0; __i < $$__NUMBER_FIELDS; ++__i)
-          {
-            __A[__i].resize($$__NUMBER_FIELDS);
-            for(int __j = 0; __j < $$__NUMBER_FIELDS; ++__j)
-              {
-                __A[__i][__j].resize($$__NUMBER_FIELDS);
-              }
-          }
-
-        __A[$$__a][$$__b][$$__c] = $$__A_PREDEF[abc]{__k1, __k2, __k3, __a, __Hsq, __eps};
+        __A[FIELDS_FLATTEN($$__a,$$__b,$$__c)] = $$__A_PREDEF[abc]{__k1, __k2, __k3, __a, __Hsq, __eps};
       }
 
 
     template <typename number>
     void $$__MODEL<number>::B(const twopf_list_task<number>* __task,
                               const std::vector<number>& __fields, double __k1, double __k2, double __k3, double __N,
-                              std::vector< std::vector< std::vector<number> > >& __B)
+                              std::vector<number>& __B)
       {
         const auto $$__PARAMETER[1]       = __task->get_params().get_vector()[$$__1];
         const auto $$__COORDINATE[A]      = __fields[$$__A];
@@ -989,26 +944,14 @@ namespace transport
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
-	      __B.clear();
-        __B.resize($$__NUMBER_FIELDS);
-
-        for(int __i = 0; __i < $$__NUMBER_FIELDS; ++__i)
-          {
-            __B[__i].resize($$__NUMBER_FIELDS);
-            for(int __j = 0; __j < $$__NUMBER_FIELDS; ++__j)
-              {
-                __B[__i][__j].resize($$__NUMBER_FIELDS);
-              }
-          }
-
-        __B[$$__a][$$__b][$$__c] = $$__B_PREDEF[abc]{__k1, __k2, __k3, __a, __Hsq, __eps};
+        __B[FIELDS_FLATTEN($$__a,$$__b,$$__c)] = $$__B_PREDEF[abc]{__k1, __k2, __k3, __a, __Hsq, __eps};
       }
 
 
     template <typename number>
     void $$__MODEL<number>::C(const twopf_list_task<number>* __task,
                               const std::vector<number>& __fields, double __k1, double __k2, double __k3, double __N,
-                              std::vector< std::vector< std::vector<number> > >& __C)
+                              std::vector<number>& __C)
       {
         const auto $$__PARAMETER[1]       = __task->get_params().get_vector()[$$__1];
         const auto $$__COORDINATE[A]      = __fields[$$__A];
@@ -1020,19 +963,7 @@ namespace transport
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
-	      __C.clear();
-        __C.resize($$__NUMBER_FIELDS);
-
-        for(int __i = 0; __i < $$__NUMBER_FIELDS; ++__i)
-          {
-            __C[__i].resize($$__NUMBER_FIELDS);
-            for(int __j = 0; __j < $$__NUMBER_FIELDS; ++__j)
-              {
-                __C[__i][__j].resize($$__NUMBER_FIELDS);
-              }
-          }
-
-        __C[$$__a][$$__b][$$__c] = $$__C_PREDEF[abc]{__k1, __k2, __k3, __a, __Hsq, __eps};
+        __C[FIELDS_FLATTEN($$__a,$$__b,$$__c)] = $$__C_PREDEF[abc]{__k1, __k2, __k3, __a, __Hsq, __eps};
       }
 
 

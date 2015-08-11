@@ -155,7 +155,6 @@ namespace transport
 				  public:
 						aggregation_record(unsigned int w, unsigned int i)
 							: worker(w),
-
 							  id(i)
 							{
 							}
@@ -1401,7 +1400,7 @@ namespace transport
             if(ptk == nullptr)
 	            {
                 std::ostringstream msg;
-                msg << CPPTRANSPORT_EXPECTED_THREEPF_TASK << " '" << zfNL->get_parent_task()->get_name() << "'";
+                msg << CPPTRANSPORT_EXPECTED_ZETA_THREEPF_TASK << " '" << zfNL->get_parent_task()->get_name() << "'";
                 throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
 	            }
 

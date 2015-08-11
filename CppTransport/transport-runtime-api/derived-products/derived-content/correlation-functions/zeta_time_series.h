@@ -152,23 +152,19 @@ namespace transport
 
                 std::vector<number> line_data = z_handle.lookup_tag(tag);
 
+                value_type value = correlation_function_value;
 		            if(this->dimensionless)
 			            {
 				            for(unsigned int j = 0; j < line_data.size(); ++j)
 					            {
 						            line_data[j] *= t->k_comoving * t->k_comoving * t->k_comoving / (2.0*M_PI*M_PI);
 					            }
+                    value = dimensionless_value;
+			            }
 
-		                data_line<number> line = data_line<number>(group, this->x_type, dimensionless_value, t_axis, line_data,
-		                                                           this->get_LaTeX_label(*t), this->get_non_LaTeX_label(*t));
-		                lines.push_back(line);
-			            }
-		            else
-			            {
-		                data_line<number> line = data_line<number>(group, this->x_type, correlation_function_value, t_axis, line_data,
-		                                                           this->get_LaTeX_label(*t), this->get_non_LaTeX_label(*t));
-		                lines.push_back(line);
-			            }
+                data_line<number> line = data_line<number>(group, this->x_type, value, t_axis, line_data,
+                                                           this->get_LaTeX_label(*t), this->get_non_LaTeX_label(*t));
+                lines.push_back(line);
               }
 
             // detach pipe from output group
@@ -358,13 +354,22 @@ namespace transport
               {
 		            zeta_threepf_time_data_tag<number> tag = pipe.new_zeta_threepf_time_data_tag(*t);
 
-                // it's safe to take a reference here to avoid a copy; we don't need the cache data to survive over multiple calls to lookup_tag()
-                const std::vector<number>& line_data = z_handle.lookup_tag(tag);
+                std::vector<number> line_data = z_handle.lookup_tag(tag);
 
                 std::string latex_label = "$" + this->make_LaTeX_label() + "\\;" + this->make_LaTeX_tag(*t, this->use_kt_label, this->use_alpha_label, this->use_beta_label) + "$";
                 std::string nonlatex_label = this->make_non_LaTeX_label() + " " + this->make_non_LaTeX_tag(*t, this->use_kt_label, this->use_alpha_label, this->use_beta_label);
 
-                data_line<number> line = data_line<number>(group, this->x_type, correlation_function_value, t_axis, line_data,
+                value_type value = correlation_function_value;
+                if(this->dimensionless)
+                  {
+                    for(unsigned int j = 0; j < line_data.size(); ++j)
+                      {
+                        line_data[j] *= t->kt_comoving * t->kt_comoving * t->kt_comoving * t->kt_comoving * t->kt_comoving * t->kt_comoving;
+                      }
+                    value = dimensionless_value;
+                  }
+
+                data_line<number> line = data_line<number>(group, this->x_type, value, t_axis, line_data,
                                                            this->get_LaTeX_label(*t), this->get_non_LaTeX_label(*t));
 
                 lines.push_back(line);

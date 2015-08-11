@@ -41,7 +41,7 @@ namespace transport
       public:
 
         //! compute the zeta twopf
-        number zeta_twopf(const std::vector<number>& twopf, const std::vector<number>& bg);
+        void zeta_twopf(const std::vector<number>& twopf, const std::vector<number>& bg, number& zeta_twopf, std::vector<number>& gauge_xfm1, bool precomputed=false);
 
         //! compute the zeta threepf and reduced bispectrum
         void zeta_threepf(const threepf_kconfig& kconfig, double t, const std::vector<number>& threepf,
@@ -49,13 +49,8 @@ namespace transport
                           const std::vector<number>& k2_re, const std::vector<number>& k2_im,
                           const std::vector<number>& k3_re, const std::vector<number>& k3_im,
                           const std::vector<number>& bg,
-                          number& zeta_threepf, number& redbsp);
-
-      protected:
-
-        //! compute the zeta twopf -- internal version
-		    //! if 'precomputed' is set, we avoid computing the gauge transformation and use a cached version
-        number zeta_twopf(const std::vector<number>& twopf, const std::vector<number>& bg, bool precomputed);
+                          number& zeta_threepf, number& redbsp, std::vector<number>& gauge_xfm1,
+                          std::vector<number>& gauge_xfm2_123, std::vector<number>& gauge_xfm2_213, std::vector<number>& gauge_xfm2_312);
 
 
         // INTERNAL API
@@ -93,27 +88,14 @@ namespace transport
         //! cache point to task instance
         twopf_list_task<number>* parent_task;
 
-
-        //! First-order gauge xfm cache
-        std::vector<number> dN;
-
-        //! Second-order gauge xfm cache - k1, k2, k3 order
-        std::vector< std::vector<number> > ddN123;
-
-        //! Second-order gauge xfm cache - k2, k1, k3 order
-        std::vector< std::vector<number> > ddN213;
-
-        //! Second-order gauge xfm cache - k3, k1, k2 order
-        std::vector< std::vector<number> > ddN312;
-
         //! B-tensor cache
-        std::vector< std::vector< std::vector<number> > > B_qrp;
+        std::vector<number> B_qrp;
 
         //! C-tensor cache (need two, because need two different index arrangements)
-        std::vector< std::vector< std::vector<number> > > C_pqr;
+        std::vector<number> C_pqr;
 
         //! C-tensor cache (need two, because need two different index arrangements)
-        std::vector< std::vector< std::vector<number> > > C_prq;
+        std::vector<number> C_prq;
 
       };
 
@@ -126,34 +108,30 @@ namespace transport
       {
         assert(this->mdl != nullptr);
         assert(this->parent_task != nullptr);
+
+        B_qrp.resize(Nfields*Nfields*Nfields);
+        C_pqr.resize(Nfields*Nfields*Nfields);
+        C_prq.resize(Nfields*Nfields*Nfields);
       }
 
 
 		template <typename number>
-		number zeta_compute<number>::zeta_twopf(const std::vector<number>& twopf, const std::vector<number>& bg)
+		void zeta_compute<number>::zeta_twopf(const std::vector<number>& twopf, const std::vector<number>& bg, number& zeta_twopf, std::vector<number>& gauge_xfm, bool precomputed)
 			{
-				return(this->zeta_twopf(twopf, bg, false));
-			}
+        zeta_twopf = 0.0;
 
+        if(!precomputed) this->mdl->compute_gauge_xfm_1(this->parent_task, bg, gauge_xfm);
 
-    template <typename number>
-    number zeta_compute<number>::zeta_twopf(const std::vector<number>& twopf, const std::vector<number>& bg, bool precomputed)
-      {
-        number zeta_twopf = 0.0;
-
-        if(!precomputed) this->mdl->compute_gauge_xfm_1(this->parent_task, bg, this->dN);
-
+        // compute twopf
         for(unsigned int m = 0; m < 2*this->Nfields; ++m)
           {
             for(unsigned int n = 0; n < 2*this->Nfields; ++n)
               {
-                number component = dN[m]*dN[n]*twopf[this->mdl->flatten(m, n)];
+                number component = gauge_xfm[m]*gauge_xfm[n]*twopf[this->mdl->flatten(m, n)];
                 zeta_twopf += component;
               }
           }
-
-        return(zeta_twopf);
-      }
+			}
 
 
     template <typename number>
@@ -162,16 +140,18 @@ namespace transport
                                             const std::vector<number>& k2_re, const std::vector<number>& k2_im,
                                             const std::vector<number>& k3_re, const std::vector<number>& k3_im,
                                             const std::vector<number>& bg,
-                                            number& zeta_threepf, number& redbsp)
+                                            number& zeta_threepf, number& redbsp, std::vector<number>& gauge_xfm1,
+                                            std::vector<number>& gauge_xfm2_123, std::vector<number>& gauge_xfm2_213, std::vector<number>& gauge_xfm2_312)
       {
         zeta_threepf = 0.0;
 
-        // compute gauge transformation coefficients for this time
-        this->mdl->compute_gauge_xfm_1(this->parent_task, bg, this->dN);
+        // compute linear gauge transformation coefficients for this time, making use of user-supplied cache which should be correctly sized
+        this->mdl->compute_gauge_xfm_1(this->parent_task, bg, gauge_xfm1);
 
-        this->mdl->compute_gauge_xfm_2(this->parent_task, bg, kconfig.k1_comoving, kconfig.k2_comoving, kconfig.k3_comoving, t, this->ddN123);
-        this->mdl->compute_gauge_xfm_2(this->parent_task, bg, kconfig.k2_comoving, kconfig.k1_comoving, kconfig.k3_comoving, t, this->ddN213);
-        this->mdl->compute_gauge_xfm_2(this->parent_task, bg, kconfig.k3_comoving, kconfig.k1_comoving, kconfig.k2_comoving, t, this->ddN312);
+        // compute quadratic gauge transformation coefficients, making use of user-supplied caches which should be correctly sized
+        this->mdl->compute_gauge_xfm_2(this->parent_task, bg, kconfig.k1_comoving, kconfig.k2_comoving, kconfig.k3_comoving, t, gauge_xfm2_123);
+        this->mdl->compute_gauge_xfm_2(this->parent_task, bg, kconfig.k2_comoving, kconfig.k1_comoving, kconfig.k3_comoving, t, gauge_xfm2_213);
+        this->mdl->compute_gauge_xfm_2(this->parent_task, bg, kconfig.k3_comoving, kconfig.k1_comoving, kconfig.k2_comoving, t, gauge_xfm2_312);
 
         // compute linear part of gauge transformation
         for(unsigned int l = 0; l < 2*this->Nfields; ++l)
@@ -182,12 +162,10 @@ namespace transport
                   {
                     number tpf = threepf[this->mdl->flatten(l,m,n)];
 
-                    // shift field so it represents a derivative correlation functions, not a momentum one
+                    // shift tpf so it represents a derivative correlation function (if any of l, m, n are momenta), not a momentum one
                     this->shift(l, m, n, kconfig, t, threepf, k1_re, k1_im, k2_re, k2_im, k3_re, k3_im, bg, tpf);
 
-                    number component = dN[l]*dN[m]*dN[n]*tpf;
-
-                    zeta_threepf += component;
+                    zeta_threepf += gauge_xfm1[l]*gauge_xfm1[m]*gauge_xfm1[n]*tpf;
                   }
               }
           }
@@ -201,9 +179,9 @@ namespace transport
                   {
                     for(unsigned int q = 0; q < 2*this->Nfields; ++q)
                       {
-                        number component1 = ddN123[l][m]*dN[p]*dN[q]*(k2_re[this->mdl->flatten(l,p)]*k3_re[this->mdl->flatten(m,q)] - k2_im[this->mdl->flatten(l,p)]*k3_im[this->mdl->flatten(m,q)]);
-                        number component2 = ddN213[l][m]*dN[p]*dN[q]*(k1_re[this->mdl->flatten(l,p)]*k3_re[this->mdl->flatten(m,q)] - k1_im[this->mdl->flatten(l,p)]*k3_im[this->mdl->flatten(m,q)]);
-                        number component3 = ddN312[l][m]*dN[p]*dN[q]*(k1_re[this->mdl->flatten(l,p)]*k2_re[this->mdl->flatten(m,q)] - k1_im[this->mdl->flatten(l,p)]*k2_im[this->mdl->flatten(m,q)]);
+                        number component1 = gauge_xfm2_123[this->mdl->flatten(l,m)]*gauge_xfm1[p]*gauge_xfm1[q]*(k2_re[this->mdl->flatten(l,p)]*k3_re[this->mdl->flatten(m,q)] - k2_im[this->mdl->flatten(l,p)]*k3_im[this->mdl->flatten(m,q)]);
+                        number component2 = gauge_xfm2_213[this->mdl->flatten(l,m)]*gauge_xfm1[p]*gauge_xfm1[q]*(k1_re[this->mdl->flatten(l,p)]*k3_re[this->mdl->flatten(m,q)] - k1_im[this->mdl->flatten(l,p)]*k3_im[this->mdl->flatten(m,q)]);
+                        number component3 = gauge_xfm2_312[this->mdl->flatten(l,m)]*gauge_xfm1[p]*gauge_xfm1[q]*(k1_re[this->mdl->flatten(l,p)]*k2_re[this->mdl->flatten(m,q)] - k1_im[this->mdl->flatten(l,p)]*k2_im[this->mdl->flatten(m,q)]);
 
                         zeta_threepf += component1;
                         zeta_threepf += component2;
@@ -214,9 +192,12 @@ namespace transport
           }
 
         // compute reduced bispectrum
-        number z_tpf_k1 = this->zeta_twopf(k1_re, bg, true);  // 'true' flags that the gauge transformation is precomputed, so there is no need to recompute it
-        number z_tpf_k2 = this->zeta_twopf(k2_re, bg, true);  // 'true' flags that the gauge transformation is precomputed, so there is no need to recompute it
-        number z_tpf_k3 = this->zeta_twopf(k3_re, bg, true);  // 'true' flags that the gauge transformation is precomputed, so there is no need to recompute it
+        number z_tpf_k1;
+        number z_tpf_k2;
+        number z_tpf_k3;
+        this->zeta_twopf(k1_re, bg, z_tpf_k1, gauge_xfm1, true);  // 'true' flags that the gauge transformation is precomputed, so there is no need to recompute it
+        this->zeta_twopf(k2_re, bg, z_tpf_k2, gauge_xfm1, true);  // 'true' flags that the gauge transformation is precomputed, so there is no need to recompute it
+        this->zeta_twopf(k3_re, bg, z_tpf_k3, gauge_xfm1, true);  // 'true' flags that the gauge transformation is precomputed, so there is no need to recompute it
 
         number form_factor = (6.0/5.0) * (z_tpf_k1*z_tpf_k2 + z_tpf_k1*z_tpf_k3 + z_tpf_k2*z_tpf_k3);
         redbsp = zeta_threepf / form_factor;
@@ -295,10 +276,10 @@ namespace transport
                 unsigned int mom_q_m_id = this->mdl->flatten((q_fixed == first_index ? this->mdl->momentum(q) : m), (q_fixed == second_index ? this->mdl->momentum(q) : m));
                 unsigned int mom_r_m_id = this->mdl->flatten((r_fixed == first_index ? this->mdl->momentum(r) : m), (r_fixed == second_index ? this->mdl->momentum(r) : m));
 
-                shift -= this->B_qrp[m][n][p_species] * ( q_re[q_m_id]*r_re[r_n_id] - q_im[q_m_id]*r_im[r_n_id] );
+                shift -= this->B_qrp[this->mdl->fields_flatten(m,n,p_species)] * ( q_re[q_m_id]*r_re[r_n_id] - q_im[q_m_id]*r_im[r_n_id] );
 
-                shift -= this->C_pqr[p_species][m][n] * ( q_re[mom_q_m_id]*r_re[r_n_id] - q_im[mom_q_m_id]*r_im[r_n_id] );
-                shift -= this->C_prq[p_species][m][n] * ( q_re[q_n_id]*r_re[mom_r_m_id] - q_im[q_n_id]*r_re[mom_r_m_id] );
+                shift -= this->C_pqr[this->mdl->fields_flatten(p_species,m,n)] * ( q_re[mom_q_m_id]*r_re[r_n_id] - q_im[mom_q_m_id]*r_im[r_n_id] );
+                shift -= this->C_prq[this->mdl->fields_flatten(p_species,m,n)] * ( q_re[q_n_id]*r_re[mom_r_m_id] - q_im[q_n_id]*r_re[mom_r_m_id] );
               }
           }
 

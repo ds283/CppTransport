@@ -65,7 +65,7 @@ int main(int argc, char* argv[])
     transport::initial_conditions<double> ics("new-axion-1", model, params, init_values, Ninit, Ncross, Npre);
 
     const unsigned int early_t_samples = 200;
-    const unsigned int late_t_samples  = 200;
+    const unsigned int late_t_samples  = 100;
 
     transport::stepping_range<double> early_times(Ncross-Npre, Ncross+Nsplit, early_t_samples, transport::logarithmic_bottom_stepping);
     transport::stepping_range<double> late_times(Ncross+Nsplit, Ncross+Nmax, late_t_samples, transport::linear_stepping);
@@ -78,9 +78,9 @@ int main(int argc, char* argv[])
     const double        ktmax         = exp(7.0);
     const unsigned int  k_samples     = 40;
 
-		const double        alphamin      = -1.0;
-		const double        alphamax      = +1.0;
-		const unsigned int  a_samples     = 2;
+		const double        alphamin      = 0.0;
+		const double        alphamax      = 1.0/2.0;
+		const unsigned int  a_samples     = 5;
 
 		const double        betamin       = 0.0;
 		const double        betamid       = 0.98;
@@ -97,17 +97,18 @@ int main(int argc, char* argv[])
 
     // SET UP TASKS
 
-    transport::stepping_range<double> kts   (ktmin, ktmax, k_samples, transport::linear_stepping);
+    transport::stepping_range<double> kts   (ktmin, ktmax, k_samples, transport::logarithmic_bottom_stepping);
     transport::stepping_range<double> alphas(alphamin, alphamax, a_samples, transport::linear_stepping);
 
 //    transport::stepping_range<double> betas_lo(betamin, betamid, lo_b_samples, transport::linear_stepping);
 //    transport::stepping_range<double> betas_hi(betamid, betamax, hi_b_samples, transport::logarithmic_top_stepping);
 //    transport::aggregation_range<double> betas(betas_lo, betas_hi);
     transport::stepping_range<double> betas_equi(1.0/3.0, 1.0/3.0, 0, transport::linear_stepping);    // add dedicated equilateral configuration
-    transport::stepping_range<double> betas_lo(0.0, 0.9, 60, transport::linear_stepping);
-    transport::stepping_range<double> betas_mid(0.9, 0.99, 50, transport::logarithmic_top_stepping);
-    transport::stepping_range<double> betas_hi(0.99, 0.999, 50, transport::logarithmic_top_stepping);
-    transport::aggregation_range<double> betas = betas_lo + betas_mid + betas_hi + betas_equi;
+    transport::stepping_range<double> betas_lo(0.0, 0.9, 5, transport::linear_stepping);
+    transport::stepping_range<double> betas_mid(0.9, 0.99, 5, transport::logarithmic_top_stepping);
+//    transport::stepping_range<double> betas_hi(0.99, 0.999, 5, transport::logarithmic_top_stepping);
+//    transport::aggregation_range<double> betas = betas_lo + betas_mid + betas_hi + betas_equi;
+    transport::aggregation_range<double> betas = betas_lo + betas_mid + betas_equi;
 
     // construct a threepf task
     transport::threepf_fls_task<double> tk3("new-axion.threepf-1", ics, times, kts, alphas, betas, ThreepfStoragePolicy(), false);
@@ -136,8 +137,14 @@ int main(int argc, char* argv[])
     // filter: (closest to) equilateral threepf with smallest k_t
     transport::derived_data::SQL_threepf_kconfig_query equilateral_smallest_threepf("ABS(alpha) < 0.01 AND ABS(beta-1.0/3.0) < 0.01 AND kt_conventional IN (SELECT MIN(kt_conventional) FROM threepf_samples)");
 
+    // filter: (closest to) equilateral threepf with largest k_t
+    transport::derived_data::SQL_threepf_kconfig_query equilateral_largest_threepf("ABS(alpha) < 0.01 AND ABS(beta-1.0/3.0) < 0.01 AND kt_conventional IN (SELECT MAX(kt_conventional) FROM threepf_samples)");
+
     // filter: squeezed, isosceles threepf
-    transport::derived_data::SQL_threepf_kconfig_query isosceles_squeezed_threepf("ABS(beta-0.999)<0.0001 AND ABS(alpha)<0.01");
+    transport::derived_data::SQL_threepf_kconfig_query isosceles_squeezed_threepf("ABS(beta-0.99)<0.0001 AND ABS(alpha)<0.01");
+
+    // filter: equilateral, isosceles threepf
+    transport::derived_data::SQL_threepf_kconfig_query isosceles_equilateral_threepf("ABS(beta-1.0/3.0)<0.0001 AND ABS(alpha)<0.01");
 
 		// filter: equilateral with high k_t
     std::ostringstream hi_kt_query;
@@ -179,13 +186,21 @@ int main(int argc, char* argv[])
 	  threepf_fields.set_on(std::array<unsigned int, 3>{ 0, 1, 1 });
 	  threepf_fields.set_on(std::array<unsigned int, 3>{ 1, 1, 1 });
 
-    transport::derived_data::threepf_time_series<double> tk3_threepf_group(tk3, threepf_fields, all_times, equilateral_smallest_threepf);
-    tk3_twopf_group.set_klabel_meaning(transport::derived_data::conventional);
+    transport::derived_data::threepf_time_series<double> tk3_threepf_lo_group(tk3, threepf_fields, all_times, equilateral_smallest_threepf);
+    tk3_threepf_lo_group.set_klabel_meaning(transport::derived_data::conventional);
 
-    transport::derived_data::time_series_plot<double> tk3_threepf_plot("new-axion.threepf-1.threepf-time", "threepf-time.pdf");
-    tk3_threepf_plot.add_line(tk3_threepf_group);
-    tk3_threepf_plot.set_title_text("Time evolution of three-point function");
-    tk3_threepf_plot.set_legend_position(transport::derived_data::bottom_left);
+    transport::derived_data::time_series_plot<double> tk3_threepf_lo_plot("new-axion.threepf-1.threepf-time-lo", "threepf-time-lo.pdf");
+    tk3_threepf_lo_plot.add_line(tk3_threepf_lo_group);
+    tk3_threepf_lo_plot.set_title_text("Time evolution of three-point function");
+    tk3_threepf_lo_plot.set_legend_position(transport::derived_data::bottom_left);
+
+    transport::derived_data::threepf_time_series<double> tk3_threepf_hi_group(tk3, threepf_fields, all_times, equilateral_largest_threepf);
+    tk3_threepf_hi_group.set_klabel_meaning(transport::derived_data::conventional);
+
+    transport::derived_data::time_series_plot<double> tk3_threepf_hi_plot("new-axion.threepf-1.threepf-time-hi", "threepf-time-hi.pdf");
+    tk3_threepf_hi_plot.add_line(tk3_threepf_hi_group);
+    tk3_threepf_hi_plot.set_title_text("Time evolution of three-point function");
+    tk3_threepf_hi_plot.set_legend_position(transport::derived_data::bottom_left);
 
 
 		// b. TIME EVOLUTION OF BACKGROUND QUANTITIES
@@ -247,35 +262,47 @@ int main(int argc, char* argv[])
     // 2. TIME EVOLUTION OF THE ZETA THREEPF
 
     // check the zeta threepf
-    transport::derived_data::zeta_threepf_time_series<double> tk3_zeta_sq_group(ztk3, all_times, isosceles_squeezed_threepf);
-    tk3_zeta_sq_group.set_klabel_meaning(transport::derived_data::comoving);
-    tk3_zeta_sq_group.set_use_beta_label(true);
+    transport::derived_data::zeta_threepf_time_series<double> tk3_zeta_eq_lo(ztk3, all_times, equilateral_smallest_threepf);
+    tk3_zeta_eq_lo.set_klabel_meaning(transport::derived_data::comoving);
+    tk3_zeta_eq_lo.set_use_beta_label(true);
 
-    transport::derived_data::time_series_plot<double> tk3_zeta_sq("new-axion.threepf-1.zeta-sq", "zeta-sq.pdf");
-    tk3_zeta_sq.add_line(tk3_zeta_sq_group);
-    tk3_zeta_sq.set_title_text("3pf of $\\zeta$ near squeezed configurations");
+    transport::derived_data::zeta_threepf_time_series<double> tk3_zeta_eq_hi(ztk3, all_times, equilateral_largest_threepf);
+    tk3_zeta_eq_hi.set_klabel_meaning(transport::derived_data::comoving);
+    tk3_zeta_eq_hi.set_use_beta_label(true);
+
+    transport::derived_data::time_series_plot<double> tk3_zeta_sq("new-axion.threepf-1.zeta-eq", "zeta-eq.pdf");
+    tk3_zeta_sq.add_line(tk3_zeta_eq_lo);
+    tk3_zeta_sq.add_line(tk3_zeta_eq_hi);
+    tk3_zeta_sq.set_title_text("3pf of $\\zeta$ near equilateral configurations");
 
 		// set up a table too
-    transport::derived_data::time_series_table<double> tk3_zeta_sq_table("new-axion.threepf-1.zeta-sq.table", "zeta-sq-table.txt");
-		tk3_zeta_sq_table.add_line(tk3_zeta_sq_group);
+    transport::derived_data::time_series_table<double> tk3_zeta_sq_table("new-axion.threepf-1.zeta-eq.table", "zeta-eq-table.txt");
+		tk3_zeta_sq_table.add_line(tk3_zeta_eq_lo);
+    tk3_zeta_sq_table.add_line(tk3_zeta_eq_hi);
 
 
     // 3. TIME EVOLUTION OF THE REDUCED BISPECTRUM
 
-    // compute the reduced bispectrum in a few squeezed configurations
-    transport::derived_data::zeta_reduced_bispectrum_time_series<double> tk3_zeta_redbsp(ztk3, all_times, isosceles_squeezed_threepf);
-    tk3_zeta_redbsp.set_klabel_meaning(transport::derived_data::comoving);
-    tk3_zeta_redbsp.set_use_beta_label(true);
+    // compute the reduced bispectrum in a few equilateral configurations
+    transport::derived_data::zeta_reduced_bispectrum_time_series<double> tk3_zeta_redbsp_lo(ztk3, all_times, equilateral_smallest_threepf);
+    tk3_zeta_redbsp_lo.set_klabel_meaning(transport::derived_data::comoving);
+    tk3_zeta_redbsp_lo.set_use_beta_label(true);
 
-    transport::derived_data::time_series_plot<double> tk3_redbsp("new-axion.threepf-1.redbsp-sq", "redbsp-sq.pdf");
-    tk3_redbsp.set_log_y(false);
-    tk3_redbsp.set_abs_y(false);
-    tk3_redbsp.add_line(tk3_zeta_redbsp);
+    transport::derived_data::zeta_reduced_bispectrum_time_series<double> tk3_zeta_redbsp_hi(ztk3, all_times, equilateral_largest_threepf);
+    tk3_zeta_redbsp_hi.set_klabel_meaning(transport::derived_data::comoving);
+    tk3_zeta_redbsp_hi.set_use_beta_label(true);
+
+    transport::derived_data::time_series_plot<double> tk3_redbsp("new-axion.threepf-1.redbsp-eq", "redbsp-eq.pdf");
+//    tk3_redbsp.set_log_y(false);
+//    tk3_redbsp.set_abs_y(false);
+    tk3_redbsp.add_line(tk3_zeta_redbsp_lo);
+    tk3_redbsp.add_line(tk3_zeta_redbsp_hi);
     tk3_redbsp.set_legend_position(transport::derived_data::bottom_right);
-    tk3_redbsp.set_title_text("Reduced bispectrum near squeezed configurations");
+    tk3_redbsp.set_title_text("Reduced bispectrum near equilateral configurations");
 
-    transport::derived_data::time_series_table<double> tk3_redbsp_table = transport::derived_data::time_series_table<double>("new-axion.threepf-1.redbsp-sq.table", "redbsp-sq-table.txt");
-    tk3_redbsp_table.add_line(tk3_zeta_redbsp);
+    transport::derived_data::time_series_table<double> tk3_redbsp_table = transport::derived_data::time_series_table<double>("new-axion.threepf-1.redbsp-eq.table", "redbsp-eq-table.txt");
+    tk3_redbsp_table.add_line(tk3_zeta_redbsp_lo);
+    tk3_redbsp_table.add_line(tk3_zeta_redbsp_hi);
 
 
     // 4. LATE-TIME ZETA TWO POINT FUNCTION
@@ -296,21 +323,43 @@ int main(int argc, char* argv[])
 
     // 5. LATE-TIME ZETA REDUCED BISPECTRUM -- FIXED k3/k_t, ISOSCELES TRIANGLES, VARYING k_t
 
-    transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_spec(ztk3, last_time, isosceles_squeezed_threepf);
-		tk3_zeta_redbsp_spec.set_klabel_meaning(transport::derived_data::conventional);
-		tk3_zeta_redbsp_spec.set_label_text("$k_3/k_t = 0.999$", "k3/k_t = 0.999");
+    transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_spec_sq(ztk3, last_time, isosceles_squeezed_threepf);
+		tk3_zeta_redbsp_spec_sq.set_klabel_meaning(transport::derived_data::conventional);
+		tk3_zeta_redbsp_spec_sq.set_label_text("$k_3/k_t = 0.99$", "k3/k_t = 0.99");
+
+    transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_spec_eq(ztk3, last_time, isosceles_equilateral_threepf);
+    tk3_zeta_redbsp_spec_eq.set_klabel_meaning(transport::derived_data::conventional);
+    tk3_zeta_redbsp_spec_eq.set_label_text("$k_3/k_t = \\frac{1}{3}$", "k3/k_t = 1/3");
+
+    tk3_zeta_redbsp_spec_sq.set_current_x_axis_value(transport::derived_data::efolds_exit_axis);
+    tk3_zeta_redbsp_spec_eq.set_current_x_axis_value(transport::derived_data::efolds_exit_axis);
 
     transport::derived_data::wavenumber_series_plot<double> tk3_redbsp_spec_plot("new-axion.threepf-1.redbsp-spec", "redbsp-spec.pdf");
-		tk3_redbsp_spec_plot.add_line(tk3_zeta_redbsp_spec);
+		tk3_redbsp_spec_plot.add_line(tk3_zeta_redbsp_spec_sq);
+    tk3_redbsp_spec_plot.add_line(tk3_zeta_redbsp_spec_eq);
 		tk3_redbsp_spec_plot.set_typeset_with_LaTeX(true);
 		tk3_redbsp_spec_plot.set_title_text("Reduced bispectrum at fixed $k_3/k_t$");
-		tk3_redbsp_spec_plot.set_x_label_text("$k_t$");
-		tk3_redbsp_spec_plot.set_log_x(true);
+    tk3_redbsp_spec_plot.set_x_label_text("e-folds from horizon-exit of $k_\\star$ to horizon-exit of $k_t$");
+		tk3_redbsp_spec_plot.set_log_x(false);
 		tk3_redbsp_spec_plot.set_log_y(false);
     tk3_redbsp_spec_plot.set_abs_y(false);
 
     transport::derived_data::wavenumber_series_table<double> tk3_redbsp_spec_table("new-axion.threepf-1.redbsp-spec-table", "redbsp-spec-table.txt");
-		tk3_redbsp_spec_table.add_line(tk3_zeta_redbsp_spec);
+		tk3_redbsp_spec_table.add_line(tk3_zeta_redbsp_spec_sq);
+    tk3_redbsp_spec_table.add_line(tk3_zeta_redbsp_spec_eq);
+
+    tk3_zeta_redbsp_spec_sq.set_current_x_axis_value(transport::derived_data::k_axis);
+    tk3_zeta_redbsp_spec_eq.set_current_x_axis_value(transport::derived_data::k_axis);
+
+    transport::derived_data::wavenumber_series_plot<double> tk3_redbsp_spec_logplot("new-axion.threepf-1.redbsp-spec-log", "redbsp-spec-log.pdf");
+    tk3_redbsp_spec_logplot.add_line(tk3_zeta_redbsp_spec_sq);
+    tk3_redbsp_spec_logplot.add_line(tk3_zeta_redbsp_spec_eq);
+    tk3_redbsp_spec_logplot.set_typeset_with_LaTeX(true);
+    tk3_redbsp_spec_logplot.set_title_text("Reduced bispectrum at fixed $k_3/k_t$");
+    tk3_redbsp_spec_logplot.set_x_label_text("scale $k_t$");
+    tk3_redbsp_spec_logplot.set_log_x(true);
+    tk3_redbsp_spec_logplot.set_log_y(true);
+    tk3_redbsp_spec_logplot.set_abs_y(true);
 
 
     // 6. LATE TIME ZETA REDUCED BISPECTRUM -- FIXED k_t, ISOSCELES TRIANGLES, VARYING k3/k_t
@@ -438,7 +487,8 @@ int main(int argc, char* argv[])
 
 
     transport::output_task<double> threepf_output = transport::output_task<double>("new-axion.threepf-1.output", tk3_twopf_plot);
-		threepf_output = threepf_output + tk3_threepf_plot
+		threepf_output = threepf_output + tk3_threepf_lo_plot
+                                    + tk3_threepf_hi_plot
 																		+ tk3_SR_objects_plot
                                     + tk3_Hubble_plot
                                     + tk3_u2_plot
@@ -448,6 +498,8 @@ int main(int argc, char* argv[])
                                     + tk3_redbsp
                                     + tk3_zeta_2spec_plot
 																		+ tk3_redbsp_spec_plot
+                                    + tk3_redbsp_spec_logplot
+                                    + tk3_redbsp_spec_table
 																		+ tk3_redbsp_beta_plot
                                     + tk3_redbsp_sqk3_plot
                                     + tk3_redbsp_sqk3_index_plot

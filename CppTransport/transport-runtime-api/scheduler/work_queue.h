@@ -39,8 +39,9 @@ namespace transport
         class device_work_list
           {
           public:
-            device_work_list(unsigned int size)
-              : state_size(0)
+
+            device_work_list(unsigned int sz=0)
+              : state_size(sz)
               {
               }
 

@@ -34,8 +34,11 @@ namespace transport
             //! kconfig serial number for the integration which produced these values. Used when unwinding a batch.
             unsigned int source_serial;
 
-            // value
+            //! twopf value
             number value;
+
+            //! reduced bispectrum not used, but included here to prevent template specialization failure
+            number redbsp;
 	        };
 
 
@@ -55,29 +58,18 @@ namespace transport
             //! kconfig serial number for the integration which produced these values. Used when unwinding a batch.
             unsigned int source_serial;
 
-            // value
+            //! threepf
             number value;
+
+            //! reduced bispectrum
+            number redbsp;
 	        };
 
 
-        //! Stores a zeta reduced bispectrum configuration
-        //! (we distinguish between threepf configurations and reduced bispectrum configurations, whose classes
-        //! carry the same data, so we can adjust template behaviour using type traits)
+        //! Used to tag a zeta bispectrum contribution via data traits, but has no meaning beyond this
         class zeta_redbsp_item
 	        {
           public:
-
-            //! time serial number for this configuration
-            unsigned int time_serial;
-
-            //! kconfig serial number of this configuration
-            unsigned int kconfig_serial;
-
-            //! kconfig serial number for the integration which produced these values. Used when unwinding a batch.
-            unsigned int source_serial;
-
-            // value
-            number value;
 	        };
 
 
@@ -89,10 +81,91 @@ namespace transport
             //! time serial number for this configuration
             unsigned int time_serial;
 
-            // value
+            // bispectrum.bispectrum
+            number BB;
+
+            // bispectrum.template
             number BT;
+
+            // template.template
             number TT;
 	        };
+
+
+        //! Stores a linear gauge transformation
+        class gauge_xfm1_item
+          {
+          public:
+
+            //! time serial number for this configuration
+            unsigned int        time_serial;
+
+            //! kconfig serial number for this configuration
+            unsigned int        kconfig_serial;
+
+            //! kconfig serial number for the integration which produced these values. Used when unwinding a batch.
+            unsigned int        source_serial;
+
+            // values
+            std::vector<number> elements;
+          };
+
+
+        //! Stores a quadratic gauge transformation in the 123 permutation
+        class gauge_xfm2_123_item
+          {
+          public:
+
+            //! time serial number for this configuration
+            unsigned int        time_serial;
+
+            //! kconfig serial number for this configuration
+            unsigned int        kconfig_serial;
+
+            //! kconfig serial number for the integration which produced these values. Used when unwinding a batch.
+            unsigned int        source_serial;
+
+            // values
+            std::vector<number> elements;
+          };
+
+
+        //! Stores a quadratic gauge transformation in the 123 permutation
+        class gauge_xfm2_213_item
+          {
+          public:
+
+            //! time serial number for this configuration
+            unsigned int        time_serial;
+
+            //! kconfig serial number for this configuration
+            unsigned int        kconfig_serial;
+
+            //! kconfig serial number for the integration which produced these values. Used when unwinding a batch.
+            unsigned int        source_serial;
+
+            // values
+            std::vector<number> elements;
+          };
+
+
+        //! Stores a quadratic gauge transformation in the 312 permutation
+        class gauge_xfm2_312_item
+          {
+          public:
+
+            //! time serial number for this configuration
+            unsigned int        time_serial;
+
+            //! kconfig serial number for this configuration
+            unsigned int        kconfig_serial;
+
+            //! kconfig serial number for the integration which produced these values. Used when unwinding a batch.
+            unsigned int        source_serial;
+
+            // values
+            std::vector<number> elements;
+          };
 
 
 		    struct fNL_item_comparator

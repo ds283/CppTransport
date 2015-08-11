@@ -95,6 +95,9 @@
 #define CPPTRANSPORT_LATEX_DIMENSIONLESS_TWOPF          "\\Delta"
 #define CPPTRANSPORT_NONLATEX_DIMENSIONLESS_TWOPF       "Delta"
 
+#define CPPTRANSPORT_LATEX_KT_SIX                       "k_t^6"
+#define CPPTRANSPORT_NONLATEX_KT_SIX                    "k_t^6"
+
 #define CPPTRANSPORT_LATEX_REDUCED_BISPECTRUM_SYMBOL    "f_{\\mathrm{NL}}(k_1, k_2, k_3)"
 #define CPPTRANSPORT_NONLATEX_REDUCED_BISPECTRUM_SYMBOL "fNL(k1, k2, k3)"
 
