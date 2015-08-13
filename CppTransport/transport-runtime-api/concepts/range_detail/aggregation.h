@@ -179,8 +179,7 @@ namespace transport
 		aggregation_range<value>::aggregation_range(const range<value>& a)
 			: aggregation_range<value>()
 			{
-		    std::shared_ptr< range<value> > element(a.clone());
-		    this->subrange_list.push_back(element);
+		    this->subrange_list.emplace_back(a.clone());
 			}
 
 
@@ -188,11 +187,8 @@ namespace transport
     aggregation_range<value>::aggregation_range(const range<value>& a, const range<value>& b)
 	    : aggregation_range<value>()
 	    {
-        std::shared_ptr< range<value> > element_a(a.clone());
-        this->subrange_list.push_back(element_a);
-
-        std::shared_ptr< range<value> > element_b(b.clone());
-        this->subrange_list.push_back(element_b);
+        this->subrange_list.emplace_back(a.clone());
+        this->subrange_list.emplace_back(b.clone());
 	    }
 
 
@@ -205,8 +201,7 @@ namespace transport
 
 				for(Json::Value::iterator t = array.begin(); t != array.end(); ++t)
 					{
-				    std::shared_ptr< range<value> > element(range_helper::deserialize<value>(*t));
-						this->subrange_list.push_back(element);
+						this->subrange_list.emplace_back(range_helper::deserialize<value>(*t));
 					}
 
 				this->populate_grid();
@@ -234,8 +229,7 @@ namespace transport
 		template <typename value>
 		void aggregation_range<value>::add_subrange(const range<value>& s)
 			{
-		    std::shared_ptr< range<value> > element(s.clone());
-				this->subrange_list.push_back(element);
+				this->subrange_list.emplace_back(s.clone());
 				this->dirty = true;
 			}
 
