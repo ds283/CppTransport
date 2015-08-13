@@ -16,7 +16,9 @@
 #include "transport-runtime-api/serialization/serializable.h"
 #include "transport-runtime-api/tasks/task_configurations.h"
 
-#include "transport-runtime-api/tasks/configuration-database/generic_iterator.h"
+#include "transport-runtime-api/tasks/configuration-database/generic_record_iterator.h"
+#include "transport-runtime-api/tasks/configuration-database/generic_config_iterator.h"
+#include "transport-runtime-api/tasks/configuration-database/generic_value_iterator.h"
 
 #include "transport-runtime-api/defaults.h"
 #include "transport-runtime-api/messages.h"
@@ -99,8 +101,11 @@ namespace transport
 		  public:
 
 		    // specialize to obtain intended iterators
-		    typedef configuration_database::generic_record_iterator<database_type, time_config_record, false > record_iterator;
-		    typedef configuration_database::generic_record_iterator<database_type, time_config_record, true >  const_record_iterator;
+		    typedef configuration_database::generic_record_iterator< database_type::iterator, database_type::const_iterator, time_config_record, false > record_iterator;
+		    typedef configuration_database::generic_record_iterator< database_type::iterator, database_type::const_iterator, time_config_record, true >  const_record_iterator;
+
+        typedef configuration_database::generic_record_iterator< database_type::reverse_iterator, database_type::const_reverse_iterator, time_config_record, false > reverse_record_iterator;
+        typedef configuration_database::generic_record_iterator< database_type::reverse_iterator, database_type::const_reverse_iterator, time_config_record, true >  const_reverse_record_iterator;
 
 
 		    // CONFIG VALUED ITERATOR
@@ -108,17 +113,23 @@ namespace transport
 		  public:
 
 		    // specialize to obtain intended iterators
-		    typedef configuration_database::generic_config_iterator<database_type, time_config, false> config_iterator;
-		    typedef configuration_database::generic_config_iterator<database_type, time_config, true>  const_config_iterator;
+		    typedef configuration_database::generic_config_iterator< database_type::iterator, database_type::const_iterator, time_config, false> config_iterator;
+		    typedef configuration_database::generic_config_iterator< database_type::iterator, database_type::const_iterator, time_config, true>  const_config_iterator;
+
+        typedef configuration_database::generic_config_iterator< database_type::reverse_iterator, database_type::const_reverse_iterator, time_config, false> reverse_config_iterator;
+        typedef configuration_database::generic_config_iterator< database_type::reverse_iterator, database_type::const_reverse_iterator, time_config, true>  const_reverse_config_iterator;
 
 
-		    // VALUE ITERATOR
+            // VALUE ITERATOR
 
 		  public:
 
 		    // specialize to obtain intended iterators
-		    typedef configuration_database::generic_value_iterator<database_type, double, false> value_iterator;
-		    typedef configuration_database::generic_value_iterator<database_type, double, true>  const_value_iterator;
+        typedef configuration_database::generic_value_iterator< database_type::iterator, database_type::const_iterator, double, false> value_iterator;
+        typedef configuration_database::generic_value_iterator< database_type::iterator, database_type::const_iterator, double, true>  const_value_iterator;
+
+		    typedef configuration_database::generic_value_iterator< database_type::reverse_iterator, database_type::const_reverse_iterator, double, false> reverse_value_iterator;
+		    typedef configuration_database::generic_value_iterator< database_type::reverse_iterator, database_type::const_reverse_iterator, double, true>  const_reverse_value_iterator;
 
 
 		    // CONSTRUCTOR, DESTRUCTOR
@@ -136,42 +147,66 @@ namespace transport
 
 		  public:
 
-		    record_iterator       record_begin()        { return record_iterator(this->database.begin()); }
-		    record_iterator       record_end()          { return record_iterator(this->database.end()); }
-		    const_record_iterator record_begin()  const { return const_record_iterator(this->database.begin()); }
-		    const_record_iterator record_end()    const { return const_record_iterator(this->database.end()); }
+		    record_iterator               record_begin()         { return record_iterator(this->database.begin()); }
+		    record_iterator               record_end()           { return record_iterator(this->database.end()); }
+		    const_record_iterator         record_begin()   const { return const_record_iterator(this->database.begin()); }
+		    const_record_iterator         record_end()     const { return const_record_iterator(this->database.end()); }
 
-		    const_record_iterator crecord_begin() const { return const_record_iterator(this->database.cbegin()); }
-		    const_record_iterator crecord_end()   const { return const_record_iterator(this->database.cend()); }
+		    const_record_iterator         record_cbegin()  const { return const_record_iterator(this->database.cbegin()); }
+		    const_record_iterator         record_cend()    const { return const_record_iterator(this->database.cend()); }
 
+        reverse_record_iterator       record_rbegin()        { return reverse_record_iterator(this->database.rbegin()); }
+        reverse_record_iterator       record_rend()          { return reverse_record_iterator(this->database.rend()); }
+        const_reverse_record_iterator record_rbegin()  const { return const_reverse_record_iterator(this->database.crbegin()); }
+        const_reverse_record_iterator record_rend()    const { return const_reverse_record_iterator(this->database.crend()); }
 
-		    // CONFIG ITERATORS
-
-		  public:
-
-		    config_iterator       config_begin()        { return config_iterator(this->database.begin()); }
-		    config_iterator       config_end()          { return config_iterator(this->database.end()); }
-		    const_config_iterator config_begin()  const { return const_config_iterator(this->database.begin()); }
-		    const_config_iterator config_end()    const { return const_config_iterator(this->database.end()); }
-
-		    const_config_iterator cconfig_begin() const { return const_config_iterator(this->database.cbegin()); }
-		    const_config_iterator cconfig_end()   const { return const_config_iterator(this->database.cend()); }
+        const_reverse_record_iterator record_crbegin() const { return const_reverse_record_iterator(this->database.crbegin()); }
+        const_reverse_record_iterator record_crend()   const { return const_reverse_record_iterator(this->database.crend()); }
 
 
-		    // VALUE ITERATORS
+        // CONFIG ITERATORS
 
 		  public:
 
-		    value_iterator       value_begin(double offset=0.0)       { return value_iterator(this->database.begin(), offset); }
-		    value_iterator       value_end(double offset=0.0)         { return value_iterator(this->database.end(), offset); }
-		    const_value_iterator value_begin(double offset=0.0) const { return const_value_iterator(this->database.begin(), offset); }
-		    const_value_iterator value_end(double offset=0.0)   const { return const_value_iterator(this->database.end(), offset); }
+		    config_iterator               config_begin()         { return config_iterator(this->database.begin()); }
+		    config_iterator               config_end()           { return config_iterator(this->database.end()); }
+		    const_config_iterator         config_begin()   const { return const_config_iterator(this->database.begin()); }
+		    const_config_iterator         config_end()     const { return const_config_iterator(this->database.end()); }
 
-		    const_value_iterator cvalue_begin(double offset=0.0)      { return const_value_iterator(this->database.cbegin(), offset); }
-		    const_value_iterator cvalue_end(double offset=0.0)        { return const_value_iterator(this->database.cend(), offset); }
+		    const_config_iterator         config_cbegin()  const { return const_config_iterator(this->database.cbegin()); }
+		    const_config_iterator         config_cend()    const { return const_config_iterator(this->database.cend()); }
+
+        reverse_config_iterator       config_rbegin()        { return reverse_config_iterator(this->database.rbegin()); }
+        reverse_config_iterator       config_rend()          { return reverse_config_iterator(this->database.rend()); }
+        const_reverse_config_iterator config_rbegin()  const { return const_reverse_config_iterator(this->database.crbegin()); }
+        const_reverse_config_iterator config_rend()    const { return const_reverse_config_iterator(this->database.crend()); }
+
+        const_reverse_config_iterator config_crbegin() const { return const_reverse_config_iterator(this->database.crbegin()); }
+        const_reverse_config_iterator config_crend()   const { return const_reverse_config_iterator(this->database.crend()); }
 
 
-				// INTERFACE -- GLOBAL OPERATIONS
+        // VALUE ITERATORS
+
+		  public:
+
+		    value_iterator               value_begin(double offset=0.0)        { return value_iterator(this->database.begin(), offset); }
+		    value_iterator               value_end(double offset=0.0)          { return value_iterator(this->database.end(), offset); }
+		    const_value_iterator         value_begin(double offset=0.0)  const { return const_value_iterator(this->database.begin(), offset); }
+		    const_value_iterator         value_end(double offset=0.0)    const { return const_value_iterator(this->database.end(), offset); }
+
+		    const_value_iterator         value_cbegin(double offset=0.0)       { return const_value_iterator(this->database.cbegin(), offset); }
+		    const_value_iterator         value_cend(double offset=0.0)         { return const_value_iterator(this->database.cend(), offset); }
+
+        reverse_value_iterator       value_rbegin(double offset=0.0)       { return reverse_value_iterator(this->database.rbegin(), offset); }
+        reverse_value_iterator       value_rend(double offset=0.0)         { return reverse_value_iterator(this->database.rend(), offset); }
+        const_reverse_value_iterator value_rbegin(double offset=0.0) const { return const_reverse_value_iterator(this->database.crbegin(), offset); }
+        const_reverse_value_iterator value_rend(double offset=0.0)   const { return const_reverse_value_iterator(this->database.crend(), offset); }
+
+        const_reverse_value_iterator value_crbegin(double offset=0.0)      { return const_reverse_value_iterator(this->database.crbegin(), offset); }
+        const_reverse_value_iterator value_crend(double offset=0.0)        { return const_reverse_value_iterator(this->database.crend(), offset); }
+
+
+        // INTERFACE -- GLOBAL OPERATIONS
 
 		  public:
 
