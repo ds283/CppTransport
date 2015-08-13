@@ -290,6 +290,14 @@ add_executable(inflection-mpi examples/inflection/main.cpp )
 target_link_libraries(inflection-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
 
 
+add_executable(oscillatory-mpi examples/oscillatory/main.cpp )
+target_link_libraries(oscillatory-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
+
+
+add_executable(oscillatory-makerepo2 examples/oscillatory/makerepo2.cpp )
+target_link_libraries(oscillatory-makerepo2 sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
+
+
 add_executable(chris-makerepo2 examples/chris-mpi/makerepo2.cpp )
 target_link_libraries(chris-makerepo2 sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
 
