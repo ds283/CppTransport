@@ -182,7 +182,7 @@ namespace transport
 			            {
 		                for(unsigned int i = 0; i <= this->steps; ++i)
 			                {
-				                value v = this->min + (static_cast<double>(i)/this->steps)*(this->max-this->min);
+				                value v = this->min + (static_cast<value>(i)/this->steps)*(this->max-this->min);
 		                    if(!std::isnan(v)) this->grid.push_back(v);
 			                }
 			            }
@@ -204,7 +204,7 @@ namespace transport
                       {
                         for(unsigned int i = 0; i <= this->steps; ++i)
                           {
-                            value v = this->min * static_cast<value>(pow(this->max/this->min, static_cast<double>(i)/this->steps));
+                            value v = this->min * static_cast<value>(std::pow(this->max/this->min, static_cast<double>(i)/this->steps));
                             if(!std::isnan(v)) this->grid.push_back(v);
                           }
                       }
@@ -216,7 +216,7 @@ namespace transport
                         double shifted_max = this->max - (this->min-1.0);
                         for(unsigned int i = 0; i <= this->steps; ++i)
                           {
-                            value v = this->min-1.0 + static_cast<value>(pow(shifted_max, static_cast<double>(i)/this->steps));
+                            value v = this->min-1.0 + static_cast<value>(std::pow(shifted_max, static_cast<double>(i)/this->steps));
                             if(!std::isnan(v)) this->grid.push_back(v);
                           }
                       }
@@ -238,7 +238,7 @@ namespace transport
                       {
                         for(unsigned int i = 0; i <= this->steps; ++i)
                           {
-                            value v = this->max + this->min - this->min * static_cast<value>(pow(this->max/this->min, static_cast<double>(i)/this->steps));
+                            value v = this->max + this->min - this->min * static_cast<value>(std::pow(this->max/this->min, static_cast<double>(i)/this->steps));
 		                        if(!std::isnan(v)) this->grid.push_back(v);
                           }
                       }
@@ -247,7 +247,7 @@ namespace transport
                         double shifted_max = this->max - (this->min-1.0);
                         for(unsigned int i = 0; i <= this->steps; ++i)
                           {
-                            value v = this->max+1.0 - static_cast<value>(pow(shifted_max, static_cast<double>(i)/this->steps));
+                            value v = this->max+1.0 - static_cast<value>(std::pow(shifted_max, static_cast<double>(i)/this->steps));
                             if(!std::isnan(v)) this->grid.push_back(v);
                           }
                       }
