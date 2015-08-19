@@ -56,8 +56,13 @@ namespace transport
 				//! Deserialization constructor
 				aggregation_range(Json::Value& reader);
 
+        //! Provide explicit copy constructor to handle deep move on std::unique_ptr
+        aggregation_range(const aggregation_range<value>& obj);
+
 
 				// OVERLOAD ARITHMETIC OPERATORS FOR CONVENIENCE
+
+      public:
 
 				//! assignment
 				aggregation_range<value>& operator=(const range<value>& rhs) { this->subrange_list.clear(); this->add_subrange(rhs); return(*this); }
@@ -71,6 +76,8 @@ namespace transport
 
 
 				// INTERFACE
+
+      public:
 
 		    //! Get minimum entry
 		    virtual value get_min()                      override       { if(this->dirty) this->populate_grid(); return(this->min); }
@@ -145,8 +152,11 @@ namespace transport
 		    //! Grid of values
 		    std::vector<value> grid;
 
-				//! List of subranges; use std::shared_ptr to manage lifetime of instances
-				typename std::list< std::shared_ptr< range<value> > > subrange_list;
+        //! set up typename alias for list of pointers to constituent objects
+        typedef typename std::list< std::unique_ptr< range<value> > > subrange_list_type;
+
+				//! List of subranges; use std::unique_ptr to manage lifetime of instances
+				subrange_list_type subrange_list;
 
 			};
 
@@ -208,6 +218,23 @@ namespace transport
 			}
 
 
+    template <typename value>
+    aggregation_range<value>::aggregation_range(const aggregation_range<value>& obj)
+      : dirty(true),
+        min(obj.min),
+        max(obj.max),
+        steps(obj.steps)
+      {
+        for(typename subrange_list_type::const_iterator t = obj.subrange_list.begin(); t != obj.subrange_list.end(); ++t)
+          {
+            if(*t)
+              {
+                subrange_list.emplace_back((*t)->clone());
+              }
+          }
+      }
+
+
 		template <typename value>
 		void aggregation_range<value>::serialize(Json::Value& writer) const
 			{
@@ -215,7 +242,7 @@ namespace transport
 
 		    Json::Value array(Json::arrayValue);
 
-				for(typename std::list< std::shared_ptr< range<value> > >::const_iterator t = this->subrange_list.begin(); t != this->subrange_list.end(); ++t)
+				for(typename subrange_list_type::const_iterator t = this->subrange_list.begin(); t != this->subrange_list.end(); ++t)
 			    {
 				    Json::Value obj(Json::objectValue);
 				    (*t)->serialize(obj);
@@ -260,7 +287,7 @@ namespace transport
 		    this->steps = 0;
 
 				// splice all subranges together
-				for(typename std::list< std::shared_ptr< range<value> > >::const_iterator t = this->subrange_list.begin(); t != this->subrange_list.end(); ++t)
+				for(typename std::list< std::unique_ptr< range<value> > >::const_iterator t = this->subrange_list.begin(); t != this->subrange_list.end(); ++t)
 			    {
 				    if((*t)->get_max() > this->max) this->max = (*t)->get_max();
 				    if((*t)->get_min() < this->min) this->min = (*t)->get_min();
