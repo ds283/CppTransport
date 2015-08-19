@@ -121,7 +121,7 @@ namespace transport
 
 		      public:
 
-				    void write(std::ostream& out);
+				    template <typename Stream> void write(Stream& out);
 
 		        // INTERNAL DATA
 
@@ -147,7 +147,8 @@ namespace transport
 
 
 				template <typename number>
-				void derived_product<number>::write(std::ostream& out)
+        template <typename Stream>
+				void derived_product<number>::write(Stream& out)
 					{
 						out << CPPTRANSPORT_DERIVED_PRODUCT_FILENAME << ": " << this->filename << '\n';
 					}

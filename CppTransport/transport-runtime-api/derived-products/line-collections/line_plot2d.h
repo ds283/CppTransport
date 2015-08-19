@@ -22,6 +22,7 @@
 #include "transport-runtime-api/exceptions.h"
 
 #include "boost/filesystem/operations.hpp"
+#include "boost/log/utility/formatting_ostream.hpp"
 
 
 #define CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_ROOT          "line-plot2d"
@@ -298,7 +299,7 @@ namespace transport
 
 		      public:
 
-				    void write(std::ostream& out);
+				    template <typename Stream> void write(Stream& out);
 
 
 		        // INTERNAL DATA
@@ -819,7 +820,8 @@ namespace transport
 
 
 		    template <typename number>
-		    void line_plot2d<number>::write(std::ostream& out)
+        template <typename Stream>
+		    void line_plot2d<number>::write(Stream& out)
 			    {
 		        // call next writer
 		        this->line_collection<number>::write(out);
@@ -882,12 +884,20 @@ namespace transport
 			    }
 
 
-		    template <typename number>
-		    std::ostream& operator<<(std::ostream& out, line_plot2d<number>& obj)
+		    template <typename number, typename Char, typename Traits>
+		    std::basic_ostream<Char, Traits>& operator<<(std::basic_ostream<Char, Traits>& out, line_plot2d<number>& obj)
 			    {
 		        obj.write(out);
 		        return(out);
 			    }
+
+
+        template <typename number, typename Char, typename Traits, typename Allocator>
+        boost::log::basic_formatting_ostream<Char, Traits, Allocator>& operator<<(boost::log::basic_formatting_ostream<Char, Traits, Allocator>& out, line_plot2d<number>& obj)
+          {
+            obj.write(out);
+            return(out);
+          }
 
 
 			}   // namespace derived_data

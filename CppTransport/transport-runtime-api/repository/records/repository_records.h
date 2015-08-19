@@ -1124,7 +1124,7 @@ namespace transport
 
       public:
 
-        void write(std::ostream& out) const;
+        template <typename Stream> void write(Stream& out) const;
 
 
         // SERIALIZATION -- implements a 'serializable' interface
@@ -1252,7 +1252,7 @@ namespace transport
 
       public:
 
-        void write(std::ostream& out) const;
+        template <typename Stream> void write(Stream& out) const;
 
 
         // SERIALIZATION -- implements a 'serializable' interface
@@ -1379,7 +1379,7 @@ namespace transport
 
       public:
 
-        void write(std::ostream& out) const;
+        template <typename Stream> void write(Stream& out) const;
 
 
         // SERIALIZATION -- implements a 'serializable' interface
@@ -1477,7 +1477,8 @@ namespace transport
 
       public:
 
-        void write(std::ostream& out) const;
+        //! write details
+        template <typename Stream> void write(Stream& out) const;
 
 
         // SERIALIZATION -- implements a 'serializable' interface
@@ -1606,7 +1607,7 @@ namespace transport
       public:
 
         //! Write self to output stream
-        void write(std::ostream& out) const;
+        template <typename Stream> void write(Stream& out) const;
 
 
         // INTERNAL DATA
@@ -2124,7 +2125,8 @@ namespace transport
 
 
     template <typename Payload>
-    void output_group_record<Payload>::write(std::ostream& out) const
+    template <typename Stream>
+    void output_group_record<Payload>::write(Stream& out) const
 	    {
         out << CPPTRANSPORT_OUTPUT_GROUP;
         if(this->locked) out << ", " << CPPTRANSPORT_OUTPUT_GROUP_LOCKED;
@@ -2235,13 +2237,21 @@ namespace transport
 
 
     // output an output_group_record descriptor to a standard stream
-    // notice obscure syntax to declare a templated member of an explicitly named namespace
-    template <typename Payload>
-    std::ostream& operator<<(std::ostream& out, const output_group_record<Payload>& group)
+    template <typename Payload, typename Char, typename Traits>
+    std::basic_ostream<Char, Traits>& operator<<(std::basic_ostream<Char, Traits>& out, const output_group_record<Payload>& group)
 	    {
         group.write(out);
         return (out);
 	    }
+
+
+    // output an output_group_record descriptor to a standard stream
+    template <typename Payload, typename Char, typename Traits, typename Allocator>
+    boost::log::basic_formatting_ostream<Char, Traits, Allocator>& operator<<(boost::log::basic_formatting_ostream<Char, Traits, Allocator>& out, const output_group_record<Payload>& group)
+      {
+        group.write(out);
+        return (out);
+      }
 
 
     namespace
@@ -2287,7 +2297,8 @@ namespace transport
 	    }
 
 
-    void precomputed_products::write(std::ostream& out) const
+    template <typename Stream>
+    void precomputed_products::write(Stream& out) const
 	    {
         out << CPPTRANSPORT_PAYLOAD_HAS_ZETA_TWO << ": " << (this->zeta_twopf ? CPPTRANSPORT_YES : CPPTRANSPORT_NO) << '\n';
         out << CPPTRANSPORT_PAYLOAD_HAS_ZETA_THREE << ": " << (this->zeta_threepf ? CPPTRANSPORT_YES : CPPTRANSPORT_NO) << '\n';
@@ -2342,7 +2353,8 @@ namespace transport
 	    }
 
 
-    void integration_payload::write(std::ostream& out) const
+    template <typename Stream>
+    void integration_payload::write(Stream& out) const
 	    {
         out << CPPTRANSPORT_PAYLOAD_INTEGRATION_DATA << " = " << this->container << '\n';
 	    }
@@ -2391,7 +2403,8 @@ namespace transport
 	    }
 
 
-    void postintegration_payload::write(std::ostream& out) const
+    template <typename Stream>
+    void postintegration_payload::write(Stream& out) const
 	    {
         out << CPPTRANSPORT_PAYLOAD_INTEGRATION_DATA << " = " << this->container << '\n';
 
@@ -2432,7 +2445,8 @@ namespace transport
 	    }
 
 
-    void output_payload::write(std::ostream& out) const
+    template <typename Stream>
+    void output_payload::write(Stream& out) const
 	    {
         for(std::list<derived_content>::const_iterator t = this->content.begin(); t != this->content.end(); ++t)
 	        {

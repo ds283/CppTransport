@@ -102,7 +102,8 @@ namespace transport
 
 
 		    //! Write self to standard output
-		    void write(std::ostream& out, const std::vector<std::string>& state_names) const;
+        template <typename Stream>
+		    void write(Stream& out, const std::vector<std::string>& state_names) const;
 
 		    // INTERNAL DATA
 
@@ -285,7 +286,8 @@ namespace transport
 
 
 		template <unsigned int indices>
-		void index_selector<indices>::write(std::ostream& out, const std::vector<std::string>& state_names) const
+    template <typename Stream>
+		void index_selector<indices>::write(Stream& out, const std::vector<std::string>& state_names) const
 			{
 				// demap available indices, by working through all available toggles
 				// and printing the ones which are switched on

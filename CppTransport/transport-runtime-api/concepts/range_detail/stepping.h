@@ -24,10 +24,6 @@
 namespace transport
 	{
 
-    template <typename value> class stepping_range;
-
-    template <typename value>
-    std::ostream& operator<<(std::ostream& out, const stepping_range<value>& obj);
 
     typedef enum { linear_stepping, logarithmic_bottom_stepping, logarithmic_top_stepping } range_spacing_type;
 
@@ -63,6 +59,9 @@ namespace transport
         //! Get number of entries
         virtual unsigned int size()                  override       { return(this->grid.size()); }
 
+        //! Get spacing type
+        range_spacing_type get_spacing_type()        const          { return(this->spacing); }
+
         //! Is a simple, linear range?
         virtual bool is_simple_linear()              const override { return(this->spacing == linear_stepping); }
 
@@ -93,8 +92,6 @@ namespace transport
 
         //! Serialize this object
         virtual void serialize(Json::Value& writer) const override;
-
-        friend std::ostream& operator<< <>(std::ostream& out, const stepping_range<value>& obj);
 
 
         // INTERNAL DATA
@@ -299,22 +296,25 @@ namespace transport
 	    }
 
 
-    template <typename value>
-    std::ostream& operator<<(std::ostream& out, const stepping_range<value>& obj)
+    template <typename value, typename Char, typename Traits>
+    std::basic_ostream<Char, Traits>& operator<<(std::basic_ostream<Char, Traits>& out, const stepping_range<value>& obj)
 	    {
-        out << CPPTRANSPORT_STEPPING_RANGE_A << obj.steps;
-        out << CPPTRANSPORT_STEPPING_RANGE_B;
+        out << CPPTRANSPORT_STEPPING_RANGE_A << obj.get_steps() << CPPTRANSPORT_STEPPING_RANGE_B;
 
-        if(obj.spacing == linear_stepping)                  out << CPPTRANSPORT_STEPPING_RANGE_LINEAR;
-        else if(obj.spacing == logarithmic_bottom_stepping) out << CPPTRANSPORT_STEPPING_RANGE_LOGARITHMIC_BOTTOM;
-        else if(obj.spacing == logarithmic_top_stepping)    out << CPPTRANSPORT_STEPPING_RANGE_LOGARITHMIC_TOP;
+        range_spacing_type type = obj.get_spacing_type();
 
-        out << CPPTRANSPORT_STEPPING_RANGE_C << obj.min << ", " << CPPTRANSPORT_STEPPING_RANGE_D << obj.max << '\n';
+        if(type == linear_stepping)                  out << CPPTRANSPORT_STEPPING_RANGE_LINEAR;
+        else if(type == logarithmic_bottom_stepping) out << CPPTRANSPORT_STEPPING_RANGE_LOGARITHMIC_BOTTOM;
+        else if(type == logarithmic_top_stepping)    out << CPPTRANSPORT_STEPPING_RANGE_LOGARITHMIC_TOP;
+
+        out << CPPTRANSPORT_STEPPING_RANGE_C << obj.get_min() << ", " << CPPTRANSPORT_STEPPING_RANGE_D << obj.get_max() << '\n';
+
+        const std::vector<value> grid = obj.get_grid();
 
         out << CPPTRANSPORT_STEPPING_RANGE_E << '\n';
-        for(unsigned int i = 0; i < obj.grid.size(); ++i)
+        for(unsigned int i = 0; i < grid.size(); ++i)
 	        {
-            out << i << ". " << obj.grid[i] << '\n';
+            out << i << ". " << grid[i] << '\n';
 	        }
 
         return(out);

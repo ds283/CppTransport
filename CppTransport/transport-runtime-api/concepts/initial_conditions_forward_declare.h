@@ -16,9 +16,6 @@ namespace transport
 
     template <typename number> class initial_conditions;
 
-    template <typename number>
-    std::ostream& operator<<(std::ostream& out, const initial_conditions<number>& obj);
-
 	}   // namespace transport
 
 

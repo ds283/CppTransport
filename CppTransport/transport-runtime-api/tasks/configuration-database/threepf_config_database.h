@@ -70,8 +70,6 @@ namespace transport
         threepf_kconfig* operator->() { return(&this->record); }
         const threepf_kconfig* operator->() const { return(&this->record); }
 
-        friend std::ostream& operator<<(std::ostream& out, const threepf_kconfig_record& obj);
-
 
         // INTERNAL DATA
 
@@ -105,7 +103,8 @@ namespace transport
       }
 
 
-    std::ostream& operator<<(std::ostream& out, const threepf_kconfig_record& obj)
+    template <typename Char, typename Traits>
+    std::basic_ostream<Char, Traits>& operator<<(std::basic_ostream<Char, Traits>& out, const threepf_kconfig_record& obj)
       {
         out << *obj;
         return(out);

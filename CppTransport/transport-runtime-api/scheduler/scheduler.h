@@ -44,11 +44,6 @@ namespace transport
       };
 
 
-    template <typename work_element> class work_item_filter;
-
-    template <typename work_element>
-    std::ostream& operator<<(std::ostream& out, const work_item_filter<work_element>& obj);
-
     //! Filter function for work items -- used by slave nodes to filter out
     //! pieces of work intended for them
 		template <typename work_element>
@@ -74,8 +69,16 @@ namespace transport
         //! Check whether a work-item is part of the filter
         bool filter(const work_element& config)   const { return(this->items.find(config.get_serial()) != this->items.end()); }
 
-        //! Declare friend function to write a filter to a stream
-        friend std::ostream& operator<< <>(std::ostream& out, const work_item_filter<work_element>& filter);
+
+        // WRITE SELF TO STREAM
+
+      public:
+
+        //! write details
+        template <typename Stream> void write(Stream& out);
+
+
+        // INTERNAL DATA
 
       private:
 
@@ -85,16 +88,24 @@ namespace transport
       };
 
 
-    //! Write a filter to a stream
-		template <typename work_element>
-    std::ostream& operator<<(std::ostream& out, const work_item_filter<work_element>& filter)
+    template <typename work_element>
+    template <typename Stream>
+    void work_item_filter<work_element>::write(Stream& out)
       {
-        std::cerr << CPPTRANSPORT_FILTER_TAG;
-        for(std::set<unsigned int>::iterator t = filter.items.begin(); t != filter.items.end(); ++t)
+        out << CPPTRANSPORT_FILTER_TAG;
+        for(std::set<unsigned int>::iterator t = this->items.begin(); t != this->items.end(); ++t)
           {
-            std::cerr << (t != filter.items.begin() ? ", " : " ") << *t;
+            out << (t != this->items.begin() ? ", " : " ") << *t;
           }
-        std::cerr << '\n';
+        out << '\n';
+      }
+
+
+    //! Write a filter to a stream
+		template <typename work_element, typename Char, typename Traits>
+    std::basic_ostream<Char, Traits>& operator<<(std::basic_ostream<Char, Traits>& out, const work_item_filter<work_element>& filter)
+      {
+        filter.write(out);
         return(out);
       }
 

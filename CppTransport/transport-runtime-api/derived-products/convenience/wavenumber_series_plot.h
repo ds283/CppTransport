@@ -16,6 +16,8 @@
 #include "transport-runtime-api/defaults.h"
 #include "transport-runtime-api/messages.h"
 
+#include "boost/log/utility/formatting_ostream.hpp"
+
 
 namespace transport
 	{
@@ -139,12 +141,20 @@ namespace transport
 			    }
 
 
-		    template <typename number>
-		    std::ostream& operator<<(std::ostream& out, wavenumber_series_plot<number>& obj)
+		    template <typename number, typename Char, typename Traits>
+		    std::basic_ostream<Char, Traits>& operator<<(std::basic_ostream<Char, Traits>& out, wavenumber_series_plot<number>& obj)
 			    {
 		        obj.write(out);
 		        return(out);
 			    }
+
+
+        template <typename number, typename Char, typename Traits, typename Allocator>
+        boost::log::basic_formatting_ostream<Char, Traits, Allocator>& operator<<(boost::log::basic_formatting_ostream<Char, Traits, Allocator>& out, wavenumber_series_plot<number>& obj)
+          {
+            obj.write(out);
+            return(out);
+          }
 
 
 			}   // namespace derived_data

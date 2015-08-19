@@ -21,9 +21,6 @@ namespace transport
 
     template <typename value> class aggregation_range;
 
-    template <typename value>
-    std::ostream& operator<<(std::ostream& out, aggregation_range<value>& obj);
-
 		template <typename value>
 		aggregation_range<value> operator+(const aggregation_range<value>& lhs, const range<value>& rhs);
 
@@ -107,6 +104,9 @@ namespace transport
 				//! add a subrange
 				void add_subrange(const range<value>& s);
 
+        //! get number of subranges
+        unsigned int get_number_subranges() const { return(this->subrange_list.size()); }
+
 
 		    // POPULATE GRID
 
@@ -129,8 +129,6 @@ namespace transport
 
 		    //! Serialize this object
 		    virtual void serialize(Json::Value& writer) const override;
-
-        friend std::ostream& operator<< <>(std::ostream& out, aggregation_range<value>& obj);
 
 
 				// INTERNAL DATA
@@ -307,18 +305,18 @@ namespace transport
 			}
 
 
-    template <typename value>
-    std::ostream& operator<<(std::ostream& out, aggregation_range<value>& obj)
+    template <typename value, typename Char, typename Traits>
+    std::basic_ostream<Char, Traits>& operator<<(std::basic_ostream<Char, Traits>& out, aggregation_range<value>& obj)
       {
-		    if(obj.dirty) obj.populate_grid();
+        const std::vector<value>& grid = obj.get_grid();
 
-        out << CPPTRANSPORT_AGGREGATION_RANGE_A << obj.subrange_list.size() << " ";
+        out << CPPTRANSPORT_AGGREGATION_RANGE_A << obj.get_number_subranges() << " ";
         out << CPPTRANSPORT_AGGREGATION_RANGE_B << '\n';
 
         out << CPPTRANSPORT_AGGREGATION_RANGE_C << '\n';
-        for(unsigned int i = 0; i < obj.grid.size(); ++i)
+        for(unsigned int i = 0; i < grid.size(); ++i)
           {
-            out << i << ". " << obj.grid[i] << '\n';
+            out << i << ". " << grid[i] << '\n';
           }
 
         return(out);

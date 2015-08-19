@@ -265,7 +265,7 @@ namespace transport
 
 				  public:
 
-						void write(std::ostream& out);
+						template <typename Stream> void write(Stream& out);
 
 
 						// INTERNAL DATA
@@ -569,7 +569,8 @@ namespace transport
 
 
 		    template <typename number>
-		    void line_collection<number>::write(std::ostream& out)
+        template <typename Stream>
+		    void line_collection<number>::write(Stream& out)
 			    {
 		        // call derived_product writer
 		        this->derived_product<number>::write(out);

@@ -26,6 +26,8 @@
 // forward-declare initial conditions class
 #include "transport-runtime-api/concepts/initial_conditions_forward_declare.h"
 
+#include "boost/log/utility/formatting_ostream.hpp"
+
 
 #define CPPTRANSPORT_NODE_ICS_VALUE         "value"
 #define CPPTRANSPORT_NODE_ICS_MODEL_UID     "model-uid"
@@ -130,12 +132,12 @@ namespace transport
         virtual void serialize(Json::Value& writer) const override;
 
 
-        // WRITE TO A STREAM
+        // WRITE SELF TO STREAM
 
       public:
 
-        //! Write ourselves to a stream
-        friend std::ostream& operator<< <>(std::ostream& out, const initial_conditions<number>& obj);
+        //! write details
+        template <typename Stream> void write(Stream& out) const;
 
 
         // INTERNAL DATA
@@ -309,20 +311,35 @@ namespace transport
 
 
     template <typename number>
-    std::ostream& operator<<(std::ostream& out, const initial_conditions<number>& obj)
+    template <typename Stream>
+    void initial_conditions<number>::write(Stream& out) const
       {
-        out << obj.params << '\n';
+        out << this->params << '\n';
 
-		    const std::vector<std::string>& names = obj.mdl->get_state_names();
-        assert(obj.ics.size() == names.size());
+        const std::vector<std::string>& names = this->mdl->get_state_names();
+        assert(this->ics.size() == names.size());
 
         out << CPPTRANSPORT_ICS_TAG << '\n';
-        for(unsigned int i = 0; i < obj.ics.size(); ++i)
+        for(unsigned int i = 0; i < this->ics.size(); ++i)
           {
-            out << "  " << names[i] << " = " << obj.ics[i] << '\n';
+            out << "  " << names[i] << " = " << this->ics[i] << '\n';
           }
+      }
 
-        return(out);
+
+    template <typename number, typename Char, typename Traits>
+    std::basic_ostream<Char, Traits>& operator<<(std::basic_ostream<Char, Traits>& out, const initial_conditions<number>& obj)
+      {
+        obj.write(out);
+        return (out);
+      }
+
+
+    template <typename number, typename Char, typename Traits, typename Allocator>
+    boost::log::basic_formatting_ostream<Char, Traits, Allocator>& operator<<(boost::log::basic_formatting_ostream<Char, Traits, Allocator>& out, const initial_conditions<number>& obj)
+      {
+        obj.write(out);
+        return (out);
       }
 
   }
