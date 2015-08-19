@@ -104,7 +104,7 @@ int main(int argc, char* argv[])
     const double        kmax      = exp(5.0);   // end with the mode which exits the horizon at N=N*+3
     const unsigned int  k_samples = 3;         // number of k-points
 
-    transport::range<double> ks = transport::range<double>(kmin, kmax, k_samples, transport::linear_stepping);
+    transport::range<double> ks = transport::range<double>(kmin, kmax, k_samples, transport::range_spacing_type::linear_stepping);
 
     // construct a threepf task
     transport::threepf_cubic_task<double> tk3("quadratic10.threepf-1", ics, times, ks, TimeStoragePolicy(), ThreepfStoragePolicy());

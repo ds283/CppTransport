@@ -69,8 +69,8 @@ int main(int argc, char* argv[])
     const unsigned int early_t_samples = 200;
     const unsigned int late_t_samples  = 100;
 
-    transport::stepping_range<double> early_times(Ncross-Npre, Ncross+Nsplit, early_t_samples, transport::logarithmic_bottom_stepping);
-    transport::stepping_range<double> late_times(Ncross+Nsplit, Ncross+Nmax, late_t_samples, transport::linear_stepping);
+    transport::stepping_range<double> early_times(Ncross-Npre, Ncross+Nsplit, early_t_samples, transport::range_spacing_type::logarithmic_bottom_stepping);
+    transport::stepping_range<double> late_times(Ncross+Nsplit, Ncross+Nmax, late_t_samples, transport::range_spacing_type::linear_stepping);
     transport::aggregation_range<double> times(early_times, late_times);
 
     // the conventions for k-numbers are as follows:
@@ -99,16 +99,16 @@ int main(int argc, char* argv[])
 
     // SET UP TASKS
 
-    transport::stepping_range<double> kts   (ktmin, ktmax, k_samples, transport::linear_stepping);
-    transport::stepping_range<double> alphas(alphamin, alphamax, a_samples, transport::linear_stepping);
+    transport::stepping_range<double> kts   (ktmin, ktmax, k_samples, transport::range_spacing_type::linear_stepping);
+    transport::stepping_range<double> alphas(alphamin, alphamax, a_samples, transport::range_spacing_type::linear_stepping);
 
-//    transport::stepping_range<double> betas_lo(betamin, betamid, lo_b_samples, transport::linear_stepping);
-//    transport::stepping_range<double> betas_hi(betamid, betamax, hi_b_samples, transport::logarithmic_top_stepping);
+//    transport::stepping_range<double> betas_lo(betamin, betamid, lo_b_samples, transport::range_spacing_type::linear_stepping);
+//    transport::stepping_range<double> betas_hi(betamid, betamax, hi_b_samples, transport::range_spacing_type::logarithmic_top_stepping);
 //    transport::aggregation_range<double> betas(betas_lo, betas_hi);
-    transport::stepping_range<double> betas_equi(1.0/3.0, 1.0/3.0, 0, transport::linear_stepping);    // add dedicated equilateral configuration
-    transport::stepping_range<double> betas_lo(0.0, 0.9, 5, transport::linear_stepping);
-    transport::stepping_range<double> betas_mid(0.9, 0.96, 5, transport::logarithmic_top_stepping);
-//    transport::stepping_range<double> betas_hi(0.99, 0.999, 5, transport::logarithmic_top_stepping);
+    transport::stepping_range<double> betas_equi(1.0/3.0, 1.0/3.0, 0, transport::range_spacing_type::linear_stepping);    // add dedicated equilateral configuration
+    transport::stepping_range<double> betas_lo(0.0, 0.9, 5, transport::range_spacing_type::linear_stepping);
+    transport::stepping_range<double> betas_mid(0.9, 0.96, 5, transport::range_spacing_type::logarithmic_top_stepping);
+//    transport::stepping_range<double> betas_hi(0.99, 0.999, 5, transport::range_spacing_type::logarithmic_top_stepping);
 //    transport::aggregation_range<double> betas = betas_lo + betas_mid + betas_hi + betas_equi;
     transport::aggregation_range<double> betas = betas_lo + betas_mid + betas_equi;
 

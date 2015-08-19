@@ -110,7 +110,7 @@ int main(int argc, char* argv[])
     const double        kmax      = exp(10.0);   // end with the mode which exits the horizon at N=N*+3
     const unsigned int  k_samples = 100;         // number of k-points
 
-    transport::range<double> ks = transport::range<double>(kmin, kmax, k_samples, transport::logarithmic_bottom_stepping);
+    transport::range<double> ks = transport::range<double>(kmin, kmax, k_samples, transport::range_spacing_type::logarithmic_bottom_stepping);
 
     // construct a twopf task
     transport::twopf_task<double> tk2 = transport::twopf_task<double>("mafalda40.twopf-1", ics, times, ks, TimeStoragePolicy());

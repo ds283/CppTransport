@@ -10,8 +10,6 @@
 
 #define CPPTRANSPORT_RANGE_RANGE                       "Internal error: Out of range when accessing 'range' object"
 
-#define CPPTRANSPORT_RANGE_INVALID_SPACING             "Unknown spacing type in 'range' object"
-
 #define CPPTRANSPORT_STEPPING_RANGE_A                  "Stepping range: "
 #define CPPTRANSPORT_STEPPING_RANGE_B                  " steps, spacing = "
 #define CPPTRANSPORT_STEPPING_RANGE_C                  ": min = "

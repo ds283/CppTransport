@@ -67,8 +67,8 @@ int main(int argc, char* argv[])
     const unsigned int early_t_samples = 200;
     const unsigned int late_t_samples  = 100;
 
-    transport::stepping_range<double>    early_times(Ncross - Npre, Ncross + Nsplit, early_t_samples, transport::logarithmic_bottom_stepping);
-    transport::stepping_range<double>    late_times(Ncross + Nsplit, Ncross + Nmax, late_t_samples, transport::linear_stepping);
+    transport::stepping_range<double>    early_times(Ncross - Npre, Ncross + Nsplit, early_t_samples, transport::range_spacing_type::logarithmic_bottom_stepping);
+    transport::stepping_range<double>    late_times(Ncross + Nsplit, Ncross + Nmax, late_t_samples, transport::range_spacing_type::linear_stepping);
     transport::aggregation_range<double> times(early_times, late_times);
 
     // the conventions for k-numbers are as follows:
@@ -87,7 +87,7 @@ int main(int argc, char* argv[])
 	        }
 	    };
 
-    transport::stepping_range<double> ks(kmin, kmax, k_samples, transport::linear_stepping);
+    transport::stepping_range<double> ks(kmin, kmax, k_samples, transport::range_spacing_type::linear_stepping);
 
     // construct a twopf task
     transport::twopf_task<double> tk2("axion.twopf-1", ics, times, ks);

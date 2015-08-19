@@ -25,7 +25,7 @@ namespace transport
 	{
 
 
-    typedef enum { linear_stepping, logarithmic_bottom_stepping, logarithmic_top_stepping } range_spacing_type;
+    enum class range_spacing_type { linear_stepping, logarithmic_bottom_stepping, logarithmic_top_stepping };
 
 
     template <typename value>
@@ -37,7 +37,7 @@ namespace transport
       public:
 
         //! Construct a range object with specified minimum & maximum values, number of steps and spacing type.
-        stepping_range(value mn, value mx, unsigned int st, range_spacing_type sp= linear_stepping);
+        stepping_range(value mn, value mx, unsigned int st, range_spacing_type sp=range_spacing_type::linear_stepping);
 
         //! Deserialization constructor
         stepping_range(Json::Value& reader);
@@ -63,7 +63,7 @@ namespace transport
         range_spacing_type get_spacing_type()        const          { return(this->spacing); }
 
         //! Is a simple, linear range?
-        virtual bool is_simple_linear()              const override { return(this->spacing == linear_stepping); }
+        virtual bool is_simple_linear()              const override { return(this->spacing == range_spacing_type::linear_stepping); }
 
         //! Get grid of entries
         virtual const std::vector<value>& get_grid() override       { return(this->grid); }
@@ -137,9 +137,9 @@ namespace transport
 
         std::string spc_string = reader[CPPTRANSPORT_NODE_SPACING].asString();
 
-        if(spc_string == CPPTRANSPORT_VALUE_LINEAR)                  spacing = linear_stepping;
-        else if(spc_string == CPPTRANSPORT_VALUE_LOGARITHMIC_BOTTOM) spacing = logarithmic_bottom_stepping;
-        else if(spc_string == CPPTRANSPORT_VALUE_LOGARITHMIC_TOP)    spacing = logarithmic_top_stepping;
+        if(spc_string == CPPTRANSPORT_VALUE_LINEAR)                  spacing = range_spacing_type::linear_stepping;
+        else if(spc_string == CPPTRANSPORT_VALUE_LOGARITHMIC_BOTTOM) spacing = range_spacing_type::logarithmic_bottom_stepping;
+        else if(spc_string == CPPTRANSPORT_VALUE_LOGARITHMIC_TOP)    spacing = range_spacing_type::logarithmic_top_stepping;
         else throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, CPPTRANSPORT_BADLY_FORMED_RANGE);
 
         this->populate_grid();
@@ -169,7 +169,7 @@ namespace transport
 
         switch(this->spacing)
 	        {
-            case linear_stepping:
+            case range_spacing_type::linear_stepping:
 	            {
 		            if(this->steps == 0)
 			            {
@@ -188,7 +188,7 @@ namespace transport
 
             // logarithmic-bottom is log-spaced at the bottom end of the interval
 
-            case logarithmic_bottom_stepping:
+            case range_spacing_type::logarithmic_bottom_stepping:
 	            {
 		            if(this->steps == 0)
 			            {
@@ -223,7 +223,7 @@ namespace transport
 
             // logarithmic-top is log-spaced at the top end of the interval
 
-            case logarithmic_top_stepping:
+            case range_spacing_type::logarithmic_top_stepping:
 	            {
 		            if(this->steps == 0)
 			            {
@@ -252,12 +252,6 @@ namespace transport
 			            }
                 break;
 	            }
-
-            default:
-	            {
-                assert(false);
-                throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_RANGE_INVALID_SPACING);
-	            }
 	        }
 
         // sort grid into order and remove duplicates, eg. if user (accidentally) set top and bottom limits to be the same
@@ -277,21 +271,17 @@ namespace transport
 
         switch(this->spacing)
 	        {
-            case linear_stepping:
+            case range_spacing_type::linear_stepping:
 	            writer[CPPTRANSPORT_NODE_SPACING] = std::string(CPPTRANSPORT_VALUE_LINEAR);
 	            break;
 
-            case logarithmic_bottom_stepping:
+            case range_spacing_type::logarithmic_bottom_stepping:
 	            writer[CPPTRANSPORT_NODE_SPACING] = std::string(CPPTRANSPORT_VALUE_LOGARITHMIC_BOTTOM);
               break;
 
-            case logarithmic_top_stepping:
+            case range_spacing_type::logarithmic_top_stepping:
 	            writer[CPPTRANSPORT_NODE_SPACING] = std::string(CPPTRANSPORT_VALUE_LOGARITHMIC_TOP);
               break;
-
-            default:
-	            assert(false);
-              throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, CPPTRANSPORT_RANGE_INVALID_SPACING);
 	        }
 	    }
 
@@ -303,9 +293,9 @@ namespace transport
 
         range_spacing_type type = obj.get_spacing_type();
 
-        if(type == linear_stepping)                  out << CPPTRANSPORT_STEPPING_RANGE_LINEAR;
-        else if(type == logarithmic_bottom_stepping) out << CPPTRANSPORT_STEPPING_RANGE_LOGARITHMIC_BOTTOM;
-        else if(type == logarithmic_top_stepping)    out << CPPTRANSPORT_STEPPING_RANGE_LOGARITHMIC_TOP;
+        if(type == range_spacing_type::linear_stepping)                  out << CPPTRANSPORT_STEPPING_RANGE_LINEAR;
+        else if(type == range_spacing_type::logarithmic_bottom_stepping) out << CPPTRANSPORT_STEPPING_RANGE_LOGARITHMIC_BOTTOM;
+        else if(type == range_spacing_type::logarithmic_top_stepping)    out << CPPTRANSPORT_STEPPING_RANGE_LOGARITHMIC_TOP;
 
         out << CPPTRANSPORT_STEPPING_RANGE_C << obj.get_min() << ", " << CPPTRANSPORT_STEPPING_RANGE_D << obj.get_max() << '\n';
 

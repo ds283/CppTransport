@@ -150,8 +150,8 @@ int main(int argc, char* argv[])
 
     const unsigned int t_samples = 1000;       // record 5000 samples - enough to find a good stepsize
 
-    transport::stepping_range<double> times(Ncross-Npre, Nmax + Ncross, t_samples, transport::logarithmic_bottom_stepping);
-//    transport::stepping_range<double> times(3.0, 63.0, t_samples, transport::logarithmic_bottom_stepping);
+    transport::stepping_range<double> times(Ncross-Npre, Nmax + Ncross, t_samples, transport::range_spacing_type::logarithmic_bottom_stepping);
+//    transport::stepping_range<double> times(3.0, 63.0, t_samples, transport::range_spacing_type::logarithmic_bottom_stepping);
 
     // the conventions for k-numbers are as follows:
     // k=1 is the mode which crosses the horizon at time N*,
@@ -170,7 +170,7 @@ int main(int argc, char* argv[])
       };
 
     // have to choose linear spacing if we want the task to be fNL-integrable
-    transport::stepping_range<double> ks(kmin, kmax, k_samples, transport::linear_stepping);
+    transport::stepping_range<double> ks(kmin, kmax, k_samples, transport::range_spacing_type::linear_stepping);
 
     // construct a threepf task and a paired zeta task
     transport::threepf_cubic_task<double> tk3("dquad.threepf-1", ics, times, ks, ThreepfStoragePolicy());
