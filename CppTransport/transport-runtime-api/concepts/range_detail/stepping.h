@@ -78,6 +78,15 @@ namespace transport
         //! fill out the grid entries
         void populate_grid(void);
 
+        //! fill out grid entries -- linear spacing
+        void populate_linear_grid(void);
+
+        //! fill out grid entries -- logarithmic bottom-spacing
+        void populate_log_bottom_grid(void);
+
+        //! fill out grid entries -- logarithmic top-spacing
+        void populate_log_top_grid(void);
+
 
         // CLONE -- implements a 'range<>' interface
 
@@ -92,6 +101,14 @@ namespace transport
 
         //! Serialize this object
         virtual void serialize(Json::Value& writer) const override;
+
+
+        // WRITE TO A STREAM
+
+      public:
+
+        //! write self to stream
+        template <typename Stream> void write(Stream& out) const;
 
 
         // INTERNAL DATA
@@ -170,88 +187,16 @@ namespace transport
         switch(this->spacing)
 	        {
             case range_spacing_type::linear_stepping:
-	            {
-		            if(this->steps == 0)
-			            {
-				            this->grid.push_back(min);
-			            }
-		            else
-			            {
-		                for(unsigned int i = 0; i <= this->steps; ++i)
-			                {
-				                value v = this->min + (static_cast<value>(i)/this->steps)*(this->max-this->min);
-		                    if(!std::isnan(v)) this->grid.push_back(v);
-			                }
-			            }
-                break;
-	            }
-
-            // logarithmic-bottom is log-spaced at the bottom end of the interval
+              this->populate_linear_grid();
+	            break;
 
             case range_spacing_type::logarithmic_bottom_stepping:
-	            {
-		            if(this->steps == 0)
-			            {
-				            this->grid.push_back(min);
-			            }
-		            else
-			            {
-                    // if max and min are both positive, perform log-spacing as we expect
-                    if(this->max > 0.0 && this->min > 0.0)
-                      {
-                        for(unsigned int i = 0; i <= this->steps; ++i)
-                          {
-                            value v = this->min * static_cast<value>(std::pow(this->max/this->min, static_cast<double>(i)/this->steps));
-                            if(!std::isnan(v)) this->grid.push_back(v);
-                          }
-                      }
-                    else
-                    // otherwise, need to think of something else.
-                    // we shift the range to begin at 1, perform the log-spacing, and then
-                    // reverse the shift
-                      {
-                        double shifted_max = this->max - (this->min-1.0);
-                        for(unsigned int i = 0; i <= this->steps; ++i)
-                          {
-                            value v = this->min-1.0 + static_cast<value>(std::pow(shifted_max, static_cast<double>(i)/this->steps));
-                            if(!std::isnan(v)) this->grid.push_back(v);
-                          }
-                      }
-			            }
-                break;
-	            }
-
-            // logarithmic-top is log-spaced at the top end of the interval
+	            this->populate_log_bottom_grid();
+              break;
 
             case range_spacing_type::logarithmic_top_stepping:
-	            {
-		            if(this->steps == 0)
-			            {
-				            this->grid.push_back(min);
-			            }
-		            else
-			            {
-                    if(this->max > 0.0 && this->min > 0.0)
-                      {
-                        for(unsigned int i = 0; i <= this->steps; ++i)
-                          {
-                            value v = this->max + this->min - this->min * static_cast<value>(std::pow(this->max/this->min, static_cast<double>(i)/this->steps));
-		                        if(!std::isnan(v)) this->grid.push_back(v);
-                          }
-                      }
-                    else
-                      {
-                        double shifted_max = this->max - (this->min-1.0);
-                        for(unsigned int i = 0; i <= this->steps; ++i)
-                          {
-                            value v = this->max+1.0 - static_cast<value>(std::pow(shifted_max, static_cast<double>(i)/this->steps));
-                            if(!std::isnan(v)) this->grid.push_back(v);
-                          }
-                      }
-		                // the result is out-of-order, but it will be sorted below
-			            }
-                break;
-	            }
+              this->populate_log_top_grid();
+              break;
 	        }
 
         // sort grid into order and remove duplicates, eg. if user (accidentally) set top and bottom limits to be the same
@@ -259,6 +204,90 @@ namespace transport
         auto last = std::unique(this->grid.begin(), this->grid.end(), aggregation_range_impl::DuplicateRemovalPredicate<value>(1E-10));
         this->grid.erase(last, this->grid.end());
 	    }
+
+
+    template <typename value>
+    void stepping_range<value>::populate_linear_grid(void)
+      {
+        if(this->steps == 0)
+          {
+            this->grid.push_back(min);
+          }
+        else
+          {
+            for(unsigned int i = 0; i <= this->steps; ++i)
+              {
+                value v = this->min + (static_cast<value>(i)/this->steps)*(this->max-this->min);
+                if(!std::isnan(v)) this->grid.push_back(v);
+              }
+          }
+      }
+
+
+    template <typename value>
+    void stepping_range<value>::populate_log_bottom_grid(void)
+      {
+        if(this->steps == 0)
+          {
+            this->grid.push_back(min);
+          }
+        else
+          {
+            // if max and min are both positive, perform log-spacing as we expect
+            if(this->max > 0.0 && this->min > 0.0)
+              {
+                for(unsigned int i = 0; i <= this->steps; ++i)
+                  {
+                    value v = this->min * static_cast<value>(std::pow(this->max/this->min, static_cast<double>(i)/this->steps));
+                    if(!std::isnan(v)) this->grid.push_back(v);
+                  }
+              }
+            else
+              // otherwise, need to think of something else.
+              // we shift the range to begin at 1, perform the log-spacing, and then
+              // reverse the shift
+              {
+                double shifted_max = this->max - (this->min-1.0);
+                for(unsigned int i = 0; i <= this->steps; ++i)
+                  {
+                    value v = this->min-1.0 + static_cast<value>(std::pow(shifted_max, static_cast<double>(i)/this->steps));
+                    if(!std::isnan(v)) this->grid.push_back(v);
+                  }
+              }
+          }
+      }
+
+
+    template <typename value>
+    void stepping_range<value>::populate_log_top_grid(void)
+      {
+        if(this->steps == 0)
+          {
+            this->grid.push_back(min);
+          }
+        else
+          {
+            if(this->max > 0.0 && this->min > 0.0)
+              {
+                for(unsigned int i = 0; i <= this->steps; ++i)
+                  {
+                    value v = this->max + this->min - this->min * static_cast<value>(std::pow(this->max/this->min, static_cast<double>(i)/this->steps));
+                    if(!std::isnan(v)) this->grid.push_back(v);
+                  }
+              }
+            else
+              {
+                double shifted_max = this->max - (this->min-1.0);
+                for(unsigned int i = 0; i <= this->steps; ++i)
+                  {
+                    value v = this->max+1.0 - static_cast<value>(std::pow(shifted_max, static_cast<double>(i)/this->steps));
+                    if(!std::isnan(v)) this->grid.push_back(v);
+                  }
+              }
+            // the result is out-of-order, but it will be sorted below
+          }
+      }
+
 
     template <typename value>
     void stepping_range<value>::serialize(Json::Value& writer) const
@@ -286,29 +315,44 @@ namespace transport
 	    }
 
 
-    template <typename value, typename Char, typename Traits>
-    std::basic_ostream<Char, Traits>& operator<<(std::basic_ostream<Char, Traits>& out, const stepping_range<value>& obj)
-	    {
-        out << CPPTRANSPORT_STEPPING_RANGE_A << obj.get_steps() << CPPTRANSPORT_STEPPING_RANGE_B;
+    template <typename value>
+    template <typename Stream>
+    void stepping_range<value>::write(Stream& out) const
+      {
+        out << CPPTRANSPORT_STEPPING_RANGE_A << this->get_steps() << CPPTRANSPORT_STEPPING_RANGE_B;
 
-        range_spacing_type type = obj.get_spacing_type();
+        range_spacing_type type = this->get_spacing_type();
 
         if(type == range_spacing_type::linear_stepping)                  out << CPPTRANSPORT_STEPPING_RANGE_LINEAR;
         else if(type == range_spacing_type::logarithmic_bottom_stepping) out << CPPTRANSPORT_STEPPING_RANGE_LOGARITHMIC_BOTTOM;
         else if(type == range_spacing_type::logarithmic_top_stepping)    out << CPPTRANSPORT_STEPPING_RANGE_LOGARITHMIC_TOP;
 
-        out << CPPTRANSPORT_STEPPING_RANGE_C << obj.get_min() << ", " << CPPTRANSPORT_STEPPING_RANGE_D << obj.get_max() << '\n';
+        out << CPPTRANSPORT_STEPPING_RANGE_C << this->get_min() << ", " << CPPTRANSPORT_STEPPING_RANGE_D << this->get_max() << '\n';
 
-        const std::vector<value> grid = obj.get_grid();
+        const std::vector<value> grid = this->get_grid();
 
         out << CPPTRANSPORT_STEPPING_RANGE_E << '\n';
         for(unsigned int i = 0; i < grid.size(); ++i)
-	        {
+          {
             out << i << ". " << grid[i] << '\n';
-	        }
+          }
+      }
 
+
+    template <typename value, typename Char, typename Traits>
+    std::basic_ostream<Char, Traits>& operator<<(std::basic_ostream<Char, Traits>& out, const stepping_range<value>& obj)
+	    {
+        obj.write(out);
         return(out);
 	    }
+
+
+    template <typename value, typename Char, typename Traits, typename Allocator>
+    boost::log::basic_formatting_ostream<Char, Traits, Allocator>& operator<<(boost::log::basic_formatting_ostream<Char, Traits, Allocator>& out, const stepping_range<value>& obj)
+      {
+        obj.write(out);
+        return(out);
+      }
 
 	}   // namespace transport
 
