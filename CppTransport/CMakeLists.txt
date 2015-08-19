@@ -238,8 +238,6 @@ target_link_libraries(chris-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SP
 set(EXAMPLES_DQUAD_MPI_FILES
   examples/dquad-mpi/defaults.model
   examples/dquad-mpi/dq.model
-  examples/dquad-mpi/dq_basic_unrolled.h
-  examples/dquad-mpi/dq_core.h
   examples/dquad-mpi/main.cpp
   examples/dquad-mpi/makerepo.cpp
   examples/dquad-mpi/makerepo2.cpp
@@ -269,8 +267,6 @@ set(EXAMPLES_NEW_AXION_FILES
   examples/new-axion/main.cpp
   examples/new-axion/makerepo2.cpp
   examples/new-axion/new-axion.model
-  examples/new-axion/new-axion_basic_unrolled.h
-  examples/new-axion/new-axion_core.h
 )
 
 set(TOP_LEVEL_FILES
@@ -306,7 +302,6 @@ set(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_SQL_QUERY_FILES
 
 set(EXAMPLES_RCHI_FILES
   examples/rchi/main.cpp
-  examples/rchi/rchi.h
   examples/rchi/rchi.model
 )
 
@@ -334,8 +329,6 @@ set(TEMPLATES_VEXCL_CUDA_FILES
 )
 
 set(EXAMPLES_OSCILLATORY_FILES
-  examples/oscillatory/oscillatory_basic_unrolled.h
-  examples/oscillatory/oscillatory_core.h
 )
 
 set(BACKENDS_INFRASTRUCTURE_MACRO_SUBSTITUTION_FILES
@@ -358,8 +351,6 @@ set(PARSER_BISON_FILES
 
 set(EXAMPLES_CHRIS_MPI_FILES
   examples/chris-mpi/chris.model
-  examples/chris-mpi/chris_basic_unrolled.h
-  examples/chris-mpi/chris_core.h
   examples/chris-mpi/defaults.model
   examples/chris-mpi/main.cpp
   examples/chris-mpi/makerepo2.cpp
@@ -448,8 +439,6 @@ set(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_UTILITIES_FILES
 set(EXAMPLES_HEAVY_HILLTOP_FILES
   examples/heavy-hilltop/defaults.model
   examples/heavy-hilltop/heavy_hilltop.model
-  examples/heavy-hilltop/heavy_hilltop_basic_unrolled.h
-  examples/heavy-hilltop/heavy_hilltop_core.h
   examples/heavy-hilltop/main.cpp
   examples/heavy-hilltop/makerepo2.cpp
 )
@@ -459,8 +448,6 @@ set(EXAMPLES_QUADRATIC_FILES
   examples/quadratic/main.cpp
   examples/quadratic/makerepo.cpp
   examples/quadratic/quad.model
-  examples/quadratic/quad_basic.h
-  examples/quadratic/quad_core.h
 )
 
 set(TRANSPORT_RUNTIME_API_LOCALIZATIONS_FILES
@@ -618,8 +605,6 @@ set(EXAMPLES_QSFI_FILES
   examples/qsfi/main.cpp
   examples/qsfi/makerepo2.cpp
   examples/qsfi/qsfi.model
-  examples/qsfi/qsfi_basic_unrolled.h
-  examples/qsfi/qsfi_core.h
 )
 
 set(TRANSPORT_RUNTIME_API_TASKS_INTEGRATION_DETAIL_FILES
@@ -643,8 +628,6 @@ set(TRANSPORT_RUNTIME_API_DATA_BATCHERS_FILES
 
 set(EXAMPLES_AXION_MPI_FILES
   examples/axion-mpi/axion.model
-  examples/axion-mpi/axion_basic_unrolled.h
-  examples/axion-mpi/axion_core.h
   examples/axion-mpi/defaults.model
   examples/axion-mpi/main.cpp
   examples/axion-mpi/makerepo.cpp
@@ -716,8 +699,6 @@ set(EXAMPLES_POWERLAW_FILES
   examples/powerlaw/main.cpp
   examples/powerlaw/makerepo2.cpp
   examples/powerlaw/powerlaw.model
-  examples/powerlaw/powerlaw_basic_unrolled.h
-  examples/powerlaw/powerlaw_core.h
 )
 
 set(TEMPLATES_FILES
@@ -763,8 +744,6 @@ set(BACKENDS_INFRASTRUCTURE_FILE_HANDLING_FILES
 set(EXAMPLES_INFLECTION_FILES
   examples/inflection/defaults.model
   examples/inflection/inflection.model
-  examples/inflection/inflection_basic_unrolled.h
-  examples/inflection/inflection_core.h
   examples/inflection/main.cpp
   examples/inflection/makerepo2.cpp
 )
