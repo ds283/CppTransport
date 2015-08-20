@@ -193,7 +193,7 @@ namespace transport
         virtual context backend_get_context(void) = 0;
 
 		    // obtain backend type
-		    virtual backend_type get_backend_type(void) = 0;
+		    virtual worker_type get_backend_type(void) = 0;
 
 		    // obtain backend memory capacity
 		    virtual unsigned int get_backend_memory(void) = 0;

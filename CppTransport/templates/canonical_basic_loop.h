@@ -74,7 +74,7 @@ namespace transport
         virtual context backend_get_context() override;
 
         // Get backend type
-        virtual backend_type get_backend_type() override;
+        virtual worker_type get_backend_type() override;
 
         //! Get backend memory capacity
         virtual unsigned int get_backend_memory() override;
@@ -277,9 +277,9 @@ namespace transport
 
 
     template <typename number>
-    backend_type $$__MODEL_basic<number>::get_backend_type(void)
+    worker_type $$__MODEL_basic<number>::get_backend_type(void)
 	    {
-        return(backend_type::cpu);
+        return(worker_type::cpu);
 	    }
 
 

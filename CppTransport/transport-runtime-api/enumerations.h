@@ -12,7 +12,8 @@ namespace transport
 
     enum class twopf_type { twopf_real, twopf_imag };
 
-    enum class backend_type { cpu, gpu };
+    enum class worker_type
+      { cpu, gpu };
 
 
   }

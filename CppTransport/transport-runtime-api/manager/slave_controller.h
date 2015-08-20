@@ -351,7 +351,7 @@ namespace transport
 		template <typename number>
 		void slave_controller<number>::send_worker_data(void)
 			{
-		    MPI::slave_information_payload payload(backend_type::cpu, 0, 1);
+		    MPI::slave_information_payload payload(worker_type::cpu, 0, 1);
 
 		    this->world.isend(MPI::RANK_MASTER, MPI::INFORMATION_RESPONSE, payload);
 			}

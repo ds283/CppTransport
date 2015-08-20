@@ -92,7 +92,7 @@ namespace transport
 
             //! construct a worker information record
             worker_information()
-	            : type(backend_type::cpu),
+	            : type(worker_type::cpu),
 	              capacity(0),
 	              priority(0),
 	              initialized(false),
@@ -108,7 +108,7 @@ namespace transport
           public:
 
             //! get worker type
-            backend_type get_type() const { return(this->type); }
+            worker_type get_type() const { return(this->type); }
 
 		        //! get worker number
 		        unsigned int get_number() const { return(this->number); }
@@ -135,7 +135,7 @@ namespace transport
             bool get_initialization_status() const { return(this->initialized); }
 
             //! set data
-            void set_data(unsigned int n, backend_type t, unsigned int c, unsigned int p) { this->number = n; this->type = t; this->capacity = c; this->priority = p; this->initialized = true; }
+            void set_data(unsigned int n, worker_type t, unsigned int c, unsigned int p) { this->number = n; this->type = t; this->capacity = c; this->priority = p; this->initialized = true; }
 
 		        //! update timing data
 		        void update_timing_data(boost::timer::nanosecond_type t, unsigned int n) { this->time += t; this->items += n; }
@@ -158,7 +158,7 @@ namespace transport
 		        unsigned int number;
 
             //! capacity type -- are integrations on this worker limited by memory?
-            backend_type type;
+            worker_type type;
 
             //! worker's memory capacity (for integrations only)
             unsigned int capacity;
@@ -431,14 +431,14 @@ namespace transport
 			{
 		    if(!(this->worker_data[worker].get_initialization_status()))
 			    {
-		        backend_type type = payload.get_type();
+		        worker_type type = payload.get_type();
             switch(type)
               {
-                case backend_type::cpu:
+                case worker_type::cpu:
                   this->has_cpus = true;
                   break;
 
-                case backend_type::gpu:
+                case worker_type::gpu:
                   this->has_gpus = true;
                   break;
               }
@@ -450,11 +450,11 @@ namespace transport
 		        msg << "** Worker " << worker+1 << " identified as ";
             switch(type)
               {
-                case backend_type::cpu:
+                case worker_type::cpu:
                   msg << "CPU";
                   break;
 
-                case backend_type::gpu:
+                case worker_type::gpu:
                   msg << "GPU, available memory = " << format_memory(payload.get_capacity());
                   break;
               }
