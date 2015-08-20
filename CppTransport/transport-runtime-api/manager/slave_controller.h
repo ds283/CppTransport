@@ -343,22 +343,7 @@ namespace transport
 			{
 				assert(m != nullptr);
 
-				typename model<number>::backend_type btype = m->get_backend_type();
-		    MPI::slave_information_payload::worker_type wtype;
-
-        switch(btype)
-          {
-            case model<number>::backend_type::cpu:
-              wtype = MPI::slave_information_payload::worker_type::cpu;
-              break;
-
-            case model<number>::backend_type::gpu:
-              wtype = MPI::slave_information_payload::worker_type::gpu;
-              break;
-          }
-
-		    MPI::slave_information_payload payload(wtype, m->get_backend_memory(), m->get_backend_priority());
-
+		    MPI::slave_information_payload payload(m->get_backend_type(), m->get_backend_memory(), m->get_backend_priority());
 				this->world.isend(MPI::RANK_MASTER, MPI::INFORMATION_RESPONSE, payload);
 			}
 
@@ -366,7 +351,7 @@ namespace transport
 		template <typename number>
 		void slave_controller<number>::send_worker_data(void)
 			{
-		    MPI::slave_information_payload payload(MPI::slave_information_payload::worker_type::cpu, 0, 1);
+		    MPI::slave_information_payload payload(backend_type::cpu, 0, 1);
 
 		    this->world.isend(MPI::RANK_MASTER, MPI::INFORMATION_RESPONSE, payload);
 			}
@@ -541,7 +526,7 @@ namespace transport
 				            catch(runtime_exception& xe)
 					            {
 				                success = false;
-				                BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::error) << "-- Exception reported during integration: code=" << xe.get_exception_code() << ": " << xe.what();
+				                BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::error) << "-- Exception reported during integration: code=" << static_cast<int>(xe.get_exception_code()) << ": " << xe.what();
 					            }
 
 				            // all work is now done - stop the wallclock timer
@@ -765,7 +750,7 @@ namespace transport
 				                catch(runtime_exception& xe)
 					                {
 				                    success = false;
-				                    BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::log_severity_level::error) << "!! Exception reported while processing: code=" << xe.get_exception_code() << ": " << xe.what();
+				                    BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::log_severity_level::error) << "!! Exception reported while processing: code=" << static_cast<int>(xe.get_exception_code()) << ": " << xe.what();
 					                }
 
 				                // check that the datapipe was correctly detached
@@ -1128,7 +1113,7 @@ namespace transport
 				            catch(runtime_exception& xe)
 					            {
 				                success = false;
-				                BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::error) << "-- Exception reported during postintegration: code=" << xe.get_exception_code() << ": " << xe.what();
+				                BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::error) << "-- Exception reported during postintegration: code=" << static_cast<int>(xe.get_exception_code()) << ": " << xe.what();
 					            }
 
 				            // inform the batcher we are at the end of this assignment

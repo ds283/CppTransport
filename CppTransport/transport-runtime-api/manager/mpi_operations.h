@@ -15,6 +15,8 @@
 
 #include "transport-runtime-api/manager/argument_cache.h"
 
+#include "transport-runtime-api/enumerations.h"
+
 
 namespace transport
   {
@@ -102,15 +104,11 @@ namespace transport
 
 		          public:
 
-			          enum class worker_type { cpu, gpu };
-
-		          public:
-
 				        //! Default constructor (used for receiving messages)
 				        slave_information_payload() = default;
 
 				        //! Value constructor (used for constructing messages to send)
-				        slave_information_payload(worker_type t, unsigned int c, unsigned int p)
+				        slave_information_payload(backend_type t, unsigned int c, unsigned int p)
 				          : type(t),
 		                capacity(c),
 		                priority(p)
@@ -118,7 +116,7 @@ namespace transport
 					        }
 
 				        //! Get worker type
-				        worker_type get_type() const { return(this->type); }
+				        backend_type get_type() const { return(this->type); }
 
 				        //! Get worker capacity
 				        unsigned int get_capacity() const { return(this->capacity); }
@@ -129,7 +127,7 @@ namespace transport
 		          private:
 
 				        //! Worker type
-				        worker_type type;
+				        backend_type type;
 
 				        //! Worker memory capacity (integrations only)
 				        unsigned int capacity;

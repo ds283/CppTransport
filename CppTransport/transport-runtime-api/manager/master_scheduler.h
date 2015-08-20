@@ -84,9 +84,6 @@ namespace transport
 
       public:
 
-        //! Labels for types of workers
-        enum class worker_type { cpu, gpu };
-
         //! Worker information class
         class worker_information
 	        {
@@ -95,7 +92,7 @@ namespace transport
 
             //! construct a worker information record
             worker_information()
-	            : type(worker_type::cpu),
+	            : type(backend_type::cpu),
 	              capacity(0),
 	              priority(0),
 	              initialized(false),
@@ -111,7 +108,7 @@ namespace transport
           public:
 
             //! get worker type
-            worker_type get_type() const { return(this->type); }
+            backend_type get_type() const { return(this->type); }
 
 		        //! get worker number
 		        unsigned int get_number() const { return(this->number); }
@@ -138,7 +135,7 @@ namespace transport
             bool get_initialization_status() const { return(this->initialized); }
 
             //! set data
-            void set_data(unsigned int n, worker_type t, unsigned int c, unsigned int p) { this->number = n; this->type = t; this->capacity = c; this->priority = p; this->initialized = true; }
+            void set_data(unsigned int n, backend_type t, unsigned int c, unsigned int p) { this->number = n; this->type = t; this->capacity = c; this->priority = p; this->initialized = true; }
 
 		        //! update timing data
 		        void update_timing_data(boost::timer::nanosecond_type t, unsigned int n) { this->time += t; this->items += n; }
@@ -161,7 +158,7 @@ namespace transport
 		        unsigned int number;
 
             //! capacity type -- are integrations on this worker limited by memory?
-            worker_type type;
+            backend_type type;
 
             //! worker's memory capacity (for integrations only)
             unsigned int capacity;
@@ -434,16 +431,14 @@ namespace transport
 			{
 		    if(!(this->worker_data[worker].get_initialization_status()))
 			    {
-		        worker_type type = worker_type::cpu;
-            switch(payload.get_type())
+		        backend_type type = payload.get_type();
+            switch(type)
               {
-                case MPI::slave_information_payload::worker_type::cpu:
-                  type = worker_type::cpu;
+                case backend_type::cpu:
                   this->has_cpus = true;
                   break;
 
-                case MPI::slave_information_payload::worker_type::gpu:
-                  type = worker_type::gpu;
+                case backend_type::gpu:
                   this->has_gpus = true;
                   break;
               }
@@ -455,11 +450,11 @@ namespace transport
 		        msg << "** Worker " << worker+1 << " identified as ";
             switch(type)
               {
-                case worker_type::cpu:
+                case backend_type::cpu:
                   msg << "CPU";
                   break;
 
-                case worker_type::gpu:
+                case backend_type::gpu:
                   msg << "GPU, available memory = " << format_memory(payload.get_capacity());
                   break;
               }

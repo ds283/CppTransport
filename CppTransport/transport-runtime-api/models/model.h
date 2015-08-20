@@ -17,6 +17,7 @@
 
 #include "transport-runtime-api/messages.h"
 #include "transport-runtime-api/defaults.h"
+#include "transport-runtime-api/enumerations.h"
 
 #include "transport-runtime-api/concepts/flattener.h"
 #include "transport-runtime-api/concepts/initial_conditions.h"
@@ -54,9 +55,6 @@ namespace transport
       public:
 
         typedef std::vector< std::vector<number> > backg_history;
-
-		    enum class backend_type { cpu, gpu };
-
 
         // CONSTRUCTORS, DESTRUCTORS
 
