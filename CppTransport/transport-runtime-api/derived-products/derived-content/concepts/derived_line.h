@@ -108,9 +108,6 @@ namespace transport
 		namespace derived_data
 			{
 
-		    typedef enum { derivatives, momenta } dot_type;
-		    typedef enum { conventional, comoving } klabel_type;
-
 				//! content producer
 				template <typename number>
 				class derived_line: public serializable
@@ -292,8 +289,8 @@ namespace transport
 				derived_line<number>::derived_line(const derivable_task<number>& tk, axis_class at, std::list< axis_value > sax, unsigned int prec)
 					: x_class(at),
 					  supported_x_axes(sax),
-            dot_meaning(momenta),
-            klabel_meaning(conventional),
+            dot_meaning(dot_type::momenta),
+            klabel_meaning(klabel_type::conventional),
             label_set(false),
             use_tags(true),
             precision(prec),
@@ -301,8 +298,8 @@ namespace transport
 					{
 						assert(parent_task != nullptr);
 
-				    if(parent_task == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_PRODUCT_DERIVED_LINE_NOT_DERIVABLE_TASK);
-						if(supported_x_axes.size() == 0) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_PRODUCT_DERIVED_LINE_NO_AXIS_TYPES);
+				    if(parent_task == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_PRODUCT_DERIVED_LINE_NOT_DERIVABLE_TASK);
+						if(supported_x_axes.size() == 0) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_PRODUCT_DERIVED_LINE_NO_AXIS_TYPES);
 
 						x_type = supported_x_axes.front();
 					}
@@ -345,14 +342,14 @@ namespace transport
 
 						// Deserialize: axis type for this derived line
 				    std::string xtype = reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_X_AXIS_CLASS].asString();
-				    if(xtype == CPPTRANSPORT_NODE_PRODUCT_AXIS_CLASS_TIME)                       x_class = time_axis;
-				    else if(xtype == CPPTRANSPORT_NODE_PRODUCT_AXIS_CLASS_WAVENUMBER)            x_class = wavenumber_axis;
-				    else if(xtype == CPPTRANSPORT_NODE_PRODUCT_AXIS_CLASS_THREEPF_CONFIGURATION) x_class = threepf_kconfig_axis;
+				    if(xtype == CPPTRANSPORT_NODE_PRODUCT_AXIS_CLASS_TIME)                       x_class = axis_class::time_axis;
+				    else if(xtype == CPPTRANSPORT_NODE_PRODUCT_AXIS_CLASS_WAVENUMBER)            x_class = axis_class::wavenumber_axis;
+				    else if(xtype == CPPTRANSPORT_NODE_PRODUCT_AXIS_CLASS_THREEPF_CONFIGURATION) x_class = axis_class::threepf_kconfig_axis;
 				    else
 					    {
 				        std::ostringstream msg;
 				        msg << CPPTRANSPORT_PRODUCT_DERIVED_LINE_UNKNOWN_X_AXIS_CLASS << " '" << xtype << "'";
-				        throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
+				        throw runtime_exception(exception_type::SERIALIZATION_ERROR, msg.str());
 					    }
 
 						// Deserialize: supported x-axis values
@@ -363,20 +360,20 @@ namespace transport
 							{
 								// decode this array element
 						    std::string value_string = t->asString();
-								axis_value value = efolds_axis;
-								if(value_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_EFOLDS)                     value = efolds_axis;
-								else if(value_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_WAVENUMBER)            value = k_axis;
-								else if(value_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_EFOLDS_EXIT)           value = efolds_exit_axis;
-								else if(value_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_ALPHA)                 value = alpha_axis;
-								else if(value_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_BETA)                  value = beta_axis;
-								else if(value_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K1) value = squeezing_fraction_k1_axis;
-								else if(value_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K2) value = squeezing_fraction_k2_axis;
-								else if(value_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K3) value = squeezing_fraction_k3_axis;
+								axis_value value = axis_value::efolds_axis;
+								if(value_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_EFOLDS)                     value = axis_value::efolds_axis;
+								else if(value_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_WAVENUMBER)            value = axis_value::k_axis;
+								else if(value_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_EFOLDS_EXIT)           value = axis_value::efolds_exit_axis;
+								else if(value_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_ALPHA)                 value = axis_value::alpha_axis;
+								else if(value_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_BETA)                  value = axis_value::beta_axis;
+								else if(value_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K1) value = axis_value::squeezing_fraction_k1_axis;
+								else if(value_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K2) value = axis_value::squeezing_fraction_k2_axis;
+								else if(value_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K3) value = axis_value::squeezing_fraction_k3_axis;
 								else
 									{
 								    std::ostringstream msg;
 										msg << CPPTRANSPORT_PRODUCT_DERIVED_LINE_UNKNOWN_X_AXIS_VALUE << " '" << value_string << "'";
-								    throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
+								    throw runtime_exception(exception_type::SERIALIZATION_ERROR, msg.str());
 									}
 
 								// add this value to the list of supported axes, if it is not already present
@@ -386,50 +383,50 @@ namespace transport
 
 						// Deserialize: current x-axis type
 				    std::string x_type_string = reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_CURRENT_X_AXIS_VALUE].asString();
-				    if(x_type_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_EFOLDS)                     x_type = efolds_axis;
-				    else if(x_type_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_WAVENUMBER)            x_type = k_axis;
-				    else if(x_type_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_EFOLDS_EXIT)           x_type = efolds_exit_axis;
-				    else if(x_type_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_ALPHA)                 x_type = alpha_axis;
-				    else if(x_type_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_BETA)                  x_type = beta_axis;
-				    else if(x_type_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K1) x_type = squeezing_fraction_k1_axis;
-				    else if(x_type_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K2) x_type = squeezing_fraction_k2_axis;
-				    else if(x_type_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K3) x_type = squeezing_fraction_k3_axis;
+				    if(x_type_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_EFOLDS)                     x_type = axis_value::efolds_axis;
+				    else if(x_type_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_WAVENUMBER)            x_type = axis_value::k_axis;
+				    else if(x_type_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_EFOLDS_EXIT)           x_type = axis_value::efolds_exit_axis;
+				    else if(x_type_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_ALPHA)                 x_type = axis_value::alpha_axis;
+				    else if(x_type_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_BETA)                  x_type = axis_value::beta_axis;
+				    else if(x_type_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K1) x_type = axis_value::squeezing_fraction_k1_axis;
+				    else if(x_type_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K2) x_type = axis_value::squeezing_fraction_k2_axis;
+				    else if(x_type_string == CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K3) x_type = axis_value::squeezing_fraction_k3_axis;
 				    else
 					    {
 				        std::ostringstream msg;
 				        msg << CPPTRANSPORT_PRODUCT_DERIVED_LINE_UNKNOWN_X_AXIS_VALUE << " '" << x_type_string << "'";
-				        throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
+				        throw runtime_exception(exception_type::SERIALIZATION_ERROR, msg.str());
 					    }
 				    std::list< axis_value >::iterator fv = std::find(supported_x_axes.begin(), supported_x_axes.end(), x_type);
 						if(fv == supported_x_axes.end())
 							{
 						    std::stringstream msg;
 								msg << CPPTRANSPORT_PRODUCT_DERIVED_LINE_X_AXIS_NOT_SUPPORTED << " '" << x_type_string << "'";
-								throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
+								throw runtime_exception(exception_type::SERIALIZATION_ERROR, msg.str());
 							}
 
 						// Deserialize: meaning of 'dot' for this derived line
 				    std::string dot_meaning_value = reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_DOT_TYPE].asString();
 
-				    if(dot_meaning_value == CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_DOT_DERIVATIVE)   dot_meaning = derivatives;
-				    else if(dot_meaning_value == CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_DOT_MOMENTA) dot_meaning = momenta;
+				    if(dot_meaning_value == CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_DOT_DERIVATIVE)   dot_meaning = dot_type::derivatives;
+				    else if(dot_meaning_value == CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_DOT_MOMENTA) dot_meaning = dot_type::momenta;
 				    else
 					    {
 				        std::ostringstream msg;
 				        msg << CPPTRANSPORT_PRODUCT_DERIVED_LINE_DOT_TYPE_UNKNOWN << " '" << dot_meaning_value << "'";
-				        throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
+				        throw runtime_exception(exception_type::SERIALIZATION_ERROR, msg.str());
 					    }
 
 						// Deserialize: meaning of k-labels for this derived line
 				    std::string label_meaning_value = reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_KLABEL_TYPE].asString();
 
-				    if(label_meaning_value == CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_KLABEL_CONVENTIONAL)  klabel_meaning = conventional;
-				    else if(label_meaning_value == CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_KLABEL_COMOVING) klabel_meaning = comoving;
+				    if(label_meaning_value == CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_KLABEL_CONVENTIONAL)  klabel_meaning = klabel_type::conventional;
+				    else if(label_meaning_value == CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_KLABEL_COMOVING) klabel_meaning = klabel_type::comoving;
 				    else
 					    {
 				        std::ostringstream msg;
 				        msg << CPPTRANSPORT_PRODUCT_DERIVED_LINE_KLABEL_TYPE_UNKNOWN << " '" << label_meaning_value << "'";
-				        throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
+				        throw runtime_exception(exception_type::SERIALIZATION_ERROR, msg.str());
 					    }
 					}
 
@@ -451,7 +448,7 @@ namespace transport
 						assert(this->parent_task != nullptr);
 
 				    if(parent_task == nullptr)
-					    throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_PRODUCT_DERIVED_LINE_NOT_DERIVABLE_TASK);
+					    throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_PRODUCT_DERIVED_LINE_NOT_DERIVABLE_TASK);
 					}
 
 
@@ -472,7 +469,7 @@ namespace transport
 							{
 						    std::ostringstream msg;
 								msg << CPPTRANSPORT_PRODUCT_DERIVED_LINE_UNSUPPORTED_X_AXIS_TYPE;
-								throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
+								throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
 							}
 
 						this->x_type = v;
@@ -538,21 +535,17 @@ namespace transport
 						// Serialize: axis type of this derived line
 				    switch(this->x_class)
 							{
-						    case time_axis:
+						    case axis_class::time_axis:
 							    writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_X_AXIS_CLASS] = std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_CLASS_TIME);
 									break;
 
-						    case wavenumber_axis:
+						    case axis_class::wavenumber_axis:
 							    writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_X_AXIS_CLASS] = std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_CLASS_WAVENUMBER);
 									break;
 
-				        case threepf_kconfig_axis:
+				        case axis_class::threepf_kconfig_axis:
 					        writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_X_AXIS_CLASS] = std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_CLASS_THREEPF_CONFIGURATION);
 						      break;
-
-						    default:
-							    assert(false);
-									throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_PRODUCT_DERIVED_LINE_UNKNOWN_X_AXIS_CLASS);
 							}
 
 						// Serialize: supported x-axis types
@@ -561,41 +554,41 @@ namespace transport
 							{
 								switch(*t)
 									{
-								    case efolds_axis:
+								    case axis_value::efolds_axis:
 									    supported_array.append(Json::Value(std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_EFOLDS)));
 											break;
 
-								    case k_axis:
+								    case axis_value::k_axis:
 									    supported_array.append(Json::Value(std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_WAVENUMBER)));
 											break;
 
-								    case efolds_exit_axis:
+								    case axis_value::efolds_exit_axis:
 									    supported_array.append(Json::Value(std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_EFOLDS_EXIT)));
 											break;
 
-								    case alpha_axis:
+								    case axis_value::alpha_axis:
 									    supported_array.append(Json::Value(std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_ALPHA)));
 											break;
 
-								    case beta_axis:
+								    case axis_value::beta_axis:
 									    supported_array.append(Json::Value(std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_BETA)));
 											break;
 
-								    case squeezing_fraction_k1_axis:
+								    case axis_value::squeezing_fraction_k1_axis:
 									    supported_array.append(Json::Value(std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K1)));
 											break;
 
-								    case squeezing_fraction_k2_axis:
+								    case axis_value::squeezing_fraction_k2_axis:
 									    supported_array.append(Json::Value(std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K2)));
 									    break;
 
-								    case squeezing_fraction_k3_axis:
+								    case axis_value::squeezing_fraction_k3_axis:
 									    supported_array.append(Json::Value(std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K3)));
 									    break;
 
 								    default:
 									    assert(false);
-											throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_PRODUCT_DERIVED_LINE_UNKNOWN_X_AXIS_VALUE);
+											throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_PRODUCT_DERIVED_LINE_UNKNOWN_X_AXIS_VALUE);
 									}
 							}
 						writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_SUPPORTED_X_AXES] = supported_array;
@@ -603,73 +596,65 @@ namespace transport
 						// Serialize: current x-axis type
 				    switch(this->x_type)
 					    {
-				        case efolds_axis:
+				        case axis_value::efolds_axis:
 					        writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_CURRENT_X_AXIS_VALUE] = std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_EFOLDS);
 				          break;
 
-				        case k_axis:
+				        case axis_value::k_axis:
 					        writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_CURRENT_X_AXIS_VALUE] = std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_WAVENUMBER);
 				          break;
 
-				        case efolds_exit_axis:
+				        case axis_value::efolds_exit_axis:
 					        writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_CURRENT_X_AXIS_VALUE] = std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_EFOLDS_EXIT);
 				          break;
 
-				        case alpha_axis:
+				        case axis_value::alpha_axis:
 					        writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_CURRENT_X_AXIS_VALUE] = std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_ALPHA);
 				          break;
 
-				        case beta_axis:
+				        case axis_value::beta_axis:
 					       writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_CURRENT_X_AXIS_VALUE] = std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_BETA);
 				          break;
 
-				        case squeezing_fraction_k1_axis:
+				        case axis_value::squeezing_fraction_k1_axis:
 					        writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_CURRENT_X_AXIS_VALUE] = std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K1);
 				          break;
 
-				        case squeezing_fraction_k2_axis:
+				        case axis_value::squeezing_fraction_k2_axis:
 					        writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_CURRENT_X_AXIS_VALUE] = std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K2);
 				          break;
 
-				        case squeezing_fraction_k3_axis:
+				        case axis_value::squeezing_fraction_k3_axis:
 					        writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_CURRENT_X_AXIS_VALUE] = std::string(CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K3);
 				          break;
 
 				        default:
 					        assert(false);
-				          throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_PRODUCT_DERIVED_LINE_UNKNOWN_X_AXIS_VALUE);
+				          throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_PRODUCT_DERIVED_LINE_UNKNOWN_X_AXIS_VALUE);
 					    }
 
 						// Serialize: meaning of 'dot' for this derived line
 				    switch(this->dot_meaning)
 					    {
-				        case derivatives:
+				        case dot_type::derivatives:
 					        writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_DOT_TYPE] = std::string(CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_DOT_DERIVATIVE);
 				          break;
 
-				        case momenta:
+                case dot_type::momenta:
 					        writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_DOT_TYPE] = std::string(CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_DOT_MOMENTA);
 				          break;
-
-				        default:
-					        assert(false);
-					        throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_PRODUCT_DERIVED_LINE_DOT_TYPE_UNKNOWN);
 					    }
 
 						// Serialize: meaning of k-labels for this derived line
 				    switch(this->klabel_meaning)
 					    {
-				        case conventional:
+				        case klabel_type::conventional:
 					        writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_KLABEL_TYPE] = std::string(CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_KLABEL_CONVENTIONAL);
 				          break;
 
-				        case comoving:
+                case klabel_type::comoving:
 					        writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_KLABEL_TYPE] = std::string(CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_KLABEL_COMOVING);
 				          break;
-
-				        default:
-					        assert(false);
-					        throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_PRODUCT_DERIVED_LINE_KLABEL_TYPE_UNKNOWN);
 					    }
 					}
 
@@ -695,20 +680,17 @@ namespace transport
 						out << "  " << CPPTRANSPORT_PRODUCT_DERIVED_LINE_X_AXIS_CLASS << " ";
 						switch(this->x_class)
 							{
-						    case time_axis:
+						    case axis_class::time_axis:
 							    out << CPPTRANSPORT_PRODUCT_DERIVED_LINE_CLASS_TIME_LABEL << '\n';
 									break;
 
-						    case wavenumber_axis:
+						    case axis_class::wavenumber_axis:
 									out << CPPTRANSPORT_PRODUCT_DERIVED_LINE_CLASS_WAVENUMBER_LABEL << '\n';
 									break;
 
-						    case threepf_kconfig_axis:
+						    case axis_class::threepf_kconfig_axis:
 							    out << CPPTRANSPORT_PRODUCT_DERIVED_LINE_CLASS_THREEPF_CONFIGURATION_LABEL << '\n';
-
-						    default:
-							    assert(false);
-									throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_PRODUCT_DERIVED_LINE_UNKNOWN_X_AXIS_CLASS);
+                  break;
 							}
 
 						unsigned int count = 0;
@@ -718,41 +700,41 @@ namespace transport
 							{
 								switch(*t)
 									{
-								    case efolds_axis:
+								    case axis_value::efolds_axis:
 									    this->wrapper.wrap_list_item(out, true, CPPTRANSPORT_PRODUCT_DERIVED_LINE_X_AXIS_VALUE_EFOLDS, count);
 											break;
 
-								    case k_axis:
+								    case axis_value::k_axis:
 									    this->wrapper.wrap_list_item(out, true, CPPTRANSPORT_PRODUCT_DERIVED_LINE_X_AXIS_VALUE_K, count);
 											break;
 
-								    case efolds_exit_axis:
+								    case axis_value::efolds_exit_axis:
 									    this->wrapper.wrap_list_item(out, true, CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_EFOLDS_EXIT, count);
 											break;
 
-								    case alpha_axis:
+								    case axis_value::alpha_axis:
 									    this->wrapper.wrap_list_item(out, true, CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_ALPHA, count);
 											break;
 
-								    case beta_axis:
+								    case axis_value::beta_axis:
 									    this->wrapper.wrap_list_item(out, true, CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_BETA, count);
 											break;
 
-								    case squeezing_fraction_k1_axis:
+								    case axis_value::squeezing_fraction_k1_axis:
 									    this->wrapper.wrap_list_item(out, true, CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K1, count);
 											break;
 
-								    case squeezing_fraction_k2_axis:
+								    case axis_value::squeezing_fraction_k2_axis:
 									    this->wrapper.wrap_list_item(out, true, CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K2, count);
 											break;
 
-								    case squeezing_fraction_k3_axis:
+								    case axis_value::squeezing_fraction_k3_axis:
 									    this->wrapper.wrap_list_item(out, true, CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K3, count);
 											break;
 
 								    default:
 									    assert(false);
-											throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_PRODUCT_DERIVED_LINE_UNKNOWN_X_AXIS_VALUE);
+											throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_PRODUCT_DERIVED_LINE_UNKNOWN_X_AXIS_VALUE);
 									}
 							}
 						if(count == CPPTRANSPORT_PRODUCT_MAX_SUPPORTED_AXES) this->wrapper.wrap_list_item(out, true, "...", count);
@@ -761,73 +743,65 @@ namespace transport
 						out << CPPTRANSPORT_PRODUCT_DERIVED_LINE_CURRENT_X_AXIS << " ";
 				    switch(this->x_type)
 					    {
-				        case efolds_axis:
+				        case axis_value::efolds_axis:
 					        out << CPPTRANSPORT_PRODUCT_DERIVED_LINE_X_AXIS_VALUE_EFOLDS << '\n';
 				          break;
 
-				        case k_axis:
+				        case axis_value::k_axis:
 					        out << CPPTRANSPORT_PRODUCT_DERIVED_LINE_X_AXIS_VALUE_K << '\n';
 				          break;
 
-				        case efolds_exit_axis:
+				        case axis_value::efolds_exit_axis:
 					        out << CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_EFOLDS_EXIT << '\n';
 				          break;
 
-				        case alpha_axis:
+				        case axis_value::alpha_axis:
 					        out << CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_ALPHA << '\n';
 				          break;
 
-				        case beta_axis:
+				        case axis_value::beta_axis:
 					        out << CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_BETA << '\n';
 				          break;
 
-				        case squeezing_fraction_k1_axis:
+				        case axis_value::squeezing_fraction_k1_axis:
 					        out << CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K1 << '\n';
 				          break;
 
-				        case squeezing_fraction_k2_axis:
+				        case axis_value::squeezing_fraction_k2_axis:
 					        out << CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K2 << '\n';
 				          break;
 
-				        case squeezing_fraction_k3_axis:
+				        case axis_value::squeezing_fraction_k3_axis:
 					        out << CPPTRANSPORT_NODE_PRODUCT_AXIS_VALUE_SQUEEZING_FRACTION_K3 << '\n';
 				          break;
 
 				        default:
 					        assert(false);
-				          throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_PRODUCT_DERIVED_LINE_UNKNOWN_X_AXIS_VALUE);
+				          throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_PRODUCT_DERIVED_LINE_UNKNOWN_X_AXIS_VALUE);
 					    }
 
 						out << "  " << CPPTRANSPORT_PRODUCT_DERIVED_LINE_DOT_MEANING << " ";
 						switch(this->dot_meaning)
 							{
-						    case derivatives:
+						    case dot_type::derivatives:
 							    out << CPPTRANSPORT_PRODUCT_DERIVED_LINE_DOT_DERIVATIVE;
 									break;
 
-						    case momenta:
+                case dot_type::momenta:
 							    out << CPPTRANSPORT_PRODUCT_DERIVED_LINE_DOT_MOMENTA;
 									break;
-
-						    default:
-							    assert(false);
-									throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_PRODUCT_DERIVED_LINE_DOT_TYPE_UNKNOWN);
 							}
 
 						out << ", " << CPPTRANSPORT_PRODUCT_DERIVED_LINE_KLABEL_MEANING << " ";
 						switch(this->klabel_meaning)
 							{
-						    case comoving:
+						    case klabel_type::comoving:
 							    out << CPPTRANSPORT_PRODUCT_DERIVED_LINE_KLABEL_COMOVING;
 									break;
 
-						    case conventional:
+                case klabel_type::conventional:
 							    out << CPPTRANSPORT_PRODUCT_DERIVED_LINE_KLABEL_CONVENTIONAL;
 									break;
-
-						    default:
-							    assert(false);
-									throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_PRODUCT_DERIVED_LINE_KLABEL_TYPE_UNKNOWN);
 							}
 
 				    count = 0;

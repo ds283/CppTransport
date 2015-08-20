@@ -35,6 +35,7 @@
 #include "transport-runtime-api/derived-products/utilities/extractor.h"
 
 #include "transport-runtime-api/derived-products/derived-content/SQL_query/SQL_query.h"
+#include "transport-runtime-api/derived-products/derived-content/correlation-functions/compute-gadgets/common.h"
 
 
 namespace transport
@@ -46,11 +47,6 @@ namespace transport
 				template <typename number>
         class threepf_time_shift
 	        {
-
-          public:
-
-            typedef enum { left, middle, right } operator_position;
-
 
 		        // CONSTRUCTOR, DESTRUCTOR
 
@@ -83,7 +79,7 @@ namespace transport
                             unsigned int p, const extractor& p_extract,
                             unsigned int q, const extractor& q_extract,
                             unsigned int r, const extractor& r_extract,
-                            const threepf_kconfig& config, operator_position pos) const;
+                            const threepf_kconfig& config, derived_data_impl::operator_position pos) const;
 
 
 		        // INTERNAL DATA
@@ -129,11 +125,11 @@ namespace transport
 			        }
 
 		        if(mdl->is_momentum(l)) this->make_shift(tk, mdl, pipe, tquery, line_data, t_axis, background,
-		                                                 l, extractor(1), m, extractor(2), n, extractor(3), config, left);
+		                                                 l, extractor(1), m, extractor(2), n, extractor(3), config, derived_data_impl::operator_position::left_pos);
 		        if(mdl->is_momentum(m)) this->make_shift(tk, mdl, pipe, tquery, line_data, t_axis, background,
-		                                                 m, extractor(2), l, extractor(1), n, extractor(3), config, middle);
+		                                                 m, extractor(2), l, extractor(1), n, extractor(3), config, derived_data_impl::operator_position::middle_pos);
 		        if(mdl->is_momentum(n)) this->make_shift(tk, mdl, pipe, tquery, line_data, t_axis, background,
-		                                                 n, extractor(3), l, extractor(1), m, extractor(2), config, right);
+		                                                 n, extractor(3), l, extractor(1), m, extractor(2), config, derived_data_impl::operator_position::right_pos);
 			    }
 
 
@@ -144,7 +140,7 @@ namespace transport
                                                     unsigned int p, const extractor& p_extract,
                                                     unsigned int q, const extractor& q_extract,
                                                     unsigned int r, const extractor& r_extract,
-                                                    const threepf_kconfig& config, operator_position pos) const
+                                                    const threepf_kconfig& config, derived_data_impl::operator_position pos) const
 			    {
 		        assert(mdl != nullptr);
 		        assert(tk != nullptr);
@@ -164,52 +160,47 @@ namespace transport
 		        // p is guaranteed to be a momentum label, but we will want to know what field species it corresponds to
 		        unsigned int p_species = mdl->species(p);
 
-		        typedef enum { first_index, second_index } fixed_index;
-
 		        // we need to know which index on each twopf is fixed, and which is summed over
-		        fixed_index q_fixed = first_index;
-		        fixed_index r_fixed = first_index;
+		        derived_data_impl::fixed_index q_fixed = derived_data_impl::fixed_index::first_index;
+            derived_data_impl::fixed_index r_fixed = derived_data_impl::fixed_index::first_index;
 
 		        switch(pos)
 			        {
-		            case left:    // our operator is on the far left-hand side, so is to the left of both the q and r operators
-			            q_fixed = second_index;
-		              r_fixed = second_index;
+		            case derived_data_impl::operator_position::left_pos:    // our operator is on the far left-hand side, so is to the left of both the q and r operators
+			            q_fixed = derived_data_impl::fixed_index::second_index;
+		              r_fixed = derived_data_impl::fixed_index::second_index;
 		              break;
 
-		            case middle:  // our operator is in the middle, to the right of the q operator but to the left of the r operator
-			            q_fixed = first_index;
-		              r_fixed = second_index;
+		            case derived_data_impl::operator_position::middle_pos:  // our operator is in the middle, to the right of the q operator but to the left of the r operator
+			            q_fixed = derived_data_impl::fixed_index::first_index;
+		              r_fixed = derived_data_impl::fixed_index::second_index;
 		              break;
 
-		            case right:   // our operator is on the right, to the right of both the q and r operators
-			            q_fixed = first_index;
-		              r_fixed = first_index;
+                case derived_data_impl::operator_position::right_pos:   // our operator is on the right, to the right of both the q and r operators
+			            q_fixed = derived_data_impl::fixed_index::first_index;
+		              r_fixed = derived_data_impl::fixed_index::first_index;
 		              break;
-
-		            default:
-			            throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_PRODUCT_TIME_SERIES_UNKNOWN_OPPOS);
-			        }
+              }
 
 		        typename datapipe<number>::time_data_handle& t_handle = pipe.new_time_data_handle(tquery);
 
 		        // pull out components of the two-pf that we need
 		        for(unsigned int i = 0; i < N_fields; ++i)
 			        {
-		            unsigned int q_id = mdl->flatten((q_fixed == first_index ? q : i), (q_fixed == second_index ? q : i));
-		            unsigned int r_id = mdl->flatten((r_fixed == first_index ? r : i), (r_fixed == second_index ? r : i));
-		            unsigned int mom_q_id = mdl->flatten((q_fixed == first_index ? q : mdl->momentum(i)), (q_fixed == second_index ? q : mdl->momentum(i)));
-		            unsigned int mom_r_id = mdl->flatten((r_fixed == first_index ? r : mdl->momentum(i)), (r_fixed == second_index ? r : mdl->momentum(i)));
+		            unsigned int q_id = mdl->flatten((q_fixed == derived_data_impl::fixed_index::first_index ? q : i), (q_fixed == derived_data_impl::fixed_index::second_index ? q : i));
+		            unsigned int r_id = mdl->flatten((r_fixed == derived_data_impl::fixed_index::first_index ? r : i), (r_fixed == derived_data_impl::fixed_index::second_index ? r : i));
+		            unsigned int mom_q_id = mdl->flatten((q_fixed == derived_data_impl::fixed_index::first_index ? q : mdl->momentum(i)), (q_fixed == derived_data_impl::fixed_index::second_index ? q : mdl->momentum(i)));
+		            unsigned int mom_r_id = mdl->flatten((r_fixed == derived_data_impl::fixed_index::first_index ? r : mdl->momentum(i)), (r_fixed == derived_data_impl::fixed_index::second_index ? r : mdl->momentum(i)));
 
-		            cf_time_data_tag<number> q_re_tag     = pipe.new_cf_time_data_tag(data_tag<number>::cf_twopf_re, q_id,     q_extract.serial(config));
-		            cf_time_data_tag<number> q_im_tag     = pipe.new_cf_time_data_tag(data_tag<number>::cf_twopf_im, q_id,     q_extract.serial(config));
-		            cf_time_data_tag<number> mom_q_re_tag = pipe.new_cf_time_data_tag(data_tag<number>::cf_twopf_re, mom_q_id, q_extract.serial(config));
-		            cf_time_data_tag<number> mom_q_im_tag = pipe.new_cf_time_data_tag(data_tag<number>::cf_twopf_im, mom_q_id, q_extract.serial(config));
+		            cf_time_data_tag<number> q_re_tag     = pipe.new_cf_time_data_tag(cf_data_type::cf_twopf_re, q_id,     q_extract.serial(config));
+		            cf_time_data_tag<number> q_im_tag     = pipe.new_cf_time_data_tag(cf_data_type::cf_twopf_im, q_id,     q_extract.serial(config));
+		            cf_time_data_tag<number> mom_q_re_tag = pipe.new_cf_time_data_tag(cf_data_type::cf_twopf_re, mom_q_id, q_extract.serial(config));
+		            cf_time_data_tag<number> mom_q_im_tag = pipe.new_cf_time_data_tag(cf_data_type::cf_twopf_im, mom_q_id, q_extract.serial(config));
 
-		            cf_time_data_tag<number> r_re_tag     = pipe.new_cf_time_data_tag(data_tag<number>::cf_twopf_re, r_id,     r_extract.serial(config));
-		            cf_time_data_tag<number> r_im_tag     = pipe.new_cf_time_data_tag(data_tag<number>::cf_twopf_im, r_id,     r_extract.serial(config));
-		            cf_time_data_tag<number> mom_r_re_tag = pipe.new_cf_time_data_tag(data_tag<number>::cf_twopf_re, mom_r_id, r_extract.serial(config));
-		            cf_time_data_tag<number> mom_r_im_tag = pipe.new_cf_time_data_tag(data_tag<number>::cf_twopf_im, mom_r_id, r_extract.serial(config));
+		            cf_time_data_tag<number> r_re_tag     = pipe.new_cf_time_data_tag(cf_data_type::cf_twopf_re, r_id,     r_extract.serial(config));
+		            cf_time_data_tag<number> r_im_tag     = pipe.new_cf_time_data_tag(cf_data_type::cf_twopf_im, r_id,     r_extract.serial(config));
+		            cf_time_data_tag<number> mom_r_re_tag = pipe.new_cf_time_data_tag(cf_data_type::cf_twopf_re, mom_r_id, r_extract.serial(config));
+		            cf_time_data_tag<number> mom_r_im_tag = pipe.new_cf_time_data_tag(cf_data_type::cf_twopf_im, mom_r_id, r_extract.serial(config));
 
 		            const std::vector<number> q_line_re     = t_handle.lookup_tag(q_re_tag);
 		            const std::vector<number> q_line_im     = t_handle.lookup_tag(q_im_tag);

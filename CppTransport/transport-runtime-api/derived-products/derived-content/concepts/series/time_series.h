@@ -136,8 +136,8 @@ namespace transport
 		    template <typename number>
 		    std::vector<double> time_series<number>::pull_time_axis(datapipe<number>& pipe, const SQL_time_config_query& tquery) const
 			    {
-				    assert(this->x_type == efolds_axis);
-		        if(!pipe.validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, CPPTRANSPORT_PRODUCT_TIME_SERIES_NULL_DATAPIPE);
+				    assert(this->x_type == axis_value::efolds_axis);
+		        if(!pipe.validate_attached()) throw runtime_exception(exception_type::DATAPIPE_ERROR, CPPTRANSPORT_PRODUCT_TIME_SERIES_NULL_DATAPIPE);
 
 		        // set-up time sample data
 				    typename datapipe<number>::time_config_handle& handle = pipe.new_time_config_handle(tquery);
@@ -164,8 +164,16 @@ namespace transport
 				    label << std::setprecision(this->precision);
 
 				    label << CPPTRANSPORT_NONLATEX_K_SYMBOL << "=";
-				    if(this->get_klabel_meaning() == conventional) label << config.k_conventional;
-				    else label << config.k_comoving;
+            switch(this->get_klabel_meaning())
+              {
+                case klabel_type::conventional:
+                  label << config.k_conventional;
+                  break;
+
+                case klabel_type::comoving:
+                  label << config.k_comoving;
+                  break;
+              }
 
 				    return(label.str());
 					}
@@ -177,8 +185,16 @@ namespace transport
 				    std::ostringstream label;
 
 				    label << CPPTRANSPORT_LATEX_K_SYMBOL << "=";
-				    if(this->get_klabel_meaning() == conventional) label << output_latex_number(config.k_conventional, this->precision);
-				    else label << output_latex_number(config.k_comoving, this->precision);
+            switch(this->get_klabel_meaning())
+              {
+                case klabel_type::conventional:
+                  label << output_latex_number(config.k_conventional, this->precision);
+                  break;
+
+                case klabel_type::comoving:
+                  label << output_latex_number(config.k_comoving, this->precision);
+                  break;
+              }
 
             return(label.str());
 					}
@@ -194,8 +210,16 @@ namespace transport
 		        if(use_kt)
 			        {
 		            label << (count > 0 ? ",\\, " : "") << CPPTRANSPORT_LATEX_KT_SYMBOL << "=";
-		            if(this->get_klabel_meaning() == conventional) label << output_latex_number(config.kt_conventional, this->precision);
-		            else label << output_latex_number(config.kt_comoving, this->precision);
+                switch(this->get_klabel_meaning())
+                  {
+                    case klabel_type::conventional:
+                      label << output_latex_number(config.kt_conventional, this->precision);
+                      break;
+
+                    case klabel_type::comoving:
+                      label << output_latex_number(config.kt_comoving, this->precision);
+                      break;
+                  }
 		            count++;
 			        }
 		        if(use_alpha)
@@ -223,8 +247,16 @@ namespace transport
 				    if(use_kt)
 					    {
 				        label << (count > 0 ? ", " : "") << CPPTRANSPORT_NONLATEX_KT_SYMBOL << "=";
-				        if(this->get_klabel_meaning() == conventional) label << config.kt_conventional;
-				        else label << config.kt_comoving;
+                switch(this->get_klabel_meaning())
+                  {
+                    case klabel_type::conventional:
+                      label << config.kt_conventional;
+                      break;
+
+                    case klabel_type::comoving:
+                      label << config.kt_comoving;
+                      break;
+                  }
 				        count++;
 					    }
 				    if(use_alpha)

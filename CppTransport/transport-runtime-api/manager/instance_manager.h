@@ -171,7 +171,7 @@ namespace transport
             std::ostringstream msg;
             msg << CPPTRANSPORT_OLD_RUNTIMEAPI_A << " (" << CPPTRANSPORT_RUNTIME_API_VERSION << ") "
                 << CPPTRANSPORT_OLD_RUNTIMEAPI_B << " " << uid << " " CPPTRANSPORT_OLD_RUNTIMEAPI_C << " " << version;
-            throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
+            throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
           }
 
         model_instance<number> instance(m, uid, version);
@@ -182,7 +182,7 @@ namespace transport
           }
         else
           {
-            throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_INSTANCES_MULTIPLE);
+            throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_INSTANCES_MULTIPLE);
           }
       }
 
@@ -202,7 +202,7 @@ namespace transport
           }
         else
           {
-            throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_INSTANCES_DELETE);
+            throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_INSTANCES_DELETE);
           }
       }
 
@@ -217,7 +217,7 @@ namespace transport
           {
             std::ostringstream msg;
             msg << CPPTRANSPORT_INSTANCES_MISSING << " '" << i << "'";
-            throw runtime_exception(runtime_exception::MISSING_MODEL_INSTANCE, msg.str());
+            throw runtime_exception(exception_type::MISSING_MODEL_INSTANCE, msg.str());
           }
         else
           {

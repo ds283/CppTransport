@@ -17,6 +17,7 @@
 
 #include "transport-runtime-api/messages.h"
 #include "transport-runtime-api/defaults.h"
+#include "transport-runtime-api/enumerations.h"
 
 #include "transport-runtime-api/concepts/flattener.h"
 #include "transport-runtime-api/concepts/initial_conditions.h"
@@ -54,9 +55,6 @@ namespace transport
       public:
 
         typedef std::vector< std::vector<number> > backg_history;
-
-		    typedef enum { cpu, gpu } backend_type;
-
 
         // CONSTRUCTORS, DESTRUCTORS
 
@@ -195,7 +193,7 @@ namespace transport
         virtual context backend_get_context(void) = 0;
 
 		    // obtain backend type
-		    virtual backend_type get_backend_type(void) = 0;
+		    virtual worker_type get_backend_type(void) = 0;
 
 		    // obtain backend memory capacity
 		    virtual unsigned int get_backend_memory(void) = 0;
@@ -318,7 +316,7 @@ namespace transport
             else
               {
                 assert(false);
-                throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_INTEGRATION_FAIL);
+                throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_INTEGRATION_FAIL);
               }
           }
       }
@@ -328,11 +326,11 @@ namespace transport
     void model<number>::write_task_data(const integration_task<number>* task, generic_batcher& batcher,
                                         double abs_err, double rel_err, double step_size, std::string stepper_name)
       {
-        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << CPPTRANSPORT_SOLVING_ICS_MESSAGE;
+        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << CPPTRANSPORT_SOLVING_ICS_MESSAGE;
 
-        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << *task;
+        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << *task;
 
-        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal)
+        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal)
           << CPPTRANSPORT_STEPPER_MESSAGE    << " '"  << stepper_name
           << "', " << CPPTRANSPORT_ABS_ERR   << " = " << abs_err
           << ", "  << CPPTRANSPORT_REL_ERR   << " = " << rel_err
@@ -370,7 +368,7 @@ namespace transport
         else
           {
             assert(false);
-            throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_INTEGRATION_FAIL);
+            throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_INTEGRATION_FAIL);
           }
       }
 

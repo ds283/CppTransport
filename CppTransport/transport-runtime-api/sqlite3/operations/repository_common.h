@@ -68,7 +68,7 @@ namespace transport
                   {
                     std::ostringstream msg;
                     msg << CPPTRANSPORT_REPO_COUNT_FAIL << status << ": " << sqlite3_errmsg(db) << ")";
-                    throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, msg.str());
+                    throw runtime_exception(exception_type::REPOSITORY_BACKEND_ERROR, msg.str());
                   }
               }
 
@@ -78,7 +78,7 @@ namespace transport
               {
                 std::stringstream msg;
                 msg << CPPTRANSPORT_REPO_COUNT_MULTIPLE_RETURN << " (" << num_rows << ")";
-                throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, msg.str());
+                throw runtime_exception(exception_type::REPOSITORY_BACKEND_ERROR, msg.str());
               }
 
             return(result);
@@ -109,7 +109,7 @@ namespace transport
                   {
                     std::ostringstream msg;
                     msg << CPPTRANSPORT_REPO_SEARCH_FAIL << status << ": " << sqlite3_errmsg(db) << ")";
-                    throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, msg.str());
+                    throw runtime_exception(exception_type::REPOSITORY_BACKEND_ERROR, msg.str());
                   }
               }
 
@@ -117,13 +117,13 @@ namespace transport
 
             if(num_rows == 0)
               {
-                throw runtime_exception(runtime_exception::RECORD_NOT_FOUND, name);   // RECORD_NOT_FOUND expects task name in message
+                throw runtime_exception(exception_type::RECORD_NOT_FOUND, name);   // RECORD_NOT_FOUND expects task name in message
               }
             else if(num_rows > 1)
               {
                 std::stringstream msg;
                 msg << CPPTRANSPORT_REPO_SEARCH_MULTIPLE_RETURN << " (" << num_rows << ")";
-                throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, msg.str());
+                throw runtime_exception(exception_type::REPOSITORY_BACKEND_ERROR, msg.str());
               }
 
             return(result);

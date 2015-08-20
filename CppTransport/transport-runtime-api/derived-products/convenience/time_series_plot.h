@@ -16,6 +16,8 @@
 #include "transport-runtime-api/defaults.h"
 #include "transport-runtime-api/messages.h"
 
+#include "boost/log/utility/formatting_ostream.hpp"
+
 
 namespace transport
 	{
@@ -77,7 +79,7 @@ namespace transport
 		        this->set_y_label(false);
 		        this->set_title(false);
 		        this->set_legend(true);
-		        this->set_legend_position(top_right);
+		        this->set_legend_position(legend_pos::top_right);
 		        this->set_typeset_with_LaTeX(false);
 			    }
 
@@ -94,8 +96,8 @@ namespace transport
 			        {
 						    switch(x_axis)
 							    {
-						        case unset_axis:
-						        case efolds_axis:
+						        case axis_value::unset_axis:
+						        case axis_value::efolds_axis:
 			                if(this->typeset_with_LaTeX) this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_TIME_SERIES_PLOT_X_LABEL_LATEX);
 			                else                         this->internal_set_x_label_text(CPPTRANSPORT_PRODUCT_TIME_SERIES_PLOT_X_LABEL_NOLATEX);
 							        break;
@@ -110,12 +112,20 @@ namespace transport
 			    }
 
 
-		    template <typename number>
-		    std::ostream& operator<<(std::ostream& out, time_series_plot<number>& obj)
+		    template <typename number, typename Char, typename Traits>
+		    std::basic_ostream<Char, Traits>& operator<<(std::basic_ostream<Char, Traits>& out, time_series_plot<number>& obj)
 			    {
 		        obj.write(out);
 		        return(out);
 			    }
+
+
+        template <typename number, typename Char, typename Traits, typename Allocator>
+        boost::log::basic_formatting_ostream<Char, Traits, Allocator>& operator<<(boost::log::basic_formatting_ostream<Char, Traits, Allocator>& out, time_series_plot<number>& obj)
+          {
+            obj.write(out);
+            return(out);
+          }
 
 
 			}   // namespace derived_data

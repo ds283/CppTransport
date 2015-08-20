@@ -26,6 +26,8 @@
 // forward-declare initial conditions class
 #include "transport-runtime-api/concepts/initial_conditions_forward_declare.h"
 
+#include "boost/log/utility/formatting_ostream.hpp"
+
 
 #define CPPTRANSPORT_NODE_ICS_VALUE         "value"
 #define CPPTRANSPORT_NODE_ICS_MODEL_UID     "model-uid"
@@ -130,12 +132,12 @@ namespace transport
         virtual void serialize(Json::Value& writer) const override;
 
 
-        // WRITE TO A STREAM
+        // WRITE SELF TO STREAM
 
       public:
 
-        //! Write ourselves to a stream
-        friend std::ostream& operator<< <>(std::ostream& out, const initial_conditions<number>& obj);
+        //! write details
+        template <typename Stream> void write(Stream& out) const;
 
 
         // INTERNAL DATA
@@ -170,14 +172,14 @@ namespace transport
       : name(nm), mdl(m), params(p), N_init(Nini), N_sub_horizon(Npre)
       {
 		    assert(m != nullptr);
-		    if(m == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_ICS_NULL_MODEL);
+		    if(m == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_ICS_NULL_MODEL);
 
         // check model matches the one supplied with parameters
         if(m->get_identity_string() != p.get_model()->get_identity_string())
           {
             std::ostringstream msg;
             msg << CPPTRANSPORT_ICS_MODEL_MISMATCH << " '" << nm << "'";
-            throw runtime_exception(runtime_exception::TASK_STRUCTURE_ERROR, msg.str());
+            throw runtime_exception(exception_type::TASK_STRUCTURE_ERROR, msg.str());
           }
 
         // validate supplied initial conditions - we rely on the validator to throw
@@ -194,7 +196,7 @@ namespace transport
       : name(nm), mdl(m), params(p), N_init(Ncross-Npre), N_sub_horizon(Npre)
       {
         assert(m != nullptr);
-        if(m == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_ICS_NULL_MODEL);
+        if(m == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_ICS_NULL_MODEL);
 
         std::vector<number> validated_ics;
 
@@ -235,7 +237,7 @@ namespace transport
 		    // sort into order required by model object
         const std::vector<std::string>& field_ordering = mdl->get_state_names();
 
-        if(temp.size() != field_ordering.size()) throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, CPPTRANSPORT_BADLY_FORMED_ICS);
+        if(temp.size() != field_ordering.size()) throw runtime_exception(exception_type::REPOSITORY_BACKEND_ERROR, CPPTRANSPORT_BADLY_FORMED_ICS);
 
         named_list::ordering order_map = named_list::make_ordering(field_ordering);
         named_list::comparator<number> cmp(order_map);
@@ -309,20 +311,35 @@ namespace transport
 
 
     template <typename number>
-    std::ostream& operator<<(std::ostream& out, const initial_conditions<number>& obj)
+    template <typename Stream>
+    void initial_conditions<number>::write(Stream& out) const
       {
-        out << obj.params << '\n';
+        out << this->params << '\n';
 
-		    const std::vector<std::string>& names = obj.mdl->get_state_names();
-        assert(obj.ics.size() == names.size());
+        const std::vector<std::string>& names = this->mdl->get_state_names();
+        assert(this->ics.size() == names.size());
 
         out << CPPTRANSPORT_ICS_TAG << '\n';
-        for(unsigned int i = 0; i < obj.ics.size(); ++i)
+        for(unsigned int i = 0; i < this->ics.size(); ++i)
           {
-            out << "  " << names[i] << " = " << obj.ics[i] << '\n';
+            out << "  " << names[i] << " = " << this->ics[i] << '\n';
           }
+      }
 
-        return(out);
+
+    template <typename number, typename Char, typename Traits>
+    std::basic_ostream<Char, Traits>& operator<<(std::basic_ostream<Char, Traits>& out, const initial_conditions<number>& obj)
+      {
+        obj.write(out);
+        return (out);
+      }
+
+
+    template <typename number, typename Char, typename Traits, typename Allocator>
+    boost::log::basic_formatting_ostream<Char, Traits, Allocator>& operator<<(boost::log::basic_formatting_ostream<Char, Traits, Allocator>& out, const initial_conditions<number>& obj)
+      {
+        obj.write(out);
+        return (out);
       }
 
   }

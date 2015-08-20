@@ -136,7 +136,7 @@ namespace transport
 	        }
 				catch(SPLINTER::Exception& xe)
 					{
-						throw runtime_exception(runtime_exception::SPLINE_ERROR, xe.what());
+						throw runtime_exception(exception_type::SPLINE_ERROR, xe.what());
 					}
       }
 

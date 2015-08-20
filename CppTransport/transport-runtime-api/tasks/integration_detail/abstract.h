@@ -14,6 +14,8 @@
 
 #include "transport-runtime-api/utilities/random_string.h"
 
+#include "boost/log/utility/formatting_ostream.hpp"
+
 #include "sqlite3.h"
 
 
@@ -29,11 +31,6 @@
 
 namespace transport
 	{
-
-    template <typename number> class integration_task;
-
-    template <typename number>
-    std::ostream& operator<<(std::ostream& out, const integration_task<number>& obj);
 
     //! An 'integration_task' is a specialization of 'task'. It contains the basic information
     //! needed to carry out an integration. The more specialized two- and three-pf integration
@@ -151,8 +148,8 @@ namespace transport
 
       public:
 
-        //! Write to a standard output stream
-        friend std::ostream& operator<< <>(std::ostream& out, const integration_task<number>& obj);
+        //! write self-details to stream
+        template <typename Stream> void write(Stream& obj) const;
 
 
         // INTERNAL DATA
@@ -197,7 +194,7 @@ namespace transport
 	        {
             std::ostringstream msg;
             msg << "'" << this->get_name() << "': " << CPPTRANSPORT_NO_TIMES;
-            throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
+            throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
 	        }
 
         // the sampling points don't have to begin at the initial time, but they shouldn't be earlier than it
@@ -207,7 +204,7 @@ namespace transport
             msg << "'" << this->get_name() << "': " << CPPTRANSPORT_SAMPLES_START_TOO_EARLY_A << " ("
               << CPPTRANSPORT_SAMPLES_START_TOO_EARLY_B << "=" << times->get_min() << ", "
               << CPPTRANSPORT_SAMPLES_START_TOO_EARLY_C << "=" << i.get_N_initial() << ")";
-            throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
+            throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
 	        }
 	    }
 
@@ -368,12 +365,27 @@ namespace transport
 
 
     template <typename number>
-    std::ostream& operator<<(std::ostream& out, const integration_task<number>& obj)
+    template <typename Stream>
+    void integration_task<number>::write(Stream& out) const
+      {
+        out << this->get_ics() << '\n';
+      }
+
+
+    template <typename number, typename Char, typename Traits>
+    std::basic_ostream<Char, Traits>& operator<<(std::basic_ostream<Char, Traits>& out, const integration_task<number>& obj)
 	    {
-        out << obj.ics << '\n';
-//        out << CPPTRANSPORT_TASK_TIMES << obj.times;
+        obj.write(out);
         return(out);
 	    }
+
+
+    template <typename number, typename Char, typename Traits, typename Allocator>
+    boost::log::basic_formatting_ostream<Char, Traits, Allocator>& operator<<(boost::log::basic_formatting_ostream<Char, Traits, Allocator>& out, const integration_task<number>& obj)
+      {
+        obj.write(out);
+        return(out);
+      }
 
 	}   // namespace transport
 

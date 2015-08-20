@@ -31,7 +31,7 @@ namespace transport
 
                 std::ostringstream msg;
                 msg << CPPTRANSPORT_PRODUCT_UNKNOWN_TYPE << " '" << type << "'";
-                throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
+                throw runtime_exception(exception_type::SERIALIZATION_ERROR, msg.str());
               }
 
           }   // namespace derived_product_helper

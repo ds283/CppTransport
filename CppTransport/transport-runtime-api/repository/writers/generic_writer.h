@@ -51,7 +51,7 @@ namespace transport
       public:
 
         //! Types needed for logging
-        typedef enum { normal, notification, warning, error, critical } log_severity_level;
+        enum class log_severity_level { normal, notification, warning, error, critical };
 
         typedef boost::log::sinks::synchronous_sink<boost::log::sinks::text_file_backend> sink_t;
 
@@ -269,9 +269,9 @@ namespace transport
 
         boost::log::add_common_attributes();
 
-        BOOST_LOG_SEV(this->log_source, normal) << "** Instantiated writer on MPI host " << host_info.get_host_name();
+        BOOST_LOG_SEV(this->log_source, log_severity_level::normal) << "** Instantiated writer on MPI host " << host_info.get_host_name();
 
-        BOOST_LOG_SEV(this->log_source, normal) << "** Host details: OS = " << host_info.get_os_name()
+        BOOST_LOG_SEV(this->log_source, log_severity_level::normal) << "** Host details: OS = " << host_info.get_os_name()
             << ", version = " << host_info.get_os_version()
             << " (release = " << host_info.get_os_release()
             << ") | " << host_info.get_architecture()
@@ -298,7 +298,7 @@ namespace transport
     template <typename data_manager_type>
     void generic_writer::get_data_manager_handle(data_manager_type* data)
 	    {
-        if(this->data_manager_handle == nullptr) throw runtime_exception(runtime_exception::REPOSITORY_ERROR, CPPTRANSPORT_REPO_OUTPUT_WRITER_UNSETHANDLE);
+        if(this->data_manager_handle == nullptr) throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_OUTPUT_WRITER_UNSETHANDLE);
         *data = static_cast<data_manager_type>(this->data_manager_handle);
 	    }
 

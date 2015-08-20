@@ -319,12 +319,12 @@ namespace transport
 
 		  public:
 
-				typedef enum
+        enum class event_type
 					{
 				    aggregate_begin, aggregate_end,
 						MPI_begin, MPI_end,
             database_begin, database_end
-					} event_type;
+					};
 
 				// CONSTRUCTOR, DESTRUCTOR
 
@@ -394,45 +394,41 @@ namespace transport
 
         switch(this->get_type())
           {
-            case master_work_event::aggregate_begin:
+            case master_work_event::event_type::aggregate_begin:
               writer[CPPTRANSPORT_JOURNAL_JSON_EVENT] = std::string(CPPTRANSPORT_JOURNAL_JSON_AGGREGATE_BEGIN);
               break;
 
-            case master_work_event::aggregate_end:
+            case master_work_event::event_type::aggregate_end:
               writer[CPPTRANSPORT_JOURNAL_JSON_EVENT] = std::string(CPPTRANSPORT_JOURNAL_JSON_AGGREGATE_END);
               break;
 
-            case master_work_event::MPI_begin:
+            case master_work_event::event_type::MPI_begin:
               writer[CPPTRANSPORT_JOURNAL_JSON_EVENT] = std::string(CPPTRANSPORT_JOURNAL_JSON_MPI_BEGIN);
               break;
 
-            case master_work_event::MPI_end:
+            case master_work_event::event_type::MPI_end:
               writer[CPPTRANSPORT_JOURNAL_JSON_EVENT] = std::string(CPPTRANSPORT_JOURNAL_JSON_MPI_END);
               break;
 
-            case master_work_event::database_begin:
+            case master_work_event::event_type::database_begin:
               writer[CPPTRANSPORT_JOURNAL_JSON_EVENT] = std::string(CPPTRANSPORT_JOURNAL_JSON_DATABASE_BEGIN);
               break;
 
-            case master_work_event::database_end:
+            case master_work_event::event_type::database_end:
               writer[CPPTRANSPORT_JOURNAL_JSON_EVENT] = std::string(CPPTRANSPORT_JOURNAL_JSON_DATABASE_END);
               break;
-
-            default:
-              assert(false);
-              throw runtime_exception(runtime_exception::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_UNEXPECTED_EVENT);
           }
       }
 
 
 		inline bool is_duration_delimiter(master_work_event::event_type type)
 			{
-				if(type == master_work_event::aggregate_begin
-					|| type == master_work_event::aggregate_end
-					|| type == master_work_event::MPI_begin
-					|| type == master_work_event::MPI_end
-					|| type == master_work_event::database_begin
-					|| type == master_work_event::database_end) return(true);
+				if(type == master_work_event::event_type::aggregate_begin
+					|| type == master_work_event::event_type::aggregate_end
+					|| type == master_work_event::event_type::MPI_begin
+					|| type == master_work_event::event_type::MPI_end
+					|| type == master_work_event::event_type::database_begin
+					|| type == master_work_event::event_type::database_end) return(true);
 
 				return(false);
 			}
@@ -450,7 +446,7 @@ namespace transport
 
 		  public:
 
-				typedef enum
+				enum class event_type
 					{
 				    begin_twopf_assignment, end_twopf_assignment,
 						begin_threepf_assignment, end_threepf_assignment,
@@ -459,7 +455,7 @@ namespace transport
 						begin_fNL_assignment, end_fNL_assignment,
 						begin_output_assignment, end_output_assignment,
 						integration_aggregation, postintegration_aggregation, derived_content_aggregation
-					} event_type;
+					};
 
 				// CONSTRUCTOR, DESTRUCTOR
 
@@ -514,12 +510,12 @@ namespace transport
 
 		inline bool is_duration_delimiter(slave_work_event::event_type type)
 			{
-				if(type == slave_work_event::begin_twopf_assignment || type == slave_work_event::end_twopf_assignment) return(true);
-		    if(type == slave_work_event::begin_threepf_assignment || type == slave_work_event::end_threepf_assignment) return(true);
-		    if(type == slave_work_event::begin_zeta_twopf_assignment || type == slave_work_event::end_zeta_twopf_assignment) return(true);
-		    if(type == slave_work_event::begin_zeta_threepf_assignment || type == slave_work_event::end_zeta_threepf_assignment) return(true);
-		    if(type == slave_work_event::begin_fNL_assignment || type == slave_work_event::end_fNL_assignment) return(true);
-		    if(type == slave_work_event::begin_output_assignment || type == slave_work_event::end_output_assignment) return(true);
+				if(type == slave_work_event::event_type::begin_twopf_assignment || type == slave_work_event::event_type::end_twopf_assignment) return(true);
+		    if(type == slave_work_event::event_type::begin_threepf_assignment || type == slave_work_event::event_type::end_threepf_assignment) return(true);
+		    if(type == slave_work_event::event_type::begin_zeta_twopf_assignment || type == slave_work_event::event_type::end_zeta_twopf_assignment) return(true);
+		    if(type == slave_work_event::event_type::begin_zeta_threepf_assignment || type == slave_work_event::event_type::end_zeta_threepf_assignment) return(true);
+		    if(type == slave_work_event::event_type::begin_fNL_assignment || type == slave_work_event::event_type::end_fNL_assignment) return(true);
+		    if(type == slave_work_event::event_type::begin_output_assignment || type == slave_work_event::event_type::end_output_assignment) return(true);
 
 				return(false);
 			}
@@ -527,9 +523,9 @@ namespace transport
 
 		inline bool is_milestone(slave_work_event::event_type type)
 			{
-				if(type == slave_work_event::integration_aggregation
-					|| type == slave_work_event::postintegration_aggregation
-					|| type == slave_work_event::derived_content_aggregation) return(true);
+				if(type == slave_work_event::event_type::integration_aggregation
+					|| type == slave_work_event::event_type::postintegration_aggregation
+					|| type == slave_work_event::event_type::derived_content_aggregation) return(true);
 
 				return(false);
 			}
@@ -560,69 +556,69 @@ namespace transport
 
         switch(this->get_type())
           {
-            case slave_work_event::begin_twopf_assignment:
+            case slave_work_event::event_type::begin_twopf_assignment:
               writer[CPPTRANSPORT_JOURNAL_JSON_EVENT] = std::string(CPPTRANSPORT_JOURNAL_JSON_TWOPF_BEGIN);
               break;
 
-            case slave_work_event::end_twopf_assignment:
+            case slave_work_event::event_type::end_twopf_assignment:
               writer[CPPTRANSPORT_JOURNAL_JSON_EVENT] = std::string(CPPTRANSPORT_JOURNAL_JSON_TWOPF_END);
               break;
 
-            case slave_work_event::begin_threepf_assignment:
+            case slave_work_event::event_type::begin_threepf_assignment:
               writer[CPPTRANSPORT_JOURNAL_JSON_EVENT] = std::string(CPPTRANSPORT_JOURNAL_JSON_THREEPF_BEGIN);
               break;
 
-            case slave_work_event::end_threepf_assignment:
+            case slave_work_event::event_type::end_threepf_assignment:
               writer[CPPTRANSPORT_JOURNAL_JSON_EVENT] = std::string(CPPTRANSPORT_JOURNAL_JSON_THREEPF_END);
               break;
 
-            case slave_work_event::begin_zeta_twopf_assignment:
+            case slave_work_event::event_type::begin_zeta_twopf_assignment:
               writer[CPPTRANSPORT_JOURNAL_JSON_EVENT] = std::string(CPPTRANSPORT_JOURNAL_JSON_ZETA_TWOPF_BEGIN);
               break;
 
-            case slave_work_event::end_zeta_twopf_assignment:
+            case slave_work_event::event_type::end_zeta_twopf_assignment:
               writer[CPPTRANSPORT_JOURNAL_JSON_EVENT] = std::string(CPPTRANSPORT_JOURNAL_JSON_ZETA_TWOPF_END);
               break;
 
-            case slave_work_event::begin_zeta_threepf_assignment:
+            case slave_work_event::event_type::begin_zeta_threepf_assignment:
               writer[CPPTRANSPORT_JOURNAL_JSON_EVENT] = std::string(CPPTRANSPORT_JOURNAL_JSON_ZETA_THREEPF_BEGIN);
               break;
 
-            case slave_work_event::end_zeta_threepf_assignment:
+            case slave_work_event::event_type::end_zeta_threepf_assignment:
               writer[CPPTRANSPORT_JOURNAL_JSON_EVENT] = std::string(CPPTRANSPORT_JOURNAL_JSON_ZETA_THREEPF_END);
               break;
 
-            case slave_work_event::begin_fNL_assignment:
+            case slave_work_event::event_type::begin_fNL_assignment:
               writer[CPPTRANSPORT_JOURNAL_JSON_EVENT] = std::string(CPPTRANSPORT_JOURNAL_JSON_FNL_BEGIN);
               break;
 
-            case slave_work_event::end_fNL_assignment:
+            case slave_work_event::event_type::end_fNL_assignment:
               writer[CPPTRANSPORT_JOURNAL_JSON_EVENT] = std::string(CPPTRANSPORT_JOURNAL_JSON_FNL_END);
               break;
 
-            case slave_work_event::begin_output_assignment:
+            case slave_work_event::event_type::begin_output_assignment:
               writer[CPPTRANSPORT_JOURNAL_JSON_EVENT] = std::string(CPPTRANSPORT_JOURNAL_JSON_OUTPUT_BEGIN);
               break;
 
-            case slave_work_event::end_output_assignment:
+            case slave_work_event::event_type::end_output_assignment:
               writer[CPPTRANSPORT_JOURNAL_JSON_EVENT] = std::string(CPPTRANSPORT_JOURNAL_JSON_OUTPUT_END);
               break;
 
-            case slave_work_event::integration_aggregation:
+            case slave_work_event::event_type::integration_aggregation:
               writer[CPPTRANSPORT_JOURNAL_JSON_EVENT] = std::string(CPPTRANSPORT_JOURNAL_JSON_INTEGRATION_AGG);
               break;
 
-            case slave_work_event::postintegration_aggregation:
+            case slave_work_event::event_type::postintegration_aggregation:
               writer[CPPTRANSPORT_JOURNAL_JSON_EVENT] = std::string(CPPTRANSPORT_JOURNAL_JSON_POSTINTEGRATION_AGG);
               break;
 
-            case slave_work_event::derived_content_aggregation:
+            case slave_work_event::event_type::derived_content_aggregation:
               writer[CPPTRANSPORT_JOURNAL_JSON_EVENT] = std::string(CPPTRANSPORT_JOURNAL_JSON_OUTPUT_AGG);
               break;
 
             default:
               assert(false);
-              throw runtime_exception(runtime_exception::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_UNEXPECTED_EVENT);
+              throw runtime_exception(exception_type::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_UNEXPECTED_EVENT);
           }
       }
 
@@ -759,39 +755,39 @@ namespace transport
 					{
 						switch((*t)->get_type())
 							{
-						    case master_work_event::aggregate_begin:
+						    case master_work_event::event_type::aggregate_begin:
 							    {
 						        boost::posix_time::ptime begin_time = (*t)->get_timestamp();
 						        t++;
-						        if(t == master_events.end()) throw runtime_exception(runtime_exception::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_AGGREGATE_TOO_FEW);
-						        if((*t)->get_type() != master_work_event::aggregate_end) throw runtime_exception(runtime_exception::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_AGGREGATE_END_MISSING);
+						        if(t == master_events.end()) throw runtime_exception(exception_type::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_AGGREGATE_TOO_FEW);
+						        if((*t)->get_type() != master_work_event::event_type::aggregate_end) throw runtime_exception(exception_type::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_AGGREGATE_END_MISSING);
 						        current_bin->push_back(Gantt_bar(begin_time, (*t)->get_timestamp(), "black"));
 						        break;
 							    }
 
-						    case master_work_event::MPI_begin:
+						    case master_work_event::event_type::MPI_begin:
 							    {
 						        boost::posix_time::ptime begin_time = (*t)->get_timestamp();
 								    t++;
-								    if(t == master_events.end()) throw runtime_exception(runtime_exception::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_MPI_TOO_FEW);
-								    if((*t)->get_type() != master_work_event::MPI_end) throw runtime_exception(runtime_exception::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_MPI_END_MISSING);
+								    if(t == master_events.end()) throw runtime_exception(exception_type::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_MPI_TOO_FEW);
+								    if((*t)->get_type() != master_work_event::event_type::MPI_end) throw runtime_exception(exception_type::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_MPI_END_MISSING);
 								    current_bin->push_back(Gantt_bar(begin_time, (*t)->get_timestamp(), "darkgoldenrod"));
 								    break;
 							    }
 
-                case master_work_event::database_begin:
+                case master_work_event::event_type::database_begin:
                   {
                     boost::posix_time::ptime begin_time = (*t)->get_timestamp();
                     t++;
-                    if(t == master_events.end()) throw runtime_exception(runtime_exception::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_DATABASE_TOO_FEW);
-                    if((*t)->get_type() != master_work_event::database_end) throw runtime_exception(runtime_exception::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_DATABASE_END_MISSING);
+                    if(t == master_events.end()) throw runtime_exception(exception_type::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_DATABASE_TOO_FEW);
+                    if((*t)->get_type() != master_work_event::event_type::database_end) throw runtime_exception(exception_type::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_DATABASE_END_MISSING);
                     current_bin->push_back(Gantt_bar(begin_time, (*t)->get_timestamp(), "aquamarine"));
                     break;
                   }
 
 						    default:
 							    assert(false);
-							    throw runtime_exception(runtime_exception::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_UNEXPECTED_EVENT);
+							    throw runtime_exception(exception_type::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_UNEXPECTED_EVENT);
 							};
 					}
 			}
@@ -822,68 +818,68 @@ namespace transport
 							{
 								switch((*t)->get_type())
 									{
-								    case slave_work_event::begin_twopf_assignment:
+								    case slave_work_event::event_type::begin_twopf_assignment:
 									    {
 								        boost::posix_time::ptime begin_time = (*t)->get_timestamp();
 								        t++;
-								        if(t == worker_events.end()) throw runtime_exception(runtime_exception::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_TWOPF_TOO_FEW);
-								        if((*t)->get_type() != slave_work_event::end_twopf_assignment) throw runtime_exception(runtime_exception::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_TWOPF_END_MISSING);
+								        if(t == worker_events.end()) throw runtime_exception(exception_type::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_TWOPF_TOO_FEW);
+								        if((*t)->get_type() != slave_work_event::event_type::end_twopf_assignment) throw runtime_exception(exception_type::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_TWOPF_END_MISSING);
 								        current_bin->push_back(Gantt_bar(begin_time, (*t)->get_timestamp(), "red"));
 								        break;
 									    }
 
-								    case slave_work_event::begin_threepf_assignment:
+								    case slave_work_event::event_type::begin_threepf_assignment:
 									    {
 								        boost::posix_time::ptime begin_time = (*t)->get_timestamp();
 								        t++;
-								        if(t == worker_events.end()) throw runtime_exception(runtime_exception::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_THREEPF_TOO_FEW);
-								        if((*t)->get_type() != slave_work_event::end_threepf_assignment) throw runtime_exception(runtime_exception::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_THREEPF_END_MISSING);
+								        if(t == worker_events.end()) throw runtime_exception(exception_type::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_THREEPF_TOO_FEW);
+								        if((*t)->get_type() != slave_work_event::event_type::end_threepf_assignment) throw runtime_exception(exception_type::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_THREEPF_END_MISSING);
 										    current_bin->push_back(Gantt_bar(begin_time, (*t)->get_timestamp(), "orangered"));
 								        break;
 									    }
 
-								    case slave_work_event::begin_zeta_twopf_assignment:
+								    case slave_work_event::event_type::begin_zeta_twopf_assignment:
 									    {
 								        boost::posix_time::ptime begin_time = (*t)->get_timestamp();
 										    t++;
-										    if(t == worker_events.end()) throw runtime_exception(runtime_exception::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_ZETA_TWOPF_TOO_FEW);
-										    if((*t)->get_type() != slave_work_event::end_zeta_twopf_assignment) throw runtime_exception(runtime_exception::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_ZETA_TWOPF_END_MISSING);
+										    if(t == worker_events.end()) throw runtime_exception(exception_type::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_ZETA_TWOPF_TOO_FEW);
+										    if((*t)->get_type() != slave_work_event::event_type::end_zeta_twopf_assignment) throw runtime_exception(exception_type::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_ZETA_TWOPF_END_MISSING);
 										    current_bin->push_back(Gantt_bar(begin_time, (*t)->get_timestamp(), "green"));
 										    break;
 									    }
 
-								    case slave_work_event::begin_zeta_threepf_assignment:
+								    case slave_work_event::event_type::begin_zeta_threepf_assignment:
 									    {
 								        boost::posix_time::ptime begin_time = (*t)->get_timestamp();
 										    t++;
-										    if(t == worker_events.end()) throw runtime_exception(runtime_exception::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_ZETA_THREEPF_TOO_FEW);
-										    if((*t)->get_type() != slave_work_event::end_zeta_threepf_assignment) throw runtime_exception(runtime_exception::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_ZETA_THREEPF_END_MISSING);
+										    if(t == worker_events.end()) throw runtime_exception(exception_type::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_ZETA_THREEPF_TOO_FEW);
+										    if((*t)->get_type() != slave_work_event::event_type::end_zeta_threepf_assignment) throw runtime_exception(exception_type::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_ZETA_THREEPF_END_MISSING);
 										    current_bin->push_back(Gantt_bar(begin_time, (*t)->get_timestamp(), "limegreen"));
 										    break;
 									    }
 
-								    case slave_work_event::begin_fNL_assignment:
+								    case slave_work_event::event_type::begin_fNL_assignment:
 									    {
 								        boost::posix_time::ptime begin_time = (*t)->get_timestamp();
 										    t++;
-										    if(t == worker_events.end()) throw runtime_exception(runtime_exception::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_FNL_TOO_FEW);
-										    if((*t)->get_type() != slave_work_event::end_fNL_assignment) throw runtime_exception(runtime_exception::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_FNL_END_MISSING);
+										    if(t == worker_events.end()) throw runtime_exception(exception_type::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_FNL_TOO_FEW);
+										    if((*t)->get_type() != slave_work_event::event_type::end_fNL_assignment) throw runtime_exception(exception_type::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_FNL_END_MISSING);
 										    current_bin->push_back(Gantt_bar(begin_time, (*t)->get_timestamp(), "royalblue"));
 										    break;
 									    }
 
-								    case slave_work_event::begin_output_assignment:
+								    case slave_work_event::event_type::begin_output_assignment:
 									    {
 								        boost::posix_time::ptime begin_time = (*t)->get_timestamp();
 										    t++;
-										    if(t == worker_events.end()) throw runtime_exception(runtime_exception::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_OUTPUT_TOO_FEW);
-										    if((*t)->get_type() != slave_work_event::end_output_assignment) throw runtime_exception(runtime_exception::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_OUTPUT_END_MISSING);
+										    if(t == worker_events.end()) throw runtime_exception(exception_type::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_OUTPUT_TOO_FEW);
+										    if((*t)->get_type() != slave_work_event::event_type::end_output_assignment) throw runtime_exception(exception_type::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_OUTPUT_END_MISSING);
 										    current_bin->push_back(Gantt_bar(begin_time, (*t)->get_timestamp(), "orchid"));
 										    break;
 									    }
 
 								    default:
-									    throw runtime_exception(runtime_exception::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_UNEXPECTED_EVENT);
+									    throw runtime_exception(exception_type::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_UNEXPECTED_EVENT);
 									};
 							}
 					}
@@ -922,7 +918,7 @@ namespace transport
 							{
 						    default:
 							    assert(false);
-							    throw runtime_exception(runtime_exception::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_UNEXPECTED_EVENT);
+							    throw runtime_exception(exception_type::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_UNEXPECTED_EVENT);
 							}
 					}
 			}
@@ -952,21 +948,21 @@ namespace transport
 							{
 								switch((*t)->get_type())
 									{
-								    case slave_work_event::integration_aggregation:
+								    case slave_work_event::event_type::integration_aggregation:
 									    current_bin->push_back(Gantt_milestone((*t)->get_timestamp(), "red"));
 												break;
 
-								    case slave_work_event::postintegration_aggregation:
+								    case slave_work_event::event_type::postintegration_aggregation:
 									    current_bin->push_back(Gantt_milestone((*t)->get_timestamp(), "green"));
 									    break;
 
-								    case slave_work_event::derived_content_aggregation:
+                    case slave_work_event::event_type::derived_content_aggregation:
 									    current_bin->push_back(Gantt_milestone((*t)->get_timestamp(), "orchid"));
 									    break;
 
 								    default:
 									    assert(false);
-									    throw runtime_exception(runtime_exception::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_UNEXPECTED_EVENT);
+									    throw runtime_exception(exception_type::JOURNAL_ERROR, CPPTRANSPORT_JOURNAL_UNEXPECTED_EVENT);
 									};
 							}
 					}
@@ -1020,7 +1016,7 @@ namespace transport
 					{
 				    std::ostringstream msg;
 						msg << CPPTRANSPORT_JOURNAL_OPEN_FAIL << " " << script_file;
-						throw runtime_exception(runtime_exception::JOURNAL_ERROR, msg.str());
+						throw runtime_exception(exception_type::JOURNAL_ERROR, msg.str());
 					}
 
 				out << "import numpy as np" << '\n';
@@ -1166,7 +1162,7 @@ namespace transport
           {
             std::ostringstream msg;
             msg << CPPTRANSPORT_JOURNAL_OPEN_FAIL << " " << out_file;
-            throw runtime_exception(runtime_exception::JOURNAL_ERROR, msg.str());
+            throw runtime_exception(exception_type::JOURNAL_ERROR, msg.str());
           }
 
         out << entries;

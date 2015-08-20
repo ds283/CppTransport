@@ -11,6 +11,8 @@
 namespace transport
 	{
 
+    enum class cf_data_type;
+
 		template <typename number> class time_config_tag;
 		template <typename number> class twopf_kconfig_tag;
 		template <typename number> class threepf_kconfig_tag;

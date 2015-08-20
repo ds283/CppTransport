@@ -23,6 +23,7 @@
 #include "transport-runtime-api/models/model_forward_declare.h"
 
 #include "boost/lexical_cast.hpp"
+#include "boost/log/utility/formatting_ostream.hpp"
 
 
 #define CPPTRANSPORT_NODE_PARAMS_MPLANCK   "mplanck"
@@ -34,11 +35,6 @@
 
 namespace transport
   {
-
-    template <typename number> class parameters;
-
-    template <typename number>
-    std::ostream& operator<<(std::ostream& out, const parameters<number>& obj);
 
     template <typename number>
     class parameters: public serializable
@@ -79,12 +75,12 @@ namespace transport
         virtual void serialize(Json::Value& writer) const override;
 
 
-        // WRITE TO A STREAM
+        // WRITE SELF TO STREAM
 
       public:
 
-        //! Write self to output stream
-        friend std::ostream& operator<< <>(std::ostream& out, const parameters<number>& obj);
+        //! write details
+        template <typename Stream> void write(Stream& out) const;
 
 
         // INTERNAL DATA
@@ -109,8 +105,8 @@ namespace transport
       {
 		    assert(m != nullptr);
 
-				if(m == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_PARAMS_NULL_MODEL);
-        if(M_Planck <= 0.0) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_MPLANCK_NEGATIVE);
+				if(m == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_PARAMS_NULL_MODEL);
+        if(M_Planck <= 0.0) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_MPLANCK_NEGATIVE);
 
         // validate supplied parameters
 		    mdl->validate_params(p, params);
@@ -141,7 +137,7 @@ namespace transport
           }
 
 		    const std::vector<std::string>& order = mdl->get_param_names();
-        if(temp.size() != order.size()) throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, CPPTRANSPORT_BADLY_FORMED_PARAMS);
+        if(temp.size() != order.size()) throw runtime_exception(exception_type::REPOSITORY_BACKEND_ERROR, CPPTRANSPORT_BADLY_FORMED_PARAMS);
 
         named_list::ordering order_map = named_list::make_ordering(order);
         named_list::comparator<number> cmp(order_map);
@@ -189,19 +185,35 @@ namespace transport
 
 
     template <typename number>
-    std::ostream& operator<<(std::ostream& out, const parameters<number>& obj)
+    template <typename Stream>
+    void parameters<number>::write(Stream& out) const
       {
         out << CPPTRANSPORT_PARAMS_TAG << '\n';
-        out << "  " << CPPTRANSPORT_MPLANCK_TAG << obj.M_Planck << '\n';
+        out << "  " << CPPTRANSPORT_MPLANCK_TAG << this->get_Mp() << '\n';
 
-		    const std::vector<std::string>& names = obj.mdl->get_param_names();
-        assert(obj.params.size() == names.size());
+        const std::vector<std::string>& names = this->get_model()->get_param_names();
+        const std::vector<number>& params = this->get_vector();
+        assert(names.size() == params.size());
 
-        for(unsigned int i = 0; i < obj.params.size(); ++i)
+        for(unsigned int i = 0; i < params.size(); ++i)
           {
-            out << "  " << names[i] << " = " << obj.params[i] << '\n';
+            out << "  " << names[i] << " = " << params[i] << '\n';
           }
+      }
 
+
+    template <typename number, typename Char, typename Traits>
+    std::basic_ostream<Char, Traits>& operator<<(std::basic_ostream<Char, Traits>& out, const parameters<number>& obj)
+      {
+        obj.write(out);
+        return(out);
+      }
+
+
+    template <typename number, typename Char, typename Traits, typename Allocator>
+    boost::log::basic_formatting_ostream<Char, Traits, Allocator>& operator<<(boost::log::basic_formatting_ostream<Char, Traits, Allocator>& out, const parameters<number>& obj)
+      {
+        obj.write(out);
         return(out);
       }
 

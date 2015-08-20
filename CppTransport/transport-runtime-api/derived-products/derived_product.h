@@ -31,6 +31,9 @@
 // get enviornment object
 #include "transport-runtime-api/manager/environment.h"
 
+// get enumeration classes
+#include "transport-runtime-api/derived-products/enumerations.h"
+
 
 #include "transport-runtime-api/defaults.h"
 #include "transport-runtime-api/messages.h"
@@ -121,7 +124,7 @@ namespace transport
 
 		      public:
 
-				    void write(std::ostream& out);
+				    template <typename Stream> void write(Stream& out);
 
 		        // INTERNAL DATA
 
@@ -147,7 +150,8 @@ namespace transport
 
 
 				template <typename number>
-				void derived_product<number>::write(std::ostream& out)
+        template <typename Stream>
+				void derived_product<number>::write(Stream& out)
 					{
 						out << CPPTRANSPORT_DERIVED_PRODUCT_FILENAME << ": " << this->filename << '\n';
 					}

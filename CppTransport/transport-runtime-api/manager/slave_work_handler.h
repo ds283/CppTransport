@@ -120,7 +120,7 @@ namespace transport
             timer.stop();
             batcher.report_finished_item(timer.elapsed().wall);
 
-            BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << "-- Processed configuration " << list[i]->serial << " (" << i+1
+            BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << "-- Processed configuration " << list[i]->serial << " (" << i+1
 		            << " of " << list.size() << "), processing time = " << format_time(timer.elapsed().wall);
 	        }
 	    }
@@ -231,7 +231,7 @@ namespace transport
             timer.stop();
             batcher.report_finished_item(timer.elapsed().wall);
 
-            BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << "-- Processed configuration " << list[i]->serial << " (" << i+1
+            BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << "-- Processed configuration " << list[i]->serial << " (" << i+1
 		            << " of " << list.size() << "), processing time = " << format_time(timer.elapsed().wall);
 	        }
 	    }
@@ -281,7 +281,7 @@ namespace transport
         batcher.report_finished_item(timer.elapsed().wall);
         batcher.set_items_processed(list.size());   // mark number of k-configurations processed, so in-flight items are correctly accounted for
 
-        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << "-- Processed " << list.size() << " k-configurations in time = " << format_time(timer.elapsed().wall);
+        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << "-- Processed " << list.size() << " k-configurations in time = " << format_time(timer.elapsed().wall);
 	    }
 
 	}   // namespace transport

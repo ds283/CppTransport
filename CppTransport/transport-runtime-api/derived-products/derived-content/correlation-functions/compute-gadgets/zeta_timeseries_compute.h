@@ -202,7 +202,7 @@ namespace transport
                 for(unsigned int n = 0; n < 2*N_fields; ++n)
                   {
                     cf_time_data_tag<number> tag =
-                                               h->pipe.new_cf_time_data_tag(data_tag<number>::cf_twopf_re, h->mdl->flatten(m,n), k.serial);
+                                               h->pipe.new_cf_time_data_tag(cf_data_type::cf_twopf_re, h->mdl->flatten(m,n), k.serial);
 
                     // pull twopf data for this component; can use a reference to avoid copying
                     const std::vector<number>& sigma_line = h->t_handle.lookup_tag(tag);
@@ -261,7 +261,7 @@ namespace transport
                     for(unsigned int n = 0; n < 2*N_fields; ++n)
                       {
                         // pull threepf data for this component
-                        cf_time_data_tag<number> tag = h->pipe.new_cf_time_data_tag(data_tag<number>::cf_threepf, h->mdl->flatten(l,m,n), k.serial);
+                        cf_time_data_tag<number> tag = h->pipe.new_cf_time_data_tag(cf_data_type::cf_threepf, h->mdl->flatten(l,m,n), k.serial);
 
                         // have to take a copy of the data line, rather than use a reference, because shifting the derivative will modify it in place
                         std::vector<number> threepf_line = h->t_handle.lookup_tag(tag);
@@ -290,17 +290,17 @@ namespace transport
                             // the indices are N_lm, N_p, N_q, so the 2pfs we sum over are
                             // sigma_lp(k2)*sigma_mq(k3) etc.
 
-                            cf_time_data_tag<number> k1_re_lp_tag = h->pipe.new_cf_time_data_tag(data_tag<number>::cf_twopf_re, h->mdl->flatten(l,p), k.k1_serial);
-                            cf_time_data_tag<number> k1_im_lp_tag = h->pipe.new_cf_time_data_tag(data_tag<number>::cf_twopf_im, h->mdl->flatten(l,p), k.k1_serial);
+                            cf_time_data_tag<number> k1_re_lp_tag = h->pipe.new_cf_time_data_tag(cf_data_type::cf_twopf_re, h->mdl->flatten(l,p), k.k1_serial);
+                            cf_time_data_tag<number> k1_im_lp_tag = h->pipe.new_cf_time_data_tag(cf_data_type::cf_twopf_im, h->mdl->flatten(l,p), k.k1_serial);
 
-                            cf_time_data_tag<number> k2_re_lp_tag = h->pipe.new_cf_time_data_tag(data_tag<number>::cf_twopf_re, h->mdl->flatten(l,p), k.k2_serial);
-                            cf_time_data_tag<number> k2_im_lp_tag = h->pipe.new_cf_time_data_tag(data_tag<number>::cf_twopf_im, h->mdl->flatten(l,p), k.k2_serial);
+                            cf_time_data_tag<number> k2_re_lp_tag = h->pipe.new_cf_time_data_tag(cf_data_type::cf_twopf_re, h->mdl->flatten(l,p), k.k2_serial);
+                            cf_time_data_tag<number> k2_im_lp_tag = h->pipe.new_cf_time_data_tag(cf_data_type::cf_twopf_im, h->mdl->flatten(l,p), k.k2_serial);
 
-                            cf_time_data_tag<number> k2_re_mq_tag = h->pipe.new_cf_time_data_tag(data_tag<number>::cf_twopf_re, h->mdl->flatten(m,q), k.k2_serial);
-                            cf_time_data_tag<number> k2_im_mq_tag = h->pipe.new_cf_time_data_tag(data_tag<number>::cf_twopf_im, h->mdl->flatten(m,q), k.k2_serial);
+                            cf_time_data_tag<number> k2_re_mq_tag = h->pipe.new_cf_time_data_tag(cf_data_type::cf_twopf_re, h->mdl->flatten(m,q), k.k2_serial);
+                            cf_time_data_tag<number> k2_im_mq_tag = h->pipe.new_cf_time_data_tag(cf_data_type::cf_twopf_im, h->mdl->flatten(m,q), k.k2_serial);
 
-                            cf_time_data_tag<number> k3_re_mq_tag = h->pipe.new_cf_time_data_tag(data_tag<number>::cf_twopf_re, h->mdl->flatten(m,q), k.k3_serial);
-                            cf_time_data_tag<number> k3_im_mq_tag = h->pipe.new_cf_time_data_tag(data_tag<number>::cf_twopf_im, h->mdl->flatten(m,q), k.k3_serial);
+                            cf_time_data_tag<number> k3_re_mq_tag = h->pipe.new_cf_time_data_tag(cf_data_type::cf_twopf_re, h->mdl->flatten(m,q), k.k3_serial);
+                            cf_time_data_tag<number> k3_im_mq_tag = h->pipe.new_cf_time_data_tag(cf_data_type::cf_twopf_im, h->mdl->flatten(m,q), k.k3_serial);
 
                             // can only take reference for the last lookup, because previous items may be evited
                             const std::vector<number>  k1_re_lp = h->t_handle.lookup_tag(k1_re_lp_tag);

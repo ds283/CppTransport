@@ -22,6 +22,7 @@
 #include "transport-runtime-api/exceptions.h"
 
 #include "boost/filesystem/operations.hpp"
+#include "boost/log/utility/formatting_ostream.hpp"
 
 
 #define CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_ROOT          "line-plot2d"
@@ -51,7 +52,6 @@
 #define CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_LC     "lower-centre"
 #define CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_C      "centre"
 #define CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_TYPESET_LATEX "typeset-with-latex"
-#define CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_PYTHON_PATH   "python-path"
 
 
 namespace transport
@@ -60,10 +60,6 @@ namespace transport
 
 		namespace derived_data
 			{
-
-		    typedef enum { top_left, top_right, bottom_left, bottom_right,
-		                   right, centre_right, centre_left,
-		                   upper_centre, lower_centre, centre} legend_pos;
 
         //! A line_plot2d is a specialization of a line_collection that
 		    //! produces a plot of derived data lines against an axis.
@@ -88,7 +84,7 @@ namespace transport
 								y_label(false),
 								title(false),
 								legend(false),
-								position(top_right),
+								position(legend_pos::top_right),
 								typeset_with_LaTeX(false),
 								dash_second_axis(true),
 								x_label_set(false),
@@ -105,7 +101,7 @@ namespace transport
 									{
 								    std::ostringstream msg;
 										msg << CPPTRANSPORT_PRODUCT_LINE_PLOT2D_UNSUPPORTED_FORMAT << " " << filename.extension();
-										throw runtime_exception(runtime_exception::DERIVED_PRODUCT_ERROR, msg.str());
+										throw runtime_exception(exception_type::DERIVED_PRODUCT_ERROR, msg.str());
 									}
 			        }
 
@@ -298,7 +294,7 @@ namespace transport
 
 		      public:
 
-				    void write(std::ostream& out);
+				    template <typename Stream> void write(Stream& out);
 
 
 		        // INTERNAL DATA
@@ -371,21 +367,21 @@ namespace transport
 
 		        std::string leg_pos = reader[CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_ROOT][CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_POS].asString();
 
-		        if     (leg_pos == CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_TL) position = top_left;
-		        else if(leg_pos == CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_TR) position = top_right;
-		        else if(leg_pos == CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_BL) position = bottom_left;
-		        else if(leg_pos == CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_BR) position = bottom_right;
-		        else if(leg_pos == CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_R)  position = right;
-		        else if(leg_pos == CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_CR) position = centre_right;
-		        else if(leg_pos == CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_CL) position = centre_left;
-		        else if(leg_pos == CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_UC) position = lower_centre;
-		        else if(leg_pos == CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_LC) position = upper_centre;
-		        else if(leg_pos == CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_C)  position = centre;
+		        if     (leg_pos == CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_TL) position = legend_pos::top_left;
+		        else if(leg_pos == CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_TR) position = legend_pos::top_right;
+		        else if(leg_pos == CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_BL) position = legend_pos::bottom_left;
+		        else if(leg_pos == CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_BR) position = legend_pos::bottom_right;
+		        else if(leg_pos == CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_R)  position = legend_pos::right;
+		        else if(leg_pos == CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_CR) position = legend_pos::centre_right;
+		        else if(leg_pos == CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_CL) position = legend_pos::centre_left;
+		        else if(leg_pos == CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_UC) position = legend_pos::lower_centre;
+		        else if(leg_pos == CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_LC) position = legend_pos::upper_centre;
+		        else if(leg_pos == CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_C)  position = legend_pos::centre;
 		        else
 			        {
 		            std::ostringstream msg;
 		            msg << CPPTRANSPORT_PRODUCT_LINE_PLOT2D_UNKNOWN_LEG_POS << " '" << leg_pos << "'";
-		            throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
+		            throw runtime_exception(exception_type::SERIALIZATION_ERROR, msg.str());
 			        }
 
 				    typeset_with_LaTeX = reader[CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_ROOT][CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_TYPESET_LATEX].asBool();
@@ -414,7 +410,7 @@ namespace transport
 
 						if(binned_lines.size() > 2)
 							{
-								BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::error) << "!! line_plot2d: more than two y-value types; unplottable values have been discarded";
+								BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::log_severity_level::error) << "!! line_plot2d: more than two y-value types; unplottable values have been discarded";
 								binned_lines.resize(2);
 								bin_types.resize(2);
 							}
@@ -429,7 +425,7 @@ namespace transport
 						// will prevent the whole output group being committed)
 						pipe.commit(this, used_groups);
 
-						if(!success) throw runtime_exception(runtime_exception::DERIVED_PRODUCT_ERROR, CPPTRANSPORT_PRODUCT_LINE_PLOT2D_PYTHON_FAIL);
+						if(!success) throw runtime_exception(exception_type::DERIVED_PRODUCT_ERROR, CPPTRANSPORT_PRODUCT_LINE_PLOT2D_PYTHON_FAIL);
             return(used_groups);
 					}
 
@@ -512,7 +508,7 @@ namespace transport
 					    {
 						    std::ostringstream msg;
 						    msg << CPPTRANSPORT_DERIVED_PRODUCT_FAILED << " " << plot_file;
-						    throw runtime_exception(runtime_exception::DERIVED_PRODUCT_ERROR, msg.str());
+						    throw runtime_exception(exception_type::DERIVED_PRODUCT_ERROR, msg.str());
 					    }
 
 				    out << "import numpy as np" << '\n';
@@ -608,19 +604,16 @@ namespace transport
 								    out << "ln" << *tt << " = ax" << bin_count << ".";
 										switch(*vv)
 											{
-										    case continuous_data:
+										    case data_line_type::continuous_data:
 											    out << "errorbar";
 													break;
 
-										    case scattered_data:
+										    case data_line_type::scattered_data:
 											    out << "plot";
 													break;
-
-										    default:
-											    assert(false);
 											}
 								    out << "(x" << *tt << ", y" << *tt;
-										if(*vv == scattered_data) out << ", 'o'";
+										if(*vv == data_line_type::scattered_data) out << ", 'o'";
 								    out << ", label=r'" << *uu << "'";
 										if(bin_count == 2 && this->dash_second_axis)
 											{
@@ -665,19 +658,16 @@ namespace transport
 				        out << "ax" << bin_count-1 << ".legend(handles, labels, frameon=False, loc=";
 				        switch(this->position)
 					        {
-				            case top_right:    out << "1"; break;
-				            case top_left:     out << "2"; break;
-				            case bottom_left:  out << "3"; break;
-				            case bottom_right: out << "4"; break;
-				            case right:        out << "5"; break;
-				            case centre_left:  out << "6"; break;
-				            case centre_right: out << "7"; break;
-				            case upper_centre: out << "8"; break;
-				            case lower_centre: out << "9"; break;
-				            case centre:       out << "10"; break;
-				            default:
-					            assert(false);
-				            throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, CPPTRANSPORT_PRODUCT_LINE_PLOT2D_INVALID_LEGEND_POSITION);
+				            case legend_pos::top_right:    out << "1"; break;
+				            case legend_pos::top_left:     out << "2"; break;
+				            case legend_pos::bottom_left:  out << "3"; break;
+				            case legend_pos::bottom_right: out << "4"; break;
+				            case legend_pos::right:        out << "5"; break;
+				            case legend_pos::centre_left:  out << "6"; break;
+				            case legend_pos::centre_right: out << "7"; break;
+				            case legend_pos::upper_centre: out << "8"; break;
+				            case legend_pos::lower_centre: out << "9"; break;
+                    case legend_pos::centre:       out << "10"; break;
 					        }
 				        out << ")" << '\n';
 					    }
@@ -766,49 +756,45 @@ namespace transport
 
 		        switch(this->position)
 			        {
-		            case top_left:
+		            case legend_pos::top_left:
 			            writer[CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_ROOT][CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_POS] = std::string(CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_TL);
 		              break;
 
-		            case top_right:
+		            case legend_pos::top_right:
 			            writer[CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_ROOT][CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_POS] = std::string(CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_TR);
 		              break;
 
-		            case bottom_left:
+		            case legend_pos::bottom_left:
 			            writer[CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_ROOT][CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_POS] = std::string(CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_BL);
 		              break;
 
-		            case bottom_right:
+		            case legend_pos::bottom_right:
 			            writer[CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_ROOT][CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_POS] = std::string(CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_BR);
 		              break;
 
-		            case right:
+		            case legend_pos::right:
 			            writer[CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_ROOT][CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_POS] = std::string(CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_R);
 		              break;
 
-		            case centre_right:
+		            case legend_pos::centre_right:
 			            writer[CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_ROOT][CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_POS] = std::string(CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_CR);
 		              break;
 
-		            case centre_left:
+		            case legend_pos::centre_left:
 			            writer[CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_ROOT][CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_POS] = std::string(CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_CL);
 		              break;
 
-		            case upper_centre:
+		            case legend_pos::upper_centre:
 			            writer[CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_ROOT][CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_POS] = std::string(CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_UC);
 		              break;
 
-		            case lower_centre:
+		            case legend_pos::lower_centre:
 			            writer[CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_ROOT][CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_POS] = std::string(CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_LC);
 		              break;
 
-		            case centre:
+                case legend_pos::centre:
 			            writer[CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_ROOT][CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_POS] = std::string(CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_C);
 		              break;
-
-		            default:
-			            assert(false);
-		              throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, CPPTRANSPORT_PRODUCT_LINE_PLOT2D_INVALID_LEGEND_POSITION);
 			        }
 
 		        writer[CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_ROOT][CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_TYPESET_LATEX] = this->typeset_with_LaTeX;
@@ -819,7 +805,8 @@ namespace transport
 
 
 		    template <typename number>
-		    void line_plot2d<number>::write(std::ostream& out)
+        template <typename Stream>
+		    void line_plot2d<number>::write(Stream& out)
 			    {
 		        // call next writer
 		        this->line_collection<number>::write(out);
@@ -845,49 +832,55 @@ namespace transport
 		            if(count > 0) out << ", ";
 		            switch(this->position)
 			            {
-		                case top_left:
+		                case legend_pos::top_left:
 			                out << CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_TL;
 		                  break;
-		                case top_right:
+		                case legend_pos::top_right:
 			                out << CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_TR;
 		                  break;
-		                case bottom_left:
+		                case legend_pos::bottom_left:
 			                out << CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_BL;
 		                  break;
-		                case bottom_right:
+		                case legend_pos::bottom_right:
 			                out << CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_BR;
 		                  break;
-		                case right:
+		                case legend_pos::right:
 			                out << CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_R;
 		                  break;
-		                case centre_right:
+		                case legend_pos::centre_right:
 			                out << CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_CR;
 		                  break;
-		                case centre_left:
+		                case legend_pos::centre_left:
 			                out << CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_CL;
 		                  break;
-		                case upper_centre:
+		                case legend_pos::upper_centre:
 			                out << CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_LC;
 		                  break;
-		                case lower_centre:
+		                case legend_pos::lower_centre:
 			                out << CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_UC;
 		                  break;
-		                case centre:
+                    case legend_pos::centre:
 			                out << CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_C;
 		                  break;
-		                default:
-			                assert(false);
 			            }
 			        }
 			    }
 
 
-		    template <typename number>
-		    std::ostream& operator<<(std::ostream& out, line_plot2d<number>& obj)
+		    template <typename number, typename Char, typename Traits>
+		    std::basic_ostream<Char, Traits>& operator<<(std::basic_ostream<Char, Traits>& out, line_plot2d<number>& obj)
 			    {
 		        obj.write(out);
 		        return(out);
 			    }
+
+
+        template <typename number, typename Char, typename Traits, typename Allocator>
+        boost::log::basic_formatting_ostream<Char, Traits, Allocator>& operator<<(boost::log::basic_formatting_ostream<Char, Traits, Allocator>& out, line_plot2d<number>& obj)
+          {
+            obj.write(out);
+            return(out);
+          }
 
 
 			}   // namespace derived_data

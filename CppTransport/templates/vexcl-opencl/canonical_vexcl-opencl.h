@@ -100,7 +100,7 @@ namespace transport
           $$__MODEL_vexcl(instance_manager<number>* mgr, unsigned int w_number)
             : $$__MODEL<number>(mgr), ctx(vex::Filter::Type(CL_DEVICE_TYPE_GPU) && vex::Filter::DoublePrecision && vex::Filter::Position(w_number > 0 ? w_number-1 : 0))
             {
-              if(this->ctx.size() != 1) throw runtime_exception(runtime_exception::BACKEND_ERROR, CPPTRANSPORT_SINGLE_GPU_ONLY);
+              if(this->ctx.size() != 1) throw runtime_exception(exception_type::BACKEND_ERROR, CPPTRANSPORT_SINGLE_GPU_ONLY);
 
               std::ostringstream backend_string;
 
@@ -299,10 +299,10 @@ namespace transport
                                                         bool silent)
       {
         std::ostringstream work_msg;
-        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal)
+        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal)
             << "** VexCL/OpenCL compute backend processing twopf task";
         work_msg << work;
-        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << work_msg.str();
+        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << work_msg.str();
         std::cout << work_msg.str();
         if(!silent) this->write_task_data(tk, batcher, $$__PERT_ABS_ERR, $$__PERT_REL_ERR, $$__PERT_STEP_SIZE, "$$__PERT_STEPPER");
 
@@ -327,9 +327,9 @@ namespace transport
                 $$__MODEL_vexcl_twopf_observer<number> obs(batcher, list, slist);
 
                 // integrate all the items on this work list
-                BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal)
+                BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal)
                     << "** VexCL/OpenCL compute backend: integrating triangles from work list " << i;
-                BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal)
+                BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal)
                     << "**   " << list.size() << " items in this work list, GPU memory for state vector = " << format_memory($$__MODEL_pool::threepf_state_size*list.size());
 
                 // set up a state vector
@@ -377,7 +377,7 @@ namespace transport
               {
                 batcher.report_integration_failure();
 
-                BOOST_LOG_SEV(batcher.get_log(), generic_batcher::error) << "!! Integration failure in work list " << i;
+                BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::error) << "!! Integration failure in work list " << i;
               }
           }
       }
@@ -416,10 +416,10 @@ namespace transport
                                                         bool silent)
       {
         std::ostringstream work_msg;
-        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal)
+        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal)
             << "** VexCL/OpenCL compute backend processing threepf task";
         work_msg << work;
-        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << work_msg.str();
+        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << work_msg.str();
         std::cout << work_msg.str();
         if(!silent) this->write_task_data(tk, batcher, $$__PERT_ABS_ERR, $$__PERT_REL_ERR, $$__PERT_STEP_SIZE, "$$__PERT_STEPPER");
 
@@ -516,7 +516,7 @@ namespace transport
               {
                 batcher.report_integration_failure();
 
-                BOOST_LOG_SEV(batcher.get_log(), generic_batcher::error) << "!! Integration failure in work list " << i;
+                BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::error) << "!! Integration failure in work list " << i;
               }
           }
       }
@@ -586,7 +586,7 @@ namespace transport
     template <typename number>
     void $$__MODEL_vexcl_twopf_observer<number>::operator()(const twopf_state& x, double t)
       {
-        this->start_batching(t, this->get_log(), generic_batcher::normal);
+        this->start_batching(t, this->get_log(), generic_batcher::log_severity_level::normal);
 
         // allocate storage for state, then copy device vector
         std::vector<double> hst_x($$__MODEL_pool::twopf_state_size*this->group_size());
@@ -649,7 +649,7 @@ namespace transport
     template <typename number>
     void $$__MODEL_vexcl_threepf_observer<number>::operator()(const threepf_state& x, double t)
       {
-        this->start_batching(t, this->get_log(), generic_batcher::normal);
+        this->start_batching(t, this->get_log(), generic_batcher::log_severity_level::normal);
 
         // allocate storage, then copy device vector to host in one shot
         std::vector<double> hst_x($$__MODEL_pool::threepf_state_size*this->group_size());

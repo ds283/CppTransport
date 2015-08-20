@@ -107,7 +107,7 @@ namespace transport
 		    template <typename number>
 		    tensor_twopf_time_series<number>::tensor_twopf_time_series(const twopf_list_task<number>& tk, index_selector<2>& sel,
 		                                                               SQL_time_config_query tq, SQL_twopf_kconfig_query kq, unsigned int prec)
-			    : derived_line<number>(tk, time_axis, std::list<axis_value>{ efolds_axis }, prec),
+			    : derived_line<number>(tk, axis_class::time_axis, std::list<axis_value>{ axis_value::efolds_axis }, prec),
             tensor_twopf_line<number>(tk, sel),
             time_series<number>(tk),
             tquery(tq),
@@ -159,12 +159,12 @@ namespace transport
 						            std::array<unsigned int, 2> index_set = { m, n };
 								        if(this->active_indices.is_on(index_set))
 									        {
-								            cf_time_data_tag<number> tag = pipe.new_cf_time_data_tag(data_tag<number>::cf_tensor_twopf, this->gadget.get_model()->tensor_flatten(m, n), t->serial);
+								            cf_time_data_tag<number> tag = pipe.new_cf_time_data_tag(cf_data_type::cf_tensor_twopf, this->gadget.get_model()->tensor_flatten(m, n), t->serial);
 
 								            // it's safe to take a reference here to avoid a copy; we don't need the cache data to survive over multiple calls to lookup_tag()
 								            const std::vector<number>& line_data = t_handle.lookup_tag(tag);
 
-								            data_line<number> line = data_line<number>(group, this->x_type, correlation_function_value, t_axis, line_data,
+								            data_line<number> line = data_line<number>(group, this->x_type, value_type::correlation_function_value, t_axis, line_data,
 								                                                       this->get_LaTeX_label(m,n,*t), this->get_non_LaTeX_label(m,n,*t));
 
 								            lines.push_back(line);

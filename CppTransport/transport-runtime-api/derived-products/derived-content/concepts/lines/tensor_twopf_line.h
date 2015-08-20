@@ -116,7 +116,7 @@ namespace transport
 						    msg << CPPTRANSPORT_PRODUCT_INDEX_MISMATCH << " ("
 								    << CPPTRANSPORT_PRODUCT_INDEX_MISMATCH_A << " " << active_indices.get_number_fields() << ", "
 								    << CPPTRANSPORT_PRODUCT_INDEX_MISMATCH_B << " 2)";
-				        throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
+				        throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
 					    }
 			    }
 
@@ -141,7 +141,7 @@ namespace transport
 					    {
 				        std::ostringstream msg;
 						    msg << CPPTRANSPORT_PRODUCT_INDEX_BOUNDS << " (" << m << "," << n << ")";
-						    throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
+						    throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
 					    }
 
 		        std::ostringstream label;
@@ -168,7 +168,7 @@ namespace transport
 	            {
                 std::ostringstream msg;
                 msg << CPPTRANSPORT_PRODUCT_INDEX_BOUNDS << " (" << m << "," << n << ")";
-                throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
+                throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
 	            }
 
             std::ostringstream label;

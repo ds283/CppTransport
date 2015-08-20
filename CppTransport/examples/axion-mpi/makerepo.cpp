@@ -67,8 +67,8 @@ int main(int argc, char* argv[])
     const unsigned int early_t_samples = 200;
     const unsigned int late_t_samples  = 100;
 
-    transport::stepping_range<double>    early_times(Ncross - Npre, Ncross + Nsplit, early_t_samples, transport::logarithmic_bottom_stepping);
-    transport::stepping_range<double>    late_times(Ncross + Nsplit, Ncross + Nmax, late_t_samples, transport::linear_stepping);
+    transport::stepping_range<double>    early_times(Ncross - Npre, Ncross + Nsplit, early_t_samples, transport::range_spacing_type::logarithmic_bottom_stepping);
+    transport::stepping_range<double>    late_times(Ncross + Nsplit, Ncross + Nmax, late_t_samples, transport::range_spacing_type::linear_stepping);
     transport::aggregation_range<double> times(early_times, late_times);
 
     // the conventions for k-numbers are as follows:
@@ -87,7 +87,7 @@ int main(int argc, char* argv[])
 	        }
 	    };
 
-    transport::stepping_range<double> ks(kmin, kmax, k_samples, transport::linear_stepping);
+    transport::stepping_range<double> ks(kmin, kmax, k_samples, transport::range_spacing_type::linear_stepping);
 
     // construct a twopf task
     transport::twopf_task<double> tk2("axion.twopf-1", ics, times, ks);
@@ -104,16 +104,16 @@ int main(int argc, char* argv[])
     transport::zeta_threepf_task<double> ztk3("axion.threepf-1.zeta", tk3);
     ztk3.set_paired(true);
 
-    transport::fNL_task<double> ztk3_fNL_local("axion.threepf-1.fNL_local", ztk3, transport::derived_data::fNL_local_template);
-    transport::fNL_task<double> ztk3_fNL_equi("axion.threepf-1.fNL_equi", ztk3, transport::derived_data::fNL_equi_template);
-    transport::fNL_task<double> ztk3_fNL_ortho("axion.threepf-1.fNL_ortho", ztk3, transport::derived_data::fNL_ortho_template);
+    transport::fNL_task<double> ztk3_fNL_local("axion.threepf-1.fNL_local", ztk3, transport::derived_data::template_type::fNL_local_template);
+    transport::fNL_task<double> ztk3_fNL_equi("axion.threepf-1.fNL_equi", ztk3, transport::derived_data::template_type::fNL_equi_template);
+    transport::fNL_task<double> ztk3_fNL_ortho("axion.threepf-1.fNL_ortho", ztk3, transport::derived_data::template_type::fNL_ortho_template);
 
 
 		// SET UP SQL QUERIES
 
 		// filter for all times
     transport::derived_data::SQL_time_config_query all_times("1=1");
-		
+
 		// filter: pick just two times
     transport::derived_data::SQL_time_config_query two_times("serial=90 OR serial=250");
 
@@ -137,7 +137,7 @@ int main(int argc, char* argv[])
 
 		// filter: equilateral threepf with largest k_t
     transport::derived_data::SQL_threepf_kconfig_query equilateral_largest_threepf("ABS(alpha) < 0.01 AND ABS(beta - 1.0/3.0) < 0.01 AND kt_conventional IN (SELECT MAX(kt_conventional) FROM threepf_samples)");
-		
+
 		// filter: all equilateral configurations
     transport::derived_data::SQL_threepf_kconfig_query all_equilateral("ABS(alpha) < 0.01 AND ABS(beta - 1.0/3.0) < 0.01");
 
@@ -211,36 +211,36 @@ int main(int argc, char* argv[])
     tensor_only.set_on(index_set_l);
 
     transport::derived_data::twopf_time_series<double> tk2_twopf_group(tk2, twopf_fields, all_times, largest_twopf);
-    tk2_twopf_group.set_klabel_meaning(transport::derived_data::conventional);
+    tk2_twopf_group.set_klabel_meaning(transport::derived_data::klabel_type::conventional);
 
     transport::derived_data::twopf_time_series<double> tk2_phis_group(tk2, twopf_phis, all_times, largest_twopf);
-    tk2_phis_group.set_klabel_meaning(transport::derived_data::conventional);
+    tk2_phis_group.set_klabel_meaning(transport::derived_data::klabel_type::conventional);
 
     transport::derived_data::tensor_twopf_time_series<double> tk2_tensor_twopf_group(tk2, tensor_twopf_fields, all_times, largest_twopf);
-    tk2_tensor_twopf_group.set_klabel_meaning(transport::derived_data::conventional);
+    tk2_tensor_twopf_group.set_klabel_meaning(transport::derived_data::klabel_type::conventional);
 
     transport::derived_data::tensor_twopf_time_series<double> tk2_tensor_only_group(tk2, tensor_only, all_times, largest_twopf);
-    tk2_tensor_twopf_group.set_klabel_meaning(transport::derived_data::conventional);
+    tk2_tensor_twopf_group.set_klabel_meaning(transport::derived_data::klabel_type::conventional);
 
     transport::derived_data::tensor_twopf_wavenumber_series<double> tk2_tensor_spectrum(tk2, tensor_twopf_fields, two_times, all_twopfs);
-    tk2_tensor_spectrum.set_klabel_meaning(transport::derived_data::conventional);
+    tk2_tensor_spectrum.set_klabel_meaning(transport::derived_data::klabel_type::conventional);
 
     transport::derived_data::twopf_time_series<double> tk3_twopf_real_group(tk3, twopf_fields, all_times, largest_twopf);
-    tk3_twopf_real_group.set_klabel_meaning(transport::derived_data::conventional);
+    tk3_twopf_real_group.set_klabel_meaning(transport::derived_data::klabel_type::conventional);
 
     transport::derived_data::twopf_time_series<double> tk3_twopf_imag_group(tk3, twopf_cross, all_times, largest_twopf);
-    tk3_twopf_imag_group.set_klabel_meaning(transport::derived_data::conventional);
-    tk3_twopf_imag_group.set_type(transport::derived_data::imaginary);
+    tk3_twopf_imag_group.set_klabel_meaning(transport::derived_data::klabel_type::conventional);
+    tk3_twopf_imag_group.set_type(transport::derived_data::twopf_type::imaginary);
 
     transport::derived_data::twopf_wavenumber_series<double> tk3_twopf_real_kgp(tk3, twopf_fields, two_times, all_twopfs);
-    tk3_twopf_real_kgp.set_klabel_meaning(transport::derived_data::conventional);
+    tk3_twopf_real_kgp.set_klabel_meaning(transport::derived_data::klabel_type::conventional);
 
     transport::derived_data::twopf_wavenumber_series<double> tk3_twopf_imag_kgp(tk3, twopf_cross, two_times, all_twopfs);
-    tk3_twopf_imag_kgp.set_klabel_meaning(transport::derived_data::conventional);
-    tk3_twopf_imag_kgp.set_type(transport::derived_data::imaginary);
+    tk3_twopf_imag_kgp.set_klabel_meaning(transport::derived_data::klabel_type::conventional);
+    tk3_twopf_imag_kgp.set_type(transport::derived_data::twopf_type::imaginary);
 
     transport::derived_data::tensor_twopf_time_series<double> tensor_twopf_group(tk3, tensor_twopf_fields, all_times, largest_twopf);
-    tensor_twopf_group.set_klabel_meaning(transport::derived_data::conventional);
+    tensor_twopf_group.set_klabel_meaning(transport::derived_data::klabel_type::conventional);
 
     transport::derived_data::r_time_series<double> r_group(ztk3, all_times, largest_twopf);
 
@@ -250,47 +250,47 @@ int main(int argc, char* argv[])
     transport::derived_data::time_series_plot<double> tk2_twopf_real_plot("axion.twopf-1.twopf-real", "twopf-real.pdf");
     tk2_twopf_real_plot.add_line(tk2_twopf_group);
     tk2_twopf_real_plot.set_title_text("Real two-point function");
-    tk2_twopf_real_plot.set_legend_position(transport::derived_data::bottom_left);
+    tk2_twopf_real_plot.set_legend_position(transport::derived_data::legend_pos::bottom_left);
 
     transport::derived_data::time_series_plot<double> tk2_twopf_total_plot("axion.twopf-1.twopf-total", "twopf-total.pdf");
     tk2_twopf_total_plot.add_line(tk2_twopf_group);
     tk2_twopf_total_plot.add_line(tk2_tensor_only_group);
     tk2_twopf_total_plot.set_title_text("Two-point functions (fields and tensors)");
-    tk2_twopf_total_plot.set_legend_position(transport::derived_data::bottom_left);
+    tk2_twopf_total_plot.set_legend_position(transport::derived_data::legend_pos::bottom_left);
 
     transport::derived_data::time_series_plot<double> tk2_compare_plot("axion.twopf-1.twopf-compare", "twopf-compare.pdf");
     tk2_compare_plot.add_line(tk2_phis_group);
     tk2_compare_plot.add_line(tk2_tensor_twopf_group);
     tk2_compare_plot.set_title_text("Comparison of two-point functions");
-    tk2_compare_plot.set_legend_position(transport::derived_data::bottom_left);
+    tk2_compare_plot.set_legend_position(transport::derived_data::legend_pos::bottom_left);
 
     transport::derived_data::time_series_plot<double> tk2_tensor_twopf_plot("axion.twopf-1.tensor-twopf", "tensor-twopf.pdf");
     tk2_tensor_twopf_plot.add_line(tk2_tensor_twopf_group);
     tk2_tensor_twopf_plot.set_title_text("Tensor two-point function");
-    tk2_tensor_twopf_plot.set_legend_position(transport::derived_data::bottom_left);
+    tk2_tensor_twopf_plot.set_legend_position(transport::derived_data::legend_pos::bottom_left);
 
     transport::derived_data::wavenumber_series_plot<double> tk2_tensor_spectrum_plot("axion.twopf-1.tensor-spectrum", "tensor-spectrum.pdf");
     tk2_tensor_spectrum_plot.add_line(tk2_tensor_spectrum);
     tk2_tensor_spectrum_plot.set_title_text("Tensor power spectra");
-    tk2_tensor_spectrum_plot.set_legend_position(transport::derived_data::bottom_left);
+    tk2_tensor_spectrum_plot.set_legend_position(transport::derived_data::legend_pos::bottom_left);
     tk2_tensor_spectrum_plot.set_log_x(true);
 
 
     transport::derived_data::time_series_plot<double> tk3_twopf_real_plot("axion.threepf-1.twopf-real", "twopf-real.pdf");
     tk3_twopf_real_plot.add_line(tk3_twopf_real_group);
     tk3_twopf_real_plot.set_title_text("Real two-point function");
-    tk3_twopf_real_plot.set_legend_position(transport::derived_data::bottom_left);
+    tk3_twopf_real_plot.set_legend_position(transport::derived_data::legend_pos::bottom_left);
 
     transport::derived_data::time_series_plot<double> tk3_twopf_imag_plot("axion.threepf-1.twopf-imag", "twopf-imag.pdf");
     tk3_twopf_imag_plot.add_line(tk3_twopf_imag_group);
     tk3_twopf_imag_plot.set_title_text("Imaginary two-point function");
-    tk3_twopf_imag_plot.set_legend_position(transport::derived_data::bottom_left);
+    tk3_twopf_imag_plot.set_legend_position(transport::derived_data::legend_pos::bottom_left);
 
     transport::derived_data::time_series_plot<double> tk3_twopf_total_plot("axion.threepf-1.twopf-total", "twopf-total.pdf");
     tk3_twopf_total_plot.add_line(tk3_twopf_real_group);
     tk3_twopf_total_plot.add_line(tk3_twopf_imag_group);
     tk3_twopf_total_plot.set_title_text("Two-point function");
-    tk3_twopf_total_plot.set_legend_position(transport::derived_data::bottom_left);
+    tk3_twopf_total_plot.set_legend_position(transport::derived_data::legend_pos::bottom_left);
 
     transport::derived_data::wavenumber_series_plot<double> tk3_twopf_real_spec("axion.threepf-1.twopf-re-spec", "twopf-re-spec.pdf");
     tk3_twopf_real_spec.add_line(tk3_twopf_real_kgp);
@@ -315,17 +315,17 @@ int main(int argc, char* argv[])
     transport::derived_data::time_series_plot<double> tensor_twopf_plot("axion.threepf-1.tensor-twopf", "tensor-twopf.pdf");
     tensor_twopf_plot.add_line(tensor_twopf_group);
     tensor_twopf_plot.set_title_text("Tensor two-point function");
-    tensor_twopf_plot.set_legend_position(transport::derived_data::bottom_left);
+    tensor_twopf_plot.set_legend_position(transport::derived_data::legend_pos::bottom_left);
 
     transport::derived_data::time_series_plot<double> r_plot("axion.threepf-1.r-time", "r-time.pdf");
     r_plot.add_line(r_group);
     r_plot.set_title_text("Tensor-to-scalar ratio");
-    r_plot.set_legend_position(transport::derived_data::bottom_left);
+    r_plot.set_legend_position(transport::derived_data::legend_pos::bottom_left);
 
     transport::derived_data::wavenumber_series_plot<double> r_spectrum("axion.threepf-1.r-spectrum", "r-spectrum.pdf");
     r_spectrum.add_line(r_spectrum_group);
     r_spectrum.set_title_text("Tensor-to-scalar ratio");
-    r_spectrum.set_legend_position(transport::derived_data::bottom_left);
+    r_spectrum.set_legend_position(transport::derived_data::legend_pos::bottom_left);
 
 
     // plots of some components of the threepf
@@ -362,26 +362,26 @@ int main(int argc, char* argv[])
 
     // THREEPF FIELDS
     transport::derived_data::threepf_time_series<double> tk3_threepf_fields_equi(tk3, threepf_fields, all_times, equilateral_largest_threepf);
-    tk3_threepf_fields_equi.set_klabel_meaning(transport::derived_data::comoving);
-    tk3_threepf_fields_equi.set_dot_meaning(transport::derived_data::derivatives);
+    tk3_threepf_fields_equi.set_klabel_meaning(transport::derived_data::klabel_type::comoving);
+    tk3_threepf_fields_equi.set_dot_meaning(transport::derived_data::dot_type::derivatives);
 
     transport::derived_data::time_series_plot<double> tk3_threepf_field_equi_plot("axion.threepf-1.f-equi", "f-equi.pdf");
     tk3_threepf_field_equi_plot.add_line(tk3_threepf_fields_equi);
     tk3_threepf_field_equi_plot.set_title_text("Three-point function");
-    tk3_threepf_field_equi_plot.set_legend_position(transport::derived_data::bottom_left);
+    tk3_threepf_field_equi_plot.set_legend_position(transport::derived_data::legend_pos::bottom_left);
 
     transport::derived_data::time_series_table<double> tk3_threepf_field_equi_table("axion.threepf-1.f-equi.table", "f-equi-table.txt");
     tk3_threepf_field_equi_table.add_line(tk3_threepf_fields_equi);
 
     transport::derived_data::threepf_time_series<double> tk3_threepf_fields_sq(tk3, threepf_fields, all_times, most_squeezed_threepf);
-    tk3_threepf_fields_sq.set_klabel_meaning(transport::derived_data::comoving);
-    tk3_threepf_fields_sq.set_dot_meaning(transport::derived_data::derivatives);
+    tk3_threepf_fields_sq.set_klabel_meaning(transport::derived_data::klabel_type::comoving);
+    tk3_threepf_fields_sq.set_dot_meaning(transport::derived_data::dot_type::derivatives);
     tk3_threepf_fields_sq.set_use_beta_label(true);
 
     transport::derived_data::time_series_plot<double> tk3_threepf_field_sq_plot("axion.threepf-1.f-sq", "f-sq.pdf");
     tk3_threepf_field_sq_plot.add_line(tk3_threepf_fields_sq);
     tk3_threepf_field_sq_plot.set_title_text("Three-point function");
-    tk3_threepf_field_sq_plot.set_legend_position(transport::derived_data::bottom_left);
+    tk3_threepf_field_sq_plot.set_legend_position(transport::derived_data::legend_pos::bottom_left);
 
     transport::derived_data::time_series_table<double> tk3_threepf_field_sq_table("axion.threepf-1.f-sq.table", "f-sq-table.txt");
     tk3_threepf_field_sq_table.add_line(tk3_threepf_fields_sq);
@@ -389,52 +389,52 @@ int main(int argc, char* argv[])
 
     // THREEPF DERIVATIVES
     transport::derived_data::threepf_time_series<double> tk3_threepf_deriv_equi(tk3, threepf_momenta, all_times, equilateral_largest_threepf);
-    tk3_threepf_deriv_equi.set_klabel_meaning(transport::derived_data::comoving);
-    tk3_threepf_deriv_equi.set_dot_meaning(transport::derived_data::derivatives);
+    tk3_threepf_deriv_equi.set_klabel_meaning(transport::derived_data::klabel_type::comoving);
+    tk3_threepf_deriv_equi.set_dot_meaning(transport::derived_data::dot_type::derivatives);
 
     transport::derived_data::time_series_plot<double> tk3_threepf_deriv_equi_plot("axion.threepf-1.d-equi", "d-equi.pdf");
     tk3_threepf_deriv_equi_plot.add_line(tk3_threepf_deriv_equi);
     tk3_threepf_deriv_equi_plot.set_title_text("Three-point function");
-    tk3_threepf_deriv_equi_plot.set_legend_position(transport::derived_data::bottom_left);
+    tk3_threepf_deriv_equi_plot.set_legend_position(transport::derived_data::legend_pos::bottom_left);
 
     transport::derived_data::time_series_table<double> tk3_threepf_deriv_equi_table("axion.threepf-1.d-equi.table", "d-equi-table.txt");
     tk3_threepf_deriv_equi_table.add_line(tk3_threepf_deriv_equi);
 
     transport::derived_data::threepf_time_series<double> tk3_threepf_deriv_sq(tk3, threepf_momenta, all_times, extreme_squeezed_threepf);
-    tk3_threepf_deriv_sq.set_klabel_meaning(transport::derived_data::comoving);
-    tk3_threepf_deriv_sq.set_dot_meaning(transport::derived_data::derivatives);
+    tk3_threepf_deriv_sq.set_klabel_meaning(transport::derived_data::klabel_type::comoving);
+    tk3_threepf_deriv_sq.set_dot_meaning(transport::derived_data::dot_type::derivatives);
     tk3_threepf_deriv_sq.set_use_beta_label(true);
 
     transport::derived_data::time_series_plot<double> tk3_threepf_deriv_sq_plot("axion.threepf-1.d-sq", "d-sq.pdf");
     tk3_threepf_deriv_sq_plot.add_line(tk3_threepf_deriv_sq);
     tk3_threepf_deriv_sq_plot.set_title_text("Three-point function");
-    tk3_threepf_deriv_sq_plot.set_legend_position(transport::derived_data::bottom_left);
+    tk3_threepf_deriv_sq_plot.set_legend_position(transport::derived_data::legend_pos::bottom_left);
 
     transport::derived_data::time_series_table<double> tk3_threepf_deriv_sq_table("axion.threepf-1.d-sq.table", "d-sq-table.txt");
     tk3_threepf_deriv_sq_table.add_line(tk3_threepf_deriv_sq);
 
     // THREEPF MOMENTA
     transport::derived_data::threepf_time_series<double> tk3_threepf_mma_equi(tk3, threepf_momenta, all_times, equilateral_largest_threepf);
-    tk3_threepf_mma_equi.set_klabel_meaning(transport::derived_data::comoving);
-    tk3_threepf_mma_equi.set_dot_meaning(transport::derived_data::momenta);
+    tk3_threepf_mma_equi.set_klabel_meaning(transport::derived_data::klabel_type::comoving);
+    tk3_threepf_mma_equi.set_dot_meaning(transport::derived_data::dot_type::momenta);
 
     transport::derived_data::time_series_plot<double> tk3_threepf_mma_equi_plot("axion.threepf-1.m-equi", "m-equi.pdf");
     tk3_threepf_mma_equi_plot.add_line(tk3_threepf_mma_equi);
     tk3_threepf_mma_equi_plot.set_title_text("Three-point function");
-    tk3_threepf_mma_equi_plot.set_legend_position(transport::derived_data::bottom_left);
+    tk3_threepf_mma_equi_plot.set_legend_position(transport::derived_data::legend_pos::bottom_left);
 
     transport::derived_data::time_series_table<double> tk3_threepf_mma_equi_table("axion.threepf-1.m-equi.table", "m-equi-table.txt");
     tk3_threepf_mma_equi_table.add_line(tk3_threepf_mma_equi);
 
     transport::derived_data::threepf_time_series<double> tk3_threepf_mma_sq(tk3, threepf_momenta, all_times, extreme_squeezed_threepf);
-    tk3_threepf_mma_sq.set_klabel_meaning(transport::derived_data::comoving);
-    tk3_threepf_mma_sq.set_dot_meaning(transport::derived_data::momenta);
+    tk3_threepf_mma_sq.set_klabel_meaning(transport::derived_data::klabel_type::comoving);
+    tk3_threepf_mma_sq.set_dot_meaning(transport::derived_data::dot_type::momenta);
     tk3_threepf_mma_sq.set_use_beta_label(true);
 
     transport::derived_data::time_series_plot<double> tk3_threepf_mma_sq_plot("axion.threepf-1.m-sq", "m-sq.pdf");
     tk3_threepf_mma_sq_plot.add_line(tk3_threepf_mma_sq);
     tk3_threepf_mma_sq_plot.set_title_text("Three-point function");
-    tk3_threepf_mma_sq_plot.set_legend_position(transport::derived_data::bottom_left);
+    tk3_threepf_mma_sq_plot.set_legend_position(transport::derived_data::legend_pos::bottom_left);
 
     transport::derived_data::time_series_table<double> tk3_threepf_mma_sq_table("axion.threepf-1.m-sq.table", "m-sq-table.txt");
     tk3_threepf_mma_sq_table.add_line(tk3_threepf_mma_sq);
@@ -445,7 +445,7 @@ int main(int argc, char* argv[])
     tk3_mixed_plot.add_line(tk3_threepf_fields_equi);
     tk3_mixed_plot.add_line(tk3_twopf_real_group);
     tk3_mixed_plot.set_title_text("Two- and three-point functions");
-    tk3_mixed_plot.set_legend_position(transport::derived_data::bottom_left);
+    tk3_mixed_plot.set_legend_position(transport::derived_data::legend_pos::bottom_left);
 
     // pick out the shift between derivative and momenta 3pfs
     transport::index_selector<3> threepf_mmta(model->get_N_fields());
@@ -456,14 +456,14 @@ int main(int argc, char* argv[])
     threepf_mmta.set_on(sq_mmta_b);
 
     transport::derived_data::threepf_time_series<double> tk3_threepf_derivs(tk3, threepf_mmta, all_times, largest_threepf);
-    tk3_threepf_derivs.set_klabel_meaning(transport::derived_data::comoving);
-    tk3_threepf_derivs.set_dot_meaning(transport::derived_data::derivatives);
+    tk3_threepf_derivs.set_klabel_meaning(transport::derived_data::klabel_type::comoving);
+    tk3_threepf_derivs.set_dot_meaning(transport::derived_data::dot_type::derivatives);
     tk3_threepf_derivs.set_use_alpha_label(true);
     tk3_threepf_derivs.set_use_beta_label(true);
 
     transport::derived_data::threepf_time_series<double> tk3_threepf_momenta(tk3, threepf_mmta, all_times, largest_threepf);
-    tk3_threepf_momenta.set_klabel_meaning(transport::derived_data::comoving);
-    tk3_threepf_momenta.set_dot_meaning(transport::derived_data::momenta);
+    tk3_threepf_momenta.set_klabel_meaning(transport::derived_data::klabel_type::comoving);
+    tk3_threepf_momenta.set_dot_meaning(transport::derived_data::dot_type::momenta);
     tk3_threepf_momenta.set_use_alpha_label(true);
     tk3_threepf_momenta.set_use_beta_label(true);
 
@@ -472,7 +472,7 @@ int main(int argc, char* argv[])
     tk3_check_shift.add_line(tk3_threepf_derivs);
     tk3_check_shift.add_line(tk3_threepf_momenta);
     tk3_check_shift.set_title_text("Comparison of derivative and momenta 3pf");
-    tk3_check_shift.set_legend_position(transport::derived_data::bottom_left);
+    tk3_check_shift.set_legend_position(transport::derived_data::legend_pos::bottom_left);
 
     transport::derived_data::time_series_table<double> tk3_check_shift_table("axion.threepf-1.checkshift.table", "checkshift-table.txt");
 
@@ -480,8 +480,8 @@ int main(int argc, char* argv[])
     tk3_check_shift_table.add_line(tk3_threepf_momenta);
 
     transport::derived_data::threepf_wavenumber_series<double> tk3_threepf_equi_kgp(tk3, threepf_fields, two_times, all_equilateral);
-    tk3_threepf_equi_kgp.set_dot_meaning(transport::derived_data::derivatives);
-    tk3_threepf_equi_kgp.set_klabel_meaning(transport::derived_data::conventional);
+    tk3_threepf_equi_kgp.set_dot_meaning(transport::derived_data::dot_type::derivatives);
+    tk3_threepf_equi_kgp.set_klabel_meaning(transport::derived_data::klabel_type::conventional);
 
     transport::derived_data::wavenumber_series_plot<double> tk3_threepf_equi_spec("axion.threepf-1.threepf-equi-spec", "threepf-equi-spec.pdf");
     tk3_threepf_equi_spec.add_line(tk3_threepf_equi_kgp);
@@ -500,16 +500,16 @@ int main(int argc, char* argv[])
     tk3_zeta_twopf.add_line(tk3_zeta_twopf_group);
     tk3_zeta_twopf.add_line(tk3_twopf_real_group);
     tk3_zeta_twopf.set_title_text("Comparison of $\\zeta$ and field 2pfs");
-    tk3_zeta_twopf.set_legend_position(transport::derived_data::bottom_left);
+    tk3_zeta_twopf.set_legend_position(transport::derived_data::legend_pos::bottom_left);
 
     // check the zeta threepf
     transport::derived_data::zeta_threepf_time_series<double> tk3_zeta_equi_group(ztk3, all_times, equilateral_extreme_threepf);
-    tk3_zeta_equi_group.set_klabel_meaning(transport::derived_data::comoving);
+    tk3_zeta_equi_group.set_klabel_meaning(transport::derived_data::klabel_type::comoving);
     tk3_zeta_equi_group.set_use_beta_label(true);
 
     transport::derived_data::time_series_plot<double> tk3_zeta_equi("axion.threepf-1.zeta-equi", "zeta-equi.pdf");
     tk3_zeta_equi.add_line(tk3_zeta_equi_group);
-    tk3_zeta_equi.set_legend_position(transport::derived_data::centre_right);
+    tk3_zeta_equi.set_legend_position(transport::derived_data::legend_pos::centre_right);
     tk3_zeta_equi.set_title_text("3pf of $\\zeta$ near equilateral configurations");
 
     // set up a table too
@@ -517,7 +517,7 @@ int main(int argc, char* argv[])
     tk3_zeta_equi_table.add_line(tk3_zeta_equi_group);
 
     transport::derived_data::zeta_threepf_time_series<double> tk3_zeta_sq_group(ztk3, all_times, extreme_squeezed_threepf);
-    tk3_zeta_sq_group.set_klabel_meaning(transport::derived_data::comoving);
+    tk3_zeta_sq_group.set_klabel_meaning(transport::derived_data::klabel_type::comoving);
     tk3_zeta_sq_group.set_use_beta_label(true);
 
     transport::derived_data::time_series_plot<double> tk3_zeta_sq("axion.threepf-1.zeta-sq", "zeta-sq.pdf");
@@ -531,12 +531,12 @@ int main(int argc, char* argv[])
 
     // compute the reduced bispectrum in a few squeezed configurations
     transport::derived_data::zeta_reduced_bispectrum_time_series<double> tk3_zeta_redbsp_sq(ztk3, all_times, extreme_squeezed_threepf);
-    tk3_zeta_redbsp_sq.set_klabel_meaning(transport::derived_data::comoving);
+    tk3_zeta_redbsp_sq.set_klabel_meaning(transport::derived_data::klabel_type::comoving);
     tk3_zeta_redbsp_sq.set_use_beta_label(true);
 
     // and a few equilateral configurations
     transport::derived_data::zeta_reduced_bispectrum_time_series<double> tk3_zeta_redbsp_eq(ztk3, all_times, equilateral_extreme_threepf);
-    tk3_zeta_redbsp_sq.set_klabel_meaning(transport::derived_data::comoving);
+    tk3_zeta_redbsp_sq.set_klabel_meaning(transport::derived_data::klabel_type::comoving);
     tk3_zeta_redbsp_sq.set_use_beta_label(true);
 
     transport::derived_data::time_series_plot<double> tk3_redbsp_sq("axion.threepf-1.redbsp-sq", "redbsp-sq.pdf");
@@ -544,14 +544,14 @@ int main(int argc, char* argv[])
     tk3_redbsp_sq.set_abs_y(false);
     tk3_redbsp_sq.add_line(tk3_zeta_redbsp_sq);
     tk3_redbsp_sq.set_legend(false);
-//    tk3_redbsp_sq.set_legend_position(transport::derived_data::bottom_right);
+//    tk3_redbsp_sq.set_legend_position(transport::derived_data::legend_pos::bottom_right);
     tk3_redbsp_sq.set_title_text("Reduced bispectrum near squeezed configurations");
 
     transport::derived_data::time_series_plot<double> tk3_redbsp_eq("axion.threepf-1.redbsp-eq", "redbsp-eq.pdf");
     tk3_redbsp_eq.set_log_y(false);
     tk3_redbsp_eq.set_abs_y(false);
     tk3_redbsp_eq.add_line(tk3_zeta_redbsp_eq);
-    tk3_redbsp_eq.set_legend_position(transport::derived_data::bottom_right);
+    tk3_redbsp_eq.set_legend_position(transport::derived_data::legend_pos::bottom_right);
     tk3_redbsp_eq.set_title_text("Reduced bispectrum near equilateral configurations");
 
     transport::derived_data::time_series_table<double> tk3_redbsp_table("axion.threepf-1.redbsp-table", "redbsp-table.txt");
@@ -559,7 +559,7 @@ int main(int argc, char* argv[])
     tk3_redbsp_table.add_line(tk3_zeta_redbsp_eq);
 
     transport::derived_data::zeta_twopf_wavenumber_series<double> tk3_zeta_2spec(ztk3, two_times, all_twopfs);
-    tk3_zeta_2spec.set_klabel_meaning(transport::derived_data::conventional);
+    tk3_zeta_2spec.set_klabel_meaning(transport::derived_data::klabel_type::conventional);
     tk3_zeta_2spec.set_dimensionless(true);
 
     transport::derived_data::wavenumber_series_plot<double> tk3_zeta_2spec_plot("axion.threepf-1.zeta-2pec", "zeta-2spec.pdf");
@@ -571,7 +571,7 @@ int main(int argc, char* argv[])
     tk3_zeta_2spec_table.add_line(tk3_zeta_2spec);
 
     transport::derived_data::zeta_threepf_wavenumber_series<double> tk3_zeta_3equspec(ztk3, two_times, all_equilateral);
-    tk3_zeta_3equspec.set_klabel_meaning(transport::derived_data::conventional);
+    tk3_zeta_3equspec.set_klabel_meaning(transport::derived_data::klabel_type::conventional);
 
     transport::derived_data::wavenumber_series_plot<double> tk3_zeta_3equspec_plot("axion.threepf-1.zeta-3equspec", "zeta-3equspec.pdf");
     tk3_zeta_3equspec_plot.add_line(tk3_zeta_3equspec);
@@ -582,7 +582,7 @@ int main(int argc, char* argv[])
     tk3_zeta_3equspec_table.add_line(tk3_zeta_3equspec);
 
     transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_spec(ztk3, two_times, extreme_squeezed_threepf);
-    tk3_zeta_redbsp_spec.set_klabel_meaning(transport::derived_data::conventional);
+    tk3_zeta_redbsp_spec.set_klabel_meaning(transport::derived_data::klabel_type::conventional);
 
     transport::derived_data::wavenumber_series_plot<double> tk3_redbsp_spec_plot("axion.threepf-1.redbsp-spec", "redbsp-spec.pdf");
     tk3_redbsp_spec_plot.add_line(tk3_zeta_redbsp_spec);

@@ -67,32 +67,32 @@ namespace transport
 					    {
 				        switch(x_axis)
 					        {
-				            case unset_axis:
-				            case k_axis:
+				            case axis_value::unset_axis:
+				            case axis_value::k_axis:
 					            this->internal_set_x_label(CPPTRANSPORT_PRODUCT_K_VALUE_TABLE_LABEL_NOLATEX);
 					            break;
 
-				            case efolds_exit_axis:
+				            case axis_value::efolds_exit_axis:
 					            this->internal_set_x_label(CPPTRANSPORT_PRODUCT_EFOLDS_EXIT_TABLE_LABEL_NOLATEX);
 				              break;
 
-				            case alpha_axis:
+				            case axis_value::alpha_axis:
 					            this->internal_set_x_label(CPPTRANSPORT_PRODUCT_ALPHA_TABLE_LABEL_NOLATEX);
 				              break;
 
-				            case beta_axis:
+				            case axis_value::beta_axis:
 					            this->internal_set_x_label(CPPTRANSPORT_PRODUCT_BETA_TABLE_LABEL_NOLATEX);
 				              break;
 
-				            case squeezing_fraction_k1_axis:
+				            case axis_value::squeezing_fraction_k1_axis:
 					            this->internal_set_x_label(CPPTRANSPORT_PRODUCT_SQUEEZING_FRACTION_K1_TABLE_LABEL_NOLATEX);
 				              break;
 
-				            case squeezing_fraction_k2_axis:
+				            case axis_value::squeezing_fraction_k2_axis:
 					            this->internal_set_x_label(CPPTRANSPORT_PRODUCT_SQUEEZING_FRACTION_K2_TABLE_LABEL_NOLATEX);
 				              break;
 
-				            case squeezing_fraction_k3_axis:
+				            case axis_value::squeezing_fraction_k3_axis:
 					            this->internal_set_x_label(CPPTRANSPORT_PRODUCT_SQUEEZING_FRACTION_K3_TABLE_LABEL_NOLATEX);
 				              break;
 

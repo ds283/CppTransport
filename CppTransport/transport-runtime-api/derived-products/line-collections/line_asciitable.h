@@ -23,6 +23,7 @@
 #include "transport-runtime-api/exceptions.h"
 
 #include "boost/filesystem/operations.hpp"
+#include "boost/log/utility/formatting_ostream.hpp"
 
 
 #define CPPTRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_ROOT        "line-asciitable"
@@ -58,7 +59,7 @@ namespace transport
 							    {
 						        std::ostringstream msg;
 								    msg << CPPTRANSPORT_PRODUCT_LINE_ASCIITABLE_UNSUPPORTED_FORMAT << " " << filename.extension();
-								    throw runtime_exception(runtime_exception::DERIVED_PRODUCT_ERROR, msg.str());
+								    throw runtime_exception(exception_type::DERIVED_PRODUCT_ERROR, msg.str());
 							    }
 					    }
 
@@ -135,7 +136,7 @@ namespace transport
 
 		      public:
 
-		        void write(std::ostream& out);
+		        template <typename Stream> void write(Stream& out);
 
 
 				    // INTERNAL DATA
@@ -246,7 +247,7 @@ namespace transport
 							{
 						    std::ostringstream msg;
 								msg << CPPTRANSPORT_DERIVED_PRODUCT_FAILED << " " << table_file;
-								throw runtime_exception(runtime_exception::DERIVED_PRODUCT_ERROR, msg.str());
+								throw runtime_exception(exception_type::DERIVED_PRODUCT_ERROR, msg.str());
 							}
 					}
 
@@ -265,7 +266,8 @@ namespace transport
 
 
 				template <typename number>
-				void line_asciitable<number>::write(std::ostream& out)
+        template <typename Stream>
+				void line_asciitable<number>::write(Stream& out)
 					{
 						// call next writer
 						this->line_collection<number>::write(out);
@@ -274,12 +276,20 @@ namespace transport
 					}
 
 
-		    template <typename number>
-		    std::ostream& operator<<(std::ostream& out, line_asciitable<number>& obj)
+		    template <typename number, typename Char, typename Traits>
+		    std::basic_ostream<Char, Traits>& operator<<(std::basic_ostream<Char, Traits>& out, line_asciitable<number>& obj)
 			    {
 		        obj.write(out);
 		        return(out);
 			    }
+
+
+        template <typename number, typename Char, typename Traits, typename Allocator>
+        boost::log::basic_formatting_ostream<Char, Traits, Allocator>& operator<<(boost::log::basic_formatting_ostream<Char, Traits, Allocator>& out, line_asciitable<number>& obj)
+          {
+            obj.write(out);
+            return(out);
+          }
 
 
 			}   // namespace derived_data

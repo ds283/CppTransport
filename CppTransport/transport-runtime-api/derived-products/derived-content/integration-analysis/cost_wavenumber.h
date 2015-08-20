@@ -46,18 +46,16 @@ namespace transport
 				class cost_wavenumber: public wavenumber_series<number>
 					{
 
-						typedef enum { twopf_analysis, threepf_analysis } analysis_type;
-
 						// CONSTRUCTOR, DESTRUCTOR
 
 				  public:
 
 						//! basic user-facing constructor -- 2pf task version
-						cost_wavenumber(const twopf_task<number>& tk, SQL_twopf_kconfig_query kq, cost_metric m=time_cost,
+						cost_wavenumber(const twopf_task<number>& tk, SQL_twopf_kconfig_query kq, cost_metric m=cost_metric::time_cost,
 						                unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
 						//! basic user-facing constructor -- 3pf task version
-						cost_wavenumber(const threepf_task<number>& tk, SQL_threepf_kconfig_query kq, cost_metric m=time_cost,
+						cost_wavenumber(const threepf_task<number>& tk, SQL_threepf_kconfig_query kq, cost_metric m=cost_metric::time_cost,
 						                unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
 						//! override copy constructor to provide deep copy of SQL_query object
@@ -131,9 +129,9 @@ namespace transport
 				template <typename number>
 				cost_wavenumber<number>::cost_wavenumber(const twopf_task<number>& tk, SQL_twopf_kconfig_query kq,
 				                                         cost_metric m, unsigned int prec)
-					: derived_line<number>(tk, wavenumber_axis, std::list<axis_value>{ k_axis, efolds_exit_axis }, prec),
+					: derived_line<number>(tk, axis_class::wavenumber_axis, std::list<axis_value>{ axis_value::k_axis, axis_value::efolds_exit_axis }, prec),
 					  wavenumber_series<number>(tk),
-					  type(twopf_analysis),
+					  type(analysis_type::twopf_analysis),
 		        gadget(tk),
 		        metric(m),
 						kquery(kq.clone())
@@ -144,9 +142,9 @@ namespace transport
 		    template <typename number>
 		    cost_wavenumber<number>::cost_wavenumber(const threepf_task<number>& tk, SQL_threepf_kconfig_query kq,
 		                                             cost_metric m, unsigned int prec)
-			    : derived_line<number>(tk, wavenumber_axis, std::list<axis_value>{ k_axis, efolds_exit_axis, alpha_axis, beta_axis, squeezing_fraction_k1_axis, squeezing_fraction_k2_axis, squeezing_fraction_k3_axis }, prec),
+			    : derived_line<number>(tk, axis_class::wavenumber_axis, std::list<axis_value>{ axis_value::k_axis, axis_value::efolds_exit_axis, axis_value::alpha_axis, axis_value::beta_axis, axis_value::squeezing_fraction_k1_axis, axis_value::squeezing_fraction_k2_axis, axis_value::squeezing_fraction_k3_axis }, prec),
 			      wavenumber_series<number>(tk),
-			      type(threepf_analysis),
+			      type(analysis_type::threepf_analysis),
 			      gadget(tk),
 			      metric(m),
 		        kquery(kq.clone())
@@ -178,15 +176,15 @@ namespace transport
 						kquery = SQL_query_helper::deserialize(reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY]);
 
 				    std::string type_string = reader[CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_TYPE].asString();
-						type = twopf_analysis;
-						if(type_string == CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_TWOPF)        type = twopf_analysis;
-						else if(type_string == CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_THREEPF) type = threepf_analysis;
+						type = analysis_type::twopf_analysis;
+						if(type_string == CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_TWOPF)        type = analysis_type::twopf_analysis;
+						else if(type_string == CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_THREEPF) type = analysis_type::threepf_analysis;
 						else assert(false); // TODO: raise exception
 
 				    std::string metric_string = reader[CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_METRIC].asString();
-						metric = time_cost;
-						if(metric_string == CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_TIME)       metric = time_cost;
-						else if(metric_string == CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_STEPS) metric = steps_cost;
+						metric = cost_metric::time_cost;
+						if(metric_string == CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_TIME)       metric = cost_metric::time_cost;
+						else if(metric_string == CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_STEPS) metric = cost_metric::steps_cost;
 						else assert(false); // TODO: raise exception
 					}
 
@@ -200,11 +198,11 @@ namespace transport
 
 				    switch(this->type)
 					    {
-				        case twopf_analysis:
+				        case analysis_type::twopf_analysis:
 					        writer[CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_TYPE] = std::string(CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_TWOPF);
 					        break;
 
-				        case threepf_analysis:
+				        case analysis_type::threepf_analysis:
 				        writer[CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_TYPE] = std::string(CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_THREEPF);
 					        break;
 
@@ -215,11 +213,11 @@ namespace transport
 
 				    switch(this->metric)
 					    {
-				        case time_cost:
+				        case cost_metric::time_cost:
 					        writer[CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_METRIC] = std::string(CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_TIME);
 					        break;
 
-				        case steps_cost:
+				        case cost_metric::steps_cost:
 					        writer[CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_METRIC] = std::string(CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_STEPS);
 					        break;
 
@@ -252,7 +250,7 @@ namespace transport
 		                std::vector<double> w_axis;
 				            switch(this->type)
 					            {
-				                case twopf_analysis:
+				                case analysis_type::twopf_analysis:
 					                {
 						                SQL_twopf_kconfig_query* kquery_as_twopf = dynamic_cast<SQL_twopf_kconfig_query*>(this->kquery);
 						                assert(kquery_as_twopf != nullptr);   // TODO: raise exception
@@ -260,7 +258,7 @@ namespace transport
 						                break;
 					                };
 
-				                case threepf_analysis:
+				                case analysis_type::threepf_analysis:
 					                {
 						                SQL_threepf_kconfig_query* kquery_as_threepf = dynamic_cast<SQL_threepf_kconfig_query*>(this->kquery);
 						                assert(kquery_as_threepf != nullptr);   // TODO: raise exception
@@ -281,20 +279,20 @@ namespace transport
 
 		                std::vector<number> line_data;
 		                line_data.reserve(statistics.size());
-		                value_type this_value = time_value;
+		                value_type this_value = value_type::time_value;
 
 		                for(std::vector<kconfiguration_statistics>::const_iterator t = statistics.begin(); t != statistics.end(); ++t)
 			                {
 		                    switch(this->metric)
 			                    {
-		                        case time_cost:
+		                        case cost_metric::time_cost:
 			                        line_data.push_back(static_cast<number>(t->integration) / (1000.0*1000.0*1000.0)); // convert to seconds
-			                        this_value = time_value;
+			                        this_value = value_type::time_value;
 			                        break;
 
-		                        case steps_cost:
+		                        case cost_metric::steps_cost:
 			                        line_data.push_back(static_cast<number>(t->steps));
-			                        this_value = steps_value;
+			                        this_value = value_type::steps_value;
 			                        break;
 
 		                        default:
@@ -304,7 +302,7 @@ namespace transport
 
 		                data_line<number> line(group, this->x_type, this_value, w_axis, line_data,
 		                                       this->get_LaTeX_label(), this->get_non_LaTeX_label(), this->is_spectral_index());
-				            line.set_data_line_type(scattered_data);
+				            line.set_data_line_type(data_line_type::scattered_data);
 
 		                lines.push_back(line);
 			            }
@@ -326,7 +324,7 @@ namespace transport
 					    }
 				    else
 					    {
-				        label = "$" + (this->metric == time_cost ? std::string(CPPTRANSPORT_LATEX_TIME_SYMBOL) : std::string(CPPTRANSPORT_LATEX_STEPS_SYMBOL)) + "$";
+				        label = "$" + (this->metric == cost_metric::time_cost ? std::string(CPPTRANSPORT_LATEX_TIME_SYMBOL) : std::string(CPPTRANSPORT_LATEX_STEPS_SYMBOL)) + "$";
 					    }
 
 				    return(label);
@@ -344,7 +342,7 @@ namespace transport
 			        }
 		        else
 			        {
-		            label = (this->metric == time_cost ? std::string(CPPTRANSPORT_NONLATEX_TIME_SYMBOL) : std::string(CPPTRANSPORT_NONLATEX_STEPS_SYMBOL));
+		            label = (this->metric == cost_metric::time_cost ? std::string(CPPTRANSPORT_NONLATEX_TIME_SYMBOL) : std::string(CPPTRANSPORT_NONLATEX_STEPS_SYMBOL));
 			        }
 
 		        return(label);

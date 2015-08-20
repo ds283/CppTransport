@@ -15,6 +15,8 @@
 
 #include "transport-runtime-api/manager/argument_cache.h"
 
+#include "transport-runtime-api/enumerations.h"
+
 
 namespace transport
   {
@@ -102,10 +104,6 @@ namespace transport
 
 		          public:
 
-			          typedef enum { cpu, gpu } worker_type;
-
-		          public:
-
 				        //! Default constructor (used for receiving messages)
 				        slave_information_payload() = default;
 
@@ -118,7 +116,7 @@ namespace transport
 					        }
 
 				        //! Get worker type
-				        worker_type get_type() const { return(this->type); }
+                worker_type get_type() const { return(this->type); }
 
 				        //! Get worker capacity
 				        unsigned int get_capacity() const { return(this->capacity); }
@@ -129,7 +127,7 @@ namespace transport
 		          private:
 
 				        //! Worker type
-				        worker_type type;
+                worker_type type;
 
 				        //! Worker memory capacity (integrations only)
 				        unsigned int capacity;
@@ -501,7 +499,7 @@ namespace transport
 
               public:
 
-                typedef enum { twopf_payload, threepf_payload } payload_type;
+                enum class payload_type { twopf_payload, threepf_payload };
 
                 //! Default constructor (used for receiving messages)
                 content_ready_payload() = default;

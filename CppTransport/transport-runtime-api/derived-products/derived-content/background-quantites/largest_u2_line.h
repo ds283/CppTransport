@@ -108,7 +108,7 @@ namespace transport
 
 				template <typename number>
 				largest_u2_line<number>::largest_u2_line(const twopf_list_task<number>& tk, SQL_time_config_query tq, SQL_twopf_kconfig_query kq, unsigned int prec)
-					: derived_line<number>(tk, time_axis, std::list<axis_value>{ efolds_axis }, prec),
+					: derived_line<number>(tk, axis_class::time_axis, std::list<axis_value>{ axis_value::efolds_axis }, prec),
 		        time_series<number>(tk),
 		        gadget(tk),
 		        tquery(tq),
@@ -210,7 +210,7 @@ namespace transport
                     line_data[j] = val;
                   }
 
-                data_line<number> line(group, this->x_type, dimensionless_value, t_axis, line_data,
+                data_line<number> line(group, this->x_type, value_type::dimensionless_value, t_axis, line_data,
                                        this->get_LaTeX_label(*t), this->get_non_LaTeX_label(*t));
                 lines.push_back(line);
               }
