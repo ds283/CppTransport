@@ -383,11 +383,11 @@ namespace transport
     void zeta_twopf_time_data_tag<number>::pull(std::shared_ptr<derived_data::SQL_query>& query, std::vector<number>& sample)
 	    {
         // check that we are attached to a content group
-        assert(this->pipe->validate_attached(datapipe<number>::postintegration_attached));
-        if(!this->pipe->validate_attached(datapipe<number>::postintegration_attached)) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+        assert(this->pipe->validate_attached(datapipe<number>::attachment_type::postintegration_attached));
+        if(!this->pipe->validate_attached(datapipe<number>::attachment_type::postintegration_attached)) throw runtime_exception(exception_type::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
 #ifdef CPPTRANSPORT_DEBUG_DATAPIPE
-		    BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::datapipe_pull) << "** PULL zeta twopf time sample request, k-configuration " << this->kdata.kserial;
+		    BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::log_severity_level::datapipe_pull) << "** PULL zeta twopf time sample request, k-configuration " << this->kdata.kserial;
 #endif
 
         this->pipe->database_timer.resume();
@@ -399,11 +399,11 @@ namespace transport
     template <typename number>
     void zeta_threepf_time_data_tag<number>::pull(std::shared_ptr<derived_data::SQL_query>& query, std::vector<number>& sample)
 	    {
-        assert(this->pipe->validate_attached(datapipe<number>::postintegration_attached));
-        if(!this->pipe->validate_attached(datapipe<number>::postintegration_attached)) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+        assert(this->pipe->validate_attached(datapipe<number>::attachment_type::postintegration_attached));
+        if(!this->pipe->validate_attached(datapipe<number>::attachment_type::postintegration_attached)) throw runtime_exception(exception_type::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
 #ifdef CPPTRANSPORT_DEBUG_DATAPIPE
-		    BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::datapipe_pull) << "** PULL zeta threepf time sample request, type = real, k-configuration " << this->kdata.kserial;
+		    BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::log_severity_level::datapipe_pull) << "** PULL zeta threepf time sample request, type = real, k-configuration " << this->kdata.kserial;
 #endif
 
         this->pipe->database_timer.resume();
@@ -415,11 +415,11 @@ namespace transport
     template <typename number>
     void zeta_reduced_bispectrum_time_data_tag<number>::pull(std::shared_ptr<derived_data::SQL_query>& query, std::vector<number>& sample)
 	    {
-        assert(this->pipe->validate_attached(datapipe<number>::postintegration_attached));
-        if(!this->pipe->validate_attached(datapipe<number>::postintegration_attached)) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+        assert(this->pipe->validate_attached(datapipe<number>::attachment_type::postintegration_attached));
+        if(!this->pipe->validate_attached(datapipe<number>::attachment_type::postintegration_attached)) throw runtime_exception(exception_type::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
 #ifdef CPPTRANSPORT_DEBUG_DATAPIPE
-		    BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::datapipe_pull) << "** PULL zeta reduced bispectrum time sample request, type = real, k-configuration " << this->kdata.kserial;
+		    BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::log_severity_level::datapipe_pull) << "** PULL zeta reduced bispectrum time sample request, type = real, k-configuration " << this->kdata.kserial;
 #endif
 
         this->pipe->database_timer.resume();
@@ -431,11 +431,11 @@ namespace transport
     template <typename number>
     void zeta_twopf_kconfig_data_tag<number>::pull(std::shared_ptr<derived_data::SQL_query>& query, std::vector<number>& sample)
 	    {
-        assert(this->pipe->validate_attached(datapipe<number>::postintegration_attached));
-        if(!this->pipe->validate_attached(datapipe<number>::postintegration_attached)) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+        assert(this->pipe->validate_attached(datapipe<number>::attachment_type::postintegration_attached));
+        if(!this->pipe->validate_attached(datapipe<number>::attachment_type::postintegration_attached)) throw runtime_exception(exception_type::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
 #ifdef CPPTRANSPORT_DEBUG_DATAPIPE
-		    BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::datapipe_pull) << "** PULL zeta twopf kconfig sample request, t-serial " << this->tserial;
+		    BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::log_severity_level::datapipe_pull) << "** PULL zeta twopf kconfig sample request, t-serial " << this->tserial;
 #endif
 
         this->pipe->database_timer.resume();
@@ -447,11 +447,11 @@ namespace transport
     template <typename number>
     void zeta_threepf_kconfig_data_tag<number>::pull(std::shared_ptr<derived_data::SQL_query>& query, std::vector<number>& sample)
 	    {
-        assert(this->pipe->validate_attached(datapipe<number>::postintegration_attached));
-        if(!this->pipe->validate_attached(datapipe<number>::postintegration_attached)) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+        assert(this->pipe->validate_attached(datapipe<number>::attachment_type::postintegration_attached));
+        if(!this->pipe->validate_attached(datapipe<number>::attachment_type::postintegration_attached)) throw runtime_exception(exception_type::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
 #ifdef CPPTRANSPORT_DEBUG_DATAPIPE
-		    BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::datapipe_pull) << "** PULL zeta threepf kconfig sample request, t-serial " << this->tserial;
+		    BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::log_severity_level::datapipe_pull) << "** PULL zeta threepf kconfig sample request, t-serial " << this->tserial;
 #endif
 
         this->pipe->database_timer.resume();
@@ -463,11 +463,11 @@ namespace transport
     template <typename number>
     void zeta_reduced_bispectrum_kconfig_data_tag<number>::pull(std::shared_ptr<derived_data::SQL_query>& query, std::vector<number>& sample)
 	    {
-        assert(this->pipe->validate_attached(datapipe<number>::postintegration_attached));
-        if(!this->pipe->validate_attached(datapipe<number>::postintegration_attached)) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+        assert(this->pipe->validate_attached(datapipe<number>::attachment_type::postintegration_attached));
+        if(!this->pipe->validate_attached(datapipe<number>::attachment_type::postintegration_attached)) throw runtime_exception(exception_type::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
 #ifdef CPPTRANSPORT_DEBUG_DATAPIPE
-		    BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::datapipe_pull) << "** PULL zeta reduced bispectrum kconfig sample request, t-serial " << this->tserial;
+		    BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::log_severity_level::datapipe_pull) << "** PULL zeta reduced bispectrum kconfig sample request, t-serial " << this->tserial;
 #endif
 
         this->pipe->database_timer.resume();

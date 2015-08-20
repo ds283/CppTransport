@@ -269,7 +269,7 @@ namespace transport
 
         //! Pull a time sample of a twopf component at fixed k-configuration from a datapipe
         virtual void pull_twopf_time_sample(datapipe<number>* pipe, unsigned int id, const std::shared_ptr<derived_data::SQL_query>& query,
-                                            unsigned int k_serial, std::vector<number>& sample, typename datapipe<number>::twopf_type type) override;
+                                            unsigned int k_serial, std::vector<number>& sample, twopf_type type) override;
 
         //! Pull a sample of a threepf at fixed k-configuration from a datapipe
         virtual void pull_threepf_time_sample(datapipe<number>* pipe, unsigned int id, const std::shared_ptr<derived_data::SQL_query>& query,
@@ -305,7 +305,7 @@ namespace transport
 
         //! Pull a kconfig sample of a twopf component at fixed time from a datapipe
         virtual void pull_twopf_kconfig_sample(datapipe<number>* pipe, unsigned int id, const std::shared_ptr<derived_data::SQL_query>& query,
-                                               unsigned int t_serial, std::vector<number>& sample, typename datapipe<number>::twopf_type type) override;
+                                               unsigned int t_serial, std::vector<number>& sample, twopf_type type) override;
 
         //! Pull a kconfig sample of a threepf at fixed time from a datapipe
         virtual void pull_threepf_kconfig_sample(datapipe<number>* pipe, unsigned int id,
@@ -405,12 +405,12 @@ namespace transport
 
             if(status != SQLITE_OK)
               {
-                if(status == SQLITE_BUSY) throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, CPPTRANSPORT_DATACTR_NOT_CLOSED);
+                if(status == SQLITE_BUSY) throw runtime_exception(exception_type::DATA_CONTAINER_ERROR, CPPTRANSPORT_DATACTR_NOT_CLOSED);
                 else
                   {
                     std::ostringstream msg;
                     msg << CPPTRANSPORT_DATACTR_CLOSE << status << ")";
-                    throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
+                    throw runtime_exception(exception_type::DATA_CONTAINER_ERROR, msg.str());
                   }
               }
           }
@@ -442,7 +442,7 @@ namespace transport
 	            {
                 msg << CPPTRANSPORT_DATACTR_CREATE_A << " '" << ctr_path.string() << "' " << CPPTRANSPORT_DATACTR_CREATE_B << status << ")";
 	            }
-            throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
+            throw runtime_exception(exception_type::DATA_CONTAINER_ERROR, msg.str());
 	        }
 
         sqlite3_extended_result_codes(db, 1);
@@ -484,7 +484,7 @@ namespace transport
         else
           {
             assert(false);
-            throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_DATACTR_AGGREGATION_HANDLER_NOT_SET);
+            throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATACTR_AGGREGATION_HANDLER_NOT_SET);
           }
       }
 
@@ -498,12 +498,12 @@ namespace transport
         writer->get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
         // vacuum the database
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << '\n' << "** Performing routine maintenance on SQLite3 container '" << writer->get_abs_container_path().string() << "'";
+        BOOST_LOG_SEV(writer->get_log(), base_writer::log_severity_level::normal) << '\n' << "** Performing routine maintenance on SQLite3 container '" << writer->get_abs_container_path().string() << "'";
         boost::timer::cpu_timer timer;
         char* errmsg;
         sqlite3_exec(db, "VACUUM;", nullptr, nullptr, &errmsg);
         timer.stop();
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "** Database vacuum complete in wallclock time " << format_time(timer.elapsed().wall);
+        BOOST_LOG_SEV(writer->get_log(), base_writer::log_severity_level::normal) << "** Database vacuum complete in wallclock time " << format_time(timer.elapsed().wall);
 
         this->open_containers.remove(db);
         sqlite3_close(db);
@@ -556,7 +556,7 @@ namespace transport
               {
                 msg << CPPTRANSPORT_DATACTR_CREATE_A << " '" << ctr_path.string() << "' " << CPPTRANSPORT_DATACTR_CREATE_B << status << ")";
               }
-            throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
+            throw runtime_exception(exception_type::DATA_CONTAINER_ERROR, msg.str());
           }
 
         sqlite3_extended_result_codes(db, 1);
@@ -604,19 +604,19 @@ namespace transport
             writer->set_integrity_check_handler(std::bind(&data_manager<number>::check_fNL_integrity_handler, this, std::placeholders::_1, std::placeholders::_2));
 		        switch(zfNL->get_template())
 			        {
-		            case derived_data::fNL_local_template:
+		            case derived_data::template_type::fNL_local_template:
 			            writer->get_products().add_fNL_local();
 				          break;
 
-		            case derived_data::fNL_equi_template:
+		            case derived_data::template_type::fNL_equi_template:
 			            writer->get_products().add_fNL_equi();
 				          break;
 
-		            case derived_data::fNL_ortho_template:
+		            case derived_data::template_type::fNL_ortho_template:
 			            writer->get_products().add_fNL_ortho();
 				          break;
 
-		            case derived_data::fNL_DBI_template:
+		            case derived_data::template_type::fNL_DBI_template:
 			            writer->get_products().add_fNL_DBI();
 				          break;
 			        }
@@ -624,7 +624,7 @@ namespace transport
         else
           {
             assert(false);
-            throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_DATACTR_AGGREGATION_HANDLER_NOT_SET);
+            throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATACTR_AGGREGATION_HANDLER_NOT_SET);
           }
       }
 
@@ -638,12 +638,12 @@ namespace transport
         writer->get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
         // vacuum the database
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << '\n' << "** Performing routine maintenance on SQLite3 container '" << writer->get_abs_container_path().string() << "'";
+        BOOST_LOG_SEV(writer->get_log(), base_writer::log_severity_level::normal) << '\n' << "** Performing routine maintenance on SQLite3 container '" << writer->get_abs_container_path().string() << "'";
         boost::timer::cpu_timer timer;
         char* errmsg;
         sqlite3_exec(db, "VACUUM;", nullptr, nullptr, &errmsg);
         timer.stop();
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "** Database vacuum complete in wallclock time " << format_time(timer.elapsed().wall);
+        BOOST_LOG_SEV(writer->get_log(), base_writer::log_severity_level::normal) << "** Database vacuum complete in wallclock time " << format_time(timer.elapsed().wall);
 
         this->open_containers.remove(db);
         sqlite3_close(db);
@@ -665,14 +665,14 @@ namespace transport
 
         sqlite3_operations::create_time_sample_table(db, tk);
         sqlite3_operations::create_twopf_sample_table(db, tk);
-        sqlite3_operations::create_backg_table<number, typename integration_items<number>::backg_item>(db, Nfields, sqlite3_operations::foreign_keys);
-        sqlite3_operations::create_paged_table<number, typename integration_items<number>::twopf_re_item>(db, Nfields, sqlite3_operations::foreign_keys);
-        sqlite3_operations::create_paged_table<number, typename integration_items<number>::tensor_twopf_item>(db, Nfields, sqlite3_operations::foreign_keys);
+        sqlite3_operations::create_backg_table<number, typename integration_items<number>::backg_item>(db, Nfields, sqlite3_operations::foreign_keys_type::foreign_keys);
+        sqlite3_operations::create_paged_table<number, typename integration_items<number>::twopf_re_item>(db, Nfields, sqlite3_operations::foreign_keys_type::foreign_keys);
+        sqlite3_operations::create_paged_table<number, typename integration_items<number>::tensor_twopf_item>(db, Nfields, sqlite3_operations::foreign_keys_type::foreign_keys);
 
-        sqlite3_operations::create_worker_info_table(db, sqlite3_operations::foreign_keys);
-        if(writer->is_collecting_statistics()) sqlite3_operations::create_stats_table(db, sqlite3_operations::foreign_keys, sqlite3_operations::twopf_configs);
+        sqlite3_operations::create_worker_info_table(db, sqlite3_operations::foreign_keys_type::foreign_keys);
+        if(writer->is_collecting_statistics()) sqlite3_operations::create_stats_table(db, sqlite3_operations::foreign_keys_type::foreign_keys, sqlite3_operations::metadata_configuration_type::twopf_configs);
 
-		    if(writer->is_collecting_initial_conditions()) sqlite3_operations::create_ics_table<number, typename integration_items<number>::ics_item>(db, Nfields, sqlite3_operations::foreign_keys, sqlite3_operations::twopf_configs);
+		    if(writer->is_collecting_initial_conditions()) sqlite3_operations::create_ics_table<number, typename integration_items<number>::ics_item>(db, Nfields, sqlite3_operations::foreign_keys_type::foreign_keys, sqlite3_operations::metadata_configuration_type::twopf_configs);
       }
 
 
@@ -687,19 +687,19 @@ namespace transport
         sqlite3_operations::create_time_sample_table(db, tk);
         sqlite3_operations::create_twopf_sample_table(db, tk);
         sqlite3_operations::create_threepf_sample_table(db, tk);
-        sqlite3_operations::create_backg_table<number, typename integration_items<number>::backg_item>(db, Nfields, sqlite3_operations::foreign_keys);
-        sqlite3_operations::create_paged_table<number, typename integration_items<number>::twopf_re_item>(db, Nfields, sqlite3_operations::foreign_keys);
-        sqlite3_operations::create_paged_table<number, typename integration_items<number>::twopf_im_item>(db, Nfields, sqlite3_operations::foreign_keys);
-        sqlite3_operations::create_paged_table<number, typename integration_items<number>::tensor_twopf_item>(db, Nfields, sqlite3_operations::foreign_keys);
-        sqlite3_operations::create_paged_table<number, typename integration_items<number>::threepf_item>(db, Nfields, sqlite3_operations::foreign_keys);
+        sqlite3_operations::create_backg_table<number, typename integration_items<number>::backg_item>(db, Nfields, sqlite3_operations::foreign_keys_type::foreign_keys);
+        sqlite3_operations::create_paged_table<number, typename integration_items<number>::twopf_re_item>(db, Nfields, sqlite3_operations::foreign_keys_type::foreign_keys);
+        sqlite3_operations::create_paged_table<number, typename integration_items<number>::twopf_im_item>(db, Nfields, sqlite3_operations::foreign_keys_type::foreign_keys);
+        sqlite3_operations::create_paged_table<number, typename integration_items<number>::tensor_twopf_item>(db, Nfields, sqlite3_operations::foreign_keys_type::foreign_keys);
+        sqlite3_operations::create_paged_table<number, typename integration_items<number>::threepf_item>(db, Nfields, sqlite3_operations::foreign_keys_type::foreign_keys);
 
-        sqlite3_operations::create_worker_info_table(db, sqlite3_operations::foreign_keys);
-        if(writer->is_collecting_statistics()) sqlite3_operations::create_stats_table(db, sqlite3_operations::foreign_keys, sqlite3_operations::threepf_configs);
+        sqlite3_operations::create_worker_info_table(db, sqlite3_operations::foreign_keys_type::foreign_keys);
+        if(writer->is_collecting_statistics()) sqlite3_operations::create_stats_table(db, sqlite3_operations::foreign_keys_type::foreign_keys, sqlite3_operations::metadata_configuration_type::threepf_configs);
 
         if(writer->is_collecting_initial_conditions())
 	        {
-            sqlite3_operations::create_ics_table<number, typename integration_items<number>::ics_item>(db, Nfields, sqlite3_operations::foreign_keys, sqlite3_operations::threepf_configs);
-            sqlite3_operations::create_ics_table<number, typename integration_items<number>::ics_kt_item>(db, Nfields, sqlite3_operations::foreign_keys, sqlite3_operations::threepf_configs);
+            sqlite3_operations::create_ics_table<number, typename integration_items<number>::ics_item>(db, Nfields, sqlite3_operations::foreign_keys_type::foreign_keys, sqlite3_operations::metadata_configuration_type::threepf_configs);
+            sqlite3_operations::create_ics_table<number, typename integration_items<number>::ics_kt_item>(db, Nfields, sqlite3_operations::foreign_keys_type::foreign_keys, sqlite3_operations::metadata_configuration_type::threepf_configs);
 	        }
       }
 
@@ -713,14 +713,14 @@ namespace transport
         derivable_task<number>* d_ptk = tk->get_parent_task();
         integration_task<number>* i_ptk = dynamic_cast< integration_task<number>* >(d_ptk);
         assert(i_ptk != nullptr);
-        if(i_ptk == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_ZETA_INTEGRATION_CAST_FAIL);
+        if(i_ptk == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_ZETA_INTEGRATION_CAST_FAIL);
 
         unsigned int Nfields = i_ptk->get_model()->get_N_fields();
 
         sqlite3_operations::create_time_sample_table(db, tk);
         sqlite3_operations::create_twopf_sample_table(db, tk);
-        sqlite3_operations::create_zeta_twopf_table(db, sqlite3_operations::foreign_keys);
-        sqlite3_operations::create_paged_table<number, typename postintegration_items<number>::gauge_xfm1_item>(db, Nfields, sqlite3_operations::foreign_keys);
+        sqlite3_operations::create_zeta_twopf_table(db, sqlite3_operations::foreign_keys_type::foreign_keys);
+        sqlite3_operations::create_paged_table<number, typename postintegration_items<number>::gauge_xfm1_item>(db, Nfields, sqlite3_operations::foreign_keys_type::foreign_keys);
       }
 
 
@@ -733,19 +733,19 @@ namespace transport
         derivable_task<number>* d_ptk = tk->get_parent_task();
         integration_task<number>* i_ptk = dynamic_cast< integration_task<number>* >(d_ptk);
         assert(i_ptk != nullptr);
-        if(i_ptk == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_ZETA_INTEGRATION_CAST_FAIL);
+        if(i_ptk == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_ZETA_INTEGRATION_CAST_FAIL);
 
         unsigned int Nfields = i_ptk->get_model()->get_N_fields();
 
         sqlite3_operations::create_time_sample_table(db, tk);
         sqlite3_operations::create_twopf_sample_table(db, tk);
         sqlite3_operations::create_threepf_sample_table(db, tk);
-        sqlite3_operations::create_zeta_twopf_table(db, sqlite3_operations::foreign_keys);
-        sqlite3_operations::create_zeta_threepf_table(db, sqlite3_operations::foreign_keys);
-        sqlite3_operations::create_paged_table<number, typename postintegration_items<number>::gauge_xfm1_item>(db, Nfields, sqlite3_operations::foreign_keys);
-        sqlite3_operations::create_paged_table<number, typename postintegration_items<number>::gauge_xfm2_123_item>(db, Nfields, sqlite3_operations::foreign_keys);
-        sqlite3_operations::create_paged_table<number, typename postintegration_items<number>::gauge_xfm2_213_item>(db, Nfields, sqlite3_operations::foreign_keys);
-        sqlite3_operations::create_paged_table<number, typename postintegration_items<number>::gauge_xfm2_312_item>(db, Nfields, sqlite3_operations::foreign_keys);
+        sqlite3_operations::create_zeta_twopf_table(db, sqlite3_operations::foreign_keys_type::foreign_keys);
+        sqlite3_operations::create_zeta_threepf_table(db, sqlite3_operations::foreign_keys_type::foreign_keys);
+        sqlite3_operations::create_paged_table<number, typename postintegration_items<number>::gauge_xfm1_item>(db, Nfields, sqlite3_operations::foreign_keys_type::foreign_keys);
+        sqlite3_operations::create_paged_table<number, typename postintegration_items<number>::gauge_xfm2_123_item>(db, Nfields, sqlite3_operations::foreign_keys_type::foreign_keys);
+        sqlite3_operations::create_paged_table<number, typename postintegration_items<number>::gauge_xfm2_213_item>(db, Nfields, sqlite3_operations::foreign_keys_type::foreign_keys);
+        sqlite3_operations::create_paged_table<number, typename postintegration_items<number>::gauge_xfm2_312_item>(db, Nfields, sqlite3_operations::foreign_keys_type::foreign_keys);
       }
 
 
@@ -756,7 +756,7 @@ namespace transport
         writer->get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
         sqlite3_operations::create_time_sample_table(db, tk);
-        sqlite3_operations::create_fNL_table(db, tk->get_template(), sqlite3_operations::foreign_keys);
+        sqlite3_operations::create_fNL_table(db, tk->get_template(), sqlite3_operations::foreign_keys_type::foreign_keys);
       }
 
 
@@ -770,7 +770,7 @@ namespace transport
         sqlite3* db = nullptr;
         writer->get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "** Seeding SQLite3 container '" << writer->get_abs_container_path().string() << "' "
+        BOOST_LOG_SEV(writer->get_log(), base_writer::log_severity_level::normal) << "** Seeding SQLite3 container '" << writer->get_abs_container_path().string() << "' "
           << "from previous content group '" << seed->get_name() << "', container '" << seed->get_abs_output_path().string() << "'";
 
         boost::timer::cpu_timer timer;
@@ -788,7 +788,7 @@ namespace transport
 	        sqlite3_operations::aggregate_ics<number, typename integration_items<number>::ics_item>(db, *writer, seed_container_path.string());
 
         timer.stop();
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "** Seeding complete in time " << format_time(timer.elapsed().wall);
+        BOOST_LOG_SEV(writer->get_log(), base_writer::log_severity_level::normal) << "** Seeding complete in time " << format_time(timer.elapsed().wall);
       }
 
 
@@ -799,7 +799,7 @@ namespace transport
         sqlite3* db = nullptr;
         writer->get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "** Seeding SQLite3 container '" << writer->get_abs_container_path().string() << "' "
+        BOOST_LOG_SEV(writer->get_log(), base_writer::log_severity_level::normal) << "** Seeding SQLite3 container '" << writer->get_abs_container_path().string() << "' "
             << "from previous content group '" << seed->get_name() << "', container '" << seed->get_abs_output_path().string() << "'";
 
         boost::timer::cpu_timer timer;
@@ -821,7 +821,7 @@ namespace transport
 	        }
 
         timer.stop();
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "** Seeding complete in time " << format_time(timer.elapsed().wall);
+        BOOST_LOG_SEV(writer->get_log(), base_writer::log_severity_level::normal) << "** Seeding complete in time " << format_time(timer.elapsed().wall);
       }
 
 
@@ -832,7 +832,7 @@ namespace transport
         sqlite3* db = nullptr;
         writer->get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "** Seeding SQLite3 container '" << writer->get_abs_container_path().string() << "' "
+        BOOST_LOG_SEV(writer->get_log(), base_writer::log_severity_level::normal) << "** Seeding SQLite3 container '" << writer->get_abs_container_path().string() << "' "
             << "from previous content group '" << seed->get_name() << "', container '" << seed->get_abs_output_path().string() << "'";
 
         boost::timer::cpu_timer timer;
@@ -841,7 +841,7 @@ namespace transport
         sqlite3_operations::aggregate_table<number, postintegration_writer<number>, typename postintegration_items<number>::zeta_twopf_item>(db, *writer, seed_container_path.string());
 
         timer.stop();
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "** Seeding complete in time " << format_time(timer.elapsed().wall);
+        BOOST_LOG_SEV(writer->get_log(), base_writer::log_severity_level::normal) << "** Seeding complete in time " << format_time(timer.elapsed().wall);
       }
 
 
@@ -852,7 +852,7 @@ namespace transport
         sqlite3* db = nullptr;
         writer->get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "** Seeding SQLite3 container '" << writer->get_abs_container_path().string() << "' "
+        BOOST_LOG_SEV(writer->get_log(), base_writer::log_severity_level::normal) << "** Seeding SQLite3 container '" << writer->get_abs_container_path().string() << "' "
             << "from previous content group '" << seed->get_name() << "', container '" << seed->get_abs_output_path().string() << "'";
 
         boost::timer::cpu_timer timer;
@@ -862,7 +862,7 @@ namespace transport
         sqlite3_operations::aggregate_table<number, postintegration_writer<number>, typename postintegration_items<number>::zeta_threepf_item>(db, *writer, seed_container_path.string());
 
         timer.stop();
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "** Seeding complete in time " << format_time(timer.elapsed().wall);
+        BOOST_LOG_SEV(writer->get_log(), base_writer::log_severity_level::normal) << "** Seeding complete in time " << format_time(timer.elapsed().wall);
       }
 
 
@@ -904,7 +904,7 @@ namespace transport
         // set up batcher
         twopf_batcher<number> batcher(this->batcher_capacity, this->checkpoint_interval, m, tk, container, logdir, writers, dispatcher, replacer, db, worker, group);
 
-        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << "** Created new temporary twopf container " << container;
+        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << "** Created new temporary twopf container " << container;
 
         // add this database to our list of open connections
         this->open_containers.push_back(db);
@@ -942,7 +942,7 @@ namespace transport
 
         // set up batcher
         threepf_batcher<number> batcher(this->batcher_capacity, this->checkpoint_interval, m, tk, container, logdir, writers, dispatcher, replacer, db, worker, group);
-        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << "** Created new temporary threepf container " << container;
+        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << "** Created new temporary threepf container " << container;
 
         // add this database to our list of open connections
         this->open_containers.push_back(db);
@@ -973,7 +973,7 @@ namespace transport
         // set up batcher
         zeta_twopf_batcher<number> batcher(this->batcher_capacity, this->checkpoint_interval, m, container, logdir, writers, dispatcher, replacer, db, worker);
 
-        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << "** Created new temporary zeta twopf container " << container;
+        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << "** Created new temporary zeta twopf container " << container;
 
         // add this database to our list of open connections
         this->open_containers.push_back(db);
@@ -1008,7 +1008,7 @@ namespace transport
         // set up batcher
         zeta_threepf_batcher<number> batcher(this->batcher_capacity, this->checkpoint_interval, m, container, logdir, writers, dispatcher, replacer, db, worker);
 
-        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << "** Created new temporary zeta threepf container " << container;
+        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << "** Created new temporary zeta threepf container " << container;
 
         // add this database to our list of open connections
         this->open_containers.push_back(db);
@@ -1038,7 +1038,7 @@ namespace transport
         // set up batcher
         fNL_batcher<number> batcher(this->batcher_capacity, this->checkpoint_interval, m, container, logdir, writers, dispatcher, replacer, db, worker, type);
 
-        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << "** Created new temporary " << derived_data::template_name(type) << " container " << container;
+        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << "** Created new temporary " << derived_data::template_name(type) << " container " << container;
 
         // add this database to our list of open connections
         this->open_containers.push_back(db);
@@ -1053,15 +1053,15 @@ namespace transport
       {
         sqlite3* db = nullptr;
 
-        BOOST_LOG_SEV(batcher->get_log(), generic_batcher::normal)
-            << "** " << (action == generic_batcher::action_replace ? "Replacing" : "Closing")
+        BOOST_LOG_SEV(batcher->get_log(), generic_batcher::log_severity_level::normal)
+            << "** " << (action == generic_batcher::replacement_action::action_replace ? "Replacing" : "Closing")
             << " temporary twopf container " << batcher->get_container_path();
 
         batcher->get_manager_handle(&db);
         this->open_containers.remove(db);
         sqlite3_close(db);
 
-        if(action == generic_batcher::action_replace)
+        if(action == generic_batcher::replacement_action::action_replace)
           {
             boost::filesystem::path container = this->generate_temporary_container_path(tempdir, worker);
 
@@ -1081,21 +1081,21 @@ namespace transport
       {
         sqlite3* db = nullptr;
 
-        BOOST_LOG_SEV(batcher->get_log(), generic_batcher::normal)
-            << "** " << (action == generic_batcher::action_replace ? "Replacing" : "Closing")
+        BOOST_LOG_SEV(batcher->get_log(), generic_batcher::log_severity_level::normal)
+            << "** " << (action == generic_batcher::replacement_action::action_replace ? "Replacing" : "Closing")
             << " temporary threepf container " << batcher->get_container_path();
 
         batcher->get_manager_handle(&db);
         this->open_containers.remove(db);
         sqlite3_close(db);
 
-        BOOST_LOG_SEV(batcher->get_log(), generic_batcher::normal) << "** Closed SQLite3 handle for " << batcher->get_container_path();
+        BOOST_LOG_SEV(batcher->get_log(), generic_batcher::log_severity_level::normal) << "** Closed SQLite3 handle for " << batcher->get_container_path();
 
-        if(action == generic_batcher::action_replace)
+        if(action == generic_batcher::replacement_action::action_replace)
           {
             boost::filesystem::path container = this->generate_temporary_container_path(tempdir, worker);
 
-            BOOST_LOG_SEV(batcher->get_log(), generic_batcher::normal) << "** Opening new threepf container " << container;
+            BOOST_LOG_SEV(batcher->get_log(), generic_batcher::log_severity_level::normal) << "** Opening new threepf container " << container;
 
             sqlite3* new_db = sqlite3_operations::create_temp_threepf_container<number>(container, m->get_N_fields(), m->supports_per_configuration_statistics(), ics);
 
@@ -1113,15 +1113,15 @@ namespace transport
       {
         sqlite3* db = nullptr;
 
-        BOOST_LOG_SEV(batcher->get_log(), generic_batcher::normal)
-            << "** " << (action == generic_batcher::action_replace ? "Replacing" : "Closing")
+        BOOST_LOG_SEV(batcher->get_log(), generic_batcher::log_severity_level::normal)
+            << "** " << (action == generic_batcher::replacement_action::action_replace ? "Replacing" : "Closing")
             << " temporary zeta twopf container " << batcher->get_container_path();
 
         batcher->get_manager_handle(&db);
         this->open_containers.remove(db);
         sqlite3_close(db);
 
-        if(action == generic_batcher::action_replace)
+        if(action == generic_batcher::replacement_action::action_replace)
           {
             boost::filesystem::path container = this->generate_temporary_container_path(tempdir, worker);
 
@@ -1141,15 +1141,15 @@ namespace transport
       {
         sqlite3* db = nullptr;
 
-        BOOST_LOG_SEV(batcher->get_log(), generic_batcher::normal)
-            << "** " << (action == generic_batcher::action_replace ? "Replacing" : "Closing")
+        BOOST_LOG_SEV(batcher->get_log(), generic_batcher::log_severity_level::normal)
+            << "** " << (action == generic_batcher::replacement_action::action_replace ? "Replacing" : "Closing")
             << " temporary zeta threepf container " << batcher->get_container_path();
 
         batcher->get_manager_handle(&db);
         this->open_containers.remove(db);
         sqlite3_close(db);
 
-        if(action == generic_batcher::action_replace)
+        if(action == generic_batcher::replacement_action::action_replace)
           {
             boost::filesystem::path container = this->generate_temporary_container_path(tempdir, worker);
 
@@ -1169,15 +1169,15 @@ namespace transport
       {
         sqlite3* db = nullptr;
 
-        BOOST_LOG_SEV(batcher->get_log(), generic_batcher::normal)
-            << "** " << (action == generic_batcher::action_replace ? "Replacing" : "Closing")
+        BOOST_LOG_SEV(batcher->get_log(), generic_batcher::log_severity_level::normal)
+            << "** " << (action == generic_batcher::replacement_action::action_replace ? "Replacing" : "Closing")
             << " temporary " << derived_data::template_name(type) << " container " << batcher->get_container_path();
 
         batcher->get_manager_handle(&db);
         this->open_containers.remove(db);
         sqlite3_close(db);
 
-        if(action == generic_batcher::action_replace)
+        if(action == generic_batcher::replacement_action::action_replace)
           {
             boost::filesystem::path container = this->generate_temporary_container_path(tempdir, worker);
 
@@ -1307,7 +1307,7 @@ namespace transport
 
         if(product == nullptr)
           {
-            BOOST_LOG_SEV(writer.get_log(), base_writer::error) << "!! Failed to lookup derived product '" << temp_name << "'; skipping this product";
+            BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::error) << "!! Failed to lookup derived product '" << temp_name << "'; skipping this product";
             return(false);
           }
 
@@ -1317,19 +1317,19 @@ namespace transport
 
         if(!boost::filesystem::exists(temp_location))
           {
-            BOOST_LOG_SEV(writer.get_log(), base_writer::error) << "!! Derived product " << temp_location << " missing; skipping this product";
+            BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::error) << "!! Derived product " << temp_location << " missing; skipping this product";
             return(false);
           }
 
         if(boost::filesystem::exists(dest_location))
           {
-            BOOST_LOG_SEV(writer.get_log(), base_writer::error) << "!! Destination " << dest_location << " for derived product " << temp_location << " already exists; skipping this product";
+            BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::error) << "!! Destination " << dest_location << " for derived product " << temp_location << " already exists; skipping this product";
             return(false);
           }
 
         boost::filesystem::rename(temp_location, dest_location);
 
-        BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << "** Emplaced derived product " << dest_location;
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Emplaced derived product " << dest_location;
 
         // commit this product to the current output group
         writer.push_content(*product, used_groups);
@@ -1612,7 +1612,7 @@ namespace transport
                                                         std::vector<time_config>& sample)
 	    {
         assert(pipe != nullptr);
-        if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
+        if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
 
         sqlite3* db = nullptr;
 		    pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
@@ -1626,7 +1626,7 @@ namespace transport
                                                           std::vector<twopf_kconfig>& sample)
 			{
 		    assert(pipe != nullptr);
-		    if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
+		    if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
 
 		    sqlite3* db = nullptr;
 		    pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
@@ -1640,7 +1640,7 @@ namespace transport
                                                             std::vector<threepf_kconfig>& sample)
 	    {
         assert(pipe != nullptr);
-        if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
+        if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
 
         sqlite3* db = nullptr;
         pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
@@ -1655,7 +1655,7 @@ namespace transport
                                                                    std::vector<number>& sample)
 	    {
         assert(pipe != nullptr);
-        if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
+        if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
 
         sqlite3* db = nullptr;
         pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
@@ -1668,25 +1668,26 @@ namespace transport
     void data_manager_sqlite3<number>::pull_twopf_time_sample(datapipe<number>* pipe, unsigned int id,
                                                               const std::shared_ptr<derived_data::SQL_query>& query,
                                                               unsigned int k_serial, std::vector<number>& sample,
-                                                              typename datapipe<number>::twopf_type type)
+                                                              twopf_type type)
 	    {
         assert(pipe != nullptr);
-        if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
+        if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
 
         sqlite3* db = nullptr;
         pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
-		    if(type == datapipe<number>::twopf_real)
-			    {
-		        sqlite3_operations::pull_paged_time_sample<number, typename integration_items<number>::twopf_re_item>(db, id, query, k_serial, sample,
-		                                                                                                              pipe->get_worker_number(), pipe->get_N_fields());
-			    }
-		    else if(type == datapipe<number>::twopf_imag)
-			    {
-		        sqlite3_operations::pull_paged_time_sample<number, typename integration_items<number>::twopf_im_item>(db, id, query, k_serial, sample,
-		                                                                                                              pipe->get_worker_number(), pipe->get_N_fields());
-			    }
-		    else assert(false);
+        switch(type)
+          {
+            case twopf_type::twopf_real:
+              sqlite3_operations::pull_paged_time_sample<number, typename integration_items<number>::twopf_re_item>(db, id, query, k_serial, sample,
+                                                                                                                    pipe->get_worker_number(), pipe->get_N_fields());
+              break;
+
+            case twopf_type::twopf_imag:
+              sqlite3_operations::pull_paged_time_sample<number, typename integration_items<number>::twopf_im_item>(db, id, query, k_serial, sample,
+                                                                                                                    pipe->get_worker_number(), pipe->get_N_fields());
+              break;
+          }
 	    }
 
 
@@ -1696,7 +1697,7 @@ namespace transport
                                                                 unsigned int k_serial, std::vector<number>& sample)
 	    {
         assert(pipe != nullptr);
-        if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
+        if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
 
         sqlite3* db = nullptr;
         pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
@@ -1712,7 +1713,7 @@ namespace transport
                                                                      unsigned int k_serial, std::vector<number>& sample)
       {
         assert(pipe != nullptr);
-        if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
+        if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
 
         sqlite3* db = nullptr;
         pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
@@ -1727,7 +1728,7 @@ namespace transport
                                                                    unsigned int k_serial, std::vector<number>& sample)
 	    {
 		    assert(pipe != nullptr);
-		    if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
+		    if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
 
 		    sqlite3* db = nullptr;
 		    pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
@@ -1742,7 +1743,7 @@ namespace transport
                                                                      unsigned int k_serial, std::vector<number>& sample)
 	    {
 		    assert(pipe != nullptr);
-		    if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
+		    if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
 
 		    sqlite3* db = nullptr;
 		    pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
@@ -1757,7 +1758,7 @@ namespace transport
                                                                     unsigned int k_serial, std::vector<number>& sample)
 	    {
 		    assert(pipe != nullptr);
-		    if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
+		    if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
 
 		    sqlite3* db = nullptr;
 		    pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
@@ -1772,7 +1773,7 @@ namespace transport
                                                             std::vector<number>& sample, derived_data::template_type type)
 	    {
 		    assert(pipe != nullptr);
-		    if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
+		    if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
 
 		    sqlite3* db = nullptr;
 		    pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
@@ -1786,7 +1787,7 @@ namespace transport
                                                            std::vector<number>& sample, derived_data::template_type type)
 	    {
 		    assert(pipe != nullptr);
-		    if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
+		    if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
 
 		    sqlite3* db = nullptr;
 		    pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
@@ -1800,7 +1801,7 @@ namespace transport
                                                            std::vector<number>& sample, derived_data::template_type type)
 	    {
 		    assert(pipe != nullptr);
-		    if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
+		    if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
 
 		    sqlite3* db = nullptr;
 		    pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
@@ -1813,25 +1814,26 @@ namespace transport
     void data_manager_sqlite3<number>::pull_twopf_kconfig_sample(datapipe<number>* pipe, unsigned int id,
                                                                  const std::shared_ptr<derived_data::SQL_query>& query,
                                                                  unsigned int t_serial, std::vector<number>& sample,
-                                                                 typename datapipe<number>::twopf_type type)
+                                                                 twopf_type type)
 	    {
 				assert(pipe != nullptr);
-		    if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
+		    if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
 
 		    sqlite3* db = nullptr;
 		    pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
-		    if(type == datapipe<number>::twopf_real)
-			    {
-		        sqlite3_operations::pull_paged_kconfig_sample<number, typename integration_items<number>::twopf_re_item>(db, id, query, t_serial, sample,
-		                                                                                                                 pipe->get_worker_number(), pipe->get_N_fields());
-			    }
-		    else if(type == datapipe<number>::twopf_imag)
-			    {
-		        sqlite3_operations::pull_paged_kconfig_sample<number, typename integration_items<number>::twopf_im_item>(db, id, query, t_serial, sample,
-		                                                                                                                 pipe->get_worker_number(), pipe->get_N_fields());
-			    }
-		    else assert(false);
+        switch(type)
+          {
+            case twopf_type::twopf_real:
+              sqlite3_operations::pull_paged_kconfig_sample<number, typename integration_items<number>::twopf_re_item>(db, id, query, t_serial, sample,
+                                                                                                                       pipe->get_worker_number(), pipe->get_N_fields());
+              break;
+
+            case twopf_type::twopf_imag:
+              sqlite3_operations::pull_paged_kconfig_sample<number, typename integration_items<number>::twopf_im_item>(db, id, query, t_serial, sample,
+                                                                                                                       pipe->get_worker_number(), pipe->get_N_fields());
+              break;
+          }
 	    }
 
 
@@ -1841,7 +1843,7 @@ namespace transport
                                                                    unsigned int t_serial, std::vector<number>& sample)
 	    {
         assert(pipe != nullptr);
-        if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
+        if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
 
         sqlite3* db = nullptr;
         pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
@@ -1857,7 +1859,7 @@ namespace transport
                                                                         unsigned int t_serial, std::vector<number>& sample)
       {
         assert(pipe != nullptr);
-        if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
+        if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
 
         sqlite3* db = nullptr;
         pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
@@ -1872,7 +1874,7 @@ namespace transport
                                                                       unsigned int t_serial, std::vector<number>& sample)
 	    {
         assert(pipe != nullptr);
-        if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
+        if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
 
         sqlite3* db = nullptr;
         pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
@@ -1887,7 +1889,7 @@ namespace transport
                                                                         unsigned int t_serial, std::vector<number>& sample)
 	    {
         assert(pipe != nullptr);
-        if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
+        if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
 
         sqlite3* db = nullptr;
         pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
@@ -1902,7 +1904,7 @@ namespace transport
                                                                        unsigned int t_serial, std::vector<number>& sample)
 	    {
         assert(pipe != nullptr);
-        if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
+        if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
 
         sqlite3* db = nullptr;
         pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
@@ -1917,7 +1919,7 @@ namespace transport
                                                                 std::vector<kconfiguration_statistics>& data)
       {
         assert(pipe != nullptr);
-        if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
+        if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
 
         sqlite3* db = nullptr;
         pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
@@ -1945,7 +1947,7 @@ namespace transport
 			        {
 		            msg << CPPTRANSPORT_DATACTR_OPEN_A << " '" << ctr_path.string() << "' " << CPPTRANSPORT_DATACTR_OPEN_B << status << ")";
 			        }
-		        throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
+		        throw runtime_exception(exception_type::DATA_CONTAINER_ERROR, msg.str());
 			    }
 		    sqlite3_extended_result_codes(db, 1);
 
@@ -1964,7 +1966,7 @@ namespace transport
 		    this->open_containers.push_back(db);
 		    pipe->set_manager_handle(db);
 
-		    BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::normal) << "** Attached SQLite3 container '" << ctr_path.string() << "' to datapipe";
+		    BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::log_severity_level::normal) << "** Attached SQLite3 container '" << ctr_path.string() << "' to datapipe";
 			}
 
 
@@ -1974,7 +1976,7 @@ namespace transport
                                                                       const std::string& name, const std::list<std::string>& tags)
 			{
 				assert(pipe != nullptr);
-				if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
+				if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
 
         // find a suitable output group for this task
         std::shared_ptr< output_group_record<integration_payload> > group = finder(name, tags);
@@ -1996,7 +1998,7 @@ namespace transport
                                                                           const std::string& name, const std::list<std::string>& tags)
 	    {
         assert(pipe != nullptr);
-        if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
+        if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
 
         // find a suitable output group for this task
         std::shared_ptr< output_group_record<postintegration_payload> > group = finder(name, tags);
@@ -2016,14 +2018,14 @@ namespace transport
 		void data_manager_sqlite3<number>::datapipe_detach(datapipe<number>* pipe)
 			{
 		    assert(pipe != nullptr);
-		    if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
+		    if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
 
 				sqlite3* db = nullptr;
 				pipe->get_manager_handle(&db);
 				this->open_containers.remove(db);
 				sqlite3_close(db);
 
-				BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::normal) << "** Detached SQLite3 container from datapipe";
+				BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::log_severity_level::normal) << "** Detached SQLite3 container from datapipe";
 			}
 
 

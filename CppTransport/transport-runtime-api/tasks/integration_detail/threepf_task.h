@@ -33,7 +33,7 @@
 namespace transport
 	{
 
-		typedef enum { smallest_wavenumber_exit, kt_wavenumber_exit} threepf_ics_exit_type;
+		enum class threepf_ics_exit_type { smallest_wavenumber_exit, kt_wavenumber_exit};
 
     // three-point function task
     template <typename number>
@@ -92,10 +92,10 @@ namespace transport
         std::vector<number> get_ics_vector(const threepf_kconfig& kconfig) const;
 
         //! Get time of horizon exit for a k-configuration
-        double get_ics_exit_time(const threepf_kconfig& kconfig, threepf_ics_exit_type type=smallest_wavenumber_exit) const;
+        double get_ics_exit_time(const threepf_kconfig& kconfig, threepf_ics_exit_type type=threepf_ics_exit_type::smallest_wavenumber_exit) const;
 
 		    //! Get std::vector of initial conditions at horizon exit time for a k-configuration
-		    std::vector<number> get_ics_exit_vector(const threepf_kconfig& kconfig, threepf_ics_exit_type type=smallest_wavenumber_exit) const;
+		    std::vector<number> get_ics_exit_vector(const threepf_kconfig& kconfig, threepf_ics_exit_type type=threepf_ics_exit_type::smallest_wavenumber_exit) const;
 
         //! Build time-sample database
         const time_config_database get_time_config_database(const threepf_kconfig& config) const;
@@ -231,7 +231,7 @@ namespace transport
 
 		    switch(type)
 			    {
-		        case smallest_wavenumber_exit:
+		        case threepf_ics_exit_type::smallest_wavenumber_exit:
 			        {
 		            double kmin = std::min(std::min(config.k1_conventional, config.k2_conventional), config.k3_conventional);
 
@@ -243,14 +243,11 @@ namespace transport
 		            break;
 			        }
 
-		        case kt_wavenumber_exit:
+		        case threepf_ics_exit_type::kt_wavenumber_exit:
 			        {
 		            time = config.t_exit;
 		            break;
 			        };
-
-		        default:
-			        assert(false);
 			    }
 
 				return(time);

@@ -106,7 +106,7 @@ namespace transport
 				template <typename number>
 				r_time_series<number>::r_time_series(const zeta_twopf_list_task<number>& tk,
 				                                     SQL_time_config_query tq, SQL_twopf_kconfig_query kq, unsigned int prec)
-					: derived_line<number>(tk, time_axis, std::list<axis_value>{ efolds_axis }, prec),
+					: derived_line<number>(tk, axis_class::time_axis, std::list<axis_value>{ axis_value::efolds_axis }, prec),
 					  r_line<number>(tk),
 					  time_series<number>(tk),
             tquery(tq),
@@ -178,7 +178,7 @@ namespace transport
 
 				    for(std::vector<twopf_kconfig>::const_iterator t = k_values.begin(); t != k_values.end(); ++t)
 					    {
-				        cf_time_data_tag<number> tensor_tag = pipe.new_cf_time_data_tag(data_tag<number>::cf_tensor_twopf, this->gadget.get_model()->tensor_flatten(0,0), t->serial);
+				        cf_time_data_tag<number> tensor_tag = pipe.new_cf_time_data_tag(cf_data_type::cf_tensor_twopf, this->gadget.get_model()->tensor_flatten(0,0), t->serial);
 
 				        // must copy this, because we will call lookup_tag() again
 				        const std::vector<number> tensor_data = t_handle.lookup_tag(tensor_tag);
@@ -191,7 +191,7 @@ namespace transport
 				            line_data[j] = tensor_data[j] / zeta_data[i][j];
 					        }
 
-				        data_line<number> line = data_line<number>(groups, this->x_type, r_value, t_axis, line_data,
+				        data_line<number> line = data_line<number>(groups, this->x_type, value_type::r_value, t_axis, line_data,
 				                                                   this->get_LaTeX_label(k_values[i]), this->get_non_LaTeX_label(k_values[i]));
 
 				        lines.push_back(line);

@@ -55,7 +55,7 @@ namespace transport
 
         typedef std::vector< std::vector<number> > backg_history;
 
-		    typedef enum { cpu, gpu } backend_type;
+		    enum class backend_type { cpu, gpu };
 
 
         // CONSTRUCTORS, DESTRUCTORS
@@ -318,7 +318,7 @@ namespace transport
             else
               {
                 assert(false);
-                throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_INTEGRATION_FAIL);
+                throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_INTEGRATION_FAIL);
               }
           }
       }
@@ -328,11 +328,11 @@ namespace transport
     void model<number>::write_task_data(const integration_task<number>* task, generic_batcher& batcher,
                                         double abs_err, double rel_err, double step_size, std::string stepper_name)
       {
-        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << CPPTRANSPORT_SOLVING_ICS_MESSAGE;
+        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << CPPTRANSPORT_SOLVING_ICS_MESSAGE;
 
-        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << *task;
+        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << *task;
 
-        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal)
+        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal)
           << CPPTRANSPORT_STEPPER_MESSAGE    << " '"  << stepper_name
           << "', " << CPPTRANSPORT_ABS_ERR   << " = " << abs_err
           << ", "  << CPPTRANSPORT_REL_ERR   << " = " << rel_err
@@ -370,7 +370,7 @@ namespace transport
         else
           {
             assert(false);
-            throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_INTEGRATION_FAIL);
+            throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_INTEGRATION_FAIL);
           }
       }
 

@@ -105,7 +105,7 @@ namespace transport
         template <typename number>
         twopf_wavenumber_series<number>::twopf_wavenumber_series(const twopf_list_task<number>& tk, index_selector<2>& sel,
                                                                  SQL_time_config_query tq, SQL_twopf_kconfig_query kq, unsigned int prec)
-	        : derived_line<number>(tk, wavenumber_axis, std::list<axis_value>{ k_axis, efolds_exit_axis }, prec),
+	        : derived_line<number>(tk, axis_class::wavenumber_axis, std::list<axis_value>{ axis_value::k_axis, axis_value::efolds_exit_axis }, prec),
 	          twopf_line<number>(tk, sel),
 	          wavenumber_series<number>(tk),
 	          tquery(tq),
@@ -162,12 +162,12 @@ namespace transport
 								        std::array<unsigned int, 2> index_set = { m, n };
 								        if(this->active_indices.is_on(index_set))
 									        {
-								            cf_kconfig_data_tag<number> tag = pipe.new_cf_kconfig_data_tag(this->is_real_twopf() ? data_tag<number>::cf_twopf_re : data_tag<number>::cf_twopf_im,
+								            cf_kconfig_data_tag<number> tag = pipe.new_cf_kconfig_data_tag(this->is_real_twopf() ? cf_data_type::cf_twopf_re : cf_data_type::cf_twopf_im,
 								                                                                           this->gadget.get_model()->flatten(m, n), t->serial);
 
 								            std::vector<number> line_data = k_handle.lookup_tag(tag);
 
-                            value_type value = correlation_function_value;
+                            value_type value = value_type::correlation_function_value;
 								            if(this->dimensionless)
 									            {
 								                assert(line_data.size() == k_values.size());
@@ -177,7 +177,7 @@ namespace transport
 									                {
 								                    *l_pos *= k_pos->k_comoving * k_pos->k_comoving * k_pos->k_comoving / (2.0*M_PI*M_PI);
 									                }
-                                value = dimensionless_value;
+                                value = value_type::dimensionless_value;
 									            }
 
                             data_line<number> line = data_line<number>(group, this->x_type, value, w_axis, line_data,
@@ -338,8 +338,8 @@ namespace transport
         threepf_wavenumber_series<number>::threepf_wavenumber_series(const threepf_task<number>& tk, index_selector<3>& sel,
                                                                      SQL_time_config_query tq, SQL_threepf_kconfig_query kq,
                                                                      unsigned int prec)
-	        : derived_line<number>(tk, wavenumber_axis,
-	                               std::list<axis_value>{ k_axis, efolds_exit_axis, alpha_axis, beta_axis, squeezing_fraction_k1_axis, squeezing_fraction_k2_axis, squeezing_fraction_k3_axis },
+	        : derived_line<number>(tk, axis_class::wavenumber_axis,
+	                               std::list<axis_value>{ axis_value::k_axis, axis_value::efolds_exit_axis, axis_value::alpha_axis, axis_value::beta_axis, axis_value::squeezing_fraction_k1_axis, axis_value::squeezing_fraction_k2_axis, axis_value::squeezing_fraction_k3_axis },
 	                               prec),
 	          threepf_line<number>(tk, sel),
 	          wavenumber_series<number>(tk),
@@ -417,17 +417,17 @@ namespace transport
 		                        std::array<unsigned int, 3> index_set = { l, m, n };
 		                        if(this->active_indices.is_on(index_set))
 			                        {
-		                            cf_kconfig_data_tag<number> tag = pipe.new_cf_kconfig_data_tag(data_tag<number>::cf_threepf, this->gadget.get_model()->flatten(l,m,n), t->serial);
+		                            cf_kconfig_data_tag<number> tag = pipe.new_cf_kconfig_data_tag(cf_data_type::cf_threepf, this->gadget.get_model()->flatten(l,m,n), t->serial);
 
 		                            std::vector<number> line_data = k_handle.lookup_tag(tag);
                                 assert(line_data.size() == w_axis.size());
 
 				                        // the integrator produces correlation functions involving the canonical momenta,
 				                        // not the derivatives. If the user wants derivatives then we have to shift.
-				                        if(this->get_dot_meaning() == derivatives)
+				                        if(this->get_dot_meaning() == dot_type::derivatives)
 					                        this->shifter.shift(this->gadget.get_integration_task(), this->gadget.get_model(), pipe, this->kquery, k_values, *bg_pos, line_data, l, m, n, *t);
 
-                                value_type value = correlation_function_value;
+                                value_type value = value_type::correlation_function_value;
                                 if(this->dimensionless)
                                   {
                                     assert(line_data.size() == k_values.size());
@@ -437,7 +437,7 @@ namespace transport
                                       {
                                         *l_pos *= k_pos->kt_comoving * k_pos->kt_comoving * k_pos->kt_comoving * k_pos->kt_comoving * k_pos->kt_comoving * k_pos->kt_comoving;
                                       }
-                                    value = dimensionless_value;
+                                    value = value_type::dimensionless_value;
                                   }
 
 		                            data_line<number> line = data_line<number>(group, this->x_type, value, w_axis, line_data,

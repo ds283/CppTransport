@@ -159,7 +159,7 @@ namespace transport
         template <typename number>
         std::vector<double> wavenumber_series<number>::pull_kconfig_axis(datapipe<number>& pipe, const SQL_twopf_kconfig_query& kquery) const
 	        {
-		        assert(this->x_type == k_axis);
+		        assert(this->x_type == axis_value::k_axis);
 
             typename datapipe<number>::twopf_kconfig_handle& handle = pipe.new_twopf_kconfig_handle(kquery);
             twopf_kconfig_tag<number> tag = pipe.new_twopf_kconfig_tag();
@@ -171,22 +171,25 @@ namespace transport
 
 		        switch(this->x_type)
 			        {
-		            case k_axis:
+		            case axis_value::k_axis:
 			            {
 		                for(typename std::vector< twopf_kconfig >::const_iterator t = configs.begin(); t != configs.end(); ++t)
 			                {
-		                    if(this->klabel_meaning == comoving) axis.push_back((*t).k_comoving);
-		                    else if(this->klabel_meaning == conventional) axis.push_back((*t).k_conventional);
-		                    else
-			                    {
-		                        assert(false);
-		                        throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_PRODUCT_DERIVED_LINE_KLABEL_TYPE_UNKNOWN);
-			                    }
+                        switch(this->klabel_meaning)
+                          {
+                            case klabel_type::comoving:
+                              axis.push_back((*t).k_comoving);
+                              break;
+
+                            case klabel_type::conventional:
+                              axis.push_back((*t).k_conventional);
+                              break;
+                          }
 			                }
 				            break;
 			            }
 
-		            case efolds_exit_axis:
+		            case axis_value::efolds_exit_axis:
 			            {
 		                for(typename std::vector< twopf_kconfig >::const_iterator t = configs.begin(); t != configs.end(); ++t)
 			                {
@@ -217,23 +220,26 @@ namespace transport
 
 		        switch(this->x_type)
 			        {
-		            case k_axis:
+		            case axis_value::k_axis:
 			            {
 				            // axis consists of k_t values
 		                for(typename std::vector< threepf_kconfig >::const_iterator t = configs.begin(); t != configs.end(); ++t)
 			                {
-		                    if(this->klabel_meaning == comoving) axis.push_back(t->kt_comoving);
-		                    else if(this->klabel_meaning == conventional) axis.push_back(t->kt_conventional);
-		                    else
-			                    {
-		                        assert(false);
-		                        throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_PRODUCT_DERIVED_LINE_KLABEL_TYPE_UNKNOWN);
-			                    }
+                        switch(this->klabel_meaning)
+                          {
+                            case klabel_type::comoving:
+                              axis.push_back(t->kt_comoving);
+                              break;
+
+                            case klabel_type::conventional:
+                              axis.push_back(t->kt_conventional);
+                              break;
+                          }
 			                }
 				            break;
 			            }
 
-		            case efolds_exit_axis:
+		            case axis_value::efolds_exit_axis:
 			            {
 		                for(typename std::vector< threepf_kconfig >::const_iterator t = configs.begin(); t != configs.end(); ++t)
 			                {
@@ -242,7 +248,7 @@ namespace transport
 		                break;
 			            }
 
-		            case alpha_axis:
+		            case axis_value::alpha_axis:
 			            {
 		                for(typename std::vector< threepf_kconfig >::const_iterator t = configs.begin(); t != configs.end(); ++t)
 			                {
@@ -251,7 +257,7 @@ namespace transport
 		                break;
 			            }
 
-		            case beta_axis:
+		            case axis_value::beta_axis:
 			            {
 		                for(typename std::vector< threepf_kconfig >::const_iterator t = configs.begin(); t != configs.end(); ++t)
 			                {
@@ -260,7 +266,7 @@ namespace transport
 		                break;
 			            }
 
-		            case squeezing_fraction_k1_axis:
+		            case axis_value::squeezing_fraction_k1_axis:
 			            {
 		                for(typename std::vector< threepf_kconfig >::const_iterator t = configs.begin(); t != configs.end(); ++t)
 			                {
@@ -269,7 +275,7 @@ namespace transport
 		                break;
 			            }
 
-		            case squeezing_fraction_k2_axis:
+		            case axis_value::squeezing_fraction_k2_axis:
 			            {
 		                for(typename std::vector< threepf_kconfig >::const_iterator t = configs.begin(); t != configs.end(); ++t)
 			                {
@@ -278,7 +284,7 @@ namespace transport
 		                break;
 			            }
 
-		            case squeezing_fraction_k3_axis:
+		            case axis_value::squeezing_fraction_k3_axis:
 			            {
 		                for(typename std::vector< threepf_kconfig >::const_iterator t = configs.begin(); t != configs.end(); ++t)
 			                {

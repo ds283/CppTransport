@@ -107,7 +107,7 @@ namespace transport
         template <typename number>
         zeta_twopf_time_series<number>::zeta_twopf_time_series(const zeta_twopf_list_task<number>& tk,
                                                                SQL_time_config_query tq, SQL_twopf_kconfig_query kq, unsigned int prec)
-	        : derived_line<number>(tk, time_axis, std::list<axis_value>{ efolds_axis }, prec),
+	        : derived_line<number>(tk, axis_class::time_axis, std::list<axis_value>{ axis_value::efolds_axis }, prec),
 	          zeta_twopf_line<number>(tk),
 	          time_series<number>(tk),
             tquery(tq),
@@ -152,14 +152,14 @@ namespace transport
 
                 std::vector<number> line_data = z_handle.lookup_tag(tag);
 
-                value_type value = correlation_function_value;
+                value_type value = value_type::correlation_function_value;
 		            if(this->dimensionless)
 			            {
 				            for(unsigned int j = 0; j < line_data.size(); ++j)
 					            {
 						            line_data[j] *= t->k_comoving * t->k_comoving * t->k_comoving / (2.0*M_PI*M_PI);
 					            }
-                    value = dimensionless_value;
+                    value = value_type::dimensionless_value;
 			            }
 
                 data_line<number> line = data_line<number>(group, this->x_type, value, t_axis, line_data,
@@ -311,7 +311,7 @@ namespace transport
         zeta_threepf_time_series<number>::zeta_threepf_time_series(const zeta_threepf_task<number>& tk,
                                                                    SQL_time_config_query tq, SQL_threepf_kconfig_query kq,
                                                                    unsigned int prec)
-          : derived_line<number>(tk, time_axis, std::list<axis_value>{ efolds_axis }, prec),
+          : derived_line<number>(tk, axis_class::time_axis, std::list<axis_value>{ axis_value::efolds_axis }, prec),
             zeta_threepf_line<number>(tk),
             time_series<number>(tk),
             tquery(tq),
@@ -359,14 +359,14 @@ namespace transport
                 std::string latex_label = "$" + this->make_LaTeX_label() + "\\;" + this->make_LaTeX_tag(*t, this->use_kt_label, this->use_alpha_label, this->use_beta_label) + "$";
                 std::string nonlatex_label = this->make_non_LaTeX_label() + " " + this->make_non_LaTeX_tag(*t, this->use_kt_label, this->use_alpha_label, this->use_beta_label);
 
-                value_type value = correlation_function_value;
+                value_type value = value_type::correlation_function_value;
                 if(this->dimensionless)
                   {
                     for(unsigned int j = 0; j < line_data.size(); ++j)
                       {
                         line_data[j] *= t->kt_comoving * t->kt_comoving * t->kt_comoving * t->kt_comoving * t->kt_comoving * t->kt_comoving;
                       }
-                    value = dimensionless_value;
+                    value = value_type::dimensionless_value;
                   }
 
                 data_line<number> line = data_line<number>(group, this->x_type, value, t_axis, line_data,
@@ -519,7 +519,7 @@ namespace transport
         zeta_reduced_bispectrum_time_series<number>::zeta_reduced_bispectrum_time_series(const zeta_threepf_task<number>& tk,
                                                                                          SQL_time_config_query tq, SQL_threepf_kconfig_query kq,
                                                                                          unsigned int prec)
-          : derived_line<number>(tk, time_axis, std::list<axis_value>{ efolds_axis }, prec),
+          : derived_line<number>(tk, axis_class::time_axis, std::list<axis_value>{ axis_value::efolds_axis }, prec),
             zeta_reduced_bispectrum_line<number>(tk),
             time_series<number>(tk),
             tquery(tq),
@@ -565,7 +565,7 @@ namespace transport
                 // it's safe to take a reference here to avoid a copy; we don't need the cache data to survive over multiple calls to lookup_tag()
                 const std::vector<number>& line_data = z_handle.lookup_tag(tag);
 
-                data_line<number> line = data_line<number>(group, this->x_type, fNL_value, t_axis, line_data,
+                data_line<number> line = data_line<number>(group, this->x_type, value_type::fNL_value, t_axis, line_data,
                                                            this->get_LaTeX_label(*t), this->get_non_LaTeX_label(*t));
 
                 lines.push_back(line);

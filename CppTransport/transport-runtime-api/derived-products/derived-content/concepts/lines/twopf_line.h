@@ -51,9 +51,6 @@ namespace transport
     namespace derived_data
 	    {
 
-        //! which type of twopf are we deriving from?
-        typedef enum { real, imaginary } twopf_type;
-
         //! general field twopf content producer, suitable
         //! for producing content usable in eg. a 2d plot or table.
 		    //! Note that we derive virtually from derived_line<> to solve the diamond
@@ -87,10 +84,10 @@ namespace transport
             void set_type(twopf_type m) { this->twopf_meaning = m; }
 
             //! query type of twopf - is it real?
-            bool is_real_twopf() const { return(this->twopf_meaning == real); }
+            bool is_real_twopf() const { return(this->twopf_meaning == twopf_type::real); }
 
             //! query type of twopf - is it imaginary?
-            bool is_imag_twopf() const { return(this->twopf_meaning == imaginary); }
+            bool is_imag_twopf() const { return(this->twopf_meaning == twopf_type::imaginary); }
 
             //! is this dimensionles?
             bool is_dimensionless() const { return(this->dimensionless); }
@@ -150,7 +147,7 @@ namespace transport
 		      : derived_line<number>(tk),  // not called because of virtual inheritance; here to silence Intel compiler warning
 		        gadget(tk),
 		        active_indices(sel),
-		        twopf_meaning(real),
+		        twopf_meaning(twopf_type::real),
 		        dimensionless(false)
 			    {
 		        if(active_indices.get_number_fields() != gadget.get_N_fields())
@@ -159,7 +156,7 @@ namespace transport
 		            msg << CPPTRANSPORT_PRODUCT_INDEX_MISMATCH << " ("
 			              << CPPTRANSPORT_PRODUCT_INDEX_MISMATCH_A << " " << active_indices.get_number_fields() << ", "
 			              << CPPTRANSPORT_PRODUCT_INDEX_MISMATCH_B << " " << gadget.get_N_fields() << ")";
-		            throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
+		            throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
 			        }
 			    }
 
@@ -177,13 +174,13 @@ namespace transport
 
 		        std::string tpf_type = reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_TYPE].asString();
 
-		        if(tpf_type == CPPTRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_REAL) twopf_meaning = real;
-		        else if(tpf_type == CPPTRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_IMAGINARY) twopf_meaning = imaginary;
+		        if(tpf_type == CPPTRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_REAL) twopf_meaning = twopf_type::real;
+		        else if(tpf_type == CPPTRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_IMAGINARY) twopf_meaning = twopf_type::imaginary;
 		        else
 			        {
 		            std::ostringstream msg;
 		            msg << CPPTRANSPORT_PRODUCT_DERIVED_LINE_TWOPF_TYPE_UNKNOWN << " '" << tpf_type << "'";
-		            throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
+		            throw runtime_exception(exception_type::SERIALIZATION_ERROR, msg.str());
 			        }
 			    }
 
@@ -197,20 +194,24 @@ namespace transport
 
 				    if(this->dimensionless) label << CPPTRANSPORT_LATEX_DIMENSIONLESS_TWOPF << "_{";
 
-		        label << (this->twopf_meaning == real ? CPPTRANSPORT_LATEX_RE_SYMBOL : CPPTRANSPORT_LATEX_IM_SYMBOL) << " ";
+		        label << (this->twopf_meaning == twopf_type::real ? CPPTRANSPORT_LATEX_RE_SYMBOL : CPPTRANSPORT_LATEX_IM_SYMBOL) << " ";
 
 		        const std::vector<std::string>& field_names = this->gadget.get_model()->get_f_latex_names();
 
-		        if(this->get_dot_meaning() == derivatives)
-			        {
-		            label << field_names[m % N_fields] << (m >= N_fields ? "^{" CPPTRANSPORT_LATEX_PRIME_SYMBOL "}" : "") << " "
-			                << field_names[n % N_fields] << (n >= N_fields ? "^{" CPPTRANSPORT_LATEX_PRIME_SYMBOL "}" : "");
-			        }
-		        else
-			        {
-		            label << (m >= N_fields ? "p_{" : "") << field_names[m % N_fields] << (m >= N_fields ? "}" : "") << " "
-			                << (n >= N_fields ? "p_{" : "") << field_names[n % N_fields] << (n >= N_fields ? "}" : "");
-			        }
+            switch(this->get_dot_meaning())
+              {
+                case dot_type::derivatives:
+                  label
+                    << field_names[m % N_fields] << (m >= N_fields ? "^{" CPPTRANSPORT_LATEX_PRIME_SYMBOL "}" : "") << " "
+                    << field_names[n % N_fields] << (n >= N_fields ? "^{" CPPTRANSPORT_LATEX_PRIME_SYMBOL "}" : "");
+                  break;
+
+                case dot_type::momenta:
+                  label
+                    << (m >= N_fields ? "p_{" : "") << field_names[m % N_fields] << (m >= N_fields ? "}" : "") << " "
+                    << (n >= N_fields ? "p_{" : "") << field_names[n % N_fields] << (n >= N_fields ? "}" : "");
+                  break;
+              }
 
 				    if(this->dimensionless) label << "}";
 
@@ -227,20 +228,24 @@ namespace transport
 
 				    if(this->dimensionless) label << CPPTRANSPORT_NONLATEX_DIMENSIONLESS_TWOPF << "[";
 
-		        label << (this->twopf_meaning == real ? CPPTRANSPORT_NONLATEX_RE_SYMBOL : CPPTRANSPORT_NONLATEX_IM_SYMBOL) << " ";
+		        label << (this->twopf_meaning == twopf_type::real ? CPPTRANSPORT_NONLATEX_RE_SYMBOL : CPPTRANSPORT_NONLATEX_IM_SYMBOL) << " ";
 
 		        const std::vector<std::string>& field_names = this->gadget.get_model()->get_field_names();
 
-		        if(this->get_dot_meaning() == derivatives)
-			        {
-		            label << field_names[m % N_fields] << (m >= N_fields ? CPPTRANSPORT_NONLATEX_PRIME_SYMBOL : "") << ", "
-			                << field_names[n % N_fields] << (n >= N_fields ? CPPTRANSPORT_NONLATEX_PRIME_SYMBOL : "");
-			        }
-		        else
-			        {
-		            label << (m >= N_fields ? "p_{" : "") << field_names[m % N_fields] << (m >= N_fields ? "}" : "") << " "
-			                << (n >= N_fields ? "p_{" : "") << field_names[n % N_fields] << (n >= N_fields ? "}" : "");
-			        }
+            switch(this->get_dot_meaning())
+              {
+                case dot_type::derivatives:
+                  label
+                    << field_names[m % N_fields] << (m >= N_fields ? CPPTRANSPORT_NONLATEX_PRIME_SYMBOL : "") << ", "
+                    << field_names[n % N_fields] << (n >= N_fields ? CPPTRANSPORT_NONLATEX_PRIME_SYMBOL : "");
+                  break;
+
+                case dot_type::momenta:
+                  label
+                    << (m >= N_fields ? "p_{" : "") << field_names[m % N_fields] << (m >= N_fields ? "}" : "") << " "
+                    << (n >= N_fields ? "p_{" : "") << field_names[n % N_fields] << (n >= N_fields ? "}" : "");
+                  break;
+              }
 
 				    if(this->dimensionless) label << "]";
 
@@ -255,21 +260,14 @@ namespace transport
 
 		        switch(this->twopf_meaning)
 			        {
-		            case real:
-			            {
+                case twopf_type::real:
 		                writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_TYPE] = std::string(CPPTRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_REAL);
 		                break;
-			            }
 
-		            case imaginary:
-			            {
+                case twopf_type::imaginary:
 		                writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_TYPE] = std::string(CPPTRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_IMAGINARY);
 		                break;
-			            }
-
-		            default:
-			            throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_PRODUCT_DERIVED_LINE_TWOPF_TYPE_UNKNOWN);
-			        }
+              }
 
 				    writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_DIMENSIONLESS] = this->dimensionless;
 			    }

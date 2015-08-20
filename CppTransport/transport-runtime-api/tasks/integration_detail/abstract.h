@@ -194,7 +194,7 @@ namespace transport
 	        {
             std::ostringstream msg;
             msg << "'" << this->get_name() << "': " << CPPTRANSPORT_NO_TIMES;
-            throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
+            throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
 	        }
 
         // the sampling points don't have to begin at the initial time, but they shouldn't be earlier than it
@@ -204,7 +204,7 @@ namespace transport
             msg << "'" << this->get_name() << "': " << CPPTRANSPORT_SAMPLES_START_TOO_EARLY_A << " ("
               << CPPTRANSPORT_SAMPLES_START_TOO_EARLY_B << "=" << times->get_min() << ", "
               << CPPTRANSPORT_SAMPLES_START_TOO_EARLY_C << "=" << i.get_N_initial() << ")";
-            throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
+            throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
 	        }
 	    }
 

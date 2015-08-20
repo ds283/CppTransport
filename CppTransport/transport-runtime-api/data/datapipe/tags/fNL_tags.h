@@ -209,11 +209,11 @@ namespace transport
     template <typename number>
     void fNL_time_data_tag<number>::pull(std::shared_ptr<derived_data::SQL_query>& query, std::vector<number>& sample)
 	    {
-        assert(this->pipe->validate_attached(datapipe<number>::postintegration_attached));
-        if(!this->pipe->validate_attached(datapipe<number>::postintegration_attached)) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+        assert(this->pipe->validate_attached(datapipe<number>::attachment_type::postintegration_attached));
+        if(!this->pipe->validate_attached(datapipe<number>::attachment_type::postintegration_attached)) throw runtime_exception(exception_type::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
 #ifdef CPPTRANSPORT_DEBUG_DATAPIPE
-		    BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::datapipe_pull) << "** PULL fNL sample request, template = " << template_type(this->type);
+		    BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::log_severity_level::datapipe_pull) << "** PULL fNL sample request, template = " << template_type(this->type);
 #endif
 
         this->pipe->database_timer.resume();
@@ -225,11 +225,11 @@ namespace transport
     template <typename number>
     void BT_time_data_tag<number>::pull(std::shared_ptr<derived_data::SQL_query>& query, std::vector<number>& sample)
 	    {
-        assert(this->pipe->validate_attached(datapipe<number>::postintegration_attached));
-        if(!this->pipe->validate_attached(datapipe<number>::postintegration_attached)) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+        assert(this->pipe->validate_attached(datapipe<number>::attachment_type::postintegration_attached));
+        if(!this->pipe->validate_attached(datapipe<number>::attachment_type::postintegration_attached)) throw runtime_exception(exception_type::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
 #ifdef CPPTRANSPORT_DEBUG_DATAPIPE
-		    BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::datapipe_pull) << "** PULL bispectrum.template sample request, template = " << template_type(this->type);
+		    BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::log_severity_level::datapipe_pull) << "** PULL bispectrum.template sample request, template = " << template_type(this->type);
 #endif
 
         this->pipe->database_timer.resume();
@@ -241,11 +241,11 @@ namespace transport
     template <typename number>
     void TT_time_data_tag<number>::pull(std::shared_ptr<derived_data::SQL_query>& query, std::vector<number>& sample)
 	    {
-        assert(this->pipe->validate_attached(datapipe<number>::postintegration_attached));
-        if(!this->pipe->validate_attached(datapipe<number>::postintegration_attached)) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+        assert(this->pipe->validate_attached(datapipe<number>::attachment_type::postintegration_attached));
+        if(!this->pipe->validate_attached(datapipe<number>::attachment_type::postintegration_attached)) throw runtime_exception(exception_type::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
 #ifdef CPPTRANSPORT_DEBUG_DATAPIPE
-		    BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::datapipe_pull) << "** PULL template.template sample request, template = " << template_type(this->type);
+		    BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::log_severity_level::datapipe_pull) << "** PULL template.template sample request, template = " << template_type(this->type);
 #endif
 
         this->pipe->database_timer.resume();

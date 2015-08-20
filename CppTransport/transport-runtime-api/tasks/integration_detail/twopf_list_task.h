@@ -436,7 +436,7 @@ namespace transport
             std::ostringstream msg;
             msg << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_TWOPF_LIST_TOO_EARLY_A << earliest_required << " "
               << CPPTRANSPORT_TASK_TWOPF_LIST_TOO_EARLY_B << this->get_N_initial();
-            throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
+            throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
           }
 
         if(!this->fast_forward && earliest_required - this->get_N_initial() < CPPTRANSPORT_DEFAULT_RECOMMENDED_EFOLDS)
@@ -473,7 +473,7 @@ namespace transport
           {
             std::ostringstream msg;
             msg << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_TWOPF_LIST_NO_TIMES;
-            throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
+            throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
           }
 
         bool first = true;

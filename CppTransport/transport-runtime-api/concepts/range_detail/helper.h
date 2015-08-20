@@ -27,7 +27,7 @@ namespace transport
 
 				    std::ostringstream msg;
 				    msg << CPPTRANSPORT_RANGE_UNKNOWN_TYPE << " '" << type << "'";
-				    throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
+				    throw runtime_exception(exception_type::SERIALIZATION_ERROR, msg.str());
 					}
 
 			}   // namespace range_helper

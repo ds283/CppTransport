@@ -42,7 +42,7 @@ namespace transport
 				                std::ostringstream msg;
 				                msg << error_msg << status << ": " << sqlite3_errmsg(db) << ")";
 				                sqlite3_finalize(stmt);
-				                throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, msg.str());
+				                throw runtime_exception(exception_type::DATA_MANAGER_BACKEND_ERROR, msg.str());
 					            }
 					        }
 
@@ -94,7 +94,7 @@ namespace transport
                     std::ostringstream msg;
                     msg << CPPTRANSPORT_DATAMGR_TIME_SERIAL_READ_FAIL << status << ": " << sqlite3_errmsg(db) << ")";
                     sqlite3_finalize(stmt);
-                    throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, msg.str());
+                    throw runtime_exception(exception_type::DATA_MANAGER_BACKEND_ERROR, msg.str());
                   }
               }
 
@@ -149,7 +149,7 @@ namespace transport
                     std::ostringstream msg;
                     msg << CPPTRANSPORT_DATAMGR_KCONFIG_SERIAL_READ_FAIL << status << ": " << sqlite3_errmsg(db) << ")";
                     sqlite3_finalize(stmt);
-                    throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, msg.str());
+                    throw runtime_exception(exception_type::DATA_MANAGER_BACKEND_ERROR, msg.str());
                   }
               }
 
@@ -234,7 +234,7 @@ namespace transport
                     std::ostringstream msg;
                     msg << CPPTRANSPORT_DATAMGR_KCONFIG_SERIAL_READ_FAIL << status << ": " << sqlite3_errmsg(db) << ")";
                     sqlite3_finalize(stmt);
-                    throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, msg.str());
+                    throw runtime_exception(exception_type::DATA_MANAGER_BACKEND_ERROR, msg.str());
                   }
               }
 
@@ -306,7 +306,7 @@ namespace transport
                     std::ostringstream msg;
                     msg << CPPTRANSPORT_DATAMGR_KCONFIG_SERIAL_READ_FAIL << status << ": " << sqlite3_errmsg(db) << ")";
                     sqlite3_finalize(stmt);
-                    throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, msg.str());
+                    throw runtime_exception(exception_type::DATA_MANAGER_BACKEND_ERROR, msg.str());
 	                }
 	            }
 

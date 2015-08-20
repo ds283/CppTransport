@@ -11,6 +11,8 @@
 #include <vector>
 #include <functional>
 
+#include "transport-runtime-api/enumerations.h"
+
 #include "transport-runtime-api/data/batchers/generic_batcher.h"
 #include "transport-runtime-api/data/batchers/postintegration_batcher.h"
 #include "transport-runtime-api/data/batchers/integration_items.h"
@@ -167,7 +169,7 @@ namespace transport
 
         //! Get longest integration time
         boost::timer::nanosecond_type get_max_integration_time() const { return (this->max_integration_time); }
-        
+
         //! Get shortest integration time
         boost::timer::nanosecond_type get_min_integration_time() const  { return (this->min_integration_time); }
 
@@ -420,8 +422,6 @@ namespace transport
             typename integration_writers<number>::host_info_writer    host_info;
 	        };
 
-        typedef enum { real_twopf, imag_twopf } twopf_type;
-
 
         // CONSTRUCTOR, DESTRUCTOR
 
@@ -465,7 +465,7 @@ namespace transport
 
       public:
 
-        void push_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial, const std::vector<number>& values, const std::vector<number>& backg, twopf_type t = real_twopf);
+        void push_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial, const std::vector<number>& values, const std::vector<number>& backg, twopf_type t = twopf_type::twopf_real);
 
         void push_threepf(unsigned int time_serial, double t,
                           const threepf_kconfig& kconfig, unsigned int source_serial, const std::vector<number>& values,
@@ -609,14 +609,14 @@ namespace transport
         if(this->flush_due)
 	        {
             this->flush_due = false;
-            this->flush(action_replace);
+            this->flush(replacement_action::action_replace);
 	        }
         else if(this->checkpoint_interval > 0 && this->checkpoint_timer.elapsed().wall > this->checkpoint_interval)
           {
-            BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "** Lifetime of " << format_time(this->checkpoint_timer.elapsed().wall)
+            BOOST_LOG_SEV(this->log_source, generic_batcher::log_severity_level::normal) << "** Lifetime of " << format_time(this->checkpoint_timer.elapsed().wall)
                 << " exceeds checkpoint interval " << format_time(this->checkpoint_interval)
                 << "; forcing flush";
-            this->flush(action_replace);
+            this->flush(replacement_action::action_replace);
           }
 	    }
 
@@ -643,14 +643,14 @@ namespace transport
         if(this->flush_due)
 	        {
             this->flush_due = false;
-            this->flush(action_replace);
+            this->flush(replacement_action::action_replace);
 	        }
         else if(this->checkpoint_interval > 0 && this->checkpoint_timer.elapsed().wall > this->checkpoint_interval)
           {
-            BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "** Lifetime of " << format_time(this->checkpoint_timer.elapsed().wall)
+            BOOST_LOG_SEV(this->log_source, generic_batcher::log_severity_level::normal) << "** Lifetime of " << format_time(this->checkpoint_timer.elapsed().wall)
                 << " exceeds checkpoint interval " << format_time(this->checkpoint_interval)
                 << "; forcing flush";
-            this->flush(action_replace);
+            this->flush(replacement_action::action_replace);
           }
 	    }
 
@@ -658,7 +658,7 @@ namespace transport
     template <typename number>
     void integration_batcher<number>::push_backg(unsigned int time_serial, unsigned int source_serial, const std::vector<number>& values)
 	    {
-        if(values.size() != 2*this->Nfields) throw runtime_exception(runtime_exception::STORAGE_ERROR, CPPTRANSPORT_NFIELDS_BACKG);
+        if(values.size() != 2*this->Nfields) throw runtime_exception(exception_type::STORAGE_ERROR, CPPTRANSPORT_NFIELDS_BACKG);
 
         typename integration_items<number>::backg_item item;
 
@@ -674,7 +674,7 @@ namespace transport
 		template <typename number>
 		void integration_batcher<number>::push_ics(unsigned int k_serial, double t_exit, const std::vector<number>& values)
 			{
-		    if(values.size() != 2*this->Nfields) throw runtime_exception(runtime_exception::STORAGE_ERROR, CPPTRANSPORT_NFIELDS_BACKG);
+		    if(values.size() != 2*this->Nfields) throw runtime_exception(exception_type::STORAGE_ERROR, CPPTRANSPORT_NFIELDS_BACKG);
 
 				if(this->collect_initial_conditions)
 					{
@@ -699,14 +699,14 @@ namespace transport
         if(this->flush_due)
 	        {
             this->flush_due = false;
-            this->flush(action_replace);
+            this->flush(replacement_action::action_replace);
 	        }
         else if(this->checkpoint_interval > 0 && this->checkpoint_timer.elapsed().wall > this->checkpoint_interval)
           {
-            BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "** Lifetime of " << format_time(this->checkpoint_timer.elapsed().wall)
+            BOOST_LOG_SEV(this->log_source, generic_batcher::log_severity_level::normal) << "** Lifetime of " << format_time(this->checkpoint_timer.elapsed().wall)
                 << " exceeds checkpoint interval " << format_time(this->checkpoint_interval)
                 << "; forcing flush";
-            this->flush(action_replace);
+            this->flush(replacement_action::action_replace);
           }
 	    }
 
@@ -746,26 +746,26 @@ namespace transport
     template <typename number>
     void integration_batcher<number>::end_assignment()
 	    {
-        BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "";
-        BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "-- Finished assignment: final integration statistics";
-        BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "--   processed " << this->num_integrations << " individual integrations in " << format_time(this->integration_time);
-        BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "--   mean integration time           = " << format_time(this->integration_time/(this->num_integrations > 0 ? this->num_integrations : 1));
-        BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "--   longest individual integration  = " << format_time(this->max_integration_time);
-        BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "--   shortest individual integration = " << format_time(this->min_integration_time);
-        BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "--   total batching time             = " << format_time(this->batching_time);
-        BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "--   mean batching time              = " << format_time(this->batching_time/(this->num_integrations > 0 ? this->num_integrations : 1));
-        BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "--   longest individual batch        = " << format_time(this->max_batching_time);
-        BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "--   shortest individual batch       = " << format_time(this->min_batching_time);
+        BOOST_LOG_SEV(this->log_source, generic_batcher::log_severity_level::normal) << "";
+        BOOST_LOG_SEV(this->log_source, generic_batcher::log_severity_level::normal) << "-- Finished assignment: final integration statistics";
+        BOOST_LOG_SEV(this->log_source, generic_batcher::log_severity_level::normal) << "--   processed " << this->num_integrations << " individual integrations in " << format_time(this->integration_time);
+        BOOST_LOG_SEV(this->log_source, generic_batcher::log_severity_level::normal) << "--   mean integration time           = " << format_time(this->integration_time/(this->num_integrations > 0 ? this->num_integrations : 1));
+        BOOST_LOG_SEV(this->log_source, generic_batcher::log_severity_level::normal) << "--   longest individual integration  = " << format_time(this->max_integration_time);
+        BOOST_LOG_SEV(this->log_source, generic_batcher::log_severity_level::normal) << "--   shortest individual integration = " << format_time(this->min_integration_time);
+        BOOST_LOG_SEV(this->log_source, generic_batcher::log_severity_level::normal) << "--   total batching time             = " << format_time(this->batching_time);
+        BOOST_LOG_SEV(this->log_source, generic_batcher::log_severity_level::normal) << "--   mean batching time              = " << format_time(this->batching_time/(this->num_integrations > 0 ? this->num_integrations : 1));
+        BOOST_LOG_SEV(this->log_source, generic_batcher::log_severity_level::normal) << "--   longest individual batch        = " << format_time(this->max_batching_time);
+        BOOST_LOG_SEV(this->log_source, generic_batcher::log_severity_level::normal) << "--   shortest individual batch       = " << format_time(this->min_batching_time);
 
-        BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "";
+        BOOST_LOG_SEV(this->log_source, generic_batcher::log_severity_level::normal) << "";
 
         if(this->refinements > 0)
 	        {
-            BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "!! " << this->refinements << " work items required mesh refinement";
+            BOOST_LOG_SEV(this->log_source, generic_batcher::log_severity_level::normal) << "!! " << this->refinements << " work items required mesh refinement";
 	        }
         if(this->failures > 0)
 	        {
-            BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "!! " << this->failures << " work items failed to integrate";
+            BOOST_LOG_SEV(this->log_source, generic_batcher::log_severity_level::normal) << "!! " << this->failures << " work items failed to integrate";
 	        }
 	    }
 
@@ -801,7 +801,7 @@ namespace transport
     void twopf_batcher<number>::push_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial,
                                            const std::vector<number>& values, const std::vector<number>& backg)
 	    {
-        if(values.size() != 2*this->Nfields*2*this->Nfields) throw runtime_exception(runtime_exception::STORAGE_ERROR, CPPTRANSPORT_NFIELDS_TWOPF);
+        if(values.size() != 2*this->Nfields*2*this->Nfields) throw runtime_exception(exception_type::STORAGE_ERROR, CPPTRANSPORT_NFIELDS_TWOPF);
 
         typename integration_items<number>::twopf_re_item item;
 
@@ -837,7 +837,7 @@ namespace transport
     void twopf_batcher<number>::push_tensor_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial,
                                                   const std::vector<number>& values)
 	    {
-        if(values.size() != 4) throw runtime_exception(runtime_exception::STORAGE_ERROR, CPPTRANSPORT_NFIELDS_TENSOR_TWOPF);
+        if(values.size() != 4) throw runtime_exception(exception_type::STORAGE_ERROR, CPPTRANSPORT_NFIELDS_TENSOR_TWOPF);
 
         typename integration_items<number>::tensor_twopf_item item;
 
@@ -865,7 +865,7 @@ namespace transport
     template <typename number>
     void twopf_batcher<number>::flush(generic_batcher::replacement_action action)
 	    {
-        BOOST_LOG_SEV(this->get_log(), generic_batcher::normal) << "** Flushing twopf batcher (capacity=" << format_memory(this->capacity) << ") of size " << format_memory(this->storage());
+        BOOST_LOG_SEV(this->get_log(), generic_batcher::log_severity_level::normal) << "** Flushing twopf batcher (capacity=" << format_memory(this->capacity) << ") of size " << format_memory(this->storage());
 
         // set up a timer to measure how long it takes to flush
         boost::timer::cpu_timer flush_timer;
@@ -878,7 +878,7 @@ namespace transport
         this->writers.tensor_twopf(this, this->tensor_twopf_batch);
 
         flush_timer.stop();
-        BOOST_LOG_SEV(this->get_log(), generic_batcher::normal) << "** Flushed in time " << format_time(flush_timer.elapsed().wall) << "; pushing to master process";
+        BOOST_LOG_SEV(this->get_log(), generic_batcher::log_severity_level::normal) << "** Flushed in time " << format_time(flush_timer.elapsed().wall) << "; pushing to master process";
 
         this->stats_batch.clear();
 		    this->ics_batch.clear();
@@ -985,32 +985,38 @@ namespace transport
     void threepf_batcher<number>::push_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial,
                                              const std::vector<number>& values, const std::vector<number>& backg, twopf_type t)
 	    {
-        if(values.size() != 2*this->Nfields*2*this->Nfields) throw runtime_exception(runtime_exception::STORAGE_ERROR, CPPTRANSPORT_NFIELDS_TWOPF);
+        if(values.size() != 2*this->Nfields*2*this->Nfields) throw runtime_exception(exception_type::STORAGE_ERROR, CPPTRANSPORT_NFIELDS_TWOPF);
 
-		    if(t == real_twopf)
-			    {
-		        typename integration_items<number>::twopf_re_item item;
+        switch(t)
+          {
+            case twopf_type::twopf_real:
+              {
+                typename integration_items<number>::twopf_re_item item;
 
-		        item.time_serial    = time_serial;
-		        item.kconfig_serial = k_serial;
-		        item.source_serial  = source_serial;
-		        item.elements       = values;
+                item.time_serial    = time_serial;
+                item.kconfig_serial = k_serial;
+                item.source_serial  = source_serial;
+                item.elements       = values;
 
-				    this->twopf_re_batch.push_back(item);
-			    }
-		    else
-			    {
-		        typename integration_items<number>::twopf_im_item item;
+                this->twopf_re_batch.push_back(item);
+                break;
+              }
 
-		        item.time_serial    = time_serial;
-		        item.kconfig_serial = k_serial;
-		        item.source_serial  = source_serial;
-		        item.elements       = values;
+            case twopf_type::twopf_imag:
+              {
+                typename integration_items<number>::twopf_im_item item;
 
-		        this->twopf_im_batch.push_back(item);
-			    }
+                item.time_serial    = time_serial;
+                item.kconfig_serial = k_serial;
+                item.source_serial  = source_serial;
+                item.elements       = values;
 
-        if(t == real_twopf && this->paired_batcher != nullptr) this->push_paired_twopf(time_serial, k_serial, source_serial, values, backg);
+                this->twopf_im_batch.push_back(item);
+                break;
+              }
+          }
+
+        if(t == twopf_type::twopf_real && this->paired_batcher != nullptr) this->push_paired_twopf(time_serial, k_serial, source_serial, values, backg);
 
         this->check_for_flush();
 	    }
@@ -1038,7 +1044,7 @@ namespace transport
                                                const std::vector<number>& tpf_k2_re, const std::vector<number>& tpf_k2_im,
                                                const std::vector<number>& tpf_k3_re, const std::vector<number>& tpf_k3_im, const std::vector<number>& bg)
 	    {
-        if(values.size() != 2*this->Nfields*2*this->Nfields*2*this->Nfields) throw runtime_exception(runtime_exception::STORAGE_ERROR, CPPTRANSPORT_NFIELDS_THREEPF);
+        if(values.size() != 2*this->Nfields*2*this->Nfields*2*this->Nfields) throw runtime_exception(exception_type::STORAGE_ERROR, CPPTRANSPORT_NFIELDS_THREEPF);
 
         typename integration_items<number>::threepf_item item;
 
@@ -1085,7 +1091,7 @@ namespace transport
     void threepf_batcher<number>::push_tensor_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial,
                                                     const std::vector<number>& values)
 	    {
-        if(values.size() != 4) throw runtime_exception(runtime_exception::STORAGE_ERROR, CPPTRANSPORT_NFIELDS_TENSOR_TWOPF);
+        if(values.size() != 4) throw runtime_exception(exception_type::STORAGE_ERROR, CPPTRANSPORT_NFIELDS_TENSOR_TWOPF);
 
         typename integration_items<number>::tensor_twopf_item item;
 
@@ -1115,7 +1121,7 @@ namespace transport
     template <typename number>
     void threepf_batcher<number>::push_kt_ics(unsigned int k_serial, double t_exit, const std::vector<number>& values)
 	    {
-        if(values.size() != 2*this->Nfields) throw runtime_exception(runtime_exception::STORAGE_ERROR, CPPTRANSPORT_NFIELDS_BACKG);
+        if(values.size() != 2*this->Nfields) throw runtime_exception(exception_type::STORAGE_ERROR, CPPTRANSPORT_NFIELDS_BACKG);
 
         if(this->collect_initial_conditions)
 	        {
@@ -1134,7 +1140,7 @@ namespace transport
     template <typename number>
     void threepf_batcher<number>::flush(generic_batcher::replacement_action action)
 	    {
-        BOOST_LOG_SEV(this->get_log(), generic_batcher::normal) << "** Flushing threepf batcher (capacity=" << format_memory(this->capacity) << ") of size " << format_memory(this->storage());
+        BOOST_LOG_SEV(this->get_log(), generic_batcher::log_severity_level::normal) << "** Flushing threepf batcher (capacity=" << format_memory(this->capacity) << ") of size " << format_memory(this->storage());
 
         // set up a timer to measure how long it takes to flush
         boost::timer::cpu_timer flush_timer;
@@ -1150,7 +1156,7 @@ namespace transport
         this->writers.threepf(this, this->threepf_batch);
 
         flush_timer.stop();
-        BOOST_LOG_SEV(this->get_log(), generic_batcher::normal) << "** Flushed in time " << format_time(flush_timer.elapsed().wall) << "; pushing to master process";
+        BOOST_LOG_SEV(this->get_log(), generic_batcher::log_severity_level::normal) << "** Flushed in time " << format_time(flush_timer.elapsed().wall) << "; pushing to master process";
 
         this->stats_batch.clear();
 		    this->ics_batch.clear();

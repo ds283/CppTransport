@@ -138,7 +138,7 @@ namespace transport
 	        {
             std::stringstream msg;
             msg << CPPTRANSPORT_REPO_ZETA_TASK_NOT_DERIVABLE << " '" << tk_name << "'";
-            throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
+            throw runtime_exception(exception_type::REPOSITORY_ERROR, msg.str());
 	        }
 	    }
 

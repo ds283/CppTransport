@@ -31,6 +31,9 @@
 // get enviornment object
 #include "transport-runtime-api/manager/environment.h"
 
+// get enumeration classes
+#include "transport-runtime-api/derived-products/enumerations.h"
+
 
 #include "transport-runtime-api/defaults.h"
 #include "transport-runtime-api/messages.h"

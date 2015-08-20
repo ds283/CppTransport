@@ -16,19 +16,16 @@ namespace transport
 		namespace derived_data
 			{
 
-				typedef enum { fNL_local_template, fNL_equi_template, fNL_ortho_template, fNL_DBI_template } template_type;
+				enum class template_type { fNL_local_template, fNL_equi_template, fNL_ortho_template, fNL_DBI_template };
 
 				std::string template_name(template_type type)
 					{
 						switch(type)
 							{
-						    case fNL_local_template: return(std::string(CPPTRANSPORT_FNL_LOCAL));
-						    case fNL_equi_template:  return(std::string(CPPTRANSPORT_FNL_EQUI));
-						    case fNL_ortho_template: return(std::string(CPPTRANSPORT_FNL_ORTHO));
-						    case fNL_DBI_template:   return(std::string(CPPTRANSPORT_FNL_DBI));
-						    default:
-							    assert(false);
-									throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_PRODUCT_FNL_LINE_UNKNOWN_TEMPLATE);
+						    case template_type::fNL_local_template: return(std::string(CPPTRANSPORT_FNL_LOCAL));
+						    case template_type::fNL_equi_template:  return(std::string(CPPTRANSPORT_FNL_EQUI));
+						    case template_type::fNL_ortho_template: return(std::string(CPPTRANSPORT_FNL_ORTHO));
+                case template_type::fNL_DBI_template:   return(std::string(CPPTRANSPORT_FNL_DBI));
 							}
 					}
 

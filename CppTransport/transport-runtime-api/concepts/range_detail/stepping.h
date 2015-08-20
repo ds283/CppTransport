@@ -157,7 +157,7 @@ namespace transport
         if(spc_string == CPPTRANSPORT_VALUE_LINEAR)                  spacing = range_spacing_type::linear_stepping;
         else if(spc_string == CPPTRANSPORT_VALUE_LOGARITHMIC_BOTTOM) spacing = range_spacing_type::logarithmic_bottom_stepping;
         else if(spc_string == CPPTRANSPORT_VALUE_LOGARITHMIC_TOP)    spacing = range_spacing_type::logarithmic_top_stepping;
-        else throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, CPPTRANSPORT_BADLY_FORMED_RANGE);
+        else throw runtime_exception(exception_type::SERIALIZATION_ERROR, CPPTRANSPORT_BADLY_FORMED_RANGE);
 
         this->populate_grid();
 	    }

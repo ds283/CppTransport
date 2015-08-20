@@ -292,7 +292,7 @@ set(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_FILES
   transport-runtime-api/derived-products/derived_product.h
   transport-runtime-api/derived-products/derived_product_forward_declare.h
   transport-runtime-api/derived-products/derived_product_helper.h
-)
+  transport-runtime-api/derived-products/enumerations.h)
 
 set(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_SQL_QUERY_FILES
   transport-runtime-api/derived-products/derived-content/SQL_query/SQL_policy.h
@@ -799,7 +799,7 @@ set(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_CORRELATION_FUNCTIONS
   transport-runtime-api/derived-products/derived-content/correlation-functions/compute-gadgets/threepf_kconfig_shift.h
   transport-runtime-api/derived-products/derived-content/correlation-functions/compute-gadgets/threepf_time_shift.h
   transport-runtime-api/derived-products/derived-content/correlation-functions/compute-gadgets/zeta_timeseries_compute.h
-)
+  transport-runtime-api/derived-products/derived-content/correlation-functions/compute-gadgets/common.h)
 
 set(TRANSPORT_RUNTIME_API_REPOSITORY_WRITERS_FILES
   transport-runtime-api/repository/writers/derived_content_writer.h
@@ -848,7 +848,7 @@ set(TRANSPORT_RUNTIME_API_FILES
   transport-runtime-api/messages.h
   transport-runtime-api/transport.h
   transport-runtime-api/version.h
-)
+  transport-runtime-api/enumerations.h)
 
 set(EXAMPLES_QUADRATIC10_FILES
   examples/quadratic10/defaults.model

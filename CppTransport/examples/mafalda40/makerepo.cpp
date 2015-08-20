@@ -135,7 +135,7 @@ int main(int argc, char* argv[])
     transport::derived_data::time_series_plot<double> tk2_zeta_timeplot = transport::derived_data::time_series_plot<double>("mafalda40.twopf-1.zeta-twopf", "zeta-twopf.pdf");
 		tk2_zeta_timeplot.add_line(tk2_zeta_times);
 		tk2_zeta_timeplot.set_title_text("$\\langle \\zeta \\zeta \\rangle$ time evolution");
-		tk2_zeta_timeplot.set_legend_position(transport::derived_data::bottom_right);
+		tk2_zeta_timeplot.set_legend_position(transport::derived_data::legend_pos::bottom_right);
 
     transport::derived_data::zeta_twopf_wavenumber_series<double> tk2_zeta_spec = transport::derived_data::zeta_twopf_wavenumber_series<double>(tk2,
                                                                                                                                                 transport::derived_data::filter::time_filter(spectrum_timefilter),

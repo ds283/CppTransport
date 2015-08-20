@@ -57,7 +57,7 @@ namespace transport
         void pull(std::shared_ptr<derived_data::SQL_query>& query, std::vector<kconfiguration_statistics>& data);
 
         //! emit a log item for this tag
-        void log(const std::string& log_item) const { BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::normal) << log_item; }
+        void log(const std::string& log_item) const { BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::log_severity_level::normal) << log_item; }
 
         //! identify this tag
         std::string name() const { return(std::string("k-configuration statistics")); }
@@ -95,11 +95,11 @@ namespace transport
     template <typename number>
     void k_statistics_tag<number>::pull(std::shared_ptr<derived_data::SQL_query>& query, std::vector<kconfiguration_statistics>& data)
 	    {
-        assert(this->pipe->validate_attached(datapipe<number>::integration_attached));
-        if(!this->pipe->validate_attached(datapipe<number>::integration_attached)) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+        assert(this->pipe->validate_attached(datapipe<number>::attachment_type::integration_attached));
+        if(!this->pipe->validate_attached(datapipe<number>::attachment_type::integration_attached)) throw runtime_exception(exception_type::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
         std::shared_ptr< output_group_record<integration_payload> > record = pipe->get_attached_integration_record();
-        if(!record) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+        if(!record) throw runtime_exception(exception_type::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
         if(record->get_payload().has_statistics())
 	        {

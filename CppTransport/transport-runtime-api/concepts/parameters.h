@@ -105,8 +105,8 @@ namespace transport
       {
 		    assert(m != nullptr);
 
-				if(m == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_PARAMS_NULL_MODEL);
-        if(M_Planck <= 0.0) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_MPLANCK_NEGATIVE);
+				if(m == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_PARAMS_NULL_MODEL);
+        if(M_Planck <= 0.0) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_MPLANCK_NEGATIVE);
 
         // validate supplied parameters
 		    mdl->validate_params(p, params);
@@ -137,7 +137,7 @@ namespace transport
           }
 
 		    const std::vector<std::string>& order = mdl->get_param_names();
-        if(temp.size() != order.size()) throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, CPPTRANSPORT_BADLY_FORMED_PARAMS);
+        if(temp.size() != order.size()) throw runtime_exception(exception_type::REPOSITORY_BACKEND_ERROR, CPPTRANSPORT_BADLY_FORMED_PARAMS);
 
         named_list::ordering order_map = named_list::make_ordering(order);
         named_list::comparator<number> cmp(order_map);

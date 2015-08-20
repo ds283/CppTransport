@@ -47,12 +47,12 @@ namespace transport
 
       public:
 
-		    typedef enum { field_range, all_range } range_type;
+        enum class range_type { field_range, all_range };
 
       public:
 
 		    //! Build a default index_selector, with all indices enabled.
-        index_selector(unsigned int N_f, range_type r=all_range);
+        index_selector(unsigned int N_f, range_type r=range_type::all_range);
 
 		    //! Deserialization constructor
 		    index_selector(Json::Value& reader);
@@ -133,7 +133,7 @@ namespace transport
       {
         // work out how many components this object has
         size = 1;
-		    unsigned int scale_factor = (r == all_range ? 2 : 1);
+		    unsigned int scale_factor = (r == range_type::all_range ? 2 : 1);
 
         for(int i = 0; i < indices; ++i)
           {
@@ -172,7 +172,7 @@ namespace transport
 
         for(unsigned int i = 0; i < indices; ++i)
 	        {
-            assert(which[i] < (this->range == all_range ? 2 : 1) * this->N_fields);  // basic sanity check: TODO: add error handling
+            assert(which[i] < (this->range == range_type::all_range ? 2 : 1) * this->N_fields);  // basic sanity check: TODO: add error handling
 
             index += this->displacements[i] * which[i];
 	        }
@@ -189,7 +189,7 @@ namespace transport
 
         for(unsigned int i = 0; i < indices; ++i)
 	        {
-            assert(which[i] < (this->range == all_range ? 2 : 1) * this->N_fields);  // basic sanity check: TODO: add error handling
+            assert(which[i] < (this->range == range_type::all_range ? 2 : 1) * this->N_fields);  // basic sanity check: TODO: add error handling
 
             index += this->displacements[i] * which[i];
 	        }
@@ -206,7 +206,7 @@ namespace transport
 
         for(unsigned int i = 0; i < indices; ++i)
 	        {
-            assert(which[i] < (this->range == all_range ? 2 : 1) * this->N_fields); // basic sanity check: TODO: add error handling
+            assert(which[i] < (this->range == range_type::all_range ? 2 : 1) * this->N_fields); // basic sanity check: TODO: add error handling
 
             index += this->displacements[i] * which[i];
 	        }
@@ -219,7 +219,7 @@ namespace transport
 		template <unsigned int indices>
 		void index_selector<indices>::serialize(Json::Value& writer) const
 			{
-		    writer[CPPTRANSPORT_NODE_INDEX_ROOT][CPPTRANSPORT_NODE_INDEX_RANGE]  = this->range == all_range ? std::string(CPPTRANSPORT_NODE_INDEX_RANGE_ALL) : std::string(CPPTRANSPORT_NODE_INDEX_RANGE_FIELD);
+		    writer[CPPTRANSPORT_NODE_INDEX_ROOT][CPPTRANSPORT_NODE_INDEX_RANGE]  = this->range == range_type::all_range ? std::string(CPPTRANSPORT_NODE_INDEX_RANGE_ALL) : std::string(CPPTRANSPORT_NODE_INDEX_RANGE_FIELD);
 		    writer[CPPTRANSPORT_NODE_INDEX_ROOT][CPPTRANSPORT_NODE_INDEX_FIELDS] = this->N_fields;
 
 		    Json::Value toggle_array(Json::arrayValue);
@@ -238,13 +238,13 @@ namespace transport
 		    std::string range_string = reader[CPPTRANSPORT_NODE_INDEX_ROOT][CPPTRANSPORT_NODE_INDEX_RANGE].asString();
 		    N_fields                 = reader[CPPTRANSPORT_NODE_INDEX_ROOT][CPPTRANSPORT_NODE_INDEX_FIELDS].asUInt();
 
-		    if(range_string == CPPTRANSPORT_NODE_INDEX_RANGE_ALL)        range = index_selector<indices>::all_range;
-		    else if(range_string == CPPTRANSPORT_NODE_INDEX_RANGE_FIELD) range = index_selector<indices>::field_range;
+		    if(range_string == CPPTRANSPORT_NODE_INDEX_RANGE_ALL)        range = index_selector<indices>::range_type::all_range;
+		    else if(range_string == CPPTRANSPORT_NODE_INDEX_RANGE_FIELD) range = index_selector<indices>::range_type::field_range;
 		    else
 			    {
 		        std::ostringstream msg;
 		        msg << CPPTRANSPORT_INDEX_UNKNOWN_RANGE_TYPE << " '" << range_string << "'";
-		        throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
+		        throw runtime_exception(exception_type::SERIALIZATION_ERROR, msg.str());
 			    }
 
 		    // read array of toggles
@@ -260,7 +260,7 @@ namespace transport
 
 		    // work out how many components this object has (or should have)
 		    size = 1;
-		    unsigned int scale_factor = (range == all_range ? 2 : 1);
+		    unsigned int scale_factor = (range == range_type::all_range ? 2 : 1);
 
 		    for(int i = 0; i < indices; ++i)
 			    {
@@ -272,7 +272,7 @@ namespace transport
 		        std::ostringstream msg;
 		        msg << CPPTRANSPORT_INDEX_PRESET_MISMATCH << size << ", "
 			        << CPPTRANSPORT_INDEX_PRESET_MISMATCH_A << enabled.size();
-		        throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
+		        throw runtime_exception(exception_type::SERIALIZATION_ERROR, msg.str());
 			    }
 
 		    displacements.resize(indices);
@@ -310,7 +310,7 @@ namespace transport
 
 										unsigned int index = remainder / this->displacements[j];
 
-										assert((this->range == all_range && index < state_names.size()) || (this->range == field_range && index < state_names.size()/2));
+										assert((this->range == range_type::all_range && index < state_names.size()) || (this->range == range_type::field_range && index < state_names.size()/2));
 
 										if(j > 0) out << ",";
 										out << state_names[index];

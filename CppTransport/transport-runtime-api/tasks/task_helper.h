@@ -46,7 +46,7 @@ namespace transport
 
             std::ostringstream msg;
             msg << CPPTRANSPORT_TASK_TYPE_UNKNOWN << " '" << type << "'";
-            throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
+            throw runtime_exception(exception_type::SERIALIZATION_ERROR, msg.str());
           }
 
       }   // namespace integration_task_helper
@@ -63,7 +63,7 @@ namespace transport
 
             std::ostringstream msg;
             msg << CPPTRANSPORT_TASK_TYPE_UNKNOWN << " '" << type << "'";
-            throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
+            throw runtime_exception(exception_type::SERIALIZATION_ERROR, msg.str());
           }
 
       }   // namespace output_task_helper
@@ -82,7 +82,7 @@ namespace transport
 
             std::ostringstream msg;
             msg << CPPTRANSPORT_TASK_TYPE_UNKNOWN << " '" << type << "'";
-            throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
+            throw runtime_exception(exception_type::SERIALIZATION_ERROR, msg.str());
           }
 
       }   // namespace postintegration_task_helper

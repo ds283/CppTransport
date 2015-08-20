@@ -172,14 +172,14 @@ namespace transport
       : name(nm), mdl(m), params(p), N_init(Nini), N_sub_horizon(Npre)
       {
 		    assert(m != nullptr);
-		    if(m == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_ICS_NULL_MODEL);
+		    if(m == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_ICS_NULL_MODEL);
 
         // check model matches the one supplied with parameters
         if(m->get_identity_string() != p.get_model()->get_identity_string())
           {
             std::ostringstream msg;
             msg << CPPTRANSPORT_ICS_MODEL_MISMATCH << " '" << nm << "'";
-            throw runtime_exception(runtime_exception::TASK_STRUCTURE_ERROR, msg.str());
+            throw runtime_exception(exception_type::TASK_STRUCTURE_ERROR, msg.str());
           }
 
         // validate supplied initial conditions - we rely on the validator to throw
@@ -196,7 +196,7 @@ namespace transport
       : name(nm), mdl(m), params(p), N_init(Ncross-Npre), N_sub_horizon(Npre)
       {
         assert(m != nullptr);
-        if(m == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_ICS_NULL_MODEL);
+        if(m == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_ICS_NULL_MODEL);
 
         std::vector<number> validated_ics;
 
@@ -237,7 +237,7 @@ namespace transport
 		    // sort into order required by model object
         const std::vector<std::string>& field_ordering = mdl->get_state_names();
 
-        if(temp.size() != field_ordering.size()) throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, CPPTRANSPORT_BADLY_FORMED_ICS);
+        if(temp.size() != field_ordering.size()) throw runtime_exception(exception_type::REPOSITORY_BACKEND_ERROR, CPPTRANSPORT_BADLY_FORMED_ICS);
 
         named_list::ordering order_map = named_list::make_ordering(field_ordering);
         named_list::comparator<number> cmp(order_map);

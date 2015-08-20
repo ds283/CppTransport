@@ -384,7 +384,7 @@ namespace transport
 
       public:
 
-        typedef enum { integration, postintegration, output } type;
+        enum class task_type { integration, postintegration, output };
 
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -413,7 +413,7 @@ namespace transport
       public:
 
         //! get record type
-        virtual type get_type() const = 0;
+        virtual task_type get_type() const = 0;
 
         //! Add content
         void add_new_output_group(const std::string& name) { this->content_groups.push_back(name); }
@@ -491,7 +491,7 @@ namespace transport
       public:
 
         //! Get type
-        virtual typename task_record<number>::type get_type() const override { return(task_record<number>::integration); }
+        virtual typename task_record<number>::task_type get_type() const override { return(task_record<number>::task_type::integration); }
 
 
         // SERIALIZATION -- implements a 'serializable' interface
@@ -562,7 +562,7 @@ namespace transport
       public:
 
         //! Get type
-        virtual typename task_record<number>::type get_type() const override { return(task_record<number>::postintegration); }
+        virtual typename task_record<number>::task_type get_type() const override { return(task_record<number>::task_type::postintegration); }
 
 
         // SERIALIZATION -- implements a 'serializable' interface
@@ -687,7 +687,7 @@ namespace transport
       public:
 
         //! Get type
-        virtual typename task_record<number>::type get_type() const override { return(task_record<number>::output); }
+        virtual typename task_record<number>::task_type get_type() const override { return(task_record<number>::task_type::output); }
 
 
         // SERIALIZATION -- implements a 'serializable' interface
@@ -1825,13 +1825,13 @@ namespace transport
 	        {
             std::ostringstream msg;
             msg << CPPTRANSPORT_REPO_FAIL_KCONFIG_DATABASE_OPEN << " '" << this->get_name() << "'";
-            throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, msg.str());
+            throw runtime_exception(exception_type::REPOSITORY_BACKEND_ERROR, msg.str());
 	        }
 
         tk = integration_task_helper::deserialize<number>(this->name, reader, handle, f);
 
         assert(tk != nullptr);
-        if(tk == nullptr) throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, CPPTRANSPORT_REPO_TASK_DESERIALIZE_FAIL);
+        if(tk == nullptr) throw runtime_exception(exception_type::SERIALIZATION_ERROR, CPPTRANSPORT_REPO_TASK_DESERIALIZE_FAIL);
 	    }
 
 
@@ -1863,7 +1863,7 @@ namespace transport
 			    {
 		        std::ostringstream msg;
 		        msg << CPPTRANSPORT_REPO_FAIL_KCONFIG_DATABASE_OPEN << " '" << this->get_name() << "'";
-		        throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, msg.str());
+		        throw runtime_exception(exception_type::REPOSITORY_BACKEND_ERROR, msg.str());
 			    }
 
 		    this->tk->write_kconfig_database(handle);
@@ -1900,7 +1900,7 @@ namespace transport
 	      tk(postintegration_task_helper::deserialize<number>(this->name, reader, f))
 	    {
         assert(tk != nullptr);
-        if(tk == nullptr) throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, CPPTRANSPORT_REPO_TASK_DESERIALIZE_FAIL);
+        if(tk == nullptr) throw runtime_exception(exception_type::SERIALIZATION_ERROR, CPPTRANSPORT_REPO_TASK_DESERIALIZE_FAIL);
 	    }
 
 
@@ -1948,7 +1948,7 @@ namespace transport
 	    {
         assert(tk != nullptr);
 
-        if(tk == nullptr) throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, CPPTRANSPORT_REPO_TASK_DESERIALIZE_FAIL);
+        if(tk == nullptr) throw runtime_exception(exception_type::SERIALIZATION_ERROR, CPPTRANSPORT_REPO_TASK_DESERIALIZE_FAIL);
 	    }
 
 
@@ -1996,7 +1996,7 @@ namespace transport
 	    {
         assert(product != nullptr);
 
-        if(product == nullptr) throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, CPPTRANSPORT_REPO_PRODUCT_DESERIALIZE_FAIL);
+        if(product == nullptr) throw runtime_exception(exception_type::SERIALIZATION_ERROR, CPPTRANSPORT_REPO_PRODUCT_DESERIALIZE_FAIL);
 	    }
 
 

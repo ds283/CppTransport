@@ -14,6 +14,7 @@
 #include <memory>
 
 #include "transport-runtime-api/defaults.h"
+#include "transport-runtime-api/enumerations.h"
 
 #include "transport-runtime-api/utilities/formatter.h"
 #include "transport-runtime-api/utilities/linecache.h"
@@ -67,14 +68,12 @@ namespace transport
       public:
 
         //! Logging severity level
-        typedef enum { datapipe_pull, normal, warning, error, critical } log_severity_level;
+        enum class log_severity_level { datapipe_pull, normal, warning, error, critical };
 
         typedef boost::log::sinks::synchronous_sink< boost::log::sinks::text_file_backend > sink_t;
 
 
       public:
-
-        typedef enum { twopf_real, twopf_imag } twopf_type;
 
         //! Find integration content -- serivce provided by a repository implementation
         typedef std::function<std::shared_ptr< output_group_record<integration_payload> >(const std::string&, const std::list<std::string>&)> integration_content_finder;
@@ -212,7 +211,7 @@ namespace transport
 
       protected:
 
-		    typedef enum { none_attached, integration_attached, postintegration_attached } attachment_type;
+		    enum class attachment_type { none_attached, integration_attached, postintegration_attached };
 
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -343,13 +342,13 @@ namespace transport
         void detach(void);
 
         //! Is this datapipe attached to an output group?
-        bool is_attached() const { return(this->type != none_attached); }
+        bool is_attached() const { return(this->type != attachment_type::none_attached); }
 
 		    //! Is this datapipe attached to an integration output group?
-		    bool is_integration_attached() const { return(this->type == integration_attached); }
+		    bool is_integration_attached() const { return(this->type == attachment_type::integration_attached); }
 
 		    //! Is this datapipe attached to a postintegration output group?
-		    bool is_postintegration_attached() const { return(this->type == postintegration_attached); }
+		    bool is_postintegration_attached() const { return(this->type == attachment_type::postintegration_attached); }
 
       protected:
 
@@ -436,10 +435,10 @@ namespace transport
         background_time_data_tag<number> new_background_time_data_tag(unsigned int id);
 
         //! Generate a new correlation-function time tag
-        cf_time_data_tag<number> new_cf_time_data_tag(typename data_tag<number>::cf_data_type type, unsigned int id, unsigned int kserial);
+        cf_time_data_tag<number> new_cf_time_data_tag(cf_data_type type, unsigned int id, unsigned int kserial);
 
         //! Generate a new correlation-function kconfig tag
-        cf_kconfig_data_tag<number> new_cf_kconfig_data_tag(typename data_tag<number>::cf_data_type type, unsigned int id, unsigned int tserial);
+        cf_kconfig_data_tag<number> new_cf_kconfig_data_tag(cf_data_type type, unsigned int id, unsigned int tserial);
 
         //! Generate a new zeta-correlation-function time tag
         zeta_twopf_time_data_tag<number> new_zeta_twopf_time_data_tag(const twopf_kconfig& kdata);
@@ -627,7 +626,7 @@ namespace transport
 	      threepf_kconfig_cache(CPPTRANSPORT_DEFAULT_CONFIGURATION_CACHE_SIZE),
 	      statistics_cache(CPPTRANSPORT_DEFAULT_CONFIGURATION_CACHE_SIZE),
 	      data_cache(cap),
-	      type(none_attached),
+	      type(attachment_type::none_attached),
         N_fields(0)
 	    {
         this->database_timer.stop();
@@ -662,7 +661,7 @@ namespace transport
             this->log_sink.reset();
 	        }
 
-        BOOST_LOG_SEV(this->log_source, normal) << "** Instantiated datapipe (cache capacity " << format_memory(cap) << ")"
+        BOOST_LOG_SEV(this->log_source, log_severity_level::normal) << "** Instantiated datapipe (cache capacity " << format_memory(cap) << ")"
 	        << " on MPI host " << host_info.get_host_name()
 	        << ", OS = " << host_info.get_os_name()
 	        << ", Version = " << host_info.get_os_version()
@@ -679,37 +678,36 @@ namespace transport
 
         if(!(this->database_timer.is_stopped()))
 	        {
-            BOOST_LOG_SEV(this->log_source, error) << ":: Error: datapipe being destroyed, but database timer is still running";
+            BOOST_LOG_SEV(this->log_source, log_severity_level::error) << ":: Error: datapipe being destroyed, but database timer is still running";
 	        }
 
-        BOOST_LOG_SEV(this->log_source, normal) << "";
-        BOOST_LOG_SEV(this->log_source, normal) << "-- Closing datapipe: final usage statistics:";
-        BOOST_LOG_SEV(this->log_source, normal) << "--   time spent querying database       = " << format_time(this->database_timer.elapsed().wall);
-        BOOST_LOG_SEV(this->log_source, normal) << "--   time-configuration cache hits      = " << this->time_config_cache.get_hits() << " | unloads = " << this->time_config_cache.get_unloads();
-        BOOST_LOG_SEV(this->log_source, normal) << "--   twopf k-configuration cache hits   = " << this->twopf_kconfig_cache.get_hits() << " | unloads = " << this->twopf_kconfig_cache.get_unloads();
-        BOOST_LOG_SEV(this->log_source, normal) << "--   threepf k-configuration cache hits = " << this->threepf_kconfig_cache.get_hits() << " | unloads = " << this->threepf_kconfig_cache.get_unloads();
-		    BOOST_LOG_SEV(this->log_source, normal) << "--   statistics cache hits              = " << this->statistics_cache.get_hits() << " | unloads = " << this->statistics_cache.get_unloads();
-        BOOST_LOG_SEV(this->log_source, normal) << "--   data cache hits:                   = " << this->data_cache.get_hits() << " | unloads = " << this->data_cache.get_unloads();
-        BOOST_LOG_SEV(this->log_source, normal) << "";
-        BOOST_LOG_SEV(this->log_source, normal) << "--   time-configuration evictions       = " << format_time(this->time_config_cache.get_eviction_timer());
-        BOOST_LOG_SEV(this->log_source, normal) << "--   twopf k-configuration evictions    = " << format_time(this->twopf_kconfig_cache.get_eviction_timer());
-        BOOST_LOG_SEV(this->log_source, normal) << "--   threepf k-configuration evictions  = " << format_time(this->threepf_kconfig_cache.get_eviction_timer());
-		    BOOST_LOG_SEV(this->log_source, normal) << "--   statistics cache evictions         = " << format_time(this->statistics_cache.get_eviction_timer());
-        BOOST_LOG_SEV(this->log_source, normal) << "--   data evictions                     = " << format_time(this->data_cache.get_eviction_timer());
+        BOOST_LOG_SEV(this->log_source, log_severity_level::normal) << "";
+        BOOST_LOG_SEV(this->log_source, log_severity_level::normal) << "-- Closing datapipe: final usage statistics:";
+        BOOST_LOG_SEV(this->log_source, log_severity_level::normal) << "--   time spent querying database       = " << format_time(this->database_timer.elapsed().wall);
+        BOOST_LOG_SEV(this->log_source, log_severity_level::normal) << "--   time-configuration cache hits      = " << this->time_config_cache.get_hits() << " | unloads = " << this->time_config_cache.get_unloads();
+        BOOST_LOG_SEV(this->log_source, log_severity_level::normal) << "--   twopf k-configuration cache hits   = " << this->twopf_kconfig_cache.get_hits() << " | unloads = " << this->twopf_kconfig_cache.get_unloads();
+        BOOST_LOG_SEV(this->log_source, log_severity_level::normal) << "--   threepf k-configuration cache hits = " << this->threepf_kconfig_cache.get_hits() << " | unloads = " << this->threepf_kconfig_cache.get_unloads();
+		    BOOST_LOG_SEV(this->log_source, log_severity_level::normal) << "--   statistics cache hits              = " << this->statistics_cache.get_hits() << " | unloads = " << this->statistics_cache.get_unloads();
+        BOOST_LOG_SEV(this->log_source, log_severity_level::normal) << "--   data cache hits:                   = " << this->data_cache.get_hits() << " | unloads = " << this->data_cache.get_unloads();
+        BOOST_LOG_SEV(this->log_source, log_severity_level::normal) << "";
+        BOOST_LOG_SEV(this->log_source, log_severity_level::normal) << "--   time-configuration evictions       = " << format_time(this->time_config_cache.get_eviction_timer());
+        BOOST_LOG_SEV(this->log_source, log_severity_level::normal) << "--   twopf k-configuration evictions    = " << format_time(this->twopf_kconfig_cache.get_eviction_timer());
+        BOOST_LOG_SEV(this->log_source, log_severity_level::normal) << "--   threepf k-configuration evictions  = " << format_time(this->threepf_kconfig_cache.get_eviction_timer());
+		    BOOST_LOG_SEV(this->log_source, log_severity_level::normal) << "--   statistics cache evictions         = " << format_time(this->statistics_cache.get_eviction_timer());
+        BOOST_LOG_SEV(this->log_source, log_severity_level::normal) << "--   data evictions                     = " << format_time(this->data_cache.get_eviction_timer());
 
         // detach any attached output group, if necessary
 		    switch(this->type)
 			    {
-		        case integration_attached:
+		        case attachment_type::integration_attached:
 			        if(this->attached_integration_group.get() != nullptr) this->detach();
 				      break;
 
-		        case postintegration_attached:
+            case attachment_type::postintegration_attached:
 			        if(this->attached_postintegration_group.get() != nullptr) this->detach();
 				      break;
 
-		        case none_attached:
-		        default:
+		        case attachment_type::none_attached:
 			        break;
 			    }
 
@@ -724,7 +722,7 @@ namespace transport
     template <typename number>
     bool datapipe<number>::validate_unattached(void) const
 	    {
-		    if(this->type != none_attached) return(false);
+		    if(this->type != attachment_type::none_attached) return(false);
 
 		    if(this->attached_integration_group.get() != nullptr
 			       || this->attached_postintegration_group.get() != nullptr) return(false);
@@ -744,14 +742,14 @@ namespace transport
 	    {
 		    switch(this->type)
 			    {
-		        case none_attached:
+		        case attachment_type::none_attached:
 			        return(false);
 
-		        case integration_attached:
+		        case attachment_type::integration_attached:
 			        if(this->attached_integration_group.get() == nullptr) return(false);
 				      break;
 
-		        case postintegration_attached:
+            case attachment_type::postintegration_attached:
 			        if(this->attached_postintegration_group.get() == nullptr) return(false);
 				      break;
 			    }
@@ -769,7 +767,7 @@ namespace transport
 		template <typename number>
 		bool datapipe<number>::validate_attached(attachment_type t) const
 			{
-				if(this->type != t) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_WRONG_CONTENT);
+				if(this->type != t) throw runtime_exception(exception_type::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_WRONG_CONTENT);
 				return(this->validate_attached());
 			}
 
@@ -778,10 +776,10 @@ namespace transport
     std::string datapipe<number>::attach(derivable_task<number>* tk, const std::list<std::string>& tags)
 	    {
         assert(this->validate_unattached());
-        if(!this->validate_unattached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_ATTACH_PIPE_ALREADY_ATTACHED);
+        if(!this->validate_unattached()) throw runtime_exception(exception_type::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_ATTACH_PIPE_ALREADY_ATTACHED);
 
         assert(tk != nullptr);
-        if(tk == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NULL_TASK);
+        if(tk == nullptr) throw runtime_exception(exception_type::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NULL_TASK);
 
         // work out what sort of content group we are trying to attach
         integration_task<number>* itk     = nullptr;
@@ -789,7 +787,7 @@ namespace transport
 
         if((itk = dynamic_cast< integration_task<number>* >(tk)) != nullptr)    // trying to attach to an integration content group
 	        {
-            this->type                       = integration_attached;
+            this->type                       = attachment_type::integration_attached;
             this->attached_integration_group = this->utilities.integration_attach(this, this->utilities.integration_finder, tk->get_name(), tags);
 
             // remember number of fields associated with this container
@@ -798,14 +796,14 @@ namespace transport
             integration_payload& payload = this->attached_integration_group->get_payload();
             this->attach_cache_tables(payload);
 
-            BOOST_LOG_SEV(this->get_log(), normal) << "** ATTACH integration content group " << boost::posix_time::to_simple_string(this->attached_integration_group->get_creation_time())
+            BOOST_LOG_SEV(this->get_log(), log_severity_level::normal) << "** ATTACH integration content group " << boost::posix_time::to_simple_string(this->attached_integration_group->get_creation_time())
 		            << " (from integration task '" << tk->get_name() << "')";
 
             return(this->attached_integration_group->get_name());
 	        }
         else if((ptk = dynamic_cast< postintegration_task<number>* >(tk)) != nullptr)      // trying to attach to a postintegration content group
 	        {
-            this->type                           = postintegration_attached;
+            this->type                           = attachment_type::postintegration_attached;
             this->attached_postintegration_group = this->utilities.postintegration_attach(this, this->utilities.postintegration_finder, tk->get_name(), tags);
 
             this->N_fields = 0;
@@ -813,7 +811,7 @@ namespace transport
             postintegration_payload& payload = this->attached_postintegration_group->get_payload();
             this->attach_cache_tables(payload);
 
-            BOOST_LOG_SEV(this->get_log(), normal) << "** ATTACH postintegration content group " << boost::posix_time::to_simple_string(this->attached_postintegration_group->get_creation_time())
+            BOOST_LOG_SEV(this->get_log(), log_severity_level::normal) << "** ATTACH postintegration content group " << boost::posix_time::to_simple_string(this->attached_postintegration_group->get_creation_time())
 		            << " (from postintegration task '" << tk->get_name() << "')";
 
             return(this->attached_postintegration_group->get_name());
@@ -821,7 +819,7 @@ namespace transport
 
         std::stringstream msg;
         msg << CPPTRANSPORT_DATAMGR_UNKNOWN_DERIVABLE_TASK << " '" << tk->get_name() << "'";
-        throw runtime_exception(runtime_exception::DATAPIPE_ERROR, msg.str());
+        throw runtime_exception(exception_type::DATAPIPE_ERROR, msg.str());
 	    }
 
 
@@ -843,28 +841,28 @@ namespace transport
     void datapipe<number>::detach(void)
 	    {
         assert(this->validate_attached());
-        if(!this->validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_DETACH_PIPE_NOT_ATTACHED);
+        if(!this->validate_attached()) throw runtime_exception(exception_type::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_DETACH_PIPE_NOT_ATTACHED);
 
         this->utilities.detach(this);
 
 		    switch(this->type)
 			    {
-		        case integration_attached:
-			        BOOST_LOG_SEV(this->get_log(), datapipe<number>::normal) << "** DETACH output group " << boost::posix_time::to_simple_string(this->attached_integration_group->get_creation_time());
+		        case attachment_type::integration_attached:
+			        BOOST_LOG_SEV(this->get_log(), datapipe<number>::log_severity_level::normal) << "** DETACH output group " << boost::posix_time::to_simple_string(this->attached_integration_group->get_creation_time());
 				      break;
 
-		        case postintegration_attached:
-			        BOOST_LOG_SEV(this->get_log(), datapipe<number>::normal) << "** DETACH output group " << boost::posix_time::to_simple_string(this->attached_postintegration_group->get_creation_time());
+            case attachment_type::postintegration_attached:
+			        BOOST_LOG_SEV(this->get_log(), datapipe<number>::log_severity_level::normal) << "** DETACH output group " << boost::posix_time::to_simple_string(this->attached_postintegration_group->get_creation_time());
 				      break;
 
-		        default:
-			        break;
-			    }
+            case attachment_type::none_attached:
+              break;
+          }
 
         this->attached_integration_group.reset();
         this->attached_postintegration_group.reset();
 
-		    this->type = none_attached;
+		    this->type = attachment_type::none_attached;
 
         this->time_config_cache_table     = nullptr;
         this->twopf_kconfig_cache_table   = nullptr;
@@ -893,7 +891,7 @@ namespace transport
     typename datapipe<number>::time_config_handle& datapipe<number>::new_time_config_handle(const derived_data::SQL_time_config_query& query) const
 	    {
         assert(this->validate_attached());
-        if(!this->validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+        if(!this->validate_attached()) throw runtime_exception(exception_type::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
         return(this->time_config_cache_table->get_serial_handle(query));
 	    }
@@ -903,7 +901,7 @@ namespace transport
     typename datapipe<number>::twopf_kconfig_handle& datapipe<number>::new_twopf_kconfig_handle(const derived_data::SQL_twopf_kconfig_query& query) const
 	    {
         assert(this->validate_attached());
-        if(!this->validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+        if(!this->validate_attached()) throw runtime_exception(exception_type::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
         return(this->twopf_kconfig_cache_table->get_serial_handle(query));
 	    }
@@ -913,7 +911,7 @@ namespace transport
     typename datapipe<number>::threepf_kconfig_handle& datapipe<number>::new_threepf_kconfig_handle(const derived_data::SQL_threepf_kconfig_query& query) const
 	    {
         assert(this->validate_attached());
-        if(!this->validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+        if(!this->validate_attached()) throw runtime_exception(exception_type::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
         return(this->threepf_kconfig_cache_table->get_serial_handle(query));
 	    }
@@ -923,7 +921,7 @@ namespace transport
 		typename datapipe<number>::k_statistics_handle& datapipe<number>::new_k_statistics_handle(const derived_data::SQL_query& query) const
 			{
 		    assert(this->validate_attached());
-		    if(!this->validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+		    if(!this->validate_attached()) throw runtime_exception(exception_type::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
 		    return(this->statistics_cache_table->get_serial_handle(query));
 			}
@@ -933,7 +931,7 @@ namespace transport
     typename datapipe<number>::time_data_handle& datapipe<number>::new_time_data_handle(const derived_data::SQL_time_config_query& query) const
 	    {
         assert(this->validate_attached());
-        if(!this->validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+        if(!this->validate_attached()) throw runtime_exception(exception_type::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
         return(this->data_cache_table->get_serial_handle(query));
 	    }
@@ -943,7 +941,7 @@ namespace transport
     typename datapipe<number>::kconfig_data_handle& datapipe<number>::new_kconfig_data_handle(const derived_data::SQL_twopf_kconfig_query& query) const
 	    {
         assert(this->validate_attached());
-        if(!this->validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+        if(!this->validate_attached()) throw runtime_exception(exception_type::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
         return(this->data_cache_table->get_serial_handle(query));
 	    }
@@ -953,7 +951,7 @@ namespace transport
     typename datapipe<number>::kconfig_data_handle& datapipe<number>::new_kconfig_data_handle(const derived_data::SQL_threepf_kconfig_query& query) const
 	    {
         assert(this->validate_attached());
-        if(!this->validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+        if(!this->validate_attached()) throw runtime_exception(exception_type::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
         return(this->data_cache_table->get_serial_handle(query));
 	    }
@@ -963,7 +961,7 @@ namespace transport
     typename datapipe<number>::time_zeta_handle& datapipe<number>::new_time_zeta_handle(const derived_data::SQL_time_config_query& query) const
 	    {
         assert(this->validate_attached());
-        if(!this->validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+        if(!this->validate_attached()) throw runtime_exception(exception_type::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
         return(this->data_cache_table->get_serial_handle(query));
 	    }
@@ -973,7 +971,7 @@ namespace transport
     typename datapipe<number>::kconfig_zeta_handle& datapipe<number>::new_kconfig_zeta_handle(const derived_data::SQL_twopf_kconfig_query& query) const
 	    {
         assert(this->validate_attached());
-        if(!this->validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+        if(!this->validate_attached()) throw runtime_exception(exception_type::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
         return(this->data_cache_table->get_serial_handle(query));
 	    }
@@ -983,7 +981,7 @@ namespace transport
     typename datapipe<number>::kconfig_zeta_handle& datapipe<number>::new_kconfig_zeta_handle(const derived_data::SQL_threepf_kconfig_query& query) const
 	    {
         assert(this->validate_attached());
-        if(!this->validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+        if(!this->validate_attached()) throw runtime_exception(exception_type::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
         return(this->data_cache_table->get_serial_handle(query));
 	    }
@@ -1025,14 +1023,14 @@ namespace transport
 
 
     template <typename number>
-    cf_time_data_tag<number> datapipe<number>::new_cf_time_data_tag(typename data_tag<number>::cf_data_type type, unsigned int id, unsigned int kserial)
+    cf_time_data_tag<number> datapipe<number>::new_cf_time_data_tag(cf_data_type type, unsigned int id, unsigned int kserial)
 	    {
         return cf_time_data_tag<number>(this, type, id, kserial);
 	    }
 
 
     template <typename number>
-    cf_kconfig_data_tag<number> datapipe<number>::new_cf_kconfig_data_tag(typename data_tag<number>::cf_data_type type, unsigned int id, unsigned int tserial)
+    cf_kconfig_data_tag<number> datapipe<number>::new_cf_kconfig_data_tag(cf_data_type type, unsigned int id, unsigned int tserial)
 	    {
         return cf_kconfig_data_tag<number>(this, type, id, tserial);
 	    }

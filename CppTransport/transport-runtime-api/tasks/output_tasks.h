@@ -278,7 +278,7 @@ namespace transport
                 std::ostringstream msg;
                 msg << CPPTRANSPORT_OUTPUT_TASK_FILENAME_COLLISION_A << " " << prod.get_filename() << " "
 	                << CPPTRANSPORT_OUTPUT_TASK_FILENAME_COLLISION_B << " '" << this->name << "'";
-                throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
+                throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
 	            }
 
             if(t->get_product_name() == prod.get_name())
@@ -286,7 +286,7 @@ namespace transport
                 std::ostringstream msg;
                 msg << CPPTRANSPORT_OUTPUT_TASK_NAME_COLLISION_A << " " << prod.get_name() << " "
 	                << CPPTRANSPORT_OUTPUT_TASK_NAME_COLLISION_B << " '" << this->name << "'";
-                throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
+                throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
 	            }
 	        }
 
@@ -298,7 +298,7 @@ namespace transport
     const output_task_element<number>& output_task<number>::get(unsigned int i) const
 	    {
         if(i >= this->elements.size())
-	        throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_OUTPUT_TASK_RANGE);
+	        throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_OUTPUT_TASK_RANGE);
 
         return(this->elements[i]);
 	    }

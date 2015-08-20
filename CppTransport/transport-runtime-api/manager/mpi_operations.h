@@ -102,7 +102,7 @@ namespace transport
 
 		          public:
 
-			          typedef enum { cpu, gpu } worker_type;
+			          enum class worker_type { cpu, gpu };
 
 		          public:
 
@@ -501,7 +501,7 @@ namespace transport
 
               public:
 
-                typedef enum { twopf_payload, threepf_payload } payload_type;
+                enum class payload_type { twopf_payload, threepf_payload };
 
                 //! Default constructor (used for receiving messages)
                 content_ready_payload() = default;

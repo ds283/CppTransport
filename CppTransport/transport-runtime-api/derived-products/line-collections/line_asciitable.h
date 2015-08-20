@@ -59,7 +59,7 @@ namespace transport
 							    {
 						        std::ostringstream msg;
 								    msg << CPPTRANSPORT_PRODUCT_LINE_ASCIITABLE_UNSUPPORTED_FORMAT << " " << filename.extension();
-								    throw runtime_exception(runtime_exception::DERIVED_PRODUCT_ERROR, msg.str());
+								    throw runtime_exception(exception_type::DERIVED_PRODUCT_ERROR, msg.str());
 							    }
 					    }
 
@@ -247,7 +247,7 @@ namespace transport
 							{
 						    std::ostringstream msg;
 								msg << CPPTRANSPORT_DERIVED_PRODUCT_FAILED << " " << table_file;
-								throw runtime_exception(runtime_exception::DERIVED_PRODUCT_ERROR, msg.str());
+								throw runtime_exception(exception_type::DERIVED_PRODUCT_ERROR, msg.str());
 							}
 					}
 

@@ -110,9 +110,9 @@ int main(int argc, char* argv[])
     transport::threepf_cubic_task<double> tk3("quadratic10.threepf-1", ics, times, ks, TimeStoragePolicy(), ThreepfStoragePolicy());
     transport::zeta_threepf_task<double> zeta_tk3("quadratic10.threepf-1.zeta", tk3, true);
 
-    transport::fNL_task<double> zeta_tk3_fNL_local("quadratic10.threepf-1.fNL_local", tk3, transport::derived_data::fNL_local_template, true);
-    transport::fNL_task<double> zeta_tk3_fNL_equi("quadratic10.threepf-1.fNL_equi", tk3, transport::derived_data::fNL_equi_template, true);
-    transport::fNL_task<double> zeta_tk3_fNL_ortho("quadratic10.threepf-1.fNL_ortho", tk3, transport::derived_data::fNL_ortho_template, true);
+    transport::fNL_task<double> zeta_tk3_fNL_local("quadratic10.threepf-1.fNL_local", tk3, transport::derived_data::template_type::fNL_local_template, true);
+    transport::fNL_task<double> zeta_tk3_fNL_equi("quadratic10.threepf-1.fNL_equi", tk3, transport::derived_data::template_type::fNL_equi_template, true);
+    transport::fNL_task<double> zeta_tk3_fNL_ortho("quadratic10.threepf-1.fNL_ortho", tk3, transport::derived_data::template_type::fNL_ortho_template, true);
 
 		// construct some derived data products; first, simply plots of the background
 
@@ -129,7 +129,7 @@ int main(int argc, char* argv[])
     transport::derived_data::time_series_plot<double> tk3_bg_plot("quadratic10.threepf-1.background", "background.pdf");
 		tk3_bg_plot.add_line(tk3_bg);
     tk3_bg_plot.set_title_text("Background fields");
-		tk3_bg_plot.set_legend_position(transport::derived_data::bottom_left);
+		tk3_bg_plot.set_legend_position(transport::derived_data::legend_pos::bottom_left);
 
     transport::derived_data::zeta_twopf_time_series<double> tk3_zeta_times(tk3,
                                                                                                                                      transport::derived_data::filter::time_filter(timeseries_filter),
@@ -138,7 +138,7 @@ int main(int argc, char* argv[])
     transport::derived_data::time_series_plot<double> tk3_zeta_timeplot("quadratic10.threepf-1.zeta-twopf", "zeta-twopf.pdf");
 		tk3_zeta_timeplot.add_line(tk3_zeta_times);
 		tk3_zeta_timeplot.set_title_text("$\\langle \\zeta \\zeta \\rangle$ time evolution");
-		tk3_zeta_timeplot.set_legend_position(transport::derived_data::bottom_right);
+		tk3_zeta_timeplot.set_legend_position(transport::derived_data::legend_pos::bottom_right);
 
     transport::derived_data::zeta_twopf_wavenumber_series<double> tk3_zeta_spec(tk3,
                                                                                                                                                 transport::derived_data::filter::time_filter(spectrum_timefilter),
@@ -157,11 +157,11 @@ int main(int argc, char* argv[])
 		tk3_r_specplot.set_title_text("Tensor-to-scalar ratio");
 
     transport::derived_data::fNL_time_series<double> fNL_local_line(tk3, transport::derived_data::filter::time_filter(timeseries_filter));
-    fNL_local_line.set_type(transport::derived_data::fNL_local_template);
+    fNL_local_line.set_type(transport::derived_data::template_type::fNL_local_template);
     transport::derived_data::fNL_time_series<double> fNL_ortho_line(tk3, transport::derived_data::filter::time_filter(timeseries_filter));
-    fNL_ortho_line.set_type(transport::derived_data::fNL_ortho_template);
+    fNL_ortho_line.set_type(transport::derived_data::template_type::fNL_ortho_template);
     transport::derived_data::fNL_time_series<double> fNL_equi_line(tk3, transport::derived_data::filter::time_filter(timeseries_filter));
-    fNL_equi_line.set_type(transport::derived_data::fNL_equi_template);
+    fNL_equi_line.set_type(transport::derived_data::template_type::fNL_equi_template);
 
     transport::derived_data::time_series_plot<double> fNL_plot("quadratic10.threepf-1.fNL", "fNLs.pdf");
     fNL_plot.add_line(fNL_local_line);
