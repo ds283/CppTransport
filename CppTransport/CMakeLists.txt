@@ -244,8 +244,6 @@ target_link_libraries(chris-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SP
 ## FILL IN DUMMY TARGETS FOR CLION
 
 set(EXAMPLES_DQUAD_MPI_FILES
-  examples/dquad-mpi/defaults.model
-  examples/dquad-mpi/dq.model
   examples/dquad-mpi/main.cpp
   examples/dquad-mpi/makerepo.cpp
   examples/dquad-mpi/makerepo2.cpp
@@ -271,10 +269,8 @@ set(PARSER_FILES
 )
 
 set(EXAMPLES_NEW_AXION_FILES
-  examples/new-axion/defaults.model
   examples/new-axion/main.cpp
   examples/new-axion/makerepo2.cpp
-  examples/new-axion/new-axion.model
 )
 
 set(TOP_LEVEL_FILES
@@ -300,7 +296,8 @@ set(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_FILES
   transport-runtime-api/derived-products/derived_product.h
   transport-runtime-api/derived-products/derived_product_forward_declare.h
   transport-runtime-api/derived-products/derived_product_helper.h
-  transport-runtime-api/derived-products/enumerations.h)
+  transport-runtime-api/derived-products/enumerations.h
+)
 
 set(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_SQL_QUERY_FILES
   transport-runtime-api/derived-products/derived-content/SQL_query/SQL_policy.h
@@ -310,7 +307,6 @@ set(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_SQL_QUERY_FILES
 
 set(EXAMPLES_RCHI_FILES
   examples/rchi/main.cpp
-  examples/rchi/rchi.model
 )
 
 set(BACKENDS_SHARED_FILES
@@ -337,6 +333,9 @@ set(TEMPLATES_VEXCL_CUDA_FILES
 )
 
 set(EXAMPLES_OSCILLATORY_FILES
+  examples/oscillatory/main.cpp
+  examples/oscillatory/makerepo.cpp
+  examples/oscillatory/makerepo2.cpp
 )
 
 set(BACKENDS_INFRASTRUCTURE_MACRO_SUBSTITUTION_FILES
@@ -358,8 +357,6 @@ set(PARSER_BISON_FILES
 )
 
 set(EXAMPLES_CHRIS_MPI_FILES
-  examples/chris-mpi/chris.model
-  examples/chris-mpi/defaults.model
   examples/chris-mpi/main.cpp
   examples/chris-mpi/makerepo2.cpp
   examples/chris-mpi/makerepo3.cpp
@@ -370,8 +367,6 @@ set(TRANSPORT_RUNTIME_API_DATA_FILES
 )
 
 set(EXAMPLES_MAFALDA40_FILES
-  examples/mafalda40/defaults.model
-  examples/mafalda40/mafalda40.model
   examples/mafalda40/main.cpp
   examples/mafalda40/makerepo.cpp
 )
@@ -445,17 +440,13 @@ set(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_UTILITIES_FILES
 )
 
 set(EXAMPLES_HEAVY_HILLTOP_FILES
-  examples/heavy-hilltop/defaults.model
-  examples/heavy-hilltop/heavy_hilltop.model
   examples/heavy-hilltop/main.cpp
   examples/heavy-hilltop/makerepo2.cpp
 )
 
 set(EXAMPLES_QUADRATIC_FILES
-  examples/quadratic/defaults.model
   examples/quadratic/main.cpp
   examples/quadratic/makerepo.cpp
-  examples/quadratic/quad.model
 )
 
 set(TRANSPORT_RUNTIME_API_LOCALIZATIONS_FILES
@@ -565,15 +556,10 @@ set(TRANSPORT_RUNTIME_API_CONCEPTS_FILES
 )
 
 set(EXAMPLES_DQUAD_VEXCL_FILES
-  examples/dquad-vexcl/cuda.model
-  examples/dquad-vexcl/defaults.model
-  examples/dquad-vexcl/dq.model
-  examples/dquad-vexcl/dq_core.h
   examples/dquad-vexcl/dq_vexcl-cuda.h
   examples/dquad-vexcl/dq_vexcl-opencl.h
   examples/dquad-vexcl/main.cpp
   examples/dquad-vexcl/makerepo.cpp
-  examples/dquad-vexcl/opencl.model
 )
 
 set(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_BACKGROUND_QUANTITES_FILES
@@ -609,10 +595,8 @@ set(TRANSPORT_RUNTIME_API_SCHEDULER_FILES
 )
 
 set(EXAMPLES_QSFI_FILES
-  examples/qsfi/defaults.model
   examples/qsfi/main.cpp
   examples/qsfi/makerepo2.cpp
-  examples/qsfi/qsfi.model
 )
 
 set(TRANSPORT_RUNTIME_API_TASKS_INTEGRATION_DETAIL_FILES
@@ -635,8 +619,6 @@ set(TRANSPORT_RUNTIME_API_DATA_BATCHERS_FILES
 )
 
 set(EXAMPLES_AXION_MPI_FILES
-  examples/axion-mpi/axion.model
-  examples/axion-mpi/defaults.model
   examples/axion-mpi/main.cpp
   examples/axion-mpi/makerepo.cpp
   examples/axion-mpi/makerepo2.cpp
@@ -703,18 +685,12 @@ set(BACKENDS_LANGUAGES_CPP_CORE_FILES
 )
 
 set(EXAMPLES_POWERLAW_FILES
-  examples/powerlaw/defaults.model
   examples/powerlaw/main.cpp
   examples/powerlaw/makerepo2.cpp
-  examples/powerlaw/powerlaw.model
 )
 
 set(TEMPLATES_FILES
-  templates/canonical_basic.h
-  templates/canonical_basic_loop.h
   templates/canonical_basic_twopf.h
-  templates/canonical_basic_unrolled.h
-  templates/canonical_core.h
   templates/canonical_core_twopf.h
 )
 
@@ -750,8 +726,6 @@ set(BACKENDS_INFRASTRUCTURE_FILE_HANDLING_FILES
 )
 
 set(EXAMPLES_INFLECTION_FILES
-  examples/inflection/defaults.model
-  examples/inflection/inflection.model
   examples/inflection/main.cpp
   examples/inflection/makerepo2.cpp
 )
@@ -803,11 +777,12 @@ set(BACKENDS_LANGUAGES_CPP_VEXCL_FILES
 )
 
 set(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_CORRELATION_FUNCTIONS_COMPUTE_GADGETS_FILES
+  transport-runtime-api/derived-products/derived-content/correlation-functions/compute-gadgets/common.h
   transport-runtime-api/derived-products/derived-content/correlation-functions/compute-gadgets/fNL_timeseries_compute.h
   transport-runtime-api/derived-products/derived-content/correlation-functions/compute-gadgets/threepf_kconfig_shift.h
   transport-runtime-api/derived-products/derived-content/correlation-functions/compute-gadgets/threepf_time_shift.h
   transport-runtime-api/derived-products/derived-content/correlation-functions/compute-gadgets/zeta_timeseries_compute.h
-  transport-runtime-api/derived-products/derived-content/correlation-functions/compute-gadgets/common.h)
+)
 
 set(TRANSPORT_RUNTIME_API_REPOSITORY_WRITERS_FILES
   transport-runtime-api/repository/writers/derived_content_writer.h
@@ -852,17 +827,16 @@ set(TRANSPORT_RUNTIME_API_FILES
   transport-runtime-api/ansi_colour_codes.h
   transport-runtime-api/default_symbols.h
   transport-runtime-api/defaults.h
+  transport-runtime-api/enumerations.h
   transport-runtime-api/exceptions.h
   transport-runtime-api/messages.h
   transport-runtime-api/transport.h
   transport-runtime-api/version.h
-  transport-runtime-api/enumerations.h)
+)
 
 set(EXAMPLES_QUADRATIC10_FILES
-  examples/quadratic10/defaults.model
   examples/quadratic10/main.cpp
   examples/quadratic10/makerepo.cpp
-  examples/quadratic10/quadratic10.model
 )
 
 set(SOURCE_FILES
