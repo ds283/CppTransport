@@ -15,6 +15,8 @@
 #include "transport-runtime-api/tasks/integration_tasks.h"
 #include "transport-runtime-api/tasks/task_configurations.h"
 
+#include "transport-runtime-api/derived-products/derived-content/correlation-functions/compute-gadgets/common.h"
+
 
 namespace transport
   {
@@ -22,10 +24,6 @@ namespace transport
     template <typename number>
     class zeta_compute
       {
-
-      public:
-
-        typedef enum { left, middle, right } operator_position;
 
         // CONSTRUCTOR, DESTRUCTOR
 
@@ -72,7 +70,7 @@ namespace transport
                              const std::vector<number>& p_re, const std::vector<number>& p_im,
                              const std::vector<number>& q_re, const std::vector<number>& q_im,
                              const std::vector<number>& r_re, const std::vector<number>& r_im,
-                             const std::vector<number>& bg, operator_position pos);
+                             const std::vector<number>& bg, derived_data::derived_data_impl::operator_position pos);
 
 
         // INTERNAL DATA
@@ -214,11 +212,11 @@ namespace transport
                                      number value)
       {
         if(this->mdl->is_momentum(l)) value += this->compute_shift(t, l, m, n, kconfig.k1_comoving, kconfig.k2_comoving, kconfig.k3_comoving,
-                                                                   k1_re, k1_im, k2_re, k2_im, k3_re, k3_im, bg, left);
+                                                                   k1_re, k1_im, k2_re, k2_im, k3_re, k3_im, bg, derived_data::derived_data_impl::operator_position::left_pos);
         if(this->mdl->is_momentum(m)) value += this->compute_shift(t, m, l, n, kconfig.k2_comoving, kconfig.k1_comoving, kconfig.k3_comoving,
-                                                                   k2_re, k2_im, k1_re, k1_im, k3_re, k3_im, bg, middle);
+                                                                   k2_re, k2_im, k1_re, k1_im, k3_re, k3_im, bg, derived_data::derived_data_impl::operator_position::middle_pos);
         if(this->mdl->is_momentum(n)) value += this->compute_shift(t, n, l, m, kconfig.k3_comoving, kconfig.k1_comoving, kconfig.k2_comoving,
-                                                                   k3_re, k3_im, k1_re, k1_im, k2_re, k2_im, bg, middle);
+                                                                   k3_re, k3_im, k1_re, k1_im, k2_re, k2_im, bg, derived_data::derived_data_impl::operator_position::middle_pos);
       }
 
 
@@ -228,7 +226,7 @@ namespace transport
                                                const std::vector<number>& p_re, const std::vector<number>& p_im,
                                                const std::vector<number>& q_re, const std::vector<number>& q_im,
                                                const std::vector<number>& r_re, const std::vector<number>& r_im,
-                                               const std::vector<number>& bg, operator_position pos)
+                                               const std::vector<number>& bg, derived_data::derived_data_impl::operator_position pos)
       {
         this->mdl->B(this->parent_task, bg, q_comoving, r_comoving, p_comoving, t, this->B_qrp);
         this->mdl->C(this->parent_task, bg, p_comoving, q_comoving, r_comoving, t, this->C_pqr);
@@ -237,44 +235,39 @@ namespace transport
         number shift = 0.0;
         unsigned int p_species = this->mdl->species(p);
 
-        typedef enum { first_index, second_index } fixed_index;
-
         // we need to know which index on each twopf is fixed, and which is summed over
-        fixed_index q_fixed = first_index;
-        fixed_index r_fixed = first_index;
+        derived_data::derived_data_impl::fixed_index q_fixed = derived_data::derived_data_impl::fixed_index::first_index;
+        derived_data::derived_data_impl::fixed_index r_fixed = derived_data::derived_data_impl::fixed_index::first_index;
 
         switch(pos)
           {
-            case left:    // our operator is on the far left-hand side, so is to the left of both the q and r operators
-              q_fixed = second_index;
-              r_fixed = second_index;
+            case derived_data::derived_data_impl::operator_position::left_pos:    // our operator is on the far left-hand side, so is to the left of both the q and r operators
+              q_fixed = derived_data::derived_data_impl::fixed_index::second_index;
+              r_fixed = derived_data::derived_data_impl::fixed_index::second_index;
               break;
 
-            case middle:  // our operator is in the middle, to the right of the q operator but to the left of the r operator
-              q_fixed = first_index;
-              r_fixed = second_index;
+            case derived_data::derived_data_impl::operator_position::middle_pos:  // our operator is in the middle, to the right of the q operator but to the left of the r operator
+              q_fixed = derived_data::derived_data_impl::fixed_index::first_index;
+              r_fixed = derived_data::derived_data_impl::fixed_index::second_index;
               break;
 
-            case right:   // our operator is on the right, to the right of both the q and r operators
-              q_fixed = first_index;
-              r_fixed = first_index;
+            case derived_data::derived_data_impl::operator_position::right_pos:   // our operator is on the right, to the right of both the q and r operators
+              q_fixed = derived_data::derived_data_impl::fixed_index::first_index;
+              r_fixed = derived_data::derived_data_impl::fixed_index::first_index;
               break;
-
-            default:
-              assert(false);
           }
 
         for(unsigned int m = 0; m < this->Nfields; ++m)
           {
             for(unsigned int n = 0; n < this->Nfields; ++n)
               {
-                unsigned int q_m_id = this->mdl->flatten((q_fixed == first_index ? q : m), (q_fixed == second_index ? q : m));
-                unsigned int q_n_id = this->mdl->flatten((q_fixed == first_index ? q : n), (q_fixed == second_index ? q : n));
+                unsigned int q_m_id = this->mdl->flatten((q_fixed == derived_data::derived_data_impl::fixed_index::first_index ? q : m), (q_fixed == derived_data::derived_data_impl::fixed_index::second_index ? q : m));
+                unsigned int q_n_id = this->mdl->flatten((q_fixed == derived_data::derived_data_impl::fixed_index::first_index ? q : n), (q_fixed == derived_data::derived_data_impl::fixed_index::second_index ? q : n));
 
-                unsigned int r_n_id = this->mdl->flatten((r_fixed == first_index ? r : n), (r_fixed == second_index ? r : n));
+                unsigned int r_n_id = this->mdl->flatten((r_fixed == derived_data::derived_data_impl::fixed_index::first_index ? r : n), (r_fixed == derived_data::derived_data_impl::fixed_index::second_index ? r : n));
 
-                unsigned int mom_q_m_id = this->mdl->flatten((q_fixed == first_index ? this->mdl->momentum(q) : m), (q_fixed == second_index ? this->mdl->momentum(q) : m));
-                unsigned int mom_r_m_id = this->mdl->flatten((r_fixed == first_index ? this->mdl->momentum(r) : m), (r_fixed == second_index ? this->mdl->momentum(r) : m));
+                unsigned int mom_q_m_id = this->mdl->flatten((q_fixed == derived_data::derived_data_impl::fixed_index::first_index ? this->mdl->momentum(q) : m), (q_fixed == derived_data::derived_data_impl::fixed_index::second_index ? this->mdl->momentum(q) : m));
+                unsigned int mom_r_m_id = this->mdl->flatten((r_fixed == derived_data::derived_data_impl::fixed_index::first_index ? this->mdl->momentum(r) : m), (r_fixed == derived_data::derived_data_impl::fixed_index::second_index ? this->mdl->momentum(r) : m));
 
                 shift -= this->B_qrp[this->mdl->fields_flatten(m,n,p_species)] * ( q_re[q_m_id]*r_re[r_n_id] - q_im[q_m_id]*r_im[r_n_id] );
 

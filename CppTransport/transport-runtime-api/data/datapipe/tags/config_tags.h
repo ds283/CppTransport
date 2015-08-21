@@ -57,7 +57,7 @@ namespace transport
         void pull(std::shared_ptr<derived_data::SQL_time_config_query>& query, std::vector<time_config>& data);
 
         //! emit a log item for this tag
-        void log(const std::string& log_item) const { BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::normal) << log_item; }
+        void log(const std::string& log_item) const { BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::log_severity_level::normal) << log_item; }
 
         //! identify this tag
         std::string name() const { return(std::string("time config")); }
@@ -117,7 +117,7 @@ namespace transport
         void pull(std::shared_ptr<derived_data::SQL_twopf_kconfig_query>& query, std::vector<twopf_kconfig>& data);
 
         //! emit a log item for this tag
-        void log(const std::string& log_item) const { BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::normal) << log_item; }
+        void log(const std::string& log_item) const { BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::log_severity_level::normal) << log_item; }
 
         //! identify this tag
         std::string name() const { return(std::string("twopf k-config")); }
@@ -177,7 +177,7 @@ namespace transport
         void pull(std::shared_ptr<derived_data::SQL_threepf_kconfig_query>& query, std::vector<threepf_kconfig>& data);
 
         //! emit a log item for this tag
-        void log(const std::string& log_item) const { BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::normal) << log_item; }
+        void log(const std::string& log_item) const { BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::log_severity_level::normal) << log_item; }
 
         //! identify this tag
         std::string name() const { return(std::string("threepf k-config")); }
@@ -219,10 +219,10 @@ namespace transport
         // time configuration data can be extracted from any container, so it doesn't matter what sort of group
         // we are attached to
         assert(this->pipe->validate_attached());
-        if(!this->pipe->validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+        if(!this->pipe->validate_attached()) throw runtime_exception(exception_type::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
 #ifdef CPPTRANSPORT_DEBUG_DATAPIPE
-		    BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::datapipe_pull) << "** PULL time sample request";
+		    BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::log_severity_level::datapipe_pull) << "** PULL time sample request";
 #endif
 
         this->pipe->database_timer.resume();
@@ -236,10 +236,10 @@ namespace transport
 	    {
         // TODO: should work out whether this content group can serve twopf configuration data?
         assert(this->pipe->validate_attached());
-        if(!this->pipe->validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+        if(!this->pipe->validate_attached()) throw runtime_exception(exception_type::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
 #ifdef CPPTRANSPORT_DEBUG_DATAPIPE
-		    BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::datapipe_pull) << "** PULL 2pf k-configuration sample request";
+		    BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::log_severity_level::datapipe_pull) << "** PULL 2pf k-configuration sample request";
 #endif
 
         this->pipe->database_timer.resume();
@@ -253,10 +253,10 @@ namespace transport
 	    {
         // TODO: should work out whether this content group can serve threepf configuration data?
         assert(this->pipe->validate_attached());
-        if(!this->pipe->validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+        if(!this->pipe->validate_attached()) throw runtime_exception(exception_type::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
 #ifdef CPPTRANSPORT_DEBUG_DATAPIPE
-		    BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::datapipe_pull) << "** PULL 3pf k-configuration sample request";
+		    BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::log_severity_level::datapipe_pull) << "** PULL 3pf k-configuration sample request";
 #endif
 
         this->pipe->database_timer.resume();

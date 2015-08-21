@@ -66,8 +66,8 @@ int main(int argc, char* argv[])
     const unsigned int early_t_samples = 200;
     const unsigned int late_t_samples  = 100;
 
-    transport::stepping_range<double> early_times(Ncross-Npre, Ncross+Nsplit, early_t_samples, transport::logarithmic_bottom_stepping);
-    transport::stepping_range<double> late_times(Ncross+Nsplit, Ncross+Nmax, late_t_samples, transport::linear_stepping);
+    transport::stepping_range<double> early_times(Ncross-Npre, Ncross+Nsplit, early_t_samples, transport::range_spacing_type::logarithmic_bottom_stepping);
+    transport::stepping_range<double> late_times(Ncross+Nsplit, Ncross+Nmax, late_t_samples, transport::range_spacing_type::linear_stepping);
     transport::aggregation_range<double> times(early_times, late_times);
 
     // the conventions for k-numbers are as follows:
@@ -96,16 +96,16 @@ int main(int argc, char* argv[])
 
     // SET UP TASKS
 
-    transport::stepping_range<double> kts   (ktmin, ktmax, k_samples, transport::linear_stepping);
-    transport::stepping_range<double> alphas(alphamin, alphamax, a_samples, transport::linear_stepping);
+    transport::stepping_range<double> kts   (ktmin, ktmax, k_samples, transport::range_spacing_type::linear_stepping);
+    transport::stepping_range<double> alphas(alphamin, alphamax, a_samples, transport::range_spacing_type::linear_stepping);
 
-//    transport::stepping_range<double> betas_lo(betamin, betamid, lo_b_samples, transport::linear_stepping);
-//    transport::stepping_range<double> betas_hi(betamid, betamax, hi_b_samples, transport::logarithmic_top_stepping);
+//    transport::stepping_range<double> betas_lo(betamin, betamid, lo_b_samples, transport::range_spacing_type::linear_stepping);
+//    transport::stepping_range<double> betas_hi(betamid, betamax, hi_b_samples, transport::range_spacing_type::logarithmic_top_stepping);
 //    transport::aggregation_range<double> betas(betas_lo, betas_hi);
-    transport::stepping_range<double> betas_equi(1.0/3.0, 1.0/3.0, 0, transport::linear_stepping);    // add dedicated equilateral configuration
-    transport::stepping_range<double> betas_lo(0.0, 0.9, 5, transport::linear_stepping);
-    transport::stepping_range<double> betas_mid(0.9, 0.99, 5, transport::logarithmic_top_stepping);
-    transport::stepping_range<double> betas_hi(0.99, 0.999, 5, transport::logarithmic_top_stepping);
+    transport::stepping_range<double> betas_equi(1.0/3.0, 1.0/3.0, 0, transport::range_spacing_type::linear_stepping);    // add dedicated equilateral configuration
+    transport::stepping_range<double> betas_lo(0.0, 0.9, 5, transport::range_spacing_type::linear_stepping);
+    transport::stepping_range<double> betas_mid(0.9, 0.99, 5, transport::range_spacing_type::logarithmic_top_stepping);
+    transport::stepping_range<double> betas_hi(0.99, 0.999, 5, transport::range_spacing_type::logarithmic_top_stepping);
     transport::aggregation_range<double> betas = betas_lo + betas_mid + betas_hi + betas_equi;
 
     // construct a threepf task
@@ -162,12 +162,12 @@ int main(int argc, char* argv[])
 		twopf_fields.set_on(std::array<unsigned int, 2>{ 1, 1 });
 
     transport::derived_data::twopf_time_series<double> tk3_twopf_group(tk3, twopf_fields, all_times, largest_twopf);
-    tk3_twopf_group.set_klabel_meaning(transport::derived_data::conventional);
+    tk3_twopf_group.set_klabel_meaning(transport::derived_data::klabel_type::conventional);
 
     transport::derived_data::time_series_plot<double> tk3_twopf_plot("powerlaw.threepf-1.twopf-time", "twopf-time.pdf");
     tk3_twopf_plot.add_line(tk3_twopf_group);
     tk3_twopf_plot.set_title_text("Time evolution of two-point function");
-    tk3_twopf_plot.set_legend_position(transport::derived_data::bottom_left);
+    tk3_twopf_plot.set_legend_position(transport::derived_data::legend_pos::bottom_left);
 
     transport::index_selector<3> threepf_fields(model->get_N_fields());
     threepf_fields.none();
@@ -179,18 +179,18 @@ int main(int argc, char* argv[])
 	  threepf_fields.set_on(std::array<unsigned int, 3>{ 1, 1, 1 });
 
     transport::derived_data::threepf_time_series<double> tk3_threepf_group(tk3, threepf_fields, all_times, equilateral_smallest_threepf);
-    tk3_twopf_group.set_klabel_meaning(transport::derived_data::conventional);
+    tk3_twopf_group.set_klabel_meaning(transport::derived_data::klabel_type::conventional);
 
     transport::derived_data::time_series_plot<double> tk3_threepf_plot("powerlaw.threepf-1.threepf-time", "threepf-time.pdf");
     tk3_threepf_plot.add_line(tk3_threepf_group);
     tk3_threepf_plot.set_title_text("Time evolution of three-point function");
-    tk3_threepf_plot.set_legend_position(transport::derived_data::bottom_left);
+    tk3_threepf_plot.set_legend_position(transport::derived_data::legend_pos::bottom_left);
 
 
 		// b. TIME EVOLUTION OF BACKGROUND QUANTITIES
 
 
-    transport::derived_data::background_line<double> tk3_epsilon(tk3, all_times, transport::derived_data::epsilon);
+    transport::derived_data::background_line<double> tk3_epsilon(tk3, all_times, transport::derived_data::background_quantity::epsilon);
     transport::derived_data::largest_u2_line<double> tk3_largest_u2(tk3, all_times, largest_twopf);
     transport::derived_data::largest_u3_line<double> tk3_largest_u3(tk3, all_times, equilateral_smallest_threepf);
 
@@ -201,8 +201,8 @@ int main(int argc, char* argv[])
     tk3_SR_objects_plot.set_log_y(true);
 
 
-    transport::derived_data::background_line<double> tk3_Hubble(tk3, all_times, transport::derived_data::Hubble);
-    transport::derived_data::background_line<double> tk3_aHubble(tk3, all_times, transport::derived_data::aHubble);
+    transport::derived_data::background_line<double> tk3_Hubble(tk3, all_times, transport::derived_data::background_quantity::Hubble);
+    transport::derived_data::background_line<double> tk3_aHubble(tk3, all_times, transport::derived_data::background_quantity::aHubble);
 
     transport::derived_data::time_series_plot<double> tk3_Hubble_plot("powerlaw.threepf-1.Hubble", "Hubble.pdf");
 		tk3_Hubble_plot.add_line(tk3_Hubble);
@@ -240,14 +240,14 @@ int main(int argc, char* argv[])
 
     tk3_zeta_twopf.add_line(tk3_zeta_twopf_group);
     tk3_zeta_twopf.set_title_text("$\\zeta$ two-point function");
-    tk3_zeta_twopf.set_legend_position(transport::derived_data::bottom_left);
+    tk3_zeta_twopf.set_legend_position(transport::derived_data::legend_pos::bottom_left);
 
 
     // 2. TIME EVOLUTION OF THE ZETA THREEPF
 
     // check the zeta threepf
     transport::derived_data::zeta_threepf_time_series<double> tk3_zeta_sq_group(ztk3, all_times, isosceles_squeezed_threepf);
-    tk3_zeta_sq_group.set_klabel_meaning(transport::derived_data::comoving);
+    tk3_zeta_sq_group.set_klabel_meaning(transport::derived_data::klabel_type::comoving);
     tk3_zeta_sq_group.set_use_beta_label(true);
 
     transport::derived_data::time_series_plot<double> tk3_zeta_sq("powerlaw.threepf-1.zeta-sq", "zeta-sq.pdf");
@@ -263,14 +263,14 @@ int main(int argc, char* argv[])
 
     // compute the reduced bispectrum in a few squeezed configurations
     transport::derived_data::zeta_reduced_bispectrum_time_series<double> tk3_zeta_redbsp(ztk3, all_times, isosceles_squeezed_threepf);
-    tk3_zeta_redbsp.set_klabel_meaning(transport::derived_data::comoving);
+    tk3_zeta_redbsp.set_klabel_meaning(transport::derived_data::klabel_type::comoving);
     tk3_zeta_redbsp.set_use_beta_label(true);
 
     transport::derived_data::time_series_plot<double> tk3_redbsp("powerlaw.threepf-1.redbsp-sq", "redbsp-sq.pdf");
     tk3_redbsp.set_log_y(false);
     tk3_redbsp.set_abs_y(false);
     tk3_redbsp.add_line(tk3_zeta_redbsp);
-    tk3_redbsp.set_legend_position(transport::derived_data::bottom_right);
+    tk3_redbsp.set_legend_position(transport::derived_data::legend_pos::bottom_right);
     tk3_redbsp.set_title_text("Reduced bispectrum near squeezed configurations");
 
     transport::derived_data::time_series_table<double> tk3_redbsp_table = transport::derived_data::time_series_table<double>("powerlaw.threepf-1.redbsp-sq.table", "redbsp-sq-table.txt");
@@ -280,7 +280,7 @@ int main(int argc, char* argv[])
     // 4. LATE-TIME ZETA TWO POINT FUNCTION
 
     transport::derived_data::zeta_twopf_wavenumber_series<double> tk3_zeta_2spec(ztk3, last_time, all_twopfs);
-    tk3_zeta_2spec.set_klabel_meaning(transport::derived_data::conventional);
+    tk3_zeta_2spec.set_klabel_meaning(transport::derived_data::klabel_type::conventional);
     tk3_zeta_2spec.set_dimensionless(true);
 
     transport::derived_data::wavenumber_series_plot<double> tk3_zeta_2spec_plot("powerlaw.threepf-1.zeta-2spec", "zeta-2spec.pdf");
@@ -296,7 +296,7 @@ int main(int argc, char* argv[])
     // 5. LATE-TIME ZETA REDUCED BISPECTRUM -- FIXED k3/k_t, ISOSCELES TRIANGLES, VARYING k_t
 
     transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_spec(ztk3, last_time, isosceles_squeezed_threepf);
-		tk3_zeta_redbsp_spec.set_klabel_meaning(transport::derived_data::conventional);
+		tk3_zeta_redbsp_spec.set_klabel_meaning(transport::derived_data::klabel_type::conventional);
 		tk3_zeta_redbsp_spec.set_label_text("$k_3/k_t = 0.999$", "k3/k_t = 0.999");
 
     transport::derived_data::wavenumber_series_plot<double> tk3_redbsp_spec_plot("powerlaw.threepf-1.redbsp-spec", "redbsp-spec.pdf");
@@ -316,12 +316,12 @@ int main(int argc, char* argv[])
     // x-axis is beta
 
     transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_beta_lo(ztk3, last_time, isosceles_lo_kt);
-    tk3_zeta_redbsp_beta_lo.set_klabel_meaning(transport::derived_data::conventional);
-    tk3_zeta_redbsp_beta_lo.set_current_x_axis_value(transport::derived_data::beta_axis);
+    tk3_zeta_redbsp_beta_lo.set_klabel_meaning(transport::derived_data::klabel_type::conventional);
+    tk3_zeta_redbsp_beta_lo.set_current_x_axis_value(transport::derived_data::axis_value::beta_axis);
 		tk3_zeta_redbsp_beta_lo.set_label_text("$k_t/k_\\star = \\mathrm{e}^3$", "k_t/k* = exp(3)");
     transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_beta_hi(ztk3, last_time, isosceles_hi_kt);
-    tk3_zeta_redbsp_beta_hi.set_klabel_meaning(transport::derived_data::conventional);
-    tk3_zeta_redbsp_beta_hi.set_current_x_axis_value(transport::derived_data::beta_axis);
+    tk3_zeta_redbsp_beta_hi.set_klabel_meaning(transport::derived_data::klabel_type::conventional);
+    tk3_zeta_redbsp_beta_hi.set_current_x_axis_value(transport::derived_data::axis_value::beta_axis);
 		tk3_zeta_redbsp_beta_hi.set_label_text("$k_t/k_\\star = \\mathrm{e}^7$", "k_t/k* = exp(7)");
 
     transport::derived_data::wavenumber_series_plot<double> tk3_redbsp_beta_plot("powerlaw.threepf-1.redbsp-beta", "redbsp-beta.pdf");
@@ -331,20 +331,20 @@ int main(int argc, char* argv[])
 		tk3_redbsp_beta_plot.set_title_text("Shape-dependence of reduced bispectrum on isosceles triangles at fixed $k_t$");
 		tk3_redbsp_beta_plot.set_log_y(false);
     tk3_redbsp_beta_plot.set_abs_y(false);
-		tk3_redbsp_beta_plot.set_legend_position(transport::derived_data::centre_left);
+		tk3_redbsp_beta_plot.set_legend_position(transport::derived_data::legend_pos::centre_left);
 
 
     // 7. LATE TIME ZETA REDUCED BISPECTRUM -- FIXED k_t, ISOSCELES TRIANGLES, VARYING k3/k_t (SAME AS 6)
     // x-axis is squeezing ratio k3/k_t
 
     transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_sqk3_lo(ztk3, last_time, isosceles_lo_kt);
-    tk3_zeta_redbsp_sqk3_lo.set_klabel_meaning(transport::derived_data::conventional);
-    tk3_zeta_redbsp_sqk3_lo.set_current_x_axis_value(transport::derived_data::squeezing_fraction_k3_axis);
+    tk3_zeta_redbsp_sqk3_lo.set_klabel_meaning(transport::derived_data::klabel_type::conventional);
+    tk3_zeta_redbsp_sqk3_lo.set_current_x_axis_value(transport::derived_data::axis_value::squeezing_fraction_k3_axis);
 		tk3_zeta_redbsp_sqk3_lo.set_label_text("$k_t/k_\\star = \\mathrm{e}^3$", "k_t/k* = exp(3)");
 
     transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_sqk3_hi(ztk3, last_time, isosceles_hi_kt);
-    tk3_zeta_redbsp_sqk3_hi.set_klabel_meaning(transport::derived_data::conventional);
-    tk3_zeta_redbsp_sqk3_hi.set_current_x_axis_value(transport::derived_data::squeezing_fraction_k3_axis);
+    tk3_zeta_redbsp_sqk3_hi.set_klabel_meaning(transport::derived_data::klabel_type::conventional);
+    tk3_zeta_redbsp_sqk3_hi.set_current_x_axis_value(transport::derived_data::axis_value::squeezing_fraction_k3_axis);
     tk3_zeta_redbsp_sqk3_hi.set_label_text("$k_t/k_\\star = \\mathrm{e}^7$", "k_t/k* = exp(7)");
 
     transport::derived_data::wavenumber_series_plot<double> tk3_redbsp_sqk3_plot("powerlaw.threepf-1.redbsp-sqk3", "redbsp-sqk3.pdf");
@@ -355,21 +355,21 @@ int main(int argc, char* argv[])
 		tk3_redbsp_sqk3_plot.set_log_x(true);
 		tk3_redbsp_sqk3_plot.set_log_y(false);
     tk3_redbsp_sqk3_plot.set_abs_y(false);
-		tk3_redbsp_sqk3_plot.set_legend_position(transport::derived_data::centre_right);
+		tk3_redbsp_sqk3_plot.set_legend_position(transport::derived_data::legend_pos::centre_right);
 
 
     // 8. SPECTRAL INDEX OF LATE TIME REDUCED BISPECTRUM -- FIXED k_t, ISOSCELES TRIANGLES, VARYING k3/k_t (SAME AS 6,7)
 		// spectral index of 7
 
     transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_sqk3_lo_index(ztk3, last_time, isosceles_lo_kt);
-    tk3_zeta_redbsp_sqk3_lo_index.set_klabel_meaning(transport::derived_data::conventional);
-    tk3_zeta_redbsp_sqk3_lo_index.set_current_x_axis_value(transport::derived_data::squeezing_fraction_k3_axis);
+    tk3_zeta_redbsp_sqk3_lo_index.set_klabel_meaning(transport::derived_data::klabel_type::conventional);
+    tk3_zeta_redbsp_sqk3_lo_index.set_current_x_axis_value(transport::derived_data::axis_value::squeezing_fraction_k3_axis);
     tk3_zeta_redbsp_sqk3_lo_index.set_spectral_index(true);
     tk3_zeta_redbsp_sqk3_lo_index.set_label_text("$n_{f_{\\mathrm{NL}}} \\;\\; k_t/k_\\star = \\mathrm{e}^3$", "n_fNL k_t/k* = exp(3)");
 
     transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_sqk3_hi_index(ztk3, last_time, isosceles_hi_kt);
-    tk3_zeta_redbsp_sqk3_hi_index.set_klabel_meaning(transport::derived_data::conventional);
-    tk3_zeta_redbsp_sqk3_hi_index.set_current_x_axis_value(transport::derived_data::squeezing_fraction_k3_axis);
+    tk3_zeta_redbsp_sqk3_hi_index.set_klabel_meaning(transport::derived_data::klabel_type::conventional);
+    tk3_zeta_redbsp_sqk3_hi_index.set_current_x_axis_value(transport::derived_data::axis_value::squeezing_fraction_k3_axis);
     tk3_zeta_redbsp_sqk3_hi_index.set_spectral_index(true);
     tk3_zeta_redbsp_sqk3_hi_index.set_label_text("$n_{f_{\\mathrm{NL}}} \\;\\; k_t/k_\\star = \\mathrm{e}^7$", "n_fNL k_t/k* = exp(7)");
 
@@ -381,13 +381,13 @@ int main(int argc, char* argv[])
     tk3_redbsp_sqk3_index_plot.set_log_x(true);
     tk3_redbsp_sqk3_index_plot.set_log_y(false);
     tk3_redbsp_sqk3_index_plot.set_abs_y(false);
-    tk3_redbsp_sqk3_index_plot.set_legend_position(transport::derived_data::bottom_left);
+    tk3_redbsp_sqk3_index_plot.set_legend_position(transport::derived_data::legend_pos::bottom_left);
 
 
     // 9. SPECTRAL INDEX OF LATE-TIME ZETA REDUCED BISPECTRUM -- FIXED k3/k_t, ISOSCELES TRIANGLES, VARYING k_t
 
     transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_spec_index(ztk3, last_time, isosceles_squeezed_threepf);
-    tk3_zeta_redbsp_spec_index.set_klabel_meaning(transport::derived_data::conventional);
+    tk3_zeta_redbsp_spec_index.set_klabel_meaning(transport::derived_data::klabel_type::conventional);
     tk3_zeta_redbsp_spec_index.set_label_text("$n_{f_{\\mathrm{NL}}} \\;\\; k_3/k_t = 0.999$", "k3/k_t = 0.999");
     tk3_zeta_redbsp_spec_index.set_spectral_index(true);
 
@@ -404,7 +404,7 @@ int main(int argc, char* argv[])
     // 10. SPECTRAL INDEX OF LATE-TIME ZETA TWO POINT FUNCTION
 
     transport::derived_data::zeta_twopf_wavenumber_series<double> tk3_zeta_2spec_index(ztk3, last_time, all_twopfs);
-    tk3_zeta_2spec_index.set_klabel_meaning(transport::derived_data::conventional);
+    tk3_zeta_2spec_index.set_klabel_meaning(transport::derived_data::klabel_type::conventional);
     tk3_zeta_2spec_index.set_dimensionless(true);
     tk3_zeta_2spec_index.set_spectral_index(true);
 
@@ -419,11 +419,11 @@ int main(int argc, char* argv[])
 		// 11. INTEGRATION COST ANALYSIS
 
     transport::derived_data::cost_wavenumber<double> tk3_hi_cost(tk3, isosceles_hi_kt);
-		tk3_hi_cost.set_current_x_axis_value(transport::derived_data::squeezing_fraction_k3_axis);
+		tk3_hi_cost.set_current_x_axis_value(transport::derived_data::axis_value::squeezing_fraction_k3_axis);
 		tk3_hi_cost.set_label_text("$k_t = \\mathrm{e}^7$", "k_t = exp(7)");
 
     transport::derived_data::cost_wavenumber<double> tk3_lo_cost(tk3, isosceles_lo_kt);
-		tk3_lo_cost.set_current_x_axis_value(transport::derived_data::squeezing_fraction_k3_axis);
+		tk3_lo_cost.set_current_x_axis_value(transport::derived_data::axis_value::squeezing_fraction_k3_axis);
 		tk3_lo_cost.set_label_text("$k_t = \\mathrm{e}^3$", "k_t = exp(3)");
 
     transport::derived_data::wavenumber_series_plot<double> tk3_cost_plot("powerlaw.threepf-1.sqk3-cost", "sqk3-cost.pdf");
@@ -441,7 +441,7 @@ int main(int argc, char* argv[])
     sigma_sigma.set_on(std::array<unsigned int, 2>{1,1});
 
     transport::derived_data::twopf_wavenumber_series<double> tk3_sigma_spec(tk3, sigma_sigma, last_time, all_twopfs);
-		tk3_sigma_spec.set_klabel_meaning(transport::derived_data::conventional);
+		tk3_sigma_spec.set_klabel_meaning(transport::derived_data::klabel_type::conventional);
 
     transport::derived_data::wavenumber_series_plot<double> tk3_sigma_spec_plot("powerlaw.threepf-1.sigma-spec", "sigma-spec.pdf");
 		tk3_sigma_spec_plot.add_line(tk3_sigma_spec);
@@ -458,7 +458,7 @@ int main(int argc, char* argv[])
     sigma_sigma_sigma.set_on(std::array<unsigned int, 3>{1,1,1});
 
     transport::derived_data::threepf_wavenumber_series<double> tk3_sigma_bsp_spec(tk3, sigma_sigma_sigma, last_time, isosceles_squeezed_threepf);
-		tk3_sigma_bsp_spec.set_klabel_meaning(transport::derived_data::conventional);
+		tk3_sigma_bsp_spec.set_klabel_meaning(transport::derived_data::klabel_type::conventional);
 		tk3_sigma_bsp_spec.set_label_text("$k_3/k_t = 0.999$", "k3/k_t = 0.999");
 
     transport::derived_data::wavenumber_series_plot<double> tk3_sigma_bsp_spec_plot("powerlaw.threepf-1.sigma-bsp-spec", "sigma-bsp-spec.pdf");
@@ -474,13 +474,13 @@ int main(int argc, char* argv[])
 		// 13. LATE TIME SIGMA BISPECTRUM -- FIXED k_t, ISOSCELES TRIANGLES, VARYING k_3/k_t
 
     transport::derived_data::threepf_wavenumber_series<double> tk3_sigma_bsp_sqk3spec_lo(tk3, sigma_sigma_sigma, last_time, isosceles_lo_kt);
-		tk3_sigma_bsp_sqk3spec_lo.set_klabel_meaning(transport::derived_data::conventional);
-		tk3_sigma_bsp_sqk3spec_lo.set_current_x_axis_value(transport::derived_data::squeezing_fraction_k3_axis);
+		tk3_sigma_bsp_sqk3spec_lo.set_klabel_meaning(transport::derived_data::klabel_type::conventional);
+		tk3_sigma_bsp_sqk3spec_lo.set_current_x_axis_value(transport::derived_data::axis_value::squeezing_fraction_k3_axis);
 		tk3_sigma_bsp_sqk3spec_lo.set_label_text("$k_3/k_\\star = \\mathrm{e}^3$", "k_t/k* = exp(3)");
 
     transport::derived_data::threepf_wavenumber_series<double> tk3_sigma_bsp_sqk3spec_hi(tk3, sigma_sigma_sigma, last_time, isosceles_hi_kt);
-    tk3_sigma_bsp_sqk3spec_hi.set_klabel_meaning(transport::derived_data::conventional);
-    tk3_sigma_bsp_sqk3spec_hi.set_current_x_axis_value(transport::derived_data::squeezing_fraction_k3_axis);
+    tk3_sigma_bsp_sqk3spec_hi.set_klabel_meaning(transport::derived_data::klabel_type::conventional);
+    tk3_sigma_bsp_sqk3spec_hi.set_current_x_axis_value(transport::derived_data::axis_value::squeezing_fraction_k3_axis);
     tk3_sigma_bsp_sqk3spec_hi.set_label_text("$k_3/k_\\star = \\mathrm{e}^7$", "k_t/k* = exp(7)");
 
     transport::derived_data::wavenumber_series_plot<double> tk3_sigma_bsp_sqk3_plot("powerlaw.threepf-1.sigma-bsp-sqk3", "sigma-bsp-sqk3.pdf");
@@ -496,7 +496,7 @@ int main(int argc, char* argv[])
     // 14. LATE TIME SIGMA SPECTRAL INDEX
 
     transport::derived_data::twopf_wavenumber_series<double> tk3_sigma_spec_index(tk3, sigma_sigma, last_time, all_twopfs);
-    tk3_sigma_spec_index.set_klabel_meaning(transport::derived_data::conventional);
+    tk3_sigma_spec_index.set_klabel_meaning(transport::derived_data::klabel_type::conventional);
     tk3_sigma_spec_index.set_spectral_index(true);
 
     transport::derived_data::wavenumber_series_plot<double> tk3_sigma_spec_index_plot("powerlaw.threepf-1.sigma-spec-index", "sigma-spec-index.pdf");
@@ -511,7 +511,7 @@ int main(int argc, char* argv[])
 
 
     transport::derived_data::threepf_wavenumber_series<double> tk3_sigma_bsp_spec_index(tk3, sigma_sigma_sigma, last_time, isosceles_squeezed_threepf);
-    tk3_sigma_bsp_spec_index.set_klabel_meaning(transport::derived_data::conventional);
+    tk3_sigma_bsp_spec_index.set_klabel_meaning(transport::derived_data::klabel_type::conventional);
     tk3_sigma_bsp_spec_index.set_label_text("$k_3/k_t = 0.999$", "k3/k_t = 0.999");
     tk3_sigma_bsp_spec_index.set_spectral_index(true);
 

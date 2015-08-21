@@ -7,6 +7,8 @@
 #ifndef __tasks_forward_declare_H_
 #define __tasks_forward_declare_H_
 
+#include <iostream>
+
 #include "sqlite3.h"
 
 

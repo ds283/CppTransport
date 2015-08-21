@@ -375,14 +375,14 @@ namespace transport
         if(this->flush_due)
           {
             this->flush_due = false;
-            this->flush(action_replace);
+            this->flush(replacement_action::action_replace);
           }
         else if(this->checkpoint_interval > 0 && this->checkpoint_timer.elapsed().wall > this->checkpoint_interval)
           {
-            BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "** Lifetime of " << format_time(this->checkpoint_timer.elapsed().wall)
+            BOOST_LOG_SEV(this->log_source, generic_batcher::log_severity_level::normal) << "** Lifetime of " << format_time(this->checkpoint_timer.elapsed().wall)
                 << " exceeds checkpoint interval " << format_time(this->checkpoint_interval)
                 << "; forcing flush";
-            this->flush(action_replace);
+            this->flush(replacement_action::action_replace);
           }
 	    }
 
@@ -400,14 +400,14 @@ namespace transport
     template <typename number>
     void postintegration_batcher<number>::end_assignment()
 	    {
-        BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "";
-        BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "-- Finished assignment: final statistics";
-        BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "--   processed " << this->items_processed << " individual work items in " << format_time(this->total_time);
-        BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "--   mean processing time                = " << format_time(this->total_time/(this->items_processed > 0 ? this->items_processed : 1));
-        BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "--   longest individual processing time  = " << format_time(this->longest_time);
-        BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "--   shortest individual processing time = " << format_time(this->shortest_time);
+        BOOST_LOG_SEV(this->log_source, generic_batcher::log_severity_level::normal) << "";
+        BOOST_LOG_SEV(this->log_source, generic_batcher::log_severity_level::normal) << "-- Finished assignment: final statistics";
+        BOOST_LOG_SEV(this->log_source, generic_batcher::log_severity_level::normal) << "--   processed " << this->items_processed << " individual work items in " << format_time(this->total_time);
+        BOOST_LOG_SEV(this->log_source, generic_batcher::log_severity_level::normal) << "--   mean processing time                = " << format_time(this->total_time/(this->items_processed > 0 ? this->items_processed : 1));
+        BOOST_LOG_SEV(this->log_source, generic_batcher::log_severity_level::normal) << "--   longest individual processing time  = " << format_time(this->longest_time);
+        BOOST_LOG_SEV(this->log_source, generic_batcher::log_severity_level::normal) << "--   shortest individual processing time = " << format_time(this->shortest_time);
 
-        BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "";
+        BOOST_LOG_SEV(this->log_source, generic_batcher::log_severity_level::normal) << "";
 	    }
 
 
@@ -466,7 +466,7 @@ namespace transport
     template <typename number>
     void zeta_twopf_batcher<number>::flush(generic_batcher::replacement_action action)
 	    {
-        BOOST_LOG_SEV(this->get_log(), generic_batcher::normal) << "** Flushing zeta twopf batcher (capacity=" << format_memory(this->capacity) << ") of size " << format_memory(this->storage());
+        BOOST_LOG_SEV(this->get_log(), generic_batcher::log_severity_level::normal) << "** Flushing zeta twopf batcher (capacity=" << format_memory(this->capacity) << ") of size " << format_memory(this->storage());
 
         // set up a timer to measure how long it takes to flush
         boost::timer::cpu_timer flush_timer;
@@ -475,7 +475,7 @@ namespace transport
         this->writers.gauge_xfm1(this, this->gauge_xfm1_batch);
 
         flush_timer.stop();
-        BOOST_LOG_SEV(this->get_log(), generic_batcher::normal) << "** Flushed in time " << format_time(flush_timer.elapsed().wall) << "; pushing to master process";
+        BOOST_LOG_SEV(this->get_log(), generic_batcher::log_severity_level::normal) << "** Flushed in time " << format_time(flush_timer.elapsed().wall) << "; pushing to master process";
 
         this->twopf_batch.clear();
         this->gauge_xfm1_batch.clear();
@@ -627,7 +627,7 @@ namespace transport
     template <typename number>
     void zeta_threepf_batcher<number>::flush(generic_batcher::replacement_action action)
 	    {
-        BOOST_LOG_SEV(this->get_log(), generic_batcher::normal) << "** Flushing zeta threepf batcher (capacity=" << format_memory(this->capacity) << ") of size " << format_memory(this->storage());
+        BOOST_LOG_SEV(this->get_log(), generic_batcher::log_severity_level::normal) << "** Flushing zeta threepf batcher (capacity=" << format_memory(this->capacity) << ") of size " << format_memory(this->storage());
 
         // set up a timer to measure how long it takes to flush
         boost::timer::cpu_timer flush_timer;
@@ -640,7 +640,7 @@ namespace transport
         this->writers.gauge_xfm2_312(this, this->gauge_xfm2_312_batch);
 
         flush_timer.stop();
-        BOOST_LOG_SEV(this->get_log(), generic_batcher::normal) << "** Flushed in time " << format_time(flush_timer.elapsed().wall) << "; pushing to master process";
+        BOOST_LOG_SEV(this->get_log(), generic_batcher::log_severity_level::normal) << "** Flushed in time " << format_time(flush_timer.elapsed().wall) << "; pushing to master process";
 
         this->twopf_batch.clear();
         this->threepf_batch.clear();
@@ -747,7 +747,7 @@ namespace transport
     template <typename number>
     void fNL_batcher<number>::flush(generic_batcher::replacement_action action)
 	    {
-        BOOST_LOG_SEV(this->get_log(), generic_batcher::normal) << "** Flushing " << template_name(this->type) << " batcher (capacity=" << format_memory(this->capacity) << ") of size " << format_memory(this->storage());
+        BOOST_LOG_SEV(this->get_log(), generic_batcher::log_severity_level::normal) << "** Flushing " << template_name(this->type) << " batcher (capacity=" << format_memory(this->capacity) << ") of size " << format_memory(this->storage());
 
         // set up a timer to measure how long it takes to flush
         boost::timer::cpu_timer flush_timer;
@@ -755,7 +755,7 @@ namespace transport
         this->writers.fNL(this, this->fNL_batch, this->type);
 
         flush_timer.stop();
-        BOOST_LOG_SEV(this->get_log(), generic_batcher::normal) << "** Flushed in time " << format_time(flush_timer.elapsed().wall) << "; pushing to master process";
+        BOOST_LOG_SEV(this->get_log(), generic_batcher::log_severity_level::normal) << "** Flushed in time " << format_time(flush_timer.elapsed().wall) << "; pushing to master process";
 
         this->fNL_batch.clear();
 

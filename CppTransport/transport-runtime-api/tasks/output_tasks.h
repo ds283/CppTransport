@@ -28,6 +28,8 @@
 // forward declare derived products if needed
 #include "transport-runtime-api/derived-products/derived_product_forward_declare.h"
 
+#include "boost/log/utility/formatting_ostream.hpp"
+
 
 
 #define CPPTRANSPORT_NODE_OUTPUT_ARRAY           "derived-data-tasks"
@@ -48,9 +50,6 @@ namespace transport
 
 
     template <typename number> class output_task;
-
-    template <typename number>
-    std::ostream& operator<<(std::ostream& out, const output_task<number>& obj);
 
 		template <typename number>
 		output_task<number> operator+(const output_task<number>& lhs, const derived_data::derived_product<number>& rhs);
@@ -96,9 +95,6 @@ namespace transport
 
         //! Destroy an output task
         virtual ~output_task() = default;
-
-        //! Write to a standard output stream
-        friend std::ostream& operator<< <>(std::ostream& out, const output_task<number>& obj);
 
 
 		    // OVERLOAD ARITHMETIC OPERATORS FOR CONVENIENCE
@@ -151,6 +147,14 @@ namespace transport
         virtual output_task<number>* clone() const override { return new output_task<number>(static_cast<const output_task<number>&>(*this)); }
 
 
+        // WRITE SELF TO STREAM
+
+      public:
+
+        //! write self-details
+        template <typename Stream> void write(Stream& out) const;
+
+
         // INTERNAL DATA
 
       protected:
@@ -165,16 +169,34 @@ namespace transport
 
 
     template <typename number>
-    std::ostream& operator<<(std::ostream& out, const output_task<number>& obj)
-	    {
+    template <typename Stream>
+    void output_task<number>::write(Stream& out) const
+      {
         out << CPPTRANSPORT_OUTPUT_ELEMENTS << '\n';
-        for(typename std::vector< output_task_element<number> >::const_iterator t = obj.elements.begin(); t != obj.elements.end(); ++t)
-	        {
-            out << *t;
-	        }
 
+        const std::vector< output_task_element<number> > elements = this->get_elements();
+
+        for(typename std::vector< output_task_element<number> >::const_iterator t = elements.begin(); t != elements.end(); ++t)
+          {
+            out << *t;
+          }
+      }
+
+
+    template <typename number, typename Char, typename Traits>
+    std::basic_ostream<Char, Traits>& operator<<(std::basic_ostream<Char, Traits>& out, const output_task<number>& obj)
+	    {
+        obj.write(out);
         return(out);
 	    }
+
+
+    template <typename number, typename Char, typename Traits, typename Allocator>
+    boost::log::basic_formatting_ostream<Char, Traits, Allocator>& operator<<(boost::log::basic_formatting_ostream<Char, Traits, Allocator>& out, const output_task<number>& obj)
+      {
+        obj.write(out);
+        return(out);
+      }
 
 
     template <typename number>
@@ -256,7 +278,7 @@ namespace transport
                 std::ostringstream msg;
                 msg << CPPTRANSPORT_OUTPUT_TASK_FILENAME_COLLISION_A << " " << prod.get_filename() << " "
 	                << CPPTRANSPORT_OUTPUT_TASK_FILENAME_COLLISION_B << " '" << this->name << "'";
-                throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
+                throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
 	            }
 
             if(t->get_product_name() == prod.get_name())
@@ -264,7 +286,7 @@ namespace transport
                 std::ostringstream msg;
                 msg << CPPTRANSPORT_OUTPUT_TASK_NAME_COLLISION_A << " " << prod.get_name() << " "
 	                << CPPTRANSPORT_OUTPUT_TASK_NAME_COLLISION_B << " '" << this->name << "'";
-                throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
+                throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
 	            }
 	        }
 
@@ -276,7 +298,7 @@ namespace transport
     const output_task_element<number>& output_task<number>::get(unsigned int i) const
 	    {
         if(i >= this->elements.size())
-	        throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_OUTPUT_TASK_RANGE);
+	        throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_OUTPUT_TASK_RANGE);
 
         return(this->elements[i]);
 	    }

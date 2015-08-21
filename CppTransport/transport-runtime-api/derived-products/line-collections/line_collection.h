@@ -265,7 +265,7 @@ namespace transport
 
 				  public:
 
-						void write(std::ostream& out);
+						template <typename Stream> void write(Stream& out);
 
 
 						// INTERNAL DATA
@@ -345,7 +345,7 @@ namespace transport
 				    if(this->lines.size() > 0)
 					    {
 						    if(line.get_current_x_axis_value() != this->lines.front()->get_current_x_axis_value())
-							    throw runtime_exception(runtime_exception::DERIVED_PRODUCT_ERROR, CPPTRANSPORT_PRODUCT_LINE_COLLECTION_AXIS_MISMATCH);
+							    throw runtime_exception(exception_type::DERIVED_PRODUCT_ERROR, CPPTRANSPORT_PRODUCT_LINE_COLLECTION_AXIS_MISMATCH);
 					    }
 
 		        this->lines.push_back(line.clone());
@@ -361,7 +361,7 @@ namespace transport
 							}
 						else
 							{
-								return(unset_axis);
+								return(axis_value::unset_axis);
 							}
 
 					}
@@ -417,9 +417,9 @@ namespace transport
 
 		                // issue warnings if required
 		                if(need_abs_y && !this->abs_y && nonzero_values)        // can plot the line, but have to abs() it
-			                BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::normal) << ":: Warning: data line '" << t->get_non_LaTeX_label() << "' contains negative or zero values; plotting absolute values instead because of logarithmic y-axis";
+			                BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::log_severity_level::normal) << ":: Warning: data line '" << t->get_non_LaTeX_label() << "' contains negative or zero values; plotting absolute values instead because of logarithmic y-axis";
 		                else if(need_abs_y && !this->abs_y && !nonzero_values)  // can't plot the line
-			                BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::normal) << ":: Warning: data line '" << t->get_non_LaTeX_label() << "' contains no positive values and can't be plotted on a logarithmic y-axis -- skipping this line";
+			                BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::log_severity_level::normal) << ":: Warning: data line '" << t->get_non_LaTeX_label() << "' contains no positive values and can't be plotted on a logarithmic y-axis -- skipping this line";
 			            }
 
 				        bool nonzero_axis = true;
@@ -432,7 +432,7 @@ namespace transport
 
 						        // warn if line can't be plotted
 						        if(!nonzero_axis)
-							        BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::normal) << ":: Warning: data line '" << t->get_non_LaTeX_label() << "' contains nonpositive x-axis values and can't be plotted on a logarithmic x-axis -- skipping this line";
+							        BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::log_severity_level::normal) << ":: Warning: data line '" << t->get_non_LaTeX_label() << "' contains nonpositive x-axis values and can't be plotted on a logarithmic x-axis -- skipping this line";
 					        }
 
 		            // if we can plot the line, push it onto the queue to be processed.
@@ -507,7 +507,7 @@ namespace transport
 			                }
 		                else
 			                {
-		                    BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::error) << ":: Error: failed to find new axis point to merge; giving up";
+		                    BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::log_severity_level::error) << ":: Error: failed to find new axis point to merge; giving up";
 		                    finished = true;
 			                }
 			            }
@@ -569,7 +569,8 @@ namespace transport
 
 
 		    template <typename number>
-		    void line_collection<number>::write(std::ostream& out)
+        template <typename Stream>
+		    void line_collection<number>::write(Stream& out)
 			    {
 		        // call derived_product writer
 		        this->derived_product<number>::write(out);

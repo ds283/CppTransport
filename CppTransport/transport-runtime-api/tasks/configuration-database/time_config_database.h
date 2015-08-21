@@ -57,8 +57,6 @@ namespace transport
         time_config* operator->() { return(&this->record); }
         const time_config* operator->() const { return(&this->record); }
 
-				friend std::ostream& operator<<(std::ostream& out, const time_config_record& obj);
-
 
 				// INTERNAL DATA
 
@@ -80,7 +78,8 @@ namespace transport
 			}
 
 
-		std::ostream& operator<<(std::ostream& out, const time_config_record& obj)
+    template <typename Char, typename Traits>
+		std::basic_ostream<Char, Traits>& operator<<(std::basic_ostream<Char, Traits>& out, const time_config_record& obj)
 			{
 				out << *obj;
         return(out);

@@ -84,9 +84,6 @@ namespace transport
 
       public:
 
-        //! Labels for types of workers
-        typedef enum { cpu, gpu } worker_type;
-
         //! Worker information class
         class worker_information
 	        {
@@ -95,7 +92,7 @@ namespace transport
 
             //! construct a worker information record
             worker_information()
-	            : type(cpu),
+	            : type(worker_type::cpu),
 	              capacity(0),
 	              priority(0),
 	              initialized(false),
@@ -434,42 +431,44 @@ namespace transport
 			{
 		    if(!(this->worker_data[worker].get_initialization_status()))
 			    {
-		        worker_type type = cpu;
-		        if(payload.get_type() == MPI::slave_information_payload::cpu)
-			        {
-		            type = cpu;
-				        this->has_cpus = true;
-			        }
-		        else if(payload.get_type() == MPI::slave_information_payload::gpu)
-			        {
-		            type = gpu;
-				        this->has_gpus = true;
-			        }
+		        worker_type type = payload.get_type();
+            switch(type)
+              {
+                case worker_type::cpu:
+                  this->has_cpus = true;
+                  break;
+
+                case worker_type::gpu:
+                  this->has_gpus = true;
+                  break;
+              }
 
 		        this->worker_data[worker].set_data(worker, type, payload.get_capacity(), payload.get_priority());
 				    this->waiting_for_setup--;
 
 		        std::ostringstream msg;
 		        msg << "** Worker " << worker+1 << " identified as ";
-		        if(type == cpu)
-			        {
-		            msg << "CPU";
-			        }
-		        else if(type == gpu)
-			        {
-		            msg << "GPU, available memory = " << format_memory(payload.get_capacity());
-			        }
+            switch(type)
+              {
+                case worker_type::cpu:
+                  msg << "CPU";
+                  break;
+
+                case worker_type::gpu:
+                  msg << "GPU, available memory = " << format_memory(payload.get_capacity());
+                  break;
+              }
 
 		        msg << " and priority " << payload.get_priority();
 
-		        BOOST_LOG_SEV(log, base_writer::normal) << msg.str();
+		        BOOST_LOG_SEV(log, base_writer::log_severity_level::normal) << msg.str();
 
 				    this->unassigned++;
 				    this->active++;
 			    }
 		    else
 			    {
-		        BOOST_LOG_SEV(log, base_writer::normal) << "!! Unexpected double identification for worker  " << worker;
+		        BOOST_LOG_SEV(log, base_writer::log_severity_level::normal) << "!! Unexpected double identification for worker  " << worker;
 			    }
 
 			}
@@ -619,10 +618,10 @@ namespace transport
 		void master_scheduler::mark_assigned(const work_assignment& assignment)
 			{
 				// check that there are unassigned workers
-				if(this->unassigned == 0) throw runtime_exception(runtime_exception::SCHEDULING_ERROR, CPPTRANSPORT_SCHEDULING_NO_UNASSIGNED);
+				if(this->unassigned == 0) throw runtime_exception(exception_type::SCHEDULING_ERROR, CPPTRANSPORT_SCHEDULING_NO_UNASSIGNED);
 
 				// if this worker is already assigned, then an error must have occurred
-				if(this->worker_data[assignment.get_worker()].is_assigned()) throw runtime_exception(runtime_exception::SCHEDULING_ERROR, CPPTRANSPORT_SCHEDULING_ALREADY_ASSIGNED);
+				if(this->worker_data[assignment.get_worker()].is_assigned()) throw runtime_exception(exception_type::SCHEDULING_ERROR, CPPTRANSPORT_SCHEDULING_ALREADY_ASSIGNED);
 
 				// mark this worker as assigned
 				this->worker_data[assignment.get_worker()].mark_assigned(true);
@@ -638,7 +637,7 @@ namespace transport
 							{
 						    std::ostringstream msg;
 								msg << CPPTRANSPORT_SCHEDULING_ASSIGN_NOT_EXIST << " " << *t << ", " << CPPTRANSPORT_SCHEDULING_ASSIGN_WORKER << " " << assignment.get_worker();
-								throw runtime_exception(runtime_exception::SCHEDULING_ERROR, msg.str());
+								throw runtime_exception(exception_type::SCHEDULING_ERROR, msg.str());
 							}
 						else
 							{
@@ -652,7 +651,7 @@ namespace transport
 		void master_scheduler::mark_unassigned(unsigned int worker, boost::timer::nanosecond_type time, unsigned int items)
 			{
 				// if this worker is not already assigned, an error must have occurred
-				if(!this->worker_data[worker].is_assigned()) throw runtime_exception(runtime_exception::SCHEDULING_ERROR, CPPTRANSPORT_SCHEDULING_NOT_ALREADY_ASSIGNED);
+				if(!this->worker_data[worker].is_assigned()) throw runtime_exception(exception_type::SCHEDULING_ERROR, CPPTRANSPORT_SCHEDULING_NOT_ALREADY_ASSIGNED);
 
 				this->worker_data[worker].update_timing_data(time, items);
 				this->worker_data[worker].mark_assigned(false);
@@ -665,7 +664,7 @@ namespace transport
 			    }
 		    else
 			    {
-				    throw runtime_exception(runtime_exception::SCHEDULING_ERROR, CPPTRANSPORT_SCHEDULING_OVERRELEASE_INFLIGHT);
+				    throw runtime_exception(exception_type::SCHEDULING_ERROR, CPPTRANSPORT_SCHEDULING_OVERRELEASE_INFLIGHT);
 			    }
 
 				this->total_work_time += time;
@@ -675,12 +674,12 @@ namespace transport
 		void master_scheduler::mark_inactive(unsigned int worker)
 			{
 				// if this worker is already inactive, an error must have occurred
-				if(!this->worker_data[worker].is_active()) throw runtime_exception(runtime_exception::SCHEDULING_ERROR, CPPTRANSPORT_SCHEDULING_ALREADY_INACTIVE);
+				if(!this->worker_data[worker].is_active()) throw runtime_exception(exception_type::SCHEDULING_ERROR, CPPTRANSPORT_SCHEDULING_ALREADY_INACTIVE);
 
 				this->worker_data[worker].mark_active(false);
 				this->active--;
 
-				if(this->active == 0 && this->work_items_in_flight > 0) throw runtime_exception(runtime_exception::SCHEDULING_ERROR, CPPTRANSPORT_SCHEDULING_UNDER_INFLIGHT);
+				if(this->active == 0 && this->work_items_in_flight > 0) throw runtime_exception(exception_type::SCHEDULING_ERROR, CPPTRANSPORT_SCHEDULING_UNDER_INFLIGHT);
 			}
 
 
@@ -909,7 +908,7 @@ namespace transport
 						if(!t->is_assigned()) workers.push_back(t);
 					}
 
-				if(workers.size() != this->unassigned) throw runtime_exception(runtime_exception::SCHEDULING_ERROR, CPPTRANSPORT_SCHEDULING_UNASSIGNED_MISMATCH);
+				if(workers.size() != this->unassigned) throw runtime_exception(exception_type::SCHEDULING_ERROR, CPPTRANSPORT_SCHEDULING_UNASSIGNED_MISMATCH);
 
 				// divide available work items between all unassigned workers
 				unsigned int items_per_worker = this->queue.size() / workers.size();
@@ -939,7 +938,7 @@ namespace transport
 
     std::list<master_scheduler::work_assignment> master_scheduler::assign_work_mixed_strategy(boost::log::sources::severity_logger<generic_writer::log_severity_level>& log)
 	    {
-				throw runtime_exception(runtime_exception::RUNTIME_ERROR, "Mixed CPU/GPU scheduling is not yet implemented");
+				throw runtime_exception(exception_type::RUNTIME_ERROR, "Mixed CPU/GPU scheduling is not yet implemented");
 	    }
 
 

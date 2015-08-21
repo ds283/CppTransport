@@ -168,7 +168,7 @@ namespace transport
 
 
 		    // Create table documenting workers
-		    void create_worker_info_table(sqlite3* db, add_foreign_keys_type keys=no_foreign_keys)
+		    void create_worker_info_table(sqlite3* db, foreign_keys_type keys=foreign_keys_type::no_foreign_keys)
 			    {
 		        std::ostringstream create_stmt;
 		        create_stmt
@@ -196,7 +196,7 @@ namespace transport
 
 
 		    // Create table for statistics, if they are being collected
-		    void create_stats_table(sqlite3* db, add_foreign_keys_type keys=no_foreign_keys, metadata_configuration_type type=twopf_configs)
+		    void create_stats_table(sqlite3* db, foreign_keys_type keys=foreign_keys_type::no_foreign_keys, metadata_configuration_type type=metadata_configuration_type::twopf_configs)
 			    {
 		        std::ostringstream create_stmt;
 		        create_stmt
@@ -209,21 +209,18 @@ namespace transport
 			        << "workgroup         INTEGER, "
 			        << "worker            INTEGER";
 
-		        if(keys == foreign_keys)
+		        if(keys == foreign_keys_type::foreign_keys)
 			        {
 		            create_stmt << ", FOREIGN KEY(kserial) REFERENCES ";
 		            switch(type)
 			            {
-		                case twopf_configs:
+		                case metadata_configuration_type::twopf_configs:
 			                create_stmt << CPPTRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE;
 		                  break;
 
-		                case threepf_configs:
+		                case metadata_configuration_type::threepf_configs:
 			                create_stmt << CPPTRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE;
 		                  break;
-
-		                default:
-			                assert(false);
 			            }
 		            create_stmt << "(serial)";
 
@@ -237,8 +234,8 @@ namespace transport
 
 		    // Create table for initial conditions, if they are being collected
 				template <typename number, typename ValueType>
-		    void create_ics_table(sqlite3* db, unsigned int Nfields, add_foreign_keys_type keys=no_foreign_keys,
-		                          metadata_configuration_type type=twopf_configs)
+		    void create_ics_table(sqlite3* db, unsigned int Nfields, foreign_keys_type keys=foreign_keys_type::no_foreign_keys,
+		                          metadata_configuration_type type=metadata_configuration_type::twopf_configs)
 			    {
 		        unsigned int num_cols = std::min(2*Nfields, max_columns);
 
@@ -256,21 +253,18 @@ namespace transport
 
 		        create_stmt << ", PRIMARY KEY (kserial, page)";
 
-		        if(keys == foreign_keys)
+		        if(keys == foreign_keys_type::foreign_keys)
 			        {
 		            create_stmt << ", FOREIGN KEY(kserial) REFERENCES ";
 		            switch(type)
 			            {
-		                case twopf_configs:
+		                case metadata_configuration_type::twopf_configs:
 			                create_stmt << CPPTRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE;
 		                  break;
 
-		                case threepf_configs:
+		                case metadata_configuration_type::threepf_configs:
 			                create_stmt << CPPTRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE;
 		                  break;
-
-		                default:
-			                assert(false);
 			            }
 		            create_stmt << "(serial)";
 			        }
@@ -282,7 +276,7 @@ namespace transport
 
 		    // Create table for background values
         template <typename number, typename ValueType>
-		    void create_backg_table(sqlite3* db, unsigned int Nfields, add_foreign_keys_type keys=no_foreign_keys)
+		    void create_backg_table(sqlite3* db, unsigned int Nfields, foreign_keys_type keys=foreign_keys_type::no_foreign_keys)
 			    {
             unsigned int num_elements = data_traits<number, ValueType>::number_elements(Nfields);
             unsigned int num_cols = std::min(num_elements, max_columns);
@@ -300,7 +294,7 @@ namespace transport
 
 		        create_stmt << ", PRIMARY KEY (tserial, page)";
 
-		        if(keys == foreign_keys) create_stmt << ", FOREIGN KEY(tserial) REFERENCES " << CPPTRANSPORT_SQLITE_TIME_SAMPLE_TABLE << "(serial)";
+		        if(keys == foreign_keys_type::foreign_keys) create_stmt << ", FOREIGN KEY(tserial) REFERENCES " << CPPTRANSPORT_SQLITE_TIME_SAMPLE_TABLE << "(serial)";
 		        create_stmt << ");";
 
 		        exec(db, create_stmt.str());
@@ -309,7 +303,7 @@ namespace transport
 
         // Create table for paged values
         template <typename number, typename ValueType>
-        void create_paged_table(sqlite3* db, unsigned int Nfields, add_foreign_keys_type keys=no_foreign_keys)
+        void create_paged_table(sqlite3* db, unsigned int Nfields, foreign_keys_type keys=foreign_keys_type::no_foreign_keys)
           {
             unsigned int num_elements = data_traits<number, ValueType>::number_elements(Nfields);
             unsigned int num_cols = std::min(num_elements, max_columns);
@@ -327,7 +321,7 @@ namespace transport
               }
 
             create_stmt << ", PRIMARY KEY (tserial, kserial, page)";
-            if(keys == foreign_keys)
+            if(keys == foreign_keys_type::foreign_keys)
               {
                 create_stmt << ", FOREIGN KEY(tserial) REFERENCES " << CPPTRANSPORT_SQLITE_TIME_SAMPLE_TABLE << "(serial)"
                   << ", FOREIGN KEY(kserial) REFERENCES " << CPPTRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE << "(serial)";
@@ -339,7 +333,7 @@ namespace transport
 
 
 		    // Create table for zeta twopf values
-		    void create_zeta_twopf_table(sqlite3* db, add_foreign_keys_type keys=no_foreign_keys)
+		    void create_zeta_twopf_table(sqlite3* db, foreign_keys_type keys=foreign_keys_type::no_foreign_keys)
 			    {
 		        std::ostringstream create_stmt;
 		        create_stmt
@@ -349,7 +343,7 @@ namespace transport
 			        << "twopf         DOUBLE, "
 			        << "PRIMARY KEY (tserial, kserial)";
 
-		        if(keys == foreign_keys)
+		        if(keys == foreign_keys_type::foreign_keys)
 			        {
 		            create_stmt << ", FOREIGN KEY(tserial) REFERENCES " << CPPTRANSPORT_SQLITE_TIME_SAMPLE_TABLE << "(serial)"
 			            << ", FOREIGN KEY(kserial) REFERENCES " << CPPTRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE << "(serial)";
@@ -361,7 +355,7 @@ namespace transport
 
 
 		    // Create table for zeta threepf values
-		    void create_zeta_threepf_table(sqlite3* db, add_foreign_keys_type keys=no_foreign_keys)
+		    void create_zeta_threepf_table(sqlite3* db, foreign_keys_type keys=foreign_keys_type::no_foreign_keys)
 			    {
 		        std::ostringstream create_stmt;
 		        create_stmt
@@ -372,7 +366,7 @@ namespace transport
               << "redbsp        DOUBLE, "
 			        << "PRIMARY KEY (tserial, kserial)";
 
-		        if(keys == foreign_keys)
+		        if(keys == foreign_keys_type::foreign_keys)
 			        {
 		            create_stmt << ", FOREIGN KEY(tserial) REFERENCES " << CPPTRANSPORT_SQLITE_TIME_SAMPLE_TABLE << "(serial)"
 			            << ", FOREIGN KEY(kserial) REFERENCES " << CPPTRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE << "(serial)";
@@ -384,7 +378,7 @@ namespace transport
 
 
 		    // Create table for fNL values
-		    void create_fNL_table(sqlite3* db, derived_data::template_type type, add_foreign_keys_type keys=no_foreign_keys)
+		    void create_fNL_table(sqlite3* db, derived_data::template_type type, foreign_keys_type keys=foreign_keys_type::no_foreign_keys)
 			    {
 		        std::ostringstream create_stmt;
 		        create_stmt
@@ -395,7 +389,7 @@ namespace transport
 			        << "TT      DOUBLE, "
 			        << "PRIMARY KEY (tserial)";
 
-		        if(keys == foreign_keys)
+		        if(keys == foreign_keys_type::foreign_keys)
 			        {
 		            create_stmt << ", FOREIGN KEY(tserial) REFERENCES " << CPPTRANSPORT_SQLITE_TIME_SAMPLE_TABLE << "(serial)";
 			        }

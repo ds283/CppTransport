@@ -93,7 +93,7 @@ namespace transport
 					        {
 				            std::ostringstream msg;
 				            msg << CPPTRANSPORT_REPO_SEARCH_FAIL << status << ": " << sqlite3_errmsg(db) << ")";
-				            throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, msg.str());
+				            throw runtime_exception(exception_type::REPOSITORY_BACKEND_ERROR, msg.str());
 					        }
 					    }
 

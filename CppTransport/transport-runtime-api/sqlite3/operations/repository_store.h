@@ -120,7 +120,7 @@ namespace transport
               {
                 std::ostringstream msg;
                 msg << CPPTRANSPORT_REPO_COMMIT_OUTPUT_NOT_RESERVED << " '" << name << "'";
-                throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, msg.str());
+                throw runtime_exception(exception_type::REPOSITORY_BACKEND_ERROR, msg.str());
               }
 
             std::stringstream store_stmt;
@@ -158,7 +158,7 @@ namespace transport
               {
                 std::ostringstream msg;
                 msg << CPPTRANSPORT_REPO_COMMIT_OUTPUT_NOT_RESERVED << " '" << name << "'";
-                throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, msg.str());
+                throw runtime_exception(exception_type::REPOSITORY_BACKEND_ERROR, msg.str());
               }
 
             std::stringstream store_stmt;
@@ -197,7 +197,7 @@ namespace transport
               {
                 std::ostringstream msg;
                 msg << CPPTRANSPORT_REPO_COMMIT_OUTPUT_NOT_RESERVED << " '" << name << "'";
-                throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, msg.str());
+                throw runtime_exception(exception_type::REPOSITORY_BACKEND_ERROR, msg.str());
               }
 
             std::stringstream store_stmt;

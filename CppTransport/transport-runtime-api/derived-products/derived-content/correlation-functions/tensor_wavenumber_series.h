@@ -102,7 +102,7 @@ namespace transport
         tensor_twopf_wavenumber_series<number>::tensor_twopf_wavenumber_series(const twopf_list_task<number>& tk, index_selector<2>& sel,
                                                                                SQL_time_config_query tq, SQL_twopf_kconfig_query kq,
                                                                                unsigned int prec)
-	        : derived_line<number>(tk, wavenumber_axis, std::list<axis_value>{ k_axis, efolds_exit_axis }, prec),
+	        : derived_line<number>(tk, axis_class::wavenumber_axis, std::list<axis_value>{ axis_value::k_axis, axis_value::efolds_exit_axis }, prec),
 	          tensor_twopf_line<number>(tk, sel),
 	          wavenumber_series<number>(tk),
             tquery(tq),
@@ -153,7 +153,7 @@ namespace transport
 						            std::array<unsigned int, 2> index_set = { m, n };
 								        if(this->active_indices.is_on(index_set))
 									        {
-										        cf_kconfig_data_tag<number> tag = pipe.new_cf_kconfig_data_tag(data_tag<number>::cf_tensor_twopf, this->gadget.get_model()->tensor_flatten(m,n), t->serial);
+										        cf_kconfig_data_tag<number> tag = pipe.new_cf_kconfig_data_tag(cf_data_type::cf_tensor_twopf, this->gadget.get_model()->tensor_flatten(m,n), t->serial);
 
 										        // it's safe to take a reference here to avoid a copy; we don't need the cache data to survive over multiple calls to lookup_tag()
 										        const std::vector<number>& line_data = k_handle.lookup_tag(tag);
@@ -161,7 +161,7 @@ namespace transport
 								            std::string latex_label = "$" + this->make_LaTeX_label(m,n) + "\\;" + this->make_LaTeX_tag(t->t) + "$";
 								            std::string nonlatex_label = this->make_non_LaTeX_label(m,n) + " " + this->make_non_LaTeX_tag(t->t);
 
-								            data_line<number> line = data_line<number>(group, this->x_type, correlation_function_value, w_axis, line_data,
+								            data_line<number> line = data_line<number>(group, this->x_type, value_type::correlation_function_value, w_axis, line_data,
 								                                                       this->get_LaTeX_label(m,n,t->t), this->get_non_LaTeX_label(m,n,t->t), this->is_spectral_index());
 
 										        lines.push_back(line);

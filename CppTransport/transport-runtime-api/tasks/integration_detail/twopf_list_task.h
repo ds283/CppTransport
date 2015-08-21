@@ -18,7 +18,9 @@
 #include "transport-runtime-api/models/advisory_classes.h"
 
 #include "transport-runtime-api/utilities/spline1d.h"
-#include <boost/math/tools/roots.hpp>
+
+#include "boost/math/tools/roots.hpp"
+#include "boost/log/utility/formatting_ostream.hpp"
 
 #define CPPTRANSPORT_NODE_TWOPF_LIST_KSTAR         "kstar"
 #define CPPTRANSPORT_NODE_TWOPF_LIST_NORMALIZATION "normalization"
@@ -46,11 +48,6 @@ namespace transport
         double tol;
 	    };
 
-
-    template <typename number> class twopf_list_task;
-
-    template <typename number>
-    std::ostream& operator<<(std::ostream& out, const twopf_list_task<number>& obj);
 
     //! Base type for a task which can represent a set of two-point functions evaluated at different wavenumbers.
     //! Ultimately, all n-point-function integrations are of this type because they all solve for the two-point function
@@ -210,8 +207,8 @@ namespace transport
 
       public:
 
-        //! Write to a standard output stream
-        friend std::ostream& operator<< <>(std::ostream& out, const twopf_list_task<number>& obj);
+        //! write self-details to stream
+        template <typename Stream> void write(Stream& obj) const;
 
 
         // INTERNAL DATA
@@ -439,7 +436,7 @@ namespace transport
             std::ostringstream msg;
             msg << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_TWOPF_LIST_TOO_EARLY_A << earliest_required << " "
               << CPPTRANSPORT_TASK_TWOPF_LIST_TOO_EARLY_B << this->get_N_initial();
-            throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
+            throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
           }
 
         if(!this->fast_forward && earliest_required - this->get_N_initial() < CPPTRANSPORT_DEFAULT_RECOMMENDED_EFOLDS)
@@ -476,7 +473,7 @@ namespace transport
           {
             std::ostringstream msg;
             msg << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_TWOPF_LIST_NO_TIMES;
-            throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
+            throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
           }
 
         bool first = true;
@@ -609,14 +606,30 @@ namespace transport
       }
 
 
-		template <typename number>
-		std::ostream& operator<<(std::ostream& out, const twopf_list_task<number>& obj)
+    template <typename number>
+    template <typename Stream>
+    void twopf_list_task<number>::write(Stream& out) const
+      {
+        out << CPPTRANSPORT_FAST_FORWARD     << ": " << (this->get_fast_forward() ? CPPTRANSPORT_YES : CPPTRANSPORT_NO) << ", ";
+        out << CPPTRANSPORT_MESH_REFINEMENTS << ": " << this->get_max_refinements() << '\n';
+        out << static_cast< const integration_task<number>& >(*this);
+      }
+
+
+		template <typename number, typename Char, typename Traits>
+		std::basic_ostream<Char, Traits>& operator<<(std::basic_ostream<Char, Traits>& out, const twopf_list_task<number>& obj)
 	    {
-        out << CPPTRANSPORT_FAST_FORWARD     << ": " << (obj.fast_forward ? CPPTRANSPORT_YES : CPPTRANSPORT_NO) << ", ";
-        out << CPPTRANSPORT_MESH_REFINEMENTS << ": " << obj.max_refinements << '\n';
-				out << static_cast< const integration_task<number>& >(obj);
+        obj.write(out);
         return(out);
 	    };
+
+
+    template <typename number, typename Char, typename Traits, typename Allocator>
+    boost::log::basic_formatting_ostream<Char, Traits, Allocator>& operator<<(boost::log::basic_formatting_ostream<Char, Traits, Allocator>& out, const twopf_list_task<number>& obj)
+      {
+        obj.write(out);
+        return(out);
+      };
 
 
 	}   // namespace transport

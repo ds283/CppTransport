@@ -98,7 +98,7 @@ namespace transport
         ptk_as_threepf = dynamic_cast< threepf_task<number>* >(this->ptk);
         assert(ptk_as_threepf != nullptr);
 
-        if(ptk_as_threepf == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_ZETA_THREEPF_CAST_FAIL);
+        if(ptk_as_threepf == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_ZETA_THREEPF_CAST_FAIL);
 	    }
 
 
@@ -110,7 +110,7 @@ namespace transport
         ptk_as_threepf = dynamic_cast< threepf_task<number>* >(this->ptk);
         assert(ptk_as_threepf != nullptr);
 
-        if(ptk_as_threepf == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_ZETA_THREEPF_CAST_FAIL);
+        if(ptk_as_threepf == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_ZETA_THREEPF_CAST_FAIL);
 
         this->paired = reader[CPPTRANSPORT_NODE_POSTINTEGRATION_TASK_PAIRED].asBool();
 	    }
@@ -125,7 +125,7 @@ namespace transport
         ptk_as_threepf = dynamic_cast< threepf_task<number>* >(this->ptk);
         assert(ptk_as_threepf != nullptr);
 
-        if(ptk_as_threepf == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_ZETA_THREEPF_CAST_FAIL);
+        if(ptk_as_threepf == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_ZETA_THREEPF_CAST_FAIL);
 	    }
 
 

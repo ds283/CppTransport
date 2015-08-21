@@ -72,7 +72,7 @@ namespace transport
         ptk_as_twopf_list = dynamic_cast< twopf_list_task<number>* >(this->ptk);
         assert(ptk_as_twopf_list != nullptr);
 
-        if(ptk_as_twopf_list == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_ZETA_TWOPF_LIST_CAST_FAIL);
+        if(ptk_as_twopf_list == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_ZETA_TWOPF_LIST_CAST_FAIL);
 	    }
 
 
@@ -84,7 +84,7 @@ namespace transport
         ptk_as_twopf_list = dynamic_cast< twopf_list_task<number>* >(this->ptk);
         assert(ptk_as_twopf_list != nullptr);
 
-        if(ptk_as_twopf_list == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_ZETA_TWOPF_LIST_CAST_FAIL);
+        if(ptk_as_twopf_list == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_ZETA_TWOPF_LIST_CAST_FAIL);
 	    }
 
 
@@ -96,7 +96,7 @@ namespace transport
         ptk_as_twopf_list = dynamic_cast< twopf_list_task<number>* >(this->ptk);
         assert(ptk_as_twopf_list != nullptr);
 
-        if(ptk_as_twopf_list == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_ZETA_TWOPF_LIST_CAST_FAIL);
+        if(ptk_as_twopf_list == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_ZETA_TWOPF_LIST_CAST_FAIL);
 	    }
 
 

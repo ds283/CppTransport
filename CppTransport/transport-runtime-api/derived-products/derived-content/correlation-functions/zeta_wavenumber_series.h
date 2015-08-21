@@ -102,7 +102,7 @@ namespace transport
 		    zeta_twopf_wavenumber_series<number>::zeta_twopf_wavenumber_series(const zeta_twopf_list_task<number>& tk,
                                                                            SQL_time_config_query tq, SQL_twopf_kconfig_query kq,
 		                                                                       unsigned int prec)
-			    : derived_line<number>(tk, wavenumber_axis, std::list<axis_value>{ k_axis, efolds_exit_axis }, prec),
+			    : derived_line<number>(tk, axis_class::wavenumber_axis, std::list<axis_value>{ axis_value::k_axis, axis_value::efolds_exit_axis }, prec),
 			      zeta_twopf_line<number>(tk),
 			      wavenumber_series<number>(tk),
             tquery(tq),
@@ -154,7 +154,7 @@ namespace transport
 
                 std::vector<number> line_data = z_handle.lookup_tag(tag);
 
-                value_type value = correlation_function_value;
+                value_type value = value_type::correlation_function_value;
 				        if(this->dimensionless)
 					        {
 						        assert(line_data.size() == k_values.size());
@@ -164,7 +164,7 @@ namespace transport
 							        {
 								        *l_pos *= k_pos->k_comoving * k_pos->k_comoving * k_pos->k_comoving / (2.0*M_PI*M_PI);
 							        }
-                    value = dimensionless_value;
+                    value = value_type::dimensionless_value;
 					        }
                 data_line<number> line = data_line<number>(group, this->x_type, value, w_axis, line_data,
                                                            this->get_LaTeX_label(t->t), this->get_non_LaTeX_label(t->t), this->is_spectral_index());
@@ -315,8 +315,8 @@ namespace transport
 		    zeta_threepf_wavenumber_series<number>::zeta_threepf_wavenumber_series(const zeta_threepf_task<number>& tk,
                                                                                SQL_time_config_query tq, SQL_threepf_kconfig_query kq,
 		                                                                           unsigned int prec)
-			    : derived_line<number>(tk, wavenumber_axis,
-			                           std::list<axis_value>{ k_axis, efolds_exit_axis, alpha_axis, beta_axis, squeezing_fraction_k1_axis, squeezing_fraction_k2_axis, squeezing_fraction_k3_axis },
+			    : derived_line<number>(tk, axis_class::wavenumber_axis,
+			                           std::list<axis_value>{ axis_value::k_axis, axis_value::efolds_exit_axis, axis_value::alpha_axis, axis_value::beta_axis, axis_value::squeezing_fraction_k1_axis, axis_value::squeezing_fraction_k2_axis, axis_value::squeezing_fraction_k3_axis },
 			                           prec),
 			      zeta_threepf_line<number>(tk),
 			      wavenumber_series<number>(tk),
@@ -370,7 +370,7 @@ namespace transport
                 std::vector<number> line_data = z_handle.lookup_tag(tag);
 				        assert(line_data.size() == w_axis.size());
 
-                value_type value = correlation_function_value;
+                value_type value = value_type::correlation_function_value;
                 if(this->dimensionless)
                   {
                     assert(line_data.size() == k_values.size());
@@ -380,7 +380,7 @@ namespace transport
                       {
                         *l_pos *= k_pos->kt_comoving * k_pos->kt_comoving * k_pos->kt_comoving * k_pos->kt_comoving * k_pos->kt_comoving * k_pos->kt_comoving;
                       }
-                    value = dimensionless_value;
+                    value = value_type::dimensionless_value;
                   }
 
 		            data_line<number> line = data_line<number>(group, this->x_type, value, w_axis, line_data,
@@ -532,8 +532,8 @@ namespace transport
 		    zeta_reduced_bispectrum_wavenumber_series<number>::zeta_reduced_bispectrum_wavenumber_series(const zeta_threepf_task<number>& tk,
 		                                                                                                 SQL_time_config_query tq, SQL_threepf_kconfig_query kq,
                                                                                                      unsigned int prec)
-			    : derived_line<number>(tk, wavenumber_axis,
-			                           std::list<axis_value>{ k_axis, efolds_exit_axis, alpha_axis, beta_axis, squeezing_fraction_k1_axis, squeezing_fraction_k2_axis, squeezing_fraction_k3_axis },
+			    : derived_line<number>(tk, axis_class::wavenumber_axis,
+			                           std::list<axis_value>{ axis_value::k_axis, axis_value::efolds_exit_axis, axis_value::alpha_axis, axis_value::beta_axis, axis_value::squeezing_fraction_k1_axis, axis_value::squeezing_fraction_k2_axis, axis_value::squeezing_fraction_k3_axis },
 			                           prec),
 			      zeta_reduced_bispectrum_line<number>(tk),
 			      wavenumber_series<number>(tk),
@@ -582,7 +582,7 @@ namespace transport
                 // it's safe to take a reference here to avoid a copy; we don't need the cache data to survive over multiple calls to lookup_tag()
                 const std::vector<number>& line_data = z_handle.lookup_tag(tag);
 
-		            data_line<number> line = data_line<number>(group, this->x_type, fNL_value, w_axis, line_data,
+		            data_line<number> line = data_line<number>(group, this->x_type, value_type::fNL_value, w_axis, line_data,
 		                                                       this->get_LaTeX_label(t->t), this->get_non_LaTeX_label(t->t), this->is_spectral_index());
 
 		            lines.push_back(line);

@@ -54,7 +54,7 @@ class ginac_cache
 		  public:
 
 		    //! write to stream
-		    void write(std::ostream& out);
+		    template <typename Stream> void write(Stream& out) const;
 
 
 				// INTERNAL DATA
@@ -256,7 +256,8 @@ bool ginac_cache<ExpressionType, HashSize>::cache_element::compare(ExpressionTyp
 
 
 template <typename ExpressionType, unsigned int HashSize>
-void ginac_cache<ExpressionType, HashSize>::cache_element::write(std::ostream& out)
+template <typename Stream>
+void ginac_cache<ExpressionType, HashSize>::cache_element::write(Stream& out) const
 	{
 		out << "== Cache element" << '\n';
 		out << "   Type = " << this->type << '\n';

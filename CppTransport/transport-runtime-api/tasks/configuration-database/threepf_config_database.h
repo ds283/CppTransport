@@ -70,8 +70,6 @@ namespace transport
         threepf_kconfig* operator->() { return(&this->record); }
         const threepf_kconfig* operator->() const { return(&this->record); }
 
-        friend std::ostream& operator<<(std::ostream& out, const threepf_kconfig_record& obj);
-
 
         // INTERNAL DATA
 
@@ -105,7 +103,8 @@ namespace transport
       }
 
 
-    std::ostream& operator<<(std::ostream& out, const threepf_kconfig_record& obj)
+    template <typename Char, typename Traits>
+    std::basic_ostream<Char, Traits>& operator<<(std::basic_ostream<Char, Traits>& out, const threepf_kconfig_record& obj)
       {
         out << *obj;
         return(out);
@@ -394,7 +393,7 @@ namespace transport
                 std::ostringstream msg;
                 msg << CPPTRANSPORT_THREEPF_DATABASE_READ_FAIL << status << ": " << sqlite3_errmsg(handle) << ")";
                 sqlite3_finalize(stmt);
-                throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
+                throw runtime_exception(exception_type::DATA_CONTAINER_ERROR, msg.str());
 	            }
           }
 
@@ -547,7 +546,7 @@ namespace transport
         for(database_type::const_iterator t = this->database.begin(); t != this->database.end(); ++t, ++count)
           {
             assert(count == t->first);
-            if(count != t->first) throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, CPPTRANSPORT_THREEPF_DATABASE_OUT_OF_ORDER);
+            if(count != t->first) throw runtime_exception(exception_type::SERIALIZATION_ERROR, CPPTRANSPORT_THREEPF_DATABASE_OUT_OF_ORDER);
 
             sqlite3_operations::check_stmt(handle, sqlite3_bind_int(stmt, 1, t->second->serial));
             sqlite3_operations::check_stmt(handle, sqlite3_bind_double(stmt, 2, t->second->kt_conventional));

@@ -163,7 +163,7 @@ namespace transport
                 msg << CPPTRANSPORT_PRODUCT_INDEX_MISMATCH << " ("
 	                << CPPTRANSPORT_PRODUCT_INDEX_MISMATCH_A << " " << active_indices.get_number_fields() << ", "
 	                << CPPTRANSPORT_PRODUCT_INDEX_MISMATCH_B << " " << this->gadget.get_N_fields() << ")";
-                throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
+                throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
 	            }
 	        }
 
@@ -196,18 +196,22 @@ namespace transport
 
             if(this->dimensionless) label << CPPTRANSPORT_LATEX_KT_SIX << " ";
 
-		        if(this->get_dot_meaning() == derivatives)
-			        {
-		            label << field_names[l % N_fields] << (l >= N_fields ? "^{" CPPTRANSPORT_LATEX_PRIME_SYMBOL "}" : "") << " "
-			                << field_names[m % N_fields] << (m >= N_fields ? "^{" CPPTRANSPORT_LATEX_PRIME_SYMBOL "}" : "") << " "
-			                << field_names[n % N_fields] << (n >= N_fields ? "^{" CPPTRANSPORT_LATEX_PRIME_SYMBOL "}" : "");
-			        }
-		        else
-			        {
-		            label << (l >= N_fields ? "p_{" : "") << field_names[l % N_fields] << (l >= N_fields ? "}" : "") << " "
-			                << (m >= N_fields ? "p_{" : "") << field_names[m % N_fields] << (m >= N_fields ? "}" : "") << " "
-			                << (n >= N_fields ? "p_{" : "") << field_names[n % N_fields] << (n >= N_fields ? "}" : "");
-			        }
+            switch(this->get_dot_meaning())
+              {
+                case dot_type::derivatives:
+                  label
+                    << field_names[l % N_fields] << (l >= N_fields ? "^{" CPPTRANSPORT_LATEX_PRIME_SYMBOL "}" : "") << " "
+                    << field_names[m % N_fields] << (m >= N_fields ? "^{" CPPTRANSPORT_LATEX_PRIME_SYMBOL "}" : "") << " "
+                    << field_names[n % N_fields] << (n >= N_fields ? "^{" CPPTRANSPORT_LATEX_PRIME_SYMBOL "}" : "");
+                  break;
+
+                case dot_type::momenta:
+                  label
+                    << (l >= N_fields ? "p_{" : "") << field_names[l % N_fields] << (l >= N_fields ? "}" : "") << " "
+                    << (m >= N_fields ? "p_{" : "") << field_names[m % N_fields] << (m >= N_fields ? "}" : "") << " "
+                    << (n >= N_fields ? "p_{" : "") << field_names[n % N_fields] << (n >= N_fields ? "}" : "");
+                  break;
+              }
 
 				    return(label.str());
 			    }
@@ -224,18 +228,22 @@ namespace transport
 
 		        const std::vector<std::string>& field_names = this->gadget.get_model()->get_field_names();
 
-		        if(this->get_dot_meaning() == derivatives)
-			        {
-		            label << field_names[l % N_fields] << (l >= N_fields ? CPPTRANSPORT_NONLATEX_PRIME_SYMBOL : "") << ", "
-			                << field_names[m % N_fields] << (m >= N_fields ? CPPTRANSPORT_NONLATEX_PRIME_SYMBOL : "") << ", "
-			                << field_names[n % N_fields] << (n >= N_fields ? CPPTRANSPORT_NONLATEX_PRIME_SYMBOL : "");
-			        }
-		        else
-			        {
-		            label << (l >= N_fields ? "p_{" : "") << field_names[l % N_fields] << (l >= N_fields ? "}" : "") << ", "
-			                << (m >= N_fields ? "p_{" : "") << field_names[m % N_fields] << (m >= N_fields ? "}" : "") << ", "
-			                << (n >= N_fields ? "p_{" : "") << field_names[n % N_fields] << (n >= N_fields ? "}" : "");
-			        }
+            switch(this->get_dot_meaning())
+              {
+                case dot_type::derivatives:
+                  label
+                    << field_names[l % N_fields] << (l >= N_fields ? CPPTRANSPORT_NONLATEX_PRIME_SYMBOL : "") << ", "
+                    << field_names[m % N_fields] << (m >= N_fields ? CPPTRANSPORT_NONLATEX_PRIME_SYMBOL : "") << ", "
+                    << field_names[n % N_fields] << (n >= N_fields ? CPPTRANSPORT_NONLATEX_PRIME_SYMBOL : "");
+                  break;
+
+                case dot_type::momenta:
+                  label
+                    << (l >= N_fields ? "p_{" : "") << field_names[l % N_fields] << (l >= N_fields ? "}" : "") << ", "
+                    << (m >= N_fields ? "p_{" : "") << field_names[m % N_fields] << (m >= N_fields ? "}" : "") << ", "
+                    << (n >= N_fields ? "p_{" : "") << field_names[n % N_fields] << (n >= N_fields ? "}" : "");
+                  break;
+              }
 
 				    return(label.str());
 			    }

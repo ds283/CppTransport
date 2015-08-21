@@ -152,7 +152,7 @@ namespace transport
 	        {
             std::stringstream msg;
             msg << CPPTRANSPORT_REPO_COMMIT_FAILURE << " '" << record.get_name() << "'";
-            throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
+            throw runtime_exception(exception_type::REPOSITORY_ERROR, msg.str());
 	        }
 
         out << root;
@@ -174,7 +174,7 @@ namespace transport
 	        {
             std::stringstream msg;
             msg << CPPTRANSPORT_REPO_DESERIALIZE_FAILURE << " '" << path << "'";
-            throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
+            throw runtime_exception(exception_type::REPOSITORY_ERROR, msg.str());
 	        }
 
         std::ifstream in;
@@ -187,7 +187,7 @@ namespace transport
 	        {
             std::stringstream msg;
             msg << CPPTRANSPORT_REPO_DESERIALIZE_FAILURE << " '" << path << "'";
-            throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
+            throw runtime_exception(exception_type::REPOSITORY_ERROR, msg.str());
 	        }
 
         return(root);

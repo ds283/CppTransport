@@ -203,7 +203,7 @@ namespace transport
                 for(unsigned int n = 0; n < 2*N_fields; ++n)
                   {
                     cf_kconfig_data_tag<number> tag =
-                      h->pipe.new_cf_kconfig_data_tag(data_tag<number>::cf_twopf_re, h->mdl->flatten(m,n), h->time_sample_sns[tindex]);
+                      h->pipe.new_cf_kconfig_data_tag(cf_data_type::cf_twopf_re, h->mdl->flatten(m,n), h->time_sample_sns[tindex]);
 
                     const std::vector<number>& sigma_line = h->k_handle.lookup_tag(tag);
 
@@ -231,7 +231,7 @@ namespace transport
 
 //            std::ostringstream msg;
 //            msg << std::setprecision(2) << "-- zeta twopf wavenumber series: serial " << h->time_sample_sns[tindex] << ": smallest intermediate = " << global_small*100.0 << "%, largest intermediate = " << global_large*100.0 << "%";
-//            BOOST_LOG_SEV(h->pipe.get_log(), datapipe<number>::normal) << msg.str();
+//            BOOST_LOG_SEV(h->pipe.get_log(), datapipe<number>::log_severity_level::normal) << msg.str();
 //            std::cout << msg.str() << '\n';
           }
 
@@ -298,7 +298,7 @@ namespace transport
                   {
                     for(unsigned int n = 0; n < 2*N_fields; ++n)
                       {
-                        cf_kconfig_data_tag<number> tag = h->pipe.new_cf_kconfig_data_tag(data_tag<number>::cf_threepf, h->mdl->flatten(l,m,n), h->time_sample_sns[tindex]);
+                        cf_kconfig_data_tag<number> tag = h->pipe.new_cf_kconfig_data_tag(cf_data_type::cf_threepf, h->mdl->flatten(l,m,n), h->time_sample_sns[tindex]);
 
                         std::vector<number> threepf_line = h->k_handle.lookup_tag(tag);
 
@@ -329,17 +329,17 @@ namespace transport
                             // the indices are N_lm, N_p, N_q so the 2pfs we sum over are
                             // sigma_lp(k2)*sigma_mq(k3) etc.
 
-                            cf_kconfig_data_tag<number> k1_re_lp_tag = h->pipe.new_cf_kconfig_data_tag(data_tag<number>::cf_twopf_re, h->mdl->flatten(l,p), h->time_sample_sns[tindex]);
-                            cf_kconfig_data_tag<number> k1_im_lp_tag = h->pipe.new_cf_kconfig_data_tag(data_tag<number>::cf_twopf_im, h->mdl->flatten(l,p), h->time_sample_sns[tindex]);
+                            cf_kconfig_data_tag<number> k1_re_lp_tag = h->pipe.new_cf_kconfig_data_tag(cf_data_type::cf_twopf_re, h->mdl->flatten(l,p), h->time_sample_sns[tindex]);
+                            cf_kconfig_data_tag<number> k1_im_lp_tag = h->pipe.new_cf_kconfig_data_tag(cf_data_type::cf_twopf_im, h->mdl->flatten(l,p), h->time_sample_sns[tindex]);
 
-                            cf_kconfig_data_tag<number> k2_re_lp_tag = h->pipe.new_cf_kconfig_data_tag(data_tag<number>::cf_twopf_re, h->mdl->flatten(l,p), h->time_sample_sns[tindex]);
-                            cf_kconfig_data_tag<number> k2_im_lp_tag = h->pipe.new_cf_kconfig_data_tag(data_tag<number>::cf_twopf_im, h->mdl->flatten(l,p), h->time_sample_sns[tindex]);
+                            cf_kconfig_data_tag<number> k2_re_lp_tag = h->pipe.new_cf_kconfig_data_tag(cf_data_type::cf_twopf_re, h->mdl->flatten(l,p), h->time_sample_sns[tindex]);
+                            cf_kconfig_data_tag<number> k2_im_lp_tag = h->pipe.new_cf_kconfig_data_tag(cf_data_type::cf_twopf_im, h->mdl->flatten(l,p), h->time_sample_sns[tindex]);
 
-                            cf_kconfig_data_tag<number> k2_re_mq_tag = h->pipe.new_cf_kconfig_data_tag(data_tag<number>::cf_twopf_re, h->mdl->flatten(m,q), h->time_sample_sns[tindex]);
-                            cf_kconfig_data_tag<number> k2_im_mq_tag = h->pipe.new_cf_kconfig_data_tag(data_tag<number>::cf_twopf_im, h->mdl->flatten(m,q), h->time_sample_sns[tindex]);
+                            cf_kconfig_data_tag<number> k2_re_mq_tag = h->pipe.new_cf_kconfig_data_tag(cf_data_type::cf_twopf_re, h->mdl->flatten(m,q), h->time_sample_sns[tindex]);
+                            cf_kconfig_data_tag<number> k2_im_mq_tag = h->pipe.new_cf_kconfig_data_tag(cf_data_type::cf_twopf_im, h->mdl->flatten(m,q), h->time_sample_sns[tindex]);
 
-                            cf_kconfig_data_tag<number> k3_re_mq_tag = h->pipe.new_cf_kconfig_data_tag(data_tag<number>::cf_twopf_re, h->mdl->flatten(m,q), h->time_sample_sns[tindex]);
-                            cf_kconfig_data_tag<number> k3_im_mq_tag = h->pipe.new_cf_kconfig_data_tag(data_tag<number>::cf_twopf_im, h->mdl->flatten(m,q), h->time_sample_sns[tindex]);
+                            cf_kconfig_data_tag<number> k3_re_mq_tag = h->pipe.new_cf_kconfig_data_tag(cf_data_type::cf_twopf_re, h->mdl->flatten(m,q), h->time_sample_sns[tindex]);
+                            cf_kconfig_data_tag<number> k3_im_mq_tag = h->pipe.new_cf_kconfig_data_tag(cf_data_type::cf_twopf_im, h->mdl->flatten(m,q), h->time_sample_sns[tindex]);
 
                             const std::vector<number> k1_re_lp = k1_handle.lookup_tag(k1_re_lp_tag);
                             const std::vector<number> k1_im_lp = k1_handle.lookup_tag(k1_im_lp_tag);
@@ -385,7 +385,7 @@ namespace transport
 
 //            std::ostringstream msg;
 //            msg << std::setprecision(2) << "-- zeta threepf wavenumber series: serial " << h->time_sample_sns[tindex] << ": smallest intermediate = " << global_small*100.0 << "%, largest intermediate = " << global_large*100.0 << "%";
-//            BOOST_LOG_SEV(h->pipe.get_log(), datapipe<number>::normal) << msg.str();
+//            BOOST_LOG_SEV(h->pipe.get_log(), datapipe<number>::log_severity_level::normal) << msg.str();
 //            std::cout << msg.str() << '\n';
           }
 

@@ -79,7 +79,7 @@ namespace transport
       public:
 
         //! Read-only/Read-write access to the repository
-        typedef enum { readonly, readwrite } access_type;
+        enum class access_type { readonly, readwrite };
 
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -167,7 +167,7 @@ namespace transport
 
 		    //! Enumerate the output groups available from a named output task
 		    virtual std::list< std::shared_ptr< output_group_record<output_payload> > > enumerate_output_task_content(const std::string& name) = 0;
-		    
+
 
         // GENERATE WRITERS FOR TASKS
 		    // The 'base' forms perform common tasks, using a suite of callbacks provided.
@@ -440,7 +440,7 @@ namespace transport
 		template <typename number>
 		transaction_manager repository<number>::transaction_factory(transaction_manager::open_handler o, transaction_manager::commit_handler c, transaction_manager::rollback_handler r)
 			{
-				if(this->transactions > 0) throw runtime_exception(runtime_exception::REPOSITORY_TRANSACTION_ERROR, CPPTRANSPORT_REPO_TRANSACTION_UNDERWAY);
+				if(this->transactions > 0) throw runtime_exception(exception_type::REPOSITORY_TRANSACTION_ERROR, CPPTRANSPORT_REPO_TRANSACTION_UNDERWAY);
 				this->transactions++;
 
 				typename transaction_manager::release_handler releaser = std::bind(&repository<number>::release_transaction, this);
@@ -452,7 +452,7 @@ namespace transport
 		template <typename number>
 		void repository<number>::release_transaction()
 			{
-				if(this->transactions == 0) throw runtime_exception(runtime_exception::REPOSITORY_TRANSACTION_ERROR, CPPTRANSPORT_REPO_TRANSACTION_OVER_RELEASE);
+				if(this->transactions == 0) throw runtime_exception(exception_type::REPOSITORY_TRANSACTION_ERROR, CPPTRANSPORT_REPO_TRANSACTION_OVER_RELEASE);
 				this->transactions--;
 			}
 
@@ -824,7 +824,7 @@ namespace transport
 	            }
             catch(boost::filesystem::filesystem_error& xe)
 	            {
-                throw runtime_exception(runtime_exception::REPOSITORY_ERROR, CPPTRANSPORT_REPO_CANT_WRITE_FAILURE_PATH);
+                throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_CANT_WRITE_FAILURE_PATH);
 	            }
 
             std::ostringstream msg;
@@ -835,7 +835,7 @@ namespace transport
 
             this->message(msg.str());
 	        }
-        else throw runtime_exception(runtime_exception::REPOSITORY_ERROR, CPPTRANSPORT_REPO_CANT_WRITE_FAILURE_PATH);
+        else throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_CANT_WRITE_FAILURE_PATH);
 	    }
 
 
@@ -912,7 +912,7 @@ namespace transport
 	            }
             catch(boost::filesystem::filesystem_error& xe)
 	            {
-                throw runtime_exception(runtime_exception::REPOSITORY_ERROR, CPPTRANSPORT_REPO_CANT_WRITE_FAILURE_PATH);
+                throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_CANT_WRITE_FAILURE_PATH);
 	            }
 
             std::ostringstream msg;
@@ -923,7 +923,7 @@ namespace transport
 
             this->message(msg.str());
 	        }
-        else throw runtime_exception(runtime_exception::REPOSITORY_ERROR, CPPTRANSPORT_REPO_CANT_WRITE_FAILURE_PATH);
+        else throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_CANT_WRITE_FAILURE_PATH);
 	    }
 
 
@@ -979,7 +979,7 @@ namespace transport
 	            }
             catch(boost::filesystem::filesystem_error& xe)
 	            {
-                throw runtime_exception(runtime_exception::REPOSITORY_ERROR, CPPTRANSPORT_REPO_CANT_WRITE_FAILURE_PATH);
+                throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_CANT_WRITE_FAILURE_PATH);
 	            }
 
             std::ostringstream msg;
@@ -990,7 +990,7 @@ namespace transport
 
             this->message(msg.str());
 	        }
-        else throw runtime_exception(runtime_exception::REPOSITORY_ERROR, CPPTRANSPORT_REPO_CANT_WRITE_FAILURE_PATH);
+        else throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_CANT_WRITE_FAILURE_PATH);
 	    }
 
 
@@ -1014,7 +1014,7 @@ namespace transport
 	        {
             std::ostringstream msg;
             msg << CPPTRANSPORT_REPO_NO_MATCHING_OUTPUT_GROUPS << " '" << name << "'";
-            throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
+            throw runtime_exception(exception_type::REPOSITORY_ERROR, msg.str());
 	        }
 
         return(output.front());
@@ -1038,7 +1038,7 @@ namespace transport
 	        {
             std::ostringstream msg;
             msg << CPPTRANSPORT_REPO_NO_MATCHING_OUTPUT_GROUPS << " '" << name << "'";
-            throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
+            throw runtime_exception(exception_type::REPOSITORY_ERROR, msg.str());
 	        }
 
         return(output.front());

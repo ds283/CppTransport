@@ -14,7 +14,7 @@ namespace transport
 		namespace derived_data
 			{
 
-				typedef enum { time_cost, steps_cost } cost_metric;
+        enum class cost_metric { time_cost, steps_cost };
 
 			}   // namespace derived_data
 

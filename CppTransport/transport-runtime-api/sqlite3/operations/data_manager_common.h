@@ -76,9 +76,9 @@ namespace transport
     namespace sqlite3_operations
       {
 
-        typedef enum { foreign_keys, no_foreign_keys } add_foreign_keys_type;
+        enum class foreign_keys_type { foreign_keys, no_foreign_keys };
 
-        typedef enum { twopf_configs, threepf_configs } metadata_configuration_type;
+        enum class metadata_configuration_type { twopf_configs, threepf_configs };
 
 
         // sqlite has a default maximum number of columns, and a maximum number of
@@ -93,21 +93,21 @@ namespace transport
           {
             switch(type)
               {
-                case derived_data::fNL_local_template:
+                case derived_data::template_type::fNL_local_template:
                   return static_cast<std::string>(CPPTRANSPORT_SQLITE_FNL_LOCAL_VALUE_TABLE);
 
-                case derived_data::fNL_equi_template:
+                case derived_data::template_type::fNL_equi_template:
                   return static_cast<std::string>(CPPTRANSPORT_SQLITE_FNL_EQUI_VALUE_TABLE);
 
-                case derived_data::fNL_ortho_template:
+                case derived_data::template_type::fNL_ortho_template:
                   return static_cast<std::string>(CPPTRANSPORT_SQLITE_FNL_ORTHO_VALUE_TABLE);
 
-                case derived_data::fNL_DBI_template:
+                case derived_data::template_type::fNL_DBI_template:
                   return static_cast<std::string>(CPPTRANSPORT_SQLITE_FNL_DBI_VALUE_TABLE);
 
                 default:
                   assert(false);
-                throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, CPPTRANSPORT_DATAMGR_UNKNOWN_FNL_TEMPLATE);
+                throw runtime_exception(exception_type::DATA_CONTAINER_ERROR, CPPTRANSPORT_DATAMGR_UNKNOWN_FNL_TEMPLATE);
               }
           }
 

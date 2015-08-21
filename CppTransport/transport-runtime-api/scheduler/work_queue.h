@@ -23,21 +23,17 @@
 namespace transport
   {
 
-    // forward reference for overload of operator<<
-    template <typename ItemType> class work_queue;
-
-    // overload operator<< to write a work_queue to a stream
-    template <typename ItemType>
-    std::ostream& operator<<(std::ostream& out, work_queue<ItemType>& obj);
 
     template <typename ItemType>
     class work_queue
       {
+
       public:
 
         //! Hold a list of work items for a specific device. The queue for a device is a collection of these work lists.
         class device_work_list
           {
+
           public:
 
             device_work_list(unsigned int sz=0)
@@ -72,17 +68,22 @@ namespace transport
               }
 
           private:
+
             //! std::vector holding the list of work items
             std::vector<ItemType> work_list;
 
             //! Memory required for the state vector, used when computing the memory required to integrate items in the list
             unsigned int state_size;
+
           };
+
 
         //! Hold a queue of work items for a specific device. The queue may be broken into a collection of work lists.
         class device_queue
           {
+
           public:
+
             device_queue(const context::device& dev, unsigned int size)
               : device(dev), total_items(0), state_size(size)
               {
@@ -139,6 +140,7 @@ namespace transport
             void new_queue() { this->queue_list.push_back(device_work_list(this->state_size)); }
 
           private:
+
             //! std::vector holding the work lists for this device
             std::vector<device_work_list> queue_list;
 
@@ -150,7 +152,13 @@ namespace transport
 
             //! Motal number of items queued on this device, over all work lists
             unsigned int total_items;
+
           };
+
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
 
         work_queue(const context& c, unsigned int size);
 
@@ -181,14 +189,23 @@ namespace transport
               }
           }
 
-        friend std::ostream& operator<< <>(std::ostream& out, work_queue<ItemType>& obj);
+
+        // WRITE SELF TO STREAM
+
+      public:
+
+        //! write to stream
+        template <typename Stream> void write(Stream& out);
+
 
       protected:
+
         //! Clear all queues
         void clear();
 
 
       private:
+
         //! Device context
         const context& ctx;
 
@@ -259,14 +276,15 @@ namespace transport
 
 
     template <typename ItemType>
-    std::ostream& operator<<(std::ostream& out, work_queue<ItemType>& obj)
+    template <typename Stream>
+    void work_queue<ItemType>::write(Stream& out)
       {
-        out << CPPTRANSPORT_WORK_QUEUE_OUTPUT_A << " " << obj.ctx.size() << " "
-            << (obj.ctx.size() > 1 ? CPPTRANSPORT_WORK_QUEUE_OUTPUT_B : CPPTRANSPORT_WORK_QUEUE_OUTPUT_C)
-            << '\n' << '\n';
+        out << CPPTRANSPORT_WORK_QUEUE_OUTPUT_A << " " << this->ctx.size() << " "
+        << (this->ctx.size() > 1 ? CPPTRANSPORT_WORK_QUEUE_OUTPUT_B : CPPTRANSPORT_WORK_QUEUE_OUTPUT_C)
+        << '\n' << '\n';
 
         unsigned int d = 0;
-        for(typename std::vector<typename work_queue<ItemType>::device_queue>::const_iterator t = obj.device_list.begin(); t != obj.device_list.end(); ++t, ++d)
+        for(typename std::vector<typename work_queue<ItemType>::device_queue>::const_iterator t = this->device_list.begin(); t != this->device_list.end(); ++t, ++d)
           {
             out << d << ". " << (*t).get_device().get_name() << " (" << CPPTRANSPORT_WORK_QUEUE_WEIGHT << " = " << (*t).get_weight() << "), ";
             if((*t).get_device().get_mem_type() == context::device::bounded)
@@ -281,8 +299,8 @@ namespace transport
 
             // loop through the queues on this device, emitting them:
             out << "   " << (*t).size() << " "
-                << ((*t).size() > 1 ? CPPTRANSPORT_WORK_QUEUE_QUEUES : CPPTRANSPORT_WORK_QUEUE_QUEUE)
-                << '\n' << '\n';
+            << ((*t).size() > 1 ? CPPTRANSPORT_WORK_QUEUE_QUEUES : CPPTRANSPORT_WORK_QUEUE_QUEUE)
+            << '\n' << '\n';
 
             for(unsigned int i = 0; i < (*t).size(); ++i)
               {
@@ -296,7 +314,13 @@ namespace transport
                 out << '\n';
               }
           }
-        
+      }
+
+
+    template <typename ItemType, typename Char, typename Traits>
+    std::basic_ostream<Char, Traits>& operator<<(std::basic_ostream<Char, Traits>& out, work_queue<ItemType>& obj)
+      {
+        obj.write(out);
         return(out);
       }
 

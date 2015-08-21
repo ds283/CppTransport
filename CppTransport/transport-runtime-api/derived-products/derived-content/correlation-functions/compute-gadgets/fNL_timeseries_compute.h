@@ -206,7 +206,7 @@ namespace transport
               {
                 std::ostringstream msg;
                 msg << CPPTRANSPORT_PRODUCT_FNL_TASK_NOT_THREEPF;
-                throw runtime_exception(runtime_exception::DERIVED_PRODUCT_ERROR, msg.str());
+                throw runtime_exception(exception_type::DERIVED_PRODUCT_ERROR, msg.str());
               }
 
             assert(this->tk->is_integrable());
@@ -214,7 +214,7 @@ namespace transport
               {
                 std::ostringstream msg;
                 msg << CPPTRANSPORT_FNL_TASK_NOT_INTEGRABLE << " " << this->tk->get_name();
-                throw runtime_exception(runtime_exception::DERIVED_PRODUCT_ERROR, msg.str());
+                throw runtime_exception(exception_type::DERIVED_PRODUCT_ERROR, msg.str());
               }
           }
 
@@ -353,25 +353,25 @@ namespace transport
 
 		            switch(type)
 			            {
-		                case fNL_local_template:
+		                case template_type::fNL_local_template:
 			                T = this->local_template(twopf_k1[j], twopf_k2[j], twopf_k3[j]);
 			                break;
 
-		                case fNL_equi_template:
+		                case template_type::fNL_equi_template:
 			                T = this->equi_template(twopf_k1[j], twopf_k2[j], twopf_k3[j]);
 			                break;
 
-		                case fNL_ortho_template:
+		                case template_type::fNL_ortho_template:
 			                T = this->ortho_template(twopf_k1[j], twopf_k2[j], twopf_k3[j]);
 			                break;
 
-		                case fNL_DBI_template:
+		                case template_type::fNL_DBI_template:
 			                T = this->DBI_template(twopf_k1[j], twopf_k2[j], twopf_k3[j]);
 		                  break;
 
 		                default:
 			                assert(false);
-		                  throw runtime_exception(runtime_exception::RUNTIME_ERROR, CPPTRANSPORT_PRODUCT_FNL_LINE_UNKNOWN_TEMPLATE);
+		                  throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_PRODUCT_FNL_LINE_UNKNOWN_TEMPLATE);
 			            }
 
 		            number Bref = this->reference_bispectrum(twopf_k1[j], twopf_k2[j], twopf_k3[j]);

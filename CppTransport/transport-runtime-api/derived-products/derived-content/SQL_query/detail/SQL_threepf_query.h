@@ -28,13 +28,12 @@ namespace transport
 		namespace derived_data
 			{
 
+        enum class SQL_config_type { kconfig, k1_config, k2_config, k3_config };
+
+
 		    //! Manager for SQL-ish query to filter threepf k-configurations
 		    class SQL_threepf_kconfig_query: public SQL_query
 			    {
-
-		      public:
-
-				    typedef enum { kconfig, k1_config, k2_config, k3_config } config_type;
 
 		        // CONSTRUCTOR, DESTRUCTOR
 
@@ -58,10 +57,10 @@ namespace transport
 		      public:
 
 				    //! get current setting (defaults to kconfig -- ie. full threepf k-configurations)
-				    config_type get_config_type() const { return(this->config); }
+            SQL_config_type get_config_type() const { return(this->config); }
 
 				    //! set current setting
-				    void set_config_type(config_type t) { this->config = t; }
+				    void set_config_type(SQL_config_type t) { this->config = t; }
 
 
 		        // EXTRACT QUERY
@@ -92,7 +91,7 @@ namespace transport
 		        std::string query;
 
 				    //! configuration to query for -- full threepf? or one of the twopf configurations corresponding to a side?
-				    config_type config;
+            SQL_config_type config;
 
 				    //! class id
 				    unsigned int my_id;
@@ -112,7 +111,7 @@ namespace transport
 
 		    SQL_threepf_kconfig_query::SQL_threepf_kconfig_query(const std::string q)
 			    : query(q),
-			      config(kconfig),
+			      config(SQL_config_type::kconfig),
 		        my_id(current_id++)
 			    {
 			    }
@@ -125,11 +124,11 @@ namespace transport
 
 		        std::string type = reader[CPPTRANSPORT_NODE_SQL_THREEPF_KCONFIG_QUERY_CONFIG].asString();\
 
-				    config = kconfig;
-				    if(type == CPPTRANSPORT_NODE_SQL_THREEPF_KCONFIG_QUERY_KCONFIG)        config = kconfig;
-				    else if(type == CPPTRANSPORT_NODE_SQL_THREEPF_KCONFIG_QUERY_K1_CONFIG) config = k1_config;
-				    else if(type == CPPTRANSPORT_NODE_SQL_THREEPF_KCONFIG_QUERY_K2_CONFIG) config = k2_config;
-				    else if(type == CPPTRANSPORT_NODE_SQL_THREEPF_KCONFIG_QUERY_K3_CONFIG) config = k3_config;
+				    config = SQL_config_type::kconfig;
+				    if(type == CPPTRANSPORT_NODE_SQL_THREEPF_KCONFIG_QUERY_KCONFIG)        config = SQL_config_type::kconfig;
+				    else if(type == CPPTRANSPORT_NODE_SQL_THREEPF_KCONFIG_QUERY_K1_CONFIG) config = SQL_config_type::k1_config;
+				    else if(type == CPPTRANSPORT_NODE_SQL_THREEPF_KCONFIG_QUERY_K2_CONFIG) config = SQL_config_type::k2_config;
+				    else if(type == CPPTRANSPORT_NODE_SQL_THREEPF_KCONFIG_QUERY_K3_CONFIG) config = SQL_config_type::k3_config;
 				    else assert(false);
 			    }
 
@@ -141,24 +140,21 @@ namespace transport
 
 				    switch(this->config)
 					    {
-				        case kconfig:
+				        case SQL_config_type::kconfig:
 					        writer[CPPTRANSPORT_NODE_SQL_THREEPF_KCONFIG_QUERY_CONFIG] = std::string(CPPTRANSPORT_NODE_SQL_THREEPF_KCONFIG_QUERY_KCONFIG);
 					        break;
 
-				        case k1_config:
+				        case SQL_config_type::k1_config:
 					        writer[CPPTRANSPORT_NODE_SQL_THREEPF_KCONFIG_QUERY_CONFIG] = std::string(CPPTRANSPORT_NODE_SQL_THREEPF_KCONFIG_QUERY_K1_CONFIG);
 							    break;
 
-				        case k2_config:
+				        case SQL_config_type::k2_config:
 					        writer[CPPTRANSPORT_NODE_SQL_THREEPF_KCONFIG_QUERY_CONFIG] = std::string(CPPTRANSPORT_NODE_SQL_THREEPF_KCONFIG_QUERY_K2_CONFIG);
 					        break;
 
-				        case k3_config:
+                case SQL_config_type::k3_config:
 					        writer[CPPTRANSPORT_NODE_SQL_THREEPF_KCONFIG_QUERY_CONFIG] = std::string(CPPTRANSPORT_NODE_SQL_THREEPF_KCONFIG_QUERY_K3_CONFIG);
 					        break;
-
-				        default:
-					        assert(false);
 					    }
 			    }
 
@@ -174,13 +170,13 @@ namespace transport
 
 				    switch(this->config)
 					    {
-				        case kconfig:
+				        case SQL_config_type::kconfig:
 					        {
 				            query << " FROM " << policy.threepf_sample_table() << " WHERE " << this->query;
 				            break;
 					        }
 
-				        case k1_config:
+				        case SQL_config_type::k1_config:
 					        {
 				            std::ostringstream temp_table;
 						        temp_table << "sql_temp_" << this->my_id;
@@ -194,9 +190,10 @@ namespace transport
 						          << " ON " << policy.twopf_sample_table() << "." << policy.twopf_serial_column()
 						          << "="
 					            << temp_table.str() << ".col";
+                      break;
 					        }
 
-				        case k2_config:
+				        case SQL_config_type::k2_config:
 					        {
 				            std::ostringstream temp_table;
 				            temp_table << "sql_temp_" << this->my_id;
@@ -210,9 +207,10 @@ namespace transport
 							        << " ON " << policy.twopf_sample_table() << "." << policy.twopf_serial_column()
 							        << "="
 							        << temp_table.str() << ".col";
+                      break;
 					        }
 
-				        case k3_config:
+                case SQL_config_type::k3_config:
 					        {
 				            std::ostringstream temp_table;
 				            temp_table << "sql_temp_" << this->my_id;
@@ -226,13 +224,9 @@ namespace transport
 							        << " ON " << policy.twopf_sample_table() << "." << policy.twopf_serial_column()
 							        << "="
 							        << temp_table.str() << ".col";
+                      break;
 					        }
-
-				        default:
-					        assert(false);
-					    };
-
-
+              };
 
 		        return(query.str());
 			    }

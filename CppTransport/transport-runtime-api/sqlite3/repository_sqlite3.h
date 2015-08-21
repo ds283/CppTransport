@@ -413,7 +413,7 @@ namespace transport
           {
             std::ostringstream msg;
             msg << CPPTRANSPORT_REPO_MISSING_ROOT << " '" << path << "'";
-            throw runtime_exception(runtime_exception::REPO_NOT_FOUND, msg.str());
+            throw runtime_exception(exception_type::REPO_NOT_FOUND, msg.str());
           }
 
         // database should be present in an existing directory
@@ -422,7 +422,7 @@ namespace transport
           {
             std::ostringstream msg;
             msg << CPPTRANSPORT_REPO_MISSING_DATABASE << " '" << path << "'";
-            throw runtime_exception(runtime_exception::REPO_NOT_FOUND, msg.str());
+            throw runtime_exception(exception_type::REPO_NOT_FOUND, msg.str());
           }
 
         // package store should be present
@@ -431,7 +431,7 @@ namespace transport
           {
             std::ostringstream msg;
             msg << CPPTRANSPORT_REPO_MISSING_PACKAGE_STORE << " '" << path << "'";
-            throw runtime_exception(runtime_exception::REPO_NOT_FOUND, msg.str());
+            throw runtime_exception(exception_type::REPO_NOT_FOUND, msg.str());
           }
 
         // task store should be present
@@ -440,7 +440,7 @@ namespace transport
           {
             std::ostringstream msg;
             msg << CPPTRANSPORT_REPO_MISSING_TASK_STORE << " '" << path << "'";
-            throw runtime_exception(runtime_exception::REPO_NOT_FOUND, msg.str());
+            throw runtime_exception(exception_type::REPO_NOT_FOUND, msg.str());
           }
 
         // product store should be present
@@ -449,7 +449,7 @@ namespace transport
           {
             std::ostringstream msg;
             msg << CPPTRANSPORT_REPO_MISSING_PRODUCT_STORE << " '" << path << "'";
-            throw runtime_exception(runtime_exception::REPO_NOT_FOUND, msg.str());
+            throw runtime_exception(exception_type::REPO_NOT_FOUND, msg.str());
           }
 
         // output store should be present
@@ -458,7 +458,7 @@ namespace transport
           {
             std::ostringstream msg;
             msg << CPPTRANSPORT_REPO_MISSING_OUTPUT_STORE << " '" << path << "'";
-            throw runtime_exception(runtime_exception::REPO_NOT_FOUND, msg.str());
+            throw runtime_exception(exception_type::REPO_NOT_FOUND, msg.str());
           }
 
         unsigned int sqlite_mode = (mode == repository<number>::access_type::readonly ? SQLITE_OPEN_READONLY : SQLITE_OPEN_READWRITE);
@@ -466,7 +466,7 @@ namespace transport
           {
             std::ostringstream msg;
             msg << CPPTRANSPORT_REPO_FAIL_DATABASE_OPEN << " " << db_path;
-            throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, msg.str());
+            throw runtime_exception(exception_type::REPOSITORY_BACKEND_ERROR, msg.str());
           }
 
         // TODO: consider checking whether required tables are present
@@ -490,7 +490,7 @@ namespace transport
           {
             std::ostringstream msg;
             msg << CPPTRANSPORT_REPO_ROOT_EXISTS << " '" << path << "'";
-            throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
+            throw runtime_exception(exception_type::REPOSITORY_ERROR, msg.str());
           }
 
         db_path       = this->get_root_path() / CPPTRANSPORT_REPO_REPOSITORY_LEAF;
@@ -511,7 +511,7 @@ namespace transport
           {
             std::ostringstream msg;
             msg << CPPTRANSPORT_REPO_FAIL_DATABASE_OPEN << " " << db_path;
-            throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, msg.str());
+            throw runtime_exception(exception_type::REPOSITORY_BACKEND_ERROR, msg.str());
           }
 
         sqlite3_operations::create_repository_tables(db);
@@ -526,7 +526,7 @@ namespace transport
         if(this->db != nullptr)
           {
             // perform routine maintenance
-            if(this->access_mode == repository<number>::readwrite) sqlite3_operations::exec(this->db, "VACUUM;");
+            if(this->access_mode == repository<number>::access_type::readwrite) sqlite3_operations::exec(this->db, "VACUUM;");
 
             sqlite3_close(this->db);
           }
@@ -592,7 +592,7 @@ namespace transport
           {
             std::ostringstream msg;
             msg << exists_err << " '" << record.get_name() << "'";
-            throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
+            throw runtime_exception(exception_type::REPOSITORY_ERROR, msg.str());
           }
 
         // commit entry to the database
@@ -628,7 +628,7 @@ namespace transport
           {
             std::ostringstream msg;
             msg << exists_err << " '" << task_record.get_name() << "'";
-            throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
+            throw runtime_exception(exception_type::REPOSITORY_ERROR, msg.str());
           }
 
         // commit entry to the database
@@ -1104,7 +1104,7 @@ namespace transport
             return this->output_task_record_factory(root);
           }
 
-        throw runtime_exception(runtime_exception::RECORD_NOT_FOUND, name);   // RECORD_NOT_FOUND expects task name in message
+        throw runtime_exception(exception_type::RECORD_NOT_FOUND, name);   // RECORD_NOT_FOUND expects task name in message
       }
 
 
@@ -1127,11 +1127,11 @@ namespace transport
       {
         std::unique_ptr <task_record<number>> record(this->query_task(name));
 
-        if(record->get_type() != task_record<number>::integration)
+        if(record->get_type() != task_record<number>::task_type::integration)
           {
             std::ostringstream msg;
             msg << CPPTRANSPORT_REPO_EXTRACT_DERIVED_NOT_INTGRTN << " '" << name << "'";
-            throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
+            throw runtime_exception(exception_type::REPOSITORY_ERROR, msg.str());
           }
 
         std::list<std::shared_ptr < output_group_record<integration_payload> > > list;
@@ -1152,11 +1152,11 @@ namespace transport
       {
         std::unique_ptr <task_record<number>> record(this->query_task(name));
 
-        if(record->get_type() != task_record<number>::postintegration)
+        if(record->get_type() != task_record<number>::task_type::postintegration)
           {
             std::ostringstream msg;
             msg << CPPTRANSPORT_REPO_EXTRACT_DERIVED_NOT_POSTINT << " '" << name << "'";
-            throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
+            throw runtime_exception(exception_type::REPOSITORY_ERROR, msg.str());
           }
 
         std::list<std::shared_ptr < output_group_record<postintegration_payload> > > list;
@@ -1177,11 +1177,11 @@ namespace transport
       {
         std::unique_ptr <task_record<number>> record(this->query_task(name));
 
-        if(record->get_type() != task_record<number>::output)
+        if(record->get_type() != task_record<number>::task_type::output)
           {
             std::ostringstream msg;
             msg << CPPTRANSPORT_REPO_EXTRACT_DERIVED_NOT_OUTPUT << " '" << name << "'";
-            throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
+            throw runtime_exception(exception_type::REPOSITORY_ERROR, msg.str());
           }
 
         std::list<std::shared_ptr < output_group_record<output_payload> > > list;
@@ -1237,7 +1237,7 @@ namespace transport
 
         std::stringstream msg;
         msg << CPPTRANSPORT_REPO_TASK_MISSING << " '" << name << "'";
-        throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
+        throw runtime_exception(exception_type::REPOSITORY_ERROR, msg.str());
       }
 
 
@@ -1282,7 +1282,7 @@ namespace transport
 
         std::stringstream msg;
         msg << CPPTRANSPORT_REPO_OUTPUT_MISSING << " '" << name << "'";
-        throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
+        throw runtime_exception(exception_type::REPOSITORY_ERROR, msg.str());
       }
 
 
@@ -1297,7 +1297,7 @@ namespace transport
           {
             std::ostringstream msg;
             msg << CPPTRANSPORT_REPO_PACKAGE_DUPLICATE << " '" << name << "'";
-            throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
+            throw runtime_exception(exception_type::REPOSITORY_ERROR, msg.str());
           }
       }
 
@@ -1310,7 +1310,7 @@ namespace transport
           {
             std::ostringstream msg;
             msg << CPPTRANSPORT_REPO_TASK_DUPLICATE << " '" << name << "'";
-            throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
+            throw runtime_exception(exception_type::REPOSITORY_ERROR, msg.str());
           }
       }
 
@@ -1323,7 +1323,7 @@ namespace transport
           {
             std::ostringstream msg;
             msg << CPPTRANSPORT_REPO_PRODUCT_DUPLICATE << " '" << name << "'";
-            throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
+            throw runtime_exception(exception_type::REPOSITORY_ERROR, msg.str());
           }
       }
 
@@ -1401,7 +1401,7 @@ void repository_sqlite3<number>::recover_integrations(std::shared_ptr< data_mana
         integration_task_record<number>* rec = dynamic_cast< integration_task_record<number>* >(pre_rec.get());
 
         assert(rec != nullptr);
-        if(rec == nullptr) throw runtime_exception(runtime_exception::REPOSITORY_ERROR, CPPTRANSPORT_REPO_RECORD_CAST_FAILED);
+        if(rec == nullptr) throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_RECORD_CAST_FAILED);
 
         std::shared_ptr< integration_writer<number> > writer = this->get_integration_recovery_writer(*t, data_mgr, rec, worker);
 
@@ -1451,7 +1451,7 @@ void repository_sqlite3<number>::recover_postintegrations(std::shared_ptr< data_
         postintegration_task_record<number>* rec = dynamic_cast< postintegration_task_record<number>* >(pre_rec.get());
 
         assert(rec != nullptr);
-        if(rec == nullptr) throw runtime_exception(runtime_exception::REPOSITORY_ERROR, CPPTRANSPORT_REPO_RECORD_CAST_FAILED);
+        if(rec == nullptr) throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_RECORD_CAST_FAILED);
 
         if(t->is_paired) this->recover_paired_postintegration(*t, data_mgr, rec, i_list, worker);
         else             this->recover_unpaired_postintegration(*t, data_mgr, rec, worker);
@@ -1518,7 +1518,7 @@ void repository_sqlite3<number>::recover_paired_postintegration(const sqlite3_op
         integration_task_record<number>* i_rec = dynamic_cast< integration_task_record<number>* >(pre_rec.get());
 
         assert(i_rec != nullptr);
-        if(i_rec == nullptr) throw runtime_exception(runtime_exception::REPOSITORY_ERROR, CPPTRANSPORT_REPO_RECORD_CAST_FAILED);
+        if(i_rec == nullptr) throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_RECORD_CAST_FAILED);
 
         std::shared_ptr< integration_writer<number> >     i_writer = this->get_integration_recovery_writer(*t, data_mgr, i_rec, worker);
         std::shared_ptr< postintegration_writer<number> > p_writer = this->get_postintegration_recovery_writer(data, data_mgr, p_rec, worker);

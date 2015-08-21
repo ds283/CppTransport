@@ -21,9 +21,6 @@ namespace transport
 
     template <typename value> class aggregation_range;
 
-    template <typename value>
-    std::ostream& operator<<(std::ostream& out, aggregation_range<value>& obj);
-
 		template <typename value>
 		aggregation_range<value> operator+(const aggregation_range<value>& lhs, const range<value>& rhs);
 
@@ -56,8 +53,13 @@ namespace transport
 				//! Deserialization constructor
 				aggregation_range(Json::Value& reader);
 
+        //! Provide explicit copy constructor to handle deep move on std::unique_ptr
+        aggregation_range(const aggregation_range<value>& obj);
+
 
 				// OVERLOAD ARITHMETIC OPERATORS FOR CONVENIENCE
+
+      public:
 
 				//! assignment
 				aggregation_range<value>& operator=(const range<value>& rhs) { this->subrange_list.clear(); this->add_subrange(rhs); return(*this); }
@@ -71,6 +73,8 @@ namespace transport
 
 
 				// INTERFACE
+
+      public:
 
 		    //! Get minimum entry
 		    virtual value get_min()                      override       { if(this->dirty) this->populate_grid(); return(this->min); }
@@ -100,6 +104,9 @@ namespace transport
 				//! add a subrange
 				void add_subrange(const range<value>& s);
 
+        //! get number of subranges
+        unsigned int get_number_subranges() const { return(this->subrange_list.size()); }
+
 
 		    // POPULATE GRID
 
@@ -123,8 +130,6 @@ namespace transport
 		    //! Serialize this object
 		    virtual void serialize(Json::Value& writer) const override;
 
-        friend std::ostream& operator<< <>(std::ostream& out, aggregation_range<value>& obj);
-
 
 				// INTERNAL DATA
 
@@ -145,8 +150,11 @@ namespace transport
 		    //! Grid of values
 		    std::vector<value> grid;
 
-				//! List of subranges; use std::shared_ptr to manage lifetime of instances
-				typename std::list< std::shared_ptr< range<value> > > subrange_list;
+        //! set up typename alias for list of pointers to constituent objects
+        typedef typename std::list< std::unique_ptr< range<value> > > subrange_list_type;
+
+				//! List of subranges; use std::unique_ptr to manage lifetime of instances
+				subrange_list_type subrange_list;
 
 			};
 
@@ -208,6 +216,23 @@ namespace transport
 			}
 
 
+    template <typename value>
+    aggregation_range<value>::aggregation_range(const aggregation_range<value>& obj)
+      : dirty(true),
+        min(obj.min),
+        max(obj.max),
+        steps(obj.steps)
+      {
+        for(typename subrange_list_type::const_iterator t = obj.subrange_list.begin(); t != obj.subrange_list.end(); ++t)
+          {
+            if(*t)
+              {
+                subrange_list.emplace_back((*t)->clone());
+              }
+          }
+      }
+
+
 		template <typename value>
 		void aggregation_range<value>::serialize(Json::Value& writer) const
 			{
@@ -215,7 +240,7 @@ namespace transport
 
 		    Json::Value array(Json::arrayValue);
 
-				for(typename std::list< std::shared_ptr< range<value> > >::const_iterator t = this->subrange_list.begin(); t != this->subrange_list.end(); ++t)
+				for(typename subrange_list_type::const_iterator t = this->subrange_list.begin(); t != this->subrange_list.end(); ++t)
 			    {
 				    Json::Value obj(Json::objectValue);
 				    (*t)->serialize(obj);
@@ -260,7 +285,7 @@ namespace transport
 		    this->steps = 0;
 
 				// splice all subranges together
-				for(typename std::list< std::shared_ptr< range<value> > >::const_iterator t = this->subrange_list.begin(); t != this->subrange_list.end(); ++t)
+				for(typename std::list< std::unique_ptr< range<value> > >::const_iterator t = this->subrange_list.begin(); t != this->subrange_list.end(); ++t)
 			    {
 				    if((*t)->get_max() > this->max) this->max = (*t)->get_max();
 				    if((*t)->get_min() < this->min) this->min = (*t)->get_min();
@@ -280,18 +305,18 @@ namespace transport
 			}
 
 
-    template <typename value>
-    std::ostream& operator<<(std::ostream& out, aggregation_range<value>& obj)
+    template <typename value, typename Char, typename Traits>
+    std::basic_ostream<Char, Traits>& operator<<(std::basic_ostream<Char, Traits>& out, aggregation_range<value>& obj)
       {
-		    if(obj.dirty) obj.populate_grid();
+        const std::vector<value>& grid = obj.get_grid();
 
-        out << CPPTRANSPORT_AGGREGATION_RANGE_A << obj.subrange_list.size() << " ";
+        out << CPPTRANSPORT_AGGREGATION_RANGE_A << obj.get_number_subranges() << " ";
         out << CPPTRANSPORT_AGGREGATION_RANGE_B << '\n';
 
         out << CPPTRANSPORT_AGGREGATION_RANGE_C << '\n';
-        for(unsigned int i = 0; i < obj.grid.size(); ++i)
+        for(unsigned int i = 0; i < grid.size(); ++i)
           {
-            out << i << ". " << obj.grid[i] << '\n';
+            out << i << ". " << grid[i] << '\n';
           }
 
         return(out);

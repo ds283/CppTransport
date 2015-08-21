@@ -74,7 +74,7 @@ namespace transport
         virtual context backend_get_context() override;
 
         // Get backend type
-        virtual typename model<number>::backend_type get_backend_type() override;
+        virtual worker_type get_backend_type() override;
 
         //! Get backend memory capacity
         virtual unsigned int get_backend_memory() override;
@@ -241,7 +241,7 @@ namespace transport
 
       };
 
-    
+
     // BACKEND INTERFACE
 
 
@@ -259,9 +259,9 @@ namespace transport
 
 
     template <typename number>
-    typename model<number>::backend_type $$__MODEL_basic<number>::get_backend_type(void)
+    worker_type $$__MODEL_basic<number>::get_backend_type(void)
 	    {
-        return(model<number>::cpu);
+        return(worker_type::cpu);
 	    }
 
 
@@ -285,13 +285,13 @@ namespace transport
                                                         twopf_batcher<number>& batcher, bool silent)
       {
         // set batcher to delayed flushing mode so that we have a chance to unwind failed integrations
-        batcher.set_flush_mode(generic_batcher::flush_delayed);
+        batcher.set_flush_mode(generic_batcher::flush_mode::flush_delayed);
 
         std::ostringstream work_msg;
-        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal)
+        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal)
             << "** MPI compute backend processing twopf task";
         work_msg << work;
-        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << work_msg.str();
+        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << work_msg.str();
 //        std::cerr << work_msg.str();
         if(!silent) this->write_task_data(tk, batcher, $$__PERT_ABS_ERR, $$__PERT_REL_ERR, $$__PERT_STEP_SIZE, "$$__PERT_STEPPER");
 
@@ -322,7 +322,7 @@ namespace transport
 			          batcher.unbatch(list[i]->serial);
 			          refinement_level++;
 
-			          BOOST_LOG_SEV(batcher.get_log(), generic_batcher::warning)
+			          BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::warning)
 			              << "** " << CPPTRANSPORT_RETRY_CONFIG << " " << list[i]->serial << " (" << i+1
 		                << " " CPPTRANSPORT_OF << " " << list.size() << "), "
 			              << CPPTRANSPORT_REFINEMENT_LEVEL << " = " << refinement_level
@@ -333,7 +333,7 @@ namespace transport
                 batcher.report_integration_failure(list[i]->serial);
 		            batcher.unbatch(list[i]->serial);
 
-                BOOST_LOG_SEV(batcher.get_log(), generic_batcher::error)
+                BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::error)
                     << "!! " CPPTRANSPORT_FAILED_CONFIG << " " << list[i]->serial << " (" << i+1
                     << " " CPPTRANSPORT_OF << " " << list.size() << ") | " << list[i];
               }
@@ -345,7 +345,7 @@ namespace transport
     void $$__MODEL_basic<number>::twopf_kmode(const twopf_kconfig_record& kconfig, const twopf_list_task<number>* tk,
                                               twopf_batcher<number>& batcher, unsigned int refinement_level)
       {
-        if(refinement_level > tk->get_max_refinements()) throw runtime_exception(runtime_exception::REFINEMENT_FAILURE, CPPTRANSPORT_REFINEMENT_TOO_DEEP);
+        if(refinement_level > tk->get_max_refinements()) throw runtime_exception(exception_type::REFINEMENT_FAILURE, CPPTRANSPORT_REFINEMENT_TOO_DEEP);
 
         // get time configuration database
         const time_config_database time_db = tk->get_time_config_database(*kconfig);
@@ -433,13 +433,13 @@ namespace transport
                                                         threepf_batcher<number>& batcher, bool silent)
       {
         // set batcher to delayed flushing mode so that we have a chance to unwind failed integrations
-        batcher.set_flush_mode(generic_batcher::flush_delayed);
+        batcher.set_flush_mode(generic_batcher::flush_mode::flush_delayed);
 
         std::ostringstream work_msg;
-        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal)
+        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal)
           << "** MPI compute backend processing threepf task";
         work_msg << work;
-        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << work_msg.str();
+        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << work_msg.str();
 //        std::cerr << work_msg.str();
         if(!silent) this->write_task_data(tk, batcher, $$__PERT_ABS_ERR, $$__PERT_REL_ERR, $$__PERT_STEP_SIZE, "$$__PERT_STEPPER");
 
@@ -471,7 +471,7 @@ namespace transport
 		            batcher.unbatch(list[i]->serial);
 		            refinement_level++;
 
-                BOOST_LOG_SEV(batcher.get_log(), generic_batcher::warning)
+                BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::warning)
 		                << "** " << CPPTRANSPORT_RETRY_CONFIG << " " << list[i]->serial << " (" << i+1
 				            << " " << CPPTRANSPORT_OF << " " << list.size() << "), "
 	                  << CPPTRANSPORT_REFINEMENT_LEVEL << " = " << refinement_level
@@ -483,7 +483,7 @@ namespace transport
                 batcher.unbatch(list[i]->serial);
                 success = true;
 
-                BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal)
+                BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal)
                     << "!! " CPPTRANSPORT_FAILED_CONFIG << " " << list[i]->serial << " (" << i+1
                     << " " << CPPTRANSPORT_OF << " " << list.size() << ") | " << list[i]
                     << " (" << CPPTRANSPORT_FAILED_INTERNAL << xe.what() << ")";
@@ -496,7 +496,7 @@ namespace transport
     void $$__MODEL_basic<number>::threepf_kmode(const threepf_kconfig_record& kconfig, const threepf_task<number>* tk,
                                                 threepf_batcher<number>& batcher, unsigned int refinement_level)
       {
-        if(refinement_level > tk->get_max_refinements()) throw runtime_exception(runtime_exception::REFINEMENT_FAILURE, CPPTRANSPORT_REFINEMENT_TOO_DEEP);
+        if(refinement_level > tk->get_max_refinements()) throw runtime_exception(exception_type::REFINEMENT_FAILURE, CPPTRANSPORT_REFINEMENT_TOO_DEEP);
 
 		    // get list of time steps, and storage list
         const time_config_database time_db = tk->get_time_config_database(*kconfig);
@@ -520,10 +520,10 @@ namespace transport
 
 		    if(batcher.is_collecting_initial_conditions())
 			    {
-				    const std::vector<number> ics_1 = tk->get_ics_exit_vector(*kconfig, smallest_wavenumber_exit);
-				    const std::vector<number> ics_2 = tk->get_ics_exit_vector(*kconfig, kt_wavenumber_exit);
-		        double t_exit_1 = tk->get_ics_exit_time(*kconfig, smallest_wavenumber_exit);
-		        double t_exit_2 = tk->get_ics_exit_time(*kconfig, kt_wavenumber_exit);
+				    const std::vector<number> ics_1 = tk->get_ics_exit_vector(*kconfig, threepf_ics_exit_type::smallest_wavenumber_exit);
+				    const std::vector<number> ics_2 = tk->get_ics_exit_vector(*kconfig, threepf_ics_exit_type::kt_wavenumber_exit);
+		        double t_exit_1 = tk->get_ics_exit_time(*kconfig, threepf_ics_exit_type::smallest_wavenumber_exit);
+		        double t_exit_2 = tk->get_ics_exit_time(*kconfig, threepf_ics_exit_type::kt_wavenumber_exit);
 		        batcher.push_ics(kconfig->serial, t_exit_1, ics_1);
 		        batcher.push_kt_ics(kconfig->serial, t_exit_2, ics_2);
 			    }
@@ -631,7 +631,7 @@ namespace transport
     template <typename number>
     void $$__MODEL_basic_twopf_observer<number>::operator()(const twopf_state<number>& x, double t)
       {
-        this->start_batching(t, this->get_log(), generic_batcher::normal);
+        this->start_batching(t, this->get_log(), generic_batcher::log_severity_level::normal);
         this->push(x);
         this->stop_batching();
       }
@@ -782,7 +782,7 @@ namespace transport
     template <typename number>
     void $$__MODEL_basic_threepf_observer<number>::operator()(const threepf_state<number>& x, double t)
       {
-        this->start_batching(t, this->get_log(), generic_batcher::normal);
+        this->start_batching(t, this->get_log(), generic_batcher::log_severity_level::normal);
         this->push(x);
         this->stop_batching();
       }
