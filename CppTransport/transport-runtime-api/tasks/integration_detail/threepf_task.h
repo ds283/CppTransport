@@ -280,9 +280,6 @@ namespace transport
 
             spline1d<number> sp(N, log_aH);
 
-            std::cout << "aH sample:" << '\n';
-            std::cout << sp;
-
             this->threepf_compute_horizon_exit_times(sp, task_impl::TolerancePredicate(CPPTRANSPORT_ROOT_FIND_TOLERANCE));
 
             // forward to underlying twopf_list_task to also update its database
