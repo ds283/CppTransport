@@ -15,14 +15,63 @@ field
 
 % set up the parameters of the model
 parameter
- { latex "m";
- } m;
+ { latex "W_0";
+ } W0;
+
+parameter
+ { latex "m_\phi";
+ } m_phi;
  
 parameter
- { latex "\Lambda";
- } Lambda;
+ { latex "m_{\sigma,1}";
+ } m_sigma1;
+
+parameter
+ { latex "m_{\sigma,2}";
+ } m_sigma2;
+
+parameter
+ { latex "sigma_{\text{c}}";
+ } sigma_c;
+
+parameter
+ { latex "sigma_{\text{grad}}";
+ } sigma_grad;
 
 % set up the potential
 % note that 'M_P' is a predefined symbol which resolves to the (user-specified) Planck mass at runtime
 
-potential = (1/2)*m^2*phi^2 + Lambda^4*exp(10*sigma/M_P);
+subexpr
+ { latex "\sigma_{\text{diff}}";
+   value = (m_sigma1^2 - m_sigma2^2) / (2*M_P^2);
+ } msigma_sq_diff;
+
+subexpr
+ { latex "\sigma_{\text{sum}}";
+   value = (m_sigma1^2 + m_sigma2^2) / (2*M_P^2);
+ } msigma_sq_sum;
+
+subexpr
+ {
+   latex "W_{t1}";
+   value = msigma_sq_diff * tanh((sigma-sigma_c)/sigma_grad) - msigma_sq_sum;
+ } tanh_factor_1;
+
+subexpr
+ { latex "W_{t2}";
+   value = msigma_sq_diff * (1 + tanh((sigma-sigma_c)/sigma_grad));
+ } tanh_factor_2;
+
+subexpr
+ {
+   latex "W_\sigma";
+   value = 1 + (1/2) * (sigma/M_P)^2 * tanh_factor_1 - (1/2) * (sigma_c/M_P)^2 * tanh_factor_2;
+ } sigma_factor;
+
+subexpr
+ {
+   latex "W_\phi";
+   value = 1 - (1/2) * (m_phi/M_P)^2 * (phi/M_P)^2;
+ } phi_factor;
+
+potential = W0 * phi_factor * sigma_factor;
