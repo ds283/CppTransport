@@ -77,7 +77,7 @@ int main(int argc, char* argv[])
     // the conventions for k-numbers are as follows:
     // k=1 is the mode which crosses the horizon at time N*,
     // where N* is the 'offset' we pass to the integration method (see below)
-    const double        ktmin         = exp(2.0);
+    const double        ktmin         = exp(0.0);
     const double        ktmax         = exp(7.0);
     const unsigned int  k_samples     = 40;
 
@@ -145,7 +145,7 @@ int main(int argc, char* argv[])
 
 		// filter: equilateral with high k_t
     std::ostringstream hi_kt_query;
-		hi_kt_query << std::setprecision(10) << "ABS(alpha) < 0.001 AND ABS(kt_conventional-" << exp(3.0) << ") < 0.01";
+		hi_kt_query << std::setprecision(10) << "ABS(alpha) < 0.001 AND ABS(kt_conventional-" << exp(0.0) << ") < 0.01";
     transport::derived_data::SQL_threepf_kconfig_query isosceles_hi_kt(hi_kt_query.str());
 
     // filter: equilateral with lo k_t
@@ -323,7 +323,7 @@ int main(int argc, char* argv[])
     transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_beta_lo(ztk3, last_time, isosceles_lo_kt);
     tk3_zeta_redbsp_beta_lo.set_klabel_meaning(transport::derived_data::klabel_type::conventional);
     tk3_zeta_redbsp_beta_lo.set_current_x_axis_value(transport::derived_data::axis_value::beta_axis);
-		tk3_zeta_redbsp_beta_lo.set_label_text("$k_t/k_\\star = \\mathrm{e}^3$", "k_t/k* = exp(3)");
+		tk3_zeta_redbsp_beta_lo.set_label_text("$k_t/k_\\star = \\mathrm{e}^0$", "k_t/k* = exp(0)");
     transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_beta_hi(ztk3, last_time, isosceles_hi_kt);
     tk3_zeta_redbsp_beta_hi.set_klabel_meaning(transport::derived_data::klabel_type::conventional);
     tk3_zeta_redbsp_beta_hi.set_current_x_axis_value(transport::derived_data::axis_value::beta_axis);
@@ -345,7 +345,7 @@ int main(int argc, char* argv[])
     transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_sqk3_lo(ztk3, last_time, isosceles_lo_kt);
     tk3_zeta_redbsp_sqk3_lo.set_klabel_meaning(transport::derived_data::klabel_type::conventional);
     tk3_zeta_redbsp_sqk3_lo.set_current_x_axis_value(transport::derived_data::axis_value::squeezing_fraction_k3_axis);
-		tk3_zeta_redbsp_sqk3_lo.set_label_text("$k_t/k_\\star = \\mathrm{e}^3$", "k_t/k* = exp(3)");
+		tk3_zeta_redbsp_sqk3_lo.set_label_text("$k_t/k_\\star = \\mathrm{e}^0$", "k_t/k* = exp(0)");
 
     transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_sqk3_hi(ztk3, last_time, isosceles_hi_kt);
     tk3_zeta_redbsp_sqk3_hi.set_klabel_meaning(transport::derived_data::klabel_type::conventional);
@@ -370,7 +370,7 @@ int main(int argc, char* argv[])
     tk3_zeta_redbsp_sqk3_lo_index.set_klabel_meaning(transport::derived_data::klabel_type::conventional);
     tk3_zeta_redbsp_sqk3_lo_index.set_current_x_axis_value(transport::derived_data::axis_value::squeezing_fraction_k3_axis);
     tk3_zeta_redbsp_sqk3_lo_index.set_spectral_index(true);
-    tk3_zeta_redbsp_sqk3_lo_index.set_label_text("$n_{f_{\\mathrm{NL}}} \\;\\; k_t/k_\\star = \\mathrm{e}^3$", "n_fNL k_t/k* = exp(3)");
+    tk3_zeta_redbsp_sqk3_lo_index.set_label_text("$n_{f_{\\mathrm{NL}}} \\;\\; k_t/k_\\star = \\mathrm{e}^0$", "n_fNL k_t/k* = exp(0)");
 
     transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_sqk3_hi_index(ztk3, last_time, isosceles_hi_kt);
     tk3_zeta_redbsp_sqk3_hi_index.set_klabel_meaning(transport::derived_data::klabel_type::conventional);
@@ -429,7 +429,7 @@ int main(int argc, char* argv[])
 
     transport::derived_data::cost_wavenumber<double> tk3_lo_cost(tk3, isosceles_lo_kt);
 		tk3_lo_cost.set_current_x_axis_value(transport::derived_data::axis_value::squeezing_fraction_k3_axis);
-		tk3_lo_cost.set_label_text("$k_t = \\mathrm{e}^3$", "k_t = exp(3)");
+		tk3_lo_cost.set_label_text("$k_t = \\mathrm{e}^0$", "k_t = exp(0)");
 
     transport::derived_data::wavenumber_series_plot<double> tk3_cost_plot("powerlaw.threepf-1.sqk3-cost", "sqk3-cost.pdf");
 		tk3_cost_plot.add_line(tk3_lo_cost);
