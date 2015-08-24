@@ -334,7 +334,6 @@ set(TEMPLATES_VEXCL_CUDA_FILES
 
 set(EXAMPLES_OSCILLATORY_FILES
   examples/oscillatory/main.cpp
-  examples/oscillatory/makerepo.cpp
   examples/oscillatory/makerepo2.cpp
 )
 
