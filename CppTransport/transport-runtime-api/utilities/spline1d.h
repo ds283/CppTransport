@@ -76,6 +76,14 @@ namespace transport
 		    double get_max_x() const { return(this->max_x); }
 
 
+        // WRITE TO STREAM
+
+      public:
+
+        //! write self to stream
+        void write(std::ostream& out) const;
+
+
         // INTERNAL DATA
 
 
@@ -159,6 +167,25 @@ namespace transport
 
         return( static_cast<number>((this->p_spline->evalJacobian(xv))(0)) );
       }
+
+
+    template <typename number>
+    void spline1d<number>::write(std::ostream& out) const
+      {
+        for(std::multiset<SPLINTER::DataSample>::const_iterator t = this->table.cbegin(); t != this->table.cend(); ++t)
+          {
+            assert(t->getDimX() == 1);
+            out << "x = " << t->getX()[0] << ", y = " << t->getY() << '\n';
+          }
+      }
+
+
+    template <typename number, typename Char, typename Traits>
+    std::basic_ostream<Char, Traits>& operator<<(std::basic_ostream<Char, Traits>& out, const spline1d<number>& obj)
+      {
+        obj.write(out);
+        return(out);
+      };
 
 
   }   // namespace transport
