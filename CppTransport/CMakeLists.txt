@@ -555,8 +555,6 @@ set(TRANSPORT_RUNTIME_API_CONCEPTS_FILES
 )
 
 set(EXAMPLES_DQUAD_VEXCL_FILES
-  examples/dquad-vexcl/dq_vexcl-cuda.h
-  examples/dquad-vexcl/dq_vexcl-opencl.h
   examples/dquad-vexcl/main.cpp
   examples/dquad-vexcl/makerepo.cpp
 )
