@@ -74,6 +74,12 @@
 #define CPPTRANSPORT_TASK_SEARCH_KAH                  "k/aH="
 #define CPPTRANSPORT_TASK_SEARCH_GUESS_FAIL           "(search ended before last k-configuration left the horizon, probably because inflation ended before that could occur)"
 #define CPPTRANSPORT_TASK_SEARCH_TOO_CLOSE_FAIL       "(search ended after last k-configuration left the horizon, but end of inflation is probably too close)"
+#define CPPTRANSPORT_TASK_SEARCH_ROOT_ACCURACY        "could not compute root of k-aH=0 to sufficient accuracy"
+#define CPPTRANSPORT_TASK_SEARCH_ROOT_INF             "received std::inf result while computing root of k-aH=0"
+#define CPPTRANSPORT_TASK_SEARCH_ROOT_NAN             "received std::nan result while computing root of k-aH=0"
+#define CPPTRANSPORT_TASK_SEARCH_ROOT_BRACKET         "extreme values of N did not bracket root of k-aH"
+#define CPPTRANSPORT_TASK_SEARCH_ROOT_ITERATIONS      "iterations"
+#define CPPTRANSPORT_TASK_SEARCH_ROOT_KAH             "abs( log(k)-log(aH) )"
 
 
 #endif // CPPTRANSPORT_MESSAGES_EN_TASKS_H
