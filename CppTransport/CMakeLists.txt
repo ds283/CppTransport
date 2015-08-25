@@ -187,6 +187,10 @@ add_executable(quadratic10-mpi examples/quadratic10/main.cpp )
 target_link_libraries(quadratic10-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
 
 
+add_executable(powerlaw-makerepo examples/powerlaw/makerepo.cpp )
+target_link_libraries(powerlaw-makerepo sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
+
+
 add_executable(powerlaw-makerepo2 examples/powerlaw/makerepo2.cpp )
 target_link_libraries(powerlaw-makerepo2 sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
 
@@ -683,6 +687,7 @@ set(BACKENDS_LANGUAGES_CPP_CORE_FILES
 
 set(EXAMPLES_POWERLAW_FILES
   examples/powerlaw/main.cpp
+  examples/powerlaw/makerepo.cpp
   examples/powerlaw/makerepo2.cpp
 )
 
