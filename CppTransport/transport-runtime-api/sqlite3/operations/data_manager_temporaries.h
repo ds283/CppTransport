@@ -45,8 +45,8 @@ namespace transport
 
 		        // create the necessary tables
 		        create_worker_info_table(db, foreign_keys_type::no_foreign_keys);
-		        if(collect_stats) create_stats_table(db, foreign_keys_type::no_foreign_keys, metadata_configuration_type::twopf_configs);
-		        if(collect_ics) create_ics_table<number, typename integration_items<number>::ics_item>(db, Nfields, foreign_keys_type::no_foreign_keys, metadata_configuration_type::twopf_configs);
+		        if(collect_stats) create_stats_table(db, foreign_keys_type::no_foreign_keys, kconfiguration_type::twopf_configs);
+		        if(collect_ics) create_ics_table<number, typename integration_items<number>::ics_item>(db, Nfields, foreign_keys_type::no_foreign_keys, kconfiguration_type::twopf_configs);
 		        create_backg_table<number, typename integration_items<number>::backg_item>(db, Nfields, foreign_keys_type::no_foreign_keys);
 		        create_paged_table<number, typename integration_items<number>::twopf_re_item>(db, Nfields, foreign_keys_type::no_foreign_keys);
             create_paged_table<number, typename integration_items<number>::tensor_twopf_item>(db, Nfields, foreign_keys_type::no_foreign_keys);
@@ -82,11 +82,11 @@ namespace transport
 
 		        // create the necessary tables
 		        create_worker_info_table(db, foreign_keys_type::no_foreign_keys);
-		        if(collect_stats) create_stats_table(db, foreign_keys_type::no_foreign_keys, metadata_configuration_type::threepf_configs);
+		        if(collect_stats) create_stats_table(db, foreign_keys_type::no_foreign_keys, kconfiguration_type::threepf_configs);
 		        if(collect_ics)
 			        {
-		            create_ics_table<number, typename integration_items<number>::ics_item>(db, Nfields, foreign_keys_type::no_foreign_keys, metadata_configuration_type::threepf_configs);
-		            create_ics_table<number, typename integration_items<number>::ics_kt_item>(db, Nfields, foreign_keys_type::no_foreign_keys, metadata_configuration_type::threepf_configs);
+		            create_ics_table<number, typename integration_items<number>::ics_item>(db, Nfields, foreign_keys_type::no_foreign_keys, kconfiguration_type::threepf_configs);
+		            create_ics_table<number, typename integration_items<number>::ics_kt_item>(db, Nfields, foreign_keys_type::no_foreign_keys, kconfiguration_type::threepf_configs);
 			        }
 		        create_backg_table<number, typename integration_items<number>::backg_item>(db, Nfields, foreign_keys_type::no_foreign_keys);
 		        create_paged_table<number, typename integration_items<number>::twopf_re_item>(db, Nfields, foreign_keys_type::no_foreign_keys);

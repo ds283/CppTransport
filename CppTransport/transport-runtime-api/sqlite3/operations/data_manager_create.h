@@ -196,7 +196,7 @@ namespace transport
 
 
 		    // Create table for statistics, if they are being collected
-		    void create_stats_table(sqlite3* db, foreign_keys_type keys=foreign_keys_type::no_foreign_keys, metadata_configuration_type type=metadata_configuration_type::twopf_configs)
+		    void create_stats_table(sqlite3* db, foreign_keys_type keys=foreign_keys_type::no_foreign_keys, kconfiguration_type type= kconfiguration_type::twopf_configs)
 			    {
 		        std::ostringstream create_stmt;
 		        create_stmt
@@ -214,11 +214,11 @@ namespace transport
 		            create_stmt << ", FOREIGN KEY(kserial) REFERENCES ";
 		            switch(type)
 			            {
-		                case metadata_configuration_type::twopf_configs:
+		                case kconfiguration_type::twopf_configs:
 			                create_stmt << CPPTRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE;
 		                  break;
 
-		                case metadata_configuration_type::threepf_configs:
+		                case kconfiguration_type::threepf_configs:
 			                create_stmt << CPPTRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE;
 		                  break;
 			            }
@@ -235,7 +235,7 @@ namespace transport
 		    // Create table for initial conditions, if they are being collected
 				template <typename number, typename ValueType>
 		    void create_ics_table(sqlite3* db, unsigned int Nfields, foreign_keys_type keys=foreign_keys_type::no_foreign_keys,
-		                          metadata_configuration_type type=metadata_configuration_type::twopf_configs)
+		                          kconfiguration_type type= kconfiguration_type::twopf_configs)
 			    {
 		        unsigned int num_cols = std::min(2*Nfields, max_columns);
 
@@ -258,11 +258,11 @@ namespace transport
 		            create_stmt << ", FOREIGN KEY(kserial) REFERENCES ";
 		            switch(type)
 			            {
-		                case metadata_configuration_type::twopf_configs:
+		                case kconfiguration_type::twopf_configs:
 			                create_stmt << CPPTRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE;
 		                  break;
 
-		                case metadata_configuration_type::threepf_configs:
+		                case kconfiguration_type::threepf_configs:
 			                create_stmt << CPPTRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE;
 		                  break;
 			            }
@@ -303,7 +303,8 @@ namespace transport
 
         // Create table for paged values
         template <typename number, typename ValueType>
-        void create_paged_table(sqlite3* db, unsigned int Nfields, foreign_keys_type keys=foreign_keys_type::no_foreign_keys)
+        void create_paged_table(sqlite3* db, unsigned int Nfields, foreign_keys_type keys=foreign_keys_type::no_foreign_keys,
+                                kconfiguration_type type=kconfiguration_type::twopf_configs)
           {
             unsigned int num_elements = data_traits<number, ValueType>::number_elements(Nfields);
             unsigned int num_cols = std::min(num_elements, max_columns);
@@ -323,8 +324,20 @@ namespace transport
             create_stmt << ", PRIMARY KEY (tserial, kserial, page)";
             if(keys == foreign_keys_type::foreign_keys)
               {
-                create_stmt << ", FOREIGN KEY(tserial) REFERENCES " << CPPTRANSPORT_SQLITE_TIME_SAMPLE_TABLE << "(serial)"
-                  << ", FOREIGN KEY(kserial) REFERENCES " << CPPTRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE << "(serial)";
+                create_stmt << ", FOREIGN KEY(tserial) REFERENCES " << CPPTRANSPORT_SQLITE_TIME_SAMPLE_TABLE << "(serial)";
+
+                create_stmt << ", FOREIGN KEY(kserial) REFERENCES ";
+                switch(type)
+                  {
+                    case kconfiguration_type::twopf_configs:
+                      create_stmt << CPPTRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE;
+                    break;
+
+                    case kconfiguration_type::threepf_configs:
+                      create_stmt << CPPTRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE;
+                    break;
+                  }
+                create_stmt << "(serial)";
               }
             create_stmt << ");";
 
