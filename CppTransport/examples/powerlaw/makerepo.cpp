@@ -76,8 +76,8 @@ int main(int argc, char* argv[])
     // the conventions for k-numbers are as follows:
     // k=1 is the mode which crosses the horizon at time N*,
     // where N* is the 'offset' we pass to the integration method (see below)
-    const double       kmin      = exp(0.0);   // begin with the mode which crosses the horizon at N=N*
-    const double       kmax      = exp(5.0);   // end with the mode which exits the horizon at N=N*+7
+    const double       kmin      = exp(1.0);   // begin with the mode which crosses the horizon at N=N*+1
+    const double       kmax      = exp(5.0);   // end with the mode which exits the horizon at N=N*+5
     const unsigned int k_samples = 50;         // number of k-points
 
     struct ThreepfStoragePolicy
