@@ -1080,23 +1080,47 @@ namespace transport
         // set up a timer to measure how long we spend aggregating
         boost::timer::cpu_timer aggregate_timer;
 
-        writer->aggregate(payload.get_container_path());
+        BOOST_LOG_SEV(writer->get_log(), base_writer::log_severity_level::normal) << "++ Beginning aggregation of temporary container '" << payload.get_container_path() << "'";
+        bool success = true;
+
+        try
+          {
+            writer->aggregate(payload.get_container_path());
+          }
+        catch(runtime_exception& xe)
+          {
+            if(xe.get_exception_code() == exception_type::DATA_CONTAINER_ERROR)   // trap data container errors (eg SQLITE key constraints) during aggregation
+              {
+                success = false;
+                writer->set_fail(true);
+                BOOST_LOG_SEV(writer->get_log(), base_writer::log_severity_level::error) << "!! Failed to aggregate container '" << payload.get_container_path() << "': " << xe.what();
+              }
+            else
+              {
+                throw xe;   // pass on to higher exception handler
+              }
+          }
 
         aggregate_timer.stop();
-        BOOST_LOG_SEV(writer->get_log(), base_writer::log_severity_level::normal) << "++ Aggregated temporary container '" << payload.get_container_path() << "' in time " << format_time(aggregate_timer.elapsed().wall);
-        metadata.total_aggregation_time += aggregate_timer.elapsed().wall;
 
-        // inform scheduler of a new aggregation
-        this->work_scheduler.report_aggregation(aggregate_timer.elapsed().wall);
+        // if aggregation proceeded normally, carry out housekeeping
+        if(success)
+          {
+            BOOST_LOG_SEV(writer->get_log(), base_writer::log_severity_level::normal) << "++ Aggregated temporary container '" << payload.get_container_path() << "' in time " << format_time(aggregate_timer.elapsed().wall);
+            metadata.total_aggregation_time += aggregate_timer.elapsed().wall;
 
-        // remove temporary container
-        BOOST_LOG_SEV(writer->get_log(), base_writer::log_severity_level::normal) << "++ Deleting temporary container '" << payload.get_container_path() << "'";
-        if(!boost::filesystem::remove(payload.get_container_path()))
-	        {
-            std::ostringstream msg;
-            msg << CPPTRANSPORT_DATACTR_REMOVE_TEMP << " '" << payload.get_container_path() << "'";
-            this->error_handler(msg.str());
-	        }
+            // inform scheduler of a new aggregation
+            this->work_scheduler.report_aggregation(aggregate_timer.elapsed().wall);
+
+            // remove temporary container
+//        BOOST_LOG_SEV(writer->get_log(), base_writer::log_severity_level::normal) << "++ Deleting temporary container '" << payload.get_container_path() << "'";
+            if(!boost::filesystem::remove(payload.get_container_path()))
+              {
+                std::ostringstream msg;
+                msg << CPPTRANSPORT_DATACTR_REMOVE_TEMP << " '" << payload.get_container_path() << "'";
+                this->error_handler(msg.str());
+              }
+          }
 	    }
 
 
@@ -1734,23 +1758,47 @@ namespace transport
         // set up a timer to measure how long we spend batching
         boost::timer::cpu_timer aggregate_timer;
 
-        writer->aggregate(payload.get_container_path());
+        BOOST_LOG_SEV(writer->get_log(), base_writer::log_severity_level::normal) << "++ Beginning aggregation of temporary container '" << payload.get_container_path() << "'";
+        bool success = true;
+
+        try
+          {
+            writer->aggregate(payload.get_container_path());
+          }
+        catch(runtime_exception& xe)
+          {
+            if(xe.get_exception_code() == exception_type::DATA_CONTAINER_ERROR)   // trap data container errors (eg SQLite key constraints) during aggregation
+              {
+                success = false;
+                writer->set_fail(true);
+                BOOST_LOG_SEV(writer->get_log(), base_writer::log_severity_level::error) << "!! Failed to aggregate container '" << payload.get_container_path() << "': " << xe.what();
+              }
+            else
+              {
+                throw xe;   // pass on to higher exception handler
+              }
+          }
 
         aggregate_timer.stop();
-        BOOST_LOG_SEV(writer->get_log(), base_writer::log_severity_level::normal) << "++ Aggregated temporary container '" << payload.get_container_path() << "' in time " << format_time(aggregate_timer.elapsed().wall);
-        metadata.aggregation_time += aggregate_timer.elapsed().wall;
 
-        // inform scheduler of a new aggregation
-        this->work_scheduler.report_aggregation(aggregate_timer.elapsed().wall);
+        // if aggregation proceeded normally, carry out housekeeping
+        if(success)
+          {
+            BOOST_LOG_SEV(writer->get_log(), base_writer::log_severity_level::normal) << "++ Aggregated temporary container '" << payload.get_container_path() << "' in time " << format_time(aggregate_timer.elapsed().wall);
+            metadata.aggregation_time += aggregate_timer.elapsed().wall;
 
-        // remove temporary container
-        BOOST_LOG_SEV(writer->get_log(), base_writer::log_severity_level::normal) << "++ Deleting temporary container '" << payload.get_container_path() << "'";
-        if(!boost::filesystem::remove(payload.get_container_path()))
-	        {
-            std::ostringstream msg;
-            msg << CPPTRANSPORT_DATACTR_REMOVE_TEMP << " '" << payload.get_container_path() << "'";
-            this->error_handler(msg.str());
-	        }
+            // inform scheduler of a new aggregation
+            this->work_scheduler.report_aggregation(aggregate_timer.elapsed().wall);
+
+            // remove temporary container
+//        BOOST_LOG_SEV(writer->get_log(), base_writer::log_severity_level::normal) << "++ Deleting temporary container '" << payload.get_container_path() << "'";
+            if(!boost::filesystem::remove(payload.get_container_path()))
+              {
+                std::ostringstream msg;
+                msg << CPPTRANSPORT_DATACTR_REMOVE_TEMP << " '" << payload.get_container_path() << "'";
+                this->error_handler(msg.str());
+              }
+          }
 	    }
 
 
