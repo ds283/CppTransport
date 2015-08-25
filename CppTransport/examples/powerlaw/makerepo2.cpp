@@ -150,12 +150,12 @@ int main(int argc, char* argv[])
 
 		// filter: equilateral with high k_t
     std::ostringstream hi_kt_query;
-		hi_kt_query << std::setprecision(10) << "ABS(alpha) < 0.001 AND ABS(kt_conventional-" << exp(kt_min_exp) << ") < 0.01";
+		hi_kt_query << std::setprecision(10) << "ABS(alpha) < 0.001 AND ABS(kt_conventional-" << exp(kt_max_exp) << ") < 0.01";
     transport::derived_data::SQL_threepf_kconfig_query isosceles_hi_kt(hi_kt_query.str());
 
     // filter: equilateral with lo k_t
     std::ostringstream lo_kt_query;
-		lo_kt_query << std::setprecision(10) << "ABS(alpha) < 0.001 AND ABS(kt_conventional-" << exp(kt_max_exp) << ") < 0.001";
+		lo_kt_query << std::setprecision(10) << "ABS(alpha) < 0.001 AND ABS(kt_conventional-" << exp(kt_min_exp) << ") < 0.001";
     transport::derived_data::SQL_threepf_kconfig_query isosceles_lo_kt(lo_kt_query.str());
 
 
@@ -371,7 +371,7 @@ int main(int argc, char* argv[])
 		tk3_redbsp_sqk3_plot.set_log_x(true);
 		tk3_redbsp_sqk3_plot.set_log_y(false);
     tk3_redbsp_sqk3_plot.set_abs_y(false);
-		tk3_redbsp_sqk3_plot.set_legend_position(transport::derived_data::legend_pos::centre_right);
+		tk3_redbsp_sqk3_plot.set_legend_position(transport::derived_data::legend_pos::top_right);
 
 
     // 8. SPECTRAL INDEX OF LATE TIME REDUCED BISPECTRUM -- FIXED k_t, ISOSCELES TRIANGLES, VARYING k3/k_t (SAME AS 6,7)
