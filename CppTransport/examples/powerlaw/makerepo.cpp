@@ -19,13 +19,13 @@
 const double M_Planck   = 1.0;
 const double W0         = 1E-10 * M_Planck * M_Planck * M_Planck * M_Planck;
 const double m_phi      = std::sqrt(0.02);
-const double m_sigma1   = std::sqrt(0.25);
-const double m_sigma2   = std::sqrt(0.08);
-const double sigma_c    = 3.445E-6 * M_Planck;
+const double m_sigma1   = std::sqrt(0.5);
+const double m_sigma2   = std::sqrt(0.05);
+const double sigma_c    = 6E-6 * M_Planck;
 const double sigma_grad = 1E-10 * M_Planck;
 
 const double phi_init   = 0.00827 * M_Planck;
-const double sigma_init = 9.40365E-9 * M_Planck;
+const double sigma_init = 5.8304E-10 * M_Planck;
 
 // ****************************************************************************
 
