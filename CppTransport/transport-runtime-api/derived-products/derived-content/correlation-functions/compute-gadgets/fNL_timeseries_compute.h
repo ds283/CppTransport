@@ -368,10 +368,6 @@ namespace transport
 		                case template_type::fNL_DBI_template:
 			                T = this->DBI_template(twopf_k1[j], twopf_k2[j], twopf_k3[j]);
 		                  break;
-
-		                default:
-			                assert(false);
-		                  throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_PRODUCT_FNL_LINE_UNKNOWN_TEMPLATE);
 			            }
 
 		            number Bref = this->reference_bispectrum(twopf_k1[j], twopf_k2[j], twopf_k3[j]);
@@ -424,6 +420,7 @@ namespace transport
 		    template <typename number>
 		    number fNL_timeseries_compute<number>::DBI_template(number Pk1, number Pk2, number Pk3) const
 			    {
+            // TODO: not yet implemented
 		        return(1.0);
 			    }
 

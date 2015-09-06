@@ -17,6 +17,8 @@
 
 #include "transport-runtime-api/utilities/spline1d.h"
 
+#include "transport-runtime-api/defaults.h"
+
 #include "boost/math/tools/roots.hpp"
 
 #include "sqlite3.h"
@@ -278,10 +280,10 @@ namespace transport
 
             spline1d<number> sp(N, log_aH);
 
-            this->threepf_compute_horizon_exit_times(sp, TolerancePredicate(1E-5));
+            this->threepf_compute_horizon_exit_times(sp, task_impl::TolerancePredicate(CPPTRANSPORT_ROOT_FIND_TOLERANCE));
 
             // forward to underlying twopf_list_task to also update its database
-            this->twopf_list_task<number>::twopf_compute_horizon_exit_times(sp, TolerancePredicate(1E-5));
+            this->twopf_list_task<number>::twopf_compute_horizon_exit_times(sp, task_impl::TolerancePredicate(CPPTRANSPORT_ROOT_FIND_TOLERANCE));
           }
         catch(failed_to_compute_horizon_exit& xe)
           {
@@ -295,18 +297,12 @@ namespace transport
 		template <typename SplineObject, typename TolerancePolicy>
 		void threepf_task<number>::threepf_compute_horizon_exit_times(SplineObject& sp, TolerancePolicy tol)
 			{
-		    boost::uintmax_t max_iter = 500;
-
 		    for(threepf_kconfig_database::config_iterator t = this->threepf_db->config_begin(); t != this->threepf_db->config_end(); ++t)
 			    {
 		        // set spline to evaluate aH-k and then solve for N
 		        sp.set_offset(log(t->kt_comoving/3.0));
 
-		        // find root; note use of std::ref, because toms748_solve normally would take a copy of
-		        // its system function and this is slow -- we have to copy the whole spline
-		        std::pair< double, double > result = boost::math::tools::toms748_solve(std::ref(sp), sp.get_min_x(), sp.get_max_x(), tol, max_iter);
-
-		        t->t_exit = (result.first + result.second)/2.0;
+            t->t_exit = task_impl::find_zero_of_spline(sp, tol);
 			    }
 			}
 

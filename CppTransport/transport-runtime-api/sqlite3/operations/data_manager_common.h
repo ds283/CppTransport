@@ -78,7 +78,7 @@ namespace transport
 
         enum class foreign_keys_type { foreign_keys, no_foreign_keys };
 
-        enum class metadata_configuration_type { twopf_configs, threepf_configs };
+        enum class kconfiguration_type { twopf_configs, threepf_configs };
 
 
         // sqlite has a default maximum number of columns, and a maximum number of
@@ -104,10 +104,6 @@ namespace transport
 
                 case derived_data::template_type::fNL_DBI_template:
                   return static_cast<std::string>(CPPTRANSPORT_SQLITE_FNL_DBI_VALUE_TABLE);
-
-                default:
-                  assert(false);
-                throw runtime_exception(exception_type::DATA_CONTAINER_ERROR, CPPTRANSPORT_DATAMGR_UNKNOWN_FNL_TEMPLATE);
               }
           }
 

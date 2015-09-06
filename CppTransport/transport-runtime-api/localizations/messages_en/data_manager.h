@@ -56,6 +56,8 @@
 #define CPPTRANSPORT_DATACTR_GAUGE_XFM2_COPY                     "Data container error: Failed to copy quadratic gauge-xfm values from temporary container (backend code="
 #define CPPTRANSPORT_DATACTR_FNL_COPY                            "Data container error: Failed to copy fNL values from temporary bispectrum container (backend code="
 #define CPPTRANSPORT_DATACTR_REMOVE_TEMP                         "Data container error: Could not remove temporary container"
+#define CPPTRANSPORT_DATACTR_ATTACH_FAIL                         "Data container error: Could not attach temporary database (backend code="
+#define CPPTRANSPORT_DATACTR_DETACH_FAIL                         "Data container error: Could not detach temporary database (backend code="
 
 #define CPPTRANSPORT_DATAMGR_NULL_DATAPIPE                       "Data manager error: Null datapipe specifier"
 #define CPPTRANSPORT_DATAMGR_DETACH_PIPE_NOT_ATTACHED            "Data manager error: Attempt to detach datapipe, but no output group is attached"

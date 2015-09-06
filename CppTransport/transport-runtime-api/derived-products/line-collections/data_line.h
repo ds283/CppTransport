@@ -186,6 +186,21 @@ namespace transport
           }
 
 
+        namespace data_line_impl
+          {
+
+            template <typename number>
+            struct AxisSorter
+              {
+                bool operator()(const std::pair<double, number>& a, const std::pair<double, number>& b)
+                  {
+                    return (a.first < b.first);
+                  }
+              };
+
+          }   // namespace data_line_impl
+
+
         template <typename number>
         void data_line<number>::zip(const std::vector<double>& a, const std::vector<number>& d, std::vector< std::pair<double, number> >& zipped)
           {
@@ -199,15 +214,7 @@ namespace transport
 	            }
 
             // now sort axis into ascending order
-            struct AxisSorter
-	            {
-                bool operator()(const std::pair<double, number>& a, const std::pair<double, number>& b)
-	                {
-                    return (a.first < b.first);
-	                }
-	            };
-
-            std::sort(zipped.begin(), zipped.end(), AxisSorter());
+            std::sort(zipped.begin(), zipped.end(), data_line_impl::AxisSorter<number>());
 	        }
 
 

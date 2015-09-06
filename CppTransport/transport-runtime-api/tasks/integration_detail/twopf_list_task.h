@@ -19,6 +19,8 @@
 
 #include "transport-runtime-api/utilities/spline1d.h"
 
+#include "transport-runtime-api/defaults.h"
+
 #include "boost/math/tools/roots.hpp"
 #include "boost/log/utility/formatting_ostream.hpp"
 
@@ -31,22 +33,87 @@ namespace transport
 	{
 
 
-    class TolerancePredicate
-	    {
-      public:
-        TolerancePredicate(double t)
-	        : tol(t)
-	        {
-	        }
+    namespace task_impl
+      {
 
-        bool operator()(const double& a, const double& b)
-	        {
-            return(std::abs((a-b)/a) < this->tol);
-	        }
+        class TolerancePredicate
+          {
+          public:
+            TolerancePredicate(double t)
+              : tol(t)
+              {
+              }
 
-      private:
-        double tol;
-	    };
+            bool operator()(const double& a, const double& b)
+              {
+                return(this->fractional_diff(a,b) - this->tol < 0);
+              }
+
+            double fractional_diff(const double& a, const double& b)
+              {
+                double frac = 2.0*(a-b)/(std::abs(a)+std::abs(b));
+
+                assert(!std::isinf(frac));
+                assert(!std::isnan(frac));
+                if(std::isinf(frac)) throw runtime_exception(exception_type::TASK_STRUCTURE_ERROR, CPPTRANSPORT_TASK_SEARCH_ROOT_INF);
+                if(std::isnan(frac)) throw runtime_exception(exception_type::TASK_STRUCTURE_ERROR, CPPTRANSPORT_TASK_SEARCH_ROOT_NAN);
+
+                return(std::abs(frac));
+              }
+
+          private:
+            double tol;
+          };
+
+
+        template <typename SplineObject, typename TolerancePolicy>
+        double find_zero_of_spline(SplineObject& sp, TolerancePolicy& tol)
+          {
+            // find root; note use of std::ref, because root finder would normally would take a copy of
+            // its system function and this is slow -- we have to copy the whole spline
+            assert(sp(sp.get_min_x()) * sp(sp.get_max_x()) < 0.0);
+            if(sp(sp.get_min_x()) * sp(sp.get_max_x()) >= 0.0) throw runtime_exception(exception_type::TASK_STRUCTURE_ERROR, CPPTRANSPORT_TASK_SEARCH_ROOT_BRACKET);
+
+            boost::uintmax_t max_iter = CPPTRANSPORT_MAX_ITERATIONS;
+            std::pair< double, double > result = boost::math::tools::bisect(std::ref(sp), sp.get_min_x(), sp.get_max_x(), tol, max_iter);
+
+            double res = (result.first + result.second)/2.0;
+            
+            assert(max_iter < CPPTRANSPORT_MAX_ITERATIONS);
+
+            // could check that tol(result.first, result.second) is strictly satisfied, but boost::bisect occasionally
+            // seems to return pairs which don't satisfy this.
+            // This may be a bug in Boost, or it may indicate that the returned interval is slightly different from
+            // the interval used to check for termination.
+            // We can instead rely on the check that |k-aH| is sufficiently small, made below
+//            assert(tol(result.first, result.second));
+
+            assert(!std::isinf(result.first) && !std::isinf(result.second));
+            assert(!std::isnan(result.first) && !std::isnan(result.second));
+
+            if(max_iter >= CPPTRANSPORT_MAX_ITERATIONS)
+              {
+                std::ostringstream msg;
+                msg << CPPTRANSPORT_TASK_SEARCH_ROOT_ACCURACY << " [" << CPPTRANSPORT_TASK_SEARCH_ROOT_ITERATIONS << "=" << max_iter << "]";
+                throw runtime_exception(exception_type::TASK_STRUCTURE_ERROR, msg.str());
+              }
+
+            if(std::isinf(result.first) || std::isinf(result.second)) throw runtime_exception(exception_type::TASK_STRUCTURE_ERROR, CPPTRANSPORT_TASK_SEARCH_ROOT_INF);
+            if(std::isnan(result.first) || std::isnan(result.second)) throw runtime_exception(exception_type::TASK_STRUCTURE_ERROR, CPPTRANSPORT_TASK_SEARCH_ROOT_NAN);
+
+            assert(std::abs(sp(res)) < CPPTRANSPORT_ROOT_FIND_ACCURACY);
+            if(std::abs(sp(res)) >= CPPTRANSPORT_ROOT_FIND_ACCURACY)
+              {
+                std::ostringstream msg;
+                msg << CPPTRANSPORT_TASK_SEARCH_ROOT_ACCURACY << " [" << CPPTRANSPORT_TASK_SEARCH_ROOT_KAH << "=" << sp(res) << "]";
+                throw runtime_exception(exception_type::TASK_STRUCTURE_ERROR, msg.str());
+              }
+
+            return(res);
+          };
+
+
+      }   // namespace task_impl
 
 
     //! Base type for a task which can represent a set of two-point functions evaluated at different wavenumbers.
@@ -547,7 +614,7 @@ namespace transport
 
             spline1d<number> sp(N, log_aH);
 
-            this->twopf_compute_horizon_exit_times(sp, TolerancePredicate(1E-5));
+            this->twopf_compute_horizon_exit_times(sp, task_impl::TolerancePredicate(CPPTRANSPORT_ROOT_FIND_TOLERANCE));
           }
         catch(failed_to_compute_horizon_exit& xe)
           {
@@ -561,18 +628,12 @@ namespace transport
 		template <typename SplineObject, typename TolerancePolicy>
 		void twopf_list_task<number>::twopf_compute_horizon_exit_times(SplineObject& sp, TolerancePolicy tol)
 			{
-		    boost::uintmax_t max_iter = 500;
-
 		    for(twopf_kconfig_database::config_iterator t = this->twopf_db->config_begin(); t != this->twopf_db->config_end(); ++t)
 			    {
 		        // set spline to evaluate aH-k and then solve for N
 		        sp.set_offset(log(t->k_comoving));
 
-		        // find root; note use of std::ref, because toms748_solve normally would take a copy of
-		        // its system function and this is slow -- we have to copy the whole spline
-		        std::pair< double, double > result = boost::math::tools::toms748_solve(std::ref(sp), sp.get_min_x(), sp.get_max_x(), tol, max_iter);
-
-		        t->t_exit = (result.first + result.second)/2.0;
+		        t->t_exit = task_impl::find_zero_of_spline(sp, tol);
 			    }
 			}
 

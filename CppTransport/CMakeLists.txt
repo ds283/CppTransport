@@ -6,8 +6,8 @@ project(CppTransport)
 SET ( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/" )
 SET ( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/splinter/cmake/" )
 
-SET ( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -mavx" CACHE STRING "compile flags" FORCE )
-SET ( CMAKE_C_FLAGS   "${CMAKE_C_FLAGS} -mavx"              CACHE STRING "compile flags" FORCE )
+SET ( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -mavx -Ofast" CACHE STRING "compile flags" FORCE )
+SET ( CMAKE_C_FLAGS   "${CMAKE_C_FLAGS} -mavx -Ofast"              CACHE STRING "compile flags" FORCE )
 
 SET ( JSONCPP_AMALGAMATED "transport-runtime-api/thirdparty/jsoncpp/jsoncpp.cpp" )
 SET ( SPLINTER_LIBRARY    "splinter-static-1-3" )
@@ -187,6 +187,10 @@ add_executable(quadratic10-mpi examples/quadratic10/main.cpp )
 target_link_libraries(quadratic10-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
 
 
+add_executable(powerlaw-makerepo examples/powerlaw/makerepo.cpp )
+target_link_libraries(powerlaw-makerepo sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
+
+
 add_executable(powerlaw-makerepo2 examples/powerlaw/makerepo2.cpp )
 target_link_libraries(powerlaw-makerepo2 sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
 
@@ -334,7 +338,6 @@ set(TEMPLATES_VEXCL_CUDA_FILES
 
 set(EXAMPLES_OSCILLATORY_FILES
   examples/oscillatory/main.cpp
-  examples/oscillatory/makerepo.cpp
   examples/oscillatory/makerepo2.cpp
 )
 
@@ -556,8 +559,6 @@ set(TRANSPORT_RUNTIME_API_CONCEPTS_FILES
 )
 
 set(EXAMPLES_DQUAD_VEXCL_FILES
-  examples/dquad-vexcl/dq_vexcl-cuda.h
-  examples/dquad-vexcl/dq_vexcl-opencl.h
   examples/dquad-vexcl/main.cpp
   examples/dquad-vexcl/makerepo.cpp
 )
@@ -686,6 +687,7 @@ set(BACKENDS_LANGUAGES_CPP_CORE_FILES
 
 set(EXAMPLES_POWERLAW_FILES
   examples/powerlaw/main.cpp
+  examples/powerlaw/makerepo.cpp
   examples/powerlaw/makerepo2.cpp
 )
 

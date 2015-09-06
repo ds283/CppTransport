@@ -8,7 +8,7 @@
 #define __defaults_H_
 
 
-#include <boost/timer/timer.hpp>
+#include "boost/timer/timer.hpp"
 
 
 #define CPPTRANSPORT_DEFAULT_WRAP_WIDTH                 (135)
@@ -64,6 +64,11 @@
 
 // notification delay for slow integrations; default is 10 minutes
 #define CPPTRANSPORT_DEFAULT_SLOW_INTEGRATION_NOTIFY    (boost::timer::nanosecond_type(10)*60*1000*1000*1000)
+
+// maximum number of iterations and search tolerance to use when root-finding to compute horizon exit times
+constexpr boost::uintmax_t CPPTRANSPORT_MAX_ITERATIONS      = 500;
+constexpr double           CPPTRANSPORT_ROOT_FIND_TOLERANCE = 1E-5;
+constexpr double           CPPTRANSPORT_ROOT_FIND_ACCURACY  = 1E-3;
 
 
 #endif //__defaults_H_
