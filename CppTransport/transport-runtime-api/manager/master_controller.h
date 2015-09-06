@@ -1080,7 +1080,8 @@ namespace transport
         // set up a timer to measure how long we spend aggregating
         boost::timer::cpu_timer aggregate_timer;
 
-        BOOST_LOG_SEV(writer->get_log(), base_writer::log_severity_level::normal) << "++ Beginning aggregation of temporary container '" << payload.get_container_path() << "'";
+        boost::filesystem::path ctr_path = payload.get_container_path();
+        BOOST_LOG_SEV(writer->get_log(), base_writer::log_severity_level::normal) << "++ Beginning aggregation of temporary container '" << ctr_path.filename().string() << "'";
         bool success = true;
 
         try
@@ -1093,7 +1094,7 @@ namespace transport
               {
                 success = false;
                 writer->set_fail(true);
-                BOOST_LOG_SEV(writer->get_log(), base_writer::log_severity_level::error) << "!! Failed to aggregate container '" << payload.get_container_path() << "': " << xe.what();
+                BOOST_LOG_SEV(writer->get_log(), base_writer::log_severity_level::error) << "!! Failed to aggregate container '" << ctr_path.filename().string() << "': " << xe.what();
               }
             else
               {
@@ -1106,7 +1107,7 @@ namespace transport
         // if aggregation proceeded normally, carry out housekeeping
         if(success)
           {
-            BOOST_LOG_SEV(writer->get_log(), base_writer::log_severity_level::normal) << "++ Aggregated temporary container '" << payload.get_container_path() << "' in time " << format_time(aggregate_timer.elapsed().wall);
+            BOOST_LOG_SEV(writer->get_log(), base_writer::log_severity_level::normal) << "++ Aggregated temporary container '" << ctr_path.filename().string() << "' in time " << format_time(aggregate_timer.elapsed().wall);
             metadata.total_aggregation_time += aggregate_timer.elapsed().wall;
 
             // inform scheduler of a new aggregation
@@ -1758,7 +1759,8 @@ namespace transport
         // set up a timer to measure how long we spend batching
         boost::timer::cpu_timer aggregate_timer;
 
-        BOOST_LOG_SEV(writer->get_log(), base_writer::log_severity_level::normal) << "++ Beginning aggregation of temporary container '" << payload.get_container_path() << "'";
+        boost::filesystem::path ctr_path = payload.get_container_path();
+        BOOST_LOG_SEV(writer->get_log(), base_writer::log_severity_level::normal) << "++ Beginning aggregation of temporary container '" << ctr_path.filename().string() << "'";
         bool success = true;
 
         try
@@ -1771,7 +1773,7 @@ namespace transport
               {
                 success = false;
                 writer->set_fail(true);
-                BOOST_LOG_SEV(writer->get_log(), base_writer::log_severity_level::error) << "!! Failed to aggregate container '" << payload.get_container_path() << "': " << xe.what();
+                BOOST_LOG_SEV(writer->get_log(), base_writer::log_severity_level::error) << "!! Failed to aggregate container '" << ctr_path.filename().string() << "': " << xe.what();
               }
             else
               {
@@ -1784,7 +1786,7 @@ namespace transport
         // if aggregation proceeded normally, carry out housekeeping
         if(success)
           {
-            BOOST_LOG_SEV(writer->get_log(), base_writer::log_severity_level::normal) << "++ Aggregated temporary container '" << payload.get_container_path() << "' in time " << format_time(aggregate_timer.elapsed().wall);
+            BOOST_LOG_SEV(writer->get_log(), base_writer::log_severity_level::normal) << "++ Aggregated temporary container '" << ctr_path.filename().string() << "' in time " << format_time(aggregate_timer.elapsed().wall);
             metadata.aggregation_time += aggregate_timer.elapsed().wall;
 
             // inform scheduler of a new aggregation
