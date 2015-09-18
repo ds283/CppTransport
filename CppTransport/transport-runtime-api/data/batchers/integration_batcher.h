@@ -50,7 +50,7 @@ namespace transport
 		    typedef std::function<void(integration_batcher<number>*, const std::vector<typename integration_items<number>::tensor_twopf_item>&)> tensor_twopf_writer;
 
 		    //! Three-point function writer function
-		    typedef std::function<void(integration_batcher<number>*, const std::vector<typename integration_items<number>::threepf_item>&)> threepf_writer;
+		    typedef std::function<void(integration_batcher<number>*, const std::vector<typename integration_items<number>::threepf_momentum_item>&)> threepf_writer;
 
 		    //! Per-configuration statistics writer function
 		    typedef std::function<void(integration_batcher<number>*, const std::vector<typename integration_items<number>::configuration_statistics>&)> stats_writer;
@@ -530,7 +530,7 @@ namespace transport
         std::vector< typename integration_items<number>::tensor_twopf_item > tensor_twopf_batch;
 
         //! threeof cache
-        std::vector< typename integration_items<number>::threepf_item >      threepf_batch;
+        std::vector< typename integration_items<number>::threepf_momentum_item>      threepf_batch;
 
 		    //! k_t initial conditions cache
 		    std::vector< typename integration_items<number>::ics_kt_item >       kt_ics_batch;
@@ -1046,7 +1046,7 @@ namespace transport
 	    {
         if(values.size() != 2*this->Nfields*2*this->Nfields*2*this->Nfields) throw runtime_exception(exception_type::STORAGE_ERROR, CPPTRANSPORT_NFIELDS_THREEPF);
 
-        typename integration_items<number>::threepf_item item;
+        typename integration_items<number>::threepf_momentum_item item;
 
         item.time_serial    = time_serial;
         item.kconfig_serial = kconfig.serial;
@@ -1201,7 +1201,7 @@ namespace transport
                                        this->tensor_twopf_batch.end());
 
         this->threepf_batch.erase(std::remove_if(this->threepf_batch.begin(), this->threepf_batch.end(),
-                                                 UnbatchPredicate<typename integration_items<number>::threepf_item>(source_serial)),
+                                                 UnbatchPredicate<typename integration_items<number>::threepf_momentum_item>(source_serial)),
                                   this->threepf_batch.end());
 
         this->ics_batch.erase(std::remove_if(this->ics_batch.begin(), this->ics_batch.end(),
