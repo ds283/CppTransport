@@ -616,7 +616,7 @@ set(TRANSPORT_RUNTIME_API_DATA_BATCHERS_FILES
   transport-runtime-api/data/batchers/integration_items.h
   transport-runtime-api/data/batchers/postintegration_batcher.h
   transport-runtime-api/data/batchers/postintegration_items.h
-  transport-runtime-api/data/batchers/zeta_compute.h
+  transport-runtime-api/data/batchers/postprocess_delegate.h
 )
 
 set(EXAMPLES_AXION_MPI_FILES

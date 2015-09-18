@@ -488,7 +488,8 @@ namespace transport
                 this->batcher.push_twopf(this->store_serial_number(), this->k_config->k3_serial, this->k_config->serial, tpf_x3_im, bg_x, twopf_type::twopf_imag);
               }
 
-            this->batcher.push_threepf(this->store_serial_number(), this->store_time(), *this->k_config, this->k_config->serial, thpf_x, tpf_x1_re, tpf_x1_im, tpf_x2_re, tpf_x2_im, tpf_x3_re, tpf_x3_im, bg_x);
+            this->batcher.push_threepf(this->store_serial_number(), this->store_time(), *this->k_config, this->k_config->serial,
+                                       thpf_x, tpf_x1_re, tpf_x1_im, tpf_x2_re, tpf_x2_im, tpf_x3_re, tpf_x3_im, bg_x);
           }
 
         this->step();

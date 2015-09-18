@@ -926,15 +926,43 @@ namespace transport
 
         // set up writers
         typename threepf_batcher<number>::writer_group writers;
-		    writers.host_info    = std::bind(&sqlite3_operations::write_host_info<number>, std::placeholders::_1);
-        writers.stats        = std::bind(&sqlite3_operations::write_stats<number>, std::placeholders::_1, std::placeholders::_2);
-        writers.ics          = std::bind(&sqlite3_operations::write_coordinate_output<number, typename integration_items<number>::ics_item>, std::placeholders::_1, std::placeholders::_2);
-        writers.kt_ics       = std::bind(&sqlite3_operations::write_coordinate_output<number, typename integration_items<number>::ics_kt_item>, std::placeholders::_1, std::placeholders::_2);
-        writers.backg        = std::bind(&sqlite3_operations::write_coordinate_output<number, typename integration_items<number>::backg_item>, std::placeholders::_1, std::placeholders::_2);
-        writers.twopf_re     = std::bind(&sqlite3_operations::write_paged_output<number, integration_batcher<number>, typename integration_items<number>::twopf_re_item>, std::placeholders::_1, std::placeholders::_2);
-        writers.twopf_im     = std::bind(&sqlite3_operations::write_paged_output<number, integration_batcher<number>, typename integration_items<number>::twopf_im_item>, std::placeholders::_1, std::placeholders::_2);
-        writers.tensor_twopf = std::bind(&sqlite3_operations::write_paged_output<number, integration_batcher<number>, typename integration_items<number>::tensor_twopf_item>, std::placeholders::_1, std::placeholders::_2);
-        writers.threepf      = std::bind(&sqlite3_operations::write_paged_output<number, integration_batcher<number>, typename integration_items<number>::threepf_momentum_item>, std::placeholders::_1, std::placeholders::_2);
+
+        writers.host_info        = std::bind(&sqlite3_operations::write_host_info<number>, std::placeholders::_1);
+
+        writers.stats            = std::bind(&sqlite3_operations::write_stats<number>, std::placeholders::_1,
+                                             std::placeholders::_2);
+
+        writers.ics              = std::bind(
+          &sqlite3_operations::write_coordinate_output<number, typename integration_items<number>::ics_item>,
+          std::placeholders::_1, std::placeholders::_2);
+
+        writers.kt_ics           = std::bind(
+          &sqlite3_operations::write_coordinate_output<number, typename integration_items<number>::ics_kt_item>,
+          std::placeholders::_1, std::placeholders::_2);
+
+        writers.backg            = std::bind(
+          &sqlite3_operations::write_coordinate_output<number, typename integration_items<number>::backg_item>,
+          std::placeholders::_1, std::placeholders::_2);
+
+        writers.twopf_re         = std::bind(
+          &sqlite3_operations::write_paged_output<number, integration_batcher<number>, typename integration_items<number>::twopf_re_item>,
+          std::placeholders::_1, std::placeholders::_2);
+
+        writers.twopf_im         = std::bind(
+          &sqlite3_operations::write_paged_output<number, integration_batcher<number>, typename integration_items<number>::twopf_im_item>,
+          std::placeholders::_1, std::placeholders::_2);
+
+        writers.tensor_twopf     = std::bind(
+          &sqlite3_operations::write_paged_output<number, integration_batcher<number>, typename integration_items<number>::tensor_twopf_item>,
+          std::placeholders::_1, std::placeholders::_2);
+
+        writers.threepf_momentum = std::bind(
+          &sqlite3_operations::write_paged_output<number, integration_batcher<number>, typename integration_items<number>::threepf_momentum_item>,
+          std::placeholders::_1, std::placeholders::_2);
+
+        writers.threepf_Nderiv   = std::bind(
+          &sqlite3_operations::write_paged_output<number, integration_batcher<number>, typename integration_items<number>::threepf_Nderiv_item>,
+          std::placeholders::_1, std::placeholders::_2);
 
         // set up a replacement function
         generic_batcher::container_replacement_function replacer =
@@ -1235,6 +1263,7 @@ namespace transport
         sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::twopf_im_item>(db, writer, temp_ctr);
         sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::tensor_twopf_item>(db, writer, temp_ctr);
         sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::threepf_momentum_item>(db, writer, temp_ctr);
+        sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::threepf_Nderiv_item>(db, writer, temp_ctr);
 
         sqlite3_operations::aggregate_workers<number>(db, writer, temp_ctr);
         if(writer.is_collecting_statistics()) sqlite3_operations::aggregate_statistics<number>(db, writer, temp_ctr);

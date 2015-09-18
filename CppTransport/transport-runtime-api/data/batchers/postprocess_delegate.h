@@ -22,16 +22,16 @@ namespace transport
   {
 
     template <typename number>
-    class zeta_compute
+    class postprocess_delegate
       {
 
         // CONSTRUCTOR, DESTRUCTOR
 
       public:
 
-        zeta_compute(model<number>* m, twopf_list_task<number>* tk);
+        postprocess_delegate(model<number>* m, twopf_list_task<number>* tk);
 
-        ~zeta_compute() = default;
+        ~postprocess_delegate() = default;
 
 
         // INTERFACE
@@ -50,19 +50,21 @@ namespace transport
                           number& zeta_threepf, number& redbsp, std::vector<number>& gauge_xfm1,
                           std::vector<number>& gauge_xfm2_123, std::vector<number>& gauge_xfm2_213, std::vector<number>& gauge_xfm2_312);
 
-
-        // INTERNAL API
-
-      protected:
-
-		    //! shift a component of a threepf from momenta to derivatives
+		    //! shift the (l,m,n) component of a threepf from momenta to derivatives;
+        //! the threepf component should be passed in 'value', and the processed
+        //! version is returned by reference
         void shift(unsigned int l, unsigned int m, unsigned int n,
-                   const threepf_kconfig& kconfig, double t, const std::vector<number>& threepf,
+                   const threepf_kconfig& kconfig, double t,
                    const std::vector<number>& k1_re, const std::vector<number>& k1_im,
                    const std::vector<number>& k2_re, const std::vector<number>& k2_im,
                    const std::vector<number>& k3_re, const std::vector<number>& k3_im,
                    const std::vector<number>& bg,
-                   number value);
+                   number& value);
+
+
+        // INTERNAL API
+
+      protected:
 
 		    //! compute the shift from momenta to derivatives
         number compute_shift(double t, unsigned int p, unsigned int q, unsigned int r,
@@ -99,7 +101,7 @@ namespace transport
 
 
     template <typename number>
-    zeta_compute<number>::zeta_compute(model<number> *m, twopf_list_task<number>* tk)
+    postprocess_delegate<number>::postprocess_delegate(model<number> *m, twopf_list_task<number>* tk)
       : mdl(m),
         Nfields(m->get_N_fields()),
         parent_task(tk)
@@ -114,7 +116,7 @@ namespace transport
 
 
 		template <typename number>
-		void zeta_compute<number>::zeta_twopf(const std::vector<number>& twopf, const std::vector<number>& bg, number& zeta_twopf, std::vector<number>& gauge_xfm, bool precomputed)
+		void postprocess_delegate<number>::zeta_twopf(const std::vector<number>& twopf, const std::vector<number>& bg, number& zeta_twopf, std::vector<number>& gauge_xfm, bool precomputed)
 			{
         zeta_twopf = 0.0;
 
@@ -133,7 +135,7 @@ namespace transport
 
 
     template <typename number>
-    void zeta_compute<number>::zeta_threepf(const threepf_kconfig& kconfig, double t, const std::vector<number>& threepf,
+    void postprocess_delegate<number>::zeta_threepf(const threepf_kconfig& kconfig, double t, const std::vector<number>& threepf,
                                             const std::vector<number>& k1_re, const std::vector<number>& k1_im,
                                             const std::vector<number>& k2_re, const std::vector<number>& k2_im,
                                             const std::vector<number>& k3_re, const std::vector<number>& k3_im,
@@ -161,7 +163,7 @@ namespace transport
                     number tpf = threepf[this->mdl->flatten(l,m,n)];
 
                     // shift tpf so it represents a derivative correlation function (if any of l, m, n are momenta), not a momentum one
-                    this->shift(l, m, n, kconfig, t, threepf, k1_re, k1_im, k2_re, k2_im, k3_re, k3_im, bg, tpf);
+                    this->shift(l, m, n, kconfig, t, k1_re, k1_im, k2_re, k2_im, k3_re, k3_im, bg, tpf);
 
                     zeta_threepf += gauge_xfm1[l]*gauge_xfm1[m]*gauge_xfm1[n]*tpf;
                   }
@@ -203,25 +205,33 @@ namespace transport
 
 
     template <typename number>
-    void zeta_compute<number>::shift(unsigned int l, unsigned int m, unsigned int n,
-                                     const threepf_kconfig& kconfig, double t, const std::vector<number>& threepf,
-                                     const std::vector<number>& k1_re, const std::vector<number>& k1_im,
-                                     const std::vector<number>& k2_re, const std::vector<number>& k2_im,
-                                     const std::vector<number>& k3_re, const std::vector<number>& k3_im,
-                                     const std::vector<number>& bg,
-                                     number value)
+    void postprocess_delegate<number>::shift(unsigned int l, unsigned int m, unsigned int n,
+                                             const threepf_kconfig& kconfig, double t,
+                                             const std::vector<number>& k1_re, const std::vector<number>& k1_im,
+                                             const std::vector<number>& k2_re, const std::vector<number>& k2_im,
+                                             const std::vector<number>& k3_re, const std::vector<number>& k3_im,
+                                             const std::vector<number>& bg,
+                                             number& value)
       {
-        if(this->mdl->is_momentum(l)) value += this->compute_shift(t, l, m, n, kconfig.k1_comoving, kconfig.k2_comoving, kconfig.k3_comoving,
-                                                                   k1_re, k1_im, k2_re, k2_im, k3_re, k3_im, bg, derived_data::derived_data_impl::operator_position::left_pos);
-        if(this->mdl->is_momentum(m)) value += this->compute_shift(t, m, l, n, kconfig.k2_comoving, kconfig.k1_comoving, kconfig.k3_comoving,
-                                                                   k2_re, k2_im, k1_re, k1_im, k3_re, k3_im, bg, derived_data::derived_data_impl::operator_position::middle_pos);
-        if(this->mdl->is_momentum(n)) value += this->compute_shift(t, n, l, m, kconfig.k3_comoving, kconfig.k1_comoving, kconfig.k2_comoving,
-                                                                   k3_re, k3_im, k1_re, k1_im, k2_re, k2_im, bg, derived_data::derived_data_impl::operator_position::middle_pos);
+        if(this->mdl->is_momentum(l))
+          value += this->compute_shift(t, l, m, n, kconfig.k1_comoving, kconfig.k2_comoving, kconfig.k3_comoving,
+                                       k1_re, k1_im, k2_re, k2_im, k3_re, k3_im, bg,
+                                       derived_data::derived_data_impl::operator_position::left_pos);
+
+        if(this->mdl->is_momentum(m))
+          value += this->compute_shift(t, m, l, n, kconfig.k2_comoving, kconfig.k1_comoving, kconfig.k3_comoving,
+                                       k2_re, k2_im, k1_re, k1_im, k3_re, k3_im, bg,
+                                       derived_data::derived_data_impl::operator_position::middle_pos);
+
+        if(this->mdl->is_momentum(n))
+          value += this->compute_shift(t, n, l, m, kconfig.k3_comoving, kconfig.k1_comoving, kconfig.k2_comoving,
+                                       k3_re, k3_im, k1_re, k1_im, k2_re, k2_im, bg,
+                                       derived_data::derived_data_impl::operator_position::middle_pos);
       }
 
 
     template <typename number>
-    number zeta_compute<number>::compute_shift(double t, unsigned int p, unsigned int q, unsigned int r,
+    number postprocess_delegate<number>::compute_shift(double t, unsigned int p, unsigned int q, unsigned int r,
                                                double p_comoving, double q_comoving, double r_comoving,
                                                const std::vector<number>& p_re, const std::vector<number>& p_im,
                                                const std::vector<number>& q_re, const std::vector<number>& q_im,
