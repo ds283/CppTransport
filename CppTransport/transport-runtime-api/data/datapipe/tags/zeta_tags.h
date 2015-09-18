@@ -65,7 +65,7 @@ namespace transport
       public:
 
         //! copy this object
-        zeta_twopf_time_data_tag<number>* clone() const { return new zeta_twopf_time_data_tag<number>(static_cast<const zeta_twopf_time_data_tag<number>&>(*this)); }
+        virtual zeta_twopf_time_data_tag<number>* clone() const override { return new zeta_twopf_time_data_tag<number>(static_cast<const zeta_twopf_time_data_tag<number>&>(*this)); }
 
 
         // HASH
@@ -123,7 +123,7 @@ namespace transport
       public:
 
         //! copy this object
-        zeta_threepf_time_data_tag<number>* clone() const { return new zeta_threepf_time_data_tag<number>(static_cast<const zeta_threepf_time_data_tag<number>&>(*this)); }
+        virtual zeta_threepf_time_data_tag<number>* clone() const override { return new zeta_threepf_time_data_tag<number>(static_cast<const zeta_threepf_time_data_tag<number>&>(*this)); }
 
 
         // HASH
@@ -181,7 +181,7 @@ namespace transport
       public:
 
         //! copy this object
-        zeta_reduced_bispectrum_time_data_tag<number>* clone() const { return new zeta_reduced_bispectrum_time_data_tag<number>(static_cast<const zeta_reduced_bispectrum_time_data_tag<number>&>(*this)); }
+        virtual zeta_reduced_bispectrum_time_data_tag<number>* clone() const override { return new zeta_reduced_bispectrum_time_data_tag<number>(static_cast<const zeta_reduced_bispectrum_time_data_tag<number>&>(*this)); }
 
 
         // HASH
@@ -239,7 +239,7 @@ namespace transport
       public:
 
         //! copy this object
-        zeta_twopf_kconfig_data_tag<number>* clone() const { return new zeta_twopf_kconfig_data_tag<number>(static_cast<const zeta_twopf_kconfig_data_tag<number>&>(*this)); }
+        virtual zeta_twopf_kconfig_data_tag<number>* clone() const override { return new zeta_twopf_kconfig_data_tag<number>(static_cast<const zeta_twopf_kconfig_data_tag<number>&>(*this)); }
 
 
         // HASH
@@ -297,7 +297,7 @@ namespace transport
       public:
 
         //! copy this object
-        zeta_threepf_kconfig_data_tag<number>* clone() const { return new zeta_threepf_kconfig_data_tag<number>(static_cast<const zeta_threepf_kconfig_data_tag<number>&>(*this)); }
+        virtual zeta_threepf_kconfig_data_tag<number>* clone() const override { return new zeta_threepf_kconfig_data_tag<number>(static_cast<const zeta_threepf_kconfig_data_tag<number>&>(*this)); }
 
 
         // HASH
@@ -355,7 +355,7 @@ namespace transport
       public:
 
         //! copy this object
-        zeta_reduced_bispectrum_kconfig_data_tag<number>* clone() const { return new zeta_reduced_bispectrum_kconfig_data_tag<number>(static_cast<const zeta_reduced_bispectrum_kconfig_data_tag&>(*this)); }
+        virtual zeta_reduced_bispectrum_kconfig_data_tag<number>* clone() const override { return new zeta_reduced_bispectrum_kconfig_data_tag<number>(static_cast<const zeta_reduced_bispectrum_kconfig_data_tag&>(*this)); }
 
 
         // HASH

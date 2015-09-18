@@ -128,7 +128,7 @@ namespace transport
       public:
 
         //! copy this object
-        background_time_data_tag<number>* clone() const { return new background_time_data_tag<number>(static_cast<const background_time_data_tag<number>&>(*this)); }
+        virtual background_time_data_tag<number>* clone() const override { return new background_time_data_tag<number>(static_cast<const background_time_data_tag<number>&>(*this)); }
 
 
         // HASH
@@ -188,7 +188,7 @@ namespace transport
       public:
 
         //! copy this object
-        cf_time_data_tag<number>* clone() const { return new cf_time_data_tag<number>(static_cast<const cf_time_data_tag<number>&>(*this)); }
+        virtual cf_time_data_tag<number>* clone() const override { return new cf_time_data_tag<number>(static_cast<const cf_time_data_tag<number>&>(*this)); }
 
 
         // HASH
@@ -254,7 +254,7 @@ namespace transport
       public:
 
         //! copy this object
-        cf_kconfig_data_tag<number>* clone() const { return new cf_kconfig_data_tag<number>(static_cast<const cf_kconfig_data_tag<number>&>(*this)); }
+        virtual cf_kconfig_data_tag<number>* clone() const override { return new cf_kconfig_data_tag<number>(static_cast<const cf_kconfig_data_tag<number>&>(*this)); }
 
 
         // HASH

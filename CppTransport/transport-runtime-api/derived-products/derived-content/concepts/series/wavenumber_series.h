@@ -108,7 +108,7 @@ namespace transport
           public:
 
 		        //! Write self-details to a stream
-		        virtual void write(std::ostream& out);
+		        virtual void write(std::ostream& out) override;
 
 
 		        // SERIALIZATION -- implements a 'serializable' interface

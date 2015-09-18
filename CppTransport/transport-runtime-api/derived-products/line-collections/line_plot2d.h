@@ -281,7 +281,7 @@ namespace transport
 		      public:
 
 				    //! Copy this object
-				    virtual line_plot2d<number>* clone() const { return new line_plot2d<number>(static_cast<const line_plot2d<number>&>(*this)); }
+				    virtual line_plot2d<number>* clone() const override { return new line_plot2d<number>(static_cast<const line_plot2d<number>&>(*this)); }
 
 				    // SERIALIZATION -- implements a 'serializable' interface
 

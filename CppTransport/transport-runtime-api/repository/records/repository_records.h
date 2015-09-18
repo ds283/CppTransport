@@ -1591,7 +1591,7 @@ namespace transport
       public:
 
         //! Serialize this object
-        void serialize(Json::Value& writer) const;
+        virtual void serialize(Json::Value& writer) const override;
 
 
         // CLONE
