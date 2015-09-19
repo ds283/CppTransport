@@ -34,7 +34,6 @@
 
 #include "transport-runtime-api/utilities/latex_output.h"
 
-#include "transport-runtime-api/derived-products/derived-content/correlation-functions/compute-gadgets/threepf_kconfig_shift.h"
 #include "transport-runtime-api/derived-products/derived-content/SQL_query/SQL_query.h"
 
 
@@ -122,12 +121,6 @@ namespace transport
             // INTERNAL DATA
 
           protected:
-
-		        // RUNTIME AGENTS
-
-		        // momentum->derivative shifter
-            threepf_kconfig_shift<number> shifter;
-
 
 		        // SETTINGS
 

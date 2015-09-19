@@ -469,7 +469,7 @@ namespace transport
 
       public:
 
-        void push_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial, const std::vector<number>& values, const std::vector<number>& backg, twopf_type t = twopf_type::twopf_real);
+        void push_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial, const std::vector<number>& values, const std::vector<number>& backg, twopf_type t = twopf_type::real);
 
         void push_threepf(unsigned int time_serial, double t,
                           const threepf_kconfig& kconfig, unsigned int source_serial, const std::vector<number>& values,
@@ -996,7 +996,7 @@ namespace transport
 
         switch(t)
           {
-            case twopf_type::twopf_real:
+            case twopf_type::real:
               {
                 typename integration_items<number>::twopf_re_item item;
 
@@ -1009,7 +1009,7 @@ namespace transport
                 break;
               }
 
-            case twopf_type::twopf_imag:
+            case twopf_type::imag:
               {
                 typename integration_items<number>::twopf_im_item item;
 
@@ -1023,7 +1023,7 @@ namespace transport
               }
           }
 
-        if(t == twopf_type::twopf_real && this->paired_batcher != nullptr) this->push_paired_twopf(time_serial, k_serial, source_serial, values, backg);
+        if(t == twopf_type::real && this->paired_batcher != nullptr) this->push_paired_twopf(time_serial, k_serial, source_serial, values, backg);
 
         this->check_for_flush();
 	    }
@@ -1080,7 +1080,7 @@ namespace transport
 
                     this->compute_agent.shift(i, j, k, kconfig, time_serial, tpf_k1_re, tpf_k1_im, tpf_k2_re, tpf_k2_im, tpf_k3_re, tpf_k3_im, bg, tpf);
 
-                    Nderiv_item.elements[this->mdl->flatten(i,k,k)] = tpf;
+                    Nderiv_item.elements[this->mdl->flatten(i,j,k)] = tpf;
                   }
               }
           }

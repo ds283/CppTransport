@@ -112,7 +112,7 @@ namespace transport
         typedef std::function<void(datapipe<number>*, unsigned int, std::shared_ptr<derived_data::SQL_query>&, unsigned int, std::vector<number>&, twopf_type)> twopf_time_callback;
 
         //! Extract a threepf component at fixed k-configuration for a set of time sample-point
-        typedef std::function<void(datapipe<number>*, unsigned int, std::shared_ptr<derived_data::SQL_query>&, unsigned int, std::vector<number>&)> threepf_time_callback;
+        typedef std::function<void(datapipe<number>*, unsigned int, std::shared_ptr<derived_data::SQL_query>&, unsigned int, std::vector<number>&, threepf_type)> threepf_time_callback;
 
         //! Extract a tensor twopf component at fixed k-configuration for a set of time sample-points
         typedef std::function<void(datapipe<number>*, unsigned int, std::shared_ptr<derived_data::SQL_query>&, unsigned int, std::vector<number>&)> tensor_twopf_time_callback;
@@ -139,7 +139,7 @@ namespace transport
         typedef std::function<void(datapipe<number>*, unsigned int, std::shared_ptr<derived_data::SQL_query>&, unsigned int, std::vector<number>&, twopf_type)> twopf_kconfig_callback;
 
         //! Extract a threepf component at fixed time for a set of k-configuration sample-points
-        typedef std::function<void(datapipe<number>*, unsigned int, std::shared_ptr<derived_data::SQL_query>&, unsigned int, std::vector<number>&)> threepf_kconfig_callback;
+        typedef std::function<void(datapipe<number>*, unsigned int, std::shared_ptr<derived_data::SQL_query>&, unsigned int, std::vector<number>&, threepf_type)> threepf_kconfig_callback;
 
         //! Extract a tensor twopf component at fixed time for a set of k-configuration sample-points
         typedef std::function<void(datapipe<number>*, unsigned int, std::shared_ptr<derived_data::SQL_query>&, unsigned int, std::vector<number>&)> tensor_twopf_kconfig_callback;

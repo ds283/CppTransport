@@ -10,11 +10,20 @@
 namespace transport
   {
 
-    enum class twopf_type { twopf_real, twopf_imag };
+    enum class twopf_type
+      {
+        real, imag
+      };
+
+    enum class threepf_type
+      {
+        momentum, Nderiv
+      };
 
     enum class worker_type
-      { cpu, gpu };
-
+      {
+        cpu, gpu
+      };
 
   }
 

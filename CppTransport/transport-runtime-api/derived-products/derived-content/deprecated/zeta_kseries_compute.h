@@ -15,9 +15,6 @@
 // need data_manager for datapipe
 #include "transport-runtime-api/data/data_manager.h"
 
-// need 3pf shifter
-#include "transport-runtime-api/derived-products/derived-content/correlation-functions/compute-gadgets/threepf_kconfig_shift.h"
-
 
 namespace transport
   {
@@ -116,13 +113,6 @@ namespace transport
 
             //! compute a time series for the zeta reduced bispectrum
             void reduced_bispectrum(std::shared_ptr<handle>& h, std::vector<number>& line_data, unsigned int tindex) const;
-
-
-            // INTERNAL DATA
-
-          protected:
-
-            threepf_kconfig_shift<number> shifter;
 
           };
 
@@ -298,12 +288,9 @@ namespace transport
                   {
                     for(unsigned int n = 0; n < 2*N_fields; ++n)
                       {
-                        cf_kconfig_data_tag<number> tag = h->pipe.new_cf_kconfig_data_tag(cf_data_type::cf_threepf, h->mdl->flatten(l,m,n), h->time_sample_sns[tindex]);
+                        cf_kconfig_data_tag<number> tag = h->pipe.new_cf_kconfig_data_tag(cf_data_type::cf_threepf_Nderiv, h->mdl->flatten(l,m,n), h->time_sample_sns[tindex]);
 
-                        std::vector<number> threepf_line = h->k_handle.lookup_tag(tag);
-
-                        // shift field so it represents a derivative correlation function, not a momentum one
-                        this->shifter.shift(h->tk, h->mdl, h->pipe, h->background[tindex], configs, threepf_line, l, m, n, h->time_sample_sns[tindex], h->time_values[tindex]);
+                        const std::vector<number>& threepf_line = h->k_handle.lookup_tag(tag);
 
                         for(unsigned int j = 0; j < h->kconfig_sample_sns.size(); ++j)
                           {

@@ -29,7 +29,7 @@
 namespace transport
 	{
 
-    enum class cf_data_type { cf_twopf_re, cf_twopf_im, cf_threepf, cf_tensor_twopf };
+    enum class cf_data_type { cf_twopf_re, cf_twopf_im, cf_threepf_momentum, cf_threepf_Nderiv, cf_tensor_twopf };
 
     //! data group tag -- abstract group used to derive background and field tags
     template <typename number>
@@ -299,8 +299,12 @@ namespace transport
 	            msg << "imaginary twopf (time series";
               break;
 
-            case cf_data_type::cf_threepf:
-	            msg << "threepf (time series)";
+            case cf_data_type::cf_threepf_momentum:
+	            msg << "threepf-momentum (time series)";
+              break;
+
+            case cf_data_type::cf_threepf_Nderiv:
+              msg << "threepf-Nderiv (time series)";
               break;
 
             case cf_data_type::cf_tensor_twopf:
@@ -328,8 +332,12 @@ namespace transport
 	            msg << "imaginary twopf (kconfig series";
               break;
 
-            case cf_data_type::cf_threepf:
-	            msg << "threepf (kconfig series)";
+            case cf_data_type::cf_threepf_momentum:
+	            msg << "threepf-momentum (kconfig series)";
+              break;
+
+            case cf_data_type::cf_threepf_Nderiv:
+              msg << "threepf-Nderiv (kconfig series)";
               break;
 
             case cf_data_type::cf_tensor_twopf:
@@ -376,22 +384,29 @@ namespace transport
 #ifdef CPPTRANSPORT_DEBUG_DATAPIPE
               BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::log_severity_level::datapipe_pull) << "** PULL twopf time sample request, type = real, for element " << this->id << ", k-configuration " << this->kserial;
 #endif
-              this->pipe->pull_timeslice.twopf(this->pipe, this->id, query, this->kserial, sample, twopf_type::twopf_real);
+              this->pipe->pull_timeslice.twopf(this->pipe, this->id, query, this->kserial, sample, twopf_type::real);
               break;
 
             case cf_data_type::cf_twopf_im:
 #ifdef CPPTRANSPORT_DEBUG_DATAPIPE
               BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::log_severity_level::datapipe_pull) << "** PULL twopf time sample request, type = imaginary, for element " << this->id << ", k-configuration " << this->kserial;
 #endif
-              this->pipe->pull_timeslice.twopf(this->pipe, this->id, query, this->kserial, sample, twopf_type::twopf_imag);
+              this->pipe->pull_timeslice.twopf(this->pipe, this->id, query, this->kserial, sample, twopf_type::imag);
               break;
 
-            case cf_data_type::cf_threepf:
+            case cf_data_type::cf_threepf_momentum:
 #ifdef CPPTRANSPORT_DEBUG_DATAPIPE
-              BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::log_severity_level::datapipe_pull) << "** PULL threepf time sample request for element " << this->id << ", k-configuration " << this->kserial;
+              BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::log_severity_level::datapipe_pull) << "** PULL threepf-momentum time sample request for element " << this->id << ", k-configuration " << this->kserial;
 #endif
-              this->pipe->pull_timeslice.threepf(this->pipe, this->id, query, this->kserial, sample);
+              this->pipe->pull_timeslice.threepf(this->pipe, this->id, query, this->kserial, sample, threepf_type::momentum);
               break;
+
+            case cf_data_type::cf_threepf_Nderiv:
+#ifdef CPPTRANSPORT_DEBUG_DATAPIPE
+              BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::log_severity_level::datapipe_pull) << "** PULL threepf-Nderiv time sample request for element " << this->id << ", k-configuration " << this->kserial;
+#endif
+              this->pipe->pull_timeslice.threepf(this->pipe, this->id, query, this->kserial, sample, threepf_type::Nderiv);
+            break;
 
             case cf_data_type::cf_tensor_twopf:
 #ifdef CPPTRANSPORT_DEBUG_DATAPIPE
@@ -418,22 +433,28 @@ namespace transport
 #ifdef CPPTRANSPORT_DEBUG_DATAPIPE
               BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::log_severity_level::datapipe_pull) << "** PULL twopf kconfig sample request, type = real, for element " << this->id << ", t-serial " << this->tserial;
 #endif
-              this->pipe->pull_kslice.twopf(this->pipe, this->id, query, this->tserial, sample, twopf_type::twopf_real);
+              this->pipe->pull_kslice.twopf(this->pipe, this->id, query, this->tserial, sample, twopf_type::real);
               break;
 
             case cf_data_type::cf_twopf_im:
 #ifdef CPPTRANSPORT_DEBUG_DATAPIPE
               BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::log_severity_level::datapipe_pull) << "** PULL twopf kconfig sample request, type = imaginary, for element " << this->id << ", t-serial " << this->tserial;
 #endif
-              this->pipe->pull_kslice.twopf(this->pipe, this->id, query, this->tserial, sample, twopf_type::twopf_imag);
+              this->pipe->pull_kslice.twopf(this->pipe, this->id, query, this->tserial, sample, twopf_type::imag);
               break;
 
-            case cf_data_type::cf_threepf:
+            case cf_data_type::cf_threepf_momentum:
 #ifdef CPPTRANSPORT_DEBUG_DATAPIPE
-              BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::log_severity_level::datapipe_pull) << "** PULL threepf kconfig sample request for element " << this->id << ", t-serial " << this->tserial;
+              BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::log_severity_level::datapipe_pull) << "** PULL threepf-momentum kconfig sample request for element " << this->id << ", t-serial " << this->tserial;
 #endif
-              this->pipe->pull_kslice.threepf(this->pipe, this->id, query, this->tserial, sample);
+              this->pipe->pull_kslice.threepf(this->pipe, this->id, query, this->tserial, sample, threepf_type::momentum);
               break;
+
+            case cf_data_type::cf_threepf_Nderiv:
+#ifdef CPPTRANSPORT_DEBUG_DATAPIPE
+              BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::log_severity_level::datapipe_pull) << "** PULL threepf-Nderiv kconfig sample request for element " << this->id << ", t-serial " << this->tserial;
+#endif
+              this->pipe->pull_kslice.threepf(this->pipe, this->id, query, this->tserial, sample, threepf_type::Nderiv);
 
             case cf_data_type::cf_tensor_twopf:
 #ifdef CPPTRANSPORT_DEBUG_DATAPIPE

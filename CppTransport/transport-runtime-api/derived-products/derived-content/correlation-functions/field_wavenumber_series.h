@@ -417,15 +417,11 @@ namespace transport
 		                        std::array<unsigned int, 3> index_set = { l, m, n };
 		                        if(this->active_indices.is_on(index_set))
 			                        {
-		                            cf_kconfig_data_tag<number> tag = pipe.new_cf_kconfig_data_tag(cf_data_type::cf_threepf, this->gadget.get_model()->flatten(l,m,n), t->serial);
+		                            cf_kconfig_data_tag<number> tag = pipe.new_cf_kconfig_data_tag(this->get_dot_meaning() == dot_type::derivatives ? cf_data_type::cf_threepf_Nderiv : cf_data_type::cf_threepf_momentum,
+                                                                                               this->gadget.get_model()->flatten(l,m,n), t->serial);
 
 		                            std::vector<number> line_data = k_handle.lookup_tag(tag);
                                 assert(line_data.size() == w_axis.size());
-
-				                        // the integrator produces correlation functions involving the canonical momenta,
-				                        // not the derivatives. If the user wants derivatives then we have to shift.
-				                        if(this->get_dot_meaning() == dot_type::derivatives)
-					                        this->shifter.shift(this->gadget.get_integration_task(), this->gadget.get_model(), pipe, this->kquery, k_values, *bg_pos, line_data, l, m, n, *t);
 
                                 value_type value = value_type::correlation_function_value;
                                 if(this->dimensionless)

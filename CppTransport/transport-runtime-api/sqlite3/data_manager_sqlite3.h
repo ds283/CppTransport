@@ -273,7 +273,7 @@ namespace transport
 
         //! Pull a sample of a threepf at fixed k-configuration from a datapipe
         virtual void pull_threepf_time_sample(datapipe<number>* pipe, unsigned int id, const std::shared_ptr<derived_data::SQL_query>& query,
-                                              unsigned int k_serial, std::vector<number>& sample) override;
+                                              unsigned int k_serial, std::vector<number>& sample, threepf_type type) override;
 
         //! Pull a sample of a tensor twopf component at fixed k-configuration from a datapipe
         virtual void pull_tensor_twopf_time_sample(datapipe<number>* pipe, unsigned int id, const std::shared_ptr<derived_data::SQL_query>& query,
@@ -310,7 +310,7 @@ namespace transport
         //! Pull a kconfig sample of a threepf at fixed time from a datapipe
         virtual void pull_threepf_kconfig_sample(datapipe<number>* pipe, unsigned int id,
                                                  const std::shared_ptr<derived_data::SQL_query>& query,
-                                                 unsigned int t_serial, std::vector<number>& sample) override;
+                                                 unsigned int t_serial, std::vector<number>& sample, threepf_type type) override;
 
         //! Pull a kconfig sample of a tensor twopf component at fixed time from a datapipe
         virtual void pull_tensor_twopf_kconfig_sample(datapipe<number>* pipe, unsigned int id, const std::shared_ptr<derived_data::SQL_query>& query,
@@ -1578,7 +1578,7 @@ namespace transport
 
         timeslice.threepf = std::bind(&data_manager_sqlite3<number>::pull_threepf_time_sample, this,
                                       std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
-                                      std::placeholders::_4, std::placeholders::_5);
+                                      std::placeholders::_4, std::placeholders::_5, std::placeholders::_6);
 
         timeslice.tensor_twopf = std::bind(&data_manager_sqlite3<number>::pull_tensor_twopf_time_sample, this,
                                            std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
@@ -1610,7 +1610,7 @@ namespace transport
 
         kslice.threepf = std::bind(&data_manager_sqlite3<number>::pull_threepf_kconfig_sample, this,
                                    std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
-                                   std::placeholders::_4, std::placeholders::_5);
+                                   std::placeholders::_4, std::placeholders::_5, std::placeholders::_6);
 
         kslice.tensor_twopf = std::bind(&data_manager_sqlite3<number>::pull_tensor_twopf_kconfig_sample, this,
                                         std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
@@ -1697,8 +1697,7 @@ namespace transport
     template <typename number>
     void data_manager_sqlite3<number>::pull_twopf_time_sample(datapipe<number>* pipe, unsigned int id,
                                                               const std::shared_ptr<derived_data::SQL_query>& query,
-                                                              unsigned int k_serial, std::vector<number>& sample,
-                                                              twopf_type type)
+                                                              unsigned int k_serial, std::vector<number>& sample, twopf_type type)
 	    {
         assert(pipe != nullptr);
         if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
@@ -1708,12 +1707,12 @@ namespace transport
 
         switch(type)
           {
-            case twopf_type::twopf_real:
+            case twopf_type::real:
               sqlite3_operations::pull_paged_time_sample<number, typename integration_items<number>::twopf_re_item>(db, id, query, k_serial, sample,
                                                                                                                     pipe->get_worker_number(), pipe->get_N_fields());
               break;
 
-            case twopf_type::twopf_imag:
+            case twopf_type::imag:
               sqlite3_operations::pull_paged_time_sample<number, typename integration_items<number>::twopf_im_item>(db, id, query, k_serial, sample,
                                                                                                                     pipe->get_worker_number(), pipe->get_N_fields());
               break;
@@ -1724,7 +1723,7 @@ namespace transport
     template <typename number>
     void data_manager_sqlite3<number>::pull_threepf_time_sample(datapipe<number>* pipe, unsigned int id,
                                                                 const std::shared_ptr<derived_data::SQL_query>& query,
-                                                                unsigned int k_serial, std::vector<number>& sample)
+                                                                unsigned int k_serial, std::vector<number>& sample, threepf_type type)
 	    {
         assert(pipe != nullptr);
         if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
@@ -1732,8 +1731,18 @@ namespace transport
         sqlite3* db = nullptr;
         pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
-        sqlite3_operations::pull_paged_time_sample<number, typename integration_items<number>::threepf_momentum_item>(db, id, query, k_serial, sample,
-                                                                                                             pipe->get_worker_number(), pipe->get_N_fields());
+        switch(type)
+          {
+            case threepf_type::momentum:
+              sqlite3_operations::pull_paged_time_sample<number, typename integration_items<number>::threepf_momentum_item>(db, id, query, k_serial, sample,
+                                                                                                                            pipe->get_worker_number(), pipe->get_N_fields());
+              break;
+
+            case threepf_type::Nderiv:
+              sqlite3_operations::pull_paged_time_sample<number, typename integration_items<number>::threepf_Nderiv_item>(db, id, query, k_serial, sample,
+                                                                                                                          pipe->get_worker_number(), pipe->get_N_fields());
+              break;
+          }
 	    }
 
 
@@ -1843,8 +1852,7 @@ namespace transport
     template <typename number>
     void data_manager_sqlite3<number>::pull_twopf_kconfig_sample(datapipe<number>* pipe, unsigned int id,
                                                                  const std::shared_ptr<derived_data::SQL_query>& query,
-                                                                 unsigned int t_serial, std::vector<number>& sample,
-                                                                 twopf_type type)
+                                                                 unsigned int t_serial, std::vector<number>& sample, twopf_type type)
 	    {
 				assert(pipe != nullptr);
 		    if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
@@ -1854,12 +1862,12 @@ namespace transport
 
         switch(type)
           {
-            case twopf_type::twopf_real:
+            case twopf_type::real:
               sqlite3_operations::pull_paged_kconfig_sample<number, typename integration_items<number>::twopf_re_item>(db, id, query, t_serial, sample,
                                                                                                                        pipe->get_worker_number(), pipe->get_N_fields());
               break;
 
-            case twopf_type::twopf_imag:
+            case twopf_type::imag:
               sqlite3_operations::pull_paged_kconfig_sample<number, typename integration_items<number>::twopf_im_item>(db, id, query, t_serial, sample,
                                                                                                                        pipe->get_worker_number(), pipe->get_N_fields());
               break;
@@ -1870,7 +1878,7 @@ namespace transport
     template <typename number>
     void data_manager_sqlite3<number>::pull_threepf_kconfig_sample(datapipe<number>* pipe, unsigned int id,
                                                                    const std::shared_ptr<derived_data::SQL_query>& query,
-                                                                   unsigned int t_serial, std::vector<number>& sample)
+                                                                   unsigned int t_serial, std::vector<number>& sample, threepf_type type)
 	    {
         assert(pipe != nullptr);
         if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
@@ -1878,8 +1886,18 @@ namespace transport
         sqlite3* db = nullptr;
         pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
-        sqlite3_operations::pull_paged_kconfig_sample<number, typename integration_items<number>::threepf_momentum_item>(db, id, query, t_serial, sample,
-                                                                                                                pipe->get_worker_number(), pipe->get_N_fields());
+        switch(type)
+          {
+            case threepf_type::momentum:
+              sqlite3_operations::pull_paged_kconfig_sample<number, typename integration_items<number>::threepf_momentum_item>(db, id, query, t_serial, sample,
+                                                                                                                               pipe->get_worker_number(), pipe->get_N_fields());
+              break;
+
+            case threepf_type::Nderiv:
+              sqlite3_operations::pull_paged_kconfig_sample<number, typename integration_items<number>::threepf_Nderiv_item>(db, id, query, t_serial, sample,
+                                                                                                                             pipe->get_worker_number(), pipe->get_N_fields());
+              break;
+          }
 	    }
 
 

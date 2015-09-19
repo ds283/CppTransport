@@ -15,9 +15,6 @@
 // need data_manager for datapipe
 #include "transport-runtime-api/data/data_manager.h"
 
-// need 3pf shifter
-#include "transport-runtime-api/derived-products/derived-content/correlation-functions/compute-gadgets/threepf_time_shift.h"
-
 
 namespace transport
   {
@@ -115,13 +112,6 @@ namespace transport
 
             //! compute a time series for the zeta two-point function (don't copy gauge xfms)
             void twopf(std::shared_ptr<handle>& h, std::vector<number>& zeta_twopf, const twopf_kconfig& k) const;
-
-
-            // INTERNAL DATA
-
-          protected:
-
-            threepf_time_shift<number> shifter;
 
           };
 
@@ -261,13 +251,9 @@ namespace transport
                     for(unsigned int n = 0; n < 2*N_fields; ++n)
                       {
                         // pull threepf data for this component
-                        cf_time_data_tag<number> tag = h->pipe.new_cf_time_data_tag(cf_data_type::cf_threepf, h->mdl->flatten(l,m,n), k.serial);
+                        cf_time_data_tag<number> tag = h->pipe.new_cf_time_data_tag(cf_data_type::cf_threepf_Nderiv, h->mdl->flatten(l,m,n), k.serial);
 
-                        // have to take a copy of the data line, rather than use a reference, because shifting the derivative will modify it in place
-                        std::vector<number> threepf_line = h->t_handle.lookup_tag(tag);
-
-                        // shift field so it represents a derivative correlation function, not a momentum one
-                        this->shifter.shift(h->tk, h->mdl, h->pipe, tquery, threepf_line, h->t_axis, l, m, n, k);
+                        const std::vector<number>& threepf_line = h->t_handle.lookup_tag(tag);
 
                         for(unsigned int j = 0; j < h->t_axis.size(); ++j)
                           {
