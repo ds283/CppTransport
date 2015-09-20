@@ -332,7 +332,7 @@ namespace transport
 
         //! Pull a sample of a threepf at fixed k-configuration from a datapipe
         virtual void pull_threepf_time_sample(datapipe<number>* pipe, unsigned int id, const std::shared_ptr<derived_data::SQL_query>& query,
-                                              unsigned int k_serial, std::vector<number>& sample) = 0;
+                                              unsigned int k_serial, std::vector<number>& sample, threepf_type type) = 0;
 
         //! Pull a sample of a tensor twopf at fixed k-configuration from a datapipe
         virtual void pull_tensor_twopf_time_sample(datapipe<number>* pipe, unsigned int id, const std::shared_ptr<derived_data::SQL_query>& query,
@@ -368,7 +368,7 @@ namespace transport
 
         //! Pull a kconfig sample of a threepf at fixed time from a datapipe
         virtual void pull_threepf_kconfig_sample(datapipe<number>* pipe, unsigned int id, const std::shared_ptr<derived_data::SQL_query>& query,
-                                                 unsigned int t_serial, std::vector<number>& sample) = 0;
+                                                 unsigned int t_serial, std::vector<number>& sample, threepf_type type) = 0;
 
         //! Pull a kconfig sample of a tensor twopf component at fixed time from a datapipe
         virtual void pull_tensor_twopf_kconfig_sample(datapipe<number>* pipe, unsigned int id, const std::shared_ptr<derived_data::SQL_query>& query,

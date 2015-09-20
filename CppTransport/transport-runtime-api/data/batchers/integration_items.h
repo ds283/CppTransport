@@ -103,8 +103,9 @@ namespace transport
 	        };
 
 
-        //! Stores a threepf configuration associated with a single time-point and k-configuration
-        class threepf_item
+        //! Stores a threepf configuration associated with a single time-point and k-configuration,
+        //! computed using fields and canonical momenta
+        class threepf_momentum_item
 	        {
           public:
 
@@ -120,6 +121,26 @@ namespace transport
             //! kconfig serial number for the integration which produced these values. Used when unwinding a batch
             unsigned int        source_serial;
 	        };
+
+
+        //! Stores a threepf configuration associated with a single time-point and k-configuration,
+        //! computed using fields and e-folding derivatives
+        class threepf_Nderiv_item
+          {
+          public:
+
+            //! time serial number for this configuration
+            unsigned int        time_serial;
+
+            //! kconfig serial number for this configuration
+            unsigned int        kconfig_serial;
+
+            //! values
+            std::vector<number> elements;
+
+            //! kconfig serial number for the integration which produced these values. Used when unwinding a batch
+            unsigned int        source_serial;
+          };
 
 
         //! Stores per-configuration statistics about the performance of the integrator.

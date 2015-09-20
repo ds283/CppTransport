@@ -66,7 +66,7 @@ namespace transport
       public:
 
         //! copy this object
-        fNL_time_data_tag<number>* clone() const { return new fNL_time_data_tag<number>(static_cast<const fNL_time_data_tag<number>&>(*this)); }
+        virtual fNL_time_data_tag<number>* clone() const override { return new fNL_time_data_tag<number>(static_cast<const fNL_time_data_tag<number>&>(*this)); }
 
 
         // HASH

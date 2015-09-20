@@ -616,7 +616,7 @@ set(TRANSPORT_RUNTIME_API_DATA_BATCHERS_FILES
   transport-runtime-api/data/batchers/integration_items.h
   transport-runtime-api/data/batchers/postintegration_batcher.h
   transport-runtime-api/data/batchers/postintegration_items.h
-  transport-runtime-api/data/batchers/zeta_compute.h
+  transport-runtime-api/data/batchers/postprocess_delegate.h
 )
 
 set(EXAMPLES_AXION_MPI_FILES
@@ -781,8 +781,8 @@ set(BACKENDS_LANGUAGES_CPP_VEXCL_FILES
 set(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_CORRELATION_FUNCTIONS_COMPUTE_GADGETS_FILES
   transport-runtime-api/derived-products/derived-content/correlation-functions/compute-gadgets/common.h
   transport-runtime-api/derived-products/derived-content/correlation-functions/compute-gadgets/fNL_timeseries_compute.h
-  transport-runtime-api/derived-products/derived-content/correlation-functions/compute-gadgets/threepf_kconfig_shift.h
-  transport-runtime-api/derived-products/derived-content/correlation-functions/compute-gadgets/threepf_time_shift.h
+  transport-runtime-api/derived-products/derived-content/deprecated/threepf_kconfig_shift.h
+  transport-runtime-api/derived-products/derived-content/deprecated/threepf_time_shift.h
   transport-runtime-api/derived-products/derived-content/correlation-functions/compute-gadgets/zeta_timeseries_compute.h
 )
 

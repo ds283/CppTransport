@@ -52,14 +52,24 @@ namespace transport
 					};
 
 
-				template<typename number> struct data_traits<number, typename integration_items<number>::threepf_item>
+				template<typename number> struct data_traits<number, typename integration_items<number>::threepf_momentum_item>
 					{
 						static int number_elements(unsigned int Nfields) { return(2*Nfields * 2*Nfields * 2*Nfields); }
-						static const std::string sqlite_table()          { return(CPPTRANSPORT_SQLITE_THREEPF_VALUE_TABLE); }
-						static const std::string write_error_msg()       { return(CPPTRANSPORT_DATACTR_THREEPF_DATATAB_FAIL); }
+						static const std::string sqlite_table()          { return(CPPTRANSPORT_SQLITE_THREEPF_MOMENTUM_VALUE_TABLE); }
+						static const std::string write_error_msg()       { return(CPPTRANSPORT_DATACTR_THREEPF_MOMENTUM_DATATAB_FAIL); }
 				    static const std::string sqlite_sample_table()   { return(CPPTRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE); }
-				    static const std::string copy_error_msg()        { return(CPPTRANSPORT_DATACTR_THREEPF_COPY); }
+				    static const std::string copy_error_msg()        { return(CPPTRANSPORT_DATACTR_THREEPF_MOMENTUM_COPY); }
 					};
+
+
+        template<typename number> struct data_traits<number, typename integration_items<number>::threepf_Nderiv_item>
+          {
+            static int number_elements(unsigned int Nfields) { return(2*Nfields * 2*Nfields * 2*Nfields); }
+            static const std::string sqlite_table()          { return(CPPTRANSPORT_SQLITE_THREEPF_DERIV_VALUE_TABLE); }
+            static const std::string write_error_msg()       { return(CPPTRANSPORT_DATACTR_THREEPF_DERIV_DATATAB_FAIL); }
+            static const std::string sqlite_sample_table()   { return(CPPTRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE); }
+            static const std::string copy_error_msg()        { return(CPPTRANSPORT_DATACTR_THREEPF_DERIV_COPY); }
+          };
 
 
 		    template<typename number> struct data_traits<number, typename integration_items<number>::ics_item>

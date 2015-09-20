@@ -34,7 +34,6 @@
 
 #include "transport-runtime-api/utilities/latex_output.h"
 
-#include "transport-runtime-api/derived-products/derived-content/correlation-functions/compute-gadgets/threepf_time_shift.h"
 #include "transport-runtime-api/derived-products/derived-content/SQL_query/SQL_query.h"
 
 
@@ -98,7 +97,7 @@ namespace transport
 		      public:
 
 		        //! write self-details to a stream
-		        virtual void write(std::ostream& out);
+		        virtual void write(std::ostream& out) override;
 
 
 		        // SERIALIZATION -- implements a 'serializable' interface
@@ -107,14 +106,6 @@ namespace transport
 
 		        //! Serialize this object
 		        virtual void serialize(Json::Value& writer) const override;
-
-
-            // INTERNAL DATA
-
-          protected:
-
-            //! 3pf shift delegate
-            threepf_time_shift<number> shifter;
 
 			    };
 

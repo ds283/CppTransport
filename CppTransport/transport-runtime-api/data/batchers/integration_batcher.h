@@ -16,7 +16,7 @@
 #include "transport-runtime-api/data/batchers/generic_batcher.h"
 #include "transport-runtime-api/data/batchers/postintegration_batcher.h"
 #include "transport-runtime-api/data/batchers/integration_items.h"
-#include "transport-runtime-api/data/batchers/zeta_compute.h"
+#include "postprocess_delegate.h"
 
 #include "transport-runtime-api/models/model_forward_declare.h"
 #include "transport-runtime-api/tasks/tasks_forward_declare.h"
@@ -49,8 +49,11 @@ namespace transport
 		    //! Tensor two-point function writer function
 		    typedef std::function<void(integration_batcher<number>*, const std::vector<typename integration_items<number>::tensor_twopf_item>&)> tensor_twopf_writer;
 
-		    //! Three-point function writer function
-		    typedef std::function<void(integration_batcher<number>*, const std::vector<typename integration_items<number>::threepf_item>&)> threepf_writer;
+		    //! Three-point function writer function for momentum insertions
+		    typedef std::function<void(integration_batcher<number>*, const std::vector<typename integration_items<number>::threepf_momentum_item>&)> threepf_momentum_writer;
+
+        //! Three-point function writer function for derivative insertions
+        typedef std::function<void(integration_batcher<number>*, const std::vector<typename integration_items<number>::threepf_Nderiv_item>&)> threepf_Nderiv_writer;
 
 		    //! Per-configuration statistics writer function
 		    typedef std::function<void(integration_batcher<number>*, const std::vector<typename integration_items<number>::configuration_statistics>&)> stats_writer;
@@ -132,7 +135,7 @@ namespace transport
         //! Query whether any integrations failed
         bool is_failed() const { return (this->failures > 0); }
 
-        //! Query how many refinements occurred
+        //! Query how many integrations report a refinement
         unsigned int get_reported_refinements() const { return(this->refinements); }
 
         //! Query number of failed integration reports
@@ -394,10 +397,10 @@ namespace transport
         zeta_twopf_batcher<number>* paired_batcher;
 
 
-        // ZETA COMPUTATION AGENT
+        // COMPUTATION AGENT
 
         //! compute delegate
-        zeta_compute<number> zeta_agent;
+        postprocess_delegate<number> compute_agent;
 
       };
 
@@ -411,15 +414,16 @@ namespace transport
         class writer_group
 	        {
           public:
-            typename integration_writers<number>::backg_writer        backg;
-            typename integration_writers<number>::twopf_re_writer     twopf_re;
-            typename integration_writers<number>::twopf_im_writer     twopf_im;
-            typename integration_writers<number>::tensor_twopf_writer tensor_twopf;
-            typename integration_writers<number>::threepf_writer      threepf;
-            typename integration_writers<number>::stats_writer        stats;
-		        typename integration_writers<number>::ics_writer          ics;
-		        typename integration_writers<number>::ics_kt_writer       kt_ics;
-            typename integration_writers<number>::host_info_writer    host_info;
+            typename integration_writers<number>::backg_writer            backg;
+            typename integration_writers<number>::twopf_re_writer         twopf_re;
+            typename integration_writers<number>::twopf_im_writer         twopf_im;
+            typename integration_writers<number>::tensor_twopf_writer     tensor_twopf;
+            typename integration_writers<number>::threepf_momentum_writer threepf_momentum;
+            typename integration_writers<number>::threepf_Nderiv_writer   threepf_Nderiv;
+            typename integration_writers<number>::stats_writer            stats;
+            typename integration_writers<number>::ics_writer              ics;
+            typename integration_writers<number>::ics_kt_writer           kt_ics;
+            typename integration_writers<number>::host_info_writer        host_info;
 	        };
 
 
@@ -465,7 +469,7 @@ namespace transport
 
       public:
 
-        void push_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial, const std::vector<number>& values, const std::vector<number>& backg, twopf_type t = twopf_type::twopf_real);
+        void push_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial, const std::vector<number>& values, const std::vector<number>& backg, twopf_type t = twopf_type::real);
 
         void push_threepf(unsigned int time_serial, double t,
                           const threepf_kconfig& kconfig, unsigned int source_serial, const std::vector<number>& values,
@@ -521,19 +525,22 @@ namespace transport
         const writer_group writers;
 
         //! real twopf cache
-        std::vector< typename integration_items<number>::twopf_re_item >     twopf_re_batch;
+        std::vector<typename integration_items<number>::twopf_re_item> twopf_re_batch;
 
         //! imaginary twopf cache
-        std::vector< typename integration_items<number>::twopf_im_item >     twopf_im_batch;
+        std::vector<typename integration_items<number>::twopf_im_item> twopf_im_batch;
 
         //! tensor twopf cache
-        std::vector< typename integration_items<number>::tensor_twopf_item > tensor_twopf_batch;
+        std::vector<typename integration_items<number>::tensor_twopf_item> tensor_twopf_batch;
 
-        //! threeof cache
-        std::vector< typename integration_items<number>::threepf_item >      threepf_batch;
+        //! threepf momentum-insertions cache
+        std::vector<typename integration_items<number>::threepf_momentum_item> threepf_momentum_batch;
 
-		    //! k_t initial conditions cache
-		    std::vector< typename integration_items<number>::ics_kt_item >       kt_ics_batch;
+        //! threepf Nderiv-insertions cache
+        std::vector<typename integration_items<number>::threepf_Nderiv_item> threepf_Nderiv_batch;
+
+        //! k_t initial conditions cache
+        std::vector<typename integration_items<number>::ics_kt_item> kt_ics_batch;
 
         //! cache for linear part of gauge transformation
         std::vector<number> gauge_xfm1;
@@ -557,10 +564,10 @@ namespace transport
         zeta_threepf_batcher<number>* paired_batcher;
 
 
-        // ZETA COMPUTATION AGENT
+        // COMPUTATION AGENT
 
         //! compute delegate
-        zeta_compute<number> zeta_agent;
+        postprocess_delegate<number> compute_agent;
 
 	    };
 
@@ -789,7 +796,7 @@ namespace transport
 	      writers(w),
         paired_batcher(nullptr),
         parent_task(tk),
-        zeta_agent(m, tk)
+        compute_agent(m, tk)
 	    {
         assert(this->parent_task != nullptr);
 
@@ -827,7 +834,7 @@ namespace transport
 
         number zeta_twopf = 0.0;
 
-        this->zeta_agent.zeta_twopf(twopf, backg, zeta_twopf, this->gauge_xfm1);
+        this->compute_agent.zeta_twopf(twopf, backg, zeta_twopf, this->gauge_xfm1);
         this->paired_batcher->push_twopf(time_serial, k_serial, zeta_twopf, source_serial);
         this->paired_batcher->push_gauge_xfm1(time_serial, k_serial, this->gauge_xfm1, source_serial);
       }
@@ -969,7 +976,7 @@ namespace transport
 	      writers(w),
         paired_batcher(nullptr),
         parent_task(tk),
-        zeta_agent(m, tk)
+        compute_agent(m, tk)
 	    {
         assert(this->parent_task != nullptr);
 
@@ -989,7 +996,7 @@ namespace transport
 
         switch(t)
           {
-            case twopf_type::twopf_real:
+            case twopf_type::real:
               {
                 typename integration_items<number>::twopf_re_item item;
 
@@ -1002,7 +1009,7 @@ namespace transport
                 break;
               }
 
-            case twopf_type::twopf_imag:
+            case twopf_type::imag:
               {
                 typename integration_items<number>::twopf_im_item item;
 
@@ -1016,7 +1023,7 @@ namespace transport
               }
           }
 
-        if(t == twopf_type::twopf_real && this->paired_batcher != nullptr) this->push_paired_twopf(time_serial, k_serial, source_serial, values, backg);
+        if(t == twopf_type::real && this->paired_batcher != nullptr) this->push_paired_twopf(time_serial, k_serial, source_serial, values, backg);
 
         this->check_for_flush();
 	    }
@@ -1031,7 +1038,7 @@ namespace transport
 
         number zeta_twopf = 0.0;
 
-        this->zeta_agent.zeta_twopf(twopf, backg, zeta_twopf, this->gauge_xfm1);
+        this->compute_agent.zeta_twopf(twopf, backg, zeta_twopf, this->gauge_xfm1);
         this->paired_batcher->push_twopf(time_serial, k_serial, zeta_twopf, source_serial);
         this->paired_batcher->push_gauge_xfm1(time_serial, k_serial, this->gauge_xfm1, source_serial);
       }
@@ -1046,14 +1053,39 @@ namespace transport
 	    {
         if(values.size() != 2*this->Nfields*2*this->Nfields*2*this->Nfields) throw runtime_exception(exception_type::STORAGE_ERROR, CPPTRANSPORT_NFIELDS_THREEPF);
 
-        typename integration_items<number>::threepf_item item;
+        typename integration_items<number>::threepf_momentum_item momentum_item;
+        typename integration_items<number>::threepf_Nderiv_item   Nderiv_item;
 
-        item.time_serial    = time_serial;
-        item.kconfig_serial = kconfig.serial;
-        item.source_serial  = source_serial;
-        item.elements       = values;
+        // momentum three-point function can be copied across directly
+        momentum_item.time_serial    = time_serial;
+        momentum_item.kconfig_serial = kconfig.serial;
+        momentum_item.source_serial  = source_serial;
+        momentum_item.elements       = values;
 
-        this->threepf_batch.push_back(item);
+        this->threepf_momentum_batch.push_back(momentum_item);
+
+        // derivative three-point function needs extra shifts in order to convert any momentum insertions
+        Nderiv_item.time_serial    = time_serial;
+        Nderiv_item.kconfig_serial = kconfig.serial;
+        Nderiv_item.source_serial  = source_serial;
+
+        Nderiv_item.elements.resize(values.size());
+        for(unsigned int i = 0; i < 2*this->Nfields; ++i)
+          {
+            for(unsigned int j = 0; j < 2*this->Nfields; ++j)
+              {
+                for(unsigned int k = 0; k < 2*this->Nfields; ++k)
+                  {
+                    number tpf = values[this->mdl->flatten(i,j,k)];
+
+                    this->compute_agent.shift(i, j, k, kconfig, time_serial, tpf_k1_re, tpf_k1_im, tpf_k2_re, tpf_k2_im, tpf_k3_re, tpf_k3_im, bg, tpf);
+
+                    Nderiv_item.elements[this->mdl->flatten(i,j,k)] = tpf;
+                  }
+              }
+          }
+
+        this->threepf_Nderiv_batch.push_back(Nderiv_item);
 
         if(this->paired_batcher != nullptr)
           this->push_paired_threepf(time_serial, t, kconfig, source_serial, values,
@@ -1077,8 +1109,8 @@ namespace transport
         number              zeta_threepf = 0.0;
         number              redbsp       = 0.0;
 
-        this->zeta_agent.zeta_threepf(kconfig, t, threepf, tpf_k1_re, tpf_k1_im, tpf_k2_re, tpf_k2_im, tpf_k3_re, tpf_k3_im, bg, zeta_threepf, redbsp,
-                                      this->gauge_xfm1, this->gauge_xfm2_123, this->gauge_xfm2_213, this->gauge_xfm2_312);
+        this->compute_agent.zeta_threepf(kconfig, t, threepf, tpf_k1_re, tpf_k1_im, tpf_k2_re, tpf_k2_im, tpf_k3_re, tpf_k3_im, bg, zeta_threepf, redbsp,
+                                         this->gauge_xfm1, this->gauge_xfm2_123, this->gauge_xfm2_213, this->gauge_xfm2_312);
 
         this->paired_batcher->push_threepf(time_serial, kconfig.serial, zeta_threepf, redbsp, source_serial);
         this->paired_batcher->push_gauge_xfm2_123(time_serial, kconfig.serial, this->gauge_xfm2_123, source_serial);
@@ -1111,7 +1143,8 @@ namespace transport
         return((sizeof(unsigned int) + 2*this->Nfields*sizeof(number))*this->backg_batch.size()
 	        + (3*sizeof(unsigned int) + 4*sizeof(number))*this->tensor_twopf_batch.size()
 	        + (3*sizeof(unsigned int) + 2*this->Nfields*2*this->Nfields*sizeof(number))*(this->twopf_re_batch.size() + this->twopf_im_batch.size())
-	        + (3*sizeof(unsigned int) + 2*this->Nfields*2*this->Nfields*2*this->Nfields*sizeof(number))*this->threepf_batch.size()
+	        + (3*sizeof(unsigned int) + 2*this->Nfields*2*this->Nfields*2*this->Nfields*sizeof(number))*this->threepf_momentum_batch.size()
+          + (3*sizeof(unsigned int) + 2*this->Nfields*2*this->Nfields*2*this->Nfields*sizeof(number))*this->threepf_Nderiv_batch.size()
 	        + (2*sizeof(unsigned int) + sizeof(size_t) + 2*sizeof(boost::timer::nanosecond_type))*this->stats_batch.size()
 	        + (sizeof(unsigned int) + 2*this->Nfields*sizeof(number))*this->ics_batch.size()
           + (sizeof(unsigned int) + 2*this->Nfields*sizeof(number))*this->kt_ics_batch.size());
@@ -1153,7 +1186,8 @@ namespace transport
         this->writers.twopf_re(this, this->twopf_re_batch);
         this->writers.twopf_im(this, this->twopf_im_batch);
         this->writers.tensor_twopf(this, this->tensor_twopf_batch);
-        this->writers.threepf(this, this->threepf_batch);
+        this->writers.threepf_momentum(this, this->threepf_momentum_batch);
+        this->writers.threepf_Nderiv(this, this->threepf_Nderiv_batch);
 
         flush_timer.stop();
         BOOST_LOG_SEV(this->get_log(), generic_batcher::log_severity_level::normal) << "** Flushed in time " << format_time(flush_timer.elapsed().wall) << "; pushing to master process";
@@ -1165,7 +1199,8 @@ namespace transport
         this->twopf_re_batch.clear();
         this->twopf_im_batch.clear();
         this->tensor_twopf_batch.clear();
-        this->threepf_batch.clear();
+        this->threepf_momentum_batch.clear();
+        this->threepf_Nderiv_batch.clear();
 
         // push a message to the master node, indicating that new data is available
         // note that the order of calls to 'dispatcher' and 'replacer' is important
@@ -1183,37 +1218,55 @@ namespace transport
 
     template <typename number>
     void threepf_batcher<number>::unbatch(unsigned int source_serial)
-	    {
-        this->backg_batch.erase(std::remove_if(this->backg_batch.begin(), this->backg_batch.end(),
-                                               UnbatchPredicate<typename integration_items<number>::backg_item>(source_serial)),
-                                this->backg_batch.end());
+      {
+        this->backg_batch.erase(
+          std::remove_if(this->backg_batch.begin(), this->backg_batch.end(),
+                         UnbatchPredicate<typename integration_items<number>::backg_item>(
+                           source_serial)),
+          this->backg_batch.end());
 
-        this->twopf_re_batch.erase(std::remove_if(this->twopf_re_batch.begin(), this->twopf_re_batch.end(),
-                                                  UnbatchPredicate<typename integration_items<number>::twopf_re_item>(source_serial)),
-                                   this->twopf_re_batch.end());
+        this->twopf_re_batch.erase(
+          std::remove_if(this->twopf_re_batch.begin(), this->twopf_re_batch.end(),
+                         UnbatchPredicate<typename integration_items<number>::twopf_re_item>(
+                           source_serial)),
+          this->twopf_re_batch.end());
 
-        this->twopf_im_batch.erase(std::remove_if(this->twopf_im_batch.begin(), this->twopf_im_batch.end(),
-                                                  UnbatchPredicate<typename integration_items<number>::twopf_im_item>(source_serial)),
-                                   this->twopf_im_batch.end());
+        this->twopf_im_batch.erase(
+          std::remove_if(this->twopf_im_batch.begin(), this->twopf_im_batch.end(),
+                         UnbatchPredicate<typename integration_items<number>::twopf_im_item>(
+                           source_serial)),
+          this->twopf_im_batch.end());
 
-        this->tensor_twopf_batch.erase(std::remove_if(this->tensor_twopf_batch.begin(), this->tensor_twopf_batch.end(),
-                                                      UnbatchPredicate<typename integration_items<number>::tensor_twopf_item>(source_serial)),
-                                       this->tensor_twopf_batch.end());
+        this->tensor_twopf_batch.erase(
+          std::remove_if(this->tensor_twopf_batch.begin(), this->tensor_twopf_batch.end(),
+                         UnbatchPredicate<typename integration_items<number>::tensor_twopf_item>(
+                           source_serial)),
+          this->tensor_twopf_batch.end());
 
-        this->threepf_batch.erase(std::remove_if(this->threepf_batch.begin(), this->threepf_batch.end(),
-                                                 UnbatchPredicate<typename integration_items<number>::threepf_item>(source_serial)),
-                                  this->threepf_batch.end());
+        this->threepf_momentum_batch.erase(
+          std::remove_if(this->threepf_momentum_batch.begin(), this->threepf_momentum_batch.end(),
+                         UnbatchPredicate<typename integration_items<number>::threepf_momentum_item>(source_serial)),
+          this->threepf_momentum_batch.end());
 
-        this->ics_batch.erase(std::remove_if(this->ics_batch.begin(), this->ics_batch.end(),
-                                             UnbatchPredicate<typename integration_items<number>::ics_item>(source_serial)),
-                              this->ics_batch.end());
+        this->threepf_Nderiv_batch.erase(
+          std::remove_if(this->threepf_Nderiv_batch.begin(), this->threepf_Nderiv_batch.end(),
+                         UnbatchPredicate<typename integration_items<number>::threepf_Nderiv_item>(source_serial)),
+          this->threepf_Nderiv_batch.end());
 
-        this->kt_ics_batch.erase(std::remove_if(this->kt_ics_batch.begin(), this->kt_ics_batch.end(),
-                                                UnbatchPredicate<typename integration_items<number>::ics_kt_item>(source_serial)),
-                              this->kt_ics_batch.end());
+        this->ics_batch.erase(
+          std::remove_if(this->ics_batch.begin(), this->ics_batch.end(),
+                         UnbatchPredicate<typename integration_items<number>::ics_item>(
+                           source_serial)),
+          this->ics_batch.end());
+
+        this->kt_ics_batch.erase(
+          std::remove_if(this->kt_ics_batch.begin(), this->kt_ics_batch.end(),
+                         UnbatchPredicate<typename integration_items<number>::ics_kt_item>(
+                           source_serial)),
+          this->kt_ics_batch.end());
 
         if(this->paired_batcher != nullptr) this->paired_batcher->unbatch(source_serial);
-	    }
+      }
 
 
     template <typename number>

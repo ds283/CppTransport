@@ -35,7 +35,8 @@
 #define CPPTRANSPORT_DATACTR_BACKG_DATATAB_FAIL                  "Data container error: Failed to create background-value table in data container (backend code="
 #define CPPTRANSPORT_DATACTR_TWOPF_DATATAB_FAIL                  "Data container error: Failed to create twopf-value table in data container (backend code="
 #define CPPTRANSPORT_DATACTR_TENSOR_TWOPF_DATATAB_FAIL           "Data container error: Failed to creata tensor twopf-value table in data container (backend code="
-#define CPPTRANSPORT_DATACTR_THREEPF_DATATAB_FAIL                "Data container error: Failed to create threepf-value table in data container (backend code="
+#define CPPTRANSPORT_DATACTR_THREEPF_MOMENTUM_DATATAB_FAIL       "Data container error: Failed to create threepf-momentum-value table in data container (backend code="
+#define CPPTRANSPORT_DATACTR_THREEPF_DERIV_DATATAB_FAIL          "Data container error: Failed to create threepf-derivative-value table in data container (backend code="
 
 #define CPPTRANSPORT_DATACTR_ZETA_TWOPF_DATATAB_FAIL             "Data container error: Failed to create zeta twopf-value table in data container (backend code="
 #define CPPTRANSPORT_DATACTR_ZETA_THREEPF_DATATAB_FAIL           "Data container error: Failed to create zeta threepf-value table in data container (backend code="
@@ -49,7 +50,8 @@
 #define CPPTRANSPORT_DATACTR_STATISTICS_COPY                     "Data container error: Failed to copy per-configuration statistics from temporary container (backend code="
 #define CPPTRANSPORT_DATACTR_ICS_COPY                            "Data container error: Failed to copy initial conditions from temporary container (backend code="
 #define CPPTRANSPORT_DATACTR_WORKERS_COPY                        "Data container error: Failed to copy worker information from temporary container (backend code="
-#define CPPTRANSPORT_DATACTR_THREEPF_COPY                        "Data container error: Failed to copy threepf values from temporary container (backend code="
+#define CPPTRANSPORT_DATACTR_THREEPF_MOMENTUM_COPY               "Data container error: Failed to copy threepf-momentum values from temporary container (backend code="
+#define CPPTRANSPORT_DATACTR_THREEPF_DERIV_COPY                  "Data container error: Failed to copy threepf-derivative values from temporary container (backend code="
 #define CPPTRANSPORT_DATACTR_ZETA_TWOPF_COPY                     "Data container error: Failed to copy zeta twopf values from temporary container (backend code="
 #define CPPTRANSPORT_DATACTR_ZETA_THREEPF_COPY                   "Data container error: Failed to copy zeta threepf values from temporary container (backend code="
 #define CPPTRANSPORT_DATACTR_GAUGE_XFM1_COPY                     "Data container error: Failed to copy linear gauge-xfm values from temporary container (backend code="
@@ -66,7 +68,6 @@
 #define CPPTRANSPORT_DATAMGR_UNKNOWN_DERIVABLE_TASK              "Data manager error: Attempt to attach datapipe to derivable task of unknown type: task name"
 #define CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED                   "Data manager error: Attempt to use datapipe when no output group is attached"
 #define CPPTRANSPORT_DATAMGR_PIPE_NULL_TASK                      "Data manager error: Null task supplied when attaching datapipe"
-#define CPPTRANSPORT_DATAMGR_UNKNOWN_CF_TYPE                     "Data manager error: Datapipe pull request for unknown correlation function type"
 
 #define CPPTRANSPORT_DATAMGR_NULL_DERIVED_PRODUCT                "Data manager error: Null derived product"
 #define CPPTRANSPORT_DATAMGR_NULL_BATCHER                        "Data manager error: Null batcher"
@@ -75,8 +76,6 @@
 
 #define CPPTRANSPORT_DATAMGR_TIME_SERIAL_READ_FAIL               "Data manager error: Failed to select time sample (backend code="
 #define CPPTRANSPORT_DATAMGR_KCONFIG_SERIAL_READ_FAIL            "Data manager error: Failed to select k-configuration sample (backend code="
-
-#define CPPTRANSPORT_DATAMGR_UNKNOWN_FNL_TEMPLATE                "Data manager error: Unknown fNL template type"
 
 #define CPPTRANSPORT_DATAMGR_INTEGRITY_READ_FAIL                 "Data manager error: Failure while performing integrity check (backend code="
 

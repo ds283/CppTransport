@@ -92,7 +92,8 @@ namespace transport
 		        create_paged_table<number, typename integration_items<number>::twopf_re_item>(db, Nfields, foreign_keys_type::no_foreign_keys);
 		        create_paged_table<number, typename integration_items<number>::twopf_im_item>(db, Nfields, foreign_keys_type::no_foreign_keys);
             create_paged_table<number, typename integration_items<number>::tensor_twopf_item>(db, Nfields, foreign_keys_type::no_foreign_keys);
-            create_paged_table<number, typename integration_items<number>::threepf_item>(db, Nfields, foreign_keys_type::no_foreign_keys);
+            create_paged_table<number, typename integration_items<number>::threepf_momentum_item>(db, Nfields, foreign_keys_type::no_foreign_keys, kconfiguration_type::threepf_configs);
+            create_paged_table<number, typename integration_items<number>::threepf_Nderiv_item>(db, Nfields, foreign_keys_type::no_foreign_keys, kconfiguration_type::threepf_configs);
 
 		        return(db);
 			    }
@@ -111,13 +112,15 @@ namespace transport
 		            std::ostringstream msg;
 		            if(db != nullptr)
 			            {
-		                msg << CPPTRANSPORT_DATACTR_TEMPCTR_FAIL_A << " '" << container.string() << "' "
+		                msg
+                      << CPPTRANSPORT_DATACTR_TEMPCTR_FAIL_A << " '" << container.string() << "' "
 			                << CPPTRANSPORT_DATACTR_TEMPCTR_FAIL_B << status << ": " << sqlite3_errmsg(db) << ")";
 		                sqlite3_close(db);
 			            }
 		            else
 			            {
-		                msg << CPPTRANSPORT_DATACTR_TEMPCTR_FAIL_A << " '" << container.string() << "' "
+		                msg
+                      << CPPTRANSPORT_DATACTR_TEMPCTR_FAIL_A << " '" << container.string() << "' "
 			                << CPPTRANSPORT_DATACTR_TEMPCTR_FAIL_B << status << ")";
 			            }
 		            throw runtime_exception(exception_type::DATA_CONTAINER_ERROR, msg.str());

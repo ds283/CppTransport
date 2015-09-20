@@ -122,7 +122,7 @@ namespace transport
 		      public:
 
 		        //! Copy this object
-		        virtual line_asciitable<number>* clone() const { return new line_asciitable<number>(static_cast<const line_asciitable<number>&>(*this)); }
+		        virtual line_asciitable<number>* clone() const override { return new line_asciitable<number>(static_cast<const line_asciitable<number>&>(*this)); }
 
 
 		        // SERIALIZATION -- implements a 'serializable' interface

@@ -273,7 +273,7 @@ namespace transport
 
         //! Pull a sample of a threepf at fixed k-configuration from a datapipe
         virtual void pull_threepf_time_sample(datapipe<number>* pipe, unsigned int id, const std::shared_ptr<derived_data::SQL_query>& query,
-                                              unsigned int k_serial, std::vector<number>& sample) override;
+                                              unsigned int k_serial, std::vector<number>& sample, threepf_type type) override;
 
         //! Pull a sample of a tensor twopf component at fixed k-configuration from a datapipe
         virtual void pull_tensor_twopf_time_sample(datapipe<number>* pipe, unsigned int id, const std::shared_ptr<derived_data::SQL_query>& query,
@@ -310,7 +310,7 @@ namespace transport
         //! Pull a kconfig sample of a threepf at fixed time from a datapipe
         virtual void pull_threepf_kconfig_sample(datapipe<number>* pipe, unsigned int id,
                                                  const std::shared_ptr<derived_data::SQL_query>& query,
-                                                 unsigned int t_serial, std::vector<number>& sample) override;
+                                                 unsigned int t_serial, std::vector<number>& sample, threepf_type type) override;
 
         //! Pull a kconfig sample of a tensor twopf component at fixed time from a datapipe
         virtual void pull_tensor_twopf_kconfig_sample(datapipe<number>* pipe, unsigned int id, const std::shared_ptr<derived_data::SQL_query>& query,
@@ -691,7 +691,8 @@ namespace transport
         sqlite3_operations::create_paged_table<number, typename integration_items<number>::twopf_re_item>(db, Nfields, sqlite3_operations::foreign_keys_type::foreign_keys, sqlite3_operations::kconfiguration_type::twopf_configs);
         sqlite3_operations::create_paged_table<number, typename integration_items<number>::twopf_im_item>(db, Nfields, sqlite3_operations::foreign_keys_type::foreign_keys, sqlite3_operations::kconfiguration_type::twopf_configs);
         sqlite3_operations::create_paged_table<number, typename integration_items<number>::tensor_twopf_item>(db, Nfields, sqlite3_operations::foreign_keys_type::foreign_keys, sqlite3_operations::kconfiguration_type::twopf_configs);
-        sqlite3_operations::create_paged_table<number, typename integration_items<number>::threepf_item>(db, Nfields, sqlite3_operations::foreign_keys_type::foreign_keys, sqlite3_operations::kconfiguration_type::threepf_configs);
+        sqlite3_operations::create_paged_table<number, typename integration_items<number>::threepf_momentum_item>(db, Nfields, sqlite3_operations::foreign_keys_type::foreign_keys, sqlite3_operations::kconfiguration_type::threepf_configs);
+        sqlite3_operations::create_paged_table<number, typename integration_items<number>::threepf_Nderiv_item>(db, Nfields, sqlite3_operations::foreign_keys_type::foreign_keys, sqlite3_operations::kconfiguration_type::threepf_configs);
 
         sqlite3_operations::create_worker_info_table(db, sqlite3_operations::foreign_keys_type::foreign_keys);
         if(writer->is_collecting_statistics()) sqlite3_operations::create_stats_table(db, sqlite3_operations::foreign_keys_type::foreign_keys, sqlite3_operations::kconfiguration_type::threepf_configs);
@@ -809,7 +810,7 @@ namespace transport
         sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::twopf_re_item>(db, *writer, seed_container_path.string());
         sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::twopf_im_item>(db, *writer, seed_container_path.string());
         sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::tensor_twopf_item>(db, *writer, seed_container_path.string());
-        sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::threepf_item>(db, *writer, seed_container_path.string());
+        sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::threepf_momentum_item>(db, *writer, seed_container_path.string());
 
         sqlite3_operations::aggregate_workers<number>(db, *writer, seed_container_path.string());
         if(writer->is_collecting_statistics() && seed->get_payload().has_statistics()) sqlite3_operations::aggregate_statistics<number>(db, *writer, seed_container_path.string());
@@ -925,15 +926,43 @@ namespace transport
 
         // set up writers
         typename threepf_batcher<number>::writer_group writers;
-		    writers.host_info    = std::bind(&sqlite3_operations::write_host_info<number>, std::placeholders::_1);
-        writers.stats        = std::bind(&sqlite3_operations::write_stats<number>, std::placeholders::_1, std::placeholders::_2);
-        writers.ics          = std::bind(&sqlite3_operations::write_coordinate_output<number, typename integration_items<number>::ics_item>, std::placeholders::_1, std::placeholders::_2);
-        writers.kt_ics       = std::bind(&sqlite3_operations::write_coordinate_output<number, typename integration_items<number>::ics_kt_item>, std::placeholders::_1, std::placeholders::_2);
-        writers.backg        = std::bind(&sqlite3_operations::write_coordinate_output<number, typename integration_items<number>::backg_item>, std::placeholders::_1, std::placeholders::_2);
-        writers.twopf_re     = std::bind(&sqlite3_operations::write_paged_output<number, integration_batcher<number>, typename integration_items<number>::twopf_re_item>, std::placeholders::_1, std::placeholders::_2);
-        writers.twopf_im     = std::bind(&sqlite3_operations::write_paged_output<number, integration_batcher<number>, typename integration_items<number>::twopf_im_item>, std::placeholders::_1, std::placeholders::_2);
-        writers.tensor_twopf = std::bind(&sqlite3_operations::write_paged_output<number, integration_batcher<number>, typename integration_items<number>::tensor_twopf_item>, std::placeholders::_1, std::placeholders::_2);
-        writers.threepf      = std::bind(&sqlite3_operations::write_paged_output<number, integration_batcher<number>, typename integration_items<number>::threepf_item>, std::placeholders::_1, std::placeholders::_2);
+
+        writers.host_info        = std::bind(&sqlite3_operations::write_host_info<number>, std::placeholders::_1);
+
+        writers.stats            = std::bind(&sqlite3_operations::write_stats<number>, std::placeholders::_1,
+                                             std::placeholders::_2);
+
+        writers.ics              = std::bind(
+          &sqlite3_operations::write_coordinate_output<number, typename integration_items<number>::ics_item>,
+          std::placeholders::_1, std::placeholders::_2);
+
+        writers.kt_ics           = std::bind(
+          &sqlite3_operations::write_coordinate_output<number, typename integration_items<number>::ics_kt_item>,
+          std::placeholders::_1, std::placeholders::_2);
+
+        writers.backg            = std::bind(
+          &sqlite3_operations::write_coordinate_output<number, typename integration_items<number>::backg_item>,
+          std::placeholders::_1, std::placeholders::_2);
+
+        writers.twopf_re         = std::bind(
+          &sqlite3_operations::write_paged_output<number, integration_batcher<number>, typename integration_items<number>::twopf_re_item>,
+          std::placeholders::_1, std::placeholders::_2);
+
+        writers.twopf_im         = std::bind(
+          &sqlite3_operations::write_paged_output<number, integration_batcher<number>, typename integration_items<number>::twopf_im_item>,
+          std::placeholders::_1, std::placeholders::_2);
+
+        writers.tensor_twopf     = std::bind(
+          &sqlite3_operations::write_paged_output<number, integration_batcher<number>, typename integration_items<number>::tensor_twopf_item>,
+          std::placeholders::_1, std::placeholders::_2);
+
+        writers.threepf_momentum = std::bind(
+          &sqlite3_operations::write_paged_output<number, integration_batcher<number>, typename integration_items<number>::threepf_momentum_item>,
+          std::placeholders::_1, std::placeholders::_2);
+
+        writers.threepf_Nderiv   = std::bind(
+          &sqlite3_operations::write_paged_output<number, integration_batcher<number>, typename integration_items<number>::threepf_Nderiv_item>,
+          std::placeholders::_1, std::placeholders::_2);
 
         // set up a replacement function
         generic_batcher::container_replacement_function replacer =
@@ -1233,7 +1262,8 @@ namespace transport
         sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::twopf_re_item>(db, writer, temp_ctr);
         sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::twopf_im_item>(db, writer, temp_ctr);
         sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::tensor_twopf_item>(db, writer, temp_ctr);
-        sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::threepf_item>(db, writer, temp_ctr);
+        sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::threepf_momentum_item>(db, writer, temp_ctr);
+        sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::threepf_Nderiv_item>(db, writer, temp_ctr);
 
         sqlite3_operations::aggregate_workers<number>(db, writer, temp_ctr);
         if(writer.is_collecting_statistics()) sqlite3_operations::aggregate_statistics<number>(db, writer, temp_ctr);
@@ -1370,7 +1400,7 @@ namespace transport
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        return sqlite3_operations::get_missing_serials<number, typename integration_items<number>::threepf_item>(db);
+        return sqlite3_operations::get_missing_serials<number, typename integration_items<number>::threepf_momentum_item>(db);
       }
 
 
@@ -1428,7 +1458,7 @@ namespace transport
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
         sqlite3_operations::drop_k_configurations(db, writer, serials, dbase,
-                                                  sqlite3_operations::data_traits<number, typename integration_items<number>::threepf_item>::sqlite_table());
+                                                  sqlite3_operations::data_traits<number, typename integration_items<number>::threepf_momentum_item>::sqlite_table());
       }
 
 
@@ -1548,7 +1578,7 @@ namespace transport
 
         timeslice.threepf = std::bind(&data_manager_sqlite3<number>::pull_threepf_time_sample, this,
                                       std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
-                                      std::placeholders::_4, std::placeholders::_5);
+                                      std::placeholders::_4, std::placeholders::_5, std::placeholders::_6);
 
         timeslice.tensor_twopf = std::bind(&data_manager_sqlite3<number>::pull_tensor_twopf_time_sample, this,
                                            std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
@@ -1580,7 +1610,7 @@ namespace transport
 
         kslice.threepf = std::bind(&data_manager_sqlite3<number>::pull_threepf_kconfig_sample, this,
                                    std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
-                                   std::placeholders::_4, std::placeholders::_5);
+                                   std::placeholders::_4, std::placeholders::_5, std::placeholders::_6);
 
         kslice.tensor_twopf = std::bind(&data_manager_sqlite3<number>::pull_tensor_twopf_kconfig_sample, this,
                                         std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
@@ -1667,8 +1697,7 @@ namespace transport
     template <typename number>
     void data_manager_sqlite3<number>::pull_twopf_time_sample(datapipe<number>* pipe, unsigned int id,
                                                               const std::shared_ptr<derived_data::SQL_query>& query,
-                                                              unsigned int k_serial, std::vector<number>& sample,
-                                                              twopf_type type)
+                                                              unsigned int k_serial, std::vector<number>& sample, twopf_type type)
 	    {
         assert(pipe != nullptr);
         if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
@@ -1678,12 +1707,12 @@ namespace transport
 
         switch(type)
           {
-            case twopf_type::twopf_real:
+            case twopf_type::real:
               sqlite3_operations::pull_paged_time_sample<number, typename integration_items<number>::twopf_re_item>(db, id, query, k_serial, sample,
                                                                                                                     pipe->get_worker_number(), pipe->get_N_fields());
               break;
 
-            case twopf_type::twopf_imag:
+            case twopf_type::imag:
               sqlite3_operations::pull_paged_time_sample<number, typename integration_items<number>::twopf_im_item>(db, id, query, k_serial, sample,
                                                                                                                     pipe->get_worker_number(), pipe->get_N_fields());
               break;
@@ -1694,7 +1723,7 @@ namespace transport
     template <typename number>
     void data_manager_sqlite3<number>::pull_threepf_time_sample(datapipe<number>* pipe, unsigned int id,
                                                                 const std::shared_ptr<derived_data::SQL_query>& query,
-                                                                unsigned int k_serial, std::vector<number>& sample)
+                                                                unsigned int k_serial, std::vector<number>& sample, threepf_type type)
 	    {
         assert(pipe != nullptr);
         if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
@@ -1702,8 +1731,18 @@ namespace transport
         sqlite3* db = nullptr;
         pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
-        sqlite3_operations::pull_paged_time_sample<number, typename integration_items<number>::threepf_item>(db, id, query, k_serial, sample,
-                                                                                                             pipe->get_worker_number(), pipe->get_N_fields());
+        switch(type)
+          {
+            case threepf_type::momentum:
+              sqlite3_operations::pull_paged_time_sample<number, typename integration_items<number>::threepf_momentum_item>(db, id, query, k_serial, sample,
+                                                                                                                            pipe->get_worker_number(), pipe->get_N_fields());
+              break;
+
+            case threepf_type::Nderiv:
+              sqlite3_operations::pull_paged_time_sample<number, typename integration_items<number>::threepf_Nderiv_item>(db, id, query, k_serial, sample,
+                                                                                                                          pipe->get_worker_number(), pipe->get_N_fields());
+              break;
+          }
 	    }
 
 
@@ -1813,8 +1852,7 @@ namespace transport
     template <typename number>
     void data_manager_sqlite3<number>::pull_twopf_kconfig_sample(datapipe<number>* pipe, unsigned int id,
                                                                  const std::shared_ptr<derived_data::SQL_query>& query,
-                                                                 unsigned int t_serial, std::vector<number>& sample,
-                                                                 twopf_type type)
+                                                                 unsigned int t_serial, std::vector<number>& sample, twopf_type type)
 	    {
 				assert(pipe != nullptr);
 		    if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
@@ -1824,12 +1862,12 @@ namespace transport
 
         switch(type)
           {
-            case twopf_type::twopf_real:
+            case twopf_type::real:
               sqlite3_operations::pull_paged_kconfig_sample<number, typename integration_items<number>::twopf_re_item>(db, id, query, t_serial, sample,
                                                                                                                        pipe->get_worker_number(), pipe->get_N_fields());
               break;
 
-            case twopf_type::twopf_imag:
+            case twopf_type::imag:
               sqlite3_operations::pull_paged_kconfig_sample<number, typename integration_items<number>::twopf_im_item>(db, id, query, t_serial, sample,
                                                                                                                        pipe->get_worker_number(), pipe->get_N_fields());
               break;
@@ -1840,7 +1878,7 @@ namespace transport
     template <typename number>
     void data_manager_sqlite3<number>::pull_threepf_kconfig_sample(datapipe<number>* pipe, unsigned int id,
                                                                    const std::shared_ptr<derived_data::SQL_query>& query,
-                                                                   unsigned int t_serial, std::vector<number>& sample)
+                                                                   unsigned int t_serial, std::vector<number>& sample, threepf_type type)
 	    {
         assert(pipe != nullptr);
         if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
@@ -1848,8 +1886,18 @@ namespace transport
         sqlite3* db = nullptr;
         pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
-        sqlite3_operations::pull_paged_kconfig_sample<number, typename integration_items<number>::threepf_item>(db, id, query, t_serial, sample,
-                                                                                                                pipe->get_worker_number(), pipe->get_N_fields());
+        switch(type)
+          {
+            case threepf_type::momentum:
+              sqlite3_operations::pull_paged_kconfig_sample<number, typename integration_items<number>::threepf_momentum_item>(db, id, query, t_serial, sample,
+                                                                                                                               pipe->get_worker_number(), pipe->get_N_fields());
+              break;
+
+            case threepf_type::Nderiv:
+              sqlite3_operations::pull_paged_kconfig_sample<number, typename integration_items<number>::threepf_Nderiv_item>(db, id, query, t_serial, sample,
+                                                                                                                             pipe->get_worker_number(), pipe->get_N_fields());
+              break;
+          }
 	    }
 
 

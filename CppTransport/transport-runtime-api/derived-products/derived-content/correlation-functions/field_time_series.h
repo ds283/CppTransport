@@ -622,14 +622,10 @@ namespace transport
 		                        std::array<unsigned int, 3> index_set = { l, m, n };
 		                        if(this->active_indices.is_on(index_set))
 			                        {
-				                        cf_time_data_tag<number> tag = pipe.new_cf_time_data_tag(cf_data_type::cf_threepf, this->gadget.get_model()->flatten(l,m,n), t->serial);
+				                        cf_time_data_tag<number> tag = pipe.new_cf_time_data_tag(this->get_dot_meaning() == dot_type::derivatives ? cf_data_type::cf_threepf_Nderiv : cf_data_type::cf_threepf_momentum,
+                                                                                         this->gadget.get_model()->flatten(l,m,n), t->serial);
 
 		                            std::vector<number> line_data = t_handle.lookup_tag(tag);
-
-		                            // the integrator produces correlation functions involving the canonical momenta,
-		                            // not the derivatives. If the user wants derivatives then we have to shift.
-		                            if(this->get_dot_meaning() == dot_type::derivatives)
-			                            this->shifter.shift(this->gadget.get_integration_task(), this->gadget.get_model(), pipe, this->tquery, line_data, t_values, l, m, n, *t);
 
                                 value_type value = value_type::correlation_function_value;
                                 if(this->dimensionless)
