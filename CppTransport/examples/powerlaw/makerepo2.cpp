@@ -17,7 +17,7 @@
 // we could choose something different
 
 const double M_Planck   = 1.0;
-const double W0         = 1E-10 * M_Planck * M_Planck * M_Planck * M_Planck;
+const double W0         = 1E-14 * M_Planck * M_Planck * M_Planck * M_Planck;
 const double m_phi      = std::sqrt(0.02);
 const double m_sigma1   = std::sqrt(0.5);
 const double m_sigma2   = std::sqrt(0.05);
