@@ -1,5 +1,5 @@
 //
-// Created by David Seery on 6/6/2014.
+// Created by David Seery on 12/10/2015.
 // Copyright (c) 2014-15 University of Sussex. All rights reserved.
 //
 
@@ -67,8 +67,8 @@ int main(int argc, char* argv[])
     // The resulting initial conditions apply at time Ncross-Npre
     transport::initial_conditions<double> ics("powerlaw-1", model, params, init_values, Ninit, Ncross, Npre);
 
-    const unsigned int early_t_samples = 25;
-    const unsigned int late_t_samples  = 25;
+    const unsigned int early_t_samples = 10;
+    const unsigned int late_t_samples  = 10;
 
     transport::stepping_range<double> early_times(Ncross-Npre, Ncross+Nsplit, early_t_samples, transport::range_spacing_type::logarithmic_bottom_stepping);
     transport::stepping_range<double> late_times(Ncross+Nsplit, Ncross+Nmax, late_t_samples, transport::range_spacing_type::linear_stepping);
@@ -77,21 +77,17 @@ int main(int argc, char* argv[])
     // the conventions for k-numbers are as follows:
     // k=1 is the mode which crosses the horizon at time N*,
     // where N* is the 'offset' we pass to the integration method (see below)
-    const double        kt_min_exp    = 0.0;
-    const double        kt_max_exp    = 7.0;
-    const double        ktmin         = exp(kt_min_exp);
-    const double        ktmax         = exp(kt_max_exp);
-    const unsigned int  k_samples     = 40;
+    const double        ktmin         = exp(0.0);
+    const double        ktmax         = exp(7.0);
+    const unsigned int  k_samples     = 50;
 
 		const double        alphamin      = 0.0;
 		const double        alphamax      = 1.0/2.0;
-		const unsigned int  a_samples     = 5;
+		const unsigned int  a_samples     = 100;
 
 		const double        betamin       = 0.0;
-		const double        betamid       = 0.98;
-		const double        betamax       = 0.999;
-		const unsigned int  lo_b_samples  = 150;
-		const unsigned int  hi_b_samples  = 200;
+		const double        betamax       = 0.99;
+		const unsigned int  b_samples     = 100;
 
 		struct ThreepfStoragePolicy
 			{
@@ -105,14 +101,9 @@ int main(int argc, char* argv[])
     transport::stepping_range<double> kts   (ktmin, ktmax, k_samples, transport::range_spacing_type::linear_stepping);
     transport::stepping_range<double> alphas(alphamin, alphamax, a_samples, transport::range_spacing_type::linear_stepping);
 
-//    transport::stepping_range<double> betas_lo(betamin, betamid, lo_b_samples, transport::range_spacing_type::linear_stepping);
-//    transport::stepping_range<double> betas_hi(betamid, betamax, hi_b_samples, transport::range_spacing_type::logarithmic_top_stepping);
-//    transport::aggregation_range<double> betas(betas_lo, betas_hi);
     transport::stepping_range<double> betas_equi(1.0/3.0, 1.0/3.0, 0, transport::range_spacing_type::linear_stepping);    // add dedicated equilateral configuration
-    transport::stepping_range<double> betas_lo(0.0, 0.9, 5, transport::range_spacing_type::linear_stepping);
-    transport::stepping_range<double> betas_mid(0.9, 0.99, 5, transport::range_spacing_type::logarithmic_top_stepping);
-    transport::stepping_range<double> betas_hi(0.99, 0.995, 5, transport::range_spacing_type::logarithmic_top_stepping);
-    transport::aggregation_range<double> betas = betas_lo + betas_mid + betas_hi + betas_equi;
+    transport::stepping_range<double> betas_range(betamin, betamax, b_samples, transport::range_spacing_type::linear_stepping);
+    transport::aggregation_range<double> betas = betas_range + betas_equi;
 
     // construct a threepf task
     transport::threepf_fls_task<double> tk3("powerlaw.threepf-1", ics, times, kts, alphas, betas, ThreepfStoragePolicy(), false);
@@ -142,19 +133,16 @@ int main(int argc, char* argv[])
     transport::derived_data::SQL_threepf_kconfig_query equilateral_smallest_threepf("ABS(alpha) < 0.01 AND ABS(beta-1.0/3.0) < 0.01 AND kt_conventional IN (SELECT MIN(kt_conventional) FROM threepf_samples)");
 
     // filter: squeezed, isosceles threepf
-    transport::derived_data::SQL_threepf_kconfig_query isosceles_squeezed_threepf("ABS(beta-0.995)<0.0001 AND ABS(alpha)<0.01");
-
-    // filter: equilateral
-    transport::derived_data::SQL_threepf_kconfig_query equilateral_threepf("ABS(beta-1.0/3.0)<0.0001 AND ABS(alpha)<0.01");
+    transport::derived_data::SQL_threepf_kconfig_query isosceles_squeezed_threepf("ABS(beta-0.999)<0.0001 AND ABS(alpha)<0.01");
 
 		// filter: equilateral with high k_t
     std::ostringstream hi_kt_query;
-		hi_kt_query << std::setprecision(10) << "ABS(alpha) < 0.001 AND ABS(kt_conventional-" << exp(kt_max_exp) << ") < 0.01";
+		hi_kt_query << std::setprecision(10) << "ABS(alpha) < 0.001 AND ABS(kt_conventional-" << exp(3.0) << ") < 0.01";
     transport::derived_data::SQL_threepf_kconfig_query isosceles_hi_kt(hi_kt_query.str());
 
     // filter: equilateral with lo k_t
     std::ostringstream lo_kt_query;
-		lo_kt_query << std::setprecision(10) << "ABS(alpha) < 0.001 AND ABS(kt_conventional-" << exp(kt_min_exp) << ") < 0.001";
+		lo_kt_query << std::setprecision(10) << "ABS(alpha) < 0.001 AND ABS(kt_conventional-" << exp(7.0) << ") < 0.001";
     transport::derived_data::SQL_threepf_kconfig_query isosceles_lo_kt(lo_kt_query.str());
 
 
@@ -304,27 +292,21 @@ int main(int argc, char* argv[])
 
     // 5. LATE-TIME ZETA REDUCED BISPECTRUM -- FIXED k3/k_t, ISOSCELES TRIANGLES, VARYING k_t
 
-    transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_spec_sq(ztk3, last_time, isosceles_squeezed_threepf);
-		tk3_zeta_redbsp_spec_sq.set_klabel_meaning(transport::derived_data::klabel_type::conventional);
-    tk3_zeta_redbsp_spec_sq.set_current_x_axis_value(transport::derived_data::axis_value::efolds_exit_axis);
-		tk3_zeta_redbsp_spec_sq.set_label_text("$k_3/k_t = 0.995$", "k3/k_t = 0.995");
-
-    transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_spec_eq(ztk3, last_time, equilateral_threepf);
-    tk3_zeta_redbsp_spec_eq.set_klabel_meaning(transport::derived_data::klabel_type::conventional);
-    tk3_zeta_redbsp_spec_eq.set_current_x_axis_value(transport::derived_data::axis_value::efolds_exit_axis);
-    tk3_zeta_redbsp_spec_eq.set_label_text("$k_3/k_t = \\frac{1}{3}$", "k3/k_t = 1/3");
+    transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_spec(ztk3, last_time, isosceles_squeezed_threepf);
+		tk3_zeta_redbsp_spec.set_klabel_meaning(transport::derived_data::klabel_type::conventional);
+		tk3_zeta_redbsp_spec.set_label_text("$k_3/k_t = 0.9999$", "k3/k_t = 0.9999");
 
     transport::derived_data::wavenumber_series_plot<double> tk3_redbsp_spec_plot("powerlaw.threepf-1.redbsp-spec", "redbsp-spec.pdf");
-		tk3_redbsp_spec_plot.add_line(tk3_zeta_redbsp_spec_sq);
-    tk3_redbsp_spec_plot.add_line(tk3_zeta_redbsp_spec_eq);
+		tk3_redbsp_spec_plot.add_line(tk3_zeta_redbsp_spec);
 		tk3_redbsp_spec_plot.set_typeset_with_LaTeX(true);
-		tk3_redbsp_spec_plot.set_title_text("Reduced bispectrum at fixed squeezing $k_3/k_t$");
-		tk3_redbsp_spec_plot.set_x_label_text("horizon-exit of $k_t$ measured from initial time");
-		tk3_redbsp_spec_plot.set_log_y(true);
-    tk3_redbsp_spec_plot.set_abs_y(true);
+		tk3_redbsp_spec_plot.set_title_text("Reduced bispectrum at fixed $k_3/k_t$");
+		tk3_redbsp_spec_plot.set_x_label_text("$k_t$");
+		tk3_redbsp_spec_plot.set_log_x(true);
+		tk3_redbsp_spec_plot.set_log_y(false);
+    tk3_redbsp_spec_plot.set_abs_y(false);
 
     transport::derived_data::wavenumber_series_table<double> tk3_redbsp_spec_table("powerlaw.threepf-1.redbsp-spec-table", "redbsp-spec-table.txt");
-		tk3_redbsp_spec_table.add_line(tk3_zeta_redbsp_spec_sq);
+		tk3_redbsp_spec_table.add_line(tk3_zeta_redbsp_spec);
 
 
     // 6. LATE TIME ZETA REDUCED BISPECTRUM -- FIXED k_t, ISOSCELES TRIANGLES, VARYING k3/k_t
@@ -333,8 +315,7 @@ int main(int argc, char* argv[])
     transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_beta_lo(ztk3, last_time, isosceles_lo_kt);
     tk3_zeta_redbsp_beta_lo.set_klabel_meaning(transport::derived_data::klabel_type::conventional);
     tk3_zeta_redbsp_beta_lo.set_current_x_axis_value(transport::derived_data::axis_value::beta_axis);
-		tk3_zeta_redbsp_beta_lo.set_label_text("$k_t/k_\\star = \\mathrm{e}^{3.5}$", "k_t/k* = exp(3.5)");
-
+		tk3_zeta_redbsp_beta_lo.set_label_text("$k_t/k_\\star = \\mathrm{e}^3$", "k_t/k* = exp(3)");
     transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_beta_hi(ztk3, last_time, isosceles_hi_kt);
     tk3_zeta_redbsp_beta_hi.set_klabel_meaning(transport::derived_data::klabel_type::conventional);
     tk3_zeta_redbsp_beta_hi.set_current_x_axis_value(transport::derived_data::axis_value::beta_axis);
@@ -356,7 +337,7 @@ int main(int argc, char* argv[])
     transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_sqk3_lo(ztk3, last_time, isosceles_lo_kt);
     tk3_zeta_redbsp_sqk3_lo.set_klabel_meaning(transport::derived_data::klabel_type::conventional);
     tk3_zeta_redbsp_sqk3_lo.set_current_x_axis_value(transport::derived_data::axis_value::squeezing_fraction_k3_axis);
-		tk3_zeta_redbsp_sqk3_lo.set_label_text("$k_t/k_\\star = \\mathrm{e}^{3.5}$", "k_t/k* = exp(3.5)");
+		tk3_zeta_redbsp_sqk3_lo.set_label_text("$k_t/k_\\star = \\mathrm{e}^3$", "k_t/k* = exp(3)");
 
     transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_sqk3_hi(ztk3, last_time, isosceles_hi_kt);
     tk3_zeta_redbsp_sqk3_hi.set_klabel_meaning(transport::derived_data::klabel_type::conventional);
@@ -371,7 +352,7 @@ int main(int argc, char* argv[])
 		tk3_redbsp_sqk3_plot.set_log_x(true);
 		tk3_redbsp_sqk3_plot.set_log_y(false);
     tk3_redbsp_sqk3_plot.set_abs_y(false);
-		tk3_redbsp_sqk3_plot.set_legend_position(transport::derived_data::legend_pos::top_right);
+		tk3_redbsp_sqk3_plot.set_legend_position(transport::derived_data::legend_pos::centre_right);
 
 
     // 8. SPECTRAL INDEX OF LATE TIME REDUCED BISPECTRUM -- FIXED k_t, ISOSCELES TRIANGLES, VARYING k3/k_t (SAME AS 6,7)
@@ -381,7 +362,7 @@ int main(int argc, char* argv[])
     tk3_zeta_redbsp_sqk3_lo_index.set_klabel_meaning(transport::derived_data::klabel_type::conventional);
     tk3_zeta_redbsp_sqk3_lo_index.set_current_x_axis_value(transport::derived_data::axis_value::squeezing_fraction_k3_axis);
     tk3_zeta_redbsp_sqk3_lo_index.set_spectral_index(true);
-    tk3_zeta_redbsp_sqk3_lo_index.set_label_text("$n_{f_{\\mathrm{NL}}} \\;\\; k_t/k_\\star = \\mathrm{e}^{3.5}$", "n_fNL k_t/k* = exp(3.5)");
+    tk3_zeta_redbsp_sqk3_lo_index.set_label_text("$n_{f_{\\mathrm{NL}}} \\;\\; k_t/k_\\star = \\mathrm{e}^3$", "n_fNL k_t/k* = exp(3)");
 
     transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_sqk3_hi_index(ztk3, last_time, isosceles_hi_kt);
     tk3_zeta_redbsp_sqk3_hi_index.set_klabel_meaning(transport::derived_data::klabel_type::conventional);
@@ -397,24 +378,18 @@ int main(int argc, char* argv[])
     tk3_redbsp_sqk3_index_plot.set_log_x(true);
     tk3_redbsp_sqk3_index_plot.set_log_y(false);
     tk3_redbsp_sqk3_index_plot.set_abs_y(false);
-    tk3_redbsp_sqk3_index_plot.set_legend_position(transport::derived_data::legend_pos::top_left);
+    tk3_redbsp_sqk3_index_plot.set_legend_position(transport::derived_data::legend_pos::bottom_left);
 
 
     // 9. SPECTRAL INDEX OF LATE-TIME ZETA REDUCED BISPECTRUM -- FIXED k3/k_t, ISOSCELES TRIANGLES, VARYING k_t
 
-    transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_spec_index_sq(ztk3, last_time, isosceles_squeezed_threepf);
-    tk3_zeta_redbsp_spec_index_sq.set_klabel_meaning(transport::derived_data::klabel_type::conventional);
-    tk3_zeta_redbsp_spec_index_sq.set_label_text("$n_{f_{\\mathrm{NL}}} \\;\\; k_3/k_t = 0.995$", "k3/k_t = 0.995");
-    tk3_zeta_redbsp_spec_index_sq.set_spectral_index(true);
-
-    transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_spec_index_eq(ztk3, last_time, equilateral_threepf);
-    tk3_zeta_redbsp_spec_index_eq.set_klabel_meaning(transport::derived_data::klabel_type::conventional);
-    tk3_zeta_redbsp_spec_index_eq.set_label_text("$n_{f_{\\mathrm{NL}}} \\;\\; k_3/k_t = \\frac{1}{3}$", "k3/k_t = 1/3");
-    tk3_zeta_redbsp_spec_index_eq.set_spectral_index(true);
+    transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_spec_index(ztk3, last_time, isosceles_squeezed_threepf);
+    tk3_zeta_redbsp_spec_index.set_klabel_meaning(transport::derived_data::klabel_type::conventional);
+    tk3_zeta_redbsp_spec_index.set_label_text("$n_{f_{\\mathrm{NL}}} \\;\\; k_3/k_t = 0.999$", "k3/k_t = 0.999");
+    tk3_zeta_redbsp_spec_index.set_spectral_index(true);
 
     transport::derived_data::wavenumber_series_plot<double> tk3_redbsp_spec_index_plot("powerlaw.threepf-1.redbsp-spec-index", "redbsp-spec-index.pdf");
-    tk3_redbsp_spec_index_plot.add_line(tk3_zeta_redbsp_spec_index_sq);
-    tk3_redbsp_spec_index_plot.add_line(tk3_zeta_redbsp_spec_index_eq);
+    tk3_redbsp_spec_index_plot.add_line(tk3_zeta_redbsp_spec_index);
     tk3_redbsp_spec_index_plot.set_typeset_with_LaTeX(true);
     tk3_redbsp_spec_index_plot.set_title_text("Spectral index of reduced bispectrum at fixed $k_3/k_t$");
     tk3_redbsp_spec_index_plot.set_x_label_text("$k_t$");
@@ -446,7 +421,7 @@ int main(int argc, char* argv[])
 
     transport::derived_data::cost_wavenumber<double> tk3_lo_cost(tk3, isosceles_lo_kt);
 		tk3_lo_cost.set_current_x_axis_value(transport::derived_data::axis_value::squeezing_fraction_k3_axis);
-		tk3_lo_cost.set_label_text("$k_t = \\mathrm{e}^{3.5}$", "k_t = exp(3.5)");
+		tk3_lo_cost.set_label_text("$k_t = \\mathrm{e}^3$", "k_t = exp(3)");
 
     transport::derived_data::wavenumber_series_plot<double> tk3_cost_plot("powerlaw.threepf-1.sqk3-cost", "sqk3-cost.pdf");
 		tk3_cost_plot.add_line(tk3_lo_cost);
@@ -454,7 +429,6 @@ int main(int argc, char* argv[])
 		tk3_cost_plot.set_typeset_with_LaTeX(true);
 		tk3_cost_plot.set_log_x(true);
 		tk3_cost_plot.set_log_y(true);
-
 
     // OUTPUT TASKS
 
@@ -475,8 +449,7 @@ int main(int argc, char* argv[])
                                     + tk3_redbsp_sqk3_index_plot
                                     + tk3_redbsp_spec_index_plot
                                     + tk3_zeta_2spec_index_plot
-																		+ tk3_cost_plot
-    ;
+																		+ tk3_cost_plot;
 
     std::cout << "powerlaw.threepf-1 output task:" << '\n' << threepf_output << '\n';
 

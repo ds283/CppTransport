@@ -195,6 +195,10 @@ add_executable(powerlaw-makerepo2 examples/powerlaw/makerepo2.cpp )
 target_link_libraries(powerlaw-makerepo2 sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
 
 
+add_executable(powerlaw-makerepo3 examples/powerlaw/makerepo3.cpp )
+target_link_libraries(powerlaw-makerepo3 sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
+
+
 add_executable(powerlaw-mpi examples/powerlaw/main.cpp )
 target_link_libraries(powerlaw-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
 
@@ -689,6 +693,7 @@ set(EXAMPLES_POWERLAW_FILES
   examples/powerlaw/main.cpp
   examples/powerlaw/makerepo.cpp
   examples/powerlaw/makerepo2.cpp
+  examples/powerlaw/makerepo3.cpp
 )
 
 set(TEMPLATES_FILES
