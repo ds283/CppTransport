@@ -239,7 +239,9 @@ namespace transport
 
       protected:
 
-        //! override cache_stored_time_config_database() supplied by integration_task<> to account for fast-forward integration if used
+        //! override cache_stored_time_config_database()
+        //! supplied by integration_task<> in order to account for fast-forward integration
+        //! if it is being used
         virtual void cache_stored_time_config_database() override;
 
 
