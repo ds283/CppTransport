@@ -77,17 +77,9 @@ int main(int argc, char* argv[])
     // the conventions for k-numbers are as follows:
     // k=1 is the mode which crosses the horizon at time N*,
     // where N* is the 'offset' we pass to the integration method (see below)
-    const double        ktmin         = exp(0.0);
-    const double        ktmax         = exp(7.0);
-    const unsigned int  k_samples     = 50;
-
-		const double        alphamin      = 0.0;
-		const double        alphamax      = 1.0/2.0;
-		const unsigned int  a_samples     = 100;
-
-		const double        betamin       = 0.0;
-		const double        betamax       = 0.99;
-		const unsigned int  b_samples     = 100;
+    const double       kmin      = exp(2.0);
+    const double       kmax      = 2000.0 * kmin;
+    const unsigned int k_samples = 300;
 
 		struct ThreepfStoragePolicy
 			{
@@ -98,15 +90,10 @@ int main(int argc, char* argv[])
 
     // SET UP TASKS
 
-    transport::stepping_range<double> kts   (ktmin, ktmax, k_samples, transport::range_spacing_type::linear_stepping);
-    transport::stepping_range<double> alphas(alphamin, alphamax, a_samples, transport::range_spacing_type::linear_stepping);
-
-    transport::stepping_range<double> betas_equi(1.0/3.0, 1.0/3.0, 0, transport::range_spacing_type::linear_stepping);    // add dedicated equilateral configuration
-    transport::stepping_range<double> betas_range(betamin, betamax, b_samples, transport::range_spacing_type::linear_stepping);
-    transport::aggregation_range<double> betas = betas_range + betas_equi;
+    transport::stepping_range<double> ks(kmin, kmax, k_samples, transport::range_spacing_type::linear_stepping);
 
     // construct a threepf task
-    transport::threepf_fls_task<double> tk3("powerlaw.threepf-1", ics, times, kts, alphas, betas, ThreepfStoragePolicy(), false);
+    transport::threepf_cubic_task<double> tk3("powerlaw.threepf-1", ics, times, ks, ThreepfStoragePolicy(), false);
 		tk3.set_fast_forward_efolds(4.0);
 		tk3.set_collect_initial_conditions(true);
 
