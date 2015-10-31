@@ -555,7 +555,7 @@ namespace transport
                   {
                     if(first)
                       {
-                        if(Nbegin < *t) time_db.add_record(Nbegin, false, 0);
+                        if(Nbegin < *t) time_db.add_record(Nbegin, false, serial++);
                       }
                     time_db.add_record(*t, true, serial);
                     first = false;
