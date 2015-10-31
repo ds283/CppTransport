@@ -19,7 +19,7 @@ SET ( EIGEN3_INCLUDE_DIR  "transport-runtime-api/thirdparty/splinter/thirdparty/
 
 
 # pull in bundled SPLINTER sources; on most platforms will need to switch default build to 64-bit
-set ( BITNESS "64" )
+set ( ARCH "x86-64" )
 ADD_SUBDIRECTORY ( "transport-runtime-api/thirdparty/splinter" "splinter-build" )
 
 
