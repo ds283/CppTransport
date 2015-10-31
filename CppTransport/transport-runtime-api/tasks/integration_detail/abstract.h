@@ -187,10 +187,10 @@ namespace transport
         cached_end_of_inflation(false)
 	    {
         // validate relation between Nstar and the sampling time
-        assert(times->get_steps() > 0);
+        assert(times->size() > 0);
         assert(times->get_min() >= ics.get_N_initial());
 
-        if(times->get_steps() == 0)
+        if(times->size() == 0)
 	        {
             std::ostringstream msg;
             msg << "'" << this->get_name() << "': " << CPPTRANSPORT_NO_TIMES;
