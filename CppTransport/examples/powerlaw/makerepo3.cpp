@@ -67,19 +67,15 @@ int main(int argc, char* argv[])
     // The resulting initial conditions apply at time Ncross-Npre
     transport::initial_conditions<double> ics("powerlaw-1", model, params, init_values, Ninit, Ncross, Npre);
 
-    const unsigned int early_t_samples = 10;
-    const unsigned int late_t_samples  = 10;
-
-    transport::stepping_range<double> early_times(Ncross-Npre, Ncross+Nsplit, early_t_samples, transport::range_spacing_type::logarithmic_bottom_stepping);
-    transport::stepping_range<double> late_times(Ncross+Nsplit, Ncross+Nmax, late_t_samples, transport::range_spacing_type::linear_stepping);
-    transport::aggregation_range<double> times(early_times, late_times);
+    // sample only at N=60
+    transport::stepping_range<double> times(60.0, 60.0, 0, transport::range_spacing_type::linear_stepping);
 
     // the conventions for k-numbers are as follows:
     // k=1 is the mode which crosses the horizon at time N*,
     // where N* is the 'offset' we pass to the integration method (see below)
     const double       kmin      = exp(2.0);
-    const double       kmax      = 2000.0 * kmin;
-    const unsigned int k_samples = 300;
+    const double       kmax      = 7000.0 * kmin;
+    const unsigned int k_samples = 400;
 
 		struct ThreepfStoragePolicy
 			{
