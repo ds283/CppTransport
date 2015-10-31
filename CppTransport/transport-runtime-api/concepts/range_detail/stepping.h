@@ -108,7 +108,7 @@ namespace transport
       public:
 
         //! write self to stream
-        template <typename Stream> void write(Stream& out) const;
+        template <typename Stream> void write(Stream& out);
 
 
         // INTERNAL DATA
@@ -317,7 +317,7 @@ namespace transport
 
     template <typename value>
     template <typename Stream>
-    void stepping_range<value>::write(Stream& out) const
+    void stepping_range<value>::write(Stream& out)
       {
         out << CPPTRANSPORT_STEPPING_RANGE_A << this->get_steps() << CPPTRANSPORT_STEPPING_RANGE_B;
 
@@ -338,17 +338,22 @@ namespace transport
           }
       }
 
-
+    // can't make stepping_range as const since some methods, eg. get_steps(), get_grid() are not marked const
+    // (for the benefit of aggregation_range, where lazy evaluation of the grid means these methods
+    // sometimes need to modify the internal state)
     template <typename value, typename Char, typename Traits>
-    std::basic_ostream<Char, Traits>& operator<<(std::basic_ostream<Char, Traits>& out, const stepping_range<value>& obj)
+    std::basic_ostream<Char, Traits>& operator<<(std::basic_ostream<Char, Traits>& out, stepping_range<value>& obj)
 	    {
         obj.write(out);
         return(out);
 	    }
 
 
+    // can't make stepping_range as const since some methods, eg. get_steps(), get_grid() are not marked const
+    // (for the benefit of aggregation_range, where lazy evaluation of the grid means these methods
+    // sometimes need to modify the internal state)
     template <typename value, typename Char, typename Traits, typename Allocator>
-    boost::log::basic_formatting_ostream<Char, Traits, Allocator>& operator<<(boost::log::basic_formatting_ostream<Char, Traits, Allocator>& out, const stepping_range<value>& obj)
+    boost::log::basic_formatting_ostream<Char, Traits, Allocator>& operator<<(boost::log::basic_formatting_ostream<Char, Traits, Allocator>& out, stepping_range<value>& obj)
       {
         obj.write(out);
         return(out);
