@@ -317,7 +317,7 @@ namespace transport
 		    // get raw time sample points
 		    const std::vector<double>& raw_times = this->times->get_grid();
 
-        unsigned int serial = 0;
+        unsigned int serial = CPPTRANSPORT_TIME_DATABASE_LOWEST_SERIAL;
         bool first = true;
 		    for(std::vector<double>::const_iterator t = raw_times.begin(); t != raw_times.end(); ++t, ++serial)
 			    {
@@ -325,7 +325,7 @@ namespace transport
               {
                 if(first)   // check that initial time is included, because this sets where the integrator begins
                   {
-                    if(this->get_N_initial() < *t) time_db.add_record(this->get_N_initial(), false, 0);
+                    if(this->get_N_initial() < *t) time_db.add_record(this->get_N_initial(), false, CPPTRANSPORT_TIME_DATABASE_SPECIAL_SERIAL);
                   }
                 time_db.add_record(*t, true, serial);
                 first = false;

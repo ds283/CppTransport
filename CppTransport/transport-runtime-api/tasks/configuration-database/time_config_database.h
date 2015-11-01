@@ -25,6 +25,10 @@
 #include "transport-runtime-api/exceptions.h"
 
 
+#define CPPTRANSPORT_TIME_DATABASE_LOWEST_SERIAL  (1)
+#define CPPTRANSPORT_TIME_DATABASE_SPECIAL_SERIAL (0)
+
+
 namespace transport
   {
 

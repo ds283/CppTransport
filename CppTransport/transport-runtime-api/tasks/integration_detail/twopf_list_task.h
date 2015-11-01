@@ -78,7 +78,7 @@ namespace transport
             std::pair< double, double > result = boost::math::tools::bisect(std::ref(sp), sp.get_min_x(), sp.get_max_x(), tol, max_iter);
 
             double res = (result.first + result.second)/2.0;
-            
+
             assert(max_iter < CPPTRANSPORT_MAX_ITERATIONS);
 
             // could check that tol(result.first, result.second) is strictly satisfied, but boost::bisect occasionally
@@ -546,7 +546,7 @@ namespace transport
           }
 
         bool first = true;
-        unsigned int serial = 0;
+        unsigned int serial = CPPTRANSPORT_TIME_DATABASE_LOWEST_SERIAL;
         for(std::vector<double>::const_iterator t = raw_times.begin(); t != raw_times.end(); ++t, ++serial)
           {
             if(*t >= Nbegin)
@@ -555,7 +555,7 @@ namespace transport
                   {
                     if(first)
                       {
-                        if(Nbegin < *t) time_db.add_record(Nbegin, false, serial++);
+                        if(Nbegin < *t) time_db.add_record(Nbegin, false, CPPTRANSPORT_TIME_DATABASE_SPECIAL_SERIAL);
                       }
                     time_db.add_record(*t, true, serial);
                     first = false;
@@ -590,7 +590,7 @@ namespace transport
         // get raw time sample points
         const std::vector<double> raw_times = this->times->get_grid();
 
-        unsigned int serial = 0;
+        unsigned int serial = CPPTRANSPORT_TIME_DATABASE_LOWEST_SERIAL;
         for(std::vector<double>::const_iterator t = raw_times.begin(); t != raw_times.end(); ++t, ++serial)
           {
             if(*t >= earliest_recordable)
