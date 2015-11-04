@@ -187,10 +187,10 @@ namespace transport
         cached_end_of_inflation(false)
 	    {
         // validate relation between Nstar and the sampling time
-        assert(times->get_steps() > 0);
+        assert(times->size() > 0);
         assert(times->get_min() >= ics.get_N_initial());
 
-        if(times->get_steps() == 0)
+        if(times->size() == 0)
 	        {
             std::ostringstream msg;
             msg << "'" << this->get_name() << "': " << CPPTRANSPORT_NO_TIMES;
@@ -317,7 +317,7 @@ namespace transport
 		    // get raw time sample points
 		    const std::vector<double>& raw_times = this->times->get_grid();
 
-        unsigned int serial = 0;
+        unsigned int serial = CPPTRANSPORT_TIME_DATABASE_LOWEST_SERIAL;
         bool first = true;
 		    for(std::vector<double>::const_iterator t = raw_times.begin(); t != raw_times.end(); ++t, ++serial)
 			    {
@@ -325,7 +325,7 @@ namespace transport
               {
                 if(first)   // check that initial time is included, because this sets where the integrator begins
                   {
-                    if(this->get_N_initial() < *t) time_db.add_record(this->get_N_initial(), false, 0);
+                    if(this->get_N_initial() < *t) time_db.add_record(this->get_N_initial(), false, CPPTRANSPORT_TIME_DATABASE_SPECIAL_SERIAL);
                   }
                 time_db.add_record(*t, true, serial);
                 first = false;

@@ -32,17 +32,22 @@ namespace transport
         ~local_environment() = default;
 
 
-        // LOCATION OF EXECUTABLES
+        // PYTHON SUPPORT
 
       public:
 
+        //! get location of Python executable
         std::string get_python_location() const { return(this->python_location.string()); }
 
+        //! execute a Python script;
+        //! returns exit code provided by system
+        int execute_python(const boost::filesystem::path& script) const;
 
         // TERMINAL PROPERTIES
 
       public:
 
+        //! determine whether the terminal we are running in has support for ANSI colourized output
         bool get_terminal_colour_support() const { return(this->colour_output); }
 
 
@@ -86,6 +91,27 @@ namespace transport
           || term_type == "screen"
           || term_type == "linux"
           || term_type == "cygwin";
+      }
+
+
+    int local_environment::execute_python(const boost::filesystem::path& script) const
+      {
+        std::ostringstream command;
+
+        // source user's .profile script if it exists
+        const char* user_home = getenv("HOME");
+        if(user_home != nullptr)
+          {
+            boost::filesystem::path user_profile = boost::filesystem::path(std::string(user_home)) / boost::filesystem::path(std::string(".profile"));
+            if(boost::filesystem::exists(user_profile))
+              {
+                command << "source " << user_profile.string() << "; ";
+              }
+          }
+
+        command << this->python_location.string() << " \"" << script.string() << "\"";
+
+        return std::system(command.str().c_str());
       }
 
 
