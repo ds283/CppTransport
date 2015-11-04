@@ -1108,9 +1108,7 @@ namespace transport
 				// if output format wasn't Python, try to execute this script
 				if(out_file.extension() != ".py")
 					{
-				    std::ostringstream command;
-				    command << "source ~/.profile; " << local_env.get_python_location() << " \"" << script_file.string() << "\"";
-				    int rc = std::system(command.str().c_str());
+            int rc = local_env.execute_python(script_file);
 
 				    // remove python script if worked ok
 				    if(rc == 0)

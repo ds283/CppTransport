@@ -714,9 +714,8 @@ namespace transport
 						// if output format wasn't Python, try to execute the script
 						if(plot_file.extension() != ".py")
 							{
-						    std::ostringstream command;
-						    command << "source ~/.profile; " << env.get_python_location() << " \"" << script_file.string() << "\"";
-						    int rc = std::system(command.str().c_str());
+                // hand off to local environment to execute
+                int rc = env.execute_python(script_file);
 
 						    // remove python script if worked ok, otherwise move script to destination and throw an exception
 						    if(rc == 0)
