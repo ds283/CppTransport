@@ -78,10 +78,10 @@ int main(int argc, char* argv[])
     // k=1 is the mode which crosses the horizon at time N*,
     // where N* is the 'offset' we pass to the integration method (see below)
     const double        kt_min_exp    = 0.0;
-    const double        kt_max_exp    = 7.0;
+    const double        kt_max_exp    = 10.0;
     const double        ktmin         = exp(kt_min_exp);
     const double        ktmax         = exp(kt_max_exp);
-    const unsigned int  k_samples     = 40;
+    const unsigned int  k_samples     = 60;
 
 		const double        alphamin      = 0.0;
 		const double        alphamax      = 1.0/2.0;
