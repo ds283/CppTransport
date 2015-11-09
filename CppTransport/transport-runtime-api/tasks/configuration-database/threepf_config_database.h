@@ -470,28 +470,31 @@ namespace transport
     template <typename StoragePolicy>
     int threepf_kconfig_database::add_record(std::shared_ptr<twopf_kconfig_database>& twopf_db, threepf_kconfig config, StoragePolicy policy)
       {
+        // populate serial numbers in configuration record before
+        // passing to storage policy
+        config.serial = this->serial++;
+
+        bool k1_stored;
+        bool k2_stored;
+        bool k3_stored;
+
+        // perform reverse-lookup to find whether twopf kconfig database records already exist for these k_i
+        twopf_kconfig_database::record_iterator rec;
+        k1_stored = twopf_db->find(config.k1_conventional, rec);
+        if(k1_stored) config.k1_serial = (*rec)->serial;
+        else          config.k1_serial = twopf_db->add_record(config.k1_conventional);
+
+        k2_stored = twopf_db->find(config.k2_conventional, rec);
+        if(k2_stored) config.k2_serial = (*rec)->serial;
+        else          config.k2_serial = twopf_db->add_record(config.k2_conventional);
+
+        k3_stored = twopf_db->find(config.k3_conventional, rec);
+        if(k3_stored) config.k3_serial = (*rec)->serial;
+        else          config.k3_serial = twopf_db->add_record(config.k3_conventional);
+
+        // ask storage policy whether this configuration should be reatined
         if(policy(config))
           {
-            config.serial = this->serial++;
-
-            bool k1_stored;
-            bool k2_stored;
-            bool k3_stored;
-
-		        // perform reverse-lookup to find whether twopf kconfig database records already exist for these k_i
-            twopf_kconfig_database::record_iterator rec;
-            k1_stored = twopf_db->find(config.k1_conventional, rec);
-		        if(k1_stored) config.k1_serial = (*rec)->serial;
-		        else          config.k1_serial = twopf_db->add_record(config.k1_conventional);
-
-            k2_stored = twopf_db->find(config.k2_conventional, rec);
-            if(k2_stored) config.k2_serial = (*rec)->serial;
-            else          config.k2_serial = twopf_db->add_record(config.k2_conventional);
-
-            k3_stored = twopf_db->find(config.k3_conventional, rec);
-            if(k3_stored) config.k3_serial = (*rec)->serial;
-            else          config.k3_serial = twopf_db->add_record(config.k3_conventional);
-
             if(config.kt_conventional > this->kmax_conventional) this->kmax_conventional = config.kt_conventional;
             if(config.kt_conventional < this->kmin_conventional) this->kmin_conventional = config.kt_conventional;
             if(config.kt_comoving > this->kmax_comoving)         this->kmax_comoving     = config.kt_comoving;
@@ -503,6 +506,13 @@ namespace transport
 		        this->modified = true;
 
             return(config.serial);
+          }
+        else
+          {
+            // unwind any twopf configurations added
+            if(!k1_stored) twopf_db->delete_record(config.k1_serial);
+            if(!k2_stored) twopf_db->delete_record(config.k2_serial);
+            if(!k3_stored) twopf_db->delete_record(config.k3_serial);
           }
 
         return(-1);
@@ -542,12 +552,8 @@ namespace transport
 
         sqlite3_operations::exec(handle, "BEGIN TRANSACTION");
 
-        unsigned int count = 0;
-        for(database_type::const_iterator t = this->database.begin(); t != this->database.end(); ++t, ++count)
+        for(database_type::const_iterator t = this->database.begin(); t != this->database.end(); ++t)
           {
-            assert(count == t->first);
-            if(count != t->first) throw runtime_exception(exception_type::SERIALIZATION_ERROR, CPPTRANSPORT_THREEPF_DATABASE_OUT_OF_ORDER);
-
             sqlite3_operations::check_stmt(handle, sqlite3_bind_int(stmt, 1, t->second->serial));
             sqlite3_operations::check_stmt(handle, sqlite3_bind_double(stmt, 2, t->second->kt_conventional));
             sqlite3_operations::check_stmt(handle, sqlite3_bind_double(stmt, 3, t->second->kt_comoving));
