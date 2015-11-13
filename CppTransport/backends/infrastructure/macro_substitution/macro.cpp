@@ -17,15 +17,15 @@
 // **************************************************************************************
 
 
-macro_agent::macro_agent(translation_unit* u, std::shared_ptr<package_group> pkg, std::string pf, std::string sp, unsigned int dm)
+macro_agent::macro_agent(translation_unit* u, package_group& pkg, std::string pf, std::string sp, unsigned int dm)
   : unit(u),
     prefix(pf),
     split(sp),
     recursion_max(dm),
     recursion_depth(0),
-    pre_rule_cache(pkg->get_pre_ruleset()),
-    post_rule_cache(pkg->get_post_ruleset()),
-    index_rule_cache(pkg->get_index_ruleset())
+    pre_rule_cache(pkg.get_pre_ruleset()),
+    post_rule_cache(pkg.get_post_ruleset()),
+    index_rule_cache(pkg.get_index_ruleset())
   {
     assert(unit != nullptr);
     assert(recursion_max > 0);
@@ -42,7 +42,7 @@ macro_agent::macro_agent(translation_unit* u, std::shared_ptr<package_group> pkg
   }
 
 
-std::shared_ptr< std::vector<std::string> > macro_agent::apply(std::string& line, unsigned int& replacements)
+std::unique_ptr< std::vector<std::string> > macro_agent::apply(std::string& line, unsigned int& replacements)
   {
 		// if timer is stopped, restart it
 		bool stopped = this->timer.is_stopped();
@@ -50,8 +50,8 @@ std::shared_ptr< std::vector<std::string> > macro_agent::apply(std::string& line
 
 		// the result of macro substitution is potentially large, and we'd rather not copy
 		// a very large array of strings while moving the result around.
-		// So, use a std::shared_ptr<> to manage the result object
-    std::shared_ptr< std::vector<std::string> > r_list(new std::vector<std::string>());
+		// So, use a std::unique_ptr<> to manage the result object
+    std::unique_ptr< std::vector<std::string> > r_list;
 
     if(++this->recursion_depth < this->recursion_max)
       {
@@ -72,9 +72,9 @@ std::shared_ptr< std::vector<std::string> > macro_agent::apply(std::string& line
   }
 
 
-std::shared_ptr< std::vector<std::string> > macro_agent::apply_line(std::string& line, unsigned int& replacements)
+std::unique_ptr< std::vector<std::string> > macro_agent::apply_line(std::string& line, unsigned int& replacements)
   {
-    std::shared_ptr< std::vector<std::string> > r_list(new std::vector<std::string>());
+    std::unique_ptr< std::vector<std::string> > r_list = std::make_unique< std::vector<std::string> >();
 
 		// break the line at the split point, if it exists, to get a 'left-hand' side and a 'right-hand' side
     std::string left;

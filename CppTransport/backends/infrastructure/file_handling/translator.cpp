@@ -110,11 +110,11 @@ unsigned int translator::process(const std::string in, buffer& buf, enum process
           {
             // generate an appropriate backend
 		        // this consists of a set of macro replacement rules which collectively comprise a 'package group'.
-		        // The result is returned as a managed pointer, using std::shared_ptr<>
-            std::shared_ptr<package_group> package = package_group_factory(in, backend, this->unit, this->cache);
+		        // The result is returned as a managed pointer, using std::unique_ptr<>
+            std::unique_ptr<package_group> package = package_group_factory(in, backend, this->unit, this->cache);
 
             // generate a macro replacement agent based on this package group
-            macro_agent agent(this->unit, package, BACKEND_MACRO_PREFIX, BACKEND_LINE_SPLIT);
+            macro_agent agent(this->unit, *package, BACKEND_MACRO_PREFIX, BACKEND_LINE_SPLIT);
 
             // push this input file to the top of the filestack
             output_stack& os = this->unit->get_stack();
@@ -129,19 +129,22 @@ unsigned int translator::process(const std::string in, buffer& buf, enum process
 		            // result is supplied as a std::shared_ptr<> because we don't want to have to take copies
 		            // of a large array of strings
                 unsigned int new_replacements = 0;
-                std::shared_ptr< std::vector<std::string> > line_list = agent.apply(line, new_replacements);
+                std::unique_ptr< std::vector<std::string> > line_list = agent.apply(line, new_replacements);
                 replacements += new_replacements;
 
-                std::ostringstream continuation_tag;
-                continuation_tag << " " << package->get_comment_separator() << " " << MESSAGE_EXPANSION_OF_LINE << " " << os.get_line();
-
-                unsigned int c = 0;
-                for(std::vector<std::string>::const_iterator l = line_list->begin(); l != line_list->end(); ++l, ++c)
+                if(line_list)
                   {
-                    std::string out_line = *l + (c > 0 ? continuation_tag.str() : "");
+                    std::ostringstream continuation_tag;
+                    continuation_tag << " " << package->get_comment_separator() << " " << MESSAGE_EXPANSION_OF_LINE << " " << os.get_line();
 
-                    if(filter != nullptr) buf.write_to_end((*filter)(out_line));
-                    else                  buf.write_to_end(out_line);
+                    unsigned int c = 0;
+                    for(std::vector<std::string>::const_iterator l = line_list->begin(); l != line_list->end(); ++l, ++c)
+                      {
+                        std::string out_line = *l + (c > 0 ? continuation_tag.str() : "");
+
+                        if(filter != nullptr) buf.write_to_end((*filter)(out_line));
+                        else                  buf.write_to_end(out_line);
+                      }
                   }
 
                 os.increment_line();

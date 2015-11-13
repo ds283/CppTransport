@@ -20,7 +20,7 @@
 #include "ginac_cache.h"
 
 
-std::shared_ptr<package_group> package_group_factory(const std::string& in, const std::string& backend, translation_unit* unit,
+std::unique_ptr<package_group> package_group_factory(const std::string& in, const std::string& backend, translation_unit* unit,
                                                      ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& cache);
 
 
