@@ -59,14 +59,14 @@ unsigned int translator::translate(const std::string& in, buffer& buf, enum proc
     unsigned int rval = 0;
     std::string  template_in;
 
-    std::shared_ptr<finder> path = this->unit->get_finder();
+    finder& path = this->unit->get_finder();
 
 		// try to find a template corresponding to the input filename
-    if(path->fqpn(in + ".h", template_in))    // leaves fully qualified pathname in template_in if it exists
+    if(path.fqpn(in + ".h", template_in))    // leaves fully qualified pathname in template_in if it exists
       {
         rval += this->process(template_in, buf, type, filter);
       }
-    else if(path->fqpn(in, template_in))
+    else if(path.fqpn(in, template_in))
       {
         rval += this->process(template_in, buf, type, filter);
       }
@@ -117,8 +117,8 @@ unsigned int translator::process(const std::string in, buffer& buf, enum process
             macro_agent agent(this->unit, package, BACKEND_MACRO_PREFIX, BACKEND_LINE_SPLIT);
 
             // push this input file to the top of the filestack
-            std::shared_ptr<output_stack> os  = this->unit->get_stack();
-            os->push(in, buf, agent, type);  // current line number is automatically set to 1
+            output_stack& os = this->unit->get_stack();
+            os.push(in, buf, agent, type);  // current line number is automatically set to 1
 
             while(!inf.eof() && !inf.fail())
               {
@@ -133,7 +133,7 @@ unsigned int translator::process(const std::string in, buffer& buf, enum process
                 replacements += new_replacements;
 
                 std::ostringstream continuation_tag;
-                continuation_tag << " " << package->get_comment_separator() << " " << MESSAGE_EXPANSION_OF_LINE << " " << os->get_line();
+                continuation_tag << " " << package->get_comment_separator() << " " << MESSAGE_EXPANSION_OF_LINE << " " << os.get_line();
 
                 unsigned int c = 0;
                 for(std::vector<std::string>::const_iterator l = line_list->begin(); l != line_list->end(); ++l, ++c)
@@ -144,14 +144,14 @@ unsigned int translator::process(const std::string in, buffer& buf, enum process
                     else                  buf.write_to_end(out_line);
                   }
 
-                os->increment_line();
+                os.increment_line();
               }
 
 		        // report end of input to the backend;
 		        // this enables it to do any tidying-up which may be required,
 		        // such as depositing temporaries to a temporary pool
 		        package->report_end_of_input();
-            os->pop();
+            os.pop();
 
             // emit advisory that translation is complete
             std::ostringstream finished_msg;

@@ -48,8 +48,10 @@ class lexfile
 
   public:
 
-    lexfile(std::string fnam, std::shared_ptr<filestack> s);
+    //! constructor
+    lexfile(const std::string& fnam, filestack& s);
 
+    //! destructor
     ~lexfile();
 
 
@@ -67,8 +69,8 @@ class lexfile
     //! get current state of the file
     enum lexfile_outcome current_state() const;
 
-    //! get (shared) pointer to current line
-    std::shared_ptr<std::string> get_current_line() const;
+    //! get shared_ptr to current line
+    const std::shared_ptr<std::string>& get_current_line() const;
 
     //! get current character position within current line
     unsigned int get_current_char_pos() const { return(this->char_pos); }
@@ -84,7 +86,7 @@ class lexfile
     std::ifstream stream;
 
     //! filestack representing our current position in processing the input file hierarchy
-    std::shared_ptr<filestack> stack;
+    filestack& stack;
 
     //! char read from the file
     char c;
@@ -95,7 +97,10 @@ class lexfile
     //! current character position in the line
     unsigned int char_pos;
 
-    //! vector of lines; we use these to attach to lexemes, so they have a local context eg. for error messages
+    //! vector of lines; we use these to attach to lexemes, so they have a local context eg. for error messages.
+    //! The strings representing each input line must persist for the lifetime of the
+    //! translation unit, so that we don't get future dangling references;
+    //! we do this using std::shared_ptr<> objects
     std::vector< std::shared_ptr<std::string> > line_array;
 
 	};

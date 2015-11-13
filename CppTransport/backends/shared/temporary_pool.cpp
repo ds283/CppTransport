@@ -102,8 +102,8 @@ namespace macro_packages
         if(tag_set)
           {
             // get buffer and macro package from the top of the stack
-            buffer&      buf = this->unit->get_stack()->top_buffer();
-            macro_agent& ms  = this->unit->get_stack()->top_macro_package();
+            buffer&      buf = this->unit->get_stack().top_buffer();
+            macro_agent& ms  = this->unit->get_stack().top_macro_package();
 
             // get temporaries which need to be deposited
             std::string temps = this->cse_worker->temporaries(this->pool_template);
@@ -141,7 +141,7 @@ namespace macro_packages
         // to update its location
 
         // get buffer and macro package from the top of the stack
-        buffer& buf = this->unit->get_stack()->top_buffer();
+        buffer& buf = this->unit->get_stack().top_buffer();
 
         // flush any existing temporaries to the preceding pool, if one exists
         if(this->tag_set) this->deposit_temporaries();

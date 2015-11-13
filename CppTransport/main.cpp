@@ -26,7 +26,7 @@ int main(int argc, const char *argv[])
     set_up_error_environment();
 
     // set up the initial search path to consist only of CWD
-    std::shared_ptr<finder> path = std::make_shared<finder>();
+    std::unique_ptr<finder> path = std::make_unique<finder>();
 
     // set up Boost::program_options descriptors for command-line arguments
     boost::program_options::options_description generic(MISC_OPTIONS);
@@ -97,7 +97,7 @@ int main(int argc, const char *argv[])
         std::vector<std::string> input_files = option_map[INPUT_FILE_SWITCH].as< std::vector<std::string> >();
         for(std::vector<std::string>::const_iterator t = input_files.begin(); t != input_files.end(); ++t)
           {
-            translation_unit unit(*t, path,
+            translation_unit unit(*t, *path,
                                   option_map[CORE_OUTPUT_SWITCH].as<std::string>(),
                                   option_map[IMPLEMENTATION_OUTPUT_SWITCH].as<std::string>(),
                                   option_map.count(NO_CSE_SWITCH)==0,

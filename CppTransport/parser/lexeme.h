@@ -60,8 +60,8 @@ namespace lexeme    // package in a unique namespace to protect common words lik
 
         lexeme(const std::string buffer, const enum lexeme_buffer_type t,
                enum lexeme_minus_context& context,
-               std::shared_ptr<filestack> p, unsigned int u,
-               std::shared_ptr<std::string> ln, unsigned int cpos,
+               filestack& p, unsigned int u,
+               const std::shared_ptr<std::string>& ln, unsigned int cpos,
                const std::string* kt, const keywords* km, unsigned int num_k,
                const std::string* ct, const characters* cm, const bool* ctx, unsigned int num_c);
 
@@ -94,11 +94,11 @@ namespace lexeme    // package in a unique namespace to protect common words lik
 
         bool get_string(std::string& str);
 
-        std::shared_ptr<filestack> get_path()   const { return(this->path); }
+        const filestack& get_path()   const { return(*this->path); }
 
-        std::shared_ptr<std::string> get_line() const { return(this->line); }
+        const std::string& get_line() const { return(*this->line); }
 
-        unsigned int get_char_pos()             const { return(this->char_pos); }
+        unsigned int get_char_pos()   const { return(this->char_pos); }
 
 
         // INTERNAL DATA
@@ -115,9 +115,12 @@ namespace lexeme    // package in a unique namespace to protect common words lik
         double      d;
         std::string str;
 
-        std::shared_ptr<filestack> path;
+        // copy of filestack object
+        std::unique_ptr<filestack> path;
 
-        std::shared_ptr<std::string> line;
+        // shared pointer to line; these lexeme is one of the shared owners
+        // of the line from which it originated
+        const std::shared_ptr<std::string> line;
         unsigned int char_pos;
 
         const std::string* ktable;
@@ -136,11 +139,11 @@ namespace lexeme    // package in a unique namespace to protect common words lik
     template <typename keywords, typename characters>
     lexeme<keywords, characters>::lexeme(const std::string buffer, const enum lexeme_buffer_type t,
                                          enum lexeme_minus_context& context,
-                                         std::shared_ptr<filestack> p, unsigned int u,
-                                         std::shared_ptr<std::string> ln, unsigned int cpos,
+                                         filestack& p, unsigned int u,
+                                         const std::shared_ptr<std::string>& ln, unsigned int cpos,
                                          const std::string* kt, const keywords* km, unsigned int num_k,
                                          const std::string* ct, const characters* cm, const bool* ctx, unsigned int num_c)
-	    : path(p->clone()),    // use clone to take a copy; otherwise, there is only one filestack object and after processing it is empty! so all file location data is lost
+	    : path(p.clone()),    // use clone to take a copy; otherwise, there is only one filestack object and after processing it is empty! so all file location data is lost
 	      unique(u),
 	      ktable(kt),
 	      kmap(km),
@@ -167,110 +170,118 @@ namespace lexeme    // package in a unique namespace to protect common words lik
         switch(t)
 	        {
             case buf_string:
-	            type = ident;
-            str    = buffer;
+              {
+                type = ident;
+                str    = buffer;
 
-            context = binary_context; // unary minus can't follow an identifier
+                context = binary_context; // unary minus can't follow an identifier
 
-            for(int i = 0; i < Nk; ++i)
-	            {
-                if(buffer == ktable[i])
-	                {
-                    type    = keyword;
-                    k       = km[i];
-                    str     = "";
-                    context = unary_context; // unary minus can always follow a keyword (eg. built-in function)
-	                }
-	            }
-            break;
+                for(int i = 0; i < Nk; ++i)
+                  {
+                    if(buffer == ktable[i])
+                      {
+                        type    = keyword;
+                        k       = km[i];
+                        str     = "";
+                        context = unary_context; // unary minus can always follow a keyword (eg. built-in function)
+                      }
+                  }
+                break;
+              }
 
             case buf_number:
-	            type = unknown;
+              {
+                type = unknown;
 
-            if((sscanf(buffer.c_str(), "%i%n", &z, &offset) == 1) && offset == buffer.length())
-	            {
-                type = integer;
-	            }
-            else if((sscanf(buffer.c_str(), "%lf%n", &d, &offset) == 1) && offset == buffer.length())
-	            {
-                type = decimal;
-	            }
-            else if((sscanf(buffer.c_str(), "%lg%n", &d, &offset) == 1) && offset == buffer.length())
-	            {
-                type = decimal;
-	            }
-            else if((sscanf(buffer.c_str(), "%lG%n", &d, &offset) == 1) && offset == buffer.length())
-	            {
-                type = decimal;
-	            }
-            else
-	            {
-                std::ostringstream msg;
-                msg << ERROR_UNRECOGNIZED_NUMBER << " '" << buffer << "'";
-                error(msg.str(), path, line, char_pos);
-	            }
+                if((sscanf(buffer.c_str(), "%i%n", &z, &offset) == 1) && offset == buffer.length())
+                  {
+                    type = integer;
+                  }
+                else if((sscanf(buffer.c_str(), "%lf%n", &d, &offset) == 1) && offset == buffer.length())
+                  {
+                    type = decimal;
+                  }
+                else if((sscanf(buffer.c_str(), "%lg%n", &d, &offset) == 1) && offset == buffer.length())
+                  {
+                    type = decimal;
+                  }
+                else if((sscanf(buffer.c_str(), "%lG%n", &d, &offset) == 1) && offset == buffer.length())
+                  {
+                    type = decimal;
+                  }
+                else
+                  {
+                    std::ostringstream msg;
+                    msg << ERROR_UNRECOGNIZED_NUMBER << " '" << buffer << "'";
+                    error(msg.str(), *path, *line, char_pos);
+                  }
 
-            if(type == integer && buffer[0] == '0' && buffer[1] == 'x')
-	            {
-                std::ostringstream msg;
-                msg << WARNING_HEX_CONVERSION_A << " '" << buffer << "' " << WARNING_HEX_CONVERSION_B;
-                warn(msg.str(), path, line, char_pos);
-	            }
-            else if(type == integer && buffer[0] == '0')
-	            {
-                std::ostringstream msg;
-                msg << WARNING_OCTAL_CONVERSION_A << " '" << buffer << "' " << WARNING_OCTAL_CONVERSION_B;
-                warn(msg.str(), path, line, char_pos);
-	            }
+                if(type == integer && buffer[0] == '0' && buffer[1] == 'x')
+                  {
+                    std::ostringstream msg;
+                    msg << WARNING_HEX_CONVERSION_A << " '" << buffer << "' " << WARNING_HEX_CONVERSION_B;
+                    warn(msg.str(), *path, *line, char_pos);
+                  }
+                else if(type == integer && buffer[0] == '0')
+                  {
+                    std::ostringstream msg;
+                    msg << WARNING_OCTAL_CONVERSION_A << " '" << buffer << "' " << WARNING_OCTAL_CONVERSION_B;
+                    warn(msg.str(), *path, *line, char_pos);
+                  }
 
-            context = binary_context; // unary minus can't follow a number
-            break;
+                context = binary_context; // unary minus can't follow a number
+                break;
+              }
 
             case buf_character:
-	            type = unknown;
+              {
+                type = unknown;
 
-            for(int i = 0; i < Nc; ++i)
-	            {
-                bool        unary  = false;
-                bool        binary = false;
-                std::string match  = ctable[i];
-                size_t      pos;
+                for(int i = 0; i < Nc; ++i)
+                  {
+                    bool        unary  = false;
+                    bool        binary = false;
+                    std::string match  = ctable[i];
+                    size_t      pos;
 
-                if((pos = match.find(UNARY_TAG)) != std::string::npos)
-	                {
-                    unary = true;
-                    match.erase(pos, LENGTH_UNARY_TAG);
-	                }
-                if((pos = match.find(BINARY_TAG)) != std::string::npos)
-	                {
-                    binary = true;
-                    match.erase(pos, LENGTH_BINARY_TAG);
-	                }
-                if(buffer == match
-	                && (!unary || (unary && context == unary_context))
-	                && (!binary || (binary && context == binary_context)))
-	                {
-                    type    = character;
-                    s       = cmap[i];
-                    context = ccontext[i] ? unary_context : binary_context;
-                    ok      = true;
-	                }
-	            }
+                    if((pos = match.find(UNARY_TAG)) != std::string::npos)
+                      {
+                        unary = true;
+                        match.erase(pos, LENGTH_UNARY_TAG);
+                      }
+                    if((pos = match.find(BINARY_TAG)) != std::string::npos)
+                      {
+                        binary = true;
+                        match.erase(pos, LENGTH_BINARY_TAG);
+                      }
+                    if(buffer == match
+                       && (!unary || (unary && context == unary_context))
+                       && (!binary || (binary && context == binary_context)))
+                      {
+                        type    = character;
+                        s       = cmap[i];
+                        context = ccontext[i] ? unary_context : binary_context;
+                        ok      = true;
+                      }
+                  }
 
-            if(!ok)
-	            {
-                std::ostringstream msg;
-                msg << ERROR_UNRECOGNIZED_SYMBOL << " '" << buffer << "'";
-                error(msg.str(), p, line, char_pos);
-                context = unary_context; // reset the context
-	            }
-            break;
+                if(!ok)
+                  {
+                    std::ostringstream msg;
+                    msg << ERROR_UNRECOGNIZED_SYMBOL << " '" << buffer << "'";
+                    error(msg.str(), *path, *line, char_pos);
+                    context = unary_context; // reset the context
+                  }
+                break;
+              }
 
             case buf_string_literal:
-	            type  = string;
-            str     = buffer;
-            context = unary_context; // binary minus can't follow a string
-            break;
+              {
+                type  = string;
+                str     = buffer;
+                context = unary_context; // binary minus can't follow a string
+                break;
+              }
 
             default:
 	            assert(false);
@@ -289,42 +300,56 @@ namespace lexeme    // package in a unique namespace to protect common words lik
         switch(type)
 	        {
             case keyword:
-	            stream << "keyword ";
+              {
+                stream << "keyword ";
 
-            assert(this->k >= 0);
-            assert(this->k < this->Nk);
+                assert(this->k >= 0);
+                assert(this->k < this->Nk);
 
-            stream << "'" << this->ktable[(int) this->k] << "'" << '\n';
-            break;
+                stream << "'" << this->ktable[(int) this->k] << "'" << '\n';
+                break;
+              }
 
             case character:
-	            stream << "symbol ";
+              {
+                stream << "symbol ";
 
-            assert(this->s >= 0);
-            assert(this->s < this->Nc);
+                assert(this->s >= 0);
+                assert(this->s < this->Nc);
 
-            stream << "'" << this->ctable[(int) this->s] << "'" << '\n';
-            break;
+                stream << "'" << this->ctable[(int) this->s] << "'" << '\n';
+                break;
+              }
 
             case ident:
-	            stream << "identifier '" << this->str << "'" << '\n';
-            break;
+              {
+                stream << "identifier '" << this->str << "'" << '\n';
+                break;
+              }
 
             case integer:
-	            stream << "integer literal '" << this->z << "'" << '\n';
-            break;
+              {
+                stream << "integer literal '" << this->z << "'" << '\n';
+                break;
+              }
 
             case decimal:
-	            stream << "decimal literal '" << this->d << "'" << '\n';
-            break;
+              {
+                stream << "decimal literal '" << this->d << "'" << '\n';
+                break;
+              }
 
             case string:
-	            stream << "string literal '" << this->str << "'" << '\n';
-            break;
+              {
+                stream << "string literal '" << this->str << "'" << '\n';
+                break;
+              }
 
             case unknown:
-	            stream << "UNKNOWN LEXEME" << '\n';
-            break;
+              {
+                stream << "UNKNOWN LEXEME" << '\n';
+                break;
+              }
 
             default:
 	            assert(false);
@@ -349,7 +374,7 @@ namespace lexeme    // package in a unique namespace to protect common words lik
 	        {
             std::ostringstream msg;
             msg << WARNING_LEXEME_KEYWORD << " (id " << this->unique << ")";
-            warn(msg.str(), this->path);
+            warn(msg.str(), *this->path);
 	        }
 
         return (rval);
@@ -370,7 +395,7 @@ namespace lexeme    // package in a unique namespace to protect common words lik
 	        {
             std::ostringstream msg;
             msg << WARNING_LEXEME_SYMBOL << " (id " << this->unique << ")";
-            warn(msg.str(), this->path);
+            warn(msg.str(), *this->path);
 	        }
 
         return (rval);
@@ -391,7 +416,7 @@ namespace lexeme    // package in a unique namespace to protect common words lik
 	        {
             std::ostringstream msg;
             msg << WARNING_LEXEME_IDENTIFIER << " (id " << this->unique << ")";
-            warn(msg.str(), this->path);
+            warn(msg.str(), *this->path);
 	        }
 
         return (rval);
@@ -412,7 +437,7 @@ namespace lexeme    // package in a unique namespace to protect common words lik
 	        {
             std::ostringstream msg;
             msg << WARNING_LEXEME_INTEGER << " (id " << this->unique << ")";
-            warn(msg.str(), this->path);
+            warn(msg.str(), *this->path);
 	        }
 
         return (rval);
@@ -433,7 +458,7 @@ namespace lexeme    // package in a unique namespace to protect common words lik
 	        {
             std::ostringstream msg;
             msg << WARNING_LEXEME_DECIMAL << " (id " << this->unique << ")";
-            warn(msg.str(), this->path);
+            warn(msg.str(), *this->path);
 	        }
 
         return (rval);
@@ -454,7 +479,7 @@ namespace lexeme    // package in a unique namespace to protect common words lik
 	        {
             std::ostringstream msg;
             msg << WARNING_LEXEME_STRING << " (id " << this->unique << ")";
-            warn(msg.str(), this->path);
+            warn(msg.str(), *this->path);
 	        }
 
         return (rval);

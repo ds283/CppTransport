@@ -123,6 +123,8 @@
 #define ERROR_FILESTACK_TOO_SHORT             "Internal error: filestack empty when attempting to pop"
 #define ERROR_FILESTACK_OVERWRITE             "Internal error: attempt to overwrite data for top filestack element"
 
+#define ERROR_CURRENT_LINE_EMPTY              "Internal error: current line empty in lexfile"
+
 #define WARNING_TEMPORARY_NO_TAG_SET          "Temporary pool being written, but no location set: defaults to end-of-buffer"
 
 #define WARNING_HEX_CONVERSION_A              "Leading '0x' in "

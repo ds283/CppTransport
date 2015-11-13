@@ -20,15 +20,15 @@
 
 #include "semantic_data.h"
 #include "filestack.h"
+#include "input_stack.h"
 
 #include "symbol_factory.h"
 #include "ginac/ginac.h"
 
+#include "boost/optional.hpp"
+
 
 // abstract 'declaration' concept
-
-// the filestack* object used here is inherited from the parent lexeme.
-// we manage its lifetime with a std::shared_ptr<>
 
 class declaration    // is an abstract class
 	{
@@ -37,7 +37,7 @@ class declaration    // is an abstract class
 
   public:
 
-    declaration(const std::string& n, GiNaC::symbol& s, std::shared_ptr<filestack> p);
+    declaration(const std::string& n, GiNaC::symbol& s, const filestack& p);
 
 		virtual ~declaration() = default;
 
@@ -53,7 +53,7 @@ class declaration    // is an abstract class
     const GiNaC::symbol& get_ginac_symbol() const { return(this->symbol); }
 
 		//! get filestack object representing definition point
-    std::shared_ptr<filestack> get_path() const { return(this->path); }
+    const filestack& get_path() const { return(this->path); }
 
 		//! return GiNaC expression to be substituted when this declaration is used;
 		//! often this will just be the GiNaC symbol, but may be more complex
@@ -82,9 +82,8 @@ class declaration    // is an abstract class
 		//! GiNaC symbol for declaration
 		GiNaC::symbol symbol;
 
-		//! filestack representing definition point;
-		//! lifetime is managed with std::shared_ptr<>
-    std::shared_ptr<filestack> path;
+		//! filestack representing definition point
+    const filestack& path;
 
 		//! class id; used to record the order in which declarations have been made
 		unsigned int my_id;
@@ -102,7 +101,7 @@ class field_declaration : public declaration
 
   public:
 
-    field_declaration(const std::string& n, GiNaC::symbol& s, std::shared_ptr<filestack> p, attributes* a);
+    field_declaration(const std::string& n, GiNaC::symbol& s, const filestack& p, attributes* a);
 
     virtual ~field_declaration() = default;
 
@@ -127,7 +126,7 @@ class field_declaration : public declaration
 
   protected:
 
-		std::shared_ptr<attributes> attrs;
+		std::unique_ptr<attributes> attrs;
 
 	};
 
@@ -139,7 +138,7 @@ class parameter_declaration : public declaration
 
   public:
 
-    parameter_declaration(const std::string& n, GiNaC::symbol& s, std::shared_ptr<filestack> p, attributes* a);
+    parameter_declaration(const std::string& n, GiNaC::symbol& s, const filestack& p, attributes* a);
 
     ~parameter_declaration() = default;
 
@@ -164,7 +163,7 @@ class parameter_declaration : public declaration
 
   protected:
 
-    std::shared_ptr<attributes> attrs;
+    std::unique_ptr<attributes> attrs;
 
 	};
 
@@ -176,7 +175,7 @@ class subexpr_declaration : public declaration
 
   public:
 
-    subexpr_declaration(const std::string& n, GiNaC::symbol& s, std::shared_ptr <filestack> p, subexpr* e);
+    subexpr_declaration(const std::string& n, GiNaC::symbol& s, const filestack& p, subexpr* e);
 
     ~subexpr_declaration() = default;
 
@@ -203,7 +202,7 @@ class subexpr_declaration : public declaration
 
   protected:
 
-    std::shared_ptr<subexpr> sexpr;
+    std::unique_ptr<subexpr> sexpr;
 
 	};
 
@@ -241,18 +240,21 @@ class script
 
     void print(std::ostream& stream) const;
 
-		std::shared_ptr<declaration> check_symbol_exists(const std::string& nm) const;
+		boost::optional<declaration&> check_symbol_exists(const std::string& nm) const;
+
+    //! detect error condition
+    bool failed() const { return(this->errors_encountered); }
 
 
 		// MODIFY CONTENT
 
   public:
 
-    bool add_field(field_declaration d);
+    bool add_field(const std::string& n, GiNaC::symbol& s, const filestack& p, attributes* a);
 
-    bool add_parameter(parameter_declaration d);
+    bool add_parameter(const std::string& n, GiNaC::symbol& s, const filestack& p, attributes* a);
 
-		bool add_subexpr(subexpr_declaration d);
+		bool add_subexpr(const std::string& n, GiNaC::symbol& s, const filestack& p, subexpr* e);
 
     void set_background_stepper(stepper* s);
 
@@ -321,6 +323,9 @@ class script
 
   private:
 
+    //! flag to indicate errors encountered during processing
+    bool errors_encountered;
+
     std::string name;
     std::string author;
     std::string tag;
@@ -333,15 +338,20 @@ class script
     struct stepper background_stepper;
     struct stepper perturbations_stepper;
 
-    typedef std::unordered_map< std::string, std::shared_ptr<field_declaration> >     field_symbol_table;
-    typedef std::unordered_map< std::string, std::shared_ptr<parameter_declaration> > parameter_symbol_table;
-    typedef std::unordered_map< std::string, std::shared_ptr<subexpr_declaration> >   subexpr_symbol_table;
+    //! symbol tables
+    typedef std::unordered_map< std::string, std::unique_ptr<field_declaration> >     field_symbol_table;
+    typedef std::unordered_map< std::string, std::unique_ptr<parameter_declaration> > parameter_symbol_table;
+    typedef std::unordered_map< std::string, std::unique_ptr<subexpr_declaration> >   subexpr_symbol_table;
 
     field_symbol_table     fields;
     parameter_symbol_table parameters;
 		parameter_symbol_table reserved;
     subexpr_symbol_table   subexprs;
 
+    //! place-holder filestack for initializing reserved words
+    input_stack placeholder_filestack;
+
+    //! store details of potentials
     bool      potential_set;
     GiNaC::ex potential;
 

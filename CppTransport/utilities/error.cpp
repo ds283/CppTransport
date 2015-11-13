@@ -55,7 +55,7 @@ void disable_colour_errors(void)
 // ******************************************************************
 
 
-void warn(std::string const msg)
+void warn(const std::string& msg)
   {
     std::ostringstream out;
 
@@ -64,7 +64,7 @@ void warn(std::string const msg)
   }
 
 
-void error(std::string const msg)
+void error(const std::string& msg)
   {
     std::ostringstream out;
 
@@ -73,60 +73,60 @@ void error(std::string const msg)
   }
 
 
-void warn(std::string const msg, std::shared_ptr<filestack> path)
+void warn(const std::string& msg, const filestack& path)
   {
     warn(msg, path, WARN_PATH_LEVEL);
   }
 
 
-void error(std::string const msg, std::shared_ptr<filestack> path)
+void error(const std::string& msg, const filestack& path)
   {
     error(msg, path, ERROR_PATH_LEVEL);
   }
 
 
-void warn(std::string const msg, std::shared_ptr<filestack> path, unsigned int level)
+void warn(const std::string& msg, const filestack& path, unsigned int level)
   {
     std::ostringstream out;
 
-    if(path) out << ERROR_MESSAGE_AT_LINE << " " << path->write(level) << '\n' << ERROR_MESSAGE_WRAP_PAD;
+    out << ERROR_MESSAGE_AT_LINE << " " << path.write(level) << '\n' << ERROR_MESSAGE_WRAP_PAD;
     out << msg;
 
     warn(out.str());
   }
 
 
-void error(std::string const msg, std::shared_ptr<filestack> path, unsigned int level)
+void error(const std::string& msg, const filestack& path, unsigned int level)
   {
     std::ostringstream out;
 
-    if(path) out << ERROR_MESSAGE_AT_LINE << " " << path->write(level) << '\n' << ERROR_MESSAGE_WRAP_PAD;
+    out << ERROR_MESSAGE_AT_LINE << " " << path.write(level) << '\n' << ERROR_MESSAGE_WRAP_PAD;
     out << msg;
 
     error(out.str());
   }
 
 
-void warn(std::string const msg, std::shared_ptr<filestack> path, std::shared_ptr<std::string> line, unsigned int char_pos)
+void warn(const std::string& msg, const filestack& path, const std::string& line, unsigned int char_pos)
   {
     warn(msg, path, line, char_pos, WARN_PATH_LEVEL);
   }
 
 
-void error(std::string const msg, std::shared_ptr<filestack> path, std::shared_ptr<std::string> line, unsigned int char_pos)
+void error(const std::string& msg, const filestack& path, const std::string& line, unsigned int char_pos)
   {
     error(msg, path, line, char_pos, ERROR_PATH_LEVEL);
   }
 
 
-void warn(std::string const msg, std::shared_ptr<filestack> path, std::shared_ptr<std::string> line, unsigned int char_pos, unsigned int level)
+void warn(const std::string& msg, const filestack& path, const std::string& line, unsigned int char_pos, unsigned int level)
   {
     std::ostringstream out;
 
-    if(path) out << ERROR_MESSAGE_AT_LINE << " " << path->write(level) << '\n';
+    out << ERROR_MESSAGE_AT_LINE << " " << path.write(level) << '\n';
     out << ERROR_MESSAGE_WRAP_PAD << (colour_output ? ANSI_BOLD_RED : "") << msg << (colour_output ? ANSI_NORMAL : "") << '\n';
 
-    out << ERROR_MESSAGE_WRAP_PAD << *line << '\n';
+    out << ERROR_MESSAGE_WRAP_PAD << line << '\n';
 
     out << ERROR_MESSAGE_WRAP_PAD;
     for(unsigned int i = 0; i < char_pos; ++i)
@@ -139,13 +139,13 @@ void warn(std::string const msg, std::shared_ptr<filestack> path, std::shared_pt
   }
 
 
-void error(std::string const msg, std::shared_ptr<filestack> path, std::shared_ptr<std::string> line, unsigned int char_pos, unsigned int level)
+void error(const std::string& msg, const filestack& path, const std::string& line, unsigned int char_pos, unsigned int level)
   {
     std::ostringstream out;
 
-    if(path) out << ERROR_MESSAGE_AT_LINE << " " << path->write(level) << '\n';
+    out << ERROR_MESSAGE_AT_LINE << " " << path.write(level) << '\n';
     out << ERROR_MESSAGE_WRAP_PAD << (colour_output ? ANSI_BOLD_RED : "") << msg << (colour_output ? ANSI_NORMAL : "") << '\n';
-    out << ERROR_MESSAGE_WRAP_PAD << *line << '\n';
+    out << ERROR_MESSAGE_WRAP_PAD << line << '\n';
 
     out << ERROR_MESSAGE_WRAP_PAD;
     for(unsigned int i = 0; i < char_pos; ++i)

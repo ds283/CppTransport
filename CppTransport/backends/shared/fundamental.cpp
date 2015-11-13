@@ -168,7 +168,7 @@ namespace macro_packages
     std::string fundamental::replace_guard(const std::vector<std::string> &args)
       {
         std::string guard;
-        enum process_type type = this->unit->get_stack()->top_process_type();
+        enum process_type type = this->unit->get_stack().top_process_type();
 
         if(type == process_core)
           {

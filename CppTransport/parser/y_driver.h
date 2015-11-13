@@ -34,18 +34,23 @@ namespace y
 
       public:
 
+        //! constructor
         y_driver(symbol_factory& s);
 
-        ~y_driver();
+        //! destructor is default
+        ~y_driver() = default;
 
 
 		    // INTERFACE
 
       public:
 
+        //! detect error conditions reported during processing
+        bool failed() const { return(this->root->failed()); }
+
         void error(std::string msg);
 
-        const script* get_script();
+        const script& get_script();
 
         void add_field(lexeme_type* lex, attributes* a);
 
@@ -180,7 +185,7 @@ namespace y
 
       private:
 
-        script* root;
+        std::unique_ptr<script> root;
 
 		    symbol_factory& sym_factory;
 
