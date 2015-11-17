@@ -69,7 +69,8 @@ class lexfile
     //! get current state of the file
     enum lexfile_outcome current_state() const;
 
-    //! get shared_ptr to current line
+    //! get shared_ptr to current line; used to allow lexemes generated from
+    //! this line to co-own it
     const std::shared_ptr<std::string>& get_current_line() const;
 
     //! get current character position within current line

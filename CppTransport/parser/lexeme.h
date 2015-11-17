@@ -58,6 +58,11 @@ namespace lexeme    // package in a unique namespace to protect common words lik
 
       public:
 
+        //! construct a lexeme
+        //! accepts a shared_ptr<> to the line from which it originates.
+        //! Ownership is shared with the lexfile object which originally read in this file,
+        //! but all lexemes generated from the same line will co-own it, so it
+        //! survives even if the lexfile object is destroyed
         lexeme(const std::string buffer, const enum lexeme_buffer_type t,
                enum lexeme_minus_context& context,
                filestack& p, unsigned int u,
@@ -65,6 +70,7 @@ namespace lexeme    // package in a unique namespace to protect common words lik
                const std::string* kt, const keywords* km, unsigned int num_k,
                const std::string* ct, const characters* cm, const bool* ctx, unsigned int num_c);
 
+        //! destructor is default
         ~lexeme() = default;
 
 
