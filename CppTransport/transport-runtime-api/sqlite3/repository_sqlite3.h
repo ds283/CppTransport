@@ -42,12 +42,6 @@
 namespace transport
   {
 
-    // forward-declare 'key' class used to create a repository.
-    // the complete declaration is in a separate file,
-    // which must be included to allow creation of repositories
-    class repository_creation_key;
-
-
     //! repository_sqlite3<> implements the repository interface using
     //! libjsoncpp and sqlite3 as the database backend.
     //! This implementation replaces two previous ones, the first
@@ -103,18 +97,24 @@ namespace transport
       public:
 
         //! Open a repository with a specified pathname, and specified warning and error handlers
-        repository_sqlite3(const std::string& path,
-                           typename repository<number>::access_type mode = repository<number>::access_type::readwrite,
+        repository_sqlite3(const std::string& path, repository_mode mode = repository_mode::readwrite,
                            typename repository<number>::error_callback e = default_error_handler(),
                            typename repository<number>::warning_callback w = default_warning_handler(),
                            typename repository<number>::message_callback m = default_message_handler());
 
-        //! Create a repository with a specific pathname
-        repository_sqlite3(const std::string& path, const repository_creation_key& key);
-
         //! Close a repository, including any corresponding containers
         virtual ~repository_sqlite3();
 
+
+        // CREATE REPOSITORY
+
+      protected:
+
+        //! Create a repository at the root specified during construction
+        void create_repository();
+
+        //! Validate an existing repository at the root specified during construction
+        void validate_repository();
 
 
         // TRANSACTIONS
@@ -398,7 +398,7 @@ namespace transport
 
     // Create a repository object associated with a pathname
     template <typename number>
-    repository_sqlite3<number>::repository_sqlite3(const std::string& path, typename repository<number>::access_type mode,
+    repository_sqlite3<number>::repository_sqlite3(const std::string& path, repository_mode mode,
                                                    typename repository<number>::error_callback e,
                                                    typename repository<number>::warning_callback w,
                                                    typename repository<number>::message_callback m)
@@ -408,11 +408,39 @@ namespace transport
                                 std::bind(&repository_sqlite3<number>::query_derived_product, this, std::placeholders::_1)),
         db(nullptr)
       {
+        // check whether object exists in filesystem at the specified path; if not, we can create it
+        if(!boost::filesystem::exists(path))
+          {
+            if(mode == repository_mode::readwrite)
+              {
+                this->create_repository();
+              }
+          }
+        else
+          {
+            this->validate_repository();
+
+            unsigned int sqlite_mode = (mode == repository_mode::readonly ? SQLITE_OPEN_READONLY : SQLITE_OPEN_READWRITE);
+            if(sqlite3_open_v2(db_path.string().c_str(), &db, sqlite_mode, nullptr) != SQLITE_OK)
+              {
+                std::ostringstream msg;
+                msg << CPPTRANSPORT_REPO_FAIL_DATABASE_OPEN << " " << db_path;
+                throw runtime_exception(exception_type::REPOSITORY_BACKEND_ERROR, msg.str());
+              }
+          }
+      }
+
+
+    template <typename number>
+    void repository_sqlite3<number>::validate_repository()
+      {
+        boost::filesystem::path path = this->get_root_path();
+
         // supplied path should be a directory which exists
         if(!boost::filesystem::is_directory(path))
           {
             std::ostringstream msg;
-            msg << CPPTRANSPORT_REPO_MISSING_ROOT << " '" << path << "'";
+            msg << CPPTRANSPORT_REPO_MISSING_ROOT << " '" << path.string() << "'";
             throw runtime_exception(exception_type::REPO_NOT_FOUND, msg.str());
           }
 
@@ -421,7 +449,7 @@ namespace transport
         if(!boost::filesystem::is_regular_file(db_path))
           {
             std::ostringstream msg;
-            msg << CPPTRANSPORT_REPO_MISSING_DATABASE << " '" << path << "'";
+            msg << CPPTRANSPORT_REPO_MISSING_DATABASE << " '" << path.string() << "'";
             throw runtime_exception(exception_type::REPO_NOT_FOUND, msg.str());
           }
 
@@ -430,7 +458,7 @@ namespace transport
         if(!boost::filesystem::is_directory(this->get_root_path() / package_store))
           {
             std::ostringstream msg;
-            msg << CPPTRANSPORT_REPO_MISSING_PACKAGE_STORE << " '" << path << "'";
+            msg << CPPTRANSPORT_REPO_MISSING_PACKAGE_STORE << " '" << path.string() << "'";
             throw runtime_exception(exception_type::REPO_NOT_FOUND, msg.str());
           }
 
@@ -439,7 +467,7 @@ namespace transport
         if(!boost::filesystem::is_directory(this->get_root_path() / task_store))
           {
             std::ostringstream msg;
-            msg << CPPTRANSPORT_REPO_MISSING_TASK_STORE << " '" << path << "'";
+            msg << CPPTRANSPORT_REPO_MISSING_TASK_STORE << " '" << path.string() << "'";
             throw runtime_exception(exception_type::REPO_NOT_FOUND, msg.str());
           }
 
@@ -448,7 +476,7 @@ namespace transport
         if(!boost::filesystem::is_directory(this->get_root_path() / product_store))
           {
             std::ostringstream msg;
-            msg << CPPTRANSPORT_REPO_MISSING_PRODUCT_STORE << " '" << path << "'";
+            msg << CPPTRANSPORT_REPO_MISSING_PRODUCT_STORE << " '" << path.string() << "'";
             throw runtime_exception(exception_type::REPO_NOT_FOUND, msg.str());
           }
 
@@ -457,16 +485,8 @@ namespace transport
         if(!boost::filesystem::is_directory(this->get_root_path() / output_store))
           {
             std::ostringstream msg;
-            msg << CPPTRANSPORT_REPO_MISSING_OUTPUT_STORE << " '" << path << "'";
+            msg << CPPTRANSPORT_REPO_MISSING_OUTPUT_STORE << " '" << path.string() << "'";
             throw runtime_exception(exception_type::REPO_NOT_FOUND, msg.str());
-          }
-
-        unsigned int sqlite_mode = (mode == repository<number>::access_type::readonly ? SQLITE_OPEN_READONLY : SQLITE_OPEN_READWRITE);
-        if(sqlite3_open_v2(db_path.string().c_str(), &db, sqlite_mode, nullptr) != SQLITE_OK)
-          {
-            std::ostringstream msg;
-            msg << CPPTRANSPORT_REPO_FAIL_DATABASE_OPEN << " " << db_path;
-            throw runtime_exception(exception_type::REPOSITORY_BACKEND_ERROR, msg.str());
           }
 
         // TODO: consider checking whether required tables are present
@@ -475,25 +495,12 @@ namespace transport
 
     // Create a named repository
     template <typename number>
-    repository_sqlite3<number>::repository_sqlite3(const std::string& path, const repository_creation_key& key)
-      : json_repository<number>(path, repository<number>::access_type::readwrite,
-                                typename repository<number>::error_callback(repository_sqlite3 < number > ::default_error_handler()),
-                                typename repository<number>::warning_callback(repository_sqlite3 < number > ::default_warning_handler()),
-                                typename repository<number>::message_callback(repository_sqlite3 < number > ::default_message_handler()),
-                                std::bind(&repository_sqlite3 < number > ::query_package, this, std::placeholders::_1),
-                                std::bind(&repository_sqlite3 < number > ::query_task, this, std::placeholders::_1),
-                                std::bind(&repository_sqlite3 < number > ::query_derived_product, this, std::placeholders::_1)),
-        db(nullptr)
+    void repository_sqlite3<number>::create_repository()
       {
-        // check whether root directory for the repository already exists -- it shouldn't
-        if(boost::filesystem::exists(path))
-          {
-            std::ostringstream msg;
-            msg << CPPTRANSPORT_REPO_ROOT_EXISTS << " '" << path << "'";
-            throw runtime_exception(exception_type::REPOSITORY_ERROR, msg.str());
-          }
+        // guaranteed that nothing stored in filesystem at path
+        boost::filesystem::path path = this->get_root_path();
 
-        db_path       = this->get_root_path() / CPPTRANSPORT_REPO_REPOSITORY_LEAF;
+        db_path       = path / CPPTRANSPORT_REPO_REPOSITORY_LEAF;
         package_store = boost::filesystem::path(CPPTRANSPORT_REPO_STORE_LEAF) / CPPTRANSPORT_REPO_PACKAGES_LEAF;
         task_store    = boost::filesystem::path(CPPTRANSPORT_REPO_STORE_LEAF) / CPPTRANSPORT_REPO_TASKS_LEAF;
         product_store = boost::filesystem::path(CPPTRANSPORT_REPO_STORE_LEAF) / CPPTRANSPORT_REPO_PRODUCTS_LEAF;
@@ -526,7 +533,7 @@ namespace transport
         if(this->db != nullptr)
           {
             // perform routine maintenance
-            if(this->access_mode == repository<number>::access_type::readwrite) sqlite3_operations::exec(this->db, "VACUUM;");
+            if(this->access_mode == repository_mode::readwrite) sqlite3_operations::exec(this->db, "VACUUM;");
 
             sqlite3_close(this->db);
           }
@@ -1642,28 +1649,19 @@ void repository_sqlite3<number>::register_writer(std::shared_ptr <derived_conten
 
 
 template <typename number>
-std::shared_ptr< json_repository<number> > repository_factory(const std::string& path,
-                                                              typename repository<number>::access_type mode = repository<number>::access_type::readwrite)
+std::shared_ptr< json_repository<number> > repository_factory(const std::string& path, repository_mode mode = repository_mode::readwrite)
   {
     return std::make_shared< repository_sqlite3<number> >(path, mode);
   }
 
 
 template <typename number>
-std::shared_ptr< json_repository<number> > repository_factory(const std::string& path,
-                                                              typename repository<number>::access_type mode,
+std::shared_ptr< json_repository<number> > repository_factory(const std::string& path, repository_mode mode,
                                                               typename repository<number>::error_callback e,
                                                               typename repository<number>::warning_callback w,
                                                               typename repository<number>::message_callback m)
   {
     return std::make_shared< repository_sqlite3<number> >(path, mode, e, w, m);
-  }
-
-
-template <typename number>
-std::shared_ptr< json_repository<number> > repository_factory(const std::string& path, const repository_creation_key& key)
-  {
-    return std::make_shared< repository_sqlite3<number> >(path, key);
   }
 
 

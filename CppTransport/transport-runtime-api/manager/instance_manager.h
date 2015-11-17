@@ -16,6 +16,8 @@
 #include <algorithm>
 #include <stdexcept>
 
+#include <memory>
+
 #include "transport-runtime-api/version.h"
 #include "transport-runtime-api/exceptions.h"
 #include "transport-runtime-api/messages.h"
@@ -37,11 +39,12 @@ namespace transport
     template <typename number>
     class model_instance
       {
+
         // CONSTRUCTOR
 
       public:
 
-        model_instance(model<number>* m, const std::string& i, unsigned int v)
+        model_instance(std::shared_ptr< model<number> > m, const std::string& i, unsigned int v)
           : m_ptr(m),
             uid(i),
             tver(v)
@@ -55,13 +58,11 @@ namespace transport
           }
 
         //! Get pointer to stored model
-        model<number>* get_model() const { return(this->m_ptr); }
-
-        //! Delete stored model
-        void delete_model() { delete(this->m_ptr); }
+        model<number>* get_model() const { return(this->m_ptr.get()); }
 
         //! Get uid of stored model
         const std::string& get_uid() const { return(this->uid); }
+
 
         // COMPARISON OPERATOR
 
@@ -70,13 +71,14 @@ namespace transport
         //! Equality comparison
         friend bool operator== <>(const model_instance<number>& lhs, const model_instance<number>& rhs);
 
+
         // INTERNAL DATA
 
       protected:
 
-        model<number>*    m_ptr;
-        const std::string uid;
-        unsigned int      tver;
+        std::shared_ptr< model<number> > m_ptr;
+        const std::string                uid;
+        unsigned int                     tver;
 
       };
 
@@ -98,25 +100,33 @@ namespace transport
 
         typedef std::function< model<number>*(const std::string&) > model_finder;
 
+
         // CONSTRUCTOR, DESTRUCTOR
         // ensure destructor is declared virtual so that derived types are destroyed
 
       public:
 
-        //! Destroy an instance manager
-        virtual ~instance_manager();
+        //! destructor is default; cached list of shared_ptr<>s will be destroyed automatically, releasing
+        //! our hold on those pointers
+        virtual ~instance_manager() = default;
+
 
         // INTERFACE --MODEL MANAGEMENT API
+
+      public:
+
+        //! Create a model instance and register it
+        template <typename Model>
+        std::shared_ptr<Model> create_model();
+
+      protected:
 
         //! Register an instance of a model.
 
         //! There should be only one registered instance of each unique uid, otherwise an exception is thrown.
         //! This function checks the version of the translator used to produce this model.
         //! It should be no later than the version of the runtime api we are running, otherwise an exception is thrown
-        void register_model(model<number>* m, const std::string& uid, unsigned int version);
-
-        //! Deregister an instance of a model.
-        void deregister_model(model<number>* m, const std::string& uid, unsigned int version);
+        void register_model(std::shared_ptr< model<number> > m);
 
 
         // INTERFACE -- MODEL ACCESS
@@ -152,19 +162,23 @@ namespace transport
 
 
     template <typename number>
-    instance_manager<number>::~instance_manager()
+    template <typename Model>
+    std::shared_ptr<Model> instance_manager<number>::create_model()
       {
-        for(typename std::list< model_instance<number> >::iterator t = this->models.begin(); t != this->models.end(); ++t)
-          {
-            t->delete_model();
-          }
+        std::shared_ptr<Model> model = std::make_shared<Model>();
+        this->register_model(model);
+
+        return(model);
       }
 
 
     template <typename number>
-    void instance_manager<number>::register_model(model<number>* m, const std::string& uid, unsigned int version)
+    void instance_manager<number>::register_model(std::shared_ptr< model<number> > m)
       {
-        assert(m != nullptr);
+        assert(m);
+
+        const std::string& uid = m->get_identity_string();
+        unsigned int version = m->get_translator_version();
 
         if(version > CPPTRANSPORT_RUNTIME_API_VERSION)
           {
@@ -183,26 +197,6 @@ namespace transport
         else
           {
             throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_INSTANCES_MULTIPLE);
-          }
-      }
-
-
-    template <typename number>
-    void instance_manager<number>::deregister_model(model<number>* m, const std::string& uid, unsigned int version)
-      {
-        assert(m != nullptr);
-
-        model_instance<number> instance(m, uid, version);
-
-        auto t = std::find(this->models.begin(), this->models.end(), instance);
-
-        if(t != this->models.end())
-          {
-            this->models.erase(t);
-          }
-        else
-          {
-            throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_INSTANCES_DELETE);
           }
       }
 

@@ -6,8 +6,6 @@
 
 #include "dq_vexcl-cuda.h"
 
-#include "transport/manager/repository_creation_key.h"
-
 
 // ****************************************************************************
 
@@ -31,18 +29,15 @@ const double chi_init = 12.9;
 
 int main(int argc, char* argv[])
   {
-    transport::repository_creation_key key;
-
     // create a new repository
-    transport::json_interface_repository<double>* repo = transport::repository_factory<double>("/Users/ds283/Documents/CppTransport-repository/test", key);
-//    transport::repository<double>* repo = transport::repository_factory<double>("/Volumes/sulis/CppTransport-repository/test", key);
+    std::shared_ptr< transport::json_repository<double> > repo = transport::repository_factory<double>("/Users/ds283/Documents/CppTransport-repository/test");
 
     // set up an instance of a manager
-    std::shared_ptr< transport::task_manager<double> > mgr = std::make_shared< transport::task_manager<double> >(0, nullptr, repo);
+    std::unique_ptr< transport::task_manager<double> > mgr = std::make_unique< transport::task_manager<double> >(0, nullptr, repo);
 
     // set up an instance of the double quadratic model,
     // using doubles, with given parameter choices
-    transport::dquad_vexcl<double>* model = new transport::dquad_vexcl<double>(mgr);
+    std::shared_ptr< transport::dquad_vexcl<double> > model = mgr->create_model< transport::dquad_vexcl<double> >();
 
     // set up parameter choices
     const std::vector<double>     init_params = { m_phi, m_chi };

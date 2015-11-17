@@ -60,17 +60,21 @@ namespace transport
 
       public:
 
-        model(std::shared_ptr< instance_manager<number> >& m, const std::string& u, unsigned int v);
-		    ~model();
+        //! constructor
+        model(const std::string& u, unsigned int v);
+
+        //! destructor is default
+		    ~model() = default;
 
 
         // EXTRACT MODEL INFORMATION
 
       public:
 
-        //! Return unique string identifying the model (and CppTransport version)
+        //! Return UID identifying the model
         const std::string&                      get_identity_string() const { return(this->uid); }
 
+        //! Return version of translator used to produce the header
         unsigned int                            get_translator_version() const { return(this->tver); }
 
         //! Return name of the model implemented by this object
@@ -237,10 +241,6 @@ namespace transport
 
       private:
 
-        //! copy of instance manager, used for deregistration; we use std::shared_ptr<> to manage its lifetime,
-        //! but to avoid a dependency cycle we need to store a weak pointer
-        std::weak_ptr< instance_manager<number> > mgr;
-
         //! copy of unique id, used for deregistration
         const std::string uid;
 
@@ -253,24 +253,13 @@ namespace transport
     //  IMPLEMENTATION -- CLASS MODEL
 
 
-    // EXTRACT MODEL INFORMATION
+    // CONSTRUCTOR, DESTRUCTOR
 
     template <typename number>
-    model<number>::model(std::shared_ptr< instance_manager<number> >& m, const std::string& u, unsigned int v)
-      : mgr(m), uid(u), tver(v)
+    model<number>::model(const std::string& u, unsigned int v)
+      : uid(u),
+        tver(v)
       {
-        // Register ourselves with the instance manager
-        m->register_model(this, uid, tver);
-      }
-
-
-    template <typename number>
-    model<number>::~model()
-      {
-        std::shared_ptr< instance_manager<number> > mgr_instance = this->mgr.lock();
-
-        // mgr_instance may not get a usable reference if the task_manger is beging destroyed, but in that case we don't need to de-register
-        if(mgr_instance) mgr_instance->deregister_model(this, this->uid, tver);
       }
 
 

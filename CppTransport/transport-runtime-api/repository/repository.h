@@ -52,10 +52,11 @@
 namespace transport
 	{
 
-    // forward-declare 'key' class used to create repositories
-    // the complete declaration is in a separate file,
-    // which must be included to allow creation of repositories
-    class repository_creation_key;
+    enum class repository_mode
+      {
+        readonly,
+        readwrite
+      };
 
 
     template <typename number>
@@ -74,20 +75,12 @@ namespace transport
         typedef std::function<void(const std::string&)> message_callback;
 
 
-        // LOGGING SERVICES
-
-      public:
-
-        //! Read-only/Read-write access to the repository
-        enum class access_type { readonly, readwrite };
-
-
         // CONSTRUCTOR, DESTRUCTOR
 
       public:
 
         //! Create a repository object
-        repository(const std::string& path, access_type mode,
+        repository(const std::string& path, repository_mode mode,
                    typename repository<number>::error_callback e,
                    typename repository<number>::warning_callback w,
                    typename repository<number>::message_callback m,
@@ -111,7 +104,7 @@ namespace transport
         const boost::filesystem::path& get_root_path() const { return (this->root_path); };
 
         //! Get access mode
-        const access_type& get_access_mode() const { return (this->access_mode); }
+        const repository_mode& get_access_mode() const { return (this->access_mode); }
 
 
 		    // TRANSACTIONS
@@ -346,7 +339,7 @@ namespace transport
       protected:
 
         //! Access mode
-        const access_type access_mode;
+        const repository_mode access_mode;
 
         //! BOOST path to the repository root directory
         const boost::filesystem::path root_path;
@@ -407,7 +400,7 @@ namespace transport
 
 
     template <typename number>
-    repository<number>::repository(const std::string& path, typename repository<number>::access_type mode,
+    repository<number>::repository(const std::string& path, repository_mode mode,
                                    typename repository<number>::error_callback e,
                                    typename repository<number>::warning_callback w,
                                    typename repository<number>::message_callback m,

@@ -6,8 +6,6 @@
 
 #include "mafalda40_basic_twopf.h"
 
-#include "transport-runtime-api/repository/repository_creation_key.h"
-
 
 // ****************************************************************************
 
@@ -67,16 +65,15 @@ int main(int argc, char* argv[])
 		    exit(EXIT_FAILURE);
 			}
 
-    transport::repository_creation_key key;
-
-    transport::json_interface_repository<double>* repo = transport::repository_factory<double>(argv[1], key);
+    std::shared_ptr< transport::json_repository<double> > repo = transport::repository_factory<double>(argv[1]);
 
     // set up an instance of a manager
-    std::shared_ptr< transport::task_manager<double> > mgr = std::make_shared< transport::task_manager<double> >(0, nullptr, repo);
+    std::unique_ptr< transport::task_manager<double> > mgr = std::make_unique< transport::task_manager<double> >(0, nullptr, repo);
 
     // set up an instance of the double quadratic model,
     // using doubles, with given parameter choices
-    transport::mafalda40_basic<double>* model = new transport::mafalda40_basic<double>(mgr);
+    std::shared_ptr< transport::mafalda40_basic<double> > model = std::make_shared< transport::mafalda40_basic<double> >();
+    mgr->register_model(model);
 
     // set up parameter choices
     const std::vector<double>     init_params;

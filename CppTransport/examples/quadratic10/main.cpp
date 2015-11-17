@@ -30,11 +30,12 @@ static void output_info(transport::canonical_model<double>* model, transport::in
 int main(int argc, char* argv[])
   {
     // set up an instance of a manager
-    std::shared_ptr< transport::task_manager<double> > mgr = std::make_shared< transport::task_manager<double> >(argc, argv);
+    std::unique_ptr< transport::task_manager<double> > mgr = std::make_unique< transport::task_manager<double> >(argc, argv);
 
     // set up an instance of the double quadratic model,
     // using doubles, with given parameter choices
-    transport::quadratic10_basic<double>* model = new transport::quadratic10_basic<double>(mgr);
+    std::shared_ptr< transport::quadratic10_basic<double> > model = std::make_shared< transport::quadratic10_basic<double> >();
+    mgr->register_model(model);
 
 		mgr->process();
 

@@ -20,17 +20,32 @@ namespace transport
 
     // a canonical model: allows an arbitrary number of fields, but flat field-space metric.
     // has a potential but no other structure
+
     template <typename number>
     class canonical_model : public model<number>
       {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
       public:
-        canonical_model(std::shared_ptr< instance_manager<number> >& mgr, const std::string& uid, unsigned int tver)
-          : model<number>(mgr, uid, tver)
+
+        //! constructor
+        canonical_model(const std::string& uid, unsigned int tver)
+          : model<number>(uid, tver)
           {
           }
 
+        //! destructor is default
+        virtual ~canonical_model() = default;
+
+
+        // INTERFACE
+
+      public:
+
         // calculate potential, given a field configuration. Pure virtual, so must be overridden by derived class
         virtual number V(const parameters<number>& p, const std::vector<number>& coords) const = 0;
+
       };
 
   }

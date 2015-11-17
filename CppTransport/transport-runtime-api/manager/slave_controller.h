@@ -313,7 +313,7 @@ namespace transport
 	        {
             boost::filesystem::path repo_path = payload.get_repository_path();
 
-            this->repo = repository_factory<number>(repo_path.string(), repository<number>::access_type::readonly,
+            this->repo = repository_factory<number>(repo_path.string(), repository_mode::readonly,
                                                     this->error_handler, this->warning_handler, this->message_handler);
             this->repo->set_model_finder(this->model_finder);
 

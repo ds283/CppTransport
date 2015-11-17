@@ -602,7 +602,7 @@ namespace transport
             try
               {
                 this->repo = repository_factory<number>(option_map[CPPTRANSPORT_SWITCH_REPO].as<std::string>(),
-                                                        repository<number>::access_type::readwrite,
+                                                        repository_mode::readwrite,
                                                         this->error_handler, this->warning_handler, this->message_handler);
                 this->repo->set_model_finder(instance_mgr.model_finder_factory());
               }
