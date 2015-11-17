@@ -94,64 +94,64 @@ namespace transport
         typedef std::function<void(datapipe<number>*, typename derived_data::derived_product<number>*, const std::list<std::string>&)> dispatch_function;
 
         //! Extract a set of time sample-points from a datapipe
-        typedef std::function<void(datapipe<number>*, std::shared_ptr<derived_data::SQL_time_config_query>&, std::vector<time_config>&)> time_config_callback;
+        typedef std::function<void(datapipe<number>*, derived_data::SQL_time_config_query&, std::vector<time_config>&)> time_config_callback;
 
         //! Extract a set of 2pf k-configuration sample points from a datapipe
-        typedef std::function<void(datapipe<number>*, std::shared_ptr<derived_data::SQL_twopf_kconfig_query>&, std::vector<twopf_kconfig>&)> kconfig_twopf_callback;
+        typedef std::function<void(datapipe<number>*, derived_data::SQL_twopf_kconfig_query&, std::vector<twopf_kconfig>&)> kconfig_twopf_callback;
 
         //! Extract a set of 3pf k-configuration sample points from a datapipe
-        typedef std::function<void(datapipe<number>*, std::shared_ptr<derived_data::SQL_threepf_kconfig_query>&, std::vector<threepf_kconfig>&)> kconfig_threepf_callback;
+        typedef std::function<void(datapipe<number>*, derived_data::SQL_threepf_kconfig_query&, std::vector<threepf_kconfig>&)> kconfig_threepf_callback;
 
 		    //! Extract a set of per-configuration statistics records from a datapipe
-		    typedef std::function<void(datapipe<number>*, std::shared_ptr<derived_data::SQL_query>&, std::vector<kconfiguration_statistics>&)> statistics_callback;
+		    typedef std::function<void(datapipe<number>*, derived_data::SQL_query&, std::vector<kconfiguration_statistics>&)> statistics_callback;
 
         //! Extract a background field at a set of time sample-points
-        typedef std::function<void(datapipe<number>*, unsigned int, std::shared_ptr<derived_data::SQL_query>&, std::vector<number>&)> background_time_callback;
+        typedef std::function<void(datapipe<number>*, unsigned int, derived_data::SQL_query&, std::vector<number>&)> background_time_callback;
 
         //! Extract a twopf component at fixed k-configuration for a set of time sample-points
-        typedef std::function<void(datapipe<number>*, unsigned int, std::shared_ptr<derived_data::SQL_query>&, unsigned int, std::vector<number>&, twopf_type)> twopf_time_callback;
+        typedef std::function<void(datapipe<number>*, unsigned int, derived_data::SQL_query&, unsigned int, std::vector<number>&, twopf_type)> twopf_time_callback;
 
         //! Extract a threepf component at fixed k-configuration for a set of time sample-point
-        typedef std::function<void(datapipe<number>*, unsigned int, std::shared_ptr<derived_data::SQL_query>&, unsigned int, std::vector<number>&, threepf_type)> threepf_time_callback;
+        typedef std::function<void(datapipe<number>*, unsigned int, derived_data::SQL_query&, unsigned int, std::vector<number>&, threepf_type)> threepf_time_callback;
 
         //! Extract a tensor twopf component at fixed k-configuration for a set of time sample-points
-        typedef std::function<void(datapipe<number>*, unsigned int, std::shared_ptr<derived_data::SQL_query>&, unsigned int, std::vector<number>&)> tensor_twopf_time_callback;
+        typedef std::function<void(datapipe<number>*, unsigned int, derived_data::SQL_query&, unsigned int, std::vector<number>&)> tensor_twopf_time_callback;
 
         //! Extract the zeta twopf at fixed k-configuration for a set of time sample-points
-        typedef std::function<void(datapipe<number>*, std::shared_ptr<derived_data::SQL_query>&, unsigned int, std::vector<number>&)> zeta_twopf_time_callback;
+        typedef std::function<void(datapipe<number>*, derived_data::SQL_query&, unsigned int, std::vector<number>&)> zeta_twopf_time_callback;
 
         //! Extract the zeta threepf at fixed k-configuration for a set of time sample-points
-        typedef std::function<void(datapipe<number>*, std::shared_ptr<derived_data::SQL_query>&, unsigned int, std::vector<number>&)> zeta_threepf_time_callback;
+        typedef std::function<void(datapipe<number>*, derived_data::SQL_query&, unsigned int, std::vector<number>&)> zeta_threepf_time_callback;
 
         //! Extract the zeta reduced bispectrum at fixed k-configuration for a set of time sample-points
-        typedef std::function<void(datapipe<number>*, std::shared_ptr<derived_data::SQL_query>&, unsigned int, std::vector<number>&)> zeta_redbsp_time_callback;
+        typedef std::function<void(datapipe<number>*, derived_data::SQL_query&, unsigned int, std::vector<number>&)> zeta_redbsp_time_callback;
 
         //! Extract an fNL for a set of time sample-points
-        typedef std::function<void(datapipe<number>*, std::shared_ptr<derived_data::SQL_query>&, std::vector<number>&, derived_data::template_type)> fNL_time_callback;
+        typedef std::function<void(datapipe<number>*, derived_data::SQL_query&, std::vector<number>&, derived_data::template_type)> fNL_time_callback;
 
         //! Extract bispectrum.template data for a set of time sample-points
-        typedef std::function<void(datapipe<number>*, std::shared_ptr<derived_data::SQL_query>&, std::vector<number>&, derived_data::template_type)> BT_time_callback;
+        typedef std::function<void(datapipe<number>*, derived_data::SQL_query&, std::vector<number>&, derived_data::template_type)> BT_time_callback;
 
         //! Extract template.template data for a set of time sample-points
-        typedef std::function<void(datapipe<number>*, std::shared_ptr<derived_data::SQL_query>&, std::vector<number>&, derived_data::template_type)> TT_time_callback;
+        typedef std::function<void(datapipe<number>*, derived_data::SQL_query&, std::vector<number>&, derived_data::template_type)> TT_time_callback;
 
         //! Extract a twopf component at fixed time for a set of k-configuration sample-points
-        typedef std::function<void(datapipe<number>*, unsigned int, std::shared_ptr<derived_data::SQL_query>&, unsigned int, std::vector<number>&, twopf_type)> twopf_kconfig_callback;
+        typedef std::function<void(datapipe<number>*, unsigned int, derived_data::SQL_query&, unsigned int, std::vector<number>&, twopf_type)> twopf_kconfig_callback;
 
         //! Extract a threepf component at fixed time for a set of k-configuration sample-points
-        typedef std::function<void(datapipe<number>*, unsigned int, std::shared_ptr<derived_data::SQL_query>&, unsigned int, std::vector<number>&, threepf_type)> threepf_kconfig_callback;
+        typedef std::function<void(datapipe<number>*, unsigned int, derived_data::SQL_query&, unsigned int, std::vector<number>&, threepf_type)> threepf_kconfig_callback;
 
         //! Extract a tensor twopf component at fixed time for a set of k-configuration sample-points
-        typedef std::function<void(datapipe<number>*, unsigned int, std::shared_ptr<derived_data::SQL_query>&, unsigned int, std::vector<number>&)> tensor_twopf_kconfig_callback;
+        typedef std::function<void(datapipe<number>*, unsigned int, derived_data::SQL_query&, unsigned int, std::vector<number>&)> tensor_twopf_kconfig_callback;
 
         //! Extract the zeta twopf at fixed time for a set of k-configuration sample-points
-        typedef std::function<void(datapipe<number>*, std::shared_ptr<derived_data::SQL_query>&, unsigned int, std::vector<number>&)> zeta_twopf_kconfig_callback;
+        typedef std::function<void(datapipe<number>*, derived_data::SQL_query&, unsigned int, std::vector<number>&)> zeta_twopf_kconfig_callback;
 
         //! Extract the zeta threepf at fixed time for a set of k-configuration sample-points
-        typedef std::function<void(datapipe<number>*, std::shared_ptr<derived_data::SQL_query>&, unsigned int, std::vector<number>&)> zeta_threepf_kconfig_callback;
+        typedef std::function<void(datapipe<number>*, derived_data::SQL_query&, unsigned int, std::vector<number>&)> zeta_threepf_kconfig_callback;
 
         //! Extract the zeta reduced bispectrum at fixed time for a set of k-configuration sample-points
-        typedef std::function<void(datapipe<number>*, std::shared_ptr<derived_data::SQL_query>&, unsigned int, std::vector<number>&)> zeta_redbsp_kconfig_callback;
+        typedef std::function<void(datapipe<number>*, derived_data::SQL_query&, unsigned int, std::vector<number>&)> zeta_redbsp_kconfig_callback;
 
 
         class utility_callbacks

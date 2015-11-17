@@ -54,7 +54,7 @@ namespace transport
         bool operator==(const k_statistics_tag<number>& obj) const { return(true); }    // nothing to check
 
         //! pull data corresponding to this tag
-        void pull(std::shared_ptr<derived_data::SQL_query>& query, std::vector<kconfiguration_statistics>& data);
+        void pull(derived_data::SQL_query& query, std::vector<kconfiguration_statistics>& data);
 
         //! emit a log item for this tag
         void log(const std::string& log_item) const { BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::log_severity_level::normal) << log_item; }
@@ -93,7 +93,7 @@ namespace transport
 
 
     template <typename number>
-    void k_statistics_tag<number>::pull(std::shared_ptr<derived_data::SQL_query>& query, std::vector<kconfiguration_statistics>& data)
+    void k_statistics_tag<number>::pull(derived_data::SQL_query& query, std::vector<kconfiguration_statistics>& data)
 	    {
         assert(this->pipe->validate_attached(datapipe<number>::attachment_type::integration_attached));
         if(!this->pipe->validate_attached(datapipe<number>::attachment_type::integration_attached)) throw runtime_exception(exception_type::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
