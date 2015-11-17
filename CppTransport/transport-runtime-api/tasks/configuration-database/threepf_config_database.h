@@ -153,7 +153,7 @@ namespace transport
         threepf_kconfig_database(double cn);
 
         //! deserialization constructor
-        threepf_kconfig_database(double cn, sqlite3* handle, std::shared_ptr<twopf_kconfig_database>& twopf_db);
+        threepf_kconfig_database(double cn, sqlite3* handle, twopf_kconfig_database& twopf_db);
 
         //! destructor is default
         ~threepf_kconfig_database() = default;
@@ -221,15 +221,15 @@ namespace transport
 
         //! add record to the database -- specified by wavenumber on each leg
         template <typename StoragePolicy>
-        int add_k1k2k3_record(std::shared_ptr<twopf_kconfig_database>& twopf_db, double k1_conventional, double k2_conventional, double k3_conventional, StoragePolicy policy);
+        int add_k1k2k3_record(twopf_kconfig_database& twopf_db, double k1_conventional, double k2_conventional, double k3_conventional, StoragePolicy policy);
 
         //! add record to the database -- specified by Fergusson-Shellard-Liguori parametrization
         template <typename StoragePolicy>
-        int add_FLS_record(std::shared_ptr<twopf_kconfig_database>& twopf_db, double kt_conventional, double alpha, double beta, StoragePolicy policy);
+        int add_FLS_record(twopf_kconfig_database& twopf_db, double kt_conventional, double alpha, double beta, StoragePolicy policy);
 
         //! add a record to the database -- directly specified
         template <typename StoragePolicy>
-        int add_record(std::shared_ptr<twopf_kconfig_database>& twopf_db, threepf_kconfig config, StoragePolicy policy);
+        int add_record(twopf_kconfig_database& twopf_db, threepf_kconfig config, StoragePolicy policy);
 
 		    //! lookup record with a given serial number -- non const version
 		    record_iterator lookup(unsigned int serial);
@@ -311,7 +311,7 @@ namespace transport
       }
 
 
-    threepf_kconfig_database::threepf_kconfig_database(double cn, sqlite3* handle, std::shared_ptr<twopf_kconfig_database>& twopf_db)
+    threepf_kconfig_database::threepf_kconfig_database(double cn, sqlite3* handle, twopf_kconfig_database& twopf_db)
       : comoving_normalization(cn),
         serial(0),
         kmax_conventional(-std::numeric_limits<double>::max()),
@@ -363,9 +363,9 @@ namespace transport
 		            config.k2_serial = static_cast<unsigned int>(sqlite3_column_int(stmt, 6));
 		            config.k3_serial = static_cast<unsigned int>(sqlite3_column_int(stmt, 7));
 
-				        twopf_kconfig_database::const_record_iterator k1 = twopf_db->lookup(config.k1_serial);
-		            twopf_kconfig_database::const_record_iterator k2 = twopf_db->lookup(config.k2_serial);
-		            twopf_kconfig_database::const_record_iterator k3 = twopf_db->lookup(config.k3_serial);
+				        twopf_kconfig_database::const_record_iterator k1 = twopf_db.lookup(config.k1_serial);
+		            twopf_kconfig_database::const_record_iterator k2 = twopf_db.lookup(config.k2_serial);
+		            twopf_kconfig_database::const_record_iterator k3 = twopf_db.lookup(config.k3_serial);
 
 		            config.k1_conventional = (*k1)->k_conventional;
 		            config.k1_comoving     = (*k1)->k_comoving;
@@ -411,7 +411,7 @@ namespace transport
 
 
     template <typename StoragePolicy>
-    int threepf_kconfig_database::add_k1k2k3_record(std::shared_ptr<twopf_kconfig_database>& twopf_db, double k1_conventional, double k2_conventional, double k3_conventional, StoragePolicy policy)
+    int threepf_kconfig_database::add_k1k2k3_record(twopf_kconfig_database& twopf_db, double k1_conventional, double k2_conventional, double k3_conventional, StoragePolicy policy)
       {
         // insert a record into the database
         threepf_kconfig config;
@@ -439,7 +439,7 @@ namespace transport
 
 
     template <typename StoragePolicy>
-    int threepf_kconfig_database::add_FLS_record(std::shared_ptr<twopf_kconfig_database>& twopf_db, double kt_conventional, double alpha, double beta, StoragePolicy policy)
+    int threepf_kconfig_database::add_FLS_record(twopf_kconfig_database& twopf_db, double kt_conventional, double alpha, double beta, StoragePolicy policy)
       {
         // insert a record into the database
         threepf_kconfig config;
@@ -468,7 +468,7 @@ namespace transport
 
 
     template <typename StoragePolicy>
-    int threepf_kconfig_database::add_record(std::shared_ptr<twopf_kconfig_database>& twopf_db, threepf_kconfig config, StoragePolicy policy)
+    int threepf_kconfig_database::add_record(twopf_kconfig_database& twopf_db, threepf_kconfig config, StoragePolicy policy)
       {
         // populate serial numbers in configuration record before
         // passing to storage policy
@@ -480,17 +480,17 @@ namespace transport
 
         // perform reverse-lookup to find whether twopf kconfig database records already exist for these k_i
         twopf_kconfig_database::record_iterator rec;
-        k1_stored = twopf_db->find(config.k1_conventional, rec);
+        k1_stored = twopf_db.find(config.k1_conventional, rec);
         if(k1_stored) config.k1_serial = (*rec)->serial;
-        else          config.k1_serial = twopf_db->add_record(config.k1_conventional);
+        else          config.k1_serial = twopf_db.add_record(config.k1_conventional);
 
-        k2_stored = twopf_db->find(config.k2_conventional, rec);
+        k2_stored = twopf_db.find(config.k2_conventional, rec);
         if(k2_stored) config.k2_serial = (*rec)->serial;
-        else          config.k2_serial = twopf_db->add_record(config.k2_conventional);
+        else          config.k2_serial = twopf_db.add_record(config.k2_conventional);
 
-        k3_stored = twopf_db->find(config.k3_conventional, rec);
+        k3_stored = twopf_db.find(config.k3_conventional, rec);
         if(k3_stored) config.k3_serial = (*rec)->serial;
-        else          config.k3_serial = twopf_db->add_record(config.k3_conventional);
+        else          config.k3_serial = twopf_db.add_record(config.k3_conventional);
 
         // ask storage policy whether this configuration should be reatined
         if(policy(config))
@@ -510,9 +510,9 @@ namespace transport
         else
           {
             // unwind any twopf configurations added
-            if(!k1_stored) twopf_db->delete_record(config.k1_serial);
-            if(!k2_stored) twopf_db->delete_record(config.k2_serial);
-            if(!k3_stored) twopf_db->delete_record(config.k3_serial);
+            if(!k1_stored) twopf_db.delete_record(config.k1_serial);
+            if(!k2_stored) twopf_db.delete_record(config.k2_serial);
+            if(!k3_stored) twopf_db.delete_record(config.k3_serial);
           }
 
         return(-1);
