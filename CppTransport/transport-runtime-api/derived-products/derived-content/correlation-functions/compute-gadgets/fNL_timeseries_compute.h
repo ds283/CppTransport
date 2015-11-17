@@ -94,10 +94,10 @@ namespace transport
 		      public:
 
 				    //! make a handle, integrate over all triangles
-				    std::shared_ptr<handle> make_handle(datapipe<number>& pipe, postintegration_task<number>* tk, const SQL_time_config_query& tq, template_type ty) const;
+				    std::unique_ptr<handle> make_handle(datapipe<number>& pipe, postintegration_task<number>* tk, const SQL_time_config_query& tq, template_type ty) const;
 
             //! make a handle, integrate over a supplied subset of triangles
-            std::shared_ptr<handle> make_handle(datapipe<number>& pipe, postintegration_task<number>* tk, const SQL_time_config_query& tq,
+            std::unique_ptr<handle> make_handle(datapipe<number>& pipe, postintegration_task<number>* tk, const SQL_time_config_query& tq,
                                                 template_type ty, const typename work_queue<threepf_kconfig_record>::device_work_list& wl) const;
 
 
@@ -106,10 +106,10 @@ namespace transport
 		      public:
 
             //! compute a timeseries for the inner products bispectrum.bispectrum, bispectrum.template, template.template
-            void components(std::shared_ptr<handle>& h, std::vector<number>& BB, std::vector<number>& BT, std::vector<number>& TT) const;
+            void components(handle& h, std::vector<number>& BB, std::vector<number>& BT, std::vector<number>& TT) const;
 
 				    //! compute a timeseries for fNL
-				    void fNL(std::shared_ptr<handle>& h, std::vector<number>& line_data) const;
+				    void fNL(handle& h, std::vector<number>& line_data) const;
 
 
 		        // COMPUTE SELECTED SHAPE FUNCTIONS
@@ -223,40 +223,40 @@ namespace transport
 
 
 		    template <typename number>
-		    std::shared_ptr<typename fNL_timeseries_compute<number>::handle>
+		    std::unique_ptr<typename fNL_timeseries_compute<number>::handle>
 		    fNL_timeseries_compute<number>::make_handle(datapipe<number>& pipe, postintegration_task<number>* tk, const SQL_time_config_query& tq, template_type ty) const
 			    {
-		        return std::make_shared<handle>(pipe, tk, tq, ty);
+		        return std::make_unique<handle>(pipe, tk, tq, ty);
 			    }
 
 
         template <typename number>
-        std::shared_ptr<typename fNL_timeseries_compute<number>::handle>
+        std::unique_ptr<typename fNL_timeseries_compute<number>::handle>
         fNL_timeseries_compute<number>::make_handle(datapipe<number>& pipe, postintegration_task<number>* tk, const SQL_time_config_query& tq,
                                                     template_type ty, const typename work_queue<threepf_kconfig_record>::device_work_list& wl) const
           {
-            return std::make_shared<handle>(pipe, tk, tq, ty, wl);
+            return std::make_unique<handle>(pipe, tk, tq, ty, wl);
           }
 
 
         template <typename number>
-        void fNL_timeseries_compute<number>::components(std::shared_ptr<typename fNL_timeseries_compute<number>::handle>& h,
+        void fNL_timeseries_compute<number>::components(typename fNL_timeseries_compute<number>::handle& h,
                                                         std::vector<number>& BB, std::vector<number>& BT, std::vector<number>& TT) const
           {
             // set up cache handles
-            typename datapipe<number>::time_zeta_handle& z_handle = h->pipe.new_time_zeta_handle(h->tquery);
+            typename datapipe<number>::time_zeta_handle& z_handle = h.pipe.new_time_zeta_handle(h.tquery);
 
             BB.clear();
-            BB.assign(h->t_axis.size(), 0.0);
+            BB.assign(h.t_axis.size(), 0.0);
             BT.clear();
-            BT.assign(h->t_axis.size(), 0.0);
+            BT.assign(h.t_axis.size(), 0.0);
             TT.clear();
-            TT.assign(h->t_axis.size(), 0.0);
+            TT.assign(h.t_axis.size(), 0.0);
 
             // loop over all sampled k-configurations, adding their contributions to the integral
-            for(unsigned int i = 0; i < h->work_list.size(); ++i)
+            for(unsigned int i = 0; i < h.work_list.size(); ++i)
               {
-                zeta_threepf_time_data_tag<number> bsp_tag = h->pipe.new_zeta_threepf_time_data_tag(*(h->work_list[i]));
+                zeta_threepf_time_data_tag<number> bsp_tag = h.pipe.new_zeta_threepf_time_data_tag(*(h.work_list[i]));
 
                 // pull bispectrum information for this triangle
                 const std::vector<number> bispectrum = z_handle.lookup_tag(bsp_tag);
@@ -265,21 +265,21 @@ namespace transport
                 twopf_kconfig k2;
                 twopf_kconfig k3;
 
-                k1.serial         = h->work_list[i]->k1_serial;
-                k1.k_comoving     = h->work_list[i]->k1_comoving;
-                k1.k_conventional = h->work_list[i]->k1_conventional;
+                k1.serial         = h.work_list[i]->k1_serial;
+                k1.k_comoving     = h.work_list[i]->k1_comoving;
+                k1.k_conventional = h.work_list[i]->k1_conventional;
 
-                k2.serial         = h->work_list[i]->k2_serial;
-                k2.k_comoving     = h->work_list[i]->k2_comoving;
-                k2.k_conventional = h->work_list[i]->k2_conventional;
+                k2.serial         = h.work_list[i]->k2_serial;
+                k2.k_comoving     = h.work_list[i]->k2_comoving;
+                k2.k_conventional = h.work_list[i]->k2_conventional;
 
-                k3.serial         = h->work_list[i]->k3_serial;
-                k3.k_comoving     = h->work_list[i]->k3_comoving;
-                k3.k_conventional = h->work_list[i]->k3_conventional;
+                k3.serial         = h.work_list[i]->k3_serial;
+                k3.k_comoving     = h.work_list[i]->k3_comoving;
+                k3.k_conventional = h.work_list[i]->k3_conventional;
 
-                zeta_twopf_time_data_tag<number> k1_tag = h->pipe.new_zeta_twopf_time_data_tag(k1);
-                zeta_twopf_time_data_tag<number> k2_tag = h->pipe.new_zeta_twopf_time_data_tag(k2);
-                zeta_twopf_time_data_tag<number> k3_tag = h->pipe.new_zeta_twopf_time_data_tag(k3);
+                zeta_twopf_time_data_tag<number> k1_tag = h.pipe.new_zeta_twopf_time_data_tag(k1);
+                zeta_twopf_time_data_tag<number> k2_tag = h.pipe.new_zeta_twopf_time_data_tag(k2);
+                zeta_twopf_time_data_tag<number> k3_tag = h.pipe.new_zeta_twopf_time_data_tag(k3);
 
                 const std::vector<number> twopf_k1 = z_handle.lookup_tag(k1_tag);
                 const std::vector<number> twopf_k2 = z_handle.lookup_tag(k2_tag);
@@ -289,10 +289,10 @@ namespace transport
                 std::vector<number> S_bispectrum;
                 std::vector<number> S_template;
                 this->shape_function(bispectrum, twopf_k1, twopf_k2, twopf_k3, S_bispectrum);
-                this->shape_function(h->type, twopf_k1, twopf_k2, twopf_k3, S_template);
+                this->shape_function(h.type, twopf_k1, twopf_k2, twopf_k3, S_template);
 
-                number measure = h->tk->measure(*(h->work_list[i]));
-                for(unsigned int j = 0; j < h->t_axis.size(); ++j)
+                number measure = h.tk->measure(*(h.work_list[i]));
+                for(unsigned int j = 0; j < h.t_axis.size(); ++j)
                   {
                     BB[j] += measure * S_bispectrum[j] * S_bispectrum[j];
                     BT[j] += measure * S_bispectrum[j] * S_template[j];
@@ -303,7 +303,7 @@ namespace transport
 
 
 		    template <typename number>
-		    void fNL_timeseries_compute<number>::fNL(std::shared_ptr<typename fNL_timeseries_compute<number>::handle>& h, std::vector<number>& line_data) const
+		    void fNL_timeseries_compute<number>::fNL(typename fNL_timeseries_compute<number>::handle& h, std::vector<number>& line_data) const
 			    {
             std::vector<number> BB_line;  // will hold <B, B>
 		        std::vector<number> BT_line;  // will hold <B, T>
@@ -312,8 +312,8 @@ namespace transport
             this->components(h, BB_line, BT_line, TT_line);
 
 				    line_data.clear();
-				    line_data.resize(h->t_axis.size());
-		        for(unsigned int j = 0; j < h->t_axis.size(); ++j)
+				    line_data.resize(h.t_axis.size());
+		        for(unsigned int j = 0; j < h.t_axis.size(); ++j)
 			        {
 		            line_data[j] = (5.0/3.0) * BT_line[j]/TT_line[j];
 			        }

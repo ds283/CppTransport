@@ -97,7 +97,7 @@ namespace transport
 		    const twopf_kconfig_database& twopf_db = ptk->get_twopf_database();
 
         // set up handle for compute delegate
-        std::shared_ptr<typename derived_data::zeta_timeseries_compute<number>::handle> handle = this->zeta_computer.make_handle(pipe, ptk, tquery, ptk->get_model()->get_N_fields());
+        std::unique_ptr<typename derived_data::zeta_timeseries_compute<number>::handle> handle = this->zeta_computer.make_handle(pipe, ptk, tquery, ptk->get_model()->get_N_fields());
 
         // buffer for computed values
         std::vector<number> zeta_npf;
@@ -108,7 +108,7 @@ namespace transport
             boost::timer::cpu_timer timer;
 
 		        // compute zeta twopf
-            this->zeta_computer.twopf(handle, zeta_npf, gauge_xfm1, *(list[i]));
+            this->zeta_computer.twopf(*handle, zeta_npf, gauge_xfm1, *(list[i]));
 						assert(zeta_npf.size() == time_values.size());
 
 		        for(unsigned int j = 0; j < time_values.size(); ++j)
@@ -148,7 +148,7 @@ namespace transport
 
         // set up handle for compute delegate
         unsigned int N_fields = ptk->get_model()->get_N_fields();
-        std::shared_ptr<typename derived_data::zeta_timeseries_compute<number>::handle> handle = this->zeta_computer.make_handle(pipe, ptk, tquery, N_fields);
+        std::unique_ptr<typename derived_data::zeta_timeseries_compute<number>::handle> handle = this->zeta_computer.make_handle(pipe, ptk, tquery, N_fields);
 
 		    // buffer for computed values
         std::vector<number> zeta_npf;
@@ -169,7 +169,7 @@ namespace transport
 	        {
             boost::timer::cpu_timer timer;
 
-            this->zeta_computer.threepf(handle, zeta_npf, redbsp, gauge_xfm2_123, gauge_xfm2_213, gauge_xfm2_312, *(list[i]));
+            this->zeta_computer.threepf(*handle, zeta_npf, redbsp, gauge_xfm2_123, gauge_xfm2_213, gauge_xfm2_312, *(list[i]));
 		        assert(zeta_npf.size() == time_values.size());
 
             for(unsigned int j = 0; j < time_values.size(); ++j)
@@ -188,7 +188,7 @@ namespace transport
                 k1.k_comoving     = list[i]->k1_comoving;
                 k1.k_conventional = list[i]->k1_conventional;
 
-		            this->zeta_computer.twopf(handle, zeta_npf, gauge_xfm2_123, k1);
+		            this->zeta_computer.twopf(*handle, zeta_npf, gauge_xfm2_123, k1);
                 for(unsigned int j = 0; j < time_values.size(); ++j)
 	                {
                     batcher.push_twopf(time_values[j].serial, k1.serial, zeta_npf[j]);
@@ -204,7 +204,7 @@ namespace transport
                 k2.k_comoving     = list[i]->k2_comoving;
                 k2.k_conventional = list[i]->k2_conventional;
 
-                this->zeta_computer.twopf(handle, zeta_npf, gauge_xfm2_123, k2);
+                this->zeta_computer.twopf(*handle, zeta_npf, gauge_xfm2_123, k2);
                 for(unsigned int j = 0; j < time_values.size(); ++j)
 	                {
                     batcher.push_twopf(time_values[j].serial, k2.serial, zeta_npf[j]);
@@ -220,7 +220,7 @@ namespace transport
                 k3.k_comoving     = list[i]->k3_comoving;
                 k3.k_conventional = list[i]->k3_conventional;
 
-                this->zeta_computer.twopf(handle, zeta_npf, gauge_xfm2_123, k3);
+                this->zeta_computer.twopf(*handle, zeta_npf, gauge_xfm2_123, k3);
                 for(unsigned int j = 0; j < time_values.size(); ++j)
 	                {
                     batcher.push_twopf(time_values[j].serial, k3.serial, zeta_npf[j]);
@@ -265,9 +265,9 @@ namespace transport
         std::vector<number> TT;
 
 		    // set up handle for compute delegate
-        std::shared_ptr<typename derived_data::fNL_timeseries_compute<number>::handle> handle = this->fNL_computer.make_handle(pipe, ptk, tquery, tk->get_template(), list);
+        std::unique_ptr<typename derived_data::fNL_timeseries_compute<number>::handle> handle = this->fNL_computer.make_handle(pipe, ptk, tquery, tk->get_template(), list);
 
-		    this->fNL_computer.components(handle, BB, BT, TT);
+		    this->fNL_computer.components(*handle, BB, BT, TT);
         assert(BB.size() == time_values.size());
         assert(BT.size() == time_values.size());
         assert(TT.size() == time_values.size());

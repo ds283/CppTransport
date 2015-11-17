@@ -114,22 +114,22 @@ namespace transport
 
         //! Initialize an integration_writer object.
         //! Never overwrites existing data; if the container already exists, an exception is thrown
-        virtual void initialize_writer(std::shared_ptr< integration_writer<number> >& writer, bool recovery_mode = false) = 0;
+        virtual void initialize_writer(integration_writer<number>& writer, bool recovery_mode = false) = 0;
 
         //! Close an integration_writer object.
-        virtual void close_writer(std::shared_ptr< integration_writer<number> >& writer) = 0;
+        virtual void close_writer(integration_writer<number>& writer) = 0;
 
         //! Initialize a derived_content_writer object.
-        virtual void initialize_writer(std::shared_ptr< derived_content_writer<number> >& writer, bool recovery_mode = false) = 0;
+        virtual void initialize_writer(derived_content_writer<number>& writer, bool recovery_mode = false) = 0;
 
         //! Close an open derived_content_writer object.
-        virtual void close_writer(std::shared_ptr< derived_content_writer<number> >& writer) = 0;
+        virtual void close_writer(derived_content_writer<number>& writer) = 0;
 
         //! Initialize a postintegration_writer object.
-        virtual void initialize_writer(std::shared_ptr< postintegration_writer<number> >& writer, bool recovery_mode = false) = 0;
+        virtual void initialize_writer(postintegration_writer<number>& writer, bool recovery_mode = false) = 0;
 
         //! Close an open postintegration_writer object.
-        virtual void close_writer(std::shared_ptr< postintegration_writer<number> >& writer) = 0;
+        virtual void close_writer(postintegration_writer<number>& writer) = 0;
 
 
         // WRITE TABLES FOR A DATA CONTAINER
@@ -137,19 +137,19 @@ namespace transport
       public:
 
         //! Create tables needed for a twopf container
-        virtual void create_tables(std::shared_ptr< integration_writer<number> >& writer, twopf_task<number>* tk) = 0;
+        virtual void create_tables(integration_writer<number>& writer, twopf_task<number>* tk) = 0;
 
         //! Create tables needed for a threepf container
-        virtual void create_tables(std::shared_ptr< integration_writer<number> >& writer, threepf_task<number>* tk) = 0;
+        virtual void create_tables(integration_writer<number>& writer, threepf_task<number>* tk) = 0;
 
         //! Create tables needed for a zeta twopf container
-        virtual void create_tables(std::shared_ptr< postintegration_writer<number> >& writer, zeta_twopf_task<number>* tk) = 0;
+        virtual void create_tables(postintegration_writer<number>& writer, zeta_twopf_task<number>* tk) = 0;
 
         //! Create tables needed for a zeta threepf container
-        virtual void create_tables(std::shared_ptr< postintegration_writer<number> >& writer, zeta_threepf_task<number>* tk) = 0;
+        virtual void create_tables(postintegration_writer<number>& writer, zeta_threepf_task<number>* tk) = 0;
 
         //! Create tables needed for an fNL container
-        virtual void create_tables(std::shared_ptr< postintegration_writer<number> >& writer, fNL_task<number>* tk) = 0;
+        virtual void create_tables(postintegration_writer<number>& writer, fNL_task<number>* tk) = 0;
 
 
         // SEEDING
@@ -157,24 +157,24 @@ namespace transport
       public:
 
         //! Seed a writer for a twopf task
-        virtual void seed_writer(std::shared_ptr< integration_writer<number> >& writer, twopf_task<number>* tk,
-                                 const std::shared_ptr< output_group_record<integration_payload> >& seed) = 0;
+        virtual void seed_writer(integration_writer<number>& writer, twopf_task<number>* tk,
+                                 const output_group_record<integration_payload>& seed) = 0;
 
         //! Seed a writer for a threepf task
-        virtual void seed_writer(std::shared_ptr< integration_writer<number> >& writer, threepf_task<number>* tk,
-                                 const std::shared_ptr< output_group_record<integration_payload> >& seed) = 0;
+        virtual void seed_writer(integration_writer<number>& writer, threepf_task<number>* tk,
+                                 const output_group_record<integration_payload>& seed) = 0;
 
         //! Seed a writer for a zeta twopf task
-        virtual void seed_writer(std::shared_ptr< postintegration_writer<number> >& writer, zeta_twopf_task<number>* tk,
-                                 const std::shared_ptr< output_group_record<postintegration_payload> >& seed) = 0;
+        virtual void seed_writer(postintegration_writer<number>& writer, zeta_twopf_task<number>* tk,
+                                 const output_group_record<postintegration_payload>& seed) = 0;
 
         //! Seed a writer for a zeta threepf task
-        virtual void seed_writer(std::shared_ptr< postintegration_writer<number> >& writer, zeta_threepf_task<number>* tk,
-                                 const std::shared_ptr< output_group_record<postintegration_payload> >& seed) = 0;
+        virtual void seed_writer(postintegration_writer<number>& writer, zeta_threepf_task<number>* tk,
+                                 const output_group_record<postintegration_payload>& seed) = 0;
 
         //! Seed a writer for an fNL task
-        virtual void seed_writer(std::shared_ptr< postintegration_writer<number> >& writer, fNL_task<number>* tk,
-                                 const std::shared_ptr< output_group_record<postintegration_payload> >& seed) = 0;
+        virtual void seed_writer(postintegration_writer<number>& writer, fNL_task<number>* tk,
+                                 const output_group_record<postintegration_payload>& seed) = 0;
 
 
         // CONSTRUCT BATCHERS
@@ -231,7 +231,7 @@ namespace transport
       public:
 
         //! Synchronize missing serial numbers between an integration writer and a postintegration writer
-        void synchronize_missing_serials(std::shared_ptr< integration_writer<number> > i_writer, std::shared_ptr< postintegration_writer<number> > p_writer,
+        void synchronize_missing_serials(integration_writer<number>& i_writer, postintegration_writer<number>& p_writer,
                                          integration_task<number>* i_tk, postintegration_task<number>* p_tk);
 
 
@@ -762,12 +762,12 @@ namespace transport
 
 
     template <typename number>
-    void data_manager<number>::synchronize_missing_serials(std::shared_ptr< integration_writer<number> > i_writer, std::shared_ptr< postintegration_writer<number> > p_writer,
+    void data_manager<number>::synchronize_missing_serials(integration_writer<number>& i_writer, postintegration_writer<number>& p_writer,
                                                            integration_task<number>* i_tk, postintegration_task<number>* p_tk)
       {
         // get serial numbers missing individually from each writer
-        std::list<unsigned int> integration_missing = i_writer->get_missing_serials();
-        std::list<unsigned int> postintegration_missing = p_writer->get_missing_serials();
+        std::list<unsigned int> integration_missing = i_writer.get_missing_serials();
+        std::list<unsigned int> postintegration_missing = p_writer.get_missing_serials();
 
         // merge into a single list
         std::list<unsigned int> total_missing = integration_missing;
@@ -782,9 +782,9 @@ namespace transport
 
         if(integration_discrepant.size() > 0)
           {
-            BOOST_LOG_SEV(i_writer->get_log(), base_writer::log_severity_level::normal) << '\n' << "** Synchronizing " << integration_discrepant.size() << " configurations in integration container which are missing in postintegration container";
-            i_writer->merge_failure_list(integration_discrepant);
-            i_writer->check_integrity(i_tk);
+            BOOST_LOG_SEV(i_writer.get_log(), base_writer::log_severity_level::normal) << '\n' << "** Synchronizing " << integration_discrepant.size() << " configurations in integration container which are missing in postintegration container";
+            i_writer.merge_failure_list(integration_discrepant);
+            i_writer.check_integrity(i_tk);
           }
 
         std::list<unsigned int> postintegration_discrepant;
@@ -793,9 +793,9 @@ namespace transport
 
         if(postintegration_discrepant.size() > 0)
           {
-            BOOST_LOG_SEV(p_writer->get_log(), base_writer::log_severity_level::normal) << '\n' << "** Synchronizing " << postintegration_discrepant.size() << " configurations in postintegration container which are missing in integration container";
-            p_writer->merge_failure_list(postintegration_discrepant);
-            p_writer->check_integrity(p_tk);
+            BOOST_LOG_SEV(p_writer.get_log(), base_writer::log_severity_level::normal) << '\n' << "** Synchronizing " << postintegration_discrepant.size() << " configurations in postintegration container which are missing in integration container";
+            p_writer.merge_failure_list(postintegration_discrepant);
+            p_writer.check_integrity(p_tk);
           }
       }
 

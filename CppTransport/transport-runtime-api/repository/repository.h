@@ -153,13 +153,13 @@ namespace transport
 		    virtual derived_product_record<number>* query_derived_product(const std::string& name) = 0;
 
         //! Enumerate the output groups available from a named integration task
-        virtual std::list< std::shared_ptr< output_group_record<integration_payload> > > enumerate_integration_task_content(const std::string& name) = 0;
+        virtual std::list< std::unique_ptr< output_group_record<integration_payload> > > enumerate_integration_task_content(const std::string& name) = 0;
 
 		    //! Enumerate the output groups available for a named postintegration task
-		    virtual std::list< std::shared_ptr< output_group_record<postintegration_payload> > > enumerate_postintegration_task_content(const std::string& name) = 0;
+		    virtual std::list< std::unique_ptr< output_group_record<postintegration_payload> > > enumerate_postintegration_task_content(const std::string& name) = 0;
 
 		    //! Enumerate the output groups available from a named output task
-		    virtual std::list< std::shared_ptr< output_group_record<output_payload> > > enumerate_output_task_content(const std::string& name) = 0;
+		    virtual std::list< std::unique_ptr< output_group_record<output_payload> > > enumerate_output_task_content(const std::string& name) = 0;
 
 
         // GENERATE WRITERS FOR TASKS
@@ -170,36 +170,36 @@ namespace transport
       public:
 
 		    //! Generate a writer object for new integration output
-		    virtual std::shared_ptr< integration_writer<number> > new_integration_task_content(integration_task_record<number>* rec,
+		    virtual std::unique_ptr< integration_writer<number> > new_integration_task_content(integration_task_record<number>* rec,
                                                                                            const std::list<std::string>& tags,
                                                                                            unsigned int worker, unsigned int workgroup, std::string suffix="");
 
 		    //! Generate a writer object for new derived-content output
-		    virtual std::shared_ptr< derived_content_writer<number> > new_output_task_content(output_task_record<number>* rec,
+		    virtual std::unique_ptr< derived_content_writer<number> > new_output_task_content(output_task_record<number>* rec,
                                                                                           const std::list<std::string>& tags,
                                                                                           unsigned int worker, std::string suffix="");
 
         //! Generate a writer object for new postintegration output
-        virtual std::shared_ptr< postintegration_writer<number> > new_postintegration_task_content(postintegration_task_record<number>* rec,
+        virtual std::unique_ptr< postintegration_writer<number> > new_postintegration_task_content(postintegration_task_record<number>* rec,
                                                                                                    const std::list<std::string>& tags,
                                                                                                    unsigned int worker, std::string suffix="");
 
       protected:
 
         //! Generate a writer object for integration recovery
-        virtual std::shared_ptr< integration_writer<number> > recover_integration_task_content(const std::string& name, integration_task_record<number>* rec,
+        virtual std::unique_ptr< integration_writer<number> > recover_integration_task_content(const std::string& name, integration_task_record<number>* rec,
                                                                                                const boost::filesystem::path& output, const boost::filesystem::path& sql_path,
                                                                                                const boost::filesystem::path& logdir_path, const boost::filesystem::path& tempdir_path,
                                                                                                unsigned int worker, unsigned int workgroup);
 
         //! Generate a writer object for postintegration recovery
-        virtual std::shared_ptr< postintegration_writer<number> > recover_postintegration_task_content(const std::string& name, postintegration_task_record<number>* rec,
+        virtual std::unique_ptr< postintegration_writer<number> > recover_postintegration_task_content(const std::string& name, postintegration_task_record<number>* rec,
                                                                                                        const boost::filesystem::path& output, const boost::filesystem::path& sql_path,
                                                                                                        const boost::filesystem::path& logdir_path, const boost::filesystem::path& tempdir_path,
                                                                                                        unsigned int worker);
 
         //! Generate a writer object for output-task recovery
-        virtual std::shared_ptr< derived_content_writer<number> > recover_output_task_content(const std::string& name, output_task_record<number>* rec,
+        virtual std::unique_ptr< derived_content_writer<number> > recover_output_task_content(const std::string& name, output_task_record<number>* rec,
                                                                                               const boost::filesystem::path& output,
                                                                                               const boost::filesystem::path& logdir_path, const boost::filesystem::path& tempdir_path,
                                                                                               unsigned int worker);
@@ -211,36 +211,36 @@ namespace transport
         virtual std::string reserve_content_name(const std::string& tk, boost::filesystem::path& parent_path, boost::posix_time::ptime& now, const std::string& suffix) = 0;
 
         //! generate an integration writer
-        std::shared_ptr< integration_writer<number> > base_new_integration_task_content(integration_task_record<number>* rec,
+        std::unique_ptr< integration_writer<number> > base_new_integration_task_content(integration_task_record<number>* rec,
                                                                                         const std::list<std::string>& tags,
                                                                                         unsigned int worker, unsigned int workgroup,
                                                                                         typename integration_writer<number>::callback_group& callbacks,
                                                                                         std::string suffix="");
 
         //! generate an integration writer for recovery
-        std::shared_ptr< integration_writer<number> > base_recover_integration_task_content(const std::string& name, integration_task_record<number>* rec,
+        std::unique_ptr< integration_writer<number> > base_recover_integration_task_content(const std::string& name, integration_task_record<number>* rec,
                                                                                             const boost::filesystem::path& output_path, const boost::filesystem::path& sql_path,
                                                                                             const boost::filesystem::path& logdir_path, const boost::filesystem::path& tempdir_path,
                                                                                             unsigned int worker, unsigned int workgroup,
                                                                                             typename integration_writer<number>::callback_group& callbacks);
 
         //! generate a derived content writer
-        std::shared_ptr< derived_content_writer<number> > base_new_output_task_content(output_task_record<number>* rec,
+        std::unique_ptr< derived_content_writer<number> > base_new_output_task_content(output_task_record<number>* rec,
                                                                                        const std::list<std::string>& tags, unsigned int worker,
                                                                                        typename derived_content_writer<number>::callback_group& callbacks, std::string suffix="");
 
         //! generate a postintegration writer for recovery
-        std::shared_ptr < derived_content_writer<number> > base_recover_output_task_content(const std::string& name, output_task_record<number>* rec,
+        std::unique_ptr < derived_content_writer<number> > base_recover_output_task_content(const std::string& name, output_task_record<number>* rec,
                                                                                             const boost::filesystem::path& output_path, const boost::filesystem::path& logdir_path,
                                                                                             const boost::filesystem::path& tempdir_path, unsigned int worker,
                                                                                             typename derived_content_writer<number>::callback_group& callbacks);
 
-        std::shared_ptr< postintegration_writer<number> > base_new_postintegration_task_content(postintegration_task_record<number>* rec,
+        std::unique_ptr< postintegration_writer<number> > base_new_postintegration_task_content(postintegration_task_record<number>* rec,
                                                                                                 const std::list<std::string>& tags, unsigned int worker,
                                                                                                 typename postintegration_writer<number>::callback_group& callbacks, std::string suffix="");
 
         //! generate a postintegration writer for recovery
-        std::shared_ptr < postintegration_writer<number> > base_recover_postintegration_task_content(const std::string& name, postintegration_task_record<number>* rec,
+        std::unique_ptr < postintegration_writer<number> > base_recover_postintegration_task_content(const std::string& name, postintegration_task_record<number>* rec,
                                                                                                      const boost::filesystem::path& output_path, const boost::filesystem::path& sql_path,
                                                                                                      const boost::filesystem::path& logdir_path, const boost::filesystem::path& tempdir_path,
                                                                                                      unsigned int worker, typename postintegration_writer<number>::callback_group& callbacks);
@@ -251,16 +251,16 @@ namespace transport
       public:
 
         //! recover crashed writers
-        virtual void perform_recovery(std::shared_ptr< data_manager<number> > data_mgr, unsigned int worker) = 0;
+        virtual void perform_recovery(data_manager<number>& data_mgr, unsigned int worker) = 0;
 
         //! register an integration writer
-        virtual void register_writer(std::shared_ptr< integration_writer<number> >& writer) = 0;
+        virtual void register_writer(integration_writer<number>& writer) = 0;
 
         //! register a postintegration writer
-        virtual void register_writer(std::shared_ptr< postintegration_writer<number> >& writer) = 0;
+        virtual void register_writer(postintegration_writer<number>& writer) = 0;
 
         //! register a derived-content writer
-        virtual void register_writer(std::shared_ptr< derived_content_writer<number> >& writer) = 0;
+        virtual void register_writer(derived_content_writer<number>& writer) = 0;
 
 
         // FIND AN OUTPUT GROUP MATCHING DEFINED TAGS
@@ -268,10 +268,10 @@ namespace transport
       public:
 
         //! Find an output group for an integration task
-        std::shared_ptr< output_group_record<integration_payload> > find_integration_task_output(const std::string& name, const std::list<std::string>& tags);
+        std::unique_ptr< output_group_record<integration_payload> > find_integration_task_output(const std::string& name, const std::list<std::string>& tags);
 
 		    //! Find an output group for a postintegration task
-		    std::shared_ptr< output_group_record<postintegration_payload> > find_postintegration_task_output(const std::string& name, const std::list<std::string>& tags);
+		    std::unique_ptr< output_group_record<postintegration_payload> > find_postintegration_task_output(const std::string& name, const std::list<std::string>& tags);
 
 
         // STANDARD WRITER CALLBACKS
@@ -389,7 +389,7 @@ namespace transport
           {
           }
 
-        bool operator()(const std::shared_ptr< output_group_record<Payload> >& a) { return(a->get_name() == name); }
+        bool operator()(const std::unique_ptr< output_group_record<Payload> >& a) { return(a->get_name() == name); }
 
       private:
         std::string name;
@@ -454,7 +454,7 @@ namespace transport
 
 
     template <typename number>
-    std::shared_ptr< integration_writer<number> >
+    std::unique_ptr< integration_writer<number> >
     repository<number>::new_integration_task_content(integration_task_record<number>* rec, const std::list<std::string>& tags,
                                                      unsigned int worker, unsigned int workgroup, std::string suffix)
 	    {
@@ -467,7 +467,7 @@ namespace transport
 
 
     template <typename number>
-    std::shared_ptr< integration_writer<number> >
+    std::unique_ptr< integration_writer<number> >
     repository<number>::recover_integration_task_content(const std::string& name, integration_task_record<number>* rec,
                                                          const boost::filesystem::path& output, const boost::filesystem::path& sql_path,
                                                          const boost::filesystem::path& logdir_path, const boost::filesystem::path& tempdir_path,
@@ -482,7 +482,7 @@ namespace transport
 
 
     template <typename number>
-    std::shared_ptr< derived_content_writer<number> >
+    std::unique_ptr< derived_content_writer<number> >
     repository<number>::new_output_task_content(output_task_record<number>* rec, const std::list<std::string>& tags,
                                                 unsigned int worker, std::string suffix)
 	    {
@@ -495,7 +495,7 @@ namespace transport
 
 
     template <typename number>
-    std::shared_ptr< derived_content_writer<number> >
+    std::unique_ptr< derived_content_writer<number> >
     repository<number>::recover_output_task_content(const std::string& name, output_task_record<number>* rec,
                                                     const boost::filesystem::path& output, const boost::filesystem::path& logdir_path,
                                                     const boost::filesystem::path& tempdir_path, unsigned int worker)
@@ -509,7 +509,7 @@ namespace transport
 
 
     template <typename number>
-    std::shared_ptr< postintegration_writer<number> >
+    std::unique_ptr< postintegration_writer<number> >
     repository<number>::new_postintegration_task_content(postintegration_task_record<number>* rec, const std::list<std::string>& tags,
                                                          unsigned int worker, std::string suffix)
 	    {
@@ -522,7 +522,7 @@ namespace transport
 
 
     template <typename number>
-    std::shared_ptr< postintegration_writer<number> >
+    std::unique_ptr< postintegration_writer<number> >
     repository<number>::recover_postintegration_task_content(const std::string& name, postintegration_task_record<number>* rec,
                                                              const boost::filesystem::path& output, const boost::filesystem::path& sql_path,
                                                              const boost::filesystem::path& logdir_path, const boost::filesystem::path& tempdir_path,
@@ -537,7 +537,7 @@ namespace transport
 
 
 		template <typename number>
-		std::shared_ptr< integration_writer<number> >
+		std::unique_ptr< integration_writer<number> >
 		repository<number>::base_new_integration_task_content(integration_task_record<number>* rec, const std::list<std::string>& tags,
                                                           unsigned int worker, unsigned int workgroup,
 		                                                      typename integration_writer<number>::callback_group& callbacks, std::string suffix)
@@ -573,12 +573,12 @@ namespace transport
 		    paths.temp   = temp_path;
 
 		    // integration_writer constructor takes a copy of the integration_task_record
-		    return std::make_shared< integration_writer<number> >(output_leaf, rec, callbacks, metadata, paths, worker, workgroup);
+		    return std::make_unique< integration_writer<number> >(output_leaf, rec, callbacks, metadata, paths, worker, workgroup);
 			}
 
 
     template <typename number>
-    std::shared_ptr <integration_writer<number>>
+    std::unique_ptr <integration_writer<number>>
     repository<number>::base_recover_integration_task_content(const std::string& name, integration_task_record<number>* rec,
                                                               const boost::filesystem::path& output_path, const boost::filesystem::path& sql_path,
                                                               const boost::filesystem::path& logdir_path, const boost::filesystem::path& tempdir_path,
@@ -598,12 +598,12 @@ namespace transport
         paths.log    = logdir_path;
         paths.temp   = tempdir_path;
 
-        return std::make_shared< integration_writer<number> >(name, rec, callbacks, metadata, paths, worker, workgroup);
+        return std::make_unique< integration_writer<number> >(name, rec, callbacks, metadata, paths, worker, workgroup);
       }
 
 
     template <typename number>
-    std::shared_ptr< derived_content_writer<number> >
+    std::unique_ptr< derived_content_writer<number> >
     repository<number>::base_new_output_task_content(output_task_record<number>* rec, const std::list<std::string>& tags, unsigned int worker,
                                                      typename derived_content_writer<number>::callback_group& callbacks, std::string suffix)
 	    {
@@ -635,12 +635,12 @@ namespace transport
         paths.log    = log_path;
         paths.temp   = temp_path;
 
-        return std::make_shared< derived_content_writer<number> >(output_leaf, rec, callbacks, metadata, paths, worker);
+        return std::make_unique< derived_content_writer<number> >(output_leaf, rec, callbacks, metadata, paths, worker);
 	    }
 
 
     template <typename number>
-    std::shared_ptr< derived_content_writer<number> >
+    std::unique_ptr< derived_content_writer<number> >
     repository<number>::base_recover_output_task_content(const std::string& name, output_task_record<number>* rec,
                                                          const boost::filesystem::path& output_path,
                                                          const boost::filesystem::path& logdir_path, const boost::filesystem::path& tempdir_path,
@@ -658,12 +658,12 @@ namespace transport
         paths.log    = logdir_path;
         paths.temp   = tempdir_path;
 
-        return std::make_shared< derived_content_writer<number> >(name, rec, callbacks, metadata, paths, worker);
+        return std::make_unique< derived_content_writer<number> >(name, rec, callbacks, metadata, paths, worker);
       }
 
 
     template <typename number>
-    std::shared_ptr< postintegration_writer<number> >
+    std::unique_ptr< postintegration_writer<number> >
     repository<number>::base_new_postintegration_task_content(postintegration_task_record<number>* rec, const std::list<std::string>& tags, unsigned int worker,
                                                               typename postintegration_writer<number>::callback_group& callbacks, std::string suffix)
 	    {
@@ -697,12 +697,12 @@ namespace transport
         paths.log    = log_path;
         paths.temp   = temp_path;
 
-        return std::make_shared< postintegration_writer<number> >(output_leaf, rec, callbacks, metadata, paths, worker);
+        return std::make_unique< postintegration_writer<number> >(output_leaf, rec, callbacks, metadata, paths, worker);
 	    }
 
 
     template <typename number>
-    std::shared_ptr< postintegration_writer<number> >
+    std::unique_ptr< postintegration_writer<number> >
     repository<number>::base_recover_postintegration_task_content(const std::string& name, postintegration_task_record<number>* rec,
                                                                   const boost::filesystem::path& output_path, const boost::filesystem::path& sql_path,
                                                                   const boost::filesystem::path& logdir_path, const boost::filesystem::path& tempdir_path,
@@ -721,7 +721,7 @@ namespace transport
         paths.log    = logdir_path;
         paths.temp   = tempdir_path;
 
-        return std::make_shared< postintegration_writer<number> >(name, rec, callbacks, metadata, paths, worker);
+        return std::make_unique< postintegration_writer<number> >(name, rec, callbacks, metadata, paths, worker);
       }
 
 
@@ -991,17 +991,17 @@ namespace transport
 
 
     template<typename number>
-    std::shared_ptr< output_group_record<integration_payload> >
+    std::unique_ptr< output_group_record<integration_payload> >
     repository<number>::find_integration_task_output(const std::string& name, const std::list<std::string>& tags)
 	    {
         // search for output groups associated with this task
-        std::list< std::shared_ptr< output_group_record<integration_payload> > > output = this->enumerate_integration_task_content(name);
+        std::list< std::unique_ptr< output_group_record<integration_payload> > > output = this->enumerate_integration_task_content(name);
 
         // remove items which are marked as failed
-        output.remove_if( [&] (const std::shared_ptr< output_group_record<integration_payload> >& group) { return(group->get_payload().is_failed()); } );
+        output.remove_if( [&] (const std::unique_ptr< output_group_record<integration_payload> >& group) { return(group->get_payload().is_failed()); } );
 
         // remove items from the list which have mismatching tags
-        output.remove_if( [&] (const std::shared_ptr< output_group_record<integration_payload> >& group) { return(group->check_tags(tags)); } );
+        output.remove_if( [&] (const std::unique_ptr< output_group_record<integration_payload> >& group) { return(group->check_tags(tags)); } );
 
         if(output.empty())
 	        {
@@ -1010,22 +1010,24 @@ namespace transport
             throw runtime_exception(exception_type::REPOSITORY_ERROR, msg.str());
 	        }
 
-        return(output.front());
+        std::unique_ptr< output_group_record<integration_payload> > rval;
+        output.front().swap(rval);
+        return(rval);
 	    }
 
 
     template<typename number>
-    std::shared_ptr< output_group_record<postintegration_payload> >
+    std::unique_ptr< output_group_record<postintegration_payload> >
     repository<number>::find_postintegration_task_output(const std::string& name, const std::list<std::string>& tags)
 	    {
         // search for output groups associated with this task
-        std::list< std::shared_ptr< output_group_record<postintegration_payload> > > output = this->enumerate_postintegration_task_content(name);
+        std::list< std::unique_ptr< output_group_record<postintegration_payload> > > output = this->enumerate_postintegration_task_content(name);
 
         // remove items which are marked as failed
-        output.remove_if( [&] (const std::shared_ptr< output_group_record<postintegration_payload> >& group) { return(group->get_payload().is_failed()); } );
+        output.remove_if( [&] (const std::unique_ptr< output_group_record<postintegration_payload> >& group) { return(group->get_payload().is_failed()); } );
 
         // remove items from the list which have mismatching tags
-        output.remove_if( [&] (const std::shared_ptr< output_group_record<postintegration_payload> > group) { return(group.get()->check_tags(tags)); } );
+        output.remove_if( [&] (const std::unique_ptr< output_group_record<postintegration_payload> >& group) { return(group.get()->check_tags(tags)); } );
 
         if(output.empty())
 	        {
@@ -1034,7 +1036,9 @@ namespace transport
             throw runtime_exception(exception_type::REPOSITORY_ERROR, msg.str());
 	        }
 
-        return(output.front());
+        std::unique_ptr< output_group_record<postintegration_payload> > rval;
+        output.front().swap(rval);
+        return(rval);
 	    }
 
 
