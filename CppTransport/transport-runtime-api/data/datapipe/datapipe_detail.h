@@ -76,16 +76,16 @@ namespace transport
       public:
 
         //! Find integration content -- serivce provided by a repository implementation
-        typedef std::function<std::shared_ptr< output_group_record<integration_payload> >(const std::string&, const std::list<std::string>&)> integration_content_finder;
+        typedef std::function<std::unique_ptr< output_group_record<integration_payload> >(const std::string&, const std::list<std::string>&)> integration_content_finder;
 
         //! Find postintegration content -- serivce provided by a repository implementation
-        typedef std::function<std::shared_ptr< output_group_record<postintegration_payload> >(const std::string&, const std::list<std::string>&)> postintegration_content_finder;
+        typedef std::function<std::unique_ptr< output_group_record<postintegration_payload> >(const std::string&, const std::list<std::string>&)> postintegration_content_finder;
 
         //! Attach to integration content group
-        typedef std::function<std::shared_ptr< output_group_record<integration_payload> >(datapipe<number>*, integration_content_finder&, const std::string&, const std::list<std::string>&)> integration_attach_callback;
+        typedef std::function<std::unique_ptr< output_group_record<integration_payload> >(datapipe<number>*, integration_content_finder&, const std::string&, const std::list<std::string>&)> integration_attach_callback;
 
         //! Attach to postintegration content group
-        typedef std::function<std::shared_ptr< output_group_record<postintegration_payload> >(datapipe<number>*, postintegration_content_finder&, const std::string&, const std::list<std::string>&)> postintegration_attach_callback;
+        typedef std::function<std::unique_ptr< output_group_record<postintegration_payload> >(datapipe<number>*, postintegration_content_finder&, const std::string&, const std::list<std::string>&)> postintegration_attach_callback;
 
         //! Detach function for a datapipe
         typedef std::function<void(datapipe<number>*)> detach_callback;
@@ -366,10 +366,12 @@ namespace transport
         unsigned int get_N_fields() const { return(this->N_fields); }
 
 		    //! Get payload record if an integration group is attached; returns nullptr if an integration group is not attached
-		    std::shared_ptr< output_group_record<integration_payload> > get_attached_integration_record();
+        //! Raw pointers are used because there is no notion of ownership transfer
+		    output_group_record<integration_payload>* get_attached_integration_record();
 
 		    //! Get payload record if a postintegration group is attached; returns nullptr if a postintegration group is not attached
-		    std::shared_ptr< output_group_record<postintegration_payload> > get_attached_postintegration_record();
+        //! Raw pointers are used because there is no notion of ownership transfer
+		    output_group_record<postintegration_payload>* get_attached_postintegration_record();
 
 
         // PULL DATA
@@ -549,10 +551,10 @@ namespace transport
 		    attachment_type type;
 
         //! Attachment point for an integration_payload output group; null if none is attached
-        std::shared_ptr< output_group_record<integration_payload> > attached_integration_group;
+        std::unique_ptr< output_group_record<integration_payload> > attached_integration_group;
 
 		    //! Attachment point for a postintegration_payload output group; null if none is attached
-		    std::shared_ptr< output_group_record<postintegration_payload> > attached_postintegration_group;
+		    std::unique_ptr< output_group_record<postintegration_payload> > attached_postintegration_group;
 
         //! Number of fields associated with currently attached group
         unsigned int N_fields;
@@ -700,15 +702,21 @@ namespace transport
 		    switch(this->type)
 			    {
 		        case attachment_type::integration_attached:
-			        if(this->attached_integration_group.get() != nullptr) this->detach();
-				      break;
+              {
+                if(this->attached_integration_group) this->detach();
+                break;
+              }
 
             case attachment_type::postintegration_attached:
-			        if(this->attached_postintegration_group.get() != nullptr) this->detach();
-				      break;
+              {
+                if(this->attached_postintegration_group) this->detach();
+                break;
+              }
 
 		        case attachment_type::none_attached:
-			        break;
+              {
+                break;
+              }
 			    }
 
         if(this->log_sink)    // implicitly converts to bool, value true if not null
@@ -743,15 +751,21 @@ namespace transport
 		    switch(this->type)
 			    {
 		        case attachment_type::none_attached:
-			        return(false);
+              {
+                return(false);
+              }
 
 		        case attachment_type::integration_attached:
-			        if(this->attached_integration_group.get() == nullptr) return(false);
-				      break;
+              {
+                if(this->attached_integration_group.get() == nullptr) return(false);
+                break;
+              }
 
             case attachment_type::postintegration_attached:
-			        if(this->attached_postintegration_group.get() == nullptr) return(false);
-				      break;
+              {
+                if(this->attached_postintegration_group.get() == nullptr) return(false);
+                break;
+              }
 			    }
 
 		    if(this->time_config_cache_table == nullptr
@@ -848,15 +862,21 @@ namespace transport
 		    switch(this->type)
 			    {
 		        case attachment_type::integration_attached:
-			        BOOST_LOG_SEV(this->get_log(), datapipe<number>::log_severity_level::normal) << "** DETACH output group " << boost::posix_time::to_simple_string(this->attached_integration_group->get_creation_time());
-				      break;
+              {
+                BOOST_LOG_SEV(this->get_log(), datapipe<number>::log_severity_level::normal) << "** DETACH output group " << boost::posix_time::to_simple_string(this->attached_integration_group->get_creation_time());
+                break;
+              }
 
             case attachment_type::postintegration_attached:
-			        BOOST_LOG_SEV(this->get_log(), datapipe<number>::log_severity_level::normal) << "** DETACH output group " << boost::posix_time::to_simple_string(this->attached_postintegration_group->get_creation_time());
-				      break;
+              {
+                BOOST_LOG_SEV(this->get_log(), datapipe<number>::log_severity_level::normal) << "** DETACH output group " << boost::posix_time::to_simple_string(this->attached_postintegration_group->get_creation_time());
+                break;
+              }
 
             case attachment_type::none_attached:
-              break;
+              {
+                break;
+              }
           }
 
         this->attached_integration_group.reset();
@@ -873,16 +893,16 @@ namespace transport
 
 
 		template <typename number>
-		std::shared_ptr< output_group_record<integration_payload> > datapipe<number>::get_attached_integration_record()
+		output_group_record<integration_payload>* datapipe<number>::get_attached_integration_record()
 			{
-				return(this->attached_integration_group);   // is null if nothing attached
+				return(this->attached_integration_group.get());   // is null if nothing attached
 			}
 
 
     template <typename number>
-    std::shared_ptr< output_group_record<postintegration_payload> > datapipe<number>::get_attached_postintegration_record()
+    output_group_record<postintegration_payload>* datapipe<number>::get_attached_postintegration_record()
 	    {
-        return(this->attached_postintegration_group);
+        return(this->attached_postintegration_group.get());
 	    }
 
 

@@ -242,7 +242,7 @@ namespace transport
 		        // because we want to match the same output groups as any other content producer)
 		        if(pipe.is_integration_attached())
 			        {
-		            std::shared_ptr <output_group_record<integration_payload>> record = pipe.get_attached_integration_record();
+		            output_group_record<integration_payload>* record = pipe.get_attached_integration_record();
 
 		            if(record && record->get_payload().has_statistics())
 			            {
@@ -265,9 +265,6 @@ namespace transport
 						                w_axis = this->pull_kconfig_axis(pipe, *kquery_as_threepf);
 						                break;
 					                };
-
-				                default:
-					                assert(false);
 					            }
 
 		                // set up cache handles
@@ -294,9 +291,6 @@ namespace transport
 			                        line_data.push_back(static_cast<number>(t->steps));
 			                        this_value = value_type::steps_value;
 			                        break;
-
-		                        default:
-			                        assert(false);
 			                    }
 			                }
 

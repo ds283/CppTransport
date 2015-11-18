@@ -98,7 +98,7 @@ namespace transport
         assert(this->pipe->validate_attached(datapipe<number>::attachment_type::integration_attached));
         if(!this->pipe->validate_attached(datapipe<number>::attachment_type::integration_attached)) throw runtime_exception(exception_type::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
-        std::shared_ptr< output_group_record<integration_payload> > record = pipe->get_attached_integration_record();
+        output_group_record<integration_payload>* record = pipe->get_attached_integration_record();
         if(!record) throw runtime_exception(exception_type::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
         if(record->get_payload().has_statistics())

@@ -302,11 +302,12 @@ namespace transport
       public:
 
         //! Create a datapipe
-        virtual datapipe<number> create_datapipe(const boost::filesystem::path& logdir, const boost::filesystem::path& tempdir,
-                                                 typename datapipe<number>::integration_content_finder integration_finder,
-                                                 typename datapipe<number>::postintegration_content_finder postintegration_finder,
-                                                 typename datapipe<number>::dispatch_function dispatcher,
-                                                 unsigned int worker, bool no_log = false) = 0;
+        virtual std::unique_ptr< datapipe<number> > create_datapipe(const boost::filesystem::path& logdir,
+                                                                    const boost::filesystem::path& tempdir,
+                                                                    typename datapipe<number>::integration_content_finder integration_finder,
+                                                                    typename datapipe<number>::postintegration_content_finder postintegration_finder,
+                                                                    typename datapipe<number>::dispatch_function dispatcher,
+                                                                    unsigned int worker, bool no_log = false) = 0;
 
         //! Pull a set of time sample-points from a datapipe
         virtual void pull_time_config(datapipe<number>* pipe, const derived_data::SQL_time_config_query& tquery,

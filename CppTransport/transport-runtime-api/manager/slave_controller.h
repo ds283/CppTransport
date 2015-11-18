@@ -660,12 +660,12 @@ namespace transport
         typename datapipe<number>::dispatch_function dispatcher = std::bind(&slave_controller<number>::push_derived_content, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
 
         // acquire a datapipe which we can use to stream content from the databse
-        datapipe<number> pipe = this->data_mgr->create_datapipe(payload.get_logdir_path(), payload.get_tempdir_path(), i_finder, p_finder, dispatcher, this->get_rank());
+        std::unique_ptr< datapipe<number> > pipe = this->data_mgr->create_datapipe(payload.get_logdir_path(), payload.get_tempdir_path(), i_finder, p_finder, dispatcher, this->get_rank());
 
         // write log header
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
-        BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::log_severity_level::normal) << '\n' << "-- NEW OUTPUT TASK '" << tk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << '\n';
-        BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::log_severity_level::normal) << *tk;
+        BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::log_severity_level::normal) << '\n' << "-- NEW OUTPUT TASK '" << tk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << '\n';
+        BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::log_severity_level::normal) << *tk;
 
 		    bool complete = false;
 		    while(!complete)
@@ -693,7 +693,7 @@ namespace transport
 						        scheduler sch(ctx);
 						        auto work = sch.make_queue(*tk, filter);
 
-				            BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::log_severity_level::normal) << '\n' << "-- NEW WORK ASSIGNMENT";
+				            BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::log_severity_level::normal) << '\n' << "-- NEW WORK ASSIGNMENT";
 
 				            bool success = true;
 
@@ -708,7 +708,7 @@ namespace transport
 
 				            std::ostringstream work_msg;
 				            work_msg << work;
-				            BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::log_severity_level::normal) << work_msg.str();
+				            BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::log_severity_level::normal) << work_msg.str();
 
 				            const typename work_queue< output_task_element<number> >::device_queue queues = work[0];
 				            assert(queues.size() == 1);
@@ -733,14 +733,14 @@ namespace transport
 
 				                task_tags.splice(task_tags.end(), command_line_tags);
 
-				                BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::log_severity_level::normal) << "-- Processing derived product '" << product->get_name() << "'";
+				                BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::log_severity_level::normal) << "-- Processing derived product '" << product->get_name() << "'";
 
                         std::list<std::string> this_groups;
 
 				                try
 					                {
 				                    boost::timer::cpu_timer derive_timer;
-				                    this_groups = product->derive(pipe, task_tags, this->local_env);
+				                    this_groups = product->derive(*pipe, task_tags, this->local_env);
                             content_groups.merge(this_groups);
 						                derive_timer.stop();
 						                processing_time += derive_timer.elapsed().wall;
@@ -750,17 +750,17 @@ namespace transport
 				                catch(runtime_exception& xe)
 					                {
 				                    success = false;
-				                    BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::log_severity_level::error) << "!! Exception reported while processing: code=" << static_cast<int>(xe.get_exception_code()) << ": " << xe.what();
+				                    BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::log_severity_level::error) << "!! Exception reported while processing: code=" << static_cast<int>(xe.get_exception_code()) << ": " << xe.what();
 					                }
 
 				                // check that the datapipe was correctly detached
-				                if(pipe.is_attached())
+				                if(pipe->is_attached())
 					                {
-				                    BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::log_severity_level::error) << "!! Task manager detected that datapipe was not correctly detached after generating derived product '" << product->get_name() << "'";
-				                    pipe.detach();
+				                    BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::log_severity_level::error) << "!! Task manager detected that datapipe was not correctly detached after generating derived product '" << product->get_name() << "'";
+				                    pipe->detach();
 					                }
 
-				                BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::log_severity_level::normal) << "";
+				                BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::log_severity_level::normal) << "";
 					            }
 
                     // collect content groups used during this derivation
@@ -772,20 +772,20 @@ namespace transport
 
 				            // notify master process that all work has been finished
 				            now = boost::posix_time::second_clock::universal_time();
-				            if(success) BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::log_severity_level::normal) << '\n' << "-- Worker sending FINISHED_DERIVED_CONTENT to master | finished at " << boost::posix_time::to_simple_string(now);
-				            else        BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::log_severity_level::error)  << '\n' << "-- Worker reporting DERIVED_CONTENT_FAIL to master | finished at " << boost::posix_time::to_simple_string(now);
+				            if(success) BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::log_severity_level::normal) << '\n' << "-- Worker sending FINISHED_DERIVED_CONTENT to master | finished at " << boost::posix_time::to_simple_string(now);
+				            else        BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::log_severity_level::error)  << '\n' << "-- Worker reporting DERIVED_CONTENT_FAIL to master | finished at " << boost::posix_time::to_simple_string(now);
 
-				            MPI::finished_derived_payload finish_payload(content_groups, pipe.get_database_time(), timer.elapsed().wall,
+				            MPI::finished_derived_payload finish_payload(content_groups, pipe->get_database_time(), timer.elapsed().wall,
 				                                                         list.size(), processing_time,
 				                                                         min_processing_time, max_processing_time,
-				                                                         pipe.get_time_config_cache_hits(), pipe.get_time_config_cache_unloads(),
-				                                                         pipe.get_twopf_kconfig_cache_hits(), pipe.get_twopf_kconfig_cache_unloads(),
-				                                                         pipe.get_threepf_kconfig_cache_hits(), pipe.get_threepf_kconfig_cache_unloads(),
-                                                                 pipe.get_stats_cache_hits(), pipe.get_stats_cache_unloads(),
-				                                                         pipe.get_data_cache_hits(), pipe.get_data_cache_unloads(),
-				                                                         pipe.get_time_config_cache_evictions(), pipe.get_twopf_kconfig_cache_evictions(),
-				                                                         pipe.get_threepf_kconfig_cache_evictions(), pipe.get_stats_cache_evictions(),
-                                                                 pipe.get_data_cache_evictions());
+				                                                         pipe->get_time_config_cache_hits(), pipe->get_time_config_cache_unloads(),
+				                                                         pipe->get_twopf_kconfig_cache_hits(), pipe->get_twopf_kconfig_cache_unloads(),
+				                                                         pipe->get_threepf_kconfig_cache_hits(), pipe->get_threepf_kconfig_cache_unloads(),
+                                                                 pipe->get_stats_cache_hits(), pipe->get_stats_cache_unloads(),
+				                                                         pipe->get_data_cache_hits(), pipe->get_data_cache_unloads(),
+				                                                         pipe->get_time_config_cache_evictions(), pipe->get_twopf_kconfig_cache_evictions(),
+				                                                         pipe->get_threepf_kconfig_cache_evictions(), pipe->get_stats_cache_evictions(),
+                                                                 pipe->get_data_cache_evictions());
 
 				            this->world.isend(MPI::RANK_MASTER, success ? MPI::FINISHED_DERIVED_CONTENT : MPI::DERIVED_CONTENT_FAIL, finish_payload);
 
@@ -796,14 +796,14 @@ namespace transport
 					        {
 				            this->world.recv(stat.source(), MPI::END_OF_WORK);
 				            complete = true;
-				            BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::log_severity_level::normal) << '\n' << "-- Notified of end-of-work: preparing to shut down";
+				            BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::log_severity_level::normal) << '\n' << "-- Notified of end-of-work: preparing to shut down";
 
 				            // close the datapipe
-				            pipe.close();
+				            pipe->close();
 
 				            // send close-down acknowledgment to master
 				            now = boost::posix_time::second_clock::universal_time();
-				            BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::log_severity_level::normal) << '\n' << "-- Worker sending WORKER_CLOSE_DOWN to master | close down at " << boost::posix_time::to_simple_string(now);
+				            BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::log_severity_level::normal) << '\n' << "-- Worker sending WORKER_CLOSE_DOWN to master | close down at " << boost::posix_time::to_simple_string(now);
 				            this->world.isend(MPI::RANK_MASTER, MPI::WORKER_CLOSE_DOWN);
 
 				            break;
@@ -811,7 +811,7 @@ namespace transport
 
 				        default:
 					        {
-				            BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::log_severity_level::normal) << "!! Received unexpected MPI message " << stat.tag() << " from master node; discarding";
+				            BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::log_severity_level::normal) << "!! Received unexpected MPI message " << stat.tag() << " from master node; discarding";
 				            this->world.recv(stat.source(), stat.tag());
 				            break;
 					        }
@@ -1066,7 +1066,7 @@ namespace transport
         typename datapipe<number>::dispatch_function dispatcher = std::bind(&slave_controller<number>::disallow_push_content, this, std::placeholders::_1, std::placeholders::_2);
 
         // acquire a datapipe which we can use to stream content from the databse
-        datapipe<number> pipe = this->data_mgr->create_datapipe(payload.get_logdir_path(), payload.get_tempdir_path(), i_finder, p_finder, dispatcher, this->get_rank(), true);
+        std::unique_ptr< datapipe<number> > pipe = this->data_mgr->create_datapipe(payload.get_logdir_path(), payload.get_tempdir_path(), i_finder, p_finder, dispatcher, this->get_rank(), true);
 
 		    bool complete = false;
 		    while(!complete)
@@ -1106,9 +1106,9 @@ namespace transport
                     std::string group;
 				            try
 					            {
-                        group = pipe.attach(ptk, payload.get_tags());
-				                this->work_handler.postintegration_handler(tk, ptk, work, batcher, pipe);
-				                pipe.detach();
+                        group = pipe->attach(ptk, payload.get_tags());
+				                this->work_handler.postintegration_handler(tk, ptk, work, batcher, *pipe);
+				                pipe->detach();
 					            }
 				            catch(runtime_exception& xe)
 					            {
@@ -1127,17 +1127,17 @@ namespace transport
 				            if(success) BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << '\n' << "-- Worker sending FINISHED_POSTINTEGRATION to master | finished at " << boost::posix_time::to_simple_string(now);
 				            else        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::error)  << '\n' << "-- Worker reporting POSTINTEGRATION_FAIL to master | finished at " << boost::posix_time::to_simple_string(now);
 
-				            MPI::finished_postintegration_payload outgoing_payload(group, pipe.get_database_time(), timer.elapsed().wall,
+				            MPI::finished_postintegration_payload outgoing_payload(group, pipe->get_database_time(), timer.elapsed().wall,
 				                                                                   batcher.get_items_processed(), batcher.get_processing_time(),
 				                                                                   batcher.get_max_processing_time(), batcher.get_min_processing_time(),
-				                                                                   pipe.get_time_config_cache_hits(), pipe.get_time_config_cache_unloads(),
-				                                                                   pipe.get_twopf_kconfig_cache_hits(), pipe.get_twopf_kconfig_cache_unloads(),
-				                                                                   pipe.get_threepf_kconfig_cache_hits(), pipe.get_threepf_kconfig_cache_unloads(),
-                                                                           pipe.get_stats_cache_hits(), pipe.get_stats_cache_unloads(),
-				                                                                   pipe.get_data_cache_hits(), pipe.get_data_cache_unloads(),
-				                                                                   pipe.get_time_config_cache_evictions(), pipe.get_twopf_kconfig_cache_evictions(),
-				                                                                   pipe.get_threepf_kconfig_cache_evictions(), pipe.get_stats_cache_evictions(),
-                                                                           pipe.get_data_cache_evictions());
+				                                                                   pipe->get_time_config_cache_hits(), pipe->get_time_config_cache_unloads(),
+				                                                                   pipe->get_twopf_kconfig_cache_hits(), pipe->get_twopf_kconfig_cache_unloads(),
+				                                                                   pipe->get_threepf_kconfig_cache_hits(), pipe->get_threepf_kconfig_cache_unloads(),
+                                                                           pipe->get_stats_cache_hits(), pipe->get_stats_cache_unloads(),
+				                                                                   pipe->get_data_cache_hits(), pipe->get_data_cache_unloads(),
+				                                                                   pipe->get_time_config_cache_evictions(), pipe->get_twopf_kconfig_cache_evictions(),
+				                                                                   pipe->get_threepf_kconfig_cache_evictions(), pipe->get_stats_cache_evictions(),
+                                                                           pipe->get_data_cache_evictions());
 
 				            this->world.isend(MPI::RANK_MASTER, success ? MPI::FINISHED_POSTINTEGRATION : MPI::POSTINTEGRATION_FAIL, outgoing_payload);
 

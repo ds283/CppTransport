@@ -246,12 +246,12 @@ namespace transport
       public:
 
         //! Create a new datapipe
-        virtual datapipe<number> create_datapipe(const boost::filesystem::path& logdir,
-                                                 const boost::filesystem::path& tempdir,
-                                                 typename datapipe<number>::integration_content_finder integration_finder,
-                                                 typename datapipe<number>::postintegration_content_finder postintegration_finder,
-                                                 typename datapipe<number>::dispatch_function dispatcher,
-                                                 unsigned int worker, bool no_log = false) override;
+        virtual std::unique_ptr< datapipe<number> > create_datapipe(const boost::filesystem::path& logdir,
+                                                                    const boost::filesystem::path& tempdir,
+                                                                    typename datapipe<number>::integration_content_finder integration_finder,
+                                                                    typename datapipe<number>::postintegration_content_finder postintegration_finder,
+                                                                    typename datapipe<number>::dispatch_function dispatcher,
+                                                                    unsigned int worker, bool no_log = false) override;
 
         //! Pull a set of time sample-points from a datapipe
         virtual void pull_time_config(datapipe<number>* pipe, const derived_data::SQL_time_config_query& tquery, std::vector<time_config>& sample) override;
@@ -338,12 +338,12 @@ namespace transport
         void datapipe_attach_container(datapipe<number>* pipe, const boost::filesystem::path& ctr_path);
 
         //! Attach an integration content group to a datapipe
-        std::shared_ptr <output_group_record<integration_payload>>
+        std::unique_ptr< output_group_record<integration_payload> >
 	        datapipe_attach_integration_content(datapipe<number>* pipe, typename datapipe<number>::integration_content_finder& finder,
 	                                            const std::string& name, const std::list<std::string>& tags);
 
         //! Attach an postintegration content group to a datapipe
-        std::shared_ptr <output_group_record<postintegration_payload>>
+        std::unique_ptr< output_group_record<postintegration_payload> >
 	        datapipe_attach_postintegration_content(datapipe<number>* pipe, typename datapipe<number>::postintegration_content_finder& finder,
 	                                                const std::string& name, const std::list<std::string>& tags);
 
@@ -1535,11 +1535,11 @@ namespace transport
 
 
     template <typename number>
-    datapipe<number> data_manager_sqlite3<number>::create_datapipe(const boost::filesystem::path& logdir, const boost::filesystem::path& tempdir,
-                                                                   typename datapipe<number>::integration_content_finder integration_finder,
-                                                                   typename datapipe<number>::postintegration_content_finder postintegration_finder,
-                                                                   typename datapipe<number>::dispatch_function dispatcher,
-                                                                   unsigned int worker, bool no_log)
+    std::unique_ptr< datapipe<number> > data_manager_sqlite3<number>::create_datapipe(const boost::filesystem::path& logdir, const boost::filesystem::path& tempdir,
+                                                                                      typename datapipe<number>::integration_content_finder integration_finder,
+                                                                                      typename datapipe<number>::postintegration_content_finder postintegration_finder,
+                                                                                      typename datapipe<number>::dispatch_function dispatcher,
+                                                                                      unsigned int worker, bool no_log)
 			{
         // set up callback API
         typename datapipe<number>::utility_callbacks utilities;
@@ -1631,9 +1631,7 @@ namespace transport
                                        std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
 
         // set up datapipe
-        datapipe<number> pipe(this->pipe_capacity, logdir, tempdir, worker, utilities, config, timeslice, kslice, stats, no_log);
-
-        return(pipe);
+        return std::make_unique< datapipe<number> >(this->pipe_capacity, logdir, tempdir, worker, utilities, config, timeslice, kslice, stats, no_log);
 			}
 
 
@@ -2018,7 +2016,7 @@ namespace transport
 
 
     template <typename number>
-    std::shared_ptr< output_group_record<integration_payload> >
+    std::unique_ptr< output_group_record<integration_payload> >
     data_manager_sqlite3<number>::datapipe_attach_integration_content(datapipe<number>* pipe, typename datapipe<number>::integration_content_finder& finder,
                                                                       const std::string& name, const std::list<std::string>& tags)
 			{
@@ -2026,7 +2024,7 @@ namespace transport
 				if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
 
         // find a suitable output group for this task
-        std::shared_ptr< output_group_record<integration_payload> > group = finder(name, tags);
+        std::unique_ptr< output_group_record<integration_payload> > group = finder(name, tags);
 
         integration_payload& payload = group->get_payload();
 
@@ -2040,7 +2038,7 @@ namespace transport
 
 
     template <typename number>
-    std::shared_ptr <output_group_record<postintegration_payload>>
+    std::unique_ptr< output_group_record<postintegration_payload> >
     data_manager_sqlite3<number>::datapipe_attach_postintegration_content(datapipe<number>* pipe, typename datapipe<number>::postintegration_content_finder& finder,
                                                                           const std::string& name, const std::list<std::string>& tags)
 	    {
@@ -2048,7 +2046,7 @@ namespace transport
         if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
 
         // find a suitable output group for this task
-        std::shared_ptr< output_group_record<postintegration_payload> > group = finder(name, tags);
+        std::unique_ptr< output_group_record<postintegration_payload> > group = finder(name, tags);
 
         postintegration_payload& payload = group->get_payload();
 
