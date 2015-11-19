@@ -327,6 +327,10 @@ namespace transport
 				template <typename WriterObject>
         void check_for_progress_update(WriterObject& writer);
 
+        //! Master node: log current worker metadata
+        template <typename WriterObject>
+        void log_worker_metadata(WriterObject& writer);
+
 
 		    // MASTER INTEGRATION TASKS
 
@@ -1896,6 +1900,25 @@ namespace transport
             this->message_handler(update_msg.str());
 
 						BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "±± Console advisory message: " << update_msg.str();
+            this->log_worker_metadata(writer);
+          }
+      }
+
+
+    template <typename number>
+    template <typename WriterObject>
+    void master_controller<number>::log_worker_metadata(WriterObject& writer)
+      {
+        std::vector< master_scheduler::worker_metadata > metadata = this->work_scheduler.get_metadata();
+
+        for(const master_scheduler::worker_metadata& t : metadata)
+          {
+            BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "## Worker " << t.get_number() << ": active = " << t.get_active()
+                                                                                     << ", assigned = " << t.get_assigned()
+                                                                                     << ", total time = " << format_time(t.get_total_elapsed_time())
+                                                                                     << ", items processed = " << t.get_total_items_processed()
+                                                                                     << ", mean time per item = " << format_time(t.get_total_elapsed_time() / t.get_total_items_processed())
+                                                                                     << ", last contact at " << boost::posix_time::to_simple_string(t.get_last_contact_time());
           }
       }
 
@@ -1999,6 +2022,8 @@ namespace transport
                 last_msg = boost::posix_time::second_clock::universal_time();
                 emit_agg_queue_msg = true;
 
+                this->work_scheduler.update_contact_time(this->worker_number(stat->source()), last_msg);
+
                 switch(stat->tag())
                   {
                     case MPI::INTEGRATION_DATA_READY:
@@ -2008,7 +2033,7 @@ namespace transport
                             MPI::data_ready_payload payload;
                             this->world.recv(stat->source(), MPI::INTEGRATION_DATA_READY, payload);
                             this->journal.add_entry(slave_work_event(this->worker_number(stat->source()), slave_work_event::event_type::integration_aggregation, payload.get_timestamp(), aggregation_counter));
-		                        aggregation_queue.emplace_back(std::unique_ptr<integration_aggregation_record>(new integration_aggregation_record(this->worker_number(stat->source()), aggregation_counter++, int_agg, int_metadata, payload)));
+		                        aggregation_queue.push_back(std::unique_ptr<integration_aggregation_record>(new integration_aggregation_record(this->worker_number(stat->source()), aggregation_counter++, int_agg, int_metadata, payload)));
                             BOOST_LOG_SEV(log, base_writer::log_severity_level::normal) << "++ Worker " << stat->source() << " sent aggregation notification for container '" << payload.get_container_path() << "'";
                           }
                         else
@@ -2158,7 +2183,9 @@ namespace transport
                       {
                         this->world.recv(stat->source(), MPI::WORKER_CLOSE_DOWN);
                         this->work_scheduler.mark_inactive(this->worker_number(stat->source()));
-                        BOOST_LOG_SEV(log, base_writer::log_severity_level::normal) << "++ Worker " << stat->source() << " advising close-down after end-of-work";
+
+                        unsigned int num_active = this->work_scheduler.get_number_active();
+                        BOOST_LOG_SEV(log, base_writer::log_severity_level::normal) << "++ Worker " << stat->source() << " advising close-down after end-of-work; " << num_active << " worker" << (num_active != 1 ? "s" : "") << " still active";
                         break;
                       }
 
@@ -2197,7 +2224,7 @@ namespace transport
         this->check_for_progress_update(writer);
 
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
-        BOOST_LOG_SEV(log, base_writer::log_severity_level::warning) << "++ Work completed at " << boost::posix_time::to_simple_string(now);
+        BOOST_LOG_SEV(log, base_writer::log_severity_level::warning) << "++ All work items completed at " << boost::posix_time::to_simple_string(now);
 
         // process any remaining aggregations
         while(aggregation_queue.size() > 0)
