@@ -22,31 +22,6 @@ const double M_Planck = 1.0;
 
 // ****************************************************************************
 
-
-bool timeseries_filter(const transport::derived_data::filter::time_filter_data& data)
-	{
-    return(true); // plot all points
-	}
-
-
-bool twopf_timeseries_filter(const transport::derived_data::filter::twopf_kconfig_filter_data& data)
-	{
-    return(data.min || data.max); // plot all values of k
-	}
-
-
-bool spectrum_timefilter(const transport::derived_data::filter::time_filter_data& data)
-	{
-    return(data.max);
-	}
-
-
-bool all_k_modes(const transport::derived_data::filter::twopf_kconfig_filter_data& data)
-	{
-    return(true); // plot only the largest k
-	}
-
-
 int main(int argc, char* argv[])
   {
 		if(argc != 2)
@@ -62,12 +37,11 @@ int main(int argc, char* argv[])
 
     // set up an instance of the double quadratic model,
     // using doubles, with given parameter choices
-    std::shared_ptr< transport::quadratic10_basic<double> > model = std::make_shared< transport::quadratic10_basic<double> >();
-    mgr->register_model(model);
+    std::shared_ptr< transport::quadratic10_basic<double> > model = mgr->create_model< transport::quadratic10_basic<double> >();
 
     // set up parameter choices
     const std::vector<double>     init_params = MASS_LIST;
-    transport::parameters<double> params      = transport::parameters<double>(M_Planck, init_params, model);
+    transport::parameters<double> params(M_Planck, init_params, model);
 
     const double Ninit  = 0.0;  // start counting from N=0 at the beginning of the integration
     const double Ncross = 5.0;  // horizon-crossing occurs at 5 e-folds from init_values
@@ -76,40 +50,49 @@ int main(int argc, char* argv[])
 
     // set up initial conditions
 		const std::vector<double> init_values     = INIT_VALUE_LIST;
-    transport::initial_conditions<double> ics = transport::initial_conditions<double>("quadratic10", model, params, init_values, Ninit, Ncross, Npre);
+    transport::initial_conditions<double> ics("quadratic10", model, params, init_values, Ninit, Ncross, Npre);
 
-    const unsigned int t_samples = 1000;       // record 2000 samples - enough to find a good stepsize
-
-    struct TimeStoragePolicy
-      {
-      public:
-        bool operator() (const transport::integration_task<double>::time_config_storage_policy_data& data) { return((data.serial % 10) == 0); }
-      };
+    const unsigned int t_samples = 100;
 
     struct ThreepfStoragePolicy
       {
       public:
-        bool operator() (const transport::threepf_task<double>::threepf_kconfig_storage_policy_data& data) { return(true); }
+        bool operator() (const transport::threepf_kconfig& data) { return(true); }
       };
 
-    transport::range<double> times = transport::range<double >(Ninit, Nmax+Npre, t_samples);
+    transport::stepping_range<double> times(Ninit, Nmax+Npre, t_samples);
 
     // the conventions for k-numbers are as follows:
     // k=1 is the mode which crosses the horizon at time N*,
     // where N* is the 'offset' we pass to the integration method (see below)
-    const double        kmin      = exp(0.0);   // begin with the mode which crosses the horizon at N=N*
-    const double        kmax      = exp(5.0);   // end with the mode which exits the horizon at N=N*+3
+    const double        kmin      = exp(0.0);  // begin with the mode which crosses the horizon at N=N*
+    const double        kmax      = exp(5.0);  // end with the mode which exits the horizon at N=N*+3
     const unsigned int  k_samples = 3;         // number of k-points
 
-    transport::range<double> ks = transport::range<double>(kmin, kmax, k_samples, transport::range_spacing_type::linear_stepping);
+    transport::stepping_range<double> ks(kmin, kmax, k_samples, transport::range_spacing_type::linear_stepping);
 
     // construct a threepf task
-    transport::threepf_cubic_task<double> tk3("quadratic10.threepf-1", ics, times, ks, TimeStoragePolicy(), ThreepfStoragePolicy());
-    transport::zeta_threepf_task<double> zeta_tk3("quadratic10.threepf-1.zeta", tk3, true);
+    transport::threepf_cubic_task<double> tk3("quadratic10.threepf-1", ics, times, ks, ThreepfStoragePolicy());
+    transport::zeta_threepf_task<double> ztk3("quadratic10.threepf-1.zeta", tk3);
+    ztk3.set_paired(true);
 
-    transport::fNL_task<double> zeta_tk3_fNL_local("quadratic10.threepf-1.fNL_local", tk3, transport::derived_data::template_type::fNL_local_template, true);
-    transport::fNL_task<double> zeta_tk3_fNL_equi("quadratic10.threepf-1.fNL_equi", tk3, transport::derived_data::template_type::fNL_equi_template, true);
-    transport::fNL_task<double> zeta_tk3_fNL_ortho("quadratic10.threepf-1.fNL_ortho", tk3, transport::derived_data::template_type::fNL_ortho_template, true);
+    transport::fNL_task<double> ztk3_fNL_local("quadratic10.threepf-1.fNL_local", ztk3, transport::derived_data::template_type::fNL_local_template);
+    transport::fNL_task<double> ztk3_fNL_equi("quadratic10.threepf-1.fNL_equi", ztk3, transport::derived_data::template_type::fNL_equi_template);
+    transport::fNL_task<double> ztk3_fNL_ortho("quadratic10.threepf-1.fNL_ortho", ztk3, transport::derived_data::template_type::fNL_ortho_template);
+
+    // SET UP SQL QUERIES
+
+    // filter for all times
+    transport::derived_data::SQL_time_config_query all_times("1=1");
+
+    // filter for latest time
+    transport::derived_data::SQL_time_config_query last_time("serial IN (SELECT MAX(serial) FROM time_samples)");
+
+    // filter for all twopf wavenumbers
+    transport::derived_data::SQL_twopf_kconfig_query all_twopfs("1=1");
+
+    // filter: twopf with largest k
+    transport::derived_data::SQL_twopf_kconfig_query largest_twopf("conventional IN (SELECT MAX(conventional) FROM twopf_samples)");
 
 		// construct some derived data products; first, simply plots of the background
 
@@ -121,44 +104,35 @@ int main(int argc, char* argv[])
 				bg_sel.set_on(set);
 			}
 
-    transport::derived_data::background_time_series<double> tk3_bg(tk3, bg_sel, transport::derived_data::filter::time_filter(timeseries_filter));
+    transport::derived_data::background_time_series<double> tk3_bg(tk3, bg_sel, all_times);
 
     transport::derived_data::time_series_plot<double> tk3_bg_plot("quadratic10.threepf-1.background", "background.pdf");
 		tk3_bg_plot.add_line(tk3_bg);
     tk3_bg_plot.set_title_text("Background fields");
 		tk3_bg_plot.set_legend_position(transport::derived_data::legend_pos::bottom_left);
 
-    transport::derived_data::zeta_twopf_time_series<double> tk3_zeta_times(tk3,
-                                                                                                                                     transport::derived_data::filter::time_filter(timeseries_filter),
-                                                                                                                                     transport::derived_data::filter::twopf_kconfig_filter(twopf_timeseries_filter));
+    transport::derived_data::zeta_twopf_time_series<double> tk3_zeta_times(ztk3, all_times, largest_twopf);
 
     transport::derived_data::time_series_plot<double> tk3_zeta_timeplot("quadratic10.threepf-1.zeta-twopf", "zeta-twopf.pdf");
 		tk3_zeta_timeplot.add_line(tk3_zeta_times);
 		tk3_zeta_timeplot.set_title_text("$\\langle \\zeta \\zeta \\rangle$ time evolution");
 		tk3_zeta_timeplot.set_legend_position(transport::derived_data::legend_pos::bottom_right);
 
-    transport::derived_data::zeta_twopf_wavenumber_series<double> tk3_zeta_spec(tk3,
-                                                                                                                                                transport::derived_data::filter::time_filter(spectrum_timefilter),
-                                                                                                                                                transport::derived_data::filter::twopf_kconfig_filter(all_k_modes));
+    transport::derived_data::zeta_twopf_wavenumber_series<double> tk3_zeta_spec(ztk3, last_time, all_twopfs);
 
     transport::derived_data::wavenumber_series_plot<double> tk3_zeta_specplot("quadratic10.threepf-1.zeta-spec", "zeta-spec.pdf");
 		tk3_zeta_specplot.add_line(tk3_zeta_spec);
 		tk3_zeta_specplot.set_title_text("$\\langle \\zeta \\zeta \\rangle$ spectrum");
 
-    transport::derived_data::r_wavenumber_series<double> tk3_r_spec(tk3,
-                                                                                                                           transport::derived_data::filter::time_filter(spectrum_timefilter),
-                                                                                                                           transport::derived_data::filter::twopf_kconfig_filter(all_k_modes));
+    transport::derived_data::r_wavenumber_series<double> tk3_r_spec(ztk3, last_time, all_twopfs);
 
     transport::derived_data::wavenumber_series_plot<double> tk3_r_specplot("quadratic10.threepf-1.r-spec", "r-spec.pdf");
 		tk3_r_specplot.add_line(tk3_r_spec);
 		tk3_r_specplot.set_title_text("Tensor-to-scalar ratio");
 
-    transport::derived_data::fNL_time_series<double> fNL_local_line(tk3, transport::derived_data::filter::time_filter(timeseries_filter));
-    fNL_local_line.set_type(transport::derived_data::template_type::fNL_local_template);
-    transport::derived_data::fNL_time_series<double> fNL_ortho_line(tk3, transport::derived_data::filter::time_filter(timeseries_filter));
-    fNL_ortho_line.set_type(transport::derived_data::template_type::fNL_ortho_template);
-    transport::derived_data::fNL_time_series<double> fNL_equi_line(tk3, transport::derived_data::filter::time_filter(timeseries_filter));
-    fNL_equi_line.set_type(transport::derived_data::template_type::fNL_equi_template);
+    transport::derived_data::fNL_time_series<double> fNL_local_line(ztk3_fNL_local, all_times);
+    transport::derived_data::fNL_time_series<double> fNL_ortho_line(ztk3_fNL_ortho, all_times);
+    transport::derived_data::fNL_time_series<double> fNL_equi_line(ztk3_fNL_equi, all_times);
 
     transport::derived_data::time_series_plot<double> fNL_plot("quadratic10.threepf-1.fNL", "fNLs.pdf");
     fNL_plot.add_line(fNL_local_line);
@@ -177,7 +151,7 @@ int main(int argc, char* argv[])
 
 		// write output tasks to the database
 		repo->commit_task(tk3);
-		repo->commit_task(zeta_tk3);
+		repo->commit_task(ztk3);
 		repo->commit_task(threepf_output);
 
     return(EXIT_SUCCESS);
