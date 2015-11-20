@@ -71,6 +71,11 @@ int main(int argc, char* argv[])
 
     transport::stepping_range<double> ks(kmin, kmax, k_samples, transport::range_spacing_type::linear_stepping);
 
+    // construct a twopf task
+    transport::twopf_task<double> tk2("quadratic10.twopf-1", ics, times, ks);
+    transport::zeta_twopf_task<double> ztk2("quadratic10.twopf-1.zeta", tk2);
+    ztk2.set_paired(true);
+
     // construct a threepf task
     transport::threepf_cubic_task<double> tk3("quadratic10.threepf-1", ics, times, ks, ThreepfStoragePolicy());
     transport::zeta_threepf_task<double> ztk3("quadratic10.threepf-1.zeta", tk3);
@@ -93,6 +98,7 @@ int main(int argc, char* argv[])
 
     // filter: twopf with largest k
     transport::derived_data::SQL_twopf_kconfig_query largest_twopf("conventional IN (SELECT MAX(conventional) FROM twopf_samples)");
+
 
 		// construct some derived data products; first, simply plots of the background
 
@@ -150,9 +156,8 @@ int main(int argc, char* argv[])
     threepf_output.add_element(fNL_plot);
 
 		// write output tasks to the database
-		repo->commit_task(tk3);
-		repo->commit_task(ztk3);
 		repo->commit_task(threepf_output);
+		repo->commit_task(ztk2);
 
     return(EXIT_SUCCESS);
   }
