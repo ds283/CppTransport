@@ -34,8 +34,7 @@ int main(int argc, char* argv[])
 
     // set up an instance of the double quadratic model,
     // using doubles, with given parameter choices
-    std::shared_ptr< transport::mafalda40_basic<double> > model = std::shared_ptr< transport::mafalda40_basic<double> >();
-    mgr->register_model(model);
+    std::shared_ptr< transport::mafalda40_basic<double> > model = mgr->create_model< transport::mafalda40_basic<double> >();
 
 		mgr->process();
 
