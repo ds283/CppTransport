@@ -1917,7 +1917,7 @@ namespace transport
                                                                                      << ", assigned = " << t.get_assigned()
                                                                                      << ", total time = " << format_time(t.get_total_elapsed_time())
                                                                                      << ", items processed = " << t.get_total_items_processed()
-                                                                                     << ", mean time per item = " << format_time(t.get_total_elapsed_time() / t.get_total_items_processed())
+                                                                                     << ", mean time per item = " << (t.get_total_items_processed() > 0 ? format_time(t.get_total_elapsed_time() / t.get_total_items_processed()) : "n/a")
                                                                                      << ", last contact at " << boost::posix_time::to_simple_string(t.get_last_contact_time());
           }
       }
