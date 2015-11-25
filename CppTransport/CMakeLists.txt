@@ -6,11 +6,11 @@ project(CppTransport)
 SET ( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/" )
 SET ( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/splinter/cmake/" )
 
-SET ( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -mavx -Ofast" CACHE STRING "compile flags" FORCE )
+SET ( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -mavx -Ofast" CACHE STRING "compile flags" FORCE )
 SET ( CMAKE_C_FLAGS   "${CMAKE_C_FLAGS} -mavx -Ofast"              CACHE STRING "compile flags" FORCE )
 
 SET ( JSONCPP_AMALGAMATED "transport-runtime-api/thirdparty/jsoncpp/jsoncpp.cpp" )
-SET ( SPLINTER_LIBRARY    "splinter-static-1-3" )
+SET ( SPLINTER_LIBRARY    "splinter-static-2-0" )
 SET ( JSONCPP_LIBRARY     "jsoncpp_lib_static" )
 
 # use version of Eigen3 bundled with SPLINTER
@@ -19,7 +19,7 @@ SET ( EIGEN3_INCLUDE_DIR  "transport-runtime-api/thirdparty/splinter/thirdparty/
 
 
 # pull in bundled SPLINTER sources; on most platforms will need to switch default build to 64-bit
-set ( BITNESS "64" )
+set ( ARCH "x86-64" )
 ADD_SUBDIRECTORY ( "transport-runtime-api/thirdparty/splinter" "splinter-build" )
 
 
@@ -193,6 +193,10 @@ target_link_libraries(powerlaw-makerepo sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARI
 
 add_executable(powerlaw-makerepo2 examples/powerlaw/makerepo2.cpp )
 target_link_libraries(powerlaw-makerepo2 sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
+
+
+add_executable(powerlaw-makerepo3 examples/powerlaw/makerepo3.cpp )
+target_link_libraries(powerlaw-makerepo3 sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
 
 
 add_executable(powerlaw-mpi examples/powerlaw/main.cpp )
@@ -502,7 +506,6 @@ set(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_LINE_COLLECTIONS_FILES
 set(TRANSPORT_RUNTIME_API_REPOSITORY_FILES
   transport-runtime-api/repository/json_repository.h
   transport-runtime-api/repository/repository.h
-  transport-runtime-api/repository/repository_creation_key.h
   transport-runtime-api/repository/transaction_manager.h
 )
 
@@ -689,6 +692,7 @@ set(EXAMPLES_POWERLAW_FILES
   examples/powerlaw/main.cpp
   examples/powerlaw/makerepo.cpp
   examples/powerlaw/makerepo2.cpp
+  examples/powerlaw/makerepo3.cpp
 )
 
 set(TEMPLATES_FILES

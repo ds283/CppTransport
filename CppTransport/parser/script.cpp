@@ -18,7 +18,7 @@
 // ******************************************************************
 
 
-declaration::declaration(const std::string& n, GiNaC::symbol& s, std::shared_ptr<filestack> p)
+declaration::declaration(const std::string& n, GiNaC::symbol& s, const filestack& p)
   : name(n),
     symbol(s),
     path(p),
@@ -33,10 +33,10 @@ unsigned int declaration::current_id = 0;
 // ******************************************************************
 
 
-field_declaration::field_declaration(const std::string& n, GiNaC::symbol& s, std::shared_ptr<filestack> p, attributes* a)
+field_declaration::field_declaration(const std::string& n, GiNaC::symbol& s, const filestack& p, attributes* a)
   : declaration(n, s, p)
   {
-		attrs = std::make_shared<attributes>(*a);
+		attrs = std::make_unique<attributes>(*a);
   }
 
 
@@ -55,17 +55,17 @@ void field_declaration::print(std::ostream& stream) const
     stream << "Field declaration for symbol '" << this->get_name()
            << "', GiNaC symbol '" << this->get_ginac_symbol() << "'" << '\n';
 
-    stream << "  defined at line " << this->path->write();
+    stream << "  defined at line " << this->path.write();
   }
 
 
 // ******************************************************************
 
 
-parameter_declaration::parameter_declaration(const std::string& n, GiNaC::symbol& s, std::shared_ptr<filestack> p, attributes* a)
+parameter_declaration::parameter_declaration(const std::string& n, GiNaC::symbol& s, const filestack& p, attributes* a)
   : declaration(n, s, p)
   {
-		attrs = std::make_shared<attributes>(*a);
+		attrs = std::make_unique<attributes>(*a);
   }
 
 
@@ -84,17 +84,17 @@ void parameter_declaration::print(std::ostream& stream) const
     stream << "Parameter declaration for symbol '" << this->get_name()
       << "', GiNaC symbol '" << this->get_ginac_symbol() << "'" << '\n';
 
-    stream << "  defined at line " << this->path->write();
+    stream << "  defined at line " << this->path.write();
   }
 
 
 // ******************************************************************
 
 
-subexpr_declaration::subexpr_declaration(const std::string& n, GiNaC::symbol& s, std::shared_ptr<filestack> p, subexpr* e)
+subexpr_declaration::subexpr_declaration(const std::string& n, GiNaC::symbol& s, const filestack& p, subexpr* e)
 	: declaration(n, s, p)
 	{
-		sexpr = std::make_shared<subexpr>(*e);
+		sexpr = std::make_unique<subexpr>(*e);
 	}
 
 
@@ -119,7 +119,7 @@ void subexpr_declaration::print(std::ostream& stream) const
     stream << "Subexpression declaration for symbol '" << this->get_name()
 	    << "', GiNaC symbol '" << this->get_ginac_symbol() << "'" << '\n';
 
-    stream << "  defined at line " << this->path->write();
+    stream << "  defined at line " << this->path.write();
 	}
 
 
@@ -129,6 +129,7 @@ void subexpr_declaration::print(std::ostream& stream) const
 
 script::script(symbol_factory& s)
   : potential_set(false),
+    errors_encountered(false),
     model(DEFAULT_MODEL_NAME),
     order(indexorder_right),
 		sym_factory(s)
@@ -138,7 +139,7 @@ script::script(symbol_factory& s)
 
 		attributes Mp_attrs;
 		Mp_attrs.set_latex(MPLANCK_LATEX_SYMBOL);
-		reserved.emplace(std::make_pair(MPLANCK_TEXT_NAME, std::make_shared<parameter_declaration>(parameter_declaration(MPLANCK_TEXT_NAME, M_Planck, std::shared_ptr<filestack>(), &Mp_attrs))));
+		reserved.emplace(std::make_pair(MPLANCK_TEXT_NAME, std::make_unique<parameter_declaration>(MPLANCK_TEXT_NAME, M_Planck, placeholder_filestack, &Mp_attrs)));
 
     // set up default values for the steppers
     this->background_stepper.abserr    = DEFAULT_ABS_ERR;
@@ -151,24 +152,24 @@ script::script(symbol_factory& s)
   }
 
 
-std::shared_ptr<declaration> script::check_symbol_exists(const std::string& nm) const
+boost::optional<declaration&> script::check_symbol_exists(const std::string& nm) const
 	{
 		// check user-defined symbols
 
     field_symbol_table::const_iterator f_it = this->fields.find(nm);
-		if(f_it != this->fields.end()) return f_it->second;
+		if(f_it != this->fields.end()) return *f_it->second;
 
     parameter_symbol_table::const_iterator p_it = this->parameters.find(nm);
-		if(p_it != this->parameters.end()) return p_it->second;
+		if(p_it != this->parameters.end()) return *p_it->second;
 
 		p_it = this->reserved.find(nm);
-		if(p_it != this->reserved.end()) return p_it->second;
+		if(p_it != this->reserved.end()) return *p_it->second;
 
     subexpr_symbol_table::const_iterator s_it = this->subexprs.find(nm);
-		if(s_it != this->subexprs.end()) return s_it->second;
+		if(s_it != this->subexprs.end()) return *s_it->second;
 
 		// didn't find anything
-		return std::shared_ptr<declaration>();
+		return boost::optional<declaration&>();
 	}
 
 
@@ -303,24 +304,25 @@ void script::print(std::ostream& stream) const
   }
 
 
-bool script::add_field(field_declaration d)
+bool script::add_field(const std::string& n, GiNaC::symbol& s, const filestack& p, attributes* a)
   {
     // search for an existing entry in the symbol table
-    std::shared_ptr<declaration> record = this->check_symbol_exists(d.get_name());
+    boost::optional<declaration&> record = this->check_symbol_exists(n);
 
     if(record)
       {
         std::ostringstream msg;
-        msg << ERROR_SYMBOL_EXISTS << " '" << d.get_name() << "'";
-        error(msg.str());
+        msg << ERROR_SYMBOL_EXISTS << " '" << n << "'";
+        error(msg.str(), p);
+        this->errors_encountered = true;
       }
     else
       {
         // add declaration to list
-        this->fields.emplace(std::make_pair(d.get_name(), std::make_shared<field_declaration>(d)));
+        this->fields.emplace(std::make_pair(n, std::make_unique<field_declaration>(n, s, p, a)));
 
         // also need to generate a symbol for the momentum corresponding to this field
-        GiNaC::symbol deriv_symbol(DERIV_PREFIX + d.get_ginac_symbol().get_name());
+        GiNaC::symbol deriv_symbol(DERIV_PREFIX + s.get_name());
         this->deriv_symbols.push_back(deriv_symbol);
       }
 
@@ -328,42 +330,44 @@ bool script::add_field(field_declaration d)
   }
 
 
-bool script::add_parameter(parameter_declaration d)
+bool script::add_parameter(const std::string& n, GiNaC::symbol& s, const filestack& p, attributes* a)
   {
     // search for an existing entry in the symbol table
-    std::shared_ptr<declaration> record = this->check_symbol_exists(d.get_name());
+    boost::optional<declaration&> record = this->check_symbol_exists(n);
 
     if(record)
       {
         std::ostringstream msg;
-        msg << ERROR_SYMBOL_EXISTS << " '" << d.get_name() << "'";
-        error(msg.str());
+        msg << ERROR_SYMBOL_EXISTS << " '" << n << "'";
+        error(msg.str(), p);
+        this->errors_encountered = true;
       }
     else
       {
         // add declaration to list
-        this->parameters.emplace(std::make_pair(d.get_name(), std::make_shared<parameter_declaration>(d)));
+        this->parameters.emplace(std::make_pair(n, std::make_unique<parameter_declaration>(n, s, p, a)));
       }
 
     return(!record);
   }
 
 
-bool script::add_subexpr(subexpr_declaration d)
+bool script::add_subexpr(const std::string& n, GiNaC::symbol& s, const filestack& p, subexpr* e)
 	{
 		// search for an existing entry in the symbol table
-    std::shared_ptr<declaration> record = this->check_symbol_exists(d.get_name());
+    boost::optional<declaration&> record = this->check_symbol_exists(n);
 
 		if(record)
 			{
 		    std::ostringstream msg;
-				msg << ERROR_SYMBOL_EXISTS << " '" << d.get_name() << "'";
-				error(msg.str());
+				msg << ERROR_SYMBOL_EXISTS << " '" << n << "'";
+				error(msg.str(), p);
+        this->errors_encountered = true;
 			}
 		else
 			{
 				// add declaration to list
-				this->subexprs.emplace(std::make_pair(d.get_name(), std::make_shared<subexpr_declaration>(d)));
+				this->subexprs.emplace(std::make_pair(n, std::make_unique<subexpr_declaration>(n, s, p, e)));
 			}
 
 		return(!record);

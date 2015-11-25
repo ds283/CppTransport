@@ -97,12 +97,10 @@ enum y::y_parser::token::yytokentype symbol_tokens[] =
 namespace y
   {
 
-    y_lexer::y_lexer(std::shared_ptr<lexstream_type> s)
+    y_lexer::y_lexer(lexstream_type& s)
       : stream(s)
       {
-        assert(s);
-
-        stream->reset();
+        stream.reset();
 		    current_lex = nullptr;
       }
 
@@ -110,8 +108,8 @@ namespace y
       {
         assert(lval != nullptr);
 
-        lval->lex = this->current_lex = this->stream->get();
-        this->stream->eat();
+        lval->lex = this->current_lex = this->stream.get();
+        this->stream.eat();
 
         int     rval = 0;
 

@@ -161,7 +161,7 @@ namespace transport
     threepf_task<number>::threepf_task(const std::string& nm, Json::Value& reader, sqlite3* handle, const initial_conditions<number>& i)
 	    : twopf_list_task<number>(nm, reader, handle, i)
 	    {
-		    threepf_db = std::make_shared<threepf_kconfig_database>(this->twopf_list_task<number>::kstar, handle, this->twopf_list_task<number>::twopf_db);
+		    threepf_db = std::make_shared<threepf_kconfig_database>(this->twopf_list_task<number>::kstar, handle, *this->twopf_list_task<number>::twopf_db);
 
         //! deserialize integrable status
         integrable = reader[CPPTRANSPORT_NODE_THREEPF_INTEGRABLE].asBool();
@@ -383,7 +383,7 @@ namespace transport
 
                     if(ks[j] + ks[k] + ks[l] - 2.0*maxijk >= -std::abs(tol))   // impose the triangle conditions
 	                    {
-                        if(this->threepf_task<number>::threepf_db->add_k1k2k3_record(this->twopf_list_task<number>::twopf_db, ks[j], ks[k], ks[l], policy) < 0)
+                        if(this->threepf_task<number>::threepf_db->add_k1k2k3_record(*this->twopf_list_task<number>::twopf_db, ks[j], ks[k], ks[l], policy) < 0)
                           {
                             this->threepf_task<number>::integrable = false;    // can't integrate any task which has dropped configurations, because the points may be scattered over the integration region
                           }
@@ -514,7 +514,7 @@ namespace transport
 	                     && std::abs(1.0 + alphas[k] + betas[l]) > smallest_squeezing
 	                     && std::abs(1.0 - alphas[k] + betas[l]) > smallest_squeezing)   // impose maximum squeezing on k1, k2
 	                    {
-                        if(this->threepf_task<number>::threepf_db->add_FLS_record(this->threepf_task<number>::twopf_db, kts[j], alphas[k], betas[l], policy) < 0)
+                        if(this->threepf_task<number>::threepf_db->add_FLS_record(*this->threepf_task<number>::twopf_db, kts[j], alphas[k], betas[l], policy) < 0)
                           {
                             this->threepf_task<number>::integrable = false;    // can't integrate any task which has dropped configurations, because the points may be scattered over the integration region
                           }

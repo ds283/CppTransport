@@ -35,7 +35,7 @@ namespace y
       public:
 
         //! constructor
-        y_lexer(std::shared_ptr<lexstream_type> s);
+        y_lexer(lexstream_type& s);
 
         //! destructor
         ~y_lexer() = default;
@@ -48,7 +48,7 @@ namespace y
 
       private:
 
-        std::shared_ptr<lexstream_type> stream;
+        lexstream_type& stream;
 
 		    lexeme_type* current_lex;
 

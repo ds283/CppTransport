@@ -59,14 +59,14 @@ unsigned int translator::translate(const std::string& in, buffer& buf, enum proc
     unsigned int rval = 0;
     std::string  template_in;
 
-    std::shared_ptr<finder> path = this->unit->get_finder();
+    finder& path = this->unit->get_finder();
 
 		// try to find a template corresponding to the input filename
-    if(path->fqpn(in + ".h", template_in))    // leaves fully qualified pathname in template_in if it exists
+    if(path.fqpn(in + ".h", template_in))    // leaves fully qualified pathname in template_in if it exists
       {
         rval += this->process(template_in, buf, type, filter);
       }
-    else if(path->fqpn(in, template_in))
+    else if(path.fqpn(in, template_in))
       {
         rval += this->process(template_in, buf, type, filter);
       }
@@ -110,15 +110,15 @@ unsigned int translator::process(const std::string in, buffer& buf, enum process
           {
             // generate an appropriate backend
 		        // this consists of a set of macro replacement rules which collectively comprise a 'package group'.
-		        // The result is returned as a managed pointer, using std::shared_ptr<>
-            std::shared_ptr<package_group> package = package_group_factory(in, backend, this->unit, this->cache);
+		        // The result is returned as a managed pointer, using std::unique_ptr<>
+            std::unique_ptr<package_group> package = package_group_factory(in, backend, this->unit, this->cache);
 
             // generate a macro replacement agent based on this package group
-            macro_agent agent(this->unit, package, BACKEND_MACRO_PREFIX, BACKEND_LINE_SPLIT);
+            macro_agent agent(this->unit, *package, BACKEND_MACRO_PREFIX, BACKEND_LINE_SPLIT);
 
             // push this input file to the top of the filestack
-            std::shared_ptr<output_stack> os  = this->unit->get_stack();
-            os->push(in, buf, agent, type);  // current line number is automatically set to 1
+            output_stack& os = this->unit->get_stack();
+            os.push(in, buf, agent, type);  // current line number is automatically set to 1
 
             while(!inf.eof() && !inf.fail())
               {
@@ -129,29 +129,32 @@ unsigned int translator::process(const std::string in, buffer& buf, enum process
 		            // result is supplied as a std::shared_ptr<> because we don't want to have to take copies
 		            // of a large array of strings
                 unsigned int new_replacements = 0;
-                std::shared_ptr< std::vector<std::string> > line_list = agent.apply(line, new_replacements);
+                std::unique_ptr< std::vector<std::string> > line_list = agent.apply(line, new_replacements);
                 replacements += new_replacements;
 
-                std::ostringstream continuation_tag;
-                continuation_tag << " " << package->get_comment_separator() << " " << MESSAGE_EXPANSION_OF_LINE << " " << os->get_line();
-
-                unsigned int c = 0;
-                for(std::vector<std::string>::const_iterator l = line_list->begin(); l != line_list->end(); ++l, ++c)
+                if(line_list)
                   {
-                    std::string out_line = *l + (c > 0 ? continuation_tag.str() : "");
+                    std::ostringstream continuation_tag;
+                    continuation_tag << " " << package->get_comment_separator() << " " << MESSAGE_EXPANSION_OF_LINE << " " << os.get_line();
 
-                    if(filter != nullptr) buf.write_to_end((*filter)(out_line));
-                    else                  buf.write_to_end(out_line);
+                    unsigned int c = 0;
+                    for(std::vector<std::string>::const_iterator l = line_list->begin(); l != line_list->end(); ++l, ++c)
+                      {
+                        std::string out_line = *l + (c > 0 ? continuation_tag.str() : "");
+
+                        if(filter != nullptr) buf.write_to_end((*filter)(out_line));
+                        else                  buf.write_to_end(out_line);
+                      }
                   }
 
-                os->increment_line();
+                os.increment_line();
               }
 
 		        // report end of input to the backend;
 		        // this enables it to do any tidying-up which may be required,
 		        // such as depositing temporaries to a temporary pool
 		        package->report_end_of_input();
-            os->pop();
+            os.pop();
 
             // emit advisory that translation is complete
             std::ostringstream finished_msg;

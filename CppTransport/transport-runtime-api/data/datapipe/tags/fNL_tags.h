@@ -55,7 +55,7 @@ namespace transport
         virtual bool operator==(const data_tag<number>& obj) const override;
 
         //! pull data corresponding to this tag
-        virtual void pull(std::shared_ptr<derived_data::SQL_query>& query, std::vector<number>& data) override;
+        virtual void pull(derived_data::SQL_query& query, std::vector<number>& data) override;
 
         //! identify this tag
         virtual std::string name() const override { std::ostringstream msg; msg << "fNL, template =  " << template_name(this->type); return(msg.str()); }
@@ -113,7 +113,7 @@ namespace transport
         virtual bool operator==(const data_tag<number>& obj) const override;
 
         //! pull data corresponding to this tag
-        virtual void pull(std::shared_ptr<derived_data::SQL_query>& query, std::vector<number>& data) override;
+        virtual void pull(derived_data::SQL_query& query, std::vector<number>& data) override;
 
         //! identify this tag
         virtual std::string name() const override { std::ostringstream msg; msg << "bispectrum.template, template =  " << template_name(this->type); return(msg.str()); }
@@ -171,7 +171,7 @@ namespace transport
         virtual bool operator==(const data_tag<number>& obj) const override;
 
         //! pull data corresponding to this tag
-        virtual void pull(std::shared_ptr<derived_data::SQL_query>& query, std::vector<number>& data) override;
+        virtual void pull(derived_data::SQL_query& query, std::vector<number>& data) override;
 
         //! identify this tag
         virtual std::string name() const override { std::ostringstream msg; msg << "template.template, template =  " << template_name(this->type); return(msg.str()); }
@@ -207,7 +207,7 @@ namespace transport
 
 
     template <typename number>
-    void fNL_time_data_tag<number>::pull(std::shared_ptr<derived_data::SQL_query>& query, std::vector<number>& sample)
+    void fNL_time_data_tag<number>::pull(derived_data::SQL_query& query, std::vector<number>& sample)
 	    {
         assert(this->pipe->validate_attached(datapipe<number>::attachment_type::postintegration_attached));
         if(!this->pipe->validate_attached(datapipe<number>::attachment_type::postintegration_attached)) throw runtime_exception(exception_type::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
@@ -223,7 +223,7 @@ namespace transport
 
 
     template <typename number>
-    void BT_time_data_tag<number>::pull(std::shared_ptr<derived_data::SQL_query>& query, std::vector<number>& sample)
+    void BT_time_data_tag<number>::pull(derived_data::SQL_query& query, std::vector<number>& sample)
 	    {
         assert(this->pipe->validate_attached(datapipe<number>::attachment_type::postintegration_attached));
         if(!this->pipe->validate_attached(datapipe<number>::attachment_type::postintegration_attached)) throw runtime_exception(exception_type::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
@@ -239,7 +239,7 @@ namespace transport
 
 
     template <typename number>
-    void TT_time_data_tag<number>::pull(std::shared_ptr<derived_data::SQL_query>& query, std::vector<number>& sample)
+    void TT_time_data_tag<number>::pull(derived_data::SQL_query& query, std::vector<number>& sample)
 	    {
         assert(this->pipe->validate_attached(datapipe<number>::attachment_type::postintegration_attached));
         if(!this->pipe->validate_attached(datapipe<number>::attachment_type::postintegration_attached)) throw runtime_exception(exception_type::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);

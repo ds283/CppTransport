@@ -1,10 +1,10 @@
 //
-// Created by David Seery on 6/6/2014.
+// Created by David Seery on 12/10/2015.
 // Copyright (c) 2014-15 University of Sussex. All rights reserved.
 //
 
 
-#include "chris_basic_unrolled.h"
+#include "powerlaw_basic_unrolled.h"
 
 
 // ****************************************************************************
@@ -14,12 +14,16 @@
 // we work in units where M_p=1, but that's up to us;
 // we could choose something different
 
-const double M_Planck = 1.0;
-const double W0       = 1e-5 * M_Planck;
-const double lambda   = 0.1;
+const double M_Planck   = 1.0;
+const double W0         = 1E-14 * M_Planck * M_Planck * M_Planck * M_Planck;
+const double m_phi      = std::sqrt(0.02);
+const double m_sigma1   = std::sqrt(0.25);
+const double m_sigma2   = std::sqrt(0.08);
+const double sigma_c    = 3.445E-6 * M_Planck;
+const double sigma_grad = 1E-10 * M_Planck;
 
-const double phi_init = 1e-7 * M_Planck;
-const double chi_init = sqrt(200) * M_Planck;
+const double phi_init   = 0.00827 * M_Planck;
+const double sigma_init = 9.40365E-9 * M_Planck;
 
 
 // ****************************************************************************
@@ -38,48 +42,36 @@ int main(int argc, char* argv[])
     // set up an instance of a manager
     std::unique_ptr< transport::task_manager<double> > mgr = std::make_unique< transport::task_manager<double> >(0, nullptr, repo);
 
-    // set up an instance of the chris-quadratic model,
+    // set up an instance of the powerlaw model,
     // using doubles, with given parameter choices
-    std::shared_ptr< transport::chris_basic<double> > model = mgr->create_model< transport::chris_basic<double> >();
+    std::shared_ptr< transport::powerlaw_basic<double> > model = mgr->create_model< transport::powerlaw_basic<double> >();
 
     // set up parameter choices
-    const std::vector<double>     init_params = { W0, lambda };
+    const std::vector<double>     init_params = { W0, m_phi, m_sigma1, m_sigma2, sigma_c, sigma_grad };
     transport::parameters<double> params(M_Planck, init_params, model);
 
-    const std::vector<double> init_values = { phi_init, chi_init };
+    const std::vector<double> init_values = { phi_init, sigma_init };
 
-    const double Ninit  = 0.0;   // start counting from N=0 at the beginning of the integration
-    const double Ncross = 10.0;  // horizon-crossing occurs at N=251. The turn occurs just after 252 e-folds, so this allows the legs of the bispecturm to span a sensible range around the turn
-    const double Npre   = 10.0;  // number of e-folds of subhorizon evolution
-    const double Nsplit = 15.0;  // split point between early and late
-    const double Nmax   = 38.0;  // how many e-folds to integrate after horizon crossing
+    const double Ninit  = 0.0;  // start counting from N=0 at the beginning of the integration
+    const double Ncross = 10.0; // horizon-crossing occurs at N=5
+    const double Npre   = 10.0; // number of e-folds of subhorizon evolution
+    const double Nsplit = 20.0; // split point between early and late
+    const double Nmax   = 50.0; // how many e-folds to integrate after horizon crossing
 
     // set up initial conditions with the specified horizon-crossing time Ncross and Npre
     // e-folds of subhorizon evolution.
     // The resulting initial conditions apply at time Ncross-Npre
-    transport::initial_conditions<double> ics("chris-1", model, params, init_values, Ninit, Ncross, Npre);
+    transport::initial_conditions<double> ics("powerlaw-1", model, params, init_values, Ninit, Ncross, Npre);
 
-    const unsigned int early_t_samples = 10;
-    const unsigned int late_t_samples  = 10;
-
-    transport::stepping_range<double> early_times(Ncross-Npre, Ncross+Nsplit, early_t_samples, transport::range_spacing_type::logarithmic_bottom_stepping);
-    transport::stepping_range<double> late_times(Ncross+Nsplit, Ncross+Nmax, late_t_samples, transport::range_spacing_type::linear_stepping);
-    transport::aggregation_range<double> times(early_times, late_times);
+    // sample only at N=60
+    transport::stepping_range<double> times(60.0, 60.0, 0, transport::range_spacing_type::linear_stepping);
 
     // the conventions for k-numbers are as follows:
     // k=1 is the mode which crosses the horizon at time N*,
     // where N* is the 'offset' we pass to the integration method (see below)
-    const double        ktmin         = exp(3.0);
-    const double        ktmax         = exp(7.0);
-    const unsigned int  k_samples     = 50;
-
-		const double        alphamin      = 0.0;
-		const double        alphamax      = 1.0/2.0;
-		const unsigned int  a_samples     = 100;
-
-		const double        betamin       = 0.0;
-		const double        betamax       = 0.99;
-		const unsigned int  b_samples     = 100;
+    const double       kmin      = exp(2.0);
+    const double       kmax      = 7000.0 * kmin;
+    const unsigned int k_samples = 400;
 
 		struct ThreepfStoragePolicy
 			{
@@ -90,20 +82,15 @@ int main(int argc, char* argv[])
 
     // SET UP TASKS
 
-    transport::stepping_range<double> kts   (ktmin, ktmax, k_samples, transport::range_spacing_type::linear_stepping);
-    transport::stepping_range<double> alphas(alphamin, alphamax, a_samples, transport::range_spacing_type::linear_stepping);
-
-    transport::stepping_range<double> betas_equi(1.0/3.0, 1.0/3.0, 0, transport::range_spacing_type::linear_stepping);    // add dedicated equilateral configuration
-    transport::stepping_range<double> betas_range(betamin, betamax, b_samples, transport::range_spacing_type::linear_stepping);
-    transport::aggregation_range<double> betas = betas_range + betas_equi;
+    transport::stepping_range<double> ks(kmin, kmax, k_samples, transport::range_spacing_type::linear_stepping);
 
     // construct a threepf task
-    transport::threepf_fls_task<double> tk3("chris.threepf-1", ics, times, kts, alphas, betas, ThreepfStoragePolicy(), false);
+    transport::threepf_cubic_task<double> tk3("powerlaw.threepf-1", ics, times, ks, ThreepfStoragePolicy(), false);
 		tk3.set_fast_forward_efolds(4.0);
 		tk3.set_collect_initial_conditions(true);
 
 		// construct a zeta threepf task, paired with the primary integration task
-    transport::zeta_threepf_task<double> ztk3("chris.threepf-1.zeta", tk3);
+    transport::zeta_threepf_task<double> ztk3("powerlaw.threepf-1.zeta", tk3);
     ztk3.set_paired(true);
 
 
@@ -153,7 +140,7 @@ int main(int argc, char* argv[])
     transport::derived_data::twopf_time_series<double> tk3_twopf_group(tk3, twopf_fields, all_times, largest_twopf);
     tk3_twopf_group.set_klabel_meaning(transport::derived_data::klabel_type::conventional);
 
-    transport::derived_data::time_series_plot<double> tk3_twopf_plot("chris.threepf-1.twopf-time", "twopf-time.pdf");
+    transport::derived_data::time_series_plot<double> tk3_twopf_plot("powerlaw.threepf-1.twopf-time", "twopf-time.pdf");
     tk3_twopf_plot.add_line(tk3_twopf_group);
     tk3_twopf_plot.set_title_text("Time evolution of two-point function");
     tk3_twopf_plot.set_legend_position(transport::derived_data::legend_pos::bottom_left);
@@ -170,7 +157,7 @@ int main(int argc, char* argv[])
     transport::derived_data::threepf_time_series<double> tk3_threepf_group(tk3, threepf_fields, all_times, equilateral_smallest_threepf);
     tk3_twopf_group.set_klabel_meaning(transport::derived_data::klabel_type::conventional);
 
-    transport::derived_data::time_series_plot<double> tk3_threepf_plot("chris.threepf-1.threepf-time", "threepf-time.pdf");
+    transport::derived_data::time_series_plot<double> tk3_threepf_plot("powerlaw.threepf-1.threepf-time", "threepf-time.pdf");
     tk3_threepf_plot.add_line(tk3_threepf_group);
     tk3_threepf_plot.set_title_text("Time evolution of three-point function");
     tk3_threepf_plot.set_legend_position(transport::derived_data::legend_pos::bottom_left);
@@ -183,7 +170,7 @@ int main(int argc, char* argv[])
     transport::derived_data::largest_u2_line<double> tk3_largest_u2(tk3, all_times, largest_twopf);
     transport::derived_data::largest_u3_line<double> tk3_largest_u3(tk3, all_times, equilateral_smallest_threepf);
 
-    transport::derived_data::time_series_plot<double> tk3_SR_objects_plot("chris.threepf-1.SR_objects", "SR_objects.pdf");
+    transport::derived_data::time_series_plot<double> tk3_SR_objects_plot("powerlaw.threepf-1.SR_objects", "SR_objects.pdf");
     tk3_SR_objects_plot.add_line(tk3_epsilon);
     tk3_SR_objects_plot.add_line(tk3_largest_u2);
     tk3_SR_objects_plot.add_line(tk3_largest_u3);
@@ -193,7 +180,7 @@ int main(int argc, char* argv[])
     transport::derived_data::background_line<double> tk3_Hubble(tk3, all_times, transport::derived_data::background_quantity::Hubble);
     transport::derived_data::background_line<double> tk3_aHubble(tk3, all_times, transport::derived_data::background_quantity::aHubble);
 
-    transport::derived_data::time_series_plot<double> tk3_Hubble_plot("chris.threepf-1.Hubble", "Hubble.pdf");
+    transport::derived_data::time_series_plot<double> tk3_Hubble_plot("powerlaw.threepf-1.Hubble", "Hubble.pdf");
 		tk3_Hubble_plot.add_line(tk3_Hubble);
 		tk3_Hubble_plot.add_line(tk3_aHubble);
 		tk3_Hubble_plot.set_log_y(true);
@@ -207,14 +194,14 @@ int main(int argc, char* argv[])
     twopf_mf.set_on(std::array<unsigned int, 2>{ 3, 1 });
     transport::derived_data::u2_line<double> tk3_u2(tk3, twopf_mf, all_times, largest_twopf);
 
-    transport::derived_data::time_series_plot<double> tk3_u2_plot("chris.threepf-1.u2", "u2.pdf");
+    transport::derived_data::time_series_plot<double> tk3_u2_plot("powerlaw.threepf-1.u2", "u2.pdf");
     tk3_u2_plot.add_line(tk3_u2);
     tk3_u2_plot.set_log_y(true);
 
 
     transport::derived_data::u3_line<double> tk3_u3(tk3, threepf_fields, all_times, equilateral_smallest_threepf);
 
-    transport::derived_data::time_series_plot<double> tk3_u3_plot("chris.threepf-1.u3", "u3.pdf");
+    transport::derived_data::time_series_plot<double> tk3_u3_plot("powerlaw.threepf-1.u3", "u3.pdf");
     tk3_u3_plot.add_line(tk3_u3);
     tk3_u3_plot.set_log_y(true);
 
@@ -225,7 +212,7 @@ int main(int argc, char* argv[])
     transport::derived_data::zeta_twopf_time_series<double> tk3_zeta_twopf_group(ztk3, all_times, largest_twopf);
     tk3_zeta_twopf_group.set_dimensionless(true);
 
-    transport::derived_data::time_series_plot<double> tk3_zeta_twopf("chris.threepf-1.zeta-twopf", "zeta-twopf-time.pdf");
+    transport::derived_data::time_series_plot<double> tk3_zeta_twopf("powerlaw.threepf-1.zeta-twopf", "zeta-twopf-time.pdf");
 
     tk3_zeta_twopf.add_line(tk3_zeta_twopf_group);
     tk3_zeta_twopf.set_title_text("$\\zeta$ two-point function");
@@ -239,12 +226,12 @@ int main(int argc, char* argv[])
     tk3_zeta_sq_group.set_klabel_meaning(transport::derived_data::klabel_type::comoving);
     tk3_zeta_sq_group.set_use_beta_label(true);
 
-    transport::derived_data::time_series_plot<double> tk3_zeta_sq("chris.threepf-1.zeta-sq", "zeta-sq.pdf");
+    transport::derived_data::time_series_plot<double> tk3_zeta_sq("powerlaw.threepf-1.zeta-sq", "zeta-sq.pdf");
     tk3_zeta_sq.add_line(tk3_zeta_sq_group);
     tk3_zeta_sq.set_title_text("3pf of $\\zeta$ near squeezed configurations");
 
 		// set up a table too
-    transport::derived_data::time_series_table<double> tk3_zeta_sq_table("chris.threepf-1.zeta-sq.table", "zeta-sq-table.txt");
+    transport::derived_data::time_series_table<double> tk3_zeta_sq_table("powerlaw.threepf-1.zeta-sq.table", "zeta-sq-table.txt");
 		tk3_zeta_sq_table.add_line(tk3_zeta_sq_group);
 
 
@@ -255,14 +242,14 @@ int main(int argc, char* argv[])
     tk3_zeta_redbsp.set_klabel_meaning(transport::derived_data::klabel_type::comoving);
     tk3_zeta_redbsp.set_use_beta_label(true);
 
-    transport::derived_data::time_series_plot<double> tk3_redbsp("chris.threepf-1.redbsp-sq", "redbsp-sq.pdf");
+    transport::derived_data::time_series_plot<double> tk3_redbsp("powerlaw.threepf-1.redbsp-sq", "redbsp-sq.pdf");
     tk3_redbsp.set_log_y(false);
     tk3_redbsp.set_abs_y(false);
     tk3_redbsp.add_line(tk3_zeta_redbsp);
     tk3_redbsp.set_legend_position(transport::derived_data::legend_pos::bottom_right);
     tk3_redbsp.set_title_text("Reduced bispectrum near squeezed configurations");
 
-    transport::derived_data::time_series_table<double> tk3_redbsp_table = transport::derived_data::time_series_table<double>("chris.threepf-1.redbsp-sq.table", "redbsp-sq-table.txt");
+    transport::derived_data::time_series_table<double> tk3_redbsp_table = transport::derived_data::time_series_table<double>("powerlaw.threepf-1.redbsp-sq.table", "redbsp-sq-table.txt");
     tk3_redbsp_table.add_line(tk3_zeta_redbsp);
 
 
@@ -272,13 +259,13 @@ int main(int argc, char* argv[])
     tk3_zeta_2spec.set_klabel_meaning(transport::derived_data::klabel_type::conventional);
     tk3_zeta_2spec.set_dimensionless(true);
 
-    transport::derived_data::wavenumber_series_plot<double> tk3_zeta_2spec_plot("chris.threepf-1.zeta-2spec", "zeta-2spec.pdf");
+    transport::derived_data::wavenumber_series_plot<double> tk3_zeta_2spec_plot("powerlaw.threepf-1.zeta-2spec", "zeta-2spec.pdf");
     tk3_zeta_2spec_plot.add_line(tk3_zeta_2spec);
 		tk3_zeta_2spec_plot.set_typeset_with_LaTeX(true);
     tk3_zeta_2spec_plot.set_log_x(true);
     tk3_zeta_2spec_plot.set_title_text("$\\langle \\zeta \\zeta \\rangle$ power spectrum");
 
-    transport::derived_data::wavenumber_series_table<double> tk3_zeta_2spec_table("chris.threepf-1.zeta-2spec.table", "zeta-2spec-table.txt");
+    transport::derived_data::wavenumber_series_table<double> tk3_zeta_2spec_table("powerlaw.threepf-1.zeta-2spec.table", "zeta-2spec-table.txt");
     tk3_zeta_2spec_table.add_line(tk3_zeta_2spec);
 
 
@@ -288,7 +275,7 @@ int main(int argc, char* argv[])
 		tk3_zeta_redbsp_spec.set_klabel_meaning(transport::derived_data::klabel_type::conventional);
 		tk3_zeta_redbsp_spec.set_label_text("$k_3/k_t = 0.9999$", "k3/k_t = 0.9999");
 
-    transport::derived_data::wavenumber_series_plot<double> tk3_redbsp_spec_plot("chris.threepf-1.redbsp-spec", "redbsp-spec.pdf");
+    transport::derived_data::wavenumber_series_plot<double> tk3_redbsp_spec_plot("powerlaw.threepf-1.redbsp-spec", "redbsp-spec.pdf");
 		tk3_redbsp_spec_plot.add_line(tk3_zeta_redbsp_spec);
 		tk3_redbsp_spec_plot.set_typeset_with_LaTeX(true);
 		tk3_redbsp_spec_plot.set_title_text("Reduced bispectrum at fixed $k_3/k_t$");
@@ -297,7 +284,7 @@ int main(int argc, char* argv[])
 		tk3_redbsp_spec_plot.set_log_y(false);
     tk3_redbsp_spec_plot.set_abs_y(false);
 
-    transport::derived_data::wavenumber_series_table<double> tk3_redbsp_spec_table("chris.threepf-1.redbsp-spec-table", "redbsp-spec-table.txt");
+    transport::derived_data::wavenumber_series_table<double> tk3_redbsp_spec_table("powerlaw.threepf-1.redbsp-spec-table", "redbsp-spec-table.txt");
 		tk3_redbsp_spec_table.add_line(tk3_zeta_redbsp_spec);
 
 
@@ -313,7 +300,7 @@ int main(int argc, char* argv[])
     tk3_zeta_redbsp_beta_hi.set_current_x_axis_value(transport::derived_data::axis_value::beta_axis);
 		tk3_zeta_redbsp_beta_hi.set_label_text("$k_t/k_\\star = \\mathrm{e}^7$", "k_t/k* = exp(7)");
 
-    transport::derived_data::wavenumber_series_plot<double> tk3_redbsp_beta_plot("chris.threepf-1.redbsp-beta", "redbsp-beta.pdf");
+    transport::derived_data::wavenumber_series_plot<double> tk3_redbsp_beta_plot("powerlaw.threepf-1.redbsp-beta", "redbsp-beta.pdf");
 		tk3_redbsp_beta_plot.add_line(tk3_zeta_redbsp_beta_lo);
     tk3_redbsp_beta_plot.add_line(tk3_zeta_redbsp_beta_hi);
 		tk3_redbsp_beta_plot.set_typeset_with_LaTeX(true);
@@ -336,7 +323,7 @@ int main(int argc, char* argv[])
     tk3_zeta_redbsp_sqk3_hi.set_current_x_axis_value(transport::derived_data::axis_value::squeezing_fraction_k3_axis);
     tk3_zeta_redbsp_sqk3_hi.set_label_text("$k_t/k_\\star = \\mathrm{e}^7$", "k_t/k* = exp(7)");
 
-    transport::derived_data::wavenumber_series_plot<double> tk3_redbsp_sqk3_plot("chris.threepf-1.redbsp-sqk3", "redbsp-sqk3.pdf");
+    transport::derived_data::wavenumber_series_plot<double> tk3_redbsp_sqk3_plot("powerlaw.threepf-1.redbsp-sqk3", "redbsp-sqk3.pdf");
     tk3_redbsp_sqk3_plot.add_line(tk3_zeta_redbsp_sqk3_lo);
     tk3_redbsp_sqk3_plot.add_line(tk3_zeta_redbsp_sqk3_hi);
     tk3_redbsp_sqk3_plot.set_typeset_with_LaTeX(true);
@@ -362,7 +349,7 @@ int main(int argc, char* argv[])
     tk3_zeta_redbsp_sqk3_hi_index.set_spectral_index(true);
     tk3_zeta_redbsp_sqk3_hi_index.set_label_text("$n_{f_{\\mathrm{NL}}} \\;\\; k_t/k_\\star = \\mathrm{e}^7$", "n_fNL k_t/k* = exp(7)");
 
-    transport::derived_data::wavenumber_series_plot<double> tk3_redbsp_sqk3_index_plot("chris.threepf-1.redbsp-sqk3-index", "redbsp-sqk3-index.pdf");
+    transport::derived_data::wavenumber_series_plot<double> tk3_redbsp_sqk3_index_plot("powerlaw.threepf-1.redbsp-sqk3-index", "redbsp-sqk3-index.pdf");
     tk3_redbsp_sqk3_index_plot.add_line(tk3_zeta_redbsp_sqk3_lo_index);
     tk3_redbsp_sqk3_index_plot.add_line(tk3_zeta_redbsp_sqk3_hi_index);
     tk3_redbsp_sqk3_index_plot.set_typeset_with_LaTeX(true);
@@ -380,7 +367,7 @@ int main(int argc, char* argv[])
     tk3_zeta_redbsp_spec_index.set_label_text("$n_{f_{\\mathrm{NL}}} \\;\\; k_3/k_t = 0.999$", "k3/k_t = 0.999");
     tk3_zeta_redbsp_spec_index.set_spectral_index(true);
 
-    transport::derived_data::wavenumber_series_plot<double> tk3_redbsp_spec_index_plot("chris.threepf-1.redbsp-spec-index", "redbsp-spec-index.pdf");
+    transport::derived_data::wavenumber_series_plot<double> tk3_redbsp_spec_index_plot("powerlaw.threepf-1.redbsp-spec-index", "redbsp-spec-index.pdf");
     tk3_redbsp_spec_index_plot.add_line(tk3_zeta_redbsp_spec_index);
     tk3_redbsp_spec_index_plot.set_typeset_with_LaTeX(true);
     tk3_redbsp_spec_index_plot.set_title_text("Spectral index of reduced bispectrum at fixed $k_3/k_t$");
@@ -397,7 +384,7 @@ int main(int argc, char* argv[])
     tk3_zeta_2spec_index.set_dimensionless(true);
     tk3_zeta_2spec_index.set_spectral_index(true);
 
-    transport::derived_data::wavenumber_series_plot<double> tk3_zeta_2spec_index_plot("chris.threepf-1.zeta-2spec-index", "zeta-2spec-index.pdf");
+    transport::derived_data::wavenumber_series_plot<double> tk3_zeta_2spec_index_plot("powerlaw.threepf-1.zeta-2spec-index", "zeta-2spec-index.pdf");
     tk3_zeta_2spec_index_plot.add_line(tk3_zeta_2spec_index);
     tk3_zeta_2spec_index_plot.set_typeset_with_LaTeX(true);
     tk3_zeta_2spec_index_plot.set_title_text("$\\langle \\zeta \\zeta \\rangle$ spectral index");
@@ -415,7 +402,7 @@ int main(int argc, char* argv[])
 		tk3_lo_cost.set_current_x_axis_value(transport::derived_data::axis_value::squeezing_fraction_k3_axis);
 		tk3_lo_cost.set_label_text("$k_t = \\mathrm{e}^3$", "k_t = exp(3)");
 
-    transport::derived_data::wavenumber_series_plot<double> tk3_cost_plot("chris.threepf-1.sqk3-cost", "sqk3-cost.pdf");
+    transport::derived_data::wavenumber_series_plot<double> tk3_cost_plot("powerlaw.threepf-1.sqk3-cost", "sqk3-cost.pdf");
 		tk3_cost_plot.add_line(tk3_lo_cost);
     tk3_cost_plot.add_line(tk3_hi_cost);
 		tk3_cost_plot.set_typeset_with_LaTeX(true);
@@ -425,7 +412,7 @@ int main(int argc, char* argv[])
     // OUTPUT TASKS
 
 
-    transport::output_task<double> threepf_output = transport::output_task<double>("chris.threepf-1.output", tk3_twopf_plot);
+    transport::output_task<double> threepf_output = transport::output_task<double>("powerlaw.threepf-1.output", tk3_twopf_plot);
 		threepf_output = threepf_output + tk3_threepf_plot
 																		+ tk3_SR_objects_plot
                                     + tk3_Hubble_plot
@@ -443,7 +430,7 @@ int main(int argc, char* argv[])
                                     + tk3_zeta_2spec_index_plot
 																		+ tk3_cost_plot;
 
-    std::cout << "chris.threepf-1 output task:" << '\n' << threepf_output << '\n';
+    std::cout << "powerlaw.threepf-1 output task:" << '\n' << threepf_output << '\n';
 
 		// write output tasks to the database
     repo->commit_task(threepf_output);

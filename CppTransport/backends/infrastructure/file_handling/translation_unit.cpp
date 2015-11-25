@@ -85,7 +85,7 @@ static std::string  strip_dot_h(const std::string& pathname);
 static std::string  leafname   (const std::string& pathname);
 
 
-translation_unit::translation_unit(std::string file, std::shared_ptr<finder>& p, std::string core_out, std::string implementation_out, bool cse, bool v)
+translation_unit::translation_unit(std::string file, finder& p, std::string core_out, std::string implementation_out, bool cse, bool v)
   : name(file),
     do_cse(cse),
     verbose(v),
@@ -93,19 +93,22 @@ translation_unit::translation_unit(std::string file, std::shared_ptr<finder>& p,
     parse_failed(false)
   {
     // lexicalize this input file
-    stream = std::make_shared<y::lexstream_type>(name, path,
+    stream = std::make_unique<y::lexstream_type>(name, path,
                                                  keyword_table, keyword_map, NUMBER_KEYWORDS,
                                                  character_table, character_map, character_unary_context, NUMBER_CHARACTERS);
 //    stream->print(std::cerr);
 
     // now pass to the parser for syntactic analysis
-    lexer  = std::make_shared<y::y_lexer>(stream);
-    driver = std::make_shared<y::y_driver>(sym_factory);
-    parser = std::make_shared<y::y_parser>(lexer, driver);
+    lexer  = std::make_unique<y::y_lexer>(*stream);
+    driver = std::make_unique<y::y_driver>(sym_factory);
+    parser = std::make_unique<y::y_parser>(*lexer, *driver);
 
-    if(parser->parse() == FAIL)
+    stack     = std::make_unique<output_stack>();
+    outstream = std::make_unique<translator>(this);
+
+    if(parser->parse() == FAIL || driver->failed())
 	    {
-        warn(WARNING_PARSING_FAILED + (std::string)(" '") + name + (std::string)("'"));
+        ::warn(WARNING_PARSING_FAILED + (std::string)(" '") + name + (std::string)("'"));
 		    parse_failed = true;
 	    }
     // in.driver->get_script()->print(std::cerr);
@@ -117,7 +120,7 @@ translation_unit::translation_unit(std::string file, std::shared_ptr<finder>& p,
       }
     else
       {
-        core_output = this->mangle_output_name(name, this->get_template_suffix(driver->get_script()->get_core()));
+        core_output = this->mangle_output_name(name, this->get_template_suffix(driver->get_script().get_core()));
       }
     core_guard = boost::to_upper_copy(leafname(core_output));
     core_guard.erase(boost::remove_if(core_guard, boost::is_any_of(INVALID_GUARD_CHARACTERS)), core_guard.end());
@@ -128,13 +131,10 @@ translation_unit::translation_unit(std::string file, std::shared_ptr<finder>& p,
       }
     else
       {
-        implementation_output = this->mangle_output_name(name, this->get_template_suffix(driver->get_script()->get_implementation()));
+        implementation_output = this->mangle_output_name(name, this->get_template_suffix(driver->get_script().get_implementation()));
       }
     implementation_guard = boost::to_upper_copy(leafname(implementation_output));
     implementation_guard.erase(boost::remove_if(implementation_guard, boost::is_any_of(INVALID_GUARD_CHARACTERS)), implementation_guard.end());
-
-    stack     = std::make_shared<output_stack>();
-    outstream = std::make_shared<translator>(this);
   }
 
 
@@ -147,9 +147,9 @@ unsigned int translation_unit::apply()
 
 		if(this->parse_failed) return rval;
 
-    const script* s = this->driver->get_script();
+    const script& s = this->driver->get_script();
 
-    std::string in = s->get_core();
+    std::string in = s.get_core();
     if(in != "")
       {
         rval += this->outstream->translate(in, this->core_output, process_core);
@@ -160,7 +160,7 @@ unsigned int translation_unit::apply()
         exit(EXIT_FAILURE);
       }
 
-    in = s->get_implementation();
+    in = s.get_implementation();
     if(in != "")
       {
         rval += this->outstream->translate(in, this->implementation_output, process_implementation);
@@ -213,109 +213,109 @@ bool translation_unit::get_do_cse() const
 
 const std::string& translation_unit::get_name() const
   {
-    return(this->driver->get_script()->get_name());
+    return(this->driver->get_script().get_name());
   }
 
 
 const std::string& translation_unit::get_author() const
   {
-    return(this->driver->get_script()->get_author());
+    return(this->driver->get_script().get_author());
   }
 
 
 const std::string& translation_unit::get_model() const
   {
-    return(this->driver->get_script()->get_model());
+    return(this->driver->get_script().get_model());
   }
 
 
 const std::string& translation_unit::get_tag() const
   {
-    return(this->driver->get_script()->get_tag());
+    return(this->driver->get_script().get_tag());
   }
 
 
 unsigned int translation_unit::get_number_fields() const
   {
-    return(this->driver->get_script()->get_number_fields());
+    return(this->driver->get_script().get_number_fields());
   }
 
 
 unsigned int translation_unit::get_number_parameters() const
   {
-    return(this->driver->get_script()->get_number_params());
+    return(this->driver->get_script().get_number_params());
   }
 
 
 enum indexorder translation_unit::get_index_order() const
   {
-    return(this->driver->get_script()->get_indexorder());
+    return(this->driver->get_script().get_indexorder());
   }
 
 
 const GiNaC::symbol& translation_unit::get_Mp_symbol() const
   {
-    return(this->driver->get_script()->get_Mp_symbol());
+    return(this->driver->get_script().get_Mp_symbol());
   }
 
 
 const GiNaC::ex translation_unit::get_potential() const
   {
-    return(this->driver->get_script()->get_potential());
+    return(this->driver->get_script().get_potential());
   }
 
 
 const std::vector<GiNaC::symbol> translation_unit::get_field_symbols() const
   {
-    return(this->driver->get_script()->get_field_symbols());
+    return(this->driver->get_script().get_field_symbols());
   }
 
 
 const std::vector<GiNaC::symbol> translation_unit::get_deriv_symbols() const
   {
-    return(this->driver->get_script()->get_deriv_symbols());
+    return(this->driver->get_script().get_deriv_symbols());
   }
 
 
 const std::vector<GiNaC::symbol> translation_unit::get_parameter_symbols() const
   {
-    return(this->driver->get_script()->get_param_symbols());
+    return(this->driver->get_script().get_param_symbols());
   }
 
 
 const std::vector<std::string> translation_unit::get_field_list() const
   {
-    return(this->driver->get_script()->get_field_list());
+    return(this->driver->get_script().get_field_list());
   }
 
 
 const std::vector<std::string> translation_unit::get_latex_list() const
   {
-    return(this->driver->get_script()->get_latex_list());
+    return(this->driver->get_script().get_latex_list());
   }
 
 
 const std::vector<std::string> translation_unit::get_param_list() const
   {
-    return(this->driver->get_script()->get_param_list());
+    return(this->driver->get_script().get_param_list());
   }
 
 
 const std::vector<std::string> translation_unit::get_platx_list() const
   {
-    return(this->driver->get_script()->get_platx_list());
+    return(this->driver->get_script().get_platx_list());
   }
 
 
 const struct stepper& translation_unit::get_background_stepper() const
   {
-    return(this->driver->get_script()->get_background_stepper());
+    return(this->driver->get_script().get_background_stepper());
   }
 
 
 const struct stepper& translation_unit::get_perturbations_stepper() const
   {
-    return(this->driver->get_script()->get_perturbations_stepper());
+    return(this->driver->get_script().get_perturbations_stepper());
   }
 
 
@@ -366,13 +366,13 @@ void translation_unit::print_advisory(const std::string& msg)
 
 void translation_unit::error(const std::string& msg)
 	{
-		::error(msg, this->stack);
+		::error(msg, *this->stack);
 	}
 
 
 void translation_unit::warn(const std::string& msg)
 	{
-		::warn(msg, this->stack);
+		::warn(msg, *this->stack);
 	}
 
 

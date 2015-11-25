@@ -15,8 +15,8 @@
 #include <assert.h>
 
 #include "datatable.h"
-#include "bspline.h"
-#include "pspline.h"
+#include "bsplineapproximant.h"
+#include "psplineapproximant.h"
 
 namespace transport
   {
@@ -93,12 +93,12 @@ namespace transport
         //! which also deals correctly with taking copies.
         //! This is a raw BSpline, meaning that it goes through each of the data points.
         //! We use it to interpolate values.
-        std::shared_ptr<SPLINTER::BSpline> b_spline;
+        std::shared_ptr<SPLINTER::BSplineApproximant> b_spline;
 
         //! pointer to penalized-B spline object.
         //! This is smoothed, so it need not go through every data point.
         //! We use it to interpolate derivatives
-        std::shared_ptr<SPLINTER::PSpline> p_spline;
+        std::shared_ptr<SPLINTER::PSplineApproximant> p_spline;
 
         //! DataTable instance
         SPLINTER::DataTable table;
@@ -139,8 +139,8 @@ namespace transport
 
         try
 	        {
-            b_spline = std::make_shared<SPLINTER::BSpline>(table, SPLINTER::BSplineType::CUBIC);
-            p_spline = std::make_shared<SPLINTER::PSpline>(table, 0.03);
+            b_spline = std::make_shared<SPLINTER::BSplineApproximant>(table, SPLINTER::BSplineType::CUBIC);
+            p_spline = std::make_shared<SPLINTER::PSplineApproximant>(table, 0.03);
 	        }
 				catch(SPLINTER::Exception& xe)
 					{

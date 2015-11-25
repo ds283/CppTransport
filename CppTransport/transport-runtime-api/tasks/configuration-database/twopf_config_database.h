@@ -238,6 +238,9 @@ namespace transport
         //! check for existence of a record with a given conventionally-normalized k
         bool find(double k_conventional, twopf_kconfig_database::record_iterator&) const;
 
+        //! remove a record specified by serial number
+        void delete_record(unsigned int serial);
+
 
         // INTERFACE -- LOOKUP META-INFORMATION
 
@@ -447,6 +450,16 @@ namespace transport
       }
 
 
+    void twopf_kconfig_database::delete_record(unsigned int serial)
+      {
+        database_type::iterator t = this->database.find(serial);
+        index_type::const_iterator u = this->index_on_k.find(t->second->k_conventional);
+
+        this->database.erase(t);
+        this->index_on_k.erase(u);
+      }
+
+
     void twopf_kconfig_database::write(sqlite3* handle)
       {
         std::ostringstream create_stmt;
@@ -469,12 +482,8 @@ namespace transport
 
         sqlite3_operations::exec(handle, "BEGIN TRANSACTION");
 
-		    unsigned int count = 0;
-        for(database_type::const_iterator t = this->database.begin(); t != this->database.end(); ++t, ++count)
+        for(database_type::const_iterator t = this->database.begin(); t != this->database.end(); ++t)
           {
-            assert(count == t->first);
-            if(count != t->first) throw runtime_exception(exception_type::SERIALIZATION_ERROR, CPPTRANSPORT_TWOPF_DATABASE_OUT_OF_ORDER);
-
             sqlite3_operations::check_stmt(handle, sqlite3_bind_int(stmt, 1, t->second->serial));
             sqlite3_operations::check_stmt(handle, sqlite3_bind_double(stmt, 2, t->second->k_conventional));
             sqlite3_operations::check_stmt(handle, sqlite3_bind_double(stmt, 3, t->second->k_comoving));

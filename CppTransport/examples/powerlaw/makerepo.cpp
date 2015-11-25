@@ -6,8 +6,6 @@
 
 #include "powerlaw_basic_unrolled.h"
 
-#include "transport-runtime-api/repository/repository_creation_key.h"
-
 
 // ****************************************************************************
 
@@ -17,15 +15,15 @@
 // we could choose something different
 
 const double M_Planck   = 1.0;
-const double W0         = 1E-10 * M_Planck * M_Planck * M_Planck * M_Planck;
+const double W0         = 1E-14 * M_Planck * M_Planck * M_Planck * M_Planck;
 const double m_phi      = std::sqrt(0.02);
-const double m_sigma1   = std::sqrt(0.5);
-const double m_sigma2   = std::sqrt(0.05);
-const double sigma_c    = 6E-6 * M_Planck;
+const double m_sigma1   = std::sqrt(0.25);
+const double m_sigma2   = std::sqrt(0.08);
+const double sigma_c    = 3.445E-6 * M_Planck;
 const double sigma_grad = 1E-10 * M_Planck;
 
 const double phi_init   = 0.00827 * M_Planck;
-const double sigma_init = 5.8304E-10 * M_Planck;
+const double sigma_init = 9.40365E-9 * M_Planck;
 
 // ****************************************************************************
 
@@ -38,16 +36,14 @@ int main(int argc, char* argv[])
         exit(EXIT_FAILURE);
 	    }
 
-    transport::repository_creation_key key;
-
-    std::shared_ptr< transport::json_repository<double> > repo = transport::repository_factory<double>(argv[1], key);
+    std::shared_ptr< transport::json_repository<double> > repo = transport::repository_factory<double>(argv[1]);
 
     // set up an instance of a manager
-    std::shared_ptr< transport::task_manager<double> > mgr = std::make_shared< transport::task_manager<double> >(0, nullptr, repo);
+    std::unique_ptr< transport::task_manager<double> > mgr = std::make_unique< transport::task_manager<double> >(0, nullptr, repo);
 
     // set up an instance of the double quadratic model,
     // using doubles, with given parameter choices
-    transport::powerlaw_basic<double>* model = new transport::powerlaw_basic<double>(mgr);
+    std::shared_ptr< transport::powerlaw_basic<double> > model = mgr->create_model< transport::powerlaw_basic<double> >();
 
     // set up parameter choices
     const std::vector<double>     init_params = { W0, m_phi, m_sigma1, m_sigma2, sigma_c, sigma_grad };
@@ -66,8 +62,8 @@ int main(int argc, char* argv[])
     // The resulting initial conditions apply at time Ncross-Npre
     transport::initial_conditions<double> ics("powerlaw-1", model, params, init_values, Ninit, Ncross, Npre);
 
-    const unsigned int early_t_samples = 200;
-    const unsigned int late_t_samples  = 100;
+    const unsigned int early_t_samples = 25;
+    const unsigned int late_t_samples  = 25;
 
     transport::stepping_range<double>    early_times(Ncross - Npre, Ncross + Nsplit, early_t_samples, transport::range_spacing_type::logarithmic_bottom_stepping);
     transport::stepping_range<double>    late_times(Ncross + Nsplit, Ncross + Nmax, late_t_samples, transport::range_spacing_type::linear_stepping);
@@ -76,8 +72,10 @@ int main(int argc, char* argv[])
     // the conventions for k-numbers are as follows:
     // k=1 is the mode which crosses the horizon at time N*,
     // where N* is the 'offset' we pass to the integration method (see below)
-    const double       kmin      = exp(1.5);   // begin with the mode which crosses the horizon at N=N*+1
-    const double       kmax      = exp(5.0);   // end with the mode which exits the horizon at N=N*+5
+    const double        kt_min_exp    = 0.0;
+    const double        kt_max_exp    = 5.0;
+    const double       kmin      = exp(kt_min_exp);   // begin with the mode which crosses the horizon at N=N*+1
+    const double       kmax      = exp(kt_max_exp);   // end with the mode which exits the horizon at N=N*+5
     const unsigned int k_samples = 50;         // number of k-points
 
     struct ThreepfStoragePolicy

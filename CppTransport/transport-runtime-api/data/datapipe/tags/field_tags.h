@@ -57,7 +57,7 @@ namespace transport
         virtual bool operator==(const data_tag<number>& obj) const = 0;
 
         //! virtual function to pull a cache line
-        virtual void pull(std::shared_ptr<derived_data::SQL_query>& query, std::vector<number>& data) = 0;
+        virtual void pull(derived_data::SQL_query& query, std::vector<number>& data) = 0;
 
         //! emit a log item for this tag
         void log(const std::string& log_item) const { BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::log_severity_level::normal) << log_item; }
@@ -117,7 +117,7 @@ namespace transport
         virtual bool operator==(const data_tag<number>& obj) const override;
 
         //! pull data corresponding to this tag
-        virtual void pull(std::shared_ptr<derived_data::SQL_query>& query, std::vector<number>& data) override;
+        virtual void pull(derived_data::SQL_query& query, std::vector<number>& data) override;
 
         //! identify this tag
         virtual std::string name() const override { std::ostringstream msg; msg << "background field " << id; return(msg.str()); }
@@ -177,7 +177,7 @@ namespace transport
         virtual bool operator==(const data_tag<number>& obj) const override;
 
         //! pull data corresponding to this tag
-        virtual void pull(std::shared_ptr<derived_data::SQL_query>& query, std::vector<number>& data) override;
+        virtual void pull(derived_data::SQL_query& query, std::vector<number>& data) override;
 
         //! identify this tag
         virtual std::string name() const override;
@@ -243,7 +243,7 @@ namespace transport
         virtual bool operator==(const data_tag<number>& obj) const override;
 
         //! pull data corresponding to this tag
-        virtual void pull(std::shared_ptr<derived_data::SQL_query>& query, std::vector<number>& data) override;
+        virtual void pull(derived_data::SQL_query& query, std::vector<number>& data) override;
 
         //! identify this tag
         virtual std::string name() const override;
@@ -354,7 +354,7 @@ namespace transport
 
 
     template <typename number>
-    void background_time_data_tag<number>::pull(std::shared_ptr<derived_data::SQL_query>& query, std::vector<number>& sample)
+    void background_time_data_tag<number>::pull(derived_data::SQL_query& query, std::vector<number>& sample)
 	    {
         // check that we are attached to an integration content group
         assert(this->pipe->validate_attached(datapipe<number>::attachment_type::integration_attached));
@@ -371,7 +371,7 @@ namespace transport
 
 
     template <typename number>
-    void cf_time_data_tag<number>::pull(std::shared_ptr<derived_data::SQL_query>& query, std::vector<number>& sample)
+    void cf_time_data_tag<number>::pull(derived_data::SQL_query& query, std::vector<number>& sample)
 	    {
         // check that we are attached to an integration content group
         assert(this->pipe->validate_attached(datapipe<number>::attachment_type::integration_attached));
@@ -420,7 +420,7 @@ namespace transport
 
 
     template <typename number>
-    void cf_kconfig_data_tag<number>::pull(std::shared_ptr<derived_data::SQL_query>& query, std::vector<number>& sample)
+    void cf_kconfig_data_tag<number>::pull(derived_data::SQL_query& query, std::vector<number>& sample)
 	    {
         // check that we are attached to an integration content group
         assert(this->pipe->validate_attached(datapipe<number>::attachment_type::integration_attached));

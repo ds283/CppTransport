@@ -11,12 +11,13 @@
 #include <assert.h>
 
 #include "lexfile.h"
+#include "msg_en.h"
 
 
 // ******************************************************************
 
 
-lexfile::lexfile(std::string fnam, std::shared_ptr<filestack> s)
+lexfile::lexfile(const std::string& fnam, filestack& s)
   : file(fnam),
     stack(s),
     state(lexfile_unready),
@@ -36,7 +37,6 @@ lexfile::lexfile(std::string fnam, std::shared_ptr<filestack> s)
     stream.seekg(0, std::ios::beg);
 
     assert(stream.is_open());
-    assert(stack);
   }
 
 lexfile::~lexfile()
@@ -85,7 +85,7 @@ char lexfile::get(enum lexfile_outcome& state)
                   this->state = lexfile_ready;
                   if(this->c == '\n')
                     {
-                      this->stack->increment_line();
+                      this->stack.increment_line();
                       this->char_pos = 0;
                     }
                 }
@@ -145,14 +145,14 @@ enum lexfile_outcome lexfile::current_state() const
   }
 
 
-std::shared_ptr<std::string> lexfile::get_current_line() const
+const std::shared_ptr<std::string>& lexfile::get_current_line() const
   {
-    unsigned int cline = this->stack->get_line();
+    unsigned int cline = this->stack.get_line();
 
     if(cline <= this->line_array.size())
       {
         return this->line_array[cline-1];
       }
 
-    return std::make_shared<std::string>("EMPTY");
+    throw std::runtime_error(ERROR_CURRENT_LINE_EMPTY);
   }

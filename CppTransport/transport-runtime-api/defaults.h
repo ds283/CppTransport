@@ -70,5 +70,7 @@ constexpr boost::uintmax_t CPPTRANSPORT_MAX_ITERATIONS      = 500;
 constexpr double           CPPTRANSPORT_ROOT_FIND_TOLERANCE = 1E-5;
 constexpr double           CPPTRANSPORT_ROOT_FIND_ACCURACY  = 1E-3;
 
+// default maximum size which can be automatically VACUUMed
+constexpr boost::uintmax_t CPPTRANSPORT_MAX_VACUUMABLE_SIZE = 2147483648;   // = 2Gb
 
 #endif //__defaults_H_

@@ -45,12 +45,14 @@ namespace transport
 
       public:
 
-        $$__MODEL_basic(std::shared_ptr< instance_manager<number> > mgr)    // don't take my reference; we are likely to be passed a std::shared_ptr< task_manager<> >, which needs conversion
-	        : $$__MODEL<number>(mgr)
+        //! constructor
+        $$__MODEL_basic()
+	        : $$__MODEL<number>()
 	        {
 	        }
 
-        ~$$__MODEL_basic() = default;
+        //! destructor is default
+        virtual ~$$__MODEL_basic() = default;
 
         // EXTRACT MODEL INFORMATION -- implements a 'model' interface
 

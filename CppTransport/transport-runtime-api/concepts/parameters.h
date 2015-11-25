@@ -44,8 +44,15 @@ namespace transport
 
       public:
 
-        //! Construct 'parameter' object from explicit
+        //! Construct 'parameter' object from an explicit model and parameter combination
         parameters(number Mp, const std::vector<number>& p, model<number>* m);
+
+        //! Convenience constructor which accepts a shared_ptr<> to a model instance, but doesn't actually use this
+        //! to manage the lifetime; we work with raw pointers
+        parameters(number Mp, const std::vector<number>& p, std::shared_ptr< model<number> > m)
+          : parameters(Mp, p, m.get())
+        {
+        }
 
         //! Deserialization constructor
         parameters(Json::Value& reader, typename instance_manager<number>::model_finder f);
@@ -101,7 +108,8 @@ namespace transport
 
     template <typename number>
     parameters<number>::parameters(number Mp, const std::vector<number>& p, model<number>* m)
-      : M_Planck(Mp), mdl(m)
+      : M_Planck(Mp),
+        mdl(m)
       {
 		    assert(m != nullptr);
 

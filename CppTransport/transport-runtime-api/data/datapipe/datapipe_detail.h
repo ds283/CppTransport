@@ -76,16 +76,16 @@ namespace transport
       public:
 
         //! Find integration content -- serivce provided by a repository implementation
-        typedef std::function<std::shared_ptr< output_group_record<integration_payload> >(const std::string&, const std::list<std::string>&)> integration_content_finder;
+        typedef std::function<std::unique_ptr< output_group_record<integration_payload> >(const std::string&, const std::list<std::string>&)> integration_content_finder;
 
         //! Find postintegration content -- serivce provided by a repository implementation
-        typedef std::function<std::shared_ptr< output_group_record<postintegration_payload> >(const std::string&, const std::list<std::string>&)> postintegration_content_finder;
+        typedef std::function<std::unique_ptr< output_group_record<postintegration_payload> >(const std::string&, const std::list<std::string>&)> postintegration_content_finder;
 
         //! Attach to integration content group
-        typedef std::function<std::shared_ptr< output_group_record<integration_payload> >(datapipe<number>*, integration_content_finder&, const std::string&, const std::list<std::string>&)> integration_attach_callback;
+        typedef std::function<std::unique_ptr< output_group_record<integration_payload> >(datapipe<number>*, integration_content_finder&, const std::string&, const std::list<std::string>&)> integration_attach_callback;
 
         //! Attach to postintegration content group
-        typedef std::function<std::shared_ptr< output_group_record<postintegration_payload> >(datapipe<number>*, postintegration_content_finder&, const std::string&, const std::list<std::string>&)> postintegration_attach_callback;
+        typedef std::function<std::unique_ptr< output_group_record<postintegration_payload> >(datapipe<number>*, postintegration_content_finder&, const std::string&, const std::list<std::string>&)> postintegration_attach_callback;
 
         //! Detach function for a datapipe
         typedef std::function<void(datapipe<number>*)> detach_callback;
@@ -94,64 +94,64 @@ namespace transport
         typedef std::function<void(datapipe<number>*, typename derived_data::derived_product<number>*, const std::list<std::string>&)> dispatch_function;
 
         //! Extract a set of time sample-points from a datapipe
-        typedef std::function<void(datapipe<number>*, std::shared_ptr<derived_data::SQL_time_config_query>&, std::vector<time_config>&)> time_config_callback;
+        typedef std::function<void(datapipe<number>*, derived_data::SQL_time_config_query&, std::vector<time_config>&)> time_config_callback;
 
         //! Extract a set of 2pf k-configuration sample points from a datapipe
-        typedef std::function<void(datapipe<number>*, std::shared_ptr<derived_data::SQL_twopf_kconfig_query>&, std::vector<twopf_kconfig>&)> kconfig_twopf_callback;
+        typedef std::function<void(datapipe<number>*, derived_data::SQL_twopf_kconfig_query&, std::vector<twopf_kconfig>&)> kconfig_twopf_callback;
 
         //! Extract a set of 3pf k-configuration sample points from a datapipe
-        typedef std::function<void(datapipe<number>*, std::shared_ptr<derived_data::SQL_threepf_kconfig_query>&, std::vector<threepf_kconfig>&)> kconfig_threepf_callback;
+        typedef std::function<void(datapipe<number>*, derived_data::SQL_threepf_kconfig_query&, std::vector<threepf_kconfig>&)> kconfig_threepf_callback;
 
 		    //! Extract a set of per-configuration statistics records from a datapipe
-		    typedef std::function<void(datapipe<number>*, std::shared_ptr<derived_data::SQL_query>&, std::vector<kconfiguration_statistics>&)> statistics_callback;
+		    typedef std::function<void(datapipe<number>*, derived_data::SQL_query&, std::vector<kconfiguration_statistics>&)> statistics_callback;
 
         //! Extract a background field at a set of time sample-points
-        typedef std::function<void(datapipe<number>*, unsigned int, std::shared_ptr<derived_data::SQL_query>&, std::vector<number>&)> background_time_callback;
+        typedef std::function<void(datapipe<number>*, unsigned int, derived_data::SQL_query&, std::vector<number>&)> background_time_callback;
 
         //! Extract a twopf component at fixed k-configuration for a set of time sample-points
-        typedef std::function<void(datapipe<number>*, unsigned int, std::shared_ptr<derived_data::SQL_query>&, unsigned int, std::vector<number>&, twopf_type)> twopf_time_callback;
+        typedef std::function<void(datapipe<number>*, unsigned int, derived_data::SQL_query&, unsigned int, std::vector<number>&, twopf_type)> twopf_time_callback;
 
         //! Extract a threepf component at fixed k-configuration for a set of time sample-point
-        typedef std::function<void(datapipe<number>*, unsigned int, std::shared_ptr<derived_data::SQL_query>&, unsigned int, std::vector<number>&, threepf_type)> threepf_time_callback;
+        typedef std::function<void(datapipe<number>*, unsigned int, derived_data::SQL_query&, unsigned int, std::vector<number>&, threepf_type)> threepf_time_callback;
 
         //! Extract a tensor twopf component at fixed k-configuration for a set of time sample-points
-        typedef std::function<void(datapipe<number>*, unsigned int, std::shared_ptr<derived_data::SQL_query>&, unsigned int, std::vector<number>&)> tensor_twopf_time_callback;
+        typedef std::function<void(datapipe<number>*, unsigned int, derived_data::SQL_query&, unsigned int, std::vector<number>&)> tensor_twopf_time_callback;
 
         //! Extract the zeta twopf at fixed k-configuration for a set of time sample-points
-        typedef std::function<void(datapipe<number>*, std::shared_ptr<derived_data::SQL_query>&, unsigned int, std::vector<number>&)> zeta_twopf_time_callback;
+        typedef std::function<void(datapipe<number>*, derived_data::SQL_query&, unsigned int, std::vector<number>&)> zeta_twopf_time_callback;
 
         //! Extract the zeta threepf at fixed k-configuration for a set of time sample-points
-        typedef std::function<void(datapipe<number>*, std::shared_ptr<derived_data::SQL_query>&, unsigned int, std::vector<number>&)> zeta_threepf_time_callback;
+        typedef std::function<void(datapipe<number>*, derived_data::SQL_query&, unsigned int, std::vector<number>&)> zeta_threepf_time_callback;
 
         //! Extract the zeta reduced bispectrum at fixed k-configuration for a set of time sample-points
-        typedef std::function<void(datapipe<number>*, std::shared_ptr<derived_data::SQL_query>&, unsigned int, std::vector<number>&)> zeta_redbsp_time_callback;
+        typedef std::function<void(datapipe<number>*, derived_data::SQL_query&, unsigned int, std::vector<number>&)> zeta_redbsp_time_callback;
 
         //! Extract an fNL for a set of time sample-points
-        typedef std::function<void(datapipe<number>*, std::shared_ptr<derived_data::SQL_query>&, std::vector<number>&, derived_data::template_type)> fNL_time_callback;
+        typedef std::function<void(datapipe<number>*, derived_data::SQL_query&, std::vector<number>&, derived_data::template_type)> fNL_time_callback;
 
         //! Extract bispectrum.template data for a set of time sample-points
-        typedef std::function<void(datapipe<number>*, std::shared_ptr<derived_data::SQL_query>&, std::vector<number>&, derived_data::template_type)> BT_time_callback;
+        typedef std::function<void(datapipe<number>*, derived_data::SQL_query&, std::vector<number>&, derived_data::template_type)> BT_time_callback;
 
         //! Extract template.template data for a set of time sample-points
-        typedef std::function<void(datapipe<number>*, std::shared_ptr<derived_data::SQL_query>&, std::vector<number>&, derived_data::template_type)> TT_time_callback;
+        typedef std::function<void(datapipe<number>*, derived_data::SQL_query&, std::vector<number>&, derived_data::template_type)> TT_time_callback;
 
         //! Extract a twopf component at fixed time for a set of k-configuration sample-points
-        typedef std::function<void(datapipe<number>*, unsigned int, std::shared_ptr<derived_data::SQL_query>&, unsigned int, std::vector<number>&, twopf_type)> twopf_kconfig_callback;
+        typedef std::function<void(datapipe<number>*, unsigned int, derived_data::SQL_query&, unsigned int, std::vector<number>&, twopf_type)> twopf_kconfig_callback;
 
         //! Extract a threepf component at fixed time for a set of k-configuration sample-points
-        typedef std::function<void(datapipe<number>*, unsigned int, std::shared_ptr<derived_data::SQL_query>&, unsigned int, std::vector<number>&, threepf_type)> threepf_kconfig_callback;
+        typedef std::function<void(datapipe<number>*, unsigned int, derived_data::SQL_query&, unsigned int, std::vector<number>&, threepf_type)> threepf_kconfig_callback;
 
         //! Extract a tensor twopf component at fixed time for a set of k-configuration sample-points
-        typedef std::function<void(datapipe<number>*, unsigned int, std::shared_ptr<derived_data::SQL_query>&, unsigned int, std::vector<number>&)> tensor_twopf_kconfig_callback;
+        typedef std::function<void(datapipe<number>*, unsigned int, derived_data::SQL_query&, unsigned int, std::vector<number>&)> tensor_twopf_kconfig_callback;
 
         //! Extract the zeta twopf at fixed time for a set of k-configuration sample-points
-        typedef std::function<void(datapipe<number>*, std::shared_ptr<derived_data::SQL_query>&, unsigned int, std::vector<number>&)> zeta_twopf_kconfig_callback;
+        typedef std::function<void(datapipe<number>*, derived_data::SQL_query&, unsigned int, std::vector<number>&)> zeta_twopf_kconfig_callback;
 
         //! Extract the zeta threepf at fixed time for a set of k-configuration sample-points
-        typedef std::function<void(datapipe<number>*, std::shared_ptr<derived_data::SQL_query>&, unsigned int, std::vector<number>&)> zeta_threepf_kconfig_callback;
+        typedef std::function<void(datapipe<number>*, derived_data::SQL_query&, unsigned int, std::vector<number>&)> zeta_threepf_kconfig_callback;
 
         //! Extract the zeta reduced bispectrum at fixed time for a set of k-configuration sample-points
-        typedef std::function<void(datapipe<number>*, std::shared_ptr<derived_data::SQL_query>&, unsigned int, std::vector<number>&)> zeta_redbsp_kconfig_callback;
+        typedef std::function<void(datapipe<number>*, derived_data::SQL_query&, unsigned int, std::vector<number>&)> zeta_redbsp_kconfig_callback;
 
 
         class utility_callbacks
@@ -366,10 +366,12 @@ namespace transport
         unsigned int get_N_fields() const { return(this->N_fields); }
 
 		    //! Get payload record if an integration group is attached; returns nullptr if an integration group is not attached
-		    std::shared_ptr< output_group_record<integration_payload> > get_attached_integration_record();
+        //! Raw pointers are used because there is no notion of ownership transfer
+		    output_group_record<integration_payload>* get_attached_integration_record();
 
 		    //! Get payload record if a postintegration group is attached; returns nullptr if a postintegration group is not attached
-		    std::shared_ptr< output_group_record<postintegration_payload> > get_attached_postintegration_record();
+        //! Raw pointers are used because there is no notion of ownership transfer
+		    output_group_record<postintegration_payload>* get_attached_postintegration_record();
 
 
         // PULL DATA
@@ -549,10 +551,10 @@ namespace transport
 		    attachment_type type;
 
         //! Attachment point for an integration_payload output group; null if none is attached
-        std::shared_ptr< output_group_record<integration_payload> > attached_integration_group;
+        std::unique_ptr< output_group_record<integration_payload> > attached_integration_group;
 
 		    //! Attachment point for a postintegration_payload output group; null if none is attached
-		    std::shared_ptr< output_group_record<postintegration_payload> > attached_postintegration_group;
+		    std::unique_ptr< output_group_record<postintegration_payload> > attached_postintegration_group;
 
         //! Number of fields associated with currently attached group
         unsigned int N_fields;
@@ -700,15 +702,21 @@ namespace transport
 		    switch(this->type)
 			    {
 		        case attachment_type::integration_attached:
-			        if(this->attached_integration_group.get() != nullptr) this->detach();
-				      break;
+              {
+                if(this->attached_integration_group) this->detach();
+                break;
+              }
 
             case attachment_type::postintegration_attached:
-			        if(this->attached_postintegration_group.get() != nullptr) this->detach();
-				      break;
+              {
+                if(this->attached_postintegration_group) this->detach();
+                break;
+              }
 
 		        case attachment_type::none_attached:
-			        break;
+              {
+                break;
+              }
 			    }
 
         if(this->log_sink)    // implicitly converts to bool, value true if not null
@@ -743,15 +751,21 @@ namespace transport
 		    switch(this->type)
 			    {
 		        case attachment_type::none_attached:
-			        return(false);
+              {
+                return(false);
+              }
 
 		        case attachment_type::integration_attached:
-			        if(this->attached_integration_group.get() == nullptr) return(false);
-				      break;
+              {
+                if(this->attached_integration_group.get() == nullptr) return(false);
+                break;
+              }
 
             case attachment_type::postintegration_attached:
-			        if(this->attached_postintegration_group.get() == nullptr) return(false);
-				      break;
+              {
+                if(this->attached_postintegration_group.get() == nullptr) return(false);
+                break;
+              }
 			    }
 
 		    if(this->time_config_cache_table == nullptr
@@ -848,15 +862,21 @@ namespace transport
 		    switch(this->type)
 			    {
 		        case attachment_type::integration_attached:
-			        BOOST_LOG_SEV(this->get_log(), datapipe<number>::log_severity_level::normal) << "** DETACH output group " << boost::posix_time::to_simple_string(this->attached_integration_group->get_creation_time());
-				      break;
+              {
+                BOOST_LOG_SEV(this->get_log(), datapipe<number>::log_severity_level::normal) << "** DETACH output group " << boost::posix_time::to_simple_string(this->attached_integration_group->get_creation_time());
+                break;
+              }
 
             case attachment_type::postintegration_attached:
-			        BOOST_LOG_SEV(this->get_log(), datapipe<number>::log_severity_level::normal) << "** DETACH output group " << boost::posix_time::to_simple_string(this->attached_postintegration_group->get_creation_time());
-				      break;
+              {
+                BOOST_LOG_SEV(this->get_log(), datapipe<number>::log_severity_level::normal) << "** DETACH output group " << boost::posix_time::to_simple_string(this->attached_postintegration_group->get_creation_time());
+                break;
+              }
 
             case attachment_type::none_attached:
-              break;
+              {
+                break;
+              }
           }
 
         this->attached_integration_group.reset();
@@ -873,16 +893,16 @@ namespace transport
 
 
 		template <typename number>
-		std::shared_ptr< output_group_record<integration_payload> > datapipe<number>::get_attached_integration_record()
+		output_group_record<integration_payload>* datapipe<number>::get_attached_integration_record()
 			{
-				return(this->attached_integration_group);   // is null if nothing attached
+				return(this->attached_integration_group.get());   // is null if nothing attached
 			}
 
 
     template <typename number>
-    std::shared_ptr< output_group_record<postintegration_payload> > datapipe<number>::get_attached_postintegration_record()
+    output_group_record<postintegration_payload>* datapipe<number>::get_attached_postintegration_record()
 	    {
-        return(this->attached_postintegration_group);
+        return(this->attached_postintegration_group.get());
 	    }
 
 
