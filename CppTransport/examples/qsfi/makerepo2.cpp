@@ -14,13 +14,22 @@
 // we work in units where M_p=1, but that's up to us;
 // we could choose something different
 
-const double M_Planck = 1.0;
-const double M        = 1e-7 * M_Planck;
-const double mphi     = M;
-const double msigma   = M * std::sqrt(30.0);
+constexpr double M_Planck   = 1.0;
 
-const double phi_init   = std::sqrt(450.0 / 2.0) * M_Planck;
-const double sigma_init = 2.0 * M_Planck;
+constexpr double shift1     = 231 * M_Planck;
+constexpr double shift2     = 231 * M_Planck;
+
+constexpr double Mass       = 1e-4 * M_Planck;
+constexpr double mphi       = 1e-7 * M_Planck;
+constexpr double deltaTheta = M_PI / 10.0;
+const     double phi0       = (-100.0 * std::sqrt(6.0)) * M_Planck + shift1;
+const     double s          = (1000.0 * std::sqrt(3.0)) * M_Planck;
+constexpr double pi         = M_PI;
+
+const     double phi_init   = (-2.0-100.0*std::sqrt(6.0)) * M_Planck + shift2;
+const     double chi_init   = (2.0*std::tan(M_PI/20.0)) * M_Planck;
+constexpr double dphi_init  = 0.0;
+constexpr double dchi_init  = 0.0;
 
 
 // ****************************************************************************
@@ -44,45 +53,41 @@ int main(int argc, char* argv[])
     std::shared_ptr< transport::QSFI_basic<double> > model = mgr->create_model< transport::QSFI_basic<double> >();
 
     // set up parameter choices
-    const std::vector<double>     init_params = { mphi, msigma };
+    const std::vector<double>     init_params = { Mass, mphi, deltaTheta, phi0, s, pi };
     transport::parameters<double> params(M_Planck, init_params, model);
 
-    const std::vector<double> init_values = { phi_init, sigma_init };
+    const std::vector<double> init_values = { phi_init, chi_init };
 
-    const double Ninit  = 0.0;  // start counting from N=0 at the beginning of the integration
-    const double Ncross = 6.0;  // horizon-crossing occurs at N=251. The turn occurs just after 252 e-folds, so this allows the legs of the bispecturm to span a sensible range around the turn
-    const double Npre   = 6.0;  // number of e-folds of subhorizon evolution
-    const double Nsplit = 26.0; // split point between early and late
-    const double Nmax   = 57.0; // how many e-folds to integrate after horizon crossing
+    constexpr double Ninit  = 0.0;   // start counting from N=0 at the beginning of the integration
+    constexpr double Ncross = 245.0; // horizon-crossing occurs at N=251. The turn occurs just after 252 e-folds, so this allows the legs of the bispecturm to span a sensible range around the turn
+    constexpr double Npre   = 15.0;  // number of e-folds of subhorizon evolution
+    constexpr double Nmax   = 55.0;  // how many e-folds to integrate after horizon crossing
 
     // set up initial conditions with the specified horizon-crossing time Ncross and Npre
     // e-folds of subhorizon evolution.
     // The resulting initial conditions apply at time Ncross-Npre
-    transport::initial_conditions<double> ics("powerlaw-1", model, params, init_values, Ninit, Ncross, Npre);
+    transport::initial_conditions<double> ics("qsfi-1", model, params, init_values, Ninit, Ncross, Npre);
 
-    const unsigned int early_t_samples = 200;
-    const unsigned int late_t_samples  = 100;
+    constexpr unsigned int t_samples = 300;
 
-    transport::stepping_range<double> early_times(Ncross-Npre, Ncross+Nsplit, early_t_samples, transport::range_spacing_type::logarithmic_bottom_stepping);
-    transport::stepping_range<double> late_times(Ncross+Nsplit, Ncross+Nmax, late_t_samples, transport::range_spacing_type::linear_stepping);
-    transport::aggregation_range<double> times(early_times, late_times);
+    transport::stepping_range<double> times(Ncross-Npre, Ncross+Nmax, t_samples, transport::range_spacing_type::linear_stepping);
 
     // the conventions for k-numbers are as follows:
     // k=1 is the mode which crosses the horizon at time N*,
     // where N* is the 'offset' we pass to the integration method (see below)
-    const double        ktmin         = exp(0.0);
-    const double        ktmax         = exp(10.0);
-    const unsigned int  k_samples     = 100;
+    const     double        ktmin         = exp(0.0);
+    const     double        ktmax         = exp(10.0);
+    constexpr unsigned int  k_samples     = 100;
 
-		const double        alphamin      = 0.0;
-		const double        alphamax      = 1.0/2.0;
-		const unsigned int  a_samples     = 5;
+		constexpr double        alphamin      = 0.0;
+		constexpr double        alphamax      = 1.0/2.0;
+		constexpr unsigned int  a_samples     = 5;
 
-		const double        betamin       = 0.0;
-		const double        betamid       = 0.98;
-		const double        betamax       = 0.999;
-		const unsigned int  lo_b_samples  = 150;
-		const unsigned int  hi_b_samples  = 200;
+		constexpr double        betamin       = 0.0;
+		constexpr double        betamid       = 0.98;
+		constexpr double        betamax       = 0.999;
+		constexpr unsigned int  lo_b_samples  = 150;
+		constexpr unsigned int  hi_b_samples  = 200;
 
 		struct ThreepfStoragePolicy
 			{
@@ -100,11 +105,11 @@ int main(int argc, char* argv[])
 //    transport::stepping_range<double> betas_hi(betamid, betamax, hi_b_samples, transport::range_spacing_type::logarithmic_top_stepping);
 //    transport::aggregation_range<double> betas(betas_lo, betas_hi);
     transport::stepping_range<double> betas_equi(1.0/3.0, 1.0/3.0, 0, transport::range_spacing_type::linear_stepping);    // add dedicated equilateral configuration
-    transport::stepping_range<double> betas_lo(0.0, 0.5, 5, transport::range_spacing_type::linear_stepping);
-//    transport::stepping_range<double> betas_mid(0.9, 0.99, 5, transport::range_spacing_type::logarithmic_top_stepping);
+    transport::stepping_range<double> betas_lo(0.0, 0.9, 5, transport::range_spacing_type::linear_stepping);
+    transport::stepping_range<double> betas_mid(0.9, 0.96, 5, transport::range_spacing_type::logarithmic_top_stepping);
 //    transport::stepping_range<double> betas_hi(0.99, 0.999, 5, transport::range_spacing_type::logarithmic_top_stepping);
 //    transport::aggregation_range<double> betas = betas_lo + betas_mid + betas_hi + betas_equi;
-    transport::aggregation_range<double> betas = betas_lo + betas_equi;
+    transport::aggregation_range<double> betas = betas_lo + betas_mid + betas_equi;
 
     // construct a threepf task
     transport::threepf_fls_task<double> tk3("QSFI.threepf-1", ics, times, kts, alphas, betas, ThreepfStoragePolicy(), false);
@@ -134,7 +139,7 @@ int main(int argc, char* argv[])
     transport::derived_data::SQL_threepf_kconfig_query equilateral_smallest_threepf("ABS(alpha) < 0.01 AND ABS(beta-1.0/3.0) < 0.01 AND kt_conventional IN (SELECT MIN(kt_conventional) FROM threepf_samples)");
 
     // filter: squeezed, isosceles threepf
-    transport::derived_data::SQL_threepf_kconfig_query isosceles_squeezed_threepf("ABS(beta-0.5)<0.0001 AND ABS(alpha)<0.01");
+    transport::derived_data::SQL_threepf_kconfig_query isosceles_squeezed_threepf("ABS(beta-0.96)<0.0001 AND ABS(alpha)<0.01");
 
     // filter: equilateral, isosceles threepf
     transport::derived_data::SQL_threepf_kconfig_query isosceles_equilateral_threepf("ABS(beta-1.0/3.0)<0.0001 AND ABS(alpha)<0.01");
@@ -298,7 +303,7 @@ int main(int argc, char* argv[])
 
     transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_spec_sq(ztk3, last_time, isosceles_squeezed_threepf);
 		tk3_zeta_redbsp_spec_sq.set_klabel_meaning(transport::derived_data::klabel_type::conventional);
-		tk3_zeta_redbsp_spec_sq.set_label_text("$k_3/k_t = 0.5$", "k3/k_t = 0.5");
+		tk3_zeta_redbsp_spec_sq.set_label_text("$k_3/k_t = 0.96$", "k3/k_t = 0.96");
 
     transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_spec_eq(ztk3, last_time, isosceles_equilateral_threepf);
     tk3_zeta_redbsp_spec_eq.set_klabel_meaning(transport::derived_data::klabel_type::conventional);
@@ -411,7 +416,7 @@ int main(int argc, char* argv[])
 
     transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_spec_index(ztk3, last_time, isosceles_squeezed_threepf);
     tk3_zeta_redbsp_spec_index.set_klabel_meaning(transport::derived_data::klabel_type::conventional);
-    tk3_zeta_redbsp_spec_index.set_label_text("$n_{f_{\\mathrm{NL}}} \\;\\; k_3/k_t = 0.5$", "k3/k_t = 0.5");
+    tk3_zeta_redbsp_spec_index.set_label_text("$n_{f_{\\mathrm{NL}}} \\;\\; k_3/k_t = 0.96$", "k3/k_t = 0.96");
     tk3_zeta_redbsp_spec_index.set_spectral_index(true);
 
     transport::derived_data::wavenumber_series_plot<double> tk3_redbsp_spec_index_plot("QSFI.threepf-1.redbsp-spec-index", "redbsp-spec-index.pdf");
