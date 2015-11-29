@@ -6,7 +6,7 @@ project(CppTransport)
 SET ( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/" )
 SET ( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/splinter/cmake/" )
 
-SET ( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -mavx -Ofast" CACHE STRING "compile flags" FORCE )
+SET ( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -mavx -Ofast" CACHE STRING "compile flags" FORCE )
 SET ( CMAKE_C_FLAGS   "${CMAKE_C_FLAGS} -mavx -Ofast"              CACHE STRING "compile flags" FORCE )
 
 SET ( JSONCPP_AMALGAMATED "transport-runtime-api/thirdparty/jsoncpp/jsoncpp.cpp" )
@@ -506,7 +506,6 @@ set(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_LINE_COLLECTIONS_FILES
 set(TRANSPORT_RUNTIME_API_REPOSITORY_FILES
   transport-runtime-api/repository/json_repository.h
   transport-runtime-api/repository/repository.h
-  transport-runtime-api/repository/repository_creation_key.h
   transport-runtime-api/repository/transaction_manager.h
 )
 

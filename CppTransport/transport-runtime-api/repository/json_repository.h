@@ -41,7 +41,7 @@ namespace transport
 
       public:
 
-        json_repository(const std::string& path, typename repository<number>::access_type type,
+        json_repository(const std::string& path, repository_mode type,
                                   typename repository<number>::error_callback e,
                                   typename repository<number>::warning_callback w,
                                   typename repository<number>::message_callback m,
@@ -118,7 +118,7 @@ namespace transport
 
 
     template <typename number>
-    json_repository<number>::json_repository(const std::string& path, typename repository<number>::access_type type,
+    json_repository<number>::json_repository(const std::string& path, repository_mode type,
                                              typename repository<number>::error_callback e,
                                              typename repository<number>::warning_callback w,
                                              typename repository<number>::message_callback m,

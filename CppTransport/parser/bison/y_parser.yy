@@ -20,11 +20,11 @@
     }
 }
 
-%lex-param   { std::shared_ptr<y_lexer>  lexer }
-%parse-param { std::shared_ptr<y_lexer>  lexer }
+%lex-param   { y_lexer&  lexer }
+%parse-param { y_lexer&  lexer }
 
-%lex-param   { std::shared_ptr<y_driver> driver }
-%parse-param { std::shared_ptr<y_driver> driver }
+%lex-param   { y_driver& driver }
+%parse-param { y_driver& driver }
 
 %code {
     #include <iostream>
@@ -39,10 +39,10 @@
 
     static int yylex(y::y_parser::semantic_type* yylval,
                      y::y_parser::location_type* yyloc,
-                     std::shared_ptr<y::y_lexer> lexer,
-                     std::shared_ptr<y::y_driver> driver)
+                     y::y_lexer& lexer,
+                     y::y_driver& driver)
       {
-        return(lexer->yylex(yylval));
+        return(lexer.yylex(yylval));
       }
 }
 
@@ -152,20 +152,20 @@
 program: script
         ;
 
-script: script potential equals expression semicolon                                    { driver->set_potential($4); }
-        | script name string semicolon                                                  { driver->set_name($3); }
-        | script author string semicolon                                                { driver->set_author($3); }
-        | script tag string semicolon                                                   { driver->set_tag($3); }
-        | script core string semicolon                                                  { driver->set_core($3); }
-        | script implementation string semicolon                                        { driver->set_implementation($3); }
-        | script model string semicolon                                                 { driver->set_model($3); }
-        | script indexorder left semicolon                                              { driver->set_indexorder_left(); }
-        | script indexorder right semicolon                                             { driver->set_indexorder_right(); }
-        | script field attribute_block identifier semicolon                             { driver->add_field($4, $3); }
-        | script parameter attribute_block identifier semicolon                         { driver->add_parameter($4, $3); }
-        | script background stepper_block semicolon                                     { driver->set_background_stepper($3); }
-        | script perturbations stepper_block semicolon                                  { driver->set_perturbations_stepper($3); }
-				| script subexpr subexpr_block identifier semicolon                             { driver->add_subexpr($4, $3); }
+script: script potential equals expression semicolon                                    { driver.set_potential($4); }
+        | script name string semicolon                                                  { driver.set_name($3); }
+        | script author string semicolon                                                { driver.set_author($3); }
+        | script tag string semicolon                                                   { driver.set_tag($3); }
+        | script core string semicolon                                                  { driver.set_core($3); }
+        | script implementation string semicolon                                        { driver.set_implementation($3); }
+        | script model string semicolon                                                 { driver.set_model($3); }
+        | script indexorder left semicolon                                              { driver.set_indexorder_left(); }
+        | script indexorder right semicolon                                             { driver.set_indexorder_right(); }
+        | script field attribute_block identifier semicolon                             { driver.add_field($4, $3); }
+        | script parameter attribute_block identifier semicolon                         { driver.add_parameter($4, $3); }
+        | script background stepper_block semicolon                                     { driver.set_background_stepper($3); }
+        | script perturbations stepper_block semicolon                                  { driver.set_perturbations_stepper($3); }
+				| script subexpr subexpr_block identifier semicolon                             { driver.add_subexpr($4, $3); }
         |
         ;
 
@@ -173,16 +173,16 @@ attribute_block: open_brace attributes close_brace                              
         |                                                                               { $$ = new attributes; }
         ;
 
-attributes: attributes latex string semicolon                                           { driver->add_latex_attribute($1, $3); $$ = $1; }
+attributes: attributes latex string semicolon                                           { driver.add_latex_attribute($1, $3); $$ = $1; }
         |                                                                               { $$ = new attributes; }
         ;
 
 stepper_block: open_brace stepper_attributes close_brace                                { $$ = $2; }
 
-stepper_attributes: stepper_attributes abserr equals decimal semicolon                  { driver->set_abserr($1, $4); $$ = $1; }
-        | stepper_attributes relerr equals decimal semicolon                            { driver->set_relerr($1, $4); $$ = $1; }
-        | stepper_attributes stepper equals string semicolon                            { driver->set_stepper($1, $4); $$ = $1; }
-        | stepper_attributes stepsize equals decimal semicolon                          { driver->set_stepsize($1, $4); $$ = $1; }
+stepper_attributes: stepper_attributes abserr equals decimal semicolon                  { driver.set_abserr($1, $4); $$ = $1; }
+        | stepper_attributes relerr equals decimal semicolon                            { driver.set_relerr($1, $4); $$ = $1; }
+        | stepper_attributes stepper equals string semicolon                            { driver.set_stepper($1, $4); $$ = $1; }
+        | stepper_attributes stepsize equals decimal semicolon                          { driver.set_stepsize($1, $4); $$ = $1; }
         |                                                                               { $$ = new stepper; }
         ;
 
@@ -190,68 +190,68 @@ subexpr_block: open_brace subexpr_def close_brace                               
         |                                                                               { $$ = new subexpr; }
 				;
 
-subexpr_def: subexpr_def latex string semicolon                                         { driver->add_latex_attribute($1, $3); $$ = $1; }
-        | subexpr_def value equals expression semicolon                                 { driver->add_value_attribute($1, $4); $$ = $1; }
+subexpr_def: subexpr_def latex string semicolon                                         { driver.add_latex_attribute($1, $3); $$ = $1; }
+        | subexpr_def value equals expression semicolon                                 { driver.add_value_attribute($1, $4); $$ = $1; }
         |                                                                               { $$ = new subexpr; }
         ;
 
 expression: term                                                                        { $$ = $1; }
-        | expression plus term                                                          { $$ = driver->add($1, $3); }
-        | expression binary_minus term                                                  { $$ = driver->sub($1, $3); }
+        | expression plus term                                                          { $$ = driver.add($1, $3); }
+        | expression binary_minus term                                                  { $$ = driver.sub($1, $3); }
         ;
         
 term: factor                                                                            { $$ = $1; }
-        | term star factor                                                              { $$ = driver->mul($1, $3); }
-        | term backslash factor                                                         { $$ = driver->div($1, $3); }
+        | term star factor                                                              { $$ = driver.mul($1, $3); }
+        | term backslash factor                                                         { $$ = driver.div($1, $3); }
         ;
 
 factor: leaf                                                                            { $$ = $1; }
-        | leaf circumflex leaf                                                          { $$ = driver->pow($1, $3); }
+        | leaf circumflex leaf                                                          { $$ = driver.pow($1, $3); }
         ;
 
-leaf: integer                                                                           { $$ = driver->get_integer($1); }
-        | decimal                                                                       { $$ = driver->get_decimal($1); }
-        | identifier                                                                    { $$ = driver->get_identifier($1); }
+leaf: integer                                                                           { $$ = driver.get_integer($1); }
+        | decimal                                                                       { $$ = driver.get_decimal($1); }
+        | identifier                                                                    { $$ = driver.get_identifier($1); }
         | built_in_function                                                             { $$ = $1; }
         | open_bracket expression close_bracket                                         { $$ = $2; }
-        | unary_minus expression                                                        { $$ = driver->unary_minus($2); }
+        | unary_minus expression                                                        { $$ = driver.unary_minus($2); }
         ;
 
-built_in_function: abs open_bracket expression close_bracket                            { $$ = driver->abs($3); }
-        | step open_bracket expression close_bracket                                    { $$ = driver->step($3); }
-        | sqrt open_bracket expression close_bracket                                    { $$ = driver->sqrt($3); }
-        | sin open_bracket expression close_bracket                                     { $$ = driver->sin($3); }
-        | cos open_bracket expression close_bracket                                     { $$ = driver->cos($3); }
-        | tan open_bracket expression close_bracket                                     { $$ = driver->tan($3); }
-        | asin open_bracket expression close_bracket                                    { $$ = driver->asin($3); }
-        | acos open_bracket expression close_bracket                                    { $$ = driver->acos($3); }
-        | atan open_bracket expression close_bracket                                    { $$ = driver->atan($3); }
-        | atan2 open_bracket expression comma expression close_bracket                  { $$ = driver->atan2($3, $5); }
-        | sinh open_bracket expression close_bracket                                    { $$ = driver->sinh($3); }
-        | cosh open_bracket expression close_bracket                                    { $$ = driver->cosh($3); }
-        | tanh open_bracket expression close_bracket                                    { $$ = driver->tanh($3); }
-        | asinh open_bracket expression close_bracket                                   { $$ = driver->asinh($3); }
-        | acosh open_bracket expression close_bracket                                   { $$ = driver->acosh($3); }
-        | atanh open_bracket expression close_bracket                                   { $$ = driver->atanh($3); }
-        | exp open_bracket expression close_bracket                                     { $$ = driver->exp($3); }
-        | log open_bracket expression close_bracket                                     { $$ = driver->log($3); }
-				| pow open_bracket expression comma expression close_bracket                    { $$ = driver->pow($3, $5); }
-        | Li2 open_bracket expression close_bracket                                     { $$ = driver->Li2($3); }
-        | Li open_bracket expression comma expression close_bracket                     { $$ = driver->Li($3, $5); }
-        | G open_bracket expression comma expression close_bracket                      { $$ = driver->G($3, $5); }
-        | G open_bracket expression comma expression comma expression close_bracket     { $$ = driver->G($3, $5, $7); }
-        | S open_bracket expression comma expression comma expression close_bracket     { $$ = driver->S($3, $5, $7); }
-        | H open_bracket expression comma expression close_bracket                      { $$ = driver->H($3, $5); }
-        | zeta open_bracket expression close_bracket                                    { $$ = driver->zeta($3); }
-        | zeta open_bracket expression comma expression close_bracket                   { $$ = driver->zeta($3, $5); }
-        | zetaderiv open_bracket expression comma expression close_bracket              { $$ = driver->zetaderiv($3, $5); }
-        | tgamma open_bracket expression close_bracket                                  { $$ = driver->tgamma($3); }
-        | lgamma open_bracket expression close_bracket                                  { $$ = driver->lgamma($3); }
-        | beta open_bracket expression comma expression close_bracket                   { $$ = driver->beta($3, $5); }
-        | psi open_bracket expression close_bracket                                     { $$ = driver->psi($3); }
-        | psi open_bracket expression comma expression close_bracket                    { $$ = driver->psi($3, $5); }
-        | factorial open_bracket expression close_bracket                               { $$ = driver->factorial($3); }
-        | binomial open_bracket expression comma expression close_bracket               { $$ = driver->binomial($3, $5); }
+built_in_function: abs open_bracket expression close_bracket                            { $$ = driver.abs($3); }
+        | step open_bracket expression close_bracket                                    { $$ = driver.step($3); }
+        | sqrt open_bracket expression close_bracket                                    { $$ = driver.sqrt($3); }
+        | sin open_bracket expression close_bracket                                     { $$ = driver.sin($3); }
+        | cos open_bracket expression close_bracket                                     { $$ = driver.cos($3); }
+        | tan open_bracket expression close_bracket                                     { $$ = driver.tan($3); }
+        | asin open_bracket expression close_bracket                                    { $$ = driver.asin($3); }
+        | acos open_bracket expression close_bracket                                    { $$ = driver.acos($3); }
+        | atan open_bracket expression close_bracket                                    { $$ = driver.atan($3); }
+        | atan2 open_bracket expression comma expression close_bracket                  { $$ = driver.atan2($3, $5); }
+        | sinh open_bracket expression close_bracket                                    { $$ = driver.sinh($3); }
+        | cosh open_bracket expression close_bracket                                    { $$ = driver.cosh($3); }
+        | tanh open_bracket expression close_bracket                                    { $$ = driver.tanh($3); }
+        | asinh open_bracket expression close_bracket                                   { $$ = driver.asinh($3); }
+        | acosh open_bracket expression close_bracket                                   { $$ = driver.acosh($3); }
+        | atanh open_bracket expression close_bracket                                   { $$ = driver.atanh($3); }
+        | exp open_bracket expression close_bracket                                     { $$ = driver.exp($3); }
+        | log open_bracket expression close_bracket                                     { $$ = driver.log($3); }
+				| pow open_bracket expression comma expression close_bracket                    { $$ = driver.pow($3, $5); }
+        | Li2 open_bracket expression close_bracket                                     { $$ = driver.Li2($3); }
+        | Li open_bracket expression comma expression close_bracket                     { $$ = driver.Li($3, $5); }
+        | G open_bracket expression comma expression close_bracket                      { $$ = driver.G($3, $5); }
+        | G open_bracket expression comma expression comma expression close_bracket     { $$ = driver.G($3, $5, $7); }
+        | S open_bracket expression comma expression comma expression close_bracket     { $$ = driver.S($3, $5, $7); }
+        | H open_bracket expression comma expression close_bracket                      { $$ = driver.H($3, $5); }
+        | zeta open_bracket expression close_bracket                                    { $$ = driver.zeta($3); }
+        | zeta open_bracket expression comma expression close_bracket                   { $$ = driver.zeta($3, $5); }
+        | zetaderiv open_bracket expression comma expression close_bracket              { $$ = driver.zetaderiv($3, $5); }
+        | tgamma open_bracket expression close_bracket                                  { $$ = driver.tgamma($3); }
+        | lgamma open_bracket expression close_bracket                                  { $$ = driver.lgamma($3); }
+        | beta open_bracket expression comma expression close_bracket                   { $$ = driver.beta($3, $5); }
+        | psi open_bracket expression close_bracket                                     { $$ = driver.psi($3); }
+        | psi open_bracket expression comma expression close_bracket                    { $$ = driver.psi($3, $5); }
+        | factorial open_bracket expression close_bracket                               { $$ = driver.factorial($3); }
+        | binomial open_bracket expression comma expression close_bracket               { $$ = driver.binomial($3, $5); }
 
 %%
 
@@ -259,7 +259,7 @@ void y::y_parser::error(const y::y_parser::location_type &l,
                         const std::string& err_message)
   {
     std::ostringstream msg;
-    lexeme::lexeme<enum keyword_type, enum character_type>* current_lexeme = this->lexer->get_current_lexeme();
+    lexeme::lexeme<enum keyword_type, enum character_type>* current_lexeme = this->lexer.get_current_lexeme();
 
 		if(current_lexeme != nullptr)
 			{

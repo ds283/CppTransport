@@ -14,6 +14,7 @@
 #include <vector>
 #include <memory>
 
+#include "transport-runtime-api/defaults.h"
 #include "transport-runtime-api/data/data_manager.h"
 
 #include "transport-runtime-api/messages.h"
@@ -67,28 +68,28 @@ namespace transport
 
         //! Initialize a new integration_writer object, including the data container.
         //! Never overwrites existing data; if the container already exists, an exception is thrown
-        virtual void initialize_writer(std::shared_ptr< integration_writer<number> >& writer, bool recover_mode = false) override;
+        virtual void initialize_writer(integration_writer<number>& writer, bool recover_mode = false) override;
 
         //! Close an open integration_writer object.
 
         //! Any open sqlite3 handles are closed, meaning that any integration_writer objects will be invalidated.
         //! After closing, attempting to use an integration_writer will lead to unsubtle errors.
-        virtual void close_writer(std::shared_ptr< integration_writer<number> >& writer) override;
+        virtual void close_writer(integration_writer<number>& writer) override;
 
 		    //! Initialize a new derived_content_writer object.
-		    virtual void initialize_writer(std::shared_ptr< derived_content_writer<number> >& writer, bool recover_mode = false) override;
+		    virtual void initialize_writer(derived_content_writer<number>& writer, bool recover_mode = false) override;
 
 		    //! Close an open derived_content_writer object.
 
 		    //! Any open sqlite3 handles are closed. Attempting to use the writer after closing
 		    //! will lead to unsubtle errors.
-		    virtual void close_writer(std::shared_ptr< derived_content_writer<number> >& writer) override;
+		    virtual void close_writer(derived_content_writer<number>& writer) override;
 
         //! Initialize a new postintegration_writer object.
-        virtual void initialize_writer(std::shared_ptr< postintegration_writer<number> >& writer, bool recover_mode = false) override;
+        virtual void initialize_writer(postintegration_writer<number>& writer, bool recover_mode = false) override;
 
         //! Close an open postintegration_writer object
-        virtual void close_writer(std::shared_ptr< postintegration_writer<number> >& writer) override;
+        virtual void close_writer(postintegration_writer<number>& writer) override;
 
 
         // WRITE TABLES -- implements a 'data_manager' interface
@@ -96,19 +97,19 @@ namespace transport
       public:
 
         //! Create tables needed for a twopf container
-        virtual void create_tables(std::shared_ptr< integration_writer<number> >& writer, twopf_task<number>* tk) override;
+        virtual void create_tables(integration_writer<number>& writer, twopf_task<number>* tk) override;
 
         //! Create tables needed for a threepf container
-        virtual void create_tables(std::shared_ptr< integration_writer<number> >& writer, threepf_task<number>* tk) override;
+        virtual void create_tables(integration_writer<number>& writer, threepf_task<number>* tk) override;
 
         //! Create tables needed for a zeta twopf container
-        virtual void create_tables(std::shared_ptr< postintegration_writer<number> >& writer, zeta_twopf_task<number>* tk) override;
+        virtual void create_tables(postintegration_writer<number>& writer, zeta_twopf_task<number>* tk) override;
 
         //! Create tables needed for a zeta threepf container
-        virtual void create_tables(std::shared_ptr< postintegration_writer<number> >& writer, zeta_threepf_task<number>* tk) override;
+        virtual void create_tables(postintegration_writer<number>& writer, zeta_threepf_task<number>* tk) override;
 
         //! Create tables needed for an fNL container
-        virtual void create_tables(std::shared_ptr< postintegration_writer<number> >& writer, fNL_task<number>* tk) override;
+        virtual void create_tables(postintegration_writer<number>& writer, fNL_task<number>* tk) override;
 
 
         // SEEDING -- implements a 'data manager' interface
@@ -116,24 +117,24 @@ namespace transport
       public:
 
         //! Seed a writer for a twopf task
-        virtual void seed_writer(std::shared_ptr< integration_writer<number> >& writer, twopf_task<number>* tk,
-                                 const std::shared_ptr< output_group_record<integration_payload> >& seed) override;
+        virtual void seed_writer(integration_writer<number>& writer, twopf_task<number>* tk,
+                                 const output_group_record<integration_payload>& seed) override;
 
         //! Seed a writer for a threepf task
-        virtual void seed_writer(std::shared_ptr< integration_writer<number> >& writer, threepf_task<number>* tk,
-                                 const std::shared_ptr< output_group_record<integration_payload> >& seed) override;
+        virtual void seed_writer(integration_writer<number>& writer, threepf_task<number>* tk,
+                                 const output_group_record<integration_payload>& seed) override;
 
         //! Seed a writer for a zeta twopf task
-        virtual void seed_writer(std::shared_ptr< postintegration_writer<number> >& writer, zeta_twopf_task<number>* tk,
-                                 const std::shared_ptr< output_group_record<postintegration_payload> >& seed) override;
+        virtual void seed_writer(postintegration_writer<number>& writer, zeta_twopf_task<number>* tk,
+                                 const output_group_record<postintegration_payload>& seed) override;
 
         //! Seed a writer for a zeta threepf task
-        virtual void seed_writer(std::shared_ptr< postintegration_writer<number> >& writer, zeta_threepf_task<number>* tk,
-                                 const std::shared_ptr< output_group_record<postintegration_payload> >& seed) override;
+        virtual void seed_writer(postintegration_writer<number>& writer, zeta_threepf_task<number>* tk,
+                                 const output_group_record<postintegration_payload>& seed) override;
 
         //! Seed a writer for an fNL task
-        virtual void seed_writer(std::shared_ptr< postintegration_writer<number> >& writer, fNL_task<number>* tk,
-                                 const std::shared_ptr< output_group_record<postintegration_payload> >& seed) override;
+        virtual void seed_writer(postintegration_writer<number>& writer, fNL_task<number>* tk,
+                                 const output_group_record<postintegration_payload>& seed) override;
 
 
         // CONSTRUCT BATCHERS  -- implements a 'data_manager' interface
@@ -246,90 +247,90 @@ namespace transport
       public:
 
         //! Create a new datapipe
-        virtual datapipe<number> create_datapipe(const boost::filesystem::path& logdir,
-                                                 const boost::filesystem::path& tempdir,
-                                                 typename datapipe<number>::integration_content_finder integration_finder,
-                                                 typename datapipe<number>::postintegration_content_finder postintegration_finder,
-                                                 typename datapipe<number>::dispatch_function dispatcher,
-                                                 unsigned int worker, bool no_log = false) override;
+        virtual std::unique_ptr< datapipe<number> > create_datapipe(const boost::filesystem::path& logdir,
+                                                                    const boost::filesystem::path& tempdir,
+                                                                    typename datapipe<number>::integration_content_finder integration_finder,
+                                                                    typename datapipe<number>::postintegration_content_finder postintegration_finder,
+                                                                    typename datapipe<number>::dispatch_function dispatcher,
+                                                                    unsigned int worker, bool no_log = false) override;
 
         //! Pull a set of time sample-points from a datapipe
-        virtual void pull_time_config(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_time_config_query>& tquery, std::vector<time_config>& sample) override;
+        virtual void pull_time_config(datapipe<number>* pipe, const derived_data::SQL_time_config_query& tquery, std::vector<time_config>& sample) override;
 
         //! Pull a set of 2pf k-configuration serial numbers from a datapipe
-        void pull_kconfig_twopf(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_twopf_kconfig_query>& kquery, std::vector<twopf_kconfig>& sample) override;
+        void pull_kconfig_twopf(datapipe<number>* pipe, const derived_data::SQL_twopf_kconfig_query& kquery, std::vector<twopf_kconfig>& sample) override;
 
         //! Pull a set of 3pd k-configuration serial numbesr from a datapipe
         //! Simultaneously, populates three lists (k1, k2, k3) with serial numbers for the 2pf k-configurations
         //! corresponding to k1, k2, k3
-        void pull_kconfig_threepf(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_threepf_kconfig_query>& query, std::vector<threepf_kconfig>& sample) override;
+        void pull_kconfig_threepf(datapipe<number>* pipe, const derived_data::SQL_threepf_kconfig_query& query, std::vector<threepf_kconfig>& sample) override;
 
         //! Pull a time sample of a background field from a datapipe
-        virtual void pull_background_time_sample(datapipe<number>* pipe, unsigned int id, const std::shared_ptr<derived_data::SQL_query>& query, std::vector<number>& sample) override;
+        virtual void pull_background_time_sample(datapipe<number>* pipe, unsigned int id, const derived_data::SQL_query& query, std::vector<number>& sample) override;
 
         //! Pull a time sample of a twopf component at fixed k-configuration from a datapipe
-        virtual void pull_twopf_time_sample(datapipe<number>* pipe, unsigned int id, const std::shared_ptr<derived_data::SQL_query>& query,
+        virtual void pull_twopf_time_sample(datapipe<number>* pipe, unsigned int id, const derived_data::SQL_query& query,
                                             unsigned int k_serial, std::vector<number>& sample, twopf_type type) override;
 
         //! Pull a sample of a threepf at fixed k-configuration from a datapipe
-        virtual void pull_threepf_time_sample(datapipe<number>* pipe, unsigned int id, const std::shared_ptr<derived_data::SQL_query>& query,
+        virtual void pull_threepf_time_sample(datapipe<number>* pipe, unsigned int id, const derived_data::SQL_query& query,
                                               unsigned int k_serial, std::vector<number>& sample, threepf_type type) override;
 
         //! Pull a sample of a tensor twopf component at fixed k-configuration from a datapipe
-        virtual void pull_tensor_twopf_time_sample(datapipe<number>* pipe, unsigned int id, const std::shared_ptr<derived_data::SQL_query>& query,
+        virtual void pull_tensor_twopf_time_sample(datapipe<number>* pipe, unsigned int id, const derived_data::SQL_query& query,
                                                    unsigned int k_serial, std::vector<number>& sample) override;
 
         //! Pull a sample of the zeta twopf at fixed k-configuration from a datapipe
-        virtual void pull_zeta_twopf_time_sample(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_query>& query,
+        virtual void pull_zeta_twopf_time_sample(datapipe<number>* pipe, const derived_data::SQL_query& query,
                                                  unsigned int k_serial, std::vector<number>& sample) override;
 
         //! Pull a sample of the zeta threepf at fixed k-configuration from a datapipe
-        virtual void pull_zeta_threepf_time_sample(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_query>& query,
+        virtual void pull_zeta_threepf_time_sample(datapipe<number>* pipe, const derived_data::SQL_query& query,
                                                    unsigned int k_serial, std::vector<number>& sample) override;
 
         //! Pull a sample of the zeta reduced bispectrum at fixed k-configuration from a datapipe
-        virtual void pull_zeta_redbsp_time_sample(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_query>& query,
+        virtual void pull_zeta_redbsp_time_sample(datapipe<number>* pipe, const derived_data::SQL_query& query,
                                                   unsigned int k_serial, std::vector<number>& sample) override;
 
         //! Pull a sample of fNL from a datapipe
-        virtual void pull_fNL_time_sample(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_query>& query,
+        virtual void pull_fNL_time_sample(datapipe<number>* pipe, const derived_data::SQL_query& query,
                                           std::vector<number>& sample, derived_data::template_type type) override;
 
         //! Pull a sample of bispectrum.template from a datapipe
-        virtual void pull_BT_time_sample(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_query>& query,
+        virtual void pull_BT_time_sample(datapipe<number>* pipe, const derived_data::SQL_query& query,
                                           std::vector<number>& sample, derived_data::template_type type) override;
 
         //! Pull a sample of template.template from a datapipe
-        virtual void pull_TT_time_sample(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_query>& query,
+        virtual void pull_TT_time_sample(datapipe<number>* pipe, const derived_data::SQL_query& query,
                                           std::vector<number>& sample, derived_data::template_type type) override;
 
         //! Pull a kconfig sample of a twopf component at fixed time from a datapipe
-        virtual void pull_twopf_kconfig_sample(datapipe<number>* pipe, unsigned int id, const std::shared_ptr<derived_data::SQL_query>& query,
+        virtual void pull_twopf_kconfig_sample(datapipe<number>* pipe, unsigned int id, const derived_data::SQL_query& query,
                                                unsigned int t_serial, std::vector<number>& sample, twopf_type type) override;
 
         //! Pull a kconfig sample of a threepf at fixed time from a datapipe
         virtual void pull_threepf_kconfig_sample(datapipe<number>* pipe, unsigned int id,
-                                                 const std::shared_ptr<derived_data::SQL_query>& query,
+                                                 const derived_data::SQL_query& query,
                                                  unsigned int t_serial, std::vector<number>& sample, threepf_type type) override;
 
         //! Pull a kconfig sample of a tensor twopf component at fixed time from a datapipe
-        virtual void pull_tensor_twopf_kconfig_sample(datapipe<number>* pipe, unsigned int id, const std::shared_ptr<derived_data::SQL_query>& query,
+        virtual void pull_tensor_twopf_kconfig_sample(datapipe<number>* pipe, unsigned int id, const derived_data::SQL_query& query,
                                                       unsigned int t_serial, std::vector<number>& sample) override;
 
         //! Pull a kconfig sample of the zeta twopf at fixed time from a datapipe
-        virtual void pull_zeta_twopf_kconfig_sample(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_query>& query,
+        virtual void pull_zeta_twopf_kconfig_sample(datapipe<number>* pipe, const derived_data::SQL_query& query,
                                                     unsigned int t_serial, std::vector<number>& sample) override;
 
         //! Pull a kconfig sample of the zeta threepf at fixed time from a datapipe
-        virtual void pull_zeta_threepf_kconfig_sample(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_query>& query,
+        virtual void pull_zeta_threepf_kconfig_sample(datapipe<number>* pipe, const derived_data::SQL_query& query,
                                                       unsigned int t_serial, std::vector<number>& sample) override;
 
         //! Pull a kconfig sample of the zeta reduced bispectrum at fixed time from a datapipe
-        virtual void pull_zeta_redbsp_kconfig_sample(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_query>& query,
+        virtual void pull_zeta_redbsp_kconfig_sample(datapipe<number>* pipe, const derived_data::SQL_query& query,
                                                      unsigned int t_serial, std::vector<number>& sample) override;
 
         //! Pull a sample of k-configuration statistics from a datapipe
-        virtual void pull_k_statistics_sample(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_query>& query,
+        virtual void pull_k_statistics_sample(datapipe<number>* pipe, const derived_data::SQL_query& query,
                                               std::vector<kconfiguration_statistics>& data) override;
 
       protected:
@@ -338,12 +339,12 @@ namespace transport
         void datapipe_attach_container(datapipe<number>* pipe, const boost::filesystem::path& ctr_path);
 
         //! Attach an integration content group to a datapipe
-        std::shared_ptr <output_group_record<integration_payload>>
+        std::unique_ptr< output_group_record<integration_payload> >
 	        datapipe_attach_integration_content(datapipe<number>* pipe, typename datapipe<number>::integration_content_finder& finder,
 	                                            const std::string& name, const std::list<std::string>& tags);
 
         //! Attach an postintegration content group to a datapipe
-        std::shared_ptr <output_group_record<postintegration_payload>>
+        std::unique_ptr< output_group_record<postintegration_payload> >
 	        datapipe_attach_postintegration_content(datapipe<number>* pipe, typename datapipe<number>::postintegration_content_finder& finder,
 	                                                const std::string& name, const std::list<std::string>& tags);
 
@@ -419,12 +420,12 @@ namespace transport
 
     // Create data files for a new integration_writer object
     template <typename number>
-    void data_manager_sqlite3<number>::initialize_writer(std::shared_ptr< integration_writer<number> >& writer, bool recovery_mode)
+    void data_manager_sqlite3<number>::initialize_writer(integration_writer<number>& writer, bool recovery_mode)
       {
         sqlite3* db = nullptr;
 
         // get paths of the data container
-        boost::filesystem::path ctr_path = writer->get_abs_container_path();
+        boost::filesystem::path ctr_path = writer.get_abs_container_path();
 
         // open the main container
         int mode = recovery_mode ? SQLITE_OPEN_READWRITE : SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE;
@@ -461,10 +462,10 @@ namespace transport
 
         // remember this connexion
         this->open_containers.push_back(db);
-        writer->set_data_manager_handle(db);
+        writer.set_data_manager_handle(db);
 
         // set up aggregation handlers
-        integration_task_record<number>* rec = writer->get_record();
+        integration_task_record<number>* rec = writer.get_record();
         assert(rec != nullptr);
 
         integration_task<number>* tk = rec->get_task();
@@ -473,13 +474,13 @@ namespace transport
         threepf_task<number>* tk3 = nullptr;
         if((tk2 = dynamic_cast<twopf_task<number>*>(tk)) != nullptr)
           {
-            writer->set_aggregation_handler(std::bind(&data_manager_sqlite3<number>::aggregate_twopf_batch, this, std::placeholders::_1, std::placeholders::_2));
-            writer->set_integrity_check_handler(std::bind(&data_manager<number>::check_twopf_integrity_handler, this, std::placeholders::_1, std::placeholders::_2));
+            writer.set_aggregation_handler(std::bind(&data_manager_sqlite3<number>::aggregate_twopf_batch, this, std::placeholders::_1, std::placeholders::_2));
+            writer.set_integrity_check_handler(std::bind(&data_manager<number>::check_twopf_integrity_handler, this, std::placeholders::_1, std::placeholders::_2));
           }
         else if((tk3 = dynamic_cast<threepf_task<number>*>(tk)) != nullptr)
           {
-            writer->set_aggregation_handler(std::bind(&data_manager_sqlite3<number>::aggregate_threepf_batch, this, std::placeholders::_1, std::placeholders::_2));
-            writer->set_integrity_check_handler(std::bind(&data_manager<number>::check_threepf_integrity_handler, this, std::placeholders::_1, std::placeholders::_2));
+            writer.set_aggregation_handler(std::bind(&data_manager_sqlite3<number>::aggregate_threepf_batch, this, std::placeholders::_1, std::placeholders::_2));
+            writer.set_integrity_check_handler(std::bind(&data_manager<number>::check_threepf_integrity_handler, this, std::placeholders::_1, std::placeholders::_2));
           }
         else
           {
@@ -491,54 +492,61 @@ namespace transport
 
     // Close data files associated with an integration_writer object
     template <typename number>
-    void data_manager_sqlite3<number>::close_writer(std::shared_ptr< integration_writer<number> >& writer)
+    void data_manager_sqlite3<number>::close_writer(integration_writer<number>& writer)
       {
         // close sqlite3 handle to principal database
         sqlite3* db = nullptr;
-        writer->get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
+        writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        // vacuum the database
-        BOOST_LOG_SEV(writer->get_log(), base_writer::log_severity_level::normal) << '\n' << "** Performing routine maintenance on SQLite3 container '" << writer->get_abs_container_path().string() << "'";
-        boost::timer::cpu_timer timer;
-        char* errmsg;
-        sqlite3_exec(db, "VACUUM;", nullptr, nullptr, &errmsg);
-        timer.stop();
-        BOOST_LOG_SEV(writer->get_log(), base_writer::log_severity_level::normal) << "** Database vacuum complete in wallclock time " << format_time(timer.elapsed().wall);
+        // vacuum the database if it is sufficiently small
+        if(boost::filesystem::file_size(writer.get_abs_container_path()) < CPPTRANSPORT_MAX_VACUUMABLE_SIZE)
+          {
+            BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << '\n' << "** Performing routine maintenance on SQLite3 container '" << writer.get_abs_container_path().string() << "'";
+            boost::timer::cpu_timer timer;
+            char* errmsg;
+            sqlite3_exec(db, "VACUUM;", nullptr, nullptr, &errmsg);
+            timer.stop();
+            BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Database vacuum complete in wallclock time " << format_time(timer.elapsed().wall);
+          }
+        else
+          {
+            BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** SQLite3 container '" << writer.get_abs_container_path().string() << "' of size " << format_memory(static_cast<unsigned int>(boost::filesystem::file_size(writer.get_abs_container_path()))) << " is very large; automatic maintenance disabled";
+          }
 
         this->open_containers.remove(db);
         sqlite3_close(db);
 
         // physically remove the tempfiles directory
-        boost::filesystem::remove_all(writer->get_abs_tempdir_path());
+        boost::filesystem::remove_all(writer.get_abs_tempdir_path());
       }
 
 
 		// Create data files for a new derived_content_writer object
 		template <typename number>
-		void data_manager_sqlite3<number>::initialize_writer(std::shared_ptr< derived_content_writer<number> >& writer, bool recovery_mode)
+		void data_manager_sqlite3<number>::initialize_writer(derived_content_writer<number>& writer, bool recovery_mode)
 			{
         // set up aggregation handler
-        writer->set_aggregation_handler(std::bind(&data_manager_sqlite3<number>::aggregate_derived_product, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+        writer.set_aggregation_handler(std::bind(&data_manager_sqlite3<number>::aggregate_derived_product, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 			}
 
 
 		// Close data files for a derived_content_writer object
 		template <typename number>
-		void data_manager_sqlite3<number>::close_writer(std::shared_ptr< derived_content_writer<number> >& writer)
+		void data_manager_sqlite3<number>::close_writer(derived_content_writer<number>& writer)
 			{
 				// physically remove the tempfiles directory
-		    boost::filesystem::remove_all(writer->get_abs_tempdir_path());
+		    boost::filesystem::remove_all(writer.get_abs_tempdir_path());
 			}
 
 
     // Initialize a new postintegration_writer object
     template <typename number>
-    void data_manager_sqlite3<number>::initialize_writer(std::shared_ptr< postintegration_writer<number> >& writer, bool recovery_mode)
+    void data_manager_sqlite3<number>::initialize_writer(postintegration_writer<number>& writer, bool recovery_mode)
       {
         sqlite3* db = nullptr;
 
         // get paths to the data container
-        boost::filesystem::path ctr_path = writer->get_abs_container_path();
+        boost::filesystem::path ctr_path = writer.get_abs_container_path();
 
         // open the main container
         int mode = recovery_mode ? SQLITE_OPEN_READWRITE : SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE;
@@ -573,10 +581,10 @@ namespace transport
 
         // remember this connexion
         this->open_containers.push_back(db);
-        writer->set_data_manager_handle(db);
+        writer.set_data_manager_handle(db);
 
         // set aggregation handler
-        postintegration_task_record<number> * rec = writer->get_record();
+        postintegration_task_record<number> * rec = writer.get_record();
         assert(rec != nullptr);
 
         postintegration_task<number>* tk = rec->get_task();
@@ -586,38 +594,38 @@ namespace transport
         fNL_task<number>* zfNL = nullptr;
         if((z2pf = dynamic_cast<zeta_twopf_task<number>*>(tk)) != nullptr)
           {
-            writer->set_aggregation_handler(std::bind(&data_manager_sqlite3<number>::aggregate_zeta_twopf_batch, this, std::placeholders::_1, std::placeholders::_2));
-            writer->set_integrity_check_handler(std::bind(&data_manager<number>::check_zeta_twopf_integrity_handler, this, std::placeholders::_1, std::placeholders::_2));
-		        writer->get_products().add_zeta_twopf();
+            writer.set_aggregation_handler(std::bind(&data_manager_sqlite3<number>::aggregate_zeta_twopf_batch, this, std::placeholders::_1, std::placeholders::_2));
+            writer.set_integrity_check_handler(std::bind(&data_manager<number>::check_zeta_twopf_integrity_handler, this, std::placeholders::_1, std::placeholders::_2));
+		        writer.get_products().add_zeta_twopf();
           }
         else if((z3pf = dynamic_cast<zeta_threepf_task<number>*>(tk)) != nullptr)
           {
-            writer->set_aggregation_handler(std::bind(&data_manager_sqlite3<number>::aggregate_zeta_threepf_batch, this, std::placeholders::_1, std::placeholders::_2));
-            writer->set_integrity_check_handler(std::bind(&data_manager<number>::check_zeta_threepf_integrity_handler, this, std::placeholders::_1, std::placeholders::_2));
-		        writer->get_products().add_zeta_twopf();
-		        writer->get_products().add_zeta_threepf();
-		        writer->get_products().add_zeta_redbsp();
+            writer.set_aggregation_handler(std::bind(&data_manager_sqlite3<number>::aggregate_zeta_threepf_batch, this, std::placeholders::_1, std::placeholders::_2));
+            writer.set_integrity_check_handler(std::bind(&data_manager<number>::check_zeta_threepf_integrity_handler, this, std::placeholders::_1, std::placeholders::_2));
+		        writer.get_products().add_zeta_twopf();
+		        writer.get_products().add_zeta_threepf();
+		        writer.get_products().add_zeta_redbsp();
           }
         else if((zfNL = dynamic_cast<fNL_task<number>*>(tk)) != nullptr)
           {
-            writer->set_aggregation_handler(std::bind(&data_manager_sqlite3<number>::aggregate_fNL_batch, this, std::placeholders::_1, std::placeholders::_2, zfNL->get_template()));
-            writer->set_integrity_check_handler(std::bind(&data_manager<number>::check_fNL_integrity_handler, this, std::placeholders::_1, std::placeholders::_2));
+            writer.set_aggregation_handler(std::bind(&data_manager_sqlite3<number>::aggregate_fNL_batch, this, std::placeholders::_1, std::placeholders::_2, zfNL->get_template()));
+            writer.set_integrity_check_handler(std::bind(&data_manager<number>::check_fNL_integrity_handler, this, std::placeholders::_1, std::placeholders::_2));
 		        switch(zfNL->get_template())
 			        {
 		            case derived_data::template_type::fNL_local_template:
-			            writer->get_products().add_fNL_local();
+			            writer.get_products().add_fNL_local();
 				          break;
 
 		            case derived_data::template_type::fNL_equi_template:
-			            writer->get_products().add_fNL_equi();
+			            writer.get_products().add_fNL_equi();
 				          break;
 
 		            case derived_data::template_type::fNL_ortho_template:
-			            writer->get_products().add_fNL_ortho();
+			            writer.get_products().add_fNL_ortho();
 				          break;
 
 		            case derived_data::template_type::fNL_DBI_template:
-			            writer->get_products().add_fNL_DBI();
+			            writer.get_products().add_fNL_DBI();
 				          break;
 			        }
           }
@@ -631,35 +639,42 @@ namespace transport
 
     // Close a postintegration_writer object
     template <typename number>
-    void data_manager_sqlite3<number>::close_writer(std::shared_ptr< postintegration_writer<number> >& writer)
+    void data_manager_sqlite3<number>::close_writer(postintegration_writer<number>& writer)
       {
         // close sqlite3 handle to principal database
         sqlite3* db = nullptr;
-        writer->get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
+        writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        // vacuum the database
-        BOOST_LOG_SEV(writer->get_log(), base_writer::log_severity_level::normal) << '\n' << "** Performing routine maintenance on SQLite3 container '" << writer->get_abs_container_path().string() << "'";
-        boost::timer::cpu_timer timer;
-        char* errmsg;
-        sqlite3_exec(db, "VACUUM;", nullptr, nullptr, &errmsg);
-        timer.stop();
-        BOOST_LOG_SEV(writer->get_log(), base_writer::log_severity_level::normal) << "** Database vacuum complete in wallclock time " << format_time(timer.elapsed().wall);
+        // vacuum the database if it is sufficiently small
+        if(boost::filesystem::file_size(writer.get_abs_container_path()) < CPPTRANSPORT_MAX_VACUUMABLE_SIZE)
+          {
+            BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << '\n' << "** Performing routine maintenance on SQLite3 container '" << writer.get_abs_container_path().string() << "'";
+            boost::timer::cpu_timer timer;
+            char* errmsg;
+            sqlite3_exec(db, "VACUUM;", nullptr, nullptr, &errmsg);
+            timer.stop();
+            BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Database vacuum complete in wallclock time " << format_time(timer.elapsed().wall);
+          }
+        else
+          {
+            BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** SQLite3 container '" << writer.get_abs_container_path().string() << "' of size " << format_memory(static_cast<unsigned int>(boost::filesystem::file_size(writer.get_abs_container_path()))) << " is very large; automatic maintenance disabled";
+          }
 
         this->open_containers.remove(db);
         sqlite3_close(db);
 
         // physically remove the tempfiles directory
-        boost::filesystem::remove_all(writer->get_abs_tempdir_path());
+        boost::filesystem::remove_all(writer.get_abs_tempdir_path());
       }
 
 
     // INDEX TABLE MANAGEMENT
 
     template <typename number>
-    void data_manager_sqlite3<number>::create_tables(std::shared_ptr< integration_writer<number> >& writer, twopf_task<number>* tk)
+    void data_manager_sqlite3<number>::create_tables(integration_writer<number>& writer, twopf_task<number>* tk)
       {
         sqlite3* db = nullptr;
-        writer->get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
+        writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
         unsigned int Nfields = tk->get_model()->get_N_fields();
 
@@ -670,17 +685,17 @@ namespace transport
         sqlite3_operations::create_paged_table<number, typename integration_items<number>::tensor_twopf_item>(db, Nfields, sqlite3_operations::foreign_keys_type::foreign_keys, sqlite3_operations::kconfiguration_type::twopf_configs);
 
         sqlite3_operations::create_worker_info_table(db, sqlite3_operations::foreign_keys_type::foreign_keys);
-        if(writer->is_collecting_statistics()) sqlite3_operations::create_stats_table(db, sqlite3_operations::foreign_keys_type::foreign_keys, sqlite3_operations::kconfiguration_type::twopf_configs);
+        if(writer.is_collecting_statistics()) sqlite3_operations::create_stats_table(db, sqlite3_operations::foreign_keys_type::foreign_keys, sqlite3_operations::kconfiguration_type::twopf_configs);
 
-		    if(writer->is_collecting_initial_conditions()) sqlite3_operations::create_ics_table<number, typename integration_items<number>::ics_item>(db, Nfields, sqlite3_operations::foreign_keys_type::foreign_keys, sqlite3_operations::kconfiguration_type::twopf_configs);
+		    if(writer.is_collecting_initial_conditions()) sqlite3_operations::create_ics_table<number, typename integration_items<number>::ics_item>(db, Nfields, sqlite3_operations::foreign_keys_type::foreign_keys, sqlite3_operations::kconfiguration_type::twopf_configs);
       }
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::create_tables(std::shared_ptr< integration_writer<number> >& writer, threepf_task<number>* tk)
+    void data_manager_sqlite3<number>::create_tables(integration_writer<number>& writer, threepf_task<number>* tk)
       {
         sqlite3* db = nullptr;
-        writer->get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
+        writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
         unsigned int Nfields = tk->get_model()->get_N_fields();
 
@@ -695,9 +710,9 @@ namespace transport
         sqlite3_operations::create_paged_table<number, typename integration_items<number>::threepf_Nderiv_item>(db, Nfields, sqlite3_operations::foreign_keys_type::foreign_keys, sqlite3_operations::kconfiguration_type::threepf_configs);
 
         sqlite3_operations::create_worker_info_table(db, sqlite3_operations::foreign_keys_type::foreign_keys);
-        if(writer->is_collecting_statistics()) sqlite3_operations::create_stats_table(db, sqlite3_operations::foreign_keys_type::foreign_keys, sqlite3_operations::kconfiguration_type::threepf_configs);
+        if(writer.is_collecting_statistics()) sqlite3_operations::create_stats_table(db, sqlite3_operations::foreign_keys_type::foreign_keys, sqlite3_operations::kconfiguration_type::threepf_configs);
 
-        if(writer->is_collecting_initial_conditions())
+        if(writer.is_collecting_initial_conditions())
 	        {
             sqlite3_operations::create_ics_table<number, typename integration_items<number>::ics_item>(db, Nfields, sqlite3_operations::foreign_keys_type::foreign_keys, sqlite3_operations::kconfiguration_type::threepf_configs);
             sqlite3_operations::create_ics_table<number, typename integration_items<number>::ics_kt_item>(db, Nfields, sqlite3_operations::foreign_keys_type::foreign_keys, sqlite3_operations::kconfiguration_type::threepf_configs);
@@ -706,10 +721,10 @@ namespace transport
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::create_tables(std::shared_ptr< postintegration_writer<number> >& writer, zeta_twopf_task<number>* tk)
+    void data_manager_sqlite3<number>::create_tables(postintegration_writer<number>& writer, zeta_twopf_task<number>* tk)
       {
         sqlite3* db = nullptr;
-        writer->get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
+        writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
         derivable_task<number>* d_ptk = tk->get_parent_task();
         integration_task<number>* i_ptk = dynamic_cast< integration_task<number>* >(d_ptk);
@@ -726,10 +741,10 @@ namespace transport
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::create_tables(std::shared_ptr< postintegration_writer<number> >& writer, zeta_threepf_task<number>* tk)
+    void data_manager_sqlite3<number>::create_tables(postintegration_writer<number>& writer, zeta_threepf_task<number>* tk)
       {
         sqlite3* db = nullptr;
-        writer->get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
+        writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
         derivable_task<number>* d_ptk = tk->get_parent_task();
         integration_task<number>* i_ptk = dynamic_cast< integration_task<number>* >(d_ptk);
@@ -751,10 +766,10 @@ namespace transport
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::create_tables(std::shared_ptr< postintegration_writer<number> >& writer, fNL_task<number>* tk)
+    void data_manager_sqlite3<number>::create_tables(postintegration_writer<number>& writer, fNL_task<number>* tk)
       {
         sqlite3* db = nullptr;
-        writer->get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
+        writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
         sqlite3_operations::create_time_sample_table(db, tk);
         sqlite3_operations::create_fNL_table(db, tk->get_template(), sqlite3_operations::foreign_keys_type::foreign_keys);
@@ -765,111 +780,111 @@ namespace transport
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::seed_writer(std::shared_ptr< integration_writer<number> >& writer, twopf_task<number>* tk,
-                                                   const std::shared_ptr< output_group_record<integration_payload> >& seed)
+    void data_manager_sqlite3<number>::seed_writer(integration_writer<number>& writer, twopf_task<number>* tk,
+                                                   const output_group_record<integration_payload>& seed)
       {
         sqlite3* db = nullptr;
-        writer->get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
+        writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        BOOST_LOG_SEV(writer->get_log(), base_writer::log_severity_level::normal) << "** Seeding SQLite3 container '" << writer->get_abs_container_path().string() << "' "
-          << "from previous content group '" << seed->get_name() << "', container '" << seed->get_abs_output_path().string() << "'";
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Seeding SQLite3 container '" << writer.get_abs_container_path().string() << "' "
+          << "from previous content group '" << seed.get_name() << "', container '" << seed.get_abs_output_path().string() << "'";
 
         boost::timer::cpu_timer timer;
-        boost::filesystem::path seed_container_path = seed->get_abs_repo_path() / seed->get_payload().get_container_path();
+        boost::filesystem::path seed_container_path = seed.get_abs_repo_path() / seed.get_payload().get_container_path();
 
-        sqlite3_operations::aggregate_backg<number>(db, *writer, seed_container_path.string());
-        sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::twopf_re_item>(db, *writer, seed_container_path.string());
-        sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::tensor_twopf_item>(db, *writer, seed_container_path.string());
+        sqlite3_operations::aggregate_backg<number>(db, writer, seed_container_path.string());
+        sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::twopf_re_item>(db, writer, seed_container_path.string());
+        sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::tensor_twopf_item>(db, writer, seed_container_path.string());
 
-        sqlite3_operations::aggregate_workers<number>(db, *writer, seed_container_path.string());
-        if(writer->is_collecting_statistics() && seed->get_payload().has_statistics())
-	        sqlite3_operations::aggregate_statistics<number>(db, *writer, seed_container_path.string());
+        sqlite3_operations::aggregate_workers<number>(db, writer, seed_container_path.string());
+        if(writer.is_collecting_statistics() && seed.get_payload().has_statistics())
+	        sqlite3_operations::aggregate_statistics<number>(db, writer, seed_container_path.string());
 
-        if(writer->is_collecting_initial_conditions() && seed->get_payload().has_initial_conditions())
-	        sqlite3_operations::aggregate_ics<number, typename integration_items<number>::ics_item>(db, *writer, seed_container_path.string());
+        if(writer.is_collecting_initial_conditions() && seed.get_payload().has_initial_conditions())
+	        sqlite3_operations::aggregate_ics<number, typename integration_items<number>::ics_item>(db, writer, seed_container_path.string());
 
         timer.stop();
-        BOOST_LOG_SEV(writer->get_log(), base_writer::log_severity_level::normal) << "** Seeding complete in time " << format_time(timer.elapsed().wall);
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Seeding complete in time " << format_time(timer.elapsed().wall);
       }
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::seed_writer(std::shared_ptr< integration_writer<number> >& writer, threepf_task<number>* tk,
-                                                   const std::shared_ptr< output_group_record<integration_payload> >& seed)
+    void data_manager_sqlite3<number>::seed_writer(integration_writer<number>& writer, threepf_task<number>* tk,
+                                                   const output_group_record<integration_payload>& seed)
       {
         sqlite3* db = nullptr;
-        writer->get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
+        writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        BOOST_LOG_SEV(writer->get_log(), base_writer::log_severity_level::normal) << "** Seeding SQLite3 container '" << writer->get_abs_container_path().string() << "' "
-            << "from previous content group '" << seed->get_name() << "', container '" << seed->get_abs_output_path().string() << "'";
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Seeding SQLite3 container '" << writer.get_abs_container_path().string() << "' "
+            << "from previous content group '" << seed.get_name() << "', container '" << seed.get_abs_output_path().string() << "'";
 
         boost::timer::cpu_timer timer;
-        boost::filesystem::path seed_container_path = seed->get_abs_repo_path() / seed->get_payload().get_container_path();
+        boost::filesystem::path seed_container_path = seed.get_abs_repo_path() / seed.get_payload().get_container_path();
 
-        sqlite3_operations::aggregate_backg<number>(db, *writer, seed_container_path.string());
-        sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::twopf_re_item>(db, *writer, seed_container_path.string());
-        sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::twopf_im_item>(db, *writer, seed_container_path.string());
-        sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::tensor_twopf_item>(db, *writer, seed_container_path.string());
-        sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::threepf_momentum_item>(db, *writer, seed_container_path.string());
+        sqlite3_operations::aggregate_backg<number>(db, writer, seed_container_path.string());
+        sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::twopf_re_item>(db, writer, seed_container_path.string());
+        sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::twopf_im_item>(db, writer, seed_container_path.string());
+        sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::tensor_twopf_item>(db, writer, seed_container_path.string());
+        sqlite3_operations::aggregate_table<number, integration_writer<number>, typename integration_items<number>::threepf_momentum_item>(db, writer, seed_container_path.string());
 
-        sqlite3_operations::aggregate_workers<number>(db, *writer, seed_container_path.string());
-        if(writer->is_collecting_statistics() && seed->get_payload().has_statistics()) sqlite3_operations::aggregate_statistics<number>(db, *writer, seed_container_path.string());
+        sqlite3_operations::aggregate_workers<number>(db, writer, seed_container_path.string());
+        if(writer.is_collecting_statistics() && seed.get_payload().has_statistics()) sqlite3_operations::aggregate_statistics<number>(db, writer, seed_container_path.string());
 
-        if(writer->is_collecting_initial_conditions() && seed->get_payload().has_initial_conditions())
+        if(writer.is_collecting_initial_conditions() && seed.get_payload().has_initial_conditions())
 	        {
-            sqlite3_operations::aggregate_ics<number, typename integration_items<number>::ics_item>(db, *writer, seed_container_path.string());
-            sqlite3_operations::aggregate_ics<number, typename integration_items<number>::ics_kt_item>(db, *writer, seed_container_path.string());
+            sqlite3_operations::aggregate_ics<number, typename integration_items<number>::ics_item>(db, writer, seed_container_path.string());
+            sqlite3_operations::aggregate_ics<number, typename integration_items<number>::ics_kt_item>(db, writer, seed_container_path.string());
 	        }
 
         timer.stop();
-        BOOST_LOG_SEV(writer->get_log(), base_writer::log_severity_level::normal) << "** Seeding complete in time " << format_time(timer.elapsed().wall);
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Seeding complete in time " << format_time(timer.elapsed().wall);
       }
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::seed_writer(std::shared_ptr< postintegration_writer<number> >& writer, zeta_twopf_task<number>* tk,
-                                                   const std::shared_ptr< output_group_record<postintegration_payload> >& seed)
+    void data_manager_sqlite3<number>::seed_writer(postintegration_writer<number>& writer, zeta_twopf_task<number>* tk,
+                                                   const output_group_record<postintegration_payload>& seed)
       {
         sqlite3* db = nullptr;
-        writer->get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
+        writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        BOOST_LOG_SEV(writer->get_log(), base_writer::log_severity_level::normal) << "** Seeding SQLite3 container '" << writer->get_abs_container_path().string() << "' "
-            << "from previous content group '" << seed->get_name() << "', container '" << seed->get_abs_output_path().string() << "'";
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Seeding SQLite3 container '" << writer.get_abs_container_path().string() << "' "
+            << "from previous content group '" << seed.get_name() << "', container '" << seed.get_abs_output_path().string() << "'";
 
         boost::timer::cpu_timer timer;
-        boost::filesystem::path seed_container_path = seed->get_abs_repo_path() / seed->get_payload().get_container_path();
+        boost::filesystem::path seed_container_path = seed.get_abs_repo_path() / seed.get_payload().get_container_path();
 
-        sqlite3_operations::aggregate_table<number, postintegration_writer<number>, typename postintegration_items<number>::zeta_twopf_item>(db, *writer, seed_container_path.string());
+        sqlite3_operations::aggregate_table<number, postintegration_writer<number>, typename postintegration_items<number>::zeta_twopf_item>(db, writer, seed_container_path.string());
 
         timer.stop();
-        BOOST_LOG_SEV(writer->get_log(), base_writer::log_severity_level::normal) << "** Seeding complete in time " << format_time(timer.elapsed().wall);
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Seeding complete in time " << format_time(timer.elapsed().wall);
       }
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::seed_writer(std::shared_ptr< postintegration_writer<number> >& writer, zeta_threepf_task<number>* tk,
-                                                   const std::shared_ptr< output_group_record<postintegration_payload> >& seed)
+    void data_manager_sqlite3<number>::seed_writer(postintegration_writer<number>& writer, zeta_threepf_task<number>* tk,
+                                                   const output_group_record<postintegration_payload>& seed)
       {
         sqlite3* db = nullptr;
-        writer->get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
+        writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        BOOST_LOG_SEV(writer->get_log(), base_writer::log_severity_level::normal) << "** Seeding SQLite3 container '" << writer->get_abs_container_path().string() << "' "
-            << "from previous content group '" << seed->get_name() << "', container '" << seed->get_abs_output_path().string() << "'";
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Seeding SQLite3 container '" << writer.get_abs_container_path().string() << "' "
+            << "from previous content group '" << seed.get_name() << "', container '" << seed.get_abs_output_path().string() << "'";
 
         boost::timer::cpu_timer timer;
-        boost::filesystem::path seed_container_path = seed->get_abs_repo_path() / seed->get_payload().get_container_path();
+        boost::filesystem::path seed_container_path = seed.get_abs_repo_path() / seed.get_payload().get_container_path();
 
-        sqlite3_operations::aggregate_table<number, postintegration_writer<number>, typename postintegration_items<number>::zeta_twopf_item>(db, *writer, seed_container_path.string());
-        sqlite3_operations::aggregate_table<number, postintegration_writer<number>, typename postintegration_items<number>::zeta_threepf_item>(db, *writer, seed_container_path.string());
+        sqlite3_operations::aggregate_table<number, postintegration_writer<number>, typename postintegration_items<number>::zeta_twopf_item>(db, writer, seed_container_path.string());
+        sqlite3_operations::aggregate_table<number, postintegration_writer<number>, typename postintegration_items<number>::zeta_threepf_item>(db, writer, seed_container_path.string());
 
         timer.stop();
-        BOOST_LOG_SEV(writer->get_log(), base_writer::log_severity_level::normal) << "** Seeding complete in time " << format_time(timer.elapsed().wall);
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** Seeding complete in time " << format_time(timer.elapsed().wall);
       }
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::seed_writer(std::shared_ptr< postintegration_writer<number> >& writer, fNL_task<number>* tk,
-                                                   const std::shared_ptr< output_group_record<postintegration_payload> >& seed)
+    void data_manager_sqlite3<number>::seed_writer(postintegration_writer<number>& writer, fNL_task<number>* tk,
+                                                   const output_group_record<postintegration_payload>& seed)
       {
         assert(false);
       }
@@ -1535,11 +1550,11 @@ namespace transport
 
 
     template <typename number>
-    datapipe<number> data_manager_sqlite3<number>::create_datapipe(const boost::filesystem::path& logdir, const boost::filesystem::path& tempdir,
-                                                                   typename datapipe<number>::integration_content_finder integration_finder,
-                                                                   typename datapipe<number>::postintegration_content_finder postintegration_finder,
-                                                                   typename datapipe<number>::dispatch_function dispatcher,
-                                                                   unsigned int worker, bool no_log)
+    std::unique_ptr< datapipe<number> > data_manager_sqlite3<number>::create_datapipe(const boost::filesystem::path& logdir, const boost::filesystem::path& tempdir,
+                                                                                      typename datapipe<number>::integration_content_finder integration_finder,
+                                                                                      typename datapipe<number>::postintegration_content_finder postintegration_finder,
+                                                                                      typename datapipe<number>::dispatch_function dispatcher,
+                                                                                      unsigned int worker, bool no_log)
 			{
         // set up callback API
         typename datapipe<number>::utility_callbacks utilities;
@@ -1631,14 +1646,12 @@ namespace transport
                                        std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
 
         // set up datapipe
-        datapipe<number> pipe(this->pipe_capacity, logdir, tempdir, worker, utilities, config, timeslice, kslice, stats, no_log);
-
-        return(pipe);
+        return std::make_unique< datapipe<number> >(this->pipe_capacity, logdir, tempdir, worker, utilities, config, timeslice, kslice, stats, no_log);
 			}
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_time_config(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_time_config_query>& query,
+    void data_manager_sqlite3<number>::pull_time_config(datapipe<number>* pipe, const derived_data::SQL_time_config_query& query,
                                                         std::vector<time_config>& sample)
 	    {
         assert(pipe != nullptr);
@@ -1652,7 +1665,7 @@ namespace transport
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_kconfig_twopf(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_twopf_kconfig_query>& query,
+    void data_manager_sqlite3<number>::pull_kconfig_twopf(datapipe<number>* pipe, const derived_data::SQL_twopf_kconfig_query& query,
                                                           std::vector<twopf_kconfig>& sample)
 			{
 		    assert(pipe != nullptr);
@@ -1666,7 +1679,7 @@ namespace transport
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_kconfig_threepf(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_threepf_kconfig_query>& query,
+    void data_manager_sqlite3<number>::pull_kconfig_threepf(datapipe<number>* pipe, const derived_data::SQL_threepf_kconfig_query& query,
                                                             std::vector<threepf_kconfig>& sample)
 	    {
         assert(pipe != nullptr);
@@ -1681,8 +1694,7 @@ namespace transport
 
     template <typename number>
     void data_manager_sqlite3<number>::pull_background_time_sample(datapipe<number>* pipe, unsigned int id,
-                                                                   const std::shared_ptr<derived_data::SQL_query>& query,
-                                                                   std::vector<number>& sample)
+                                                                   const derived_data::SQL_query& query, std::vector<number>& sample)
 	    {
         assert(pipe != nullptr);
         if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
@@ -1696,7 +1708,7 @@ namespace transport
 
     template <typename number>
     void data_manager_sqlite3<number>::pull_twopf_time_sample(datapipe<number>* pipe, unsigned int id,
-                                                              const std::shared_ptr<derived_data::SQL_query>& query,
+                                                              const derived_data::SQL_query& query,
                                                               unsigned int k_serial, std::vector<number>& sample, twopf_type type)
 	    {
         assert(pipe != nullptr);
@@ -1722,7 +1734,7 @@ namespace transport
 
     template <typename number>
     void data_manager_sqlite3<number>::pull_threepf_time_sample(datapipe<number>* pipe, unsigned int id,
-                                                                const std::shared_ptr<derived_data::SQL_query>& query,
+                                                                const derived_data::SQL_query& query,
                                                                 unsigned int k_serial, std::vector<number>& sample, threepf_type type)
 	    {
         assert(pipe != nullptr);
@@ -1748,7 +1760,7 @@ namespace transport
 
     template <typename number>
     void data_manager_sqlite3<number>::pull_tensor_twopf_time_sample(datapipe<number>* pipe, unsigned int id,
-                                                                     const std::shared_ptr<derived_data::SQL_query>& query,
+                                                                     const derived_data::SQL_query& query,
                                                                      unsigned int k_serial, std::vector<number>& sample)
       {
         assert(pipe != nullptr);
@@ -1763,7 +1775,7 @@ namespace transport
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_zeta_twopf_time_sample(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_query>& query,
+    void data_manager_sqlite3<number>::pull_zeta_twopf_time_sample(datapipe<number>* pipe, const derived_data::SQL_query& query,
                                                                    unsigned int k_serial, std::vector<number>& sample)
 	    {
 		    assert(pipe != nullptr);
@@ -1778,7 +1790,7 @@ namespace transport
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_zeta_threepf_time_sample(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_query>& query,
+    void data_manager_sqlite3<number>::pull_zeta_threepf_time_sample(datapipe<number>* pipe, const derived_data::SQL_query& query,
                                                                      unsigned int k_serial, std::vector<number>& sample)
 	    {
 		    assert(pipe != nullptr);
@@ -1793,7 +1805,7 @@ namespace transport
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_zeta_redbsp_time_sample(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_query>& query,
+    void data_manager_sqlite3<number>::pull_zeta_redbsp_time_sample(datapipe<number>* pipe, const derived_data::SQL_query& query,
                                                                     unsigned int k_serial, std::vector<number>& sample)
 	    {
 		    assert(pipe != nullptr);
@@ -1808,7 +1820,7 @@ namespace transport
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_fNL_time_sample(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_query>& query,
+    void data_manager_sqlite3<number>::pull_fNL_time_sample(datapipe<number>* pipe, const derived_data::SQL_query& query,
                                                             std::vector<number>& sample, derived_data::template_type type)
 	    {
 		    assert(pipe != nullptr);
@@ -1822,7 +1834,7 @@ namespace transport
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_BT_time_sample(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_query>& query,
+    void data_manager_sqlite3<number>::pull_BT_time_sample(datapipe<number>* pipe, const derived_data::SQL_query& query,
                                                            std::vector<number>& sample, derived_data::template_type type)
 	    {
 		    assert(pipe != nullptr);
@@ -1836,7 +1848,7 @@ namespace transport
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_TT_time_sample(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_query>& query,
+    void data_manager_sqlite3<number>::pull_TT_time_sample(datapipe<number>* pipe, const derived_data::SQL_query& query,
                                                            std::vector<number>& sample, derived_data::template_type type)
 	    {
 		    assert(pipe != nullptr);
@@ -1851,7 +1863,7 @@ namespace transport
 
     template <typename number>
     void data_manager_sqlite3<number>::pull_twopf_kconfig_sample(datapipe<number>* pipe, unsigned int id,
-                                                                 const std::shared_ptr<derived_data::SQL_query>& query,
+                                                                 const derived_data::SQL_query& query,
                                                                  unsigned int t_serial, std::vector<number>& sample, twopf_type type)
 	    {
 				assert(pipe != nullptr);
@@ -1877,7 +1889,7 @@ namespace transport
 
     template <typename number>
     void data_manager_sqlite3<number>::pull_threepf_kconfig_sample(datapipe<number>* pipe, unsigned int id,
-                                                                   const std::shared_ptr<derived_data::SQL_query>& query,
+                                                                   const derived_data::SQL_query& query,
                                                                    unsigned int t_serial, std::vector<number>& sample, threepf_type type)
 	    {
         assert(pipe != nullptr);
@@ -1903,7 +1915,7 @@ namespace transport
 
     template <typename number>
     void data_manager_sqlite3<number>::pull_tensor_twopf_kconfig_sample(datapipe<number>* pipe, unsigned int id,
-                                                                        const std::shared_ptr<derived_data::SQL_query>& query,
+                                                                        const derived_data::SQL_query& query,
                                                                         unsigned int t_serial, std::vector<number>& sample)
       {
         assert(pipe != nullptr);
@@ -1918,7 +1930,7 @@ namespace transport
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_zeta_twopf_kconfig_sample(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_query>& query,
+    void data_manager_sqlite3<number>::pull_zeta_twopf_kconfig_sample(datapipe<number>* pipe, const derived_data::SQL_query& query,
                                                                       unsigned int t_serial, std::vector<number>& sample)
 	    {
         assert(pipe != nullptr);
@@ -1933,7 +1945,7 @@ namespace transport
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_zeta_threepf_kconfig_sample(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_query>& query,
+    void data_manager_sqlite3<number>::pull_zeta_threepf_kconfig_sample(datapipe<number>* pipe, const derived_data::SQL_query& query,
                                                                         unsigned int t_serial, std::vector<number>& sample)
 	    {
         assert(pipe != nullptr);
@@ -1948,7 +1960,7 @@ namespace transport
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_zeta_redbsp_kconfig_sample(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_query>& query,
+    void data_manager_sqlite3<number>::pull_zeta_redbsp_kconfig_sample(datapipe<number>* pipe, const derived_data::SQL_query& query,
                                                                        unsigned int t_serial, std::vector<number>& sample)
 	    {
         assert(pipe != nullptr);
@@ -1963,7 +1975,7 @@ namespace transport
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::pull_k_statistics_sample(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_query>& query,
+    void data_manager_sqlite3<number>::pull_k_statistics_sample(datapipe<number>* pipe, const derived_data::SQL_query& query,
                                                                 std::vector<kconfiguration_statistics>& data)
       {
         assert(pipe != nullptr);
@@ -2019,7 +2031,7 @@ namespace transport
 
 
     template <typename number>
-    std::shared_ptr< output_group_record<integration_payload> >
+    std::unique_ptr< output_group_record<integration_payload> >
     data_manager_sqlite3<number>::datapipe_attach_integration_content(datapipe<number>* pipe, typename datapipe<number>::integration_content_finder& finder,
                                                                       const std::string& name, const std::list<std::string>& tags)
 			{
@@ -2027,7 +2039,7 @@ namespace transport
 				if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
 
         // find a suitable output group for this task
-        std::shared_ptr< output_group_record<integration_payload> > group = finder(name, tags);
+        std::unique_ptr< output_group_record<integration_payload> > group = finder(name, tags);
 
         integration_payload& payload = group->get_payload();
 
@@ -2041,7 +2053,7 @@ namespace transport
 
 
     template <typename number>
-    std::shared_ptr <output_group_record<postintegration_payload>>
+    std::unique_ptr< output_group_record<postintegration_payload> >
     data_manager_sqlite3<number>::datapipe_attach_postintegration_content(datapipe<number>* pipe, typename datapipe<number>::postintegration_content_finder& finder,
                                                                           const std::string& name, const std::list<std::string>& tags)
 	    {
@@ -2049,7 +2061,7 @@ namespace transport
         if(pipe == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATAMGR_NULL_DATAPIPE);
 
         // find a suitable output group for this task
-        std::shared_ptr< output_group_record<postintegration_payload> > group = finder(name, tags);
+        std::unique_ptr< output_group_record<postintegration_payload> > group = finder(name, tags);
 
         postintegration_payload& payload = group->get_payload();
 

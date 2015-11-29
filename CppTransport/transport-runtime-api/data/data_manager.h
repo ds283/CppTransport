@@ -114,22 +114,22 @@ namespace transport
 
         //! Initialize an integration_writer object.
         //! Never overwrites existing data; if the container already exists, an exception is thrown
-        virtual void initialize_writer(std::shared_ptr< integration_writer<number> >& writer, bool recovery_mode = false) = 0;
+        virtual void initialize_writer(integration_writer<number>& writer, bool recovery_mode = false) = 0;
 
         //! Close an integration_writer object.
-        virtual void close_writer(std::shared_ptr< integration_writer<number> >& writer) = 0;
+        virtual void close_writer(integration_writer<number>& writer) = 0;
 
         //! Initialize a derived_content_writer object.
-        virtual void initialize_writer(std::shared_ptr< derived_content_writer<number> >& writer, bool recovery_mode = false) = 0;
+        virtual void initialize_writer(derived_content_writer<number>& writer, bool recovery_mode = false) = 0;
 
         //! Close an open derived_content_writer object.
-        virtual void close_writer(std::shared_ptr< derived_content_writer<number> >& writer) = 0;
+        virtual void close_writer(derived_content_writer<number>& writer) = 0;
 
         //! Initialize a postintegration_writer object.
-        virtual void initialize_writer(std::shared_ptr< postintegration_writer<number> >& writer, bool recovery_mode = false) = 0;
+        virtual void initialize_writer(postintegration_writer<number>& writer, bool recovery_mode = false) = 0;
 
         //! Close an open postintegration_writer object.
-        virtual void close_writer(std::shared_ptr< postintegration_writer<number> >& writer) = 0;
+        virtual void close_writer(postintegration_writer<number>& writer) = 0;
 
 
         // WRITE TABLES FOR A DATA CONTAINER
@@ -137,19 +137,19 @@ namespace transport
       public:
 
         //! Create tables needed for a twopf container
-        virtual void create_tables(std::shared_ptr< integration_writer<number> >& writer, twopf_task<number>* tk) = 0;
+        virtual void create_tables(integration_writer<number>& writer, twopf_task<number>* tk) = 0;
 
         //! Create tables needed for a threepf container
-        virtual void create_tables(std::shared_ptr< integration_writer<number> >& writer, threepf_task<number>* tk) = 0;
+        virtual void create_tables(integration_writer<number>& writer, threepf_task<number>* tk) = 0;
 
         //! Create tables needed for a zeta twopf container
-        virtual void create_tables(std::shared_ptr< postintegration_writer<number> >& writer, zeta_twopf_task<number>* tk) = 0;
+        virtual void create_tables(postintegration_writer<number>& writer, zeta_twopf_task<number>* tk) = 0;
 
         //! Create tables needed for a zeta threepf container
-        virtual void create_tables(std::shared_ptr< postintegration_writer<number> >& writer, zeta_threepf_task<number>* tk) = 0;
+        virtual void create_tables(postintegration_writer<number>& writer, zeta_threepf_task<number>* tk) = 0;
 
         //! Create tables needed for an fNL container
-        virtual void create_tables(std::shared_ptr< postintegration_writer<number> >& writer, fNL_task<number>* tk) = 0;
+        virtual void create_tables(postintegration_writer<number>& writer, fNL_task<number>* tk) = 0;
 
 
         // SEEDING
@@ -157,24 +157,24 @@ namespace transport
       public:
 
         //! Seed a writer for a twopf task
-        virtual void seed_writer(std::shared_ptr< integration_writer<number> >& writer, twopf_task<number>* tk,
-                                 const std::shared_ptr< output_group_record<integration_payload> >& seed) = 0;
+        virtual void seed_writer(integration_writer<number>& writer, twopf_task<number>* tk,
+                                 const output_group_record<integration_payload>& seed) = 0;
 
         //! Seed a writer for a threepf task
-        virtual void seed_writer(std::shared_ptr< integration_writer<number> >& writer, threepf_task<number>* tk,
-                                 const std::shared_ptr< output_group_record<integration_payload> >& seed) = 0;
+        virtual void seed_writer(integration_writer<number>& writer, threepf_task<number>* tk,
+                                 const output_group_record<integration_payload>& seed) = 0;
 
         //! Seed a writer for a zeta twopf task
-        virtual void seed_writer(std::shared_ptr< postintegration_writer<number> >& writer, zeta_twopf_task<number>* tk,
-                                 const std::shared_ptr< output_group_record<postintegration_payload> >& seed) = 0;
+        virtual void seed_writer(postintegration_writer<number>& writer, zeta_twopf_task<number>* tk,
+                                 const output_group_record<postintegration_payload>& seed) = 0;
 
         //! Seed a writer for a zeta threepf task
-        virtual void seed_writer(std::shared_ptr< postintegration_writer<number> >& writer, zeta_threepf_task<number>* tk,
-                                 const std::shared_ptr< output_group_record<postintegration_payload> >& seed) = 0;
+        virtual void seed_writer(postintegration_writer<number>& writer, zeta_threepf_task<number>* tk,
+                                 const output_group_record<postintegration_payload>& seed) = 0;
 
         //! Seed a writer for an fNL task
-        virtual void seed_writer(std::shared_ptr< postintegration_writer<number> >& writer, fNL_task<number>* tk,
-                                 const std::shared_ptr< output_group_record<postintegration_payload> >& seed) = 0;
+        virtual void seed_writer(postintegration_writer<number>& writer, fNL_task<number>* tk,
+                                 const output_group_record<postintegration_payload>& seed) = 0;
 
 
         // CONSTRUCT BATCHERS
@@ -231,7 +231,7 @@ namespace transport
       public:
 
         //! Synchronize missing serial numbers between an integration writer and a postintegration writer
-        void synchronize_missing_serials(std::shared_ptr< integration_writer<number> > i_writer, std::shared_ptr< postintegration_writer<number> > p_writer,
+        void synchronize_missing_serials(integration_writer<number>& i_writer, postintegration_writer<number>& p_writer,
                                          integration_task<number>* i_tk, postintegration_task<number>* p_tk);
 
 
@@ -302,92 +302,93 @@ namespace transport
       public:
 
         //! Create a datapipe
-        virtual datapipe<number> create_datapipe(const boost::filesystem::path& logdir, const boost::filesystem::path& tempdir,
-                                                 typename datapipe<number>::integration_content_finder integration_finder,
-                                                 typename datapipe<number>::postintegration_content_finder postintegration_finder,
-                                                 typename datapipe<number>::dispatch_function dispatcher,
-                                                 unsigned int worker, bool no_log = false) = 0;
+        virtual std::unique_ptr< datapipe<number> > create_datapipe(const boost::filesystem::path& logdir,
+                                                                    const boost::filesystem::path& tempdir,
+                                                                    typename datapipe<number>::integration_content_finder integration_finder,
+                                                                    typename datapipe<number>::postintegration_content_finder postintegration_finder,
+                                                                    typename datapipe<number>::dispatch_function dispatcher,
+                                                                    unsigned int worker, bool no_log = false) = 0;
 
         //! Pull a set of time sample-points from a datapipe
-        virtual void pull_time_config(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_time_config_query>& tquery,
+        virtual void pull_time_config(datapipe<number>* pipe, const derived_data::SQL_time_config_query& tquery,
                                       std::vector<time_config>& sample) = 0;
 
         //! Pull a set of 2pf k-configuration serial numbers from a datapipe
-        virtual void pull_kconfig_twopf(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_twopf_kconfig_query>& kquery,
+        virtual void pull_kconfig_twopf(datapipe<number>* pipe, const derived_data::SQL_twopf_kconfig_query& kquery,
                                         std::vector<twopf_kconfig>& sample) = 0;
 
         //! Pull a set of 3pd k-configuration serial numbesr from a datapipe
         //! Simultaneously, populates three lists (k1, k2, k3) with serial numbers for the 2pf k-configurations
         //! corresponding to k1, k2, k3
-        virtual void pull_kconfig_threepf(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_threepf_kconfig_query>& kquery,
+        virtual void pull_kconfig_threepf(datapipe<number>* pipe, const derived_data::SQL_threepf_kconfig_query& kquery,
                                           std::vector<threepf_kconfig>& sample) = 0;
 
         //! Pull a time sample of a background field from a datapipe
-        virtual void pull_background_time_sample(datapipe<number>* pipe, unsigned int id, const std::shared_ptr<derived_data::SQL_query>& query,
+        virtual void pull_background_time_sample(datapipe<number>* pipe, unsigned int id, const derived_data::SQL_query& query,
                                                  std::vector<number>& sample) = 0;
 
         //! Pull a time sample of a twopf component at fixed k-configuration from a datapipe
-        virtual void pull_twopf_time_sample(datapipe<number>* pipe, unsigned int id, const std::shared_ptr<derived_data::SQL_query>& query,
+        virtual void pull_twopf_time_sample(datapipe<number>* pipe, unsigned int id, const derived_data::SQL_query& query,
                                             unsigned int k_serial, std::vector<number>& sample, twopf_type type) = 0;
 
         //! Pull a sample of a threepf at fixed k-configuration from a datapipe
-        virtual void pull_threepf_time_sample(datapipe<number>* pipe, unsigned int id, const std::shared_ptr<derived_data::SQL_query>& query,
+        virtual void pull_threepf_time_sample(datapipe<number>* pipe, unsigned int id, const derived_data::SQL_query& query,
                                               unsigned int k_serial, std::vector<number>& sample, threepf_type type) = 0;
 
         //! Pull a sample of a tensor twopf at fixed k-configuration from a datapipe
-        virtual void pull_tensor_twopf_time_sample(datapipe<number>* pipe, unsigned int id, const std::shared_ptr<derived_data::SQL_query>& query,
+        virtual void pull_tensor_twopf_time_sample(datapipe<number>* pipe, unsigned int id, const derived_data::SQL_query& query,
                                                    unsigned int k_serial, std::vector<number>& sample) = 0;
 
         //! Pull a sample of the zeta twopf at fixed k-configuration from a datapipe
-        virtual void pull_zeta_twopf_time_sample(datapipe<number>*, const std::shared_ptr<derived_data::SQL_query>& query,
+        virtual void pull_zeta_twopf_time_sample(datapipe<number>*, const derived_data::SQL_query& query,
                                                  unsigned int k_serial, std::vector<number>& sample) = 0;
 
         //! Pull a sample of the zeta threepf at fixed k-configuration from a datapipe
-        virtual void pull_zeta_threepf_time_sample(datapipe<number>*, const std::shared_ptr<derived_data::SQL_query>& query,
+        virtual void pull_zeta_threepf_time_sample(datapipe<number>*, const derived_data::SQL_query& query,
                                                    unsigned int k_serial, std::vector<number>& sample) = 0;
 
         //! Pull a sample of the zeta reduced bispectrum at fixed k-configuration from a datapipe
-        virtual void pull_zeta_redbsp_time_sample(datapipe<number>*, const std::shared_ptr<derived_data::SQL_query>& query,
+        virtual void pull_zeta_redbsp_time_sample(datapipe<number>*, const derived_data::SQL_query& query,
                                                   unsigned int k_serial, std::vector<number>& sample) = 0;
 
         //! Pull a sample of fNL from a datapipe
-        virtual void pull_fNL_time_sample(datapipe<number>*, const std::shared_ptr<derived_data::SQL_query>& query,
+        virtual void pull_fNL_time_sample(datapipe<number>*, const derived_data::SQL_query& query,
                                           std::vector<number>& sample, derived_data::template_type type) = 0;
 
         //! Pull a sample of bispectrum.template from a datapipe
-        virtual void pull_BT_time_sample(datapipe<number>*, const std::shared_ptr<derived_data::SQL_query>& query,
+        virtual void pull_BT_time_sample(datapipe<number>*, const derived_data::SQL_query& query,
                                          std::vector<number>& sample, derived_data::template_type type) = 0;
 
         //! Pull a sample of template.template from a datapipe
-        virtual void pull_TT_time_sample(datapipe<number>*, const std::shared_ptr<derived_data::SQL_query>& query,
+        virtual void pull_TT_time_sample(datapipe<number>*, const derived_data::SQL_query& query,
                                          std::vector<number>& sample, derived_data::template_type type) = 0;
 
         //! Pull a kconfig sample of a twopf component at fixed time from a datapipe
-        virtual void pull_twopf_kconfig_sample(datapipe<number>* pipe, unsigned int id, const std::shared_ptr<derived_data::SQL_query>& query,
+        virtual void pull_twopf_kconfig_sample(datapipe<number>* pipe, unsigned int id, const derived_data::SQL_query& query,
                                                unsigned int t_serial, std::vector<number>& sample, twopf_type type) = 0;
 
         //! Pull a kconfig sample of a threepf at fixed time from a datapipe
-        virtual void pull_threepf_kconfig_sample(datapipe<number>* pipe, unsigned int id, const std::shared_ptr<derived_data::SQL_query>& query,
+        virtual void pull_threepf_kconfig_sample(datapipe<number>* pipe, unsigned int id, const derived_data::SQL_query& query,
                                                  unsigned int t_serial, std::vector<number>& sample, threepf_type type) = 0;
 
         //! Pull a kconfig sample of a tensor twopf component at fixed time from a datapipe
-        virtual void pull_tensor_twopf_kconfig_sample(datapipe<number>* pipe, unsigned int id, const std::shared_ptr<derived_data::SQL_query>& query,
+        virtual void pull_tensor_twopf_kconfig_sample(datapipe<number>* pipe, unsigned int id, const derived_data::SQL_query& query,
                                                       unsigned int t_serial, std::vector<number>& sample) = 0;
 
         //! Pull a kconfig sample of the zeta twopf at fixed time from a datapipe
-        virtual void pull_zeta_twopf_kconfig_sample(datapipe<number>*, const std::shared_ptr<derived_data::SQL_query>& query,
+        virtual void pull_zeta_twopf_kconfig_sample(datapipe<number>*, const derived_data::SQL_query& query,
                                                     unsigned int t_serial, std::vector<number>& sample) = 0;
 
         //! Pull a kconfig sample of the zeta threepf at fixed time from a datapipe
-        virtual void pull_zeta_threepf_kconfig_sample(datapipe<number>*, const std::shared_ptr<derived_data::SQL_query>& query,
+        virtual void pull_zeta_threepf_kconfig_sample(datapipe<number>*, const derived_data::SQL_query& query,
                                                       unsigned int t_serial, std::vector<number>& sample) = 0;
 
         //! Pull a kconfig sample of the zeta reduced bispectrum at fixed time from a datapipe
-        virtual void pull_zeta_redbsp_kconfig_sample(datapipe<number>*, const std::shared_ptr<derived_data::SQL_query>& query,
+        virtual void pull_zeta_redbsp_kconfig_sample(datapipe<number>*, const derived_data::SQL_query& query,
                                                      unsigned int t_serial, std::vector<number>& sample) = 0;
 
         //! Pull a sample of k-configuration statistics from a datapipe
-        virtual void pull_k_statistics_sample(datapipe<number>* pipe, const std::shared_ptr<derived_data::SQL_query>& query,
+        virtual void pull_k_statistics_sample(datapipe<number>* pipe, const derived_data::SQL_query& query,
                                               std::vector<kconfiguration_statistics>& data) = 0;
 
 
@@ -762,12 +763,12 @@ namespace transport
 
 
     template <typename number>
-    void data_manager<number>::synchronize_missing_serials(std::shared_ptr< integration_writer<number> > i_writer, std::shared_ptr< postintegration_writer<number> > p_writer,
+    void data_manager<number>::synchronize_missing_serials(integration_writer<number>& i_writer, postintegration_writer<number>& p_writer,
                                                            integration_task<number>* i_tk, postintegration_task<number>* p_tk)
       {
         // get serial numbers missing individually from each writer
-        std::list<unsigned int> integration_missing = i_writer->get_missing_serials();
-        std::list<unsigned int> postintegration_missing = p_writer->get_missing_serials();
+        std::list<unsigned int> integration_missing = i_writer.get_missing_serials();
+        std::list<unsigned int> postintegration_missing = p_writer.get_missing_serials();
 
         // merge into a single list
         std::list<unsigned int> total_missing = integration_missing;
@@ -782,9 +783,9 @@ namespace transport
 
         if(integration_discrepant.size() > 0)
           {
-            BOOST_LOG_SEV(i_writer->get_log(), base_writer::log_severity_level::normal) << '\n' << "** Synchronizing " << integration_discrepant.size() << " configurations in integration container which are missing in postintegration container";
-            i_writer->merge_failure_list(integration_discrepant);
-            i_writer->check_integrity(i_tk);
+            BOOST_LOG_SEV(i_writer.get_log(), base_writer::log_severity_level::normal) << '\n' << "** Synchronizing " << integration_discrepant.size() << " configurations in integration container which are missing in postintegration container";
+            i_writer.merge_failure_list(integration_discrepant);
+            i_writer.check_integrity(i_tk);
           }
 
         std::list<unsigned int> postintegration_discrepant;
@@ -793,9 +794,9 @@ namespace transport
 
         if(postintegration_discrepant.size() > 0)
           {
-            BOOST_LOG_SEV(p_writer->get_log(), base_writer::log_severity_level::normal) << '\n' << "** Synchronizing " << postintegration_discrepant.size() << " configurations in postintegration container which are missing in integration container";
-            p_writer->merge_failure_list(postintegration_discrepant);
-            p_writer->check_integrity(p_tk);
+            BOOST_LOG_SEV(p_writer.get_log(), base_writer::log_severity_level::normal) << '\n' << "** Synchronizing " << postintegration_discrepant.size() << " configurations in postintegration container which are missing in integration container";
+            p_writer.merge_failure_list(postintegration_discrepant);
+            p_writer.check_integrity(p_tk);
           }
       }
 

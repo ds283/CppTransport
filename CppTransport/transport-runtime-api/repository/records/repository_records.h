@@ -1583,7 +1583,10 @@ namespace transport
       public:
 
         //! Get payload
-        Payload& get_payload() { return(this->payload); }
+        Payload& get_payload()             { return(this->payload); }
+
+        //! Get payload (const version)
+        const Payload& get_payload() const { return(this->payload); }
 
 
         // SERIALIZATION -- implements a 'serializable' interface
@@ -2262,8 +2265,8 @@ namespace transport
 
             // used for sorting a list of output_groups into decreasing chronological order
             template <typename Payload>
-            bool comparator(const std::shared_ptr< output_group_record<Payload> >& A,
-                            const std::shared_ptr< output_group_record<Payload> >& B)
+            bool comparator(const std::unique_ptr< output_group_record<Payload> >& A,
+                            const std::unique_ptr< output_group_record<Payload> >& B)
 	            {
                 return (A->get_creation_time() > B->get_creation_time());
 	            }

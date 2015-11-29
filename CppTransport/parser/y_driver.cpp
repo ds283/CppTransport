@@ -14,16 +14,11 @@
 
 namespace y
 	{
+
     y_driver::y_driver(symbol_factory& s)
 	    : sym_factory(s)
 	    {
-        root = new script(sym_factory);
-	    }
-
-
-    y_driver::~y_driver()
-	    {
-        delete this->root;
+        root = std::make_unique<script>(sym_factory);
 	    }
 
 
@@ -33,9 +28,9 @@ namespace y
 	    }
 
 
-    const script* y_driver::get_script()
+    const script& y_driver::get_script()
 	    {
-        return (this->root);
+        return(*this->root);
 	    }
 
 
@@ -48,7 +43,7 @@ namespace y
         if(ok)
 	        {
             GiNaC::symbol sym = this->sym_factory.get_symbol(id, a->get_latex());
-            this->root->add_field(field_declaration(id, sym, lex->get_path(), a));
+            this->root->add_field(id, sym, lex->get_path(), a);
 	        }
         else
 	        {
@@ -68,7 +63,7 @@ namespace y
         if(ok)
 	        {
             GiNaC::symbol sym = this->sym_factory.get_symbol(id, a->get_latex());
-		        this->root->add_parameter(parameter_declaration(id, sym, lex->get_path(), a));
+		        this->root->add_parameter(id, sym, lex->get_path(), a);
 	        }
         else
 	        {
@@ -90,7 +85,7 @@ namespace y
 				if(ok)
 					{
 				    GiNaC::symbol sym = this->sym_factory.get_symbol(id, e->get_latex());
-						this->root->add_subexpr(subexpr_declaration(id, sym, lex->get_path(), e));
+						this->root->add_subexpr(id, sym, lex->get_path(), e);
 					}
 				else
 					{
@@ -800,7 +795,7 @@ namespace y
 
         if(ok)
 	        {
-            std::shared_ptr<declaration> record = this->root->check_symbol_exists(id);
+            boost::optional<declaration&> record = this->root->check_symbol_exists(id);
 
             if(record)
 	            {

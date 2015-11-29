@@ -30,13 +30,13 @@ static void output_info(transport::canonical_model<double>* model, transport::in
 int main(int argc, char* argv[])
   {
     // set up an instance of a manager
-    std::shared_ptr< transport::task_manager<double> > mgr = std::make_shared< transport::task_manager<double> >(argc, argv);
+    std::unique_ptr< transport::task_manager<double> > mgr = std::make_unique< transport::task_manager<double> >(argc, argv);
 
     // set up an instance of the double quadratic model,
     // using doubles, with given parameter choices
 	// for the VexCL backends, we have to pass the worker number so that
 	// (if necessary) the backend can select an appropriate GPU
-    transport::dquad_vexcl<double>* model = new transport::dquad_vexcl<double>(mgr, mgr->get_rank());
+    std::make_shared< transport::dquad_vexcl<double> > model = mgr->create_model< transport::dquad_vexcl<double> >();
 
 		mgr->process();
 

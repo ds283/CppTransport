@@ -44,7 +44,7 @@ class macro_agent
   public:
 
 		// constructor
-		macro_agent(translation_unit* u, std::shared_ptr<package_group> pkg, std::string pf, std::string sp,
+		macro_agent(translation_unit* u, package_group& pkg, std::string pf, std::string sp,
 		            unsigned int dm = DEFAULT_RECURSION_DEPTH);
 
 
@@ -54,7 +54,7 @@ class macro_agent
 
     // apply macro substitution to a line, provided this does not bring the total number
     // of recursive applications above the maximum
-    std::shared_ptr< std::vector<std::string> > apply(std::string& line, unsigned int& replacements);
+    std::unique_ptr< std::vector<std::string> > apply(std::string& line, unsigned int& replacements);
 
 
 		// INTERFACE - STATISTICS
@@ -73,28 +73,7 @@ class macro_agent
   protected:
 
     // do the heavy lifting of applying macro substitution to a line
-    std::shared_ptr< std::vector<std::string> > apply_line(std::string& line, unsigned int& replacements);
-
-    // apply a ruleset of simple macros to a line
-    unsigned int apply_simple(std::string& line, std::vector<macro_packages::simple_rule>& ruleset, bool blank = false);
-
-    // apply a ruleset of index macros to a line
-    unsigned int apply_index(std::string& line, const std::vector<struct index_abstract>& lhs_indices,
-                             const bool semicolon, const bool comma, const bool lhs_present,
-                             std::vector<macro_packages::index_rule>& ruleset);
-
-    std::vector<struct index_abstract> get_lhs_indices(std::string lhs);
-
-    void assign_lhs_index_types(std::string rhs, std::vector<struct index_abstract>& lhs_indices,
-                                std::vector<macro_packages::index_rule>& ruleset);
-
-    void assign_index_defaults(std::vector<struct index_abstract>& lhs_indices);
-
-    std::vector<std::string> get_argument_list(std::string& line, size_t pos, unsigned int num_args, std::string macro_name);
-
-    std::vector<struct index_abstract> get_index_set(std::string line, size_t pos, std::string name, unsigned int indices, unsigned int range);
-
-    void map_indices(std::string& line, std::string prefx, const std::vector<struct index_assignment>& assignment);
+    std::unique_ptr< std::vector<std::string> > apply_line(std::string& line, unsigned int& replacements);
 
 
     // INTERNAL DATA
@@ -105,8 +84,8 @@ class macro_agent
     unsigned int    parameters;
     enum indexorder order;
 
-    unsigned int recursion_depth;
-    unsigned int recursion_max;
+    unsigned int    recursion_depth;
+    unsigned int    recursion_max;
 
     translation_unit* unit;
 

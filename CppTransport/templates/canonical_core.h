@@ -83,8 +83,11 @@ namespace transport
 
       public:
 
-        $$__MODEL(std::shared_ptr< instance_manager<number> >& mgr);
-		    ~$$__MODEL() = default;
+        //! constructor
+        $$__MODEL();
+
+        //! destructor is default
+		    virtual ~$$__MODEL() = default;
 
 
         // EXTRACT MODEL INFORMATION -- implements a 'model' interface
@@ -266,8 +269,8 @@ namespace transport
 
 
     template <typename number>
-    $$__MODEL<number>::$$__MODEL(std::shared_ptr< instance_manager<number> >& mgr)
-      : canonical_model<number>(mgr, "$$__UNIQUE_ID", static_cast<unsigned int>(100*$$__VERSION))
+    $$__MODEL<number>::$$__MODEL()
+      : canonical_model<number>("$$__UNIQUE_ID", static_cast<unsigned int>(100*$$__VERSION))
       {
       }
 

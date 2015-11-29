@@ -82,7 +82,7 @@ namespace transport
 				    const std::list<unsigned int> items;
 			    };
 
-      public:
+      protected:
 
         //! Worker information class
         class worker_information
@@ -99,11 +99,12 @@ namespace transport
 	              assigned(false),
 	              active(true),
                 items(0),
-                time(0)
+                time(0),
+                last_contact(boost::posix_time::second_clock::universal_time())
 	            {
 	            }
 
-            // INTERFACE
+            // INTERFACE -- INTERROGATE FOR GENERAL INFORMATION
 
           public:
 
@@ -115,6 +116,20 @@ namespace transport
 
             //! get worker capacity
             unsigned int get_capacity() const { return(this->capacity); }
+
+            //! get worker priority
+            unsigned int get_priority() const { return(this->priority); }
+
+            //! get initialization status
+            bool get_initialization_status() const { return(this->initialized); }
+
+            //! set data
+            void set_data(unsigned int n, worker_type t, unsigned int c, unsigned int p) { this->number = n; this->type = t; this->capacity = c; this->priority = p; this->initialized = true; }
+
+
+            // INTERFACE -- ASSIGNMENT MANAGEMENT
+
+          public:
 
 		        //! is this worker currently assigned?
 		        bool is_assigned() const { return(this->assigned); }
@@ -128,14 +143,10 @@ namespace transport
 		        //! set active states
 		        void mark_active(bool status) { this->active = status; }
 
-            //! get worker priority
-            unsigned int get_priority() const { return(this->priority); }
 
-            //! get initialization status
-            bool get_initialization_status() const { return(this->initialized); }
+            // INTERFACE -- METADATA MANAGEMENT
 
-            //! set data
-            void set_data(unsigned int n, worker_type t, unsigned int c, unsigned int p) { this->number = n; this->type = t; this->capacity = c; this->priority = p; this->initialized = true; }
+          public:
 
 		        //! update timing data
 		        void update_timing_data(boost::timer::nanosecond_type t, unsigned int n) { this->time += t; this->items += n; }
@@ -148,6 +159,12 @@ namespace transport
 
 		        // get total number of items processed
 		        unsigned int get_number_items() const { return(this->items); }
+
+            //! update last contact time
+            void update_contact_time(boost::posix_time::ptime t) { this->last_contact = t; }
+
+            //! get last contact time
+            boost::posix_time::ptime get_last_contact_time() const { return(this->last_contact); }
 
 
             // INTERNAL DATA
@@ -175,13 +192,90 @@ namespace transport
 		        //! is this worker currently active?
 		        bool active;
 
-		        //! total time to process items on this worker
+		        //! total time used to process items on this worker
 		        boost::timer::nanosecond_type time;
 
 		        //! total number of items processed on this worker
 		        unsigned int items;
 
+            //! time of last contact with this worker
+            boost::posix_time::ptime last_contact;
+
 	        };
+
+
+        // WORKER METADATA RECORD
+
+      public:
+
+        class worker_metadata
+          {
+
+            // CONSTRUCTOR, DESTRUCTOR
+
+          public:
+
+            //! constructor
+            worker_metadata(unsigned int n, bool as, bool ac, boost::timer::nanosecond_type t, unsigned int i, boost::posix_time::ptime l)
+              : number(n),
+                assigned(as),
+                active(ac),
+                total_time(t),
+                items(i),
+                last_contact(l)
+              {
+              }
+
+            //! destructor is default
+            ~worker_metadata() = default;
+
+
+            // INTERFACE
+
+          public:
+
+            //! get worker number
+            unsigned int get_number() const { return(this->number); }
+
+            //! get assignment status
+            bool get_assigned() const { return(this->assigned); }
+
+            //! get active status
+            bool get_active() const { return(this->active); }
+
+            //! get total elapsed time
+            boost::timer::nanosecond_type get_total_elapsed_time() const { return(this->total_time); }
+
+            //! get total number of work items processed
+            unsigned int get_total_items_processed() const { return(this->items); }
+
+            //! get last contact time
+            boost::posix_time::ptime get_last_contact_time() const { return(this->last_contact); }
+
+
+            // INTERNAL DATA
+
+          private:
+
+            //! worker number
+            unsigned int number;
+
+            //! assigned status
+            bool assigned;
+
+            //! active status
+            bool active;
+
+            //! total elapsed time doing work
+            boost::timer::nanosecond_type total_time;
+
+            //! total number of work items processed
+            unsigned int items;
+
+            //! last contact time
+            boost::posix_time::ptime last_contact;
+
+          };
 
 
 		    // CONSTRUCTOR, DESTRUCTOR
@@ -228,7 +322,7 @@ namespace transport
 		    //! otherwise, logs an error.
 		    void initialize_worker(boost::log::sources::severity_logger< base_writer::log_severity_level >& log, unsigned int worker, MPI::slave_information_payload& payload);
 
-		    //! set current state; used when assigning work to GPUs
+		    //! set current state size; used when assigning work to GPUs
 		    void set_state_size(unsigned int size) { this->state_size = size; }
 
         //! advise a new aggregation time
@@ -296,6 +390,20 @@ namespace transport
 
 		    //! are all workers inactive?
 		    bool all_inactive() const { return(this->active == 0); }
+
+        //! get number of active workers
+        unsigned int get_number_active() const { return(this->active); }
+
+
+        // INTERFACE -- MANAGE METADATA
+
+      public:
+
+        //! update time of last contact with a worker
+        void update_contact_time(unsigned int worker, boost::posix_time::ptime time);
+
+        //! get metadata for all workers
+        std::vector< worker_metadata > get_metadata() const;
 
 
 		    // INTERNAL API
@@ -681,6 +789,25 @@ namespace transport
 
 				if(this->active == 0 && this->work_items_in_flight > 0) throw runtime_exception(exception_type::SCHEDULING_ERROR, CPPTRANSPORT_SCHEDULING_UNDER_INFLIGHT);
 			}
+
+
+    void master_scheduler::update_contact_time(unsigned int worker, boost::posix_time::ptime time)
+      {
+        this->worker_data[worker].update_contact_time(time);
+      }
+
+
+    std::vector< master_scheduler::worker_metadata > master_scheduler::get_metadata() const
+      {
+        std::vector< master_scheduler::worker_metadata > list;
+
+        for(std::vector<master_scheduler::worker_information>::const_iterator t = this->worker_data.begin(); t != this->worker_data.end(); ++t)
+          {
+            list.emplace_back(t->get_number(), t->is_assigned(), t->is_active(), t->get_total_time(), t->get_number_items(), t->get_last_contact_time());
+          }
+
+        return(list);
+      }
 
 
 		void master_scheduler::report_aggregation(boost::timer::nanosecond_type time)

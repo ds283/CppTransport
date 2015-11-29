@@ -24,20 +24,20 @@ void set_up_error_environment(void);
 void disable_colour_errors(void);
 
 
-void warn (std::string const msg);
-void error(std::string const msg);
+void warn (const std::string& msg);
+void error(const std::string& msg);
 
-void warn (std::string const msg, std::shared_ptr<filestack> path);
-void error(std::string const msg, std::shared_ptr<filestack> path);
+void warn (const std::string& msg, const filestack& path);
+void error(const std::string& msg, const filestack& path);
 
-void warn (std::string const msg, std::shared_ptr<filestack> path, unsigned int level);
-void error(std::string const msg, std::shared_ptr<filestack> path, unsigned int level);
+void warn (const std::string& msg, const filestack& path, unsigned int level);
+void error(const std::string& msg, const filestack& path, unsigned int level);
 
-void warn (std::string const msg, std::shared_ptr<filestack> path, std::shared_ptr<std::string> line, unsigned int char_pos);
-void error(std::string const msg, std::shared_ptr<filestack> path, std::shared_ptr<std::string> line, unsigned int char_pos);
+void warn (const std::string& msg, const filestack& path, const std::string& line, unsigned int char_pos);
+void error(const std::string& msg, const filestack& path, const std::string& line, unsigned int char_pos);
 
-void warn (std::string const msg, std::shared_ptr<filestack> path, std::shared_ptr<std::string> line, unsigned int char_pos, unsigned int level);
-void error(std::string const msg, std::shared_ptr<filestack> path, std::shared_ptr<std::string> line, unsigned int char_pos, unsigned int level);
+void warn (const std::string& msg, const filestack& path, const std::string& line, unsigned int char_pos, unsigned int level);
+void error(const std::string& msg, const filestack& path, const std::string& line, unsigned int char_pos, unsigned int level);
 
 
 #endif //__error_H_

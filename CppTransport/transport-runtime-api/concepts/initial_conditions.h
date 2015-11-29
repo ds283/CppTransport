@@ -52,13 +52,31 @@ namespace transport
         //! Construct named initial conditions from directly-supplied data.
         //! There are Npre e-folds of evolution prior to horizon exit for the conventionally-normalized
         //! mode with k=1, so N* (the horizon-crossing time for the k=1 mode) is equal to Ninit + Npre
-        initial_conditions(const std::string& nm, model<number>* m, const parameters<number>& p, const std::vector<number>& i,
+        initial_conditions(const std::string& nm, model<number>* m,
+                           const parameters<number>& p, const std::vector<number>& i,
                            double Nini, double Npre);
 
-        //! Construct anonymized initial conditions from directly-supplied data
-        initial_conditions(model<number>* m, const parameters<number>& p, const std::vector<number>& i,
+        //! Convenience constructor which accepts a shared_ptr<> to a model instance, but doesn't actually use this
+        //! to manage the lifetime; we work with raw pointers
+        initial_conditions(const std::string& nm, std::shared_ptr< model<number> > m,
+                           const parameters<number>& p, const std::vector<number>& i,
                            double Nini, double Npre)
+          : initial_conditions(nm, m.get(), p, i, Nini, Npre)
+          {
+          }
+
+        //! Construct anonymized initial conditions from directly-supplied data
+        initial_conditions(model<number>* m, const parameters<number>& p,
+                           const std::vector<number>& i, double Nini, double Npre)
           : initial_conditions(random_string(), m, p, i, Nini, Npre)
+          {
+          }
+
+        //! Convenience constructor which accepts a shared_ptr<> to a model instance, but doesn't actually use this
+        //! to manage the lifetime; we work with raw pointers
+        initial_conditions(std::shared_ptr< model<number> > m, const parameters<number>& p,
+                           const std::vector<number>& i, double Nini, double Npre)
+          : initial_conditions(random_string(), m.get(), p, i, Nini, Npre)
           {
           }
 
@@ -71,11 +89,29 @@ namespace transport
                            const parameters<number>& p, const std::vector<number>& i,
                            double Nini, double Ncross, double Npre);
 
+        //! Convenience constructor which accepts a shared_ptr<> to a model instance, but doesn't actually use this
+        //! to manage the lifetime; we work with raw pointers
+        initial_conditions(const std::string& nm, std::shared_ptr< model<number> > m,
+                           const parameters<number>& p, const std::vector<number>& i,
+                           double Nini, double Ncross, double Npre)
+          : initial_conditions(nm, m.get(), p, i, Nini, Ncross, Npre)
+          {
+          }
+
         //! Construct anonymized initial conditions offset from directly-supplied data using a supplied model
         initial_conditions(model<number>* m,
                            const parameters<number>& p, const std::vector<number>& i,
                            double Nini, double Ncross, double Npre)
           : initial_conditions(random_string(), m, p, i, Nini, Ncross, Npre)
+          {
+          }
+
+        //! Convenience constructor which accepts a shared_ptr<> to a model instance, but doesn't actually use this
+        //! to manage the lifetime; we work with raw pointers
+        initial_conditions(std::shared_ptr< model<number> > m,
+                           const parameters<number>& p, const std::vector<number>& i,
+                           double Nini, double Ncross, double Npre)
+          : initial_conditions(random_string(), m.get, p, i, Nini, Ncross, Npre)
           {
           }
 
@@ -169,7 +205,11 @@ namespace transport
     initial_conditions<number>::initial_conditions(const std::string& nm, model<number>* m,
                                                    const parameters<number>& p, const std::vector<number>& i,
                                                    double Nini, double Npre)
-      : name(nm), mdl(m), params(p), N_init(Nini), N_sub_horizon(Npre)
+      : name(nm),
+        mdl(m),
+        params(p),
+        N_init(Nini),
+        N_sub_horizon(Npre)
       {
 		    assert(m != nullptr);
 		    if(m == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_ICS_NULL_MODEL);
@@ -193,7 +233,11 @@ namespace transport
     initial_conditions<number>::initial_conditions(const std::string& nm, model<number>* m,
                                                    const parameters<number>& p, const std::vector<number>& i,
                                                    double Nini, double Ncross, double Npre)
-      : name(nm), mdl(m), params(p), N_init(Ncross-Npre), N_sub_horizon(Npre)
+      : name(nm),
+        mdl(m),
+        params(p),
+        N_init(Ncross-Npre),
+        N_sub_horizon(Npre)
       {
         assert(m != nullptr);
         if(m == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_ICS_NULL_MODEL);

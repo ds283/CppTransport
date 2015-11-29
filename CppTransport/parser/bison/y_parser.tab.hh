@@ -351,7 +351,7 @@ namespace y {
 
 
     /// Build a parser object.
-    y_parser (std::shared_ptr<y_lexer>  lexer_yyarg, std::shared_ptr<y_driver> driver_yyarg);
+    y_parser (y_lexer&  lexer_yyarg, y_driver& driver_yyarg);
     virtual ~y_parser ();
 
     /// Parse.
@@ -564,8 +564,8 @@ namespace y {
 
 
     // User arguments.
-    std::shared_ptr<y_lexer>  lexer;
-    std::shared_ptr<y_driver> driver;
+    y_lexer&  lexer;
+    y_driver& driver;
   };
 
 

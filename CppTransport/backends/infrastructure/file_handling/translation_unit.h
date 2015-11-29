@@ -27,7 +27,7 @@ class translation_unit
 
   public:
 
-    translation_unit(std::string file, std::shared_ptr<finder>& p,
+    translation_unit(std::string file, finder& p,
                      std::string core_out="", std::string implementation_out="", bool cse=true, bool v=false);
 
     ~translation_unit() = default;
@@ -93,9 +93,9 @@ class translation_unit
     const struct stepper&                              get_background_stepper() const;
     const struct stepper&                              get_perturbations_stepper() const;
 
-    std::shared_ptr<finder>                            get_finder() const { return(this->path); }
-    std::shared_ptr<output_stack>                      get_stack() const { return(this->stack); }
-    std::shared_ptr<translator>                        get_translator() const { return(this->outstream); }
+    finder&                                            get_finder() const { return(this->path); }
+    output_stack&                                      get_stack() const { return(*this->stack); }
+    translator&                                        get_translator() const { return(*this->outstream); }
 
 		symbol_factory&                                    get_symbol_factory();
 
@@ -106,10 +106,10 @@ class translation_unit
 
   private:
 
-    std::shared_ptr<y::lexstream_type> stream;
-    std::shared_ptr<y::y_lexer>     lexer;
-    std::shared_ptr<y::y_driver>    driver;
-    std::shared_ptr<y::y_parser>    parser;
+    std::unique_ptr<y::lexstream_type>                 stream;
+    std::unique_ptr<y::y_lexer>                        lexer;
+    std::unique_ptr<y::y_driver>                       driver;
+    std::unique_ptr<y::y_parser>                       parser;
 
 		// GiNaC symbol factory
 		symbol_factory                                     sym_factory;
@@ -119,9 +119,9 @@ class translation_unit
 		bool                                               verbose;
 		bool                                               parse_failed;
 
-    std::shared_ptr<finder>                            path;
-    std::shared_ptr<output_stack>                      stack;
-    std::shared_ptr<translator>                        outstream;
+    finder&                                            path;
+    std::unique_ptr<output_stack>                      stack;
+    std::unique_ptr<translator>                        outstream;
 
     // cached details about the translation unit
     std::string                                        core_output;             // name of core .h file
