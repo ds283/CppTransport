@@ -1,5 +1,5 @@
 model          "QSFI";
-name           "Quasi-single field like model";
+name           "Langlois et al. model with heavy field";
 
 % include details of library tags, stepper definitions, etc.
 #include "defaults.model"
@@ -8,7 +8,7 @@ name           "Quasi-single field like model";
 field
  { latex "\phi";
  } phi;
- 
+
 field
  { latex "\chi";
  } chi;
@@ -21,7 +21,7 @@ parameter
 parameter
  { latex "m_\phi";
  } mphi;
- 
+
 parameter
  { latex "\Delta\Theta";
  } deltaTheta;
@@ -43,7 +43,17 @@ parameter
 
 subexpr
  { latex "\Xi";
-   value = (deltaTheta/pi) * atan(s*(phi-phi0));
+   value = (deltaTheta/pi) * atan(s*(phi-phi0) / M_P^2);
  } Xi;
 
-potential = (1/2) * M^2 * cos(deltaTheta/2)^2 * (chi - (phi-phi0)*tan(Xi))^2 + (1/2) * mphi^2 * phi^2;
+subexpr
+ { latex "V_1";
+   value = (1/2) * M^2 * cos(deltaTheta/2)^2 * (chi - (phi-phi0)*tan(Xi))^2;
+ } V1;
+
+subexpr
+ { latex "V_2";
+   value = (1/2) * mphi^2 * phi^2;
+ } V2;
+
+potential = V1 + V2;

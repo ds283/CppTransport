@@ -14,16 +14,22 @@
 // we work in units where M_p=1, but that's up to us;
 // we could choose something different
 
-const double M_Planck   = 1.0;
-const double M          = 1e-4 * M_Planck;
-const double mphi       = 1e-7 * M_Planck;
-const double deltaTheta = M_PI / 10.0;
-const double phi0       = (-100.0 * sqrt(6.0)) * M_Planck;
-const double s          = (100.0 * sqrt(3.0))  * M_Planck;
-const double pi         = M_PI;
+constexpr double M_Planck   = 1.0;
 
-const double phi_init = (-2.0-100.0*sqrt(6.0)) * M_Planck;
-const double chi_init = (2.0*tan(M_PI/20.0)) * M_Planck;
+constexpr double shift1     = 231 * M_Planck;
+constexpr double shift2     = 231 * M_Planck;
+
+constexpr double Mass       = 1e-4 * M_Planck;
+constexpr double mphi       = 1e-7 * M_Planck;
+constexpr double deltaTheta = M_PI / 10.0;
+const     double phi0       = (-100.0 * std::sqrt(6.0)) * M_Planck + shift1;
+const     double s          = (1000.0 * std::sqrt(3.0)) * M_Planck;
+constexpr double pi         = M_PI;
+
+const     double phi_init   = (-2.0-100.0*std::sqrt(6.0)) * M_Planck + shift2;
+const     double chi_init   = (2.0*std::tan(M_PI/20.0)) * M_Planck;
+constexpr double dphi_init  = 0.0;
+constexpr double dchi_init  = 0.0;
 
 
 // ****************************************************************************
@@ -47,45 +53,41 @@ int main(int argc, char* argv[])
     std::shared_ptr< transport::QSFI_basic<double> > model = mgr->create_model< transport::QSFI_basic<double> >();
 
     // set up parameter choices
-    const std::vector<double>     init_params = { M, mphi, deltaTheta, phi0, s, pi };
+    const std::vector<double>     init_params = { Mass, mphi, deltaTheta, phi0, s, pi };
     transport::parameters<double> params(M_Planck, init_params, model);
 
     const std::vector<double> init_values = { phi_init, chi_init };
 
-    const double Ninit  = 0.0;   // start counting from N=0 at the beginning of the integration
-    const double Ncross = 251.0; // horizon-crossing occurs at N=251. The turn occurs just after 252 e-folds, so this allows the legs of the bispecturm to span a sensible range around the turn
-    const double Npre   = 15.0;  // number of e-folds of subhorizon evolution
-    const double Nsplit = 5.0;   // split point between early and late
-    const double Nmax   = 30.0;  // how many e-folds to integrate after horizon crossing
+    constexpr double Ninit  = 0.0;   // start counting from N=0 at the beginning of the integration
+    constexpr double Ncross = 245.0; // horizon-crossing occurs at N=251. The turn occurs just after 252 e-folds, so this allows the legs of the bispecturm to span a sensible range around the turn
+    constexpr double Npre   = 15.0;  // number of e-folds of subhorizon evolution
+    constexpr double Nmax   = 55.0;  // how many e-folds to integrate after horizon crossing
 
     // set up initial conditions with the specified horizon-crossing time Ncross and Npre
     // e-folds of subhorizon evolution.
     // The resulting initial conditions apply at time Ncross-Npre
-    transport::initial_conditions<double> ics("powerlaw-1", model, params, init_values, Ninit, Ncross, Npre);
+    transport::initial_conditions<double> ics("qsfi-1", model, params, init_values, Ninit, Ncross, Npre);
 
-    const unsigned int early_t_samples = 200;
-    const unsigned int late_t_samples  = 100;
+    constexpr unsigned int t_samples = 300;
 
-    transport::stepping_range<double> early_times(Ncross-Npre, Ncross+Nsplit, early_t_samples, transport::range_spacing_type::logarithmic_bottom_stepping);
-    transport::stepping_range<double> late_times(Ncross+Nsplit, Ncross+Nmax, late_t_samples, transport::range_spacing_type::linear_stepping);
-    transport::aggregation_range<double> times(early_times, late_times);
+    transport::stepping_range<double> times(Ncross-Npre, Ncross+Nmax, t_samples, transport::range_spacing_type::linear_stepping);
 
     // the conventions for k-numbers are as follows:
     // k=1 is the mode which crosses the horizon at time N*,
     // where N* is the 'offset' we pass to the integration method (see below)
-    const double        ktmin         = exp(0.0);
-    const double        ktmax         = exp(10.0);
-    const unsigned int  k_samples     = 100;
+    const     double        ktmin         = exp(0.0);
+    const     double        ktmax         = exp(10.0);
+    constexpr unsigned int  k_samples     = 100;
 
-		const double        alphamin      = 0.0;
-		const double        alphamax      = 1.0/2.0;
-		const unsigned int  a_samples     = 5;
+		constexpr double        alphamin      = 0.0;
+		constexpr double        alphamax      = 1.0/2.0;
+		constexpr unsigned int  a_samples     = 5;
 
-		const double        betamin       = 0.0;
-		const double        betamid       = 0.98;
-		const double        betamax       = 0.999;
-		const unsigned int  lo_b_samples  = 150;
-		const unsigned int  hi_b_samples  = 200;
+		constexpr double        betamin       = 0.0;
+		constexpr double        betamid       = 0.98;
+		constexpr double        betamax       = 0.999;
+		constexpr unsigned int  lo_b_samples  = 150;
+		constexpr unsigned int  hi_b_samples  = 200;
 
 		struct ThreepfStoragePolicy
 			{
