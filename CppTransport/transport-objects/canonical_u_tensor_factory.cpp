@@ -25,12 +25,12 @@ void canonical_u_tensor_factory::compute_sr_u(std::vector<GiNaC::ex>& v, flatten
       {
 		    unsigned int index = fl->flatten(i);
 
-		    if(!this->cache.query(sr_U_item, index, v[index]))
+		    if(!this->cache.query(expression_item_types::sr_U_item, index, v[index]))
 			    {
 				    this->compute_timer.resume();
 		        v[index] = - GiNaC::diff(this->V, this->field_list[i]) * GiNaC::pow(this->M_Planck, 2) / (this->V);
 		        this->compute_timer.stop();
-				    this->cache.store(sr_U_item, index, v[index]);
+				    this->cache.store(expression_item_types::sr_U_item, index, v[index]);
 			    }
       }
   }
@@ -60,7 +60,7 @@ void canonical_u_tensor_factory::compute_u1(GiNaC::ex& Hsq, GiNaC::ex& eps, std:
       {
 		    unsigned int index = fl->flatten(i);
 
-		    if(!this->cache.query(U1_item, index, args, v[index]))
+		    if(!this->cache.query(expression_item_types::U1_item, index, args, v[index]))
 			    {
 				    this->compute_timer.resume();
 		        if(this->is_field(i))
@@ -76,7 +76,7 @@ void canonical_u_tensor_factory::compute_u1(GiNaC::ex& Hsq, GiNaC::ex& eps, std:
 		            assert(false);
 			        }
 		        this->compute_timer.stop();
-				    this->cache.store(U1_item, index, args, v[index]);
+				    this->cache.store(expression_item_types::U1_item, index, args, v[index]);
 			    }
       }
   }
@@ -111,7 +111,7 @@ void canonical_u_tensor_factory::compute_u2(GiNaC::symbol& k, GiNaC::symbol& a,
           {
 		        unsigned int index = fl->flatten(i,j);
 
-		        if(!this->cache.query(U2_item, index, args, v[index]))
+		        if(!this->cache.query(expression_item_types::U2_item, index, args, v[index]))
 			        {
 				        this->compute_timer.resume();
 
@@ -148,7 +148,7 @@ void canonical_u_tensor_factory::compute_u2(GiNaC::symbol& k, GiNaC::symbol& a,
 
 		            v[index] = c;
 		            this->compute_timer.stop();
-				        this->cache.store(U2_item, index, args, v[index]);
+				        this->cache.store(expression_item_types::U2_item, index, args, v[index]);
 			        }
           }
       }
@@ -190,7 +190,7 @@ void canonical_u_tensor_factory::compute_u3(GiNaC::symbol& k1,
               {
 		            unsigned int index = fl->flatten(i,j,k);
 
-		            if(!this->cache.query(U3_item, index, args, v[index]))
+		            if(!this->cache.query(expression_item_types::U3_item, index, args, v[index]))
 			            {
 				            this->compute_timer.resume();
 
@@ -240,7 +240,7 @@ void canonical_u_tensor_factory::compute_u3(GiNaC::symbol& k1,
 
 		                v[index] = c;
 		                this->compute_timer.stop();
-		                this->cache.store(U3_item, index, args, v[index]);
+		                this->cache.store(expression_item_types::U3_item, index, args, v[index]);
 			            }
               }
           }
@@ -393,7 +393,7 @@ void canonical_u_tensor_factory::compute_zeta_xfm_1(GiNaC::ex& Hsq, GiNaC::ex& e
       {
 		    unsigned int index = fl->flatten(i);
 
-		    if(!this->cache.query(zxfm1_item, index, args, v[index]))
+		    if(!this->cache.query(expression_item_types::zxfm1_item, index, args, v[index]))
 			    {
 				    this->compute_timer.resume();
 		        if(this->is_field(i))
@@ -409,7 +409,7 @@ void canonical_u_tensor_factory::compute_zeta_xfm_1(GiNaC::ex& Hsq, GiNaC::ex& e
 		            assert(false);
 			        }
 				    this->compute_timer.stop();
-				    this->cache.store(zxfm1_item, index, args, v[index]);
+				    this->cache.store(expression_item_types::zxfm1_item, index, args, v[index]);
 			    }
       }
   }
@@ -437,7 +437,7 @@ void canonical_u_tensor_factory::compute_zeta_xfm_2(GiNaC::symbol& k, GiNaC::sym
           {
 		        unsigned int index = fl->flatten(i,j);
 
-		        if(!this->cache.query(zxfm2_item, index, args, v[index]))
+		        if(!this->cache.query(expression_item_types::zxfm2_item, index, args, v[index]))
 			        {
 				        this->compute_timer.resume();
 
@@ -466,7 +466,7 @@ void canonical_u_tensor_factory::compute_zeta_xfm_2(GiNaC::symbol& k, GiNaC::sym
 
 		            v[index] = c;
 				        this->compute_timer.stop();
-				        this->cache.store(zxfm2_item, index, args, v[index]);
+				        this->cache.store(expression_item_types::zxfm2_item, index, args, v[index]);
 			        }
 
           }
@@ -542,7 +542,7 @@ void canonical_u_tensor_factory::compute_deltaN_xfm_1(std::vector<GiNaC::ex>& v,
 	    {
 		    unsigned int index = fl->flatten(i);
 
-		    if(!this->cache.query(dN1_item, index, v[index]))
+		    if(!this->cache.query(expression_item_types::dN1_item, index, v[index]))
 			    {
 				    this->compute_timer.resume();
 		        if(this->is_field(i))
@@ -558,7 +558,7 @@ void canonical_u_tensor_factory::compute_deltaN_xfm_1(std::vector<GiNaC::ex>& v,
 		            assert(false);
 			        }
 						this->compute_timer.stop();
-				    this->cache.store(dN1_item, index, v[index]);
+				    this->cache.store(expression_item_types::dN1_item, index, v[index]);
 			    }
 	    }
 	}
@@ -597,7 +597,7 @@ void canonical_u_tensor_factory::compute_deltaN_xfm_2(std::vector<GiNaC::ex>& v,
 	        {
 		        unsigned int index = fl->flatten(i,j);
 
-		        if(!this->cache.query(dN2_item, index, v[index]))
+		        if(!this->cache.query(expression_item_types::dN2_item, index, v[index]))
 			        {
 				        this->compute_timer.resume();
 		            v[index] = -1/(2*dotH) * diff(diff(Hsq, this->coordinate(i)), this->coordinate(j))
@@ -605,7 +605,7 @@ void canonical_u_tensor_factory::compute_deltaN_xfm_2(std::vector<GiNaC::ex>& v,
 			            - diff(1/(2*dotH), this->coordinate(j)) * diff(Hsq, this->coordinate(i))
 			            + 1/(2*dotH) * p_sum * diff(Hsq, this->coordinate(i)) * diff(Hsq, this->coordinate(j));
 				        this->compute_timer.stop();
-				        this->cache.store(dN2_item, index, v[index]);
+				        this->cache.store(expression_item_types::dN2_item, index, v[index]);
 			        }
 	        }
 	    }
@@ -665,7 +665,7 @@ GiNaC::ex canonical_u_tensor_factory::compute_A_component(unsigned int i, GiNaC:
 
     GiNaC::ex c = 0;
 
-		if(!this->cache.query(A_item, index, args, c))
+		if(!this->cache.query(expression_item_types::A_item, index, args, c))
 			{
 				this->compute_timer.resume();
 
@@ -704,7 +704,7 @@ GiNaC::ex canonical_u_tensor_factory::compute_A_component(unsigned int i, GiNaC:
 
 				this->compute_timer.stop();
 
-				this->cache.store(A_item, index, args, c);
+				this->cache.store(expression_item_types::A_item, index, args, c);
 			}
 
     return(c);
@@ -733,7 +733,7 @@ GiNaC::ex canonical_u_tensor_factory::compute_B_component(unsigned int i, GiNaC:
 
     GiNaC::ex c = 0;
 
-		if(!this->cache.query(B_item, index, args, c))
+		if(!this->cache.query(expression_item_types::B_item, index, args, c))
 			{
 				this->compute_timer.resume();
 
@@ -754,7 +754,7 @@ GiNaC::ex canonical_u_tensor_factory::compute_B_component(unsigned int i, GiNaC:
 
 				this->compute_timer.stop();
 
-				this->cache.store(B_item, index, args, c);
+				this->cache.store(expression_item_types::B_item, index, args, c);
 			}
 
     return(c);
@@ -783,7 +783,7 @@ GiNaC::ex canonical_u_tensor_factory::compute_C_component(unsigned int i, GiNaC:
 		
     GiNaC::ex c = 0;
 
-    if(!this->cache.query(C_item, index, args, c))
+    if(!this->cache.query(expression_item_types::C_item, index, args, c))
 	    {
 		    this->compute_timer.resume();
 
@@ -800,7 +800,7 @@ GiNaC::ex canonical_u_tensor_factory::compute_C_component(unsigned int i, GiNaC:
 
 		    this->compute_timer.stop();
 
-		    this->cache.store(C_item, index, args, c);
+		    this->cache.store(expression_item_types::C_item, index, args, c);
 	    }
 
     return(c);
@@ -833,7 +833,7 @@ GiNaC::ex canonical_u_tensor_factory::compute_M_component(unsigned int i, unsign
 
     GiNaC::ex v;
 
-		if(!this->cache.query(M_item, index, args, v))
+		if(!this->cache.query(expression_item_types::M_item, index, args, v))
 			{
 				this->compute_timer.resume();
 
@@ -851,7 +851,7 @@ GiNaC::ex canonical_u_tensor_factory::compute_M_component(unsigned int i, unsign
 
 				this->compute_timer.stop();
 
-				this->cache.store(M_item, index, args, v);
+				this->cache.store(expression_item_types::M_item, index, args, v);
 			}
 
     return(v);

@@ -15,7 +15,7 @@
 #include "formatter.h"
 
 
-enum expression_item_types
+enum class expression_item_types
 	{
     sr_U_item, U1_item, U2_item, U3_item, A_item, B_item, C_item, M_item, zxfm1_item, zxfm2_item, dN1_item, dN2_item
 	};
@@ -78,7 +78,7 @@ class translator
 		//! point back to parent translation unit
     translation_unit* unit;
 
-		//! expression cache for this translation unit
+		//! expression cache for this translator
 		ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE> cache;
 
   };
