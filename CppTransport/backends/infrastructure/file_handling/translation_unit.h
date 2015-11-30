@@ -99,7 +99,7 @@ class translation_unit
     const struct stepper&                              get_perturbations_stepper() const;
 
     finder&                                            get_finder() const { return(this->path); }
-    output_stack&                                      get_stack() const { return(*this->stack); }
+    output_stack&                                      get_stack() { return(this->stack); }                     // not marked const; clients can change the stack
     translator&                                        get_translator() const { return(*this->outstream); }
 
 		symbol_factory&                                    get_symbol_factory();
@@ -126,7 +126,7 @@ class translation_unit
     argument_cache&                                    cache;
     local_environment&                                 env;
 
-    std::unique_ptr<output_stack>                      stack;
+    output_stack                                       stack;
     std::unique_ptr<translator>                        outstream;
 
     // cached details about the translation unit

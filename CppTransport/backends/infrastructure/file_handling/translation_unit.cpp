@@ -104,7 +104,6 @@ translation_unit::translation_unit(std::string file, finder& p, argument_cache& 
     driver = std::make_unique<y::y_driver>(sym_factory);
     parser = std::make_unique<y::y_parser>(*lexer, *driver);
 
-    stack     = std::make_unique<output_stack>();
     outstream = std::make_unique<translator>(this);
 
     if(parser->parse() == FAIL || driver->failed())
@@ -367,13 +366,13 @@ void translation_unit::print_advisory(const std::string& msg)
 
 void translation_unit::error(const std::string& msg)
 	{
-		::error(msg, *this->stack);
+		::error(msg, this->stack);
 	}
 
 
 void translation_unit::warn(const std::string& msg)
 	{
-		::warn(msg, *this->stack);
+		::warn(msg, this->stack);
 	}
 
 
