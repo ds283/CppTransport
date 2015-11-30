@@ -22,63 +22,81 @@
 // lexical analyser data
 
 
-const std::string keyword_table[] =
-                    {
-                      "name", "author", "tag", "field", "potential", "subexpr", "value",
-                      "parameter", "latex", "core", "implementation", "model",
-                      "abserr", "relerr", "stepper", "stepsize",
-                      "background", "perturbations",
-                      "indexorder", "left", "right",
-                      "abs", "step", "sqrt", "sin", "cos", "tan",
-                      "asin", "acos", "atan", "atan2", "sinh", "cosh", "tanh",
-                      "asinh", "acosh", "atanh", "exp", "log", "pow", "Li2", "Li", "G_func", "S_func", "H_func",
-                      "zeta_func", "zetaderiv", "tgamma_func", "lgamma_func", "beta_func", "psi_func", "factorial", "binomial"
-                    };
+const std::vector<std::string> keyword_table =
+                                 {
+                                   "name", "author", "tag", "field", "potential", "subexpr", "value",
+                                   "parameter", "latex", "core", "implementation", "model",
+                                   "abserr", "relerr", "stepper", "stepsize",
+                                   "background", "perturbations",
+                                   "indexorder", "left", "right",
+                                   "abs", "step", "sqrt", "sin", "cos", "tan",
+                                   "asin", "acos", "atan", "atan2", "sinh", "cosh", "tanh",
+                                   "asinh", "acosh", "atanh", "exp", "log", "pow", "Li2", "Li", "G_func", "S_func",
+                                   "H_func",
+                                   "zeta_func", "zetaderiv", "tgamma_func", "lgamma_func", "beta_func", "psi_func",
+                                   "factorial", "binomial"
+                                 };
 
-const enum keyword_type keyword_map[] =
-                          {
-                            k_name, k_author, k_tag, k_field, k_potential, k_subexpr, k_value,
-                            k_parameter, k_latex, k_core, k_implementation, k_model,
-                            k_abserr, k_relerr, k_stepper, k_stepsize,
-                            k_background, k_perturbations,
-                            k_indexorder, k_left, k_right,
-                            f_abs, f_step, f_sqrt,
-                            f_sin, f_cos, f_tan,
-                            f_asin, f_acos, f_atan, f_atan2,
-                            f_sinh, f_cosh, f_tanh,
-                            f_asinh, f_acosh, f_atanh,
-                            f_exp, f_log, f_pow, f_Li2, f_Li, f_G, f_S, f_H,
-                            f_zeta, f_zetaderiv, f_tgamma, f_lgamma,
-                            f_beta, f_psi, f_factorial, f_binomial
-                          };
+const std::vector<enum keyword_type> keyword_map =
+                                       {
+                                         keyword_type::name, keyword_type::author, keyword_type::tag,
+                                         keyword_type::field, keyword_type::potential, keyword_type::subexpr,
+                                         keyword_type::value,
+                                         keyword_type::parameter, keyword_type::latex,
+                                         keyword_type::core, keyword_type::impl, keyword_type::model,
+                                         keyword_type::abserr, keyword_type::relerr, keyword_type::k_stepper,
+                                         keyword_type::stepsize,
+                                         keyword_type::background, keyword_type::perturbations,
+                                         keyword_type::indexorder, keyword_type::left, keyword_type::right,
+                                         keyword_type::f_abs, keyword_type::f_step, keyword_type::f_sqrt,
+                                         keyword_type::f_sin, keyword_type::f_cos, keyword_type::f_tan,
+                                         keyword_type::f_asin, keyword_type::f_acos, keyword_type::f_atan,
+                                         keyword_type::f_atan2,
+                                         keyword_type::f_sinh, keyword_type::f_cosh, keyword_type::f_tanh,
+                                         keyword_type::f_asinh, keyword_type::f_acosh, keyword_type::f_atanh,
+                                         keyword_type::f_exp, keyword_type::f_log, keyword_type::f_pow,
+                                         keyword_type::f_Li2,
+                                         keyword_type::f_Li, keyword_type::f_G, keyword_type::f_S, keyword_type::f_H,
+                                         keyword_type::f_zeta, keyword_type::f_zetaderiv, keyword_type::f_tgamma,
+                                         keyword_type::f_lgamma,
+                                         keyword_type::f_beta, keyword_type::f_psi, keyword_type::f_factorial,
+                                         keyword_type::f_binomial
+                                       };
 
-const std::string character_table[] =
-                    {
-                      "{", "}", "(", ")",
-                      "[", "]", ",", ".", ":", ";",
-                      "=", "+", "-@binary", "-@unary", "*", "/", "\\", "~",
-                      "&", "^", "@", "...", "->"
-                    };
+const std::vector<std::string> character_table =
+                                 {
+                                   "{", "}", "(", ")",
+                                   "[", "]", ",", ".", ":", ";",
+                                   "=", "+", "-@binary", "-@unary", "*", "/", "\\", "~",
+                                   "&", "^", "@", "...", "->"
+                                 };
 
-const enum character_type character_map[] =
-                            {
-                              open_brace, close_brace, open_bracket, close_bracket,
-                              open_square, close_square, comma, period, colon, semicolon,
-                              equals, plus, binary_minus, unary_minus, star, backslash, foreslash, tilde,
-                              ampersand, circumflex, ampersat, ellipsis, rightarrow
-                            };
+const std::vector<enum character_type> character_map =
+                                         {
+                                           character_type::open_brace, character_type::close_brace,
+                                           character_type::open_bracket, character_type::close_bracket,
+                                           character_type::open_square, character_type::close_square,
+                                           character_type::comma,
+                                           character_type::period, character_type::colon, character_type::semicolon,
+                                           character_type::equals, character_type::plus,
+                                           character_type::binary_minus, character_type::unary_minus,
+                                           character_type::star, character_type::backslash, character_type::foreslash,
+                                           character_type::tilde, character_type::ampersand, character_type::circumflex,
+                                           character_type::ampersat, character_type::ellipsis,
+                                           character_type::rightarrow
+                                         };
 
 // keep track of which characters can precede a unary minus
 // this is an open bracket '(', and the binary operators
 // which bind tighter: *, /, ^
 // plus anything which isn't part of an expression
-const bool character_unary_context[] =
-             {
-               true, true, true, false,
-               true, true, true, true, true, true,
-               false, false, false, false, true, true, true, true,
-               true, true, true, true, true
-             };
+const std::vector<bool> character_unary_context =
+                          {
+                            true, true, true, false,
+                            true, true, true, true, true, true,
+                            false, false, false, false, true, true, true, true,
+                            true, true, true, true, true
+                          };
 
 
 static std::string  strip_dot_h(const std::string& pathname);
@@ -93,11 +111,10 @@ translation_unit::translation_unit(std::string file, finder& p, argument_cache& 
     parse_failed(false)
   {
     // lexicalize this input file
-    stream = std::make_unique<y::lexstream_type>(name, path,
-                                                 keyword_table, keyword_map, NUMBER_KEYWORDS,
-                                                 character_table, character_map, character_unary_context, NUMBER_CHARACTERS);
-//    dump lexeme stream to output -- for debugging
-//    stream->print(std::cerr);
+    stream = std::make_unique<y::lexstream_type>(name, path, keyword_table, keyword_map, character_table, character_map, character_unary_context);
+
+    // dump lexeme stream to output -- for debugging
+    // stream->print(std::cerr);
 
     // now pass to the parser for syntactic analysis
     lexer  = std::make_unique<y::y_lexer>(*stream);
@@ -111,6 +128,8 @@ translation_unit::translation_unit(std::string file, finder& p, argument_cache& 
         ::warn(WARNING_PARSING_FAILED + (std::string)(" '") + name + (std::string)("'"));
 		    parse_failed = true;
 	    }
+
+    // dump results of syntactic analysis -- for debugging
     // in.driver->get_script()->print(std::cerr);
 
     // cache details about this translation unit
