@@ -30,7 +30,7 @@ constexpr auto BINARY_TAG                 = "@binary";
 constexpr unsigned int LENGTH_BINARY_TAG  = 7;
 
 
-namespace lexeme    // package in a unique namespace to protect common words like 'keyword', 'character' used below
+namespace lexeme    // package in a unique namespace
 	{
 
     enum class buffer_type
