@@ -23,67 +23,67 @@
 
 
 const std::vector<std::string> keyword_table =
-                                 {
-                                   "name", "author", "tag", "field", "potential", "subexpr", "value",
-                                   "parameter", "latex", "core", "implementation", "model",
-                                   "abserr", "relerr", "stepper", "stepsize",
-                                   "background", "perturbations",
-                                   "indexorder", "left", "right",
-                                   "abs", "step", "sqrt", "sin", "cos", "tan",
-                                   "asin", "acos", "atan", "atan2", "sinh", "cosh", "tanh",
-                                   "asinh", "acosh", "atanh", "exp", "log", "pow", "Li2", "Li", "G_func", "S_func",
-                                   "H_func",
-                                   "zeta_func", "zetaderiv", "tgamma_func", "lgamma_func", "beta_func", "psi_func",
-                                   "factorial", "binomial"
+  {
+    "name", "author", "tag", "field", "potential", "subexpr", "value",
+    "parameter", "latex", "core", "implementation", "model",
+    "abserr", "relerr", "stepper", "stepsize",
+    "background", "perturbations",
+    "indexorder", "left", "right",
+    "abs", "step", "sqrt", "sin", "cos", "tan",
+    "asin", "acos", "atan", "atan2", "sinh", "cosh", "tanh",
+    "asinh", "acosh", "atanh", "exp", "log", "pow", "Li2", "Li", "G_func", "S_func",
+    "H_func",
+    "zeta_func", "zetaderiv", "tgamma_func", "lgamma_func", "beta_func", "psi_func",
+    "factorial", "binomial"
                                  };
 
 const std::vector<enum keyword_type> keyword_map =
-                                       {
-                                         keyword_type::name, keyword_type::author, keyword_type::tag,
-                                         keyword_type::field, keyword_type::potential, keyword_type::subexpr,
-                                         keyword_type::value,
-                                         keyword_type::parameter, keyword_type::latex,
-                                         keyword_type::core, keyword_type::impl, keyword_type::model,
-                                         keyword_type::abserr, keyword_type::relerr, keyword_type::k_stepper,
-                                         keyword_type::stepsize,
-                                         keyword_type::background, keyword_type::perturbations,
-                                         keyword_type::indexorder, keyword_type::left, keyword_type::right,
-                                         keyword_type::f_abs, keyword_type::f_step, keyword_type::f_sqrt,
-                                         keyword_type::f_sin, keyword_type::f_cos, keyword_type::f_tan,
-                                         keyword_type::f_asin, keyword_type::f_acos, keyword_type::f_atan,
-                                         keyword_type::f_atan2,
-                                         keyword_type::f_sinh, keyword_type::f_cosh, keyword_type::f_tanh,
-                                         keyword_type::f_asinh, keyword_type::f_acosh, keyword_type::f_atanh,
-                                         keyword_type::f_exp, keyword_type::f_log, keyword_type::f_pow,
-                                         keyword_type::f_Li2,
-                                         keyword_type::f_Li, keyword_type::f_G, keyword_type::f_S, keyword_type::f_H,
-                                         keyword_type::f_zeta, keyword_type::f_zetaderiv, keyword_type::f_tgamma,
-                                         keyword_type::f_lgamma,
-                                         keyword_type::f_beta, keyword_type::f_psi, keyword_type::f_factorial,
-                                         keyword_type::f_binomial
-                                       };
+  {
+    keyword_type::name, keyword_type::author, keyword_type::tag,
+    keyword_type::field, keyword_type::potential, keyword_type::subexpr,
+    keyword_type::value,
+    keyword_type::parameter, keyword_type::latex,
+    keyword_type::core, keyword_type::impl, keyword_type::model,
+    keyword_type::abserr, keyword_type::relerr, keyword_type::k_stepper,
+    keyword_type::stepsize,
+    keyword_type::background, keyword_type::perturbations,
+    keyword_type::indexorder, keyword_type::left, keyword_type::right,
+    keyword_type::f_abs, keyword_type::f_step, keyword_type::f_sqrt,
+    keyword_type::f_sin, keyword_type::f_cos, keyword_type::f_tan,
+    keyword_type::f_asin, keyword_type::f_acos, keyword_type::f_atan,
+    keyword_type::f_atan2,
+    keyword_type::f_sinh, keyword_type::f_cosh, keyword_type::f_tanh,
+    keyword_type::f_asinh, keyword_type::f_acosh, keyword_type::f_atanh,
+    keyword_type::f_exp, keyword_type::f_log, keyword_type::f_pow,
+    keyword_type::f_Li2,
+    keyword_type::f_Li, keyword_type::f_G, keyword_type::f_S, keyword_type::f_H,
+    keyword_type::f_zeta, keyword_type::f_zetaderiv, keyword_type::f_tgamma,
+    keyword_type::f_lgamma,
+    keyword_type::f_beta, keyword_type::f_psi, keyword_type::f_factorial,
+    keyword_type::f_binomial
+  };
 
 const std::vector<std::string> character_table =
-                                 {
-                                   "{", "}", "(", ")",
-                                   "[", "]", ",", ".", ":", ";",
-                                   "=", "+", "-@binary", "-@unary", "*", "/", "\\", "~",
-                                   "&", "^", "@", "...", "->"
+  {
+    "{", "}", "(", ")",
+    "[", "]", ",", ".", ":", ";",
+    "=", "+", "-@binary", "-@unary", "*", "/", "\\", "~",
+    "&", "^", "@", "...", "->"
                                  };
 
 const std::vector<enum character_type> character_map =
-                                         {
-                                           character_type::open_brace, character_type::close_brace,
-                                           character_type::open_bracket, character_type::close_bracket,
-                                           character_type::open_square, character_type::close_square,
-                                           character_type::comma,
-                                           character_type::period, character_type::colon, character_type::semicolon,
-                                           character_type::equals, character_type::plus,
-                                           character_type::binary_minus, character_type::unary_minus,
-                                           character_type::star, character_type::backslash, character_type::foreslash,
-                                           character_type::tilde, character_type::ampersand, character_type::circumflex,
-                                           character_type::ampersat, character_type::ellipsis,
-                                           character_type::rightarrow
+  {
+    character_type::open_brace, character_type::close_brace,
+    character_type::open_bracket, character_type::close_bracket,
+    character_type::open_square, character_type::close_square,
+    character_type::comma,
+    character_type::period, character_type::colon, character_type::semicolon,
+    character_type::equals, character_type::plus,
+    character_type::binary_minus, character_type::unary_minus,
+    character_type::star, character_type::backslash, character_type::foreslash,
+    character_type::tilde, character_type::ampersand, character_type::circumflex,
+    character_type::ampersat, character_type::ellipsis,
+    character_type::rightarrow
                                          };
 
 // keep track of which characters can precede a unary minus
@@ -91,12 +91,12 @@ const std::vector<enum character_type> character_map =
 // which bind tighter: *, /, ^
 // plus anything which isn't part of an expression
 const std::vector<bool> character_unary_context =
-                          {
-                            true, true, true, false,
-                            true, true, true, true, true, true,
-                            false, false, false, false, true, true, true, true,
-                            true, true, true, true, true
-                          };
+  {
+    true, true, true, false,
+    true, true, true, true, true, true,
+    false, false, false, false, true, true, true, true,
+    true, true, true, true, true
+  };
 
 
 static std::string  strip_dot_h(const std::string& pathname);
