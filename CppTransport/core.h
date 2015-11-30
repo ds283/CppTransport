@@ -31,4 +31,6 @@
 
 #define DEFAULT_RECURSION_DEPTH      (127)
 
+#define TEMPLATE_PATHS_ENV           "CPPTRANSPORT_TEMPLATE_PATH"
+
 #endif //__core_H_

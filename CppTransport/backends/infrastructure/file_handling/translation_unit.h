@@ -18,6 +18,8 @@
 #include "indexorder.h"
 #include "output_stack.h"
 #include "translator.h"
+#include "local_environment.h"
+#include "argument_cache.h"
 
 #include "symbol_factory.h"
 
@@ -25,11 +27,14 @@
 class translation_unit
   {
 
+    // CONSTRUCTOR, DESTRUCTOR
+
   public:
 
-    translation_unit(std::string file, finder& p,
-                     std::string core_out="", std::string implementation_out="", bool cse=true, bool v=false);
+    //! constructor
+    translation_unit(std::string file, finder& p, argument_cache& c, local_environment& e);
 
+    //! destructor is default
     ~translation_unit() = default;
 
 
@@ -115,11 +120,12 @@ class translation_unit
 		symbol_factory                                     sym_factory;
 
     std::string                                        name;                    // name of input script
-    bool                                               do_cse;
-		bool                                               verbose;
 		bool                                               parse_failed;
 
     finder&                                            path;
+    argument_cache&                                    cache;
+    local_environment&                                 env;
+
     std::unique_ptr<output_stack>                      stack;
     std::unique_ptr<translator>                        outstream;
 

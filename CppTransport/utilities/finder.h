@@ -8,25 +8,55 @@
 #ifndef __finder_H_
 #define __finder_H_
 
+
 #include <iostream>
 #include <string>
-#include <vector>
+#include <list>
+
 
 class finder
   {
-    public:
-      finder();
-      finder(std::string path);
-      ~finder();
 
-      // add a path to the search list
-      void add(std::string path);
+    // CONSTRUCTOR, DESTRUCTOR
 
-      // find fully-qualified path name corresponding to a given leafname
-      bool fqpn(std::string leaf, std::string& fqpn);
+  public:
 
-    private:
-      std::vector<std::string> paths;
+    //! default constructor; sets search path to be current working direcotry
+    finder();
+
+    //! value constructor; sets search path as specified, but does not include current working directory
+    finder(std::string path);
+
+    //! destructor is default
+    ~finder() = default;
+
+
+    // INTERFACE -- ADD PATHS
+
+  public:
+
+    //! add a path to the search list
+    void add(const std::string& p);
+
+    //! add a list of paths to the search list
+    void add(const std::list<std::string>& plist);
+
+
+    // INTERFACE-- FIND FULLY-QUALIFIED PATHS
+
+  public:
+
+    // find fully-qualified path name corresponding to a given leafname
+    bool fqpn(const std::string leaf, std::string& fqpn);
+
+
+    // INTERNAL DATA
+
+  private:
+
+    //! list of paths to search
+    std::list<std::string> paths;
+
   };
 
 

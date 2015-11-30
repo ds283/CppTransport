@@ -48,7 +48,7 @@ namespace transport
       public:
 
         //! determine whether the terminal we are running in has support for ANSI colourized output
-        bool get_terminal_colour_support() const { return(this->colour_output); }
+        bool has_colour_terminal_support() const { return(this->colour_output); }
 
 
         // INTERNAL DATA

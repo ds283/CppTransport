@@ -85,17 +85,18 @@ static std::string  strip_dot_h(const std::string& pathname);
 static std::string  leafname   (const std::string& pathname);
 
 
-translation_unit::translation_unit(std::string file, finder& p, std::string core_out, std::string implementation_out, bool cse, bool v)
+translation_unit::translation_unit(std::string file, finder& p, argument_cache& c, local_environment& e)
   : name(file),
-    do_cse(cse),
-    verbose(v),
     path(p),
+    cache(c),
+    env(e),
     parse_failed(false)
   {
     // lexicalize this input file
     stream = std::make_unique<y::lexstream_type>(name, path,
                                                  keyword_table, keyword_map, NUMBER_KEYWORDS,
                                                  character_table, character_map, character_unary_context, NUMBER_CHARACTERS);
+//    dump lexeme stream to output -- for debugging
 //    stream->print(std::cerr);
 
     // now pass to the parser for syntactic analysis
@@ -114,9 +115,9 @@ translation_unit::translation_unit(std::string file, finder& p, std::string core
     // in.driver->get_script()->print(std::cerr);
 
     // cache details about this translation unit
-    if(core_out != "")
+    if(cache.core_out().length() > 0 )
       {
-        core_output = core_out;
+        core_output = cache.core_out();
       }
     else
       {
@@ -125,9 +126,9 @@ translation_unit::translation_unit(std::string file, finder& p, std::string core
     core_guard = boost::to_upper_copy(leafname(core_output));
     core_guard.erase(boost::remove_if(core_guard, boost::is_any_of(INVALID_GUARD_CHARACTERS)), core_guard.end());
 
-    if(implementation_out != "")
+    if(cache.implementation_out().length() > 0)
       {
-        implementation_output = implementation_out;
+        implementation_output = cache.implementation_out();
       }
     else
       {
@@ -207,7 +208,7 @@ const std::string& translation_unit::get_implementation_guard() const
 
 bool translation_unit::get_do_cse() const
   {
-    return(this->do_cse);
+    return(this->cache.do_cse());
   }
 
 
@@ -357,7 +358,7 @@ std::string translation_unit::get_template_suffix(std::string input)
 
 void translation_unit::print_advisory(const std::string& msg)
 	{
-		if(this->verbose)
+		if(this->cache.verbose())
 			{
 		    std::cout << CPPTRANSPORT_NAME << ": " << msg << '\n';
 			}

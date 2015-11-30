@@ -8,12 +8,15 @@
 
 #include <fstream>
 #include <sstream>
+#include <algorithm>
 
 #include "finder.h"
 
 #include "boost/filesystem/operations.hpp"
 
+
 // ******************************************************************
+
 
 finder::finder()
   {
@@ -24,52 +27,47 @@ finder::finder()
     paths.push_back(cwd.string());
   }
 
+
 finder::finder(std::string path)
   {
     paths.push_back(path);
   }
 
-finder::~finder()
-  {
-  }
 
 // ******************************************************************
 
-void finder::add(std::string path)
+
+void finder::add(const std::string& p)
   {
-    int i;
-    bool match = false;
+    // add path to list, if it isn't already present
+    std::list<std::string>::iterator t = std::find(this->paths.begin(), this->paths.end(), p);
 
-    for(i = 0; i < this->paths.size() && match == false; ++i)
-      {
-        if(this->paths[i] == path)
-          {
-            match = true;
-          }
-      }
+    if(t == this->paths.end()) this->paths.emplace_back(p);
+  }
 
-    if(match == false)
+
+void finder::add(const std::list<std::string>& plist)
+  {
+    for(const std::string& t : plist)
       {
-        paths.push_back(path);
+        this->add(t);
       }
   }
 
-bool finder::fqpn(std::string leaf, std::string& fqpn)
+
+bool finder::fqpn(const std::string leaf, std::string& fqpn)
   {
     bool match = false;
 
-    for(int i = 0; match == false && i < this->paths.size(); ++i)
+    for(const std::string& t : this->paths)
       {
-        std::ostringstream filepath;
-        filepath << this->paths[i] << "/" << leaf;
+        boost::filesystem::path file = boost::filesystem::path(t) / boost::filesystem::path(leaf);
 
-        boost::filesystem::path file(filepath.str());
         if(boost::filesystem::exists(file))
           {
-            boost::filesystem::canonical(file);
-
             match = true;
-            fqpn  = filepath.str();
+            fqpn  = boost::filesystem::canonical(file).string();
+            break;
           }
       }
 

@@ -114,7 +114,9 @@ add_executable(CppTransport main.cpp
 							utilities/error.cpp
 							utilities/finder.cpp
 							utilities/formatter.cpp
-							utilities/to_printable.cpp)
+							utilities/to_printable.cpp
+              utilities/local_environment.cpp
+              utilities/argument_cache.cpp)
 
 target_link_libraries(CppTransport ${GINAC_LIBRARIES} ${Boost_LIBRARIES})
 
@@ -285,7 +287,7 @@ set(TOP_LEVEL_FILES
   core.h
   main.cpp
   msg_en.h
-)
+  switches.h)
 
 set(TRANSPORT_RUNTIME_API_UTILITIES_FILES
   transport-runtime-api/utilities/asciitable.h
@@ -393,7 +395,10 @@ set(UTILITIES_FILES
   utilities/formatter.h
   utilities/to_printable.cpp
   utilities/to_printable.h
-)
+  utilities/local_environment.cpp
+  utilities/local_environment.h
+  utilities/argument_cache.cpp
+  utilities/argument_cache.h)
 
 set(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_CONVENIENCE_FILES
   transport-runtime-api/derived-products/convenience/time_series_plot.h
