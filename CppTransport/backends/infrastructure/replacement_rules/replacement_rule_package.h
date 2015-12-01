@@ -85,17 +85,6 @@ namespace macro_packages
         virtual void report_end_of_input() { return; }
 
 
-        // INTERFACE -- MESSAGING
-
-      public:
-
-        //! raise error
-        void error(std::string const msg);
-
-        //! raise warning
-        void warn(std::string const msg);
-
-
         // INTERFACE -- INTERNAL API
 
       protected:

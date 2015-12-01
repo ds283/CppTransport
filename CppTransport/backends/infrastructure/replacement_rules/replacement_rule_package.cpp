@@ -18,18 +18,6 @@
 namespace macro_packages
   {
 
-    void replacement_rule_package::error(const std::string msg)
-      {
-        ::error(msg, this->data_payload.get_stack());
-      }
- 
- 
-    void replacement_rule_package::warn(const std::string msg)
-      {
-        ::warn(msg, this->data_payload.get_stack());
-      }
- 
-
     unsigned int replacement_rule_package::get_index_label(struct index_assignment& index)
       {
         unsigned int label = 0;
