@@ -62,7 +62,7 @@ namespace lexeme    // package in a unique namespace
         //! accepts an error_context object which is used in generating context for
         //! later error messages
         lexeme(const std::string& buffer, const enum buffer_type t,
-               enum minus_context& context, unsigned int u, error_context& err_ctx,
+               enum minus_context& context, unsigned int u, error_context err_ctx,
                const std::vector<std::string>& kt, const std::vector<Keywords>& km,
                const std::vector<std::string>& ct, const std::vector<Characters>& cm, const std::vector<bool>& ctx);
 
@@ -100,7 +100,11 @@ namespace lexeme    // package in a unique namespace
 
       public:
 
+        //! raise error using the context defined by this lexeme
         void error(const std::string& msg) const { this->err_context.error(msg); }
+
+        //! raise warning using the context defined by this lexeme
+        void warn(const std::string& msg) const { this->err_context.warn(msg); }
 
 
         // INTERNAL DATA
@@ -141,7 +145,7 @@ namespace lexeme    // package in a unique namespace
 
     template <typename Keywords, typename Characters>
     lexeme<Keywords, Characters>::lexeme(const std::string& buffer, const enum buffer_type t,
-                                         enum minus_context& context, unsigned int u, error_context& err_ctx,
+                                         enum minus_context& context, unsigned int u, error_context err_ctx,
                                          const std::vector<std::string>& kt, const std::vector<Keywords>& km,
                                          const std::vector<std::string>& ct, const std::vector<Characters>& cm, const std::vector<bool>& ctx)
 	    : unique(u),
@@ -150,7 +154,7 @@ namespace lexeme    // package in a unique namespace
 	      ctable(ct),
 	      cmap(cm),
 	      ccontext(ctx),
-        err_context(err_ctx)
+        err_context(std::move(err_ctx))
 	    {
         bool ok     = false;
         int  offset = 0;

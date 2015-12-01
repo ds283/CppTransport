@@ -63,6 +63,9 @@ class declaration    // is an abstract class
 		//! return unique identifier representing order of declarations
 		unsigned int get_unique_id() const { return(this->my_id); }
 
+    //! return lexeme representing declaration point
+    const y::lexeme_type& get_declaration_point() const { return(this->declaration_point); }
+
 
 		// PRINT TO STANDARD STREAM
 

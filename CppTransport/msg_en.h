@@ -55,7 +55,7 @@
 #define ERROR_EXPECTED_ELLIPSIS               "Expected '...', not '..'"
 
 #define ERROR_SYMBOL_EXISTS                   "Redefinition of existing symbol"
-#define NOTIFY_DUPLICATION_DEFINITION_WAS     "original definition was here"
+#define NOTIFY_DUPLICATION_DEFINITION_WAS     "Location of original definition for symbol"
 #define ERROR_IDENTIFIER_LOOKUP               "Lookup of identifier name failed"
 #define ERROR_STRING_LOOKUP                   "Lookup of string literal value failed"
 #define ERROR_INTEGER_LOOKUP                  "Lookup of integer literal value failed"

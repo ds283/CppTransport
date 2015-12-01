@@ -327,6 +327,11 @@ bool script::add_field(const std::string& n, GiNaC::symbol& s, const y::lexeme_t
         std::ostringstream msg;
         msg << ERROR_SYMBOL_EXISTS << " '" << n << "'";
         l.error(msg.str());
+
+        std::ostringstream orig_decl;
+        orig_decl << NOTIFY_DUPLICATION_DEFINITION_WAS << " '" << n << "'";
+        record.get().get_declaration_point().warn(orig_decl.str());
+
         this->errors_encountered = true;
       }
     else
@@ -353,6 +358,11 @@ bool script::add_parameter(const std::string& n, GiNaC::symbol& s, const y::lexe
         std::ostringstream msg;
         msg << ERROR_SYMBOL_EXISTS << " '" << n << "'";
         l.error(msg.str());
+
+        std::ostringstream orig_decl;
+        orig_decl << NOTIFY_DUPLICATION_DEFINITION_WAS << " '" << n << "'";
+        record.get().get_declaration_point().warn(orig_decl.str());
+
         this->errors_encountered = true;
       }
     else
@@ -375,6 +385,11 @@ bool script::add_subexpr(const std::string& n, GiNaC::symbol& s, const y::lexeme
 		    std::ostringstream msg;
 				msg << ERROR_SYMBOL_EXISTS << " '" << n << "'";
 				l.error(msg.str());
+
+        std::ostringstream orig_decl;
+        orig_decl << NOTIFY_DUPLICATION_DEFINITION_WAS << " '" << n << "'";
+        record.get().get_declaration_point().warn(orig_decl.str());
+
         this->errors_encountered = true;
 			}
 		else
