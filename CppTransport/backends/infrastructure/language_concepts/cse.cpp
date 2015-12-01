@@ -116,13 +116,13 @@ std::string cse::temporaries(const std::string& t)
     if(ok)
       {
         // deposit each declaration into the output stream
-        for(size_t i = 0; i < this->decls.size(); ++i)
+        for(const std::pair<std::string, std::string>& decl: this->decls)
           {
             std::string line = t;
 
             // replace LHS and RHS macros in the template
-            if((lhs_pos = line.find("$1")) != std::string::npos) line.replace(lhs_pos, (size_t)2, this->decls[i].first);
-            if((rhs_pos = line.find("$2")) != std::string::npos) line.replace(rhs_pos, (size_t)2, this->decls[i].second);
+            line.replace(lhs_pos, (size_t)2, decl.first);
+            line.replace(rhs_pos, (size_t)2, decl.second);
             out << line << '\n';
           }
       }
