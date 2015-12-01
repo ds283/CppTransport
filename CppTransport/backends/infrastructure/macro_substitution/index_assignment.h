@@ -25,9 +25,9 @@
 #define INDEX_RANGE_PARAMETER (1000)
 
 
-enum index_trait
+enum class index_trait
   {
-    index_field, index_momentum, index_parameter, index_unknown
+    field, momentum, parameter, unknown
   };
 
 struct index_assignment
@@ -53,26 +53,42 @@ struct index_abstract
 class assignment_package
   {
 
+    // CONSTRUCTOR, DESTRUCTOR
+
   public:
 
-    assignment_package(unsigned int f, unsigned int p, enum indexorder o = indexorder_right)
-	    : num_fields(f), num_parameters(p), order(o)
+    //! constructor
+    assignment_package(unsigned int f, unsigned int p, enum indexorder o = indexorder::right)
+	    : num_fields(f),
+        num_parameters(p),
+        order(o)
 	    {
 	    }
 
-      std::vector< std::vector<index_assignment> > assign(const std::vector<index_abstract>& indices);
+    //! destructor is default
+    ~assignment_package() = default;
 
-			std::vector<index_assignment> merge(const std::vector<index_assignment>& l, const std::vector<index_assignment>& r);
 
-			std::vector<index_abstract> difference(const std::vector<index_abstract>& l, const std::vector<index_abstract>& r);
+    // INTERFACE
 
-      unsigned int value(struct index_assignment& v);
+  public:
 
-    private:
+    std::vector<std::vector<index_assignment> > assign(const std::vector<index_abstract>& indices);
 
-      const unsigned int     num_fields;
-      const unsigned int     num_parameters;
-      const enum indexorder  order;
+    std::vector<index_assignment> merge(const std::vector<index_assignment>& l, const std::vector<index_assignment>& r);
+
+    std::vector<index_abstract> difference(const std::vector<index_abstract>& l, const std::vector<index_abstract>& r);
+
+    unsigned int value(struct index_assignment& v);
+
+
+    // INTERNAL DATA
+
+  private:
+
+    const unsigned int    num_fields;
+    const unsigned int    num_parameters;
+    const enum indexorder order;
 
   };
 

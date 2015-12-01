@@ -25,24 +25,24 @@
 
 class vexcl_group: public package_group
   {
-  public:
-    vexcl_group(translation_unit* u, ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& cache);
-    ~vexcl_group();
 
-    virtual void report_end_of_input() override;
+    // CONSTRUCTOR, DESTRUCTOR
+
+  public:
+
+    //! constructor
+    vexcl_group(translator_data& p, ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& cache);
+
+    //! destructor is default
+    ~vexcl_group() = default;
+
+
+    // INTERNAL DATA
 
   protected:
-    cpp::cpp_printer                    printer;
 
-    macro_packages::fundamental*        f;
-    macro_packages::flow_tensors*       ft;
-    macro_packages::lagrangian_tensors* lt;
-    macro_packages::utensors*           ut;
-    macro_packages::gauge_xfm*          xf;
-    macro_packages::temporary_pool*     tp;
-    macro_packages::summation*          su;
-    cpp::vexcl_steppers*                vs;
-    cpp::vexcl_kernels*                 vk;
+    cpp::cpp_printer printer;
+
   };
 
 

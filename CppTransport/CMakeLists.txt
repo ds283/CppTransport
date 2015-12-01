@@ -74,6 +74,7 @@ add_executable(CppTransport main.cpp
 							backends/infrastructure/file_handling/output_stack.cpp
 							backends/infrastructure/file_handling/translation_unit.cpp
 							backends/infrastructure/file_handling/translator.cpp
+              backends/infrastructure/file_handling/translator_data.cpp
 							backends/infrastructure/language_concepts/cse.cpp
 							backends/infrastructure/macro_substitution/index_assignment.cpp
 							backends/infrastructure/macro_substitution/macro.cpp
@@ -723,7 +724,7 @@ set(BACKENDS_UTILITIES_FILES
   backends/utilities/ginac_cache.h
   backends/utilities/symbol_factory.cpp
   backends/utilities/symbol_factory.h
-)
+  backends/utilities/expression_types.h)
 
 set(BACKENDS_INFRASTRUCTURE_FILE_HANDLING_FILES
   backends/infrastructure/file_handling/buffer.cpp
@@ -734,7 +735,8 @@ set(BACKENDS_INFRASTRUCTURE_FILE_HANDLING_FILES
   backends/infrastructure/file_handling/translation_unit.h
   backends/infrastructure/file_handling/translator.cpp
   backends/infrastructure/file_handling/translator.h
-)
+  backends/infrastructure/file_handling/translator_data.cpp
+  backends/infrastructure/file_handling/translator_data.h)
 
 set(EXAMPLES_INFLECTION_FILES
   examples/inflection/main.cpp

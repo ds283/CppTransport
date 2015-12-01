@@ -8,22 +8,24 @@
 
 #include <vector>
 
+#include "translator.h"
+#include "buffer.h"
+#include "package_group_factory.h"
+
+#include "formatter.h"
+
 #include "boost/algorithm/string.hpp"
 #include "boost/range/algorithm/remove_if.hpp"
 #include "boost/lexical_cast.hpp"
-
-#include "buffer.h"
-#include "package_group_factory.h"
 
 
 #define BACKEND_TOKEN "backend"
 #define MINVER_TOKEN  "minver"
 
 
-translator::translator(translation_unit* tu)
-  : unit(tu)
+translator::translator(translator_data& payload)
+  : data_payload(payload)
   {
-    assert(unit != nullptr);
   }
 
 
@@ -40,7 +42,7 @@ translator::~translator()
 
 void translator::print_advisory(const std::string& msg)
 	{
-    this->unit->print_advisory(msg);
+    this->data_payload.message(msg);
 	}
 
 
@@ -59,7 +61,7 @@ unsigned int translator::translate(const std::string& in, buffer& buf, enum proc
     unsigned int rval = 0;
     std::string  template_in;
 
-    finder& path = this->unit->get_finder();
+    finder& path = this->data_payload.get_finder();
 
 		// try to find a template corresponding to the input filename
     if(path.fqpn(in + ".h", template_in))    // leaves fully qualified pathname in template_in if it exists
@@ -100,7 +102,7 @@ unsigned int translator::process(const std::string in, buffer& buf, enum process
 			    {
 		        translation_msg << " " << MESSAGE_TRANSLATING_TO << " '" << buf.get_filename() << "'";
 			    }
-        this->unit->print_advisory(translation_msg.str());
+        this->data_payload.message(translation_msg.str());
 
 		    // decide which backend and API version are required
         std::getline(inf, line);
@@ -111,13 +113,13 @@ unsigned int translator::process(const std::string in, buffer& buf, enum process
             // generate an appropriate backend
 		        // this consists of a set of macro replacement rules which collectively comprise a 'package group'.
 		        // The result is returned as a managed pointer, using std::unique_ptr<>
-            std::unique_ptr<package_group> package = package_group_factory(in, backend, this->unit, this->cache);
+            std::unique_ptr<package_group> package = package_group_factory(in, backend, this->data_payload, this->cache);
 
             // generate a macro replacement agent based on this package group
-            macro_agent agent(this->unit, *package, BACKEND_MACRO_PREFIX, BACKEND_LINE_SPLIT);
+            macro_agent agent(this->data_payload, *package, BACKEND_MACRO_PREFIX, BACKEND_LINE_SPLIT);
 
             // push this input file to the top of the filestack
-            output_stack& os = this->unit->get_stack();
+            output_stack& os = this->data_payload.get_stack();
             os.push(in, buf, agent, type);  // current line number is automatically set to 1
 
             while(!inf.eof() && !inf.fail())
@@ -159,7 +161,7 @@ unsigned int translator::process(const std::string in, buffer& buf, enum process
             // emit advisory that translation is complete
             std::ostringstream finished_msg;
             finished_msg << MESSAGE_TRANSLATION_RESULT << " " << replacements << " " << MESSAGE_MACRO_REPLACEMENTS;
-            this->unit->print_advisory(finished_msg.str());
+            this->data_payload.message(finished_msg.str());
 
             // report time spent doing macro replacement
             package->report_macro_metadata(agent.get_total_time(), agent.get_tokenization_time());

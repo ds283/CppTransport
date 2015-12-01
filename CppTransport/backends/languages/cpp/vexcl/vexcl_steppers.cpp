@@ -78,7 +78,7 @@ namespace cpp
 
     std::string vexcl_steppers::replace_backg_stepper(const std::vector<std::string>& args)
       {
-        const struct stepper& s = this->unit->get_background_stepper();
+        const struct stepper& s = this->data_payload.get_background_stepper();
 
         assert(args.size() == 1);
         if(args.size() < 1)
@@ -104,7 +104,7 @@ namespace cpp
 
     std::string vexcl_steppers::replace_pert_stepper(const std::vector<std::string>& args)
       {
-        const struct stepper& s = this->unit->get_perturbations_stepper();
+        const struct stepper& s = this->data_payload.get_perturbations_stepper();
 
         assert(args.size() == 1);
         if(args.size() < 1)

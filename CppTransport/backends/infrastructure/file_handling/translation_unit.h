@@ -18,10 +18,12 @@
 #include "indexorder.h"
 #include "output_stack.h"
 #include "translator.h"
+#include "translator_data.h"
 #include "local_environment.h"
 #include "argument_cache.h"
 
 #include "symbol_factory.h"
+
 
 // data structure for tracking input scripts as they progress through the pipeline
 class translation_unit
@@ -46,9 +48,9 @@ class translation_unit
     unsigned int apply();
 
 
-		// UTILITIES
+		// INTERNAL API
 
-  public:
+  protected:
 
 		// print an advisory message, if the current verbosity level is set sufficiently high
     void print_advisory(const std::string& msg);
@@ -59,65 +61,31 @@ class translation_unit
 		// print an error message
 		void error(const std::string& msg);
 
+    //! construct output name (input not const or taken by reference because modified internally)
+    std::string mangle_output_name(std::string input, const std::string& tag);
+
+    //! deduce template suffix frmo input name (input not const or taken by reference because modified internally)
+    std::string get_template_suffix(std::string input);
+
 
 		// INTERFACE - EXTRACT INFORMATION ABOUT THIS TRANSLATION UNIT
 
   public:
 
-    const std::string&                                 get_model_input() const;
+    translator&                                        get_translator() { return(this->outstream); }
 
-    const std::string&                                 get_core_output() const;
-    const std::string&                                 get_implementation_output() const;
 
-    const std::string&                                 get_core_guard() const;
-    const std::string&                                 get_implementation_guard() const;
-
-    bool                                               get_do_cse() const;
-
-    const std::string&                                 get_name() const;
-    const std::string&                                 get_author() const;
-    const std::string&                                 get_model() const;
-    const std::string&                                 get_tag() const;
-
-    unsigned int                                       get_number_fields() const;
-    unsigned int                                       get_number_parameters() const;
-    enum indexorder                                    get_index_order() const;
-
-    const GiNaC::symbol&                               get_Mp_symbol() const;
-    const GiNaC::ex                                    get_potential() const;
-
-    const std::vector<GiNaC::symbol>                   get_field_symbols() const;
-    const std::vector<GiNaC::symbol>                   get_deriv_symbols() const;
-    const std::vector<GiNaC::symbol>                   get_parameter_symbols() const;
-
-    const std::vector<std::string>                     get_field_list() const;
-    const std::vector<std::string>                     get_latex_list() const;
-    const std::vector<std::string>                     get_param_list() const;
-    const std::vector<std::string>                     get_platx_list() const;
-
-    const struct stepper&                              get_background_stepper() const;
-    const struct stepper&                              get_perturbations_stepper() const;
-
-    finder&                                            get_finder() const { return(this->path); }
-    output_stack&                                      get_stack() { return(this->stack); }                     // not marked const; clients can change the stack
-    translator&                                        get_translator() const { return(*this->outstream); }
-
-		symbol_factory&                                    get_symbol_factory();
-
-  protected:
-
-    std::string                                        mangle_output_name(std::string input, std::string tag);
-    std::string                                        get_template_suffix(std::string input);
+    // INTERNAL DATA
 
   private:
 
+    // GiNaC symbol factory
+    symbol_factory                                     sym_factory;
+
     std::unique_ptr<y::lexstream_type>                 stream;
     std::unique_ptr<y::y_lexer>                        lexer;
-    std::unique_ptr<y::y_driver>                       driver;
+    y::y_driver                                        driver;
     std::unique_ptr<y::y_parser>                       parser;
-
-		// GiNaC symbol factory
-		symbol_factory                                     sym_factory;
 
     std::string                                        name;                    // name of input script
 		bool                                               parse_failed;
@@ -125,16 +93,12 @@ class translation_unit
     finder&                                            path;
     argument_cache&                                    cache;
     local_environment&                                 env;
-
     output_stack                                       stack;
-    std::unique_ptr<translator>                        outstream;
 
-    // cached details about the translation unit
-    std::string                                        core_output;             // name of core .h file
-    std::string                                        implementation_output;   // name of implementation .h file
+    translator_data                                    data_payload;
 
-    std::string                                        core_guard;              // tag for #ifndef guard -- core file
-    std::string                                        implementation_guard;    // tag for #ifndef guard -- implementation file
+    translator                                         outstream;               // must be constructed *after* data_payload, path, stack, sym_factory
+
   };
 
 

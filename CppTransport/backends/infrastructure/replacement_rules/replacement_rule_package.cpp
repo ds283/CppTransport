@@ -17,20 +17,16 @@
 
 namespace macro_packages
   {
-    replacement_rule_package::~replacement_rule_package()
-      {
-      }
-
 
     void replacement_rule_package::error(const std::string msg)
       {
-        ::error(msg, this->unit->get_stack());
+        ::error(msg, this->data_payload.get_stack());
       }
  
  
     void replacement_rule_package::warn(const std::string msg)
       {
-        ::warn(msg, this->unit->get_stack());
+        ::warn(msg, this->data_payload.get_stack());
       }
  
 
@@ -40,17 +36,23 @@ namespace macro_packages
 
         switch(index.trait)
           {
-            case index_field:
-              label = index.species;
-            break;
+            case index_trait::field:
+              {
+                label = index.species;
+                break;
+              }
 
-            case index_momentum:
-              label = index.species + index.num_fields;
-            break;
+            case index_trait::momentum:
+              {
+                label = index.species + index.num_fields;
+                break;
+              }
 
-            case index_parameter:
-            default:
-              assert(false);
+            case index_trait::parameter:
+            case index_trait::unknown:
+              {
+                assert(false);
+              }
           }
 
         return(label);
@@ -60,12 +62,12 @@ namespace macro_packages
     std::string replacement_rule_package::replace_1index_tensor(const std::vector<std::string>& args, std::vector<struct index_assignment> indices, void* state)
       {
         assert(indices.size() == 1);
-        assert(indices[0].species < this->unit->get_number_fields());
+        assert(indices[0].species < this->data_payload.get_number_fields());
 
         assert(state != nullptr);
-        cse_map* map = (cse_map*)state;
+        cse_map* map = static_cast<cse_map*>(state);
 
-        this->fl->set_size(2*this->unit->get_number_fields());
+        this->fl->set_size(2*this->data_payload.get_number_fields());
 
         unsigned int i_label = this->get_index_label(indices[0]);
         return((*map)[this->fl->flatten(i_label)]);
@@ -75,13 +77,13 @@ namespace macro_packages
     std::string replacement_rule_package::replace_2index_tensor(const std::vector<std::string>& args, std::vector<struct index_assignment> indices, void* state)
       {
         assert(indices.size() == 2);
-        assert(indices[0].species < this->unit->get_number_fields());
-        assert(indices[1].species < this->unit->get_number_fields());
+        assert(indices[0].species < this->data_payload.get_number_fields());
+        assert(indices[1].species < this->data_payload.get_number_fields());
 
         assert(state != nullptr);
-        cse_map* map = (cse_map*)state;
+        cse_map* map = static_cast<cse_map*>(state);
 
-        this->fl->set_size(2*this->unit->get_number_fields());
+        this->fl->set_size(2*this->data_payload.get_number_fields());
 
         unsigned int i_label = this->get_index_label(indices[0]);
         unsigned int j_label = this->get_index_label(indices[1]);
@@ -93,14 +95,14 @@ namespace macro_packages
     std::string replacement_rule_package::replace_3index_tensor(const std::vector<std::string>& args, std::vector<struct index_assignment> indices, void* state)
       {
         assert(indices.size() == 3);
-        assert(indices[0].species < this->unit->get_number_fields());
-        assert(indices[1].species < this->unit->get_number_fields());
-        assert(indices[2].species < this->unit->get_number_fields());
+        assert(indices[0].species < this->data_payload.get_number_fields());
+        assert(indices[1].species < this->data_payload.get_number_fields());
+        assert(indices[2].species < this->data_payload.get_number_fields());
 
         assert(state != nullptr);
-        cse_map* map = (cse_map*)state;
+        cse_map* map = static_cast<cse_map*>(state);
 
-        this->fl->set_size(2*this->unit->get_number_fields());
+        this->fl->set_size(2*this->data_payload.get_number_fields());
 
         unsigned int i_label = this->get_index_label(indices[0]);
         unsigned int j_label = this->get_index_label(indices[1]);
@@ -113,13 +115,13 @@ namespace macro_packages
     std::string replacement_rule_package::replace_1index_field_tensor(const std::vector<std::string>& args, std::vector<struct index_assignment> indices, void* state)
       {
         assert(indices.size() == 1);
-        assert(indices[0].species < this->unit->get_number_fields());
-        assert(indices[0].trait == index_field);
+        assert(indices[0].species < this->data_payload.get_number_fields());
+        assert(indices[0].trait == index_trait::field);
 
         assert(state != nullptr);
-        cse_map* map = (cse_map*)state;
+        cse_map* map = static_cast<cse_map*>(state);
 
-        this->fl->set_size(this->unit->get_number_fields());
+        this->fl->set_size(this->data_payload.get_number_fields());
 
         unsigned int i_label = this->get_index_label(indices[0]);
 
@@ -130,15 +132,15 @@ namespace macro_packages
     std::string replacement_rule_package::replace_2index_field_tensor(const std::vector<std::string>& args, std::vector<struct index_assignment> indices, void* state)
       {
         assert(indices.size() == 2);
-        assert(indices[0].species < this->unit->get_number_fields());
-        assert(indices[1].species < this->unit->get_number_fields());
-        assert(indices[0].trait == index_field);
-        assert(indices[1].trait == index_field);
+        assert(indices[0].species < this->data_payload.get_number_fields());
+        assert(indices[1].species < this->data_payload.get_number_fields());
+        assert(indices[0].trait == index_trait::field);
+        assert(indices[1].trait == index_trait::field);
 
         assert(state != nullptr);
-        cse_map* map = (cse_map*)state;
+        cse_map* map = static_cast<cse_map*>(state);
 
-        this->fl->set_size(this->unit->get_number_fields());
+        this->fl->set_size(this->data_payload.get_number_fields());
 
         unsigned int i_label = get_index_label(indices[0]);
         unsigned int j_label = get_index_label(indices[1]);
@@ -150,17 +152,17 @@ namespace macro_packages
     std::string replacement_rule_package::replace_3index_field_tensor(const std::vector<std::string>& args, std::vector<struct index_assignment> indices, void* state)
       {
         assert(indices.size() == 3);
-        assert(indices[0].species < this->unit->get_number_fields());
-        assert(indices[1].species < this->unit->get_number_fields());
-        assert(indices[2].species < this->unit->get_number_fields());
-        assert(indices[0].trait == index_field);
-        assert(indices[1].trait == index_field);
-        assert(indices[2].trait == index_field);
+        assert(indices[0].species < this->data_payload.get_number_fields());
+        assert(indices[1].species < this->data_payload.get_number_fields());
+        assert(indices[2].species < this->data_payload.get_number_fields());
+        assert(indices[0].trait == index_trait::field);
+        assert(indices[1].trait == index_trait::field);
+        assert(indices[2].trait == index_trait::field);
 
         assert(state != nullptr);
-        cse_map* map = (cse_map*)state;
+        cse_map* map = static_cast<cse_map*>(state);
 
-        this->fl->set_size(this->unit->get_number_fields());
+        this->fl->set_size(this->data_payload.get_number_fields());
 
         unsigned int i_label = get_index_label(indices[0]);
         unsigned int j_label = get_index_label(indices[1]);
@@ -174,7 +176,7 @@ namespace macro_packages
       {
         assert(state != nullptr);
 
-        delete (cse_map*)state;
+        delete static_cast<cse_map*>(state);
       }
 
   }

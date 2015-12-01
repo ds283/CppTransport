@@ -131,7 +131,7 @@ script::script(symbol_factory& s)
   : potential_set(false),
     errors_encountered(false),
     model(DEFAULT_MODEL_NAME),
-    order(indexorder_right),
+    order(indexorder::right),
 		sym_factory(s)
   {
 		// set up reserved symbols

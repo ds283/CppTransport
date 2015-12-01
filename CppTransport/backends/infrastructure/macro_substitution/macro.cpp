@@ -17,8 +17,8 @@
 // **************************************************************************************
 
 
-macro_agent::macro_agent(translation_unit* u, package_group& pkg, std::string pf, std::string sp, unsigned int dm)
-  : unit(u),
+macro_agent::macro_agent(translator_data& p, package_group& pkg, std::string pf, std::string sp, unsigned int dm)
+  : data_payload(p),
     prefix(pf),
     split(sp),
     recursion_max(dm),
@@ -27,7 +27,6 @@ macro_agent::macro_agent(translation_unit* u, package_group& pkg, std::string pf
     post_rule_cache(pkg.get_post_ruleset()),
     index_rule_cache(pkg.get_index_ruleset())
   {
-    assert(unit != nullptr);
     assert(recursion_max > 0);
 
 		// pause timers
@@ -36,9 +35,9 @@ macro_agent::macro_agent(translation_unit* u, package_group& pkg, std::string pf
 
     if(recursion_max == 0) recursion_max = 1;
 
-    fields     = unit->get_number_fields();
-    parameters = unit->get_number_parameters();
-    order      = unit->get_index_order();
+    fields     = data_payload.get_number_fields();
+    parameters = data_payload.get_number_parameters();
+    order      = data_payload.get_index_order();
   }
 
 
@@ -62,7 +61,7 @@ std::unique_ptr< std::vector<std::string> > macro_agent::apply(std::string& line
       {
         std::ostringstream msg;
         msg << WARNING_RECURSION_DEPTH << "=" << this->recursion_max << ")";
-        this->unit->warn(msg.str());
+        this->data_payload.warn(msg.str());
       }
 
 		// if timer was stopped, stop it again

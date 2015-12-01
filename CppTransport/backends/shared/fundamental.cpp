@@ -168,15 +168,15 @@ namespace macro_packages
     std::string fundamental::replace_guard(const std::vector<std::string> &args)
       {
         std::string guard;
-        enum process_type type = this->unit->get_stack().top_process_type();
+        enum process_type type = this->data_payload.get_stack().top_process_type();
 
         if(type == process_core)
           {
-            guard = this->unit->get_core_guard();
+            guard = this->data_payload.get_core_guard();
           }
         else if(type == process_implementation)
           {
-            guard = this->unit->get_implementation_guard();
+            guard = this->data_payload.get_implementation_guard();
           }
 
         return(this->tag + "_" + guard + this->guard_terminator);
@@ -193,13 +193,13 @@ namespace macro_packages
 
     std::string fundamental::replace_source(const std::vector<std::string>& args)
       {
-        return(this->unit->get_model_input());
+        return(this->data_payload.get_model_input());
       }
 
 
     std::string fundamental::replace_uid(const std::vector<std::string>& args)
       {
-        std::string unique_string = this->unit->get_name() + this->unit->get_author() + this->unit->get_tag() + this->unit->get_model() + CPPTRANSPORT_VERSION;
+        std::string unique_string = this->data_payload.get_name() + this->data_payload.get_author() + this->data_payload.get_tag() + this->data_payload.get_model() + CPPTRANSPORT_VERSION;
         boost::uuids::string_generator gen;
         boost::uuids::uuid id = gen(unique_string);
 
@@ -209,37 +209,37 @@ namespace macro_packages
 
     std::string fundamental::replace_name(const std::vector<std::string> &args)
       {
-        return(this->unit->get_name());
+        return(this->data_payload.get_name());
       }
 
 
     std::string fundamental::replace_author(const std::vector<std::string> &args)
       {
-        return(this->unit->get_author());
+        return(this->data_payload.get_author());
       }
 
 
     std::string fundamental::replace_tag(const std::vector<std::string> &args)
       {
-        return(this->unit->get_tag());
+        return(this->data_payload.get_tag());
       }
 
 
     std::string fundamental::replace_model(const std::vector<std::string>& args)
       {
-        return(this->unit->get_model());
+        return(this->data_payload.get_model());
       }
 
 
     std::string fundamental::replace_header(const std::vector<std::string> &args)
       {
-        return(this->unit->get_implementation_output());
+        return(this->data_payload.get_implementation_output());
       }
 
 
     std::string fundamental::replace_core(const std::vector<std::string> &args)
       {
-        return(this->unit->get_core_output());
+        return(this->data_payload.get_core_output());
       }
 
 
@@ -247,7 +247,7 @@ namespace macro_packages
       {
         std::ostringstream out;
 
-        out << this->unit->get_number_fields();
+        out << this->data_payload.get_number_fields();
 
         return(out.str());
       }
@@ -257,7 +257,7 @@ namespace macro_packages
       {
         std::ostringstream out;
 
-        out << this->unit->get_number_parameters();
+        out << this->data_payload.get_number_parameters();
 
         return(out.str());
       }
@@ -265,7 +265,7 @@ namespace macro_packages
 
     std::string fundamental::replace_field_list(const std::vector<std::string> &args)
       {
-        std::vector<std::string> list = this->unit->get_field_list();
+        std::vector<std::string> list = this->data_payload.get_field_list();
 
         return(this->stringize_list(list));
       }
@@ -273,7 +273,7 @@ namespace macro_packages
 
     std::string fundamental::replace_latex_list(const std::vector<std::string> &args)
       {
-        std::vector<std::string> list = this->unit->get_latex_list();
+        std::vector<std::string> list = this->data_payload.get_latex_list();
 
         return(this->stringize_list(list));
       }
@@ -281,7 +281,7 @@ namespace macro_packages
 
     std::string fundamental::replace_param_list(const std::vector<std::string> &args)
       {
-        std::vector<std::string> list = this->unit->get_param_list();
+        std::vector<std::string> list = this->data_payload.get_param_list();
 
         return(this->stringize_list(list));
       }
@@ -289,7 +289,7 @@ namespace macro_packages
 
     std::string fundamental::replace_platx_list(const std::vector<std::string> &args)
       {
-        std::vector<std::string> list = this->unit->get_platx_list();
+        std::vector<std::string> list = this->data_payload.get_platx_list();
 
         return(this->stringize_list(list));
       }
@@ -297,8 +297,8 @@ namespace macro_packages
 
     std::string fundamental::replace_state_list(const std::vector<std::string> &args)
       {
-        std::vector<GiNaC::symbol> f_list = this->unit->get_field_symbols();
-        std::vector<GiNaC::symbol> d_list = this->unit->get_deriv_symbols();
+        std::vector<GiNaC::symbol> f_list = this->data_payload.get_field_symbols();
+        std::vector<GiNaC::symbol> d_list = this->data_payload.get_deriv_symbols();
 
         std::vector<std::string> list;
 
@@ -317,7 +317,7 @@ namespace macro_packages
 
      std::string fundamental::replace_b_abs_err(const std::vector<std::string> &args)
       {
-        const struct stepper s = this->unit->get_background_stepper();
+        const struct stepper s = this->data_payload.get_background_stepper();
 
         return(this->stringize_number(s.abserr));
       }
@@ -325,7 +325,7 @@ namespace macro_packages
 
     std::string fundamental::replace_b_rel_err(const std::vector<std::string> &args)
       {
-        const struct stepper s = this->unit->get_background_stepper();
+        const struct stepper s = this->data_payload.get_background_stepper();
 
         return(this->stringize_number(s.relerr));
       }
@@ -333,7 +333,7 @@ namespace macro_packages
 
     std::string fundamental::replace_b_step(const std::vector<std::string> &args)
       {
-        const struct stepper s = this->unit->get_background_stepper();
+        const struct stepper s = this->data_payload.get_background_stepper();
 
         return(this->stringize_number(s.stepsize));
       }
@@ -341,7 +341,7 @@ namespace macro_packages
 
     std::string fundamental::replace_b_stepper(const std::vector<std::string> &args)
       {
-        const struct stepper s = this->unit->get_background_stepper();
+        const struct stepper s = this->data_payload.get_background_stepper();
 
         return(s.name);
       }
@@ -349,7 +349,7 @@ namespace macro_packages
 
     std::string fundamental::replace_p_abs_err(const std::vector<std::string> &args)
       {
-        const struct stepper s = this->unit->get_perturbations_stepper();
+        const struct stepper s = this->data_payload.get_perturbations_stepper();
 
         return(this->stringize_number(s.abserr));
       }
@@ -357,7 +357,7 @@ namespace macro_packages
 
     std::string fundamental::replace_p_rel_err(const std::vector<std::string> &args)
       {
-        const struct stepper s = this->unit->get_perturbations_stepper();
+        const struct stepper s = this->data_payload.get_perturbations_stepper();
 
         return(this->stringize_number(s.relerr));
       }
@@ -365,7 +365,7 @@ namespace macro_packages
 
     std::string fundamental::replace_p_step(const std::vector<std::string> &args)
       {
-        const struct stepper s = this->unit->get_perturbations_stepper();
+        const struct stepper s = this->data_payload.get_perturbations_stepper();
 
         return(this->stringize_number(s.stepsize));
       }
@@ -373,7 +373,7 @@ namespace macro_packages
 
     std::string fundamental::replace_p_stepper(const std::vector<std::string>& args)
       {
-        const struct stepper s = this->unit->get_perturbations_stepper();
+        const struct stepper s = this->data_payload.get_perturbations_stepper();
 
         return(s.name);
       }

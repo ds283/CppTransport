@@ -15,24 +15,24 @@
 #include "cuda_group.h"
 
 
-std::unique_ptr<package_group> package_group_factory(const std::string& in, const std::string& backend, translation_unit* unit,
+std::unique_ptr<package_group> package_group_factory(const std::string& in, const std::string& backend, translator_data& payload,
                                                      ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& cache)
   {
     if(backend == "cpp")
       {
-		    return std::make_unique<core_group>(unit, cache);
+		    return std::make_unique<core_group>(payload, cache);
       }
     else if(backend == "vexcl")
       {
-		    return std::make_unique<vexcl_group>(unit, cache);
+		    return std::make_unique<vexcl_group>(payload, cache);
       }
     else if(backend == "opencl")
       {
-		    return std::make_unique<opencl_group>(unit, cache);
+		    return std::make_unique<opencl_group>(payload, cache);
       }
     else if(backend == "cuda")
       {
-		    return std::make_unique<cuda_group>(unit, cache);
+		    return std::make_unique<cuda_group>(payload, cache);
       }
 
     std::ostringstream msg;

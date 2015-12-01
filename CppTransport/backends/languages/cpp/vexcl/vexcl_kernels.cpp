@@ -85,8 +85,8 @@ namespace cpp
           {
             std::string kernel_file = args[0];
 
-            output_stack& os = this->unit->get_stack();
-            translator&   t  = this->unit->get_translator();
+            output_stack& os = this->data_payload.get_stack();
+            translator t(this->data_payload);
 
             buffer& buf = os.top_buffer();
             enum process_type type = os.top_process_type();

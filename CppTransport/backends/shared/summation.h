@@ -14,20 +14,38 @@
 namespace macro_packages
   {
 
-    class summation: public ::macro_packages::replacement_rule_package
+    class summation: public replacement_rule_package
       {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
       public:
-        summation(translation_unit* u, language_printer& p)
-          : ::macro_packages::replacement_rule_package(u, p)
+
+        //! constructor
+        summation(translator_data& p, language_printer& prn)
+          : replacement_rule_package(p, prn)
           {
           }
+
+        //! destructor
+        virtual ~summation() = default;
+
+
+        // INTERFACE
+
+      public:
 
         const std::vector<macro_packages::simple_rule> get_pre_rules();
         const std::vector<macro_packages::simple_rule> get_post_rules();
         const std::vector<macro_packages::index_rule>  get_index_rules();
 
+
+        // INTERNAL API
+
       protected:
+
         std::string null(const std::vector<std::string>& args, std::vector<struct index_assignment> indices, void* state);
+
       };
 
   }

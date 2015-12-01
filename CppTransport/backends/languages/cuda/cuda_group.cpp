@@ -9,52 +9,29 @@
 #include "cpp_cse.h"
 
 
-cuda_group::cuda_group(translation_unit* u, ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& cache)
-  : package_group(u, CUDA_COMMENT_SEPARATOR, cache), printer()
+cuda_group::cuda_group(translator_data& p, ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& cache)
+  : package_group(p, CUDA_COMMENT_SEPARATOR, cache), printer()
   {
     // set up cse worker instance
     // this has to happen before setting up the individual macro packages,
     // because it gets pushed to them when they join the package group
-    cse_worker = new cpp::cpp_cse(0, this->printer, this->unit->get_do_cse());
+    cse_worker = std::make_unique<cpp::cpp_cse>(0, this->printer, this->data_payload.get_do_cse());
 
-    f  = new macro_packages::fundamental       (u, this->printer);
-    ft = new macro_packages::flow_tensors      (u, this->printer);
-    lt = new macro_packages::lagrangian_tensors(u, this->printer);
-    ut = new macro_packages::utensors          (u, this->printer);
-    xf = new macro_packages::gauge_xfm         (u, this->printer);
-    tp = new macro_packages::temporary_pool    (u, this->printer);
-    su = new macro_packages::summation         (u, this->printer);
-    ka = new shared::kernel_argument_macros    (u, this->printer);
+    auto f  = std::make_unique<macro_packages::fundamental>       (p, this->printer);
+    auto ft = std::make_unique<macro_packages::flow_tensors>      (p, this->printer);
+    auto lt = std::make_unique<macro_packages::lagrangian_tensors>(p, this->printer);
+    auto ut = std::make_unique<macro_packages::utensors>          (p, this->printer);
+    auto xf = std::make_unique<macro_packages::gauge_xfm>         (p, this->printer);
+    auto tp = std::make_unique<macro_packages::temporary_pool>    (p, this->printer);
+    auto su = std::make_unique<macro_packages::summation>         (p, this->printer);
+    auto ka = std::make_unique<shared::kernel_argument_macros>    (p, this->printer);
 
-    this->push_back(ka);
-    this->push_back(su);
-    this->push_back(tp);
-    this->push_back(ut);
-    this->push_back(xf);
-    this->push_back(lt);
-    this->push_back(ft);
-    this->push_back(f);
+    this->push_back(std::move(ka));
+    this->push_back(std::move(su));
+    this->push_back(std::move(tp));
+    this->push_back(std::move(ut));
+    this->push_back(std::move(xf));
+    this->push_back(std::move(lt));
+    this->push_back(std::move(ft));
+    this->push_back(std::move(f));
   }
-
-
-cuda_group::~cuda_group()
-  {
-    delete f;
-    delete ft;
-    delete lt;
-    delete ut;
-    delete xf;
-    delete tp;
-    delete su;
-    delete ka;
-
-    // cse_worker gets deleted by base
-  }
-
-
-void cuda_group::report_end_of_input()
-	{
-    assert(this->tp != nullptr);
-
-    this->tp->report_end_of_input();
-	}

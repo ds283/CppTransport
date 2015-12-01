@@ -16,22 +16,45 @@ namespace shared
 
     class kernel_argument_macros : public ::macro_packages::replacement_rule_package
       {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
       public:
-        kernel_argument_macros(translation_unit* u, language_printer& p, std::string q="", std::string l=OUTPUT_OPENCL_DEFAULT_LABEL);
+
+        //! constructor
+        kernel_argument_macros(translator_data& p, language_printer& prn, std::string q="", std::string l=OUTPUT_OPENCL_DEFAULT_LABEL);
+
+        //! destructor is default
+        virtual ~kernel_argument_macros() = default;
+
+
+        // INTERFACE
+
+      public:
 
         const std::vector<macro_packages::simple_rule> get_pre_rules();
         const std::vector<macro_packages::simple_rule> get_post_rules();
         const std::vector<macro_packages::index_rule>  get_index_rules();
 
+
+        // INTERNAL API
+
       protected:
+
         std::string args_params(const std::vector<std::string> &args);
 
         std::string args_1index(const std::vector<std::string>& args);
         std::string args_2index(const std::vector<std::string>& args);
         std::string args_3index(const std::vector<std::string>& args);
 
+
+        // INTERNAL DATA
+
+      protected:
+
         std::string qualifier;
         std::string label;
+
       };
 
   } // namespace shared

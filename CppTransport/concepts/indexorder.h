@@ -8,7 +8,10 @@
 #define __indexorder_H_
 
 
-enum indexorder { indexorder_left, indexorder_right };
+enum class indexorder
+  {
+    left, right
+  };
 
 
 #endif //__indexorder_H_

@@ -10,55 +10,33 @@
 #include "cpp_cse.h"
 
 
-vexcl_group::vexcl_group(translation_unit* u, ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& cache)
-  : package_group(u, CPP_COMMENT_SEPARATOR, cache), printer()
+vexcl_group::vexcl_group(translator_data& p, ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& cache)
+  : package_group(p, CPP_COMMENT_SEPARATOR, cache), printer()
   {
     // set up cse worker instance
     // this has to happen before setting up the individual macro packages,
     // because it gets pushed to them when they join the package group
-    cse_worker = new cpp::cpp_cse(0, this->printer, this->unit->get_do_cse());
+    cse_worker = std::make_unique<cpp::cpp_cse>(0, this->printer, this->data_payload.get_do_cse());
 
-    f  = new macro_packages::fundamental       (u, this->printer);
-    ft = new macro_packages::flow_tensors      (u, this->printer);
-    lt = new macro_packages::lagrangian_tensors(u, this->printer);
-    ut = new macro_packages::utensors          (u, this->printer);
-    xf = new macro_packages::gauge_xfm         (u, this->printer);
-    tp = new macro_packages::temporary_pool    (u, this->printer);
-    su = new macro_packages::summation         (u, this->printer);
-    vs = new cpp::vexcl_steppers               (u, this->printer);
-    vk = new cpp::vexcl_kernels                (u, this->printer);
+    // construct replacement rule packages
+    auto f  = std::make_unique<macro_packages::fundamental>       (p, this->printer);
+    auto ft = std::make_unique<macro_packages::flow_tensors>      (p, this->printer);
+    auto lt = std::make_unique<macro_packages::lagrangian_tensors>(p, this->printer);
+    auto ut = std::make_unique<macro_packages::utensors>          (p, this->printer);
+    auto xf = std::make_unique<macro_packages::gauge_xfm>         (p, this->printer);
+    auto tp = std::make_unique<macro_packages::temporary_pool>    (p, this->printer);
+    auto su = std::make_unique<macro_packages::summation>         (p, this->printer);
+    auto vs = std::make_unique<cpp::vexcl_steppers>               (p, this->printer);
+    auto vk = std::make_unique<cpp::vexcl_kernels>                (p, this->printer);
 
-    this->push_back(vk);
-    this->push_back(vs);
-    this->push_back(su);
-    this->push_back(tp);
-    this->push_back(ut);
-    this->push_back(xf);
-    this->push_back(lt);
-    this->push_back(ft);
-    this->push_back(f);
+    // register these packages and transfer their ownership
+    this->push_back(std::move(vk));
+    this->push_back(std::move(vs));
+    this->push_back(std::move(su));
+    this->push_back(std::move(tp));
+    this->push_back(std::move(ut));
+    this->push_back(std::move(xf));
+    this->push_back(std::move(lt));
+    this->push_back(std::move(ft));
+    this->push_back(std::move(f));
   }
-
-
-vexcl_group::~vexcl_group()
-  {
-    delete f;
-    delete ft;
-    delete lt;
-    delete ut;
-    delete xf;
-    delete tp;
-    delete su;
-    delete vs;
-    delete vk;
-
-    // cse_worker gets deleted by base
-  }
-
-
-void vexcl_group::report_end_of_input()
-	{
-    assert(this->tp != nullptr);
-
-    this->tp->report_end_of_input();
-	}
