@@ -68,13 +68,6 @@ class translation_unit
     std::string get_template_suffix(std::string input);
 
 
-		// INTERFACE - EXTRACT INFORMATION ABOUT THIS TRANSLATION UNIT
-
-  public:
-
-    translator&                                        get_translator() { return(this->outstream); }
-
-
     // INTERNAL DATA
 
   private:
