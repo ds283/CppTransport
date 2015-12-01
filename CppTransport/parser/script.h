@@ -21,6 +21,9 @@
 #include "semantic_data.h"
 #include "filestack.h"
 #include "input_stack.h"
+#include "error_context.h"
+
+#include "y_common.h"
 
 #include "symbol_factory.h"
 #include "ginac/ginac.h"
@@ -37,7 +40,7 @@ class declaration    // is an abstract class
 
   public:
 
-    declaration(const std::string& n, GiNaC::symbol& s, const filestack& p);
+    declaration(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l);
 
 		virtual ~declaration() = default;
 
@@ -52,10 +55,7 @@ class declaration    // is an abstract class
 		//! get GiNaC symbol association with declaration/symbol
     const GiNaC::symbol& get_ginac_symbol() const { return(this->symbol); }
 
-		//! get filestack object representing definition point
-    const filestack& get_path() const { return(this->path); }
-
-		//! return GiNaC expression to be substituted when this declaration is used;
+    //! return GiNaC expression to be substituted when this declaration is used;
 		//! often this will just be the GiNaC symbol, but may be more complex
 		//! eg. for a subexpression declaration
 		virtual GiNaC::ex get_expression() const = 0;
@@ -82,8 +82,8 @@ class declaration    // is an abstract class
 		//! GiNaC symbol for declaration
 		GiNaC::symbol symbol;
 
-		//! filestack representing definition point
-    const filestack& path;
+		//! reference to declaration lexeme
+    const y::lexeme_type& declaration_point;
 
 		//! class id; used to record the order in which declarations have been made
 		unsigned int my_id;
@@ -101,7 +101,7 @@ class field_declaration : public declaration
 
   public:
 
-    field_declaration(const std::string& n, GiNaC::symbol& s, const filestack& p, attributes* a);
+    field_declaration(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l, attributes* a);
 
     virtual ~field_declaration() = default;
 
@@ -138,7 +138,7 @@ class parameter_declaration : public declaration
 
   public:
 
-    parameter_declaration(const std::string& n, GiNaC::symbol& s, const filestack& p, attributes* a);
+    parameter_declaration(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l, attributes* a);
 
     ~parameter_declaration() = default;
 
@@ -175,7 +175,7 @@ class subexpr_declaration : public declaration
 
   public:
 
-    subexpr_declaration(const std::string& n, GiNaC::symbol& s, const filestack& p, subexpr* e);
+    subexpr_declaration(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l, subexpr* e);
 
     ~subexpr_declaration() = default;
 
@@ -222,8 +222,13 @@ class script
 
   public:
 
-    script(symbol_factory& s);
+    //! constructor;
+    //! symbol_factory is inherited from parent translation_unit
+    //! error_context is passed down from parent translation_unit and is used to construct
+    //! fake error contexts for default reserved symbols such as M_Planck
+    script(symbol_factory& s, error_context err_ctx);
 
+    //! destructor is default
     ~script() = default;
 
     // delete copying constructor, to avoid multiple aliasing of the
@@ -246,15 +251,23 @@ class script
     bool failed() const { return(this->errors_encountered); }
 
 
-		// MODIFY CONTENT
+		// POPULATE SYMBOLS
 
   public:
 
-    bool add_field(const std::string& n, GiNaC::symbol& s, const filestack& p, attributes* a);
+    //! add symbol representing a field
+    bool add_field(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& p, attributes* a);
 
-    bool add_parameter(const std::string& n, GiNaC::symbol& s, const filestack& p, attributes* a);
+    //! add symbol representing a parameter
+    bool add_parameter(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& p, attributes* a);
 
-		bool add_subexpr(const std::string& n, GiNaC::symbol& s, const filestack& p, subexpr* e);
+    //! add symbol representing a subexpression
+		bool add_subexpr(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& p, subexpr* e);
+
+
+    // POPULATE PARAMETERS AND SETTINGS
+
+  public:
 
     void set_background_stepper(stepper* s);
 
@@ -349,7 +362,7 @@ class script
     subexpr_symbol_table   subexprs;
 
     //! place-holder filestack for initializing reserved words
-    input_stack placeholder_filestack;
+    std::unique_ptr<y::lexeme_type> fake_MPlanck_lexeme;
 
     //! store details of potentials
     bool      potential_set;

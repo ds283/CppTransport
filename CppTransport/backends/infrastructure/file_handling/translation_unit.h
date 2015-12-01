@@ -55,11 +55,17 @@ class translation_unit
 		// print an advisory message, if the current verbosity level is set sufficiently high
     void print_advisory(const std::string& msg);
 
-		// print a warning message
+		// print a warning message - no context data
 		void warn(const std::string& msg);
 
-		// print an error message
+		// print an error message - no context data
 		void error(const std::string& msg);
+
+    // print a warning message - with context data
+    void context_warn(const std::string& msg, const error_context& ctx);
+
+    // print an error message - with context data
+    void context_error(const std::string& msg, const error_context& ctx);
 
     //! construct output name (input not const or taken by reference because modified internally)
     std::string mangle_output_name(std::string input, const std::string& tag);
@@ -73,24 +79,25 @@ class translation_unit
   private:
 
     // GiNaC symbol factory
-    symbol_factory                                     sym_factory;
+    symbol_factory sym_factory;
 
-    std::unique_ptr<y::lexstream_type>                 stream;
-    std::unique_ptr<y::y_lexer>                        lexer;
-    y::y_driver                                        driver;
-    std::unique_ptr<y::y_parser>                       parser;
+    std::string name;                    // name of input script
+    bool        parse_failed;
 
-    std::string                                        name;                    // name of input script
-		bool                                               parse_failed;
+    finder&            path;
+    argument_cache&    cache;
+    local_environment& env;
+    output_stack       stack;
 
-    finder&                                            path;
-    argument_cache&                                    cache;
-    local_environment&                                 env;
-    output_stack                                       stack;
+    translator_data translator_payload;
+    lexstream_data  lexstream_payload;
 
-    translator_data                                    data_payload;
+    std::unique_ptr<y::lexstream_type> stream;
+    std::unique_ptr<y::y_lexer>        lexer;
+    y::y_driver                        driver;    // must be constructed *after* stack
+    std::unique_ptr<y::y_parser>       parser;
 
-    translator                                         outstream;               // must be constructed *after* data_payload, path, stack, sym_factory
+    translator outstream;               // must be constructed *after* data_payload, path, stack, sym_factory
 
   };
 

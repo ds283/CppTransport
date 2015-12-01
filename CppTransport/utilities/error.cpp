@@ -2,8 +2,6 @@
 // Created by David Seery on 12/06/2013.
 // Copyright (c) 2013-15 University of Sussex. All rights reserved.
 //
-// To change the template use AppCode | Preferences | File Templates.
-//
 
 #include <iostream>
 #include <sstream>
@@ -14,145 +12,96 @@
 #include "error.h"
 
 
-#define ANSI_BOLD_RED     "\033[1;31m"
-#define ANSI_BOLD_GREEN   "\033[1;32m"
-#define ANSI_BOLD_MAGENTA "\033[1;35m"
-#define ANSI_NORMAL       "\033[0m"
-
-// ******************************************************************
-
-
-static bool colour_output = true;
-
-
-void set_up_error_environment(void)
-  {
-    char* term_type_cstr = std::getenv("TERM");
-
-    if(term_type_cstr == nullptr)
-      {
-        colour_output = false;
-        return;
-      }
-
-    std::string term_type(term_type_cstr);
-
-    colour_output = term_type == "xterm"
-      || term_type == "xterm-color"
-      || term_type == "xterm-256color"
-      || term_type == "screen"
-      || term_type == "linux"
-      || term_type == "cygwin";
-  }
-
-
-void disable_colour_errors(void)
-  {
-    colour_output = false;
-  }
+constexpr auto ANSI_BOLD_RED     = "\033[1;31m";
+constexpr auto ANSI_BOLD_GREEN   = "\033[1;32m";
+constexpr auto ANSI_BOLD_MAGENTA = "\033[1;35m";
+constexpr auto ANSI_NORMAL       = "\033[0m";
 
 
 // ******************************************************************
 
 
-void warn(const std::string& msg)
+void warn(const std::string& msg, const argument_cache& cache, const local_environment& env)
   {
     std::ostringstream out;
+
+    bool colour_output = cache.colourize() && env.has_colour_terminal_support();
 
     out << CPPTRANSPORT_NAME << ": " << (colour_output ? ANSI_BOLD_MAGENTA : "") << WARNING_TOKEN << (colour_output ? ANSI_NORMAL : "") << msg;
     std::cout << out.str() << '\n';
   }
 
 
-void error(const std::string& msg)
+void error(const std::string& msg, const argument_cache& cache, const local_environment& env)
   {
     std::ostringstream out;
+
+    bool colour_output = cache.colourize() && env.has_colour_terminal_support();
 
     out << CPPTRANSPORT_NAME << ": " << (colour_output ? ANSI_BOLD_MAGENTA : "") << ERROR_TOKEN << (colour_output ? ANSI_NORMAL : "") << msg;
     std::cout << out.str() << '\n';
   }
 
 
-void warn(const std::string& msg, const filestack& path)
+// CONTEXT BASED ERROR MESSAGES, WITH INPUT LINE AND CHARACTER POSITION
+
+
+void warn(const std::string& msg, const argument_cache& cache, const local_environment& env, const error_context& context)
   {
-    warn(msg, path, WARN_PATH_LEVEL);
+    warn(msg, cache, env, context, WARN_PATH_LEVEL);
   }
 
 
-void error(const std::string& msg, const filestack& path)
+void error(const std::string& msg, const argument_cache& cache, const local_environment& env, const error_context& context)
   {
-    error(msg, path, ERROR_PATH_LEVEL);
+    error(msg, cache, env, context, ERROR_PATH_LEVEL);
   }
 
 
-void warn(const std::string& msg, const filestack& path, unsigned int level)
+void warn(const std::string& msg, const argument_cache& cache, const local_environment& env, const error_context& context, unsigned int level)
   {
     std::ostringstream out;
 
-    out << ERROR_MESSAGE_AT_LINE << " " << path.write(level) << '\n' << ERROR_MESSAGE_WRAP_PAD;
-    out << msg;
+    bool colour_output = cache.colourize() && env.has_colour_terminal_support();
 
-    warn(out.str());
-  }
-
-
-void error(const std::string& msg, const filestack& path, unsigned int level)
-  {
-    std::ostringstream out;
-
-    out << ERROR_MESSAGE_AT_LINE << " " << path.write(level) << '\n' << ERROR_MESSAGE_WRAP_PAD;
-    out << msg;
-
-    error(out.str());
-  }
-
-
-void warn(const std::string& msg, const filestack& path, const std::string& line, unsigned int char_pos)
-  {
-    warn(msg, path, line, char_pos, WARN_PATH_LEVEL);
-  }
-
-
-void error(const std::string& msg, const filestack& path, const std::string& line, unsigned int char_pos)
-  {
-    error(msg, path, line, char_pos, ERROR_PATH_LEVEL);
-  }
-
-
-void warn(const std::string& msg, const filestack& path, const std::string& line, unsigned int char_pos, unsigned int level)
-  {
-    std::ostringstream out;
-
-    out << ERROR_MESSAGE_AT_LINE << " " << path.write(level) << '\n';
+    out << ERROR_MESSAGE_AT_LINE << " " << context.get_filestack().write(level) << '\n';
     out << ERROR_MESSAGE_WRAP_PAD << (colour_output ? ANSI_BOLD_RED : "") << msg << (colour_output ? ANSI_NORMAL : "") << '\n';
 
-    out << ERROR_MESSAGE_WRAP_PAD << line << '\n';
-
-    out << ERROR_MESSAGE_WRAP_PAD;
-    for(unsigned int i = 0; i < char_pos; ++i)
+    if(context.has_full_context())
       {
-        out << " ";
-      }
-    out << (colour_output ? ANSI_BOLD_GREEN : "") << "^" << (colour_output ? ANSI_NORMAL : "");
+        out << ERROR_MESSAGE_WRAP_PAD << context.get_line() << '\n';
 
-    warn(out.str());
+        out << ERROR_MESSAGE_WRAP_PAD;
+        for(unsigned int i = 0; i < context.get_position(); ++i)
+          {
+            out << " ";
+          }
+        out << (colour_output ? ANSI_BOLD_GREEN : "") << "^" << (colour_output ? ANSI_NORMAL : "");
+      }
+
+    warn(out.str(), cache, env);
   }
 
 
-void error(const std::string& msg, const filestack& path, const std::string& line, unsigned int char_pos, unsigned int level)
+void error(const std::string& msg, const argument_cache& cache, const local_environment& env, const error_context& context, unsigned int level)
   {
     std::ostringstream out;
 
-    out << ERROR_MESSAGE_AT_LINE << " " << path.write(level) << '\n';
+    bool colour_output = cache.colourize() && env.has_colour_terminal_support();
+
+    out << ERROR_MESSAGE_AT_LINE << " " << context.get_filestack().write(level) << '\n';
     out << ERROR_MESSAGE_WRAP_PAD << (colour_output ? ANSI_BOLD_RED : "") << msg << (colour_output ? ANSI_NORMAL : "") << '\n';
-    out << ERROR_MESSAGE_WRAP_PAD << line << '\n';
+    out << ERROR_MESSAGE_WRAP_PAD << context.get_line() << '\n';
 
-    out << ERROR_MESSAGE_WRAP_PAD;
-    for(unsigned int i = 0; i < char_pos; ++i)
+    if(context.has_full_context())
       {
-        out << " ";
+        out << ERROR_MESSAGE_WRAP_PAD;
+        for(unsigned int i = 0; i < context.get_position(); ++i)
+          {
+            out << " ";
+          }
+        out << (colour_output ? ANSI_BOLD_GREEN : "") << "^" << (colour_output ? ANSI_NORMAL : "");
       }
-    out << (colour_output ? ANSI_BOLD_GREEN : "") << "^" << (colour_output ? ANSI_NORMAL : "");
 
-    error(out.str());
+    error(out.str(), cache, env);
   }

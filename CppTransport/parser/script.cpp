@@ -9,6 +9,7 @@
 #include <assert.h>
 #include <algorithm>
 
+#include "lexical.h"
 #include "script.h"
 
 #define DEFAULT_MODEL_NAME "inflationary_model"
@@ -18,10 +19,10 @@
 // ******************************************************************
 
 
-declaration::declaration(const std::string& n, GiNaC::symbol& s, const filestack& p)
+declaration::declaration(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l)
   : name(n),
     symbol(s),
-    path(p),
+    declaration_point(l),
 		my_id(current_id++)
   {
   }
@@ -33,8 +34,8 @@ unsigned int declaration::current_id = 0;
 // ******************************************************************
 
 
-field_declaration::field_declaration(const std::string& n, GiNaC::symbol& s, const filestack& p, attributes* a)
-  : declaration(n, s, p)
+field_declaration::field_declaration(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l, attributes* a)
+  : declaration(n, s, l)
   {
 		attrs = std::make_unique<attributes>(*a);
   }
@@ -54,16 +55,14 @@ void field_declaration::print(std::ostream& stream) const
   {
     stream << "Field declaration for symbol '" << this->get_name()
            << "', GiNaC symbol '" << this->get_ginac_symbol() << "'" << '\n';
-
-    stream << "  defined at line " << this->path.write();
   }
 
 
 // ******************************************************************
 
 
-parameter_declaration::parameter_declaration(const std::string& n, GiNaC::symbol& s, const filestack& p, attributes* a)
-  : declaration(n, s, p)
+parameter_declaration::parameter_declaration(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l, attributes* a)
+  : declaration(n, s, l)
   {
 		attrs = std::make_unique<attributes>(*a);
   }
@@ -83,16 +82,14 @@ void parameter_declaration::print(std::ostream& stream) const
   {
     stream << "Parameter declaration for symbol '" << this->get_name()
       << "', GiNaC symbol '" << this->get_ginac_symbol() << "'" << '\n';
-
-    stream << "  defined at line " << this->path.write();
   }
 
 
 // ******************************************************************
 
 
-subexpr_declaration::subexpr_declaration(const std::string& n, GiNaC::symbol& s, const filestack& p, subexpr* e)
-	: declaration(n, s, p)
+subexpr_declaration::subexpr_declaration(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l, subexpr* e)
+	: declaration(n, s, l)
 	{
 		sexpr = std::make_unique<subexpr>(*e);
 	}
@@ -118,8 +115,6 @@ void subexpr_declaration::print(std::ostream& stream) const
 	{
     stream << "Subexpression declaration for symbol '" << this->get_name()
 	    << "', GiNaC symbol '" << this->get_ginac_symbol() << "'" << '\n';
-
-    stream << "  defined at line " << this->path.write();
 	}
 
 
@@ -127,19 +122,37 @@ void subexpr_declaration::print(std::ostream& stream) const
 // ******************************************************************
 
 
-script::script(symbol_factory& s)
+std::vector<std::string>     fake_keyword_table;
+std::vector<keyword_type>    fake_keyword_map;
+std::vector<std::string>     fake_character_table;
+std::vector<character_type>  fake_character_map;
+std::vector<bool>            fake_context_table;
+
+
+script::script(symbol_factory& s, error_context err_ctx)
   : potential_set(false),
     errors_encountered(false),
     model(DEFAULT_MODEL_NAME),
     order(indexorder::right),
 		sym_factory(s)
   {
-		// set up reserved symbols
+		// set up reserved symbol for Planck mass
     M_Planck = sym_factory.get_symbol(MPLANCK_SYMBOL, MPLANCK_LATEX_SYMBOL);
 
+    // set up attributes for Planck mass symbol
 		attributes Mp_attrs;
 		Mp_attrs.set_latex(MPLANCK_LATEX_SYMBOL);
-		reserved.emplace(std::make_pair(MPLANCK_TEXT_NAME, std::make_unique<parameter_declaration>(MPLANCK_TEXT_NAME, M_Planck, placeholder_filestack, &Mp_attrs)));
+
+    // manufacture fake lexeme
+    std::string MPlanck_buffer(MPLANCK_TEXT_NAME);
+    lexeme::minus_context mctx = lexeme::minus_context::unary;
+    fake_MPlanck_lexeme = std::make_unique<y::lexeme_type>(MPlanck_buffer, lexeme::buffer_type::string_literal, mctx,
+                                                           0, err_ctx,
+                                                           fake_keyword_table, fake_keyword_map, fake_character_table,
+                                                           fake_character_map, fake_context_table);
+
+    // emplace faked symbol table entry
+		reserved.emplace(std::make_pair(MPLANCK_TEXT_NAME, std::make_unique<parameter_declaration>(MPLANCK_TEXT_NAME, M_Planck, *fake_MPlanck_lexeme, &Mp_attrs)));
 
     // set up default values for the steppers
     this->background_stepper.abserr    = DEFAULT_ABS_ERR;
@@ -304,7 +317,7 @@ void script::print(std::ostream& stream) const
   }
 
 
-bool script::add_field(const std::string& n, GiNaC::symbol& s, const filestack& p, attributes* a)
+bool script::add_field(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l, attributes* a)
   {
     // search for an existing entry in the symbol table
     boost::optional<declaration&> record = this->check_symbol_exists(n);
@@ -313,13 +326,13 @@ bool script::add_field(const std::string& n, GiNaC::symbol& s, const filestack& 
       {
         std::ostringstream msg;
         msg << ERROR_SYMBOL_EXISTS << " '" << n << "'";
-        error(msg.str(), p);
+        l.error(msg.str());
         this->errors_encountered = true;
       }
     else
       {
         // add declaration to list
-        this->fields.emplace(std::make_pair(n, std::make_unique<field_declaration>(n, s, p, a)));
+        this->fields.emplace(std::make_pair(n, std::make_unique<field_declaration>(n, s, l, a)));
 
         // also need to generate a symbol for the momentum corresponding to this field
         GiNaC::symbol deriv_symbol(DERIV_PREFIX + s.get_name());
@@ -330,7 +343,7 @@ bool script::add_field(const std::string& n, GiNaC::symbol& s, const filestack& 
   }
 
 
-bool script::add_parameter(const std::string& n, GiNaC::symbol& s, const filestack& p, attributes* a)
+bool script::add_parameter(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l, attributes* a)
   {
     // search for an existing entry in the symbol table
     boost::optional<declaration&> record = this->check_symbol_exists(n);
@@ -339,20 +352,20 @@ bool script::add_parameter(const std::string& n, GiNaC::symbol& s, const filesta
       {
         std::ostringstream msg;
         msg << ERROR_SYMBOL_EXISTS << " '" << n << "'";
-        error(msg.str(), p);
+        l.error(msg.str());
         this->errors_encountered = true;
       }
     else
       {
         // add declaration to list
-        this->parameters.emplace(std::make_pair(n, std::make_unique<parameter_declaration>(n, s, p, a)));
+        this->parameters.emplace(std::make_pair(n, std::make_unique<parameter_declaration>(n, s, l, a)));
       }
 
     return(!record);
   }
 
 
-bool script::add_subexpr(const std::string& n, GiNaC::symbol& s, const filestack& p, subexpr* e)
+bool script::add_subexpr(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l, subexpr* e)
 	{
 		// search for an existing entry in the symbol table
     boost::optional<declaration&> record = this->check_symbol_exists(n);
@@ -361,13 +374,13 @@ bool script::add_subexpr(const std::string& n, GiNaC::symbol& s, const filestack
 			{
 		    std::ostringstream msg;
 				msg << ERROR_SYMBOL_EXISTS << " '" << n << "'";
-				error(msg.str(), p);
+				l.error(msg.str());
         this->errors_encountered = true;
 			}
 		else
 			{
 				// add declaration to list
-				this->subexprs.emplace(std::make_pair(n, std::make_unique<subexpr_declaration>(n, s, p, e)));
+				this->subexprs.emplace(std::make_pair(n, std::make_unique<subexpr_declaration>(n, s, l, e)));
 			}
 
 		return(!record);

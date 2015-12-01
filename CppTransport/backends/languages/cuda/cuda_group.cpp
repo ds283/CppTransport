@@ -15,7 +15,7 @@ cuda_group::cuda_group(translator_data& p, ginac_cache<expression_item_types, DE
     // set up cse worker instance
     // this has to happen before setting up the individual macro packages,
     // because it gets pushed to them when they join the package group
-    cse_worker = std::make_unique<cpp::cpp_cse>(0, this->printer, this->data_payload.get_do_cse());
+    cse_worker = std::make_unique<cpp::cpp_cse>(0, this->printer, this->data_payload);
 
     auto f  = std::make_unique<macro_packages::fundamental>       (p, this->printer);
     auto ft = std::make_unique<macro_packages::flow_tensors>      (p, this->printer);

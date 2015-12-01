@@ -50,6 +50,7 @@
 #include "ginac/ginac.h"
 
 #include "language_printer.h"
+#include "translator_data.h"
 #include "msg_en.h"
 
 #include "boost/timer/timer.hpp"
@@ -131,17 +132,23 @@ class cse
 
   public:
 
-    cse(unsigned int s, language_printer& p, bool d=true, std::string k=OUTPUT_DEFAULT_CPP_CSE_TEMPORARY_NAME)
+    //! constructor
+    //! s  = initial serial number for temporaries, typically 0 for a new translation unit
+    //! p  = printer appropriate for language
+    //! pd = payload from translation_unit
+    //! k  = kernel name for temporary identifiers
+    cse(unsigned int s, language_printer& p, translator_data& pd, std::string k=OUTPUT_DEFAULT_CPP_CSE_TEMPORARY_NAME)
       : serial_number(s),
         printer(p),
-        perform_cse(d),
         temporary_name_kernel(k),
-        symbol_counter(0)
+        symbol_counter(0),
+        data_payload(pd)
       {
 		    // pause timer
 		    timer.stop();
       }
 
+    //! destructor is default
     virtual ~cse() = default;
 
 
@@ -186,10 +193,7 @@ class cse
   public:
 
 		// get CSE active flag
-    bool               get_perform_cse() const { return(this->perform_cse); }
-
-		// set CSE active flag
-    void               set_perform_cse(bool d) { this->perform_cse = d; }
+    bool               get_perform_cse() const { return(this->data_payload.get_do_cse()); }
 
 		// get raw GiNaC printer associated with this CSE worker
     language_printer&  get_ginac_printer() { return(this->printer); }
@@ -223,7 +227,8 @@ class cse
   protected:
 
     language_printer& printer;
-    bool perform_cse;
+
+    translator_data& data_payload;
 
     unsigned int serial_number;
     unsigned int symbol_counter;

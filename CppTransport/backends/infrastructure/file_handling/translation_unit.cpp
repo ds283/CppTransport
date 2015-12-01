@@ -69,7 +69,7 @@ const std::vector<std::string> character_table =
     "[", "]", ",", ".", ":", ";",
     "=", "+", "-@binary", "-@unary", "*", "/", "\\", "~",
     "&", "^", "@", "...", "->"
-                                 };
+  };
 
 const std::vector<enum character_type> character_map =
   {
@@ -109,16 +109,26 @@ translation_unit::translation_unit(std::string file, finder& p, argument_cache& 
     cache(c),
     env(e),
     parse_failed(false),
-    driver(sym_factory),
-    data_payload(name,
-                 std::bind(&translation_unit::error, this, std::placeholders::_1),
-                 std::bind(&translation_unit::warn, this, std::placeholders::_1),
-                 std::bind(&translation_unit::print_advisory, this, std::placeholders::_1),
-                 this->path, this->stack, this->sym_factory, this->driver, this->cache),
-    outstream(this->data_payload)
+    driver(sym_factory, c, e, error_context(stack,
+                                            std::bind(&translation_unit::context_error, this, std::placeholders::_1, std::placeholders::_2),
+                                            std::bind(&translation_unit::context_warn, this, std::placeholders::_1, std::placeholders::_2))),
+    translator_payload(file,
+                       std::bind(&translation_unit::context_error, this, std::placeholders::_1, std::placeholders::_2),
+                       std::bind(&translation_unit::context_warn, this, std::placeholders::_1, std::placeholders::_2),
+                       std::bind(&translation_unit::print_advisory, this, std::placeholders::_1),
+                       path, stack, sym_factory, driver, cache),
+    lexstream_payload(file,
+                      std::bind(&translation_unit::context_error, this, std::placeholders::_1, std::placeholders::_2),
+                      std::bind(&translation_unit::context_warn, this, std::placeholders::_1, std::placeholders::_2),
+                      path, cache),
+    outstream(translator_payload)
   {
     // lexicalize this input file
-    stream = std::make_unique<y::lexstream_type>(name, path, keyword_table, keyword_map, character_table, character_map, character_unary_context);
+    // lexstream owns the list of lexemes, which persist as long as the lexstream object exists
+    // it goes out of scope only when this translation_unit is destroyed, so the lexeme list
+    // should be persistent while all transactions involving this unit are active
+    stream = std::make_unique<y::lexstream_type>(lexstream_payload,
+                                                 keyword_table, keyword_map, character_table, character_map, character_unary_context);
 
     // dump lexeme stream to output -- for debugging
     // stream->print(std::cerr);
@@ -129,7 +139,9 @@ translation_unit::translation_unit(std::string file, finder& p, argument_cache& 
 
     if(parser->parse() == FAIL || driver.failed())
 	    {
-        ::warn(WARNING_PARSING_FAILED + (std::string)(" '") + name + (std::string)("'"));
+        std::ostringstream msg;
+        msg << WARNING_PARSING_FAILED << " '" << name << "'";
+        this->warn(msg.str());
 		    parse_failed = true;
 	    }
 
@@ -165,7 +177,7 @@ translation_unit::translation_unit(std::string file, finder& p, argument_cache& 
     implementation_guard = boost::to_upper_copy(leafname(implementation_output));
     implementation_guard.erase(boost::remove_if(implementation_guard, boost::is_any_of(INVALID_GUARD_CHARACTERS)), implementation_guard.end());
 
-    this->data_payload.set_core_implementation(core_output, core_guard, implementation_output, implementation_guard);
+    this->translator_payload.set_core_implementation(core_output, core_guard, implementation_output, implementation_guard);
   }
 
 
@@ -183,7 +195,7 @@ unsigned int translation_unit::apply()
     std::string in = s.get_core();
     if(in != "")
       {
-        rval += this->outstream.translate(in, this->data_payload.get_core_output(), process_core);
+        rval += this->outstream.translate(in, this->translator_payload.get_core_output(), process_core);
       }
     else
       {
@@ -194,7 +206,7 @@ unsigned int translation_unit::apply()
     in = s.get_implementation();
     if(in != "")
       {
-        rval += this->outstream.translate(in, this->data_payload.get_implementation_output(), process_implementation);
+        rval += this->outstream.translate(in, this->translator_payload.get_implementation_output(), process_implementation);
       }
     else
       {
@@ -247,14 +259,26 @@ void translation_unit::print_advisory(const std::string& msg)
 
 void translation_unit::error(const std::string& msg)
 	{
-		::error(msg, this->stack);
+		::error(msg, this->cache, this->env);
 	}
 
 
 void translation_unit::warn(const std::string& msg)
 	{
-		::warn(msg, this->stack);
+		::warn(msg, this->cache, this->env);
 	}
+
+
+void translation_unit::context_error(const std::string& msg, const error_context& ctx)
+  {
+    ::error(msg, this->cache, this->env, ctx);
+  }
+
+
+void translation_unit::context_warn(const std::string& msg, const error_context& ctx)
+  {
+    ::warn(msg, this->cache, this->env, ctx);
+  }
 
 
 static std::string strip_dot_h(const std::string& pathname)

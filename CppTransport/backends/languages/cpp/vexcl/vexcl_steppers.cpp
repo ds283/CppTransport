@@ -83,7 +83,8 @@ namespace cpp
         assert(args.size() == 1);
         if(args.size() < 1)
           {
-            this->data_payload.error(ERROR_VEXCL_NO_STEPPER_STATE);
+            error_context err_context(this->data_payload.get_stack(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
+            err_context.error(ERROR_VEXCL_NO_STEPPER_STATE);
             exit(EXIT_FAILURE);
           }
         std::string state_name = args[0];
@@ -92,7 +93,9 @@ namespace cpp
           {
             std::ostringstream msg;
             msg << WARNING_VEXCL_STEPPER_IGNORED_A << " '" << VEXCL_STEPPER << "' " << WARNING_VEXCL_STEPPER_IGNORED_B << " ('" << s.name << "')";
-            this->data_payload.warn(msg.str());
+
+            error_context err_context(this->data_payload.get_stack(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
+            err_context.warn(msg.str());
           }
 
         std::ostringstream out;
@@ -109,7 +112,8 @@ namespace cpp
         assert(args.size() == 1);
         if(args.size() < 1)
           {
-            this->data_payload.error(ERROR_VEXCL_NO_STEPPER_STATE);
+            error_context err_context(this->data_payload.get_stack(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
+            err_context.error(ERROR_VEXCL_NO_STEPPER_STATE);
             exit(EXIT_FAILURE);
           }
         std::string state_name = args[0];
@@ -118,7 +122,9 @@ namespace cpp
           {
             std::ostringstream msg;
             msg << WARNING_VEXCL_STEPPER_IGNORED_A << " '" << VEXCL_STEPPER << "' " << WARNING_VEXCL_STEPPER_IGNORED_B << " ('" << s.name << "')";
-            this->data_payload.warn(msg.str());
+
+            error_context err_context(this->data_payload.get_stack(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
+            err_context.warn(msg.str());
           }
 
         std::ostringstream out;

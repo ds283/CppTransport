@@ -1721,10 +1721,11 @@ void y::y_parser::error(const y::y_parser::location_type &l,
 
 		if(current_lexeme != nullptr)
 			{
-        ::error(err_message, current_lexeme->get_path(), current_lexeme->get_line(), current_lexeme->get_char_pos());
+        current_lexeme->error(err_message);
 			}
 		else
 			{
-		    ::error(err_message);
+        // bypass context-based error reporting
+		    driver.error(err_message);
 			}
   }

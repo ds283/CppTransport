@@ -75,6 +75,7 @@ add_executable(CppTransport main.cpp
 							backends/infrastructure/file_handling/translation_unit.cpp
 							backends/infrastructure/file_handling/translator.cpp
               backends/infrastructure/file_handling/translator_data.cpp
+              backends/infrastructure/file_handling/lexstream_data.cpp
 							backends/infrastructure/language_concepts/cse.cpp
 							backends/infrastructure/macro_substitution/index_assignment.cpp
 							backends/infrastructure/macro_substitution/macro.cpp
@@ -113,6 +114,7 @@ add_executable(CppTransport main.cpp
 							transport-objects/canonical_u_tensor_factory.cpp
 							transport-objects/u_tensor_factory.cpp
 							utilities/error.cpp
+              utilities/error_context.cpp
 							utilities/finder.cpp
 							utilities/formatter.cpp
 							utilities/to_printable.cpp
@@ -399,7 +401,9 @@ set(UTILITIES_FILES
   utilities/local_environment.cpp
   utilities/local_environment.h
   utilities/argument_cache.cpp
-  utilities/argument_cache.h)
+  utilities/argument_cache.h
+  utilities/error_context.cpp
+  utilities/error_context.h)
 
 set(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_CONVENIENCE_FILES
   transport-runtime-api/derived-products/convenience/time_series_plot.h
@@ -736,7 +740,9 @@ set(BACKENDS_INFRASTRUCTURE_FILE_HANDLING_FILES
   backends/infrastructure/file_handling/translator.cpp
   backends/infrastructure/file_handling/translator.h
   backends/infrastructure/file_handling/translator_data.cpp
-  backends/infrastructure/file_handling/translator_data.h)
+  backends/infrastructure/file_handling/translator_data.h
+  backends/infrastructure/file_handling/lexstream_data.cpp
+  backends/infrastructure/file_handling/lexstream_data.h)
 
 set(EXAMPLES_INFLECTION_FILES
   examples/inflection/main.cpp

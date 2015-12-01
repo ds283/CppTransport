@@ -81,7 +81,11 @@ namespace macro_packages
 
 		void temporary_pool::report_end_of_input()
 			{
-		    if(!this->tag_set) this->data_payload.warn(WARNING_TEMPORARY_NO_TAG_SET);
+		    if(!this->tag_set)
+          {
+            error_context err_context(this->data_payload.get_stack(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
+            err_context.warn(WARNING_TEMPORARY_NO_TAG_SET);
+          }
 		    this->deposit_temporaries();
         this->replacement_rule_package::report_end_of_input();
 			}

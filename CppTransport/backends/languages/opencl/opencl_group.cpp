@@ -15,7 +15,7 @@ opencl_group::opencl_group(translator_data& p, ginac_cache<expression_item_types
     // set up cse worker instance
     // this has to happen before setting up the individual macro packages,
     // because it gets pushed to them when they join the package group
-    cse_worker = std::make_unique<cpp::cpp_cse>(0, this->printer, this->data_payload.get_do_cse());
+    cse_worker = std::make_unique<cpp::cpp_cse>(0, this->printer, this->data_payload);
 
     // construct replacement rule packages
     auto f  = std::make_unique<macro_packages::fundamental>       (p, this->printer);

@@ -21,6 +21,7 @@
 
 #include "core.h"
 #include "error.h"
+#include "error_context.h"
 #include "filestack.h"
 
 
@@ -58,13 +59,10 @@ namespace lexeme    // package in a unique namespace
       public:
 
         //! construct a lexeme
-        //! accepts a shared_ptr<> to the line from which it originates.
-        //! Ownership is shared with the lexfile object which originally read in this file,
-        //! but all lexemes generated from the same line will co-own it, so it
-        //! survives even if the lexfile object is destroyed
+        //! accepts an error_context object which is used in generating context for
+        //! later error messages
         lexeme(const std::string& buffer, const enum buffer_type t,
-               enum minus_context& context, filestack& p, unsigned int u,
-               const std::shared_ptr<std::string>& ln, unsigned int cpos,
+               enum minus_context& context, unsigned int u, error_context& err_ctx,
                const std::vector<std::string>& kt, const std::vector<Keywords>& km,
                const std::vector<std::string>& ct, const std::vector<Characters>& cm, const std::vector<bool>& ctx);
 
@@ -79,11 +77,10 @@ namespace lexeme    // package in a unique namespace
         void dump(std::ostream& stream);
 
 
-		    // INTERFACE
+		    // INTERFACE -- EXTRACT INFORMATION ABOUT THIS LEXEME
 
       public:
 
-        // get information
         enum lexeme_type get_type() const { return(this->type); }
 
         bool get_keyword(Keywords& keyword);
@@ -98,18 +95,22 @@ namespace lexeme    // package in a unique namespace
 
         bool get_string(std::string& str);
 
-        const filestack& get_path()   const { return(*this->path); }
 
-        const std::string& get_line() const { return(*this->line); }
+        // INTERFACE -- RAISE ERROR CONTEXTUALIZED TO THIS LEXEME
 
-        unsigned int get_char_pos()   const { return(this->char_pos); }
+      public:
+
+        void error(const std::string& msg) const { this->err_context.error(msg); }
 
 
         // INTERNAL DATA
 
       protected:
 
+        //! lexeme type
         enum lexeme_type   type;
+
+        //! unique identifier
         const unsigned int unique;
 
         // lexeme value - not all of these are used by any single lexeme
@@ -119,13 +120,8 @@ namespace lexeme    // package in a unique namespace
         double      d;
         std::string str;
 
-        // copy of filestack object
-        std::unique_ptr<filestack> path;
-
-        // shared pointer to line; these lexeme is one of the shared owners
-        // of the line from which it originated
-        const std::shared_ptr<std::string> line;
-        unsigned int char_pos;
+        // error context
+        error_context err_context;
 
         // cache keyword and character tables;
         // these are technically needed only during construction, but we keep a copy
@@ -145,25 +141,19 @@ namespace lexeme    // package in a unique namespace
 
     template <typename Keywords, typename Characters>
     lexeme<Keywords, Characters>::lexeme(const std::string& buffer, const enum buffer_type t,
-                                         enum minus_context& context, filestack& p, unsigned int u,
-                                         const std::shared_ptr<std::string>& ln, unsigned int cpos,
+                                         enum minus_context& context, unsigned int u, error_context& err_ctx,
                                          const std::vector<std::string>& kt, const std::vector<Keywords>& km,
                                          const std::vector<std::string>& ct, const std::vector<Characters>& cm, const std::vector<bool>& ctx)
-	    : path(p.clone()),    // use clone to take a copy; otherwise, there is only one filestack object and after processing it is empty! so all file location data is lost
-	      unique(u),
+	    : unique(u),
 	      ktable(kt),
 	      kmap(km),
 	      ctable(ct),
 	      cmap(cm),
 	      ccontext(ctx),
-        line(ln),
-        char_pos(cpos)
+        err_context(err_ctx)
 	    {
         bool ok     = false;
         int  offset = 0;
-
-        assert(path);
-        assert(line);
 
         switch(t)
 	        {
@@ -211,20 +201,20 @@ namespace lexeme    // package in a unique namespace
                   {
                     std::ostringstream msg;
                     msg << ERROR_UNRECOGNIZED_NUMBER << " '" << buffer << "'";
-                    error(msg.str(), *path, *line, char_pos);
+                    err_context.error(msg.str());
                   }
 
                 if(type == lexeme_type::integer && buffer[0] == '0' && buffer[1] == 'x')
                   {
                     std::ostringstream msg;
                     msg << WARNING_HEX_CONVERSION_A << " '" << buffer << "' " << WARNING_HEX_CONVERSION_B;
-                    warn(msg.str(), *path, *line, char_pos);
+                    err_context.warn(msg.str());
                   }
                 else if(type == lexeme_type::integer && buffer[0] == '0')
                   {
                     std::ostringstream msg;
                     msg << WARNING_OCTAL_CONVERSION_A << " '" << buffer << "' " << WARNING_OCTAL_CONVERSION_B;
-                    warn(msg.str(), *path, *line, char_pos);
+                    err_context.warn(msg.str());
                   }
 
                 context = minus_context::binary; // unary minus can't follow a number
@@ -267,7 +257,7 @@ namespace lexeme    // package in a unique namespace
                   {
                     std::ostringstream msg;
                     msg << ERROR_UNRECOGNIZED_SYMBOL << " '" << buffer << "'";
-                    error(msg.str(), *path, *line, char_pos);
+                    err_context.error(msg.str());
                     context = minus_context::unary; // reset the context
                   }
                 break;
@@ -366,7 +356,7 @@ namespace lexeme    // package in a unique namespace
 	        {
             std::ostringstream msg;
             msg << WARNING_LEXEME_KEYWORD << " (id " << this->unique << ")";
-            warn(msg.str(), *this->path);
+            this->err_context.warn(msg.str());
 	        }
 
         return (rval);
@@ -387,7 +377,7 @@ namespace lexeme    // package in a unique namespace
 	        {
             std::ostringstream msg;
             msg << WARNING_LEXEME_SYMBOL << " (id " << this->unique << ")";
-            warn(msg.str(), *this->path);
+            this->err_context.warn(msg.str());
 	        }
 
         return (rval);
@@ -408,7 +398,7 @@ namespace lexeme    // package in a unique namespace
 	        {
             std::ostringstream msg;
             msg << WARNING_LEXEME_IDENTIFIER << " (id " << this->unique << ")";
-            warn(msg.str(), *this->path);
+            this->err_context.warn(msg.str());
 	        }
 
         return (rval);
@@ -429,7 +419,7 @@ namespace lexeme    // package in a unique namespace
 	        {
             std::ostringstream msg;
             msg << WARNING_LEXEME_INTEGER << " (id " << this->unique << ")";
-            warn(msg.str(), *this->path);
+            this->err_context.warn(msg.str());
 	        }
 
         return (rval);
@@ -450,7 +440,7 @@ namespace lexeme    // package in a unique namespace
 	        {
             std::ostringstream msg;
             msg << WARNING_LEXEME_DECIMAL << " (id " << this->unique << ")";
-            warn(msg.str(), *this->path);
+            this->err_context.warn(msg.str());
 	        }
 
         return (rval);
@@ -471,7 +461,7 @@ namespace lexeme    // package in a unique namespace
 	        {
             std::ostringstream msg;
             msg << WARNING_LEXEME_STRING << " (id " << this->unique << ")";
-            warn(msg.str(), *this->path);
+            this->err_context.warn(msg.str());
 	        }
 
         return (rval);

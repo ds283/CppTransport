@@ -6,13 +6,12 @@
 
 #include <string>
 #include <sstream>
-
+#include <stdexcept>
 
 #include "output_stack.h"
 #include "msg_en.h"
 #include "macro.h"
 #include "package_group.h"
-#include "error.h"
 
 
 void output_stack::push(const std::string& in, buffer& buf, macro_agent& agent, enum process_type type)
@@ -26,7 +25,7 @@ void output_stack::set_line(unsigned int line)
   {
     if(inclusions.size() == 0)
       {
-        error(ERROR_FILESTACK_EMPTY);
+        throw std::runtime_error(ERROR_FILESTACK_EMPTY);
       }
     else
       {
@@ -41,7 +40,7 @@ unsigned int output_stack::increment_line()
 
     if(inclusions.size() == 0)
       {
-        error(ERROR_FILESTACK_EMPTY);
+        throw std::runtime_error(ERROR_FILESTACK_EMPTY);
       }
     else
       {
@@ -57,7 +56,7 @@ unsigned int output_stack::get_line() const
 
     if(inclusions.size() == 0)
       {
-        error(ERROR_FILESTACK_EMPTY);
+        throw std::runtime_error(ERROR_FILESTACK_EMPTY);
       }
     else
       {
@@ -75,7 +74,7 @@ void output_stack::pop()
       }
     else
       {
-        error(ERROR_FILESTACK_TOO_SHORT);
+        throw std::runtime_error(ERROR_FILESTACK_TOO_SHORT);
       }
   }
 
@@ -128,6 +127,7 @@ macro_agent& output_stack::top_macro_package()
       {
         return this->inclusions[0].agent;
       }
+
     throw std::runtime_error(ERROR_FILESTACK_EMPTY);
   }
 
@@ -138,5 +138,6 @@ enum process_type output_stack::top_process_type() const
       {
         return this->inclusions[0].type;
       }
+
     throw std::runtime_error(ERROR_FILESTACK_EMPTY);
   }

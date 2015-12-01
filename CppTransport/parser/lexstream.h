@@ -21,6 +21,7 @@
 #include "lexfile.h"
 #include "error.h"
 #include "input_stack.h"
+#include "lexstream_data.h"
 
 
 template <class Keywords, class Characters>
@@ -31,7 +32,7 @@ class lexstream
 
   public:
 
-    lexstream(const std::string& filename, finder& s,
+    lexstream(lexstream_data& p,
               const std::vector<std::string>& kt, const std::vector<Keywords>& km,
               const std::vector<std::string>& ct, const std::vector<Characters>& cm, const std::vector<bool>& ctx);
 
@@ -52,6 +53,9 @@ class lexstream
 
     void print(std::ostream& stream);
 
+
+    // INTERNAL API
+
   private:
 
     bool parse(const std::string& file);
@@ -60,7 +64,14 @@ class lexstream
 
     std::string get_lexeme(lexfile& input, enum lexeme::buffer_type& type);
 
-    finder&     search;      // finder
+
+    // INTERNAL DATA
+
+  private:
+
+    // data object passed to us by the translation unit
+    lexstream_data& data_payload;
+
     input_stack stack;       // stack of included files
 
     std::deque< lexeme::lexeme<Keywords, Characters> > lexeme_list; // list of lexemes obtained from the file
@@ -89,7 +100,7 @@ class lexstream
 // convert the contents of 'filename' to a string of lexemes, descending into
 // included files as necessary
 template <class Keywords, class Characters>
-lexstream<Keywords, Characters>::lexstream(const std::string& filename, finder& s,
+lexstream<Keywords, Characters>::lexstream(lexstream_data& p,
                                            const std::vector<std::string>& kt, const std::vector<Keywords>& km,
                                            const std::vector<std::string>& ct, const std::vector<Characters>& cm, const std::vector<bool>& ctx)
   : ptr_valid(false),
@@ -98,13 +109,16 @@ lexstream<Keywords, Characters>::lexstream(const std::string& filename, finder& 
     ctable(ct),
     cmap(cm),
     ccontext(ctx),
-    search(s)
+    data_payload(p),
+    unique(1)
   {
-    if(!this->parse(filename))
+    if(!this->parse(data_payload.get_model_input()))
       {
         std::ostringstream msg;
-        msg << ERROR_OPEN_TOPLEVEL << " '" << filename << "'";
-        error(msg.str());
+        msg << ERROR_OPEN_TOPLEVEL << " '" << data_payload.get_model_input() << "'";
+
+        error_context err_context(stack, data_payload.get_error_handler(), data_payload.get_warning_handler());
+        err_context.error(msg.str());
       }
   }
 
@@ -186,7 +200,7 @@ template <class Keywords, class Characters>
 bool lexstream<Keywords, Characters>::parse(const std::string& file)
   {
     std::string path = "";
-    bool        found = this->search.fqpn(file, path);
+    bool        found = this->data_payload.get_finder().fqpn(file, path);
 
     if(found)
       {
@@ -232,15 +246,18 @@ void lexstream<Keywords, Characters>::lexicalize(lexfile& input)
 
                             if(type != lexeme::buffer_type::string_literal)
                               {
-                                error(ERROR_INCLUDE_DIRECTIVE, this->stack, *input.get_current_line(), input.get_current_char_pos());
+                                error_context err_ctx(this->stack, input.get_current_line(), input.get_current_char_pos(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
+                                err_ctx.error(ERROR_INCLUDE_DIRECTIVE);
                               }
                             else
                               {
                                 if(!this->parse(word))
                                   {
+                                    error_context err_ctx(this->stack, input.get_current_line(), input.get_current_char_pos(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
+
                                     std::ostringstream msg;
                                     msg << ERROR_INCLUDE_FILE << " '" << word << "'";
-                                    error(msg.str(), this->stack, *input.get_current_line(), input.get_current_char_pos());
+                                    err_ctx.error(msg.str());
                                   }
                               }
                           }
@@ -248,8 +265,8 @@ void lexstream<Keywords, Characters>::lexicalize(lexfile& input)
                     else
                       {
                         // note: this updates context, depending what the lexeme is recognized as
-                        this->lexeme_list.emplace_back(word, type, context, this->stack, this->unique++,
-                                                       input.get_current_line(), input.get_current_char_pos(),
+                        error_context err_ctx(this->stack, input.get_current_line(), input.get_current_char_pos(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
+                        this->lexeme_list.emplace_back(word, type, context, this->unique++, err_ctx,
                                                        this->ktable, this->kmap, this->ctable, this->cmap, this->ccontext);
                       }
                     break;
@@ -260,14 +277,11 @@ void lexstream<Keywords, Characters>::lexicalize(lexfile& input)
                 case lexeme::buffer_type::string_literal:
                   {
                     // note: this updates context, depending what the lexeme is recognized as
-                    this->lexeme_list.emplace_back(word, type, context, this->stack, this->unique++,
-                                                   input.get_current_line(), input.get_current_char_pos(),
+                    error_context err_ctx(this->stack, input.get_current_line(), input.get_current_char_pos(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
+                    this->lexeme_list.emplace_back(word, type, context, this->unique++, err_ctx,
                                                    this->ktable, this->kmap, this->ctable, this->cmap, this->ccontext);
                     break;
                   }
-
-                default:
-                  assert(false);                          // should never get here
               }
           }
       }
@@ -368,7 +382,8 @@ std::string lexstream<Keywords, Characters>::get_lexeme(lexfile& input, enum lex
                       }
                     else
                       {
-                        error(ERROR_EXPECTED_ELLIPSIS, this->stack, *input.get_current_line(), input.get_current_char_pos());
+                        error_context err_ctx(this->stack, input.get_current_line(), input.get_current_char_pos(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
+                        err_ctx.error(ERROR_EXPECTED_ELLIPSIS);
                         word += '.';                          // make up to a proper ellipsis anyway
                       }
                   }
@@ -390,7 +405,8 @@ std::string lexstream<Keywords, Characters>::get_lexeme(lexfile& input, enum lex
                   }
                 else
                   {
-                    error(ERROR_EXPECTED_CLOSE_QUOTE, this->stack, *input.get_current_line(), input.get_current_char_pos());
+                    error_context err_ctx(this->stack, input.get_current_line(), input.get_current_char_pos(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
+                    err_ctx.error(ERROR_EXPECTED_CLOSE_QUOTE);
                   }
                 type = lexeme::buffer_type::string_literal;
               }

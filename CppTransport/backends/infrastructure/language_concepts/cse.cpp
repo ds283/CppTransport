@@ -48,7 +48,6 @@
 
 #include "msg_en.h"
 
-#include "error.h"
 #include "cse.h"
 
 
@@ -102,14 +101,18 @@ std::string cse::temporaries(const std::string& t)
       {
         std::ostringstream msg;
         msg << ERROR_MISSING_LHS << " '" << t << "'";
-        error(msg.str());
+
+        error_context err_ctx(this->data_payload.get_stack(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
+        err_ctx.error(msg.str());
         ok = false;
       }
     if((rhs_pos = t.find("$2")) == std::string::npos)
       {
         std::ostringstream msg;
         msg << ERROR_MISSING_RHS << " '" << t << "'";
-        error(msg.str());
+
+        error_context err_ctx(this->data_payload.get_stack(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
+        err_ctx.error(msg.str());
         ok = false;
       }
 

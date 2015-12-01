@@ -14,12 +14,10 @@
 #include "indexorder.h"
 #include "symbol_factory.h"
 #include "y_driver.h"
-
+#include "error_context.h"
 #include "argument_cache.h"
 
 
-typedef std::function<void(const std::string&)> error_handler;
-typedef std::function<void(const std::string&)> warning_handler;
 typedef std::function<void(const std::string&)> message_handler;
 
 
@@ -32,12 +30,23 @@ class translator_data
 
     //! constructor
     translator_data(const std::string& file,
-                    error_handler e, warning_handler w, message_handler m,
-                    finder& f, output_stack& os, symbol_factory& s, y::y_driver& drv,
+                    error_context::error_handler e, error_context::warning_handler w,
+                    message_handler m, finder& f, output_stack& os, symbol_factory& s, y::y_driver& drv,
                     argument_cache& c);
 
     //! destructor is default
     ~translator_data() = default;
+
+
+    // GET ERROR_CONTEXT HANDLERS
+
+  public:
+
+    //! get error handler
+    error_context::error_handler& get_error_handler() { return(this->err); }
+
+    //! get warning handler
+    error_context::warning_handler& get_warning_handler() { return(this->wrn); }
 
 
     // SET CORE, IMPLEMENTATION DATA
@@ -52,7 +61,7 @@ class translator_data
   public:
 
     //! get filename of model descriptor
-    const std::string& get_model_input() const { return(this->filename); };
+    const std::string& get_model_input() const { return(this->filename); }
 
     //! get filename of translated core
     const std::string& get_core_output() const { return(this->core_output); }
@@ -114,12 +123,6 @@ class translator_data
 
   public:
 
-    //! report an error
-    void error(const std::string& m) { this->err(m); }
-
-    //! report a warning
-    void warn(const std::string& m) { this->wrn(m); }
-
     //! report a message
     void message(const std::string& m) { this->msg(m); }
 
@@ -148,11 +151,17 @@ class translator_data
     //! message handler
     message_handler msg;
 
+
+    // HANDLERS FOR ERROR_CONTEXT
+
     //! error handler
-    error_handler err;
+    error_context::error_handler err;
 
     //! warning handler
-    warning_handler wrn;
+    error_context::warning_handler wrn;
+
+
+    // UTILITY OBJECTS
 
     //! finder
     finder& search_paths;

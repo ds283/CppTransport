@@ -76,7 +76,9 @@ unsigned int translator::translate(const std::string& in, buffer& buf, enum proc
       {
         std::ostringstream msg;
         msg << ERROR_MISSING_TEMPLATE << " '" << in << ".h'";
-        error(msg.str());
+
+        error_context err_context(this->data_payload.get_stack(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
+        err_context.error(msg.str());
       }
 
     return(rval);
@@ -172,14 +174,18 @@ unsigned int translator::process(const std::string in, buffer& buf, enum process
           {
             std::ostringstream msg;
             msg << ERROR_TEMPLATE_TOO_RECENT_A << " '" << in << "' " << ERROR_TEMPLATE_TOO_RECENT_B << minver << ")";
-            error(msg.str());
+
+            error_context err_context(this->data_payload.get_stack(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
+            err_context.error(msg.str());
           }
       }
     else  // failed to open the input file
       {
         std::ostringstream msg;
         msg << ERROR_READING_TEMPLATE << " '" << in << "'";
-        error(msg.str());
+
+        error_context err_context(this->data_payload.get_stack(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
+        err_context.error(msg.str());
       }
 
     inf.close();
@@ -200,7 +206,9 @@ void translator::parse_header_line(const std::string in, const std::string line,
       {
         std::ostringstream msg;
         msg << ERROR_IMPROPER_TEMPLATE_HEADER << " '" << in << "'";
-        error(msg.str());
+
+        error_context err_context(this->data_payload.get_stack(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
+        err_context.error(msg.str());
       }
 
     for(int i = 1; i < tokens.size(); ++i)
@@ -213,7 +221,9 @@ void translator::parse_header_line(const std::string in, const std::string line,
                   {
                     std::ostringstream msg;
                     msg << WARNING_DUPLICATE_TEMPLATE_BACKEND << " '" << in << "'";
-                    warn(msg.str());
+
+                    error_context err_context(this->data_payload.get_stack(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
+                    err_context.warn(msg.str());
                   }
                 else
                   {
@@ -225,7 +235,9 @@ void translator::parse_header_line(const std::string in, const std::string line,
               {
                 std::ostringstream msg;
                 msg << ERROR_EXPECTED_TEMPLATE_BACKEND << " '" << in << "'";
-                error(msg.str());
+
+                error_context err_context(this->data_payload.get_stack(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
+                err_context.error(msg.str());
               }
           }
         else if(boost::to_lower_copy(tokens[i]) == MINVER_TOKEN)
@@ -236,7 +248,9 @@ void translator::parse_header_line(const std::string in, const std::string line,
                   {
                     std::ostringstream msg;
                     msg << WARNING_DUPLICATE_TEMPLATE_MINVER << " '" << in << "'";
-                    warn(msg.str());
+
+                    error_context err_context(this->data_payload.get_stack(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
+                    err_context.warn(msg.str());
                   }
                 else
                   {
@@ -248,7 +262,9 @@ void translator::parse_header_line(const std::string in, const std::string line,
               {
                 std::ostringstream msg;
                 msg << ERROR_EXPECTED_TEMPLATE_MINVER << " '" << in << "'";
-                error(msg.str());
+
+                error_context err_context(this->data_payload.get_stack(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
+                err_context.error(msg.str());
               }
           }
       }
@@ -257,7 +273,9 @@ void translator::parse_header_line(const std::string in, const std::string line,
       {
         std::ostringstream msg;
         msg << ERROR_IMPROPER_TEMPLATE_HEADER << " '" << in << "'";
-        error(msg.str());
+
+        error_context err_context(this->data_payload.get_stack(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
+        err_context.error(msg.str());
       }
   }
 

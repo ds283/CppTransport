@@ -61,7 +61,9 @@ std::unique_ptr< std::vector<std::string> > macro_agent::apply(std::string& line
       {
         std::ostringstream msg;
         msg << WARNING_RECURSION_DEPTH << "=" << this->recursion_max << ")";
-        this->data_payload.warn(msg.str());
+
+        error_context err_context(this->data_payload.get_stack(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
+        err_context.warn(msg.str());
       }
 
 		// if timer was stopped, stop it again

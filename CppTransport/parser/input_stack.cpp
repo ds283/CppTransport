@@ -6,10 +6,9 @@
 
 #include <string>
 #include <sstream>
-
+#include <stdexcept>
 
 #include "msg_en.h"
-#include "error.h"
 #include "input_stack.h"
 
 
@@ -28,7 +27,7 @@ void input_stack::set_line(unsigned int line)
   {
     if(inclusions.size() == 0)
       {
-        error(ERROR_FILESTACK_EMPTY);
+        throw std::runtime_error(ERROR_FILESTACK_EMPTY);
       }
     else
       {
@@ -43,7 +42,7 @@ unsigned int input_stack::increment_line()
 
     if(inclusions.size() == 0)
       {
-        error(ERROR_FILESTACK_EMPTY);
+        throw std::runtime_error(ERROR_FILESTACK_EMPTY);
       }
     else
       {
@@ -59,7 +58,7 @@ unsigned int input_stack::get_line() const
 
     if(inclusions.size() == 0)
       {
-        error(ERROR_FILESTACK_EMPTY);
+        throw std::runtime_error(ERROR_FILESTACK_EMPTY);
       }
     else
       {
@@ -77,7 +76,7 @@ void input_stack::pop()
       }
     else
       {
-        error(ERROR_FILESTACK_TOO_SHORT);
+        throw std::runtime_error(ERROR_FILESTACK_TOO_SHORT);
       }
   }
 

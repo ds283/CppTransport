@@ -116,7 +116,9 @@ namespace cpp
           {
             std::ostringstream msg;
             msg << ERROR_UNKNOWN_STEPPER << " '" << s.name << "'";
-            this->data_payload.error(msg.str());
+
+            error_context err_context(data_payload.get_stack(), data_payload.get_error_handler(), data_payload.get_warning_handler());
+            err_context.error(msg.str());
             out << "<UNKNOWN_STEPPER>";
           }
 

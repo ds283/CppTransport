@@ -26,8 +26,6 @@ int main(int argc, const char *argv[])
     local_environment env;
     argument_cache args(argc, argv);
 
-    set_up_error_environment();
-
     // set up the initial search path;
     // this should consist of the current working directory, but also
     // any include paths set using environment variables

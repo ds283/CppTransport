@@ -7,8 +7,8 @@
 
 
 translator_data::translator_data(const std::string& file,
-                                 error_handler e, warning_handler w, message_handler m,
-                                 finder& f, output_stack& os, symbol_factory& s, y::y_driver& drv,
+                                 error_context::error_handler e, error_context::warning_handler w,
+                                 message_handler m, finder& f, output_stack& os, symbol_factory& s, y::y_driver& drv,
                                  argument_cache& c)
   : filename(file),
     err(e),
