@@ -12,7 +12,7 @@
 #include "y_common.h"
 #include "y_lexer.h"
 #include "y_driver.h"
-#include "y_parser.tab.hh"
+#include "y_parser.hpp"
 
 #include "stepper.h"
 #include "indexorder.h"

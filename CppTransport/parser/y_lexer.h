@@ -21,8 +21,7 @@
 #include "lexstream.h"
 
 #include "y_common.h"
-#include "y_parser.tab.hh"
-
+#include "y_parser.hpp"
 
 namespace y
 	{
