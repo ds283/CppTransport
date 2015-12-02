@@ -89,11 +89,11 @@ class translation_unit
     local_environment& env;
     output_stack       stack;
 
-    lexstream_data    lexstream_payload;       // must be constructed *after* path, cache
-    y::lexstream_type instream;
-    y::y_lexer        lexer;
-    y::y_driver       driver;
-    y::y_parser       parser;
+    lexstream_data     lexstream_payload;       // must be constructed *after* path, cache
+    y::lexstream_type  instream;
+    y::y_lexer         lexer;
+    y::y_driver        driver;
+    y::y_parser        parser;
 
     translator_data    translator_payload;
     translator         outstream;               // must be constructed *after* data_payload, path, stack, sym_factory
