@@ -109,35 +109,34 @@ translation_unit::translation_unit(std::string file, finder& p, argument_cache& 
     cache(c),
     env(e),
     parse_failed(false),
+    lexstream_payload(file,
+                      std::bind(&translation_unit::context_error, this, std::placeholders::_1, std::placeholders::_2),
+                      std::bind(&translation_unit::context_warn, this, std::placeholders::_1, std::placeholders::_2),
+                      path, cache),
+    instream(lexstream_payload,
+             keyword_table, keyword_map, character_table, character_map, character_unary_context),
+    lexer(instream),
     driver(sym_factory, c, e, error_context(stack,
                                             std::bind(&translation_unit::context_error, this, std::placeholders::_1, std::placeholders::_2),
                                             std::bind(&translation_unit::context_warn, this, std::placeholders::_1, std::placeholders::_2))),
+    parser(lexer, driver),
     translator_payload(file,
                        std::bind(&translation_unit::context_error, this, std::placeholders::_1, std::placeholders::_2),
                        std::bind(&translation_unit::context_warn, this, std::placeholders::_1, std::placeholders::_2),
                        std::bind(&translation_unit::print_advisory, this, std::placeholders::_1),
                        path, stack, sym_factory, driver, cache),
-    lexstream_payload(file,
-                      std::bind(&translation_unit::context_error, this, std::placeholders::_1, std::placeholders::_2),
-                      std::bind(&translation_unit::context_warn, this, std::placeholders::_1, std::placeholders::_2),
-                      path, cache),
     outstream(translator_payload)
   {
-    // lexicalize this input file
-    // lexstream owns the list of lexemes, which persist as long as the lexstream object exists
-    // it goes out of scope only when this translation_unit is destroyed, so the lexeme list
-    // should be persistent while all transactions involving this unit are active
-    stream = std::make_unique<y::lexstream_type>(lexstream_payload,
-                                                 keyword_table, keyword_map, character_table, character_map, character_unary_context);
+    // construction of 'instream' lexicalizes the input file
+    // the instream object owns the list of lexemes, which persist as long as it exists
+    // therefore the lexeme list should be persistent while all transactions involving this unit are active
 
     // dump lexeme stream to output -- for debugging
     // stream->print(std::cerr);
 
-    // now pass to the parser for syntactic analysis
-    lexer  = std::make_unique<y::y_lexer>(*stream);
-    parser = std::make_unique<y::y_parser>(*lexer, driver);
+    // construction of lexer, driver and parser performs syntactic analysis
 
-    if(parser->parse() == FAIL || driver.failed())
+    if(parser.parse() == FAIL || driver.failed())
 	    {
         std::ostringstream msg;
         msg << WARNING_PARSING_FAILED << " '" << name << "'";

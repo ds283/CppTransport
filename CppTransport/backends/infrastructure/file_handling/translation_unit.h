@@ -70,7 +70,7 @@ class translation_unit
     //! construct output name (input not const or taken by reference because modified internally)
     std::string mangle_output_name(std::string input, const std::string& tag);
 
-    //! deduce template suffix frmo input name (input not const or taken by reference because modified internally)
+    //! deduce template suffix from input name (input not const or taken by reference because modified internally)
     std::string get_template_suffix(std::string input);
 
 
@@ -79,25 +79,24 @@ class translation_unit
   private:
 
     // GiNaC symbol factory
-    symbol_factory sym_factory;
+    symbol_factory     sym_factory;
 
-    std::string name;                    // name of input script
-    bool        parse_failed;
+    std::string        name;                    // name of input script
+    bool               parse_failed;
 
     finder&            path;
     argument_cache&    cache;
     local_environment& env;
     output_stack       stack;
 
-    translator_data translator_payload;
-    lexstream_data  lexstream_payload;
+    lexstream_data    lexstream_payload;       // must be constructed *after* path, cache
+    y::lexstream_type instream;
+    y::y_lexer        lexer;
+    y::y_driver       driver;
+    y::y_parser       parser;
 
-    std::unique_ptr<y::lexstream_type> stream;
-    std::unique_ptr<y::y_lexer>        lexer;
-    y::y_driver                        driver;    // must be constructed *after* stack
-    std::unique_ptr<y::y_parser>       parser;
-
-    translator outstream;               // must be constructed *after* data_payload, path, stack, sym_factory
+    translator_data    translator_payload;
+    translator         outstream;               // must be constructed *after* data_payload, path, stack, sym_factory
 
   };
 
