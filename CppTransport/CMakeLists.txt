@@ -21,7 +21,9 @@ SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mavx -Ofast" CACHE STRING "compile flags" F
 FIND_PACKAGE(Bison 3.0 REQUIRED)
 
 
-ADD_SUBDIRECTORY(examples/axion-mpi "axion-mpi" EXCLUDE_FROM_ALL)
+# pull in bundled JsonCpp and SPLINTER libraries
+ADD_SUBDIRECTORY(transport-runtime-api/thirdparty/splinter "splinter-build")
+ADD_SUBDIRECTORY(transport-runtime-api/thirdparty/jsoncpp  "jsoncpp-build")
 
 
 # find required libraries
@@ -122,125 +124,8 @@ INSTALL(DIRECTORY templates DESTINATION share)
 INSTALL(DIRECTORY transport-runtime-api DESTINATION include)
 INSTALL(FILES cmake/Modules/FindCppTransport.cmake DESTINATION share/cmake/Modules)
 
-ADD_EXECUTABLE(dquad-mpi examples/dquad-mpi/main.cpp)
-TARGET_LINK_LIBRARIES(dquad-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
-
-
-ADD_EXECUTABLE(dquad-makerepo examples/dquad-mpi/makerepo.cpp)
-TARGET_LINK_LIBRARIES(dquad-makerepo sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
-
-
-ADD_EXECUTABLE(dquad-makerepo2 examples/dquad-mpi/makerepo2.cpp)
-TARGET_LINK_LIBRARIES(dquad-makerepo2 sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
-
-
-ADD_EXECUTABLE(quadratic-mpi examples/quadratic/main.cpp)
-TARGET_LINK_LIBRARIES(quadratic-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
-
-
-ADD_EXECUTABLE(quadratic-makerepo examples/quadratic/makerepo.cpp)
-TARGET_LINK_LIBRARIES(quadratic-makerepo sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
-
-
-ADD_EXECUTABLE(new-axion-mpi examples/new-axion/main.cpp)
-TARGET_LINK_LIBRARIES(new-axion-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
-
-
-ADD_EXECUTABLE(new-axion-makerepo2 examples/new-axion/makerepo2.cpp)
-TARGET_LINK_LIBRARIES(new-axion-makerepo2 sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
-
-
-ADD_EXECUTABLE(qsfi-mpi examples/qsfi/main.cpp)
-TARGET_LINK_LIBRARIES(qsfi-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
-
-
-ADD_EXECUTABLE(qsfi-makerepo2 examples/qsfi/makerepo2.cpp)
-TARGET_LINK_LIBRARIES(qsfi-makerepo2 sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
-
-
-ADD_EXECUTABLE(mafalda40-makerepo examples/mafalda40/makerepo.cpp)
-TARGET_LINK_LIBRARIES(mafalda40-makerepo sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
-
-
-ADD_EXECUTABLE(mafalda40-mpi examples/mafalda40/main.cpp)
-TARGET_LINK_LIBRARIES(mafalda40-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
-
-
-ADD_EXECUTABLE(quadratic10-makerepo examples/quadratic10/makerepo.cpp)
-TARGET_LINK_LIBRARIES(quadratic10-makerepo sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
-
-
-ADD_EXECUTABLE(quadratic10-mpi examples/quadratic10/main.cpp)
-TARGET_LINK_LIBRARIES(quadratic10-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
-
-
-ADD_EXECUTABLE(powerlaw-makerepo examples/powerlaw/makerepo.cpp)
-TARGET_LINK_LIBRARIES(powerlaw-makerepo sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
-
-
-ADD_EXECUTABLE(powerlaw-makerepo2 examples/powerlaw/makerepo2.cpp)
-TARGET_LINK_LIBRARIES(powerlaw-makerepo2 sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
-
-
-ADD_EXECUTABLE(powerlaw-makerepo3 examples/powerlaw/makerepo3.cpp)
-TARGET_LINK_LIBRARIES(powerlaw-makerepo3 sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
-
-
-ADD_EXECUTABLE(powerlaw-mpi examples/powerlaw/main.cpp)
-TARGET_LINK_LIBRARIES(powerlaw-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
-
-
-ADD_EXECUTABLE(heavy-hilltop-makerepo2 examples/heavy-hilltop/makerepo2.cpp)
-TARGET_LINK_LIBRARIES(heavy-hilltop-makerepo2 sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
-
-
-ADD_EXECUTABLE(heavy-hilltop-mpi examples/heavy-hilltop/main.cpp)
-TARGET_LINK_LIBRARIES(heavy-hilltop-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
-
-
-ADD_EXECUTABLE(inflection-makerepo2 examples/inflection/makerepo2.cpp)
-TARGET_LINK_LIBRARIES(inflection-makerepo2 sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
-
-
-ADD_EXECUTABLE(inflection-mpi examples/inflection/main.cpp)
-TARGET_LINK_LIBRARIES(inflection-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
-
-
-ADD_EXECUTABLE(oscillatory-mpi examples/oscillatory/main.cpp)
-TARGET_LINK_LIBRARIES(oscillatory-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
-
-
-ADD_EXECUTABLE(oscillatory-makerepo2 examples/oscillatory/makerepo2.cpp)
-TARGET_LINK_LIBRARIES(oscillatory-makerepo2 sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
-
-
-ADD_EXECUTABLE(chris-makerepo2 examples/chris-mpi/makerepo2.cpp)
-TARGET_LINK_LIBRARIES(chris-makerepo2 sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
-
-
-ADD_EXECUTABLE(chris-makerepo3 examples/chris-mpi/makerepo3.cpp)
-TARGET_LINK_LIBRARIES(chris-makerepo3 sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
-
-
-ADD_EXECUTABLE(chris-mpi examples/chris-mpi/main.cpp)
-TARGET_LINK_LIBRARIES(chris-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
-
-
-# cuda_add_executable(dquad-cuda examples/dquad-vexcl/main.cpp )
-# target_link_libraries(dquad-cuda sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY} /usr/local/CUDA/lib/libcuda.dylib)
-
-
-# add_executable(dquad-opencl examples/dquad-vexcl/main.cpp )
-# target_link_libraries(dquad-opencl sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${OPENCL_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
-
 
 ## FILL IN DUMMY TARGETS FOR CLION
-
-SET(EXAMPLES_DQUAD_MPI_FILES
-  examples/dquad-mpi/main.cpp
-  examples/dquad-mpi/makerepo.cpp
-  examples/dquad-mpi/makerepo2.cpp
-  )
 
 SET(PARSER_FILES
   parser/input_stack.cpp
@@ -259,11 +144,6 @@ SET(PARSER_FILES
   parser/y_driver.h
   parser/y_lexer.cpp
   parser/y_lexer.h
-  )
-
-SET(EXAMPLES_NEW_AXION_FILES
-  examples/new-axion/main.cpp
-  examples/new-axion/makerepo2.cpp
   )
 
 SET(TOP_LEVEL_FILES
@@ -298,10 +178,6 @@ SET(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_SQL_QUERY_FILES
   transport-runtime-api/derived-products/derived-content/SQL_query/SQL_query_helper.h
   )
 
-SET(EXAMPLES_RCHI_FILES
-  examples/rchi/main.cpp
-  )
-
 SET(BACKENDS_SHARED_FILES
   backends/shared/flow_tensors.cpp
   backends/shared/flow_tensors.h
@@ -325,11 +201,6 @@ SET(TEMPLATES_VEXCL_CUDA_FILES
   templates/vexcl-cuda/twopf.cu
   )
 
-SET(EXAMPLES_OSCILLATORY_FILES
-  examples/oscillatory/main.cpp
-  examples/oscillatory/makerepo2.cpp
-  )
-
 SET(BACKENDS_INFRASTRUCTURE_MACRO_SUBSTITUTION_FILES
   backends/infrastructure/macro_substitution/index_assignment.cpp
   backends/infrastructure/macro_substitution/index_assignment.h
@@ -343,19 +214,8 @@ SET(PARSER_BISON_FILES
   parser/bison/y_parser.yy
   )
 
-SET(EXAMPLES_CHRIS_MPI_FILES
-  examples/chris-mpi/main.cpp
-  examples/chris-mpi/makerepo2.cpp
-  examples/chris-mpi/makerepo3.cpp
-  )
-
 SET(TRANSPORT_RUNTIME_API_DATA_FILES
   transport-runtime-api/data/data_manager.h
-  )
-
-SET(EXAMPLES_MAFALDA40_FILES
-  examples/mafalda40/main.cpp
-  examples/mafalda40/makerepo.cpp
   )
 
 SET(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_INTEGRATION_ANALYSIS_FILES
@@ -429,16 +289,6 @@ SET(BACKENDS_LANGUAGES_SHARED_FILES
 
 SET(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_UTILITIES_FILES
   transport-runtime-api/derived-products/derived-content/utilities/integration_task_gadget.h
-  )
-
-SET(EXAMPLES_HEAVY_HILLTOP_FILES
-  examples/heavy-hilltop/main.cpp
-  examples/heavy-hilltop/makerepo2.cpp
-  )
-
-SET(EXAMPLES_QUADRATIC_FILES
-  examples/quadratic/main.cpp
-  examples/quadratic/makerepo.cpp
   )
 
 SET(TRANSPORT_RUNTIME_API_LOCALIZATIONS_FILES
@@ -546,11 +396,6 @@ SET(TRANSPORT_RUNTIME_API_CONCEPTS_FILES
   transport-runtime-api/concepts/range.h
   )
 
-SET(EXAMPLES_DQUAD_VEXCL_FILES
-  examples/dquad-vexcl/main.cpp
-  examples/dquad-vexcl/makerepo.cpp
-  )
-
 SET(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_BACKGROUND_QUANTITES_FILES
   transport-runtime-api/derived-products/derived-content/background-quantites/background_line.h
   transport-runtime-api/derived-products/derived-content/background-quantites/largest_u2_line.h
@@ -583,11 +428,6 @@ SET(TRANSPORT_RUNTIME_API_SCHEDULER_FILES
   transport-runtime-api/scheduler/work_queue.h
   )
 
-SET(EXAMPLES_QSFI_FILES
-  examples/qsfi/main.cpp
-  examples/qsfi/makerepo2.cpp
-  )
-
 SET(TRANSPORT_RUNTIME_API_TASKS_INTEGRATION_DETAIL_FILES
   transport-runtime-api/tasks/integration_detail/abstract.h
   transport-runtime-api/tasks/integration_detail/background_task.h
@@ -605,13 +445,6 @@ SET(TRANSPORT_RUNTIME_API_DATA_BATCHERS_FILES
   transport-runtime-api/data/batchers/postintegration_batcher.h
   transport-runtime-api/data/batchers/postintegration_items.h
   transport-runtime-api/data/batchers/postprocess_delegate.h
-  )
-
-SET(EXAMPLES_AXION_MPI_FILES
-  examples/axion-mpi/main.cpp
-  examples/axion-mpi/makerepo.cpp
-  examples/axion-mpi/makerepo2.cpp
-  examples/axion-mpi/makerepo3.cpp
   )
 
 SET(BACKENDS_LANGUAGES_OPENCL_FILES
@@ -673,13 +506,6 @@ SET(BACKENDS_LANGUAGES_CPP_CORE_FILES
   backends/languages/cpp/core/core_macros.h
   )
 
-SET(EXAMPLES_POWERLAW_FILES
-  examples/powerlaw/main.cpp
-  examples/powerlaw/makerepo.cpp
-  examples/powerlaw/makerepo2.cpp
-  examples/powerlaw/makerepo3.cpp
-  )
-
 SET(TEMPLATES_FILES
   templates/canonical_basic_twopf.h
   templates/canonical_core_twopf.h
@@ -718,11 +544,6 @@ SET(BACKENDS_INFRASTRUCTURE_FILE_HANDLING_FILES
   backends/infrastructure/file_handling/translator_data.h
   backends/infrastructure/file_handling/lexstream_data.cpp
   backends/infrastructure/file_handling/lexstream_data.h backends/infrastructure/file_handling/contexted_value.h)
-
-SET(EXAMPLES_INFLECTION_FILES
-  examples/inflection/main.cpp
-  examples/inflection/makerepo2.cpp
-  )
 
 SET(TRANSPORT_RUNTIME_API_TASKS_CONFIGURATION_DATABASE_FILES
   transport-runtime-api/tasks/configuration-database/generic_config_iterator.h
@@ -828,28 +649,17 @@ SET(TRANSPORT_RUNTIME_API_FILES
   transport-runtime-api/version.h
   )
 
-SET(EXAMPLES_QUADRATIC10_FILES
-  examples/quadratic10/main.cpp
-  examples/quadratic10/makerepo.cpp
-  )
-
 SET(SOURCE_FILES
-  ${EXAMPLES_DQUAD_MPI_FILES}
   ${PARSER_FILES}
-  ${EXAMPLES_NEW_AXION_FILES}
   ${TOP_LEVEL_FILES}
   ${TRANSPORT_RUNTIME_API_UTILITIES_FILES}
   ${TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_FILES}
   ${TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_SQL_QUERY_FILES}
-  ${EXAMPLES_RCHI_FILES}
   ${BACKENDS_SHARED_FILES}
   ${TEMPLATES_VEXCL_CUDA_FILES}
-  ${EXAMPLES_OSCILLATORY_FILES}
   ${BACKENDS_INFRASTRUCTURE_MACRO_SUBSTITUTION_FILES}
   ${PARSER_BISON_FILES}
-  ${EXAMPLES_CHRIS_MPI_FILES}
   ${TRANSPORT_RUNTIME_API_DATA_FILES}
-  ${EXAMPLES_MAFALDA40_FILES}
   ${TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_INTEGRATION_ANALYSIS_FILES}
   ${UTILITIES_FILES}
   ${TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_CONVENIENCE_FILES}
@@ -860,8 +670,6 @@ SET(SOURCE_FILES
   ${TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_CONCEPTS_SERIES_FILES}
   ${BACKENDS_LANGUAGES_SHARED_FILES}
   ${TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_UTILITIES_FILES}
-  ${EXAMPLES_HEAVY_HILLTOP_FILES}
-  ${EXAMPLES_QUADRATIC_FILES}
   ${TRANSPORT_RUNTIME_API_LOCALIZATIONS_FILES}
   ${TRANSPORT_RUNTIME_API_TASKS_POSTINTEGRATION_DETAIL_FILES}
   ${TRANSPORT_RUNTIME_API_LOCALIZATIONS_MESSAGES_EN_FILES}
@@ -874,28 +682,23 @@ SET(SOURCE_FILES
   ${BACKENDS_LANGUAGES_CUDA_FILES}
   ${TRANSPORT_RUNTIME_API_REPOSITORY_RECORDS_FILES}
   ${TRANSPORT_RUNTIME_API_CONCEPTS_FILES}
-  ${EXAMPLES_DQUAD_VEXCL_FILES}
   ${TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_BACKGROUND_QUANTITES_FILES}
   ${TRANSPORT_RUNTIME_API_LOCALIZATIONS_MESSAGES_EN_TASKS_FILES}
   ${BACKENDS_LANGUAGES_CPP_FILES}
   ${TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_CONCEPTS_FILES}
   ${TRANSPORT_RUNTIME_API_SCHEDULER_FILES}
-  ${EXAMPLES_QSFI_FILES}
   ${TRANSPORT_RUNTIME_API_TASKS_INTEGRATION_DETAIL_FILES}
   ${TRANSPORT_RUNTIME_API_DATA_BATCHERS_FILES}
-  ${EXAMPLES_AXION_MPI_FILES}
   ${BACKENDS_LANGUAGES_OPENCL_FILES}
   ${TRANSPORT_RUNTIME_API_SQLITE3_OPERATIONS_FILES}
   ${TRANSPORT_RUNTIME_API_TASKS_FILES}
   ${TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_CORRELATION_FUNCTIONS_FILES}
   ${BACKENDS_LANGUAGES_CPP_CORE_FILES}
-  ${EXAMPLES_POWERLAW_FILES}
   ${TEMPLATES_FILES}
   ${BACKENDS_INFRASTRUCTURE_LANGUAGE_CONCEPTS_FILES}
   ${TRANSPORT_RUNTIME_API_DATA_DATAPIPE_TAGS_FILES}
   ${BACKENDS_UTILITIES_FILES}
   ${BACKENDS_INFRASTRUCTURE_FILE_HANDLING_FILES}
-  ${EXAMPLES_INFLECTION_FILES}
   ${TRANSPORT_RUNTIME_API_TASKS_CONFIGURATION_DATABASE_FILES}
   ${TRANSPORT_RUNTIME_API_SQLITE3_FILES}
   ${TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_DEPRECATED_FILES}
@@ -908,7 +711,6 @@ SET(SOURCE_FILES
   ${TRANSPORT_RUNTIME_API_LOCALIZATIONS_MESSAGES_EN_DERIVED_PRODUCTS_FILES}
   ${TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_UTILITIES_FILES}
   ${TRANSPORT_RUNTIME_API_FILES}
-  ${EXAMPLES_QUADRATIC10_FILES}
   )
 
 ADD_EXECUTABLE(dummy_clion_target EXCLUDE_FROM_ALL ${SOURCE_FILES})
