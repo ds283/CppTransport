@@ -1,8 +1,0 @@
-[submodule "splinter"]
-	path = CppTransport/transport-runtime-api/thirdparty/splinter
-	url = https://github.com/bgrimstad/splinter.git
-	branch = master
-[submodule "jsoncpp"]
-	path = CppTransport/transport-runtime-api/thirdparty/jsoncpp
-	url = https://github.com/open-source-parsers/jsoncpp.git
-	branch = master
