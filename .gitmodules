@@ -1,7 +1,3 @@
-[submodule "odeint"]
-	path = CppTransport/transport-runtime-api/thirdparty/odeint
-	url = https://github.com/headmyshoulder/odeint-v2.git
-	branch = master
 [submodule "splinter"]
 	path = CppTransport/transport-runtime-api/thirdparty/splinter
 	url = https://github.com/bgrimstad/splinter.git
