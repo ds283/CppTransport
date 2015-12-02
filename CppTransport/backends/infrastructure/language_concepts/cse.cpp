@@ -116,17 +116,17 @@ std::string cse::temporaries(const std::string& t)
         ok = false;
       }
 
+    std::string left  = t.substr(0, lhs_pos);
+    std::string mid   = t.substr(lhs_pos+2, rhs_pos-lhs_pos-2);
+    std::string right = t.substr(rhs_pos+2, std::string::npos);
+
     if(ok)
       {
         // deposit each declaration into the output stream
         for(const std::pair<std::string, std::string>& decl: this->decls)
           {
-            std::string line = t;
-
             // replace LHS and RHS macros in the template
-            line.replace(lhs_pos, (size_t)2, decl.first);
-            line.replace(rhs_pos, (size_t)2, decl.second);
-            out << line << '\n';
+            out << left << decl.first << mid << decl.second << right << '\n';
           }
       }
     else
