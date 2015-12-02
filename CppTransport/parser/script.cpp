@@ -12,8 +12,7 @@
 #include "lexical.h"
 #include "script.h"
 
-#define DEFAULT_MODEL_NAME "inflationary_model"
-#define DERIV_PREFIX       "__d"
+const auto DERIV_PREFIX = "__d";
 
 
 // ******************************************************************

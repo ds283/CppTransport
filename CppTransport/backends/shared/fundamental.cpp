@@ -228,7 +228,7 @@ namespace macro_packages
           }
         else
           {
-            return(std::string());
+            return(std::string(DEFAULT_MODEL_NAME));
           }
       }
 
@@ -242,7 +242,7 @@ namespace macro_packages
           }
         else
           {
-            return(std::string());
+            return(std::string(DEFAULT_AUTHOR));
           }
       }
 
@@ -270,7 +270,7 @@ namespace macro_packages
           }
         else
           {
-            return(std::string());
+            return(std::string(DEFAULT_MODEL_NAME));
           }
       }
 
