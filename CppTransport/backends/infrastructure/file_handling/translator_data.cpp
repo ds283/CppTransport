@@ -6,7 +6,7 @@
 #include "translator_data.h"
 
 
-translator_data::translator_data(const std::string& file,
+translator_data::translator_data(const boost::filesystem::path& file,
                                  error_context::error_handler e, error_context::warning_handler w,
                                  message_handler m, finder& f, output_stack& os, symbol_factory& s, y::y_driver& drv,
                                  argument_cache& c)
@@ -137,8 +137,8 @@ const struct stepper& translator_data::get_perturbations_stepper() const
   }
 
 
-void translator_data::set_core_implementation(const std::string& co, const std::string& cg, const std::string& io,
-                                              const std::string& ig)
+void translator_data::set_core_implementation(const boost::filesystem::path& co, const std::string& cg,
+                                              const boost::filesystem::path& io, const std::string& ig)
   {
     this->core_output           = co;
     this->core_guard            = cg;

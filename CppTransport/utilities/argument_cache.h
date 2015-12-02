@@ -10,6 +10,7 @@
 #include <list>
 
 #include "boost/program_options.hpp"
+#include "boost/filesystem/operations.hpp"
 
 
 class argument_cache
@@ -40,10 +41,10 @@ class argument_cache
     bool do_cse() const { return(this->cse_flag); }
 
     //! get search paths
-    const std::list<std::string>& search_paths() const { return(this->search_path_list); }
+    const std::list<boost::filesystem::path>& search_paths() const { return(this->search_path_list); }
 
     //! get input files
-    const std::list<std::string>& input_files() const { return(this->input_file_list); }
+    const std::list<boost::filesystem::path>& input_files() const { return(this->input_file_list); }
 
     //! get core output file
     const std::string& core_out() const { return(this->core_output); };
@@ -74,10 +75,10 @@ class argument_cache
     std::string implementation_output;
 
     //! list of search paths
-    std::list< std::string > search_path_list;
+    std::list< boost::filesystem::path > search_path_list;
 
     //! list of files to process
-    std::list< std::string > input_file_list;
+    std::list< boost::filesystem::path > input_file_list;
 
   };
 

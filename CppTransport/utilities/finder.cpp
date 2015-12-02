@@ -2,8 +2,6 @@
 // Created by David Seery on 12/06/2013.
 // Copyright (c) 2013-15 University of Sussex. All rights reserved.
 //
-// To change the template use AppCode | Preferences | File Templates.
-//
 
 
 #include <fstream>
@@ -20,53 +18,57 @@
 
 finder::finder()
   {
-    using namespace boost::filesystem;
+    boost::filesystem::path cwd(boost::filesystem::initial_path<boost::filesystem::path>());
 
-    path cwd(initial_path<path>());
-
-    paths.push_back(cwd.string());
+    paths.push_back(cwd);
   }
 
 
-finder::finder(std::string path)
+finder::finder(boost::filesystem::path path)
   {
-    paths.push_back(path);
+    paths.emplace_back(std::move(path));
   }
 
 
 // ******************************************************************
 
 
-void finder::add(const std::string& p)
+void finder::add(boost::filesystem::path p)
   {
     // add path to list, if it isn't already present
-    std::list<std::string>::iterator t = std::find(this->paths.begin(), this->paths.end(), p);
+    std::list<boost::filesystem::path>::iterator t = std::find(this->paths.begin(), this->paths.end(), p);
 
-    if(t == this->paths.end()) this->paths.emplace_back(p);
+    if(t == this->paths.end()) this->paths.emplace_back(std::move(p));
   }
 
 
-void finder::add(const std::list<std::string>& plist)
+void finder::add(const std::list<boost::filesystem::path>& plist)
   {
-    for(const std::string& t : plist)
+    for(const boost::filesystem::path& t : plist)
       {
         this->add(t);
       }
   }
 
 
-bool finder::fqpn(const std::string leaf, std::string& fqpn)
+bool finder::fqpn(const boost::filesystem::path& leaf, boost::filesystem::path& fqpn)
   {
+    if(leaf.is_absolute())
+      {
+        fqpn = boost::filesystem::canonical(leaf);
+        return(boost::filesystem::exists(leaf));
+      }
+
     bool match = false;
 
-    for(const std::string& t : this->paths)
+    for(const boost::filesystem::path& path : this->paths)
       {
-        boost::filesystem::path file = boost::filesystem::path(t) / boost::filesystem::path(leaf);
+        boost::filesystem::path file = path / leaf;
 
         if(boost::filesystem::exists(file))
           {
             match = true;
-            fqpn  = boost::filesystem::canonical(file).string();
+            fqpn  = boost::filesystem::canonical(file);
             break;
           }
       }

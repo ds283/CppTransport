@@ -15,7 +15,7 @@
 #include "cuda_group.h"
 
 
-std::unique_ptr<package_group> package_group_factory(const std::string& in, const std::string& backend, translator_data& payload,
+std::unique_ptr<package_group> package_group_factory(const boost::filesystem::path& in, const std::string& backend, translator_data& payload,
                                                      ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& cache)
   {
     if(backend == "cpp")
@@ -36,6 +36,6 @@ std::unique_ptr<package_group> package_group_factory(const std::string& in, cons
       }
 
     std::ostringstream msg;
-    msg << ERROR_TEMPLATE_BACKEND_A << " '" << in << "' " << ERROR_TEMPLATE_BACKEND_B << " '" << backend << "'";
+    msg << ERROR_TEMPLATE_BACKEND_A << " " << in << " " << ERROR_TEMPLATE_BACKEND_B << " '" << backend << "'";
     throw std::runtime_error(msg.str());
   }

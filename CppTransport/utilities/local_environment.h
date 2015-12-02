@@ -9,6 +9,7 @@
 
 #include <list>
 
+
 #include "boost/filesystem/operations.hpp"
 
 
@@ -35,7 +36,7 @@ class local_environment
     // ENVIRONMENT PATHS
 
     //! get template search paths specified via environment variables
-    const std::list<std::string>& search_paths() const { return(this->template_search); }
+    const std::list< boost::filesystem::path >& search_paths() const { return(this->template_search); }
 
 
     // INTERNAL API
@@ -60,7 +61,7 @@ class local_environment
 
 
     // ENVIRONMENT PATHS
-    std::list<std::string> template_search;
+    std::list<boost::filesystem::path> template_search;
 
   };
 

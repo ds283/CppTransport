@@ -13,6 +13,8 @@
 
 #include "filestack.h"
 
+#include "boost/filesystem/operations.hpp"
+
 
 class input_stack: public filestack_derivation_helper<input_stack>
   {
@@ -21,13 +23,13 @@ class input_stack: public filestack_derivation_helper<input_stack>
     // data structure for tracking the source of any lexeme
     struct inclusion
       {
-        std::string  name;
-        unsigned int line;
+        boost::filesystem::path  name;
+        unsigned int             line;
       };
 
     virtual ~input_stack() = default;
 
-    void         push                  (const std::string name);
+    void         push                  (const boost::filesystem::path name);
 
     virtual void         set_line      (unsigned int line) override;
     virtual unsigned int increment_line() override;

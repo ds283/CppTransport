@@ -11,9 +11,10 @@
 #include <string>
 #include <deque>
 
-
 #include "filestack.h"
 #include "buffer.h"
+
+#include "boost/filesystem/operations.hpp"
 
 
 // forward reference to avoid circularity
@@ -34,8 +35,8 @@ class output_stack: public filestack_derivation_helper<output_stack>
 
       public:
 
-		    inclusion(const std::string& i, unsigned int l, buffer& b, macro_agent& a, enum process_type t)
-			    : in(i),
+		    inclusion(const boost::filesystem::path i, unsigned int l, buffer& b, macro_agent& a, enum process_type t)
+			    : in(std::move(i)),
 			      line(l),
 			      buf(b),
 			      agent(a),
@@ -45,11 +46,11 @@ class output_stack: public filestack_derivation_helper<output_stack>
 
       public:
 
-        std::string       in;
-        unsigned int      line;
-        buffer&           buf;
-		    macro_agent&      agent;
-        enum process_type type;
+        boost::filesystem::path in;
+        unsigned int            line;
+        buffer&                 buf;
+		    macro_agent&            agent;
+        enum process_type       type;
 
       };
 
@@ -68,7 +69,7 @@ class output_stack: public filestack_derivation_helper<output_stack>
 		// PUSH AND POP
 
     // push an object to the top of the stack
-    void                      push          (const std::string& in, buffer& buf, macro_agent& agent, enum process_type type);
+    void                      push          (const boost::filesystem::path in, buffer& buf, macro_agent& agent, enum process_type type);
 
     virtual void              pop           () override;
 

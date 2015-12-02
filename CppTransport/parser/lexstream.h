@@ -58,7 +58,7 @@ class lexstream
 
   private:
 
-    bool parse(const std::string& file);
+    bool parse(const boost::filesystem::path& file);
 
     void lexicalize(lexfile& input);
 
@@ -197,19 +197,26 @@ bool lexstream<Keywords, Characters>::state()
 
 
 template <class Keywords, class Characters>
-bool lexstream<Keywords, Characters>::parse(const std::string& file)
+bool lexstream<Keywords, Characters>::parse(const boost::filesystem::path& file)
   {
-    std::string path = "";
-    bool        found = this->data_payload.get_finder().fqpn(file, path);
+    boost::filesystem::path path;
+    bool found = this->data_payload.get_finder().fqpn(file, path);
 
     if(found)
       {
-        // lexfile persists only within this block,
+        // the lexfile object reponsible for reading in a file persists only within this block,
         // but the lines it reads in are managed with std::shared_ptr<>
 
         // the lexemes which are generated during lexicalization
         // then inherit ownership of these lines, so even though the
         // lexfile object itself is destroyed we are not left with dangling pointers
+
+        // push parent directory into search paths
+        if(path.has_parent_path())
+          {
+            this->data_payload.get_finder().add(path.parent_path());
+          }
+
         lexfile input(path, this->stack);
 
         this->stack.push(path);
@@ -225,7 +232,7 @@ void lexstream<Keywords, Characters>::lexicalize(lexfile& input)
   {
     enum lexeme::minus_context context = lexeme::minus_context::unary;      // keep track of whether we expect unary or binary minus sign
 
-    while(input.current_state() == lex_ok)
+    while(input.current_state() == lexfile_outcome::ok)
       {
         enum lexeme::buffer_type type;
         std::string              word = this->get_lexeme(input, type);
@@ -290,23 +297,23 @@ void lexstream<Keywords, Characters>::lexicalize(lexfile& input)
 template <class Keywords, class Characters>
 std::string lexstream<Keywords, Characters>::get_lexeme(lexfile& input, enum lexeme::buffer_type& type)
   {
-    enum lexfile_outcome state = lex_ok;
+    enum lexfile_outcome state = lexfile_outcome::ok;
     char                 c     = 0;
 
     std::string          word   = "";
 
-	  while(word == "" && state == lex_ok)
+	  while(word == "" && state == lexfile_outcome::ok)
       {
         c = input.get(state);
 
-        if(state == lex_ok)
+        if(state == lexfile_outcome::ok)
           {
             if(isalpha(c) || c == '_' || c == '$')            // looks like identifier or reserved work
               {
                 word = c;
                 input.eat();
 
-                while((isalnum(c = input.get(state)) || c == '_' || c == '$') && state == lex_ok)
+                while((isalnum(c = input.get(state)) || c == '_' || c == '$') && state == lexfile_outcome::ok)
                   { word += c;
                     input.eat();
                   }
@@ -328,7 +335,7 @@ std::string lexstream<Keywords, Characters>::get_lexeme(lexfile& input, enum lex
                                             || c == 'A' || c == 'B' || c == 'D' || c == 'E' || c == 'F'))
                        || (hex == false && (c == 'e' || c == 'E'))
                        || (eng == true  && (c == '+' || c == '-')))
-                      && state == lex_ok)
+                      && state == lexfile_outcome::ok)
                   {
                     word += c;
 
@@ -346,7 +353,7 @@ std::string lexstream<Keywords, Characters>::get_lexeme(lexfile& input, enum lex
               {
                 input.eat();
 
-                while((c = input.get(state)) != '\n' && state == lex_ok)
+                while((c = input.get(state)) != '\n' && state == lexfile_outcome::ok)
                   {
                     input.eat();
                   }
@@ -360,7 +367,7 @@ std::string lexstream<Keywords, Characters>::get_lexeme(lexfile& input, enum lex
               {
                 word = c;
                 input.eat();
-                if((c = input.get(state)) == '>' && state == lex_ok)
+                if((c = input.get(state)) == '>' && state == lexfile_outcome::ok)
                   {
                     word += c;
                     input.eat();
@@ -371,11 +378,11 @@ std::string lexstream<Keywords, Characters>::get_lexeme(lexfile& input, enum lex
               {
                 word = c;
                 input.eat();
-                if((c = input.get(state)) == '.' && state == lex_ok)
+                if((c = input.get(state)) == '.' && state == lexfile_outcome::ok)
                   {
                     word += c;
                     input.eat();
-                    if((c = input.get(state)) == '.' && state == lex_ok)
+                    if((c = input.get(state)) == '.' && state == lexfile_outcome::ok)
                       {
                         word += c;
                         input.eat();
@@ -393,7 +400,7 @@ std::string lexstream<Keywords, Characters>::get_lexeme(lexfile& input, enum lex
               {
                 input.eat();
                 c = input.get(state);
-                while(c != '"' && state == lex_ok)
+                while(c != '"' && state == lexfile_outcome::ok)
                   {
                     word += c;
                     input.eat();

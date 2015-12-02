@@ -34,7 +34,7 @@ class translation_unit
   public:
 
     //! constructor
-    translation_unit(std::string file, finder& p, argument_cache& c, local_environment& e);
+    translation_unit(boost::filesystem::path file, finder& p, argument_cache& c, local_environment& e);
 
     //! destructor is default
     ~translation_unit() = default;
@@ -68,7 +68,7 @@ class translation_unit
     void context_error(const std::string& msg, const error_context& ctx);
 
     //! construct output name (input not const or taken by reference because modified internally)
-    std::string mangle_output_name(std::string input, const std::string& tag);
+    boost::filesystem::path mangle_output_name(const boost::filesystem::path& input, const std::string& tag);
 
     //! deduce template suffix from input name (input not const or taken by reference because modified internally)
     std::string get_template_suffix(std::string input);
@@ -79,24 +79,24 @@ class translation_unit
   private:
 
     // GiNaC symbol factory
-    symbol_factory     sym_factory;
+    symbol_factory          sym_factory;
 
-    std::string        name;                    // name of input script
-    bool               parse_failed;
+    boost::filesystem::path name;                    // name of input script
+    bool                    parse_failed;
 
-    finder&            path;
-    argument_cache&    cache;
-    local_environment& env;
-    output_stack       stack;
+    finder&                 path;
+    argument_cache&         cache;
+    local_environment&      env;
+    output_stack            stack;
 
-    lexstream_data     lexstream_payload;       // must be constructed *after* path, cache
-    y::lexstream_type  instream;
-    y::y_lexer         lexer;
-    y::y_driver        driver;
-    y::y_parser        parser;
+    lexstream_data          lexstream_payload;       // must be constructed *after* path, cache
+    y::lexstream_type       instream;
+    y::y_lexer              lexer;
+    y::y_driver             driver;
+    y::y_parser             parser;
 
-    translator_data    translator_payload;
-    translator         outstream;               // must be constructed *after* data_payload, path, stack, sym_factory
+    translator_data         translator_payload;
+    translator              outstream;               // must be constructed *after* data_payload, path, stack, sym_factory
 
   };
 

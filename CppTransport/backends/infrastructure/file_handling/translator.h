@@ -59,10 +59,10 @@ class translator
   protected:
 
     // internal API to process a file
-    unsigned int process(const std::string in, buffer& buf, enum process_type type, filter_function* filter);
+    unsigned int process(const boost::filesystem::path& in, buffer& buf, enum process_type type, filter_function* filter);
 
     // parse the header line from a template, tokenizing it into 'backend' and 'minimum version' data
-    void parse_header_line(const std::string in, const std::string line, std::string& backend, double& minver);
+    void parse_header_line(const boost::filesystem::path& in, const std::string line, std::string& backend, double& minver);
 
 
 		// INTERNAL DATA

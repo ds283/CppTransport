@@ -20,7 +20,7 @@ class lexstream_data
   public:
 
     //! constructor
-    lexstream_data(const std::string& name, error_context::error_handler e, error_context::warning_handler w, finder& s, argument_cache& c);
+    lexstream_data(const boost::filesystem::path& name, error_context::error_handler e, error_context::warning_handler w, finder& s, argument_cache& c);
 
     //! destructor is default
     ~lexstream_data() = default;
@@ -50,7 +50,7 @@ class lexstream_data
   public:
 
     //! get filename of model descriptor
-    const std::string& get_model_input() const { return(this->filename); }
+    const boost::filesystem::path& get_model_input() const { return(this->filename); }
 
 
     // INTERNAL DATA
@@ -58,7 +58,7 @@ class lexstream_data
   private:
 
     //! filename of model description
-    std::string filename;
+    boost::filesystem::path filename;
 
 
     // HANDLERS FOR ERROR_CONTEXT

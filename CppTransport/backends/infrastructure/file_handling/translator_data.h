@@ -30,7 +30,7 @@ class translator_data
   public:
 
     //! constructor
-    translator_data(const std::string& file,
+    translator_data(const boost::filesystem::path& file,
                     error_context::error_handler e, error_context::warning_handler w,
                     message_handler m, finder& f, output_stack& os, symbol_factory& s, y::y_driver& drv,
                     argument_cache& c);
@@ -54,7 +54,8 @@ class translator_data
 
   public:
 
-    void set_core_implementation(const std::string& co, const std::string& cg, const std::string& io, const std::string& ig);
+    void set_core_implementation(const boost::filesystem::path& co, const std::string& cg,
+                                 const boost::filesystem::path& io, const std::string& ig);
 
 
     // GET CORE, IMPLEMENTATION DATA
@@ -62,13 +63,13 @@ class translator_data
   public:
 
     //! get filename of model descriptor
-    const std::string& get_model_input() const { return(this->filename); }
+    const boost::filesystem::path& get_model_input() const { return(this->filename); }
 
     //! get filename of translated core
-    const std::string& get_core_output() const { return(this->core_output); }
+    const boost::filesystem::path& get_core_output() const { return(this->core_output); }
 
     //! get filename of translated implementation
-    const std::string& get_implementation_output() const { return(this->implementation_output); }
+    const boost::filesystem::path& get_implementation_output() const { return(this->implementation_output); }
 
     //! get header guard for translated core
     const std::string& get_core_guard() const { return(this->core_guard); }
@@ -147,7 +148,7 @@ class translator_data
   private:
 
     //! filename of model description
-    std::string filename;
+    boost::filesystem::path filename;
 
     //! message handler
     message_handler msg;
@@ -183,10 +184,10 @@ class translator_data
     // CORE, IMPLEMENTATION
 
     //! core output file name
-    std::string core_output;
+    boost::filesystem::path core_output;
 
     //! implementation output file name
-    std::string implementation_output;
+    boost::filesystem::path implementation_output;
 
     //! core header guard
     std::string core_guard;

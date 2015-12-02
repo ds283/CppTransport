@@ -193,7 +193,7 @@ namespace macro_packages
 
     std::string fundamental::replace_source(const std::vector<std::string>& args)
       {
-        return(this->data_payload.get_model_input());
+        return(this->data_payload.get_model_input().string());
       }
 
 
@@ -277,13 +277,13 @@ namespace macro_packages
 
     std::string fundamental::replace_header(const std::vector<std::string> &args)
       {
-        return(this->data_payload.get_implementation_output());
+        return(this->data_payload.get_implementation_output().string());
       }
 
 
     std::string fundamental::replace_core(const std::vector<std::string> &args)
       {
-        return(this->data_payload.get_core_output());
+        return(this->data_payload.get_core_output().string());
       }
 
 

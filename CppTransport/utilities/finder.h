@@ -2,8 +2,6 @@
 // Created by David Seery on 12/06/2013.
 // Copyright (c) 2013-15 University of Sussex. All rights reserved.
 //
-// To change the template use AppCode | Preferences | File Templates.
-//
 
 #ifndef __finder_H_
 #define __finder_H_
@@ -12,6 +10,8 @@
 #include <iostream>
 #include <string>
 #include <list>
+
+#include "boost/filesystem/operations.hpp"
 
 
 class finder
@@ -25,7 +25,7 @@ class finder
     finder();
 
     //! value constructor; sets search path as specified, but does not include current working directory
-    finder(std::string path);
+    finder(boost::filesystem::path path);
 
     //! destructor is default
     ~finder() = default;
@@ -36,10 +36,10 @@ class finder
   public:
 
     //! add a path to the search list
-    void add(const std::string& p);
+    void add(boost::filesystem::path p);
 
     //! add a list of paths to the search list
-    void add(const std::list<std::string>& plist);
+    void add(const std::list<boost::filesystem::path>& plist);
 
 
     // INTERFACE-- FIND FULLY-QUALIFIED PATHS
@@ -47,7 +47,7 @@ class finder
   public:
 
     // find fully-qualified path name corresponding to a given leafname
-    bool fqpn(const std::string leaf, std::string& fqpn);
+    bool fqpn(const boost::filesystem::path& leaf, boost::filesystem::path& fqpn);
 
 
     // INTERNAL DATA
@@ -55,7 +55,7 @@ class finder
   private:
 
     //! list of paths to search
-    std::list<std::string> paths;
+    std::list<boost::filesystem::path> paths;
 
   };
 

@@ -36,10 +36,10 @@ int main(int argc, const char *argv[])
     unsigned int files_processed = 0;
     unsigned int replacements    = 0;
 
-    const std::list<std::string> input_files = args.input_files();
-    for(std::list<std::string>::const_iterator t = input_files.begin(); t != input_files.end(); ++t)
+    const std::list<boost::filesystem::path> input_files = args.input_files();
+    for(const boost::filesystem::path& f : input_files)
       {
-        translation_unit unit(*t, path, args, env);
+        translation_unit unit(f, path, args, env);
         replacements += unit.apply();
         ++files_processed;
       }

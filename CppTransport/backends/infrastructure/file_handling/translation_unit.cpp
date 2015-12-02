@@ -103,7 +103,7 @@ static std::string  strip_dot_h(const std::string& pathname);
 static std::string  leafname   (const std::string& pathname);
 
 
-translation_unit::translation_unit(std::string file, finder& p, argument_cache& c, local_environment& e)
+translation_unit::translation_unit(boost::filesystem::path file, finder& p, argument_cache& c, local_environment& e)
   : name(file),
     path(p),
     cache(c),
@@ -139,7 +139,7 @@ translation_unit::translation_unit(std::string file, finder& p, argument_cache& 
     if(parser.parse() == FAIL || driver.failed())
 	    {
         std::ostringstream msg;
-        msg << WARNING_PARSING_FAILED << " '" << name << "'";
+        msg << WARNING_PARSING_FAILED << " " << name;
         this->warn(msg.str());
 		    parse_failed = true;
 	    }
@@ -149,10 +149,10 @@ translation_unit::translation_unit(std::string file, finder& p, argument_cache& 
 
     // cache details about this translation unit
 
-    std::string core_output;
-    std::string core_guard;
-    std::string implementation_output;
-    std::string implementation_guard;
+    boost::filesystem::path core_output;
+    std::string             core_guard;
+    boost::filesystem::path implementation_output;
+    std::string             implementation_guard;
 
     if(cache.core_out().length() > 0 )
       {
@@ -166,7 +166,7 @@ translation_unit::translation_unit(std::string file, finder& p, argument_cache& 
             core_output = this->mangle_output_name(name, this->get_template_suffix(*(*core)));
           }
       }
-    core_guard = boost::to_upper_copy(leafname(core_output));
+    core_guard = boost::to_upper_copy(leafname(core_output.string()));
     core_guard.erase(boost::remove_if(core_guard, boost::is_any_of(INVALID_GUARD_CHARACTERS)), core_guard.end());
 
     if(cache.implementation_out().length() > 0)
@@ -181,7 +181,7 @@ translation_unit::translation_unit(std::string file, finder& p, argument_cache& 
             implementation_output = this->mangle_output_name(name, this->get_template_suffix(*(*impl)));
           }
       }
-    implementation_guard = boost::to_upper_copy(leafname(implementation_output));
+    implementation_guard = boost::to_upper_copy(leafname(implementation_output.string()));
     implementation_guard.erase(boost::remove_if(implementation_guard, boost::is_any_of(INVALID_GUARD_CHARACTERS)), implementation_guard.end());
 
     this->translator_payload.set_core_implementation(core_output, core_guard, implementation_output, implementation_guard);
@@ -202,7 +202,7 @@ unsigned int translation_unit::apply()
     boost::optional< contexted_value<std::string>& > core = s.get_core();
     if(core)
       {
-        rval += this->outstream.translate(*(*core), (*core).get_declaration_point(), this->translator_payload.get_core_output(), process_core);
+        rval += this->outstream.translate(*(*core), (*core).get_declaration_point(), this->translator_payload.get_core_output().string(), process_core);
       }
     else
       {
@@ -213,7 +213,7 @@ unsigned int translation_unit::apply()
     boost::optional< contexted_value<std::string>& > impl = s.get_implementation();
     if(impl)
       {
-        rval += this->outstream.translate(*(*impl), (*core).get_declaration_point(), this->translator_payload.get_implementation_output(), process_implementation);
+        rval += this->outstream.translate(*(*impl), (*core).get_declaration_point(), this->translator_payload.get_implementation_output().string(), process_implementation);
       }
     else
       {
@@ -228,18 +228,17 @@ unsigned int translation_unit::apply()
 // ******************************************************************
 
 
-std::string translation_unit::mangle_output_name(std::string input, const std::string& tag)
+boost::filesystem::path translation_unit::mangle_output_name(const boost::filesystem::path& input, const std::string& tag)
   {
     size_t      pos = 0;
     std::string output;
 
-    if((pos = input.find(MODEL_SCRIPT_SUFFIX)) != std::string::npos)
-      {
-        if(pos == input.length() - MODEL_SCRIPT_SUFFIX_LENGTH) output = input.erase(input.length() - MODEL_SCRIPT_SUFFIX_LENGTH, std::string::npos) + "_" + tag;
-        else                                                   output = input + "_" + tag;
-      }
+    boost::filesystem::path h_extension(".h");
 
-    return(output + ".h");
+    boost::filesystem::path stem = input.stem();
+    boost::filesystem::path leaf = stem.leaf().string() + "_" + tag;
+
+    return(leaf.replace_extension(h_extension));
   }
 
 

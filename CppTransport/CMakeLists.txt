@@ -1,4 +1,4 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
 
 PROJECT(CppTransport)
 
@@ -17,52 +17,22 @@ SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -mavx -Ofast" CACHE STRING "c
 SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mavx -Ofast" CACHE STRING "compile flags" FORCE)
 
 
-SET(SPLINTER_LIBRARY "splinter-static-2-0")
-SET(JSONCPP_LIBRARY "jsoncpp_lib_static")
-
-
-# use version of Eigen3 bundled with SPLINTER
-SET(EIGEN3_INCLUDE_DIR "transport-runtime-api/thirdparty/splinter/thirdparty/Eigen")
-
-
-# pull in bundled SPLINTER library; on most platforms will need to switch default build to 64-bit
-SET(ARCH "x86-64")
-ADD_SUBDIRECTORY("transport-runtime-api/thirdparty/splinter" "splinter-build" EXCLUDE_FROM_ALL)
-
-
-# pull in bundled libjsoncpp library
-SET(BUILD_STATIC_LIBS)
-ADD_SUBDIRECTORY("transport-runtime-api/thirdparty/jsoncpp" "jsoncpp-build" EXCLUDE_FROM_ALL)
-
-
 # find Bison to produce parser
 FIND_PACKAGE(Bison 3.0 REQUIRED)
+
+
+ADD_SUBDIRECTORY(examples/axion-mpi "axion-mpi" EXCLUDE_FROM_ALL)
 
 
 # find required libraries
 FIND_PACKAGE(MPI REQUIRED)
 FIND_PACKAGE(Boost 1.56 REQUIRED COMPONENTS system filesystem random timer date_time mpi log_setup log serialization thread program_options)
 FIND_PACKAGE(GiNaC 1.6 REQUIRED)
-#find_package(CUDA REQUIRED)
-#find_package(OpenCL REQUIRED)
 
-
-INCLUDE_DIRECTORIES(
-  .
-  transport-runtime-api
-  transport-runtime-api/thirdparty/jsoncpp/include
-  transport-runtime-api/thirdparty/splinter/include
-  transport-runtime-api/thirdparty/odeint/include
-  /usr/include
-  /usr/local/include
-  ${EIGEN3_INCLUDE_DIR}
-  ${Boost_INCLUDE_DIRS}
-  ${MPI_CXX_INCLUDE_PATH}
-  ${OPENCL_INCLUDE_DIR}
-)
 
 # build parser
 BISON_TARGET(parser parser/bison/y_parser.yy ${CMAKE_CURRENT_BINARY_DIR}/y_parser.cpp)
+
 
 ADD_EXECUTABLE(CppTransport main.cpp
   backends/infrastructure/file_handling/buffer.cpp
@@ -150,6 +120,7 @@ TARGET_INCLUDE_DIRECTORIES(CppTransport PRIVATE
 INSTALL(TARGETS CppTransport DESTINATION bin)
 INSTALL(DIRECTORY templates DESTINATION share)
 INSTALL(DIRECTORY transport-runtime-api DESTINATION include)
+INSTALL(FILES cmake/Modules/FindCppTransport.cmake DESTINATION share/cmake/Modules)
 
 ADD_EXECUTABLE(dquad-mpi examples/dquad-mpi/main.cpp)
 TARGET_LINK_LIBRARIES(dquad-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
@@ -169,22 +140,6 @@ TARGET_LINK_LIBRARIES(quadratic-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} 
 
 ADD_EXECUTABLE(quadratic-makerepo examples/quadratic/makerepo.cpp)
 TARGET_LINK_LIBRARIES(quadratic-makerepo sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
-
-
-ADD_EXECUTABLE(axion-mpi examples/axion-mpi/main.cpp)
-TARGET_LINK_LIBRARIES(axion-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
-
-
-ADD_EXECUTABLE(axion-makerepo examples/axion-mpi/makerepo.cpp)
-TARGET_LINK_LIBRARIES(axion-makerepo sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
-
-
-ADD_EXECUTABLE(axion-makerepo2 examples/axion-mpi/makerepo2.cpp)
-TARGET_LINK_LIBRARIES(axion-makerepo2 sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
-
-
-ADD_EXECUTABLE(axion-makerepo3 examples/axion-mpi/makerepo3.cpp)
-TARGET_LINK_LIBRARIES(axion-makerepo3 sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
 
 
 ADD_EXECUTABLE(new-axion-mpi examples/new-axion/main.cpp)
