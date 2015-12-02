@@ -107,6 +107,14 @@ namespace lexeme    // package in a unique namespace
         void warn(const std::string& msg) const { this->err_context.warn(msg); }
 
 
+        // INTERFACE -- GET ERROR CONTEXT
+
+      public:
+
+        //! return error context
+        const error_context& get_error_context() const { return(this->err_context); }
+
+
         // INTERNAL DATA
 
       protected:

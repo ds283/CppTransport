@@ -227,7 +227,7 @@ namespace y
 
         if(ok)
 	        {
-            this->root.set_name(str);
+            this->root.set_name(str, *lex);
 	        }
         else
 	        {
@@ -243,7 +243,7 @@ namespace y
 
         if(ok)
 	        {
-            this->root.set_author(str);
+            this->root.set_author(str, *lex);
 	        }
         else
 	        {
@@ -259,7 +259,7 @@ namespace y
 
         if(ok)
 	        {
-            this->root.set_tag(str);
+            this->root.set_tag(str, *lex);
 	        }
         else
 	        {
@@ -275,7 +275,7 @@ namespace y
 
         if(ok)
 	        {
-            this->root.set_core(str);
+            this->root.set_core(str, *lex);
 	        }
         else
 	        {
@@ -291,7 +291,7 @@ namespace y
 
         if(ok)
 	        {
-            this->root.set_implementation(str);
+            this->root.set_implementation(str, *lex);
 	        }
         else
 	        {
@@ -307,7 +307,7 @@ namespace y
 
         if(ok)
 	        {
-            this->root.set_model(str);
+            this->root.set_model(str, *lex);
 	        }
         else
 	        {

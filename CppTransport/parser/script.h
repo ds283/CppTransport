@@ -22,6 +22,7 @@
 #include "filestack.h"
 #include "input_stack.h"
 #include "error_context.h"
+#include "contexted_value.h"
 
 #include "y_common.h"
 
@@ -210,12 +211,12 @@ class subexpr_declaration : public declaration
 	};
 
 
-#define DEFAULT_ABS_ERR   (1E-6)
-#define DEFAULT_REL_ERR   (1E-6)
-#define DEFAULT_STEP_SIZE (1E-2)
-#define DEFAULT_STEPPER   "runge_kutta_dopri5"
+constexpr double DEFAULT_ABS_ERR   = 1E-6;
+constexpr double DEFAULT_REL_ERR   = 1E-6;
+constexpr double DEFAULT_STEP_SIZE = 1E-2;
+constexpr auto   DEFAULT_STEPPER   = "runge_kutta_dopri5";
 
-#define SYMBOL_TABLE_SIZE (1024)
+constexpr unsigned int SYMBOL_TABLE_SIZE = 1024;
 
 
 class script
@@ -268,21 +269,14 @@ class script
 		bool add_subexpr(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& p, subexpr* e);
 
 
-    // POPULATE PARAMETERS AND SETTINGS
+    // MODEL DATA
 
   public:
-
-    void set_background_stepper(stepper* s);
-
-    void set_perturbations_stepper(stepper* s);
-
-    const struct stepper& get_background_stepper() const;
-
-    const struct stepper& get_perturbations_stepper() const;
 
     unsigned int get_number_fields() const;
 
     unsigned int get_number_params() const;
+
 
     std::vector<std::string> get_field_list() const;
 
@@ -300,39 +294,64 @@ class script
 
     const GiNaC::symbol& get_Mp_symbol() const;
 
-    void set_name(const std::string n);
-
-    const std::string& get_name() const;
-
-    void set_author(const std::string a);
-
-    const std::string& get_author() const;
-
-    void set_tag(const std::string t);
-
-    const std::string& get_tag() const;
-
-    void set_core(const std::string c);
-
-    const std::string& get_core() const;
-
-    void set_implementation(const std::string i);
-
-    const std::string& get_implementation() const;
-
-    void set_model(const std::string m);
-
-    const std::string& get_model() const;
 
     void set_indexorder(enum indexorder o);
 
     enum indexorder get_indexorder() const;
+
 
     void set_potential(GiNaC::ex V);
 
     GiNaC::ex get_potential() const;
 
     void unset_potential();
+
+
+    // BASIC METADATA
+
+  public:
+
+    void set_name(const std::string n, const y::lexeme_type& l);
+
+    boost::optional< contexted_value<std::string>& > get_name() const;
+
+
+    void set_author(const std::string a, const y::lexeme_type& l);
+
+    boost::optional< contexted_value<std::string>& > get_author() const;
+
+
+    void set_tag(const std::string t, const y::lexeme_type& l);
+
+    boost::optional< contexted_value<std::string>& > get_tag() const;
+
+
+    void set_core(const std::string c, const y::lexeme_type& l);
+
+    boost::optional< contexted_value<std::string>& > get_core() const;
+
+
+    void set_implementation(const std::string i, const y::lexeme_type& l);
+
+    boost::optional< contexted_value<std::string>& > get_implementation() const;
+
+
+    void set_model(const std::string m, const y::lexeme_type& l);
+
+    boost::optional< contexted_value<std::string>& > get_model() const;
+
+
+    // IMPLEMENTATION DATA
+
+  public:
+
+    void set_background_stepper(stepper* s);
+
+    void set_perturbations_stepper(stepper* s);
+
+    const struct stepper& get_background_stepper() const;
+
+    const struct stepper& get_perturbations_stepper() const;
 
 
 		// INTERNAL DATA
@@ -342,12 +361,12 @@ class script
     //! flag to indicate errors encountered during processing
     bool errors_encountered;
 
-    std::string name;
-    std::string author;
-    std::string tag;
-    std::string core;
-    std::string implementation;
-    std::string model;
+    std::unique_ptr< contexted_value<std::string> > name;
+    std::unique_ptr< contexted_value<std::string> > author;
+    std::unique_ptr< contexted_value<std::string> > tag;
+    std::unique_ptr< contexted_value<std::string> > core;
+    std::unique_ptr< contexted_value<std::string> > implementation;
+    std::unique_ptr< contexted_value<std::string> > model;
 
     enum indexorder order;
 

@@ -64,7 +64,14 @@ void warn(const std::string& msg, const argument_cache& cache, const local_envir
 
     bool colour_output = cache.colourize() && env.has_colour_terminal_support();
 
-    out << ERROR_MESSAGE_AT_LINE << " " << context.get_filestack().write(level) << '\n';
+    try
+      {
+        out << ERROR_MESSAGE_AT_LINE << " " << context.get_filestack().write(level) << '\n';
+      }
+    catch(std::runtime_error& xe)
+      {
+      }
+
     out << ERROR_MESSAGE_WRAP_PAD << (colour_output ? ANSI_BOLD_RED : "") << msg << (colour_output ? ANSI_NORMAL : "") << '\n';
 
     if(context.has_full_context())
@@ -89,12 +96,20 @@ void error(const std::string& msg, const argument_cache& cache, const local_envi
 
     bool colour_output = cache.colourize() && env.has_colour_terminal_support();
 
-    out << ERROR_MESSAGE_AT_LINE << " " << context.get_filestack().write(level) << '\n';
+    try
+      {
+        out << ERROR_MESSAGE_AT_LINE << " " << context.get_filestack().write(level) << '\n';
+      }
+    catch(std::runtime_error& xe)
+      {
+      }
+
     out << ERROR_MESSAGE_WRAP_PAD << (colour_output ? ANSI_BOLD_RED : "") << msg << (colour_output ? ANSI_NORMAL : "") << '\n';
-    out << ERROR_MESSAGE_WRAP_PAD << context.get_line() << '\n';
 
     if(context.has_full_context())
       {
+        out << ERROR_MESSAGE_WRAP_PAD << context.get_line() << '\n';
+
         out << ERROR_MESSAGE_WRAP_PAD;
         for(unsigned int i = 0; i < context.get_position(); ++i)
           {

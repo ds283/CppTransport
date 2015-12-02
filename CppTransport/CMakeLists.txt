@@ -762,7 +762,7 @@ SET(BACKENDS_INFRASTRUCTURE_FILE_HANDLING_FILES
   backends/infrastructure/file_handling/translator_data.cpp
   backends/infrastructure/file_handling/translator_data.h
   backends/infrastructure/file_handling/lexstream_data.cpp
-  backends/infrastructure/file_handling/lexstream_data.h)
+  backends/infrastructure/file_handling/lexstream_data.h backends/infrastructure/file_handling/contexted_value.h)
 
 SET(EXAMPLES_INFLECTION_FILES
   examples/inflection/main.cpp

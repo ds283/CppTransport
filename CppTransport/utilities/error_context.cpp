@@ -47,14 +47,14 @@ void error_context::warn(const std::string& msg) const
 
 const filestack& error_context::get_filestack() const
   {
-    if(!this->stack) throw std::runtime_error(ERROR_NOT_FULL_CONTEXT);
+    if(!this->stack) throw std::runtime_error(ERROR_NO_STACK_REGISTERED);
     return(*this->stack);
   }
 
 
 const std::string& error_context::get_line() const
   {
-    if(!this->line ||!this->full_context) throw std::runtime_error(ERROR_NOT_FULL_CONTEXT);
+    if(!this->line || !this->full_context) throw std::runtime_error(ERROR_NOT_FULL_CONTEXT);
     return(*this->line);
   }
 

@@ -12,6 +12,7 @@
 #define ERROR_NO_WARNING_HANDLER              "Internal error: no registered warning handler"
 #define ERROR_NO_MESSAGE_HANDLER              "Internal error: no registered message handler"
 #define ERROR_NOT_FULL_CONTEXT                "Internal error: attempt to unpack error context without full context data"
+#define ERROR_NO_STACK_REGISTERED             "Internal error: attempt to unpack error context with no filestack data"
 
 #define ERROR_MESSAGE_AT_LINE                 "at line"
 #define ERROR_MESSAGE_WRAP_PAD                "  "

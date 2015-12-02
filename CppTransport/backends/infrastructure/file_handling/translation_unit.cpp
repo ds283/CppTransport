@@ -160,7 +160,11 @@ translation_unit::translation_unit(std::string file, finder& p, argument_cache& 
       }
     else
       {
-        core_output = this->mangle_output_name(name, this->get_template_suffix(driver.get_script().get_core()));
+        boost::optional< contexted_value<std::string>& > core = driver.get_script().get_core();
+        if(core)
+          {
+            core_output = this->mangle_output_name(name, this->get_template_suffix(*(*core)));
+          }
       }
     core_guard = boost::to_upper_copy(leafname(core_output));
     core_guard.erase(boost::remove_if(core_guard, boost::is_any_of(INVALID_GUARD_CHARACTERS)), core_guard.end());
@@ -171,7 +175,11 @@ translation_unit::translation_unit(std::string file, finder& p, argument_cache& 
       }
     else
       {
-        implementation_output = this->mangle_output_name(name, this->get_template_suffix(driver.get_script().get_implementation()));
+        boost::optional< contexted_value<std::string>& > impl = driver.get_script().get_implementation();
+        if(impl)
+          {
+            implementation_output = this->mangle_output_name(name, this->get_template_suffix(*(*impl)));
+          }
       }
     implementation_guard = boost::to_upper_copy(leafname(implementation_output));
     implementation_guard.erase(boost::remove_if(implementation_guard, boost::is_any_of(INVALID_GUARD_CHARACTERS)), implementation_guard.end());
@@ -191,26 +199,26 @@ unsigned int translation_unit::apply()
 
     const script& s = this->driver.get_script();
 
-    std::string in = s.get_core();
-    if(in != "")
+    boost::optional< contexted_value<std::string>& > core = s.get_core();
+    if(core)
       {
-        rval += this->outstream.translate(in, this->translator_payload.get_core_output(), process_core);
+        rval += this->outstream.translate(*(*core), (*core).get_declaration_point(), this->translator_payload.get_core_output(), process_core);
       }
     else
       {
         this->error(ERROR_NO_CORE_TEMPLATE);
-        exit(EXIT_FAILURE);
+//        exit(EXIT_FAILURE);
       }
 
-    in = s.get_implementation();
-    if(in != "")
+    boost::optional< contexted_value<std::string>& > impl = s.get_implementation();
+    if(impl)
       {
-        rval += this->outstream.translate(in, this->translator_payload.get_implementation_output(), process_implementation);
+        rval += this->outstream.translate(*(*impl), (*core).get_declaration_point(), this->translator_payload.get_implementation_output(), process_implementation);
       }
     else
       {
         this->error(ERROR_NO_IMPLEMENTATION_TEMPLATE);
-        exit(EXIT_FAILURE);
+//        exit(EXIT_FAILURE);
       }
 
     return(rval);

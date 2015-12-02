@@ -199,7 +199,19 @@ namespace macro_packages
 
     std::string fundamental::replace_uid(const std::vector<std::string>& args)
       {
-        std::string unique_string = this->data_payload.get_name() + this->data_payload.get_author() + this->data_payload.get_tag() + this->data_payload.get_model() + CPPTRANSPORT_VERSION;
+        boost::optional< contexted_value<std::string>& > nm_value = this->data_payload.get_name();
+        std::string name = nm_value ? *(*nm_value) : std::string();
+
+        boost::optional< contexted_value<std::string>& > au_value = this->data_payload.get_author();
+        std::string author = au_value ? *(*au_value) : std::string();
+
+        boost::optional< contexted_value<std::string>& > tg_value = this->data_payload.get_tag();
+        std::string tag = tg_value ? *(*tg_value) : std::string();
+
+        boost::optional< contexted_value<std::string>& > md_value = this->data_payload.get_model();
+        std::string model = md_value ? *(*md_value) : std::string();
+
+        std::string unique_string = name + author + tag + model + CPPTRANSPORT_VERSION;
         boost::uuids::string_generator gen;
         boost::uuids::uuid id = gen(unique_string);
 
@@ -209,25 +221,57 @@ namespace macro_packages
 
     std::string fundamental::replace_name(const std::vector<std::string> &args)
       {
-        return(this->data_payload.get_name());
+        boost::optional< contexted_value<std::string>& > value = this->data_payload.get_name();
+        if(value)
+          {
+            return *(*value);
+          }
+        else
+          {
+            return(std::string());
+          }
       }
 
 
     std::string fundamental::replace_author(const std::vector<std::string> &args)
       {
-        return(this->data_payload.get_author());
+        boost::optional< contexted_value<std::string>& > value = this->data_payload.get_author();
+        if(value)
+          {
+            return *(*value);
+          }
+        else
+          {
+            return(std::string());
+          }
       }
 
 
     std::string fundamental::replace_tag(const std::vector<std::string> &args)
       {
-        return(this->data_payload.get_tag());
+        boost::optional< contexted_value<std::string>& > value = this->data_payload.get_tag();
+        if(value)
+          {
+            return *(*value);
+          }
+        else
+          {
+            return(std::string());
+          }
       }
 
 
     std::string fundamental::replace_model(const std::vector<std::string>& args)
       {
-        return(this->data_payload.get_model());
+        boost::optional< contexted_value<std::string>& > value = this->data_payload.get_model();
+        if(value)
+          {
+            return *(*value);
+          }
+        else
+          {
+            return(std::string());
+          }
       }
 
 

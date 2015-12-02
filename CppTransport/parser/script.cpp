@@ -132,7 +132,6 @@ std::vector<bool>            fake_context_table;
 script::script(symbol_factory& s, error_context err_ctx)
   : potential_set(false),
     errors_encountered(false),
-    model(DEFAULT_MODEL_NAME),
     order(indexorder::right),
 		sym_factory(s)
   {
@@ -182,79 +181,127 @@ boost::optional<declaration&> script::check_symbol_exists(const std::string& nm)
 		if(s_it != this->subexprs.end()) return *s_it->second;
 
 		// didn't find anything
-		return boost::optional<declaration&>();
+		return(boost::none);
 	}
 
 
-void script::set_name(const std::string n)
+void script::set_name(const std::string n, const y::lexeme_type& l)
   {
-    this->name = n;
+    this->name.release();
+    this->name = std::make_unique< contexted_value<std::string> >(n, l.get_error_context());
   }
 
 
-const std::string& script::get_name() const
+boost::optional< contexted_value<std::string>& > script::get_name() const
   {
-    return(this->name);
+    if(this->name)
+      {
+        return(*this->name);
+      }
+    else
+      {
+        return(boost::none);
+      }
   }
 
 
-void script::set_author(const std::string a)
+void script::set_author(const std::string a, const y::lexeme_type& l)
   {
-    this->author = a;
+    this->author.release();
+    this->author = std::make_unique< contexted_value<std::string> >(a, l.get_error_context());
   }
 
 
-const std::string& script::get_author() const
+boost::optional< contexted_value<std::string>& > script::get_author() const
   {
-    return(this->author);
+    if(this->author)
+      {
+        return(*this->author);
+      }
+    else
+      {
+        return(boost::none);
+      }
   }
 
 
-void script::set_tag(const std::string t)
+void script::set_tag(const std::string t, const y::lexeme_type& l)
   {
-    this->tag = t;
+    this->tag.release();
+    this->tag = std::make_unique< contexted_value<std::string> >(t, l.get_error_context());
   }
 
 
-const std::string& script::get_tag() const
+boost::optional< contexted_value<std::string>& > script::get_tag() const
   {
-    return(this->tag);
+    if(this->tag)
+      {
+        return(*this->tag);
+      }
+    else
+      {
+        return(boost::none);
+      }
   }
 
 
-void script::set_core(const std::string c)
+void script::set_core(const std::string c, const y::lexeme_type& l)
   {
-    this->core = c;
+    this->core.release();
+    this->core = std::make_unique< contexted_value<std::string> >(c, l.get_error_context());
   }
 
 
-const std::string& script::get_core() const
+boost::optional< contexted_value<std::string>& > script::get_core() const
   {
-    return(this->core);
+    if(this->core)
+      {
+        return(*this->core);
+      }
+    else
+      {
+        return(boost::none);
+      }
   }
 
 
-void script::set_implementation(const std::string i)
+void script::set_implementation(const std::string i, const y::lexeme_type& l)
   {
-    this->implementation = i;
+    this->implementation.release();
+    this->implementation = std::make_unique< contexted_value<std::string> >(i, l.get_error_context());
   }
 
 
-const std::string& script::get_implementation() const
+boost::optional< contexted_value<std::string>& > script::get_implementation() const
   {
-    return(this->implementation);
+    if(this->implementation)
+      {
+        return(*this->implementation);
+      }
+    else
+      {
+        return(boost::none);
+      }
   }
 
 
-void script::set_model(const std::string m)
+void script::set_model(const std::string m, const y::lexeme_type& l)
   {
-    this->model = m;
+    this->model.release();
+    this->model = std::make_unique< contexted_value<std::string> >(m, l.get_error_context());
   }
 
 
-const std::string& script::get_model() const
+boost::optional< contexted_value<std::string>& > script::get_model() const
   {
-    return(this->model);
+    if(this->model)
+      {
+        return(*this->model);
+      }
+    else
+      {
+        return(boost::none);
+      }
   }
 
 
@@ -272,14 +319,21 @@ enum indexorder script::get_indexorder() const
 
 void script::print(std::ostream& stream) const
   {
+    std::string name = this->name ? *(*this->name) : std::string();
+    std::string author = this->author ? *(*this->author) : std::string();
+    std::string tag = this->tag ? *(*this->tag) : std::string();
+    std::string model = this->model ? *(*this->model) : std::string();
+    std::string core = this->core ? *(*this->core) : std::string();
+    std::string impl = this->implementation ? *(*this->implementation) : std::string();
+
     stream << "Script summary:" << '\n';
     stream << "===============" << '\n';
-    stream << "  Name           = '" << this->name << "'" << '\n';
-    stream << "  Model          = '" << this->model << "'" << '\n';
-    stream << "  Author         = '" << this->author << "'" << '\n';
-    stream << "  Tag            = '" << this->tag << "'" << '\n';
-    stream << "  Core           = '" << this->core << "'" << '\n';
-    stream << "  Implementation = '" << this->implementation << "'" << '\n';
+    stream << "  Name           = '" << name << "'" << '\n';
+    stream << "  Model          = '" << model << "'" << '\n';
+    stream << "  Author         = '" << author << "'" << '\n';
+    stream << "  Tag            = '" << tag << "'" << '\n';
+    stream << "  Core           = '" << core << "'" << '\n';
+    stream << "  Implementation = '" << impl << "'" << '\n';
     stream << '\n';
 
     stream << "Fields:" << '\n';

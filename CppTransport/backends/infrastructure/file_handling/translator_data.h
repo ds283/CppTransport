@@ -15,6 +15,7 @@
 #include "symbol_factory.h"
 #include "y_driver.h"
 #include "error_context.h"
+#include "contexted_value.h"
 #include "argument_cache.h"
 
 
@@ -82,13 +83,13 @@ class translator_data
 
     bool get_do_cse() const;
 
-    const std::string& get_name() const;
+    boost::optional< contexted_value<std::string>& > get_name() const;
 
-    const std::string& get_author() const;
+    boost::optional< contexted_value<std::string>& > get_author() const;
 
-    const std::string& get_model() const;
+    boost::optional< contexted_value<std::string>& > get_model() const;
 
-    const std::string& get_tag() const;
+    boost::optional< contexted_value<std::string>& > get_tag() const;
 
     unsigned int    get_number_fields() const;
 

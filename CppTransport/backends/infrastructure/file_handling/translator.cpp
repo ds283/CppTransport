@@ -46,17 +46,17 @@ void translator::print_advisory(const std::string& msg)
 	}
 
 
-unsigned int translator::translate(const std::string& in, const std::string& out, enum process_type type, filter_function* filter)
+unsigned int translator::translate(const std::string& in, const error_context& ctx, const std::string& out, enum process_type type, filter_function* filter)
   {
 		buffer buf(out);
 
-    unsigned int rval = this->translate(in, buf, type, filter);
+    unsigned int rval = this->translate(in, ctx, buf, type, filter);
 
     return(rval);
   }
 
 
-unsigned int translator::translate(const std::string& in, buffer& buf, enum process_type type, filter_function* filter)
+unsigned int translator::translate(const std::string& in, const error_context& ctx, buffer& buf, enum process_type type, filter_function* filter)
   {
     unsigned int rval = 0;
     std::string  template_in;
@@ -77,8 +77,7 @@ unsigned int translator::translate(const std::string& in, buffer& buf, enum proc
         std::ostringstream msg;
         msg << ERROR_MISSING_TEMPLATE << " '" << in << ".h'";
 
-        error_context err_context(this->data_payload.get_stack(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
-        err_context.error(msg.str());
+        ctx.error(msg.str());
       }
 
     return(rval);

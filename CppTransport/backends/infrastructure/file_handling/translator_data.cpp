@@ -29,25 +29,25 @@ bool translator_data::get_do_cse() const
   }
 
 
-const std::string& translator_data::get_name() const
+boost::optional< contexted_value<std::string>& > translator_data::get_name() const
   {
     return(this->driver.get_script().get_name());
   }
 
 
-const std::string& translator_data::get_author() const
+boost::optional< contexted_value<std::string>& > translator_data::get_author() const
   {
     return(this->driver.get_script().get_author());
   }
 
 
-const std::string& translator_data::get_model() const
+boost::optional< contexted_value<std::string>& > translator_data::get_model() const
   {
     return(this->driver.get_script().get_model());
   }
 
 
-const std::string& translator_data::get_tag() const
+boost::optional< contexted_value<std::string>& > translator_data::get_tag() const
   {
     return(this->driver.get_script().get_tag());
   }
