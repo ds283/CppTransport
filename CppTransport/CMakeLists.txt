@@ -2,6 +2,13 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 
 PROJECT(CppTransport)
 
+# silence CMake warning about @rpath
+# this is relevant only for shared libraries which we're not using, so has
+# no consequences for us
+SET(CMAKE_MACOSX_RPATH TRUE)
+
+# don't build all targets when installing
+SET(CMAKE_SKIP_INSTALL_ALL_DEPENDENCY TRUE)
 
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/splinter/cmake/")
@@ -9,22 +16,23 @@ SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/splinter/cmake/"
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -mavx -Ofast" CACHE STRING "compile flags" FORCE)
 SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mavx -Ofast" CACHE STRING "compile flags" FORCE)
 
-SET(JSONCPP_AMALGAMATED "transport-runtime-api/thirdparty/jsoncpp/jsoncpp.cpp")
+
 SET(SPLINTER_LIBRARY "splinter-static-2-0")
 SET(JSONCPP_LIBRARY "jsoncpp_lib_static")
+
 
 # use version of Eigen3 bundled with SPLINTER
 SET(EIGEN3_INCLUDE_DIR "transport-runtime-api/thirdparty/splinter/thirdparty/Eigen")
 
 
-# pull in bundled SPLINTER sources; on most platforms will need to switch default build to 64-bit
+# pull in bundled SPLINTER library; on most platforms will need to switch default build to 64-bit
 SET(ARCH "x86-64")
-ADD_SUBDIRECTORY("transport-runtime-api/thirdparty/splinter" "splinter-build")
+ADD_SUBDIRECTORY("transport-runtime-api/thirdparty/splinter" "splinter-build" EXCLUDE_FROM_ALL)
 
 
-# pull in bundles libjsoncpp sources
+# pull in bundled libjsoncpp library
 SET(BUILD_STATIC_LIBS)
-ADD_SUBDIRECTORY("transport-runtime-api/thirdparty/jsoncpp" "jsoncpp-build")
+ADD_SUBDIRECTORY("transport-runtime-api/thirdparty/jsoncpp" "jsoncpp-build" EXCLUDE_FROM_ALL)
 
 
 # find Bison to produce parser
@@ -39,26 +47,8 @@ FIND_PACKAGE(GiNaC 1.6 REQUIRED)
 #find_package(OpenCL REQUIRED)
 
 
-INCLUDE_DIRECTORIES(./ backends
-  backends/infrastructure
-  backends/infrastructure/file_handling
-  backends/infrastructure/language_concepts
-  backends/infrastructure/macro_substitution
-  backends/infrastructure/replacement_rules
-  backends/languages
-  backends/languages/cpp
-  backends/languages/cpp/core
-  backends/languages/cpp/vexcl
-  backends/languages/cuda
-  backends/languages/opencl
-  backends/languages/shared
-  backends/shared
-  backends/utilities
-  concepts
-  parser
-  parser/bison
-  transport-objects
-  utilities
+INCLUDE_DIRECTORIES(
+  .
   transport-runtime-api
   transport-runtime-api/thirdparty/jsoncpp/include
   transport-runtime-api/thirdparty/splinter/include
@@ -68,9 +58,8 @@ INCLUDE_DIRECTORIES(./ backends
   ${EIGEN3_INCLUDE_DIR}
   ${Boost_INCLUDE_DIRS}
   ${MPI_CXX_INCLUDE_PATH}
-  ${GINAC_INCLUDE_DIRS}
   ${OPENCL_INCLUDE_DIR}
-  ${CMAKE_CURRENT_BINARY_DIR})
+)
 
 # build parser
 BISON_TARGET(parser parser/bison/y_parser.yy ${CMAKE_CURRENT_BINARY_DIR}/y_parser.cpp)
@@ -125,10 +114,42 @@ ADD_EXECUTABLE(CppTransport main.cpp
   utilities/formatter.cpp
   utilities/to_printable.cpp
   utilities/local_environment.cpp
-  utilities/argument_cache.cpp)
+  utilities/argument_cache.cpp
+)
 
 TARGET_LINK_LIBRARIES(CppTransport ${GINAC_LIBRARIES} ${Boost_LIBRARIES})
 
+TARGET_INCLUDE_DIRECTORIES(CppTransport PRIVATE
+  ./
+  backends
+  backends/infrastructure
+  backends/infrastructure/file_handling
+  backends/infrastructure/language_concepts
+  backends/infrastructure/macro_substitution
+  backends/infrastructure/replacement_rules
+  backends/languages
+  backends/languages/cpp
+  backends/languages/cpp/core
+  backends/languages/cpp/vexcl
+  backends/languages/cuda
+  backends/languages/opencl
+  backends/languages/shared
+  backends/shared
+  backends/utilities
+  concepts
+  parser
+  transport-objects
+  utilities
+  ${Boost_INCLUDE_DIRS}
+  ${GINAC_INCLUDE_DIRS}
+  ${CMAKE_CURRENT_BINARY_DIR}
+)
+
+
+# install targets for CppTransport translator, templates, and header-only library/runtime API
+INSTALL(TARGETS CppTransport DESTINATION bin)
+INSTALL(DIRECTORY templates DESTINATION share)
+INSTALL(DIRECTORY transport-runtime-api DESTINATION include)
 
 ADD_EXECUTABLE(dquad-mpi examples/dquad-mpi/main.cpp)
 TARGET_LINK_LIBRARIES(dquad-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${SPLINTER_LIBRARY} ${JSONCPP_LIBRARY})
