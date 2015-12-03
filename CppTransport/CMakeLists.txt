@@ -118,11 +118,15 @@ TARGET_INCLUDE_DIRECTORIES(CppTransport PRIVATE
 )
 
 
+# pull in test target
+ADD_SUBDIRECTORY(test-target EXCLUDE_FROM_ALL)
+
+
 # install targets for CppTransport translator, templates, and header-only library/runtime API
 INSTALL(TARGETS CppTransport DESTINATION bin)
 INSTALL(DIRECTORY templates DESTINATION share)
 INSTALL(DIRECTORY transport-runtime-api DESTINATION include)
-INSTALL(FILES cmake/Modules/FindCppTransport.cmake DESTINATION share/cmake/Modules)
+INSTALL(FILES cmake/FindCppTransport.cmake DESTINATION share/cmake/Modules)
 
 
 ## FILL IN DUMMY TARGETS FOR CLION
