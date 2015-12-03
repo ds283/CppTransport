@@ -14,9 +14,9 @@
 
 #include <assert.h>
 
-#include "datatable.h"
-#include "bsplineapproximant.h"
-#include "psplineapproximant.h"
+#include "SPLINTER/datatable.h"
+#include "SPLINTER/bsplineapproximant.h"
+#include "SPLINTER/psplineapproximant.h"
 
 namespace transport
   {

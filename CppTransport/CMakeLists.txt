@@ -1,4 +1,4 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.3)
 
 PROJECT(CppTransport)
 
@@ -22,8 +22,8 @@ FIND_PACKAGE(Bison 3.0 REQUIRED)
 
 
 # pull in bundled JsonCpp and SPLINTER libraries
-ADD_SUBDIRECTORY(transport-runtime-api/thirdparty/splinter "splinter-build")
-ADD_SUBDIRECTORY(transport-runtime-api/thirdparty/jsoncpp  "jsoncpp-build")
+ADD_SUBDIRECTORY(thirdparty/splinter)
+ADD_SUBDIRECTORY(thirdparty/jsoncpp)
 
 
 # find required libraries
