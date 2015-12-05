@@ -13,9 +13,9 @@ FIND_PACKAGE(Boost 1.56 REQUIRED COMPONENTS system filesystem random timer date_
 #find_package(OpenCL REQUIRED)
 
 
-SET(CPPTRANSPORT_INCLUDE_DIR ..)
-SET(CPPTRANSPORT_JSONCPP_INCLUDE_DIR ../thirdparty/jsoncpp/include)
-SET(CPPTRANSPORT_SPLINTER_EIGEN_DIR ../thirdparty/splinter/thirdparty/Eigen)
+SET(CPPTRANSPORT_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/..)
+SET(CPPTRANSPORT_JSONCPP_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../thirdparty/jsoncpp/include)
+SET(CPPTRANSPORT_SPLINTER_EIGEN_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../thirdparty/splinter/thirdparty/Eigen)
 
 
 # main SPLINTER includes have a different relative position in the build tree
@@ -48,7 +48,11 @@ SET(
 )
 
 
-ADD_EXECUTABLE(test-target test_target.cpp ${AXION_HEADERS})
+ADD_CUSTOM_TARGET(AxionGenerator DEPENDS ${AXION_HEADERS})
+
+
+ADD_EXECUTABLE(test-target test_target.cpp)
+ADD_DEPENDENCIES(test-target AxionGenerator)
 TARGET_LINK_LIBRARIES(test-target sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${CPPTRANSPORT_LIBRARIES})
 
 
