@@ -13,8 +13,8 @@
 #include "msg_en.h"
 
 constexpr auto CPPTRANSPORT_NAME            = "CppTransport";
-constexpr auto CPPTRANSPORT_VERSION         = "0.12";
-constexpr auto CPPTRANSPORT_NUMERIC_VERSION = 0.12;
+constexpr auto CPPTRANSPORT_VERSION         = "0.13";
+constexpr auto CPPTRANSPORT_NUMERIC_VERSION = 0.13;
 constexpr auto CPPTRANSPORT_COPYRIGHT       = "(c) University of Sussex 2013-15";
 
 constexpr auto MODEL_SCRIPT_SUFFIX          = ".model";
