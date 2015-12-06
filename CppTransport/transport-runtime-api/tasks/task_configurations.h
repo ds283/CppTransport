@@ -15,8 +15,11 @@
 // forward-declare derived products if needed
 #include "transport-runtime-api/derived-products/derived_product_forward_declare.h"
 
-#define __CPP_TRANSPORT_DEFAULT_K_PRECISION (6)
-#define __CPP_TRANSPORT_DEFAULT_T_PRECISION (2)
+#include "boost/log/utility/formatting_ostream.hpp"
+
+
+#define CPPTRANSPORT_DEFAULT_K_PRECISION (6)
+#define CPPTRANSPORT_DEFAULT_T_PRECISION (2)
 
 
 namespace transport
@@ -39,19 +42,33 @@ namespace transport
 				double&       get_value()        { return(this->t); }
 				const double& get_value()  const { return(this->t); }
 
-				//! Output to a standard stream
-				friend std::ostream& operator<<(std::ostream& out, const time_config& obj);
-			};
+        template <typename Stream> void write(Stream& out) const;
+      };
 
 
-		std::ostream& operator<<(std::ostream& out, const time_config& obj)
+    template <typename Stream>
+    void time_config::write(Stream& out) const
+      {
+        std::ostringstream str;
+        str << std::setprecision(CPPTRANSPORT_DEFAULT_T_PRECISION) << this->t;
+        out << CPPTRANSPORT_TIME_CONFIG_SERIAL << " " << this->serial << ", " << CPPTRANSPORT_TIME_CONFIG_TEQUALS << " " << str.str() << '\n';
+      }
+
+
+    template <typename Char, typename Traits>
+		std::basic_ostream<Char, Traits>& operator<<(std::basic_ostream<Char, Traits>& out, const time_config& obj)
 			{
-		    std::ostringstream str;
-				str << std::setprecision(__CPP_TRANSPORT_DEFAULT_T_PRECISION) << obj.t;
-				out << __CPP_TRANSPORT_TIME_CONFIG_SERIAL << " " << obj.serial << ", " << __CPP_TRANSPORT_TIME_CONFIG_TEQUALS << " " << str.str() << std::endl;
-
+        obj.write(out);
 				return(out);
 			}
+
+
+    template <typename Char, typename Traits, typename Allocator>
+    boost::log::basic_formatting_ostream<Char, Traits, Allocator>& operator<<(boost::log::basic_formatting_ostream<Char, Traits, Allocator>& out, const time_config& obj)
+      {
+        obj.write(out);
+        return(out);
+      }
 
 
     // K-CONFIGURATION DATA
@@ -74,25 +91,39 @@ namespace transport
 		    //! time of horizon exit
 		    double t_exit;
 
-        //! Output to a standard stream
-        friend std::ostream& operator<<(std::ostream& out, const twopf_kconfig& obj);
+        template <typename Stream> void write(Stream& out) const;
 	    };
 
 
-    std::ostream& operator<<(std::ostream& out, const twopf_kconfig& obj)
-	    {
+    template <typename Stream>
+    void twopf_kconfig::write(Stream& out) const
+      {
         std::ostringstream str;
-        str << std::setprecision(__CPP_TRANSPORT_DEFAULT_K_PRECISION) << obj.k_comoving;
+        str << std::setprecision(CPPTRANSPORT_DEFAULT_K_PRECISION) << this->k_comoving;
 
         std::ostringstream exit_str;
-		    exit_str << std::setprecision(__CPP_TRANSPORT_DEFAULT_K_PRECISION) << obj.t_exit;
+        exit_str << std::setprecision(CPPTRANSPORT_DEFAULT_K_PRECISION) << this->t_exit;
 
-        out << __CPP_TRANSPORT_KCONFIG_SERIAL << " " << obj.serial << ", "
-	        << __CPP_TRANSPORT_KCONFIG_KEQUALS << " " << str.str() << ", "
-	        << __CPP_TRANSPORT_KCONFIG_T_EXIT << " " << exit_str.str() << std::endl;
+        out << CPPTRANSPORT_KCONFIG_SERIAL << " " << this->serial << ", "
+        << CPPTRANSPORT_KCONFIG_KEQUALS << " " << str.str() << ", "
+        << CPPTRANSPORT_KCONFIG_T_EXIT << " " << exit_str.str() << '\n';
+      }
 
+
+    template <typename Char, typename Traits>
+    std::basic_ostream<Char, Traits>& operator<<(std::basic_ostream<Char, Traits>& out, const twopf_kconfig& obj)
+	    {
+        obj.write(out);
         return(out);
 	    }
+
+
+    template <typename Char, typename Traits, typename Allocator>
+    boost::log::basic_formatting_ostream<Char, Traits, Allocator>& operator<<(boost::log::basic_formatting_ostream<Char, Traits, Allocator>& out, const twopf_kconfig& obj)
+      {
+        obj.write(out);
+        return(out);
+      }
 
 
     class threepf_kconfig
@@ -126,28 +157,42 @@ namespace transport
 		    //! horizon-exit time
 		    double t_exit;
 
-        //! Output to a standard stream
-        friend std::ostream& operator<<(std::ostream& out, const threepf_kconfig& obj);
+        template <typename Stream> void write(Stream& out) const;
 	    };
 
 
-    std::ostream& operator<<(std::ostream& out, const threepf_kconfig& obj)
-	    {
+    template <typename Stream>
+    void threepf_kconfig::write(Stream& out) const
+      {
         std::ostringstream kt_str;
         std::ostringstream alpha_str;
         std::ostringstream beta_str;
 
-        kt_str    << std::setprecision(__CPP_TRANSPORT_DEFAULT_K_PRECISION) << obj.kt_comoving;
-        alpha_str << std::setprecision(__CPP_TRANSPORT_DEFAULT_K_PRECISION) << obj.alpha;
-        beta_str  << std::setprecision(__CPP_TRANSPORT_DEFAULT_K_PRECISION) << obj.beta;
+        kt_str    << std::setprecision(CPPTRANSPORT_DEFAULT_K_PRECISION) << this->kt_comoving;
+        alpha_str << std::setprecision(CPPTRANSPORT_DEFAULT_K_PRECISION) << this->alpha;
+        beta_str  << std::setprecision(CPPTRANSPORT_DEFAULT_K_PRECISION) << this->beta;
 
-        out << __CPP_TRANSPORT_KCONFIG_SERIAL << " " << obj.serial << ", " << __CPP_TRANSPORT_KCONFIG_KTEQUALS << " " << kt_str.str()
-	        << ", " << __CPP_TRANSPORT_KCONFIG_ALPHAEQUALS << " " << alpha_str.str()
-	        << ", " << __CPP_TRANSPORT_KCONFIG_BETAEQUALS << " " << beta_str.str()
-	        << std::endl;
+        out << CPPTRANSPORT_KCONFIG_SERIAL << " " << this->serial << ", " << CPPTRANSPORT_KCONFIG_KTEQUALS << " " << kt_str.str()
+        << ", " << CPPTRANSPORT_KCONFIG_ALPHAEQUALS << " " << alpha_str.str()
+        << ", " << CPPTRANSPORT_KCONFIG_BETAEQUALS << " " << beta_str.str()
+        << '\n';
+      }
 
+
+    template <typename Char, typename Traits>
+    std::basic_ostream<Char, Traits>& operator<<(std::basic_ostream<Char, Traits>& out, const threepf_kconfig& obj)
+	    {
+        obj.write(out);
         return(out);
 	    }
+
+
+    template <typename Char, typename Traits, typename Allocator>
+    boost::log::basic_formatting_ostream<Char, Traits, Allocator>& operator<<(boost::log::basic_formatting_ostream<Char, Traits, Allocator>& out, const threepf_kconfig& obj)
+      {
+        obj.write(out);
+        return(out);
+      }
 
 
 		class kconfiguration_statistics
@@ -191,11 +236,6 @@ namespace transport
 
     // OUTPUT DATA
 
-
-    template <typename number> class output_task_element;
-
-    template <typename number>
-    std::ostream& operator<<(std::ostream& out, const output_task_element<number>& obj);
 
     template <typename number>
     class output_task_element
@@ -246,8 +286,14 @@ namespace transport
         unsigned int get_serial() const { return(this->serial); }
 
 
-        //! Write to a standard output stream
-        friend std::ostream& operator<< <>(std::ostream& out, const output_task_element<number>& obj);
+        // WRITE TO STREAM
+
+      public:
+
+        //! write self to stream
+        template <typename Stream>
+        void write(Stream& out) const;
+
 
         // INTERNAL DATA
 
@@ -266,20 +312,35 @@ namespace transport
 
 
     template <typename number>
-    std::ostream& operator<<(std::ostream& out, const output_task_element<number>& obj)
+    template <typename Stream>
+    void output_task_element<number>::write(Stream& out) const
       {
-        out << "  " << __CPP_TRANSPORT_OUTPUT_ELEMENT_OUTPUT << " " << obj.get_product_name() << ",";
-        out << " " << __CPP_TRANSPORT_OUTPUT_ELEMENT_TAGS  << ": ";
+        out << "  " << CPPTRANSPORT_OUTPUT_ELEMENT_OUTPUT << " " << this->get_product_name() << ",";
+        out << " " << CPPTRANSPORT_OUTPUT_ELEMENT_TAGS  << ": ";
 
         unsigned int count = 0;
-        const std::list<std::string>& tags = obj.get_tags();
+        const std::list<std::string>& tags = this->get_tags();
         for (std::list<std::string>::const_iterator u = tags.begin(); u != tags.end(); ++u)
           {
             if(count > 0) out << ", ";
             out << *u;
           }
-        out << std::endl;
+        out << '\n';
+      }
 
+
+    template <typename number, typename Char, typename Traits>
+    std::basic_ostream<Char, Traits>& operator<<(std::basic_ostream<Char, Traits>& out, const output_task_element<number>& obj)
+      {
+        obj.write(out);
+        return(out);
+      }
+
+
+    template <typename number, typename Char, typename Traits, typename Allocator>
+    boost::log::basic_formatting_ostream<Char, Traits, Allocator>& operator<<(boost::log::basic_formatting_ostream<Char, Traits, Allocator>& out, const output_task_element<number>& obj)
+      {
+        obj.write(out);
         return(out);
       }
 

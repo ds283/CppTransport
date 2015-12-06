@@ -17,17 +17,16 @@
 // **************************************************************************************
 
 
-macro_agent::macro_agent(translation_unit* u, std::shared_ptr<package_group> pkg, std::string pf, std::string sp, unsigned int dm)
-  : unit(u),
+macro_agent::macro_agent(translator_data& p, package_group& pkg, std::string pf, std::string sp, unsigned int dm)
+  : data_payload(p),
     prefix(pf),
     split(sp),
     recursion_max(dm),
     recursion_depth(0),
-    pre_rule_cache(pkg->get_pre_ruleset()),
-    post_rule_cache(pkg->get_post_ruleset()),
-    index_rule_cache(pkg->get_index_ruleset())
+    pre_rule_cache(pkg.get_pre_ruleset()),
+    post_rule_cache(pkg.get_post_ruleset()),
+    index_rule_cache(pkg.get_index_ruleset())
   {
-    assert(unit != nullptr);
     assert(recursion_max > 0);
 
 		// pause timers
@@ -36,13 +35,13 @@ macro_agent::macro_agent(translation_unit* u, std::shared_ptr<package_group> pkg
 
     if(recursion_max == 0) recursion_max = 1;
 
-    fields     = unit->get_number_fields();
-    parameters = unit->get_number_parameters();
-    order      = unit->get_index_order();
+    fields     = data_payload.get_number_fields();
+    parameters = data_payload.get_number_parameters();
+    order      = data_payload.get_index_order();
   }
 
 
-std::shared_ptr< std::vector<std::string> > macro_agent::apply(std::string& line, unsigned int& replacements)
+std::unique_ptr< std::vector<std::string> > macro_agent::apply(std::string& line, unsigned int& replacements)
   {
 		// if timer is stopped, restart it
 		bool stopped = this->timer.is_stopped();
@@ -50,8 +49,8 @@ std::shared_ptr< std::vector<std::string> > macro_agent::apply(std::string& line
 
 		// the result of macro substitution is potentially large, and we'd rather not copy
 		// a very large array of strings while moving the result around.
-		// So, use a std::shared_ptr<> to manage the result object
-    std::shared_ptr< std::vector<std::string> > r_list(new std::vector<std::string>());
+		// So, use a std::unique_ptr<> to manage the result object
+    std::unique_ptr< std::vector<std::string> > r_list;
 
     if(++this->recursion_depth < this->recursion_max)
       {
@@ -62,7 +61,9 @@ std::shared_ptr< std::vector<std::string> > macro_agent::apply(std::string& line
       {
         std::ostringstream msg;
         msg << WARNING_RECURSION_DEPTH << "=" << this->recursion_max << ")";
-        this->unit->warn(msg.str());
+
+        error_context err_context(this->data_payload.get_stack(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
+        err_context.warn(msg.str());
       }
 
 		// if timer was stopped, stop it again
@@ -72,9 +73,9 @@ std::shared_ptr< std::vector<std::string> > macro_agent::apply(std::string& line
   }
 
 
-std::shared_ptr< std::vector<std::string> > macro_agent::apply_line(std::string& line, unsigned int& replacements)
+std::unique_ptr< std::vector<std::string> > macro_agent::apply_line(std::string& line, unsigned int& replacements)
   {
-    std::shared_ptr< std::vector<std::string> > r_list(new std::vector<std::string>());
+    std::unique_ptr< std::vector<std::string> > r_list = std::make_unique< std::vector<std::string> >();
 
 		// break the line at the split point, if it exists, to get a 'left-hand' side and a 'right-hand' side
     std::string left;

@@ -41,7 +41,7 @@ namespace transport
 
 				    //! basic user-facing constructor
 				    largest_u2_line(const twopf_list_task<number>& tk, SQL_time_config_query tq, SQL_twopf_kconfig_query,
-                            unsigned int prec = __CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
+                            unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
 				    //! deserialization constructor
 				    largest_u2_line(Json::Value& reader, typename repository_finder<number>::task_finder& finder);
@@ -108,7 +108,7 @@ namespace transport
 
 				template <typename number>
 				largest_u2_line<number>::largest_u2_line(const twopf_list_task<number>& tk, SQL_time_config_query tq, SQL_twopf_kconfig_query kq, unsigned int prec)
-					: derived_line<number>(tk, time_axis, std::list<axis_value>{ efolds_axis }, prec),
+					: derived_line<number>(tk, axis_class::time_axis, std::list<axis_value>{ axis_value::efolds_axis }, prec),
 		        time_series<number>(tk),
 		        gadget(tk),
 		        tquery(tq),
@@ -122,8 +122,8 @@ namespace transport
 					: derived_line<number>(reader, finder),
 		        time_series<number>(reader),
 						gadget(),
-						tquery(reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]),
-            kquery(reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY])
+						tquery(reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]),
+            kquery(reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY])
 					{
 						assert(this->parent_task != nullptr);
 						gadget.set_task(this->parent_task, finder);
@@ -133,10 +133,10 @@ namespace transport
 				template <typename number>
 				void largest_u2_line<number>::serialize(Json::Value& writer) const
 					{
-						writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_LARGEST_U2_LINE);
+						writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_LARGEST_U2_LINE);
 
-						this->tquery.serialize(writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]);
-            this->kquery.serialize(writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY]);
+						this->tquery.serialize(writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]);
+            this->kquery.serialize(writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY]);
 
 						this->time_series<number>::serialize(writer);
 						this->derived_line<number>::serialize(writer);
@@ -165,7 +165,9 @@ namespace transport
 				    typename datapipe<number>::time_data_handle& handle = pipe.new_time_data_handle(this->tquery);
 				    std::vector<std::vector<number> > bg_data(t_axis.size());
 
-				    for(unsigned int m = 0; m < 2 * this->gadget.get_N_fields(); ++m)
+            unsigned int Nfields = this->gadget.get_N_fields();
+
+				    for(unsigned int m = 0; m < 2*Nfields; ++m)
 					    {
 				        std::array<unsigned int, 1>      index_set = { m };
 				        background_time_data_tag<number> tag       = pipe.new_background_time_data_tag(this->gadget.get_model()->flatten(m));
@@ -182,7 +184,7 @@ namespace transport
 		        model<number>* mdl = this->gadget.get_model();
 		        assert(mdl != nullptr);
 
-            std::vector< std::vector<number> > u2_tensor;
+            std::vector<number> u2_tensor(2*Nfields * 2*Nfields);
 
             for(std::vector<twopf_kconfig>::iterator t = k_configs.begin(); t != k_configs.end(); ++t)
               {
@@ -193,13 +195,13 @@ namespace transport
                     mdl->u2(this->gadget.get_integration_task(), bg_data[j], t->k_comoving, t_configs[j].t, u2_tensor);
                     number val = -std::numeric_limits<number>::max();
 
-                    for(unsigned int m = 0; m < 2 * this->gadget.get_N_fields(); ++m)
+                    for(unsigned int m = 0; m < 2*Nfields; ++m)
                       {
-                        for(unsigned int n = 0; n < 2 * this->gadget.get_N_fields(); ++n)
+                        for(unsigned int n = 0; n < 2*Nfields; ++n)
                           {
                             if(mdl->is_momentum(m) && mdl->is_field(n)) // only look at the momentum-field block, which is M/H^2; the other blocks aren't relate to SR
                               {
-                                number value = std::abs(u2_tensor[m][n]);
+                                number value = std::abs(u2_tensor[mdl->flatten(m,n)]);
                                 if(value > val) val = value;
                               }
                           }
@@ -208,7 +210,7 @@ namespace transport
                     line_data[j] = val;
                   }
 
-                data_line<number> line(group, this->x_type, dimensionless_value, t_axis, line_data,
+                data_line<number> line(group, this->x_type, value_type::dimensionless_value, t_axis, line_data,
                                        this->get_LaTeX_label(*t), this->get_non_LaTeX_label(*t));
                 lines.push_back(line);
               }
@@ -228,7 +230,7 @@ namespace transport
 							}
 						else
 							{
-                label = "$" + std::string(__CPP_TRANSPORT_LATEX_LARGEST_U2_SYMBOL) + "$";
+                label = "$" + std::string(CPPTRANSPORT_LATEX_LARGEST_U2_SYMBOL) + "$";
 
                 if(this->use_tags) label += " $" + this->make_LaTeX_tag(k) + "$";
 							}
@@ -251,7 +253,7 @@ namespace transport
               }
             else
               {
-                label = __CPP_TRANSPORT_NONLATEX_LARGEST_U2_SYMBOL;
+                label = CPPTRANSPORT_NONLATEX_LARGEST_U2_SYMBOL;
 
                 if(this->use_tags) label += " " + this->make_non_LaTeX_tag(k);
               }

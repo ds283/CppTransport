@@ -129,7 +129,7 @@ namespace transport
 				    std::ostringstream label;
 						label << std::setprecision(this->precision);
 
-						label << __CPP_TRANSPORT_LATEX_R_SYMBOL;
+						label << CPPTRANSPORT_LATEX_R_SYMBOL;
 
 						return(label.str());
 					}
@@ -141,7 +141,7 @@ namespace transport
 		        std::ostringstream label;
 		        label << std::setprecision(this->precision);
 
-		        label << __CPP_TRANSPORT_NONLATEX_R_SYMBOL;
+		        label << CPPTRANSPORT_NONLATEX_R_SYMBOL;
 
 		        return(label.str());
 			    }
@@ -156,8 +156,8 @@ namespace transport
 				template <typename number>
 				void r_line<number>::write(std::ostream& out)
 					{
-				    out << " " << __CPP_TRANSPORT_PRODUCT_WAVENUMBER_SERIES_LABEL_R << std::endl;
-						out << std::endl;
+				    out << " " << CPPTRANSPORT_PRODUCT_WAVENUMBER_SERIES_LABEL_R << '\n';
+						out << '\n';
 					}
 
 			}   // namespace derived_data

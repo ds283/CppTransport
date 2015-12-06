@@ -42,7 +42,7 @@ namespace transport
             //! construct a twopf wavenumber-series object
             twopf_wavenumber_series(const twopf_list_task<number>& tk, index_selector<2>& sel,
                                     SQL_time_config_query tq, SQL_twopf_kconfig_query kq,
-                                    unsigned int prec = __CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
+                                    unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
 		        //! deserialization constructor
 		        twopf_wavenumber_series(Json::Value& reader, typename repository_finder<number>::task_finder& finder);
@@ -105,7 +105,7 @@ namespace transport
         template <typename number>
         twopf_wavenumber_series<number>::twopf_wavenumber_series(const twopf_list_task<number>& tk, index_selector<2>& sel,
                                                                  SQL_time_config_query tq, SQL_twopf_kconfig_query kq, unsigned int prec)
-	        : derived_line<number>(tk, wavenumber_axis, std::list<axis_value>{ k_axis, efolds_exit_axis }, prec),
+	        : derived_line<number>(tk, axis_class::wavenumber_axis, std::list<axis_value>{ axis_value::k_axis, axis_value::efolds_exit_axis }, prec),
 	          twopf_line<number>(tk, sel),
 	          wavenumber_series<number>(tk),
 	          tquery(tq),
@@ -121,8 +121,8 @@ namespace transport
 	        : derived_line<number>(reader, finder),
 	          twopf_line<number>(reader, finder),
 	          wavenumber_series<number>(reader),
-	          tquery(reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]),
-	          kquery(reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY])
+	          tquery(reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]),
+	          kquery(reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY])
 	        {
 	        }
 
@@ -162,32 +162,28 @@ namespace transport
 								        std::array<unsigned int, 2> index_set = { m, n };
 								        if(this->active_indices.is_on(index_set))
 									        {
-								            cf_kconfig_data_tag<number> tag = pipe.new_cf_kconfig_data_tag(this->is_real_twopf() ? data_tag<number>::cf_twopf_re : data_tag<number>::cf_twopf_im,
+								            cf_kconfig_data_tag<number> tag = pipe.new_cf_kconfig_data_tag(this->is_real_twopf() ? cf_data_type::cf_twopf_re : cf_data_type::cf_twopf_im,
 								                                                                           this->gadget.get_model()->flatten(m, n), t->serial);
 
 								            std::vector<number> line_data = k_handle.lookup_tag(tag);
 
+                            value_type value = value_type::correlation_function_value;
 								            if(this->dimensionless)
 									            {
 								                assert(line_data.size() == k_values.size());
-                                typename std::vector<number>::iterator l_pos = line_data.begin();
+                                typename std::vector<number>::iterator     l_pos = line_data.begin();
                                 std::vector<twopf_kconfig>::const_iterator k_pos = k_values.begin();
 								                for(; l_pos != line_data.end() && k_pos != k_values.end(); ++l_pos, ++k_pos)
 									                {
 								                    *l_pos *= k_pos->k_comoving * k_pos->k_comoving * k_pos->k_comoving / (2.0*M_PI*M_PI);
 									                }
+                                value = value_type::dimensionless_value;
+									            }
 
-								                data_line<number> line = data_line<number>(group, this->x_type, dimensionless_value, w_axis, line_data,
-								                                                           this->get_LaTeX_label(m,n,t->t), this->get_non_LaTeX_label(m,n,t->t), this->is_spectral_index());
-								                lines.push_back(line);
-									            }
-								            else
-									            {
-								                data_line<number> line = data_line<number>(group, this->x_type, correlation_function_value, w_axis, line_data,
-								                                                           this->get_LaTeX_label(m,n,t->t), this->get_non_LaTeX_label(m,n,t->t), this->is_spectral_index());
-								                lines.push_back(line);
-									            }
-									        }
+                            data_line<number> line = data_line<number>(group, this->x_type, value, w_axis, line_data,
+                                                                       this->get_LaTeX_label(m,n,t->t), this->get_non_LaTeX_label(m,n,t->t), this->is_spectral_index());
+                            lines.push_back(line);
+                          }
 									    }
 							    }
 					    }
@@ -253,10 +249,10 @@ namespace transport
         template <typename number>
         void twopf_wavenumber_series<number>::serialize(Json::Value& writer) const
 	        {
-            writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TWOPF_WAVENUMBER_SERIES);
+            writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TWOPF_WAVENUMBER_SERIES);
 
-            this->tquery.serialize(writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]);
-            this->kquery.serialize(writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY]);
+            this->tquery.serialize(writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]);
+            this->kquery.serialize(writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY]);
 
             this->derived_line<number>::serialize(writer);
             this->twopf_line<number>::serialize(writer);
@@ -276,7 +272,7 @@ namespace transport
 				    //! construct a threepf wavenumber-data object
 				    threepf_wavenumber_series(const threepf_task<number>& tk, index_selector<3>& sel,
 				                              SQL_time_config_query tq, SQL_threepf_kconfig_query kq,
-				                              unsigned int prec=__CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
+				                              unsigned int prec=CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
 				    //! deserialization constructor
 				    threepf_wavenumber_series(Json::Value& reader, typename repository_finder<number>::task_finder& finder);
@@ -342,8 +338,8 @@ namespace transport
         threepf_wavenumber_series<number>::threepf_wavenumber_series(const threepf_task<number>& tk, index_selector<3>& sel,
                                                                      SQL_time_config_query tq, SQL_threepf_kconfig_query kq,
                                                                      unsigned int prec)
-	        : derived_line<number>(tk, wavenumber_axis,
-	                               std::list<axis_value>{ k_axis, efolds_exit_axis, alpha_axis, beta_axis, squeezing_fraction_k1_axis, squeezing_fraction_k2_axis, squeezing_fraction_k3_axis },
+	        : derived_line<number>(tk, axis_class::wavenumber_axis,
+	                               std::list<axis_value>{ axis_value::k_axis, axis_value::efolds_exit_axis, axis_value::alpha_axis, axis_value::beta_axis, axis_value::squeezing_fraction_k1_axis, axis_value::squeezing_fraction_k2_axis, axis_value::squeezing_fraction_k3_axis },
 	                               prec),
 	          threepf_line<number>(tk, sel),
 	          wavenumber_series<number>(tk),
@@ -360,8 +356,8 @@ namespace transport
 	        : derived_line<number>(reader, finder),
 	          threepf_line<number>(reader, finder),
 	          wavenumber_series<number>(reader),
-	          tquery(reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]),
-	          kquery(reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY])
+	          tquery(reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]),
+	          kquery(reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY])
 	        {
 	        }
 
@@ -405,8 +401,8 @@ namespace transport
 	            }
 
             // extract k-configuration data
-            threepf_kconfig_tag<number>  k_tag   = pipe.new_threepf_kconfig_tag();
-            std::vector<threepf_kconfig> configs = kc_handle.lookup_tag(k_tag);
+            threepf_kconfig_tag<number>  k_tag    = pipe.new_threepf_kconfig_tag();
+            std::vector<threepf_kconfig> k_values = kc_handle.lookup_tag(k_tag);
 
             // loop through all components of the twopf, for each t-configuration we use, pulling data from the database
             typename std::vector< std::vector<number> >::const_iterator bg_pos = background.begin();
@@ -421,18 +417,27 @@ namespace transport
 		                        std::array<unsigned int, 3> index_set = { l, m, n };
 		                        if(this->active_indices.is_on(index_set))
 			                        {
-		                            cf_kconfig_data_tag<number> tag = pipe.new_cf_kconfig_data_tag(data_tag<number>::cf_threepf, this->gadget.get_model()->flatten(l,m,n), t->serial);
+		                            cf_kconfig_data_tag<number> tag = pipe.new_cf_kconfig_data_tag(this->get_dot_meaning() == dot_type::derivatives ? cf_data_type::cf_threepf_Nderiv : cf_data_type::cf_threepf_momentum,
+                                                                                               this->gadget.get_model()->flatten(l,m,n), t->serial);
 
 		                            std::vector<number> line_data = k_handle.lookup_tag(tag);
+                                assert(line_data.size() == w_axis.size());
 
-				                        // the integrator produces correlation functions involving the canonical momenta,
-				                        // not the derivatives. If the user wants derivatives then we have to shift.
-				                        if(this->get_dot_meaning() == derivatives)
-					                        this->shifter.shift(this->gadget.get_integration_task(), this->gadget.get_model(), pipe, this->kquery, configs, *bg_pos, line_data, l, m, n, *t);
+                                value_type value = value_type::correlation_function_value;
+                                if(this->dimensionless)
+                                  {
+                                    assert(line_data.size() == k_values.size());
+                                    typename std::vector<number>::iterator       l_pos = line_data.begin();
+                                    std::vector<threepf_kconfig>::const_iterator k_pos = k_values.begin();
+                                    for(; l_pos != line_data.end() && k_pos != k_values.end(); ++l_pos, ++k_pos)
+                                      {
+                                        *l_pos *= k_pos->kt_comoving * k_pos->kt_comoving * k_pos->kt_comoving * k_pos->kt_comoving * k_pos->kt_comoving * k_pos->kt_comoving;
+                                      }
+                                    value = value_type::dimensionless_value;
+                                  }
 
-		                            data_line<number> line = data_line<number>(group, this->x_type, correlation_function_value, w_axis, line_data,
+		                            data_line<number> line = data_line<number>(group, this->x_type, value, w_axis, line_data,
 		                                                                       this->get_LaTeX_label(l,m,n,t->t), this->get_non_LaTeX_label(l,m,n,t->t), this->is_spectral_index());
-
 		                            lines.push_back(line);
 			                        }
 			                    }
@@ -501,10 +506,10 @@ namespace transport
         template <typename number>
         void threepf_wavenumber_series<number>::serialize(Json::Value& writer) const
 	        {
-            writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_WAVENUMBER_SERIES);
+            writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_WAVENUMBER_SERIES);
 
-            this->tquery.serialize(writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]);
-            this->kquery.serialize(writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY]);
+            this->tquery.serialize(writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]);
+            this->kquery.serialize(writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY]);
 
             this->derived_line<number>::serialize(writer);
             this->threepf_line<number>::serialize(writer);

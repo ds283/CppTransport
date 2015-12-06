@@ -18,39 +18,103 @@
 #include "transport-runtime-api/models/advisory_classes.h"
 
 #include "transport-runtime-api/utilities/spline1d.h"
-#include <boost/math/tools/roots.hpp>
 
-#define __CPP_TRANSPORT_NODE_TWOPF_LIST_KSTAR         "kstar"
-#define __CPP_TRANSPORT_NODE_TWOPF_LIST_NORMALIZATION "normalization"
-#define __CPP_TRANSPORT_NODE_TWOPF_LIST_COLLECT_ICS   "collect-ics"
+#include "transport-runtime-api/defaults.h"
+
+#include "boost/math/tools/roots.hpp"
+#include "boost/log/utility/formatting_ostream.hpp"
+
+#define CPPTRANSPORT_NODE_TWOPF_LIST_KSTAR         "kstar"
+#define CPPTRANSPORT_NODE_TWOPF_LIST_NORMALIZATION "normalization"
+#define CPPTRANSPORT_NODE_TWOPF_LIST_COLLECT_ICS   "collect-ics"
 
 
 namespace transport
 	{
 
 
-    class TolerancePredicate
-	    {
-      public:
-        TolerancePredicate(double t)
-	        : tol(t)
-	        {
-	        }
+    namespace task_impl
+      {
 
-        bool operator()(const double& a, const double& b)
-	        {
-            return(std::abs((a-b)/a) < this->tol);
-	        }
+        class TolerancePredicate
+          {
+          public:
+            TolerancePredicate(double t)
+              : tol(t)
+              {
+              }
 
-      private:
-        double tol;
-	    };
+            bool operator()(const double& a, const double& b)
+              {
+                return(this->fractional_diff(a,b) - this->tol < 0);
+              }
+
+            double fractional_diff(const double& a, const double& b)
+              {
+                double frac = 2.0*(a-b)/(std::abs(a)+std::abs(b));
+
+                assert(!std::isinf(frac));
+                assert(!std::isnan(frac));
+                if(std::isinf(frac)) throw runtime_exception(exception_type::TASK_STRUCTURE_ERROR, CPPTRANSPORT_TASK_SEARCH_ROOT_INF);
+                if(std::isnan(frac)) throw runtime_exception(exception_type::TASK_STRUCTURE_ERROR, CPPTRANSPORT_TASK_SEARCH_ROOT_NAN);
+
+                return(std::abs(frac));
+              }
+
+          private:
+            double tol;
+          };
 
 
-    template <typename number> class twopf_list_task;
+        template <typename SplineObject, typename TolerancePolicy>
+        double find_zero_of_spline(SplineObject& sp, TolerancePolicy& tol)
+          {
+            // find root; note use of std::ref, because root finder would normally would take a copy of
+            // its system function and this is slow -- we have to copy the whole spline
+            assert(sp(sp.get_min_x()) * sp(sp.get_max_x()) < 0.0);
+            if(sp(sp.get_min_x()) * sp(sp.get_max_x()) >= 0.0) throw runtime_exception(exception_type::TASK_STRUCTURE_ERROR, CPPTRANSPORT_TASK_SEARCH_ROOT_BRACKET);
 
-    template <typename number>
-    std::ostream& operator<<(std::ostream& out, const twopf_list_task<number>& obj);
+            boost::uintmax_t max_iter = CPPTRANSPORT_MAX_ITERATIONS;
+            std::pair< double, double > result = boost::math::tools::bisect(std::ref(sp), sp.get_min_x(), sp.get_max_x(), tol, max_iter);
+
+            double res = (result.first + result.second)/2.0;
+
+            assert(max_iter < CPPTRANSPORT_MAX_ITERATIONS);
+
+            // could check that tol(result.first, result.second) is strictly satisfied, but boost::bisect occasionally
+            // seems to return pairs which don't satisfy this.
+            // This may be a bug in Boost, or it may indicate that the returned interval is slightly different from
+            // the interval used to check for termination.
+            // We can instead rely on the check that |k-aH| is sufficiently small, made below
+//            assert(tol(result.first, result.second));
+
+            assert(!std::isinf(result.first) && !std::isinf(result.second));
+            assert(!std::isnan(result.first) && !std::isnan(result.second));
+
+            if(max_iter >= CPPTRANSPORT_MAX_ITERATIONS)
+              {
+                std::ostringstream msg;
+                msg << CPPTRANSPORT_TASK_SEARCH_ROOT_ACCURACY << " [" << CPPTRANSPORT_TASK_SEARCH_ROOT_ITERATIONS << "=" << max_iter << "]";
+                throw runtime_exception(exception_type::TASK_STRUCTURE_ERROR, msg.str());
+              }
+
+            if(std::isinf(result.first) || std::isinf(result.second)) throw runtime_exception(exception_type::TASK_STRUCTURE_ERROR, CPPTRANSPORT_TASK_SEARCH_ROOT_INF);
+            if(std::isnan(result.first) || std::isnan(result.second)) throw runtime_exception(exception_type::TASK_STRUCTURE_ERROR, CPPTRANSPORT_TASK_SEARCH_ROOT_NAN);
+
+            assert(std::abs(sp(res)) < CPPTRANSPORT_ROOT_FIND_ACCURACY);
+            if(std::abs(sp(res)) >= CPPTRANSPORT_ROOT_FIND_ACCURACY)
+              {
+                std::ostringstream msg;
+                msg << CPPTRANSPORT_TASK_SEARCH_ROOT_ACCURACY << " [" << CPPTRANSPORT_TASK_SEARCH_ROOT_KAH << "=" << sp(res) << "]";
+                throw runtime_exception(exception_type::TASK_STRUCTURE_ERROR, msg.str());
+              }
+
+            return(res);
+          };
+
+
+      }   // namespace task_impl
+
 
     //! Base type for a task which can represent a set of two-point functions evaluated at different wavenumbers.
     //! Ultimately, all n-point-function integrations are of this type because they all solve for the two-point function
@@ -66,7 +130,7 @@ namespace transport
       public:
 
         //! construct a twopf-list-task object
-        twopf_list_task(const std::string& nm, const initial_conditions<number>& i, range<double>& t, bool ff, double ast=__CPP_TRANSPORT_DEFAULT_ASTAR_NORMALIZATION);
+        twopf_list_task(const std::string& nm, const initial_conditions<number>& i, range<double>& t, bool ff, double ast=CPPTRANSPORT_DEFAULT_ASTAR_NORMALIZATION);
 
         //! deserialization constructor
         twopf_list_task(const std::string& nm, Json::Value& reader, sqlite3* handle, const initial_conditions<number>& i);
@@ -98,6 +162,9 @@ namespace transport
 		    //! Compute horizon-exit times for each mode in the database -- use supplied spline
 		    template <typename SplineObject, typename TolerancePolicy>
 		    void twopf_compute_horizon_exit_times(SplineObject& sp, TolerancePolicy tol);
+
+        //! Issue advisory messages if failed to compute horizon exit times
+        void compute_horizon_exit_times_fail(failed_to_compute_horizon_exit& xe);
 
 
 		    // INTERFACE - INITIAL CONDITIONS AND INTEGRATION DETAILS
@@ -172,7 +239,9 @@ namespace transport
 
       protected:
 
-        //! override cache_stored_time_config_database() supplied by integration_task<> to account for fast-forward integration if used
+        //! override cache_stored_time_config_database()
+        //! supplied by integration_task<> in order to account for fast-forward integration
+        //! if it is being used
         virtual void cache_stored_time_config_database() override;
 
 
@@ -207,8 +276,8 @@ namespace transport
 
       public:
 
-        //! Write to a standard output stream
-        friend std::ostream& operator<< <>(std::ostream& out, const twopf_list_task<number>& obj);
+        //! write self-details to stream
+        template <typename Stream> void write(Stream& obj) const;
 
 
         // INTERNAL DATA
@@ -268,10 +337,10 @@ namespace transport
                                              bool ff, double ast)
 	    : integration_task<number>(nm, i, t),
         fast_forward(ff),
-        ff_efolds(__CPP_TRANSPORT_DEFAULT_FAST_FORWARD_EFOLDS),
-        max_refinements(__CPP_TRANSPORT_DEFAULT_MESH_REFINEMENTS),
+        ff_efolds(CPPTRANSPORT_DEFAULT_FAST_FORWARD_EFOLDS),
+        max_refinements(CPPTRANSPORT_DEFAULT_MESH_REFINEMENTS),
         astar_normalization(ast),
-        collect_initial_conditions(__CPP_TRANSPORT_DEFAULT_COLLECT_INITIAL_CONDITIONS),
+        collect_initial_conditions(CPPTRANSPORT_DEFAULT_COLLECT_INITIAL_CONDITIONS),
         kstar(i.get_model()->compute_kstar(this))
       {
 		    twopf_db = std::make_shared<twopf_kconfig_database>(kstar);
@@ -282,26 +351,26 @@ namespace transport
     twopf_list_task<number>::twopf_list_task(const std::string& nm, Json::Value& reader, sqlite3* handle, const initial_conditions<number>& i)
 	    : integration_task<number>(nm, reader, i)
 	    {
-        kstar    = reader[__CPP_TRANSPORT_NODE_TWOPF_LIST_KSTAR].asDouble();
+        kstar    = reader[CPPTRANSPORT_NODE_TWOPF_LIST_KSTAR].asDouble();
         twopf_db = std::make_shared<twopf_kconfig_database>(kstar, handle);
 
-        fast_forward               = reader[__CPP_TRANSPORT_NODE_FAST_FORWARD].asBool();
-        ff_efolds                  = reader[__CPP_TRANSPORT_NODE_FAST_FORWARD_EFOLDS].asDouble();
-        max_refinements            = reader[__CPP_TRANSPORT_NODE_MESH_REFINEMENTS].asUInt();
-        astar_normalization        = reader[__CPP_TRANSPORT_NODE_TWOPF_LIST_NORMALIZATION].asDouble();
-        collect_initial_conditions = reader[__CPP_TRANSPORT_NODE_TWOPF_LIST_COLLECT_ICS].asBool();
+        fast_forward               = reader[CPPTRANSPORT_NODE_FAST_FORWARD].asBool();
+        ff_efolds                  = reader[CPPTRANSPORT_NODE_FAST_FORWARD_EFOLDS].asDouble();
+        max_refinements            = reader[CPPTRANSPORT_NODE_MESH_REFINEMENTS].asUInt();
+        astar_normalization        = reader[CPPTRANSPORT_NODE_TWOPF_LIST_NORMALIZATION].asDouble();
+        collect_initial_conditions = reader[CPPTRANSPORT_NODE_TWOPF_LIST_COLLECT_ICS].asBool();
 	    }
 
 
     template <typename number>
     void twopf_list_task<number>::serialize(Json::Value& writer) const
 	    {
-        writer[__CPP_TRANSPORT_NODE_FAST_FORWARD]             = this->fast_forward;
-        writer[__CPP_TRANSPORT_NODE_FAST_FORWARD_EFOLDS]      = this->ff_efolds;
-        writer[__CPP_TRANSPORT_NODE_MESH_REFINEMENTS]         = this->max_refinements;
-        writer[__CPP_TRANSPORT_NODE_TWOPF_LIST_NORMALIZATION] = this->astar_normalization;
-        writer[__CPP_TRANSPORT_NODE_TWOPF_LIST_COLLECT_ICS]   = this->collect_initial_conditions;
-		    writer[__CPP_TRANSPORT_NODE_TWOPF_LIST_KSTAR]         = this->kstar;
+        writer[CPPTRANSPORT_NODE_FAST_FORWARD]             = this->fast_forward;
+        writer[CPPTRANSPORT_NODE_FAST_FORWARD_EFOLDS]      = this->ff_efolds;
+        writer[CPPTRANSPORT_NODE_MESH_REFINEMENTS]         = this->max_refinements;
+        writer[CPPTRANSPORT_NODE_TWOPF_LIST_NORMALIZATION] = this->astar_normalization;
+        writer[CPPTRANSPORT_NODE_TWOPF_LIST_COLLECT_ICS]   = this->collect_initial_conditions;
+		    writer[CPPTRANSPORT_NODE_TWOPF_LIST_KSTAR]         = this->kstar;
 
 		    // twopf database is serialized separately into an SQLite database
         // this serialization is handled by the repository layer via write_kconfig_database() below
@@ -378,8 +447,8 @@ namespace transport
 		    latest_crossing   -= this->get_N_horizon_crossing();
 
         std::cout << "'" << this->get_name() << "': ";
-        std::cout << __CPP_TRANSPORT_TASK_TWOPF_LIST_MODE_RANGE_A << this->twopf_db->get_kmin_conventional()
-          << " " << __CPP_TRANSPORT_TASK_TWOPF_LIST_MODE_RANGE_B;
+        std::cout << CPPTRANSPORT_TASK_TWOPF_LIST_MODE_RANGE_A << this->twopf_db->get_kmin_conventional()
+          << " " << CPPTRANSPORT_TASK_TWOPF_LIST_MODE_RANGE_B;
 
         std::ostringstream early_time;
 		    early_time << std::setprecision(3);
@@ -388,33 +457,33 @@ namespace transport
 
         std::cout << early_time.str() << ", ";
 
-        std::cout << __CPP_TRANSPORT_TASK_TWOPF_LIST_MODE_RANGE_C << this->twopf_db->get_kmax_conventional()
-          << " " << __CPP_TRANSPORT_TASK_TWOPF_LIST_MODE_RANGE_D;
+        std::cout << CPPTRANSPORT_TASK_TWOPF_LIST_MODE_RANGE_C << this->twopf_db->get_kmax_conventional()
+          << " " << CPPTRANSPORT_TASK_TWOPF_LIST_MODE_RANGE_D;
 
         std::ostringstream late_time;
 		    late_time << std::setprecision(3);
         if(latest_crossing > 0) late_time << "+";
         late_time << latest_crossing;
 
-        std::cout << late_time.str() << std::endl;
+        std::cout << late_time.str() << '\n';
 
         this->validate_subhorizon_efolds();
 
         try
           {
             double end_of_inflation = this->get_N_end_of_inflation();
-            std::cout << "'" << this->get_name() << "': " << __CPP_TRANSPORT_TASK_TWOPF_LIST_END_OF_INFLATION  << end_of_inflation << std::endl;
+            std::cout << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_TWOPF_LIST_END_OF_INFLATION  << end_of_inflation << '\n';
 
             // check if end time is after the end of inflation
             double end_time = this->times->get_grid().back();
             if(end_time > end_of_inflation)
               {
-                std::cout << "'" << this->get_name() << "': " << __CPP_TRANSPORT_TASK_TWOPF_LIST_WARN_LATE_END << std::endl;
+                std::cout << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_TWOPF_LIST_WARN_LATE_END << '\n';
               }
           }
         catch(end_of_inflation_not_found& xe)
           {
-            std::cout << "'" << this->get_name() << "': " << __CPP_TRANSPORT_TASK_TWOPF_LIST_NO_END_INFLATION << std::endl;
+            std::cout << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_TWOPF_LIST_NO_END_INFLATION << '\n';
           }
       }
 
@@ -434,16 +503,16 @@ namespace transport
         if(earliest_required < this->get_N_initial())
           {
             std::ostringstream msg;
-            msg << "'" << this->get_name() << "': " << __CPP_TRANSPORT_TASK_TWOPF_LIST_TOO_EARLY_A << earliest_required << " "
-              << __CPP_TRANSPORT_TASK_TWOPF_LIST_TOO_EARLY_B << this->get_N_initial();
-            throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
+            msg << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_TWOPF_LIST_TOO_EARLY_A << earliest_required << " "
+              << CPPTRANSPORT_TASK_TWOPF_LIST_TOO_EARLY_B << this->get_N_initial();
+            throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
           }
 
-        if(!this->fast_forward && earliest_required - this->get_N_initial() < __CPP_TRANSPORT_DEFAULT_RECOMMENDED_EFOLDS)
+        if(!this->fast_forward && earliest_required - this->get_N_initial() < CPPTRANSPORT_DEFAULT_RECOMMENDED_EFOLDS)
           {
-            std::cout << "'" << this->get_name() << "': " << __CPP_TRANSPORT_TASK_TWOPF_LIST_CROSS_WARN_A << this->get_N_initial() << " "
-              << __CPP_TRANSPORT_TASK_TWOPF_LIST_CROSS_WARN_B << " " << earliest_required-this->get_N_initial() << " "
-              << __CPP_TRANSPORT_TASK_TWOPF_LIST_CROSS_WARN_C << std::endl;
+            std::cout << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_TWOPF_LIST_CROSS_WARN_A << this->get_N_initial() << " "
+              << CPPTRANSPORT_TASK_TWOPF_LIST_CROSS_WARN_B << " " << earliest_required-this->get_N_initial() << " "
+              << CPPTRANSPORT_TASK_TWOPF_LIST_CROSS_WARN_C << '\n';
           }
       }
 
@@ -472,12 +541,12 @@ namespace transport
         if(raw_times.size() == 0)
           {
             std::ostringstream msg;
-            msg << "'" << this->get_name() << "': " << __CPP_TRANSPORT_TASK_TWOPF_LIST_NO_TIMES;
-            throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
+            msg << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_TWOPF_LIST_NO_TIMES;
+            throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
           }
 
         bool first = true;
-        unsigned int serial = 0;
+        unsigned int serial = CPPTRANSPORT_TIME_DATABASE_LOWEST_SERIAL;
         for(std::vector<double>::const_iterator t = raw_times.begin(); t != raw_times.end(); ++t, ++serial)
           {
             if(*t >= Nbegin)
@@ -486,7 +555,7 @@ namespace transport
                   {
                     if(first)
                       {
-                        if(Nbegin < *t) time_db.add_record(Nbegin, false, 0);
+                        if(Nbegin < *t) time_db.add_record(Nbegin, false, CPPTRANSPORT_TIME_DATABASE_SPECIAL_SERIAL);
                       }
                     time_db.add_record(*t, true, serial);
                     first = false;
@@ -521,7 +590,7 @@ namespace transport
         // get raw time sample points
         const std::vector<double> raw_times = this->times->get_grid();
 
-        unsigned int serial = 0;
+        unsigned int serial = CPPTRANSPORT_TIME_DATABASE_LOWEST_SERIAL;
         for(std::vector<double>::const_iterator t = raw_times.begin(); t != raw_times.end(); ++t, ++serial)
           {
             if(*t >= earliest_recordable)
@@ -539,12 +608,21 @@ namespace transport
 
 		    std::vector<double> N;
 		    std::vector<number> log_aH;
-				this->get_model()->compute_aH(this, N, log_aH, largest_k);
-		    assert(N.size() == log_aH.size());
 
-				spline1d<number> sp(N, log_aH);
+        try
+          {
+            this->get_model()->compute_aH(this, N, log_aH, largest_k);
+            assert(N.size() == log_aH.size());
 
-				this->twopf_compute_horizon_exit_times(sp, TolerancePredicate(1E-5));
+            spline1d<number> sp(N, log_aH);
+
+            this->twopf_compute_horizon_exit_times(sp, task_impl::TolerancePredicate(CPPTRANSPORT_ROOT_FIND_TOLERANCE));
+          }
+        catch(failed_to_compute_horizon_exit& xe)
+          {
+            this->compute_horizon_exit_times_fail(xe);
+            exit(EXIT_FAILURE);
+          }
 			};
 
 
@@ -552,30 +630,69 @@ namespace transport
 		template <typename SplineObject, typename TolerancePolicy>
 		void twopf_list_task<number>::twopf_compute_horizon_exit_times(SplineObject& sp, TolerancePolicy tol)
 			{
-		    boost::uintmax_t max_iter = 500;
-
 		    for(twopf_kconfig_database::config_iterator t = this->twopf_db->config_begin(); t != this->twopf_db->config_end(); ++t)
 			    {
 		        // set spline to evaluate aH-k and then solve for N
 		        sp.set_offset(log(t->k_comoving));
 
-		        // find root; note use of std::ref, because toms748_solve normally would take a copy of
-		        // its system function and this is slow -- we have to copy the whole spline
-		        std::pair< double, double > result = boost::math::tools::toms748_solve(std::ref(sp), sp.get_min_x(), sp.get_max_x(), tol, max_iter);
-
-		        t->t_exit = (result.first + result.second)/2.0;
+		        t->t_exit = task_impl::find_zero_of_spline(sp, tol);
 			    }
 			}
 
 
-		template <typename number>
-		std::ostream& operator<<(std::ostream& out, const twopf_list_task<number>& obj)
+    template <typename number>
+    void twopf_list_task<number>::compute_horizon_exit_times_fail(failed_to_compute_horizon_exit& xe)
+      {
+        std::cout << "'" << this->get_name() << "': ";
+        std::cout << CPPTRANSPORT_TASK_FAIL_COMPUTE_HEXIT << '\n';
+
+        std::cout << CPPTRANSPORT_TASK_SEARCH_FROM << xe.get_search_begin() << " " << CPPTRANSPORT_TASK_SEARCH_TO << xe.get_search_end() << " ";
+
+        if(xe.get_found_end()) std::cout << CPPTRANSPORT_TASK_SEARCH_FOUND_END;
+        else std::cout << CPPTRANSPORT_TASK_SEARCH_NO_FOUND_END;
+        std::cout << '\n';
+
+        std::cout << CPPTRANSPORT_TASK_SEARCH_RECORDED << " " << xe.get_N_samples() << " " << CPPTRANSPORT_TASK_SEARCH_SAMPLES;
+        std::cout << ", " << CPPTRANSPORT_TASK_SEARCH_LAST_SAMPLE << xe.get_last_log_aH() << " ";
+        std::cout << CPPTRANSPORT_TASK_SEARCH_LAST_SAMPLE_TIME << xe.get_last_N();
+        std::cout << ", " << CPPTRANSPORT_TASK_SEARCH_LARGEST_K << std::log(xe.get_largest_k());
+        std::cout << ", " << CPPTRANSPORT_TASK_SEARCH_KAH << xe.get_largest_k()/std::exp(xe.get_last_log_aH()) << '\n';
+
+        if(xe.get_found_end() && xe.get_N_samples() > 1 && xe.get_last_log_aH() < std::log(xe.get_largest_k()))
+          {
+            std::cout << CPPTRANSPORT_TASK_SEARCH_GUESS_FAIL << '\n';
+          }
+        else if(xe.get_found_end() && xe.get_N_samples() > 1 && xe.get_last_log_aH() > std::log(xe.get_largest_k()))
+          {
+            std::cout << CPPTRANSPORT_TASK_SEARCH_TOO_CLOSE_FAIL << '\n';
+          }
+      }
+
+
+    template <typename number>
+    template <typename Stream>
+    void twopf_list_task<number>::write(Stream& out) const
+      {
+        out << CPPTRANSPORT_FAST_FORWARD     << ": " << (this->get_fast_forward() ? CPPTRANSPORT_YES : CPPTRANSPORT_NO) << ", ";
+        out << CPPTRANSPORT_MESH_REFINEMENTS << ": " << this->get_max_refinements() << '\n';
+        out << static_cast< const integration_task<number>& >(*this);
+      }
+
+
+		template <typename number, typename Char, typename Traits>
+		std::basic_ostream<Char, Traits>& operator<<(std::basic_ostream<Char, Traits>& out, const twopf_list_task<number>& obj)
 	    {
-        out << __CPP_TRANSPORT_FAST_FORWARD     << ": " << (obj.fast_forward ? __CPP_TRANSPORT_YES : __CPP_TRANSPORT_NO) << ", ";
-        out << __CPP_TRANSPORT_MESH_REFINEMENTS << ": " << obj.max_refinements << std::endl;
-				out << static_cast< const integration_task<number>& >(obj);
+        obj.write(out);
         return(out);
 	    };
+
+
+    template <typename number, typename Char, typename Traits, typename Allocator>
+    boost::log::basic_formatting_ostream<Char, Traits, Allocator>& operator<<(boost::log::basic_formatting_ostream<Char, Traits, Allocator>& out, const twopf_list_task<number>& obj)
+      {
+        obj.write(out);
+        return(out);
+      };
 
 
 	}   // namespace transport

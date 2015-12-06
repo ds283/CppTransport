@@ -136,39 +136,39 @@ namespace transport
 				zeta_reduced_bispectrum_line<number>::zeta_reduced_bispectrum_line(Json::Value& reader)
 					: derived_line<number>(reader)  // not called because of virtual inheritance; here to silence Intel compiler warning
 					{
-				    use_kt_label    = reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_KT].asBool();
-				    use_alpha_label = reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_ALPHA].asBool();
-				    use_beta_label  = reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_BETA].asBool();
+				    use_kt_label    = reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_KT].asBool();
+				    use_alpha_label = reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_ALPHA].asBool();
+				    use_beta_label  = reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_BETA].asBool();
 					}
 
 
 				template <typename number>
 				std::string zeta_reduced_bispectrum_line<number>::make_LaTeX_label(void) const
 					{
-				    return( std::string(__CPP_TRANSPORT_LATEX_REDUCED_BISPECTRUM_SYMBOL) );
+				    return( std::string(CPPTRANSPORT_LATEX_REDUCED_BISPECTRUM_SYMBOL) );
 					}
 
 
 				template <typename number>
 				std::string zeta_reduced_bispectrum_line<number>::make_non_LaTeX_label(void) const
 					{
-						return( std::string(__CPP_TRANSPORT_NONLATEX_REDUCED_BISPECTRUM_SYMBOL) );
+						return( std::string(CPPTRANSPORT_NONLATEX_REDUCED_BISPECTRUM_SYMBOL) );
 					}
 
 
 				template <typename number>
 				void zeta_reduced_bispectrum_line<number>::serialize(Json::Value& writer) const
 					{
-				    writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_KT] = this->use_kt_label;
-				    writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_ALPHA] = this->use_alpha_label;
-				    writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_BETA] = this->use_beta_label;
+				    writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_KT] = this->use_kt_label;
+				    writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_ALPHA] = this->use_alpha_label;
+				    writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_BETA] = this->use_beta_label;
 					}
 
 
 				template <typename number>
 				void zeta_reduced_bispectrum_line<number>::write(std::ostream& out)
 					{
-				    out << "  " << __CPP_TRANSPORT_PRODUCT_WAVENUMBER_SERIES_LABEL_REDUCED_BISPECTRUM << std::endl;
+				    out << "  " << CPPTRANSPORT_PRODUCT_WAVENUMBER_SERIES_LABEL_REDUCED_BISPECTRUM << '\n';
 					}
 
 			}   // namespace derived_data

@@ -42,7 +42,7 @@ namespace transport
             //! construct a zeta two-pf time data object
             zeta_twopf_time_series(const zeta_twopf_list_task<number>& tk,
                                    SQL_time_config_query tq, SQL_twopf_kconfig_query kq,
-                                   unsigned int prec = __CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
+                                   unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
             //! deserialization constructor
             zeta_twopf_time_series(Json::Value& reader, typename repository_finder<number>::task_finder& finder);
@@ -107,7 +107,7 @@ namespace transport
         template <typename number>
         zeta_twopf_time_series<number>::zeta_twopf_time_series(const zeta_twopf_list_task<number>& tk,
                                                                SQL_time_config_query tq, SQL_twopf_kconfig_query kq, unsigned int prec)
-	        : derived_line<number>(tk, time_axis, std::list<axis_value>{ efolds_axis }, prec),
+	        : derived_line<number>(tk, axis_class::time_axis, std::list<axis_value>{ axis_value::efolds_axis }, prec),
 	          zeta_twopf_line<number>(tk),
 	          time_series<number>(tk),
             tquery(tq),
@@ -123,8 +123,8 @@ namespace transport
           : derived_line<number>(reader, finder),
             zeta_twopf_line<number>(reader),
             time_series<number>(reader),
-            tquery(reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]),
-            kquery(reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY])
+            tquery(reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]),
+            kquery(reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY])
           {
           }
 
@@ -152,23 +152,19 @@ namespace transport
 
                 std::vector<number> line_data = z_handle.lookup_tag(tag);
 
+                value_type value = value_type::correlation_function_value;
 		            if(this->dimensionless)
 			            {
 				            for(unsigned int j = 0; j < line_data.size(); ++j)
 					            {
 						            line_data[j] *= t->k_comoving * t->k_comoving * t->k_comoving / (2.0*M_PI*M_PI);
 					            }
+                    value = value_type::dimensionless_value;
+			            }
 
-		                data_line<number> line = data_line<number>(group, this->x_type, dimensionless_value, t_axis, line_data,
-		                                                           this->get_LaTeX_label(*t), this->get_non_LaTeX_label(*t));
-		                lines.push_back(line);
-			            }
-		            else
-			            {
-		                data_line<number> line = data_line<number>(group, this->x_type, correlation_function_value, t_axis, line_data,
-		                                                           this->get_LaTeX_label(*t), this->get_non_LaTeX_label(*t));
-		                lines.push_back(line);
-			            }
+                data_line<number> line = data_line<number>(group, this->x_type, value, t_axis, line_data,
+                                                           this->get_LaTeX_label(*t), this->get_non_LaTeX_label(*t));
+                lines.push_back(line);
               }
 
             // detach pipe from output group
@@ -232,10 +228,10 @@ namespace transport
         template <typename number>
         void zeta_twopf_time_series<number>::serialize(Json::Value& writer) const
           {
-            writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_TWOPF_TIME_SERIES);
+            writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_TWOPF_TIME_SERIES);
 
-            this->tquery.serialize(writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]);
-            this->kquery.serialize(writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY]);
+            this->tquery.serialize(writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]);
+            this->kquery.serialize(writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY]);
 
             this->derived_line<number>::serialize(writer);
             this->zeta_twopf_line<number>::serialize(writer);
@@ -255,7 +251,7 @@ namespace transport
             //! construct a zeta_threepf_time_series object
             zeta_threepf_time_series(const zeta_threepf_task<number>& tk,
                                      SQL_time_config_query tq, SQL_threepf_kconfig_query kq,
-                                     unsigned int prec = __CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
+                                     unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
             //! deserialization constructor
             zeta_threepf_time_series(Json::Value& reader, typename repository_finder<number>::task_finder& finder);
@@ -315,7 +311,7 @@ namespace transport
         zeta_threepf_time_series<number>::zeta_threepf_time_series(const zeta_threepf_task<number>& tk,
                                                                    SQL_time_config_query tq, SQL_threepf_kconfig_query kq,
                                                                    unsigned int prec)
-          : derived_line<number>(tk, time_axis, std::list<axis_value>{ efolds_axis }, prec),
+          : derived_line<number>(tk, axis_class::time_axis, std::list<axis_value>{ axis_value::efolds_axis }, prec),
             zeta_threepf_line<number>(tk),
             time_series<number>(tk),
             tquery(tq),
@@ -331,8 +327,8 @@ namespace transport
           : derived_line<number>(reader, finder),
             zeta_threepf_line<number>(reader),
             time_series<number>(reader),
-            tquery(reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]),
-            kquery(reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY])
+            tquery(reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]),
+            kquery(reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY])
           {
           }
 
@@ -358,13 +354,22 @@ namespace transport
               {
 		            zeta_threepf_time_data_tag<number> tag = pipe.new_zeta_threepf_time_data_tag(*t);
 
-                // it's safe to take a reference here to avoid a copy; we don't need the cache data to survive over multiple calls to lookup_tag()
-                const std::vector<number>& line_data = z_handle.lookup_tag(tag);
+                std::vector<number> line_data = z_handle.lookup_tag(tag);
 
                 std::string latex_label = "$" + this->make_LaTeX_label() + "\\;" + this->make_LaTeX_tag(*t, this->use_kt_label, this->use_alpha_label, this->use_beta_label) + "$";
                 std::string nonlatex_label = this->make_non_LaTeX_label() + " " + this->make_non_LaTeX_tag(*t, this->use_kt_label, this->use_alpha_label, this->use_beta_label);
 
-                data_line<number> line = data_line<number>(group, this->x_type, correlation_function_value, t_axis, line_data,
+                value_type value = value_type::correlation_function_value;
+                if(this->dimensionless)
+                  {
+                    for(unsigned int j = 0; j < line_data.size(); ++j)
+                      {
+                        line_data[j] *= t->kt_comoving * t->kt_comoving * t->kt_comoving * t->kt_comoving * t->kt_comoving * t->kt_comoving;
+                      }
+                    value = value_type::dimensionless_value;
+                  }
+
+                data_line<number> line = data_line<number>(group, this->x_type, value, t_axis, line_data,
                                                            this->get_LaTeX_label(*t), this->get_non_LaTeX_label(*t));
 
                 lines.push_back(line);
@@ -431,10 +436,10 @@ namespace transport
         template <typename number>
         void zeta_threepf_time_series<number>::serialize(Json::Value& writer) const
           {
-            writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_THREEPF_TIME_SERIES);
+            writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_THREEPF_TIME_SERIES);
 
-            this->tquery.serialize(writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]);
-            this->kquery.serialize(writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY]);
+            this->tquery.serialize(writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]);
+            this->kquery.serialize(writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY]);
 
             this->derived_line<number>::serialize(writer);
             this->zeta_threepf_line<number>::serialize(writer);
@@ -454,7 +459,7 @@ namespace transport
             //! construct a zeta_reduced_bispectrum_time_series object
             zeta_reduced_bispectrum_time_series(const zeta_threepf_task<number>& tk,
                                                 SQL_time_config_query tq, SQL_threepf_kconfig_query kq,
-                                                unsigned int prec = __CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
+                                                unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
             //! deserialization constructor
             zeta_reduced_bispectrum_time_series(Json::Value& reader, typename repository_finder<number>::task_finder& finder);
@@ -514,7 +519,7 @@ namespace transport
         zeta_reduced_bispectrum_time_series<number>::zeta_reduced_bispectrum_time_series(const zeta_threepf_task<number>& tk,
                                                                                          SQL_time_config_query tq, SQL_threepf_kconfig_query kq,
                                                                                          unsigned int prec)
-          : derived_line<number>(tk, time_axis, std::list<axis_value>{ efolds_axis }, prec),
+          : derived_line<number>(tk, axis_class::time_axis, std::list<axis_value>{ axis_value::efolds_axis }, prec),
             zeta_reduced_bispectrum_line<number>(tk),
             time_series<number>(tk),
             tquery(tq),
@@ -530,8 +535,8 @@ namespace transport
           : derived_line<number>(reader, finder),
             zeta_reduced_bispectrum_line<number>(reader),
             time_series<number>(reader),
-            tquery(reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]),
-            kquery(reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY])
+            tquery(reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]),
+            kquery(reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY])
           {
           }
 
@@ -560,7 +565,7 @@ namespace transport
                 // it's safe to take a reference here to avoid a copy; we don't need the cache data to survive over multiple calls to lookup_tag()
                 const std::vector<number>& line_data = z_handle.lookup_tag(tag);
 
-                data_line<number> line = data_line<number>(group, this->x_type, fNL_value, t_axis, line_data,
+                data_line<number> line = data_line<number>(group, this->x_type, value_type::fNL_value, t_axis, line_data,
                                                            this->get_LaTeX_label(*t), this->get_non_LaTeX_label(*t));
 
                 lines.push_back(line);
@@ -627,10 +632,10 @@ namespace transport
         template <typename number>
         void zeta_reduced_bispectrum_time_series<number>::serialize(Json::Value& writer) const
           {
-            writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_REDUCED_BISPECTRUM_TIME_SERIES);
+            writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_REDUCED_BISPECTRUM_TIME_SERIES);
 
-            this->tquery.serialize(writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]);
-            this->kquery.serialize(writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY]);
+            this->tquery.serialize(writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]);
+            this->kquery.serialize(writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY]);
 
             this->derived_line<number>::serialize(writer);
             this->zeta_reduced_bispectrum_line<number>::serialize(writer);

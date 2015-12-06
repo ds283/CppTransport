@@ -4,11 +4,11 @@
 //
 
 
-#ifndef __CPP_TRANSPORT_MESSAGES_H
-#define __CPP_TRANSPORT_MESSAGES_H
+#ifndef CPPTRANSPORT_MESSAGES_H
+#define CPPTRANSPORT_MESSAGES_H
 
 
 #include "transport-runtime-api/localizations/messages_en.h"
 
 
-#endif // __CPP_TRANSPORT_MESSAGES_H
+#endif // CPPTRANSPORT_MESSAGES_H

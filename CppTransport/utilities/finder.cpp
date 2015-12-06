@@ -2,74 +2,74 @@
 // Created by David Seery on 12/06/2013.
 // Copyright (c) 2013-15 University of Sussex. All rights reserved.
 //
-// To change the template use AppCode | Preferences | File Templates.
-//
 
 
 #include <fstream>
 #include <sstream>
+#include <algorithm>
 
 #include "finder.h"
 
 #include "boost/filesystem/operations.hpp"
 
+
 // ******************************************************************
+
 
 finder::finder()
   {
-    using namespace boost::filesystem;
+    boost::filesystem::path cwd(boost::filesystem::initial_path<boost::filesystem::path>());
 
-    path cwd(initial_path<path>());
-
-    paths.push_back(cwd.string());
+    paths.push_back(cwd);
   }
 
-finder::finder(std::string path)
+
+finder::finder(boost::filesystem::path path)
   {
-    paths.push_back(path);
+    paths.emplace_back(std::move(path));
   }
 
-finder::~finder()
-  {
-  }
 
 // ******************************************************************
 
-void finder::add(std::string path)
+
+void finder::add(boost::filesystem::path p)
   {
-    int i;
-    bool match = false;
+    // add path to list, if it isn't already present
+    std::list<boost::filesystem::path>::iterator t = std::find(this->paths.begin(), this->paths.end(), p);
 
-    for(i = 0; i < this->paths.size() && match == false; ++i)
-      {
-        if(this->paths[i] == path)
-          {
-            match = true;
-          }
-      }
+    if(t == this->paths.end()) this->paths.emplace_back(std::move(p));
+  }
 
-    if(match == false)
+
+void finder::add(const std::list<boost::filesystem::path>& plist)
+  {
+    for(const boost::filesystem::path& t : plist)
       {
-        paths.push_back(path);
+        this->add(t);
       }
   }
 
-bool finder::fqpn(std::string leaf, std::string& fqpn)
+
+bool finder::fqpn(const boost::filesystem::path& leaf, boost::filesystem::path& fqpn)
   {
+    if(leaf.is_absolute())
+      {
+        fqpn = boost::filesystem::canonical(leaf);
+        return(boost::filesystem::exists(leaf));
+      }
+
     bool match = false;
 
-    for(int i = 0; match == false && i < this->paths.size(); ++i)
+    for(const boost::filesystem::path& path : this->paths)
       {
-        std::ostringstream filepath;
-        filepath << this->paths[i] << "/" << leaf;
+        boost::filesystem::path file = path / leaf;
 
-        boost::filesystem::path file(filepath.str());
         if(boost::filesystem::exists(file))
           {
-            boost::filesystem::canonical(file);
-
             match = true;
-            fqpn  = filepath.str();
+            fqpn  = boost::filesystem::canonical(file);
+            break;
           }
       }
 

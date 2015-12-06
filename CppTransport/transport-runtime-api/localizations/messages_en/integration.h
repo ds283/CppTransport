@@ -4,29 +4,32 @@
 //
 
 
-#ifndef __CPP_TRANSPORT_MESSAGES_EN_INTERGRATION_H
-#define __CPP_TRANSPORT_MESSAGES_EN_INTERGRATION_H
+#ifndef CPPTRANSPORT_MESSAGES_EN_INTERGRATION_H
+#define CPPTRANSPORT_MESSAGES_EN_INTERGRATION_H
 
 
-#define __CPP_TRANSPORT_OBSERVER_TIME             "Integration in progress: time N"
-#define __CPP_TRANSPORT_OBSERVER_ELAPSED          "| time elapsed since last report"
+#define CPPTRANSPORT_OBSERVER_SLOW_INTEGRATION "Detected slow integration in progress"
+#define CPPTRANSPORT_OBSERVER_UPDATE           "Progress update"
+#define CPPTRANSPORT_OBSERVER_TIME             ": current stepper position is N"
+#define CPPTRANSPORT_OBSERVER_ELAPSED_FIRST    "| time elapsed since beginning of integration"
+#define CPPTRANSPORT_OBSERVER_ELAPSED_LATER    "| time elapsed since last report"
 
-#define __CPP_TRANSPORT_NO_TIMES                  "Fatal: no times specified for integration"
+#define CPPTRANSPORT_NO_TIMES                  "Fatal: no times specified for integration"
 
-#define __CPP_TRANSPORT_SAMPLES_START_TOO_EARLY_A "fatal: sample times begin before the initial time"
-#define __CPP_TRANSPORT_SAMPLES_START_TOO_EARLY_B "earliest sample time"
-#define __CPP_TRANSPORT_SAMPLES_START_TOO_EARLY_C "initial time"
+#define CPPTRANSPORT_SAMPLES_START_TOO_EARLY_A "fatal: sample times begin before the initial time"
+#define CPPTRANSPORT_SAMPLES_START_TOO_EARLY_B "earliest sample time"
+#define CPPTRANSPORT_SAMPLES_START_TOO_EARLY_C "initial time"
 
-#define __CPP_TRANSPORT_NSTAR_TOO_LATE            "Fatal: Nstar is later than the end point of the integration"
+#define CPPTRANSPORT_NSTAR_TOO_LATE            "Fatal: Nstar is later than the end point of the integration"
 
-#define __CPP_TRANSPORT_TWOPF_STORE               "Fatal: failed to find a configuration which would store the two-point function"
-#define __CPP_TRANSPORT_BACKGROUND_STORE          "Fatal: failed to find a configuration which would store the background"
+#define CPPTRANSPORT_TWOPF_STORE               "Fatal: failed to find a configuration which would store the two-point function"
+#define CPPTRANSPORT_BACKGROUND_STORE          "Fatal: failed to find a configuration which would store the background"
 
-#define __CPP_TRANSPORT_NO_DEVICES                "Fatal: no devices specified in context"
+#define CPPTRANSPORT_NO_DEVICES                "Fatal: no devices specified in context"
 
-#define __CPP_TRANSPORT_SINGLE_GPU_ONLY           "GPU error: only a single GPU device is currently supported per worker process"
+#define CPPTRANSPORT_SINGLE_GPU_ONLY           "GPU error: only a single GPU device is currently supported per worker process"
 
-#define __CPP_TRANSPORT_INTEGRATION_FAIL          "Fatal: integration failure"
+#define CPPTRANSPORT_INTEGRATION_FAIL          "Fatal: integration failure"
 
 
-#endif // __CPP_TRANSPORT_MESSAGES_EN_INTEGRATION_H
+#endif // CPPTRANSPORT_MESSAGES_EN_INTEGRATION_H

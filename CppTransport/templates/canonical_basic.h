@@ -45,12 +45,14 @@ namespace transport
 
       public:
 
-        $$__MODEL_basic(instance_manager<number>* mgr)
-	        : $$__MODEL<number>(mgr)
+        //! constructor
+        $$__MODEL_basic()
+	        : $$__MODEL<number>()
 	        {
 	        }
 
-        ~$$__MODEL_basic() = default;
+        //! destructor is default
+        virtual ~$$__MODEL_basic() = default;
 
         // EXTRACT MODEL INFORMATION -- implements a 'model' interface
 
@@ -62,6 +64,10 @@ namespace transport
 
         virtual const std::string& get_pert_stepper() const override { return($$__MODEL_pool::pert_stepper); }
 
+        virtual std::pair< double, double > get_back_tol() const override { return std::make_pair($$__BACKG_ABS_ERR, $$__BACKG_REL_ERR); }
+
+        virtual std::pair< double, double > get_pert_tol() const override { return std::make_pair($$__PERT_ABS_ERR, $$__PERT_REL_ERR); }
+
         // BACKEND INTERFACE
 
       public:
@@ -70,7 +76,7 @@ namespace transport
         virtual context backend_get_context() override;
 
         // Get backend type
-        virtual typename model<number>::backend_type get_backend_type() override;
+        virtual worker_type get_backend_type() override;
 
         //! Get backend memory capacity
         virtual unsigned int get_backend_memory() override;
@@ -99,14 +105,10 @@ namespace transport
       protected:
 
         void twopf_kmode(const twopf_kconfig_record& kconfig, const twopf_list_task<number>* tk,
-                         twopf_batcher<number>& batcher,
-                         boost::timer::nanosecond_type& int_time, boost::timer::nanosecond_type& batch_time,
-                         unsigned int refinement_level);
+                         twopf_batcher<number>& batcher, unsigned int refinement_level);
 
         void threepf_kmode(const threepf_kconfig_record&, const threepf_task<number>* tk,
-                           threepf_batcher<number>& batcher,
-                           boost::timer::nanosecond_type& int_time, boost::timer::nanosecond_type& batch_time,
-                           unsigned int refinement_level);
+                           threepf_batcher<number>& batcher, unsigned int refinement_level);
 
         void populate_twopf_ic(twopf_state<number>& x, unsigned int start, double kmode, double Ninit,
                                const twopf_list_task<number>* tk, const std::vector<number>& ic, bool imaginary = false);
@@ -135,11 +137,7 @@ namespace transport
 	          astar_normalization(tk->get_astar_normalization()),
 	          config(k)
 	        {
-		        this->u2.resize(2*$$__NUMBER_FIELDS);
-
-		        for(unsigned int i = 0; i < 2*$$__NUMBER_FIELDS; ++i)
-			        {
-				        this->u2[i].resize(2*$$__NUMBER_FIELDS);
+		        this->u2.resize(2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS);
 	        }
 
         void operator ()(const twopf_state<number>& __x, twopf_state<number>& __dxdt, double __t);
@@ -161,7 +159,7 @@ namespace transport
 
         const twopf_kconfig config;
 
-        std::vector< std::vector<number> > u2;
+        std::vector<number> u2;
 
 	    };
 
@@ -200,34 +198,13 @@ namespace transport
 	          astar_normalization(tk->get_astar_normalization()),
 	          config(k)
 	        {
-		        this->u2_k1.resize(2*$$__NUMBER_FIELDS);
-		        this->u2_k2.resize(2*$$__NUMBER_FIELDS);
-		        this->u2_k3.resize(2*$$__NUMBER_FIELDS);
+		        this->u2_k1.resize(2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS);
+		        this->u2_k2.resize(2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS);
+		        this->u2_k3.resize(2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS);
 
-		        for(unsigned int i = 0; i < 2*$$__NUMBER_FIELDS; ++i)
-			        {
-				        this->u2_k1[i].resize(2*$$__NUMBER_FIELDS);
-				        this->u2_k2[i].resize(2*$$__NUMBER_FIELDS);
-				        this->u2_k3[i].resize(2*$$__NUMBER_FIELDS);
-	        }
-
-		        this->u3_k1k2k3.resize(2*$$__NUMBER_FIELDS);
-		        this->u3_k2k1k3.resize(2*$$__NUMBER_FIELDS);
-		        this->u3_k3k1k2.resize(2*$$__NUMBER_FIELDS);
-
-		        for(unsigned int i = 0; i < 2*$$__NUMBER_FIELDS; ++i)
-			        {
-				        this->u3_k1k2k3[i].resize(2*$$__NUMBER_FIELDS);
-				        this->u3_k2k1k3[i].resize(2*$$__NUMBER_FIELDS);
-				        this->u3_k3k1k2[i].resize(2*$$__NUMBER_FIELDS);
-
-				        for(unsigned int j = 0; j < 2*$$__NUMBER_FIELDS; j++)
-					        {
-						        this->u3_k1k2k3[i][j].resize(2*$$__NUMBER_FIELDS);
-						        this->u3_k2k1k3[i][j].resize(2*$$__NUMBER_FIELDS);
-						        this->u3_k3k1k2[i][j].resize(2*$$__NUMBER_FIELDS);
-					        }
-			        }
+		        this->u3_k1k2k3.resize(2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS);
+		        this->u3_k2k1k3.resize(2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS);
+		        this->u3_k3k1k2.resize(2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS);
           }
 
         void operator ()(const threepf_state<number>& __x, threepf_state<number>& __dxdt, double __dt);
@@ -249,13 +226,13 @@ namespace transport
 
         const threepf_kconfig config;
 
-        std::vector< std::vector<number> > u2_k1;
-        std::vector< std::vector<number> > u2_k2;
-        std::vector< std::vector<number> > u2_k3;
+        std::vector<number> u2_k1;
+        std::vector<number> u2_k2;
+        std::vector<number> u2_k3;
 
-        std::vector< std::vector< std::vector<number> > > u3_k1k2k3;
-        std::vector< std::vector< std::vector<number> > > u3_k2k1k3;
-        std::vector< std::vector< std::vector<number> > > u3_k3k1k2;
+        std::vector<number> u3_k1k2k3;
+        std::vector<number> u3_k2k1k3;
+        std::vector<number> u3_k3k1k2;
 
 	    };
 
@@ -302,9 +279,9 @@ namespace transport
 
 
     template <typename number>
-    typename model<number>::backend_type $$__MODEL_basic<number>::get_backend_type(void)
+    worker_type $$__MODEL_basic<number>::get_backend_type(void)
 	    {
-        return(model<number>::cpu);
+        return(worker_type::cpu);
 	    }
 
 
@@ -328,13 +305,13 @@ namespace transport
                                                         twopf_batcher<number>& batcher, bool silent)
 	    {
         // set batcher to delayed flushing mode so that we have a chance to unwind failed integrations
-        batcher.set_flush_mode(generic_batcher::flush_delayed);
+        batcher.set_flush_mode(generic_batcher::flush_mode::flush_delayed);
 
         std::ostringstream work_msg;
-        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal)
+        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal)
 	        << "** MPI compute backend processing twopf task";
         work_msg << work;
-        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << work_msg.str();
+        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << work_msg.str();
 //        std::cerr << work_msg.str();
         if(!silent) this->write_task_data(tk, batcher, $$__PERT_ABS_ERR, $$__PERT_REL_ERR, $$__PERT_STEP_SIZE, "$$__PERT_STEPPER");
 
@@ -347,47 +324,38 @@ namespace transport
         const work_queue<twopf_kconfig_record>::device_work_list list = queues[0];
 
         for(unsigned int i = 0; i < list.size(); ++i)
-	        {
-            boost::timer::nanosecond_type int_time;
-            boost::timer::nanosecond_type batch_time;
-
+          {
             bool success = false;
             unsigned int refinement_level = 0;
 
             while(!success)
-	            try
-		            {
-	                // write the time history for this k-configuration
-	                this->twopf_kmode(list[i], tk, batcher, int_time, batch_time, refinement_level);
+            try
+              {
+                // write the time history for this k-configuration
+                this->twopf_kmode(list[i], tk, batcher, refinement_level);    // logging and report of successful integration are wrapped up in the observer stop_timers() method
+		            success = true;
+               }
+	          catch(std::overflow_error& xe)
+		          {
+			          // unwind any batched results before trying again with a refined mesh
+			          if(refinement_level == 0) batcher.report_refinement();
+			          batcher.unbatch(list[i]->serial);
+			          refinement_level++;
 
-	                success = true;
-	                BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal)
-		                << "** " << __CPP_TRANSPORT_SOLVING_CONFIG << " " << list[i]->serial << " (" << i+1
-			                << " " __CPP_TRANSPORT_OF << " " << list.size() << "), "
-			                << __CPP_TRANSPORT_INTEGRATION_TIME << " = " << format_time(int_time) << " | "
-			                << __CPP_TRANSPORT_BATCHING_TIME << " = " << format_time(batch_time);
-		            }
-	            catch(std::overflow_error& xe)
-		            {
-	                // unwind any batched results before trying again with a refined mesh
-	                if(refinement_level == 0) batcher.report_refinement();
-	                batcher.unbatch(list[i]->serial);
-	                refinement_level++;
-
-	                BOOST_LOG_SEV(batcher.get_log(), generic_batcher::warning)
-		                << "** " << __CPP_TRANSPORT_RETRY_CONFIG << " " << list[i]->serial << " (" << i+1
-			                << " " __CPP_TRANSPORT_OF << " " << list.size() << "), "
-			                << __CPP_TRANSPORT_REFINEMENT_LEVEL << " = " << refinement_level
-			                << " (" << __CPP_TRANSPORT_REFINEMENT_INTERNAL << xe.what() << ")";
+	                BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::warning)
+		                << "** " << CPPTRANSPORT_RETRY_CONFIG << " " << list[i]->serial << " (" << i+1
+			                << " " CPPTRANSPORT_OF << " " << list.size() << "), "
+			                << CPPTRANSPORT_REFINEMENT_LEVEL << " = " << refinement_level
+			                << " (" << CPPTRANSPORT_REFINEMENT_INTERNAL << xe.what() << ")";
 		            }
 	            catch(runtime_exception& xe)
 		            {
 	                batcher.report_integration_failure(list[i]->serial);
 	                batcher.unbatch(list[i]->serial);
 
-	                BOOST_LOG_SEV(batcher.get_log(), generic_batcher::error)
-		                << "!! " __CPP_TRANSPORT_FAILED_CONFIG << " " << list[i]->serial << " (" << i+1
-			                << " " __CPP_TRANSPORT_OF << " " << list.size() << ") | " << list[i];
+	                BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::error)
+		                << "!! " CPPTRANSPORT_FAILED_CONFIG << " " << list[i]->serial << " (" << i+1
+			                << " " CPPTRANSPORT_OF << " " << list.size() << ") | " << list[i];
 		            }
 	        }
 	    }
@@ -395,11 +363,9 @@ namespace transport
 
     template <typename number>
     void $$__MODEL_basic<number>::twopf_kmode(const twopf_kconfig_record& kconfig, const twopf_list_task<number>* tk,
-                                              twopf_batcher<number>& batcher,
-                                              boost::timer::nanosecond_type& int_time, boost::timer::nanosecond_type& batch_time,
-                                              unsigned int refinement_level)
-	    {
-        if(refinement_level > tk->get_max_refinements()) throw runtime_exception(runtime_exception::REFINEMENT_FAILURE, __CPP_TRANSPORT_REFINEMENT_TOO_DEEP);
+                                              twopf_batcher<number>& batcher, unsigned int refinement_level)
+      {
+        if(refinement_level > tk->get_max_refinements()) throw runtime_exception(exception_type::REFINEMENT_FAILURE, CPPTRANSPORT_REFINEMENT_TOO_DEEP);
 
         // get time configuration database
         const time_config_database time_db = tk->get_time_config_database(*kconfig);
@@ -416,8 +382,15 @@ namespace transport
         x.resize($$__MODEL_pool::twopf_state_size);
 
         // fix initial conditions - background
-        const std::vector<number>& ics = tk->get_ics_vector(*kconfig);
+        const std::vector<number> ics = tk->get_ics_vector(*kconfig);
         x[$$__MODEL_pool::backg_start + FLATTEN($$__A)] = $$// ics[$$__A];
+
+		    if(batcher.is_collecting_initial_conditions())
+			    {
+				    const std::vector<number> ics_1 = tk->get_ics_exit_vector(*kconfig);
+		        double t_exit = tk->get_ics_exit_time(*kconfig);
+		        batcher.push_ics(kconfig->serial, t_exit, ics_1);
+			    }
 
         // fix initial conditions - tensors
         this->populate_tensor_ic(x, $$__MODEL_pool::tensor_start, kconfig->k_comoving, *(time_db.value_begin()), tk, ics);
@@ -435,9 +408,7 @@ namespace transport
         size_t steps = boost::numeric::odeint::integrate_times($$__MAKE_PERT_STEPPER{twopf_state<number>}, rhs, x, begin_iterator, end_iterator, $$__PERT_STEP_SIZE/pow(4.0,refinement_level), obs);
 
         obs.stop_timers(steps, refinement_level);
-        int_time = obs.get_integration_time();
-        batch_time = obs.get_batching_time();
-	    }
+      }
 
 
     // make initial conditions for each component of the 2pf
@@ -482,13 +453,13 @@ namespace transport
                                                         threepf_batcher<number>& batcher, bool silent)
 	    {
         // set batcher to delayed flushing mode so that we have a chance to unwind failed integrations
-        batcher.set_flush_mode(generic_batcher::flush_delayed);
+        batcher.set_flush_mode(generic_batcher::flush_mode::flush_delayed);
 
         std::ostringstream work_msg;
-        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal)
+        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal)
 	        << "** MPI compute backend processing threepf task";
         work_msg << work;
-        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << work_msg.str();
+        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << work_msg.str();
 //        std::cerr << work_msg.str();
         if(!silent) this->write_task_data(tk, batcher, $$__PERT_ABS_ERR, $$__PERT_REL_ERR, $$__PERT_STEP_SIZE, "$$__PERT_STEPPER");
 
@@ -502,38 +473,29 @@ namespace transport
 
         // step through the queue, solving for the three-point functions in each case
         for(unsigned int i = 0; i < list.size(); ++i)
-	        {
-            boost::timer::nanosecond_type int_time;
-            boost::timer::nanosecond_type batch_time;
-
+          {
             bool success = false;
             unsigned int refinement_level = 0;
 
             while(!success)
-	            try
-		            {
-	                // write the time history for this k-configuration
-	                this->threepf_kmode(list[i], tk, batcher, int_time, batch_time, refinement_level);
+            try
+              {
+                // write the time history for this k-configuration
+                this->threepf_kmode(list[i], tk, batcher, refinement_level);    // logging and report of successful integration are wrapped up in the observer stop_timers() method
+                success = true;
+              }
+            catch(std::overflow_error& xe)
+              {
+		            // unwind any batched results before trying again with a refined mesh
+		            if(refinement_level == 0) batcher.report_refinement();
+		            batcher.unbatch(list[i]->serial);
+		            refinement_level++;
 
-	                success = true;
-	                BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal)
-		                << "** " << __CPP_TRANSPORT_SOLVING_CONFIG << " " << list[i]->serial << " (" << i + 1
-			                << " " << __CPP_TRANSPORT_OF << " " << list.size() << "), "
-			                << __CPP_TRANSPORT_INTEGRATION_TIME << " = " << format_time(int_time) << " | "
-			                << __CPP_TRANSPORT_BATCHING_TIME << " = " << format_time(batch_time);
-		            }
-	            catch(std::overflow_error& xe)
-		            {
-	                // unwind any batched results before trying again with a refined mesh
-	                if(refinement_level == 0) batcher.report_refinement();
-	                batcher.unbatch(list[i]->serial);
-	                refinement_level++;
-
-	                BOOST_LOG_SEV(batcher.get_log(), generic_batcher::warning)
-		                << "** " << __CPP_TRANSPORT_RETRY_CONFIG << " " << list[i]->serial << " (" << i+1
-			                << " " << __CPP_TRANSPORT_OF << " " << list.size() << "), "
-			                << __CPP_TRANSPORT_REFINEMENT_LEVEL << " = " << refinement_level
-			                << " (" << __CPP_TRANSPORT_REFINEMENT_INTERNAL << xe.what() << ")";
+	                BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::warning)
+		                << "** " << CPPTRANSPORT_RETRY_CONFIG << " " << list[i]->serial << " (" << i+1
+			                << " " << CPPTRANSPORT_OF << " " << list.size() << "), "
+			                << CPPTRANSPORT_REFINEMENT_LEVEL << " = " << refinement_level
+			                << " (" << CPPTRANSPORT_REFINEMENT_INTERNAL << xe.what() << ")";
 		            }
 	            catch(runtime_exception& xe)
 		            {
@@ -541,10 +503,10 @@ namespace transport
 	                batcher.unbatch(list[i]->serial);
 	                success = true;
 
-	                BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal)
-		                << "!! " __CPP_TRANSPORT_FAILED_CONFIG << " " << list[i]->serial << " (" << i+1
-			                << " " << __CPP_TRANSPORT_OF << " " << list.size() << ") | " << list[i]
-			                << " (" << __CPP_TRANSPORT_FAILED_INTERNAL << xe.what() << ")";
+	                BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal)
+		                << "!! " CPPTRANSPORT_FAILED_CONFIG << " " << list[i]->serial << " (" << i+1
+			                << " " << CPPTRANSPORT_OF << " " << list.size() << ") | " << list[i]
+			                << " (" << CPPTRANSPORT_FAILED_INTERNAL << xe.what() << ")";
 		            }
 	        }
 	    }
@@ -552,11 +514,9 @@ namespace transport
 
     template <typename number>
     void $$__MODEL_basic<number>::threepf_kmode(const threepf_kconfig_record& kconfig, const threepf_task<number>* tk,
-                                                threepf_batcher<number>& batcher,
-                                                boost::timer::nanosecond_type& int_time, boost::timer::nanosecond_type& batch_time,
-                                                unsigned int refinement_level)
-	    {
-        if(refinement_level > tk->get_max_refinements()) throw runtime_exception(runtime_exception::REFINEMENT_FAILURE, __CPP_TRANSPORT_REFINEMENT_TOO_DEEP);
+                                                threepf_batcher<number>& batcher, unsigned int refinement_level)
+      {
+        if(refinement_level > tk->get_max_refinements()) throw runtime_exception(exception_type::REFINEMENT_FAILURE, CPPTRANSPORT_REFINEMENT_TOO_DEEP);
 
         // get list of time steps, and storage list
         const time_config_database time_db = tk->get_time_config_database(*kconfig);
@@ -575,8 +535,18 @@ namespace transport
         // fix initial conditions - background
         // use fast-forwarding if enabled
         // (don't need explicit FLATTEN since it would appear on both sides)
-        const std::vector<number>& ics = tk->get_ics_vector(*kconfig);
+        const std::vector<number> ics = tk->get_ics_vector(*kconfig);
         x[$$__MODEL_pool::backg_start + $$__A] = $$// ics[$$__A];
+
+		    if(batcher.is_collecting_initial_conditions())
+			    {
+				    const std::vector<number> ics_1 = tk->get_ics_exit_vector(*kconfig, threepf_ics_exit_type::smallest_wavenumber_exit);
+				    const std::vector<number> ics_2 = tk->get_ics_exit_vector(*kconfig, threepf_ics_exit_type::kt_wavenumber_exit);
+		        double t_exit_1 = tk->get_ics_exit_time(*kconfig, threepf_ics_exit_type::smallest_wavenumber_exit);
+		        double t_exit_2 = tk->get_ics_exit_time(*kconfig, threepf_ics_exit_type::kt_wavenumber_exit);
+		        batcher.push_ics(kconfig->serial, t_exit_1, ics_1);
+		        batcher.push_kt_ics(kconfig->serial, t_exit_2, ics_2);
+			    }
 
         // fix initial conditions - tensors
         this->populate_tensor_ic(x, $$__MODEL_pool::tensor_k1_start, kconfig->k1_comoving, *(time_db.value_begin()), tk, ics);
@@ -606,9 +576,7 @@ namespace transport
         size_t steps = boost::numeric::odeint::integrate_times( $$__MAKE_PERT_STEPPER{threepf_state<number>}, rhs, x, begin_iterator, end_iterator, $$__PERT_STEP_SIZE/pow(4.0,refinement_level), obs);
 
         obs.stop_timers(steps, refinement_level);
-        int_time = obs.get_integration_time();
-        batch_time = obs.get_batching_time();
-	    }
+      }
 
 
     template <typename number>
@@ -633,7 +601,7 @@ namespace transport
         const auto $$__COORDINATE[A] = __x[FLATTEN($$__A)];
         const auto __Mp              = this->Mp;
         const auto __k               = this->config.k_comoving;
-        const auto __a               = exp(__t - this->N_horizon_exit + this->astar_normalization);
+        const auto __a               = std::exp(__t - this->N_horizon_exit + this->astar_normalization);
         const auto __Hsq             = $$__HUBBLE_SQ;
         const auto __eps             = $$__EPSILON;
 
@@ -670,7 +638,7 @@ namespace transport
         __dtwopf_tensor(1,1) = __pf*__tensor_twopf_fp + __pp*__tensor_twopf_pp + __pf*__tensor_twopf_pf + __pp*__tensor_twopf_pp;
 
         // set up components of the u2 tensor
-        this->u2[$$__A][$$__B] = $$__U2_PREDEF[AB]{__k, __a, __Hsq, __eps};
+        this->u2[FLATTEN($$__A,$$__B)] = $$__U2_PREDEF[AB]{__k, __a, __Hsq, __eps};
 
         // evolve the 2pf
         // here, we are dealing only with the real part - which is symmetric.
@@ -681,8 +649,8 @@ namespace transport
 		        {
 	            __dtwopf(__i,__j) = 0;
 
-	            __dtwopf(__i,__j) += this->u2[__i][$$__K]*__twopf($$__K,__j);
-	            __dtwopf(__i,__j) += this->u2[__j][$$__K]*__twopf(__i,$$__K);
+	            __dtwopf(__i,__j) += this->u2[FLATTEN(__i,$$__K)]*__twopf($$__K,__j);
+	            __dtwopf(__i,__j) += this->u2[FLATTEN(__j,$$__K)]*__twopf(__i,$$__K);
 		        }
         }
 	    }
@@ -694,7 +662,7 @@ namespace transport
     template <typename number>
     void $$__MODEL_basic_twopf_observer<number>::operator()(const twopf_state<number>& x, double t)
 	    {
-        this->start_batching(t, this->get_log(), generic_batcher::normal);
+        this->start_batching(t, this->get_log(), generic_batcher::log_severity_level::normal);
         this->push(x);
         this->stop_batching();
 	    }
@@ -712,7 +680,7 @@ namespace transport
         const auto __k1              = this->config.k1_comoving;
         const auto __k2              = this->config.k2_comoving;
         const auto __k3              = this->config.k3_comoving;
-        const auto __a               = exp(__t - this->N_horizon_exit + this->astar_normalization);
+        const auto __a               = std::exp(__t - this->N_horizon_exit + this->astar_normalization);
         const auto __Hsq             = $$__HUBBLE_SQ;
         const auto __eps             = $$__EPSILON;
 
@@ -801,14 +769,14 @@ namespace transport
         __dtwopf_k3_tensor(1,1) = __pf*__tensor_k3_twopf_fp + __pp*__tensor_k3_twopf_pp + __pf*__tensor_k3_twopf_pf + __pp*__tensor_k3_twopf_pp;
 
         // set up components of the u2 tensor for k1, k2, k3
-        this->u2_k1[$$__A][$$__B] = $$__U2_PREDEF[AB]{__k1, __a, __Hsq, __eps};
-        this->u2_k2[$$__A][$$__B] = $$__U2_PREDEF[AB]{__k2, __a, __Hsq, __eps};
-        this->u2_k3[$$__A][$$__B] = $$__U2_PREDEF[AB]{__k3, __a, __Hsq, __eps};
+        this->u2_k1[FLATTEN($$__A,$$__B)] = $$__U2_PREDEF[AB]{__k1, __a, __Hsq, __eps};
+        this->u2_k2[FLATTEN($$__A,$$__B)] = $$__U2_PREDEF[AB]{__k2, __a, __Hsq, __eps};
+        this->u2_k3[FLATTEN($$__A,$$__B)] = $$__U2_PREDEF[AB]{__k3, __a, __Hsq, __eps};
 
         // set up components of the u3 tensor
-        this->u3_k1k2k3[$$__A][$$__B][$$__C] = $$__U3_PREDEF[ABC]{__k1, __k2, __k3, __a, __Hsq, __eps};
-        this->u3_k2k1k3[$$__A][$$__B][$$__C] = $$__U3_PREDEF[ABC]{__k2, __k1, __k3, __a, __Hsq, __eps};
-        this->u3_k3k1k2[$$__A][$$__B][$$__C] = $$__U3_PREDEF[ABC]{__k3, __k1, __k2, __a, __Hsq, __eps};
+        this->u3_k1k2k3[FLATTEN($$__A,$$__B,$$__C)] = $$__U3_PREDEF[ABC]{__k1, __k2, __k3, __a, __Hsq, __eps};
+        this->u3_k2k1k3[FLATTEN($$__A,$$__B,$$__C)] = $$__U3_PREDEF[ABC]{__k2, __k1, __k3, __a, __Hsq, __eps};
+        this->u3_k3k1k2[FLATTEN($$__A,$$__B,$$__C)] = $$__U3_PREDEF[ABC]{__k3, __k1, __k2, __a, __Hsq, __eps};
 
         for(unsigned int __i = 0; __i < 2*$$__NUMBER_FIELDS; ++__i)
         {
@@ -827,23 +795,23 @@ namespace transport
 	                // evolve the real and imaginary components of the 2pf
 	                // for the imaginary parts, index placement *does* matter so we must take care
 
-	                __dtwopf_re_k1(__i,__j) += this->u2_k1[__i][__k]*__twopf_re_k1(__k,__j);
-	                __dtwopf_re_k1(__i,__j) += this->u2_k1[__j][__k]*__twopf_re_k1(__i,__k);
+	                __dtwopf_re_k1(__i,__j) += this->u2_k1[FLATTEN(__i,__k)]*__twopf_re_k1(__k,__j);
+	                __dtwopf_re_k1(__i,__j) += this->u2_k1[FLATTEN(__j,__k)]*__twopf_re_k1(__i,__k);
 
-	                __dtwopf_im_k1(__i,__j) += this->u2_k1[__i][__k]*__twopf_im_k1(__k,__j);
-	                __dtwopf_im_k1(__i,__j) += this->u2_k1[__j][__k]*__twopf_im_k1(__i,__k);
+	                __dtwopf_im_k1(__i,__j) += this->u2_k1[FLATTEN(__i,__k)]*__twopf_im_k1(__k,__j);
+	                __dtwopf_im_k1(__i,__j) += this->u2_k1[FLATTEN(__j,__k)]*__twopf_im_k1(__i,__k);
 
-	                __dtwopf_re_k2(__i,__j) += this->u2_k2[__i][__k]*__twopf_re_k2(__k,__j);
-	                __dtwopf_re_k2(__i,__j) += this->u2_k2[__j][__k]*__twopf_re_k2(__i,__k);
+	                __dtwopf_re_k2(__i,__j) += this->u2_k2[FLATTEN(__i,__k)]*__twopf_re_k2(__k,__j);
+	                __dtwopf_re_k2(__i,__j) += this->u2_k2[FLATTEN(__j,__k)]*__twopf_re_k2(__i,__k);
 
-	                __dtwopf_im_k2(__i,__j) += this->u2_k2[__i][__k]*__twopf_im_k2(__k,__j);
-	                __dtwopf_im_k2(__i,__j) += this->u2_k2[__j][__k]*__twopf_im_k2(__i,__k);
+	                __dtwopf_im_k2(__i,__j) += this->u2_k2[FLATTEN(__i,__k)]*__twopf_im_k2(__k,__j);
+	                __dtwopf_im_k2(__i,__j) += this->u2_k2[FLATTEN(__j,__k)]*__twopf_im_k2(__i,__k);
 
-	                __dtwopf_re_k3(__i,__j) += this->u2_k3[__i][__k]*__twopf_re_k3(__k,__j);
-	                __dtwopf_re_k3(__i,__j) += this->u2_k3[__j][__k]*__twopf_re_k3(__i,__k);
+	                __dtwopf_re_k3(__i,__j) += this->u2_k3[FLATTEN(__i,__k)]*__twopf_re_k3(__k,__j);
+	                __dtwopf_re_k3(__i,__j) += this->u2_k3[FLATTEN(__j,__k)]*__twopf_re_k3(__i,__k);
 
-	                __dtwopf_im_k3(__i,__j) += this->u2_k3[__i][__k]*__twopf_im_k3(__k,__j);
-	                __dtwopf_im_k3(__i,__j) += this->u2_k3[__j][__k]*__twopf_im_k3(__i,__k);
+	                __dtwopf_im_k3(__i,__j) += this->u2_k3[FLATTEN(__i,__k)]*__twopf_im_k3(__k,__j);
+	                __dtwopf_im_k3(__i,__j) += this->u2_k3[FLATTEN(__j,__k)]*__twopf_im_k3(__i,__k);
 
 	                // evolve the components of the 3pf
 	                // index placement matters, partly because of the k-dependence
@@ -851,18 +819,18 @@ namespace transport
 
 	                __dthreepf(__i,__j,__k) = 0;
 
-	                __dthreepf(__i,__j,__k) += 0 $$// + this->u2_k1[__i][$$__M]*__threepf($$__M,__j,__k);
-	                __dthreepf(__i,__j,__k) += 0 $$// + this->u2_k2[__j][$$__M]*__threepf(__i,$$__M,__k);
-	                __dthreepf(__i,__j,__k) += 0 $$// + this->u2_k3[__k][$$__M]*__threepf(__i,__j,$$__M);
+	                __dthreepf(__i,__j,__k) += 0 $$// + this->u2_k1[FLATTEN(__i,$$__M)]*__threepf($$__M,__j,__k);
+	                __dthreepf(__i,__j,__k) += 0 $$// + this->u2_k2[FLATTEN(__j,$$__M)]*__threepf(__i,$$__M,__k);
+	                __dthreepf(__i,__j,__k) += 0 $$// + this->u2_k3[FLATTEN(__k,$$__M)]*__threepf(__i,__j,$$__M);
 
-	                __dthreepf(__i,__j,__k) += 0 $$// + this->u3_k1k2k3[__i][$$__M][$$__N]*__twopf_re_k2($$__M,__j)*__twopf_re_k3($$__N,__k);
-	                __dthreepf(__i,__j,__k) += 0 $$// - this->u3_k1k2k3[__i][$$__M][$$__N]*__twopf_im_k2($$__M,__j)*__twopf_im_k3($$__N,__k);
+	                __dthreepf(__i,__j,__k) += 0 $$// + this->u3_k1k2k3[FLATTEN(__i,$$__M,$$__N)]*__twopf_re_k2($$__M,__j)*__twopf_re_k3($$__N,__k);
+	                __dthreepf(__i,__j,__k) += 0 $$// - this->u3_k1k2k3[FLATTEN(__i,$$__M,$$__N)]*__twopf_im_k2($$__M,__j)*__twopf_im_k3($$__N,__k);
 
-	                __dthreepf(__i,__j,__k) += 0 $$// + this->u3_k2k1k3[__j][$$__M][$$__N]*__twopf_re_k1(__i,$$__M)*__twopf_re_k3($$__N,__k);
-	                __dthreepf(__i,__j,__k) += 0 $$// - this->u3_k2k1k3[__j][$$__M][$$__N]*__twopf_im_k1(__i,$$__M)*__twopf_im_k3($$__N,__k);
+	                __dthreepf(__i,__j,__k) += 0 $$// + this->u3_k2k1k3[FLATTEN(__j,$$__M,$$__N)]*__twopf_re_k1(__i,$$__M)*__twopf_re_k3($$__N,__k);
+	                __dthreepf(__i,__j,__k) += 0 $$// - this->u3_k2k1k3[FLATTEN(__j,$$__M,$$__N)]*__twopf_im_k1(__i,$$__M)*__twopf_im_k3($$__N,__k);
 
-	                __dthreepf(__i,__j,__k) += 0 $$// + this->u3_k3k1k2[__k][$$__M][$$__N]*__twopf_re_k1(__i,$$__M)*__twopf_re_k2(__j,$$__N);
-	                __dthreepf(__i,__j,__k) += 0 $$// - this->u3_k3k1k2[__k][$$__M][$$__N]*__twopf_im_k1(__i,$$__M)*__twopf_im_k2(__j,$$__N);
+	                __dthreepf(__i,__j,__k) += 0 $$// + this->u3_k3k1k2[FLATTEN(__k,$$__M,$$__N)]*__twopf_re_k1(__i,$$__M)*__twopf_re_k2(__j,$$__N);
+	                __dthreepf(__i,__j,__k) += 0 $$// - this->u3_k3k1k2[FLATTEN(__k,$$__M,$$__N)]*__twopf_im_k1(__i,$$__M)*__twopf_im_k2(__j,$$__N);
 		            }
 		        }
         }
@@ -875,7 +843,7 @@ namespace transport
     template <typename number>
     void $$__MODEL_basic_threepf_observer<number>::operator()(const threepf_state<number>& x, double t)
 	    {
-        this->start_batching(t, this->get_log(), generic_batcher::normal);
+        this->start_batching(t, this->get_log(), generic_batcher::log_severity_level::normal);
         this->push(x);
         this->stop_batching();
 	    }

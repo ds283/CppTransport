@@ -33,6 +33,10 @@
 #include "transport-runtime-api/derived-products/utilities/wrapper.h"
 
 
+#define CPPTRANSPORT_NODE_PRODUCT_ZETA_THREEPF_LINE_ROOT          "zeta-threepf-line-settings"
+#define CPPTRANSPORT_NODE_PRODUCT_ZETA_THREEPF_LINE_DIMENSIONLESS "dimensionless"
+
+
 namespace transport
 	{
 
@@ -59,6 +63,17 @@ namespace transport
 				    zeta_threepf_line(Json::Value& reader);
 
 				    virtual ~zeta_threepf_line() = default;
+
+
+            // SETTINGS
+
+          public:
+
+            //! is this dimensionles?
+            bool is_dimensionless() const { return(this->dimensionless); }
+
+            //! set dimensionless
+            void set_dimensionless(bool g) { this->dimensionless = g; }
 
 
 		        // MANAGE LABEL OPTIONS
@@ -119,6 +134,9 @@ namespace transport
 		        //! use beta on line labels?
 		        bool use_beta_label;
 
+            //! compute the dimensionless threepf?
+            bool dimensionless;
+
 			    };
 
 
@@ -134,39 +152,51 @@ namespace transport
 				zeta_threepf_line<number>::zeta_threepf_line(Json::Value& reader)
           : derived_line<number>(reader)  // not called because of virtual inheritance; here to silence Intel compiler warning
 					{
-            use_kt_label    = reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_KT].asBool();
-            use_alpha_label = reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_ALPHA].asBool();
-            use_beta_label  = reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_BETA].asBool();
+            use_kt_label    = reader[CPPTRANSPORT_NODE_PRODUCT_ZETA_THREEPF_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_KT].asBool();
+            use_alpha_label = reader[CPPTRANSPORT_NODE_PRODUCT_ZETA_THREEPF_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_ALPHA].asBool();
+            use_beta_label  = reader[CPPTRANSPORT_NODE_PRODUCT_ZETA_THREEPF_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_BETA].asBool();
+
+            dimensionless   = reader[CPPTRANSPORT_NODE_PRODUCT_ZETA_THREEPF_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_ZETA_THREEPF_LINE_DIMENSIONLESS].asBool();
 					}
 
 
 				template <typename number>
 				std::string zeta_threepf_line<number>::make_LaTeX_label(void) const
 					{
-				    return( std::string(__CPP_TRANSPORT_LATEX_ZETA_SYMBOL) + std::string(" ") + std::string(__CPP_TRANSPORT_LATEX_ZETA_SYMBOL) + std::string(" ") + std::string(__CPP_TRANSPORT_LATEX_ZETA_SYMBOL) );
+            std::ostringstream label;
+            if(this->dimensionless) label << CPPTRANSPORT_LATEX_KT_SIX << " ";
+            label << CPPTRANSPORT_LATEX_ZETA_SYMBOL << " " << CPPTRANSPORT_LATEX_ZETA_SYMBOL << " " << CPPTRANSPORT_LATEX_ZETA_SYMBOL;
+
+            return(label.str());
 					}
 
 
 				template <typename number>
 				std::string zeta_threepf_line<number>::make_non_LaTeX_label(void) const
 					{
-						return( std::string(__CPP_TRANSPORT_NONLATEX_ZETA_SYMBOL) + std::string(" ") + std::string(__CPP_TRANSPORT_NONLATEX_ZETA_SYMBOL + std::string(" ") + std::string(__CPP_TRANSPORT_NONLATEX_ZETA_SYMBOL)) );
+            std::ostringstream label;
+            if(this->dimensionless) label << CPPTRANSPORT_NONLATEX_KT_SIX << " ";
+            label << CPPTRANSPORT_NONLATEX_ZETA_SYMBOL << " " << CPPTRANSPORT_NONLATEX_ZETA_SYMBOL << " " << CPPTRANSPORT_NONLATEX_ZETA_SYMBOL;
+
+            return(label.str());
 					}
 
 
 				template <typename number>
 				void zeta_threepf_line<number>::serialize(Json::Value& writer) const
 					{
-				    writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_KT] = this->use_kt_label;
-				    writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_ALPHA] = this->use_alpha_label;
-				    writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_BETA] = this->use_beta_label;
+            writer[CPPTRANSPORT_NODE_PRODUCT_ZETA_THREEPF_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_KT]    = this->use_kt_label;
+            writer[CPPTRANSPORT_NODE_PRODUCT_ZETA_THREEPF_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_ALPHA] = this->use_alpha_label;
+            writer[CPPTRANSPORT_NODE_PRODUCT_ZETA_THREEPF_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_BETA]  = this->use_beta_label;
+
+            writer[CPPTRANSPORT_NODE_PRODUCT_ZETA_THREEPF_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_ZETA_THREEPF_LINE_DIMENSIONLESS]  = this->dimensionless;
 					}
 
 
 				template <typename number>
 				void zeta_threepf_line<number>::write(std::ostream& out)
 					{
-				    out << "  " << __CPP_TRANSPORT_PRODUCT_WAVENUMBER_SERIES_LABEL_ZETA_THREEPF << std::endl;
+				    out << "  " << CPPTRANSPORT_PRODUCT_WAVENUMBER_SERIES_LABEL_ZETA_THREEPF << '\n';
 					}
 
 			}   // namespace derived_data

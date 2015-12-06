@@ -41,7 +41,7 @@ namespace transport
 
       public:
 
-        json_repository(const std::string& path, typename repository<number>::access_type type,
+        json_repository(const std::string& path, repository_mode type,
                                   typename repository<number>::error_callback e,
                                   typename repository<number>::warning_callback w,
                                   typename repository<number>::message_callback m,
@@ -118,7 +118,7 @@ namespace transport
 
 
     template <typename number>
-    json_repository<number>::json_repository(const std::string& path, typename repository<number>::access_type type,
+    json_repository<number>::json_repository(const std::string& path, repository_mode type,
                                              typename repository<number>::error_callback e,
                                              typename repository<number>::warning_callback w,
                                              typename repository<number>::message_callback m,
@@ -151,8 +151,8 @@ namespace transport
         if(!out.is_open() || out.fail())
 	        {
             std::stringstream msg;
-            msg << __CPP_TRANSPORT_REPO_COMMIT_FAILURE << " '" << record.get_name() << "'";
-            throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
+            msg << CPPTRANSPORT_REPO_COMMIT_FAILURE << " '" << record.get_name() << "'";
+            throw runtime_exception(exception_type::REPOSITORY_ERROR, msg.str());
 	        }
 
         out << root;
@@ -173,8 +173,8 @@ namespace transport
         if(!boost::filesystem::is_regular_file(abs_record))
 	        {
             std::stringstream msg;
-            msg << __CPP_TRANSPORT_REPO_DESERIALIZE_FAILURE << " '" << path << "'";
-            throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
+            msg << CPPTRANSPORT_REPO_DESERIALIZE_FAILURE << " '" << path << "'";
+            throw runtime_exception(exception_type::REPOSITORY_ERROR, msg.str());
 	        }
 
         std::ifstream in;
@@ -186,8 +186,8 @@ namespace transport
         else
 	        {
             std::stringstream msg;
-            msg << __CPP_TRANSPORT_REPO_DESERIALIZE_FAILURE << " '" << path << "'";
-            throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
+            msg << CPPTRANSPORT_REPO_DESERIALIZE_FAILURE << " '" << path << "'";
+            throw runtime_exception(exception_type::REPOSITORY_ERROR, msg.str());
 	        }
 
         return(root);

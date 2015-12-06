@@ -14,26 +14,23 @@
 
 #include "transport-runtime-api/utilities/random_string.h"
 
+#include "boost/log/utility/formatting_ostream.hpp"
+
 #include "sqlite3.h"
 
 
-#define __CPP_TRANSPORT_NODE_FAST_FORWARD                  "fast-forward"
-#define __CPP_TRANSPORT_NODE_FAST_FORWARD_EFOLDS           "ff-efolds"
-#define __CPP_TRANSPORT_NODE_MESH_REFINEMENTS              "mesh-refinements"
-#define __CPP_TRANSPORT_NODE_END_OF_INFLATION              "end-of-inflation"
+#define CPPTRANSPORT_NODE_FAST_FORWARD                  "fast-forward"
+#define CPPTRANSPORT_NODE_FAST_FORWARD_EFOLDS           "ff-efolds"
+#define CPPTRANSPORT_NODE_MESH_REFINEMENTS              "mesh-refinements"
+#define CPPTRANSPORT_NODE_END_OF_INFLATION              "end-of-inflation"
 
-#define __CPP_TRANSPORT_NODE_TIME_RANGE                    "integration-range"
+#define CPPTRANSPORT_NODE_TIME_RANGE                    "integration-range"
 
-#define __CPP_TRANSPORT_NODE_PACKAGE_NAME                  "package"
+#define CPPTRANSPORT_NODE_PACKAGE_NAME                  "package"
 
 
 namespace transport
 	{
-
-    template <typename number> class integration_task;
-
-    template <typename number>
-    std::ostream& operator<<(std::ostream& out, const integration_task<number>& obj);
 
     //! An 'integration_task' is a specialization of 'task'. It contains the basic information
     //! needed to carry out an integration. The more specialized two- and three-pf integration
@@ -151,8 +148,8 @@ namespace transport
 
       public:
 
-        //! Write to a standard output stream
-        friend std::ostream& operator<< <>(std::ostream& out, const integration_task<number>& obj);
+        //! write self-details to stream
+        template <typename Stream> void write(Stream& obj) const;
 
 
         // INTERNAL DATA
@@ -190,24 +187,24 @@ namespace transport
         cached_end_of_inflation(false)
 	    {
         // validate relation between Nstar and the sampling time
-        assert(times->get_steps() > 0);
+        assert(times->size() > 0);
         assert(times->get_min() >= ics.get_N_initial());
 
-        if(times->get_steps() == 0)
+        if(times->size() == 0)
 	        {
             std::ostringstream msg;
-            msg << "'" << this->get_name() << "': " << __CPP_TRANSPORT_NO_TIMES;
-            throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
+            msg << "'" << this->get_name() << "': " << CPPTRANSPORT_NO_TIMES;
+            throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
 	        }
 
         // the sampling points don't have to begin at the initial time, but they shouldn't be earlier than it
         if(times->get_min() < ics.get_N_initial())
 	        {
             std::ostringstream msg;
-            msg << "'" << this->get_name() << "': " << __CPP_TRANSPORT_SAMPLES_START_TOO_EARLY_A << " ("
-              << __CPP_TRANSPORT_SAMPLES_START_TOO_EARLY_B << "=" << times->get_min() << ", "
-              << __CPP_TRANSPORT_SAMPLES_START_TOO_EARLY_C << "=" << i.get_N_initial() << ")";
-            throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
+            msg << "'" << this->get_name() << "': " << CPPTRANSPORT_SAMPLES_START_TOO_EARLY_A << " ("
+              << CPPTRANSPORT_SAMPLES_START_TOO_EARLY_B << "=" << times->get_min() << ", "
+              << CPPTRANSPORT_SAMPLES_START_TOO_EARLY_C << "=" << i.get_N_initial() << ")";
+            throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
 	        }
 	    }
 
@@ -216,12 +213,12 @@ namespace transport
     integration_task<number>::integration_task(const std::string& nm, Json::Value& reader, const initial_conditions<number>& i)
 	    : derivable_task<number>(nm, reader),
 	      ics(i),
-	      times(range_helper::deserialize<double>(reader[__CPP_TRANSPORT_NODE_TIME_RANGE])),
+	      times(range_helper::deserialize<double>(reader[CPPTRANSPORT_NODE_TIME_RANGE])),
         cached_end_of_inflation(true)
 	    {
-		    if(reader.isMember(__CPP_TRANSPORT_NODE_END_OF_INFLATION))
+		    if(reader.isMember(CPPTRANSPORT_NODE_END_OF_INFLATION))
 			    {
-		        end_of_inflation = reader[__CPP_TRANSPORT_NODE_END_OF_INFLATION].asDouble();
+		        end_of_inflation = reader[CPPTRANSPORT_NODE_END_OF_INFLATION].asDouble();
 						cached_end_of_inflation = true;
 			    }
 		    else
@@ -256,18 +253,18 @@ namespace transport
     void integration_task<number>::serialize(Json::Value& writer) const
 	    {
         // store name of package
-        writer[__CPP_TRANSPORT_NODE_PACKAGE_NAME] = this->ics.get_name();
+        writer[CPPTRANSPORT_NODE_PACKAGE_NAME] = this->ics.get_name();
 
 		    if(this->cached_end_of_inflation)
 			    {
-		        writer[__CPP_TRANSPORT_NODE_END_OF_INFLATION] = this->end_of_inflation;
+		        writer[CPPTRANSPORT_NODE_END_OF_INFLATION] = this->end_of_inflation;
 			    }
 		    else
 			    {
 				    try
 					    {
 				        // can't use get_N_end_of_inflation() because it is not const
-				        writer[__CPP_TRANSPORT_NODE_END_OF_INFLATION] = this->ics.get_model()->compute_end_of_inflation(this);
+				        writer[CPPTRANSPORT_NODE_END_OF_INFLATION] = this->ics.get_model()->compute_end_of_inflation(this);
 					    }
 						catch (end_of_inflation_not_found& xe)
 							{
@@ -277,7 +274,7 @@ namespace transport
 
         Json::Value time_data(Json::objectValue);
         this->times->serialize(time_data);
-        writer[__CPP_TRANSPORT_NODE_TIME_RANGE] = time_data;
+        writer[CPPTRANSPORT_NODE_TIME_RANGE] = time_data;
 
         // note that we do not serialize the initial conditions;
         // these are handled separately by the repository layer
@@ -320,7 +317,7 @@ namespace transport
 		    // get raw time sample points
 		    const std::vector<double>& raw_times = this->times->get_grid();
 
-        unsigned int serial = 0;
+        unsigned int serial = CPPTRANSPORT_TIME_DATABASE_LOWEST_SERIAL;
         bool first = true;
 		    for(std::vector<double>::const_iterator t = raw_times.begin(); t != raw_times.end(); ++t, ++serial)
 			    {
@@ -328,7 +325,7 @@ namespace transport
               {
                 if(first)   // check that initial time is included, because this sets where the integrator begins
                   {
-                    if(this->get_N_initial() < *t) time_db.add_record(this->get_N_initial(), false, 0);
+                    if(this->get_N_initial() < *t) time_db.add_record(this->get_N_initial(), false, CPPTRANSPORT_TIME_DATABASE_SPECIAL_SERIAL);
                   }
                 time_db.add_record(*t, true, serial);
                 first = false;
@@ -368,12 +365,27 @@ namespace transport
 
 
     template <typename number>
-    std::ostream& operator<<(std::ostream& out, const integration_task<number>& obj)
+    template <typename Stream>
+    void integration_task<number>::write(Stream& out) const
+      {
+        out << this->get_ics() << '\n';
+      }
+
+
+    template <typename number, typename Char, typename Traits>
+    std::basic_ostream<Char, Traits>& operator<<(std::basic_ostream<Char, Traits>& out, const integration_task<number>& obj)
 	    {
-        out << obj.ics << std::endl;
-//        out << __CPP_TRANSPORT_TASK_TIMES << obj.times;
+        obj.write(out);
         return(out);
 	    }
+
+
+    template <typename number, typename Char, typename Traits, typename Allocator>
+    boost::log::basic_formatting_ostream<Char, Traits, Allocator>& operator<<(boost::log::basic_formatting_ostream<Char, Traits, Allocator>& out, const integration_task<number>& obj)
+      {
+        obj.write(out);
+        return(out);
+      }
 
 	}   // namespace transport
 

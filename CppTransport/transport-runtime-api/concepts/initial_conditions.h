@@ -26,14 +26,16 @@
 // forward-declare initial conditions class
 #include "transport-runtime-api/concepts/initial_conditions_forward_declare.h"
 
+#include "boost/log/utility/formatting_ostream.hpp"
 
-#define __CPP_TRANSPORT_NODE_ICS_VALUE         "value"
-#define __CPP_TRANSPORT_NODE_ICS_MODEL_UID     "model-uid"
-#define __CPP_TRANSPORT_NODE_ICS_NAME          "name"
-#define __CPP_TRANSPORT_NODE_ICS_N_SUB_HORIZON "sub-horizon-efolds"
-#define __CPP_TRANSPORT_NODE_ICS_N_INIT        "initial-time"
-#define __CPP_TRANSPORT_NODE_ICS_VALUES        "values"
-#define __CPP_TRANSPORT_NODE_ICS_PARAMETERS    "parameters"
+
+#define CPPTRANSPORT_NODE_ICS_VALUE         "value"
+#define CPPTRANSPORT_NODE_ICS_MODEL_UID     "model-uid"
+#define CPPTRANSPORT_NODE_ICS_NAME          "name"
+#define CPPTRANSPORT_NODE_ICS_N_SUB_HORIZON "sub-horizon-efolds"
+#define CPPTRANSPORT_NODE_ICS_N_INIT        "initial-time"
+#define CPPTRANSPORT_NODE_ICS_VALUES        "values"
+#define CPPTRANSPORT_NODE_ICS_PARAMETERS    "parameters"
 
 
 namespace transport
@@ -50,13 +52,31 @@ namespace transport
         //! Construct named initial conditions from directly-supplied data.
         //! There are Npre e-folds of evolution prior to horizon exit for the conventionally-normalized
         //! mode with k=1, so N* (the horizon-crossing time for the k=1 mode) is equal to Ninit + Npre
-        initial_conditions(const std::string& nm, model<number>* m, const parameters<number>& p, const std::vector<number>& i,
+        initial_conditions(const std::string& nm, model<number>* m,
+                           const parameters<number>& p, const std::vector<number>& i,
                            double Nini, double Npre);
 
-        //! Construct anonymized initial conditions from directly-supplied data
-        initial_conditions(model<number>* m, const parameters<number>& p, const std::vector<number>& i,
+        //! Convenience constructor which accepts a shared_ptr<> to a model instance, but doesn't actually use this
+        //! to manage the lifetime; we work with raw pointers
+        initial_conditions(const std::string& nm, std::shared_ptr< model<number> > m,
+                           const parameters<number>& p, const std::vector<number>& i,
                            double Nini, double Npre)
+          : initial_conditions(nm, m.get(), p, i, Nini, Npre)
+          {
+          }
+
+        //! Construct anonymized initial conditions from directly-supplied data
+        initial_conditions(model<number>* m, const parameters<number>& p,
+                           const std::vector<number>& i, double Nini, double Npre)
           : initial_conditions(random_string(), m, p, i, Nini, Npre)
+          {
+          }
+
+        //! Convenience constructor which accepts a shared_ptr<> to a model instance, but doesn't actually use this
+        //! to manage the lifetime; we work with raw pointers
+        initial_conditions(std::shared_ptr< model<number> > m, const parameters<number>& p,
+                           const std::vector<number>& i, double Nini, double Npre)
+          : initial_conditions(random_string(), m.get(), p, i, Nini, Npre)
           {
           }
 
@@ -69,11 +89,29 @@ namespace transport
                            const parameters<number>& p, const std::vector<number>& i,
                            double Nini, double Ncross, double Npre);
 
+        //! Convenience constructor which accepts a shared_ptr<> to a model instance, but doesn't actually use this
+        //! to manage the lifetime; we work with raw pointers
+        initial_conditions(const std::string& nm, std::shared_ptr< model<number> > m,
+                           const parameters<number>& p, const std::vector<number>& i,
+                           double Nini, double Ncross, double Npre)
+          : initial_conditions(nm, m.get(), p, i, Nini, Ncross, Npre)
+          {
+          }
+
         //! Construct anonymized initial conditions offset from directly-supplied data using a supplied model
         initial_conditions(model<number>* m,
                            const parameters<number>& p, const std::vector<number>& i,
                            double Nini, double Ncross, double Npre)
           : initial_conditions(random_string(), m, p, i, Nini, Ncross, Npre)
+          {
+          }
+
+        //! Convenience constructor which accepts a shared_ptr<> to a model instance, but doesn't actually use this
+        //! to manage the lifetime; we work with raw pointers
+        initial_conditions(std::shared_ptr< model<number> > m,
+                           const parameters<number>& p, const std::vector<number>& i,
+                           double Nini, double Ncross, double Npre)
+          : initial_conditions(random_string(), m.get, p, i, Nini, Ncross, Npre)
           {
           }
 
@@ -130,12 +168,12 @@ namespace transport
         virtual void serialize(Json::Value& writer) const override;
 
 
-        // WRITE TO A STREAM
+        // WRITE SELF TO STREAM
 
       public:
 
-        //! Write ourselves to a stream
-        friend std::ostream& operator<< <>(std::ostream& out, const initial_conditions<number>& obj);
+        //! write details
+        template <typename Stream> void write(Stream& out) const;
 
 
         // INTERNAL DATA
@@ -167,17 +205,21 @@ namespace transport
     initial_conditions<number>::initial_conditions(const std::string& nm, model<number>* m,
                                                    const parameters<number>& p, const std::vector<number>& i,
                                                    double Nini, double Npre)
-      : name(nm), mdl(m), params(p), N_init(Nini), N_sub_horizon(Npre)
+      : name(nm),
+        mdl(m),
+        params(p),
+        N_init(Nini),
+        N_sub_horizon(Npre)
       {
 		    assert(m != nullptr);
-		    if(m == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_ICS_NULL_MODEL);
+		    if(m == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_ICS_NULL_MODEL);
 
         // check model matches the one supplied with parameters
         if(m->get_identity_string() != p.get_model()->get_identity_string())
           {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_ICS_MODEL_MISMATCH << " '" << nm << "'";
-            throw runtime_exception(runtime_exception::TASK_STRUCTURE_ERROR, msg.str());
+            msg << CPPTRANSPORT_ICS_MODEL_MISMATCH << " '" << nm << "'";
+            throw runtime_exception(exception_type::TASK_STRUCTURE_ERROR, msg.str());
           }
 
         // validate supplied initial conditions - we rely on the validator to throw
@@ -191,10 +233,14 @@ namespace transport
     initial_conditions<number>::initial_conditions(const std::string& nm, model<number>* m,
                                                    const parameters<number>& p, const std::vector<number>& i,
                                                    double Nini, double Ncross, double Npre)
-      : name(nm), mdl(m), params(p), N_init(Ncross-Npre), N_sub_horizon(Npre)
+      : name(nm),
+        mdl(m),
+        params(p),
+        N_init(Ncross-Npre),
+        N_sub_horizon(Npre)
       {
         assert(m != nullptr);
-        if(m == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_ICS_NULL_MODEL);
+        if(m == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_ICS_NULL_MODEL);
 
         std::vector<number> validated_ics;
 
@@ -209,25 +255,25 @@ namespace transport
     template <typename number>
     initial_conditions<number>::initial_conditions(const std::string& nm, Json::Value& reader,
                                                    typename instance_manager<number>::model_finder f)
-      : name(nm), params(reader[__CPP_TRANSPORT_NODE_ICS_PARAMETERS], f)
+      : name(nm), params(reader[CPPTRANSPORT_NODE_ICS_PARAMETERS], f)
       {
 		    // construct model object
-        std::string uid = reader[__CPP_TRANSPORT_NODE_ICS_MODEL_UID].asString();
+        std::string uid = reader[CPPTRANSPORT_NODE_ICS_MODEL_UID].asString();
 		    mdl = f(uid);
 
         // deserialize time parameters
-        N_init        = reader[__CPP_TRANSPORT_NODE_ICS_N_INIT].asDouble();
-        N_sub_horizon = reader[__CPP_TRANSPORT_NODE_ICS_N_SUB_HORIZON].asDouble();
+        N_init        = reader[CPPTRANSPORT_NODE_ICS_N_INIT].asDouble();
+        N_sub_horizon = reader[CPPTRANSPORT_NODE_ICS_N_SUB_HORIZON].asDouble();
 
         // deserialize array of initial values
-        Json::Value& ics_array = reader[__CPP_TRANSPORT_NODE_ICS_VALUES];
+        Json::Value& ics_array = reader[CPPTRANSPORT_NODE_ICS_VALUES];
 		    assert(ics_array.isArray());
 
         std::vector< named_list::element<number> > temp;
 		    for(Json::Value::iterator t = ics_array.begin(); t != ics_array.end(); ++t)
           {
-            std::string field_name = (*t)[__CPP_TRANSPORT_NODE_ICS_NAME].asString();
-            double field_value = (*t)[__CPP_TRANSPORT_NODE_ICS_VALUE].asDouble();
+            std::string field_name = (*t)[CPPTRANSPORT_NODE_ICS_NAME].asString();
+            double field_value = (*t)[CPPTRANSPORT_NODE_ICS_VALUE].asDouble();
 
             temp.push_back(named_list::element<number>(field_name, static_cast<number>(field_value)));
           }
@@ -235,7 +281,7 @@ namespace transport
 		    // sort into order required by model object
         const std::vector<std::string>& field_ordering = mdl->get_state_names();
 
-        if(temp.size() != field_ordering.size()) throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_BADLY_FORMED_ICS);
+        if(temp.size() != field_ordering.size()) throw runtime_exception(exception_type::REPOSITORY_BACKEND_ERROR, CPPTRANSPORT_BADLY_FORMED_ICS);
 
         named_list::ordering order_map = named_list::make_ordering(field_ordering);
         named_list::comparator<number> cmp(order_map);
@@ -281,11 +327,11 @@ namespace transport
     void initial_conditions<number>::serialize(Json::Value& writer) const
       {
 		    // serialize model UID
-		    writer[__CPP_TRANSPORT_NODE_ICS_MODEL_UID] = this->mdl->get_identity_string();
+		    writer[CPPTRANSPORT_NODE_ICS_MODEL_UID] = this->mdl->get_identity_string();
 
         // serialize time parameters
-        writer[__CPP_TRANSPORT_NODE_ICS_N_SUB_HORIZON] = this->N_sub_horizon;
-        writer[__CPP_TRANSPORT_NODE_ICS_N_INIT]        = this->N_init;
+        writer[CPPTRANSPORT_NODE_ICS_N_SUB_HORIZON] = this->N_sub_horizon;
+        writer[CPPTRANSPORT_NODE_ICS_N_INIT]        = this->N_init;
 
         // serialize array of initial values
         Json::Value ics(Json::arrayValue);
@@ -296,33 +342,48 @@ namespace transport
         for(unsigned int i = 0; i < this->ics.size(); ++i)
           {
             Json::Value ics_element(Json::objectValue);
-		        ics_element[__CPP_TRANSPORT_NODE_ICS_NAME] = names[i];
-		        ics_element[__CPP_TRANSPORT_NODE_ICS_VALUE] = static_cast<double>(this->ics[i]);
+		        ics_element[CPPTRANSPORT_NODE_ICS_NAME] = names[i];
+		        ics_element[CPPTRANSPORT_NODE_ICS_VALUE] = static_cast<double>(this->ics[i]);
 		        ics.append(ics_element);
           }
-		    writer[__CPP_TRANSPORT_NODE_ICS_VALUES] = ics;
+		    writer[CPPTRANSPORT_NODE_ICS_VALUES] = ics;
 
         Json::Value params_serialize(Json::objectValue);
         this->params.serialize(params_serialize);
-        writer[__CPP_TRANSPORT_NODE_ICS_PARAMETERS] = params_serialize;
+        writer[CPPTRANSPORT_NODE_ICS_PARAMETERS] = params_serialize;
       }
 
 
     template <typename number>
-    std::ostream& operator<<(std::ostream& out, const initial_conditions<number>& obj)
+    template <typename Stream>
+    void initial_conditions<number>::write(Stream& out) const
       {
-        out << obj.params << std::endl;
+        out << this->params << '\n';
 
-		    const std::vector<std::string>& names = obj.mdl->get_state_names();
-        assert(obj.ics.size() == names.size());
+        const std::vector<std::string>& names = this->mdl->get_state_names();
+        assert(this->ics.size() == names.size());
 
-        out << __CPP_TRANSPORT_ICS_TAG << std::endl;
-        for(unsigned int i = 0; i < obj.ics.size(); ++i)
+        out << CPPTRANSPORT_ICS_TAG << '\n';
+        for(unsigned int i = 0; i < this->ics.size(); ++i)
           {
-            out << "  " << names[i] << " = " << obj.ics[i] << std::endl;
+            out << "  " << names[i] << " = " << this->ics[i] << '\n';
           }
+      }
 
-        return(out);
+
+    template <typename number, typename Char, typename Traits>
+    std::basic_ostream<Char, Traits>& operator<<(std::basic_ostream<Char, Traits>& out, const initial_conditions<number>& obj)
+      {
+        obj.write(out);
+        return (out);
+      }
+
+
+    template <typename number, typename Char, typename Traits, typename Allocator>
+    boost::log::basic_formatting_ostream<Char, Traits, Allocator>& operator<<(boost::log::basic_formatting_ostream<Char, Traits, Allocator>& out, const initial_conditions<number>& obj)
+      {
+        obj.write(out);
+        return (out);
       }
 
   }

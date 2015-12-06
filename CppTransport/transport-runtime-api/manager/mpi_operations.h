@@ -13,6 +13,10 @@
 #include "boost/date_time/posix_time/time_serialize.hpp"
 #include "boost/timer/timer.hpp"
 
+#include "transport-runtime-api/manager/argument_cache.h"
+
+#include "transport-runtime-api/enumerations.h"
+
 
 namespace transport
   {
@@ -62,32 +66,25 @@ namespace transport
                 slave_setup_payload() = default;
 
                 //! Value constructor (used for constructing messages to send)
-                slave_setup_payload(const boost::filesystem::path& rp, unsigned int bcp, unsigned int pcp)
+                slave_setup_payload(const boost::filesystem::path& rp, argument_cache& ac)
                   : repository(rp.string()),
-                    batcher_capacity(bcp),
-                    data_capacity(pcp)
+                    arg_cache(ac)
                   {
                   }
 
 		            //! Get path to repository
                 boost::filesystem::path get_repository_path() const { return(boost::filesystem::path(this->repository)); }
 
-		            //! Get batcher capacity
-		            unsigned int get_batcher_capacity() const { return(this->batcher_capacity); }
-
-		            //! Get datapipe main cache capacity
-		            unsigned int get_data_capacity()    const { return(this->data_capacity); }
+                //! Get argument cache
+                const argument_cache&   get_argument_cache()  const { return(this->arg_cache); }
 
               private:
 
                 //! Pathname to repository
                 std::string repository;
 
-		            //! Batcher capacity
-		            unsigned int batcher_capacity;
-
-		            //! Datapipe main cache capacity
-		            unsigned int data_capacity;
+                //! Argument cache
+                argument_cache arg_cache;
 
                 // enable boost::serialization support, and hence automated packing for transmission over MPI
                 friend class boost::serialization::access;
@@ -96,8 +93,7 @@ namespace transport
                 void serialize(Archive& ar, unsigned int version)
                   {
                     ar & repository;
-		                ar & batcher_capacity;
-		                ar & data_capacity;
+		                ar & arg_cache;
                   }
 
               };
@@ -105,10 +101,6 @@ namespace transport
 
 		        class slave_information_payload
 			        {
-
-		          public:
-
-			          typedef enum { cpu, gpu } worker_type;
 
 		          public:
 
@@ -124,7 +116,7 @@ namespace transport
 					        }
 
 				        //! Get worker type
-				        worker_type get_type() const { return(this->type); }
+                worker_type get_type() const { return(this->type); }
 
 				        //! Get worker capacity
 				        unsigned int get_capacity() const { return(this->capacity); }
@@ -135,7 +127,7 @@ namespace transport
 		          private:
 
 				        //! Worker type
-				        worker_type type;
+                worker_type type;
 
 				        //! Worker memory capacity (integrations only)
 				        unsigned int capacity;
@@ -507,7 +499,7 @@ namespace transport
 
               public:
 
-                typedef enum { twopf_payload, threepf_payload } payload_type;
+                enum class payload_type { twopf_payload, threepf_payload };
 
                 //! Default constructor (used for receiving messages)
                 content_ready_payload() = default;

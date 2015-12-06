@@ -101,7 +101,7 @@ namespace transport
         // We have to call it ourselves.
         template <typename number>
         fNL_time_series<number>::fNL_time_series(const fNL_task<number>& tk, SQL_time_config_query tq)
-          : derived_line<number>(tk, time_axis, std::list<axis_value>{ efolds_axis }),
+          : derived_line<number>(tk, axis_class::time_axis, std::list<axis_value>{ axis_value::efolds_axis }),
             fNL_line<number>(tk),
             time_series<number>(tk),
             tquery(tq)
@@ -117,7 +117,7 @@ namespace transport
           : derived_line<number>(reader, finder),
             fNL_line<number>(reader),
             time_series<number>(reader),
-            tquery(reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY])
+            tquery(reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY])
           {
           }
 
@@ -140,7 +140,7 @@ namespace transport
 		        // it's safe to take a reference here to avoid a copy; we don't need the cache data to survive over multiple calls to lookup_tag()
             const std::vector<number>& line_data = z_handle.lookup_tag(tag);
 
-            data_line<number> line = data_line<number>(group, this->x_type, fNL_value, t_axis, line_data, this->get_LaTeX_label(), this->get_non_LaTeX_label());
+            data_line<number> line = data_line<number>(group, this->x_type, value_type::fNL_value, t_axis, line_data, this->get_LaTeX_label(), this->get_non_LaTeX_label());
 
             lines.push_back(line);
 
@@ -201,9 +201,9 @@ namespace transport
         template <typename number>
         void fNL_time_series<number>::serialize(Json::Value& writer) const
           {
-            writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_FNL_TIME_SERIES);
+            writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_FNL_TIME_SERIES);
 
-            this->tquery.serialize(writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]);
+            this->tquery.serialize(writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]);
 
             this->derived_line<number>::serialize(writer);
             this->fNL_line<number>::serialize(writer);

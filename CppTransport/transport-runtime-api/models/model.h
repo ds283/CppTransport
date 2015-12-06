@@ -5,17 +5,19 @@
 // To change the template use AppCode | Preferences | File Templates.
 //
 
-#ifndef __CPP_TRANSPORT_MODEL_H_
-#define __CPP_TRANSPORT_MODEL_H_
+#ifndef CPPTRANSPORT_MODEL_H_
+#define CPPTRANSPORT_MODEL_H_
 
 #include <string>
 #include <vector>
 #include <functional>
+#include <memory>
 
 #include <math.h>
 
 #include "transport-runtime-api/messages.h"
 #include "transport-runtime-api/defaults.h"
+#include "transport-runtime-api/enumerations.h"
 
 #include "transport-runtime-api/concepts/flattener.h"
 #include "transport-runtime-api/concepts/initial_conditions.h"
@@ -54,24 +56,25 @@ namespace transport
 
         typedef std::vector< std::vector<number> > backg_history;
 
-		    typedef enum { cpu, gpu } backend_type;
-
-
         // CONSTRUCTORS, DESTRUCTORS
 
       public:
 
-        model(instance_manager<number>* m, const std::string& u, unsigned int v);
-		    ~model();
+        //! constructor
+        model(const std::string& u, unsigned int v);
+
+        //! destructor is default
+		    ~model() = default;
 
 
         // EXTRACT MODEL INFORMATION
 
       public:
 
-        //! Return unique string identifying the model (and CppTransport version)
+        //! Return UID identifying the model
         const std::string&                      get_identity_string() const { return(this->uid); }
 
+        //! Return version of translator used to produce the header
         unsigned int                            get_translator_version() const { return(this->tver); }
 
         //! Return name of the model implemented by this object
@@ -86,6 +89,10 @@ namespace transport
         virtual const std::string&              get_back_stepper() const = 0;
         //! Return name of stepper used to do perturbation evolution in the computation
         virtual const std::string&              get_pert_stepper() const = 0;
+        //! Return (abs, rel) tolerance of stepper used to do background evolution
+        virtual std::pair< double, double >     get_back_tol() const = 0;
+        //! Return (abs, rel) tolerance of stepper used to do perturbation evolution
+        virtual std::pair< double, double >     get_pert_tol() const = 0;
 
         //! Return number of fields belonging to the model implemented by this object
         virtual unsigned int                    get_N_fields() const = 0;
@@ -126,8 +133,8 @@ namespace transport
         //! The supplied parameters should be validated.
         void offset_ics(const parameters<number>& params, const std::vector<number>& input, std::vector<number>& output,
                         double Ninit, double Ncross, double Npre,
-                        double tolerance = __CPP_TRANSPORT_DEFAULT_ICS_GAP_TOLERANCE,
-                        unsigned int time_steps = __CPP_TRANSPORT_DEFAULT_ICS_TIME_STEPS);
+                        double tolerance = CPPTRANSPORT_DEFAULT_ICS_GAP_TOLERANCE,
+                        unsigned int time_steps = CPPTRANSPORT_DEFAULT_ICS_TIME_STEPS);
 
 
 		    // WAVENUMBER NORMALIZATION
@@ -135,10 +142,10 @@ namespace transport
       public:
 
         //! Get value of H at horizon crossing, which can be used to normalize the comoving waveumbers
-        double compute_kstar(const twopf_list_task<number>* tk, unsigned int time_steps=__CPP_TRANSPORT_DEFAULT_ICS_TIME_STEPS);
+        double compute_kstar(const twopf_list_task<number>* tk, unsigned int time_steps=CPPTRANSPORT_DEFAULT_ICS_TIME_STEPS);
 
         //! Compute when the end of inflation occurs relative to the initial conditions
-        virtual double compute_end_of_inflation(const integration_task<number>* tk, double search_time=__CPP_TRANSPORT_DEFAULT_END_OF_INFLATION_SEARCH) = 0;
+        virtual double compute_end_of_inflation(const integration_task<number>* tk, double search_time=CPPTRANSPORT_DEFAULT_END_OF_INFLATION_SEARCH) = 0;
 
 		    //! Compute aH as a function of N up to the horizon-exit time of some wavenumber
 		    virtual void compute_aH(const twopf_list_task<number>* tk, std::vector<double>& N, std::vector<number>& aH, double largest_k) = 0;
@@ -159,25 +166,25 @@ namespace transport
         // pure virtual, so must be implemented by derived class
         virtual void compute_gauge_xfm_1(const twopf_list_task<number>* __task, const std::vector<number>& __state, std::vector<number>& __dN) = 0;
 
-        virtual void compute_gauge_xfm_2(const twopf_list_task<number>* __task, const std::vector<number>& __state, double __k, double __k1, double __k2, double __N, std::vector< std::vector<number> >& __ddN) = 0;
+        virtual void compute_gauge_xfm_2(const twopf_list_task<number>* __task, const std::vector<number>& __state, double __k, double __k1, double __k2, double __N, std::vector<number>& __ddN) = 0;
 
 		    // calculate 'deltaN' gauge transformations using separate-universe methods
 		    // pure virtual, so must be implemented by derived class
 		    virtual void compute_deltaN_xfm_1(const twopf_list_task<number>* __task, const std::vector<number>& __state, std::vector<number>& __dN) = 0;
 
-		    virtual void compute_deltaN_xfm_2(const twopf_list_task<number>* __task, const std::vector<number>& __state, std::vector< std::vector<number> >& __ddN) = 0;
+		    virtual void compute_deltaN_xfm_2(const twopf_list_task<number>* __task, const std::vector<number>& __state, std::vector<number>& __ddN) = 0;
 
         // calculate tensor quantities, including the 'flow' tensors u2, u3 and the basic tensors A, B, C from which u3 is built
 		    // pure virtual, so must be implemented by derived class
-        virtual void u2(const twopf_list_task<number>* __task, const std::vector<number>& __fields, double __k, double __N, std::vector< std::vector<number> >& __u2) = 0;
+        virtual void u2(const twopf_list_task<number>* __task, const std::vector<number>& __fields, double __k, double __N, std::vector<number>& __u2) = 0;
 
-        virtual void u3(const twopf_list_task<number>* __task, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __u3) = 0;
+        virtual void u3(const twopf_list_task<number>* __task, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector<number>& __u3) = 0;
 
-        virtual void A(const twopf_list_task<number>* __task, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __A) = 0;
+        virtual void A(const twopf_list_task<number>* __task, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector<number>& __A) = 0;
 
-        virtual void B(const twopf_list_task<number>* __task, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __B) = 0;
+        virtual void B(const twopf_list_task<number>* __task, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector<number>& __B) = 0;
 
-        virtual void C(const twopf_list_task<number>* __task, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __C) = 0;
+        virtual void C(const twopf_list_task<number>* __task, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector<number>& __C) = 0;
 
 
         // BACKEND
@@ -190,7 +197,7 @@ namespace transport
         virtual context backend_get_context(void) = 0;
 
 		    // obtain backend type
-		    virtual backend_type get_backend_type(void) = 0;
+		    virtual worker_type get_backend_type(void) = 0;
 
 		    // obtain backend memory capacity
 		    virtual unsigned int get_backend_memory(void) = 0;
@@ -234,9 +241,6 @@ namespace transport
 
       private:
 
-        //! copy of instance manager, used for deregistration
-        instance_manager<number>* mgr;
-
         //! copy of unique id, used for deregistration
         const std::string uid;
 
@@ -249,22 +253,13 @@ namespace transport
     //  IMPLEMENTATION -- CLASS MODEL
 
 
-    // EXTRACT MODEL INFORMATION
+    // CONSTRUCTOR, DESTRUCTOR
 
     template <typename number>
-    model<number>::model(instance_manager<number>* m, const std::string& u, unsigned int v)
-      : mgr(m), uid(u), tver(v)
+    model<number>::model(const std::string& u, unsigned int v)
+      : uid(u),
+        tver(v)
       {
-        // Register ourselves with the instance manager
-        mgr->register_model(this, uid, tver);
-      }
-
-
-    template <typename number>
-    model<number>::~model()
-      {
-        assert(this->mgr != nullptr);
-        mgr->deregister_model(this, this->uid, tver);
       }
 
 
@@ -310,7 +305,7 @@ namespace transport
             else
               {
                 assert(false);
-                throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_INTEGRATION_FAIL);
+                throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_INTEGRATION_FAIL);
               }
           }
       }
@@ -320,15 +315,15 @@ namespace transport
     void model<number>::write_task_data(const integration_task<number>* task, generic_batcher& batcher,
                                         double abs_err, double rel_err, double step_size, std::string stepper_name)
       {
-        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << __CPP_TRANSPORT_SOLVING_ICS_MESSAGE;
+        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << CPPTRANSPORT_SOLVING_ICS_MESSAGE;
 
-        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << *task;
+        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << *task;
 
-        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal)
-          << __CPP_TRANSPORT_STEPPER_MESSAGE    << " '"  << stepper_name
-          << "', " << __CPP_TRANSPORT_ABS_ERR   << " = " << abs_err
-          << ", "  << __CPP_TRANSPORT_REL_ERR   << " = " << rel_err
-          << ", "  << __CPP_TRANSPORT_STEP_SIZE << " = " << step_size;
+        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal)
+          << CPPTRANSPORT_STEPPER_MESSAGE    << " '"  << stepper_name
+          << "', " << CPPTRANSPORT_ABS_ERR   << " = " << abs_err
+          << ", "  << CPPTRANSPORT_REL_ERR   << " = " << rel_err
+          << ", "  << CPPTRANSPORT_STEP_SIZE << " = " << step_size;
       }
 
 
@@ -362,11 +357,11 @@ namespace transport
         else
           {
             assert(false);
-            throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_INTEGRATION_FAIL);
+            throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_INTEGRATION_FAIL);
           }
       }
 
 
   }    // namespace transport
 
-#endif // __CPP_TRANSPORT_MODEL_H_
+#endif // CPPTRANSPORT_MODEL_H_

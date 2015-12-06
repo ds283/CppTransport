@@ -34,7 +34,6 @@
 
 #include "transport-runtime-api/utilities/latex_output.h"
 
-#include "transport-runtime-api/derived-products/derived-content/correlation-functions/compute-gadgets/threepf_time_shift.h"
 #include "transport-runtime-api/derived-products/derived-content/SQL_query/SQL_query.h"
 
 
@@ -98,7 +97,7 @@ namespace transport
 		      public:
 
 		        //! write self-details to a stream
-		        virtual void write(std::ostream& out);
+		        virtual void write(std::ostream& out) override;
 
 
 		        // SERIALIZATION -- implements a 'serializable' interface
@@ -107,14 +106,6 @@ namespace transport
 
 		        //! Serialize this object
 		        virtual void serialize(Json::Value& writer) const override;
-
-
-            // INTERNAL DATA
-
-          protected:
-
-            //! 3pf shift delegate
-            threepf_time_shift<number> shifter;
 
 			    };
 
@@ -136,8 +127,8 @@ namespace transport
 		    template <typename number>
 		    std::vector<double> time_series<number>::pull_time_axis(datapipe<number>& pipe, const SQL_time_config_query& tquery) const
 			    {
-				    assert(this->x_type == efolds_axis);
-		        if(!pipe.validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_PRODUCT_TIME_SERIES_NULL_DATAPIPE);
+				    assert(this->x_type == axis_value::efolds_axis);
+		        if(!pipe.validate_attached()) throw runtime_exception(exception_type::DATAPIPE_ERROR, CPPTRANSPORT_PRODUCT_TIME_SERIES_NULL_DATAPIPE);
 
 		        // set-up time sample data
 				    typename datapipe<number>::time_config_handle& handle = pipe.new_time_config_handle(tquery);
@@ -163,9 +154,17 @@ namespace transport
 
 				    label << std::setprecision(this->precision);
 
-				    label << __CPP_TRANSPORT_NONLATEX_K_SYMBOL << "=";
-				    if(this->get_klabel_meaning() == conventional) label << config.k_conventional;
-				    else label << config.k_comoving;
+				    label << CPPTRANSPORT_NONLATEX_K_SYMBOL << "=";
+            switch(this->get_klabel_meaning())
+              {
+                case klabel_type::conventional:
+                  label << config.k_conventional;
+                  break;
+
+                case klabel_type::comoving:
+                  label << config.k_comoving;
+                  break;
+              }
 
 				    return(label.str());
 					}
@@ -176,9 +175,17 @@ namespace transport
 					{
 				    std::ostringstream label;
 
-				    label << __CPP_TRANSPORT_LATEX_K_SYMBOL << "=";
-				    if(this->get_klabel_meaning() == conventional) label << output_latex_number(config.k_conventional, this->precision);
-				    else label << output_latex_number(config.k_comoving, this->precision);
+				    label << CPPTRANSPORT_LATEX_K_SYMBOL << "=";
+            switch(this->get_klabel_meaning())
+              {
+                case klabel_type::conventional:
+                  label << output_latex_number(config.k_conventional, this->precision);
+                  break;
+
+                case klabel_type::comoving:
+                  label << output_latex_number(config.k_comoving, this->precision);
+                  break;
+              }
 
             return(label.str());
 					}
@@ -193,19 +200,27 @@ namespace transport
 		        unsigned int count = 0;
 		        if(use_kt)
 			        {
-		            label << (count > 0 ? ",\\, " : "") << __CPP_TRANSPORT_LATEX_KT_SYMBOL << "=";
-		            if(this->get_klabel_meaning() == conventional) label << output_latex_number(config.kt_conventional, this->precision);
-		            else label << output_latex_number(config.kt_comoving, this->precision);
+		            label << (count > 0 ? ",\\, " : "") << CPPTRANSPORT_LATEX_KT_SYMBOL << "=";
+                switch(this->get_klabel_meaning())
+                  {
+                    case klabel_type::conventional:
+                      label << output_latex_number(config.kt_conventional, this->precision);
+                      break;
+
+                    case klabel_type::comoving:
+                      label << output_latex_number(config.kt_comoving, this->precision);
+                      break;
+                  }
 		            count++;
 			        }
 		        if(use_alpha)
 			        {
-		            label << (count > 0 ? ",\\, " : "") << __CPP_TRANSPORT_LATEX_ALPHA_SYMBOL << "=" << output_latex_number(config.alpha, this->precision);
+		            label << (count > 0 ? ",\\, " : "") << CPPTRANSPORT_LATEX_ALPHA_SYMBOL << "=" << output_latex_number(config.alpha, this->precision);
 		            count++;
 			        }
 		        if(use_beta)
 			        {
-		            label << (count > 0 ? ",\\, " : "") << __CPP_TRANSPORT_LATEX_BETA_SYMBOL << "=" << output_latex_number(config.beta, this->precision);
+		            label << (count > 0 ? ",\\, " : "") << CPPTRANSPORT_LATEX_BETA_SYMBOL << "=" << output_latex_number(config.beta, this->precision);
 		            count++;
 			        }
 
@@ -222,19 +237,27 @@ namespace transport
 				    unsigned int count = 0;
 				    if(use_kt)
 					    {
-				        label << (count > 0 ? ", " : "") << __CPP_TRANSPORT_NONLATEX_KT_SYMBOL << "=";
-				        if(this->get_klabel_meaning() == conventional) label << config.kt_conventional;
-				        else label << config.kt_comoving;
+				        label << (count > 0 ? ", " : "") << CPPTRANSPORT_NONLATEX_KT_SYMBOL << "=";
+                switch(this->get_klabel_meaning())
+                  {
+                    case klabel_type::conventional:
+                      label << config.kt_conventional;
+                      break;
+
+                    case klabel_type::comoving:
+                      label << config.kt_comoving;
+                      break;
+                  }
 				        count++;
 					    }
 				    if(use_alpha)
 					    {
-				        label << (count > 0 ? ", " : "") << __CPP_TRANSPORT_NONLATEX_ALPHA_SYMBOL << "=" << config.alpha;
+				        label << (count > 0 ? ", " : "") << CPPTRANSPORT_NONLATEX_ALPHA_SYMBOL << "=" << config.alpha;
 				        count++;
 					    }
 				    if(use_beta)
 					    {
-				        label << (count > 0 ? ", " : "") << __CPP_TRANSPORT_NONLATEX_BETA_SYMBOL << "=" << config.beta;
+				        label << (count > 0 ? ", " : "") << CPPTRANSPORT_NONLATEX_BETA_SYMBOL << "=" << config.beta;
 				        count++;
 					    }
 

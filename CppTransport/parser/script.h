@@ -20,15 +20,19 @@
 
 #include "semantic_data.h"
 #include "filestack.h"
+#include "input_stack.h"
+#include "error_context.h"
+#include "contexted_value.h"
+
+#include "y_common.h"
 
 #include "symbol_factory.h"
 #include "ginac/ginac.h"
 
+#include "boost/optional.hpp"
+
 
 // abstract 'declaration' concept
-
-// the filestack* object used here is inherited from the parent lexeme.
-// we manage its lifetime with a std::shared_ptr<>
 
 class declaration    // is an abstract class
 	{
@@ -37,7 +41,7 @@ class declaration    // is an abstract class
 
   public:
 
-    declaration(const std::string& n, GiNaC::symbol& s, std::shared_ptr<filestack> p);
+    declaration(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l);
 
 		virtual ~declaration() = default;
 
@@ -52,16 +56,16 @@ class declaration    // is an abstract class
 		//! get GiNaC symbol association with declaration/symbol
     const GiNaC::symbol& get_ginac_symbol() const { return(this->symbol); }
 
-		//! get filestack object representing definition point
-    std::shared_ptr<filestack> get_path() const { return(this->path); }
-
-		//! return GiNaC expression to be substituted when this declaration is used;
+    //! return GiNaC expression to be substituted when this declaration is used;
 		//! often this will just be the GiNaC symbol, but may be more complex
 		//! eg. for a subexpression declaration
 		virtual GiNaC::ex get_expression() const = 0;
 
 		//! return unique identifier representing order of declarations
 		unsigned int get_unique_id() const { return(this->my_id); }
+
+    //! return lexeme representing declaration point
+    const y::lexeme_type& get_declaration_point() const { return(this->declaration_point); }
 
 
 		// PRINT TO STANDARD STREAM
@@ -82,9 +86,8 @@ class declaration    // is an abstract class
 		//! GiNaC symbol for declaration
 		GiNaC::symbol symbol;
 
-		//! filestack representing definition point;
-		//! lifetime is managed with std::shared_ptr<>
-    std::shared_ptr<filestack> path;
+		//! reference to declaration lexeme
+    const y::lexeme_type& declaration_point;
 
 		//! class id; used to record the order in which declarations have been made
 		unsigned int my_id;
@@ -102,7 +105,7 @@ class field_declaration : public declaration
 
   public:
 
-    field_declaration(const std::string& n, GiNaC::symbol& s, std::shared_ptr<filestack> p, attributes* a);
+    field_declaration(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l, attributes* a);
 
     virtual ~field_declaration() = default;
 
@@ -127,7 +130,7 @@ class field_declaration : public declaration
 
   protected:
 
-		std::shared_ptr<attributes> attrs;
+		std::unique_ptr<attributes> attrs;
 
 	};
 
@@ -139,7 +142,7 @@ class parameter_declaration : public declaration
 
   public:
 
-    parameter_declaration(const std::string& n, GiNaC::symbol& s, std::shared_ptr<filestack> p, attributes* a);
+    parameter_declaration(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l, attributes* a);
 
     ~parameter_declaration() = default;
 
@@ -164,7 +167,7 @@ class parameter_declaration : public declaration
 
   protected:
 
-    std::shared_ptr<attributes> attrs;
+    std::unique_ptr<attributes> attrs;
 
 	};
 
@@ -176,7 +179,7 @@ class subexpr_declaration : public declaration
 
   public:
 
-    subexpr_declaration(const std::string& n, GiNaC::symbol& s, std::shared_ptr <filestack> p, subexpr* e);
+    subexpr_declaration(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l, subexpr* e);
 
     ~subexpr_declaration() = default;
 
@@ -203,17 +206,17 @@ class subexpr_declaration : public declaration
 
   protected:
 
-    std::shared_ptr<subexpr> sexpr;
+    std::unique_ptr<subexpr> sexpr;
 
 	};
 
 
-#define DEFAULT_ABS_ERR   (1E-6)
-#define DEFAULT_REL_ERR   (1E-6)
-#define DEFAULT_STEP_SIZE (1E-2)
-#define DEFAULT_STEPPER   "runge_kutta_dopri5"
+constexpr double DEFAULT_ABS_ERR   = 1E-6;
+constexpr double DEFAULT_REL_ERR   = 1E-6;
+constexpr double DEFAULT_STEP_SIZE = 1E-2;
+constexpr auto   DEFAULT_STEPPER   = "runge_kutta_dopri5";
 
-#define SYMBOL_TABLE_SIZE (1024)
+constexpr unsigned int SYMBOL_TABLE_SIZE = 1024;
 
 
 class script
@@ -223,8 +226,13 @@ class script
 
   public:
 
-    script(symbol_factory& s);
+    //! constructor;
+    //! symbol_factory is inherited from parent translation_unit
+    //! error_context is passed down from parent translation_unit and is used to construct
+    //! fake error contexts for default reserved symbols such as M_Planck
+    script(symbol_factory& s, error_context err_ctx);
 
+    //! destructor is default
     ~script() = default;
 
     // delete copying constructor, to avoid multiple aliasing of the
@@ -241,30 +249,34 @@ class script
 
     void print(std::ostream& stream) const;
 
-		std::shared_ptr<declaration> check_symbol_exists(const std::string& nm) const;
+		boost::optional<declaration&> check_symbol_exists(const std::string& nm) const;
+
+    //! detect error condition
+    bool failed() const { return(this->errors_encountered); }
 
 
-		// MODIFY CONTENT
+		// POPULATE SYMBOLS
 
   public:
 
-    bool add_field(field_declaration d);
+    //! add symbol representing a field
+    bool add_field(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& p, attributes* a);
 
-    bool add_parameter(parameter_declaration d);
+    //! add symbol representing a parameter
+    bool add_parameter(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& p, attributes* a);
 
-		bool add_subexpr(subexpr_declaration d);
+    //! add symbol representing a subexpression
+		bool add_subexpr(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& p, subexpr* e);
 
-    void set_background_stepper(stepper* s);
 
-    void set_perturbations_stepper(stepper* s);
+    // MODEL DATA
 
-    const struct stepper& get_background_stepper() const;
-
-    const struct stepper& get_perturbations_stepper() const;
+  public:
 
     unsigned int get_number_fields() const;
 
     unsigned int get_number_params() const;
+
 
     std::vector<std::string> get_field_list() const;
 
@@ -282,33 +294,11 @@ class script
 
     const GiNaC::symbol& get_Mp_symbol() const;
 
-    void set_name(const std::string n);
-
-    const std::string& get_name() const;
-
-    void set_author(const std::string a);
-
-    const std::string& get_author() const;
-
-    void set_tag(const std::string t);
-
-    const std::string& get_tag() const;
-
-    void set_core(const std::string c);
-
-    const std::string& get_core() const;
-
-    void set_implementation(const std::string i);
-
-    const std::string& get_implementation() const;
-
-    void set_model(const std::string m);
-
-    const std::string& get_model() const;
 
     void set_indexorder(enum indexorder o);
 
     enum indexorder get_indexorder() const;
+
 
     void set_potential(GiNaC::ex V);
 
@@ -317,31 +307,86 @@ class script
     void unset_potential();
 
 
+    // BASIC METADATA
+
+  public:
+
+    void set_name(const std::string n, const y::lexeme_type& l);
+
+    boost::optional< contexted_value<std::string>& > get_name() const;
+
+
+    void set_author(const std::string a, const y::lexeme_type& l);
+
+    boost::optional< contexted_value<std::string>& > get_author() const;
+
+
+    void set_tag(const std::string t, const y::lexeme_type& l);
+
+    boost::optional< contexted_value<std::string>& > get_tag() const;
+
+
+    void set_core(const std::string c, const y::lexeme_type& l);
+
+    boost::optional< contexted_value<std::string>& > get_core() const;
+
+
+    void set_implementation(const std::string i, const y::lexeme_type& l);
+
+    boost::optional< contexted_value<std::string>& > get_implementation() const;
+
+
+    void set_model(const std::string m, const y::lexeme_type& l);
+
+    boost::optional< contexted_value<std::string>& > get_model() const;
+
+
+    // IMPLEMENTATION DATA
+
+  public:
+
+    void set_background_stepper(stepper* s);
+
+    void set_perturbations_stepper(stepper* s);
+
+    const struct stepper& get_background_stepper() const;
+
+    const struct stepper& get_perturbations_stepper() const;
+
+
 		// INTERNAL DATA
 
   private:
 
-    std::string name;
-    std::string author;
-    std::string tag;
-    std::string core;
-    std::string implementation;
-    std::string model;
+    //! flag to indicate errors encountered during processing
+    bool errors_encountered;
+
+    std::unique_ptr< contexted_value<std::string> > name;
+    std::unique_ptr< contexted_value<std::string> > author;
+    std::unique_ptr< contexted_value<std::string> > tag;
+    std::unique_ptr< contexted_value<std::string> > core;
+    std::unique_ptr< contexted_value<std::string> > implementation;
+    std::unique_ptr< contexted_value<std::string> > model;
 
     enum indexorder order;
 
     struct stepper background_stepper;
     struct stepper perturbations_stepper;
 
-    typedef std::unordered_map< std::string, std::shared_ptr<field_declaration> >     field_symbol_table;
-    typedef std::unordered_map< std::string, std::shared_ptr<parameter_declaration> > parameter_symbol_table;
-    typedef std::unordered_map< std::string, std::shared_ptr<subexpr_declaration> >   subexpr_symbol_table;
+    //! symbol tables
+    typedef std::unordered_map< std::string, std::unique_ptr<field_declaration> >     field_symbol_table;
+    typedef std::unordered_map< std::string, std::unique_ptr<parameter_declaration> > parameter_symbol_table;
+    typedef std::unordered_map< std::string, std::unique_ptr<subexpr_declaration> >   subexpr_symbol_table;
 
     field_symbol_table     fields;
     parameter_symbol_table parameters;
 		parameter_symbol_table reserved;
     subexpr_symbol_table   subexprs;
 
+    //! place-holder filestack for initializing reserved words
+    std::unique_ptr<y::lexeme_type> fake_MPlanck_lexeme;
+
+    //! store details of potentials
     bool      potential_set;
     GiNaC::ex potential;
 

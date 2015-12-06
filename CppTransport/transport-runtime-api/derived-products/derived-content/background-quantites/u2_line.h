@@ -41,7 +41,7 @@ namespace transport
 
 				    //! basic user-facing constructor
 				    u2_line(const twopf_list_task<number>& tk, index_selector<2>& sel, SQL_time_config_query tq, SQL_twopf_kconfig_query,
-                    unsigned int prec = __CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
+                    unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
 				    //! deserialization constructor
 				    u2_line(Json::Value& reader, typename repository_finder<number>::task_finder& finder);
@@ -112,7 +112,7 @@ namespace transport
 				template <typename number>
 				u2_line<number>::u2_line(const twopf_list_task<number>& tk, index_selector<2>& sel,
                                  SQL_time_config_query tq, SQL_twopf_kconfig_query kq, unsigned int prec)
-					: derived_line<number>(tk, time_axis, std::list<axis_value>{ efolds_axis }, prec),
+					: derived_line<number>(tk, axis_class::time_axis, std::list<axis_value>{ axis_value::efolds_axis }, prec),
 		        time_series<number>(tk),
 		        gadget(tk),
             active_indices(sel),
@@ -128,8 +128,8 @@ namespace transport
 		        time_series<number>(reader),
 						gadget(),
             active_indices(reader),
-						tquery(reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]),
-            kquery(reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY])
+						tquery(reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]),
+            kquery(reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY])
 					{
 						assert(this->parent_task != nullptr);
 						gadget.set_task(this->parent_task, finder);
@@ -139,10 +139,10 @@ namespace transport
 				template <typename number>
 				void u2_line<number>::serialize(Json::Value& writer) const
 					{
-						writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_U2_LINE);
+						writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_U2_LINE);
 
-						this->tquery.serialize(writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]);
-            this->kquery.serialize(writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY]);
+						this->tquery.serialize(writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]);
+            this->kquery.serialize(writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY]);
 
             this->active_indices.serialize(writer);
 
@@ -173,7 +173,9 @@ namespace transport
 				    typename datapipe<number>::time_data_handle& handle = pipe.new_time_data_handle(this->tquery);
 				    std::vector<std::vector<number> > bg_data(t_axis.size());
 
-				    for(unsigned int m = 0; m < 2 * this->gadget.get_N_fields(); ++m)
+            unsigned int Nfields = this->gadget.get_N_fields();
+
+				    for(unsigned int m = 0; m < 2*Nfields; ++m)
 					    {
 				        std::array<unsigned int, 1>      index_set = { m };
 				        background_time_data_tag<number> tag       = pipe.new_background_time_data_tag(this->gadget.get_model()->flatten(m));
@@ -190,13 +192,13 @@ namespace transport
 		        model<number>* mdl = this->gadget.get_model();
 		        assert(mdl != nullptr);
 
-            std::vector< std::vector<number> > u2_tensor;
+            std::vector<number> u2_tensor(2*Nfields * 2*Nfields);
 
             for(std::vector<twopf_kconfig>::iterator t = k_configs.begin(); t != k_configs.end(); ++t)
               {
-                for(unsigned int m = 0; m < 2*this->gadget.get_N_fields(); ++m)
+                for(unsigned int m = 0; m < 2*Nfields; ++m)
                   {
-                    for(unsigned int n = 0; n < 2*this->gadget.get_N_fields(); ++n)
+                    for(unsigned int n = 0; n < 2*Nfields; ++n)
                       {
                         std::array<unsigned int, 2> index_set = { m, n };
                         if(this->active_indices.is_on(index_set))
@@ -206,10 +208,10 @@ namespace transport
                             for(unsigned int j = 0; j < line_data.size(); ++j)
                               {
                                 mdl->u2(this->gadget.get_integration_task(), bg_data[j], t->k_comoving, t_configs[j].t, u2_tensor);
-                                line_data[j] = u2_tensor[m][n];
+                                line_data[j] = u2_tensor[mdl->flatten(m,n)];
                               }
 
-                            data_line<number> line(group, this->x_type, dimensionless_value, t_axis, line_data,
+                            data_line<number> line(group, this->x_type, value_type::dimensionless_value, t_axis, line_data,
                                                    this->get_LaTeX_label(m,n,*t), this->get_non_LaTeX_label(m,n,*t));
                             lines.push_back(line);
                           }
@@ -237,10 +239,10 @@ namespace transport
 							{
                 std::ostringstream lbl;
 
-                lbl << __CPP_TRANSPORT_LATEX_U2_SYMBOL << "_{";
+                lbl << CPPTRANSPORT_LATEX_U2_SYMBOL << "_{";
 
-                lbl << field_names[m % N_fields] << (m >= N_fields ? "^{" __CPP_TRANSPORT_LATEX_PRIME_SYMBOL "}" : "") << " "
-                    << field_names[n % N_fields] << (n >= N_fields ? "^{" __CPP_TRANSPORT_LATEX_PRIME_SYMBOL "}" : "");
+                lbl << field_names[m % N_fields] << (m >= N_fields ? "^{" CPPTRANSPORT_LATEX_PRIME_SYMBOL "}" : "") << " "
+                    << field_names[n % N_fields] << (n >= N_fields ? "^{" CPPTRANSPORT_LATEX_PRIME_SYMBOL "}" : "");
 
                 lbl << "}";
 
@@ -269,10 +271,10 @@ namespace transport
               {
                 std::ostringstream lbl;
 
-                lbl << __CPP_TRANSPORT_NONLATEX_U2_SYMBOL << "[";
+                lbl << CPPTRANSPORT_NONLATEX_U2_SYMBOL << "[";
 
-                lbl << field_names[m % N_fields] << (m >= N_fields ? __CPP_TRANSPORT_NONLATEX_PRIME_SYMBOL : "") << " "
-                    << field_names[n % N_fields] << (n >= N_fields ? __CPP_TRANSPORT_NONLATEX_PRIME_SYMBOL : "");
+                lbl << field_names[m % N_fields] << (m >= N_fields ? CPPTRANSPORT_NONLATEX_PRIME_SYMBOL : "") << " "
+                    << field_names[n % N_fields] << (n >= N_fields ? CPPTRANSPORT_NONLATEX_PRIME_SYMBOL : "");
 
                 lbl << "]";
 

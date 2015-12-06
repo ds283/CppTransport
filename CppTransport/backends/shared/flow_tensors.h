@@ -19,15 +19,30 @@ namespace macro_packages
 
     class flow_tensors : public replacement_rule_package
       {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
       public:
-        flow_tensors(translation_unit* u, language_printer& p)
-          : replacement_rule_package(u, p)
+
+        //! constructor
+        flow_tensors(translator_data& p, language_printer& prn)
+          : replacement_rule_package(p, prn)
           {
           }
+
+        //! destructor is default
+        virtual ~flow_tensors() = default;
+
+
+        // INTERFACE
+
+      public:
 
         const std::vector<simple_rule> get_pre_rules();
         const std::vector<simple_rule> get_post_rules();
         const std::vector<index_rule>  get_index_rules();
+
+        // INTERNAL API
 
       protected:
 

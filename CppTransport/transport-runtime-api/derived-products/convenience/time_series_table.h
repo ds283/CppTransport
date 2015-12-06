@@ -67,9 +67,9 @@ namespace transport
 							{
 						    switch(x_axis)
 							    {
-						        case unset_axis:
-						        case efolds_axis:
-							        this->internal_set_x_label(__CPP_TRANSPORT_PRODUCT_TIME_SERIES_TABLE_X_LABEL_NOLATEX);
+						        case axis_value::unset_axis:
+						        case axis_value::efolds_axis:
+							        this->internal_set_x_label(CPPTRANSPORT_PRODUCT_TIME_SERIES_TABLE_X_LABEL_NOLATEX);
 							        break;
 
 						        default:

@@ -42,7 +42,7 @@ namespace transport
 				                std::ostringstream msg;
 				                msg << error_msg << status << ": " << sqlite3_errmsg(db) << ")";
 				                sqlite3_finalize(stmt);
-				                throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, msg.str());
+				                throw runtime_exception(exception_type::DATA_MANAGER_BACKEND_ERROR, msg.str());
 					            }
 					        }
 
@@ -53,14 +53,14 @@ namespace transport
 
 
         // Pull a set of time sample points, identified by their serial numbers
-        void pull_time_config_sample(sqlite3* db, const std::shared_ptr<derived_data::SQL_time_config_query>& query,
+        void pull_time_config_sample(sqlite3* db, const derived_data::SQL_time_config_query& query,
                                      std::vector<time_config>& sample, unsigned int worker)
           {
             assert(db != nullptr);
 
-            derived_data::SQL_policy policy(__CPP_TRANSPORT_SQLITE_TIME_SAMPLE_TABLE, "serial",
-                                            __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE, "serial",
-                                            __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE, "serial",
+            derived_data::SQL_policy policy(CPPTRANSPORT_SQLITE_TIME_SAMPLE_TABLE, "serial",
+                                            CPPTRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE, "serial",
+                                            CPPTRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE, "serial",
                                             "wavenumber1", "wavenumber2", "wavenumber3");
 
             // pull out the set of time-sample points matching serial numbers in the temporary table
@@ -69,7 +69,7 @@ namespace transport
               << "SELECT"
 	            << " temp.serial AS serial,"
 	            << " temp.time AS time"
-              << " FROM (" << query->make_query(policy, false) << ") temp"
+              << " FROM (" << query.make_query(policy, false) << ") temp"
               << " ORDER BY temp.serial;";
 
             sqlite3_stmt* stmt;
@@ -92,9 +92,9 @@ namespace transport
                 else
                   {
                     std::ostringstream msg;
-                    msg << __CPP_TRANSPORT_DATAMGR_TIME_SERIAL_READ_FAIL << status << ": " << sqlite3_errmsg(db) << ")";
+                    msg << CPPTRANSPORT_DATAMGR_TIME_SERIAL_READ_FAIL << status << ": " << sqlite3_errmsg(db) << ")";
                     sqlite3_finalize(stmt);
-                    throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, msg.str());
+                    throw runtime_exception(exception_type::DATA_MANAGER_BACKEND_ERROR, msg.str());
                   }
               }
 
@@ -104,14 +104,14 @@ namespace transport
 
         // Pull a set of twopf k-configuration sample points, identified by their serial numbers
         template <typename number>
-        void pull_twopf_kconfig_sample(sqlite3* db, const std::shared_ptr<derived_data::SQL_twopf_kconfig_query>& query,
+        void pull_twopf_kconfig_sample(sqlite3* db, const derived_data::SQL_twopf_kconfig_query& query,
                                        std::vector<twopf_kconfig>& sample, unsigned int worker)
           {
             assert(db != nullptr);
 
-            derived_data::SQL_policy policy(__CPP_TRANSPORT_SQLITE_TIME_SAMPLE_TABLE, "serial",
-                                            __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE, "serial",
-                                            __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE, "serial",
+            derived_data::SQL_policy policy(CPPTRANSPORT_SQLITE_TIME_SAMPLE_TABLE, "serial",
+                                            CPPTRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE, "serial",
+                                            CPPTRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE, "serial",
                                             "wavenumber1", "wavenumber2", "wavenumber3");
 
             // pull out the set of k-sample points matching serial numbers in the temporary table
@@ -122,7 +122,7 @@ namespace transport
 	            << " temp.conventional AS conventional,"
               << " temp.comoving AS comoving,"
 	            << " temp.t_exit AS t_exit"
-              << " FROM (" << query->make_query(policy, false) << ") temp"
+              << " FROM (" << query.make_query(policy, false) << ") temp"
               << " ORDER BY temp.serial";
 
             sqlite3_stmt* stmt;
@@ -147,9 +147,9 @@ namespace transport
                 else
                   {
                     std::ostringstream msg;
-                    msg << __CPP_TRANSPORT_DATAMGR_KCONFIG_SERIAL_READ_FAIL << status << ": " << sqlite3_errmsg(db) << ")";
+                    msg << CPPTRANSPORT_DATAMGR_KCONFIG_SERIAL_READ_FAIL << status << ": " << sqlite3_errmsg(db) << ")";
                     sqlite3_finalize(stmt);
-                    throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, msg.str());
+                    throw runtime_exception(exception_type::DATA_MANAGER_BACKEND_ERROR, msg.str());
                   }
               }
 
@@ -159,14 +159,14 @@ namespace transport
 
         // Pull a set of threepf k-configuration sample points, identified by their serial numbers
         template <typename number>
-        void pull_threepf_kconfig_sample(sqlite3* db, const std::shared_ptr<derived_data::SQL_threepf_kconfig_query>& query,
+        void pull_threepf_kconfig_sample(sqlite3* db, const derived_data::SQL_threepf_kconfig_query& query,
                                          std::vector<threepf_kconfig>& sample, unsigned int worker)
           {
             assert(db != nullptr);
 
-            derived_data::SQL_policy policy(__CPP_TRANSPORT_SQLITE_TIME_SAMPLE_TABLE, "serial",
-                                            __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE, "serial",
-                                            __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE, "serial",
+            derived_data::SQL_policy policy(CPPTRANSPORT_SQLITE_TIME_SAMPLE_TABLE, "serial",
+                                            CPPTRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE, "serial",
+                                            CPPTRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE, "serial",
                                             "wavenumber1", "wavenumber2", "wavenumber3");
 
             // create a temporary table which contains the set of configuration-sample points
@@ -190,12 +190,12 @@ namespace transport
               << " temp.wavenumber2 AS wavenumber1,"
               << " temp.wavenumber3 AS wavenumber1,"
 	            << " temp.t_exit AS t_exit"
-              << " FROM (" << query->make_query(policy, false) << ") temp"
-              << " INNER JOIN " << __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE << " AS tpf1"
+              << " FROM (" << query.make_query(policy, false) << ") temp"
+              << " INNER JOIN " << CPPTRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE << " AS tpf1"
               << " ON temp.wavenumber1=tpf1.serial"
-              << " INNER JOIN " << __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE << " AS tpf2"
+              << " INNER JOIN " << CPPTRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE << " AS tpf2"
               << " ON temp.wavenumber2=tpf2.serial"
-              << " INNER JOIN " << __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE << " AS tpf3"
+              << " INNER JOIN " << CPPTRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE << " AS tpf3"
               << " ON temp.wavenumber3=tpf3.serial"
               << " ORDER BY temp.serial;";
 
@@ -232,9 +232,9 @@ namespace transport
                 else
                   {
                     std::ostringstream msg;
-                    msg << __CPP_TRANSPORT_DATAMGR_KCONFIG_SERIAL_READ_FAIL << status << ": " << sqlite3_errmsg(db) << ")";
+                    msg << CPPTRANSPORT_DATAMGR_KCONFIG_SERIAL_READ_FAIL << status << ": " << sqlite3_errmsg(db) << ")";
                     sqlite3_finalize(stmt);
-                    throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, msg.str());
+                    throw runtime_exception(exception_type::DATA_MANAGER_BACKEND_ERROR, msg.str());
                   }
               }
 
@@ -243,14 +243,14 @@ namespace transport
 
 
         // Pull k-configuration statistics data for a set of k-configuration serial numbers
-        void pull_k_statistics_sample(sqlite3* db, const std::shared_ptr<derived_data::SQL_query>& query,
+        void pull_k_statistics_sample(sqlite3* db, const derived_data::SQL_query& query,
                                       std::vector<kconfiguration_statistics>& data, unsigned int worker)
 	        {
             assert(db != nullptr);
 
-            derived_data::SQL_policy policy(__CPP_TRANSPORT_SQLITE_TIME_SAMPLE_TABLE, "serial",
-                                            __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE, "serial",
-                                            __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE, "serial",
+            derived_data::SQL_policy policy(CPPTRANSPORT_SQLITE_TIME_SAMPLE_TABLE, "serial",
+                                            CPPTRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE, "serial",
+                                            CPPTRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE, "serial",
                                             "wavenumber1", "wavenumber2", "wavenumber3");
 
             // pull out matching k-statistics data
@@ -268,10 +268,10 @@ namespace transport
 	            << " workers.back_stepper AS back_stepper,"
 	            << " workers.pert_stepper AS pert_stepper,"
 	            << " workers.hostname AS hostname"
-	            << " FROM (SELECT * FROM " << __CPP_TRANSPORT_SQLITE_STATS_TABLE
-	            << " INNER JOIN (" << query->make_query(policy, true) << ") tpf"
-	            << " ON " << __CPP_TRANSPORT_SQLITE_STATS_TABLE << ".kserial=tpf.serial) temp"
-	            << " INNER JOIN " << __CPP_TRANSPORT_SQLITE_WORKERS_TABLE << " workers ON workers.workgroup=temp.workgroup"
+	            << " FROM (SELECT * FROM " << CPPTRANSPORT_SQLITE_STATS_TABLE
+	            << " INNER JOIN (" << query.make_query(policy, true) << ") tpf"
+	            << " ON " << CPPTRANSPORT_SQLITE_STATS_TABLE << ".kserial=tpf.serial) temp"
+	            << " INNER JOIN " << CPPTRANSPORT_SQLITE_WORKERS_TABLE << " workers ON workers.workgroup=temp.workgroup"
 	            << " WHERE temp.worker=workers.worker"
 	            << " ORDER BY temp.kserial;";
 
@@ -304,9 +304,9 @@ namespace transport
                 else
 	                {
                     std::ostringstream msg;
-                    msg << __CPP_TRANSPORT_DATAMGR_KCONFIG_SERIAL_READ_FAIL << status << ": " << sqlite3_errmsg(db) << ")";
+                    msg << CPPTRANSPORT_DATAMGR_KCONFIG_SERIAL_READ_FAIL << status << ": " << sqlite3_errmsg(db) << ")";
                     sqlite3_finalize(stmt);
-                    throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, msg.str());
+                    throw runtime_exception(exception_type::DATA_MANAGER_BACKEND_ERROR, msg.str());
 	                }
 	            }
 
@@ -316,14 +316,14 @@ namespace transport
 
         // Pull a sample of the background field evolution, for a specific field, for a specific set of time serial numbers
         template <typename number>
-        void pull_background_time_sample(sqlite3* db, unsigned int id, const std::shared_ptr<derived_data::SQL_query>& tquery,
+        void pull_background_time_sample(sqlite3* db, unsigned int id, const derived_data::SQL_query& tquery,
                                          std::vector<number>& sample, unsigned int worker, unsigned int Nfields)
           {
             assert(db != nullptr);
 
-            derived_data::SQL_policy policy(__CPP_TRANSPORT_SQLITE_TIME_SAMPLE_TABLE, "serial",
-                                            __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE, "serial",
-                                            __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE, "serial",
+            derived_data::SQL_policy policy(CPPTRANSPORT_SQLITE_TIME_SAMPLE_TABLE, "serial",
+                                            CPPTRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE, "serial",
+                                            CPPTRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE, "serial",
                                             "wavenumber1", "wavenumber2", "wavenumber3");
 
             unsigned int num_cols = std::min(2*Nfields, max_columns);
@@ -335,27 +335,27 @@ namespace transport
             std::stringstream select_stmt;
             select_stmt
               << "SELECT"
-	            << " " << __CPP_TRANSPORT_SQLITE_BACKG_VALUE_TABLE << ".coord" << col
-              << " FROM " << __CPP_TRANSPORT_SQLITE_BACKG_VALUE_TABLE
-              << " INNER JOIN (" << tquery->make_query(policy, true) << ") tsample"
-	            << " ON " << __CPP_TRANSPORT_SQLITE_BACKG_VALUE_TABLE << ".tserial=tsample.serial"
-              << " WHERE " __CPP_TRANSPORT_SQLITE_BACKG_VALUE_TABLE << ".page=" << page
+	            << " " << CPPTRANSPORT_SQLITE_BACKG_VALUE_TABLE << ".coord" << col
+              << " FROM " << CPPTRANSPORT_SQLITE_BACKG_VALUE_TABLE
+              << " INNER JOIN (" << tquery.make_query(policy, true) << ") tsample"
+	            << " ON " << CPPTRANSPORT_SQLITE_BACKG_VALUE_TABLE << ".tserial=tsample.serial"
+              << " WHERE " CPPTRANSPORT_SQLITE_BACKG_VALUE_TABLE << ".page=" << page
               << " ORDER BY tsample.serial;";
 
             sample.clear();
-            pull_implementation::pull_number_list(db, sample, select_stmt.str(), __CPP_TRANSPORT_DATAMGR_TIME_SERIAL_READ_FAIL);
+            pull_implementation::pull_number_list(db, sample, select_stmt.str(), CPPTRANSPORT_DATAMGR_TIME_SERIAL_READ_FAIL);
           }
 
 
 		    template <typename number, typename ValueType>
-		    void pull_paged_time_sample(sqlite3* db, unsigned int id, const std::shared_ptr<derived_data::SQL_query>& tquery,
+		    void pull_paged_time_sample(sqlite3* db, unsigned int id, const derived_data::SQL_query& tquery,
 		                                unsigned int k_serial, std::vector<number>& sample, unsigned int worker, unsigned int Nfields)
 			    {
 				    assert(db != nullptr);
 
-		        derived_data::SQL_policy policy(__CPP_TRANSPORT_SQLITE_TIME_SAMPLE_TABLE, "serial",
-		                                        __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE, "serial",
-		                                        __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE, "serial",
+		        derived_data::SQL_policy policy(CPPTRANSPORT_SQLITE_TIME_SAMPLE_TABLE, "serial",
+		                                        CPPTRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE, "serial",
+		                                        CPPTRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE, "serial",
 		                                        "wavenumber1", "wavenumber2", "wavenumber3");
 
 		        unsigned int num_elements = data_traits<number, ValueType>::number_elements(Nfields);
@@ -372,25 +372,25 @@ namespace transport
 			        << "SELECT"
 			        << " " << table_name << ".ele" << col
 			        << " FROM " << table_name
-			        << " INNER JOIN (" << tquery->make_query(policy, true) << ") tsample"
+			        << " INNER JOIN (" << tquery.make_query(policy, true) << ") tsample"
 			        << " ON " << table_name << ".tserial=tsample.serial"
 			        << " WHERE " << table_name << ".kserial=" << k_serial << " AND " << table_name << ".page=" << page
 			        << " ORDER BY tsample.serial;";
 
 						sample.clear();
-		        pull_implementation::pull_number_list(db, sample, select_stmt.str(), __CPP_TRANSPORT_DATAMGR_TIME_SERIAL_READ_FAIL);
+		        pull_implementation::pull_number_list(db, sample, select_stmt.str(), CPPTRANSPORT_DATAMGR_TIME_SERIAL_READ_FAIL);
 			    }
 
 
         template <typename number, typename ValueType>
-        void pull_paged_kconfig_sample(sqlite3* db, unsigned int id, const std::shared_ptr<derived_data::SQL_query>& kquery,
+        void pull_paged_kconfig_sample(sqlite3* db, unsigned int id, const derived_data::SQL_query& kquery,
                                        unsigned int t_serial, std::vector<number>& sample, unsigned int worker, unsigned int Nfields)
 	        {
             assert(db != nullptr);
 
-            derived_data::SQL_policy policy(__CPP_TRANSPORT_SQLITE_TIME_SAMPLE_TABLE, "serial",
-                                            __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE, "serial",
-                                            __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE, "serial",
+            derived_data::SQL_policy policy(CPPTRANSPORT_SQLITE_TIME_SAMPLE_TABLE, "serial",
+                                            CPPTRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE, "serial",
+                                            CPPTRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE, "serial",
                                             "wavenumber1", "wavenumber2", "wavenumber3");
 
             unsigned int num_elements = data_traits<number, ValueType>::number_elements(Nfields);
@@ -407,25 +407,25 @@ namespace transport
 	            << "SELECT"
 	            << " " << table_name << ".ele" << col
 	            << " FROM " << table_name
-	            << " INNER JOIN (" << kquery->make_query(policy, true) << ") ksample"
+	            << " INNER JOIN (" << kquery.make_query(policy, true) << ") ksample"
 	            << " ON " << table_name << ".kserial=ksample.serial"
 	            << " WHERE " << table_name << ".tserial=" << t_serial << " AND " << table_name << ".page=" << page
 	            << " ORDER BY ksample.serial;";
 
             sample.clear();
-            pull_implementation::pull_number_list(db, sample, select_stmt.str(), __CPP_TRANSPORT_DATAMGR_TIME_SERIAL_READ_FAIL);
+            pull_implementation::pull_number_list(db, sample, select_stmt.str(), CPPTRANSPORT_DATAMGR_TIME_SERIAL_READ_FAIL);
 	        }
 
 
         template <typename number, typename ValueType>
-        void pull_unpaged_time_sample(sqlite3* db, const std::shared_ptr<derived_data::SQL_query>& tquery,
+        void pull_unpaged_time_sample(sqlite3* db, const derived_data::SQL_query& tquery,
                                       unsigned int k_serial, std::vector<number>& sample, unsigned int worker)
 	        {
             assert(db != nullptr);
 
-            derived_data::SQL_policy policy(__CPP_TRANSPORT_SQLITE_TIME_SAMPLE_TABLE, "serial",
-                                            __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE, "serial",
-                                            __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE, "serial",
+            derived_data::SQL_policy policy(CPPTRANSPORT_SQLITE_TIME_SAMPLE_TABLE, "serial",
+                                            CPPTRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE, "serial",
+                                            CPPTRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE, "serial",
                                             "wavenumber1", "wavenumber2", "wavenumber3");
 
             std::string table_name = data_traits<number, ValueType>::sqlite_table();
@@ -434,27 +434,27 @@ namespace transport
             std::stringstream select_stmt;
             select_stmt
 	            << "SELECT"
-	            << " " << table_name << ".ele"
+	            << " " << table_name << "." << data_traits<number, ValueType>::column_name()
 	            << " FROM " << table_name
-	            << " INNER JOIN (" << tquery->make_query(policy, true) << ") tsample"
+	            << " INNER JOIN (" << tquery.make_query(policy, true) << ") tsample"
 	            << " ON " << table_name << ".tserial=tsample.serial"
 	            << " WHERE " << table_name << ".kserial=" << k_serial
 	            << " ORDER BY tsample.serial;";
 
             sample.clear();
-            pull_implementation::pull_number_list(db, sample, select_stmt.str(), __CPP_TRANSPORT_DATAMGR_TIME_SERIAL_READ_FAIL);
+            pull_implementation::pull_number_list(db, sample, select_stmt.str(), CPPTRANSPORT_DATAMGR_TIME_SERIAL_READ_FAIL);
 	        }
 
 
         template <typename number, typename ValueType>
-        void pull_unpaged_kconfig_sample(sqlite3* db, const std::shared_ptr<derived_data::SQL_query>& kquery,
+        void pull_unpaged_kconfig_sample(sqlite3* db, const derived_data::SQL_query& kquery,
                                          unsigned int t_serial, std::vector<number>& sample, unsigned int worker)
 	        {
             assert(db != nullptr);
 
-            derived_data::SQL_policy policy(__CPP_TRANSPORT_SQLITE_TIME_SAMPLE_TABLE, "serial",
-                                            __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE, "serial",
-                                            __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE, "serial",
+            derived_data::SQL_policy policy(CPPTRANSPORT_SQLITE_TIME_SAMPLE_TABLE, "serial",
+                                            CPPTRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE, "serial",
+                                            CPPTRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE, "serial",
                                             "wavenumber1", "wavenumber2", "wavenumber3");
 
             std::string table_name = data_traits<number, ValueType>::sqlite_table();
@@ -463,28 +463,28 @@ namespace transport
             std::stringstream select_stmt;
             select_stmt
 	            << "SELECT"
-	            << " " << table_name << ".ele"
+	            << " " << table_name << "." << data_traits<number, ValueType>::column_name()
 	            << " FROM " << table_name
-	            << " INNER JOIN (" << kquery->make_query(policy, true) << ") ksample"
+	            << " INNER JOIN (" << kquery.make_query(policy, true) << ") ksample"
 	            << " ON " << table_name << ".kserial=ksample.serial"
 	            << " WHERE " << table_name << ".tserial=" << t_serial
 	            << " ORDER BY ksample.serial;";
 
             sample.clear();
-            pull_implementation::pull_number_list(db, sample, select_stmt.str(), __CPP_TRANSPORT_DATAMGR_TIME_SERIAL_READ_FAIL);
+            pull_implementation::pull_number_list(db, sample, select_stmt.str(), CPPTRANSPORT_DATAMGR_TIME_SERIAL_READ_FAIL);
 	        }
 
 
         // Pull a sample of an fNL, for a specific set of time serial numbers
         template <typename number>
-        void pull_fNL_time_sample(sqlite3* db, const std::shared_ptr<derived_data::SQL_query>& tquery,
+        void pull_fNL_time_sample(sqlite3* db, const derived_data::SQL_query& tquery,
                                   std::vector<number>& sample, unsigned int worker, derived_data::template_type type)
           {
             assert(db != nullptr);
 
-            derived_data::SQL_policy policy(__CPP_TRANSPORT_SQLITE_TIME_SAMPLE_TABLE, "serial",
-                                            __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE, "serial",
-                                            __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE, "serial",
+            derived_data::SQL_policy policy(CPPTRANSPORT_SQLITE_TIME_SAMPLE_TABLE, "serial",
+                                            CPPTRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE, "serial",
+                                            CPPTRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE, "serial",
                                             "wavenumber1", "wavenumber2", "wavenumber3");
 
             // pull out the fNL component matching serial numbers in the temporary table
@@ -492,25 +492,25 @@ namespace transport
             select_stmt
               << "SELECT (5.0/3.0)*(" << fNL_table_name(type) << ".BT/" << fNL_table_name(type) << ".TT)"
               << " FROM " << fNL_table_name(type)
-	            << " INNER JOIN (" << tquery->make_query(policy, true) << ") tsample"
+	            << " INNER JOIN (" << tquery.make_query(policy, true) << ") tsample"
 	            << " ON " << fNL_table_name(type) << ".tserial=tsample.serial"
               << " ORDER BY tsample.serial;";
 
             sample.clear();
-            pull_implementation::pull_number_list(db, sample, select_stmt.str(), __CPP_TRANSPORT_DATAMGR_TIME_SERIAL_READ_FAIL);
+            pull_implementation::pull_number_list(db, sample, select_stmt.str(), CPPTRANSPORT_DATAMGR_TIME_SERIAL_READ_FAIL);
           }
 
 
         // Pull a sample of bispectrum.template, for a specific set of time serial numbers
         template <typename number>
-        void pull_BT_time_sample(sqlite3* db, const std::shared_ptr<derived_data::SQL_query>& tquery,
+        void pull_BT_time_sample(sqlite3* db, const derived_data::SQL_query& tquery,
                                  std::vector<number>& sample, unsigned int worker, derived_data::template_type type)
           {
             assert(db != nullptr);
 
-            derived_data::SQL_policy policy(__CPP_TRANSPORT_SQLITE_TIME_SAMPLE_TABLE, "serial",
-                                            __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE, "serial",
-                                            __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE, "serial",
+            derived_data::SQL_policy policy(CPPTRANSPORT_SQLITE_TIME_SAMPLE_TABLE, "serial",
+                                            CPPTRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE, "serial",
+                                            CPPTRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE, "serial",
                                             "wavenumber1", "wavenumber2", "wavenumber3");
 
             // pull out the bispectrum.template component matching serial numbers in the temporary table
@@ -518,25 +518,25 @@ namespace transport
             select_stmt
               << "SELECT " << fNL_table_name(type) << ".BT"
               << " FROM " << fNL_table_name(type)
-	            << " INNER JOIN (" << tquery->make_query(policy, true) << ") tsample"
+	            << " INNER JOIN (" << tquery.make_query(policy, true) << ") tsample"
 	            << " ON " << fNL_table_name(type) << ".tserial=tsample.serial"
 	            << " ORDER BY tsample.serial;";
 
             sample.clear();
-            pull_implementation::pull_number_list(db, sample, select_stmt.str(), __CPP_TRANSPORT_DATAMGR_TIME_SERIAL_READ_FAIL);
+            pull_implementation::pull_number_list(db, sample, select_stmt.str(), CPPTRANSPORT_DATAMGR_TIME_SERIAL_READ_FAIL);
           }
 
 
         // Pull a sample of template.template, for a specific set of time serial numbers
         template <typename number>
-        void pull_TT_time_sample(sqlite3* db, const std::shared_ptr<derived_data::SQL_query>& tquery,
+        void pull_TT_time_sample(sqlite3* db, const derived_data::SQL_query& tquery,
                                  std::vector<number>& sample, unsigned int worker, derived_data::template_type type)
           {
             assert(db != nullptr);
 
-            derived_data::SQL_policy policy(__CPP_TRANSPORT_SQLITE_TIME_SAMPLE_TABLE, "serial",
-                                            __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE, "serial",
-                                            __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE, "serial",
+            derived_data::SQL_policy policy(CPPTRANSPORT_SQLITE_TIME_SAMPLE_TABLE, "serial",
+                                            CPPTRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE, "serial",
+                                            CPPTRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE, "serial",
                                             "wavenumber1", "wavenumber2", "wavenumber3");
 
             // pull out the template.template component matching serial numbers in the temporary table
@@ -544,12 +544,12 @@ namespace transport
             select_stmt
               << "SELECT " << fNL_table_name(type) << ".TT"
               << " FROM " << fNL_table_name(type)
-	            << " INNER JOIN (" << tquery->make_query(policy, true) << ") tsample"
+	            << " INNER JOIN (" << tquery.make_query(policy, true) << ") tsample"
 	            << " ON " << fNL_table_name(type) << ".tserial=tsample.serial"
 	            << " ORDER BY tsample.serial;";
 
             sample.clear();
-            pull_implementation::pull_number_list(db, sample, select_stmt.str(), __CPP_TRANSPORT_DATAMGR_TIME_SERIAL_READ_FAIL);
+            pull_implementation::pull_number_list(db, sample, select_stmt.str(), CPPTRANSPORT_DATAMGR_TIME_SERIAL_READ_FAIL);
           }
 
 

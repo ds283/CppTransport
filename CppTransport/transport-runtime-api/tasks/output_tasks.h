@@ -28,13 +28,15 @@
 // forward declare derived products if needed
 #include "transport-runtime-api/derived-products/derived_product_forward_declare.h"
 
+#include "boost/log/utility/formatting_ostream.hpp"
 
 
-#define __CPP_TRANSPORT_NODE_OUTPUT_ARRAY           "derived-data-tasks"
-#define __CPP_TRANSPORT_NODE_OUTPUT_DERIVED_PRODUCT "label"
-#define __CPP_TRANSPORT_NODE_OUTPUT_SERIAL          "serial"
-#define __CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS       "tags"
-#define __CPP_TRANSPORT_NODE_OUTPUTGROUP_TAG        "tag"
+
+#define CPPTRANSPORT_NODE_OUTPUT_ARRAY           "derived-data-tasks"
+#define CPPTRANSPORT_NODE_OUTPUT_DERIVED_PRODUCT "label"
+#define CPPTRANSPORT_NODE_OUTPUT_SERIAL          "serial"
+#define CPPTRANSPORT_NODE_OUTPUTGROUP_TAGS       "tags"
+#define CPPTRANSPORT_NODE_OUTPUTGROUP_TAG        "tag"
 
 
 namespace transport
@@ -48,9 +50,6 @@ namespace transport
 
 
     template <typename number> class output_task;
-
-    template <typename number>
-    std::ostream& operator<<(std::ostream& out, const output_task<number>& obj);
 
 		template <typename number>
 		output_task<number> operator+(const output_task<number>& lhs, const derived_data::derived_product<number>& rhs);
@@ -96,9 +95,6 @@ namespace transport
 
         //! Destroy an output task
         virtual ~output_task() = default;
-
-        //! Write to a standard output stream
-        friend std::ostream& operator<< <>(std::ostream& out, const output_task<number>& obj);
 
 
 		    // OVERLOAD ARITHMETIC OPERATORS FOR CONVENIENCE
@@ -151,6 +147,14 @@ namespace transport
         virtual output_task<number>* clone() const override { return new output_task<number>(static_cast<const output_task<number>&>(*this)); }
 
 
+        // WRITE SELF TO STREAM
+
+      public:
+
+        //! write self-details
+        template <typename Stream> void write(Stream& out) const;
+
+
         // INTERNAL DATA
 
       protected:
@@ -165,16 +169,34 @@ namespace transport
 
 
     template <typename number>
-    std::ostream& operator<<(std::ostream& out, const output_task<number>& obj)
-	    {
-        out << __CPP_TRANSPORT_OUTPUT_ELEMENTS << std::endl;
-        for(typename std::vector< output_task_element<number> >::const_iterator t = obj.elements.begin(); t != obj.elements.end(); ++t)
-	        {
-            out << *t;
-	        }
+    template <typename Stream>
+    void output_task<number>::write(Stream& out) const
+      {
+        out << CPPTRANSPORT_OUTPUT_ELEMENTS << '\n';
 
+        const std::vector< output_task_element<number> > elements = this->get_elements();
+
+        for(typename std::vector< output_task_element<number> >::const_iterator t = elements.begin(); t != elements.end(); ++t)
+          {
+            out << *t;
+          }
+      }
+
+
+    template <typename number, typename Char, typename Traits>
+    std::basic_ostream<Char, Traits>& operator<<(std::basic_ostream<Char, Traits>& out, const output_task<number>& obj)
+	    {
+        obj.write(out);
         return(out);
 	    }
+
+
+    template <typename number, typename Char, typename Traits, typename Allocator>
+    boost::log::basic_formatting_ostream<Char, Traits, Allocator>& operator<<(boost::log::basic_formatting_ostream<Char, Traits, Allocator>& out, const output_task<number>& obj)
+      {
+        obj.write(out);
+        return(out);
+      }
 
 
     template <typename number>
@@ -183,16 +205,16 @@ namespace transport
         serial(0)
       {
         // deserialize array of task elements
-        Json::Value& element_list = reader[__CPP_TRANSPORT_NODE_OUTPUT_ARRAY];
+        Json::Value& element_list = reader[CPPTRANSPORT_NODE_OUTPUT_ARRAY];
 		    assert(element_list.isArray());
 
         for(Json::Value::iterator t = element_list.begin(); t != element_list.end(); ++t)
           {
-            std::string  product_name = (*t)[__CPP_TRANSPORT_NODE_OUTPUT_DERIVED_PRODUCT].asString();
-            unsigned int sn           = (*t)[__CPP_TRANSPORT_NODE_OUTPUT_SERIAL].asUInt();
+            std::string  product_name = (*t)[CPPTRANSPORT_NODE_OUTPUT_DERIVED_PRODUCT].asString();
+            unsigned int sn           = (*t)[CPPTRANSPORT_NODE_OUTPUT_SERIAL].asUInt();
 
             std::list<std::string> tags;
-            Json::Value& tag_list = (*t)[__CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS];
+            Json::Value& tag_list = (*t)[CPPTRANSPORT_NODE_OUTPUTGROUP_TAGS];
 
             for(Json::Value::iterator u = tag_list.begin(); u != tag_list.end(); ++u)
               {
@@ -214,7 +236,7 @@ namespace transport
     template <typename number>
     void output_task<number>::serialize(Json::Value& writer) const
 	    {
-        writer[__CPP_TRANSPORT_NODE_TASK_TYPE] = std::string(__CPP_TRANSPORT_NODE_TASK_TYPE_OUTPUT);
+        writer[CPPTRANSPORT_NODE_TASK_TYPE] = std::string(CPPTRANSPORT_NODE_TASK_TYPE_OUTPUT);
 
         // serialize array of task elements
         Json::Value element_list(Json::arrayValue);
@@ -223,8 +245,8 @@ namespace transport
 	        {
             Json::Value elem(Json::objectValue);
 
-            elem[__CPP_TRANSPORT_NODE_OUTPUT_DERIVED_PRODUCT] = t->get_product_name();
-            elem[__CPP_TRANSPORT_NODE_OUTPUT_SERIAL]          = t->get_serial();
+            elem[CPPTRANSPORT_NODE_OUTPUT_DERIVED_PRODUCT] = t->get_product_name();
+            elem[CPPTRANSPORT_NODE_OUTPUT_SERIAL]          = t->get_serial();
 
             const std::list<std::string>& tags = t->get_tags();
 
@@ -235,10 +257,10 @@ namespace transport
                 Json::Value tag_element = *u;
                 tag_list.append(tag_element);
 	            }
-		        elem[__CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS] = tag_list;
+		        elem[CPPTRANSPORT_NODE_OUTPUTGROUP_TAGS] = tag_list;
 		        element_list.append(elem);
 	        }
-        writer[__CPP_TRANSPORT_NODE_OUTPUT_ARRAY] = element_list;
+        writer[CPPTRANSPORT_NODE_OUTPUT_ARRAY] = element_list;
 
         this->task<number>::serialize(writer);
 	    }
@@ -254,17 +276,17 @@ namespace transport
             if(t->get_product()->get_filename() == prod.get_filename())
 	            {
                 std::ostringstream msg;
-                msg << __CPP_TRANSPORT_OUTPUT_TASK_FILENAME_COLLISION_A << " " << prod.get_filename() << " "
-	                << __CPP_TRANSPORT_OUTPUT_TASK_FILENAME_COLLISION_B << " '" << this->name << "'";
-                throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
+                msg << CPPTRANSPORT_OUTPUT_TASK_FILENAME_COLLISION_A << " " << prod.get_filename() << " "
+	                << CPPTRANSPORT_OUTPUT_TASK_FILENAME_COLLISION_B << " '" << this->name << "'";
+                throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
 	            }
 
             if(t->get_product_name() == prod.get_name())
 	            {
                 std::ostringstream msg;
-                msg << __CPP_TRANSPORT_OUTPUT_TASK_NAME_COLLISION_A << " " << prod.get_name() << " "
-	                << __CPP_TRANSPORT_OUTPUT_TASK_NAME_COLLISION_B << " '" << this->name << "'";
-                throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
+                msg << CPPTRANSPORT_OUTPUT_TASK_NAME_COLLISION_A << " " << prod.get_name() << " "
+	                << CPPTRANSPORT_OUTPUT_TASK_NAME_COLLISION_B << " '" << this->name << "'";
+                throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
 	            }
 	        }
 
@@ -276,7 +298,7 @@ namespace transport
     const output_task_element<number>& output_task<number>::get(unsigned int i) const
 	    {
         if(i >= this->elements.size())
-	        throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_OUTPUT_TASK_RANGE);
+	        throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_OUTPUT_TASK_RANGE);
 
         return(this->elements[i]);
 	    }

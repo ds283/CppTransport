@@ -2,8 +2,6 @@
 // Created by David Seery on 12/06/2013.
 // Copyright (c) 2013-15 University of Sussex. All rights reserved.
 //
-// To change the template use AppCode | Preferences | File Templates.
-//
 
 #ifndef __error_H_
 #define __error_H_
@@ -13,21 +11,29 @@
 #include <memory>
 
 #include "core.h"
-#include "filestack.h"
+#include "error_context.h"
+#include "argument_cache.h"
+#include "local_environment.h"
 
 
-#define ERROR_PATH_LEVEL (5)
-#define WARN_PATH_LEVEL  (5)
+constexpr unsigned int ERROR_PATH_LEVEL = 5;
+constexpr unsigned int WARN_PATH_LEVEL  = 5;
 
 
-void warn (std::string const msg);
-void error(std::string const msg);
+// PLAIN ERROR MESSAGES, NO CONTEXT INFORMATION
 
-void warn (std::string const msg, std::shared_ptr<filestack> path);
-void error(std::string const msg, std::shared_ptr<filestack> path);
+void warn (const std::string& msg, const argument_cache& cache, const local_environment& env);
+void error(const std::string& msg, const argument_cache& cache, const local_environment& env);
 
-void warn (std::string const msg, std::shared_ptr<filestack> path, unsigned int level);
-void error(std::string const msg, std::shared_ptr<filestack> path, unsigned int level);
+
+// CONTEXT BASED ERROR MESSAGES, WITH INPUT LINE AND CHARACTER POSITION IF AVAILABLE
+
+
+void warn (const std::string& msg, const argument_cache& cache, const local_environment& env, const error_context& context);
+void error(const std::string& msg, const argument_cache& cache, const local_environment& env, const error_context& context);
+
+void warn (const std::string& msg, const argument_cache& cache, const local_environment& env, const error_context& context, unsigned int level);
+void error(const std::string& msg, const argument_cache& cache, const local_environment& env, const error_context& context, unsigned int level);
 
 
 #endif //__error_H_

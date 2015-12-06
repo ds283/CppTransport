@@ -33,8 +33,8 @@
 #include "transport-runtime-api/derived-products/utilities/wrapper.h"
 
 
-#define __CPP_TRANSPORT_NODE_PRODUCT_ZETA_TWOPF_LINE_ROOT          "zeta-twopf-line-settings"
-#define __CPP_TRANSPORT_NODE_PRODUCT_ZETA_TWOPF_LINE_DIMENSIONLESS "dimensionless"
+#define CPPTRANSPORT_NODE_PRODUCT_ZETA_TWOPF_LINE_ROOT          "zeta-twopf-line-settings"
+#define CPPTRANSPORT_NODE_PRODUCT_ZETA_TWOPF_LINE_DIMENSIONLESS "dimensionless"
 
 
 namespace transport
@@ -125,7 +125,7 @@ namespace transport
 				zeta_twopf_line<number>::zeta_twopf_line(Json::Value& reader)
 					: derived_line<number>(reader)  // not called because of virtual inheritance; here to silence Intel compiler warning
 					{
-						dimensionless = reader[__CPP_TRANSPORT_NODE_PRODUCT_ZETA_TWOPF_LINE_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_ZETA_TWOPF_LINE_DIMENSIONLESS].asBool();
+						dimensionless = reader[CPPTRANSPORT_NODE_PRODUCT_ZETA_TWOPF_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_ZETA_TWOPF_LINE_DIMENSIONLESS].asBool();
 					}
 
 
@@ -134,11 +134,11 @@ namespace transport
 					{
 						if(this->dimensionless)
 							{
-								return( std::string(__CPP_TRANSPORT_LATEX_DIMENSIONLESS_PZETA) );
+								return( std::string(CPPTRANSPORT_LATEX_DIMENSIONLESS_PZETA) );
 							}
 						else
 							{
-						    return( std::string(__CPP_TRANSPORT_LATEX_ZETA_SYMBOL) + std::string(" ") + std::string(__CPP_TRANSPORT_LATEX_ZETA_SYMBOL) );
+						    return( std::string(CPPTRANSPORT_LATEX_ZETA_SYMBOL) + std::string(" ") + std::string(CPPTRANSPORT_LATEX_ZETA_SYMBOL) );
 							}
 					}
 
@@ -148,11 +148,11 @@ namespace transport
 					{
 						if(this->dimensionless)
 							{
-								return( std::string(__CPP_TRANSPORT_NONLATEX_DIMENSIONLESS_PZETA) );
+								return( std::string(CPPTRANSPORT_NONLATEX_DIMENSIONLESS_PZETA) );
 							}
 						else
 							{
-						    return( std::string(__CPP_TRANSPORT_NONLATEX_ZETA_SYMBOL) + std::string(" ") + std::string(__CPP_TRANSPORT_NONLATEX_ZETA_SYMBOL) );
+						    return( std::string(CPPTRANSPORT_NONLATEX_ZETA_SYMBOL) + std::string(" ") + std::string(CPPTRANSPORT_NONLATEX_ZETA_SYMBOL) );
 							}
 					}
 
@@ -160,14 +160,14 @@ namespace transport
 				template <typename number>
 				void zeta_twopf_line<number>::serialize(Json::Value& writer) const
 					{
-						writer[__CPP_TRANSPORT_NODE_PRODUCT_ZETA_TWOPF_LINE_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_ZETA_TWOPF_LINE_DIMENSIONLESS] = this->dimensionless;
+						writer[CPPTRANSPORT_NODE_PRODUCT_ZETA_TWOPF_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_ZETA_TWOPF_LINE_DIMENSIONLESS] = this->dimensionless;
 					}
 
 
 				template <typename number>
 				void zeta_twopf_line<number>::write(std::ostream& out)
 					{
-				    out << "  " << __CPP_TRANSPORT_PRODUCT_WAVENUMBER_SERIES_LABEL_ZETA_TWOPF << std::endl;
+				    out << "  " << CPPTRANSPORT_PRODUCT_WAVENUMBER_SERIES_LABEL_ZETA_TWOPF << '\n';
 					}
 
 			}   // namespace derived_data

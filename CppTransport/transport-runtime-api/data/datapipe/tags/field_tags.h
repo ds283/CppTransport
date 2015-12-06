@@ -29,15 +29,12 @@
 namespace transport
 	{
 
+    enum class cf_data_type { cf_twopf_re, cf_twopf_im, cf_threepf_momentum, cf_threepf_Nderiv, cf_tensor_twopf };
+
     //! data group tag -- abstract group used to derive background and field tags
     template <typename number>
     class data_tag
 	    {
-
-      public:
-
-        typedef enum { cf_twopf_re, cf_twopf_im, cf_threepf, cf_tensor_twopf } cf_data_type;
-
 
         // CONSTRUCTOR, DESTRUCTOR
 
@@ -60,10 +57,10 @@ namespace transport
         virtual bool operator==(const data_tag<number>& obj) const = 0;
 
         //! virtual function to pull a cache line
-        virtual void pull(std::shared_ptr<derived_data::SQL_query>& query, std::vector<number>& data) = 0;
+        virtual void pull(derived_data::SQL_query& query, std::vector<number>& data) = 0;
 
         //! emit a log item for this tag
-        void log(const std::string& log_item) const { BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::normal) << log_item; }
+        void log(const std::string& log_item) const { BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::log_severity_level::normal) << log_item; }
 
         //! virtual function to identify this tag
         virtual std::string name() const = 0;
@@ -120,7 +117,7 @@ namespace transport
         virtual bool operator==(const data_tag<number>& obj) const override;
 
         //! pull data corresponding to this tag
-        virtual void pull(std::shared_ptr<derived_data::SQL_query>& query, std::vector<number>& data) override;
+        virtual void pull(derived_data::SQL_query& query, std::vector<number>& data) override;
 
         //! identify this tag
         virtual std::string name() const override { std::ostringstream msg; msg << "background field " << id; return(msg.str()); }
@@ -131,7 +128,7 @@ namespace transport
       public:
 
         //! copy this object
-        background_time_data_tag<number>* clone() const { return new background_time_data_tag<number>(static_cast<const background_time_data_tag<number>&>(*this)); }
+        virtual background_time_data_tag<number>* clone() const override { return new background_time_data_tag<number>(static_cast<const background_time_data_tag<number>&>(*this)); }
 
 
         // HASH
@@ -139,7 +136,7 @@ namespace transport
       public:
 
         //! hash
-        virtual unsigned int hash() const override { return((this->id*2141) % __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE); }
+        virtual unsigned int hash() const override { return((this->id*2141) % CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE); }
 
 
         // INTERNAL DATA
@@ -161,7 +158,7 @@ namespace transport
 
       public:
 
-        cf_time_data_tag(datapipe<number>* p, typename data_tag<number>::cf_data_type t, unsigned int i, unsigned int k)
+        cf_time_data_tag(datapipe<number>* p, cf_data_type t, unsigned int i, unsigned int k)
 	        : data_tag<number>(p),
 	          type(t),
 	          id(i),
@@ -180,7 +177,7 @@ namespace transport
         virtual bool operator==(const data_tag<number>& obj) const override;
 
         //! pull data corresponding to this tag
-        virtual void pull(std::shared_ptr<derived_data::SQL_query>& query, std::vector<number>& data) override;
+        virtual void pull(derived_data::SQL_query& query, std::vector<number>& data) override;
 
         //! identify this tag
         virtual std::string name() const override;
@@ -191,7 +188,7 @@ namespace transport
       public:
 
         //! copy this object
-        cf_time_data_tag<number>* clone() const { return new cf_time_data_tag<number>(static_cast<const cf_time_data_tag<number>&>(*this)); }
+        virtual cf_time_data_tag<number>* clone() const override { return new cf_time_data_tag<number>(static_cast<const cf_time_data_tag<number>&>(*this)); }
 
 
         // HASH
@@ -199,7 +196,7 @@ namespace transport
       public:
 
         //! hash
-        virtual unsigned int hash() const override { return((this->kserial*8761 + this->id*2141) % __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE); }
+        virtual unsigned int hash() const override { return((this->kserial*8761 + this->id*2141) % CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE); }
 
 
         // INTERNAL DATA
@@ -207,7 +204,7 @@ namespace transport
       protected:
 
         //! type
-        const typename data_tag<number>::cf_data_type type;
+        const cf_data_type type;
 
         //! data id - controls which element id is sampled
         const unsigned int id;
@@ -227,7 +224,7 @@ namespace transport
 
       public:
 
-        cf_kconfig_data_tag(datapipe<number>* p, typename data_tag<number>::cf_data_type t, unsigned int i, unsigned int ts)
+        cf_kconfig_data_tag(datapipe<number>* p, cf_data_type t, unsigned int i, unsigned int ts)
 	        : data_tag<number>(p),
 	          type(t),
 	          id(i),
@@ -246,7 +243,7 @@ namespace transport
         virtual bool operator==(const data_tag<number>& obj) const override;
 
         //! pull data corresponding to this tag
-        virtual void pull(std::shared_ptr<derived_data::SQL_query>& query, std::vector<number>& data) override;
+        virtual void pull(derived_data::SQL_query& query, std::vector<number>& data) override;
 
         //! identify this tag
         virtual std::string name() const override;
@@ -257,7 +254,7 @@ namespace transport
       public:
 
         //! copy this object
-        cf_kconfig_data_tag<number>* clone() const { return new cf_kconfig_data_tag<number>(static_cast<const cf_kconfig_data_tag<number>&>(*this)); }
+        virtual cf_kconfig_data_tag<number>* clone() const override { return new cf_kconfig_data_tag<number>(static_cast<const cf_kconfig_data_tag<number>&>(*this)); }
 
 
         // HASH
@@ -265,7 +262,7 @@ namespace transport
       public:
 
         //! hash
-        virtual unsigned int hash() const override { return((this->tserial*8761 + this->id*2131) % __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE); }
+        virtual unsigned int hash() const override { return((this->tserial*8761 + this->id*2131) % CPPTRANSPORT_LINECACHE_HASH_TABLE_SIZE); }
 
 
         // INTERNAL DATA
@@ -273,7 +270,7 @@ namespace transport
       protected:
 
         //! type
-        const typename data_tag<number>::cf_data_type type;
+        const cf_data_type type;
 
         //! data id - controls which element id is samples
         const unsigned int id;
@@ -294,24 +291,25 @@ namespace transport
 
         switch(this->type)
 	        {
-            case data_tag<number>::cf_twopf_re:
+            case cf_data_type::cf_twopf_re:
 	            msg << "real twopf (time series)";
-            break;
+              break;
 
-            case data_tag<number>::cf_twopf_im:
+            case cf_data_type::cf_twopf_im:
 	            msg << "imaginary twopf (time series";
-            break;
+              break;
 
-            case data_tag<number>::cf_threepf:
-	            msg << "threepf (time series)";
-            break;
+            case cf_data_type::cf_threepf_momentum:
+	            msg << "threepf-momentum (time series)";
+              break;
 
-            case data_tag<number>::cf_tensor_twopf:
+            case cf_data_type::cf_threepf_Nderiv:
+              msg << "threepf-Nderiv (time series)";
+              break;
+
+            case cf_data_type::cf_tensor_twopf:
 	            msg << "tensor twopf (time series)";
-            break;
-
-            default:
-	            msg << "unknown";
+              break;
 	        }
 
         msg << ", element = " << this->id << ", kserial = " << this->kserial;
@@ -326,24 +324,25 @@ namespace transport
 
         switch(this->type)
 	        {
-            case data_tag<number>::cf_twopf_re:
+            case cf_data_type::cf_twopf_re:
 	            msg << "real twopf (kconfig series)";
-            break;
+              break;
 
-            case data_tag<number>::cf_twopf_im:
+            case cf_data_type::cf_twopf_im:
 	            msg << "imaginary twopf (kconfig series";
-            break;
+              break;
 
-            case data_tag<number>::cf_threepf:
-	            msg << "threepf (kconfig series)";
-            break;
+            case cf_data_type::cf_threepf_momentum:
+	            msg << "threepf-momentum (kconfig series)";
+              break;
 
-            case data_tag<number>::cf_tensor_twopf:
+            case cf_data_type::cf_threepf_Nderiv:
+              msg << "threepf-Nderiv (kconfig series)";
+              break;
+
+            case cf_data_type::cf_tensor_twopf:
 	            msg << "tensor twopf (kconfig series)";
-            break;
-
-            default:
-	            msg << "unknown";
+              break;
 	        }
 
         msg << ", element = " << this->id << ", tserial = " << this->tserial;
@@ -355,14 +354,14 @@ namespace transport
 
 
     template <typename number>
-    void background_time_data_tag<number>::pull(std::shared_ptr<derived_data::SQL_query>& query, std::vector<number>& sample)
+    void background_time_data_tag<number>::pull(derived_data::SQL_query& query, std::vector<number>& sample)
 	    {
         // check that we are attached to an integration content group
-        assert(this->pipe->validate_attached(datapipe<number>::integration_attached));
-        if(!this->pipe->validate_attached(datapipe<number>::integration_attached)) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+        assert(this->pipe->validate_attached(datapipe<number>::attachment_type::integration_attached));
+        if(!this->pipe->validate_attached(datapipe<number>::attachment_type::integration_attached)) throw runtime_exception(exception_type::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
-#ifdef __CPP_TRANSPORT_DEBUG_DATAPIPE
-		    BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::datapipe_pull) << "** PULL background time sample request for element " << this->id;
+#ifdef CPPTRANSPORT_DEBUG_DATAPIPE
+		    BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::log_severity_level::datapipe_pull) << "** PULL background time sample request for element " << this->id;
 #endif
 
         this->pipe->database_timer.resume();
@@ -372,111 +371,99 @@ namespace transport
 
 
     template <typename number>
-    void cf_time_data_tag<number>::pull(std::shared_ptr<derived_data::SQL_query>& query, std::vector<number>& sample)
+    void cf_time_data_tag<number>::pull(derived_data::SQL_query& query, std::vector<number>& sample)
 	    {
         // check that we are attached to an integration content group
-        assert(this->pipe->validate_attached(datapipe<number>::integration_attached));
-        if(!this->pipe->validate_attached(datapipe<number>::integration_attached)) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+        assert(this->pipe->validate_attached(datapipe<number>::attachment_type::integration_attached));
+        if(!this->pipe->validate_attached(datapipe<number>::attachment_type::integration_attached)) throw runtime_exception(exception_type::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
-        if(this->type == data_tag<number>::cf_twopf_re)
-	        {
-#ifdef __CPP_TRANSPORT_DEBUG_DATAPIPE
-				    BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::datapipe_pull) << "** PULL twopf time sample request, type = real, for element " << this->id << ", k-configuration " << this->kserial;
+        this->pipe->database_timer.resume();
+        switch(this->type)
+          {
+            case cf_data_type::cf_twopf_re:
+#ifdef CPPTRANSPORT_DEBUG_DATAPIPE
+              BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::log_severity_level::datapipe_pull) << "** PULL twopf time sample request, type = real, for element " << this->id << ", k-configuration " << this->kserial;
 #endif
+              this->pipe->pull_timeslice.twopf(this->pipe, this->id, query, this->kserial, sample, twopf_type::real);
+              break;
 
-            this->pipe->database_timer.resume();
-            this->pipe->pull_timeslice.twopf(this->pipe, this->id, query, this->kserial, sample, datapipe<number>::twopf_real);
-            this->pipe->database_timer.stop();
-	        }
-        else if(this->type == data_tag<number>::cf_twopf_im)
-	        {
-#ifdef __CPP_TRANSPORT_DEBUG_DATAPIPE
-				    BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::datapipe_pull) << "** PULL twopf time sample request, type = imaginary, for element " << this->id << ", k-configuration " << this->kserial;
+            case cf_data_type::cf_twopf_im:
+#ifdef CPPTRANSPORT_DEBUG_DATAPIPE
+              BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::log_severity_level::datapipe_pull) << "** PULL twopf time sample request, type = imaginary, for element " << this->id << ", k-configuration " << this->kserial;
 #endif
+              this->pipe->pull_timeslice.twopf(this->pipe, this->id, query, this->kserial, sample, twopf_type::imag);
+              break;
 
-            this->pipe->database_timer.resume();
-            this->pipe->pull_timeslice.twopf(this->pipe, this->id, query, this->kserial, sample, datapipe<number>::twopf_imag);
-            this->pipe->database_timer.stop();
-	        }
-        else if(this->type == data_tag<number>::cf_threepf)
-	        {
-#ifdef __CPP_TRANSPORT_DEBUG_DATAPIPE
-				    BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::datapipe_pull) << "** PULL threepf time sample request for element " << this->id << ", k-configuration " << this->kserial;
+            case cf_data_type::cf_threepf_momentum:
+#ifdef CPPTRANSPORT_DEBUG_DATAPIPE
+              BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::log_severity_level::datapipe_pull) << "** PULL threepf-momentum time sample request for element " << this->id << ", k-configuration " << this->kserial;
 #endif
+              this->pipe->pull_timeslice.threepf(this->pipe, this->id, query, this->kserial, sample, threepf_type::momentum);
+              break;
 
-            this->pipe->database_timer.resume();
-            this->pipe->pull_timeslice.threepf(this->pipe, this->id, query, this->kserial, sample);
-            this->pipe->database_timer.stop();
-	        }
-        else if(this->type == data_tag<number>::cf_tensor_twopf)
-	        {
-#ifdef __CPP_TRANSPORT_DEBUG_DATAPIPE
-            BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::datapipe_pull) << "** PULL tensor twopf time sample request for element " << this->id << ", k-configuration " << this->kserial;
+            case cf_data_type::cf_threepf_Nderiv:
+#ifdef CPPTRANSPORT_DEBUG_DATAPIPE
+              BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::log_severity_level::datapipe_pull) << "** PULL threepf-Nderiv time sample request for element " << this->id << ", k-configuration " << this->kserial;
 #endif
+              this->pipe->pull_timeslice.threepf(this->pipe, this->id, query, this->kserial, sample, threepf_type::Nderiv);
+            break;
 
-            this->pipe->database_timer.resume();
-            this->pipe->pull_timeslice.tensor_twopf(this->pipe, this->id, query, this->kserial, sample);
-            this->pipe->database_timer.stop();
-	        }
-        else
-	        {
-            assert(false);
-            throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_UNKNOWN_CF_TYPE);
-	        }
+            case cf_data_type::cf_tensor_twopf:
+#ifdef CPPTRANSPORT_DEBUG_DATAPIPE
+              BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::log_severity_level::datapipe_pull) << "** PULL tensor twopf time sample request for element " << this->id << ", k-configuration " << this->kserial;
+#endif
+              this->pipe->pull_timeslice.tensor_twopf(this->pipe, this->id, query, this->kserial, sample);
+              break;
+          }
+        this->pipe->database_timer.stop();
 	    }
 
 
     template <typename number>
-    void cf_kconfig_data_tag<number>::pull(std::shared_ptr<derived_data::SQL_query>& query, std::vector<number>& sample)
+    void cf_kconfig_data_tag<number>::pull(derived_data::SQL_query& query, std::vector<number>& sample)
 	    {
         // check that we are attached to an integration content group
-        assert(this->pipe->validate_attached(datapipe<number>::integration_attached));
-        if(!this->pipe->validate_attached(datapipe<number>::integration_attached)) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+        assert(this->pipe->validate_attached(datapipe<number>::attachment_type::integration_attached));
+        if(!this->pipe->validate_attached(datapipe<number>::attachment_type::integration_attached)) throw runtime_exception(exception_type::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
-        if(this->type == data_tag<number>::cf_twopf_re)
-	        {
-#ifdef __CPP_TRANSPORT_DEBUG_DATAPIPE
-            BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::datapipe_pull) << "** PULL twopf kconfig sample request, type = real, for element " << this->id << ", t-serial " << this->tserial;
+        this->pipe->database_timer.resume();
+        switch(this->type)
+          {
+            case cf_data_type::cf_twopf_re:
+#ifdef CPPTRANSPORT_DEBUG_DATAPIPE
+              BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::log_severity_level::datapipe_pull) << "** PULL twopf kconfig sample request, type = real, for element " << this->id << ", t-serial " << this->tserial;
 #endif
+              this->pipe->pull_kslice.twopf(this->pipe, this->id, query, this->tserial, sample, twopf_type::real);
+              break;
 
-            this->pipe->database_timer.resume();
-            this->pipe->pull_kslice.twopf(this->pipe, this->id, query, this->tserial, sample, datapipe<number>::twopf_real);
-            this->pipe->database_timer.stop();
-	        }
-        else if(this->type == data_tag<number>::cf_twopf_im)
-	        {
-#ifdef __CPP_TRANSPORT_DEBUG_DATAPIPE
-            BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::datapipe_pull) << "** PULL twopf kconfig sample request, type = imaginary, for element " << this->id << ", t-serial " << this->tserial;
+            case cf_data_type::cf_twopf_im:
+#ifdef CPPTRANSPORT_DEBUG_DATAPIPE
+              BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::log_severity_level::datapipe_pull) << "** PULL twopf kconfig sample request, type = imaginary, for element " << this->id << ", t-serial " << this->tserial;
 #endif
+              this->pipe->pull_kslice.twopf(this->pipe, this->id, query, this->tserial, sample, twopf_type::imag);
+              break;
 
-            this->pipe->database_timer.resume();
-            this->pipe->pull_kslice.twopf(this->pipe, this->id, query, this->tserial, sample, datapipe<number>::twopf_imag);
-            this->pipe->database_timer.stop();
-	        }
-        else if(this->type == data_tag<number>::cf_threepf)
-	        {
-#ifdef __CPP_TRANSPORT_DEBUG_DATAPIPE
-            BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::datapipe_pull) << "** PULL threepf kconfig sample request for element " << this->id << ", t-serial " << this->tserial;
+            case cf_data_type::cf_threepf_momentum:
+#ifdef CPPTRANSPORT_DEBUG_DATAPIPE
+              BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::log_severity_level::datapipe_pull) << "** PULL threepf-momentum kconfig sample request for element " << this->id << ", t-serial " << this->tserial;
 #endif
+              this->pipe->pull_kslice.threepf(this->pipe, this->id, query, this->tserial, sample, threepf_type::momentum);
+              break;
 
-            this->pipe->database_timer.resume();
-            this->pipe->pull_kslice.threepf(this->pipe, this->id, query, this->tserial, sample);
-            this->pipe->database_timer.stop();
-	        }
-        else if(this->type == data_tag<number>::cf_tensor_twopf)
-	        {
-#ifdef __CPP_TRANSPORT_DEBUG_DATAPIPE
-            BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::datapipe_pull) << "** PULL tensor twopf kconfig sample request for element " << this->id << ", t-serial " << this->tserial;
+            case cf_data_type::cf_threepf_Nderiv:
+#ifdef CPPTRANSPORT_DEBUG_DATAPIPE
+              BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::log_severity_level::datapipe_pull) << "** PULL threepf-Nderiv kconfig sample request for element " << this->id << ", t-serial " << this->tserial;
 #endif
-            this->pipe->database_timer.resume();
-            this->pipe->pull_kslice.tensor_twopf(this->pipe, this->id, query, this->tserial, sample);
-            this->pipe->database_timer.stop();
-	        }
-        else
-	        {
-            assert(false);
-            throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_UNKNOWN_CF_TYPE);
-	        }
+              this->pipe->pull_kslice.threepf(this->pipe, this->id, query, this->tserial, sample, threepf_type::Nderiv);
+
+            case cf_data_type::cf_tensor_twopf:
+#ifdef CPPTRANSPORT_DEBUG_DATAPIPE
+              BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::log_severity_level::datapipe_pull) << "** PULL tensor twopf kconfig sample request for element " << this->id << ", t-serial " << this->tserial;
+#endif
+              this->pipe->pull_kslice.tensor_twopf(this->pipe, this->id, query, this->tserial, sample);
+              break;
+          }
+        this->pipe->database_timer.stop();
 	    }
 
 

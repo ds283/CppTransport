@@ -4,8 +4,8 @@
 //
 //
 
-#ifndef __CPP_TRANSPORT_SPLINE_H_
-#define __CPP_TRANSPORT_SPLINE_H_
+#ifndef CPPTRANSPORT_SPLINE_H_
+#define CPPTRANSPORT_SPLINE_H_
 
 
 #include <vector>
@@ -14,9 +14,9 @@
 
 #include <assert.h>
 
-#include "datatable.h"
-#include "bspline.h"
-#include "pspline.h"
+#include "SPLINTER/datatable.h"
+#include "SPLINTER/bsplineapproximant.h"
+#include "SPLINTER/psplineapproximant.h"
 
 namespace transport
   {
@@ -76,6 +76,14 @@ namespace transport
 		    double get_max_x() const { return(this->max_x); }
 
 
+        // WRITE TO STREAM
+
+      public:
+
+        //! write self to stream
+        void write(std::ostream& out) const;
+
+
         // INTERNAL DATA
 
 
@@ -85,15 +93,15 @@ namespace transport
         //! which also deals correctly with taking copies.
         //! This is a raw BSpline, meaning that it goes through each of the data points.
         //! We use it to interpolate values.
-        std::shared_ptr<Splinter::BSpline> b_spline;
+        std::shared_ptr<SPLINTER::BSplineApproximant> b_spline;
 
         //! pointer to penalized-B spline object.
         //! This is smoothed, so it need not go through every data point.
         //! We use it to interpolate derivatives
-        std::shared_ptr<Splinter::PSpline> p_spline;
+        std::shared_ptr<SPLINTER::PSplineApproximant> p_spline;
 
         //! DataTable instance
-        Splinter::DataTable table;
+        SPLINTER::DataTable table;
 
 		    //! offset to apply on evaluation
 		    number offset;
@@ -131,12 +139,12 @@ namespace transport
 
         try
 	        {
-            b_spline = std::make_shared<Splinter::BSpline>(table, Splinter::BSplineType::CUBIC_FREE);
-            p_spline = std::make_shared<Splinter::PSpline>(table, 0.03);
+            b_spline = std::make_shared<SPLINTER::BSplineApproximant>(table, SPLINTER::BSplineType::CUBIC);
+            p_spline = std::make_shared<SPLINTER::PSplineApproximant>(table, 0.03);
 	        }
-				catch(Splinter::Exception& xe)
+				catch(SPLINTER::Exception& xe)
 					{
-						throw runtime_exception(runtime_exception::SPLINE_ERROR, xe.what());
+						throw runtime_exception(exception_type::SPLINE_ERROR, xe.what());
 					}
       }
 
@@ -144,7 +152,7 @@ namespace transport
     template <typename number>
     number spline1d<number>::eval(double x)
       {
-        Splinter::DenseVector xv(1);
+        SPLINTER::DenseVector xv(1);
         xv(0) = x;
 
         return( static_cast<number>(this->b_spline->eval(xv)) - this->offset );
@@ -154,14 +162,33 @@ namespace transport
     template <typename number>
     number spline1d<number>::eval_diff(double x)
       {
-        Splinter::DenseVector xv(1);
+        SPLINTER::DenseVector xv(1);
         xv(0) = x;
 
         return( static_cast<number>((this->p_spline->evalJacobian(xv))(0)) );
       }
 
 
+    template <typename number>
+    void spline1d<number>::write(std::ostream& out) const
+      {
+        for(std::multiset<SPLINTER::DataSample>::const_iterator t = this->table.cbegin(); t != this->table.cend(); ++t)
+          {
+            assert(t->getDimX() == 1);
+            out << "x = " << t->getX()[0] << ", y = " << t->getY() << '\n';
+          }
+      }
+
+
+    template <typename number, typename Char, typename Traits>
+    std::basic_ostream<Char, Traits>& operator<<(std::basic_ostream<Char, Traits>& out, const spline1d<number>& obj)
+      {
+        obj.write(out);
+        return(out);
+      };
+
+
   }   // namespace transport
 
 
-#endif // __CPP_TRANSPORT_SPLINE_H_
+#endif // CPPTRANSPORT_SPLINE_H_

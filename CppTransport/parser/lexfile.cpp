@@ -11,17 +11,32 @@
 #include <assert.h>
 
 #include "lexfile.h"
+#include "msg_en.h"
 
 
 // ******************************************************************
 
 
-lexfile::lexfile(std::string fnam, std::shared_ptr<filestack> s)
-  : file(fnam), stack(s), state(lexfile_unready)
+lexfile::lexfile(const boost::filesystem::path& fnam, filestack& s)
+  : file(fnam),
+    stack(s),
+    state(lexfile_state::unready),
+    char_pos(0)
   {
-    stream.open(fnam.c_str());    // when building with GCC LLVM 4.2, stream.open() doesn't accept std::string
+    stream.open(fnam.string());    // when building with GCC LLVM 4.2, stream.open() doesn't accept std::string
+
+    // build up array of lines
+    std::string line;
+    while(std::getline(stream, line))
+      {
+        line_array.push_back(std::make_shared<std::string>(line));
+      }
+
+    // reset to the beginning of the stream
+    stream.clear();
+    stream.seekg(0, std::ios::beg);
+
     assert(stream.is_open());
-    assert(stack != nullptr);
   }
 
 lexfile::~lexfile()
@@ -40,59 +55,68 @@ char lexfile::get(enum lexfile_outcome& state)
   {
     switch(this->state)
       {
-        case lexfile_unready:                       // this will be the most common case; we need to read a new char
-          if(this->stream.eof())
-            {
-              this->state = lexfile_eof;
-              this->c     = 0;
-              break;
-            }
-          while(this->state == lexfile_unready)
-            {
-              assert(this->stream.is_open());
-              assert(!(this->stream.fail()));
+        case lexfile_state::unready:                       // this will be the most common case; we need to read a new char
+          {
+            if(this->stream.eof())
+              {
+                this->state = lexfile_state::eof;
+                this->c     = 0;
+                break;
+              }
 
-              this->stream.get(this->c);
-              if(this->stream.eof())                // reached end-of-file
-                {
-                  this->state = lexfile_eof;
-                  this->c     = 0;
-                }
-              else if(this->stream.fail())          // there was an error
-                {
-                  this->state = lexfile_error;
-                  this->c     = 0;
-                }
-              else                                  // can assume this character is valid
-                {
-                  this->state = lexfile_ready;
-                  if(this->c == '\n') this->stack->increment_line();
-                }
-            }
-          break;
+            while(this->state == lexfile_state::unready)
+              {
+                assert(this->stream.is_open());
+                assert(!(this->stream.fail()));
 
-        case lexfile_ready:
-          break;                                    // don't need to do anything if we are already 'ready'
+                this->stream.get(this->c);
+                if(this->stream.eof())                // reached end-of-file
+                  {
+                    this->state = lexfile_state::eof;
+                    this->c     = 0;
+                  }
+                else if(this->stream.fail())          // there was an error
+                  {
+                    this->state = lexfile_state::error;
+                    this->c     = 0;
+                  }
+                else                                  // can assume this character is valid
+                  {
+                    this->state = lexfile_state::ready;
+                    if(this->c == '\n')
+                      {
+                        this->stack.increment_line();
+                        this->char_pos = 0;
+                      }
+                  }
+              }
 
-        case lexfile_eof:
-        case lexfile_error:
-          break;                                    // do nothing if there is already an error or eof condition
+            break;
+          }
 
-        default:
-          assert(false);                            // shouldn't arrive here
+        case lexfile_state::ready:
+          {
+            break;                                    // don't need to do anything if we are already 'ready'
+          }
+
+        case lexfile_state::eof:
+        case lexfile_state::error:
+          {
+            break;                                    // do nothing if there is already an error or eof condition
+          }
       }
 
-    if(this->state == lexfile_eof)
+    if(this->state == lexfile_state::eof)
       {
-        state = lex_eof;
+        state = lexfile_outcome::eof;
       }
-    else if(this->state == lexfile_error)
+    else if(this->state == lexfile_state::error)
       {
-        state = lex_error;
+        state = lexfile_outcome::error;
       }
     else
       {
-        state = lex_ok;
+        state = lexfile_outcome::ok;
       }
 
     return(this->c);
@@ -102,21 +126,35 @@ void lexfile::eat()
   {
     assert(this->stream.is_open());
 
-    this->state = lexfile_unready;
+    this->state = lexfile_state::unready;
+    this->char_pos++;
   }
 
 enum lexfile_outcome lexfile::current_state() const
   {
-    enum lexfile_outcome rval = lex_ok;
+    enum lexfile_outcome rval = lexfile_outcome::ok;
 
-    if(this->state == lexfile_eof)
+    if(this->state == lexfile_state::eof)
       {
-        rval = lex_eof;
+        rval = lexfile_outcome::eof;
       }
-    else if(this->state == lexfile_error)
+    else if(this->state == lexfile_state::error)
       {
-        rval = lex_error;
+        rval = lexfile_outcome::error;
       }
 
     return(rval);
+  }
+
+
+const std::shared_ptr<std::string>& lexfile::get_current_line() const
+  {
+    unsigned int cline = this->stack.get_line();
+
+    if(cline <= this->line_array.size())
+      {
+        return this->line_array[cline-1];
+      }
+
+    throw std::runtime_error(ERROR_CURRENT_LINE_EMPTY);
   }

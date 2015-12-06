@@ -14,11 +14,11 @@
 #include "transport-runtime-api/tasks/postintegration_detail/zeta_threepf_task.h"
 
 
-#define __CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE               "template"
-#define __CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE_LOCAL         "local"
-#define __CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE_EQUI          "equilateral"
-#define __CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE_ORTHO         "orthogonal"
-#define __CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE_DBI           "DBI"
+#define CPPTRANSPORT_NODE_FNL_TASK_TEMPLATE               "template"
+#define CPPTRANSPORT_NODE_FNL_TASK_TEMPLATE_LOCAL         "local"
+#define CPPTRANSPORT_NODE_FNL_TASK_TEMPLATE_EQUI          "equilateral"
+#define CPPTRANSPORT_NODE_FNL_TASK_TEMPLATE_ORTHO         "orthogonal"
+#define CPPTRANSPORT_NODE_FNL_TASK_TEMPLATE_DBI           "DBI"
 
 
 namespace transport
@@ -36,7 +36,7 @@ namespace transport
       public:
 
         //! construct an fNL task; this depends on output from a zeta_threepf_task
-        fNL_task(const std::string& nm, const zeta_threepf_task<number>& t, derived_data::template_type ty=derived_data::fNL_local_template);
+        fNL_task(const std::string& nm, const zeta_threepf_task<number>& t, derived_data::template_type ty=derived_data::template_type::fNL_local_template);
 
         //! deserialization constructor
         fNL_task(const std::string& nm, Json::Value& reader, typename repository_finder<number>::task_finder& finder);
@@ -89,8 +89,8 @@ namespace transport
         if(!t.is_integrable())
 	        {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_FNL_TASK_NOT_INTEGRABLE << " '" << t.get_name() << "'";
-            throw runtime_exception(runtime_exception::DERIVED_PRODUCT_ERROR, msg.str());
+            msg << CPPTRANSPORT_FNL_TASK_NOT_INTEGRABLE << " '" << t.get_name() << "'";
+            throw runtime_exception(exception_type::DERIVED_PRODUCT_ERROR, msg.str());
 	        }
 	    }
 
@@ -99,17 +99,17 @@ namespace transport
     fNL_task<number>::fNL_task(const std::string& nm, Json::Value& reader, typename repository_finder<number>::task_finder& finder)
 	    : postintegration_task<number>(nm, reader, finder)
 	    {
-        std::string type_str = reader[__CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE].asString();
+        std::string type_str = reader[CPPTRANSPORT_NODE_FNL_TASK_TEMPLATE].asString();
 
-        if     (type_str == __CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE_LOCAL) type = derived_data::fNL_local_template;
-        else if(type_str == __CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE_EQUI)  type = derived_data::fNL_equi_template;
-        else if(type_str == __CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE_ORTHO) type = derived_data::fNL_ortho_template;
-        else if(type_str == __CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE_DBI)   type = derived_data::fNL_DBI_template;
+        if     (type_str == CPPTRANSPORT_NODE_FNL_TASK_TEMPLATE_LOCAL) type = derived_data::template_type::fNL_local_template;
+        else if(type_str == CPPTRANSPORT_NODE_FNL_TASK_TEMPLATE_EQUI)  type = derived_data::template_type::fNL_equi_template;
+        else if(type_str == CPPTRANSPORT_NODE_FNL_TASK_TEMPLATE_ORTHO) type = derived_data::template_type::fNL_ortho_template;
+        else if(type_str == CPPTRANSPORT_NODE_FNL_TASK_TEMPLATE_DBI)   type = derived_data::template_type::fNL_DBI_template;
         else
 	        {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_FNL_TASK_UNKNOWN_TEMPLATE << " '" << type_str << "'";
-            throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
+            msg << CPPTRANSPORT_FNL_TASK_UNKNOWN_TEMPLATE << " '" << type_str << "'";
+            throw runtime_exception(exception_type::SERIALIZATION_ERROR, msg.str());
 	        }
 	    }
 
@@ -117,29 +117,29 @@ namespace transport
     template <typename number>
     void fNL_task<number>::serialize(Json::Value& writer) const
 	    {
-        writer[__CPP_TRANSPORT_NODE_TASK_TYPE] = std::string(__CPP_TRANSPORT_NODE_TASK_TYPE_FNL);
+        writer[CPPTRANSPORT_NODE_TASK_TYPE] = std::string(CPPTRANSPORT_NODE_TASK_TYPE_FNL);
 
         switch(this->type)
 	        {
-            case derived_data::fNL_local_template:
-	            writer[__CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE] = std::string(__CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE_LOCAL);
+            case derived_data::template_type::fNL_local_template:
+	            writer[CPPTRANSPORT_NODE_FNL_TASK_TEMPLATE] = std::string(CPPTRANSPORT_NODE_FNL_TASK_TEMPLATE_LOCAL);
             break;
 
-            case derived_data::fNL_equi_template:
-	            writer[__CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE] = std::string(__CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE_EQUI);
+            case derived_data::template_type::fNL_equi_template:
+	            writer[CPPTRANSPORT_NODE_FNL_TASK_TEMPLATE] = std::string(CPPTRANSPORT_NODE_FNL_TASK_TEMPLATE_EQUI);
             break;
 
-            case derived_data::fNL_ortho_template:
-	            writer[__CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE] = std::string(__CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE_ORTHO);
+            case derived_data::template_type::fNL_ortho_template:
+	            writer[CPPTRANSPORT_NODE_FNL_TASK_TEMPLATE] = std::string(CPPTRANSPORT_NODE_FNL_TASK_TEMPLATE_ORTHO);
             break;
 
-            case derived_data::fNL_DBI_template:
-	            writer[__CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE] = std::string(__CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE_DBI);
+            case derived_data::template_type::fNL_DBI_template:
+	            writer[CPPTRANSPORT_NODE_FNL_TASK_TEMPLATE] = std::string(CPPTRANSPORT_NODE_FNL_TASK_TEMPLATE_DBI);
             break;
 
             default:
 	            assert(false);
-            throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_FNL_TASK_UNKNOWN_TEMPLATE);
+            throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_FNL_TASK_UNKNOWN_TEMPLATE);
 	        }
 
         this->postintegration_task<number>::serialize(writer);

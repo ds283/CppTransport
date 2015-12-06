@@ -10,15 +10,17 @@
 #include <functional>
 
 #include "transport-runtime-api/manager/instance_manager.h"
-
 #include "transport-runtime-api/repository/json_repository.h"
 
-#include "master_controller.h"
-#include "slave_controller.h"
+#include "transport-runtime-api/manager/master_controller.h"
+#include "transport-runtime-api/manager/slave_controller.h"
 
-#include "transport-runtime-api/defaults.h"
+#include "transport-runtime-api/manager/argument_cache.h"
+#include "transport-runtime-api/manager/environment.h"
+
 #include "transport-runtime-api/messages.h"
 #include "transport-runtime-api/exceptions.h"
+#include "transport-runtime-api/ansi_colour_codes.h"
 
 
 namespace transport
@@ -36,14 +38,10 @@ namespace transport
       public:
 
         //! Construct a task manager using command-line arguments. The repository must exist and be named on the command line.
-        task_manager(int argc, char* argv[],
-                     unsigned int bcp=__CPP_TRANSPORT_DEFAULT_BATCHER_STORAGE,
-                     unsigned int pcp=__CPP_TRANSPORT_DEFAULT_PIPE_STORAGE);
+        task_manager(int argc, char* argv[]);
 
         //! Construct a task manager using a previously-constructed repository object. Usually this will be used only when creating a new repository.
-        task_manager(int argc, char* argv[], json_repository<number>* r,
-                     unsigned int bcp=__CPP_TRANSPORT_DEFAULT_BATCHER_STORAGE,
-                     unsigned int pcp=__CPP_TRANSPORT_DEFAULT_PIPE_STORAGE);
+        task_manager(int argc, char* argv[], std::shared_ptr< json_repository<number> > r);
 
         //! Destroy a task manager object
         ~task_manager() = default;
@@ -59,24 +57,19 @@ namespace transport
 
         // INTERFACE -- REPOSITORY MANAGEMENT
 
-      public:
-
-		    //! Return handle to repository
-		    json_repository<number>* get_repository();
-
 
         // INTERFACE -- ERROR REPORTING
 
       protected:
 
         //! Report an error
-        void error(const std::string& msg) { std::cout << msg << std::endl; }
+        void error(const std::string& msg);
 
         //! Report a warning
-        void warn(const std::string& msg) { std::cout << __CPP_TRANSPORT_TASK_MANAGER_WARNING_LABEL << " " << msg << std::endl; }
+        void warn(const std::string& msg);
 
         //! Report a message
-        void message(const std::string& msg) { if(this->master.get_arguments().get_verbose()) std::cout << msg << std::endl; }
+        void message(const std::string& msg);
 
 
         // INTERNAL DATA
@@ -101,53 +94,56 @@ namespace transport
 		    //! master controller
 		    master_controller<number> master;
 
+
+        // LOCAL ENVIRONMENT
+        local_environment local_env;
+
+        //! Argument cache
+        argument_cache arg_cache;
+
       };
 
 
     template <typename number>
-    task_manager<number>::task_manager(int argc, char* argv[], unsigned int bcp, unsigned int pcp)
+    task_manager<number>::task_manager(int argc, char* argv[])
 	    : instance_manager<number>(),
 	      environment(argc, argv),
 	    // note it is safe to assume environment and world have been constructed when the constructor for
 	    // slave and master are invoked, because environment and world are declared
 	    // prior to slave and master in the class declaration
-	      slave(environment, world, this->model_finder_factory(),
+	      slave(environment, world, local_env, arg_cache, this->model_finder_factory(),
 	            std::bind(&task_manager<number>::error, this, std::placeholders::_1),
 	            std::bind(&task_manager<number>::warn, this, std::placeholders::_1),
-	            std::bind(&task_manager<number>::message, this, std::placeholders::_1),
-	            bcp, pcp),
-	      master(environment, world,
+	            std::bind(&task_manager<number>::message, this, std::placeholders::_1)),
+	      master(environment, world, local_env, arg_cache,
 	             std::bind(&task_manager<number>::error, this, std::placeholders::_1),
 	             std::bind(&task_manager<number>::warn, this, std::placeholders::_1),
-	             std::bind(&task_manager<number>::message, this, std::placeholders::_1),
-	             bcp, pcp)
+	             std::bind(&task_manager<number>::message, this, std::placeholders::_1))
       {
         if(world.rank() == MPI::RANK_MASTER)  // process command-line arguments if we are the master node
 	        {
-            master.process_arguments(argc, argv, this->model_finder_factory());
+            master.process_arguments(argc, argv, *this);
 	        }
       }
 
 
     template <typename number>
-    task_manager<number>::task_manager(int argc, char* argv[], json_repository<number>* r, unsigned int bcp, unsigned int pcp)
+    task_manager<number>::task_manager(int argc, char* argv[], std::shared_ptr< json_repository<number> > r)
       : instance_manager<number>(),
         environment(argc, argv),
         // note it is safe to assume environment and world have been constructed when the constructor for
         // slave and master are invoked, because environment and world are declared
         // prior to slave and master in the class declaration
-        slave(environment, world, this->model_finder_factory(),
+        slave(environment, world, local_env, arg_cache, this->model_finder_factory(),
               std::bind(&task_manager<number>::error, this, std::placeholders::_1),
               std::bind(&task_manager<number>::warn, this, std::placeholders::_1),
-              std::bind(&task_manager<number>::message, this, std::placeholders::_1),
-              bcp, pcp),
-        master(environment, world, r,
+              std::bind(&task_manager<number>::message, this, std::placeholders::_1)),
+        master(environment, world, local_env, arg_cache, r,
                std::bind(&task_manager<number>::error, this, std::placeholders::_1),
                std::bind(&task_manager<number>::warn, this, std::placeholders::_1),
-               std::bind(&task_manager<number>::message, this, std::placeholders::_1),
-               bcp, pcp)
+               std::bind(&task_manager<number>::message, this, std::placeholders::_1))
       {
-        assert(r != nullptr);
+        assert(r);
 
 		    // set model finder for the repository
 		    // (this is a function which, given a model ID, returns the model* instance representing it)
@@ -160,6 +156,8 @@ namespace transport
 			{
 				if(this->world.rank() == MPI::RANK_MASTER)
 					{
+            // output model list if it has been asked for (have to wait until this point to be sure all models have registered)
+            if(this->arg_cache.get_model_list()) this->write_models(std::cout);
 						this->master.execute_tasks();
 					}
 				else
@@ -169,18 +167,42 @@ namespace transport
 			}
 
 
-    // REPOSITORY INTERFACE
+    template <typename number>
+    void task_manager<number>::error(const std::string& msg)
+      {
+        bool colour = this->local_env.has_colour_terminal_support() && this->arg_cache.get_colour_output();
+
+        if(colour) std::cout << ANSI_BOLD_RED;
+        std::cout << msg << '\n';
+        if(colour) std::cout << ANSI_NORMAL;
+      }
 
 
-		template <typename number>
-		json_repository<number>* task_manager<number>::get_repository()
-			{
-				assert(this->repo != nullptr);
+    template <typename number>
+    void task_manager<number>::warn(const std::string& msg)
+      {
+        bool colour = this->local_env.has_colour_terminal_support() && this->arg_cache.get_colour_output();
 
-				if(this->repo == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NOT_SET);
+        if(colour) std::cout << ANSI_BOLD_MAGENTA;
+        std::cout << CPPTRANSPORT_TASK_MANAGER_WARNING_LABEL << " ";
+        if(colour) std::cout << ANSI_NORMAL;
+        std::cout << msg << '\n';
+      }
 
-				return(this->repo);
-			}
+
+    template <typename number>
+    void task_manager<number>::message(const std::string& msg)
+      {
+        bool colour = this->local_env.has_colour_terminal_support() && this->arg_cache.get_colour_output();
+
+        if(this->arg_cache.get_verbose())
+          {
+//            if(colour) std::cout << ANSI_GREEN;
+            std::cout << msg << '\n';
+//            if(colour) std::cout << ANSI_NORMAL;
+          }
+      }
+
 
   } // namespace transport
 

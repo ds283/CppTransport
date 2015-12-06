@@ -44,26 +44,7 @@
 #include "boost/serialization/string.hpp"
 #include "boost/timer/timer.hpp"
 #include "boost/lexical_cast.hpp"
-
-
-
-#define __CPP_TRANSPORT_SWITCH_REPO              "--repo"
-#define __CPP_TRANSPORT_SWITCH_TAG               "--tag"
-#define __CPP_TRANSPORT_SWITCH_CAPACITY          "--caches"
-#define __CPP_TRANSPORT_SWITCH_BATCHER_CAPACITY  "--batch-cache"
-#define __CPP_TRANSPORT_SWITCH_CACHE_CAPACITY    "--data-cache"
-#define __CPP_TRANSPORT_SWITCH_VERBOSE           "-v"
-#define __CPP_TRANSPORT_SWITCH_GANTT_CHART       "--gantt-chart"
-
-#define __CPP_TRANSPORT_VERB_TASK                "task"
-#define __CPP_TRANSPORT_VERB_GET                 "get"
-#define __CPP_TRANSPORT_VERB_SEED                "seed"
-
-#define __CPP_TRANSPORT_NOUN_TASK                "task"
-#define __CPP_TRANSPORT_NOUN_PACKAGE             "package"
-#define __CPP_TRANSPORT_NOUN_PRODUCT             "product"
-#define __CPP_TRANSPORT_NOUN_CONTENT             "content"
-
+#include "boost/program_options.hpp"
 
 
 namespace transport
@@ -98,7 +79,7 @@ namespace transport
 				typedef std::function<bool(unsigned int,unsigned int,MPI::content_ready_payload&,output_metadata&)> derived_content_aggregator;
 
 				//! Labels for types of job
-		    typedef enum { job_task, job_get_package, job_get_task, job_get_product, job_get_content } job_type;
+		    enum class job_type { job_task };
 
 
 				//! Job descriptor class
@@ -174,7 +155,6 @@ namespace transport
 				  public:
 						aggregation_record(unsigned int w, unsigned int i)
 							: worker(w),
-
 							  id(i)
 							{
 							}
@@ -266,19 +246,17 @@ namespace transport
 				//! construct a master controller object with no supplied repository
 				//! (one has to be provided in the command line arguments later)
 				master_controller(boost::mpi::environment& e, boost::mpi::communicator& w,
-				                  error_callback err, warning_callback warn, message_callback msg,
-				                  unsigned int bcp = __CPP_TRANSPORT_DEFAULT_BATCHER_STORAGE,
-				                  unsigned int pcp = __CPP_TRANSPORT_DEFAULT_PIPE_STORAGE);
+                          local_environment& le, argument_cache& ac,
+				                  error_callback err, warning_callback warn, message_callback msg);
 
 				//! construct a master controller object with a supplied repository
 				master_controller(boost::mpi::environment& e, boost::mpi::communicator& w,
-				                  json_repository<number>* r,
-				                  error_callback err, warning_callback warn, message_callback msg,
-				                  unsigned int bcp = __CPP_TRANSPORT_DEFAULT_BATCHER_STORAGE,
-				                  unsigned int pcp = __CPP_TRANSPORT_DEFAULT_PIPE_STORAGE);
+                          local_environment& le, argument_cache& ac,
+				                  std::shared_ptr< json_repository<number> > r,
+				                  error_callback err, warning_callback warn, message_callback msg);
 
 				//! destroy a master manager object
-				~master_controller();
+				~master_controller() = default;
 
 
 				// INTERFACE
@@ -286,13 +264,10 @@ namespace transport
 		  public:
 
 				//! interpret command-line arguments
-				void process_arguments(int argc, char* argv[], const typename instance_manager<number>::model_finder& finder);
-				
+				void process_arguments(int argc, char* argv[], instance_manager<number>& instance_mgr);
+
 		    //! execute any queued tasks
 		    void execute_tasks(void);
-
-				//! expose arguments
-				const argument_cache& get_arguments(void) { return(this->arg_cache); }
 
 
 		    // MPI FUNCTIONS
@@ -316,10 +291,7 @@ namespace transport
 
 		  protected:
 
-		    //! Master node: Process a 'get' job
-		    void process_get(const job_descriptor& job);
-
-		    //! Master node: Process a 'task' job.
+        //! Master node: Process a 'task' job.
 		    //! Some tasks are integrations, others process the numerical output from an integration to product
 		    //! a derived data product (like fNL).
 		    //! This function schedules workers to process the task.
@@ -355,6 +327,10 @@ namespace transport
 				template <typename WriterObject>
         void check_for_progress_update(WriterObject& writer);
 
+        //! Master node: log current worker metadata
+        template <typename WriterObject>
+        void log_worker_metadata(WriterObject& writer);
+
 
 		    // MASTER INTEGRATION TASKS
 
@@ -373,19 +349,19 @@ namespace transport
         //! Master node: Seed an integration writer using a previous integration
         //! returns list of serial numbers which remain to be integrated
         template <typename TaskObject>
-        std::list<unsigned int> seed_writer(std::shared_ptr< integration_writer<number> >& writer, TaskObject* tk, const std::string& seed_group);
+        std::list<unsigned int> seed_writer(integration_writer<number>& writer, TaskObject* tk, const std::string& seed_group);
 
 		    //! Master node: Pass new integration task to the workers
-		    bool integration_task_to_workers(std::shared_ptr< integration_writer<number> >& writer,
+		    bool integration_task_to_workers(integration_writer<number>& writer,
                                          integration_aggregator& i_agg, postintegration_aggregator& p_agg, derived_content_aggregator& d_agg,
                                          slave_work_event::event_type begin_label, slave_work_event::event_type end_label);
 
         //! Master node: debrief after task completion
-        void debrief_integration(std::shared_ptr< integration_writer<number> >& writer,
+        void debrief_integration(integration_writer<number>& writer,
                                  integration_metadata& i_metadata, boost::timer::cpu_timer& wallclock_timer);
 
 		    //! Master node: respond to an aggregation request
-		    void aggregate_integration(std::shared_ptr<integration_writer<number> > &writer, unsigned int worker, unsigned int id,
+		    void aggregate_integration(integration_writer<number>& writer, unsigned int worker, unsigned int id,
 		                               MPI::data_ready_payload& payload, integration_metadata &metadata);
 
 		    //! Master node: update integration metadata after a worker has finished its tasks
@@ -414,26 +390,26 @@ namespace transport
 
         //! Master node: Seed an integration writer using a previous integration
         template <typename TaskObject>
-        std::list<unsigned int> seed_writer(std::shared_ptr< postintegration_writer<number> >& writer, TaskObject* tk, const std::string& seed_group);
+        std::list<unsigned int> seed_writer(postintegration_writer<number>& writer, TaskObject* tk, const std::string& seed_group);
 
         //! Master node: Seed a pair of integration & postintegration writers using a previous integration/postintegration output
         template <typename TaskObject, typename ParentTaskObject>
-        std::list<unsigned int> seed_writer_pair(std::shared_ptr<integration_writer<number> >& i_writer, std::shared_ptr<postintegration_writer<number> >& p_writer,
+        std::list<unsigned int> seed_writer_pair(integration_writer<number>& i_writer, postintegration_writer<number>& p_writer,
                                                  TaskObject* tk, ParentTaskObject* ptk, const std::string& seed_group);
 
         //! Master node: Pass new postintegration task to workers
-		    bool postintegration_task_to_workers(std::shared_ptr< postintegration_writer<number> >& writer, const std::list<std::string>& tags,
+		    bool postintegration_task_to_workers(postintegration_writer<number>& writer, const std::list<std::string>& tags,
                                              integration_aggregator& i_agg, postintegration_aggregator& p_agg, derived_content_aggregator& d_agg,
                                              slave_work_event::event_type begin_label, slave_work_event::event_type end_label);
 
         //! Master node: Pass new paired postintegration task to workers
-        bool paired_postintegration_task_to_workers(std::shared_ptr< integration_writer<number> >& i_writer, std::shared_ptr< postintegration_writer<number> >& p_writer,
+        bool paired_postintegration_task_to_workers(integration_writer<number>& i_writer, postintegration_writer<number>& p_writer,
                                                     const std::list<std::string>& tags,
                                                     integration_aggregator& i_agg, postintegration_aggregator& p_agg, derived_content_aggregator& d_agg,
                                                     slave_work_event::event_type begin_label, slave_work_event::event_type end_label);
 
 		    //! Master node: respond to an aggregation request
-		    void aggregate_postprocess(std::shared_ptr< postintegration_writer<number> >& writer, unsigned int worker, unsigned int id,
+		    void aggregate_postprocess(postintegration_writer<number>& writer, unsigned int worker, unsigned int id,
 		                               MPI::data_ready_payload& payload, output_metadata& metadata);
 
 
@@ -445,7 +421,7 @@ namespace transport
 		    void dispatch_output_task(output_task_record<number>* rec, const std::list<std::string>& tags);
 
 		    //! Master node: Pass new output task to the workers
-		    bool output_task_to_workers(std::shared_ptr <derived_content_writer<number>>& writer, const std::list<std::string>& tags,
+		    bool output_task_to_workers(derived_content_writer<number>& writer, const std::list<std::string>& tags,
                                     integration_aggregator& i_agg, postintegration_aggregator& p_agg, derived_content_aggregator& d_agg,
                                     slave_work_event::event_type begin_label, slave_work_event::event_type end_label);
 
@@ -454,7 +430,7 @@ namespace transport
         void debrief_output(WriterObject& writer, output_metadata& i_metadata, boost::timer::cpu_timer& wallclock_timer);
 
 		    //! Master node: respond to a notification of new derived content
-		    bool aggregate_content(std::shared_ptr< derived_content_writer<number> >& writer, unsigned int worker, unsigned int id,
+		    bool aggregate_content(derived_content_writer<number>& writer, unsigned int worker, unsigned int id,
 		                           MPI::content_ready_payload& payload, output_metadata& metadata);
 
 		    //! Master node: update output metadata after a worker has finished its tasks
@@ -480,22 +456,24 @@ namespace transport
 
 
         // LOCAL ENVIRONMENT
-        local_environment local_env;
+
+        //! environment data
+        local_environment& local_env;
+
+        //! Argument cache
+        argument_cache& arg_cache;
 
 
 		    // RUNTIME AGENTS
 
 		    //! Repository manager instance
-		    json_repository<number>* repo;
+		    std::shared_ptr< json_repository<number> > repo;
 
 		    //! Data manager instance
-		    data_manager<number>* data_mgr;
+		    std::shared_ptr< data_manager<number> > data_mgr;
 
 				//! Event journal
 				work_journal journal;
-
-				//! Argument cache
-				argument_cache arg_cache;
 
 
 		    // DATA AND STATE
@@ -505,12 +483,6 @@ namespace transport
 
 		    //! Queue of tasks to process
 		    std::list<job_descriptor> job_queue;
-
-		    //! Storage capacity per batcher
-		    unsigned int batcher_capacity;
-
-		    //! Data cache capacity per datapipe
-		    unsigned int pipe_capacity;
 
 
 		    // ERROR CALLBACKS
@@ -529,15 +501,14 @@ namespace transport
 
     template <typename number>
     master_controller<number>::master_controller(boost::mpi::environment& e, boost::mpi::communicator& w,
-                                                 error_callback err, warning_callback warn, message_callback msg,
-                                                 unsigned int bcp, unsigned int pcp)
+                                                 local_environment& le, argument_cache& ac,
+                                                 error_callback err, warning_callback warn, message_callback msg)
 	    : environment(e),
 	      world(w),
-	      repo(nullptr),
-	      data_mgr(data_manager_factory<number>(bcp, pcp)),
+        local_env(le),
+        arg_cache(ac),
+	      data_mgr(data_manager_factory<number>(ac.get_batcher_capacity(), ac.get_datapipe_capacity(), ac.get_checkpoint_interval())),
 	      journal(w.size()-1),
-	      batcher_capacity(bcp),
-	      pipe_capacity(pcp),
 	      error_handler(err),
 	      warning_handler(warn),
 	      message_handler(msg)
@@ -547,252 +518,255 @@ namespace transport
 
     template <typename number>
     master_controller<number>::master_controller(boost::mpi::environment& e, boost::mpi::communicator& w,
-                                                 json_repository<number>* r,
-                                                 error_callback err, warning_callback warn, message_callback msg,
-                                                 unsigned int bcp, unsigned int pcp)
+                                                 local_environment& le, argument_cache& ac,
+                                                 std::shared_ptr< json_repository<number> > r,
+                                                 error_callback err, warning_callback warn, message_callback msg)
 	    : environment(e),
 	      world(w),
+        local_env(le),
+        arg_cache(ac),
 	      repo(r),
-	      data_mgr(data_manager_factory<number>(bcp, pcp)),
+	      data_mgr(data_manager_factory<number>(ac.get_batcher_capacity(), ac.get_datapipe_capacity(), ac.get_checkpoint_interval())),
 	      journal(w.size()-1),
-	      batcher_capacity(bcp),
-	      pipe_capacity(pcp),
 	      error_handler(err),
 	      warning_handler(warn),
 	      message_handler(msg)
 	    {
-		    assert(repo != nullptr);
+		    assert(repo);
 	    }
 
-		
-    template <typename number>
-    master_controller<number>::~master_controller()
-	    {
-		    // delete repository instance, if it is set
-        if(this->repo != nullptr)
-	        {
-            delete this->repo;
-	        }
-	    }
-		
-		
+
 		template <typename number>
-		void master_controller<number>::process_arguments(int argc, char* argv[], const typename instance_manager<number>::model_finder& finder)
+		void master_controller<number>::process_arguments(int argc, char* argv[], instance_manager<number>& instance_mgr)
 			{
-		    bool multiple_repo_warn = false;
+        // set up Boost::program_options descriptors for command-line arguments
+        boost::program_options::options_description generic("Generic options");
+        generic.add_options()
+          (CPPTRANSPORT_SWITCH_HELP,      CPPTRANSPORT_HELP_HELP)
+          (CPPTRANSPORT_SWITCH_VERSION,   CPPTRANSPORT_HELP_VERSION)
+          (CPPTRANSPORT_SWITCH_MODELS,    CPPTRANSPORT_HELP_MODELS)
+          (CPPTRANSPORT_SWITCH_NO_COLOUR, CPPTRANSPORT_HELP_NO_COLOUR);
 
-				bool seed = false;
-		    std::string seed_group;
+        boost::program_options::options_description configuration("Configuration options");
+        configuration.add_options()
+          (CPPTRANSPORT_SWITCH_VERBOSE,                                                                                      CPPTRANSPORT_HELP_VERBOSE)
+          (CPPTRANSPORT_SWITCH_REPO,             boost::program_options::value< std::string >(),                             CPPTRANSPORT_HELP_REPO)
+          (CPPTRANSPORT_SWITCH_TAG,              boost::program_options::value< std::vector<std::string> >(),                CPPTRANSPORT_HELP_TAG)
+          (CPPTRANSPORT_SWITCH_CHECKPOINT,       boost::program_options::value< int >(),                                     CPPTRANSPORT_HELP_CHECKPOINT)
+          (CPPTRANSPORT_SWITCH_RECOVER,                                                                                      CPPTRANSPORT_HELP_RECOVER)
+          (CPPTRANSPORT_SWITCH_CAPACITY,         boost::program_options::value< int >(),                                     CPPTRANSPORT_HELP_CAPACITY)
+          (CPPTRANSPORT_SWITCH_BATCHER_CAPACITY, boost::program_options::value< int >(),                                     CPPTRANSPORT_HELP_BATCHER_CAPACITY)
+          (CPPTRANSPORT_SWITCH_CACHE_CAPACITY,   boost::program_options::value< int >(),                                     CPPTRANSPORT_HELP_CACHE_CAPACITY);
 
-		    std::list<std::string> tags;
+        boost::program_options::options_description journaling("Journaling options");
+        journaling.add_options()
+          (CPPTRANSPORT_SWITCH_GANTT_CHART,      boost::program_options::value< std::string >(),                             CPPTRANSPORT_HELP_GANTT_CHART)
+          (CPPTRANSPORT_SWITCH_JOURNAL,          boost::program_options::value< std::string >(),                             CPPTRANSPORT_HELP_JOURNAL);
 
-		    for(unsigned int i = 1; i < argc; ++i)
-			    {
-		        if(std::string(argv[i]) == __CPP_TRANSPORT_SWITCH_REPO)
-			        {
-		            if(repo != nullptr)
-			            {
-		                ++i;
-		                if(!multiple_repo_warn)
-			                {
-		                    this->warning_handler(__CPP_TRANSPORT_MULTIPLE_SET_REPO);
-		                    multiple_repo_warn = true;
-			                }
-			            }
-		            else if(i+1 >= argc) this->error_handler(__CPP_TRANSPORT_EXPECTED_REPO);
-		            else
-			            {
-		                ++i;
-		                std::string repo_path = std::string(argv[i]);
-		                try
-			                {
-		                    repo = repository_factory<number>(repo_path, repository<number>::access_type::readwrite,
-		                                                      this->error_handler, this->warning_handler, this->message_handler);
-		                    this->repo->set_model_finder(finder);
-			                }
-		                catch (runtime_exception& xe)
-			                {
-		                    if(xe.get_exception_code() == runtime_exception::REPO_NOT_FOUND)
-			                    {
-		                        this->error_handler(xe.what());
-		                        repo = nullptr;
-			                    }
-		                    else
-			                    {
-		                        throw xe;
-			                    }
-			                }
-			            }
-			        }
-		        else if(std::string(argv[i]) == __CPP_TRANSPORT_SWITCH_TAG)
-			        {
-		            if(i+1 >= argc) this->error_handler(__CPP_TRANSPORT_EXPECTED_TAG);
-		            else            tags.push_back(std::string(argv[++i]));
-			        }
-		        else if(std::string(argv[i]) == __CPP_TRANSPORT_SWITCH_CAPACITY)
-			        {
-		            if(i+1 >= argc) this->error_handler(__CPP_TRANSPORT_EXPECTED_CAPACITY);
-		            else
-			            {
-		                ++i;
-		                std::string capacity_str(argv[i]);
-		                int capacity = boost::lexical_cast<int>(capacity_str);
-		                capacity = capacity * 1024*1024;
-		                if(capacity > 0)
-			                {
-		                    this->batcher_capacity = this->pipe_capacity = static_cast<unsigned int>(capacity);
-		                    this->data_mgr->set_batcher_capacity(this->batcher_capacity);
-                        this->data_mgr->set_pipe_capacity(this->pipe_capacity);
-			                }
-		                else
-			                {
-		                    std::ostringstream msg;
-		                    msg << __CPP_TRANSPORT_EXPECTED_POSITIVE << " " << __CPP_TRANSPORT_SWITCH_CAPACITY;
-		                    this->error_handler(msg.str());
-			                }
-			            }
-			        }
-		        else if(std::string(argv[i]) == __CPP_TRANSPORT_SWITCH_BATCHER_CAPACITY)
-			        {
-		            if(i+1 >= argc) this->error_handler(__CPP_TRANSPORT_EXPECTED_CAPACITY);
-		            else
-			            {
-		                ++i;
-		                std::string capacity_str(argv[i]);
-		                int capacity = boost::lexical_cast<int>(capacity_str);
-		                capacity = capacity * 1024*1024;
-		                if(capacity > 0)
-			                {
-		                    this->batcher_capacity = static_cast<unsigned int>(capacity);
-		                    this->data_mgr->set_batcher_capacity(this->batcher_capacity);
-			                }
-		                else
-			                {
-		                    std::ostringstream msg;
-		                    msg << __CPP_TRANSPORT_EXPECTED_POSITIVE << " " << __CPP_TRANSPORT_SWITCH_BATCHER_CAPACITY;
-		                    this->error_handler(msg.str());
-			                }
-			            }
-			        }
-		        else if(std::string(argv[i]) == __CPP_TRANSPORT_SWITCH_CACHE_CAPACITY)
-			        {
-		            if(i+1 >= argc) this->error_handler(__CPP_TRANSPORT_EXPECTED_CAPACITY);
-		            else
-			            {
-		                ++i;
-		                std::string capacity_str(argv[i]);
-		                int capacity = boost::lexical_cast<int>(capacity_str);
-		                capacity = capacity * 1024*1024;
-		                if(capacity > 0)
-			                {
-		                    this->pipe_capacity = static_cast<unsigned int>(capacity);
-                        this->data_mgr->set_pipe_capacity(this->pipe_capacity);
-			                }
-		                else
-			                {
-		                    std::ostringstream msg;
-		                    msg << __CPP_TRANSPORT_EXPECTED_POSITIVE << " " << __CPP_TRANSPORT_SWITCH_CACHE_CAPACITY;
-		                    this->error_handler(msg.str());
-			                }
-			            }
-			        }
-		        else if(std::string(argv[i]) == __CPP_TRANSPORT_SWITCH_GANTT_CHART)
-			        {
-				        if(i+1 >= argc) this->error_handler(__CPP_TRANSPORT_EXPECTED_GANTT_FILENAME);
-				        else
-					        {
-						        ++i;
-						        this->arg_cache.set_gantt_chart(true);
-						        this->arg_cache.set_gantt_filename(argv[i]);
-					        }
-			        }
-		        else if(std::string(argv[i]) == __CPP_TRANSPORT_SWITCH_VERBOSE)
-			        {
-				        this->arg_cache.set_verbose(true);
-			        }
-		        else if(std::string(argv[i]) == __CPP_TRANSPORT_VERB_SEED)
-			        {
-								if(i+1 >= argc) this->error_handler(__CPP_TRANSPORT_EXPECTED_SEED_GROUP);
-								else
-									{
-								    ++i;
-										seed_group = std::string(argv[i]);
-								    seed = true;
-									}
-			        }
-		        else if(std::string(argv[i]) == __CPP_TRANSPORT_VERB_TASK)
-			        {
-		            if(i+1 >= argc) this->error_handler(__CPP_TRANSPORT_EXPECTED_TASK_ID);
-		            else
-			            {
-		                ++i;
-		                job_queue.push_back(job_descriptor(job_task, argv[i], tags));
-		                tags.clear();
+        boost::program_options::options_description job_options("Job specification");
+        job_options.add_options()
+          (CPPTRANSPORT_SWITCH_TASK,             boost::program_options::value< std::vector< std::string > >()->composing(), CPPTRANSPORT_HELP_TASK)
+          (CPPTRANSPORT_SWITCH_SEED,             boost::program_options::value< std::string >(),                             CPPTRANSPORT_HELP_SEED);
 
-				            if(seed) job_queue.back().set_seed(seed_group);
-				            seed_group.clear();
-				            seed = false;
-			            }
-			        }
-		        else if(std::string(argv[i]) == __CPP_TRANSPORT_VERB_GET)
-			        {
-		            if(i+1 >= argc) this->error_handler(__CPP_TRANSPORT_EXPECTED_GET_TYPE);
-				        else
-			            {
-		                ++i;
+        boost::program_options::options_description hidden_options;
+        hidden_options.add_options()
+          (CPPTRANSPORT_SWITCH_NO_COLOR, CPPTRANSPORT_HELP_NO_COLOR);
 
-		                job_type type;
-		                if(std::string(argv[i]) == __CPP_TRANSPORT_NOUN_PACKAGE)      type = job_get_package;
-		                else if(std::string(argv[i]) == __CPP_TRANSPORT_NOUN_TASK)    type = job_get_task;
-		                else if(std::string(argv[i]) == __CPP_TRANSPORT_NOUN_PRODUCT) type = job_get_product;
-		                else if(std::string(argv[i]) == __CPP_TRANSPORT_NOUN_CONTENT) type = job_get_content;
-		                else
-			                {
-		                    std::ostringstream msg;
-		                    msg << __CPP_TRANSPORT_UNKNOWN_GET_TYPE << " '" << argv[i] << "'";
-		                    this->error_handler(msg.str());
-			                }
+        boost::program_options::options_description cmdline_options;
+        cmdline_options.add(generic).add(configuration).add(journaling).add(job_options).add(hidden_options);
 
-		                if(i+1 >= argc) this->error_handler(__CPP_TRANSPORT_EXPECTED_GET_NAME);
-		                else
-			                {
-		                    ++i;
-		                    std::string name = argv[i];
+        boost::program_options::options_description output_options;
+        output_options.add(generic).add(configuration).add(journaling).add(job_options);
 
-		                    if(i+1 >= argc) this->error_handler(__CPP_TRANSPORT_EXPECTED_GET_OUTPUT);
-				                else
-			                    {
-		                        ++i;
-		                        std::string output = argv[i];
+        boost::program_options::variables_map option_map;
+        boost::program_options::store(boost::program_options::parse_command_line(argc, argv, cmdline_options), option_map);
+        boost::program_options::notify(option_map);
 
-		                        job_queue.push_back(job_descriptor(type, name, tags, output));
-		                        tags.clear();
-			                    }
-			                }
-			            }
-			        }
-		        else
-			        {
-		            std::ostringstream msg;
-		            msg << __CPP_TRANSPORT_UNKNOWN_SWITCH << " '" << argv[i] << "'";
-		            this->error_handler(msg.str());
-			        }
-			    }
-			}
-		
+        bool emitted_version = false;
+
+        if(option_map.count(CPPTRANSPORT_SWITCH_VERSION))
+          {
+            std::cout << CPPTRANSPORT_NAME << " " << CPPTRANSPORT_VERSION << " " << CPPTRANSPORT_COPYRIGHT << " | " << CPPTRANSPORT_RUNTIME_API << '\n';
+            emitted_version = true;
+          }
+
+        if(option_map.count(CPPTRANSPORT_SWITCH_HELP))
+          {
+            if(!emitted_version) std::cout << CPPTRANSPORT_NAME << " " << CPPTRANSPORT_VERSION << " " << CPPTRANSPORT_COPYRIGHT << " | " << CPPTRANSPORT_RUNTIME_API << '\n';
+            std::cout << output_options << '\n';
+          }
+
+        if(option_map.count(CPPTRANSPORT_SWITCH_MODELS))
+          {
+            this->arg_cache.set_model_list(true);
+          }
+
+        if(option_map.count(CPPTRANSPORT_SWITCH_REPO))
+          {
+            try
+              {
+                this->repo = repository_factory<number>(option_map[CPPTRANSPORT_SWITCH_REPO].as<std::string>(),
+                                                        repository_mode::readwrite,
+                                                        this->error_handler, this->warning_handler, this->message_handler);
+                this->repo->set_model_finder(instance_mgr.model_finder_factory());
+              }
+            catch(runtime_exception& xe)
+              {
+                if(xe.get_exception_code() == exception_type::REPO_NOT_FOUND)
+                  {
+                    this->error_handler(xe.what());
+                    repo = nullptr;
+                  }
+                else
+                  {
+                    throw xe;
+                  }
+              }
+          }
+
+        // populate list of tags
+        std::list<std::string> tags;
+        if(option_map.count(CPPTRANSPORT_SWITCH_TAG) > 0)
+          {
+            std::vector<std::string> tmp = option_map[CPPTRANSPORT_SWITCH_TAG].as<std::vector<std::string> >();
+
+            // copy tags into std::list tags
+            // Boost::program_arguments doesn't support lists, so we have to do it this way
+            std::copy(tmp.begin(), tmp.end(), std::back_inserter(tags));
+          }
+
+        // process global capacity specification, if provided
+        if(option_map.count(CPPTRANSPORT_SWITCH_CAPACITY))
+          {
+            int capacity = option_map[CPPTRANSPORT_SWITCH_CAPACITY].as<int>() * 1024*1024;            // argument size interpreted in Mb
+            if(capacity > 0)
+              {
+                unsigned int cp = static_cast<unsigned int>(capacity);
+
+                this->arg_cache.set_batcher_capacity(cp);
+                this->arg_cache.set_datapipe_capacity(cp);
+
+                this->data_mgr->set_batcher_capacity(cp);                         // probably not required; only slaves need these values set
+                this->data_mgr->set_pipe_capacity(cp);                            // probably not required; only slaves need these values set
+              }
+            else
+              {
+                std::ostringstream msg;
+                msg << CPPTRANSPORT_EXPECTED_POSITIVE << " " << CPPTRANSPORT_SWITCH_CAPACITY;
+                this->error_handler(msg.str());
+              }
+          }
+
+        // process datapipe capacity specification, if provided
+        if(option_map.count(CPPTRANSPORT_SWITCH_CACHE_CAPACITY))
+          {
+            int capacity = option_map[CPPTRANSPORT_SWITCH_CACHE_CAPACITY].as<int>() * 1024*1024;      // argument size interpreted in Mb
+            if(capacity > 0)
+              {
+                unsigned int cp = static_cast<unsigned int>(capacity);
+
+                this->arg_cache.set_datapipe_capacity(cp);
+
+                this->data_mgr->set_pipe_capacity(cp);                            // probably not required; only slaves need these values set
+              }
+            else
+              {
+                std::ostringstream msg;
+                msg << CPPTRANSPORT_EXPECTED_POSITIVE << " " << CPPTRANSPORT_SWITCH_CACHE_CAPACITY;
+                this->error_handler(msg.str());
+              }
+          }
+
+        // process batcher capacity specification, if provided
+        if(option_map.count(CPPTRANSPORT_SWITCH_BATCHER_CAPACITY))
+          {
+            int capacity = option_map[CPPTRANSPORT_SWITCH_BATCHER_CAPACITY].as<int>() * 1024*1024;    // argument size interpreted in Mb
+            if(capacity > 0)
+              {
+                unsigned int cp = static_cast<unsigned int>(capacity);
+
+                this->arg_cache.set_batcher_capacity(cp);
+
+                this->data_mgr->set_batcher_capacity(cp);                         // probably not required; only slaves need these values set
+              }
+            else
+              {
+                std::ostringstream msg;
+                msg << CPPTRANSPORT_EXPECTED_POSITIVE << " " << CPPTRANSPORT_SWITCH_BATCHER_CAPACITY;
+                this->error_handler(msg.str());
+              }
+          }
+
+        // process checkpoint timer specification, if provided
+        if(option_map.count(CPPTRANSPORT_SWITCH_CHECKPOINT))
+          {
+            int interval = option_map[CPPTRANSPORT_SWITCH_CHECKPOINT].as<int>() * 60;                 // argument size interpreted in minutes; convert value to seconds
+            if(interval > 0)
+              {
+                unsigned int ck = static_cast<unsigned int>(interval);
+
+                this->arg_cache.set_checkpoint_interval(ck);
+                this->data_mgr->set_checkpoint_interval(ck);                   // probably not required; only slaves need these values set
+              }
+            else
+              {
+                std::ostringstream msg;
+                msg << CPPTRANSPORT_EXPECTED_POSITIVE << " " CPPTRANSPORT_SWITCH_CHECKPOINT;
+                this->error_handler(msg.str());
+              }
+          }
+
+        // process Gantt chart specification, if provided
+        if(option_map.count(CPPTRANSPORT_SWITCH_GANTT_CHART))
+          {
+            this->arg_cache.set_gantt_chart(true);
+            this->arg_cache.set_gantt_filename(option_map[CPPTRANSPORT_SWITCH_GANTT_CHART].as<std::string>());
+          }
+
+        // process journal specification, if provided
+        if(option_map.count(CPPTRANSPORT_SWITCH_JOURNAL))
+          {
+            this->arg_cache.set_journal(true);
+            this->arg_cache.set_journal_filename(option_map[CPPTRANSPORT_SWITCH_JOURNAL].as<std::string>());
+          }
+
+        if(option_map.count(CPPTRANSPORT_SWITCH_VERBOSE_LONG))                                                this->arg_cache.set_verbose(true);
+        if(option_map.count(CPPTRANSPORT_SWITCH_RECOVER))                                                     this->arg_cache.set_recovery_mode(true);
+        if(option_map.count(CPPTRANSPORT_SWITCH_NO_COLOUR) || option_map.count(CPPTRANSPORT_SWITCH_NO_COLOR)) this->arg_cache.set_colour_output(false);
+
+        // process task specification
+        if(option_map.count(CPPTRANSPORT_SWITCH_TASK))
+          {
+            std::vector<std::string> tasks = option_map[CPPTRANSPORT_SWITCH_TASK].as< std::vector<std::string> >();
+
+            for(std::vector<std::string>::const_iterator t = tasks.begin(); t != tasks.end(); ++t)
+              {
+                job_queue.push_back(job_descriptor(job_type::job_task, *t, tags));
+
+                if(option_map.count(CPPTRANSPORT_SWITCH_SEED))
+                  {
+                    job_queue.back().set_seed(option_map[CPPTRANSPORT_SWITCH_SEED].as<std::string>());
+                  }
+              }
+          }
+      }
+
 
     template <typename number>
     void master_controller<number>::execute_tasks(void)
 	    {
-        if(!(this->get_rank() == 0)) throw runtime_exception(runtime_exception::MPI_ERROR, __CPP_TRANSPORT_EXEC_SLAVE);
+        if(!(this->get_rank() == 0)) throw runtime_exception(exception_type::MPI_ERROR, CPPTRANSPORT_EXEC_SLAVE);
 
-        if(this->repo == nullptr)
+        if(!this->repo)
 	        {
-            this->error_handler(__CPP_TRANSPORT_REPO_NONE);
+            this->error_handler(CPPTRANSPORT_REPO_NONE);
 	        }
         else
 	        {
             boost::timer::cpu_timer timer;
+
+            // perform recovery if requested
+            if(this->arg_cache.get_recovery_mode()) this->repo->perform_recovery(*this->data_mgr, this->get_rank());
 
 		        // set up workers
 		        this->initialize_workers();
@@ -802,24 +776,12 @@ namespace transport
 	            {
                 switch((*t).get_type())
 	                {
-                    case job_task:
+                    case job_type::job_task:
 	                    {
                         this->process_task(*t);
 		                    database_tasks++;
                         break;
 	                    }
-
-                    case job_get_product:
-                    case job_get_task:
-                    case job_get_package:
-                    case job_get_content:
-	                    {
-                        this->process_get(*t);
-                        break;
-	                    }
-
-                    default:
-	                    throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_UNKNOWN_JOB_TYPE);
 	                }
 	            }
 
@@ -827,17 +789,17 @@ namespace transport
 		        if(database_tasks > 0)
 			        {
 		            std::ostringstream msg;
-		            msg << __CPP_TRANSPORT_PROCESSED_TASKS_A << " " << database_tasks << " ";
+		            msg << CPPTRANSPORT_PROCESSED_TASKS_A << " " << database_tasks << " ";
 				        if(database_tasks > 1)
 					        {
-						        msg << __CPP_TRANSPORT_PROCESSED_TASKS_B_PLURAL;
+						        msg << CPPTRANSPORT_PROCESSED_TASKS_B_PLURAL;
 					        }
 				        else
 					        {
-						        msg << __CPP_TRANSPORT_PROCESSED_TASKS_B_SINGULAR;
+						        msg << CPPTRANSPORT_PROCESSED_TASKS_B_SINGULAR;
 					        }
-		            msg << " " << __CPP_TRANSPORT_PROCESSED_TASKS_C << " " << format_time(timer.elapsed().wall);
-				        msg << " | " << __CPP_TRANSPORT_PROCESSED_TASKS_D << " ";
+		            msg << " " << CPPTRANSPORT_PROCESSED_TASKS_C << " " << format_time(timer.elapsed().wall);
+				        msg << " | " << CPPTRANSPORT_PROCESSED_TASKS_D << " ";
 
 		            boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
 				        msg << boost::posix_time::to_simple_string(now);
@@ -851,64 +813,7 @@ namespace transport
         this->terminate_workers();
 
 		    if(this->arg_cache.get_gantt_chart()) this->journal.make_gantt_chart(this->arg_cache.get_gantt_filename(), this->local_env);
-	    }
-
-
-    template <typename number>
-    void master_controller<number>::process_get(const job_descriptor& job)
-	    {
-        try
-	        {
-            std::string document;
-
-            switch(job.get_type())
-	            {
-                case job_get_package:
-	                {
-                    document = this->repo->export_JSON_package_record(job.get_name());
-                    break;
-	                }
-
-                case job_get_task:
-	                {
-                    document = this->repo->export_JSON_task_record(job.get_name());
-                    break;
-	                }
-
-                case job_get_product:
-	                {
-                    document = this->repo->export_JSON_product_record(job.get_name());
-                    break;
-	                }
-
-                case job_get_content:
-	                {
-                    document = this->repo->export_JSON_content_record(job.get_name());
-                    break;
-	                }
-
-                default:
-	                assert(false);
-	            }
-
-            std::ofstream out;
-            out.open(job.get_output().c_str());
-            if(out.is_open() && !out.fail())
-	            {
-                out << document;
-	            }
-            else
-	            {
-                std::ostringstream msg;
-                msg << __CPP_TRANSPORT_OPEN_OUTPUT_FAIL << " '" << job.get_output() << "'";
-                throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
-	            }
-            out.close();
-	        }
-        catch(runtime_exception& xe)
-	        {
-            this->error_handler(xe.what());
-	        }
+        if(this->arg_cache.get_journal())     this->journal.make_journal(this->arg_cache.get_journal_filename(), this->local_env);
 	    }
 
 
@@ -922,62 +827,53 @@ namespace transport
 
             switch(record->get_type())
 	            {
-                case task_record<number>::integration:
+                case task_record<number>::task_type::integration:
 	                {
                     integration_task_record<number>* int_rec = dynamic_cast< integration_task_record<number>* >(record.get());
 
                     assert(int_rec != nullptr);
-                    if(int_rec == nullptr) throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_RECORD_CAST_FAILED);
+                    if(int_rec == nullptr) throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_RECORD_CAST_FAILED);
 
                     this->dispatch_integration_task(int_rec, job.is_seeded(), job.get_seed_group(), job.get_tags());
                     break;
 	                }
 
-                case task_record<number>::output:
+                case task_record<number>::task_type::output:
 	                {
                     output_task_record<number>* out_rec = dynamic_cast< output_task_record<number>* >(record.get());
 
                     assert(out_rec != nullptr);
-                    if(out_rec == nullptr) throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_RECORD_CAST_FAILED);
+                    if(out_rec == nullptr) throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_RECORD_CAST_FAILED);
 
                     this->dispatch_output_task(out_rec, job.get_tags());
                     break;
 	                }
 
-                case task_record<number>::postintegration:
+                case task_record<number>::task_type::postintegration:
 	                {
                     postintegration_task_record<number>* pint_rec = dynamic_cast< postintegration_task_record<number>* >(record.get());
 
                     assert(pint_rec != nullptr);
-                    if(pint_rec == nullptr) throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_RECORD_CAST_FAILED);
+                    if(pint_rec == nullptr) throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_RECORD_CAST_FAILED);
 
                     this->dispatch_postintegration_task(pint_rec, job.is_seeded(), job.get_seed_group(), job.get_tags());
                     break;
-	                }
-
-                default:
-	                {
-                    assert(false);
-
-                    std::ostringstream msg;
-                    msg << __CPP_TRANSPORT_REPO_UNKNOWN_RECORD_TYPE << " '" << job.get_name() << "'";
-                    throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
 	                }
 	            }
 	        }
         catch (runtime_exception xe)
 	        {
-            if(xe.get_exception_code() == runtime_exception::RECORD_NOT_FOUND)
+            if(xe.get_exception_code() == exception_type::RECORD_NOT_FOUND)
 	            {
                 std::ostringstream msg;
-                msg << __CPP_TRANSPORT_REPO_MISSING_RECORD << " '" << xe.what() << "'" << __CPP_TRANSPORT_REPO_SKIPPING_TASK;
+                msg << CPPTRANSPORT_REPO_MISSING_RECORD << " '" << xe.what() << "'" << CPPTRANSPORT_REPO_SKIPPING_TASK;
                 this->error_handler(msg.str());
 	            }
-            else if(xe.get_exception_code() == runtime_exception::MISSING_MODEL_INSTANCE
-	            || xe.get_exception_code() == runtime_exception::REPOSITORY_BACKEND_ERROR)
+            else if(xe.get_exception_code() == exception_type::MISSING_MODEL_INSTANCE
+	            || xe.get_exception_code() == exception_type::REPOSITORY_BACKEND_ERROR)
 	            {
                 std::ostringstream msg;
-                msg << xe.what() << " " << __CPP_TRANSPORT_REPO_FOR_TASK << " '" << job.get_name() << "'" << __CPP_TRANSPORT_REPO_SKIPPING_TASK;
+                msg << xe.what() << " " << CPPTRANSPORT_REPO_FOR_TASK << " '" << job.get_name() << "'" << CPPTRANSPORT_REPO_SKIPPING_TASK;
                 this->error_handler(msg.str());
 	            }
             else throw xe;
@@ -995,7 +891,7 @@ namespace transport
         assert(rec != nullptr);
 
         // can't process a task if there are no workers
-        if(this->world.size() == 1) throw runtime_exception(runtime_exception::MPI_ERROR, __CPP_TRANSPORT_TOO_FEW_WORKERS);
+        if(this->world.size() == 1) throw runtime_exception(exception_type::MPI_ERROR, CPPTRANSPORT_TOO_FEW_WORKERS);
 
         integration_task<number>* tk = rec->get_task();
         model<number>* m = rec->get_task()->get_model();
@@ -1007,19 +903,19 @@ namespace transport
 	        {
 		        this->work_scheduler.set_state_size(m->backend_twopf_state_size());
             this->work_scheduler.prepare_queue(*tka);
-            this->schedule_integration(rec, tka, seeded, seed_group, tags, slave_work_event::begin_twopf_assignment, slave_work_event::end_twopf_assignment);
+            this->schedule_integration(rec, tka, seeded, seed_group, tags, slave_work_event::event_type::begin_twopf_assignment, slave_work_event::event_type::end_twopf_assignment);
 	        }
         else if((tkb = dynamic_cast< threepf_task<number>* >(tk)) != nullptr)
 	        {
 		        this->work_scheduler.set_state_size(m->backend_threepf_state_size());
             this->work_scheduler.prepare_queue(*tkb);
-            this->schedule_integration(rec, tkb, seeded, seed_group, tags, slave_work_event::begin_threepf_assignment, slave_work_event::end_threepf_assignment);
+            this->schedule_integration(rec, tkb, seeded, seed_group, tags, slave_work_event::event_type::begin_threepf_assignment, slave_work_event::event_type::end_threepf_assignment);
 	        }
         else
 	        {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_UNKNOWN_DERIVED_TASK << " '" << rec->get_name() << "'";
-            throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
+            msg << CPPTRANSPORT_UNKNOWN_DERIVED_TASK << " '" << rec->get_name() << "'";
+            throw runtime_exception(exception_type::REPOSITORY_ERROR, msg.str());
 	        }
 	    }
 
@@ -1035,71 +931,74 @@ namespace transport
         // create an output writer to commit the result of this integration to the repository.
         // like all writers, it aborts (ie. executes a rollback if needed) when it goes out of scope unless
         // it is explicitly committed
-        std::shared_ptr< integration_writer<number> > writer = this->repo->new_integration_task_content(rec, tags, this->get_rank(), 0);
+        std::unique_ptr< integration_writer<number> > writer = this->repo->new_integration_task_content(rec, tags, this->get_rank(), 0);
 
         // initialize the writer
-        this->data_mgr->initialize_writer(writer);
+        this->data_mgr->initialize_writer(*writer);
 
         // write the various tables needed in the database
-        this->data_mgr->create_tables(writer, tk);
+        this->data_mgr->create_tables(*writer, tk);
 
-        // seed writer if a group has been provided
-        if(seeded) this->seed_writer(writer, tk, seed_group);
+        // seed writer if a group has been provided; resets the work queue if required
+        if(seeded) this->seed_writer(*writer, tk, seed_group);
+
+        // register writer with the repository -- allows its debris to be recovered later if a crash occurs
+        this->repo->register_writer(*writer);
 
         // set up aggregators
-        integration_aggregator     i_agg = std::bind(&master_controller<number>::aggregate_integration, this, writer, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
+        integration_aggregator     i_agg = std::bind(&master_controller<number>::aggregate_integration, this, std::ref(*writer), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
         postintegration_aggregator p_agg;
         derived_content_aggregator d_agg;
 
         // write log header
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ NEW INTEGRATION TASK '" << tk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << std::endl;
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << *tk;
+        BOOST_LOG_SEV(writer->get_log(), base_writer::log_severity_level::normal) << "++ NEW INTEGRATION TASK '" << tk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << '\n';
+        BOOST_LOG_SEV(writer->get_log(), base_writer::log_severity_level::normal) << *tk;
 
         // instruct workers to carry out the calculation
         // this call returns when all workers have signalled that their work is done
-        bool success = this->integration_task_to_workers(writer, i_agg, p_agg, d_agg, begin_label, end_label);
+        bool success = this->integration_task_to_workers(*writer, i_agg, p_agg, d_agg, begin_label, end_label);
 
-        journal_instrument instrument(this->journal, master_work_event::database_begin, master_work_event::database_end);
+        journal_instrument instrument(this->journal, master_work_event::event_type::database_begin, master_work_event::event_type::database_end);
 
-        // perform integrity check
+        // perform integrity check; updates writer with a list of missing serial numbers, if needed
         writer->check_integrity(tk);
 
         // close the writer
-        this->data_mgr->close_writer(writer);
+        this->data_mgr->close_writer(*writer);
 
-        // commit output if successful
+        // commit output if successful; integrity failures are ignored, so containers can subsequently be used as a seed
         if(success) writer->commit();
 	    }
 
 
     template <typename number>
     template <typename TaskObject>
-    std::list<unsigned int> master_controller<number>::seed_writer(std::shared_ptr< integration_writer<number> >& writer, TaskObject* tk, const std::string& seed_group)
+    std::list<unsigned int> master_controller<number>::seed_writer(integration_writer<number>& writer, TaskObject* tk, const std::string& seed_group)
       {
         // enumerate the content groups available for our own task
-        std::list< std::shared_ptr< output_group_record<integration_payload> > > list = this->repo->enumerate_integration_task_content(tk->get_name());
+        std::list< std::unique_ptr< output_group_record<integration_payload> > > list = this->repo->enumerate_integration_task_content(tk->get_name());
 
         // find the specified group in this list
-        std::list< std::shared_ptr< output_group_record<integration_payload> > >::const_iterator t = std::find_if(list.begin(), list.end(),
+        std::list< std::unique_ptr< output_group_record<integration_payload> > >::const_iterator t = std::find_if(list.begin(), list.end(),
                                                                                                                   OutputGroupFinder<integration_payload>(seed_group));
 
         if(t == list.end())   // no record found
           {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_SEED_GROUP_NOT_FOUND_A << " '" << seed_group << "' " << __CPP_TRANSPORT_SEED_GROUP_NOT_FOUND_B << " '" << tk->get_name() << "'";
+            msg << CPPTRANSPORT_SEED_GROUP_NOT_FOUND_A << " '" << seed_group << "' " << CPPTRANSPORT_SEED_GROUP_NOT_FOUND_B << " '" << tk->get_name() << "'";
             this->warning_handler(msg.str());
             return std::list<unsigned int>{};
           }
 
         // mark writer as seeded
-        writer->set_seed(seed_group);
+        writer.set_seed(seed_group);
 
         // get workgroup number used by seed
         unsigned int seed_workgroup = (*t)->get_payload().get_workgroup_number();
-        writer->set_workgroup_number(seed_workgroup+1);
+        writer.set_workgroup_number(seed_workgroup+1);
 
-        this->data_mgr->seed_writer(writer, tk, *t);
+        this->data_mgr->seed_writer(writer, tk, *(*t));
         this->work_scheduler.prepare_queue((*t)->get_payload().get_failed_serials());
 
         return((*t)->get_payload().get_failed_serials());
@@ -1107,7 +1006,7 @@ namespace transport
 
 
     template <typename number>
-    bool master_controller<number>::integration_task_to_workers(std::shared_ptr <integration_writer<number>>& writer,
+    bool master_controller<number>::integration_task_to_workers(integration_writer<number>& writer,
                                                                 integration_aggregator& i_agg, postintegration_aggregator& p_agg, derived_content_aggregator& d_agg,
                                                                 slave_work_event::event_type begin_label, slave_work_event::event_type end_label)
 	    {
@@ -1122,15 +1021,15 @@ namespace transport
         std::list<std::string> content_groups;  // unused
 
         // get paths the workers will need
-        boost::filesystem::path tempdir_path = writer->get_abs_tempdir_path();
-        boost::filesystem::path logdir_path  = writer->get_abs_logdir_path();
+        boost::filesystem::path tempdir_path = writer.get_abs_tempdir_path();
+        boost::filesystem::path logdir_path  = writer.get_abs_logdir_path();
 
         {
 	        // journal_instrument will log time spent doing MPI when it goes out of scope
-	        journal_instrument instrument(this->journal, master_work_event::MPI_begin, master_work_event::MPI_end);
+	        journal_instrument instrument(this->journal, master_work_event::event_type::MPI_begin, master_work_event::event_type::MPI_end);
 
 	        std::vector<boost::mpi::request> requests(this->world.size()-1);
-	        MPI::new_integration_payload payload(writer->get_record()->get_name(), tempdir_path, logdir_path, writer->get_workgroup_number());
+	        MPI::new_integration_payload payload(writer.get_record()->get_name(), tempdir_path, logdir_path, writer.get_workgroup_number());
 
 	        for(unsigned int i = 0; i < this->world.size()-1; ++i)
 		        {
@@ -1139,13 +1038,13 @@ namespace transport
 
 	        // wait for all messages to be received
 	        boost::mpi::wait_all(requests.begin(), requests.end());
-	        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ All workers received NEW_INTEGRATION instruction";
+	        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "++ All workers received NEW_INTEGRATION instruction";
         }
 
 		    bool success = this->poll_workers(i_agg, p_agg, d_agg, i_metadata, o_metadata, content_groups, writer, begin_label, end_label);
 
         // push task metadata we have collected to the writer
-        writer->set_metadata(i_metadata);
+        writer.set_metadata(i_metadata);
         wallclock_timer.stop();
         this->debrief_integration(writer, i_metadata, wallclock_timer);
 
@@ -1154,54 +1053,79 @@ namespace transport
 
 
     template <typename number>
-    void master_controller<number>::debrief_integration(std::shared_ptr< integration_writer<number> >& writer,
+    void master_controller<number>::debrief_integration(integration_writer<number>& writer,
                                                         integration_metadata& i_metadata, boost::timer::cpu_timer& wallclock_timer)
       {
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "";
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ TASK COMPLETE (at " << boost::posix_time::to_simple_string(now) << "): FINAL USAGE STATISTICS";
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total wallclock time for task '" << writer->get_record()->get_name() << "' " << format_time(wallclock_timer.elapsed().wall);
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total wallclock time required by worker processes = " << format_time(i_metadata.total_wallclock_time);
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total aggregation time required by master process = " << format_time(i_metadata.total_aggregation_time);
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "";
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ AGGREGATE PERFORMANCE STATISTICS";
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Workers processed " << i_metadata.total_configurations << " individual integrations";
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   " << i_metadata.total_failures << " integrations failed, and " << i_metadata.total_refinements << " integrations required mesh refinement (may not match individual k-configurations for some backends)";
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total integration time    = " << format_time(i_metadata.total_integration_time) << " | global mean integration time = " << format_time(i_metadata.total_integration_time/(i_metadata.total_configurations > 0 ? i_metadata.total_configurations : 1));
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Min mean integration time = " << format_time(i_metadata.min_mean_integration_time) << " | global min integration time = " << format_time(i_metadata.global_min_integration_time);
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Max mean integration time = " << format_time(i_metadata.max_mean_integration_time) << " | global max integration time = " << format_time(i_metadata.global_max_integration_time);
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total batching time       = " << format_time(i_metadata.total_batching_time) << " | global mean batching time = " << format_time(i_metadata.total_batching_time/(i_metadata.total_configurations > 0 ? i_metadata.total_configurations : 1));
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Min mean batching time    = " << format_time(i_metadata.min_mean_batching_time) << " | global min batching time = " << format_time(i_metadata.global_min_batching_time);
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Max mean batching time    = " << format_time(i_metadata.max_mean_batching_time) << " | global max batching time = " << format_time(i_metadata.global_max_batching_time);
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "";
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "++ TASK COMPLETE (at " << boost::posix_time::to_simple_string(now) << "): FINAL USAGE STATISTICS";
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "++   Total wallclock time for task '" << writer.get_record()->get_name() << "' " << format_time(wallclock_timer.elapsed().wall);
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "++   Total wallclock time required by worker processes = " << format_time(i_metadata.total_wallclock_time);
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "++   Total aggregation time required by master process = " << format_time(i_metadata.total_aggregation_time);
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "";
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "++ AGGREGATE PERFORMANCE STATISTICS";
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "++   Workers processed " << i_metadata.total_configurations << " individual integrations";
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "++   " << i_metadata.total_failures << " integrations failed, and " << i_metadata.total_refinements << " integrations required mesh refinement (may not match individual k-configurations for some backends)";
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "++   Total integration time    = " << format_time(i_metadata.total_integration_time) << " | global mean integration time = " << format_time(i_metadata.total_integration_time/(i_metadata.total_configurations > 0 ? i_metadata.total_configurations : 1));
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "++   Min mean integration time = " << format_time(i_metadata.min_mean_integration_time) << " | global min integration time = " << format_time(i_metadata.global_min_integration_time);
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "++   Max mean integration time = " << format_time(i_metadata.max_mean_integration_time) << " | global max integration time = " << format_time(i_metadata.global_max_integration_time);
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "++   Total batching time       = " << format_time(i_metadata.total_batching_time) << " | global mean batching time = " << format_time(i_metadata.total_batching_time/(i_metadata.total_configurations > 0 ? i_metadata.total_configurations : 1));
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "++   Min mean batching time    = " << format_time(i_metadata.min_mean_batching_time) << " | global min batching time = " << format_time(i_metadata.global_min_batching_time);
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "++   Max mean batching time    = " << format_time(i_metadata.max_mean_batching_time) << " | global max batching time = " << format_time(i_metadata.global_max_batching_time);
       }
 
 
     template <typename number>
-    void master_controller<number>::aggregate_integration(std::shared_ptr<integration_writer<number> > &writer, unsigned int worker, unsigned int id,
+    void master_controller<number>::aggregate_integration(integration_writer<number>& writer, unsigned int worker, unsigned int id,
                                                           MPI::data_ready_payload& payload, integration_metadata &metadata)
 	    {
-        journal_instrument instrument(this->journal, master_work_event::aggregate_begin, master_work_event::aggregate_end, id);
+        journal_instrument instrument(this->journal, master_work_event::event_type::aggregate_begin, master_work_event::event_type::aggregate_end, id);
 
         // set up a timer to measure how long we spend aggregating
         boost::timer::cpu_timer aggregate_timer;
 
-        writer->aggregate(payload.get_container_path());
+        boost::filesystem::path ctr_path = payload.get_container_path();
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "++ Beginning aggregation of temporary container '" << ctr_path.filename().string() << "'";
+        bool success = true;
+
+        try
+          {
+            writer.aggregate(payload.get_container_path());
+          }
+        catch(runtime_exception& xe)
+          {
+            if(xe.get_exception_code() == exception_type::DATA_CONTAINER_ERROR)   // trap data container errors (eg SQLITE key constraints) during aggregation
+              {
+                success = false;
+                writer.set_fail(true);
+                BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::error) << "!! Failed to aggregate container '" << ctr_path.filename().string() << "': " << xe.what();
+              }
+            else
+              {
+                throw xe;   // pass on to higher exception handler
+              }
+          }
 
         aggregate_timer.stop();
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ Aggregated temporary container '" << payload.get_container_path() << "' in time " << format_time(aggregate_timer.elapsed().wall);
-        metadata.total_aggregation_time += aggregate_timer.elapsed().wall;
 
-        // inform scheduler of a new aggregation
-        this->work_scheduler.report_aggregation(aggregate_timer.elapsed().wall);
+        // if aggregation proceeded normally, carry out housekeeping
+        if(success)
+          {
+            BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "++ Aggregated temporary container '" << ctr_path.filename().string() << "' in time " << format_time(aggregate_timer.elapsed().wall);
+            metadata.total_aggregation_time += aggregate_timer.elapsed().wall;
 
-        // remove temporary container
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ Deleting temporary container '" << payload.get_container_path() << "'";
-        if(!boost::filesystem::remove(payload.get_container_path()))
-	        {
-            std::ostringstream msg;
-            msg << __CPP_TRANSPORT_DATACTR_REMOVE_TEMP << " '" << payload.get_container_path() << "'";
-            this->error_handler(msg.str());
-	        }
+            // inform scheduler of a new aggregation
+            this->work_scheduler.report_aggregation(aggregate_timer.elapsed().wall);
+
+            // remove temporary container
+//        BOOST_LOG_SEV(writer->get_log(), base_writer::log_severity_level::normal) << "++ Deleting temporary container '" << payload.get_container_path() << "'";
+            if(!boost::filesystem::remove(payload.get_container_path()))
+              {
+                std::ostringstream msg;
+                msg << CPPTRANSPORT_DATACTR_REMOVE_TEMP << " '" << payload.get_container_path() << "'";
+                this->error_handler(msg.str());
+              }
+          }
 	    }
 
 
@@ -1241,7 +1165,7 @@ namespace transport
 		    assert(rec != nullptr);
 
         // can't process a task if there are no workers
-        if(this->world.size() <= 1) throw runtime_exception(runtime_exception::MPI_ERROR, __CPP_TRANSPORT_TOO_FEW_WORKERS);
+        if(this->world.size() <= 1) throw runtime_exception(exception_type::MPI_ERROR, CPPTRANSPORT_TOO_FEW_WORKERS);
 
         output_task<number>* tk = rec->get_task();
 
@@ -1251,28 +1175,31 @@ namespace transport
         // set up an derived_content_writer object to coordinate logging, output destination and commits into the repository.
         // like all writers, it aborts (ie. executes a rollback if needed) when it goes out of scope unless
         // it is explicitly committed
-        std::shared_ptr< derived_content_writer<number> > writer = this->repo->new_output_task_content(rec, tags, this->get_rank());
+        std::unique_ptr< derived_content_writer<number> > writer = this->repo->new_output_task_content(rec, tags, this->get_rank());
 
         // set up the writer for us
-        this->data_mgr->initialize_writer(writer);
+        this->data_mgr->initialize_writer(*writer);
+
+        // register writer with the repository -- allows its debris to be recovered later if a crash occurs
+        this->repo->register_writer(*writer);
 
         // set up aggregators
         integration_aggregator     i_agg;
         postintegration_aggregator p_agg;
-        derived_content_aggregator d_agg = std::bind(&master_controller<number>::aggregate_content, this, writer, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
+        derived_content_aggregator d_agg = std::bind(&master_controller<number>::aggregate_content, this, std::ref(*writer), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
 
         // write log header
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ NEW OUTPUT TASK '" << tk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << std::endl;
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << *tk;
+        BOOST_LOG_SEV(writer->get_log(), base_writer::log_severity_level::normal) << "++ NEW OUTPUT TASK '" << tk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << '\n';
+        BOOST_LOG_SEV(writer->get_log(), base_writer::log_severity_level::normal) << *tk;
 
         // instruct workers to carry out their tasks
-        bool success = this->output_task_to_workers(writer, tags, i_agg, p_agg, d_agg, slave_work_event::begin_output_assignment, slave_work_event::end_output_assignment);
+        bool success = this->output_task_to_workers(*writer, tags, i_agg, p_agg, d_agg, slave_work_event::event_type::begin_output_assignment, slave_work_event::event_type::end_output_assignment);
 
-        journal_instrument instrument(this->journal, master_work_event::database_begin, master_work_event::database_end);
+        journal_instrument instrument(this->journal, master_work_event::event_type::database_begin, master_work_event::event_type::database_end);
 
         // close the writer
-        this->data_mgr->close_writer(writer);
+        this->data_mgr->close_writer(*writer);
 
         // commit output to the database if successful
         if(success) writer->commit();
@@ -1280,7 +1207,7 @@ namespace transport
 
 
     template <typename number>
-    bool master_controller<number>::output_task_to_workers(std::shared_ptr< derived_content_writer<number> >& writer, const std::list<std::string>& tags,
+    bool master_controller<number>::output_task_to_workers(derived_content_writer<number>& writer, const std::list<std::string>& tags,
                                                            integration_aggregator& i_agg, postintegration_aggregator& p_agg, derived_content_aggregator& d_agg,
                                                            slave_work_event::event_type begin_label, slave_work_event::event_type end_label)
 	    {
@@ -1295,15 +1222,15 @@ namespace transport
         std::list<std::string> content_groups;  // unused
 
         // get paths the workers will need
-        boost::filesystem::path tempdir_path = writer->get_abs_tempdir_path();
-        boost::filesystem::path logdir_path  = writer->get_abs_logdir_path();
+        boost::filesystem::path tempdir_path = writer.get_abs_tempdir_path();
+        boost::filesystem::path logdir_path  = writer.get_abs_logdir_path();
 
         {
 	        // journal_instrument will log time spent doing MPI when it goes out of scope
-	        journal_instrument instrument(this->journal, master_work_event::MPI_begin, master_work_event::MPI_end);
+	        journal_instrument instrument(this->journal, master_work_event::event_type::MPI_begin, master_work_event::event_type::MPI_end);
 
 	        std::vector<boost::mpi::request> requests(this->world.size()-1);
-	        MPI::new_derived_content_payload payload(writer->get_record()->get_name(), tempdir_path, logdir_path, tags);
+	        MPI::new_derived_content_payload payload(writer.get_record()->get_name(), tempdir_path, logdir_path, tags);
 
 	        for(unsigned int i = 0; i < this->world.size()-1; ++i)
 		        {
@@ -1312,12 +1239,12 @@ namespace transport
 
 	        // wait for all messages to be received
 	        boost::mpi::wait_all(requests.begin(), requests.end());
-	        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ All workers received NEW_DERIVED_CONTENT instruction";
+	        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "++ All workers received NEW_DERIVED_CONTENT instruction";
         }
 
 		    bool success = this->poll_workers(i_agg, p_agg, d_agg, i_metadata, o_metadata, content_groups, writer, begin_label, end_label);
 
-        writer->set_metadata(o_metadata);
+        writer.set_metadata(o_metadata);
         wallclock_timer.stop();
         this->debrief_output(writer, o_metadata, wallclock_timer);
 
@@ -1330,39 +1257,39 @@ namespace transport
     void master_controller<number>::debrief_output(WriterObject& writer, output_metadata& o_metadata, boost::timer::cpu_timer& wallclock_timer)
       {
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "";
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ TASK COMPLETE (at " << boost::posix_time::to_simple_string(now) << "): FINAL USAGE STATISTICS";
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total wallclock time for task '" << writer->get_record()->get_name() << "' " << format_time(wallclock_timer.elapsed().wall);
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "";
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ AGGREGATE CACHE STATISTICS";
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total work time required by worker processes      = " << format_time(o_metadata.work_time);
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total aggregation time required by master process = " << format_time(o_metadata.aggregation_time);
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total time spent reading database                 = " << format_time(o_metadata.db_time);
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "";
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total time-configuration cache hits               = " << o_metadata.time_config_hits << ", unloads = " << o_metadata.time_config_unloads;
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total twopf k-config cache hits                   = " << o_metadata.twopf_kconfig_hits << ", unloads = " << o_metadata.twopf_kconfig_unloads;
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total threepf k-config cache hits                 = " << o_metadata.threepf_kconfig_hits << ", unloads = " << o_metadata.threepf_kconfig_unloads;
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total statistics cache hits                       = " << o_metadata.stats_hits << ", unloads = " << o_metadata.stats_unloads;
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total data cache hits                             = " << o_metadata.data_hits << ", unloads = " << o_metadata.data_unloads;
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "";
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total time config cache evictions                 = " << format_time(o_metadata.time_config_evictions);
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total twopf k-config cache evictions              = " << format_time(o_metadata.twopf_kconfig_evictions);
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total threepf k-config cache evictions            = " << format_time(o_metadata.threepf_kconfig_evictions);
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total statistics cache evictions                  = " << format_time(o_metadata.stats_evictions);
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total data cache evictions                        = " << format_time(o_metadata.data_evictions);
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "";
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "++ TASK COMPLETE (at " << boost::posix_time::to_simple_string(now) << "): FINAL USAGE STATISTICS";
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "++   Total wallclock time for task '" << writer.get_record()->get_name() << "' " << format_time(wallclock_timer.elapsed().wall);
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "";
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "++ AGGREGATE CACHE STATISTICS";
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "++   Total work time required by worker processes      = " << format_time(o_metadata.work_time);
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "++   Total aggregation time required by master process = " << format_time(o_metadata.aggregation_time);
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "++   Total time spent reading database                 = " << format_time(o_metadata.db_time);
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "";
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "++   Total time-configuration cache hits               = " << o_metadata.time_config_hits << ", unloads = " << o_metadata.time_config_unloads;
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "++   Total twopf k-config cache hits                   = " << o_metadata.twopf_kconfig_hits << ", unloads = " << o_metadata.twopf_kconfig_unloads;
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "++   Total threepf k-config cache hits                 = " << o_metadata.threepf_kconfig_hits << ", unloads = " << o_metadata.threepf_kconfig_unloads;
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "++   Total statistics cache hits                       = " << o_metadata.stats_hits << ", unloads = " << o_metadata.stats_unloads;
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "++   Total data cache hits                             = " << o_metadata.data_hits << ", unloads = " << o_metadata.data_unloads;
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "";
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "++   Total time config cache evictions                 = " << format_time(o_metadata.time_config_evictions);
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "++   Total twopf k-config cache evictions              = " << format_time(o_metadata.twopf_kconfig_evictions);
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "++   Total threepf k-config cache evictions            = " << format_time(o_metadata.threepf_kconfig_evictions);
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "++   Total statistics cache evictions                  = " << format_time(o_metadata.stats_evictions);
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "++   Total data cache evictions                        = " << format_time(o_metadata.data_evictions);
       }
 
 
     template <typename number>
-    bool master_controller<number>::aggregate_content(std::shared_ptr< derived_content_writer<number> >& writer, unsigned int worker, unsigned int id,
+    bool master_controller<number>::aggregate_content(derived_content_writer<number>& writer, unsigned int worker, unsigned int id,
                                                       MPI::content_ready_payload& payload, output_metadata& metadata)
 	    {
-        journal_instrument instrument(this->journal, master_work_event::aggregate_begin, master_work_event::aggregate_end, id);
+        journal_instrument instrument(this->journal, master_work_event::event_type::aggregate_begin, master_work_event::event_type::aggregate_end, id);
 
         // set up a timer to measure how long we spend aggregating
         boost::timer::cpu_timer aggregate_timer;
 
-        bool success = writer->aggregate(payload.get_product_name(), payload.get_content_groups());
+        bool success = writer.aggregate(payload.get_product_name(), payload.get_content_groups());
 
         aggregate_timer.stop();
         metadata.aggregation_time += aggregate_timer.elapsed().wall;
@@ -1420,7 +1347,7 @@ namespace transport
         assert(rec != nullptr);
 
         // can't process a task if there are no workers
-        if(this->world.size() <= 1) throw runtime_exception(runtime_exception::MPI_ERROR, __CPP_TRANSPORT_TOO_FEW_WORKERS);
+        if(this->world.size() <= 1) throw runtime_exception(exception_type::MPI_ERROR, CPPTRANSPORT_TOO_FEW_WORKERS);
 
         postintegration_task<number>* tk = rec->get_task();
 
@@ -1436,8 +1363,8 @@ namespace transport
             if(ptk == nullptr)
 	            {
                 std::ostringstream msg;
-                msg << __CPP_TRANSPORT_EXPECTED_TWOPF_TASK << " '" << z2pf->get_parent_task()->get_name() << "'";
-                throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
+                msg << CPPTRANSPORT_EXPECTED_TWOPF_TASK << " '" << z2pf->get_parent_task()->get_name() << "'";
+                throw runtime_exception(exception_type::REPOSITORY_ERROR, msg.str());
 	            }
 
             // is this 2pf task paired?
@@ -1446,13 +1373,13 @@ namespace transport
                 model<number>* m = ptk->get_model();
                 this->work_scheduler.set_state_size(m->backend_twopf_state_size());
                 this->work_scheduler.prepare_queue(*ptk);
-                this->schedule_paired_postintegration(rec, z2pf, ptk, seeded, seed_group, tags, slave_work_event::begin_twopf_assignment, slave_work_event::end_twopf_assignment);
+                this->schedule_paired_postintegration(rec, z2pf, ptk, seeded, seed_group, tags, slave_work_event::event_type::begin_twopf_assignment, slave_work_event::event_type::end_twopf_assignment);
               }
             else
               {
                 this->work_scheduler.set_state_size(sizeof(number));
                 this->work_scheduler.prepare_queue(*ptk);
-                this->schedule_postintegration(rec, z2pf, seeded, seed_group, tags, slave_work_event::begin_zeta_twopf_assignment, slave_work_event::end_zeta_twopf_assignment);
+                this->schedule_postintegration(rec, z2pf, seeded, seed_group, tags, slave_work_event::event_type::begin_zeta_twopf_assignment, slave_work_event::event_type::end_zeta_twopf_assignment);
               }
 	        }
         else if((z3pf = dynamic_cast< zeta_threepf_task<number>* >(tk)) != nullptr)
@@ -1463,8 +1390,8 @@ namespace transport
             if(ptk == nullptr)
 	            {
                 std::ostringstream msg;
-                msg << __CPP_TRANSPORT_EXPECTED_THREEPF_TASK << " '" << z3pf->get_parent_task()->get_name() << "'";
-                throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
+                msg << CPPTRANSPORT_EXPECTED_THREEPF_TASK << " '" << z3pf->get_parent_task()->get_name() << "'";
+                throw runtime_exception(exception_type::REPOSITORY_ERROR, msg.str());
 	            }
 
             // is this 3pf task apired?
@@ -1473,13 +1400,13 @@ namespace transport
                 model<number>* m = ptk->get_model();
                 this->work_scheduler.set_state_size(m->backend_threepf_state_size());
                 this->work_scheduler.prepare_queue(*ptk);
-                this->schedule_paired_postintegration(rec, z3pf, ptk, seeded, seed_group, tags, slave_work_event::begin_threepf_assignment, slave_work_event::end_threepf_assignment);
+                this->schedule_paired_postintegration(rec, z3pf, ptk, seeded, seed_group, tags, slave_work_event::event_type::begin_threepf_assignment, slave_work_event::event_type::end_threepf_assignment);
               }
             else
               {
                 this->work_scheduler.set_state_size(sizeof(number));
                 this->work_scheduler.prepare_queue(*ptk);
-                this->schedule_postintegration(rec, z3pf, seeded, seed_group, tags, slave_work_event::begin_zeta_threepf_assignment, slave_work_event::end_zeta_threepf_assignment);
+                this->schedule_postintegration(rec, z3pf, seeded, seed_group, tags, slave_work_event::event_type::begin_zeta_threepf_assignment, slave_work_event::event_type::end_zeta_threepf_assignment);
               }
 	        }
         else if((zfNL = dynamic_cast< fNL_task<number>* >(tk)) != nullptr)
@@ -1490,19 +1417,19 @@ namespace transport
             if(ptk == nullptr)
 	            {
                 std::ostringstream msg;
-                msg << __CPP_TRANSPORT_EXPECTED_THREEPF_TASK << " '" << zfNL->get_parent_task()->get_name() << "'";
-                throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
+                msg << CPPTRANSPORT_EXPECTED_ZETA_THREEPF_TASK << " '" << zfNL->get_parent_task()->get_name() << "'";
+                throw runtime_exception(exception_type::REPOSITORY_ERROR, msg.str());
 	            }
 
 		        this->work_scheduler.set_state_size(sizeof(number));
 		        this->work_scheduler.prepare_queue(*ptk);
-            this->schedule_postintegration(rec, zfNL, false, "", tags, slave_work_event::begin_fNL_assignment, slave_work_event::end_fNL_assignment);
+            this->schedule_postintegration(rec, zfNL, false, "", tags, slave_work_event::event_type::begin_fNL_assignment, slave_work_event::event_type::end_fNL_assignment);
 	        }
         else
 	        {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_UNKNOWN_DERIVED_TASK << " '" << rec->get_name() << "'";
-            throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
+            msg << CPPTRANSPORT_UNKNOWN_DERIVED_TASK << " '" << rec->get_name() << "'";
+            throw runtime_exception(exception_type::REPOSITORY_ERROR, msg.str());
 	        }
 	    }
 
@@ -1518,39 +1445,42 @@ namespace transport
         // create an output writer to commit our results into the repository
         // like all writers, it aborts (ie. executes a rollback if needed) when it goes out of scope unless
         // it is explicitly committed
-        std::shared_ptr< postintegration_writer<number> > writer = this->repo->new_postintegration_task_content(rec, tags, this->get_rank());
+        std::unique_ptr< postintegration_writer<number> > writer = this->repo->new_postintegration_task_content(rec, tags, this->get_rank());
 
         // initialize the writer
-        this->data_mgr->initialize_writer(writer);
+        this->data_mgr->initialize_writer(*writer);
 
         // create new tables needed in the database
-        this->data_mgr->create_tables(writer, tk);
+        this->data_mgr->create_tables(*writer, tk);
 
-        // seed writer if a group has been provided
-        if(seeded) this->seed_writer(writer, tk, seed_group);
+        // seed writer if a group has been provided; resets the work queue if required
+        if(seeded) this->seed_writer(*writer, tk, seed_group);
+
+        // register writer with the repository -- allows its debris to be recovered later if a crash occurs
+        this->repo->register_writer(*writer);
 
         // set up aggregators
         integration_aggregator     i_agg;
-        postintegration_aggregator p_agg = std::bind(&master_controller<number>::aggregate_postprocess, this, writer, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
+        postintegration_aggregator p_agg = std::bind(&master_controller<number>::aggregate_postprocess, this, std::ref(*writer), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
         derived_content_aggregator d_agg;
 
         // write log header
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ NEW POSTINTEGRATION TASK '" << tk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << std::endl;
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << *tk;
+        BOOST_LOG_SEV(writer->get_log(), base_writer::log_severity_level::normal) << "++ NEW POSTINTEGRATION TASK '" << tk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << '\n';
+        BOOST_LOG_SEV(writer->get_log(), base_writer::log_severity_level::normal) << *tk;
 
         // instruct workers to carry out the calculation
-        bool success = this->postintegration_task_to_workers(writer, tags, i_agg, p_agg, d_agg, begin_label, end_label);
+        bool success = this->postintegration_task_to_workers(*writer, tags, i_agg, p_agg, d_agg, begin_label, end_label);
 
-        journal_instrument instrument(this->journal, master_work_event::database_begin, master_work_event::database_end);
+        journal_instrument instrument(this->journal, master_work_event::event_type::database_begin, master_work_event::event_type::database_end);
 
-        // perform integrity check
+        // perform integrity check; updates writer with a valid list of missing serial numbers if needed
         writer->check_integrity(tk);
 
         // close the writer
-        this->data_mgr->close_writer(writer);
+        this->data_mgr->close_writer(*writer);
 
-        // commit output if successful
+        // commit output if successful; integrity failures are ignored, so containers can subsequently be used as a seed
         if(success) writer->commit();
 	    }
 
@@ -1567,49 +1497,57 @@ namespace transport
         integration_task_record<number>* prec = dynamic_cast< integration_task_record<number>* >(pre_prec.get());
 
         assert(prec != nullptr);
-        if(prec == nullptr) throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_RECORD_CAST_FAILED);
+        if(prec == nullptr) throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_RECORD_CAST_FAILED);
 
         // create an output writer for the postintegration task
-        std::shared_ptr< postintegration_writer<number> > p_writer = this->repo->new_postintegration_task_content(rec, tags, this->get_rank());
-        this->data_mgr->initialize_writer(p_writer);
-        this->data_mgr->create_tables(p_writer, tk);
+        std::unique_ptr< postintegration_writer<number> > p_writer = this->repo->new_postintegration_task_content(rec, tags, this->get_rank());
+        this->data_mgr->initialize_writer(*p_writer);
+        this->data_mgr->create_tables(*p_writer, tk);
 
         // create an output writer for the integration task; use suffix option to add "-paired" to distinguish the different output groups
-        std::shared_ptr<integration_writer<number> > i_writer = this->repo->new_integration_task_content(prec, tags, this->get_rank(), 0, "paired");
-        this->data_mgr->initialize_writer(i_writer);
-        this->data_mgr->create_tables(i_writer, ptk);
+        std::unique_ptr<integration_writer<number> > i_writer = this->repo->new_integration_task_content(prec, tags, this->get_rank(), 0, "paired");
+        this->data_mgr->initialize_writer(*i_writer);
+        this->data_mgr->create_tables(*i_writer, ptk);
 
         // pair
         p_writer->set_pair(true);
         p_writer->set_parent_group(i_writer->get_name());
 
-        // seed writers if a group has been provided
-        if(seeded) this->seed_writer_pair(i_writer, p_writer, tk, ptk, seed_group);
+        // seed writers if a group has been provided; resets the work queue if required
+        if(seeded) this->seed_writer_pair(*i_writer, *p_writer, tk, ptk, seed_group);
+
+        // register writers with the repository -- allows their debris to be recovered later if a crash occurs
+        this->repo->register_writer(*i_writer);
+        this->repo->register_writer(*p_writer);
 
         // set up aggregators
-        integration_aggregator     i_agg = std::bind(&master_controller<number>::aggregate_integration, this, i_writer, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
-        postintegration_aggregator p_agg = std::bind(&master_controller<number>::aggregate_postprocess, this, p_writer, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
+        integration_aggregator     i_agg = std::bind(&master_controller<number>::aggregate_integration, this, std::ref(*i_writer), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
+        postintegration_aggregator p_agg = std::bind(&master_controller<number>::aggregate_postprocess, this, std::ref(*p_writer), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
         derived_content_aggregator d_agg;
 
         // write log header
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
-        BOOST_LOG_SEV(i_writer->get_log(), base_writer::normal) << "++ NEW PAIRED POSTINTEGRATION TASKS '" << tk->get_name() << "' & '" << ptk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << std::endl;
-        BOOST_LOG_SEV(i_writer->get_log(), base_writer::normal) << *ptk;
+        BOOST_LOG_SEV(i_writer->get_log(), base_writer::log_severity_level::normal) << "++ NEW PAIRED POSTINTEGRATION TASKS '" << tk->get_name() << "' & '" << ptk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << '\n';
+        BOOST_LOG_SEV(i_writer->get_log(), base_writer::log_severity_level::normal) << *ptk;
 
         // instruct workers to carry out the calculation
-        bool success = this->paired_postintegration_task_to_workers(i_writer, p_writer, tags, i_agg, p_agg, d_agg, begin_label, end_label);
+        bool success = this->paired_postintegration_task_to_workers(*i_writer, *p_writer, tags, i_agg, p_agg, d_agg, begin_label, end_label);
 
-        journal_instrument instrument(this->journal, master_work_event::database_begin, master_work_event::database_end);
+        journal_instrument instrument(this->journal, master_work_event::event_type::database_begin, master_work_event::event_type::database_end);
 
         // perform integrity check
+        // the integrity check updates each writer with a valid list of missing serial numbers, if needed
         i_writer->check_integrity(ptk);
         p_writer->check_integrity(tk);
 
-        // close both writers
-        this->data_mgr->close_writer(i_writer);
-        this->data_mgr->close_writer(p_writer);
+        // ensure missing serial numbers are synchronized
+        this->data_mgr->synchronize_missing_serials(*i_writer, *p_writer, ptk, tk);
 
-        // commit output if successful
+        // close both writers
+        this->data_mgr->close_writer(*i_writer);
+        this->data_mgr->close_writer(*p_writer);
+
+        // commit output if successful; integrity failures are ignored, so containers can subsequently be used as a seed
         if(success)
           {
             i_writer->commit();
@@ -1620,27 +1558,27 @@ namespace transport
 
     template <typename number>
     template <typename TaskObject>
-    std::list<unsigned int> master_controller<number>::seed_writer(std::shared_ptr< postintegration_writer<number> >& writer, TaskObject* tk, const std::string& seed_group)
+    std::list<unsigned int> master_controller<number>::seed_writer(postintegration_writer<number>& writer, TaskObject* tk, const std::string& seed_group)
       {
         // enumerate the content groups available for our own task
-        std::list< std::shared_ptr< output_group_record<postintegration_payload> > > list = this->repo->enumerate_postintegration_task_content(tk->get_name());
+        std::list< std::unique_ptr< output_group_record<postintegration_payload> > > list = this->repo->enumerate_postintegration_task_content(tk->get_name());
 
         // find the specified group in this list
-        std::list< std::shared_ptr< output_group_record<postintegration_payload> > >::const_iterator t = std::find_if(list.begin(), list.end(),
+        std::list< std::unique_ptr< output_group_record<postintegration_payload> > >::const_iterator t = std::find_if(list.begin(), list.end(),
                                                                                                                       OutputGroupFinder<postintegration_payload>(seed_group));
 
         if(t == list.end())   // no record found
           {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_SEED_GROUP_NOT_FOUND_A << " '" << seed_group << "' " << __CPP_TRANSPORT_SEED_GROUP_NOT_FOUND_B << " '" << tk->get_name() << "'";
+            msg << CPPTRANSPORT_SEED_GROUP_NOT_FOUND_A << " '" << seed_group << "' " << CPPTRANSPORT_SEED_GROUP_NOT_FOUND_B << " '" << tk->get_name() << "'";
             this->warning_handler(msg.str());
             return std::list<unsigned int>{};
           };
 
         // mark writer as seeded
-        writer->set_seed(seed_group);
+        writer.set_seed(seed_group);
 
-        this->data_mgr->seed_writer(writer, tk, *t);
+        this->data_mgr->seed_writer(writer, tk, *(*t));
         this->work_scheduler.prepare_queue((*t)->get_payload().get_failed_serials());
 
         return((*t)->get_payload().get_failed_serials());
@@ -1649,21 +1587,21 @@ namespace transport
 
     template <typename number>
     template <typename TaskObject, typename ParentTaskObject>
-    std::list<unsigned int> master_controller<number>::seed_writer_pair(std::shared_ptr<integration_writer<number> >& i_writer,
-                                                                        std::shared_ptr<postintegration_writer<number> >& p_writer,
+    std::list<unsigned int> master_controller<number>::seed_writer_pair(integration_writer<number>& i_writer,
+                                                                        postintegration_writer<number>& p_writer,
                                                                         TaskObject* tk, ParentTaskObject* ptk, const std::string& seed_group)
       {
         // enumerate the content groups available for our own task
-        std::list< std::shared_ptr< output_group_record<postintegration_payload> > > list = this->repo->enumerate_postintegration_task_content(tk->get_name());
+        std::list< std::unique_ptr< output_group_record<postintegration_payload> > > list = this->repo->enumerate_postintegration_task_content(tk->get_name());
 
         // find the specified group in this list
-        std::list< std::shared_ptr< output_group_record<postintegration_payload> > >::const_iterator t = std::find_if(list.begin(), list.end(),
+        std::list< std::unique_ptr< output_group_record<postintegration_payload> > >::const_iterator t = std::find_if(list.begin(), list.end(),
                                                                                                                       OutputGroupFinder<postintegration_payload>(seed_group));
 
         if(t == list.end())   // no record found
           {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_SEED_GROUP_NOT_FOUND_A << " '" << seed_group << "' " << __CPP_TRANSPORT_SEED_GROUP_NOT_FOUND_B << " '" << tk->get_name() << "'";
+            msg << CPPTRANSPORT_SEED_GROUP_NOT_FOUND_A << " '" << seed_group << "' " << CPPTRANSPORT_SEED_GROUP_NOT_FOUND_B << " '" << tk->get_name() << "'";
             this->warning_handler(msg.str());
             return std::list<unsigned int>{};
           }
@@ -1671,21 +1609,26 @@ namespace transport
         // find parent content group for the seed
         std::string parent_seed_name = (*t)->get_payload().get_parent_group();
 
+        // check that same k-configurations are missing from both content groups in the pair
+        // currently we assume this to be true, although the integrity check for paired writers
+        // doesn't enforce it (yet)
         std::list<unsigned int> integration_serials = this->seed_writer(i_writer, ptk, parent_seed_name);
 
-        if(i_writer->is_seeded())
+        if(i_writer.is_seeded())
           {
             std::list<unsigned int> postintegration_serials = (*t)->get_payload().get_failed_serials();
 
+            // minimal check is that each content group is missing the same number of serial numbers
             if(postintegration_serials.size() != integration_serials.size())
               {
                 std::ostringstream msg;
-                msg << __CPP_TRANSPORT_SEED_GROUP_MISMATCHED_SERIALS_A << " '" << (*t)->get_name() << "' "
-                  << __CPP_TRANSPORT_SEED_GROUP_MISMATCHED_SERIALS_B << " '" << parent_seed_name << "' "
-                  << __CPP_TRANSPORT_SEED_GROUP_MISMATCHED_SERIALS_C;
-                throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
+                msg << CPPTRANSPORT_SEED_GROUP_MISMATCHED_SERIALS_A << " '" << (*t)->get_name() << "' "
+                  << CPPTRANSPORT_SEED_GROUP_MISMATCHED_SERIALS_B << " '" << parent_seed_name << "' "
+                  << CPPTRANSPORT_SEED_GROUP_MISMATCHED_SERIALS_C;
+                throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
               }
 
+            // now check more carefully that the missing serial numbers are the same
             std::list<unsigned int> diff;
             std::set_difference(integration_serials.begin(), integration_serials.end(),
                                 postintegration_serials.begin(), postintegration_serials.end(), std::back_inserter(diff));
@@ -1693,14 +1636,14 @@ namespace transport
             if(diff.size() > 0)
               {
                 std::ostringstream msg;
-                msg << __CPP_TRANSPORT_SEED_GROUP_MISMATCHED_SERIALS_A << " '" << (*t)->get_name() << "' "
-                  << __CPP_TRANSPORT_SEED_GROUP_MISMATCHED_SERIALS_B << " '" << parent_seed_name << "' "
-                  << __CPP_TRANSPORT_SEED_GROUP_MISMATCHED_SERIALS_C;
-                throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
+                msg << CPPTRANSPORT_SEED_GROUP_MISMATCHED_SERIALS_A << " '" << (*t)->get_name() << "' "
+                  << CPPTRANSPORT_SEED_GROUP_MISMATCHED_SERIALS_B << " '" << parent_seed_name << "' "
+                  << CPPTRANSPORT_SEED_GROUP_MISMATCHED_SERIALS_C;
+                throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
               }
 
-            p_writer->set_seed(seed_group);
-            this->data_mgr->seed_writer(p_writer, tk, *t);
+            p_writer.set_seed(seed_group);
+            this->data_mgr->seed_writer(p_writer, tk, *(*t));
           }
 
         return((*t)->get_payload().get_failed_serials());
@@ -1708,7 +1651,7 @@ namespace transport
 
 
     template <typename number>
-    bool master_controller<number>::postintegration_task_to_workers(std::shared_ptr< postintegration_writer<number> >& writer, const std::list<std::string>& tags,
+    bool master_controller<number>::postintegration_task_to_workers(postintegration_writer<number>& writer, const std::list<std::string>& tags,
                                                                     integration_aggregator& i_agg, postintegration_aggregator& p_agg, derived_content_aggregator& d_agg,
                                                                     slave_work_event::event_type begin_label, slave_work_event::event_type end_label)
 	    {
@@ -1723,15 +1666,15 @@ namespace transport
         std::list<std::string> content_groups;
 
         // get paths the workers will need
-        boost::filesystem::path tempdir_path = writer->get_abs_tempdir_path();
-        boost::filesystem::path logdir_path  = writer->get_abs_logdir_path();
+        boost::filesystem::path tempdir_path = writer.get_abs_tempdir_path();
+        boost::filesystem::path logdir_path  = writer.get_abs_logdir_path();
 
         {
 	        // journal_instrument will log time spent doing MPI when it goes out of scope
-	        journal_instrument instrument(this->journal, master_work_event::MPI_begin, master_work_event::MPI_end);
+	        journal_instrument instrument(this->journal, master_work_event::event_type::MPI_begin, master_work_event::event_type::MPI_end);
 
 	        std::vector<boost::mpi::request> requests(this->world.size()-1);
-	        MPI::new_postintegration_payload payload(writer->get_record()->get_name(), tempdir_path, logdir_path, tags);
+	        MPI::new_postintegration_payload payload(writer.get_record()->get_name(), tempdir_path, logdir_path, tags);
 
 	        for(unsigned int i = 0; i < this->world.size()-1; ++i)
 		        {
@@ -1740,15 +1683,15 @@ namespace transport
 
 	        // wait for all messages to be received
 	        boost::mpi::wait_all(requests.begin(), requests.end());
-	        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ All workers received NEW_POSTINTEGRATION instruction";
+	        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "++ All workers received NEW_POSTINTEGRATION instruction";
         }
 
 		    bool success = this->poll_workers(i_agg, p_agg, d_agg, i_metadata, o_metadata, content_groups, writer, begin_label, end_label);
 
-        if(content_groups.size() > 1) throw runtime_exception(runtime_exception::RUNTIME_ERROR,  __CPP_TRANSPORT_POSTINTEGRATION_MULTIPLE_GROUPS);
+        if(content_groups.size() > 1) throw runtime_exception(exception_type::RUNTIME_ERROR,  CPPTRANSPORT_POSTINTEGRATION_MULTIPLE_GROUPS);
 
-        writer->set_parent_group(content_groups.front());
-        writer->set_metadata(o_metadata);
+        writer.set_parent_group(content_groups.front());
+        writer.set_metadata(o_metadata);
         wallclock_timer.stop();
         this->debrief_output(writer, o_metadata, wallclock_timer);
 
@@ -1757,8 +1700,7 @@ namespace transport
 
 
     template <typename number>
-    bool master_controller<number>::paired_postintegration_task_to_workers(std::shared_ptr< integration_writer<number> >& i_writer,
-                                                                           std::shared_ptr< postintegration_writer<number> >& p_writer,
+    bool master_controller<number>::paired_postintegration_task_to_workers(integration_writer<number>& i_writer, postintegration_writer<number>& p_writer,
                                                                            const std::list<std::string>& tags,
                                                                            integration_aggregator& i_agg, postintegration_aggregator& p_agg, derived_content_aggregator& d_agg,
                                                                            slave_work_event::event_type begin_label, slave_work_event::event_type end_label)
@@ -1774,18 +1716,18 @@ namespace transport
         std::list<std::string> content_groups;  // unused
 
         // get paths needed by different batchers on each worker
-        boost::filesystem::path i_tempdir_path = i_writer->get_abs_tempdir_path();
-        boost::filesystem::path i_logdir_path  = i_writer->get_abs_logdir_path();
+        boost::filesystem::path i_tempdir_path = i_writer.get_abs_tempdir_path();
+        boost::filesystem::path i_logdir_path  = i_writer.get_abs_logdir_path();
 
-        boost::filesystem::path p_tempdir_path = p_writer->get_abs_tempdir_path();
-        boost::filesystem::path p_logdir_path  = p_writer->get_abs_logdir_path();
+        boost::filesystem::path p_tempdir_path = p_writer.get_abs_tempdir_path();
+        boost::filesystem::path p_logdir_path  = p_writer.get_abs_logdir_path();
 
         {
           // journal instrument will log time spent doing MPI when it goes out of scope
-          journal_instrument instrument(this->journal, master_work_event::MPI_begin, master_work_event::MPI_end);
+          journal_instrument instrument(this->journal, master_work_event::event_type::MPI_begin, master_work_event::event_type::MPI_end);
 
           std::vector<boost::mpi::request> requests(this->world.size()-1);
-          MPI::new_postintegration_payload payload(p_writer->get_record()->get_name(), p_tempdir_path, p_logdir_path, tags, i_tempdir_path, i_logdir_path, i_writer->get_workgroup_number());
+          MPI::new_postintegration_payload payload(p_writer.get_record()->get_name(), p_tempdir_path, p_logdir_path, tags, i_tempdir_path, i_logdir_path, i_writer.get_workgroup_number());
 
           for(unsigned int i = 0; i < this->world.size()-1; ++i)
             {
@@ -1794,15 +1736,15 @@ namespace transport
 
           // wait for all messages to be received
           boost::mpi::wait_all(requests.begin(), requests.end());
-          BOOST_LOG_SEV(i_writer->get_log(), base_writer::normal) << "++ All workers received NEW_POSTINTEGRATION instruction";
+          BOOST_LOG_SEV(i_writer.get_log(), base_writer::log_severity_level::normal) << "++ All workers received NEW_POSTINTEGRATION instruction";
         }
 
         bool success = this->poll_workers(i_agg, p_agg, d_agg, i_metadata, o_metadata, content_groups, i_writer, begin_label, end_label);
 
-        if(content_groups.size() > 1) throw runtime_exception(runtime_exception::RUNTIME_ERROR,  __CPP_TRANSPORT_POSTINTEGRATION_MULTIPLE_GROUPS);
+        if(content_groups.size() > 1) throw runtime_exception(exception_type::RUNTIME_ERROR,  CPPTRANSPORT_POSTINTEGRATION_MULTIPLE_GROUPS);
 
-        i_writer->set_metadata(i_metadata);
-        p_writer->set_metadata(o_metadata);
+        i_writer.set_metadata(i_metadata);
+        p_writer.set_metadata(o_metadata);
 
         wallclock_timer.stop();
         this->debrief_integration(i_writer, i_metadata, wallclock_timer);
@@ -1812,31 +1754,56 @@ namespace transport
 
 
     template <typename number>
-    void master_controller<number>::aggregate_postprocess(std::shared_ptr< postintegration_writer<number> >& writer, unsigned int worker, unsigned int id,
+    void master_controller<number>::aggregate_postprocess(postintegration_writer<number>& writer, unsigned int worker, unsigned int id,
                                                           MPI::data_ready_payload& payload, output_metadata& metadata)
 	    {
-		    journal_instrument instrument(this->journal, master_work_event::aggregate_begin, master_work_event::aggregate_end, id);
+		    journal_instrument instrument(this->journal, master_work_event::event_type::aggregate_begin, master_work_event::event_type::aggregate_end, id);
 
         // set up a timer to measure how long we spend batching
         boost::timer::cpu_timer aggregate_timer;
 
-        writer->aggregate(payload.get_container_path());
+        boost::filesystem::path ctr_path = payload.get_container_path();
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "++ Beginning aggregation of temporary container '" << ctr_path.filename().string() << "'";
+        bool success = true;
+
+        try
+          {
+            writer.aggregate(payload.get_container_path());
+          }
+        catch(runtime_exception& xe)
+          {
+            if(xe.get_exception_code() == exception_type::DATA_CONTAINER_ERROR)   // trap data container errors (eg SQLite key constraints) during aggregation
+              {
+                success = false;
+                writer.set_fail(true);
+                BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::error) << "!! Failed to aggregate container '" << ctr_path.filename().string() << "': " << xe.what();
+              }
+            else
+              {
+                throw xe;   // pass on to higher exception handler
+              }
+          }
 
         aggregate_timer.stop();
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ Aggregated temporary container '" << payload.get_container_path() << "' in time " << format_time(aggregate_timer.elapsed().wall);
-        metadata.aggregation_time += aggregate_timer.elapsed().wall;
 
-        // inform scheduler of a new aggregation
-        this->work_scheduler.report_aggregation(aggregate_timer.elapsed().wall);
+        // if aggregation proceeded normally, carry out housekeeping
+        if(success)
+          {
+            BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "++ Aggregated temporary container '" << ctr_path.filename().string() << "' in time " << format_time(aggregate_timer.elapsed().wall);
+            metadata.aggregation_time += aggregate_timer.elapsed().wall;
 
-        // remove temporary container
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ Deleting temporary container '" << payload.get_container_path() << "'";
-        if(!boost::filesystem::remove(payload.get_container_path()))
-	        {
-            std::ostringstream msg;
-            msg << __CPP_TRANSPORT_DATACTR_REMOVE_TEMP << " '" << payload.get_container_path() << "'";
-            this->error_handler(msg.str());
-	        }
+            // inform scheduler of a new aggregation
+            this->work_scheduler.report_aggregation(aggregate_timer.elapsed().wall);
+
+            // remove temporary container
+//        BOOST_LOG_SEV(writer->get_log(), base_writer::log_severity_level::normal) << "++ Deleting temporary container '" << payload.get_container_path() << "'";
+            if(!boost::filesystem::remove(payload.get_container_path()))
+              {
+                std::ostringstream msg;
+                msg << CPPTRANSPORT_DATACTR_REMOVE_TEMP << " '" << payload.get_container_path() << "'";
+                this->error_handler(msg.str());
+              }
+          }
 	    }
 
 
@@ -1847,16 +1814,16 @@ namespace transport
     void master_controller<number>::initialize_workers(void)
 	    {
         // set up instrument to journal the MPI communication if needed
-        journal_instrument instrument(this->journal, master_work_event::MPI_begin, master_work_event::MPI_end);
+        journal_instrument instrument(this->journal, master_work_event::event_type::MPI_begin, master_work_event::event_type::MPI_end);
 
         std::vector<boost::mpi::request> requests(this->world.size()-1);
 
         // we require this->repo not to be null
-        assert(this->repo != nullptr);
-		    if(this->repo == nullptr) throw std::runtime_error(__CPP_TRANSPORT_REPO_NOT_SET);
+        assert(this->repo);
+		    if(!this->repo) throw std::runtime_error(CPPTRANSPORT_REPO_NOT_SET);
 
 		    // request information from each worker, and pass all necessary setup details
-        MPI::slave_setup_payload payload(this->repo->get_root_path(), this->batcher_capacity, this->pipe_capacity);
+        MPI::slave_setup_payload payload(this->repo->get_root_path(), this->arg_cache);
 
         for(unsigned int i = 0; i < this->world.size()-1; ++i)
 	        {
@@ -1872,7 +1839,7 @@ namespace transport
     void master_controller<number>::set_up_workers(boost::log::sources::severity_logger< base_writer::log_severity_level >& log)
 			{
 		    // set up instrument to journal the MPI communication if needed
-		    journal_instrument instrument(this->journal, master_work_event::MPI_begin, master_work_event::MPI_end);
+		    journal_instrument instrument(this->journal, master_work_event::event_type::MPI_begin, master_work_event::event_type::MPI_end);
 
 		    // rebuild information about our workers; this information
 				// it is updated whenever we start a new task, because the details can vary
@@ -1895,7 +1862,7 @@ namespace transport
 
 				        default:
 					        {
-						        BOOST_LOG_SEV(log, base_writer::normal) << "!! Received unexpected MPI message " << stat.tag() << " from worker " << stat.source() << "; discarding";
+						        BOOST_LOG_SEV(log, base_writer::log_severity_level::normal) << "!! Received unexpected MPI message " << stat.tag() << " from worker " << stat.source() << "; discarding";
 						        this->world.recv(stat.source(), stat.tag());
 						        break;
 					        }
@@ -1910,7 +1877,7 @@ namespace transport
 		template <typename number>
 		void master_controller<number>::close_down_workers(boost::log::sources::severity_logger< base_writer::log_severity_level >& log)
 			{
-		    BOOST_LOG_SEV(log, base_writer::normal) << "++ Notifying workers of end-of-work";
+		    BOOST_LOG_SEV(log, base_writer::log_severity_level::normal) << "++ Notifying workers of end-of-work";
 
 				for(unsigned int i = 0; i < this->world.size()-1; ++i)
 					{
@@ -1929,10 +1896,29 @@ namespace transport
         if(print_msg)
           {
             std::ostringstream update_msg;
-            update_msg << __CPP_TRANSPORT_TASK_MANAGER_LABEL << " " << msg;
+            update_msg << CPPTRANSPORT_TASK_MANAGER_LABEL << " " << msg;
             this->message_handler(update_msg.str());
 
-						BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "±± Console advisory message: " << update_msg.str();
+						BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "±± Console advisory message: " << update_msg.str();
+            this->log_worker_metadata(writer);
+          }
+      }
+
+
+    template <typename number>
+    template <typename WriterObject>
+    void master_controller<number>::log_worker_metadata(WriterObject& writer)
+      {
+        std::vector< master_scheduler::worker_metadata > metadata = this->work_scheduler.get_metadata();
+
+        for(const master_scheduler::worker_metadata& t : metadata)
+          {
+            BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "## Worker " << t.get_number() << ": active = " << t.get_active()
+                                                                                     << ", assigned = " << t.get_assigned()
+                                                                                     << ", total time = " << format_time(t.get_total_elapsed_time())
+                                                                                     << ", items processed = " << t.get_total_items_processed()
+                                                                                     << ", mean time per item = " << (t.get_total_items_processed() > 0 ? format_time(t.get_total_elapsed_time() / t.get_total_items_processed()) : "n/a")
+                                                                                     << ", last contact at " << boost::posix_time::to_simple_string(t.get_last_contact_time());
           }
       }
 
@@ -1941,12 +1927,12 @@ namespace transport
 		void master_controller<number>::assign_work_to_workers(boost::log::sources::severity_logger< base_writer::log_severity_level >& log)
 			{
 		    // set up instrument to journal the MPI communication if needed
-		    journal_instrument instrument(this->journal, master_work_event::MPI_begin, master_work_event::MPI_end);
+		    journal_instrument instrument(this->journal, master_work_event::event_type::MPI_begin, master_work_event::event_type::MPI_end);
 
         // generate a list of work assignments
         std::list<master_scheduler::work_assignment> work = this->work_scheduler.assign_work(log);
 
-        BOOST_LOG_SEV(log, base_writer::normal) << "++ Generating new work assignments for " << work.size() << " worker" << (work.size() > 1 ? "s" : "") << " (" << this->work_scheduler.get_queue_size() << " work items remain in queue)";
+        BOOST_LOG_SEV(log, base_writer::log_severity_level::normal) << "++ Generating new work assignments for " << work.size() << " worker" << (work.size() > 1 ? "s" : "") << " (" << this->work_scheduler.get_queue_size() << " work items remain in queue)";
 
         // push assignments to workers
         std::vector<boost::mpi::request> msg_status(work.size());
@@ -1961,12 +1947,12 @@ namespace transport
 
 		        // mark this worker, and these work items, as assigned
             this->work_scheduler.mark_assigned(*t);
-		        BOOST_LOG_SEV(log, base_writer::normal) << "++ Assigned " << t->get_items().size() << " work items to worker " << t->get_worker() << " [MPI rank=" << this->worker_rank(t->get_worker()) << "]";
+		        BOOST_LOG_SEV(log, base_writer::log_severity_level::normal) << "++ Assigned " << t->get_items().size() << " work items to worker " << t->get_worker() << " [MPI rank=" << this->worker_rank(t->get_worker()) << "]";
 	        }
 
         // wait for all assignments to be received
         boost::mpi::wait_all(msg_status.begin(), msg_status.end());
-		    BOOST_LOG_SEV(log, base_writer::normal) << "++ All workers accepted new assignments";
+		    BOOST_LOG_SEV(log, base_writer::log_severity_level::normal) << "++ All workers accepted new assignments";
 			}
 
 
@@ -1974,7 +1960,7 @@ namespace transport
     void master_controller<number>::terminate_workers(void)
 	    {
 		    // set up instrument to journal the MPI communication if needed
-		    journal_instrument instrument(this->journal, master_work_event::MPI_begin, master_work_event::MPI_end);
+		    journal_instrument instrument(this->journal, master_work_event::event_type::MPI_begin, master_work_event::event_type::MPI_end);
 
         std::vector<boost::mpi::request> requests(this->world.size()-1);
 
@@ -1996,11 +1982,11 @@ namespace transport
 	    {
 		    bool success = true;
 
-        boost::log::sources::severity_logger <base_writer::log_severity_level>& log = writer->get_log();
+        boost::log::sources::severity_logger< base_writer::log_severity_level >& log = writer.get_log();
 
         // set up aggregation queues
 		    unsigned int aggregation_counter = 0;
-        std::list< std::shared_ptr<aggregation_record> > aggregation_queue;
+        std::list< std::unique_ptr<aggregation_record> > aggregation_queue;
 
         // wait for workers to report their characteristics
         this->set_up_workers(log);
@@ -2036,6 +2022,8 @@ namespace transport
                 last_msg = boost::posix_time::second_clock::universal_time();
                 emit_agg_queue_msg = true;
 
+                this->work_scheduler.update_contact_time(this->worker_number(stat->source()), last_msg);
+
                 switch(stat->tag())
                   {
                     case MPI::INTEGRATION_DATA_READY:
@@ -2044,13 +2032,13 @@ namespace transport
                           {
                             MPI::data_ready_payload payload;
                             this->world.recv(stat->source(), MPI::INTEGRATION_DATA_READY, payload);
-                            this->journal.add_entry(slave_work_event(this->worker_number(stat->source()), slave_work_event::integration_aggregation, payload.get_timestamp(), aggregation_counter));
-		                        aggregation_queue.push_back(std::shared_ptr<integration_aggregation_record>(new integration_aggregation_record(this->worker_number(stat->source()), aggregation_counter++, int_agg, int_metadata, payload)));
-                            BOOST_LOG_SEV(log, base_writer::normal) << "++ Worker " << stat->source() << " sent aggregation notification for container '" << payload.get_container_path() << "'";
+                            this->journal.add_entry(slave_work_event(this->worker_number(stat->source()), slave_work_event::event_type::integration_aggregation, payload.get_timestamp(), aggregation_counter));
+		                        aggregation_queue.push_back(std::unique_ptr<integration_aggregation_record>(new integration_aggregation_record(this->worker_number(stat->source()), aggregation_counter++, int_agg, int_metadata, payload)));
+                            BOOST_LOG_SEV(log, base_writer::log_severity_level::normal) << "++ Worker " << stat->source() << " sent aggregation notification for container '" << payload.get_container_path() << "'";
                           }
                         else
                           {
-                            BOOST_LOG_SEV(log, base_writer::normal) << "!! Received INTEGRATION_DATA_READY message from worker " << stat->source() << ", but no integration aggregator has been assigned";
+                            BOOST_LOG_SEV(log, base_writer::log_severity_level::normal) << "!! Received INTEGRATION_DATA_READY message from worker " << stat->source() << ", but no integration aggregator has been assigned";
                           }
                         break;
                       }
@@ -2061,13 +2049,13 @@ namespace transport
                           {
                             MPI::content_ready_payload payload;
                             this->world.recv(stat->source(), MPI::DERIVED_CONTENT_READY, payload);
-                            this->journal.add_entry(slave_work_event(this->worker_number(stat->source()), slave_work_event::derived_content_aggregation, payload.get_timestamp(), aggregation_counter));
-		                        aggregation_queue.push_back(std::shared_ptr<derived_content_aggregation_record>(new derived_content_aggregation_record(this->worker_number(stat->source()), aggregation_counter++, derived_agg, out_metadata, payload)));
-                            BOOST_LOG_SEV(log, base_writer::normal) << "++ Worker " << stat->source() << " sent content-ready notification";
+                            this->journal.add_entry(slave_work_event(this->worker_number(stat->source()), slave_work_event::event_type::derived_content_aggregation, payload.get_timestamp(), aggregation_counter));
+		                        aggregation_queue.push_back(std::unique_ptr<derived_content_aggregation_record>(new derived_content_aggregation_record(this->worker_number(stat->source()), aggregation_counter++, derived_agg, out_metadata, payload)));
+                            BOOST_LOG_SEV(log, base_writer::log_severity_level::normal) << "++ Worker " << stat->source() << " sent content-ready notification";
                           }
                         else
                           {
-                            BOOST_LOG_SEV(log, base_writer::normal) << "!! Received DERIVED_CONTENT_READY message from worker " << stat->source() << ", but no derived content aggregator has been assigned";
+                            BOOST_LOG_SEV(log, base_writer::log_severity_level::normal) << "!! Received DERIVED_CONTENT_READY message from worker " << stat->source() << ", but no derived content aggregator has been assigned";
                           }
                         break;
                       }
@@ -2078,13 +2066,13 @@ namespace transport
                           {
                             MPI::data_ready_payload payload;
                             this->world.recv(stat->source(), MPI::POSTINTEGRATION_DATA_READY, payload);
-                            this->journal.add_entry(slave_work_event(this->worker_number(stat->source()), slave_work_event::postintegration_aggregation, payload.get_timestamp(), aggregation_counter));
-		                        aggregation_queue.push_back(std::shared_ptr<postintegration_aggregation_record>(new postintegration_aggregation_record(this->worker_number(stat->source()), aggregation_counter++, post_agg, out_metadata, payload)));
-                            BOOST_LOG_SEV(log, base_writer::normal) << "++ Worker " << stat->source() << " sent aggregation notification for container '" << payload.get_container_path() << "'";
+                            this->journal.add_entry(slave_work_event(this->worker_number(stat->source()), slave_work_event::event_type::postintegration_aggregation, payload.get_timestamp(), aggregation_counter));
+		                        aggregation_queue.push_back(std::unique_ptr<postintegration_aggregation_record>(new postintegration_aggregation_record(this->worker_number(stat->source()), aggregation_counter++, post_agg, out_metadata, payload)));
+                            BOOST_LOG_SEV(log, base_writer::log_severity_level::normal) << "++ Worker " << stat->source() << " sent aggregation notification for container '" << payload.get_container_path() << "'";
                           }
                         else
                           {
-                            BOOST_LOG_SEV(log, base_writer::normal) << "!! Received POSTINTEGRATION_DATA_READY message from worker " << stat->source() << ", but no postintegration aggregator has been assigned";
+                            BOOST_LOG_SEV(log, base_writer::log_severity_level::normal) << "!! Received POSTINTEGRATION_DATA_READY message from worker " << stat->source() << ", but no postintegration aggregator has been assigned";
                           }
                         break;
                       }
@@ -2094,7 +2082,7 @@ namespace transport
                         MPI::work_acknowledgment_payload payload;
                         this->world.recv(stat->source(), MPI::NEW_WORK_ACKNOWLEDGMENT, payload);
                         this->journal.add_entry(slave_work_event(this->worker_number(stat->source()), begin_label, payload.get_timestamp()));
-                        BOOST_LOG_SEV(log, base_writer::normal) << "++ Worker " << stat->source() << " advising receipt of work assignment at time " << boost::posix_time::to_simple_string(payload.get_timestamp());
+                        BOOST_LOG_SEV(log, base_writer::log_severity_level::normal) << "++ Worker " << stat->source() << " advising receipt of work assignment at time " << boost::posix_time::to_simple_string(payload.get_timestamp());
 
                         break;
                       }
@@ -2104,12 +2092,12 @@ namespace transport
                         MPI::finished_integration_payload payload;
                         this->world.recv(stat->source(), MPI::FINISHED_INTEGRATION, payload);
                         this->journal.add_entry(slave_work_event(this->worker_number(stat->source()), end_label, payload.get_timestamp()));
-                        BOOST_LOG_SEV(log, base_writer::normal) << "++ Worker " << stat->source() << " advising finished work assignment in wallclock time " << format_time(payload.get_wallclock_time());
+                        BOOST_LOG_SEV(log, base_writer::log_severity_level::normal) << "++ Worker " << stat->source() << " advising finished work assignment in wallclock time " << format_time(payload.get_wallclock_time());
 
                         // mark this worker as unassigned, and update its mean time per work item
                         this->work_scheduler.mark_unassigned(this->worker_number(stat->source()), payload.get_integration_time(), payload.get_num_integrations());
                         this->update_integration_metadata(payload, int_metadata);
-                        if(payload.get_num_failures() > 0) writer->merge_failure_list(payload.get_failed_serials());
+                        if(payload.get_num_failures() > 0) writer.merge_failure_list(payload.get_failed_serials());
 
                         break;
                       }
@@ -2119,11 +2107,11 @@ namespace transport
                         MPI::finished_integration_payload payload;
                         this->world.recv(stat->source(), MPI::INTEGRATION_FAIL, payload);
                         this->journal.add_entry(slave_work_event(this->worker_number(stat->source()), end_label, payload.get_timestamp()));
-                        BOOST_LOG_SEV(log, base_writer::normal) << "!! Worker " << stat->source() << " advising failure of work assignment (successful work items consumed wallclock time " << format_time(payload.get_wallclock_time()) << ")";
+                        BOOST_LOG_SEV(log, base_writer::log_severity_level::normal) << "!! Worker " << stat->source() << " advising failure of work assignment (successful work items consumed wallclock time " << format_time(payload.get_wallclock_time()) << ")";
 
                         this->work_scheduler.mark_unassigned(this->worker_number(stat->source()), payload.get_integration_time(), payload.get_num_integrations());
                         this->update_integration_metadata(payload, int_metadata);
-                        if(payload.get_num_failures() > 0) writer->merge_failure_list(payload.get_failed_serials());
+                        if(payload.get_num_failures() > 0) writer.merge_failure_list(payload.get_failed_serials());
 
                         success = false;
                         break;
@@ -2134,7 +2122,7 @@ namespace transport
                         MPI::finished_derived_payload payload;
                         this->world.recv(stat->source(), MPI::FINISHED_DERIVED_CONTENT, payload);
                         this->journal.add_entry(slave_work_event(this->worker_number(stat->source()), end_label, payload.get_timestamp()));
-                        BOOST_LOG_SEV(log, base_writer::normal) << "++ Worker " << stat->source() << " advising finished work assignment in CPU time " << format_time(payload.get_cpu_time());
+                        BOOST_LOG_SEV(log, base_writer::log_severity_level::normal) << "++ Worker " << stat->source() << " advising finished work assignment in CPU time " << format_time(payload.get_cpu_time());
 
                         // mark this scheduler as unassigned, and update its mean time per work item
                         this->work_scheduler.mark_unassigned(this->worker_number(stat->source()), payload.get_processing_time(), payload.get_items_processed());
@@ -2149,7 +2137,7 @@ namespace transport
                         MPI::finished_derived_payload payload;
                         this->world.recv(stat->source(), MPI::DERIVED_CONTENT_FAIL, payload);
                         this->journal.add_entry(slave_work_event(this->worker_number(stat->source()), end_label, payload.get_timestamp()));
-                        BOOST_LOG_SEV(log, base_writer::normal) << "!! Worker " << stat->source() << " advising failure of work assignment (successful work items consumed wallclock time " << format_time(payload.get_cpu_time()) << ")";
+                        BOOST_LOG_SEV(log, base_writer::log_severity_level::normal) << "!! Worker " << stat->source() << " advising failure of work assignment (successful work items consumed wallclock time " << format_time(payload.get_cpu_time()) << ")";
 
                         // mark this scheduler as unassigned, and update its mean time per work item
                         this->work_scheduler.mark_unassigned(this->worker_number(stat->source()), payload.get_processing_time(), payload.get_items_processed());
@@ -2165,7 +2153,7 @@ namespace transport
                         MPI::finished_postintegration_payload payload;
                         this->world.recv(stat->source(), MPI::FINISHED_POSTINTEGRATION, payload);
                         this->journal.add_entry(slave_work_event(this->worker_number(stat->source()), end_label, payload.get_timestamp()));
-                        BOOST_LOG_SEV(log, base_writer::normal) << "++ Worker " << stat->source() << " advising finished work assignment in wallclock time " << format_time(payload.get_cpu_time());
+                        BOOST_LOG_SEV(log, base_writer::log_severity_level::normal) << "++ Worker " << stat->source() << " advising finished work assignment in wallclock time " << format_time(payload.get_cpu_time());
 
                         // mark this worker as unassigned, and update its mean time per work item
                         this->work_scheduler.mark_unassigned(this->worker_number(stat->source()), payload.get_processing_time(), payload.get_items_processed());
@@ -2180,7 +2168,7 @@ namespace transport
                         MPI::finished_postintegration_payload payload;
                         this->world.recv(stat->source(), MPI::POSTINTEGRATION_FAIL, payload);
                         this->journal.add_entry(slave_work_event(this->worker_number(stat->source()), end_label, payload.get_timestamp()));
-                        BOOST_LOG_SEV(log, base_writer::normal) << "!! Worker " << stat->source() << " advising failure of work assignment (successful work items consumed wallclock time " << format_time(payload.get_cpu_time()) << ")";
+                        BOOST_LOG_SEV(log, base_writer::log_severity_level::normal) << "!! Worker " << stat->source() << " advising failure of work assignment (successful work items consumed wallclock time " << format_time(payload.get_cpu_time()) << ")";
 
                         // mark this worker as unassigned, and update its mean time per work item
                         this->work_scheduler.mark_unassigned(this->worker_number(stat->source()), payload.get_processing_time(), payload.get_items_processed());
@@ -2195,13 +2183,15 @@ namespace transport
                       {
                         this->world.recv(stat->source(), MPI::WORKER_CLOSE_DOWN);
                         this->work_scheduler.mark_inactive(this->worker_number(stat->source()));
-                        BOOST_LOG_SEV(log, base_writer::normal) << "++ Worker " << stat->source() << " advising close-down after end-of-work";
+
+                        unsigned int num_active = this->work_scheduler.get_number_active();
+                        BOOST_LOG_SEV(log, base_writer::log_severity_level::normal) << "++ Worker " << stat->source() << " advising close-down after end-of-work; " << num_active << " worker" << (num_active != 1 ? "s" : "") << " still active";
                         break;
                       }
 
                     default:
                       {
-                        BOOST_LOG_SEV(log, base_writer::warning) << "!! Received unexpected message " << stat->tag() << " waiting in the queue; discarding";
+                        BOOST_LOG_SEV(log, base_writer::log_severity_level::warning) << "!! Received unexpected message " << stat->tag() << " waiting in the queue; discarding";
                         this->world.recv(stat->source(), stat->tag());
                         break;
                       }
@@ -2221,7 +2211,7 @@ namespace transport
                   {
                     if(emit_agg_queue_msg)
                       {
-                        BOOST_LOG_SEV(log, base_writer::warning) << "++ Idle for more than 5 seconds: processing queued aggregations";
+                        BOOST_LOG_SEV(log, base_writer::log_severity_level::warning) << "++ Idle for more than 5 seconds: processing queued aggregations";
                         emit_agg_queue_msg = false;
                       }
 
@@ -2234,7 +2224,7 @@ namespace transport
         this->check_for_progress_update(writer);
 
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
-        BOOST_LOG_SEV(log, base_writer::warning) << "++ Work completed at " << boost::posix_time::to_simple_string(now);
+        BOOST_LOG_SEV(log, base_writer::log_severity_level::warning) << "++ All work items completed at " << boost::posix_time::to_simple_string(now);
 
         // process any remaining aggregations
         while(aggregation_queue.size() > 0)

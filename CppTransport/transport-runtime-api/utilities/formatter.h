@@ -26,19 +26,19 @@ inline std::string format_memory(unsigned int size, unsigned int precision=2)
 
     if(size > gigabyte)
       {
-        out << std::setprecision(precision) << static_cast<double>(size) / gigabyte << " " << __CPP_TRANSPORT_GIGABYTE;
+        out << std::setprecision(precision) << static_cast<double>(size) / gigabyte << " " << CPPTRANSPORT_GIGABYTE;
       }
     else if(size > megabyte)
       {
-        out << std::setprecision(precision) << static_cast<double>(size) / megabyte << " " << __CPP_TRANSPORT_MEGABYTE;
+        out << std::setprecision(precision) << static_cast<double>(size) / megabyte << " " << CPPTRANSPORT_MEGABYTE;
       }
     else if(size > kilobyte)
       {
-        out << std::setprecision(precision) << static_cast<double>(size) / kilobyte << " " << __CPP_TRANSPORT_KILOBYTE;
+        out << std::setprecision(precision) << static_cast<double>(size) / kilobyte << " " << CPPTRANSPORT_KILOBYTE;
       }
     else
       {
-        out << size << " " << __CPP_TRANSPORT_BYTE;
+        out << size << " " << CPPTRANSPORT_BYTE;
       }
 
     return(out.str());
@@ -57,15 +57,15 @@ inline std::string format_time(boost::timer::nanosecond_type time, unsigned int 
 
     if(time > hour)
       {
-        out << time/hour << __CPP_TRANSPORT_HOUR << " ";
+        out << time/hour << CPPTRANSPORT_HOUR << " ";
         time = time % hour;
       }
     if(time > minute)
       {
-        out << time/minute << __CPP_TRANSPORT_MINUTE << " ";
+        out << time/minute << CPPTRANSPORT_MINUTE << " ";
         time = time % minute;
       }
-    out << std::setprecision(precision) << static_cast<double>(time) / sec << __CPP_TRANSPORT_SECOND;
+    out << std::setprecision(precision) << static_cast<double>(time) / sec << CPPTRANSPORT_SECOND;
 
     return(out.str());
   }

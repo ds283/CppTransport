@@ -44,15 +44,16 @@
 #define __cse_H_
 
 #include <string>
-#include <map>
+#include <unordered_map>
 #include <utility>
 
 #include "ginac/ginac.h"
 
 #include "language_printer.h"
+#include "translator_data.h"
 #include "msg_en.h"
 
-#include <boost/timer/timer.hpp>
+#include "boost/timer/timer.hpp"
 
 // to be defined below; need a forward reference here
 class cse;
@@ -90,9 +91,6 @@ class cse_map
   };
 
 
-typedef std::function<std::string(const GiNaC::ex&)> symbol_f;
-
-
 class cse
   {
 
@@ -100,16 +98,33 @@ class cse
 
     class symbol_record
       {
+
       public:
-        symbol_record()
-          : target(""), written(false), filled(false)
+
+        symbol_record(const std::string& t, const std::string& s)
+          : target(t),
+            symbol(s),
+            written(false)
           {
           }
+
+
+      public:
+
+        const std::string get_target() const { return(this->target); }
+
+        const std::string get_symbol() const { return(this->symbol); }
+
+        bool is_written() const { return(this->written); }
+
+        void set_written() { this->written = true; }
+
+      protected:
 
         std::string target;
         std::string symbol;
         bool        written;
-        bool        filled;
+
       };
 
 
@@ -117,13 +132,23 @@ class cse
 
   public:
 
-    cse(unsigned int s, language_printer& p, bool d=true, std::string k=OUTPUT_DEFAULT_CPP_CSE_TEMPORARY_NAME)
-      : serial_number(s), printer(p), perform_cse(d), temporary_name_kernel(k), symbol_counter(0)
+    //! constructor
+    //! s  = initial serial number for temporaries, typically 0 for a new translation unit
+    //! p  = printer appropriate for language
+    //! pd = payload from translation_unit
+    //! k  = kernel name for temporary identifiers
+    cse(unsigned int s, language_printer& p, translator_data& pd, std::string k=OUTPUT_DEFAULT_CPP_CSE_TEMPORARY_NAME)
+      : serial_number(s),
+        printer(p),
+        temporary_name_kernel(k),
+        symbol_counter(0),
+        data_payload(pd)
       {
 		    // pause timer
 		    timer.stop();
       }
 
+    //! destructor is default
     virtual ~cse() = default;
 
 
@@ -136,10 +161,10 @@ class cse
     std::string        temporaries(const std::string& t);
 
     // two methods for getting the symbol corresponding to a GiNaC expression
-    // get_symbol_no_tag() just returns the symbol and is used during the parsing phase
-    // get_symbol_and_tag() marks each temporary as 'used', and injects it into the declarations.
+    // get_symbol_without_use_count() just returns the symbol and is used during the parsing phase
+    // get_symbol_with_use_count() marks each temporary as 'used', and injects it into the declarations.
     // This method is used when actually outputting symbols
-    std::string        get_symbol_and_tag(const GiNaC::ex &expr);
+    std::string        get_symbol_with_use_count(const GiNaC::ex& expr);
 
     void               clear();
 
@@ -168,10 +193,7 @@ class cse
   public:
 
 		// get CSE active flag
-    bool               get_perform_cse() const { return(this->perform_cse); }
-
-		// set CSE active flag
-    void               set_perform_cse(bool d) { this->perform_cse = d; }
+    bool               get_perform_cse() const { return(this->data_payload.get_do_cse()); }
 
 		// get raw GiNaC printer associated with this CSE worker
     language_printer&  get_ginac_printer() { return(this->printer); }
@@ -191,10 +213,10 @@ class cse
 
     // these functions are abstract and must be implemented by any derived classes
     // typically they will vary depending on the target language
-    virtual std::string print           (const GiNaC::ex& expr, symbol_f symf) = 0;
-    virtual std::string print_operands  (const GiNaC::ex& expr, std::string op, symbol_f symf) = 0;
+    virtual std::string print(const GiNaC::ex& expr, bool use_count)                          = 0;
+    virtual std::string print_operands(const GiNaC::ex& expr, std::string op, bool use_count) = 0;
 
-    std::string get_symbol_no_tag(const GiNaC::ex& expr);
+    std::string get_symbol_without_use_count(const GiNaC::ex& expr);
 
 		// make a temporary symbol
     std::string make_symbol();
@@ -205,15 +227,19 @@ class cse
   protected:
 
     language_printer& printer;
-    bool perform_cse;
+
+    translator_data& data_payload;
 
     unsigned int serial_number;
     unsigned int symbol_counter;
 
     std::string temporary_name_kernel;
 
-    std::map<std::string, symbol_record>              symbols;
-    std::vector<std::pair<std::string, std::string> > decls;
+    typedef std::unordered_map< std::string, symbol_record >   symbol_lookup_table;
+    typedef std::vector< std::pair<std::string, std::string> > declaration_table;
+
+    symbol_lookup_table symbols;
+    declaration_table   decls;
 
 		// timer
 		boost::timer::cpu_timer timer;

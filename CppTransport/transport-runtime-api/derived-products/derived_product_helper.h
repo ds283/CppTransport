@@ -24,14 +24,14 @@ namespace transport
             template <typename number>
             derived_data::derived_product<number>* deserialize(const std::string& name, Json::Value& reader, typename repository_finder<number>::task_finder& finder)
               {
-                std::string type = reader[__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_TYPE].asString();
+                std::string type = reader[CPPTRANSPORT_NODE_DERIVED_PRODUCT_TYPE].asString();
 
-                if (type == __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_LINE_PLOT2D)         return new line_plot2d<number>(name, reader, finder);
-                else if(type == __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_LINE_ASCIITABLE) return new line_asciitable<number>(name, reader, finder);
+                if (type == CPPTRANSPORT_NODE_DERIVED_PRODUCT_LINE_PLOT2D)         return new line_plot2d<number>(name, reader, finder);
+                else if(type == CPPTRANSPORT_NODE_DERIVED_PRODUCT_LINE_ASCIITABLE) return new line_asciitable<number>(name, reader, finder);
 
                 std::ostringstream msg;
-                msg << __CPP_TRANSPORT_PRODUCT_UNKNOWN_TYPE << " '" << type << "'";
-                throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
+                msg << CPPTRANSPORT_PRODUCT_UNKNOWN_TYPE << " '" << type << "'";
+                throw runtime_exception(exception_type::SERIALIZATION_ERROR, msg.str());
               }
 
           }   // namespace derived_product_helper

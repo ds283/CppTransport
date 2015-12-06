@@ -13,6 +13,7 @@
 #include <functional>
 #include <algorithm>
 #include <cmath>
+#include <random>
 
 #include "transport-runtime-api/manager/mpi_operations.h"
 
@@ -31,11 +32,11 @@
 // 1 millisecond = 1000 microsecond
 // 1 second = 1000 milisecond
 // 1 minute = 60 seconds
-#define __CPP_TRANSPORT_DEFAULT_SCHEDULING_GRANULARITY (boost::timer::nanosecond_type(1)*60*1000*1000*1000)
+#define CPPTRANSPORT_DEFAULT_SCHEDULING_GRANULARITY (boost::timer::nanosecond_type(1)*60*1000*1000*1000)
 
-#define __CPP_TRANSPORT_SCHEDULER_MINIMUM_UPDATE_TIME  (boost::timer::nanosecond_type(5)*60*1000*1000*1000)
+#define CPPTRANSPORT_SCHEDULER_MINIMUM_UPDATE_TIME  (boost::timer::nanosecond_type(5)*60*1000*1000*1000)
 
-//#define __CPP_TRANSPORT_DEBUG_SCHEDULER
+//#define CPPTRANSPORT_DEBUG_SCHEDULER
 
 
 namespace transport
@@ -81,10 +82,7 @@ namespace transport
 				    const std::list<unsigned int> items;
 			    };
 
-      public:
-
-        //! Labels for types of workers
-        typedef enum { cpu, gpu } worker_type;
+      protected:
 
         //! Worker information class
         class worker_information
@@ -94,18 +92,19 @@ namespace transport
 
             //! construct a worker information record
             worker_information()
-	            : type(cpu),
+	            : type(worker_type::cpu),
 	              capacity(0),
 	              priority(0),
 	              initialized(false),
 	              assigned(false),
 	              active(true),
                 items(0),
-                time(0)
+                time(0),
+                last_contact(boost::posix_time::second_clock::universal_time())
 	            {
 	            }
 
-            // INTERFACE
+            // INTERFACE -- INTERROGATE FOR GENERAL INFORMATION
 
           public:
 
@@ -117,6 +116,20 @@ namespace transport
 
             //! get worker capacity
             unsigned int get_capacity() const { return(this->capacity); }
+
+            //! get worker priority
+            unsigned int get_priority() const { return(this->priority); }
+
+            //! get initialization status
+            bool get_initialization_status() const { return(this->initialized); }
+
+            //! set data
+            void set_data(unsigned int n, worker_type t, unsigned int c, unsigned int p) { this->number = n; this->type = t; this->capacity = c; this->priority = p; this->initialized = true; }
+
+
+            // INTERFACE -- ASSIGNMENT MANAGEMENT
+
+          public:
 
 		        //! is this worker currently assigned?
 		        bool is_assigned() const { return(this->assigned); }
@@ -130,14 +143,10 @@ namespace transport
 		        //! set active states
 		        void mark_active(bool status) { this->active = status; }
 
-            //! get worker priority
-            unsigned int get_priority() const { return(this->priority); }
 
-            //! get initialization status
-            bool get_initialization_status() const { return(this->initialized); }
+            // INTERFACE -- METADATA MANAGEMENT
 
-            //! set data
-            void set_data(unsigned int n, worker_type t, unsigned int c, unsigned int p) { this->number = n; this->type = t; this->capacity = c; this->priority = p; this->initialized = true; }
+          public:
 
 		        //! update timing data
 		        void update_timing_data(boost::timer::nanosecond_type t, unsigned int n) { this->time += t; this->items += n; }
@@ -150,6 +159,12 @@ namespace transport
 
 		        // get total number of items processed
 		        unsigned int get_number_items() const { return(this->items); }
+
+            //! update last contact time
+            void update_contact_time(boost::posix_time::ptime t) { this->last_contact = t; }
+
+            //! get last contact time
+            boost::posix_time::ptime get_last_contact_time() const { return(this->last_contact); }
 
 
             // INTERNAL DATA
@@ -177,13 +192,90 @@ namespace transport
 		        //! is this worker currently active?
 		        bool active;
 
-		        //! total time to process items on this worker
+		        //! total time used to process items on this worker
 		        boost::timer::nanosecond_type time;
 
 		        //! total number of items processed on this worker
 		        unsigned int items;
 
+            //! time of last contact with this worker
+            boost::posix_time::ptime last_contact;
+
 	        };
+
+
+        // WORKER METADATA RECORD
+
+      public:
+
+        class worker_metadata
+          {
+
+            // CONSTRUCTOR, DESTRUCTOR
+
+          public:
+
+            //! constructor
+            worker_metadata(unsigned int n, bool as, bool ac, boost::timer::nanosecond_type t, unsigned int i, boost::posix_time::ptime l)
+              : number(n),
+                assigned(as),
+                active(ac),
+                total_time(t),
+                items(i),
+                last_contact(l)
+              {
+              }
+
+            //! destructor is default
+            ~worker_metadata() = default;
+
+
+            // INTERFACE
+
+          public:
+
+            //! get worker number
+            unsigned int get_number() const { return(this->number); }
+
+            //! get assignment status
+            bool get_assigned() const { return(this->assigned); }
+
+            //! get active status
+            bool get_active() const { return(this->active); }
+
+            //! get total elapsed time
+            boost::timer::nanosecond_type get_total_elapsed_time() const { return(this->total_time); }
+
+            //! get total number of work items processed
+            unsigned int get_total_items_processed() const { return(this->items); }
+
+            //! get last contact time
+            boost::posix_time::ptime get_last_contact_time() const { return(this->last_contact); }
+
+
+            // INTERNAL DATA
+
+          private:
+
+            //! worker number
+            unsigned int number;
+
+            //! assigned status
+            bool assigned;
+
+            //! active status
+            bool active;
+
+            //! total elapsed time doing work
+            boost::timer::nanosecond_type total_time;
+
+            //! total number of work items processed
+            unsigned int items;
+
+            //! last contact time
+            boost::posix_time::ptime last_contact;
+
+          };
 
 
 		    // CONSTRUCTOR, DESTRUCTOR
@@ -199,13 +291,16 @@ namespace transport
 		        has_cpus(false),
 		        has_gpus(false),
 		        max_work_allocation(1),
-		        current_granularity(__CPP_TRANSPORT_DEFAULT_SCHEDULING_GRANULARITY),
+		        current_granularity(CPPTRANSPORT_DEFAULT_SCHEDULING_GRANULARITY),
 		        total_aggregation_time(0),
 		        number_aggregations(0),
 		        total_work_time(0),
-		        number_work(0),
+		        work_items_completed(0),
+		        work_items_in_flight(0),
             finished(false)
 			    {
+            // set up the random number generator
+            urng.seed(rng());
 			    }
 
 		    ~master_scheduler() = default;
@@ -227,7 +322,7 @@ namespace transport
 		    //! otherwise, logs an error.
 		    void initialize_worker(boost::log::sources::severity_logger< base_writer::log_severity_level >& log, unsigned int worker, MPI::slave_information_payload& payload);
 
-		    //! set current state; used when assigning work to GPUs
+		    //! set current state size; used when assigning work to GPUs
 		    void set_state_size(unsigned int size) { this->state_size = size; }
 
         //! advise a new aggregation time
@@ -295,6 +390,20 @@ namespace transport
 
 		    //! are all workers inactive?
 		    bool all_inactive() const { return(this->active == 0); }
+
+        //! get number of active workers
+        unsigned int get_number_active() const { return(this->active); }
+
+
+        // INTERFACE -- MANAGE METADATA
+
+      public:
+
+        //! update time of last contact with a worker
+        void update_contact_time(unsigned int worker, boost::posix_time::ptime time);
+
+        //! get metadata for all workers
+        std::vector< worker_metadata > get_metadata() const;
 
 
 		    // INTERNAL API
@@ -379,14 +488,24 @@ namespace transport
 		    //! Keep track of total time spent doing work, to estimate a time-to-completion
 		    boost::timer::nanosecond_type total_work_time;
 
-		    //! Keep track of total number of work items, to estimate a time-to-complation
-		    unsigned number_work;
+		    //! Keep track of total number of work items which have been fully processed, to estimate a time-to-complation
+		    unsigned int work_items_completed;
+
+		    //! Keep track of total number of work items which are still in-flight
+		    unsigned int work_items_in_flight;
 
 		    //! Points at which to emit updates
 		    std::list< unsigned int > update_stack;
 
         //! work complete?
         bool finished;
+
+
+        // RANDOM NUMBER GENERATORS
+
+        std::random_device rng;
+
+        std::mt19937 urng;
 
 	    };
 
@@ -410,7 +529,8 @@ namespace transport
 				this->total_aggregation_time = 0;
 				this->total_work_time = 0;
 				this->number_aggregations = 0;
-				this->number_work = 0;
+				this->work_items_completed = 0;
+				this->work_items_in_flight = 0;
 				this->timer.start();
 			}
 
@@ -419,42 +539,44 @@ namespace transport
 			{
 		    if(!(this->worker_data[worker].get_initialization_status()))
 			    {
-		        worker_type type = cpu;
-		        if(payload.get_type() == MPI::slave_information_payload::cpu)
-			        {
-		            type = cpu;
-				        this->has_cpus = true;
-			        }
-		        else if(payload.get_type() == MPI::slave_information_payload::gpu)
-			        {
-		            type = gpu;
-				        this->has_gpus = true;
-			        }
+		        worker_type type = payload.get_type();
+            switch(type)
+              {
+                case worker_type::cpu:
+                  this->has_cpus = true;
+                  break;
+
+                case worker_type::gpu:
+                  this->has_gpus = true;
+                  break;
+              }
 
 		        this->worker_data[worker].set_data(worker, type, payload.get_capacity(), payload.get_priority());
 				    this->waiting_for_setup--;
 
 		        std::ostringstream msg;
 		        msg << "** Worker " << worker+1 << " identified as ";
-		        if(type == cpu)
-			        {
-		            msg << "CPU";
-			        }
-		        else if(type == gpu)
-			        {
-		            msg << "GPU, available memory = " << format_memory(payload.get_capacity());
-			        }
+            switch(type)
+              {
+                case worker_type::cpu:
+                  msg << "CPU";
+                  break;
+
+                case worker_type::gpu:
+                  msg << "GPU, available memory = " << format_memory(payload.get_capacity());
+                  break;
+              }
 
 		        msg << " and priority " << payload.get_priority();
 
-		        BOOST_LOG_SEV(log, base_writer::normal) << msg.str();
+		        BOOST_LOG_SEV(log, base_writer::log_severity_level::normal) << msg.str();
 
 				    this->unassigned++;
 				    this->active++;
 			    }
 		    else
 			    {
-		        BOOST_LOG_SEV(log, base_writer::normal) << "!! Unexpected double identification for worker  " << worker;
+		        BOOST_LOG_SEV(log, base_writer::log_severity_level::normal) << "!! Unexpected double identification for worker  " << worker;
 			    }
 
 			}
@@ -519,7 +641,7 @@ namespace transport
         // shuffling attempt to alleviate that problem a bit
         std::vector<unsigned int> temp(this->queue.size());
         std::copy(this->queue.begin(), this->queue.end(), temp.begin());
-        std::random_shuffle(temp.begin(), temp.end());
+        std::shuffle(temp.begin(), temp.end(), this->urng);
         std::copy(temp.begin(), temp.end(), this->queue.begin());
 			}
 
@@ -546,7 +668,7 @@ namespace transport
         // shuffling attempt to alleviate that problem a bit
         std::vector<unsigned int> temp(this->queue.size());
         std::copy(this->queue.begin(), this->queue.end(), temp.begin());
-        std::random_shuffle(temp.begin(), temp.end());
+        std::shuffle(temp.begin(), temp.end(), this->urng);
         std::copy(temp.begin(), temp.end(), this->queue.begin());
       }
 
@@ -560,7 +682,7 @@ namespace transport
 
         std::vector<unsigned int> temp(this->queue.size());
         std::copy(this->queue.begin(), this->queue.end(), temp.begin());
-        std::random_shuffle(temp.begin(), temp.end());
+        std::shuffle(temp.begin(), temp.end(), this->urng);
         std::copy(temp.begin(), temp.end(), this->queue.begin());
       }
 
@@ -604,10 +726,10 @@ namespace transport
 		void master_scheduler::mark_assigned(const work_assignment& assignment)
 			{
 				// check that there are unassigned workers
-				if(this->unassigned == 0) throw runtime_exception(runtime_exception::SCHEDULING_ERROR, __CPP_TRANSPORT_SCHEDULING_NO_UNASSIGNED);
+				if(this->unassigned == 0) throw runtime_exception(exception_type::SCHEDULING_ERROR, CPPTRANSPORT_SCHEDULING_NO_UNASSIGNED);
 
 				// if this worker is already assigned, then an error must have occurred
-				if(this->worker_data[assignment.get_worker()].is_assigned()) throw runtime_exception(runtime_exception::SCHEDULING_ERROR, __CPP_TRANSPORT_SCHEDULING_ALREADY_ASSIGNED);
+				if(this->worker_data[assignment.get_worker()].is_assigned()) throw runtime_exception(exception_type::SCHEDULING_ERROR, CPPTRANSPORT_SCHEDULING_ALREADY_ASSIGNED);
 
 				// mark this worker as assigned
 				this->worker_data[assignment.get_worker()].mark_assigned(true);
@@ -622,12 +744,13 @@ namespace transport
 						if(u == this->queue.end())
 							{
 						    std::ostringstream msg;
-								msg << __CPP_TRANSPORT_SCHEDULING_ASSIGN_NOT_EXIST << " " << *t << ", " << __CPP_TRANSPORT_SCHEDULING_ASSIGN_WORKER << " " << assignment.get_worker();
-								throw runtime_exception(runtime_exception::SCHEDULING_ERROR, msg.str());
+								msg << CPPTRANSPORT_SCHEDULING_ASSIGN_NOT_EXIST << " " << *t << ", " << CPPTRANSPORT_SCHEDULING_ASSIGN_WORKER << " " << assignment.get_worker();
+								throw runtime_exception(exception_type::SCHEDULING_ERROR, msg.str());
 							}
 						else
 							{
 								this->queue.erase(u);
+								this->work_items_in_flight++;
 							}
 					}
 			}
@@ -636,13 +759,22 @@ namespace transport
 		void master_scheduler::mark_unassigned(unsigned int worker, boost::timer::nanosecond_type time, unsigned int items)
 			{
 				// if this worker is not already assigned, an error must have occurred
-				if(!this->worker_data[worker].is_assigned()) throw runtime_exception(runtime_exception::SCHEDULING_ERROR, __CPP_TRANSPORT_SCHEDULING_NOT_ALREADY_ASSIGNED);
+				if(!this->worker_data[worker].is_assigned()) throw runtime_exception(exception_type::SCHEDULING_ERROR, CPPTRANSPORT_SCHEDULING_NOT_ALREADY_ASSIGNED);
 
 				this->worker_data[worker].update_timing_data(time, items);
 				this->worker_data[worker].mark_assigned(false);
 				this->unassigned++;
 
-				this->number_work += items;
+				this->work_items_completed += items;
+		    if(this->work_items_in_flight >= items)
+			    {
+		        this->work_items_in_flight -= items;
+			    }
+		    else
+			    {
+				    throw runtime_exception(exception_type::SCHEDULING_ERROR, CPPTRANSPORT_SCHEDULING_OVERRELEASE_INFLIGHT);
+			    }
+
 				this->total_work_time += time;
 			}
 
@@ -650,11 +782,32 @@ namespace transport
 		void master_scheduler::mark_inactive(unsigned int worker)
 			{
 				// if this worker is already inactive, an error must have occurred
-				if(!this->worker_data[worker].is_active()) throw runtime_exception(runtime_exception::SCHEDULING_ERROR, __CPP_TRANSPORT_SCHEDULING_ALREADY_INACTIVE);
+				if(!this->worker_data[worker].is_active()) throw runtime_exception(exception_type::SCHEDULING_ERROR, CPPTRANSPORT_SCHEDULING_ALREADY_INACTIVE);
 
 				this->worker_data[worker].mark_active(false);
 				this->active--;
+
+				if(this->active == 0 && this->work_items_in_flight > 0) throw runtime_exception(exception_type::SCHEDULING_ERROR, CPPTRANSPORT_SCHEDULING_UNDER_INFLIGHT);
 			}
+
+
+    void master_scheduler::update_contact_time(unsigned int worker, boost::posix_time::ptime time)
+      {
+        this->worker_data[worker].update_contact_time(time);
+      }
+
+
+    std::vector< master_scheduler::worker_metadata > master_scheduler::get_metadata() const
+      {
+        std::vector< master_scheduler::worker_metadata > list;
+
+        for(std::vector<master_scheduler::worker_information>::const_iterator t = this->worker_data.begin(); t != this->worker_data.end(); ++t)
+          {
+            list.emplace_back(t->get_number(), t->is_assigned(), t->is_active(), t->get_total_time(), t->get_number_items(), t->get_last_contact_time());
+          }
+
+        return(list);
+      }
 
 
 		void master_scheduler::report_aggregation(boost::timer::nanosecond_type time)
@@ -672,13 +825,13 @@ namespace transport
         // note we don't have to worry about how many items are left;
         // the scheduler will never allocate more than an equitable amount of work per-worker,
         // no matter how large the granularity becomes
-				if(10*mean_aggregation_time > __CPP_TRANSPORT_DEFAULT_SCHEDULING_GRANULARITY)
+				if(10*mean_aggregation_time > CPPTRANSPORT_DEFAULT_SCHEDULING_GRANULARITY)
 					{
 						this->current_granularity = 10*mean_aggregation_time;
 					}
 				else
 					{
-						this->current_granularity = __CPP_TRANSPORT_DEFAULT_SCHEDULING_GRANULARITY;
+						this->current_granularity = CPPTRANSPORT_DEFAULT_SCHEDULING_GRANULARITY;
 					}
 			}
 
@@ -688,43 +841,48 @@ namespace transport
 				bool result = false;
 				msg.clear();
 
-				if(this->timer.elapsed().wall > __CPP_TRANSPORT_SCHEDULER_MINIMUM_UPDATE_TIME)
+				if(this->timer.elapsed().wall > CPPTRANSPORT_SCHEDULER_MINIMUM_UPDATE_TIME)
 					{
-						if(this->update_stack.size() > 0)
+						if(this->update_stack.size() > 0)     // any updates remaining in the queue?
 							{
-								if(this->update_stack.front() > this->queue.size())
+								if(this->update_stack.front() > this->queue.size() + this->work_items_in_flight)   // wait until items remaining (including those in flight) is small enough
 									{
 										result = true;
-										while(this->update_stack.size() > 0 && this->update_stack.front() > this->queue.size())
+										while(this->update_stack.size() > 0 && this->update_stack.front() > this->queue.size() + this->work_items_in_flight)
 											{
 												this->update_stack.pop_front();
 											}
 
 								    std::ostringstream percent_stream;
 										percent_stream << std::setprecision(3);
-										percent_stream << 100.0 * (static_cast<double>(this->number_work) / (static_cast<double>(this->number_work + this->queue.size()))) << "%";
+										percent_stream << 100.0 * (static_cast<double>(this->work_items_completed)
+											/ (static_cast<double>(this->work_items_completed + this->work_items_in_flight + this->queue.size()))) << "%";
 
 								    std::ostringstream msg_stream;
-										msg_stream << this->number_work << " " << __CPP_TRANSPORT_MASTER_SCHEDULER_WORK_ITEMS_PROCESSED
-											<< ", " << this->queue.size() << " " << __CPP_TRANSPORT_MASTER_SCHEDULER_REMAIN
-											<< " (~" << percent_stream.str() << " " << __CPP_TRANSPORT_MASTER_SCHEDULER_COMPLETE << ")";
 
-								    boost::timer::nanosecond_type mean_time_per_item = this->total_work_time / this->number_work;
-										msg_stream << " | " << __CPP_TRANSPORT_MASTER_SCHEDULER_MEAN_TIME_PER_ITEM << " " << format_time(mean_time_per_item);
+								    boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
+										msg_stream << boost::posix_time::to_simple_string(now) << ": ";
 
-										msg_stream << " | " << __CPP_TRANSPORT_MASTER_SCHEDULER_TARGET_DURATION << " " << format_time(this->current_granularity);
+										msg_stream << this->work_items_completed << " " << CPPTRANSPORT_MASTER_SCHEDULER_WORK_ITEMS_PROCESSED
+											<< ", " << this->work_items_in_flight << " " << CPPTRANSPORT_MASTER_SCHEDULER_WORK_ITEMS_INFLIGHT
+											<< ", " << this->queue.size() << " " << CPPTRANSPORT_MASTER_SCHEDULER_REMAIN
+											<< " (~" << percent_stream.str() << " " << CPPTRANSPORT_MASTER_SCHEDULER_COMPLETE << ")";
+
+								    boost::timer::nanosecond_type mean_time_per_item = this->total_work_time / this->work_items_completed;
+										msg_stream << " | " << CPPTRANSPORT_MASTER_SCHEDULER_MEAN_TIME_PER_ITEM << " " << format_time(mean_time_per_item);
+
+										msg_stream << " | " << CPPTRANSPORT_MASTER_SCHEDULER_TARGET_DURATION << " " << format_time(this->current_granularity);
 
 								    boost::timer::nanosecond_type total_wallclock_time         = this->timer.elapsed().wall;
-								    boost::timer::nanosecond_type mean_wallclock_time_per_item = total_wallclock_time / this->number_work;
-								    boost::timer::nanosecond_type estimated_time_remaining     = mean_wallclock_time_per_item * static_cast<unsigned int>(this->queue.size()) + this->current_granularity;
+								    boost::timer::nanosecond_type mean_wallclock_time_per_item = total_wallclock_time / this->work_items_completed;
+								    boost::timer::nanosecond_type estimated_time_remaining     = mean_wallclock_time_per_item * static_cast<unsigned int>(this->queue.size() + this->work_items_in_flight);
 
 								    boost::posix_time::time_duration duration        = boost::posix_time::seconds(estimated_time_remaining / (1000 * 1000 * 1000));
-								    boost::posix_time::ptime         now             = boost::posix_time::second_clock::local_time();
 								    boost::posix_time::ptime         completion_time = now + duration;
 
-										msg_stream << " | " << __CPP_TRANSPORT_MASTER_SCHEDULER_COMPLETION_ESTIMATE << " "
+										msg_stream << " | " << CPPTRANSPORT_MASTER_SCHEDULER_COMPLETION_ESTIMATE << " "
 											<< boost::posix_time::to_simple_string(completion_time) << " ("
-											<< format_time(estimated_time_remaining) << " " << __CPP_TRANSPORT_MASTER_SCHEDULER_FROM_NOW << ")";
+											<< format_time(estimated_time_remaining) << " " << CPPTRANSPORT_MASTER_SCHEDULER_FROM_NOW << ")";
 
 										msg = msg_stream.str();
 									}
@@ -738,7 +896,7 @@ namespace transport
                 boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
 
                 std::ostringstream msg_stream;
-                msg_stream << __CPP_TRANSPORT_MASTER_SCHEDULER_WORK_COMPLETE << " " << boost::posix_time::to_simple_string(now);
+                msg_stream << CPPTRANSPORT_MASTER_SCHEDULER_WORK_COMPLETE << " " << boost::posix_time::to_simple_string(now);
 
                 msg = msg_stream.str();
               }
@@ -812,7 +970,7 @@ namespace transport
 		    std::list<unsigned int>::iterator next_item = this->queue.begin();
 
 				// loop through workers, allocating work from the queue
-#ifdef __CPP_TRANSPORT_DEBUG_SCHEDULER
+#ifdef CPPTRANSPORT_DEBUG_SCHEDULER
 				BOOST_LOG_SEV(log, generic_writer::normal) << "%% BEGIN NEW SCHEDULE (max work allocation=" << this->max_work_allocation << ", max allocation per worker=" << max_allocation_per_worker << ")";
 #endif
 				for(typename std::list< std::vector<master_scheduler::worker_information>::iterator >::iterator t = workers.begin(); next_item != this->queue.end() && t != workers.end(); ++t)
@@ -822,7 +980,7 @@ namespace transport
 						// is this a worker which has not yet had any assignment?
 						if((*t)->get_total_time() == 0)
 							{
-#ifdef __CPP_TRANSPORT_DEBUG_SCHEDULER
+#ifdef CPPTRANSPORT_DEBUG_SCHEDULER
 								BOOST_LOG_SEV(log, generic_writer::normal) << "%% Worker " << (*t)->get_number()+1 << " has not yet been allocated work; allocating 1 item";
 #endif
 								// if so, assign just a single work item to get a sense of how long it takes this worker to process
@@ -831,7 +989,7 @@ namespace transport
 							}
 						else
 							{
-								// allocate up to __CPP_TRANSPORT_DEFAULT_SCHEDULING_GRANULARITY of work,
+								// allocate up to CPPTRANSPORT_DEFAULT_SCHEDULING_GRANULARITY of work,
 								// or the mean allocation per worker, whichever is smaller
 						    boost::timer::nanosecond_type time_per_item   = (*t)->get_mean_time_per_work_item();
 						    boost::timer::nanosecond_type granularity     = time_per_item > 0 ? this->current_granularity / (*t)->get_mean_time_per_work_item() : 1.0;
@@ -842,7 +1000,7 @@ namespace transport
 
 								unsigned int num_work_items = std::min(unit_of_work, max_allocation_per_worker);
 
-#ifdef __CPP_TRANSPORT_DEBUG_SCHEDULER
+#ifdef CPPTRANSPORT_DEBUG_SCHEDULER
 								BOOST_LOG_SEV(log, generic_writer::normal) << "%% Worker " << (*t)->get_number()+1 << " mean time-per-item = " << format_time(time_per_item)
 										<< " -> granularity = " << granularity_int
 										<< ". Allocated " << num_work_items << " items";
@@ -877,7 +1035,7 @@ namespace transport
 						if(!t->is_assigned()) workers.push_back(t);
 					}
 
-				if(workers.size() != this->unassigned) throw runtime_exception(runtime_exception::SCHEDULING_ERROR, __CPP_TRANSPORT_SCHEDULING_UNASSIGNED_MISMATCH);
+				if(workers.size() != this->unassigned) throw runtime_exception(exception_type::SCHEDULING_ERROR, CPPTRANSPORT_SCHEDULING_UNASSIGNED_MISMATCH);
 
 				// divide available work items between all unassigned workers
 				unsigned int items_per_worker = this->queue.size() / workers.size();
@@ -907,7 +1065,7 @@ namespace transport
 
     std::list<master_scheduler::work_assignment> master_scheduler::assign_work_mixed_strategy(boost::log::sources::severity_logger<generic_writer::log_severity_level>& log)
 	    {
-				throw runtime_exception(runtime_exception::RUNTIME_ERROR, "Mixed CPU/GPU scheduling is not yet implemented");
+				throw runtime_exception(exception_type::RUNTIME_ERROR, "Mixed CPU/GPU scheduling is not yet implemented");
 	    }
 
 

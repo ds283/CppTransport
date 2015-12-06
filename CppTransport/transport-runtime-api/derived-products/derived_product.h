@@ -31,6 +31,9 @@
 // get enviornment object
 #include "transport-runtime-api/manager/environment.h"
 
+// get enumeration classes
+#include "transport-runtime-api/derived-products/enumerations.h"
+
 
 #include "transport-runtime-api/defaults.h"
 #include "transport-runtime-api/messages.h"
@@ -39,12 +42,12 @@
 #include "boost/filesystem/operations.hpp"
 
 
-#define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_TYPE                 "derived-product-type"
+#define CPPTRANSPORT_NODE_DERIVED_PRODUCT_TYPE                 "derived-product-type"
 
-#define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_LINE_PLOT2D          "line-plot2d"
-#define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_LINE_ASCIITABLE      "line-asciitable"
+#define CPPTRANSPORT_NODE_DERIVED_PRODUCT_LINE_PLOT2D          "line-plot2d"
+#define CPPTRANSPORT_NODE_DERIVED_PRODUCT_LINE_ASCIITABLE      "line-asciitable"
 
-#define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_FILENAME             "filename"
+#define CPPTRANSPORT_NODE_DERIVED_PRODUCT_FILENAME             "filename"
 
 
 namespace transport
@@ -74,7 +77,7 @@ namespace transport
 				    derived_product(const std::string& nm, Json::Value& reader)
 				      : name(nm)
 					    {
-						    filename = reader[__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_FILENAME].asString();
+						    filename = reader[CPPTRANSPORT_NODE_DERIVED_PRODUCT_FILENAME].asString();
 					    }
 
 		        virtual ~derived_product() = default;
@@ -121,7 +124,7 @@ namespace transport
 
 		      public:
 
-				    void write(std::ostream& out);
+				    template <typename Stream> void write(Stream& out);
 
 		        // INTERNAL DATA
 
@@ -142,14 +145,15 @@ namespace transport
 				template <typename number>
 				void derived_product<number>::serialize(Json::Value& writer) const
 					{
-						writer[__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_FILENAME] = this->filename.string();
+						writer[CPPTRANSPORT_NODE_DERIVED_PRODUCT_FILENAME] = this->filename.string();
 					}
 
 
 				template <typename number>
-				void derived_product<number>::write(std::ostream& out)
+        template <typename Stream>
+				void derived_product<number>::write(Stream& out)
 					{
-						out << __CPP_TRANSPORT_DERIVED_PRODUCT_FILENAME << ": " << this->filename << std::endl;
+						out << CPPTRANSPORT_DERIVED_PRODUCT_FILENAME << ": " << this->filename << '\n';
 					}
 
 

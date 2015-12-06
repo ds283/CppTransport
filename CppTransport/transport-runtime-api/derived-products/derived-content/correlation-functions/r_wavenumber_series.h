@@ -39,7 +39,7 @@ namespace transport
 		        //! construct an r_line wavenumber-series object
 		        r_wavenumber_series(const zeta_twopf_list_task<number>& tk,
                                 SQL_time_config_query tq, SQL_twopf_kconfig_query kq,
-		                            unsigned int prec = __CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
+		                            unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
 		        //! deserialization constructor
 		        r_wavenumber_series(Json::Value& reader, typename repository_finder<number>::task_finder& finder);
@@ -99,7 +99,7 @@ namespace transport
 				template <typename number>
 				r_wavenumber_series<number>::r_wavenumber_series(const zeta_twopf_list_task<number>& tk,
 				                                                 SQL_time_config_query tq, SQL_twopf_kconfig_query kq, unsigned int prec)
-					: derived_line<number>(tk, wavenumber_axis, std::list<axis_value>{ k_axis, efolds_exit_axis }, prec),
+					: derived_line<number>(tk, axis_class::wavenumber_axis, std::list<axis_value>{ axis_value::k_axis, axis_value::efolds_exit_axis }, prec),
 					  r_line<number>(tk),
 					  wavenumber_series<number>(tk),
             tquery(tq),
@@ -116,8 +116,8 @@ namespace transport
 					: derived_line<number>(reader, finder),
 		        r_line<number>(reader, finder),
 		        wavenumber_series<number>(reader),
-            tquery(reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]),
-            kquery(reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY])
+            tquery(reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]),
+            kquery(reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY])
 			    {
 			    }
 
@@ -173,7 +173,7 @@ namespace transport
 				    for(std::vector<time_config>::const_iterator t = t_values.begin(); t != t_values.end(); ++t, ++i)
 					    {
 				        cf_kconfig_data_tag<number> tensor_tag =
-					                                    pipe.new_cf_kconfig_data_tag(data_tag<number>::cf_tensor_twopf, this->gadget.get_model()->tensor_flatten(0,0), t->serial);
+					                                    pipe.new_cf_kconfig_data_tag(cf_data_type::cf_tensor_twopf, this->gadget.get_model()->tensor_flatten(0,0), t->serial);
 
 				        // can take a reference here to avoid a copy
 				        const std::vector<number>& tensor_data = k_handle.lookup_tag(tensor_tag);
@@ -186,7 +186,7 @@ namespace transport
 				            line_data[j] = tensor_data[j] / zeta_data[i][j];
 					        }
 
-				        data_line<number> line = data_line<number>(groups, this->x_type, r_value, w_axis, line_data,
+				        data_line<number> line = data_line<number>(groups, this->x_type, value_type::r_value, w_axis, line_data,
 				                                                   this->get_LaTeX_label(t->t), this->get_non_LaTeX_label(t->t), this->is_spectral_index());
 
 				        lines.push_back(line);
@@ -253,10 +253,10 @@ namespace transport
 		    template <typename number>
 		    void r_wavenumber_series<number>::serialize(Json::Value& writer) const
 			    {
-		        writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_R_WAVENUMBER_SERIES);
+		        writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_R_WAVENUMBER_SERIES);
 
-            this->tquery.serialize(writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]);
-            this->kquery.serialize(writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY]);
+            this->tquery.serialize(writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]);
+            this->kquery.serialize(writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY]);
 
 		        this->derived_line<number>::serialize(writer);
 		        this->r_line<number>::serialize(writer);

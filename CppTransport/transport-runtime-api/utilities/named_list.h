@@ -71,7 +71,7 @@ namespace
                 auto t_a = this->order_map.find(a.name);
                 auto t_b = this->order_map.find(b.name);
 
-                if(t_a == this->order_map.end() || t_b == this->order_map.end()) throw transport::runtime_exception(transport::runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_NAMED_LIST_FAIL);
+                if(t_a == this->order_map.end() || t_b == this->order_map.end()) throw transport::runtime_exception(transport::exception_type::RUNTIME_ERROR, CPPTRANSPORT_NAMED_LIST_FAIL);
 
                 return((*t_a).second < (*t_b).second);
 	            }

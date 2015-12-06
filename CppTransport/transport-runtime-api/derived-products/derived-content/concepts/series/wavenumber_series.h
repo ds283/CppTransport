@@ -34,12 +34,11 @@
 
 #include "transport-runtime-api/utilities/latex_output.h"
 
-#include "transport-runtime-api/derived-products/derived-content/correlation-functions/compute-gadgets/threepf_kconfig_shift.h"
 #include "transport-runtime-api/derived-products/derived-content/SQL_query/SQL_query.h"
 
 
-#define __CPP_TRANSPORT_NODE_PRODUCT_WAVENUMBER_SERIES_ROOT           "momentum-configuration-series"
-#define __CPP_TRANSPORT_NODE_PRODUCT_WAVENUMBER_SERIES_SPECTRAL_INDEX "spectral-index"
+#define CPPTRANSPORT_NODE_PRODUCT_WAVENUMBER_SERIES_ROOT           "momentum-configuration-series"
+#define CPPTRANSPORT_NODE_PRODUCT_WAVENUMBER_SERIES_SPECTRAL_INDEX "spectral-index"
 
 
 namespace transport
@@ -108,7 +107,7 @@ namespace transport
           public:
 
 		        //! Write self-details to a stream
-		        virtual void write(std::ostream& out);
+		        virtual void write(std::ostream& out) override;
 
 
 		        // SERIALIZATION -- implements a 'serializable' interface
@@ -122,12 +121,6 @@ namespace transport
             // INTERNAL DATA
 
           protected:
-
-		        // RUNTIME AGENTS
-
-		        // momentum->derivative shifter
-            threepf_kconfig_shift<number> shifter;
-
 
 		        // SETTINGS
 
@@ -150,7 +143,7 @@ namespace transport
 		    wavenumber_series<number>::wavenumber_series(Json::Value& reader)
           : derived_line<number>(reader)  // not called because of virtual inheritance; here to silence Intel compiler warning
 			    {
-		        compute_index = reader[__CPP_TRANSPORT_NODE_PRODUCT_WAVENUMBER_SERIES_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_WAVENUMBER_SERIES_SPECTRAL_INDEX].asBool();
+		        compute_index = reader[CPPTRANSPORT_NODE_PRODUCT_WAVENUMBER_SERIES_ROOT][CPPTRANSPORT_NODE_PRODUCT_WAVENUMBER_SERIES_SPECTRAL_INDEX].asBool();
 			    }
 
 
@@ -159,7 +152,7 @@ namespace transport
         template <typename number>
         std::vector<double> wavenumber_series<number>::pull_kconfig_axis(datapipe<number>& pipe, const SQL_twopf_kconfig_query& kquery) const
 	        {
-		        assert(this->x_type == k_axis);
+		        assert(this->x_type == axis_value::k_axis);
 
             typename datapipe<number>::twopf_kconfig_handle& handle = pipe.new_twopf_kconfig_handle(kquery);
             twopf_kconfig_tag<number> tag = pipe.new_twopf_kconfig_tag();
@@ -171,22 +164,25 @@ namespace transport
 
 		        switch(this->x_type)
 			        {
-		            case k_axis:
+		            case axis_value::k_axis:
 			            {
 		                for(typename std::vector< twopf_kconfig >::const_iterator t = configs.begin(); t != configs.end(); ++t)
 			                {
-		                    if(this->klabel_meaning == comoving) axis.push_back((*t).k_comoving);
-		                    else if(this->klabel_meaning == conventional) axis.push_back((*t).k_conventional);
-		                    else
-			                    {
-		                        assert(false);
-		                        throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_KLABEL_TYPE_UNKNOWN);
-			                    }
+                        switch(this->klabel_meaning)
+                          {
+                            case klabel_type::comoving:
+                              axis.push_back((*t).k_comoving);
+                              break;
+
+                            case klabel_type::conventional:
+                              axis.push_back((*t).k_conventional);
+                              break;
+                          }
 			                }
 				            break;
 			            }
 
-		            case efolds_exit_axis:
+		            case axis_value::efolds_exit_axis:
 			            {
 		                for(typename std::vector< twopf_kconfig >::const_iterator t = configs.begin(); t != configs.end(); ++t)
 			                {
@@ -217,23 +213,26 @@ namespace transport
 
 		        switch(this->x_type)
 			        {
-		            case k_axis:
+		            case axis_value::k_axis:
 			            {
 				            // axis consists of k_t values
 		                for(typename std::vector< threepf_kconfig >::const_iterator t = configs.begin(); t != configs.end(); ++t)
 			                {
-		                    if(this->klabel_meaning == comoving) axis.push_back(t->kt_comoving);
-		                    else if(this->klabel_meaning == conventional) axis.push_back(t->kt_conventional);
-		                    else
-			                    {
-		                        assert(false);
-		                        throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_KLABEL_TYPE_UNKNOWN);
-			                    }
+                        switch(this->klabel_meaning)
+                          {
+                            case klabel_type::comoving:
+                              axis.push_back(t->kt_comoving);
+                              break;
+
+                            case klabel_type::conventional:
+                              axis.push_back(t->kt_conventional);
+                              break;
+                          }
 			                }
 				            break;
 			            }
 
-		            case efolds_exit_axis:
+		            case axis_value::efolds_exit_axis:
 			            {
 		                for(typename std::vector< threepf_kconfig >::const_iterator t = configs.begin(); t != configs.end(); ++t)
 			                {
@@ -242,7 +241,7 @@ namespace transport
 		                break;
 			            }
 
-		            case alpha_axis:
+		            case axis_value::alpha_axis:
 			            {
 		                for(typename std::vector< threepf_kconfig >::const_iterator t = configs.begin(); t != configs.end(); ++t)
 			                {
@@ -251,7 +250,7 @@ namespace transport
 		                break;
 			            }
 
-		            case beta_axis:
+		            case axis_value::beta_axis:
 			            {
 		                for(typename std::vector< threepf_kconfig >::const_iterator t = configs.begin(); t != configs.end(); ++t)
 			                {
@@ -260,7 +259,7 @@ namespace transport
 		                break;
 			            }
 
-		            case squeezing_fraction_k1_axis:
+		            case axis_value::squeezing_fraction_k1_axis:
 			            {
 		                for(typename std::vector< threepf_kconfig >::const_iterator t = configs.begin(); t != configs.end(); ++t)
 			                {
@@ -269,7 +268,7 @@ namespace transport
 		                break;
 			            }
 
-		            case squeezing_fraction_k2_axis:
+		            case axis_value::squeezing_fraction_k2_axis:
 			            {
 		                for(typename std::vector< threepf_kconfig >::const_iterator t = configs.begin(); t != configs.end(); ++t)
 			                {
@@ -278,7 +277,7 @@ namespace transport
 		                break;
 			            }
 
-		            case squeezing_fraction_k3_axis:
+		            case axis_value::squeezing_fraction_k3_axis:
 			            {
 		                for(typename std::vector< threepf_kconfig >::const_iterator t = configs.begin(); t != configs.end(); ++t)
 			                {
@@ -302,7 +301,7 @@ namespace transport
 			    {
 		        std::ostringstream label;
 
-				    label << __CPP_TRANSPORT_LATEX_T_SYMBOL << "=" << output_latex_number(config, this->precision);
+				    label << CPPTRANSPORT_LATEX_T_SYMBOL << "=" << output_latex_number(config, this->precision);
 
 				    return(label.str());
 			    }
@@ -315,7 +314,7 @@ namespace transport
 
 				    label << std::setprecision(this->precision);
 
-				    label << __CPP_TRANSPORT_NONLATEX_T_SYMBOL << "=" << config;
+				    label << CPPTRANSPORT_NONLATEX_T_SYMBOL << "=" << config;
 
 				    return(label.str());
 			    }
@@ -327,7 +326,7 @@ namespace transport
 				    // DON'T CALL derived_line<> serialization because of virtual inheritance;
 				    // concrete classes must call it themselves
 
-		        writer[__CPP_TRANSPORT_NODE_PRODUCT_WAVENUMBER_SERIES_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_WAVENUMBER_SERIES_SPECTRAL_INDEX] = this->compute_index;
+		        writer[CPPTRANSPORT_NODE_PRODUCT_WAVENUMBER_SERIES_ROOT][CPPTRANSPORT_NODE_PRODUCT_WAVENUMBER_SERIES_SPECTRAL_INDEX] = this->compute_index;
 			    }
 
 

@@ -11,9 +11,10 @@
 #include <string>
 #include <deque>
 
-
 #include "filestack.h"
 #include "buffer.h"
+
+#include "boost/filesystem/operations.hpp"
 
 
 // forward reference to avoid circularity
@@ -34,8 +35,8 @@ class output_stack: public filestack_derivation_helper<output_stack>
 
       public:
 
-		    inclusion(const std::string& i, unsigned int l, buffer& b, macro_agent& a, enum process_type t)
-			    : in(i),
+		    inclusion(const boost::filesystem::path i, unsigned int l, buffer& b, macro_agent& a, enum process_type t)
+			    : in(std::move(i)),
 			      line(l),
 			      buf(b),
 			      agent(a),
@@ -45,20 +46,20 @@ class output_stack: public filestack_derivation_helper<output_stack>
 
       public:
 
-        std::string       in;
-        unsigned int      line;
-        buffer&           buf;
-		    macro_agent&      agent;
-        enum process_type type;
+        boost::filesystem::path in;
+        unsigned int            line;
+        buffer&                 buf;
+		    macro_agent&            agent;
+        enum process_type       type;
 
       };
 
 
-		// CONSTRUCTOR, DESTRUCOTR
+		// CONSTRUCTOR, DESTRUCTOR
 
   public:
 
-    ~output_stack();
+    virtual ~output_stack() = default;
 
 
 		// INTERFACE - implements a 'filestack' interface
@@ -67,34 +68,30 @@ class output_stack: public filestack_derivation_helper<output_stack>
 
 		// PUSH AND POP
 
-    // we are forced to have the basic push method inherited from filestack, even though we don't want it,
-    // because otherwise it makes output_stack abstract
-    void              push              (const std::string name);
-
     // push an object to the top of the stack
-    void              push              (const std::string& in, buffer& buf, macro_agent& agent, enum process_type type);
+    void                      push          (const boost::filesystem::path in, buffer& buf, macro_agent& agent, enum process_type type);
 
-    void              pop               ();
+    virtual void              pop           () override;
 
 		// HANDLE LINE NUMBERS
 
-    void              set_line          (unsigned int line);
-    unsigned int      increment_line    ();
-    unsigned int      get_line          () const;
+    virtual void              set_line      (unsigned int line) override;
+    virtual unsigned int      increment_line() override;
+    virtual unsigned int      get_line      () const override;
 
 		// STRINGIZE
 
-    std::string       write             (size_t level) const;
-    std::string       write             () const;
+    virtual std::string       write         (size_t level) const override;
+    virtual std::string       write         () const override;
 
 
 		// INTERFACE - specific to output_stack
 
   public:
 
-    buffer&           top_buffer        ();
-    macro_agent&      top_macro_package ();
-    enum process_type top_process_type  () const;
+    buffer&           top_buffer            ();
+    macro_agent&      top_macro_package     ();
+    enum process_type top_process_type      () const;
 
 
 		// INTERNAL DATA

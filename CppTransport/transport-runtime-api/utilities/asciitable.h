@@ -5,8 +5,8 @@
 // To change the template use AppCode | Preferences | File Templates.
 //
 
-#ifndef __CPP_TRANSPORT_ASCIITABLE_H_
-#define __CPP_TRANSPORT_ASCIITABLE_H_
+#ifndef CPPTRANSPORT_ASCIITABLE_H_
+#define CPPTRANSPORT_ASCIITABLE_H_
 
 #include <iostream>
 #include <iomanip>
@@ -102,7 +102,7 @@ namespace transport
         // write out tag if one has been given
         if(!tag.empty())
 	        {
-            this->stream << "// " << tag << std::endl;
+            this->stream << "// " << tag << '\n';
 	        }
 
         // max is the column width
@@ -115,7 +115,7 @@ namespace transport
         while(columns_output < columns.size())
 	        {
             // insert blank line if this is a continuation
-            if(columns_output > 0) this->stream << std::endl;
+            if(columns_output > 0) this->stream << '\n';
 
             // how many columns to output on this go?
             size_t columns_left     = columns.size() - columns_output;
@@ -127,7 +127,7 @@ namespace transport
 	            {
                 this->stream << std::right << std::setw((unsigned int) max) << columns[columns_output + i];
 	            }
-            this->stream << std::endl;
+            this->stream << '\n';
 
             // write out data
             for(size_t i = 0; i < ys.size(); ++i)
@@ -156,7 +156,7 @@ namespace transport
 			                    << std::setprecision(this->precision - 1) << (ys[i])[columns_output + j];
 			                }
 	                }
-                this->stream << std::endl;
+                this->stream << '\n';
 	            }
             columns_output += columns_to_print;
 	        }
@@ -203,4 +203,4 @@ namespace transport
 
   }   // namespace transport
 
-#endif //__CPP_TRANSPORT_ASCIITABLE_H_
+#endif //CPPTRANSPORT_ASCIITABLE_H_

@@ -23,22 +23,18 @@
 #include "transport-runtime-api/models/model_forward_declare.h"
 
 #include "boost/lexical_cast.hpp"
+#include "boost/log/utility/formatting_ostream.hpp"
 
 
-#define __CPP_TRANSPORT_NODE_PARAMS_MPLANCK   "mplanck"
-#define __CPP_TRANSPORT_NODE_PARAMS_VALUES    "values"
-#define __CPP_TRANSPORT_NODE_PARAMS_VALUE     "value"
-#define __CPP_TRANSPORT_NODE_PARAMS_NAME      "name"
-#define __CPP_TRANSPORT_NODE_PARAMS_MODEL_UID "model-uid"
+#define CPPTRANSPORT_NODE_PARAMS_MPLANCK   "mplanck"
+#define CPPTRANSPORT_NODE_PARAMS_VALUES    "values"
+#define CPPTRANSPORT_NODE_PARAMS_VALUE     "value"
+#define CPPTRANSPORT_NODE_PARAMS_NAME      "name"
+#define CPPTRANSPORT_NODE_PARAMS_MODEL_UID "model-uid"
 
 
 namespace transport
   {
-
-    template <typename number> class parameters;
-
-    template <typename number>
-    std::ostream& operator<<(std::ostream& out, const parameters<number>& obj);
 
     template <typename number>
     class parameters: public serializable
@@ -48,8 +44,15 @@ namespace transport
 
       public:
 
-        //! Construct 'parameter' object from explicit
+        //! Construct 'parameter' object from an explicit model and parameter combination
         parameters(number Mp, const std::vector<number>& p, model<number>* m);
+
+        //! Convenience constructor which accepts a shared_ptr<> to a model instance, but doesn't actually use this
+        //! to manage the lifetime; we work with raw pointers
+        parameters(number Mp, const std::vector<number>& p, std::shared_ptr< model<number> > m)
+          : parameters(Mp, p, m.get())
+        {
+        }
 
         //! Deserialization constructor
         parameters(Json::Value& reader, typename instance_manager<number>::model_finder f);
@@ -79,12 +82,12 @@ namespace transport
         virtual void serialize(Json::Value& writer) const override;
 
 
-        // WRITE TO A STREAM
+        // WRITE SELF TO STREAM
 
       public:
 
-        //! Write self to output stream
-        friend std::ostream& operator<< <>(std::ostream& out, const parameters<number>& obj);
+        //! write details
+        template <typename Stream> void write(Stream& out) const;
 
 
         // INTERNAL DATA
@@ -105,12 +108,13 @@ namespace transport
 
     template <typename number>
     parameters<number>::parameters(number Mp, const std::vector<number>& p, model<number>* m)
-      : M_Planck(Mp), mdl(m)
+      : M_Planck(Mp),
+        mdl(m)
       {
 		    assert(m != nullptr);
 
-				if(m == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PARAMS_NULL_MODEL);
-        if(M_Planck <= 0.0) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_MPLANCK_NEGATIVE);
+				if(m == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_PARAMS_NULL_MODEL);
+        if(M_Planck <= 0.0) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_MPLANCK_NEGATIVE);
 
         // validate supplied parameters
 		    mdl->validate_params(p, params);
@@ -121,27 +125,27 @@ namespace transport
     parameters<number>::parameters(Json::Value& reader, typename instance_manager<number>::model_finder f)
       {
 		    // construct model object
-        std::string uid = reader[__CPP_TRANSPORT_NODE_PARAMS_MODEL_UID].asString();
+        std::string uid = reader[CPPTRANSPORT_NODE_PARAMS_MODEL_UID].asString();
 		    mdl = f(uid);
 
         // deserialize value of Planck mass
-		    M_Planck = static_cast<number>(reader[__CPP_TRANSPORT_NODE_PARAMS_MPLANCK].asDouble());
+		    M_Planck = static_cast<number>(reader[CPPTRANSPORT_NODE_PARAMS_MPLANCK].asDouble());
 
         // deserialize array of parameter values
-        Json::Value& param_array = reader[__CPP_TRANSPORT_NODE_PARAMS_VALUES];
+        Json::Value& param_array = reader[CPPTRANSPORT_NODE_PARAMS_VALUES];
 		    assert(param_array.isArray());
 
         std::vector< named_list::element<number> > temp;
 		    for(Json::Value::iterator t = param_array.begin(); t != param_array.end(); ++t)
           {
-            std::string param_name = (*t)[__CPP_TRANSPORT_NODE_PARAMS_NAME].asString();
-            double param_value = (*t)[__CPP_TRANSPORT_NODE_PARAMS_VALUE].asDouble();
+            std::string param_name = (*t)[CPPTRANSPORT_NODE_PARAMS_NAME].asString();
+            double param_value = (*t)[CPPTRANSPORT_NODE_PARAMS_VALUE].asDouble();
 
             temp.push_back(named_list::element<number>(param_name, static_cast<number>(param_value)));
           }
 
 		    const std::vector<std::string>& order = mdl->get_param_names();
-        if(temp.size() != order.size()) throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_BADLY_FORMED_PARAMS);
+        if(temp.size() != order.size()) throw runtime_exception(exception_type::REPOSITORY_BACKEND_ERROR, CPPTRANSPORT_BADLY_FORMED_PARAMS);
 
         named_list::ordering order_map = named_list::make_ordering(order);
         named_list::comparator<number> cmp(order_map);
@@ -162,10 +166,10 @@ namespace transport
     void parameters<number>::serialize(Json::Value& writer) const
       {
 		    // serialize model UID
-		    writer[__CPP_TRANSPORT_NODE_PARAMS_MODEL_UID] = this->mdl->get_identity_string();
+		    writer[CPPTRANSPORT_NODE_PARAMS_MODEL_UID] = this->mdl->get_identity_string();
 
         // serialize value of Planck mass
-        writer[__CPP_TRANSPORT_NODE_PARAMS_MPLANCK] = this->M_Planck;
+        writer[CPPTRANSPORT_NODE_PARAMS_MPLANCK] = this->M_Planck;
 
         // serialize array of parameter values
 		    const std::vector<std::string>& names = this->mdl->get_param_names();
@@ -178,30 +182,46 @@ namespace transport
             for(unsigned int i = 0; i < this->params.size(); ++i)
               {
                 Json::Value param_element(Json::objectValue);
-		            param_element[__CPP_TRANSPORT_NODE_PARAMS_NAME] = names[i];
-		            param_element[__CPP_TRANSPORT_NODE_PARAMS_VALUE] = this->params[i];
+		            param_element[CPPTRANSPORT_NODE_PARAMS_NAME] = names[i];
+		            param_element[CPPTRANSPORT_NODE_PARAMS_VALUE] = this->params[i];
 		            param_array.append(param_element);
               }
-		        writer[__CPP_TRANSPORT_NODE_PARAMS_VALUES] = param_array;
+		        writer[CPPTRANSPORT_NODE_PARAMS_VALUES] = param_array;
           }
-        else throw std::out_of_range(__CPP_TRANSPORT_PARAM_DATA_MISMATCH);
+        else throw std::out_of_range(CPPTRANSPORT_PARAM_DATA_MISMATCH);
       }
 
 
     template <typename number>
-    std::ostream& operator<<(std::ostream& out, const parameters<number>& obj)
+    template <typename Stream>
+    void parameters<number>::write(Stream& out) const
       {
-        out << __CPP_TRANSPORT_PARAMS_TAG << std::endl;
-        out << "  " << __CPP_TRANSPORT_MPLANCK_TAG << obj.M_Planck << std::endl;
+        out << CPPTRANSPORT_PARAMS_TAG << '\n';
+        out << "  " << CPPTRANSPORT_MPLANCK_TAG << this->get_Mp() << '\n';
 
-		    const std::vector<std::string>& names = obj.mdl->get_param_names();
-        assert(obj.params.size() == names.size());
+        const std::vector<std::string>& names = this->get_model()->get_param_names();
+        const std::vector<number>& params = this->get_vector();
+        assert(names.size() == params.size());
 
-        for(unsigned int i = 0; i < obj.params.size(); ++i)
+        for(unsigned int i = 0; i < params.size(); ++i)
           {
-            out << "  " << names[i] << " = " << obj.params[i] << std::endl;
+            out << "  " << names[i] << " = " << params[i] << '\n';
           }
+      }
 
+
+    template <typename number, typename Char, typename Traits>
+    std::basic_ostream<Char, Traits>& operator<<(std::basic_ostream<Char, Traits>& out, const parameters<number>& obj)
+      {
+        obj.write(out);
+        return(out);
+      }
+
+
+    template <typename number, typename Char, typename Traits, typename Allocator>
+    boost::log::basic_formatting_ostream<Char, Traits, Allocator>& operator<<(boost::log::basic_formatting_ostream<Char, Traits, Allocator>& out, const parameters<number>& obj)
+      {
+        obj.write(out);
         return(out);
       }
 

@@ -10,9 +10,11 @@
 
 #include "transport-runtime-api/tasks/postintegration_detail/common.h"
 
+#include "boost/log/utility/formatting_ostream.hpp"
 
-#define __CPP_TRANSPORT_NODE_POSTINTEGRATION_TASK_PARENT     "parent-task"
-#define __CPP_TRANSPORT_NODE_POSTINTEGRATION_TASK_PAIRED     "paired"
+
+#define CPPTRANSPORT_NODE_POSTINTEGRATION_TASK_PARENT     "parent-task"
+#define CPPTRANSPORT_NODE_POSTINTEGRATION_TASK_PAIRED     "paired"
 
 
 namespace transport
@@ -73,7 +75,7 @@ namespace transport
       public:
 
         //! write to stream
-        void write(std::ostream& out) const;
+        template <typename Stream> void write(Stream& out) const;
 
 
         // INTERNAL DATA
@@ -86,12 +88,20 @@ namespace transport
 	    };
 
 
-    template <typename number>
-    std::ostream& operator<<(std::ostream& out, const postintegration_task<number>& obj)
+    template <typename number, typename Char, typename Traits>
+    std::basic_ostream<Char, Traits>& operator<<(std::basic_ostream<Char, Traits>& out, const postintegration_task<number>& obj)
 	    {
         obj.write(out);
         return(out);
 	    }
+
+
+    template <typename number, typename Char, typename Traits, typename Allocator>
+    boost::log::basic_formatting_ostream<Char, Traits, Allocator>& operator<<(boost::log::basic_formatting_ostream<Char, Traits, Allocator>& out, const postintegration_task<number>& obj)
+      {
+        obj.write(out);
+        return(out);
+      }
 
 
     template <typename number>
@@ -118,7 +128,7 @@ namespace transport
 	      ptk(nullptr)
 	    {
         // deserialize and reconstruct parent integration task
-        std::string tk_name = reader[__CPP_TRANSPORT_NODE_POSTINTEGRATION_TASK_PARENT].asString();
+        std::string tk_name = reader[CPPTRANSPORT_NODE_POSTINTEGRATION_TASK_PARENT].asString();
 
         std::unique_ptr< task_record<number> > record(finder(tk_name));
         assert(record.get() != nullptr);
@@ -127,8 +137,8 @@ namespace transport
         if(ptk == nullptr)
 	        {
             std::stringstream msg;
-            msg << __CPP_TRANSPORT_REPO_ZETA_TASK_NOT_DERIVABLE << " '" << tk_name << "'";
-            throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
+            msg << CPPTRANSPORT_REPO_ZETA_TASK_NOT_DERIVABLE << " '" << tk_name << "'";
+            throw runtime_exception(exception_type::REPOSITORY_ERROR, msg.str());
 	        }
 	    }
 
@@ -144,15 +154,16 @@ namespace transport
     void postintegration_task<number>::serialize(Json::Value& writer) const
 	    {
         // serialize parent integration task
-        writer[__CPP_TRANSPORT_NODE_POSTINTEGRATION_TASK_PARENT] = this->ptk->get_name();
+        writer[CPPTRANSPORT_NODE_POSTINTEGRATION_TASK_PARENT] = this->ptk->get_name();
         this->derivable_task<number>::serialize(writer);
 	    }
 
 
     template <typename number>
-    void postintegration_task<number>::write(std::ostream& out) const
+    template <typename Stream>
+    void postintegration_task<number>::write(Stream& out) const
 	    {
-        out << __CPP_TRANSPORT_PARENT_TASK << ": '" << this->ptk->get_name() << "'" << std::endl;
+        out << CPPTRANSPORT_PARENT_TASK << ": '" << this->ptk->get_name() << "'" << '\n';
 	    }
 
 	}   // namespace transport

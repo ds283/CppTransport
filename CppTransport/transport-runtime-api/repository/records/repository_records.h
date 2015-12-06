@@ -50,103 +50,103 @@
 
 // JSON node names
 
-#define __CPP_TRANSPORT_NODE_RECORD_NAME                              "name"
-#define __CPP_TRANSPORT_NODE_RECORD_TYPE                              "record-type"
-#define __CPP_TRANSPORT_NODE_RECORD_PACKAGE                           "package"
-#define __CPP_TRANSPORT_NODE_RECORD_INTEGRATION_TASK                  "integration-task"
-#define __CPP_TRANSPORT_NODE_RECORD_POSTINTEGRATION_TASK              "postintegration-task"
-#define __CPP_TRANSPORT_NODE_RECORD_OUTPUT_TASK                       "output-task"
-#define __CPP_TRANSPORT_NODE_RECORD_DERIVED_PRODUCT                   "derived-product"
-#define __CPP_TRANSPORT_NODE_RECORD_CONTENT                           "content-group"
+#define CPPTRANSPORT_NODE_RECORD_NAME                              "name"
+#define CPPTRANSPORT_NODE_RECORD_TYPE                              "record-type"
+#define CPPTRANSPORT_NODE_RECORD_PACKAGE                           "package"
+#define CPPTRANSPORT_NODE_RECORD_INTEGRATION_TASK                  "integration-task"
+#define CPPTRANSPORT_NODE_RECORD_POSTINTEGRATION_TASK              "postintegration-task"
+#define CPPTRANSPORT_NODE_RECORD_OUTPUT_TASK                       "output-task"
+#define CPPTRANSPORT_NODE_RECORD_DERIVED_PRODUCT                   "derived-product"
+#define CPPTRANSPORT_NODE_RECORD_CONTENT                           "content-group"
 
-#define __CPP_TRANSPORT_NODE_INITIAL_CONDITIONS                       "package-data"
+#define CPPTRANSPORT_NODE_INITIAL_CONDITIONS                       "package-data"
 
-#define __CPP_TRANSPORT_NODE_METADATA_GROUP                           "metadata"
-#define __CPP_TRANSPORT_NODE_METADATA_CREATED                         "created"
-#define __CPP_TRANSPORT_NODE_METADATA_EDITED                          "edited"
-#define __CPP_TRANSPORT_NODE_METADATA_RUNTIME_API                     "api"
+#define CPPTRANSPORT_NODE_METADATA_GROUP                           "metadata"
+#define CPPTRANSPORT_NODE_METADATA_CREATED                         "created"
+#define CPPTRANSPORT_NODE_METADATA_EDITED                          "edited"
+#define CPPTRANSPORT_NODE_METADATA_RUNTIME_API                     "api"
 
-#define __CPP_TRANSPORT_NODE_TASK_OUTPUT_GROUPS                       "output-groups"
+#define CPPTRANSPORT_NODE_TASK_OUTPUT_GROUPS                       "output-groups"
 
-#define __CPP_TRANSPORT_NODE_OUTPUTGROUP_TASK_NAME                    "parent-task"
-#define __CPP_TRANSPORT_NODE_OUTPUTGROUP_DATA_ROOT                    "output-path"
-#define __CPP_TRANSPORT_NODE_OUTPUTGROUP_LOCKED                       "locked"
-#define __CPP_TRANSPORT_NODE_OUTPUTGROUP_NOTES                        "notes"
-#define __CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS                         "tags"
+#define CPPTRANSPORT_NODE_OUTPUTGROUP_TASK_NAME                    "parent-task"
+#define CPPTRANSPORT_NODE_OUTPUTGROUP_DATA_ROOT                    "output-path"
+#define CPPTRANSPORT_NODE_OUTPUTGROUP_LOCKED                       "locked"
+#define CPPTRANSPORT_NODE_OUTPUTGROUP_NOTES                        "notes"
+#define CPPTRANSPORT_NODE_OUTPUTGROUP_TAGS                         "tags"
 
-#define __CPP_TRANSPORT_NODE_RECORD_INTEGRATION_TASK_KCONFIG_DATABASE "kconfig-database"
+#define CPPTRANSPORT_NODE_RECORD_INTEGRATION_TASK_KCONFIG_DATABASE "kconfig-database"
 
-#define __CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_DATABASE             "database-path"
-#define __CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FAILED               "failed"
-#define __CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_WORKGROUP            "workgroup"
-#define __CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FAILED_SERIALS       "failed-serials"
-#define __CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_SEEDED               "seeded"
-#define __CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_SEED_GROUP           "seed-group"
-#define __CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_STATISTICS           "has-statistics"
-#define __CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_ICS                  "has-ics"
+#define CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_DATABASE             "database-path"
+#define CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_FAILED               "failed"
+#define CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_WORKGROUP            "workgroup"
+#define CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_FAILED_SERIALS       "failed-serials"
+#define CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_SEEDED               "seeded"
+#define CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_SEED_GROUP           "seed-group"
+#define CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_STATISTICS           "has-statistics"
+#define CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_ICS                  "has-ics"
 
-#define __CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_DATABASE         "database-path"
-#define __CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_FAILED           "failed"
-#define __CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_PAIRED           "paired"
-#define __CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_PARENT_GROUP     "parent-group"
-#define __CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_SEEDED           "seeded"
-#define __CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_SEED_GROUP       "seed-group"
-#define __CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_FAILED_SERIALS   "failed-serials"
+#define CPPTRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_DATABASE         "database-path"
+#define CPPTRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_FAILED           "failed"
+#define CPPTRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_PAIRED           "paired"
+#define CPPTRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_PARENT_GROUP     "parent-group"
+#define CPPTRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_SEEDED           "seeded"
+#define CPPTRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_SEED_GROUP       "seed-group"
+#define CPPTRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_FAILED_SERIALS   "failed-serials"
 
-#define __CPP_TRANSPORT_NODE_PRECOMPUTED_ROOT                         "contains-products"
-#define __CPP_TRANSPORT_NODE_PRECOMPUTED_ZETA_TWOPF                   "zeta-twopf"
-#define __CPP_TRANSPORT_NODE_PRECOMPUTED_ZETA_THREEPF                 "zeta-threepf"
-#define __CPP_TRANSPORT_NODE_PRECOMPUTED_ZETA_REDBSP                  "zeta-redbsp"
-#define __CPP_TRANSPORT_NODE_PRECOMPUTED_FNL_LOCAL                    "fNL_local"
-#define __CPP_TRANSPORT_NODE_PRECOMPUTED_FNL_EQUI                     "fNL_equi"
-#define __CPP_TRANSPORT_NODE_PRECOMPUTED_FNL_ORTHO                    "fNL_ortho"
-#define __CPP_TRANSPORT_NODE_PRECOMPUTED_FNL_DBI                      "fNL_DBI"
+#define CPPTRANSPORT_NODE_PRECOMPUTED_ROOT                         "contains-products"
+#define CPPTRANSPORT_NODE_PRECOMPUTED_ZETA_TWOPF                   "zeta-twopf"
+#define CPPTRANSPORT_NODE_PRECOMPUTED_ZETA_THREEPF                 "zeta-threepf"
+#define CPPTRANSPORT_NODE_PRECOMPUTED_ZETA_REDBSP                  "zeta-redbsp"
+#define CPPTRANSPORT_NODE_PRECOMPUTED_FNL_LOCAL                    "fNL_local"
+#define CPPTRANSPORT_NODE_PRECOMPUTED_FNL_EQUI                     "fNL_equi"
+#define CPPTRANSPORT_NODE_PRECOMPUTED_FNL_ORTHO                    "fNL_ortho"
+#define CPPTRANSPORT_NODE_PRECOMPUTED_FNL_DBI                      "fNL_DBI"
 
-#define __CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_FAILED                   "failed"
-#define __CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_ARRAY                    "generated-products"
-#define __CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_USED_GROUPS              "used-content-groups"
-#define __CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_PRODUCT_NAME             "parent-product"
-#define __CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_FILENAME                 "filename"
-#define __CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_CREATED                  "creation-time"
-#define __CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_NOTES                    "notes"
-#define __CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_TAGS                     "tags"
+#define CPPTRANSPORT_NODE_PAYLOAD_CONTENT_FAILED                   "failed"
+#define CPPTRANSPORT_NODE_PAYLOAD_CONTENT_ARRAY                    "generated-products"
+#define CPPTRANSPORT_NODE_PAYLOAD_CONTENT_USED_GROUPS              "used-content-groups"
+#define CPPTRANSPORT_NODE_PAYLOAD_CONTENT_PRODUCT_NAME             "parent-product"
+#define CPPTRANSPORT_NODE_PAYLOAD_CONTENT_FILENAME                 "filename"
+#define CPPTRANSPORT_NODE_PAYLOAD_CONTENT_CREATED                  "creation-time"
+#define CPPTRANSPORT_NODE_PAYLOAD_CONTENT_NOTES                    "notes"
+#define CPPTRANSPORT_NODE_PAYLOAD_CONTENT_TAGS                     "tags"
 
-#define __CPP_TRANSPORT_NODE_TIMINGDATA_GROUP                         "integration-metadata"
-#define __CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_WALLCLOCK_TIME          "total-wallclock-time"
-#define __CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_AGG_TIME                "total-aggregation-time"
-#define __CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_INT_TIME                "total-integration-time"
-#define __CPP_TRANSPORT_NODE_TIMINGDATA_MIN_MEAN_INT_TIME             "min-mean-integration-time"
-#define __CPP_TRANSPORT_NODE_TIMINGDATA_MAX_MEAN_INT_TIME             "max-mean-integration-time"
-#define __CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MIN_INT_TIME           "global-min-integration-time"
-#define __CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MAX_INT_TIME           "global-max-integration-time"
-#define __CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_BATCH_TIME              "total-batching-time"
-#define __CPP_TRANSPORT_NODE_TIMINGDATA_MIN_MEAN_BATCH_TIME           "min-mean-batching-time"
-#define __CPP_TRANSPORT_NODE_TIMINGDATA_MAX_MEAN_BATCH_TIME           "max-mean-batching-time"
-#define __CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MIN_BATCH_TIME         "global-min-batching-time"
-#define __CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MAX_BATCH_TIME         "global-max-batching-time"
-#define __CPP_TRANSPORT_NODE_TIMINGDATA_NUM_CONFIGURATIONS            "configurations-processed"
-#define __CPP_TRANSPORT_NODE_TIMINGDATA_NUM_FAILURES                  "configurations-failed"
-#define __CPP_TRANSPORT_NODE_TIMINGDATA_NUM_REFINED                   "configurations-refined"
+#define CPPTRANSPORT_NODE_TIMINGDATA_GROUP                         "integration-metadata"
+#define CPPTRANSPORT_NODE_TIMINGDATA_TOTAL_WALLCLOCK_TIME          "total-wallclock-time"
+#define CPPTRANSPORT_NODE_TIMINGDATA_TOTAL_AGG_TIME                "total-aggregation-time"
+#define CPPTRANSPORT_NODE_TIMINGDATA_TOTAL_INT_TIME                "total-integration-time"
+#define CPPTRANSPORT_NODE_TIMINGDATA_MIN_MEAN_INT_TIME             "min-mean-integration-time"
+#define CPPTRANSPORT_NODE_TIMINGDATA_MAX_MEAN_INT_TIME             "max-mean-integration-time"
+#define CPPTRANSPORT_NODE_TIMINGDATA_GLOBAL_MIN_INT_TIME           "global-min-integration-time"
+#define CPPTRANSPORT_NODE_TIMINGDATA_GLOBAL_MAX_INT_TIME           "global-max-integration-time"
+#define CPPTRANSPORT_NODE_TIMINGDATA_TOTAL_BATCH_TIME              "total-batching-time"
+#define CPPTRANSPORT_NODE_TIMINGDATA_MIN_MEAN_BATCH_TIME           "min-mean-batching-time"
+#define CPPTRANSPORT_NODE_TIMINGDATA_MAX_MEAN_BATCH_TIME           "max-mean-batching-time"
+#define CPPTRANSPORT_NODE_TIMINGDATA_GLOBAL_MIN_BATCH_TIME         "global-min-batching-time"
+#define CPPTRANSPORT_NODE_TIMINGDATA_GLOBAL_MAX_BATCH_TIME         "global-max-batching-time"
+#define CPPTRANSPORT_NODE_TIMINGDATA_NUM_CONFIGURATIONS            "configurations-processed"
+#define CPPTRANSPORT_NODE_TIMINGDATA_NUM_FAILURES                  "configurations-failed"
+#define CPPTRANSPORT_NODE_TIMINGDATA_NUM_REFINED                   "configurations-refined"
 
-#define __CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP                         "output-metadata"
-#define __CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_WALLCLOCK_TIME          "total-wallclock-time"
-#define __CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_DB_TIME                 "total-db-time"
-#define __CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_AGG_TIME                "total-aggregation-time"
-#define __CPP_TRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_HITS               "time-cache-hits"
-#define __CPP_TRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_UNLOADS            "time-cache-unloads"
-#define __CPP_TRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_HITS              "twopf-cache-hits"
-#define __CPP_TRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_UNLOADS           "twopf-cache-unloads"
-#define __CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_HITS            "threepf-cache-hits"
-#define __CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_UNLOADS         "threepf-cache-unloads"
-#define __CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_HITS               "data-cache-hits"
-#define __CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_UNLOADS            "data-cache-unloads"
-#define __CPP_TRANSPORT_NODE_OUTPUTDATA_STATS_CACHE_HITS              "stats-cache-hits"
-#define __CPP_TRANSPORT_NODE_OUTPUTDATA_STATS_CACHE_UNLOADS           "stats-cache-unloads"
-#define __CPP_TRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_EVICTIONS          "time-cache-evictions"
-#define __CPP_TRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_EVICTIONS         "twopf-cache-evictions"
-#define __CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_EVICTIONS       "threepf-cache-evictions"
-#define __CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_EVICTIONS          "data-cache-evictions"
-#define __CPP_TRANSPORT_NODE_OUTPUTDATA_STATS_CACHE_EVICTIONS         "stats-cache-evictions"
+#define CPPTRANSPORT_NODE_OUTPUTDATA_GROUP                         "output-metadata"
+#define CPPTRANSPORT_NODE_OUTPUTDATA_TOTAL_WALLCLOCK_TIME          "total-wallclock-time"
+#define CPPTRANSPORT_NODE_OUTPUTDATA_TOTAL_DB_TIME                 "total-db-time"
+#define CPPTRANSPORT_NODE_OUTPUTDATA_TOTAL_AGG_TIME                "total-aggregation-time"
+#define CPPTRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_HITS               "time-cache-hits"
+#define CPPTRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_UNLOADS            "time-cache-unloads"
+#define CPPTRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_HITS              "twopf-cache-hits"
+#define CPPTRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_UNLOADS           "twopf-cache-unloads"
+#define CPPTRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_HITS            "threepf-cache-hits"
+#define CPPTRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_UNLOADS         "threepf-cache-unloads"
+#define CPPTRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_HITS               "data-cache-hits"
+#define CPPTRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_UNLOADS            "data-cache-unloads"
+#define CPPTRANSPORT_NODE_OUTPUTDATA_STATS_CACHE_HITS              "stats-cache-hits"
+#define CPPTRANSPORT_NODE_OUTPUTDATA_STATS_CACHE_UNLOADS           "stats-cache-unloads"
+#define CPPTRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_EVICTIONS          "time-cache-evictions"
+#define CPPTRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_EVICTIONS         "twopf-cache-evictions"
+#define CPPTRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_EVICTIONS       "threepf-cache-evictions"
+#define CPPTRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_EVICTIONS          "data-cache-evictions"
+#define CPPTRANSPORT_NODE_OUTPUTDATA_STATS_CACHE_EVICTIONS         "stats-cache-evictions"
 
 
 namespace transport
@@ -384,7 +384,7 @@ namespace transport
 
       public:
 
-        typedef enum { integration, postintegration, output } type;
+        enum class task_type { integration, postintegration, output };
 
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -413,7 +413,7 @@ namespace transport
       public:
 
         //! get record type
-        virtual type get_type() const = 0;
+        virtual task_type get_type() const = 0;
 
         //! Add content
         void add_new_output_group(const std::string& name) { this->content_groups.push_back(name); }
@@ -491,7 +491,7 @@ namespace transport
       public:
 
         //! Get type
-        virtual typename task_record<number>::type get_type() const override { return(task_record<number>::integration); }
+        virtual typename task_record<number>::task_type get_type() const override { return(task_record<number>::task_type::integration); }
 
 
         // SERIALIZATION -- implements a 'serializable' interface
@@ -562,7 +562,7 @@ namespace transport
       public:
 
         //! Get type
-        virtual typename task_record<number>::type get_type() const override { return(task_record<number>::postintegration); }
+        virtual typename task_record<number>::task_type get_type() const override { return(task_record<number>::task_type::postintegration); }
 
 
         // SERIALIZATION -- implements a 'serializable' interface
@@ -687,7 +687,7 @@ namespace transport
       public:
 
         //! Get type
-        virtual typename task_record<number>::type get_type() const override { return(task_record<number>::output); }
+        virtual typename task_record<number>::task_type get_type() const override { return(task_record<number>::task_type::output); }
 
 
         // SERIALIZATION -- implements a 'serializable' interface
@@ -1124,7 +1124,7 @@ namespace transport
 
       public:
 
-        void write(std::ostream& out) const;
+        template <typename Stream> void write(Stream& out) const;
 
 
         // SERIALIZATION -- implements a 'serializable' interface
@@ -1252,7 +1252,7 @@ namespace transport
 
       public:
 
-        void write(std::ostream& out) const;
+        template <typename Stream> void write(Stream& out) const;
 
 
         // SERIALIZATION -- implements a 'serializable' interface
@@ -1379,7 +1379,7 @@ namespace transport
 
       public:
 
-        void write(std::ostream& out) const;
+        template <typename Stream> void write(Stream& out) const;
 
 
         // SERIALIZATION -- implements a 'serializable' interface
@@ -1477,7 +1477,8 @@ namespace transport
 
       public:
 
-        void write(std::ostream& out) const;
+        //! write details
+        template <typename Stream> void write(Stream& out) const;
 
 
         // SERIALIZATION -- implements a 'serializable' interface
@@ -1582,7 +1583,10 @@ namespace transport
       public:
 
         //! Get payload
-        Payload& get_payload() { return(this->payload); }
+        Payload& get_payload()             { return(this->payload); }
+
+        //! Get payload (const version)
+        const Payload& get_payload() const { return(this->payload); }
 
 
         // SERIALIZATION -- implements a 'serializable' interface
@@ -1590,7 +1594,7 @@ namespace transport
       public:
 
         //! Serialize this object
-        void serialize(Json::Value& writer) const;
+        virtual void serialize(Json::Value& writer) const override;
 
 
         // CLONE
@@ -1606,7 +1610,7 @@ namespace transport
       public:
 
         //! Write self to output stream
-        void write(std::ostream& out) const;
+        template <typename Stream> void write(Stream& out) const;
 
 
         // INTERNAL DATA
@@ -1651,20 +1655,20 @@ namespace transport
     record_metadata::record_metadata()
 	    : creation_time(boost::posix_time::second_clock::universal_time()),
 	      last_edit_time(boost::posix_time::second_clock::universal_time()),    // don't initialize from creation_time; order of initialization depends on order of *declaration* in class, and that might change
-	      runtime_api(__CPP_TRANSPORT_RUNTIME_API_VERSION)
+	      runtime_api(CPPTRANSPORT_RUNTIME_API_VERSION)
 	    {
 	    }
 
 
     record_metadata::record_metadata(Json::Value& reader)
 	    {
-        std::string ctime_str = reader[__CPP_TRANSPORT_NODE_METADATA_GROUP][__CPP_TRANSPORT_NODE_METADATA_CREATED].asString();
+        std::string ctime_str = reader[CPPTRANSPORT_NODE_METADATA_GROUP][CPPTRANSPORT_NODE_METADATA_CREATED].asString();
         this->creation_time = boost::posix_time::from_iso_string(ctime_str);
 
-        std::string etime_str = reader[__CPP_TRANSPORT_NODE_METADATA_GROUP][__CPP_TRANSPORT_NODE_METADATA_EDITED].asString();
+        std::string etime_str = reader[CPPTRANSPORT_NODE_METADATA_GROUP][CPPTRANSPORT_NODE_METADATA_EDITED].asString();
         this->last_edit_time = boost::posix_time::from_iso_string(etime_str);
 
-        this->runtime_api = reader[__CPP_TRANSPORT_NODE_METADATA_GROUP][__CPP_TRANSPORT_NODE_METADATA_RUNTIME_API].asUInt();
+        this->runtime_api = reader[CPPTRANSPORT_NODE_METADATA_GROUP][CPPTRANSPORT_NODE_METADATA_RUNTIME_API].asUInt();
 	    }
 
 
@@ -1672,9 +1676,9 @@ namespace transport
 	    {
         Json::Value metadata(Json::objectValue);
 
-        writer[__CPP_TRANSPORT_NODE_METADATA_GROUP][__CPP_TRANSPORT_NODE_METADATA_CREATED] = boost::posix_time::to_iso_string(this->creation_time);
-        writer[__CPP_TRANSPORT_NODE_METADATA_GROUP][__CPP_TRANSPORT_NODE_METADATA_EDITED] = boost::posix_time::to_iso_string(this->last_edit_time);
-        writer[__CPP_TRANSPORT_NODE_METADATA_GROUP][__CPP_TRANSPORT_NODE_METADATA_RUNTIME_API] = this->runtime_api;
+        writer[CPPTRANSPORT_NODE_METADATA_GROUP][CPPTRANSPORT_NODE_METADATA_CREATED] = boost::posix_time::to_iso_string(this->creation_time);
+        writer[CPPTRANSPORT_NODE_METADATA_GROUP][CPPTRANSPORT_NODE_METADATA_EDITED] = boost::posix_time::to_iso_string(this->last_edit_time);
+        writer[CPPTRANSPORT_NODE_METADATA_GROUP][CPPTRANSPORT_NODE_METADATA_RUNTIME_API] = this->runtime_api;
 	    }
 
 
@@ -1701,13 +1705,13 @@ namespace transport
 	    : metadata(reader),
 	      handlers(pkg)
 	    {
-		    name = reader[__CPP_TRANSPORT_NODE_RECORD_NAME].asString();
+		    name = reader[CPPTRANSPORT_NODE_RECORD_NAME].asString();
 	    }
 
 
     void repository_record::serialize(Json::Value& writer) const
 	    {
-        writer[__CPP_TRANSPORT_NODE_RECORD_NAME] = this->name;
+        writer[CPPTRANSPORT_NODE_RECORD_NAME] = this->name;
         this->metadata.serialize(writer);
 	    }
 
@@ -1727,7 +1731,7 @@ namespace transport
     package_record<number>::package_record(Json::Value& reader, typename instance_manager<number>::model_finder& f,
                                            repository_record::handler_package& pkg)
 	    : repository_record(reader, pkg),
-	      ics(this->name, reader[__CPP_TRANSPORT_NODE_INITIAL_CONDITIONS], f)        // name gets deserialized by repository_record, so is safe to use here
+	      ics(this->name, reader[CPPTRANSPORT_NODE_INITIAL_CONDITIONS], f)        // name gets deserialized by repository_record, so is safe to use here
 	    {
 	    }
 
@@ -1735,11 +1739,11 @@ namespace transport
     template <typename number>
     void package_record<number>::serialize(Json::Value& writer) const
 	    {
-        writer[__CPP_TRANSPORT_NODE_RECORD_TYPE] = std::string(__CPP_TRANSPORT_NODE_RECORD_PACKAGE);
+        writer[CPPTRANSPORT_NODE_RECORD_TYPE] = std::string(CPPTRANSPORT_NODE_RECORD_PACKAGE);
 
         Json::Value ics_package(Json::objectValue);
         this->ics.serialize(ics_package);
-        writer[__CPP_TRANSPORT_NODE_INITIAL_CONDITIONS] = ics_package;
+        writer[CPPTRANSPORT_NODE_INITIAL_CONDITIONS] = ics_package;
 
         this->repository_record::serialize(writer);
 	    }
@@ -1759,7 +1763,7 @@ namespace transport
     task_record<number>::task_record(Json::Value& reader, repository_record::handler_package& pkg)
 	    : repository_record(reader, pkg)
 	    {
-		    Json::Value& group_list = reader[__CPP_TRANSPORT_NODE_TASK_OUTPUT_GROUPS];
+		    Json::Value& group_list = reader[CPPTRANSPORT_NODE_TASK_OUTPUT_GROUPS];
 				assert(group_list.isArray());
 
         for(Json::Value::iterator t = group_list.begin(); t != group_list.end(); ++t)
@@ -1780,7 +1784,7 @@ namespace transport
             Json::Value group_element = *t;
 		        group_list.append(group_element);
 	        }
-        writer[__CPP_TRANSPORT_NODE_TASK_OUTPUT_GROUPS] = group_list;
+        writer[CPPTRANSPORT_NODE_TASK_OUTPUT_GROUPS] = group_list;
 
         this->repository_record::serialize(writer);
 	    }
@@ -1814,7 +1818,7 @@ namespace transport
 	    : task_record<number>(reader, pkg)
 	    {
 		    // deserialize location of database
-        kconfig_db = reader[__CPP_TRANSPORT_NODE_RECORD_INTEGRATION_TASK_KCONFIG_DATABASE].asString();
+        kconfig_db = reader[CPPTRANSPORT_NODE_RECORD_INTEGRATION_TASK_KCONFIG_DATABASE].asString();
 
         boost::filesystem::path abs_database = repo_root / kconfig_db;
 
@@ -1823,14 +1827,14 @@ namespace transport
         if(sqlite3_open_v2(abs_database.c_str(), &handle, SQLITE_OPEN_READONLY, nullptr) != SQLITE_OK)
 	        {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_REPO_FAIL_KCONFIG_DATABASE_OPEN << " '" << this->get_name() << "'";
-            throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, msg.str());
+            msg << CPPTRANSPORT_REPO_FAIL_KCONFIG_DATABASE_OPEN << " '" << this->get_name() << "'";
+            throw runtime_exception(exception_type::REPOSITORY_BACKEND_ERROR, msg.str());
 	        }
 
         tk = integration_task_helper::deserialize<number>(this->name, reader, handle, f);
 
         assert(tk != nullptr);
-        if(tk == nullptr) throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_REPO_TASK_DESERIALIZE_FAIL);
+        if(tk == nullptr) throw runtime_exception(exception_type::SERIALIZATION_ERROR, CPPTRANSPORT_REPO_TASK_DESERIALIZE_FAIL);
 	    }
 
 
@@ -1844,9 +1848,9 @@ namespace transport
     template <typename number>
     void integration_task_record<number>::serialize(Json::Value& writer) const
 	    {
-        writer[__CPP_TRANSPORT_NODE_RECORD_TYPE] = std::string(__CPP_TRANSPORT_NODE_RECORD_INTEGRATION_TASK);
+        writer[CPPTRANSPORT_NODE_RECORD_TYPE] = std::string(CPPTRANSPORT_NODE_RECORD_INTEGRATION_TASK);
 
-		    writer[__CPP_TRANSPORT_NODE_RECORD_INTEGRATION_TASK_KCONFIG_DATABASE] = this->kconfig_db.string();
+		    writer[CPPTRANSPORT_NODE_RECORD_INTEGRATION_TASK_KCONFIG_DATABASE] = this->kconfig_db.string();
 
         this->tk->serialize(writer);
         this->task_record<number>::serialize(writer);
@@ -1861,8 +1865,8 @@ namespace transport
 		    if(sqlite3_open_v2(db_path.c_str(), &handle, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nullptr) != SQLITE_OK)
 			    {
 		        std::ostringstream msg;
-		        msg << __CPP_TRANSPORT_REPO_FAIL_KCONFIG_DATABASE_OPEN << " '" << this->get_name() << "'";
-		        throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, msg.str());
+		        msg << CPPTRANSPORT_REPO_FAIL_KCONFIG_DATABASE_OPEN << " '" << this->get_name() << "'";
+		        throw runtime_exception(exception_type::REPOSITORY_BACKEND_ERROR, msg.str());
 			    }
 
 		    this->tk->write_kconfig_database(handle);
@@ -1899,7 +1903,7 @@ namespace transport
 	      tk(postintegration_task_helper::deserialize<number>(this->name, reader, f))
 	    {
         assert(tk != nullptr);
-        if(tk == nullptr) throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_REPO_TASK_DESERIALIZE_FAIL);
+        if(tk == nullptr) throw runtime_exception(exception_type::SERIALIZATION_ERROR, CPPTRANSPORT_REPO_TASK_DESERIALIZE_FAIL);
 	    }
 
 
@@ -1913,7 +1917,7 @@ namespace transport
     template <typename number>
     void postintegration_task_record<number>::serialize(Json::Value& writer) const
 	    {
-        writer[__CPP_TRANSPORT_NODE_RECORD_TYPE] = std::string(__CPP_TRANSPORT_NODE_RECORD_POSTINTEGRATION_TASK);
+        writer[CPPTRANSPORT_NODE_RECORD_TYPE] = std::string(CPPTRANSPORT_NODE_RECORD_POSTINTEGRATION_TASK);
         this->tk->serialize(writer);
         this->task_record<number>::serialize(writer);
 	    }
@@ -1947,7 +1951,7 @@ namespace transport
 	    {
         assert(tk != nullptr);
 
-        if(tk == nullptr) throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_REPO_TASK_DESERIALIZE_FAIL);
+        if(tk == nullptr) throw runtime_exception(exception_type::SERIALIZATION_ERROR, CPPTRANSPORT_REPO_TASK_DESERIALIZE_FAIL);
 	    }
 
 
@@ -1961,7 +1965,7 @@ namespace transport
     template <typename number>
     void output_task_record<number>::serialize(Json::Value& writer) const
 	    {
-        writer[__CPP_TRANSPORT_NODE_RECORD_TYPE] = std::string(__CPP_TRANSPORT_NODE_RECORD_OUTPUT_TASK);
+        writer[CPPTRANSPORT_NODE_RECORD_TYPE] = std::string(CPPTRANSPORT_NODE_RECORD_OUTPUT_TASK);
         this->tk->serialize(writer);
         this->task_record<number>::serialize(writer);
 	    }
@@ -1995,7 +1999,7 @@ namespace transport
 	    {
         assert(product != nullptr);
 
-        if(product == nullptr) throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_REPO_PRODUCT_DESERIALIZE_FAIL);
+        if(product == nullptr) throw runtime_exception(exception_type::SERIALIZATION_ERROR, CPPTRANSPORT_REPO_PRODUCT_DESERIALIZE_FAIL);
 	    }
 
 
@@ -2009,7 +2013,7 @@ namespace transport
     template <typename number>
     void derived_product_record<number>::serialize(Json::Value& writer) const
 	    {
-        writer[__CPP_TRANSPORT_NODE_RECORD_TYPE] = std::string(__CPP_TRANSPORT_NODE_RECORD_DERIVED_PRODUCT);
+        writer[CPPTRANSPORT_NODE_RECORD_TYPE] = std::string(CPPTRANSPORT_NODE_RECORD_DERIVED_PRODUCT);
         this->product->serialize(writer);
         this->repository_record::serialize(writer);
 	    }
@@ -2020,47 +2024,47 @@ namespace transport
 
     output_metadata::output_metadata(Json::Value& reader)
 	    {
-        work_time                 = reader[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_WALLCLOCK_TIME].asLargestInt();
-        db_time                   = reader[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_DB_TIME].asLargestInt();
-        aggregation_time          = reader[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_AGG_TIME].asLargestInt();
-        time_config_hits          = reader[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_HITS].asUInt();
-        time_config_unloads       = reader[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_UNLOADS].asUInt();
-        twopf_kconfig_hits        = reader[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_HITS].asUInt();
-        twopf_kconfig_unloads     = reader[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_UNLOADS].asUInt();
-        threepf_kconfig_hits      = reader[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_HITS].asUInt();
-        threepf_kconfig_unloads   = reader[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_UNLOADS].asUInt();
-        data_hits                 = reader[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_HITS].asUInt();
-        data_unloads              = reader[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_UNLOADS].asUInt();
-        stats_hits                = reader[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_STATS_CACHE_HITS].asUInt();
-        stats_unloads             = reader[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_STATS_CACHE_UNLOADS].asUInt();
-        time_config_evictions     = reader[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_EVICTIONS].asLargestInt();
-        twopf_kconfig_evictions   = reader[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_EVICTIONS].asLargestInt();
-        threepf_kconfig_evictions = reader[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_EVICTIONS].asLargestInt();
-        data_evictions            = reader[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_EVICTIONS].asLargestInt();
-        stats_evictions           = reader[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_STATS_CACHE_EVICTIONS].asLargestInt();
+        work_time                 = reader[CPPTRANSPORT_NODE_OUTPUTDATA_GROUP][CPPTRANSPORT_NODE_OUTPUTDATA_TOTAL_WALLCLOCK_TIME].asLargestInt();
+        db_time                   = reader[CPPTRANSPORT_NODE_OUTPUTDATA_GROUP][CPPTRANSPORT_NODE_OUTPUTDATA_TOTAL_DB_TIME].asLargestInt();
+        aggregation_time          = reader[CPPTRANSPORT_NODE_OUTPUTDATA_GROUP][CPPTRANSPORT_NODE_OUTPUTDATA_TOTAL_AGG_TIME].asLargestInt();
+        time_config_hits          = reader[CPPTRANSPORT_NODE_OUTPUTDATA_GROUP][CPPTRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_HITS].asUInt();
+        time_config_unloads       = reader[CPPTRANSPORT_NODE_OUTPUTDATA_GROUP][CPPTRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_UNLOADS].asUInt();
+        twopf_kconfig_hits        = reader[CPPTRANSPORT_NODE_OUTPUTDATA_GROUP][CPPTRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_HITS].asUInt();
+        twopf_kconfig_unloads     = reader[CPPTRANSPORT_NODE_OUTPUTDATA_GROUP][CPPTRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_UNLOADS].asUInt();
+        threepf_kconfig_hits      = reader[CPPTRANSPORT_NODE_OUTPUTDATA_GROUP][CPPTRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_HITS].asUInt();
+        threepf_kconfig_unloads   = reader[CPPTRANSPORT_NODE_OUTPUTDATA_GROUP][CPPTRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_UNLOADS].asUInt();
+        data_hits                 = reader[CPPTRANSPORT_NODE_OUTPUTDATA_GROUP][CPPTRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_HITS].asUInt();
+        data_unloads              = reader[CPPTRANSPORT_NODE_OUTPUTDATA_GROUP][CPPTRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_UNLOADS].asUInt();
+        stats_hits                = reader[CPPTRANSPORT_NODE_OUTPUTDATA_GROUP][CPPTRANSPORT_NODE_OUTPUTDATA_STATS_CACHE_HITS].asUInt();
+        stats_unloads             = reader[CPPTRANSPORT_NODE_OUTPUTDATA_GROUP][CPPTRANSPORT_NODE_OUTPUTDATA_STATS_CACHE_UNLOADS].asUInt();
+        time_config_evictions     = reader[CPPTRANSPORT_NODE_OUTPUTDATA_GROUP][CPPTRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_EVICTIONS].asLargestInt();
+        twopf_kconfig_evictions   = reader[CPPTRANSPORT_NODE_OUTPUTDATA_GROUP][CPPTRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_EVICTIONS].asLargestInt();
+        threepf_kconfig_evictions = reader[CPPTRANSPORT_NODE_OUTPUTDATA_GROUP][CPPTRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_EVICTIONS].asLargestInt();
+        data_evictions            = reader[CPPTRANSPORT_NODE_OUTPUTDATA_GROUP][CPPTRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_EVICTIONS].asLargestInt();
+        stats_evictions           = reader[CPPTRANSPORT_NODE_OUTPUTDATA_GROUP][CPPTRANSPORT_NODE_OUTPUTDATA_STATS_CACHE_EVICTIONS].asLargestInt();
 	    }
 
 
     void output_metadata::serialize(Json::Value& writer) const
 	    {
-        writer[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_WALLCLOCK_TIME]    = static_cast<Json::LargestInt>(this->work_time);
-        writer[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_DB_TIME]           = static_cast<Json::LargestInt>(this->db_time);
-        writer[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_AGG_TIME]          = static_cast<Json::LargestInt>(aggregation_time);
-        writer[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_HITS]         = this->time_config_hits;
-        writer[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_UNLOADS]      = this->time_config_unloads;
-        writer[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_HITS]        = this->twopf_kconfig_hits;
-        writer[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_UNLOADS]     = this->twopf_kconfig_unloads;
-        writer[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_HITS]      = this->threepf_kconfig_hits;
-        writer[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_UNLOADS]   = this->threepf_kconfig_unloads;
-        writer[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_STATS_CACHE_HITS]        = this->stats_hits;
-        writer[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_STATS_CACHE_UNLOADS]     = this->stats_unloads;
-        writer[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_HITS]         = this->data_hits;
-        writer[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_UNLOADS]      = this->data_unloads;
-        writer[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_EVICTIONS]    = static_cast<Json::LargestInt>(this->time_config_evictions);
-        writer[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_EVICTIONS]   = static_cast<Json::LargestInt>(this->twopf_kconfig_evictions);
-        writer[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_EVICTIONS] = static_cast<Json::LargestInt>(this->threepf_kconfig_evictions);
-        writer[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_STATS_CACHE_EVICTIONS]   = static_cast<Json::LargestInt>(this->stats_evictions);
-        writer[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP][__CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_EVICTIONS]    = static_cast<Json::LargestInt>(this->data_evictions);
+        writer[CPPTRANSPORT_NODE_OUTPUTDATA_GROUP][CPPTRANSPORT_NODE_OUTPUTDATA_TOTAL_WALLCLOCK_TIME]    = static_cast<Json::LargestInt>(this->work_time);
+        writer[CPPTRANSPORT_NODE_OUTPUTDATA_GROUP][CPPTRANSPORT_NODE_OUTPUTDATA_TOTAL_DB_TIME]           = static_cast<Json::LargestInt>(this->db_time);
+        writer[CPPTRANSPORT_NODE_OUTPUTDATA_GROUP][CPPTRANSPORT_NODE_OUTPUTDATA_TOTAL_AGG_TIME]          = static_cast<Json::LargestInt>(aggregation_time);
+        writer[CPPTRANSPORT_NODE_OUTPUTDATA_GROUP][CPPTRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_HITS]         = this->time_config_hits;
+        writer[CPPTRANSPORT_NODE_OUTPUTDATA_GROUP][CPPTRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_UNLOADS]      = this->time_config_unloads;
+        writer[CPPTRANSPORT_NODE_OUTPUTDATA_GROUP][CPPTRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_HITS]        = this->twopf_kconfig_hits;
+        writer[CPPTRANSPORT_NODE_OUTPUTDATA_GROUP][CPPTRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_UNLOADS]     = this->twopf_kconfig_unloads;
+        writer[CPPTRANSPORT_NODE_OUTPUTDATA_GROUP][CPPTRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_HITS]      = this->threepf_kconfig_hits;
+        writer[CPPTRANSPORT_NODE_OUTPUTDATA_GROUP][CPPTRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_UNLOADS]   = this->threepf_kconfig_unloads;
+        writer[CPPTRANSPORT_NODE_OUTPUTDATA_GROUP][CPPTRANSPORT_NODE_OUTPUTDATA_STATS_CACHE_HITS]        = this->stats_hits;
+        writer[CPPTRANSPORT_NODE_OUTPUTDATA_GROUP][CPPTRANSPORT_NODE_OUTPUTDATA_STATS_CACHE_UNLOADS]     = this->stats_unloads;
+        writer[CPPTRANSPORT_NODE_OUTPUTDATA_GROUP][CPPTRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_HITS]         = this->data_hits;
+        writer[CPPTRANSPORT_NODE_OUTPUTDATA_GROUP][CPPTRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_UNLOADS]      = this->data_unloads;
+        writer[CPPTRANSPORT_NODE_OUTPUTDATA_GROUP][CPPTRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_EVICTIONS]    = static_cast<Json::LargestInt>(this->time_config_evictions);
+        writer[CPPTRANSPORT_NODE_OUTPUTDATA_GROUP][CPPTRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_EVICTIONS]   = static_cast<Json::LargestInt>(this->twopf_kconfig_evictions);
+        writer[CPPTRANSPORT_NODE_OUTPUTDATA_GROUP][CPPTRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_EVICTIONS] = static_cast<Json::LargestInt>(this->threepf_kconfig_evictions);
+        writer[CPPTRANSPORT_NODE_OUTPUTDATA_GROUP][CPPTRANSPORT_NODE_OUTPUTDATA_STATS_CACHE_EVICTIONS]   = static_cast<Json::LargestInt>(this->stats_evictions);
+        writer[CPPTRANSPORT_NODE_OUTPUTDATA_GROUP][CPPTRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_EVICTIONS]    = static_cast<Json::LargestInt>(this->data_evictions);
 	    }
 
 
@@ -2069,41 +2073,41 @@ namespace transport
 
     integration_metadata::integration_metadata(Json::Value& reader)
 	    {
-        total_wallclock_time        = reader[__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP][__CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_WALLCLOCK_TIME].asLargestInt();
-        total_aggregation_time      = reader[__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP][__CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_AGG_TIME].asLargestInt();
-        total_integration_time      = reader[__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP][__CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_INT_TIME].asLargestInt();
-        min_mean_integration_time   = reader[__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP][__CPP_TRANSPORT_NODE_TIMINGDATA_MIN_MEAN_INT_TIME].asLargestInt();
-        max_mean_integration_time   = reader[__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP][__CPP_TRANSPORT_NODE_TIMINGDATA_MAX_MEAN_INT_TIME].asLargestInt();
-        global_min_integration_time = reader[__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP][__CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MIN_INT_TIME].asLargestInt();
-        global_max_integration_time = reader[__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP][__CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MAX_INT_TIME].asLargestInt();
-        total_batching_time         = reader[__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP][__CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_BATCH_TIME].asLargestInt();
-        min_mean_batching_time      = reader[__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP][__CPP_TRANSPORT_NODE_TIMINGDATA_MIN_MEAN_BATCH_TIME].asLargestInt();
-        max_mean_batching_time      = reader[__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP][__CPP_TRANSPORT_NODE_TIMINGDATA_MAX_MEAN_BATCH_TIME].asLargestInt();
-        global_min_batching_time    = reader[__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP][__CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MIN_BATCH_TIME].asLargestInt();
-        global_max_batching_time    = reader[__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP][__CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MAX_BATCH_TIME].asLargestInt();
-        total_configurations        = reader[__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP][__CPP_TRANSPORT_NODE_TIMINGDATA_NUM_CONFIGURATIONS].asUInt();
-        total_failures              = reader[__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP][__CPP_TRANSPORT_NODE_TIMINGDATA_NUM_FAILURES].asUInt();
-        total_refinements           = reader[__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP][__CPP_TRANSPORT_NODE_TIMINGDATA_NUM_REFINED].asUInt();
+        total_wallclock_time        = reader[CPPTRANSPORT_NODE_TIMINGDATA_GROUP][CPPTRANSPORT_NODE_TIMINGDATA_TOTAL_WALLCLOCK_TIME].asLargestInt();
+        total_aggregation_time      = reader[CPPTRANSPORT_NODE_TIMINGDATA_GROUP][CPPTRANSPORT_NODE_TIMINGDATA_TOTAL_AGG_TIME].asLargestInt();
+        total_integration_time      = reader[CPPTRANSPORT_NODE_TIMINGDATA_GROUP][CPPTRANSPORT_NODE_TIMINGDATA_TOTAL_INT_TIME].asLargestInt();
+        min_mean_integration_time   = reader[CPPTRANSPORT_NODE_TIMINGDATA_GROUP][CPPTRANSPORT_NODE_TIMINGDATA_MIN_MEAN_INT_TIME].asLargestInt();
+        max_mean_integration_time   = reader[CPPTRANSPORT_NODE_TIMINGDATA_GROUP][CPPTRANSPORT_NODE_TIMINGDATA_MAX_MEAN_INT_TIME].asLargestInt();
+        global_min_integration_time = reader[CPPTRANSPORT_NODE_TIMINGDATA_GROUP][CPPTRANSPORT_NODE_TIMINGDATA_GLOBAL_MIN_INT_TIME].asLargestInt();
+        global_max_integration_time = reader[CPPTRANSPORT_NODE_TIMINGDATA_GROUP][CPPTRANSPORT_NODE_TIMINGDATA_GLOBAL_MAX_INT_TIME].asLargestInt();
+        total_batching_time         = reader[CPPTRANSPORT_NODE_TIMINGDATA_GROUP][CPPTRANSPORT_NODE_TIMINGDATA_TOTAL_BATCH_TIME].asLargestInt();
+        min_mean_batching_time      = reader[CPPTRANSPORT_NODE_TIMINGDATA_GROUP][CPPTRANSPORT_NODE_TIMINGDATA_MIN_MEAN_BATCH_TIME].asLargestInt();
+        max_mean_batching_time      = reader[CPPTRANSPORT_NODE_TIMINGDATA_GROUP][CPPTRANSPORT_NODE_TIMINGDATA_MAX_MEAN_BATCH_TIME].asLargestInt();
+        global_min_batching_time    = reader[CPPTRANSPORT_NODE_TIMINGDATA_GROUP][CPPTRANSPORT_NODE_TIMINGDATA_GLOBAL_MIN_BATCH_TIME].asLargestInt();
+        global_max_batching_time    = reader[CPPTRANSPORT_NODE_TIMINGDATA_GROUP][CPPTRANSPORT_NODE_TIMINGDATA_GLOBAL_MAX_BATCH_TIME].asLargestInt();
+        total_configurations        = reader[CPPTRANSPORT_NODE_TIMINGDATA_GROUP][CPPTRANSPORT_NODE_TIMINGDATA_NUM_CONFIGURATIONS].asUInt();
+        total_failures              = reader[CPPTRANSPORT_NODE_TIMINGDATA_GROUP][CPPTRANSPORT_NODE_TIMINGDATA_NUM_FAILURES].asUInt();
+        total_refinements           = reader[CPPTRANSPORT_NODE_TIMINGDATA_GROUP][CPPTRANSPORT_NODE_TIMINGDATA_NUM_REFINED].asUInt();
 	    }
 
 
     void integration_metadata::serialize(Json::Value& writer) const
 	    {
-        writer[__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP][__CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_WALLCLOCK_TIME]  = static_cast<Json::LargestInt>(this->total_wallclock_time);
-        writer[__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP][__CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_AGG_TIME]        = static_cast<Json::LargestInt>(this->total_aggregation_time);
-        writer[__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP][__CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_INT_TIME]        = static_cast<Json::LargestInt>(this->total_integration_time);
-        writer[__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP][__CPP_TRANSPORT_NODE_TIMINGDATA_MIN_MEAN_INT_TIME]     = static_cast<Json::LargestInt>(this->min_mean_integration_time);
-        writer[__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP][__CPP_TRANSPORT_NODE_TIMINGDATA_MAX_MEAN_INT_TIME]     = static_cast<Json::LargestInt>(this->max_mean_integration_time);
-        writer[__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP][__CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MIN_INT_TIME]   = static_cast<Json::LargestInt>(this->global_min_integration_time);
-        writer[__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP][__CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MAX_INT_TIME]   = static_cast<Json::LargestInt>(this->global_max_integration_time);
-        writer[__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP][__CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_BATCH_TIME]      = static_cast<Json::LargestInt>(this->total_batching_time);
-        writer[__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP][__CPP_TRANSPORT_NODE_TIMINGDATA_MIN_MEAN_BATCH_TIME]   = static_cast<Json::LargestInt>(this->min_mean_batching_time);
-        writer[__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP][__CPP_TRANSPORT_NODE_TIMINGDATA_MAX_MEAN_BATCH_TIME]   = static_cast<Json::LargestInt>(this->max_mean_batching_time);
-        writer[__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP][__CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MIN_BATCH_TIME] = static_cast<Json::LargestInt>(this->global_min_batching_time);
-        writer[__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP][__CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MAX_BATCH_TIME] = static_cast<Json::LargestInt>(this->global_max_batching_time);
-        writer[__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP][__CPP_TRANSPORT_NODE_TIMINGDATA_NUM_CONFIGURATIONS]    = this->total_configurations;
-        writer[__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP][__CPP_TRANSPORT_NODE_TIMINGDATA_NUM_FAILURES]          = this->total_failures;
-        writer[__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP][__CPP_TRANSPORT_NODE_TIMINGDATA_NUM_REFINED]           = this->total_refinements;
+        writer[CPPTRANSPORT_NODE_TIMINGDATA_GROUP][CPPTRANSPORT_NODE_TIMINGDATA_TOTAL_WALLCLOCK_TIME]  = static_cast<Json::LargestInt>(this->total_wallclock_time);
+        writer[CPPTRANSPORT_NODE_TIMINGDATA_GROUP][CPPTRANSPORT_NODE_TIMINGDATA_TOTAL_AGG_TIME]        = static_cast<Json::LargestInt>(this->total_aggregation_time);
+        writer[CPPTRANSPORT_NODE_TIMINGDATA_GROUP][CPPTRANSPORT_NODE_TIMINGDATA_TOTAL_INT_TIME]        = static_cast<Json::LargestInt>(this->total_integration_time);
+        writer[CPPTRANSPORT_NODE_TIMINGDATA_GROUP][CPPTRANSPORT_NODE_TIMINGDATA_MIN_MEAN_INT_TIME]     = static_cast<Json::LargestInt>(this->min_mean_integration_time);
+        writer[CPPTRANSPORT_NODE_TIMINGDATA_GROUP][CPPTRANSPORT_NODE_TIMINGDATA_MAX_MEAN_INT_TIME]     = static_cast<Json::LargestInt>(this->max_mean_integration_time);
+        writer[CPPTRANSPORT_NODE_TIMINGDATA_GROUP][CPPTRANSPORT_NODE_TIMINGDATA_GLOBAL_MIN_INT_TIME]   = static_cast<Json::LargestInt>(this->global_min_integration_time);
+        writer[CPPTRANSPORT_NODE_TIMINGDATA_GROUP][CPPTRANSPORT_NODE_TIMINGDATA_GLOBAL_MAX_INT_TIME]   = static_cast<Json::LargestInt>(this->global_max_integration_time);
+        writer[CPPTRANSPORT_NODE_TIMINGDATA_GROUP][CPPTRANSPORT_NODE_TIMINGDATA_TOTAL_BATCH_TIME]      = static_cast<Json::LargestInt>(this->total_batching_time);
+        writer[CPPTRANSPORT_NODE_TIMINGDATA_GROUP][CPPTRANSPORT_NODE_TIMINGDATA_MIN_MEAN_BATCH_TIME]   = static_cast<Json::LargestInt>(this->min_mean_batching_time);
+        writer[CPPTRANSPORT_NODE_TIMINGDATA_GROUP][CPPTRANSPORT_NODE_TIMINGDATA_MAX_MEAN_BATCH_TIME]   = static_cast<Json::LargestInt>(this->max_mean_batching_time);
+        writer[CPPTRANSPORT_NODE_TIMINGDATA_GROUP][CPPTRANSPORT_NODE_TIMINGDATA_GLOBAL_MIN_BATCH_TIME] = static_cast<Json::LargestInt>(this->global_min_batching_time);
+        writer[CPPTRANSPORT_NODE_TIMINGDATA_GROUP][CPPTRANSPORT_NODE_TIMINGDATA_GLOBAL_MAX_BATCH_TIME] = static_cast<Json::LargestInt>(this->global_max_batching_time);
+        writer[CPPTRANSPORT_NODE_TIMINGDATA_GROUP][CPPTRANSPORT_NODE_TIMINGDATA_NUM_CONFIGURATIONS]    = this->total_configurations;
+        writer[CPPTRANSPORT_NODE_TIMINGDATA_GROUP][CPPTRANSPORT_NODE_TIMINGDATA_NUM_FAILURES]          = this->total_failures;
+        writer[CPPTRANSPORT_NODE_TIMINGDATA_GROUP][CPPTRANSPORT_NODE_TIMINGDATA_NUM_REFINED]           = this->total_refinements;
 	    }
 
 
@@ -2124,36 +2128,37 @@ namespace transport
 
 
     template <typename Payload>
-    void output_group_record<Payload>::write(std::ostream& out) const
+    template <typename Stream>
+    void output_group_record<Payload>::write(Stream& out) const
 	    {
-        out << __CPP_TRANSPORT_OUTPUT_GROUP;
-        if(this->locked) out << ", " << __CPP_TRANSPORT_OUTPUT_GROUP_LOCKED;
-        out << std::endl;
-        out << "  " << __CPP_TRANSPORT_OUTPUT_GROUP_REPO_ROOT << " = " << this->paths.root << std::endl;
-        out << "  " << __CPP_TRANSPORT_OUTPUT_GROUP_DATA_ROOT << " = " << this->paths.output << std::endl;
+        out << CPPTRANSPORT_OUTPUT_GROUP;
+        if(this->locked) out << ", " << CPPTRANSPORT_OUTPUT_GROUP_LOCKED;
+        out << '\n';
+        out << "  " << CPPTRANSPORT_OUTPUT_GROUP_REPO_ROOT << " = " << this->paths.root << '\n';
+        out << "  " << CPPTRANSPORT_OUTPUT_GROUP_DATA_ROOT << " = " << this->paths.output << '\n';
 
         unsigned int count = 0;
 
         for(std::list<std::string>::const_iterator t = this->notes.begin(); t != this->notes.end(); ++t)
 	        {
-            out << "  " << __CPP_TRANSPORT_OUTPUT_GROUP_NOTE << " " << count << std::endl;
-            out << "    " << *t << std::endl;
+            out << "  " << CPPTRANSPORT_OUTPUT_GROUP_NOTE << " " << count << '\n';
+            out << "    " << *t << '\n';
             count++;
 	        }
 
         count = 0;
-        out << "  " << __CPP_TRANSPORT_OUTPUT_GROUP_TAGS << ": ";
+        out << "  " << CPPTRANSPORT_OUTPUT_GROUP_TAGS << ": ";
         for(std::list<std::string>::const_iterator t = this->tags.begin(); t != this->tags.end(); ++t)
 	        {
             if(count > 0) out << ", ";
             out << *t;
             count++;
 	        }
-        out << std::endl;
+        out << '\n';
 
         this->payload.write(out);
 
-        out << std::endl;
+        out << '\n';
 	    }
 
 
@@ -2179,11 +2184,11 @@ namespace transport
 	    {
         paths.root = root;
 
-        task         = reader[__CPP_TRANSPORT_NODE_OUTPUTGROUP_TASK_NAME].asString();
-        paths.output = reader[__CPP_TRANSPORT_NODE_OUTPUTGROUP_DATA_ROOT].asString();
-        locked       = reader[__CPP_TRANSPORT_NODE_OUTPUTGROUP_LOCKED].asBool();
+        task         = reader[CPPTRANSPORT_NODE_OUTPUTGROUP_TASK_NAME].asString();
+        paths.output = reader[CPPTRANSPORT_NODE_OUTPUTGROUP_DATA_ROOT].asString();
+        locked       = reader[CPPTRANSPORT_NODE_OUTPUTGROUP_LOCKED].asBool();
 
-        Json::Value note_list = reader[__CPP_TRANSPORT_NODE_OUTPUTGROUP_NOTES];
+        Json::Value note_list = reader[CPPTRANSPORT_NODE_OUTPUTGROUP_NOTES];
 				assert(note_list.isArray());
 
         for(Json::Value::iterator t = note_list.begin(); t != note_list.end(); ++t)
@@ -2191,7 +2196,7 @@ namespace transport
             notes.push_back(t->asString());
 	        }
 
-        Json::Value tag_list = reader[__CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS];
+        Json::Value tag_list = reader[CPPTRANSPORT_NODE_OUTPUTGROUP_TAGS];
 		    assert(tag_list.isArray());
 
         for(Json::Value::iterator t = tag_list.begin(); t != tag_list.end(); ++t)
@@ -2204,11 +2209,11 @@ namespace transport
     template <typename Payload>
     void output_group_record<Payload>::serialize(Json::Value& writer) const
 	    {
-        writer[__CPP_TRANSPORT_NODE_RECORD_TYPE] = std::string(__CPP_TRANSPORT_NODE_RECORD_CONTENT);
+        writer[CPPTRANSPORT_NODE_RECORD_TYPE] = std::string(CPPTRANSPORT_NODE_RECORD_CONTENT);
 
-        writer[__CPP_TRANSPORT_NODE_OUTPUTGROUP_TASK_NAME] = this->task;
-        writer[__CPP_TRANSPORT_NODE_OUTPUTGROUP_DATA_ROOT] = this->paths.output.string();
-        writer[__CPP_TRANSPORT_NODE_OUTPUTGROUP_LOCKED]    = this->locked;
+        writer[CPPTRANSPORT_NODE_OUTPUTGROUP_TASK_NAME] = this->task;
+        writer[CPPTRANSPORT_NODE_OUTPUTGROUP_DATA_ROOT] = this->paths.output.string();
+        writer[CPPTRANSPORT_NODE_OUTPUTGROUP_LOCKED]    = this->locked;
 
         Json::Value note_list(Json::arrayValue);
 
@@ -2217,7 +2222,7 @@ namespace transport
             Json::Value note_element = *t;
 		        note_list.append(note_element);
 	        }
-        writer[__CPP_TRANSPORT_NODE_OUTPUTGROUP_NOTES] = note_list;
+        writer[CPPTRANSPORT_NODE_OUTPUTGROUP_NOTES] = note_list;
 
         Json::Value tag_list(Json::arrayValue);
 
@@ -2226,7 +2231,7 @@ namespace transport
             Json::Value tag_element = *t;
 		        tag_list.append(tag_element);
 	        }
-        writer[__CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS] = tag_list;
+        writer[CPPTRANSPORT_NODE_OUTPUTGROUP_TAGS] = tag_list;
 
         this->payload.serialize(writer);
 
@@ -2235,13 +2240,21 @@ namespace transport
 
 
     // output an output_group_record descriptor to a standard stream
-    // notice obscure syntax to declare a templated member of an explicitly named namespace
-    template <typename Payload>
-    std::ostream& operator<<(std::ostream& out, const output_group_record<Payload>& group)
+    template <typename Payload, typename Char, typename Traits>
+    std::basic_ostream<Char, Traits>& operator<<(std::basic_ostream<Char, Traits>& out, const output_group_record<Payload>& group)
 	    {
         group.write(out);
         return (out);
 	    }
+
+
+    // output an output_group_record descriptor to a standard stream
+    template <typename Payload, typename Char, typename Traits, typename Allocator>
+    boost::log::basic_formatting_ostream<Char, Traits, Allocator>& operator<<(boost::log::basic_formatting_ostream<Char, Traits, Allocator>& out, const output_group_record<Payload>& group)
+      {
+        group.write(out);
+        return (out);
+      }
 
 
     namespace
@@ -2252,8 +2265,8 @@ namespace transport
 
             // used for sorting a list of output_groups into decreasing chronological order
             template <typename Payload>
-            bool comparator(const std::shared_ptr< output_group_record<Payload> >& A,
-                            const std::shared_ptr< output_group_record<Payload> >& B)
+            bool comparator(const std::unique_ptr< output_group_record<Payload> >& A,
+                            const std::unique_ptr< output_group_record<Payload> >& B)
 	            {
                 return (A->get_creation_time() > B->get_creation_time());
 	            }
@@ -2265,52 +2278,53 @@ namespace transport
 
     precomputed_products::precomputed_products(Json::Value& reader)
 	    {
-        zeta_twopf   = reader[__CPP_TRANSPORT_NODE_PRECOMPUTED_ROOT][__CPP_TRANSPORT_NODE_PRECOMPUTED_ZETA_TWOPF].asBool();
-        zeta_threepf = reader[__CPP_TRANSPORT_NODE_PRECOMPUTED_ROOT][__CPP_TRANSPORT_NODE_PRECOMPUTED_ZETA_THREEPF].asBool();
-        zeta_redbsp  = reader[__CPP_TRANSPORT_NODE_PRECOMPUTED_ROOT][__CPP_TRANSPORT_NODE_PRECOMPUTED_ZETA_REDBSP].asBool();
-        fNL_local    = reader[__CPP_TRANSPORT_NODE_PRECOMPUTED_ROOT][__CPP_TRANSPORT_NODE_PRECOMPUTED_FNL_LOCAL].asBool();
-        fNL_equi     = reader[__CPP_TRANSPORT_NODE_PRECOMPUTED_ROOT][__CPP_TRANSPORT_NODE_PRECOMPUTED_FNL_EQUI].asBool();
-        fNL_ortho    = reader[__CPP_TRANSPORT_NODE_PRECOMPUTED_ROOT][__CPP_TRANSPORT_NODE_PRECOMPUTED_FNL_ORTHO].asBool();
-        fNL_DBI      = reader[__CPP_TRANSPORT_NODE_PRECOMPUTED_ROOT][__CPP_TRANSPORT_NODE_PRECOMPUTED_FNL_DBI].asBool();
+        zeta_twopf   = reader[CPPTRANSPORT_NODE_PRECOMPUTED_ROOT][CPPTRANSPORT_NODE_PRECOMPUTED_ZETA_TWOPF].asBool();
+        zeta_threepf = reader[CPPTRANSPORT_NODE_PRECOMPUTED_ROOT][CPPTRANSPORT_NODE_PRECOMPUTED_ZETA_THREEPF].asBool();
+        zeta_redbsp  = reader[CPPTRANSPORT_NODE_PRECOMPUTED_ROOT][CPPTRANSPORT_NODE_PRECOMPUTED_ZETA_REDBSP].asBool();
+        fNL_local    = reader[CPPTRANSPORT_NODE_PRECOMPUTED_ROOT][CPPTRANSPORT_NODE_PRECOMPUTED_FNL_LOCAL].asBool();
+        fNL_equi     = reader[CPPTRANSPORT_NODE_PRECOMPUTED_ROOT][CPPTRANSPORT_NODE_PRECOMPUTED_FNL_EQUI].asBool();
+        fNL_ortho    = reader[CPPTRANSPORT_NODE_PRECOMPUTED_ROOT][CPPTRANSPORT_NODE_PRECOMPUTED_FNL_ORTHO].asBool();
+        fNL_DBI      = reader[CPPTRANSPORT_NODE_PRECOMPUTED_ROOT][CPPTRANSPORT_NODE_PRECOMPUTED_FNL_DBI].asBool();
 	    }
 
 
     void precomputed_products::serialize(Json::Value& writer) const
 	    {
-        writer[__CPP_TRANSPORT_NODE_PRECOMPUTED_ROOT][__CPP_TRANSPORT_NODE_PRECOMPUTED_ZETA_TWOPF]   = this->zeta_twopf;
-        writer[__CPP_TRANSPORT_NODE_PRECOMPUTED_ROOT][__CPP_TRANSPORT_NODE_PRECOMPUTED_ZETA_THREEPF] = this->zeta_threepf;
-        writer[__CPP_TRANSPORT_NODE_PRECOMPUTED_ROOT][__CPP_TRANSPORT_NODE_PRECOMPUTED_ZETA_REDBSP]  = this->zeta_redbsp;
-        writer[__CPP_TRANSPORT_NODE_PRECOMPUTED_ROOT][__CPP_TRANSPORT_NODE_PRECOMPUTED_FNL_LOCAL]    = this->fNL_local;
-        writer[__CPP_TRANSPORT_NODE_PRECOMPUTED_ROOT][__CPP_TRANSPORT_NODE_PRECOMPUTED_FNL_EQUI]     = this->fNL_equi;
-        writer[__CPP_TRANSPORT_NODE_PRECOMPUTED_ROOT][__CPP_TRANSPORT_NODE_PRECOMPUTED_FNL_ORTHO]    = this->fNL_ortho;
-        writer[__CPP_TRANSPORT_NODE_PRECOMPUTED_ROOT][__CPP_TRANSPORT_NODE_PRECOMPUTED_FNL_DBI]      = this->fNL_DBI;
+        writer[CPPTRANSPORT_NODE_PRECOMPUTED_ROOT][CPPTRANSPORT_NODE_PRECOMPUTED_ZETA_TWOPF]   = this->zeta_twopf;
+        writer[CPPTRANSPORT_NODE_PRECOMPUTED_ROOT][CPPTRANSPORT_NODE_PRECOMPUTED_ZETA_THREEPF] = this->zeta_threepf;
+        writer[CPPTRANSPORT_NODE_PRECOMPUTED_ROOT][CPPTRANSPORT_NODE_PRECOMPUTED_ZETA_REDBSP]  = this->zeta_redbsp;
+        writer[CPPTRANSPORT_NODE_PRECOMPUTED_ROOT][CPPTRANSPORT_NODE_PRECOMPUTED_FNL_LOCAL]    = this->fNL_local;
+        writer[CPPTRANSPORT_NODE_PRECOMPUTED_ROOT][CPPTRANSPORT_NODE_PRECOMPUTED_FNL_EQUI]     = this->fNL_equi;
+        writer[CPPTRANSPORT_NODE_PRECOMPUTED_ROOT][CPPTRANSPORT_NODE_PRECOMPUTED_FNL_ORTHO]    = this->fNL_ortho;
+        writer[CPPTRANSPORT_NODE_PRECOMPUTED_ROOT][CPPTRANSPORT_NODE_PRECOMPUTED_FNL_DBI]      = this->fNL_DBI;
 	    }
 
 
-    void precomputed_products::write(std::ostream& out) const
+    template <typename Stream>
+    void precomputed_products::write(Stream& out) const
 	    {
-        out << __CPP_TRANSPORT_PAYLOAD_HAS_ZETA_TWO << ": " << (this->zeta_twopf ? __CPP_TRANSPORT_YES : __CPP_TRANSPORT_NO) << std::endl;
-        out << __CPP_TRANSPORT_PAYLOAD_HAS_ZETA_THREE << ": " << (this->zeta_threepf ? __CPP_TRANSPORT_YES : __CPP_TRANSPORT_NO) << std::endl;
-        out << __CPP_TRANSPORT_PAYLOAD_HAS_ZETA_REDBSP << ": " << (this->zeta_redbsp ? __CPP_TRANSPORT_YES : __CPP_TRANSPORT_NO) << std::endl;
-        out << __CPP_TRANSPORT_PAYLOAD_HAS_FNL_LOCAL << ": " << (this->fNL_local ? __CPP_TRANSPORT_YES : __CPP_TRANSPORT_NO) << std::endl;
-        out << __CPP_TRANSPORT_PAYLOAD_HAS_FNL_EQUI << ": " << (this->fNL_equi ? __CPP_TRANSPORT_YES : __CPP_TRANSPORT_NO) << std::endl;
-        out << __CPP_TRANSPORT_PAYLOAD_HAS_FNL_ORTHO << ": " << (this->fNL_ortho ? __CPP_TRANSPORT_YES : __CPP_TRANSPORT_NO) << std::endl;
-        out << __CPP_TRANSPORT_PAYLOAD_HAS_FNL_DBI << ": " << (this->fNL_DBI ? __CPP_TRANSPORT_YES : __CPP_TRANSPORT_NO) << std::endl;
+        out << CPPTRANSPORT_PAYLOAD_HAS_ZETA_TWO << ": " << (this->zeta_twopf ? CPPTRANSPORT_YES : CPPTRANSPORT_NO) << '\n';
+        out << CPPTRANSPORT_PAYLOAD_HAS_ZETA_THREE << ": " << (this->zeta_threepf ? CPPTRANSPORT_YES : CPPTRANSPORT_NO) << '\n';
+        out << CPPTRANSPORT_PAYLOAD_HAS_ZETA_REDBSP << ": " << (this->zeta_redbsp ? CPPTRANSPORT_YES : CPPTRANSPORT_NO) << '\n';
+        out << CPPTRANSPORT_PAYLOAD_HAS_FNL_LOCAL << ": " << (this->fNL_local ? CPPTRANSPORT_YES : CPPTRANSPORT_NO) << '\n';
+        out << CPPTRANSPORT_PAYLOAD_HAS_FNL_EQUI << ": " << (this->fNL_equi ? CPPTRANSPORT_YES : CPPTRANSPORT_NO) << '\n';
+        out << CPPTRANSPORT_PAYLOAD_HAS_FNL_ORTHO << ": " << (this->fNL_ortho ? CPPTRANSPORT_YES : CPPTRANSPORT_NO) << '\n';
+        out << CPPTRANSPORT_PAYLOAD_HAS_FNL_DBI << ": " << (this->fNL_DBI ? CPPTRANSPORT_YES : CPPTRANSPORT_NO) << '\n';
 	    }
 
 
     integration_payload::integration_payload(Json::Value& reader)
 	    : metadata(reader)
 	    {
-        container          = reader[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_DATABASE].asString();
-        fail               = reader[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FAILED].asBool();
-        workgroup_number   = reader[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_WORKGROUP].asUInt();
-        seeded             = reader[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_SEEDED].asBool();
-        seed_group         = reader[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_SEED_GROUP].asString();
-        statistics         = reader[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_STATISTICS].asBool();
-        initial_conditions = reader[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_ICS].asBool();
+        container          = reader[CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_DATABASE].asString();
+        fail               = reader[CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_FAILED].asBool();
+        workgroup_number   = reader[CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_WORKGROUP].asUInt();
+        seeded             = reader[CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_SEEDED].asBool();
+        seed_group         = reader[CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_SEED_GROUP].asString();
+        statistics         = reader[CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_STATISTICS].asBool();
+        initial_conditions = reader[CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_ICS].asBool();
 
-        Json::Value failure_array = reader[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FAILED_SERIALS];
+        Json::Value failure_array = reader[CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_FAILED_SERIALS];
         assert(failure_array.isArray());
         failed_serials.clear();
         for(Json::Value::iterator t = failure_array.begin(); t != failure_array.end(); ++t)
@@ -2322,13 +2336,13 @@ namespace transport
 
     void integration_payload::serialize(Json::Value& writer) const
 	    {
-        writer[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_DATABASE]   = this->container.string();
-        writer[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FAILED]     = this->fail;
-        writer[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_WORKGROUP]  = this->workgroup_number;
-        writer[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_SEEDED]     = this->seeded;
-        writer[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_SEED_GROUP] = this->seed_group;
-        writer[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_STATISTICS] = this->statistics;
-		    writer[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_ICS]        = this->initial_conditions;
+        writer[CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_DATABASE]   = this->container.string();
+        writer[CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_FAILED]     = this->fail;
+        writer[CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_WORKGROUP]  = this->workgroup_number;
+        writer[CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_SEEDED]     = this->seeded;
+        writer[CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_SEED_GROUP] = this->seed_group;
+        writer[CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_STATISTICS] = this->statistics;
+		    writer[CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_ICS]        = this->initial_conditions;
 
         Json::Value failure_array(Json::arrayValue);
         for(std::list<unsigned int>::const_iterator t = this->failed_serials.begin(); t != this->failed_serials.end(); ++t)
@@ -2336,15 +2350,16 @@ namespace transport
             Json::Value element = *t;
             failure_array.append(element);
           }
-        writer[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FAILED_SERIALS] = failure_array;
+        writer[CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_FAILED_SERIALS] = failure_array;
 
         this->metadata.serialize(writer);
 	    }
 
 
-    void integration_payload::write(std::ostream& out) const
+    template <typename Stream>
+    void integration_payload::write(Stream& out) const
 	    {
-        out << __CPP_TRANSPORT_PAYLOAD_INTEGRATION_DATA << " = " << this->container << std::endl;
+        out << CPPTRANSPORT_PAYLOAD_INTEGRATION_DATA << " = " << this->container << '\n';
 	    }
 
 
@@ -2352,14 +2367,14 @@ namespace transport
 	    : metadata(reader),
 	      precomputed(reader)
 	    {
-        container    = reader[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_DATABASE].asString();
-        fail         = reader[__CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_FAILED].asBool();
-        paired       = reader[__CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_PAIRED].asBool();
-        parent_group = reader[__CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_PARENT_GROUP].asString();
-        seeded       = reader[__CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_SEEDED].asBool();
-        seed_group   = reader[__CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_SEED_GROUP].asString();
+        container    = reader[CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_DATABASE].asString();
+        fail         = reader[CPPTRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_FAILED].asBool();
+        paired       = reader[CPPTRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_PAIRED].asBool();
+        parent_group = reader[CPPTRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_PARENT_GROUP].asString();
+        seeded       = reader[CPPTRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_SEEDED].asBool();
+        seed_group   = reader[CPPTRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_SEED_GROUP].asString();
 
-        Json::Value failure_array = reader[__CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_FAILED_SERIALS];
+        Json::Value failure_array = reader[CPPTRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_FAILED_SERIALS];
         assert(failure_array.isArray());
         failed_serials.clear();
         for(Json::Value::iterator t = failure_array.begin(); t != failure_array.end(); ++t)
@@ -2371,12 +2386,12 @@ namespace transport
 
     void postintegration_payload::serialize(Json::Value& writer) const
 	    {
-        writer[__CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_DATABASE]     = this->container.string();
-        writer[__CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_FAILED]       = this->fail;
-        writer[__CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_PAIRED]       = this->paired;
-        writer[__CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_PARENT_GROUP] = this->parent_group;
-        writer[__CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_SEEDED]       = this->seeded;
-        writer[__CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_SEED_GROUP]   = this->seed_group;
+        writer[CPPTRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_DATABASE]     = this->container.string();
+        writer[CPPTRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_FAILED]       = this->fail;
+        writer[CPPTRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_PAIRED]       = this->paired;
+        writer[CPPTRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_PARENT_GROUP] = this->parent_group;
+        writer[CPPTRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_SEEDED]       = this->seeded;
+        writer[CPPTRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_SEED_GROUP]   = this->seed_group;
 
         Json::Value failure_array(Json::arrayValue);
         for(std::list<unsigned int>::const_iterator t = this->failed_serials.begin(); t != this->failed_serials.end(); ++t)
@@ -2384,16 +2399,17 @@ namespace transport
             Json::Value element = *t;
             failure_array.append(element);
           }
-        writer[__CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_FAILED_SERIALS] = failure_array;
+        writer[CPPTRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_FAILED_SERIALS] = failure_array;
 
         this->metadata.serialize(writer);
         this->precomputed.serialize(writer);
 	    }
 
 
-    void postintegration_payload::write(std::ostream& out) const
+    template <typename Stream>
+    void postintegration_payload::write(Stream& out) const
 	    {
-        out << __CPP_TRANSPORT_PAYLOAD_INTEGRATION_DATA << " = " << this->container << std::endl;
+        out << CPPTRANSPORT_PAYLOAD_INTEGRATION_DATA << " = " << this->container << '\n';
 
         this->precomputed.write(out);
 	    }
@@ -2402,9 +2418,9 @@ namespace transport
     output_payload::output_payload(Json::Value& reader)
 	    : metadata(reader)
 	    {
-        fail = reader[__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_FAILED].asBool();
+        fail = reader[CPPTRANSPORT_NODE_PAYLOAD_CONTENT_FAILED].asBool();
 
-        Json::Value& content_array = reader[__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_ARRAY];
+        Json::Value& content_array = reader[CPPTRANSPORT_NODE_PAYLOAD_CONTENT_ARRAY];
 		    assert(content_array.isArray());
 
         for(Json::Value::iterator t = content_array.begin(); t != content_array.end(); ++t)
@@ -2416,7 +2432,7 @@ namespace transport
 
     void output_payload::serialize(Json::Value& writer) const
 	    {
-        writer[__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_FAILED] = this->fail;
+        writer[CPPTRANSPORT_NODE_PAYLOAD_CONTENT_FAILED] = this->fail;
 
         Json::Value content_array(Json::arrayValue);
 
@@ -2426,31 +2442,32 @@ namespace transport
             (*t).serialize(element);
 		        content_array.append(element);
 	        }
-        writer[__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_ARRAY] = content_array;
+        writer[CPPTRANSPORT_NODE_PAYLOAD_CONTENT_ARRAY] = content_array;
 
         this->metadata.serialize(writer);
 	    }
 
 
-    void output_payload::write(std::ostream& out) const
+    template <typename Stream>
+    void output_payload::write(Stream& out) const
 	    {
         for(std::list<derived_content>::const_iterator t = this->content.begin(); t != this->content.end(); ++t)
 	        {
-            out << __CPP_TRANSPORT_PAYLOAD_OUTPUT_CONTENT_PRODUCT << " = " << (*t).get_parent_product() << ", "
-	            << __CPP_TRANSPORT_PAYLOAD_OUTPUT_CONTENT_PATH    << " = " << (*t).get_filename() << std::endl;
+            out << CPPTRANSPORT_PAYLOAD_OUTPUT_CONTENT_PRODUCT << " = " << (*t).get_parent_product() << ", "
+	            << CPPTRANSPORT_PAYLOAD_OUTPUT_CONTENT_PATH    << " = " << (*t).get_filename() << '\n';
 	        }
 	    }
 
 
     derived_content::derived_content(Json::Value& reader)
 	    {
-        parent_product = reader[__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_PRODUCT_NAME].asString();
-        filename = reader[__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_FILENAME].asString();
+        parent_product = reader[CPPTRANSPORT_NODE_PAYLOAD_CONTENT_PRODUCT_NAME].asString();
+        filename = reader[CPPTRANSPORT_NODE_PAYLOAD_CONTENT_FILENAME].asString();
 
-        std::string ctime_string = reader[__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_CREATED].asString();
+        std::string ctime_string = reader[CPPTRANSPORT_NODE_PAYLOAD_CONTENT_CREATED].asString();
         created = boost::posix_time::from_iso_string(ctime_string);
 
-        Json::Value& content_groups_array = reader[__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_USED_GROUPS];
+        Json::Value& content_groups_array = reader[CPPTRANSPORT_NODE_PAYLOAD_CONTENT_USED_GROUPS];
         assert(content_groups_array.isArray());
 
         for(Json::Value::iterator t = content_groups_array.begin(); t != content_groups_array.end(); ++t)
@@ -2458,7 +2475,7 @@ namespace transport
             this->content_groups.push_back(t->asString());
           }
 
-        Json::Value note_list = reader[__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_NOTES];
+        Json::Value note_list = reader[CPPTRANSPORT_NODE_PAYLOAD_CONTENT_NOTES];
 		    assert(note_list.isArray());
 
         for(Json::Value::iterator t = note_list.begin(); t != note_list.end(); ++t)
@@ -2466,7 +2483,7 @@ namespace transport
             notes.push_back(t->asString());
 	        }
 
-        Json::Value tag_list = reader[__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_TAGS];
+        Json::Value tag_list = reader[CPPTRANSPORT_NODE_PAYLOAD_CONTENT_TAGS];
 		    assert(tag_list.isArray());
 
         for(Json::Value::iterator t = tag_list.begin(); t != tag_list.end(); ++t)
@@ -2478,9 +2495,9 @@ namespace transport
 
     void derived_content::serialize(Json::Value& writer) const
 	    {
-        writer[__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_PRODUCT_NAME] = this->parent_product;
-        writer[__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_FILENAME]     = this->filename.string();
-        writer[__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_CREATED]      = boost::posix_time::to_iso_string(this->created);
+        writer[CPPTRANSPORT_NODE_PAYLOAD_CONTENT_PRODUCT_NAME] = this->parent_product;
+        writer[CPPTRANSPORT_NODE_PAYLOAD_CONTENT_FILENAME]     = this->filename.string();
+        writer[CPPTRANSPORT_NODE_PAYLOAD_CONTENT_CREATED]      = boost::posix_time::to_iso_string(this->created);
 
         Json::Value content_groups_array(Json::arrayValue);
 
@@ -2489,7 +2506,7 @@ namespace transport
             Json::Value element = *t;
             content_groups_array.append(element);
           }
-        writer[__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_USED_GROUPS] = content_groups_array;
+        writer[CPPTRANSPORT_NODE_PAYLOAD_CONTENT_USED_GROUPS] = content_groups_array;
 
         Json::Value note_list(Json::arrayValue);
 
@@ -2498,7 +2515,7 @@ namespace transport
             Json::Value note_element = *t;
 		        note_list.append(note_element);
 	        }
-        writer[__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_NOTES] = note_list;
+        writer[CPPTRANSPORT_NODE_PAYLOAD_CONTENT_NOTES] = note_list;
 
         Json::Value tag_list(Json::arrayValue);
 
@@ -2507,7 +2524,7 @@ namespace transport
             Json::Value tag_element = *t;
 		        tag_list.append(tag_element);
 	        }
-        writer[__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_TAGS] = tag_list;
+        writer[CPPTRANSPORT_NODE_PAYLOAD_CONTENT_TAGS] = tag_list;
 	    }
 
 	}   // namespace transport

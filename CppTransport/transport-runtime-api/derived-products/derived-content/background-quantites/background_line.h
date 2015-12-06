@@ -25,10 +25,10 @@
 #include "transport-runtime-api/derived-products/derived-content/SQL_query/SQL_query_helper.h"
 
 
-#define __CPP_TRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_TYPE       "type"
-#define __CPP_TRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_EPSILON    "epsilon"
-#define __CPP_TRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_HUBBLE     "hubble"
-#define __CPP_TRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_A_HUBBLE   "a-hubble"
+#define CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_TYPE       "type"
+#define CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_EPSILON    "epsilon"
+#define CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_HUBBLE     "hubble"
+#define CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_A_HUBBLE   "a-hubble"
 
 
 namespace transport
@@ -36,8 +36,6 @@ namespace transport
 
 		namespace derived_data
 			{
-
-		    typedef enum { epsilon, Hubble, aHubble } background_line_type;
 
 				template <typename number>
 		    class background_line: public time_series<number>
@@ -48,7 +46,7 @@ namespace transport
 		      public:
 
 				    //! basic user-facing constructor
-				    background_line(const twopf_list_task<number>& tk, SQL_time_config_query tq, background_line_type t, unsigned int prec = __CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
+				    background_line(const twopf_list_task<number>& tk, SQL_time_config_query tq, background_quantity t, unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
 				    //! deserialization constructor
 				    background_line(Json::Value& reader, typename repository_finder<number>::task_finder& finder);
@@ -120,14 +118,14 @@ namespace transport
 				    SQL_time_config_query tquery;
 
 				    //! line type
-				    background_line_type type;
+            background_quantity type;
 
 			    };
 
 
 				template <typename number>
-				background_line<number>::background_line(const twopf_list_task<number>& tk, SQL_time_config_query tq, background_line_type t, unsigned int prec)
-					: derived_line<number>(tk, time_axis, std::list<axis_value>{ efolds_axis }, prec),
+				background_line<number>::background_line(const twopf_list_task<number>& tk, SQL_time_config_query tq, background_quantity t, unsigned int prec)
+					: derived_line<number>(tk, axis_class::time_axis, std::list<axis_value>{ axis_value::efolds_axis }, prec),
 		        time_series<number>(tk),
 		        gadget(tk),
 		        tquery(tq),
@@ -141,16 +139,16 @@ namespace transport
 					: derived_line<number>(reader, finder),
 		        time_series<number>(reader),
 						gadget(),
-						tquery(reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY])
+						tquery(reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY])
 					{
 						assert(this->parent_task != nullptr);
 						gadget.set_task(this->parent_task, finder);
 
-				    std::string type_string = reader[__CPP_TRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_TYPE].asString();
-						type = epsilon;
-						if(type_string == __CPP_TRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_EPSILON)         type = epsilon;
-						else if(type_string == __CPP_TRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_HUBBLE)     type = Hubble;
-						else if(type_string == __CPP_TRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_A_HUBBLE)   type = aHubble;
+				    std::string type_string = reader[CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_TYPE].asString();
+						type = background_quantity::epsilon;
+						if(type_string == CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_EPSILON)         type = background_quantity::epsilon;
+						else if(type_string == CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_HUBBLE)     type = background_quantity::Hubble;
+						else if(type_string == CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_A_HUBBLE)   type = background_quantity::aHubble;
 						else assert(false); // TODO: raise exception
 					}
 
@@ -158,27 +156,23 @@ namespace transport
 				template <typename number>
 				void background_line<number>::serialize(Json::Value& writer) const
 					{
-						writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_BACKGROUND_LINE);
+						writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_BACKGROUND_LINE);
 
-						this->tquery.serialize(writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]);
+						this->tquery.serialize(writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]);
 
 				    switch(this->type)
 					    {
-				        case epsilon:
-					        writer[__CPP_TRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_TYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_EPSILON);
+				        case background_quantity::epsilon:
+					        writer[CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_TYPE] = std::string(CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_EPSILON);
 						      break;
 
-				        case Hubble:
-					        writer[__CPP_TRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_TYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_HUBBLE);
+				        case background_quantity::Hubble:
+					        writer[CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_TYPE] = std::string(CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_HUBBLE);
 						      break;
 
-				        case aHubble:
-					        writer[__CPP_TRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_TYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_A_HUBBLE);
+                case background_quantity::aHubble:
+					        writer[CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_TYPE] = std::string(CPPTRANSPORT_NODE_PRODUCT_BACKGROUND_LINE_A_HUBBLE);
 						      break;
-
-				        default:
-					        assert(false);
-						      // TODO: raise exception
 					    }
 
 						this->time_series<number>::serialize(writer);
@@ -214,15 +208,15 @@ namespace transport
 
 				    switch(this->type)
 					    {
-				        case epsilon:
+				        case background_quantity::epsilon:
 					        this->epsilon_line(group, pipe, lines, tags, t_axis, bg_data);
 					        break;
 
-				        case Hubble:
+				        case background_quantity::Hubble:
 					        this->Hubble_line(group, pipe, lines, tags, t_axis, bg_data);
 					        break;
 
-				        case aHubble:
+				        case background_quantity::aHubble:
 					        this->aHubble_line(group, pipe, lines, tags, t_axis, bg_data);
 					        break;
 					    }
@@ -245,7 +239,7 @@ namespace transport
 				        line_data[j] = mdl->epsilon(this->gadget.get_integration_task()->get_params(), bg_data[j]);
 					    }
 
-				    data_line<number> line(group, this->x_type, dimensionless_value, t_axis, line_data,
+				    data_line<number> line(group, this->x_type, value_type::dimensionless_value, t_axis, line_data,
 				                           this->get_LaTeX_label(), this->get_non_LaTeX_label());
 				    lines.push_back(line);
 			    }
@@ -265,7 +259,7 @@ namespace transport
 		            line_data[j] = mdl->H(this->gadget.get_integration_task()->get_params(), bg_data[j]) / this->gadget.get_integration_task()->get_params().get_Mp();
 			        }
 
-		        data_line<number> line(group, this->x_type, dimensionless_value, t_axis, line_data,
+		        data_line<number> line(group, this->x_type, value_type::dimensionless_value, t_axis, line_data,
 		                               this->get_LaTeX_label(), this->get_non_LaTeX_label());
 		        lines.push_back(line);
 			    }
@@ -290,7 +284,7 @@ namespace transport
 		            line_data[j] = a * mdl->H(this->gadget.get_integration_task()->get_params(), bg_data[j]) / this->gadget.get_integration_task()->get_params().get_Mp();
 			        }
 
-		        data_line<number> line(group, this->x_type, dimensionless_value, t_axis, line_data,
+		        data_line<number> line(group, this->x_type, value_type::dimensionless_value, t_axis, line_data,
 		                               this->get_LaTeX_label(), this->get_non_LaTeX_label());
 		        lines.push_back(line);
 			    }
@@ -309,21 +303,17 @@ namespace transport
 							{
 								switch(this->type)
 									{
-								    case epsilon:
-									    label = "$" + std::string(__CPP_TRANSPORT_LATEX_EPSILON_SYMBOL) + "$";
+								    case background_quantity::epsilon:
+									    label = "$" + std::string(CPPTRANSPORT_LATEX_EPSILON_SYMBOL) + "$";
 											break;
 
-								    case Hubble:
-									    label = "$" + std::string(__CPP_TRANSPORT_LATEX_HUBBLE_SYMBOL) + "$";
+								    case background_quantity::Hubble:
+									    label = "$" + std::string(CPPTRANSPORT_LATEX_HUBBLE_SYMBOL) + "$";
 											break;
 
-								    case aHubble:
-									    label = "$" + std::string(__CPP_TRANSPORT_LATEX_A_HUBBLE_SYMBOL) + "$";
+                    case background_quantity::aHubble:
+									    label = "$" + std::string(CPPTRANSPORT_LATEX_A_HUBBLE_SYMBOL) + "$";
 											break;
-
-								    default:
-									    assert(false);
-											// TODO: raise exception
 									}
 							}
 
@@ -344,21 +334,17 @@ namespace transport
 			        {
 		            switch(this->type)
 			            {
-		                case epsilon:
-			                label = "$" + std::string(__CPP_TRANSPORT_NONLATEX_EPSILON_SYMBOL) + "$";
-		                break;
+		                case background_quantity::epsilon:
+			                label = "$" + std::string(CPPTRANSPORT_NONLATEX_EPSILON_SYMBOL) + "$";
+		                  break;
 
-		                case Hubble:
-			                label = "$" + std::string(__CPP_TRANSPORT_NONLATEX_HUBBLE_SYMBOL) + "$";
-		                break;
+		                case background_quantity::Hubble:
+			                label = "$" + std::string(CPPTRANSPORT_NONLATEX_HUBBLE_SYMBOL) + "$";
+	  	                break;
 
-		                case aHubble:
-			                label = "$" + std::string(__CPP_TRANSPORT_NONLATEX_A_HUBBLE_SYMBOL) + "$";
-		                break;
-
-		                default:
-			                assert(false);
-		                // TODO: raise exception
+                    case background_quantity::aHubble:
+			                label = "$" + std::string(CPPTRANSPORT_NONLATEX_A_HUBBLE_SYMBOL) + "$";
+  		                break;
 			            }
 			        }
 

@@ -41,7 +41,7 @@ namespace transport
 
             //! construct a background time-data object
             background_time_series(const twopf_list_task<number>& tk, index_selector<1>& sel,
-                                   SQL_time_config_query tq, unsigned int prec = __CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
+                                   SQL_time_config_query tq, unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
 		        //! deserialization constructor.
 		        background_time_series(Json::Value& reader, typename repository_finder<number>::task_finder& finder);
@@ -107,7 +107,7 @@ namespace transport
 		    template <typename number>
 		    background_time_series<number>::background_time_series(const twopf_list_task<number>& tk, index_selector<1>& sel,
 		                                                           SQL_time_config_query tq, unsigned int prec)
-			    : derived_line<number>(tk, time_axis, std::list<axis_value>{ efolds_axis }, prec),
+			    : derived_line<number>(tk, axis_class::time_axis, std::list<axis_value>{ axis_value::efolds_axis }, prec),
 			      time_series<number>(tk),
 			      gadget(tk),
 			      active_indices(sel),
@@ -116,10 +116,10 @@ namespace transport
 		        if(active_indices.get_number_fields() != gadget.get_N_fields())
 			        {
 		            std::ostringstream msg;
-		            msg << __CPP_TRANSPORT_PRODUCT_INDEX_MISMATCH << " ("
-			              << __CPP_TRANSPORT_PRODUCT_INDEX_MISMATCH_A << " " << active_indices.get_number_fields() << ", "
-			              << __CPP_TRANSPORT_PRODUCT_INDEX_MISMATCH_B << " " << gadget.get_N_fields() << ")";
-		            throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
+		            msg << CPPTRANSPORT_PRODUCT_INDEX_MISMATCH << " ("
+			              << CPPTRANSPORT_PRODUCT_INDEX_MISMATCH_A << " " << active_indices.get_number_fields() << ", "
+			              << CPPTRANSPORT_PRODUCT_INDEX_MISMATCH_B << " " << gadget.get_N_fields() << ")";
+		            throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
 			        }
 			    }
 
@@ -131,7 +131,7 @@ namespace transport
 			      time_series<number>(reader),
 			      gadget(),
 			      active_indices(reader),
-			      tquery(reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY])
+			      tquery(reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY])
 			    {
 				    assert(this->parent_task != nullptr);
 		        gadget.set_task(this->parent_task, finder);
@@ -142,8 +142,8 @@ namespace transport
 		    template <typename number>
 		    void background_time_series<number>::write(std::ostream& out)
 			    {
-		        out << "  " << __CPP_TRANSPORT_PRODUCT_TIME_SERIES_LABEL_BACKGROUND << std::endl;
-		        out << "  " << __CPP_TRANSPORT_PRODUCT_LINE_COLLECTION_LABEL_INDICES << " ";
+		        out << "  " << CPPTRANSPORT_PRODUCT_TIME_SERIES_LABEL_BACKGROUND << '\n';
+		        out << "  " << CPPTRANSPORT_PRODUCT_LINE_COLLECTION_LABEL_INDICES << " ";
 
 		        integration_task<number>* itk = dynamic_cast< integration_task<number>* >(this->get_parent_task());
 		        this->active_indices.write(out, itk->get_model()->get_state_names());
@@ -158,10 +158,10 @@ namespace transport
 		    template <typename number>
 		    void background_time_series<number>::serialize(Json::Value& writer) const
 			    {
-		        writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_BACKGROUND);
+		        writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_BACKGROUND);
 
 		        this->active_indices.serialize(writer);
-		        this->tquery.serialize(writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]);
+		        this->tquery.serialize(writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]);
 
 		        this->time_series<number>::serialize(writer);
 				    this->derived_line<number>::serialize(writer);
@@ -191,7 +191,7 @@ namespace transport
                     // it's safe to take a reference here to avoid a copy; we don't need the cache data to survive over multiple calls to lookup_tag()
                     const std::vector<number>& line_data = handle.lookup_tag(tag);
 
-                    data_line<number> line = data_line<number>(group, this->x_type, this->gadget.get_model()->is_field(m) ? field_value : momentum_value, t_axis, line_data,
+                    data_line<number> line = data_line<number>(group, this->x_type, this->gadget.get_model()->is_field(m) ? value_type::field_value :  value_type::momentum_value, t_axis, line_data,
                                                                this->make_LaTeX_label(m), this->make_non_LaTeX_label(m));
 
                     lines.push_back(line);
@@ -219,14 +219,16 @@ namespace transport
 				        const std::vector<std::string>& field_names = this->gadget.get_model()->get_f_latex_names();
 
 				        label << "$";
-				        if(this->get_dot_meaning() == derivatives)
-					        {
-				            label << field_names[i % N_fields] << (i >= N_fields ? "^{" __CPP_TRANSPORT_LATEX_PRIME_SYMBOL "}" : "");
-					        }
-				        else
-					        {
-				            label << (i >= N_fields ? "p_{" : "") << field_names[i % N_fields] << (i >= N_fields ? "}" : "");
-					        }
+                switch(this->get_dot_meaning())
+                  {
+                    case dot_type::derivatives:
+                      label << field_names[i % N_fields] << (i >= N_fields ? "^{" CPPTRANSPORT_LATEX_PRIME_SYMBOL "}" : "");
+                      break;
+
+                    case dot_type::momenta:
+                      label << (i >= N_fields ? "p_{" : "") << field_names[i % N_fields] << (i >= N_fields ? "}" : "");
+                      break;
+                  }
 				        label << "$";
 					    }
 
@@ -249,14 +251,16 @@ namespace transport
 
 				        const std::vector<std::string>& field_names = this->gadget.get_model()->get_field_names();
 
-				        if(this->get_dot_meaning() == derivatives)
-					        {
-				            label << field_names[i % N_fields] << (i >= N_fields ? __CPP_TRANSPORT_NONLATEX_PRIME_SYMBOL : "");
-					        }
-				        else
-					        {
-				            label << (i >= N_fields ? "p_{" : "") << field_names[i % N_fields] << (i >= N_fields ? "}" : "");
-					        }
+                switch(this->get_dot_meaning())
+                  {
+                    case dot_type::derivatives:
+                      label << field_names[i % N_fields] << (i >= N_fields ? CPPTRANSPORT_NONLATEX_PRIME_SYMBOL : "");
+                      break;
+
+                    case dot_type::momenta:
+                      label << (i >= N_fields ? "p_{" : "") << field_names[i % N_fields] << (i >= N_fields ? "}" : "");
+                      break;
+                  }
 					    }
 
 		        return(label.str());
@@ -275,7 +279,7 @@ namespace transport
 		        //! construct a twopf time-series object
 		        twopf_time_series(const twopf_list_task<number>& tk, index_selector<2>& sel,
 		                          SQL_time_config_query tq, SQL_twopf_kconfig_query kq,
-		                          unsigned int prec = __CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
+		                          unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
 		        //! deserialization constuctor.
 		        twopf_time_series(Json::Value& reader, typename repository_finder<number>::task_finder& finder);
@@ -334,7 +338,7 @@ namespace transport
 		    template <typename number>
 		    twopf_time_series<number>::twopf_time_series(const twopf_list_task<number>& tk, index_selector<2>& sel,
 		                                                 SQL_time_config_query tq, SQL_twopf_kconfig_query kq, unsigned int prec)
-			    : derived_line<number>(tk, time_axis, std::list<axis_value>{ efolds_axis }, prec),
+			    : derived_line<number>(tk, axis_class::time_axis, std::list<axis_value>{ axis_value::efolds_axis }, prec),
 			      twopf_line<number>(tk, sel),
 			      time_series<number>(tk),
 			      tquery(tq),
@@ -350,8 +354,8 @@ namespace transport
 			    : derived_line<number>(reader, finder),
 			      twopf_line<number>(reader, finder),
 			      time_series<number>(reader),
-			      tquery(reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]),
-			      kquery(reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY])
+			      tquery(reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]),
+			      kquery(reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY])
 			    {
 			    }
 
@@ -387,28 +391,24 @@ namespace transport
 		                    if(this->active_indices.is_on(index_set))
 			                    {
 		                        cf_time_data_tag<number> tag =
-			                                                 pipe.new_cf_time_data_tag(this->is_real_twopf() ? data_tag<number>::cf_twopf_re : data_tag<number>::cf_twopf_im,
+			                                                 pipe.new_cf_time_data_tag(this->is_real_twopf() ? cf_data_type::cf_twopf_re : cf_data_type::cf_twopf_im,
 			                                                                           this->gadget.get_model()->flatten(m, n), t->serial);
 
 		                        std::vector<number> line_data = t_handle.lookup_tag(tag);
 
+                            value_type value = value_type::correlation_function_value;
 		                        if(this->dimensionless)
 			                        {
 		                            for(unsigned int j = 0; j < line_data.size(); ++j)
 			                            {
 		                                line_data[j] *= t->k_comoving * t->k_comoving * t->k_comoving / (2.0*M_PI*M_PI);
 			                            }
+                                value = value_type::dimensionless_value;
+			                        }
 
-		                            data_line<number> line = data_line<number>(group, this->x_type, dimensionless_value, t_axis, line_data,
-		                                                                       this->get_LaTeX_label(m,n,*t), this->get_non_LaTeX_label(m,n,*t));
-		                            lines.push_back(line);
-			                        }
-		                        else
-			                        {
-		                            data_line<number> line = data_line<number>(group, this->x_type, correlation_function_value, t_axis, line_data,
-		                                                                       this->get_LaTeX_label(m,n,*t), this->get_non_LaTeX_label(m,n,*t));
-		                            lines.push_back(line);
-			                        }
+                            data_line<number> line = data_line<number>(group, this->x_type, value, t_axis, line_data,
+                                                                       this->get_LaTeX_label(m,n,*t), this->get_non_LaTeX_label(m,n,*t));
+                            lines.push_back(line);
 			                    }
 			                }
 			            }
@@ -475,10 +475,10 @@ namespace transport
 		    template <typename number>
 		    void twopf_time_series<number>::serialize(Json::Value& writer) const
 			    {
-		        writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TWOPF_TIME_SERIES);
+		        writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TWOPF_TIME_SERIES);
 
-		        this->tquery.serialize(writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]);
-		        this->kquery.serialize(writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY]);
+		        this->tquery.serialize(writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]);
+		        this->kquery.serialize(writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY]);
 
 				    this->derived_line<number>::serialize(writer);
 				    this->twopf_line<number>::serialize(writer);
@@ -498,7 +498,7 @@ namespace transport
             //! construct a threepf time-data object
             threepf_time_series(const threepf_task<number>& tk, index_selector<3>& sel,
                                 SQL_time_config_query tq, SQL_threepf_kconfig_query kq,
-                                unsigned int prec = __CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
+                                unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
 		        //! deserialization constructor.
 		        threepf_time_series(Json::Value& reader, typename repository_finder<number>::task_finder& finder);
@@ -564,7 +564,7 @@ namespace transport
 		    threepf_time_series<number>::threepf_time_series(const threepf_task<number>& tk, index_selector<3>& sel,
 		                                                     SQL_time_config_query tq, SQL_threepf_kconfig_query kq,
 		                                                     unsigned int prec)
-			    : derived_line<number>(tk, time_axis, std::list<axis_value>{ efolds_axis }, prec),
+			    : derived_line<number>(tk, axis_class::time_axis, std::list<axis_value>{ axis_value::efolds_axis }, prec),
 			      threepf_line<number>(tk, sel),
 			      time_series<number>(tk),
 			      tquery(tq),
@@ -580,8 +580,8 @@ namespace transport
 			    : derived_line<number>(reader, finder),
 		        threepf_line<number>(reader, finder),
 		        time_series<number>(reader),
-		        tquery(reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]),
-		        kquery(reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY])
+		        tquery(reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]),
+		        kquery(reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY])
 			    {
 			    }
 
@@ -622,19 +622,24 @@ namespace transport
 		                        std::array<unsigned int, 3> index_set = { l, m, n };
 		                        if(this->active_indices.is_on(index_set))
 			                        {
-				                        cf_time_data_tag<number> tag = pipe.new_cf_time_data_tag(data_tag<number>::cf_threepf, this->gadget.get_model()->flatten(l,m,n), t->serial);
+				                        cf_time_data_tag<number> tag = pipe.new_cf_time_data_tag(this->get_dot_meaning() == dot_type::derivatives ? cf_data_type::cf_threepf_Nderiv : cf_data_type::cf_threepf_momentum,
+                                                                                         this->gadget.get_model()->flatten(l,m,n), t->serial);
 
 		                            std::vector<number> line_data = t_handle.lookup_tag(tag);
 
-		                            // the integrator produces correlation functions involving the canonical momenta,
-		                            // not the derivatives. If the user wants derivatives then we have to shift.
-		                            if(this->get_dot_meaning() == derivatives)
-			                            this->shifter.shift(this->gadget.get_integration_task(), this->gadget.get_model(), pipe, this->tquery, line_data, t_values, l, m, n, *t);
+                                value_type value = value_type::correlation_function_value;
+                                if(this->dimensionless)
+                                  {
+                                    for(unsigned int j = 0; j < line_data.size(); ++j)
+                                      {
+                                        line_data[j] *= t->kt_comoving * t->kt_comoving * t->kt_comoving * t->kt_comoving * t->kt_comoving * t->kt_comoving;
+                                      }
+                                    value = value_type::dimensionless_value;
+                                  }
 
-		                            data_line<number> line = data_line<number>(group, this->x_type, correlation_function_value, t_axis, line_data,
-		                                                                       this->get_LaTeX_label(l, m, n, *t), this->get_non_LaTeX_label(l, m, n, *t));
-
-		                            lines.push_back(line);
+                                data_line<number> line = data_line<number>(group, this->x_type, value, t_axis, line_data,
+                                                                           this->get_LaTeX_label(l, m, n, *t), this->get_non_LaTeX_label(l, m, n, *t));
+                                lines.push_back(line);
 			                        }
 			                    }
 			                }
@@ -702,10 +707,10 @@ namespace transport
 		    template <typename number>
 		    void threepf_time_series<number>::serialize(Json::Value& writer) const
 			    {
-		        writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_TIME_SERIES);
+		        writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_TIME_SERIES);
 
-		        this->tquery.serialize(writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]);
-		        this->kquery.serialize(writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY]);
+		        this->tquery.serialize(writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]);
+		        this->kquery.serialize(writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY]);
 
 		        this->derived_line<number>::serialize(writer);
 				    this->threepf_line<number>::serialize(writer);

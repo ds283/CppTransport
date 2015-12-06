@@ -1,6 +1,6 @@
-[submodule "CppTransport/splinter"]
-	path = CppTransport/splinter
-	url = https://github.com/bgrimstad/splinter.git
-[submodule "CppTransport/odeint"]
-	path = CppTransport/odeint
-	url = https://github.com/headmyshoulder/odeint-v2.git
+[submodule "CppTransport/thirdparty/jsoncpp"]
+	path = CppTransport/thirdparty/jsoncpp
+	url = https://ds283@github.com/open-source-parsers/jsoncpp.git
+[submodule "CppTransport/thirdparty/splinter"]
+	path = CppTransport/thirdparty/splinter
+	url = https://ds283@github.com/bgrimstad/splinter.git

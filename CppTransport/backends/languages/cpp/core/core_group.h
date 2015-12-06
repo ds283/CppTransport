@@ -26,25 +26,22 @@
 class core_group: public package_group
   {
 
+    // CONSTRUCTOR, DESTRUCTOR
+
   public:
 
-    core_group(translation_unit* u, ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& cache);
-    ~core_group();
+    core_group(translator_data& p, ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& cache);
 
-		virtual void report_end_of_input() override;
+    //! destructor is default
+    virtual ~core_group() = default;
+
+
+    // INTERNAL DATA
 
   protected:
 
-    cpp::cpp_printer                    printer;
+    cpp::cpp_printer printer;
 
-    macro_packages::fundamental*        f;
-    macro_packages::flow_tensors*       ft;
-    macro_packages::lagrangian_tensors* lt;
-    macro_packages::utensors*           ut;
-    macro_packages::gauge_xfm*          xf;
-    macro_packages::temporary_pool*     tp;
-    macro_packages::summation*          su;
-    cpp::core_macros*                   cm;
   };
 
 

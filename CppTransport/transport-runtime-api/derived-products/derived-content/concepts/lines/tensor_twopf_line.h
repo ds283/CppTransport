@@ -113,10 +113,10 @@ namespace transport
 				    if(active_indices.get_number_fields() != 2)
 					    {
 				        std::ostringstream msg;
-						    msg << __CPP_TRANSPORT_PRODUCT_INDEX_MISMATCH << " ("
-								    << __CPP_TRANSPORT_PRODUCT_INDEX_MISMATCH_A << " " << active_indices.get_number_fields() << ", "
-								    << __CPP_TRANSPORT_PRODUCT_INDEX_MISMATCH_B << " 2)";
-				        throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
+						    msg << CPPTRANSPORT_PRODUCT_INDEX_MISMATCH << " ("
+								    << CPPTRANSPORT_PRODUCT_INDEX_MISMATCH_A << " " << active_indices.get_number_fields() << ", "
+								    << CPPTRANSPORT_PRODUCT_INDEX_MISMATCH_B << " 2)";
+				        throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
 					    }
 			    }
 
@@ -140,20 +140,20 @@ namespace transport
 				    if(m > 1 || n > 1)
 					    {
 				        std::ostringstream msg;
-						    msg << __CPP_TRANSPORT_PRODUCT_INDEX_BOUNDS << " (" << m << "," << n << ")";
-						    throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
+						    msg << CPPTRANSPORT_PRODUCT_INDEX_BOUNDS << " (" << m << "," << n << ")";
+						    throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
 					    }
 
 		        std::ostringstream label;
 		        label << std::setprecision(this->precision);
 
-		        if(m == 0)      label << __CPP_TRANSPORT_LATEX_TENSOR_SYMBOL;
-				    else if(m == 1) label << __CPP_TRANSPORT_LATEX_TENSOR_MOMENTUM_SYMBOL;
+		        if(m == 0)      label << CPPTRANSPORT_LATEX_TENSOR_SYMBOL;
+				    else if(m == 1) label << CPPTRANSPORT_LATEX_TENSOR_MOMENTUM_SYMBOL;
 
 				    label << " ";
 
-				    if(n == 0)      label << __CPP_TRANSPORT_LATEX_TENSOR_SYMBOL;
-				    else if(n == 1) label << __CPP_TRANSPORT_LATEX_TENSOR_MOMENTUM_SYMBOL;
+				    if(n == 0)      label << CPPTRANSPORT_LATEX_TENSOR_SYMBOL;
+				    else if(n == 1) label << CPPTRANSPORT_LATEX_TENSOR_MOMENTUM_SYMBOL;
 
 				    return(label.str());
 			    }
@@ -167,20 +167,20 @@ namespace transport
             if(m > 1 || n > 1)
 	            {
                 std::ostringstream msg;
-                msg << __CPP_TRANSPORT_PRODUCT_INDEX_BOUNDS << " (" << m << "," << n << ")";
-                throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
+                msg << CPPTRANSPORT_PRODUCT_INDEX_BOUNDS << " (" << m << "," << n << ")";
+                throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
 	            }
 
             std::ostringstream label;
             label << std::setprecision(this->precision);
 
-            if(m == 0)      label << __CPP_TRANSPORT_NONLATEX_TENSOR_SYMBOL;
-            else if(m == 1) label << __CPP_TRANSPORT_NONLATEX_TENSOR_MOMENTUM_SYMBOL;
+            if(m == 0)      label << CPPTRANSPORT_NONLATEX_TENSOR_SYMBOL;
+            else if(m == 1) label << CPPTRANSPORT_NONLATEX_TENSOR_MOMENTUM_SYMBOL;
 
             label << " ";
 
-            if(n == 0)      label << __CPP_TRANSPORT_NONLATEX_TENSOR_SYMBOL;
-            else if(n == 1) label << __CPP_TRANSPORT_NONLATEX_TENSOR_MOMENTUM_SYMBOL;
+            if(n == 0)      label << CPPTRANSPORT_NONLATEX_TENSOR_SYMBOL;
+            else if(n == 1) label << CPPTRANSPORT_NONLATEX_TENSOR_MOMENTUM_SYMBOL;
 
             return(label.str());
 	        }
@@ -196,12 +196,12 @@ namespace transport
 		    template <typename number>
 		    void tensor_twopf_line<number>::write(std::ostream& out)
 			    {
-		        std::vector<std::string> names = { __CPP_TRANSPORT_NONLATEX_TENSOR_SYMBOL, __CPP_TRANSPORT_NONLATEX_TENSOR_MOMENTUM_SYMBOL };
+		        std::vector<std::string> names = { CPPTRANSPORT_NONLATEX_TENSOR_SYMBOL, CPPTRANSPORT_NONLATEX_TENSOR_MOMENTUM_SYMBOL };
 
-				    out << " " << __CPP_TRANSPORT_PRODUCT_WAVENUMBER_SERIES_LABEL_TENSOR_TWOPF << std::endl;
-		        out << "  " << __CPP_TRANSPORT_PRODUCT_LINE_COLLECTION_LABEL_INDICES << " ";
+				    out << " " << CPPTRANSPORT_PRODUCT_WAVENUMBER_SERIES_LABEL_TENSOR_TWOPF << '\n';
+		        out << "  " << CPPTRANSPORT_PRODUCT_LINE_COLLECTION_LABEL_INDICES << " ";
 		        this->active_indices.write(out, names);
-		        out << std::endl;
+		        out << '\n';
 			    }
 
 	    }

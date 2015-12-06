@@ -131,7 +131,7 @@ namespace macro_packages
 
     std::string flow_tensors::replace_V(const std::vector<std::string> &args)
       {
-        GiNaC::ex potential = this->unit->get_potential();
+        GiNaC::ex potential = this->data_payload.get_potential();
 
         return(this->printer.ginac(potential));
       }
@@ -159,10 +159,10 @@ namespace macro_packages
     std::string flow_tensors::replace_parameter(const std::vector<std::string>& args, std::vector<struct index_assignment> indices, void* state)
       {
         assert(indices.size() == 1);
-        assert(indices[0].trait == index_parameter);
-        assert(indices[0].species < this->unit->get_number_parameters());
+        assert(indices[0].trait == index_trait::parameter);
+        assert(indices[0].species < this->data_payload.get_number_parameters());
 
-        std::vector<GiNaC::symbol> parameters = this->unit->get_parameter_symbols();
+        std::vector<GiNaC::symbol> parameters = this->data_payload.get_parameter_symbols();
         return(this->printer.ginac(parameters[indices[0].species]));
       }
 
@@ -170,10 +170,10 @@ namespace macro_packages
     std::string flow_tensors::replace_field(const std::vector<std::string>& args, std::vector<struct index_assignment> indices, void* state)
       {
         assert(indices.size() == 1);
-        assert(indices[0].trait == index_field);
-        assert(indices[0].species < this->unit->get_number_fields());
+        assert(indices[0].trait == index_trait::field);
+        assert(indices[0].species < this->data_payload.get_number_fields());
 
-        std::vector<GiNaC::symbol> fields = this->unit->get_field_symbols();
+        std::vector<GiNaC::symbol> fields = this->data_payload.get_field_symbols();
         return(this->printer.ginac(fields[indices[0].species]));
       }
 
@@ -181,26 +181,33 @@ namespace macro_packages
     std::string flow_tensors::replace_coordinate(const std::vector<std::string>& args, std::vector<struct index_assignment> indices, void* state)
       {
         assert(indices.size() == 1);
-        assert(indices[0].species < this->unit->get_number_fields());
+        assert(indices[0].species < this->data_payload.get_number_fields());
 
-        std::vector<GiNaC::symbol> fields  = this->unit->get_field_symbols();
-        std::vector<GiNaC::symbol> momenta = this->unit->get_deriv_symbols();
+        std::vector<GiNaC::symbol> fields  = this->data_payload.get_field_symbols();
+        std::vector<GiNaC::symbol> momenta = this->data_payload.get_deriv_symbols();
 
         std::string rval;
 
         switch(indices[0].trait)
           {
-            case index_field:
-              rval = this->printer.ginac(fields[indices[0].species]);
-              break;
+            case index_trait::field:
+              {
+                rval = this->printer.ginac(fields[indices[0].species]);
+                break;
+              }
 
-            case index_momentum:
-              rval = this->printer.ginac(momenta[indices[0].species]);
-              break;
+            case index_trait::momentum:
+              {
+                rval = this->printer.ginac(momenta[indices[0].species]);
+                break;
+              }
 
-            case index_parameter:
-            default:
-              assert(false);
+            case index_trait::parameter:
+            case index_trait::unknown:
+              {
+                assert(false);
+                break;
+              }
           }
 
         return(rval);
@@ -213,7 +220,7 @@ namespace macro_packages
     void* flow_tensors::pre_sr_velocity(const std::vector<std::string>& args)
       {
         std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
-        this->u_factory->compute_sr_u(*container, this->fl);
+        this->u_factory->compute_sr_u(*container, *this->fl);
 
         cse_map* map = this->cse_worker->map_factory(container);
 

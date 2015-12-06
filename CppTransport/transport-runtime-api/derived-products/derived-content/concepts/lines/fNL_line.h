@@ -38,11 +38,11 @@
 #include "transport-runtime-api/derived-products/utilities/wrapper.h"
 
 
-#define __CPP_TRANSPORT_NODE_PRODUCT_FNL_TEMPLATE             "template"
-#define __CPP_TRANSPORT_NODE_PRODUCT_FNL_TEMPLATE_LOCAL       "local"
-#define __CPP_TRANSPORT_NODE_PRODUCT_FNL_TEMPLATE_EQUILATERAL "equilateral"
-#define __CPP_TRANSPORT_NODE_PRODUCT_FNL_TEMPLATE_ORTHOGONAL  "orthogonal"
-#define __CPP_TRANSPORT_NODE_PRODUCT_FNL_TEMPLATE_DBI         "DBI"
+#define CPPTRANSPORT_NODE_PRODUCT_FNL_TEMPLATE             "template"
+#define CPPTRANSPORT_NODE_PRODUCT_FNL_TEMPLATE_LOCAL       "local"
+#define CPPTRANSPORT_NODE_PRODUCT_FNL_TEMPLATE_EQUILATERAL "equilateral"
+#define CPPTRANSPORT_NODE_PRODUCT_FNL_TEMPLATE_ORTHOGONAL  "orthogonal"
+#define CPPTRANSPORT_NODE_PRODUCT_FNL_TEMPLATE_DBI         "DBI"
 
 
 namespace transport
@@ -120,19 +120,19 @@ namespace transport
         template <typename number>
         fNL_line<number>::fNL_line(Json::Value& reader)
           : derived_line<number>(reader),  // not called because of virtual inheritance; here to silence Intel compiler warning
-            type(fNL_local_template)
+            type(template_type::fNL_local_template)
           {
-            std::string type_str = reader[__CPP_TRANSPORT_NODE_PRODUCT_FNL_TEMPLATE].asString();
+            std::string type_str = reader[CPPTRANSPORT_NODE_PRODUCT_FNL_TEMPLATE].asString();
 
-            if     (type_str == __CPP_TRANSPORT_NODE_PRODUCT_FNL_TEMPLATE_LOCAL)       type = fNL_local_template;
-            else if(type_str == __CPP_TRANSPORT_NODE_PRODUCT_FNL_TEMPLATE_EQUILATERAL) type = fNL_equi_template;
-            else if(type_str == __CPP_TRANSPORT_NODE_PRODUCT_FNL_TEMPLATE_ORTHOGONAL)  type = fNL_ortho_template;
-            else if(type_str == __CPP_TRANSPORT_NODE_PRODUCT_FNL_TEMPLATE_DBI)         type = fNL_DBI_template;
+            if     (type_str == CPPTRANSPORT_NODE_PRODUCT_FNL_TEMPLATE_LOCAL)       type = template_type::fNL_local_template;
+            else if(type_str == CPPTRANSPORT_NODE_PRODUCT_FNL_TEMPLATE_EQUILATERAL) type = template_type::fNL_equi_template;
+            else if(type_str == CPPTRANSPORT_NODE_PRODUCT_FNL_TEMPLATE_ORTHOGONAL)  type = template_type::fNL_ortho_template;
+            else if(type_str == CPPTRANSPORT_NODE_PRODUCT_FNL_TEMPLATE_DBI)         type = template_type::fNL_DBI_template;
             else
               {
                 std::ostringstream msg;
-                msg << __CPP_TRANSPORT_PRODUCT_FNL_LINE_UNKNOWN_TEMPLATE << " '" << type_str << "'";
-                throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
+                msg << CPPTRANSPORT_PRODUCT_FNL_LINE_UNKNOWN_TEMPLATE << " '" << type_str << "'";
+                throw runtime_exception(exception_type::SERIALIZATION_ERROR, msg.str());
               }
           }
 
@@ -144,25 +144,25 @@ namespace transport
 
             switch(this->type)
               {
-                case fNL_local_template:
-                  label << __CPP_TRANSPORT_LATEX_FNL_LOCAL_SYMBOL;
+                case template_type::fNL_local_template:
+                  label << CPPTRANSPORT_LATEX_FNL_LOCAL_SYMBOL;
                   break;
 
-                case fNL_equi_template:
-                  label << __CPP_TRANSPORT_LATEX_FNL_EQUI_SYMBOL;
+                case template_type::fNL_equi_template:
+                  label << CPPTRANSPORT_LATEX_FNL_EQUI_SYMBOL;
                   break;
 
-                case fNL_ortho_template:
-                  label << __CPP_TRANSPORT_LATEX_FNL_ORTHO_SYMBOL;
+                case template_type::fNL_ortho_template:
+                  label << CPPTRANSPORT_LATEX_FNL_ORTHO_SYMBOL;
                   break;
 
-                case fNL_DBI_template:
-                  label << __CPP_TRANSPORT_LATEX_FNL_DBI_SYMBOL;
+                case template_type::fNL_DBI_template:
+                  label << CPPTRANSPORT_LATEX_FNL_DBI_SYMBOL;
                   break;
 
                 default:
                   assert(false);
-                  throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_FNL_LINE_UNKNOWN_TEMPLATE);
+                  throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_PRODUCT_FNL_LINE_UNKNOWN_TEMPLATE);
               }
 
             return(label.str());
@@ -176,25 +176,25 @@ namespace transport
 
             switch(this->type)
               {
-                case fNL_local_template:
-                  label << __CPP_TRANSPORT_NONLATEX_FNL_LOCAL_SYMBOL;
+                case template_type::fNL_local_template:
+                  label << CPPTRANSPORT_NONLATEX_FNL_LOCAL_SYMBOL;
                   break;
 
-                case fNL_equi_template:
-                  label << __CPP_TRANSPORT_NONLATEX_FNL_EQUI_SYMBOL;
+                case template_type::fNL_equi_template:
+                  label << CPPTRANSPORT_NONLATEX_FNL_EQUI_SYMBOL;
                   break;
 
-                case fNL_ortho_template:
-                  label << __CPP_TRANSPORT_NONLATEX_FNL_ORTHO_SYMBOL;
+                case template_type::fNL_ortho_template:
+                  label << CPPTRANSPORT_NONLATEX_FNL_ORTHO_SYMBOL;
                   break;
 
-                case fNL_DBI_template:
-                  label << __CPP_TRANSPORT_NONLATEX_FNL_DBI_SYMBOL;
+                case template_type::fNL_DBI_template:
+                  label << CPPTRANSPORT_NONLATEX_FNL_DBI_SYMBOL;
                   break;
 
                 default:
                   assert(false);
-                  throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_FNL_LINE_UNKNOWN_TEMPLATE);
+                  throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_PRODUCT_FNL_LINE_UNKNOWN_TEMPLATE);
               }
 
             return(label.str());
@@ -206,25 +206,25 @@ namespace transport
           {
             switch(this->type)
               {
-                case fNL_local_template:
-                  writer[__CPP_TRANSPORT_NODE_PRODUCT_FNL_TEMPLATE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_FNL_TEMPLATE_LOCAL);
+                case template_type::fNL_local_template:
+                  writer[CPPTRANSPORT_NODE_PRODUCT_FNL_TEMPLATE] = std::string(CPPTRANSPORT_NODE_PRODUCT_FNL_TEMPLATE_LOCAL);
                   break;
 
-                case fNL_equi_template:
-                  writer[__CPP_TRANSPORT_NODE_PRODUCT_FNL_TEMPLATE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_FNL_TEMPLATE_EQUILATERAL);
+                case template_type::fNL_equi_template:
+                  writer[CPPTRANSPORT_NODE_PRODUCT_FNL_TEMPLATE] = std::string(CPPTRANSPORT_NODE_PRODUCT_FNL_TEMPLATE_EQUILATERAL);
                   break;
 
-                case fNL_ortho_template:
-                  writer[__CPP_TRANSPORT_NODE_PRODUCT_FNL_TEMPLATE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_FNL_TEMPLATE_ORTHOGONAL);
+                case template_type::fNL_ortho_template:
+                  writer[CPPTRANSPORT_NODE_PRODUCT_FNL_TEMPLATE] = std::string(CPPTRANSPORT_NODE_PRODUCT_FNL_TEMPLATE_ORTHOGONAL);
                   break;
 
-                case fNL_DBI_template:
-                  writer[__CPP_TRANSPORT_NODE_PRODUCT_FNL_TEMPLATE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_FNL_TEMPLATE_DBI);
+                case template_type::fNL_DBI_template:
+                  writer[CPPTRANSPORT_NODE_PRODUCT_FNL_TEMPLATE] = std::string(CPPTRANSPORT_NODE_PRODUCT_FNL_TEMPLATE_DBI);
                   break;
 
                 default:
                   assert(false);
-                  throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_FNL_LINE_UNKNOWN_TEMPLATE);
+                  throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_PRODUCT_FNL_LINE_UNKNOWN_TEMPLATE);
               }
           }
 
@@ -232,7 +232,7 @@ namespace transport
         template <typename number>
         void fNL_line<number>::write(std::ostream& out)
           {
-            out << "FIXME" << std::endl;
+            out << "FIXME" << '\n';
           }
 
       }   // namespace derived_data

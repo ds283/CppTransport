@@ -25,6 +25,9 @@
 #include "transport-runtime-api/derived-products/derived-content/SQL_query/SQL_query_helper.h"
 
 
+#define CPPTRANSPORT_NODE_PRODUCT_DERIVED_LARGEST_U3_LINE_ROOT          "u3-line-settings"
+
+
 namespace transport
 	{
 
@@ -41,7 +44,7 @@ namespace transport
 
 				    //! basic user-facing constructor
 				    largest_u3_line(const threepf_task<number>& tk, SQL_time_config_query tq, SQL_threepf_kconfig_query,
-                            unsigned int prec = __CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
+                            unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
 				    //! deserialization constructor
 				    largest_u3_line(Json::Value& reader, typename repository_finder<number>::task_finder& finder);
@@ -133,7 +136,7 @@ namespace transport
 
 				template <typename number>
 				largest_u3_line<number>::largest_u3_line(const threepf_task<number>& tk, SQL_time_config_query tq, SQL_threepf_kconfig_query kq, unsigned int prec)
-					: derived_line<number>(tk, time_axis, std::list<axis_value>{ efolds_axis }, prec),
+					: derived_line<number>(tk, axis_class::time_axis, std::list<axis_value>{ axis_value::efolds_axis }, prec),
 		        time_series<number>(tk),
 		        gadget(tk),
 		        tquery(tq),
@@ -150,29 +153,29 @@ namespace transport
 					: derived_line<number>(reader, finder),
 		        time_series<number>(reader),
 						gadget(),
-						tquery(reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]),
-            kquery(reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY])
+						tquery(reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]),
+            kquery(reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY])
 					{
 						assert(this->parent_task != nullptr);
 						gadget.set_task(this->parent_task, finder);
 
-            use_kt_label    = reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_KT].asBool();
-            use_alpha_label = reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_ALPHA].asBool();
-            use_beta_label  = reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_BETA].asBool();
+            use_kt_label    = reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LARGEST_U3_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_KT].asBool();
+            use_alpha_label = reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LARGEST_U3_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_ALPHA].asBool();
+            use_beta_label  = reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LARGEST_U3_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_BETA].asBool();
 					}
 
 
 				template <typename number>
 				void largest_u3_line<number>::serialize(Json::Value& writer) const
 					{
-						writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_LARGEST_U3_LINE);
+						writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_LARGEST_U3_LINE);
 
-						this->tquery.serialize(writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]);
-            this->kquery.serialize(writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY]);
+						this->tquery.serialize(writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_QUERY]);
+            this->kquery.serialize(writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY]);
 
-            writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_KT]    = this->use_kt_label;
-            writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_ALPHA] = this->use_alpha_label;
-            writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_BETA]  = this->use_beta_label;
+            writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LARGEST_U3_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_KT]    = this->use_kt_label;
+            writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LARGEST_U3_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_ALPHA] = this->use_alpha_label;
+            writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LARGEST_U3_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_BETA]  = this->use_beta_label;
 
 						this->time_series<number>::serialize(writer);
 						this->derived_line<number>::serialize(writer);
@@ -201,7 +204,9 @@ namespace transport
 				    typename datapipe<number>::time_data_handle& handle = pipe.new_time_data_handle(this->tquery);
 				    std::vector<std::vector<number> > bg_data(t_axis.size());
 
-				    for(unsigned int m = 0; m < 2 * this->gadget.get_N_fields(); ++m)
+            unsigned int Nfields = this->gadget.get_N_fields();
+
+				    for(unsigned int m = 0; m < 2*Nfields; ++m)
 					    {
 				        std::array<unsigned int, 1>      index_set = { m };
 				        background_time_data_tag<number> tag       = pipe.new_background_time_data_tag(this->gadget.get_model()->flatten(m));
@@ -218,7 +223,7 @@ namespace transport
 		        model<number>* mdl = this->gadget.get_model();
 		        assert(mdl != nullptr);
 
-            std::vector< std::vector< std::vector<number> > > u3_tensor;
+            std::vector<number> u3_tensor(2*Nfields * 2*Nfields * 2*Nfields);
 
             for(std::vector<threepf_kconfig>::iterator t = k_configs.begin(); t != k_configs.end(); ++t)
               {
@@ -229,13 +234,13 @@ namespace transport
                     mdl->u3(this->gadget.get_integration_task(), bg_data[j], t->k1_comoving, t->k2_comoving, t->k3_comoving, t_configs[j].t, u3_tensor);
                     number val = -std::numeric_limits<number>::max();
 
-                    for(unsigned int l = 0; l < 2 * this->gadget.get_N_fields(); ++l)
+                    for(unsigned int l = 0; l < 2*Nfields; ++l)
                       {
-                        for(unsigned int m = 0; m < 2 * this->gadget.get_N_fields(); ++m)
+                        for(unsigned int m = 0; m < 2*Nfields; ++m)
                           {
-                            for(unsigned int n = 0; n < 2 * this->gadget.get_N_fields(); ++n)
+                            for(unsigned int n = 0; n < 2*Nfields; ++n)
                               {
-                                number value = std::abs(u3_tensor[l][m][n]);
+                                number value = std::abs(u3_tensor[mdl->flatten(l,m,n)]);
                                 if(value > val) val = value;
                               }
                           }
@@ -244,7 +249,7 @@ namespace transport
                     line_data[j] = val;
                   }
 
-                data_line<number> line(group, this->x_type, dimensionless_value, t_axis, line_data,
+                data_line<number> line(group, this->x_type, value_type::dimensionless_value, t_axis, line_data,
                                        this->get_LaTeX_label(*t), this->get_non_LaTeX_label(*t));
                 lines.push_back(line);
               }
@@ -264,7 +269,7 @@ namespace transport
 							}
 						else
 							{
-                label = "$" + std::string(__CPP_TRANSPORT_LATEX_LARGEST_U3_SYMBOL) + "$";
+                label = "$" + std::string(CPPTRANSPORT_LATEX_LARGEST_U3_SYMBOL) + "$";
 
                 if(this->use_tags) label += " $" + this->make_LaTeX_tag(k, this->use_kt_label, this->use_alpha_label, this->use_beta_label) + "$";
 							}
@@ -287,7 +292,7 @@ namespace transport
               }
             else
               {
-                label = __CPP_TRANSPORT_NONLATEX_LARGEST_U3_SYMBOL;
+                label = CPPTRANSPORT_NONLATEX_LARGEST_U3_SYMBOL;
 
                 if(this->use_tags) label += " " + this->make_non_LaTeX_tag(k, this->use_kt_label, this->use_alpha_label, this->use_beta_label);
               }

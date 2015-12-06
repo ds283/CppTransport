@@ -9,10 +9,11 @@
 #define $$__GUARD
 
 #include <assert.h>
-#include <math.h>
+#include <cmath>
 #include <iomanip>
 #include <sstream>
 #include <stdexcept>
+#include <memory>
 
 #include "boost/numeric/odeint.hpp"
 #include "boost/range/algorithm.hpp"
@@ -82,8 +83,11 @@ namespace transport
 
       public:
 
-        $$__MODEL(instance_manager<number>* mgr);
-		    ~$$__MODEL() = default;
+        //! constructor
+        $$__MODEL();
+
+        //! destructor is default
+		    virtual ~$$__MODEL() = default;
 
 
         // EXTRACT MODEL INFORMATION -- implements a 'model' interface
@@ -115,20 +119,25 @@ namespace transport
 
       public:
 
-        virtual unsigned int flatten(unsigned int a)                                  const override { return(a); };
-        virtual unsigned int flatten(unsigned int a, unsigned int b)                  const override { return(2*$$__NUMBER_FIELDS*a + b); };
-        virtual unsigned int flatten(unsigned int a, unsigned int b, unsigned int c)  const override { return(2*$$__NUMBER_FIELDS*2*$$__NUMBER_FIELDS*a + 2*$$__NUMBER_FIELDS*b + c); };
-        virtual unsigned int tensor_flatten(unsigned int a, unsigned int b)           const override { return(2*a + b); }
+        virtual unsigned int flatten(unsigned int a)                                         const override { return(a); };
+        virtual unsigned int flatten(unsigned int a, unsigned int b)                         const override { return(2*$$__NUMBER_FIELDS*a + b); };
+        virtual unsigned int flatten(unsigned int a, unsigned int b, unsigned int c)         const override { return(2*$$__NUMBER_FIELDS*2*$$__NUMBER_FIELDS*a + 2*$$__NUMBER_FIELDS*b + c); };
+
+        virtual unsigned int fields_flatten(unsigned int a)                                  const override { return(a); };
+        virtual unsigned int fields_flatten(unsigned int a, unsigned int b)                  const override { return($$__NUMBER_FIELDS*a + b); };
+        virtual unsigned int fields_flatten(unsigned int a, unsigned int b, unsigned int c)  const override { return($$__NUMBER_FIELDS*$$__NUMBER_FIELDS*a + $$__NUMBER_FIELDS*b + c); };
+
+        virtual unsigned int tensor_flatten(unsigned int a, unsigned int b)                  const override { return(2*a + b); }
 
 
         // INDEX TRAITS -- implements an 'abstract_flattener' interface
 
       public:
 
-        virtual unsigned int species(unsigned int a)      const override { return((a >= $$__NUMBER_FIELDS) ? a-$$__NUMBER_FIELDS : a); };
-        virtual unsigned int momentum(unsigned int a)     const override { return((a >= $$__NUMBER_FIELDS) ? a : a+$$__NUMBER_FIELDS); };
-        virtual unsigned int is_field(unsigned int a)     const override { return(a < $$__NUMBER_FIELDS); }
-        virtual unsigned int is_momentum(unsigned int a)  const override { return(a >= $$__NUMBER_FIELDS && a <= 2*$$__NUMBER_FIELDS); }
+        virtual unsigned int species(unsigned int a)                                         const override { return((a >= $$__NUMBER_FIELDS) ? a-$$__NUMBER_FIELDS : a); };
+        virtual unsigned int momentum(unsigned int a)                                        const override { return((a >= $$__NUMBER_FIELDS) ? a : a+$$__NUMBER_FIELDS); };
+        virtual unsigned int is_field(unsigned int a)                                        const override { return(a < $$__NUMBER_FIELDS); }
+        virtual unsigned int is_momentum(unsigned int a)                                     const override { return(a >= $$__NUMBER_FIELDS && a <= 2*$$__NUMBER_FIELDS); }
 
 
         // COMPUTE BASIC PHYSICAL QUANTITIES -- implements a 'model'/'canonical_model' interface
@@ -163,18 +172,18 @@ namespace transport
 
         // calculate gauge transformations to zeta
         virtual void compute_gauge_xfm_1(const twopf_list_task<number>* __task, const std::vector<number>& __state, std::vector<number>& __dN) override;
-        virtual void compute_gauge_xfm_2(const twopf_list_task<number>* __task, const std::vector<number>& __state, double __k, double __k1, double __k2, double __N, std::vector< std::vector<number> >& __ddN) override;
+        virtual void compute_gauge_xfm_2(const twopf_list_task<number>* __task, const std::vector<number>& __state, double __k, double __k1, double __k2, double __N, std::vector<number>& __ddN) override;
 
         virtual void compute_deltaN_xfm_1(const twopf_list_task<number>* __task, const std::vector<number>& __state, std::vector<number>& __dN) override;
-        virtual void compute_deltaN_xfm_2(const twopf_list_task<number>* __task, const std::vector<number>& __state, std::vector< std::vector<number> >& __ddN) override;
+        virtual void compute_deltaN_xfm_2(const twopf_list_task<number>* __task, const std::vector<number>& __state, std::vector<number>& __ddN) override;
 
         // calculate tensor quantities, including the 'flow' tensors u2, u3 and the basic tensors A, B, C from which u3 is built
-        virtual void u2(const twopf_list_task<number>* __task, const std::vector<number>& __fields, double __k, double __N, std::vector< std::vector<number> >& __u2) override;
-        virtual void u3(const twopf_list_task<number>* __task, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __u3) override;
+        virtual void u2(const twopf_list_task<number>* __task, const std::vector<number>& __fields, double __k, double __N, std::vector<number>& __u2) override;
+        virtual void u3(const twopf_list_task<number>* __task, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector<number>& __u3) override;
 
-        virtual void A(const twopf_list_task<number>* __task, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __A) override;
-        virtual void B(const twopf_list_task<number>* __task, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __B) override;
-        virtual void C(const twopf_list_task<number>* __task, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __C) override;
+        virtual void A(const twopf_list_task<number>* __task, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector<number>& __A) override;
+        virtual void B(const twopf_list_task<number>* __task, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector<number>& __B) override;
+        virtual void C(const twopf_list_task<number>* __task, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector<number>& __C) override;
 
 
         // BACKEND INTERFACE (PARTIAL IMPLEMENTATION -- WE PROVIDE A COMMON BACKGROUND INTEGRATOR)
@@ -183,7 +192,7 @@ namespace transport
 
         virtual void backend_process_backg(const background_task<number>* tk, typename model<number>::backg_history& solution, bool silent=false) override;
 
-        virtual double compute_end_of_inflation(const integration_task<number>* tk, double search_time=__CPP_TRANSPORT_DEFAULT_END_OF_INFLATION_SEARCH) override;
+        virtual double compute_end_of_inflation(const integration_task<number>* tk, double search_time=CPPTRANSPORT_DEFAULT_END_OF_INFLATION_SEARCH) override;
 
 		    virtual void compute_aH(const twopf_list_task<number>* tk, std::vector<double>& N, std::vector<number>& aH, double largest_k) override;
 
@@ -260,8 +269,8 @@ namespace transport
 
 
     template <typename number>
-    $$__MODEL<number>::$$__MODEL(instance_manager<number>* mgr)
-      : canonical_model<number>(mgr, "$$__UNIQUE_ID", static_cast<unsigned int>(100*$$__VERSION))
+    $$__MODEL<number>::$$__MODEL()
+      : canonical_model<number>("$$__UNIQUE_ID", static_cast<unsigned int>(100*$$__VERSION))
       {
       }
 
@@ -282,12 +291,12 @@ namespace transport
 
             $$__TEMP_POOL{"const auto $1 = $2;"}
 
-            return(sqrt($$__HUBBLE_SQ));
+            return(std::sqrt($$__HUBBLE_SQ));
           }
         else
           {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_WRONG_ICS_A << __coords.size() << __CPP_TRANSPORT_WRONG_ICS_B << 2*$$__NUMBER_FIELDS << ")";
+            msg << CPPTRANSPORT_WRONG_ICS_A << __coords.size() << CPPTRANSPORT_WRONG_ICS_B << 2*$$__NUMBER_FIELDS << ")";
             throw std::out_of_range(msg.str());
           }
       }
@@ -311,7 +320,7 @@ namespace transport
         else
           {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_WRONG_ICS_A << __coords.size() << __CPP_TRANSPORT_WRONG_ICS_B << 2*$$__NUMBER_FIELDS << ")";
+            msg << CPPTRANSPORT_WRONG_ICS_A << __coords.size() << CPPTRANSPORT_WRONG_ICS_B << 2*$$__NUMBER_FIELDS << ")";
             throw std::out_of_range(msg.str());
           }
       }
@@ -335,7 +344,7 @@ namespace transport
         else
           {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_WRONG_ICS_A << __coords.size() << __CPP_TRANSPORT_WRONG_ICS_B << 2*$$__NUMBER_FIELDS << ")";
+            msg << CPPTRANSPORT_WRONG_ICS_A << __coords.size() << CPPTRANSPORT_WRONG_ICS_B << 2*$$__NUMBER_FIELDS << ")";
             throw std::out_of_range(msg.str());
           }
       }
@@ -370,9 +379,9 @@ namespace transport
           {
             std::ostringstream msg;
 
-            msg << __CPP_TRANSPORT_WRONG_ICS_A << __input.size() << "]"
-                << __CPP_TRANSPORT_WRONG_ICS_B << $$__NUMBER_FIELDS
-                << __CPP_TRANSPORT_WRONG_ICS_C << 2*$$__NUMBER_FIELDS << "]";
+            msg << CPPTRANSPORT_WRONG_ICS_A << __input.size() << "]"
+                << CPPTRANSPORT_WRONG_ICS_B << $$__NUMBER_FIELDS
+                << CPPTRANSPORT_WRONG_ICS_C << 2*$$__NUMBER_FIELDS << "]";
 
             throw std::out_of_range(msg.str());
           }
@@ -395,7 +404,7 @@ namespace transport
           {
             std::ostringstream msg;
 
-            msg << __CPP_TRANSPORT_WRONG_PARAMS_A << input.size() << __CPP_TRANSPORT_WRONG_PARAMS_B << $$__NUMBER_PARAMS << ")";
+            msg << CPPTRANSPORT_WRONG_PARAMS_A << input.size() << CPPTRANSPORT_WRONG_PARAMS_B << $$__NUMBER_PARAMS << ")";
 
             throw std::out_of_range(msg.str());
           }
@@ -417,9 +426,9 @@ namespace transport
 
         const auto __Hsq             = $$__HUBBLE_SQ;
         const auto __eps             = $$__EPSILON;
-        const auto __a               = exp(__Ninit - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
+        const auto __a               = std::exp(__Ninit - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
-        const auto __N               = log(__k/(__a*sqrt(__Hsq)));
+        const auto __N               = std::log(__k/(__a*std::sqrt(__Hsq)));
 
         number     __tpf             = 0.0;
 
@@ -504,9 +513,9 @@ namespace transport
 
       const auto __Hsq             = $$__HUBBLE_SQ;
       const auto __eps             = $$__EPSILON;
-      const auto __a               = exp(__Ninit - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
+      const auto __a               = std::exp(__Ninit - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
-      const auto __N               = log(__k/(__a*sqrt(__Hsq)));
+      const auto __N               = std::log(__k/(__a*std::sqrt(__Hsq)));
 
       number     __tpf             = 0.0;
 
@@ -525,7 +534,7 @@ namespace transport
           // NEXT-ORDER INITIAL CONDITION
 //            auto __leading = (SPECIES(__i) == SPECIES(__j) ? 1.0 : 0.0) * (1.0 - 2.0*__eps*(1.0-__N));
 
-          __tpf = + __leading / (2.0*sqrt(__Hsq)*__a*__a*__a);
+          __tpf = + __leading / (2.0*std::sqrt(__Hsq)*__a*__a*__a);
         }
       else if(IS_MOMENTUM(__i) && IS_FIELD(__j))
         {
@@ -535,7 +544,7 @@ namespace transport
           // NEXT-ORDER INITIAL CONDITION
 //            auto __leading = (SPECIES(__i) == SPECIES(__j) ? 1.0 : 0.0) * (1.0 - 2.0*__eps*(1.0-__N));
 
-          __tpf = - __leading / (2.0*sqrt(__Hsq)*__a*__a*__a);
+          __tpf = - __leading / (2.0*std::sqrt(__Hsq)*__a*__a*__a);
         }
 
       return(__tpf);
@@ -553,9 +562,9 @@ namespace transport
 
         const auto __Hsq             = $$__HUBBLE_SQ;
         const auto __eps             = $$__EPSILON;
-        const auto __a               = exp(__Ninit - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
+        const auto __a               = std::exp(__Ninit - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
-        const auto __N               = log(__k/(__a*sqrt(__Hsq)));
+        const auto __N               = std::log(__k/(__a*std::sqrt(__Hsq)));
 
         number     __tpf             = 0.0;
 
@@ -600,7 +609,7 @@ namespace transport
 
         const auto __Hsq             = $$__HUBBLE_SQ;
         const auto __eps             = $$__EPSILON;
-        const auto __a               = exp(__Ninit - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
+        const auto __a               = std::exp(__Ninit - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
         const auto __kt              = __k1 + __k2 + __k3;
         const auto __Ksq             = __k1*__k2 + __k1*__k3 + __k2*__k3;
@@ -809,9 +818,7 @@ namespace transport
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
-	      __dN.clear();
-        __dN.resize(2*$$__NUMBER_FIELDS); // ensure enough space
-        __dN[$$__A] = $$__ZETA_XFM_1[A]{__Hsq, __eps};
+        __dN[FLATTEN($$__A)] = $$__ZETA_XFM_1[A]{__Hsq, __eps};
       }
 
 
@@ -819,7 +826,7 @@ namespace transport
     void $$__MODEL<number>::compute_gauge_xfm_2(const twopf_list_task<number>* __task,
                                                 const std::vector<number>& __state,
                                                 double __k, double __k1, double __k2, double __N,
-                                                std::vector< std::vector<number> >& __ddN)
+                                                std::vector<number>& __ddN)
       {
         const auto $$__PARAMETER[1]  = __task->get_params().get_vector()[$$__1];
         const auto $$__COORDINATE[A] = __state[$$__A];
@@ -827,18 +834,11 @@ namespace transport
 
         const auto __Hsq             = $$__HUBBLE_SQ;
         const auto __eps             = $$__EPSILON;
-        const auto __a               = exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
+        const auto __a               = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
-	      __ddN.clear();
-        __ddN.resize(2*$$__NUMBER_FIELDS);
-        for(int i = 0; i < 2*$$__NUMBER_FIELDS; ++i)
-          {
-            __ddN[i].resize(2*$$__NUMBER_FIELDS);
-          }
-
-        __ddN[$$__A][$$__B] = $$__ZETA_XFM_2[AB]{__k, __k1, __k2, __a, __Hsq, __eps};
+        __ddN[FLATTEN($$__A,$$__B)] = $$__ZETA_XFM_2[AB]{__k, __k1, __k2, __a, __Hsq, __eps};
       }
 
 
@@ -853,16 +853,14 @@ namespace transport
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
-	      __dN.clear();
-        __dN.resize(2*$$__NUMBER_FIELDS); // ensure enough space
-        __dN[$$__A] = $$__DELTAN_XFM_1[A];
+        __dN[FLATTEN($$__A)] = $$__DELTAN_XFM_1[A];
 	    }
 
 
     template <typename number>
     void $$__MODEL<number>::compute_deltaN_xfm_2(const twopf_list_task<number>* __task,
                                                  const std::vector<number>& __state,
-                                                 std::vector< std::vector<number> >& __ddN)
+                                                 std::vector<number>& __ddN)
 	    {
         const auto $$__PARAMETER[1]  = __task->get_params().get_vector()[$$__1];
         const auto $$__COORDINATE[A] = __state[$$__A];
@@ -870,14 +868,7 @@ namespace transport
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
-	      __ddN.clear();
-        __ddN.resize(2*$$__NUMBER_FIELDS);
-        for(int i = 0; i < 2*$$__NUMBER_FIELDS; ++i)
-	        {
-            __ddN[i].resize(2*$$__NUMBER_FIELDS);
-	        }
-
-        __ddN[$$__A][$$__B] = $$__DELTAN_XFM_2[AB];
+        __ddN[FLATTEN($$__A,$$__B)] = $$__DELTAN_XFM_2[AB];
 	    }
 
 
@@ -887,7 +878,7 @@ namespace transport
     template <typename number>
     void $$__MODEL<number>::u2(const twopf_list_task<number>* __task,
                                const std::vector<number>& __fields, double __k, double __N,
-                               std::vector< std::vector<number> >& __u2)
+                               std::vector<number>& __u2)
       {
         const auto $$__PARAMETER[1]  = __task->get_params().get_vector()[$$__1];
         const auto $$__COORDINATE[A] = __fields[$$__A];
@@ -895,26 +886,18 @@ namespace transport
 
         const auto __Hsq             = $$__HUBBLE_SQ;
         const auto __eps             = $$__EPSILON;
-        const auto __a               = exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
+        const auto __a               = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
-	      __u2.clear();
-        __u2.resize(2*$$__NUMBER_FIELDS);
-
-        for(int __i = 0; __i < 2*$$__NUMBER_FIELDS; ++__i)
-          {
-            __u2[__i].resize(2*$$__NUMBER_FIELDS);
-          }
-
-        __u2[$$__A][$$__B] = $$__U2_PREDEF[AB]{__k, __a, __Hsq, __eps};
+        __u2[FLATTEN($$__A,$$__B)] = $$__U2_PREDEF[AB]{__k, __a, __Hsq, __eps};
       }
 
 
     template <typename number>
     void $$__MODEL<number>::u3(const twopf_list_task<number>* __task,
                                const std::vector<number>& __fields, double __k1, double __k2, double __k3, double __N,
-                               std::vector< std::vector< std::vector<number> > >& __u3)
+                               std::vector<number>& __u3)
       {
         const auto $$__PARAMETER[1]  = __task->get_params().get_vector()[$$__1];
         const auto $$__COORDINATE[A] = __fields[$$__A];
@@ -922,30 +905,18 @@ namespace transport
 
         const auto __Hsq             = $$__HUBBLE_SQ;
         const auto __eps             = $$__EPSILON;
-        const auto __a               = exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
+        const auto __a               = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
-	      __u3.clear();
-        __u3.resize(2*$$__NUMBER_FIELDS);
-
-        for(int __i = 0; __i < 2*$$__NUMBER_FIELDS; ++__i)
-          {
-            __u3[__i].resize(2*$$__NUMBER_FIELDS);
-            for(int __j = 0; __j < 2*$$__NUMBER_FIELDS; ++__j)
-              {
-                __u3[__i][__j].resize(2*$$__NUMBER_FIELDS);
-              }
-          }
-
-        __u3[$$__A][$$__B][$$__C] = $$__U3_PREDEF[ABC]{__k1, __k1, __k3, __a, __Hsq, __eps};
+        __u3[FLATTEN($$__A,$$__B,$$__C)] = $$__U3_PREDEF[ABC]{__k1, __k1, __k3, __a, __Hsq, __eps};
       }
 
 
     template <typename number>
     void $$__MODEL<number>::A(const twopf_list_task<number>* __task,
                               const std::vector<number>& __fields, double __k1, double __k2, double __k3, double __N,
-                              std::vector< std::vector< std::vector<number> > >& __A)
+                              std::vector<number>& __A)
       {
         const auto $$__PARAMETER[1]       = __task->get_params().get_vector()[$$__1];
         const auto $$__COORDINATE[A]      = __fields[$$__A];
@@ -953,30 +924,18 @@ namespace transport
 
         const auto __Hsq                  = $$__HUBBLE_SQ;
         const auto __eps                  = $$__EPSILON;
-        const auto __a                    = exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
+        const auto __a                    = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
-	      __A.clear();
-        __A.resize($$__NUMBER_FIELDS);
-
-        for(int __i = 0; __i < $$__NUMBER_FIELDS; ++__i)
-          {
-            __A[__i].resize($$__NUMBER_FIELDS);
-            for(int __j = 0; __j < $$__NUMBER_FIELDS; ++__j)
-              {
-                __A[__i][__j].resize($$__NUMBER_FIELDS);
-              }
-          }
-
-        __A[$$__a][$$__b][$$__c] = $$__A_PREDEF[abc]{__k1, __k2, __k3, __a, __Hsq, __eps};
+        __A[FIELDS_FLATTEN($$__a,$$__b,$$__c)] = $$__A_PREDEF[abc]{__k1, __k2, __k3, __a, __Hsq, __eps};
       }
 
 
     template <typename number>
     void $$__MODEL<number>::B(const twopf_list_task<number>* __task,
                               const std::vector<number>& __fields, double __k1, double __k2, double __k3, double __N,
-                              std::vector< std::vector< std::vector<number> > >& __B)
+                              std::vector<number>& __B)
       {
         const auto $$__PARAMETER[1]       = __task->get_params().get_vector()[$$__1];
         const auto $$__COORDINATE[A]      = __fields[$$__A];
@@ -984,30 +943,18 @@ namespace transport
 
         const auto __Hsq                  = $$__HUBBLE_SQ;
         const auto __eps                  = $$__EPSILON;
-        const auto __a                    = exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
+        const auto __a                    = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
-	      __B.clear();
-        __B.resize($$__NUMBER_FIELDS);
-
-        for(int __i = 0; __i < $$__NUMBER_FIELDS; ++__i)
-          {
-            __B[__i].resize($$__NUMBER_FIELDS);
-            for(int __j = 0; __j < $$__NUMBER_FIELDS; ++__j)
-              {
-                __B[__i][__j].resize($$__NUMBER_FIELDS);
-              }
-          }
-
-        __B[$$__a][$$__b][$$__c] = $$__B_PREDEF[abc]{__k1, __k2, __k3, __a, __Hsq, __eps};
+        __B[FIELDS_FLATTEN($$__a,$$__b,$$__c)] = $$__B_PREDEF[abc]{__k1, __k2, __k3, __a, __Hsq, __eps};
       }
 
 
     template <typename number>
     void $$__MODEL<number>::C(const twopf_list_task<number>* __task,
                               const std::vector<number>& __fields, double __k1, double __k2, double __k3, double __N,
-                              std::vector< std::vector< std::vector<number> > >& __C)
+                              std::vector<number>& __C)
       {
         const auto $$__PARAMETER[1]       = __task->get_params().get_vector()[$$__1];
         const auto $$__COORDINATE[A]      = __fields[$$__A];
@@ -1015,23 +962,11 @@ namespace transport
 
         const auto __Hsq                  = $$__HUBBLE_SQ;
         const auto __eps                  = $$__EPSILON;
-        const auto __a                    = exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
+        const auto __a                    = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
-	      __C.clear();
-        __C.resize($$__NUMBER_FIELDS);
-
-        for(int __i = 0; __i < $$__NUMBER_FIELDS; ++__i)
-          {
-            __C[__i].resize($$__NUMBER_FIELDS);
-            for(int __j = 0; __j < $$__NUMBER_FIELDS; ++__j)
-              {
-                __C[__i][__j].resize($$__NUMBER_FIELDS);
-              }
-          }
-
-        __C[$$__a][$$__b][$$__c] = $$__C_PREDEF[abc]{__k1, __k2, __k3, __a, __Hsq, __eps};
+        __C[FIELDS_FLATTEN($$__a,$$__b,$$__c)] = $$__C_PREDEF[abc]{__k1, __k2, __k3, __a, __Hsq, __eps};
       }
 
 
@@ -1062,29 +997,45 @@ namespace transport
       }
 
 
-		template <typename number>
-    class EpsilonUnityPredicate
-	    {
-      public:
-        EpsilonUnityPredicate(const parameters<number>& p)
-	        : params(p)
-	        {
-	        }
+    namespace $$__MODEL_impl
+      {
 
-        bool operator()(const std::pair< backg_state<number>, double >& __x)
-	        {
-            const auto $$__PARAMETER[1]  = this->params.get_vector()[$$__1];
-            const auto $$__COORDINATE[A] = __x.first[$$__A];
-            const auto __Mp              = this->params.get_Mp();
+        template <typename number>
+        class EpsilonUnityPredicate
+          {
+          public:
+            EpsilonUnityPredicate(const parameters<number>& p)
+              : params(p)
+              {
+                param_vector = params.get_vector();
+                Mp = params.get_Mp();
+              }
 
-            const auto __eps = $$__EPSILON;
+            bool operator()(const std::pair< backg_state<number>, double >& __x)
+              {
+                const auto $$__PARAMETER[1]  = this->param_vector[$$__1];
+                const auto $$__COORDINATE[A] = __x.first[$$__A];
+                const auto __Mp              = this->Mp;
 
-            return (__eps > 1.0);
-	        }
+                const auto __eps = $$__EPSILON;
 
-      private:
-        const parameters<number>& params;
-	    };
+                return (__eps >= 1.0 || __eps < 0.0);
+              }
+
+          private:
+
+            //! parameters for the model in use
+            const parameters<number>& params;
+
+            //! cache parameters vectors
+            std::vector<number> param_vector;
+
+            //! cache Planck mass
+            number Mp;
+
+          };
+
+      }   // namespace $$__MODEL_impl
 
 
     template <typename number>
@@ -1102,11 +1053,11 @@ namespace transport
 
 		    // find point where epsilon = 1
         auto stepper = $$__MAKE_BACKG_STEPPER{backg_state<number>};
-
-		    auto range = boost::numeric::odeint::make_adaptive_time_range(stepper, system, x, tk->get_N_initial(), tk->get_N_initial()+search_time, $$__BACKG_STEP_SIZE);
+        
+        auto range = boost::numeric::odeint::make_adaptive_time_range(stepper, system, x, tk->get_N_initial(), tk->get_N_initial()+search_time, $$__BACKG_STEP_SIZE);
 
         // returns the first iterator in 'range' for which the predicate EpsilonUnityPredicate() is satisfied
-        auto iter = boost::find_if(range, EpsilonUnityPredicate<number>(tk->get_params()));
+        auto iter = boost::find_if(range, $$__MODEL_impl::EpsilonUnityPredicate<number>(tk->get_params()));
 
 				if(iter == boost::end(range)) throw end_of_inflation_not_found();
 
@@ -1114,47 +1065,73 @@ namespace transport
       };
 
 
-		template <typename number>
-		class aHAggregatorPredicate
-			{
-		  public:
-				aHAggregatorPredicate(const twopf_list_task<number>* tk, std::vector<double>& N, std::vector<number>& log_aH, double lk)
-					: params(tk->get_params()),
-		        N_vector(N),
-		        log_aH_vector(log_aH),
-		        largest_k(lk),
-						N_horizon_crossing(tk->get_N_horizon_crossing()),
-						astar_normalization(tk->get_astar_normalization())
-					{
-					}
+    namespace $$__MODEL_impl
+      {
 
-				bool operator()(const std::pair< backg_state<number>, double >& __x)
-					{
-				    const auto $$__PARAMETER[1]  = this->params.get_vector()[$$__1];
-				    const auto $$__COORDINATE[A] = __x.first[$$__A];
-				    const auto __Mp              = this->params.get_Mp();
+        template <typename number>
+        class aHAggregatorPredicate
+          {
+          public:
+            aHAggregatorPredicate(const twopf_list_task<number>* tk, std::vector<double>& N, std::vector<number>& log_aH, double lk)
+              : params(tk->get_params()),
+                N_vector(N),
+                log_aH_vector(log_aH),
+                largest_k(lk),
+                N_horizon_crossing(tk->get_N_horizon_crossing()),
+                astar_normalization(tk->get_astar_normalization())
+              {
+                param_vector = params.get_vector();
+                Mp = params.get_Mp();
+              }
 
-				    const auto __Hsq = $$__HUBBLE_SQ;
-						const auto __H   = sqrt(__Hsq);
+            bool operator()(const std::pair< backg_state<number>, double >& __x)
+              {
+                const auto $$__PARAMETER[1]  = this->param_vector[$$__1];
+                const auto $$__COORDINATE[A] = __x.first[$$__A];
+                const auto __Mp              = this->Mp;
 
-						const auto __a   = exp(__x.second - this->N_horizon_crossing + this->astar_normalization);
+                const auto __Hsq = $$__HUBBLE_SQ;
+                const auto __H   = std::sqrt(__Hsq);
 
-						this->N_vector.push_back(__x.second);
-						this->log_aH_vector.push_back(log(__a*__H));
+                const auto __a   = std::exp(__x.second - this->N_horizon_crossing + this->astar_normalization);
 
-						// are we now at a point where we have comfortably covered the horizon crossing time for largest_k?
-						if(largest_k / (__a*__H) < 0.01) return(true);
-						return(false);
-					}
+                this->N_vector.push_back(__x.second);
+                this->log_aH_vector.push_back(std::log(__a*__H));
 
-		  private:
-				const parameters<number>& params;
-				std::vector<double>& N_vector;
-				std::vector<number>& log_aH_vector;
-				const double largest_k;
-				const double N_horizon_crossing;
-				const double astar_normalization;
-			};
+                // are we now at a point where we have comfortably covered the horizon crossing time for largest_k?
+                if(std::log(largest_k) - std::log(__a*__H) < -0.5) return(true);
+                return(false);
+              }
+
+          private:
+
+            //! parameters for the model in use
+            const parameters<number>& params;
+
+            //! cache parameters vectors
+            std::vector<number> param_vector;
+
+            //! cache Planck mass
+            number Mp;
+
+            //! output vector for times N
+            std::vector<double>& N_vector;
+
+            //! output vector for values log(aH)
+            std::vector<number>& log_aH_vector;
+
+            //! largest k-mode for which we are trying to find a horizon-exit time
+            const double largest_k;
+
+            //! time of horizon crossing
+            const double N_horizon_crossing;
+
+            //! normalization of ln(a) at horizon crossing time
+            const double astar_normalization;
+
+          };
+
+      }   // namespace $$__MODEL_impl
 
 
 		template <typename number>
@@ -1174,19 +1151,21 @@ namespace transport
 				auto stepper = $$__MAKE_BACKG_STEPPER{backg_state<number>};
 
         double N_range = 0.0;
+        bool found_end = false;
         try
           {
-            N_range = tk->get_N_end_of_inflation();
+            N_range   = tk->get_N_end_of_inflation();
+            found_end = true;
           }
         catch (end_of_inflation_not_found& xe)
           {
             // try to fall back on a sensible default
-            N_range = tk->get_N_initial() + __CPP_TRANSPORT_DEFAULT_END_OF_INFLATION_SEARCH;
+            N_range = tk->get_N_initial() + CPPTRANSPORT_DEFAULT_END_OF_INFLATION_SEARCH;
           }
 
-        auto range = boost::numeric::odeint::make_const_step_time_range(stepper, system, x, tk->get_N_initial(), N_range, 0.01);
+        auto range = boost::numeric::odeint::make_adaptive_time_range(stepper, system, x, tk->get_N_initial(), N_range, $$__BACKG_STEP_SIZE);
 
-				aHAggregatorPredicate<number> aggregator(tk, N, log_aH, largest_k);
+        $$__MODEL_impl::aHAggregatorPredicate<number> aggregator(tk, N, log_aH, largest_k);
 
 				// step through iterators, finding first point which is comfortably after time when largest_k has left
 				// the horizon
@@ -1197,8 +1176,7 @@ namespace transport
 				// so something has gone wrong
 				if(iter == boost::end(range))
 					{
-						assert(false);
-				    throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_FAIL_COMPUTE_T_EXIT);
+            throw failed_to_compute_horizon_exit(tk->get_N_initial(), N_range, found_end, log_aH.size(), (N.size() > 0 ? N.back() : 0.0), (log_aH.size() > 0 ? log_aH.back() : 0.0), largest_k);
 					}
 			}
 

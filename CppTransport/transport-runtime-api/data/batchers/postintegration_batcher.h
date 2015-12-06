@@ -22,7 +22,7 @@ namespace transport
 	{
 
 		// forward declare
-    class postintegration_batcher;
+    template <typename number> class postintegration_batcher;
 
 
 		// writer functions
@@ -33,20 +33,30 @@ namespace transport
 		  public:
 
 		    //! Zeta 2pf writer function
-		    typedef std::function<void(postintegration_batcher*, const std::vector< typename postintegration_items<number>::zeta_twopf_item >&)> zeta_twopf_writer;
+		    typedef std::function<void(postintegration_batcher<number>*, const std::vector< typename postintegration_items<number>::zeta_twopf_item >&)> zeta_twopf_writer;
 
 		    //! Zeta 3pf writer function
-		    typedef std::function<void(postintegration_batcher*, const std::vector< typename postintegration_items<number>::zeta_threepf_item >&)> zeta_threepf_writer;
-
-		    //! Zeta reduced bispectrum writer function
-		    typedef std::function<void(postintegration_batcher*, const std::vector< typename postintegration_items<number>::zeta_redbsp_item >&)> zeta_redbsp_writer;
+		    typedef std::function<void(postintegration_batcher<number>*, const std::vector< typename postintegration_items<number>::zeta_threepf_item >&)> zeta_threepf_writer;
 
 		    //! fNL writer function
-		    typedef std::function<void(postintegration_batcher*, const std::set< typename postintegration_items<number>::fNL_item, typename postintegration_items<number>::fNL_item_comparator >&, derived_data::template_type)> fNL_writer;
+		    typedef std::function<void(postintegration_batcher<number>*, const std::set< typename postintegration_items<number>::fNL_item, typename postintegration_items<number>::fNL_item_comparator >&, derived_data::template_type)> fNL_writer;
+
+        //! linear gauge xfm writer function
+        typedef std::function<void(postintegration_batcher<number>*, const std::vector< typename postintegration_items<number>::gauge_xfm1_item >&)> gauge_xfm1_writer;
+
+        //! quadratic gauge xfm writer function
+        typedef std::function<void(postintegration_batcher<number>*, const std::vector< typename postintegration_items<number>::gauge_xfm2_123_item >&)> gauge_xfm2_123_writer;
+
+        //! quadratic gauge xfm writer function
+        typedef std::function<void(postintegration_batcher<number>*, const std::vector< typename postintegration_items<number>::gauge_xfm2_213_item >&)> gauge_xfm2_213_writer;
+
+        //! quadratic gauge xfm writer function
+        typedef std::function<void(postintegration_batcher<number>*, const std::vector< typename postintegration_items<number>::gauge_xfm2_312_item >&)> gauge_xfm2_312_writer;
 
 			};
 
 
+    template <typename number>
     class postintegration_batcher: public generic_batcher
 	    {
 
@@ -55,8 +65,9 @@ namespace transport
       public:
 
         template <typename handle_type>
-        postintegration_batcher(unsigned int cap, const boost::filesystem::path& cp, const boost::filesystem::path& lp,
-                                container_dispatch_function d, container_replacement_function r,
+        postintegration_batcher(unsigned int cap, unsigned int ckp, model<number>* m,
+                                const boost::filesystem::path& cp, const boost::filesystem::path& lp,
+                                generic_batcher::container_dispatch_function d, generic_batcher::container_replacement_function r,
                                 handle_type h, unsigned int w);
 
         virtual ~postintegration_batcher() = default;
@@ -76,6 +87,14 @@ namespace transport
         void end_assignment();
 
 
+        // ADMIN
+
+      public:
+
+        //! Return number of fields
+        unsigned int get_number_fields() const { return(this->Nfields); }
+
+
         // STATISTICS
 
       public:
@@ -92,12 +111,16 @@ namespace transport
         //! Get number of items processed
         unsigned int get_items_processed() const { return(this->items_processed); }
 
+
         // INTERNAL DATA
 
-      private:
+      protected:
 
         //! Number of work items processed
         unsigned int items_processed;
+
+        //! number of fields in model
+        unsigned int Nfields;
 
         //! Aggregate processing time
         boost::timer::nanosecond_type total_time;
@@ -112,7 +135,7 @@ namespace transport
 
 
 		template <typename number>
-    class zeta_twopf_batcher: public postintegration_batcher
+    class zeta_twopf_batcher: public postintegration_batcher<number>
 	    {
 
       public:
@@ -121,6 +144,7 @@ namespace transport
 	        {
           public:
             typename postintegration_writers<number>::zeta_twopf_writer twopf;
+            typename postintegration_writers<number>::gauge_xfm1_writer gauge_xfm1;
 	        };
 
 
@@ -129,9 +153,10 @@ namespace transport
       public:
 
         template <typename handle_type>
-        zeta_twopf_batcher(unsigned int cap, const boost::filesystem::path& cp, const boost::filesystem::path& lp,
-                           const writer_group& w, generic_batcher::container_dispatch_function d, generic_batcher::container_replacement_function r,
-                           handle_type h, unsigned int wn);
+        zeta_twopf_batcher(unsigned int cap, unsigned int ckp, model<number>* m,
+                           const boost::filesystem::path& cp, const boost::filesystem::path& lp,
+                           const writer_group& w, generic_batcher::container_dispatch_function d,
+                           generic_batcher::container_replacement_function r, handle_type h, unsigned int wn);
 
 
         // BATCH, UNBATCH
@@ -139,7 +164,9 @@ namespace transport
       public:
 
         //! batch twopf value
-        void push_twopf(unsigned int time_serial, unsigned int k_serial, number value, unsigned int source_serial=0);
+        void push_twopf(unsigned int time_serial, unsigned int k_serial, number zeta_twopf, unsigned int source_serial=0);
+
+        void push_gauge_xfm1(unsigned int time_serial, unsigned int k_serial, std::vector<number>& gauge_xfm1, unsigned int source_serial=0);
 
         //! unbatch a k-configuration serial number
         void unbatch(unsigned int source_serial);
@@ -164,11 +191,14 @@ namespace transport
         //! zeta twopf cache
         std::vector< typename postintegration_items<number>::zeta_twopf_item > twopf_batch;
 
+        //! linear gauge-xfm cache
+        std::vector< typename postintegration_items<number>::gauge_xfm1_item > gauge_xfm1_batch;
+
 	    };
 
 
 		template <typename number>
-    class zeta_threepf_batcher: public postintegration_batcher
+    class zeta_threepf_batcher: public postintegration_batcher<number>
 	    {
 
       public:
@@ -176,9 +206,12 @@ namespace transport
         class writer_group
 	        {
           public:
-            typename postintegration_writers<number>::zeta_twopf_writer   twopf;
-            typename postintegration_writers<number>::zeta_threepf_writer threepf;
-            typename postintegration_writers<number>::zeta_redbsp_writer  redbsp;
+            typename postintegration_writers<number>::zeta_twopf_writer     twopf;
+            typename postintegration_writers<number>::zeta_threepf_writer   threepf;
+            typename postintegration_writers<number>::gauge_xfm1_writer     gauge_xfm1;
+            typename postintegration_writers<number>::gauge_xfm2_123_writer gauge_xfm2_123;
+            typename postintegration_writers<number>::gauge_xfm2_213_writer gauge_xfm2_213;
+            typename postintegration_writers<number>::gauge_xfm2_312_writer gauge_xfm2_312;
 	        };
 
 
@@ -187,20 +220,27 @@ namespace transport
       public:
 
         template <typename handle_type>
-        zeta_threepf_batcher(unsigned int cap, const boost::filesystem::path& cp, const boost::filesystem::path& lp,
-                             const writer_group& w, container_dispatch_function d, container_replacement_function r,
-                             handle_type h, unsigned int wn);
+        zeta_threepf_batcher(unsigned int cap, unsigned int ckp, model<number>* m,
+                             const boost::filesystem::path& cp, const boost::filesystem::path& lp,
+                             const writer_group& w, generic_batcher::container_dispatch_function d,
+                             generic_batcher::container_replacement_function r, handle_type h, unsigned int wn);
 
 
         // BATCH, UNBATCH
 
       public:
 
-        void push_twopf(unsigned int time_serial, unsigned int k_serial, number value, unsigned int source_serial=0);
+        void push_twopf(unsigned int time_serial, unsigned int k_serial, number zeta_twopf, unsigned int source_serial=0);
 
-        void push_threepf(unsigned int time_serial, unsigned int k_serial, number value, unsigned int source_serial=0);
+        void push_threepf(unsigned int time_serial, unsigned int k_serial, number zeta_threepf, number redbsp, unsigned int source_serial=0);
 
-        void push_reduced_bispectrum(unsigned int time_serial, unsigned int k_serial, number value, unsigned int source_serial=0);
+        void push_gauge_xfm1(unsigned int time_serial, unsigned int k_serial, std::vector<number>& gauge_xfm1, unsigned int source_serial=0);
+
+        void push_gauge_xfm2_123(unsigned int time_serial, unsigned int k_serial, std::vector<number>& gauge_xfm2, unsigned int source_serial=0);
+
+        void push_gauge_xfm2_213(unsigned int time_serial, unsigned int k_serial, std::vector<number>& gauge_xfm2, unsigned int source_serial=0);
+
+        void push_gauge_xfm2_312(unsigned int time_serial, unsigned int k_serial, std::vector<number>& gauge_xfm2, unsigned int source_serial=0);
 
         //! unbatch a k-configuration serial number
         void unbatch(unsigned int source_serial);
@@ -212,7 +252,7 @@ namespace transport
 
         virtual size_t storage() const override;
 
-        virtual void flush(replacement_action action) override;
+        virtual void flush(generic_batcher::replacement_action action) override;
 
 
         // INTERNAL DATA
@@ -228,14 +268,23 @@ namespace transport
         //! zeta threepf cache
         std::vector< typename postintegration_items<number>::zeta_threepf_item > threepf_batch;
 
-        //! zeta reduced bispectrum cache
-        std::vector< typename postintegration_items<number>::zeta_redbsp_item > redbsp_batch;
+        //! linear gauge-xfm cache
+        std::vector< typename postintegration_items<number>::gauge_xfm1_item > gauge_xfm1_batch;
+
+        //! quadratic gauge-xfm cache for the 123 permutation
+        std::vector< typename postintegration_items<number>::gauge_xfm2_123_item > gauge_xfm2_123_batch;
+
+        //! quadratic gauge-xfm cache for the 213 permutation
+        std::vector< typename postintegration_items<number>::gauge_xfm2_213_item > gauge_xfm2_213_batch;
+
+        //! quadratic gauge-xfm cache for the 312 permutation
+        std::vector< typename postintegration_items<number>::gauge_xfm2_312_item > gauge_xfm2_312_batch;
 
 	    };
 
 
 		template <typename number>
-    class fNL_batcher: public postintegration_batcher
+    class fNL_batcher: public postintegration_batcher<number>
 	    {
 
       public:
@@ -252,8 +301,10 @@ namespace transport
       public:
 
         template <typename handle_type>
-        fNL_batcher(unsigned int cap, const boost::filesystem::path& cp, const boost::filesystem::path& lp,
-                    const writer_group& w, container_dispatch_function d, container_replacement_function r,
+        fNL_batcher(unsigned int cap, unsigned int ckp, model<number>* m,
+                    const boost::filesystem::path& cp, const boost::filesystem::path& lp,
+                    const writer_group& w, generic_batcher::container_dispatch_function d,
+                    generic_batcher::container_replacement_function r,
                     handle_type h, unsigned int wn, derived_data::template_type t);
 
 
@@ -261,7 +312,11 @@ namespace transport
 
       public:
 
-        void push_fNL(unsigned int time_serial, number BT, number TT);
+        //! push bispectrum.bispectrum, bispectrum.template, template.template values to the batcher
+        void push_fNL(unsigned int time_serial, number BB, number BT, number TT);
+
+        //! set number of k-configurations processed, so can be correctly reported to account for in-flight items
+        void set_items_processed(unsigned int N) { this->items_processed = N; }
 
 
         // INTERNAL API
@@ -270,7 +325,7 @@ namespace transport
 
         virtual size_t storage() const override;
 
-        virtual void flush(replacement_action action) override;
+        virtual void flush(generic_batcher::replacement_action action) override;
 
 
         // INTERNAL DATA
@@ -292,20 +347,24 @@ namespace transport
     // POSTINTEGRATION BATCHER METHODS
 
 
+    template <typename number>
     template <typename handle_type>
-    postintegration_batcher::postintegration_batcher(unsigned int cap, const boost::filesystem::path& cp, const boost::filesystem::path& lp,
-                                                     container_dispatch_function d, container_replacement_function r,
-                                                     handle_type h, unsigned int w)
-	    : generic_batcher(cap, cp, lp, d, r, h, w),
+    postintegration_batcher<number>::postintegration_batcher(unsigned int cap, unsigned int ckp, model<number>* m,
+                                                             const boost::filesystem::path& cp, const boost::filesystem::path& lp,
+                                                             generic_batcher::container_dispatch_function d, generic_batcher::container_replacement_function r,
+                                                             handle_type h, unsigned int w)
+	    : generic_batcher(cap, ckp, cp, lp, d, r, h, w),
 	      items_processed(0),
 	      total_time(0),
 	      longest_time(0),
-	      shortest_time(0)
+	      shortest_time(0),
+        Nfields(m->get_N_fields())
 	    {
 	    }
 
 
-    void postintegration_batcher::report_finished_item(boost::timer::nanosecond_type time)
+    template <typename number>
+    void postintegration_batcher<number>::report_finished_item(boost::timer::nanosecond_type time)
 	    {
         this->items_processed++;
         this->total_time += time;
@@ -316,12 +375,20 @@ namespace transport
         if(this->flush_due)
           {
             this->flush_due = false;
-            this->flush(action_replace);
+            this->flush(replacement_action::action_replace);
+          }
+        else if(this->checkpoint_interval > 0 && this->checkpoint_timer.elapsed().wall > this->checkpoint_interval)
+          {
+            BOOST_LOG_SEV(this->log_source, generic_batcher::log_severity_level::normal) << "** Lifetime of " << format_time(this->checkpoint_timer.elapsed().wall)
+                << " exceeds checkpoint interval " << format_time(this->checkpoint_interval)
+                << "; forcing flush";
+            this->flush(replacement_action::action_replace);
           }
 	    }
 
 
-    void postintegration_batcher::begin_assignment()
+    template <typename number>
+    void postintegration_batcher<number>::begin_assignment()
 	    {
         this->items_processed = 0;
         this->total_time = 0;
@@ -330,16 +397,17 @@ namespace transport
 	    }
 
 
-    void postintegration_batcher::end_assignment()
+    template <typename number>
+    void postintegration_batcher<number>::end_assignment()
 	    {
-        BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "";
-        BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "-- Finished assignment: final statistics";
-        BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "--   processed " << this->items_processed << " individual work items in " << format_time(this->total_time);
-        BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "--   mean processing time                = " << format_time(this->total_time/(this->items_processed > 0 ? this->items_processed : 1));
-        BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "--   longest individual processing time  = " << format_time(this->longest_time);
-        BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "--   shortest individual processing time = " << format_time(this->shortest_time);
+        BOOST_LOG_SEV(this->log_source, generic_batcher::log_severity_level::normal) << "";
+        BOOST_LOG_SEV(this->log_source, generic_batcher::log_severity_level::normal) << "-- Finished assignment: final statistics";
+        BOOST_LOG_SEV(this->log_source, generic_batcher::log_severity_level::normal) << "--   processed " << this->items_processed << " individual work items in " << format_time(this->total_time);
+        BOOST_LOG_SEV(this->log_source, generic_batcher::log_severity_level::normal) << "--   mean processing time                = " << format_time(this->total_time/(this->items_processed > 0 ? this->items_processed : 1));
+        BOOST_LOG_SEV(this->log_source, generic_batcher::log_severity_level::normal) << "--   longest individual processing time  = " << format_time(this->longest_time);
+        BOOST_LOG_SEV(this->log_source, generic_batcher::log_severity_level::normal) << "--   shortest individual processing time = " << format_time(this->shortest_time);
 
-        BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "";
+        BOOST_LOG_SEV(this->log_source, generic_batcher::log_severity_level::normal) << "";
 	    }
 
 
@@ -347,24 +415,25 @@ namespace transport
 
     template <typename number>
     template <typename handle_type>
-    zeta_twopf_batcher<number>::zeta_twopf_batcher(unsigned int cap, const boost::filesystem::path& cp, const boost::filesystem::path& lp,
-                                                   const writer_group& w, container_dispatch_function d, container_replacement_function r,
-                                                   handle_type h, unsigned int wn)
-	    : postintegration_batcher(cap, cp, lp, d, r, h, wn),
+    zeta_twopf_batcher<number>::zeta_twopf_batcher(unsigned int cap, unsigned int ckp, model<number>* m,
+                                                   const boost::filesystem::path& cp, const boost::filesystem::path& lp,
+                                                   const writer_group& w, generic_batcher::container_dispatch_function d,
+                                                   generic_batcher::container_replacement_function r, handle_type h, unsigned int wn)
+	    : postintegration_batcher<number>(cap, ckp, m, cp, lp, d, r, h, wn),
 	      writers(w)
 	    {
 	    }
 
 
     template <typename number>
-    void zeta_twopf_batcher<number>::push_twopf(unsigned int time_serial, unsigned int k_serial, number value, unsigned int source_serial)
+    void zeta_twopf_batcher<number>::push_twopf(unsigned int time_serial, unsigned int k_serial, number zeta_twopf, unsigned int source_serial)
 	    {
         typename postintegration_items<number>::zeta_twopf_item item;
 
         item.time_serial    = time_serial;
         item.kconfig_serial = k_serial;
         item.source_serial  = source_serial;
-        item.value          = value;
+        item.value          = zeta_twopf;
 
         this->twopf_batch.push_back(item);
         this->check_for_flush();
@@ -372,26 +441,44 @@ namespace transport
 
 
     template <typename number>
+    void zeta_twopf_batcher<number>::push_gauge_xfm1(unsigned int time_serial, unsigned int k_serial, std::vector<number>& gauge_xfm1, unsigned int source_serial)
+      {
+        typename postintegration_items<number>::gauge_xfm1_item item;
+
+        item.time_serial    = time_serial;
+        item.kconfig_serial = k_serial;
+        item.source_serial  = source_serial;
+        item.elements       = gauge_xfm1;
+
+        this->gauge_xfm1_batch.push_back(item);
+        this->check_for_flush();
+      }
+
+
+    template <typename number>
     size_t zeta_twopf_batcher<number>::storage() const
 	    {
-        return((3*sizeof(unsigned int) + sizeof(number))*this->twopf_batch.size());
+        return((3*sizeof(unsigned int) + 2*sizeof(number))*this->twopf_batch.size()
+          + (3*sizeof(unsigned int) + 2*this->Nfields*sizeof(number))*this->gauge_xfm1_batch.size());
 	    }
 
 
     template <typename number>
-    void zeta_twopf_batcher<number>::flush(replacement_action action)
+    void zeta_twopf_batcher<number>::flush(generic_batcher::replacement_action action)
 	    {
-        BOOST_LOG_SEV(this->get_log(), normal) << "** Flushing zeta twopf batcher (capacity=" << format_memory(this->capacity) << ") of size " << format_memory(this->storage());
+        BOOST_LOG_SEV(this->get_log(), generic_batcher::log_severity_level::normal) << "** Flushing zeta twopf batcher (capacity=" << format_memory(this->capacity) << ") of size " << format_memory(this->storage());
 
         // set up a timer to measure how long it takes to flush
         boost::timer::cpu_timer flush_timer;
 
         this->writers.twopf(this, this->twopf_batch);
+        this->writers.gauge_xfm1(this, this->gauge_xfm1_batch);
 
         flush_timer.stop();
-        BOOST_LOG_SEV(this->get_log(), normal) << "** Flushed in time " << format_time(flush_timer.elapsed().wall) << "; pushing to master process";
+        BOOST_LOG_SEV(this->get_log(), generic_batcher::log_severity_level::normal) << "** Flushed in time " << format_time(flush_timer.elapsed().wall) << "; pushing to master process";
 
         this->twopf_batch.clear();
+        this->gauge_xfm1_batch.clear();
 
         // push a message to the master node, indicating that new data is available
         // note that the order of calls to 'dispatcher' and 'replacer' is important
@@ -401,6 +488,9 @@ namespace transport
 
         // close current container, and replace with a new one if required
         this->replacer(this, action);
+
+        // pass flush notification down to generic batcher (eg. resets checkpoint timer)
+        this->generic_batcher::flush(action);
 	    }
 
 
@@ -410,6 +500,10 @@ namespace transport
         this->twopf_batch.erase(std::remove_if(this->twopf_batch.begin(), this->twopf_batch.end(),
                                                UnbatchPredicate<typename postintegration_items<number>::zeta_twopf_item>(source_serial)),
                                 this->twopf_batch.end());
+
+        this->gauge_xfm1_batch.erase(std::remove_if(this->gauge_xfm1_batch.begin(), this->gauge_xfm1_batch.end(),
+                                                    UnbatchPredicate<typename postintegration_items<number>::gauge_xfm1_item>(source_serial)),
+                                     this->gauge_xfm1_batch.end());
       }
 
 
@@ -418,24 +512,25 @@ namespace transport
 
     template <typename number>
     template <typename handle_type>
-    zeta_threepf_batcher<number>::zeta_threepf_batcher(unsigned int cap, const boost::filesystem::path& cp, const boost::filesystem::path& lp,
-                                                       const writer_group& w, container_dispatch_function d, container_replacement_function r,
-                                                       handle_type h, unsigned int wn)
-	    : postintegration_batcher(cap, cp, lp, d, r, h, wn),
+    zeta_threepf_batcher<number>::zeta_threepf_batcher(unsigned int cap, unsigned int ckp, model<number>* m,
+                                                       const boost::filesystem::path& cp, const boost::filesystem::path& lp,
+                                                       const writer_group& w, generic_batcher::container_dispatch_function d,
+                                                       generic_batcher::container_replacement_function r, handle_type h, unsigned int wn)
+	    : postintegration_batcher<number>(cap, ckp, m, cp, lp, d, r, h, wn),
 	      writers(w)
 	    {
 	    }
 
 
     template <typename number>
-    void zeta_threepf_batcher<number>::push_twopf(unsigned int time_serial, unsigned int k_serial, number value, unsigned int source_serial)
+    void zeta_threepf_batcher<number>::push_twopf(unsigned int time_serial, unsigned int k_serial, number zeta_twopf, unsigned int source_serial)
 	    {
         typename postintegration_items<number>::zeta_twopf_item item;
 
         item.time_serial    = time_serial;
         item.kconfig_serial = k_serial;
         item.source_serial  = source_serial;
-        item.value          = value;
+        item.value          = zeta_twopf;
 
         this->twopf_batch.push_back(item);
         this->check_for_flush();
@@ -443,14 +538,15 @@ namespace transport
 
 
     template <typename number>
-    void zeta_threepf_batcher<number>::push_threepf(unsigned int time_serial, unsigned int k_serial, number value, unsigned int source_serial)
+    void zeta_threepf_batcher<number>::push_threepf(unsigned int time_serial, unsigned int k_serial, number zeta_threepf, number redbsp, unsigned int source_serial)
 	    {
         typename postintegration_items<number>::zeta_threepf_item item;
 
         item.time_serial    = time_serial;
         item.kconfig_serial = k_serial;
         item.source_serial  = source_serial;
-        item.value          = value;
+        item.value          = zeta_threepf;
+        item.redbsp         = redbsp;
 
         this->threepf_batch.push_back(item);
         this->check_for_flush();
@@ -458,47 +554,100 @@ namespace transport
 
 
     template <typename number>
-    void zeta_threepf_batcher<number>::push_reduced_bispectrum(unsigned int time_serial, unsigned int k_serial, number value, unsigned int source_serial)
-	    {
-        typename postintegration_items<number>::zeta_redbsp_item item;
+    void zeta_threepf_batcher<number>::push_gauge_xfm1(unsigned int time_serial, unsigned int k_serial, std::vector<number>& gauge_xfm1, unsigned int source_serial)
+      {
+        typename postintegration_items<number>::gauge_xfm1_item item;
 
         item.time_serial    = time_serial;
         item.kconfig_serial = k_serial;
         item.source_serial  = source_serial;
-        item.value          = value;
+        item.elements       = gauge_xfm1;
 
-        this->redbsp_batch.push_back(item);
+        this->gauge_xfm1_batch.push_back(item);
         this->check_for_flush();
-	    }
+      }
 
+
+    template <typename number>
+    void zeta_threepf_batcher<number>::push_gauge_xfm2_123(unsigned int time_serial, unsigned int k_serial, std::vector<number>& gauge_xfm2, unsigned int source_serial)
+      {
+        typename postintegration_items<number>::gauge_xfm2_123_item item;
+
+        item.time_serial    = time_serial;
+        item.kconfig_serial = k_serial;
+        item.source_serial  = source_serial;
+        item.elements       = gauge_xfm2;
+
+        this->gauge_xfm2_123_batch.push_back(item);
+        this->check_for_flush();
+      }
+
+
+    template <typename number>
+    void zeta_threepf_batcher<number>::push_gauge_xfm2_213(unsigned int time_serial, unsigned int k_serial, std::vector<number>& gauge_xfm2, unsigned int source_serial)
+      {
+        typename postintegration_items<number>::gauge_xfm2_213_item item;
+
+        item.time_serial    = time_serial;
+        item.kconfig_serial = k_serial;
+        item.source_serial  = source_serial;
+        item.elements       = gauge_xfm2;
+
+        this->gauge_xfm2_213_batch.push_back(item);
+        this->check_for_flush();
+      }
+
+
+    template <typename number>
+    void zeta_threepf_batcher<number>::push_gauge_xfm2_312(unsigned int time_serial, unsigned int k_serial, std::vector<number>& gauge_xfm2, unsigned int source_serial)
+      {
+        typename postintegration_items<number>::gauge_xfm2_312_item item;
+
+        item.time_serial    = time_serial;
+        item.kconfig_serial = k_serial;
+        item.source_serial  = source_serial;
+        item.elements       = gauge_xfm2;
+
+        this->gauge_xfm2_312_batch.push_back(item);
+        this->check_for_flush();
+      }
 
     template <typename number>
     size_t zeta_threepf_batcher<number>::storage() const
 	    {
         return((2*sizeof(unsigned int) + sizeof(number))*this->twopf_batch.size()
-	        + (3*sizeof(unsigned int) + sizeof(number))*this->threepf_batch.size()
-	        + (3*sizeof(unsigned int) + sizeof(number))*this->redbsp_batch.size());
+	        + (3*sizeof(unsigned int) + 3*sizeof(number))*this->threepf_batch.size()
+          + (3*sizeof(unsigned int) + 2*this->Nfields*sizeof(number))*this->gauge_xfm1_batch.size()
+          + (3*sizeof(unsigned int) + 2*this->Nfields*2*this->Nfields*sizeof(number))*this->gauge_xfm2_123_batch.size()
+          + (3*sizeof(unsigned int) + 2*this->Nfields*2*this->Nfields*sizeof(number))*this->gauge_xfm2_213_batch.size()
+          + (3*sizeof(unsigned int) + 2*this->Nfields*2*this->Nfields*sizeof(number))*this->gauge_xfm2_312_batch.size());
 	    }
 
 
     template <typename number>
-    void zeta_threepf_batcher<number>::flush(replacement_action action)
+    void zeta_threepf_batcher<number>::flush(generic_batcher::replacement_action action)
 	    {
-        BOOST_LOG_SEV(this->get_log(), normal) << "** Flushing zeta threepf batcher (capacity=" << format_memory(this->capacity) << ") of size " << format_memory(this->storage());
+        BOOST_LOG_SEV(this->get_log(), generic_batcher::log_severity_level::normal) << "** Flushing zeta threepf batcher (capacity=" << format_memory(this->capacity) << ") of size " << format_memory(this->storage());
 
         // set up a timer to measure how long it takes to flush
         boost::timer::cpu_timer flush_timer;
 
         this->writers.twopf(this, this->twopf_batch);
         this->writers.threepf(this, this->threepf_batch);
-        this->writers.redbsp(this, this->redbsp_batch);
+        this->writers.gauge_xfm1(this, this->gauge_xfm1_batch);
+        this->writers.gauge_xfm2_123(this, this->gauge_xfm2_123_batch);
+        this->writers.gauge_xfm2_213(this, this->gauge_xfm2_213_batch);
+        this->writers.gauge_xfm2_312(this, this->gauge_xfm2_312_batch);
 
         flush_timer.stop();
-        BOOST_LOG_SEV(this->get_log(), normal) << "** Flushed in time " << format_time(flush_timer.elapsed().wall) << "; pushing to master process";
+        BOOST_LOG_SEV(this->get_log(), generic_batcher::log_severity_level::normal) << "** Flushed in time " << format_time(flush_timer.elapsed().wall) << "; pushing to master process";
 
         this->twopf_batch.clear();
         this->threepf_batch.clear();
-        this->redbsp_batch.clear();
+        this->gauge_xfm1_batch.clear();
+        this->gauge_xfm2_123_batch.clear();
+        this->gauge_xfm2_213_batch.clear();
+        this->gauge_xfm2_312_batch.clear();
 
         // push a message to the master node, indicating that new data is available
         // note that the order of calls to 'dispatcher' and 'replacer' is important
@@ -508,6 +657,9 @@ namespace transport
 
         // close current container, and replace with a new one if required
         this->replacer(this, action);
+
+        // pass flush notification down to generic batcher (eg. resets checkpoint timer)
+        this->generic_batcher::flush(action);
 	    }
 
 
@@ -522,9 +674,21 @@ namespace transport
                                                  UnbatchPredicate<typename postintegration_items<number>::zeta_threepf_item>(source_serial)),
                                 this->threepf_batch.end());
 
-        this->redbsp_batch.erase(std::remove_if(this->redbsp_batch.begin(), this->redbsp_batch.end(),
-                                                UnbatchPredicate<typename postintegration_items<number>::zeta_redbsp_item>(source_serial)),
-                                this->redbsp_batch.end());
+        this->gauge_xfm1_batch.erase(std::remove_if(this->gauge_xfm1_batch.begin(), this->gauge_xfm1_batch.end(),
+                                                    UnbatchPredicate<typename postintegration_items<number>::gauge_xfm1_item>(source_serial)),
+                                     this->gauge_xfm1_batch.end());
+
+        this->gauge_xfm2_123_batch.erase(std::remove_if(this->gauge_xfm2_123_batch.begin(), this->gauge_xfm2_123_batch.end(),
+                                                        UnbatchPredicate<typename postintegration_items<number>::gauge_xfm2_123_item>(source_serial)),
+                                         this->gauge_xfm2_123_batch.end());
+
+        this->gauge_xfm2_213_batch.erase(std::remove_if(this->gauge_xfm2_213_batch.begin(), this->gauge_xfm2_213_batch.end(),
+                                                        UnbatchPredicate<typename postintegration_items<number>::gauge_xfm2_213_item>(source_serial)),
+                                         this->gauge_xfm2_213_batch.end());
+
+        this->gauge_xfm2_312_batch.erase(std::remove_if(this->gauge_xfm2_312_batch.begin(), this->gauge_xfm2_312_batch.end(),
+                                                        UnbatchPredicate<typename postintegration_items<number>::gauge_xfm2_312_item>(source_serial)),
+                                         this->gauge_xfm2_312_batch.end());
       }
 
 
@@ -532,10 +696,12 @@ namespace transport
 
     template <typename number>
     template <typename handle_type>
-    fNL_batcher<number>::fNL_batcher(unsigned int cap, const boost::filesystem::path& cp, const boost::filesystem::path& lp,
-                                     const writer_group& w, container_dispatch_function d, container_replacement_function r,
+    fNL_batcher<number>::fNL_batcher(unsigned int cap, unsigned int ckp, model<number>* m,
+                                     const boost::filesystem::path& cp, const boost::filesystem::path& lp,
+                                     const writer_group& w, generic_batcher::container_dispatch_function d,
+                                     generic_batcher::container_replacement_function r,
                                      handle_type h, unsigned int wn, derived_data::template_type t)
-	    : postintegration_batcher(cap, cp, lp, d, r, h, wn),
+	    : postintegration_batcher<number>(cap, ckp, m, cp, lp, d, r, h, wn),
 	      writers(w),
 	      type(t)
 	    {
@@ -543,11 +709,12 @@ namespace transport
 
 
     template <typename number>
-    void fNL_batcher<number>::push_fNL(unsigned int time_serial, number BT, number TT)
+    void fNL_batcher<number>::push_fNL(unsigned int time_serial, number BB, number BT, number TT)
 	    {
         typename postintegration_items<number>::fNL_item item;
 
         item.time_serial = time_serial;
+        item.BB          = BB;
         item.BT          = BT;
         item.TT          = TT;
 
@@ -559,6 +726,7 @@ namespace transport
 
 		    if(t != this->fNL_batch.end())
 			    {
+            item.BB += t->BB;
 				    item.BT += t->BT;
 				    item.TT += t->TT;
 				    this->fNL_batch.erase(t);
@@ -577,9 +745,9 @@ namespace transport
 
 
     template <typename number>
-    void fNL_batcher<number>::flush(replacement_action action)
+    void fNL_batcher<number>::flush(generic_batcher::replacement_action action)
 	    {
-        BOOST_LOG_SEV(this->get_log(), normal) << "** Flushing " << template_name(this->type) << " batcher (capacity=" << format_memory(this->capacity) << ") of size " << format_memory(this->storage());
+        BOOST_LOG_SEV(this->get_log(), generic_batcher::log_severity_level::normal) << "** Flushing " << template_name(this->type) << " batcher (capacity=" << format_memory(this->capacity) << ") of size " << format_memory(this->storage());
 
         // set up a timer to measure how long it takes to flush
         boost::timer::cpu_timer flush_timer;
@@ -587,7 +755,7 @@ namespace transport
         this->writers.fNL(this, this->fNL_batch, this->type);
 
         flush_timer.stop();
-        BOOST_LOG_SEV(this->get_log(), normal) << "** Flushed in time " << format_time(flush_timer.elapsed().wall) << "; pushing to master process";
+        BOOST_LOG_SEV(this->get_log(), generic_batcher::log_severity_level::normal) << "** Flushed in time " << format_time(flush_timer.elapsed().wall) << "; pushing to master process";
 
         this->fNL_batch.clear();
 
@@ -599,6 +767,9 @@ namespace transport
 
         // close current container, and replace with a new one if required
         this->replacer(this, action);
+
+        // pass flush notification down to generic batcher (eg. resets checkpoint timer)
+        this->generic_batcher::flush(action);
 	    }
 
 	}   // namespace transport

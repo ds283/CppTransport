@@ -109,8 +109,8 @@ namespace transport
 				    std::unique_ptr< task_record<number> > tk_rec(finder(tk->get_name()));
 				    assert(tk_rec.get() != nullptr);
 
-				    if(tk_rec->get_type() != task_record<number>::integration)
-					    throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_TASK_NOT_INTEGRATION);
+				    if(tk_rec->get_type() != task_record<number>::task_type::integration)
+					    throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_TASK_NOT_INTEGRATION);
 
 				    integration_task_record<number>* int_rec = dynamic_cast< integration_task_record<number>* >(tk_rec.get());
 				    assert(int_rec != nullptr);

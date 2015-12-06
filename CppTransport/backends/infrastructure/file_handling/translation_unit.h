@@ -12,24 +12,31 @@
 #include "y_common.h"
 #include "y_lexer.h"
 #include "y_driver.h"
-#include "y_parser.tab.hh"
+#include "y_parser.hpp"
 
 #include "stepper.h"
 #include "indexorder.h"
 #include "output_stack.h"
 #include "translator.h"
+#include "translator_data.h"
+#include "local_environment.h"
+#include "argument_cache.h"
 
 #include "symbol_factory.h"
+
 
 // data structure for tracking input scripts as they progress through the pipeline
 class translation_unit
   {
 
+    // CONSTRUCTOR, DESTRUCTOR
+
   public:
 
-    translation_unit(std::string file, std::shared_ptr<finder>& p,
-                     std::string core_out="", std::string implementation_out="", bool cse=true, bool v=false);
+    //! constructor
+    translation_unit(boost::filesystem::path file, finder& p, argument_cache& c, local_environment& e);
 
+    //! destructor is default
     ~translation_unit() = default;
 
 
@@ -41,94 +48,56 @@ class translation_unit
     unsigned int apply();
 
 
-		// UTILITIES
+		// INTERNAL API
 
-  public:
+  protected:
 
 		// print an advisory message, if the current verbosity level is set sufficiently high
     void print_advisory(const std::string& msg);
 
-		// print a warning message
+		// print a warning message - no context data
 		void warn(const std::string& msg);
 
-		// print an error message
+		// print an error message - no context data
 		void error(const std::string& msg);
 
+    // print a warning message - with context data
+    void context_warn(const std::string& msg, const error_context& ctx);
 
-		// INTERFACE - EXTRACT INFORMATION ABOUT THIS TRANSLATION UNIT
+    // print an error message - with context data
+    void context_error(const std::string& msg, const error_context& ctx);
 
-  public:
+    //! construct output name (input not const or taken by reference because modified internally)
+    boost::filesystem::path mangle_output_name(const boost::filesystem::path& input, const std::string& tag);
 
-    const std::string&                                 get_model_input() const;
+    //! deduce template suffix from input name (input not const or taken by reference because modified internally)
+    std::string get_template_suffix(std::string input);
 
-    const std::string&                                 get_core_output() const;
-    const std::string&                                 get_implementation_output() const;
 
-    const std::string&                                 get_core_guard() const;
-    const std::string&                                 get_implementation_guard() const;
-
-    bool                                               get_do_cse() const;
-
-    const std::string&                                 get_name() const;
-    const std::string&                                 get_author() const;
-    const std::string&                                 get_model() const;
-    const std::string&                                 get_tag() const;
-
-    unsigned int                                       get_number_fields() const;
-    unsigned int                                       get_number_parameters() const;
-    enum indexorder                                    get_index_order() const;
-
-    const GiNaC::symbol&                               get_Mp_symbol() const;
-    const GiNaC::ex                                    get_potential() const;
-
-    const std::vector<GiNaC::symbol>                   get_field_symbols() const;
-    const std::vector<GiNaC::symbol>                   get_deriv_symbols() const;
-    const std::vector<GiNaC::symbol>                   get_parameter_symbols() const;
-
-    const std::vector<std::string>                     get_field_list() const;
-    const std::vector<std::string>                     get_latex_list() const;
-    const std::vector<std::string>                     get_param_list() const;
-    const std::vector<std::string>                     get_platx_list() const;
-
-    const struct stepper&                              get_background_stepper() const;
-    const struct stepper&                              get_perturbations_stepper() const;
-
-    std::shared_ptr<finder>                            get_finder() const { return(this->path); }
-    std::shared_ptr<output_stack>                      get_stack() const { return(this->stack); }
-    std::shared_ptr<translator>                        get_translator() const { return(this->outstream); }
-
-		symbol_factory&                                    get_symbol_factory();
-
-  protected:
-
-    std::string                                        mangle_output_name(std::string input, std::string tag);
-    std::string                                        get_template_suffix(std::string input);
+    // INTERNAL DATA
 
   private:
 
-    std::shared_ptr<y::lexstream_type> stream;
-    std::shared_ptr<y::y_lexer>     lexer;
-    std::shared_ptr<y::y_driver>    driver;
-    std::shared_ptr<y::y_parser>    parser;
+    // GiNaC symbol factory
+    symbol_factory          sym_factory;
 
-		// GiNaC symbol factory
-		symbol_factory                                     sym_factory;
+    boost::filesystem::path name;                    // name of input script
+    bool                    parse_failed;
 
-    std::string                                        name;                    // name of input script
-    bool                                               do_cse;
-		bool                                               verbose;
-		bool                                               parse_failed;
+    finder&                 path;
+    argument_cache&         cache;
+    local_environment&      env;
+    output_stack            stack;
 
-    std::shared_ptr<finder>                            path;
-    std::shared_ptr<output_stack>                      stack;
-    std::shared_ptr<translator>                        outstream;
+    lexstream_data          lexstream_payload;       // must be constructed *after* path, cache
+    y::lexstream_type       instream;
+    y::y_lexer              lexer;
+    y::y_driver             driver;
+    y::y_parser             parser;
 
-    // cached details about the translation unit
-    std::string                                        core_output;             // name of core .h file
-    std::string                                        implementation_output;   // name of implementation .h file
+    translator_data         translator_payload;
+    translator              outstream;               // must be constructed *after* data_payload, path, stack, sym_factory
 
-    std::string                                        core_guard;              // tag for #ifndef guard -- core file
-    std::string                                        implementation_guard;    // tag for #ifndef guard -- implementation file
   };
 
 

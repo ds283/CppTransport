@@ -23,24 +23,21 @@
 namespace transport
   {
 
-    // forward reference for overload of operator<<
-    template <typename ItemType> class work_queue;
-
-    // overload operator<< to write a work_queue to a stream
-    template <typename ItemType>
-    std::ostream& operator<<(std::ostream& out, work_queue<ItemType>& obj);
 
     template <typename ItemType>
     class work_queue
       {
+
       public:
 
         //! Hold a list of work items for a specific device. The queue for a device is a collection of these work lists.
         class device_work_list
           {
+
           public:
-            device_work_list(unsigned int size)
-              : state_size(0)
+
+            device_work_list(unsigned int sz=0)
+              : state_size(sz)
               {
               }
 
@@ -66,22 +63,27 @@ namespace transport
                   }
                 else
                   {
-                    throw std::out_of_range(__CPP_TRANSPORT_WORK_LIST_RANGE);
+                    throw std::out_of_range(CPPTRANSPORT_WORK_LIST_RANGE);
                   }
               }
 
           private:
+
             //! std::vector holding the list of work items
             std::vector<ItemType> work_list;
 
             //! Memory required for the state vector, used when computing the memory required to integrate items in the list
             unsigned int state_size;
+
           };
+
 
         //! Hold a queue of work items for a specific device. The queue may be broken into a collection of work lists.
         class device_queue
           {
+
           public:
+
             device_queue(const context::device& dev, unsigned int size)
               : device(dev), total_items(0), state_size(size)
               {
@@ -112,7 +114,7 @@ namespace transport
                   }
                 else
                   {
-                    throw std::out_of_range(__CPP_TRANSPORT_DEVICE_QUEUE_RANGE);
+                    throw std::out_of_range(CPPTRANSPORT_DEVICE_QUEUE_RANGE);
                   }
               }
 
@@ -138,6 +140,7 @@ namespace transport
             void new_queue() { this->queue_list.push_back(device_work_list(this->state_size)); }
 
           private:
+
             //! std::vector holding the work lists for this device
             std::vector<device_work_list> queue_list;
 
@@ -149,7 +152,13 @@ namespace transport
 
             //! Motal number of items queued on this device, over all work lists
             unsigned int total_items;
+
           };
+
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
 
         work_queue(const context& c, unsigned int size);
 
@@ -176,18 +185,27 @@ namespace transport
               }
             else
               {
-                throw std::out_of_range(__CPP_TRANSPORT_WORK_QUEUE_RANGE);
+                throw std::out_of_range(CPPTRANSPORT_WORK_QUEUE_RANGE);
               }
           }
 
-        friend std::ostream& operator<< <>(std::ostream& out, work_queue<ItemType>& obj);
+
+        // WRITE SELF TO STREAM
+
+      public:
+
+        //! write to stream
+        template <typename Stream> void write(Stream& out);
+
 
       protected:
+
         //! Clear all queues
         void clear();
 
 
       private:
+
         //! Device context
         const context& ctx;
 
@@ -212,7 +230,7 @@ namespace transport
 
         if(ctx.size() == 0)
           {
-            throw std::logic_error(__CPP_TRANSPORT_NO_DEVICES);
+            throw std::logic_error(CPPTRANSPORT_NO_DEVICES);
           }
       }
 
@@ -258,44 +276,51 @@ namespace transport
 
 
     template <typename ItemType>
-    std::ostream& operator<<(std::ostream& out, work_queue<ItemType>& obj)
+    template <typename Stream>
+    void work_queue<ItemType>::write(Stream& out)
       {
-        out << __CPP_TRANSPORT_WORK_QUEUE_OUTPUT_A << " " << obj.ctx.size() << " "
-            << (obj.ctx.size() > 1 ? __CPP_TRANSPORT_WORK_QUEUE_OUTPUT_B : __CPP_TRANSPORT_WORK_QUEUE_OUTPUT_C)
-            << std::endl << std::endl;
+        out << CPPTRANSPORT_WORK_QUEUE_OUTPUT_A << " " << this->ctx.size() << " "
+        << (this->ctx.size() > 1 ? CPPTRANSPORT_WORK_QUEUE_OUTPUT_B : CPPTRANSPORT_WORK_QUEUE_OUTPUT_C)
+        << '\n' << '\n';
 
         unsigned int d = 0;
-        for(typename std::vector<typename work_queue<ItemType>::device_queue>::const_iterator t = obj.device_list.begin(); t != obj.device_list.end(); ++t, ++d)
+        for(typename std::vector<typename work_queue<ItemType>::device_queue>::const_iterator t = this->device_list.begin(); t != this->device_list.end(); ++t, ++d)
           {
-            out << d << ". " << (*t).get_device().get_name() << " (" << __CPP_TRANSPORT_WORK_QUEUE_WEIGHT << " = " << (*t).get_weight() << "), ";
+            out << d << ". " << (*t).get_device().get_name() << " (" << CPPTRANSPORT_WORK_QUEUE_WEIGHT << " = " << (*t).get_weight() << "), ";
             if((*t).get_device().get_mem_type() == context::device::bounded)
               {
-                out << __CPP_TRANSPORT_WORK_QUEUE_MAXMEM << " = " << format_memory((*t).get_device().get_mem_size());
+                out << CPPTRANSPORT_WORK_QUEUE_MAXMEM << " = " << format_memory((*t).get_device().get_mem_size());
               }
             else
               {
-                out << __CPP_TRANSPORT_WORK_QUEUE_UNBOUNDED;
+                out << CPPTRANSPORT_WORK_QUEUE_UNBOUNDED;
               }
-            out << std::endl;
+            out << '\n';
 
             // loop through the queues on this device, emitting them:
             out << "   " << (*t).size() << " "
-                << ((*t).size() > 1 ? __CPP_TRANSPORT_WORK_QUEUE_QUEUES : __CPP_TRANSPORT_WORK_QUEUE_QUEUE)
-                << std::endl << std::endl;
+            << ((*t).size() > 1 ? CPPTRANSPORT_WORK_QUEUE_QUEUES : CPPTRANSPORT_WORK_QUEUE_QUEUE)
+            << '\n' << '\n';
 
             for(unsigned int i = 0; i < (*t).size(); ++i)
               {
                 const typename work_queue<ItemType>::device_work_list& work = (*t)[i];
 
-                out << "   ** " << __CPP_TRANSPORT_WORK_QUEUE_QUEUE_NAME << " " << i << std::endl;
+                out << "   ** " << CPPTRANSPORT_WORK_QUEUE_QUEUE_NAME << " " << i << '\n';
                 for(unsigned int j = 0; j < work.size(); ++j)
                   {
                     out << "     " << work[j];
                   }
-                out << std::endl;
+                out << '\n';
               }
           }
-        
+      }
+
+
+    template <typename ItemType, typename Char, typename Traits>
+    std::basic_ostream<Char, Traits>& operator<<(std::basic_ostream<Char, Traits>& out, work_queue<ItemType>& obj)
+      {
+        obj.write(out);
         return(out);
       }
 

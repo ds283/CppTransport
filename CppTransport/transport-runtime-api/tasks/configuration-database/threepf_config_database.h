@@ -16,7 +16,9 @@
 #include "transport-runtime-api/tasks/task_configurations.h"
 #include "transport-runtime-api/tasks/configuration-database/twopf_config_database.h"
 
-#include "transport-runtime-api/tasks/configuration-database/generic_iterator.h"
+#include "transport-runtime-api/tasks/configuration-database/generic_record_iterator.h"
+#include "transport-runtime-api/tasks/configuration-database/generic_config_iterator.h"
+#include "transport-runtime-api/tasks/configuration-database/generic_value_iterator.h"
 
 #include "transport-runtime-api/defaults.h"
 #include "transport-runtime-api/messages.h"
@@ -68,8 +70,6 @@ namespace transport
         threepf_kconfig* operator->() { return(&this->record); }
         const threepf_kconfig* operator->() const { return(&this->record); }
 
-        friend std::ostream& operator<<(std::ostream& out, const threepf_kconfig_record& obj);
-
 
         // INTERNAL DATA
 
@@ -103,7 +103,8 @@ namespace transport
       }
 
 
-    std::ostream& operator<<(std::ostream& out, const threepf_kconfig_record& obj)
+    template <typename Char, typename Traits>
+    std::basic_ostream<Char, Traits>& operator<<(std::basic_ostream<Char, Traits>& out, const threepf_kconfig_record& obj)
       {
         out << *obj;
         return(out);
@@ -125,8 +126,11 @@ namespace transport
       public:
 
         // specialize to obtain intended iterators
-        typedef configuration_database::generic_record_iterator<database_type, threepf_kconfig_record, false > record_iterator;
-        typedef configuration_database::generic_record_iterator<database_type, threepf_kconfig_record, true >  const_record_iterator;
+        typedef configuration_database::generic_record_iterator< database_type::iterator, database_type::const_iterator, threepf_kconfig_record, false > record_iterator;
+        typedef configuration_database::generic_record_iterator< database_type::iterator, database_type::const_iterator, threepf_kconfig_record, true >  const_record_iterator;
+
+        typedef configuration_database::generic_record_iterator< database_type::reverse_iterator, database_type::const_reverse_iterator, threepf_kconfig_record, false > reverse_record_iterator;
+        typedef configuration_database::generic_record_iterator< database_type::reverse_iterator, database_type::const_reverse_iterator, threepf_kconfig_record, true >  const_reverse_record_iterator;
 
 
         // CONFIG VALUED ITERATOR
@@ -134,8 +138,11 @@ namespace transport
       public:
 
         // specialize to obtain intended iterators
-        typedef configuration_database::generic_config_iterator<database_type, threepf_kconfig, false> config_iterator;
-        typedef configuration_database::generic_config_iterator<database_type, threepf_kconfig, true>  const_config_iterator;
+        typedef configuration_database::generic_config_iterator< database_type::iterator, database_type::const_iterator, threepf_kconfig, false> config_iterator;
+        typedef configuration_database::generic_config_iterator< database_type::iterator, database_type::const_iterator, threepf_kconfig, true>  const_config_iterator;
+
+        typedef configuration_database::generic_config_iterator< database_type::reverse_iterator, database_type::const_reverse_iterator, threepf_kconfig, false> reverse_config_iterator;
+        typedef configuration_database::generic_config_iterator< database_type::reverse_iterator, database_type::const_reverse_iterator, threepf_kconfig, true>  const_reverse_config_iterator;
 
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -146,7 +153,7 @@ namespace transport
         threepf_kconfig_database(double cn);
 
         //! deserialization constructor
-        threepf_kconfig_database(double cn, sqlite3* handle, std::shared_ptr<twopf_kconfig_database>& twopf_db);
+        threepf_kconfig_database(double cn, sqlite3* handle, twopf_kconfig_database& twopf_db);
 
         //! destructor is default
         ~threepf_kconfig_database() = default;
@@ -156,28 +163,42 @@ namespace transport
 
       public:
 
-        record_iterator       record_begin()        { return record_iterator(this->database.begin()); }
-        record_iterator       record_end()          { return record_iterator(this->database.end()); }
+        record_iterator               record_begin()         { return record_iterator(this->database.begin()); }
+        record_iterator               record_end()           { return record_iterator(this->database.end()); }
+        const_record_iterator         record_begin()   const { return const_record_iterator(this->database.begin()); }
+        const_record_iterator         record_end()     const { return const_record_iterator(this->database.end()); }
 
-        const_record_iterator record_begin()  const { return const_record_iterator(this->database.begin()); }
-        const_record_iterator record_end()    const { return const_record_iterator(this->database.end()); }
+        const_record_iterator         record_cbegin()  const { return const_record_iterator(this->database.cbegin()); }
+        const_record_iterator         record_cend()    const { return const_record_iterator(this->database.cend()); }
 
-        const_record_iterator crecord_begin() const { return const_record_iterator(this->database.cbegin()); }
-        const_record_iterator crecord_end()   const { return const_record_iterator(this->database.cend()); }
+        reverse_record_iterator       record_rbegin()        { return reverse_record_iterator(this->database.rbegin()); }
+        reverse_record_iterator       record_rend()          { return reverse_record_iterator(this->database.rend()); }
+        const_reverse_record_iterator record_rbegin()  const { return const_reverse_record_iterator(this->database.rbegin()); }
+        const_reverse_record_iterator record_rend()    const { return const_reverse_record_iterator(this->database.rend()); }
+
+        const_reverse_record_iterator record_crbegin() const { return const_reverse_record_iterator(this->database.crbegin()); }
+        const_reverse_record_iterator record_crend()   const { return const_reverse_record_iterator(this->database.crend()); }
 
 
         // CONFIG ITERATORS
 
       public:
 
-        config_iterator       config_begin()        { return config_iterator(this->database.begin()); }
-        config_iterator       config_end()          { return config_iterator(this->database.end()); }
+        config_iterator               config_begin()         { return config_iterator(this->database.begin()); }
+        config_iterator               config_end()           { return config_iterator(this->database.end()); }
+        const_config_iterator         config_begin()   const { return const_config_iterator(this->database.begin()); }
+        const_config_iterator         config_end()     const { return const_config_iterator(this->database.end()); }
 
-        const_config_iterator config_begin()  const { return const_config_iterator(this->database.begin()); }
-        const_config_iterator config_end()    const { return const_config_iterator(this->database.end()); }
+        const_config_iterator         config_cbegin()  const { return const_config_iterator(this->database.cbegin()); }
+        const_config_iterator         config_cend()    const { return const_config_iterator(this->database.cend()); }
 
-        const_config_iterator cconfig_begin() const { return const_config_iterator(this->database.cbegin()); }
-        const_config_iterator cconfig_end()   const { return const_config_iterator(this->database.cend()); }
+        reverse_config_iterator       config_rbegin()        { return reverse_config_iterator(this->database.rbegin()); }
+        reverse_config_iterator       config_rend()          { return reverse_config_iterator(this->database.rend()); }
+        const_reverse_config_iterator config_rbegin()  const { return const_reverse_config_iterator(this->database.crbegin()); }
+        const_reverse_config_iterator config_rend()    const { return const_reverse_config_iterator(this->database.crend()); }
+
+        const_reverse_config_iterator config_crbegin() const { return const_reverse_config_iterator(this->database.crbegin()); }
+        const_reverse_config_iterator config_crend()   const { return const_reverse_config_iterator(this->database.crend()); }
 
 
         // INTERFACE -- GLOBAL OPERATIONS
@@ -200,15 +221,15 @@ namespace transport
 
         //! add record to the database -- specified by wavenumber on each leg
         template <typename StoragePolicy>
-        int add_k1k2k3_record(std::shared_ptr<twopf_kconfig_database>& twopf_db, double k1_conventional, double k2_conventional, double k3_conventional, StoragePolicy policy);
+        int add_k1k2k3_record(twopf_kconfig_database& twopf_db, double k1_conventional, double k2_conventional, double k3_conventional, StoragePolicy policy);
 
         //! add record to the database -- specified by Fergusson-Shellard-Liguori parametrization
         template <typename StoragePolicy>
-        int add_FLS_record(std::shared_ptr<twopf_kconfig_database>& twopf_db, double kt_conventional, double alpha, double beta, StoragePolicy policy);
+        int add_FLS_record(twopf_kconfig_database& twopf_db, double kt_conventional, double alpha, double beta, StoragePolicy policy);
 
         //! add a record to the database -- directly specified
         template <typename StoragePolicy>
-        int add_record(std::shared_ptr<twopf_kconfig_database>& twopf_db, threepf_kconfig config, StoragePolicy policy);
+        int add_record(twopf_kconfig_database& twopf_db, threepf_kconfig config, StoragePolicy policy);
 
 		    //! lookup record with a given serial number -- non const version
 		    record_iterator lookup(unsigned int serial);
@@ -290,7 +311,7 @@ namespace transport
       }
 
 
-    threepf_kconfig_database::threepf_kconfig_database(double cn, sqlite3* handle, std::shared_ptr<twopf_kconfig_database>& twopf_db)
+    threepf_kconfig_database::threepf_kconfig_database(double cn, sqlite3* handle, twopf_kconfig_database& twopf_db)
       : comoving_normalization(cn),
         serial(0),
         kmax_conventional(-std::numeric_limits<double>::max()),
@@ -342,9 +363,9 @@ namespace transport
 		            config.k2_serial = static_cast<unsigned int>(sqlite3_column_int(stmt, 6));
 		            config.k3_serial = static_cast<unsigned int>(sqlite3_column_int(stmt, 7));
 
-				        twopf_kconfig_database::const_record_iterator k1 = twopf_db->lookup(config.k1_serial);
-		            twopf_kconfig_database::const_record_iterator k2 = twopf_db->lookup(config.k2_serial);
-		            twopf_kconfig_database::const_record_iterator k3 = twopf_db->lookup(config.k3_serial);
+				        twopf_kconfig_database::const_record_iterator k1 = twopf_db.lookup(config.k1_serial);
+		            twopf_kconfig_database::const_record_iterator k2 = twopf_db.lookup(config.k2_serial);
+		            twopf_kconfig_database::const_record_iterator k3 = twopf_db.lookup(config.k3_serial);
 
 		            config.k1_conventional = (*k1)->k_conventional;
 		            config.k1_comoving     = (*k1)->k_comoving;
@@ -370,9 +391,9 @@ namespace transport
             else
 	            {
                 std::ostringstream msg;
-                msg << __CPP_TRANSPORT_THREEPF_DATABASE_READ_FAIL << status << ": " << sqlite3_errmsg(handle) << ")";
+                msg << CPPTRANSPORT_THREEPF_DATABASE_READ_FAIL << status << ": " << sqlite3_errmsg(handle) << ")";
                 sqlite3_finalize(stmt);
-                throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
+                throw runtime_exception(exception_type::DATA_CONTAINER_ERROR, msg.str());
 	            }
           }
 
@@ -390,7 +411,7 @@ namespace transport
 
 
     template <typename StoragePolicy>
-    int threepf_kconfig_database::add_k1k2k3_record(std::shared_ptr<twopf_kconfig_database>& twopf_db, double k1_conventional, double k2_conventional, double k3_conventional, StoragePolicy policy)
+    int threepf_kconfig_database::add_k1k2k3_record(twopf_kconfig_database& twopf_db, double k1_conventional, double k2_conventional, double k3_conventional, StoragePolicy policy)
       {
         // insert a record into the database
         threepf_kconfig config;
@@ -418,7 +439,7 @@ namespace transport
 
 
     template <typename StoragePolicy>
-    int threepf_kconfig_database::add_FLS_record(std::shared_ptr<twopf_kconfig_database>& twopf_db, double kt_conventional, double alpha, double beta, StoragePolicy policy)
+    int threepf_kconfig_database::add_FLS_record(twopf_kconfig_database& twopf_db, double kt_conventional, double alpha, double beta, StoragePolicy policy)
       {
         // insert a record into the database
         threepf_kconfig config;
@@ -447,30 +468,33 @@ namespace transport
 
 
     template <typename StoragePolicy>
-    int threepf_kconfig_database::add_record(std::shared_ptr<twopf_kconfig_database>& twopf_db, threepf_kconfig config, StoragePolicy policy)
+    int threepf_kconfig_database::add_record(twopf_kconfig_database& twopf_db, threepf_kconfig config, StoragePolicy policy)
       {
+        // populate serial numbers in configuration record before
+        // passing to storage policy
+        config.serial = this->serial++;
+
+        bool k1_stored;
+        bool k2_stored;
+        bool k3_stored;
+
+        // perform reverse-lookup to find whether twopf kconfig database records already exist for these k_i
+        twopf_kconfig_database::record_iterator rec;
+        k1_stored = twopf_db.find(config.k1_conventional, rec);
+        if(k1_stored) config.k1_serial = (*rec)->serial;
+        else          config.k1_serial = twopf_db.add_record(config.k1_conventional);
+
+        k2_stored = twopf_db.find(config.k2_conventional, rec);
+        if(k2_stored) config.k2_serial = (*rec)->serial;
+        else          config.k2_serial = twopf_db.add_record(config.k2_conventional);
+
+        k3_stored = twopf_db.find(config.k3_conventional, rec);
+        if(k3_stored) config.k3_serial = (*rec)->serial;
+        else          config.k3_serial = twopf_db.add_record(config.k3_conventional);
+
+        // ask storage policy whether this configuration should be reatined
         if(policy(config))
           {
-            config.serial = this->serial++;
-
-            bool k1_stored;
-            bool k2_stored;
-            bool k3_stored;
-
-		        // perform reverse-lookup to find whether twopf kconfig database records already exist for these k_i
-            twopf_kconfig_database::record_iterator rec;
-            k1_stored = twopf_db->find(config.k1_conventional, rec);
-		        if(k1_stored) config.k1_serial = (*rec)->serial;
-		        else          config.k1_serial = twopf_db->add_record(config.k1_conventional);
-
-            k2_stored = twopf_db->find(config.k2_conventional, rec);
-            if(k2_stored) config.k2_serial = (*rec)->serial;
-            else          config.k2_serial = twopf_db->add_record(config.k2_conventional);
-
-            k3_stored = twopf_db->find(config.k3_conventional, rec);
-            if(k3_stored) config.k3_serial = (*rec)->serial;
-            else          config.k3_serial = twopf_db->add_record(config.k3_conventional);
-
             if(config.kt_conventional > this->kmax_conventional) this->kmax_conventional = config.kt_conventional;
             if(config.kt_conventional < this->kmin_conventional) this->kmin_conventional = config.kt_conventional;
             if(config.kt_comoving > this->kmax_comoving)         this->kmax_comoving     = config.kt_comoving;
@@ -482,6 +506,13 @@ namespace transport
 		        this->modified = true;
 
             return(config.serial);
+          }
+        else
+          {
+            // unwind any twopf configurations added
+            if(!k1_stored) twopf_db.delete_record(config.k1_serial);
+            if(!k2_stored) twopf_db.delete_record(config.k2_serial);
+            if(!k3_stored) twopf_db.delete_record(config.k3_serial);
           }
 
         return(-1);
@@ -511,7 +542,7 @@ namespace transport
 		      << "FOREIGN KEY(wavenumber2) REFERENCES twopf_kconfig(serial), "
 		      << "FOREIGN KEY(wavenumber3) REFERENCES twopf_kconfig(serial));";
 
-        sqlite3_operations::exec(handle, create_stmt.str(), __CPP_TRANSPORT_THREEPF_DATABASE_WRITE_FAIL);
+        sqlite3_operations::exec(handle, create_stmt.str(), CPPTRANSPORT_THREEPF_DATABASE_WRITE_FAIL);
 
         std::ostringstream insert_stmt;
 		    insert_stmt << "INSERT INTO threepf_kconfig VALUES (@serial, @kt_conventional, @kt_comoving, @alpha, @beta, @wavenumber1, @wavenumber2, @wavenumber3, @t_exit, @store_bg, @store_k1, @store_k2, @store_k3);";
@@ -521,12 +552,8 @@ namespace transport
 
         sqlite3_operations::exec(handle, "BEGIN TRANSACTION");
 
-        unsigned int count = 0;
-        for(database_type::const_iterator t = this->database.begin(); t != this->database.end(); ++t, ++count)
+        for(database_type::const_iterator t = this->database.begin(); t != this->database.end(); ++t)
           {
-            assert(count == t->first);
-            if(count != t->first) throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_THREEPF_DATABASE_OUT_OF_ORDER);
-
             sqlite3_operations::check_stmt(handle, sqlite3_bind_int(stmt, 1, t->second->serial));
             sqlite3_operations::check_stmt(handle, sqlite3_bind_double(stmt, 2, t->second->kt_conventional));
             sqlite3_operations::check_stmt(handle, sqlite3_bind_double(stmt, 3, t->second->kt_comoving));
@@ -541,7 +568,7 @@ namespace transport
             sqlite3_operations::check_stmt(handle, sqlite3_bind_int(stmt, 12, t->second.is_twopf_k2_stored()));
             sqlite3_operations::check_stmt(handle, sqlite3_bind_int(stmt, 13, t->second.is_twopf_k3_stored()));
 
-            sqlite3_operations::check_stmt(handle, sqlite3_step(stmt), __CPP_TRANSPORT_THREEPF_DATABASE_WRITE_FAIL, SQLITE_DONE);
+            sqlite3_operations::check_stmt(handle, sqlite3_step(stmt), CPPTRANSPORT_THREEPF_DATABASE_WRITE_FAIL, SQLITE_DONE);
 
             sqlite3_operations::check_stmt(handle, sqlite3_clear_bindings(stmt));
             sqlite3_operations::check_stmt(handle, sqlite3_reset(stmt));

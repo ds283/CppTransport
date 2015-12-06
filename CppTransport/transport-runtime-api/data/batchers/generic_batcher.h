@@ -47,11 +47,11 @@ namespace transport
         //! Internal flag indicating whether flushes occur whenever the batcher becomes full,
         //! or whether we wait until the end-of-integration is reported.
         //! To unwind integrations, we need the delayed mode.
-        typedef enum { flush_immediate, flush_delayed } flush_mode;
+        enum class flush_mode { flush_immediate, flush_delayed };
 
         //! Internal flag indicating the action which should be taken by
         //! a batcher when its temporary container is replaced.
-        typedef enum { action_replace, action_close } replacement_action;
+        enum class replacement_action { action_replace, action_close };
 
         //! data-manager callback to close a temporary container and replace it with another one
         typedef std::function<void(generic_batcher* batcher, replacement_action)> container_replacement_function;
@@ -60,7 +60,8 @@ namespace transport
         typedef std::function<void(generic_batcher* batcher)> container_dispatch_function;
 
         //! Logging severity level
-        typedef enum { datapipe_pull, normal, warning, error, critical } log_severity_level;
+        enum class log_severity_level { datapipe_pull, normal, warning, error, critical };
+
         typedef boost::log::sinks::synchronous_sink< boost::log::sinks::text_file_backend > sink_t;
 
 
@@ -69,7 +70,7 @@ namespace transport
       public:
 
         template <typename handle_type>
-        generic_batcher(unsigned int cap,
+        generic_batcher(unsigned int cap, unsigned int ckp,
                         const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                         container_dispatch_function d, container_replacement_function r,
                         handle_type h, unsigned int w, unsigned int g=0, bool no_log=false);
@@ -138,7 +139,7 @@ namespace transport
         virtual size_t storage() const = 0;
 
         //! Flush currently-batched results into the database, and then send to the master process
-        virtual void flush(replacement_action action) = 0;
+        virtual void flush(replacement_action action);
 
         //! Check if the batcher is ready for flush
         void check_for_flush();
@@ -189,6 +190,12 @@ namespace transport
         //! Flushing mode
         flush_mode                                               mode;
 
+        //! checkpoint interval in nanoseconds; 0 indicates that checkpointing is disabled
+        boost::timer::nanosecond_type                            checkpoint_interval;
+
+        //! checkpoint timer
+        boost::timer::cpu_timer                                  checkpoint_timer;
+
 
         // LOGGING
 
@@ -205,11 +212,12 @@ namespace transport
 
 
     template <typename handle_type>
-    generic_batcher::generic_batcher(unsigned int cap,
+    generic_batcher::generic_batcher(unsigned int cap, unsigned int ckp,
                                      const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                                      container_dispatch_function d, container_replacement_function r,
                                      handle_type h, unsigned int w, unsigned int g, bool no_log)
 	    : capacity(cap),
+        checkpoint_interval(boost::timer::nanosecond_type(ckp)*1000*1000*1000),
 	      container_path(cp),
 	      logdir_path(lp),
 	      dispatcher(d),
@@ -217,13 +225,13 @@ namespace transport
 	      worker_group(g),
 	      worker_number(w),
 	      manager_handle(static_cast<void*>(h)),
-	      mode(flush_immediate),
+	      mode(flush_mode::flush_immediate),
 	      flush_due(false)
 	    {
         // set up logging
 
         std::ostringstream log_file;
-        log_file << __CPP_TRANSPORT_LOG_FILENAME_A << worker_number << __CPP_TRANSPORT_LOG_FILENAME_B;
+        log_file << CPPTRANSPORT_LOG_FILENAME_A << worker_number << CPPTRANSPORT_LOG_FILENAME_B;
 
         boost::filesystem::path log_path = logdir_path / log_file.str();
 
@@ -234,7 +242,8 @@ namespace transport
 //		    core->set_filter(boost::log::trivial::severity >= normal);
 
             boost::shared_ptr<boost::log::sinks::text_file_backend> backend =
-	                                                                    boost::make_shared<boost::log::sinks::text_file_backend>(boost::log::keywords::file_name = log_path.string());
+	                                                                    boost::make_shared<boost::log::sinks::text_file_backend>(boost::log::keywords::file_name = log_path.string(),
+                                                                                                                               boost::log::keywords::open_mode = std::ios::app);
 
             // enable auto-flushing of log entries
             // this degrades performance, but we are not writing many entries and they
@@ -254,13 +263,23 @@ namespace transport
             this->log_sink.reset();
 	        }
 
-        BOOST_LOG_SEV(this->log_source, normal) << "** Instantiated batcher (capacity " << format_memory(capacity) << ")"
-	        << " on MPI host " << host_info.get_host_name()
-	        << ", OS = " << host_info.get_os_name()
-	        << ", Version = " << host_info.get_os_version()
-	        << " (Release = " << host_info.get_os_release()
+        BOOST_LOG_SEV(this->log_source, log_severity_level::normal) << "** Instantiated batcher (capacity " << format_memory(capacity) << ")"
+	        << " on MPI host " << host_info.get_host_name();
+
+        BOOST_LOG_SEV(this->log_source, log_severity_level::normal) << "** Host details: OS = " << host_info.get_os_name()
+	        << ", version = " << host_info.get_os_version()
+	        << " (release = " << host_info.get_os_release()
 	        << ") | " << host_info.get_architecture()
-	        << " | CPU vendor = " << host_info.get_cpu_vendor_id() << std::endl;
+	        << " | CPU vendor = " << host_info.get_cpu_vendor_id();
+
+        if(this->checkpoint_interval == 0)
+          {
+            BOOST_LOG_SEV(this->log_source, log_severity_level::normal) << "** Checkpointing disabled";
+          }
+        else
+          {
+            BOOST_LOG_SEV(this->log_source, log_severity_level::normal) << "** Checkpoint interval = " << format_time(this->checkpoint_interval);
+          }
 	    }
 
 
@@ -276,7 +295,7 @@ namespace transport
 
     void generic_batcher::close()
 	    {
-        this->flush(action_close);
+        this->flush(replacement_action::action_close);
 	    }
 
 
@@ -284,10 +303,26 @@ namespace transport
 	    {
         if(this->storage() > this->capacity)
 	        {
-            if(this->mode == flush_immediate) this->flush(action_replace);
-            else                              this->flush_due = true;
+            switch(this->mode)
+              {
+                case flush_mode::flush_immediate:
+                  this->flush(replacement_action::action_replace);
+                  break;
+
+                case flush_mode::flush_delayed:
+                  this->flush_due = true;
+                  break;
+              }
 	        }
 	    }
+
+
+    void generic_batcher::flush(replacement_action action)
+      {
+        // reset checkpoint timer
+        this->checkpoint_timer.stop();
+        this->checkpoint_timer.start();
+      }
 
 
     template <typename Item>

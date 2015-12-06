@@ -2,11 +2,17 @@
 // Created by David Seery on 12/06/2013.
 // Copyright (c) 2013-15 University of Sussex. All rights reserved.
 //
-// To change the template use AppCode | Preferences | File Templates.
-//
 
 #ifndef __msg_H_
 #define __msg_H_
+
+// Messages
+
+#define ERROR_NO_ERROR_HANDLER                "Internal error: no registered error handler"
+#define ERROR_NO_WARNING_HANDLER              "Internal error: no registered warning handler"
+#define ERROR_NO_MESSAGE_HANDLER              "Internal error: no registered message handler"
+#define ERROR_NOT_FULL_CONTEXT                "Internal error: attempt to unpack error context without full context data"
+#define ERROR_NO_STACK_REGISTERED             "Internal error: attempt to unpack error context with no filestack data"
 
 #define ERROR_MESSAGE_AT_LINE                 "at line"
 #define ERROR_MESSAGE_WRAP_PAD                "  "
@@ -15,13 +21,12 @@
 #define OUTPUT_STACK_INCLUDED_FROM            "included from line"
 #define OUTPUT_STACK_OF_FILE                  "of file"
 
-#define ERROR_FILESTACK_PUSH                  "Internal error: call to push() method of abstract filestack"
+#define WARNING_TOKEN                         "warning: "
+#define ERROR_TOKEN                           "error: "
 
 #define ERROR_OPEN_TOPLEVEL                   "Could not open top-level file"
 #define ERROR_INCLUDE_FILE                    "Could not open included file"
 #define ERROR_INCLUDE_DIRECTIVE               "Expected filename following #include directive"
-
-#define ERROR_MISSING_PATHNAME                "Too few arguments: expected pathname following"
 
 #define ERROR_CPP_BUFFER_WRITE                "Error opening output file"
 
@@ -51,6 +56,7 @@
 #define ERROR_EXPECTED_ELLIPSIS               "Expected '...', not '..'"
 
 #define ERROR_SYMBOL_EXISTS                   "Redefinition of existing symbol"
+#define NOTIFY_DUPLICATION_DEFINITION_WAS     "Location of original definition for symbol"
 #define ERROR_IDENTIFIER_LOOKUP               "Lookup of identifier name failed"
 #define ERROR_STRING_LOOKUP                   "Lookup of string literal value failed"
 #define ERROR_INTEGER_LOOKUP                  "Lookup of integer literal value failed"
@@ -81,6 +87,8 @@
 #define ERROR_FILESTACK_EMPTY                 "Internal error: filestack empty when accessing top element"
 #define ERROR_FILESTACK_TOO_SHORT             "Internal error: filestack empty when attempting to pop"
 #define ERROR_FILESTACK_OVERWRITE             "Internal error: attempt to overwrite data for top filestack element"
+
+#define ERROR_CURRENT_LINE_EMPTY              "Internal error: current line empty in lexfile"
 
 #define WARNING_TEMPORARY_NO_TAG_SET          "Temporary pool being written, but no location set: defaults to end-of-buffer"
 

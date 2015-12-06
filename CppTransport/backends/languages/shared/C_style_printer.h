@@ -26,10 +26,11 @@ class C_style_printer: public language_printer
       {
       }
 
-    std::string ginac  (const GiNaC::ex& expr);
-    std::string comment(const std::string tag);
+    virtual std::string ginac  (const GiNaC::ex& expr) override;
+    virtual std::string comment(const std::string tag) override;
 
   protected:
+
     std::string print_operands(const GiNaC::ex& expr, std::string op);
 
     std::string comment_prefix;

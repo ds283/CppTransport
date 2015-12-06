@@ -38,9 +38,9 @@ namespace transport
                     else
 	                    {
                         std::ostringstream msg;
-                        msg << __CPP_TRANSPORT_DATAMGR_INTEGRITY_READ_FAIL << status << ": " << sqlite3_errmsg(db) << ") [" << __func__ << "]";
+                        msg << CPPTRANSPORT_DATAMGR_INTEGRITY_READ_FAIL << status << ": " << sqlite3_errmsg(db) << ") [" << __func__ << "]";
                         sqlite3_finalize(stmt);
-                        throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, msg.str());
+                        throw runtime_exception(exception_type::DATA_MANAGER_BACKEND_ERROR, msg.str());
 	                    }
 	                }
 
@@ -52,6 +52,9 @@ namespace transport
 	        }   // namespace integrity_detail
 
 
+        // at the moment we only check for missing k-configuration serial numbers
+        // we don't check that k-configuration serial numbers which are *present* have their full complement
+        // of time samples
 		    template <typename number, typename ValueType>
 		    std::list<unsigned int> get_missing_serials(sqlite3* db)
 			    {
@@ -102,7 +105,7 @@ namespace transport
                 if(u != dbase.config_end())
 	                {
                     std::ostringstream drop_stmt;
-                    drop_stmt << "DELETE FROM " << __CPP_TRANSPORT_SQLITE_STATS_TABLE << " WHERE kserial=" << *t << ";";
+                    drop_stmt << "DELETE FROM " << CPPTRANSPORT_SQLITE_STATS_TABLE << " WHERE kserial=" << *t << ";";
                     exec(db, drop_stmt.str());
 	                }
 	            }
@@ -138,7 +141,7 @@ namespace transport
 
 				        if(u != dbase.config_end())
 					        {
-				            if(!silent) BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << "** " << *u;
+				            if(!silent) BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** " << *u;
 
 				            std::ostringstream drop_stmt;
 				            drop_stmt << "DELETE FROM " << table << " WHERE kserial=" << *t << ";";

@@ -23,13 +23,14 @@
 #include "transport-runtime-api/exceptions.h"
 
 #include "boost/filesystem/operations.hpp"
+#include "boost/log/utility/formatting_ostream.hpp"
 
 
-#define __CPP_TRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_ROOT        "line-asciitable"
+#define CPPTRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_ROOT        "line-asciitable"
 
-#define __CPP_TRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_PRECISION   "precision"
-#define __CPP_TRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_X_LABEL     "x-label"
-#define __CPP_TRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_X_LABEL_SET "x-label-set"
+#define CPPTRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_PRECISION   "precision"
+#define CPPTRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_X_LABEL     "x-label"
+#define CPPTRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_X_LABEL_SET "x-label-set"
 
 
 namespace transport
@@ -47,7 +48,7 @@ namespace transport
 		      public:
 
 				    //! Basic user-facing constructor
-				    line_asciitable(const std::string& name, const boost::filesystem::path& filename, unsigned int prec=__CPP_TRANSPORT_DEFAULT_TABLE_PRECISION)
+				    line_asciitable(const std::string& name, const boost::filesystem::path& filename, unsigned int prec=CPPTRANSPORT_DEFAULT_TABLE_PRECISION)
 		          : line_collection<number>(name, filename),
 				        x_label_set(false),
 				        precision(prec)
@@ -57,8 +58,8 @@ namespace transport
 							     this->filename.extension().string() != ".data")
 							    {
 						        std::ostringstream msg;
-								    msg << __CPP_TRANSPORT_PRODUCT_LINE_ASCIITABLE_UNSUPPORTED_FORMAT << " " << filename.extension();
-								    throw runtime_exception(runtime_exception::DERIVED_PRODUCT_ERROR, msg.str());
+								    msg << CPPTRANSPORT_PRODUCT_LINE_ASCIITABLE_UNSUPPORTED_FORMAT << " " << filename.extension();
+								    throw runtime_exception(exception_type::DERIVED_PRODUCT_ERROR, msg.str());
 							    }
 					    }
 
@@ -121,7 +122,7 @@ namespace transport
 		      public:
 
 		        //! Copy this object
-		        virtual line_asciitable<number>* clone() const { return new line_asciitable<number>(static_cast<const line_asciitable<number>&>(*this)); }
+		        virtual line_asciitable<number>* clone() const override { return new line_asciitable<number>(static_cast<const line_asciitable<number>&>(*this)); }
 
 
 		        // SERIALIZATION -- implements a 'serializable' interface
@@ -135,7 +136,7 @@ namespace transport
 
 		      public:
 
-		        void write(std::ostream& out);
+		        template <typename Stream> void write(Stream& out);
 
 
 				    // INTERNAL DATA
@@ -158,9 +159,9 @@ namespace transport
 				line_asciitable<number>::line_asciitable(const std::string& name, Json::Value& reader, typename repository_finder<number>::task_finder finder)
 					: line_collection<number>(name, reader, finder)
 					{
-						precision   = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_PRECISION].asUInt();
-						x_label     = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_X_LABEL].asString();
-						x_label_set = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_X_LABEL_SET].asBool();
+						precision   = reader[CPPTRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_ROOT][CPPTRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_PRECISION].asUInt();
+						x_label     = reader[CPPTRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_ROOT][CPPTRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_X_LABEL].asString();
+						x_label_set = reader[CPPTRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_ROOT][CPPTRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_X_LABEL_SET].asBool();
 					}
 
 
@@ -245,19 +246,19 @@ namespace transport
 						else
 							{
 						    std::ostringstream msg;
-								msg << __CPP_TRANSPORT_DERIVED_PRODUCT_FAILED << " " << table_file;
-								throw runtime_exception(runtime_exception::DERIVED_PRODUCT_ERROR, msg.str());
+								msg << CPPTRANSPORT_DERIVED_PRODUCT_FAILED << " " << table_file;
+								throw runtime_exception(exception_type::DERIVED_PRODUCT_ERROR, msg.str());
 							}
 					}
 
 				template <typename number>
 				void line_asciitable<number>::serialize(Json::Value& writer) const
 					{
-						writer[__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_TYPE] = std::string(__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_LINE_ASCIITABLE);
+						writer[CPPTRANSPORT_NODE_DERIVED_PRODUCT_TYPE] = std::string(CPPTRANSPORT_NODE_DERIVED_PRODUCT_LINE_ASCIITABLE);
 
-				    writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_PRECISION]   = this->precision;
-				    writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_X_LABEL]     = this->x_label;
-				    writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_X_LABEL_SET] = this->x_label_set;
+				    writer[CPPTRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_ROOT][CPPTRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_PRECISION]   = this->precision;
+				    writer[CPPTRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_ROOT][CPPTRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_X_LABEL]     = this->x_label;
+				    writer[CPPTRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_ROOT][CPPTRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_X_LABEL_SET] = this->x_label_set;
 
 						// call next serializer
 						this->line_collection<number>::serialize(writer);
@@ -265,21 +266,30 @@ namespace transport
 
 
 				template <typename number>
-				void line_asciitable<number>::write(std::ostream& out)
+        template <typename Stream>
+				void line_asciitable<number>::write(Stream& out)
 					{
 						// call next writer
 						this->line_collection<number>::write(out);
 
-						out << __CPP_TRANSPORT_PRODUCT_LINE_ASCIITABLE_LABEL_PRECISION << " " << this->precision << std::endl;
+						out << CPPTRANSPORT_PRODUCT_LINE_ASCIITABLE_LABEL_PRECISION << " " << this->precision << '\n';
 					}
 
 
-		    template <typename number>
-		    std::ostream& operator<<(std::ostream& out, line_asciitable<number>& obj)
+		    template <typename number, typename Char, typename Traits>
+		    std::basic_ostream<Char, Traits>& operator<<(std::basic_ostream<Char, Traits>& out, line_asciitable<number>& obj)
 			    {
 		        obj.write(out);
 		        return(out);
 			    }
+
+
+        template <typename number, typename Char, typename Traits, typename Allocator>
+        boost::log::basic_formatting_ostream<Char, Traits, Allocator>& operator<<(boost::log::basic_formatting_ostream<Char, Traits, Allocator>& out, line_asciitable<number>& obj)
+          {
+            obj.write(out);
+            return(out);
+          }
 
 
 			}   // namespace derived_data

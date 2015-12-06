@@ -15,27 +15,27 @@
 #include "cuda_group.h"
 
 
-std::shared_ptr<package_group> package_group_factory(const std::string& in, const std::string& backend, translation_unit* unit,
+std::unique_ptr<package_group> package_group_factory(const boost::filesystem::path& in, const std::string& backend, translator_data& payload,
                                                      ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& cache)
   {
     if(backend == "cpp")
       {
-		    return std::shared_ptr<core_group>(new core_group(unit, cache));
+		    return std::make_unique<core_group>(payload, cache);
       }
     else if(backend == "vexcl")
       {
-		    return std::shared_ptr<vexcl_group>(new vexcl_group(unit, cache));
+		    return std::make_unique<vexcl_group>(payload, cache);
       }
     else if(backend == "opencl")
       {
-		    return std::shared_ptr<opencl_group>(new opencl_group(unit, cache));
+		    return std::make_unique<opencl_group>(payload, cache);
       }
     else if(backend == "cuda")
       {
-		    return std::shared_ptr<cuda_group>(new cuda_group(unit, cache));
+		    return std::make_unique<cuda_group>(payload, cache);
       }
 
     std::ostringstream msg;
-    msg << ERROR_TEMPLATE_BACKEND_A << " '" << in << "' " << ERROR_TEMPLATE_BACKEND_B << " '" << backend << "'";
+    msg << ERROR_TEMPLATE_BACKEND_A << " " << in << " " << ERROR_TEMPLATE_BACKEND_B << " '" << backend << "'";
     throw std::runtime_error(msg.str());
   }

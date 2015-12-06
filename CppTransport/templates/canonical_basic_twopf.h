@@ -16,7 +16,7 @@
 
 
 namespace transport
-  {
+	{
     // set up a state type for 2pf integration
     template <typename number>
     using twopf_state = std::vector<number>;
@@ -26,9 +26,11 @@ namespace transport
     using threepf_state = std::vector<number>;
 
     namespace $$__MODEL_pool
-      {
+	    {
         const static std::string backend = "MPI";
-      }
+        const static std::string pert_stepper = "$$__PERT_STEPPER";
+        const static std::string back_stepper = "$$__BACKG_STEPPER";
+	    }
 
 
     // *********************************************************************************************
@@ -37,24 +39,34 @@ namespace transport
     // CLASS FOR $$__MODEL 'basic', ie., MPI implementation
     template <typename number>
     class $$__MODEL_basic : public $$__MODEL<number>
-      {
+	    {
 
-	      // CONSTRUCTOR, DESTRUCTOR
+        // CONSTRUCTOR, DESTRUCTOR
 
       public:
 
-        $$__MODEL_basic(instance_manager<number>* mgr)
-        : $$__MODEL<number>(mgr)
-          {
-          }
+        //! constructor
+        $$__MODEL_basic()
+	        : $$__MODEL<number>()
+	        {
+	        }
 
-		    ~$$__MODEL_basic() = default;
+        //! destructor is default
+        virtual ~$$__MODEL_basic() = default;
 
         // EXTRACT MODEL INFORMATION -- implements a 'model' interface
 
       public:
 
         virtual const std::string& get_backend() const override { return($$__MODEL_pool::backend); }
+
+        virtual const std::string& get_back_stepper() const override { return($$__MODEL_pool::back_stepper); }
+
+        virtual const std::string& get_pert_stepper() const override { return($$__MODEL_pool::pert_stepper); }
+
+        virtual std::pair< double, double > get_back_tol() const override { return std::make_pair($$__BACKG_ABS_ERR, $$__BACKG_REL_ERR); }
+
+        virtual std::pair< double, double > get_pert_tol() const override { return std::make_pair($$__PERT_ABS_ERR, $$__PERT_REL_ERR); }
 
         // BACKEND INTERFACE
 
@@ -64,7 +76,7 @@ namespace transport
         virtual context backend_get_context() override;
 
         // Get backend type
-        virtual typename model<number>::backend_type get_backend_type() override;
+        virtual worker_type get_backend_type() override;
 
         //! Get backend memory capacity
         virtual unsigned int get_backend_memory() override;
@@ -93,117 +105,143 @@ namespace transport
       protected:
 
         void twopf_kmode(const twopf_kconfig_record& kconfig, const twopf_list_task<number>* tk,
-                         twopf_batcher<number>& batcher,
-                         boost::timer::nanosecond_type& int_time, boost::timer::nanosecond_type& batch_time,
-                         unsigned int refinement_level);
+                         twopf_batcher<number>& batcher, unsigned int refinement_level);
 
         void threepf_kmode(const threepf_kconfig_record&, const threepf_task<number>* tk,
-                           threepf_batcher<number>& batcher,
-                           boost::timer::nanosecond_type& int_time, boost::timer::nanosecond_type& batch_time,
-                           unsigned int refinement_level);
+                           threepf_batcher<number>& batcher, unsigned int refinement_level);
 
         void populate_twopf_ic(twopf_state<number>& x, unsigned int start, double kmode, double Ninit,
-                               const parameters<number>& p, const std::vector<number>& ic, bool imaginary = false);
+                               const twopf_list_task<number>* tk, const std::vector<number>& ic, bool imaginary = false);
 
         void populate_tensor_ic(twopf_state<number>& x, unsigned int start, double kmode, double Ninit,
-                                const parameters<number>& p, const std::vector<number>& ic);
+                                const twopf_list_task<number>* tk, const std::vector<number>& ic);
 
         void populate_threepf_ic(threepf_state<number>& x, unsigned int start, const threepf_kconfig& kconfig,
-                                 double Ninit, const parameters<number>& p, const std::vector<number>& ic);
+                                 double Ninit, const twopf_list_task<number>* tk, const std::vector<number>& ic);
 
-      };
+	    };
 
 
     // integration - 2pf functor
     template <typename number>
     class $$__MODEL_basic_twopf_functor: public constexpr_flattener<$$__NUMBER_FIELDS>
-      {
+	    {
 
       public:
 
-        $$__MODEL_basic_twopf_functor(const parameters<number>& p, double k)
-          : params(p), k_mode(k)
-          {
-          }
+        $$__MODEL_basic_twopf_functor(const twopf_list_task<number>* tk, const twopf_kconfig& k)
+	        : params(tk->get_params()),
+	          param_vector(tk->get_params().get_vector()),
+	          Mp(tk->get_params().get_Mp()),
+	          N_horizon_exit(tk->get_N_horizon_crossing()),
+	          astar_normalization(tk->get_astar_normalization()),
+	          config(k)
+	        {
+	        }
 
         void operator ()(const twopf_state<number>& __x, twopf_state<number>& __dxdt, double __t);
+
+        // adjust horizon exit time, given an initial time N_init which we wish to move to zero
+        void rebase_horizon_exit_time(double N_init) { this->N_horizon_exit -= N_init; }
 
       private:
 
         const parameters<number>& params;
 
-        const double k_mode;
+        const std::vector<number>& param_vector;
 
-      };
+        number Mp;
+
+        double N_horizon_exit;
+
+        double astar_normalization;
+
+        const twopf_kconfig config;
+
+	    };
 
 
     // integration - observer object for 2pf
     template <typename number>
     class $$__MODEL_basic_twopf_observer: public twopf_singleconfig_batch_observer<number>
-      {
+	    {
 
       public:
 
         $$__MODEL_basic_twopf_observer(twopf_batcher<number>& b, const twopf_kconfig_record& c,
                                        const time_config_database& t)
-          : twopf_singleconfig_batch_observer<number>(b, c, t,
-                                                      $$__MODEL_pool::backg_size, $$__MODEL_pool::tensor_size, $$__MODEL_pool::twopf_size,
-                                                      $$__MODEL_pool::backg_start, $$__MODEL_pool::tensor_start, $$__MODEL_pool::twopf_start)
-          {
-          }
+	        : twopf_singleconfig_batch_observer<number>(b, c, t,
+	                                                    $$__MODEL_pool::backg_size, $$__MODEL_pool::tensor_size, $$__MODEL_pool::twopf_size,
+	                                                    $$__MODEL_pool::backg_start, $$__MODEL_pool::tensor_start, $$__MODEL_pool::twopf_start)
+	        {
+	        }
 
         void operator ()(const twopf_state<number>& x, double t);
 
-      };
+	    };
 
 
     // integration - 3pf functor
     template <typename number>
     class $$__MODEL_basic_threepf_functor: public constexpr_flattener<$$__NUMBER_FIELDS>
-      {
+	    {
 
       public:
-        $$__MODEL_basic_threepf_functor(const parameters<number>& p, double k1, double k2, double k3)
-          : params(p), kmode_1(k1), kmode_2(k2), kmode_3(k3)
-          {
-          }
+        $$__MODEL_basic_threepf_functor(const twopf_list_task<number>* tk, const threepf_kconfig& k)
+	        : params(tk->get_params()),
+	          param_vector(tk->get_params().get_vector()),
+	          Mp(tk->get_params().get_Mp()),
+	          N_horizon_exit(tk->get_N_horizon_crossing()),
+	          astar_normalization(tk->get_astar_normalization()),
+	          config(k)
+	        {
+	        }
 
         void operator ()(const threepf_state<number>& __x, threepf_state<number>& __dxdt, double __dt);
+
+        // adjust horizon exit time, given an initial time N_init which we wish to move to zero
+        void rebase_horizon_exit_time(double N_init) { this->N_horizon_exit -= N_init; }
 
       private:
 
         const parameters<number>& params;
 
-        const double kmode_1;
-        const double kmode_2;
-        const double kmode_3;
+        const std::vector<number>& param_vector;
 
-      };
+        number Mp;
+
+        double N_horizon_exit;
+
+        double astar_normalization;
+
+        const threepf_kconfig config;
+
+	    };
 
 
     // integration - observer object for 3pf
     template <typename number>
     class $$__MODEL_basic_threepf_observer: public threepf_singleconfig_batch_observer<number>
-      {
+	    {
 
       public:
         $$__MODEL_basic_threepf_observer(threepf_batcher<number>& b, const threepf_kconfig_record& c,
                                          const time_config_database& t)
-          : threepf_singleconfig_batch_observer<number>(b, c, t,
-                                                        $$__MODEL_pool::backg_size, $$__MODEL_pool::tensor_size,
-                                                        $$__MODEL_pool::twopf_size, $$__MODEL_pool::threepf_size,
-                                                        $$__MODEL_pool::backg_start,
-                                                        $$__MODEL_pool::tensor_k1_start, $$__MODEL_pool::tensor_k2_start, $$__MODEL_pool::tensor_k3_start,
-                                                        $$__MODEL_pool::twopf_re_k1_start, $$__MODEL_pool::twopf_im_k1_start,
-                                                        $$__MODEL_pool::twopf_re_k2_start, $$__MODEL_pool::twopf_im_k2_start,
-                                                        $$__MODEL_pool::twopf_re_k3_start, $$__MODEL_pool::twopf_im_k3_start,
-                                                        $$__MODEL_pool::threepf_start)
-          {
-          }
+	        : threepf_singleconfig_batch_observer<number>(b, c, t,
+	                                                      $$__MODEL_pool::backg_size, $$__MODEL_pool::tensor_size,
+	                                                      $$__MODEL_pool::twopf_size, $$__MODEL_pool::threepf_size,
+	                                                      $$__MODEL_pool::backg_start,
+	                                                      $$__MODEL_pool::tensor_k1_start, $$__MODEL_pool::tensor_k2_start, $$__MODEL_pool::tensor_k3_start,
+	                                                      $$__MODEL_pool::twopf_re_k1_start, $$__MODEL_pool::twopf_im_k1_start,
+	                                                      $$__MODEL_pool::twopf_re_k2_start, $$__MODEL_pool::twopf_im_k2_start,
+	                                                      $$__MODEL_pool::twopf_re_k3_start, $$__MODEL_pool::twopf_im_k3_start,
+	                                                      $$__MODEL_pool::threepf_start)
+	        {
+	        }
 
         void operator ()(const threepf_state<number>& x, double t);
 
-      };
+	    };
 
 
     // BACKEND INTERFACE
@@ -212,20 +250,20 @@ namespace transport
     // generate a context
     template <typename number>
     context $$__MODEL_basic<number>::backend_get_context(void)
-      {
+	    {
         context ctx;
 
         // set up just one device
         ctx.add_device($$__MODEL_pool::backend);
 
         return(ctx);
-      }
+	    }
 
 
     template <typename number>
-    typename model<number>::backend_type $$__MODEL_basic<number>::get_backend_type(void)
+    worker_type $$__MODEL_basic<number>::get_backend_type(void)
 	    {
-        return(model<number>::cpu);
+        return(worker_type::cpu);
 	    }
 
 
@@ -247,15 +285,15 @@ namespace transport
     template <typename number>
     void $$__MODEL_basic<number>::backend_process_queue(work_queue<twopf_kconfig_record>& work, const twopf_list_task<number>* tk,
                                                         twopf_batcher<number>& batcher, bool silent)
-      {
+	    {
         // set batcher to delayed flushing mode so that we have a chance to unwind failed integrations
-        batcher.set_flush_mode(generic_batcher::flush_delayed);
+        batcher.set_flush_mode(generic_batcher::flush_mode::flush_delayed);
 
         std::ostringstream work_msg;
-        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal)
-            << "** MPI compute backend processing twopf task";
+        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal)
+	        << "** MPI compute backend processing twopf task";
         work_msg << work;
-        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << work_msg.str();
+        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << work_msg.str();
 //        std::cerr << work_msg.str();
         if(!silent) this->write_task_data(tk, batcher, $$__PERT_ABS_ERR, $$__PERT_REL_ERR, $$__PERT_STEP_SIZE, "$$__PERT_STEPPER");
 
@@ -268,59 +306,48 @@ namespace transport
         const work_queue<twopf_kconfig_record>::device_work_list list = queues[0];
 
         for(unsigned int i = 0; i < list.size(); ++i)
-          {
-            boost::timer::nanosecond_type int_time;
-            boost::timer::nanosecond_type batch_time;
-
+	        {
             bool success = false;
             unsigned int refinement_level = 0;
 
             while(!success)
-            try
-              {
-                // write the time history for this k-configuration
-                this->twopf_kmode(list[i], tk, batcher, int_time, batch_time, refinement_level);
+	            try
+		            {
+	                // write the time history for this k-configuration
+	                this->twopf_kmode(list[i], tk, batcher, refinement_level);    // logging and report of successful integration are wrapped up in the observer stop_timers() method
+	                success = true;
+		            }
+	            catch(std::overflow_error& xe)
+		            {
+	                // unwind any batched results before trying again with a refined mesh
+	                if(refinement_level == 0) batcher.report_refinement();
+	                batcher.unbatch(list[i]->serial);
+	                refinement_level++;
 
-		            success = true;
-                BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal)
-                    << "** " << __CPP_TRANSPORT_SOLVING_CONFIG << " " << list[i]->serial << " (" << i+1
-                    << " " __CPP_TRANSPORT_OF << " " << list.size() << "), "
-                    << __CPP_TRANSPORT_INTEGRATION_TIME << " = " << format_time(int_time) << " | "
-                    << __CPP_TRANSPORT_BATCHING_TIME << " = " << format_time(batch_time);
-               }
-	          catch(std::overflow_error& xe)
-		          {
-			          // unwind any batched results before trying again with a refined mesh
-			          if(refinement_level == 0) batcher.report_refinement();
-			          batcher.unbatch(list[i]->serial);
-			          refinement_level++;
+	                BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::warning)
+		                << "** " << CPPTRANSPORT_RETRY_CONFIG << " " << list[i]->serial << " (" << i+1
+			                << " " CPPTRANSPORT_OF << " " << list.size() << "), "
+			                << CPPTRANSPORT_REFINEMENT_LEVEL << " = " << refinement_level
+			                << " (" << CPPTRANSPORT_REFINEMENT_INTERNAL << xe.what() << ")";
+		            }
+	            catch(runtime_exception& xe)
+		            {
+	                batcher.report_integration_failure(list[i]->serial);
+	                batcher.unbatch(list[i]->serial);
 
-			          BOOST_LOG_SEV(batcher.get_log(), generic_batcher::warning)
-			              << "** " << __CPP_TRANSPORT_RETRY_CONFIG << " " << list[i]->serial << " (" << i+1
-		                << " " __CPP_TRANSPORT_OF << " " << list.size() << "), "
-			              << __CPP_TRANSPORT_REFINEMENT_LEVEL << " = " << refinement_level
-					          << " (" << __CPP_TRANSPORT_REFINEMENT_INTERNAL << xe.what() << ")";
-		          }
-            catch(runtime_exception& xe)
-              {
-                batcher.report_integration_failure(list[i]->serial);
-		            batcher.unbatch(list[i]->serial);
-
-                BOOST_LOG_SEV(batcher.get_log(), generic_batcher::error)
-                    << "!! " __CPP_TRANSPORT_FAILED_CONFIG << " " << list[i]->serial << " (" << i+1
-                    << " " __CPP_TRANSPORT_OF << " " << list.size() << ") | " << list[i];
-              }
-          }
-      }
+	                BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::error)
+		                << "!! " CPPTRANSPORT_FAILED_CONFIG << " " << list[i]->serial << " (" << i+1
+			                << " " CPPTRANSPORT_OF << " " << list.size() << ") | " << list[i];
+		            }
+	        }
+	    }
 
 
     template <typename number>
     void $$__MODEL_basic<number>::twopf_kmode(const twopf_kconfig_record& kconfig, const twopf_list_task<number>* tk,
-                                              twopf_batcher<number>& batcher,
-                                              boost::timer::nanosecond_type& int_time, boost::timer::nanosecond_type& batch_time,
-                                              unsigned int refinement_level)
-      {
-        if(refinement_level > tk->get_max_refinements()) throw runtime_exception(runtime_exception::REFINEMENT_FAILURE, __CPP_TRANSPORT_REFINEMENT_TOO_DEEP);
+                                              twopf_batcher<number>& batcher, unsigned int refinement_level)
+	    {
+        if(refinement_level > tk->get_max_refinements()) throw runtime_exception(exception_type::REFINEMENT_FAILURE, CPPTRANSPORT_REFINEMENT_TOO_DEEP);
 
         // get time configuration database
         const time_config_database time_db = tk->get_time_config_database(*kconfig);
@@ -330,29 +357,40 @@ namespace transport
         $$__MODEL_basic_twopf_observer<number> obs(batcher, kconfig, time_db);
 
         // set up a functor to evolve this system
-        $$__MODEL_basic_twopf_functor<number> rhs(tk->get_params(), kconfig->k_comoving);
+        $$__MODEL_basic_twopf_functor<number> rhs(tk, *kconfig);
 
         // set up a state vector
         twopf_state<number> x;
         x.resize($$__MODEL_pool::twopf_state_size);
 
         // fix initial conditions - background
-        const std::vector<number>& ics = tk->get_ics_vector(*kconfig);
+        const std::vector<number> ics = tk->get_ics_vector(*kconfig);
         x[$$__MODEL_pool::backg_start + FLATTEN($$__A)] = $$// ics[$$__A];
 
+        if(batcher.is_collecting_initial_conditions())
+	        {
+            const std::vector<number> ics_1 = tk->get_ics_exit_vector(*kconfig);
+            double t_exit = tk->get_ics_exit_time(*kconfig);
+            batcher.push_ics(kconfig->serial, t_exit, ics_1);
+	        }
+
         // fix initial conditions - tensors
-        this->populate_tensor_ic(x, $$__MODEL_pool::tensor_start, kconfig->k_comoving, *(time_db.value_begin()), tk->get_params(), ics);
+        this->populate_tensor_ic(x, $$__MODEL_pool::tensor_start, kconfig->k_comoving, *(time_db.value_begin()), tk, ics);
 
         // fix initial conditions - 2pf
-        this->populate_twopf_ic(x, $$__MODEL_pool::twopf_start, kconfig->k_comoving, *(time_db.value_begin()), tk->get_params(), ics);
+        this->populate_twopf_ic(x, $$__MODEL_pool::twopf_start, kconfig->k_comoving, *(time_db.value_begin()), tk, ics);
 
-        using namespace boost::numeric::odeint;
-        integrate_times($$__MAKE_PERT_STEPPER{twopf_state<number>}, rhs, x, time_db.value_begin(), time_db.value_end(), $$__PERT_STEP_SIZE/pow(4.0,refinement_level), obs);
+        // up to this point the calculation has been done in the user-supplied time variable.
+        // However, the integrator apparently performs much better if times are measured from zero (but not yet clear why)
+        // TODO: would be nice to remove this in future
+        rhs.rebase_horizon_exit_time(tk->get_ics().get_N_initial());
+        time_config_database::const_value_iterator begin_iterator = time_db.value_begin(tk->get_ics().get_N_initial());
+        time_config_database::const_value_iterator end_iterator   = time_db.value_end(tk->get_ics().get_N_initial());
 
-        obs.stop_timers(refinement_level);
-        int_time = obs.get_integration_time();
-        batch_time = obs.get_batching_time();
-      }
+        size_t steps = boost::numeric::odeint::integrate_times($$__MAKE_PERT_STEPPER{twopf_state<number>}, rhs, x, begin_iterator, end_iterator, $$__PERT_STEP_SIZE/pow(4.0,refinement_level), obs);
+
+        obs.stop_timers(steps, refinement_level);
+	    }
 
 
     // make initial conditions for each component of the 2pf
@@ -365,28 +403,28 @@ namespace transport
     // imaginary - whether to populate using real or imaginary components of the 2pf
     template <typename number>
     void $$__MODEL_basic<number>::populate_twopf_ic(twopf_state<number>& x, unsigned int start, double kmode, double Ninit,
-                                                    const parameters<number>& p, const std::vector<number>& ics, bool imaginary)
-      {
+                                                    const twopf_list_task<number>* tk, const std::vector<number>& ics, bool imaginary)
+	    {
         assert(x.size() >= start);
         assert(x.size() >= start + $$__MODEL_pool::twopf_size);
 
-        x[start + FLATTEN($$__A,$$__B)] = imaginary ? this->make_twopf_im_ic($$__A, $$__B, kmode, Ninit, p, ics) : this->make_twopf_re_ic($$__A, $$__B, kmode, Ninit, p, ics) $$// ;
-      }
+        x[start + FLATTEN($$__A,$$__B)] = imaginary ? this->make_twopf_im_ic($$__A, $$__B, kmode, Ninit, tk, ics) : this->make_twopf_re_ic($$__A, $$__B, kmode, Ninit, tk, ics) $$// ;
+	    }
 
 
     // make initial conditions for the tensor twopf
     template <typename number>
     void $$__MODEL_basic<number>::populate_tensor_ic(twopf_state<number>& x, unsigned int start, double kmode, double Ninit,
-                                                     const parameters<number>& p, const std::vector<number>& ics)
-      {
+                                                     const twopf_list_task<number>* tk, const std::vector<number>& ics)
+	    {
         assert(x.size() >= start);
         assert(x.size() >= start + $$__MODEL_pool::tensor_size);
 
-        x[start + TENSOR_FLATTEN(0,0)] = this->make_twopf_tensor_ic(0, 0, kmode, Ninit, p, ics);
-        x[start + TENSOR_FLATTEN(0,1)] = this->make_twopf_tensor_ic(0, 1, kmode, Ninit, p, ics);
-        x[start + TENSOR_FLATTEN(1,0)] = this->make_twopf_tensor_ic(1, 0, kmode, Ninit, p, ics);
-        x[start + TENSOR_FLATTEN(1,1)] = this->make_twopf_tensor_ic(1, 1, kmode, Ninit, p, ics);
-      }
+        x[start + TENSOR_FLATTEN(0,0)] = this->make_twopf_tensor_ic(0, 0, kmode, Ninit, tk, ics);
+        x[start + TENSOR_FLATTEN(0,1)] = this->make_twopf_tensor_ic(0, 1, kmode, Ninit, tk, ics);
+        x[start + TENSOR_FLATTEN(1,0)] = this->make_twopf_tensor_ic(1, 0, kmode, Ninit, tk, ics);
+        x[start + TENSOR_FLATTEN(1,1)] = this->make_twopf_tensor_ic(1, 1, kmode, Ninit, tk, ics);
+	    }
 
 
     // THREE-POINT FUNCTION INTEGRATION
@@ -400,10 +438,8 @@ namespace transport
 
 
     template <typename number>
-    void $$__MODEL_basic<number>::threepf_kmode(const threepf_kconfig& kconfig, const integration_task<number>* tk,
-                                                threepf_batcher<number>& batcher,
-                                                boost::timer::nanosecond_type& int_time, boost::timer::nanosecond_type& batch_time,
-                                                unsigned int refinement_level)
+    void $$__MODEL_basic<number>::threepf_kmode(const threepf_kconfig_record& kconfig, const threepf_task<number>* tk,
+                                                threepf_batcher<number>& batcher, unsigned int refinement_level)
 	    {
 	    }
 
@@ -411,7 +447,7 @@ namespace transport
     template <typename number>
     void $$__MODEL_basic<number>::populate_threepf_ic(threepf_state<number>& x, unsigned int start,
                                                       const threepf_kconfig& kconfig, double Ninit,
-                                                      const parameters<number>& p, const std::vector<number>& ics)
+                                                      const twopf_list_task<number>* tk, const std::vector<number>& ics)
 	    {
 	    }
 
@@ -422,11 +458,11 @@ namespace transport
     template <typename number>
     void $$__MODEL_basic_twopf_functor<number>::operator()(const twopf_state<number>& __x, twopf_state<number>& __dxdt, double __t)
 	    {
-        const auto $$__PARAMETER[1]  = this->params.get_vector()[$$__1];
+        const auto $$__PARAMETER[1]  = this->param_vector[$$__1];
         const auto $$__COORDINATE[A] = __x[FLATTEN($$__A)];
-        const auto __Mp              = this->params.get_Mp();
-        const auto __k               = this->k_mode;
-        const auto __a               = exp(__t);
+        const auto __Mp              = this->Mp;
+        const auto __k               = this->config.k_comoving;
+        const auto __a               = std::exp(__t - this->N_horizon_exit + this->astar_normalization);
         const auto __Hsq             = $$__HUBBLE_SQ;
         const auto __eps             = $$__EPSILON;
 
@@ -467,7 +503,7 @@ namespace transport
         // so the index placement is not important
         __dtwopf($$__A, $$__B) = 0 $$// + $$__SUM_COORDS[C] __u2_$$__A_$$__C*__tpf_$$__C_$$__B;
         __dtwopf($$__A, $$__B) += 0 $$// + $$__SUM_COORDS[C] __u2_$$__B_$$__C*__tpf_$$__A_$$__C;
-      }
+	    }
 
 
     // IMPLEMENTATION - FUNCTOR FOR 2PF OBSERVATION
@@ -475,11 +511,11 @@ namespace transport
 
     template <typename number>
     void $$__MODEL_basic_twopf_observer<number>::operator()(const twopf_state<number>& x, double t)
-      {
-        this->start_batching(t, this->get_log(), generic_batcher::normal);
+	    {
+        this->start_batching(t, this->get_log(), generic_batcher::log_severity_level::normal);
         this->push(x);
         this->stop_batching();
-      }
+	    }
 
 
     // IMPLEMENTATION - FUNCTOR FOR 3PF INTEGRATION
@@ -496,14 +532,11 @@ namespace transport
 
     template <typename number>
     void $$__MODEL_basic_threepf_observer<number>::operator()(const threepf_state<number>& x, double t)
-      {
-        this->start_batching(t, this->get_log(), generic_batcher::normal);
-        this->push(x);
-        this->stop_batching();
-      }
+	    {
+	    }
 
 
-    }   // namespace transport
+	}   // namespace transport
 
 
 #endif  // $$__GUARD

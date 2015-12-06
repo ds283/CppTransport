@@ -8,9 +8,8 @@
 #define __threepf_config_database_messages_H_
 
 
-#define __CPP_TRANSPORT_THREEPF_DATABASE_OUT_OF_ORDER "Internal error: three configuration database out of order"
-#define __CPP_TRANSPORT_THREEPF_DATABASE_WRITE_FAIL   "Internal error: failed to write threepf k-configuration database (backend code="
-#define __CPP_TRANSPORT_THREEPF_DATABASE_READ_FAIL    "Internal error: failed to read threepf k-configuration database (backend code="
+#define CPPTRANSPORT_THREEPF_DATABASE_WRITE_FAIL   "Internal error: failed to write threepf k-configuration database (backend code="
+#define CPPTRANSPORT_THREEPF_DATABASE_READ_FAIL    "Internal error: failed to read threepf k-configuration database (backend code="
 
 
 #endif //__threepf_config_database_messages_H_

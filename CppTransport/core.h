@@ -12,23 +12,27 @@
 
 #include "msg_en.h"
 
-#define CPPTRANSPORT_NAME            "CppTransport"
-#define CPPTRANSPORT_VERSION         "0.12"
-#define CPPTRANSPORT_NUMERIC_VERSION (0.12)
-#define CPPTRANSPORT_COPYRIGHT       "(c) University of Sussex 2013-15"
+constexpr auto CPPTRANSPORT_NAME            = "CppTransport";
+constexpr auto CPPTRANSPORT_VERSION         = "0.13";
+constexpr auto CPPTRANSPORT_NUMERIC_VERSION = 0.13;
+constexpr auto CPPTRANSPORT_COPYRIGHT       = "(c) University of Sussex 2013-15";
 
-#define MODEL_SCRIPT_SUFFIX          ".model"
-#define MODEL_SCRIPT_SUFFIX_LENGTH   (6)
-#define TEMPLATE_TAG_SUFFIX          "_"
+constexpr auto MODEL_SCRIPT_SUFFIX          = ".model";
+constexpr auto MODEL_SCRIPT_SUFFIX_LENGTH   = (6);
+constexpr auto TEMPLATE_TAG_SUFFIX          = "_";
 
-#define NEWLINE_CHAR                 "\n"
+constexpr auto NEWLINE_CHAR                 = "\n";
 
-#define INVALID_GUARD_CHARACTERS     "-/\\|@£$%^&*()`~+=[]{}:;<>,§±"
+constexpr auto INVALID_GUARD_CHARACTERS     = "-/\\|@£$%^&*()`~+=[]{}:;<>,§±";
 
-#define MPLANCK_SYMBOL               "__Mp"
-#define MPLANCK_LATEX_SYMBOL         "M_{\\mathrm{P}}"
-#define MPLANCK_TEXT_NAME            "M_P"
+constexpr auto MPLANCK_SYMBOL               = "__Mp";
+constexpr auto MPLANCK_LATEX_SYMBOL         = "M_{\\mathrm{P}}";
+constexpr auto MPLANCK_TEXT_NAME            = "M_P";
 
-#define DEFAULT_RECURSION_DEPTH      (127)
+constexpr auto DEFAULT_RECURSION_DEPTH      = (127);
+constexpr auto DEFAULT_MODEL_NAME           = "UNKNOWN_MODEL";
+constexpr auto DEFAULT_AUTHOR               = "Anonymous";
+
+constexpr auto TEMPLATE_PATHS_ENV           = "CPPTRANSPORT_TEMPLATE_PATH";
 
 #endif //__core_H_

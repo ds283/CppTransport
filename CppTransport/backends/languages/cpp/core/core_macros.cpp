@@ -116,7 +116,9 @@ namespace cpp
           {
             std::ostringstream msg;
             msg << ERROR_UNKNOWN_STEPPER << " '" << s.name << "'";
-            error(msg.str());
+
+            error_context err_context(data_payload.get_stack(), data_payload.get_error_handler(), data_payload.get_warning_handler());
+            err_context.error(msg.str());
             out << "<UNKNOWN_STEPPER>";
           }
 
@@ -129,7 +131,7 @@ namespace cpp
 
     std::string core_macros::replace_backg_stepper(const std::vector<std::string>& args)
       {
-        const struct stepper& s = this->unit->get_background_stepper();
+        const struct stepper& s = this->data_payload.get_background_stepper();
 
         assert(args.size() == 1);
         std::string state_name = (args.size() >= 1 ? args[0] : this->default_state);
@@ -140,7 +142,7 @@ namespace cpp
 
     std::string core_macros::replace_pert_stepper(const std::vector<std::string>& args)
       {
-        const struct stepper& s = this->unit->get_perturbations_stepper();
+        const struct stepper& s = this->data_payload.get_perturbations_stepper();
 
         assert(args.size() == 1);
         std::string state_name = (args.size() >= 1 ? args[0] : this->default_state);

@@ -11,10 +11,12 @@
 #include <vector>
 #include <functional>
 
+#include "transport-runtime-api/enumerations.h"
+
 #include "transport-runtime-api/data/batchers/generic_batcher.h"
 #include "transport-runtime-api/data/batchers/postintegration_batcher.h"
 #include "transport-runtime-api/data/batchers/integration_items.h"
-#include "transport-runtime-api/data/batchers/zeta_compute.h"
+#include "postprocess_delegate.h"
 
 #include "transport-runtime-api/models/model_forward_declare.h"
 #include "transport-runtime-api/tasks/tasks_forward_declare.h"
@@ -47,8 +49,11 @@ namespace transport
 		    //! Tensor two-point function writer function
 		    typedef std::function<void(integration_batcher<number>*, const std::vector<typename integration_items<number>::tensor_twopf_item>&)> tensor_twopf_writer;
 
-		    //! Three-point function writer function
-		    typedef std::function<void(integration_batcher<number>*, const std::vector<typename integration_items<number>::threepf_item>&)> threepf_writer;
+		    //! Three-point function writer function for momentum insertions
+		    typedef std::function<void(integration_batcher<number>*, const std::vector<typename integration_items<number>::threepf_momentum_item>&)> threepf_momentum_writer;
+
+        //! Three-point function writer function for derivative insertions
+        typedef std::function<void(integration_batcher<number>*, const std::vector<typename integration_items<number>::threepf_Nderiv_item>&)> threepf_Nderiv_writer;
 
 		    //! Per-configuration statistics writer function
 		    typedef std::function<void(integration_batcher<number>*, const std::vector<typename integration_items<number>::configuration_statistics>&)> stats_writer;
@@ -73,7 +78,7 @@ namespace transport
       public:
 
         template <typename handle_type>
-        integration_batcher(unsigned int cap, model<number>* m,
+        integration_batcher(unsigned int cap, unsigned int ckp, model<number>* m,
                             const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                             container_dispatch_function d, container_replacement_function r,
                             handle_type h, unsigned int w, unsigned int g=0, bool ics=false);
@@ -96,6 +101,12 @@ namespace transport
 
         //! Return stepper identifier - perturbations evolution
         const std::string& get_pert_stepper() const { return(this->mdl->get_pert_stepper()); }
+
+        //! Return stepper tolerance - background evolution
+        std::pair< double, double > get_back_tol() const { return(this->mdl->get_back_tol()); }
+
+        //! Return stepper tolerance - perturbations evolution
+        std::pair< double, double > get_pert_tol() const { return(this->mdl->get_pert_tol()); }
 
         //! Close this batcher -- called at the end of an integration
         virtual void close() override;
@@ -124,7 +135,7 @@ namespace transport
         //! Query whether any integrations failed
         bool is_failed() const { return (this->failures > 0); }
 
-        //! Query how many refinements occurred
+        //! Query how many integrations report a refinement
         unsigned int get_reported_refinements() const { return(this->refinements); }
 
         //! Query number of failed integration reports
@@ -161,7 +172,7 @@ namespace transport
 
         //! Get longest integration time
         boost::timer::nanosecond_type get_max_integration_time() const { return (this->max_integration_time); }
-        
+
         //! Get shortest integration time
         boost::timer::nanosecond_type get_min_integration_time() const  { return (this->min_integration_time); }
 
@@ -290,7 +301,7 @@ namespace transport
       public:
 
         template <typename handle_type>
-        twopf_batcher(unsigned int cap, model<number>* m, twopf_task<number>* tk,
+        twopf_batcher(unsigned int cap, unsigned int ckp, model<number>* m, twopf_task<number>* tk,
                       const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                       const writer_group& w,
                       generic_batcher::container_dispatch_function d, generic_batcher::container_replacement_function r,
@@ -373,6 +384,9 @@ namespace transport
         //! tensor twopf cache
         std::vector< typename integration_items<number>::tensor_twopf_item > tensor_twopf_batch;
 
+        //! cache for linear part of gauge transformation
+        std::vector<number> gauge_xfm1;
+
 
         // PAIRING
 
@@ -383,10 +397,10 @@ namespace transport
         zeta_twopf_batcher<number>* paired_batcher;
 
 
-        // ZETA COMPUTATION AGENT
+        // COMPUTATION AGENT
 
         //! compute delegate
-        zeta_compute<number> zeta_agent;
+        postprocess_delegate<number> compute_agent;
 
       };
 
@@ -400,18 +414,17 @@ namespace transport
         class writer_group
 	        {
           public:
-            typename integration_writers<number>::backg_writer        backg;
-            typename integration_writers<number>::twopf_re_writer     twopf_re;
-            typename integration_writers<number>::twopf_im_writer     twopf_im;
-            typename integration_writers<number>::tensor_twopf_writer tensor_twopf;
-            typename integration_writers<number>::threepf_writer      threepf;
-            typename integration_writers<number>::stats_writer        stats;
-		        typename integration_writers<number>::ics_writer          ics;
-		        typename integration_writers<number>::ics_kt_writer       kt_ics;
-            typename integration_writers<number>::host_info_writer    host_info;
+            typename integration_writers<number>::backg_writer            backg;
+            typename integration_writers<number>::twopf_re_writer         twopf_re;
+            typename integration_writers<number>::twopf_im_writer         twopf_im;
+            typename integration_writers<number>::tensor_twopf_writer     tensor_twopf;
+            typename integration_writers<number>::threepf_momentum_writer threepf_momentum;
+            typename integration_writers<number>::threepf_Nderiv_writer   threepf_Nderiv;
+            typename integration_writers<number>::stats_writer            stats;
+            typename integration_writers<number>::ics_writer              ics;
+            typename integration_writers<number>::ics_kt_writer           kt_ics;
+            typename integration_writers<number>::host_info_writer        host_info;
 	        };
-
-        typedef enum { real_twopf, imag_twopf } twopf_type;
 
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -419,7 +432,7 @@ namespace transport
       public:
 
         template <typename handle_type>
-        threepf_batcher(unsigned int cap, model<number>* m, threepf_task<number>* tk,
+        threepf_batcher(unsigned int cap, unsigned int ckp, model<number>* m, threepf_task<number>* tk,
                         const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                         const writer_group& w,
                         generic_batcher::container_dispatch_function d, generic_batcher::container_replacement_function r,
@@ -456,7 +469,7 @@ namespace transport
 
       public:
 
-        void push_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial, const std::vector<number>& values, const std::vector<number>& backg, twopf_type t = real_twopf);
+        void push_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial, const std::vector<number>& values, const std::vector<number>& backg, twopf_type t = twopf_type::real);
 
         void push_threepf(unsigned int time_serial, double t,
                           const threepf_kconfig& kconfig, unsigned int source_serial, const std::vector<number>& values,
@@ -512,19 +525,34 @@ namespace transport
         const writer_group writers;
 
         //! real twopf cache
-        std::vector< typename integration_items<number>::twopf_re_item >     twopf_re_batch;
+        std::vector<typename integration_items<number>::twopf_re_item> twopf_re_batch;
 
         //! imaginary twopf cache
-        std::vector< typename integration_items<number>::twopf_im_item >     twopf_im_batch;
+        std::vector<typename integration_items<number>::twopf_im_item> twopf_im_batch;
 
         //! tensor twopf cache
-        std::vector< typename integration_items<number>::tensor_twopf_item > tensor_twopf_batch;
+        std::vector<typename integration_items<number>::tensor_twopf_item> tensor_twopf_batch;
 
-        //! threeof cache
-        std::vector< typename integration_items<number>::threepf_item >      threepf_batch;
+        //! threepf momentum-insertions cache
+        std::vector<typename integration_items<number>::threepf_momentum_item> threepf_momentum_batch;
 
-		    //! k_t initial conditions cache
-		    std::vector< typename integration_items<number>::ics_kt_item >       kt_ics_batch;
+        //! threepf Nderiv-insertions cache
+        std::vector<typename integration_items<number>::threepf_Nderiv_item> threepf_Nderiv_batch;
+
+        //! k_t initial conditions cache
+        std::vector<typename integration_items<number>::ics_kt_item> kt_ics_batch;
+
+        //! cache for linear part of gauge transformation
+        std::vector<number> gauge_xfm1;
+
+        //! cache for quadratic part of gauge transformation, 123 permutation
+        std::vector<number> gauge_xfm2_123;
+
+        //! cache for quadratic part of gauge transformation, 213 permutation
+        std::vector<number> gauge_xfm2_213;
+
+        //! cache for quadratic part of gauge transformation, 312 permutation
+        std::vector<number> gauge_xfm2_312;
 
 
         // PAIRING
@@ -536,10 +564,10 @@ namespace transport
         zeta_threepf_batcher<number>* paired_batcher;
 
 
-        // ZETA COMPUTATION AGENT
+        // COMPUTATION AGENT
 
         //! compute delegate
-        zeta_compute<number> zeta_agent;
+        postprocess_delegate<number> compute_agent;
 
 	    };
 
@@ -549,11 +577,11 @@ namespace transport
 
     template <typename number>
     template <typename handle_type>
-    integration_batcher<number>::integration_batcher(unsigned int cap, model<number>* m,
+    integration_batcher<number>::integration_batcher(unsigned int cap, unsigned int ckp, model<number>* m,
                                                      const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                                                      container_dispatch_function d, container_replacement_function r,
                                                      handle_type h, unsigned int w, unsigned int g, bool ics)
-	    : generic_batcher(cap, cp, lp, d, r, h, w, g),
+	    : generic_batcher(cap, ckp, cp, lp, d, r, h, w, g),
         Nfields(m->get_N_fields()),
         mdl(m),
 	      num_integrations(0),
@@ -588,8 +616,15 @@ namespace transport
         if(this->flush_due)
 	        {
             this->flush_due = false;
-            this->flush(action_replace);
+            this->flush(replacement_action::action_replace);
 	        }
+        else if(this->checkpoint_interval > 0 && this->checkpoint_timer.elapsed().wall > this->checkpoint_interval)
+          {
+            BOOST_LOG_SEV(this->log_source, generic_batcher::log_severity_level::normal) << "** Lifetime of " << format_time(this->checkpoint_timer.elapsed().wall)
+                << " exceeds checkpoint interval " << format_time(this->checkpoint_interval)
+                << "; forcing flush";
+            this->flush(replacement_action::action_replace);
+          }
 	    }
 
 
@@ -615,15 +650,22 @@ namespace transport
         if(this->flush_due)
 	        {
             this->flush_due = false;
-            this->flush(action_replace);
+            this->flush(replacement_action::action_replace);
 	        }
+        else if(this->checkpoint_interval > 0 && this->checkpoint_timer.elapsed().wall > this->checkpoint_interval)
+          {
+            BOOST_LOG_SEV(this->log_source, generic_batcher::log_severity_level::normal) << "** Lifetime of " << format_time(this->checkpoint_timer.elapsed().wall)
+                << " exceeds checkpoint interval " << format_time(this->checkpoint_interval)
+                << "; forcing flush";
+            this->flush(replacement_action::action_replace);
+          }
 	    }
 
 
     template <typename number>
     void integration_batcher<number>::push_backg(unsigned int time_serial, unsigned int source_serial, const std::vector<number>& values)
 	    {
-        if(values.size() != 2*this->Nfields) throw runtime_exception(runtime_exception::STORAGE_ERROR, __CPP_TRANSPORT_NFIELDS_BACKG);
+        if(values.size() != 2*this->Nfields) throw runtime_exception(exception_type::STORAGE_ERROR, CPPTRANSPORT_NFIELDS_BACKG);
 
         typename integration_items<number>::backg_item item;
 
@@ -639,7 +681,7 @@ namespace transport
 		template <typename number>
 		void integration_batcher<number>::push_ics(unsigned int k_serial, double t_exit, const std::vector<number>& values)
 			{
-		    if(values.size() != 2*this->Nfields) throw runtime_exception(runtime_exception::STORAGE_ERROR, __CPP_TRANSPORT_NFIELDS_BACKG);
+		    if(values.size() != 2*this->Nfields) throw runtime_exception(exception_type::STORAGE_ERROR, CPPTRANSPORT_NFIELDS_BACKG);
 
 				if(this->collect_initial_conditions)
 					{
@@ -664,8 +706,15 @@ namespace transport
         if(this->flush_due)
 	        {
             this->flush_due = false;
-            this->flush(action_replace);
+            this->flush(replacement_action::action_replace);
 	        }
+        else if(this->checkpoint_interval > 0 && this->checkpoint_timer.elapsed().wall > this->checkpoint_interval)
+          {
+            BOOST_LOG_SEV(this->log_source, generic_batcher::log_severity_level::normal) << "** Lifetime of " << format_time(this->checkpoint_timer.elapsed().wall)
+                << " exceeds checkpoint interval " << format_time(this->checkpoint_interval)
+                << "; forcing flush";
+            this->flush(replacement_action::action_replace);
+          }
 	    }
 
 
@@ -704,26 +753,26 @@ namespace transport
     template <typename number>
     void integration_batcher<number>::end_assignment()
 	    {
-        BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "";
-        BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "-- Finished assignment: final integration statistics";
-        BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "--   processed " << this->num_integrations << " individual integrations in " << format_time(this->integration_time);
-        BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "--   mean integration time           = " << format_time(this->integration_time/(this->num_integrations > 0 ? this->num_integrations : 1));
-        BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "--   longest individual integration  = " << format_time(this->max_integration_time);
-        BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "--   shortest individual integration = " << format_time(this->min_integration_time);
-        BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "--   total batching time             = " << format_time(this->batching_time);
-        BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "--   mean batching time              = " << format_time(this->batching_time/(this->num_integrations > 0 ? this->num_integrations : 1));
-        BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "--   longest individual batch        = " << format_time(this->max_batching_time);
-        BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "--   shortest individual batch       = " << format_time(this->min_batching_time);
+        BOOST_LOG_SEV(this->log_source, generic_batcher::log_severity_level::normal) << "";
+        BOOST_LOG_SEV(this->log_source, generic_batcher::log_severity_level::normal) << "-- Finished assignment: final integration statistics";
+        BOOST_LOG_SEV(this->log_source, generic_batcher::log_severity_level::normal) << "--   processed " << this->num_integrations << " individual integrations in " << format_time(this->integration_time);
+        BOOST_LOG_SEV(this->log_source, generic_batcher::log_severity_level::normal) << "--   mean integration time           = " << format_time(this->integration_time/(this->num_integrations > 0 ? this->num_integrations : 1));
+        BOOST_LOG_SEV(this->log_source, generic_batcher::log_severity_level::normal) << "--   longest individual integration  = " << format_time(this->max_integration_time);
+        BOOST_LOG_SEV(this->log_source, generic_batcher::log_severity_level::normal) << "--   shortest individual integration = " << format_time(this->min_integration_time);
+        BOOST_LOG_SEV(this->log_source, generic_batcher::log_severity_level::normal) << "--   total batching time             = " << format_time(this->batching_time);
+        BOOST_LOG_SEV(this->log_source, generic_batcher::log_severity_level::normal) << "--   mean batching time              = " << format_time(this->batching_time/(this->num_integrations > 0 ? this->num_integrations : 1));
+        BOOST_LOG_SEV(this->log_source, generic_batcher::log_severity_level::normal) << "--   longest individual batch        = " << format_time(this->max_batching_time);
+        BOOST_LOG_SEV(this->log_source, generic_batcher::log_severity_level::normal) << "--   shortest individual batch       = " << format_time(this->min_batching_time);
 
-        BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "";
+        BOOST_LOG_SEV(this->log_source, generic_batcher::log_severity_level::normal) << "";
 
         if(this->refinements > 0)
 	        {
-            BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "!! " << this->refinements << " work items required mesh refinement";
+            BOOST_LOG_SEV(this->log_source, generic_batcher::log_severity_level::normal) << "!! " << this->refinements << " work items required mesh refinement";
 	        }
         if(this->failures > 0)
 	        {
-            BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "!! " << this->failures << " work items failed to integrate";
+            BOOST_LOG_SEV(this->log_source, generic_batcher::log_severity_level::normal) << "!! " << this->failures << " work items failed to integrate";
 	        }
 	    }
 
@@ -739,17 +788,19 @@ namespace transport
 
     template <typename number>
     template <typename handle_type>
-    twopf_batcher<number>::twopf_batcher(unsigned int cap, model<number>* m, twopf_task<number>* tk,
+    twopf_batcher<number>::twopf_batcher(unsigned int cap, unsigned int ckp, model<number>* m, twopf_task<number>* tk,
                                          const boost::filesystem::path& cp, const boost::filesystem::path& lp, const writer_group& w,
                                          generic_batcher::container_dispatch_function d, generic_batcher::container_replacement_function r,
                                          handle_type h, unsigned int wn, unsigned int wg)
-	    : integration_batcher<number>(cap, m, cp, lp, d, r, h, wn, wg, tk->get_collect_initial_conditions()),
+	    : integration_batcher<number>(cap, ckp, m, cp, lp, d, r, h, wn, wg, tk->get_collect_initial_conditions()),
 	      writers(w),
         paired_batcher(nullptr),
         parent_task(tk),
-        zeta_agent(m, tk)
+        compute_agent(m, tk)
 	    {
         assert(this->parent_task != nullptr);
+
+        gauge_xfm1.resize(2*this->Nfields);
 	    }
 
 
@@ -757,7 +808,7 @@ namespace transport
     void twopf_batcher<number>::push_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial,
                                            const std::vector<number>& values, const std::vector<number>& backg)
 	    {
-        if(values.size() != 2*this->Nfields*2*this->Nfields) throw runtime_exception(runtime_exception::STORAGE_ERROR, __CPP_TRANSPORT_NFIELDS_TWOPF);
+        if(values.size() != 2*this->Nfields*2*this->Nfields) throw runtime_exception(exception_type::STORAGE_ERROR, CPPTRANSPORT_NFIELDS_TWOPF);
 
         typename integration_items<number>::twopf_re_item item;
 
@@ -781,8 +832,11 @@ namespace transport
         assert(this->mdl != nullptr);
         assert(this->parent_task != nullptr);
 
-        number zeta_twopf = this->zeta_agent.zeta_twopf(twopf, backg);
+        number zeta_twopf = 0.0;
+
+        this->compute_agent.zeta_twopf(twopf, backg, zeta_twopf, this->gauge_xfm1);
         this->paired_batcher->push_twopf(time_serial, k_serial, zeta_twopf, source_serial);
+        this->paired_batcher->push_gauge_xfm1(time_serial, k_serial, this->gauge_xfm1, source_serial);
       }
 
 
@@ -790,7 +844,7 @@ namespace transport
     void twopf_batcher<number>::push_tensor_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial,
                                                   const std::vector<number>& values)
 	    {
-        if(values.size() != 4) throw runtime_exception(runtime_exception::STORAGE_ERROR, __CPP_TRANSPORT_NFIELDS_TENSOR_TWOPF);
+        if(values.size() != 4) throw runtime_exception(exception_type::STORAGE_ERROR, CPPTRANSPORT_NFIELDS_TENSOR_TWOPF);
 
         typename integration_items<number>::tensor_twopf_item item;
 
@@ -818,7 +872,7 @@ namespace transport
     template <typename number>
     void twopf_batcher<number>::flush(generic_batcher::replacement_action action)
 	    {
-        BOOST_LOG_SEV(this->get_log(), generic_batcher::normal) << "** Flushing twopf batcher (capacity=" << format_memory(this->capacity) << ") of size " << format_memory(this->storage());
+        BOOST_LOG_SEV(this->get_log(), generic_batcher::log_severity_level::normal) << "** Flushing twopf batcher (capacity=" << format_memory(this->capacity) << ") of size " << format_memory(this->storage());
 
         // set up a timer to measure how long it takes to flush
         boost::timer::cpu_timer flush_timer;
@@ -831,7 +885,7 @@ namespace transport
         this->writers.tensor_twopf(this, this->tensor_twopf_batch);
 
         flush_timer.stop();
-        BOOST_LOG_SEV(this->get_log(), generic_batcher::normal) << "** Flushed in time " << format_time(flush_timer.elapsed().wall) << "; pushing to master process";
+        BOOST_LOG_SEV(this->get_log(), generic_batcher::log_severity_level::normal) << "** Flushed in time " << format_time(flush_timer.elapsed().wall) << "; pushing to master process";
 
         this->stats_batch.clear();
 		    this->ics_batch.clear();
@@ -847,6 +901,9 @@ namespace transport
 
         // close current container, and replace with a new one if required
         this->replacer(this, action);
+
+        // pass flush notification down to generic batcher (eg. resets checkpoint timer)
+        this->generic_batcher::flush(action);
 	    }
 
 
@@ -911,17 +968,23 @@ namespace transport
 
     template <typename number>
     template <typename handle_type>
-    threepf_batcher<number>::threepf_batcher(unsigned int cap, model<number>* m, threepf_task<number>* tk,
+    threepf_batcher<number>::threepf_batcher(unsigned int cap, unsigned int ckp, model<number>* m, threepf_task<number>* tk,
                                              const boost::filesystem::path& cp, const boost::filesystem::path& lp, const writer_group& w,
                                              generic_batcher::container_dispatch_function d, generic_batcher::container_replacement_function r,
                                              handle_type h, unsigned int wn, unsigned int wg)
-	    : integration_batcher<number>(cap, m, cp, lp, d, r, h, wn, wg, tk->get_collect_initial_conditions()),
+	    : integration_batcher<number>(cap, ckp, m, cp, lp, d, r, h, wn, wg, tk->get_collect_initial_conditions()),
 	      writers(w),
         paired_batcher(nullptr),
         parent_task(tk),
-        zeta_agent(m, tk)
+        compute_agent(m, tk)
 	    {
         assert(this->parent_task != nullptr);
+
+        gauge_xfm1.resize(2*this->Nfields);
+
+        gauge_xfm2_123.resize(2*this->Nfields * 2*this->Nfields);
+        gauge_xfm2_213.resize(2*this->Nfields * 2*this->Nfields);
+        gauge_xfm2_312.resize(2*this->Nfields * 2*this->Nfields);
 	    }
 
 
@@ -929,32 +992,38 @@ namespace transport
     void threepf_batcher<number>::push_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial,
                                              const std::vector<number>& values, const std::vector<number>& backg, twopf_type t)
 	    {
-        if(values.size() != 2*this->Nfields*2*this->Nfields) throw runtime_exception(runtime_exception::STORAGE_ERROR, __CPP_TRANSPORT_NFIELDS_TWOPF);
+        if(values.size() != 2*this->Nfields*2*this->Nfields) throw runtime_exception(exception_type::STORAGE_ERROR, CPPTRANSPORT_NFIELDS_TWOPF);
 
-		    if(t == real_twopf)
-			    {
-		        typename integration_items<number>::twopf_re_item item;
+        switch(t)
+          {
+            case twopf_type::real:
+              {
+                typename integration_items<number>::twopf_re_item item;
 
-		        item.time_serial    = time_serial;
-		        item.kconfig_serial = k_serial;
-		        item.source_serial  = source_serial;
-		        item.elements       = values;
+                item.time_serial    = time_serial;
+                item.kconfig_serial = k_serial;
+                item.source_serial  = source_serial;
+                item.elements       = values;
 
-				    this->twopf_re_batch.push_back(item);
-			    }
-		    else
-			    {
-		        typename integration_items<number>::twopf_im_item item;
+                this->twopf_re_batch.push_back(item);
+                break;
+              }
 
-		        item.time_serial    = time_serial;
-		        item.kconfig_serial = k_serial;
-		        item.source_serial  = source_serial;
-		        item.elements       = values;
+            case twopf_type::imag:
+              {
+                typename integration_items<number>::twopf_im_item item;
 
-		        this->twopf_im_batch.push_back(item);
-			    }
+                item.time_serial    = time_serial;
+                item.kconfig_serial = k_serial;
+                item.source_serial  = source_serial;
+                item.elements       = values;
 
-        if(t == real_twopf && this->paired_batcher != nullptr) this->push_paired_twopf(time_serial, k_serial, source_serial, values, backg);
+                this->twopf_im_batch.push_back(item);
+                break;
+              }
+          }
+
+        if(t == twopf_type::real && this->paired_batcher != nullptr) this->push_paired_twopf(time_serial, k_serial, source_serial, values, backg);
 
         this->check_for_flush();
 	    }
@@ -967,8 +1036,11 @@ namespace transport
         assert(this->mdl != nullptr);
         assert(this->parent_task != nullptr);
 
-        number zeta_twopf = this->zeta_agent.zeta_twopf(twopf, backg);
+        number zeta_twopf = 0.0;
+
+        this->compute_agent.zeta_twopf(twopf, backg, zeta_twopf, this->gauge_xfm1);
         this->paired_batcher->push_twopf(time_serial, k_serial, zeta_twopf, source_serial);
+        this->paired_batcher->push_gauge_xfm1(time_serial, k_serial, this->gauge_xfm1, source_serial);
       }
 
 
@@ -979,16 +1051,41 @@ namespace transport
                                                const std::vector<number>& tpf_k2_re, const std::vector<number>& tpf_k2_im,
                                                const std::vector<number>& tpf_k3_re, const std::vector<number>& tpf_k3_im, const std::vector<number>& bg)
 	    {
-        if(values.size() != 2*this->Nfields*2*this->Nfields*2*this->Nfields) throw runtime_exception(runtime_exception::STORAGE_ERROR, __CPP_TRANSPORT_NFIELDS_THREEPF);
+        if(values.size() != 2*this->Nfields*2*this->Nfields*2*this->Nfields) throw runtime_exception(exception_type::STORAGE_ERROR, CPPTRANSPORT_NFIELDS_THREEPF);
 
-        typename integration_items<number>::threepf_item item;
+        typename integration_items<number>::threepf_momentum_item momentum_item;
+        typename integration_items<number>::threepf_Nderiv_item   Nderiv_item;
 
-        item.time_serial    = time_serial;
-        item.kconfig_serial = kconfig.serial;
-        item.source_serial  = source_serial;
-        item.elements       = values;
+        // momentum three-point function can be copied across directly
+        momentum_item.time_serial    = time_serial;
+        momentum_item.kconfig_serial = kconfig.serial;
+        momentum_item.source_serial  = source_serial;
+        momentum_item.elements       = values;
 
-        this->threepf_batch.push_back(item);
+        this->threepf_momentum_batch.push_back(momentum_item);
+
+        // derivative three-point function needs extra shifts in order to convert any momentum insertions
+        Nderiv_item.time_serial    = time_serial;
+        Nderiv_item.kconfig_serial = kconfig.serial;
+        Nderiv_item.source_serial  = source_serial;
+
+        Nderiv_item.elements.resize(values.size());
+        for(unsigned int i = 0; i < 2*this->Nfields; ++i)
+          {
+            for(unsigned int j = 0; j < 2*this->Nfields; ++j)
+              {
+                for(unsigned int k = 0; k < 2*this->Nfields; ++k)
+                  {
+                    number tpf = values[this->mdl->flatten(i,j,k)];
+
+                    this->compute_agent.shift(i, j, k, kconfig, time_serial, tpf_k1_re, tpf_k1_im, tpf_k2_re, tpf_k2_im, tpf_k3_re, tpf_k3_im, bg, tpf);
+
+                    Nderiv_item.elements[this->mdl->flatten(i,j,k)] = tpf;
+                  }
+              }
+          }
+
+        this->threepf_Nderiv_batch.push_back(Nderiv_item);
 
         if(this->paired_batcher != nullptr)
           this->push_paired_threepf(time_serial, t, kconfig, source_serial, values,
@@ -1009,13 +1106,16 @@ namespace transport
         assert(this->mdl != nullptr);
         assert(this->parent_task != nullptr);
 
-        number zeta_threepf = 0.0;
-        number redbsp = 0.0;
+        number              zeta_threepf = 0.0;
+        number              redbsp       = 0.0;
 
-        this->zeta_agent.zeta_threepf(kconfig, t, threepf, tpf_k1_re, tpf_k1_im, tpf_k2_re, tpf_k2_im, tpf_k3_re, tpf_k3_im, bg, zeta_threepf, redbsp);
+        this->compute_agent.zeta_threepf(kconfig, t, threepf, tpf_k1_re, tpf_k1_im, tpf_k2_re, tpf_k2_im, tpf_k3_re, tpf_k3_im, bg, zeta_threepf, redbsp,
+                                         this->gauge_xfm1, this->gauge_xfm2_123, this->gauge_xfm2_213, this->gauge_xfm2_312);
 
-        this->paired_batcher->push_threepf(time_serial, kconfig.serial, zeta_threepf, source_serial);
-        this->paired_batcher->push_reduced_bispectrum(time_serial, kconfig.serial, redbsp, source_serial);
+        this->paired_batcher->push_threepf(time_serial, kconfig.serial, zeta_threepf, redbsp, source_serial);
+        this->paired_batcher->push_gauge_xfm2_123(time_serial, kconfig.serial, this->gauge_xfm2_123, source_serial);
+        this->paired_batcher->push_gauge_xfm2_213(time_serial, kconfig.serial, this->gauge_xfm2_213, source_serial);
+        this->paired_batcher->push_gauge_xfm2_312(time_serial, kconfig.serial, this->gauge_xfm2_312, source_serial);
       }
 
 
@@ -1023,7 +1123,7 @@ namespace transport
     void threepf_batcher<number>::push_tensor_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial,
                                                     const std::vector<number>& values)
 	    {
-        if(values.size() != 4) throw runtime_exception(runtime_exception::STORAGE_ERROR, __CPP_TRANSPORT_NFIELDS_TENSOR_TWOPF);
+        if(values.size() != 4) throw runtime_exception(exception_type::STORAGE_ERROR, CPPTRANSPORT_NFIELDS_TENSOR_TWOPF);
 
         typename integration_items<number>::tensor_twopf_item item;
 
@@ -1043,7 +1143,8 @@ namespace transport
         return((sizeof(unsigned int) + 2*this->Nfields*sizeof(number))*this->backg_batch.size()
 	        + (3*sizeof(unsigned int) + 4*sizeof(number))*this->tensor_twopf_batch.size()
 	        + (3*sizeof(unsigned int) + 2*this->Nfields*2*this->Nfields*sizeof(number))*(this->twopf_re_batch.size() + this->twopf_im_batch.size())
-	        + (3*sizeof(unsigned int) + 2*this->Nfields*2*this->Nfields*2*this->Nfields*sizeof(number))*this->threepf_batch.size()
+	        + (3*sizeof(unsigned int) + 2*this->Nfields*2*this->Nfields*2*this->Nfields*sizeof(number))*this->threepf_momentum_batch.size()
+          + (3*sizeof(unsigned int) + 2*this->Nfields*2*this->Nfields*2*this->Nfields*sizeof(number))*this->threepf_Nderiv_batch.size()
 	        + (2*sizeof(unsigned int) + sizeof(size_t) + 2*sizeof(boost::timer::nanosecond_type))*this->stats_batch.size()
 	        + (sizeof(unsigned int) + 2*this->Nfields*sizeof(number))*this->ics_batch.size()
           + (sizeof(unsigned int) + 2*this->Nfields*sizeof(number))*this->kt_ics_batch.size());
@@ -1053,7 +1154,7 @@ namespace transport
     template <typename number>
     void threepf_batcher<number>::push_kt_ics(unsigned int k_serial, double t_exit, const std::vector<number>& values)
 	    {
-        if(values.size() != 2*this->Nfields) throw runtime_exception(runtime_exception::STORAGE_ERROR, __CPP_TRANSPORT_NFIELDS_BACKG);
+        if(values.size() != 2*this->Nfields) throw runtime_exception(exception_type::STORAGE_ERROR, CPPTRANSPORT_NFIELDS_BACKG);
 
         if(this->collect_initial_conditions)
 	        {
@@ -1072,7 +1173,7 @@ namespace transport
     template <typename number>
     void threepf_batcher<number>::flush(generic_batcher::replacement_action action)
 	    {
-        BOOST_LOG_SEV(this->get_log(), generic_batcher::normal) << "** Flushing threepf batcher (capacity=" << format_memory(this->capacity) << ") of size " << format_memory(this->storage());
+        BOOST_LOG_SEV(this->get_log(), generic_batcher::log_severity_level::normal) << "** Flushing threepf batcher (capacity=" << format_memory(this->capacity) << ") of size " << format_memory(this->storage());
 
         // set up a timer to measure how long it takes to flush
         boost::timer::cpu_timer flush_timer;
@@ -1085,10 +1186,11 @@ namespace transport
         this->writers.twopf_re(this, this->twopf_re_batch);
         this->writers.twopf_im(this, this->twopf_im_batch);
         this->writers.tensor_twopf(this, this->tensor_twopf_batch);
-        this->writers.threepf(this, this->threepf_batch);
+        this->writers.threepf_momentum(this, this->threepf_momentum_batch);
+        this->writers.threepf_Nderiv(this, this->threepf_Nderiv_batch);
 
         flush_timer.stop();
-        BOOST_LOG_SEV(this->get_log(), generic_batcher::normal) << "** Flushed in time " << format_time(flush_timer.elapsed().wall) << "; pushing to master process";
+        BOOST_LOG_SEV(this->get_log(), generic_batcher::log_severity_level::normal) << "** Flushed in time " << format_time(flush_timer.elapsed().wall) << "; pushing to master process";
 
         this->stats_batch.clear();
 		    this->ics_batch.clear();
@@ -1097,7 +1199,8 @@ namespace transport
         this->twopf_re_batch.clear();
         this->twopf_im_batch.clear();
         this->tensor_twopf_batch.clear();
-        this->threepf_batch.clear();
+        this->threepf_momentum_batch.clear();
+        this->threepf_Nderiv_batch.clear();
 
         // push a message to the master node, indicating that new data is available
         // note that the order of calls to 'dispatcher' and 'replacer' is important
@@ -1107,42 +1210,63 @@ namespace transport
 
         // close current container, and replace with a new one if required
         this->replacer(this, action);
+
+        // pass flush notification down to generic batcher (eg. resets checkpoint timer)
+        this->generic_batcher::flush(action);
 	    }
 
 
     template <typename number>
     void threepf_batcher<number>::unbatch(unsigned int source_serial)
-	    {
-        this->backg_batch.erase(std::remove_if(this->backg_batch.begin(), this->backg_batch.end(),
-                                               UnbatchPredicate<typename integration_items<number>::backg_item>(source_serial)),
-                                this->backg_batch.end());
+      {
+        this->backg_batch.erase(
+          std::remove_if(this->backg_batch.begin(), this->backg_batch.end(),
+                         UnbatchPredicate<typename integration_items<number>::backg_item>(
+                           source_serial)),
+          this->backg_batch.end());
 
-        this->twopf_re_batch.erase(std::remove_if(this->twopf_re_batch.begin(), this->twopf_re_batch.end(),
-                                                  UnbatchPredicate<typename integration_items<number>::twopf_re_item>(source_serial)),
-                                   this->twopf_re_batch.end());
+        this->twopf_re_batch.erase(
+          std::remove_if(this->twopf_re_batch.begin(), this->twopf_re_batch.end(),
+                         UnbatchPredicate<typename integration_items<number>::twopf_re_item>(
+                           source_serial)),
+          this->twopf_re_batch.end());
 
-        this->twopf_im_batch.erase(std::remove_if(this->twopf_im_batch.begin(), this->twopf_im_batch.end(),
-                                                  UnbatchPredicate<typename integration_items<number>::twopf_im_item>(source_serial)),
-                                   this->twopf_im_batch.end());
+        this->twopf_im_batch.erase(
+          std::remove_if(this->twopf_im_batch.begin(), this->twopf_im_batch.end(),
+                         UnbatchPredicate<typename integration_items<number>::twopf_im_item>(
+                           source_serial)),
+          this->twopf_im_batch.end());
 
-        this->tensor_twopf_batch.erase(std::remove_if(this->tensor_twopf_batch.begin(), this->tensor_twopf_batch.end(),
-                                                      UnbatchPredicate<typename integration_items<number>::tensor_twopf_item>(source_serial)),
-                                       this->tensor_twopf_batch.end());
+        this->tensor_twopf_batch.erase(
+          std::remove_if(this->tensor_twopf_batch.begin(), this->tensor_twopf_batch.end(),
+                         UnbatchPredicate<typename integration_items<number>::tensor_twopf_item>(
+                           source_serial)),
+          this->tensor_twopf_batch.end());
 
-        this->threepf_batch.erase(std::remove_if(this->threepf_batch.begin(), this->threepf_batch.end(),
-                                                 UnbatchPredicate<typename integration_items<number>::threepf_item>(source_serial)),
-                                  this->threepf_batch.end());
+        this->threepf_momentum_batch.erase(
+          std::remove_if(this->threepf_momentum_batch.begin(), this->threepf_momentum_batch.end(),
+                         UnbatchPredicate<typename integration_items<number>::threepf_momentum_item>(source_serial)),
+          this->threepf_momentum_batch.end());
 
-        this->ics_batch.erase(std::remove_if(this->ics_batch.begin(), this->ics_batch.end(),
-                                             UnbatchPredicate<typename integration_items<number>::ics_item>(source_serial)),
-                              this->ics_batch.end());
+        this->threepf_Nderiv_batch.erase(
+          std::remove_if(this->threepf_Nderiv_batch.begin(), this->threepf_Nderiv_batch.end(),
+                         UnbatchPredicate<typename integration_items<number>::threepf_Nderiv_item>(source_serial)),
+          this->threepf_Nderiv_batch.end());
 
-        this->kt_ics_batch.erase(std::remove_if(this->kt_ics_batch.begin(), this->kt_ics_batch.end(),
-                                                UnbatchPredicate<typename integration_items<number>::ics_kt_item>(source_serial)),
-                              this->kt_ics_batch.end());
+        this->ics_batch.erase(
+          std::remove_if(this->ics_batch.begin(), this->ics_batch.end(),
+                         UnbatchPredicate<typename integration_items<number>::ics_item>(
+                           source_serial)),
+          this->ics_batch.end());
+
+        this->kt_ics_batch.erase(
+          std::remove_if(this->kt_ics_batch.begin(), this->kt_ics_batch.end(),
+                         UnbatchPredicate<typename integration_items<number>::ics_kt_item>(
+                           source_serial)),
+          this->kt_ics_batch.end());
 
         if(this->paired_batcher != nullptr) this->paired_batcher->unbatch(source_serial);
-	    }
+      }
 
 
     template <typename number>

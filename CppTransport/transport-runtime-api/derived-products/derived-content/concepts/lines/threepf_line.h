@@ -36,6 +36,11 @@
 #include "transport-runtime-api/derived-products/derived-content/utilities/integration_task_gadget.h"
 
 
+#define CPPTRANSPORT_NODE_PRODUCT_DERIVED_THREEPF_LINE_ROOT          "threepf-line-settings"
+
+#define CPPTRANSPORT_NODE_PRODUCT_DERIVED_THREEPF_LINE_DIMENSIONLESS "dimensionless"
+
+
 namespace transport
 	{
 
@@ -64,18 +69,31 @@ namespace transport
 		        virtual ~threepf_line() = default;
 
 
+            // MANAGE SETTING
+
+            //! is this dimensionles?
+            bool is_dimensionless() const { return(this->dimensionless); }
+
+            //! set dimensionless
+            void set_dimensionless(bool g) { this->dimensionless = g; }
+
             // MANAGE LABEL OPTIONS
 
             //! get k_t label setting
             bool get_use_kt_label() const { return(this->use_kt_label); }
+
             //! set k_t label setting
             void set_use_kt_label(bool g) { this->use_kt_label = g; }
+
             //! get alpha label setting
             bool get_use_alpha_label() const { return(this->use_alpha_label); }
+
             //! set alpha label setting
             void set_use_alpha_label(bool g) { this->use_alpha_label = g; }
+
             //! get beta label setting
             bool get_use_beta_label() const { return(this->use_beta_label); }
+
             //! set beta label setting
             void set_use_beta_label(bool g) { this->use_beta_label = g; }
 
@@ -124,6 +142,9 @@ namespace transport
             //! use beta on line labels?
             bool use_beta_label;
 
+            //! compute the dimensionless threepf (ie. kt^6 * threepf)
+            bool dimensionless;
+
 	        };
 
 
@@ -139,10 +160,10 @@ namespace transport
             if(active_indices.get_number_fields() != this->gadget.get_N_fields())
 	            {
                 std::ostringstream msg;
-                msg << __CPP_TRANSPORT_PRODUCT_INDEX_MISMATCH << " ("
-	                << __CPP_TRANSPORT_PRODUCT_INDEX_MISMATCH_A << " " << active_indices.get_number_fields() << ", "
-	                << __CPP_TRANSPORT_PRODUCT_INDEX_MISMATCH_B << " " << this->gadget.get_N_fields() << ")";
-                throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
+                msg << CPPTRANSPORT_PRODUCT_INDEX_MISMATCH << " ("
+	                << CPPTRANSPORT_PRODUCT_INDEX_MISMATCH_A << " " << active_indices.get_number_fields() << ", "
+	                << CPPTRANSPORT_PRODUCT_INDEX_MISMATCH_B << " " << this->gadget.get_N_fields() << ")";
+                throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
 	            }
 	        }
 
@@ -156,9 +177,11 @@ namespace transport
 				    assert(this->parent_task != nullptr);
 		        gadget.set_task(this->parent_task, finder);
 
-		        use_kt_label    = reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_KT].asBool();
-		        use_alpha_label = reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_ALPHA].asBool();
-		        use_beta_label  = reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_BETA].asBool();
+		        use_kt_label    = reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_THREEPF_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_KT].asBool();
+		        use_alpha_label = reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_THREEPF_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_ALPHA].asBool();
+		        use_beta_label  = reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_THREEPF_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_BETA].asBool();
+
+            dimensionless   = reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_THREEPF_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_THREEPF_LINE_DIMENSIONLESS].asBool();
 			    }
 
 
@@ -171,18 +194,24 @@ namespace transport
 
 		        const std::vector<std::string>& field_names = this->gadget.get_model()->get_f_latex_names();
 
-		        if(this->get_dot_meaning() == derivatives)
-			        {
-		            label << field_names[l % N_fields] << (l >= N_fields ? "^{" __CPP_TRANSPORT_LATEX_PRIME_SYMBOL "}" : "") << " "
-			                << field_names[m % N_fields] << (m >= N_fields ? "^{" __CPP_TRANSPORT_LATEX_PRIME_SYMBOL "}" : "") << " "
-			                << field_names[n % N_fields] << (n >= N_fields ? "^{" __CPP_TRANSPORT_LATEX_PRIME_SYMBOL "}" : "");
-			        }
-		        else
-			        {
-		            label << (l >= N_fields ? "p_{" : "") << field_names[l % N_fields] << (l >= N_fields ? "}" : "") << " "
-			                << (m >= N_fields ? "p_{" : "") << field_names[m % N_fields] << (m >= N_fields ? "}" : "") << " "
-			                << (n >= N_fields ? "p_{" : "") << field_names[n % N_fields] << (n >= N_fields ? "}" : "");
-			        }
+            if(this->dimensionless) label << CPPTRANSPORT_LATEX_KT_SIX << " ";
+
+            switch(this->get_dot_meaning())
+              {
+                case dot_type::derivatives:
+                  label
+                    << field_names[l % N_fields] << (l >= N_fields ? "^{" CPPTRANSPORT_LATEX_PRIME_SYMBOL "}" : "") << " "
+                    << field_names[m % N_fields] << (m >= N_fields ? "^{" CPPTRANSPORT_LATEX_PRIME_SYMBOL "}" : "") << " "
+                    << field_names[n % N_fields] << (n >= N_fields ? "^{" CPPTRANSPORT_LATEX_PRIME_SYMBOL "}" : "");
+                  break;
+
+                case dot_type::momenta:
+                  label
+                    << (l >= N_fields ? "p_{" : "") << field_names[l % N_fields] << (l >= N_fields ? "}" : "") << " "
+                    << (m >= N_fields ? "p_{" : "") << field_names[m % N_fields] << (m >= N_fields ? "}" : "") << " "
+                    << (n >= N_fields ? "p_{" : "") << field_names[n % N_fields] << (n >= N_fields ? "}" : "");
+                  break;
+              }
 
 				    return(label.str());
 			    }
@@ -195,20 +224,26 @@ namespace transport
 
 		        unsigned int N_fields = this->gadget.get_N_fields();
 
+            if(this->dimensionless) label << CPPTRANSPORT_NONLATEX_KT_SIX << " ";
+
 		        const std::vector<std::string>& field_names = this->gadget.get_model()->get_field_names();
 
-		        if(this->get_dot_meaning() == derivatives)
-			        {
-		            label << field_names[l % N_fields] << (l >= N_fields ? __CPP_TRANSPORT_NONLATEX_PRIME_SYMBOL : "") << ", "
-			                << field_names[m % N_fields] << (m >= N_fields ? __CPP_TRANSPORT_NONLATEX_PRIME_SYMBOL : "") << ", "
-			                << field_names[n % N_fields] << (n >= N_fields ? __CPP_TRANSPORT_NONLATEX_PRIME_SYMBOL : "");
-			        }
-		        else
-			        {
-		            label << (l >= N_fields ? "p_{" : "") << field_names[l % N_fields] << (l >= N_fields ? "}" : "") << ", "
-			                << (m >= N_fields ? "p_{" : "") << field_names[m % N_fields] << (m >= N_fields ? "}" : "") << ", "
-			                << (n >= N_fields ? "p_{" : "") << field_names[n % N_fields] << (n >= N_fields ? "}" : "");
-			        }
+            switch(this->get_dot_meaning())
+              {
+                case dot_type::derivatives:
+                  label
+                    << field_names[l % N_fields] << (l >= N_fields ? CPPTRANSPORT_NONLATEX_PRIME_SYMBOL : "") << ", "
+                    << field_names[m % N_fields] << (m >= N_fields ? CPPTRANSPORT_NONLATEX_PRIME_SYMBOL : "") << ", "
+                    << field_names[n % N_fields] << (n >= N_fields ? CPPTRANSPORT_NONLATEX_PRIME_SYMBOL : "");
+                  break;
+
+                case dot_type::momenta:
+                  label
+                    << (l >= N_fields ? "p_{" : "") << field_names[l % N_fields] << (l >= N_fields ? "}" : "") << ", "
+                    << (m >= N_fields ? "p_{" : "") << field_names[m % N_fields] << (m >= N_fields ? "}" : "") << ", "
+                    << (n >= N_fields ? "p_{" : "") << field_names[n % N_fields] << (n >= N_fields ? "}" : "");
+                  break;
+              }
 
 				    return(label.str());
 			    }
@@ -219,19 +254,21 @@ namespace transport
 			    {
 				    this->active_indices.serialize(writer);
 
-            writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_KT]    = this->use_kt_label;
-            writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_ALPHA] = this->use_alpha_label;
-            writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_BETA]  = this->use_beta_label;
+            writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_THREEPF_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_KT]      = this->use_kt_label;
+            writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_THREEPF_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_ALPHA]   = this->use_alpha_label;
+            writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_THREEPF_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_BETA]    = this->use_beta_label;
+
+            writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_THREEPF_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_THREEPF_LINE_DIMENSIONLESS] = this->dimensionless;
 			    }
 
 
 		    template <typename number>
 		    void threepf_line<number>::write(std::ostream& out)
 			    {
-		        out << "  " << __CPP_TRANSPORT_PRODUCT_WAVENUMBER_SERIES_LABEL_THREEPF << std::endl;
-		        out << "  " << __CPP_TRANSPORT_PRODUCT_LINE_COLLECTION_LABEL_INDICES << " ";
+		        out << "  " << CPPTRANSPORT_PRODUCT_WAVENUMBER_SERIES_LABEL_THREEPF << '\n';
+		        out << "  " << CPPTRANSPORT_PRODUCT_LINE_COLLECTION_LABEL_INDICES << " ";
 		        this->active_indices.write(out, this->gadget.get_model()->get_state_names());
-		        out << std::endl;
+		        out << '\n';
 			    }
 
 	    }   // namespace derived_data

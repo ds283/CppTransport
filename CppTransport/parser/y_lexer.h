@@ -21,8 +21,7 @@
 #include "lexstream.h"
 
 #include "y_common.h"
-#include "y_parser.tab.hh"
-
+#include "y_parser.hpp"
 
 namespace y
 	{
@@ -35,7 +34,7 @@ namespace y
       public:
 
         //! constructor
-        y_lexer(std::shared_ptr<lexstream_type> s);
+        y_lexer(lexstream_type& s);
 
         //! destructor
         ~y_lexer() = default;
@@ -48,7 +47,7 @@ namespace y
 
       private:
 
-        std::shared_ptr<lexstream_type> stream;
+        lexstream_type& stream;
 
 		    lexeme_type* current_lex;
 
