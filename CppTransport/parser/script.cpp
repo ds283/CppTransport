@@ -9,19 +9,19 @@
 #include <assert.h>
 #include <algorithm>
 
+#include "lexical.h"
 #include "script.h"
 
-#define DEFAULT_MODEL_NAME "inflationary_model"
-#define DERIV_PREFIX       "__d"
+const auto DERIV_PREFIX = "__d";
 
 
 // ******************************************************************
 
 
-declaration::declaration(const std::string& n, GiNaC::symbol& s, const filestack& p)
+declaration::declaration(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l)
   : name(n),
     symbol(s),
-    path(p),
+    declaration_point(l),
 		my_id(current_id++)
   {
   }
@@ -33,8 +33,8 @@ unsigned int declaration::current_id = 0;
 // ******************************************************************
 
 
-field_declaration::field_declaration(const std::string& n, GiNaC::symbol& s, const filestack& p, attributes* a)
-  : declaration(n, s, p)
+field_declaration::field_declaration(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l, attributes* a)
+  : declaration(n, s, l)
   {
 		attrs = std::make_unique<attributes>(*a);
   }
@@ -54,16 +54,14 @@ void field_declaration::print(std::ostream& stream) const
   {
     stream << "Field declaration for symbol '" << this->get_name()
            << "', GiNaC symbol '" << this->get_ginac_symbol() << "'" << '\n';
-
-    stream << "  defined at line " << this->path.write();
   }
 
 
 // ******************************************************************
 
 
-parameter_declaration::parameter_declaration(const std::string& n, GiNaC::symbol& s, const filestack& p, attributes* a)
-  : declaration(n, s, p)
+parameter_declaration::parameter_declaration(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l, attributes* a)
+  : declaration(n, s, l)
   {
 		attrs = std::make_unique<attributes>(*a);
   }
@@ -83,16 +81,14 @@ void parameter_declaration::print(std::ostream& stream) const
   {
     stream << "Parameter declaration for symbol '" << this->get_name()
       << "', GiNaC symbol '" << this->get_ginac_symbol() << "'" << '\n';
-
-    stream << "  defined at line " << this->path.write();
   }
 
 
 // ******************************************************************
 
 
-subexpr_declaration::subexpr_declaration(const std::string& n, GiNaC::symbol& s, const filestack& p, subexpr* e)
-	: declaration(n, s, p)
+subexpr_declaration::subexpr_declaration(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l, subexpr* e)
+	: declaration(n, s, l)
 	{
 		sexpr = std::make_unique<subexpr>(*e);
 	}
@@ -118,8 +114,6 @@ void subexpr_declaration::print(std::ostream& stream) const
 	{
     stream << "Subexpression declaration for symbol '" << this->get_name()
 	    << "', GiNaC symbol '" << this->get_ginac_symbol() << "'" << '\n';
-
-    stream << "  defined at line " << this->path.write();
 	}
 
 
@@ -127,19 +121,36 @@ void subexpr_declaration::print(std::ostream& stream) const
 // ******************************************************************
 
 
-script::script(symbol_factory& s)
+std::vector<std::string>     fake_keyword_table;
+std::vector<keyword_type>    fake_keyword_map;
+std::vector<std::string>     fake_character_table;
+std::vector<character_type>  fake_character_map;
+std::vector<bool>            fake_context_table;
+
+
+script::script(symbol_factory& s, error_context err_ctx)
   : potential_set(false),
     errors_encountered(false),
-    model(DEFAULT_MODEL_NAME),
-    order(indexorder_right),
+    order(indexorder::right),
 		sym_factory(s)
   {
-		// set up reserved symbols
+		// set up reserved symbol for Planck mass
     M_Planck = sym_factory.get_symbol(MPLANCK_SYMBOL, MPLANCK_LATEX_SYMBOL);
 
+    // set up attributes for Planck mass symbol
 		attributes Mp_attrs;
 		Mp_attrs.set_latex(MPLANCK_LATEX_SYMBOL);
-		reserved.emplace(std::make_pair(MPLANCK_TEXT_NAME, std::make_unique<parameter_declaration>(MPLANCK_TEXT_NAME, M_Planck, placeholder_filestack, &Mp_attrs)));
+
+    // manufacture fake lexeme
+    std::string MPlanck_buffer(MPLANCK_TEXT_NAME);
+    lexeme::minus_context mctx = lexeme::minus_context::unary;
+    fake_MPlanck_lexeme = std::make_unique<y::lexeme_type>(MPlanck_buffer, lexeme::buffer_type::string_literal, mctx,
+                                                           0, err_ctx,
+                                                           fake_keyword_table, fake_keyword_map, fake_character_table,
+                                                           fake_character_map, fake_context_table);
+
+    // emplace faked symbol table entry
+		reserved.emplace(std::make_pair(MPLANCK_TEXT_NAME, std::make_unique<parameter_declaration>(MPLANCK_TEXT_NAME, M_Planck, *fake_MPlanck_lexeme, &Mp_attrs)));
 
     // set up default values for the steppers
     this->background_stepper.abserr    = DEFAULT_ABS_ERR;
@@ -169,79 +180,127 @@ boost::optional<declaration&> script::check_symbol_exists(const std::string& nm)
 		if(s_it != this->subexprs.end()) return *s_it->second;
 
 		// didn't find anything
-		return boost::optional<declaration&>();
+		return(boost::none);
 	}
 
 
-void script::set_name(const std::string n)
+void script::set_name(const std::string n, const y::lexeme_type& l)
   {
-    this->name = n;
+    this->name.release();
+    this->name = std::make_unique< contexted_value<std::string> >(n, l.get_error_context());
   }
 
 
-const std::string& script::get_name() const
+boost::optional< contexted_value<std::string>& > script::get_name() const
   {
-    return(this->name);
+    if(this->name)
+      {
+        return(*this->name);
+      }
+    else
+      {
+        return(boost::none);
+      }
   }
 
 
-void script::set_author(const std::string a)
+void script::set_author(const std::string a, const y::lexeme_type& l)
   {
-    this->author = a;
+    this->author.release();
+    this->author = std::make_unique< contexted_value<std::string> >(a, l.get_error_context());
   }
 
 
-const std::string& script::get_author() const
+boost::optional< contexted_value<std::string>& > script::get_author() const
   {
-    return(this->author);
+    if(this->author)
+      {
+        return(*this->author);
+      }
+    else
+      {
+        return(boost::none);
+      }
   }
 
 
-void script::set_tag(const std::string t)
+void script::set_tag(const std::string t, const y::lexeme_type& l)
   {
-    this->tag = t;
+    this->tag.release();
+    this->tag = std::make_unique< contexted_value<std::string> >(t, l.get_error_context());
   }
 
 
-const std::string& script::get_tag() const
+boost::optional< contexted_value<std::string>& > script::get_tag() const
   {
-    return(this->tag);
+    if(this->tag)
+      {
+        return(*this->tag);
+      }
+    else
+      {
+        return(boost::none);
+      }
   }
 
 
-void script::set_core(const std::string c)
+void script::set_core(const std::string c, const y::lexeme_type& l)
   {
-    this->core = c;
+    this->core.release();
+    this->core = std::make_unique< contexted_value<std::string> >(c, l.get_error_context());
   }
 
 
-const std::string& script::get_core() const
+boost::optional< contexted_value<std::string>& > script::get_core() const
   {
-    return(this->core);
+    if(this->core)
+      {
+        return(*this->core);
+      }
+    else
+      {
+        return(boost::none);
+      }
   }
 
 
-void script::set_implementation(const std::string i)
+void script::set_implementation(const std::string i, const y::lexeme_type& l)
   {
-    this->implementation = i;
+    this->implementation.release();
+    this->implementation = std::make_unique< contexted_value<std::string> >(i, l.get_error_context());
   }
 
 
-const std::string& script::get_implementation() const
+boost::optional< contexted_value<std::string>& > script::get_implementation() const
   {
-    return(this->implementation);
+    if(this->implementation)
+      {
+        return(*this->implementation);
+      }
+    else
+      {
+        return(boost::none);
+      }
   }
 
 
-void script::set_model(const std::string m)
+void script::set_model(const std::string m, const y::lexeme_type& l)
   {
-    this->model = m;
+    this->model.release();
+    this->model = std::make_unique< contexted_value<std::string> >(m, l.get_error_context());
   }
 
 
-const std::string& script::get_model() const
+boost::optional< contexted_value<std::string>& > script::get_model() const
   {
-    return(this->model);
+    if(this->model)
+      {
+        return(*this->model);
+      }
+    else
+      {
+        return(boost::none);
+      }
   }
 
 
@@ -259,14 +318,21 @@ enum indexorder script::get_indexorder() const
 
 void script::print(std::ostream& stream) const
   {
+    std::string name = this->name ? *(*this->name) : std::string();
+    std::string author = this->author ? *(*this->author) : std::string();
+    std::string tag = this->tag ? *(*this->tag) : std::string();
+    std::string model = this->model ? *(*this->model) : std::string();
+    std::string core = this->core ? *(*this->core) : std::string();
+    std::string impl = this->implementation ? *(*this->implementation) : std::string();
+
     stream << "Script summary:" << '\n';
     stream << "===============" << '\n';
-    stream << "  Name           = '" << this->name << "'" << '\n';
-    stream << "  Model          = '" << this->model << "'" << '\n';
-    stream << "  Author         = '" << this->author << "'" << '\n';
-    stream << "  Tag            = '" << this->tag << "'" << '\n';
-    stream << "  Core           = '" << this->core << "'" << '\n';
-    stream << "  Implementation = '" << this->implementation << "'" << '\n';
+    stream << "  Name           = '" << name << "'" << '\n';
+    stream << "  Model          = '" << model << "'" << '\n';
+    stream << "  Author         = '" << author << "'" << '\n';
+    stream << "  Tag            = '" << tag << "'" << '\n';
+    stream << "  Core           = '" << core << "'" << '\n';
+    stream << "  Implementation = '" << impl << "'" << '\n';
     stream << '\n';
 
     stream << "Fields:" << '\n';
@@ -304,7 +370,7 @@ void script::print(std::ostream& stream) const
   }
 
 
-bool script::add_field(const std::string& n, GiNaC::symbol& s, const filestack& p, attributes* a)
+bool script::add_field(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l, attributes* a)
   {
     // search for an existing entry in the symbol table
     boost::optional<declaration&> record = this->check_symbol_exists(n);
@@ -313,13 +379,18 @@ bool script::add_field(const std::string& n, GiNaC::symbol& s, const filestack& 
       {
         std::ostringstream msg;
         msg << ERROR_SYMBOL_EXISTS << " '" << n << "'";
-        error(msg.str(), p);
+        l.error(msg.str());
+
+        std::ostringstream orig_decl;
+        orig_decl << NOTIFY_DUPLICATION_DEFINITION_WAS << " '" << n << "'";
+        record.get().get_declaration_point().warn(orig_decl.str());
+
         this->errors_encountered = true;
       }
     else
       {
         // add declaration to list
-        this->fields.emplace(std::make_pair(n, std::make_unique<field_declaration>(n, s, p, a)));
+        this->fields.emplace(std::make_pair(n, std::make_unique<field_declaration>(n, s, l, a)));
 
         // also need to generate a symbol for the momentum corresponding to this field
         GiNaC::symbol deriv_symbol(DERIV_PREFIX + s.get_name());
@@ -330,7 +401,7 @@ bool script::add_field(const std::string& n, GiNaC::symbol& s, const filestack& 
   }
 
 
-bool script::add_parameter(const std::string& n, GiNaC::symbol& s, const filestack& p, attributes* a)
+bool script::add_parameter(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l, attributes* a)
   {
     // search for an existing entry in the symbol table
     boost::optional<declaration&> record = this->check_symbol_exists(n);
@@ -339,20 +410,25 @@ bool script::add_parameter(const std::string& n, GiNaC::symbol& s, const filesta
       {
         std::ostringstream msg;
         msg << ERROR_SYMBOL_EXISTS << " '" << n << "'";
-        error(msg.str(), p);
+        l.error(msg.str());
+
+        std::ostringstream orig_decl;
+        orig_decl << NOTIFY_DUPLICATION_DEFINITION_WAS << " '" << n << "'";
+        record.get().get_declaration_point().warn(orig_decl.str());
+
         this->errors_encountered = true;
       }
     else
       {
         // add declaration to list
-        this->parameters.emplace(std::make_pair(n, std::make_unique<parameter_declaration>(n, s, p, a)));
+        this->parameters.emplace(std::make_pair(n, std::make_unique<parameter_declaration>(n, s, l, a)));
       }
 
     return(!record);
   }
 
 
-bool script::add_subexpr(const std::string& n, GiNaC::symbol& s, const filestack& p, subexpr* e)
+bool script::add_subexpr(const std::string& n, GiNaC::symbol& s, const y::lexeme_type& l, subexpr* e)
 	{
 		// search for an existing entry in the symbol table
     boost::optional<declaration&> record = this->check_symbol_exists(n);
@@ -361,13 +437,18 @@ bool script::add_subexpr(const std::string& n, GiNaC::symbol& s, const filestack
 			{
 		    std::ostringstream msg;
 				msg << ERROR_SYMBOL_EXISTS << " '" << n << "'";
-				error(msg.str(), p);
+				l.error(msg.str());
+
+        std::ostringstream orig_decl;
+        orig_decl << NOTIFY_DUPLICATION_DEFINITION_WAS << " '" << n << "'";
+        record.get().get_declaration_point().warn(orig_decl.str());
+
         this->errors_encountered = true;
 			}
 		else
 			{
 				// add declaration to list
-				this->subexprs.emplace(std::make_pair(n, std::make_unique<subexpr_declaration>(n, s, p, e)));
+				this->subexprs.emplace(std::make_pair(n, std::make_unique<subexpr_declaration>(n, s, l, e)));
 			}
 
 		return(!record);

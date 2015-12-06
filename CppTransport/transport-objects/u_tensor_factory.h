@@ -2,8 +2,6 @@
 // Created by David Seery on 29/06/2013.
 // Copyright (c) 2013-15 University of Sussex. All rights reserved.
 //
-// To change the template use AppCode | Preferences | File Templates.
-//
 
 #ifndef __u_tensor_factory_H_
 #define __u_tensor_factory_H_
@@ -14,13 +12,10 @@
 #include "ginac_cache.h"
 
 #include "ginac/ginac.h"
-#include "translation_unit.h"
+#include "translator_data.h"
+#include "expression_types.h"
 
-#include <boost/timer/timer.hpp>
-
-
-// need a forward reference to avoid circularity
-class translation_unit;
+#include "boost/timer/timer.hpp"
 
 
 // abstract u-tensor factory class
@@ -31,7 +26,7 @@ class u_tensor_factory
 
   public:
 
-    u_tensor_factory(translation_unit* u,  ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& c);
+    u_tensor_factory(translator_data& p,  ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& c);
 
     virtual ~u_tensor_factory() = default;
 
@@ -40,55 +35,55 @@ class u_tensor_factory
 
   public:
 
-    virtual void compute_sr_u(std::vector<GiNaC::ex>& v, flattener* fl) = 0;
+    virtual void compute_sr_u(std::vector<GiNaC::ex>& v, flattener& fl) = 0;
 
-    virtual void compute_u1(std::vector<GiNaC::ex>& v, flattener* fl) = 0;
+    virtual void compute_u1(std::vector<GiNaC::ex>& v, flattener& fl) = 0;
 
-    virtual void compute_u1(GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener* fl) = 0;
+    virtual void compute_u1(GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener& fl) = 0;
 
-    virtual void compute_u2(GiNaC::symbol& k, GiNaC::symbol& a, std::vector<GiNaC::ex>& v, flattener* fl) = 0;
+    virtual void compute_u2(GiNaC::symbol& k, GiNaC::symbol& a, std::vector<GiNaC::ex>& v, flattener& fl) = 0;
 
-    virtual void compute_u2(GiNaC::symbol& k, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener* fl) = 0;
+    virtual void compute_u2(GiNaC::symbol& k, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener& fl) = 0;
 
-    virtual void compute_u3(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, std::vector<GiNaC::ex>& v, flattener* fl) = 0;
+    virtual void compute_u3(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, std::vector<GiNaC::ex>& v, flattener& fl) = 0;
 
-    virtual void compute_u3(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener* fl) = 0;
+    virtual void compute_u3(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener& fl) = 0;
 
     // the A, B and C tensors are associated with the Hamiltonian for
     // scalar field fluctuations [see written notes]
     // actually, these compute A/H^2, B/H and C
     // all of these have mass dimension -1
 
-    virtual void compute_A(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, std::vector<GiNaC::ex>& v, flattener* fl) = 0;
+    virtual void compute_A(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, std::vector<GiNaC::ex>& v, flattener& fl) = 0;
 
-    virtual void compute_A(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener* fl) = 0;
+    virtual void compute_A(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener& fl) = 0;
 
-    virtual void compute_B(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, std::vector<GiNaC::ex>& v, flattener* fl) = 0;
+    virtual void compute_B(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, std::vector<GiNaC::ex>& v, flattener& fl) = 0;
 
-    virtual void compute_B(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener* fl) = 0;
+    virtual void compute_B(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener& fl) = 0;
 
-    virtual void compute_C(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, std::vector<GiNaC::ex>& v, flattener* fl) = 0;
+    virtual void compute_C(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, std::vector<GiNaC::ex>& v, flattener& fl) = 0;
 
-    virtual void compute_C(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener* fl) = 0;
+    virtual void compute_C(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener& fl) = 0;
 
     // compute M tensor
 
-    virtual void compute_M(std::vector<GiNaC::ex>& v, flattener* fl) = 0;
+    virtual void compute_M(std::vector<GiNaC::ex>& v, flattener& fl) = 0;
 
-    virtual void compute_M(GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener* fl) = 0;
+    virtual void compute_M(GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener& fl) = 0;
 
 
     // INTERFACE - CALCULATE GAUGE TRANSFORMATIONS
 
   public:
 
-    virtual void compute_zeta_xfm_1(GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener* fl) = 0;
+    virtual void compute_zeta_xfm_1(GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener& fl) = 0;
 
-    virtual void compute_zeta_xfm_2(GiNaC::symbol& k, GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener* fl) = 0;
+    virtual void compute_zeta_xfm_2(GiNaC::symbol& k, GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener& fl) = 0;
 
-		virtual void compute_deltaN_xfm_1(std::vector<GiNaC::ex>& v, flattener* fl) = 0;
+		virtual void compute_deltaN_xfm_1(std::vector<GiNaC::ex>& v, flattener& fl) = 0;
 
-		virtual void compute_deltaN_xfm_2(std::vector<GiNaC::ex>& v, flattener* fl) = 0;
+		virtual void compute_deltaN_xfm_2(std::vector<GiNaC::ex>& v, flattener& fl) = 0;
 
 
 		// INTERFACE - COMPUTE BACKGROUND OBJECTS
@@ -143,7 +138,7 @@ class u_tensor_factory
   protected:
 
 		// parent translation unit
-    translation_unit* unit;
+    translator_data& data_payload;
 
 		// basic model details
     const unsigned int num_fields;
@@ -174,8 +169,8 @@ class canonical_u_tensor_factory: public u_tensor_factory
 
   public:
 
-    canonical_u_tensor_factory(translation_unit* u, ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& c)
-	    : u_tensor_factory(u, c)
+    canonical_u_tensor_factory(translator_data& p, ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& c)
+	    : u_tensor_factory(p, c)
       {
       }
 
@@ -183,56 +178,56 @@ class canonical_u_tensor_factory: public u_tensor_factory
 
   public:
 
-    virtual void compute_sr_u(std::vector<GiNaC::ex>& v, flattener* fl) override;
+    virtual void compute_sr_u(std::vector<GiNaC::ex>& v, flattener& fl) override;
 
-    virtual void compute_u1(std::vector<GiNaC::ex>& v, flattener* fl) override;
+    virtual void compute_u1(std::vector<GiNaC::ex>& v, flattener& fl) override;
 
-    virtual void compute_u1(GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener* fl) override;
+    virtual void compute_u1(GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener& fl) override;
 
-    virtual void compute_u2(GiNaC::symbol& k, GiNaC::symbol& a, std::vector<GiNaC::ex>& v, flattener* fl) override;
+    virtual void compute_u2(GiNaC::symbol& k, GiNaC::symbol& a, std::vector<GiNaC::ex>& v, flattener& fl) override;
 
-    virtual void compute_u2(GiNaC::symbol& k, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener* fl) override;
+    virtual void compute_u2(GiNaC::symbol& k, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener& fl) override;
 
-    virtual void compute_u3(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, std::vector<GiNaC::ex>& v, flattener* fl) override;
+    virtual void compute_u3(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, std::vector<GiNaC::ex>& v, flattener& fl) override;
 
-    virtual void compute_u3(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener* fl) override;
+    virtual void compute_u3(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener& fl) override;
 
     // the A, B and C tensors are associated with the Hamiltonian for
     // scalar field fluctuations [see written notes]
     // actually, these compute A/H^2, B/H and C
     // all of these have mass dimension -1
 
-    virtual void compute_A(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, std::vector<GiNaC::ex>& v, flattener* fl) override;
+    virtual void compute_A(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, std::vector<GiNaC::ex>& v, flattener& fl) override;
 
-    virtual void compute_A(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener* fl) override;
+    virtual void compute_A(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener& fl) override;
 
-    virtual void compute_B(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, std::vector<GiNaC::ex>& v, flattener* fl) override;
+    virtual void compute_B(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, std::vector<GiNaC::ex>& v, flattener& fl) override;
 
-    virtual void compute_B(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener* fl) override;
+    virtual void compute_B(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener& fl) override;
 
-    virtual void compute_C(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, std::vector<GiNaC::ex>& v, flattener* fl) override;
+    virtual void compute_C(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, std::vector<GiNaC::ex>& v, flattener& fl) override;
 
-    virtual void compute_C(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener* fl) override;
+    virtual void compute_C(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener& fl) override;
 
 
     // compute M tensor
 
-    virtual void compute_M(std::vector<GiNaC::ex>& v, flattener* fl) override;
+    virtual void compute_M(std::vector<GiNaC::ex>& v, flattener& fl) override;
 
-    virtual void compute_M(GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener* fl) override;
+    virtual void compute_M(GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener& fl) override;
 
 
     //  CALCULATE GAUGE TRANSFORMATIONS
 
   public:
 
-    virtual void compute_zeta_xfm_1(GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener* fl) override;
+    virtual void compute_zeta_xfm_1(GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener& fl) override;
 
-    virtual void compute_zeta_xfm_2(GiNaC::symbol& k, GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener* fl) override;
+    virtual void compute_zeta_xfm_2(GiNaC::symbol& k, GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener& fl) override;
 
-		virtual void compute_deltaN_xfm_1(std::vector<GiNaC::ex>& v, flattener* fl) override;
+		virtual void compute_deltaN_xfm_1(std::vector<GiNaC::ex>& v, flattener& fl) override;
 
-		virtual void compute_deltaN_xfm_2(std::vector<GiNaC::ex>& v, flattener* fl) override;
+		virtual void compute_deltaN_xfm_2(std::vector<GiNaC::ex>& v, flattener& fl) override;
 
     virtual GiNaC::ex compute_Hsq() override;
 
@@ -268,7 +263,7 @@ class canonical_u_tensor_factory: public u_tensor_factory
 
 
 // factory function to manufacture a u_tensor_factory instance
-u_tensor_factory* make_u_tensor_factory(translation_unit* u, ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& cache);
+std::unique_ptr<u_tensor_factory> make_u_tensor_factory(translator_data& u, ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& cache);
 
 
 #endif //__u_tensor_factory_H_

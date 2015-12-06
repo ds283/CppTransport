@@ -6,14 +6,13 @@
 
 #include <string>
 #include <sstream>
-
+#include <stdexcept>
 
 #include "msg_en.h"
-#include "error.h"
 #include "input_stack.h"
 
 
-void input_stack::push(const std::string name)
+void input_stack::push(const boost::filesystem::path name)
   {
     struct inclusion incl;
 
@@ -28,7 +27,7 @@ void input_stack::set_line(unsigned int line)
   {
     if(inclusions.size() == 0)
       {
-        error(ERROR_FILESTACK_EMPTY);
+        throw std::runtime_error(ERROR_FILESTACK_EMPTY);
       }
     else
       {
@@ -43,7 +42,7 @@ unsigned int input_stack::increment_line()
 
     if(inclusions.size() == 0)
       {
-        error(ERROR_FILESTACK_EMPTY);
+        throw std::runtime_error(ERROR_FILESTACK_EMPTY);
       }
     else
       {
@@ -59,7 +58,7 @@ unsigned int input_stack::get_line() const
 
     if(inclusions.size() == 0)
       {
-        error(ERROR_FILESTACK_EMPTY);
+        throw std::runtime_error(ERROR_FILESTACK_EMPTY);
       }
     else
       {
@@ -77,7 +76,7 @@ void input_stack::pop()
       }
     else
       {
-        error(ERROR_FILESTACK_TOO_SHORT);
+        throw std::runtime_error(ERROR_FILESTACK_TOO_SHORT);
       }
   }
 
@@ -99,14 +98,14 @@ std::string input_stack::write(size_t level) const
 
     if(level >= 1)
       {
-        out << this->inclusions[0].line << " " << OUTPUT_STACK_OF << " '" << this->inclusions[0].name << "'";
+        out << this->inclusions[0].line << " " << OUTPUT_STACK_OF << " " << this->inclusions[0].name;
       }
 
     for(int i = 1; i < level; ++i)
       {
         out << '\n'
             << OUTPUT_STACK_WRAP_PAD << OUTPUT_STACK_INCLUDED_FROM << " " << this->inclusions[i].line
-            << " " << OUTPUT_STACK_OF_FILE << " '" << this->inclusions[i].name << "'";
+            << " " << OUTPUT_STACK_OF_FILE << " " << this->inclusions[i].name;
       }
 
     return(out.str());

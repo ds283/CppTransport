@@ -30,25 +30,27 @@ namespace macro_packages
 		    // by default, it assumes that a literal pool location has not been set (s=false)
 		    // this needs to be overridden for kernel buffers, where the literal pool coincides with
 		    // the beginning of the buffer
-        temporary_pool(translation_unit* u, language_printer& p, std::string t = OUTPUT_DEFAULT_POOL_TEMPLATE);
+        temporary_pool(translator_data& u, language_printer& prn, std::string t = OUTPUT_DEFAULT_POOL_TEMPLATE);
 
-        ~temporary_pool();
+        //! destructor is default
+        ~temporary_pool() = default;
 
 
 		    // INTERFACE - implements a 'replacement_rule_package' interface
 
       public:
 
-        const std::vector<simple_rule> get_pre_rules();
-        const std::vector<simple_rule> get_post_rules();
-        const std::vector<index_rule>  get_index_rules();
+        const std::vector<simple_rule> get_pre_rules() override;
+        const std::vector<simple_rule> get_post_rules() override;
+        const std::vector<index_rule>  get_index_rules() override;
 
 
 		    // INTERFACE -- report end of an input; used to deposit temporaries if necessary
 
       public:
 
-		    void report_end_of_input();
+        //! override default report_end_of_input() implementation to dump temporaries
+		    virtual void report_end_of_input() override;
 
 
 		    // INTERNAL API

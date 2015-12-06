@@ -12,7 +12,7 @@
 #include <string>
 #include <memory>
 
-#include "translation_unit.h"
+#include "translator_data.h"
 #include "package_group.h"
 #include "buffer.h"
 
@@ -20,7 +20,7 @@
 #include "ginac_cache.h"
 
 
-std::unique_ptr<package_group> package_group_factory(const std::string& in, const std::string& backend, translation_unit* unit,
+std::unique_ptr<package_group> package_group_factory(const boost::filesystem::path& in, const std::string& backend, translator_data& payload,
                                                      ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& cache);
 
 

@@ -14,12 +14,12 @@
 #include <iostream>
 #include <string>
 
-#include "lexeme.h"
-#include "lexical.h"
 #include "semantic_data.h"
 #include "script.h"
 
 #include "symbol_factory.h"
+#include "argument_cache.h"
+#include "local_environment.h"
 
 #include "y_common.h"
 
@@ -35,7 +35,10 @@ namespace y
       public:
 
         //! constructor
-        y_driver(symbol_factory& s);
+        //! error_context is passed down from parent translation_unit.
+        //! It is only used to pass to our script object 'root' and is used to construct
+        //! fake error contexts for default reserved symbols such as M_Planck
+        y_driver(symbol_factory& s, argument_cache& c, local_environment& e, error_context err_ctx);
 
         //! destructor is default
         ~y_driver() = default;
@@ -46,8 +49,9 @@ namespace y
       public:
 
         //! detect error conditions reported during processing
-        bool failed() const { return(this->root->failed()); }
+        bool failed() const { return(this->root.failed()); }
 
+        //! raise error, bypassing normal context-reporting system (eg. if no context can be found)
         void error(std::string msg);
 
         const script& get_script();
@@ -185,9 +189,20 @@ namespace y
 
       private:
 
-        std::unique_ptr<script> root;
+        //! container for model descriptor information
+        script root;
 
+
+        // REFERNCES TO UTILITY OBJECTS
+
+        //! reference to symbol factory
 		    symbol_factory& sym_factory;
+
+        //! reference to argument cache
+        argument_cache& cache;
+
+        //! reference to local environment
+        local_environment& env;
 
 	    };
 

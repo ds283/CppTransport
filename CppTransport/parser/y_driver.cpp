@@ -2,8 +2,6 @@
 // Created by David Seery on 17/06/2013.
 // Copyright (c) 2013-15 University of Sussex. All rights reserved.
 //
-// To change the template use AppCode | Preferences | File Templates.
-//
 
 
 #include <string>
@@ -15,26 +13,28 @@
 namespace y
 	{
 
-    y_driver::y_driver(symbol_factory& s)
-	    : sym_factory(s)
+    y_driver::y_driver(symbol_factory& s, argument_cache& c, local_environment& e, error_context err_ctx)
+	    : sym_factory(s),
+        cache(c),
+        env(e),
+        root(s, err_ctx)
 	    {
-        root = std::make_unique<script>(sym_factory);
 	    }
 
 
     void y_driver::error(std::string msg)
 	    {
-        ::error(msg);
+        ::error(msg, this->cache, this->env);
 	    }
 
 
     const script& y_driver::get_script()
 	    {
-        return(*this->root);
+        return(this->root);
 	    }
 
 
-    void y_driver::add_field(lexeme::lexeme<enum keyword_type, enum character_type>* lex, attributes* a)
+    void y_driver::add_field(lexeme_type* lex, attributes* a)
 	    {
         // extract identifier name from lexeme
         std::string id;
@@ -43,18 +43,18 @@ namespace y
         if(ok)
 	        {
             GiNaC::symbol sym = this->sym_factory.get_symbol(id, a->get_latex());
-            this->root->add_field(id, sym, lex->get_path(), a);
+            this->root.add_field(id, sym, *lex, a);
 	        }
         else
 	        {
-            ::error(ERROR_IDENTIFIER_LOOKUP, lex->get_path(), lex->get_line(), lex->get_char_pos());
+            lex->error(ERROR_IDENTIFIER_LOOKUP);
 	        }
 
         delete a; // otherwise, attributes block would never be deallocated
 	    }
 
 
-    void y_driver::add_parameter(lexeme::lexeme<enum keyword_type, enum character_type>* lex, attributes* a)
+    void y_driver::add_parameter(lexeme_type* lex, attributes* a)
 	    {
         // extract identifier name from lexeme
         std::string            id;
@@ -63,11 +63,11 @@ namespace y
         if(ok)
 	        {
             GiNaC::symbol sym = this->sym_factory.get_symbol(id, a->get_latex());
-		        this->root->add_parameter(id, sym, lex->get_path(), a);
+		        this->root.add_parameter(id, sym, *lex, a);
 	        }
         else
 	        {
-            ::error(ERROR_IDENTIFIER_LOOKUP, lex->get_path(), lex->get_line(), lex->get_char_pos());
+            lex->error(ERROR_IDENTIFIER_LOOKUP);
 	        }
 
         delete a; // otherwise, attributes block would never be deallocated
@@ -85,11 +85,11 @@ namespace y
 				if(ok)
 					{
 				    GiNaC::symbol sym = this->sym_factory.get_symbol(id, e->get_latex());
-						this->root->add_subexpr(id, sym, lex->get_path(), e);
+						this->root.add_subexpr(id, sym, *lex, e);
 					}
 				else
 					{
-				    ::error(ERROR_IDENTIFIER_LOOKUP, lex->get_path(), lex->get_line(), lex->get_char_pos());
+            lex->error(ERROR_IDENTIFIER_LOOKUP);
 					}
 
 				delete e;
@@ -108,7 +108,7 @@ namespace y
 	        }
         else
 	        {
-            ::error(ERROR_STRING_LOOKUP, lex->get_path(), lex->get_line(), lex->get_char_pos());
+            lex->error(ERROR_STRING_LOOKUP);
 	        }
 	    }
 
@@ -125,7 +125,7 @@ namespace y
 					}
 				else
 					{
-						::error(ERROR_STRING_LOOKUP, lex->get_path(), lex->get_line(), lex->get_char_pos());
+            lex->error(ERROR_STRING_LOOKUP);
 					}
 			}
 
@@ -148,7 +148,7 @@ namespace y
 	        }
         else
 	        {
-            ::error(ERROR_DECIMAL_LOOKUP, lex->get_path(), lex->get_line(), lex->get_char_pos());
+            lex->error(ERROR_STRING_LOOKUP);
 	        }
 	    }
 
@@ -165,7 +165,7 @@ namespace y
 	        }
         else
 	        {
-            ::error(ERROR_DECIMAL_LOOKUP, lex->get_path(), lex->get_line(), lex->get_char_pos());
+            lex->error(ERROR_STRING_LOOKUP);
 	        }
 	    }
 
@@ -182,7 +182,7 @@ namespace y
 	        }
         else
 	        {
-            ::error(ERROR_STRING_LOOKUP, lex->get_path(), lex->get_line(), lex->get_char_pos());
+            lex->error(ERROR_STRING_LOOKUP);
 	        }
 	    }
 
@@ -199,14 +199,14 @@ namespace y
 	        }
         else
 	        {
-            ::error(ERROR_DECIMAL_LOOKUP, lex->get_path(), lex->get_line(), lex->get_char_pos());
+            lex->error(ERROR_STRING_LOOKUP);
 	        }
 	    }
 
 
     void y_driver::set_background_stepper(struct stepper* s)
 	    {
-        this->root->set_background_stepper(s);
+        this->root.set_background_stepper(s);
 
         delete s;
 	    }
@@ -214,7 +214,7 @@ namespace y
 
     void y_driver::set_perturbations_stepper(struct stepper* s)
 	    {
-        this->root->set_perturbations_stepper(s);
+        this->root.set_perturbations_stepper(s);
 
         delete s;
 	    }
@@ -227,11 +227,11 @@ namespace y
 
         if(ok)
 	        {
-            this->root->set_name(str);
+            this->root.set_name(str, *lex);
 	        }
         else
 	        {
-            ::error(ERROR_STRING_LOOKUP, lex->get_path(), lex->get_line(), lex->get_char_pos());
+            lex->error(ERROR_STRING_LOOKUP);
 	        }
 	    }
 
@@ -243,11 +243,11 @@ namespace y
 
         if(ok)
 	        {
-            this->root->set_author(str);
+            this->root.set_author(str, *lex);
 	        }
         else
 	        {
-            ::error(ERROR_STRING_LOOKUP, lex->get_path(), lex->get_line(), lex->get_char_pos());
+            lex->error(ERROR_STRING_LOOKUP);
 	        }
 	    }
 
@@ -259,11 +259,11 @@ namespace y
 
         if(ok)
 	        {
-            this->root->set_tag(str);
+            this->root.set_tag(str, *lex);
 	        }
         else
 	        {
-            ::error(ERROR_STRING_LOOKUP, lex->get_path(), lex->get_line(), lex->get_char_pos());
+            lex->error(ERROR_STRING_LOOKUP);
 	        }
 	    }
 
@@ -275,11 +275,11 @@ namespace y
 
         if(ok)
 	        {
-            this->root->set_core(str);
+            this->root.set_core(str, *lex);
 	        }
         else
 	        {
-            ::error(ERROR_STRING_LOOKUP, lex->get_path(), lex->get_line(), lex->get_char_pos());
+            lex->error(ERROR_STRING_LOOKUP);
 	        }
 	    }
 
@@ -291,11 +291,11 @@ namespace y
 
         if(ok)
 	        {
-            this->root->set_implementation(str);
+            this->root.set_implementation(str, *lex);
 	        }
         else
 	        {
-            ::error(ERROR_STRING_LOOKUP, lex->get_path(), lex->get_line(), lex->get_char_pos());
+            lex->error(ERROR_STRING_LOOKUP);
 	        }
 	    }
 
@@ -307,18 +307,18 @@ namespace y
 
         if(ok)
 	        {
-            this->root->set_model(str);
+            this->root.set_model(str, *lex);
 	        }
         else
 	        {
-            ::error(ERROR_STRING_LOOKUP, lex->get_path(), lex->get_line(), lex->get_char_pos());
+            lex->error(ERROR_STRING_LOOKUP);
 	        }
 	    }
 
 
     void y_driver::set_potential(GiNaC::ex* V)
 	    {
-        this->root->set_potential(*V);
+        this->root.set_potential(*V);
 
         delete V;
 	    }
@@ -326,13 +326,13 @@ namespace y
 
     void y_driver::set_indexorder_left()
 	    {
-        this->root->set_indexorder(indexorder_left);
+        this->root.set_indexorder(indexorder::left);
 	    }
 
 
     void y_driver::set_indexorder_right()
 	    {
-        this->root->set_indexorder(indexorder_right);
+        this->root.set_indexorder(indexorder::right);
 	    }
 
 
@@ -763,7 +763,7 @@ namespace y
 
         if(!ok)
 	        {
-            ::error(ERROR_INTEGER_LOOKUP, lex->get_path(), lex->get_line(), lex->get_char_pos());
+            lex->error(ERROR_INTEGER_LOOKUP);
 	        }
 
         return (rval);
@@ -779,7 +779,7 @@ namespace y
 
         if(!ok)
 	        {
-            ::error(ERROR_DECIMAL_LOOKUP, lex->get_path(), lex->get_line(), lex->get_char_pos());
+            lex->error(ERROR_DECIMAL_LOOKUP);
 	        }
 
         return (rval);
@@ -795,7 +795,7 @@ namespace y
 
         if(ok)
 	        {
-            boost::optional<declaration&> record = this->root->check_symbol_exists(id);
+            boost::optional<declaration&> record = this->root.check_symbol_exists(id);
 
             if(record)
 	            {
@@ -806,12 +806,12 @@ namespace y
                 std::ostringstream msg;
 
                 msg << ERROR_UNKNOWN_IDENTIFIER << " '" << id << "'";
-                ::error(msg.str(), lex->get_path(), lex->get_line(), lex->get_char_pos());
+                lex->error(msg.str());
 	            }
 	        }
         else
 	        {
-            ::error(ERROR_IDENTIFIER_LOOKUP, lex->get_path(), lex->get_line(), lex->get_char_pos());
+            lex->error(ERROR_IDENTIFIER_LOOKUP);
 	        }
 
         if(rval == nullptr)

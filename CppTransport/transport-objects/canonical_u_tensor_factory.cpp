@@ -2,8 +2,6 @@
 // Created by David Seery on 01/07/2013.
 // Copyright (c) 2013-15 University of Sussex. All rights reserved.
 //
-// To change the template use AppCode | Preferences | File Templates.
-//
 
 
 #include <assert.h>
@@ -14,29 +12,29 @@
 // *****************************************************************************
 
 
-void canonical_u_tensor_factory::compute_sr_u(std::vector<GiNaC::ex>& v, flattener* fl)
+void canonical_u_tensor_factory::compute_sr_u(std::vector<GiNaC::ex>& v, flattener& fl)
   {
-    fl->set_size(this->num_fields);
+    fl.set_size(this->num_fields);
     v.clear();
-    v.resize(fl->get_flattened_size(1));
+    v.resize(fl.get_flattened_size(1));
 
 #pragma omp parallel for schedule(dynamic)
     for(int i = 0; i < this->num_fields; ++i)
       {
-		    unsigned int index = fl->flatten(i);
+		    unsigned int index = fl.flatten(i);
 
-		    if(!this->cache.query(sr_U_item, index, v[index]))
+		    if(!this->cache.query(expression_item_types::sr_U_item, index, v[index]))
 			    {
 				    this->compute_timer.resume();
 		        v[index] = - GiNaC::diff(this->V, this->field_list[i]) * GiNaC::pow(this->M_Planck, 2) / (this->V);
 		        this->compute_timer.stop();
-				    this->cache.store(sr_U_item, index, v[index]);
+				    this->cache.store(expression_item_types::sr_U_item, index, v[index]);
 			    }
       }
   }
 
 
-void canonical_u_tensor_factory::compute_u1(std::vector<GiNaC::ex>& v, flattener* fl)
+void canonical_u_tensor_factory::compute_u1(std::vector<GiNaC::ex>& v, flattener& fl)
   {
     GiNaC::ex Hsq = this->compute_Hsq();
     GiNaC::ex eps = this->compute_eps();
@@ -45,11 +43,11 @@ void canonical_u_tensor_factory::compute_u1(std::vector<GiNaC::ex>& v, flattener
   }
 
 
-void canonical_u_tensor_factory::compute_u1(GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener* fl)
+void canonical_u_tensor_factory::compute_u1(GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener& fl)
   {
-    fl->set_size(2*this->num_fields);
+    fl.set_size(2*this->num_fields);
     v.clear();
-    v.resize(fl->get_flattened_size(1));
+    v.resize(fl.get_flattened_size(1));
 
     std::vector<GiNaC::ex> args;
 		args.push_back(Hsq);
@@ -58,9 +56,9 @@ void canonical_u_tensor_factory::compute_u1(GiNaC::ex& Hsq, GiNaC::ex& eps, std:
 #pragma omp parallel for schedule(dynamic)
     for(int i = 0; i < 2*this->num_fields; ++i)
       {
-		    unsigned int index = fl->flatten(i);
+		    unsigned int index = fl.flatten(i);
 
-		    if(!this->cache.query(U1_item, index, args, v[index]))
+		    if(!this->cache.query(expression_item_types::U1_item, index, args, v[index]))
 			    {
 				    this->compute_timer.resume();
 		        if(this->is_field(i))
@@ -76,13 +74,13 @@ void canonical_u_tensor_factory::compute_u1(GiNaC::ex& Hsq, GiNaC::ex& eps, std:
 		            assert(false);
 			        }
 		        this->compute_timer.stop();
-				    this->cache.store(U1_item, index, args, v[index]);
+				    this->cache.store(expression_item_types::U1_item, index, args, v[index]);
 			    }
       }
   }
 
 
-void canonical_u_tensor_factory::compute_u2(GiNaC::symbol& k, GiNaC::symbol& a, std::vector<GiNaC::ex>& v, flattener* fl)
+void canonical_u_tensor_factory::compute_u2(GiNaC::symbol& k, GiNaC::symbol& a, std::vector<GiNaC::ex>& v, flattener& fl)
   {
     GiNaC::ex Hsq = this->compute_Hsq();
     GiNaC::ex eps = this->compute_eps();
@@ -92,11 +90,11 @@ void canonical_u_tensor_factory::compute_u2(GiNaC::symbol& k, GiNaC::symbol& a, 
 
 
 void canonical_u_tensor_factory::compute_u2(GiNaC::symbol& k, GiNaC::symbol& a,
-                                            GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener* fl)
+                                            GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener& fl)
   {
-    fl->set_size(2*this->num_fields);
+    fl.set_size(2*this->num_fields);
     v.clear();
-    v.resize(fl->get_flattened_size(2));
+    v.resize(fl.get_flattened_size(2));
 
     std::vector<GiNaC::ex> args;
 		args.push_back(k);
@@ -109,9 +107,9 @@ void canonical_u_tensor_factory::compute_u2(GiNaC::symbol& k, GiNaC::symbol& a,
       {
         for(int j = 0; j < 2*this->num_fields; ++j)
           {
-		        unsigned int index = fl->flatten(i,j);
+		        unsigned int index = fl.flatten(i,j);
 
-		        if(!this->cache.query(U2_item, index, args, v[index]))
+		        if(!this->cache.query(expression_item_types::U2_item, index, args, v[index]))
 			        {
 				        this->compute_timer.resume();
 
@@ -148,7 +146,7 @@ void canonical_u_tensor_factory::compute_u2(GiNaC::symbol& k, GiNaC::symbol& a,
 
 		            v[index] = c;
 		            this->compute_timer.stop();
-				        this->cache.store(U2_item, index, args, v[index]);
+				        this->cache.store(expression_item_types::U2_item, index, args, v[index]);
 			        }
           }
       }
@@ -156,7 +154,7 @@ void canonical_u_tensor_factory::compute_u2(GiNaC::symbol& k, GiNaC::symbol& a,
 
 
 void canonical_u_tensor_factory::compute_u3(GiNaC::symbol& k1,
-                                            GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, std::vector<GiNaC::ex>& v, flattener* fl)
+                                            GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, std::vector<GiNaC::ex>& v, flattener& fl)
   {
     GiNaC::ex Hsq = this->compute_Hsq();
     GiNaC::ex eps = this->compute_eps();
@@ -167,11 +165,11 @@ void canonical_u_tensor_factory::compute_u3(GiNaC::symbol& k1,
 
 void canonical_u_tensor_factory::compute_u3(GiNaC::symbol& k1,
                                             GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a,
-                                            GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener* fl)
+                                            GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener& fl)
   {
-    fl->set_size(2*this->num_fields);
+    fl.set_size(2*this->num_fields);
     v.clear();
-    v.resize(fl->get_flattened_size(3));
+    v.resize(fl.get_flattened_size(3));
 
     std::vector<GiNaC::ex> args;
     args.push_back(k1);
@@ -188,9 +186,9 @@ void canonical_u_tensor_factory::compute_u3(GiNaC::symbol& k1,
           {
             for(int k = 0; k < 2*this->num_fields; ++k)
               {
-		            unsigned int index = fl->flatten(i,j,k);
+		            unsigned int index = fl.flatten(i,j,k);
 
-		            if(!this->cache.query(U3_item, index, args, v[index]))
+		            if(!this->cache.query(expression_item_types::U3_item, index, args, v[index]))
 			            {
 				            this->compute_timer.resume();
 
@@ -240,7 +238,7 @@ void canonical_u_tensor_factory::compute_u3(GiNaC::symbol& k1,
 
 		                v[index] = c;
 		                this->compute_timer.stop();
-		                this->cache.store(U3_item, index, args, v[index]);
+		                this->cache.store(expression_item_types::U3_item, index, args, v[index]);
 			            }
               }
           }
@@ -252,7 +250,7 @@ void canonical_u_tensor_factory::compute_u3(GiNaC::symbol& k1,
 
 
 void canonical_u_tensor_factory::compute_A(GiNaC::symbol& k1,
-                                           GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, std::vector<GiNaC::ex>& v, flattener* fl)
+                                           GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, std::vector<GiNaC::ex>& v, flattener& fl)
   {
     GiNaC::ex Hsq = this->compute_Hsq();
     GiNaC::ex eps = this->compute_eps();
@@ -263,11 +261,11 @@ void canonical_u_tensor_factory::compute_A(GiNaC::symbol& k1,
 
 void canonical_u_tensor_factory::compute_A(GiNaC::symbol& k1,
                                            GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps,
-                                           std::vector<GiNaC::ex>& v, flattener* fl)
+                                           std::vector<GiNaC::ex>& v, flattener& fl)
   {
-    fl->set_size(this->num_fields);
+    fl.set_size(this->num_fields);
     v.clear();
-    v.resize(fl->get_flattened_size(3));
+    v.resize(fl.get_flattened_size(3));
 
 #pragma omp parallel for schedule(dynamic)
     for(int i = 0; i < this->num_fields; ++i)
@@ -276,7 +274,7 @@ void canonical_u_tensor_factory::compute_A(GiNaC::symbol& k1,
           {
             for(int k = 0; k < this->num_fields; ++k)
               {
-                v[fl->flatten(i,j,k)] = this->compute_A_component(i, k1, j, k2, k, k3, a, Hsq, eps);
+                v[fl.flatten(i,j,k)] = this->compute_A_component(i, k1, j, k2, k, k3, a, Hsq, eps);
               }
           }
       }
@@ -284,7 +282,7 @@ void canonical_u_tensor_factory::compute_A(GiNaC::symbol& k1,
 
 
 void canonical_u_tensor_factory::compute_B(GiNaC::symbol& k1,
-                                           GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, std::vector<GiNaC::ex>& v, flattener* fl)
+                                           GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, std::vector<GiNaC::ex>& v, flattener& fl)
   {
     GiNaC::ex Hsq = this->compute_Hsq();
     GiNaC::ex eps = this->compute_eps();
@@ -295,11 +293,11 @@ void canonical_u_tensor_factory::compute_B(GiNaC::symbol& k1,
 
 void canonical_u_tensor_factory::compute_B(GiNaC::symbol& k1,
                                            GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps,
-                                           std::vector<GiNaC::ex>& v, flattener* fl)
+                                           std::vector<GiNaC::ex>& v, flattener& fl)
   {
-    fl->set_size(this->num_fields);
+    fl.set_size(this->num_fields);
     v.clear();
-    v.resize(fl->get_flattened_size(3));
+    v.resize(fl.get_flattened_size(3));
 
 #pragma omp parallel for schedule(dynamic)
     for(int i = 0; i < this->num_fields; ++i)
@@ -308,7 +306,7 @@ void canonical_u_tensor_factory::compute_B(GiNaC::symbol& k1,
           {
             for(int k = 0; k < this->num_fields; ++k)
               {
-                v[fl->flatten(i,j,k)] = this->compute_B_component(i, k1, j, k2, k, k3, a, Hsq, eps);
+                v[fl.flatten(i,j,k)] = this->compute_B_component(i, k1, j, k2, k, k3, a, Hsq, eps);
               }
           }
       }
@@ -316,7 +314,7 @@ void canonical_u_tensor_factory::compute_B(GiNaC::symbol& k1,
 
 
 void canonical_u_tensor_factory::compute_C(GiNaC::symbol& k1,
-                                           GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, std::vector<GiNaC::ex>& v, flattener* fl)
+                                           GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, std::vector<GiNaC::ex>& v, flattener& fl)
   {
     GiNaC::ex Hsq = this->compute_Hsq();
     GiNaC::ex eps = this->compute_eps();
@@ -327,11 +325,11 @@ void canonical_u_tensor_factory::compute_C(GiNaC::symbol& k1,
 
 void canonical_u_tensor_factory::compute_C(GiNaC::symbol& k1,
                                            GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps,
-                                           std::vector<GiNaC::ex>& v, flattener* fl)
+                                           std::vector<GiNaC::ex>& v, flattener& fl)
   {
-    fl->set_size(this->num_fields);
+    fl.set_size(this->num_fields);
     v.clear();
-    v.resize(fl->get_flattened_size(3));
+    v.resize(fl.get_flattened_size(3));
 
 #pragma omp parallel for schedule(dynamic)
     for(int i = 0; i < this->num_fields; ++i)
@@ -340,14 +338,14 @@ void canonical_u_tensor_factory::compute_C(GiNaC::symbol& k1,
           {
             for(int k = 0; k < this->num_fields; ++k)
               {
-                v[fl->flatten(i,j,k)] = this->compute_C_component(i, k1, j, k2, k, k3, a, Hsq, eps);
+                v[fl.flatten(i,j,k)] = this->compute_C_component(i, k1, j, k2, k, k3, a, Hsq, eps);
               }
           }
       }
   }
 
 
-void canonical_u_tensor_factory::compute_M(std::vector<GiNaC::ex>& v, flattener* fl)
+void canonical_u_tensor_factory::compute_M(std::vector<GiNaC::ex>& v, flattener& fl)
   {
     GiNaC::ex Hsq = this->compute_Hsq();
     GiNaC::ex eps = this->compute_eps();
@@ -356,18 +354,18 @@ void canonical_u_tensor_factory::compute_M(std::vector<GiNaC::ex>& v, flattener*
   }
 
 
-void canonical_u_tensor_factory::compute_M(GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener* fl)
+void canonical_u_tensor_factory::compute_M(GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener& fl)
   {
-    fl->set_size(this->num_fields);
+    fl.set_size(this->num_fields);
     v.clear();
-    v.resize(fl->get_flattened_size(2));
+    v.resize(fl.get_flattened_size(2));
 
 #pragma omp parallel for schedule(dynamic)
     for(int i = 0; i < this->num_fields; ++i)
       {
         for(int j = 0; j < this->num_fields; ++j)
           {
-            v[fl->flatten(i,j)] = this->compute_M_component(i, j, Hsq, eps);
+            v[fl.flatten(i,j)] = this->compute_M_component(i, j, Hsq, eps);
           }
       }
   }
@@ -376,11 +374,11 @@ void canonical_u_tensor_factory::compute_M(GiNaC::ex& Hsq, GiNaC::ex& eps, std::
 // *****************************************************************************
 
 
-void canonical_u_tensor_factory::compute_zeta_xfm_1(GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener* fl)
+void canonical_u_tensor_factory::compute_zeta_xfm_1(GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener& fl)
   {
-    fl->set_size(2*this->num_fields);
+    fl.set_size(2*this->num_fields);
     v.clear();
-    v.resize(fl->get_flattened_size(1));
+    v.resize(fl.get_flattened_size(1));
 
     std::vector<GiNaC::ex> args;
     args.push_back(Hsq);
@@ -391,9 +389,9 @@ void canonical_u_tensor_factory::compute_zeta_xfm_1(GiNaC::ex& Hsq, GiNaC::ex& e
 #pragma omp parallel for schedule(dynamic)
     for(int i = 0; i < 2*this->num_fields; ++i)
       {
-		    unsigned int index = fl->flatten(i);
+		    unsigned int index = fl.flatten(i);
 
-		    if(!this->cache.query(zxfm1_item, index, args, v[index]))
+		    if(!this->cache.query(expression_item_types::zxfm1_item, index, args, v[index]))
 			    {
 				    this->compute_timer.resume();
 		        if(this->is_field(i))
@@ -409,7 +407,7 @@ void canonical_u_tensor_factory::compute_zeta_xfm_1(GiNaC::ex& Hsq, GiNaC::ex& e
 		            assert(false);
 			        }
 				    this->compute_timer.stop();
-				    this->cache.store(zxfm1_item, index, args, v[index]);
+				    this->cache.store(expression_item_types::zxfm1_item, index, args, v[index]);
 			    }
       }
   }
@@ -417,11 +415,11 @@ void canonical_u_tensor_factory::compute_zeta_xfm_1(GiNaC::ex& Hsq, GiNaC::ex& e
 
 void canonical_u_tensor_factory::compute_zeta_xfm_2(GiNaC::symbol& k, GiNaC::symbol& k1, GiNaC::symbol& k2,
                                                     GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps,
-                                                    std::vector<GiNaC::ex>& v, flattener* fl)
+                                                    std::vector<GiNaC::ex>& v, flattener& fl)
   {
-    fl->set_size(2*this->num_fields);
+    fl.set_size(2*this->num_fields);
     v.clear();
-    v.resize(fl->get_flattened_size(2));
+    v.resize(fl.get_flattened_size(2));
 
     std::vector<GiNaC::ex> args;
     args.push_back(k1);
@@ -435,9 +433,9 @@ void canonical_u_tensor_factory::compute_zeta_xfm_2(GiNaC::symbol& k, GiNaC::sym
       {
         for(int j = 0; j < 2*this->num_fields; ++j)
           {
-		        unsigned int index = fl->flatten(i,j);
+		        unsigned int index = fl.flatten(i,j);
 
-		        if(!this->cache.query(zxfm2_item, index, args, v[index]))
+		        if(!this->cache.query(expression_item_types::zxfm2_item, index, args, v[index]))
 			        {
 				        this->compute_timer.resume();
 
@@ -466,7 +464,7 @@ void canonical_u_tensor_factory::compute_zeta_xfm_2(GiNaC::symbol& k, GiNaC::sym
 
 		            v[index] = c;
 				        this->compute_timer.stop();
-				        this->cache.store(zxfm2_item, index, args, v[index]);
+				        this->cache.store(expression_item_types::zxfm2_item, index, args, v[index]);
 			        }
 
           }
@@ -526,11 +524,11 @@ GiNaC::ex canonical_u_tensor_factory::compute_zeta_xfm_2_fp(unsigned int m, unsi
 // *****************************************************************************
 
 
-void canonical_u_tensor_factory::compute_deltaN_xfm_1(std::vector<GiNaC::ex>& v, flattener* fl)
+void canonical_u_tensor_factory::compute_deltaN_xfm_1(std::vector<GiNaC::ex>& v, flattener& fl)
 	{
-    fl->set_size(2*this->num_fields);
+    fl.set_size(2*this->num_fields);
     v.clear();
-    v.resize(fl->get_flattened_size(1));
+    v.resize(fl.get_flattened_size(1));
 
     GiNaC::ex Hsq  = this->compute_Hsq();
     GiNaC::ex eps  = this->compute_eps();
@@ -540,9 +538,9 @@ void canonical_u_tensor_factory::compute_deltaN_xfm_1(std::vector<GiNaC::ex>& v,
 #pragma omp parallel for schedule(dynamic)
     for(int i = 0; i < 2*this->num_fields; ++i)
 	    {
-		    unsigned int index = fl->flatten(i);
+		    unsigned int index = fl.flatten(i);
 
-		    if(!this->cache.query(dN1_item, index, v[index]))
+		    if(!this->cache.query(expression_item_types::dN1_item, index, v[index]))
 			    {
 				    this->compute_timer.resume();
 		        if(this->is_field(i))
@@ -558,17 +556,17 @@ void canonical_u_tensor_factory::compute_deltaN_xfm_1(std::vector<GiNaC::ex>& v,
 		            assert(false);
 			        }
 						this->compute_timer.stop();
-				    this->cache.store(dN1_item, index, v[index]);
+				    this->cache.store(expression_item_types::dN1_item, index, v[index]);
 			    }
 	    }
 	}
 
 
-void canonical_u_tensor_factory::compute_deltaN_xfm_2(std::vector<GiNaC::ex>& v, flattener* fl)
+void canonical_u_tensor_factory::compute_deltaN_xfm_2(std::vector<GiNaC::ex>& v, flattener& fl)
 	{
-    fl->set_size(2*this->num_fields);
+    fl.set_size(2*this->num_fields);
     v.clear();
-    v.resize(fl->get_flattened_size(2));
+    v.resize(fl.get_flattened_size(2));
 
     GiNaC::ex Hsq  = this->compute_Hsq();
     GiNaC::ex eps  = this->compute_eps();
@@ -595,9 +593,9 @@ void canonical_u_tensor_factory::compute_deltaN_xfm_2(std::vector<GiNaC::ex>& v,
 	    {
         for(int j = 0; j < 2*this->num_fields; ++j)
 	        {
-		        unsigned int index = fl->flatten(i,j);
+		        unsigned int index = fl.flatten(i,j);
 
-		        if(!this->cache.query(dN2_item, index, v[index]))
+		        if(!this->cache.query(expression_item_types::dN2_item, index, v[index]))
 			        {
 				        this->compute_timer.resume();
 		            v[index] = -1/(2*dotH) * diff(diff(Hsq, this->coordinate(i)), this->coordinate(j))
@@ -605,7 +603,7 @@ void canonical_u_tensor_factory::compute_deltaN_xfm_2(std::vector<GiNaC::ex>& v,
 			            - diff(1/(2*dotH), this->coordinate(j)) * diff(Hsq, this->coordinate(i))
 			            + 1/(2*dotH) * p_sum * diff(Hsq, this->coordinate(i)) * diff(Hsq, this->coordinate(j));
 				        this->compute_timer.stop();
-				        this->cache.store(dN2_item, index, v[index]);
+				        this->cache.store(expression_item_types::dN2_item, index, v[index]);
 			        }
 	        }
 	    }
@@ -665,7 +663,7 @@ GiNaC::ex canonical_u_tensor_factory::compute_A_component(unsigned int i, GiNaC:
 
     GiNaC::ex c = 0;
 
-		if(!this->cache.query(A_item, index, args, c))
+		if(!this->cache.query(expression_item_types::A_item, index, args, c))
 			{
 				this->compute_timer.resume();
 
@@ -704,7 +702,7 @@ GiNaC::ex canonical_u_tensor_factory::compute_A_component(unsigned int i, GiNaC:
 
 				this->compute_timer.stop();
 
-				this->cache.store(A_item, index, args, c);
+				this->cache.store(expression_item_types::A_item, index, args, c);
 			}
 
     return(c);
@@ -733,7 +731,7 @@ GiNaC::ex canonical_u_tensor_factory::compute_B_component(unsigned int i, GiNaC:
 
     GiNaC::ex c = 0;
 
-		if(!this->cache.query(B_item, index, args, c))
+		if(!this->cache.query(expression_item_types::B_item, index, args, c))
 			{
 				this->compute_timer.resume();
 
@@ -754,7 +752,7 @@ GiNaC::ex canonical_u_tensor_factory::compute_B_component(unsigned int i, GiNaC:
 
 				this->compute_timer.stop();
 
-				this->cache.store(B_item, index, args, c);
+				this->cache.store(expression_item_types::B_item, index, args, c);
 			}
 
     return(c);
@@ -783,7 +781,7 @@ GiNaC::ex canonical_u_tensor_factory::compute_C_component(unsigned int i, GiNaC:
 		
     GiNaC::ex c = 0;
 
-    if(!this->cache.query(C_item, index, args, c))
+    if(!this->cache.query(expression_item_types::C_item, index, args, c))
 	    {
 		    this->compute_timer.resume();
 
@@ -800,7 +798,7 @@ GiNaC::ex canonical_u_tensor_factory::compute_C_component(unsigned int i, GiNaC:
 
 		    this->compute_timer.stop();
 
-		    this->cache.store(C_item, index, args, c);
+		    this->cache.store(expression_item_types::C_item, index, args, c);
 	    }
 
     return(c);
@@ -833,7 +831,7 @@ GiNaC::ex canonical_u_tensor_factory::compute_M_component(unsigned int i, unsign
 
     GiNaC::ex v;
 
-		if(!this->cache.query(M_item, index, args, v))
+		if(!this->cache.query(expression_item_types::M_item, index, args, v))
 			{
 				this->compute_timer.resume();
 
@@ -851,7 +849,7 @@ GiNaC::ex canonical_u_tensor_factory::compute_M_component(unsigned int i, unsign
 
 				this->compute_timer.stop();
 
-				this->cache.store(M_item, index, args, v);
+				this->cache.store(expression_item_types::M_item, index, args, v);
 			}
 
     return(v);

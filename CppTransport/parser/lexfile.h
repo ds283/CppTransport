@@ -17,25 +17,27 @@
 
 #include "filestack.h"
 
+#include "boost/filesystem/operations.hpp"
+
 
 // reading from the stream is a finite state machine
 // the available internal states are:
 
-enum lexfile_state
+enum class lexfile_state
 	{
-    lexfile_unready,  // current value of c does not make sense; need to read a new one
-    lexfile_eof,      // at end of file
-    lexfile_error,    // an error state
-    lexfile_ready     // current value of c is valid; can simply return this
+    unready,  // current value of c does not make sense; need to read a new one
+    eof,      // at end of file
+    error,    // an error state
+    ready     // current value of c is valid; can simply return this
 	};
 
 // the states reported via the API are:
 
-enum lexfile_outcome
+enum class lexfile_outcome
 	{
-    lex_ok,       // everything was ok
-    lex_eof,      // we are at the end of the file
-    lex_error     // there was an error
+    ok,       // everything was ok
+    eof,      // we are at the end of the file
+    error     // there was an error
 	};
 
 
@@ -49,7 +51,7 @@ class lexfile
   public:
 
     //! constructor
-    lexfile(const std::string& fnam, filestack& s);
+    lexfile(const boost::filesystem::path& fnam, filestack& s);
 
     //! destructor
     ~lexfile();
@@ -81,7 +83,7 @@ class lexfile
   private:
 
     //! filename
-    std::string file;
+    boost::filesystem::path file;
 
     //! stream representing the input
     std::ifstream stream;

@@ -48,7 +48,6 @@
 
 #include "msg_en.h"
 
-#include "error.h"
 #include "cse.h"
 
 
@@ -102,28 +101,32 @@ std::string cse::temporaries(const std::string& t)
       {
         std::ostringstream msg;
         msg << ERROR_MISSING_LHS << " '" << t << "'";
-        error(msg.str());
+
+        error_context err_ctx(this->data_payload.get_stack(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
+        err_ctx.error(msg.str());
         ok = false;
       }
     if((rhs_pos = t.find("$2")) == std::string::npos)
       {
         std::ostringstream msg;
         msg << ERROR_MISSING_RHS << " '" << t << "'";
-        error(msg.str());
+
+        error_context err_ctx(this->data_payload.get_stack(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
+        err_ctx.error(msg.str());
         ok = false;
       }
+
+    std::string left  = t.substr(0, lhs_pos);
+    std::string mid   = t.substr(lhs_pos+2, rhs_pos-lhs_pos-2);
+    std::string right = t.substr(rhs_pos+2, std::string::npos);
 
     if(ok)
       {
         // deposit each declaration into the output stream
-        for(size_t i = 0; i < this->decls.size(); ++i)
+        for(const std::pair<std::string, std::string>& decl: this->decls)
           {
-            std::string line = t;
-
             // replace LHS and RHS macros in the template
-            if((lhs_pos = line.find("$1")) != std::string::npos) line.replace(lhs_pos, (size_t)2, this->decls[i].first);
-            if((rhs_pos = line.find("$2")) != std::string::npos) line.replace(rhs_pos, (size_t)2, this->decls[i].second);
-            out << line << '\n';
+            out << left << decl.first << mid << decl.second << right << '\n';
           }
       }
     else

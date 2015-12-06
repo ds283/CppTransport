@@ -18,17 +18,34 @@ namespace cpp
 
     class vexcl_steppers: public ::macro_packages::replacement_rule_package
       {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
       public:
-        vexcl_steppers(translation_unit* u, language_printer& p)
-          : ::macro_packages::replacement_rule_package(u, p)
+
+        //! constructor
+        vexcl_steppers(translator_data& p, language_printer& prn)
+          : ::macro_packages::replacement_rule_package(p, prn)
           {
           }
+
+        //! destructor
+        virtual ~vexcl_steppers() = default;
+
+
+        // INTERFACE
+
+      public:
 
         const std::vector<macro_packages::simple_rule> get_pre_rules();
         const std::vector<macro_packages::simple_rule> get_post_rules();
         const std::vector<macro_packages::index_rule>  get_index_rules();
 
+
+        // INTERFACE
+
       protected:
+
         std::string replace_backg_stepper(const std::vector<std::string>& args);
         std::string replace_pert_stepper (const std::vector<std::string>& args);
         std::string stepper_name         (const std::vector<std::string>& args);

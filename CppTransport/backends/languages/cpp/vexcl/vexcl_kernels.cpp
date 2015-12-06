@@ -85,8 +85,8 @@ namespace cpp
           {
             std::string kernel_file = args[0];
 
-            output_stack& os = this->unit->get_stack();
-            translator&   t  = this->unit->get_translator();
+            output_stack& os = this->data_payload.get_stack();
+            translator t(this->data_payload);
 
             buffer& buf = os.top_buffer();
             enum process_type type = os.top_process_type();
@@ -109,7 +109,8 @@ namespace cpp
             std::function<std::string(const std::string&)> filter = std::bind(to_printable, std::placeholders::_1, false, true);
 
             // translate into our new in-memory buffer, preserving the type of translation (ie. core or implementation)
-            unsigned int replacements = t.translate(kernel_file, kernel_buffer, type, &filter);
+            error_context ctx(this->data_payload.get_stack(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
+            unsigned int replacements = t.translate(kernel_file, ctx, kernel_buffer, type, &filter);
 
             // merge new buffer into old one
             buf.merge(kernel_buffer);

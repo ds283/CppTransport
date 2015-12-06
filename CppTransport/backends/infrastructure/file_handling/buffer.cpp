@@ -7,10 +7,10 @@
 
 #include <iostream>
 #include <fstream>
-
 #include <list>
 #include <sstream>
 #include <vector>
+#include <stdexcept>
 
 #include "core.h"
 #include "buffer.h"
@@ -38,7 +38,8 @@ buffer::buffer(const std::string& fn, unsigned int cp)
 			{
 		    std::ostringstream msg;
 		    msg << ERROR_CPP_BUFFER_WRITE << " '" << fn << "'";
-		    error(msg.str());
+
+        throw std::runtime_error(msg.str());
 			}
   }
 

@@ -21,10 +21,17 @@ namespace cpp
 
       public:
 
-        cpp_cse(unsigned int s, language_printer& p, bool d=true, std::string k=OUTPUT_DEFAULT_CPP_CSE_TEMPORARY_NAME)
-          : cse(s, p, d, k)
+        //! s  = initial serial number for temporaries, typically 0 for a new translation unit
+        //! p  = printer appropriate for language
+        //! pd = payload from translation_unit
+        //! k  = kernel name for temporary identifiers
+        cpp_cse(unsigned int s, language_printer& p, translator_data& pd, std::string k=OUTPUT_DEFAULT_CPP_CSE_TEMPORARY_NAME)
+          : cse(s, p, pd, k)
           {
           }
+
+        //! destructor is default
+        virtual ~cpp_cse() = default;
 
 
 		    // INTERNAL API

@@ -22,8 +22,10 @@
 namespace shared
   {
 
-    kernel_argument_macros::kernel_argument_macros(translation_unit* u, language_printer& p, std::string q, std::string l)
-      : ::macro_packages::replacement_rule_package(u, p), qualifier(q), label(l)
+    kernel_argument_macros::kernel_argument_macros(translator_data& p, language_printer& prn, std::string q, std::string l)
+      : ::macro_packages::replacement_rule_package(p, prn),
+        qualifier(q),
+        label(l)
       {
 //        printer->set_label(label);
       }
@@ -89,7 +91,7 @@ namespace shared
 
     std::string kernel_argument_macros::args_params(const std::vector<std::string> &args)
       {
-        std::vector<std::string> list = this->unit->get_param_list();
+        std::vector<std::string> list = this->data_payload.get_param_list();
 
         std::ostringstream out;
 
@@ -116,7 +118,7 @@ namespace shared
         A.range  = INDEX_RANGE_ALL;
         indices.push_back(A);
 
-        assignment_package assigner(this->unit->get_number_fields(), this->unit->get_number_parameters(), this->unit->get_index_order());
+        assignment_package assigner(this->data_payload.get_number_fields(), this->data_payload.get_number_parameters(), this->data_payload.get_index_order());
 
         std::vector< std::vector<struct index_assignment> > assignment = assigner.assign(indices);
 
@@ -151,7 +153,7 @@ namespace shared
         B.range  = INDEX_RANGE_ALL;
         indices.push_back(B);
 
-        assignment_package assigner(this->unit->get_number_fields(), this->unit->get_number_parameters(), this->unit->get_index_order());
+        assignment_package assigner(this->data_payload.get_number_fields(), this->data_payload.get_number_parameters(), this->data_payload.get_index_order());
 
         std::vector< std::vector<struct index_assignment> > assignment = assigner.assign(indices);
 
@@ -190,7 +192,7 @@ namespace shared
         C.range  = INDEX_RANGE_ALL;
         indices.push_back(C);
 
-        assignment_package assigner(this->unit->get_number_fields(), this->unit->get_number_parameters(), this->unit->get_index_order());
+        assignment_package assigner(this->data_payload.get_number_fields(), this->data_payload.get_number_parameters(), this->data_payload.get_index_order());
 
         std::vector< std::vector<struct index_assignment> > assignment = assigner.assign(indices);
 

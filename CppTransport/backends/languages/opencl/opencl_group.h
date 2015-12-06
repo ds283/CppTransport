@@ -23,23 +23,24 @@
 
 class opencl_group: public package_group
   {
-  public:
-    opencl_group(translation_unit* u, ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& cache);
-    ~opencl_group();
 
-    virtual void report_end_of_input() override;
+    // CONSTRUCTOR, DESTRUCTOR
+
+  public:
+
+    //! constructor
+    opencl_group(translator_data& p, ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& cache);
+
+    //! destructor is default
+    ~opencl_group() = default;
+
+
+    // INTERNAL DATA
 
   protected:
+
     opencl::opencl_printer              printer;
 
-    macro_packages::fundamental*        f;
-    macro_packages::flow_tensors*       ft;
-    macro_packages::lagrangian_tensors* lt;
-    macro_packages::utensors*           ut;
-    macro_packages::gauge_xfm*          xf;
-    macro_packages::temporary_pool*     tp;
-    macro_packages::summation*          su;
-    shared::kernel_argument_macros*     ka;
   };
 
 

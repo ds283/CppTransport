@@ -170,7 +170,7 @@ namespace transport
     template <typename number>
     void task_manager<number>::error(const std::string& msg)
       {
-        bool colour = this->local_env.get_terminal_colour_support() && this->arg_cache.get_colour_output();
+        bool colour = this->local_env.has_colour_terminal_support() && this->arg_cache.get_colour_output();
 
         if(colour) std::cout << ANSI_BOLD_RED;
         std::cout << msg << '\n';
@@ -181,7 +181,7 @@ namespace transport
     template <typename number>
     void task_manager<number>::warn(const std::string& msg)
       {
-        bool colour = this->local_env.get_terminal_colour_support() && this->arg_cache.get_colour_output();
+        bool colour = this->local_env.has_colour_terminal_support() && this->arg_cache.get_colour_output();
 
         if(colour) std::cout << ANSI_BOLD_MAGENTA;
         std::cout << CPPTRANSPORT_TASK_MANAGER_WARNING_LABEL << " ";
@@ -193,7 +193,7 @@ namespace transport
     template <typename number>
     void task_manager<number>::message(const std::string& msg)
       {
-        bool colour = this->local_env.get_terminal_colour_support() && this->arg_cache.get_colour_output();
+        bool colour = this->local_env.has_colour_terminal_support() && this->arg_cache.get_colour_output();
 
         if(this->arg_cache.get_verbose())
           {

@@ -2,53 +2,17 @@
 // Created by David Seery on 12/06/2013.
 // Copyright (c) 2013-15 University of Sussex. All rights reserved.
 //
-// To change the template use AppCode | Preferences | File Templates.
-//
 
 #ifndef __msg_H_
 #define __msg_H_
 
-
-// Command line options
-
-#define VERSION_SWITCH                "version"
-#define VERSION_HELP                  "output version information"
-
-#define HELP_SWITCH                   "help"
-#define HELP_HELP                     "obtain brief description of command-line options"
-
-#define VERBOSE_SWITCH                "verbose,v"
-#define VERBOSE_SWITCH_LONG           "verbose"
-#define VERBOSE_HELP                  "enable verbose output"
-
-#define INCLUDE_SWITCH                "include,I"
-#define INCLUDE_SWITCH_LONG           "include"
-#define INCLUDE_HELP                  "add specified path to search list"
-
-#define CORE_OUTPUT_SWITCH            "core-output"
-#define CORE_OUTPUT_HELP              "specify name of core header"
-
-#define IMPLEMENTATION_OUTPUT_SWITCH  "implementation-output"
-#define IMPLEMENTATION_OUTPUT_HELP    "specify name of implementation header"
-
-#define NO_CSE_SWITCH                 "no-cse"
-#define NO_CSE_HELP                   "disable common sub-expression elimination"
-
-#define NO_COLOUR_SWITCH              "no-colour"
-#define NO_COLOUR_HELP                "disable colourized output"
-
-#define NO_COLOR_SWITCH               "no-color"
-#define NO_COLOR_HELP                 "disable colourized output"
-
-#define INPUT_FILE_SWITCH             "input-file"
-#define INPUT_FILE_HELP               "do not use"
-
-#define MISC_OPTIONS                  "Miscellaneous options"
-#define CONFIG_OPTIONS                "Configuration options"
-#define HIDDEN_OPTIONS                "Hidden options"
-
-
 // Messages
+
+#define ERROR_NO_ERROR_HANDLER                "Internal error: no registered error handler"
+#define ERROR_NO_WARNING_HANDLER              "Internal error: no registered warning handler"
+#define ERROR_NO_MESSAGE_HANDLER              "Internal error: no registered message handler"
+#define ERROR_NOT_FULL_CONTEXT                "Internal error: attempt to unpack error context without full context data"
+#define ERROR_NO_STACK_REGISTERED             "Internal error: attempt to unpack error context with no filestack data"
 
 #define ERROR_MESSAGE_AT_LINE                 "at line"
 #define ERROR_MESSAGE_WRAP_PAD                "  "
@@ -92,6 +56,7 @@
 #define ERROR_EXPECTED_ELLIPSIS               "Expected '...', not '..'"
 
 #define ERROR_SYMBOL_EXISTS                   "Redefinition of existing symbol"
+#define NOTIFY_DUPLICATION_DEFINITION_WAS     "Location of original definition for symbol"
 #define ERROR_IDENTIFIER_LOOKUP               "Lookup of identifier name failed"
 #define ERROR_STRING_LOOKUP                   "Lookup of string literal value failed"
 #define ERROR_INTEGER_LOOKUP                  "Lookup of integer literal value failed"

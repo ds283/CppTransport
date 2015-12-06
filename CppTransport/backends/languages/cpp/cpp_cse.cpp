@@ -63,7 +63,8 @@ namespace cpp
 
         if(n != 2)
           {
-            error(ERROR_CSE_POWER_ARGUMENTS);
+            error_context err_ctx(this->data_payload.get_stack(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
+            err_ctx.error(ERROR_CSE_POWER_ARGUMENTS);
             out << "std::pow(" << this->print_operands(expr, ",", use_count) << ")";
           }
         else

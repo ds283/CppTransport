@@ -21,7 +21,7 @@
 #include "cse.h"
 #include "flatten.h"
 #include "package_group.h"
-#include "translation_unit.h"
+#include "translator_data.h"
 #include "replacement_rule_definitions.h"
 
 #include <boost/timer/timer.hpp>
@@ -44,7 +44,7 @@ class macro_agent
   public:
 
 		// constructor
-		macro_agent(translation_unit* u, package_group& pkg, std::string pf, std::string sp,
+		macro_agent(translator_data& p, package_group& pkg, std::string pf, std::string sp,
 		            unsigned int dm = DEFAULT_RECURSION_DEPTH);
 
 
@@ -80,27 +80,27 @@ class macro_agent
 
   private:
 
-    unsigned int    fields;
-    unsigned int    parameters;
-    enum indexorder order;
+    unsigned int                              fields;
+    unsigned int                              parameters;
+    enum indexorder                           order;
 
-    unsigned int    recursion_depth;
-    unsigned int    recursion_max;
+    unsigned int                              recursion_depth;
+    unsigned int                              recursion_max;
 
-    translation_unit* unit;
+    translator_data&                          data_payload;
 
     std::vector<macro_packages::simple_rule>& pre_rule_cache;
     std::vector<macro_packages::simple_rule>& post_rule_cache;
     std::vector<macro_packages::index_rule>&  index_rule_cache;
 
-    const std::string prefix;
-    const std::string split;
+    const std::string                         prefix;
+    const std::string                         split;
 
 		// timer to measure performance during macro replacement
-		boost::timer::cpu_timer timer;
+		boost::timer::cpu_timer                   timer;
 
 		// measure time spent tokenizing
-		boost::timer::cpu_timer tokenization_timer;
+		boost::timer::cpu_timer                   tokenization_timer;
 
 	};
 

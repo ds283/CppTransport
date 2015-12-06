@@ -106,7 +106,7 @@ namespace macro_packages
       {
         assert(args.size() == 2);
 
-        symbol_factory& sym_factory = this->unit->get_symbol_factory();
+        symbol_factory& sym_factory = this->data_payload.get_symbol_factory();
 
         GiNaC::symbol Hsq_symbol = sym_factory.get_symbol(args.size() >= 1 ? args[0] : this->default_Hsq);
         GiNaC::symbol eps_symbol = sym_factory.get_symbol(args.size() >= 2 ? args[1] : this->default_eps);
@@ -114,7 +114,7 @@ namespace macro_packages
         GiNaC::ex     eps = eps_symbol;
 
         std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
-        this->u_factory->compute_zeta_xfm_1(Hsq, eps, *container, this->fl);
+        this->u_factory->compute_zeta_xfm_1(Hsq, eps, *container, *this->fl);
 
         cse_map* map = this->cse_worker->map_factory(container);
 
@@ -126,7 +126,7 @@ namespace macro_packages
       {
         assert(args.size() == 6);
 
-        symbol_factory& sym_factory = this->unit->get_symbol_factory();
+        symbol_factory& sym_factory = this->data_payload.get_symbol_factory();
 
         GiNaC::symbol  k = sym_factory.get_symbol(args.size() >= 1 ? args[0] : this->default_k);
         GiNaC::symbol k1 = sym_factory.get_symbol(args.size() >= 2 ? args[1] : this->default_k1);
@@ -139,7 +139,7 @@ namespace macro_packages
         GiNaC::ex     eps = eps_symbol;
 
         std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
-        this->u_factory->compute_zeta_xfm_2(k, k1, k2, a, Hsq, eps, *container, this->fl);
+        this->u_factory->compute_zeta_xfm_2(k, k1, k2, a, Hsq, eps, *container, *this->fl);
 
         cse_map* map = this->cse_worker->map_factory(container);
 
@@ -150,7 +150,7 @@ namespace macro_packages
     void* gauge_xfm::pre_deltaN_xfm_1(const std::vector<std::string>& args)
 	    {
         std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
-        this->u_factory->compute_deltaN_xfm_1(*container, this->fl);
+        this->u_factory->compute_deltaN_xfm_1(*container, *this->fl);
 
         cse_map* map = this->cse_worker->map_factory(container);
 
@@ -161,7 +161,7 @@ namespace macro_packages
     void* gauge_xfm::pre_deltaN_xfm_2(const std::vector<std::string>& args)
 	    {
         std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
-        this->u_factory->compute_deltaN_xfm_2(*container, this->fl);
+        this->u_factory->compute_deltaN_xfm_2(*container, *this->fl);
 
         cse_map* map = this->cse_worker->map_factory(container);
 

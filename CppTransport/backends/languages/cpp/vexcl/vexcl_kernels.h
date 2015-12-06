@@ -17,18 +17,36 @@ namespace cpp
 
     class vexcl_kernels : public ::macro_packages::replacement_rule_package
       {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
       public:
-        vexcl_kernels(translation_unit* u, language_printer& p)
-          : ::macro_packages::replacement_rule_package(u, p)
+
+        //! constructor
+        vexcl_kernels(translator_data& p, language_printer& prn)
+          : ::macro_packages::replacement_rule_package(p, prn)
           {
           }
+
+        //! destructor is default
+        virtual ~vexcl_kernels() = default;
+
+
+        // INTERFACE
+
+      public:
 
         const std::vector<macro_packages::simple_rule> get_pre_rules  ();
         const std::vector<macro_packages::simple_rule> get_post_rules ();
         const std::vector<macro_packages::index_rule>  get_index_rules();
 
+
+        // INTERNAL API
+
       protected:
+
         std::string import_kernel(const std::vector<std::string>& args);
+
       };
 
   } // namespace cpp

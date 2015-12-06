@@ -9,16 +9,14 @@
 #include "formatter.h"
 
 
-package_group::package_group(translation_unit* u, const std::string& cmnt, ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& cache)
-  : unit(u),
+package_group::package_group(translator_data& p, const std::string& cmnt, ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& cache)
+  : data_payload(p),
     cse_worker(nullptr),    // should be set to a sensible value in the derived class constructor
     comment_string(cmnt),
 		statistics_reported(false)
   {
-    assert(unit != nullptr);
-
-    u_factory = make_u_tensor_factory(unit, cache);
-    fl        = new flattener(1);
+    u_factory = make_u_tensor_factory(data_payload, cache);
+    fl        = std::make_unique<flattener>(1);
   }
 
 
@@ -33,28 +31,28 @@ package_group::~package_group()
 						<< " (" << MESSAGE_SYMBOLIC_COMPUTE_TIME << " " << format_time(this->u_factory->get_symbolic_compute_time())
 			      << ", " << MESSAGE_CSE_TIME << " " << format_time(this->cse_worker->get_cse_time()) << ")";
 
-		    this->unit->print_advisory(msg.str());
+		    this->data_payload.message(msg.str());
 			}
-
-    delete this->u_factory;
-    delete this->fl;
-		delete this->cse_worker;   // ! warning: assumes cse_worker has been set by the derived class constructor
   }
 
 
-void package_group::push_back(macro_packages::replacement_rule_package* package)
+void package_group::push_back(std::unique_ptr<macro_packages::replacement_rule_package>&& package)
   {
-    assert(this->u_factory != nullptr);
-    assert(this->fl != nullptr);
-    assert(this->cse_worker != nullptr);
+    // establish that everything has been set up correctly
+    assert(package);
+    assert(this->u_factory);
+    assert(this->fl);
+    assert(this->cse_worker);
 
-    // store this rule package in our list
-    this->packages.push_back(package);
-
+    // at this point, ownership of the managed pointer lies in the 'package' argument
     // populate the rule package with information about the package environment
-    package->set_u_factory(this->u_factory);
-    package->set_flattener(this->fl);
-    package->set_cse_worker(this->cse_worker);    // ! warning: assumes cse_worker has been set by the derived class constructor
+    package->set_u_factory(this->u_factory.get());
+    package->set_flattener(this->fl.get());
+    package->set_cse_worker(this->cse_worker.get());    // ! warning: assumes cse_worker has been set by the derived class constructor
+
+    // store this rule package in our list; after this call
+    // ownership of the managed pointer lies in the 'packages' list
+    this->packages.emplace_back(std::move(package));
 
     // rebuild ruleset caches
     this->build_pre_ruleset();
@@ -73,9 +71,9 @@ void package_group::build_pre_ruleset()
   {
     this->pre_ruleset.clear();
 
-    for(std::list<macro_packages::replacement_rule_package*>::iterator t = this->packages.begin(); t != this->packages.end(); ++t)
+    for(std::unique_ptr<macro_packages::replacement_rule_package>& pkg : this->packages)
       {
-        std::vector<macro_packages::simple_rule> rules = (*t)->get_pre_rules();
+        std::vector<macro_packages::simple_rule> rules = pkg->get_pre_rules();
         this->pre_ruleset.reserve(this->pre_ruleset.size() + rules.size());
         this->pre_ruleset.insert(this->pre_ruleset.end(), rules.begin(), rules.end());
       }
@@ -92,9 +90,9 @@ void package_group::build_post_ruleset()
   {
     this->post_ruleset.clear();
 
-    for(std::list<macro_packages::replacement_rule_package*>::iterator t = this->packages.begin(); t != this->packages.end(); ++t)
+    for(std::unique_ptr<macro_packages::replacement_rule_package>& pkg : this->packages)
       {
-        std::vector<macro_packages::simple_rule> rules = (*t)->get_post_rules();
+        std::vector<macro_packages::simple_rule> rules = pkg->get_post_rules();
         this->post_ruleset.reserve(this->post_ruleset.size() + rules.size());
         this->post_ruleset.insert(this->post_ruleset.end(), rules.begin(), rules.end());
       }
@@ -111,10 +109,19 @@ void package_group::build_index_ruleset()
   {
     this->index_ruleset.clear();
 
-    for(std::list<macro_packages::replacement_rule_package*>::iterator t = this->packages.begin(); t != this->packages.end(); ++t)
+    for(std::unique_ptr<macro_packages::replacement_rule_package>& pkg : this->packages)
       {
-        std::vector<macro_packages::index_rule> rules = (*t)->get_index_rules();
+        std::vector<macro_packages::index_rule> rules = pkg->get_index_rules();
         this->index_ruleset.reserve(this->index_ruleset.size() + rules.size());
         this->index_ruleset.insert(this->index_ruleset.end(), rules.begin(), rules.end());
+      }
+  }
+
+
+void package_group::report_end_of_input()
+  {
+    for(std::unique_ptr<macro_packages::replacement_rule_package>& pkg : this->packages)
+      {
+        pkg->report_end_of_input();
       }
   }
