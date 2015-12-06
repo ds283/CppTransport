@@ -50,9 +50,9 @@ namespace macro_packages
         std::string replace_Hsq       (const std::vector<std::string> &args);
         std::string replace_eps       (const std::vector<std::string> &args);
 
-        std::string replace_parameter (const std::vector<std::string>& args, std::vector<struct index_assignment> indices, void* state);
-        std::string replace_field     (const std::vector<std::string>& args, std::vector<struct index_assignment> indices, void* state);
-        std::string replace_coordinate(const std::vector<std::string>& args, std::vector<struct index_assignment> indices, void* state);
+        std::string replace_parameter (const std::vector<std::string>& args, std::vector<index_assignment> indices, void* state);
+        std::string replace_field     (const std::vector<std::string>& args, std::vector<index_assignment> indices, void* state);
+        std::string replace_coordinate(const std::vector<std::string>& args, std::vector<index_assignment> indices, void* state);
 
         void*       pre_sr_velocity   (const std::vector<std::string>& args);
 

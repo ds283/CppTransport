@@ -315,6 +315,24 @@ unsigned int assignment_package::value(index_assignment& v)
 	}
 
 
+namespace index_assignment_impl
+  {
+
+    //! compare index assignments via labels
+    bool IndexAssignment_LabelEquality(const index_assignment& l, const index_assignment& r)
+      {
+        return(l.label == r.label);
+      }
+
+    //! order index assignments via labels
+    bool IndexAssignment_LabelComparator(const index_assignment& l, const index_assignment& r)
+      {
+        return(l.label < r.label);
+      }
+
+  }   // namespace index_assignment_impl
+
+
 std::vector<index_assignment> assignment_package::merge(const std::vector<index_assignment>& l, const std::vector<index_assignment>& r)
 	{
     std::vector<index_assignment> merged = l;

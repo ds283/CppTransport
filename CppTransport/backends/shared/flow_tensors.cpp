@@ -156,7 +156,7 @@ namespace macro_packages
     // ******************************************************************
 
 
-    std::string flow_tensors::replace_parameter(const std::vector<std::string>& args, std::vector<struct index_assignment> indices, void* state)
+    std::string flow_tensors::replace_parameter(const std::vector<std::string>& args, std::vector<index_assignment> indices, void* state)
       {
         assert(indices.size() == 1);
         assert(indices[0].trait == index_trait::parameter);
@@ -167,7 +167,7 @@ namespace macro_packages
       }
 
 
-    std::string flow_tensors::replace_field(const std::vector<std::string>& args, std::vector<struct index_assignment> indices, void* state)
+    std::string flow_tensors::replace_field(const std::vector<std::string>& args, std::vector<index_assignment> indices, void* state)
       {
         assert(indices.size() == 1);
         assert(indices[0].trait == index_trait::field);
@@ -178,7 +178,7 @@ namespace macro_packages
       }
 
 
-    std::string flow_tensors::replace_coordinate(const std::vector<std::string>& args, std::vector<struct index_assignment> indices, void* state)
+    std::string flow_tensors::replace_coordinate(const std::vector<std::string>& args, std::vector<index_assignment> indices, void* state)
       {
         assert(indices.size() == 1);
         assert(indices[0].species < this->data_payload.get_number_fields());

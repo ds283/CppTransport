@@ -127,7 +127,7 @@ std::unique_ptr< std::vector<std::string> > macro_agent::apply_line(std::string&
 
     // generate an assignment for each LHS index
     assignment_package assigner(this->fields, this->parameters, this->order);
-    std::vector< std::vector<struct index_assignment> > LHS_assignments = assigner.assign(left_tokens.get_indices());
+    std::vector< std::vector<index_assignment> > LHS_assignments = assigner.assign(left_tokens.get_indices());
 
 		// LHS_assignments may be empty if there are no valid assignments (probably one of the index
 		// ranges is empty). If there are no LHS indices then it will contain one empty vector
@@ -137,11 +137,11 @@ std::unique_ptr< std::vector<std::string> > macro_agent::apply_line(std::string&
 		// generate an assignment for each RHS index
 		// TODO: check that RHS assignments match the expected type for each macro (the previous implementation did this; the revised one doesn't yet)
     std::vector<index_abstract> RHS_indices = assigner.difference(right_tokens.get_indices(), left_tokens.get_indices());
-    std::vector< std::vector<struct index_assignment> > RHS_assignments = assigner.assign(RHS_indices);
+    std::vector< std::vector<index_assignment> > RHS_assignments = assigner.assign(RHS_indices);
 
 		if(LHS_assignments.size() > 0)
 			{
-				for(std::vector< std::vector<struct index_assignment> >::iterator t = LHS_assignments.begin(); t != LHS_assignments.end(); ++t)
+				for(std::vector< std::vector<index_assignment> >::iterator t = LHS_assignments.begin(); t != LHS_assignments.end(); ++t)
 			    {
 				    // evaluate LHS macros on this index assignment
 				    counter += left_tokens.evaluate_macros(*t);
@@ -156,7 +156,7 @@ std::unique_ptr< std::vector<std::string> > macro_agent::apply_line(std::string&
 							    }
 
 						    // now generate a set of RHS evaluations for this LHS evaluation
-						    for(std::vector< std::vector<struct index_assignment> >::iterator u = RHS_assignments.begin(); u != RHS_assignments.end(); ++u)
+						    for(std::vector< std::vector<index_assignment> >::iterator u = RHS_assignments.begin(); u != RHS_assignments.end(); ++u)
 							    {
 						        std::vector<index_assignment> LHS_RHS_assignment = assigner.merge(*t, *u);
 

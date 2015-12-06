@@ -44,9 +44,9 @@ struct index_assignment
 
 struct index_abstract
   {
-    char                    label;       // index label
-    unsigned int            range;       // how many values does this index assume? this is a multiplier for the total number of fields
-                                         // UNLESS it is INDEX_RANGE_PARAMETER, in which case this is a parameter index
+    char         label;       // index label
+    unsigned int range;       // how many values does this index assume? this is a multiplier for the total number of fields
+                              // UNLESS it is INDEX_RANGE_PARAMETER, in which case this is a parameter index
   };
 
 
@@ -75,11 +75,13 @@ class assignment_package
 
     std::vector<std::vector<index_assignment> > assign(const std::vector<index_abstract>& indices);
 
+    //! merge two index assignment lists, checking for duplicates
     std::vector<index_assignment> merge(const std::vector<index_assignment>& l, const std::vector<index_assignment>& r);
 
+    //! compute the difference between two index assignment lists
     std::vector<index_abstract> difference(const std::vector<index_abstract>& l, const std::vector<index_abstract>& r);
 
-    unsigned int value(struct index_assignment& v);
+    unsigned int value(index_assignment& v);
 
 
     // INTERNAL DATA
@@ -93,8 +95,8 @@ class assignment_package
   };
 
 
-std::string  index_stringize(const struct index_assignment& index);
-unsigned int index_numeric  (const struct index_assignment& index);
+std::string  index_stringize(const index_assignment& index);
+unsigned int index_numeric  (const index_assignment& index);
 
 unsigned int identify_index (char label);
 

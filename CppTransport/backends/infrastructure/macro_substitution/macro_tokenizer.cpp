@@ -315,7 +315,7 @@ std::vector<index_abstract> token_list::get_index_list(const std::string& input,
 					{
 						if(isalnum(input[position]))
 							{
-								struct index_abstract index;
+								index_abstract index;
 
 								index.label = input[position];
 								assert(range = identify_index(index.label));
@@ -460,7 +460,7 @@ token_list::text_token::text_token(const std::string& l)
 	}
 
 
-token_list::free_index_token::free_index_token(const struct index_abstract& i)
+token_list::free_index_token::free_index_token(const index_abstract& i)
 	: generic_token(std::string(1, i.label)),
     index(i)
 	{
@@ -533,7 +533,7 @@ token_list::index_macro_token::~index_macro_token()
 
 void token_list::index_macro_token::evaluate(const std::vector<index_assignment>& a)
 	{
-    std::vector<struct index_assignment> index_values;
+    std::vector<index_assignment> index_values;
 
 		for(std::vector<index_abstract>::const_iterator t = this->indices.begin(); t != indices.end(); ++t)
 			{

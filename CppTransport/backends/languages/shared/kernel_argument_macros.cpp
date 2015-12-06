@@ -112,20 +112,20 @@ namespace shared
 
         std::ostringstream out;
 
-        std::vector<struct index_abstract> indices;
-        struct index_abstract A;
+        std::vector<index_abstract> indices;
+        index_abstract A;
         A.label  = 'A';
         A.range  = INDEX_RANGE_ALL;
         indices.push_back(A);
 
         assignment_package assigner(this->data_payload.get_number_fields(), this->data_payload.get_number_parameters(), this->data_payload.get_index_order());
 
-        std::vector< std::vector<struct index_assignment> > assignment = assigner.assign(indices);
+        std::vector< std::vector<index_assignment> > assignment = assigner.assign(indices);
 
-        for(std::vector< std::vector<struct index_assignment> >::iterator t = assignment.begin(); t != assignment.end(); ++t)
+        for(std::vector< std::vector<index_assignment> >::iterator t = assignment.begin(); t != assignment.end(); ++t)
           {
             out << (t != assignment.begin() ? ", " : "") << this->qualifier << (this->qualifier != "" ? " " : "") << "double* " << name;
-            for(std::vector<struct index_assignment>::iterator u = (*t).begin(); u != (*t).end(); ++u)
+            for(std::vector<index_assignment>::iterator u = (*t).begin(); u != (*t).end(); ++u)
               {
                 out << "_" << assigner.value(*u);
               }
@@ -143,24 +143,24 @@ namespace shared
 
         std::ostringstream out;
 
-        std::vector< struct index_abstract > indices;
-        struct index_abstract A;
+        std::vector< index_abstract > indices;
+        index_abstract A;
         A.label  = 'A';
         A.range  = INDEX_RANGE_ALL;
         indices.push_back(A);
-        struct index_abstract B;
+        index_abstract B;
         B.label  = 'B';
         B.range  = INDEX_RANGE_ALL;
         indices.push_back(B);
 
         assignment_package assigner(this->data_payload.get_number_fields(), this->data_payload.get_number_parameters(), this->data_payload.get_index_order());
 
-        std::vector< std::vector<struct index_assignment> > assignment = assigner.assign(indices);
+        std::vector< std::vector<index_assignment> > assignment = assigner.assign(indices);
 
-        for(std::vector< std::vector<struct index_assignment> >::iterator t = assignment.begin(); t != assignment.end(); ++t)
+        for(std::vector< std::vector<index_assignment> >::iterator t = assignment.begin(); t != assignment.end(); ++t)
           {
             out << (t != assignment.begin() ? ", " : "") << this->qualifier << (this->qualifier != "" ? " " : "") << "double* " << name;
-            for(std::vector<struct index_assignment>::iterator u = (*t).begin(); u != (*t).end(); ++u)
+            for(std::vector<index_assignment>::iterator u = (*t).begin(); u != (*t).end(); ++u)
               {
                 out << "_" << assigner.value(*u);
               }
@@ -178,28 +178,28 @@ namespace shared
 
         std::ostringstream out;
 
-        std::vector< struct index_abstract > indices;
-        struct index_abstract A;
+        std::vector< index_abstract > indices;
+        index_abstract A;
         A.label  = 'A';
         A.range  = INDEX_RANGE_ALL;
         indices.push_back(A);
-        struct index_abstract B;
+        index_abstract B;
         B.label  = 'B';
         B.range  = INDEX_RANGE_ALL;
         indices.push_back(B);
-        struct index_abstract C;
+        index_abstract C;
         C.label  = 'C';
         C.range  = INDEX_RANGE_ALL;
         indices.push_back(C);
 
         assignment_package assigner(this->data_payload.get_number_fields(), this->data_payload.get_number_parameters(), this->data_payload.get_index_order());
 
-        std::vector< std::vector<struct index_assignment> > assignment = assigner.assign(indices);
+        std::vector< std::vector<index_assignment> > assignment = assigner.assign(indices);
 
-        for(std::vector< std::vector<struct index_assignment> >::iterator t = assignment.begin(); t != assignment.end(); ++t)
+        for(std::vector< std::vector<index_assignment> >::iterator t = assignment.begin(); t != assignment.end(); ++t)
           {
             out << (t != assignment.begin() ? ", " : "") << this->qualifier << (this->qualifier != "" ? " " : "") << "double* " << name;
-            for(std::vector<struct index_assignment>::iterator u = (*t).begin(); u != (*t).end(); ++u)
+            for(std::vector<index_assignment>::iterator u = (*t).begin(); u != (*t).end(); ++u)
               {
                 out << "_" << assigner.value(*u);
               }

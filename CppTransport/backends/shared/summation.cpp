@@ -104,7 +104,7 @@ namespace macro_packages
     // *******************************************************************
 
 
-    std::string summation::null(const std::vector<std::string>& args, std::vector<struct index_assignment> indices, void* state)
+    std::string summation::null(const std::vector<std::string>& args, std::vector<index_assignment> indices, void* state)
       {
         return("");
       }

@@ -90,26 +90,26 @@ namespace macro_packages
       protected:
 
         std::string replace_1index_tensor(const std::vector<std::string>& args,
-                                          std::vector<struct index_assignment> indices, void* state);
+                                          std::vector<index_assignment> indices, void* state);
 
         std::string replace_2index_tensor(const std::vector<std::string>& args,
-                                          std::vector<struct index_assignment> indices, void* state);
+                                          std::vector<index_assignment> indices, void* state);
 
         std::string replace_3index_tensor(const std::vector<std::string>& args,
-                                          std::vector<struct index_assignment> indices, void* state);
+                                          std::vector<index_assignment> indices, void* state);
 
         std::string replace_1index_field_tensor(const std::vector<std::string>& args,
-                                                std::vector<struct index_assignment> indices, void* state);
+                                                std::vector<index_assignment> indices, void* state);
 
         std::string replace_2index_field_tensor(const std::vector<std::string>& args,
-                                                std::vector<struct index_assignment> indices, void* state);
+                                                std::vector<index_assignment> indices, void* state);
 
         std::string replace_3index_field_tensor(const std::vector<std::string>& args,
-                                                std::vector<struct index_assignment> indices, void* state);
+                                                std::vector<index_assignment> indices, void* state);
 
         void generic_post_hook(void* state);
 
-        unsigned int get_index_label(struct index_assignment& index);
+        unsigned int get_index_label(index_assignment& index);
 
 
         // INTERNAL DATA

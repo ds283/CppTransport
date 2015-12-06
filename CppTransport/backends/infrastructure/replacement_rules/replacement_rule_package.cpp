@@ -18,7 +18,7 @@
 namespace macro_packages
   {
 
-    unsigned int replacement_rule_package::get_index_label(struct index_assignment& index)
+    unsigned int replacement_rule_package::get_index_label(index_assignment& index)
       {
         unsigned int label = 0;
 
@@ -47,7 +47,7 @@ namespace macro_packages
       }
 
 
-    std::string replacement_rule_package::replace_1index_tensor(const std::vector<std::string>& args, std::vector<struct index_assignment> indices, void* state)
+    std::string replacement_rule_package::replace_1index_tensor(const std::vector<std::string>& args, std::vector<index_assignment> indices, void* state)
       {
         assert(indices.size() == 1);
         assert(indices[0].species < this->data_payload.get_number_fields());
@@ -62,7 +62,7 @@ namespace macro_packages
       }
 
 
-    std::string replacement_rule_package::replace_2index_tensor(const std::vector<std::string>& args, std::vector<struct index_assignment> indices, void* state)
+    std::string replacement_rule_package::replace_2index_tensor(const std::vector<std::string>& args, std::vector<index_assignment> indices, void* state)
       {
         assert(indices.size() == 2);
         assert(indices[0].species < this->data_payload.get_number_fields());
@@ -80,7 +80,7 @@ namespace macro_packages
       }
 
 
-    std::string replacement_rule_package::replace_3index_tensor(const std::vector<std::string>& args, std::vector<struct index_assignment> indices, void* state)
+    std::string replacement_rule_package::replace_3index_tensor(const std::vector<std::string>& args, std::vector<index_assignment> indices, void* state)
       {
         assert(indices.size() == 3);
         assert(indices[0].species < this->data_payload.get_number_fields());
@@ -100,7 +100,7 @@ namespace macro_packages
       }
 
 
-    std::string replacement_rule_package::replace_1index_field_tensor(const std::vector<std::string>& args, std::vector<struct index_assignment> indices, void* state)
+    std::string replacement_rule_package::replace_1index_field_tensor(const std::vector<std::string>& args, std::vector<index_assignment> indices, void* state)
       {
         assert(indices.size() == 1);
         assert(indices[0].species < this->data_payload.get_number_fields());
@@ -117,7 +117,7 @@ namespace macro_packages
       }
 
 
-    std::string replacement_rule_package::replace_2index_field_tensor(const std::vector<std::string>& args, std::vector<struct index_assignment> indices, void* state)
+    std::string replacement_rule_package::replace_2index_field_tensor(const std::vector<std::string>& args, std::vector<index_assignment> indices, void* state)
       {
         assert(indices.size() == 2);
         assert(indices[0].species < this->data_payload.get_number_fields());
@@ -137,7 +137,7 @@ namespace macro_packages
       }
 
 
-    std::string replacement_rule_package::replace_3index_field_tensor(const std::vector<std::string>& args, std::vector<struct index_assignment> indices, void* state)
+    std::string replacement_rule_package::replace_3index_field_tensor(const std::vector<std::string>& args, std::vector<index_assignment> indices, void* state)
       {
         assert(indices.size() == 3);
         assert(indices[0].species < this->data_payload.get_number_fields());

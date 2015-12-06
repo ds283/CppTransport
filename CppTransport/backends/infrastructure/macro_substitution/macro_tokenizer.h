@@ -64,7 +64,7 @@ class token_list
 
       public:
 
-        free_index_token(const struct index_abstract& i);
+        free_index_token(const index_abstract& i);
 
 		    free_index_token(char label)
 		      : generic_token(std::string(1, label))
@@ -86,7 +86,7 @@ class token_list
 
       protected:
 
-		    struct index_abstract index;
+		    index_abstract index;
 
 	    };
 
