@@ -34,8 +34,10 @@ class token_list
         //! constructor
 		    generic_token(const std::string& c);
 
-//        //! destructor is default
-//        virtual ~generic_token() = default;
+        //! destructor is default, but icpc fails with explictly-defaulted destructor
+        virtual ~generic_token()
+          {
+          }
 
 
         // TOKEN INTERFACE
@@ -63,8 +65,10 @@ class token_list
         //! constructor
         text_token(const std::string& l);
 
-//        //! destructor is default
-//        virtual ~text_token() = default;
+        //! destructor is default, but icpc fails with explicitly-default destructor
+        virtual ~text_token()
+          {
+          }
 
 	    };
 
@@ -76,8 +80,10 @@ class token_list
         //! constructor
         free_index_token(index_abstract_list::const_iterator& it);
 
-//        //! destructor is default
-//        virtual ~free_index_token() = default;
+        //! destructor is default, but icpc fails with explicitly-default destructor
+        virtual ~free_index_token()
+          {
+          }
 
         // INTERFACE
 
@@ -103,8 +109,10 @@ class token_list
         //! constructor
         simple_macro_token(const std::string& m, const macro_argument_list& a, const macro_packages::simple_rule& r, simple_macro_type t);
 
-//        //! destructor is default
-//        virtual ~simple_macro_token() = default;
+        //! destructor is default, but icpc fails with explicitly-default destructor
+        virtual ~simple_macro_token()
+          {
+          }
 
 
 		    // INTERFACE

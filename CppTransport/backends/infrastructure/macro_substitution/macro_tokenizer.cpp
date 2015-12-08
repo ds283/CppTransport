@@ -33,7 +33,8 @@ token_list::token_list(const std::string& input, const std::string& prefix,
 								string_literal += input[position++];
 							}
 
-						this->tokens.push_back(std::make_unique<text_token>(string_literal));
+            std::unique_ptr<text_token> tok = std::make_unique<text_token>(string_literal);
+						this->tokens.push_back(std::move(tok));     // transfers ownership
 					}
 				else  // possible macro or index
 					{
@@ -57,8 +58,7 @@ token_list::token_list(const std::string& input, const std::string& prefix,
 
                     std::unique_ptr<free_index_token> tok = std::make_unique<free_index_token>(idx);
                     this->free_index_tokens.push_back(tok.get());
-										this->tokens.push_back(std::move(tok));  // transfers ownership
-
+										this->tokens.push_back(std::move(tok));     // transfers ownership
 										position++;
 									}
 								else  // more than one character left, so could be free index or a macro
@@ -103,7 +103,7 @@ token_list::token_list(const std::string& input, const std::string& prefix,
 
                                 std::unique_ptr<simple_macro_token> tok = std::make_unique<simple_macro_token>(candidate, arg_list, rule, simple_macro_type::pre);
                                 this->simple_macro_tokens.push_back(tok.get());
-												        this->tokens.push_back(std::move(tok));    // transfers ownership
+												        this->tokens.push_back(std::move(tok));     // transfers ownership
 											        }
 										        else if(this->check_for_match(candidate, post, false))
 											        {
@@ -121,7 +121,7 @@ token_list::token_list(const std::string& input, const std::string& prefix,
 
                                 std::unique_ptr<simple_macro_token> tok = std::make_unique<simple_macro_token>(candidate, arg_list, rule, simple_macro_type::post);
                                 this->simple_macro_tokens.push_back(tok.get());
-												        this->tokens.push_back(std::move(tok));    // transfers ownership
+												        this->tokens.push_back(std::move(tok));     // transfers ownership
 											        }
 										        else if(this->check_for_match(candidate, index, false))
 											        {
@@ -139,7 +139,7 @@ token_list::token_list(const std::string& input, const std::string& prefix,
 
                                 std::unique_ptr<index_macro_token> tok = std::make_unique<index_macro_token>(candidate, idx_list, arg_list, rule);
                                 this->index_macro_tokens.push_back(tok.get());
-												        this->tokens.push_back(std::move(tok));    // transfers ownership
+												        this->tokens.push_back(std::move(tok));     // transfers ownership
 											        }
 										        else  // something has gone wrong
 											        {
@@ -149,7 +149,7 @@ token_list::token_list(const std::string& input, const std::string& prefix,
 
                                 std::unique_ptr<free_index_token> tok = std::make_unique<free_index_token>(idx);
                                 this->free_index_tokens.push_back(tok.get());
-										            this->tokens.push_back(std::move(tok));    // transfers ownership
+										            this->tokens.push_back(std::move(tok));     // transfers ownership
 
 										            position++;
 											        }
@@ -162,7 +162,7 @@ token_list::token_list(const std::string& input, const std::string& prefix,
 
                             std::unique_ptr<free_index_token> tok = std::make_unique<free_index_token>(idx);
                             this->free_index_tokens.push_back(tok.get());
-								            this->tokens.push_back(std::move(tok));    // transfers ownership
+								            this->tokens.push_back(std::move(tok));     // transfers ownership
 
 								            position++;
 									        }
@@ -173,7 +173,7 @@ token_list::token_list(const std::string& input, const std::string& prefix,
 
                         std::unique_ptr<free_index_token> tok = std::make_unique<free_index_token>(idx);
                         this->free_index_tokens.push_back(tok.get());
-												this->tokens.push_back(std::move(tok));    // transfers ownership
+												this->tokens.push_back(std::move(tok));     // transfers ownership
 
 												position++;
 											}
@@ -187,7 +187,8 @@ token_list::token_list(const std::string& input, const std::string& prefix,
 						        string_literal += input[position++];
 							    }
 
-						    this->tokens.push_back(std::make_unique<text_token>(string_literal));
+                std::unique_ptr<text_token> tok = std::make_unique<text_token>(string_literal);
+						    this->tokens.push_back(std::move(tok));     // transfers ownership
 							}
 					}
 			}
@@ -462,13 +463,13 @@ unsigned int token_list::evaluate_macros(const assignment_list& a)
 	{
 		unsigned int replacements = 0;
 
-    for(free_index_token* t : this->free_index_tokens)
+    for(free_index_token*& t : this->free_index_tokens)
       {
         t->evaluate(a);
         replacements++;
       }
 
-    for(index_macro_token* t : this->index_macro_tokens)
+    for(index_macro_token*& t : this->index_macro_tokens)
       {
         t->evaluate(a);
         replacements++;
@@ -482,7 +483,7 @@ std::string token_list::to_string()
 	{
     std::string output;
 
-    for(std::unique_ptr<generic_token>& t : this->tokens)
+    for(const std::unique_ptr<generic_token>& t : this->tokens)
 			{
 				output += t->to_string();
 			}
