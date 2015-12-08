@@ -24,8 +24,7 @@ namespace cpp
       public:
 
         //! constructor
-        core_macros(translator_data& p, language_printer& prn,
-                   std::string ds=OUTPUT_DEFAULT_STEPPER_STATE_NAME)
+        core_macros(translator_data& p, language_printer& prn, std::string ds=OUTPUT_DEFAULT_STEPPER_STATE_NAME)
           : ::macro_packages::replacement_rule_package(p, prn),
             default_state(ds)
           {
@@ -50,8 +49,8 @@ namespace cpp
 
         std::string replace_stepper      (const struct stepper& s, std::string state_name);
 
-        std::string replace_backg_stepper(const std::vector<std::string>& args);
-        std::string replace_pert_stepper (const std::vector<std::string>& args);
+        std::string replace_backg_stepper(const macro_argument_list& args);
+        std::string replace_pert_stepper (const macro_argument_list& args);
 
 
         // INTERNAL DATA

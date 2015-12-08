@@ -128,7 +128,7 @@ unsigned int translator::process(const boost::filesystem::path& in, buffer& buf,
 		            // result is supplied as a std::shared_ptr<> because we don't want to have to take copies
 		            // of a large array of strings
                 unsigned int new_replacements = 0;
-                std::unique_ptr< std::vector<std::string> > line_list = agent.apply(line, new_replacements);
+                std::unique_ptr< std::list<std::string> > line_list = agent.apply(line, new_replacements);
                 replacements += new_replacements;
 
                 if(line_list)
@@ -137,12 +137,14 @@ unsigned int translator::process(const boost::filesystem::path& in, buffer& buf,
                     continuation_tag << " " << package->get_comment_separator() << " " << MESSAGE_EXPANSION_OF_LINE << " " << os.get_line();
 
                     unsigned int c = 0;
-                    for(std::vector<std::string>::const_iterator l = line_list->begin(); l != line_list->end(); ++l, ++c)
+                    for(const std::string& l : *line_list)
                       {
-                        std::string out_line = *l + (c > 0 ? continuation_tag.str() : "");
+                        std::string out_line = l + (c > 0 ? continuation_tag.str() : "");
 
                         if(filter != nullptr) buf.write_to_end((*filter)(out_line));
                         else                  buf.write_to_end(out_line);
+
+                        ++c;
                       }
                   }
 

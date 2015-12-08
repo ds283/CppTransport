@@ -50,7 +50,7 @@ namespace transport
 
             //! value constructor
             generic_record_iterator(record_iterator_type i)
-              : it(i)
+              : it(std::move(i))
               {
               }
 

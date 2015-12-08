@@ -113,7 +113,7 @@ namespace macro_packages
 
             // apply macro replacement to them, in case this is required
             unsigned int replacements;
-            std::unique_ptr< std::vector<std::string> > r_list = ms.apply(temps, replacements);
+            std::unique_ptr< std::list<std::string> > r_list = ms.apply(temps, replacements);
 
             if(r_list)
               {
@@ -122,9 +122,9 @@ namespace macro_packages
                 label << OUTPUT_TEMPORARY_POOL_START << " (" << OUTPUT_TEMPORARY_POOL_SEQUENCE << "=" << this->unique++ << ")";
                 buf.write_to_tag(this->printer.comment(label.str()));
 
-                for(std::vector<std::string>::const_iterator l = r_list->begin(); l != r_list->end(); ++l)
+                for(const std::string& l : *r_list)
                   {
-                    if(temps != "") buf.write_to_tag(*l);
+                    if(temps != "") buf.write_to_tag(l);
                   }
               }
 
@@ -133,7 +133,7 @@ namespace macro_packages
           }
        }
 
-    std::string temporary_pool::replace_temp_pool(const std::vector<std::string>& args)
+    std::string temporary_pool::replace_temp_pool(const macro_argument_list& args)
       {
         assert(args.size() == 1);
         std::string t = (args.size() >= 1 ? args[0] : OUTPUT_DEFAULT_POOL_TEMPLATE);

@@ -44,7 +44,7 @@ namespace macro_packages
 
       protected:
 
-        std::string null(const std::vector<std::string>& args, std::vector<index_assignment> indices, void* state);
+        std::string null(const macro_argument_list& args, const assignment_list& indices, void* state);
 
       };
 

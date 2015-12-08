@@ -60,16 +60,16 @@ namespace macro_packages
 
       protected:
 
-        void* pre_A_tensor(const std::vector<std::string>& args);
-        void* pre_B_tensor(const std::vector<std::string>& args);
-        void* pre_C_tensor(const std::vector<std::string>& args);
+        void* pre_A_tensor(const macro_argument_list& args);
+        void* pre_B_tensor(const macro_argument_list& args);
+        void* pre_C_tensor(const macro_argument_list& args);
 
-        void* pre_A_predef(const std::vector<std::string>& args);
-        void* pre_B_predef(const std::vector<std::string>& args);
-        void* pre_C_predef(const std::vector<std::string>& args);
+        void* pre_A_predef(const macro_argument_list& args);
+        void* pre_B_predef(const macro_argument_list& args);
+        void* pre_C_predef(const macro_argument_list& args);
 
-        void* pre_M_tensor(const std::vector<std::string>& args);
-        void* pre_M_predef(const std::vector<std::string>& args);
+        void* pre_M_tensor(const macro_argument_list& args);
+        void* pre_M_predef(const macro_argument_list& args);
 
 
         // INTERNAL DATA

@@ -63,6 +63,17 @@
 #define ERROR_DECIMAL_LOOKUP                  "Lookup of decimal literal value failed"
 #define ERROR_UNKNOWN_IDENTIFIER              "Undeclared identifier"
 
+#define ERROR_ASSIGNMENT_ITERATOR_NO_PARENT   "Internal error: increment or decrement of unattached assignment set iterator"
+#define ERROR_ASSIGNMENT_ITERATOR_DECREMENT   "Internal error: attempt to decrement assignment iterator before first element"
+#define ERROR_ASSIGNMENT_ITERATOR_INCREMENT   "Internal error: attempt to increment assignment iterator after last element"
+
+#define ERROR_TOKENIZE_INDEX_MISMATCH         "Duplicate inequivalent declaration of index"
+#define ERROR_TOKENIZE_NO_MACRO_MATCH         "Internal error: unepexectedly failed to match a macro"
+#define ERROR_TOKENIZE_UNEXPECTED_LIST        "Did not expect index list following simple macro"
+#define ERROR_TOKENIZE_SKIPPING               "skipping"
+
+#define ERROR_MISSING_INDEX_ASSIGNMENT        "Internal error: missing index assignment"
+
 #define ERROR_EXPECTED_INDEX                  "Expected index label following prefix"
 #define ERROR_TOO_FEW_INDICES                 "Too few indices supplied to summation-convention object"
 #define ERROR_EXPECTED_OPEN_INDEX_LIST        "Expected index list beginning with '[' for indexed macro"
@@ -80,6 +91,11 @@
 
 #define ERROR_MISSING_LHS                     "Missing left-hand side in temporary template "
 #define ERROR_MISSING_RHS                     "Missing right-hand side in temporary template "
+
+#define ERROR_MACRO_LHS_RHS_MISMATCH          "Mismatched index class on left- and right-hand sides"
+
+#define ERROR_INDEX_DATABASE_EMPLACE_FAIL     "Internal error: emplacement in index database failed"
+#define ERROR_INDEX_DATABASE_OUT_OF_RANGE     "Internal error: out of range access in index database"
 
 #define ERROR_NO_BUFFER_REGISTERED            "Internal error: TemporaryPool macro package in use, but no buffer registered"
 #define ERROR_NO_MACROS_REGISTERED            "Internal error: TemporaryPool macro package in use, but no macro set registered"

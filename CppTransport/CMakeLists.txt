@@ -47,6 +47,8 @@ ADD_EXECUTABLE(CppTransport main.cpp
   backends/infrastructure/macro_substitution/index_assignment.cpp
   backends/infrastructure/macro_substitution/macro.cpp
   backends/infrastructure/macro_substitution/macro_tokenizer.cpp
+  backends/infrastructure/macro_substitution/index_abstract.cpp
+  backends/infrastructure/macro_substitution/index_traits.cpp
   backends/infrastructure/replacement_rules/package_group.cpp
   backends/infrastructure/replacement_rules/package_group_factory.cpp
   backends/infrastructure/replacement_rules/replacement_rule_package.cpp
@@ -212,6 +214,12 @@ SET(BACKENDS_INFRASTRUCTURE_MACRO_SUBSTITUTION_FILES
   backends/infrastructure/macro_substitution/macro.h
   backends/infrastructure/macro_substitution/macro_tokenizer.cpp
   backends/infrastructure/macro_substitution/macro_tokenizer.h
+  backends/infrastructure/macro_substitution/index_abstract.cpp
+  backends/infrastructure/macro_substitution/index_abstract.h
+  backends/infrastructure/macro_substitution/index_traits.cpp
+  backends/infrastructure/macro_substitution/index_traits.h
+  backends/infrastructure/macro_substitution/macro_types.h
+  backends/infrastructure/macro_substitution/index_database.h
   )
 
 SET(PARSER_BISON_FILES
@@ -242,7 +250,8 @@ SET(UTILITIES_FILES
   utilities/argument_cache.cpp
   utilities/argument_cache.h
   utilities/error_context.cpp
-  utilities/error_context.h)
+  utilities/error_context.h
+  )
 
 SET(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_CONVENIENCE_FILES
   transport-runtime-api/derived-products/convenience/time_series_plot.h
@@ -547,7 +556,9 @@ SET(BACKENDS_INFRASTRUCTURE_FILE_HANDLING_FILES
   backends/infrastructure/file_handling/translator_data.cpp
   backends/infrastructure/file_handling/translator_data.h
   backends/infrastructure/file_handling/lexstream_data.cpp
-  backends/infrastructure/file_handling/lexstream_data.h backends/infrastructure/file_handling/contexted_value.h)
+  backends/infrastructure/file_handling/lexstream_data.h
+  backends/infrastructure/file_handling/contexted_value.h
+  )
 
 SET(TRANSPORT_RUNTIME_API_TASKS_CONFIGURATION_DATABASE_FILES
   transport-runtime-api/tasks/configuration-database/generic_config_iterator.h

@@ -10,11 +10,15 @@
 #include "macro_tokenizer.h"
 
 
-token_list::token_list(const std::string& input,
-                       const std::string& prefix,
+token_list::token_list(const std::string& input, const std::string& prefix,
+                       unsigned int nf, unsigned int np,
                        const std::vector<macro_packages::simple_rule>& pre,
                        const std::vector<macro_packages::simple_rule>& post,
-                       const std::vector<macro_packages::index_rule>& index)
+                       const std::vector<macro_packages::index_rule>& index,
+                       error_context& ec)
+  : num_fields(nf),
+    num_params(np),
+    err_ctx(ec)
 	{
 		size_t position = 0;
 
@@ -28,7 +32,7 @@ token_list::token_list(const std::string& input,
 								string_literal += input[position++];
 							}
 
-						this->tokens.push_back(new text_token(string_literal));
+						this->tokens.push_back(std::make_unique<text_token>(string_literal));
 					}
 				else  // possible macro or index
 					{
@@ -48,8 +52,12 @@ token_list::token_list(const std::string& input,
 								// is there only one character left in the input string? if so, this must be a free index
 								if(position+1 >= input.length())
 									{
-										this->tokens.push_back(new free_index_token(input[position]));
-										this->add_index(input[position]);
+                    index_abstract_list::const_iterator idx = this->add_index(input[position]);
+
+                    std::unique_ptr<free_index_token> tok = std::make_unique<free_index_token>(idx);
+                    this->free_index_tokens.push_back(tok.get());
+										this->tokens.push_back(std::move(tok));  // transfers ownership
+
 										position++;
 									}
 								else  // more than one character left, so could be free index or a macro
@@ -89,10 +97,12 @@ token_list::token_list(const std::string& input,
 										            // shouldn't find an index list
 										            this->check_no_index_list(input, candidate, position);
 
-										            std::vector<std::string> arg_list;
+										            macro_argument_list arg_list;
 												        if(rule.args > 0) arg_list = this->get_argument_list(input, candidate, position, rule.args);
 
-												        this->tokens.push_back(new simple_macro_token(candidate, arg_list, rule, simple_macro_token::pre));
+                                std::unique_ptr<simple_macro_token> tok = std::make_unique<simple_macro_token>(candidate, arg_list, rule, simple_macro_type::pre);
+                                this->simple_macro_tokens.push_back(tok.get());
+												        this->tokens.push_back(std::move(tok));    // transfers ownership
 											        }
 										        else if(this->check_for_match(candidate, post, false))
 											        {
@@ -105,10 +115,12 @@ token_list::token_list(const std::string& input,
 										            // shouldn't find an index list
 										            this->check_no_index_list(input, candidate, position);
 
-										            std::vector<std::string> arg_list;
+										            macro_argument_list arg_list;
 										            if(rule.args > 0) arg_list = this->get_argument_list(input, candidate, position, rule.args);
 
-												        this->tokens.push_back(new simple_macro_token(candidate, arg_list, rule, simple_macro_token::post));
+                                std::unique_ptr<simple_macro_token> tok = std::make_unique<simple_macro_token>(candidate, arg_list, rule, simple_macro_type::post);
+                                this->simple_macro_tokens.push_back(tok.get());
+												        this->tokens.push_back(std::move(tok));    // transfers ownership
 											        }
 										        else if(this->check_for_match(candidate, index, false))
 											        {
@@ -119,35 +131,49 @@ token_list::token_list(const std::string& input,
 										            position += candidate_length;
 
 												        // should find an index list
-										            std::vector<index_abstract> idx_list = this->get_index_list(input, candidate, position, rule.indices, rule.range);
+										            index_abstract_list idx_list = this->get_index_list(input, candidate, position, rule.indices, rule.range);
 
-										            std::vector<std::string> arg_list;
+										            macro_argument_list arg_list;
 										            if(rule.args > 0) arg_list = this->get_argument_list(input, candidate, position, rule.args);
 
-												        this->tokens.push_back(new index_macro_token(candidate, idx_list, arg_list, rule));
+                                std::unique_ptr<index_macro_token> tok = std::make_unique<index_macro_token>(candidate, idx_list, arg_list, rule);
+                                this->index_macro_tokens.push_back(tok.get());
+												        this->tokens.push_back(std::move(tok));    // transfers ownership
 											        }
 										        else  // something has gone wrong
 											        {
 												        // we didn't find an exact match after all; we only matched a substring
 												        // assume it was a free index after all
-										            this->tokens.push_back(new free_index_token(input[position]));
-										            this->add_index(input[position]);
+                                index_abstract_list::const_iterator idx = this->add_index(input[position]);
+
+                                std::unique_ptr<free_index_token> tok = std::make_unique<free_index_token>(idx);
+                                this->free_index_tokens.push_back(tok.get());
+										            this->tokens.push_back(std::move(tok));    // transfers ownership
+
 										            position++;
 											        }
 											    }
 								        catch(std::runtime_error& xe)
 									        {
-										        // something whent wrong
+										        // something went wrong
 										        // assume it was a free index after all
-								            this->tokens.push_back(new free_index_token(input[position]));
-								            this->add_index(input[position]);
+                            index_abstract_list::const_iterator idx = this->add_index(input[position]);
+
+                            std::unique_ptr<free_index_token> tok = std::make_unique<free_index_token>(idx);
+                            this->free_index_tokens.push_back(tok.get());
+								            this->tokens.push_back(std::move(tok));    // transfers ownership
+
 								            position++;
 									        }
 											}
 										else  // no it doesn't; there's no match. It must have been a free index
 											{
-												this->tokens.push_back(new free_index_token(input[position]));
-										    this->add_index(input[position]);
+                        index_abstract_list::const_iterator idx = this->add_index(input[position]);
+
+                        std::unique_ptr<free_index_token> tok = std::make_unique<free_index_token>(idx);
+                        this->free_index_tokens.push_back(tok.get());
+												this->tokens.push_back(std::move(tok));    // transfers ownership
+
 												position++;
 											}
 									}
@@ -160,18 +186,9 @@ token_list::token_list(const std::string& input,
 						        string_literal += input[position++];
 							    }
 
-						    this->tokens.push_back(new text_token(string_literal));
+						    this->tokens.push_back(std::make_unique<text_token>(string_literal));
 							}
 					}
-			}
-	}
-
-
-token_list::~token_list()
-	{
-		for(std::list< generic_token* >::iterator t = this->tokens.begin(); t != this->tokens.end(); ++t)
-			{
-				delete *t;
 			}
 	}
 
@@ -181,14 +198,15 @@ bool token_list::check_for_match(const std::string& candidate, const std::vector
 	{
 		bool found = false;
 
-		for(typename std::vector<Rule>::const_iterator t = rule_list.begin(); !found && t != rule_list.end(); ++t)
+    for(const Rule& t : rule_list)
 			{
-				if(candidate.length() <= (*t).name.length())
+				if(candidate.length() <= t.name.length())
 					{
-				    std::string name_substring = allow_substring ? (*t).name.substr(0, candidate.length()) : (*t).name;
+				    std::string name_substring = allow_substring ? t.name.substr(0, candidate.length()) : t.name;
 						if(candidate == name_substring)
 							{
 								found = true;
+                break;
 							}
 					}
 			}
@@ -197,18 +215,42 @@ bool token_list::check_for_match(const std::string& candidate, const std::vector
 	}
 
 
+namespace macro_tokenizer_impl
+  {
+
+    template <typename Rule>
+    class RuleNameComparator
+      {
+
+      public:
+
+        RuleNameComparator(const std::string n)
+          : name(std::move(n))
+          {
+          }
+
+        bool operator()(const Rule& r)
+          {
+            return(this->name == r.name);
+          }
+
+      private:
+
+        std::string name;
+
+      };
+
+  }
+
+
 template <typename Rule>
 const Rule& token_list::find_match(const std::string& candidate, const std::vector<Rule>& rule_list)
 	{
-		for(typename std::vector<Rule>::const_iterator t = rule_list.begin(); t != rule_list.end(); ++t)
-			{
-				if(candidate == (*t).name)
-					{
-						return(*t);
-					}
-			}
+    typename std::vector<Rule>::const_iterator t = std::find_if(rule_list.begin(), rule_list.end(), macro_tokenizer_impl::RuleNameComparator<Rule>(candidate));
 
-		throw std::runtime_error("Unexpectedly failed to match any macro");
+    if(t != rule_list.end()) return(*t);
+
+		throw std::runtime_error(ERROR_TOKENIZE_NO_MACRO_MATCH);
 	}
 
 
@@ -216,7 +258,10 @@ void token_list::check_no_index_list(const std::string& input, const std::string
 	{
     if(position < input.length() && input[position] == '[')
 	    {
-        std::cout << "ERROR: didn't expect index list following simple macro '" << candidate << "'; skipping" << '\n';
+        std::ostringstream msg;
+        msg << ERROR_TOKENIZE_UNEXPECTED_LIST << " '" << candidate << "'; " << ERROR_TOKENIZE_SKIPPING;
+        this->err_ctx.error(msg.str());
+
         position++;
         while(position < input.length() && input[position] != ']')
 	        {
@@ -227,9 +272,9 @@ void token_list::check_no_index_list(const std::string& input, const std::string
 	}
 
 
-std::vector<std::string> token_list::get_argument_list(const std::string& input, const std::string& candidate, size_t& position, unsigned int expected_args)
+macro_argument_list token_list::get_argument_list(const std::string& input, const std::string& candidate, size_t& position, unsigned int expected_args)
 	{
-    std::vector<std::string> arg_list;
+    macro_argument_list arg_list;
 
 		if(position < input.length() && input[position] == '{')
 			{
@@ -266,12 +311,15 @@ std::vector<std::string> token_list::get_argument_list(const std::string& input,
 								    arg += input[position];
 							    }
 					    }
-						position++;
+
+						++position;
 			    }
 
 				if(!(position < input.length() && input[position] == '}'))
 					{
-				    std::cout << ERROR_EXPECTED_CLOSE_ARGUMENT_LIST << " '" << candidate << "'";
+            std::ostringstream msg;
+            msg << ERROR_EXPECTED_CLOSE_ARGUMENT_LIST << " '" << candidate << "'";
+            this->err_ctx.error(msg.str());
 					}
 				else
 					{
@@ -285,12 +333,16 @@ std::vector<std::string> token_list::get_argument_list(const std::string& input,
 			}
 		else  // expected to find an argument list
 			{
-		    std::cout << ERROR_EXPECTED_OPEN_ARGUMENT_LIST << " '" << candidate << "'";
+        std::ostringstream msg;
+		    msg << ERROR_EXPECTED_OPEN_ARGUMENT_LIST << " '" << candidate << "'";
+        this->err_ctx.error(msg.str());
 			}
 
 		if(arg_list.size() != expected_args)
 			{
-		    std::cout << ERROR_WRONG_ARGUMENT_COUNT << " '" << candidate << "' (" << ERROR_EXPECTED_ARGUMENT_COUNT << " " << expected_args << ")" << '\n';
+        std::ostringstream msg;
+		    msg << ERROR_WRONG_ARGUMENT_COUNT << " '" << candidate << "' (" << ERROR_EXPECTED_ARGUMENT_COUNT << " " << expected_args << ")";
+        this->err_ctx.error(msg.str());
 
 		    while(arg_list.size() < expected_args)
 			    {
@@ -303,9 +355,9 @@ std::vector<std::string> token_list::get_argument_list(const std::string& input,
 	}
 
 
-std::vector<index_abstract> token_list::get_index_list(const std::string& input, const std::string& candidate, size_t& position, unsigned int expected_indices, unsigned int range)
+index_abstract_list token_list::get_index_list(const std::string& input, const std::string& candidate, size_t& position, unsigned int expected_indices, enum index_class range)
 	{
-    std::vector<index_abstract> idx_list;
+    index_abstract_list idx_list;
 
 		if(position < input.length() && input[position] == '[')
 			{
@@ -315,18 +367,15 @@ std::vector<index_abstract> token_list::get_index_list(const std::string& input,
 					{
 						if(isalnum(input[position]))
 							{
-								index_abstract index;
-
-								index.label = input[position];
-								assert(range = identify_index(index.label));
-								index.range = range;
-
-								idx_list.push_back(index);
-								this->add_index(index);
+                std::pair< index_abstract_list::iterator, bool > result = idx_list.emplace_back(std::make_pair(input[position],
+                                                                                                               std::make_shared<index_abstract>(input[position], this->num_fields, this->num_params)));    // will guess suitable index class
+								if(result.second) this->add_index(*result.first);
 							}
 						else
 							{
-						    std::cout << ERROR_EXPECTED_INDEX_LABEL_A << " '" << candidate << "', " << ERROR_EXPECTED_INDEX_LABEL_B << " '" << input[position] << "'" << '\n';
+                std::ostringstream msg;
+						    msg << ERROR_EXPECTED_INDEX_LABEL_A << " '" << candidate << "', " << ERROR_EXPECTED_INDEX_LABEL_B << " '" << input[position] << "'";
+                this->err_ctx.error(msg.str());
 							}
 
 						position++;
@@ -334,7 +383,9 @@ std::vector<index_abstract> token_list::get_index_list(const std::string& input,
 
 				if(!(position < input.length() && input[position] == ']'))
 					{
-				    std::cout << ERROR_EXPECTED_CLOSE_ARGUMENT_LIST << " '" << candidate << "'" << '\n';
+            std::ostringstream msg;
+				    msg << ERROR_EXPECTED_CLOSE_ARGUMENT_LIST << " '" << candidate << "'";
+            this->err_ctx.error(msg.str());
 					}
 				else
 					{
@@ -343,90 +394,84 @@ std::vector<index_abstract> token_list::get_index_list(const std::string& input,
 			}
 		else    // expected to find an index list
 			{
-		    std::cout << ERROR_EXPECTED_OPEN_INDEX_LIST << " '" << candidate << "'" << '\n';
+        std::ostringstream msg;
+		    msg << ERROR_EXPECTED_OPEN_INDEX_LIST << " '" << candidate << "'";
+        this->err_ctx.error(msg.str());
 			}
 
 		if(idx_list.size() != expected_indices)
 			{
-		    std::cout << ERROR_WRONG_INDEX_COUNT << " '" << candidate << "' (" << ERROR_EXPECTED_INDEX_COUNT << " " << expected_indices << ")";
+        std::ostringstream msg;
+		    msg << ERROR_WRONG_INDEX_COUNT << " '" << candidate << "' (" << ERROR_EXPECTED_INDEX_COUNT << " " << expected_indices << ")";
+        this->err_ctx.error(msg.str());
 			}
 
 		return(idx_list);
 	}
 
 
-void token_list::add_index(char label)
+index_abstract_list::const_iterator token_list::add_index(char label)
 	{
-    index_abstract index;
-
-		index.label = label;
-		index.range = identify_index(label);
-
-		add_index(index);
+    // emplace does nothing if a record already exists
+    return (this->indices.emplace_back(std::make_pair(label, std::make_unique<index_abstract>(label, this->num_fields, this->num_params)))).first;
 	}
 
 
-void token_list::add_index(const index_abstract& index)
+index_abstract_list::const_iterator token_list::add_index(const index_abstract& index)
 	{
-		bool found = false;
+    // emplace does nothing if a record already exists;
+    // we want to ensure class compatibility, so we have to take this responsibility on ourselves
+    index_abstract_list::const_iterator t = this->indices.find(index.get_label());
 
-		for(std::vector<index_abstract>::iterator t = this->indices.begin(); !found && t != this->indices.end(); ++t)
-			{
-				if((*t).label == index.label && (*t).range == index.range)
-					{
-						found = true;
-					}
-			}
-
-		if(!found)
-			{
-				this->indices.push_back(index);
-			}
+    if(t != this->indices.end())
+      {
+        if(index.get_class() != t->get_class())
+          {
+            std::ostringstream msg;
+            msg << ERROR_TOKENIZE_INDEX_MISMATCH << " '" << index.get_label() << "'";
+            this->err_ctx.error(msg.str());
+          }
+        return(t);
+      }
+    else
+      {
+        return (this->indices.emplace_back(index.get_label(), std::make_unique<index_abstract>(index))).first;
+      }
 	}
 
 
-unsigned int token_list::evaluate_macros(simple_macro_token::macro_type type)
+unsigned int token_list::evaluate_macros(simple_macro_type type)
 	{
 		unsigned int replacements = 0;
 
-		for(std::list<generic_token*>::iterator t = this->tokens.begin(); t != this->tokens.end(); ++t)
+    for(simple_macro_token* t : this->simple_macro_tokens)
 			{
-				simple_macro_token* token;
-
-				if((token = dynamic_cast<simple_macro_token*>(*t)) != nullptr)
-					{
-						if(token->get_type() == type)
-							{
-								token->evaluate();
-								replacements++;
-							}
-					}
+        if(t->get_type() == type)
+          {
+            t->evaluate();
+            replacements++;
+          }
 			}
 
 		return(replacements);
 	}
 
 
-unsigned int token_list::evaluate_macros(const std::vector<index_assignment>& a)
+unsigned int token_list::evaluate_macros(const assignment_list& a)
 	{
 		unsigned int replacements = 0;
 
-		for(std::list<generic_token*>::iterator t = this->tokens.begin(); t != this->tokens.end(); ++t)
-			{
-				free_index_token* f_token;
-				index_macro_token* i_token;
+    for(free_index_token* t : this->free_index_tokens)
+      {
+        t->evaluate(a);
+        replacements++;
+      }
 
-				if((f_token = dynamic_cast<free_index_token*>(*t)) != nullptr)
-					{
-						f_token->evaluate(a);
-						replacements++;
-					}
-				else if((i_token = dynamic_cast<index_macro_token*>(*t)) != nullptr)
-					{
-						i_token->evaluate(a);
-						replacements++;
-					}
-			}
+    for(index_macro_token* t : this->index_macro_tokens)
+      {
+        t->evaluate(a);
+        replacements++;
+      }
 
 		return(replacements);
 }
@@ -436,9 +481,9 @@ std::string token_list::to_string()
 	{
     std::string output;
 
-		for(std::list<generic_token*>::iterator t = this->tokens.begin(); t != this->tokens.end(); ++t)
+    for(std::unique_ptr<generic_token>& t : this->tokens)
 			{
-				output += (*t)->to_string();
+				output += t->to_string();
 			}
 
 		return(output);
@@ -460,37 +505,26 @@ token_list::text_token::text_token(const std::string& l)
 	}
 
 
-token_list::free_index_token::free_index_token(const index_abstract& i)
-	: generic_token(std::string(1, i.label)),
-    index(i)
+token_list::free_index_token::free_index_token(index_abstract_list::const_iterator& it)
+	: generic_token(std::string(1, it->get_label())),
+    index(*it)
 	{
 	}
 
 
-void token_list::free_index_token::evaluate(const std::vector<index_assignment>& a)
+void token_list::free_index_token::evaluate(const assignment_list& a)
 	{
-    bool found = false;
+    assignment_list::const_iterator it = a.find(this->index.get_label());
+    if(it == a.end()) throw std::runtime_error(ERROR_MISSING_INDEX_ASSIGNMENT);
 
-    for(std::vector<index_assignment>::const_iterator t = a.begin(); !found && t != a.end(); ++t)
-	    {
-        if((*t).label == this->index.label)
-	        {
-            std::ostringstream cnv;
-            cnv << index_numeric(*t);
-            this->conversion = cnv.str();
-            found = true;
-	        }
-	    }
-
-    if(!found)
-	    {
-        throw std::runtime_error("Missing index assignment!");
-	    }
+    std::ostringstream cnv;
+    cnv << it->get_numeric_value();
+    this->conversion = cnv.str();
 	}
 
 
-token_list::simple_macro_token::simple_macro_token(const std::string& m, const std::vector<std::string>& a,
-                                                   const macro_packages::simple_rule& r, token_list::simple_macro_token::macro_type t)
+token_list::simple_macro_token::simple_macro_token(const std::string& m, const macro_argument_list& a,
+                                                   const macro_packages::simple_rule& r, simple_macro_type t)
 	: generic_token(m),
     name(m),
     args(a),
@@ -507,11 +541,11 @@ void token_list::simple_macro_token::evaluate()
 	}
 
 
-token_list::index_macro_token::index_macro_token(const std::string& m, const std::vector<index_abstract>& i, const std::vector<std::string>& a, const macro_packages::index_rule& r)
+token_list::index_macro_token::index_macro_token(const std::string& m, const index_abstract_list i, const macro_argument_list& a, const macro_packages::index_rule& r)
 	: generic_token(m),
     name(m),
     args(a),
-    indices(i),
+    indices(std::move(i)),
     rule(r),
     state(nullptr)
 	{
@@ -531,27 +565,19 @@ token_list::index_macro_token::~index_macro_token()
 	}
 
 
-void token_list::index_macro_token::evaluate(const std::vector<index_assignment>& a)
+void token_list::index_macro_token::evaluate(const assignment_list& a)
 	{
-    std::vector<index_assignment> index_values;
+    // strip out the index assignment just for the indices this macro requires
+    // preserves ordering
+    assignment_list index_values;
 
-		for(std::vector<index_abstract>::const_iterator t = this->indices.begin(); t != indices.end(); ++t)
-			{
-				bool found = false;
-				for(std::vector<index_assignment>::const_iterator u = a.begin(); !found && u != a.end(); ++u)
-					{
-						if((*u).label == (*t).label)
-							{
-								index_values.push_back(*u);
-								found = true;
-							}
-					}
+    for(const index_abstract& idx : this->indices)
+      {
+        assignment_list::const_iterator it = a.find(idx.get_label());
+        if(it == a.end()) throw std::runtime_error(ERROR_MISSING_INDEX_ASSIGNMENT);
 
-				if(!found)
-					{
-						throw std::runtime_error("Missing index assignment!");
-					}
-			}
+        index_values.emplace_back(std::make_pair(idx.get_label(), std::make_shared<assignment_record>(*it)));
+      }
 
 		this->conversion = (this->rule.rule)(this->args, index_values, this->state);
 	}

@@ -48,7 +48,7 @@ namespace transport
 
             //! value constructor
             generic_value_iterator(value_iterator_type i, ValueType o)
-	            : it(i),
+	            : it(std::move(i)),
                 offset(o)
 	            {
 	            }

@@ -37,7 +37,7 @@ namespace macro_packages
             BIND(replace_p_abs_err),      BIND(replace_p_rel_err),      BIND(replace_p_step),      BIND(replace_p_stepper)
           };
 
-        const std::vector<std::string> names =
+        const macro_argument_list names =
           { "TOOL",                       "VERSION",                    "GUARD",                   "DATE",                    "SOURCE",
             "NAME",                       "AUTHOR",                     "TAG",                     "MODEL",                   "UNIQUE_ID",
             "HEADER",                     "CORE",
@@ -120,19 +120,23 @@ namespace macro_packages
     // *******************************************************************
 
 
-    std::string fundamental::stringize_list(std::vector<std::string> list)
+    template <typename ListType>
+    std::string fundamental::stringize_list(const ListType& list)
       {
         std::ostringstream out;
 
         out << this->list_start + this->list_pad;
 
-        for(int i = 0; i < list.size(); ++i)
+        unsigned int i = 0;
+        for(const std::string& item : list)
           {
             if(i > 0)
               {
                 out << this->list_separator + this->list_pad;
               }
-            out << to_printable(list[i]);
+
+            out << to_printable(item);
+            ++i;
           }
         out << this->list_pad + this->list_end;
 
@@ -153,19 +157,19 @@ namespace macro_packages
 
     // PRE macros
 
-    std::string fundamental::replace_tool(const std::vector<std::string> &args)
+    std::string fundamental::replace_tool(const macro_argument_list& args)
       {
         return(CPPTRANSPORT_NAME);
       }
 
 
-    std::string fundamental::replace_version(const std::vector<std::string> &args)
+    std::string fundamental::replace_version(const macro_argument_list& args)
       {
         return(CPPTRANSPORT_VERSION);
       }
 
 
-    std::string fundamental::replace_guard(const std::vector<std::string> &args)
+    std::string fundamental::replace_guard(const macro_argument_list& args)
       {
         std::string guard;
         enum process_type type = this->data_payload.get_stack().top_process_type();
@@ -183,7 +187,7 @@ namespace macro_packages
       }
 
 
-    std::string fundamental::replace_date(const std::vector<std::string> &args)
+    std::string fundamental::replace_date(const macro_argument_list& args)
       {
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
 
@@ -191,13 +195,13 @@ namespace macro_packages
       }
 
 
-    std::string fundamental::replace_source(const std::vector<std::string>& args)
+    std::string fundamental::replace_source(const macro_argument_list& args)
       {
         return(this->data_payload.get_model_input().string());
       }
 
 
-    std::string fundamental::replace_uid(const std::vector<std::string>& args)
+    std::string fundamental::replace_uid(const macro_argument_list& args)
       {
         boost::optional< contexted_value<std::string>& > nm_value = this->data_payload.get_name();
         std::string name = nm_value ? *(*nm_value) : std::string();
@@ -219,7 +223,7 @@ namespace macro_packages
       }
 
 
-    std::string fundamental::replace_name(const std::vector<std::string> &args)
+    std::string fundamental::replace_name(const macro_argument_list& args)
       {
         boost::optional< contexted_value<std::string>& > value = this->data_payload.get_name();
         if(value)
@@ -233,7 +237,7 @@ namespace macro_packages
       }
 
 
-    std::string fundamental::replace_author(const std::vector<std::string> &args)
+    std::string fundamental::replace_author(const macro_argument_list& args)
       {
         boost::optional< contexted_value<std::string>& > value = this->data_payload.get_author();
         if(value)
@@ -247,7 +251,7 @@ namespace macro_packages
       }
 
 
-    std::string fundamental::replace_tag(const std::vector<std::string> &args)
+    std::string fundamental::replace_tag(const macro_argument_list& args)
       {
         boost::optional< contexted_value<std::string>& > value = this->data_payload.get_tag();
         if(value)
@@ -261,7 +265,7 @@ namespace macro_packages
       }
 
 
-    std::string fundamental::replace_model(const std::vector<std::string>& args)
+    std::string fundamental::replace_model(const macro_argument_list& args)
       {
         boost::optional< contexted_value<std::string>& > value = this->data_payload.get_model();
         if(value)
@@ -275,19 +279,19 @@ namespace macro_packages
       }
 
 
-    std::string fundamental::replace_header(const std::vector<std::string> &args)
+    std::string fundamental::replace_header(const macro_argument_list& args)
       {
         return(this->data_payload.get_implementation_output().string());
       }
 
 
-    std::string fundamental::replace_core(const std::vector<std::string> &args)
+    std::string fundamental::replace_core(const macro_argument_list& args)
       {
         return(this->data_payload.get_core_output().string());
       }
 
 
-    std::string fundamental::replace_number_fields(const std::vector<std::string> &args)
+    std::string fundamental::replace_number_fields(const macro_argument_list& args)
       {
         std::ostringstream out;
 
@@ -297,7 +301,7 @@ namespace macro_packages
       }
 
 
-    std::string fundamental::replace_number_params(const std::vector<std::string> &args)
+    std::string fundamental::replace_number_params(const macro_argument_list& args)
       {
         std::ostringstream out;
 
@@ -307,7 +311,7 @@ namespace macro_packages
       }
 
 
-    std::string fundamental::replace_field_list(const std::vector<std::string> &args)
+    std::string fundamental::replace_field_list(const macro_argument_list& args)
       {
         std::vector<std::string> list = this->data_payload.get_field_list();
 
@@ -315,7 +319,7 @@ namespace macro_packages
       }
 
 
-    std::string fundamental::replace_latex_list(const std::vector<std::string> &args)
+    std::string fundamental::replace_latex_list(const macro_argument_list& args)
       {
         std::vector<std::string> list = this->data_payload.get_latex_list();
 
@@ -323,7 +327,7 @@ namespace macro_packages
       }
 
 
-    std::string fundamental::replace_param_list(const std::vector<std::string> &args)
+    std::string fundamental::replace_param_list(const macro_argument_list& args)
       {
         std::vector<std::string> list = this->data_payload.get_param_list();
 
@@ -331,7 +335,7 @@ namespace macro_packages
       }
 
 
-    std::string fundamental::replace_platx_list(const std::vector<std::string> &args)
+    std::string fundamental::replace_platx_list(const macro_argument_list& args)
       {
         std::vector<std::string> list = this->data_payload.get_platx_list();
 
@@ -339,7 +343,7 @@ namespace macro_packages
       }
 
 
-    std::string fundamental::replace_state_list(const std::vector<std::string> &args)
+    std::string fundamental::replace_state_list(const macro_argument_list& args)
       {
         std::vector<GiNaC::symbol> f_list = this->data_payload.get_field_symbols();
         std::vector<GiNaC::symbol> d_list = this->data_payload.get_deriv_symbols();
@@ -359,7 +363,7 @@ namespace macro_packages
       }
 
 
-     std::string fundamental::replace_b_abs_err(const std::vector<std::string> &args)
+     std::string fundamental::replace_b_abs_err(const macro_argument_list& args)
       {
         const struct stepper s = this->data_payload.get_background_stepper();
 
@@ -367,7 +371,7 @@ namespace macro_packages
       }
 
 
-    std::string fundamental::replace_b_rel_err(const std::vector<std::string> &args)
+    std::string fundamental::replace_b_rel_err(const macro_argument_list& args)
       {
         const struct stepper s = this->data_payload.get_background_stepper();
 
@@ -375,7 +379,7 @@ namespace macro_packages
       }
 
 
-    std::string fundamental::replace_b_step(const std::vector<std::string> &args)
+    std::string fundamental::replace_b_step(const macro_argument_list& args)
       {
         const struct stepper s = this->data_payload.get_background_stepper();
 
@@ -383,7 +387,7 @@ namespace macro_packages
       }
 
 
-    std::string fundamental::replace_b_stepper(const std::vector<std::string> &args)
+    std::string fundamental::replace_b_stepper(const macro_argument_list& args)
       {
         const struct stepper s = this->data_payload.get_background_stepper();
 
@@ -391,7 +395,7 @@ namespace macro_packages
       }
 
 
-    std::string fundamental::replace_p_abs_err(const std::vector<std::string> &args)
+    std::string fundamental::replace_p_abs_err(const macro_argument_list& args)
       {
         const struct stepper s = this->data_payload.get_perturbations_stepper();
 
@@ -399,7 +403,7 @@ namespace macro_packages
       }
 
 
-    std::string fundamental::replace_p_rel_err(const std::vector<std::string> &args)
+    std::string fundamental::replace_p_rel_err(const macro_argument_list& args)
       {
         const struct stepper s = this->data_payload.get_perturbations_stepper();
 
@@ -407,7 +411,7 @@ namespace macro_packages
       }
 
 
-    std::string fundamental::replace_p_step(const std::vector<std::string> &args)
+    std::string fundamental::replace_p_step(const macro_argument_list& args)
       {
         const struct stepper s = this->data_payload.get_perturbations_stepper();
 
@@ -415,7 +419,7 @@ namespace macro_packages
       }
 
 
-    std::string fundamental::replace_p_stepper(const std::vector<std::string>& args)
+    std::string fundamental::replace_p_stepper(const macro_argument_list& args)
       {
         const struct stepper s = this->data_payload.get_perturbations_stepper();
 
@@ -426,7 +430,7 @@ namespace macro_packages
     // POST macros
 
 
-    std::string fundamental::replace_unique(const std::vector<std::string> &args)
+    std::string fundamental::replace_unique(const macro_argument_list& args)
       {
         return(this->stringize_number(this->unique++));
       }

@@ -56,12 +56,12 @@ namespace macro_packages
 
       protected:
 
-        void* pre_u1_tensor(const std::vector<std::string> &args);
-        void *pre_u2_tensor(const std::vector<std::string> &args);
-        void *pre_u3_tensor(const std::vector<std::string> &args);
-        void *pre_u1_predef(const std::vector<std::string> &args);
-        void *pre_u2_predef(const std::vector<std::string> &args);
-        void *pre_u3_predef(const std::vector<std::string> &args);
+        void* pre_u1_tensor(const macro_argument_list& args);
+        void *pre_u2_tensor(const macro_argument_list& args);
+        void *pre_u3_tensor(const macro_argument_list& args);
+        void *pre_u1_predef(const macro_argument_list& args);
+        void *pre_u2_predef(const macro_argument_list& args);
+        void *pre_u3_predef(const macro_argument_list& args);
 
 
         // INTERNAL DATA

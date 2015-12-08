@@ -9,12 +9,13 @@
 
 
 #include "index_assignment.h"
+#include "macro_types.h"
 
 
-typedef std::function<std::string(const std::vector<std::string>&)>                                       replacement_rule_simple;
-typedef std::function<std::string(const std::vector<std::string>&, std::vector<index_assignment>, void*)> replacement_rule_index;
-typedef std::function<void*      (const std::vector<std::string>&)>                                       replacement_rule_pre;
-typedef std::function<void       (void*)>                                                                 replacement_rule_post;
+typedef std::function<std::string(const macro_argument_list&)>                                replacement_rule_simple;
+typedef std::function<std::string(const macro_argument_list&, const assignment_list&, void*)> replacement_rule_index;
+typedef std::function<void*      (const macro_argument_list&)>                                replacement_rule_pre;
+typedef std::function<void       (void*)>                                                     replacement_rule_post;
 
 
 namespace macro_packages
@@ -43,7 +44,7 @@ namespace macro_packages
         replacement_rule_post    post;
         unsigned int             args;
         unsigned int             indices;
-        unsigned int             range;
+        enum index_class         range;
         std::string              name;
 
       };

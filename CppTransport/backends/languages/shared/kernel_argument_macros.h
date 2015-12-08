@@ -41,11 +41,11 @@ namespace shared
 
       protected:
 
-        std::string args_params(const std::vector<std::string> &args);
+        std::string args_params(const macro_argument_list& args);
 
-        std::string args_1index(const std::vector<std::string>& args);
-        std::string args_2index(const std::vector<std::string>& args);
-        std::string args_3index(const std::vector<std::string>& args);
+        std::string args_1index(const macro_argument_list& args);
+        std::string args_2index(const macro_argument_list& args);
+        std::string args_3index(const macro_argument_list& args);
 
 
         // INTERNAL DATA

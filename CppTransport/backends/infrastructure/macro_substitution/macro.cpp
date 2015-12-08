@@ -19,8 +19,8 @@
 
 macro_agent::macro_agent(translator_data& p, package_group& pkg, std::string pf, std::string sp, unsigned int dm)
   : data_payload(p),
-    prefix(pf),
-    split(sp),
+    prefix(std::move(pf)),
+    split(std::move(sp)),
     recursion_max(dm),
     recursion_depth(0),
     pre_rule_cache(pkg.get_pre_ruleset()),
@@ -41,7 +41,7 @@ macro_agent::macro_agent(translator_data& p, package_group& pkg, std::string pf,
   }
 
 
-std::unique_ptr< std::vector<std::string> > macro_agent::apply(std::string& line, unsigned int& replacements)
+std::unique_ptr< std::list<std::string> > macro_agent::apply(std::string& line, unsigned int& replacements)
   {
 		// if timer is stopped, restart it
 		bool stopped = this->timer.is_stopped();
@@ -50,7 +50,7 @@ std::unique_ptr< std::vector<std::string> > macro_agent::apply(std::string& line
 		// the result of macro substitution is potentially large, and we'd rather not copy
 		// a very large array of strings while moving the result around.
 		// So, use a std::unique_ptr<> to manage the result object
-    std::unique_ptr< std::vector<std::string> > r_list;
+    std::unique_ptr< std::list<std::string> > r_list;
 
     if(++this->recursion_depth < this->recursion_max)
       {
@@ -73,9 +73,9 @@ std::unique_ptr< std::vector<std::string> > macro_agent::apply(std::string& line
   }
 
 
-std::unique_ptr< std::vector<std::string> > macro_agent::apply_line(std::string& line, unsigned int& replacements)
+std::unique_ptr< std::list<std::string> > macro_agent::apply_line(std::string& line, unsigned int& replacements)
   {
-    std::unique_ptr< std::vector<std::string> > r_list = std::make_unique< std::vector<std::string> >();
+    std::unique_ptr< std::list<std::string> > r_list = std::make_unique< std::list<std::string> >();
 
 		// break the line at the split point, if it exists, to get a 'left-hand' side and a 'right-hand' side
     std::string left;
@@ -113,8 +113,9 @@ std::unique_ptr< std::vector<std::string> > macro_agent::apply_line(std::string&
 	    }
 
 		tokenization_timer.resume();
-		token_list left_tokens(left, this->prefix, this->pre_rule_cache, this->post_rule_cache, this->index_rule_cache);
-		token_list right_tokens(right, this->prefix, this->pre_rule_cache, this->post_rule_cache, this->index_rule_cache);
+    error_context err_context(this->data_payload.get_stack(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
+		token_list left_tokens(left, this->prefix, this->fields, this->parameters, this->pre_rule_cache, this->post_rule_cache, this->index_rule_cache, err_context);
+		token_list right_tokens(right, this->prefix, this->fields, this->parameters, this->pre_rule_cache, this->post_rule_cache, this->index_rule_cache, err_context);
 		tokenization_timer.stop();
 
     // running total of number of macro replacements
@@ -122,12 +123,11 @@ std::unique_ptr< std::vector<std::string> > macro_agent::apply_line(std::string&
 
     // evaluate pre macros and cache the results
 		// we'd like to do this only once if possible, because evaluation may be expensive
-		counter += left_tokens.evaluate_macros(token_list::simple_macro_token::pre);
-		counter += right_tokens.evaluate_macros(token_list::simple_macro_token::pre);
+		counter += left_tokens.evaluate_macros(simple_macro_type::pre);
+		counter += right_tokens.evaluate_macros(simple_macro_type::pre);
 
-    // generate an assignment for each LHS index
-    assignment_package assigner(this->fields, this->parameters, this->order);
-    std::vector< std::vector<index_assignment> > LHS_assignments = assigner.assign(left_tokens.get_indices());
+    // generate assignments for the LHS indices
+    assignment_set LHS_assignments(left_tokens.get_indices());
 
 		// LHS_assignments may be empty if there are no valid assignments (probably one of the index
 		// ranges is empty). If there are no LHS indices then it will contain one empty vector
@@ -136,16 +136,29 @@ std::unique_ptr< std::vector<std::string> > macro_agent::apply_line(std::string&
 
 		// generate an assignment for each RHS index
 		// TODO: check that RHS assignments match the expected type for each macro (the previous implementation did this; the revised one doesn't yet)
-    std::vector<index_abstract> RHS_indices = assigner.difference(right_tokens.get_indices(), left_tokens.get_indices());
-    std::vector< std::vector<index_assignment> > RHS_assignments = assigner.assign(RHS_indices);
+
+    // first get RHS indices which are not also LHS indices
+    index_abstract_list RHS_indices;
+    try
+      {
+        RHS_indices = right_tokens.get_indices() - left_tokens.get_indices();
+      }
+    catch(index_exception& xe)
+      {
+        std::ostringstream msg;
+        msg << ERROR_MACRO_LHS_RHS_MISMATCH << " '" << xe.what() << "'";
+        err_context.error(msg.str());
+      }
+
+    assignment_set RHS_assignments(RHS_indices);
 
 		if(LHS_assignments.size() > 0)
 			{
-				for(std::vector< std::vector<index_assignment> >::iterator t = LHS_assignments.begin(); t != LHS_assignments.end(); ++t)
+        for(std::unique_ptr<assignment_list> LHS_assign : LHS_assignments)
 			    {
 				    // evaluate LHS macros on this index assignment
-				    counter += left_tokens.evaluate_macros(*t);
-						counter += left_tokens.evaluate_macros(token_list::simple_macro_token::post);
+				    counter += left_tokens.evaluate_macros(*LHS_assign);
+						counter += left_tokens.evaluate_macros(simple_macro_type::post);    // pre macros were evaluated earlier
 
 						if(RHS_assignments.size() > 1)   // multiple RHS assignments
 							{
@@ -156,12 +169,22 @@ std::unique_ptr< std::vector<std::string> > macro_agent::apply_line(std::string&
 							    }
 
 						    // now generate a set of RHS evaluations for this LHS evaluation
-						    for(std::vector< std::vector<index_assignment> >::iterator u = RHS_assignments.begin(); u != RHS_assignments.end(); ++u)
+                for(std::unique_ptr<assignment_list> RHS_assign : RHS_assignments)
 							    {
-						        std::vector<index_assignment> LHS_RHS_assignment = assigner.merge(*t, *u);
+                    assignment_list total_assignment;
+                    try
+                      {
+                        total_assignment = *LHS_assign + *RHS_assign;
+                      }
+                    catch(index_exception& xe)
+                      {
+                        std::ostringstream msg;
+                        msg << ERROR_MACRO_LHS_RHS_MISMATCH << " '" << xe.what() << "'";
+                        err_context.error(msg.str());
+                      }
 
-						        counter += right_tokens.evaluate_macros(LHS_RHS_assignment);
-						        counter += right_tokens.evaluate_macros(token_list::simple_macro_token::post);
+						        counter += right_tokens.evaluate_macros(total_assignment);
+						        counter += right_tokens.evaluate_macros(simple_macro_type::post);
 
 								    // set up replacement right hand side; add trailing ; and , only if the LHS is empty
 						        std::string this_line = right_tokens.to_string() + (left_tokens.size() == 0 && semicolon ? ";" : "") + (left_tokens.size() == 0 && comma ? "," : "");
@@ -184,10 +207,22 @@ std::unique_ptr< std::vector<std::string> > macro_agent::apply_line(std::string&
 							}
 						else if(RHS_assignments.size() == 1)  // just one RHS assignment, so coalesce with LHS
 							{
-						    std::vector<index_assignment> LHS_RHS_assignment = assigner.merge(*t, RHS_assignments.front());
+                std::unique_ptr<assignment_list> RHS_assign = *RHS_assignments.begin();
 
-						    counter += right_tokens.evaluate_macros(LHS_RHS_assignment);
-						    counter += right_tokens.evaluate_macros(token_list::simple_macro_token::post);
+                assignment_list total_assignment;
+                try
+                  {
+                    total_assignment = *LHS_assign + *RHS_assign;
+                  }
+                catch(index_exception& xe)
+                  {
+                    std::ostringstream msg;
+                    msg << ERROR_MACRO_LHS_RHS_MISMATCH << " '" << xe.what() << "'";
+                    err_context.error(msg.str());
+                  }
+
+						    counter += right_tokens.evaluate_macros(total_assignment);
+						    counter += right_tokens.evaluate_macros(simple_macro_type::post);
 
 								// set up line with macro replacements, and add trailing ; and , if necessary
 						    std::string full_line = left_tokens.to_string() + " " + right_tokens.to_string() + (semicolon ? ";" : "") + (comma ? "," : "");
@@ -204,4 +239,3 @@ std::unique_ptr< std::vector<std::string> > macro_agent::apply_line(std::string&
 
     return(r_list);
 	}
-

@@ -75,10 +75,10 @@ namespace macro_packages
             2,                                  2
           };
 
-        const std::vector<unsigned int> ranges =
-          { 1,                                  1,                                  1,
-            1,                                  1,                                  1,
-            1,                                  1
+        const std::vector<enum index_class> ranges =
+          { index_class::field_only,            index_class::field_only,            index_class::field_only,
+            index_class::field_only,            index_class::field_only,            index_class::field_only,
+            index_class::field_only,            index_class::field_only
           };
 
         assert(pres.size() == posts.size());
@@ -109,7 +109,7 @@ namespace macro_packages
     // *******************************************************************
 
 
-    void* lagrangian_tensors::pre_A_tensor(const std::vector<std::string>& args)
+    void* lagrangian_tensors::pre_A_tensor(const macro_argument_list& args)
       {
         assert(args.size() == 4);
 
@@ -129,7 +129,7 @@ namespace macro_packages
       }
 
 
-    void* lagrangian_tensors::pre_A_predef(const std::vector<std::string>& args)
+    void* lagrangian_tensors::pre_A_predef(const macro_argument_list& args)
       {
         assert(args.size() == 6);
 
@@ -157,7 +157,7 @@ namespace macro_packages
       // ******************************************************************
 
 
-    void* lagrangian_tensors::pre_B_tensor(const std::vector<std::string> &args)
+    void* lagrangian_tensors::pre_B_tensor(const macro_argument_list& args)
       {
         assert(args.size() == 4);
 
@@ -177,7 +177,7 @@ namespace macro_packages
       }
 
 
-    void* lagrangian_tensors::pre_B_predef(const std::vector<std::string>& args)
+    void* lagrangian_tensors::pre_B_predef(const macro_argument_list& args)
       {
         assert(args.size() == 6);
 
@@ -205,7 +205,7 @@ namespace macro_packages
     // ******************************************************************
 
 
-    void* lagrangian_tensors::pre_C_tensor(const std::vector<std::string> &args)
+    void* lagrangian_tensors::pre_C_tensor(const macro_argument_list& args)
       {
         assert(args.size() == 4);
 
@@ -225,7 +225,7 @@ namespace macro_packages
       }
 
 
-    void* lagrangian_tensors::pre_C_predef(const std::vector<std::string> &args)
+    void* lagrangian_tensors::pre_C_predef(const macro_argument_list& args)
       {
         assert(args.size() == 6);
 
@@ -253,7 +253,7 @@ namespace macro_packages
 // ******************************************************************
 
 
-    void* lagrangian_tensors::pre_M_tensor(const std::vector<std::string> &args)
+    void* lagrangian_tensors::pre_M_tensor(const macro_argument_list& args)
       {
         std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
         this->u_factory->compute_M(*container, *this->fl);
@@ -264,7 +264,7 @@ namespace macro_packages
       }
 
 
-    void* lagrangian_tensors::pre_M_predef(const std::vector<std::string> &args)
+    void* lagrangian_tensors::pre_M_predef(const macro_argument_list& args)
       {
         assert(args.size() == 2);
 

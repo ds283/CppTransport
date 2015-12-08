@@ -51,10 +51,10 @@ namespace macro_packages
 
       protected:
 
-        void* pre_zeta_xfm_1  (const std::vector<std::string>& args);
-        void* pre_zeta_xfm_2  (const std::vector<std::string>& args);
-        void* pre_deltaN_xfm_1(const std::vector<std::string>& args);
-        void* pre_deltaN_xfm_2(const std::vector<std::string>& args);
+        void* pre_zeta_xfm_1  (const macro_argument_list& args);
+        void* pre_zeta_xfm_2  (const macro_argument_list& args);
+        void* pre_deltaN_xfm_1(const macro_argument_list& args);
+        void* pre_deltaN_xfm_2(const macro_argument_list& args);
 
 
         // INTERNAL DATA

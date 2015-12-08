@@ -71,9 +71,9 @@ namespace macro_packages
             1,                            2,                            3
           };
 
-        const std::vector<unsigned int> ranges =
-          { 2,                            2,                            2,
-            2,                            2,                            2
+        const std::vector<enum index_class> ranges =
+          { index_class::full,            index_class::full,            index_class::full,
+            index_class::full,            index_class::full,            index_class::full
           };
 
         assert(pres.size() == posts.size());
@@ -104,7 +104,7 @@ namespace macro_packages
     // *******************************************************************
 
 
-    void* utensors::pre_u1_tensor(const std::vector<std::string>& args)
+    void* utensors::pre_u1_tensor(const macro_argument_list& args)
       {
         std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
         this->u_factory->compute_u1(*container, *this->fl);
@@ -115,7 +115,7 @@ namespace macro_packages
       }
 
 
-    void* utensors::pre_u1_predef(const std::vector<std::string>& args)
+    void* utensors::pre_u1_predef(const macro_argument_list& args)
       {
         assert(args.size() == 2);
 
@@ -138,7 +138,7 @@ namespace macro_packages
     // ******************************************************************
 
 
-    void* utensors::pre_u2_tensor(const std::vector<std::string>& args)
+    void* utensors::pre_u2_tensor(const macro_argument_list& args)
       {
         assert(args.size() == 2);
 
@@ -156,7 +156,7 @@ namespace macro_packages
       }
 
 
-    void* utensors::pre_u2_predef(const std::vector<std::string>& args)
+    void* utensors::pre_u2_predef(const macro_argument_list& args)
       {
         assert(args.size() == 4);
 
@@ -182,7 +182,7 @@ namespace macro_packages
     // ******************************************************************
 
 
-    void* utensors::pre_u3_tensor(const std::vector<std::string>& args)
+    void* utensors::pre_u3_tensor(const macro_argument_list& args)
       {
         assert(args.size() == 4);
 
@@ -202,7 +202,7 @@ namespace macro_packages
       }
 
 
-    void* utensors::pre_u3_predef(const std::vector<std::string>& args)
+    void* utensors::pre_u3_predef(const macro_argument_list& args)
       {
         assert(args.size() == 6);
 

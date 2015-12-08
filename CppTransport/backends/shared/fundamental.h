@@ -60,47 +60,48 @@ namespace macro_packages
 
       protected:
 
-        std::string stringize_list         (std::vector<std::string> list);
-        std::string stringize_number       (double number);
+        template <typename ListType>
+        std::string stringize_list        (const ListType& list);
+        std::string stringize_number      (double number);
 
         // PRE macros
-        std::string replace_tool          (const std::vector<std::string> &args);
-        std::string replace_version       (const std::vector<std::string> &args);
-        std::string replace_guard         (const std::vector<std::string> &args);
-        std::string replace_date          (const std::vector<std::string> &args);
-        std::string replace_source        (const std::vector<std::string> &args);
+        std::string replace_tool          (const macro_argument_list& args);
+        std::string replace_version       (const macro_argument_list& args);
+        std::string replace_guard         (const macro_argument_list& args);
+        std::string replace_date          (const macro_argument_list& args);
+        std::string replace_source        (const macro_argument_list& args);
 
-        std::string replace_uid           (const std::vector<std::string> &args);
+        std::string replace_uid           (const macro_argument_list& args);
 
-        std::string replace_name          (const std::vector<std::string> &args);
-        std::string replace_author        (const std::vector<std::string> &args);
-        std::string replace_tag           (const std::vector<std::string> &args);
-        std::string replace_model         (const std::vector<std::string> &args);
+        std::string replace_name          (const macro_argument_list& args);
+        std::string replace_author        (const macro_argument_list& args);
+        std::string replace_tag           (const macro_argument_list& args);
+        std::string replace_model         (const macro_argument_list& args);
 
-        std::string replace_header        (const std::vector<std::string> &args);
-        std::string replace_core          (const std::vector<std::string> &args);
+        std::string replace_header        (const macro_argument_list& args);
+        std::string replace_core          (const macro_argument_list& args);
 
-        std::string replace_number_fields (const std::vector<std::string> &args);
-        std::string replace_number_params (const std::vector<std::string> &args);
+        std::string replace_number_fields (const macro_argument_list& args);
+        std::string replace_number_params (const macro_argument_list& args);
 
-        std::string replace_field_list    (const std::vector<std::string> &args);
-        std::string replace_latex_list    (const std::vector<std::string> &args);
-        std::string replace_param_list    (const std::vector<std::string> &args);
-        std::string replace_platx_list    (const std::vector<std::string> &args);
-        std::string replace_state_list    (const std::vector<std::string> &args);
+        std::string replace_field_list    (const macro_argument_list& args);
+        std::string replace_latex_list    (const macro_argument_list& args);
+        std::string replace_param_list    (const macro_argument_list& args);
+        std::string replace_platx_list    (const macro_argument_list& args);
+        std::string replace_state_list    (const macro_argument_list& args);
 
-        std::string replace_b_abs_err     (const std::vector<std::string> &args);
-        std::string replace_b_rel_err     (const std::vector<std::string> &args);
-        std::string replace_b_step        (const std::vector<std::string> &args);
-        std::string replace_b_stepper     (const std::vector<std::string> &args);
+        std::string replace_b_abs_err     (const macro_argument_list& args);
+        std::string replace_b_rel_err     (const macro_argument_list& args);
+        std::string replace_b_step        (const macro_argument_list& args);
+        std::string replace_b_stepper     (const macro_argument_list& args);
 
-        std::string replace_p_abs_err     (const std::vector<std::string> &args);
-        std::string replace_p_rel_err     (const std::vector<std::string> &args);
-        std::string replace_p_step        (const std::vector<std::string> &args);
-        std::string replace_p_stepper     (const std::vector<std::string> &args);
+        std::string replace_p_abs_err     (const macro_argument_list& args);
+        std::string replace_p_rel_err     (const macro_argument_list& args);
+        std::string replace_p_step        (const macro_argument_list& args);
+        std::string replace_p_stepper     (const macro_argument_list& args);
 
         // POST macros
-        std::string replace_unique        (const std::vector<std::string> &args);
+        std::string replace_unique        (const macro_argument_list& args);
 
 
         // INTERNAL DATA

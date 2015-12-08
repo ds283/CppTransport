@@ -69,9 +69,9 @@ namespace macro_packages
             1,                            2
           };
 
-        const std::vector<unsigned int> ranges =
-          { 2,                            2,
-            2,                            2
+        const std::vector<enum index_class> ranges =
+          { index_class::full,            index_class::full,
+            index_class::full,            index_class::full
           };
 
         assert(pres.size() == posts.size());
@@ -102,7 +102,7 @@ namespace macro_packages
     // *******************************************************************
 
 
-    void* gauge_xfm::pre_zeta_xfm_1(const std::vector<std::string>& args)
+    void* gauge_xfm::pre_zeta_xfm_1(const macro_argument_list& args)
       {
         assert(args.size() == 2);
 
@@ -122,7 +122,7 @@ namespace macro_packages
       }
 
 
-    void* gauge_xfm::pre_zeta_xfm_2(const std::vector<std::string>& args)
+    void* gauge_xfm::pre_zeta_xfm_2(const macro_argument_list& args)
       {
         assert(args.size() == 6);
 
@@ -147,7 +147,7 @@ namespace macro_packages
       }
 
 
-    void* gauge_xfm::pre_deltaN_xfm_1(const std::vector<std::string>& args)
+    void* gauge_xfm::pre_deltaN_xfm_1(const macro_argument_list& args)
 	    {
         std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
         this->u_factory->compute_deltaN_xfm_1(*container, *this->fl);
@@ -158,7 +158,7 @@ namespace macro_packages
 	    }
 
 
-    void* gauge_xfm::pre_deltaN_xfm_2(const std::vector<std::string>& args)
+    void* gauge_xfm::pre_deltaN_xfm_2(const macro_argument_list& args)
 	    {
         std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
         this->u_factory->compute_deltaN_xfm_2(*container, *this->fl);

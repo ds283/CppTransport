@@ -10,12 +10,15 @@
 #include <iostream>
 #include <vector>
 #include <list>
+#include <unordered_map>
 #include <string>
 #include <functional>
 
 #include "core.h"
+#include "error_context.h"
 #include "index_assignment.h"
 #include "replacement_rule_definitions.h"
+#include "macro_types.h"
 
 
 class token_list
@@ -28,8 +31,10 @@ class token_list
 
       public:
 
+        //! constructor
 		    generic_token(const std::string& c);
 
+        //! destructor is default
         virtual ~generic_token() = default;
 
 
@@ -55,7 +60,11 @@ class token_list
 
       public:
 
+        //! constructor
         text_token(const std::string& l);
+
+        //! destructor is default
+        virtual ~text_token() = default;
 
 	    };
 
@@ -64,22 +73,18 @@ class token_list
 
       public:
 
-        free_index_token(const index_abstract& i);
+        //! constructor
+        free_index_token(index_abstract_list::const_iterator& it);
 
-		    free_index_token(char label)
-		      : generic_token(std::string(1, label))
-			    {
-				    index.label = label;
-				    index.range = identify_index(label);
-			    }
-
+        //! destructor is default
+        virtual ~free_index_token() = default;
 
         // INTERFACE
 
       public:
 
         //! evaluate and cache the result given a list of index assignments
-        void evaluate(const std::vector<index_assignment>& a);
+        void evaluate(const assignment_list& a);
 
 
 		    // INTERNAL DATA
@@ -95,11 +100,11 @@ class token_list
 
       public:
 
-	      enum macro_type { pre, post };
+        //! constructor
+        simple_macro_token(const std::string& m, const macro_argument_list& a, const macro_packages::simple_rule& r, simple_macro_type t);
 
-      public:
-
-        simple_macro_token(const std::string& m, const std::vector<std::string>& a, const macro_packages::simple_rule& r, macro_type t);
+        //! destructor is default
+        virtual ~simple_macro_token() = default;
 
 
 		    // INTERFACE
@@ -107,7 +112,7 @@ class token_list
       public:
 
 		    //! get type
-		    macro_type get_type() const { return(this->type); }
+        simple_macro_type get_type() const { return(this->type); }
 
 		    //! evaluate and cache the result
 		    void evaluate();
@@ -118,10 +123,10 @@ class token_list
       protected:
 
 		    const std::string name;
-		    const std::vector<std::string> args;
+		    const macro_argument_list args;
 		    macro_packages::simple_rule rule;
 
-		    enum macro_type type;
+		    enum simple_macro_type type;
 
 	    };
 
@@ -130,8 +135,10 @@ class token_list
 
 		  public:
 
-		    index_macro_token(const std::string& m, const std::vector<index_abstract>& i, const std::vector<std::string>& a, const macro_packages::index_rule& r);
+        //! constructor
+		    index_macro_token(const std::string& m, const index_abstract_list i, const macro_argument_list& a, const macro_packages::index_rule& r);
 
+        //! destructor is default
 				virtual ~index_macro_token();
 
 
@@ -140,7 +147,7 @@ class token_list
 		  public:
 
 		    //! evaluate and cache the result given a list of index assignments
-		    void evaluate(const std::vector<index_assignment>& a);
+		    void evaluate(const assignment_list& a);
 
 
 		    // INTERNAL DATA
@@ -148,8 +155,8 @@ class token_list
 		  protected:
 
 				const std::string name;
-				const std::vector<std::string> args;
-				const std::vector<index_abstract> indices;
+				const macro_argument_list args;
+				const index_abstract_list indices;
 				macro_packages::index_rule rule;
 
 				void* state;
@@ -159,16 +166,18 @@ class token_list
   public:
 
 		//! build a token list from an input string
-		token_list(const std::string& input,
-		           const std::string& prefix,
-		           const std::vector<macro_packages::simple_rule>& pre,
-		           const std::vector<macro_packages::simple_rule>& post,
-		           const std::vector<macro_packages::index_rule>& index);
+    token_list(const std::string& input, const std::string& prefix,
+               unsigned int nf, unsigned int np,
+               const std::vector<macro_packages::simple_rule>& pre,
+               const std::vector<macro_packages::simple_rule>& post,
+               const std::vector<macro_packages::index_rule>& index,
+               error_context& ec);
 
 		// suppress default copy constructor
 		token_list(const token_list& obj) = delete;
 
-		~token_list();
+    //! destructor is default
+		~token_list() = default;
 
 
 		// INTERFACE
@@ -183,13 +192,13 @@ class token_list
 
 		//! evaluate simple macros of a specific type, and cache the result.
 		//! We only want to do this once if possible, since macro evaluation may be expensive.
-		unsigned int evaluate_macros(simple_macro_token::macro_type type);
+		unsigned int evaluate_macros(simple_macro_type type);
 
 		//! evaluate index macros and cache the result
-		unsigned int evaluate_macros(const std::vector<index_assignment>& a);
+		unsigned int evaluate_macros(const assignment_list& a);
 
 		//! get list of indices identified during tokenization
-		const std::vector<index_abstract>& get_indices() { return(this->indices); }
+		const index_abstract_list& get_indices() { return(this->indices); }
 
 
 		// INTERNAL API
@@ -200,10 +209,10 @@ class token_list
     void check_no_index_list(const std::string& input, const std::string& candidate, size_t& position);
 
 		//! check an argument list of correct size exists in the input string, and return it (tokenized)
-		std::vector<std::string> get_argument_list(const std::string& input, const std::string& candidate, size_t& position, unsigned int expected_args);
+		macro_argument_list get_argument_list(const std::string& input, const std::string& candidate, size_t& position, unsigned int expected_args);
 
 		//! check an index list of correct size exists in the input string, and return it (tokenized)
-		std::vector<index_abstract> get_index_list(const std::string& input, const std::string& candidate, size_t& position, unsigned int expected_indices, unsigned int range);
+		index_abstract_list get_index_list(const std::string& input, const std::string& candidate, size_t& position, unsigned int expected_indices, enum index_class range);
 
 		//! check whether the current candidate is a potential match for a macro
 		template <typename Rule>
@@ -214,21 +223,39 @@ class token_list
 		const Rule& find_match(const std::string& candidate, const std::vector<Rule>& rule_list);
 
 		//! add an index to our internal list
-		void add_index(char label);
+		index_abstract_list::const_iterator add_index(char label);
 
 		//! add an index to our internal list
-		void add_index(const index_abstract& index);
+		index_abstract_list::const_iterator add_index(const index_abstract& index);
 
 
     // INTERNAL DATA
 
   protected:
 
+    //! reference to error context
+    error_context& err_ctx;
+
 		//! tokenized version of input
-		std::list<generic_token*> tokens;
+		std::list< std::unique_ptr<generic_token> > tokens;
+
+    //! auxiliary list of simple macro tokens
+    std::list< simple_macro_token* > simple_macro_tokens;
+
+    //! auxiliary list of index macro tokens
+    std::list< index_macro_token* > index_macro_tokens;
+
+    //! auxiliary list of free index tokens
+    std::list< free_index_token* > free_index_tokens;
 
 		//! list of indices found in input
-		std::vector<index_abstract> indices;
+		index_abstract_list indices;
+
+    //! cache number of fields
+    unsigned int num_fields;
+
+    //! cache number of parameters
+    unsigned int num_params;
 
 	};
 

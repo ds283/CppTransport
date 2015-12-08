@@ -35,22 +35,22 @@ namespace shared
         std::vector<macro_packages::simple_rule> package;
 
         const std::vector<replacement_rule_simple> rules =
-                                                     { BIND(args_params), BIND(args_1index),
-                                                       BIND(args_2index), BIND(args_2index),
-                                                       BIND(args_3index), BIND(args_3index)
-                                                     };
+          { BIND(args_params), BIND(args_1index),
+            BIND(args_2index), BIND(args_2index),
+            BIND(args_3index), BIND(args_3index)
+          };
 
         const std::vector<std::string> names =
-                                         { "PARAM_ARGS", "COORD_ARGS",
-                                           "U2_ARGS", "TWOPF_ARGS",
-                                           "U3_ARGS", "THREEPF_ARGS"
-                                         };
+          { "PARAM_ARGS", "COORD_ARGS",
+            "U2_ARGS", "TWOPF_ARGS",
+            "U3_ARGS", "THREEPF_ARGS"
+          };
 
         const std::vector<unsigned int> args =
-                                          { 0, 1,
-                                            1, 1,
-                                            1, 1
-                                          };
+          { 0, 1,
+            1, 1,
+            1, 1
+          };
 
         assert(rules.size() == names.size());
         assert(rules.size() == args.size());
@@ -104,38 +104,40 @@ namespace shared
       }
 
 
-    std::string kernel_argument_macros::args_1index(const std::vector<std::string>& args)
+    std::string kernel_argument_macros::args_1index(const macro_argument_list& args)
       {
         assert(args.size() == 1);
 
-        std::string name     = (args.size() >= 1 ? args[0] : OUTPUT_DEFAULT_ONEINDEX_NAME);
+        std::string name = (args.size() >= 1 ? args[0] : OUTPUT_DEFAULT_ONEINDEX_NAME);
 
         std::ostringstream out;
 
-        std::vector<index_abstract> indices;
-        index_abstract A;
-        A.label  = 'A';
-        A.range  = INDEX_RANGE_ALL;
-        indices.push_back(A);
+        // build a set of assignments for a fake index 'A'
+        // the assignments will range over all possible values which A can assume
+        // we use these to construct a list of arguments, one for each possible value
+        index_abstract_list indices;
+        indices.emplace_back('A', std::make_unique<index_abstract>('A', this->data_payload.get_number_fields(), this->data_payload.get_number_parameters()));
 
-        assignment_package assigner(this->data_payload.get_number_fields(), this->data_payload.get_number_parameters(), this->data_payload.get_index_order());
+        assignment_set assignments(indices, this->data_payload.get_index_order());
 
-        std::vector< std::vector<index_assignment> > assignment = assigner.assign(indices);
-
-        for(std::vector< std::vector<index_assignment> >::iterator t = assignment.begin(); t != assignment.end(); ++t)
+        unsigned int c = 0;
+        for(std::unique_ptr<assignment_list> assign : assignments)
           {
-            out << (t != assignment.begin() ? ", " : "") << this->qualifier << (this->qualifier != "" ? " " : "") << "double* " << name;
-            for(std::vector<index_assignment>::iterator u = (*t).begin(); u != (*t).end(); ++u)
+            out << (c != 0 ? ", " : "") << this->qualifier << (this->qualifier != "" ? " " : "") << "double* " << name;
+
+            for(const assignment_record& t : *assign)
               {
-                out << "_" << assigner.value(*u);
+                out << "_" << t.get_numeric_value();
               }
+
+            ++c;
           }
 
         return(out.str());
       }
 
 
-    std::string kernel_argument_macros::args_2index(const std::vector<std::string>& args)
+    std::string kernel_argument_macros::args_2index(const macro_argument_list& args)
       {
         assert(args.size() == 1);
 
@@ -143,34 +145,30 @@ namespace shared
 
         std::ostringstream out;
 
-        std::vector< index_abstract > indices;
-        index_abstract A;
-        A.label  = 'A';
-        A.range  = INDEX_RANGE_ALL;
-        indices.push_back(A);
-        index_abstract B;
-        B.label  = 'B';
-        B.range  = INDEX_RANGE_ALL;
-        indices.push_back(B);
+        index_abstract_list indices;
+        indices.emplace_back('A', std::make_unique<index_abstract>('A', this->data_payload.get_number_fields(), this->data_payload.get_number_parameters()));
+        indices.emplace_back('B', std::make_unique<index_abstract>('B', this->data_payload.get_number_fields(), this->data_payload.get_number_parameters()));
 
-        assignment_package assigner(this->data_payload.get_number_fields(), this->data_payload.get_number_parameters(), this->data_payload.get_index_order());
+        assignment_set assignments(indices, this->data_payload.get_index_order());
 
-        std::vector< std::vector<index_assignment> > assignment = assigner.assign(indices);
-
-        for(std::vector< std::vector<index_assignment> >::iterator t = assignment.begin(); t != assignment.end(); ++t)
+        unsigned int c = 0;
+        for(std::unique_ptr<assignment_list> assign : assignments)
           {
-            out << (t != assignment.begin() ? ", " : "") << this->qualifier << (this->qualifier != "" ? " " : "") << "double* " << name;
-            for(std::vector<index_assignment>::iterator u = (*t).begin(); u != (*t).end(); ++u)
+            out << (c != 0 ? ", " : "") << this->qualifier << (this->qualifier != "" ? " " : "") << "double* " << name;
+
+            for(const assignment_record& t : *assign)
               {
-                out << "_" << assigner.value(*u);
+                out << "_" << t.get_numeric_value();
               }
+
+            ++c;
           }
 
         return(out.str());
       }
 
 
-    std::string kernel_argument_macros::args_3index(const std::vector<std::string>& args)
+    std::string kernel_argument_macros::args_3index(const macro_argument_list& args)
       {
         assert(args.size() == 1);
 
@@ -178,31 +176,22 @@ namespace shared
 
         std::ostringstream out;
 
-        std::vector< index_abstract > indices;
-        index_abstract A;
-        A.label  = 'A';
-        A.range  = INDEX_RANGE_ALL;
-        indices.push_back(A);
-        index_abstract B;
-        B.label  = 'B';
-        B.range  = INDEX_RANGE_ALL;
-        indices.push_back(B);
-        index_abstract C;
-        C.label  = 'C';
-        C.range  = INDEX_RANGE_ALL;
-        indices.push_back(C);
+        index_abstract_list indices;
+        indices.emplace_back('A', std::make_unique<index_abstract>('A', this->data_payload.get_number_fields(), this->data_payload.get_number_parameters()));
+        indices.emplace_back('B', std::make_unique<index_abstract>('B', this->data_payload.get_number_fields(), this->data_payload.get_number_parameters()));
+        indices.emplace_back('C', std::make_unique<index_abstract>('C', this->data_payload.get_number_fields(), this->data_payload.get_number_parameters()));
 
-        assignment_package assigner(this->data_payload.get_number_fields(), this->data_payload.get_number_parameters(), this->data_payload.get_index_order());
+        assignment_set assignments(indices, this->data_payload.get_index_order());
 
-        std::vector< std::vector<index_assignment> > assignment = assigner.assign(indices);
-
-        for(std::vector< std::vector<index_assignment> >::iterator t = assignment.begin(); t != assignment.end(); ++t)
+        unsigned int c = 0;
+        for(std::unique_ptr<assignment_list> assign : assignments)
           {
-            out << (t != assignment.begin() ? ", " : "") << this->qualifier << (this->qualifier != "" ? " " : "") << "double* " << name;
-            for(std::vector<index_assignment>::iterator u = (*t).begin(); u != (*t).end(); ++u)
-              {
-                out << "_" << assigner.value(*u);
-              }
+            out << (c != 0 ? ", " : "") << this->qualifier << (this->qualifier != "" ? " " : "") << "double* " << name;
+
+
+            ++c;
+
+            ++c;
           }
 
         return(out.str());

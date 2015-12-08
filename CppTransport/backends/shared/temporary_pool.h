@@ -59,7 +59,7 @@ namespace macro_packages
 
         void deposit_temporaries();
 
-        std::string replace_temp_pool(const std::vector<std::string>& args);
+        std::string replace_temp_pool(const macro_argument_list& args);
 
 
 		    // INTERNAL DATA

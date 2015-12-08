@@ -129,7 +129,7 @@ namespace cpp
     // ********************************************************************************
 
 
-    std::string core_macros::replace_backg_stepper(const std::vector<std::string>& args)
+    std::string core_macros::replace_backg_stepper(const macro_argument_list& args)
       {
         const struct stepper& s = this->data_payload.get_background_stepper();
 
@@ -140,7 +140,7 @@ namespace cpp
       }
 
 
-    std::string core_macros::replace_pert_stepper(const std::vector<std::string>& args)
+    std::string core_macros::replace_pert_stepper(const macro_argument_list& args)
       {
         const struct stepper& s = this->data_payload.get_perturbations_stepper();
 

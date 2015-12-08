@@ -46,15 +46,15 @@ namespace macro_packages
 
       protected:
 
-        std::string replace_V         (const std::vector<std::string> &args);
-        std::string replace_Hsq       (const std::vector<std::string> &args);
-        std::string replace_eps       (const std::vector<std::string> &args);
+        std::string replace_V         (const macro_argument_list& args);
+        std::string replace_Hsq       (const macro_argument_list& args);
+        std::string replace_eps       (const macro_argument_list& args);
 
-        std::string replace_parameter (const std::vector<std::string>& args, std::vector<index_assignment> indices, void* state);
-        std::string replace_field     (const std::vector<std::string>& args, std::vector<index_assignment> indices, void* state);
-        std::string replace_coordinate(const std::vector<std::string>& args, std::vector<index_assignment> indices, void* state);
+        std::string replace_parameter (const macro_argument_list& args, const assignment_list& indices, void* state);
+        std::string replace_field     (const macro_argument_list& args, const assignment_list& indices, void* state);
+        std::string replace_coordinate(const macro_argument_list& args, const assignment_list& indices, void* state);
 
-        void*       pre_sr_velocity   (const std::vector<std::string>& args);
+        void*       pre_sr_velocity   (const macro_argument_list& args);
 
       };
 
