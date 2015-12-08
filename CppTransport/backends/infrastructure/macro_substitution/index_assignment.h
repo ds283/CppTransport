@@ -216,8 +216,8 @@ namespace index_assignment_impl
         //! prefix decrement
         assignment_set_iterator& operator--()
           {
-            if(this->parent == nullptr) throw std::runtime_error(ERROR_ASSIGNMENT_ITERATOR_NO_PARENT);
-            if(this->pos == 0)          throw std::runtime_error(ERROR_ASSIGNMENT_ITERATOR_DECREMENT);
+            if(this->parent == nullptr)    throw std::runtime_error(ERROR_ASSIGNMENT_ITERATOR_NO_PARENT);
+            if(this->pos == 0)             throw std::runtime_error(ERROR_ASSIGNMENT_ITERATOR_DECREMENT);
 
             --this->pos;
             return(*this);
@@ -226,8 +226,8 @@ namespace index_assignment_impl
         //! postfix decrement
         assignment_set_iterator operator--(int)
           {
-            if(this->parent == nullptr) throw std::runtime_error(ERROR_ASSIGNMENT_ITERATOR_NO_PARENT);
-            if(this->pos == 0)          throw std::runtime_error(ERROR_ASSIGNMENT_ITERATOR_DECREMENT);
+            if(this->parent == nullptr)    throw std::runtime_error(ERROR_ASSIGNMENT_ITERATOR_NO_PARENT);
+            if(this->pos == 0)             throw std::runtime_error(ERROR_ASSIGNMENT_ITERATOR_DECREMENT);
 
             const assignment_set_iterator old(*this);
             --this->pos;
@@ -237,8 +237,8 @@ namespace index_assignment_impl
         //! prefix increment
         assignment_set_iterator& operator++()
           {
-            if(this->parent == nullptr)       throw std::runtime_error(ERROR_ASSIGNMENT_ITERATOR_NO_PARENT);
-            if(this->pos == this->max_pos)  throw std::runtime_error(ERROR_ASSIGNMENT_ITERATOR_INCREMENT);
+            if(this->parent == nullptr)    throw std::runtime_error(ERROR_ASSIGNMENT_ITERATOR_NO_PARENT);
+            if(this->pos == this->max_pos) throw std::runtime_error(ERROR_ASSIGNMENT_ITERATOR_INCREMENT);
 
             ++this->pos;
             return(*this);
@@ -247,8 +247,8 @@ namespace index_assignment_impl
         //! postfix increment
         assignment_set_iterator operator++(int)
           {
-            if(this->parent == nullptr)       throw std::runtime_error(ERROR_ASSIGNMENT_ITERATOR_NO_PARENT);
-            if(this->pos == this->max_pos)  throw std::runtime_error(ERROR_ASSIGNMENT_ITERATOR_INCREMENT);
+            if(this->parent == nullptr)    throw std::runtime_error(ERROR_ASSIGNMENT_ITERATOR_NO_PARENT);
+            if(this->pos == this->max_pos) throw std::runtime_error(ERROR_ASSIGNMENT_ITERATOR_INCREMENT);
 
             const assignment_set_iterator old(*this);
             ++this->pos;

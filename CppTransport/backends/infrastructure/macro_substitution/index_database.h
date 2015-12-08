@@ -7,6 +7,8 @@
 #define CPPTRANSPORT_INDEX_DATABASE_H
 
 
+#include <iostream>
+
 #include <string>
 #include <memory>
 #include <map>
@@ -15,6 +17,9 @@
 #include <stdexcept>
 
 #include "msg_en.h"
+
+
+//#define DEBUG_INDEX_DATABASE
 
 
 class index_exception: public std::runtime_error
@@ -102,13 +107,15 @@ namespace index_database_impl
         //! dereference to get underlying record
         reference_type operator*()
           {
-            return(*(*this->it)->second);
+            pointer_type& rec_ptr = (*this->it)->second;
+            return(*rec_ptr);
           }
 
         //! dereference to provide member access
         pointer_type operator->()
           {
-            return((*this->it)->second);
+            pointer_type& rec_ptr = (*this->it)->second;
+            return(rec_ptr);
           }
 
 
@@ -203,6 +210,14 @@ class index_database
     ~index_database() = default;
 
 
+    // ASSIGNMENT
+
+  public:
+
+    //! supply move assignment operator to handle rebuild of indices
+    index_database& operator=(index_database&& obj);
+
+
     // ITERATORS
 
   public:
@@ -280,6 +295,13 @@ class index_database
     const RecordType& operator[](std::size_t i) const;
 
 
+    // DEBUGGING API
+
+  public:
+
+    void write_database() const;
+
+
     // INTERNAL DATA
 
   private:
@@ -288,11 +310,11 @@ class index_database
     database_type db;
 
     //! ordering memory
-    //! note this will be invalidated on copy, so we have to rebuild it
+    //! note this will be invalidated on copy, so we have to rebuild it in the copy constructor
     ordered_list_type order_db;
 
     //! index into ordered list
-    //! nothtis will be invalidated on copy, so we have to rebuild it
+    //! note this will be invalidated on copy, so we have to rebuild it in the copy constructor
     ordered_list_index_type order_index;
 
   };
@@ -302,6 +324,10 @@ template <typename RecordType>
 index_database<RecordType>::index_database(const index_database<RecordType>& obj)
   : db(obj.db)
   {
+#ifdef DEBUG_INDEX_DATABASE
+    std::cout << '\n' << "CALLING COPY CONSTRUCTOR" << '\n';
+#endif
+
     // work through ordered_db in object, finding iterators into the database as we go
     for(typename database_type::iterator t : obj.order_db)
       {
@@ -319,6 +345,64 @@ index_database<RecordType>::index_database(const index_database<RecordType>& obj
             throw index_exception(key);
           }
       }
+
+#ifdef DEBUG_INDEX_DATABASE
+    std::cout << "ORIGINAL DATABASE" << '\n';
+    this->write_database();
+
+    std::cout << '\n' << "COPIED DATABASE" << '\n';
+    obj.write_database();
+#endif
+  }
+
+
+template <typename RecordType>
+index_database<RecordType>& index_database<RecordType>::operator=(index_database<RecordType>&& obj)
+  {
+    if(this != &obj)
+      {
+        this->db.clear();
+        this->order_db.clear();
+        this->order_index.clear();
+
+        // move main database
+        this->db = std::move(obj.db);
+
+#ifdef DEBUG_INDEX_DATABASE
+        std::cout << '\n' << "CALLING MOVE ASSIGNMENT OPERATOR" << '\n';
+#endif
+
+        // work through ordered_db in object, finding iterators into the database as we go
+        for(typename database_type::iterator t : obj.order_db)
+          {
+            // get key
+            char key = t->first;
+
+            typename database_type::iterator u = db.find(key);
+            if(u != db.end())
+              {
+                order_db.push_back(u);
+                order_index.emplace(std::make_pair(key, --order_db.end()));
+              }
+            else
+              {
+                throw index_exception(key);
+              }
+          }
+
+        obj.order_db.clear();
+        obj.order_index.clear();
+
+#ifdef DEBUG_INDEX_DATABASE
+        std::cout << "ASSIGNED DATABASE" << '\n';
+        this->write_database();
+
+        std::cout << '\n' << "ORIGINAL DATABASE" << '\n';
+        obj.write_database();
+#endif
+      }
+
+    return(*this);
   }
 
 
@@ -334,10 +418,11 @@ typename index_database<RecordType>::emplace_return_type index_database<RecordTy
         this->order_db.push_front(result.first);
 
         // store reference to ordering database element in index
-        this->order_index.emplace(std::make_pair(result.first->second->get_label(), --this->order_db.end()));
+        this->order_index.emplace(std::make_pair(result.first->second->get_label(), this->order_db.begin()));
       }
 
-    // want to return an iterator to the emplaced item
+    // want to return an iterator to the emplaced item, or to the existing item if an entry
+    // with this key was already present
     typename ordered_list_index_type::iterator it = this->order_index.find(result.first->second->get_label());
 
     if(it == this->order_index.end()) throw std::runtime_error(ERROR_INDEX_DATABASE_EMPLACE_FAIL);
@@ -361,7 +446,8 @@ typename index_database<RecordType>::emplace_return_type index_database<RecordTy
         this->order_index.emplace(std::make_pair(result.first->second->get_label(), --this->order_db.end()));
       }
 
-    // want to return an iterator to the emplaced item
+    // want to return an iterator to the emplaced item, or to the existing item if an entry
+    // with this key was already present
     typename ordered_list_index_type::iterator it = this->order_index.find(result.first->second->get_label());
 
     if(it == this->order_index.end()) throw std::runtime_error(ERROR_INDEX_DATABASE_EMPLACE_FAIL);
@@ -379,6 +465,7 @@ typename index_database<RecordType>::iterator index_database<RecordType>::find(c
 
     typename ordered_list_type::iterator oit = it->second;
     iterator rval(oit);
+
     return rval;
   }
 
@@ -392,6 +479,7 @@ typename index_database<RecordType>::const_iterator index_database<RecordType>::
 
     typename ordered_list_type::const_iterator oit = it->second;
     const_iterator rval(oit);
+
     return rval;
   }
 
@@ -425,6 +513,32 @@ RecordType& index_database<RecordType>::operator[](std::size_t i)
       }
 
     return(*it);
+  }
+
+
+template <typename RecordType>
+void index_database<RecordType>::write_database() const
+  {
+    std::cout << "  DATABASE: " << '\n';
+    for(const std::pair< char, std::shared_ptr<RecordType> >& v : this->db)
+      {
+        std::cout << "    -- key = '" << v.first << "', shared pointer OK = " << static_cast<bool>(v.second) << ", shared pointer value = " << v.second.get() << '\n';
+      }
+
+    std::cout << "  ORDERED LIST: " << '\n';
+    for(typename database_type::const_iterator t : this->order_db)
+      {
+        std::cout << "    -- key = '" << t->first << "', shared pointer OK = " << static_cast<bool>(t->second) << ", shared pointer value = " << t->second.get() << '\n';
+      }
+
+    std::cout << "  LOOKUP INDEX: " << '\n';
+    for(const std::pair< char, typename ordered_list_type::iterator >& v : this->order_index)
+      {
+        std::cout << "    -- key = '" << v.first << "', ";
+
+        typename database_type::const_iterator t = *v.second;
+        std::cout << "iterator points at: key = '" << t->first << "', shared pointer OK = " << static_cast<bool>(t->second) << ", shared pointer value = " << t->second.get() << '\n';
+      }
   }
 
 
@@ -538,6 +652,15 @@ index_database<RecordType> operator-(const index_database<RecordType>& l, const 
 template <typename RecordType>
 index_database<RecordType> operator+(const index_database<RecordType>& l, const index_database<RecordType>& r)
   {
+#ifdef DEBUG_INDEX_DATABASE
+    std::cout << '\n' << "********" << '\n';
+    std::cout << '\n' << "COMBINING DATABASES" << '\n';
+    std::cout << '\n' << "LHS DATABASE:" << '\n';
+    l.write_database();
+    std::cout << '\n' << "RHS DATABASE:" << '\n';
+    r.write_database();
+#endif
+
     index_database<RecordType> rval = l;
 
     for(const RecordType& rec : r)
@@ -548,6 +671,12 @@ index_database<RecordType> operator+(const index_database<RecordType>& l, const 
 
         rval.emplace_back(std::make_pair(rec.get_label(), std::make_shared<RecordType>(rec)));
       }
+
+#ifdef DEBUG_INDEX_DATABASE
+    std::cout << '\n' << "COMBINED DATABASE:" << '\n';
+    rval.write_database();
+    std::cout << '\n' << "********" << '\n';
+#endif
 
     return (rval);
   }
