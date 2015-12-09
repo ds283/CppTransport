@@ -7,9 +7,6 @@ PROJECT(CppTransport)
 # no consequences for us
 SET(CMAKE_MACOSX_RPATH TRUE)
 
-# don't build all targets when installing
-SET(CMAKE_SKIP_INSTALL_ALL_DEPENDENCY TRUE)
-
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/splinter/cmake/")
 

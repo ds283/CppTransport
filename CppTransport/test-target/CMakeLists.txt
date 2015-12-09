@@ -36,8 +36,9 @@ SET(CPPTRANSPORT_LIBRARIES jsoncpp_lib_static splinter-static-2-0)
 
 ADD_CUSTOM_COMMAND(
   OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/axion_core.h ${CMAKE_CURRENT_BINARY_DIR}/axion_basic_unrolled.h
-  COMMAND CppTransport ${CMAKE_CURRENT_SOURCE_DIR}/axion.model
+  COMMAND CppTransport --no-search-env -I ${CMAKE_CURRENT_SOURCE_DIR}/../templates ${CMAKE_CURRENT_SOURCE_DIR}/axion.model
   DEPENDS axion.model
+  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/../templates/canonical_basic_unrolled.h
 )
 
 
