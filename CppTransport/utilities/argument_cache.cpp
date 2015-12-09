@@ -15,7 +15,8 @@
 argument_cache::argument_cache(int argc, const char** argv)
   : verbose_flag(false),
     colour_flag(true),
-    cse_flag(true)
+    cse_flag(true),
+    no_search_environment(false)
   {
     // set up Boost::program_options descriptors for command-line arguments
     boost::program_options::options_description generic(MISC_OPTIONS);
@@ -27,6 +28,7 @@ argument_cache::argument_cache(int argc, const char** argv)
     configuration.add_options()
       (VERBOSE_SWITCH,                                                                                         VERBOSE_HELP)
       (INCLUDE_SWITCH,               boost::program_options::value< std::vector<std::string> >()->composing(), INCLUDE_HELP)
+      (NO_ENV_SEARCH_SWITCH,                                                                                   NO_ENV_SEARCH_HELP)
       (CORE_OUTPUT_SWITCH,           boost::program_options::value< std::string >()->default_value(""),        CORE_OUTPUT_HELP)
       (IMPLEMENTATION_OUTPUT_SWITCH, boost::program_options::value< std::string >()->default_value(""),        IMPLEMENTATION_OUTPUT_HELP)
       (NO_CSE_SWITCH,                                                                                          NO_CSE_HELP)
@@ -67,6 +69,7 @@ argument_cache::argument_cache(int argc, const char** argv)
         std::cout << visible << '\n';
       }
 
+    if(option_map.count(NO_ENV_SEARCH_SWITCH)) this->no_search_environment = true;
     if(option_map.count(NO_COLOUR_SWITCH) || option_map.count(NO_COLOR_SWITCH)) this->colour_flag = false;
     if(option_map.count(VERBOSE_SWITCH_LONG)) this->verbose_flag = true;
     if(option_map.count(NO_CSE_SWITCH)) this->cse_flag = false;

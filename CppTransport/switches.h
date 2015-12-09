@@ -41,6 +41,9 @@
 #define INPUT_FILE_SWITCH             "input-file"
 #define INPUT_FILE_HELP               "do not use"
 
+#define NO_ENV_SEARCH_SWITCH          "no-search-env"
+#define NO_ENV_SEARCH_HELP            "do not search CPPTRANSPORT_TEMPLATE_PATH"
+
 #define MISC_OPTIONS                  "Miscellaneous options"
 #define CONFIG_OPTIONS                "Configuration options"
 #define HIDDEN_OPTIONS                "Hidden options"

@@ -40,6 +40,9 @@ class argument_cache
     //! get common-subexpression elimination setting
     bool do_cse() const { return(this->cse_flag); }
 
+    //! search environment paths for eg. template files?
+    bool search_environment() const { return(!this->no_search_environment); }
+
     //! get search paths
     const std::list<boost::filesystem::path>& search_paths() const { return(this->search_path_list); }
 
@@ -67,6 +70,9 @@ class argument_cache
 
     //! CSE flag
     bool cse_flag;
+
+    //! don't search environment directories
+    bool no_search_environment;
 
     //! core output file
     std::string core_output;

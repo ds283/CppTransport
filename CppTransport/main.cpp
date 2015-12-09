@@ -30,7 +30,7 @@ int main(int argc, const char *argv[])
     // this should consist of the current working directory, but also
     // any include paths set using environment variables
     finder path;
-    path.add(env.search_paths());
+    if(args.search_environment()) path.add(env.search_paths());
     path.add(args.search_paths());
 
     unsigned int files_processed = 0;
