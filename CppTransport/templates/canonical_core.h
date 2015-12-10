@@ -991,7 +991,7 @@ namespace transport
         auto ics = tk->get_ics_vector();
 
         backg_state<number> x($$__MODEL_pool::backg_state_size);
-        x[this->flatten($$__A)] = $$// ics[$$__A];
+        x[this->flatten($$__A)] = ics[$$__A];
 
         boost::numeric::odeint::integrate_times($$__MAKE_BACKG_STEPPER{backg_state<number>}, system, x, time_db.value_begin(), time_db.value_end(), $$__BACKG_STEP_SIZE, obs);
       }
@@ -1049,7 +1049,7 @@ namespace transport
         auto ics = tk->get_ics_vector();
 
         backg_state<number> x($$__MODEL_pool::backg_state_size);
-        x[this->flatten($$__A)] = $$// ics[$$__A];
+        x[this->flatten($$__A)] = ics[$$__A];
 
 		    // find point where epsilon = 1
         auto stepper = $$__MAKE_BACKG_STEPPER{backg_state<number>};
@@ -1146,7 +1146,7 @@ namespace transport
 				auto ics = tk->integration_task<number>::get_ics_vector();
 
 				backg_state<number> x($$__MODEL_pool::backg_state_size);
-				x[this->flatten($$__A)] = $$// ics[$$__A];
+				x[this->flatten($$__A)] = ics[$$__A];
 
 				auto stepper = $$__MAKE_BACKG_STEPPER{backg_state<number>};
 
