@@ -13,16 +13,18 @@ namespace transport
 
     class abstract_flattener
       {
+
         // CONSTRUCTOR, DESTRUCTOR
 
       public:
-        virtual ~abstract_flattener()
-          {
-          }
+
+        //! declare virtual destructor so derived class destructors get called correctly
+        virtual ~abstract_flattener() = default;
 
         // INTERFACE: INDEX-FLATTENING FUNCTIONS
 
       public:
+
         virtual unsigned int flatten(unsigned int a)                                          const = 0;
         virtual unsigned int flatten(unsigned int a, unsigned int b)                          const = 0;
         virtual unsigned int flatten(unsigned int a, unsigned int b, unsigned int c)          const = 0;
@@ -39,6 +41,7 @@ namespace transport
         virtual unsigned int momentum(unsigned int a)                                         const = 0;
         virtual unsigned int is_field(unsigned int a)                                         const = 0;
         virtual unsigned int is_momentum(unsigned int a)                                      const = 0;
+
       };
 
 
@@ -46,9 +49,17 @@ namespace transport
     class constexpr_flattener
       {
 
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! declare virtual destructor so derived class destructors get called correctly
+        virtual ~constexpr_flattener() = default;
+
         // INTERFACE: INDEX-FLATTENING FUNCTIONS
 
       protected:
+
         constexpr unsigned int flatten(unsigned int a)                                        const { return(a); }
         constexpr unsigned int flatten(unsigned int a, unsigned int b)                        const { return(2*N*a + b); }
         constexpr unsigned int flatten(unsigned int a, unsigned int b, unsigned int c)        const { return(2*N*2*N*a + 2*N*b + c); }
@@ -65,6 +76,7 @@ namespace transport
         constexpr unsigned int momentum(unsigned int a)                                       const { return((a >= N) ? a : a+N); }
         constexpr unsigned int is_field(unsigned int a)                                       const { return(a < N); }
         constexpr unsigned int is_momentum(unsigned int a)                                    const { return(a >= N && a <= 2*N); }
+
       };
 
     // macros to simplify application of these functions
