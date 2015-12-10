@@ -39,6 +39,7 @@ ADD_CUSTOM_COMMAND(
   COMMAND CppTransport --no-search-env -I ${CMAKE_CURRENT_SOURCE_DIR}/../templates ${CMAKE_CURRENT_SOURCE_DIR}/axion.model
   DEPENDS axion.model
   DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/../templates/canonical_basic_unrolled.h
+  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/../templates/canonical_core.h
 )
 
 
@@ -54,7 +55,9 @@ ADD_CUSTOM_TARGET(AxionGenerator DEPENDS ${AXION_HEADERS})
 
 ADD_EXECUTABLE(test-target test_target.cpp)
 ADD_DEPENDENCIES(test-target AxionGenerator)
+
 TARGET_LINK_LIBRARIES(test-target sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${CPPTRANSPORT_LIBRARIES})
+TARGET_COMPILE_OPTIONS(test-target PRIVATE -std=c++14)
 
 
 TARGET_INCLUDE_DIRECTORIES(

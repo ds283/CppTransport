@@ -10,8 +10,9 @@ SET(CMAKE_MACOSX_RPATH TRUE)
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/splinter/cmake/")
 
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -mavx -Ofast" CACHE STRING "compile flags" FORCE)
-SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mavx -Ofast" CACHE STRING "compile flags" FORCE)
+
+SET(CMAKE_CXX_FLAGS_RELEASE "-mavx -Ofast -DNDEBUG")
+SET(CMAKE_C_FLAGS_RELEASE "-mavx -Ofast")
 
 
 # find Bison to produce parser
@@ -19,6 +20,7 @@ FIND_PACKAGE(Bison 3.0 REQUIRED)
 
 
 # pull in bundled JsonCpp and SPLINTER libraries
+SET(ARCH x86-64)
 ADD_SUBDIRECTORY(thirdparty/splinter)
 ADD_SUBDIRECTORY(thirdparty/jsoncpp)
 
@@ -89,6 +91,7 @@ ADD_EXECUTABLE(CppTransport main.cpp
 )
 
 TARGET_LINK_LIBRARIES(CppTransport ${GINAC_LIBRARIES} ${Boost_LIBRARIES})
+TARGET_COMPILE_OPTIONS(CppTransport PRIVATE -std=c++14)
 
 TARGET_INCLUDE_DIRECTORIES(CppTransport PRIVATE
   ./
