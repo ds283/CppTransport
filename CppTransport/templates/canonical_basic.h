@@ -610,11 +610,9 @@ namespace transport
         const auto __tensor_twopf_pf = __x[$$__MODEL_pool::tensor_start + TENSOR_FLATTEN(1,0)];
         const auto __tensor_twopf_pp = __x[$$__MODEL_pool::tensor_start + TENSOR_FLATTEN(1,1)];
 
-        const auto __tpf_$$__A_$$__B = $$// __x[$$__MODEL_pool::twopf_start + FLATTEN($$__A,$$__B)];
-
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
-#undef __tpf
+#undef __twopf
 #define __twopf(a,b) __x[$$__MODEL_pool::twopf_start + FLATTEN(a,b)]
 
 #undef __background
