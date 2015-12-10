@@ -130,13 +130,24 @@ namespace transport
       public:
 
         $$__MODEL_basic_twopf_functor(const twopf_list_task<number>* tk, const twopf_kconfig& k)
-          : params(tk->get_params()),
-            param_vector(tk->get_params().get_vector()),
-            Mp(tk->get_params().get_Mp()),
-            N_horizon_exit(tk->get_N_horizon_crossing()),
-            astar_normalization(tk->get_astar_normalization()),
-            config(k)
+	        : params(tk->get_params()),
+	          param_vector(tk->get_params().get_vector()),
+	          Mp(tk->get_params().get_Mp()),
+	          N_horizon_exit(tk->get_N_horizon_crossing()),
+	          astar_normalization(tk->get_astar_normalization()),
+	          config(k),
+            u2(nullptr)
+	        {
+	        }
+
+        void set_up_workspace()
           {
+            u2 = new number[2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS];
+          }
+
+        void close_down_workspace()
+          {
+            delete[] u2;
           }
 
         void operator ()(const twopf_state<number>& __x, twopf_state<number>& __dxdt, double __t);
@@ -158,7 +169,11 @@ namespace transport
 
         const twopf_kconfig config;
 
-      };
+        // manage memory ourselves, rather than via an STL container, for maximum performance
+        // also avoids copying overheads (the Boost odeint library copies the functor by value)
+        number* u2;
+
+	    };
 
 
     // integration - observer object for 2pf
@@ -187,14 +202,43 @@ namespace transport
       {
 
       public:
+
         $$__MODEL_basic_threepf_functor(const twopf_list_task<number>* tk, const threepf_kconfig& k)
-          : params(tk->get_params()),
-            param_vector(tk->get_params().get_vector()),
-            Mp(tk->get_params().get_Mp()),
-            N_horizon_exit(tk->get_N_horizon_crossing()),
-            astar_normalization(tk->get_astar_normalization()),
-            config(k)
+	        : params(tk->get_params()),
+	          param_vector(tk->get_params().get_vector()),
+	          Mp(tk->get_params().get_Mp()),
+	          N_horizon_exit(tk->get_N_horizon_crossing()),
+	          astar_normalization(tk->get_astar_normalization()),
+	          config(k),
+            u2_k1(nullptr),
+            u2_k2(nullptr),
+            u2_k3(nullptr),
+            u3_k1k2k3(nullptr),
+            u3_k2k1k3(nullptr),
+            u3_k3k1k2(nullptr)
           {
+          }
+
+        void set_up_workspace()
+	        {
+		        u2_k1 = new number[2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS];
+		        u2_k2 = new number[2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS];
+		        u2_k3 = new number[2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS];
+
+		        u3_k1k2k3 = new number[2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS];
+		        u3_k2k1k3 = new number[2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS];
+		        u3_k3k1k2 = new number[2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS];
+          }
+
+        void close_down_workspace()
+          {
+            delete[] u2_k1;
+            delete[] u2_k2;
+            delete[] u2_k3;
+
+            delete[] u3_k1k2k3;
+            delete[] u3_k2k1k3;
+            delete[] u3_k3k1k2;
           }
 
         void operator ()(const threepf_state<number>& __x, threepf_state<number>& __dxdt, double __dt);
@@ -216,7 +260,18 @@ namespace transport
 
         const threepf_kconfig config;
 
-      };
+        // manage memory ourselves, rather than via an STL container, for maximum performance
+        // also avoids copying overheads (the Boost odeint library copies the functor by value)
+
+        number* u2_k1;
+        number* u2_k2;
+        number* u2_k3;
+
+        number* u3_k1k2k3;
+        number* u3_k2k1k3;
+        number* u3_k3k1k2;
+
+	    };
 
 
     // integration - observer object for 3pf
@@ -358,6 +413,7 @@ namespace transport
 
         // set up a functor to evolve this system
         $$__MODEL_basic_twopf_functor<number> rhs(tk, *kconfig);
+        rhs.set_up_workspace();
 
         // set up a state vector
         twopf_state<number> x;
@@ -365,7 +421,7 @@ namespace transport
 
         // fix initial conditions - background
         const std::vector<number> ics = tk->get_ics_vector(*kconfig);
-        x[$$__MODEL_pool::backg_start + FLATTEN($$__A)] = $$// ics[$$__A];
+        x[$$__MODEL_pool::backg_start + FLATTEN($$__A)] = ics[$$__A];
 
 		    if(batcher.is_collecting_initial_conditions())
 			    {
@@ -390,6 +446,7 @@ namespace transport
         size_t steps = boost::numeric::odeint::integrate_times($$__MAKE_PERT_STEPPER{twopf_state<number>}, rhs, x, begin_iterator, end_iterator, $$__PERT_STEP_SIZE/pow(4.0,refinement_level), obs);
 
         obs.stop_timers(steps, refinement_level);
+        rhs.close_down_workspace();
       }
 
 
@@ -408,7 +465,7 @@ namespace transport
         assert(x.size() >= start);
         assert(x.size() >= start + $$__MODEL_pool::twopf_size);
 
-        x[start + FLATTEN($$__A,$$__B)] = imaginary ? this->make_twopf_im_ic($$__A, $$__B, kmode, Ninit, tk, ics) : this->make_twopf_re_ic($$__A, $$__B, kmode, Ninit, tk, ics) $$// ;
+        x[start + FLATTEN($$__A,$$__B)] = imaginary ? this->make_twopf_im_ic($$__A, $$__B, kmode, Ninit, tk, ics) : this->make_twopf_re_ic($$__A, $$__B, kmode, Ninit, tk, ics);
       }
 
 
@@ -509,6 +566,7 @@ namespace transport
 
         // set up a functor to evolve this system
         $$__MODEL_basic_threepf_functor<number>  rhs(tk, *kconfig);
+        rhs.set_up_workspace();
 
         // set up a state vector
         threepf_state<number> x;
@@ -518,7 +576,7 @@ namespace transport
 		    // use fast-forwarding if enabled
         // (don't need explicit FLATTEN since it would appear on both sides)
         const std::vector<number> ics = tk->get_ics_vector(*kconfig);
-        x[$$__MODEL_pool::backg_start + $$__A] = $$// ics[$$__A];
+        x[$$__MODEL_pool::backg_start + $$__A] = ics[$$__A];
 
 		    if(batcher.is_collecting_initial_conditions())
 			    {
@@ -558,6 +616,7 @@ namespace transport
         size_t steps = boost::numeric::odeint::integrate_times( $$__MAKE_PERT_STEPPER{threepf_state<number>}, rhs, x, begin_iterator, end_iterator, $$__PERT_STEP_SIZE/pow(4.0,refinement_level), obs);
 
         obs.stop_timers(steps, refinement_level);
+        rhs.close_down_workspace();
       }
 
 
@@ -569,7 +628,7 @@ namespace transport
         assert(x.size() >= start);
         assert(x.size() >= start + $$__MODEL_pool::threepf_size);
 
-        x[start + FLATTEN($$__A,$$__B,$$__C)] = this->make_threepf_ic($$__A, $$__B, $$__C, kconfig.k1_comoving, kconfig.k2_comoving, kconfig.k3_comoving, Ninit, tk, ics) $$// ;
+        x[start + FLATTEN($$__A,$$__B,$$__C)] = this->make_threepf_ic($$__A, $$__B, $$__C, kconfig.k1_comoving, kconfig.k2_comoving, kconfig.k3_comoving, Ninit, tk, ics);
       }
 
 
@@ -592,9 +651,10 @@ namespace transport
         const auto __tensor_twopf_pf = __x[$$__MODEL_pool::tensor_start + TENSOR_FLATTEN(1,0)];
         const auto __tensor_twopf_pp = __x[$$__MODEL_pool::tensor_start + TENSOR_FLATTEN(1,1)];
 
-        const auto __tpf_$$__A_$$__B = $$// __x[$$__MODEL_pool::twopf_start + FLATTEN($$__A,$$__B)];
-
         $$__TEMP_POOL{"const auto $1 = $2;"}
+
+#undef __twopf
+#define __twopf(a,b) __x[$$__MODEL_pool::twopf_start + FLATTEN(a,b)]
 
 #undef __background
 #undef __dtwopf
@@ -617,13 +677,13 @@ namespace transport
         __dtwopf_tensor(1,1) = __pf*__tensor_twopf_fp + __pp*__tensor_twopf_pp + __pf*__tensor_twopf_pf + __pp*__tensor_twopf_pp;
 
         // set up components of the u2 tensor
-        const auto __u2_$$__A_$$__B = $$__U2_PREDEF[AB]{__k, __a, __Hsq, __eps};
+        this->u2[FLATTEN($$__A,$$__B)] = $$__U2_PREDEF[AB]{__k, __a, __Hsq, __eps};
 
         // evolve the 2pf
         // here, we are dealing only with the real part - which is symmetric.
         // so the index placement is not important
-        __dtwopf($$__A, $$__B) = 0 $$// + $$__SUM_COORDS[C] __u2_$$__A_$$__C*__tpf_$$__C_$$__B;
-        __dtwopf($$__A, $$__B) += 0 $$// + $$__SUM_COORDS[C] __u2_$$__B_$$__C*__tpf_$$__A_$$__C;
+        __dtwopf($$__A, $$__B)  = 0 $$// + $$__SUM_COORDS[C] this->u2[FLATTEN($$__A, $$__C)] * __twopf($$__C, $$__B);
+        __dtwopf($$__A, $$__B) += 0 $$// + $$__SUM_COORDS[C] this->u2[FLATTEN($$__B, $$__C)] * __twopf($$__A, $$__C);
       }
 
 
@@ -670,16 +730,25 @@ namespace transport
         const auto __tensor_k3_twopf_pf = __x[$$__MODEL_pool::tensor_k3_start + TENSOR_FLATTEN(1,0)];
         const auto __tensor_k3_twopf_pp = __x[$$__MODEL_pool::tensor_k3_start + TENSOR_FLATTEN(1,1)];
 
-        const auto __twopf_re_k1_$$__A_$$__B   = $$// __x[$$__MODEL_pool::twopf_re_k1_start + FLATTEN($$__A,$$__B)];
-        const auto __twopf_im_k1_$$__A_$$__B   = $$// __x[$$__MODEL_pool::twopf_im_k1_start + FLATTEN($$__A,$$__B)];
-        const auto __twopf_re_k2_$$__A_$$__B   = $$// __x[$$__MODEL_pool::twopf_re_k2_start + FLATTEN($$__A,$$__B)];
-        const auto __twopf_im_k2_$$__A_$$__B   = $$// __x[$$__MODEL_pool::twopf_im_k2_start + FLATTEN($$__A,$$__B)];
-        const auto __twopf_re_k3_$$__A_$$__B   = $$// __x[$$__MODEL_pool::twopf_re_k3_start + FLATTEN($$__A,$$__B)];
-        const auto __twopf_im_k3_$$__A_$$__B   = $$// __x[$$__MODEL_pool::twopf_im_k3_start + FLATTEN($$__A,$$__B)];
-
-        const auto __threepf_$$__A_$$__B_$$__C = $$// __x[$$__MODEL_pool::threepf_start     + FLATTEN($$__A,$$__B,$$__C)];
-
         $$__TEMP_POOL{"const auto $1 = $2;"}
+
+#undef __twopf_re_k1
+#undef __twopf_re_k2
+#undef __twopf_re_k3
+#undef __twopf_im_k1
+#undef __twopf_im_k2
+#undef __twopf_im_k3
+
+#undef __threepf
+
+#define __twopf_re_k1(a,b) __x[$$__MODEL_pool::twopf_re_k1_start + FLATTEN(a,b)]
+#define __twopf_im_k1(a,b) __x[$$__MODEL_pool::twopf_im_k1_start + FLATTEN(a,b)]
+#define __twopf_re_k2(a,b) __x[$$__MODEL_pool::twopf_re_k2_start + FLATTEN(a,b)]
+#define __twopf_im_k2(a,b) __x[$$__MODEL_pool::twopf_im_k2_start + FLATTEN(a,b)]
+#define __twopf_re_k3(a,b) __x[$$__MODEL_pool::twopf_re_k3_start + FLATTEN(a,b)]
+#define __twopf_im_k3(a,b) __x[$$__MODEL_pool::twopf_im_k3_start + FLATTEN(a,b)]
+
+#define __threepf(a,b,c)	 __x[$$__MODEL_pool::threepf_start  + FLATTEN(a,b,c)]
 
 #undef __background
 #undef __dtwopf_k1_tensor
@@ -731,50 +800,50 @@ namespace transport
         __dtwopf_k3_tensor(1,1) = __pf*__tensor_k3_twopf_fp + __pp*__tensor_k3_twopf_pp + __pf*__tensor_k3_twopf_pf + __pp*__tensor_k3_twopf_pp;
 
         // set up components of the u2 tensor for k1, k2, k3
-        const auto __u2_k1_$$__A_$$__B = $$__U2_PREDEF[AB]{__k1, __a, __Hsq, __eps};
-        const auto __u2_k2_$$__A_$$__B = $$__U2_PREDEF[AB]{__k2, __a, __Hsq, __eps};
-        const auto __u2_k3_$$__A_$$__B = $$__U2_PREDEF[AB]{__k3, __a, __Hsq, __eps};
+        this->u2_k1[FLATTEN($$__A,$$__B)] = $$__U2_PREDEF[AB]{__k1, __a, __Hsq, __eps};
+        this->u2_k2[FLATTEN($$__A,$$__B)] = $$__U2_PREDEF[AB]{__k2, __a, __Hsq, __eps};
+        this->u2_k3[FLATTEN($$__A,$$__B)] = $$__U2_PREDEF[AB]{__k3, __a, __Hsq, __eps};
 
         // set up components of the u3 tensor
-        const auto __u3_k1k2k3_$$__A_$$__B_$$__C = $$__U3_PREDEF[ABC]{__k1, __k2, __k3, __a, __Hsq, __eps};
-        const auto __u3_k2k1k3_$$__A_$$__B_$$__C = $$__U3_PREDEF[ABC]{__k2, __k1, __k3, __a, __Hsq, __eps};
-        const auto __u3_k3k1k2_$$__A_$$__B_$$__C = $$__U3_PREDEF[ABC]{__k3, __k1, __k2, __a, __Hsq, __eps};
+        this->u3_k1k2k3[FLATTEN($$__A,$$__B,$$__C)] = $$__U3_PREDEF[ABC]{__k1, __k2, __k3, __a, __Hsq, __eps};
+        this->u3_k2k1k3[FLATTEN($$__A,$$__B,$$__C)] = $$__U3_PREDEF[ABC]{__k2, __k1, __k3, __a, __Hsq, __eps};
+        this->u3_k3k1k2[FLATTEN($$__A,$$__B,$$__C)] = $$__U3_PREDEF[ABC]{__k3, __k1, __k2, __a, __Hsq, __eps};
 
         // evolve the real and imaginary components of the 2pf
         // for the imaginary parts, index placement *does* matter so we must take care
-        __dtwopf_re_k1($$__A, $$__B)  = 0 $$// + $$__SUM_COORDS[C] __u2_k1_$$__A_$$__C*__twopf_re_k1_$$__C_$$__B;
-        __dtwopf_re_k1($$__A, $$__B) += 0 $$// + $$__SUM_COORDS[C] __u2_k1_$$__B_$$__C*__twopf_re_k1_$$__A_$$__C;
+        __dtwopf_re_k1($$__A, $$__B)  = 0 $$// + $$__SUM_COORDS[C] this->u2_k1[FLATTEN($$__A, $$__C)] * __twopf_re_k1($$__C, $$__B);
+        __dtwopf_re_k1($$__A, $$__B) += 0 $$// + $$__SUM_COORDS[C] this->u2_k1[FLATTEN($$__B, $$__C)] * __twopf_re_k1($$__A, $$__C);
 
-        __dtwopf_im_k1($$__A, $$__B)  = 0 $$// + $$__SUM_COORDS[C] __u2_k1_$$__A_$$__C*__twopf_im_k1_$$__C_$$__B;
-        __dtwopf_im_k1($$__A, $$__B) += 0 $$// + $$__SUM_COORDS[C] __u2_k1_$$__B_$$__C*__twopf_im_k1_$$__A_$$__C;
+        __dtwopf_im_k1($$__A, $$__B)  = 0 $$// + $$__SUM_COORDS[C] this->u2_k1[FLATTEN($$__A, $$__C)] * __twopf_im_k1($$__C, $$__B);
+        __dtwopf_im_k1($$__A, $$__B) += 0 $$// + $$__SUM_COORDS[C] this->u2_k1[FLATTEN($$__B, $$__C)] * __twopf_im_k1($$__A, $$__C);
 
-        __dtwopf_re_k2($$__A, $$__B)  = 0 $$// + $$__SUM_COORDS[C] __u2_k2_$$__A_$$__C*__twopf_re_k2_$$__C_$$__B;
-        __dtwopf_re_k2($$__A, $$__B) += 0 $$// + $$__SUM_COORDS[C] __u2_k2_$$__B_$$__C*__twopf_re_k2_$$__A_$$__C;
+        __dtwopf_re_k2($$__A, $$__B)  = 0 $$// + $$__SUM_COORDS[C] this->u2_k2[FLATTEN($$__A, $$__C)] * __twopf_re_k2($$__C, $$__B);
+        __dtwopf_re_k2($$__A, $$__B) += 0 $$// + $$__SUM_COORDS[C] this->u2_k2[FLATTEN($$__B, $$__C)] * __twopf_re_k2($$__A, $$__C);
 
-        __dtwopf_im_k2($$__A, $$__B)  = 0 $$// + $$__SUM_COORDS[C] __u2_k2_$$__A_$$__C*__twopf_im_k2_$$__C_$$__B;
-        __dtwopf_im_k2($$__A, $$__B) += 0 $$// + $$__SUM_COORDS[C] __u2_k2_$$__B_$$__C*__twopf_im_k2_$$__A_$$__C;
+        __dtwopf_im_k2($$__A, $$__B)  = 0 $$// + $$__SUM_COORDS[C] this->u2_k2[FLATTEN($$__A, $$__C)] * __twopf_im_k2($$__C, $$__B);
+        __dtwopf_im_k2($$__A, $$__B) += 0 $$// + $$__SUM_COORDS[C] this->u2_k2[FLATTEN($$__B, $$__C)] * __twopf_im_k2($$__A, $$__C);
 
-        __dtwopf_re_k3($$__A, $$__B)  = 0 $$// + $$__SUM_COORDS[C] __u2_k3_$$__A_$$__C*__twopf_re_k3_$$__C_$$__B;
-        __dtwopf_re_k3($$__A, $$__B) += 0 $$// + $$__SUM_COORDS[C] __u2_k3_$$__B_$$__C*__twopf_re_k3_$$__A_$$__C;
+        __dtwopf_re_k3($$__A, $$__B)  = 0 $$// + $$__SUM_COORDS[C] this->u2_k3[FLATTEN($$__A, $$__C)] * __twopf_re_k3($$__C, $$__B);
+        __dtwopf_re_k3($$__A, $$__B) += 0 $$// + $$__SUM_COORDS[C] this->u2_k3[FLATTEN($$__B, $$__C)] * __twopf_re_k3($$__A, $$__C);
 
-        __dtwopf_im_k3($$__A, $$__B)  = 0 $$// + $$__SUM_COORDS[C] __u2_k3_$$__A_$$__C*__twopf_im_k3_$$__C_$$__B;
-        __dtwopf_im_k3($$__A, $$__B) += 0 $$// + $$__SUM_COORDS[C] __u2_k3_$$__B_$$__C*__twopf_im_k3_$$__A_$$__C;
+        __dtwopf_im_k3($$__A, $$__B)  = 0 $$// + $$__SUM_COORDS[C] this->u2_k3[FLATTEN($$__A, $$__C)] * __twopf_im_k3($$__C, $$__B);
+        __dtwopf_im_k3($$__A, $$__B) += 0 $$// + $$__SUM_COORDS[C] this->u2_k3[FLATTEN($$__B, $$__C)] * __twopf_im_k3($$__A, $$__C);
 
         // evolve the components of the 3pf
         // index placement matters, partly because of the k-dependence
         // but also in the source terms from the imaginary components of the 2pf
 
-        __dthreepf($$__A, $$__B, $$__C)  = 0 $$// + $$__SUM_COORDS[M] __u2_k1_$$__A_$$__M*__threepf_$$__M_$$__B_$$__C;
-        __dthreepf($$__A, $$__B, $$__C) += 0 $$// + $$__SUM_2COORDS[MN] __u3_k1k2k3_$$__A_$$__M_$$__N*__twopf_re_k2_$$__M_$$__B*__twopf_re_k3_$$__N_$$__C;
-        __dthreepf($$__A, $$__B, $$__C) += 0 $$// - $$__SUM_2COORDS[MN] __u3_k1k2k3_$$__A_$$__M_$$__N*__twopf_im_k2_$$__M_$$__B*__twopf_im_k3_$$__N_$$__C;
+        __dthreepf($$__A, $$__B, $$__C)  = 0 $$// + $$__SUM_COORDS[M] this->u2_k1[FLATTEN($$__A, $$__M)] * __threepf($$__M, $$__B, $$__C);
+        __dthreepf($$__A, $$__B, $$__C) += 0 $$// + $$__SUM_2COORDS[MN] this->u3_k1k2k3[FLATTEN($$__A, $$__M, $$__N)] * __twopf_re_k2($$__M, $$__B) * __twopf_re_k3($$__N, $$__C);
+        __dthreepf($$__A, $$__B, $$__C) += 0 $$// - $$__SUM_2COORDS[MN] this->u3_k1k2k3[FLATTEN($$__A, $$__M, $$__N)] * __twopf_im_k2($$__M, $$__B) * __twopf_im_k3($$__N, $$__C);
 
-        __dthreepf($$__A, $$__B, $$__C) += 0 $$// + $$__SUM_COORDS[M] __u2_k2_$$__B_$$__M*__threepf_$$__A_$$__M_$$__C;
-        __dthreepf($$__A, $$__B, $$__C) += 0 $$// + $$__SUM_2COORDS[MN] __u3_k2k1k3_$$__B_$$__M_$$__N*__twopf_re_k1_$$__A_$$__M*__twopf_re_k3_$$__N_$$__C;
-        __dthreepf($$__A, $$__B, $$__C) += 0 $$// - $$__SUM_2COORDS[MN] __u3_k2k1k3_$$__B_$$__M_$$__N*__twopf_im_k1_$$__A_$$__M*__twopf_im_k3_$$__N_$$__C;
+        __dthreepf($$__A, $$__B, $$__C) += 0 $$// + $$__SUM_COORDS[M] this->u2_k2[FLATTEN($$__B, $$__M)] * __threepf($$__A, $$__M, $$__C);
+        __dthreepf($$__A, $$__B, $$__C) += 0 $$// + $$__SUM_2COORDS[MN] this->u3_k2k1k3[FLATTEN($$__B, $$__M, $$__N)] * __twopf_re_k1($$__A, $$__M) * __twopf_re_k3($$__N, $$__C);
+        __dthreepf($$__A, $$__B, $$__C) += 0 $$// - $$__SUM_2COORDS[MN] this->u3_k2k1k3[FLATTEN($$__B, $$__M, $$__N)] * __twopf_im_k1($$__A, $$__M) * __twopf_im_k3($$__N, $$__C);
 
-        __dthreepf($$__A, $$__B, $$__C) += 0 $$// + $$__SUM_COORDS[M] __u2_k3_$$__C_$$__M*__threepf_$$__A_$$__B_$$__M;
-        __dthreepf($$__A, $$__B, $$__C) += 0 $$// + $$__SUM_2COORDS[MN] __u3_k3k1k2_$$__C_$$__M_$$__N*__twopf_re_k1_$$__A_$$__M*__twopf_re_k2_$$__B_$$__N;
-        __dthreepf($$__A, $$__B, $$__C) += 0 $$// - $$__SUM_2COORDS[MN] __u3_k3k1k2_$$__C_$$__M_$$__N*__twopf_im_k1_$$__A_$$__M*__twopf_im_k2_$$__B_$$__N;
+        __dthreepf($$__A, $$__B, $$__C) += 0 $$// + $$__SUM_COORDS[M] this->u2_k3[FLATTEN($$__C, $$__M)] * __threepf($$__A, $$__B, $$__M);
+        __dthreepf($$__A, $$__B, $$__C) += 0 $$// + $$__SUM_2COORDS[MN] this->u3_k3k1k2[FLATTEN($$__C, $$__M, $$__N)] * __twopf_re_k1($$__A, $$__M) * __twopf_re_k2($$__B, $$__N);
+        __dthreepf($$__A, $$__B, $$__C) += 0 $$// - $$__SUM_2COORDS[MN] this->u3_k3k1k2[FLATTEN($$__C, $$__M, $$__N)] * __twopf_im_k1($$__A, $$__M) * __twopf_im_k2($$__B, $$__N);
       }
 
 
