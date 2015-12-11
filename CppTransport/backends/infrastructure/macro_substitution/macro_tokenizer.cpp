@@ -54,7 +54,7 @@ token_list::token_list(const std::string& input, const std::string& prefix,
 								// is there only one character left in the input string? if so, this must be a free index
 								if(position+1 >= input.length())
 									{
-                    index_abstract_list::const_iterator idx = this->add_index(input[position]);
+                    abstract_index_list::const_iterator idx = this->add_index(input[position]);
 
                     std::unique_ptr<free_index_token> tok = std::make_unique<free_index_token>(idx);
                     this->free_index_tokens.push_back(tok.get());
@@ -132,7 +132,7 @@ token_list::token_list(const std::string& input, const std::string& prefix,
 										            position += candidate_length;
 
 												        // should find an index list
-										            index_abstract_list idx_list = this->get_index_list(input, candidate, position, rule.indices, rule.range);
+										            abstract_index_list idx_list = this->get_index_list(input, candidate, position, rule.indices, rule.range);
 
 										            macro_argument_list arg_list;
 										            if(rule.args > 0) arg_list = this->get_argument_list(input, candidate, position, rule.args);
@@ -145,7 +145,7 @@ token_list::token_list(const std::string& input, const std::string& prefix,
 											        {
 												        // we didn't find an exact match after all; we only matched a substring
 												        // assume it was a free index after all
-                                index_abstract_list::const_iterator idx = this->add_index(input[position]);
+                                abstract_index_list::const_iterator idx = this->add_index(input[position]);
 
                                 std::unique_ptr<free_index_token> tok = std::make_unique<free_index_token>(idx);
                                 this->free_index_tokens.push_back(tok.get());
@@ -158,7 +158,7 @@ token_list::token_list(const std::string& input, const std::string& prefix,
 									        {
 										        // something went wrong
 										        // assume it was a free index after all
-                            index_abstract_list::const_iterator idx = this->add_index(input[position]);
+                            abstract_index_list::const_iterator idx = this->add_index(input[position]);
 
                             std::unique_ptr<free_index_token> tok = std::make_unique<free_index_token>(idx);
                             this->free_index_tokens.push_back(tok.get());
@@ -169,7 +169,7 @@ token_list::token_list(const std::string& input, const std::string& prefix,
 											}
 										else  // no it doesn't; there's no match. It must have been a free index
 											{
-                        index_abstract_list::const_iterator idx = this->add_index(input[position]);
+                        abstract_index_list::const_iterator idx = this->add_index(input[position]);
 
                         std::unique_ptr<free_index_token> tok = std::make_unique<free_index_token>(idx);
                         this->free_index_tokens.push_back(tok.get());
@@ -357,9 +357,9 @@ macro_argument_list token_list::get_argument_list(const std::string& input, cons
 	}
 
 
-index_abstract_list token_list::get_index_list(const std::string& input, const std::string& candidate, size_t& position, unsigned int expected_indices, enum index_class range)
+abstract_index_list token_list::get_index_list(const std::string& input, const std::string& candidate, size_t& position, unsigned int expected_indices, enum index_class range)
 	{
-    index_abstract_list idx_list;
+    abstract_index_list idx_list;
 
 		if(position < input.length() && input[position] == '[')
 			{
@@ -369,7 +369,7 @@ index_abstract_list token_list::get_index_list(const std::string& input, const s
 					{
 						if(isalnum(input[position]))
 							{
-                std::pair< index_abstract_list::iterator, bool > result = idx_list.emplace_back(std::make_pair(input[position],
+                std::pair< abstract_index_list::iterator, bool > result = idx_list.emplace_back(std::make_pair(input[position],
                                                                                                                std::make_shared<index_abstract>(input[position], this->num_fields, this->num_params)));    // will guess suitable index class
 								if(result.second) this->add_index(*result.first);
 							}
@@ -412,18 +412,18 @@ index_abstract_list token_list::get_index_list(const std::string& input, const s
 	}
 
 
-index_abstract_list::const_iterator token_list::add_index(char label)
+abstract_index_list::const_iterator token_list::add_index(char label)
 	{
     // emplace does nothing if a record already exists
     return (this->indices.emplace_back(std::make_pair(label, std::make_unique<index_abstract>(label, this->num_fields, this->num_params)))).first;
 	}
 
 
-index_abstract_list::const_iterator token_list::add_index(const index_abstract& index)
+abstract_index_list::const_iterator token_list::add_index(const index_abstract& index)
 	{
     // emplace does nothing if a record already exists;
     // we want to ensure class compatibility, so we have to take this responsibility on ourselves
-    index_abstract_list::const_iterator t = this->indices.find(index.get_label());
+    abstract_index_list::const_iterator t = this->indices.find(index.get_label());
 
     if(t != this->indices.end())
       {
@@ -507,7 +507,7 @@ token_list::text_token::text_token(const std::string& l)
 	}
 
 
-token_list::free_index_token::free_index_token(index_abstract_list::const_iterator& it)
+token_list::free_index_token::free_index_token(abstract_index_list::const_iterator& it)
 	: generic_token(std::string(1, it->get_label())),
     index(*it)
 	{
@@ -543,7 +543,7 @@ void token_list::simple_macro_token::evaluate()
 	}
 
 
-token_list::index_macro_token::index_macro_token(const std::string& m, const index_abstract_list i, const macro_argument_list& a, const macro_packages::index_rule& r)
+token_list::index_macro_token::index_macro_token(const std::string& m, const abstract_index_list i, const macro_argument_list& a, const macro_packages::index_rule& r)
 	: generic_token(m),
     name(m),
     args(a),

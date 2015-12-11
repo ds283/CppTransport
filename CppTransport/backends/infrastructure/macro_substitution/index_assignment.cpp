@@ -61,7 +61,7 @@ namespace index_assignment_impl
   }   // namespace index_assignment_impl
 
 
-assignment_set::assignment_set(const index_abstract_list& s, indexorder o)
+assignment_set::assignment_set(const abstract_index_list& s, indexorder o)
   : source_set(s),
     order(o),
     assignments_size(1)

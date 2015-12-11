@@ -78,7 +78,7 @@ class token_list
       public:
 
         //! constructor
-        free_index_token(index_abstract_list::const_iterator& it);
+        free_index_token(abstract_index_list::const_iterator& it);
 
         //! destructor is default, but icpc fails with explicitly-default destructor
         virtual ~free_index_token()
@@ -144,7 +144,7 @@ class token_list
 		  public:
 
         //! constructor
-		    index_macro_token(const std::string& m, const index_abstract_list i, const macro_argument_list& a, const macro_packages::index_rule& r);
+		    index_macro_token(const std::string& m, const abstract_index_list i, const macro_argument_list& a, const macro_packages::index_rule& r);
 
         //! destructor
 				virtual ~index_macro_token();
@@ -162,9 +162,9 @@ class token_list
 
 		  protected:
 
-				const std::string name;
-				const macro_argument_list args;
-				const index_abstract_list indices;
+				const std::string          name;
+				const macro_argument_list  args;
+				const abstract_index_list  indices;
 				macro_packages::index_rule rule;
 
 				void* state;
@@ -206,7 +206,7 @@ class token_list
 		unsigned int evaluate_macros(const assignment_list& a);
 
 		//! get list of indices identified during tokenization
-		const index_abstract_list& get_indices() { return(this->indices); }
+		const abstract_index_list& get_indices() { return(this->indices); }
 
 
 		// INTERNAL API
@@ -220,7 +220,7 @@ class token_list
 		macro_argument_list get_argument_list(const std::string& input, const std::string& candidate, size_t& position, unsigned int expected_args);
 
 		//! check an index list of correct size exists in the input string, and return it (tokenized)
-		index_abstract_list get_index_list(const std::string& input, const std::string& candidate, size_t& position, unsigned int expected_indices, enum index_class range);
+    abstract_index_list get_index_list(const std::string& input, const std::string& candidate, size_t& position, unsigned int expected_indices, enum index_class range);
 
 		//! check whether the current candidate is a potential match for a macro
 		template <typename Rule>
@@ -231,10 +231,10 @@ class token_list
 		const Rule& find_match(const std::string& candidate, const std::vector<Rule>& rule_list);
 
 		//! add an index to our internal list
-		index_abstract_list::const_iterator add_index(char label);
+		abstract_index_list::const_iterator add_index(char label);
 
 		//! add an index to our internal list
-		index_abstract_list::const_iterator add_index(const index_abstract& index);
+		abstract_index_list::const_iterator add_index(const index_abstract& index);
 
 
     // INTERNAL DATA
@@ -257,7 +257,7 @@ class token_list
     std::list< free_index_token* > free_index_tokens;
 
 		//! list of indices found in input
-		index_abstract_list indices;
+    abstract_index_list indices;
 
     //! cache number of fields
     unsigned int num_fields;

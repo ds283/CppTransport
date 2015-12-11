@@ -70,7 +70,7 @@ class index_abstract
 
 
 //! set up typedef for database of index_abstract records
-typedef index_database<index_abstract> index_abstract_list;
+typedef index_database<index_abstract> abstract_index_list;
 
 
 

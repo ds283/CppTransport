@@ -138,7 +138,7 @@ std::unique_ptr< std::list<std::string> > macro_agent::apply_line(std::string& l
 		// TODO: check that RHS assignments match the expected type for each macro (the previous implementation did this; the revised one doesn't yet)
 
     // first get RHS indices which are not also LHS indices
-    index_abstract_list RHS_indices;
+    abstract_index_list RHS_indices;
     try
       {
         RHS_indices = right_tokens.get_indices() - left_tokens.get_indices();
