@@ -89,6 +89,8 @@
 #define ERROR_WRONG_INDEX_COUNT               "Unexpected number of arguments to macro"
 #define ERROR_EXPECTED_INDEX_COUNT            "expected"
 
+#define WARNING_INDEX_TYPE_MISMATCH           "expected index type for this macro does not match for"
+
 #define ERROR_MISSING_LHS                     "Missing left-hand side in temporary template "
 #define ERROR_MISSING_RHS                     "Missing right-hand side in temporary template "
 

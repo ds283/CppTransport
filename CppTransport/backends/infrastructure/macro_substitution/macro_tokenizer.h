@@ -19,20 +19,19 @@
 #include "index_assignment.h"
 #include "replacement_rule_definitions.h"
 #include "macro_types.h"
+#include "translator_data.h"
 
 
-class token_list
-	{
-
-  public:
+namespace token_list_impl
+  {
 
     class generic_token
-	    {
+      {
 
       public:
 
         //! constructor
-		    generic_token(const std::string& c);
+        generic_token(const std::string& c, error_context ec);
 
         //! destructor is default, but icpc fails with explictly-defaulted destructor
         virtual ~generic_token()
@@ -44,41 +43,44 @@ class token_list
 
       public:
 
-		    //! convert this token to its string equivalent
+        //! convert this token to its string equivalent
         std::string to_string() const { return(conversion); }
 
 
-		    // INTERNAL DATA
+        // INTERNAL DATA
 
       protected:
 
-		    //! converted value of this macro
-		    std::string conversion;
+        //! converted value of this macro
+        std::string conversion;
 
-	    };
+        //! context for error messages involving this token
+        error_context err_ctx;
+
+      };
 
     class text_token: public generic_token
-	    {
+      {
 
       public:
 
         //! constructor
-        text_token(const std::string& l);
+        text_token(const std::string& l, error_context ec);
 
         //! destructor is default, but icpc fails with explicitly-default destructor
         virtual ~text_token()
           {
           }
 
-	    };
+      };
 
     class free_index_token: public generic_token
-	    {
+      {
 
       public:
 
         //! constructor
-        free_index_token(abstract_index_list::const_iterator& it);
+        free_index_token(abstract_index_list::const_iterator& it, error_context ec);
 
         //! destructor is default, but icpc fails with explicitly-default destructor
         virtual ~free_index_token()
@@ -93,21 +95,21 @@ class token_list
         void evaluate(const assignment_list& a);
 
 
-		    // INTERNAL DATA
+        // INTERNAL DATA
 
       protected:
 
-		    index_abstract index;
+        index_abstract index;
 
-	    };
+      };
 
     class simple_macro_token: public generic_token
-	    {
+      {
 
       public:
 
         //! constructor
-        simple_macro_token(const std::string& m, const macro_argument_list& a, const macro_packages::simple_rule& r, simple_macro_type t);
+        simple_macro_token(const std::string& m, const macro_argument_list& a, const macro_packages::simple_rule& r, simple_macro_type t, error_context ec);
 
         //! destructor is default, but icpc fails with explicitly-default destructor
         virtual ~simple_macro_token()
@@ -115,61 +117,67 @@ class token_list
           }
 
 
-		    // INTERFACE
+        // INTERFACE
 
       public:
 
-		    //! get type
+        //! get type
         simple_macro_type get_type() const { return(this->type); }
 
-		    //! evaluate and cache the result
-		    void evaluate();
+        //! evaluate and cache the result
+        void evaluate();
 
 
-		    // INTERNAL DATA
+        // INTERNAL DATA
 
       protected:
 
-		    const std::string name;
-		    const macro_argument_list args;
-		    macro_packages::simple_rule rule;
+        const std::string name;
+        const macro_argument_list args;
+        macro_packages::simple_rule rule;
 
-		    enum simple_macro_type type;
+        enum simple_macro_type type;
 
-	    };
+      };
 
-		class index_macro_token: public generic_token
-			{
+    class index_macro_token: public generic_token
+      {
 
-		  public:
+      public:
 
         //! constructor
-		    index_macro_token(const std::string& m, const abstract_index_list i, const macro_argument_list& a, const macro_packages::index_rule& r);
+        index_macro_token(const std::string& m, const abstract_index_list i, const macro_argument_list& a, const macro_packages::index_rule& r, error_context ec);
 
         //! destructor
-				virtual ~index_macro_token();
+        virtual ~index_macro_token();
 
 
-		    // INTERFACE
+        // INTERFACE
 
-		  public:
+      public:
 
-		    //! evaluate and cache the result given a list of index assignments
-		    void evaluate(const assignment_list& a);
+        //! evaluate and cache the result given a list of index assignments
+        void evaluate(const assignment_list& a);
 
 
-		    // INTERNAL DATA
+        // INTERNAL DATA
 
-		  protected:
+      protected:
 
-				const std::string          name;
-				const macro_argument_list  args;
-				const abstract_index_list  indices;
-				macro_packages::index_rule rule;
+        const std::string          name;
+        const macro_argument_list  args;
+        const abstract_index_list  indices;
+        macro_packages::index_rule rule;
 
-				void* state;
+        void* state;
 
-			};
+      };
+
+  }   // namespace token_list_impl
+
+
+class token_list
+	{
 
   public:
 
@@ -179,7 +187,7 @@ class token_list
                const std::vector<macro_packages::simple_rule>& pre,
                const std::vector<macro_packages::simple_rule>& post,
                const std::vector<macro_packages::index_rule>& index,
-               error_context& ec);
+               translator_data& d);
 
 		// suppress default copy constructor
 		token_list(const token_list& obj) = delete;
@@ -234,27 +242,30 @@ class token_list
 		abstract_index_list::const_iterator add_index(char label);
 
 		//! add an index to our internal list
-		abstract_index_list::const_iterator add_index(const index_abstract& index);
+		abstract_index_list::const_iterator add_index(const index_abstract& index, error_context& ctx);
 
 
     // INTERNAL DATA
 
   protected:
 
-    //! reference to error context
-    error_context& err_ctx;
+    //! tokenized input string; ownership is shared with any error contexts which we generate
+    std::shared_ptr< std::string > input_string;
+
+    //! reference to translator data payload
+    translator_data& data_payload;
 
 		//! tokenized version of input
-		std::list< std::unique_ptr<generic_token> > tokens;
+		std::list< std::unique_ptr< token_list_impl::generic_token > > tokens;
 
     //! auxiliary list of simple macro tokens
-    std::list< simple_macro_token* > simple_macro_tokens;
+    std::list< token_list_impl::simple_macro_token* > simple_macro_tokens;
 
     //! auxiliary list of index macro tokens
-    std::list< index_macro_token* > index_macro_tokens;
+    std::list< token_list_impl::index_macro_token* > index_macro_tokens;
 
     //! auxiliary list of free index tokens
-    std::list< free_index_token* > free_index_tokens;
+    std::list< token_list_impl::free_index_token* > free_index_tokens;
 
 		//! list of indices found in input
     abstract_index_list indices;

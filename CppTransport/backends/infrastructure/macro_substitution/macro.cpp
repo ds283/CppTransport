@@ -113,9 +113,8 @@ std::unique_ptr< std::list<std::string> > macro_agent::apply_line(std::string& l
 	    }
 
 		tokenization_timer.resume();
-    error_context err_context(this->data_payload.get_stack(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
-		token_list left_tokens(left, this->prefix, this->fields, this->parameters, this->pre_rule_cache, this->post_rule_cache, this->index_rule_cache, err_context);
-		token_list right_tokens(right, this->prefix, this->fields, this->parameters, this->pre_rule_cache, this->post_rule_cache, this->index_rule_cache, err_context);
+		token_list left_tokens(left, this->prefix, this->fields, this->parameters, this->pre_rule_cache, this->post_rule_cache, this->index_rule_cache, this->data_payload);
+		token_list right_tokens(right, this->prefix, this->fields, this->parameters, this->pre_rule_cache, this->post_rule_cache, this->index_rule_cache, this->data_payload);
 		tokenization_timer.stop();
 
     // running total of number of macro replacements
@@ -135,10 +134,11 @@ std::unique_ptr< std::list<std::string> > macro_agent::apply_line(std::string& l
 		// It's important to distinguish these two cases!
 
 		// generate an assignment for each RHS index
-		// TODO: check that RHS assignments match the expected type for each macro (the previous implementation did this; the revised one doesn't yet)
 
     // first get RHS indices which are not also LHS indices
     abstract_index_list RHS_indices;
+    error_context ctx(this->data_payload.get_stack(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
+
     try
       {
         RHS_indices = right_tokens.get_indices() - left_tokens.get_indices();
@@ -147,7 +147,7 @@ std::unique_ptr< std::list<std::string> > macro_agent::apply_line(std::string& l
       {
         std::ostringstream msg;
         msg << ERROR_MACRO_LHS_RHS_MISMATCH << " '" << xe.what() << "'";
-        err_context.error(msg.str());
+        ctx.error(msg.str());
       }
 
     assignment_set RHS_assignments(RHS_indices);
@@ -180,7 +180,7 @@ std::unique_ptr< std::list<std::string> > macro_agent::apply_line(std::string& l
                       {
                         std::ostringstream msg;
                         msg << ERROR_MACRO_LHS_RHS_MISMATCH << " '" << xe.what() << "'";
-                        err_context.error(msg.str());
+                        ctx.error(msg.str());
                       }
 
 						        counter += right_tokens.evaluate_macros(total_assignment);
@@ -218,7 +218,7 @@ std::unique_ptr< std::list<std::string> > macro_agent::apply_line(std::string& l
                   {
                     std::ostringstream msg;
                     msg << ERROR_MACRO_LHS_RHS_MISMATCH << " '" << xe.what() << "'";
-                    err_context.error(msg.str());
+                    ctx.error(msg.str());
                   }
 
 						    counter += right_tokens.evaluate_macros(total_assignment);
