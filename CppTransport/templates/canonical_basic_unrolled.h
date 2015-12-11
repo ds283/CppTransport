@@ -124,7 +124,7 @@ namespace transport
 
     // integration - 2pf functor
     template <typename number>
-    class $$__MODEL_basic_twopf_functor: public constexpr_flattener<$$__NUMBER_FIELDS>
+    class $$__MODEL_basic_twopf_functor
       {
 
       public:
@@ -198,7 +198,7 @@ namespace transport
 
     // integration - 3pf functor
     template <typename number>
-    class $$__MODEL_basic_threepf_functor: public constexpr_flattener<$$__NUMBER_FIELDS>
+    class $$__MODEL_basic_threepf_functor
       {
 
       public:
@@ -646,6 +646,12 @@ namespace transport
         const auto __Hsq             = $$__HUBBLE_SQ;
         const auto __eps             = $$__EPSILON;
 
+        // check FLATTEN functions are being evaluated at compile time
+        static_assert(TENSOR_FLATTEN(0,0) == 0, "TENSOR_FLATTEN failure");
+        static_assert(FLATTEN(0) == 0, "FLATTEN failure");
+        static_assert(FLATTEN(0,0) == 0, "FLATTEN failure");
+        static_assert(FLATTEN(0,0,0) == 0, "FLATTEN failure");
+
         const auto __tensor_twopf_ff = __x[$$__MODEL_pool::tensor_start + TENSOR_FLATTEN(0,0)];
         const auto __tensor_twopf_fp = __x[$$__MODEL_pool::tensor_start + TENSOR_FLATTEN(0,1)];
         const auto __tensor_twopf_pf = __x[$$__MODEL_pool::tensor_start + TENSOR_FLATTEN(1,0)];
@@ -714,6 +720,12 @@ namespace transport
         const auto __a               = std::exp(__t - this->N_horizon_exit + this->astar_normalization);
         const auto __Hsq             = $$__HUBBLE_SQ;
         const auto __eps             = $$__EPSILON;
+
+        // check FLATTEN functions are being evaluated at compile time
+        static_assert(TENSOR_FLATTEN(0,0) == 0, "TENSOR_FLATTEN failure");
+        static_assert(FLATTEN(0) == 0, "FLATTEN failure");
+        static_assert(FLATTEN(0,0) == 0, "FLATTEN failure");
+        static_assert(FLATTEN(0,0,0) == 0, "FLATTEN failure");
 
         const auto __tensor_k1_twopf_ff = __x[$$__MODEL_pool::tensor_k1_start + TENSOR_FLATTEN(0,0)];
         const auto __tensor_k1_twopf_fp = __x[$$__MODEL_pool::tensor_k1_start + TENSOR_FLATTEN(0,1)];

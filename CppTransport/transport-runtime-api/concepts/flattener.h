@@ -45,48 +45,66 @@ namespace transport
       };
 
 
-    template <unsigned int N>
-    class constexpr_flattener
+    namespace flatten_impl
       {
 
-        // CONSTRUCTOR, DESTRUCTOR
+        constexpr unsigned int flatten(unsigned int a, unsigned int N)
+          {
+            return(a);
+          }
 
-      public:
+        constexpr unsigned int flatten(unsigned int a, unsigned int b, unsigned int N)
+          {
+            return(2*N*a + b);
+          }
 
-        //! declare virtual destructor so derived class destructors get called correctly
-        virtual ~constexpr_flattener() = default;
+        constexpr unsigned int flatten(unsigned int a, unsigned int b, unsigned int c, unsigned int N)
+          {
+            return(2*N*2*N*a + 2*N*b + c);
+          }
 
-        // INTERFACE: INDEX-FLATTENING FUNCTIONS
+        constexpr unsigned int fields_flatten(unsigned int a, unsigned int N)
+          {
+            return(a);
+          }
 
-      protected:
+        constexpr unsigned int fields_flatten(unsigned int a, unsigned int b, unsigned int N)
+          {
+            return(N*a + b);
+          }
 
-        constexpr unsigned int flatten(unsigned int a)                                        const { return(a); }
-        constexpr unsigned int flatten(unsigned int a, unsigned int b)                        const { return(2*N*a + b); }
-        constexpr unsigned int flatten(unsigned int a, unsigned int b, unsigned int c)        const { return(2*N*2*N*a + 2*N*b + c); }
+        constexpr unsigned int fields_flatten(unsigned int a, unsigned int b, unsigned int c, unsigned int N)
+          {
+            return(N*N*a + N*b + c);
+          }
 
-        constexpr unsigned int fields_flatten(unsigned int a)                                 const { return(a); }
-        constexpr unsigned int fields_flatten(unsigned int a, unsigned int b)                 const { return(N*a + b); }
-        constexpr unsigned int fields_flatten(unsigned int a, unsigned int b, unsigned int c) const { return(N*N*a + N*b + c); }
+        constexpr unsigned int tensor_flatten(unsigned int a, unsigned int b)
+          {
+            return(2*a + b);
+          }
 
-        constexpr unsigned int tensor_flatten(unsigned int a, unsigned int b)                 const { return(2*a + b); }
+        constexpr unsigned int species(unsigned int a, unsigned int N)
+          {
+            return(a >= N ? a-N : a);
+          }
 
-        // INTERFACE: INDEX TRAITS
+        constexpr unsigned int momentum(unsigned int a, unsigned int N)
+          {
+            return(a >= N ? a : a+N);
+          }
 
-        constexpr unsigned int species(unsigned int a)                                        const { return((a >= N) ? a-N : a); }
-        constexpr unsigned int momentum(unsigned int a)                                       const { return((a >= N) ? a : a+N); }
-        constexpr unsigned int is_field(unsigned int a)                                       const { return(a < N); }
-        constexpr unsigned int is_momentum(unsigned int a)                                    const { return(a >= N && a <= 2*N); }
+        constexpr bool is_field(unsigned int a, unsigned int N)
+          {
+            return(a < N);
+          }
 
-      };
+        constexpr bool is_momentum(unsigned int a, unsigned int N)
+          {
+            return(a >= N && a < 2*N);
+          }
 
-    // macros to simplify application of these functions
-#define SPECIES(a)     this->species(a)
-#define MOMENTUM(a)    this->momentum(a)
-#define IS_FIELD(a)    this->is_field(a)
-#define IS_MOMENTUM(a) this->is_momentum(a)
-#define FLATTEN        this->flatten
-#define FIELDS_FLATTEN this->fields_flatten
-#define TENSOR_FLATTEN this->tensor_flatten
+      }   // namespace flatten_impl
+
 
   }   // namespace transport
 

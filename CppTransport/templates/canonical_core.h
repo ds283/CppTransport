@@ -69,6 +69,25 @@ namespace transport
       }
 
 
+    // FLATTENNING FUNCTIONS
+
+
+    constexpr unsigned int SPECIES       (unsigned int a)                                 { return flatten_impl::species(a, $$__NUMBER_FIELDS); }
+    constexpr unsigned int MOMENTUM      (unsigned int a)                                 { return flatten_impl::momentum(a, $$__NUMBER_FIELDS); }
+    constexpr unsigned int IS_FIELD      (unsigned int a)                                 { return flatten_impl::is_field(a, $$__NUMBER_FIELDS); }
+    constexpr unsigned int IS_MOMENTUM   (unsigned int a)                                 { return flatten_impl::is_momentum(a, $$__NUMBER_FIELDS); }
+
+    constexpr unsigned int FLATTEN       (unsigned int a)                                 { return flatten_impl::flatten(a, $$__NUMBER_FIELDS); }
+    constexpr unsigned int FLATTEN       (unsigned int a, unsigned int b)                 { return flatten_impl::flatten(a, b, $$__NUMBER_FIELDS); }
+    constexpr unsigned int FLATTEN       (unsigned int a, unsigned int b, unsigned int c) { return flatten_impl::flatten(a, b, $$__NUMBER_FIELDS); }
+
+    constexpr unsigned int FIELDS_FLATTEN(unsigned int a)                                 { return flatten_impl::fields_flatten(a, $$__NUMBER_FIELDS); }
+    constexpr unsigned int FIELDS_FLATTEN(unsigned int a, unsigned int b)                 { return flatten_impl::fields_flatten(a, b, $$__NUMBER_FIELDS); }
+    constexpr unsigned int FIELDS_FLATTEN(unsigned int a, unsigned int b, unsigned int c) { return flatten_impl::fields_flatten(a, b, $$__NUMBER_FIELDS); }
+
+    constexpr unsigned int TENSOR_FLATTEN(unsigned int a, unsigned int b)                 { return flatten_impl::tensor_flatten(a, b); }
+
+
     // *********************************************************************************************
 
 
@@ -219,7 +238,7 @@ namespace transport
 
     // integration - background functor
     template <typename number>
-    class $$__MODEL_background_functor: public constexpr_flattener<$$__NUMBER_FIELDS>
+    class $$__MODEL_background_functor
       {
 
       public:
@@ -991,7 +1010,7 @@ namespace transport
         auto ics = tk->get_ics_vector();
 
         backg_state<number> x($$__MODEL_pool::backg_state_size);
-        x[this->flatten($$__A)] = ics[$$__A];
+        x[FLATTEN($$__A)] = ics[$$__A];
 
         boost::numeric::odeint::integrate_times($$__MAKE_BACKG_STEPPER{backg_state<number>}, system, x, time_db.value_begin(), time_db.value_end(), $$__BACKG_STEP_SIZE, obs);
       }
@@ -1049,7 +1068,7 @@ namespace transport
         auto ics = tk->get_ics_vector();
 
         backg_state<number> x($$__MODEL_pool::backg_state_size);
-        x[this->flatten($$__A)] = ics[$$__A];
+        x[FLATTEN($$__A)] = ics[$$__A];
 
 		    // find point where epsilon = 1
         auto stepper = $$__MAKE_BACKG_STEPPER{backg_state<number>};
@@ -1146,7 +1165,7 @@ namespace transport
 				auto ics = tk->integration_task<number>::get_ics_vector();
 
 				backg_state<number> x($$__MODEL_pool::backg_state_size);
-				x[this->flatten($$__A)] = ics[$$__A];
+				x[FLATTEN($$__A)] = ics[$$__A];
 
 				auto stepper = $$__MAKE_BACKG_STEPPER{backg_state<number>};
 
@@ -1202,7 +1221,7 @@ namespace transport
         // check for nan being produced
         if(std::isnan($$__COORDINATE[A])) throw integration_produced_nan(__t);
 
-        __dxdt[this->flatten($$__A)] = $$__U1_PREDEF[A]{__Hsq,__eps};
+        __dxdt[FLATTEN($$__A)] = $$__U1_PREDEF[A]{__Hsq,__eps};
       }
 
 
