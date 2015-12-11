@@ -17,7 +17,6 @@
 #include "utensors.h"
 #include "gauge_xfm.h"
 #include "temporary_pool.h"
-#include "summation.h"
 #include "vexcl_steppers.h"
 #include "vexcl_kernels.h"
 #include "cpp_printer.h"

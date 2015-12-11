@@ -68,7 +68,6 @@ ADD_EXECUTABLE(CppTransport main.cpp
   backends/shared/fundamental.cpp
   backends/shared/gauge_xfm.cpp
   backends/shared/lagrangian_tensors.cpp
-  backends/shared/summation.cpp
   backends/shared/temporary_pool.cpp
   backends/shared/utensors.cpp
   backends/utilities/symbol_factory.cpp
@@ -193,8 +192,6 @@ SET(BACKENDS_SHARED_FILES
   backends/shared/gauge_xfm.h
   backends/shared/lagrangian_tensors.cpp
   backends/shared/lagrangian_tensors.h
-  backends/shared/summation.cpp
-  backends/shared/summation.h
   backends/shared/temporary_pool.cpp
   backends/shared/temporary_pool.h
   backends/shared/utensors.cpp

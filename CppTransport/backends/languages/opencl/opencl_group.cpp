@@ -24,12 +24,10 @@ opencl_group::opencl_group(translator_data& p, ginac_cache<expression_item_types
     auto ut = std::make_unique<macro_packages::utensors>          (p, this->printer);
     auto xf = std::make_unique<macro_packages::gauge_xfm>         (p, this->printer);
     auto tp = std::make_unique<macro_packages::temporary_pool>    (p, this->printer);
-    auto su = std::make_unique<macro_packages::summation>         (p, this->printer);
     auto ka = std::make_unique<shared::kernel_argument_macros>    (p, this->printer, "global");
 
     // register these packages and transfer their ownership
     this->push_back(std::move(ka));
-    this->push_back(std::move(su));
     this->push_back(std::move(tp));
     this->push_back(std::move(ut));
     this->push_back(std::move(xf));

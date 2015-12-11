@@ -16,7 +16,6 @@
 #include "utensors.h"
 #include "gauge_xfm.h"
 #include "temporary_pool.h"
-#include "summation.h"
 #include "kernel_argument_macros.h"
 #include "opencl_printer.h"
 

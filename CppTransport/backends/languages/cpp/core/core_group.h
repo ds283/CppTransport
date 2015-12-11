@@ -18,7 +18,6 @@
 #include "utensors.h"
 #include "gauge_xfm.h"
 #include "temporary_pool.h"
-#include "summation.h"
 #include "core_macros.h"
 #include "cpp_printer.h"
 
