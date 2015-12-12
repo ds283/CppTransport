@@ -23,9 +23,15 @@ translator_data::translator_data(const boost::filesystem::path& file,
   }
 
 
-bool translator_data::get_do_cse() const
+bool translator_data::do_cse() const
   {
     return(this->cache.do_cse());
+  }
+
+
+bool translator_data::annotate() const
+  {
+    return(this->cache.annotate());
   }
 
 

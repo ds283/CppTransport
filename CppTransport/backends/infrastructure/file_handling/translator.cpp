@@ -119,6 +119,8 @@ unsigned int translator::process(const boost::filesystem::path& in, buffer& buf,
             output_stack& os = this->data_payload.get_stack();
             os.push(in, buf, agent, type);  // current line number is automatically set to 1
 
+            bool annotate = this->data_payload.annotate();
+
             while(!inf.eof() && !inf.fail())
               {
                 // read in a line from the template
@@ -139,7 +141,7 @@ unsigned int translator::process(const boost::filesystem::path& in, buffer& buf,
                     unsigned int c = 0;
                     for(const std::string& l : *line_list)
                       {
-                        std::string out_line = l + (c > 0 ? continuation_tag.str() : "");
+                        std::string out_line = l + (annotate && c > 0 ? continuation_tag.str() : "");
 
                         if(filter != nullptr) buf.write_to_end((*filter)(out_line));
                         else                  buf.write_to_end(out_line);

@@ -193,7 +193,7 @@ class cse
   public:
 
 		// get CSE active flag
-    bool               get_perform_cse() const { return(this->data_payload.get_do_cse()); }
+    bool               get_perform_cse() const { return(this->data_payload.do_cse()); }
 
 		// get raw GiNaC printer associated with this CSE worker
     language_printer&  get_ginac_printer() { return(this->printer); }

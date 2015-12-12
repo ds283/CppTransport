@@ -27,33 +27,50 @@ class argument_cache
     ~argument_cache() = default;
 
 
-    // INTERFACE
+    // MISCELLANEOUS OPTIONS
 
   public:
 
     //! get verbose output setting
     bool verbose() const { return(this->verbose_flag); }
 
+
+    // CONFIGURATION OPTIONS
+
+  public:
+
     //! get colourized setting
     bool colourize() const { return(this->colour_flag); }
 
-    //! get common-subexpression elimination setting
-    bool do_cse() const { return(this->cse_flag); }
-
     //! search environment paths for eg. template files?
     bool search_environment() const { return(!this->no_search_environment); }
-
-    //! get search paths
-    const std::list<boost::filesystem::path>& search_paths() const { return(this->search_path_list); }
-
-    //! get input files
-    const std::list<boost::filesystem::path>& input_files() const { return(this->input_file_list); }
 
     //! get core output file
     const std::string& core_out() const { return(this->core_output); };
 
     //! get implementation output file
     const std::string& implementation_out() const { return(this->implementation_output); }
+
+    //! get search paths
+    const std::list<boost::filesystem::path>& search_paths() const { return(this->search_path_list); }
+
+
+    // CODE GENERATION OPTIONS
+
+  public:
+
+    //! get common-subexpression elimination setting
+    bool do_cse() const { return(this->cse_flag); }
+
+    //! get code annotation setting
+    bool annotate() const { return(this->annotate_flag); }
+
+    // INPUT FILES
+
+  public:
+
+    //! get input files
+    const std::list<boost::filesystem::path>& input_files() const { return(this->input_file_list); }
 
 
     // INTERNAL DATA
@@ -62,17 +79,19 @@ class argument_cache
 
     // OPTION FLAGS
 
+    // MISCELLANEOUS OPTIONS
+
     //! verbose flag
     bool verbose_flag;
 
-    //! colourized output flag
-    bool colour_flag;
 
-    //! CSE flag
-    bool cse_flag;
+    // CONFIGURATION OPTIONS
 
     //! don't search environment directories
     bool no_search_environment;
+
+    //! colourized output flag
+    bool colour_flag;
 
     //! core output file
     std::string core_output;
@@ -82,6 +101,18 @@ class argument_cache
 
     //! list of search paths
     std::list< boost::filesystem::path > search_path_list;
+
+
+    // CODE GENERATION OPTIONS
+
+    //! annotate output?
+    bool annotate_flag;
+
+    //! CSE flag
+    bool cse_flag;
+
+
+    // INPUT FILES
 
     //! list of files to process
     std::list< boost::filesystem::path > input_file_list;

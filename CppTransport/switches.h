@@ -44,9 +44,13 @@
 #define NO_ENV_SEARCH_SWITCH          "no-search-env"
 #define NO_ENV_SEARCH_HELP            "do not search CPPTRANSPORT_TEMPLATE_PATH"
 
+#define ANNOTATE_SWITCH               "annotate"
+#define ANNOTATE_HELP                 "annotate generated header files"
+
 #define MISC_OPTIONS                  "Miscellaneous options"
 #define CONFIG_OPTIONS                "Configuration options"
 #define HIDDEN_OPTIONS                "Hidden options"
+#define GENERATION_OPTIONS            "Code generation options"
 
 
 #endif //CPPTRANSPORT_SWITCHES_H

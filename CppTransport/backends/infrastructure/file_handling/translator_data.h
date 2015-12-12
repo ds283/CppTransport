@@ -82,7 +82,9 @@ class translator_data
 
   public:
 
-    bool get_do_cse() const;
+    bool do_cse() const;
+
+    bool annotate() const;
 
     boost::optional< contexted_value<std::string>& > get_name() const;
 
