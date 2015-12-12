@@ -3,15 +3,15 @@
 // Copyright (c) 2015 University of Sussex. All rights reserved.
 //
 
-#ifndef CPPTRANSPORT_INDEX_ABSTRACT_H
-#define CPPTRANSPORT_INDEX_ABSTRACT_H
+#ifndef CPPTRANSPORT_ABSTRACT_INDEX_H
+#define CPPTRANSPORT_ABSTRACT_INDEX_H
 
 
 #include "index_traits.h"
 #include "index_database.h"
 
 
-class index_abstract
+class abstract_index
   {
 
     // CONSTRUCTOR, DESTRUCTOR
@@ -19,13 +19,13 @@ class index_abstract
   public:
 
     //! constructor -- takes best-guess at classification of index
-    index_abstract(char l, unsigned int f, unsigned int p);
+    abstract_index(char l, unsigned int f, unsigned int p);
 
     //! constructor -- with assigned classification
-    index_abstract(char l, enum index_class c, unsigned int f, unsigned int p);
+    abstract_index(char l, enum index_class c, unsigned int f, unsigned int p);
 
     //! destructor is default
-    ~index_abstract() = default;
+    ~abstract_index() = default;
 
 
     // INTERFACE -- REQUIRED FOR INDEX_DATABASE
@@ -69,9 +69,9 @@ class index_abstract
   };
 
 
-//! set up typedef for database of index_abstract records
-typedef index_database<index_abstract> abstract_index_list;
+//! set up typedef for database of abstract_index records
+typedef index_database<abstract_index> abstract_index_list;
 
 
 
-#endif //CPPTRANSPORT_INDEX_ABSTRACT_H
+#endif //CPPTRANSPORT_ABSTRACT_INDEX_H

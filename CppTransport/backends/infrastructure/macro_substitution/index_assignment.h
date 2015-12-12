@@ -16,7 +16,7 @@
 
 #include "indexorder.h"
 #include "index_traits.h"
-#include "index_abstract.h"
+#include "abstract_index.h"
 
 #include "msg_en.h"
 
@@ -105,7 +105,7 @@ class assignment_record
   public:
 
     //! constructor
-    assignment_record(const index_abstract& a, unsigned int v)
+    assignment_record(const abstract_index& a, unsigned int v)
       : abstract(a),
         value(v)
       {
@@ -148,7 +148,7 @@ class assignment_record
   private:
 
     //! reference to associated abstract index
-    const index_abstract& abstract;
+    const abstract_index& abstract;
 
     //! numerical value
     unsigned int value;

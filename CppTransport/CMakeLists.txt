@@ -46,7 +46,7 @@ ADD_EXECUTABLE(CppTransport main.cpp
   backends/infrastructure/macro_substitution/index_assignment.cpp
   backends/infrastructure/macro_substitution/macro.cpp
   backends/infrastructure/macro_substitution/macro_tokenizer.cpp
-  backends/infrastructure/macro_substitution/index_abstract.cpp
+  backends/infrastructure/macro_substitution/abstract_index.cpp
   backends/infrastructure/macro_substitution/index_traits.cpp
   backends/infrastructure/replacement_rules/package_group.cpp
   backends/infrastructure/replacement_rules/package_group_factory.cpp
@@ -211,8 +211,8 @@ SET(BACKENDS_INFRASTRUCTURE_MACRO_SUBSTITUTION_FILES
   backends/infrastructure/macro_substitution/macro.h
   backends/infrastructure/macro_substitution/macro_tokenizer.cpp
   backends/infrastructure/macro_substitution/macro_tokenizer.h
-  backends/infrastructure/macro_substitution/index_abstract.cpp
-  backends/infrastructure/macro_substitution/index_abstract.h
+  backends/infrastructure/macro_substitution/abstract_index.cpp
+  backends/infrastructure/macro_substitution/abstract_index.h
   backends/infrastructure/macro_substitution/index_traits.cpp
   backends/infrastructure/macro_substitution/index_traits.h
   backends/infrastructure/macro_substitution/macro_types.h

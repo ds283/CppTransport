@@ -387,9 +387,9 @@ abstract_index_list token_list::get_index_list(const std::string& input, const s
 						if(isalnum(input[position]))
 							{
                 // add to index list for this macro if we haven't already seen it
-                // the constructor for index_abstract will assign a suitable type
+                // the constructor for abstract_index will assign a suitable type
                 std::pair< abstract_index_list::iterator, bool > result = idx_list.emplace_back(std::make_pair(input[position],
-                                                                                                               std::make_shared<index_abstract>(input[position], this->num_fields, this->num_params)));    // will guess suitable index class
+                                                                                                               std::make_shared<abstract_index>(input[position], this->num_fields, this->num_params)));    // will guess suitable index class
 
                 // if the index was new, add to list for this entire tokenization job
                 // if the index has already been seen for a previous macro then add_index() will do nothing provided
@@ -450,11 +450,11 @@ abstract_index_list token_list::get_index_list(const std::string& input, const s
 abstract_index_list::const_iterator token_list::add_index(char label)
 	{
     // emplace does nothing if a record already exists
-    return (this->indices.emplace_back(std::make_pair(label, std::make_unique<index_abstract>(label, this->num_fields, this->num_params)))).first;
+    return (this->indices.emplace_back(std::make_pair(label, std::make_unique<abstract_index>(label, this->num_fields, this->num_params)))).first;
 	}
 
 
-abstract_index_list::const_iterator token_list::add_index(const index_abstract& index, error_context& ctx)
+abstract_index_list::const_iterator token_list::add_index(const abstract_index& index, error_context& ctx)
 	{
     // emplace does nothing if a record already exists;
     // we want to ensure class compatibility, so we have to take this responsibility on ourselves
@@ -472,7 +472,7 @@ abstract_index_list::const_iterator token_list::add_index(const index_abstract& 
       }
     else
       {
-        return (this->indices.emplace_back(index.get_label(), std::make_unique<index_abstract>(index))).first;
+        return (this->indices.emplace_back(index.get_label(), std::make_unique<abstract_index>(index))).first;
       }
 	}
 
@@ -612,7 +612,7 @@ void token_list_impl::index_macro_token::evaluate(const assignment_list& a)
     // preserves ordering
     assignment_list index_values;
 
-    for(const index_abstract& idx : this->indices)
+    for(const abstract_index& idx : this->indices)
       {
         assignment_list::const_iterator it = a.find(idx.get_label());
         if(it == a.end()) throw std::runtime_error(ERROR_MISSING_INDEX_ASSIGNMENT);

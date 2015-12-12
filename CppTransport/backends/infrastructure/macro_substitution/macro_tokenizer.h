@@ -99,7 +99,7 @@ namespace token_list_impl
 
       protected:
 
-        index_abstract index;
+        abstract_index index;
 
       };
 
@@ -242,7 +242,7 @@ class token_list
 		abstract_index_list::const_iterator add_index(char label);
 
 		//! add an index to our internal list
-		abstract_index_list::const_iterator add_index(const index_abstract& index, error_context& ctx);
+		abstract_index_list::const_iterator add_index(const abstract_index& index, error_context& ctx);
 
 
     // INTERNAL DATA

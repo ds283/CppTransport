@@ -4,10 +4,10 @@
 //
 
 
-#include "index_abstract.h"
+#include "abstract_index.h"
 
 
-index_abstract::index_abstract(char l, unsigned int f, unsigned int p)
+abstract_index::abstract_index(char l, unsigned int f, unsigned int p)
   : label(l),
     classification(identify_index(l)),
     fields(f),
@@ -16,7 +16,7 @@ index_abstract::index_abstract(char l, unsigned int f, unsigned int p)
   }
 
 
-index_abstract::index_abstract(char l, enum index_class c, unsigned int f, unsigned int p)
+abstract_index::abstract_index(char l, enum index_class c, unsigned int f, unsigned int p)
   : label(l),
     classification(c),
     fields(f),
@@ -25,7 +25,7 @@ index_abstract::index_abstract(char l, enum index_class c, unsigned int f, unsig
   }
 
 
-unsigned int index_abstract::numeric_range() const
+unsigned int abstract_index::numeric_range() const
   {
     switch(this->classification)
       {

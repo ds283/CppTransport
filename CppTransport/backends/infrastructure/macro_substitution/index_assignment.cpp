@@ -66,7 +66,7 @@ assignment_set::assignment_set(const abstract_index_list& s, indexorder o)
     order(o),
     assignments_size(1)
   {
-    for(const index_abstract& idx : source_set)
+    for(const abstract_index& idx : source_set)
       {
         assignments_size *= idx.numeric_range();
       }
