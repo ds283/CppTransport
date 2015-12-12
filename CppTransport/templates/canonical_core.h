@@ -79,11 +79,11 @@ namespace transport
 
     constexpr unsigned int FLATTEN       (unsigned int a)                                 { return flatten_impl::flatten(a, $$__NUMBER_FIELDS); }
     constexpr unsigned int FLATTEN       (unsigned int a, unsigned int b)                 { return flatten_impl::flatten(a, b, $$__NUMBER_FIELDS); }
-    constexpr unsigned int FLATTEN       (unsigned int a, unsigned int b, unsigned int c) { return flatten_impl::flatten(a, b, $$__NUMBER_FIELDS); }
+    constexpr unsigned int FLATTEN       (unsigned int a, unsigned int b, unsigned int c) { return flatten_impl::flatten(a, b, c, $$__NUMBER_FIELDS); }
 
     constexpr unsigned int FIELDS_FLATTEN(unsigned int a)                                 { return flatten_impl::fields_flatten(a, $$__NUMBER_FIELDS); }
     constexpr unsigned int FIELDS_FLATTEN(unsigned int a, unsigned int b)                 { return flatten_impl::fields_flatten(a, b, $$__NUMBER_FIELDS); }
-    constexpr unsigned int FIELDS_FLATTEN(unsigned int a, unsigned int b, unsigned int c) { return flatten_impl::fields_flatten(a, b, $$__NUMBER_FIELDS); }
+    constexpr unsigned int FIELDS_FLATTEN(unsigned int a, unsigned int b, unsigned int c) { return flatten_impl::fields_flatten(a, b, c, $$__NUMBER_FIELDS); }
 
     constexpr unsigned int TENSOR_FLATTEN(unsigned int a, unsigned int b)                 { return flatten_impl::tensor_flatten(a, b); }
 
