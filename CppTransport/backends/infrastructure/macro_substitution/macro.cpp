@@ -17,10 +17,11 @@
 // **************************************************************************************
 
 
-macro_agent::macro_agent(translator_data& p, package_group& pkg, std::string pf, std::string sp, unsigned int dm)
+macro_agent::macro_agent(translator_data& p, package_group& pkg, std::string pf, std::string speq, std::string spsumeq, unsigned int dm)
   : data_payload(p),
     prefix(std::move(pf)),
-    split(std::move(sp)),
+    split_equal(std::move(speq)),
+    split_sum_equal(std::move(spsumeq)),
     recursion_max(dm),
     recursion_depth(0),
     pre_rule_cache(pkg.get_pre_ruleset()),
@@ -73,48 +74,16 @@ std::unique_ptr< std::list<std::string> > macro_agent::apply(std::string& line, 
   }
 
 
-std::unique_ptr< std::list<std::string> > macro_agent::apply_line(std::string& line, unsigned int& replacements)
+std::unique_ptr< std::list<std::string> > macro_agent::apply_line(const std::string& line, unsigned int& replacements)
   {
     std::unique_ptr< std::list<std::string> > r_list = std::make_unique< std::list<std::string> >();
 
 		// break the line at the split point, if it exists, to get a 'left-hand' side and a 'right-hand' side
-    std::string left;
-    std::string right;
-
-		size_t split_point;
-		if((split_point = line.find(this->split)) != std::string::npos)
-			{
-				left = line.substr(0, split_point);
-				right = line.substr(split_point + this->split.size());
-			}
-		else  // no split-point; everything counts as the right-hand side
-			{
-				right = line;
-			}
-
-    // trim trailing white space on the right-hand side
-    boost::algorithm::trim_right(right);
-
-    // check if the last component is a semicolon
-    // note std:string::back() and std::string::pop_back() require C++11
-    bool semicolon = false;
-    if(right.size() > 0 && right.back() == ';')
-	    {
-        semicolon = true;
-        right.pop_back();
-	    }
-
-    // check if the last component is a comma
-    bool comma = false;
-    if(right.size() > 0 && right.back() == ',')
-	    {
-        comma = true;
-        right.pop_back();
-	    }
+    macro_impl::split_string split_result = this->split(line);
 
 		tokenization_timer.resume();
-		token_list left_tokens(left, this->prefix, this->fields, this->parameters, this->pre_rule_cache, this->post_rule_cache, this->index_rule_cache, this->data_payload);
-		token_list right_tokens(right, this->prefix, this->fields, this->parameters, this->pre_rule_cache, this->post_rule_cache, this->index_rule_cache, this->data_payload);
+		token_list left_tokens(split_result.left, this->prefix, this->fields, this->parameters, this->pre_rule_cache, this->post_rule_cache, this->index_rule_cache, this->data_payload);
+		token_list right_tokens(split_result.right, this->prefix, this->fields, this->parameters, this->pre_rule_cache, this->post_rule_cache, this->index_rule_cache, this->data_payload);
 		tokenization_timer.stop();
 
     // running total of number of macro replacements
@@ -128,14 +97,7 @@ std::unique_ptr< std::list<std::string> > macro_agent::apply_line(std::string& l
     // generate assignments for the LHS indices
     assignment_set LHS_assignments(left_tokens.get_indices());
 
-		// LHS_assignments may be empty if there are no valid assignments (probably one of the index
-		// ranges is empty). If there are no LHS indices then it will contain one empty vector
-		// (the trivial index assignment, ie. no indices to assign).
-		// It's important to distinguish these two cases!
-
-		// generate an assignment for each RHS index
-
-    // first get RHS indices which are not also LHS indices
+		// generate an assignment for each RHS index; first get RHS indices which are not also LHS indices
     abstract_index_list RHS_indices;
     error_context ctx(this->data_payload.get_stack(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
 
@@ -152,20 +114,28 @@ std::unique_ptr< std::list<std::string> > macro_agent::apply_line(std::string& l
 
     assignment_set RHS_assignments(RHS_indices);
 
+    // LHS_assignments may be *empty* (ie size=0) if there are no valid assignments (probably one of the index
+    // ranges is empty).
+    // If there are no LHS indices then it will report size=1, ie. the trivial index assignment
+    // It's important to distinguish these two cases!
 		if(LHS_assignments.size() > 0)
 			{
         for(std::unique_ptr<assignment_list> LHS_assign : LHS_assignments)
 			    {
-				    // evaluate LHS macros on this index assignment
+				    // evaluate LHS macros on this index assignment;
+            // only need index- and post-macros; pre-macros were evaluated earlier
 				    counter += left_tokens.evaluate_macros(*LHS_assign);
-						counter += left_tokens.evaluate_macros(simple_macro_type::post);    // pre macros were evaluated earlier
+						counter += left_tokens.evaluate_macros(simple_macro_type::post);
 
 						if(RHS_assignments.size() > 1)   // multiple RHS assignments
 							{
 						    // push the LHS evaluated on this assignment into the output list, if it is non-empty
 						    if(left_tokens.size() > 0)
 							    {
-						        r_list->push_back(left_tokens.to_string());
+                    std::string lhs = left_tokens.to_string();
+                    if(split_result.type == macro_impl::split_type::sum)       lhs += " = ";
+                    if(split_result.type == macro_impl::split_type::sum_equal) lhs += " += ";
+						        r_list->push_back(lhs);
 							    }
 
 						    // now generate a set of RHS evaluations for this LHS evaluation
@@ -187,7 +157,7 @@ std::unique_ptr< std::list<std::string> > macro_agent::apply_line(std::string& l
 						        counter += right_tokens.evaluate_macros(simple_macro_type::post);
 
 								    // set up replacement right hand side; add trailing ; and , only if the LHS is empty
-						        std::string this_line = right_tokens.to_string() + (left_tokens.size() == 0 && semicolon ? ";" : "") + (left_tokens.size() == 0 && comma ? "," : "");
+						        std::string this_line = right_tokens.to_string() + (left_tokens.size() == 0 && split_result.semicolon ? ";" : "") + (left_tokens.size() == 0 && split_result.comma ? "," : "");
 
 						        r_list->push_back(this_line);
 							    }
@@ -195,11 +165,11 @@ std::unique_ptr< std::list<std::string> > macro_agent::apply_line(std::string& l
 								// add a trailing ; and , if the LHS is nonempty
 						    if(left_tokens.size() > 0 && r_list->size() > 0)
 							    {
-						        if(semicolon)
+						        if(split_result.semicolon)
 							        {
 						            r_list->back() += ";";
 							        }
-						        if(comma)
+						        if(split_result.comma)
 							        {
 						            r_list->back() += ",";
 							        }
@@ -225,7 +195,11 @@ std::unique_ptr< std::list<std::string> > macro_agent::apply_line(std::string& l
 						    counter += right_tokens.evaluate_macros(simple_macro_type::post);
 
 								// set up line with macro replacements, and add trailing ; and , if necessary
-						    std::string full_line = left_tokens.to_string() + " " + right_tokens.to_string() + (semicolon ? ";" : "") + (comma ? "," : "");
+						    std::string full_line = left_tokens.to_string();
+                if(split_result.type == macro_impl::split_type::sum)       full_line += " =";
+                if(split_result.type == macro_impl::split_type::sum_equal) full_line += " +=";
+
+                full_line += " " + right_tokens.to_string() + (split_result.semicolon ? ";" : "") + (split_result.comma ? "," : "");
 								r_list->push_back(full_line);
 							}
 			    }
@@ -239,3 +213,51 @@ std::unique_ptr< std::list<std::string> > macro_agent::apply_line(std::string& l
 
     return(r_list);
 	}
+
+
+macro_impl::split_string macro_agent::split(const std::string& line)
+  {
+    macro_impl::split_string rval;
+
+    // check for sum split point
+    if((rval.split_point = line.find(this->split_equal)) != std::string::npos)
+      {
+        rval.left  = line.substr(0, rval.split_point);
+        rval.right = line.substr(rval.split_point + this->split_equal.length());
+        rval.type  = macro_impl::split_type::sum;
+      }
+    else    // not sum, but possibly sum-equals?
+      {
+        if((rval.split_point = line.find(this->split_sum_equal)) != std::string::npos)
+          {
+            rval.left  = line.substr(0, rval.split_point);
+            rval.right = line.substr(rval.split_point + this->split_sum_equal.length());
+            rval.type  = macro_impl::split_type::sum_equal;
+          }
+        else    // no split-point; everything counts as the right-hand side
+          {
+            rval.right = line;
+            rval.type  = macro_impl::split_type::none;
+          }
+      }
+
+    // trim trailing white space on the right-hand side
+    boost::algorithm::trim_right(rval.right);
+
+    // check if the last component is a semicolon
+    // note std:string::back() and std::string::pop_back() require C++11
+    if(rval.right.size() > 0 && rval.right.back() == ';')
+      {
+        rval.semicolon = true;
+        rval.right.pop_back();
+      }
+
+    // check if the last component is a comma
+    if(rval.right.size() > 0 && rval.right.back() == ',')
+      {
+        rval.comma = true;
+        rval.right.pop_back();
+      }
+
+    return(rval);
+  }

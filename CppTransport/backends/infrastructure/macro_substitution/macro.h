@@ -38,13 +38,64 @@ namespace macro_packages
 	}
 
 
+namespace macro_impl
+  {
+
+    enum class split_type
+      {
+        none,
+        sum,
+        sum_equal
+      };
+
+    //! hold the result of breaking an input line at a split-point marker, if one is present
+    class split_string
+      {
+
+      public:
+
+        //! constructor applies sensible defaults
+        split_string()
+          : split_point(0),
+            comma(false),
+            semicolon(false),
+            type(split_type::none)
+          {
+          }
+
+        //! destructor is default
+        ~split_string() = default;
+
+        //! left-hand side
+        std::string left;
+
+        //! right-hand side
+        std::string right;
+
+        //! split point, if exists
+        size_t split_point;
+
+        //! does the right-hand side have a trailing comma?
+        bool comma;
+
+        //! does the right-hand side have a trailing semicolon?
+        bool semicolon;
+
+        //! split type
+        enum split_type type;
+
+      };
+
+  }
+
+
 class macro_agent
 	{
 
   public:
 
 		// constructor
-		macro_agent(translator_data& p, package_group& pkg, std::string pf, std::string sp,
+		macro_agent(translator_data& p, package_group& pkg, std::string pf, std::string speq, std::string spsumeq,
 		            unsigned int dm = DEFAULT_RECURSION_DEPTH);
 
 
@@ -73,7 +124,10 @@ class macro_agent
   protected:
 
     // do the heavy lifting of applying macro substitution to a line
-    std::unique_ptr< std::list<std::string> > apply_line(std::string& line, unsigned int& replacements);
+    std::unique_ptr< std::list<std::string> > apply_line(const std::string& line, unsigned int& replacements);
+
+    //! find a split-point in a line, if one exists
+    macro_impl::split_string split(const std::string& line);
 
 
     // INTERNAL DATA
@@ -94,7 +148,8 @@ class macro_agent
     std::vector<macro_packages::index_rule>&  index_rule_cache;
 
     const std::string                         prefix;
-    const std::string                         split;
+    const std::string                         split_equal;
+    const std::string                         split_sum_equal;
 
 		// timer to measure performance during macro replacement
 		boost::timer::cpu_timer                   timer;

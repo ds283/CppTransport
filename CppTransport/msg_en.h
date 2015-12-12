@@ -160,7 +160,8 @@
 // output strings
 
 #define BACKEND_MACRO_PREFIX                  "$$__"
-#define BACKEND_LINE_SPLIT                    "$$//"
+#define BACKEND_LINE_SPLIT_EQUAL              "$$="
+#define BACKEND_LINE_SPLIT_SUM_EQUAL          "$$+="
 
 #define OUTPUT_CPPTRANSPORT_TAG               "__CPPTRANSPORT"
 #define OUTPUT_TIME_FORMAT                    "%X on %d %m %Y"

@@ -41,7 +41,7 @@ namespace transport
     class $$__MODEL_basic : public $$__MODEL<number>
       {
 
-	      // CONSTRUCTOR, DESTRUCTOR
+        // CONSTRUCTOR, DESTRUCTOR
 
       public:
 
@@ -52,7 +52,7 @@ namespace transport
           }
 
         //! destructor is default
-		    virtual ~$$__MODEL_basic() = default;
+        virtual ~$$__MODEL_basic() = default;
 
         // EXTRACT MODEL INFORMATION -- implements a 'model' interface
 
@@ -130,15 +130,15 @@ namespace transport
       public:
 
         $$__MODEL_basic_twopf_functor(const twopf_list_task<number>* tk, const twopf_kconfig& k)
-	        : params(tk->get_params()),
-	          param_vector(tk->get_params().get_vector()),
-	          Mp(tk->get_params().get_Mp()),
-	          N_horizon_exit(tk->get_N_horizon_crossing()),
-	          astar_normalization(tk->get_astar_normalization()),
-	          config(k),
+          : params(tk->get_params()),
+            param_vector(tk->get_params().get_vector()),
+            Mp(tk->get_params().get_Mp()),
+            N_horizon_exit(tk->get_N_horizon_crossing()),
+            astar_normalization(tk->get_astar_normalization()),
+            config(k),
             u2(nullptr)
-	        {
-	        }
+          {
+          }
 
         void set_up_workspace()
           {
@@ -152,7 +152,7 @@ namespace transport
 
         void operator ()(const twopf_state<number>& __x, twopf_state<number>& __dxdt, double __t);
 
-				// adjust horizon exit time, given an initial time N_init which we wish to move to zero
+        // adjust horizon exit time, given an initial time N_init which we wish to move to zero
         void rebase_horizon_exit_time(double N_init) { this->N_horizon_exit -= N_init; }
 
       private:
@@ -173,7 +173,7 @@ namespace transport
         // also avoids copying overheads (the Boost odeint library copies the functor by value)
         number* u2;
 
-	    };
+      };
 
 
     // integration - observer object for 2pf
@@ -204,12 +204,12 @@ namespace transport
       public:
 
         $$__MODEL_basic_threepf_functor(const twopf_list_task<number>* tk, const threepf_kconfig& k)
-	        : params(tk->get_params()),
-	          param_vector(tk->get_params().get_vector()),
-	          Mp(tk->get_params().get_Mp()),
-	          N_horizon_exit(tk->get_N_horizon_crossing()),
-	          astar_normalization(tk->get_astar_normalization()),
-	          config(k),
+          : params(tk->get_params()),
+            param_vector(tk->get_params().get_vector()),
+            Mp(tk->get_params().get_Mp()),
+            N_horizon_exit(tk->get_N_horizon_crossing()),
+            astar_normalization(tk->get_astar_normalization()),
+            config(k),
             u2_k1(nullptr),
             u2_k2(nullptr),
             u2_k3(nullptr),
@@ -220,14 +220,14 @@ namespace transport
           }
 
         void set_up_workspace()
-	        {
-		        u2_k1 = new number[2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS];
-		        u2_k2 = new number[2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS];
-		        u2_k3 = new number[2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS];
+          {
+            u2_k1 = new number[2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS];
+            u2_k2 = new number[2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS];
+            u2_k3 = new number[2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS];
 
-		        u3_k1k2k3 = new number[2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS];
-		        u3_k2k1k3 = new number[2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS];
-		        u3_k3k1k2 = new number[2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS];
+            u3_k1k2k3 = new number[2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS];
+            u3_k2k1k3 = new number[2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS];
+            u3_k3k1k2 = new number[2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS];
           }
 
         void close_down_workspace()
@@ -243,7 +243,7 @@ namespace transport
 
         void operator ()(const threepf_state<number>& __x, threepf_state<number>& __dxdt, double __dt);
 
-				// adjust horizon exit time, given an initial time N_init which we wish to move to zero
+        // adjust horizon exit time, given an initial time N_init which we wish to move to zero
         void rebase_horizon_exit_time(double N_init) { this->N_horizon_exit -= N_init; }
 
       private:
@@ -271,7 +271,7 @@ namespace transport
         number* u3_k2k1k3;
         number* u3_k3k1k2;
 
-	    };
+      };
 
 
     // integration - observer object for 3pf
@@ -317,23 +317,23 @@ namespace transport
 
     template <typename number>
     worker_type $$__MODEL_basic<number>::get_backend_type(void)
-	    {
+      {
         return(worker_type::cpu);
-	    }
+      }
 
 
     template <typename number>
     unsigned int $$__MODEL_basic<number>::get_backend_memory(void)
-	    {
+      {
         return(0);
-	    }
+      }
 
 
     template <typename number>
     unsigned int $$__MODEL_basic<number>::get_backend_priority(void)
-	    {
+      {
         return(1);
-	    }
+      }
 
 
     // process work queue for twopf
@@ -370,25 +370,25 @@ namespace transport
               {
                 // write the time history for this k-configuration
                 this->twopf_kmode(list[i], tk, batcher, refinement_level);    // logging and report of successful integration are wrapped up in the observer stop_timers() method
-		            success = true;
+                success = true;
                }
-	          catch(std::overflow_error& xe)
-		          {
-			          // unwind any batched results before trying again with a refined mesh
-			          if(refinement_level == 0) batcher.report_refinement();
-			          batcher.unbatch(list[i]->serial);
-			          refinement_level++;
+            catch(std::overflow_error& xe)
+              {
+                // unwind any batched results before trying again with a refined mesh
+                if(refinement_level == 0) batcher.report_refinement();
+                batcher.unbatch(list[i]->serial);
+                refinement_level++;
 
-			          BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::warning)
-			              << "** " << CPPTRANSPORT_RETRY_CONFIG << " " << list[i]->serial << " (" << i+1
-		                << " " CPPTRANSPORT_OF << " " << list.size() << "), "
-			              << CPPTRANSPORT_REFINEMENT_LEVEL << " = " << refinement_level
-					          << " (" << CPPTRANSPORT_REFINEMENT_INTERNAL << xe.what() << ")";
-		          }
+                BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::warning)
+                    << "** " << CPPTRANSPORT_RETRY_CONFIG << " " << list[i]->serial << " (" << i+1
+                    << " " CPPTRANSPORT_OF << " " << list.size() << "), "
+                    << CPPTRANSPORT_REFINEMENT_LEVEL << " = " << refinement_level
+                    << " (" << CPPTRANSPORT_REFINEMENT_INTERNAL << xe.what() << ")";
+              }
             catch(runtime_exception& xe)
               {
                 batcher.report_integration_failure(list[i]->serial);
-		            batcher.unbatch(list[i]->serial);
+                batcher.unbatch(list[i]->serial);
 
                 BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::error)
                     << "!! " CPPTRANSPORT_FAILED_CONFIG << " " << list[i]->serial << " (" << i+1
@@ -423,12 +423,12 @@ namespace transport
         const std::vector<number> ics = tk->get_ics_vector(*kconfig);
         x[$$__MODEL_pool::backg_start + FLATTEN($$__A)] = ics[$$__A];
 
-		    if(batcher.is_collecting_initial_conditions())
-			    {
-				    const std::vector<number> ics_1 = tk->get_ics_exit_vector(*kconfig);
-		        double t_exit = tk->get_ics_exit_time(*kconfig);
-		        batcher.push_ics(kconfig->serial, t_exit, ics_1);
-			    }
+        if(batcher.is_collecting_initial_conditions())
+          {
+            const std::vector<number> ics_1 = tk->get_ics_exit_vector(*kconfig);
+            double t_exit = tk->get_ics_exit_time(*kconfig);
+            batcher.push_ics(kconfig->serial, t_exit, ics_1);
+          }
 
         // fix initial conditions - tensors
         this->populate_tensor_ic(x, $$__MODEL_pool::tensor_start, kconfig->k_comoving, *(time_db.value_begin()), tk, ics);
@@ -514,7 +514,7 @@ namespace transport
         for(unsigned int i = 0; i < list.size(); ++i)
           {
             bool success = false;
-		        unsigned int refinement_level = 0;
+            unsigned int refinement_level = 0;
 
             while(!success)
             try
@@ -525,16 +525,16 @@ namespace transport
               }
             catch(std::overflow_error& xe)
               {
-		            // unwind any batched results before trying again with a refined mesh
-		            if(refinement_level == 0) batcher.report_refinement();
-		            batcher.unbatch(list[i]->serial);
-		            refinement_level++;
+                // unwind any batched results before trying again with a refined mesh
+                if(refinement_level == 0) batcher.report_refinement();
+                batcher.unbatch(list[i]->serial);
+                refinement_level++;
 
                 BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::warning)
-		                << "** " << CPPTRANSPORT_RETRY_CONFIG << " " << list[i]->serial << " (" << i+1
-				            << " " << CPPTRANSPORT_OF << " " << list.size() << "), "
-	                  << CPPTRANSPORT_REFINEMENT_LEVEL << " = " << refinement_level
-		                << " (" << CPPTRANSPORT_REFINEMENT_INTERNAL << xe.what() << ")";
+                    << "** " << CPPTRANSPORT_RETRY_CONFIG << " " << list[i]->serial << " (" << i+1
+                    << " " << CPPTRANSPORT_OF << " " << list.size() << "), "
+                    << CPPTRANSPORT_REFINEMENT_LEVEL << " = " << refinement_level
+                    << " (" << CPPTRANSPORT_REFINEMENT_INTERNAL << xe.what() << ")";
               }
             catch(runtime_exception& xe)
               {
@@ -557,7 +557,7 @@ namespace transport
       {
         if(refinement_level > tk->get_max_refinements()) throw runtime_exception(exception_type::REFINEMENT_FAILURE, CPPTRANSPORT_REFINEMENT_TOO_DEEP);
 
-		    // get list of time steps, and storage list
+        // get list of time steps, and storage list
         const time_config_database time_db = tk->get_time_config_database(*kconfig);
 
         // set up a functor to observe the integration
@@ -573,20 +573,20 @@ namespace transport
         x.resize($$__MODEL_pool::threepf_state_size);
 
         // fix initial conditions - background
-		    // use fast-forwarding if enabled
+        // use fast-forwarding if enabled
         // (don't need explicit FLATTEN since it would appear on both sides)
         const std::vector<number> ics = tk->get_ics_vector(*kconfig);
         x[$$__MODEL_pool::backg_start + $$__A] = ics[$$__A];
 
-		    if(batcher.is_collecting_initial_conditions())
-			    {
-				    const std::vector<number> ics_1 = tk->get_ics_exit_vector(*kconfig, threepf_ics_exit_type::smallest_wavenumber_exit);
-				    const std::vector<number> ics_2 = tk->get_ics_exit_vector(*kconfig, threepf_ics_exit_type::kt_wavenumber_exit);
-		        double t_exit_1 = tk->get_ics_exit_time(*kconfig, threepf_ics_exit_type::smallest_wavenumber_exit);
-		        double t_exit_2 = tk->get_ics_exit_time(*kconfig, threepf_ics_exit_type::kt_wavenumber_exit);
-		        batcher.push_ics(kconfig->serial, t_exit_1, ics_1);
-		        batcher.push_kt_ics(kconfig->serial, t_exit_2, ics_2);
-			    }
+        if(batcher.is_collecting_initial_conditions())
+          {
+            const std::vector<number> ics_1 = tk->get_ics_exit_vector(*kconfig, threepf_ics_exit_type::smallest_wavenumber_exit);
+            const std::vector<number> ics_2 = tk->get_ics_exit_vector(*kconfig, threepf_ics_exit_type::kt_wavenumber_exit);
+            double t_exit_1 = tk->get_ics_exit_time(*kconfig, threepf_ics_exit_type::smallest_wavenumber_exit);
+            double t_exit_2 = tk->get_ics_exit_time(*kconfig, threepf_ics_exit_type::kt_wavenumber_exit);
+            batcher.push_ics(kconfig->serial, t_exit_1, ics_1);
+            batcher.push_kt_ics(kconfig->serial, t_exit_2, ics_2);
+          }
 
         // fix initial conditions - tensors
         this->populate_tensor_ic(x, $$__MODEL_pool::tensor_k1_start, kconfig->k1_comoving, *(time_db.value_begin()), tk, ics);
@@ -606,9 +606,9 @@ namespace transport
         // fix initial conditions - threepf
         this->populate_threepf_ic(x, $$__MODEL_pool::threepf_start, *kconfig, *(time_db.value_begin()), tk, ics);
 
-		    // up to this point the calculation has been done in the user-supplied time variable.
-		    // However, the integrator apparently performs much better if times are measured from zero (but not yet clear why)
-		    // TODO: would be nice to remove this in future
+        // up to this point the calculation has been done in the user-supplied time variable.
+        // However, the integrator apparently performs much better if times are measured from zero (but not yet clear why)
+        // TODO: would be nice to remove this in future
         rhs.rebase_horizon_exit_time(tk->get_ics().get_N_initial());
         time_config_database::const_value_iterator begin_iterator = time_db.value_begin(tk->get_ics().get_N_initial());
         time_config_database::const_value_iterator end_iterator   = time_db.value_end(tk->get_ics().get_N_initial());
@@ -688,8 +688,8 @@ namespace transport
         // evolve the 2pf
         // here, we are dealing only with the real part - which is symmetric.
         // so the index placement is not important
-        __dtwopf($$__A, $$__B)  = 0 $$// + $$__SUM_COORDS[C] this->u2[FLATTEN($$__A, $$__C)] * __twopf($$__C, $$__B);
-        __dtwopf($$__A, $$__B) += 0 $$// + $$__SUM_COORDS[C] this->u2[FLATTEN($$__B, $$__C)] * __twopf($$__A, $$__C);
+        __dtwopf($$__A, $$__B) $$=  + this->u2[FLATTEN($$__A, $$__C)] * __twopf($$__C, $$__B);
+        __dtwopf($$__A, $$__B) $$+= + this->u2[FLATTEN($$__B, $$__C)] * __twopf($$__A, $$__C);
       }
 
 
@@ -823,39 +823,39 @@ namespace transport
 
         // evolve the real and imaginary components of the 2pf
         // for the imaginary parts, index placement *does* matter so we must take care
-        __dtwopf_re_k1($$__A, $$__B)  = 0 $$// + $$__SUM_COORDS[C] this->u2_k1[FLATTEN($$__A, $$__C)] * __twopf_re_k1($$__C, $$__B);
-        __dtwopf_re_k1($$__A, $$__B) += 0 $$// + $$__SUM_COORDS[C] this->u2_k1[FLATTEN($$__B, $$__C)] * __twopf_re_k1($$__A, $$__C);
+        __dtwopf_re_k1($$__A, $$__B) $$=  + this->u2_k1[FLATTEN($$__A, $$__C)] * __twopf_re_k1($$__C, $$__B);
+        __dtwopf_re_k1($$__A, $$__B) $$+= + this->u2_k1[FLATTEN($$__B, $$__C)] * __twopf_re_k1($$__A, $$__C);
 
-        __dtwopf_im_k1($$__A, $$__B)  = 0 $$// + $$__SUM_COORDS[C] this->u2_k1[FLATTEN($$__A, $$__C)] * __twopf_im_k1($$__C, $$__B);
-        __dtwopf_im_k1($$__A, $$__B) += 0 $$// + $$__SUM_COORDS[C] this->u2_k1[FLATTEN($$__B, $$__C)] * __twopf_im_k1($$__A, $$__C);
+        __dtwopf_im_k1($$__A, $$__B) $$=  + this->u2_k1[FLATTEN($$__A, $$__C)] * __twopf_im_k1($$__C, $$__B);
+        __dtwopf_im_k1($$__A, $$__B) $$+= + this->u2_k1[FLATTEN($$__B, $$__C)] * __twopf_im_k1($$__A, $$__C);
 
-        __dtwopf_re_k2($$__A, $$__B)  = 0 $$// + $$__SUM_COORDS[C] this->u2_k2[FLATTEN($$__A, $$__C)] * __twopf_re_k2($$__C, $$__B);
-        __dtwopf_re_k2($$__A, $$__B) += 0 $$// + $$__SUM_COORDS[C] this->u2_k2[FLATTEN($$__B, $$__C)] * __twopf_re_k2($$__A, $$__C);
+        __dtwopf_re_k2($$__A, $$__B) $$=  + this->u2_k2[FLATTEN($$__A, $$__C)] * __twopf_re_k2($$__C, $$__B);
+        __dtwopf_re_k2($$__A, $$__B) $$+= + this->u2_k2[FLATTEN($$__B, $$__C)] * __twopf_re_k2($$__A, $$__C);
 
-        __dtwopf_im_k2($$__A, $$__B)  = 0 $$// + $$__SUM_COORDS[C] this->u2_k2[FLATTEN($$__A, $$__C)] * __twopf_im_k2($$__C, $$__B);
-        __dtwopf_im_k2($$__A, $$__B) += 0 $$// + $$__SUM_COORDS[C] this->u2_k2[FLATTEN($$__B, $$__C)] * __twopf_im_k2($$__A, $$__C);
+        __dtwopf_im_k2($$__A, $$__B) $$=  + this->u2_k2[FLATTEN($$__A, $$__C)] * __twopf_im_k2($$__C, $$__B);
+        __dtwopf_im_k2($$__A, $$__B) $$+= + this->u2_k2[FLATTEN($$__B, $$__C)] * __twopf_im_k2($$__A, $$__C);
 
-        __dtwopf_re_k3($$__A, $$__B)  = 0 $$// + $$__SUM_COORDS[C] this->u2_k3[FLATTEN($$__A, $$__C)] * __twopf_re_k3($$__C, $$__B);
-        __dtwopf_re_k3($$__A, $$__B) += 0 $$// + $$__SUM_COORDS[C] this->u2_k3[FLATTEN($$__B, $$__C)] * __twopf_re_k3($$__A, $$__C);
+        __dtwopf_re_k3($$__A, $$__B) $$=  + this->u2_k3[FLATTEN($$__A, $$__C)] * __twopf_re_k3($$__C, $$__B);
+        __dtwopf_re_k3($$__A, $$__B) $$+= + this->u2_k3[FLATTEN($$__B, $$__C)] * __twopf_re_k3($$__A, $$__C);
 
-        __dtwopf_im_k3($$__A, $$__B)  = 0 $$// + $$__SUM_COORDS[C] this->u2_k3[FLATTEN($$__A, $$__C)] * __twopf_im_k3($$__C, $$__B);
-        __dtwopf_im_k3($$__A, $$__B) += 0 $$// + $$__SUM_COORDS[C] this->u2_k3[FLATTEN($$__B, $$__C)] * __twopf_im_k3($$__A, $$__C);
+        __dtwopf_im_k3($$__A, $$__B) $$=  + this->u2_k3[FLATTEN($$__A, $$__C)] * __twopf_im_k3($$__C, $$__B);
+        __dtwopf_im_k3($$__A, $$__B) $$+= + this->u2_k3[FLATTEN($$__B, $$__C)] * __twopf_im_k3($$__A, $$__C);
 
         // evolve the components of the 3pf
         // index placement matters, partly because of the k-dependence
         // but also in the source terms from the imaginary components of the 2pf
 
-        __dthreepf($$__A, $$__B, $$__C)  = 0 $$// + $$__SUM_COORDS[M] this->u2_k1[FLATTEN($$__A, $$__M)] * __threepf($$__M, $$__B, $$__C);
-        __dthreepf($$__A, $$__B, $$__C) += 0 $$// + $$__SUM_2COORDS[MN] this->u3_k1k2k3[FLATTEN($$__A, $$__M, $$__N)] * __twopf_re_k2($$__M, $$__B) * __twopf_re_k3($$__N, $$__C);
-        __dthreepf($$__A, $$__B, $$__C) += 0 $$// - $$__SUM_2COORDS[MN] this->u3_k1k2k3[FLATTEN($$__A, $$__M, $$__N)] * __twopf_im_k2($$__M, $$__B) * __twopf_im_k3($$__N, $$__C);
+        __dthreepf($$__A, $$__B, $$__C) $$=  + this->u2_k1[FLATTEN($$__A, $$__M)] * __threepf($$__M, $$__B, $$__C);
+        __dthreepf($$__A, $$__B, $$__C) $$+= + this->u3_k1k2k3[FLATTEN($$__A, $$__M, $$__N)] * __twopf_re_k2($$__M, $$__B) * __twopf_re_k3($$__N, $$__C);
+        __dthreepf($$__A, $$__B, $$__C) $$+= - this->u3_k1k2k3[FLATTEN($$__A, $$__M, $$__N)] * __twopf_im_k2($$__M, $$__B) * __twopf_im_k3($$__N, $$__C);
 
-        __dthreepf($$__A, $$__B, $$__C) += 0 $$// + $$__SUM_COORDS[M] this->u2_k2[FLATTEN($$__B, $$__M)] * __threepf($$__A, $$__M, $$__C);
-        __dthreepf($$__A, $$__B, $$__C) += 0 $$// + $$__SUM_2COORDS[MN] this->u3_k2k1k3[FLATTEN($$__B, $$__M, $$__N)] * __twopf_re_k1($$__A, $$__M) * __twopf_re_k3($$__N, $$__C);
-        __dthreepf($$__A, $$__B, $$__C) += 0 $$// - $$__SUM_2COORDS[MN] this->u3_k2k1k3[FLATTEN($$__B, $$__M, $$__N)] * __twopf_im_k1($$__A, $$__M) * __twopf_im_k3($$__N, $$__C);
+        __dthreepf($$__A, $$__B, $$__C) $$+= + this->u2_k2[FLATTEN($$__B, $$__M)] * __threepf($$__A, $$__M, $$__C);
+        __dthreepf($$__A, $$__B, $$__C) $$+= + this->u3_k2k1k3[FLATTEN($$__B, $$__M, $$__N)] * __twopf_re_k1($$__A, $$__M) * __twopf_re_k3($$__N, $$__C);
+        __dthreepf($$__A, $$__B, $$__C) $$+= - this->u3_k2k1k3[FLATTEN($$__B, $$__M, $$__N)] * __twopf_im_k1($$__A, $$__M) * __twopf_im_k3($$__N, $$__C);
 
-        __dthreepf($$__A, $$__B, $$__C) += 0 $$// + $$__SUM_COORDS[M] this->u2_k3[FLATTEN($$__C, $$__M)] * __threepf($$__A, $$__B, $$__M);
-        __dthreepf($$__A, $$__B, $$__C) += 0 $$// + $$__SUM_2COORDS[MN] this->u3_k3k1k2[FLATTEN($$__C, $$__M, $$__N)] * __twopf_re_k1($$__A, $$__M) * __twopf_re_k2($$__B, $$__N);
-        __dthreepf($$__A, $$__B, $$__C) += 0 $$// - $$__SUM_2COORDS[MN] this->u3_k3k1k2[FLATTEN($$__C, $$__M, $$__N)] * __twopf_im_k1($$__A, $$__M) * __twopf_im_k2($$__B, $$__N);
+        __dthreepf($$__A, $$__B, $$__C) $$+= + this->u2_k3[FLATTEN($$__C, $$__M)] * __threepf($$__A, $$__B, $$__M);
+        __dthreepf($$__A, $$__B, $$__C) $$+= + this->u3_k3k1k2[FLATTEN($$__C, $$__M, $$__N)] * __twopf_re_k1($$__A, $$__M) * __twopf_re_k2($$__B, $$__N);
+        __dthreepf($$__A, $$__B, $$__C) $$+= - this->u3_k3k1k2[FLATTEN($$__C, $$__M, $$__N)] * __twopf_im_k1($$__A, $$__M) * __twopf_im_k2($$__B, $$__N);
       }
 
 
