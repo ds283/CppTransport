@@ -62,13 +62,7 @@ namespace macro_packages
 
         for(int i = 0; i < rules.size(); ++i)
           {
-            simple_rule rule;
-
-            rule.rule = rules[i];
-            rule.args = args[i];
-            rule.name = names[i];
-
-            package.push_back(rule);
+            package.emplace_back(names[i], rules[i], args[i]);
           }
 
         return(package);
@@ -96,13 +90,7 @@ namespace macro_packages
 
         for(int i = 0; i < rules.size(); ++i)
           {
-            simple_rule rule;
-
-            rule.rule = rules[i];
-            rule.args = args[i];
-            rule.name = names[i];
-
-            package.push_back(rule);
+            package.emplace_back(names[i], rules[i], args[i]);
           }
 
         return(package);

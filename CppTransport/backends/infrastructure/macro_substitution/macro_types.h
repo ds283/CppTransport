@@ -16,5 +16,7 @@ typedef std::vector< std::string > macro_argument_list;
 
 enum class simple_macro_type { pre, post };
 
+enum class unroll_behaviour { force, prevent, allow };
+
 
 #endif //CPPTRANSPORT_MACRO_TYPES_H

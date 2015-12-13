@@ -41,13 +41,7 @@ namespace cpp
 
         for(int i = 0; i < rules.size(); ++i)
           {
-            macro_packages::simple_rule rule;
-
-            rule.rule = rules[i];
-            rule.args = args[i];
-            rule.name = names[i];
-
-            package.push_back(rule);
+            package.emplace_back(names[i], rules[i], args[i]);
           }
 
         return(package);

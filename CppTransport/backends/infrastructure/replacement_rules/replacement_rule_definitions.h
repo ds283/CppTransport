@@ -26,25 +26,68 @@ namespace macro_packages
 
       public:
 
+        //! constructor enforces setup of all fields
+        simple_rule(std::string n, replacement_rule_simple r, unsigned int a)
+          : rule(std::move(r)),
+            args(a),
+            name(std::move(n))
+          {
+          }
+
+
+        //! function pointer to replacement rule
         replacement_rule_simple  rule;
+
+        //! number of arguments expected by this macro
         unsigned int             args;
+
+        //! name of this macro
         std::string              name;
 
       };
 
 
     class index_rule
-
       {
 
       public:
 
+        //! constructor enforces setup of all fields
+        index_rule(std::string n, replacement_rule_index r, replacement_rule_pre pr, replacement_rule_post po,
+                   unsigned int a, unsigned int i, enum index_class rn, enum unroll_behaviour u)
+          : rule(std::move(r)),
+            pre(std::move(pr)),
+            post(std::move(po)),
+            args(a),
+            indices(i),
+            range(rn),
+            unroll(u),
+            name(n)
+          {
+          }
+
+        //! function pointer to replacement rule
         replacement_rule_index   rule;
+
+        //! function pointer to set-up method for this macro
         replacement_rule_pre     pre;
+
+        //! function pointer to set-down method for this macro
         replacement_rule_post    post;
+
+        //! number of arguments expected by this macro
         unsigned int             args;
+
+        //! number of indices expected by this macro
         unsigned int             indices;
+
+        //! type of index expected by this macro
         enum index_class         range;
+
+        //! does this macro require unrolling, prevent unrolling, or simply allow it?
+        enum unroll_behaviour    unroll;
+
+        //! name of this macro
         std::string              name;
 
       };

@@ -61,7 +61,7 @@ class package_group
 
   public:
 
-		// !make a comment appropriate for this backend
+		//! make a comment appropriate for this backend
     const std::string& get_comment_separator() const { return (this->comment_string); }
 
 

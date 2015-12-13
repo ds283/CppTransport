@@ -38,13 +38,7 @@ namespace macro_packages
 
         for(int i = 0; i < rules.size(); ++i)
           {
-            simple_rule rule;
-
-            rule.rule = rules[i];
-            rule.args = args[i];
-            rule.name = names[i];
-
-            package.push_back(rule);
+            package.emplace_back(names[i], rules[i], args[i]);
           }
 
         return(package);
@@ -98,25 +92,21 @@ namespace macro_packages
             index_class::field_only
           };
 
+        const std::vector<enum unroll_behaviour> unroll =
+          { unroll_behaviour::allow,           unroll_behaviour::allow, unroll_behaviour::allow,
+            unroll_behaviour::allow
+          };
+
         assert(pres.size() == posts.size());
         assert(pres.size() == rules.size());
         assert(pres.size() == names.size());
         assert(pres.size() == args.size());
         assert(pres.size() == ranges.size());
+        assert(pres.size() == unroll.size());
 
         for(int i = 0; i < pres.size(); ++i)
           {
-            index_rule rule;
-
-            rule.rule    = rules[i];
-            rule.name    = names[i];
-            rule.pre     = pres[i];
-            rule.post    = posts[i];
-            rule.args    = args[i];
-            rule.indices = indices[i];
-            rule.range   = ranges[i];
-
-            package.push_back(rule);
+            package.emplace_back(names[i], rules[i], pres[i], posts[i], args[i], indices[i], ranges[i], unroll[i]);
           }
 
         return(package);

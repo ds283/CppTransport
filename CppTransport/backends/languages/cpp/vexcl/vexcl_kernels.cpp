@@ -27,29 +27,23 @@ namespace cpp
         std::vector<macro_packages::simple_rule> package;
 
         const std::vector<replacement_rule_simple> rules =
-                                                     { BIND(import_kernel)
-                                                     };
+          { BIND(import_kernel)
+          };
 
         const std::vector<std::string> names =
-                                         { "IMPORT_KERNEL"
-                                         };
+          { "IMPORT_KERNEL"
+          };
 
         const std::vector<unsigned int> args =
-                                          { 3
-                                          };
+          { 3
+          };
 
         assert(rules.size() == names.size());
         assert(rules.size() == args.size());
 
         for(int i = 0; i < rules.size(); ++i)
           {
-            macro_packages::simple_rule rule;
-
-            rule.rule = rules[i];
-            rule.args = args[i];
-            rule.name = names[i];
-
-            package.push_back(rule);
+            package.emplace_back(names[i], rules[i], args[i]);
           }
 
         return(package);
