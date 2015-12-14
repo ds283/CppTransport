@@ -4,18 +4,19 @@
 //
 
 
-#ifndef __replacement_rule_definitions_H_
-#define __replacement_rule_definitions_H_
+#ifndef CPPTRANSPORT_REPLACEMENT_RULE_DEFINITIONS_H
+#define CPPTRANSPORT_REPLACEMENT_RULE_DEFINITIONS_H
 
 
 #include "index_assignment.h"
 #include "macro_types.h"
+#include "cse_map.h"
 
 
-typedef std::function<std::string(const macro_argument_list&)>                                replacement_rule_simple;
-typedef std::function<std::string(const macro_argument_list&, const assignment_list&, void*)> replacement_rule_index;
-typedef std::function<void*      (const macro_argument_list&)>                                replacement_rule_pre;
-typedef std::function<void       (void*)>                                                     replacement_rule_post;
+typedef std::function<std::string             (const macro_argument_list&)>                                   replacement_rule_simple;
+typedef std::function<std::string             (const macro_argument_list&, const assignment_list&, cse_map*)> replacement_rule_index;
+typedef std::function<std::unique_ptr<cse_map>(const macro_argument_list&)>                                   replacement_rule_pre;
+typedef std::function<void                    (std::unique_ptr<cse_map>&)>                                    replacement_rule_post;
 
 
 namespace macro_packages
@@ -95,4 +96,4 @@ namespace macro_packages
   } // namespace macro_packages
 
 
-#endif //__replacement_rule_definitions_H_
+#endif //CPPTRANSPORT_REPLACEMENT_RULE_DEFINITIONS_H

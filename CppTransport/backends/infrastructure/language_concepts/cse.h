@@ -40,8 +40,8 @@
 //***************************************************************************
 
 
-#ifndef __cse_H_
-#define __cse_H_
+#ifndef CPPTRANSPORT_CSE_H
+#define CPPTRANSPORT_CSE_H
 
 #include <string>
 #include <unordered_map>
@@ -55,46 +55,9 @@
 
 #include "boost/timer/timer.hpp"
 
-// to be defined below; need a forward reference here
-class cse;
 
-// utility class to make using CSE easier
-// it takes a vector of GiNaC expressions as input,
-// and can be indexed in the same order to produce the equivalent CSE get_symbol
-class cse_map
+namespace cse_impl
   {
-
-		// CONSTRUCTOR, DESTRUCTOR
-
-  public:
-
-    cse_map(std::vector<GiNaC::ex>* l, cse* c);
-    ~cse_map();
-
-
-		// INTERFACE
-
-  public:
-
-    // not returning a reference disallows using [] as an lvalue
-    std::string operator[](unsigned int index);
-
-
-		// INTERNAL DATA
-
-  protected:
-
-    cse* cse_worker;
-
-    std::vector<GiNaC::ex>* list;
-
-  };
-
-
-class cse
-  {
-
-  public:
 
     class symbol_record
       {
@@ -127,6 +90,11 @@ class cse
 
       };
 
+  }   // namespace cse_impl
+
+
+class cse
+  {
 
 		// CONSTRUCTOR, DESTRUCTOR
 
@@ -177,23 +145,12 @@ class cse
     void               set_temporary_name(const std::string& k)  { this->temporary_name_kernel = k; }
 
 
-		// INTERFACE - CSE MAPS
-
-  public:
-
-		// build a 'CSE map' from a vector of GiNaC expressions
-		// The 'CSE map' is a container object which can be indexed to return
-		// either the CSE temporary representing a particular expression in the vector,
-		// or (if we are not performing CSE) the expression itself
-    cse_map*           map_factory(std::vector<GiNaC::ex>* l) { return(new cse_map(l, this)); }
-
-
 		// INTERFACE - METADATA
 
   public:
 
 		// get CSE active flag
-    bool               get_perform_cse() const { return(this->data_payload.do_cse()); }
+    bool               do_cse() const { return(this->data_payload.do_cse()); }
 
 		// get raw GiNaC printer associated with this CSE worker
     language_printer&  get_ginac_printer() { return(this->printer); }
@@ -235,10 +192,10 @@ class cse
 
     std::string temporary_name_kernel;
 
-    typedef std::unordered_map< std::string, symbol_record >   symbol_lookup_table;
+    typedef std::unordered_map< std::string, cse_impl::symbol_record > symbol_table;
     typedef std::vector< std::pair<std::string, std::string> > declaration_table;
 
-    symbol_lookup_table symbols;
+    symbol_table symbols;
     declaration_table   decls;
 
 		// timer
@@ -247,4 +204,4 @@ class cse
   };
 
 
-#endif //__cse_H_
+#endif //CPPTRANSPORT_CSE_H

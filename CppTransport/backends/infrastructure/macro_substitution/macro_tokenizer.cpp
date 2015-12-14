@@ -617,11 +617,11 @@ token_list_impl::index_macro_token::index_macro_token(const std::string& m, cons
     name(m),
     args(a),
     indices(std::move(i)),
-    rule(r),
-    state(nullptr)
+    rule(r)
 	{
     if(rule.pre != nullptr)
 	    {
+        // state assumes ownership of the CSE-map returned from the pre-rule
         state = (rule.pre)(args);
 	    }
 	}
@@ -633,6 +633,9 @@ token_list_impl::index_macro_token::~index_macro_token()
 	    {
         (this->rule.post)(this->state);
 	    }
+
+    // release CSE map held by this macro if it hasn't already been done
+    this->state.release();
 	}
 
 
@@ -650,7 +653,7 @@ void token_list_impl::index_macro_token::evaluate(const assignment_list& a)
         index_values.emplace_back(std::make_pair(idx.get_label(), std::make_shared<assignment_record>(*it)));
       }
 
-		this->conversion = (this->rule.rule)(this->args, index_values, this->state);
+		this->conversion = (this->rule.rule)(this->args, index_values, this->state.get());
 	}
 
 

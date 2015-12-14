@@ -25,8 +25,8 @@ namespace macro_packages
       public:
 
         //! constructor
-        flow_tensors(translator_data& p, language_printer& prn)
-          : replacement_rule_package(p, prn)
+        flow_tensors(u_tensor_factory& uf, flattener& f, cse& cw, translator_data& p, language_printer& prn)
+          : replacement_rule_package(uf, f, cw, p, prn)
           {
           }
 
@@ -46,15 +46,19 @@ namespace macro_packages
 
       protected:
 
-        std::string replace_V         (const macro_argument_list& args);
-        std::string replace_Hsq       (const macro_argument_list& args);
-        std::string replace_eps       (const macro_argument_list& args);
+        std::string replace_V(const macro_argument_list& args);
 
-        std::string replace_parameter (const macro_argument_list& args, const assignment_list& indices, void* state);
-        std::string replace_field     (const macro_argument_list& args, const assignment_list& indices, void* state);
-        std::string replace_coordinate(const macro_argument_list& args, const assignment_list& indices, void* state);
+        std::string replace_Hsq(const macro_argument_list& args);
 
-        void*       pre_sr_velocity   (const macro_argument_list& args);
+        std::string replace_eps(const macro_argument_list& args);
+
+        std::string replace_parameter(const macro_argument_list& args, const assignment_list& indices, cse_map* map);
+
+        std::string replace_field(const macro_argument_list& args, const assignment_list& indices, cse_map* map);
+
+        std::string replace_coordinate(const macro_argument_list& args, const assignment_list& indices, cse_map* map);
+
+        std::unique_ptr<cse_map> pre_sr_velocity(const macro_argument_list& args);
 
       };
 

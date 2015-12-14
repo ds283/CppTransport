@@ -42,31 +42,6 @@ package_group::~package_group()
   }
 
 
-void package_group::push_back(std::unique_ptr<macro_packages::replacement_rule_package>&& package)
-  {
-    // establish that everything has been set up correctly
-    assert(package);
-    assert(this->u_factory);
-    assert(this->fl);
-    assert(this->cse_worker);
-
-    // at this point, ownership of the managed pointer lies in the 'package' argument
-    // populate the rule package with information about the package environment
-    package->set_u_factory(this->u_factory.get());
-    package->set_flattener(this->fl.get());
-    package->set_cse_worker(this->cse_worker.get());    // ! warning: assumes cse_worker has been set by the derived class constructor
-
-    // store this rule package in our list; after this call
-    // ownership of the managed pointer lies in the 'packages' list
-    this->packages.emplace_back(std::move(package));
-
-    // rebuild ruleset caches
-    this->build_pre_ruleset();
-    this->build_post_ruleset();
-    this->build_index_ruleset();
-  }
-
-
 std::vector<macro_packages::simple_rule>& package_group::get_pre_ruleset()
   {
     return(this->pre_ruleset);

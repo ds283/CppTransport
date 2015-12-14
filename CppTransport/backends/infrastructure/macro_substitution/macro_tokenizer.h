@@ -169,7 +169,7 @@ namespace token_list_impl
         const abstract_index_list  indices;
         macro_packages::index_rule rule;
 
-        void* state;
+        std::unique_ptr<cse_map>   state;
 
       };
 

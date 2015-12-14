@@ -12,6 +12,7 @@
 #include "flatten.h"
 #include "language_printer.h"
 #include "cse.h"
+#include "cse_map.h"
 #include "error.h"
 #include "replacement_rule_definitions.h"
 #include "index_assignment.h"
@@ -33,12 +34,12 @@ namespace macro_packages
 
       public:
 
-        replacement_rule_package(translator_data& p, language_printer& prn)
+        replacement_rule_package(u_tensor_factory& uf, flattener& f, cse& cw, translator_data& p, language_printer& prn)
           : data_payload(p),
             printer(prn),
-            u_factory(nullptr),         // initialize utility objects to nullptr
-            fl(nullptr),                // these will be populated later, when this rule package
-            cse_worker(nullptr)         // is registered in a group
+            u_factory(uf),
+            fl(f),
+            cse_worker(cw)
           {
           }
 
@@ -62,20 +63,6 @@ namespace macro_packages
         virtual const std::vector<index_rule>  get_index_rules() = 0;
 
 
-        // INTERFACE -- SET WORKER OBJECTS
-
-      public:
-
-        //! set u-tensor factory object
-        inline void set_u_factory(u_tensor_factory* uf) { this->u_factory = uf; }
-
-        //! set flattener object
-        inline void set_flattener(flattener* f) { this->fl = f; }
-
-        //! set CSE worker object
-        inline void set_cse_worker(cse* cw) { this->cse_worker = cw; }
-
-
         // INTERFACE -- END OF INPUT
 
       public:
@@ -89,19 +76,17 @@ namespace macro_packages
 
       protected:
 
-        std::string replace_1index_tensor(const macro_argument_list& args, const assignment_list& indices, void* state);
+        std::string replace_1index_tensor(const macro_argument_list& args, const assignment_list& indices, cse_map* map);
 
-        std::string replace_2index_tensor(const macro_argument_list& args, const assignment_list& indices, void* state);
+        std::string replace_2index_tensor(const macro_argument_list& args, const assignment_list& indices, cse_map* map);
 
-        std::string replace_3index_tensor(const macro_argument_list& args, const assignment_list& indices, void* state);
+        std::string replace_3index_tensor(const macro_argument_list& args, const assignment_list& indices, cse_map* map);
 
-        std::string replace_1index_field_tensor(const macro_argument_list& args, const assignment_list& indices, void* state);
+        std::string replace_1index_field_tensor(const macro_argument_list& args, const assignment_list& indices, cse_map* map);
 
-        std::string replace_2index_field_tensor(const macro_argument_list& args, const assignment_list& indices, void* state);
+        std::string replace_2index_field_tensor(const macro_argument_list& args, const assignment_list& indices, cse_map* map);
 
-        std::string replace_3index_field_tensor(const macro_argument_list& args, const assignment_list& indices, void* state);
-
-        void generic_post_hook(void* state);
+        std::string replace_3index_field_tensor(const macro_argument_list& args, const assignment_list& indices, cse_map* map);
 
 
         // INTERNAL DATA
@@ -111,9 +96,9 @@ namespace macro_packages
         translator_data&  data_payload;
         language_printer& printer;
 
-        u_tensor_factory* u_factory;
-        flattener*        fl;
-        cse*              cse_worker;
+        u_tensor_factory& u_factory;
+        flattener&        fl;
+        cse&              cse_worker;
 
       };
 

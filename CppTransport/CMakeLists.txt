@@ -43,6 +43,7 @@ ADD_EXECUTABLE(CppTransport main.cpp
   backends/infrastructure/file_handling/translator_data.cpp
   backends/infrastructure/file_handling/lexstream_data.cpp
   backends/infrastructure/language_concepts/cse.cpp
+  backends/infrastructure/language_concepts/cse_map.cpp
   backends/infrastructure/macro_substitution/index_assignment.cpp
   backends/infrastructure/macro_substitution/macro.cpp
   backends/infrastructure/macro_substitution/macro_tokenizer.cpp
@@ -525,7 +526,8 @@ SET(BACKENDS_INFRASTRUCTURE_LANGUAGE_CONCEPTS_FILES
   backends/infrastructure/language_concepts/cse.cpp
   backends/infrastructure/language_concepts/cse.h
   backends/infrastructure/language_concepts/language_printer.h
-  )
+  backends/infrastructure/language_concepts/cse_map.cpp
+  backends/infrastructure/language_concepts/cse_map.h)
 
 SET(TRANSPORT_RUNTIME_API_DATA_DATAPIPE_TAGS_FILES
   transport-runtime-api/data/datapipe/tags/config_tags.h

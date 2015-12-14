@@ -23,7 +23,7 @@ namespace macro_packages
       public:
 
         //! constructor
-        utensors(translator_data& p, language_printer& prn,
+        utensors(u_tensor_factory& uf, flattener& f, cse& cw, translator_data& p, language_printer& prn,
                  std::string da=OUTPUT_DEFAULT_A_NAME, std::string dHsq=OUTPUT_DEFAULT_HSQ_NAME,
                  std::string deps=OUTPUT_DEFAULT_EPS_NAME,
                  std::string dk=OUTPUT_DEFAULT_K_NAME,
@@ -35,7 +35,7 @@ namespace macro_packages
             default_k1(dk1),
             default_k2(dk2),
             default_k3(dk3),
-            replacement_rule_package(p, prn)
+            replacement_rule_package(uf, f, cw, p, prn)
         {
         }
 
@@ -55,13 +55,18 @@ namespace macro_packages
         // INTERNAL API
 
       protected:
-
-        void* pre_u1_tensor(const macro_argument_list& args);
-        void *pre_u2_tensor(const macro_argument_list& args);
-        void *pre_u3_tensor(const macro_argument_list& args);
-        void *pre_u1_predef(const macro_argument_list& args);
-        void *pre_u2_predef(const macro_argument_list& args);
-        void *pre_u3_predef(const macro_argument_list& args);
+    
+        std::unique_ptr<cse_map> pre_u1_tensor(const macro_argument_list& args);
+    
+        std::unique_ptr<cse_map> pre_u2_tensor(const macro_argument_list& args);
+    
+        std::unique_ptr<cse_map> pre_u3_tensor(const macro_argument_list& args);
+    
+        std::unique_ptr<cse_map> pre_u1_predef(const macro_argument_list& args);
+    
+        std::unique_ptr<cse_map> pre_u2_predef(const macro_argument_list& args);
+    
+        std::unique_ptr<cse_map> pre_u3_predef(const macro_argument_list& args);
 
 
         // INTERNAL DATA

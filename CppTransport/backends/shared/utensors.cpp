@@ -9,7 +9,7 @@
 #include <sstream>
 
 #include "utensors.h"
-#include "cse.h"
+#include "cse_map.h"
 #include "u_tensor_factory.h"
 #include "translation_unit.h"
 
@@ -47,8 +47,8 @@ namespace macro_packages
           };
 
         const std::vector<replacement_rule_post> posts =
-          { BIND1(generic_post_hook),     BIND1(generic_post_hook),     BIND1(generic_post_hook),
-            BIND1(generic_post_hook),     BIND1(generic_post_hook),     BIND1(generic_post_hook)
+          { nullptr,                      nullptr,                      nullptr,
+            nullptr,                      nullptr,                      nullptr
           };
 
         const std::vector<replacement_rule_index> rules =
@@ -100,18 +100,16 @@ namespace macro_packages
     // *******************************************************************
 
 
-    void* utensors::pre_u1_tensor(const macro_argument_list& args)
+    std::unique_ptr<cse_map> utensors::pre_u1_tensor(const macro_argument_list& args)
       {
-        std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
-        this->u_factory->compute_u1(*container, *this->fl);
+        std::unique_ptr< std::vector<GiNaC::ex> > container = std::make_unique< std::vector<GiNaC::ex> >();
+        this->u_factory.compute_u1(*container, this->fl);
 
-        cse_map* map = this->cse_worker->map_factory(container);
-
-        return(map);
+        return std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }
 
 
-    void* utensors::pre_u1_predef(const macro_argument_list& args)
+    std::unique_ptr<cse_map> utensors::pre_u1_predef(const macro_argument_list& args)
       {
         assert(args.size() == 2);
 
@@ -122,19 +120,17 @@ namespace macro_packages
         GiNaC::ex     Hsq = Hsq_symbol;
         GiNaC::ex     eps = eps_symbol;
 
-        std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
-        this->u_factory->compute_u1(Hsq, eps, *container, *this->fl);
+        std::unique_ptr< std::vector<GiNaC::ex> > container = std::make_unique< std::vector<GiNaC::ex> >();
+        this->u_factory.compute_u1(Hsq, eps, *container, this->fl);
 
-        cse_map* map = this->cse_worker->map_factory(container);
-
-        return(map);
+        return std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }
 
 
     // ******************************************************************
 
 
-    void* utensors::pre_u2_tensor(const macro_argument_list& args)
+    std::unique_ptr<cse_map> utensors::pre_u2_tensor(const macro_argument_list& args)
       {
         assert(args.size() == 2);
 
@@ -143,16 +139,14 @@ namespace macro_packages
         GiNaC::symbol k = sym_factory.get_symbol(args.size() >= 1 ? args[0] : this->default_k);
         GiNaC::symbol a = sym_factory.get_symbol(args.size() >= 2 ? args[1] : this->default_a);
 
-        std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
-        this->u_factory->compute_u2(k, a, *container, *this->fl);
+        std::unique_ptr< std::vector<GiNaC::ex> > container = std::make_unique< std::vector<GiNaC::ex> >();
+        this->u_factory.compute_u2(k, a, *container, this->fl);
 
-        cse_map* map = this->cse_worker->map_factory(container);
-
-        return(map);
+        return std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }
 
 
-    void* utensors::pre_u2_predef(const macro_argument_list& args)
+    std::unique_ptr<cse_map> utensors::pre_u2_predef(const macro_argument_list& args)
       {
         assert(args.size() == 4);
 
@@ -166,19 +160,17 @@ namespace macro_packages
         GiNaC::ex     Hsq = Hsq_symbol;
         GiNaC::ex     eps = eps_symbol;
 
-        std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
-        this->u_factory->compute_u2(k, a, Hsq, eps, *container, *this->fl);
+        std::unique_ptr< std::vector<GiNaC::ex> > container = std::make_unique< std::vector<GiNaC::ex> >();
+        this->u_factory.compute_u2(k, a, Hsq, eps, *container, this->fl);
 
-        cse_map* map = this->cse_worker->map_factory(container);
-
-        return(map);
+        return std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }
 
 
     // ******************************************************************
 
 
-    void* utensors::pre_u3_tensor(const macro_argument_list& args)
+    std::unique_ptr<cse_map> utensors::pre_u3_tensor(const macro_argument_list& args)
       {
         assert(args.size() == 4);
 
@@ -189,16 +181,14 @@ namespace macro_packages
         GiNaC::symbol k3 = sym_factory.get_symbol(args.size() >= 3 ? args[2] : this->default_k3);
         GiNaC::symbol  a = sym_factory.get_symbol(args.size() >= 4 ? args[3] : this->default_a);
 
-        std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
-        this->u_factory->compute_u3(k1, k2, k3, a, *container, *this->fl);
+        std::unique_ptr< std::vector<GiNaC::ex> > container = std::make_unique< std::vector<GiNaC::ex> >();
+        this->u_factory.compute_u3(k1, k2, k3, a, *container, this->fl);
 
-        cse_map* map = this->cse_worker->map_factory(container);
-
-        return(map);
+        return std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }
 
 
-    void* utensors::pre_u3_predef(const macro_argument_list& args)
+    std::unique_ptr<cse_map> utensors::pre_u3_predef(const macro_argument_list& args)
       {
         assert(args.size() == 6);
 
@@ -214,12 +204,11 @@ namespace macro_packages
         GiNaC::ex     Hsq = Hsq_symbol;
         GiNaC::ex     eps = eps_symbol;
 
-        std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
-        this->u_factory->compute_u3(k1, k2, k3, a, Hsq, eps, *container, *this->fl);
+        std::unique_ptr< std::vector<GiNaC::ex> > container = std::make_unique< std::vector<GiNaC::ex> >();
+        this->u_factory.compute_u3(k1, k2, k3, a, Hsq, eps, *container, this->fl);
 
-        cse_map* map = this->cse_worker->map_factory(container);
-
-        return(map);
+        return std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }
+
   } // namespace macro_packages
 

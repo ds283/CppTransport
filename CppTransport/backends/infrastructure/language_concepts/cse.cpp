@@ -51,9 +51,6 @@
 #include "cse.h"
 
 
-// **********************************************************************
-
-
 void cse::clear()
   {
     this->symbols.clear();
@@ -61,9 +58,6 @@ void cse::clear()
 
     this->serial_number++;
   }
-
-
-// **********************************************************************
 
 
 void cse::parse(const GiNaC::ex& expr)
@@ -76,12 +70,12 @@ void cse::parse(const GiNaC::ex& expr)
         std::string e = this->print(*t, false);
 
         // does this expression already exist in the lookup table?
-        symbol_lookup_table::iterator u = this->symbols.find(e);
+        symbol_table::iterator u = this->symbols.find(e);
 
         // if not, we should insert it
         if(u == this->symbols.end())
           {
-            this->symbols.emplace(std::make_pair( e, symbol_record( e, this->make_symbol() ) ));
+            this->symbols.emplace(std::make_pair( e, cse_impl::symbol_record( e, this->make_symbol() ) ));
           }
       }
 
@@ -138,16 +132,13 @@ std::string cse::temporaries(const std::string& t)
   }
 
 
-// **********************************************************************
-
-
 std::string cse::get_symbol_without_use_count(const GiNaC::ex& expr)
   {
     // print expression using ourselves as the lookup function (false means that print doesn't count uses via recursively calling ourselves)
     std::string e = this->print(expr, false);
 
     // search for this expression in the lookup table
-    symbol_lookup_table::iterator t = this->symbols.find(e);
+    symbol_table::iterator t = this->symbols.find(e);
 
     // was it present? if not, return the plain expression
     if(t == this->symbols.end()) return e;
@@ -163,7 +154,7 @@ std::string cse::get_symbol_with_use_count(const GiNaC::ex& expr)
     std::string e = this->print(expr, true);
 
     // search for this expression in the lookup table
-    symbol_lookup_table::iterator t = this->symbols.find(e);
+    symbol_table::iterator t = this->symbols.find(e);
 
     // was it present? if not, return the plain expression
     if(t == this->symbols.end()) return e;
@@ -189,51 +180,4 @@ std::string cse::make_symbol()
     symbol_counter++;
 
     return(s.str());
-  }
-
-
-// **********************************************************************
-
-
-cse_map::cse_map(std::vector<GiNaC::ex>* l, cse* c)
-  : list(l), cse_worker(c)
-  {
-    assert(l != nullptr);
-    assert(c != nullptr);
-
-		// if doing CSE, parse the whole vector of expressions
-    if(cse_worker->get_perform_cse())
-      {
-        // parse each component of the container
-        for(int i = 0; i < list->size(); ++i)
-          {
-            cse_worker->parse((*list)[i]);
-          }
-      }
-  }
-
-
-cse_map::~cse_map()
-  {
-    delete list;
-  }
-
-
-std::string cse_map::operator[](unsigned int index)
-  {
-    std::string rval = "";
-
-    if(index < this->list->size())
-      {
-        if(this->cse_worker->get_perform_cse())
-          {
-            rval = this->cse_worker->get_symbol_with_use_count((*this->list)[index]);
-          }
-        else
-          {
-            rval = (this->cse_worker->get_ginac_printer()).ginac((*this->list)[index]);
-          }
-      }
-
-    return(rval);
   }

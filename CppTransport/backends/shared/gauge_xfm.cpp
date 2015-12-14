@@ -45,8 +45,8 @@ namespace macro_packages
           };
 
         const std::vector<replacement_rule_post> posts =
-          { BIND1(generic_post_hook),     BIND1(generic_post_hook),
-            BIND1(generic_post_hook),     BIND1(generic_post_hook),
+          { nullptr,                      nullptr,
+            nullptr,                      nullptr,
           };
 
         const std::vector<replacement_rule_index> rules =
@@ -98,7 +98,7 @@ namespace macro_packages
     // *******************************************************************
 
 
-    void* gauge_xfm::pre_zeta_xfm_1(const macro_argument_list& args)
+    std::unique_ptr<cse_map> gauge_xfm::pre_zeta_xfm_1(const macro_argument_list& args)
       {
         assert(args.size() == 2);
 
@@ -109,16 +109,14 @@ namespace macro_packages
         GiNaC::ex     Hsq = Hsq_symbol;
         GiNaC::ex     eps = eps_symbol;
 
-        std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
-        this->u_factory->compute_zeta_xfm_1(Hsq, eps, *container, *this->fl);
+        std::unique_ptr< std::vector<GiNaC::ex> > container = std::make_unique< std::vector<GiNaC::ex> >();
+        this->u_factory.compute_zeta_xfm_1(Hsq, eps, *container, this->fl);
 
-        cse_map* map = this->cse_worker->map_factory(container);
-
-        return(map);
+        return std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }
 
 
-    void* gauge_xfm::pre_zeta_xfm_2(const macro_argument_list& args)
+    std::unique_ptr<cse_map> gauge_xfm::pre_zeta_xfm_2(const macro_argument_list& args)
       {
         assert(args.size() == 6);
 
@@ -134,34 +132,28 @@ namespace macro_packages
         GiNaC::ex     Hsq = Hsq_symbol;
         GiNaC::ex     eps = eps_symbol;
 
-        std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
-        this->u_factory->compute_zeta_xfm_2(k, k1, k2, a, Hsq, eps, *container, *this->fl);
+        std::unique_ptr< std::vector<GiNaC::ex> > container = std::make_unique< std::vector<GiNaC::ex> >();
+        this->u_factory.compute_zeta_xfm_2(k, k1, k2, a, Hsq, eps, *container, this->fl);
 
-        cse_map* map = this->cse_worker->map_factory(container);
-
-        return(map);
+        return std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }
 
 
-    void* gauge_xfm::pre_deltaN_xfm_1(const macro_argument_list& args)
+    std::unique_ptr<cse_map> gauge_xfm::pre_deltaN_xfm_1(const macro_argument_list& args)
 	    {
-        std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
-        this->u_factory->compute_deltaN_xfm_1(*container, *this->fl);
+        std::unique_ptr< std::vector<GiNaC::ex> > container = std::make_unique< std::vector<GiNaC::ex> >();
+        this->u_factory.compute_deltaN_xfm_1(*container, this->fl);
 
-        cse_map* map = this->cse_worker->map_factory(container);
-
-        return(map);
+        return std::make_unique<cse_map>(std::move(container), this->cse_worker);
 	    }
 
 
-    void* gauge_xfm::pre_deltaN_xfm_2(const macro_argument_list& args)
+    std::unique_ptr<cse_map> gauge_xfm::pre_deltaN_xfm_2(const macro_argument_list& args)
 	    {
-        std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
-        this->u_factory->compute_deltaN_xfm_2(*container, *this->fl);
+        std::unique_ptr< std::vector<GiNaC::ex> > container = std::make_unique< std::vector<GiNaC::ex> >();
+        this->u_factory.compute_deltaN_xfm_2(*container, this->fl);
 
-        cse_map* map = this->cse_worker->map_factory(container);
-
-        return(map);
+        return std::make_unique<cse_map>(std::move(container), this->cse_worker);
 	    }
 
 

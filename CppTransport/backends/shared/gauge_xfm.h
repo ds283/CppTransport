@@ -23,14 +23,14 @@ namespace macro_packages
       public:
 
         //! constructor
-        gauge_xfm(translator_data& p, language_printer& prn,
+        gauge_xfm(u_tensor_factory& uf, flattener& f, cse& cw, translator_data& p, language_printer& prn,
                   std::string da=OUTPUT_DEFAULT_A_NAME, std::string dHsq=OUTPUT_DEFAULT_HSQ_NAME,
                   std::string deps=OUTPUT_DEFAULT_EPS_NAME,
                   std::string dk=OUTPUT_DEFAULT_K_NAME,
                   std::string dk1=OUTPUT_DEFAULT_K1_NAME, std::string dk2=OUTPUT_DEFAULT_K2_NAME)
           : default_a(da), default_Hsq(dHsq), default_eps(deps),
             default_k(dk), default_k1(dk1), default_k2(dk2),
-            replacement_rule_package(p, prn)
+            replacement_rule_package(uf, f, cw, p, prn)
           {
           }
 
@@ -50,11 +50,14 @@ namespace macro_packages
         // INTERNAL API
 
       protected:
-
-        void* pre_zeta_xfm_1  (const macro_argument_list& args);
-        void* pre_zeta_xfm_2  (const macro_argument_list& args);
-        void* pre_deltaN_xfm_1(const macro_argument_list& args);
-        void* pre_deltaN_xfm_2(const macro_argument_list& args);
+    
+        std::unique_ptr<cse_map> pre_zeta_xfm_1(const macro_argument_list& args);
+    
+        std::unique_ptr<cse_map> pre_zeta_xfm_2(const macro_argument_list& args);
+    
+        std::unique_ptr<cse_map> pre_deltaN_xfm_1(const macro_argument_list& args);
+    
+        std::unique_ptr<cse_map> pre_deltaN_xfm_2(const macro_argument_list& args);
 
 
         // INTERNAL DATA

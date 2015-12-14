@@ -26,7 +26,7 @@ namespace macro_packages
       public:
 
         //! constructor
-        fundamental(translator_data& p, language_printer& prn,
+        fundamental(u_tensor_factory& uf, flattener& f, cse& cw, translator_data& p, language_printer& prn,
                     std::string ls = "{", std::string le = "}", std::string lsep = ",", std::string lpad = " ",
                     std::string t = OUTPUT_CPPTRANSPORT_TAG,
                     std::string ge = "_H_",
@@ -39,7 +39,7 @@ namespace macro_packages
             guard_terminator(ge),
             time_format(tf),
             unique(0),
-            replacement_rule_package(p, prn)
+            replacement_rule_package(uf, f, cw, p, prn)
           {
           }
 
@@ -64,44 +64,71 @@ namespace macro_packages
         std::string stringize_list        (const ListType& list);
         std::string stringize_number      (double number);
 
+
         // PRE macros
-        std::string replace_tool          (const macro_argument_list& args);
-        std::string replace_version       (const macro_argument_list& args);
-        std::string replace_guard         (const macro_argument_list& args);
-        std::string replace_date          (const macro_argument_list& args);
-        std::string replace_source        (const macro_argument_list& args);
 
-        std::string replace_uid           (const macro_argument_list& args);
+      protected:
 
-        std::string replace_name          (const macro_argument_list& args);
-        std::string replace_author        (const macro_argument_list& args);
-        std::string replace_tag           (const macro_argument_list& args);
-        std::string replace_model         (const macro_argument_list& args);
+        std::string replace_tool(const macro_argument_list& args);
 
-        std::string replace_header        (const macro_argument_list& args);
-        std::string replace_core          (const macro_argument_list& args);
+        std::string replace_version(const macro_argument_list& args);
 
-        std::string replace_number_fields (const macro_argument_list& args);
-        std::string replace_number_params (const macro_argument_list& args);
+        std::string replace_guard(const macro_argument_list& args);
 
-        std::string replace_field_list    (const macro_argument_list& args);
-        std::string replace_latex_list    (const macro_argument_list& args);
-        std::string replace_param_list    (const macro_argument_list& args);
-        std::string replace_platx_list    (const macro_argument_list& args);
-        std::string replace_state_list    (const macro_argument_list& args);
+        std::string replace_date(const macro_argument_list& args);
 
-        std::string replace_b_abs_err     (const macro_argument_list& args);
-        std::string replace_b_rel_err     (const macro_argument_list& args);
-        std::string replace_b_step        (const macro_argument_list& args);
-        std::string replace_b_stepper     (const macro_argument_list& args);
+        std::string replace_source(const macro_argument_list& args);
 
-        std::string replace_p_abs_err     (const macro_argument_list& args);
-        std::string replace_p_rel_err     (const macro_argument_list& args);
-        std::string replace_p_step        (const macro_argument_list& args);
-        std::string replace_p_stepper     (const macro_argument_list& args);
+        std::string replace_uid(const macro_argument_list& args);
+
+        std::string replace_name(const macro_argument_list& args);
+
+        std::string replace_author(const macro_argument_list& args);
+
+        std::string replace_tag(const macro_argument_list& args);
+
+        std::string replace_model(const macro_argument_list& args);
+
+        std::string replace_header(const macro_argument_list& args);
+
+        std::string replace_core(const macro_argument_list& args);
+
+        std::string replace_number_fields(const macro_argument_list& args);
+
+        std::string replace_number_params(const macro_argument_list& args);
+
+        std::string replace_field_list(const macro_argument_list& args);
+
+        std::string replace_latex_list(const macro_argument_list& args);
+
+        std::string replace_param_list(const macro_argument_list& args);
+
+        std::string replace_platx_list(const macro_argument_list& args);
+
+        std::string replace_state_list(const macro_argument_list& args);
+
+        std::string replace_b_abs_err(const macro_argument_list& args);
+
+        std::string replace_b_rel_err(const macro_argument_list& args);
+
+        std::string replace_b_step(const macro_argument_list& args);
+
+        std::string replace_b_stepper(const macro_argument_list& args);
+
+        std::string replace_p_abs_err(const macro_argument_list& args);
+
+        std::string replace_p_rel_err(const macro_argument_list& args);
+
+        std::string replace_p_step(const macro_argument_list& args);
+
+        std::string replace_p_stepper(const macro_argument_list& args);
+
 
         // POST macros
-        std::string replace_unique        (const macro_argument_list& args);
+
+      protected:
+
+        std::string replace_unique(const macro_argument_list& args);
 
 
         // INTERNAL DATA

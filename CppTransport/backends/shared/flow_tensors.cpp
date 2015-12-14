@@ -64,7 +64,7 @@ namespace macro_packages
 
         const std::vector<replacement_rule_post> posts =
           { nullptr,                           nullptr,                 nullptr,
-            BIND1(generic_post_hook)
+            nullptr
           };
 
         const std::vector<replacement_rule_index> rules =
@@ -126,7 +126,7 @@ namespace macro_packages
 
     std::string flow_tensors::replace_Hsq(const macro_argument_list& args)
       {
-        GiNaC::ex Hsq = this->u_factory->compute_Hsq();
+        GiNaC::ex Hsq = this->u_factory.compute_Hsq();
 
         return(this->printer.ginac(Hsq));
       }
@@ -134,7 +134,7 @@ namespace macro_packages
 
     std::string flow_tensors::replace_eps(const macro_argument_list& args)
       {
-        GiNaC::ex eps = this->u_factory->compute_eps();
+        GiNaC::ex eps = this->u_factory.compute_eps();
 
         return(this->printer.ginac(eps));
       }
@@ -143,30 +143,27 @@ namespace macro_packages
     // ******************************************************************
 
 
-    std::string flow_tensors::replace_parameter(const macro_argument_list& args, const assignment_list& indices, void* state)
+    std::string flow_tensors::replace_parameter(const macro_argument_list& args, const assignment_list& indices, cse_map* map)
       {
         assert(indices.size() == 1);
-        assert(indices[0].get_class() == index_class::parameter);
 
         std::vector<GiNaC::symbol> parameters = this->data_payload.get_parameter_symbols();
         return(this->printer.ginac(parameters[indices[0].get_numeric_value()]));
       }
 
 
-    std::string flow_tensors::replace_field(const macro_argument_list& args, const assignment_list& indices, void* state)
+    std::string flow_tensors::replace_field(const macro_argument_list& args, const assignment_list& indices, cse_map* map)
       {
         assert(indices.size() == 1);
-        assert(indices[0].get_class() == index_class::field_only);
 
         std::vector<GiNaC::symbol> fields = this->data_payload.get_field_symbols();
         return(this->printer.ginac(fields[indices[0].get_numeric_value()]));
       }
 
 
-    std::string flow_tensors::replace_coordinate(const macro_argument_list& args, const assignment_list& indices, void* state)
+    std::string flow_tensors::replace_coordinate(const macro_argument_list& args, const assignment_list& indices, cse_map* map)
       {
         assert(indices.size() == 1);
-        assert(indices[0].get_class() == index_class::full);
 
         std::vector<GiNaC::symbol> fields  = this->data_payload.get_field_symbols();
         std::vector<GiNaC::symbol> momenta = this->data_payload.get_deriv_symbols();
@@ -193,14 +190,12 @@ namespace macro_packages
 // ******************************************************************
 
 
-    void* flow_tensors::pre_sr_velocity(const macro_argument_list& args)
+    std::unique_ptr<cse_map> flow_tensors::pre_sr_velocity(const macro_argument_list& args)
       {
-        std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
-        this->u_factory->compute_sr_u(*container, *this->fl);
+        std::unique_ptr< std::vector<GiNaC::ex> > container = std::make_unique< std::vector<GiNaC::ex> >();
+        this->u_factory.compute_sr_u(*container, this->fl);
 
-        cse_map* map = this->cse_worker->map_factory(container);
-
-        return(map);
+        return std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }
 
 

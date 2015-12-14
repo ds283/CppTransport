@@ -46,9 +46,9 @@ namespace macro_packages
           };
 
         const std::vector<replacement_rule_post> posts =
-          { BIND1(generic_post_hook),           BIND1(generic_post_hook),           BIND1(generic_post_hook),
-            BIND1(generic_post_hook),           BIND1(generic_post_hook),           BIND1(generic_post_hook),
-            BIND1(generic_post_hook),           BIND1(generic_post_hook)
+          { nullptr,                            nullptr,                            nullptr,
+            nullptr,                            nullptr,                            nullptr,
+            nullptr,                            nullptr
           };
 
         const std::vector<replacement_rule_index> rules =
@@ -106,7 +106,7 @@ namespace macro_packages
     // *******************************************************************
 
 
-    void* lagrangian_tensors::pre_A_tensor(const macro_argument_list& args)
+    std::unique_ptr<cse_map> lagrangian_tensors::pre_A_tensor(const macro_argument_list& args)
       {
         assert(args.size() == 4);
 
@@ -117,16 +117,14 @@ namespace macro_packages
         GiNaC::symbol k3 = sym_factory.get_symbol(args.size() >= 3 ? args[2] : this->default_k3);
         GiNaC::symbol  a = sym_factory.get_symbol(args.size() >= 4 ? args[3] : this->default_a);
 
-        std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
-        this->u_factory->compute_A(k1, k2, k3, a, *container, *this->fl);
+        std::unique_ptr< std::vector<GiNaC::ex> > container = std::make_unique< std::vector<GiNaC::ex> >();
+        this->u_factory.compute_A(k1, k2, k3, a, *container, this->fl);
 
-        cse_map* map = this->cse_worker->map_factory(container);
-
-        return(map);
+        return std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }
 
 
-    void* lagrangian_tensors::pre_A_predef(const macro_argument_list& args)
+    std::unique_ptr<cse_map> lagrangian_tensors::pre_A_predef(const macro_argument_list& args)
       {
         assert(args.size() == 6);
 
@@ -142,19 +140,17 @@ namespace macro_packages
         GiNaC::ex     Hsq = Hsq_symbol;
         GiNaC::ex     eps = eps_symbol;
 
-        std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
-        this->u_factory->compute_A(k1, k2, k3, a, Hsq, eps, *container, *this->fl);
+        std::unique_ptr< std::vector<GiNaC::ex> > container = std::make_unique< std::vector<GiNaC::ex> >();
+        this->u_factory.compute_A(k1, k2, k3, a, Hsq, eps, *container, this->fl);
 
-        cse_map* map = this->cse_worker->map_factory(container);
-
-        return(map);
+        return std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }
 
 
       // ******************************************************************
 
 
-    void* lagrangian_tensors::pre_B_tensor(const macro_argument_list& args)
+    std::unique_ptr<cse_map> lagrangian_tensors::pre_B_tensor(const macro_argument_list& args)
       {
         assert(args.size() == 4);
 
@@ -165,16 +161,14 @@ namespace macro_packages
         GiNaC::symbol k3 = sym_factory.get_symbol(args.size() >= 3 ? args[2] : this->default_k3);
         GiNaC::symbol  a = sym_factory.get_symbol(args.size() >= 4 ? args[3] : this->default_a);
 
-        std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
-        this->u_factory->compute_B(k1, k2, k3, a, *container, *this->fl);
+        std::unique_ptr< std::vector<GiNaC::ex> > container = std::make_unique< std::vector<GiNaC::ex> >();
+        this->u_factory.compute_B(k1, k2, k3, a, *container, this->fl);
 
-        cse_map* map = this->cse_worker->map_factory(container);
-
-        return (map);
+        return std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }
 
 
-    void* lagrangian_tensors::pre_B_predef(const macro_argument_list& args)
+    std::unique_ptr<cse_map> lagrangian_tensors::pre_B_predef(const macro_argument_list& args)
       {
         assert(args.size() == 6);
 
@@ -190,19 +184,17 @@ namespace macro_packages
         GiNaC::ex     Hsq = Hsq_symbol;
         GiNaC::ex     eps = eps_symbol;
 
-        std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
-        this->u_factory->compute_B(k1, k2, k3, a, Hsq, eps, *container, *this->fl);
+        std::unique_ptr< std::vector<GiNaC::ex> > container = std::make_unique< std::vector<GiNaC::ex> >();
+        this->u_factory.compute_B(k1, k2, k3, a, Hsq, eps, *container, this->fl);
 
-        cse_map* map = this->cse_worker->map_factory(container);
-
-        return (map);
+        return std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }
 
 
     // ******************************************************************
 
 
-    void* lagrangian_tensors::pre_C_tensor(const macro_argument_list& args)
+    std::unique_ptr<cse_map> lagrangian_tensors::pre_C_tensor(const macro_argument_list& args)
       {
         assert(args.size() == 4);
 
@@ -213,16 +205,14 @@ namespace macro_packages
         GiNaC::symbol k3 = sym_factory.get_symbol(args.size() >= 3 ? args[2] : this->default_k3);
         GiNaC::symbol  a = sym_factory.get_symbol(args.size() >= 4 ? args[3] : this->default_a);
 
-        std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
-        this->u_factory->compute_C(k1, k2, k3, a, *container, *this->fl);
+        std::unique_ptr< std::vector<GiNaC::ex> > container = std::make_unique< std::vector<GiNaC::ex> >();
+        this->u_factory.compute_C(k1, k2, k3, a, *container, this->fl);
 
-        cse_map* map = this->cse_worker->map_factory(container);
-
-        return (map);
+        return std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }
 
 
-    void* lagrangian_tensors::pre_C_predef(const macro_argument_list& args)
+    std::unique_ptr<cse_map> lagrangian_tensors::pre_C_predef(const macro_argument_list& args)
       {
         assert(args.size() == 6);
 
@@ -238,30 +228,26 @@ namespace macro_packages
         GiNaC::ex     Hsq = Hsq_symbol;
         GiNaC::ex     eps = eps_symbol;
 
-        std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
-        this->u_factory->compute_C(k1, k2, k3, a, Hsq, eps, *container, *this->fl);
+        std::unique_ptr< std::vector<GiNaC::ex> > container = std::make_unique< std::vector<GiNaC::ex> >();
+        this->u_factory.compute_C(k1, k2, k3, a, Hsq, eps, *container, this->fl);
 
-        cse_map* map = this->cse_worker->map_factory(container);
-
-        return (map);
+        return std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }
 
 
 // ******************************************************************
 
 
-    void* lagrangian_tensors::pre_M_tensor(const macro_argument_list& args)
+    std::unique_ptr<cse_map> lagrangian_tensors::pre_M_tensor(const macro_argument_list& args)
       {
-        std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
-        this->u_factory->compute_M(*container, *this->fl);
+        std::unique_ptr< std::vector<GiNaC::ex> > container = std::make_unique< std::vector<GiNaC::ex> >();
+        this->u_factory.compute_M(*container, this->fl);
 
-        cse_map* map = this->cse_worker->map_factory(container);
-
-        return (map);
+        return std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }
 
 
-    void* lagrangian_tensors::pre_M_predef(const macro_argument_list& args)
+    std::unique_ptr<cse_map> lagrangian_tensors::pre_M_predef(const macro_argument_list& args)
       {
         assert(args.size() == 2);
 
@@ -270,12 +256,10 @@ namespace macro_packages
         GiNaC::ex     Hsq = Hsq_symbol;
         GiNaC::ex     eps = eps_symbol;
 
-        std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
-        this->u_factory->compute_M(Hsq, eps, *container, *this->fl);
+        std::unique_ptr< std::vector<GiNaC::ex> > container = std::make_unique< std::vector<GiNaC::ex> >();
+        this->u_factory.compute_M(Hsq, eps, *container, this->fl);
 
-        cse_map* map = this->cse_worker->map_factory(container);
-
-        return (map);
+        return std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }
 
   } // namespace macro_packages

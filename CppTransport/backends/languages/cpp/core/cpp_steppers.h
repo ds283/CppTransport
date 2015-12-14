@@ -24,8 +24,9 @@ namespace cpp
       public:
 
         //! constructor
-        cpp_steppers(translator_data& p, language_printer& prn, std::string ds=OUTPUT_DEFAULT_STEPPER_STATE_NAME)
-          : ::macro_packages::replacement_rule_package(p, prn),
+        cpp_steppers(u_tensor_factory& uf, flattener& f, cse& cw, translator_data& p, language_printer& prn,
+                     std::string ds=OUTPUT_DEFAULT_STEPPER_STATE_NAME)
+          : ::macro_packages::replacement_rule_package(uf, f, cw, p, prn),
             default_state(ds)
           {
           }

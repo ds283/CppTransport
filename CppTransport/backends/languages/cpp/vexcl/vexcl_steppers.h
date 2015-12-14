@@ -24,8 +24,8 @@ namespace cpp
       public:
 
         //! constructor
-        vexcl_steppers(translator_data& p, language_printer& prn)
-          : ::macro_packages::replacement_rule_package(p, prn)
+        vexcl_steppers(u_tensor_factory& uf, flattener& f, cse& cw, translator_data& p, language_printer& prn)
+          : ::macro_packages::replacement_rule_package(uf, f, cw, p, prn)
           {
           }
 

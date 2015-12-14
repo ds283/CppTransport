@@ -20,11 +20,12 @@
 namespace macro_packages
   {
 
-    temporary_pool::temporary_pool(translator_data& p, language_printer& prn, std::string t)
+    temporary_pool::temporary_pool(u_tensor_factory& uf, flattener& f, cse& cw, translator_data& p, language_printer& prn,
+                                   std::string t)
 	    : pool_template(t),
         unique(0),
         tag_set(false),
-        replacement_rule_package(p, prn)
+        replacement_rule_package(uf, f, cw, p, prn)
 	    {
 	    }
 
@@ -103,7 +104,7 @@ namespace macro_packages
             macro_agent& ms  = this->data_payload.get_stack().top_macro_package();
 
             // get temporaries which need to be deposited
-            std::string temps = this->cse_worker->temporaries(this->pool_template);
+            std::string temps = this->cse_worker.temporaries(this->pool_template);
 
             // apply macro replacement to them, in case this is required
             unsigned int replacements;
@@ -123,7 +124,7 @@ namespace macro_packages
               }
 
             // clear worker object; if we don't we might duplicate temporaries we've already written out
-            this->cse_worker->clear();
+            this->cse_worker.clear();
           }
        }
 

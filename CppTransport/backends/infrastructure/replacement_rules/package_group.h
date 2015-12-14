@@ -4,7 +4,6 @@
 //
 
 
-
 #ifndef __package_group_H_
 #define __package_group_H_
 
@@ -101,7 +100,8 @@ class package_group
 
     //! register a replacement rule package, transfer its ownership to ourselves, and populate it
     //! with details about the u-tensor factory and CSE worker
-    void push_back(std::unique_ptr<macro_packages::replacement_rule_package>&& package);
+    template <typename PackageType, typename ... Args>
+    void add_package(Args&& ... args);
 
     //! rebuild pre-ruleset
     void build_pre_ruleset();
@@ -183,6 +183,25 @@ class package_group
     boost::timer::nanosecond_type macro_tokenization_time;
 
   };
+
+
+template <typename PackageType, typename ... Args>
+void package_group::add_package(Args&& ... args)
+  {
+    // establish that everything has been set up correctly
+    assert(this->u_factory);
+    assert(this->fl);
+    assert(this->cse_worker);
+
+    // construct a new package of the specified type, forwarding any arguments we were given
+    std::unique_ptr< macro_packages::replacement_rule_package> pkg = std::make_unique<PackageType>(*this->u_factory, *this->fl, *this->cse_worker, std::forward<Args>(args) ...);
+    this->packages.push_back(std::move(pkg));
+
+    // rebuild ruleset caches
+    this->build_pre_ruleset();
+    this->build_post_ruleset();
+    this->build_index_ruleset();
+  }
 
 
 #endif //__package_group_H_
