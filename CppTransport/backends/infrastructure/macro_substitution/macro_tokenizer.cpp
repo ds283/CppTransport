@@ -144,8 +144,25 @@ token_list::token_list(const std::string& input, const std::string& prefix,
 										            macro_argument_list arg_list;
 										            if(rule.args > 0) arg_list = this->get_argument_list(input, candidate, position, rule.args);
 
-                                if(rule.unroll == unroll_behaviour::force)   ++this->num_force_unroll;
-                                if(rule.unroll == unroll_behaviour::prevent) ++this->num_prevent_unroll;
+                                // apply unroll flags, either inherited from the macro or by allowing suffixies
+                                if(rule.unroll == unroll_behaviour::force)
+                                  {
+                                    ++this->num_force_unroll;
+                                  }
+                                else if(rule.unroll == unroll_behaviour::prevent)
+                                  {
+                                    ++this->num_prevent_unroll;
+                                  }
+                                else if(position < input.length() && input[position] == '@')    // check for 'force unroll' suffix if macro is neutral; ignore suffixes otherwise
+                                  {
+                                    ++position;
+                                    ++this->num_force_unroll;
+                                  }
+                                else if(position < input.length() && input[position] == '^')    // check for 'prevent unroll' suffix if macro is neutral
+                                  {
+                                    ++position;
+                                    ++this->num_prevent_unroll;
+                                  }
 
                                 error_context ctx(this->data_payload.get_stack(), input_string, position, this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
 
