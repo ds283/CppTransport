@@ -2,11 +2,10 @@
 // Created by David Seery on 27/06/2013.
 // Copyright (c) 2013-15 University of Sussex. All rights reserved.
 //
-// To change the template use AppCode | Preferences | File Templates.
-//
 
 
 #include <assert.h>
+#include <cctype>
 
 #include "boost/algorithm/string.hpp"
 
@@ -23,6 +22,7 @@ macro_agent::macro_agent(translator_data& p, package_group& pkg, std::string pf,
     split_sum_equal(std::move(spsumeq)),
     recursion_max(dm),
     recursion_depth(0),
+    package(pkg),
     pre_rule_cache(pkg.get_pre_ruleset()),
     post_rule_cache(pkg.get_post_ruleset()),
     index_rule_cache(pkg.get_index_ruleset())
@@ -164,6 +164,7 @@ void macro_agent::unroll_index_assignment(token_list& left_tokens, token_list& r
     // ranges is empty).
     // If there are no LHS indices then it will report size=1, ie. the trivial index assignment
     // It's important to distinguish these two cases!
+
 		if(LHS_assignments.size() > 0)
 			{
         for(std::unique_ptr<assignment_list> LHS_assign : LHS_assignments)
@@ -262,7 +263,19 @@ void macro_agent::forloop_index_assignment(token_list& left_tokens, token_list& 
                                            unsigned int& counter, macro_impl::split_string& split_result,
                                            error_context& ctx, std::list<std::string>& r_list)
   {
+    std::string raw_indent = this->compute_prefix(split_result);
+    unsigned int current_indent = 0;
 
+    if(LHS_assignments.size() > 0)
+      {
+        this->plant_LHS_forloop(LHS_assignments.idx_set_begin(), LHS_assignments.idx_set_end(),
+                                RHS_assignments, left_tokens, right_tokens, counter, split_result,
+                                ctx, r_list, raw_indent, current_indent);
+      }
+    else
+      {
+        r_list.push_back(std::string("// Skipped: empty index range (LHS index set is empty)"));
+      }
   }
 
 
@@ -311,4 +324,87 @@ macro_impl::split_string macro_agent::split(const std::string& line)
       }
 
     return(rval);
+  }
+
+
+std::string macro_agent::compute_prefix(macro_impl::split_string& split_string)
+  {
+    std::string prefix;
+    size_t pos = 0;
+
+    std::string raw = (split_string.left.length() > 0) ? split_string.left : split_string.right;
+
+    while(pos < raw.length() && std::isspace(raw[pos]))
+      {
+        prefix += raw[pos];
+        ++pos;
+      }
+
+    return(prefix);
+  }
+
+
+void macro_agent::plant_LHS_forloop(index_database<abstract_index>::const_iterator current,
+                                    index_database<abstract_index>::const_iterator end,
+                                    assignment_set& RHS_assignments, token_list& left_tokens, token_list& right_tokens,
+                                    unsigned int& counter, macro_impl::split_string& split_result, error_context& ctx,
+                                    std::list<std::string>& r_list, const std::string& raw_indent,
+                                    unsigned int current_indent)
+  {
+    if(current == end)
+      {
+        this->plant_RHS_forloop(RHS_assignments.idx_set_begin(), RHS_assignments.idx_set_end(), left_tokens,
+                                right_tokens, counter, split_result, ctx, r_list, raw_indent, current_indent);
+      }
+    else
+      {
+        r_list.push_back(this->dress(this->package.plant_for_loop(current->get_loop_variable(), 0, current->numeric_range()), raw_indent, current_indent));
+
+        std::ostringstream brace_indent;
+        for(unsigned int i = 0; i < this->package.get_brace_indent(); ++i) brace_indent << " ";
+
+        r_list.push_back(this->dress(brace_indent.str() + this->package.get_open_brace(), raw_indent, current_indent));
+        this->plant_LHS_forloop(++current, end, RHS_assignments, left_tokens, right_tokens, counter, split_result, ctx,
+                                r_list, raw_indent, current_indent + this->package.get_block_indent());
+        r_list.push_back(this->dress(brace_indent.str() + this->package.get_close_brace(), raw_indent, current_indent));
+      }
+  }
+
+
+void macro_agent::plant_RHS_forloop(index_database<abstract_index>::const_iterator current,
+                                    index_database<abstract_index>::const_iterator end,
+                                    token_list& left_tokens, token_list& right_tokens, unsigned int& counter,
+                                    macro_impl::split_string& split_result, error_context& ctx,
+                                    std::list<std::string>& r_list, const std::string& raw_indent,
+                                    unsigned int current_indent)
+  {
+    if(current == end)
+      {
+        std::string this_line = left_tokens.to_string() + " " + right_tokens.to_string() + (left_tokens.size() == 0 && split_result.semicolon ? ";" : "") + (left_tokens.size() == 0 && split_result.comma ? "," : "");
+        r_list.push_back(this->dress(this_line, raw_indent, current_indent));
+      }
+    else
+      {
+        r_list.push_back(this->dress(this->package.plant_for_loop(current->get_loop_variable(), 0, current->numeric_range()), raw_indent, current_indent));
+
+        std::ostringstream brace_indent;
+        for(unsigned int i = 0; i < this->package.get_brace_indent(); ++i) brace_indent << " ";
+
+        r_list.push_back(this->dress(brace_indent.str() + this->package.get_open_brace(), raw_indent, current_indent));
+        this->plant_RHS_forloop(++current, end, left_tokens, right_tokens, counter, split_result, ctx, r_list,
+                                raw_indent, current_indent + this->package.get_block_indent());
+        r_list.push_back(this->dress(brace_indent.str() + this->package.get_close_brace(), raw_indent, current_indent));
+      }
+  }
+
+
+std::string macro_agent::dress(std::string out_str, const std::string& raw_indent, unsigned int current_indent)
+  {
+    std::ostringstream out;
+
+    out << raw_indent;
+    for(unsigned int i = 0; i < current_indent; ++i) out << " ";
+
+    out << out_str;
+    return(out.str());
   }

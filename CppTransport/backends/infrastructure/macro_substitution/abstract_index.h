@@ -39,6 +39,14 @@ class abstract_index
     enum index_class get_class() const { return(this->classification); }
 
 
+    // INTERFACE -- TURN SELF INTO A FOR-LOOP VARIABLE
+
+  public:
+
+    //! return for-loop variable
+    std::string get_loop_variable() const { return(std::string("__") + this->label); }
+
+
     // INTERFACE -- SPECIFIC TO INDEX_ABSTRACT
 
   public:

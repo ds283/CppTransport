@@ -64,15 +64,23 @@ class assignment_set
 
   public:
 
-    //! is this assignment set to be handled by unrolling, or by conversion to for-loop?
-    bool is_unrolled() const { return(this->unroll); }
-
     //! get size of assignment set
     unsigned int size() const { return(this->assignments_size); }
 
 
     // make iterator class a friend
     friend class index_assignment_impl::assignment_set_iterator;
+
+
+    // ITERATORS TO UNDERLYING ABSTRACT INDICES
+
+  public:
+
+    //! begin
+    abstract_index_list::const_iterator idx_set_begin() const { return(this->source_set.cbegin()); }
+
+    //! end
+    abstract_index_list::const_iterator idx_set_end() const { return(this->source_set.cend()); }
 
 
     // INTERNAL DATA
@@ -84,10 +92,6 @@ class assignment_set
 
     //! size of assignment set
     unsigned int assignments_size;
-
-    //! policy flag to indicate whether this assignment set should
-    //! be handled by unrolling, or by conversion to for-loop
-    bool unroll;
 
     //! cache desired index order
     enum indexorder order;

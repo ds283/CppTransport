@@ -128,11 +128,21 @@ class macro_agent
     //! find a split-point in a line, if one exists
     macro_impl::split_string split(const std::string& line);
 
+
+    // INTERNAL API -- HANDLE INDEX SET BY UNROLLING
     //! unroll an index assignment
+
+  protected:
+
     void unroll_index_assignment(token_list& left_tokens, token_list& right_tokens,
                                  assignment_set& LHS_assignments, assignment_set& RHS_assignments,
                                  unsigned int& counter, macro_impl::split_string& split_result,
                                  error_context& ctx, std::list<std::string>& r_list);
+
+
+    // INTERNAL API -- HANDLE INDEX SET BY FOR-LOOP
+
+  protected:
 
     //! plant a for-loop implementation of an index assignment
     void forloop_index_assignment(token_list& left_tokens, token_list& right_tokens,
@@ -140,35 +150,89 @@ class macro_agent
                                   unsigned int& counter, macro_impl::split_string& split_result,
                                   error_context& ctx, std::list<std::string>& r_list);
 
+    //! compute leading indentation for planting for-loop code
+    std::string compute_prefix(macro_impl::split_string& split_string);
+
+    //! plant code representing LHS for-loops (recursive)
+    void plant_LHS_forloop(index_database<abstract_index>::const_iterator current,
+                           index_database<abstract_index>::const_iterator end,
+                           assignment_set& RHS_assignments, token_list& left_tokens, token_list& right_tokens,
+                           unsigned int& counter, macro_impl::split_string& split_result, error_context& ctx,
+                           std::list<std::string>& r_list, const std::string& raw_indent, unsigned int current_indent);
+
+    //! plant code representing RHS for-loops (recursive)
+    void plant_RHS_forloop(index_database<abstract_index>::const_iterator current,
+                           index_database<abstract_index>::const_iterator end,
+                           token_list& left_tokens, token_list& right_tokens, unsigned int& counter,
+                           macro_impl::split_string& split_result, error_context& ctx,
+                           std::list<std::string>& r_list, const std::string& raw_indent, unsigned int current_indent);
+
+    //! format an output string with correct indents
+    std::string dress(std::string out_str, const std::string& raw_indent, unsigned int current_indent);
+
 
     // INTERNAL DATA
 
   private:
 
-    unsigned int                              fields;
-    unsigned int                              parameters;
-    enum indexorder                           order;
 
-    unsigned int                              recursion_depth;
-    unsigned int                              recursion_max;
+    // TRANSLATOR-SUPPLIED PAYLOAD AND CONFIGURATION DATA
 
-    translator_data&                          data_payload;
+    //! data payload
+    translator_data& data_payload;
 
+    //! cache number of fields
+    unsigned int fields;
+
+    //! cache number of parameters
+    unsigned int parameters;
+
+    //! cache index ordering convention
+    enum indexorder order;
+
+    //! current recursion depth
+    unsigned int recursion_depth;
+
+    //! maximum recursive replacement depth
+    unsigned int recursion_max;
+
+
+    // MACRO PACKAGES
+
+    //! indexes to macro package
+    package_group& package;
+
+    //! cache pre-rules
     std::vector<macro_packages::simple_rule>& pre_rule_cache;
+
+    //! cache post-rules
     std::vector<macro_packages::simple_rule>& post_rule_cache;
+
+    //! cache index rules
     std::vector<macro_packages::index_rule>&  index_rule_cache;
 
-    const std::string                         prefix;
-    const std::string                         split_equal;
-    const std::string                         split_sum_equal;
+
+    // MACRO CONFIGURATION
+
+    //! macro prefix string (usually '$$__')
+    const std::string prefix;
+
+    //! split-equality symbol (usually '$$=')
+    const std::string split_equal;
+
+    //! split-sum-equals symbol (usually '$$+=')
+    const std::string split_sum_equal;
+
+
+    // TIMERS
 
 		// timer to measure performance during macro replacement
-		boost::timer::cpu_timer                   timer;
+    boost::timer::cpu_timer timer;
 
 		// measure time spent tokenizing
-		boost::timer::cpu_timer                   tokenization_timer;
+    boost::timer::cpu_timer tokenization_timer;
 
-	};
+  };
 
 
 #endif //__macro_H_
