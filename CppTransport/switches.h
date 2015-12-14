@@ -47,6 +47,9 @@
 #define ANNOTATE_SWITCH               "annotate"
 #define ANNOTATE_HELP                 "annotate generated header files"
 
+#define UNROLL_POLICY_SWITCH          "unroll-policy"
+#define UNROLL_POLICY_HELP            "set maximum size of unrolled index set"
+
 #define MISC_OPTIONS                  "Miscellaneous options"
 #define CONFIG_OPTIONS                "Configuration options"
 #define HIDDEN_OPTIONS                "Hidden options"

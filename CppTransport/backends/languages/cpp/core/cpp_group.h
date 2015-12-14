@@ -18,21 +18,29 @@
 #include "utensors.h"
 #include "gauge_xfm.h"
 #include "temporary_pool.h"
-#include "core_macros.h"
+#include "cpp_steppers.h"
 #include "cpp_printer.h"
 
 
-class core_group: public package_group
+class cpp_group : public package_group
   {
 
     // CONSTRUCTOR, DESTRUCTOR
 
   public:
 
-    core_group(translator_data& p, ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& cache);
+    cpp_group(translator_data& p, ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& cache);
 
     //! destructor is default
-    virtual ~core_group() = default;
+    virtual ~cpp_group() = default;
+
+
+    // IMPLEMENTATION -- FOR LOOP
+
+  public:
+
+    //! plant a 'for' loop
+    virtual std::string plant_for_loop(const std::string& loop_variable, unsigned int min, unsigned int max) const override;
 
 
     // INTERNAL DATA

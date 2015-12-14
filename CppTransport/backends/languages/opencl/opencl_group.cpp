@@ -10,7 +10,8 @@
 
 
 opencl_group::opencl_group(translator_data& p, ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& cache)
-  : package_group(p, OPENCL_COMMENT_SEPARATOR, cache), printer()
+  : package_group(p, OPENCL_COMMENT_SEPARATOR, OPENCL_OPEN_BRACE, OPENCL_CLOSE_BRACE, OPENCL_BRACE_INDENT, OPENCL_BLOCK_INDENT, cache),
+    printer()
   {
     // set up cse worker instance
     // this has to happen before setting up the individual macro packages,
@@ -34,4 +35,12 @@ opencl_group::opencl_group(translator_data& p, ginac_cache<expression_item_types
     this->push_back(std::move(lt));
     this->push_back(std::move(ft));
     this->push_back(std::move(f));
+  }
+
+
+std::string opencl_group::plant_for_loop(const std::string& loop_variable, unsigned int min, unsigned int max) const
+  {
+    std::ostringstream stmt;
+    stmt << "for(unsigned int " << loop_variable << " = " << min << "; " << loop_variable << " < " << max << "; ++" << loop_variable << ")";
+    return(stmt.str());
   }

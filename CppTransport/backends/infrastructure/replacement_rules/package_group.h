@@ -26,7 +26,9 @@ class package_group
 
   public:
 
-    package_group(translator_data& p, const std::string& cmnt, ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& cache);
+    package_group(translator_data& p, const std::string cmnt, const std::string opb, const std::string clb,
+                  unsigned int brind, unsigned int bkind,
+                  ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& cache);
 
     virtual ~package_group();
 
@@ -62,7 +64,22 @@ class package_group
   public:
 
 		//! make a comment appropriate for this backend
-    const std::string& get_comment_separator() const { return (this->comment_string); }
+    virtual const std::string& get_comment_separator() const { return(this->comment_string); }
+
+    //! get open-brace appropriate for this backend (if exists)
+    virtual const std::string& get_open_brace() const { return(this->open_brace); }
+
+    //! get close-brace appropriate for this backend (if exists)
+    virtual const std::string& get_close_brace() const { return(this->close_brace); }
+
+    //! get brace indent
+    virtual unsigned int get_brace_indent() const { return(this->brace_indent); }
+
+    //! get block indent
+    virtual unsigned int get_block_indent() const { return(this->block_indent); }
+
+    //! plant a 'for' loop appropriate for this backend; should be supplied by a concrete class
+    virtual std::string plant_for_loop(const std::string& loop_variable, unsigned int min, unsigned int max) const = 0;
 
 
 		// INTERFACE - STATISTICS
@@ -70,7 +87,12 @@ class package_group
   public:
 
 		// report macro replacement time data
-		void report_macro_metadata(boost::timer::nanosecond_type m, boost::timer::nanosecond_type t) { this->statistics_reported = true; this->macro_replacement_time = m; this->macro_tokenization_time = t; }
+		void report_macro_metadata(boost::timer::nanosecond_type m, boost::timer::nanosecond_type t)
+      {
+        this->statistics_reported = true;
+        this->macro_replacement_time = m;
+        this->macro_tokenization_time = t;
+      }
 
 
 		// INTERNAL API
@@ -95,21 +117,69 @@ class package_group
 
   protected:
 
+
+    // PAYLOAD DATA (provided by parent translator)
+
+    //! data payload
     translator_data& data_payload;
+
+
+    // AGENTS
+
+    //! u-tensor factory
     std::unique_ptr<u_tensor_factory> u_factory;
-    std::unique_ptr<cse>              cse_worker;  // should be set by implementations
-    std::unique_ptr<flattener>        fl;
+
+    //! CSE worker
+    std::unique_ptr<cse> cse_worker;  // should be set by implementations
+
+    //! flattener
+    std::unique_ptr<flattener> fl;
+
+
+    // CODE GENERATION DATA
+
+    //! comment delimiter
+    std::string comment_string;
+
+    //! open brace
+    std::string open_brace;
+
+    //! close brace
+    std::string close_brace;
+
+    //! brace-level indent
+    unsigned int brace_indent;
+
+    //! block-level indent
+    unsigned int block_indent;
+
+
+    // MACRO PACKAGE CACHE
 
     std::list< std::unique_ptr<macro_packages::replacement_rule_package> > packages;
-    std::string                                                            comment_string;
 
+
+    // RULE CACHE, BUILD BY AGGREGATING RULES FROM MACRO PACKAGES
+
+    //! rules for pre-macros
     std::vector<macro_packages::simple_rule> pre_ruleset;
+
+    //! rules for post-macros
     std::vector<macro_packages::simple_rule> post_ruleset;
+
+    //! rules for index macros
     std::vector<macro_packages::index_rule>  index_ruleset;
 
-    // statistics
-    bool                          statistics_reported;
+
+    // STATISTICS AND METADATA
+
+    //! have macro replacement statistics been reported?
+    bool statistics_reported;
+
+    //! time taken to replace macros
     boost::timer::nanosecond_type macro_replacement_time;
+
+    //! time taken to tokenize template
     boost::timer::nanosecond_type macro_tokenization_time;
 
   };

@@ -9,10 +9,16 @@
 #include "formatter.h"
 
 
-package_group::package_group(translator_data& p, const std::string& cmnt, ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& cache)
+package_group::package_group(translator_data& p, const std::string cmnt, const std::string opb, const std::string clb,
+                             unsigned int brind, unsigned int bkind,
+                             ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& cache)
   : data_payload(p),
     cse_worker(nullptr),    // should be set to a sensible value in the derived class constructor
-    comment_string(cmnt),
+    comment_string(std::move(cmnt)),
+    open_brace(std::move(opb)),
+    close_brace(std::move(clb)),
+    brace_indent(brind),
+    block_indent(bkind),
 		statistics_reported(false)
   {
     u_factory = make_u_tensor_factory(data_payload, cache);

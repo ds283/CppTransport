@@ -196,15 +196,20 @@ class token_list
 		~token_list() = default;
 
 
-		// INTERFACE
+    // INTERFACE -- METADATA
+
+  public:
+
+    //! get number of tokens
+    unsigned int size() const { return(this->tokens.size()); }
+
+
+		// INTERFACE -- MACRO EVALUATION AND CONVERSION
 
   public:
 
 		//! convert to string form, using evaluated versions of each macro
 		std::string to_string();
-
-		//! get number of tokens
-		unsigned int size() const { return(this->tokens.size()); }
 
 		//! evaluate simple macros of a specific type, and cache the result.
 		//! We only want to do this once if possible, since macro evaluation may be expensive.
@@ -215,6 +220,14 @@ class token_list
 
 		//! get list of indices identified during tokenization
 		const abstract_index_list& get_indices() { return(this->indices); }
+
+
+    // INTERFACE -- INDEX SET UNROLLING
+
+  public:
+
+    //! does this token set prevent, force or allow unrolling?
+    enum unroll_behaviour unroll_status() const;
 
 
 		// INTERNAL API
@@ -249,11 +262,17 @@ class token_list
 
   protected:
 
+
+    // PAYLOAD DATA (provided to us by owning translator)
+
     //! tokenized input string; ownership is shared with any error contexts which we generate
     std::shared_ptr< std::string > input_string;
 
     //! reference to translator data payload
     translator_data& data_payload;
+
+
+    // TOKEN DATA
 
 		//! tokenized version of input
 		std::list< std::unique_ptr< token_list_impl::generic_token > > tokens;
@@ -267,8 +286,23 @@ class token_list
     //! auxiliary list of free index tokens
     std::list< token_list_impl::free_index_token* > free_index_tokens;
 
+
+    // MACRO DATA
+
+    //! number of macros preventing loop unroll
+    unsigned int num_prevent_unroll;
+
+    //! number of macros forcing loop unroll
+    unsigned int num_force_unroll;
+
+
+    // INDEX DATA (maintains information about indices encountered in this entire line)
+
 		//! list of indices found in input
     abstract_index_list indices;
+
+
+    // CACHE DATA ABOUT MODEL
 
     //! cache number of fields
     unsigned int num_fields;

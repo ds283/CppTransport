@@ -10,17 +10,17 @@
 #include <assert.h>
 #include <functional>
 
-#include "core_macros.h"
+#include "cpp_steppers.h"
 #include "translation_unit.h"
 
 
-#define BIND(X) std::bind(&core_macros::X, this, std::placeholders::_1)
+#define BIND(X) std::bind(&cpp_steppers::X, this, std::placeholders::_1)
 
 
 namespace cpp
   {
 
-    const std::vector<macro_packages::simple_rule> core_macros::get_pre_rules()
+    const std::vector<macro_packages::simple_rule> cpp_steppers::get_pre_rules()
       {
         std::vector<macro_packages::simple_rule> package;
 
@@ -48,7 +48,7 @@ namespace cpp
       }
 
 
-    const std::vector<macro_packages::simple_rule> core_macros::get_post_rules()
+    const std::vector<macro_packages::simple_rule> cpp_steppers::get_post_rules()
       {
         std::vector<macro_packages::simple_rule> package;
 
@@ -56,7 +56,7 @@ namespace cpp
       }
 
 
-    const std::vector<macro_packages::index_rule> core_macros::get_index_rules()
+    const std::vector<macro_packages::index_rule> cpp_steppers::get_index_rules()
       {
         std::vector<macro_packages::index_rule> package;
 
@@ -67,7 +67,7 @@ namespace cpp
     // *******************************************************************
 
 
-    std::string core_macros::replace_stepper(const struct stepper& s, std::string state_name)
+    std::string cpp_steppers::replace_stepper(const struct stepper& s, std::string state_name)
       {
         std::ostringstream out;
 
@@ -123,7 +123,7 @@ namespace cpp
     // ********************************************************************************
 
 
-    std::string core_macros::replace_backg_stepper(const macro_argument_list& args)
+    std::string cpp_steppers::replace_backg_stepper(const macro_argument_list& args)
       {
         const struct stepper& s = this->data_payload.get_background_stepper();
 
@@ -134,7 +134,7 @@ namespace cpp
       }
 
 
-    std::string core_macros::replace_pert_stepper(const macro_argument_list& args)
+    std::string cpp_steppers::replace_pert_stepper(const macro_argument_list& args)
       {
         const struct stepper& s = this->data_payload.get_perturbations_stepper();
 

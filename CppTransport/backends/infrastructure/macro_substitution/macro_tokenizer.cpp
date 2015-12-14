@@ -20,6 +20,8 @@ token_list::token_list(const std::string& input, const std::string& prefix,
   : num_fields(nf),
     num_params(np),
     data_payload(d),
+    num_prevent_unroll(0),
+    num_force_unroll(0),
     input_string(std::make_shared<std::string>(input))
 	{
 		size_t position = 0;
@@ -142,7 +144,18 @@ token_list::token_list(const std::string& input, const std::string& prefix,
 										            macro_argument_list arg_list;
 										            if(rule.args > 0) arg_list = this->get_argument_list(input, candidate, position, rule.args);
 
+                                if(rule.unroll == unroll_behaviour::force)   ++this->num_force_unroll;
+                                if(rule.unroll == unroll_behaviour::prevent) ++this->num_prevent_unroll;
+
                                 error_context ctx(this->data_payload.get_stack(), input_string, position, this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
+
+                                if(this->num_force_unroll > 0 && this->num_prevent_unroll > 0)
+                                  {
+                                    std::ostringstream msg;
+                                    msg << ERROR_INCOMPATIBLE_UNROLL << " '" << candidate << "'";
+                                    ctx.error(msg.str());
+                                  }
+
                                 std::unique_ptr<token_list_impl::index_macro_token> tok = std::make_unique<token_list_impl::index_macro_token>(candidate, idx_list, arg_list, rule, ctx);
                                 this->index_macro_tokens.push_back(tok.get());
 												        this->tokens.push_back(std::move(tok));     // transfers ownership
@@ -622,3 +635,13 @@ void token_list_impl::index_macro_token::evaluate(const assignment_list& a)
 
 		this->conversion = (this->rule.rule)(this->args, index_values, this->state);
 	}
+
+
+enum unroll_behaviour token_list::unroll_status() const
+  {
+    if(this->num_force_unroll > 0 && this->num_prevent_unroll == 0) return unroll_behaviour::force;
+    if(this->num_force_unroll == 0 && this->num_prevent_unroll > 0) return unroll_behaviour::prevent;
+
+    // if we are in an inconsistent state then an error will already have been raised, so do nothing here
+    return unroll_behaviour::allow;
+  }

@@ -78,13 +78,23 @@ class translator_data
     const std::string& get_implementation_guard() const { return(this->implementation_guard); }
 
 
-    // GET MODEL DATA
+    // GET CONFIGURATION OPTIONS
 
   public:
 
+    //! perform common-subexpression elimination?
     bool do_cse() const;
 
+    //! annotate output?
     bool annotate() const;
+
+    //! get size of index assignment at which unrolling is disabled
+    unsigned int unroll_policy() const;
+
+
+    // GET MODEL DATA
+
+  public:
 
     boost::optional< contexted_value<std::string>& > get_name() const;
 

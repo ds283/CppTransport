@@ -16,7 +16,7 @@
 namespace cpp
   {
 
-    class core_macros: public ::macro_packages::replacement_rule_package
+    class cpp_steppers: public ::macro_packages::replacement_rule_package
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -24,14 +24,14 @@ namespace cpp
       public:
 
         //! constructor
-        core_macros(translator_data& p, language_printer& prn, std::string ds=OUTPUT_DEFAULT_STEPPER_STATE_NAME)
+        cpp_steppers(translator_data& p, language_printer& prn, std::string ds=OUTPUT_DEFAULT_STEPPER_STATE_NAME)
           : ::macro_packages::replacement_rule_package(p, prn),
             default_state(ds)
           {
           }
 
         //! destructor is default
-        virtual ~core_macros() = default;
+        virtual ~cpp_steppers() = default;
 
 
         // INTERFACE

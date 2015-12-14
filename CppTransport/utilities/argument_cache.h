@@ -65,6 +65,10 @@ class argument_cache
     //! get code annotation setting
     bool annotate() const { return(this->annotate_flag); }
 
+    //! get unrolling policy
+    unsigned int unroll_policy() const { return(this->unroll_policy_size); }
+
+
     // INPUT FILES
 
   public:
@@ -110,6 +114,9 @@ class argument_cache
 
     //! CSE flag
     bool cse_flag;
+
+    //! unroll policy - maximum size of index set above which unrolling is disabled
+    unsigned int unroll_policy_size;
 
 
     // INPUT FILES

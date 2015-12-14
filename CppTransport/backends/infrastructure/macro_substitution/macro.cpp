@@ -11,7 +11,6 @@
 #include "boost/algorithm/string.hpp"
 
 #include "macro.h"
-#include "macro_tokenizer.h"
 
 
 // **************************************************************************************
@@ -76,30 +75,33 @@ std::unique_ptr< std::list<std::string> > macro_agent::apply(std::string& line, 
 
 std::unique_ptr< std::list<std::string> > macro_agent::apply_line(const std::string& line, unsigned int& replacements)
   {
-    std::unique_ptr< std::list<std::string> > r_list = std::make_unique< std::list<std::string> >();
+    std::unique_ptr< std::list<std::string> > r_list = std::make_unique<std::list<std::string> >();
 
-		// break the line at the split point, if it exists, to get a 'left-hand' side and a 'right-hand' side
+    // break the line at the split point, if it exists, to get a 'left-hand' side and a 'right-hand' side
     macro_impl::split_string split_result = this->split(line);
 
-		tokenization_timer.resume();
-		token_list left_tokens(split_result.left, this->prefix, this->fields, this->parameters, this->pre_rule_cache, this->post_rule_cache, this->index_rule_cache, this->data_payload);
-		token_list right_tokens(split_result.right, this->prefix, this->fields, this->parameters, this->pre_rule_cache, this->post_rule_cache, this->index_rule_cache, this->data_payload);
-		tokenization_timer.stop();
+    tokenization_timer.resume();
+    token_list left_tokens(split_result.left, this->prefix, this->fields, this->parameters, this->pre_rule_cache,
+                           this->post_rule_cache, this->index_rule_cache, this->data_payload);
+    token_list right_tokens(split_result.right, this->prefix, this->fields, this->parameters, this->pre_rule_cache,
+                            this->post_rule_cache, this->index_rule_cache, this->data_payload);
+    tokenization_timer.stop();
 
     // running total of number of macro replacements
     unsigned int counter = 0;
 
     // evaluate pre macros and cache the results
-		// we'd like to do this only once if possible, because evaluation may be expensive
-		counter += left_tokens.evaluate_macros(simple_macro_type::pre);
-		counter += right_tokens.evaluate_macros(simple_macro_type::pre);
+    // we'd like to do this only once if possible, because evaluation may be expensive
+    counter += left_tokens.evaluate_macros(simple_macro_type::pre);
+    counter += right_tokens.evaluate_macros(simple_macro_type::pre);
 
     // generate assignments for the LHS indices
     assignment_set LHS_assignments(left_tokens.get_indices());
 
-		// generate an assignment for each RHS index; first get RHS indices which are not also LHS indices
+    // generate an assignment for each RHS index; first get RHS indices which are not also LHS indices
     abstract_index_list RHS_indices;
-    error_context ctx(this->data_payload.get_stack(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
+    error_context ctx(this->data_payload.get_stack(), this->data_payload.get_error_handler(),
+                      this->data_payload.get_warning_handler());
 
     try
       {
@@ -114,6 +116,50 @@ std::unique_ptr< std::list<std::string> > macro_agent::apply_line(const std::str
 
     assignment_set RHS_assignments(RHS_indices);
 
+    // decide on total size of assignment set and apply policy for unrolling
+    unsigned int total_assignment_size = LHS_assignments.size() * RHS_assignments.size();
+    bool unroll_by_policy = total_assignment_size <= this->data_payload.unroll_policy();
+    bool unroll = unroll_by_policy;
+
+    unsigned int prevent = 0;
+    unsigned int force = 0;
+    if(left_tokens.unroll_status() == unroll_behaviour::prevent) ++prevent;
+    if(right_tokens.unroll_status() == unroll_behaviour::prevent) ++prevent;
+    if(left_tokens.unroll_status() == unroll_behaviour::force) ++force;
+    if(right_tokens.unroll_status() == unroll_behaviour::force) ++force;
+
+    if(force > 0 && prevent > 0)
+      {
+        ctx.error(ERROR_LHS_RHS_INCOMPATIBLE_UNROLL);
+      }
+    else
+      {
+        if(force > 0 || (unroll_by_policy && prevent == 0)) unroll = true;
+        else unroll = false;
+      }
+
+    if(unroll)
+      {
+        this->unroll_index_assignment(left_tokens, right_tokens, LHS_assignments, RHS_assignments, counter,
+                                      split_result, ctx, *r_list);
+      }
+    else
+      {
+        this->forloop_index_assignment(left_tokens, right_tokens, LHS_assignments, RHS_assignments, counter,
+                                       split_result, ctx, *r_list);
+      }
+
+    replacements = counter;
+
+    return(r_list);
+  }
+
+
+void macro_agent::unroll_index_assignment(token_list& left_tokens, token_list& right_tokens,
+                                          assignment_set& LHS_assignments, assignment_set& RHS_assignments,
+                                          unsigned int& counter, macro_impl::split_string& split_result,
+                                          error_context& ctx, std::list<std::string>& r_list)
+  {
     // LHS_assignments may be *empty* (ie size=0) if there are no valid assignments (probably one of the index
     // ranges is empty).
     // If there are no LHS indices then it will report size=1, ie. the trivial index assignment
@@ -135,7 +181,7 @@ std::unique_ptr< std::list<std::string> > macro_agent::apply_line(const std::str
                     std::string lhs = left_tokens.to_string();
                     if(split_result.type == macro_impl::split_type::sum)       lhs += " = ";
                     if(split_result.type == macro_impl::split_type::sum_equal) lhs += " += ";
-						        r_list->push_back(lhs);
+						        r_list.push_back(lhs);
 							    }
 
 						    // now generate a set of RHS evaluations for this LHS evaluation
@@ -159,19 +205,19 @@ std::unique_ptr< std::list<std::string> > macro_agent::apply_line(const std::str
 								    // set up replacement right hand side; add trailing ; and , only if the LHS is empty
 						        std::string this_line = right_tokens.to_string() + (left_tokens.size() == 0 && split_result.semicolon ? ";" : "") + (left_tokens.size() == 0 && split_result.comma ? "," : "");
 
-						        r_list->push_back(this_line);
+						        r_list.push_back(this_line);
 							    }
 
 								// add a trailing ; and , if the LHS is nonempty
-						    if(left_tokens.size() > 0 && r_list->size() > 0)
+						    if(left_tokens.size() > 0 && r_list.size() > 0)
 							    {
 						        if(split_result.semicolon)
 							        {
-						            r_list->back() += ";";
+						            r_list.back() += ";";
 							        }
 						        if(split_result.comma)
 							        {
-						            r_list->back() += ",";
+						            r_list.back() += ",";
 							        }
 							    }
 							}
@@ -200,19 +246,24 @@ std::unique_ptr< std::list<std::string> > macro_agent::apply_line(const std::str
                 if(split_result.type == macro_impl::split_type::sum_equal) full_line += " +=";
 
                 full_line += " " + right_tokens.to_string() + (split_result.semicolon ? ";" : "") + (split_result.comma ? "," : "");
-								r_list->push_back(full_line);
+								r_list.push_back(full_line);
 							}
 			    }
 			}
 		else
 			{
-				r_list->push_back(std::string("// Skipped: empty index range (LHS index set is empty)"));
+				r_list.push_back(std::string("// Skipped: empty index range (LHS index set is empty)"));
 			}
-
-    replacements = counter;
-
-    return(r_list);
 	}
+
+
+void macro_agent::forloop_index_assignment(token_list& left_tokens, token_list& right_tokens,
+                                           assignment_set& LHS_assignments, assignment_set& RHS_assignments,
+                                           unsigned int& counter, macro_impl::split_string& split_result,
+                                           error_context& ctx, std::list<std::string>& r_list)
+  {
+
+  }
 
 
 macro_impl::split_string macro_agent::split(const std::string& line)

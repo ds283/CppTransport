@@ -19,7 +19,6 @@
 
 // forward reference to avoid circularity
 class macro_agent;
-class package_group;
 
 
 enum process_type { process_core, process_implementation };

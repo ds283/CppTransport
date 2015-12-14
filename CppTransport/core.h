@@ -35,4 +35,6 @@ constexpr auto DEFAULT_AUTHOR               = "Anonymous";
 
 constexpr auto TEMPLATE_PATHS_ENV           = "CPPTRANSPORT_TEMPLATE_PATH";
 
+constexpr auto DEFAULT_UNROLL_MAX           = 1000;
+
 #endif //__core_H_

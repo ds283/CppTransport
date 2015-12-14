@@ -11,7 +11,12 @@
 
 #include "C_style_printer.h"
 
-#define CPP_COMMENT_SEPARATOR "//"
+
+constexpr auto         CPP_COMMENT_SEPARATOR = "//";
+constexpr auto         CPP_OPEN_BRACE        = "{";
+constexpr auto         CPP_CLOSE_BRACE       = "}";
+constexpr unsigned int CPP_BRACE_INDENT      = 1;
+constexpr unsigned int CPP_BLOCK_INDENT      = 3;
 
 
 namespace cpp

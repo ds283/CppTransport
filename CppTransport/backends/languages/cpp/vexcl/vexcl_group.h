@@ -36,6 +36,14 @@ class vexcl_group: public package_group
     ~vexcl_group() = default;
 
 
+    // IMPLEMENTATION -- FOR LOOP
+
+  public:
+
+    //! plant a 'for' loop
+    virtual std::string plant_for_loop(const std::string& loop_variable, unsigned int min, unsigned int max) const override;
+
+
     // INTERNAL DATA
 
   protected:

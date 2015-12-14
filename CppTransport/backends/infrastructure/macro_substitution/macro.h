@@ -2,8 +2,6 @@
 // Created by David Seery on 27/06/2013.
 // Copyright (c) 2013-15 University of Sussex. All rights reserved.
 //
-// To change the template use AppCode | Preferences | File Templates.
-//
 
 
 #ifndef __macro_H_
@@ -23,8 +21,9 @@
 #include "package_group.h"
 #include "translator_data.h"
 #include "replacement_rule_definitions.h"
+#include "macro_tokenizer.h"
 
-#include <boost/timer/timer.hpp>
+#include "boost/timer/timer.hpp"
 
 
 class package_group;
@@ -128,6 +127,18 @@ class macro_agent
 
     //! find a split-point in a line, if one exists
     macro_impl::split_string split(const std::string& line);
+
+    //! unroll an index assignment
+    void unroll_index_assignment(token_list& left_tokens, token_list& right_tokens,
+                                 assignment_set& LHS_assignments, assignment_set& RHS_assignments,
+                                 unsigned int& counter, macro_impl::split_string& split_result,
+                                 error_context& ctx, std::list<std::string>& r_list);
+
+    //! plant a for-loop implementation of an index assignment
+    void forloop_index_assignment(token_list& left_tokens, token_list& right_tokens,
+                                  assignment_set& LHS_assignments, assignment_set& RHS_assignments,
+                                  unsigned int& counter, macro_impl::split_string& split_result,
+                                  error_context& ctx, std::list<std::string>& r_list);
 
 
     // INTERNAL DATA

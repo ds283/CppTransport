@@ -9,7 +9,7 @@
 
 #include "package_group_factory.h"
 
-#include "core_group.h"
+#include "cpp_group.h"
 #include "vexcl_group.h"
 #include "opencl_group.h"
 #include "cuda_group.h"
@@ -20,7 +20,7 @@ std::unique_ptr<package_group> package_group_factory(const boost::filesystem::pa
   {
     if(backend == "cpp")
       {
-		    return std::make_unique<core_group>(payload, cache);
+		    return std::make_unique<cpp_group>(payload, cache);
       }
     else if(backend == "vexcl")
       {

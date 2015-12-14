@@ -4,14 +4,14 @@
 //
 
 
-#include "core_group.h"
+#include "cpp_group.h"
 
 #include "cpp_printer.h"
 #include "cpp_cse.h"
 
 
-core_group::core_group(translator_data& p, ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& cache)
-  : package_group(p, CPP_COMMENT_SEPARATOR, cache),
+cpp_group::cpp_group(translator_data& p, ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& cache)
+  : package_group(p, CPP_COMMENT_SEPARATOR, CPP_OPEN_BRACE, CPP_CLOSE_BRACE, CPP_BRACE_INDENT, CPP_BLOCK_INDENT, cache),
     printer()
   {
     // set up cse worker instance
@@ -27,7 +27,7 @@ core_group::core_group(translator_data& p, ginac_cache<expression_item_types, DE
     auto ut = std::make_unique<macro_packages::utensors>          (p, this->printer);
     auto xf = std::make_unique<macro_packages::gauge_xfm>         (p, this->printer);
     auto tp = std::make_unique<macro_packages::temporary_pool>    (p, this->printer);
-    auto cm = std::make_unique<cpp::core_macros>                  (p, this->printer);
+    auto cm = std::make_unique<cpp::cpp_steppers>                 (p, this->printer);
 
     // register these packages and transfer their ownership
     this->push_back(std::move(cm));
@@ -37,4 +37,12 @@ core_group::core_group(translator_data& p, ginac_cache<expression_item_types, DE
     this->push_back(std::move(lt));
     this->push_back(std::move(ft));
     this->push_back(std::move(f));
+  }
+
+
+std::string cpp_group::plant_for_loop(const std::string& loop_variable, unsigned int min, unsigned int max) const
+  {
+    std::ostringstream stmt;
+    stmt << "for(unsigned int " << loop_variable << " = " << min << "; " << loop_variable << " < " << max << "; ++" << loop_variable << ")";
+    return(stmt.str());
   }

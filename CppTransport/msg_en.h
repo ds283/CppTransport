@@ -72,6 +72,9 @@
 #define ERROR_TOKENIZE_UNEXPECTED_LIST        "Did not expect index list following simple macro"
 #define ERROR_TOKENIZE_SKIPPING               "skipping"
 
+#define ERROR_INCOMPATIBLE_UNROLL             "Unrolling requirements are incompatible with earlier macros for"
+#define ERROR_LHS_RHS_INCOMPATIBLE_UNROLL     "Left-hand side and right-hand side have incompatible unrolling requirements"
+
 #define ERROR_MISSING_INDEX_ASSIGNMENT        "Internal error: missing index assignment"
 
 #define ERROR_EXPECTED_INDEX                  "Expected index label following prefix"

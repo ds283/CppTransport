@@ -17,7 +17,8 @@ argument_cache::argument_cache(int argc, const char** argv)
     colour_flag(true),
     cse_flag(true),
     no_search_environment(false),
-    annotate_flag(false)
+    annotate_flag(false),
+    unroll_policy_size(DEFAULT_UNROLL_MAX)
   {
     // set up Boost::program_options descriptors for command-line arguments
     boost::program_options::options_description generic(MISC_OPTIONS);
@@ -36,8 +37,9 @@ argument_cache::argument_cache(int argc, const char** argv)
 
     boost::program_options::options_description generation(GENERATION_OPTIONS);
     generation.add_options()
-      (NO_CSE_SWITCH,   NO_CSE_HELP)
-      (ANNOTATE_SWITCH, ANNOTATE_HELP);
+      (NO_CSE_SWITCH,                                                                                            NO_CSE_HELP)
+      (ANNOTATE_SWITCH,                                                                                          ANNOTATE_HELP)
+      (UNROLL_POLICY_SWITCH, boost::program_options::value< unsigned int >()->default_value(DEFAULT_UNROLL_MAX), UNROLL_POLICY_HELP);
 
     boost::program_options::options_description hidden(HIDDEN_OPTIONS);
     hidden.add_options()
@@ -78,6 +80,7 @@ argument_cache::argument_cache(int argc, const char** argv)
     // CODE GENERATION OPTIONS
     if(option_map.count(NO_CSE_SWITCH)) this->cse_flag = false;
     if(option_map.count(ANNOTATE_SWITCH)) this->annotate_flag = true;
+    if(option_map.count(UNROLL_POLICY_SWITCH)) this->unroll_policy_size = option_map[UNROLL_POLICY_SWITCH].as<unsigned int>();
 
     // CONFIGURATION OPTIONS
     if(option_map.count(VERBOSE_SWITCH_LONG)) this->verbose_flag = true;

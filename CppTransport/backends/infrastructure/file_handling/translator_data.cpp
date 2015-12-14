@@ -35,6 +35,12 @@ bool translator_data::annotate() const
   }
 
 
+unsigned int translator_data::unroll_policy() const
+  {
+    return(this->cache.unroll_policy());
+  }
+
+
 boost::optional< contexted_value<std::string>& > translator_data::get_name() const
   {
     return(this->driver.get_script().get_name());

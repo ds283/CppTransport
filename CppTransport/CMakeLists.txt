@@ -51,8 +51,8 @@ ADD_EXECUTABLE(CppTransport main.cpp
   backends/infrastructure/replacement_rules/package_group.cpp
   backends/infrastructure/replacement_rules/package_group_factory.cpp
   backends/infrastructure/replacement_rules/replacement_rule_package.cpp
-  backends/languages/cpp/core/core_group.cpp
-  backends/languages/cpp/core/core_macros.cpp
+  backends/languages/cpp/core/cpp_group.cpp
+  backends/languages/cpp/core/cpp_steppers.cpp
   backends/languages/cpp/vexcl/vexcl_group.cpp
   backends/languages/cpp/vexcl/vexcl_kernels.cpp
   backends/languages/cpp/vexcl/vexcl_steppers.cpp
@@ -510,10 +510,10 @@ SET(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_CORRELATION_FUNCTIONS
   )
 
 SET(BACKENDS_LANGUAGES_CPP_CORE_FILES
-  backends/languages/cpp/core/core_group.cpp
-  backends/languages/cpp/core/core_group.h
-  backends/languages/cpp/core/core_macros.cpp
-  backends/languages/cpp/core/core_macros.h
+  backends/languages/cpp/core/cpp_group.cpp
+  backends/languages/cpp/core/cpp_group.h
+  backends/languages/cpp/core/cpp_steppers.cpp
+  backends/languages/cpp/core/cpp_steppers.h
   )
 
 SET(TEMPLATES_FILES
