@@ -3,8 +3,8 @@
 // Copyright (c) 2013-15 University of Sussex. All rights reserved.
 //
 
-#ifndef __msg_H_
-#define __msg_H_
+#ifndef CPPTRANSPORT_MSG_EN_H
+#define CPPTRANSPORT_MSG_EN_H
 
 // Messages
 
@@ -160,48 +160,4 @@
 #define MESSAGE_MINUTE_LABEL                  "m"
 #define MESSAGE_SECOND_LABEL                  "s"
 
-// output strings
-
-#define BACKEND_MACRO_PREFIX                  "$$__"
-#define BACKEND_LINE_SPLIT_EQUAL              "$$="
-#define BACKEND_LINE_SPLIT_SUM_EQUAL          "$$+="
-
-#define OUTPUT_CPPTRANSPORT_TAG               "__CPPTRANSPORT"
-#define OUTPUT_TIME_FORMAT                    "%X on %d %m %Y"
-#define OUTPUT_DEFAULT_POOL_TEMPLATE          "auto $1 = $2;"
-
-#define OUTPUT_DEFAULT_CPP_CSE_TEMPORARY_NAME "__temp"
-
-#define OUTPUT_DEFAULT_U2_NAME                "__u2"
-#define OUTPUT_DEFAULT_U3_NAME                "__u3"
-#define OUTPUT_DEFAULT_M_NAME                 "__M"
-#define OUTPUT_DEFAULT_K_NAME                 "__k"
-#define OUTPUT_DEFAULT_K1_NAME                "__k1"
-#define OUTPUT_DEFAULT_K2_NAME                "__k2"
-#define OUTPUT_DEFAULT_K3_NAME                "__k3"
-#define OUTPUT_DEFAULT_A_NAME                 "__a"
-
-#define OUTPUT_DEFAULT_HSQ_NAME               "__Hsq"
-#define OUTPUT_DEFAULT_EPS_NAME               "__eps"
-
-#define OUTPUT_DEFAULT_ONEINDEX_NAME          "__1index"
-#define OUTPUT_DEFAULT_TWOINDEX_NAME          "__2index"
-#define OUTPUT_DEFAULT_THREEINDEX_NAME        "__3index"
-
-#define OUTPUT_DEFAULT_STEPPER_STATE_NAME     "double"
-
-#define OUTPUT_TEMPORARY_POOL_START           "-- START -- temporary pool"
-#define OUTPUT_TEMPORARY_POOL_END             "-- END -- temporary pool"
-#define OUTPUT_TEMPORARY_POOL_SEQUENCE        "sequence"
-#define OUTPUT_KERNEL_LOCATION                "-- VEXCL KERNEL INSERTION"
-
-#define OUTPUT_VEXCL_KERNEL_PRE               ", \""
-#define OUTPUT_VEXCL_KERNEL_POST              "\""
-#define OUTPUT_VEXCL_UNKNOWN_KERNEL           (OUTPUT_VEXCL_KERNEL_PRE "<UNKNOWN_KERNEL_NAME>" OUTPUT_VEXCL_KERNEL_POST)
-
-#define OUTPUT_VEXCL_KERNEL_LINE_PRE          "\""
-#define OUTPUT_VEXCL_KERNEL_LINE_POST         "\\n\""
-
-#define OUTPUT_OPENCL_DEFAULT_LABEL           "idx"
-
-#endif //__msg_H_
+#endif //CPPTRANSPORT_MSG_EN_H

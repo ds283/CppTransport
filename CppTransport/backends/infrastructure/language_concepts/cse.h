@@ -196,7 +196,7 @@ class cse
     typedef std::vector< std::pair<std::string, std::string> > declaration_table;
 
     symbol_table symbols;
-    declaration_table   decls;
+    declaration_table decls;
 
 		// timer
 		boost::timer::cpu_timer timer;

@@ -57,6 +57,7 @@ void cse::clear()
     this->decls.clear();
 
     this->serial_number++;
+    this->symbol_counter = 0;
   }
 
 
