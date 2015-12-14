@@ -54,6 +54,7 @@ namespace transport
         //! destructor is default
         virtual ~$$__MODEL_basic() = default;
 
+
         // EXTRACT MODEL INFORMATION -- implements a 'model' interface
 
       public:
@@ -67,6 +68,7 @@ namespace transport
         virtual std::pair< double, double > get_back_tol() const override { return std::make_pair($$__BACKG_ABS_ERR, $$__BACKG_REL_ERR); }
 
         virtual std::pair< double, double > get_pert_tol() const override { return std::make_pair($$__PERT_ABS_ERR, $$__PERT_REL_ERR); }
+
 
         // BACKEND INTERFACE
 
@@ -122,6 +124,42 @@ namespace transport
       };
 
 
+    template <typename number>
+    void compute_dV(number* raw_params, const std::vector<number>& __x, number* dV)
+      {
+        const auto $$__PARAMETER[1]  = raw_params[$$__1];
+        const auto $$__COORDINATE[A] = __x[FLATTEN($$__A)];
+
+        $$__TEMP_POOL{"const auto $1 = $2;"}
+
+        dV[FLATTEN($$__a)] = $$__DV[a];
+      }
+
+
+    template <typename number>
+    void compute_ddV(number* raw_params, const std::vector<number>& __x, number* ddV)
+      {
+        const auto $$__PARAMETER[1]  = raw_params[$$__1];
+        const auto $$__COORDINATE[A] = __x[FLATTEN($$__A)];
+
+        $$__TEMP_POOL{"const auto $1 = $2;"}
+
+        ddV[FLATTEN($$__a,$$__b)] = $$__DDV[ab];
+      }
+
+
+    template <typename number>
+    void compute_dddV(number* raw_params, const std::vector<number>& __x, number* dddV)
+      {
+        const auto $$__PARAMETER[1]  = raw_params[$$__1];
+        const auto $$__COORDINATE[A] = __x[FLATTEN($$__A)];
+
+        $$__TEMP_POOL{"const auto $1 = $2;"}
+
+        dddV[FLATTEN($$__a,$$__b,$$__c)] = $$__DDDV[abc];
+      }
+
+
     // integration - 2pf functor
     template <typename number>
     class $$__MODEL_basic_twopf_functor
@@ -131,23 +169,37 @@ namespace transport
 
         $$__MODEL_basic_twopf_functor(const twopf_list_task<number>* tk, const twopf_kconfig& k)
           : params(tk->get_params()),
-            param_vector(tk->get_params().get_vector()),
             Mp(tk->get_params().get_Mp()),
             N_horizon_exit(tk->get_N_horizon_crossing()),
             astar_normalization(tk->get_astar_normalization()),
             config(k),
-            u2(nullptr)
+            u2(nullptr),
+            dV(nullptr),
+            ddV(nullptr),
+            raw_params(nullptr)
           {
           }
 
         void set_up_workspace()
           {
-            u2 = new number[2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS];
+            this->u2 = new number[2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS];
+
+            this->dV = new number[$$__NUMBER_FIELDS];
+            this->ddV = new number[$$__NUMBER_FIELDS * $$__NUMBER_FIELDS];
+
+            this->raw_params = new number[$$__NUMBER_PARAMS];
+
+            this->raw_params[$$__1] = this->params.get_vector()[$$__1];
           }
 
         void close_down_workspace()
           {
-            delete[] u2;
+            delete[] this->u2;
+
+            delete[] this->dV;
+            delete[] this->ddV;
+
+            delete[] this->raw_params;
           }
 
         void operator ()(const twopf_state<number>& __x, twopf_state<number>& __dxdt, double __t);
@@ -155,11 +207,12 @@ namespace transport
         // adjust horizon exit time, given an initial time N_init which we wish to move to zero
         void rebase_horizon_exit_time(double N_init) { this->N_horizon_exit -= N_init; }
 
+
+        // INTERNAL DATA
+
       private:
 
         const parameters<number>& params;
-
-        const std::vector<number>& param_vector;
 
         number Mp;
 
@@ -172,6 +225,11 @@ namespace transport
         // manage memory ourselves, rather than via an STL container, for maximum performance
         // also avoids copying overheads (the Boost odeint library copies the functor by value)
         number* u2;
+
+        number* dV;
+        number* ddV;
+
+        number* raw_params;
 
       };
 
@@ -205,7 +263,6 @@ namespace transport
 
         $$__MODEL_basic_threepf_functor(const twopf_list_task<number>* tk, const threepf_kconfig& k)
           : params(tk->get_params()),
-            param_vector(tk->get_params().get_vector()),
             Mp(tk->get_params().get_Mp()),
             N_horizon_exit(tk->get_N_horizon_crossing()),
             astar_normalization(tk->get_astar_normalization()),
@@ -215,30 +272,48 @@ namespace transport
             u2_k3(nullptr),
             u3_k1k2k3(nullptr),
             u3_k2k1k3(nullptr),
-            u3_k3k1k2(nullptr)
+            u3_k3k1k2(nullptr),
+            dV(nullptr),
+            ddV(nullptr),
+            dddV(nullptr),
+            raw_params(nullptr)
           {
           }
 
         void set_up_workspace()
           {
-            u2_k1 = new number[2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS];
-            u2_k2 = new number[2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS];
-            u2_k3 = new number[2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS];
+            this->u2_k1 = new number[2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS];
+            this->u2_k2 = new number[2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS];
+            this->u2_k3 = new number[2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS];
 
-            u3_k1k2k3 = new number[2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS];
-            u3_k2k1k3 = new number[2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS];
-            u3_k3k1k2 = new number[2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS];
+            this->u3_k1k2k3 = new number[2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS];
+            this->u3_k2k1k3 = new number[2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS];
+            this->u3_k3k1k2 = new number[2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS];
+
+            this->dV = new number[$$__NUMBER_FIELDS];
+            this->ddV = new number[$$__NUMBER_FIELDS * $$__NUMBER_FIELDS];
+            this->dddV = new number[$$__NUMBER_FIELDS * $$__NUMBER_FIELDS * $$__NUMBER_FIELDS];
+
+            this->raw_params = new number[$$__NUMBER_PARAMS];
+
+            this->raw_params[$$__1] = this->params.get_vector()[$$__1];
           }
 
         void close_down_workspace()
           {
-            delete[] u2_k1;
-            delete[] u2_k2;
-            delete[] u2_k3;
+            delete[] this->u2_k1;
+            delete[] this->u2_k2;
+            delete[] this->u2_k3;
 
-            delete[] u3_k1k2k3;
-            delete[] u3_k2k1k3;
-            delete[] u3_k3k1k2;
+            delete[] this->u3_k1k2k3;
+            delete[] this->u3_k2k1k3;
+            delete[] this->u3_k3k1k2;
+
+            delete[] this->dV;
+            delete[] this->ddV;
+            delete[] this->dddV;
+
+            delete[] this->raw_params;
           }
 
         void operator ()(const threepf_state<number>& __x, threepf_state<number>& __dxdt, double __dt);
@@ -249,8 +324,6 @@ namespace transport
       private:
 
         const parameters<number>& params;
-
-        const std::vector<number>& param_vector;
 
         number Mp;
 
@@ -270,6 +343,12 @@ namespace transport
         number* u3_k1k2k3;
         number* u3_k2k1k3;
         number* u3_k3k1k2;
+
+        number* dV;
+        number* ddV;
+        number* dddV;
+
+        number* raw_params;
 
       };
 
@@ -638,7 +717,7 @@ namespace transport
     template <typename number>
     void $$__MODEL_basic_twopf_functor<number>::operator()(const twopf_state<number>& __x, twopf_state<number>& __dxdt, double __t)
       {
-        const auto $$__PARAMETER[1]  = this->param_vector[$$__1];
+        const auto $$__PARAMETER[1]  = this->raw_params[$$__1];
         const auto $$__COORDINATE[A] = __x[FLATTEN($$__A)];
         const auto __Mp              = this->Mp;
         const auto __k               = this->config.k_comoving;
@@ -714,7 +793,7 @@ namespace transport
     template <typename number>
     void $$__MODEL_basic_threepf_functor<number>::operator()(const threepf_state<number>& __x, threepf_state<number>& __dxdt, double __t)
       {
-        const auto $$__PARAMETER[1]  = this->param_vector[$$__1];
+        const auto $$__PARAMETER[1]  = this->raw_params[$$__1];
         const auto $$__COORDINATE[A] = __x[FLATTEN($$__A)];
         const auto __Mp              = this->Mp;
         const auto __k1              = this->config.k1_comoving;
