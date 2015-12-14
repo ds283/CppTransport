@@ -120,7 +120,11 @@ namespace macro_packages
       {
         GiNaC::ex potential = this->data_payload.get_potential();
 
-        return(this->printer.ginac(potential));
+        // pass to CSE module for evalaution
+        this->cse_worker.parse(potential);
+
+        // emit
+        return this->cse_worker.get_symbol_with_use_count(potential);
       }
 
 
@@ -128,7 +132,11 @@ namespace macro_packages
       {
         GiNaC::ex Hsq = this->u_factory.compute_Hsq();
 
-        return(this->printer.ginac(Hsq));
+        // pass to CSE module for evaluation
+        this->cse_worker.parse(Hsq);
+
+        // emit
+        return this->cse_worker.get_symbol_with_use_count(Hsq);
       }
 
 
@@ -136,7 +144,11 @@ namespace macro_packages
       {
         GiNaC::ex eps = this->u_factory.compute_eps();
 
-        return(this->printer.ginac(eps));
+        // pass to CSE module for evaluation
+        this->cse_worker.parse(eps);
+
+        // emit
+        return this->cse_worker.get_symbol_with_use_count(eps);
       }
 
 

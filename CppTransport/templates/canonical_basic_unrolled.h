@@ -643,8 +643,13 @@ namespace transport
         const auto __Mp              = this->Mp;
         const auto __k               = this->config.k_comoving;
         const auto __a               = std::exp(__t - this->N_horizon_exit + this->astar_normalization);
+
+        $$__TEMP_POOL{"const auto $1 = $2;"}
+
         const auto __Hsq             = $$__HUBBLE_SQ;
         const auto __eps             = $$__EPSILON;
+
+        $$__TEMP_POOL{"const auto $1 = $2;"}
 
         // check FLATTEN functions are being evaluated at compile time
         static_assert(TENSOR_FLATTEN(0,0) == 0, "TENSOR_FLATTEN failure");
@@ -656,8 +661,6 @@ namespace transport
         const auto __tensor_twopf_fp = __x[$$__MODEL_pool::tensor_start + TENSOR_FLATTEN(0,1)];
         const auto __tensor_twopf_pf = __x[$$__MODEL_pool::tensor_start + TENSOR_FLATTEN(1,0)];
         const auto __tensor_twopf_pp = __x[$$__MODEL_pool::tensor_start + TENSOR_FLATTEN(1,1)];
-
-        $$__TEMP_POOL{"const auto $1 = $2;"}
 
 #undef __twopf
 #define __twopf(a,b) __x[$$__MODEL_pool::twopf_start + FLATTEN(a,b)]
@@ -718,8 +721,13 @@ namespace transport
         const auto __k2              = this->config.k2_comoving;
         const auto __k3              = this->config.k3_comoving;
         const auto __a               = std::exp(__t - this->N_horizon_exit + this->astar_normalization);
+
+        $$__TEMP_POOL{"const auto $1 = $2;"}
+
         const auto __Hsq             = $$__HUBBLE_SQ;
         const auto __eps             = $$__EPSILON;
+
+        $$__TEMP_POOL{"const auto $1 = $2;"}
 
         // check FLATTEN functions are being evaluated at compile time
         static_assert(TENSOR_FLATTEN(0,0) == 0, "TENSOR_FLATTEN failure");
@@ -741,8 +749,6 @@ namespace transport
         const auto __tensor_k3_twopf_fp = __x[$$__MODEL_pool::tensor_k3_start + TENSOR_FLATTEN(0,1)];
         const auto __tensor_k3_twopf_pf = __x[$$__MODEL_pool::tensor_k3_start + TENSOR_FLATTEN(1,0)];
         const auto __tensor_k3_twopf_pp = __x[$$__MODEL_pool::tensor_k3_start + TENSOR_FLATTEN(1,1)];
-
-        $$__TEMP_POOL{"const auto $1 = $2;"}
 
 #undef __twopf_re_k1
 #undef __twopf_re_k2

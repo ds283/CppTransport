@@ -310,7 +310,7 @@ namespace transport
 
             $$__TEMP_POOL{"const auto $1 = $2;"}
 
-            return(std::sqrt($$__HUBBLE_SQ));
+            return std::sqrt($$__HUBBLE_SQ);
           }
         else
           {
@@ -334,7 +334,7 @@ namespace transport
 
             $$__TEMP_POOL{"const auto $1 = $2;"}
 
-            return($$__EPSILON);
+            return $$__EPSILON;
           }
         else
           {
@@ -443,6 +443,8 @@ namespace transport
         const auto $$__COORDINATE[A] = __fields[$$__A];
         const auto __Mp              = __task->get_params().get_Mp();
 
+        $$__TEMP_POOL{"const auto $1 = $2;"}
+
         const auto __Hsq             = $$__HUBBLE_SQ;
         const auto __eps             = $$__EPSILON;
         const auto __a               = std::exp(__Ninit - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
@@ -530,6 +532,8 @@ namespace transport
       const auto $$__COORDINATE[A] = __fields[$$__A];
       const auto __Mp              = __task->get_params().get_Mp();
 
+      $$__TEMP_POOL{"const auto $1 = $2;"}
+
       const auto __Hsq             = $$__HUBBLE_SQ;
       const auto __eps             = $$__EPSILON;
       const auto __a               = std::exp(__Ninit - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
@@ -579,6 +583,8 @@ namespace transport
         const auto $$__COORDINATE[A] = __fields[$$__A];
         const auto __Mp              = __task->get_params().get_Mp();
 
+        $$__TEMP_POOL{"const auto $1 = $2;"}
+
         const auto __Hsq             = $$__HUBBLE_SQ;
         const auto __eps             = $$__EPSILON;
         const auto __a               = std::exp(__Ninit - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
@@ -625,6 +631,8 @@ namespace transport
         const auto $$__PARAMETER[1]  = __task->get_params().get_vector()[$$__1];
         const auto $$__COORDINATE[A] = __fields[$$__A];
         const auto __Mp              = __task->get_params().get_Mp();
+
+        $$__TEMP_POOL{"const auto $1 = $2;"}
 
         const auto __Hsq             = $$__HUBBLE_SQ;
         const auto __eps             = $$__EPSILON;
@@ -832,6 +840,8 @@ namespace transport
         const auto $$__COORDINATE[A] = __state[$$__A];
         const auto __Mp              = __task->get_params().get_Mp();
 
+        $$__TEMP_POOL{"const auto $1 = $2;"}
+
         const auto __Hsq             = $$__HUBBLE_SQ;
         const auto __eps             = $$__EPSILON;
 
@@ -850,6 +860,8 @@ namespace transport
         const auto $$__PARAMETER[1]  = __task->get_params().get_vector()[$$__1];
         const auto $$__COORDINATE[A] = __state[$$__A];
         const auto __Mp              = __task->get_params().get_Mp();
+
+        $$__TEMP_POOL{"const auto $1 = $2;"}
 
         const auto __Hsq             = $$__HUBBLE_SQ;
         const auto __eps             = $$__EPSILON;
@@ -903,6 +915,8 @@ namespace transport
         const auto $$__COORDINATE[A] = __fields[$$__A];
         const auto __Mp              = __task->get_params().get_Mp();
 
+        $$__TEMP_POOL{"const auto $1 = $2;"}
+
         const auto __Hsq             = $$__HUBBLE_SQ;
         const auto __eps             = $$__EPSILON;
         const auto __a               = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
@@ -921,6 +935,8 @@ namespace transport
         const auto $$__PARAMETER[1]  = __task->get_params().get_vector()[$$__1];
         const auto $$__COORDINATE[A] = __fields[$$__A];
         const auto __Mp              = __task->get_params().get_Mp();
+
+        $$__TEMP_POOL{"const auto $1 = $2;"}
 
         const auto __Hsq             = $$__HUBBLE_SQ;
         const auto __eps             = $$__EPSILON;
@@ -941,6 +957,8 @@ namespace transport
         const auto $$__COORDINATE[A]      = __fields[$$__A];
         const auto __Mp                   = __task->get_params().get_Mp();
 
+        $$__TEMP_POOL{"const auto $1 = $2;"}
+
         const auto __Hsq                  = $$__HUBBLE_SQ;
         const auto __eps                  = $$__EPSILON;
         const auto __a                    = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
@@ -960,6 +978,8 @@ namespace transport
         const auto $$__COORDINATE[A]      = __fields[$$__A];
         const auto __Mp                   = __task->get_params().get_Mp();
 
+        $$__TEMP_POOL{"const auto $1 = $2;"}
+
         const auto __Hsq                  = $$__HUBBLE_SQ;
         const auto __eps                  = $$__EPSILON;
         const auto __a                    = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
@@ -978,6 +998,8 @@ namespace transport
         const auto $$__PARAMETER[1]       = __task->get_params().get_vector()[$$__1];
         const auto $$__COORDINATE[A]      = __fields[$$__A];
         const auto __Mp                   = __task->get_params().get_Mp();
+
+        $$__TEMP_POOL{"const auto $1 = $2;"}
 
         const auto __Hsq                  = $$__HUBBLE_SQ;
         const auto __eps                  = $$__EPSILON;
@@ -1035,6 +1057,8 @@ namespace transport
                 const auto $$__PARAMETER[1]  = this->param_vector[$$__1];
                 const auto $$__COORDINATE[A] = __x.first[$$__A];
                 const auto __Mp              = this->Mp;
+
+                $$__TEMP_POOL{"const auto $1 = $2;"}
 
                 const auto __eps = $$__EPSILON;
 
@@ -1108,6 +1132,8 @@ namespace transport
                 const auto $$__PARAMETER[1]  = this->param_vector[$$__1];
                 const auto $$__COORDINATE[A] = __x.first[$$__A];
                 const auto __Mp              = this->Mp;
+
+                $$__TEMP_POOL{"const auto $1 = $2;"}
 
                 const auto __Hsq = $$__HUBBLE_SQ;
                 const auto __H   = std::sqrt(__Hsq);
@@ -1210,13 +1236,15 @@ namespace transport
         const auto $$__COORDINATE[A] = __x[$$__A];
         const auto __Mp              = this->params.get_Mp();
 
+        $$__TEMP_POOL{"const auto $1 = $2;"}
+
         const auto __Hsq             = $$__HUBBLE_SQ;
         const auto __eps             = $$__EPSILON;
 
+        $$__TEMP_POOL{"const auto $1 = $2;"}
+
         // check whether Hsq is positive
         if(__Hsq < 0) throw Hsq_is_negative(__t);
-
-        $$__TEMP_POOL{"const auto $1 = $2;"}
 
         // check for nan being produced
         if(std::isnan($$__COORDINATE[A])) throw integration_produced_nan(__t);
