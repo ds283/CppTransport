@@ -93,6 +93,17 @@ class u_tensor_factory
     virtual GiNaC::ex compute_Hsq() = 0;
 
     virtual GiNaC::ex compute_eps() = 0;
+    
+    
+    // INTERFACE -- COMPUTE DERIVATIVES OF THE POTENTIAL
+    
+  public:
+    
+    virtual void compute_dV(std::vector<GiNaC::ex>& v, flattener& fl) = 0;
+    
+    virtual void compute_ddV(std::vector<GiNaC::ex>& v, flattener& fl) = 0;
+    
+    virtual void compute_dddV(std::vector<GiNaC::ex>& v, flattener& fl) = 0;
 
 
 		// INTERFACE - UTILITY FUNCTIONS
@@ -173,8 +184,11 @@ class canonical_u_tensor_factory: public u_tensor_factory
 	    : u_tensor_factory(p, c)
       {
       }
-
-    //  CALCULATE DERIVED QUANTITIES
+    
+    virtual ~canonical_u_tensor_factory() = default;
+    
+    
+    // INTERFACE - COMPUTE FLOW TENSORS AND RELATIVES
 
   public:
 
@@ -208,16 +222,15 @@ class canonical_u_tensor_factory: public u_tensor_factory
     virtual void compute_C(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, std::vector<GiNaC::ex>& v, flattener& fl) override;
 
     virtual void compute_C(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener& fl) override;
-
-
+    
     // compute M tensor
 
     virtual void compute_M(std::vector<GiNaC::ex>& v, flattener& fl) override;
 
     virtual void compute_M(GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener& fl) override;
-
-
-    //  CALCULATE GAUGE TRANSFORMATIONS
+    
+    
+    // INTERFACE - CALCULATE GAUGE TRANSFORMATIONS
 
   public:
 
@@ -228,10 +241,26 @@ class canonical_u_tensor_factory: public u_tensor_factory
 		virtual void compute_deltaN_xfm_1(std::vector<GiNaC::ex>& v, flattener& fl) override;
 
 		virtual void compute_deltaN_xfm_2(std::vector<GiNaC::ex>& v, flattener& fl) override;
+    
+    
+    // INTERFACE - COMPUTE BACKGROUND OBJECTS
+    
+  public:
 
     virtual GiNaC::ex compute_Hsq() override;
 
     virtual GiNaC::ex compute_eps() override;
+    
+    
+    // INTERFACE -- COMPUTE DERIVATIVES OF THE POTENTIAL
+  
+  public:
+    
+    virtual void compute_dV(std::vector<GiNaC::ex>& v, flattener& fl) override;
+    
+    virtual void compute_ddV(std::vector<GiNaC::ex>& v, flattener& fl) override;
+    
+    virtual void compute_dddV(std::vector<GiNaC::ex>& v, flattener& fl) override;
 
 
 		// INTERNAL API

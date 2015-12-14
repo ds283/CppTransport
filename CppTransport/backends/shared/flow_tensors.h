@@ -60,6 +60,12 @@ namespace macro_packages
 
         std::unique_ptr<cse_map> pre_sr_velocity(const macro_argument_list& args);
 
+        std::unique_ptr<cse_map> pre_dV(const macro_argument_list& args);
+
+        std::unique_ptr<cse_map> pre_ddV(const macro_argument_list& args);
+
+        std::unique_ptr<cse_map> pre_dddV(const macro_argument_list& args);
+
       };
 
   } // namespace macro_packages

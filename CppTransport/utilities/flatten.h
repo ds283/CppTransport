@@ -4,16 +4,26 @@
 //
 
 
-#ifndef __flatten_H_
-#define __flatten_H_
+#ifndef CPPTRANSPORT_FLATTEN_H
+#define CPPTRANSPORT_FLATTEN_H
 
 #include <math.h>
 
 
 class abstract_flattener
   {
+
+    // CONSTRUCTOR, DESTRUCTOR
+
   public:
+
+    //! constructor
     abstract_flattener(unsigned int s) : size(s) {}
+
+
+    // INTERFACE
+
+  public:
 
     unsigned int get_size()                         { return(this->size); }
     void         set_size(unsigned int s)           { this->size = s; }
@@ -23,20 +33,36 @@ class abstract_flattener
     virtual unsigned int flatten(unsigned int a, unsigned int b) = 0;
     virtual unsigned int flatten(unsigned int a, unsigned int b, unsigned int c) = 0;
 
+
+    // INTERNAL DATA
+
   protected:
+
     unsigned int size;
+
   };
 
 
 class flattener : public abstract_flattener
   {
+
+    // CONSTRUCTOR, DESTRUCTOR
+
   public:
+
+    //! constructor
     flattener(unsigned int s) : abstract_flattener(s) {}
+
+
+    // INTERFACE
+
+  public:
 
     unsigned int flatten(unsigned int a)                                 { return(a); }
     unsigned int flatten(unsigned int a, unsigned int b)                 { return(this->size*a + b); }
     unsigned int flatten(unsigned int a, unsigned int b, unsigned int c) { return(this->size*this->size*a + this->size*b + c); }
+
   };
 
 
-#endif // __flatten_H_
+#endif // CPPTRANSPORT_FLATTEN_H

@@ -641,6 +641,85 @@ GiNaC::ex canonical_u_tensor_factory::compute_eps()
 // *****************************************************************************
 
 
+void canonical_u_tensor_factory::compute_dV(std::vector<GiNaC::ex>& v, flattener& fl)
+  {
+    fl.set_size(this->num_fields);
+    v.clear();
+    v.resize(fl.get_flattened_size(1));
+
+#pragma omp parallel for schedule(dynamic)
+    for(int i = 0; i < this->num_fields; ++i)
+      {
+        unsigned int index = fl.flatten(i);
+
+        if(!this->cache.query(expression_item_types::dV_item, index, v[index]))
+          {
+            this->compute_timer.resume();
+            v[index] = GiNaC::diff(this->V, this->field_list[i]);
+            this->compute_timer.stop();
+            this->cache.store(expression_item_types::dV_item, index, v[index]);
+          }
+      }
+  }
+
+
+void canonical_u_tensor_factory::compute_ddV(std::vector<GiNaC::ex>& v, flattener& fl)
+  {
+    fl.set_size(this->num_fields);
+    v.clear();
+    v.resize(fl.get_flattened_size(2));
+
+#pragma omp parallel for schedule(dynamic)
+    for(int i = 0; i < this->num_fields; ++i)
+      {
+        for(int j = 0; j < this->num_fields; ++j)
+          {
+            unsigned int index = fl.flatten(i,j);
+
+
+            if(!this->cache.query(expression_item_types::ddV_item, index, v[index]))
+              {
+                this->compute_timer.resume();
+                v[index] = GiNaC::diff(this->V, this->field_list[i]);
+                this->compute_timer.stop();
+                this->cache.store(expression_item_types::ddV_item, index, v[index]);
+              }
+          }
+      }
+  }
+
+
+void canonical_u_tensor_factory::compute_dddV(std::vector<GiNaC::ex>& v, flattener& fl)
+  {
+    fl.set_size(this->num_fields);
+    v.clear();
+    v.resize(fl.get_flattened_size(3));
+
+#pragma omp parallel for schedule(dynamic)
+    for(int i = 0; i < this->num_fields; ++i)
+      {
+        for(int j = 0; i < this->num_fields; ++j)
+          {
+            for(int k = 0; k < this->num_fields; ++k)
+              {
+                unsigned int index = fl.flatten(i,j,k);
+
+                if(!this->cache.query(expression_item_types::dddV_item, index, v[index]))
+                  {
+                    this->compute_timer.resume();
+                    v[index] = GiNaC::diff(this->V, this->field_list[i]);
+                    this->compute_timer.stop();
+                    this->cache.store(expression_item_types::dddV_item, index, v[index]);
+                  }
+              }
+          }
+      }
+  }
+
+
+// *****************************************************************************
+
+
 // compute A/H^2 tensor
 GiNaC::ex canonical_u_tensor_factory::compute_A_component(unsigned int i, GiNaC::symbol& k1,
                                                           unsigned int j, GiNaC::symbol& k2,

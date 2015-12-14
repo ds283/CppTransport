@@ -58,43 +58,51 @@ namespace macro_packages
         std::vector<index_rule> package;
 
         const std::vector<replacement_rule_pre> pres =
-          { nullptr,                           nullptr,                 nullptr,
-            BIND1(pre_sr_velocity)
+          { nullptr,                            nullptr,                            nullptr,
+            BIND1(pre_sr_velocity),             BIND1(pre_dV),                      BIND1(pre_ddV),
+            BIND1(pre_dddV)
           };
 
         const std::vector<replacement_rule_post> posts =
-          { nullptr,                           nullptr,                 nullptr,
+          { nullptr,                            nullptr,                            nullptr,
+            nullptr,                            nullptr,                            nullptr,
             nullptr
           };
 
         const std::vector<replacement_rule_index> rules =
-          { BIND3(replace_parameter),          BIND3(replace_field),    BIND3(replace_coordinate),
-            BIND3(replace_1index_field_tensor)
+          { BIND3(replace_parameter),           BIND3(replace_field),               BIND3(replace_coordinate),
+            BIND3(replace_1index_field_tensor), BIND3(replace_1index_field_tensor), BIND3(replace_2index_field_tensor),
+            BIND3(replace_3index_field_tensor)
           };
 
         const std::vector<std::string> names =
-          { "PARAMETER",                       "FIELD",                 "COORDINATE",
-            "SR_VELOCITY"
+          { "PARAMETER",                        "FIELD",                            "COORDINATE",
+            "SR_VELOCITY",                      "DV",                               "DDV",
+            "DDDV"
           };
 
         const std::vector<unsigned int> args =
-          { 0,                                 0,                       0,
+          { 0,                                  0,                                  0,
+            0,                                  0,                                  0,
             0
           };
 
         const std::vector<unsigned int> indices =
-          { 1,                                 1,                       1,
-            1
+          { 1,                                  1,                                  1,
+            1,                                  1,                                  2,
+            3
           };
 
         const std::vector<enum index_class> ranges =
-          { index_class::parameter,            index_class::field_only, index_class::full,
+          { index_class::parameter,             index_class::field_only,            index_class::full,
+            index_class::field_only,            index_class::field_only,            index_class::field_only,
             index_class::field_only
           };
 
         const std::vector<enum unroll_behaviour> unroll =
-          { unroll_behaviour::allow,           unroll_behaviour::allow, unroll_behaviour::allow,
-            unroll_behaviour::allow
+          { unroll_behaviour::allow,            unroll_behaviour::allow,            unroll_behaviour::allow,
+            unroll_behaviour::allow,            unroll_behaviour::force,            unroll_behaviour::force,
+            unroll_behaviour::force
           };
 
         assert(pres.size() == posts.size());
@@ -206,6 +214,33 @@ namespace macro_packages
       {
         std::unique_ptr< std::vector<GiNaC::ex> > container = std::make_unique< std::vector<GiNaC::ex> >();
         this->u_factory.compute_sr_u(*container, this->fl);
+
+        return std::make_unique<cse_map>(std::move(container), this->cse_worker);
+      }
+
+
+    std::unique_ptr<cse_map> flow_tensors::pre_dV(const macro_argument_list& args)
+      {
+        std::unique_ptr< std::vector<GiNaC::ex> > container = std::make_unique< std::vector<GiNaC::ex> >();
+        this->u_factory.compute_dV(*container, this->fl);
+
+        return std::make_unique<cse_map>(std::move(container), this->cse_worker);
+      }
+
+
+    std::unique_ptr<cse_map> flow_tensors::pre_ddV(const macro_argument_list& args)
+      {
+        std::unique_ptr< std::vector<GiNaC::ex> > container = std::make_unique< std::vector<GiNaC::ex> >();
+        this->u_factory.compute_ddV(*container, this->fl);
+
+        return std::make_unique<cse_map>(std::move(container), this->cse_worker);
+      }
+
+
+    std::unique_ptr<cse_map> flow_tensors::pre_dddV(const macro_argument_list& args)
+      {
+        std::unique_ptr< std::vector<GiNaC::ex> > container = std::make_unique< std::vector<GiNaC::ex> >();
+        this->u_factory.compute_dddV(*container, this->fl);
 
         return std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }
