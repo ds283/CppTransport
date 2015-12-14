@@ -680,7 +680,7 @@ void canonical_u_tensor_factory::compute_ddV(std::vector<GiNaC::ex>& v, flattene
             if(!this->cache.query(expression_item_types::ddV_item, index, v[index]))
               {
                 this->compute_timer.resume();
-                v[index] = GiNaC::diff(this->V, this->field_list[i]);
+                v[index] = GiNaC::diff(GiNaC::diff(this->V, this->field_list[j]), this->field_list[i]);
                 this->compute_timer.stop();
                 this->cache.store(expression_item_types::ddV_item, index, v[index]);
               }
@@ -698,7 +698,7 @@ void canonical_u_tensor_factory::compute_dddV(std::vector<GiNaC::ex>& v, flatten
 #pragma omp parallel for schedule(dynamic)
     for(int i = 0; i < this->num_fields; ++i)
       {
-        for(int j = 0; i < this->num_fields; ++j)
+        for(int j = 0; j < this->num_fields; ++j)
           {
             for(int k = 0; k < this->num_fields; ++k)
               {
@@ -707,7 +707,7 @@ void canonical_u_tensor_factory::compute_dddV(std::vector<GiNaC::ex>& v, flatten
                 if(!this->cache.query(expression_item_types::dddV_item, index, v[index]))
                   {
                     this->compute_timer.resume();
-                    v[index] = GiNaC::diff(this->V, this->field_list[i]);
+                    v[index] = GiNaC::diff(GiNaC::diff(GiNaC::diff(this->V, this->field_list[k]), this->field_list[j]), this->field_list[i]);
                     this->compute_timer.stop();
                     this->cache.store(expression_item_types::dddV_item, index, v[index]);
                   }
