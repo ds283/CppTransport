@@ -167,6 +167,9 @@ void macro_agent::unroll_index_assignment(token_list& left_tokens, token_list& r
 
 		if(LHS_assignments.size() > 0)
 			{
+        // compute raw indent for LHS
+        std::string raw_indent = this->compute_prefix(split_result);
+
         for(std::unique_ptr<assignment_list> LHS_assign : LHS_assignments)
 			    {
 				    // evaluate LHS macros on this index assignment;
@@ -206,7 +209,14 @@ void macro_agent::unroll_index_assignment(token_list& left_tokens, token_list& r
 								    // set up replacement right hand side; add trailing ; and , only if the LHS is empty
 						        std::string this_line = right_tokens.to_string() + (left_tokens.size() == 0 && split_result.semicolon ? ";" : "") + (left_tokens.size() == 0 && split_result.comma ? "," : "");
 
-						        r_list.push_back(this_line);
+                    if(left_tokens.size() == 0)   // no need to format for indentation if no LHS; RHS will already include indentation
+                      {
+                        r_list.push_back(this_line);
+                      }
+                    else
+                      {
+                        r_list.push_back(this->dress(this_line, raw_indent, 3));
+                      }
 							    }
 
 								// add a trailing ; and , if the LHS is nonempty
@@ -241,12 +251,13 @@ void macro_agent::unroll_index_assignment(token_list& left_tokens, token_list& r
 						    counter += right_tokens.evaluate_macros(total_assignment);
 						    counter += right_tokens.evaluate_macros(simple_macro_type::post);
 
-								// set up line with macro replacements, and add trailing ; and , if necessary
+								// set up line with macro replacements, and add trailing ; and , if necessary;
+                // since the line includes the full LHS it needs no special formatting to account for indentation
 						    std::string full_line = left_tokens.to_string();
                 if(split_result.type == macro_impl::split_type::sum)       full_line += " =";
                 if(split_result.type == macro_impl::split_type::sum_equal) full_line += " +=";
 
-                full_line += " " + right_tokens.to_string() + (split_result.semicolon ? ";" : "") + (split_result.comma ? "," : "");
+                full_line += (left_tokens.size() > 0 ? " " : "") + right_tokens.to_string() + (split_result.semicolon ? ";" : "") + (split_result.comma ? "," : "");
 								r_list.push_back(full_line);
 							}
 			    }
@@ -305,8 +316,10 @@ macro_impl::split_string macro_agent::split(const std::string& line)
           }
       }
 
-    // trim trailing white space on the right-hand side
+    // trim trailing white space on the right-hand side,
+    // and leading white space if there is a nontrivial left-hand side
     boost::algorithm::trim_right(rval.right);
+    if(rval.left.length() > 0) boost::algorithm::trim_left(rval.right);
 
     // check if the last component is a semicolon
     // note std:string::back() and std::string::pop_back() require C++11

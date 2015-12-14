@@ -103,7 +103,7 @@ namespace macro_packages
             buffer&      buf = this->data_payload.get_stack().top_buffer();
             macro_agent& ms  = this->data_payload.get_stack().top_macro_package();
 
-            // get temporaries which need to be deposited
+            // get any temporaries which need to be deposited
             std::string temps = this->cse_worker.temporaries(this->pool_template);
 
             // apply macro replacement to them, in case this is required
