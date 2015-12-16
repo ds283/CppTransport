@@ -26,7 +26,7 @@ namespace macro_packages
       public:
 
         //! constructor
-        fundamental(u_tensor_factory& uf, flattener& f, cse& cw, translator_data& p, language_printer& prn,
+        fundamental(u_tensor_factory& uf, cse& cw, translator_data& p, language_printer& prn,
                     std::string ls = "{", std::string le = "}", std::string lsep = ",", std::string lpad = " ",
                     std::string t = OUTPUT_CPPTRANSPORT_TAG,
                     std::string ge = "_H",
@@ -39,7 +39,7 @@ namespace macro_packages
             guard_terminator(ge),
             time_format(tf),
             unique(0),
-            replacement_rule_package(uf, f, cw, p, prn)
+            replacement_rule_package(uf, cw, p, prn)
           {
           }
 

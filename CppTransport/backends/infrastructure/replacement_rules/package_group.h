@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __package_group_H_
-#define __package_group_H_
+#ifndef CPPTRANSPORT_PACKAGE_GROUP_H
+#define CPPTRANSPORT_PACKAGE_GROUP_H
 
 #include <memory>
 
@@ -126,14 +126,13 @@ class package_group
 
     // AGENTS
 
-    //! u-tensor factory
+    //! polymorphic pointer to u-tensor factory; exactly which factory is
+    //! involved may depend what kind of model is being processed (eg. canonical, noncanoniocal)
     std::unique_ptr<u_tensor_factory> u_factory;
 
-    //! CSE worker
+    //! polymorphic pointer to CSE worker; as above exactly which CSE scheme is
+    //! invovled may depend what kind of model is being processed
     std::unique_ptr<cse> cse_worker;  // should be set by implementations
-
-    //! flattener
-    std::unique_ptr<flattener> fl;
 
 
     // CODE GENERATION DATA
@@ -190,11 +189,10 @@ void package_group::add_package(Args&& ... args)
   {
     // establish that everything has been set up correctly
     assert(this->u_factory);
-    assert(this->fl);
     assert(this->cse_worker);
 
     // construct a new package of the specified type, forwarding any arguments we were given
-    std::unique_ptr< macro_packages::replacement_rule_package> pkg = std::make_unique<PackageType>(*this->u_factory, *this->fl, *this->cse_worker, std::forward<Args>(args) ...);
+    std::unique_ptr< macro_packages::replacement_rule_package> pkg = std::make_unique<PackageType>(*this->u_factory, *this->cse_worker, std::forward<Args>(args) ...);
     this->packages.push_back(std::move(pkg));
 
     // rebuild ruleset caches
@@ -204,4 +202,4 @@ void package_group::add_package(Args&& ... args)
   }
 
 
-#endif //__package_group_H_
+#endif //CPPTRANSPORT_PACKAGE_GROUP_H

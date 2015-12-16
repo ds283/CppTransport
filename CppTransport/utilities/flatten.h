@@ -7,8 +7,6 @@
 #ifndef CPPTRANSPORT_FLATTEN_H
 #define CPPTRANSPORT_FLATTEN_H
 
-#include <math.h>
-
 
 class abstract_flattener
   {
@@ -18,19 +16,35 @@ class abstract_flattener
   public:
 
     //! constructor
-    abstract_flattener(unsigned int s) : size(s) {}
+    abstract_flattener(unsigned int s)
+      : size(s)
+      {
+      }
 
 
     // INTERFACE
 
   public:
 
-    unsigned int get_size()                         { return(this->size); }
-    void         set_size(unsigned int s)           { this->size = s; }
-    unsigned int get_flattened_size(unsigned int d) { return(d > 0 ? this->size*this->get_flattened_size(d-1) : 1); }
+    //! get size of a flattened d-dimensional array
+    unsigned int get_flattened_size(unsigned int d)
+      {
+        unsigned int s = 1;
+        while(d > 0)
+          {
+            s *= size;
+            --d;
+          }
+        return(s);
+      }
 
+    //! flatten 1-index object
     virtual unsigned int flatten(unsigned int a) = 0;
+
+    //! flatten 2-index object
     virtual unsigned int flatten(unsigned int a, unsigned int b) = 0;
+
+    //! flatten 3-index object
     virtual unsigned int flatten(unsigned int a, unsigned int b, unsigned int c) = 0;
 
 
@@ -38,12 +52,16 @@ class abstract_flattener
 
   protected:
 
+    //! size of each dimension
     unsigned int size;
 
   };
 
 
-class flattener : public abstract_flattener
+// notice that our flattening scheme is never exposed to the external environment;
+// it's purely internal to the translator
+// So there is no need to offer different flattening schemes
+class right_order_flattener : public abstract_flattener
   {
 
     // CONSTRUCTOR, DESTRUCTOR
@@ -51,15 +69,23 @@ class flattener : public abstract_flattener
   public:
 
     //! constructor
-    flattener(unsigned int s) : abstract_flattener(s) {}
+    right_order_flattener(unsigned int s)
+      : abstract_flattener(s)
+      {
+      }
 
 
     // INTERFACE
 
   public:
 
+    //! flatten 1-index object
     unsigned int flatten(unsigned int a)                                 { return(a); }
+
+    //! flatten 2-index object
     unsigned int flatten(unsigned int a, unsigned int b)                 { return(this->size*a + b); }
+
+    //! flatten 3-index object
     unsigned int flatten(unsigned int a, unsigned int b, unsigned int c) { return(this->size*this->size*a + this->size*b + c); }
 
   };

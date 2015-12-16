@@ -173,7 +173,7 @@ namespace macro_packages
         GiNaC::symbol  a = sym_factory.get_symbol(args[A_TENSOR_A_ARGUMENT]);
 
         std::unique_ptr< std::vector<GiNaC::ex> > container = std::make_unique< std::vector<GiNaC::ex> >();
-        this->u_factory.compute_A(k1, k2, k3, a, *container, this->fl);
+        this->u_factory.compute_A(k1, k2, k3, a, *container);
 
         return std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }
@@ -194,7 +194,7 @@ namespace macro_packages
         GiNaC::ex     eps = eps_symbol;
 
         std::unique_ptr< std::vector<GiNaC::ex> > container = std::make_unique< std::vector<GiNaC::ex> >();
-        this->u_factory.compute_A(k1, k2, k3, a, Hsq, eps, *container, this->fl);
+        this->u_factory.compute_A(k1, k2, k3, a, Hsq, eps, *container);
 
         return std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }
@@ -213,7 +213,7 @@ namespace macro_packages
         GiNaC::symbol  a = sym_factory.get_symbol(args[B_TENSOR_A_ARGUMENT]);
 
         std::unique_ptr< std::vector<GiNaC::ex> > container = std::make_unique< std::vector<GiNaC::ex> >();
-        this->u_factory.compute_B(k1, k2, k3, a, *container, this->fl);
+        this->u_factory.compute_B(k1, k2, k3, a, *container);
 
         return std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }
@@ -234,7 +234,7 @@ namespace macro_packages
         GiNaC::ex     eps = eps_symbol;
 
         std::unique_ptr< std::vector<GiNaC::ex> > container = std::make_unique< std::vector<GiNaC::ex> >();
-        this->u_factory.compute_B(k1, k2, k3, a, Hsq, eps, *container, this->fl);
+        this->u_factory.compute_B(k1, k2, k3, a, Hsq, eps, *container);
 
         return std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }
@@ -253,7 +253,7 @@ namespace macro_packages
         GiNaC::symbol  a = sym_factory.get_symbol(args[C_TENSOR_A_ARGUMENT]);
 
         std::unique_ptr< std::vector<GiNaC::ex> > container = std::make_unique< std::vector<GiNaC::ex> >();
-        this->u_factory.compute_C(k1, k2, k3, a, *container, this->fl);
+        this->u_factory.compute_C(k1, k2, k3, a, *container);
 
         return std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }
@@ -274,7 +274,7 @@ namespace macro_packages
         GiNaC::ex     eps = eps_symbol;
 
         std::unique_ptr< std::vector<GiNaC::ex> > container = std::make_unique< std::vector<GiNaC::ex> >();
-        this->u_factory.compute_C(k1, k2, k3, a, Hsq, eps, *container, this->fl);
+        this->u_factory.compute_C(k1, k2, k3, a, Hsq, eps, *container);
 
         return std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }
@@ -286,7 +286,7 @@ namespace macro_packages
     std::unique_ptr<cse_map> lagrangian_tensors::pre_M_tensor(const macro_argument_list& args)
       {
         std::unique_ptr< std::vector<GiNaC::ex> > container = std::make_unique< std::vector<GiNaC::ex> >();
-        this->u_factory.compute_M(*container, this->fl);
+        this->u_factory.compute_M(*container);
 
         return std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }
@@ -302,7 +302,7 @@ namespace macro_packages
         GiNaC::ex     eps = eps_symbol;
 
         std::unique_ptr< std::vector<GiNaC::ex> > container = std::make_unique< std::vector<GiNaC::ex> >();
-        this->u_factory.compute_M(Hsq, eps, *container, this->fl);
+        this->u_factory.compute_M(Hsq, eps, *container);
 
         return std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }

@@ -235,7 +235,7 @@ namespace macro_packages
     std::unique_ptr<cse_map> flow_tensors::pre_sr_velocity(const macro_argument_list& args)
       {
         std::unique_ptr< std::vector<GiNaC::ex> > container = std::make_unique< std::vector<GiNaC::ex> >();
-        this->u_factory.compute_sr_u(*container, this->fl);
+        this->u_factory.compute_sr_u(*container);
 
         return std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }
@@ -244,7 +244,7 @@ namespace macro_packages
     std::unique_ptr<cse_map> flow_tensors::pre_dV(const macro_argument_list& args)
       {
         std::unique_ptr< std::vector<GiNaC::ex> > container = std::make_unique< std::vector<GiNaC::ex> >();
-        this->u_factory.compute_dV(*container, this->fl);
+        this->u_factory.compute_dV(*container);
 
         return std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }
@@ -253,7 +253,7 @@ namespace macro_packages
     std::unique_ptr<cse_map> flow_tensors::pre_ddV(const macro_argument_list& args)
       {
         std::unique_ptr< std::vector<GiNaC::ex> > container = std::make_unique< std::vector<GiNaC::ex> >();
-        this->u_factory.compute_ddV(*container, this->fl);
+        this->u_factory.compute_ddV(*container);
 
         return std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }
@@ -262,7 +262,7 @@ namespace macro_packages
     std::unique_ptr<cse_map> flow_tensors::pre_dddV(const macro_argument_list& args)
       {
         std::unique_ptr< std::vector<GiNaC::ex> > container = std::make_unique< std::vector<GiNaC::ex> >();
-        this->u_factory.compute_dddV(*container, this->fl);
+        this->u_factory.compute_dddV(*container);
 
         return std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }

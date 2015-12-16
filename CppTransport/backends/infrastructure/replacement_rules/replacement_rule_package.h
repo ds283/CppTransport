@@ -34,14 +34,8 @@ namespace macro_packages
 
       public:
 
-        replacement_rule_package(u_tensor_factory& uf, flattener& f, cse& cw, translator_data& p, language_printer& prn)
-          : data_payload(p),
-            printer(prn),
-            u_factory(uf),
-            fl(f),
-            cse_worker(cw)
-          {
-          }
+        //! constructor
+        replacement_rule_package(u_tensor_factory& uf, cse& cw, translator_data& p, language_printer& prn);
 
         // provide virtual destructor so that derived classes delete correctly
         virtual ~replacement_rule_package() = default;
@@ -117,8 +111,11 @@ namespace macro_packages
 
         // INTERNAL AGENTS
 
-        //! index flattener
-        flattener& fl;
+        //! index_flattener -- full
+        right_order_flattener fl;
+
+        //! index flattener -- field space
+        right_order_flattener field_fl;
 
       };
 

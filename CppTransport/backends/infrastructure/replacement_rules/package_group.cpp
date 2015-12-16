@@ -5,6 +5,7 @@
 
 
 #include "package_group.h"
+#include "canonical_u_tensor_factory.h"
 
 #include "formatter.h"
 
@@ -22,7 +23,6 @@ package_group::package_group(translator_data& p, const std::string cmnt, const s
 		statistics_reported(false)
   {
     u_factory = make_u_tensor_factory(data_payload, cache);
-    fl        = std::make_unique<flattener>(1);
   }
 
 

@@ -140,7 +140,7 @@ namespace macro_packages
     std::unique_ptr<cse_map> utensors::pre_u1_tensor(const macro_argument_list& args)
       {
         std::unique_ptr< std::vector<GiNaC::ex> > container = std::make_unique< std::vector<GiNaC::ex> >();
-        this->u_factory.compute_u1(*container, this->fl);
+        this->u_factory.compute_u1(*container);
 
         return std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }
@@ -156,7 +156,7 @@ namespace macro_packages
         GiNaC::ex     eps = eps_symbol;
 
         std::unique_ptr< std::vector<GiNaC::ex> > container = std::make_unique< std::vector<GiNaC::ex> >();
-        this->u_factory.compute_u1(Hsq, eps, *container, this->fl);
+        this->u_factory.compute_u1(Hsq, eps, *container);
 
         return std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }
@@ -173,7 +173,7 @@ namespace macro_packages
         GiNaC::symbol a = sym_factory.get_symbol(args[U2_A_ARGUMENT]);
 
         std::unique_ptr< std::vector<GiNaC::ex> > container = std::make_unique< std::vector<GiNaC::ex> >();
-        this->u_factory.compute_u2(k, a, *container, this->fl);
+        this->u_factory.compute_u2(k, a, *container);
 
         return std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }
@@ -192,7 +192,7 @@ namespace macro_packages
         GiNaC::ex     eps = eps_symbol;
 
         std::unique_ptr< std::vector<GiNaC::ex> > container = std::make_unique< std::vector<GiNaC::ex> >();
-        this->u_factory.compute_u2(k, a, Hsq, eps, *container, this->fl);
+        this->u_factory.compute_u2(k, a, Hsq, eps, *container);
 
         return std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }
@@ -211,7 +211,7 @@ namespace macro_packages
         GiNaC::symbol  a = sym_factory.get_symbol(args[U3_A_ARGUMENT]);
 
         std::unique_ptr< std::vector<GiNaC::ex> > container = std::make_unique< std::vector<GiNaC::ex> >();
-        this->u_factory.compute_u3(k1, k2, k3, a, *container, this->fl);
+        this->u_factory.compute_u3(k1, k2, k3, a, *container);
 
         return std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }
@@ -232,7 +232,7 @@ namespace macro_packages
         GiNaC::ex     eps = eps_symbol;
 
         std::unique_ptr< std::vector<GiNaC::ex> > container = std::make_unique< std::vector<GiNaC::ex> >();
-        this->u_factory.compute_u3(k1, k2, k3, a, Hsq, eps, *container, this->fl);
+        this->u_factory.compute_u3(k1, k2, k3, a, Hsq, eps, *container);
 
         return std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }

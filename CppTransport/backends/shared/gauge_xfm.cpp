@@ -129,7 +129,7 @@ namespace macro_packages
         GiNaC::ex     eps = eps_symbol;
 
         std::unique_ptr< std::vector<GiNaC::ex> > container = std::make_unique< std::vector<GiNaC::ex> >();
-        this->u_factory.compute_zeta_xfm_1(Hsq, eps, *container, this->fl);
+        this->u_factory.compute_zeta_xfm_1(Hsq, eps, *container);
 
         return std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }
@@ -150,7 +150,7 @@ namespace macro_packages
         GiNaC::ex     eps = eps_symbol;
 
         std::unique_ptr< std::vector<GiNaC::ex> > container = std::make_unique< std::vector<GiNaC::ex> >();
-        this->u_factory.compute_zeta_xfm_2(k, k1, k2, a, Hsq, eps, *container, this->fl);
+        this->u_factory.compute_zeta_xfm_2(k, k1, k2, a, Hsq, eps, *container);
 
         return std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }
@@ -159,7 +159,7 @@ namespace macro_packages
     std::unique_ptr<cse_map> gauge_xfm::pre_deltaN_xfm_1(const macro_argument_list& args)
 	    {
         std::unique_ptr< std::vector<GiNaC::ex> > container = std::make_unique< std::vector<GiNaC::ex> >();
-        this->u_factory.compute_deltaN_xfm_1(*container, this->fl);
+        this->u_factory.compute_deltaN_xfm_1(*container);
 
         return std::make_unique<cse_map>(std::move(container), this->cse_worker);
 	    }
@@ -168,7 +168,7 @@ namespace macro_packages
     std::unique_ptr<cse_map> gauge_xfm::pre_deltaN_xfm_2(const macro_argument_list& args)
 	    {
         std::unique_ptr< std::vector<GiNaC::ex> > container = std::make_unique< std::vector<GiNaC::ex> >();
-        this->u_factory.compute_deltaN_xfm_2(*container, this->fl);
+        this->u_factory.compute_deltaN_xfm_2(*container);
 
         return std::make_unique<cse_map>(std::move(container), this->cse_worker);
 	    }

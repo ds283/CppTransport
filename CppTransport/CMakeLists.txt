@@ -595,6 +595,7 @@ SET(TRANSPORT_OBJECTS_FILES
   transport-objects/canonical_u_tensor_factory.cpp
   transport-objects/u_tensor_factory.cpp
   transport-objects/u_tensor_factory.h
+  transport-objects/canonical_u_tensor_factory.h
   )
 
 SET(BACKENDS_LANGUAGES_CPP_VEXCL_FILES

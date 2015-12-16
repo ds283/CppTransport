@@ -25,8 +25,8 @@ namespace macro_packages
       public:
 
         //! constructor
-        flow_tensors(u_tensor_factory& uf, flattener& f, cse& cw, translator_data& p, language_printer& prn)
-          : replacement_rule_package(uf, f, cw, p, prn)
+        flow_tensors(u_tensor_factory& uf, cse& cw, translator_data& p, language_printer& prn)
+          : replacement_rule_package(uf, cw, p, prn)
           {
           }
 

@@ -24,12 +24,12 @@ namespace macro_packages
     constexpr unsigned int TEMP_POOL_TOTAL_ARGUMENTS = 1;
 
 
-    temporary_pool::temporary_pool(u_tensor_factory& uf, flattener& f, cse& cw, translator_data& p, language_printer& prn,
+    temporary_pool::temporary_pool(u_tensor_factory& uf, cse& cw, translator_data& p, language_printer& prn,
                                    std::string t)
 	    : pool_template(t),
         unique(0),
         tag_set(false),
-        replacement_rule_package(uf, f, cw, p, prn)
+        replacement_rule_package(uf, cw, p, prn)
 	    {
 	    }
 
