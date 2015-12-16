@@ -77,16 +77,22 @@ namespace macro_packages
 
       protected:
 
+        //! generic CSE-map replacement rule for 1-index full tensor
         std::string replace_1index_tensor(const macro_argument_list& args, const assignment_list& indices, cse_map* map);
 
+        //! generic CSE-map replacement rule for 2-index full tensopr
         std::string replace_2index_tensor(const macro_argument_list& args, const assignment_list& indices, cse_map* map);
 
+        //! generic CSE-map replacement rule for 3-index full tensor
         std::string replace_3index_tensor(const macro_argument_list& args, const assignment_list& indices, cse_map* map);
 
+        //! generic CSE-map replacement rule for 1-index field-space tensor
         std::string replace_1index_field_tensor(const macro_argument_list& args, const assignment_list& indices, cse_map* map);
 
+        //! generic CSE-map replacement rule for 2-index field-space tensor
         std::string replace_2index_field_tensor(const macro_argument_list& args, const assignment_list& indices, cse_map* map);
 
+        //! generic CSE-map replacement rule for 3-index field-space tensor
         std::string replace_3index_field_tensor(const macro_argument_list& args, const assignment_list& indices, cse_map* map);
 
 
@@ -94,12 +100,25 @@ namespace macro_packages
 
       protected:
 
-        translator_data&  data_payload;
+        // REFERENCES TO EXTERNALLY-SUPPLIED AGENTS
+
+        //! data payload from parent translator
+        translator_data& data_payload;
+
+        //! language-printer
         language_printer& printer;
 
+        //! u-tensor factory
         u_tensor_factory& u_factory;
-        flattener&        fl;
-        cse&              cse_worker;
+
+        // CSE worker object
+        cse& cse_worker;
+
+
+        // INTERNAL AGENTS
+
+        //! index flattener
+        flattener& fl;
 
       };
 
