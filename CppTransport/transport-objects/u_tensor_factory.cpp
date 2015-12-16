@@ -87,8 +87,20 @@ std::unique_ptr<GiNaC::exmap> u_tensor_factory::substitution_map(const std::vect
   }
 
 
-GiNaC::ex u_tensor_factory::substitute_V(const GiNaC::exmap& map)
+GiNaC::ex u_tensor_factory::substitute_V(const GiNaC::exmap& map, const std::vector<GiNaC::ex>& args)
   {
+    GiNaC::ex result;
+
+    if(!this->cache.query(expression_item_types::V_item, 0, args, result))
+      {
+        this->compute_timer.resume();
+
+        result = this->V.subs(map, GiNaC::subs_options::no_pattern);
+        this->cache.store(expression_item_types::V_item, 0, args, result);
+
+        this->compute_timer.stop();
+      }
+
     // disable unneeded pattern-matching for speed
-    return this->V.subs(map, GiNaC::subs_options::no_pattern);
+    return result;
   }

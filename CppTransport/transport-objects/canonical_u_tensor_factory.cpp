@@ -634,6 +634,9 @@ void canonical_u_tensor_factory::compute_dV(const std::vector<GiNaC::symbol>& pa
     std::copy(params.begin(), params.end(), std::back_inserter(args));
     std::copy(fields.begin(), fields.end(), std::back_inserter(args));
 
+    GiNaC::ex subs_V;
+    bool cached = false;
+
 #pragma omp parallel for schedule(dynamic)
     for(int i = 0; i < this->num_fields; ++i)
       {
@@ -643,8 +646,12 @@ void canonical_u_tensor_factory::compute_dV(const std::vector<GiNaC::symbol>& pa
           {
             this->compute_timer.resume();
 
-            std::unique_ptr<GiNaC::exmap> map = this->substitution_map(params, fields);
-            GiNaC::ex subs_V = this->substitute_V(*map);
+            if(!cached)
+              {
+                std::unique_ptr<GiNaC::exmap> map = this->substitution_map(params, fields);
+                subs_V = this->substitute_V(*map, args);
+                cached = true;
+              }
 
             v[index] = GiNaC::diff(subs_V, fields[i]);
 
@@ -665,6 +672,9 @@ void canonical_u_tensor_factory::compute_ddV(const std::vector<GiNaC::symbol>& p
     std::copy(params.begin(), params.end(), std::back_inserter(args));
     std::copy(fields.begin(), fields.end(), std::back_inserter(args));
 
+    GiNaC::ex subs_V;
+    bool cached = false;
+
 #pragma omp parallel for schedule(dynamic)
     for(int i = 0; i < this->num_fields; ++i)
       {
@@ -676,8 +686,12 @@ void canonical_u_tensor_factory::compute_ddV(const std::vector<GiNaC::symbol>& p
               {
                 this->compute_timer.resume();
 
-                std::unique_ptr<GiNaC::exmap> map = this->substitution_map(params, fields);
-                GiNaC::ex subs_V = this->substitute_V(*map);
+                if(!cached)
+                  {
+                    std::unique_ptr<GiNaC::exmap> map = this->substitution_map(params, fields);
+                    subs_V = this->substitute_V(*map, args);
+                    cached = true;
+                  }
 
                 v[index] = GiNaC::diff(GiNaC::diff(subs_V, fields[j]), fields[i]);
 
@@ -699,6 +713,9 @@ void canonical_u_tensor_factory::compute_dddV(const std::vector<GiNaC::symbol>& 
     std::copy(params.begin(), params.end(), std::back_inserter(args));
     std::copy(fields.begin(), fields.end(), std::back_inserter(args));
 
+    GiNaC::ex subs_V;
+    bool cached = false;
+
 #pragma omp parallel for schedule(dynamic)
     for(int i = 0; i < this->num_fields; ++i)
       {
@@ -712,8 +729,12 @@ void canonical_u_tensor_factory::compute_dddV(const std::vector<GiNaC::symbol>& 
                   {
                     this->compute_timer.resume();
 
-                    std::unique_ptr<GiNaC::exmap> map = this->substitution_map(params, fields);
-                    GiNaC::ex subs_V = this->substitute_V(*map);
+                    if(!cached)
+                      {
+                        std::unique_ptr<GiNaC::exmap> map = this->substitution_map(params, fields);
+                        subs_V = this->substitute_V(*map, args);
+                        cached = true;
+                      }
 
                     v[index] = GiNaC::diff(GiNaC::diff(GiNaC::diff(subs_V, fields[k]), fields[j]), fields[i]);
 

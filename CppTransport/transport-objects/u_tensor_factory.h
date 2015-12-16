@@ -138,7 +138,7 @@ class u_tensor_factory
     std::unique_ptr<GiNaC::exmap> substitution_map(const std::vector<GiNaC::symbol>& params, const std::vector<GiNaC::symbol>& fields);
 
     //! apply a substitution map to the potential
-    GiNaC::ex substitute_V(const GiNaC::exmap& map);
+    GiNaC::ex substitute_V(const GiNaC::exmap& map, const std::vector<GiNaC::ex>& args);
 
 
 		// INTERFACE - STATISTICS
