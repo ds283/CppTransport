@@ -90,6 +90,18 @@ namespace macro_packages
         std::string replace_3index_field_tensor(const macro_argument_list& args, const assignment_list& indices, cse_map* map);
 
 
+        // INTERFACE -- INTERNAL API
+        // UTILITY FUNCTIONS TO BUILD PARAMETER/FIELD/COORDINATE REPLACEMENT LISTS
+
+      protected:
+
+        //! build parameter list from a kernel
+        std::unique_ptr< std::vector<GiNaC::symbol> > parameter_list(const std::string& kernel);
+
+        //! build field list from a kernel
+        std::unique_ptr< std::vector<GiNaC::symbol> > field_list(const std::string& kernel, const std::string& flatten);
+
+
         // INTERNAL DATA
 
       protected:
@@ -107,6 +119,18 @@ namespace macro_packages
 
         // CSE worker object
         cse& cse_worker;
+
+
+        // CACHE USEFUL OBJECTS
+
+        //! number of fields
+        const unsigned int num_fields;
+
+        //! number of parameters
+        const unsigned int num_params;
+
+        //! symbol factory
+        symbol_factory& sym_factory;
 
 
         // INTERNAL AGENTS

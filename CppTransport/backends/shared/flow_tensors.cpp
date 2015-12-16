@@ -36,13 +36,22 @@ namespace macro_packages
     constexpr unsigned int SR_VELOCITY_TOTAL_ARGUMENTS = 0;
     constexpr unsigned int SR_VELOCITY_TOTAL_INDICES = 1;
 
-    constexpr unsigned int DV_TOTAL_ARGUMENTS = 0;
+    constexpr unsigned int DV_PARAM_KERNEL_ARGUMENT = 0;
+    constexpr unsigned int DV_COORD_KERNEL_ARGUMENT = 1;
+    constexpr unsigned int DV_FLATTEN_ARGUMENT = 2;
+    constexpr unsigned int DV_TOTAL_ARGUMENTS = 3;
     constexpr unsigned int DV_TOTAL_INDICES = 1;
 
-    constexpr unsigned int DDV_TOTAL_ARGUMENTS = 0;
+    constexpr unsigned int DDV_PARAM_KERNEL_ARGUMENT = 0;
+    constexpr unsigned int DDV_COORD_KERNEL_ARGUMENT = 1;
+    constexpr unsigned int DDV_FLATTEN_ARGUMENT = 2;
+    constexpr unsigned int DDV_TOTAL_ARGUMENTS = 3;
     constexpr unsigned int DDV_TOTAL_INDICES = 2;
 
-    constexpr unsigned int DDDV_TOTAL_ARGUMENTS = 0;
+    constexpr unsigned int DDDV_PARAM_KERNEL_ARGUMENT = 0;
+    constexpr unsigned int DDDV_COORD_KERNEL_ARGUMENT = 1;
+    constexpr unsigned int DDDV_FLATTEN_ARGUMENT = 2;
+    constexpr unsigned int DDDV_TOTAL_ARGUMENTS = 3;
     constexpr unsigned int DDDV_TOTAL_INDICES = 3;
 
     const std::vector<simple_rule> flow_tensors::get_pre_rules()
@@ -243,8 +252,15 @@ namespace macro_packages
 
     std::unique_ptr<cse_map> flow_tensors::pre_dV(const macro_argument_list& args)
       {
+        std::string param_kernel = args[DV_PARAM_KERNEL_ARGUMENT];
+        std::string coord_kernel = args[DV_COORD_KERNEL_ARGUMENT];
+        std::string flattener    = args[DV_FLATTEN_ARGUMENT];
+
+        std::unique_ptr< std::vector<GiNaC::symbol> > params = this->parameter_list(param_kernel);
+        std::unique_ptr< std::vector<GiNaC::symbol> > fields = this->field_list(coord_kernel, flattener);
+
         std::unique_ptr< std::vector<GiNaC::ex> > container = std::make_unique< std::vector<GiNaC::ex> >();
-        this->u_factory.compute_dV(*container);
+        this->u_factory.compute_dV(*params, *fields, *container);
 
         return std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }
@@ -252,8 +268,15 @@ namespace macro_packages
 
     std::unique_ptr<cse_map> flow_tensors::pre_ddV(const macro_argument_list& args)
       {
+        std::string param_kernel = args[DDV_PARAM_KERNEL_ARGUMENT];
+        std::string coord_kernel = args[DDV_COORD_KERNEL_ARGUMENT];
+        std::string flattener    = args[DDV_FLATTEN_ARGUMENT];
+
+        std::unique_ptr< std::vector<GiNaC::symbol> > params = this->parameter_list(param_kernel);
+        std::unique_ptr< std::vector<GiNaC::symbol> > fields = this->field_list(coord_kernel, flattener);
+
         std::unique_ptr< std::vector<GiNaC::ex> > container = std::make_unique< std::vector<GiNaC::ex> >();
-        this->u_factory.compute_ddV(*container);
+        this->u_factory.compute_ddV(*params, *fields, *container);
 
         return std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }
@@ -261,8 +284,15 @@ namespace macro_packages
 
     std::unique_ptr<cse_map> flow_tensors::pre_dddV(const macro_argument_list& args)
       {
+        std::string param_kernel = args[DDDV_PARAM_KERNEL_ARGUMENT];
+        std::string coord_kernel = args[DDDV_COORD_KERNEL_ARGUMENT];
+        std::string flattener    = args[DDDV_FLATTEN_ARGUMENT];
+
+        std::unique_ptr< std::vector<GiNaC::symbol> > params = this->parameter_list(param_kernel);
+        std::unique_ptr< std::vector<GiNaC::symbol> > fields = this->field_list(coord_kernel, flattener);
+
         std::unique_ptr< std::vector<GiNaC::ex> > container = std::make_unique< std::vector<GiNaC::ex> >();
-        this->u_factory.compute_dddV(*container);
+        this->u_factory.compute_dddV(*params, *fields, *container);
 
         return std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }

@@ -7,6 +7,7 @@
 #define __u_tensor_factory_H_
 
 #include <iostream>
+#include <stdexcept>
 
 #include "flatten.h"
 #include "ginac_cache.h"
@@ -99,41 +100,45 @@ class u_tensor_factory
     
   public:
     
-    virtual void compute_dV(std::vector<GiNaC::ex>& v) = 0;
+    virtual void compute_dV(const std::vector<GiNaC::symbol>& params, const std::vector<GiNaC::symbol>& fields,
+                            std::vector<GiNaC::ex>& v) = 0;
     
-    virtual void compute_ddV(std::vector<GiNaC::ex>& v) = 0;
+    virtual void compute_ddV(const std::vector<GiNaC::symbol>& params, const std::vector<GiNaC::symbol>& fields,
+                             std::vector<GiNaC::ex>& v) = 0;
     
-    virtual void compute_dddV(std::vector<GiNaC::ex>& v) = 0;
+    virtual void compute_dddV(const std::vector<GiNaC::symbol>& params, const std::vector<GiNaC::symbol>& fields,
+                              std::vector<GiNaC::ex>& v) = 0;
 
 
-		// INTERFACE - UTILITY FUNCTIONS
+		// INTERNAL API - UTILITY FUNCTIONS
 
   protected:
 
-    unsigned int species(unsigned int z)
-      {
-        return (z >= this->num_fields ? z - this->num_fields : z);
-      }
+    //! return species index corresponding to a given full-phase-space index
+    unsigned int species(unsigned int z);
 
-    unsigned int momentum(unsigned int z)
-      {
-        return (z >= this->num_fields ? z : z + this->num_fields);
-      }
+    //! return momentum index corresponding to a given full-phase-space index
+    unsigned int momentum(unsigned int z);
 
-    const GiNaC::symbol& coordinate(unsigned int z)
-      {
-        return ((z < this->num_fields) ? this->field_list[z] : this->deriv_list[z - this->num_fields]);
-      }
+    //! return GiNaC symbol for a given full-phase-space coordinate
+    const GiNaC::symbol& coordinate(unsigned int z);
 
-    bool is_field(unsigned int z)
-      {
-        return (z < this->num_fields);
-      }
+    //! is this full-phase-space index a field?
+    bool is_field(unsigned int z);
 
-    bool is_momentum(unsigned int z)
-      {
-        return (z >= this->num_fields && z < 2 * this->num_fields);
-      }
+    //! is this full-phase-space index a coordinate?
+    bool is_momentum(unsigned int z);
+
+
+    // INTERNAL API - GINAC SUBSTITUTION
+
+  protected:
+
+    //! build substitution map for parameters+fields combination
+    std::unique_ptr<GiNaC::exmap> substitution_map(const std::vector<GiNaC::symbol>& params, const std::vector<GiNaC::symbol>& fields);
+
+    //! apply a substitution map to the potential
+    GiNaC::ex substitute_V(const GiNaC::exmap& map);
 
 
 		// INTERFACE - STATISTICS
@@ -154,6 +159,9 @@ class u_tensor_factory
 		//! cache number of fields
     const unsigned int num_fields;
 
+    //! cache number of parameters
+    const unsigned int num_params;
+
     //! cache M_Planck symbol
     const GiNaC::symbol& M_Planck;
 
@@ -165,6 +173,9 @@ class u_tensor_factory
 
     //! list of symbols representing derivatives in the model
     const std::vector<GiNaC::symbol> deriv_list;
+
+    //! list of symbols representing parameters in the model
+    const std::vector<GiNaC::symbol> param_list;
 
     //! reference to GiNaC expression cache, used to cache the output from our calculations.
     //! the cache is intended to avoid expensive recomputation where possible
@@ -178,6 +189,25 @@ class u_tensor_factory
 
     //! flattener -- field-space tensors
     right_order_flattener field_fl;
+
+  };
+
+
+class u_tensor_exception: std::runtime_error
+  {
+
+    // CONSTRUCTOR, DESTRUCTOR
+
+  public:
+
+    //! constructor
+    u_tensor_exception(const std::string& msg)
+      : std::runtime_error(msg)
+      {
+      }
+
+    //! destructor is default
+    virtual ~u_tensor_exception() = default;
 
   };
 

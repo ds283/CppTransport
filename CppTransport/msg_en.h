@@ -111,6 +111,8 @@
 #define ERROR_INDEX_DATABASE_EMPLACE_FAIL     "Internal error: emplacement in index database failed"
 #define ERROR_INDEX_DATABASE_OUT_OF_RANGE     "Internal error: out of range access in index database"
 
+#define ERROR_SUBSTITUTION_FAILURE            "Internal error: substitution failure"
+
 #define ERROR_NO_BUFFER_REGISTERED            "Internal error: TemporaryPool macro package in use, but no buffer registered"
 #define ERROR_NO_MACROS_REGISTERED            "Internal error: TemporaryPool macro package in use, but no macro set registered"
 

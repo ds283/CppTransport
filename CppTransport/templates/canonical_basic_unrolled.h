@@ -17,6 +17,7 @@
 
 namespace transport
   {
+
     // set up a state type for 2pf integration
     template <typename number>
     using twopf_state = std::vector<number>;
@@ -127,36 +128,27 @@ namespace transport
     template <typename number>
     void compute_dV(number* raw_params, const std::vector<number>& __x, number* dV)
       {
-        const auto $$__PARAMETER[1]  = raw_params[$$__1];
-        const auto $$__COORDINATE[A] = __x[FLATTEN($$__A)];
-
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
-        dV[FLATTEN($$__a)] = $$__DV[a];
+        dV[FLATTEN($$__a)] = $$__DV[a]{raw_params, __x, FLATTEN};
       }
 
 
     template <typename number>
     void compute_ddV(number* raw_params, const std::vector<number>& __x, number* ddV)
       {
-        const auto $$__PARAMETER[1]  = raw_params[$$__1];
-        const auto $$__COORDINATE[A] = __x[FLATTEN($$__A)];
-
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
-        ddV[FLATTEN($$__a,$$__b)] = $$__DDV[ab];
+        ddV[FLATTEN($$__a,$$__b)] = $$__DDV[ab]{raw_params, __x, FLATTEN};
       }
 
 
     template <typename number>
     void compute_dddV(number* raw_params, const std::vector<number>& __x, number* dddV)
       {
-        const auto $$__PARAMETER[1]  = raw_params[$$__1];
-        const auto $$__COORDINATE[A] = __x[FLATTEN($$__A)];
-
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
-        dddV[FLATTEN($$__a,$$__b,$$__c)] = $$__DDDV[abc];
+        dddV[FLATTEN($$__a,$$__b,$$__c)] = $$__DDDV[abc]{raw_params, __x, FLATTEN};
       }
 
 

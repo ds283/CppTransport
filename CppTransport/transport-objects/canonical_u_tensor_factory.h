@@ -95,11 +95,14 @@ class canonical_u_tensor_factory: public u_tensor_factory
 
   public:
 
-    virtual void compute_dV(std::vector<GiNaC::ex>& v) override;
+    virtual void compute_dV(const std::vector<GiNaC::symbol>& params, const std::vector<GiNaC::symbol>& fields,
+                            std::vector<GiNaC::ex>& v) override;
 
-    virtual void compute_ddV(std::vector<GiNaC::ex>& v) override;
+    virtual void compute_ddV(const std::vector<GiNaC::symbol>& params, const std::vector<GiNaC::symbol>& fields,
+                             std::vector<GiNaC::ex>& v) override;
 
-    virtual void compute_dddV(std::vector<GiNaC::ex>& v) override;
+    virtual void compute_dddV(const std::vector<GiNaC::symbol>& params, const std::vector<GiNaC::symbol>& fields,
+                              std::vector<GiNaC::ex>& v) override;
 
 
 		// INTERNAL API

@@ -624,10 +624,15 @@ GiNaC::ex canonical_u_tensor_factory::compute_eps()
 // *****************************************************************************
 
 
-void canonical_u_tensor_factory::compute_dV(std::vector<GiNaC::ex>& v)
+void canonical_u_tensor_factory::compute_dV(const std::vector<GiNaC::symbol>& params, const std::vector<GiNaC::symbol>& fields,
+                                            std::vector<GiNaC::ex>& v)
   {
     v.clear();
     v.resize(field_fl.get_flattened_size(1));
+
+    std::vector<GiNaC::ex> args;
+    std::copy(params.begin(), params.end(), std::back_inserter(args));
+    std::copy(fields.begin(), fields.end(), std::back_inserter(args));
 
 #pragma omp parallel for schedule(dynamic)
     for(int i = 0; i < this->num_fields; ++i)
@@ -637,18 +642,28 @@ void canonical_u_tensor_factory::compute_dV(std::vector<GiNaC::ex>& v)
         if(!this->cache.query(expression_item_types::dV_item, index, v[index]))
           {
             this->compute_timer.resume();
-            v[index] = GiNaC::diff(this->V, this->field_list[i]);
+
+            std::unique_ptr<GiNaC::exmap> map = this->substitution_map(params, fields);
+            GiNaC::ex subs_V = this->substitute_V(*map);
+
+            v[index] = GiNaC::diff(subs_V, fields[i]);
+
             this->compute_timer.stop();
-            this->cache.store(expression_item_types::dV_item, index, v[index]);
+            this->cache.store(expression_item_types::dV_item, index, args, v[index]);
           }
       }
   }
 
 
-void canonical_u_tensor_factory::compute_ddV(std::vector<GiNaC::ex>& v)
+void canonical_u_tensor_factory::compute_ddV(const std::vector<GiNaC::symbol>& params, const std::vector<GiNaC::symbol>& fields,
+                                             std::vector<GiNaC::ex>& v)
   {
     v.clear();
     v.resize(field_fl.get_flattened_size(2));
+
+    std::vector<GiNaC::ex> args;
+    std::copy(params.begin(), params.end(), std::back_inserter(args));
+    std::copy(fields.begin(), fields.end(), std::back_inserter(args));
 
 #pragma omp parallel for schedule(dynamic)
     for(int i = 0; i < this->num_fields; ++i)
@@ -657,23 +672,32 @@ void canonical_u_tensor_factory::compute_ddV(std::vector<GiNaC::ex>& v)
           {
             unsigned int index = field_fl.flatten(i,j);
 
-
             if(!this->cache.query(expression_item_types::ddV_item, index, v[index]))
               {
                 this->compute_timer.resume();
-                v[index] = GiNaC::diff(GiNaC::diff(this->V, this->field_list[j]), this->field_list[i]);
+
+                std::unique_ptr<GiNaC::exmap> map = this->substitution_map(params, fields);
+                GiNaC::ex subs_V = this->substitute_V(*map);
+
+                v[index] = GiNaC::diff(GiNaC::diff(subs_V, fields[j]), fields[i]);
+
                 this->compute_timer.stop();
-                this->cache.store(expression_item_types::ddV_item, index, v[index]);
+                this->cache.store(expression_item_types::ddV_item, index, args, v[index]);
               }
           }
       }
   }
 
 
-void canonical_u_tensor_factory::compute_dddV(std::vector<GiNaC::ex>& v)
+void canonical_u_tensor_factory::compute_dddV(const std::vector<GiNaC::symbol>& params, const std::vector<GiNaC::symbol>& fields,
+                                              std::vector<GiNaC::ex>& v)
   {
     v.clear();
     v.resize(field_fl.get_flattened_size(3));
+
+    std::vector<GiNaC::ex> args;
+    std::copy(params.begin(), params.end(), std::back_inserter(args));
+    std::copy(fields.begin(), fields.end(), std::back_inserter(args));
 
 #pragma omp parallel for schedule(dynamic)
     for(int i = 0; i < this->num_fields; ++i)
@@ -687,9 +711,14 @@ void canonical_u_tensor_factory::compute_dddV(std::vector<GiNaC::ex>& v)
                 if(!this->cache.query(expression_item_types::dddV_item, index, v[index]))
                   {
                     this->compute_timer.resume();
-                    v[index] = GiNaC::diff(GiNaC::diff(GiNaC::diff(this->V, this->field_list[k]), this->field_list[j]), this->field_list[i]);
+
+                    std::unique_ptr<GiNaC::exmap> map = this->substitution_map(params, fields);
+                    GiNaC::ex subs_V = this->substitute_V(*map);
+
+                    v[index] = GiNaC::diff(GiNaC::diff(GiNaC::diff(subs_V, fields[k]), fields[j]), fields[i]);
+
                     this->compute_timer.stop();
-                    this->cache.store(expression_item_types::dddV_item, index, v[index]);
+                    this->cache.store(expression_item_types::dddV_item, index, args, v[index]);
                   }
               }
           }
