@@ -13,7 +13,7 @@
 #include "stepper.h"
 
 
-namespace cpp
+namespace vexcl
   {
 
     class vexcl_steppers: public ::macro_packages::replacement_rule_package

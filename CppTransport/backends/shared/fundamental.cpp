@@ -23,38 +23,64 @@
 namespace macro_packages
   {
 
+    constexpr unsigned int TOOL_TOTAL_ARGUMENTS = 0;
+    constexpr unsigned int VERSION_TOTAL_ARGUMENTS = 0;
+    constexpr unsigned int GUARD_TOTAL_ARGUMENTS = 0;
+    constexpr unsigned int DATE_TOTAL_ARGUMENTS = 0;
+    constexpr unsigned int SOURCE_TOTAL_ARGUMENTS = 0;
+    constexpr unsigned int NAME_TOTAL_ARGUMENTS = 0;
+    constexpr unsigned int AUTHOR_TOTAL_ARGUMENTS = 0;
+    constexpr unsigned int TAG_TOTAL_ARGUMENTS = 0;
+    constexpr unsigned int MODEL_TOTAL_ARGUMENTS = 0;
+    constexpr unsigned int UNIQUE_ID_TOTAL_ARGUMENTS = 0;
+    constexpr unsigned int HEADER_TOTAL_ARGUMENTS = 0;
+    constexpr unsigned int CORE_TOTAL_ARGUMENTS = 0;
+    constexpr unsigned int NUMBER_FIELDS_TOTAL_ARGUMENTS = 0;
+    constexpr unsigned int NUMBER_PARAMS_TOTAL_ARGUMENTS = 0;
+    constexpr unsigned int FIELD_LIST_TOTAL_ARGUMENTS = 0;
+    constexpr unsigned int LATEX_LIST_TOTAL_ARGUMENTS = 0;
+    constexpr unsigned int PARAM_LIST_TOTAL_ARGUMENTS = 0;
+    constexpr unsigned int PLATX_LIST_TOTAL_ARGUMENTS = 0;
+    constexpr unsigned int STATE_LIST_TOTAL_ARGUMENTS = 0;
+    constexpr unsigned int BACKG_ABS_ERR_TOTAL_ARGUMENTS = 0;
+    constexpr unsigned int BACKG_REL_ERR_TOTAL_ARGUMENTS = 0;
+    constexpr unsigned int BACKG_STEP_TOTAL_ARGUMENTS = 0;
+    constexpr unsigned int BACKG_NAME_TOTAL_ARGUMENTS = 0;
+    constexpr unsigned int PERT_ABS_ERR_TOTAL_ARGUMENTS = 0;
+    constexpr unsigned int PERT_REL_ERR_TOTAL_ARGUMENTS = 0;
+    constexpr unsigned int PERT_STEP_TOTAL_ARGUMENTS = 0;
+    constexpr unsigned int PERT_NAME_TOTAL_ARGUMENTS = 0;
+
+
     const std::vector<simple_rule> fundamental::get_pre_rules()
       {
         std::vector<simple_rule> package;
 
         const std::vector<replacement_rule_simple> rules =
-          { BIND(replace_tool) ,          BIND(replace_version),        BIND(replace_guard),       BIND(replace_date),        BIND(replace_source),
-            BIND(replace_name),           BIND(replace_author),         BIND(replace_tag),         BIND(replace_model),       BIND(replace_uid),
-            BIND(replace_header),         BIND(replace_core),
-            BIND(replace_number_fields),  BIND(replace_number_params),
-            BIND(replace_field_list),     BIND(replace_latex_list),     BIND(replace_param_list),  BIND(replace_platx_list),  BIND(replace_state_list),
-            BIND(replace_b_abs_err),      BIND(replace_b_rel_err),      BIND(replace_b_step),      BIND(replace_b_stepper),
-            BIND(replace_p_abs_err),      BIND(replace_p_rel_err),      BIND(replace_p_step),      BIND(replace_p_stepper)
+          { BIND(replace_tool) ,            BIND(replace_version),          BIND(replace_guard),            BIND(replace_date),             BIND(replace_source),
+            BIND(replace_name),             BIND(replace_author),           BIND(replace_tag),              BIND(replace_model),            BIND(replace_uid),
+            BIND(replace_header),           BIND(replace_core),             BIND(replace_number_fields),    BIND(replace_number_params),
+            BIND(replace_field_list),       BIND(replace_latex_list),       BIND(replace_param_list),       BIND(replace_platx_list),       BIND(replace_state_list),
+            BIND(replace_b_abs_err),        BIND(replace_b_rel_err),        BIND(replace_b_step),           BIND(replace_b_stepper),
+            BIND(replace_p_abs_err),        BIND(replace_p_rel_err),        BIND(replace_p_step),           BIND(replace_p_stepper)
           };
 
         const macro_argument_list names =
-          { "TOOL",                       "VERSION",                    "GUARD",                   "DATE",                    "SOURCE",
-            "NAME",                       "AUTHOR",                     "TAG",                     "MODEL",                   "UNIQUE_ID",
-            "HEADER",                     "CORE",
-            "NUMBER_FIELDS",              "NUMBER_PARAMS",
-            "FIELD_NAME_LIST",            "LATEX_NAME_LIST",            "PARAM_NAME_LIST",         "PLATX_NAME_LIST",         "STATE_NAME_LIST",
-            "BACKG_ABS_ERR",              "BACKG_REL_ERR",              "BACKG_STEP_SIZE",         "BACKG_STEPPER",
-            "PERT_ABS_ERR",               "PERT_REL_ERR",               "PERT_STEP_SIZE",          "PERT_STEPPER"
+          { "TOOL",                         "VERSION",                      "GUARD",                        "DATE",                         "SOURCE",
+            "NAME",                         "AUTHOR",                       "TAG",                          "MODEL",                        "UNIQUE_ID",
+            "HEADER",                       "CORE",                         "NUMBER_FIELDS",                "NUMBER_PARAMS",
+            "FIELD_NAME_LIST",              "LATEX_NAME_LIST",              "PARAM_NAME_LIST",              "PLATX_NAME_LIST",              "STATE_NAME_LIST",
+            "BACKG_ABS_ERR",                "BACKG_REL_ERR",                "BACKG_STEP_SIZE",              "BACKG_STEPPER",
+            "PERT_ABS_ERR",                 "PERT_REL_ERR",                 "PERT_STEP_SIZE",               "PERT_STEPPER"
           };
 
         const std::vector<unsigned int> args =
-          { 0,                            0,                            0,                         0,                         0,
-            0,                            0,                            0,                         0,                         0,
-            0,                            0,
-            0,                            0,
-            0,                            0,                            0,                         0,                         0,
-            0,                            0,                            0,                         0,
-            0,                            0,                            0,                         0
+          { TOOL_TOTAL_ARGUMENTS,           VERSION_TOTAL_ARGUMENTS,        GUARD_TOTAL_ARGUMENTS,          DATE_TOTAL_ARGUMENTS,           SOURCE_TOTAL_ARGUMENTS,
+            NAME_TOTAL_ARGUMENTS,           AUTHOR_TOTAL_ARGUMENTS,         TAG_TOTAL_ARGUMENTS,            MODEL_TOTAL_ARGUMENTS,          UNIQUE_ID_TOTAL_ARGUMENTS,
+            HEADER_TOTAL_ARGUMENTS,         CORE_TOTAL_ARGUMENTS,           NUMBER_FIELDS_TOTAL_ARGUMENTS,  NUMBER_PARAMS_TOTAL_ARGUMENTS,
+            FIELD_LIST_TOTAL_ARGUMENTS,     LATEX_LIST_TOTAL_ARGUMENTS,     PARAM_LIST_TOTAL_ARGUMENTS,     PLATX_LIST_TOTAL_ARGUMENTS,     STATE_LIST_TOTAL_ARGUMENTS,
+            BACKG_ABS_ERR_TOTAL_ARGUMENTS,  BACKG_REL_ERR_TOTAL_ARGUMENTS,  BACKG_STEP_TOTAL_ARGUMENTS,     BACKG_NAME_TOTAL_ARGUMENTS,
+            PERT_ABS_ERR_TOTAL_ARGUMENTS,   PERT_REL_ERR_TOTAL_ARGUMENTS,   PERT_STEP_TOTAL_ARGUMENTS,      PERT_NAME_TOTAL_ARGUMENTS
           };
 
         assert(rules.size() == names.size());

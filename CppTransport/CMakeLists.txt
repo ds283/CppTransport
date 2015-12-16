@@ -52,6 +52,7 @@ ADD_EXECUTABLE(CppTransport main.cpp
   backends/infrastructure/replacement_rules/package_group.cpp
   backends/infrastructure/replacement_rules/package_group_factory.cpp
   backends/infrastructure/replacement_rules/replacement_rule_package.cpp
+  backends/infrastructure/replacement_rules/replacement_rule_definitions.cpp
   backends/languages/cpp/core/cpp_group.cpp
   backends/languages/cpp/core/cpp_steppers.cpp
   backends/languages/cpp/vexcl/vexcl_group.cpp
@@ -629,6 +630,7 @@ SET(BACKENDS_INFRASTRUCTURE_REPLACEMENT_RULES_FILES
   backends/infrastructure/replacement_rules/replacement_rule_definitions.h
   backends/infrastructure/replacement_rules/replacement_rule_package.cpp
   backends/infrastructure/replacement_rules/replacement_rule_package.h
+  backends/infrastructure/replacement_rules/replacement_rule_definitions.cpp
   )
 
 SET(TRANSPORT_RUNTIME_API_LOCALIZATIONS_MESSAGES_EN_DERIVED_PRODUCTS_FILES

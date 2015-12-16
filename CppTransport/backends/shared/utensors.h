@@ -4,9 +4,8 @@
 //
 
 
-
-#ifndef __macropackage_utensors_H_
-#define __macropackage_utensors_H_
+#ifndef CPPTRANSPORT_MACROS_UTENSORS_H
+#define CPPTRANSPORT_MACROS_UTENSORS_H
 
 
 #include "replacement_rule_package.h"
@@ -23,19 +22,8 @@ namespace macro_packages
       public:
 
         //! constructor
-        utensors(u_tensor_factory& uf, flattener& f, cse& cw, translator_data& p, language_printer& prn,
-                 std::string da=OUTPUT_DEFAULT_A_NAME, std::string dHsq=OUTPUT_DEFAULT_HSQ_NAME,
-                 std::string deps=OUTPUT_DEFAULT_EPS_NAME,
-                 std::string dk=OUTPUT_DEFAULT_K_NAME,
-                 std::string dk1=OUTPUT_DEFAULT_K1_NAME, std::string dk2=OUTPUT_DEFAULT_K2_NAME, std::string dk3=OUTPUT_DEFAULT_K3_NAME)
-          : default_a(da),
-            default_Hsq(dHsq),
-            default_eps(deps),
-            default_k(dk),
-            default_k1(dk1),
-            default_k2(dk2),
-            default_k3(dk3),
-            replacement_rule_package(uf, f, cw, p, prn)
+        utensors(u_tensor_factory& uf, flattener& f, cse& cw, translator_data& p, language_printer& prn)
+          : replacement_rule_package(uf, f, cw, p, prn)
         {
         }
 
@@ -68,21 +56,8 @@ namespace macro_packages
     
         std::unique_ptr<cse_map> pre_u3_predef(const macro_argument_list& args);
 
-
-        // INTERNAL DATA
-
-      protected:
-
-        std::string default_a;
-        std::string default_Hsq;
-        std::string default_eps;
-        std::string default_k;
-        std::string default_k1;
-        std::string default_k2;
-        std::string default_k3;
-
       };
   } // namespace macro_packages
 
 
-#endif //__macropackage_utensors_H_
+#endif //CPPTRANSPORT_MACROS_UTENSORS_H

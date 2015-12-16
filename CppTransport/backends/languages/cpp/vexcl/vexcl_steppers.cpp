@@ -14,29 +14,38 @@
 #include "translation_unit.h"
 
 
-#define VEXCL_STEPPER "runge_kutta_fehlberg78"
-//#define VEXCL_STEPPER "runge_kutta_dopri5"
-
 #define BIND(X) std::bind(&vexcl_steppers::X, this, std::placeholders::_1)
 
 
-namespace cpp
+namespace vexcl
   {
+
+    constexpr auto VEXCL_STEPPER = "runge_kutta_dopri5";
+
+    constexpr unsigned int BACKG_STEPPER_STATE_ARGUMENT = 0;
+    constexpr unsigned int BACKG_STEPPER_TOTAL_ARGUMENTS = 1;
+
+    constexpr unsigned int PERT_STEPPER_STATE_ARGUMENT = 0;
+    constexpr unsigned int PERT_STEPPER_TOTAL_ARGUMENTS = 1;
+
+    constexpr unsigned int BACKG_NAME_TOTAL_ARGUMENTS = 0;
+    constexpr unsigned int PERT_NAME_TOTAL_ARGUMENTS = 0;
+
 
     const std::vector<macro_packages::simple_rule> vexcl_steppers::get_pre_rules()
       {
         std::vector<macro_packages::simple_rule> package;
 
         const std::vector<replacement_rule_simple> rules =
-          { BIND(replace_backg_stepper), BIND(replace_pert_stepper), BIND(stepper_name), BIND(stepper_name)
+          { BIND(replace_backg_stepper),   BIND(replace_pert_stepper),   BIND(stepper_name),         BIND(stepper_name)
           };
 
         const std::vector<std::string> names =
-          { "MAKE_BACKG_STEPPER",        "MAKE_PERT_STEPPER",        "BACKG_STEPPER",    "BACKG_STEPPER"
+          { "MAKE_BACKG_STEPPER",          "MAKE_PERT_STEPPER",          "BACKG_STEPPER",            "BACKG_STEPPER"
           };
 
         const std::vector<unsigned int> args =
-          { 1,                           1,                          1,                  1
+          { BACKG_STEPPER_TOTAL_ARGUMENTS, PERT_STEPPER_TOTAL_ARGUMENTS, BACKG_NAME_TOTAL_ARGUMENTS, PERT_NAME_TOTAL_ARGUMENTS
           };
 
         assert(rules.size() == names.size());
@@ -73,15 +82,7 @@ namespace cpp
     std::string vexcl_steppers::replace_backg_stepper(const std::vector<std::string>& args)
       {
         const struct stepper& s = this->data_payload.get_background_stepper();
-
-        assert(args.size() == 1);
-        if(args.size() < 1)
-          {
-            error_context err_context(this->data_payload.get_stack(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
-            err_context.error(ERROR_VEXCL_NO_STEPPER_STATE);
-            exit(EXIT_FAILURE);
-          }
-        std::string state_name = args[0];
+        std::string state_name = args[BACKG_STEPPER_STATE_ARGUMENT];
 
         if(s.name != VEXCL_STEPPER)
           {
@@ -102,15 +103,7 @@ namespace cpp
     std::string vexcl_steppers::replace_pert_stepper(const std::vector<std::string>& args)
       {
         const struct stepper& s = this->data_payload.get_perturbations_stepper();
-
-        assert(args.size() == 1);
-        if(args.size() < 1)
-          {
-            error_context err_context(this->data_payload.get_stack(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
-            err_context.error(ERROR_VEXCL_NO_STEPPER_STATE);
-            exit(EXIT_FAILURE);
-          }
-        std::string state_name = args[0];
+        std::string state_name = args[PERT_STEPPER_STATE_ARGUMENT];
 
         if(s.name != VEXCL_STEPPER)
           {

@@ -17,21 +17,49 @@
 
 namespace macro_packages
   {
+
+    constexpr unsigned int POTENTIAL_TOTAL_ARGUMENTS = 0;
+
+    constexpr unsigned int HUBBLESQ_TOTAL_ARGUMENTS = 0;
+
+    constexpr unsigned int EPSILON_TOTAL_ARGUMENTS = 0;
+
+    constexpr unsigned int PARAMETER_TOTAL_ARGUMENTS = 0;
+    constexpr unsigned int PARAMETER_TOTAL_INDICES = 1;
+
+    constexpr unsigned int FIELD_TOTAL_ARGUMENTS = 0;
+    constexpr unsigned int FIELD_TOTAL_INDICES = 1;
+
+    constexpr unsigned int COORDINATE_TOTAL_ARGUMENTS = 0;
+    constexpr unsigned int COORDINATE_TOTAL_INDICES = 1;
+
+    constexpr unsigned int SR_VELOCITY_TOTAL_ARGUMENTS = 0;
+    constexpr unsigned int SR_VELOCITY_TOTAL_INDICES = 1;
+
+    constexpr unsigned int DV_TOTAL_ARGUMENTS = 0;
+    constexpr unsigned int DV_TOTAL_INDICES = 1;
+
+    constexpr unsigned int DDV_TOTAL_ARGUMENTS = 0;
+    constexpr unsigned int DDV_TOTAL_INDICES = 2;
+
+    constexpr unsigned int DDDV_TOTAL_ARGUMENTS = 0;
+    constexpr unsigned int DDDV_TOTAL_INDICES = 3;
+
     const std::vector<simple_rule> flow_tensors::get_pre_rules()
       {
         std::vector<simple_rule> package;
 
         const std::vector<replacement_rule_simple> rules =
-          { BIND1(replace_V), BIND1(replace_Hsq), BIND1(replace_eps)
+          { BIND1(replace_V),           BIND1(replace_Hsq),        BIND1(replace_eps)
           };
 
         const std::vector<std::string> names =
-          { "POTENTIAL",      "HUBBLE_SQ",        "EPSILON"
+          { "POTENTIAL",                "HUBBLE_SQ",               "EPSILON"
           };
 
         const std::vector<unsigned int> args =
-          { 0,                0,                  0
-          };
+          { POTENTIAL_TOTAL_ARGUMENTS,  HUBBLESQ_TOTAL_ARGUMENTS,  EPSILON_TOTAL_ARGUMENTS
+           };
 
         assert(rules.size() == names.size());
         assert(rules.size() == args.size());
@@ -82,15 +110,15 @@ namespace macro_packages
           };
 
         const std::vector<unsigned int> args =
-          { 0,                                  0,                                  0,
-            0,                                  0,                                  0,
-            0
+          { PARAMETER_TOTAL_ARGUMENTS,          FIELD_TOTAL_ARGUMENTS,              COORDINATE_TOTAL_ARGUMENTS,
+            SR_VELOCITY_TOTAL_ARGUMENTS,        DV_TOTAL_ARGUMENTS,                 DDV_TOTAL_ARGUMENTS,
+            DDDV_TOTAL_ARGUMENTS
           };
 
         const std::vector<unsigned int> indices =
-          { 1,                                  1,                                  1,
-            1,                                  1,                                  2,
-            3
+          { PARAMETER_TOTAL_INDICES,            FIELD_TOTAL_INDICES,                COORDINATE_TOTAL_INDICES,
+            SR_VELOCITY_TOTAL_INDICES,          DV_TOTAL_INDICES,                   DDV_TOTAL_INDICES,
+            DDDV_TOTAL_INDICES
           };
 
         const std::vector<enum index_class> ranges =
@@ -100,8 +128,8 @@ namespace macro_packages
           };
 
         const std::vector<enum unroll_behaviour> unroll =
-          { unroll_behaviour::allow,            unroll_behaviour::allow,            unroll_behaviour::allow,
-            unroll_behaviour::allow,            unroll_behaviour::force,            unroll_behaviour::force,
+          { unroll_behaviour::force,            unroll_behaviour::force,            unroll_behaviour::force,
+            unroll_behaviour::force,            unroll_behaviour::force,            unroll_behaviour::force,
             unroll_behaviour::force
           };
 
@@ -165,8 +193,6 @@ namespace macro_packages
 
     std::string flow_tensors::replace_parameter(const macro_argument_list& args, const assignment_list& indices, cse_map* map)
       {
-        assert(indices.size() == 1);
-
         std::vector<GiNaC::symbol> parameters = this->data_payload.get_parameter_symbols();
         return(this->printer.ginac(parameters[indices[0].get_numeric_value()]));
       }
@@ -174,8 +200,6 @@ namespace macro_packages
 
     std::string flow_tensors::replace_field(const macro_argument_list& args, const assignment_list& indices, cse_map* map)
       {
-        assert(indices.size() == 1);
-
         std::vector<GiNaC::symbol> fields = this->data_payload.get_field_symbols();
         return(this->printer.ginac(fields[indices[0].get_numeric_value()]));
       }
@@ -183,8 +207,6 @@ namespace macro_packages
 
     std::string flow_tensors::replace_coordinate(const macro_argument_list& args, const assignment_list& indices, cse_map* map)
       {
-        assert(indices.size() == 1);
-
         std::vector<GiNaC::symbol> fields  = this->data_payload.get_field_symbols();
         std::vector<GiNaC::symbol> momenta = this->data_payload.get_deriv_symbols();
 

@@ -20,6 +20,10 @@
 namespace macro_packages
   {
 
+    constexpr unsigned int TEMP_POOL_TEMPLATE_ARGUMENT = 0;
+    constexpr unsigned int TEMP_POOL_TOTAL_ARGUMENTS = 1;
+
+
     temporary_pool::temporary_pool(u_tensor_factory& uf, flattener& f, cse& cw, translator_data& p, language_printer& prn,
                                    std::string t)
 	    : pool_template(t),
@@ -43,7 +47,7 @@ namespace macro_packages
           };
 
         const std::vector<unsigned int> args =
-          { 1
+          { TEMP_POOL_TOTAL_ARGUMENTS
           };
 
         assert(rules.size() == names.size());
@@ -130,12 +134,11 @@ namespace macro_packages
 
     std::string temporary_pool::replace_temp_pool(const macro_argument_list& args)
       {
-        assert(args.size() == 1);
-        std::string t = (args.size() >= 1 ? args[0] : OUTPUT_DEFAULT_POOL_TEMPLATE);
+        std::string t = args[TEMP_POOL_TEMPLATE_ARGUMENT];
 
         std::string rval = "";
 
-        // deposit any temporaries generated up to this point the current temporary pool
+        // deposit any temporaries generated up to this point into the current temporary pool
         //
         // the insertion happens before the element pointed
         // to by data.pool, so there should be no need

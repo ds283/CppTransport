@@ -4,9 +4,8 @@
 //
 
 
-
-#ifndef __macropackage_cpp_macros_H_
-#define __macropackage_cpp_macros_H_
+#ifndef CPPTRANSPORT_MACROS_CPP_STEPPERS_H
+#define CPPTRANSPORT_MACROS_CPP_STEPPERS_H
 
 
 #include "replacement_rule_package.h"
@@ -24,10 +23,8 @@ namespace cpp
       public:
 
         //! constructor
-        cpp_steppers(u_tensor_factory& uf, flattener& f, cse& cw, translator_data& p, language_printer& prn,
-                     std::string ds=OUTPUT_DEFAULT_STEPPER_STATE_NAME)
-          : ::macro_packages::replacement_rule_package(uf, f, cw, p, prn),
-            default_state(ds)
+        cpp_steppers(u_tensor_factory& uf, flattener& f, cse& cw, translator_data& p, language_printer& prn)
+          : ::macro_packages::replacement_rule_package(uf, f, cw, p, prn)
           {
           }
 
@@ -53,17 +50,9 @@ namespace cpp
         std::string replace_backg_stepper(const macro_argument_list& args);
         std::string replace_pert_stepper (const macro_argument_list& args);
 
-
-        // INTERNAL DATA
-
-      protected:
-
-        std::string default_state;
-
       };
 
   } // namespace cpp
 
 
-
-#endif //__macropackage_cpp_macros_H_
+#endif //CPPTRANSPORT_MACROS_CPP_STEPPERS_H

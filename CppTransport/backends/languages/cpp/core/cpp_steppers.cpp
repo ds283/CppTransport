@@ -11,7 +11,6 @@
 #include <functional>
 
 #include "cpp_steppers.h"
-#include "translation_unit.h"
 
 
 #define BIND(X) std::bind(&cpp_steppers::X, this, std::placeholders::_1)
@@ -20,20 +19,27 @@
 namespace cpp
   {
 
+    constexpr unsigned int BACKG_STEPPER_STATE_ARGUMENT = 0;
+    constexpr unsigned int BACKG_STEPPER_TOTAL_ARGUMENTS = 1;
+
+    constexpr unsigned int PERT_STEPPER_STATE_ARGUMENT = 0;
+    constexpr unsigned int PERT_STEPPER_TOTAL_ARGUMENTS = 1;
+
+
     const std::vector<macro_packages::simple_rule> cpp_steppers::get_pre_rules()
       {
         std::vector<macro_packages::simple_rule> package;
 
         const std::vector<replacement_rule_simple> rules =
-          { BIND(replace_backg_stepper), BIND(replace_pert_stepper)
+          { BIND(replace_backg_stepper),   BIND(replace_pert_stepper)
           };
 
         const std::vector<std::string> names =
-          { "MAKE_BACKG_STEPPER",        "MAKE_PERT_STEPPER"
+          { "MAKE_BACKG_STEPPER",          "MAKE_PERT_STEPPER"
           };
 
         const std::vector<unsigned int> args =
-          { 1,                           1
+          { BACKG_STEPPER_TOTAL_ARGUMENTS, PERT_STEPPER_TOTAL_ARGUMENTS
           };
 
         assert(rules.size() == names.size());
@@ -110,10 +116,7 @@ namespace cpp
           {
             std::ostringstream msg;
             msg << ERROR_UNKNOWN_STEPPER << " '" << s.name << "'";
-
-            error_context err_context(data_payload.get_stack(), data_payload.get_error_handler(), data_payload.get_warning_handler());
-            err_context.error(msg.str());
-            out << "<UNKNOWN_STEPPER>";
+            throw macro_packages::rule_apply_fail(msg.str());
           }
 
         return(out.str());
@@ -126,9 +129,7 @@ namespace cpp
     std::string cpp_steppers::replace_backg_stepper(const macro_argument_list& args)
       {
         const struct stepper& s = this->data_payload.get_background_stepper();
-
-        assert(args.size() == 1);
-        std::string state_name = (args.size() >= 1 ? args[0] : this->default_state);
+        std::string state_name = args[BACKG_STEPPER_STATE_ARGUMENT];
 
         return(this->replace_stepper(s, state_name));
       }
@@ -137,9 +138,7 @@ namespace cpp
     std::string cpp_steppers::replace_pert_stepper(const macro_argument_list& args)
       {
         const struct stepper& s = this->data_payload.get_perturbations_stepper();
-
-        assert(args.size() == 1);
-        std::string state_name = (args.size() >= 1 ? args[0] : this->default_state);
+        std::string state_name = args[PERT_STEPPER_STATE_ARGUMENT];
 
         return(this->replace_stepper(s, state_name));
       }

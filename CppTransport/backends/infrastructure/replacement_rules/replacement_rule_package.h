@@ -3,8 +3,8 @@
 // Copyright (c) 2013-15 University of Sussex. All rights reserved.
 //
 
-#ifndef __replacement_rule_package_H_
-#define __replacement_rule_package_H_
+#ifndef CPPTRANSPORT_REPLACEMENT_RULE_PACKAGE_H
+#define CPPTRANSPORT_REPLACEMENT_RULE_PACKAGE_H
 
 
 #include "ginac/ginac.h"
@@ -73,6 +73,7 @@ namespace macro_packages
 
 
         // INTERFACE -- INTERNAL API
+        // COMMON UTILITY FUNCTIONS FOR MACRO REPLACEMENT
 
       protected:
 
@@ -105,4 +106,4 @@ namespace macro_packages
   }
 
 
-#endif // __replacement_rule_package_H_
+#endif // CPPTRANSPORT_REPLACEMENT_RULE_PACKAGE_H

@@ -23,23 +23,8 @@ namespace macro_packages
       public:
 
         //! constructor
-        lagrangian_tensors(u_tensor_factory& uf, flattener& f, cse& cw, translator_data& p, language_printer& prn,
-                           std::string da=OUTPUT_DEFAULT_A_NAME, std::string dHsq=OUTPUT_DEFAULT_HSQ_NAME,
-                           std::string deps=OUTPUT_DEFAULT_EPS_NAME,
-                           std::string dk=OUTPUT_DEFAULT_K_NAME,
-                           std::string dk1=OUTPUT_DEFAULT_K1_NAME, std::string dk2=OUTPUT_DEFAULT_K2_NAME, std::string dk3=OUTPUT_DEFAULT_K3_NAME,
-                           std::string dM=OUTPUT_DEFAULT_M_NAME,
-                           std::string ip="_")
-          : default_a(da),
-            default_Hsq(dHsq),
-            default_eps(deps),
-            default_k(dk),
-            default_k1(dk1),
-            default_k2(dk2),
-            default_k3(dk3),
-            default_M(dM),
-            index_pad(ip), 
-            replacement_rule_package(uf, f, cw, p, prn)
+        lagrangian_tensors(u_tensor_factory& uf, flattener& f, cse& cw, translator_data& p, language_printer& prn)
+          : replacement_rule_package(uf, f, cw, p, prn)
           {
           }
 
@@ -59,38 +44,22 @@ namespace macro_packages
         // INTERNAL API
 
       protected:
-    
+
         std::unique_ptr<cse_map> pre_A_tensor(const macro_argument_list& args);
-    
+
         std::unique_ptr<cse_map> pre_B_tensor(const macro_argument_list& args);
-    
+
         std::unique_ptr<cse_map> pre_C_tensor(const macro_argument_list& args);
-    
+
         std::unique_ptr<cse_map> pre_A_predef(const macro_argument_list& args);
-    
+
         std::unique_ptr<cse_map> pre_B_predef(const macro_argument_list& args);
-    
+
         std::unique_ptr<cse_map> pre_C_predef(const macro_argument_list& args);
-    
+
         std::unique_ptr<cse_map> pre_M_tensor(const macro_argument_list& args);
-    
+
         std::unique_ptr<cse_map> pre_M_predef(const macro_argument_list& args);
-
-
-        // INTERNAL DATA
-
-      protected:
-
-        std::string default_a;
-        std::string default_Hsq;
-        std::string default_eps;
-        std::string default_k;
-        std::string default_k1;
-        std::string default_k2;
-        std::string default_k3;
-        std::string default_M;
-
-        std::string index_pad;
 
       };
 

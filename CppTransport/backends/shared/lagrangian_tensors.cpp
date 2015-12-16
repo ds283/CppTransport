@@ -19,6 +19,63 @@
 namespace macro_packages
   {
 
+    constexpr unsigned int A_TENSOR_K1_ARGUMENT = 0;
+    constexpr unsigned int A_TENSOR_K2_ARGUMENT = 1;
+    constexpr unsigned int A_TENSOR_K3_ARGUMENT = 2;
+    constexpr unsigned int A_TENSOR_A_ARGUMENT = 3;
+    constexpr unsigned int A_TENSOR_TOTAL_ARGUMENTS = 4;
+    constexpr unsigned int A_TENSOR_TOTAL_INDICES = 3;
+
+    constexpr unsigned int B_TENSOR_K1_ARGUMENT = 0;
+    constexpr unsigned int B_TENSOR_K2_ARGUMENT = 1;
+    constexpr unsigned int B_TENSOR_K3_ARGUMENT = 2;
+    constexpr unsigned int B_TENSOR_A_ARGUMENT = 3;
+    constexpr unsigned int B_TENSOR_TOTAL_ARGUMENTS = 4;
+    constexpr unsigned int B_TENSOR_TOTAL_INDICES = 3;
+
+    constexpr unsigned int C_TENSOR_K1_ARGUMENT = 0;
+    constexpr unsigned int C_TENSOR_K2_ARGUMENT = 1;
+    constexpr unsigned int C_TENSOR_K3_ARGUMENT = 2;
+    constexpr unsigned int C_TENSOR_A_ARGUMENT = 3;
+    constexpr unsigned int C_TENSOR_TOTAL_ARUGMENTS = 4;
+    constexpr unsigned int C_TENSOR_TOTAL_INDICES = 3;
+
+    constexpr unsigned int A_PREDEF_K1_ARGUMENT = 0;
+    constexpr unsigned int A_PREDEF_K2_ARGUMENT = 1;
+    constexpr unsigned int A_PREDEF_K3_ARGUMENT = 2;
+    constexpr unsigned int A_PREDEF_A_ARGUMENT = 3;
+    constexpr unsigned int A_PREDEF_HSQ_ARGUMENT = 4;
+    constexpr unsigned int A_PREDEF_EPSILON_ARGUMENT = 5;
+    constexpr unsigned int A_PREDEF_TOTAL_ARGUMENTS = 6;
+    constexpr unsigned int A_PREDEF_TOTAl_INDICES = 3;
+
+    constexpr unsigned int B_PREDEF_K1_ARGUMENT = 0;
+    constexpr unsigned int B_PREDEF_K2_ARGUMENT = 1;
+    constexpr unsigned int B_PREDEF_K3_ARGUMENT = 2;
+    constexpr unsigned int B_PREDEF_A_ARGUMENT = 3;
+    constexpr unsigned int B_PREDEF_HSQ_ARGUMENT = 4;
+    constexpr unsigned int B_PREDEF_EPSILON_ARGUMENT = 5;
+    constexpr unsigned int B_PREDEF_TOTAL_ARGUMENTS = 6;
+    constexpr unsigned int B_PREDEF_TOTAL_INDICES = 3;
+
+    constexpr unsigned int C_PREDEF_K1_ARGUMENT = 0;
+    constexpr unsigned int C_PREDEF_K2_ARGUMENT = 1;
+    constexpr unsigned int C_PREDEF_K3_ARGUMENT = 2;
+    constexpr unsigned int C_PREDEF_A_ARGUMENT = 3;
+    constexpr unsigned int C_PREDEF_HSQ_ARGUMENT = 4;
+    constexpr unsigned int C_PREDEF_EPSILON_ARGUMENT = 5;
+    constexpr unsigned int C_PREDEF_TOTAL_ARGUMENTS = 6;
+    constexpr unsigned int C_PREDEF_TOTAL_INDICES = 3;
+
+    constexpr unsigned int M_TENSOR_TOTAL_ARGUMENTS = 0;
+    constexpr unsigned int M_TENSOR_TOTAL_INDICES = 2;
+
+    constexpr unsigned int M_PREDEF_HSQ_ARGUMENT = 0;
+    constexpr unsigned int M_PREDEF_EPSILON_ARGUMENT = 1;
+    constexpr unsigned int M_PREDEF_TOTAL_ARGUMENTS = 2;
+    constexpr unsigned int M_PREDEF_TOTAL_INDICES = 2;
+
+
     const std::vector<simple_rule> lagrangian_tensors::get_pre_rules()
       {
         std::vector<simple_rule> package;
@@ -64,15 +121,15 @@ namespace macro_packages
           };
 
         const std::vector<unsigned int> args =
-          { 4,                                  4,                                  4,
-            6,                                  6,                                  6,
-            0,                                  2
+          { A_TENSOR_TOTAL_ARGUMENTS,           B_TENSOR_TOTAL_ARGUMENTS,           C_TENSOR_TOTAL_ARUGMENTS,
+            A_PREDEF_TOTAL_ARGUMENTS,           B_PREDEF_TOTAL_ARGUMENTS,           C_PREDEF_TOTAL_ARGUMENTS,
+            M_TENSOR_TOTAL_ARGUMENTS,           M_PREDEF_TOTAL_ARGUMENTS
           };
 
         const std::vector<unsigned int> indices =
-          { 3,                                  3,                                  3,
-            3,                                  3,                                  3,
-            2,                                  2
+          { A_TENSOR_TOTAL_INDICES,             B_TENSOR_TOTAL_INDICES,             C_TENSOR_TOTAL_INDICES,
+            A_PREDEF_TOTAl_INDICES,             B_PREDEF_TOTAL_INDICES,             C_PREDEF_TOTAL_INDICES,
+            M_TENSOR_TOTAL_INDICES,             M_PREDEF_TOTAL_INDICES
           };
 
         const std::vector<enum index_class> ranges =
@@ -108,14 +165,12 @@ namespace macro_packages
 
     std::unique_ptr<cse_map> lagrangian_tensors::pre_A_tensor(const macro_argument_list& args)
       {
-        assert(args.size() == 4);
-
 		    symbol_factory& sym_factory = this->data_payload.get_symbol_factory();
 
-        GiNaC::symbol k1 = sym_factory.get_symbol(args.size() >= 1 ? args[0] : this->default_k1);
-        GiNaC::symbol k2 = sym_factory.get_symbol(args.size() >= 2 ? args[1] : this->default_k2);
-        GiNaC::symbol k3 = sym_factory.get_symbol(args.size() >= 3 ? args[2] : this->default_k3);
-        GiNaC::symbol  a = sym_factory.get_symbol(args.size() >= 4 ? args[3] : this->default_a);
+        GiNaC::symbol k1 = sym_factory.get_symbol(args[A_TENSOR_K1_ARGUMENT]);
+        GiNaC::symbol k2 = sym_factory.get_symbol(args[A_TENSOR_K2_ARGUMENT]);
+        GiNaC::symbol k3 = sym_factory.get_symbol(args[A_TENSOR_K3_ARGUMENT]);
+        GiNaC::symbol  a = sym_factory.get_symbol(args[A_TENSOR_A_ARGUMENT]);
 
         std::unique_ptr< std::vector<GiNaC::ex> > container = std::make_unique< std::vector<GiNaC::ex> >();
         this->u_factory.compute_A(k1, k2, k3, a, *container, this->fl);
@@ -126,17 +181,15 @@ namespace macro_packages
 
     std::unique_ptr<cse_map> lagrangian_tensors::pre_A_predef(const macro_argument_list& args)
       {
-        assert(args.size() == 6);
-
         symbol_factory& sym_factory = this->data_payload.get_symbol_factory();
 
-        GiNaC::symbol k1 = sym_factory.get_symbol(args.size() >= 1 ? args[0] : this->default_k1);
-        GiNaC::symbol k2 = sym_factory.get_symbol(args.size() >= 2 ? args[1] : this->default_k2);
-        GiNaC::symbol k3 = sym_factory.get_symbol(args.size() >= 3 ? args[2] : this->default_k3);
-        GiNaC::symbol  a = sym_factory.get_symbol(args.size() >= 4 ? args[3] : this->default_a);
+        GiNaC::symbol k1 = sym_factory.get_symbol(args[A_PREDEF_K1_ARGUMENT]);
+        GiNaC::symbol k2 = sym_factory.get_symbol(args[A_PREDEF_K2_ARGUMENT]);
+        GiNaC::symbol k3 = sym_factory.get_symbol(args[A_PREDEF_K3_ARGUMENT]);
+        GiNaC::symbol  a = sym_factory.get_symbol(args[A_PREDEF_TOTAl_INDICES]);
 
-        GiNaC::symbol Hsq_symbol = sym_factory.get_symbol(args.size() >= 5 ? args[4] : this->default_Hsq);
-        GiNaC::symbol eps_symbol = sym_factory.get_symbol(args.size() >= 6 ? args[5] : this->default_eps);
+        GiNaC::symbol Hsq_symbol = sym_factory.get_symbol(args[A_PREDEF_HSQ_ARGUMENT]);
+        GiNaC::symbol eps_symbol = sym_factory.get_symbol(args[A_PREDEF_EPSILON_ARGUMENT]);
         GiNaC::ex     Hsq = Hsq_symbol;
         GiNaC::ex     eps = eps_symbol;
 
@@ -152,14 +205,12 @@ namespace macro_packages
 
     std::unique_ptr<cse_map> lagrangian_tensors::pre_B_tensor(const macro_argument_list& args)
       {
-        assert(args.size() == 4);
-
         symbol_factory& sym_factory = this->data_payload.get_symbol_factory();
 
-        GiNaC::symbol k1 = sym_factory.get_symbol(args.size() >= 1 ? args[0] : this->default_k1);
-        GiNaC::symbol k2 = sym_factory.get_symbol(args.size() >= 2 ? args[1] : this->default_k2);
-        GiNaC::symbol k3 = sym_factory.get_symbol(args.size() >= 3 ? args[2] : this->default_k3);
-        GiNaC::symbol  a = sym_factory.get_symbol(args.size() >= 4 ? args[3] : this->default_a);
+        GiNaC::symbol k1 = sym_factory.get_symbol(args[B_TENSOR_K1_ARGUMENT]);
+        GiNaC::symbol k2 = sym_factory.get_symbol(args[B_TENSOR_K2_ARGUMENT]);
+        GiNaC::symbol k3 = sym_factory.get_symbol(args[B_TENSOR_K3_ARGUMENT]);
+        GiNaC::symbol  a = sym_factory.get_symbol(args[B_TENSOR_A_ARGUMENT]);
 
         std::unique_ptr< std::vector<GiNaC::ex> > container = std::make_unique< std::vector<GiNaC::ex> >();
         this->u_factory.compute_B(k1, k2, k3, a, *container, this->fl);
@@ -170,17 +221,15 @@ namespace macro_packages
 
     std::unique_ptr<cse_map> lagrangian_tensors::pre_B_predef(const macro_argument_list& args)
       {
-        assert(args.size() == 6);
-
         symbol_factory& sym_factory = this->data_payload.get_symbol_factory();
 
-        GiNaC::symbol k1 = sym_factory.get_symbol(args.size() >= 1 ? args[0] : this->default_k1);
-        GiNaC::symbol k2 = sym_factory.get_symbol(args.size() >= 2 ? args[1] : this->default_k2);
-        GiNaC::symbol k3 = sym_factory.get_symbol(args.size() >= 3 ? args[2] : this->default_k3);
-        GiNaC::symbol  a = sym_factory.get_symbol(args.size() >= 4 ? args[3] : this->default_a);
+        GiNaC::symbol k1 = sym_factory.get_symbol(args[B_PREDEF_K1_ARGUMENT]);
+        GiNaC::symbol k2 = sym_factory.get_symbol(args[B_PREDEF_K2_ARGUMENT]);
+        GiNaC::symbol k3 = sym_factory.get_symbol(args[B_PREDEF_K3_ARGUMENT]);
+        GiNaC::symbol  a = sym_factory.get_symbol(args[B_PREDEF_A_ARGUMENT]);
 
-        GiNaC::symbol Hsq_symbol(args.size() >= 5 ? args[4] : this->default_Hsq);
-        GiNaC::symbol eps_symbol(args.size() >= 6 ? args[5] : this->default_eps);
+        GiNaC::symbol Hsq_symbol(args[B_PREDEF_HSQ_ARGUMENT]);
+        GiNaC::symbol eps_symbol(args[B_PREDEF_EPSILON_ARGUMENT]);
         GiNaC::ex     Hsq = Hsq_symbol;
         GiNaC::ex     eps = eps_symbol;
 
@@ -196,14 +245,12 @@ namespace macro_packages
 
     std::unique_ptr<cse_map> lagrangian_tensors::pre_C_tensor(const macro_argument_list& args)
       {
-        assert(args.size() == 4);
-
         symbol_factory& sym_factory = this->data_payload.get_symbol_factory();
 
-        GiNaC::symbol k1 = sym_factory.get_symbol(args.size() >= 1 ? args[0] : this->default_k1);
-        GiNaC::symbol k2 = sym_factory.get_symbol(args.size() >= 2 ? args[1] : this->default_k2);
-        GiNaC::symbol k3 = sym_factory.get_symbol(args.size() >= 3 ? args[2] : this->default_k3);
-        GiNaC::symbol  a = sym_factory.get_symbol(args.size() >= 4 ? args[3] : this->default_a);
+        GiNaC::symbol k1 = sym_factory.get_symbol(args[C_TENSOR_K1_ARGUMENT]);
+        GiNaC::symbol k2 = sym_factory.get_symbol(args[C_TENSOR_K2_ARGUMENT]);
+        GiNaC::symbol k3 = sym_factory.get_symbol(args[C_TENSOR_K3_ARGUMENT]);
+        GiNaC::symbol  a = sym_factory.get_symbol(args[C_TENSOR_A_ARGUMENT]);
 
         std::unique_ptr< std::vector<GiNaC::ex> > container = std::make_unique< std::vector<GiNaC::ex> >();
         this->u_factory.compute_C(k1, k2, k3, a, *container, this->fl);
@@ -214,17 +261,15 @@ namespace macro_packages
 
     std::unique_ptr<cse_map> lagrangian_tensors::pre_C_predef(const macro_argument_list& args)
       {
-        assert(args.size() == 6);
-
         symbol_factory& sym_factory = this->data_payload.get_symbol_factory();
 
-        GiNaC::symbol k1 = sym_factory.get_symbol(args.size() >= 1 ? args[0] : this->default_k1);
-        GiNaC::symbol k2 = sym_factory.get_symbol(args.size() >= 2 ? args[1] : this->default_k2);
-        GiNaC::symbol k3 = sym_factory.get_symbol(args.size() >= 3 ? args[2] : this->default_k3);
-        GiNaC::symbol  a = sym_factory.get_symbol(args.size() >= 4 ? args[3] : this->default_a);
+        GiNaC::symbol k1 = sym_factory.get_symbol(args[C_PREDEF_K1_ARGUMENT]);
+        GiNaC::symbol k2 = sym_factory.get_symbol(args[C_PREDEF_K2_ARGUMENT]);
+        GiNaC::symbol k3 = sym_factory.get_symbol(args[C_PREDEF_K3_ARGUMENT]);
+        GiNaC::symbol  a = sym_factory.get_symbol(args[C_PREDEF_A_ARGUMENT]);
 
-        GiNaC::symbol Hsq_symbol = sym_factory.get_symbol(args.size() >= 5 ? args[4] : this->default_Hsq);
-        GiNaC::symbol eps_symbol = sym_factory.get_symbol(args.size() >= 6 ? args[5] : this->default_eps);
+        GiNaC::symbol Hsq_symbol = sym_factory.get_symbol(args[C_PREDEF_HSQ_ARGUMENT]);
+        GiNaC::symbol eps_symbol = sym_factory.get_symbol(args[C_PREDEF_EPSILON_ARGUMENT]);
         GiNaC::ex     Hsq = Hsq_symbol;
         GiNaC::ex     eps = eps_symbol;
 
@@ -249,10 +294,10 @@ namespace macro_packages
 
     std::unique_ptr<cse_map> lagrangian_tensors::pre_M_predef(const macro_argument_list& args)
       {
-        assert(args.size() == 2);
+        symbol_factory& sym_factory = this->data_payload.get_symbol_factory();
 
-        GiNaC::symbol Hsq_symbol(args.size() >= 1 ? args[0] : this->default_Hsq);
-        GiNaC::symbol eps_symbol(args.size() >= 2 ? args[1] : this->default_eps);
+        GiNaC::symbol Hsq_symbol = sym_factory.get_symbol(args[M_PREDEF_HSQ_ARGUMENT]);
+        GiNaC::symbol eps_symbol = sym_factory.get_symbol(args[M_PREDEF_EPSILON_ARGUMENT]);
         GiNaC::ex     Hsq = Hsq_symbol;
         GiNaC::ex     eps = eps_symbol;
 

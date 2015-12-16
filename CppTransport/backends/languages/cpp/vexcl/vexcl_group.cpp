@@ -26,8 +26,8 @@ vexcl_group::vexcl_group(translator_data& p, ginac_cache<expression_item_types, 
     this->add_package<macro_packages::utensors>          (p, this->printer);
     this->add_package<macro_packages::gauge_xfm>         (p, this->printer);
     this->add_package<macro_packages::temporary_pool>    (p, this->printer);
-    this->add_package<cpp::vexcl_steppers>               (p, this->printer);
-    this->add_package<cpp::vexcl_kernels>                (p, this->printer);
+    this->add_package<vexcl::vexcl_steppers>             (p, this->printer);
+    this->add_package<vexcl::vexcl_kernels>              (p, this->printer);
   }
 
 

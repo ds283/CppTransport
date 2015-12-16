@@ -19,6 +19,27 @@
 namespace macro_packages
   {
 
+    constexpr unsigned int ZETA_XFM_1_HSQ_ARGUMENT = 0;
+    constexpr unsigned int ZETA_XFM_1_EPSILON_ARGUMENT = 1;
+    constexpr unsigned int ZETA_XFM_1_TOTAL_ARGUMENTS = 2;
+    constexpr unsigned int ZETA_XFM_1_TOTAL_INDICES = 1;
+
+    constexpr unsigned int ZETA_XFM_2_K_ARGUMENT = 0;
+    constexpr unsigned int ZETA_XFM_2_K1_ARGUMENT = 1;
+    constexpr unsigned int ZETA_XFM_2_K2_ARGUMENT = 2;
+    constexpr unsigned int ZETA_XFM_2_A_ARGUMENT = 3;
+    constexpr unsigned int ZETA_XFM_2_HSQ_ARGUMENT = 4;
+    constexpr unsigned int ZETA_XFM_2_EPSILON_ARGUMENT = 5;
+    constexpr unsigned int ZETA_XFM_2_TOTAL_ARGUMENTS = 6;
+    constexpr unsigned int ZETA_XFM_2_TOTAL_INDICES = 2;
+
+    constexpr unsigned int DELTAN_XFM_1_TOTAL_ARGUMENTS = 0;
+    constexpr unsigned int DELTAN_XFM_1_TOTAL_INDICES = 1;
+
+    constexpr unsigned int DELTAN_XFM_2_TOTAL_ARGUMENTS = 0;
+    constexpr unsigned int DELTAN_XFM_2_TOTAL_INDICES = 2;
+
+
     const std::vector<simple_rule> gauge_xfm::get_pre_rules()
       {
         std::vector<simple_rule> package;
@@ -60,13 +81,13 @@ namespace macro_packages
           };
 
         const std::vector<unsigned int> args =
-          { 2,                            6,
-            0,                            0
+          { ZETA_XFM_1_TOTAL_ARGUMENTS,   ZETA_XFM_2_TOTAL_ARGUMENTS,
+            DELTAN_XFM_1_TOTAL_ARGUMENTS, DELTAN_XFM_2_TOTAL_ARGUMENTS
           };
 
         const std::vector<unsigned int> indices =
-          { 1,                            2,
-            1,                            2
+          { ZETA_XFM_1_TOTAL_INDICES,     ZETA_XFM_2_TOTAL_INDICES,
+            DELTAN_XFM_1_TOTAL_INDICES,   DELTAN_XFM_2_TOTAL_INDICES
           };
 
         const std::vector<enum index_class> ranges =
@@ -100,12 +121,10 @@ namespace macro_packages
 
     std::unique_ptr<cse_map> gauge_xfm::pre_zeta_xfm_1(const macro_argument_list& args)
       {
-        assert(args.size() == 2);
-
         symbol_factory& sym_factory = this->data_payload.get_symbol_factory();
 
-        GiNaC::symbol Hsq_symbol = sym_factory.get_symbol(args.size() >= 1 ? args[0] : this->default_Hsq);
-        GiNaC::symbol eps_symbol = sym_factory.get_symbol(args.size() >= 2 ? args[1] : this->default_eps);
+        GiNaC::symbol Hsq_symbol = sym_factory.get_symbol(args[ZETA_XFM_1_HSQ_ARGUMENT]);
+        GiNaC::symbol eps_symbol = sym_factory.get_symbol(args[ZETA_XFM_1_EPSILON_ARGUMENT]);
         GiNaC::ex     Hsq = Hsq_symbol;
         GiNaC::ex     eps = eps_symbol;
 
@@ -118,17 +137,15 @@ namespace macro_packages
 
     std::unique_ptr<cse_map> gauge_xfm::pre_zeta_xfm_2(const macro_argument_list& args)
       {
-        assert(args.size() == 6);
-
         symbol_factory& sym_factory = this->data_payload.get_symbol_factory();
 
-        GiNaC::symbol  k = sym_factory.get_symbol(args.size() >= 1 ? args[0] : this->default_k);
-        GiNaC::symbol k1 = sym_factory.get_symbol(args.size() >= 2 ? args[1] : this->default_k1);
-        GiNaC::symbol k2 = sym_factory.get_symbol(args.size() >= 3 ? args[2] : this->default_k2);
-        GiNaC::symbol  a = sym_factory.get_symbol(args.size() >= 4 ? args[3] : this->default_a);
+        GiNaC::symbol  k = sym_factory.get_symbol(args[ZETA_XFM_2_K_ARGUMENT]);
+        GiNaC::symbol k1 = sym_factory.get_symbol(args[ZETA_XFM_2_K1_ARGUMENT]);
+        GiNaC::symbol k2 = sym_factory.get_symbol(args[ZETA_XFM_2_K2_ARGUMENT]);
+        GiNaC::symbol  a = sym_factory.get_symbol(args[ZETA_XFM_2_A_ARGUMENT]);
 
-        GiNaC::symbol Hsq_symbol = sym_factory.get_symbol(args.size() >= 5 ? args[4] : this->default_Hsq);
-        GiNaC::symbol eps_symbol = sym_factory.get_symbol(args.size() >= 6 ? args[5] : this->default_eps);
+        GiNaC::symbol Hsq_symbol = sym_factory.get_symbol(args[ZETA_XFM_2_HSQ_ARGUMENT]);
+        GiNaC::symbol eps_symbol = sym_factory.get_symbol(args[ZETA_XFM_2_EPSILON_ARGUMENT]);
         GiNaC::ex     Hsq = Hsq_symbol;
         GiNaC::ex     eps = eps_symbol;
 

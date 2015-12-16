@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __language_printer_H_
-#define __language_printer_H_
+#ifndef CPPTRANSPORT_LANGUAGE_PRINTER_H
+#define CPPTRANSPORT_LANGUAGE_PRINTER_H
 
 
 #include <functional>
@@ -52,4 +52,4 @@ class language_printer
   };
 
 
-#endif //__language_printer_H_
+#endif //CPPTRANSPORT_LANGUAGE_PRINTER_H

@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __macro_tokenizer_H_
-#define __macro_tokenizer_H_
+#ifndef CPPTRANSPORT_MACRO_TOKENIZER_H
+#define CPPTRANSPORT_MACRO_TOKENIZER_H
 
 #include <iostream>
 #include <vector>
@@ -46,6 +46,9 @@ namespace token_list_impl
         //! convert this token to its string equivalent
         std::string to_string() const { return(conversion); }
 
+        //! raise error
+        void error(const std::string& msg);
+
 
         // INTERNAL DATA
 
@@ -56,6 +59,12 @@ namespace token_list_impl
 
         //! context for error messages involving this token
         error_context err_ctx;
+
+        //! number of errors raised by this token
+        unsigned int num_errors;
+
+        //! error reported silenced?
+        bool silent;
 
       };
 
@@ -313,4 +322,4 @@ class token_list
 	};
 
 
-#endif //__macro_tokenizer_H_
+#endif //CPPTRANSPORT_MACRO_TOKENIZER_H

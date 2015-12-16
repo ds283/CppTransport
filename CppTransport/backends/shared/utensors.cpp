@@ -18,6 +18,43 @@
 #define BIND3(X) std::bind(&utensors::X, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)
 
 
+constexpr unsigned int U1_TOTAL_ARGUMENTS = 0;
+constexpr unsigned int U1_TOTAL_INDICES = 1;
+
+constexpr unsigned int U1_PREDEF_HSQ_ARGUMENT = 0;
+constexpr unsigned int U1_PREDEF_EPSILON_ARGUMENT = 1;
+constexpr unsigned int U1_PREDEF_TOTAL_ARGUMENTS = 2;
+constexpr unsigned int U1_PREDEF_TOTAL_INDICES = 1;
+
+constexpr unsigned int U2_K_ARGUMENT = 0;
+constexpr unsigned int U2_A_ARGUMENT = 1;
+constexpr unsigned int U2_TOTAL_ARGUMENTS = 2;
+constexpr unsigned int U2_TOTAL_INDICES = 2;
+
+constexpr unsigned int U2_PREDEF_K_ARGUMENT = 0;
+constexpr unsigned int U2_PREDEF_A_ARGUMENT = 1;
+constexpr unsigned int U2_PREDEF_HSQ_ARGUMENT = 2;
+constexpr unsigned int U2_PREDEF_EPSILON_ARGUMENT = 3;
+constexpr unsigned int U2_PREDEF_TOTAL_ARGUMENTS = 4;
+constexpr unsigned int U2_PREDEF_TOTAL_INDICES = 2;
+
+constexpr unsigned int U3_K1_ARGUMENT = 0;
+constexpr unsigned int U3_K2_ARGUMENT = 1;
+constexpr unsigned int U3_K3_ARGUMENT = 2;
+constexpr unsigned int U3_A_ARGUMENT = 3;
+constexpr unsigned int U3_TOTAL_ARGUMENTS = 4;
+constexpr unsigned int U3_TOTAL_INDICES = 3;
+
+constexpr unsigned int U3_PREDEF_K1_ARGUMENT = 0;
+constexpr unsigned int U3_PREDEF_K2_ARGUMENT = 1;
+constexpr unsigned int U3_PREDEF_K3_ARGUMENT = 2;
+constexpr unsigned int U3_PREDEF_A_ARGUMENT = 3;
+constexpr unsigned int U3_PREDEF_HSQ_ARGUMENT = 4;
+constexpr unsigned int U3_PREDEF_EPSILON_ARGUMENT = 5;
+constexpr unsigned int U3_PREDEF_TOTAL_ARGUMENTS = 6;
+constexpr unsigned int U3_PREDEF_TOTAL_INDICES = 3;
+
+
 namespace macro_packages
   {
 
@@ -62,13 +99,13 @@ namespace macro_packages
           };
 
         const std::vector<unsigned int> args =
-          { 0,                            2,                            4,
-            2,                            4,                            6
+          { U1_TOTAL_ARGUMENTS,           U2_TOTAL_ARGUMENTS,           U3_TOTAL_ARGUMENTS,
+            U1_PREDEF_TOTAL_ARGUMENTS,    U2_PREDEF_TOTAL_ARGUMENTS,    U3_PREDEF_TOTAL_ARGUMENTS
           };
 
         const std::vector<unsigned int> indices =
-          { 1,                            2,                            3,
-            1,                            2,                            3
+          { U1_TOTAL_INDICES,             U2_TOTAL_INDICES,             U3_TOTAL_INDICES,
+            U1_PREDEF_TOTAL_INDICES,      U2_PREDEF_TOTAL_INDICES,      U3_PREDEF_TOTAL_INDICES
           };
 
         const std::vector<enum index_class> ranges =
@@ -111,12 +148,10 @@ namespace macro_packages
 
     std::unique_ptr<cse_map> utensors::pre_u1_predef(const macro_argument_list& args)
       {
-        assert(args.size() == 2);
-
         symbol_factory& sym_factory = this->data_payload.get_symbol_factory();
 
-        GiNaC::symbol Hsq_symbol = sym_factory.get_symbol(args.size() >= 1 ? args[0] : this->default_Hsq);
-        GiNaC::symbol eps_symbol = sym_factory.get_symbol(args.size() >= 2 ? args[1] : this->default_eps);
+        GiNaC::symbol Hsq_symbol = sym_factory.get_symbol(args[U1_PREDEF_HSQ_ARGUMENT]);
+        GiNaC::symbol eps_symbol = sym_factory.get_symbol(args[U1_PREDEF_EPSILON_ARGUMENT]);
         GiNaC::ex     Hsq = Hsq_symbol;
         GiNaC::ex     eps = eps_symbol;
 
@@ -132,12 +167,10 @@ namespace macro_packages
 
     std::unique_ptr<cse_map> utensors::pre_u2_tensor(const macro_argument_list& args)
       {
-        assert(args.size() == 2);
-
         symbol_factory& sym_factory = this->data_payload.get_symbol_factory();
 
-        GiNaC::symbol k = sym_factory.get_symbol(args.size() >= 1 ? args[0] : this->default_k);
-        GiNaC::symbol a = sym_factory.get_symbol(args.size() >= 2 ? args[1] : this->default_a);
+        GiNaC::symbol k = sym_factory.get_symbol(args[U2_K_ARGUMENT]);
+        GiNaC::symbol a = sym_factory.get_symbol(args[U2_A_ARGUMENT]);
 
         std::unique_ptr< std::vector<GiNaC::ex> > container = std::make_unique< std::vector<GiNaC::ex> >();
         this->u_factory.compute_u2(k, a, *container, this->fl);
@@ -148,15 +181,13 @@ namespace macro_packages
 
     std::unique_ptr<cse_map> utensors::pre_u2_predef(const macro_argument_list& args)
       {
-        assert(args.size() == 4);
-
         symbol_factory& sym_factory = this->data_payload.get_symbol_factory();
 
-        GiNaC::symbol k = sym_factory.get_symbol(args.size() >= 1 ? args[0] : this->default_k);
-        GiNaC::symbol a = sym_factory.get_symbol(args.size() >= 2 ? args[1] : this->default_a);
+        GiNaC::symbol k = sym_factory.get_symbol(args[U2_PREDEF_K_ARGUMENT]);
+        GiNaC::symbol a = sym_factory.get_symbol(args[U2_PREDEF_A_ARGUMENT]);
 
-        GiNaC::symbol Hsq_symbol = sym_factory.get_symbol(args.size() >= 3 ? args[2] : this->default_Hsq);
-        GiNaC::symbol eps_symbol = sym_factory.get_symbol(args.size() >= 4 ? args[3] : this->default_eps);
+        GiNaC::symbol Hsq_symbol = sym_factory.get_symbol(args[U2_PREDEF_HSQ_ARGUMENT]);
+        GiNaC::symbol eps_symbol = sym_factory.get_symbol(args[U2_PREDEF_EPSILON_ARGUMENT]);
         GiNaC::ex     Hsq = Hsq_symbol;
         GiNaC::ex     eps = eps_symbol;
 
@@ -172,14 +203,12 @@ namespace macro_packages
 
     std::unique_ptr<cse_map> utensors::pre_u3_tensor(const macro_argument_list& args)
       {
-        assert(args.size() == 4);
-
         symbol_factory& sym_factory = this->data_payload.get_symbol_factory();
 
-        GiNaC::symbol k1 = sym_factory.get_symbol(args.size() >= 1 ? args[0] : this->default_k1);
-        GiNaC::symbol k2 = sym_factory.get_symbol(args.size() >= 2 ? args[1] : this->default_k2);
-        GiNaC::symbol k3 = sym_factory.get_symbol(args.size() >= 3 ? args[2] : this->default_k3);
-        GiNaC::symbol  a = sym_factory.get_symbol(args.size() >= 4 ? args[3] : this->default_a);
+        GiNaC::symbol k1 = sym_factory.get_symbol(args[U3_K1_ARGUMENT]);
+        GiNaC::symbol k2 = sym_factory.get_symbol(args[U3_K2_ARGUMENT]);
+        GiNaC::symbol k3 = sym_factory.get_symbol(args[U3_K3_ARGUMENT]);
+        GiNaC::symbol  a = sym_factory.get_symbol(args[U3_A_ARGUMENT]);
 
         std::unique_ptr< std::vector<GiNaC::ex> > container = std::make_unique< std::vector<GiNaC::ex> >();
         this->u_factory.compute_u3(k1, k2, k3, a, *container, this->fl);
@@ -190,17 +219,15 @@ namespace macro_packages
 
     std::unique_ptr<cse_map> utensors::pre_u3_predef(const macro_argument_list& args)
       {
-        assert(args.size() == 6);
-
         symbol_factory& sym_factory = this->data_payload.get_symbol_factory();
 
-        GiNaC::symbol k1 = sym_factory.get_symbol(args.size() >= 1 ? args[0] : this->default_k1);
-        GiNaC::symbol k2 = sym_factory.get_symbol(args.size() >= 2 ? args[1] : this->default_k2);
-        GiNaC::symbol k3 = sym_factory.get_symbol(args.size() >= 3 ? args[2] : this->default_k3);
-        GiNaC::symbol  a = sym_factory.get_symbol(args.size() >= 4 ? args[3] : this->default_a);
+        GiNaC::symbol k1 = sym_factory.get_symbol(args[U3_PREDEF_K1_ARGUMENT]);
+        GiNaC::symbol k2 = sym_factory.get_symbol(args[U3_PREDEF_K2_ARGUMENT]);
+        GiNaC::symbol k3 = sym_factory.get_symbol(args[U3_PREDEF_K3_ARGUMENT]);
+        GiNaC::symbol  a = sym_factory.get_symbol(args[U3_PREDEF_A_ARGUMENT]);
 
-        GiNaC::symbol Hsq_symbol = sym_factory.get_symbol(args.size() >= 5 ? args[4] : this->default_Hsq);
-        GiNaC::symbol eps_symbol = sym_factory.get_symbol(args.size() >= 6 ? args[5] : this->default_eps);
+        GiNaC::symbol Hsq_symbol = sym_factory.get_symbol(args[U3_PREDEF_HSQ_ARGUMENT]);
+        GiNaC::symbol eps_symbol = sym_factory.get_symbol(args[U3_PREDEF_EPSILON_ARGUMENT]);
         GiNaC::ex     Hsq = Hsq_symbol;
         GiNaC::ex     eps = eps_symbol;
 

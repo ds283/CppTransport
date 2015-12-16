@@ -5,8 +5,8 @@
 
 
 
-#ifndef __macropackage_background_H_
-#define __macropackage_background_H_
+#ifndef CPPTRANSPORT_MACROPACKAGE_FLOW_TENSORS_H
+#define CPPTRANSPORT_MACROPACKAGE_FLOW_TENSORS_H
 
 
 #include <string>
@@ -71,4 +71,4 @@ namespace macro_packages
   } // namespace macro_packages
 
 
-#endif //__macropackage_background_H_
+#endif //CPPTRANSPORT_MACROPACKAGE_FLOW_TENSORS_H

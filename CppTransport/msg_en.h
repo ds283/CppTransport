@@ -72,6 +72,10 @@
 #define ERROR_TOKENIZE_UNEXPECTED_LIST        "Did not expect index list following simple macro"
 #define ERROR_TOKENIZE_SKIPPING               "skipping"
 
+#define ERROR_TOKENIZE_TOO_MANY_ERRORS        "Too many errors from this token; further output will be suppressed"
+
+#define ERROR_NO_RULE_HANDLER                 "Internal error: no assigned replacement rule for macro"
+
 #define ERROR_INCOMPATIBLE_UNROLL             "Unrolling requirements are incompatible with earlier macros for"
 #define ERROR_LHS_RHS_INCOMPATIBLE_UNROLL     "Left-hand side and right-hand side have incompatible unrolling requirements"
 
@@ -87,12 +91,16 @@
 #define ERROR_EXPECTED_OPEN_ARGUMENT_LIST     "Missing open of argument list '{' for macro"
 #define ERROR_EXPECTED_CLOSE_ARGUMENT_LIST    "Missing close of argument list '}' for macro"
 #define ERROR_EXPECTED_CLOSE_ARGUMENT_QUOTE   "Missing closing quotation '\"' for macro"
-#define ERROR_WRONG_ARGUMENT_COUNT            "Unexpected number of arguments to macro"
+#define ERROR_WRONG_ARGUMENT_COUNT            "Incorrect number of arguments for macro"
 #define ERROR_EXPECTED_ARGUMENT_COUNT         "expected"
-#define ERROR_WRONG_INDEX_COUNT               "Unexpected number of arguments to macro"
+#define ERROR_RECEIVED_ARGUMENT_COUNT         "received"
+#define ERROR_WRONG_INDEX_COUNT               "Incorrect number of indices for macro"
 #define ERROR_EXPECTED_INDEX_COUNT            "expected"
+#define ERROR_RECEIVED_INDEX_COUNT            "received"
 
 #define WARNING_INDEX_TYPE_MISMATCH           "expected index type for this macro does not match for"
+#define ERROR_WRONG_INDEX_CLASS               "Index type mismatch for"
+#define ERROR_WRONG_INDEX_LABEL               "index"
 
 #define ERROR_MISSING_LHS                     "Missing left-hand side in temporary template "
 #define ERROR_MISSING_RHS                     "Missing right-hand side in temporary template "

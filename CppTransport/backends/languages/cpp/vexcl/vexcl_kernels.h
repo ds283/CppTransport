@@ -12,7 +12,7 @@
 #include "replacement_rule_package.h"
 
 
-namespace cpp
+namespace vexcl
   {
 
     class vexcl_kernels : public ::macro_packages::replacement_rule_package

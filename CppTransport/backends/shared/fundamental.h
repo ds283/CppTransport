@@ -29,7 +29,7 @@ namespace macro_packages
         fundamental(u_tensor_factory& uf, flattener& f, cse& cw, translator_data& p, language_printer& prn,
                     std::string ls = "{", std::string le = "}", std::string lsep = ",", std::string lpad = " ",
                     std::string t = OUTPUT_CPPTRANSPORT_TAG,
-                    std::string ge = "_H_",
+                    std::string ge = "_H",
                     std::string tf = OUTPUT_TIME_FORMAT)  // output format currently unused, since switch to boost date & time library
           : list_start(ls),
             list_end(le),
@@ -135,14 +135,14 @@ namespace macro_packages
 
       protected:
 
-        std::string  list_start;
-        std::string  list_end;
-        std::string  list_separator;
-        std::string  list_pad;
-        std::string  tag;
-        std::string  guard_terminator;
+        std::string list_start;
+        std::string list_end;
+        std::string list_separator;
+        std::string list_pad;
+        std::string tag;
+        std::string guard_terminator;
 
-        std::string  time_format;
+        std::string time_format;
 
         unsigned int unique;
 

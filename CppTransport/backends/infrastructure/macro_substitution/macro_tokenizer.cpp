@@ -11,6 +11,9 @@
 #include "macro_tokenizer.h"
 
 
+constexpr unsigned int MAX_TOKEN_ERRORS = 4;
+
+
 token_list::token_list(const std::string& input, const std::string& prefix,
                        unsigned int nf, unsigned int np,
                        const std::vector<macro_packages::simple_rule>& pre,
@@ -104,7 +107,7 @@ token_list::token_list(const std::string& input, const std::string& prefix,
 										            this->check_no_index_list(input, candidate, position);
 
 										            macro_argument_list arg_list;
-												        if(rule.args > 0) arg_list = this->get_argument_list(input, candidate, position, rule.args);
+												        if(rule.get_number_args() > 0) arg_list = this->get_argument_list(input, candidate, position, rule.get_number_args());
 
                                 error_context ctx(this->data_payload.get_stack(), input_string, position, this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
                                 std::unique_ptr<token_list_impl::simple_macro_token> tok = std::make_unique<token_list_impl::simple_macro_token>(candidate, arg_list, rule, simple_macro_type::pre, ctx);
@@ -123,7 +126,7 @@ token_list::token_list(const std::string& input, const std::string& prefix,
 										            this->check_no_index_list(input, candidate, position);
 
 										            macro_argument_list arg_list;
-										            if(rule.args > 0) arg_list = this->get_argument_list(input, candidate, position, rule.args);
+										            if(rule.get_number_args() > 0) arg_list = this->get_argument_list(input, candidate, position, rule.get_number_args());
 
                                 error_context ctx(this->data_payload.get_stack(), input_string, position, this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
                                 std::unique_ptr<token_list_impl::simple_macro_token> tok = std::make_unique<token_list_impl::simple_macro_token>(candidate, arg_list, rule, simple_macro_type::post, ctx);
@@ -139,17 +142,17 @@ token_list::token_list(const std::string& input, const std::string& prefix,
 										            position += candidate_length;
 
 												        // should find an index list
-										            abstract_index_list idx_list = this->get_index_list(input, candidate, position, rule.indices, rule.range);
+										            abstract_index_list idx_list = this->get_index_list(input, candidate, position, rule.get_number_indices(), rule.get_index_class());
 
 										            macro_argument_list arg_list;
-										            if(rule.args > 0) arg_list = this->get_argument_list(input, candidate, position, rule.args);
+										            if(rule.get_number_args() > 0) arg_list = this->get_argument_list(input, candidate, position, rule.get_number_args());
 
                                 // apply unroll flags, either inherited from the macro or by allowing suffixies
-                                if(rule.unroll == unroll_behaviour::force)
+                                if(rule.get_unroll() == unroll_behaviour::force)
                                   {
                                     ++this->num_force_unroll;
                                   }
-                                else if(rule.unroll == unroll_behaviour::prevent)
+                                else if(rule.get_unroll() == unroll_behaviour::prevent)
                                   {
                                     ++this->num_prevent_unroll;
                                   }
@@ -242,9 +245,9 @@ bool token_list::check_for_match(const std::string& candidate, const std::vector
 
     for(const Rule& t : rule_list)
 			{
-				if(candidate.length() <= t.name.length())
+				if(candidate.length() <= t.get_name().length())
 					{
-				    std::string name_substring = allow_substring ? t.name.substr(0, candidate.length()) : t.name;
+				    std::string name_substring = allow_substring ? t.get_name().substr(0, candidate.length()) : t.get_name();
 						if(candidate == name_substring)
 							{
 								found = true;
@@ -273,7 +276,7 @@ namespace macro_tokenizer_impl
 
         bool operator()(const Rule& r)
           {
-            return(this->name == r.name);
+            return(this->name == r.get_name());
           }
 
       private:
@@ -557,14 +560,44 @@ std::string token_list::to_string()
 	}
 
 
+enum unroll_behaviour token_list::unroll_status() const
+  {
+    if(this->num_force_unroll > 0 && this->num_prevent_unroll == 0) return unroll_behaviour::force;
+    if(this->num_force_unroll == 0 && this->num_prevent_unroll > 0) return unroll_behaviour::prevent;
+
+    // if we are in an inconsistent state then an error will already have been raised, so do nothing here
+    return unroll_behaviour::allow;
+  }
+
+
+
 // TOKEN IMPLEMENTATION
 
 
 token_list_impl::generic_token::generic_token(const std::string& c, error_context ec)
 	: conversion(c),
-    err_ctx(std::move(ec))
+    err_ctx(std::move(ec)),
+    num_errors(0),
+    silent(false)
 	{
 	}
+
+
+void token_list_impl::generic_token::error(const std::string& msg)
+  {
+    if(!silent)
+      {
+        this->err_ctx.error(msg);
+      }
+
+    ++this->num_errors;
+
+    if(this->num_errors >= MAX_TOKEN_ERRORS && !silent)
+      {
+        this->err_ctx.warn(ERROR_TOKENIZE_TOO_MANY_ERRORS);
+        silent = true;
+      }
+  }
 
 
 token_list_impl::text_token::text_token(const std::string& l, error_context ec)
@@ -606,7 +639,14 @@ token_list_impl::simple_macro_token::simple_macro_token(const std::string& m, co
 void token_list_impl::simple_macro_token::evaluate()
 	{
 		// evaluate the macro, and cache the result
-		this->conversion = this->rule.rule(this->args);
+    try
+      {
+        this->conversion = this->rule(this->args);
+      }
+    catch(macro_packages::rule_apply_fail& xe)
+      {
+        this->error(xe.what());
+      }
 	}
 
 
@@ -619,20 +659,28 @@ token_list_impl::index_macro_token::index_macro_token(const std::string& m, cons
     indices(std::move(i)),
     rule(r)
 	{
-    if(rule.pre != nullptr)
-	    {
+    try
+      {
         // state assumes ownership of the CSE-map returned from the pre-rule
-        state = (rule.pre)(args);
-	    }
+        state = this->rule.pre_evaluate(args);
+      }
+    catch(macro_packages::rule_apply_fail& xe)
+      {
+        this->error(xe.what());
+      }
 	}
 
 
 token_list_impl::index_macro_token::~index_macro_token()
 	{
-    if(this->rule.post != nullptr)
-	    {
-        (this->rule.post)(this->state);
-	    }
+    try
+      {
+        this->rule.post_evaluate(this->state.get());
+      }
+    catch(macro_packages::rule_apply_fail& xe)
+      {
+        this->error(xe.what());
+      }
 
     // release CSE map held by this macro if it hasn't already been done
     this->state.release();
@@ -653,15 +701,12 @@ void token_list_impl::index_macro_token::evaluate(const assignment_list& a)
         index_values.emplace_back(std::make_pair(idx.get_label(), std::make_shared<assignment_record>(*it)));
       }
 
-		this->conversion = (this->rule.rule)(this->args, index_values, this->state.get());
+    try
+      {
+        this->conversion = this->rule(this->args, index_values, this->state.get());
+      }
+    catch(macro_packages::rule_apply_fail& xe)
+      {
+        this->error(xe.what());
+      }
 	}
-
-
-enum unroll_behaviour token_list::unroll_status() const
-  {
-    if(this->num_force_unroll > 0 && this->num_prevent_unroll == 0) return unroll_behaviour::force;
-    if(this->num_force_unroll == 0 && this->num_prevent_unroll > 0) return unroll_behaviour::prevent;
-
-    // if we are in an inconsistent state then an error will already have been raised, so do nothing here
-    return unroll_behaviour::allow;
-  }

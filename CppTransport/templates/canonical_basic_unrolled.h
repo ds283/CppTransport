@@ -751,8 +751,11 @@ namespace transport
 #define __dtwopf_tensor(a,b) __dxdt[$$__MODEL_pool::tensor_start + TENSOR_FLATTEN(a,b)]
 #define __dtwopf(a,b)        __dxdt[$$__MODEL_pool::twopf_start + FLATTEN(a,b)]
 
+        dV(this->raw_params, __x, this->dV);
+        ddV(this->raw_params, __x, this->ddV);
+
         // evolve the background
-        __background($$__A) = $$__U1_PREDEF[A]{__Hsq, __eps};
+        __background($$__A) = $$__U1_PREDEF[A]{__Hsq, __eps, __x, this->dV, FLATTEN};
 
         // evolve the tensor modes
         const auto __ff = 0.0;
@@ -765,7 +768,7 @@ namespace transport
         __dtwopf_tensor(1,1) = __pf*__tensor_twopf_fp + __pp*__tensor_twopf_pp + __pf*__tensor_twopf_pf + __pp*__tensor_twopf_pp;
 
         // set up components of the u2 tensor
-        this->u2[FLATTEN($$__A,$$__B)] = $$__U2_PREDEF[AB]{__k, __a, __Hsq, __eps};
+        this->u2[FLATTEN($$__A,$$__B)] = $$__U2_PREDEF[AB]{__k, __a, __Hsq, __eps, __x, this->dV, this->ddV, FLATTEN};
 
         // evolve the 2pf
         // here, we are dealing only with the real part - which is symmetric.
@@ -870,8 +873,12 @@ namespace transport
 #define __dtwopf_im_k3(a,b)     __dxdt[$$__MODEL_pool::twopf_im_k3_start + FLATTEN(a,b)]
 #define __dthreepf(a,b,c)       __dxdt[$$__MODEL_pool::threepf_start     + FLATTEN(a,b,c)]
 
+        dV(this->raw_params, __x, this->dV);
+        ddV(this->raw_params, __x, this->ddV);
+        dddV(this->raw_params, __x, this->dddV);
+
         // evolve the background
-        __background($$__A) = $$__U1_PREDEF[A]{__Hsq,__eps};
+        __background($$__A) = $$__U1_PREDEF[A]{__Hsq, __eps, __x, this->dV, FLATTEN};
 
         // evolve the tensor modes
         const auto __ff = 0.0;
@@ -897,14 +904,14 @@ namespace transport
         __dtwopf_k3_tensor(1,1) = __pf*__tensor_k3_twopf_fp + __pp*__tensor_k3_twopf_pp + __pf*__tensor_k3_twopf_pf + __pp*__tensor_k3_twopf_pp;
 
         // set up components of the u2 tensor for k1, k2, k3
-        this->u2_k1[FLATTEN($$__A,$$__B)] = $$__U2_PREDEF[AB]{__k1, __a, __Hsq, __eps};
-        this->u2_k2[FLATTEN($$__A,$$__B)] = $$__U2_PREDEF[AB]{__k2, __a, __Hsq, __eps};
-        this->u2_k3[FLATTEN($$__A,$$__B)] = $$__U2_PREDEF[AB]{__k3, __a, __Hsq, __eps};
+        this->u2_k1[FLATTEN($$__A,$$__B)] = $$__U2_PREDEF[AB]{__k1, __a, __Hsq, __eps, __x, this->dV, this->ddV, FLATTEN};
+        this->u2_k2[FLATTEN($$__A,$$__B)] = $$__U2_PREDEF[AB]{__k2, __a, __Hsq, __eps, __x, this->dV, this->ddV, FLATTEN};
+        this->u2_k3[FLATTEN($$__A,$$__B)] = $$__U2_PREDEF[AB]{__k3, __a, __Hsq, __eps, __x, this->dV, this->ddV, FLATTEN};
 
         // set up components of the u3 tensor
-        this->u3_k1k2k3[FLATTEN($$__A,$$__B,$$__C)] = $$__U3_PREDEF[ABC]{__k1, __k2, __k3, __a, __Hsq, __eps};
-        this->u3_k2k1k3[FLATTEN($$__A,$$__B,$$__C)] = $$__U3_PREDEF[ABC]{__k2, __k1, __k3, __a, __Hsq, __eps};
-        this->u3_k3k1k2[FLATTEN($$__A,$$__B,$$__C)] = $$__U3_PREDEF[ABC]{__k3, __k1, __k2, __a, __Hsq, __eps};
+        this->u3_k1k2k3[FLATTEN($$__A,$$__B,$$__C)] = $$__U3_PREDEF[ABC]{__k1, __k2, __k3, __a, __Hsq, __eps, __x, this->dV, this->ddV, this->dddV, FLATTEN};
+        this->u3_k2k1k3[FLATTEN($$__A,$$__B,$$__C)] = $$__U3_PREDEF[ABC]{__k2, __k1, __k3, __a, __Hsq, __eps, __x, this->dV, this->ddV, this->dddV, FLATTEN};
+        this->u3_k3k1k2[FLATTEN($$__A,$$__B,$$__C)] = $$__U3_PREDEF[ABC]{__k3, __k1, __k2, __a, __Hsq, __eps, __x, this->dV, this->ddV, this->dddV, FLATTEN};
 
         // evolve the real and imaginary components of the 2pf
         // for the imaginary parts, index placement *does* matter so we must take care
