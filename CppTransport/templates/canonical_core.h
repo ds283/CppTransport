@@ -276,16 +276,20 @@ namespace transport
       public:
 
         $$__MODEL_background_functor(const parameters<number>& p)
+          : __params(p)
+          {
+            __Mp = p.get_Mp();
+          }
+
+        void set_up_workspace()
           {
             __dV = new number[$$__NUMBER_FIELDS];
             __raw_params = new number[$$__NUMBER_PARAMS];
 
-            __raw_params[$$__1] = p.get_vector()[$$__1];
-
-            __Mp = p.get_Mp();
+            __raw_params[$$__1] = __params.get_vector()[$$__1];
           }
 
-        ~$$__MODEL_background_functor()
+        void close_down_workspace()
           {
             delete[] __dV;
             delete[] __raw_params;
@@ -294,6 +298,8 @@ namespace transport
         void operator ()(const backg_state<number>& __x, backg_state<number>& __dxdt, double __t);
 
       protected:
+
+        const parameters<number>& __params;
 
         number* __dV;
 
@@ -1095,6 +1101,7 @@ namespace transport
 
         // set up a functor to evolve this system
         $$__MODEL_background_functor<number> system(tk->get_params());
+        system.set_up_workspace();
 
         auto ics = tk->get_ics_vector();
 
@@ -1102,6 +1109,7 @@ namespace transport
         x[FLATTEN($$__A)] = ics[$$__A];
 
         boost::numeric::odeint::integrate_times($$__MAKE_BACKG_STEPPER{backg_state<number>}, system, x, time_db.value_begin(), time_db.value_end(), $$__BACKG_STEP_SIZE, obs);
+        system.close_down_workspace();
       }
 
 
@@ -1143,6 +1151,7 @@ namespace transport
 
         // set up a functor to evolve this system
         $$__MODEL_background_functor<number> system(tk->get_params());
+        system.set_up_workspace();
 
         auto ics = tk->get_ics_vector();
 
@@ -1158,6 +1167,8 @@ namespace transport
         auto iter = boost::find_if(range, $$__MODEL_impl::EpsilonUnityPredicate<number>(tk->get_params()));
 
 				if(iter == boost::end(range)) throw end_of_inflation_not_found();
+
+        system.close_down_workspace();
 
 		    return ((*iter).second);
       };
@@ -1179,13 +1190,11 @@ namespace transport
                 astar_normalization(tk->get_astar_normalization())
               {
                 param_vector = params.get_vector();
-                Mp = params.get_Mp();
+                __Mp = params.get_Mp();
               }
 
             bool operator()(const std::pair< backg_state<number>, double >& __x)
               {
-                const auto __Mp = this->Mp;
-
                 $$__TEMP_POOL{"const auto $1 = $2;"}
 
                 const auto __Hsq = $$__HUBBLE_SQ{param_vector, __x.first, FLATTEN};
@@ -1210,7 +1219,7 @@ namespace transport
             std::vector<number> param_vector;
 
             //! cache Planck mass
-            number Mp;
+            number __Mp;
 
             //! output vector for times N
             std::vector<double>& N_vector;
@@ -1240,6 +1249,7 @@ namespace transport
 
 				// set up a functor to evolve the system
 				$$__MODEL_background_functor<number> system(tk->get_params());
+        system.set_up_workspace();
 
 				auto ics = tk->integration_task<number>::get_ics_vector();
 
@@ -1276,6 +1286,8 @@ namespace transport
 					{
             throw failed_to_compute_horizon_exit(tk->get_N_initial(), N_range, found_end, log_aH.size(), (N.size() > 0 ? N.back() : 0.0), (log_aH.size() > 0 ? log_aH.back() : 0.0), largest_k);
 					}
+
+        system.close_down_workspace();
 			}
 
 

@@ -757,11 +757,11 @@ namespace transport
     template <typename number>
     void $$__MODEL_basic_threepf_functor<number>::operator()(const threepf_state<number>& __x, threepf_state<number>& __dxdt, double __t)
       {
-        const auto __Mp              = this->Mp;
-        const auto __k1              = this->config.k1_comoving;
-        const auto __k2              = this->config.k2_comoving;
-        const auto __k3              = this->config.k3_comoving;
-        const auto __a               = std::exp(__t - this->N_horizon_exit + this->astar_normalization);
+        const auto __Mp = this->Mp;
+        const auto __k1 = this->config.k1_comoving;
+        const auto __k2 = this->config.k2_comoving;
+        const auto __k3 = this->config.k3_comoving;
+        const auto __a = std::exp(__t - this->N_horizon_exit + this->astar_normalization);
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
