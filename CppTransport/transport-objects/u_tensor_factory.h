@@ -36,64 +36,81 @@ class u_tensor_factory
 
   public:
 
-    virtual void compute_sr_u(std::vector<GiNaC::ex>& v) = 0;
+    virtual void compute_sr_u(const std::vector<GiNaC::symbol>& params, const std::vector<GiNaC::symbol>& fields, std::vector<GiNaC::ex>& v) = 0;
 
-    virtual void compute_u1(std::vector<GiNaC::ex>& v) = 0;
+    virtual void compute_u1(const std::vector<GiNaC::symbol>& params, const std::vector<GiNaC::symbol>& fields,
+                            const std::vector<GiNaC::symbol>& derivs, const std::vector<GiNaC::symbol>& dV,
+                            std::vector<GiNaC::ex>& v) = 0;
 
-    virtual void compute_u1(GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v) = 0;
+    virtual void compute_u2(GiNaC::symbol& k, GiNaC::symbol& a,
+                            const std::vector<GiNaC::symbol>& params, const std::vector<GiNaC::symbol>& fields,
+                            const std::vector<GiNaC::symbol>& derivs, const std::vector<GiNaC::symbol>& dV,
+                            const std::vector<GiNaC::symbol>& ddV, std::vector<GiNaC::ex>& v) = 0;
 
-    virtual void compute_u2(GiNaC::symbol& k, GiNaC::symbol& a, std::vector<GiNaC::ex>& v) = 0;
-
-    virtual void compute_u2(GiNaC::symbol& k, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v) = 0;
-
-    virtual void compute_u3(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, std::vector<GiNaC::ex>& v) = 0;
-
-    virtual void compute_u3(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v) = 0;
+    virtual void compute_u3(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a,
+                            const std::vector<GiNaC::symbol>& params, const std::vector<GiNaC::symbol>& fields,
+                            const std::vector<GiNaC::symbol>& derivs, const std::vector<GiNaC::symbol>& dV,
+                            const std::vector<GiNaC::symbol>& ddV, const std::vector<GiNaC::symbol>& dddV,
+                            std::vector<GiNaC::ex>& v) = 0;
 
     // the A, B and C tensors are associated with the Hamiltonian for
     // scalar field fluctuations [see written notes]
     // actually, these compute A/H^2, B/H and C
     // all of these have mass dimension -1
 
-    virtual void compute_A(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, std::vector<GiNaC::ex>& v) = 0;
+    virtual void compute_A(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a,
+                           const std::vector<GiNaC::symbol>& params, const std::vector<GiNaC::symbol>& fields,
+                           const std::vector<GiNaC::symbol>& derivs, const std::vector<GiNaC::symbol>& dV,
+                           const std::vector<GiNaC::symbol>& ddV, const std::vector<GiNaC::symbol>& dddV,
+                           std::vector<GiNaC::ex>& v) = 0;
 
-    virtual void compute_A(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v) = 0;
+    virtual void compute_B(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a,
+                           const std::vector<GiNaC::symbol>& params, const std::vector<GiNaC::symbol>& fields,
+                           const std::vector<GiNaC::symbol>& derivs, const std::vector<GiNaC::symbol>& dV,
+                           std::vector<GiNaC::ex>& v) = 0;
 
-    virtual void compute_B(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, std::vector<GiNaC::ex>& v) = 0;
-
-    virtual void compute_B(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v) = 0;
-
-    virtual void compute_C(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, std::vector<GiNaC::ex>& v) = 0;
-
-    virtual void compute_C(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v) = 0;
+    virtual void compute_C(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a,
+                           const std::vector<GiNaC::symbol>& params, const std::vector<GiNaC::symbol>& fields,
+                           const std::vector<GiNaC::symbol>& derivs, std::vector<GiNaC::ex>& v) = 0;
 
     // compute M tensor
 
-    virtual void compute_M(std::vector<GiNaC::ex>& v) = 0;
-
-    virtual void compute_M(GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v) = 0;
+    virtual void compute_M(const std::vector<GiNaC::symbol>& params, const std::vector<GiNaC::symbol>& fields,
+                           const std::vector<GiNaC::symbol>& derivs, const std::vector<GiNaC::symbol>& dV,
+                           const std::vector<GiNaC::symbol>& ddV, std::vector<GiNaC::ex>& v) = 0;
 
 
     // INTERFACE - CALCULATE GAUGE TRANSFORMATIONS
 
   public:
 
-    virtual void compute_zeta_xfm_1(GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v) = 0;
+    virtual void compute_zeta_xfm_1(const std::vector<GiNaC::symbol>& params, const std::vector<GiNaC::symbol>& fields,
+                                    const std::vector<GiNaC::symbol>& derivs, const std::vector<GiNaC::symbol>& dV,
+                                    std::vector<GiNaC::ex>& v) = 0;
 
-    virtual void compute_zeta_xfm_2(GiNaC::symbol& k, GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v) = 0;
+    virtual void compute_zeta_xfm_2(GiNaC::symbol& k, GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& a,
+                                    const std::vector<GiNaC::symbol>& params, const std::vector<GiNaC::symbol>& fields,
+                                    const std::vector<GiNaC::symbol>& derivs, const std::vector<GiNaC::symbol>& dV,
+                                    std::vector<GiNaC::ex>& v) = 0;
 
-		virtual void compute_deltaN_xfm_1(std::vector<GiNaC::ex>& v) = 0;
+		virtual void compute_deltaN_xfm_1(const std::vector<GiNaC::symbol>& params, const std::vector<GiNaC::symbol>& fields,
+                                      const std::vector<GiNaC::symbol>& derivs, std::vector<GiNaC::ex>& v) = 0;
 
-		virtual void compute_deltaN_xfm_2(std::vector<GiNaC::ex>& v) = 0;
+		virtual void compute_deltaN_xfm_2(const std::vector<GiNaC::symbol>& params, const std::vector<GiNaC::symbol>& fields,
+                                      const std::vector<GiNaC::symbol>& derivs, const std::vector<GiNaC::symbol>& dV,
+                                      std::vector<GiNaC::ex>& v) = 0;
 
 
 		// INTERFACE - COMPUTE BACKGROUND OBJECTS
 
   public:
 
-    virtual GiNaC::ex compute_Hsq() = 0;
+    virtual GiNaC::ex compute_V(const std::vector<GiNaC::symbol>& params, const std::vector<GiNaC::symbol>& fields) = 0;
 
-    virtual GiNaC::ex compute_eps() = 0;
+    virtual GiNaC::ex compute_Hsq(const std::vector<GiNaC::symbol>& params, const std::vector<GiNaC::symbol>& fields,
+                                  const std::vector<GiNaC::symbol>& derivs) = 0;
+
+    virtual GiNaC::ex compute_eps(const std::vector<GiNaC::symbol>& derivs) = 0;
     
     
     // INTERFACE -- COMPUTE DERIVATIVES OF THE POTENTIAL
@@ -120,9 +137,6 @@ class u_tensor_factory
     //! return momentum index corresponding to a given full-phase-space index
     unsigned int momentum(unsigned int z);
 
-    //! return GiNaC symbol for a given full-phase-space coordinate
-    const GiNaC::symbol& coordinate(unsigned int z);
-
     //! is this full-phase-space index a field?
     bool is_field(unsigned int z);
 
@@ -138,7 +152,10 @@ class u_tensor_factory
     std::unique_ptr<GiNaC::exmap> substitution_map(const std::vector<GiNaC::symbol>& params, const std::vector<GiNaC::symbol>& fields);
 
     //! apply a substitution map to the potential
-    GiNaC::ex substitute_V(const GiNaC::exmap& map, const std::vector<GiNaC::ex>& args);
+    GiNaC::ex substitute_V(const std::vector<GiNaC::symbol>& params, const std::vector<GiNaC::symbol>& fields);
+
+    //! apply a substitution map to the potential -- argument list already build (prevents a rebuild inside the function)
+    GiNaC::ex substitute_V(const std::vector<GiNaC::symbol>& params, const std::vector<GiNaC::symbol>& fields, const std::vector<GiNaC::ex>& args);
 
 
 		// INTERFACE - STATISTICS

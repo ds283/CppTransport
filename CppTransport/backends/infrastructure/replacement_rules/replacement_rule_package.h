@@ -101,6 +101,27 @@ namespace macro_packages
         //! build field list from a kernel
         std::unique_ptr< std::vector<GiNaC::symbol> > field_list(const std::string& kernel, const std::string& flatten);
 
+        //! build derivative list from a kernel
+        std::unique_ptr< std::vector<GiNaC::symbol> > deriv_list(const std::string& kernel, const std::string& flatten);
+
+        //! build list of symbols for components of a 1-index full-phase-space tensor
+        std::unique_ptr< std::vector<GiNaC::symbol> > index1_list(const std::string& kernel, const std::string& flatten);
+
+        //! build list of symbols for components of a 2-index full-phase-space tensor
+        std::unique_ptr< std::vector<GiNaC::symbol> > index2_list(const std::string& kernel, const std::string& flatten);
+
+        //! build list of symbols for components of a 3-index full-phase-space tensor
+        std::unique_ptr< std::vector<GiNaC::symbol> > index3_list(const std::string& kernel, const std::string& flatten);
+
+        //! build list of symbols for components of a 1-index field-space tensor
+        std::unique_ptr< std::vector<GiNaC::symbol> > index1_field_list(const std::string& kernel, const std::string& flatten);
+
+        //! build list of symbols for components of a 2-index field-space tensor
+        std::unique_ptr< std::vector<GiNaC::symbol> > index2_field_list(const std::string& kernel, const std::string& flatten);
+
+        //! build list of symbols for components of a 3-index field-space tensor
+        std::unique_ptr< std::vector<GiNaC::symbol> > index3_field_list(const std::string& kernel, const std::string& flatten);
+
 
         // INTERNAL DATA
 

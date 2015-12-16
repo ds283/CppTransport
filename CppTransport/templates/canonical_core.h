@@ -1,4 +1,4 @@
-// backend=cpp minver=0.06
+// backend=cpp minver=0.13
 //
 // DO NOT EDIT: GENERATED AUTOMATICALLY BY $$__TOOL $$__VERSION
 //
@@ -105,8 +105,8 @@ namespace transport
         //! constructor
         $$__MODEL();
 
-        //! destructor is default
-		    virtual ~$$__MODEL() = default;
+        //! destructor
+		    virtual ~$$__MODEL();
 
 
         // EXTRACT MODEL INFORMATION -- implements a 'model' interface
@@ -233,6 +233,38 @@ namespace transport
                                double kmode_1, double kmode_2, double kmode_3, double __Ninit,
                                const twopf_list_task<number>* __task, const std::vector<number>& __fields);
 
+
+        // INTERNAL DATA
+
+      private:
+
+        number* __A_k1k2k3;
+        number* __A_k1k3k2;
+        number* __B_k1k2k3;
+        number* __B_k1k3k2;
+        number* __C_k1k2k3;
+        number* __C_k1k3k2;
+
+        number* __A_k2k1k3;
+        number* __A_k2k3k1;
+        number* __B_k2k1k3;
+        number* __B_k2k3k1;
+        number* __C_k2k1k3;
+        number* __C_k2k3k1;
+
+        number* __A_k3k1k2;
+        number* __A_k3k2k1;
+        number* __B_k3k1k2;
+        number* __B_k3k2k1;
+        number* __C_k3k1k2;
+        number* __C_k3k2k1;
+
+        number* __dV;
+        number* __ddV;
+        number* __dddV;
+
+        number* __raw_params;
+
       };
 
 
@@ -244,15 +276,30 @@ namespace transport
       public:
 
         $$__MODEL_background_functor(const parameters<number>& p)
-          : params(p)
           {
+            __dV = new number[$$__NUMBER_FIELDS];
+            __raw_params = new number[$$__NUMBER_PARAMS];
+
+            __raw_params[$$__1] = p.get_vector()[$$__1];
+
+            __Mp = p.get_Mp();
+          }
+
+        ~$$__MODEL_background_functor()
+          {
+            delete[] __dV;
+            delete[] __raw_params;
           }
 
         void operator ()(const backg_state<number>& __x, backg_state<number>& __dxdt, double __t);
 
       protected:
 
-        const parameters<number> params;
+        number* __dV;
+
+        number* __raw_params;
+
+        number __Mp;
 
       };
 
@@ -291,6 +338,64 @@ namespace transport
     $$__MODEL<number>::$$__MODEL()
       : canonical_model<number>("$$__UNIQUE_ID", static_cast<unsigned int>(100*$$__VERSION))
       {
+        __A_k1k2k3 = new number[$$__NUMBER_FIELDS * $$__NUMBER_FIELDS * $$__NUMBER_FIELDS];
+        __A_k1k3k2 = new number[$$__NUMBER_FIELDS * $$__NUMBER_FIELDS * $$__NUMBER_FIELDS];
+        __B_k1k2k3 = new number[$$__NUMBER_FIELDS * $$__NUMBER_FIELDS * $$__NUMBER_FIELDS];
+        __B_k1k3k2 = new number[$$__NUMBER_FIELDS * $$__NUMBER_FIELDS * $$__NUMBER_FIELDS];
+        __C_k1k2k3 = new number[$$__NUMBER_FIELDS * $$__NUMBER_FIELDS * $$__NUMBER_FIELDS];
+        __C_k1k3k2 = new number[$$__NUMBER_FIELDS * $$__NUMBER_FIELDS * $$__NUMBER_FIELDS];
+
+        __A_k2k1k3 = new number[$$__NUMBER_FIELDS * $$__NUMBER_FIELDS * $$__NUMBER_FIELDS];
+        __A_k2k3k1 = new number[$$__NUMBER_FIELDS * $$__NUMBER_FIELDS * $$__NUMBER_FIELDS];
+        __B_k2k1k3 = new number[$$__NUMBER_FIELDS * $$__NUMBER_FIELDS * $$__NUMBER_FIELDS];
+        __B_k2k3k1 = new number[$$__NUMBER_FIELDS * $$__NUMBER_FIELDS * $$__NUMBER_FIELDS];
+        __C_k2k1k3 = new number[$$__NUMBER_FIELDS * $$__NUMBER_FIELDS * $$__NUMBER_FIELDS];
+        __C_k2k3k1 = new number[$$__NUMBER_FIELDS * $$__NUMBER_FIELDS * $$__NUMBER_FIELDS];
+
+        __A_k3k1k2 = new number[$$__NUMBER_FIELDS * $$__NUMBER_FIELDS * $$__NUMBER_FIELDS];
+        __A_k3k2k1 = new number[$$__NUMBER_FIELDS * $$__NUMBER_FIELDS * $$__NUMBER_FIELDS];
+        __B_k3k1k2 = new number[$$__NUMBER_FIELDS * $$__NUMBER_FIELDS * $$__NUMBER_FIELDS];
+        __B_k3k2k1 = new number[$$__NUMBER_FIELDS * $$__NUMBER_FIELDS * $$__NUMBER_FIELDS];
+        __C_k3k1k2 = new number[$$__NUMBER_FIELDS * $$__NUMBER_FIELDS * $$__NUMBER_FIELDS];
+        __C_k3k2k1 = new number[$$__NUMBER_FIELDS * $$__NUMBER_FIELDS * $$__NUMBER_FIELDS];
+
+        __dV = new number[$$__NUMBER_FIELDS];
+        __ddV = new number[$$__NUMBER_FIELDS * $$__NUMBER_FIELDS];
+        __dddV = new number[$$__NUMBER_FIELDS * $$__NUMBER_FIELDS * $$__NUMBER_FIELDS];
+
+        __raw_params = new number[$$__NUMBER_PARAMS];
+      }
+
+
+    template <typename number>
+    $$__MODEL<number>::~$$__MODEL()
+      {
+        delete[] __A_k1k2k3;
+        delete[] __A_k1k3k2;
+        delete[] __B_k1k2k3;
+        delete[] __B_k1k3k2;
+        delete[] __C_k1k2k3;
+        delete[] __C_k1k3k2;
+
+        delete[] __A_k2k1k3;
+        delete[] __A_k2k3k1;
+        delete[] __B_k2k1k3;
+        delete[] __B_k2k3k1;
+        delete[] __C_k2k1k3;
+        delete[] __C_k2k3k1;
+
+        delete[] __A_k3k1k2;
+        delete[] __A_k3k2k1;
+        delete[] __B_k3k1k2;
+        delete[] __B_k3k2k1;
+        delete[] __C_k3k1k2;
+        delete[] __C_k3k2k1;
+
+        delete[] __dV;
+        delete[] __ddV;
+        delete[] __dddV;
+
+        delete[] __raw_params;
       }
 
 
@@ -304,13 +409,12 @@ namespace transport
 
         if(__coords.size() == 2*$$__NUMBER_FIELDS)
           {
-            const auto $$__PARAMETER[1]  = __params.get_vector()[$$__1];
-            const auto $$__COORDINATE[A] = __coords[$$__A];
-            const auto __Mp              = __params.get_Mp();
+            const auto __Mp = __params.get_Mp();
+            const std::vector<number>& __param_vector = __params.get_vector();
 
             $$__TEMP_POOL{"const auto $1 = $2;"}
 
-            return std::sqrt($$__HUBBLE_SQ);
+            return std::sqrt($$__HUBBLE_SQ{__param_vector, __coords, FLATTEN});
           }
         else
           {
@@ -328,13 +432,11 @@ namespace transport
 
         if(__coords.size() == 2*$$__NUMBER_FIELDS)
           {
-            const auto $$__PARAMETER[1]  = __params.get_vector()[$$__1];
-            const auto $$__COORDINATE[A] = __coords[$$__A];
-            const auto __Mp              = __params.get_Mp();
+            const auto __Mp = __params.get_Mp();
 
             $$__TEMP_POOL{"const auto $1 = $2;"}
 
-            return $$__EPSILON;
+            return $$__EPSILON{__coords, FLATTEN};
           }
         else
           {
@@ -352,13 +454,12 @@ namespace transport
 
         if(__coords.size() == 2*$$__NUMBER_FIELDS)
           {
-            const auto $$__PARAMETER[1] = __params.get_vector()[$$__1];
-            const auto $$__FIELD[a]     = __coords[$$__a];
-            const auto __Mp             = __params.get_Mp();
+            const auto __Mp = __params.get_Mp();
+            const std::vector<number>& __param_vector = __params.get_vector();
 
             $$__TEMP_POOL{"const auto $1 = $2;"}
 
-            return $$__POTENTIAL;
+            return $$__POTENTIAL{__param_vector, __coords, FLATTEN};
           }
         else
           {
@@ -366,6 +467,33 @@ namespace transport
             msg << CPPTRANSPORT_WRONG_ICS_A << __coords.size() << CPPTRANSPORT_WRONG_ICS_B << 2*$$__NUMBER_FIELDS << ")";
             throw std::out_of_range(msg.str());
           }
+      }
+
+
+    template <typename number>
+    void $$__MODEL_compute_dV(number* raw_params, const std::vector<number>& __x, number* dV)
+      {
+        $$__TEMP_POOL{"const auto $1 = $2;"}
+
+        dV[FIELDS_FLATTEN($$__a)] = $$__DV[a]{raw_params, __x, FIELDS_FLATTEN};
+      }
+
+
+    template <typename number>
+    void $$__MODEL_compute_ddV(number* raw_params, const std::vector<number>& __x, number* ddV)
+      {
+        $$__TEMP_POOL{"const auto $1 = $2;"}
+
+        ddV[FIELDS_FLATTEN($$__a,$$__b)] = $$__DDV[ab]{raw_params, __x, FIELDS_FLATTEN};
+      }
+
+
+    template <typename number>
+    void $$__MODEL_compute_dddV(number* raw_params, const std::vector<number>& __x, number* dddV)
+      {
+        $$__TEMP_POOL{"const auto $1 = $2;"}
+
+        dddV[FIELDS_FLATTEN($$__a,$$__b,$$__c)] = $$__DDDV[abc]{raw_params, __x, FIELDS_FLATTEN};
       }
 
 
@@ -382,13 +510,11 @@ namespace transport
         if(__input.size() == $$__NUMBER_FIELDS)  // initial conditions for momenta *were not* supplied -- need to compute them
           {
             // supply the missing initial conditions using a slow-roll approximation
-            const auto $$__PARAMETER[1] = __params.get_vector()[$$__1];
-            const auto $$__FIELD[a]     = __input[$$__a];
-            const auto __Mp             = __params.get_Mp();
+            const auto __Mp = __params.get_Mp();
 
             $$__TEMP_POOL{"const auto $1 = $2;"}
 
-            __output.push_back($$__SR_VELOCITY[a]);
+            __output.push_back($$__SR_VELOCITY[a]{__params.get_vector(), __input, FLATTEN});
           }
         else if(__input.size() == 2*$$__NUMBER_FIELDS)  // initial conditions for momenta *were* supplied
           {
@@ -439,25 +565,24 @@ namespace transport
     number $$__MODEL<number>::make_twopf_re_ic(unsigned int __i, unsigned int __j, double __k, double __Ninit,
                                                const twopf_list_task<number>* __task, const std::vector<number>& __fields)
       {
-        const auto $$__PARAMETER[1]  = __task->get_params().get_vector()[$$__1];
-        const auto $$__COORDINATE[A] = __fields[$$__A];
-        const auto __Mp              = __task->get_params().get_Mp();
+        __raw_params[$$__1] = __task->get_params().get_vector()[$$__1];
+
+        const auto __Mp = __task->get_params().get_Mp();
+        const auto __a = std::exp(__Ninit - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
+
+//        $$__MODEL_compute_dV(__raw_params, __fields, __dV);
+//        $$__MODEL_compute_ddV(__raw_params, __fields, __ddV);
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
-        const auto __Hsq             = $$__HUBBLE_SQ;
-        const auto __eps             = $$__EPSILON;
-        const auto __a               = std::exp(__Ninit - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
+        const auto __Hsq = $$__HUBBLE_SQ{__raw_params, __fields, FLATTEN};
+        const auto __N = std::log(__k / (__a * std::sqrt(__Hsq)));
 
-        const auto __N               = std::log(__k/(__a*std::sqrt(__Hsq)));
-
-        number     __tpf             = 0.0;
-
-        $$__TEMP_POOL{"const auto $1 = $2;"}
+        number __tpf = 0.0;
 
 //        std::array< std::array<number, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS> __M;
 //
-//        __M[$$__a][$$__b] = $$__M_PREDEF[ab]{__Hsq, __eps};
+//        __M[$$__a][$$__b] = $$__M_PREDEF[ab]{__raw_params, __fields, __dV, __ddV, FLATTEN, FIELDS_FLATTEN};
 
         // NOTE - conventions for the scale factor are
         //   a = exp(t), where t is the user-defined time (usually = 0 at the start of the integration)
@@ -528,25 +653,24 @@ namespace transport
   number $$__MODEL<number>::make_twopf_im_ic(unsigned int __i, unsigned int __j, double __k, double __Ninit,
                                              const twopf_list_task<number>* __task, const std::vector<number>& __fields)
     {
-      const auto $$__PARAMETER[1]  = __task->get_params().get_vector()[$$__1];
-      const auto $$__COORDINATE[A] = __fields[$$__A];
-      const auto __Mp              = __task->get_params().get_Mp();
+      __raw_params[$$__1] = __task->get_params().get_vector()[$$__1];
+
+      const auto __Mp = __task->get_params().get_Mp();
+      const auto __a = std::exp(__Ninit - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
+
+//      $$__MODEL_compute_dV(__raw_params, __fields, __dV);
+//      $$__MODEL_compute_ddV(__raw_params, __fields, __ddV);
 
       $$__TEMP_POOL{"const auto $1 = $2;"}
 
-      const auto __Hsq             = $$__HUBBLE_SQ;
-      const auto __eps             = $$__EPSILON;
-      const auto __a               = std::exp(__Ninit - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
+      const auto __Hsq = $$__HUBBLE_SQ{__raw_params, __fields, FLATTEN};
+      const auto __N = std::log(__k / (__a * std::sqrt(__Hsq)));
 
-      const auto __N               = std::log(__k/(__a*std::sqrt(__Hsq)));
-
-      number     __tpf             = 0.0;
-
-      $$__TEMP_POOL{"const auto $1 = $2;"}
+      number __tpf = 0.0;
 
 //      std::array< std::array<number, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS> __M;
 //
-//      __M[$$__a][$$__b] = $$__M_PREDEF[ab]{__Hsq, __eps};
+//      __M[$$__a][$$__b] = $$__M_PREDEF[ab]{__raw_params, __fields, __dV, __ddV, FLATTEN, FIELDS_FLATTEN};
 
       // only the field-momentum and momentum-field correlation functions have imaginary parts
       if(IS_FIELD(__i) && IS_MOMENTUM(__j))
@@ -579,21 +703,17 @@ namespace transport
     number $$__MODEL<number>::make_twopf_tensor_ic(unsigned int __i, unsigned int __j, double __k, double __Ninit,
                                                    const twopf_list_task<number>* __task, const std::vector<number>& __fields)
       {
-        const auto $$__PARAMETER[1]  = __task->get_params().get_vector()[$$__1];
-        const auto $$__COORDINATE[A] = __fields[$$__A];
-        const auto __Mp              = __task->get_params().get_Mp();
+        __raw_params[$$__1] = __task->get_params().get_vector()[$$__1];
+
+        const auto __Mp = __task->get_params().get_Mp();
+        const auto __a = std::exp(__Ninit - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
-        const auto __Hsq             = $$__HUBBLE_SQ;
-        const auto __eps             = $$__EPSILON;
-        const auto __a               = std::exp(__Ninit - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
+        const auto __Hsq = $$__HUBBLE_SQ{__raw_params, __fields, FLATTEN};
+        const auto __N = std::log(__k / (__a * std::sqrt(__Hsq)));
 
-        const auto __N               = std::log(__k/(__a*std::sqrt(__Hsq)));
-
-        number     __tpf             = 0.0;
-
-        $$__TEMP_POOL{"const auto $1 = $2;"}
+        number __tpf = 0.0;
 
         if(__i == 0 && __j == 0)                                      // h-h correlation function
           {
@@ -628,69 +748,41 @@ namespace transport
                                               double __k1, double __k2, double __k3, double __Ninit,
                                               const twopf_list_task<number>* __task, const std::vector<number>& __fields)
       {
-        const auto $$__PARAMETER[1]  = __task->get_params().get_vector()[$$__1];
-        const auto $$__COORDINATE[A] = __fields[$$__A];
-        const auto __Mp              = __task->get_params().get_Mp();
+        __raw_params[$$__1] = __task->get_params().get_vector()[$$__1];
+
+        const auto __Mp = __task->get_params().get_Mp();
+        const auto __a = std::exp(__Ninit - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
+
+        $$__MODEL_compute_dV(__raw_params, __fields, __dV);
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
-        const auto __Hsq             = $$__HUBBLE_SQ;
-        const auto __eps             = $$__EPSILON;
-        const auto __a               = std::exp(__Ninit - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
+        const auto __Hsq = $$__HUBBLE_SQ{__raw_params, __fields, FLATTEN};
 
-        const auto __kt              = __k1 + __k2 + __k3;
-        const auto __Ksq             = __k1*__k2 + __k1*__k3 + __k2*__k3;
-        const auto __kprod3          = 4.0 * __k1*__k1*__k1 * __k2*__k2*__k2 * __k3*__k3*__k3;
+        const auto __kt      = __k1 + __k2 + __k3;
+        const auto __Ksq     = __k1*__k2 + __k1*__k3 + __k2*__k3;
+        const auto __kprod3  = 4.0 * __k1*__k1*__k1 * __k2*__k2*__k2 * __k3*__k3*__k3;
 
-        const auto __k2dotk3         = (__k1*__k1 - __k2*__k2 - __k3*__k3)/2.0;
-        const auto __k1dotk3         = (__k2*__k2 - __k1*__k1 - __k3*__k3)/2.0;
-        const auto __k1dotk2         = (__k3*__k3 - __k1*__k1 - __k2*__k2)/2.0;
+        const auto __k2dotk3 = (__k1*__k1 - __k2*__k2 - __k3*__k3)/2.0;
+        const auto __k1dotk3 = (__k2*__k2 - __k1*__k1 - __k3*__k3)/2.0;
+        const auto __k1dotk2 = (__k3*__k3 - __k1*__k1 - __k2*__k2)/2.0;
 
-        number     __tpf             = 0.0;
+        number __tpf = 0.0;
 
-        $$__TEMP_POOL{"const auto $1 = $2;"}
+        __B_k1k2k3[FIELDS_FLATTEN($$__a, $$__b, $$__c)] = $$__B_PREDEF[abc]{__k1, __k2, __k3, __a, __raw_params, __fields, __dV, FLATTEN, FIELDS_FLATTEN};
+        __B_k1k3k2[FIELDS_FLATTEN($$__a, $$__b, $$__c)] = $$__B_PREDEF[abc]{__k1, __k3, __k2, __a, __raw_params, __fields, __dV, FLATTEN, FIELDS_FLATTEN};
+        __C_k1k2k3[FIELDS_FLATTEN($$__a, $$__b, $$__c)] = $$__C_PREDEF[abc]{__k1, __k2, __k3, __a, __raw_params, __fields, FLATTEN};
+        __C_k1k3k2[FIELDS_FLATTEN($$__a, $$__b, $$__c)] = $$__C_PREDEF[abc]{__k1, __k3, __k2, __a, __raw_params, __fields, FLATTEN};
 
-        std::array< std::array< std::array<number, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS> __A_k1k2k3;
-        std::array< std::array< std::array<number, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS> __A_k1k3k2;
-        std::array< std::array< std::array<number, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS> __B_k1k2k3;
-        std::array< std::array< std::array<number, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS> __B_k1k3k2;
-        std::array< std::array< std::array<number, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS> __C_k1k2k3;
-        std::array< std::array< std::array<number, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS> __C_k1k3k2;
+        __B_k2k3k1[FIELDS_FLATTEN($$__a, $$__b, $$__c)] = $$__B_PREDEF[abc]{__k2, __k3, __k1, __a, __raw_params, __fields, __dV, FLATTEN, FIELDS_FLATTEN};
+        __B_k2k1k3[FIELDS_FLATTEN($$__a, $$__b, $$__c)] = $$__B_PREDEF[abc]{__k2, __k1, __k3, __a, __raw_params, __fields, __dV, FLATTEN, FIELDS_FLATTEN};
+        __C_k2k3k1[FIELDS_FLATTEN($$__a, $$__b, $$__c)] = $$__C_PREDEF[abc]{__k2, __k3, __k1, __a, __raw_params, __fields, FLATTEN};
+        __C_k2k1k3[FIELDS_FLATTEN($$__a, $$__b, $$__c)] = $$__C_PREDEF[abc]{__k2, __k1, __k3, __a, __raw_params, __fields, FLATTEN};
 
-        std::array< std::array< std::array<number, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS> __A_k2k1k3;
-        std::array< std::array< std::array<number, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS> __A_k2k3k1;
-        std::array< std::array< std::array<number, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS> __B_k2k1k3;
-        std::array< std::array< std::array<number, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS> __B_k2k3k1;
-        std::array< std::array< std::array<number, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS> __C_k2k1k3;
-        std::array< std::array< std::array<number, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS> __C_k2k3k1;
-
-        std::array< std::array< std::array<number, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS> __A_k3k1k2;
-        std::array< std::array< std::array<number, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS> __A_k3k2k1;
-        std::array< std::array< std::array<number, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS> __B_k3k1k2;
-        std::array< std::array< std::array<number, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS> __B_k3k2k1;
-        std::array< std::array< std::array<number, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS> __C_k3k1k2;
-        std::array< std::array< std::array<number, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS> __C_k3k2k1;
-
-        __A_k1k2k3[$$__a][$$__b][$$__c] = $$__A_PREDEF[abc]{__k1, __k2, __k3, __a, __Hsq, __eps};
-        __A_k1k3k2[$$__a][$$__b][$$__c] = $$__A_PREDEF[abc]{__k1, __k3, __k2, __a, __Hsq, __eps};
-        __B_k1k2k3[$$__a][$$__b][$$__c] = $$__B_PREDEF[abc]{__k1, __k2, __k3, __a, __Hsq, __eps};
-        __B_k1k3k2[$$__a][$$__b][$$__c] = $$__B_PREDEF[abc]{__k1, __k3, __k2, __a, __Hsq, __eps};
-        __C_k1k2k3[$$__a][$$__b][$$__c] = $$__C_PREDEF[abc]{__k1, __k2, __k3, __a, __Hsq, __eps};
-        __C_k1k3k2[$$__a][$$__b][$$__c] = $$__C_PREDEF[abc]{__k1, __k3, __k2, __a, __Hsq, __eps};
-
-        __A_k2k3k1[$$__a][$$__b][$$__c] = $$__A_PREDEF[abc]{__k2, __k3, __k1, __a, __Hsq, __eps};
-        __A_k2k1k3[$$__a][$$__b][$$__c] = $$__A_PREDEF[abc]{__k2, __k1, __k3, __a, __Hsq, __eps};
-        __B_k2k3k1[$$__a][$$__b][$$__c] = $$__B_PREDEF[abc]{__k2, __k3, __k1, __a, __Hsq, __eps};
-        __B_k2k1k3[$$__a][$$__b][$$__c] = $$__B_PREDEF[abc]{__k2, __k1, __k3, __a, __Hsq, __eps};
-        __C_k2k3k1[$$__a][$$__b][$$__c] = $$__C_PREDEF[abc]{__k2, __k3, __k1, __a, __Hsq, __eps};
-        __C_k2k1k3[$$__a][$$__b][$$__c] = $$__C_PREDEF[abc]{__k2, __k1, __k3, __a, __Hsq, __eps};
-
-        __A_k3k1k2[$$__a][$$__b][$$__c] = $$__A_PREDEF[abc]{__k3, __k1, __k2, __a, __Hsq, __eps};
-        __A_k3k2k1[$$__a][$$__b][$$__c] = $$__A_PREDEF[abc]{__k3, __k2, __k1, __a, __Hsq, __eps};
-        __B_k3k1k2[$$__a][$$__b][$$__c] = $$__B_PREDEF[abc]{__k3, __k1, __k2, __a, __Hsq, __eps};
-        __B_k3k2k1[$$__a][$$__b][$$__c] = $$__B_PREDEF[abc]{__k3, __k2, __k1, __a, __Hsq, __eps};
-        __C_k3k1k2[$$__a][$$__b][$$__c] = $$__C_PREDEF[abc]{__k3, __k1, __k2, __a, __Hsq, __eps};
-        __C_k3k2k1[$$__a][$$__b][$$__c] = $$__C_PREDEF[abc]{__k3, __k2, __k1, __a, __Hsq, __eps};
+        __B_k3k1k2[FIELDS_FLATTEN($$__a, $$__b, $$__c)] = $$__B_PREDEF[abc]{__k3, __k1, __k2, __a, __raw_params, __fields, __dV, FLATTEN, FIELDS_FLATTEN};
+        __B_k3k2k1[FIELDS_FLATTEN($$__a, $$__b, $$__c)] = $$__B_PREDEF[abc]{__k3, __k2, __k1, __a, __raw_params, __fields, __dV, FLATTEN, FIELDS_FLATTEN};
+        __C_k3k1k2[FIELDS_FLATTEN($$__a, $$__b, $$__c)] = $$__C_PREDEF[abc]{__k3, __k1, __k2, __a, __raw_params, __fields, FLATTEN};
+        __C_k3k2k1[FIELDS_FLATTEN($$__a, $$__b, $$__c)] = $$__C_PREDEF[abc]{__k3, __k2, __k1, __a, __raw_params, __fields, FLATTEN};
 
         unsigned int total_fields  = (IS_FIELD(__i)    ? 1 : 0) + (IS_FIELD(__j)    ? 1 : 0) + (IS_FIELD(__k)    ? 1 : 0);
         unsigned int total_momenta = (IS_MOMENTUM(__i) ? 1 : 0) + (IS_MOMENTUM(__j) ? 1 : 0) + (IS_MOMENTUM(__k) ? 1 : 0);
@@ -712,9 +804,9 @@ namespace transport
                 __tpf += (SPECIES(__i) == SPECIES(__j) ? __fields[MOMENTUM(__k)] : 0.0) * __k1dotk2 / (2.0*__Mp*__Mp);
 
                 // these components are dimension 1
-                __tpf += - (__C_k1k2k3[SPECIES(__i)][SPECIES(__j)][SPECIES(__k)] + __C_k2k1k3[SPECIES(__j)][SPECIES(__i)][SPECIES(__k)])*__k1*__k2/2.0;
-                __tpf += - (__C_k1k3k2[SPECIES(__i)][SPECIES(__k)][SPECIES(__j)] + __C_k3k1k2[SPECIES(__k)][SPECIES(__i)][SPECIES(__j)])*__k1*__k3/2.0;
-                __tpf += - (__C_k2k3k1[SPECIES(__j)][SPECIES(__k)][SPECIES(__i)] + __C_k3k2k1[SPECIES(__k)][SPECIES(__j)][SPECIES(__i)])*__k2*__k3/2.0;
+                __tpf += - (__C_k1k2k3[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__j), SPECIES(__k))] + __C_k2k1k3[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__i), SPECIES(__k))])*__k1*__k2/2.0;
+                __tpf += - (__C_k1k3k2[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__k), SPECIES(__j))] + __C_k3k1k2[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__i), SPECIES(__j))])*__k1*__k3/2.0;
+                __tpf += - (__C_k2k3k1[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__k), SPECIES(__i))] + __C_k3k2k1[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__j), SPECIES(__i))])*__k2*__k3/2.0;
 
                 __tpf *= __prefactor / __kprod3;
                 break;
@@ -737,9 +829,9 @@ namespace transport
                      __tpf_1 += (SPECIES(__i) == SPECIES(__j) ? __fields[MOMENTUM(__k)] : 0.0) * __k1*__k2*__k3 * __k1dotk2 / (2.0*__Mp*__Mp);
 
                 // these components are dimension 4
-                     __tpf_1 += - (__C_k1k2k3[SPECIES(__i)][SPECIES(__j)][SPECIES(__k)] + __C_k2k1k3[SPECIES(__j)][SPECIES(__i)][SPECIES(__k)])*__k1*__k1*__k2*__k2*__k3 / 2.0;
-                     __tpf_1 += - (__C_k1k3k2[SPECIES(__i)][SPECIES(__k)][SPECIES(__j)] + __C_k3k1k2[SPECIES(__k)][SPECIES(__i)][SPECIES(__j)])*__k1*__k1*__k3*__k3*__k2 / 2.0;
-                     __tpf_1 += - (__C_k2k3k1[SPECIES(__j)][SPECIES(__k)][SPECIES(__i)] + __C_k3k2k1[SPECIES(__k)][SPECIES(__j)][SPECIES(__i)])*__k2*__k2*__k3*__k3*__k1 / 2.0;
+                     __tpf_1 += - (__C_k1k2k3[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__j), SPECIES(__k))] + __C_k2k1k3[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__i), SPECIES(__k))])*__k1*__k1*__k2*__k2*__k3 / 2.0;
+                     __tpf_1 += - (__C_k1k3k2[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__k), SPECIES(__j))] + __C_k3k1k2[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__i), SPECIES(__j))])*__k1*__k1*__k3*__k3*__k2 / 2.0;
+                     __tpf_1 += - (__C_k2k3k1[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__k), SPECIES(__i))] + __C_k3k2k1[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__j), SPECIES(__i))])*__k2*__k2*__k3*__k3*__k1 / 2.0;
 
                 __tpf = __prefactor_1 * __tpf_1;
 
@@ -753,14 +845,14 @@ namespace transport
                      __tpf_2 += (SPECIES(__i) == SPECIES(__j) ? __fields[MOMENTUM(__k)] : 0.0) * -(__Ksq + __k1*__k2*__k3/__kt) * __k1dotk2 / (2.0*__Mp*__Mp);
 
                 // these componennts are dimension 3
-                     __tpf_2 += (__C_k1k2k3[SPECIES(__i)][SPECIES(__j)][SPECIES(__k)] + __C_k2k1k3[SPECIES(__j)][SPECIES(__i)][SPECIES(__k)])*__k1*__k1*__k2*__k2*(1.0+__k3/__kt) / 2.0;
-                     __tpf_2 += (__C_k1k3k2[SPECIES(__i)][SPECIES(__k)][SPECIES(__j)] + __C_k3k1k2[SPECIES(__k)][SPECIES(__i)][SPECIES(__j)])*__k1*__k1*__k3*__k3*(1.0+__k2/__kt) / 2.0;
-                     __tpf_2 += (__C_k2k3k1[SPECIES(__j)][SPECIES(__k)][SPECIES(__i)] + __C_k3k2k1[SPECIES(__k)][SPECIES(__j)][SPECIES(__i)])*__k2*__k2*__k3*__k3*(1.0+__k1/__kt) / 2.0;
+                     __tpf_2 += (__C_k1k2k3[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__j), SPECIES(__k))] + __C_k2k1k3[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__i), SPECIES(__k))])*__k1*__k1*__k2*__k2*(1.0+__k3/__kt) / 2.0;
+                     __tpf_2 += (__C_k1k3k2[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__k), SPECIES(__j))] + __C_k3k1k2[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__i), SPECIES(__j))])*__k1*__k1*__k3*__k3*(1.0+__k2/__kt) / 2.0;
+                     __tpf_2 += (__C_k2k3k1[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__k), SPECIES(__i))] + __C_k3k2k1[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__j), SPECIES(__i))])*__k2*__k2*__k3*__k3*(1.0+__k1/__kt) / 2.0;
 
                 // these components are dimension 3
-                     __tpf_2 += (__B_k2k3k1[SPECIES(__j)][SPECIES(__k)][SPECIES(__i)] + __B_k3k2k1[SPECIES(__k)][SPECIES(__j)][SPECIES(__i)])*__k1*__k1*__k2*__k3 / 2.0;
-                     __tpf_2 += (__B_k1k3k2[SPECIES(__i)][SPECIES(__k)][SPECIES(__j)] + __B_k3k1k2[SPECIES(__k)][SPECIES(__i)][SPECIES(__j)])*__k2*__k2*__k1*__k3 / 2.0;
-                     __tpf_2 += (__B_k1k2k3[SPECIES(__i)][SPECIES(__j)][SPECIES(__k)] + __B_k2k1k3[SPECIES(__j)][SPECIES(__i)][SPECIES(__k)])*__k3*__k3*__k1*__k2 / 2.0;
+                     __tpf_2 += (__B_k2k3k1[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__k), SPECIES(__i))] + __B_k3k2k1[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__j), SPECIES(__i))])*__k1*__k1*__k2*__k3 / 2.0;
+                     __tpf_2 += (__B_k1k3k2[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__k), SPECIES(__j))] + __B_k3k1k2[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__i), SPECIES(__j))])*__k2*__k2*__k1*__k3 / 2.0;
+                     __tpf_2 += (__B_k1k2k3[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__j), SPECIES(__k))] + __B_k2k1k3[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__i), SPECIES(__k))])*__k3*__k3*__k1*__k2 / 2.0;
 
                 __tpf += __prefactor_2 * __tpf_2;
 
@@ -785,9 +877,9 @@ namespace transport
                 __tpf += (SPECIES(__i) == SPECIES(__j) ? __fields[MOMENTUM(__k)] : 0.0) * __k1dotk2 / (2.0*__Mp*__Mp);
 
                 // these components have dimension 1
-                __tpf += - (__C_k1k2k3[SPECIES(__i)][SPECIES(__j)][SPECIES(__k)] + __C_k2k1k3[SPECIES(__j)][SPECIES(__i)][SPECIES(__k)]) * __k1*__k2 / 2.0;
-                __tpf += - (__C_k1k3k2[SPECIES(__i)][SPECIES(__k)][SPECIES(__j)] + __C_k3k1k2[SPECIES(__k)][SPECIES(__i)][SPECIES(__j)]) * __k1*__k3 / 2.0;
-                __tpf += - (__C_k2k3k1[SPECIES(__j)][SPECIES(__k)][SPECIES(__i)] + __C_k3k2k1[SPECIES(__k)][SPECIES(__j)][SPECIES(__i)]) * __k2*__k3 / 2.0;
+                __tpf += - (__C_k1k2k3[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__j), SPECIES(__k))] + __C_k2k1k3[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__i), SPECIES(__k))]) * __k1*__k2 / 2.0;
+                __tpf += - (__C_k1k3k2[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__k), SPECIES(__j))] + __C_k3k1k2[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__i), SPECIES(__j))]) * __k1*__k3 / 2.0;
+                __tpf += - (__C_k2k3k1[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__k), SPECIES(__i))] + __C_k3k2k1[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__j), SPECIES(__i))]) * __k2*__k3 / 2.0;
 
                 __tpf *= __prefactor * __mom_factor / __kprod3;
                 break;
@@ -807,14 +899,14 @@ namespace transport
                 __tpf += (SPECIES(__i) == SPECIES(__j) ? __fields[MOMENTUM(__k)] : 0.0) * -(__Ksq + __k1*__k2*__k3/__kt) * __k1dotk2 / (2.0*__Mp*__Mp);
 
                 // these components are dimension 2
-                __tpf += (__C_k1k2k3[SPECIES(__i)][SPECIES(__j)][SPECIES(__k)] + __C_k2k1k3[SPECIES(__j)][SPECIES(__i)][SPECIES(__k)])*__k1*__k1*__k2*__k2*(1.0+__k3/__kt) / 2.0;
-                __tpf += (__C_k1k3k2[SPECIES(__i)][SPECIES(__k)][SPECIES(__j)] + __C_k3k1k2[SPECIES(__k)][SPECIES(__i)][SPECIES(__j)])*__k1*__k1*__k3*__k3*(1.0+__k2/__kt) / 2.0;
-                __tpf += (__C_k2k3k1[SPECIES(__j)][SPECIES(__k)][SPECIES(__i)] + __C_k3k2k1[SPECIES(__k)][SPECIES(__j)][SPECIES(__i)])*__k2*__k2*__k3*__k3*(1.0+__k1/__kt) / 2.0;
+                __tpf += (__C_k1k2k3[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__j), SPECIES(__k))] + __C_k2k1k3[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__i), SPECIES(__k))])*__k1*__k1*__k2*__k2*(1.0+__k3/__kt) / 2.0;
+                __tpf += (__C_k1k3k2[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__k), SPECIES(__j))] + __C_k3k1k2[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__i), SPECIES(__j))])*__k1*__k1*__k3*__k3*(1.0+__k2/__kt) / 2.0;
+                __tpf += (__C_k2k3k1[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__k), SPECIES(__i))] + __C_k3k2k1[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__j), SPECIES(__i))])*__k2*__k2*__k3*__k3*(1.0+__k1/__kt) / 2.0;
 
                 // these components are dimension 2
-                __tpf += (__B_k2k3k1[SPECIES(__j)][SPECIES(__k)][SPECIES(__i)] + __B_k3k2k1[SPECIES(__k)][SPECIES(__j)][SPECIES(__i)])*__k1*__k1*__k2*__k3/2.0;
-                __tpf += (__B_k1k3k2[SPECIES(__i)][SPECIES(__k)][SPECIES(__j)] + __B_k3k1k2[SPECIES(__k)][SPECIES(__i)][SPECIES(__j)])*__k2*__k2*__k1*__k3/2.0;
-                __tpf += (__B_k1k2k3[SPECIES(__i)][SPECIES(__j)][SPECIES(__k)] + __B_k2k1k3[SPECIES(__j)][SPECIES(__i)][SPECIES(__k)])*__k3*__k3*__k1*__k2/2.0;
+                __tpf += (__B_k2k3k1[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__k), SPECIES(__i))] + __B_k3k2k1[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__j), SPECIES(__i))])*__k1*__k1*__k2*__k3/2.0;
+                __tpf += (__B_k1k3k2[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__k), SPECIES(__j))] + __B_k3k1k2[FIELDS_FLATTEN(SPECIES(__k), SPECIES(__i), SPECIES(__j))])*__k2*__k2*__k1*__k3/2.0;
+                __tpf += (__B_k1k2k3[FIELDS_FLATTEN(SPECIES(__i), SPECIES(__j), SPECIES(__k))] + __B_k2k1k3[FIELDS_FLATTEN(SPECIES(__j), SPECIES(__i), SPECIES(__k))])*__k3*__k3*__k1*__k2/2.0;
 
                 __tpf *= __prefactor / __kprod3;
                 break;
@@ -836,18 +928,14 @@ namespace transport
                                                 const std::vector<number>& __state,
                                                 std::vector<number>& __dN)
       {
-        const auto $$__PARAMETER[1]  = __task->get_params().get_vector()[$$__1];
-        const auto $$__COORDINATE[A] = __state[$$__A];
-        const auto __Mp              = __task->get_params().get_Mp();
+        __raw_params[$$__1] = __task->get_params().get_vector()[$$__1];
+        const auto __Mp = __task->get_params().get_Mp();
+
+        $$__MODEL_compute_dV(__raw_params, __state, __dV);
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
-        const auto __Hsq             = $$__HUBBLE_SQ;
-        const auto __eps             = $$__EPSILON;
-
-        $$__TEMP_POOL{"const auto $1 = $2;"}
-
-        __dN[FLATTEN($$__A)] = $$__ZETA_XFM_1[A]{__Hsq, __eps};
+        __dN[FLATTEN($$__A)] = $$__ZETA_XFM_1[A]{__raw_params, __state, __dV, FLATTEN, FIELDS_FLATTEN};
       }
 
 
@@ -857,19 +945,15 @@ namespace transport
                                                 double __k, double __k1, double __k2, double __N,
                                                 std::vector<number>& __ddN)
       {
-        const auto $$__PARAMETER[1]  = __task->get_params().get_vector()[$$__1];
-        const auto $$__COORDINATE[A] = __state[$$__A];
-        const auto __Mp              = __task->get_params().get_Mp();
+        __raw_params[$$__1] = __task->get_params().get_vector()[$$__1];
+        const auto __Mp = __task->get_params().get_Mp();
+        const auto __a = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
+
+        $$__MODEL_compute_dV(__raw_params, __state, __dV);
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
-        const auto __Hsq             = $$__HUBBLE_SQ;
-        const auto __eps             = $$__EPSILON;
-        const auto __a               = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
-
-        $$__TEMP_POOL{"const auto $1 = $2;"}
-
-        __ddN[FLATTEN($$__A,$$__B)] = $$__ZETA_XFM_2[AB]{__k, __k1, __k2, __a, __Hsq, __eps};
+        __ddN[FLATTEN($$__A,$$__B)] = $$__ZETA_XFM_2[AB]{__k, __k1, __k2, __a, __raw_params, __state, __dV, FLATTEN, FIELDS_FLATTEN};
       }
 
 
@@ -878,13 +962,12 @@ namespace transport
                                                  const std::vector<number>& __state,
                                                  std::vector<number>& __dN)
 	    {
-        const auto $$__PARAMETER[1]  = __task->get_params().get_vector()[$$__1];
-        const auto $$__COORDINATE[A] = __state[$$__A];
-        const auto __Mp              = __task->get_params().get_Mp();
+        __raw_params[$$__1] = __task->get_params().get_vector()[$$__1];
+        const auto __Mp = __task->get_params().get_Mp();
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
-        __dN[FLATTEN($$__A)] = $$__DELTAN_XFM_1[A];
+        __dN[FLATTEN($$__A)] = $$__DELTAN_XFM_1[A]{__raw_params, __state, FLATTEN};
 	    }
 
 
@@ -893,13 +976,14 @@ namespace transport
                                                  const std::vector<number>& __state,
                                                  std::vector<number>& __ddN)
 	    {
-        const auto $$__PARAMETER[1]  = __task->get_params().get_vector()[$$__1];
-        const auto $$__COORDINATE[A] = __state[$$__A];
-        const auto __Mp              = __task->get_params().get_Mp();
+        __raw_params[$$__1] = __task->get_params().get_vector()[$$__1];
+        const auto __Mp = __task->get_params().get_Mp();
+
+        $$__MODEL_compute_dV(__raw_params, __state, __dV);
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
-        __ddN[FLATTEN($$__A,$$__B)] = $$__DELTAN_XFM_2[AB];
+        __ddN[FLATTEN($$__A,$$__B)] = $$__DELTAN_XFM_2[AB]{__raw_params, __state, __dV, FLATTEN, FIELDS_FLATTEN};
 	    }
 
 
@@ -911,19 +995,16 @@ namespace transport
                                const std::vector<number>& __fields, double __k, double __N,
                                std::vector<number>& __u2)
       {
-        const auto $$__PARAMETER[1]  = __task->get_params().get_vector()[$$__1];
-        const auto $$__COORDINATE[A] = __fields[$$__A];
-        const auto __Mp              = __task->get_params().get_Mp();
+        __raw_params[$$__1] = __task->get_params().get_vector()[$$__1];
+        const auto __Mp = __task->get_params().get_Mp();
+        const auto __a = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
+
+        $$__MODEL_compute_dV(__raw_params, __fields, __dV);
+        $$__MODEL_compute_ddV(__raw_params, __fields, __ddV);
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
-        const auto __Hsq             = $$__HUBBLE_SQ;
-        const auto __eps             = $$__EPSILON;
-        const auto __a               = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
-
-        $$__TEMP_POOL{"const auto $1 = $2;"}
-
-        __u2[FLATTEN($$__A,$$__B)] = $$__U2_PREDEF[AB]{__k, __a, __Hsq, __eps};
+        __u2[FLATTEN($$__A,$$__B)] = $$__U2_PREDEF[AB]{__k, __a, __raw_params, __fields, __dV, __ddV, FLATTEN, FIELDS_FLATTEN};
       }
 
 
@@ -932,19 +1013,17 @@ namespace transport
                                const std::vector<number>& __fields, double __k1, double __k2, double __k3, double __N,
                                std::vector<number>& __u3)
       {
-        const auto $$__PARAMETER[1]  = __task->get_params().get_vector()[$$__1];
-        const auto $$__COORDINATE[A] = __fields[$$__A];
-        const auto __Mp              = __task->get_params().get_Mp();
+        __raw_params[$$__1] = __task->get_params().get_vector()[$$__1];
+        const auto __Mp = __task->get_params().get_Mp();
+        const auto __a = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
-        const auto __Hsq             = $$__HUBBLE_SQ;
-        const auto __eps             = $$__EPSILON;
-        const auto __a               = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
+        $$__MODEL_compute_dV(__raw_params, __fields, __dV);
+        $$__MODEL_compute_ddV(__raw_params, __fields, __ddV);
+        $$__MODEL_compute_dddV(__raw_params, __fields, __dddV);
 
-        $$__TEMP_POOL{"const auto $1 = $2;"}
-
-        __u3[FLATTEN($$__A,$$__B,$$__C)] = $$__U3_PREDEF[ABC]{__k1, __k1, __k3, __a, __Hsq, __eps};
+        __u3[FLATTEN($$__A,$$__B,$$__C)] = $$__U3_PREDEF[ABC]{__k1, __k1, __k3, __a, __raw_params, __fields, __dV, __ddV, __dddV, FLATTEN, FIELDS_FLATTEN};
       }
 
 
@@ -953,19 +1032,17 @@ namespace transport
                               const std::vector<number>& __fields, double __k1, double __k2, double __k3, double __N,
                               std::vector<number>& __A)
       {
-        const auto $$__PARAMETER[1]       = __task->get_params().get_vector()[$$__1];
-        const auto $$__COORDINATE[A]      = __fields[$$__A];
-        const auto __Mp                   = __task->get_params().get_Mp();
+        __raw_params[$$__1] = __task->get_params().get_vector()[$$__1];
+        const auto __Mp = __task->get_params().get_Mp();
+        const auto __a = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
+
+        $$__MODEL_compute_dV(__raw_params, __fields, __dV);
+        $$__MODEL_compute_ddV(__raw_params, __fields, __ddV);
+        $$__MODEL_compute_dddV(__raw_params, __fields, __dddV);
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
-        const auto __Hsq                  = $$__HUBBLE_SQ;
-        const auto __eps                  = $$__EPSILON;
-        const auto __a                    = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
-
-        $$__TEMP_POOL{"const auto $1 = $2;"}
-
-        __A[FIELDS_FLATTEN($$__a,$$__b,$$__c)] = $$__A_PREDEF[abc]{__k1, __k2, __k3, __a, __Hsq, __eps};
+        __A[FIELDS_FLATTEN($$__a,$$__b,$$__c)] = $$__A_PREDEF[abc]{__k1, __k2, __k3, __a, __raw_params, __fields, __dV, __ddV, __dddV, FLATTEN, FIELDS_FLATTEN};
       }
 
 
@@ -974,19 +1051,15 @@ namespace transport
                               const std::vector<number>& __fields, double __k1, double __k2, double __k3, double __N,
                               std::vector<number>& __B)
       {
-        const auto $$__PARAMETER[1]       = __task->get_params().get_vector()[$$__1];
-        const auto $$__COORDINATE[A]      = __fields[$$__A];
-        const auto __Mp                   = __task->get_params().get_Mp();
+        __raw_params[$$__1] = __task->get_params().get_vector()[$$__1];
+        const auto __Mp = __task->get_params().get_Mp();
+        const auto __a = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
+
+        $$__MODEL_compute_dV(__raw_params, __fields, __dV);
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
-        const auto __Hsq                  = $$__HUBBLE_SQ;
-        const auto __eps                  = $$__EPSILON;
-        const auto __a                    = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
-
-        $$__TEMP_POOL{"const auto $1 = $2;"}
-
-        __B[FIELDS_FLATTEN($$__a,$$__b,$$__c)] = $$__B_PREDEF[abc]{__k1, __k2, __k3, __a, __Hsq, __eps};
+        __B[FIELDS_FLATTEN($$__a,$$__b,$$__c)] = $$__B_PREDEF[abc]{__k1, __k2, __k3, __a, __raw_params, __fields, __dV, FLATTEN, FIELDS_FLATTEN};
       }
 
 
@@ -995,19 +1068,13 @@ namespace transport
                               const std::vector<number>& __fields, double __k1, double __k2, double __k3, double __N,
                               std::vector<number>& __C)
       {
-        const auto $$__PARAMETER[1]       = __task->get_params().get_vector()[$$__1];
-        const auto $$__COORDINATE[A]      = __fields[$$__A];
-        const auto __Mp                   = __task->get_params().get_Mp();
+        __raw_params[$$__1] = __task->get_params().get_vector()[$$__1];
+        const auto __Mp = __task->get_params().get_Mp();
+        const auto __a = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
-        const auto __Hsq                  = $$__HUBBLE_SQ;
-        const auto __eps                  = $$__EPSILON;
-        const auto __a                    = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
-
-        $$__TEMP_POOL{"const auto $1 = $2;"}
-
-        __C[FIELDS_FLATTEN($$__a,$$__b,$$__c)] = $$__C_PREDEF[abc]{__k1, __k2, __k3, __a, __Hsq, __eps};
+        __C[FIELDS_FLATTEN($$__a,$$__b,$$__c)] = $$__C_PREDEF[abc]{__k1, __k2, __k3, __a, __raw_params, __fields, FLATTEN};
       }
 
 
@@ -1046,35 +1113,23 @@ namespace transport
           {
           public:
             EpsilonUnityPredicate(const parameters<number>& p)
-              : params(p)
               {
-                param_vector = params.get_vector();
-                Mp = params.get_Mp();
+                __Mp = p.get_Mp();
               }
 
             bool operator()(const std::pair< backg_state<number>, double >& __x)
               {
-                const auto $$__PARAMETER[1]  = this->param_vector[$$__1];
-                const auto $$__COORDINATE[A] = __x.first[$$__A];
-                const auto __Mp              = this->Mp;
-
                 $$__TEMP_POOL{"const auto $1 = $2;"}
 
-                const auto __eps = $$__EPSILON;
+                const auto __eps = $$__EPSILON{__x.first, FLATTEN};
 
                 return (__eps >= 1.0 || __eps < 0.0);
               }
 
           private:
 
-            //! parameters for the model in use
-            const parameters<number>& params;
-
-            //! cache parameters vectors
-            std::vector<number> param_vector;
-
             //! cache Planck mass
-            number Mp;
+            number __Mp;
 
           };
 
@@ -1129,13 +1184,11 @@ namespace transport
 
             bool operator()(const std::pair< backg_state<number>, double >& __x)
               {
-                const auto $$__PARAMETER[1]  = this->param_vector[$$__1];
-                const auto $$__COORDINATE[A] = __x.first[$$__A];
-                const auto __Mp              = this->Mp;
+                const auto __Mp = this->Mp;
 
                 $$__TEMP_POOL{"const auto $1 = $2;"}
 
-                const auto __Hsq = $$__HUBBLE_SQ;
+                const auto __Hsq = $$__HUBBLE_SQ{param_vector, __x.first, FLATTEN};
                 const auto __H   = std::sqrt(__Hsq);
 
                 const auto __a   = std::exp(__x.second - this->N_horizon_crossing + this->astar_normalization);
@@ -1232,24 +1285,19 @@ namespace transport
     template <typename number>
     void $$__MODEL_background_functor<number>::operator()(const backg_state<number>& __x, backg_state<number>& __dxdt, double __t)
       {
-        const auto $$__PARAMETER[1]  = this->params.get_vector()[$$__1];
-        const auto $$__COORDINATE[A] = __x[$$__A];
-        const auto __Mp              = this->params.get_Mp();
+        $$__MODEL_compute_dV(__raw_params, __x, __dV);
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
-        const auto __Hsq             = $$__HUBBLE_SQ;
-        const auto __eps             = $$__EPSILON;
-
-        $$__TEMP_POOL{"const auto $1 = $2;"}
+        const auto __Hsq = $$__HUBBLE_SQ{__raw_params, __x, FLATTEN};
 
         // check whether Hsq is positive
         if(__Hsq < 0) throw Hsq_is_negative(__t);
 
         // check for nan being produced
-        if(std::isnan($$__COORDINATE[A])) throw integration_produced_nan(__t);
+        if(std::isnan(__x[$$__A])) throw integration_produced_nan(__t);
 
-        __dxdt[FLATTEN($$__A)] = $$__U1_PREDEF[A]{__Hsq,__eps};
+        __dxdt[FLATTEN($$__A)] = $$__U1_PREDEF[A]{__raw_params, __x, __dV, FLATTEN, FIELDS_FLATTEN};
       }
 
 

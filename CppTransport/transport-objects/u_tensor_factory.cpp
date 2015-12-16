@@ -47,12 +47,6 @@ unsigned int u_tensor_factory::momentum(unsigned int z)
   }
 
 
-const GiNaC::symbol& u_tensor_factory::coordinate(unsigned int z)
-  {
-    return ((z < this->num_fields) ? this->field_list[z] : this->deriv_list[z - this->num_fields]);
-  }
-
-
 bool u_tensor_factory::is_field(unsigned int z)
   {
     return (z < this->num_fields);
@@ -65,8 +59,7 @@ bool u_tensor_factory::is_momentum(unsigned int z)
   }
 
 
-std::unique_ptr<GiNaC::exmap> u_tensor_factory::substitution_map(const std::vector<GiNaC::symbol>& params,
-                                                                 const std::vector<GiNaC::symbol>& fields)
+std::unique_ptr<GiNaC::exmap> u_tensor_factory::substitution_map(const std::vector<GiNaC::symbol>& params, const std::vector<GiNaC::symbol>& fields)
   {
     std::unique_ptr<GiNaC::exmap> map = std::make_unique<GiNaC::exmap>();
 
@@ -87,7 +80,18 @@ std::unique_ptr<GiNaC::exmap> u_tensor_factory::substitution_map(const std::vect
   }
 
 
-GiNaC::ex u_tensor_factory::substitute_V(const GiNaC::exmap& map, const std::vector<GiNaC::ex>& args)
+GiNaC::ex u_tensor_factory::substitute_V(const std::vector<GiNaC::symbol>& params, const std::vector<GiNaC::symbol>& fields)
+  {
+    std::vector<GiNaC::ex> args;
+    std::copy(params.begin(), params.end(), std::back_inserter(args));
+    std::copy(fields.begin(), fields.end(), std::back_inserter(args));
+
+    return this->substitute_V(params, fields, args);
+  }
+
+
+GiNaC::ex u_tensor_factory::substitute_V(const std::vector<GiNaC::symbol>& params, const std::vector<GiNaC::symbol>& fields,
+                                         const std::vector<GiNaC::ex>& args)
   {
     GiNaC::ex result;
 
@@ -95,12 +99,14 @@ GiNaC::ex u_tensor_factory::substitute_V(const GiNaC::exmap& map, const std::vec
       {
         this->compute_timer.resume();
 
-        result = this->V.subs(map, GiNaC::subs_options::no_pattern);
+        std::shared_ptr<GiNaC::exmap> map = this->substitution_map(params, fields);
+
+        // disable unneeded pattern-matching for speed
+        result = this->V.subs(*map, GiNaC::subs_options::no_pattern);
         this->cache.store(expression_item_types::V_item, 0, args, result);
 
         this->compute_timer.stop();
       }
 
-    // disable unneeded pattern-matching for speed
     return result;
   }

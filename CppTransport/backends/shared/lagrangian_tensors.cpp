@@ -19,60 +19,49 @@
 namespace macro_packages
   {
 
-    constexpr unsigned int A_TENSOR_K1_ARGUMENT = 0;
-    constexpr unsigned int A_TENSOR_K2_ARGUMENT = 1;
-    constexpr unsigned int A_TENSOR_K3_ARGUMENT = 2;
-    constexpr unsigned int A_TENSOR_A_ARGUMENT = 3;
-    constexpr unsigned int A_TENSOR_TOTAL_ARGUMENTS = 4;
-    constexpr unsigned int A_TENSOR_TOTAL_INDICES = 3;
-
-    constexpr unsigned int B_TENSOR_K1_ARGUMENT = 0;
-    constexpr unsigned int B_TENSOR_K2_ARGUMENT = 1;
-    constexpr unsigned int B_TENSOR_K3_ARGUMENT = 2;
-    constexpr unsigned int B_TENSOR_A_ARGUMENT = 3;
-    constexpr unsigned int B_TENSOR_TOTAL_ARGUMENTS = 4;
-    constexpr unsigned int B_TENSOR_TOTAL_INDICES = 3;
-
-    constexpr unsigned int C_TENSOR_K1_ARGUMENT = 0;
-    constexpr unsigned int C_TENSOR_K2_ARGUMENT = 1;
-    constexpr unsigned int C_TENSOR_K3_ARGUMENT = 2;
-    constexpr unsigned int C_TENSOR_A_ARGUMENT = 3;
-    constexpr unsigned int C_TENSOR_TOTAL_ARUGMENTS = 4;
-    constexpr unsigned int C_TENSOR_TOTAL_INDICES = 3;
-
     constexpr unsigned int A_PREDEF_K1_ARGUMENT = 0;
     constexpr unsigned int A_PREDEF_K2_ARGUMENT = 1;
     constexpr unsigned int A_PREDEF_K3_ARGUMENT = 2;
     constexpr unsigned int A_PREDEF_A_ARGUMENT = 3;
-    constexpr unsigned int A_PREDEF_HSQ_ARGUMENT = 4;
-    constexpr unsigned int A_PREDEF_EPSILON_ARGUMENT = 5;
-    constexpr unsigned int A_PREDEF_TOTAL_ARGUMENTS = 6;
-    constexpr unsigned int A_PREDEF_TOTAl_INDICES = 3;
+    constexpr unsigned int A_PREDEF_PARAM_KERNEL_ARGUMENT = 4;
+    constexpr unsigned int A_PREDEF_COORD_KERNEL_ARGUMENT = 5;
+    constexpr unsigned int A_PREDEF_DV_KERNEL_ARGUMENT = 6;
+    constexpr unsigned int A_PREDEF_DDV_KERNEL_ARGUMENT = 7;
+    constexpr unsigned int A_PREDEF_DDDV_KERNEL_ARGUMENT = 8;
+    constexpr unsigned int A_PREDEF_FLATTEN_ARGUMENT = 9;
+    constexpr unsigned int A_PREDEF_FIELD_FLATTEN_ARGUMENT = 10;
+    constexpr unsigned int A_PREDEF_TOTAL_ARGUMENTS = 11;
+    constexpr unsigned int A_PREDEF_TOTAL_INDICES = 3;
 
     constexpr unsigned int B_PREDEF_K1_ARGUMENT = 0;
     constexpr unsigned int B_PREDEF_K2_ARGUMENT = 1;
     constexpr unsigned int B_PREDEF_K3_ARGUMENT = 2;
     constexpr unsigned int B_PREDEF_A_ARGUMENT = 3;
-    constexpr unsigned int B_PREDEF_HSQ_ARGUMENT = 4;
-    constexpr unsigned int B_PREDEF_EPSILON_ARGUMENT = 5;
-    constexpr unsigned int B_PREDEF_TOTAL_ARGUMENTS = 6;
+    constexpr unsigned int B_PREDEF_PARAM_KERNEL_ARGUMENT = 4;
+    constexpr unsigned int B_PREDEF_COORD_KERNEL_ARGUMENT = 5;
+    constexpr unsigned int B_PREDEF_DV_KERNEL_ARGUMENT = 6;
+    constexpr unsigned int B_PREDEF_FLATTEN_ARGUMENT = 7;
+    constexpr unsigned int B_PREDEF_FIELD_FLATTEN_ARGUMENT = 8;
+    constexpr unsigned int B_PREDEF_TOTAL_ARGUMENTS = 9;
     constexpr unsigned int B_PREDEF_TOTAL_INDICES = 3;
 
     constexpr unsigned int C_PREDEF_K1_ARGUMENT = 0;
     constexpr unsigned int C_PREDEF_K2_ARGUMENT = 1;
     constexpr unsigned int C_PREDEF_K3_ARGUMENT = 2;
     constexpr unsigned int C_PREDEF_A_ARGUMENT = 3;
-    constexpr unsigned int C_PREDEF_HSQ_ARGUMENT = 4;
-    constexpr unsigned int C_PREDEF_EPSILON_ARGUMENT = 5;
-    constexpr unsigned int C_PREDEF_TOTAL_ARGUMENTS = 6;
+    constexpr unsigned int C_PREDEF_PARAM_KERNEL_ARGUMENT = 4;
+    constexpr unsigned int C_PREDEF_COORD_KERNEL_ARGUMENT = 5;
+    constexpr unsigned int C_PREDEF_FLATTEN_ARGUMENT = 6;
+    constexpr unsigned int C_PREDEF_TOTAL_ARGUMENTS = 7;
     constexpr unsigned int C_PREDEF_TOTAL_INDICES = 3;
 
-    constexpr unsigned int M_TENSOR_TOTAL_ARGUMENTS = 0;
-    constexpr unsigned int M_TENSOR_TOTAL_INDICES = 2;
-
-    constexpr unsigned int M_PREDEF_HSQ_ARGUMENT = 0;
-    constexpr unsigned int M_PREDEF_EPSILON_ARGUMENT = 1;
-    constexpr unsigned int M_PREDEF_TOTAL_ARGUMENTS = 2;
+    constexpr unsigned int M_PREDEF_PARAM_KERNEL_ARGUMENT = 0;
+    constexpr unsigned int M_PREDEF_COORD_KERNEL_ARGUMENT = 1;
+    constexpr unsigned int M_PREDEF_DV_KERNEL_ARGUMENT = 2;
+    constexpr unsigned int M_PREDEF_DDV_KERNEL_ARGUMENT = 3;
+    constexpr unsigned int M_PREDEF_FLATTEN_ARGUMENT = 4;
+    constexpr unsigned int M_PREDEF_FIELD_FLATTEN_ARGUMENT = 5;
+    constexpr unsigned int M_PREDEF_TOTAL_ARGUMENTS = 6;
     constexpr unsigned int M_PREDEF_TOTAL_INDICES = 2;
 
 
@@ -97,51 +86,43 @@ namespace macro_packages
         std::vector<index_rule> package;
 
         const std::vector<replacement_rule_pre> pres =
-          { BIND1(pre_A_tensor),                BIND1(pre_B_tensor),                BIND1(pre_C_tensor),
-            BIND1(pre_A_predef),                BIND1(pre_B_predef),                BIND1(pre_C_predef),
-            BIND1(pre_M_tensor),                BIND1(pre_M_predef)
+          { BIND1(pre_A_predef),                BIND1(pre_B_predef),                BIND1(pre_C_predef),
+            BIND1(pre_M_predef)
           };
 
         const std::vector<replacement_rule_post> posts =
           { nullptr,                            nullptr,                            nullptr,
-            nullptr,                            nullptr,                            nullptr,
-            nullptr,                            nullptr
+            nullptr
           };
 
         const std::vector<replacement_rule_index> rules =
           { BIND3(replace_3index_field_tensor), BIND3(replace_3index_field_tensor), BIND3(replace_3index_field_tensor),
-            BIND3(replace_3index_field_tensor), BIND3(replace_3index_field_tensor), BIND3(replace_3index_field_tensor),
-            BIND3(replace_2index_field_tensor), BIND3(replace_2index_field_tensor)
+            BIND3(replace_2index_field_tensor)
           };
 
         const std::vector<std::string> names =
-          { "A_TENSOR",                         "B_TENSOR",                         "C_TENSOR",
-            "A_PREDEF",                         "B_PREDEF",                         "C_PREDEF",
-            "M_TENSOR",                         "M_PREDEF"
+          { "A_PREDEF",                         "B_PREDEF",                         "C_PREDEF",
+            "M_PREDEF"
           };
 
         const std::vector<unsigned int> args =
-          { A_TENSOR_TOTAL_ARGUMENTS,           B_TENSOR_TOTAL_ARGUMENTS,           C_TENSOR_TOTAL_ARUGMENTS,
-            A_PREDEF_TOTAL_ARGUMENTS,           B_PREDEF_TOTAL_ARGUMENTS,           C_PREDEF_TOTAL_ARGUMENTS,
-            M_TENSOR_TOTAL_ARGUMENTS,           M_PREDEF_TOTAL_ARGUMENTS
+          { A_PREDEF_TOTAL_ARGUMENTS,           B_PREDEF_TOTAL_ARGUMENTS,           C_PREDEF_TOTAL_ARGUMENTS,
+            M_PREDEF_TOTAL_ARGUMENTS
           };
 
         const std::vector<unsigned int> indices =
-          { A_TENSOR_TOTAL_INDICES,             B_TENSOR_TOTAL_INDICES,             C_TENSOR_TOTAL_INDICES,
-            A_PREDEF_TOTAl_INDICES,             B_PREDEF_TOTAL_INDICES,             C_PREDEF_TOTAL_INDICES,
-            M_TENSOR_TOTAL_INDICES,             M_PREDEF_TOTAL_INDICES
+          { A_PREDEF_TOTAL_INDICES,             B_PREDEF_TOTAL_INDICES,             C_PREDEF_TOTAL_INDICES,
+            M_PREDEF_TOTAL_INDICES
           };
 
         const std::vector<enum index_class> ranges =
           { index_class::field_only,            index_class::field_only,            index_class::field_only,
-            index_class::field_only,            index_class::field_only,            index_class::field_only,
-            index_class::field_only,            index_class::field_only
+            index_class::field_only
           };
 
         const std::vector<enum unroll_behaviour> unroll =
           { unroll_behaviour::allow,            unroll_behaviour::allow,            unroll_behaviour::allow,
-            unroll_behaviour::allow,            unroll_behaviour::allow,            unroll_behaviour::allow,
-            unroll_behaviour::allow,            unroll_behaviour::allow
+            unroll_behaviour::allow
           };
 
         assert(pres.size() == posts.size());
@@ -163,57 +144,30 @@ namespace macro_packages
     // *******************************************************************
 
 
-    std::unique_ptr<cse_map> lagrangian_tensors::pre_A_tensor(const macro_argument_list& args)
-      {
-		    symbol_factory& sym_factory = this->data_payload.get_symbol_factory();
-
-        GiNaC::symbol k1 = sym_factory.get_symbol(args[A_TENSOR_K1_ARGUMENT]);
-        GiNaC::symbol k2 = sym_factory.get_symbol(args[A_TENSOR_K2_ARGUMENT]);
-        GiNaC::symbol k3 = sym_factory.get_symbol(args[A_TENSOR_K3_ARGUMENT]);
-        GiNaC::symbol  a = sym_factory.get_symbol(args[A_TENSOR_A_ARGUMENT]);
-
-        std::unique_ptr< std::vector<GiNaC::ex> > container = std::make_unique< std::vector<GiNaC::ex> >();
-        this->u_factory.compute_A(k1, k2, k3, a, *container);
-
-        return std::make_unique<cse_map>(std::move(container), this->cse_worker);
-      }
-
-
     std::unique_ptr<cse_map> lagrangian_tensors::pre_A_predef(const macro_argument_list& args)
       {
-        symbol_factory& sym_factory = this->data_payload.get_symbol_factory();
+        std::string param_kernel = args[A_PREDEF_PARAM_KERNEL_ARGUMENT];
+        std::string coord_kernel = args[A_PREDEF_COORD_KERNEL_ARGUMENT];
+        std::string dV_kernel    = args[A_PREDEF_DV_KERNEL_ARGUMENT];
+        std::string ddV_kernel   = args[A_PREDEF_DDV_KERNEL_ARGUMENT];
+        std::string dddV_kernel  = args[A_PREDEF_DDDV_KERNEL_ARGUMENT];
+        std::string flattener    = args[A_PREDEF_FLATTEN_ARGUMENT];
+        std::string f_flattener  = args[A_PREDEF_FIELD_FLATTEN_ARGUMENT];
+
+        std::unique_ptr< std::vector<GiNaC::symbol> > params = this->parameter_list(param_kernel);
+        std::unique_ptr< std::vector<GiNaC::symbol> > fields = this->field_list(coord_kernel, flattener);
+        std::unique_ptr< std::vector<GiNaC::symbol> > derivs = this->deriv_list(coord_kernel, flattener);
+        std::unique_ptr< std::vector<GiNaC::symbol> > dV     = this->index1_field_list(dV_kernel, f_flattener);
+        std::unique_ptr< std::vector<GiNaC::symbol> > ddV    = this->index2_field_list(ddV_kernel, f_flattener);
+        std::unique_ptr< std::vector<GiNaC::symbol> > dddV   = this->index3_field_list(dddV_kernel, f_flattener);
 
         GiNaC::symbol k1 = sym_factory.get_symbol(args[A_PREDEF_K1_ARGUMENT]);
         GiNaC::symbol k2 = sym_factory.get_symbol(args[A_PREDEF_K2_ARGUMENT]);
         GiNaC::symbol k3 = sym_factory.get_symbol(args[A_PREDEF_K3_ARGUMENT]);
-        GiNaC::symbol  a = sym_factory.get_symbol(args[A_PREDEF_TOTAl_INDICES]);
-
-        GiNaC::symbol Hsq_symbol = sym_factory.get_symbol(args[A_PREDEF_HSQ_ARGUMENT]);
-        GiNaC::symbol eps_symbol = sym_factory.get_symbol(args[A_PREDEF_EPSILON_ARGUMENT]);
-        GiNaC::ex     Hsq = Hsq_symbol;
-        GiNaC::ex     eps = eps_symbol;
+        GiNaC::symbol  a = sym_factory.get_symbol(args[A_PREDEF_A_ARGUMENT]);
 
         std::unique_ptr< std::vector<GiNaC::ex> > container = std::make_unique< std::vector<GiNaC::ex> >();
-        this->u_factory.compute_A(k1, k2, k3, a, Hsq, eps, *container);
-
-        return std::make_unique<cse_map>(std::move(container), this->cse_worker);
-      }
-
-
-      // ******************************************************************
-
-
-    std::unique_ptr<cse_map> lagrangian_tensors::pre_B_tensor(const macro_argument_list& args)
-      {
-        symbol_factory& sym_factory = this->data_payload.get_symbol_factory();
-
-        GiNaC::symbol k1 = sym_factory.get_symbol(args[B_TENSOR_K1_ARGUMENT]);
-        GiNaC::symbol k2 = sym_factory.get_symbol(args[B_TENSOR_K2_ARGUMENT]);
-        GiNaC::symbol k3 = sym_factory.get_symbol(args[B_TENSOR_K3_ARGUMENT]);
-        GiNaC::symbol  a = sym_factory.get_symbol(args[B_TENSOR_A_ARGUMENT]);
-
-        std::unique_ptr< std::vector<GiNaC::ex> > container = std::make_unique< std::vector<GiNaC::ex> >();
-        this->u_factory.compute_B(k1, k2, k3, a, *container);
+        this->u_factory.compute_A(k1, k2, k3, a, *params, *fields, *derivs, *dV, *ddV, *dddV, *container);
 
         return std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }
@@ -221,39 +175,24 @@ namespace macro_packages
 
     std::unique_ptr<cse_map> lagrangian_tensors::pre_B_predef(const macro_argument_list& args)
       {
-        symbol_factory& sym_factory = this->data_payload.get_symbol_factory();
+        std::string param_kernel = args[B_PREDEF_PARAM_KERNEL_ARGUMENT];
+        std::string coord_kernel = args[B_PREDEF_COORD_KERNEL_ARGUMENT];
+        std::string dV_kernel    = args[B_PREDEF_DV_KERNEL_ARGUMENT];
+        std::string flattener    = args[B_PREDEF_FLATTEN_ARGUMENT];
+        std::string f_flattener  = args[B_PREDEF_FIELD_FLATTEN_ARGUMENT];
+
+        std::unique_ptr< std::vector<GiNaC::symbol> > params = this->parameter_list(param_kernel);
+        std::unique_ptr< std::vector<GiNaC::symbol> > fields = this->field_list(coord_kernel, flattener);
+        std::unique_ptr< std::vector<GiNaC::symbol> > derivs = this->deriv_list(coord_kernel, flattener);
+        std::unique_ptr< std::vector<GiNaC::symbol> > dV     = this->index1_field_list(dV_kernel, f_flattener);
 
         GiNaC::symbol k1 = sym_factory.get_symbol(args[B_PREDEF_K1_ARGUMENT]);
         GiNaC::symbol k2 = sym_factory.get_symbol(args[B_PREDEF_K2_ARGUMENT]);
         GiNaC::symbol k3 = sym_factory.get_symbol(args[B_PREDEF_K3_ARGUMENT]);
         GiNaC::symbol  a = sym_factory.get_symbol(args[B_PREDEF_A_ARGUMENT]);
 
-        GiNaC::symbol Hsq_symbol(args[B_PREDEF_HSQ_ARGUMENT]);
-        GiNaC::symbol eps_symbol(args[B_PREDEF_EPSILON_ARGUMENT]);
-        GiNaC::ex     Hsq = Hsq_symbol;
-        GiNaC::ex     eps = eps_symbol;
-
         std::unique_ptr< std::vector<GiNaC::ex> > container = std::make_unique< std::vector<GiNaC::ex> >();
-        this->u_factory.compute_B(k1, k2, k3, a, Hsq, eps, *container);
-
-        return std::make_unique<cse_map>(std::move(container), this->cse_worker);
-      }
-
-
-    // ******************************************************************
-
-
-    std::unique_ptr<cse_map> lagrangian_tensors::pre_C_tensor(const macro_argument_list& args)
-      {
-        symbol_factory& sym_factory = this->data_payload.get_symbol_factory();
-
-        GiNaC::symbol k1 = sym_factory.get_symbol(args[C_TENSOR_K1_ARGUMENT]);
-        GiNaC::symbol k2 = sym_factory.get_symbol(args[C_TENSOR_K2_ARGUMENT]);
-        GiNaC::symbol k3 = sym_factory.get_symbol(args[C_TENSOR_K3_ARGUMENT]);
-        GiNaC::symbol  a = sym_factory.get_symbol(args[C_TENSOR_A_ARGUMENT]);
-
-        std::unique_ptr< std::vector<GiNaC::ex> > container = std::make_unique< std::vector<GiNaC::ex> >();
-        this->u_factory.compute_C(k1, k2, k3, a, *container);
+        this->u_factory.compute_B(k1, k2, k3, a, *params, *fields, *derivs, *dV, *container);
 
         return std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }
@@ -261,20 +200,21 @@ namespace macro_packages
 
     std::unique_ptr<cse_map> lagrangian_tensors::pre_C_predef(const macro_argument_list& args)
       {
-        symbol_factory& sym_factory = this->data_payload.get_symbol_factory();
+        std::string param_kernel = args[C_PREDEF_PARAM_KERNEL_ARGUMENT];
+        std::string coord_kernel = args[C_PREDEF_COORD_KERNEL_ARGUMENT];
+        std::string flattener    = args[C_PREDEF_FLATTEN_ARGUMENT];
+
+        std::unique_ptr< std::vector<GiNaC::symbol> > params = this->parameter_list(param_kernel);
+        std::unique_ptr< std::vector<GiNaC::symbol> > fields = this->field_list(coord_kernel, flattener);
+        std::unique_ptr< std::vector<GiNaC::symbol> > derivs = this->deriv_list(coord_kernel, flattener);
 
         GiNaC::symbol k1 = sym_factory.get_symbol(args[C_PREDEF_K1_ARGUMENT]);
         GiNaC::symbol k2 = sym_factory.get_symbol(args[C_PREDEF_K2_ARGUMENT]);
         GiNaC::symbol k3 = sym_factory.get_symbol(args[C_PREDEF_K3_ARGUMENT]);
         GiNaC::symbol  a = sym_factory.get_symbol(args[C_PREDEF_A_ARGUMENT]);
 
-        GiNaC::symbol Hsq_symbol = sym_factory.get_symbol(args[C_PREDEF_HSQ_ARGUMENT]);
-        GiNaC::symbol eps_symbol = sym_factory.get_symbol(args[C_PREDEF_EPSILON_ARGUMENT]);
-        GiNaC::ex     Hsq = Hsq_symbol;
-        GiNaC::ex     eps = eps_symbol;
-
         std::unique_ptr< std::vector<GiNaC::ex> > container = std::make_unique< std::vector<GiNaC::ex> >();
-        this->u_factory.compute_C(k1, k2, k3, a, Hsq, eps, *container);
+        this->u_factory.compute_C(k1, k2, k3, a, *params, *fields, *derivs, *container);
 
         return std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }
@@ -283,26 +223,23 @@ namespace macro_packages
 // ******************************************************************
 
 
-    std::unique_ptr<cse_map> lagrangian_tensors::pre_M_tensor(const macro_argument_list& args)
-      {
-        std::unique_ptr< std::vector<GiNaC::ex> > container = std::make_unique< std::vector<GiNaC::ex> >();
-        this->u_factory.compute_M(*container);
-
-        return std::make_unique<cse_map>(std::move(container), this->cse_worker);
-      }
-
-
     std::unique_ptr<cse_map> lagrangian_tensors::pre_M_predef(const macro_argument_list& args)
       {
-        symbol_factory& sym_factory = this->data_payload.get_symbol_factory();
+        std::string param_kernel = args[M_PREDEF_PARAM_KERNEL_ARGUMENT];
+        std::string coord_kernel = args[M_PREDEF_COORD_KERNEL_ARGUMENT];
+        std::string dV_kernel    = args[M_PREDEF_DV_KERNEL_ARGUMENT];
+        std::string ddV_kernel   = args[M_PREDEF_DDV_KERNEL_ARGUMENT];
+        std::string flattener    = args[M_PREDEF_FLATTEN_ARGUMENT];
+        std::string f_flattener  = args[M_PREDEF_FIELD_FLATTEN_ARGUMENT];
 
-        GiNaC::symbol Hsq_symbol = sym_factory.get_symbol(args[M_PREDEF_HSQ_ARGUMENT]);
-        GiNaC::symbol eps_symbol = sym_factory.get_symbol(args[M_PREDEF_EPSILON_ARGUMENT]);
-        GiNaC::ex     Hsq = Hsq_symbol;
-        GiNaC::ex     eps = eps_symbol;
+        std::unique_ptr< std::vector<GiNaC::symbol> > params = this->parameter_list(param_kernel);
+        std::unique_ptr< std::vector<GiNaC::symbol> > fields = this->field_list(coord_kernel, flattener);
+        std::unique_ptr< std::vector<GiNaC::symbol> > derivs = this->deriv_list(coord_kernel, flattener);
+        std::unique_ptr< std::vector<GiNaC::symbol> > dV     = this->index1_field_list(dV_kernel, f_flattener);
+        std::unique_ptr< std::vector<GiNaC::symbol> > ddV    = this->index2_field_list(ddV_kernel, f_flattener);
 
         std::unique_ptr< std::vector<GiNaC::ex> > container = std::make_unique< std::vector<GiNaC::ex> >();
-        this->u_factory.compute_M(Hsq, eps, *container);
+        this->u_factory.compute_M(*params, *fields, *derivs, *dV, *ddV, *container);
 
         return std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }

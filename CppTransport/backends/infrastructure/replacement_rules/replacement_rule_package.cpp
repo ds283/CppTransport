@@ -124,4 +124,141 @@ namespace macro_packages
 
         return(list);
       }
+
+
+    std::unique_ptr<std::vector<GiNaC::symbol> > replacement_rule_package::deriv_list(const std::string& kernel, const std::string& flatten)
+      {
+        std::unique_ptr< std::vector<GiNaC::symbol> > list = std::make_unique< std::vector<GiNaC::symbol> >();
+
+        list->reserve(this->num_fields);
+        for(unsigned int i = 0; i < this->num_fields; ++i)
+          {
+            std::ostringstream name;
+            name << kernel << "[" << flatten << "(" << i + this->num_fields << ")]";
+            list->push_back(this->sym_factory.get_symbol(name.str()));
+          }
+
+        return(list);
+      }
+
+
+    std::unique_ptr<std::vector<GiNaC::symbol> > replacement_rule_package::index1_list(const std::string& kernel, const std::string& flatten)
+      {
+        std::unique_ptr< std::vector<GiNaC::symbol> > list = std::make_unique< std::vector<GiNaC::symbol> >(this->fl.get_flattened_size(1));
+
+        for(unsigned int i = 0; i < 2*this->num_fields; ++i)
+          {
+            std::ostringstream name;
+            name << kernel << "[" << flatten << "(" << i << ")]";
+
+            unsigned int index = this->fl.flatten(i);
+            (*list)[index] = (this->sym_factory.get_symbol(name.str()));
+          }
+
+        return(list);
+      }
+
+
+    std::unique_ptr<std::vector<GiNaC::symbol> > replacement_rule_package::index2_list(const std::string& kernel, const std::string& flatten)
+      {
+        std::unique_ptr< std::vector<GiNaC::symbol> > list = std::make_unique< std::vector<GiNaC::symbol> >(this->fl.get_flattened_size(2));
+
+        for(unsigned int i = 0; i < 2*this->num_fields; ++i)
+          {
+            for(unsigned int j = 0; j < 2*this->num_fields; ++j)
+              {
+                std::ostringstream name;
+                name << kernel << "[" << flatten << "(" << i << "," << j << ")]";
+
+                unsigned int index = this->fl.flatten(i,j);
+                (*list)[index] = (this->sym_factory.get_symbol(name.str()));
+              }
+          }
+
+        return(list);
+      }
+
+
+    std::unique_ptr<std::vector<GiNaC::symbol> > replacement_rule_package::index3_list(const std::string& kernel, const std::string& flatten)
+      {
+        std::unique_ptr< std::vector<GiNaC::symbol> > list = std::make_unique< std::vector<GiNaC::symbol> >(this->fl.get_flattened_size(3));
+
+        for(unsigned int i = 0; i < 2*this->num_fields; ++i)
+          {
+            for(unsigned int j = 0; j < 2*this->num_fields; ++j)
+              {
+                for(unsigned int k = 0; k < 2*this->num_fields; ++k)
+                  {
+                    std::ostringstream name;
+                    name << kernel << "[" << flatten << "(" << i << "," << j << "," << k << ")]";
+
+                    unsigned int index = this->fl.flatten(i,j,k);
+                    (*list)[index] = (this->sym_factory.get_symbol(name.str()));
+                  }
+              }
+          }
+
+        return(list);
+      }
+
+
+    std::unique_ptr<std::vector<GiNaC::symbol> > replacement_rule_package::index1_field_list(const std::string& kernel, const std::string& flatten)
+      {
+        std::unique_ptr< std::vector<GiNaC::symbol> > list = std::make_unique< std::vector<GiNaC::symbol> >(this->field_fl.get_flattened_size(1));
+
+        for(unsigned int i = 0; i < this->num_fields; ++i)
+          {
+            std::ostringstream name;
+            name << kernel << "[" << flatten << "(" << i << ")]";
+
+            unsigned int index = this->field_fl.flatten(i);
+            (*list)[index] = (this->sym_factory.get_symbol(name.str()));
+          }
+
+        return(list);
+      }
+
+
+    std::unique_ptr<std::vector<GiNaC::symbol> > replacement_rule_package::index2_field_list(const std::string& kernel, const std::string& flatten)
+      {
+        std::unique_ptr< std::vector<GiNaC::symbol> > list = std::make_unique< std::vector<GiNaC::symbol> >(this->field_fl.get_flattened_size(2));
+
+        for(unsigned int i = 0; i < this->num_fields; ++i)
+          {
+            for(unsigned int j = 0; j < this->num_fields; ++j)
+              {
+                std::ostringstream name;
+                name << kernel << "[" << flatten << "(" << i << "," << j << ")]";
+
+                unsigned int index = this->field_fl.flatten(i,j);
+                (*list)[index] = (this->sym_factory.get_symbol(name.str()));
+              }
+          }
+
+        return(list);
+      }
+
+
+    std::unique_ptr<std::vector<GiNaC::symbol> > replacement_rule_package::index3_field_list(const std::string& kernel, const std::string& flatten)
+      {
+        std::unique_ptr< std::vector<GiNaC::symbol> > list = std::make_unique< std::vector<GiNaC::symbol> >(this->field_fl.get_flattened_size(3));
+
+        for(unsigned int i = 0; i < this->num_fields; ++i)
+          {
+            for(unsigned int j = 0; j < this->num_fields; ++j)
+              {
+                for(unsigned int k = 0; k < this->num_fields; ++k)
+                  {
+                    std::ostringstream name;
+                    name << kernel << "[" << flatten << "(" << i << "," << j << "," << k << ")]";
+
+                    unsigned int index = this->field_fl.flatten(i,j,k);
+                    (*list)[index] = (this->sym_factory.get_symbol(name.str()));
+                  }
+              }
+          }
+
+        return(list);
+      }
+
   }

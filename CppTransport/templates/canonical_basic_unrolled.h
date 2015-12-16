@@ -1,4 +1,4 @@
-// backend=cpp minver=0.06
+// backend=cpp minver=0.13
 //
 // DO NOT EDIT: GENERATED AUTOMATICALLY BY $$__TOOL $$__VERSION
 //
@@ -123,33 +123,6 @@ namespace transport
                                  double Ninit, const twopf_list_task<number>* tk, const std::vector<number>& ic);
 
       };
-
-
-    template <typename number>
-    void compute_dV(number* raw_params, const std::vector<number>& __x, number* dV)
-      {
-        $$__TEMP_POOL{"const auto $1 = $2;"}
-
-        dV[FLATTEN($$__a)] = $$__DV[a]{raw_params, __x, FLATTEN};
-      }
-
-
-    template <typename number>
-    void compute_ddV(number* raw_params, const std::vector<number>& __x, number* ddV)
-      {
-        $$__TEMP_POOL{"const auto $1 = $2;"}
-
-        ddV[FLATTEN($$__a,$$__b)] = $$__DDV[ab]{raw_params, __x, FLATTEN};
-      }
-
-
-    template <typename number>
-    void compute_dddV(number* raw_params, const std::vector<number>& __x, number* dddV)
-      {
-        $$__TEMP_POOL{"const auto $1 = $2;"}
-
-        dddV[FLATTEN($$__a,$$__b,$$__c)] = $$__DDDV[abc]{raw_params, __x, FLATTEN};
-      }
 
 
     // integration - 2pf functor
@@ -709,16 +682,9 @@ namespace transport
     template <typename number>
     void $$__MODEL_basic_twopf_functor<number>::operator()(const twopf_state<number>& __x, twopf_state<number>& __dxdt, double __t)
       {
-        const auto $$__PARAMETER[1]  = this->raw_params[$$__1];
-        const auto $$__COORDINATE[A] = __x[FLATTEN($$__A)];
-        const auto __Mp              = this->Mp;
-        const auto __k               = this->config.k_comoving;
-        const auto __a               = std::exp(__t - this->N_horizon_exit + this->astar_normalization);
-
-        $$__TEMP_POOL{"const auto $1 = $2;"}
-
-        const auto __Hsq             = $$__HUBBLE_SQ;
-        const auto __eps             = $$__EPSILON;
+        const auto __Mp = this->Mp;
+        const auto __k = this->config.k_comoving;
+        const auto __a = std::exp(__t - this->N_horizon_exit + this->astar_normalization);
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
@@ -743,11 +709,14 @@ namespace transport
 #define __dtwopf_tensor(a,b) __dxdt[$$__MODEL_pool::tensor_start + TENSOR_FLATTEN(a,b)]
 #define __dtwopf(a,b)        __dxdt[$$__MODEL_pool::twopf_start + FLATTEN(a,b)]
 
-        dV(this->raw_params, __x, this->dV);
-        ddV(this->raw_params, __x, this->ddV);
+        $$__MODEL_compute_dV(this->raw_params, __x, this->dV);
+        $$__MODEL_compute_ddV(this->raw_params, __x, this->ddV);
 
         // evolve the background
-        __background($$__A) = $$__U1_PREDEF[A]{__Hsq, __eps, __x, this->dV, FLATTEN};
+        __background($$__A) = $$__U1_PREDEF[A]{raw_params, __x, dV, FLATTEN, FIELDS_FLATTEN};
+
+        const auto __Hsq = $$__HUBBLE_SQ{raw_params, __x, FLATTEN};
+        const auto __eps = $$__EPSILON{__x, FLATTEN};
 
         // evolve the tensor modes
         const auto __ff = 0.0;
@@ -760,7 +729,7 @@ namespace transport
         __dtwopf_tensor(1,1) = __pf*__tensor_twopf_fp + __pp*__tensor_twopf_pp + __pf*__tensor_twopf_pf + __pp*__tensor_twopf_pp;
 
         // set up components of the u2 tensor
-        this->u2[FLATTEN($$__A,$$__B)] = $$__U2_PREDEF[AB]{__k, __a, __Hsq, __eps, __x, this->dV, this->ddV, FLATTEN};
+        this->u2[FLATTEN($$__A,$$__B)] = $$__U2_PREDEF[AB]{__k, __a, raw_params, __x, dV, ddV, FLATTEN, FIELDS_FLATTEN};
 
         // evolve the 2pf
         // here, we are dealing only with the real part - which is symmetric.
@@ -788,18 +757,11 @@ namespace transport
     template <typename number>
     void $$__MODEL_basic_threepf_functor<number>::operator()(const threepf_state<number>& __x, threepf_state<number>& __dxdt, double __t)
       {
-        const auto $$__PARAMETER[1]  = this->raw_params[$$__1];
-        const auto $$__COORDINATE[A] = __x[FLATTEN($$__A)];
         const auto __Mp              = this->Mp;
         const auto __k1              = this->config.k1_comoving;
         const auto __k2              = this->config.k2_comoving;
         const auto __k3              = this->config.k3_comoving;
         const auto __a               = std::exp(__t - this->N_horizon_exit + this->astar_normalization);
-
-        $$__TEMP_POOL{"const auto $1 = $2;"}
-
-        const auto __Hsq             = $$__HUBBLE_SQ;
-        const auto __eps             = $$__EPSILON;
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
@@ -865,12 +827,15 @@ namespace transport
 #define __dtwopf_im_k3(a,b)     __dxdt[$$__MODEL_pool::twopf_im_k3_start + FLATTEN(a,b)]
 #define __dthreepf(a,b,c)       __dxdt[$$__MODEL_pool::threepf_start     + FLATTEN(a,b,c)]
 
-        dV(this->raw_params, __x, this->dV);
-        ddV(this->raw_params, __x, this->ddV);
-        dddV(this->raw_params, __x, this->dddV);
+        $$__MODEL_compute_dV(this->raw_params, __x, this->dV);
+        $$__MODEL_compute_ddV(this->raw_params, __x, this->ddV);
+        $$__MODEL_compute_dddV(this->raw_params, __x, this->dddV);
 
         // evolve the background
-        __background($$__A) = $$__U1_PREDEF[A]{__Hsq, __eps, __x, this->dV, FLATTEN};
+        __background($$__A) = $$__U1_PREDEF[A]{raw_params, __x, dV, FLATTEN, FIELDS_FLATTEN};
+
+        const auto __Hsq = $$__HUBBLE_SQ{raw_params, __x, FLATTEN};
+        const auto __eps = $$__EPSILON{__x, FLATTEN};
 
         // evolve the tensor modes
         const auto __ff = 0.0;
@@ -896,14 +861,14 @@ namespace transport
         __dtwopf_k3_tensor(1,1) = __pf*__tensor_k3_twopf_fp + __pp*__tensor_k3_twopf_pp + __pf*__tensor_k3_twopf_pf + __pp*__tensor_k3_twopf_pp;
 
         // set up components of the u2 tensor for k1, k2, k3
-        this->u2_k1[FLATTEN($$__A,$$__B)] = $$__U2_PREDEF[AB]{__k1, __a, __Hsq, __eps, __x, this->dV, this->ddV, FLATTEN};
-        this->u2_k2[FLATTEN($$__A,$$__B)] = $$__U2_PREDEF[AB]{__k2, __a, __Hsq, __eps, __x, this->dV, this->ddV, FLATTEN};
-        this->u2_k3[FLATTEN($$__A,$$__B)] = $$__U2_PREDEF[AB]{__k3, __a, __Hsq, __eps, __x, this->dV, this->ddV, FLATTEN};
+        this->u2_k1[FLATTEN($$__A,$$__B)] = $$__U2_PREDEF[AB]{__k1, __a, raw_params, __x, dV, ddV, FLATTEN, FIELDS_FLATTEN};
+        this->u2_k2[FLATTEN($$__A,$$__B)] = $$__U2_PREDEF[AB]{__k2, __a, raw_params, __x, dV, ddV, FLATTEN, FIELDS_FLATTEN};
+        this->u2_k3[FLATTEN($$__A,$$__B)] = $$__U2_PREDEF[AB]{__k3, __a, raw_params, __x, dV, ddV, FLATTEN, FIELDS_FLATTEN};
 
         // set up components of the u3 tensor
-        this->u3_k1k2k3[FLATTEN($$__A,$$__B,$$__C)] = $$__U3_PREDEF[ABC]{__k1, __k2, __k3, __a, __Hsq, __eps, __x, this->dV, this->ddV, this->dddV, FLATTEN};
-        this->u3_k2k1k3[FLATTEN($$__A,$$__B,$$__C)] = $$__U3_PREDEF[ABC]{__k2, __k1, __k3, __a, __Hsq, __eps, __x, this->dV, this->ddV, this->dddV, FLATTEN};
-        this->u3_k3k1k2[FLATTEN($$__A,$$__B,$$__C)] = $$__U3_PREDEF[ABC]{__k3, __k1, __k2, __a, __Hsq, __eps, __x, this->dV, this->ddV, this->dddV, FLATTEN};
+        this->u3_k1k2k3[FLATTEN($$__A,$$__B,$$__C)] = $$__U3_PREDEF[ABC]{__k1, __k2, __k3, __a, raw_params, __x, dV, ddV, dddV, FLATTEN, FIELDS_FLATTEN};
+        this->u3_k2k1k3[FLATTEN($$__A,$$__B,$$__C)] = $$__U3_PREDEF[ABC]{__k2, __k1, __k3, __a, raw_params, __x, dV, ddV, dddV, FLATTEN, FIELDS_FLATTEN};
+        this->u3_k3k1k2[FLATTEN($$__A,$$__B,$$__C)] = $$__U3_PREDEF[ABC]{__k3, __k1, __k2, __a, raw_params, __x, dV, ddV, dddV, FLATTEN, FIELDS_FLATTEN};
 
         // evolve the real and imaginary components of the 2pf
         // for the imaginary parts, index placement *does* matter so we must take care

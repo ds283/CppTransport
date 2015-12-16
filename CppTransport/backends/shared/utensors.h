@@ -43,13 +43,7 @@ namespace macro_packages
         // INTERNAL API
 
       protected:
-    
-        std::unique_ptr<cse_map> pre_u1_tensor(const macro_argument_list& args);
-    
-        std::unique_ptr<cse_map> pre_u2_tensor(const macro_argument_list& args);
-    
-        std::unique_ptr<cse_map> pre_u3_tensor(const macro_argument_list& args);
-    
+
         std::unique_ptr<cse_map> pre_u1_predef(const macro_argument_list& args);
     
         std::unique_ptr<cse_map> pre_u2_predef(const macro_argument_list& args);
