@@ -25,9 +25,7 @@ class package_group
 
   public:
 
-    package_group(translator_data& p, const std::string cmnt, const std::string opb, const std::string clb,
-                  unsigned int brind, unsigned int bkind,
-                  ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& cache);
+    package_group(translator_data& p, ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& cache);
 
     virtual ~package_group();
 
@@ -58,27 +56,12 @@ class package_group
     std::vector<macro_packages::index_rule>& get_index_ruleset();
 
 
-		// INTERFACE - QUERY DATA ABOUT THE BACKEND
+		// INTERFACE - GET LANGUAGE PRINTER FOR THIS PACKAGE GROUP
 
   public:
 
-		//! make a comment appropriate for this backend
-    virtual const std::string& get_comment_separator() const { return(this->comment_string); }
-
-    //! get open-brace appropriate for this backend (if exists)
-    virtual const std::string& get_open_brace() const { return(this->open_brace); }
-
-    //! get close-brace appropriate for this backend (if exists)
-    virtual const std::string& get_close_brace() const { return(this->close_brace); }
-
-    //! get brace indent
-    virtual unsigned int get_brace_indent() const { return(this->brace_indent); }
-
-    //! get block indent
-    virtual unsigned int get_block_indent() const { return(this->block_indent); }
-
-    //! plant a 'for' loop appropriate for this backend; should be supplied by a concrete class
-    virtual std::string plant_for_loop(const std::string& loop_variable, unsigned int min, unsigned int max) const = 0;
+    //! return reference to language printer
+    language_printer& get_language_printer() { return(*this->l_printer); }    // will throw exception if l_printer has not been set
 
 
 		// INTERFACE - STATISTICS
@@ -134,23 +117,9 @@ class package_group
     //! invovled may depend what kind of model is being processed
     std::unique_ptr<cse> cse_worker;  // should be set by implementations
 
-
-    // CODE GENERATION DATA
-
-    //! comment delimiter
-    std::string comment_string;
-
-    //! open brace
-    std::string open_brace;
-
-    //! close brace
-    std::string close_brace;
-
-    //! brace-level indent
-    unsigned int brace_indent;
-
-    //! block-level indent
-    unsigned int block_indent;
+    //! polymorphic pointer to language printer; as above, depends on what kind
+    //! of model is being processed
+    std::unique_ptr<language_printer> l_printer;  // should be set by implementations
 
 
     // MACRO PACKAGE CACHE

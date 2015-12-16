@@ -371,15 +371,19 @@ void macro_agent::plant_LHS_forloop(index_database<abstract_index>::const_iterat
       }
     else
       {
-        r_list.push_back(this->dress(this->package.plant_for_loop(current->get_loop_variable(), 0, current->numeric_range()), raw_indent, current_indent));
+        language_printer& printer = this->package.get_language_printer();
+        boost::optional< std::string > start_delimiter = printer.get_start_block_delimiter();
+        boost::optional< std::string > end_delimiter = printer.get_end_block_delimiter();
+
+        r_list.push_back(this->dress(printer.plant_for_loop(current->get_loop_variable(), 0, current->numeric_range()), raw_indent, current_indent));
 
         std::ostringstream brace_indent;
-        for(unsigned int i = 0; i < this->package.get_brace_indent(); ++i) brace_indent << " ";
+        for(unsigned int i = 0; i < printer.get_block_delimiter_indent(); ++i) brace_indent << " ";
 
-        r_list.push_back(this->dress(brace_indent.str() + this->package.get_open_brace(), raw_indent, current_indent));
+        if(start_delimiter) r_list.push_back(this->dress(brace_indent.str() + *start_delimiter, raw_indent, current_indent));
         this->plant_LHS_forloop(++current, end, RHS_assignments, left_tokens, right_tokens, counter, split_result, ctx,
-                                r_list, raw_indent, current_indent + this->package.get_block_indent());
-        r_list.push_back(this->dress(brace_indent.str() + this->package.get_close_brace(), raw_indent, current_indent));
+                                r_list, raw_indent, current_indent + printer.get_block_indent());
+        if(end_delimiter) r_list.push_back(this->dress(brace_indent.str() + *end_delimiter, raw_indent, current_indent));
       }
   }
 
@@ -398,15 +402,19 @@ void macro_agent::plant_RHS_forloop(index_database<abstract_index>::const_iterat
       }
     else
       {
-        r_list.push_back(this->dress(this->package.plant_for_loop(current->get_loop_variable(), 0, current->numeric_range()), raw_indent, current_indent));
+        language_printer& printer = this->package.get_language_printer();
+        boost::optional< std::string > start_delimiter = printer.get_start_block_delimiter();
+        boost::optional< std::string > end_delimiter = printer.get_end_block_delimiter();
+
+        r_list.push_back(this->dress(printer.plant_for_loop(current->get_loop_variable(), 0, current->numeric_range()), raw_indent, current_indent));
 
         std::ostringstream brace_indent;
-        for(unsigned int i = 0; i < this->package.get_brace_indent(); ++i) brace_indent << " ";
+        for(unsigned int i = 0; i < printer.get_block_delimiter_indent(); ++i) brace_indent << " ";
 
-        r_list.push_back(this->dress(brace_indent.str() + this->package.get_open_brace(), raw_indent, current_indent));
+        if(start_delimiter) r_list.push_back(this->dress(brace_indent.str() + *start_delimiter, raw_indent, current_indent));
         this->plant_RHS_forloop(++current, end, left_tokens, right_tokens, counter, split_result, ctx, r_list,
-                                raw_indent, current_indent + this->package.get_block_indent());
-        r_list.push_back(this->dress(brace_indent.str() + this->package.get_close_brace(), raw_indent, current_indent));
+                                raw_indent, current_indent + printer.get_block_indent());
+        if(end_delimiter) r_list.push_back(this->dress(brace_indent.str() + *end_delimiter, raw_indent, current_indent));
       }
   }
 

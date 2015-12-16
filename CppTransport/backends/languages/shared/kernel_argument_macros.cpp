@@ -22,6 +22,23 @@
 namespace shared
   {
 
+    constexpr unsigned int PARAM_ARGS_TOTAL_ARGUMENTS = 0;
+
+    constexpr unsigned int COORD_ARGS_NAME_ARGUMENT = 0;
+    constexpr unsigned int COORD_ARGS_TOTAL_ARGUMENTS = 1;
+
+    constexpr unsigned int U2_ARGS_NAME_ARGUMENT = 0;
+    constexpr unsigned int U2_ARGS_TOTAL_ARGUMENTS = 1;
+
+    constexpr unsigned int TWOPF_ARGS_NAME_ARGUMENT = 0;
+    constexpr unsigned int TWOPF_ARGS_TOTAL_ARGUMENTS = 1;
+
+    constexpr unsigned int U3_ARGS_NAME_ARGUMENT = 0;
+    constexpr unsigned int U3_ARGS_TOTAL_ARGUMENTS = 1;
+
+    constexpr unsigned int THREEPF_ARGS_NAME_ARGUMENT = 0;
+    constexpr unsigned int THREEPF_ARGS_TOTAL_ARGUMENTS = 1;
+
     kernel_argument_macros::kernel_argument_macros(u_tensor_factory& uf, cse& cw, translator_data& p, language_printer& prn,
                                                    std::string q, std::string l)
       : ::macro_packages::replacement_rule_package(uf, cw, p, prn),
@@ -36,21 +53,21 @@ namespace shared
         std::vector<macro_packages::simple_rule> package;
 
         const std::vector<replacement_rule_simple> rules =
-          { BIND(args_params), BIND(args_1index),
-            BIND(args_2index), BIND(args_2index),
-            BIND(args_3index), BIND(args_3index)
+          { BIND(args_params),          BIND(args_1index),
+            BIND(args_2index),          BIND(args_2index),
+            BIND(args_3index),          BIND(args_3index)
           };
 
         const std::vector<std::string> names =
-          { "PARAM_ARGS", "COORD_ARGS",
-            "U2_ARGS", "TWOPF_ARGS",
-            "U3_ARGS", "THREEPF_ARGS"
+          { "PARAM_ARGS",               "COORD_ARGS",
+            "U2_ARGS",                  "TWOPF_ARGS",
+            "U3_ARGS",                  "THREEPF_ARGS"
           };
 
         const std::vector<unsigned int> args =
-          { 0, 1,
-            1, 1,
-            1, 1
+          { PARAM_ARGS_TOTAL_ARGUMENTS, COORD_ARGS_TOTAL_ARGUMENTS,
+            U2_ARGS_TOTAL_ARGUMENTS,    TWOPF_ARGS_TOTAL_ARGUMENTS,
+            U3_ARGS_TOTAL_ARGUMENTS,    THREEPF_ARGS_TOTAL_ARGUMENTS
           };
 
         assert(rules.size() == names.size());
@@ -84,7 +101,7 @@ namespace shared
     // *******************************************************************
 
 
-    std::string kernel_argument_macros::args_params(const std::vector<std::string> &args)
+    std::string kernel_argument_macros::args_params(const std::vector<std::string>& args)
       {
         std::vector<std::string> list = this->data_payload.get_param_list();
 
@@ -101,9 +118,7 @@ namespace shared
 
     std::string kernel_argument_macros::args_1index(const macro_argument_list& args)
       {
-        assert(args.size() == 1);
-
-        std::string name = (args.size() >= 1 ? args[0] : OUTPUT_DEFAULT_ONEINDEX_NAME);
+        std::string name = args[COORD_ARGS_NAME_ARGUMENT];
 
         std::ostringstream out;
 
@@ -134,9 +149,7 @@ namespace shared
 
     std::string kernel_argument_macros::args_2index(const macro_argument_list& args)
       {
-        assert(args.size() == 1);
-
-        std::string  name    = (args.size() >= 1 ? args[0] : OUTPUT_DEFAULT_TWOINDEX_NAME);
+        std::string name = args[TWOPF_ARGS_NAME_ARGUMENT];
 
         std::ostringstream out;
 
@@ -165,9 +178,7 @@ namespace shared
 
     std::string kernel_argument_macros::args_3index(const macro_argument_list& args)
       {
-        assert(args.size() == 1);
-
-        std::string  name    = (args.size() >= 1 ? args[0] : OUTPUT_DEFAULT_THREEINDEX_NAME);
+        std::string name = args[THREEPF_ARGS_NAME_ARGUMENT];
 
         std::ostringstream out;
 
@@ -183,8 +194,10 @@ namespace shared
           {
             out << (c != 0 ? ", " : "") << this->qualifier << (this->qualifier != "" ? " " : "") << "double* " << name;
 
-
-            ++c;
+            for(const assignment_record& t : *assign)
+              {
+                out << "_" << t.get_numeric_value();
+              }
 
             ++c;
           }

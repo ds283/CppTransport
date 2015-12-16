@@ -156,7 +156,7 @@
 
 #define MESSAGE_TRANSLATING                   "translating"
 #define MESSAGE_TRANSLATING_TO                "into"
-#define MESSAGE_EXPANSION_OF_LINE             "expansion of template line"
+#define ANNOTATE_EXPANSION_OF_LINE            "expansion of template line"
 
 #define MESSAGE_OPENED_BUFFER                 "opened output file"
 

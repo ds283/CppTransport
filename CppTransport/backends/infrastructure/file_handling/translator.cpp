@@ -136,12 +136,14 @@ unsigned int translator::process(const boost::filesystem::path& in, buffer& buf,
                 if(line_list)
                   {
                     std::ostringstream continuation_tag;
-                    continuation_tag << " " << package->get_comment_separator() << " " << MESSAGE_EXPANSION_OF_LINE << " " << os.get_line();
+                    language_printer& printer = package->get_language_printer();
+    
+                    continuation_tag << ANNOTATE_EXPANSION_OF_LINE << " " << os.get_line();
 
                     unsigned int c = 0;
                     for(const std::string& l : *line_list)
                       {
-                        std::string out_line = l + (annotate && c > 0 ? continuation_tag.str() : "");
+                        std::string out_line = l + (annotate && c > 0 ? " " + printer.comment(continuation_tag.str()) : "");
 
                         if(filter != nullptr) buf.write_to_end((*filter)(out_line));
                         else                  buf.write_to_end(out_line);
