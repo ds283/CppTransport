@@ -36,12 +36,16 @@ int main(int argc, const char *argv[])
     unsigned int files_processed = 0;
     unsigned int replacements    = 0;
 
+    bool errors = false;
+
     const std::list<boost::filesystem::path> input_files = args.input_files();
     for(const boost::filesystem::path& f : input_files)
       {
         translation_unit unit(f, path, args, env);
         replacements += unit.apply();
         ++files_processed;
+
+        errors = errors | unit.fail();
       }
 
     timer.stop();
@@ -54,5 +58,6 @@ int main(int argc, const char *argv[])
 			    << " " << MESSAGE_PROCESSING_COMPLETE_B << " " << format_time(timer.elapsed().wall) << '\n';
 			}
 
-    return(EXIT_SUCCESS);
+    if(errors) return (EXIT_FAILURE);
+    else return(EXIT_SUCCESS);
   }

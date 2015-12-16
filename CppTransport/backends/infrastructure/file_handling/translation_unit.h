@@ -44,9 +44,11 @@ class translation_unit
 
   public:
 
-		// perform translation
+		//! perform translation
     unsigned int apply();
 
+    //! detect errors encountered during processing
+    bool fail() const { return(this->parse_failed); }
 
 		// INTERNAL API
 
@@ -83,6 +85,9 @@ class translation_unit
 
     boost::filesystem::path name;                    // name of input script
     bool                    parse_failed;
+
+    unsigned int            errors;
+    unsigned int            warnings;
 
     finder&                 path;
     argument_cache&         cache;

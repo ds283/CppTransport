@@ -49,6 +49,9 @@ namespace token_list_impl
         //! raise error
         void error(const std::string& msg);
 
+        //! mark this token as silent for error reporting
+        void mark_silent() { this->silent = true; }
+
 
         // INTERNAL DATA
 

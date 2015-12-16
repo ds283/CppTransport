@@ -109,6 +109,8 @@ translation_unit::translation_unit(boost::filesystem::path file, finder& p, argu
     cache(c),
     env(e),
     parse_failed(false),
+    errors(0),
+    warnings(0),
     lexstream_payload(file,
                       std::bind(&translation_unit::context_error, this, std::placeholders::_1, std::placeholders::_2),
                       std::bind(&translation_unit::context_warn, this, std::placeholders::_1, std::placeholders::_2),
@@ -195,6 +197,7 @@ unsigned int translation_unit::apply()
   {
     unsigned int rval = 0;
 
+    // don't attempt translation if parsing failed
 		if(this->parse_failed) return rval;
 
     const script& s = this->driver.get_script();
@@ -207,7 +210,6 @@ unsigned int translation_unit::apply()
     else
       {
         this->error(ERROR_NO_CORE_TEMPLATE);
-//        exit(EXIT_FAILURE);
       }
 
     boost::optional< contexted_value<std::string>& > impl = s.get_implementation();
@@ -218,8 +220,9 @@ unsigned int translation_unit::apply()
     else
       {
         this->error(ERROR_NO_IMPLEMENTATION_TEMPLATE);
-//        exit(EXIT_FAILURE);
       }
+
+    if(this->errors > 0) this->parse_failed = true;
 
     return(rval);
   }
@@ -266,24 +269,28 @@ void translation_unit::print_advisory(const std::string& msg)
 void translation_unit::error(const std::string& msg)
 	{
 		::error(msg, this->cache, this->env);
+    ++this->errors;
 	}
 
 
 void translation_unit::warn(const std::string& msg)
 	{
 		::warn(msg, this->cache, this->env);
+    ++this->warnings;
 	}
 
 
 void translation_unit::context_error(const std::string& msg, const error_context& ctx)
   {
     ::error(msg, this->cache, this->env, ctx);
+    ++this->errors;
   }
 
 
 void translation_unit::context_warn(const std::string& msg, const error_context& ctx)
   {
     ::warn(msg, this->cache, this->env, ctx);
+    ++this->warnings;
   }
 
 

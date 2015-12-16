@@ -20,8 +20,7 @@ namespace macro_packages
 
     std::string replacement_rule_package::replace_1index_tensor(const macro_argument_list& args, const assignment_list& indices, cse_map* map)
       {
-        assert(indices.size() == 1);
-        assert(map != nullptr);
+        if(map == nullptr) throw rule_apply_fail(ERROR_NO_PRE_MAP);
 
         this->fl.set_size(2*this->data_payload.get_number_fields());
 
@@ -31,8 +30,7 @@ namespace macro_packages
 
     std::string replacement_rule_package::replace_2index_tensor(const macro_argument_list& args, const assignment_list& indices, cse_map* map)
       {
-        assert(indices.size() == 2);
-        assert(map != nullptr);
+        if(map == nullptr) throw rule_apply_fail(ERROR_NO_PRE_MAP);
 
         this->fl.set_size(2*this->data_payload.get_number_fields());
 
@@ -45,8 +43,7 @@ namespace macro_packages
 
     std::string replacement_rule_package::replace_3index_tensor(const macro_argument_list& args, const assignment_list& indices, cse_map* map)
       {
-        assert(indices.size() == 3);
-        assert(map != nullptr);
+        if(map == nullptr) throw rule_apply_fail(ERROR_NO_PRE_MAP);
 
         this->fl.set_size(2*this->data_payload.get_number_fields());
 
@@ -60,8 +57,7 @@ namespace macro_packages
 
     std::string replacement_rule_package::replace_1index_field_tensor(const macro_argument_list& args, const assignment_list& indices, cse_map* map)
       {
-        assert(indices.size() == 1);
-        assert(map != nullptr);
+        if(map == nullptr) throw rule_apply_fail(ERROR_NO_PRE_MAP);
 
         this->fl.set_size(this->data_payload.get_number_fields());
 
@@ -71,8 +67,7 @@ namespace macro_packages
 
     std::string replacement_rule_package::replace_2index_field_tensor(const macro_argument_list& args, const assignment_list& indices, cse_map* map)
       {
-        assert(indices.size() == 2);
-        assert(map != nullptr);
+        if(map == nullptr) throw rule_apply_fail(ERROR_NO_PRE_MAP);
 
         this->fl.set_size(this->data_payload.get_number_fields());
 
@@ -85,8 +80,7 @@ namespace macro_packages
 
     std::string replacement_rule_package::replace_3index_field_tensor(const macro_argument_list& args, const assignment_list& indices, cse_map* map)
       {
-        assert(indices.size() == 3);
-        assert(map != nullptr);
+        if(map == nullptr) throw rule_apply_fail(ERROR_NO_PRE_MAP);
 
         this->fl.set_size(this->data_payload.get_number_fields());
 

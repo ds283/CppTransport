@@ -111,6 +111,7 @@ token_list::token_list(const std::string& input, const std::string& prefix,
 
                                 error_context ctx(this->data_payload.get_stack(), input_string, position, this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
                                 std::unique_ptr<token_list_impl::simple_macro_token> tok = std::make_unique<token_list_impl::simple_macro_token>(candidate, arg_list, rule, simple_macro_type::pre, ctx);
+                                if(arg_list.size() != rule.get_number_args()) tok->mark_silent();   // constructor will raise error; further errors will be suppressed
                                 this->simple_macro_tokens.push_back(tok.get());
 												        this->tokens.push_back(std::move(tok));     // transfers ownership
 											        }
@@ -130,6 +131,7 @@ token_list::token_list(const std::string& input, const std::string& prefix,
 
                                 error_context ctx(this->data_payload.get_stack(), input_string, position, this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
                                 std::unique_ptr<token_list_impl::simple_macro_token> tok = std::make_unique<token_list_impl::simple_macro_token>(candidate, arg_list, rule, simple_macro_type::post, ctx);
+                                if(arg_list.size() != rule.get_number_args()) tok->mark_silent();   // constructor will raise error; further errors will be suppressed
                                 this->simple_macro_tokens.push_back(tok.get());
 												        this->tokens.push_back(std::move(tok));     // transfers ownership
 											        }
@@ -177,6 +179,7 @@ token_list::token_list(const std::string& input, const std::string& prefix,
                                   }
 
                                 std::unique_ptr<token_list_impl::index_macro_token> tok = std::make_unique<token_list_impl::index_macro_token>(candidate, idx_list, arg_list, rule, ctx);
+                                if(arg_list.size() != rule.get_number_args() || idx_list.size() != rule.get_number_indices()) tok->mark_silent();   // constructor will raise error; further errors will be suppressed
                                 this->index_macro_tokens.push_back(tok.get());
 												        this->tokens.push_back(std::move(tok));     // transfers ownership
 											        }
@@ -386,20 +389,6 @@ macro_argument_list token_list::get_argument_list(const std::string& input, cons
         ctx.error(msg.str());
 			}
 
-		if(arg_list.size() != expected_args)
-			{
-        std::ostringstream msg;
-		    msg << ERROR_WRONG_ARGUMENT_COUNT << " '" << candidate << "' (" << ERROR_EXPECTED_ARGUMENT_COUNT << " " << expected_args << ")";
-        error_context ctx(this->data_payload.get_stack(), this->input_string, position, this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
-        ctx.error(msg.str());
-
-		    while(arg_list.size() < expected_args)
-			    {
-		        arg_list.push_back(std::string(""));
-			    }
-
-			}
-
 		return(arg_list);
 	}
 
@@ -451,7 +440,7 @@ abstract_index_list token_list::get_index_list(const std::string& input, const s
 				if(!(position < input.length() && input[position] == ']'))
 					{
             std::ostringstream msg;
-				    msg << ERROR_EXPECTED_CLOSE_ARGUMENT_LIST << " '" << candidate << "'";
+				    msg << ERROR_EXPECTED_CLOSE_INDEX_LIST << " '" << candidate << "'";
             error_context ctx(this->data_payload.get_stack(), this->input_string, position, this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
             ctx.error(msg.str());
 					}
@@ -464,14 +453,6 @@ abstract_index_list token_list::get_index_list(const std::string& input, const s
 			{
         std::ostringstream msg;
 		    msg << ERROR_EXPECTED_OPEN_INDEX_LIST << " '" << candidate << "'";
-        error_context ctx(this->data_payload.get_stack(), this->input_string, position, this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
-        ctx.error(msg.str());
-			}
-
-		if(idx_list.size() != expected_indices)
-			{
-        std::ostringstream msg;
-		    msg << ERROR_WRONG_INDEX_COUNT << " '" << candidate << "' (" << ERROR_EXPECTED_INDEX_COUNT << " " << expected_indices << ")";
         error_context ctx(this->data_payload.get_stack(), this->input_string, position, this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
         ctx.error(msg.str());
 			}
@@ -585,17 +566,17 @@ token_list_impl::generic_token::generic_token(const std::string& c, error_contex
 
 void token_list_impl::generic_token::error(const std::string& msg)
   {
-    if(!silent)
+    if(!this->silent)
       {
         this->err_ctx.error(msg);
       }
 
     ++this->num_errors;
 
-    if(this->num_errors >= MAX_TOKEN_ERRORS && !silent)
+    if(!this->silent && this->num_errors >= MAX_TOKEN_ERRORS)
       {
         this->err_ctx.warn(ERROR_TOKENIZE_TOO_MANY_ERRORS);
-        silent = true;
+        this->silent = true;
       }
   }
 

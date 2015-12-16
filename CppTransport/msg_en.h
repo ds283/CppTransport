@@ -75,6 +75,7 @@
 #define ERROR_TOKENIZE_TOO_MANY_ERRORS        "Too many errors from this token; further output will be suppressed"
 
 #define ERROR_NO_RULE_HANDLER                 "Internal error: no assigned replacement rule for macro"
+#define ERROR_NO_PRE_MAP                      "Missing data to perform macro replacement"
 
 #define ERROR_INCOMPATIBLE_UNROLL             "Unrolling requirements are incompatible with earlier macros for"
 #define ERROR_LHS_RHS_INCOMPATIBLE_UNROLL     "Left-hand side and right-hand side have incompatible unrolling requirements"
@@ -159,7 +160,7 @@
 
 #define MESSAGE_OPENED_BUFFER                 "opened output file"
 
-#define MESSAGE_TRANSLATION_RESULT            "translation succeeded with"
+#define MESSAGE_TRANSLATION_RESULT            "translation finished with"
 #define MESSAGE_MACRO_REPLACEMENTS            "macro replacements"
 
 #define ERROR_UNKNOWN_STEPPER                 "Unknown or unimplemented odeint-v2 stepper"
