@@ -30,7 +30,8 @@ void canonical_u_tensor_factory::compute_sr_u(const std::vector<GiNaC::symbol>& 
 
 		    if(!this->cache.query(expression_item_types::sr_U_item, index, args, v[index]))
 			    {
-				    this->compute_timer.resume();
+            bool is_stopped = this->compute_timer.is_stopped();
+				    if(is_stopped) this->compute_timer.resume();
 
             if(!cached)
               {
@@ -40,7 +41,7 @@ void canonical_u_tensor_factory::compute_sr_u(const std::vector<GiNaC::symbol>& 
 
 		        v[index] = - GiNaC::diff(subs_V, fields[i]) * GiNaC::pow(this->M_Planck, 2) / (subs_V);
 
-		        this->compute_timer.stop();
+		        if(is_stopped) this->compute_timer.stop();
 				    this->cache.store(expression_item_types::sr_U_item, index, args, v[index]);
 			    }
       }
@@ -69,7 +70,8 @@ void canonical_u_tensor_factory::compute_u1(const std::vector<GiNaC::symbol>& pa
 
 		    if(!this->cache.query(expression_item_types::U1_item, index, args, v[index]))
 			    {
-				    this->compute_timer.resume();
+            bool is_stopped = this->compute_timer.is_stopped();
+				    if(is_stopped) this->compute_timer.resume();
 
 		        if(this->is_field(i))
 			        {
@@ -84,7 +86,7 @@ void canonical_u_tensor_factory::compute_u1(const std::vector<GiNaC::symbol>& pa
 		            assert(false);
 			        }
 
-		        this->compute_timer.stop();
+		        if(is_stopped) this->compute_timer.stop();
 				    this->cache.store(expression_item_types::U1_item, index, args, v[index]);
 			    }
       }
@@ -119,7 +121,8 @@ void canonical_u_tensor_factory::compute_u2(GiNaC::symbol& k, GiNaC::symbol& a,
 
 		        if(!this->cache.query(expression_item_types::U2_item, index, args, v[index]))
 			        {
-				        this->compute_timer.resume();
+                bool is_stopped = this->compute_timer.is_stopped();
+				        if(is_stopped) this->compute_timer.resume();
 
 		            GiNaC::ex c = 0;
 
@@ -153,7 +156,7 @@ void canonical_u_tensor_factory::compute_u2(GiNaC::symbol& k, GiNaC::symbol& a,
 			            }
 
 		            v[index] = c;
-		            this->compute_timer.stop();
+		            if(is_stopped) this->compute_timer.stop();
 				        this->cache.store(expression_item_types::U2_item, index, args, v[index]);
 			        }
           }
@@ -172,6 +175,9 @@ void canonical_u_tensor_factory::compute_u3(GiNaC::symbol& k1, GiNaC::symbol& k2
 
     GiNaC::ex Hsq = this->compute_Hsq(params, fields, derivs);
     GiNaC::ex eps = this->compute_eps(derivs);
+
+    // build argument block for each of the k1, k2, k3 permutations we need
+    // we need different blocks for each permutation to prevent cache aliasing
 
     std::vector<GiNaC::ex> args;
     args.push_back(k1);
@@ -250,7 +256,8 @@ void canonical_u_tensor_factory::compute_u3(GiNaC::symbol& k1, GiNaC::symbol& k2
 
 		            if(!this->cache.query(expression_item_types::U3_item, index, args, v[index]))
 			            {
-				            this->compute_timer.resume();
+                    bool is_stopped = this->compute_timer.is_stopped();
+				            if(is_stopped) this->compute_timer.resume();
 
 		                GiNaC::ex c = 0;
 
@@ -297,7 +304,7 @@ void canonical_u_tensor_factory::compute_u3(GiNaC::symbol& k1, GiNaC::symbol& k2
 			                }
 
 		                v[index] = c;
-		                this->compute_timer.stop();
+		                if(is_stopped) this->compute_timer.stop();
 		                this->cache.store(expression_item_types::U3_item, index, args, v[index]);
 			            }
               }
@@ -456,7 +463,8 @@ void canonical_u_tensor_factory::compute_zeta_xfm_1(const std::vector<GiNaC::sym
 
 		    if(!this->cache.query(expression_item_types::zxfm1_item, index, args, v[index]))
 			    {
-				    this->compute_timer.resume();
+            bool is_stopped = this->compute_timer.is_stopped();
+				    if(is_stopped) this->compute_timer.resume();
 
 		        if(this->is_field(i))
 			        {
@@ -471,7 +479,7 @@ void canonical_u_tensor_factory::compute_zeta_xfm_1(const std::vector<GiNaC::sym
 		            assert(false);
 			        }
 
-				    this->compute_timer.stop();
+				    if(is_stopped) this->compute_timer.stop();
 				    this->cache.store(expression_item_types::zxfm1_item, index, args, v[index]);
 			    }
       }
@@ -506,7 +514,8 @@ void canonical_u_tensor_factory::compute_zeta_xfm_2(GiNaC::symbol& k, GiNaC::sym
 
 		        if(!this->cache.query(expression_item_types::zxfm2_item, index, args, v[index]))
 			        {
-				        this->compute_timer.resume();
+                bool is_stopped = this->compute_timer.is_stopped();
+				        if(is_stopped) this->compute_timer.resume();
 
 		            GiNaC::ex c = 0;
 
@@ -533,7 +542,7 @@ void canonical_u_tensor_factory::compute_zeta_xfm_2(GiNaC::symbol& k, GiNaC::sym
 
 		            v[index] = c;
 
-				        this->compute_timer.stop();
+				        if(is_stopped) this->compute_timer.stop();
 				        this->cache.store(expression_item_types::zxfm2_item, index, args, v[index]);
 			        }
 
@@ -552,6 +561,9 @@ GiNaC::ex canonical_u_tensor_factory::compute_zeta_xfm_2_ff(unsigned int m, unsi
 
     // formulae from DS calculation 28 May 2014
 
+    bool is_stopped = this->compute_timer.is_stopped();
+    if(is_stopped) this->compute_timer.resume();
+
     GiNaC::ex p = 0;
 
 		for(unsigned int i = 0; i < this->num_fields; ++i)
@@ -561,6 +573,8 @@ GiNaC::ex canonical_u_tensor_factory::compute_zeta_xfm_2_ff(unsigned int m, unsi
 		p = p / (Hsq*pow(this->M_Planck,2));
 
     GiNaC::ex c = (-GiNaC::ex(1)/2 + 3/(2*eps) + p/(4*pow(eps,2)))*derivs[m]*derivs[n] / (pow(this->M_Planck,4)*eps);
+
+    if(is_stopped) this->compute_timer.stop();
 
     return(c);
   }
@@ -577,6 +591,9 @@ GiNaC::ex canonical_u_tensor_factory::compute_zeta_xfm_2_fp(unsigned int m, unsi
 
     // formulae from DS calculation 28 May 2014
 
+    bool is_stopped = this->compute_timer.is_stopped();
+    if(is_stopped) this->compute_timer.resume();
+
     GiNaC::ex k1dotk2 = (k*k - k1*k1 - k2*k2)/2;
 
     GiNaC::ex k12sq = k*k;
@@ -588,6 +605,8 @@ GiNaC::ex canonical_u_tensor_factory::compute_zeta_xfm_2_fp(unsigned int m, unsi
 				c += -(k1dotk2 / k12sq) / (2*pow(this->M_Planck,2)*eps);
 				c += -(k1*k1 / k12sq)   / (2*pow(this->M_Planck,2)*eps);
 			}
+
+    if(is_stopped) this->compute_timer.stop();
 
     return(c);
   }
@@ -619,7 +638,8 @@ void canonical_u_tensor_factory::compute_deltaN_xfm_1(const std::vector<GiNaC::s
 
 		    if(!this->cache.query(expression_item_types::dN1_item, index, v[index]))
 			    {
-				    this->compute_timer.resume();
+            bool is_stopped = this->compute_timer.is_stopped();
+				    if(is_stopped) this->compute_timer.resume();
 
             if(!cached)
               {
@@ -640,7 +660,7 @@ void canonical_u_tensor_factory::compute_deltaN_xfm_1(const std::vector<GiNaC::s
 		            assert(false);
 			        }
 
-						this->compute_timer.stop();
+						if(is_stopped) this->compute_timer.stop();
 				    this->cache.store(expression_item_types::dN1_item, index, v[index]);
 			    }
 	    }
@@ -677,7 +697,8 @@ void canonical_u_tensor_factory::compute_deltaN_xfm_2(const std::vector<GiNaC::s
 
 		        if(!this->cache.query(expression_item_types::dN2_item, index, v[index]))
 			        {
-				        this->compute_timer.resume();
+                bool is_stopped = this->compute_timer.is_stopped();
+				        if(is_stopped) this->compute_timer.resume();
 
                 if(!cached)
                   {
@@ -702,7 +723,7 @@ void canonical_u_tensor_factory::compute_deltaN_xfm_2(const std::vector<GiNaC::s
 			            - diff(1/(2*dotH), coord_j) * diff(Hsq, coord_j)
 			            + 1/(2*dotH) * p_sum * diff(Hsq, coord_i) * diff(Hsq, coord_j);
 
-				        this->compute_timer.stop();
+				        if(is_stopped) this->compute_timer.stop();
 				        this->cache.store(expression_item_types::dN2_item, index, v[index]);
 			        }
 	        }
@@ -731,14 +752,15 @@ GiNaC::ex canonical_u_tensor_factory::compute_Hsq(const std::vector<GiNaC::symbo
 
     if(!this->cache.query(expression_item_types::Hubble2_item, 0, args, Hsq))
       {
-        this->compute_timer.resume();
+        bool is_stopped = this->compute_timer.is_stopped();
+        if(is_stopped) this->compute_timer.resume();
 
         GiNaC::ex subs_V = this->substitute_V(params, fields);
 
         GiNaC::ex eps = this->compute_eps(derivs);
         Hsq = subs_V / (GiNaC::pow(this->M_Planck,2)*(3-eps));
 
-        this->compute_timer.stop();
+        if(is_stopped) this->compute_timer.stop();
         this->cache.store(expression_item_types::Hubble2_item, 0, args, Hsq);
       }
 
@@ -751,7 +773,8 @@ GiNaC::ex canonical_u_tensor_factory::compute_eps(const std::vector<GiNaC::symbo
     GiNaC::ex sum_momenta_sq(0);
 
     // presumably not worth going to the cache for a calculation as short as this
-    this->compute_timer.resume();
+    bool is_stopped = this->compute_timer.is_stopped();
+    if(is_stopped) this->compute_timer.resume();
 
     for(const GiNaC::symbol& sym : derivs)
       {
@@ -760,7 +783,7 @@ GiNaC::ex canonical_u_tensor_factory::compute_eps(const std::vector<GiNaC::symbo
 
     GiNaC::ex eps = sum_momenta_sq/(2*GiNaC::pow(this->M_Planck,2));
 
-    this->compute_timer.stop();
+    if(is_stopped) this->compute_timer.stop();
 
     return(eps);
   }
@@ -788,7 +811,8 @@ void canonical_u_tensor_factory::compute_dV(const std::vector<GiNaC::symbol>& pa
 
         if(!this->cache.query(expression_item_types::dV_item, index, args, v[index]))
           {
-            this->compute_timer.resume();
+            bool is_stopped = this->compute_timer.is_stopped();
+            if(is_stopped) this->compute_timer.resume();
 
             if(!cached)
               {
@@ -798,7 +822,7 @@ void canonical_u_tensor_factory::compute_dV(const std::vector<GiNaC::symbol>& pa
 
             v[index] = GiNaC::diff(subs_V, fields[i]);
 
-            this->compute_timer.stop();
+            if(is_stopped) this->compute_timer.stop();
             this->cache.store(expression_item_types::dV_item, index, args, v[index]);
           }
       }
@@ -826,7 +850,8 @@ void canonical_u_tensor_factory::compute_ddV(const std::vector<GiNaC::symbol>& p
 
             if(!this->cache.query(expression_item_types::ddV_item, index, args, v[index]))
               {
-                this->compute_timer.resume();
+                bool is_stopped = this->compute_timer.is_stopped();
+                if(is_stopped) this->compute_timer.resume();
 
                 if(!cached)
                   {
@@ -836,7 +861,7 @@ void canonical_u_tensor_factory::compute_ddV(const std::vector<GiNaC::symbol>& p
 
                 v[index] = GiNaC::diff(GiNaC::diff(subs_V, fields[j]), fields[i]);
 
-                this->compute_timer.stop();
+                if(is_stopped) this->compute_timer.stop();
                 this->cache.store(expression_item_types::ddV_item, index, args, v[index]);
               }
           }
@@ -851,6 +876,7 @@ void canonical_u_tensor_factory::compute_dddV(const std::vector<GiNaC::symbol>& 
     v.resize(field_fl.get_flattened_size(3));
 
     std::vector<GiNaC::ex> args;
+    std::copy(params.begin(), params.end(), std::back_inserter(args));
     std::copy(params.begin(), params.end(), std::back_inserter(args));
     std::copy(fields.begin(), fields.end(), std::back_inserter(args));
 
@@ -867,7 +893,8 @@ void canonical_u_tensor_factory::compute_dddV(const std::vector<GiNaC::symbol>& 
 
                 if(!this->cache.query(expression_item_types::dddV_item, index, args, v[index]))
                   {
-                    this->compute_timer.resume();
+                    bool is_stopped = this->compute_timer.is_stopped();
+                    if(is_stopped) this->compute_timer.resume();
 
                     if(!cached)
                       {
@@ -877,7 +904,7 @@ void canonical_u_tensor_factory::compute_dddV(const std::vector<GiNaC::symbol>& 
 
                     v[index] = GiNaC::diff(GiNaC::diff(GiNaC::diff(subs_V, fields[k]), fields[j]), fields[i]);
 
-                    this->compute_timer.stop();
+                    if(is_stopped) this->compute_timer.stop();
                     this->cache.store(expression_item_types::dddV_item, index, args, v[index]);
                   }
               }
@@ -910,7 +937,8 @@ GiNaC::ex canonical_u_tensor_factory::compute_A_component(unsigned int i, GiNaC:
 
 		if(!this->cache.query(expression_item_types::A_item, index, args, c))
 			{
-				this->compute_timer.resume();
+        bool is_stopped = this->compute_timer.is_stopped();
+				if(is_stopped) this->compute_timer.resume();
 
 		    GiNaC::ex Vijk = dddV[this->field_fl.flatten(i,j,k)];
 		    GiNaC::ex Vij  = ddV[this->field_fl.flatten(i,j)];
@@ -945,7 +973,7 @@ GiNaC::ex canonical_u_tensor_factory::compute_A_component(unsigned int i, GiNaC:
 		    if(i == k) c += ((derivs[j]/(2*pow(this->M_Planck,2))) * k1dotk3/(pow(a,2)*Hsq))/3;
 		    if(i == j) c += ((derivs[k]/(2*pow(this->M_Planck,2))) * k1dotk2/(pow(a,2)*Hsq))/3;
 
-				this->compute_timer.stop();
+				if(is_stopped) this->compute_timer.stop();
 
 				this->cache.store(expression_item_types::A_item, index, args, c);
 			}
@@ -973,7 +1001,8 @@ GiNaC::ex canonical_u_tensor_factory::compute_B_component(unsigned int i, GiNaC:
 
 		if(!this->cache.query(expression_item_types::B_item, index, args, c))
 			{
-				this->compute_timer.resume();
+        bool is_stopped = this->compute_timer.is_stopped();
+				if(is_stopped) this->compute_timer.resume();
 
 		    GiNaC::ex xi_i = this->compute_xi(i, Hsq, eps, derivs, dV);
 		    GiNaC::ex xi_j = this->compute_xi(j, Hsq, eps, derivs, dV);
@@ -990,7 +1019,7 @@ GiNaC::ex canonical_u_tensor_factory::compute_B_component(unsigned int i, GiNaC:
 		    if(j == k) c += - (xi_i / (2*pow(this->M_Planck,2))) * k1dotk2 / (k1*k1) /2;
 		    if(i == k) c += - (xi_j / (2*pow(this->M_Planck,2))) * k1dotk2 / (k2*k2) /2;
 
-				this->compute_timer.stop();
+				if(is_stopped) this->compute_timer.stop();
 
 				this->cache.store(expression_item_types::B_item, index, args, c);
 			}
@@ -1016,7 +1045,8 @@ GiNaC::ex canonical_u_tensor_factory::compute_C_component(unsigned int i, GiNaC:
 
     if(!this->cache.query(expression_item_types::C_item, index, args, c))
 	    {
-		    this->compute_timer.resume();
+        bool is_stopped = this->compute_timer.is_stopped();
+		    if(is_stopped) this->compute_timer.resume();
 
         GiNaC::ex k1dotk2 = (k3*k3 - k1*k1 - k2*k2)/2;
         GiNaC::ex k1dotk3 = (k2*k2 - k1*k1 - k3*k3)/2;
@@ -1029,7 +1059,7 @@ GiNaC::ex canonical_u_tensor_factory::compute_C_component(unsigned int i, GiNaC:
         if (j == k) c += (derivs[i] / pow(this->M_Planck, 2)) * (k1dotk3 / (k1*k1)) /2;
         if (i == k) c += (derivs[j] / pow(this->M_Planck, 2)) * (k2dotk3 / (k2*k2)) /2;
 
-		    this->compute_timer.stop();
+		    if(is_stopped) this->compute_timer.stop();
 
 		    this->cache.store(expression_item_types::C_item, index, args, c);
 	    }
@@ -1044,7 +1074,12 @@ GiNaC::ex canonical_u_tensor_factory::compute_xi(unsigned int i, GiNaC::ex& Hsq,
   {
     assert(i < this->num_fields);
 
+    bool is_stopped = this->compute_timer.is_stopped();
+    if(is_stopped) this->compute_timer.resume();
+
     GiNaC::ex c = -2*(3-eps)*derivs[i] - 2*dV[i]/Hsq;
+
+    if(is_stopped) this->compute_timer.stop();
 
     return(c);
   }
@@ -1064,7 +1099,8 @@ GiNaC::ex canonical_u_tensor_factory::compute_M_component(unsigned int i, unsign
 
 		if(!this->cache.query(expression_item_types::M_item, index, args, v))
 			{
-				this->compute_timer.resume();
+        bool is_stopped = this->compute_timer.is_stopped();
+				if(is_stopped) this->compute_timer.resume();
 
 		    GiNaC::ex Vab = ddV[this->field_fl.flatten(i,j)];
 		    GiNaC::ex Va  = dV[this->field_fl.flatten(i)];
@@ -1078,7 +1114,7 @@ GiNaC::ex canonical_u_tensor_factory::compute_M_component(unsigned int i, unsign
 
 				v = c+u/3;
 
-				this->compute_timer.stop();
+				if(is_stopped) this->compute_timer.stop();
 
 				this->cache.store(expression_item_types::M_item, index, args, v);
 			}
