@@ -167,7 +167,7 @@ unsigned int translator::process(const boost::filesystem::path& in, buffer& buf,
             this->data_payload.message(finished_msg.str());
 
             // report time spent doing macro replacement
-            package->report_macro_metadata(agent.get_total_time(), agent.get_tokenization_time());
+            package->report_macro_metadata(agent.get_total_work_time(), agent.get_tokenization_time());
 
 		        // package will report on time and memory use when it goes out of scope and is destroyed
           }

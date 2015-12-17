@@ -105,19 +105,19 @@ namespace macro_packages
       {
         std::vector<index_rule> package;
 
-        const std::vector<replacement_rule_pre> pres =
+        const std::vector<replacement_pre_unroll> pres =
           { nullptr,                            nullptr,                            nullptr,
             BIND1(pre_sr_velocity),             BIND1(pre_dV),                      BIND1(pre_ddV),
             BIND1(pre_dddV)
           };
 
-        const std::vector<replacement_rule_post> posts =
+        const std::vector<replacement_post_unroll> posts =
           { nullptr,                            nullptr,                            nullptr,
             nullptr,                            nullptr,                            nullptr,
             nullptr
           };
 
-        const std::vector<replacement_rule_index> rules =
+        const std::vector<replacement_rule_unroll> rules =
           { BIND3(replace_parameter),           BIND3(replace_field),               BIND3(replace_coordinate),
             BIND3(replace_1index_field_tensor), BIND3(replace_1index_field_tensor), BIND3(replace_2index_field_tensor),
             BIND3(replace_3index_field_tensor)

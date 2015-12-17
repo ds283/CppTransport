@@ -85,17 +85,17 @@ namespace macro_packages
       {
         std::vector<index_rule> package;
 
-        const std::vector<replacement_rule_pre> pres =
+        const std::vector<replacement_pre_unroll> pres =
           { BIND1(pre_A_predef),                BIND1(pre_B_predef),                BIND1(pre_C_predef),
             BIND1(pre_M_predef)
           };
 
-        const std::vector<replacement_rule_post> posts =
+        const std::vector<replacement_post_unroll> posts =
           { nullptr,                            nullptr,                            nullptr,
             nullptr
           };
 
-        const std::vector<replacement_rule_index> rules =
+        const std::vector<replacement_rule_unroll> rules =
           { BIND3(replace_3index_field_tensor), BIND3(replace_3index_field_tensor), BIND3(replace_3index_field_tensor),
             BIND3(replace_2index_field_tensor)
           };

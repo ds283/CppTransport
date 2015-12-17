@@ -74,17 +74,17 @@ namespace macro_packages
       {
         std::vector<index_rule> package;
 
-        const std::vector<replacement_rule_pre> pres =
+        const std::vector<replacement_pre_unroll> pres =
           { BIND1(pre_zeta_xfm_1),        BIND1(pre_zeta_xfm_2),
             BIND1(pre_deltaN_xfm_1),      BIND1(pre_deltaN_xfm_2)
           };
 
-        const std::vector<replacement_rule_post> posts =
+        const std::vector<replacement_post_unroll> posts =
           { nullptr,                      nullptr,
             nullptr,                      nullptr,
           };
 
-        const std::vector<replacement_rule_index> rules =
+        const std::vector<replacement_rule_unroll> rules =
           { BIND3(replace_1index_tensor), BIND3(replace_2index_tensor),
             BIND3(replace_1index_tensor), BIND3(replace_2index_tensor)
           };

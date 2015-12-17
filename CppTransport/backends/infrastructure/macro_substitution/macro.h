@@ -112,7 +112,7 @@ class macro_agent
   public:
 
 		// get total time spent doing macro replacement
-		boost::timer::nanosecond_type get_total_time() const { return(this->timer.elapsed().wall); }
+		boost::timer::nanosecond_type get_total_work_time() const { return(this->macro_apply_timer.elapsed().wall); }
 
 		// get time spent doing tokenization
 		boost::timer::nanosecond_type get_tokenization_time() const { return(this->tokenization_timer.elapsed().wall); }
@@ -228,7 +228,7 @@ class macro_agent
     // TIMERS
 
 		// timer to measure performance during macro replacement
-    boost::timer::cpu_timer timer;
+    boost::timer::cpu_timer macro_apply_timer;
 
 		// measure time spent tokenizing
     boost::timer::cpu_timer tokenization_timer;
