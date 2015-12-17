@@ -1952,7 +1952,6 @@ namespace transport
 
         // wait for all assignments to be received
         boost::mpi::wait_all(msg_status.begin(), msg_status.end());
-		    BOOST_LOG_SEV(log, base_writer::log_severity_level::normal) << "++ All workers accepted new assignments";
 			}
 
 
