@@ -195,20 +195,50 @@ void canonical_u_tensor_factory::compute_u3(GiNaC::symbol& k1, GiNaC::symbol& k2
     std::copy(ddV.begin(), ddV.end(), std::back_inserter(a_args));
     std::copy(dddV.begin(), dddV.end(), std::back_inserter(a_args));
 
-    std::vector<GiNaC::ex> b_args;
-    b_args.push_back(k1);
-    b_args.push_back(k2);
-    b_args.push_back(k3);
-    b_args.push_back(a);
-    std::copy(derivs.begin(), derivs.end(), std::back_inserter(b_args));
-    std::copy(dV.begin(), dV.end(), std::back_inserter(b_args));
+    std::vector<GiNaC::ex> b_args_123;
+    b_args_123.push_back(k1);
+    b_args_123.push_back(k2);
+    b_args_123.push_back(k3);
+    b_args_123.push_back(a);
+    std::copy(derivs.begin(), derivs.end(), std::back_inserter(b_args_123));
+    std::copy(dV.begin(), dV.end(), std::back_inserter(b_args_123));
 
-    std::vector<GiNaC::ex> c_args;
-    c_args.push_back(k1);
-    c_args.push_back(k2);
-    c_args.push_back(k3);
-    c_args.push_back(a);
-    std::copy(derivs.begin(), derivs.end(), std::back_inserter(c_args));
+    std::vector<GiNaC::ex> c_args_123;
+    c_args_123.push_back(k1);
+    c_args_123.push_back(k2);
+    c_args_123.push_back(k3);
+    c_args_123.push_back(a);
+    std::copy(derivs.begin(), derivs.end(), std::back_inserter(c_args_123));
+
+    std::vector<GiNaC::ex> b_args_231;
+    b_args_231.push_back(k2);
+    b_args_231.push_back(k3);
+    b_args_231.push_back(k1);
+    b_args_231.push_back(a);
+    std::copy(derivs.begin(), derivs.end(), std::back_inserter(b_args_231));
+    std::copy(dV.begin(), dV.end(), std::back_inserter(b_args_231));
+
+    std::vector<GiNaC::ex> c_args_231;
+    c_args_231.push_back(k2);
+    c_args_231.push_back(k3);
+    c_args_231.push_back(k1);
+    c_args_231.push_back(a);
+    std::copy(derivs.begin(), derivs.end(), std::back_inserter(c_args_231));
+
+    std::vector<GiNaC::ex> b_args_132;
+    b_args_132.push_back(k1);
+    b_args_132.push_back(k3);
+    b_args_132.push_back(k2);
+    b_args_132.push_back(a);
+    std::copy(derivs.begin(), derivs.end(), std::back_inserter(b_args_132));
+    std::copy(dV.begin(), dV.end(), std::back_inserter(b_args_132));
+
+    std::vector<GiNaC::ex> c_args_132;
+    c_args_132.push_back(k1);
+    c_args_132.push_back(k3);
+    c_args_132.push_back(k2);
+    c_args_132.push_back(a);
+    std::copy(derivs.begin(), derivs.end(), std::back_inserter(c_args_132));
 
     for(int i = 0; i < 2*this->num_fields; ++i)
       {
@@ -231,15 +261,15 @@ void canonical_u_tensor_factory::compute_u3(GiNaC::symbol& k1, GiNaC::symbol& k2
 		                // factor of 2 from definition of 2nd order term in transport eq: dX/dN = u2.X + (1/2) u3.X.X + ...
 		                if(this->is_field(i) && this->is_field(j) && this->is_field(k))
 			                {
-		                    c = -this->compute_B_component(this->species(j), k2, this->species(k), k3, this->species(i), k1, a, Hsq, eps, derivs, dV, b_args);
+		                    c = -this->compute_B_component(this->species(j), k2, this->species(k), k3, this->species(i), k1, a, Hsq, eps, derivs, dV, b_args_231);
 			                }
 		                else if(this->is_field(i) && this->is_field(j) && this->is_momentum(k))
 			                {
-		                    c = -this->compute_C_component(this->species(i), k1, this->species(k), k3, this->species(j), k2, a, derivs, c_args);
+		                    c = -this->compute_C_component(this->species(i), k1, this->species(k), k3, this->species(j), k2, a, derivs, c_args_132);
 			                }
 		                else if(this->is_field(i) && this->is_momentum(j) && this->is_field(k))
 			                {
-		                    c = -this->compute_C_component(this->species(i), k1, this->species(j), k2, this->species(k), k3, a, derivs, c_args);
+		                    c = -this->compute_C_component(this->species(i), k1, this->species(j), k2, this->species(k), k3, a, derivs, c_args_123);
 			                }
 		                else if(this->is_field(i) && this->is_momentum(j) && this->is_momentum(k))
 			                {
@@ -251,15 +281,15 @@ void canonical_u_tensor_factory::compute_u3(GiNaC::symbol& k1, GiNaC::symbol& k2
 			                }
 		                else if(this->is_momentum(i) && this->is_field(j) && this->is_momentum(k))
 			                {
-		                    c = this->compute_B_component(this->species(i), k1, this->species(j), k2, this->species(k), k3, a, Hsq, eps, derivs, dV, b_args);
+		                    c = this->compute_B_component(this->species(i), k1, this->species(j), k2, this->species(k), k3, a, Hsq, eps, derivs, dV, b_args_123);
 			                }
 		                else if(this->is_momentum(i) && this->is_momentum(j) && this->is_field(k))
 			                {
-		                    c = this->compute_B_component(this->species(i), k1, this->species(k), k3, this->species(j), k2, a, Hsq, eps, derivs, dV, b_args);
+		                    c = this->compute_B_component(this->species(i), k1, this->species(k), k3, this->species(j), k2, a, Hsq, eps, derivs, dV, b_args_132);
 			                }
 		                else if(this->is_momentum(i) && this->is_momentum(j) && this->is_momentum(k))
 			                {
-		                    c = this->compute_C_component(this->species(j), k2, this->species(k), k3, this->species(i), k1, a, derivs, c_args);
+		                    c = this->compute_C_component(this->species(j), k2, this->species(k), k3, this->species(i), k1, a, derivs, c_args_231);
 			                }
 		                else
 			                {
@@ -898,16 +928,16 @@ GiNaC::ex canonical_u_tensor_factory::compute_A_component(unsigned int i, GiNaC:
 		    c = - (Vijk / Hsq)/3;
 
 		    c += - (derivs[i]/(2*pow(this->M_Planck,2))) * (Vjk / Hsq)/3
-			    - (derivs[j]/(2*pow(this->M_Planck,2))) * (Vik / Hsq)/3
-			    - (derivs[k]/(2*pow(this->M_Planck,2))) * (Vij / Hsq)/3;
+			       - (derivs[j]/(2*pow(this->M_Planck,2))) * (Vik / Hsq)/3
+			       - (derivs[k]/(2*pow(this->M_Planck,2))) * (Vij / Hsq)/3;
 
 		    c +=   ((derivs[i]*derivs[j]*xi_k)/(8*pow(this->M_Planck,4)))/3
-			    + ((derivs[i]*derivs[k]*xi_j)/(8*pow(this->M_Planck,4)))/3
-			    + ((derivs[j]*derivs[k]*xi_i)/(8*pow(this->M_Planck,4)))/3;
+			       + ((derivs[i]*derivs[k]*xi_j)/(8*pow(this->M_Planck,4)))/3
+			       + ((derivs[j]*derivs[k]*xi_i)/(8*pow(this->M_Planck,4)))/3;
 
 		    c +=   (derivs[i]*xi_j*xi_k)/(32*pow(this->M_Planck,4)) * ( 1 - k2dotk3*k2dotk3 / (k2*k2*k3*k3) ) /3
-			    + (derivs[j]*xi_i*xi_k)/(32*pow(this->M_Planck,4)) * ( 1 - k1dotk3*k1dotk3 / (k1*k1*k3*k3) ) /3
-			    + (derivs[k]*xi_i*xi_j)/(32*pow(this->M_Planck,4)) * ( 1 - k1dotk2*k1dotk2 / (k1*k1*k2*k2) ) /3;
+			       + (derivs[j]*xi_i*xi_k)/(32*pow(this->M_Planck,4)) * ( 1 - k1dotk3*k1dotk3 / (k1*k1*k3*k3) ) /3
+			       + (derivs[k]*xi_i*xi_j)/(32*pow(this->M_Planck,4)) * ( 1 - k1dotk2*k1dotk2 / (k1*k1*k2*k2) ) /3;
 
 		    c += (derivs[i]*derivs[j]*derivs[k]/(8*pow(this->M_Planck,4))) * (6 - 2*eps);
 
@@ -955,7 +985,7 @@ GiNaC::ex canonical_u_tensor_factory::compute_B_component(unsigned int i, GiNaC:
 		    c = derivs[i]*derivs[j]*derivs[k]/(4*pow(this->M_Planck,4));
 
 		    c += - (derivs[i]*xi_j*derivs[k]/(8*pow(this->M_Planck,4))) * ( 1 - k2dotk3*k2dotk3 / (k2*k2*k3*k3) ) /2
-			    - (derivs[j]*xi_i*derivs[k]/(8*pow(this->M_Planck,4))) * ( 1 - k1dotk3*k1dotk3 / (k1*k1*k3*k3) ) /2;
+             - (derivs[j]*xi_i*derivs[k]/(8*pow(this->M_Planck,4))) * ( 1 - k1dotk3*k1dotk3 / (k1*k1*k3*k3) ) /2;
 
 		    if(j == k) c += - (xi_i / (2*pow(this->M_Planck,2))) * k1dotk2 / (k1*k1) /2;
 		    if(i == k) c += - (xi_j / (2*pow(this->M_Planck,2))) * k1dotk2 / (k2*k2) /2;
@@ -1014,9 +1044,7 @@ GiNaC::ex canonical_u_tensor_factory::compute_xi(unsigned int i, GiNaC::ex& Hsq,
   {
     assert(i < this->num_fields);
 
-    GiNaC::ex Vi = dV[i];
-
-    GiNaC::ex c = -2*(3-eps)*derivs[i] - 2*Vi/Hsq;
+    GiNaC::ex c = -2*(3-eps)*derivs[i] - 2*dV[i]/Hsq;
 
     return(c);
   }
