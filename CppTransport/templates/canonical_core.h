@@ -1023,11 +1023,11 @@ namespace transport
         const auto __Mp = __task->get_params().get_Mp();
         const auto __a = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
-        $$__TEMP_POOL{"const auto $1 = $2;"}
-
         $$__MODEL_compute_dV(__raw_params, __fields, __dV);
         $$__MODEL_compute_ddV(__raw_params, __fields, __ddV);
         $$__MODEL_compute_dddV(__raw_params, __fields, __dddV);
+
+        $$__TEMP_POOL{"const auto $1 = $2;"}
 
         __u3[FLATTEN($$__A,$$__B,$$__C)] = $$__U3_PREDEF[ABC]{__k1, __k1, __k3, __a, __raw_params, __fields, __dV, __ddV, __dddV, FLATTEN, FIELDS_FLATTEN};
       }

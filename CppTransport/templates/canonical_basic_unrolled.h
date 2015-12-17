@@ -686,6 +686,10 @@ namespace transport
         const auto __k = this->config.k_comoving;
         const auto __a = std::exp(__t - this->N_horizon_exit + this->astar_normalization);
 
+        // calculation of dV, ddV, dddV has to occur above the temporary pool
+        $$__MODEL_compute_dV(this->raw_params, __x, this->dV);
+        $$__MODEL_compute_ddV(this->raw_params, __x, this->ddV);
+
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
         // check FLATTEN functions are being evaluated at compile time
@@ -708,9 +712,6 @@ namespace transport
 #define __background(a)      __dxdt[$$__MODEL_pool::backg_start + FLATTEN(a)]
 #define __dtwopf_tensor(a,b) __dxdt[$$__MODEL_pool::tensor_start + TENSOR_FLATTEN(a,b)]
 #define __dtwopf(a,b)        __dxdt[$$__MODEL_pool::twopf_start + FLATTEN(a,b)]
-
-        $$__MODEL_compute_dV(this->raw_params, __x, this->dV);
-        $$__MODEL_compute_ddV(this->raw_params, __x, this->ddV);
 
         // evolve the background
         __background($$__A) = $$__U1_PREDEF[A]{raw_params, __x, dV, FLATTEN, FIELDS_FLATTEN};
@@ -762,6 +763,11 @@ namespace transport
         const auto __k2 = this->config.k2_comoving;
         const auto __k3 = this->config.k3_comoving;
         const auto __a = std::exp(__t - this->N_horizon_exit + this->astar_normalization);
+
+        // calculation of dV, ddV, dddV has to occur above the temporary pool
+        $$__MODEL_compute_dV(this->raw_params, __x, this->dV);
+        $$__MODEL_compute_ddV(this->raw_params, __x, this->ddV);
+        $$__MODEL_compute_dddV(this->raw_params, __x, this->dddV);
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
@@ -826,10 +832,6 @@ namespace transport
 #define __dtwopf_re_k3(a,b)     __dxdt[$$__MODEL_pool::twopf_re_k3_start + FLATTEN(a,b)]
 #define __dtwopf_im_k3(a,b)     __dxdt[$$__MODEL_pool::twopf_im_k3_start + FLATTEN(a,b)]
 #define __dthreepf(a,b,c)       __dxdt[$$__MODEL_pool::threepf_start     + FLATTEN(a,b,c)]
-
-        $$__MODEL_compute_dV(this->raw_params, __x, this->dV);
-        $$__MODEL_compute_ddV(this->raw_params, __x, this->ddV);
-        $$__MODEL_compute_dddV(this->raw_params, __x, this->dddV);
 
         // evolve the background
         __background($$__A) = $$__U1_PREDEF[A]{raw_params, __x, dV, FLATTEN, FIELDS_FLATTEN};
