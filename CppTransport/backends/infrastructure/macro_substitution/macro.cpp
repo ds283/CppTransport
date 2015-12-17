@@ -366,8 +366,22 @@ void macro_agent::plant_LHS_forloop(index_database<abstract_index>::const_iterat
   {
     if(current == end)
       {
+        // evaluate macros, converting indices to abstract 'for' loop variables
+        counter += left_tokens.evaluate_macros();
+        counter += left_tokens.evaluate_macros(simple_macro_type::post);
+
+        // if this is an assignment statement then plant code to zero the accumulator variable,
+        // unless there are no RHS assignments.
+        // In that case we can simply coalesce the assignment with the RHS.
+        if(left_tokens.size() > 0 && RHS_assignments.size() > 1 && split_result.type == macro_impl::split_type::sum)
+          {
+            std::string zero_stmt = left_tokens.to_string() + " = 0;";
+            boost::algorithm::trim_left(zero_stmt);
+            r_list.push_back(this->dress(zero_stmt, raw_indent, current_indent));
+          }
+
         this->plant_RHS_forloop(RHS_assignments.idx_set_begin(), RHS_assignments.idx_set_end(), left_tokens,
-                                right_tokens, counter, split_result, ctx, r_list, raw_indent, current_indent);
+                                right_tokens, counter, split_result, ctx, r_list, raw_indent, current_indent, RHS_assignments.size() == 1);
       }
     else
       {
@@ -393,12 +407,32 @@ void macro_agent::plant_RHS_forloop(index_database<abstract_index>::const_iterat
                                     token_list& left_tokens, token_list& right_tokens, unsigned int& counter,
                                     macro_impl::split_string& split_result, error_context& ctx,
                                     std::list<std::string>& r_list, const std::string& raw_indent,
-                                    unsigned int current_indent)
+                                    unsigned int current_indent, bool coalesce)
   {
     if(current == end)
       {
-        std::string this_line = left_tokens.to_string() + " " + right_tokens.to_string() + (left_tokens.size() == 0 && split_result.semicolon ? ";" : "") + (left_tokens.size() == 0 && split_result.comma ? "," : "");
-        r_list.push_back(this->dress(this_line, raw_indent, current_indent));
+        // evaluate macros, converting indices to abstract 'for' loop variables
+        counter += right_tokens.evaluate_macros();
+        counter += right_tokens.evaluate_macros(simple_macro_type::post);
+
+        std::string left_line = left_tokens.to_string();
+        std::string right_line = right_tokens.to_string() + (left_tokens.size() == 0 && split_result.semicolon ? ";" : "") + (left_tokens.size() == 0 && split_result.comma ? "," : "");
+
+        boost::algorithm::trim_left(left_line);
+        std::string total_line = left_line;
+
+        if(split_result.type == macro_impl::split_type::sum_equal)
+          {
+            total_line += " += ";
+          }
+        else
+          {
+            if(coalesce) total_line += " = ";
+            else         total_line += " += ";
+          }
+
+        total_line += right_line + (split_result.semicolon ? ";" : "") + (split_result.comma ? "," : "");
+        r_list.push_back(this->dress(total_line, raw_indent, current_indent));
       }
     else
       {
@@ -413,7 +447,7 @@ void macro_agent::plant_RHS_forloop(index_database<abstract_index>::const_iterat
 
         if(start_delimiter) r_list.push_back(this->dress(brace_indent.str() + *start_delimiter, raw_indent, current_indent));
         this->plant_RHS_forloop(++current, end, left_tokens, right_tokens, counter, split_result, ctx, r_list,
-                                raw_indent, current_indent + printer.get_block_indent());
+                                raw_indent, current_indent + printer.get_block_indent(), coalesce);
         if(end_delimiter) r_list.push_back(this->dress(brace_indent.str() + *end_delimiter, raw_indent, current_indent));
       }
   }

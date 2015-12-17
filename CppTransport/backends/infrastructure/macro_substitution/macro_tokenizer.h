@@ -103,8 +103,13 @@ namespace token_list_impl
 
       public:
 
-        //! evaluate and cache the result given a list of index assignments
+        //! evaluate on a specific assignment and cache the result;
+        //! used when unrolling an index set
         void evaluate(const assignment_list& a);
+
+        //! evaluate on an abstract index and cache the result; used when
+        //! planting code as a 'for'-loop
+        void evaluate();
 
 
         // INTERNAL DATA
@@ -227,8 +232,13 @@ class token_list
 		//! We only want to do this once if possible, since macro evaluation may be expensive.
 		unsigned int evaluate_macros(simple_macro_type type);
 
-		//! evaluate index macros and cache the result
+		//! evaluate index macros on a specific assignment and cache the result;
+    //! used when unrolling index sets
 		unsigned int evaluate_macros(const assignment_list& a);
+
+    //! evaluate index macros on an abstract assignment and cache the result;
+    //! used when planting code as a 'for'-loop
+    unsigned int evaluate_macros();
 
 		//! get list of indices identified during tokenization
 		const abstract_index_list& get_indices() { return(this->indices); }

@@ -528,6 +528,20 @@ unsigned int token_list::evaluate_macros(const assignment_list& a)
 }
 
 
+unsigned int token_list::evaluate_macros()
+  {
+    unsigned int replacements = 0;
+
+    for(token_list_impl::free_index_token*& t : this->free_index_tokens)
+      {
+        t->evaluate();
+        replacements++;
+      }
+
+    return(replacements);
+  }
+
+
 std::string token_list::to_string()
 	{
     std::string output;
@@ -603,6 +617,12 @@ void token_list_impl::free_index_token::evaluate(const assignment_list& a)
     cnv << it->get_numeric_value();
     this->conversion = cnv.str();
 	}
+
+
+void token_list_impl::free_index_token::evaluate()
+  {
+    this->conversion = this->index.get_loop_variable();
+  }
 
 
 token_list_impl::simple_macro_token::simple_macro_token(const std::string& m, const macro_argument_list& a,

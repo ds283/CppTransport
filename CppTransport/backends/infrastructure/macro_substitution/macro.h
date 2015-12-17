@@ -165,7 +165,8 @@ class macro_agent
                            index_database<abstract_index>::const_iterator end,
                            token_list& left_tokens, token_list& right_tokens, unsigned int& counter,
                            macro_impl::split_string& split_result, error_context& ctx,
-                           std::list<std::string>& r_list, const std::string& raw_indent, unsigned int current_indent);
+                           std::list<std::string>& r_list, const std::string& raw_indent, unsigned int current_indent,
+                           bool coalesce);
 
     //! format an output string with correct indents
     std::string dress(std::string out_str, const std::string& raw_indent, unsigned int current_indent);
