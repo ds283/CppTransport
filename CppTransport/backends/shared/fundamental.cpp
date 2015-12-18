@@ -218,16 +218,16 @@ namespace macro_packages
     std::string fundamental::replace_uid(const macro_argument_list& args)
       {
         boost::optional< contexted_value<std::string>& > nm_value = this->data_payload.get_name();
-        std::string name = nm_value ? *(*nm_value) : std::string();
+        std::string name = nm_value ? *nm_value : std::string();
 
         boost::optional< contexted_value<std::string>& > au_value = this->data_payload.get_author();
-        std::string author = au_value ? *(*au_value) : std::string();
+        std::string author = au_value ? *au_value : std::string();
 
         boost::optional< contexted_value<std::string>& > tg_value = this->data_payload.get_tag();
-        std::string tag = tg_value ? *(*tg_value) : std::string();
+        std::string tag = tg_value ? *tg_value : std::string();
 
         boost::optional< contexted_value<std::string>& > md_value = this->data_payload.get_model();
-        std::string model = md_value ? *(*md_value) : std::string();
+        std::string model = md_value ? *md_value : std::string();
 
         std::string unique_string = name + author + tag + model + CPPTRANSPORT_VERSION;
         boost::uuids::string_generator gen;
@@ -242,7 +242,7 @@ namespace macro_packages
         boost::optional< contexted_value<std::string>& > value = this->data_payload.get_name();
         if(value)
           {
-            return *(*value);
+            return *value;
           }
         else
           {
@@ -256,7 +256,7 @@ namespace macro_packages
         boost::optional< contexted_value<std::string>& > value = this->data_payload.get_author();
         if(value)
           {
-            return *(*value);
+            return *value;
           }
         else
           {
@@ -270,7 +270,7 @@ namespace macro_packages
         boost::optional< contexted_value<std::string>& > value = this->data_payload.get_tag();
         if(value)
           {
-            return *(*value);
+            return *value;
           }
         else
           {
@@ -284,7 +284,7 @@ namespace macro_packages
         boost::optional< contexted_value<std::string>& > value = this->data_payload.get_model();
         if(value)
           {
-            return *(*value);
+            return *value;
           }
         else
           {

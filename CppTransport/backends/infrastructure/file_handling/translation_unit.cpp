@@ -165,7 +165,7 @@ translation_unit::translation_unit(boost::filesystem::path file, finder& p, argu
         boost::optional< contexted_value<std::string>& > core = driver.get_script().get_core();
         if(core)
           {
-            core_output = this->mangle_output_name(name, this->get_template_suffix(*(*core)));
+            core_output = this->mangle_output_name(name, this->get_template_suffix(*core));
           }
       }
     core_guard = boost::to_upper_copy(leafname(core_output.string()));
@@ -180,7 +180,7 @@ translation_unit::translation_unit(boost::filesystem::path file, finder& p, argu
         boost::optional< contexted_value<std::string>& > impl = driver.get_script().get_implementation();
         if(impl)
           {
-            implementation_output = this->mangle_output_name(name, this->get_template_suffix(*(*impl)));
+            implementation_output = this->mangle_output_name(name, this->get_template_suffix(*impl));
           }
       }
     implementation_guard = boost::to_upper_copy(leafname(implementation_output.string()));
@@ -205,7 +205,7 @@ unsigned int translation_unit::apply()
     boost::optional< contexted_value<std::string>& > core = s.get_core();
     if(core)
       {
-        rval += this->outstream.translate(*(*core), (*core).get_declaration_point(), this->translator_payload.get_core_output().string(), process_core);
+        rval += this->outstream.translate(*core, (*core).get_declaration_point(), this->translator_payload.get_core_output().string(), process_core);
       }
     else
       {
@@ -215,7 +215,7 @@ unsigned int translation_unit::apply()
     boost::optional< contexted_value<std::string>& > impl = s.get_implementation();
     if(impl)
       {
-        rval += this->outstream.translate(*(*impl), (*core).get_declaration_point(), this->translator_payload.get_implementation_output().string(), process_implementation);
+        rval += this->outstream.translate(*impl, (*core).get_declaration_point(), this->translator_payload.get_implementation_output().string(), process_implementation);
       }
     else
       {

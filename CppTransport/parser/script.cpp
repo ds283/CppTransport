@@ -318,12 +318,12 @@ enum indexorder script::get_indexorder() const
 
 void script::print(std::ostream& stream) const
   {
-    std::string name = this->name ? *(*this->name) : std::string();
-    std::string author = this->author ? *(*this->author) : std::string();
-    std::string tag = this->tag ? *(*this->tag) : std::string();
-    std::string model = this->model ? *(*this->model) : std::string();
-    std::string core = this->core ? *(*this->core) : std::string();
-    std::string impl = this->implementation ? *(*this->implementation) : std::string();
+    std::string name = this->name ? *this->name : std::string();
+    std::string author = this->author ? *this->author : std::string();
+    std::string tag = this->tag ? *this->tag : std::string();
+    std::string model = this->model ? *this->model : std::string();
+    std::string core = this->core ? *this->core : std::string();
+    std::string impl = this->implementation ? *this->implementation : std::string();
 
     stream << "Script summary:" << '\n';
     stream << "===============" << '\n';
