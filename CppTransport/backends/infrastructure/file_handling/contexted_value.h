@@ -19,9 +19,9 @@ class contexted_value
   public:
 
     //! constructor
-    contexted_value(ValueType v, const error_context& l)
+    contexted_value(ValueType v, const error_context l)
       : value(std::move(v)),
-        declaration_point(l)
+        declaration_point(std::make_shared<error_context>(l))
       {
       }
 
@@ -37,7 +37,7 @@ class contexted_value
     operator ValueType() const { return(this->value); }
 
     //! get declaration point
-    const error_context& get_declaration_point() const { return(this->declaration_point); }
+    const error_context& get_declaration_point() const { return(*this->declaration_point); }
 
 
     // INTERNAL DATA
@@ -47,8 +47,11 @@ class contexted_value
     //! value stored
     ValueType value;
 
-    //! reference to declaration point
-    const error_context& declaration_point;
+    //! link to declaration point; we take a copy of the
+    //! error context provided to us, so that it does not itself
+    //! have to be long-lived. We share ownership with any
+    //! copies of ourselves
+    std::shared_ptr<error_context> declaration_point;
 
   };
 
