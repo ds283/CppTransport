@@ -65,7 +65,7 @@ namespace macro_packages
             BIND(replace_p_abs_err),        BIND(replace_p_rel_err),        BIND(replace_p_step),           BIND(replace_p_stepper)
           };
 
-        const macro_argument_list names =
+        const std::vector<std::string> names =
           { "TOOL",                         "VERSION",                      "GUARD",                        "DATE",                         "SOURCE",
             "NAME",                         "AUTHOR",                       "TAG",                          "MODEL",                        "UNIQUE_ID",
             "HEADER",                       "CORE",                         "NUMBER_FIELDS",                "NUMBER_PARAMS",

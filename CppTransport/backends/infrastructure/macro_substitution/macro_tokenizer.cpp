@@ -334,7 +334,8 @@ macro_argument_list token_list::get_argument_list(const std::string& input, cons
 			    {
 				    if(input[position] == ',')
 					    {
-						    arg_list.push_back(arg);
+                error_context ctx(this->data_payload.get_stack(), this->input_string, position, this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
+						    arg_list.emplace_back(arg, ctx);
 						    arg.clear();
 					    }
 				    else if(input[position] == '"' && arg.length() == 0)
@@ -378,7 +379,8 @@ macro_argument_list token_list::get_argument_list(const std::string& input, cons
 
 				if(arg.length() > 0)
 					{
-						arg_list.push_back(arg);
+            error_context ctx(this->data_payload.get_stack(), this->input_string, position, this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
+						arg_list.emplace_back(arg, ctx);
 					}
 			}
 		else  // expected to find an argument list

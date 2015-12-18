@@ -19,7 +19,7 @@ class contexted_value
   public:
 
     //! constructor
-    contexted_value(const ValueType v, const error_context& l)
+    contexted_value(ValueType v, const error_context& l)
       : value(std::move(v)),
         declaration_point(l)
       {

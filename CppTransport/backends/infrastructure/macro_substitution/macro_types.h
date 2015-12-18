@@ -10,9 +10,11 @@
 #include <string>
 #include <vector>
 
+#include "contexted_value.h"
+
 
 // use vector to allow index subscripting
-typedef std::vector< std::string > macro_argument_list;
+typedef std::vector< contexted_value<std::string> > macro_argument_list;
 
 enum class simple_macro_type { pre, post };
 

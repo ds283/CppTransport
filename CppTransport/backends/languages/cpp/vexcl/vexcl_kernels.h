@@ -45,7 +45,7 @@ namespace vexcl
 
       protected:
 
-        std::string import_kernel(const std::vector<std::string>& args);
+        std::string import_kernel(const macro_argument_list& args);
 
       };
 

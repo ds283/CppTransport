@@ -46,9 +46,9 @@ namespace vexcl
 
       protected:
 
-        std::string replace_backg_stepper(const std::vector<std::string>& args);
-        std::string replace_pert_stepper (const std::vector<std::string>& args);
-        std::string stepper_name         (const std::vector<std::string>& args);
+        std::string replace_backg_stepper(const macro_argument_list& args);
+        std::string replace_pert_stepper (const macro_argument_list& args);
+        std::string stepper_name         (const macro_argument_list& args);
 
       };
 

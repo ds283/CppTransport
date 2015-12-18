@@ -110,7 +110,7 @@ namespace vexcl
         buf.merge(kernel_buffer);
 
         // output kernel name string
-        buf.write_to_end(OUTPUT_VEXCL_KERNEL_PRE + args[IMPORT_KERNEL_NAME_ARGUMENT] + OUTPUT_VEXCL_KERNEL_POST);
+        buf.write_to_end(OUTPUT_VEXCL_KERNEL_PRE + static_cast<std::string>(args[IMPORT_KERNEL_NAME_ARGUMENT]) + OUTPUT_VEXCL_KERNEL_POST);
 
         // output trailing content, which must appear *before* the location of the new pool, if required
         buf.write_to_end(args[IMPORT_KERNEL_TRAILING_ARGUMENT]);

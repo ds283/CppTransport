@@ -79,7 +79,7 @@ namespace vexcl
     // *******************************************************************
 
 
-    std::string vexcl_steppers::replace_backg_stepper(const std::vector<std::string>& args)
+    std::string vexcl_steppers::replace_backg_stepper(const macro_argument_list& args)
       {
         const struct stepper& s = this->data_payload.get_background_stepper();
         std::string state_name = args[BACKG_STEPPER_STATE_ARGUMENT];
@@ -100,7 +100,7 @@ namespace vexcl
       }
 
 
-    std::string vexcl_steppers::replace_pert_stepper(const std::vector<std::string>& args)
+    std::string vexcl_steppers::replace_pert_stepper(const macro_argument_list& args)
       {
         const struct stepper& s = this->data_payload.get_perturbations_stepper();
         std::string state_name = args[PERT_STEPPER_STATE_ARGUMENT];
@@ -120,7 +120,7 @@ namespace vexcl
         return(out.str());
       }
 
-    std::string vexcl_steppers::stepper_name(const std::vector<std::string>& args)
+    std::string vexcl_steppers::stepper_name(const macro_argument_list& args)
       {
         return(VEXCL_STEPPER);
       }

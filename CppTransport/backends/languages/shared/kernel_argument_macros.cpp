@@ -101,7 +101,7 @@ namespace shared
     // *******************************************************************
 
 
-    std::string kernel_argument_macros::args_params(const std::vector<std::string>& args)
+    std::string kernel_argument_macros::args_params(const macro_argument_list& args)
       {
         std::vector<std::string> list = this->data_payload.get_param_list();
 
