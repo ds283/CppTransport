@@ -57,25 +57,25 @@ class resource_manager
   public:
 
     //! assign parameter resource
-    void assign_parameters(contexted_value<std::string>& p) { this->parameters_cache = p; }
+    void assign_parameters(const contexted_value<std::string>& p) { this->parameters_cache = p; }
 
     //! assign phase-space coordinate resource
-    void assign_coordinates(contexted_value<std::string>& c) { this->coordinates_cache = c; }
+    void assign_coordinates(const contexted_value<std::string>& c) { this->coordinates_cache = c; }
 
     //! assign V,i resource
-    void assign_dV(contexted_value<std::string>& d) { this->dV_cache = d; }
+    void assign_dV(const contexted_value<std::string>& d) { this->dV_cache = d; }
 
     //! assign V,ij resource
-    void assign_ddV(contexted_value<std::string>& d) { this->ddV_cache = d; }
+    void assign_ddV(const contexted_value<std::string>& d) { this->ddV_cache = d; }
 
     //! assign V,ijk resource
-    void assign_dddV(contexted_value<std::string>& d) { this->dddV_cache = d; }
+    void assign_dddV(const contexted_value<std::string>& d) { this->dddV_cache = d; }
 
     //! assign connexion resource
-    void assign_connexion(contexted_value<std::string>& c) { this->connexion_cache = c; }
+    void assign_connexion(const contexted_value<std::string>& c) { this->connexion_cache = c; }
 
     //! assign Riemann resource
-    void assign_Riemann(contexted_value<std::string>& R) { this->Riemann_cache = R; }
+    void assign_Riemann(const contexted_value<std::string>& R) { this->Riemann_cache = R; }
 
 
     // INTERFACE - RELEASE RESOURCES

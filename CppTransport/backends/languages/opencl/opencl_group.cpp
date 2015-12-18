@@ -6,8 +6,17 @@
 
 #include "opencl_group.h"
 
-#include "opencl_printer.h"
+#include "fundamental.h"
+#include "flow_tensors.h"
+#include "lagrangian_tensors.h"
+#include "utensors.h"
+#include "gauge_xfm.h"
+#include "temporary_pool.h"
+#include "kernel_argument_macros.h"
+#include "resources.h"
+
 #include "cpp_cse.h"
+#include "opencl_printer.h"
 
 
 opencl_group::opencl_group(translator_data& p, u_tensor_factory& factory)
@@ -25,6 +34,7 @@ opencl_group::opencl_group(translator_data& p, u_tensor_factory& factory)
     this->add_package<macro_packages::lagrangian_tensors>(p, *l_printer);
     this->add_package<macro_packages::utensors>          (p, *l_printer);
     this->add_package<macro_packages::gauge_xfm>         (p, *l_printer);
+    this->add_package<macro_packages::resources>         (p, *l_printer);
     this->add_package<macro_packages::temporary_pool>    (p, *l_printer);
     this->add_package<shared::kernel_argument_macros>    (p, *l_printer, "global");
   }

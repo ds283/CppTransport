@@ -9,8 +9,6 @@
 #define CPPTRANSPORT_MACROPACKAGE_FLOW_TENSORS_H
 
 
-#include <string>
-
 #include "replacement_rule_package.h"
 
 
@@ -41,6 +39,7 @@ namespace macro_packages
         const std::vector<simple_rule> get_pre_rules();
         const std::vector<simple_rule> get_post_rules();
         const std::vector<index_rule>  get_index_rules();
+
 
         // INTERNAL API
 

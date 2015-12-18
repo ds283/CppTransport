@@ -6,8 +6,17 @@
 
 #include "cpp_group.h"
 
-#include "cpp_printer.h"
+#include "fundamental.h"
+#include "flow_tensors.h"
+#include "lagrangian_tensors.h"
+#include "utensors.h"
+#include "gauge_xfm.h"
+#include "temporary_pool.h"
+#include "cpp_steppers.h"
+#include "resources.h"
+
 #include "cpp_cse.h"
+#include "cpp_printer.h"
 
 
 cpp_group::cpp_group(translator_data& p, u_tensor_factory& factory)
@@ -26,6 +35,7 @@ cpp_group::cpp_group(translator_data& p, u_tensor_factory& factory)
     this->add_package<macro_packages::lagrangian_tensors>(p, *l_printer);
     this->add_package<macro_packages::utensors>          (p, *l_printer);
     this->add_package<macro_packages::gauge_xfm>         (p, *l_printer);
+    this->add_package<macro_packages::resources>         (p, *l_printer);
     this->add_package<macro_packages::temporary_pool>    (p, *l_printer);
     this->add_package<cpp::cpp_steppers>                 (p, *l_printer);
   }

@@ -65,6 +65,7 @@ namespace macro_packages
     constexpr unsigned int DDDV_TOTAL_ARGUMENTS = 3;
     constexpr unsigned int DDDV_TOTAL_INDICES = 3;
 
+
     const std::vector<simple_rule> flow_tensors::get_pre_rules()
       {
         std::vector<simple_rule> package;

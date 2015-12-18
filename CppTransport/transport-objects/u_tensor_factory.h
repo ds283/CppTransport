@@ -36,6 +36,13 @@ class u_tensor_factory
     virtual ~u_tensor_factory() = default;
 
 
+    // INTERFACE -- GET RESOURCE MANAGER
+
+  public:
+
+    resource_manager& get_resource_manager() { return(this->res_mgr); }
+
+
 		// INTERFACE - COMPUTE FLOW TENSORS AND RELATIVES
 
   public:

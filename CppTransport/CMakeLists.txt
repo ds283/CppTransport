@@ -72,6 +72,7 @@ ADD_EXECUTABLE(CppTransport
   backends/shared/fundamental.cpp
   backends/shared/gauge_xfm.cpp
   backends/shared/lagrangian_tensors.cpp
+  backends/shared/resources.cpp
   backends/shared/temporary_pool.cpp
   backends/shared/utensors.cpp
   backends/utilities/symbol_factory.cpp
@@ -249,6 +250,8 @@ set(BACKENDS_SHARED_FILES
   backends/shared/temporary_pool.h
   backends/shared/utensors.cpp
   backends/shared/utensors.h
+  backends/shared/resources.cpp
+  backends/shared/resources.h
   )
 
 set(BACKENDS_UTILITIES_FILES
