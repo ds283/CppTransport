@@ -189,7 +189,7 @@ class macro_agent
     unsigned int parameters;
 
     //! cache index ordering convention
-    enum indexorder order;
+    enum index_order order;
 
     //! current recursion depth
     unsigned int recursion_depth;

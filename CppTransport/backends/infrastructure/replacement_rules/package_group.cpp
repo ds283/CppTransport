@@ -5,16 +5,15 @@
 
 
 #include "package_group.h"
-#include "canonical_u_tensor_factory.h"
 
 #include "formatter.h"
 
 
-package_group::package_group(translator_data& p, ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& cache)
+package_group::package_group(translator_data& p, u_tensor_factory& f)
   : data_payload(p),
-		statistics_reported(false)
+		statistics_reported(false),
+    u_factory(f)
   {
-    u_factory = make_u_tensor_factory(data_payload, cache);
   }
 
 
@@ -26,7 +25,7 @@ package_group::~package_group()
 
 				msg << MESSAGE_MACRO_TIME << " " << format_time(this->macro_replacement_time)
 						<< ", " << MESSAGE_TOKENIZATION_TIME << " " << format_time(this->macro_tokenization_time)
-						<< " (" << MESSAGE_SYMBOLIC_COMPUTE_TIME << " " << format_time(this->u_factory->get_symbolic_compute_time())
+						<< " (" << MESSAGE_SYMBOLIC_COMPUTE_TIME << " " << format_time(this->u_factory.get_symbolic_compute_time())
 			      << ", " << MESSAGE_CSE_TIME << " " << format_time(this->cse_worker->get_cse_time()) << ")";
 
 		    this->data_payload.message(msg.str());

@@ -131,7 +131,7 @@ std::vector<bool>            fake_context_table;
 script::script(symbol_factory& s, error_context err_ctx)
   : potential_set(false),
     errors_encountered(false),
-    order(indexorder::right),
+    order(index_order::right),
 		sym_factory(s)
   {
 		// set up reserved symbol for Planck mass
@@ -304,13 +304,13 @@ boost::optional< contexted_value<std::string>& > script::get_model() const
   }
 
 
-void script::set_indexorder(enum indexorder o)
+void script::set_indexorder(enum index_order o)
   {
     this->order = o;
   }
 
 
-enum indexorder script::get_indexorder() const
+enum index_order script::get_indexorder() const
   {
     return(this->order);
   }

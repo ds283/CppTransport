@@ -4,11 +4,12 @@
 //
 
 
-#ifndef __opencl_group_H_
-#define __opencl_group_H_
+#ifndef CPPTRANSPORT_OPENCL_GROUP_H
+#define CPPTRANSPORT_OPENCL_GROUP_H
 
 
 #include "package_group.h"
+#include "u_tensor_factory.h"
 
 #include "fundamental.h"
 #include "flow_tensors.h"
@@ -28,7 +29,7 @@ class opencl_group: public package_group
   public:
 
     //! constructor
-    opencl_group(translator_data& p, ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& cache);
+    opencl_group(translator_data& p, u_tensor_factory& cache);
 
     //! destructor is default
     ~opencl_group() = default;
@@ -36,4 +37,4 @@ class opencl_group: public package_group
   };
 
 
-#endif //__opencl_group_H_
+#endif //CPPTRANSPORT_OPENCL_GROUP_H

@@ -15,7 +15,7 @@
 // Constructor for parent (virtual) class
 
 
-u_tensor_factory::u_tensor_factory(translator_data& p, ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& c)
+u_tensor_factory::u_tensor_factory(translator_data& p, expression_cache& c)
   : data_payload(p),
     num_fields(p.get_number_fields()),
     num_params(p.get_number_parameters()),

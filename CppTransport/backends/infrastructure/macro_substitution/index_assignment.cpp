@@ -24,13 +24,13 @@ namespace index_assignment_impl
 
         switch(this->parent->order)
           {
-            case indexorder::left:
+            case index_order::left:
               {
                 // arrange for insertion at the back, so indices are in correct order
                 this->construct_assignment(this->parent->source_set.begin(), this->parent->source_set.end(), database_back_inserter<assignment_list>(*rval));
               }
 
-            case indexorder::right:
+            case index_order::right:
               {
                 // arrange for insertion at the front, so indices remain in correct order
                 this->construct_assignment(this->parent->source_set.rbegin(), this->parent->source_set.rend(), database_front_inserter<assignment_list>(*rval));
@@ -61,7 +61,7 @@ namespace index_assignment_impl
   }   // namespace index_assignment_impl
 
 
-assignment_set::assignment_set(const abstract_index_list& s, indexorder o)
+assignment_set::assignment_set(const abstract_index_list& s, index_order o)
   : source_set(s),
     order(o),
     assignments_size(1)

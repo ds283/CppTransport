@@ -4,14 +4,17 @@
 //
 
 
-#ifndef __translator_H_
-#define __translator_H_
+#ifndef CPPTRANSPORT_TRANSLATOR_H
+#define CPPTRANSPORT_TRANSLATOR_H
 
+
+#include <iostream>
 
 #include "buffer.h"
 #include "output_stack.h"
 #include "translator_data.h"
 #include "expression_types.h"
+#include "backend_data.h"
 
 #include "ginac_cache.h"
 #include "formatter.h"
@@ -61,9 +64,6 @@ class translator
     // internal API to process a file
     unsigned int process(const boost::filesystem::path& in, buffer& buf, enum process_type type, filter_function* filter);
 
-    // parse the header line from a template, tokenizing it into 'backend' and 'minimum version' data
-    void parse_header_line(const boost::filesystem::path& in, const std::string line, std::string& backend, double& minver);
-
 
 		// INTERNAL DATA
 
@@ -78,4 +78,4 @@ class translator
   };
 
 
-#endif //__translator_H_
+#endif //CPPTRANSPORT_TRANSLATOR_H

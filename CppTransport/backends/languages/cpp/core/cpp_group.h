@@ -5,12 +5,12 @@
 
 
 
-#ifndef __core_group_H_
-#define __core_group_H_
+#ifndef CPPTRANSPORT_CORE_GROUP_H
+#define CPPTRANSPORT_CORE_GROUP_H
 
 
 #include "package_group.h"
-#include "ginac_cache.h"
+#include "u_tensor_factory.h"
 
 #include "fundamental.h"
 #include "flow_tensors.h"
@@ -29,7 +29,7 @@ class cpp_group : public package_group
 
   public:
 
-    cpp_group(translator_data& p, ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& cache);
+    cpp_group(translator_data& p, u_tensor_factory& factory);
 
     //! destructor is default
     virtual ~cpp_group() = default;
@@ -37,4 +37,4 @@ class cpp_group : public package_group
   };
 
 
-#endif //__core_group_H_
+#endif //CPPTRANSPORT_CORE_GROUP_H

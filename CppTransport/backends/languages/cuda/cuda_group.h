@@ -4,11 +4,12 @@
 //
 
 
-#ifndef __cuda_group_H_
-#define __cuda_group_H_
+#ifndef CPPTRANSPORT_CUDA_GROUP_H
+#define CPPTRANSPORT_CUDA_GROUP_H
 
 
 #include "package_group.h"
+#include "u_tensor_factory.h"
 
 #include "fundamental.h"
 #include "flow_tensors.h"
@@ -28,7 +29,7 @@ class cuda_group : public package_group
   public:
 
     //! constructor
-    cuda_group(translator_data& p, ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& cache);
+    cuda_group(translator_data& p, u_tensor_factory& factory);
 
     //! destructor is default
     ~cuda_group() = default;
@@ -36,4 +37,4 @@ class cuda_group : public package_group
   };
 
 
-#endif //__cuda_group_H_
+#endif //CPPTRANSPORT_CUDA_GROUP_H

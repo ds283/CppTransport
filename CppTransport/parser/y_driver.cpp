@@ -326,13 +326,13 @@ namespace y
 
     void y_driver::set_indexorder_left()
 	    {
-        this->root.set_indexorder(indexorder::left);
+        this->root.set_indexorder(index_order::left);
 	    }
 
 
     void y_driver::set_indexorder_right()
 	    {
-        this->root.set_indexorder(indexorder::right);
+        this->root.set_indexorder(index_order::right);
 	    }
 
 

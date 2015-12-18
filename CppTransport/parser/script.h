@@ -16,7 +16,7 @@
 #include <unordered_map>
 
 #include "stepper.h"
-#include "indexorder.h"
+#include "model_settings.h"
 
 #include "semantic_data.h"
 #include "filestack.h"
@@ -295,9 +295,9 @@ class script
     const GiNaC::symbol& get_Mp_symbol() const;
 
 
-    void set_indexorder(enum indexorder o);
+    void set_indexorder(enum index_order o);
 
-    enum indexorder get_indexorder() const;
+    enum index_order get_indexorder() const;
 
 
     void set_potential(GiNaC::ex V);
@@ -368,7 +368,7 @@ class script
     std::unique_ptr< contexted_value<std::string> > implementation;
     std::unique_ptr< contexted_value<std::string> > model;
 
-    enum indexorder order;
+    enum index_order order;
 
     struct stepper background_stepper;
     struct stepper perturbations_stepper;

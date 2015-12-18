@@ -12,14 +12,11 @@
 class canonical_u_tensor_factory: public u_tensor_factory
   {
 
-  private:
-
-
 		// CONSTRUCTOR
 
   public:
 
-    canonical_u_tensor_factory(translator_data& p, ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& c)
+    canonical_u_tensor_factory(translator_data& p, expression_cache& c)
 	    : u_tensor_factory(p, c)
       {
       }
@@ -163,14 +160,6 @@ class canonical_u_tensor_factory: public u_tensor_factory
                                   const std::vector<GiNaC::symbol>& ddV, const std::vector<GiNaC::ex>& args);
 
   };
-
-
-// factory function to manufacture a u_tensor_factory instance
-inline std::unique_ptr<u_tensor_factory> make_u_tensor_factory(translator_data& p, ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& cache)
-  {
-    // at the moment, nothing to do - only canonical models implemented
-    return std::make_unique<canonical_u_tensor_factory>(p, cache);
-  }
 
 
 #endif //CPPTRANSPORT_CANONICAL_U_TENSOR_FACTORY_H

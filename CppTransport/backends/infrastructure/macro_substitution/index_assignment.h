@@ -14,7 +14,7 @@
 #include <deque>
 #include <map>
 
-#include "indexorder.h"
+#include "model_settings.h"
 #include "index_traits.h"
 #include "abstract_index.h"
 
@@ -43,7 +43,7 @@ class assignment_set
   public:
 
     //! construct an assignment set from a given list of abstract indices
-    assignment_set(const abstract_index_list& s, enum indexorder o = indexorder::right);
+    assignment_set(const abstract_index_list& s, enum index_order o = index_order::right);
 
     //! destructor is default
     ~assignment_set() = default;
@@ -94,7 +94,7 @@ class assignment_set
     unsigned int assignments_size;
 
     //! cache desired index order
-    enum indexorder order;
+    enum index_order order;
 
   };
 

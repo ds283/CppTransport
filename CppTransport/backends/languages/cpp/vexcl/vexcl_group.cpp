@@ -10,8 +10,8 @@
 #include "cpp_cse.h"
 
 
-vexcl_group::vexcl_group(translator_data& p, ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& cache)
-  : package_group(p, cache)
+vexcl_group::vexcl_group(translator_data& p, u_tensor_factory& factory)
+  : package_group(p, factory)
   {
     // set up cse worker instance
     // this has to happen before setting up the individual macro packages,

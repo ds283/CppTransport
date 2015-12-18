@@ -21,7 +21,7 @@
 class macro_agent;
 
 
-enum process_type { process_core, process_implementation };
+enum class process_type { process_core, process_implementation };
 
 
 class output_stack: public filestack_derivation_helper<output_stack>

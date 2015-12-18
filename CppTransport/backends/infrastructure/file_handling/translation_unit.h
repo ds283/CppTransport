@@ -15,7 +15,7 @@
 #include "y_parser.hpp"
 
 #include "stepper.h"
-#include "indexorder.h"
+#include "model_settings.h"
 #include "output_stack.h"
 #include "translator.h"
 #include "translator_data.h"

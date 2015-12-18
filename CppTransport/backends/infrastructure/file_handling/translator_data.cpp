@@ -77,7 +77,7 @@ unsigned int translator_data::get_number_parameters() const
   }
 
 
-enum indexorder translator_data::get_index_order() const
+enum index_order translator_data::get_index_order() const
   {
     return(this->driver.get_script().get_indexorder());
   }

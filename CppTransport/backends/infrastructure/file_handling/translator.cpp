@@ -11,16 +11,9 @@
 #include "translator.h"
 #include "buffer.h"
 #include "package_group_factory.h"
+#include "make_u_tensor_factory.h"
 
 #include "formatter.h"
-
-#include "boost/algorithm/string.hpp"
-#include "boost/range/algorithm/remove_if.hpp"
-#include "boost/lexical_cast.hpp"
-
-
-#define BACKEND_TOKEN "backend"
-#define MINVER_TOKEN  "minver"
 
 
 translator::translator(translator_data& payload)
@@ -88,10 +81,6 @@ unsigned int translator::process(const boost::filesystem::path& in, buffer& buf,
     inf.open(in.string().c_str());
     if(inf.is_open() && !inf.fail())
       {
-        std::string line;
-        std::string backend;
-        double minver;
-
 		    // emit advisory that translation is underway
         std::ostringstream translation_msg;
         translation_msg << MESSAGE_TRANSLATING << " " << in;
@@ -102,79 +91,85 @@ unsigned int translator::process(const boost::filesystem::path& in, buffer& buf,
         this->data_payload.message(translation_msg.str());
 
 		    // decide which backend and API version are required
-        std::getline(inf, line);
-        this->parse_header_line(in, line, backend, minver);
+        error_context err_context(this->data_payload.get_stack(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
+        backend_data backend(inf, in, err_context);
 
-        if(minver <= CPPTRANSPORT_NUMERIC_VERSION)
+        if(backend)
           {
-            // generate an appropriate backend
-		        // this consists of a set of macro replacement rules which collectively comprise a 'package group'.
-		        // The result is returned as a managed pointer, using std::unique_ptr<>
-            std::unique_ptr<package_group> package = package_group_factory(in, backend, this->data_payload, this->cache);
-
-            // generate a macro replacement agent based on this package group
-            macro_agent agent(this->data_payload, *package, BACKEND_MACRO_PREFIX, BACKEND_LINE_SPLIT_EQUAL, BACKEND_LINE_SPLIT_SUM_EQUAL);
-
-            // push this input file to the top of the filestack
-            output_stack& os = this->data_payload.get_stack();
-            os.push(in, buf, agent, type);  // current line number is automatically set to 1
-
-            bool annotate = this->data_payload.annotate();
-
-            while(!inf.eof() && !inf.fail())
+            if(backend.get_min_version() <= CPPTRANSPORT_NUMERIC_VERSION)
               {
-                // read in a line from the template
-                std::getline(inf, line);
+                // generate an appropriate backend
+                // this consists of a set of macro replacement rules which collectively comprise a 'package group'.
+                // The result is returned as a managed pointer, using std::unique_ptr<>
+                std::unique_ptr<expression_cache> cache = std::make_unique<expression_cache>();
+                std::unique_ptr<u_tensor_factory> factory = make_u_tensor_factory(backend, this->data_payload, *cache);
+                std::unique_ptr<package_group> package = package_group_factory(in, backend, this->data_payload, *factory);
 
-                // apply macro replacement to this line, keeping track of how many replacements are performed
-		            // result is supplied as a std::shared_ptr<> because we don't want to have to take copies
-		            // of a large array of strings
-                unsigned int new_replacements = 0;
-                std::unique_ptr< std::list<std::string> > line_list = agent.apply(line, new_replacements);
-                replacements += new_replacements;
+                // generate a macro replacement agent based on this package group
+                macro_agent agent(this->data_payload, *package, BACKEND_MACRO_PREFIX, BACKEND_LINE_SPLIT_EQUAL, BACKEND_LINE_SPLIT_SUM_EQUAL);
 
-                if(line_list)
+                // push this input file to the top of the filestack
+                output_stack& os = this->data_payload.get_stack();
+                os.push(in, buf, agent, type);  // current line number is automatically set to 2 (accounting for the header line)
+
+                bool annotate = this->data_payload.annotate();
+
+                while(!inf.eof() && !inf.fail())
                   {
-                    std::ostringstream continuation_tag;
-                    language_printer& printer = package->get_language_printer();
-    
-                    continuation_tag << ANNOTATE_EXPANSION_OF_LINE << " " << os.get_line();
+                    std::string line;
+                    // read in a line from the template
+                    std::getline(inf, line);
 
-                    unsigned int c = 0;
-                    for(const std::string& l : *line_list)
+                    // apply macro replacement to this line, keeping track of how many replacements are performed
+                    // result is supplied as a std::shared_ptr<> because we don't want to have to take copies
+                    // of a large array of strings
+                    unsigned int new_replacements = 0;
+                    std::unique_ptr< std::list<std::string> > line_list = agent.apply(line, new_replacements);
+                    replacements += new_replacements;
+
+                    if(line_list)
                       {
-                        std::string out_line = l + (annotate && c > 0 ? " " + printer.comment(continuation_tag.str()) : "");
+                        std::ostringstream continuation_tag;
+                        language_printer& printer = package->get_language_printer();
 
-                        if(filter != nullptr) buf.write_to_end((*filter)(out_line));
-                        else                  buf.write_to_end(out_line);
+                        continuation_tag << ANNOTATE_EXPANSION_OF_LINE << " " << os.get_line();
 
-                        ++c;
+                        unsigned int c = 0;
+                        for(const std::string& l : *line_list)
+                          {
+                            std::string out_line = l + (annotate && c > 0 ? " " + printer.comment(continuation_tag.str()) : "");
+
+                            if(filter != nullptr) buf.write_to_end((*filter)(out_line));
+                            else                  buf.write_to_end(out_line);
+
+                            ++c;
+                          }
                       }
+
+                    os.increment_line();
                   }
 
-                os.increment_line();
+                // report end of input to the backend;
+                // this enables it to do any tidying-up which may be required,
+                // such as depositing temporaries to a temporary pool
+                package->report_end_of_input();
+                os.pop();
+
+                // emit advisory that translation is complete
+                std::ostringstream finished_msg;
+                finished_msg << MESSAGE_TRANSLATION_RESULT << " " << replacements << " " << MESSAGE_MACRO_REPLACEMENTS;
+                this->data_payload.message(finished_msg.str());
+
+                // report time spent doing macro replacement
+                package->report_macro_metadata(agent.get_total_work_time(), agent.get_tokenization_time());
+
+                // package will report on time and memory use when it goes out of scope and is destroyed
               }
-
-		        // report end of input to the backend;
-		        // this enables it to do any tidying-up which may be required,
-		        // such as depositing temporaries to a temporary pool
-		        package->report_end_of_input();
-            os.pop();
-
-            // emit advisory that translation is complete
-            std::ostringstream finished_msg;
-            finished_msg << MESSAGE_TRANSLATION_RESULT << " " << replacements << " " << MESSAGE_MACRO_REPLACEMENTS;
-            this->data_payload.message(finished_msg.str());
-
-            // report time spent doing macro replacement
-            package->report_macro_metadata(agent.get_total_work_time(), agent.get_tokenization_time());
-
-		        // package will report on time and memory use when it goes out of scope and is destroyed
           }
         else  // we can't handle this template -- the API version required is too new
           {
             std::ostringstream msg;
-            msg << ERROR_TEMPLATE_TOO_RECENT_A << " " << in << " " << ERROR_TEMPLATE_TOO_RECENT_B << minver << ")";
+            msg << ERROR_TEMPLATE_TOO_RECENT_A << " " << in << " " << ERROR_TEMPLATE_TOO_RECENT_B << backend.get_min_version() << ")";
 
             error_context err_context(this->data_payload.get_stack(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
             err_context.error(msg.str());
@@ -193,90 +188,3 @@ unsigned int translator::process(const boost::filesystem::path& in, buffer& buf,
 
     return(replacements);
   }
-
-
-void translator::parse_header_line(const boost::filesystem::path& in, const std::string line, std::string& backend, double& minver)
-  {
-    std::vector<std::string> tokens;
-    boost::split(tokens, line, boost::is_any_of(" ,:;="));
-
-    bool backend_set = false;
-    bool minver_set  = false;
-
-    if(tokens.size() <= 1)
-      {
-        std::ostringstream msg;
-        msg << ERROR_IMPROPER_TEMPLATE_HEADER << " " << in;
-
-        error_context err_context(this->data_payload.get_stack(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
-        err_context.error(msg.str());
-      }
-
-    for(int i = 1; i < tokens.size(); ++i)
-      {
-        if(boost::to_lower_copy(tokens[i]) == BACKEND_TOKEN)
-          {
-            if(i+1 < tokens.size())
-              {
-                if(backend_set)
-                  {
-                    std::ostringstream msg;
-                    msg << WARNING_DUPLICATE_TEMPLATE_BACKEND << " " << in;
-
-                    error_context err_context(this->data_payload.get_stack(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
-                    err_context.warn(msg.str());
-                  }
-                else
-                  {
-                    backend     = tokens[++i];
-                    backend_set = true;
-                  }
-              }
-            else
-              {
-                std::ostringstream msg;
-                msg << ERROR_EXPECTED_TEMPLATE_BACKEND << " " << in;
-
-                error_context err_context(this->data_payload.get_stack(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
-                err_context.error(msg.str());
-              }
-          }
-        else if(boost::to_lower_copy(tokens[i]) == MINVER_TOKEN)
-          {
-            if(i+1 < tokens.size())
-              {
-                if(minver_set)
-                  {
-                    std::ostringstream msg;
-                    msg << WARNING_DUPLICATE_TEMPLATE_MINVER << " " << in;
-
-                    error_context err_context(this->data_payload.get_stack(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
-                    err_context.warn(msg.str());
-                  }
-                else
-                  {
-                    minver     = boost::lexical_cast<double>(tokens[++i]);
-                    minver_set = true;
-                  }
-              }
-            else
-              {
-                std::ostringstream msg;
-                msg << ERROR_EXPECTED_TEMPLATE_MINVER << " " << in;
-
-                error_context err_context(this->data_payload.get_stack(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
-                err_context.error(msg.str());
-              }
-          }
-      }
-
-    if(!backend_set || !minver_set)
-      {
-        std::ostringstream msg;
-        msg << ERROR_IMPROPER_TEMPLATE_HEADER << " " << in;
-
-        error_context err_context(this->data_payload.get_stack(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
-        err_context.error(msg.str());
-      }
-  }
-

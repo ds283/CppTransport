@@ -11,7 +11,7 @@
 
 #include "finder.h"
 #include "output_stack.h"
-#include "indexorder.h"
+#include "model_settings.h"
 #include "symbol_factory.h"
 #include "y_driver.h"
 #include "error_context.h"
@@ -104,11 +104,11 @@ class translator_data
 
     boost::optional< contexted_value<std::string>& > get_tag() const;
 
-    unsigned int    get_number_fields() const;
+    unsigned int     get_number_fields() const;
 
-    unsigned int    get_number_parameters() const;
+    unsigned int     get_number_parameters() const;
 
-    enum indexorder get_index_order() const;
+    enum index_order get_index_order() const;
 
     const GiNaC::symbol& get_Mp_symbol() const;
 

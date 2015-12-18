@@ -205,7 +205,7 @@ unsigned int translation_unit::apply()
     boost::optional< contexted_value<std::string>& > core = s.get_core();
     if(core)
       {
-        rval += this->outstream.translate(*core, (*core).get_declaration_point(), this->translator_payload.get_core_output().string(), process_core);
+        rval += this->outstream.translate(*core, (*core).get_declaration_point(), this->translator_payload.get_core_output().string(), process_type::process_core);
       }
     else
       {
@@ -215,7 +215,7 @@ unsigned int translation_unit::apply()
     boost::optional< contexted_value<std::string>& > impl = s.get_implementation();
     if(impl)
       {
-        rval += this->outstream.translate(*impl, (*core).get_declaration_point(), this->translator_payload.get_implementation_output().string(), process_implementation);
+        rval += this->outstream.translate(*impl, (*core).get_declaration_point(), this->translator_payload.get_implementation_output().string(), process_type::process_implementation);
       }
     else
       {

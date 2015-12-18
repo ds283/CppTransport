@@ -35,7 +35,9 @@ FIND_PACKAGE(GiNaC 1.6 REQUIRED)
 BISON_TARGET(parser parser/bison/y_parser.yy ${CMAKE_CURRENT_BINARY_DIR}/y_parser.cpp)
 
 
-ADD_EXECUTABLE(CppTransport main.cpp
+ADD_EXECUTABLE(CppTransport
+  main.cpp
+  backends/infrastructure/file_handling/backend_data.cpp
   backends/infrastructure/file_handling/buffer.cpp
   backends/infrastructure/file_handling/output_stack.cpp
   backends/infrastructure/file_handling/translation_unit.cpp
@@ -82,6 +84,8 @@ ADD_EXECUTABLE(CppTransport main.cpp
   parser/y_lexer.cpp
   transport-objects/canonical_u_tensor_factory.cpp
   transport-objects/u_tensor_factory.cpp
+  transport-objects/resource_manager.cpp
+  transport-objects/concepts/transport_tensor.cpp
   utilities/error.cpp
   utilities/error_context.cpp
   utilities/finder.cpp
@@ -119,7 +123,7 @@ TARGET_INCLUDE_DIRECTORIES(CppTransport PRIVATE
   ${Boost_INCLUDE_DIRS}
   ${GINAC_INCLUDE_DIRS}
   ${CMAKE_CURRENT_BINARY_DIR}
-)
+  )
 
 
 # pull in test target
@@ -150,6 +154,8 @@ set(BACKENDS_INFRASTRUCTURE_FILE_HANDLING_FILES
   backends/infrastructure/file_handling/translator.h
   backends/infrastructure/file_handling/translator_data.cpp
   backends/infrastructure/file_handling/translator_data.h
+  backends/infrastructure/file_handling/backend_data.cpp
+  backends/infrastructure/file_handling/backend_data.h
   )
 
 set(BACKENDS_INFRASTRUCTURE_LANGUAGE_CONCEPTS_FILES
@@ -253,7 +259,7 @@ set(BACKENDS_UTILITIES_FILES
   )
 
 set(CONCEPTS_FILES
-  concepts/indexorder.h
+  concepts/model_settings.h
   concepts/stepper.h
   )
 
@@ -317,12 +323,17 @@ set(TOP_LEVEL_FILES
   switches.h
   )
 
+set(TRANSPORT_OBJECTS_CONCEPTS_FILES
+  transport-objects/concepts/transport_tensor.cpp
+  transport-objects/concepts/transport_tensor.h
+  )
+
 set(TRANSPORT_OBJECTS_FILES
   transport-objects/canonical_u_tensor_factory.cpp
   transport-objects/canonical_u_tensor_factory.h
   transport-objects/u_tensor_factory.cpp
   transport-objects/u_tensor_factory.h
-  )
+  transport-objects/resource_manager.cpp transport-objects/resource_manager.h transport-objects/make_u_tensor_factory.h)
 
 set(TRANSPORT_RUNTIME_API_CONCEPTS_FILES
   transport-runtime-api/concepts/flattener.h
@@ -705,6 +716,7 @@ set(SOURCE_FILES
   ${TEMPLATES_VEXCL_OPENCL_FILES}
   ${TEST_TARGET_FILES}
   ${TOP_LEVEL_FILES}
+  ${TRANSPORT_OBJECTS_CONCEPTS_FILES}
   ${TRANSPORT_OBJECTS_FILES}
   ${TRANSPORT_RUNTIME_API_CONCEPTS_FILES}
   ${TRANSPORT_RUNTIME_API_CONCEPTS_RANGE_DETAIL_FILES}
@@ -747,6 +759,6 @@ set(SOURCE_FILES
   ${TRANSPORT_RUNTIME_API_TASKS_POSTINTEGRATION_DETAIL_FILES}
   ${TRANSPORT_RUNTIME_API_UTILITIES_FILES}
   ${UTILITIES_FILES}
-  )
+  transport-objects/resource_manager.cpp transport-objects/resource_manager.h)
 
 ADD_EXECUTABLE(dummy_clion_target EXCLUDE_FROM_ALL ${SOURCE_FILES})

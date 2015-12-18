@@ -7,6 +7,7 @@
 #ifndef CPPTRANSPORT_PACKAGE_GROUP_H
 #define CPPTRANSPORT_PACKAGE_GROUP_H
 
+
 #include <memory>
 
 #include "macro.h"
@@ -25,7 +26,7 @@ class package_group
 
   public:
 
-    package_group(translator_data& p, ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& cache);
+    package_group(translator_data& p, u_tensor_factory& factory);
 
     virtual ~package_group();
 
@@ -109,9 +110,9 @@ class package_group
 
     // AGENTS
 
-    //! polymorphic pointer to u-tensor factory; exactly which factory is
+    //! polymorphic reference to u-tensor factory; exactly which factory is
     //! involved may depend what kind of model is being processed (eg. canonical, noncanoniocal)
-    std::unique_ptr<u_tensor_factory> u_factory;
+    u_tensor_factory& u_factory;
 
     //! polymorphic pointer to CSE worker; as above exactly which CSE scheme is
     //! invovled may depend what kind of model is being processed
@@ -157,11 +158,10 @@ template <typename PackageType, typename ... Args>
 void package_group::add_package(Args&& ... args)
   {
     // establish that everything has been set up correctly
-    assert(this->u_factory);
     assert(this->cse_worker);
 
     // construct a new package of the specified type, forwarding any arguments we were given
-    std::unique_ptr< macro_packages::replacement_rule_package> pkg = std::make_unique<PackageType>(*this->u_factory, *this->cse_worker, std::forward<Args>(args) ...);
+    std::unique_ptr< macro_packages::replacement_rule_package> pkg = std::make_unique<PackageType>(this->u_factory, *this->cse_worker, std::forward<Args>(args) ...);
     this->packages.push_back(std::move(pkg));
 
     // rebuild ruleset caches

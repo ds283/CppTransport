@@ -3,14 +3,15 @@
 // Copyright (c) 2013-15 University of Sussex. All rights reserved.
 //
 
+
 #include "opencl_group.h"
 
 #include "opencl_printer.h"
 #include "cpp_cse.h"
 
 
-opencl_group::opencl_group(translator_data& p, ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& cache)
-  : package_group(p, cache)
+opencl_group::opencl_group(translator_data& p, u_tensor_factory& factory)
+  : package_group(p, factory)
   {
     // set up cse worker instance
     // this has to happen before setting up the individual macro packages,

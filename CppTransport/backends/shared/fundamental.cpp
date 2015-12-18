@@ -188,11 +188,11 @@ namespace macro_packages
         std::string guard;
         enum process_type type = this->data_payload.get_stack().top_process_type();
 
-        if(type == process_core)
+        if(type == process_type::process_core)
           {
             guard = this->data_payload.get_core_guard();
           }
-        else if(type == process_implementation)
+        else if(type == process_type::process_implementation)
           {
             guard = this->data_payload.get_implementation_guard();
           }

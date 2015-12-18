@@ -3,8 +3,8 @@
 // Copyright (c) 2013-15 University of Sussex. All rights reserved.
 //
 
-#ifndef __u_tensor_factory_H_
-#define __u_tensor_factory_H_
+#ifndef CPPTRANSPORT_U_TENSOR_FACTORY_H
+#define CPPTRANSPORT_U_TENSOR_FACTORY_H
 
 #include <iostream>
 #include <stdexcept>
@@ -15,8 +15,12 @@
 #include "ginac/ginac.h"
 #include "translator_data.h"
 #include "expression_types.h"
+#include "resource_manager.h"
 
 #include "boost/timer/timer.hpp"
+
+
+typedef ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE> expression_cache;
 
 
 // abstract u-tensor factory class
@@ -27,7 +31,7 @@ class u_tensor_factory
 
   public:
 
-    u_tensor_factory(translator_data& p,  ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& c);
+    u_tensor_factory(translator_data& p, expression_cache& c);
 
     virtual ~u_tensor_factory() = default;
 
@@ -170,8 +174,7 @@ class u_tensor_factory
 
   protected:
 
-		//! data payload provided by parent translation unit
-    translator_data& data_payload;
+    // LOCAL COPIES OF BASIC DATA
 
 		//! cache number of fields
     const unsigned int num_fields;
@@ -185,6 +188,9 @@ class u_tensor_factory
     //! cache potential
     const GiNaC::ex V;
 
+
+    // SYMBOL LISTS
+
 		//! list of symbols representing fields in the model
     const std::vector<GiNaC::symbol> field_list;
 
@@ -194,18 +200,33 @@ class u_tensor_factory
     //! list of symbols representing parameters in the model
     const std::vector<GiNaC::symbol> param_list;
 
-    //! reference to GiNaC expression cache, used to cache the output from our calculations.
-    //! the cache is intended to avoid expensive recomputation where possible
-    ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& cache;
 
-		//! timer
-		boost::timer::cpu_timer compute_timer;
+    // CACHES
+
+    //! reference to GiNaC expression cache, used to cache the output from our calculations;
+    //! the cache is intended to avoid expensive recomputation where possible
+    expression_cache& cache;
+
+    //! data payload provided by parent translation unit
+    translator_data& data_payload;
+
+
+    // AGENTS
 
     //! flattener -- full tensors
     right_order_flattener fl;
 
     //! flattener -- field-space tensors
     right_order_flattener field_fl;
+
+    //! resource manager
+    resource_manager res_mgr;
+
+
+    // TIMERS
+
+    //! timer
+    boost::timer::cpu_timer compute_timer;
 
   };
 
@@ -229,4 +250,4 @@ class u_tensor_exception: std::runtime_error
   };
 
 
-#endif //__u_tensor_factory_H_
+#endif //CPPTRANSPORT_U_TENSOR_FACTORY_H
