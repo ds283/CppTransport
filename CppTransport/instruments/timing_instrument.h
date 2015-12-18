@@ -7,7 +7,7 @@
 #define CPPTRANSPORT_TIMING_INSTRUMENT_H
 
 
-#include "boost/timer.hpp"
+#include "boost/timer/timer.hpp"
 
 
 class timing_instrument
@@ -28,8 +28,27 @@ class timing_instrument
     //! destructor
     ~timing_instrument()
       {
-        is(was_stopped) cp.stop();
+        if(was_stopped) captured_timer.stop();
       }
+
+
+    // INTERFACE
+
+  public:
+
+    //! stop the timer (if it was previously stopped)
+    void stop() { if(was_stopped) captured_timer.stop(); }
+
+
+    // INTERNAL DATA
+
+  private:
+
+    //! reference to timer we are managing
+    boost::timer::cpu_timer& captured_timer;
+
+    //! record whether timer was stopped on construction
+    bool was_stopped;
 
   };
 

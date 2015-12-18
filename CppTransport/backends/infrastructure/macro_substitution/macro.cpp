@@ -7,9 +7,10 @@
 #include <assert.h>
 #include <cctype>
 
-#include "boost/algorithm/string.hpp"
-
 #include "macro.h"
+#include "timing_instrument.h"
+
+#include "boost/algorithm/string.hpp"
 
 
 // **************************************************************************************
@@ -44,8 +45,7 @@ macro_agent::macro_agent(translator_data& p, package_group& pkg, std::string pf,
 std::unique_ptr< std::list<std::string> > macro_agent::apply(std::string& line, unsigned int& replacements)
   {
 		// if timer is stopped, restart it
-		bool stopped = this->macro_apply_timer.is_stopped();
-		if(stopped) macro_apply_timer.resume();
+    timing_instrument timer(this->macro_apply_timer);
 
 		// the result of macro substitution is potentially large, and we'd rather not copy
 		// a very large array of strings while moving the result around.
@@ -66,9 +66,6 @@ std::unique_ptr< std::list<std::string> > macro_agent::apply(std::string& line, 
         err_context.warn(msg.str());
       }
 
-		// if timer was stopped, stop it again
-		if(stopped) macro_apply_timer.stop();
-
     return(r_list);
   }
 
@@ -80,13 +77,12 @@ std::unique_ptr< std::list<std::string> > macro_agent::apply_line(const std::str
     // break the line at the split point, if it exists, to get a 'left-hand' side and a 'right-hand' side
     macro_impl::split_string split_result = this->split(line);
 
-    bool tokenization_is_stopped = this->tokenization_timer.is_stopped();
-    this->tokenization_timer.resume();
+    timing_instrument timer(this->tokenization_timer);
     token_list left_tokens(split_result.left, this->prefix, this->fields, this->parameters, this->pre_rule_cache,
                            this->post_rule_cache, this->index_rule_cache, this->data_payload);
     token_list right_tokens(split_result.right, this->prefix, this->fields, this->parameters, this->pre_rule_cache,
                             this->post_rule_cache, this->index_rule_cache, this->data_payload);
-    this->tokenization_timer.stop();
+    timer.stop();
 
     // running total of number of macro replacements
     unsigned int counter = 0;

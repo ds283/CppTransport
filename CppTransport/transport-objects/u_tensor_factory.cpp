@@ -7,6 +7,8 @@
 #include "u_tensor_factory.h"
 #include "translation_unit.h"
 
+#include "timing_instrument.h"
+
 
 // *****************************************************************************
 
@@ -97,15 +99,13 @@ GiNaC::ex u_tensor_factory::substitute_V(const std::vector<GiNaC::symbol>& param
 
     if(!this->cache.query(expression_item_types::V_item, 0, args, result))
       {
-        this->compute_timer.resume();
+        timing_instrument timer(this->compute_timer);
 
         std::shared_ptr<GiNaC::exmap> map = this->substitution_map(params, fields);
 
         // disable unneeded pattern-matching for speed
         result = this->V.subs(*map, GiNaC::subs_options::no_pattern);
         this->cache.store(expression_item_types::V_item, 0, args, result);
-
-        this->compute_timer.stop();
       }
 
     return result;

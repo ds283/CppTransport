@@ -49,6 +49,7 @@
 #include "msg_en.h"
 
 #include "cse.h"
+#include "timing_instrument.h"
 
 
 void cse::clear()
@@ -63,7 +64,7 @@ void cse::clear()
 
 void cse::parse(const GiNaC::ex& expr)
   {
-		timer.resume();
+    timing_instrument time_instmt(timer);
 
     for(GiNaC::const_postorder_iterator t = expr.postorder_begin(); t != expr.postorder_end(); ++t)
       {
@@ -79,8 +80,6 @@ void cse::parse(const GiNaC::ex& expr)
             this->symbols.emplace(std::make_pair( e, cse_impl::symbol_record( e, this->make_symbol() ) ));
           }
       }
-
-		timer.stop();
   }
 
 
