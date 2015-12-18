@@ -12,10 +12,10 @@
 
 #include "ginac/ginac.h"
 
-#include <boost/timer/timer.hpp>
+#include "boost/timer/timer.hpp"
 
 
-#define DEFAULT_GINAC_CACHE_SIZE 2048
+constexpr unsigned int DEFAULT_GINAC_CACHE_SIZE = 2048;
 
 
 template <typename ExpressionType, unsigned int HashSize>
@@ -41,12 +41,12 @@ class ginac_cache
 
 		  public:
 
-				bool compare(ExpressionType t, unsigned int i, const std::vector<GiNaC::ex>& a, GiNaC::ex& e);
+				bool compare(ExpressionType t, unsigned int i, const std::vector<GiNaC::ex>& a, GiNaC::ex& e) const;
 
 		    bool compare(ExpressionType t, unsigned int i, const std::vector<GiNaC::ex>& a, GiNaC::ex& e,
-		                 GiNaC::ex& expected, bool& matched);
+		                 GiNaC::ex& expected, bool& matched) const;
 
-				bool compare(ExpressionType t, unsigned int i, GiNaC::ex& e);
+				bool compare(ExpressionType t, unsigned int i, GiNaC::ex& e) const;
 
 
 		    // WRITE SELF DETAILS TO STREAM
@@ -74,7 +74,8 @@ class ginac_cache
 
 		//! construct a cache object
 		ginac_cache()
-			: hits(0), misses(0)
+			: hits(0),
+        misses(0)
 			{
 				// pause query timer
 				query_timer.stop();
@@ -117,7 +118,7 @@ class ginac_cache
 		//! get number of misses
 		unsigned int get_misses() const { return(this->misses); }
 
-		//! get time spend performing queryies
+		//! get time spend performing queries
 		boost::timer::nanosecond_type get_query_time() const { return(this->query_timer.elapsed().wall); }
 
 
@@ -126,7 +127,7 @@ class ginac_cache
   protected:
 
 		//! hash
-		unsigned int hash(unsigned int a, unsigned int b, unsigned int c) { return((a + b*101 + c*463) % HashSize); }
+		unsigned int hash(unsigned int a, unsigned int b, unsigned int c) const { return((a + b*101 + c*463) % HashSize); }
 
 
 		// INTERNAL DATA
@@ -165,7 +166,7 @@ ginac_cache<ExpressionType, HashSize>::cache_element::cache_element(ExpressionTy
 
 
 template <typename ExpressionType, unsigned int HashSize>
-bool ginac_cache<ExpressionType, HashSize>::cache_element::compare(ExpressionType t, unsigned int i, const std::vector<GiNaC::ex>& a, GiNaC::ex& e)
+bool ginac_cache<ExpressionType, HashSize>::cache_element::compare(ExpressionType t, unsigned int i, const std::vector<GiNaC::ex>& a, GiNaC::ex& e) const
 	{
 		if(this->type != t) return(false);
 		if(this->index != i) return(false);
@@ -189,7 +190,7 @@ bool ginac_cache<ExpressionType, HashSize>::cache_element::compare(ExpressionTyp
 
 template <typename ExpressionType, unsigned int HashSize>
 bool ginac_cache<ExpressionType, HashSize>::cache_element::compare(ExpressionType t, unsigned int i, const std::vector<GiNaC::ex>& a, GiNaC::ex& e,
-                                                                   GiNaC::ex& expected, bool& matched)
+                                                                   GiNaC::ex& expected, bool& matched) const
 	{
     if(this->type != t) return(false);
     if(this->index != i) return(false);
@@ -244,7 +245,7 @@ bool ginac_cache<ExpressionType, HashSize>::cache_element::compare(ExpressionTyp
 
 
 template <typename ExpressionType, unsigned int HashSize>
-bool ginac_cache<ExpressionType, HashSize>::cache_element::compare(ExpressionType t, unsigned int i, GiNaC::ex& e)
+bool ginac_cache<ExpressionType, HashSize>::cache_element::compare(ExpressionType t, unsigned int i, GiNaC::ex& e) const
 	{
     if(this->type != t) return(false);
     if(this->index != i) return(false);
@@ -280,9 +281,9 @@ bool ginac_cache<ExpressionType, HashSize>::query(ExpressionType t, unsigned int
 
 		unsigned int hash = this->hash(static_cast<typename std::underlying_type<ExpressionType>::type>(t), i, a.size());
 
-		for(typename std::vector<cache_element>::iterator u = this->cache[hash].begin(); u != this->cache[hash].end(); ++u)
+    for(const cache_element& elt : this->cache[hash])
 			{
-				if((*u).compare(t, i, a, e))
+				if(elt.compare(t, i, a, e))
 					{
 				    hits++;
 						this->query_timer.stop();
@@ -303,23 +304,23 @@ bool ginac_cache<ExpressionType, HashSize>::query(ExpressionType t, unsigned int
 
     unsigned int hash = this->hash(t, i, a.size());
 
-    for(typename std::vector<cache_element>::iterator u = this->cache[hash].begin(); u != this->cache[hash].end(); ++u)
+    for(const cache_element& elt : this->cache[hash])
 	    {
 		    bool matched = true;
 
-        if((*u).compare(t, i, a, e, expected, matched))
+        if(elt.compare(t, i, a, e, expected, matched))
 	        {
 		        if(!matched)
 			        {
 		            std::cout << '\n';
 		            std::cout << "Detected matching failure -- dumping diagnostics" << '\n';
 		            std::cout << "  index = " << i << ", hash = " << hash << ", number of entries in hash table at this value = " << this->cache[hash].size() << '\n';
-		            for(typename std::vector<cache_element>::iterator v = this->cache[hash].begin(); v != this->cache[hash].end(); ++v)
+                for(const cache_element& v : this->cache[hash])
 			            {
 		                std::cout << '\n';
-		                (*v).write(std::cout);
+		                v.write(std::cout);
 		                std::cout << '\n';
-		                std::cout << "Match to this cache element = " << (*v).compare(t, i, a, e) << '\n';
+		                std::cout << "Match to this cache element = " << v.compare(t, i, a, e) << '\n';
 			            }
 		            std::cout << '\n';
 			        }
@@ -343,9 +344,9 @@ bool ginac_cache<ExpressionType, HashSize>::query(ExpressionType t, unsigned int
 
     unsigned int hash = this->hash(static_cast<typename std::underlying_type<ExpressionType>::type>(t), i, 0);
 
-    for(typename std::vector<cache_element>::iterator u = this->cache[hash].begin(); u != this->cache[hash].end(); ++u)
+    for(const cache_element& elt : this->cache[hash])
 	    {
-        if((*u).compare(t, i, e))
+        if(elt.compare(t, i, e))
 	        {
 		        hits++;
 		        this->query_timer.stop();
@@ -364,7 +365,7 @@ void ginac_cache<ExpressionType, HashSize>::store(ExpressionType t, unsigned int
 	{
     unsigned int hash = this->hash(static_cast<typename std::underlying_type<ExpressionType>::type>(t), i, a.size());
 
-		this->cache[hash].push_back(cache_element(t, i, a, e));
+		this->cache[hash].emplace_back(t, i, a, e);
 	}
 
 
@@ -373,7 +374,7 @@ void ginac_cache<ExpressionType, HashSize>::store(ExpressionType t, unsigned int
 	{
     unsigned int hash = this->hash(static_cast<typename std::underlying_type<ExpressionType>::type>(t), i, 0);
 
-    this->cache[hash].push_back(cache_element(t, i, e));
+    this->cache[hash].emplace_back(t, i, e);
 	}
 
 
