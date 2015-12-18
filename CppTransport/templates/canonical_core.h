@@ -1,12 +1,12 @@
 // backend=cpp minver=0.13
 //
-// DO NOT EDIT: GENERATED AUTOMATICALLY BY $$__TOOL $$__VERSION
+// DO NOT EDIT: GENERATED AUTOMATICALLY BY $TOOL $VERSION
 //
-// '$$__HEADER' generated from '$$__SOURCE'
-// processed on $$__DATE
+// '$HEADER' generated from '$SOURCE'
+// processed on $DATE
 
-#ifndef $$__GUARD   // avoid multiple inclusion
-#define $$__GUARD
+#ifndef $GUARD   // avoid multiple inclusion
+#define $GUARD
 
 #include <assert.h>
 #include <cmath>
@@ -28,23 +28,23 @@ namespace transport
     using backg_state = std::vector<number>;
 
     // Literal data pool
-    namespace $$__MODEL_pool
+    namespace $MODEL_pool
       {
-        static std::vector<std::string> field_names = $$__FIELD_NAME_LIST;
-        static std::vector<std::string> latex_names = $$__LATEX_NAME_LIST;
-        static std::vector<std::string> param_names = $$__PARAM_NAME_LIST;
-        static std::vector<std::string> platx_names = $$__PLATX_NAME_LIST;
-        static std::vector<std::string> state_names = $$__STATE_NAME_LIST;
+        static std::vector<std::string> field_names = $FIELD_NAME_LIST;
+        static std::vector<std::string> latex_names = $LATEX_NAME_LIST;
+        static std::vector<std::string> param_names = $PARAM_NAME_LIST;
+        static std::vector<std::string> platx_names = $PLATX_NAME_LIST;
+        static std::vector<std::string> state_names = $STATE_NAME_LIST;
 
-        static std::string              name        = "$$__NAME";
-        static std::string              author      = "$$__AUTHOR";
-        static std::string              tag         = "$$__TAG";
-        static std::string              unique_id   = "$$__UNIQUE_ID";
+        static std::string              name        = "$NAME";
+        static std::string              author      = "$AUTHOR";
+        static std::string              tag         = "$TAG";
+        static std::string              unique_id   = "$UNIQUE_ID";
 
-        constexpr unsigned int backg_size         = (2*$$__NUMBER_FIELDS);
-        constexpr unsigned int twopf_size         = ((2*$$__NUMBER_FIELDS)*(2*$$__NUMBER_FIELDS));
+        constexpr unsigned int backg_size         = (2*$NUMBER_FIELDS);
+        constexpr unsigned int twopf_size         = ((2*$NUMBER_FIELDS)*(2*$NUMBER_FIELDS));
         constexpr unsigned int tensor_size        = (4);
-        constexpr unsigned int threepf_size       = ((2*$$__NUMBER_FIELDS)*(2*$$__NUMBER_FIELDS)*(2*$$__NUMBER_FIELDS));
+        constexpr unsigned int threepf_size       = ((2*$NUMBER_FIELDS)*(2*$NUMBER_FIELDS)*(2*$NUMBER_FIELDS));
      
         constexpr unsigned int backg_start        = 0;
         constexpr unsigned int tensor_start       = backg_start + backg_size;         // for twopf state vector
@@ -64,26 +64,26 @@ namespace transport
         constexpr unsigned int twopf_state_size   = backg_size + tensor_size + twopf_size;
         constexpr unsigned int threepf_state_size = backg_size + 3*tensor_size + 6*twopf_size + threepf_size;
 
-        constexpr unsigned int u2_size            = ((2*$$__NUMBER_FIELDS)*(2*$$__NUMBER_FIELDS));
-        constexpr unsigned int u3_size            = ((2*$$__NUMBER_FIELDS)*(2*$$__NUMBER_FIELDS)*(2*$$__NUMBER_FIELDS));
+        constexpr unsigned int u2_size            = ((2*$NUMBER_FIELDS)*(2*$NUMBER_FIELDS));
+        constexpr unsigned int u3_size            = ((2*$NUMBER_FIELDS)*(2*$NUMBER_FIELDS)*(2*$NUMBER_FIELDS));
       }
 
 
     // FLATTENNING FUNCTIONS
 
 
-    constexpr unsigned int SPECIES       (unsigned int a)                                 { return flatten_impl::species(a, $$__NUMBER_FIELDS); }
-    constexpr unsigned int MOMENTUM      (unsigned int a)                                 { return flatten_impl::momentum(a, $$__NUMBER_FIELDS); }
-    constexpr unsigned int IS_FIELD      (unsigned int a)                                 { return flatten_impl::is_field(a, $$__NUMBER_FIELDS); }
-    constexpr unsigned int IS_MOMENTUM   (unsigned int a)                                 { return flatten_impl::is_momentum(a, $$__NUMBER_FIELDS); }
+    constexpr unsigned int SPECIES       (unsigned int a)                                 { return flatten_impl::species(a, $NUMBER_FIELDS); }
+    constexpr unsigned int MOMENTUM      (unsigned int a)                                 { return flatten_impl::momentum(a, $NUMBER_FIELDS); }
+    constexpr unsigned int IS_FIELD      (unsigned int a)                                 { return flatten_impl::is_field(a, $NUMBER_FIELDS); }
+    constexpr unsigned int IS_MOMENTUM   (unsigned int a)                                 { return flatten_impl::is_momentum(a, $NUMBER_FIELDS); }
 
-    constexpr unsigned int FLATTEN       (unsigned int a)                                 { return flatten_impl::flatten(a, $$__NUMBER_FIELDS); }
-    constexpr unsigned int FLATTEN       (unsigned int a, unsigned int b)                 { return flatten_impl::flatten(a, b, $$__NUMBER_FIELDS); }
-    constexpr unsigned int FLATTEN       (unsigned int a, unsigned int b, unsigned int c) { return flatten_impl::flatten(a, b, c, $$__NUMBER_FIELDS); }
+    constexpr unsigned int FLATTEN       (unsigned int a)                                 { return flatten_impl::flatten(a, $NUMBER_FIELDS); }
+    constexpr unsigned int FLATTEN       (unsigned int a, unsigned int b)                 { return flatten_impl::flatten(a, b, $NUMBER_FIELDS); }
+    constexpr unsigned int FLATTEN       (unsigned int a, unsigned int b, unsigned int c) { return flatten_impl::flatten(a, b, c, $NUMBER_FIELDS); }
 
-    constexpr unsigned int FIELDS_FLATTEN(unsigned int a)                                 { return flatten_impl::fields_flatten(a, $$__NUMBER_FIELDS); }
-    constexpr unsigned int FIELDS_FLATTEN(unsigned int a, unsigned int b)                 { return flatten_impl::fields_flatten(a, b, $$__NUMBER_FIELDS); }
-    constexpr unsigned int FIELDS_FLATTEN(unsigned int a, unsigned int b, unsigned int c) { return flatten_impl::fields_flatten(a, b, c, $$__NUMBER_FIELDS); }
+    constexpr unsigned int FIELDS_FLATTEN(unsigned int a)                                 { return flatten_impl::fields_flatten(a, $NUMBER_FIELDS); }
+    constexpr unsigned int FIELDS_FLATTEN(unsigned int a, unsigned int b)                 { return flatten_impl::fields_flatten(a, b, $NUMBER_FIELDS); }
+    constexpr unsigned int FIELDS_FLATTEN(unsigned int a, unsigned int b, unsigned int c) { return flatten_impl::fields_flatten(a, b, c, $NUMBER_FIELDS); }
 
     constexpr unsigned int TENSOR_FLATTEN(unsigned int a, unsigned int b)                 { return flatten_impl::tensor_flatten(a, b); }
 
@@ -91,11 +91,11 @@ namespace transport
     // *********************************************************************************************
 
 
-    // CLASS FOR $$__MODEL CORE
+    // CLASS FOR $MODEL CORE
     // contains code and functionality shared by all the compute backends (OpenMP, MPI, OpenCL, CUDA, ...)
     // these backends are implemented by classes which inherit from this common core
     template <typename number>
-    class $$__MODEL : public canonical_model<number>
+    class $MODEL : public canonical_model<number>
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -103,35 +103,35 @@ namespace transport
       public:
 
         //! constructor
-        $$__MODEL();
+        $MODEL();
 
         //! destructor
-		    virtual ~$$__MODEL();
+		    virtual ~$MODEL();
 
 
         // EXTRACT MODEL INFORMATION -- implements a 'model' interface
 
       public:
 
-        virtual const std::string& get_name() const override { return($$__MODEL_pool::name); }
+        virtual const std::string& get_name() const override { return($MODEL_pool::name); }
 
-        virtual const std::string& get_author() const override { return($$__MODEL_pool::author); }
+        virtual const std::string& get_author() const override { return($MODEL_pool::author); }
 
-        virtual const std::string& get_tag() const override { return($$__MODEL_pool::tag); }
+        virtual const std::string& get_tag() const override { return($MODEL_pool::tag); }
 
-        virtual unsigned int get_N_fields() const override { return($$__NUMBER_FIELDS); }
+        virtual unsigned int get_N_fields() const override { return($NUMBER_FIELDS); }
 
-        virtual unsigned int get_N_params() const override { return($$__NUMBER_PARAMS); }
+        virtual unsigned int get_N_params() const override { return($NUMBER_PARAMS); }
 
-        virtual const std::vector< std::string >& get_field_names() const override { return($$__MODEL_pool::field_names); }
+        virtual const std::vector< std::string >& get_field_names() const override { return($MODEL_pool::field_names); }
 
-        virtual const std::vector< std::string >& get_f_latex_names() const override { return($$__MODEL_pool::latex_names); }
+        virtual const std::vector< std::string >& get_f_latex_names() const override { return($MODEL_pool::latex_names); }
 
-        virtual const std::vector< std::string >& get_param_names() const override { return($$__MODEL_pool::param_names); }
+        virtual const std::vector< std::string >& get_param_names() const override { return($MODEL_pool::param_names); }
 
-        virtual const std::vector< std::string >& get_p_latex_names() const override { return($$__MODEL_pool::platx_names); }
+        virtual const std::vector< std::string >& get_p_latex_names() const override { return($MODEL_pool::platx_names); }
 
-        virtual const std::vector< std::string >& get_state_names() const override { return($$__MODEL_pool::state_names); }
+        virtual const std::vector< std::string >& get_state_names() const override { return($MODEL_pool::state_names); }
 
 
         // INDEX FLATTENING FUNCTIONS -- implements an 'abstract_flattener' interface
@@ -139,12 +139,12 @@ namespace transport
       public:
 
         virtual unsigned int flatten(unsigned int a)                                         const override { return(a); };
-        virtual unsigned int flatten(unsigned int a, unsigned int b)                         const override { return(2*$$__NUMBER_FIELDS*a + b); };
-        virtual unsigned int flatten(unsigned int a, unsigned int b, unsigned int c)         const override { return(2*$$__NUMBER_FIELDS*2*$$__NUMBER_FIELDS*a + 2*$$__NUMBER_FIELDS*b + c); };
+        virtual unsigned int flatten(unsigned int a, unsigned int b)                         const override { return(2*$NUMBER_FIELDS*a + b); };
+        virtual unsigned int flatten(unsigned int a, unsigned int b, unsigned int c)         const override { return(2*$NUMBER_FIELDS*2*$NUMBER_FIELDS*a + 2*$NUMBER_FIELDS*b + c); };
 
         virtual unsigned int fields_flatten(unsigned int a)                                  const override { return(a); };
-        virtual unsigned int fields_flatten(unsigned int a, unsigned int b)                  const override { return($$__NUMBER_FIELDS*a + b); };
-        virtual unsigned int fields_flatten(unsigned int a, unsigned int b, unsigned int c)  const override { return($$__NUMBER_FIELDS*$$__NUMBER_FIELDS*a + $$__NUMBER_FIELDS*b + c); };
+        virtual unsigned int fields_flatten(unsigned int a, unsigned int b)                  const override { return($NUMBER_FIELDS*a + b); };
+        virtual unsigned int fields_flatten(unsigned int a, unsigned int b, unsigned int c)  const override { return($NUMBER_FIELDS*$NUMBER_FIELDS*a + $NUMBER_FIELDS*b + c); };
 
         virtual unsigned int tensor_flatten(unsigned int a, unsigned int b)                  const override { return(2*a + b); }
 
@@ -153,10 +153,10 @@ namespace transport
 
       public:
 
-        virtual unsigned int species(unsigned int a)                                         const override { return((a >= $$__NUMBER_FIELDS) ? a-$$__NUMBER_FIELDS : a); };
-        virtual unsigned int momentum(unsigned int a)                                        const override { return((a >= $$__NUMBER_FIELDS) ? a : a+$$__NUMBER_FIELDS); };
-        virtual unsigned int is_field(unsigned int a)                                        const override { return(a < $$__NUMBER_FIELDS); }
-        virtual unsigned int is_momentum(unsigned int a)                                     const override { return(a >= $$__NUMBER_FIELDS && a <= 2*$$__NUMBER_FIELDS); }
+        virtual unsigned int species(unsigned int a)                                         const override { return((a >= $NUMBER_FIELDS) ? a-$NUMBER_FIELDS : a); };
+        virtual unsigned int momentum(unsigned int a)                                        const override { return((a >= $NUMBER_FIELDS) ? a : a+$NUMBER_FIELDS); };
+        virtual unsigned int is_field(unsigned int a)                                        const override { return(a < $NUMBER_FIELDS); }
+        virtual unsigned int is_momentum(unsigned int a)                                     const override { return(a >= $NUMBER_FIELDS && a <= 2*$NUMBER_FIELDS); }
 
 
         // COMPUTE BASIC PHYSICAL QUANTITIES -- implements a 'model'/'canonical_model' interface
@@ -270,12 +270,12 @@ namespace transport
 
     // integration - background functor
     template <typename number>
-    class $$__MODEL_background_functor
+    class $MODEL_background_functor
       {
 
       public:
 
-        $$__MODEL_background_functor(const parameters<number>& p)
+        $MODEL_background_functor(const parameters<number>& p)
           : __params(p)
           {
             __Mp = p.get_Mp();
@@ -283,10 +283,10 @@ namespace transport
 
         void set_up_workspace()
           {
-            __dV = new number[$$__NUMBER_FIELDS];
-            __raw_params = new number[$$__NUMBER_PARAMS];
+            __dV = new number[$NUMBER_FIELDS];
+            __raw_params = new number[$NUMBER_PARAMS];
 
-            __raw_params[$$__1] = __params.get_vector()[$$__1];
+            __raw_params[$1] = __params.get_vector()[$1];
           }
 
         void close_down_workspace()
@@ -312,12 +312,12 @@ namespace transport
 
     // integration - observer object for background only
     template <typename number>
-    class $$__MODEL_background_observer
+    class $MODEL_background_observer
       {
 
       public:
 
-        $$__MODEL_background_observer(typename model<number>::backg_history& h, const time_config_database& t)
+        $MODEL_background_observer(typename model<number>::backg_history& h, const time_config_database& t)
           : history(h),
             time_db(t)
           {
@@ -337,44 +337,44 @@ namespace transport
       };
 
 
-    // CLASS $$__MODEL -- CONSTRUCTORS, DESTRUCTORS
+    // CLASS $MODEL -- CONSTRUCTORS, DESTRUCTORS
 
 
     template <typename number>
-    $$__MODEL<number>::$$__MODEL()
-      : canonical_model<number>("$$__UNIQUE_ID", static_cast<unsigned int>(100*$$__VERSION))
+    $MODEL<number>::$MODEL()
+      : canonical_model<number>("$UNIQUE_ID", static_cast<unsigned int>(100*$VERSION))
       {
-        __A_k1k2k3 = new number[$$__NUMBER_FIELDS * $$__NUMBER_FIELDS * $$__NUMBER_FIELDS];
-        __A_k1k3k2 = new number[$$__NUMBER_FIELDS * $$__NUMBER_FIELDS * $$__NUMBER_FIELDS];
-        __B_k1k2k3 = new number[$$__NUMBER_FIELDS * $$__NUMBER_FIELDS * $$__NUMBER_FIELDS];
-        __B_k1k3k2 = new number[$$__NUMBER_FIELDS * $$__NUMBER_FIELDS * $$__NUMBER_FIELDS];
-        __C_k1k2k3 = new number[$$__NUMBER_FIELDS * $$__NUMBER_FIELDS * $$__NUMBER_FIELDS];
-        __C_k1k3k2 = new number[$$__NUMBER_FIELDS * $$__NUMBER_FIELDS * $$__NUMBER_FIELDS];
+        __A_k1k2k3 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
+        __A_k1k3k2 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
+        __B_k1k2k3 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
+        __B_k1k3k2 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
+        __C_k1k2k3 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
+        __C_k1k3k2 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
 
-        __A_k2k1k3 = new number[$$__NUMBER_FIELDS * $$__NUMBER_FIELDS * $$__NUMBER_FIELDS];
-        __A_k2k3k1 = new number[$$__NUMBER_FIELDS * $$__NUMBER_FIELDS * $$__NUMBER_FIELDS];
-        __B_k2k1k3 = new number[$$__NUMBER_FIELDS * $$__NUMBER_FIELDS * $$__NUMBER_FIELDS];
-        __B_k2k3k1 = new number[$$__NUMBER_FIELDS * $$__NUMBER_FIELDS * $$__NUMBER_FIELDS];
-        __C_k2k1k3 = new number[$$__NUMBER_FIELDS * $$__NUMBER_FIELDS * $$__NUMBER_FIELDS];
-        __C_k2k3k1 = new number[$$__NUMBER_FIELDS * $$__NUMBER_FIELDS * $$__NUMBER_FIELDS];
+        __A_k2k1k3 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
+        __A_k2k3k1 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
+        __B_k2k1k3 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
+        __B_k2k3k1 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
+        __C_k2k1k3 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
+        __C_k2k3k1 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
 
-        __A_k3k1k2 = new number[$$__NUMBER_FIELDS * $$__NUMBER_FIELDS * $$__NUMBER_FIELDS];
-        __A_k3k2k1 = new number[$$__NUMBER_FIELDS * $$__NUMBER_FIELDS * $$__NUMBER_FIELDS];
-        __B_k3k1k2 = new number[$$__NUMBER_FIELDS * $$__NUMBER_FIELDS * $$__NUMBER_FIELDS];
-        __B_k3k2k1 = new number[$$__NUMBER_FIELDS * $$__NUMBER_FIELDS * $$__NUMBER_FIELDS];
-        __C_k3k1k2 = new number[$$__NUMBER_FIELDS * $$__NUMBER_FIELDS * $$__NUMBER_FIELDS];
-        __C_k3k2k1 = new number[$$__NUMBER_FIELDS * $$__NUMBER_FIELDS * $$__NUMBER_FIELDS];
+        __A_k3k1k2 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
+        __A_k3k2k1 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
+        __B_k3k1k2 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
+        __B_k3k2k1 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
+        __C_k3k1k2 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
+        __C_k3k2k1 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
 
-        __dV = new number[$$__NUMBER_FIELDS];
-        __ddV = new number[$$__NUMBER_FIELDS * $$__NUMBER_FIELDS];
-        __dddV = new number[$$__NUMBER_FIELDS * $$__NUMBER_FIELDS * $$__NUMBER_FIELDS];
+        __dV = new number[$NUMBER_FIELDS];
+        __ddV = new number[$NUMBER_FIELDS * $NUMBER_FIELDS];
+        __dddV = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
 
-        __raw_params = new number[$$__NUMBER_PARAMS];
+        __raw_params = new number[$NUMBER_PARAMS];
       }
 
 
     template <typename number>
-    $$__MODEL<number>::~$$__MODEL()
+    $MODEL<number>::~$MODEL()
       {
         delete[] __A_k1k2k3;
         delete[] __A_k1k3k2;
@@ -409,97 +409,97 @@ namespace transport
 
 
     template <typename number>
-    number $$__MODEL<number>::H(const parameters<number>& __params, const std::vector<number>& __coords) const
+    number $MODEL<number>::H(const parameters<number>& __params, const std::vector<number>& __coords) const
       {
-        assert(__coords.size() == 2*$$__NUMBER_FIELDS);
+        assert(__coords.size() == 2*$NUMBER_FIELDS);
 
-        if(__coords.size() == 2*$$__NUMBER_FIELDS)
+        if(__coords.size() == 2*$NUMBER_FIELDS)
           {
             const auto __Mp = __params.get_Mp();
             const std::vector<number>& __param_vector = __params.get_vector();
 
-            $$__TEMP_POOL{"const auto $1 = $2;"}
+            $TEMP_POOL{"const auto $1 = $2;"}
 
-            return std::sqrt($$__HUBBLE_SQ{__param_vector, __coords, FLATTEN});
+            return std::sqrt($HUBBLE_SQ{__param_vector, __coords, FLATTEN});
           }
         else
           {
             std::ostringstream msg;
-            msg << CPPTRANSPORT_WRONG_ICS_A << __coords.size() << CPPTRANSPORT_WRONG_ICS_B << 2*$$__NUMBER_FIELDS << ")";
+            msg << CPPTRANSPORT_WRONG_ICS_A << __coords.size() << CPPTRANSPORT_WRONG_ICS_B << 2*$NUMBER_FIELDS << ")";
             throw std::out_of_range(msg.str());
           }
       }
 
 
     template <typename number>
-    number $$__MODEL<number>::epsilon(const parameters<number>& __params, const std::vector<number>& __coords) const
+    number $MODEL<number>::epsilon(const parameters<number>& __params, const std::vector<number>& __coords) const
       {
-        assert(__coords.size() == 2*$$__NUMBER_FIELDS);
+        assert(__coords.size() == 2*$NUMBER_FIELDS);
 
-        if(__coords.size() == 2*$$__NUMBER_FIELDS)
+        if(__coords.size() == 2*$NUMBER_FIELDS)
           {
             const auto __Mp = __params.get_Mp();
 
-            $$__TEMP_POOL{"const auto $1 = $2;"}
+            $TEMP_POOL{"const auto $1 = $2;"}
 
-            return $$__EPSILON{__coords, FLATTEN};
+            return $EPSILON{__coords, FLATTEN};
           }
         else
           {
             std::ostringstream msg;
-            msg << CPPTRANSPORT_WRONG_ICS_A << __coords.size() << CPPTRANSPORT_WRONG_ICS_B << 2*$$__NUMBER_FIELDS << ")";
+            msg << CPPTRANSPORT_WRONG_ICS_A << __coords.size() << CPPTRANSPORT_WRONG_ICS_B << 2*$NUMBER_FIELDS << ")";
             throw std::out_of_range(msg.str());
           }
       }
 
 
     template <typename number>
-    number $$__MODEL<number>::V(const parameters<number>& __params, const std::vector<number>& __coords) const
+    number $MODEL<number>::V(const parameters<number>& __params, const std::vector<number>& __coords) const
       {
-        assert(__coords.size() == 2*$$__NUMBER_FIELDS);
+        assert(__coords.size() == 2*$NUMBER_FIELDS);
 
-        if(__coords.size() == 2*$$__NUMBER_FIELDS)
+        if(__coords.size() == 2*$NUMBER_FIELDS)
           {
             const auto __Mp = __params.get_Mp();
             const std::vector<number>& __param_vector = __params.get_vector();
 
-            $$__TEMP_POOL{"const auto $1 = $2;"}
+            $TEMP_POOL{"const auto $1 = $2;"}
 
-            return $$__POTENTIAL{__param_vector, __coords, FLATTEN};
+            return $POTENTIAL{__param_vector, __coords, FLATTEN};
           }
         else
           {
             std::ostringstream msg;
-            msg << CPPTRANSPORT_WRONG_ICS_A << __coords.size() << CPPTRANSPORT_WRONG_ICS_B << 2*$$__NUMBER_FIELDS << ")";
+            msg << CPPTRANSPORT_WRONG_ICS_A << __coords.size() << CPPTRANSPORT_WRONG_ICS_B << 2*$NUMBER_FIELDS << ")";
             throw std::out_of_range(msg.str());
           }
       }
 
 
     template <typename number>
-    void $$__MODEL_compute_dV(number* raw_params, const std::vector<number>& __x, number* dV)
+    void $MODEL_compute_dV(number* raw_params, const std::vector<number>& __x, number* dV)
       {
-        $$__TEMP_POOL{"const auto $1 = $2;"}
+        $TEMP_POOL{"const auto $1 = $2;"}
 
-        dV[FIELDS_FLATTEN($$__a)] = $$__DV[a]{raw_params, __x, FIELDS_FLATTEN};
+        dV[FIELDS_FLATTEN($a)] = $DV[a]{raw_params, __x, FIELDS_FLATTEN};
       }
 
 
     template <typename number>
-    void $$__MODEL_compute_ddV(number* raw_params, const std::vector<number>& __x, number* ddV)
+    void $MODEL_compute_ddV(number* raw_params, const std::vector<number>& __x, number* ddV)
       {
-        $$__TEMP_POOL{"const auto $1 = $2;"}
+        $TEMP_POOL{"const auto $1 = $2;"}
 
-        ddV[FIELDS_FLATTEN($$__a,$$__b)] = $$__DDV[ab]{raw_params, __x, FIELDS_FLATTEN};
+        ddV[FIELDS_FLATTEN($a,$b)] = $DDV[ab]{raw_params, __x, FIELDS_FLATTEN};
       }
 
 
     template <typename number>
-    void $$__MODEL_compute_dddV(number* raw_params, const std::vector<number>& __x, number* dddV)
+    void $MODEL_compute_dddV(number* raw_params, const std::vector<number>& __x, number* dddV)
       {
-        $$__TEMP_POOL{"const auto $1 = $2;"}
+        $TEMP_POOL{"const auto $1 = $2;"}
 
-        dddV[FIELDS_FLATTEN($$__a,$$__b,$$__c)] = $$__DDDV[abc]{raw_params, __x, FIELDS_FLATTEN};
+        dddV[FIELDS_FLATTEN($a,$b,$c)] = $DDDV[abc]{raw_params, __x, FIELDS_FLATTEN};
       }
 
 
@@ -507,22 +507,22 @@ namespace transport
 
 
     template <typename number>
-    void $$__MODEL<number>::validate_ics(const parameters<number>& __params, const std::vector<number>& __input, std::vector<number>& __output)
+    void $MODEL<number>::validate_ics(const parameters<number>& __params, const std::vector<number>& __input, std::vector<number>& __output)
       {
         __output.clear();
-        __output.reserve(2*$$__NUMBER_FIELDS);
+        __output.reserve(2*$NUMBER_FIELDS);
         __output.insert(__output.end(), __input.begin(), __input.end());
 
-        if(__input.size() == $$__NUMBER_FIELDS)  // initial conditions for momenta *were not* supplied -- need to compute them
+        if(__input.size() == $NUMBER_FIELDS)  // initial conditions for momenta *were not* supplied -- need to compute them
           {
             // supply the missing initial conditions using a slow-roll approximation
             const auto __Mp = __params.get_Mp();
 
-            $$__TEMP_POOL{"const auto $1 = $2;"}
+            $TEMP_POOL{"const auto $1 = $2;"}
 
-            __output.push_back($$__SR_VELOCITY[a]{__params.get_vector(), __input, FLATTEN});
+            __output.push_back($SR_VELOCITY[a]{__params.get_vector(), __input, FLATTEN});
           }
-        else if(__input.size() == 2*$$__NUMBER_FIELDS)  // initial conditions for momenta *were* supplied
+        else if(__input.size() == 2*$NUMBER_FIELDS)  // initial conditions for momenta *were* supplied
           {
             // need do nothing
           }
@@ -531,8 +531,8 @@ namespace transport
             std::ostringstream msg;
 
             msg << CPPTRANSPORT_WRONG_ICS_A << __input.size() << "]"
-                << CPPTRANSPORT_WRONG_ICS_B << $$__NUMBER_FIELDS
-                << CPPTRANSPORT_WRONG_ICS_C << 2*$$__NUMBER_FIELDS << "]";
+                << CPPTRANSPORT_WRONG_ICS_B << $NUMBER_FIELDS
+                << CPPTRANSPORT_WRONG_ICS_C << 2*$NUMBER_FIELDS << "]";
 
             throw std::out_of_range(msg.str());
           }
@@ -543,11 +543,11 @@ namespace transport
 
 
     template <typename number>
-    void $$__MODEL<number>::validate_params(const std::vector<number>& input, std::vector<number>& output)
+    void $MODEL<number>::validate_params(const std::vector<number>& input, std::vector<number>& output)
       {
         output.clear();
 
-        if(input.size() == $$__NUMBER_PARAMS)
+        if(input.size() == $NUMBER_PARAMS)
           {
             output.assign(input.begin(), input.end());
           }
@@ -555,7 +555,7 @@ namespace transport
           {
             std::ostringstream msg;
 
-            msg << CPPTRANSPORT_WRONG_PARAMS_A << input.size() << CPPTRANSPORT_WRONG_PARAMS_B << $$__NUMBER_PARAMS << ")";
+            msg << CPPTRANSPORT_WRONG_PARAMS_A << input.size() << CPPTRANSPORT_WRONG_PARAMS_B << $NUMBER_PARAMS << ")";
 
             throw std::out_of_range(msg.str());
           }
@@ -568,27 +568,27 @@ namespace transport
     // __Ninit  -- initial time
     // __fields -- vector of initial conditions for the background fields (or fields+momenta)
     template <typename number>
-    number $$__MODEL<number>::make_twopf_re_ic(unsigned int __i, unsigned int __j, double __k, double __Ninit,
+    number $MODEL<number>::make_twopf_re_ic(unsigned int __i, unsigned int __j, double __k, double __Ninit,
                                                const twopf_list_task<number>* __task, const std::vector<number>& __fields)
       {
-        __raw_params[$$__1] = __task->get_params().get_vector()[$$__1];
+        __raw_params[$1] = __task->get_params().get_vector()[$1];
 
         const auto __Mp = __task->get_params().get_Mp();
         const auto __a = std::exp(__Ninit - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
-//        $$__MODEL_compute_dV(__raw_params, __fields, __dV);
-//        $$__MODEL_compute_ddV(__raw_params, __fields, __ddV);
+//        $MODEL_compute_dV(__raw_params, __fields, __dV);
+//        $MODEL_compute_ddV(__raw_params, __fields, __ddV);
 
-        $$__TEMP_POOL{"const auto $1 = $2;"}
+        $TEMP_POOL{"const auto $1 = $2;"}
 
-        const auto __Hsq = $$__HUBBLE_SQ{__raw_params, __fields, FLATTEN};
+        const auto __Hsq = $HUBBLE_SQ{__raw_params, __fields, FLATTEN};
         const auto __N = std::log(__k / (__a * std::sqrt(__Hsq)));
 
         number __tpf = 0.0;
 
-//        std::array< std::array<number, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS> __M;
+//        std::array< std::array<number, $NUMBER_FIELDS>, $NUMBER_FIELDS> __M;
 //
-//        __M[$$__a][$$__b] = $$__M_PREDEF[ab]{__raw_params, __fields, __dV, __ddV, FLATTEN, FIELDS_FLATTEN};
+//        __M[$a][$b] = $M_PREDEF[ab]{__raw_params, __fields, __dV, __ddV, FLATTEN, FIELDS_FLATTEN};
 
         // NOTE - conventions for the scale factor are
         //   a = exp(t), where t is the user-defined time (usually = 0 at the start of the integration)
@@ -656,27 +656,27 @@ namespace transport
 
   // set up initial conditions for the imaginary part of the equal-time two-point function
   template <typename number>
-  number $$__MODEL<number>::make_twopf_im_ic(unsigned int __i, unsigned int __j, double __k, double __Ninit,
+  number $MODEL<number>::make_twopf_im_ic(unsigned int __i, unsigned int __j, double __k, double __Ninit,
                                              const twopf_list_task<number>* __task, const std::vector<number>& __fields)
     {
-      __raw_params[$$__1] = __task->get_params().get_vector()[$$__1];
+      __raw_params[$1] = __task->get_params().get_vector()[$1];
 
       const auto __Mp = __task->get_params().get_Mp();
       const auto __a = std::exp(__Ninit - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
-//      $$__MODEL_compute_dV(__raw_params, __fields, __dV);
-//      $$__MODEL_compute_ddV(__raw_params, __fields, __ddV);
+//      $MODEL_compute_dV(__raw_params, __fields, __dV);
+//      $MODEL_compute_ddV(__raw_params, __fields, __ddV);
 
-      $$__TEMP_POOL{"const auto $1 = $2;"}
+      $TEMP_POOL{"const auto $1 = $2;"}
 
-      const auto __Hsq = $$__HUBBLE_SQ{__raw_params, __fields, FLATTEN};
+      const auto __Hsq = $HUBBLE_SQ{__raw_params, __fields, FLATTEN};
       const auto __N = std::log(__k / (__a * std::sqrt(__Hsq)));
 
       number __tpf = 0.0;
 
-//      std::array< std::array<number, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS> __M;
+//      std::array< std::array<number, $NUMBER_FIELDS>, $NUMBER_FIELDS> __M;
 //
-//      __M[$$__a][$$__b] = $$__M_PREDEF[ab]{__raw_params, __fields, __dV, __ddV, FLATTEN, FIELDS_FLATTEN};
+//      __M[$a][$b] = $M_PREDEF[ab]{__raw_params, __fields, __dV, __ddV, FLATTEN, FIELDS_FLATTEN};
 
       // only the field-momentum and momentum-field correlation functions have imaginary parts
       if(IS_FIELD(__i) && IS_MOMENTUM(__j))
@@ -706,17 +706,17 @@ namespace transport
 
     // set up initial conditions for the real part of the equal-time tensor two-point function
     template <typename number>
-    number $$__MODEL<number>::make_twopf_tensor_ic(unsigned int __i, unsigned int __j, double __k, double __Ninit,
+    number $MODEL<number>::make_twopf_tensor_ic(unsigned int __i, unsigned int __j, double __k, double __Ninit,
                                                    const twopf_list_task<number>* __task, const std::vector<number>& __fields)
       {
-        __raw_params[$$__1] = __task->get_params().get_vector()[$$__1];
+        __raw_params[$1] = __task->get_params().get_vector()[$1];
 
         const auto __Mp = __task->get_params().get_Mp();
         const auto __a = std::exp(__Ninit - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
-        $$__TEMP_POOL{"const auto $1 = $2;"}
+        $TEMP_POOL{"const auto $1 = $2;"}
 
-        const auto __Hsq = $$__HUBBLE_SQ{__raw_params, __fields, FLATTEN};
+        const auto __Hsq = $HUBBLE_SQ{__raw_params, __fields, FLATTEN};
         const auto __N = std::log(__k / (__a * std::sqrt(__Hsq)));
 
         number __tpf = 0.0;
@@ -750,20 +750,20 @@ namespace transport
 
     // set up initial conditions for the real part of the equal-time three-point function
     template <typename number>
-    number $$__MODEL<number>::make_threepf_ic(unsigned int __i, unsigned int __j, unsigned int __k,
+    number $MODEL<number>::make_threepf_ic(unsigned int __i, unsigned int __j, unsigned int __k,
                                               double __k1, double __k2, double __k3, double __Ninit,
                                               const twopf_list_task<number>* __task, const std::vector<number>& __fields)
       {
-        __raw_params[$$__1] = __task->get_params().get_vector()[$$__1];
+        __raw_params[$1] = __task->get_params().get_vector()[$1];
 
         const auto __Mp = __task->get_params().get_Mp();
         const auto __a = std::exp(__Ninit - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
-        $$__MODEL_compute_dV(__raw_params, __fields, __dV);
+        $MODEL_compute_dV(__raw_params, __fields, __dV);
 
-        $$__TEMP_POOL{"const auto $1 = $2;"}
+        $TEMP_POOL{"const auto $1 = $2;"}
 
-        const auto __Hsq = $$__HUBBLE_SQ{__raw_params, __fields, FLATTEN};
+        const auto __Hsq = $HUBBLE_SQ{__raw_params, __fields, FLATTEN};
 
         const auto __kt      = __k1 + __k2 + __k3;
         const auto __Ksq     = __k1*__k2 + __k1*__k3 + __k2*__k3;
@@ -775,20 +775,20 @@ namespace transport
 
         number __tpf = 0.0;
 
-        __B_k1k2k3[FIELDS_FLATTEN($$__a, $$__b, $$__c)] = $$__B_PREDEF[abc]{__k1, __k2, __k3, __a, __raw_params, __fields, __dV, FLATTEN, FIELDS_FLATTEN};
-        __B_k1k3k2[FIELDS_FLATTEN($$__a, $$__b, $$__c)] = $$__B_PREDEF[abc]{__k1, __k3, __k2, __a, __raw_params, __fields, __dV, FLATTEN, FIELDS_FLATTEN};
-        __C_k1k2k3[FIELDS_FLATTEN($$__a, $$__b, $$__c)] = $$__C_PREDEF[abc]{__k1, __k2, __k3, __a, __raw_params, __fields, FLATTEN};
-        __C_k1k3k2[FIELDS_FLATTEN($$__a, $$__b, $$__c)] = $$__C_PREDEF[abc]{__k1, __k3, __k2, __a, __raw_params, __fields, FLATTEN};
+        __B_k1k2k3[FIELDS_FLATTEN($a, $b, $c)] = $B_PREDEF[abc]{__k1, __k2, __k3, __a, __raw_params, __fields, __dV, FLATTEN, FIELDS_FLATTEN};
+        __B_k1k3k2[FIELDS_FLATTEN($a, $b, $c)] = $B_PREDEF[abc]{__k1, __k3, __k2, __a, __raw_params, __fields, __dV, FLATTEN, FIELDS_FLATTEN};
+        __C_k1k2k3[FIELDS_FLATTEN($a, $b, $c)] = $C_PREDEF[abc]{__k1, __k2, __k3, __a, __raw_params, __fields, FLATTEN};
+        __C_k1k3k2[FIELDS_FLATTEN($a, $b, $c)] = $C_PREDEF[abc]{__k1, __k3, __k2, __a, __raw_params, __fields, FLATTEN};
 
-        __B_k2k3k1[FIELDS_FLATTEN($$__a, $$__b, $$__c)] = $$__B_PREDEF[abc]{__k2, __k3, __k1, __a, __raw_params, __fields, __dV, FLATTEN, FIELDS_FLATTEN};
-        __B_k2k1k3[FIELDS_FLATTEN($$__a, $$__b, $$__c)] = $$__B_PREDEF[abc]{__k2, __k1, __k3, __a, __raw_params, __fields, __dV, FLATTEN, FIELDS_FLATTEN};
-        __C_k2k3k1[FIELDS_FLATTEN($$__a, $$__b, $$__c)] = $$__C_PREDEF[abc]{__k2, __k3, __k1, __a, __raw_params, __fields, FLATTEN};
-        __C_k2k1k3[FIELDS_FLATTEN($$__a, $$__b, $$__c)] = $$__C_PREDEF[abc]{__k2, __k1, __k3, __a, __raw_params, __fields, FLATTEN};
+        __B_k2k3k1[FIELDS_FLATTEN($a, $b, $c)] = $B_PREDEF[abc]{__k2, __k3, __k1, __a, __raw_params, __fields, __dV, FLATTEN, FIELDS_FLATTEN};
+        __B_k2k1k3[FIELDS_FLATTEN($a, $b, $c)] = $B_PREDEF[abc]{__k2, __k1, __k3, __a, __raw_params, __fields, __dV, FLATTEN, FIELDS_FLATTEN};
+        __C_k2k3k1[FIELDS_FLATTEN($a, $b, $c)] = $C_PREDEF[abc]{__k2, __k3, __k1, __a, __raw_params, __fields, FLATTEN};
+        __C_k2k1k3[FIELDS_FLATTEN($a, $b, $c)] = $C_PREDEF[abc]{__k2, __k1, __k3, __a, __raw_params, __fields, FLATTEN};
 
-        __B_k3k1k2[FIELDS_FLATTEN($$__a, $$__b, $$__c)] = $$__B_PREDEF[abc]{__k3, __k1, __k2, __a, __raw_params, __fields, __dV, FLATTEN, FIELDS_FLATTEN};
-        __B_k3k2k1[FIELDS_FLATTEN($$__a, $$__b, $$__c)] = $$__B_PREDEF[abc]{__k3, __k2, __k1, __a, __raw_params, __fields, __dV, FLATTEN, FIELDS_FLATTEN};
-        __C_k3k1k2[FIELDS_FLATTEN($$__a, $$__b, $$__c)] = $$__C_PREDEF[abc]{__k3, __k1, __k2, __a, __raw_params, __fields, FLATTEN};
-        __C_k3k2k1[FIELDS_FLATTEN($$__a, $$__b, $$__c)] = $$__C_PREDEF[abc]{__k3, __k2, __k1, __a, __raw_params, __fields, FLATTEN};
+        __B_k3k1k2[FIELDS_FLATTEN($a, $b, $c)] = $B_PREDEF[abc]{__k3, __k1, __k2, __a, __raw_params, __fields, __dV, FLATTEN, FIELDS_FLATTEN};
+        __B_k3k2k1[FIELDS_FLATTEN($a, $b, $c)] = $B_PREDEF[abc]{__k3, __k2, __k1, __a, __raw_params, __fields, __dV, FLATTEN, FIELDS_FLATTEN};
+        __C_k3k1k2[FIELDS_FLATTEN($a, $b, $c)] = $C_PREDEF[abc]{__k3, __k1, __k2, __a, __raw_params, __fields, FLATTEN};
+        __C_k3k2k1[FIELDS_FLATTEN($a, $b, $c)] = $C_PREDEF[abc]{__k3, __k2, __k1, __a, __raw_params, __fields, FLATTEN};
 
         unsigned int total_fields  = (IS_FIELD(__i)    ? 1 : 0) + (IS_FIELD(__j)    ? 1 : 0) + (IS_FIELD(__k)    ? 1 : 0);
         unsigned int total_momenta = (IS_MOMENTUM(__i) ? 1 : 0) + (IS_MOMENTUM(__j) ? 1 : 0) + (IS_MOMENTUM(__k) ? 1 : 0);
@@ -930,66 +930,66 @@ namespace transport
 
 
     template <typename number>
-    void $$__MODEL<number>::compute_gauge_xfm_1(const twopf_list_task<number>* __task,
+    void $MODEL<number>::compute_gauge_xfm_1(const twopf_list_task<number>* __task,
                                                 const std::vector<number>& __state,
                                                 std::vector<number>& __dN)
       {
-        __raw_params[$$__1] = __task->get_params().get_vector()[$$__1];
+        __raw_params[$1] = __task->get_params().get_vector()[$1];
         const auto __Mp = __task->get_params().get_Mp();
 
-        $$__MODEL_compute_dV(__raw_params, __state, __dV);
+        $MODEL_compute_dV(__raw_params, __state, __dV);
 
-        $$__TEMP_POOL{"const auto $1 = $2;"}
+        $TEMP_POOL{"const auto $1 = $2;"}
 
-        __dN[FLATTEN($$__A)] = $$__ZETA_XFM_1[A]{__raw_params, __state, __dV, FLATTEN, FIELDS_FLATTEN};
+        __dN[FLATTEN($A)] = $ZETA_XFM_1[A]{__raw_params, __state, __dV, FLATTEN, FIELDS_FLATTEN};
       }
 
 
     template <typename number>
-    void $$__MODEL<number>::compute_gauge_xfm_2(const twopf_list_task<number>* __task,
+    void $MODEL<number>::compute_gauge_xfm_2(const twopf_list_task<number>* __task,
                                                 const std::vector<number>& __state,
                                                 double __k, double __k1, double __k2, double __N,
                                                 std::vector<number>& __ddN)
       {
-        __raw_params[$$__1] = __task->get_params().get_vector()[$$__1];
+        __raw_params[$1] = __task->get_params().get_vector()[$1];
         const auto __Mp = __task->get_params().get_Mp();
         const auto __a = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
-        $$__MODEL_compute_dV(__raw_params, __state, __dV);
+        $MODEL_compute_dV(__raw_params, __state, __dV);
 
-        $$__TEMP_POOL{"const auto $1 = $2;"}
+        $TEMP_POOL{"const auto $1 = $2;"}
 
-        __ddN[FLATTEN($$__A,$$__B)] = $$__ZETA_XFM_2[AB]{__k, __k1, __k2, __a, __raw_params, __state, __dV, FLATTEN, FIELDS_FLATTEN};
+        __ddN[FLATTEN($A,$B)] = $ZETA_XFM_2[AB]{__k, __k1, __k2, __a, __raw_params, __state, __dV, FLATTEN, FIELDS_FLATTEN};
       }
 
 
     template <typename number>
-    void $$__MODEL<number>::compute_deltaN_xfm_1(const twopf_list_task<number>* __task,
+    void $MODEL<number>::compute_deltaN_xfm_1(const twopf_list_task<number>* __task,
                                                  const std::vector<number>& __state,
                                                  std::vector<number>& __dN)
 	    {
-        __raw_params[$$__1] = __task->get_params().get_vector()[$$__1];
+        __raw_params[$1] = __task->get_params().get_vector()[$1];
         const auto __Mp = __task->get_params().get_Mp();
 
-        $$__TEMP_POOL{"const auto $1 = $2;"}
+        $TEMP_POOL{"const auto $1 = $2;"}
 
-        __dN[FLATTEN($$__A)] = $$__DELTAN_XFM_1[A]{__raw_params, __state, FLATTEN};
+        __dN[FLATTEN($A)] = $DELTAN_XFM_1[A]{__raw_params, __state, FLATTEN};
 	    }
 
 
     template <typename number>
-    void $$__MODEL<number>::compute_deltaN_xfm_2(const twopf_list_task<number>* __task,
+    void $MODEL<number>::compute_deltaN_xfm_2(const twopf_list_task<number>* __task,
                                                  const std::vector<number>& __state,
                                                  std::vector<number>& __ddN)
 	    {
-        __raw_params[$$__1] = __task->get_params().get_vector()[$$__1];
+        __raw_params[$1] = __task->get_params().get_vector()[$1];
         const auto __Mp = __task->get_params().get_Mp();
 
-        $$__MODEL_compute_dV(__raw_params, __state, __dV);
+        $MODEL_compute_dV(__raw_params, __state, __dV);
 
-        $$__TEMP_POOL{"const auto $1 = $2;"}
+        $TEMP_POOL{"const auto $1 = $2;"}
 
-        __ddN[FLATTEN($$__A,$$__B)] = $$__DELTAN_XFM_2[AB]{__raw_params, __state, __dV, FLATTEN, FIELDS_FLATTEN};
+        __ddN[FLATTEN($A,$B)] = $DELTAN_XFM_2[AB]{__raw_params, __state, __dV, FLATTEN, FIELDS_FLATTEN};
 	    }
 
 
@@ -997,95 +997,95 @@ namespace transport
 
 
     template <typename number>
-    void $$__MODEL<number>::u2(const twopf_list_task<number>* __task,
+    void $MODEL<number>::u2(const twopf_list_task<number>* __task,
                                const std::vector<number>& __fields, double __k, double __N,
                                std::vector<number>& __u2)
       {
-        __raw_params[$$__1] = __task->get_params().get_vector()[$$__1];
+        __raw_params[$1] = __task->get_params().get_vector()[$1];
         const auto __Mp = __task->get_params().get_Mp();
         const auto __a = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
-        $$__MODEL_compute_dV(__raw_params, __fields, __dV);
-        $$__MODEL_compute_ddV(__raw_params, __fields, __ddV);
+        $MODEL_compute_dV(__raw_params, __fields, __dV);
+        $MODEL_compute_ddV(__raw_params, __fields, __ddV);
 
-        $$__TEMP_POOL{"const auto $1 = $2;"}
+        $TEMP_POOL{"const auto $1 = $2;"}
 
-        __u2[FLATTEN($$__A,$$__B)] = $$__U2_PREDEF[AB]{__k, __a, __raw_params, __fields, __dV, __ddV, FLATTEN, FIELDS_FLATTEN};
+        __u2[FLATTEN($A,$B)] = $U2_PREDEF[AB]{__k, __a, __raw_params, __fields, __dV, __ddV, FLATTEN, FIELDS_FLATTEN};
       }
 
 
     template <typename number>
-    void $$__MODEL<number>::u3(const twopf_list_task<number>* __task,
+    void $MODEL<number>::u3(const twopf_list_task<number>* __task,
                                const std::vector<number>& __fields, double __k1, double __k2, double __k3, double __N,
                                std::vector<number>& __u3)
       {
-        __raw_params[$$__1] = __task->get_params().get_vector()[$$__1];
+        __raw_params[$1] = __task->get_params().get_vector()[$1];
         const auto __Mp = __task->get_params().get_Mp();
         const auto __a = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
-        $$__MODEL_compute_dV(__raw_params, __fields, __dV);
-        $$__MODEL_compute_ddV(__raw_params, __fields, __ddV);
-        $$__MODEL_compute_dddV(__raw_params, __fields, __dddV);
+        $MODEL_compute_dV(__raw_params, __fields, __dV);
+        $MODEL_compute_ddV(__raw_params, __fields, __ddV);
+        $MODEL_compute_dddV(__raw_params, __fields, __dddV);
 
-        $$__TEMP_POOL{"const auto $1 = $2;"}
+        $TEMP_POOL{"const auto $1 = $2;"}
 
-        __u3[FLATTEN($$__A,$$__B,$$__C)] = $$__U3_PREDEF[ABC]{__k1, __k1, __k3, __a, __raw_params, __fields, __dV, __ddV, __dddV, FLATTEN, FIELDS_FLATTEN};
+        __u3[FLATTEN($A,$B,$C)] = $U3_PREDEF[ABC]{__k1, __k1, __k3, __a, __raw_params, __fields, __dV, __ddV, __dddV, FLATTEN, FIELDS_FLATTEN};
       }
 
 
     template <typename number>
-    void $$__MODEL<number>::A(const twopf_list_task<number>* __task,
+    void $MODEL<number>::A(const twopf_list_task<number>* __task,
                               const std::vector<number>& __fields, double __k1, double __k2, double __k3, double __N,
                               std::vector<number>& __A)
       {
-        __raw_params[$$__1] = __task->get_params().get_vector()[$$__1];
+        __raw_params[$1] = __task->get_params().get_vector()[$1];
         const auto __Mp = __task->get_params().get_Mp();
         const auto __a = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
-        $$__MODEL_compute_dV(__raw_params, __fields, __dV);
-        $$__MODEL_compute_ddV(__raw_params, __fields, __ddV);
-        $$__MODEL_compute_dddV(__raw_params, __fields, __dddV);
+        $MODEL_compute_dV(__raw_params, __fields, __dV);
+        $MODEL_compute_ddV(__raw_params, __fields, __ddV);
+        $MODEL_compute_dddV(__raw_params, __fields, __dddV);
 
-        $$__TEMP_POOL{"const auto $1 = $2;"}
+        $TEMP_POOL{"const auto $1 = $2;"}
 
-        __A[FIELDS_FLATTEN($$__a,$$__b,$$__c)] = $$__A_PREDEF[abc]{__k1, __k2, __k3, __a, __raw_params, __fields, __dV, __ddV, __dddV, FLATTEN, FIELDS_FLATTEN};
+        __A[FIELDS_FLATTEN($a,$b,$c)] = $A_PREDEF[abc]{__k1, __k2, __k3, __a, __raw_params, __fields, __dV, __ddV, __dddV, FLATTEN, FIELDS_FLATTEN};
       }
 
 
     template <typename number>
-    void $$__MODEL<number>::B(const twopf_list_task<number>* __task,
+    void $MODEL<number>::B(const twopf_list_task<number>* __task,
                               const std::vector<number>& __fields, double __k1, double __k2, double __k3, double __N,
                               std::vector<number>& __B)
       {
-        __raw_params[$$__1] = __task->get_params().get_vector()[$$__1];
+        __raw_params[$1] = __task->get_params().get_vector()[$1];
         const auto __Mp = __task->get_params().get_Mp();
         const auto __a = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
-        $$__MODEL_compute_dV(__raw_params, __fields, __dV);
+        $MODEL_compute_dV(__raw_params, __fields, __dV);
 
-        $$__TEMP_POOL{"const auto $1 = $2;"}
+        $TEMP_POOL{"const auto $1 = $2;"}
 
-        __B[FIELDS_FLATTEN($$__a,$$__b,$$__c)] = $$__B_PREDEF[abc]{__k1, __k2, __k3, __a, __raw_params, __fields, __dV, FLATTEN, FIELDS_FLATTEN};
+        __B[FIELDS_FLATTEN($a,$b,$c)] = $B_PREDEF[abc]{__k1, __k2, __k3, __a, __raw_params, __fields, __dV, FLATTEN, FIELDS_FLATTEN};
       }
 
 
     template <typename number>
-    void $$__MODEL<number>::C(const twopf_list_task<number>* __task,
+    void $MODEL<number>::C(const twopf_list_task<number>* __task,
                               const std::vector<number>& __fields, double __k1, double __k2, double __k3, double __N,
                               std::vector<number>& __C)
       {
-        __raw_params[$$__1] = __task->get_params().get_vector()[$$__1];
+        __raw_params[$1] = __task->get_params().get_vector()[$1];
         const auto __Mp = __task->get_params().get_Mp();
         const auto __a = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
-        $$__TEMP_POOL{"const auto $1 = $2;"}
+        $TEMP_POOL{"const auto $1 = $2;"}
 
-        __C[FIELDS_FLATTEN($$__a,$$__b,$$__c)] = $$__C_PREDEF[abc]{__k1, __k2, __k3, __a, __raw_params, __fields, FLATTEN};
+        __C[FIELDS_FLATTEN($a,$b,$c)] = $C_PREDEF[abc]{__k1, __k2, __k3, __a, __raw_params, __fields, FLATTEN};
       }
 
 
     template <typename number>
-    void $$__MODEL<number>::backend_process_backg(const background_task<number>* tk, typename model<number>::backg_history& solution, bool silent)
+    void $MODEL<number>::backend_process_backg(const background_task<number>* tk, typename model<number>::backg_history& solution, bool silent)
       {
         assert(tk != nullptr);
 
@@ -1094,26 +1094,26 @@ namespace transport
         solution.clear();
         solution.reserve(time_db.size());
 
-//        if(!silent) this->write_task_data(tk, std::cout, $$__BACKG_ABS_ERR, $$__BACKG_REL_ERR, $$__BACKG_STEP_SIZE, "$$__BACKG_STEPPER");
+//        if(!silent) this->write_task_data(tk, std::cout, $BACKG_ABS_ERR, $BACKG_REL_ERR, $BACKG_STEP_SIZE, "$BACKG_STEPPER");
 
         // set up an observer which writes to this history vector
-        $$__MODEL_background_observer<number> obs(solution, time_db);
+        $MODEL_background_observer<number> obs(solution, time_db);
 
         // set up a functor to evolve this system
-        $$__MODEL_background_functor<number> system(tk->get_params());
+        $MODEL_background_functor<number> system(tk->get_params());
         system.set_up_workspace();
 
         auto ics = tk->get_ics_vector();
 
-        backg_state<number> x($$__MODEL_pool::backg_state_size);
-        x[FLATTEN($$__A)] = ics[$$__A];
+        backg_state<number> x($MODEL_pool::backg_state_size);
+        x[FLATTEN($A)] = ics[$A];
 
-        boost::numeric::odeint::integrate_times($$__MAKE_BACKG_STEPPER{backg_state<number>}, system, x, time_db.value_begin(), time_db.value_end(), $$__BACKG_STEP_SIZE, obs);
+        boost::numeric::odeint::integrate_times($MAKE_BACKG_STEPPER{backg_state<number>}, system, x, time_db.value_begin(), time_db.value_end(), $BACKG_STEP_SIZE, obs);
         system.close_down_workspace();
       }
 
 
-    namespace $$__MODEL_impl
+    namespace $MODEL_impl
       {
 
         template <typename number>
@@ -1127,9 +1127,9 @@ namespace transport
 
             bool operator()(const std::pair< backg_state<number>, double >& __x)
               {
-                $$__TEMP_POOL{"const auto $1 = $2;"}
+                $TEMP_POOL{"const auto $1 = $2;"}
 
-                const auto __eps = $$__EPSILON{__x.first, FLATTEN};
+                const auto __eps = $EPSILON{__x.first, FLATTEN};
 
                 return (__eps >= 1.0 || __eps < 0.0);
               }
@@ -1141,30 +1141,30 @@ namespace transport
 
           };
 
-      }   // namespace $$__MODEL_impl
+      }   // namespace $MODEL_impl
 
 
     template <typename number>
-    double $$__MODEL<number>::compute_end_of_inflation(const integration_task<number>* tk, double search_time)
+    double $MODEL<number>::compute_end_of_inflation(const integration_task<number>* tk, double search_time)
       {
         assert(tk != nullptr);
 
         // set up a functor to evolve this system
-        $$__MODEL_background_functor<number> system(tk->get_params());
+        $MODEL_background_functor<number> system(tk->get_params());
         system.set_up_workspace();
 
         auto ics = tk->get_ics_vector();
 
-        backg_state<number> x($$__MODEL_pool::backg_state_size);
-        x[FLATTEN($$__A)] = ics[$$__A];
+        backg_state<number> x($MODEL_pool::backg_state_size);
+        x[FLATTEN($A)] = ics[$A];
 
 		    // find point where epsilon = 1
-        auto stepper = $$__MAKE_BACKG_STEPPER{backg_state<number>};
+        auto stepper = $MAKE_BACKG_STEPPER{backg_state<number>};
         
-        auto range = boost::numeric::odeint::make_adaptive_time_range(stepper, system, x, tk->get_N_initial(), tk->get_N_initial()+search_time, $$__BACKG_STEP_SIZE);
+        auto range = boost::numeric::odeint::make_adaptive_time_range(stepper, system, x, tk->get_N_initial(), tk->get_N_initial()+search_time, $BACKG_STEP_SIZE);
 
         // returns the first iterator in 'range' for which the predicate EpsilonUnityPredicate() is satisfied
-        auto iter = boost::find_if(range, $$__MODEL_impl::EpsilonUnityPredicate<number>(tk->get_params()));
+        auto iter = boost::find_if(range, $MODEL_impl::EpsilonUnityPredicate<number>(tk->get_params()));
 
 				if(iter == boost::end(range)) throw end_of_inflation_not_found();
 
@@ -1174,7 +1174,7 @@ namespace transport
       };
 
 
-    namespace $$__MODEL_impl
+    namespace $MODEL_impl
       {
 
         template <typename number>
@@ -1195,9 +1195,9 @@ namespace transport
 
             bool operator()(const std::pair< backg_state<number>, double >& __x)
               {
-                $$__TEMP_POOL{"const auto $1 = $2;"}
+                $TEMP_POOL{"const auto $1 = $2;"}
 
-                const auto __Hsq = $$__HUBBLE_SQ{param_vector, __x.first, FLATTEN};
+                const auto __Hsq = $HUBBLE_SQ{param_vector, __x.first, FLATTEN};
                 const auto __H   = std::sqrt(__Hsq);
 
                 const auto __a   = std::exp(__x.second - this->N_horizon_crossing + this->astar_normalization);
@@ -1238,25 +1238,25 @@ namespace transport
 
           };
 
-      }   // namespace $$__MODEL_impl
+      }   // namespace $MODEL_impl
 
 
 		template <typename number>
-		void $$__MODEL<number>::compute_aH(const twopf_list_task<number>* tk, std::vector<double>& N, std::vector<number>& log_aH, double largest_k)
+		void $MODEL<number>::compute_aH(const twopf_list_task<number>* tk, std::vector<double>& N, std::vector<number>& log_aH, double largest_k)
 			{
 				N.clear();
 				log_aH.clear();
 
 				// set up a functor to evolve the system
-				$$__MODEL_background_functor<number> system(tk->get_params());
+				$MODEL_background_functor<number> system(tk->get_params());
         system.set_up_workspace();
 
 				auto ics = tk->integration_task<number>::get_ics_vector();
 
-				backg_state<number> x($$__MODEL_pool::backg_state_size);
-				x[FLATTEN($$__A)] = ics[$$__A];
+				backg_state<number> x($MODEL_pool::backg_state_size);
+				x[FLATTEN($A)] = ics[$A];
 
-				auto stepper = $$__MAKE_BACKG_STEPPER{backg_state<number>};
+				auto stepper = $MAKE_BACKG_STEPPER{backg_state<number>};
 
         double N_range = 0.0;
         bool found_end = false;
@@ -1271,9 +1271,9 @@ namespace transport
             N_range = tk->get_N_initial() + CPPTRANSPORT_DEFAULT_END_OF_INFLATION_SEARCH;
           }
 
-        auto range = boost::numeric::odeint::make_adaptive_time_range(stepper, system, x, tk->get_N_initial(), N_range, $$__BACKG_STEP_SIZE);
+        auto range = boost::numeric::odeint::make_adaptive_time_range(stepper, system, x, tk->get_N_initial(), N_range, $BACKG_STEP_SIZE);
 
-        $$__MODEL_impl::aHAggregatorPredicate<number> aggregator(tk, N, log_aH, largest_k);
+        $MODEL_impl::aHAggregatorPredicate<number> aggregator(tk, N, log_aH, largest_k);
 
 				// step through iterators, finding first point which is comfortably after time when largest_k has left
 				// the horizon
@@ -1295,21 +1295,21 @@ namespace transport
 
 
     template <typename number>
-    void $$__MODEL_background_functor<number>::operator()(const backg_state<number>& __x, backg_state<number>& __dxdt, double __t)
+    void $MODEL_background_functor<number>::operator()(const backg_state<number>& __x, backg_state<number>& __dxdt, double __t)
       {
-        $$__MODEL_compute_dV(__raw_params, __x, __dV);
+        $MODEL_compute_dV(__raw_params, __x, __dV);
 
-        $$__TEMP_POOL{"const auto $1 = $2;"}
+        $TEMP_POOL{"const auto $1 = $2;"}
 
-        const auto __Hsq = $$__HUBBLE_SQ{__raw_params, __x, FLATTEN};
+        const auto __Hsq = $HUBBLE_SQ{__raw_params, __x, FLATTEN};
 
         // check whether Hsq is positive
         if(__Hsq < 0) throw Hsq_is_negative(__t);
 
         // check for nan being produced
-        if(std::isnan(__x[$$__A])) throw integration_produced_nan(__t);
+        if(std::isnan(__x[$A])) throw integration_produced_nan(__t);
 
-        __dxdt[FLATTEN($$__A)] = $$__U1_PREDEF[A]{__raw_params, __x, __dV, FLATTEN, FIELDS_FLATTEN};
+        __dxdt[FLATTEN($A)] = $U1_PREDEF[A]{__raw_params, __x, __dV, FLATTEN, FIELDS_FLATTEN};
       }
 
 
@@ -1317,7 +1317,7 @@ namespace transport
 
 
     template <typename number>
-    void $$__MODEL_background_observer<number>::operator()(const backg_state<number>& x, double t)
+    void $MODEL_background_observer<number>::operator()(const backg_state<number>& x, double t)
       {
         if(this->current_step != this->time_db.record_end() && this->current_step->is_stored())
           {
@@ -1330,4 +1330,4 @@ namespace transport
   };   // namespace transport
 
 
-#endif  // $$__GUARD
+#endif  // $GUARD

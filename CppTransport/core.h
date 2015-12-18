@@ -36,11 +36,11 @@ constexpr auto TEMPLATE_PATHS_ENV                    = "CPPTRANSPORT_TEMPLATE_PA
 constexpr auto DEFAULT_UNROLL_MAX                    = 1000;
 // output strings
 
-constexpr auto BACKEND_MACRO_PREFIX                  = "$$__";
-constexpr auto BACKEND_LINE_SPLIT_EQUAL              = "$$=";
-constexpr auto BACKEND_LINE_SPLIT_SUM_EQUAL          = "$$+=";
+constexpr auto BACKEND_MACRO_PREFIX                  = "$";
+constexpr auto BACKEND_LINE_SPLIT_EQUAL              = "$=";
+constexpr auto BACKEND_LINE_SPLIT_SUM_EQUAL          = "$+=";
 
-constexpr auto OUTPUT_CPPTRANSPORT_TAG               = "__CPPTRANSPORT";
+constexpr auto OUTPUT_CPPTRANSPORT_TAG               = "CPPTRANSPORT";
 constexpr auto OUTPUT_TIME_FORMAT                    = "%X on %d %m %Y";
 constexpr auto OUTPUT_DEFAULT_POOL_TEMPLATE          = "auto $1 = $2;";
 
