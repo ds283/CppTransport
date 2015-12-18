@@ -357,7 +357,6 @@ SET(TRANSPORT_RUNTIME_API_REPOSITORY_FILES
   )
 
 SET(CONCEPTS_FILES
-  concepts/filestack.h
   concepts/indexorder.h
   concepts/stepper.h
   )
@@ -547,6 +546,7 @@ SET(BACKENDS_UTILITIES_FILES
 SET(BACKENDS_INFRASTRUCTURE_FILE_HANDLING_FILES
   backends/infrastructure/file_handling/buffer.cpp
   backends/infrastructure/file_handling/buffer.h
+  backends/infrastructure/file_handling/filestack.h
   backends/infrastructure/file_handling/output_stack.cpp
   backends/infrastructure/file_handling/output_stack.h
   backends/infrastructure/file_handling/translation_unit.cpp

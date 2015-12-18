@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __indexorder_H_
-#define __indexorder_H_
+#ifndef CPPTRANSPORT_INDEX_ORDER_H
+#define CPPTRANSPORT_INDEX_ORDER_H
 
 
 enum class indexorder
@@ -14,4 +14,4 @@ enum class indexorder
   };
 
 
-#endif //__indexorder_H_
+#endif //CPPTRANSPORT_INDEX_ORDER_H
