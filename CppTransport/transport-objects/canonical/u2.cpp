@@ -67,7 +67,7 @@ namespace canonical
 
                 result += -Vab/Hsq;
                 result += -(3-eps) * (*derivs)[this->fl.flatten(species_i)] * (*derivs)[this->fl.flatten(species_j)] / (Mp*Mp);
-                result += -1/(Mp*Mp*Hsq) * ((*derivs)[this->fl.flatten(species_i)]*Vb + (*derivs)[this->fl.flatten(species_j)]*Va);
+                result += -1/(Mp*Mp*Hsq) * ( (*derivs)[this->fl.flatten(species_i)]*Vb + (*derivs)[this->fl.flatten(species_j)]*Va );
               }
             else if(this->traits.is_momentum(i) && this->traits.is_momentum(j))
               {
