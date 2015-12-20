@@ -22,7 +22,8 @@ namespace macro_packages
 
         //! constructor
         resources(tensor_factory& f, cse& cw, translator_data& p, language_printer& prn)
-          : replacement_rule_package(f, cw, p, prn)
+          : replacement_rule_package(f, cw, p, prn),
+            mgr(f.get_resource_manager())
           {
           }
 
@@ -62,6 +63,16 @@ namespace macro_packages
         std::string set_Riemann(const macro_argument_list& args);
 
         std::string release(const macro_argument_list& args);
+
+        std::string release_flatteners(const macro_argument_list& args);
+
+
+        // INTERNAL DATA
+
+      private:
+
+        //! cache reference to resource manager
+        resource_manager& mgr;
 
       };
 

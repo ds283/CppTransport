@@ -126,8 +126,11 @@ class resource_manager
 
   public:
 
-    //! release all resources
+    //! release all resources, but not flatteners
     void release();
+
+    //! release flatteners
+    void release_flatteners();
 
 
     // INTERNAL DATA

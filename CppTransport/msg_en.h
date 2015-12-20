@@ -138,6 +138,21 @@
 #define WARNING_LEXEME_STRING                 "Internal error: attempt to get string value for non-string lexeme"
 #define WARNING_LEXEME_IDENTIFIER             "Internal error: attempt to get identifier value for non-identifier lexeme"
 
+#define RESOURCE_SET_PARAMETERS               "parameters resource set to"
+#define RESOURCE_SET_COORDINATES              "coordinates resource set to"
+#define RESOURCE_SET_DV                       "V,i resource set to"
+#define RESOURCE_SET_DDV                      "V,ij resource set to"
+#define RESOURCE_SET_DDDV                     "V,ijk resource set to"
+#define RESOURCE_SET_CONNEXION                "connexion resource set to"
+#define RESOURCE_SET_RIEMANN                  "Riemann resource set to"
+
+#define RESOURCE_SET_PHASE_FLATTEN            "phase-space flattener set to"
+#define RESOURCE_SET_FIELD_FLATTEN            "field-space flattener set to"
+
+#define RESOURCE_RELEASE_FLATTENERS           "release flatteners"
+#define RESOURCE_RELEASE                      "release resources"
+
+
 #define WARNING_UNKNOWN_SWITCH                "Unknown command-line switch"
 
 #define WARNING_PARSING_FAILED                "Failed to parse file"
