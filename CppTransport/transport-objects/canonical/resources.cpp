@@ -356,22 +356,31 @@ namespace canonical
         if(flatten && (flags & use_dV_argument))
           {
             const boost::optional< contexted_value<std::string> >& dV_resource = this->mgr.dV();
-            GiNaC::symbol sym = this->sym_factory.get_symbol(*dV_resource);
-            args->push_back(sym);
+            if(dV_resource)   // no need to push arguments if no resource available
+              {
+                GiNaC::symbol sym = this->sym_factory.get_symbol(*dV_resource);
+                args->push_back(sym);
+              }
           }
 
         if(flatten && (flags & use_ddV_argument))
           {
             const boost::optional< contexted_value<std::string> >& ddV_resource = this->mgr.ddV();
-            GiNaC::symbol sym = this->sym_factory.get_symbol(*ddV_resource);
-            args->push_back(sym);
+            if(ddV_resource)
+              {
+                GiNaC::symbol sym = this->sym_factory.get_symbol(*ddV_resource);
+                args->push_back(sym);
+              }
           }
 
         if(flatten && (flags & use_dddV_argument))
           {
             const boost::optional< contexted_value<std::string> >& dddV_resource = this->mgr.dddV();
-            GiNaC::symbol sym = this->sym_factory.get_symbol(*dddV_resource);
-            args->push_back(sym);
+            if(dddV_resource)
+              {
+                GiNaC::symbol sym = this->sym_factory.get_symbol(*dddV_resource);
+                args->push_back(sym);
+              }
           }
 
         return(args);

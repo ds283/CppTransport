@@ -115,8 +115,8 @@ namespace canonical
         // formulae from DS calculation 28 May 2014
 
         p = 0;
-        const phase_index num_phase = this->shared.get_number_phase();
-        for(phase_index i = phase_index(0); i < num_phase; ++i)
+        const field_index num_field = this->shared.get_number_field();
+        for(field_index i = field_index(0); i < num_field; ++i)
           {
             p += (*dV)[this->fl.flatten(i)] * (*derivs)[this->fl.flatten(i)];
           }

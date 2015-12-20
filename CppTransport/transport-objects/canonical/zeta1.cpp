@@ -28,7 +28,7 @@ namespace canonical
     GiNaC::ex canonical_zeta1::compute_component(phase_index i)
       {
         unsigned int index = this->fl.flatten(i);
-        std::unique_ptr<ginac_cache_args> args = this->res.generate_arguments(use_dV_argument, this->printer);
+        std::unique_ptr<ginac_cache_args> args = this->res.generate_arguments(0, this->printer);
 
         GiNaC::ex result;
 
@@ -62,7 +62,6 @@ namespace canonical
     void canonical_zeta1::populate_cache()
       {
         derivs = this->shared.generate_derivs(this->printer);
-        dV = this->res.dV_resource(this->printer);
         eps = this->res.eps_resource(this->printer);
         Mp = this->shared.generate_Mp();
         cached = true;

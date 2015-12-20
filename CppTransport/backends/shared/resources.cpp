@@ -62,7 +62,7 @@ namespace macro_packages
 
         const std::vector<std::string> names =
           { "RESOURCE_PARAMETERS",            "RESOURCE_COORDINATES",
-            "PHASE_FLATTEN",                  "FIELD_FLATTEN",                    "RELEASE_FLATTENERS"
+            "PHASE_FLATTEN",                  "FIELD_FLATTEN",                    "RELEASE_FLATTENERS",
             "RESOURCE_DV",                    "RESOURCE_DDV",                     "RESOURCE_DDDV",
             "RESOURCE_CONNEXION",             "RESOURCE_RIEMANN",
             "RESOURCE_RELEASE"
