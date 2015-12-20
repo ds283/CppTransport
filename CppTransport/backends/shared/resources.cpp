@@ -117,7 +117,7 @@ namespace macro_packages
 
     std::string resources::set_coordinates(const macro_argument_list& args)
       {
-        this->mgr.assign_parameters(args[COORDINATES_KERNEL_ARGUMENT]);
+        this->mgr.assign_coordinates(args[COORDINATES_KERNEL_ARGUMENT]);
 
         std::ostringstream msg;
         msg << RESOURCE_SET_COORDINATES << " '" << static_cast<std::string>(args[COORDINATES_KERNEL_ARGUMENT]) << "'";
@@ -158,7 +158,7 @@ namespace macro_packages
 
     std::string resources::set_dV(const macro_argument_list& args)
       {
-        this->mgr.assign_parameters(args[DV_KERNEL_ARGUMENT]);
+        this->mgr.assign_dV(args[DV_KERNEL_ARGUMENT]);
 
         std::ostringstream msg;
         msg << RESOURCE_SET_DV << " '" << static_cast<std::string>(args[DV_KERNEL_ARGUMENT]) << "'";
@@ -169,7 +169,7 @@ namespace macro_packages
 
     std::string resources::set_ddV(const macro_argument_list& args)
       {
-        this->mgr.assign_parameters(args[DDV_KERNEL_ARGUMENT]);
+        this->mgr.assign_ddV(args[DDV_KERNEL_ARGUMENT]);
 
         std::ostringstream msg;
         msg << RESOURCE_SET_DDV << " '" << static_cast<std::string>(args[DDV_KERNEL_ARGUMENT]) << "'";
@@ -180,7 +180,7 @@ namespace macro_packages
 
     std::string resources::set_dddV(const macro_argument_list& args)
       {
-        this->mgr.assign_parameters(args[DDDV_KERNEL_ARGUMENT]);
+        this->mgr.assign_dddV(args[DDDV_KERNEL_ARGUMENT]);
 
         std::ostringstream msg;
         msg << RESOURCE_SET_DDDV << " '" << static_cast<std::string>(args[DDDV_KERNEL_ARGUMENT]) << "'";
@@ -191,7 +191,7 @@ namespace macro_packages
 
     std::string resources::set_connexion(const macro_argument_list& args)
       {
-        this->mgr.assign_parameters(args[CONNEXION_KERNEL_ARGUMENT]);
+        this->mgr.assign_connexion(args[CONNEXION_KERNEL_ARGUMENT]);
 
         std::ostringstream msg;
         msg << RESOURCE_SET_CONNEXION << " '" << static_cast<std::string>(args[CONNEXION_KERNEL_ARGUMENT]) << "'";
@@ -202,7 +202,7 @@ namespace macro_packages
 
     std::string resources::set_Riemann(const macro_argument_list& args)
       {
-        this->mgr.assign_parameters(args[RIEMANN_KERNEL_ARGUMENT]);
+        this->mgr.assign_Riemann(args[RIEMANN_KERNEL_ARGUMENT]);
 
         std::ostringstream msg;
         msg << RESOURCE_SET_RIEMANN << " '" << static_cast<std::string>(args[RIEMANN_KERNEL_ARGUMENT]) << "'";
