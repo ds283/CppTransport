@@ -45,7 +45,7 @@ namespace transport
         constexpr unsigned int twopf_size         = ((2*$NUMBER_FIELDS)*(2*$NUMBER_FIELDS));
         constexpr unsigned int tensor_size        = (4);
         constexpr unsigned int threepf_size       = ((2*$NUMBER_FIELDS)*(2*$NUMBER_FIELDS)*(2*$NUMBER_FIELDS));
-     
+
         constexpr unsigned int backg_start        = 0;
         constexpr unsigned int tensor_start       = backg_start + backg_size;         // for twopf state vector
         constexpr unsigned int tensor_k1_start    = tensor_start;                     // for threepf state vector
@@ -86,6 +86,9 @@ namespace transport
     constexpr unsigned int FIELDS_FLATTEN(unsigned int a, unsigned int b, unsigned int c) { return flatten_impl::fields_flatten(a, b, c, $NUMBER_FIELDS); }
 
     constexpr unsigned int TENSOR_FLATTEN(unsigned int a, unsigned int b)                 { return flatten_impl::tensor_flatten(a, b); }
+
+    $PHASE_FLATTEN{FLATTEN}
+    $FIELD_FLATTEN{FLATTEN}
 
 
     // *********************************************************************************************
@@ -283,6 +286,7 @@ namespace transport
 
         void set_up_workspace()
           {
+            $RESOURCE_RELEASE
             __dV = new number[$NUMBER_FIELDS];
             __raw_params = new number[$NUMBER_PARAMS];
 
@@ -415,12 +419,16 @@ namespace transport
 
         if(__coords.size() == 2*$NUMBER_FIELDS)
           {
+            $RESOURCE_RELEASE
             const auto __Mp = __params.get_Mp();
             const std::vector<number>& __param_vector = __params.get_vector();
 
+            $RESOURCE_PARAMETERS{__params_vector}
+            $RESOURCE_COORDINATES{__coords}
+
             $TEMP_POOL{"const auto $1 = $2;"}
 
-            return std::sqrt($HUBBLE_SQ{__param_vector, __coords, FLATTEN});
+            return std::sqrt($HUBBLE_SQ);
           }
         else
           {
@@ -438,11 +446,14 @@ namespace transport
 
         if(__coords.size() == 2*$NUMBER_FIELDS)
           {
+            $RESOURCE_RELEASE
             const auto __Mp = __params.get_Mp();
+
+            $RESOURCE_COORDINATES{__coords}
 
             $TEMP_POOL{"const auto $1 = $2;"}
 
-            return $EPSILON{__coords, FLATTEN};
+            return $EPSILON;
           }
         else
           {
@@ -460,12 +471,16 @@ namespace transport
 
         if(__coords.size() == 2*$NUMBER_FIELDS)
           {
+            $RESOURCE_RELEASE
             const auto __Mp = __params.get_Mp();
             const std::vector<number>& __param_vector = __params.get_vector();
 
+            $RESOURCE_PARAMETERS{__param_vector}
+            $RESOURCE_COORDINATES{__coords}
+
             $TEMP_POOL{"const auto $1 = $2;"}
 
-            return $POTENTIAL{__param_vector, __coords, FLATTEN};
+            return $POTENTIAL;
           }
         else
           {
@@ -479,27 +494,36 @@ namespace transport
     template <typename number>
     void $MODEL_compute_dV(number* raw_params, const std::vector<number>& __x, number* dV)
       {
+        $RESOURCE_RELEASE
+        $RESOURCE_PARAMETERS{raw_params}
+        $RESOURCE_COORDINATES{__x}
         $TEMP_POOL{"const auto $1 = $2;"}
 
-        dV[FIELDS_FLATTEN($a)] = $DV[a]{raw_params, __x, FIELDS_FLATTEN};
+        dV[FIELDS_FLATTEN($a)] = $DV[a];
       }
 
 
     template <typename number>
     void $MODEL_compute_ddV(number* raw_params, const std::vector<number>& __x, number* ddV)
       {
+        $RESOURCE_RELEASE
+        $RESOURCE_PARAMETERS{raw_params}
+        $RESOURCE_COORDINATES{__x}
         $TEMP_POOL{"const auto $1 = $2;"}
 
-        ddV[FIELDS_FLATTEN($a,$b)] = $DDV[ab]{raw_params, __x, FIELDS_FLATTEN};
+        ddV[FIELDS_FLATTEN($a,$b)] = $DDV[ab];
       }
 
 
     template <typename number>
     void $MODEL_compute_dddV(number* raw_params, const std::vector<number>& __x, number* dddV)
       {
+        $RESOURCE_RELEASE
+        $RESOURCE_PARAMETERS{raw_params}
+        $RESOURCE_COORDINATES{__x}
         $TEMP_POOL{"const auto $1 = $2;"}
 
-        dddV[FIELDS_FLATTEN($a,$b,$c)] = $DDDV[abc]{raw_params, __x, FIELDS_FLATTEN};
+        dddV[FIELDS_FLATTEN($a,$b,$c)] = $DDDV[abc];
       }
 
 
@@ -515,12 +539,17 @@ namespace transport
 
         if(__input.size() == $NUMBER_FIELDS)  // initial conditions for momenta *were not* supplied -- need to compute them
           {
+            $RESOURCE_RELEASE
+
             // supply the missing initial conditions using a slow-roll approximation
             const auto __Mp = __params.get_Mp();
 
+            $RESOURCE_PARAMETERS{__params.get_vector()}
+            $RESOURCE_COORDINATES{__input}
+
             $TEMP_POOL{"const auto $1 = $2;"}
 
-            __output.push_back($SR_VELOCITY[a]{__params.get_vector(), __input, FLATTEN});
+            __output.push_back($SR_VELOCITY[a]);
           }
         else if(__input.size() == 2*$NUMBER_FIELDS)  // initial conditions for momenta *were* supplied
           {
@@ -571,6 +600,7 @@ namespace transport
     number $MODEL<number>::make_twopf_re_ic(unsigned int __i, unsigned int __j, double __k, double __Ninit,
                                                const twopf_list_task<number>* __task, const std::vector<number>& __fields)
       {
+        $RESOURCE_RELEASE
         __raw_params[$1] = __task->get_params().get_vector()[$1];
 
         const auto __Mp = __task->get_params().get_Mp();
@@ -579,9 +609,12 @@ namespace transport
 //        $MODEL_compute_dV(__raw_params, __fields, __dV);
 //        $MODEL_compute_ddV(__raw_params, __fields, __ddV);
 
+        $RESOURCE_PARAMETERS{__raw_params}
+        $RESOURCE_COORDINATES{__fields}
+
         $TEMP_POOL{"const auto $1 = $2;"}
 
-        const auto __Hsq = $HUBBLE_SQ{__raw_params, __fields, FLATTEN};
+        const auto __Hsq = $HUBBLE_SQ;
         const auto __N = std::log(__k / (__a * std::sqrt(__Hsq)));
 
         number __tpf = 0.0;
@@ -659,6 +692,7 @@ namespace transport
   number $MODEL<number>::make_twopf_im_ic(unsigned int __i, unsigned int __j, double __k, double __Ninit,
                                              const twopf_list_task<number>* __task, const std::vector<number>& __fields)
     {
+      $RESOURCE_RELEASE
       __raw_params[$1] = __task->get_params().get_vector()[$1];
 
       const auto __Mp = __task->get_params().get_Mp();
@@ -667,9 +701,12 @@ namespace transport
 //      $MODEL_compute_dV(__raw_params, __fields, __dV);
 //      $MODEL_compute_ddV(__raw_params, __fields, __ddV);
 
+      $RESOURCE_PARAMETERS{__raw_params}
+      $RESOURCE_COORDINATES{__fields}
+
       $TEMP_POOL{"const auto $1 = $2;"}
 
-      const auto __Hsq = $HUBBLE_SQ{__raw_params, __fields, FLATTEN};
+      const auto __Hsq = $HUBBLE_SQ;
       const auto __N = std::log(__k / (__a * std::sqrt(__Hsq)));
 
       number __tpf = 0.0;
@@ -709,6 +746,7 @@ namespace transport
     number $MODEL<number>::make_twopf_tensor_ic(unsigned int __i, unsigned int __j, double __k, double __Ninit,
                                                    const twopf_list_task<number>* __task, const std::vector<number>& __fields)
       {
+        $RESOURCE_RELEASE
         __raw_params[$1] = __task->get_params().get_vector()[$1];
 
         const auto __Mp = __task->get_params().get_Mp();
@@ -716,7 +754,10 @@ namespace transport
 
         $TEMP_POOL{"const auto $1 = $2;"}
 
-        const auto __Hsq = $HUBBLE_SQ{__raw_params, __fields, FLATTEN};
+        $RESOURCE_PARAMETERS{__raw_params}
+        $RESOURCE_COORDINATES{__fields}
+
+        const auto __Hsq = $HUBBLE_SQ;
         const auto __N = std::log(__k / (__a * std::sqrt(__Hsq)));
 
         number __tpf = 0.0;
@@ -754,6 +795,7 @@ namespace transport
                                               double __k1, double __k2, double __k3, double __Ninit,
                                               const twopf_list_task<number>* __task, const std::vector<number>& __fields)
       {
+        $RESOURCE_RELEASE
         __raw_params[$1] = __task->get_params().get_vector()[$1];
 
         const auto __Mp = __task->get_params().get_Mp();
@@ -763,7 +805,11 @@ namespace transport
 
         $TEMP_POOL{"const auto $1 = $2;"}
 
-        const auto __Hsq = $HUBBLE_SQ{__raw_params, __fields, FLATTEN};
+        $RESOURCE_PARAMETERS{__raw_params}
+        $RESOURCE_COORDINATES{__fields}
+        $RESOURCE_DV{__dV}
+
+        const auto __Hsq = $HUBBLE_SQ;
 
         const auto __kt      = __k1 + __k2 + __k3;
         const auto __Ksq     = __k1*__k2 + __k1*__k3 + __k2*__k3;
@@ -775,20 +821,20 @@ namespace transport
 
         number __tpf = 0.0;
 
-        __B_k1k2k3[FIELDS_FLATTEN($a, $b, $c)] = $B_PREDEF[abc]{__k1, __k2, __k3, __a, __raw_params, __fields, __dV, FLATTEN, FIELDS_FLATTEN};
-        __B_k1k3k2[FIELDS_FLATTEN($a, $b, $c)] = $B_PREDEF[abc]{__k1, __k3, __k2, __a, __raw_params, __fields, __dV, FLATTEN, FIELDS_FLATTEN};
-        __C_k1k2k3[FIELDS_FLATTEN($a, $b, $c)] = $C_PREDEF[abc]{__k1, __k2, __k3, __a, __raw_params, __fields, FLATTEN};
-        __C_k1k3k2[FIELDS_FLATTEN($a, $b, $c)] = $C_PREDEF[abc]{__k1, __k3, __k2, __a, __raw_params, __fields, FLATTEN};
+        __B_k1k2k3[FIELDS_FLATTEN($a, $b, $c)] = $B_PREDEF[abc]{__k1, __k2, __k3, __a};
+        __B_k1k3k2[FIELDS_FLATTEN($a, $b, $c)] = $B_PREDEF[abc]{__k1, __k3, __k2, __a};
+        __C_k1k2k3[FIELDS_FLATTEN($a, $b, $c)] = $C_PREDEF[abc]{__k1, __k2, __k3, __a};
+        __C_k1k3k2[FIELDS_FLATTEN($a, $b, $c)] = $C_PREDEF[abc]{__k1, __k3, __k2, __a};
 
-        __B_k2k3k1[FIELDS_FLATTEN($a, $b, $c)] = $B_PREDEF[abc]{__k2, __k3, __k1, __a, __raw_params, __fields, __dV, FLATTEN, FIELDS_FLATTEN};
-        __B_k2k1k3[FIELDS_FLATTEN($a, $b, $c)] = $B_PREDEF[abc]{__k2, __k1, __k3, __a, __raw_params, __fields, __dV, FLATTEN, FIELDS_FLATTEN};
-        __C_k2k3k1[FIELDS_FLATTEN($a, $b, $c)] = $C_PREDEF[abc]{__k2, __k3, __k1, __a, __raw_params, __fields, FLATTEN};
-        __C_k2k1k3[FIELDS_FLATTEN($a, $b, $c)] = $C_PREDEF[abc]{__k2, __k1, __k3, __a, __raw_params, __fields, FLATTEN};
+        __B_k2k3k1[FIELDS_FLATTEN($a, $b, $c)] = $B_PREDEF[abc]{__k2, __k3, __k1, __a};
+        __B_k2k1k3[FIELDS_FLATTEN($a, $b, $c)] = $B_PREDEF[abc]{__k2, __k1, __k3, __a};
+        __C_k2k3k1[FIELDS_FLATTEN($a, $b, $c)] = $C_PREDEF[abc]{__k2, __k3, __k1, __a};
+        __C_k2k1k3[FIELDS_FLATTEN($a, $b, $c)] = $C_PREDEF[abc]{__k2, __k1, __k3, __a};
 
-        __B_k3k1k2[FIELDS_FLATTEN($a, $b, $c)] = $B_PREDEF[abc]{__k3, __k1, __k2, __a, __raw_params, __fields, __dV, FLATTEN, FIELDS_FLATTEN};
-        __B_k3k2k1[FIELDS_FLATTEN($a, $b, $c)] = $B_PREDEF[abc]{__k3, __k2, __k1, __a, __raw_params, __fields, __dV, FLATTEN, FIELDS_FLATTEN};
-        __C_k3k1k2[FIELDS_FLATTEN($a, $b, $c)] = $C_PREDEF[abc]{__k3, __k1, __k2, __a, __raw_params, __fields, FLATTEN};
-        __C_k3k2k1[FIELDS_FLATTEN($a, $b, $c)] = $C_PREDEF[abc]{__k3, __k2, __k1, __a, __raw_params, __fields, FLATTEN};
+        __B_k3k1k2[FIELDS_FLATTEN($a, $b, $c)] = $B_PREDEF[abc]{__k3, __k1, __k2, __a};
+        __B_k3k2k1[FIELDS_FLATTEN($a, $b, $c)] = $B_PREDEF[abc]{__k3, __k2, __k1, __a};
+        __C_k3k1k2[FIELDS_FLATTEN($a, $b, $c)] = $C_PREDEF[abc]{__k3, __k1, __k2, __a};
+        __C_k3k2k1[FIELDS_FLATTEN($a, $b, $c)] = $C_PREDEF[abc]{__k3, __k2, __k1, __a};
 
         unsigned int total_fields  = (IS_FIELD(__i)    ? 1 : 0) + (IS_FIELD(__j)    ? 1 : 0) + (IS_FIELD(__k)    ? 1 : 0);
         unsigned int total_momenta = (IS_MOMENTUM(__i) ? 1 : 0) + (IS_MOMENTUM(__j) ? 1 : 0) + (IS_MOMENTUM(__k) ? 1 : 0);
@@ -934,14 +980,18 @@ namespace transport
                                                 const std::vector<number>& __state,
                                                 std::vector<number>& __dN)
       {
+        $RESOURCE_RELEASE
         __raw_params[$1] = __task->get_params().get_vector()[$1];
         const auto __Mp = __task->get_params().get_Mp();
 
         $MODEL_compute_dV(__raw_params, __state, __dV);
 
+        $RESOURCE_PARAMETERS{__raw_params}
+        $RESOURCE_COORDINATES{__state}
+
         $TEMP_POOL{"const auto $1 = $2;"}
 
-        __dN[FLATTEN($A)] = $ZETA_XFM_1[A]{__raw_params, __state, __dV, FLATTEN, FIELDS_FLATTEN};
+        __dN[FLATTEN($A)] = $ZETA_XFM_1[A];
       }
 
 
@@ -951,15 +1001,20 @@ namespace transport
                                                 double __k, double __k1, double __k2, double __N,
                                                 std::vector<number>& __ddN)
       {
+        $RESOURCE_RELEASE
         __raw_params[$1] = __task->get_params().get_vector()[$1];
         const auto __Mp = __task->get_params().get_Mp();
         const auto __a = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
         $MODEL_compute_dV(__raw_params, __state, __dV);
 
+        $RESOURCE_PARAMETERS{__raw_params}
+        $RESOURCE_COORDINATES{__state}
+        $RESOURCE_DV{__dV}
+
         $TEMP_POOL{"const auto $1 = $2;"}
 
-        __ddN[FLATTEN($A,$B)] = $ZETA_XFM_2[AB]{__k, __k1, __k2, __a, __raw_params, __state, __dV, FLATTEN, FIELDS_FLATTEN};
+        __ddN[FLATTEN($A,$B)] = $ZETA_XFM_2[AB]{__k, __k1, __k2, __a};
       }
 
 
@@ -968,12 +1023,16 @@ namespace transport
                                                  const std::vector<number>& __state,
                                                  std::vector<number>& __dN)
 	    {
+        $RESOURCE_RELEASE
         __raw_params[$1] = __task->get_params().get_vector()[$1];
         const auto __Mp = __task->get_params().get_Mp();
 
+        $RESOURCE_PARAMETERS{__raw_params}
+        $RESOURCE_COORDINATES{__state}
+
         $TEMP_POOL{"const auto $1 = $2;"}
 
-        __dN[FLATTEN($A)] = $DELTAN_XFM_1[A]{__raw_params, __state, FLATTEN};
+        __dN[FLATTEN($A)] = $DELTAN_XFM_1[A];
 	    }
 
 
@@ -982,14 +1041,18 @@ namespace transport
                                                  const std::vector<number>& __state,
                                                  std::vector<number>& __ddN)
 	    {
+        $RESOURCE_RELEASE
         __raw_params[$1] = __task->get_params().get_vector()[$1];
         const auto __Mp = __task->get_params().get_Mp();
 
         $MODEL_compute_dV(__raw_params, __state, __dV);
 
+        $RESOURCE_PARAMETERS{__raw_params}
+        $RESOURCE_COORDINATES{__state}
+
         $TEMP_POOL{"const auto $1 = $2;"}
 
-        __ddN[FLATTEN($A,$B)] = $DELTAN_XFM_2[AB]{__raw_params, __state, __dV, FLATTEN, FIELDS_FLATTEN};
+        __ddN[FLATTEN($A,$B)] = $DELTAN_XFM_2[AB];
 	    }
 
 
@@ -1001,6 +1064,7 @@ namespace transport
                                const std::vector<number>& __fields, double __k, double __N,
                                std::vector<number>& __u2)
       {
+        $RESOURCE_RELEASE
         __raw_params[$1] = __task->get_params().get_vector()[$1];
         const auto __Mp = __task->get_params().get_Mp();
         const auto __a = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
@@ -1008,9 +1072,14 @@ namespace transport
         $MODEL_compute_dV(__raw_params, __fields, __dV);
         $MODEL_compute_ddV(__raw_params, __fields, __ddV);
 
+        $RESOURCE_PARAMETERS{__raw_params}
+        $RESOURCE_COORDINATES{__state}
+        $RESOURCE_DV{__dV}
+        $RESOURCE_DDV{__ddV}
+
         $TEMP_POOL{"const auto $1 = $2;"}
 
-        __u2[FLATTEN($A,$B)] = $U2_PREDEF[AB]{__k, __a, __raw_params, __fields, __dV, __ddV, FLATTEN, FIELDS_FLATTEN};
+        __u2[FLATTEN($A,$B)] = $U2_PREDEF[AB]{__k, __a}};
       }
 
 
@@ -1019,6 +1088,7 @@ namespace transport
                                const std::vector<number>& __fields, double __k1, double __k2, double __k3, double __N,
                                std::vector<number>& __u3)
       {
+        $RESOURCE_RELEASE
         __raw_params[$1] = __task->get_params().get_vector()[$1];
         const auto __Mp = __task->get_params().get_Mp();
         const auto __a = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
@@ -1027,9 +1097,15 @@ namespace transport
         $MODEL_compute_ddV(__raw_params, __fields, __ddV);
         $MODEL_compute_dddV(__raw_params, __fields, __dddV);
 
+        $RESOURCE_PARAMETERS{__raw_params}
+        $RESOURCE_COORDINATES{__state}
+        $RESOURCE_DV{__dV}
+        $RESOURCE_DDV{__ddV}
+        $RESOURCE_DDDV{__dddV}
+
         $TEMP_POOL{"const auto $1 = $2;"}
 
-        __u3[FLATTEN($A,$B,$C)] = $U3_PREDEF[ABC]{__k1, __k1, __k3, __a, __raw_params, __fields, __dV, __ddV, __dddV, FLATTEN, FIELDS_FLATTEN};
+        __u3[FLATTEN($A,$B,$C)] = $U3_PREDEF[ABC]{__k1, __k1, __k3, __a};
       }
 
 
@@ -1038,6 +1114,7 @@ namespace transport
                               const std::vector<number>& __fields, double __k1, double __k2, double __k3, double __N,
                               std::vector<number>& __A)
       {
+        $RESOURCE_RELEASE
         __raw_params[$1] = __task->get_params().get_vector()[$1];
         const auto __Mp = __task->get_params().get_Mp();
         const auto __a = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
@@ -1046,9 +1123,15 @@ namespace transport
         $MODEL_compute_ddV(__raw_params, __fields, __ddV);
         $MODEL_compute_dddV(__raw_params, __fields, __dddV);
 
+        $RESOURCE_PARAMETERS{__raw_params}
+        $RESOURCE_COORDINATES{__state}
+        $RESOURCE_DV{__dV}
+        $RESOURCE_DDV{__ddV}
+        $RESOURCE_DDDV{__dddV}
+
         $TEMP_POOL{"const auto $1 = $2;"}
 
-        __A[FIELDS_FLATTEN($a,$b,$c)] = $A_PREDEF[abc]{__k1, __k2, __k3, __a, __raw_params, __fields, __dV, __ddV, __dddV, FLATTEN, FIELDS_FLATTEN};
+        __A[FIELDS_FLATTEN($a,$b,$c)] = $A_PREDEF[abc]{__k1, __k2, __k3, __a};
       }
 
 
@@ -1057,15 +1140,20 @@ namespace transport
                               const std::vector<number>& __fields, double __k1, double __k2, double __k3, double __N,
                               std::vector<number>& __B)
       {
+        $RESOURCE_RELEASE
         __raw_params[$1] = __task->get_params().get_vector()[$1];
         const auto __Mp = __task->get_params().get_Mp();
         const auto __a = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
         $MODEL_compute_dV(__raw_params, __fields, __dV);
 
+        $RESOURCE_PARAMETERS{__raw_params}
+        $RESOURCE_COORDINATES{__state}
+        $RESOURCE_DV{__dV}
+
         $TEMP_POOL{"const auto $1 = $2;"}
 
-        __B[FIELDS_FLATTEN($a,$b,$c)] = $B_PREDEF[abc]{__k1, __k2, __k3, __a, __raw_params, __fields, __dV, FLATTEN, FIELDS_FLATTEN};
+        __B[FIELDS_FLATTEN($a,$b,$c)] = $B_PREDEF[abc]{__k1, __k2, __k3, __a};
       }
 
 
@@ -1074,13 +1162,18 @@ namespace transport
                               const std::vector<number>& __fields, double __k1, double __k2, double __k3, double __N,
                               std::vector<number>& __C)
       {
+        $RESOURCE_RELEASE
         __raw_params[$1] = __task->get_params().get_vector()[$1];
         const auto __Mp = __task->get_params().get_Mp();
         const auto __a = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
+        $RESOURCE_PARAMETERS{__raw_params}
+        $RESOURCE_COORDINATES{__state}
+        $RESOURCE_DV{__dV}
+
         $TEMP_POOL{"const auto $1 = $2;"}
 
-        __C[FIELDS_FLATTEN($a,$b,$c)] = $C_PREDEF[abc]{__k1, __k2, __k3, __a, __raw_params, __fields, FLATTEN};
+        __C[FIELDS_FLATTEN($a,$b,$c)] = $C_PREDEF[abc]{__k1, __k2, __k3, __a};
       }
 
 
@@ -1127,9 +1220,12 @@ namespace transport
 
             bool operator()(const std::pair< backg_state<number>, double >& __x)
               {
+                $RESOURCE_RELEASE
                 $TEMP_POOL{"const auto $1 = $2;"}
 
-                const auto __eps = $EPSILON{__x.first, FLATTEN};
+                $RESOURCE_COORDINATES{__x.first}
+
+                const auto __eps = $EPSILON;
 
                 return (__eps >= 1.0 || __eps < 0.0);
               }
@@ -1160,7 +1256,7 @@ namespace transport
 
 		    // find point where epsilon = 1
         auto stepper = $MAKE_BACKG_STEPPER{backg_state<number>};
-        
+
         auto range = boost::numeric::odeint::make_adaptive_time_range(stepper, system, x, tk->get_N_initial(), tk->get_N_initial()+search_time, $BACKG_STEP_SIZE);
 
         // returns the first iterator in 'range' for which the predicate EpsilonUnityPredicate() is satisfied
@@ -1195,9 +1291,13 @@ namespace transport
 
             bool operator()(const std::pair< backg_state<number>, double >& __x)
               {
+                $RESOURCE_RELEASE
                 $TEMP_POOL{"const auto $1 = $2;"}
 
-                const auto __Hsq = $HUBBLE_SQ{param_vector, __x.first, FLATTEN};
+                $RESOURCE_PARAMETERS{param_vector}
+                $RESOURCE_COORDINATES{__x.first}
+
+                const auto __Hsq = $HUBBLE_SQ{;
                 const auto __H   = std::sqrt(__Hsq);
 
                 const auto __a   = std::exp(__x.second - this->N_horizon_crossing + this->astar_normalization);
@@ -1297,11 +1397,16 @@ namespace transport
     template <typename number>
     void $MODEL_background_functor<number>::operator()(const backg_state<number>& __x, backg_state<number>& __dxdt, double __t)
       {
+        $RESOURCE_RELEASE
         $MODEL_compute_dV(__raw_params, __x, __dV);
+
+        $RESOURCE_PARAMETERS{__raw_params}
+        $RESOURCE_COORDINATES{__x}
+        $RESOURCE_DV{__dV}
 
         $TEMP_POOL{"const auto $1 = $2;"}
 
-        const auto __Hsq = $HUBBLE_SQ{__raw_params, __x, FLATTEN};
+        const auto __Hsq = $HUBBLE_SQ;
 
         // check whether Hsq is positive
         if(__Hsq < 0) throw Hsq_is_negative(__t);
@@ -1309,7 +1414,7 @@ namespace transport
         // check for nan being produced
         if(std::isnan(__x[$A])) throw integration_produced_nan(__t);
 
-        __dxdt[FLATTEN($A)] = $U1_PREDEF[A]{__raw_params, __x, __dV, FLATTEN, FIELDS_FLATTEN};
+        __dxdt[FLATTEN($A)] = $U1_PREDEF[A];
       }
 
 

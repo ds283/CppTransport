@@ -14,6 +14,8 @@
 
 #include "$CORE"
 
+$PHASE_FLATTEN{FLATTEN}
+$FIELD_FLATTEN{FIELDS}
 
 namespace transport
   {
@@ -147,6 +149,7 @@ namespace transport
 
         void set_up_workspace()
           {
+            $RESOURCE_RELEASE
             this->u2 = new number[2*$NUMBER_FIELDS * 2*$NUMBER_FIELDS];
 
             this->dV = new number[$NUMBER_FIELDS];
@@ -247,6 +250,7 @@ namespace transport
 
         void set_up_workspace()
           {
+            $RESOURCE_RELEASE
             this->u2_k1 = new number[2*$NUMBER_FIELDS * 2*$NUMBER_FIELDS];
             this->u2_k2 = new number[2*$NUMBER_FIELDS * 2*$NUMBER_FIELDS];
             this->u2_k3 = new number[2*$NUMBER_FIELDS * 2*$NUMBER_FIELDS];
@@ -682,6 +686,8 @@ namespace transport
     template <typename number>
     void $MODEL_basic_twopf_functor<number>::operator()(const twopf_state<number>& __x, twopf_state<number>& __dxdt, double __t)
       {
+        $RESOURCE_RELEASE
+
         const auto __Mp = this->Mp;
         const auto __k = this->config.k_comoving;
         const auto __a = std::exp(__t - this->N_horizon_exit + this->astar_normalization);
@@ -689,6 +695,12 @@ namespace transport
         // calculation of dV, ddV, dddV has to occur above the temporary pool
         $MODEL_compute_dV(this->raw_params, __x, this->dV);
         $MODEL_compute_ddV(this->raw_params, __x, this->ddV);
+
+        // capture resources for transport tensors
+        $RESOURCE_PARAMETERS{raw_params}
+        $RESOURCE_COORDINATES{__x}
+        $RESOURCE_DV{dV}
+        $RESOURCE_DDV{ddV}
 
         $TEMP_POOL{"const auto $1 = $2;"}
 
@@ -714,10 +726,10 @@ namespace transport
 #define __dtwopf(a,b)        __dxdt[$MODEL_pool::twopf_start + FLATTEN(a,b)]
 
         // evolve the background
-        __background($A) = $U1_PREDEF[A]{raw_params, __x, dV, FLATTEN, FIELDS_FLATTEN};
+        __background($A) = $U1_PREDEF[A];
 
-        const auto __Hsq = $HUBBLE_SQ{raw_params, __x, FLATTEN};
-        const auto __eps = $EPSILON{__x, FLATTEN};
+        const auto __Hsq = $HUBBLE_SQ;
+        const auto __eps = $EPSILON;
 
         // evolve the tensor modes
         const auto __ff = 0.0;
@@ -730,7 +742,7 @@ namespace transport
         __dtwopf_tensor(1,1) = __pf*__tensor_twopf_fp + __pp*__tensor_twopf_pp + __pf*__tensor_twopf_pf + __pp*__tensor_twopf_pp;
 
         // set up components of the u2 tensor
-        this->u2[FLATTEN($A,$B)] = $U2_PREDEF[AB]{__k, __a, raw_params, __x, dV, ddV, FLATTEN, FIELDS_FLATTEN};
+        this->u2[FLATTEN($A,$B)] = $U2_PREDEF[AB]{__k, __a};
 
         // evolve the 2pf
         // here, we are dealing only with the real part - which is symmetric.
@@ -758,6 +770,8 @@ namespace transport
     template <typename number>
     void $MODEL_basic_threepf_functor<number>::operator()(const threepf_state<number>& __x, threepf_state<number>& __dxdt, double __t)
       {
+        $RESOURCE_RELEASE
+
         const auto __Mp = this->Mp;
         const auto __k1 = this->config.k1_comoving;
         const auto __k2 = this->config.k2_comoving;
@@ -768,6 +782,13 @@ namespace transport
         $MODEL_compute_dV(this->raw_params, __x, this->dV);
         $MODEL_compute_ddV(this->raw_params, __x, this->ddV);
         $MODEL_compute_dddV(this->raw_params, __x, this->dddV);
+
+        // capture resources for transport tensors
+        $RESOURCE_PARAMETERS{raw_params}
+        $RESOURCE_COORDINATES{__x}
+        $RESOURCE_DV{dV}
+        $RESOURCE_DDV{ddV}
+        $RESOURCE_DDDV{dddV};
 
         $TEMP_POOL{"const auto $1 = $2;"}
 
@@ -863,14 +884,14 @@ namespace transport
         __dtwopf_k3_tensor(1,1) = __pf*__tensor_k3_twopf_fp + __pp*__tensor_k3_twopf_pp + __pf*__tensor_k3_twopf_pf + __pp*__tensor_k3_twopf_pp;
 
         // set up components of the u2 tensor for k1, k2, k3
-        this->u2_k1[FLATTEN($A,$B)] = $U2_PREDEF[AB]{__k1, __a, raw_params, __x, dV, ddV, FLATTEN, FIELDS_FLATTEN};
-        this->u2_k2[FLATTEN($A,$B)] = $U2_PREDEF[AB]{__k2, __a, raw_params, __x, dV, ddV, FLATTEN, FIELDS_FLATTEN};
-        this->u2_k3[FLATTEN($A,$B)] = $U2_PREDEF[AB]{__k3, __a, raw_params, __x, dV, ddV, FLATTEN, FIELDS_FLATTEN};
+        this->u2_k1[FLATTEN($A,$B)] = $U2_PREDEF[AB]{__k1, __a};
+        this->u2_k2[FLATTEN($A,$B)] = $U2_PREDEF[AB]{__k2, __a};
+        this->u2_k3[FLATTEN($A,$B)] = $U2_PREDEF[AB]{__k3, __a};
 
         // set up components of the u3 tensor
-        this->u3_k1k2k3[FLATTEN($A,$B,$C)] = $U3_PREDEF[ABC]{__k1, __k2, __k3, __a, raw_params, __x, dV, ddV, dddV, FLATTEN, FIELDS_FLATTEN};
-        this->u3_k2k1k3[FLATTEN($A,$B,$C)] = $U3_PREDEF[ABC]{__k2, __k1, __k3, __a, raw_params, __x, dV, ddV, dddV, FLATTEN, FIELDS_FLATTEN};
-        this->u3_k3k1k2[FLATTEN($A,$B,$C)] = $U3_PREDEF[ABC]{__k3, __k1, __k2, __a, raw_params, __x, dV, ddV, dddV, FLATTEN, FIELDS_FLATTEN};
+        this->u3_k1k2k3[FLATTEN($A,$B,$C)] = $U3_PREDEF[ABC]{__k1, __k2, __k3, __a};
+        this->u3_k2k1k3[FLATTEN($A,$B,$C)] = $U3_PREDEF[ABC]{__k2, __k1, __k3, __a};
+        this->u3_k3k1k2[FLATTEN($A,$B,$C)] = $U3_PREDEF[ABC]{__k3, __k1, __k2, __a};
 
         // evolve the real and imaginary components of the 2pf
         // for the imaginary parts, index placement *does* matter so we must take care
