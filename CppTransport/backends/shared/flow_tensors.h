@@ -4,7 +4,6 @@
 //
 
 
-
 #ifndef CPPTRANSPORT_MACROPACKAGE_FLOW_TENSORS_H
 #define CPPTRANSPORT_MACROPACKAGE_FLOW_TENSORS_H
 
@@ -23,10 +22,7 @@ namespace macro_packages
       public:
 
         //! constructor
-        flow_tensors(u_tensor_factory& uf, cse& cw, translator_data& p, language_printer& prn)
-          : replacement_rule_package(uf, cw, p, prn)
-          {
-          }
+        flow_tensors(tensor_factory& f, cse& cw, translator_data& p, language_printer& prn);
 
         //! destructor is default
         virtual ~flow_tensors() = default;
@@ -64,6 +60,29 @@ namespace macro_packages
         std::unique_ptr<cse_map> pre_ddV(const macro_argument_list& args);
 
         std::unique_ptr<cse_map> pre_dddV(const macro_argument_list& args);
+
+
+        // INTERNAL DATA
+
+      private:
+
+        //! Hubble object
+        std::unique_ptr<Hubble> Hubble_obj;
+
+        //! dV object
+        std::unique_ptr<dV> dV_tensor;
+
+        //! ddV object
+        std::unique_ptr<ddV> ddV_tensor;
+
+        //! dddV object
+        std::unique_ptr<dddV> dddV_tensor;
+
+        //! SR_velocity object
+        std::unique_ptr<SR_velocity> SR_velocity_tensor;
+
+        //! reference to shared resource
+        shared_resources& shared;
 
       };
 

@@ -17,6 +17,7 @@
 
 #include "stepper.h"
 #include "model_settings.h"
+#include "symbol_list.h"
 
 #include "semantic_data.h"
 #include "filestack.h"
@@ -286,11 +287,11 @@ class script
 
     std::vector<std::string> get_platx_list() const;
 
-    std::vector<GiNaC::symbol> get_field_symbols() const;
+    symbol_list get_field_symbols() const;
 
-    std::vector<GiNaC::symbol> get_deriv_symbols() const;
+    symbol_list get_deriv_symbols() const;
 
-    std::vector<GiNaC::symbol> get_param_symbols() const;
+    symbol_list get_param_symbols() const;
 
     const GiNaC::symbol& get_Mp_symbol() const;
 
@@ -392,13 +393,13 @@ class script
 
     // symbols
 
-		symbol_factory             sym_factory;
+    symbol_factory sym_factory;
 
-    std::vector<GiNaC::symbol> deriv_symbols;
+    symbol_list deriv_symbols;
 
 		// reserved symbols
 
-    GiNaC::symbol              M_Planck;
+    GiNaC::symbol M_Planck;
 
 	};
 

@@ -9,10 +9,10 @@
 #include "formatter.h"
 
 
-package_group::package_group(translator_data& p, u_tensor_factory& f)
+package_group::package_group(translator_data& p, tensor_factory& _f)
   : data_payload(p),
 		statistics_reported(false),
-    u_factory(f)
+    fctry(_f)
   {
   }
 
@@ -25,7 +25,7 @@ package_group::~package_group()
 
 				msg << MESSAGE_MACRO_TIME << " " << format_time(this->macro_replacement_time)
 						<< ", " << MESSAGE_TOKENIZATION_TIME << " " << format_time(this->macro_tokenization_time)
-						<< " (" << MESSAGE_SYMBOLIC_COMPUTE_TIME << " " << format_time(this->u_factory.get_symbolic_compute_time())
+						<< " (" << MESSAGE_SYMBOLIC_COMPUTE_TIME << " " << format_time(this->fctry.get_symbolic_compute_time())
 			      << ", " << MESSAGE_CSE_TIME << " " << format_time(this->cse_worker->get_cse_time()) << ")";
 
 		    this->data_payload.message(msg.str());

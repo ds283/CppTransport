@@ -66,12 +66,24 @@ class language_printer
     virtual unsigned get_block_indent() const = 0;
 
 
-    // INTERFACE -- CODE PLANTING
+    // INTERFACE -- CODE GENERATION
 
   public:
 
-    //! plant a 'for' loop appropriate for this backend; should be supplied by a concrete class
-    virtual std::string plant_for_loop(const std::string& loop_variable, unsigned int min, unsigned int max) const = 0;
+    //! generate a 'for' loop appropriate for this backend; should be supplied by a concrete class
+    virtual std::string for_loop(const std::string& loop_variable, unsigned int min, unsigned int max) const = 0;
+
+    //! generate 1D array subscript without flattening
+    virtual std::string array_subscript(const std::string& kernel, unsigned int a) const = 0;
+
+    //! generate 1D array subscript
+    virtual std::string array_subscript(const std::string& kernel, const std::string& flatten, unsigned int a) const = 0;
+
+    //! generate 2D array subscript
+    virtual std::string array_subscript(const std::string& kernel, const std::string& flatten, unsigned int a, unsigned int b) const = 0;
+
+    //! generate 3D array subscript
+    virtual std::string array_subscript(const std::string& kernel, const std::string& flatten, unsigned int a, unsigned int b, unsigned int c) const = 0;
 
 
     // INTERNAL DATA

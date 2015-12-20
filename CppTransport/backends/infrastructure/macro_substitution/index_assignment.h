@@ -15,7 +15,7 @@
 #include <map>
 
 #include "model_settings.h"
-#include "index_traits.h"
+#include "index_class.h"
 #include "abstract_index.h"
 
 #include "msg_en.h"

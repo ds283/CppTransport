@@ -386,7 +386,7 @@ void macro_agent::plant_LHS_forloop(index_database<abstract_index>::const_iterat
         boost::optional< std::string > start_delimiter = printer.get_start_block_delimiter();
         boost::optional< std::string > end_delimiter = printer.get_end_block_delimiter();
 
-        r_list.push_back(this->dress(printer.plant_for_loop(current->get_loop_variable(), 0, current->numeric_range()), raw_indent, current_indent));
+        r_list.push_back(this->dress(printer.for_loop(current->get_loop_variable(), 0, current->numeric_range()), raw_indent, current_indent));
 
         std::ostringstream brace_indent;
         for(unsigned int i = 0; i < printer.get_block_delimiter_indent(); ++i) brace_indent << " ";
@@ -437,7 +437,7 @@ void macro_agent::plant_RHS_forloop(index_database<abstract_index>::const_iterat
         boost::optional< std::string > start_delimiter = printer.get_start_block_delimiter();
         boost::optional< std::string > end_delimiter = printer.get_end_block_delimiter();
 
-        r_list.push_back(this->dress(printer.plant_for_loop(current->get_loop_variable(), 0, current->numeric_range()), raw_indent, current_indent));
+        r_list.push_back(this->dress(printer.for_loop(current->get_loop_variable(), 0, current->numeric_range()), raw_indent, current_indent));
 
         std::ostringstream brace_indent;
         for(unsigned int i = 0; i < printer.get_block_delimiter_indent(); ++i) brace_indent << " ";

@@ -22,7 +22,7 @@ namespace shared
       public:
 
         //! constructor
-        kernel_argument_macros(u_tensor_factory& uf, cse& cw, translator_data& p, language_printer& prn,
+        kernel_argument_macros(tensor_factory& f, cse& cw, translator_data& p, language_printer& prn,
                                std::string q="", std::string l=OUTPUT_OPENCL_DEFAULT_LABEL);
 
         //! destructor is default

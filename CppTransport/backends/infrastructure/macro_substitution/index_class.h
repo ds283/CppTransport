@@ -3,8 +3,8 @@
 // Copyright (c) 2015 University of Sussex. All rights reserved.
 //
 
-#ifndef CPPTRANSPORT_INDEX_TRAITS_H
-#define CPPTRANSPORT_INDEX_TRAITS_H
+#ifndef CPPTRANSPORT_INDEX_CLASS_H
+#define CPPTRANSPORT_INDEX_CLASS_H
 
 
 enum class index_class
@@ -17,4 +17,4 @@ enum index_class identify_index (char label);
 
 
 
-#endif //CPPTRANSPORT_INDEX_TRAITS_H
+#endif //CPPTRANSPORT_INDEX_CLASS_H

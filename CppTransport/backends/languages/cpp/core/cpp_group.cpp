@@ -19,8 +19,8 @@
 #include "cpp_printer.h"
 
 
-cpp_group::cpp_group(translator_data& p, u_tensor_factory& factory)
-  : package_group(p, factory)
+cpp_group::cpp_group(translator_data& p, tensor_factory& fctry)
+  : package_group(p, fctry)
   {
     // set up cse worker instance
     // this has to happen before setting up the individual macro packages,

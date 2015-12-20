@@ -9,7 +9,7 @@
 
 
 #include "package_group.h"
-#include "u_tensor_factory.h"
+#include "concepts/tensor_factory.h"
 
 
 class vexcl_group: public package_group
@@ -20,7 +20,7 @@ class vexcl_group: public package_group
   public:
 
     //! constructor
-    vexcl_group(translator_data& p, u_tensor_factory& factory);
+    vexcl_group(translator_data& p, tensor_factory& fctry);
 
     //! destructor is default
     ~vexcl_group() = default;

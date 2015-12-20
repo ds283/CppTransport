@@ -9,14 +9,16 @@
 
 #include "ginac/ginac.h"
 
-#include "flatten.h"
 #include "language_printer.h"
 #include "cse.h"
 #include "cse_map.h"
 #include "error.h"
 #include "replacement_rule_definitions.h"
 #include "index_assignment.h"
+#include "index_flatten.h"
 #include "translator_data.h"
+
+#include "concepts/tensor_factory.h"
 
 
 // need forward reference to avoid circularity
@@ -35,7 +37,7 @@ namespace macro_packages
       public:
 
         //! constructor
-        replacement_rule_package(u_tensor_factory& uf, cse& cw, translator_data& p, language_printer& prn);
+        replacement_rule_package(tensor_factory& f, cse& cw, translator_data& p, language_printer& prn);
 
         // provide virtual destructor so that derived classes delete correctly
         virtual ~replacement_rule_package() = default;
@@ -90,39 +92,6 @@ namespace macro_packages
         std::string replace_3index_field_tensor(const macro_argument_list& args, const assignment_list& indices, cse_map* map);
 
 
-        // INTERFACE -- INTERNAL API
-        // UTILITY FUNCTIONS TO BUILD PARAMETER/FIELD/COORDINATE REPLACEMENT LISTS
-
-      protected:
-
-        //! build parameter list from a kernel
-        std::unique_ptr< std::vector<GiNaC::symbol> > parameter_list(const std::string& kernel);
-
-        //! build field list from a kernel
-        std::unique_ptr< std::vector<GiNaC::symbol> > field_list(const std::string& kernel, const std::string& flatten);
-
-        //! build derivative list from a kernel
-        std::unique_ptr< std::vector<GiNaC::symbol> > deriv_list(const std::string& kernel, const std::string& flatten);
-
-        //! build list of symbols for components of a 1-index full-phase-space tensor
-        std::unique_ptr< std::vector<GiNaC::symbol> > index1_list(const std::string& kernel, const std::string& flatten);
-
-        //! build list of symbols for components of a 2-index full-phase-space tensor
-        std::unique_ptr< std::vector<GiNaC::symbol> > index2_list(const std::string& kernel, const std::string& flatten);
-
-        //! build list of symbols for components of a 3-index full-phase-space tensor
-        std::unique_ptr< std::vector<GiNaC::symbol> > index3_list(const std::string& kernel, const std::string& flatten);
-
-        //! build list of symbols for components of a 1-index field-space tensor
-        std::unique_ptr< std::vector<GiNaC::symbol> > index1_field_list(const std::string& kernel, const std::string& flatten);
-
-        //! build list of symbols for components of a 2-index field-space tensor
-        std::unique_ptr< std::vector<GiNaC::symbol> > index2_field_list(const std::string& kernel, const std::string& flatten);
-
-        //! build list of symbols for components of a 3-index field-space tensor
-        std::unique_ptr< std::vector<GiNaC::symbol> > index3_field_list(const std::string& kernel, const std::string& flatten);
-
-
         // INTERNAL DATA
 
       protected:
@@ -135,8 +104,8 @@ namespace macro_packages
         //! language-printer
         language_printer& printer;
 
-        //! u-tensor factory
-        u_tensor_factory& u_factory;
+        //! tensor factory
+        tensor_factory& fctry;
 
         // CSE worker object
         cse& cse_worker;
@@ -144,23 +113,14 @@ namespace macro_packages
 
         // CACHE USEFUL OBJECTS
 
-        //! number of fields
-        const unsigned int num_fields;
-
-        //! number of parameters
-        const unsigned int num_params;
-
         //! symbol factory
         symbol_factory& sym_factory;
 
 
         // INTERNAL AGENTS
 
-        //! index_flattener -- full
-        right_order_flattener fl;
-
-        //! index flattener -- field space
-        right_order_flattener field_fl;
+        //! index flattener
+        index_flatten fl;
 
       };
 

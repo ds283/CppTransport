@@ -11,7 +11,7 @@
 #include "translator.h"
 #include "buffer.h"
 #include "package_group_factory.h"
-#include "make_u_tensor_factory.h"
+#include "make_tensor_factory.h"
 
 #include "formatter.h"
 
@@ -102,8 +102,9 @@ unsigned int translator::process(const boost::filesystem::path& in, buffer& buf,
                 // this consists of a set of macro replacement rules which collectively comprise a 'package group'.
                 // The result is returned as a managed pointer, using std::unique_ptr<>
                 std::unique_ptr<expression_cache> cache = std::make_unique<expression_cache>();
-                std::unique_ptr<u_tensor_factory> factory = make_u_tensor_factory(backend, this->data_payload, *cache);
-                std::unique_ptr<package_group> package = package_group_factory(in, backend, this->data_payload, *factory);
+                std::unique_ptr<tensor_factory> fctry = make_tensor_factory(backend, this->data_payload, *cache);
+
+                std::unique_ptr<package_group> package = package_group_factory(in, backend, this->data_payload, *fctry);
 
                 // generate a macro replacement agent based on this package group
                 macro_agent agent(this->data_payload, *package, BACKEND_MACRO_PREFIX, BACKEND_LINE_SPLIT_EQUAL, BACKEND_LINE_SPLIT_SUM_EQUAL);

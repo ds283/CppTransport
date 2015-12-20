@@ -14,13 +14,10 @@
 
 #include "ginac/ginac.h"
 #include "translator_data.h"
-#include "expression_types.h"
+#include "expression_cache.h"
 #include "resource_manager.h"
 
 #include "boost/timer/timer.hpp"
-
-
-typedef ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE> expression_cache;
 
 
 // abstract u-tensor factory class

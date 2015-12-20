@@ -26,20 +26,20 @@ namespace macro_packages
       public:
 
         //! constructor
-        fundamental(u_tensor_factory& uf, cse& cw, translator_data& p, language_printer& prn,
+        fundamental(tensor_factory& f, cse& cw, translator_data& p, language_printer& prn,
                     std::string ls = "{", std::string le = "}", std::string lsep = ",", std::string lpad = " ",
                     std::string t = OUTPUT_CPPTRANSPORT_TAG,
                     std::string ge = "_H",
                     std::string tf = OUTPUT_TIME_FORMAT)  // output format currently unused, since switch to boost date & time library
-          : list_start(ls),
+          : replacement_rule_package(f, cw, p, prn),
+            list_start(ls),
             list_end(le),
             list_separator(lsep),
             list_pad(lpad),
             tag(t),
             guard_terminator(ge),
             time_format(tf),
-            unique(0),
-            replacement_rule_package(uf, cw, p, prn)
+            unique(0)
           {
           }
 

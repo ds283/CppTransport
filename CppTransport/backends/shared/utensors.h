@@ -22,10 +22,7 @@ namespace macro_packages
       public:
 
         //! constructor
-        utensors(u_tensor_factory& uf, cse& cw, translator_data& p, language_printer& prn)
-          : replacement_rule_package(uf, cw, p, prn)
-        {
-        }
+        utensors(tensor_factory& f, cse& cw, translator_data& p, language_printer& prn);
 
         //! destructor
         virtual ~utensors() = default;
@@ -45,10 +42,24 @@ namespace macro_packages
       protected:
 
         std::unique_ptr<cse_map> pre_u1_predef(const macro_argument_list& args);
-    
+
         std::unique_ptr<cse_map> pre_u2_predef(const macro_argument_list& args);
-    
+
         std::unique_ptr<cse_map> pre_u3_predef(const macro_argument_list& args);
+
+
+        // INTERNAL DATA
+
+      private:
+
+        //! u1 object
+        std::unique_ptr<u1> u1_tensor;
+
+        //! u2 object
+        std::unique_ptr<u2> u2_tensor;
+
+        //! u3 object
+        std::unique_ptr<u3> u3_tensor;
 
       };
   } // namespace macro_packages

@@ -21,8 +21,8 @@ namespace macro_packages
       public:
 
         //! constructor
-        resources(u_tensor_factory& uf, cse& cw, translator_data& p, language_printer& prn)
-          : replacement_rule_package(uf, cw, p, prn)
+        resources(tensor_factory& f, cse& cw, translator_data& p, language_printer& prn)
+          : replacement_rule_package(f, cw, p, prn)
           {
           }
 
@@ -46,6 +46,10 @@ namespace macro_packages
         std::string set_params(const macro_argument_list& args);
 
         std::string set_coordinates(const macro_argument_list& args);
+
+        std::string set_phase_flatten(const macro_argument_list& args);
+
+        std::string set_field_flatten(const macro_argument_list& args);
 
         std::string set_dV(const macro_argument_list& args);
 

@@ -13,11 +13,13 @@
 #include "macro.h"
 #include "ginac_cache.h"
 #include "replacement_rule_package.h"
-#include "u_tensor_factory.h"
+#include "concepts/tensor_factory.h"
 #include "buffer.h"
 #include "cse.h"
 #include "error.h"
 
+// TODO: remove
+#include "u_tensor_factory.h"
 
 class package_group
   {
@@ -26,7 +28,7 @@ class package_group
 
   public:
 
-    package_group(translator_data& p, u_tensor_factory& factory);
+    package_group(translator_data& p, tensor_factory& fctry);
 
     virtual ~package_group();
 
@@ -110,9 +112,9 @@ class package_group
 
     // AGENTS
 
-    //! polymorphic reference to u-tensor factory; exactly which factory is
-    //! involved may depend what kind of model is being processed (eg. canonical, noncanoniocal)
-    u_tensor_factory& u_factory;
+    //! polymorphic reference to tensor factory; exactly which factory is involved
+    //! may depend on what kind of model is being processed, eg. canonical, noncanonical
+    tensor_factory& fctry;
 
     //! polymorphic pointer to CSE worker; as above exactly which CSE scheme is
     //! invovled may depend what kind of model is being processed
@@ -161,7 +163,7 @@ void package_group::add_package(Args&& ... args)
     assert(this->cse_worker);
 
     // construct a new package of the specified type, forwarding any arguments we were given
-    std::unique_ptr< macro_packages::replacement_rule_package> pkg = std::make_unique<PackageType>(this->u_factory, *this->cse_worker, std::forward<Args>(args) ...);
+    std::unique_ptr< macro_packages::replacement_rule_package> pkg = std::make_unique<PackageType>(this->fctry, *this->cse_worker, std::forward<Args>(args) ...);
     this->packages.push_back(std::move(pkg));
 
     // rebuild ruleset caches

@@ -114,11 +114,11 @@ class translator_data
 
     const GiNaC::ex get_potential() const;
 
-    const std::vector<GiNaC::symbol> get_field_symbols() const;
+    const symbol_list get_field_symbols() const;
 
-    const std::vector<GiNaC::symbol> get_deriv_symbols() const;
+    const symbol_list get_deriv_symbols() const;
 
-    const std::vector<GiNaC::symbol> get_parameter_symbols() const;
+    const symbol_list get_parameter_symbols() const;
 
     const std::vector<std::string> get_field_list() const;
 

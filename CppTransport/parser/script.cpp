@@ -599,48 +599,48 @@ std::vector<std::string> script::get_platx_list() const
   }
 
 
-std::vector<GiNaC::symbol> script::get_field_symbols() const
+symbol_list script::get_field_symbols() const
   {
     script_impl::zipped_symbol_list zipped_list;
-    std::vector<GiNaC::symbol> rval;
+    symbol_list rval;
 
-    for(field_symbol_table::const_iterator t = this->fields.begin(); t != this->fields.end(); ++t)
+    for(const std::pair< const std::string, std::unique_ptr<field_declaration> >& t : this->fields)
 	    {
-        zipped_list.push_back(std::make_pair(t->second->get_unique_id(), t->second->get_ginac_symbol()));
+        zipped_list.push_back(std::make_pair(t.second->get_unique_id(), t.second->get_ginac_symbol()));
 	    }
 
     std::sort(zipped_list.begin(), zipped_list.end(), script_impl::zipped_symbol_sorter());
 
-    for(script_impl::zipped_symbol_list::const_iterator t = zipped_list.begin(); t != zipped_list.end(); ++t)
-	    {
-        rval.push_back(t->second);
-	    }
+    for(std::pair< unsigned int, GiNaC::symbol >& item : zipped_list)
+      {
+        rval.push_back(item.second);
+      }
 
     return(rval);
   }
 
 
-std::vector<GiNaC::symbol> script::get_deriv_symbols() const
+symbol_list script::get_deriv_symbols() const
   {
     return(this->deriv_symbols);
   }
 
 
-std::vector<GiNaC::symbol> script::get_param_symbols() const
+symbol_list script::get_param_symbols() const
   {
     script_impl::zipped_symbol_list zipped_list;
-    std::vector<GiNaC::symbol> rval;
+    symbol_list rval;
 
-    for(parameter_symbol_table::const_iterator t = this->parameters.begin(); t != this->parameters.end(); ++t)
+    for(const std::pair< const std::string, std::unique_ptr<parameter_declaration> >& t : this->parameters)
 	    {
-        zipped_list.push_back(std::make_pair(t->second->get_unique_id(), t->second->get_ginac_symbol()));
+        zipped_list.push_back(std::make_pair(t.second->get_unique_id(), t.second->get_ginac_symbol()));
 	    }
 
     std::sort(zipped_list.begin(), zipped_list.end(), script_impl::zipped_symbol_sorter());
 
-    for(script_impl::zipped_symbol_list::const_iterator t = zipped_list.begin(); t != zipped_list.end(); ++t)
+    for(std::pair< unsigned int, GiNaC::symbol >& item : zipped_list)
 	    {
-        rval.push_back(t->second);
+        rval.push_back(item.second);
 	    }
 
     return(rval);

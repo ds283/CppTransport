@@ -3,7 +3,7 @@
 // Copyright (c) 2015 University of Sussex. All rights reserved.
 //
 
-#include "index_traits.h"
+#include "index_class.h"
 
 #include <ctype.h>
 

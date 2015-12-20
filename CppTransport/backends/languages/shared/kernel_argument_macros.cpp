@@ -39,9 +39,9 @@ namespace shared
     constexpr unsigned int THREEPF_ARGS_NAME_ARGUMENT = 0;
     constexpr unsigned int THREEPF_ARGS_TOTAL_ARGUMENTS = 1;
 
-    kernel_argument_macros::kernel_argument_macros(u_tensor_factory& uf, cse& cw, translator_data& p, language_printer& prn,
+    kernel_argument_macros::kernel_argument_macros(tensor_factory& f, cse& cw, translator_data& p, language_printer& prn,
                                                    std::string q, std::string l)
-      : ::macro_packages::replacement_rule_package(uf, cw, p, prn),
+      : ::macro_packages::replacement_rule_package(f, cw, p, prn),
         qualifier(q),
         label(l)
       {

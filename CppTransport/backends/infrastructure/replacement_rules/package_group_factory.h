@@ -5,8 +5,8 @@
 
 
 
-#ifndef __package_group_factory_H_
-#define __package_group_factory_H_
+#ifndef PACKAGE_GROUP_FACTORY_H
+#define PACKAGE_GROUP_FACTORY_H
 
 
 #include <string>
@@ -17,11 +17,13 @@
 #include "buffer.h"
 #include "backend_data.h"
 
+#include "concepts/tensor_factory.h"
 #include "symbol_factory.h"
 #include "ginac_cache.h"
 
 
-std::unique_ptr<package_group> package_group_factory(const boost::filesystem::path& in, const backend_data& backend, translator_data& payload, u_tensor_factory& factory);
+std::unique_ptr<package_group> package_group_factory(const boost::filesystem::path& in, const backend_data& backend,
+                                                     translator_data& payload, tensor_factory& fctry);
 
 
-#endif //__package_group_factory_H_
+#endif //PACKAGE_GROUP_FACTORY_H

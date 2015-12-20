@@ -7,7 +7,7 @@
 #define CPPTRANSPORT_ABSTRACT_INDEX_H
 
 
-#include "index_traits.h"
+#include "index_class.h"
 #include "index_database.h"
 
 

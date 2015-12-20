@@ -30,7 +30,7 @@ namespace macro_packages
 		    // by default, it assumes that a literal pool location has not been set (s=false)
 		    // this needs to be overridden for kernel buffers, where the literal pool coincides with
 		    // the beginning of the buffer
-        temporary_pool(u_tensor_factory& uf, cse& cw, translator_data& u, language_printer& prn,
+        temporary_pool(tensor_factory& f, cse& cw, translator_data& u, language_printer& prn,
                        std::string t = OUTPUT_DEFAULT_POOL_TEMPLATE);
 
         //! destructor is default

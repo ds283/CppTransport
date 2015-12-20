@@ -23,10 +23,7 @@ namespace macro_packages
       public:
 
         //! constructor
-        lagrangian_tensors(u_tensor_factory& uf, cse& cw, translator_data& p, language_printer& prn)
-          : replacement_rule_package(uf, cw, p, prn)
-          {
-          }
+        lagrangian_tensors(tensor_factory& f, cse& cw, translator_data& p, language_printer& prn);
 
         //! destructor is default
         virtual ~lagrangian_tensors() = default;
@@ -60,6 +57,23 @@ namespace macro_packages
         std::unique_ptr<cse_map> pre_M_tensor(const macro_argument_list& args);
 
         std::unique_ptr<cse_map> pre_M_predef(const macro_argument_list& args);
+
+
+        // INTERNAL DATA
+
+      private:
+
+        //! A-tensor object
+        std::unique_ptr<A> A_tensor;
+
+        //! B-tensor object
+        std::unique_ptr<B> B_tensor;
+
+        //! C-tensor object
+        std::unique_ptr<C> C_tensor;
+
+        //! M-tensor object
+        std::unique_ptr<M> M_tensor;
 
       };
 

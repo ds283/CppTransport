@@ -23,8 +23,8 @@ namespace cpp
       public:
 
         //! constructor
-        cpp_steppers(u_tensor_factory& uf, cse& cw, translator_data& p, language_printer& prn)
-          : ::macro_packages::replacement_rule_package(uf, cw, p, prn)
+        cpp_steppers(tensor_factory& f, cse& cw, translator_data& p, language_printer& prn)
+          : ::macro_packages::replacement_rule_package(f, cw, p, prn)
           {
           }
 

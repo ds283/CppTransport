@@ -50,7 +50,7 @@ ADD_EXECUTABLE(CppTransport
   backends/infrastructure/macro_substitution/macro.cpp
   backends/infrastructure/macro_substitution/macro_tokenizer.cpp
   backends/infrastructure/macro_substitution/abstract_index.cpp
-  backends/infrastructure/macro_substitution/index_traits.cpp
+  backends/infrastructure/macro_substitution/index_class.cpp
   backends/infrastructure/replacement_rules/package_group.cpp
   backends/infrastructure/replacement_rules/package_group_factory.cpp
   backends/infrastructure/replacement_rules/replacement_rule_package.cpp
@@ -75,7 +75,6 @@ ADD_EXECUTABLE(CppTransport
   backends/shared/resources.cpp
   backends/shared/temporary_pool.cpp
   backends/shared/utensors.cpp
-  backends/utilities/symbol_factory.cpp
   ${BISON_parser_OUTPUTS}
   parser/input_stack.cpp
   parser/lexfile.cpp
@@ -83,10 +82,33 @@ ADD_EXECUTABLE(CppTransport
   parser/semantic_data.cpp
   parser/y_driver.cpp
   parser/y_lexer.cpp
+  transport-objects/canonical/resources.cpp
+  transport-objects/canonical/Hubble.cpp
+  transport-objects/canonical/dV.cpp
+  transport-objects/canonical/ddV.cpp
+  transport-objects/canonical/dddV.cpp
+  transport-objects/canonical/SR_velocity.cpp
+  transport-objects/canonical/A.cpp
+  transport-objects/canonical/B.cpp
+  transport-objects/canonical/C.cpp
+  transport-objects/canonical/M.cpp
+  transport-objects/canonical/u1.cpp
+  transport-objects/canonical/u2.cpp
+  transport-objects/canonical/u3.cpp
+  transport-objects/canonical/zeta1.cpp
+  transport-objects/canonical/zeta2.cpp
+  transport-objects/canonical/dN1.cpp
+  transport-objects/canonical/dN2.cpp
+  transport-objects/canonical/tensor_factory.cpp
   transport-objects/canonical_u_tensor_factory.cpp
   transport-objects/u_tensor_factory.cpp
   transport-objects/resource_manager.cpp
   transport-objects/concepts/transport_tensor.cpp
+  transport-objects/indices/indices.cpp
+  transport-objects/indices/index_flatten.cpp
+  transport-objects/indices/index_traits.cpp
+  transport-objects/utilities/symbol_factory.cpp
+  transport-objects/utilities/shared_resources.cpp
   utilities/error.cpp
   utilities/error_context.cpp
   utilities/finder.cpp
@@ -115,11 +137,12 @@ TARGET_INCLUDE_DIRECTORIES(CppTransport PRIVATE
   backends/languages/opencl
   backends/languages/shared
   backends/shared
-  backends/utilities
   concepts
   instruments
   parser
   transport-objects
+  transport-objects/indices
+  transport-objects/utilities
   utilities
   ${Boost_INCLUDE_DIRS}
   ${GINAC_INCLUDE_DIRS}
@@ -141,6 +164,8 @@ INSTALL(FILES cmake/FindCppTransport.cmake DESTINATION share/cmake/Modules)
 ## FILL IN DUMMY TARGETS FOR CLION
 
 set(BACKENDS_INFRASTRUCTURE_FILE_HANDLING_FILES
+  backends/infrastructure/file_handling/backend_data.cpp
+  backends/infrastructure/file_handling/backend_data.h
   backends/infrastructure/file_handling/buffer.cpp
   backends/infrastructure/file_handling/buffer.h
   backends/infrastructure/file_handling/contexted_value.h
@@ -155,8 +180,6 @@ set(BACKENDS_INFRASTRUCTURE_FILE_HANDLING_FILES
   backends/infrastructure/file_handling/translator.h
   backends/infrastructure/file_handling/translator_data.cpp
   backends/infrastructure/file_handling/translator_data.h
-  backends/infrastructure/file_handling/backend_data.cpp
-  backends/infrastructure/file_handling/backend_data.h
   )
 
 set(BACKENDS_INFRASTRUCTURE_LANGUAGE_CONCEPTS_FILES
@@ -173,8 +196,8 @@ set(BACKENDS_INFRASTRUCTURE_MACRO_SUBSTITUTION_FILES
   backends/infrastructure/macro_substitution/index_assignment.cpp
   backends/infrastructure/macro_substitution/index_assignment.h
   backends/infrastructure/macro_substitution/index_database.h
-  backends/infrastructure/macro_substitution/index_traits.cpp
-  backends/infrastructure/macro_substitution/index_traits.h
+  backends/infrastructure/macro_substitution/index_class.cpp
+  backends/infrastructure/macro_substitution/index_class.h
   backends/infrastructure/macro_substitution/macro.cpp
   backends/infrastructure/macro_substitution/macro.h
   backends/infrastructure/macro_substitution/macro_tokenizer.cpp
@@ -246,24 +269,18 @@ set(BACKENDS_SHARED_FILES
   backends/shared/gauge_xfm.h
   backends/shared/lagrangian_tensors.cpp
   backends/shared/lagrangian_tensors.h
+  backends/shared/resources.cpp
+  backends/shared/resources.h
   backends/shared/temporary_pool.cpp
   backends/shared/temporary_pool.h
   backends/shared/utensors.cpp
   backends/shared/utensors.h
-  backends/shared/resources.cpp
-  backends/shared/resources.h
-  )
-
-set(BACKENDS_UTILITIES_FILES
-  backends/utilities/expression_types.h
-  backends/utilities/ginac_cache.h
-  backends/utilities/symbol_factory.cpp
-  backends/utilities/symbol_factory.h
   )
 
 set(CONCEPTS_FILES
   concepts/model_settings.h
   concepts/stepper.h
+  concepts/symbol_list.h
   )
 
 set(INSTRUMENTS_FILES
@@ -326,17 +343,96 @@ set(TOP_LEVEL_FILES
   switches.h
   )
 
+set(TRANSPORT_OBJECTS_CANONICAL_FILES
+  transport-objects/canonical/resources.cpp
+  transport-objects/canonical/resources.h
+  transport-objects/canonical/Hubble.cpp
+  transport-objects/canonical/Hubble.h
+  transport-objects/canonical/dV.cpp
+  transport-objects/canonical/dV.h
+  transport-objects/canonical/ddV.cpp
+  transport-objects/canonical/ddV.h
+  transport-objects/canonical/dddV.cpp
+  transport-objects/canonical/dddV.h
+  transport-objects/canonical/SR_velocity.cpp
+  transport-objects/canonical/SR_velocity.h
+  transport-objects/canonical/A.cpp
+  transport-objects/canonical/A.h
+  transport-objects/canonical/B.cpp
+  transport-objects/canonical/B.h
+  transport-objects/canonical/C.cpp
+  transport-objects/canonical/C.h
+  transport-objects/canonical/M.cpp
+  transport-objects/canonical/M.h
+  transport-objects/canonical/u1.cpp
+  transport-objects/canonical/u1.h
+  transport-objects/canonical/u2.cpp
+  transport-objects/canonical/u2.h
+  transport-objects/canonical/u3.cpp
+  transport-objects/canonical/u3.h
+  transport-objects/canonical/zeta1.cpp
+  transport-objects/canonical/zeta1.h
+  transport-objects/canonical/zeta2.cpp
+  transport-objects/canonical/zeta2.h
+  transport-objects/canonical/dN1.cpp
+  transport-objects/canonical/dN1.h
+  transport-objects/canonical/dN2.cpp
+  transport-objects/canonical/dN2.h
+  transport-objects/canonical/tensor_factory.cpp
+  transport-objects/canonical/tensor_factory.h
+  )
+
 set(TRANSPORT_OBJECTS_CONCEPTS_FILES
   transport-objects/concepts/transport_tensor.cpp
   transport-objects/concepts/transport_tensor.h
+  transport-objects/concepts/Hubble.h
+  transport-objects/concepts/dV.h
+  transport-objects/concepts/ddV.h
+  transport-objects/concepts/dddV.h
+  transport-objects/concepts/SR_velocity.h
+  transport-objects/concepts/A.h
+  transport-objects/concepts/B.h
+  transport-objects/concepts/C.h
+  transport-objects/concepts/M.h
+  transport-objects/concepts/u1.h
+  transport-objects/concepts/u2.h
+  transport-objects/concepts/u3.h
+  transport-objects/concepts/zeta1.h
+  transport-objects/concepts/zeta2.h
+  transport-objects/concepts/dN1.h
+  transport-objects/concepts/dN2.h
+  transport-objects/concepts/flattened_tensor.h
+  transport-objects/concepts/tensor_factory.h
   )
 
 set(TRANSPORT_OBJECTS_FILES
   transport-objects/canonical_u_tensor_factory.cpp
   transport-objects/canonical_u_tensor_factory.h
+  transport-objects/make_u_tensor_factory.h
+  transport-objects/resource_manager.cpp
+  transport-objects/resource_manager.h
   transport-objects/u_tensor_factory.cpp
   transport-objects/u_tensor_factory.h
-  transport-objects/resource_manager.cpp transport-objects/resource_manager.h transport-objects/make_u_tensor_factory.h)
+  transport-objects/make_tensor_factory.h)
+
+set(TRANSPORT_OBJECTS_INDICES_FILES
+  transport-objects/indices/flatten.h
+  transport-objects/indices/indices.cpp
+  transport-objects/indices/indices.h
+  transport-objects/indices/index_flatten.h
+  transport-objects/indices/index_flatten.cpp
+  transport-objects/indices/index_traits.cpp
+  transport-objects/indices/index_traits.h
+  )
+
+set(TRANSPORT_OBJECTS_UTILITIES_FILES
+  transport-objects/utilities/expression_cache.h
+  transport-objects/utilities/ginac_cache.h
+  transport-objects/utilities/shared_resources.cpp
+  transport-objects/utilities/shared_resources.h
+  transport-objects/utilities/symbol_factory.cpp
+  transport-objects/utilities/symbol_factory.h
+  )
 
 set(TRANSPORT_RUNTIME_API_CONCEPTS_FILES
   transport-runtime-api/concepts/flattener.h
@@ -688,7 +784,6 @@ set(UTILITIES_FILES
   utilities/error_context.h
   utilities/finder.cpp
   utilities/finder.h
-  utilities/flatten.h
   utilities/formatter.cpp
   utilities/formatter.h
   utilities/local_environment.cpp
@@ -709,7 +804,6 @@ set(SOURCE_FILES
   ${BACKENDS_LANGUAGES_OPENCL_FILES}
   ${BACKENDS_LANGUAGES_SHARED_FILES}
   ${BACKENDS_SHARED_FILES}
-  ${BACKENDS_UTILITIES_FILES}
   ${CONCEPTS_FILES}
   ${INSTRUMENTS_FILES}
   ${PARSER_BISON_FILES}
@@ -719,8 +813,11 @@ set(SOURCE_FILES
   ${TEMPLATES_VEXCL_OPENCL_FILES}
   ${TEST_TARGET_FILES}
   ${TOP_LEVEL_FILES}
+  ${TRANSPORT_OBJECTS_CANONICAL_FILES}
   ${TRANSPORT_OBJECTS_CONCEPTS_FILES}
   ${TRANSPORT_OBJECTS_FILES}
+  ${TRANSPORT_OBJECTS_INDICES_FILES}
+  ${TRANSPORT_OBJECTS_UTILITIES_FILES}
   ${TRANSPORT_RUNTIME_API_CONCEPTS_FILES}
   ${TRANSPORT_RUNTIME_API_CONCEPTS_RANGE_DETAIL_FILES}
   ${TRANSPORT_RUNTIME_API_DATA_BATCHERS_FILES}
@@ -762,6 +859,6 @@ set(SOURCE_FILES
   ${TRANSPORT_RUNTIME_API_TASKS_POSTINTEGRATION_DETAIL_FILES}
   ${TRANSPORT_RUNTIME_API_UTILITIES_FILES}
   ${UTILITIES_FILES}
-  transport-objects/resource_manager.cpp transport-objects/resource_manager.h)
+  )
 
 ADD_EXECUTABLE(dummy_clion_target EXCLUDE_FROM_ALL ${SOURCE_FILES})

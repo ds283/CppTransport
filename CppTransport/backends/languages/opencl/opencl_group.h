@@ -9,7 +9,7 @@
 
 
 #include "package_group.h"
-#include "u_tensor_factory.h"
+#include "concepts/tensor_factory.h"
 
 
 class opencl_group: public package_group
@@ -20,7 +20,7 @@ class opencl_group: public package_group
   public:
 
     //! constructor
-    opencl_group(translator_data& p, u_tensor_factory& cache);
+    opencl_group(translator_data& p, tensor_factory& fctry);
 
     //! destructor is default
     ~opencl_group() = default;

@@ -18,19 +18,11 @@
 namespace macro_packages
   {
 
-    constexpr unsigned int POTENTIAL_PARAM_KERNEL_ARGUMENT = 0;
-    constexpr unsigned int POTENTIAL_COORD_KERNEL_ARGUMENT = 1;
-    constexpr unsigned int POTENTIAL_FLATTEN_ARGUMENT = 2;
-    constexpr unsigned int POTENTIAL_TOTAL_ARGUMENTS = 3;
+    constexpr unsigned int POTENTIAL_TOTAL_ARGUMENTS = 0;
 
-    constexpr unsigned int HUBBLESQ_PARAM_KERNEL_ARGUMENT = 0;
-    constexpr unsigned int HUBBLESQ_COORD_KERNEL_ARGUMENT = 1;
-    constexpr unsigned int HUBBLESQ_FLATTEN_ARGUMENT = 2;
-    constexpr unsigned int HUBBLESQ_TOTAL_ARGUMENTS = 3;
+    constexpr unsigned int HUBBLESQ_TOTAL_ARGUMENTS = 0;
 
-    constexpr unsigned int EPSILON_COORD_KERNEL_ARGUMENT = 0;
-    constexpr unsigned int EPSILON_FLATTEN_ARGUMENT = 1;
-    constexpr unsigned int EPSILON_TOTAL_ARGUMENTS = 2;
+    constexpr unsigned int EPSILON_TOTAL_ARGUMENTS = 0;
 
     constexpr unsigned int PARAMETER_TOTAL_ARGUMENTS = 0;
     constexpr unsigned int PARAMETER_TOTAL_INDICES = 1;
@@ -41,29 +33,29 @@ namespace macro_packages
     constexpr unsigned int COORDINATE_TOTAL_ARGUMENTS = 0;
     constexpr unsigned int COORDINATE_TOTAL_INDICES = 1;
 
-    constexpr unsigned int SR_VELOCITY_PARAM_KERNEL_ARGUMENT = 0;
-    constexpr unsigned int SR_VELOCITY_COORD_KERNEL_ARGUMENT = 1;
-    constexpr unsigned int SR_VELOCITY_FLATTEN_ARGUMENT = 2;
-    constexpr unsigned int SR_VELOCITY_TOTAL_ARGUMENTS = 3;
+    constexpr unsigned int SR_VELOCITY_TOTAL_ARGUMENTS = 0;
     constexpr unsigned int SR_VELOCITY_TOTAL_INDICES = 1;
 
-    constexpr unsigned int DV_PARAM_KERNEL_ARGUMENT = 0;
-    constexpr unsigned int DV_COORD_KERNEL_ARGUMENT = 1;
-    constexpr unsigned int DV_FLATTEN_ARGUMENT = 2;
-    constexpr unsigned int DV_TOTAL_ARGUMENTS = 3;
+    constexpr unsigned int DV_TOTAL_ARGUMENTS = 0;
     constexpr unsigned int DV_TOTAL_INDICES = 1;
 
-    constexpr unsigned int DDV_PARAM_KERNEL_ARGUMENT = 0;
-    constexpr unsigned int DDV_COORD_KERNEL_ARGUMENT = 1;
-    constexpr unsigned int DDV_FLATTEN_ARGUMENT = 2;
-    constexpr unsigned int DDV_TOTAL_ARGUMENTS = 3;
+    constexpr unsigned int DDV_TOTAL_ARGUMENTS = 0;
     constexpr unsigned int DDV_TOTAL_INDICES = 2;
 
-    constexpr unsigned int DDDV_PARAM_KERNEL_ARGUMENT = 0;
-    constexpr unsigned int DDDV_COORD_KERNEL_ARGUMENT = 1;
-    constexpr unsigned int DDDV_FLATTEN_ARGUMENT = 2;
-    constexpr unsigned int DDDV_TOTAL_ARGUMENTS = 3;
+    constexpr unsigned int DDDV_TOTAL_ARGUMENTS = 0;
     constexpr unsigned int DDDV_TOTAL_INDICES = 3;
+
+
+    flow_tensors::flow_tensors(tensor_factory& f, cse& cw, translator_data& p, language_printer& prn)
+      : replacement_rule_package(f, cw, p, prn),
+        shared(f.get_shared_resources())
+      {
+        Hubble_obj = f.make_Hubble(prn);
+        dV_tensor = f.make_dV(prn);
+        ddV_tensor = f.make_ddV(prn);
+        dddV_tensor = f.make_dddV(prn);
+        SR_velocity_tensor = f.make_SR_velocity(prn);
+      }
 
 
     const std::vector<simple_rule> flow_tensors::get_pre_rules()
@@ -175,34 +167,19 @@ namespace macro_packages
 
     std::string flow_tensors::replace_V(const macro_argument_list& args)
       {
-        std::string param_kernel = args[POTENTIAL_PARAM_KERNEL_ARGUMENT];
-        std::string coord_kernel = args[POTENTIAL_COORD_KERNEL_ARGUMENT];
-        std::string flattener    = args[POTENTIAL_FLATTEN_ARGUMENT];
-
-        std::unique_ptr< std::vector<GiNaC::symbol> > params = this->parameter_list(param_kernel);
-        std::unique_ptr< std::vector<GiNaC::symbol> > fields = this->field_list(coord_kernel, flattener);
-
-        GiNaC::ex potential = this->u_factory.compute_V(*params, *fields);
+        GiNaC::ex V = this->Hubble_obj->compute_V();
 
         // pass to CSE module for evalaution
-        this->cse_worker.parse(potential);
+        this->cse_worker.parse(V);
 
         // emit
-        return this->cse_worker.get_symbol_with_use_count(potential);
+        return this->cse_worker.get_symbol_with_use_count(V);
       }
 
 
     std::string flow_tensors::replace_Hsq(const macro_argument_list& args)
       {
-        std::string param_kernel = args[HUBBLESQ_PARAM_KERNEL_ARGUMENT];
-        std::string coord_kernel = args[HUBBLESQ_COORD_KERNEL_ARGUMENT];
-        std::string flattener    = args[HUBBLESQ_FLATTEN_ARGUMENT];
-
-        std::unique_ptr< std::vector<GiNaC::symbol> > params = this->parameter_list(param_kernel);
-        std::unique_ptr< std::vector<GiNaC::symbol> > fields = this->field_list(coord_kernel, flattener);
-        std::unique_ptr< std::vector<GiNaC::symbol> > derivs = this->deriv_list(coord_kernel, flattener);
-
-        GiNaC::ex Hsq = this->u_factory.compute_Hsq(*params, *fields, *derivs);
+        GiNaC::ex Hsq = this->Hubble_obj->compute_Hsq();
 
         // pass to CSE module for evaluation
         this->cse_worker.parse(Hsq);
@@ -214,12 +191,7 @@ namespace macro_packages
 
     std::string flow_tensors::replace_eps(const macro_argument_list& args)
       {
-        std::string coord_kernel = args[EPSILON_COORD_KERNEL_ARGUMENT];
-        std::string flattener    = args[EPSILON_FLATTEN_ARGUMENT];
-
-        std::unique_ptr< std::vector<GiNaC::symbol> > derivs = this->deriv_list(coord_kernel, flattener);
-
-        GiNaC::ex eps = this->u_factory.compute_eps(*derivs);
+        GiNaC::ex eps = this->Hubble_obj->compute_eps();
 
         // pass to CSE module for evaluation
         this->cse_worker.parse(eps);
@@ -234,32 +206,32 @@ namespace macro_packages
 
     std::string flow_tensors::replace_parameter(const macro_argument_list& args, const assignment_list& indices, cse_map* map)
       {
-        std::vector<GiNaC::symbol> parameters = this->data_payload.get_parameter_symbols();
-        return(this->printer.ginac(parameters[indices[0].get_numeric_value()]));
+        std::unique_ptr<symbol_list> parameters = this->shared.generate_parameters(this->printer);
+        return this->printer.ginac((*parameters)[indices[0].get_numeric_value()]);
       }
 
 
     std::string flow_tensors::replace_field(const macro_argument_list& args, const assignment_list& indices, cse_map* map)
       {
-        std::vector<GiNaC::symbol> fields = this->data_payload.get_field_symbols();
-        return(this->printer.ginac(fields[indices[0].get_numeric_value()]));
+        std::unique_ptr<symbol_list> fields = this->shared.generate_fields(this->printer);
+        return this->printer.ginac((*fields)[indices[0].get_numeric_value()]);
       }
 
 
     std::string flow_tensors::replace_coordinate(const macro_argument_list& args, const assignment_list& indices, cse_map* map)
       {
-        std::vector<GiNaC::symbol> fields  = this->data_payload.get_field_symbols();
-        std::vector<GiNaC::symbol> momenta = this->data_payload.get_deriv_symbols();
+        std::unique_ptr<symbol_list> fields = this->shared.generate_fields(this->printer);
+        std::unique_ptr<symbol_list> derivs = this->shared.generate_derivs(this->printer);
 
         std::string rval;
 
         if(indices[0].is_field())
           {
-            rval = this->printer.ginac(fields[indices[0].species()]);
+            rval = this->printer.ginac((*fields)[indices[0].species()]);
           }
         else if(indices[0].is_momentum())
           {
-            rval = this->printer.ginac(momenta[indices[0].species()]);
+            rval = this->printer.ginac((*derivs)[indices[0].species()]);
           }
         else
           {
@@ -275,64 +247,28 @@ namespace macro_packages
 
     std::unique_ptr<cse_map> flow_tensors::pre_sr_velocity(const macro_argument_list& args)
       {
-        std::string param_kernel = args[SR_VELOCITY_PARAM_KERNEL_ARGUMENT];
-        std::string coord_kernel = args[SR_VELOCITY_COORD_KERNEL_ARGUMENT];
-        std::string flattener    = args[SR_VELOCITY_FLATTEN_ARGUMENT];
-
-        std::unique_ptr< std::vector<GiNaC::symbol> > params = this->parameter_list(param_kernel);
-        std::unique_ptr< std::vector<GiNaC::symbol> > fields = this->field_list(coord_kernel, flattener);
-
-        std::unique_ptr< std::vector<GiNaC::ex> > container = std::make_unique< std::vector<GiNaC::ex> >();
-        this->u_factory.compute_sr_u(*params, *fields, *container);
-
+        std::unique_ptr<flattened_tensor> container = this->SR_velocity_tensor->compute();
         return std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }
 
 
     std::unique_ptr<cse_map> flow_tensors::pre_dV(const macro_argument_list& args)
       {
-        std::string param_kernel = args[DV_PARAM_KERNEL_ARGUMENT];
-        std::string coord_kernel = args[DV_COORD_KERNEL_ARGUMENT];
-        std::string flattener    = args[DV_FLATTEN_ARGUMENT];
-
-        std::unique_ptr< std::vector<GiNaC::symbol> > params = this->parameter_list(param_kernel);
-        std::unique_ptr< std::vector<GiNaC::symbol> > fields = this->field_list(coord_kernel, flattener);
-
-        std::unique_ptr< std::vector<GiNaC::ex> > container = std::make_unique< std::vector<GiNaC::ex> >();
-        this->u_factory.compute_dV(*params, *fields, *container);
-
+        std::unique_ptr<flattened_tensor> container = this->dV_tensor->compute();
         return std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }
 
 
     std::unique_ptr<cse_map> flow_tensors::pre_ddV(const macro_argument_list& args)
       {
-        std::string param_kernel = args[DDV_PARAM_KERNEL_ARGUMENT];
-        std::string coord_kernel = args[DDV_COORD_KERNEL_ARGUMENT];
-        std::string flattener    = args[DDV_FLATTEN_ARGUMENT];
-
-        std::unique_ptr< std::vector<GiNaC::symbol> > params = this->parameter_list(param_kernel);
-        std::unique_ptr< std::vector<GiNaC::symbol> > fields = this->field_list(coord_kernel, flattener);
-
-        std::unique_ptr< std::vector<GiNaC::ex> > container = std::make_unique< std::vector<GiNaC::ex> >();
-        this->u_factory.compute_ddV(*params, *fields, *container);
-
+        std::unique_ptr<flattened_tensor> container = this->ddV_tensor->compute();
         return std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }
 
 
     std::unique_ptr<cse_map> flow_tensors::pre_dddV(const macro_argument_list& args)
       {
-        std::string param_kernel = args[DDDV_PARAM_KERNEL_ARGUMENT];
-        std::string coord_kernel = args[DDDV_COORD_KERNEL_ARGUMENT];
-        std::string flattener    = args[DDDV_FLATTEN_ARGUMENT];
-
-        std::unique_ptr< std::vector<GiNaC::symbol> > params = this->parameter_list(param_kernel);
-        std::unique_ptr< std::vector<GiNaC::symbol> > fields = this->field_list(coord_kernel, flattener);
-
-        std::unique_ptr< std::vector<GiNaC::ex> > container = std::make_unique< std::vector<GiNaC::ex> >();
-        this->u_factory.compute_dddV(*params, *fields, *container);
-
+        std::unique_ptr<flattened_tensor> container = this->dddV_tensor->compute();
         return std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }
 

@@ -3,6 +3,7 @@
 // Copyright (c) 2013-15 University of Sussex. All rights reserved.
 //
 
+
 #include "translator_data.h"
 
 
@@ -95,19 +96,19 @@ const GiNaC::ex translator_data::get_potential() const
   }
 
 
-const std::vector<GiNaC::symbol> translator_data::get_field_symbols() const
+const symbol_list translator_data::get_field_symbols() const
   {
     return(this->driver.get_script().get_field_symbols());
   }
 
 
-const std::vector<GiNaC::symbol> translator_data::get_deriv_symbols() const
+const symbol_list translator_data::get_deriv_symbols() const
   {
     return(this->driver.get_script().get_deriv_symbols());
   }
 
 
-const std::vector<GiNaC::symbol> translator_data::get_parameter_symbols() const
+const symbol_list translator_data::get_parameter_symbols() const
   {
     return(this->driver.get_script().get_param_symbols());
   }

@@ -834,10 +834,10 @@ namespace transport
 #define __dthreepf(a,b,c)       __dxdt[$MODEL_pool::threepf_start     + FLATTEN(a,b,c)]
 
         // evolve the background
-        __background($A) = $U1_PREDEF[A]{raw_params, __x, dV, FLATTEN, FIELDS_FLATTEN};
+        __background($A) = $U1_PREDEF[A];
 
-        const auto __Hsq = $HUBBLE_SQ{raw_params, __x, FLATTEN};
-        const auto __eps = $EPSILON{__x, FLATTEN};
+        const auto __Hsq = $HUBBLE_SQ;
+        const auto __eps = $EPSILON;
 
         // evolve the tensor modes
         const auto __ff = 0.0;

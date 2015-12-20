@@ -36,6 +36,12 @@ class resource_manager
     //! get phase-space coordinates
     const boost::optional< contexted_value<std::string> >& coordinates() const { return(this->coordinates_cache); }
 
+    //! get phase-space flattening function
+    const boost::optional< contexted_value<std::string> >& phase_flatten() const { return(this->phase_flatten_cache); }
+
+    //! get field-space flattening function
+    const boost::optional< contexted_value<std::string> >& field_flatten() const { return(this->field_flatten_cache); }
+
     //! get V,i
     const boost::optional< contexted_value<std::string> >& dV() const { return(this->dV_cache); }
 
@@ -62,6 +68,12 @@ class resource_manager
     //! assign phase-space coordinate resource
     void assign_coordinates(const contexted_value<std::string>& c) { this->coordinates_cache = c; }
 
+    //! assign phase-space flattening function
+    void assign_phase_flatten(const contexted_value<std::string>& f) { this->phase_flatten_cache = f; }
+
+    //! assign field-space flattening function
+    void assign_field_flatten(const contexted_value<std::string>& f) { this->field_flatten_cache = f; }
+
     //! assign V,i resource
     void assign_dV(const contexted_value<std::string>& d) { this->dV_cache = d; }
 
@@ -87,6 +99,12 @@ class resource_manager
 
     //! release phase-space coordinate resource
     void release_coordinates() { this->connexion_cache.reset(); }
+
+    //! release phase-space flattening function
+    void release_phase_flatten() { this->phase_flatten_cache.reset(); }
+
+    //! release field-space flattening function
+    void release_field_flatten() { this->field_flatten_cache.reset(); }
 
     //! release V,i resource
     void release_dV() { this->dV_cache.reset(); }
@@ -121,6 +139,12 @@ class resource_manager
 
     //! cache parameters resource
     boost::optional< contexted_value<std::string> > coordinates_cache;
+
+    //! cache flattening function - full phase-space coordinates
+    boost::optional< contexted_value<std::string> > phase_flatten_cache;
+
+    //! cache flattening function - field space coordinates
+    boost::optional< contexted_value<std::string> > field_flatten_cache;
 
     //! cache V, resource
     boost::optional< contexted_value<std::string> > dV_cache;

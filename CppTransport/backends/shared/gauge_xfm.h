@@ -23,10 +23,7 @@ namespace macro_packages
       public:
 
         //! constructor
-        gauge_xfm(u_tensor_factory& uf, cse& cw, translator_data& p, language_printer& prn)
-          : replacement_rule_package(uf, cw, p, prn)
-          {
-          }
+        gauge_xfm(tensor_factory& f, cse& cw, translator_data& p, language_printer& prn);
 
         //! destructor is default
         virtual ~gauge_xfm() = default;
@@ -52,6 +49,23 @@ namespace macro_packages
         std::unique_ptr<cse_map> pre_deltaN_xfm_1(const macro_argument_list& args);
 
         std::unique_ptr<cse_map> pre_deltaN_xfm_2(const macro_argument_list& args);
+
+
+        // INTERNAL DATA
+
+      private:
+
+        //! zeta1 tensor
+        std::unique_ptr<zeta1> zeta1_tensor;
+
+        //! zeta2 tensor
+        std::unique_ptr<zeta2> zeta2_tensor;
+
+        //! dN1 tensor
+        std::unique_ptr<dN1> dN1_tensor;
+
+        //! dN2 tensor
+        std::unique_ptr<dN2> dN2_tensor;
 
       };
 

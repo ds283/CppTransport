@@ -23,6 +23,12 @@ constexpr auto         DEFAULT_C_STYLE_CLOSE_BRACE      = "}";
 constexpr unsigned int DEFAULT_C_STYLE_BRACE_INDENT     = 1;
 constexpr unsigned int DEFAULT_C_STYLE_BLOCK_INDENT     = 3;
 
+constexpr auto         DEFAULT_C_STYLE_ARRAY_OPEN       = "[";
+constexpr auto         DEFAULT_C_STYLE_ARRAY_CLOSE      = "]";
+
+constexpr auto         DEFAULT_C_STYLE_FUNCTION_OPEN    = "(";
+constexpr auto         DEFAULT_C_STYLE_FUNCTION_CLOSE   = ")";
+
 
 //! policy class for output to C-style languages, eg. C++, VexCL, CUDA, OpenCL
 class C_style_printer: public language_printer
@@ -41,7 +47,11 @@ class C_style_printer: public language_printer
                     std::string opb = DEFAULT_C_STYLE_OPEN_BRACE,
                     std::string clb = DEFAULT_C_STYLE_CLOSE_BRACE,
                     unsigned int brc_ind = DEFAULT_C_STYLE_BRACE_INDENT,
-                    unsigned int blk_ind = DEFAULT_C_STYLE_BLOCK_INDENT)
+                    unsigned int blk_ind = DEFAULT_C_STYLE_BLOCK_INDENT,
+                    std::string ao = DEFAULT_C_STYLE_ARRAY_OPEN,
+                    std::string ac = DEFAULT_C_STYLE_ARRAY_CLOSE,
+                    std::string fo = DEFAULT_C_STYLE_FUNCTION_OPEN,
+                    std::string fc = DEFAULT_C_STYLE_FUNCTION_CLOSE)
       : comment_prefix(std::move(cpre)),
         comment_postfix(std::move(cpost)),
         comment_pad(std::move(cpad)),
@@ -50,7 +60,11 @@ class C_style_printer: public language_printer
         open_brace(std::move(opb)),
         close_brace(std::move(clb)),
         brace_indent(brc_ind),
-        block_indent(blk_ind)
+        block_indent(blk_ind),
+        array_open(ao),
+        array_close(ac),
+        function_open(fo),
+        function_close(fc)
       {
       }
 
@@ -91,8 +105,20 @@ class C_style_printer: public language_printer
 
   public:
 
-    //! plant a 'for' loop appropriate for this backend; should be supplied by a concrete class
-    virtual std::string plant_for_loop(const std::string& loop_variable, unsigned int min, unsigned int max) const override;
+    //! generate a 'for' loop
+    virtual std::string for_loop(const std::string& loop_variable, unsigned int min, unsigned int max) const override;
+
+    //! generate 1D array subscript without flattening
+    virtual std::string array_subscript(const std::string& kernel, unsigned int a) const override;
+
+    //! generate 1D array subscript
+    virtual std::string array_subscript(const std::string& kernel, const std::string& flatten, unsigned int a) const override;
+
+    //! generate 2D array subscript
+    virtual std::string array_subscript(const std::string& kernel, const std::string& flatten, unsigned int a, unsigned int b) const override;
+
+    //! generate 3D array subscript
+    virtual std::string array_subscript(const std::string& kernel, const std::string& flatten, unsigned int a, unsigned int b, unsigned int c) const override;
 
 
     // INTERNAL DATA
@@ -124,6 +150,18 @@ class C_style_printer: public language_printer
 
     //! block-level indent
     unsigned int block_indent;
+
+    //! array open subscript
+    std::string array_open;
+
+    //! array close subscript
+    std::string array_close;
+
+    //! function invokation open
+    std::string function_open;
+
+    //! function invokation close
+    std::string function_close;
 
     //! keyword used for 'for' loop
     std::string for_keyword;

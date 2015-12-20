@@ -21,7 +21,9 @@ std::string C_style_printer::ginac(const GiNaC::ex& expr) const
 
 std::string C_style_printer::comment(const std::string tag) const
   {
-    return(this->comment_prefix + this->comment_pad + tag + this->comment_pad + this->comment_postfix);
+    std::ostringstream stmt;
+    stmt << this->comment_prefix << this->comment_pad << tag << this->comment_pad << this->comment_postfix;
+    return(stmt.str());
   }
 
 
@@ -49,9 +51,41 @@ unsigned int C_style_printer::get_block_indent() const
   }
 
 
-std::string C_style_printer::plant_for_loop(const std::string& loop_variable, unsigned int min, unsigned int max) const
+std::string C_style_printer::for_loop(const std::string& loop_variable, unsigned int min, unsigned int max) const
   {
     std::ostringstream stmt;
     stmt << this->for_keyword << "(" << this->loop_type << " " << loop_variable << " = " << min << "; " << loop_variable << " < " << max << "; ++" << loop_variable << ")";
+    return(stmt.str());
+  }
+
+
+std::string C_style_printer::array_subscript(const std::string& kernel, unsigned int a) const
+  {
+    std::ostringstream stmt;
+    stmt << kernel << this->array_open << a << this->array_close;
+    return(stmt.str());
+  }
+
+
+std::string C_style_printer::array_subscript(const std::string& kernel, const std::string& flatten, unsigned int a) const
+  {
+    std::ostringstream stmt;
+    stmt << kernel << this->array_open << flatten << this->function_open << a << this->function_close << this->array_close;
+    return(stmt.str());
+  }
+
+
+std::string C_style_printer::array_subscript(const std::string& kernel, const std::string& flatten, unsigned int a, unsigned int b) const
+  {
+    std::ostringstream stmt;
+    stmt << kernel << this->array_open << flatten << this->function_open << a << ", " << b << this->function_close << this->array_close;
+    return(stmt.str());
+  }
+
+
+std::string C_style_printer::array_subscript(const std::string& kernel, const std::string& flatten, unsigned int a, unsigned int b, unsigned int c) const
+  {
+    std::ostringstream stmt;
+    stmt << kernel << this->array_open << flatten << this->function_open << a << ", " << b << ", " << c << this->function_close << this->array_close;
     return(stmt.str());
   }

@@ -13,7 +13,7 @@
 #include "buffer.h"
 #include "output_stack.h"
 #include "translator_data.h"
-#include "expression_types.h"
+#include "expression_cache.h"
 #include "backend_data.h"
 
 #include "ginac_cache.h"
