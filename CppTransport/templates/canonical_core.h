@@ -88,7 +88,7 @@ namespace transport
     constexpr unsigned int TENSOR_FLATTEN(unsigned int a, unsigned int b)                 { return flatten_impl::tensor_flatten(a, b); }
 
     $PHASE_FLATTEN{FLATTEN}
-    $FIELD_FLATTEN{FLATTEN}
+    $FIELD_FLATTEN{FIELDS_FLATTEN}
 
 
     // *********************************************************************************************
@@ -423,7 +423,7 @@ namespace transport
             const auto __Mp = __params.get_Mp();
             const std::vector<number>& __param_vector = __params.get_vector();
 
-            $RESOURCE_PARAMETERS{__params_vector}
+            $RESOURCE_PARAMETERS{__param_vector}
             $RESOURCE_COORDINATES{__coords}
 
             $TEMP_POOL{"const auto $1 = $2;"}
@@ -1073,13 +1073,13 @@ namespace transport
         $MODEL_compute_ddV(__raw_params, __fields, __ddV);
 
         $RESOURCE_PARAMETERS{__raw_params}
-        $RESOURCE_COORDINATES{__state}
+        $RESOURCE_COORDINATES{__fields}
         $RESOURCE_DV{__dV}
         $RESOURCE_DDV{__ddV}
 
         $TEMP_POOL{"const auto $1 = $2;"}
 
-        __u2[FLATTEN($A,$B)] = $U2_PREDEF[AB]{__k, __a}};
+        __u2[FLATTEN($A,$B)] = $U2_PREDEF[AB]{__k, __a};
       }
 
 
@@ -1098,7 +1098,7 @@ namespace transport
         $MODEL_compute_dddV(__raw_params, __fields, __dddV);
 
         $RESOURCE_PARAMETERS{__raw_params}
-        $RESOURCE_COORDINATES{__state}
+        $RESOURCE_COORDINATES{__fields}
         $RESOURCE_DV{__dV}
         $RESOURCE_DDV{__ddV}
         $RESOURCE_DDDV{__dddV}
@@ -1124,7 +1124,7 @@ namespace transport
         $MODEL_compute_dddV(__raw_params, __fields, __dddV);
 
         $RESOURCE_PARAMETERS{__raw_params}
-        $RESOURCE_COORDINATES{__state}
+        $RESOURCE_COORDINATES{__fields}
         $RESOURCE_DV{__dV}
         $RESOURCE_DDV{__ddV}
         $RESOURCE_DDDV{__dddV}
@@ -1148,7 +1148,7 @@ namespace transport
         $MODEL_compute_dV(__raw_params, __fields, __dV);
 
         $RESOURCE_PARAMETERS{__raw_params}
-        $RESOURCE_COORDINATES{__state}
+        $RESOURCE_COORDINATES{__fields}
         $RESOURCE_DV{__dV}
 
         $TEMP_POOL{"const auto $1 = $2;"}
@@ -1168,7 +1168,7 @@ namespace transport
         const auto __a = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
         $RESOURCE_PARAMETERS{__raw_params}
-        $RESOURCE_COORDINATES{__state}
+        $RESOURCE_COORDINATES{__fields}
         $RESOURCE_DV{__dV}
 
         $TEMP_POOL{"const auto $1 = $2;"}
@@ -1297,7 +1297,7 @@ namespace transport
                 $RESOURCE_PARAMETERS{param_vector}
                 $RESOURCE_COORDINATES{__x.first}
 
-                const auto __Hsq = $HUBBLE_SQ{;
+                const auto __Hsq = $HUBBLE_SQ;
                 const auto __H   = std::sqrt(__Hsq);
 
                 const auto __a   = std::exp(__x.second - this->N_horizon_crossing + this->astar_normalization);
