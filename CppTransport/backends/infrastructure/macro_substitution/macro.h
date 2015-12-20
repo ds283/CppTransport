@@ -15,9 +15,7 @@
 
 #include "core.h"
 #include "index_assignment.h"
-#include "u_tensor_factory.h"
 #include "cse.h"
-#include "flatten.h"
 #include "package_group.h"
 #include "translator_data.h"
 #include "replacement_rule_definitions.h"

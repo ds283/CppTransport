@@ -8,7 +8,6 @@
 #include <functional>
 
 #include "flow_tensors.h"
-#include "u_tensor_factory.h"
 
 
 #define BIND1(X) std::bind(&flow_tensors::X, this, std::placeholders::_1)

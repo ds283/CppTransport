@@ -8,13 +8,6 @@
 
 #include "replacement_rule_package.h"
 
-#include "macro.h"
-#include "flatten.h"
-#include "cse.h"
-#include "translation_unit.h"
-#include "error.h"
-
-
 namespace macro_packages
   {
 

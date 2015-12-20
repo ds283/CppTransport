@@ -100,8 +100,6 @@ ADD_EXECUTABLE(CppTransport
   transport-objects/canonical/dN1.cpp
   transport-objects/canonical/dN2.cpp
   transport-objects/canonical/tensor_factory.cpp
-  transport-objects/canonical_u_tensor_factory.cpp
-  transport-objects/u_tensor_factory.cpp
   transport-objects/resource_manager.cpp
   transport-objects/concepts/transport_tensor.cpp
   transport-objects/indices/indices.cpp
@@ -406,17 +404,11 @@ set(TRANSPORT_OBJECTS_CONCEPTS_FILES
   )
 
 set(TRANSPORT_OBJECTS_FILES
-  transport-objects/canonical_u_tensor_factory.cpp
-  transport-objects/canonical_u_tensor_factory.h
-  transport-objects/make_u_tensor_factory.h
   transport-objects/resource_manager.cpp
   transport-objects/resource_manager.h
-  transport-objects/u_tensor_factory.cpp
-  transport-objects/u_tensor_factory.h
   transport-objects/make_tensor_factory.h)
 
 set(TRANSPORT_OBJECTS_INDICES_FILES
-  transport-objects/indices/flatten.h
   transport-objects/indices/indices.cpp
   transport-objects/indices/indices.h
   transport-objects/indices/index_flatten.h

@@ -8,8 +8,6 @@
 #include <functional>
 
 #include "resources.h"
-#include "u_tensor_factory.h"
-#include "resource_manager.h"
 
 
 #define BIND1(X) std::bind(&resources::X, this, std::placeholders::_1)

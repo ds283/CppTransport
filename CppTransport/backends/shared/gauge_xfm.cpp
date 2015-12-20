@@ -8,8 +8,6 @@
 #include <functional>
 
 #include "gauge_xfm.h"
-#include "cse.h"
-#include "u_tensor_factory.h"
 
 
 #define BIND1(X) std::bind(&gauge_xfm::X, this, std::placeholders::_1)

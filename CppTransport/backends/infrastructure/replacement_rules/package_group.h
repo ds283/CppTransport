@@ -18,9 +18,6 @@
 #include "cse.h"
 #include "error.h"
 
-// TODO: remove
-#include "u_tensor_factory.h"
-
 class package_group
   {
 
