@@ -2,13 +2,11 @@
 // Created by David Seery on 18/06/2013.
 // Copyright (c) 2013-15 University of Sussex. All rights reserved.
 //
-// To change the template use AppCode | Preferences | File Templates.
-//
 
 
 
-#ifndef __script_H_
-#define __script_H_
+#ifndef CPPTRANSPORT_SCRIPT_H
+#define CPPTRANSPORT_SCRIPT_H
 
 
 #include <iostream>
@@ -404,4 +402,4 @@ class script
 	};
 
 
-#endif //__script_H_
+#endif //CPPTRANSPORT_SCRIPT_H

@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __filestack_H_
-#define __filestack_H_
+#ifndef CPPTRANSPORT_FILESTACK_H
+#define CPPTRANSPORT_FILESTACK_H
 
 
 #include <string>
@@ -75,4 +75,4 @@ class filestack_derivation_helper : public filestack
   };
 
 
-#endif //__filestack_H_
+#endif //CPPTRANSPORT_FILESTACK_H

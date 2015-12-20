@@ -3,8 +3,8 @@
 // Copyright (c) 2015 University of Sussex. All rights reserved.
 //
 
-#ifndef CPPTRANSPORT_MACROPACKAGE_RESOURCES_H
-#define CPPTRANSPORT_MACROPACKAGE_RESOURCES_H
+#ifndef CPPTRANSPORT_MACROS_RESOURCES_H
+#define CPPTRANSPORT_MACROS_RESOURCES_H
 
 
 #include "replacement_rule_package.h"
@@ -79,4 +79,4 @@ namespace macro_packages
   }
 
 
-#endif //CPPTRANSPORT_MACROPACKAGE_RESOURCES_H
+#endif //CPPTRANSPORT_MACROS_RESOURCES_H

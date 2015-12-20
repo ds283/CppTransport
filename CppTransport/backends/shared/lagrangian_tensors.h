@@ -5,8 +5,8 @@
 
 
 
-#ifndef __macropackage_lagrangian_tensors_H_
-#define __macropackage_lagrangian_tensors_H_
+#ifndef CPPTRANSPORT_MACROS_LAGRANGIAN_TENSORS_H
+#define CPPTRANSPORT_MACROS_LAGRANGIAN_TENSORS_H
 
 
 #include "replacement_rule_package.h"
@@ -80,4 +80,4 @@ namespace macro_packages
   }
 
 
-#endif //__macropackage_lagrangian_tensors_H_
+#endif //CPPTRANSPORT_MACROS_LAGRANGIAN_TENSORS_H

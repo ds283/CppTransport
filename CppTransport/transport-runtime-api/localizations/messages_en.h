@@ -2,8 +2,6 @@
 // Created by David Seery on 14/05/2014.
 // Copyright (c) 2013-14 University of Sussex. All rights reserved.
 //
-// To change the template use AppCode | Preferences | File Templates.
-//
 
 #ifndef CPPTRANSPORT_MESSAGES_EN_H_
 #define CPPTRANSPORT_MESSAGES_EN_H_

@@ -5,8 +5,8 @@
 
 
 
-#ifndef __macropackage_vexcl_opencl_kernels_H_
-#define __macropackage_vexcl_opencl_kernels_H_
+#ifndef __macropackagCPPTRANSPORT_MACROS_VEXCL_KERNELS_H
+#define __macropackagCPPTRANSPORT_MACROS_VEXCL_KERNELS_H
 
 
 #include "replacement_rule_package.h"
@@ -49,7 +49,7 @@ namespace vexcl
 
       };
 
-  } // namespace cpp
+  } // namespace vexcl
 
 
-#endif //__vexcl_opencl_kernels_H_
+#endif //CPPTRANSPORT_MACROS_VEXCL_KERNELS_H

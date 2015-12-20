@@ -2,13 +2,11 @@
 // Created by David Seery on 14/06/2013.
 // Copyright (c) 2013-15 University of Sussex. All rights reserved.
 //
-// To change the template use AppCode | Preferences | File Templates.
-//
 
 
 
-#ifndef __lexfile_H_
-#define __lexfile_H_
+#ifndef CPPTRANSPORT_LEXFILE_H
+#define CPPTRANSPORT_LEXFILE_H
 
 
 #include <iostream>
@@ -109,4 +107,4 @@ class lexfile
 	};
 
 
-#endif //__lexfile_H_
+#endif //CPPTRANSPORT_LEXFILE_H

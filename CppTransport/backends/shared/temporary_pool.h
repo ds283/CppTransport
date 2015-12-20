@@ -5,8 +5,8 @@
 
 
 
-#ifndef __macropackage_temporary_pool_H_
-#define __macropackage_temporary_pool_H_
+#ifndef CPPTRANSPORT_MACROS_TEMPORARY_POOL_H
+#define CPPTRANSPORT_MACROS_TEMPORARY_POOL_H
 
 
 #include <list>
@@ -76,4 +76,4 @@ namespace macro_packages
   } // namespace macro_packages
 
 
-#endif //__macropackage_temporary_pool_H_
+#endif //CPPTRANSPORT_MACROS_TEMPORARY_POOL_H

@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __output_stack_H_
-#define __output_stack_H_
+#ifndef CPPTRANSPORT_OUTPUT_STACK_H
+#define CPPTRANSPORT_OUTPUT_STACK_H
 
 
 #include <string>
@@ -102,4 +102,4 @@ class output_stack: public filestack_derivation_helper<output_stack>
   };
 
 
-#endif //__output_stack_H_
+#endif //CPPTRANSPORT_OUTPUT_STACK_H

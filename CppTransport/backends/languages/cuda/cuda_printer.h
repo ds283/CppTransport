@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __cuda_printer_H_
-#define __cuda_printer_H_
+#ifndef CPPTRANSPORT_CUDA_PRINTER_H
+#define CPPTRANSPORT_CUDA_PRINTER_H
 
 
 #include "C_style_printer.h"
@@ -35,4 +35,4 @@ namespace cuda
   } // namespace cuda
 
 
-#endif //__cuda_printer_H_
+#endif //CPPTRANSPORT_CUDA_PRINTER_H

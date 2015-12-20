@@ -2,11 +2,9 @@
 // Created by David Seery on 25/06/2013.
 // Copyright (c) 2013-15 University of Sussex. All rights reserved.
 //
-// To change the template use AppCode | Preferences | File Templates.
-//
 
-#ifndef __input_H_
-#define __input_H_
+#ifndef CPPTRANSPORT_TRANSLATION_UNIT_H
+#define CPPTRANSPORT_TRANSLATION_UNIT_H
 
 #include "lexstream.h"
 #include "y_common.h"
@@ -106,4 +104,4 @@ class translation_unit
   };
 
 
-#endif // __input_H_
+#endif // CPPTRANSPORT_TRANSLATION_UNIT_H

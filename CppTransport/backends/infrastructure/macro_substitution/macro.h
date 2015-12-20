@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __macro_H_
-#define __macro_H_
+#ifndef CPPTRANSPORT_MACRO_H
+#define CPPTRANSPORT_MACRO_H
 
 #include <iostream>
 #include <vector>
@@ -234,4 +234,4 @@ class macro_agent
   };
 
 
-#endif //__macro_H_
+#endif //CPPTRANSPORT_MACRO_H

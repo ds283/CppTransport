@@ -5,8 +5,8 @@
 
 
 
-#ifndef __macropackage_gauge_xfm_H_
-#define __macropackage_gauge_xfm_H_
+#ifndef __macropackagCPPTRANSPORT_MACROS_GAUGE_XFM_H
+#define __macropackagCPPTRANSPORT_MACROS_GAUGE_XFM_H
 
 
 #include "replacement_rule_package.h"
@@ -72,4 +72,4 @@ namespace macro_packages
   } // namespace macro_packages
 
 
-#endif //__gauge_xfm_H_
+#endif //CPPTRANSPORT_MACROS_GAUGE_XFM_H

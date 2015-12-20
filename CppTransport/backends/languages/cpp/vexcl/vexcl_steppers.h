@@ -5,8 +5,8 @@
 
 
 
-#ifndef __macropackage_vexcl_steppers_H_
-#define __macropackage_vexcl_steppers_H_
+#ifndef CPPTRANSPORT_MACROS_VEXCL_STEPPERS_H
+#define CPPTRANSPORT_MACROS_VEXCL_STEPPERS_H
 
 
 #include "replacement_rule_package.h"
@@ -55,4 +55,4 @@ namespace vexcl
   } // namespace cpp
 
 
-#endif //__macropackage_vexcl_steppers_H_
+#endif //CPPTRANSPORT_MACROS_VEXCL_STEPPERS_H

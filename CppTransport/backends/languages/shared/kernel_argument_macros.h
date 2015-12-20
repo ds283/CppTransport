@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __macropackage_shared_kernelargs_macros_H_
-#define __macropackage_shared_kernelargs_macros_H_
+#ifndef CPPTRANSPORT_MACROS_KERNEL_ARGUMENTS_H
+#define CPPTRANSPORT_MACROS_KERNEL_ARGUMENTS_H
 
 
 #include "replacement_rule_package.h"
@@ -61,4 +61,4 @@ namespace shared
   } // namespace shared
 
 
-#endif //__macropackage_shared_kernelargs_macros_H_
+#endif //CPPTRANSPORT_MACROS_KERNEL_ARGUMENTS_H

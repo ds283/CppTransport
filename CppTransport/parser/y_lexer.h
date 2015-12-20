@@ -2,13 +2,11 @@
 // Created by David Seery on 17/06/2013.
 // Copyright (c) 2013-15 University of Sussex. All rights reserved.
 //
-// To change the template use AppCode | Preferences | File Templates.
-//
 
 
 
-#ifndef __y_lexer_H_
-#define __y_lexer_H_
+#ifndef CPPTRANSPORT_Y_LEXER_H
+#define CPPTRANSPORT_Y_LEXER_H
 
 #undef  YY_DECL
 #define YY_DECL int y::y_lexer::yylex()
@@ -55,4 +53,4 @@ namespace y
 
 	}
 
-#endif //__y_lexer_H_
+#endif //CPPTRANSPORT_Y_LEXER_H

@@ -5,8 +5,8 @@
 
 
 
-#ifndef __cpp_cse_H_
-#define __cpp_cse_H_
+#ifndef CPPTRANSPORT_CPP_CSE_H
+#define CPPTRANSPORT_CPP_CSE_H
 
 #include "cse.h"
 #include "msg_en.h"
@@ -47,4 +47,4 @@ namespace cpp
   } // namespace cpp
 
 
-#endif //__cpp_cse_H_
+#endif //CPPTRANSPORT_CPP_CSE_H

@@ -3,8 +3,8 @@
 //
 
 
-#ifndef __opencl_printer_H_
-#define __opencl_printer_H_
+#ifndef CPPTRANSPORT_OPENCL_PRINTER_H
+#define CPPTRANSPORT_OPENCL_PRINTER_H
 
 
 #include "C_style_printer.h"
@@ -34,4 +34,4 @@ namespace opencl
   } // namespace opencl
 
 
-#endif //__opencl_printer_H_
+#endif //CPPTRANSPORT_OPENCL_PRINTER_H
