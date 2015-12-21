@@ -78,7 +78,7 @@ std::string C_style_printer::array_subscript(const std::string& kernel, const st
 std::string C_style_printer::array_subscript(const std::string& kernel, const std::string& flatten, unsigned int a, unsigned int b) const
   {
     std::ostringstream stmt;
-    stmt << kernel << this->array_open << flatten << this->function_open << a << ", " << b << this->function_close << this->array_close;
+    stmt << kernel << this->array_open << flatten << this->function_open << a << "," << b << this->function_close << this->array_close;
     return(stmt.str());
   }
 
@@ -86,6 +86,6 @@ std::string C_style_printer::array_subscript(const std::string& kernel, const st
 std::string C_style_printer::array_subscript(const std::string& kernel, const std::string& flatten, unsigned int a, unsigned int b, unsigned int c) const
   {
     std::ostringstream stmt;
-    stmt << kernel << this->array_open << flatten << this->function_open << a << ", " << b << ", " << c << this->function_close << this->array_close;
+    stmt << kernel << this->array_open << flatten << this->function_open << a << "," << b << "," << c << this->function_close << this->array_close;
     return(stmt.str());
   }

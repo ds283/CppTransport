@@ -253,7 +253,7 @@ namespace canonical
                 for(field_index j = field_index(0); j < this->num_fields; ++j)
                   {
                     GiNaC::ex ddV;
-                    unsigned int index = this->fl.flatten(i, j);
+                    unsigned int index = this->fl.flatten(i,j);
 
                     if(!this->cache.query(expression_item_types::ddV_item, index, *args, ddV))
                       {
@@ -324,7 +324,7 @@ namespace canonical
                     for(field_index k = field_index(0); k < this->num_fields; ++k)
                       {
                         GiNaC::ex dddV;
-                        unsigned int index = this->fl.flatten(i, j, k);
+                        unsigned int index = this->fl.flatten(i,j,k);
 
                         if(!this->cache.query(expression_item_types::dddV_item, index, *args, dddV))
                           {
