@@ -117,7 +117,7 @@ namespace canonical
 
         if(!this->cache.query(expression_item_types::epsilon_item, 0, *args, eps))
           {
-            timing_instrument(this->compute_timer);
+            timing_instrument timer(this->compute_timer);
 
             std::unique_ptr<symbol_list> derivs = this->share.generate_derivs(printer);
             GiNaC::symbol Mp = this->share.generate_Mp();
@@ -128,7 +128,7 @@ namespace canonical
                 eps += dv*dv;
               }
 
-            eps = eps/2*Mp;
+            eps = eps/(2*Mp*Mp);
             this->cache.store(expression_item_types::epsilon_item, 0, *args, eps);
           }
 
@@ -144,7 +144,7 @@ namespace canonical
 
         if(!this->cache.query(expression_item_types::Hubble2_item, 0, *args, Hsq))
           {
-            timing_instrument(this->compute_timer);
+            timing_instrument timer(this->compute_timer);
 
             GiNaC::ex V = this->V_resource(printer);
             GiNaC::ex eps = this->eps_resource(printer);
@@ -191,7 +191,7 @@ namespace canonical
 
                 if(!this->cache.query(expression_item_types::dV_item, index, *args, dV))
                   {
-                    timing_instrument(this->compute_timer);
+                    timing_instrument timer(this->compute_timer);
 
                     // generate necessary items if they have not been done
                     if(!cached)
@@ -252,7 +252,7 @@ namespace canonical
 
                     if(!this->cache.query(expression_item_types::ddV_item, index, *args, ddV))
                       {
-                        timing_instrument(this->compute_timer);
+                        timing_instrument timer(this->compute_timer);
 
                         // generate necessary items if they have not been done
                         if(!cached)
@@ -320,7 +320,7 @@ namespace canonical
 
                         if(!this->cache.query(expression_item_types::ddV_item, index, *args, dddV))
                           {
-                            timing_instrument(this->compute_timer);
+                            timing_instrument timer(this->compute_timer);
 
                             // generate necessary items if they have not been done
                             if(!cached)

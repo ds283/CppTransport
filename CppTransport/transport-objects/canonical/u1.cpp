@@ -40,15 +40,13 @@ namespace canonical
 
             if(this->traits.is_species(i))
               {
-                field_index species = this->traits.to_species(i);
-
-                result = (*derivs)[this->fl.flatten(species)];
+                result = (*derivs)[this->fl.flatten(i)];
               }
             else if(this->traits.is_momentum(i))
               {
-                field_index species = this->traits.to_species(i);
+                field_index species_i = this->traits.to_species(i);
 
-                result = -(3-eps) * (*derivs)[this->fl.flatten(species)] - (*dV)[this->fl.flatten(species)]/Hsq;
+                result = -(3-eps) * (*derivs)[this->fl.flatten(species_i)] - (*dV)[this->fl.flatten(species_i)]/Hsq;
               }
             else
               {
