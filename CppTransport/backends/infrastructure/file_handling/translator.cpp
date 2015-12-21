@@ -84,7 +84,7 @@ unsigned int translator::process(const boost::filesystem::path& in, buffer& buf,
       {
 		    // emit advisory that translation is underway
         std::ostringstream translation_msg;
-        translation_msg << MESSAGE_TRANSLATING << " " << in;
+        translation_msg << MESSAGE_TRANSLATING << " '" << in.string() << "'";
 		    if(!buf.is_memory())
 			    {
 		        translation_msg << " " << MESSAGE_TRANSLATING_TO << " '" << buf.get_filename() << "'";
