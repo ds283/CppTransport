@@ -18,9 +18,7 @@
 constexpr unsigned int DEFAULT_GINAC_CACHE_SIZE = 2048;
 
 
-// TODO: possibly convert to std::list<>
-// in order that we can use splice() method to merge argument sets
-typedef std::vector< GiNaC::ex > ginac_cache_args;
+typedef std::list< GiNaC::symbol > ginac_cache_args;
 
 
 template <typename ExpressionType, unsigned int HashSize>
