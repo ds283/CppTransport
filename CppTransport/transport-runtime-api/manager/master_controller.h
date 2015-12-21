@@ -1947,7 +1947,7 @@ namespace transport
 
 		        // mark this worker, and these work items, as assigned
             this->work_scheduler.mark_assigned(*t);
-		        BOOST_LOG_SEV(log, base_writer::log_severity_level::normal) << "++ Assigned " << t->get_items().size() << " work items to worker " << t->get_worker() << " [MPI rank=" << this->worker_rank(t->get_worker()) << "]";
+		        BOOST_LOG_SEV(log, base_writer::log_severity_level::normal) << "++ Assigned " << t->get_items().size() << " work item" << (t->get_items().size() == 1 ? "" : "s") << " to worker " << t->get_worker() << " [MPI rank=" << this->worker_rank(t->get_worker()) << "]";
 	        }
 
         // wait for all assignments to be received
