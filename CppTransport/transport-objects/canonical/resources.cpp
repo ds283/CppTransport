@@ -205,6 +205,7 @@ namespace canonical
 
                     GiNaC::symbol x1 = (*f_list)[this->fl.flatten(i)];
                     dV = GiNaC::diff(subs_V, x1);
+
                     this->cache.store(expression_item_types::dV_item, index, *args, dV);
                   }
 
@@ -269,6 +270,7 @@ namespace canonical
                         GiNaC::symbol x1 = (*f_list)[this->fl.flatten(i)];
                         GiNaC::symbol x2 = (*f_list)[this->fl.flatten(j)];
                         ddV = GiNaC::diff(GiNaC::diff(subs_V, x1), x2);
+
                         this->cache.store(expression_item_types::ddV_item, index, *args, ddV);
                       }
 
@@ -299,6 +301,7 @@ namespace canonical
                         unsigned int index = this->fl.flatten(i,j,k);
 
                         std::string variable = printer.array_subscript(*resource, *flatten, this->fl.flatten(i), this->fl.flatten(j), this->fl.flatten(k));
+
                         (*list)[index] = this->sym_factory.get_symbol(variable);
                       }
                   }
@@ -323,7 +326,7 @@ namespace canonical
                         GiNaC::ex dddV;
                         unsigned int index = this->fl.flatten(i, j, k);
 
-                        if(!this->cache.query(expression_item_types::ddV_item, index, *args, dddV))
+                        if(!this->cache.query(expression_item_types::dddV_item, index, *args, dddV))
                           {
                             timing_instrument timer(this->compute_timer);
 
@@ -339,7 +342,8 @@ namespace canonical
                             GiNaC::symbol x2 = (*f_list)[this->fl.flatten(j)];
                             GiNaC::symbol x3 = (*f_list)[this->fl.flatten(k)];
                             dddV = GiNaC::diff(GiNaC::diff(GiNaC::diff(subs_V, x1), x2), x3);
-                            this->cache.store(expression_item_types::ddV_item, index, *args, dddV);
+
+                            this->cache.store(expression_item_types::dddV_item, index, *args, dddV);
                           }
 
                         (*list)[index] = dddV;
