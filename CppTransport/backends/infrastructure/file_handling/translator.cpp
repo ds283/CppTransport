@@ -19,15 +19,16 @@
 translator::translator(translator_data& payload)
   : data_payload(payload)
   {
+    cache = std::make_unique<expression_cache>();
   }
 
 
 translator::~translator()
 	{
     std::ostringstream msg;
-    msg << this->cache.get_hits() << " " << MESSAGE_EXPRESSION_CACHE_HITS
-		    << ", " << this->cache.get_misses() << " " << MESSAGE_EXPRESSION_CACHE_MISSES
-		    << " (" << MESSAGE_EXPRESSION_CACHE_QUERY_TIME << " " << format_time(this->cache.get_query_time()) << ")";
+    msg << this->cache->get_hits() << " " << MESSAGE_EXPRESSION_CACHE_HITS
+		    << ", " << this->cache->get_misses() << " " << MESSAGE_EXPRESSION_CACHE_MISSES
+		    << " (" << MESSAGE_EXPRESSION_CACHE_QUERY_TIME << " " << format_time(this->cache->get_query_time()) << ")";
 
     this->print_advisory(msg.str());
 	}
@@ -101,8 +102,7 @@ unsigned int translator::process(const boost::filesystem::path& in, buffer& buf,
                 // generate an appropriate backend
                 // this consists of a set of macro replacement rules which collectively comprise a 'package group'.
                 // The result is returned as a managed pointer, using std::unique_ptr<>
-                std::unique_ptr<expression_cache> cache = std::make_unique<expression_cache>();
-                std::unique_ptr<tensor_factory> fctry = make_tensor_factory(backend, this->data_payload, *cache);
+                std::unique_ptr<tensor_factory> fctry = make_tensor_factory(backend, this->data_payload, *this->cache);
 
                 std::unique_ptr<package_group> package = package_group_factory(in, backend, this->data_payload, *fctry);
 

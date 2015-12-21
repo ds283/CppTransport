@@ -72,8 +72,8 @@ class translator
     //! translator_data payload
     translator_data& data_payload;
 
-		//! expression cache for this translator
-		ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE> cache;
+		//! expression cache for this translator; has to be a pointer because we use it in the destructor
+		std::unique_ptr<expression_cache> cache;
 
   };
 
