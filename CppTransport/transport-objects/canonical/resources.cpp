@@ -169,9 +169,11 @@ namespace canonical
           {
             for(field_index i = field_index(0); i < this->num_fields; ++i)
               {
+                unsigned int index = this->fl.flatten(i);
+
                 std::string variable = printer.array_subscript(*resource, *flatten, this->fl.flatten(i));
-                GiNaC::symbol sym = this->sym_factory.get_symbol(variable);
-                list->push_back(sym);
+
+                (*list)[index] = this->sym_factory.get_symbol(variable);
               }
           }
         else                        // have to construct dV ourselves
@@ -227,9 +229,11 @@ namespace canonical
               {
                 for(field_index j = field_index(0); j < this->num_fields; ++j)
                   {
+                    unsigned int index = this->fl.flatten(i,j);
+
                     std::string variable = printer.array_subscript(*resource, *flatten, this->fl.flatten(i), this->fl.flatten(j));
-                    GiNaC::symbol sym = this->sym_factory.get_symbol(variable);
-                    list->push_back(sym);
+
+                    (*list)[index] = this->sym_factory.get_symbol(variable);
                   }
               }
           }
@@ -292,9 +296,10 @@ namespace canonical
                   {
                     for(field_index k = field_index(0); k < this->num_fields; ++k)
                       {
+                        unsigned int index = this->fl.flatten(i,j,k);
+
                         std::string variable = printer.array_subscript(*resource, *flatten, this->fl.flatten(i), this->fl.flatten(j), this->fl.flatten(k));
-                        GiNaC::symbol sym = this->sym_factory.get_symbol(variable);
-                        list->push_back(sym);
+                        (*list)[index] = this->sym_factory.get_symbol(variable);
                       }
                   }
               }
