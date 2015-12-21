@@ -59,7 +59,7 @@ namespace canonical
             result = (*derivs)[this->fl.flatten(i)] * (*derivs)[this->fl.flatten(j)] * (*derivs)[this->fl.flatten(k)] / (4*Mp*Mp*Mp*Mp);
 
             result += - ( (*derivs)[this->fl.flatten(i)] * xi_j * (*derivs)[this->fl.flatten(k)] / (8*Mp*Mp*Mp*Mp) ) * (1 - k2dotk3*k2dotk3 / (k2*k2 * k3*k3)) / 2
-                      - ( (*derivs)[this->fl.flatten(j)] + xi_i * (*derivs)[this->fl.flatten(k)] / (8*Mp*Mp*Mp*Mp) ) * (1 - k1dotk3*k1dotk3 / (k1*k1 * k3*k3)) / 2;
+                      - ( (*derivs)[this->fl.flatten(j)] * xi_i * (*derivs)[this->fl.flatten(k)] / (8*Mp*Mp*Mp*Mp) ) * (1 - k1dotk3*k1dotk3 / (k1*k1 * k3*k3)) / 2;
 
             if(j == k) result += - (xi_i / (2*Mp*Mp)) * k1dotk2 / (k1*k1) / 2;
             if(i == k) result += - (xi_j / (2*Mp*Mp)) * k1dotk2 / (k2*k2) / 2;
