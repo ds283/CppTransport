@@ -30,7 +30,7 @@ namespace macro_packages
             throw macro_packages::rule_apply_fail(msg.str());
           }
 
-        return (this->rule)(args);
+        return (*this->rule)(args);
       }
 
 
@@ -145,6 +145,12 @@ namespace macro_packages
           {
             (this->post)(state);
           }
+      }
+
+
+    void simple_rule::report_end_of_input()
+      {
+        this->rule->report_end_of_input();
       }
 
   }   // namespace macro_packages

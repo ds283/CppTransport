@@ -18,7 +18,9 @@
 #include "boost/uuid/uuid_io.hpp"
 #include "boost/date_time/posix_time/posix_time.hpp"
 
-#define BIND(X) std::bind(&fundamental::X, this, std::placeholders::_1)
+
+#define BIND(X) std::move(std::make_shared<X>(this->data_payload, this->printer))
+
 
 namespace macro_packages
   {
@@ -32,7 +34,7 @@ namespace macro_packages
     constexpr unsigned int AUTHOR_TOTAL_ARGUMENTS = 0;
     constexpr unsigned int TAG_TOTAL_ARGUMENTS = 0;
     constexpr unsigned int MODEL_TOTAL_ARGUMENTS = 0;
-    constexpr unsigned int UNIQUE_ID_TOTAL_ARGUMENTS = 0;
+    constexpr unsigned int UUID_TOTAL_ARGUMENTS = 0;
     constexpr unsigned int HEADER_TOTAL_ARGUMENTS = 0;
     constexpr unsigned int CORE_TOTAL_ARGUMENTS = 0;
     constexpr unsigned int NUMBER_FIELDS_TOTAL_ARGUMENTS = 0;
@@ -50,76 +52,41 @@ namespace macro_packages
     constexpr unsigned int PERT_REL_ERR_TOTAL_ARGUMENTS = 0;
     constexpr unsigned int PERT_STEP_TOTAL_ARGUMENTS = 0;
     constexpr unsigned int PERT_NAME_TOTAL_ARGUMENTS = 0;
+    constexpr unsigned int UNIQUE_TOTAL_ARGUMENTS = 0;
 
 
-    const std::vector<simple_rule> fundamental::get_pre_rules()
+    fundamental::fundamental(tensor_factory& f, cse& cw, translator_data& p, language_printer& prn)
+      : replacement_rule_package(f, cw, p, prn)
       {
-        std::vector<simple_rule> package;
+        pre_package.emplace_back("TOOL", BIND(replace_tool), TOOL_TOTAL_ARGUMENTS);
+        pre_package.emplace_back("VERSION", BIND(replace_version), VERSION_TOTAL_ARGUMENTS);
+        pre_package.emplace_back("GUARD", BIND(replace_guard), GUARD_TOTAL_ARGUMENTS);
+        pre_package.emplace_back("DATE", BIND(replace_date), DATE_TOTAL_ARGUMENTS);
+        pre_package.emplace_back("SOURCE", BIND(replace_source), SOURCE_TOTAL_ARGUMENTS);
+        pre_package.emplace_back("NAME", BIND(replace_name), NAME_TOTAL_ARGUMENTS);
+        pre_package.emplace_back("AUTHOR", BIND(replace_author), AUTHOR_TOTAL_ARGUMENTS);
+        pre_package.emplace_back("TAG", BIND(replace_tag), TAG_TOTAL_ARGUMENTS);
+        pre_package.emplace_back("MODEL", BIND(replace_model), MODEL_TOTAL_ARGUMENTS);
+        pre_package.emplace_back("UNIQUE_ID", BIND(replace_uid), UUID_TOTAL_ARGUMENTS);
+        pre_package.emplace_back("HEADER", BIND(replace_header), HEADER_TOTAL_ARGUMENTS);
+        pre_package.emplace_back("CORE", BIND(replace_core), CORE_TOTAL_ARGUMENTS);
+        pre_package.emplace_back("NUMBER_FIELDS", BIND(replace_number_fields), NUMBER_FIELDS_TOTAL_ARGUMENTS);
+        pre_package.emplace_back("NUMBER_PARAMS", BIND(replace_number_params), NUMBER_PARAMS_TOTAL_ARGUMENTS);
+        pre_package.emplace_back("FIELD_NAME_LIST", BIND(replace_field_list), FIELD_LIST_TOTAL_ARGUMENTS);
+        pre_package.emplace_back("LATEX_NAME_LIST", BIND(replace_latex_list), LATEX_LIST_TOTAL_ARGUMENTS);
+        pre_package.emplace_back("PARAM_NAME_LIST", BIND(replace_param_list), PARAM_LIST_TOTAL_ARGUMENTS);
+        pre_package.emplace_back("PLATX_NAME_LIST", BIND(replace_platx_list), PLATX_LIST_TOTAL_ARGUMENTS);
+        pre_package.emplace_back("STATE_NAME_LIST", BIND(replace_state_list), STATE_LIST_TOTAL_ARGUMENTS);
+        pre_package.emplace_back("BACKG_ABS_ERR", BIND(replace_b_abs_err), BACKG_ABS_ERR_TOTAL_ARGUMENTS);
+        pre_package.emplace_back("BACKG_REL_ERR", BIND(replace_b_rel_err), BACKG_REL_ERR_TOTAL_ARGUMENTS);
+        pre_package.emplace_back("BACKG_STEP_SIZE", BIND(replace_b_step), BACKG_STEP_TOTAL_ARGUMENTS);
+        pre_package.emplace_back("BACKG_STEPPER", BIND(replace_b_stepper), BACKG_NAME_TOTAL_ARGUMENTS);
+        pre_package.emplace_back("PERT_ABS_ERR", BIND(replace_p_abs_err), PERT_ABS_ERR_TOTAL_ARGUMENTS);
+        pre_package.emplace_back("PERT_REL_ERR", BIND(replace_p_rel_err), PERT_REL_ERR_TOTAL_ARGUMENTS);
+        pre_package.emplace_back("PERT_STEP_SIZE", BIND(replace_p_step), PERT_STEP_TOTAL_ARGUMENTS);
+        pre_package.emplace_back("PERT_STEPPER", BIND(replace_p_stepper), PERT_NAME_TOTAL_ARGUMENTS);
 
-        const std::vector<replacement_rule_simple> rules =
-          { BIND(replace_tool) ,            BIND(replace_version),          BIND(replace_guard),            BIND(replace_date),             BIND(replace_source),
-            BIND(replace_name),             BIND(replace_author),           BIND(replace_tag),              BIND(replace_model),            BIND(replace_uid),
-            BIND(replace_header),           BIND(replace_core),             BIND(replace_number_fields),    BIND(replace_number_params),
-            BIND(replace_field_list),       BIND(replace_latex_list),       BIND(replace_param_list),       BIND(replace_platx_list),       BIND(replace_state_list),
-            BIND(replace_b_abs_err),        BIND(replace_b_rel_err),        BIND(replace_b_step),           BIND(replace_b_stepper),
-            BIND(replace_p_abs_err),        BIND(replace_p_rel_err),        BIND(replace_p_step),           BIND(replace_p_stepper)
-          };
-
-        const std::vector<std::string> names =
-          { "TOOL",                         "VERSION",                      "GUARD",                        "DATE",                         "SOURCE",
-            "NAME",                         "AUTHOR",                       "TAG",                          "MODEL",                        "UNIQUE_ID",
-            "HEADER",                       "CORE",                         "NUMBER_FIELDS",                "NUMBER_PARAMS",
-            "FIELD_NAME_LIST",              "LATEX_NAME_LIST",              "PARAM_NAME_LIST",              "PLATX_NAME_LIST",              "STATE_NAME_LIST",
-            "BACKG_ABS_ERR",                "BACKG_REL_ERR",                "BACKG_STEP_SIZE",              "BACKG_STEPPER",
-            "PERT_ABS_ERR",                 "PERT_REL_ERR",                 "PERT_STEP_SIZE",               "PERT_STEPPER"
-          };
-
-        const std::vector<unsigned int> args =
-          { TOOL_TOTAL_ARGUMENTS,           VERSION_TOTAL_ARGUMENTS,        GUARD_TOTAL_ARGUMENTS,          DATE_TOTAL_ARGUMENTS,           SOURCE_TOTAL_ARGUMENTS,
-            NAME_TOTAL_ARGUMENTS,           AUTHOR_TOTAL_ARGUMENTS,         TAG_TOTAL_ARGUMENTS,            MODEL_TOTAL_ARGUMENTS,          UNIQUE_ID_TOTAL_ARGUMENTS,
-            HEADER_TOTAL_ARGUMENTS,         CORE_TOTAL_ARGUMENTS,           NUMBER_FIELDS_TOTAL_ARGUMENTS,  NUMBER_PARAMS_TOTAL_ARGUMENTS,
-            FIELD_LIST_TOTAL_ARGUMENTS,     LATEX_LIST_TOTAL_ARGUMENTS,     PARAM_LIST_TOTAL_ARGUMENTS,     PLATX_LIST_TOTAL_ARGUMENTS,     STATE_LIST_TOTAL_ARGUMENTS,
-            BACKG_ABS_ERR_TOTAL_ARGUMENTS,  BACKG_REL_ERR_TOTAL_ARGUMENTS,  BACKG_STEP_TOTAL_ARGUMENTS,     BACKG_NAME_TOTAL_ARGUMENTS,
-            PERT_ABS_ERR_TOTAL_ARGUMENTS,   PERT_REL_ERR_TOTAL_ARGUMENTS,   PERT_STEP_TOTAL_ARGUMENTS,      PERT_NAME_TOTAL_ARGUMENTS
-          };
-
-        assert(rules.size() == names.size());
-        assert(rules.size() == args.size());
-
-        for(int i = 0; i < rules.size(); ++i)
-          {
-            package.emplace_back(names[i], rules[i], args[i]);
-          }
-
-        return(package);
-      }
-
-
-    const std::vector<simple_rule> fundamental::get_post_rules()
-      {
-        std::vector<simple_rule> package;
-
-        const std::vector<replacement_rule_simple> rules =
-          { BIND(replace_unique)
-          };
-
-        const std::vector<std::string> names =
-          { "UNIQUE"
-          };
-
-        const std::vector<unsigned int> args =
-          { 0
-          };
-
-        assert(rules.size() == names.size());
-        assert(rules.size() == args.size());
-
-        for(int i = 0; i < rules.size(); ++i)
-          {
-            package.emplace_back(names[i], rules[i], args[i]);
-          }
-
-        return(package);
+        post_package.emplace_back("UNIQUE", BIND(replace_unique), UNIQUE_TOTAL_ARGUMENTS);
       }
 
 
@@ -134,56 +101,24 @@ namespace macro_packages
     // *******************************************************************
 
 
-    template <typename ListType>
-    std::string fundamental::stringize_list(const ListType& list)
-      {
-        std::ostringstream out;
-
-        out << this->list_start + this->list_pad;
-
-        unsigned int i = 0;
-        for(const std::string& item : list)
-          {
-            if(i > 0)
-              {
-                out << this->list_separator + this->list_pad;
-              }
-
-            out << to_printable(item);
-            ++i;
-          }
-        out << this->list_pad + this->list_end;
-
-        return(out.str());
-      }
-
-
-    std::string fundamental::stringize_number(double number)
-      {
-        return(boost::lexical_cast<std::string>(number));
-      }
-
-
-    // *******************************************************************
-
-
     // REPLACEMENT RULES
 
     // PRE macros
 
-    std::string fundamental::replace_tool(const macro_argument_list& args)
+
+    std::string replace_tool::operator()(const macro_argument_list& args)
       {
         return(CPPTRANSPORT_NAME);
       }
 
 
-    std::string fundamental::replace_version(const macro_argument_list& args)
+    std::string replace_version::operator()(const macro_argument_list& args)
       {
         return(CPPTRANSPORT_VERSION);
       }
 
 
-    std::string fundamental::replace_guard(const macro_argument_list& args)
+    std::string replace_guard::operator()(const macro_argument_list& args)
       {
         std::string guard;
         enum process_type type = this->data_payload.get_stack().top_process_type();
@@ -201,7 +136,7 @@ namespace macro_packages
       }
 
 
-    std::string fundamental::replace_date(const macro_argument_list& args)
+    std::string replace_date::operator()(const macro_argument_list& args)
       {
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
 
@@ -209,13 +144,13 @@ namespace macro_packages
       }
 
 
-    std::string fundamental::replace_source(const macro_argument_list& args)
+    std::string replace_source::operator()(const macro_argument_list& args)
       {
         return(this->data_payload.get_model_input().string());
       }
 
 
-    std::string fundamental::replace_uid(const macro_argument_list& args)
+    std::string replace_uid::operator()(const macro_argument_list& args)
       {
         boost::optional< contexted_value<std::string>& > nm_value = this->data_payload.get_name();
         std::string name = nm_value ? *nm_value : std::string();
@@ -237,7 +172,7 @@ namespace macro_packages
       }
 
 
-    std::string fundamental::replace_name(const macro_argument_list& args)
+    std::string replace_name::operator()(const macro_argument_list& args)
       {
         boost::optional< contexted_value<std::string>& > value = this->data_payload.get_name();
         if(value)
@@ -251,7 +186,7 @@ namespace macro_packages
       }
 
 
-    std::string fundamental::replace_author(const macro_argument_list& args)
+    std::string replace_author::operator()(const macro_argument_list& args)
       {
         boost::optional< contexted_value<std::string>& > value = this->data_payload.get_author();
         if(value)
@@ -265,7 +200,7 @@ namespace macro_packages
       }
 
 
-    std::string fundamental::replace_tag(const macro_argument_list& args)
+    std::string replace_tag::operator()(const macro_argument_list& args)
       {
         boost::optional< contexted_value<std::string>& > value = this->data_payload.get_tag();
         if(value)
@@ -279,7 +214,7 @@ namespace macro_packages
       }
 
 
-    std::string fundamental::replace_model(const macro_argument_list& args)
+    std::string replace_model::operator()(const macro_argument_list& args)
       {
         boost::optional< contexted_value<std::string>& > value = this->data_payload.get_model();
         if(value)
@@ -293,19 +228,19 @@ namespace macro_packages
       }
 
 
-    std::string fundamental::replace_header(const macro_argument_list& args)
+    std::string replace_header::operator()(const macro_argument_list& args)
       {
         return(this->data_payload.get_implementation_output().string());
       }
 
 
-    std::string fundamental::replace_core(const macro_argument_list& args)
+    std::string replace_core::operator()(const macro_argument_list& args)
       {
         return(this->data_payload.get_core_output().string());
       }
 
 
-    std::string fundamental::replace_number_fields(const macro_argument_list& args)
+    std::string replace_number_fields::operator()(const macro_argument_list& args)
       {
         std::ostringstream out;
 
@@ -315,7 +250,7 @@ namespace macro_packages
       }
 
 
-    std::string fundamental::replace_number_params(const macro_argument_list& args)
+    std::string replace_number_params::operator()(const macro_argument_list& args)
       {
         std::ostringstream out;
 
@@ -325,42 +260,42 @@ namespace macro_packages
       }
 
 
-    std::string fundamental::replace_field_list(const macro_argument_list& args)
+    std::string replace_field_list::operator()(const macro_argument_list& args)
       {
         std::vector<std::string> list = this->data_payload.get_field_list();
 
-        return(this->stringize_list(list));
+        return this->printer.initialization_list(list);
       }
 
 
-    std::string fundamental::replace_latex_list(const macro_argument_list& args)
+    std::string replace_latex_list::operator()(const macro_argument_list& args)
       {
         std::vector<std::string> list = this->data_payload.get_latex_list();
 
-        return(this->stringize_list(list));
+        return this->printer.initialization_list(list);
       }
 
 
-    std::string fundamental::replace_param_list(const macro_argument_list& args)
+    std::string replace_param_list::operator()(const macro_argument_list& args)
       {
         std::vector<std::string> list = this->data_payload.get_param_list();
 
-        return(this->stringize_list(list));
+        return this->printer.initialization_list(list);
       }
 
 
-    std::string fundamental::replace_platx_list(const macro_argument_list& args)
+    std::string replace_platx_list::operator()(const macro_argument_list& args)
       {
         std::vector<std::string> list = this->data_payload.get_platx_list();
 
-        return(this->stringize_list(list));
+        return this->printer.initialization_list(list);
       }
 
 
-    std::string fundamental::replace_state_list(const macro_argument_list& args)
+    std::string replace_state_list::operator()(const macro_argument_list& args)
       {
-        std::vector<GiNaC::symbol> f_list = this->data_payload.get_field_symbols();
-        std::vector<GiNaC::symbol> d_list = this->data_payload.get_deriv_symbols();
+        symbol_list f_list = this->data_payload.get_field_symbols();
+        symbol_list d_list = this->data_payload.get_deriv_symbols();
 
         std::vector<std::string> list;
 
@@ -373,35 +308,35 @@ namespace macro_packages
             list.push_back(d_list[i].get_name());
           }
 
-        return(this->stringize_list(list));
+        return this->printer.initialization_list(list);
       }
 
 
-     std::string fundamental::replace_b_abs_err(const macro_argument_list& args)
+     std::string replace_b_abs_err::operator()(const macro_argument_list& args)
       {
         const struct stepper s = this->data_payload.get_background_stepper();
 
-        return(this->stringize_number(s.abserr));
+        return boost::lexical_cast<std::string>(s.abserr);
       }
 
 
-    std::string fundamental::replace_b_rel_err(const macro_argument_list& args)
+    std::string replace_b_rel_err::operator()(const macro_argument_list& args)
       {
         const struct stepper s = this->data_payload.get_background_stepper();
 
-        return(this->stringize_number(s.relerr));
+        return boost::lexical_cast<std::string>(s.relerr);
       }
 
 
-    std::string fundamental::replace_b_step(const macro_argument_list& args)
+    std::string replace_b_step::operator()(const macro_argument_list& args)
       {
         const struct stepper s = this->data_payload.get_background_stepper();
 
-        return(this->stringize_number(s.stepsize));
+        return boost::lexical_cast<std::string>(s.stepsize);
       }
 
 
-    std::string fundamental::replace_b_stepper(const macro_argument_list& args)
+    std::string replace_b_stepper::operator()(const macro_argument_list& args)
       {
         const struct stepper s = this->data_payload.get_background_stepper();
 
@@ -409,31 +344,31 @@ namespace macro_packages
       }
 
 
-    std::string fundamental::replace_p_abs_err(const macro_argument_list& args)
+    std::string replace_p_abs_err::operator()(const macro_argument_list& args)
       {
         const struct stepper s = this->data_payload.get_perturbations_stepper();
 
-        return(this->stringize_number(s.abserr));
+        return boost::lexical_cast<std::string>(s.abserr);
       }
 
 
-    std::string fundamental::replace_p_rel_err(const macro_argument_list& args)
+    std::string replace_p_rel_err::operator()(const macro_argument_list& args)
       {
         const struct stepper s = this->data_payload.get_perturbations_stepper();
 
-        return(this->stringize_number(s.relerr));
+        return boost::lexical_cast<std::string>(s.relerr);
       }
 
 
-    std::string fundamental::replace_p_step(const macro_argument_list& args)
+    std::string replace_p_step::operator()(const macro_argument_list& args)
       {
         const struct stepper s = this->data_payload.get_perturbations_stepper();
 
-        return(this->stringize_number(s.stepsize));
+        return boost::lexical_cast<std::string>(s.stepsize);
       }
 
 
-    std::string fundamental::replace_p_stepper(const macro_argument_list& args)
+    std::string replace_p_stepper::operator()(const macro_argument_list& args)
       {
         const struct stepper s = this->data_payload.get_perturbations_stepper();
 
@@ -444,9 +379,9 @@ namespace macro_packages
     // POST macros
 
 
-    std::string fundamental::replace_unique(const macro_argument_list& args)
+    std::string replace_unique::operator()(const macro_argument_list& args)
       {
-        return(this->stringize_number(this->unique++));
+        return boost::lexical_cast<std::string>(this->unique++);
       }
 
 

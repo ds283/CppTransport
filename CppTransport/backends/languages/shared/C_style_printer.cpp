@@ -89,3 +89,19 @@ std::string C_style_printer::array_subscript(const std::string& kernel, const st
     stmt << kernel << this->array_open << flatten << this->function_open << a << "," << b << "," << c << this->function_close << this->array_close;
     return(stmt.str());
   }
+
+
+std::string C_style_printer::initialization_list(const std::vector<std::string>& list) const
+  {
+    std::ostringstream stmt;
+    stmt << this->initializer_open << " ";
+
+    unsigned int count = 0;
+    for(const std::string& ele : list)
+      {
+        if(count > 0) stmt << this->initializer_sep << " ";
+        stmt << ele;
+      }
+
+    stmt << " " << this->initializer_close;
+  }

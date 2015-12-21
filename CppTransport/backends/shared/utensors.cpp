@@ -43,22 +43,6 @@ namespace macro_packages
       }
 
 
-    const std::vector<simple_rule> utensors::get_pre_rules()
-      {
-        std::vector<simple_rule> package;
-
-        return(package);
-      }
-
-
-    const std::vector<simple_rule> utensors::get_post_rules()
-      {
-        std::vector<simple_rule> package;
-
-        return(package);
-      }
-
-
     const std::vector<index_rule> utensors::get_index_rules()
       {
         std::vector<index_rule> package;

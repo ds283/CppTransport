@@ -57,6 +57,6 @@ constexpr auto OUTPUT_VEXCL_KERNEL_POST              = "\"";
 constexpr auto OUTPUT_VEXCL_KERNEL_LINE_PRE          = "\"";
 constexpr auto OUTPUT_VEXCL_KERNEL_LINE_POST         = "\\n\"";
 
-constexpr auto OUTPUT_OPENCL_DEFAULT_LABEL           = "idx";
+constexpr auto OUTPUT_OPENCL_QUALIFIER               = "global";
 
 #endif //CPPTRANSPORT_CORE_H

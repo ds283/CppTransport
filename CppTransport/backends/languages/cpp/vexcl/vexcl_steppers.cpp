@@ -14,7 +14,7 @@
 #include "translation_unit.h"
 
 
-#define BIND(X) std::bind(&vexcl_steppers::X, this, std::placeholders::_1)
+#define BIND(X) std::move(std::make_shared<X>(this->data_payload, this->printer))
 
 
 namespace vexcl
@@ -32,39 +32,13 @@ namespace vexcl
     constexpr unsigned int PERT_NAME_TOTAL_ARGUMENTS = 0;
 
 
-    const std::vector<macro_packages::simple_rule> vexcl_steppers::get_pre_rules()
+    vexcl_steppers::vexcl_steppers(tensor_factory& f, cse& cw, translator_data& p, language_printer& prn)
+      : ::macro_packages::replacement_rule_package(f, cw, p, prn)
       {
-        std::vector<macro_packages::simple_rule> package;
-
-        const std::vector<replacement_rule_simple> rules =
-          { BIND(replace_backg_stepper),   BIND(replace_pert_stepper),   BIND(stepper_name),         BIND(stepper_name)
-          };
-
-        const std::vector<std::string> names =
-          { "MAKE_BACKG_STEPPER",          "MAKE_PERT_STEPPER",          "BACKG_STEPPER",            "BACKG_STEPPER"
-          };
-
-        const std::vector<unsigned int> args =
-          { BACKG_STEPPER_TOTAL_ARGUMENTS, PERT_STEPPER_TOTAL_ARGUMENTS, BACKG_NAME_TOTAL_ARGUMENTS, PERT_NAME_TOTAL_ARGUMENTS
-          };
-
-        assert(rules.size() == names.size());
-        assert(rules.size() == args.size());
-
-        for(int i = 0; i < rules.size(); ++i)
-          {
-            package.emplace_back(names[i], rules[i], args[i]);
-          }
-
-        return(package);
-      }
-
-
-    const std::vector<macro_packages::simple_rule> vexcl_steppers::get_post_rules()
-      {
-        std::vector<macro_packages::simple_rule> package;
-
-        return(package);
+        pre_package.emplace_back("MAKE_BACKG_STEPPER", BIND(replace_backg_stepper), BACKG_STEPPER_TOTAL_ARGUMENTS);
+        pre_package.emplace_back("MAKE_PERT_STEPPER", BIND(replace_pert_stepper), PERT_STEPPER_TOTAL_ARGUMENTS);
+        pre_package.emplace_back("BACKG_STEPPER", BIND(stepper_name), BACKG_NAME_TOTAL_ARGUMENTS);
+        pre_package.emplace_back("PERT_STEPPER", BIND(stepper_name), PERT_NAME_TOTAL_ARGUMENTS);
       }
 
 
@@ -79,7 +53,7 @@ namespace vexcl
     // *******************************************************************
 
 
-    std::string vexcl_steppers::replace_backg_stepper(const macro_argument_list& args)
+    std::string replace_backg_stepper::operator()(const macro_argument_list& args)
       {
         const struct stepper& s = this->data_payload.get_background_stepper();
         std::string state_name = args[BACKG_STEPPER_STATE_ARGUMENT];
@@ -100,7 +74,7 @@ namespace vexcl
       }
 
 
-    std::string vexcl_steppers::replace_pert_stepper(const macro_argument_list& args)
+    std::string replace_pert_stepper::operator()(const macro_argument_list& args)
       {
         const struct stepper& s = this->data_payload.get_perturbations_stepper();
         std::string state_name = args[PERT_STEPPER_STATE_ARGUMENT];
@@ -120,7 +94,7 @@ namespace vexcl
         return(out.str());
       }
 
-    std::string vexcl_steppers::stepper_name(const macro_argument_list& args)
+    std::string stepper_name::operator()(const macro_argument_list& args)
       {
         return(VEXCL_STEPPER);
       }

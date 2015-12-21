@@ -52,22 +52,6 @@ namespace macro_packages
       }
 
 
-const std::vector<simple_rule> lagrangian_tensors::get_pre_rules()
-      {
-        std::vector<simple_rule> package;
-
-        return(package);
-      }
-
-
-    const std::vector<simple_rule> lagrangian_tensors::get_post_rules()
-      {
-        std::vector<simple_rule> package;
-
-        return(package);
-      }
-
-
     const std::vector<index_rule> lagrangian_tensors::get_index_rules()
       {
         std::vector<index_rule> package;

@@ -14,7 +14,7 @@
 #include "msg_en.h"
 
 
-#define BIND(X) std::bind(&temporary_pool::X, this, std::placeholders::_1)
+#define BIND(X) std::move(std::make_shared<X>(this->data_payload, this->cse_worker, this->printer))
 
 
 namespace macro_packages
@@ -24,50 +24,11 @@ namespace macro_packages
     constexpr unsigned int TEMP_POOL_TOTAL_ARGUMENTS = 1;
 
 
-    temporary_pool::temporary_pool(tensor_factory& f, cse& cw, translator_data& p, language_printer& prn,
-                                   std::string t)
-	    : pool_template(t),
-        unique(0),
-        tag_set(false),
-        replacement_rule_package(f, cw, p, prn)
+    temporary_pool::temporary_pool(tensor_factory& f, cse& cw, translator_data& p, language_printer& prn)
+	    : replacement_rule_package(f, cw, p, prn)
 	    {
+        pre_package.emplace_back("TEMP_POOL", BIND(replace_temp_pool), TEMP_POOL_TOTAL_ARGUMENTS);
 	    }
-
-
-    const std::vector<simple_rule> temporary_pool::get_pre_rules()
-      {
-        std::vector<simple_rule> package;
-
-        const std::vector<replacement_rule_simple> rules =
-          { BIND(replace_temp_pool)
-          };
-
-        const std::vector<std::string> names =
-          { "TEMP_POOL"
-          };
-
-        const std::vector<unsigned int> args =
-          { TEMP_POOL_TOTAL_ARGUMENTS
-          };
-
-        assert(rules.size() == names.size());
-        assert(rules.size() == args.size());
-
-        for(int i = 0; i < rules.size(); ++i)
-          {
-            package.emplace_back(names[i], rules[i], args[i]);
-          }
-
-        return(package);
-      }
-
-
-    const std::vector<simple_rule> temporary_pool::get_post_rules()
-      {
-        std::vector<simple_rule> package;
-
-        return(package);
-      }
 
 
     const std::vector<index_rule> temporary_pool::get_index_rules()
@@ -80,20 +41,36 @@ namespace macro_packages
 
 		void temporary_pool::report_end_of_input()
 			{
-		    if(!this->tag_set)
+        for(simple_rule& rule : this->pre_package)
           {
-            error_context err_context(this->data_payload.get_stack(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
-            err_context.warn(WARNING_TEMPORARY_NO_TAG_SET);
+            rule.report_end_of_input();
           }
-		    this->deposit_temporaries();
+
+        for(simple_rule& rule : this->post_package)
+          {
+            rule.report_end_of_input();
+          }
+
+        // pass notification up to parent handler
         this->replacement_rule_package::report_end_of_input();
 			}
 
 
-    // *******************************************************************
+    void replace_temp_pool::report_end_of_input()
+      {
+        if(!this->tag_set)
+          {
+            error_context err_context(this->data_payload.get_stack(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
+            err_context.warn(WARNING_TEMPORARY_NO_TAG_SET);
+          }
+        else
+          {
+            this->deposit_temporaries();
+          }
+      }
 
 
-    void temporary_pool::deposit_temporaries()
+    void replace_temp_pool::deposit_temporaries()
       {
         // deposit any temporaries generated in the current temporary pool,
         // and then reset the CSE agent
@@ -108,7 +85,7 @@ namespace macro_packages
             macro_agent& ms  = this->data_payload.get_stack().top_macro_package();
 
             // get any temporaries which need to be deposited
-            std::string temps = this->cse_worker.temporaries(this->pool_template);
+            std::string temps = this->cse_worker.temporaries(this->templ);
 
             // apply macro replacement to them, in case this is required
             unsigned int replacements;
@@ -132,11 +109,9 @@ namespace macro_packages
           }
        }
 
-    std::string temporary_pool::replace_temp_pool(const macro_argument_list& args)
+    std::string replace_temp_pool::operator()(const macro_argument_list& args)
       {
         std::string t = args[TEMP_POOL_TEMPLATE_ARGUMENT];
-
-        std::string rval = "";
 
         // deposit any temporaries generated up to this point into the current temporary pool
         //
@@ -151,7 +126,7 @@ namespace macro_packages
         if(this->tag_set) this->deposit_temporaries();
 
         // remember new template
-        this->pool_template = t;
+        this->templ = t;
 
         // mark current endpoint in the buffer as the new insertion point
         buf.set_tag_to_end();
@@ -160,7 +135,7 @@ namespace macro_packages
         // temporary pool will be inserted *before* the line corresponding to this macro
         std::ostringstream label;
         label << OUTPUT_TEMPORARY_POOL_END << " (" << OUTPUT_TEMPORARY_POOL_SEQUENCE << "=" << this->unique << ")";
-        rval = this->printer.comment(label.str());
+        std::string rval = this->printer.comment(label.str());
 
         return(rval);
       }

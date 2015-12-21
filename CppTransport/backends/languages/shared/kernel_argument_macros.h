@@ -14,6 +14,178 @@
 namespace shared
   {
 
+    class args_params : public ::macro_packages::replacement_rule_simple
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! constructor
+        args_params(translator_data& p, language_printer& prn, std::string q="")
+          : data_payload(p),
+            printer(prn),
+            qualifier(q)
+          {
+          }
+
+        //! destructor
+        virtual ~args_params() = default;
+
+
+        // INTERFACE
+
+      public:
+
+        //! evaluate
+        virtual std::string operator()(const macro_argument_list& args) override;
+
+
+        // INTERNAL DATA
+
+      private:
+
+        //! data payload
+        translator_data& data_payload;
+
+        //! language printer
+        language_printer& printer;
+
+        //! qualifier
+        std::string qualifier;
+
+      };
+
+
+    class args_1index : public ::macro_packages::replacement_rule_simple
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! constructor
+        args_1index(translator_data& p, language_printer& prn, std::string q="")
+          : data_payload(p),
+            printer(prn),
+            qualifier(q)
+          {
+          }
+
+        //! destructor
+        virtual ~args_1index() = default;
+
+
+        // INTERFACE
+
+      public:
+
+        //! evaluate
+        virtual std::string operator()(const macro_argument_list& args) override;
+
+
+        // INTERNAL DATA
+
+      private:
+
+        //! data payload
+        translator_data& data_payload;
+
+        //! language printer
+        language_printer& printer;
+
+        //! qualifier
+        std::string qualifier;
+
+      };
+
+
+    class args_2index : public ::macro_packages::replacement_rule_simple
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! constructor
+        args_2index(translator_data& p, language_printer& prn, std::string q="")
+          : data_payload(p),
+            printer(prn),
+            qualifier(q)
+          {
+          }
+
+        //! destructor
+        virtual ~args_2index() = default;
+
+
+        // INTERFACE
+
+      public:
+
+        //! evaluate
+        virtual std::string operator()(const macro_argument_list& args) override;
+
+
+        // INTERNAL DATA
+
+      private:
+
+        //! data payload
+        translator_data& data_payload;
+
+        //! language printer
+        language_printer& printer;
+
+        //! qualifier
+        std::string qualifier;
+
+      };
+
+
+    class args_3index : public ::macro_packages::replacement_rule_simple
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! constructor
+        args_3index(translator_data& p, language_printer& prn, std::string q=OUTPUT_OPENCL_QUALIFIER)
+          : data_payload(p),
+            printer(prn),
+            qualifier(q)
+          {
+          }
+
+        //! destructor
+        virtual ~args_3index() = default;
+
+
+        // INTERFACE
+
+      public:
+
+        //! evaluate
+        virtual std::string operator()(const macro_argument_list& args) override;
+
+
+        // INTERNAL DATA
+
+      private:
+
+        //! data payload
+        translator_data& data_payload;
+
+        //! language printer
+        language_printer& printer;
+
+        //! qualifier
+        std::string qualifier;
+
+      };
+
+
     class kernel_argument_macros : public ::macro_packages::replacement_rule_package
       {
 
@@ -22,8 +194,7 @@ namespace shared
       public:
 
         //! constructor
-        kernel_argument_macros(tensor_factory& f, cse& cw, translator_data& p, language_printer& prn,
-                               std::string q="", std::string l=OUTPUT_OPENCL_DEFAULT_LABEL);
+        kernel_argument_macros(tensor_factory& f, cse& cw, translator_data& p, language_printer& prn);
 
         //! destructor is default
         virtual ~kernel_argument_macros() = default;
@@ -33,28 +204,7 @@ namespace shared
 
       public:
 
-        const std::vector<macro_packages::simple_rule> get_pre_rules();
-        const std::vector<macro_packages::simple_rule> get_post_rules();
         const std::vector<macro_packages::index_rule>  get_index_rules();
-
-
-        // INTERNAL API
-
-      protected:
-
-        std::string args_params(const macro_argument_list& args);
-
-        std::string args_1index(const macro_argument_list& args);
-        std::string args_2index(const macro_argument_list& args);
-        std::string args_3index(const macro_argument_list& args);
-
-
-        // INTERNAL DATA
-
-      protected:
-
-        std::string qualifier;
-        std::string label;
 
       };
 

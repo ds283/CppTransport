@@ -10,8 +10,9 @@
 #include "flow_tensors.h"
 
 
-#define BIND1(X) std::bind(&flow_tensors::X, this, std::placeholders::_1)
+#define BIND1(X) std::move(std::make_shared<X>(this->fctry, this->cse_worker, this->printer))
 #define BIND3(X) std::bind(&flow_tensors::X, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)
+#define BIND1OLD(X) std::bind(&flow_tensors::X, this, std::placeholders::_1)
 
 
 namespace macro_packages
@@ -49,47 +50,14 @@ namespace macro_packages
       : replacement_rule_package(f, cw, p, prn),
         shared(f.get_shared_resources())
       {
-        Hubble_obj = f.make_Hubble(prn);
         dV_tensor = f.make_dV(prn);
         ddV_tensor = f.make_ddV(prn);
         dddV_tensor = f.make_dddV(prn);
         SR_velocity_tensor = f.make_SR_velocity(prn);
-      }
 
-
-    const std::vector<simple_rule> flow_tensors::get_pre_rules()
-      {
-        std::vector<simple_rule> package;
-
-        const std::vector<replacement_rule_simple> rules =
-          { BIND1(replace_V),           BIND1(replace_Hsq),        BIND1(replace_eps)
-          };
-
-        const std::vector<std::string> names =
-          { "POTENTIAL",                "HUBBLE_SQ",               "EPSILON"
-          };
-
-        const std::vector<unsigned int> args =
-          { POTENTIAL_TOTAL_ARGUMENTS,  HUBBLESQ_TOTAL_ARGUMENTS,  EPSILON_TOTAL_ARGUMENTS
-           };
-
-        assert(rules.size() == names.size());
-        assert(rules.size() == args.size());
-
-        for(int i = 0; i < rules.size(); ++i)
-          {
-            package.emplace_back(names[i], rules[i], args[i]);
-          }
-
-        return(package);
-      }
-
-
-    const std::vector<simple_rule> flow_tensors::get_post_rules()
-      {
-        std::vector<simple_rule> package;
-
-        return(package);
+        pre_package.emplace_back("POTENTIAL", BIND1(replace_V), POTENTIAL_TOTAL_ARGUMENTS);
+        pre_package.emplace_back("HUBBLE_SQ", BIND1(replace_Hsq), HUBBLESQ_TOTAL_ARGUMENTS);
+        pre_package.emplace_back("EPSILON", BIND1(replace_eps), EPSILON_TOTAL_ARGUMENTS);
       }
 
 
@@ -99,8 +67,8 @@ namespace macro_packages
 
         const std::vector<replacement_pre_unroll> pres =
           { nullptr,                            nullptr,                            nullptr,
-            BIND1(pre_sr_velocity),             BIND1(pre_dV),                      BIND1(pre_ddV),
-            BIND1(pre_dddV)
+            BIND1OLD(pre_sr_velocity),             BIND1OLD(pre_dV),                      BIND1OLD(pre_ddV),
+            BIND1OLD(pre_dddV)
           };
 
         const std::vector<replacement_post_unroll> posts =
@@ -164,7 +132,7 @@ namespace macro_packages
     // *******************************************************************
 
 
-    std::string flow_tensors::replace_V(const macro_argument_list& args)
+    std::string replace_V::operator()(const macro_argument_list& args)
       {
         GiNaC::ex V = this->Hubble_obj->compute_V();
 
@@ -176,7 +144,7 @@ namespace macro_packages
       }
 
 
-    std::string flow_tensors::replace_Hsq(const macro_argument_list& args)
+    std::string replace_Hsq::operator()(const macro_argument_list& args)
       {
         GiNaC::ex Hsq = this->Hubble_obj->compute_Hsq();
 
@@ -188,7 +156,7 @@ namespace macro_packages
       }
 
 
-    std::string flow_tensors::replace_eps(const macro_argument_list& args)
+    std::string replace_eps::operator()(const macro_argument_list& args)
       {
         GiNaC::ex eps = this->Hubble_obj->compute_eps();
 

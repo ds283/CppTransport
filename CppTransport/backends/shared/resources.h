@@ -13,6 +13,435 @@
 namespace macro_packages
   {
 
+    class set_params : public replacement_rule_simple
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! constructor
+        set_params(resource_manager& m, language_printer& prn)
+          : mgr(m),
+            printer(prn)
+          {
+          }
+
+        //! destructor
+        virtual ~set_params() = default;
+
+
+        // INTERFACE
+
+      public:
+
+        //! evaluate
+        virtual std::string operator()(const macro_argument_list& args) override;
+
+
+        // INTERNAL DATA
+
+      private:
+
+        //! resource manager
+        resource_manager& mgr;
+
+        //! language printer
+        language_printer& printer;
+
+      };
+
+
+    class set_coordinates : public replacement_rule_simple
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! constructor
+        set_coordinates(resource_manager& m, language_printer& prn)
+          : mgr(m),
+            printer(prn)
+          {
+          }
+
+        //! destructor
+        virtual ~set_coordinates() = default;
+
+
+        // INTERFACE
+
+      public:
+
+        //! evaluate
+        virtual std::string operator()(const macro_argument_list& args) override;
+
+
+        // INTERNAL DATA
+
+      private:
+
+        //! resource manager
+        resource_manager& mgr;
+
+        //! language printer
+        language_printer& printer;
+
+      };
+
+
+    class set_phase_flatten : public replacement_rule_simple
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! constructor
+        set_phase_flatten(resource_manager& m, language_printer& prn)
+          : mgr(m),
+            printer(prn)
+          {
+          }
+
+        //! destructor
+        virtual ~set_phase_flatten() = default;
+
+
+        // INTERFACE
+
+      public:
+
+        //! evaluate
+        virtual std::string operator()(const macro_argument_list& args) override;
+
+
+        // INTERNAL DATA
+
+      private:
+
+        //! resource manager
+        resource_manager& mgr;
+
+        //! language printer
+        language_printer& printer;
+
+      };
+
+
+    class set_field_flatten : public replacement_rule_simple
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! constructor
+        set_field_flatten(resource_manager& m, language_printer& prn)
+          : mgr(m),
+            printer(prn)
+          {
+          }
+
+        //! destructor
+        virtual ~set_field_flatten() = default;
+
+
+        // INTERFACE
+
+      public:
+
+        //! evaluate
+        virtual std::string operator()(const macro_argument_list& args) override;
+
+
+        // INTERNAL DATA
+
+      private:
+
+        //! resource manager
+        resource_manager& mgr;
+
+        //! language printer
+        language_printer& printer;
+
+      };
+
+
+    class set_dV : public replacement_rule_simple
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! constructor
+        set_dV(resource_manager& m, language_printer& prn)
+          : mgr(m),
+            printer(prn)
+          {
+          }
+
+        //! destructor
+        virtual ~set_dV() = default;
+
+
+        // INTERFACE
+
+      public:
+
+        //! evaluate
+        virtual std::string operator()(const macro_argument_list& args) override;
+
+
+        // INTERNAL DATA
+
+      private:
+
+        //! resource manager
+        resource_manager& mgr;
+
+        //! language printer
+        language_printer& printer;
+
+      };
+
+
+    class set_ddV : public replacement_rule_simple
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! constructor
+        set_ddV(resource_manager& m, language_printer& prn)
+          : mgr(m),
+            printer(prn)
+          {
+          }
+
+        //! destructor
+        virtual ~set_ddV() = default;
+
+
+        // INTERFACE
+
+      public:
+
+        //! evaluate
+        virtual std::string operator()(const macro_argument_list& args) override;
+
+
+        // INTERNAL DATA
+
+      private:
+
+        //! resource manager
+        resource_manager& mgr;
+
+        //! language printer
+        language_printer& printer;
+
+      };
+
+
+    class set_dddV : public replacement_rule_simple
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! constructor
+        set_dddV(resource_manager& m, language_printer& prn)
+          : mgr(m),
+            printer(prn)
+          {
+          }
+
+        //! destructor
+        virtual ~set_dddV() = default;
+
+
+        // INTERFACE
+
+      public:
+
+        //! evaluate
+        virtual std::string operator()(const macro_argument_list& args) override;
+
+
+        // INTERNAL DATA
+
+      private:
+
+        //! resource manager
+        resource_manager& mgr;
+
+        //! language printer
+        language_printer& printer;
+
+      };
+
+
+    class set_connexion : public replacement_rule_simple
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! constructor
+        set_connexion(resource_manager& m, language_printer& prn)
+          : mgr(m),
+            printer(prn)
+          {
+          }
+
+        //! destructor
+        virtual ~set_connexion() = default;
+
+
+        // INTERFACE
+
+      public:
+
+        //! evaluate
+        virtual std::string operator()(const macro_argument_list& args) override;
+
+
+        // INTERNAL DATA
+
+      private:
+
+        //! resource manager
+        resource_manager& mgr;
+
+        //! language printer
+        language_printer& printer;
+
+      };
+
+
+    class set_Riemann : public replacement_rule_simple
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! constructor
+        set_Riemann(resource_manager& m, language_printer& prn)
+          : mgr(m),
+            printer(prn)
+          {
+          }
+
+        //! destructor
+        virtual ~set_Riemann() = default;
+
+
+        // INTERFACE
+
+      public:
+
+        //! evaluate
+        virtual std::string operator()(const macro_argument_list& args) override;
+
+
+        // INTERNAL DATA
+
+      private:
+
+        //! resource manager
+        resource_manager& mgr;
+
+        //! language printer
+        language_printer& printer;
+
+      };
+
+
+    class release : public replacement_rule_simple
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! constructor
+        release(resource_manager& m, language_printer& prn)
+          : mgr(m),
+            printer(prn)
+          {
+          }
+
+        //! destructor
+        virtual ~release() = default;
+
+
+        // INTERFACE
+
+      public:
+
+        //! evaluate
+        virtual std::string operator()(const macro_argument_list& args) override;
+
+
+        // INTERNAL DATA
+
+      private:
+
+        //! resource manager
+        resource_manager& mgr;
+
+        //! language printer
+        language_printer& printer;
+
+      };
+
+
+    class release_flatteners : public replacement_rule_simple
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! constructor
+        release_flatteners(resource_manager& m, language_printer& prn)
+          : mgr(m),
+            printer(prn)
+          {
+          }
+
+        //! destructor
+        virtual ~release_flatteners() = default;
+
+
+        // INTERFACE
+
+      public:
+
+        //! evaluate
+        virtual std::string operator()(const macro_argument_list& args) override;
+
+
+        // INTERNAL DATA
+
+      private:
+
+        //! resource manager
+        resource_manager& mgr;
+
+        //! language printer
+        language_printer& printer;
+
+      };
+
+
     class resources : public replacement_rule_package
       {
 
@@ -21,11 +450,7 @@ namespace macro_packages
       public:
 
         //! constructor
-        resources(tensor_factory& f, cse& cw, translator_data& p, language_printer& prn)
-          : replacement_rule_package(f, cw, p, prn),
-            mgr(f.get_resource_manager())
-          {
-          }
+        resources(tensor_factory& f, cse& cw, translator_data& p, language_printer& prn);
 
         //! destructor is default
         virtual ~resources() = default;
@@ -35,36 +460,8 @@ namespace macro_packages
 
       public:
 
-        const std::vector<simple_rule> get_pre_rules();
-        const std::vector<simple_rule> get_post_rules();
-        const std::vector<index_rule>  get_index_rules();
-
-
-        // INTERNAL API
-
-      protected:
-
-        std::string set_params(const macro_argument_list& args);
-
-        std::string set_coordinates(const macro_argument_list& args);
-
-        std::string set_phase_flatten(const macro_argument_list& args);
-
-        std::string set_field_flatten(const macro_argument_list& args);
-
-        std::string set_dV(const macro_argument_list& args);
-
-        std::string set_ddV(const macro_argument_list& args);
-
-        std::string set_dddV(const macro_argument_list& args);
-
-        std::string set_connexion(const macro_argument_list& args);
-
-        std::string set_Riemann(const macro_argument_list& args);
-
-        std::string release(const macro_argument_list& args);
-
-        std::string release_flatteners(const macro_argument_list& args);
+        //! return index- macros package
+        const std::vector<index_rule>  get_index_rules() override;
 
 
         // INTERNAL DATA

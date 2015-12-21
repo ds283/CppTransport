@@ -15,10 +15,6 @@
 #include "cse_map.h"
 
 
-//! replacement rule for a 'simple' macro, which takes arguments but not indices
-//! used for pre- and post- type macros
-typedef std::function<std::string(const macro_argument_list&)> replacement_rule_simple;
-
 //! replacement rule for an 'index' macro, which takes both arguments and needs an
 //! index set; we need to be able to evaluate it concretely on a specific index
 //! assignment, if the index set is unrolled, and abstractly on a loop variable if
@@ -41,13 +37,74 @@ typedef std::function<std::string(const macro_argument_list&, const abstract_ind
 namespace macro_packages
   {
 
+    //! base class for a 'simple' macro which takes arguments but not indices
+    class replacement_rule_simple
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! constructor
+        replacement_rule_simple() = default;
+
+        //! destructor
+        virtual ~replacement_rule_simple() = default;
+
+
+        // INTERFACE
+
+      public:
+
+        //! evaluate the macro
+        virtual std::string operator()(const macro_argument_list& args) = 0;
+
+        //! report end of input; here a no-op but but can be overridden if needed
+        virtual void report_end_of_input() { return; }
+
+      };
+
+
+    // base class for an 'index' macro which takes both arguments and needs an index set
+    class replacement_rule_index
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! constructor
+        replacement_rule_index() = default;
+
+        //! destructor
+        virtual ~replacement_rule_index() = default;
+
+
+        // INTERFACE
+
+      public:
+
+        //! evaluate the macro
+        virtual std::string operator()(const macro_argument_list& args, const assignment_list& indices) = 0;
+
+        //! pre-evaluation
+        virtual void pre(const macro_argument_list& args) = 0;
+
+        //! post-evaluation
+        virtual void post(const macro_argument_list& args) = 0;
+
+      };
+
+
     class simple_rule
       {
 
       public:
 
-        //! constructor enforces setup of all fields
-        simple_rule(std::string n, replacement_rule_simple r, unsigned int a)
+        //! constructor enforces setup of all fields;
+        //! we capture the replacement rule via a std::shared_ptr<> which may not be ideal
+        // TODO: consider searching for a better solution
+        simple_rule(std::string n, std::shared_ptr<replacement_rule_simple> r, unsigned int a)
           : rule(std::move(r)),
             args(a),
             name(std::move(n))
@@ -73,13 +130,16 @@ namespace macro_packages
         //! apply replacement rule
         std::string operator()(const macro_argument_list& args);
 
+        //! report end of input; used eg. to deposit temporaries when input is finished
+        void report_end_of_input();
+
 
         // INTERNAL DATA
 
       private:
 
         //! function pointer to replacement rule
-        replacement_rule_simple rule;
+        std::shared_ptr<replacement_rule_simple> rule;
 
         //! number of arguments expected by this macro
         unsigned int args;

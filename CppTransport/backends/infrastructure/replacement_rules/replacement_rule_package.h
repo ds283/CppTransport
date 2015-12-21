@@ -49,14 +49,15 @@ namespace macro_packages
 
         // these methods must be overridden by derived classes which implement the replacement_rule_package concept
 
-        //! get pre-rules
-        virtual const std::vector<simple_rule> get_pre_rules  () = 0;
 
-        //! get post-rules
-        virtual const std::vector<simple_rule> get_post_rules () = 0;
+        //! return pre- macros package
+        const std::vector<simple_rule>& get_pre_rules()  { return(this->pre_package); }
 
-        //! get index rules
-        virtual const std::vector<index_rule>  get_index_rules() = 0;
+        //! return post- macros package
+        const std::vector<simple_rule>& get_post_rules() { return(this->post_package); }
+
+        //! get index-macro package
+        virtual const std::vector<index_rule>   get_index_rules() = 0;
 
 
         // INTERFACE -- END OF INPUT
@@ -95,6 +96,18 @@ namespace macro_packages
         // INTERNAL DATA
 
       protected:
+
+        // MACRO PACKAGES
+
+        //! package of pre- macros
+        std::vector<simple_rule> pre_package;
+
+        //! package of post- macros
+        std::vector<simple_rule> post_package;
+
+        //! package of index-macros
+        std::vector<index_rule> index_package;
+
 
         // REFERENCES TO EXTERNALLY-SUPPLIED AGENTS
 

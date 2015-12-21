@@ -16,7 +16,8 @@
 
 #include "to_printable.h"
 
-#define BIND(X) std::bind(&vexcl_kernels::X, this, std::placeholders::_1)
+
+#define BIND(X) std::move(std::make_shared<X>(this->data_payload, this->printer))
 
 
 namespace vexcl
@@ -28,39 +29,10 @@ namespace vexcl
     constexpr unsigned int IMPORT_KERNEL_TOTAL_ARGUMENTS = 3;
 
 
-    const std::vector<macro_packages::simple_rule> vexcl_kernels::get_pre_rules()
+    vexcl_kernels::vexcl_kernels(tensor_factory& f, cse& cw, translator_data& p, language_printer& prn)
+      : ::macro_packages::replacement_rule_package(f, cw, p, prn)
       {
-        std::vector<macro_packages::simple_rule> package;
-
-        const std::vector<replacement_rule_simple> rules =
-          { BIND(import_kernel)
-          };
-
-        const std::vector<std::string> names =
-          { "IMPORT_KERNEL"
-          };
-
-        const std::vector<unsigned int> args =
-          { IMPORT_KERNEL_TOTAL_ARGUMENTS
-          };
-
-        assert(rules.size() == names.size());
-        assert(rules.size() == args.size());
-
-        for(int i = 0; i < rules.size(); ++i)
-          {
-            package.emplace_back(names[i], rules[i], args[i]);
-          }
-
-        return(package);
-      }
-
-
-    const std::vector<macro_packages::simple_rule> vexcl_kernels::get_post_rules()
-      {
-        std::vector<macro_packages::simple_rule> package;
-
-        return(package);
+        pre_package.emplace_back("IMPORT_KERNEL", BIND(import_kernel), IMPORT_KERNEL_TOTAL_ARGUMENTS);
       }
 
 
@@ -75,7 +47,7 @@ namespace vexcl
     // *******************************************************************
 
 
-    std::string vexcl_kernels::import_kernel(const macro_argument_list& args)
+    std::string import_kernel::operator()(const macro_argument_list& args)
       {
         std::string kernel_file = args[IMPORT_KERNEL_FILE_ARGUMENT];
 

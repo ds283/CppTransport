@@ -16,7 +16,7 @@
 #include "msg_en.h"
 
 
-#define BIND(X) std::bind(&kernel_argument_macros::X, this, std::placeholders::_1)
+#define BIND(X) std::move(std::make_shared<X>(this->data_payload, this->printer))
 
 
 namespace shared
@@ -39,54 +39,16 @@ namespace shared
     constexpr unsigned int THREEPF_ARGS_NAME_ARGUMENT = 0;
     constexpr unsigned int THREEPF_ARGS_TOTAL_ARGUMENTS = 1;
 
-    kernel_argument_macros::kernel_argument_macros(tensor_factory& f, cse& cw, translator_data& p, language_printer& prn,
-                                                   std::string q, std::string l)
-      : ::macro_packages::replacement_rule_package(f, cw, p, prn),
-        qualifier(q),
-        label(l)
+
+    kernel_argument_macros::kernel_argument_macros(tensor_factory& f, cse& cw, translator_data& p, language_printer& prn)
+      : ::macro_packages::replacement_rule_package(f, cw, p, prn)
       {
-//        printer->set_label(label);
-      }
-
-    const std::vector<macro_packages::simple_rule> kernel_argument_macros::get_pre_rules()
-      {
-        std::vector<macro_packages::simple_rule> package;
-
-        const std::vector<replacement_rule_simple> rules =
-          { BIND(args_params),          BIND(args_1index),
-            BIND(args_2index),          BIND(args_2index),
-            BIND(args_3index),          BIND(args_3index)
-          };
-
-        const std::vector<std::string> names =
-          { "PARAM_ARGS",               "COORD_ARGS",
-            "U2_ARGS",                  "TWOPF_ARGS",
-            "U3_ARGS",                  "THREEPF_ARGS"
-          };
-
-        const std::vector<unsigned int> args =
-          { PARAM_ARGS_TOTAL_ARGUMENTS, COORD_ARGS_TOTAL_ARGUMENTS,
-            U2_ARGS_TOTAL_ARGUMENTS,    TWOPF_ARGS_TOTAL_ARGUMENTS,
-            U3_ARGS_TOTAL_ARGUMENTS,    THREEPF_ARGS_TOTAL_ARGUMENTS
-          };
-
-        assert(rules.size() == names.size());
-        assert(rules.size() == args.size());
-
-        for(int i = 0; i < rules.size(); ++i)
-          {
-            package.emplace_back(names[i], rules[i], args[i]);
-          }
-
-        return(package);
-      }
-
-
-    const std::vector<macro_packages::simple_rule> kernel_argument_macros::get_post_rules()
-      {
-        std::vector<macro_packages::simple_rule> package;
-
-        return(package);
+        pre_package.emplace_back("PARAM_ARGS", BIND(args_params), PARAM_ARGS_TOTAL_ARGUMENTS);
+        pre_package.emplace_back("COORD_ARGS", BIND(args_1index), COORD_ARGS_TOTAL_ARGUMENTS);
+        pre_package.emplace_back("U2_ARGS", BIND(args_2index), U2_ARGS_TOTAL_ARGUMENTS);
+        pre_package.emplace_back("TWOPF_ARGS", BIND(args_2index), TWOPF_ARGS_TOTAL_ARGUMENTS);
+        pre_package.emplace_back("U3_ARGS", BIND(args_3index), U3_ARGS_TOTAL_ARGUMENTS);
+        pre_package.emplace_back("THREEPF_ARGS", BIND(args_3index), THREEPF_ARGS_TOTAL_ARGUMENTS);
       }
 
 
@@ -101,7 +63,7 @@ namespace shared
     // *******************************************************************
 
 
-    std::string kernel_argument_macros::args_params(const macro_argument_list& args)
+    std::string args_params::operator()(const macro_argument_list& args)
       {
         std::vector<std::string> list = this->data_payload.get_param_list();
 
@@ -116,7 +78,7 @@ namespace shared
       }
 
 
-    std::string kernel_argument_macros::args_1index(const macro_argument_list& args)
+    std::string args_1index::operator()(const macro_argument_list& args)
       {
         std::string name = args[COORD_ARGS_NAME_ARGUMENT];
 
@@ -147,7 +109,7 @@ namespace shared
       }
 
 
-    std::string kernel_argument_macros::args_2index(const macro_argument_list& args)
+    std::string args_2index::operator()(const macro_argument_list& args)
       {
         std::string name = args[TWOPF_ARGS_NAME_ARGUMENT];
 
@@ -176,7 +138,7 @@ namespace shared
       }
 
 
-    std::string kernel_argument_macros::args_3index(const macro_argument_list& args)
+    std::string args_3index::operator()(const macro_argument_list& args)
       {
         std::string name = args[THREEPF_ARGS_NAME_ARGUMENT];
 

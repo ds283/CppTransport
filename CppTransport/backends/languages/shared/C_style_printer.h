@@ -11,23 +11,27 @@
 #include "language_printer.h"
 
 
-constexpr auto         DEFAULT_C_STYLE_COMMENT_PREFIX   = "//";
-constexpr auto         DEFAULT_C_STYLE_COMMENT_POSTFIX  = "";
-constexpr auto         DEFAULT_C_STYLE_COMMENT_PAD      = " ";
+constexpr auto         DEFAULT_C_STYLE_COMMENT_PREFIX        = "//";
+constexpr auto         DEFAULT_C_STYLE_COMMENT_POSTFIX       = "";
+constexpr auto         DEFAULT_C_STYLE_COMMENT_PAD           = " ";
 
-constexpr auto         DEFAULT_C_STYLE_FOR_KEYWORD      = "for";
-constexpr auto         DEFAULT_C_STYLE_LOOP_TYPE        = "unsigned int";
+constexpr auto         DEFAULT_C_STYLE_FOR_KEYWORD           = "for";
+constexpr auto         DEFAULT_C_STYLE_LOOP_TYPE             = "unsigned int";
 
-constexpr auto         DEFAULT_C_STYLE_OPEN_BRACE       = "{";
-constexpr auto         DEFAULT_C_STYLE_CLOSE_BRACE      = "}";
-constexpr unsigned int DEFAULT_C_STYLE_BRACE_INDENT     = 1;
-constexpr unsigned int DEFAULT_C_STYLE_BLOCK_INDENT     = 3;
+constexpr auto         DEFAULT_C_STYLE_OPEN_BRACE            = "{";
+constexpr auto         DEFAULT_C_STYLE_CLOSE_BRACE           = "}";
+constexpr unsigned int DEFAULT_C_STYLE_BRACE_INDENT          = 1;
+constexpr unsigned int DEFAULT_C_STYLE_BLOCK_INDENT          = 3;
 
-constexpr auto         DEFAULT_C_STYLE_ARRAY_OPEN       = "[";
-constexpr auto         DEFAULT_C_STYLE_ARRAY_CLOSE      = "]";
+constexpr auto         DEFAULT_C_STYLE_ARRAY_OPEN            = "[";
+constexpr auto         DEFAULT_C_STYLE_ARRAY_CLOSE           = "]";
 
-constexpr auto         DEFAULT_C_STYLE_FUNCTION_OPEN    = "(";
-constexpr auto         DEFAULT_C_STYLE_FUNCTION_CLOSE   = ")";
+constexpr auto         DEFAULT_C_STYLE_FUNCTION_OPEN         = "(";
+constexpr auto         DEFAULT_C_STYLE_FUNCTION_CLOSE        = ")";
+
+constexpr auto         DEFAULT_C_STYLE_INITIALIZER_OPEN      = "{";
+constexpr auto         DEFAULT_C_STYLE_INITIALIZER_CLOSE     = "}";
+constexpr auto         DEFAULT_C_STYLE_INITIALIZER_SEPARATOR = ",";
 
 
 //! policy class for output to C-style languages, eg. C++, VexCL, CUDA, OpenCL
@@ -51,7 +55,10 @@ class C_style_printer: public language_printer
                     std::string ao = DEFAULT_C_STYLE_ARRAY_OPEN,
                     std::string ac = DEFAULT_C_STYLE_ARRAY_CLOSE,
                     std::string fo = DEFAULT_C_STYLE_FUNCTION_OPEN,
-                    std::string fc = DEFAULT_C_STYLE_FUNCTION_CLOSE)
+                    std::string fc = DEFAULT_C_STYLE_FUNCTION_CLOSE,
+                    std::string io = DEFAULT_C_STYLE_INITIALIZER_OPEN,
+                    std::string ic = DEFAULT_C_STYLE_INITIALIZER_CLOSE,
+                    std::string is = DEFAULT_C_STYLE_INITIALIZER_SEPARATOR)
       : comment_prefix(std::move(cpre)),
         comment_postfix(std::move(cpost)),
         comment_pad(std::move(cpad)),
@@ -64,7 +71,10 @@ class C_style_printer: public language_printer
         array_open(ao),
         array_close(ac),
         function_open(fo),
-        function_close(fc)
+        function_close(fc),
+        initializer_open(io),
+        initializer_close(ic),
+        initializer_sep(is)
       {
       }
 
@@ -101,12 +111,17 @@ class C_style_printer: public language_printer
     virtual unsigned int get_block_indent() const override;
 
 
-    // INTERFACE -- CODE PLANTING
+    // INTERFACE -- CONTROL STRUCTURES
 
   public:
 
     //! generate a 'for' loop
     virtual std::string for_loop(const std::string& loop_variable, unsigned int min, unsigned int max) const override;
+
+
+    // INTERFACE -- ARRAY SUBSCRIPTING
+
+  public:
 
     //! generate 1D array subscript without flattening
     virtual std::string array_subscript(const std::string& kernel, unsigned int a) const override;
@@ -119,6 +134,14 @@ class C_style_printer: public language_printer
 
     //! generate 3D array subscript
     virtual std::string array_subscript(const std::string& kernel, const std::string& flatten, unsigned int a, unsigned int b, unsigned int c) const override;
+
+
+    // INTERFACE -- INITIALIZATION LISTS
+
+  public:
+
+    //! generate initialization list frmo a set of strings
+    virtual std::string initialization_list(const std::vector<std::string>& list) const override;
 
 
     // INTERNAL DATA
@@ -168,6 +191,15 @@ class C_style_printer: public language_printer
 
     //! variable type used for 'for' loop
     std::string loop_type;
+
+    //! initializer list open
+    std::string initializer_open;
+
+    //! initializer list close
+    std::string initializer_close;
+
+    //! initializer list separator
+    std::string initializer_sep;
 
   };
 

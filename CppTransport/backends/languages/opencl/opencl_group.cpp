@@ -36,5 +36,5 @@ opencl_group::opencl_group(translator_data& p, tensor_factory& fctry)
     this->add_package<macro_packages::gauge_xfm>         (p, *l_printer);
     this->add_package<macro_packages::resources>         (p, *l_printer);
     this->add_package<macro_packages::temporary_pool>    (p, *l_printer);
-    this->add_package<shared::kernel_argument_macros>    (p, *l_printer, "global");
+    this->add_package<shared::kernel_argument_macros>    (p, *l_printer);
   }

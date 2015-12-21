@@ -13,11 +13,13 @@
 #include "cpp_steppers.h"
 
 
-#define BIND(X) std::bind(&cpp_steppers::X, this, std::placeholders::_1)
+#define BIND(X) std::move(std::make_shared<X>(this->data_payload, this->printer))
 
 
 namespace cpp
   {
+
+    static std::string replace_stepper(const struct stepper& s, std::string state_name);
 
     constexpr unsigned int BACKG_STEPPER_STATE_ARGUMENT = 0;
     constexpr unsigned int BACKG_STEPPER_TOTAL_ARGUMENTS = 1;
@@ -26,39 +28,11 @@ namespace cpp
     constexpr unsigned int PERT_STEPPER_TOTAL_ARGUMENTS = 1;
 
 
-    const std::vector<macro_packages::simple_rule> cpp_steppers::get_pre_rules()
+    cpp_steppers::cpp_steppers(tensor_factory& f, cse& cw, translator_data& p, language_printer& prn)
+      : ::macro_packages::replacement_rule_package(f, cw, p, prn)
       {
-        std::vector<macro_packages::simple_rule> package;
-
-        const std::vector<replacement_rule_simple> rules =
-          { BIND(replace_backg_stepper),   BIND(replace_pert_stepper)
-          };
-
-        const std::vector<std::string> names =
-          { "MAKE_BACKG_STEPPER",          "MAKE_PERT_STEPPER"
-          };
-
-        const std::vector<unsigned int> args =
-          { BACKG_STEPPER_TOTAL_ARGUMENTS, PERT_STEPPER_TOTAL_ARGUMENTS
-          };
-
-        assert(rules.size() == names.size());
-        assert(rules.size() == args.size());
-
-        for(int i = 0; i < rules.size(); ++i)
-          {
-            package.emplace_back(names[i], rules[i], args[i]);
-          }
-
-        return(package);
-      }
-
-
-    const std::vector<macro_packages::simple_rule> cpp_steppers::get_post_rules()
-      {
-        std::vector<macro_packages::simple_rule> package;
-
-        return(package);
+        pre_package.emplace_back("MAKE_BACKG_STEPPER", BIND(replace_backg_stepper), BACKG_STEPPER_TOTAL_ARGUMENTS);
+        pre_package.emplace_back("MAKE_PERT_SEPPER", BIND(replace_pert_stepper), PERT_STEPPER_TOTAL_ARGUMENTS);
       }
 
 
@@ -73,7 +47,7 @@ namespace cpp
     // *******************************************************************
 
 
-    std::string cpp_steppers::replace_stepper(const struct stepper& s, std::string state_name)
+    static std::string replace_stepper(const struct stepper& s, std::string state_name)
       {
         std::ostringstream out;
 
@@ -126,21 +100,21 @@ namespace cpp
     // ********************************************************************************
 
 
-    std::string cpp_steppers::replace_backg_stepper(const macro_argument_list& args)
+    std::string replace_backg_stepper::operator()(const macro_argument_list& args)
       {
         const struct stepper& s = this->data_payload.get_background_stepper();
         std::string state_name = args[BACKG_STEPPER_STATE_ARGUMENT];
 
-        return(this->replace_stepper(s, state_name));
+        return(replace_stepper(s, state_name));
       }
 
 
-    std::string cpp_steppers::replace_pert_stepper(const macro_argument_list& args)
+    std::string replace_pert_stepper::operator()(const macro_argument_list& args)
       {
         const struct stepper& s = this->data_payload.get_perturbations_stepper();
         std::string state_name = args[PERT_STEPPER_STATE_ARGUMENT];
 
-        return(this->replace_stepper(s, state_name));
+        return(replace_stepper(s, state_name));
       }
 
 

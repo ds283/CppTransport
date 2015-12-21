@@ -14,6 +14,123 @@
 namespace macro_packages
   {
 
+    class replace_V : public replacement_rule_simple
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! constructor
+        replace_V(tensor_factory& f, cse& cw, language_printer& prn)
+          : cse_worker(cw)
+          {
+            Hubble_obj = f.make_Hubble(prn);
+          }
+
+        //! destructor
+        virtual ~replace_V() = default;
+
+
+        // INTERFACE
+
+      public:
+
+        //! evaluate
+        virtual std::string operator()(const macro_argument_list& args) override;
+
+
+        // INTERNAL DATA
+
+      private:
+
+        //! Hubble object
+        std::unique_ptr<Hubble> Hubble_obj;
+
+        //! CSE worker
+        cse& cse_worker;
+
+      };
+
+
+    class replace_Hsq : public replacement_rule_simple
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! constructor
+        replace_Hsq(tensor_factory& f, cse& cw, language_printer& prn)
+        : cse_worker(cw)
+          {
+            Hubble_obj = f.make_Hubble(prn);
+          }
+
+        //! destructor
+        virtual ~replace_Hsq() = default;
+
+
+        // INTERFACE
+
+      public:
+
+        //! evaluate
+        virtual std::string operator()(const macro_argument_list& args) override;
+
+
+        // INTERNAL DATA
+
+      private:
+
+        //! Hubble object
+        std::unique_ptr<Hubble> Hubble_obj;
+
+        //! CSE worker
+        cse& cse_worker;
+
+      };
+
+
+    class replace_eps : public replacement_rule_simple
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! constructor
+        replace_eps(tensor_factory& f, cse& cw, language_printer& prn)
+        : cse_worker(cw)
+          {
+            Hubble_obj = f.make_Hubble(prn);
+          }
+
+        //! destructor
+        virtual ~replace_eps() = default;
+
+
+        // INTERFACE
+
+      public:
+
+        //! evaluate
+        virtual std::string operator()(const macro_argument_list& args) override;
+
+
+        // INTERNAL DATA
+
+      private:
+
+        //! Hubble object
+        std::unique_ptr<Hubble> Hubble_obj;
+
+        //! CSE worker
+        cse& cse_worker;
+
+      };
+
+
     class flow_tensors : public replacement_rule_package
       {
 
@@ -32,20 +149,12 @@ namespace macro_packages
 
       public:
 
-        const std::vector<simple_rule> get_pre_rules();
-        const std::vector<simple_rule> get_post_rules();
         const std::vector<index_rule>  get_index_rules();
 
 
         // INTERNAL API
 
       protected:
-
-        std::string replace_V(const macro_argument_list& args);
-
-        std::string replace_Hsq(const macro_argument_list& args);
-
-        std::string replace_eps(const macro_argument_list& args);
 
         std::string replace_parameter(const macro_argument_list& args, const assignment_list& indices, cse_map* map);
 
@@ -65,9 +174,6 @@ namespace macro_packages
         // INTERNAL DATA
 
       private:
-
-        //! Hubble object
-        std::unique_ptr<Hubble> Hubble_obj;
 
         //! dV object
         std::unique_ptr<dV> dV_tensor;

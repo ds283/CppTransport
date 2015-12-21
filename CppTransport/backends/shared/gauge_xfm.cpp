@@ -44,22 +44,6 @@ namespace macro_packages
       }
 
 
-const std::vector<simple_rule> gauge_xfm::get_pre_rules()
-      {
-        std::vector<simple_rule> package;
-
-        return(package);
-      }
-
-
-    const std::vector<simple_rule> gauge_xfm::get_post_rules()
-      {
-        std::vector<simple_rule> package;
-
-        return(package);
-      }
-
-
     const std::vector<index_rule> gauge_xfm::get_index_rules()
       {
         std::vector<index_rule> package;

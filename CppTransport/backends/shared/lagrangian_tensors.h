@@ -33,9 +33,8 @@ namespace macro_packages
 
       public:
 
-        const std::vector<simple_rule> get_pre_rules();
-        const std::vector<simple_rule> get_post_rules();
-        const std::vector<index_rule>  get_index_rules();
+        //! return index- macros package
+        const std::vector<index_rule>  get_index_rules() override;
 
 
         // INTERNAL API
