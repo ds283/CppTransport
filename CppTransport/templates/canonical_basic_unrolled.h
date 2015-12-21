@@ -14,11 +14,11 @@
 
 #include "$CORE"
 
-$PHASE_FLATTEN{FLATTEN}
-$FIELD_FLATTEN{FIELDS}
-
 namespace transport
   {
+
+    $PHASE_FLATTEN{FLATTEN}
+    $FIELD_FLATTEN{FIELDS_FLATTEN}
 
     // set up a state type for 2pf integration
     template <typename number>
