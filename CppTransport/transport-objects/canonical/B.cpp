@@ -34,7 +34,7 @@ namespace canonical
     GiNaC::ex canonical_B::compute_component(field_index i, field_index j, field_index k,
                                              GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a)
       {
-        unsigned int index = this->fl.flatten(i, j);
+        unsigned int index = this->fl.flatten(i, j, k);
         std::unique_ptr<ginac_cache_args> args = this->res.generate_arguments(use_dV_argument, this->printer);
         args->push_back(k1);
         args->push_back(k2);
@@ -52,7 +52,7 @@ namespace canonical
             GiNaC::ex xi_i = -2*(3-eps)*(*derivs)[this->fl.flatten(i)] - 2*(*dV)[this->fl.flatten(i)]/Hsq;
             GiNaC::ex xi_j = -2*(3-eps)*(*derivs)[this->fl.flatten(j)] - 2*(*dV)[this->fl.flatten(j)]/Hsq;
 
-            GiNaC::ex k1dotk2 = (k3*k3 - k1*k2 - k2*k2) / 2;
+            GiNaC::ex k1dotk2 = (k3*k3 - k1*k1 - k2*k2) / 2;
             GiNaC::ex k1dotk3 = (k2*k2 - k1*k1 - k3*k3) / 2;
             GiNaC::ex k2dotk3 = (k1*k1 - k2*k2 - k3*k3) / 2;
 

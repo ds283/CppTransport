@@ -34,7 +34,7 @@ namespace canonical
     GiNaC::ex canonical_C::compute_component(field_index i, field_index j, field_index k,
                                              GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a)
       {
-        unsigned int index = this->fl.flatten(i, j);
+        unsigned int index = this->fl.flatten(i, j, k);
         std::unique_ptr<ginac_cache_args> args = this->res.generate_arguments(0, this->printer);
         args->push_back(k1);
         args->push_back(k2);
@@ -49,15 +49,14 @@ namespace canonical
 
             if(!cached) this->populate_cache();
 
-            GiNaC::ex k1dotk2 = (k3*k3 - k1*k2 - k2*k2) / 2;
+            GiNaC::ex k1dotk2 = (k3*k3 - k1*k1 - k2*k2) / 2;
             GiNaC::ex k1dotk3 = (k2*k2 - k1*k1 - k3*k3) / 2;
             GiNaC::ex k2dotk3 = (k1*k1 - k2*k2 - k3*k3) / 2;
 
             result = 0;
             if(i == j) result += -(*derivs)[this->fl.flatten(k)] / (2*Mp*Mp);
 
-            result += ( (*derivs)[this->fl.flatten(i)] * (*derivs)[this->fl.flatten(j)] * (*derivs)[this->fl.flatten(k)] / (8 * Mp*Mp*Mp*Mp) )
-              * (1 - k1dotk2*k1dotk2 / (k1*k1 * k2*k2));
+            result += ( (*derivs)[this->fl.flatten(i)] * (*derivs)[this->fl.flatten(j)] * (*derivs)[this->fl.flatten(k)] / (8 * Mp*Mp*Mp*Mp) ) * (1 - k1dotk2*k1dotk2 / (k1*k1 * k2*k2));
 
             if(j == k) result += ((*derivs)[this->fl.flatten(i)] / (Mp*Mp)) * (k1dotk3 / (k1*k1)) / 2;
             if(i == k) result += ((*derivs)[this->fl.flatten(j)] / (Mp*Mp)) * (k2dotk3 / (k2*k2)) / 2;

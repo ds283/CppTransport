@@ -13,16 +13,16 @@ namespace canonical
       {
         std::unique_ptr<flattened_tensor> result = std::make_unique<flattened_tensor>(this->fl.get_flattened_size<phase_index>(3));
 
-        const phase_index num_field = this->shared.get_number_phase();
+        const phase_index num_phase = this->shared.get_number_phase();
         this->A_agent.reset_cache();
         this->B_agent.reset_cache();
         this->C_agent.reset_cache();
 
-        for(phase_index i = phase_index(0); i < num_field; ++i)
+        for(phase_index i = phase_index(0); i < num_phase; ++i)
           {
-            for(phase_index j = phase_index(0); j < num_field; ++j)
+            for(phase_index j = phase_index(0); j < num_phase; ++j)
               {
-                for(phase_index k = phase_index(0); k < num_field; ++k)
+                for(phase_index k = phase_index(0); k < num_phase; ++k)
                   {
                     (*result)[this->fl.flatten(i, j, k)] = this->compute_component(i, j, k, k1, k2, k3, a);
                   }
@@ -36,7 +36,7 @@ namespace canonical
     GiNaC::ex canonical_u3::compute_component(phase_index i, phase_index j, phase_index k,
                                               GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a)
       {
-        unsigned int index = this->fl.flatten(i, j);
+        unsigned int index = this->fl.flatten(i, j, k);
         std::unique_ptr<ginac_cache_args> args = this->res.generate_arguments(use_dV_argument | use_ddV_argument | use_dddV_argument, this->printer);
         args->push_back(k1);
         args->push_back(k2);
