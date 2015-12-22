@@ -8,6 +8,8 @@
 
 #include "C_style_printer.h"
 
+#include "to_printable.h"
+
 
 std::string C_style_printer::ginac(const GiNaC::ex& expr) const
   {
@@ -156,7 +158,8 @@ std::string C_style_printer::initialization_list(const std::vector<std::string>&
     for(const std::string& ele : list)
       {
         if(count > 0) stmt << this->initializer_sep << " ";
-        stmt << ele;
+        stmt << to_printable(ele);
+        ++count;
       }
 
     stmt << " " << this->initializer_close;
