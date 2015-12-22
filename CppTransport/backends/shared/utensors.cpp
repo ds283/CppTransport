@@ -29,14 +29,14 @@ namespace macro_packages
     // *******************************************************************
 
 
-    void replace_U1::pre_evaluate(const macro_argument_list& args)
+    void replace_U1::pre_hook(const macro_argument_list& args)
       {
         std::unique_ptr<flattened_tensor> container = this->u1_tensor->compute();
         this->map = std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }
 
 
-    void replace_U2::pre_evaluate(const macro_argument_list& args)
+    void replace_U2::pre_hook(const macro_argument_list& args)
       {
         GiNaC::symbol k = sym_factory.get_symbol(args[U2_PREDEF_K_ARGUMENT]);
         GiNaC::symbol a = sym_factory.get_symbol(args[U2_PREDEF_A_ARGUMENT]);
@@ -46,7 +46,7 @@ namespace macro_packages
       }
 
 
-    void replace_U3::pre_evaluate(const macro_argument_list& args)
+    void replace_U3::pre_hook(const macro_argument_list& args)
       {
         GiNaC::symbol k1 = sym_factory.get_symbol(args[U3_PREDEF_K1_ARGUMENT]);
         GiNaC::symbol k2 = sym_factory.get_symbol(args[U3_PREDEF_K2_ARGUMENT]);

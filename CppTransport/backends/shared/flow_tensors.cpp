@@ -116,28 +116,28 @@ namespace macro_packages
 // ******************************************************************
 
 
-    void replace_SR_velocity::pre_evaluate(const macro_argument_list& args)
+    void replace_SR_velocity::pre_hook(const macro_argument_list& args)
       {
         std::unique_ptr<flattened_tensor> container = this->SR_velocity_tensor->compute();
         this->map = std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }
 
 
-    void replace_dV::pre_evaluate(const macro_argument_list& args)
+    void replace_dV::pre_hook(const macro_argument_list& args)
       {
         std::unique_ptr<flattened_tensor> container = this->dV_tensor->compute();
         this->map = std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }
 
 
-    void replace_ddV::pre_evaluate(const macro_argument_list& args)
+    void replace_ddV::pre_hook(const macro_argument_list& args)
       {
         std::unique_ptr<flattened_tensor> container = this->ddV_tensor->compute();
         this->map = std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }
 
 
-    void replace_dddV::pre_evaluate(const macro_argument_list& args)
+    void replace_dddV::pre_hook(const macro_argument_list& args)
       {
         std::unique_ptr<flattened_tensor> container = this->dddV_tensor->compute();
         this->map = std::make_unique<cse_map>(std::move(container), this->cse_worker);

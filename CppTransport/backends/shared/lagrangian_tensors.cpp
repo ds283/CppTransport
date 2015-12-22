@@ -29,7 +29,7 @@ namespace macro_packages
     // *******************************************************************
 
 
-    void replace_A::pre_evaluate(const macro_argument_list& args)
+    void replace_A::pre_hook(const macro_argument_list& args)
       {
         GiNaC::symbol k1 = sym_factory.get_symbol(args[A_PREDEF_K1_ARGUMENT]);
         GiNaC::symbol k2 = sym_factory.get_symbol(args[A_PREDEF_K2_ARGUMENT]);
@@ -41,7 +41,7 @@ namespace macro_packages
       }
 
 
-    void replace_B::pre_evaluate(const macro_argument_list& args)
+    void replace_B::pre_hook(const macro_argument_list& args)
       {
         GiNaC::symbol k1 = sym_factory.get_symbol(args[B_PREDEF_K1_ARGUMENT]);
         GiNaC::symbol k2 = sym_factory.get_symbol(args[B_PREDEF_K2_ARGUMENT]);
@@ -53,7 +53,7 @@ namespace macro_packages
       }
 
 
-    void replace_C::pre_evaluate(const macro_argument_list& args)
+    void replace_C::pre_hook(const macro_argument_list& args)
       {
         GiNaC::symbol k1 = sym_factory.get_symbol(args[C_PREDEF_K1_ARGUMENT]);
         GiNaC::symbol k2 = sym_factory.get_symbol(args[C_PREDEF_K2_ARGUMENT]);
@@ -68,7 +68,7 @@ namespace macro_packages
 // ******************************************************************
 
 
-    void replace_M::pre_evaluate(const macro_argument_list& args)
+    void replace_M::pre_hook(const macro_argument_list& args)
       {
         std::unique_ptr<flattened_tensor> container = this->M_tensor->compute();
         this->map = std::make_unique<cse_map>(std::move(container), this->cse_worker);

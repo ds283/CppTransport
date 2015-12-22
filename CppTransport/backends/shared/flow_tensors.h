@@ -353,7 +353,7 @@ namespace macro_packages
       protected:
 
         //! evaluate
-        virtual void pre_evaluate(const macro_argument_list& args) override;
+        virtual void pre_hook(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA
@@ -409,7 +409,7 @@ namespace macro_packages
       protected:
 
         //! evaluate
-        virtual void pre_evaluate(const macro_argument_list& args) override;
+        virtual void pre_hook(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA
@@ -465,7 +465,7 @@ namespace macro_packages
       protected:
 
         //! evaluate
-        virtual void pre_evaluate(const macro_argument_list& args) override;
+        virtual void pre_hook(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA
@@ -521,7 +521,7 @@ namespace macro_packages
       protected:
 
         //! evaluate
-        virtual void pre_evaluate(const macro_argument_list& args) override;
+        virtual void pre_hook(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA

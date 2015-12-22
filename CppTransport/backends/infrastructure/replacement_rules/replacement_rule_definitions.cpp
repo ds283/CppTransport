@@ -111,13 +111,13 @@ namespace macro_packages
             throw rule_apply_fail(msg.str());
           }
 
-        this->pre_evaluate(args);
+        this->pre_hook(args);
       }
 
 
     void replacement_rule_index::post(const macro_argument_list& args)
       {
-        this->post_evaluate(args);
+        this->post_hook(args);
       }
 
   }   // namespace macro_packages

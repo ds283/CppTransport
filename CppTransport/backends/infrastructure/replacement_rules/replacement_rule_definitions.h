@@ -143,10 +143,10 @@ namespace macro_packages
         virtual std::string evaluate(const macro_argument_list& args, const assignment_list& indices) = 0;
 
         //! pre-evaluation; if needed, can be supplied by implementation; default is no-op
-        virtual void pre_evaluate(const macro_argument_list& args) { return; }
+        virtual void pre_hook(const macro_argument_list& args) { return; }
 
         //! post-evaluation; if needed, can be supplied by implementation; default is no-op
-        virtual void post_evaluate(const macro_argument_list& args) { return; }
+        virtual void post_hook(const macro_argument_list& args) { return; }
 
 
         // INTERNAL DATA

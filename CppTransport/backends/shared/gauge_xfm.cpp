@@ -30,14 +30,14 @@ namespace macro_packages
     // *******************************************************************
 
 
-    void replace_zeta1::pre_evaluate(const macro_argument_list& args)
+    void replace_zeta1::pre_hook(const macro_argument_list& args)
       {
         std::unique_ptr<flattened_tensor> container = this->zeta1_tensor->compute();
         this->map =  std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }
 
 
-    void replace_zeta2::pre_evaluate(const macro_argument_list& args)
+    void replace_zeta2::pre_hook(const macro_argument_list& args)
       {
         GiNaC::symbol  k = sym_factory.get_symbol(args[ZETA_XFM_2_K_ARGUMENT]);
         GiNaC::symbol k1 = sym_factory.get_symbol(args[ZETA_XFM_2_K1_ARGUMENT]);
@@ -49,14 +49,14 @@ namespace macro_packages
       }
 
 
-    void replace_dN1::pre_evaluate(const macro_argument_list& args)
+    void replace_dN1::pre_hook(const macro_argument_list& args)
 	    {
         std::unique_ptr<flattened_tensor> container = this->dN1_tensor->compute();
         this->map = std::make_unique<cse_map>(std::move(container), this->cse_worker);
 	    }
 
 
-    void replace_dN2::pre_evaluate(const macro_argument_list& args)
+    void replace_dN2::pre_hook(const macro_argument_list& args)
 	    {
         std::unique_ptr<flattened_tensor> container = this->dN2_tensor->compute();
         this->map = std::make_unique<cse_map>(std::move(container), this->cse_worker);

@@ -42,7 +42,7 @@ namespace macro_packages
         virtual std::string evaluate(const macro_argument_list& args, const assignment_list& indices) override;
 
         //! default post-hook will release CSE map
-        virtual void post_evaluate(const macro_argument_list&) override { this->map.release(); }
+        virtual void post_hook(const macro_argument_list&) override { this->map.release(); }
 
 
         // INTERNAL DATA
@@ -84,7 +84,7 @@ namespace macro_packages
         virtual std::string evaluate(const macro_argument_list& args, const assignment_list& indices) override;
 
         //! default post-hook will release CSE map
-        virtual void post_evaluate(const macro_argument_list&) override { this->map.release(); }
+        virtual void post_hook(const macro_argument_list&) override { this->map.release(); }
 
 
         // INTERNAL DATA
@@ -126,7 +126,7 @@ namespace macro_packages
         virtual std::string evaluate(const macro_argument_list& args, const assignment_list& indices) override;
 
         //! default post-hook will release CSE map
-        virtual void post_evaluate(const macro_argument_list&) override { this->map.release(); }
+        virtual void post_hook(const macro_argument_list&) override { this->map.release(); }
 
 
         // INTERNAL DATA
