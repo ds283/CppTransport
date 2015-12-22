@@ -26,7 +26,7 @@ namespace cpp
       : ::macro_packages::replacement_rule_package(f, cw, p, prn)
       {
         pre_package.emplace_back(BIND(replace_backg_stepper, "MAKE_BACKG_STEPPER"));
-        pre_package.emplace_back(BIND(replace_pert_stepper, "MAKE_PERT_SEPPER"));
+        pre_package.emplace_back(BIND(replace_pert_stepper, "MAKE_PERT_STEPPER"));
       }
 
 
