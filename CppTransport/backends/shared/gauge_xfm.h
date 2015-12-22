@@ -59,7 +59,7 @@ namespace macro_packages
       public:
 
         //! determine unroll status
-        enum unroll_behaviour get_unroll() const override { return(unroll_behaviour::allow); }
+        enum unroll_behaviour get_unroll() const override { return this->zeta1_tensor->get_unroll(); }
 
 
         // INTERNAL API
@@ -116,7 +116,7 @@ namespace macro_packages
       public:
 
         //! determine unroll status
-        enum unroll_behaviour get_unroll() const override { return(unroll_behaviour::allow); }
+        enum unroll_behaviour get_unroll() const override { return this->zeta2_tensor->get_unroll(); }
 
 
         // INTERNAL API
@@ -175,7 +175,7 @@ namespace macro_packages
       public:
 
         //! determine unroll status
-        enum unroll_behaviour get_unroll() const override { return(unroll_behaviour::allow); }
+        enum unroll_behaviour get_unroll() const override { return this->dN1_tensor->get_unroll(); }
 
 
         // INTERNAL API
@@ -231,7 +231,7 @@ namespace macro_packages
       public:
 
         //! determine unroll status
-        enum unroll_behaviour get_unroll() const override { return(unroll_behaviour::allow); }
+        enum unroll_behaviour get_unroll() const override { return this->dN2_tensor->get_unroll(); }
 
 
         // INTERNAL API
