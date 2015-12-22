@@ -41,20 +41,30 @@ namespace canonical
 
             if(!cached) this->populate_cache();
 
-            GiNaC::ex Vab = (*ddV)[this->fl.flatten(i,j)];
-            GiNaC::ex Va  = (*dV)[this->fl.flatten(i)];
-            GiNaC::ex Vb  = (*dV)[this->fl.flatten(j)];
+            GiNaC::ex& Vij = (*ddV)[this->fl.flatten(i,j)];
+            GiNaC::ex& Vi  = (*dV)[this->fl.flatten(i)];
+            GiNaC::ex& Vj  = (*dV)[this->fl.flatten(j)];
 
-            GiNaC::ex u = -Vab/Hsq;
-            u += -(3-eps) * (*derivs)[this->fl.flatten(i)] * (*derivs)[this->fl.flatten(j)] / (Mp*Mp);
-            u += -1/(Mp*Mp*Hsq) * ( (*derivs)[this->fl.flatten(i)]*Vb + (*derivs)[this->fl.flatten(j)]*Va );
+            GiNaC::symbol& deriv_i = (*derivs)[this->fl.flatten(i)];
+            GiNaC::symbol& deriv_j = (*derivs)[this->fl.flatten(j)];
 
-            result = (i == j ? eps : 0) + u/3;
+            result = this->expr(i, j, Vij, Vi, Vj, deriv_i, deriv_j);
 
             this->cache.store(expression_item_types::M_item, index, *args, result);
           }
 
         return(result);
+      }
+
+
+    GiNaC::ex canonical_M::expr(field_index& i, field_index& j, GiNaC::ex& Vij, GiNaC::ex& Vi, GiNaC::ex& Vj,
+                                GiNaC::symbol& deriv_i, GiNaC::symbol& deriv_j)
+      {
+        GiNaC::ex u = -Vij/Hsq;
+        u += -(3-eps) * deriv_i * deriv_j / (Mp*Mp);
+        u += -1/(Mp*Mp*Hsq) * ( deriv_i*Vj + deriv_j*Vi );
+
+        return (i == j ? eps : 0) + u/3;
       }
 
 

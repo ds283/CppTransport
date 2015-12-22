@@ -49,20 +49,34 @@ namespace canonical
 
             if(!cached) this->populate_cache();
 
-            GiNaC::ex k1dotk2 = (k3*k3 - k1*k1 - k2*k2) / 2;
-            GiNaC::ex k1dotk3 = (k2*k2 - k1*k1 - k3*k3) / 2;
-            GiNaC::ex k2dotk3 = (k1*k1 - k2*k2 - k3*k3) / 2;
+            GiNaC::symbol& deriv_i = (*derivs)[this->fl.flatten(i)];
+            GiNaC::symbol& deriv_j = (*derivs)[this->fl.flatten(j)];
+            GiNaC::symbol& deriv_k = (*derivs)[this->fl.flatten(k)];
 
-            result = 0;
-            if(i == j) result += -(*derivs)[this->fl.flatten(k)] / (2*Mp*Mp);
-
-            result += ( (*derivs)[this->fl.flatten(i)] * (*derivs)[this->fl.flatten(j)] * (*derivs)[this->fl.flatten(k)] / (8 * Mp*Mp*Mp*Mp) ) * (1 - k1dotk2*k1dotk2 / (k1*k1 * k2*k2));
-
-            if(j == k) result += ((*derivs)[this->fl.flatten(i)] / (Mp*Mp)) * (k1dotk3 / (k1*k1)) / 2;
-            if(i == k) result += ((*derivs)[this->fl.flatten(j)] / (Mp*Mp)) * (k2dotk3 / (k2*k2)) / 2;
+            result = this->expr(i, j, k, deriv_i, deriv_j, deriv_k, k1, k2, k3, a);
 
             this->cache.store(expression_item_types::C_item, index, *args, result);
           }
+
+        return(result);
+      }
+
+
+    GiNaC::ex canonical_C::expr(field_index& i, field_index& j, field_index& k,
+                                GiNaC::symbol& deriv_i, GiNaC::symbol& deriv_j, GiNaC::symbol& deriv_k,
+                                GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a)
+      {
+        GiNaC::ex k1dotk2 = (k3*k3 - k1*k1 - k2*k2) / 2;
+        GiNaC::ex k1dotk3 = (k2*k2 - k1*k1 - k3*k3) / 2;
+        GiNaC::ex k2dotk3 = (k1*k1 - k2*k2 - k3*k3) / 2;
+
+        GiNaC::ex result = 0;
+        if(i == j) result += -deriv_k / (2*Mp*Mp);
+
+        result += ( deriv_i * deriv_j * deriv_k / (8 * Mp*Mp*Mp*Mp) ) * (1 - k1dotk2*k1dotk2 / (k1*k1 * k2*k2));
+
+        if(j == k) result += (deriv_i / (Mp*Mp)) * (k1dotk3 / (k1*k1)) / 2;
+        if(i == k) result += (deriv_j / (Mp*Mp)) * (k2dotk3 / (k2*k2)) / 2;
 
         return(result);
       }

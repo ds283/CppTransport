@@ -40,7 +40,8 @@ namespace canonical
 
             if(this->traits.is_species(i))
               {
-                result = -(*derivs)[this->fl.flatten(i)] / (2*Mp*Mp*eps);
+                GiNaC::symbol& deriv_i = (*derivs)[this->fl.flatten(i)];
+                result = this->expr(deriv_i);
               }
             else if(this->traits.is_momentum(i))
               {
@@ -56,6 +57,12 @@ namespace canonical
           }
 
         return(result);
+      }
+
+
+    GiNaC::ex canonical_zeta1::expr(GiNaC::symbol& deriv_i)
+      {
+        return -deriv_i / (2*Mp*Mp*eps);
       }
 
 

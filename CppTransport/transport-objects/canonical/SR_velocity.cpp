@@ -38,12 +38,19 @@ namespace canonical
 
             if(!cached) this->populate_cache();
 
-            result = - (*dV)[this->fl.flatten(i)] * (Mp*Mp) / V;
+            GiNaC::ex& Vi = (*dV)[this->fl.flatten(i)];
+            result = this->expr(Vi);
 
             this->cache.store(expression_item_types::sr_U_item, index, *args, result);
           }
 
         return(result);
+      }
+
+
+    GiNaC::ex canonical_SR_velocity::expr(GiNaC::ex& Vi)
+      {
+        return - Vi * (Mp*Mp) / V;
       }
 
 

@@ -38,15 +38,18 @@ namespace canonical
 
             if(!cached) this->populate_cache();
 
+            field_index species_i = this->traits.to_species(i);
+
+            GiNaC::symbol& deriv_i = (*derivs)[this->fl.flatten(species_i)];
+
             if(this->traits.is_species(i))
               {
-                result = (*derivs)[this->fl.flatten(i)];
+                result = deriv_i;
               }
             else if(this->traits.is_momentum(i))
               {
-                field_index species_i = this->traits.to_species(i);
-
-                result = -(3-eps) * (*derivs)[this->fl.flatten(species_i)] - (*dV)[this->fl.flatten(species_i)]/Hsq;
+                GiNaC::ex& Vi = (*dV)[this->fl.flatten(species_i)];
+                result = this->expr_momentum(Vi, deriv_i);
               }
             else
               {
@@ -58,6 +61,12 @@ namespace canonical
           }
 
         return(result);
+      }
+
+
+    GiNaC::ex canonical_u1::expr_momentum(GiNaC::ex& Vi, GiNaC::symbol& deriv_i)
+      {
+        return -(3-eps) * deriv_i - Vi/Hsq;
       }
 
 

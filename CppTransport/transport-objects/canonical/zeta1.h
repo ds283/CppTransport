@@ -80,6 +80,9 @@ namespace canonical
         //! populate workspace
         void populate_cache();
 
+        //! underlying symbolic expression
+        GiNaC::ex expr(GiNaC::symbol& deriv_i);
+
 
         // INTERNAL DATA
 

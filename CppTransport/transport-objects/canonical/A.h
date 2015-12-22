@@ -81,6 +81,13 @@ namespace canonical
         //! populate workspace
         void populate_cache();
 
+        //! underlying symbolic expression
+        GiNaC::ex expr(field_index& i, field_index& j, field_index& k,
+                       GiNaC::ex& Vijk, GiNaC::ex& Vij, GiNaC::ex& Vjk, GiNaC::ex& Vik,
+                       GiNaC::ex& Vi, GiNaC::ex& Vj, GiNaC::ex& Vk,
+                       GiNaC::symbol& deriv_i, GiNaC::symbol& deriv_j, GiNaC::symbol& deriv_k,
+                       GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a);
+
 
         // INTERNAL DATA
 

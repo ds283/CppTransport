@@ -49,23 +49,43 @@ namespace canonical
 
             if(!cached) this->populate_cache();
 
-            GiNaC::ex xi_i = -2*(3-eps)*(*derivs)[this->fl.flatten(i)] - 2*(*dV)[this->fl.flatten(i)]/Hsq;
-            GiNaC::ex xi_j = -2*(3-eps)*(*derivs)[this->fl.flatten(j)] - 2*(*dV)[this->fl.flatten(j)]/Hsq;
+            GiNaC::ex& Vi   = (*dV)[this->fl.flatten(i)];
+            GiNaC::ex& Vj   = (*dV)[this->fl.flatten(j)];
+            GiNaC::ex& Vk   = (*dV)[this->fl.flatten(k)];
 
-            GiNaC::ex k1dotk2 = (k3*k3 - k1*k1 - k2*k2) / 2;
-            GiNaC::ex k1dotk3 = (k2*k2 - k1*k1 - k3*k3) / 2;
-            GiNaC::ex k2dotk3 = (k1*k1 - k2*k2 - k3*k3) / 2;
+            GiNaC::symbol& deriv_i = (*derivs)[this->fl.flatten(i)];
+            GiNaC::symbol& deriv_j = (*derivs)[this->fl.flatten(j)];
+            GiNaC::symbol& deriv_k = (*derivs)[this->fl.flatten(k)];
 
-            result = (*derivs)[this->fl.flatten(i)] * (*derivs)[this->fl.flatten(j)] * (*derivs)[this->fl.flatten(k)] / (4*Mp*Mp*Mp*Mp);
-
-            result += - ( (*derivs)[this->fl.flatten(i)] * xi_j * (*derivs)[this->fl.flatten(k)] / (8*Mp*Mp*Mp*Mp) ) * (1 - k2dotk3*k2dotk3 / (k2*k2 * k3*k3)) / 2
-                      - ( (*derivs)[this->fl.flatten(j)] * xi_i * (*derivs)[this->fl.flatten(k)] / (8*Mp*Mp*Mp*Mp) ) * (1 - k1dotk3*k1dotk3 / (k1*k1 * k3*k3)) / 2;
-
-            if(j == k) result += - (xi_i / (2*Mp*Mp)) * k1dotk2 / (k1*k1) / 2;
-            if(i == k) result += - (xi_j / (2*Mp*Mp)) * k1dotk2 / (k2*k2) / 2;
+            result = this->expr(i, j, k, Vi, Vj, Vk,
+                                deriv_i, deriv_j, deriv_k, k1, k2, k3, a);
 
             this->cache.store(expression_item_types::B_item, index, *args, result);
           }
+
+        return(result);
+      }
+
+
+    GiNaC::ex canonical_B::expr(field_index& i, field_index& j, field_index& k,
+                                GiNaC::ex& Vi, GiNaC::ex& Vj, GiNaC::ex& Vk,
+                                GiNaC::symbol& deriv_i, GiNaC::symbol& deriv_j, GiNaC::symbol& deriv_k,
+                                GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a)
+      {
+        GiNaC::ex xi_i = -2*(3-eps) * deriv_i - 2 * Vi/Hsq;
+        GiNaC::ex xi_j = -2*(3-eps) * deriv_j - 2 * Vj/Hsq;
+
+        GiNaC::ex k1dotk2 = (k3*k3 - k1*k1 - k2*k2) / 2;
+        GiNaC::ex k1dotk3 = (k2*k2 - k1*k1 - k3*k3) / 2;
+        GiNaC::ex k2dotk3 = (k1*k1 - k2*k2 - k3*k3) / 2;
+
+        GiNaC::ex result = deriv_i * deriv_j * deriv_k / (4*Mp*Mp*Mp*Mp);
+
+        result += - ( deriv_i * xi_j * deriv_k / (8*Mp*Mp*Mp*Mp) ) * (1 - k2dotk3*k2dotk3 / (k2*k2 * k3*k3)) / 2
+                  - ( deriv_j * xi_i * deriv_k / (8*Mp*Mp*Mp*Mp) ) * (1 - k1dotk3*k1dotk3 / (k1*k1 * k3*k3)) / 2;
+
+        if(j == k) result += - (xi_i / (2*Mp*Mp)) * k1dotk2 / (k1*k1) / 2;
+        if(i == k) result += - (xi_j / (2*Mp*Mp)) * k1dotk2 / (k2*k2) / 2;
 
         return(result);
       }

@@ -46,17 +46,23 @@ namespace canonical
 
             if(!cached) this->populate_cache();
 
+            GiNaC::symbol& deriv_i = (*derivs)[this->fl.flatten(this->traits.to_species(i))];
+            GiNaC::symbol& deriv_j = (*derivs)[this->fl.flatten(this->traits.to_species(j))];
+
+            field_index species_i = this->traits.to_species(i);
+            field_index species_j = this->traits.to_species(j);
+
             if(this->traits.is_species(i) && this->traits.is_species(j))
               {
-                result = this->compute_field_field(this->traits.to_species(i), this->traits.to_species(j), k, k1, k2, a);
+                result = this->expr_field_field(species_i, species_j, deriv_i, deriv_j, k, k1, k2, a);
               }
             else if(this->traits.is_species(i) && this->traits.is_momentum(j))
               {
-                result = this->compute_field_momentum(this->traits.to_species(i), this->traits.to_species(j), k, k1, k2, a);
+                result = this->expr_field_momentum(species_i, species_j, deriv_i, deriv_j, k, k1, k2, a);
               }
             else if(this->traits.is_momentum(i) && this->traits.is_species(j))
               {
-                result = this->compute_field_momentum(this->traits.to_species(j), this->traits.to_species(i), k, k2, k1, a);
+                result = this->expr_field_momentum(species_j, species_i, deriv_i, deriv_j, k, k2, k1, a);
               }
             else if(this->traits.is_momentum(i) && this->traits.is_momentum(j))
               {
@@ -75,24 +81,26 @@ namespace canonical
       }
 
 
-    GiNaC::ex canonical_zeta2::compute_field_field(field_index i, field_index j, GiNaC::symbol& k, GiNaC::symbol& k1,
-                                                   GiNaC::symbol& k2, GiNaC::symbol& a)
+    GiNaC::ex canonical_zeta2::expr_field_field(field_index& i, field_index& j,
+                                                GiNaC::symbol& deriv_i, GiNaC::symbol& deriv_j,
+                                                GiNaC::symbol& k, GiNaC::symbol& k1, GiNaC::symbol& k2,
+                                                GiNaC::symbol& a)
       {
         // formulae from DS calculation 28 May 2014
-        GiNaC::ex result = (-GiNaC::ex(1)/2 + 3/(2*eps) + p/(4*eps*eps)) * (*derivs)[this->fl.flatten(i)] * (*derivs)[this->fl.flatten(j)] / (Mp*Mp*Mp*Mp*eps);
+        GiNaC::ex result = (-GiNaC::ex(1)/2 + 3/(2*eps) + p/(4*eps*eps)) * deriv_i * deriv_j / (Mp*Mp*Mp*Mp*eps);
         return(result);
       }
 
 
-    GiNaC::ex canonical_zeta2::compute_field_momentum(field_index i, field_index j, GiNaC::symbol& k, GiNaC::symbol& k1,
-                                                      GiNaC::symbol& k2, GiNaC::symbol& a)
+    GiNaC::ex canonical_zeta2::expr_field_momentum(field_index& i, field_index& j, GiNaC::symbol& deriv_i, GiNaC::symbol& deriv_j,
+                                                   GiNaC::symbol& k, GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& a)
       {
         // formulae from DS calculation 28 May 2014
 
         GiNaC::ex k1dotk2 = (k*k - k1*k1 - k2*k2) / 2;
         GiNaC::ex k12sq = k*k;
 
-        GiNaC::ex result = (*derivs)[this->fl.flatten(i)] * (*derivs)[this->fl.flatten(j)] / (2 * Mp*Mp*Mp*Mp * eps*eps);
+        GiNaC::ex result = deriv_i * deriv_j / (2 * Mp*Mp*Mp*Mp * eps*eps);
 
         if(i == j)
           {

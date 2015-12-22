@@ -49,7 +49,7 @@ namespace canonical
         virtual ~canonical_SR_velocity() = default;
 
 
-        // INTERFACE -- IMPLEMENTS A 'dV' TENSOR CONCEPT
+        // INTERFACE -- IMPLEMENTS A 'SR_velocity' TENSOR CONCEPT
 
       public:
 
@@ -77,6 +77,10 @@ namespace canonical
 
         //! populate workspace
         void populate_cache();
+
+        //! underlying symbolic expression
+        GiNaC::ex expr(GiNaC::ex& Vi);
+
 
 
         // INTERNAL DATA
