@@ -126,7 +126,7 @@ namespace token_list_impl
       public:
 
         //! constructor
-        simple_macro_token(const std::string& m, const macro_argument_list& a, const macro_packages::simple_rule& r, simple_macro_type t, error_context ec);
+        simple_macro_token(const std::string& m, const macro_argument_list& a, macro_packages::replacement_rule_simple& r, simple_macro_type t, error_context ec);
 
         //! destructor is default, but icpc fails with explicitly-default destructor
         virtual ~simple_macro_token()
@@ -151,7 +151,7 @@ namespace token_list_impl
 
         const std::string name;
         const macro_argument_list args;
-        macro_packages::simple_rule rule;
+        macro_packages::replacement_rule_simple& rule;
 
         enum simple_macro_type type;
 
@@ -201,8 +201,8 @@ class token_list
 		//! build a token list from an input string
     token_list(const std::string& input, const std::string& prefix,
                unsigned int nf, unsigned int np,
-               const std::vector<macro_packages::simple_rule>& pre,
-               const std::vector<macro_packages::simple_rule>& post,
+               const std::vector<macro_packages::replacement_rule_simple*>& pre,
+               const std::vector<macro_packages::replacement_rule_simple*>& post,
                const std::vector<macro_packages::index_rule>& index,
                translator_data& d);
 

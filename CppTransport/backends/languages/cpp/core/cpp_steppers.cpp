@@ -13,7 +13,7 @@
 #include "cpp_steppers.h"
 
 
-#define BIND(X) std::move(std::make_shared<X>(this->data_payload, this->printer))
+#define BIND(X, N) std::move(std::make_unique<X>(N, this->data_payload, this->printer))
 
 
 namespace cpp
@@ -21,18 +21,12 @@ namespace cpp
 
     static std::string replace_stepper(const struct stepper& s, std::string state_name);
 
-    constexpr unsigned int BACKG_STEPPER_STATE_ARGUMENT = 0;
-    constexpr unsigned int BACKG_STEPPER_TOTAL_ARGUMENTS = 1;
-
-    constexpr unsigned int PERT_STEPPER_STATE_ARGUMENT = 0;
-    constexpr unsigned int PERT_STEPPER_TOTAL_ARGUMENTS = 1;
-
 
     cpp_steppers::cpp_steppers(tensor_factory& f, cse& cw, translator_data& p, language_printer& prn)
       : ::macro_packages::replacement_rule_package(f, cw, p, prn)
       {
-        pre_package.emplace_back("MAKE_BACKG_STEPPER", BIND(replace_backg_stepper), BACKG_STEPPER_TOTAL_ARGUMENTS);
-        pre_package.emplace_back("MAKE_PERT_SEPPER", BIND(replace_pert_stepper), PERT_STEPPER_TOTAL_ARGUMENTS);
+        pre_package.emplace_back(BIND(replace_backg_stepper, "MAKE_BACKG_STEPPER"));
+        pre_package.emplace_back(BIND(replace_pert_stepper, "MAKE_PERT_SEPPER"));
       }
 
 

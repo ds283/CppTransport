@@ -19,6 +19,10 @@
 namespace macro_packages
   {
 
+    constexpr unsigned int TEMP_POOL_TEMPLATE_ARGUMENT = 0;
+    constexpr unsigned int TEMP_POOL_TOTAL_ARGUMENTS = 1;
+
+
     class replace_temp_pool : public replacement_rule_simple
       {
 
@@ -27,9 +31,10 @@ namespace macro_packages
       public:
 
         //! constructor
-        replace_temp_pool(translator_data& p, cse& cw, language_printer& prn,
+        replace_temp_pool(std::string n, translator_data& p, cse& cw, language_printer& prn,
                           std::string t = OUTPUT_DEFAULT_POOL_TEMPLATE)
-          : data_payload(p),
+          : replacement_rule_simple(std::move(n)),
+            data_payload(p),
             cse_worker(cw),
             printer(prn),
             templ(t),
@@ -51,6 +56,14 @@ namespace macro_packages
 
         //! over-ride default end-of-input handler
         virtual void report_end_of_input() override;
+
+
+        // INTERFACE -- QUERY FOR DATA
+
+      public:
+
+        //! get number of arguments associated with this macro
+        virtual unsigned int get_number_args() const override { return(TEMP_POOL_TOTAL_ARGUMENTS); }
 
 
         // INTERNAL API

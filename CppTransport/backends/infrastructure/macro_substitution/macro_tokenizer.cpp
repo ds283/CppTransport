@@ -16,8 +16,8 @@ constexpr unsigned int MAX_TOKEN_ERRORS = 4;
 
 token_list::token_list(const std::string& input, const std::string& prefix,
                        unsigned int nf, unsigned int np,
-                       const std::vector<macro_packages::simple_rule>& pre,
-                       const std::vector<macro_packages::simple_rule>& post,
+                       const std::vector<macro_packages::replacement_rule_simple*>& pre,
+                       const std::vector<macro_packages::replacement_rule_simple*>& post,
                        const std::vector<macro_packages::index_rule>& index,
                        translator_data& d)
   : num_fields(nf),
@@ -98,7 +98,7 @@ token_list::token_list(const std::string& input, const std::string& prefix,
 										        if(this->check_for_match(candidate, pre, false))
 											        {
 										            // we matched a simple pre-macro
-										            const macro_packages::simple_rule& rule = this->find_match(candidate, pre);
+										            const macro_packages::replacement_rule_simple& rule = this->find_match(candidate, pre);
 
 												        // found a match -- move position past the candidate
 										            position += candidate_length;
@@ -118,7 +118,7 @@ token_list::token_list(const std::string& input, const std::string& prefix,
 										        else if(this->check_for_match(candidate, post, false))
 											        {
 										            // we matched a simple post-macro
-										            const macro_packages::simple_rule& rule = this->find_match(candidate, post);
+										            const macro_packages::replacement_rule_simple& rule = this->find_match(candidate, post);
 
 										            // found a match -- move position past the candidate
 										            position += candidate_length;
@@ -628,7 +628,7 @@ void token_list_impl::free_index_token::evaluate()
 
 
 token_list_impl::simple_macro_token::simple_macro_token(const std::string& m, const macro_argument_list& a,
-                                                        const macro_packages::simple_rule& r, simple_macro_type t,
+                                                        macro_packages::replacement_rule_simple& r, simple_macro_type t,
                                                         error_context ec)
 	: generic_token(m, std::move(ec)),
     name(m),

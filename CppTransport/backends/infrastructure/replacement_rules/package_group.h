@@ -44,13 +44,12 @@ class package_group
   public:
 
     // return references to our ruleset caches
-    // TODO find some way to prevent them being changed explicitly - they can change *indirectly* by rebuilding the cache, so is it ok to use const?
 
     //! return reference to pre-rules
-    std::vector<macro_packages::simple_rule>& get_pre_ruleset();
+    std::vector<macro_packages::replacement_rule_simple*>& get_pre_ruleset() { return(this->pre_ruleset); }
 
     //! return reference to post-rules
-    std::vector<macro_packages::simple_rule>& get_post_ruleset();
+    std::vector<macro_packages::replacement_rule_simple*>& get_post_ruleset() { return(this->post_ruleset); }
 
     //! return reference to index-rules
     std::vector<macro_packages::index_rule>& get_index_ruleset();
@@ -129,11 +128,15 @@ class package_group
 
     // RULE CACHE, BUILD BY AGGREGATING RULES FROM MACRO PACKAGES
 
-    //! rules for pre-macros
-    std::vector<macro_packages::simple_rule> pre_ruleset;
+    //! rules for pre-macros; held as a raw pointer because
+    //! we have no ownership in these objects.
+    //! They are owned by the underylying replacement_rule_package
+    std::vector<macro_packages::replacement_rule_simple*> pre_ruleset;
 
-    //! rules for post-macros
-    std::vector<macro_packages::simple_rule> post_ruleset;
+    //! rules for post-macros; held as a raw pointer because
+    //! we have no ownership in these objects.
+    //! They are owned by the underylying replacement_rule_package
+    std::vector<macro_packages::replacement_rule_simple*> post_ruleset;
 
     //! rules for index macros
     std::vector<macro_packages::index_rule>  index_ruleset;

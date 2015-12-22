@@ -14,20 +14,16 @@
 #include "msg_en.h"
 
 
-#define BIND(X) std::move(std::make_shared<X>(this->data_payload, this->cse_worker, this->printer))
+#define BIND(X, N) std::move(std::make_unique<X>(N, this->data_payload, this->cse_worker, this->printer))
 
 
 namespace macro_packages
   {
 
-    constexpr unsigned int TEMP_POOL_TEMPLATE_ARGUMENT = 0;
-    constexpr unsigned int TEMP_POOL_TOTAL_ARGUMENTS = 1;
-
-
     temporary_pool::temporary_pool(tensor_factory& f, cse& cw, translator_data& p, language_printer& prn)
 	    : replacement_rule_package(f, cw, p, prn)
 	    {
-        pre_package.emplace_back("TEMP_POOL", BIND(replace_temp_pool), TEMP_POOL_TOTAL_ARGUMENTS);
+        pre_package.emplace_back(BIND(replace_temp_pool, "TEMP_POOL"));
 	    }
 
 
@@ -41,14 +37,14 @@ namespace macro_packages
 
 		void temporary_pool::report_end_of_input()
 			{
-        for(simple_rule& rule : this->pre_package)
+        for(std::unique_ptr<replacement_rule_simple>& rule : this->pre_package)
           {
-            rule.report_end_of_input();
+            rule->report_end_of_input();
           }
 
-        for(simple_rule& rule : this->post_package)
+        for(std::unique_ptr<replacement_rule_simple>& rule : this->post_package)
           {
-            rule.report_end_of_input();
+            rule->report_end_of_input();
           }
 
         // pass notification up to parent handler

@@ -16,39 +16,22 @@
 #include "msg_en.h"
 
 
-#define BIND(X) std::move(std::make_shared<X>(this->data_payload, this->printer))
+#define BIND(X, N) std::move(std::make_unique<X>(N, this->data_payload, this->printer))
 
 
 namespace shared
   {
 
-    constexpr unsigned int PARAM_ARGS_TOTAL_ARGUMENTS = 0;
-
-    constexpr unsigned int COORD_ARGS_NAME_ARGUMENT = 0;
-    constexpr unsigned int COORD_ARGS_TOTAL_ARGUMENTS = 1;
-
-    constexpr unsigned int U2_ARGS_NAME_ARGUMENT = 0;
-    constexpr unsigned int U2_ARGS_TOTAL_ARGUMENTS = 1;
-
-    constexpr unsigned int TWOPF_ARGS_NAME_ARGUMENT = 0;
-    constexpr unsigned int TWOPF_ARGS_TOTAL_ARGUMENTS = 1;
-
-    constexpr unsigned int U3_ARGS_NAME_ARGUMENT = 0;
-    constexpr unsigned int U3_ARGS_TOTAL_ARGUMENTS = 1;
-
-    constexpr unsigned int THREEPF_ARGS_NAME_ARGUMENT = 0;
-    constexpr unsigned int THREEPF_ARGS_TOTAL_ARGUMENTS = 1;
-
 
     kernel_argument_macros::kernel_argument_macros(tensor_factory& f, cse& cw, translator_data& p, language_printer& prn)
       : ::macro_packages::replacement_rule_package(f, cw, p, prn)
       {
-        pre_package.emplace_back("PARAM_ARGS", BIND(args_params), PARAM_ARGS_TOTAL_ARGUMENTS);
-        pre_package.emplace_back("COORD_ARGS", BIND(args_1index), COORD_ARGS_TOTAL_ARGUMENTS);
-        pre_package.emplace_back("U2_ARGS", BIND(args_2index), U2_ARGS_TOTAL_ARGUMENTS);
-        pre_package.emplace_back("TWOPF_ARGS", BIND(args_2index), TWOPF_ARGS_TOTAL_ARGUMENTS);
-        pre_package.emplace_back("U3_ARGS", BIND(args_3index), U3_ARGS_TOTAL_ARGUMENTS);
-        pre_package.emplace_back("THREEPF_ARGS", BIND(args_3index), THREEPF_ARGS_TOTAL_ARGUMENTS);
+        pre_package.emplace_back(BIND(args_params, "PARAM_ARGS"));
+        pre_package.emplace_back(BIND(args_1index, "COORD_ARGS"));
+        pre_package.emplace_back(BIND(args_2index, "U2_ARGS"));
+        pre_package.emplace_back(BIND(args_2index, "TWOPF_ARGS"));
+        pre_package.emplace_back(BIND(args_3index, "U3_ARGS"));
+        pre_package.emplace_back(BIND(args_3index, "THREEPF_ARGS"));
       }
 
 

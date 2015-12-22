@@ -33,28 +33,20 @@ package_group::~package_group()
   }
 
 
-std::vector<macro_packages::simple_rule>& package_group::get_pre_ruleset()
-  {
-    return(this->pre_ruleset);
-  }
-
-
 void package_group::build_pre_ruleset()
   {
     this->pre_ruleset.clear();
 
     for(std::unique_ptr<macro_packages::replacement_rule_package>& pkg : this->packages)
       {
-        const std::vector<macro_packages::simple_rule>& rules = pkg->get_pre_rules();
+        const std::vector< std::unique_ptr<macro_packages::replacement_rule_simple> >& rules = pkg->get_pre_rules();
+
         this->pre_ruleset.reserve(this->pre_ruleset.size() + rules.size());
-        this->pre_ruleset.insert(this->pre_ruleset.end(), rules.begin(), rules.end());
+        for(const std::unique_ptr<macro_packages::replacement_rule_simple>& rule : rules)
+          {
+            this->pre_ruleset.emplace_back(rule.get());
+          }
       }
-  }
-
-
-std::vector<macro_packages::simple_rule>& package_group::get_post_ruleset()
-  {
-    return(this->post_ruleset);
   }
 
 
@@ -64,9 +56,13 @@ void package_group::build_post_ruleset()
 
     for(std::unique_ptr<macro_packages::replacement_rule_package>& pkg : this->packages)
       {
-        const std::vector<macro_packages::simple_rule>& rules = pkg->get_post_rules();
+        const std::vector< std::unique_ptr<macro_packages::replacement_rule_simple> >& rules = pkg->get_post_rules();
+
         this->post_ruleset.reserve(this->post_ruleset.size() + rules.size());
-        this->post_ruleset.insert(this->post_ruleset.end(), rules.begin(), rules.end());
+        for(const std::unique_ptr<macro_packages::replacement_rule_simple>& rule : rules)
+          {
+            this->post_ruleset.emplace_back(rule.get());
+          }
       }
   }
 

@@ -202,10 +202,10 @@ class macro_agent
     package_group& package;
 
     //! cache pre-rules
-    std::vector<macro_packages::simple_rule>& pre_rule_cache;
+    std::vector<macro_packages::replacement_rule_simple*>& pre_rule_cache;
 
     //! cache post-rules
-    std::vector<macro_packages::simple_rule>& post_rule_cache;
+    std::vector<macro_packages::replacement_rule_simple*>& post_rule_cache;
 
     //! cache index rules
     std::vector<macro_packages::index_rule>&  index_rule_cache;

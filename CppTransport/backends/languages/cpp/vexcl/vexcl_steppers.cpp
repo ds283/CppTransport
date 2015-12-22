@@ -14,7 +14,7 @@
 #include "translation_unit.h"
 
 
-#define BIND(X) std::move(std::make_shared<X>(this->data_payload, this->printer))
+#define BIND(X, N) std::move(std::make_unique<X>(N, this->data_payload, this->printer))
 
 
 namespace vexcl
@@ -22,23 +22,14 @@ namespace vexcl
 
     constexpr auto VEXCL_STEPPER = "runge_kutta_dopri5";
 
-    constexpr unsigned int BACKG_STEPPER_STATE_ARGUMENT = 0;
-    constexpr unsigned int BACKG_STEPPER_TOTAL_ARGUMENTS = 1;
-
-    constexpr unsigned int PERT_STEPPER_STATE_ARGUMENT = 0;
-    constexpr unsigned int PERT_STEPPER_TOTAL_ARGUMENTS = 1;
-
-    constexpr unsigned int BACKG_NAME_TOTAL_ARGUMENTS = 0;
-    constexpr unsigned int PERT_NAME_TOTAL_ARGUMENTS = 0;
-
 
     vexcl_steppers::vexcl_steppers(tensor_factory& f, cse& cw, translator_data& p, language_printer& prn)
       : ::macro_packages::replacement_rule_package(f, cw, p, prn)
       {
-        pre_package.emplace_back("MAKE_BACKG_STEPPER", BIND(replace_backg_stepper), BACKG_STEPPER_TOTAL_ARGUMENTS);
-        pre_package.emplace_back("MAKE_PERT_STEPPER", BIND(replace_pert_stepper), PERT_STEPPER_TOTAL_ARGUMENTS);
-        pre_package.emplace_back("BACKG_STEPPER", BIND(stepper_name), BACKG_NAME_TOTAL_ARGUMENTS);
-        pre_package.emplace_back("PERT_STEPPER", BIND(stepper_name), PERT_NAME_TOTAL_ARGUMENTS);
+        pre_package.emplace_back(BIND(replace_backg_stepper, "MAKE_BACKG_STEPPER"));
+        pre_package.emplace_back(BIND(replace_pert_stepper, "MAKE_PERT_STEPPER"));
+        pre_package.emplace_back(BIND(stepper_name, "BACKG_STEPPER"));
+        pre_package.emplace_back(BIND(stepper_name, "PERT_STEPPER"));
       }
 
 

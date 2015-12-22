@@ -51,10 +51,10 @@ namespace macro_packages
 
 
         //! return pre- macros package
-        const std::vector<simple_rule>& get_pre_rules()  { return(this->pre_package); }
+        const std::vector< std::unique_ptr<replacement_rule_simple> >& get_pre_rules()  { return(this->pre_package); }
 
         //! return post- macros package
-        const std::vector<simple_rule>& get_post_rules() { return(this->post_package); }
+        const std::vector< std::unique_ptr<replacement_rule_simple> >& get_post_rules() { return(this->post_package); }
 
         //! get index-macro package
         virtual const std::vector<index_rule>   get_index_rules() = 0;
@@ -100,10 +100,16 @@ namespace macro_packages
         // MACRO PACKAGES
 
         //! package of pre- macros
-        std::vector<simple_rule> pre_package;
+        //! held as a container of std::unique_ptr<>, because ownership of these
+        //! replacement rules is vested in this package.
+        //! They are shared with clients as raw pointers or references.
+        std::vector< std::unique_ptr<replacement_rule_simple> > pre_package;
 
         //! package of post- macros
-        std::vector<simple_rule> post_package;
+        //! held as a container of std::unique_ptr<>, because ownership of these
+        //! replacement rules is vested in this package.
+        //! They are shared with clients as raw pointers or references.
+        std::vector< std::unique_ptr<replacement_rule_simple> > post_package;
 
         //! package of index-macros
         std::vector<index_rule> index_package;

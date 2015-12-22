@@ -17,22 +17,16 @@
 #include "to_printable.h"
 
 
-#define BIND(X) std::move(std::make_shared<X>(this->data_payload, this->printer))
+#define BIND(X, N) std::move(std::make_unique<X>(N, this->data_payload, this->printer))
 
 
 namespace vexcl
   {
 
-    constexpr unsigned int IMPORT_KERNEL_FILE_ARGUMENT = 0;
-    constexpr unsigned int IMPORT_KERNEL_NAME_ARGUMENT = 1;
-    constexpr unsigned int IMPORT_KERNEL_TRAILING_ARGUMENT = 2;
-    constexpr unsigned int IMPORT_KERNEL_TOTAL_ARGUMENTS = 3;
-
-
     vexcl_kernels::vexcl_kernels(tensor_factory& f, cse& cw, translator_data& p, language_printer& prn)
       : ::macro_packages::replacement_rule_package(f, cw, p, prn)
       {
-        pre_package.emplace_back("IMPORT_KERNEL", BIND(import_kernel), IMPORT_KERNEL_TOTAL_ARGUMENTS);
+        pre_package.emplace_back(BIND(import_kernel, "IMPORT_KERNEL"));
       }
 
 

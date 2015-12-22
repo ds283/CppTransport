@@ -46,13 +46,16 @@ namespace macro_packages
       public:
 
         //! constructor
-        replacement_rule_simple() = default;
+        replacement_rule_simple(std::string n)
+          : name(std::move(n))
+          {
+          }
 
         //! destructor
         virtual ~replacement_rule_simple() = default;
 
 
-        // INTERFACE
+        // INTERFACE -- EVALUATION
 
       public:
 
@@ -61,6 +64,25 @@ namespace macro_packages
 
         //! report end of input; here a no-op but but can be overridden if needed
         virtual void report_end_of_input() { return; }
+
+
+        // INTERFACE -- QUERY FOR DATA
+
+      public:
+
+        //! get number of arguments associated with this macro
+        virtual unsigned int get_number_args() const = 0;
+
+        //! get name associated with this macro
+        const std::string& get_name() const { return(this->name); }
+
+
+        // INTERNAL DATA
+
+      protected:
+
+        //! name of this macro
+        std::string name;
 
       };
 

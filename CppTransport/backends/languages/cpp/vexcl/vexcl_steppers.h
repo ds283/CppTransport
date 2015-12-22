@@ -16,6 +16,16 @@
 namespace vexcl
   {
 
+    constexpr unsigned int BACKG_STEPPER_STATE_ARGUMENT = 0;
+    constexpr unsigned int BACKG_STEPPER_TOTAL_ARGUMENTS = 1;
+
+    constexpr unsigned int PERT_STEPPER_STATE_ARGUMENT = 0;
+    constexpr unsigned int PERT_STEPPER_TOTAL_ARGUMENTS = 1;
+
+    constexpr unsigned int BACKG_NAME_TOTAL_ARGUMENTS = 0;
+    constexpr unsigned int PERT_NAME_TOTAL_ARGUMENTS = 0;
+
+
     class replace_backg_stepper : public ::macro_packages::replacement_rule_simple
       {
 
@@ -24,8 +34,9 @@ namespace vexcl
       public:
 
         //! constructor
-        replace_backg_stepper(translator_data& p, language_printer& prn)
-          : data_payload(p),
+        replace_backg_stepper(std::string n, translator_data& p, language_printer& prn)
+          : ::macro_packages::replacement_rule_simple(std::move(n)),
+            data_payload(p),
             printer(prn)
           {
           }
@@ -40,6 +51,14 @@ namespace vexcl
 
         //! evaluate
         virtual std::string operator()(const macro_argument_list& args) override;
+
+
+        // INTERFACE -- QUERY FOR DATA
+
+      public:
+
+        //! get number of arguments associated with this macro
+        virtual unsigned int get_number_args() const override { return(BACKG_STEPPER_TOTAL_ARGUMENTS); }
 
 
         // INTERNAL DATA
@@ -63,8 +82,9 @@ namespace vexcl
       public:
 
         //! constructor
-        replace_pert_stepper(translator_data& p, language_printer& prn)
-          : data_payload(p),
+        replace_pert_stepper(std::string n, translator_data& p, language_printer& prn)
+          : ::macro_packages::replacement_rule_simple(std::move(n)),
+            data_payload(p),
             printer(prn)
           {
           }
@@ -79,6 +99,14 @@ namespace vexcl
 
         //! evaluate
         virtual std::string operator()(const macro_argument_list& args) override;
+
+
+        // INTERFACE -- QUERY FOR DATA
+
+      public:
+
+        //! get number of arguments associated with this macro
+        virtual unsigned int get_number_args() const override { return(PERT_STEPPER_TOTAL_ARGUMENTS); }
 
 
         // INTERNAL DATA
@@ -102,8 +130,9 @@ namespace vexcl
       public:
 
         //! constructor
-        stepper_name(translator_data& p, language_printer& prn)
-          : data_payload(p),
+        stepper_name(std::string n, translator_data& p, language_printer& prn)
+          : ::macro_packages::replacement_rule_simple(std::move(n)),
+            data_payload(p),
             printer(prn)
           {
           }
@@ -118,6 +147,14 @@ namespace vexcl
 
         //! evaluate
         virtual std::string operator()(const macro_argument_list& args) override;
+
+
+        // INTERFACE -- QUERY FOR DATA
+
+      public:
+
+        //! get number of arguments associated with this macro
+        virtual unsigned int get_number_args() const override { return(BACKG_NAME_TOTAL_ARGUMENTS); }
 
 
         // INTERNAL DATA

@@ -10,41 +10,13 @@
 #include "flow_tensors.h"
 
 
-#define BIND1(X) std::move(std::make_shared<X>(this->fctry, this->cse_worker, this->printer))
+#define BIND1(X, N) std::move(std::make_unique<X>(N, this->fctry, this->cse_worker, this->printer))
 #define BIND3(X) std::bind(&flow_tensors::X, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)
 #define BIND1OLD(X) std::bind(&flow_tensors::X, this, std::placeholders::_1)
 
 
 namespace macro_packages
   {
-
-    constexpr unsigned int POTENTIAL_TOTAL_ARGUMENTS = 0;
-
-    constexpr unsigned int HUBBLESQ_TOTAL_ARGUMENTS = 0;
-
-    constexpr unsigned int EPSILON_TOTAL_ARGUMENTS = 0;
-
-    constexpr unsigned int PARAMETER_TOTAL_ARGUMENTS = 0;
-    constexpr unsigned int PARAMETER_TOTAL_INDICES = 1;
-
-    constexpr unsigned int FIELD_TOTAL_ARGUMENTS = 0;
-    constexpr unsigned int FIELD_TOTAL_INDICES = 1;
-
-    constexpr unsigned int COORDINATE_TOTAL_ARGUMENTS = 0;
-    constexpr unsigned int COORDINATE_TOTAL_INDICES = 1;
-
-    constexpr unsigned int SR_VELOCITY_TOTAL_ARGUMENTS = 0;
-    constexpr unsigned int SR_VELOCITY_TOTAL_INDICES = 1;
-
-    constexpr unsigned int DV_TOTAL_ARGUMENTS = 0;
-    constexpr unsigned int DV_TOTAL_INDICES = 1;
-
-    constexpr unsigned int DDV_TOTAL_ARGUMENTS = 0;
-    constexpr unsigned int DDV_TOTAL_INDICES = 2;
-
-    constexpr unsigned int DDDV_TOTAL_ARGUMENTS = 0;
-    constexpr unsigned int DDDV_TOTAL_INDICES = 3;
-
 
     flow_tensors::flow_tensors(tensor_factory& f, cse& cw, translator_data& p, language_printer& prn)
       : replacement_rule_package(f, cw, p, prn),
@@ -55,9 +27,9 @@ namespace macro_packages
         dddV_tensor = f.make_dddV(prn);
         SR_velocity_tensor = f.make_SR_velocity(prn);
 
-        pre_package.emplace_back("POTENTIAL", BIND1(replace_V), POTENTIAL_TOTAL_ARGUMENTS);
-        pre_package.emplace_back("HUBBLE_SQ", BIND1(replace_Hsq), HUBBLESQ_TOTAL_ARGUMENTS);
-        pre_package.emplace_back("EPSILON", BIND1(replace_eps), EPSILON_TOTAL_ARGUMENTS);
+        pre_package.emplace_back(BIND1(replace_V, "POTENTIAL"));
+        pre_package.emplace_back(BIND1(replace_Hsq, "HUBBLE_SQ"));
+        pre_package.emplace_back(BIND1(replace_eps, "EPSILON"));
       }
 
 

@@ -19,74 +19,45 @@
 #include "boost/date_time/posix_time/posix_time.hpp"
 
 
-#define BIND(X) std::move(std::make_shared<X>(this->data_payload, this->printer))
+#define BIND(X, N) std::move(std::make_unique<X>(N, this->data_payload, this->printer))
 
 
 namespace macro_packages
   {
 
-    constexpr unsigned int TOOL_TOTAL_ARGUMENTS = 0;
-    constexpr unsigned int VERSION_TOTAL_ARGUMENTS = 0;
-    constexpr unsigned int GUARD_TOTAL_ARGUMENTS = 0;
-    constexpr unsigned int DATE_TOTAL_ARGUMENTS = 0;
-    constexpr unsigned int SOURCE_TOTAL_ARGUMENTS = 0;
-    constexpr unsigned int NAME_TOTAL_ARGUMENTS = 0;
-    constexpr unsigned int AUTHOR_TOTAL_ARGUMENTS = 0;
-    constexpr unsigned int TAG_TOTAL_ARGUMENTS = 0;
-    constexpr unsigned int MODEL_TOTAL_ARGUMENTS = 0;
-    constexpr unsigned int UUID_TOTAL_ARGUMENTS = 0;
-    constexpr unsigned int HEADER_TOTAL_ARGUMENTS = 0;
-    constexpr unsigned int CORE_TOTAL_ARGUMENTS = 0;
-    constexpr unsigned int NUMBER_FIELDS_TOTAL_ARGUMENTS = 0;
-    constexpr unsigned int NUMBER_PARAMS_TOTAL_ARGUMENTS = 0;
-    constexpr unsigned int FIELD_LIST_TOTAL_ARGUMENTS = 0;
-    constexpr unsigned int LATEX_LIST_TOTAL_ARGUMENTS = 0;
-    constexpr unsigned int PARAM_LIST_TOTAL_ARGUMENTS = 0;
-    constexpr unsigned int PLATX_LIST_TOTAL_ARGUMENTS = 0;
-    constexpr unsigned int STATE_LIST_TOTAL_ARGUMENTS = 0;
-    constexpr unsigned int BACKG_ABS_ERR_TOTAL_ARGUMENTS = 0;
-    constexpr unsigned int BACKG_REL_ERR_TOTAL_ARGUMENTS = 0;
-    constexpr unsigned int BACKG_STEP_TOTAL_ARGUMENTS = 0;
-    constexpr unsigned int BACKG_NAME_TOTAL_ARGUMENTS = 0;
-    constexpr unsigned int PERT_ABS_ERR_TOTAL_ARGUMENTS = 0;
-    constexpr unsigned int PERT_REL_ERR_TOTAL_ARGUMENTS = 0;
-    constexpr unsigned int PERT_STEP_TOTAL_ARGUMENTS = 0;
-    constexpr unsigned int PERT_NAME_TOTAL_ARGUMENTS = 0;
-    constexpr unsigned int UNIQUE_TOTAL_ARGUMENTS = 0;
-
 
     fundamental::fundamental(tensor_factory& f, cse& cw, translator_data& p, language_printer& prn)
       : replacement_rule_package(f, cw, p, prn)
       {
-        pre_package.emplace_back("TOOL", BIND(replace_tool), TOOL_TOTAL_ARGUMENTS);
-        pre_package.emplace_back("VERSION", BIND(replace_version), VERSION_TOTAL_ARGUMENTS);
-        pre_package.emplace_back("GUARD", BIND(replace_guard), GUARD_TOTAL_ARGUMENTS);
-        pre_package.emplace_back("DATE", BIND(replace_date), DATE_TOTAL_ARGUMENTS);
-        pre_package.emplace_back("SOURCE", BIND(replace_source), SOURCE_TOTAL_ARGUMENTS);
-        pre_package.emplace_back("NAME", BIND(replace_name), NAME_TOTAL_ARGUMENTS);
-        pre_package.emplace_back("AUTHOR", BIND(replace_author), AUTHOR_TOTAL_ARGUMENTS);
-        pre_package.emplace_back("TAG", BIND(replace_tag), TAG_TOTAL_ARGUMENTS);
-        pre_package.emplace_back("MODEL", BIND(replace_model), MODEL_TOTAL_ARGUMENTS);
-        pre_package.emplace_back("UNIQUE_ID", BIND(replace_uid), UUID_TOTAL_ARGUMENTS);
-        pre_package.emplace_back("HEADER", BIND(replace_header), HEADER_TOTAL_ARGUMENTS);
-        pre_package.emplace_back("CORE", BIND(replace_core), CORE_TOTAL_ARGUMENTS);
-        pre_package.emplace_back("NUMBER_FIELDS", BIND(replace_number_fields), NUMBER_FIELDS_TOTAL_ARGUMENTS);
-        pre_package.emplace_back("NUMBER_PARAMS", BIND(replace_number_params), NUMBER_PARAMS_TOTAL_ARGUMENTS);
-        pre_package.emplace_back("FIELD_NAME_LIST", BIND(replace_field_list), FIELD_LIST_TOTAL_ARGUMENTS);
-        pre_package.emplace_back("LATEX_NAME_LIST", BIND(replace_latex_list), LATEX_LIST_TOTAL_ARGUMENTS);
-        pre_package.emplace_back("PARAM_NAME_LIST", BIND(replace_param_list), PARAM_LIST_TOTAL_ARGUMENTS);
-        pre_package.emplace_back("PLATX_NAME_LIST", BIND(replace_platx_list), PLATX_LIST_TOTAL_ARGUMENTS);
-        pre_package.emplace_back("STATE_NAME_LIST", BIND(replace_state_list), STATE_LIST_TOTAL_ARGUMENTS);
-        pre_package.emplace_back("BACKG_ABS_ERR", BIND(replace_b_abs_err), BACKG_ABS_ERR_TOTAL_ARGUMENTS);
-        pre_package.emplace_back("BACKG_REL_ERR", BIND(replace_b_rel_err), BACKG_REL_ERR_TOTAL_ARGUMENTS);
-        pre_package.emplace_back("BACKG_STEP_SIZE", BIND(replace_b_step), BACKG_STEP_TOTAL_ARGUMENTS);
-        pre_package.emplace_back("BACKG_STEPPER", BIND(replace_b_stepper), BACKG_NAME_TOTAL_ARGUMENTS);
-        pre_package.emplace_back("PERT_ABS_ERR", BIND(replace_p_abs_err), PERT_ABS_ERR_TOTAL_ARGUMENTS);
-        pre_package.emplace_back("PERT_REL_ERR", BIND(replace_p_rel_err), PERT_REL_ERR_TOTAL_ARGUMENTS);
-        pre_package.emplace_back("PERT_STEP_SIZE", BIND(replace_p_step), PERT_STEP_TOTAL_ARGUMENTS);
-        pre_package.emplace_back("PERT_STEPPER", BIND(replace_p_stepper), PERT_NAME_TOTAL_ARGUMENTS);
+        pre_package.emplace_back(BIND(replace_tool, "TOOL"));
+        pre_package.emplace_back(BIND(replace_version, "VERSION"));
+        pre_package.emplace_back(BIND(replace_guard, "GUARD"));
+        pre_package.emplace_back(BIND(replace_date, "DATE"));
+        pre_package.emplace_back(BIND(replace_source, "SOURCE"));
+        pre_package.emplace_back(BIND(replace_name, "NAME"));
+        pre_package.emplace_back(BIND(replace_author, "AUTHOR"));
+        pre_package.emplace_back(BIND(replace_tag, "TAG"));
+        pre_package.emplace_back(BIND(replace_model, "MODEL"));
+        pre_package.emplace_back(BIND(replace_uid, "UNIQUE_ID"));
+        pre_package.emplace_back(BIND(replace_header, "HEADER"));
+        pre_package.emplace_back(BIND(replace_core, "CORE"));
+        pre_package.emplace_back(BIND(replace_number_fields, "NUMBER_FIELDS"));
+        pre_package.emplace_back(BIND(replace_number_params, "NUMBER_PARAMS"));
+        pre_package.emplace_back(BIND(replace_field_list, "FIELD_NAME_LIST"));
+        pre_package.emplace_back(BIND(replace_latex_list, "LATEX_NAME_LIST"));
+        pre_package.emplace_back(BIND(replace_param_list, "PARAM_NAME_LIST"));
+        pre_package.emplace_back(BIND(replace_platx_list, "PLATX_NAME_LIST"));
+        pre_package.emplace_back(BIND(replace_state_list, "STATE_NAME_LIST"));
+        pre_package.emplace_back(BIND(replace_b_abs_err, "BACKG_ABS_ERR"));
+        pre_package.emplace_back(BIND(replace_b_rel_err, "BACKG_REL_ERR"));
+        pre_package.emplace_back(BIND(replace_b_step, "BACKG_STEP_SIZE"));
+        pre_package.emplace_back(BIND(replace_b_stepper, "BACKG_STEPPER"));
+        pre_package.emplace_back(BIND(replace_p_abs_err, "PERT_ABS_ERR"));
+        pre_package.emplace_back(BIND(replace_p_rel_err, "PERT_REL_ERR"));
+        pre_package.emplace_back(BIND(replace_p_step, "PERT_STEP_SIZE"));
+        pre_package.emplace_back(BIND(replace_p_stepper, "PERT_STEPPER"));
 
-        post_package.emplace_back("UNIQUE", BIND(replace_unique), UNIQUE_TOTAL_ARGUMENTS);
+        post_package.emplace_back(BIND(replace_unique, "UNIQUE"));
       }
 
 

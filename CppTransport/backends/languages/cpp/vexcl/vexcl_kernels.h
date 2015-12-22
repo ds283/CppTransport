@@ -14,6 +14,12 @@
 namespace vexcl
   {
 
+    constexpr unsigned int IMPORT_KERNEL_FILE_ARGUMENT = 0;
+    constexpr unsigned int IMPORT_KERNEL_NAME_ARGUMENT = 1;
+    constexpr unsigned int IMPORT_KERNEL_TRAILING_ARGUMENT = 2;
+    constexpr unsigned int IMPORT_KERNEL_TOTAL_ARGUMENTS = 3;
+
+
     class import_kernel : public ::macro_packages::replacement_rule_simple
       {
 
@@ -22,8 +28,9 @@ namespace vexcl
       public:
 
         //! constructor
-        import_kernel(translator_data& p, language_printer& prn)
-          : data_payload(p),
+        import_kernel(std::string n, translator_data& p, language_printer& prn)
+          : ::macro_packages::replacement_rule_simple(std::move(n)),
+            data_payload(p),
             printer(prn)
           {
           }
@@ -38,6 +45,14 @@ namespace vexcl
 
         //! evaluate
         virtual std::string operator()(const macro_argument_list& args) override;
+
+
+        // INTERFACE -- QUERY FOR DATA
+
+      public:
+
+        //! get number of arguments associated with this macro
+        virtual unsigned int get_number_args() const override { return(IMPORT_KERNEL_TOTAL_ARGUMENTS); }
 
 
         // INTERNAL DATA
