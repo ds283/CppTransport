@@ -171,7 +171,7 @@ namespace canonical
               {
                 unsigned int index = this->fl.flatten(i);
 
-                std::string variable = printer.array_subscript(*resource, *flatten, this->fl.flatten(i));
+                std::string variable = printer.array_subscript(*resource, this->fl.flatten(i), *flatten);
 
                 (*list)[index] = this->sym_factory.get_symbol(variable);
               }
@@ -232,7 +232,7 @@ namespace canonical
                   {
                     unsigned int index = this->fl.flatten(i,j);
 
-                    std::string variable = printer.array_subscript(*resource, *flatten, this->fl.flatten(i), this->fl.flatten(j));
+                    std::string variable = printer.array_subscript(*resource, this->fl.flatten(i), this->fl.flatten(j), *flatten);
 
                     (*list)[index] = this->sym_factory.get_symbol(variable);
                   }
@@ -300,7 +300,7 @@ namespace canonical
                       {
                         unsigned int index = this->fl.flatten(i,j,k);
 
-                        std::string variable = printer.array_subscript(*resource, *flatten, this->fl.flatten(i), this->fl.flatten(j), this->fl.flatten(k));
+                        std::string variable = printer.array_subscript(*resource, this->fl.flatten(i), this->fl.flatten(j), this->fl.flatten(k), *flatten);
 
                         (*list)[index] = this->sym_factory.get_symbol(variable);
                       }
@@ -420,6 +420,43 @@ namespace canonical
         const boost::optional< contexted_value<std::string> >& flatten = this->mgr.field_flatten();
 
         return(resource && flatten);
+      }
+
+
+    GiNaC::symbol resources::dV_resource(abstract_index& a, language_printer& printer)
+      {
+        const boost::optional< contexted_value<std::string> >& resource = this->mgr.dV();
+        const boost::optional< contexted_value<std::string> >& flatten = this->mgr.field_flatten();
+
+        if(!resource || !flatten) throw resource_failure(a.get_loop_variable());
+
+        std::string variable = printer.array_subscript(*resource, a, *flatten);
+        return this->sym_factory.get_symbol(variable);
+      }
+
+
+    GiNaC::symbol resources::ddV_resource(abstract_index& a, abstract_index& b, language_printer& printer)
+      {
+        const boost::optional< contexted_value<std::string> >& resource = this->mgr.ddV();
+        const boost::optional< contexted_value<std::string> >& flatten = this->mgr.field_flatten();
+
+        if(!resource || !flatten) throw resource_failure(a.get_loop_variable() + ", " + b.get_loop_variable());
+
+        std::string variable = printer.array_subscript(*resource, a, b, *flatten);
+        return this->sym_factory.get_symbol(variable);
+      }
+
+
+    GiNaC::symbol resources::dddV_resource(abstract_index& a, abstract_index& b, abstract_index& c,
+                                           language_printer& printer)
+      {
+        const boost::optional< contexted_value<std::string> >& resource = this->mgr.dddV();
+        const boost::optional< contexted_value<std::string> >& flatten = this->mgr.field_flatten();
+
+        if(!resource || !flatten) throw resource_failure(a.get_loop_variable() + ", " + b.get_loop_variable() + ", " + c.get_loop_variable());
+
+        std::string variable = printer.array_subscript(*resource, a, b, c, *flatten);
+        return this->sym_factory.get_symbol(variable);
       }
   }   // namespace canonical
 

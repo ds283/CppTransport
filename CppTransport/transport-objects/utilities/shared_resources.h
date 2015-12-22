@@ -9,12 +9,14 @@
 
 #include <memory>
 #include <vector>
+#include <stdexcept>
 
 #include "resource_manager.h"
 #include "translator_data.h"
 #include "expression_cache.h"
 #include "indices.h"
 #include "index_flatten.h"
+#include "abstract_index.h"
 
 #include "language_printer.h"
 
@@ -56,14 +58,23 @@ class shared_resources
     //! generate Mp resource
     GiNaC::symbol generate_Mp() const { return this->M_Planck; }
 
-    //! generate parameter label resource
+    //! generate concrete parameter label resource
     std::unique_ptr<symbol_list> generate_parameters(language_printer& printer) const;
 
-    //! generate field-space coordinate label resource
+    //! generate concrete field-space coordinate label resource
     std::unique_ptr<symbol_list> generate_fields(language_printer& printer) const;
 
-    //! generate field-space derivative label resource
+    //! generate concrete field-space derivative label resource
     std::unique_ptr<symbol_list> generate_derivs(language_printer& printer) const;
+
+    //! generate abstract parameter label resource
+    GiNaC::symbol generate_parameters(abstract_index& idx, language_printer& printer) const;
+
+    //! generate abstract field-space coordinate label resource
+    GiNaC::symbol generate_fields(abstract_index& idx, language_printer& printer) const;
+
+    //! generate abstract fields-space derivative label resource
+    GiNaC::symbol generate_derivs(abstract_index& idx, language_printer& printer) const;
 
 
     // INTERFACE -- QUERY ROLL/UNROLL AVAILABILITY
@@ -127,6 +138,25 @@ class shared_resources
 
     //! index flattener
     index_flatten fl;
+
+  };
+
+
+class resource_failure: public std::runtime_error
+  {
+
+    // CONSTRUCTOR, DESTRUCTOR
+
+  public:
+
+    //! constructor
+    resource_failure(std::string x)
+      : std::runtime_error(std::move(x))
+      {
+      }
+
+    //! destructor
+    ~resource_failure() = default;
 
   };
 

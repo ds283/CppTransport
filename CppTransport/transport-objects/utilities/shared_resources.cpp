@@ -64,7 +64,7 @@ std::unique_ptr<symbol_list> shared_resources::generate_fields(language_printer&
       {
         for(field_index i = field_index(0); i < this->num_fields; ++i)
           {
-            std::string variable = printer.array_subscript(*resource, *flatten, this->fl.flatten(i));
+            std::string variable = printer.array_subscript(*resource, this->fl.flatten(i), *flatten);
             GiNaC::symbol sym = this->sym_factory.get_symbol(variable);
             list->push_back(sym);
           }
@@ -93,7 +93,7 @@ std::unique_ptr<symbol_list> shared_resources::generate_derivs(language_printer&
         for(field_index i = field_index(0); i < this->num_fields; ++i)
           {
             // TODO: explicit offset by this->num_fields is a bit ugly; would be nice to find a better approach
-            std::string variable = printer.array_subscript(*resource, *flatten, this->fl.flatten(i) + static_cast<unsigned int>(this->num_fields));
+            std::string variable = printer.array_subscript(*resource, this->fl.flatten(i), *flatten, static_cast<unsigned int>(this->num_fields));
             GiNaC::symbol sym = this->sym_factory.get_symbol(variable);
             list->push_back(sym);
           }
@@ -124,4 +124,39 @@ bool shared_resources::roll_coordinates() const
     const boost::optional< contexted_value<std::string> >& flatten = this->mgr.phase_flatten();
 
     return(resource && flatten);
+  }
+
+
+GiNaC::symbol shared_resources::generate_parameters(abstract_index& idx, language_printer& printer) const
+  {
+    const boost::optional< contexted_value<std::string> >& resource = this->mgr.parameters();
+
+    if(!resource) throw resource_failure(idx.get_loop_variable());
+
+    std::string variable = printer.array_subscript(*resource, idx);
+    return this->sym_factory.get_symbol(variable);
+  }
+
+
+GiNaC::symbol shared_resources::generate_fields(abstract_index& idx, language_printer& printer) const
+  {
+    const boost::optional< contexted_value<std::string> >& resource = this->mgr.coordinates();
+    const boost::optional< contexted_value<std::string> >& flatten = this->mgr.phase_flatten();
+
+    if(!resource || !flatten) throw resource_failure(idx.get_loop_variable());
+
+    std::string variable = printer.array_subscript(*resource, idx, *flatten);
+    return this->sym_factory.get_symbol(variable);
+  }
+
+
+GiNaC::symbol shared_resources::generate_derivs(abstract_index& idx, language_printer& printer) const
+  {
+    const boost::optional< contexted_value<std::string> >& resource = this->mgr.coordinates();
+    const boost::optional< contexted_value<std::string> >& flatten = this->mgr.phase_flatten();
+
+    if(!resource || !flatten) throw resource_failure(idx.get_loop_variable());
+
+    std::string variable = printer.array_subscript(*resource, idx, *flatten, static_cast<unsigned int>(this->num_fields));
+    return this->sym_factory.get_symbol(variable);
   }

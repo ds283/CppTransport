@@ -61,14 +61,24 @@ namespace canonical
         //! generate Hubble-squared resource
         GiNaC::ex Hsq_resource(language_printer& printer);
 
-        //! generate dV resources
+        //! generate concrete dV resource labels
         std::unique_ptr<flattened_tensor> dV_resource(language_printer& printer);
 
-        //! generate ddV resources
+        //! generate concrete ddV resource labels
         std::unique_ptr<flattened_tensor> ddV_resource(language_printer& printer);
 
-        //! generate dddV resources
+        //! generate concrete dddV resource labels
         std::unique_ptr<flattened_tensor> dddV_resource(language_printer& printer);
+
+        //! generate abstract dV resource label
+        GiNaC::symbol dV_resource(abstract_index& a, language_printer& printer);
+
+        //! generate abstract ddV resource label
+        GiNaC::symbol ddV_resource(abstract_index& a, abstract_index& b, language_printer& printer);
+
+        //! generate abstract dddV resource label
+        GiNaC::symbol dddV_resource(abstract_index& a, abstract_index& b, abstract_index& c, language_printer& printer);
+
 
 
         // INTERFACE -- BUILD ARGUMENT LISTS

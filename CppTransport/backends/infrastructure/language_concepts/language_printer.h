@@ -11,6 +11,8 @@
 #include <functional>
 #include <string>
 
+#include "abstract_index.h"
+
 #include "ginac/ginac.h"
 
 #include "boost/optional.hpp"
@@ -79,16 +81,28 @@ class language_printer
   public:
 
     //! generate 1D array subscript without flattening
-    virtual std::string array_subscript(const std::string& kernel, unsigned int a) const = 0;
+    virtual std::string array_subscript(const std::string& kernel, unsigned int a, unsigned int offset=0) const = 0;
 
     //! generate 1D array subscript
-    virtual std::string array_subscript(const std::string& kernel, const std::string& flatten, unsigned int a) const = 0;
+    virtual std::string array_subscript(const std::string& kernel, unsigned int a, const std::string& flatten, unsigned int offset=0) const = 0;
 
     //! generate 2D array subscript
-    virtual std::string array_subscript(const std::string& kernel, const std::string& flatten, unsigned int a, unsigned int b) const = 0;
+    virtual std::string array_subscript(const std::string& kernel, unsigned int a, unsigned int b, const std::string& flatten) const = 0;
 
     //! generate 3D array subscript
-    virtual std::string array_subscript(const std::string& kernel, const std::string& flatten, unsigned int a, unsigned int b, unsigned int c) const = 0;
+    virtual std::string array_subscript(const std::string& kernel, unsigned int a, unsigned int b, unsigned int c, const std::string& flatten) const = 0;
+
+    //! generate 1D array subscript without flattening
+    virtual std::string array_subscript(const std::string& kernel, const abstract_index& a, unsigned int offset=0) const = 0;
+
+    //! generate 1D array subscript
+    virtual std::string array_subscript(const std::string& kernel, const abstract_index& a, const std::string& flatten, unsigned int offset=0) const = 0;
+
+    //! generate 2D array subscript
+    virtual std::string array_subscript(const std::string& kernel, const abstract_index& a, const abstract_index& b, const std::string& flatten) const = 0;
+
+    //! generate 3D array subscript
+    virtual std::string array_subscript(const std::string& kernel, const abstract_index& a, const abstract_index& b, const abstract_index& c, const std::string& flatten) const = 0;
 
 
     // INTERFACE -- INITIALIZATION LISTS
