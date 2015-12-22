@@ -59,7 +59,7 @@ namespace macro_packages
 
         //! constructor
         set_params(std::string n, resource_manager& m, language_printer& prn)
-          : replacement_rule_simple(std::move(n)),
+          : replacement_rule_simple(std::move(n), RESOURCES::PARAMETERS_TOTAL_ARGUMENTS),
             mgr(m),
             printer(prn)
           {
@@ -69,20 +69,12 @@ namespace macro_packages
         virtual ~set_params() = default;
 
 
-        // INTERFACE
+        // INTERNAL API
 
-      public:
+      protected:
 
         //! evaluate
-        virtual std::string operator()(const macro_argument_list& args) override;
-
-
-        // INTERFACE -- QUERY FOR DATA
-
-      public:
-
-        //! get number of arguments associated with this macro
-        virtual unsigned int get_number_args() const override { return(RESOURCES::PARAMETERS_TOTAL_ARGUMENTS); }
+        virtual std::string evaluate(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA
@@ -107,7 +99,7 @@ namespace macro_packages
 
         //! constructor
         set_coordinates(std::string n, resource_manager& m, language_printer& prn)
-          : replacement_rule_simple(std::move(n)),
+          : replacement_rule_simple(std::move(n), RESOURCES::COORDINATES_TOTAL_ARGUMENTS),
             mgr(m),
             printer(prn)
           {
@@ -117,20 +109,12 @@ namespace macro_packages
         virtual ~set_coordinates() = default;
 
 
-        // INTERFACE
+        // INTERNAL API
 
-      public:
+      protected:
 
         //! evaluate
-        virtual std::string operator()(const macro_argument_list& args) override;
-
-
-        // INTERFACE -- QUERY FOR DATA
-
-      public:
-
-        //! get number of arguments associated with this macro
-        virtual unsigned int get_number_args() const override { return(RESOURCES::COORDINATES_TOTAL_ARGUMENTS); }
+        virtual std::string evaluate(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA
@@ -155,7 +139,7 @@ namespace macro_packages
 
         //! constructor
         set_phase_flatten(std::string n, resource_manager& m, language_printer& prn)
-          : replacement_rule_simple(std::move(n)),
+          : replacement_rule_simple(std::move(n), RESOURCES::PHASE_FLATTEN_TOTAL_ARGUMENTS),
             mgr(m),
             printer(prn)
           {
@@ -165,20 +149,12 @@ namespace macro_packages
         virtual ~set_phase_flatten() = default;
 
 
-        // INTERFACE
+        // INTERNAL API
 
-      public:
+      protected:
 
         //! evaluate
-        virtual std::string operator()(const macro_argument_list& args) override;
-
-
-        // INTERFACE -- QUERY FOR DATA
-
-      public:
-
-        //! get number of arguments associated with this macro
-        virtual unsigned int get_number_args() const override { return(RESOURCES::PHASE_FLATTEN_TOTAL_ARGUMENTS); }
+        virtual std::string evaluate(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA
@@ -203,7 +179,7 @@ namespace macro_packages
 
         //! constructor
         set_field_flatten(std::string n, resource_manager& m, language_printer& prn)
-          : replacement_rule_simple(std::move(n)),
+          : replacement_rule_simple(std::move(n), RESOURCES::FIELD_FLATTEN_TOTAL_ARGUMENTS),
             mgr(m),
             printer(prn)
           {
@@ -213,20 +189,12 @@ namespace macro_packages
         virtual ~set_field_flatten() = default;
 
 
-        // INTERFACE
+        // INTERNAL API
 
-      public:
+      protected:
 
         //! evaluate
-        virtual std::string operator()(const macro_argument_list& args) override;
-
-
-        // INTERFACE -- QUERY FOR DATA
-
-      public:
-
-        //! get number of arguments associated with this macro
-        virtual unsigned int get_number_args() const override { return(RESOURCES::FIELD_FLATTEN_TOTAL_ARGUMENTS); }
+        virtual std::string evaluate(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA
@@ -251,7 +219,7 @@ namespace macro_packages
 
         //! constructor
         set_dV(std::string n, resource_manager& m, language_printer& prn)
-          : replacement_rule_simple(std::move(n)),
+          : replacement_rule_simple(std::move(n), RESOURCES::DV_TOTAL_ARGUMENTS),
             mgr(m),
             printer(prn)
           {
@@ -261,20 +229,12 @@ namespace macro_packages
         virtual ~set_dV() = default;
 
 
-        // INTERFACE
+        // INTERNAL API
 
-      public:
+      protected:
 
         //! evaluate
-        virtual std::string operator()(const macro_argument_list& args) override;
-
-
-        // INTERFACE -- QUERY FOR DATA
-
-      public:
-
-        //! get number of arguments associated with this macro
-        virtual unsigned int get_number_args() const override { return(RESOURCES::DV_TOTAL_ARGUMENTS); }
+        virtual std::string evaluate(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA
@@ -299,7 +259,7 @@ namespace macro_packages
 
         //! constructor
         set_ddV(std::string n, resource_manager& m, language_printer& prn)
-          : replacement_rule_simple(std::move(n)),
+          : replacement_rule_simple(std::move(n), RESOURCES::DDV_TOTAL_ARGUMENTS),
             mgr(m),
             printer(prn)
           {
@@ -309,20 +269,12 @@ namespace macro_packages
         virtual ~set_ddV() = default;
 
 
-        // INTERFACE
+        // INTERNAL  API
 
-      public:
+      protected:
 
         //! evaluate
-        virtual std::string operator()(const macro_argument_list& args) override;
-
-
-        // INTERFACE -- QUERY FOR DATA
-
-      public:
-
-        //! get number of arguments associated with this macro
-        virtual unsigned int get_number_args() const override { return(RESOURCES::DDV_TOTAL_ARGUMENTS); }
+        virtual std::string evaluate(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA
@@ -347,7 +299,7 @@ namespace macro_packages
 
         //! constructor
         set_dddV(std::string n, resource_manager& m, language_printer& prn)
-          : replacement_rule_simple(std::move(n)),
+          : replacement_rule_simple(std::move(n), RESOURCES::DDDV_TOTAL_ARGUMENTS),
             mgr(m),
             printer(prn)
           {
@@ -357,20 +309,12 @@ namespace macro_packages
         virtual ~set_dddV() = default;
 
 
-        // INTERFACE
+        // INTERNAL API
 
-      public:
+      protected:
 
         //! evaluate
-        virtual std::string operator()(const macro_argument_list& args) override;
-
-
-        // INTERFACE -- QUERY FOR DATA
-
-      public:
-
-        //! get number of arguments associated with this macro
-        virtual unsigned int get_number_args() const override { return(RESOURCES::DDDV_TOTAL_ARGUMENTS); }
+        virtual std::string evaluate(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA
@@ -395,7 +339,7 @@ namespace macro_packages
 
         //! constructor
         set_connexion(std::string n, resource_manager& m, language_printer& prn)
-          : replacement_rule_simple(std::move(n)),
+          : replacement_rule_simple(std::move(n), RESOURCES::CONNEXION_TOTAL_ARGUMENTS),
             mgr(m),
             printer(prn)
           {
@@ -405,20 +349,12 @@ namespace macro_packages
         virtual ~set_connexion() = default;
 
 
-        // INTERFACE
+        // INTERNAL API
 
-      public:
+      protected:
 
         //! evaluate
-        virtual std::string operator()(const macro_argument_list& args) override;
-
-
-        // INTERFACE -- QUERY FOR DATA
-
-      public:
-
-        //! get number of arguments associated with this macro
-        virtual unsigned int get_number_args() const override { return(RESOURCES::CONNEXION_TOTAL_ARGUMENTS); }
+        virtual std::string evaluate(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA
@@ -443,7 +379,7 @@ namespace macro_packages
 
         //! constructor
         set_Riemann(std::string n, resource_manager& m, language_printer& prn)
-          : replacement_rule_simple(std::move(n)),
+          : replacement_rule_simple(std::move(n), RESOURCES::RIEMANN_TOTAL_ARGUMENTS),
             mgr(m),
             printer(prn)
           {
@@ -453,20 +389,12 @@ namespace macro_packages
         virtual ~set_Riemann() = default;
 
 
-        // INTERFACE
+        // INTERNAL API
 
-      public:
+      protected:
 
         //! evaluate
-        virtual std::string operator()(const macro_argument_list& args) override;
-
-
-        // INTERFACE -- QUERY FOR DATA
-
-      public:
-
-        //! get number of arguments associated with this macro
-        virtual unsigned int get_number_args() const override { return(RESOURCES::RIEMANN_TOTAL_ARGUMENTS); }
+        virtual std::string evaluate(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA
@@ -491,7 +419,7 @@ namespace macro_packages
 
         //! constructor
         release(std::string n, resource_manager& m, language_printer& prn)
-          : replacement_rule_simple(std::move(n)),
+          : replacement_rule_simple(std::move(n), RESOURCES::RELEASE_TOTAL_ARGUMENTS),
             mgr(m),
             printer(prn)
           {
@@ -501,20 +429,12 @@ namespace macro_packages
         virtual ~release() = default;
 
 
-        // INTERFACE
+        // INTERNAL API
 
-      public:
+      protected:
 
         //! evaluate
-        virtual std::string operator()(const macro_argument_list& args) override;
-
-
-        // INTERFACE -- QUERY FOR DATA
-
-      public:
-
-        //! get number of arguments associated with this macro
-        virtual unsigned int get_number_args() const override { return(RESOURCES::RELEASE_TOTAL_ARGUMENTS); }
+        virtual std::string evaluate(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA
@@ -539,7 +459,7 @@ namespace macro_packages
 
         //! constructor
         release_flatteners(std::string n, resource_manager& m, language_printer& prn)
-          : replacement_rule_simple(std::move(n)),
+          : replacement_rule_simple(std::move(n), RESOURCES::RELEASE_FLATTENERS_TOTAL_ARGUMENTS),
             mgr(m),
             printer(prn)
           {
@@ -549,20 +469,12 @@ namespace macro_packages
         virtual ~release_flatteners() = default;
 
 
-        // INTERFACE
+        // INTERNAL API
 
-      public:
+      protected:
 
         //! evaluate
-        virtual std::string operator()(const macro_argument_list& args) override;
-
-
-        // INTERFACE -- QUERY FOR DATA
-
-      public:
-
-        //! get number of arguments associated with this macro
-        virtual unsigned int get_number_args() const override { return(RESOURCES::RELEASE_FLATTENERS_TOTAL_ARGUMENTS); }
+        virtual std::string evaluate(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA

@@ -41,7 +41,7 @@ namespace shared
 
         //! constructor
         args_params(std::string n, translator_data& p, language_printer& prn, std::string q="")
-          : ::macro_packages::replacement_rule_simple(std::move(n)),
+          : ::macro_packages::replacement_rule_simple(std::move(n), PARAM_ARGS_TOTAL_ARGUMENTS),
             data_payload(p),
             printer(prn),
             qualifier(q)
@@ -52,20 +52,12 @@ namespace shared
         virtual ~args_params() = default;
 
 
-        // INTERFACE
+        // INTERNAL API
 
-      public:
+      protected:
 
         //! evaluate
-        virtual std::string operator()(const macro_argument_list& args) override;
-
-
-        // INTERFACE -- QUERY FOR DATA
-
-      public:
-
-        //! get number of arguments associated with this macro
-        virtual unsigned int get_number_args() const override { return(PARAM_ARGS_TOTAL_ARGUMENTS); }
+        virtual std::string evaluate(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA
@@ -93,7 +85,7 @@ namespace shared
 
         //! constructor
         args_1index(std::string n, translator_data& p, language_printer& prn, std::string q="")
-          : ::macro_packages::replacement_rule_simple(std::move(n)),
+          : ::macro_packages::replacement_rule_simple(std::move(n), COORD_ARGS_TOTAL_ARGUMENTS),    // pick representative number of args
             data_payload(p),
             printer(prn),
             qualifier(q)
@@ -104,20 +96,12 @@ namespace shared
         virtual ~args_1index() = default;
 
 
-        // INTERFACE
+        // INTERNAL API
 
-      public:
+      protected:
 
         //! evaluate
-        virtual std::string operator()(const macro_argument_list& args) override;
-
-
-        // INTERFACE -- QUERY FOR DATA
-
-      public:
-
-        //! get number of arguments associated with this macro
-        virtual unsigned int get_number_args() const override { return(COORD_ARGS_TOTAL_ARGUMENTS); }
+        virtual std::string evaluate(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA
@@ -145,7 +129,7 @@ namespace shared
 
         //! constructor
         args_2index(std::string n, translator_data& p, language_printer& prn, std::string q="")
-          : ::macro_packages::replacement_rule_simple(std::move(n)),
+          : ::macro_packages::replacement_rule_simple(std::move(n), TWOPF_ARGS_TOTAL_ARGUMENTS),        // pick representative number of args
             data_payload(p),
             printer(prn),
             qualifier(q)
@@ -156,20 +140,12 @@ namespace shared
         virtual ~args_2index() = default;
 
 
-        // INTERFACE
+        // INTERNAL API
 
-      public:
+      protected:
 
         //! evaluate
-        virtual std::string operator()(const macro_argument_list& args) override;
-
-
-        // INTERFACE -- QUERY FOR DATA
-
-      public:
-
-        //! get number of arguments associated with this macro
-        virtual unsigned int get_number_args() const override { return(TWOPF_ARGS_TOTAL_ARGUMENTS); }
+        virtual std::string evaluate(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA
@@ -197,7 +173,7 @@ namespace shared
 
         //! constructor
         args_3index(std::string n, translator_data& p, language_printer& prn, std::string q=OUTPUT_OPENCL_QUALIFIER)
-          : ::macro_packages::replacement_rule_simple(std::move(n)),
+          : ::macro_packages::replacement_rule_simple(std::move(n), THREEPF_ARGS_TOTAL_ARGUMENTS),          // pick representative number of args
             data_payload(p),
             printer(prn),
             qualifier(q)
@@ -208,20 +184,12 @@ namespace shared
         virtual ~args_3index() = default;
 
 
-        // INTERFACE
+        // INTERNAL API
 
-      public:
+      protected:
 
         //! evaluate
-        virtual std::string operator()(const macro_argument_list& args) override;
-
-
-        // INTERFACE -- QUERY FOR DATA
-
-      public:
-
-        //! get number of arguments associated with this macro
-        virtual unsigned int get_number_args() const override { return(THREEPF_ARGS_TOTAL_ARGUMENTS); }
+        virtual std::string evaluate(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA

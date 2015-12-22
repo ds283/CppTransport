@@ -51,7 +51,7 @@ namespace macro_packages
 
         //! constructor
         replace_V(std::string n, tensor_factory& f, cse& cw, language_printer& prn)
-          : replacement_rule_simple(std::move(n)),
+          : replacement_rule_simple(std::move(n), POTENTIAL_TOTAL_ARGUMENTS),
             cse_worker(cw)
           {
             Hubble_obj = f.make_Hubble(prn);
@@ -61,20 +61,12 @@ namespace macro_packages
         virtual ~replace_V() = default;
 
 
-        // INTERFACE
+        // INTERNAL API
 
-      public:
+      protected:
 
         //! evaluate
-        virtual std::string operator()(const macro_argument_list& args) override;
-
-
-        // INTERFACE -- QUERY FOR DATA
-
-      public:
-
-        //! get number of arguments associated with this macro
-        virtual unsigned int get_number_args() const override { return(POTENTIAL_TOTAL_ARGUMENTS); }
+        virtual std::string evaluate(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA
@@ -99,7 +91,7 @@ namespace macro_packages
 
         //! constructor
         replace_Hsq(std::string n, tensor_factory& f, cse& cw, language_printer& prn)
-        : replacement_rule_simple(std::move(n)),
+        : replacement_rule_simple(std::move(n), HUBBLESQ_TOTAL_ARGUMENTS),
           cse_worker(cw)
           {
             Hubble_obj = f.make_Hubble(prn);
@@ -109,20 +101,12 @@ namespace macro_packages
         virtual ~replace_Hsq() = default;
 
 
-        // INTERFACE
+        // INTERNAL API
 
-      public:
+      protected:
 
         //! evaluate
-        virtual std::string operator()(const macro_argument_list& args) override;
-
-
-        // INTERFACE -- QUERY FOR DATA
-
-      public:
-
-        //! get number of arguments associated with this macro
-        virtual unsigned int get_number_args() const override { return(HUBBLESQ_TOTAL_ARGUMENTS); }
+        virtual std::string evaluate(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA
@@ -147,7 +131,7 @@ namespace macro_packages
 
         //! constructor
         replace_eps(std::string n, tensor_factory& f, cse& cw, language_printer& prn)
-        : replacement_rule_simple(std::move(n)),
+        : replacement_rule_simple(std::move(n), PARAMETER_TOTAL_ARGUMENTS),
           cse_worker(cw)
           {
             Hubble_obj = f.make_Hubble(prn);
@@ -157,20 +141,12 @@ namespace macro_packages
         virtual ~replace_eps() = default;
 
 
-        // INTERFACE
+        // INTERNAL API
 
-      public:
+      protected:
 
         //! evaluate
-        virtual std::string operator()(const macro_argument_list& args) override;
-
-
-        // INTERFACE -- QUERY FOR DATA
-
-      public:
-
-        //! get number of arguments associated with this macro
-        virtual unsigned int get_number_args() const override { return(PARAMETER_TOTAL_ARGUMENTS); }
+        virtual std::string evaluate(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA

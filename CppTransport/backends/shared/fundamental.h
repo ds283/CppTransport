@@ -57,7 +57,7 @@ namespace macro_packages
 
         //! constructor
         replace_tool(std::string n, translator_data& p, language_printer& prn)
-          : replacement_rule_simple(std::move(n)),
+          : replacement_rule_simple(std::move(n), TOOL_TOTAL_ARGUMENTS),
             data_payload(p),
             printer(prn)
           {
@@ -67,20 +67,12 @@ namespace macro_packages
         virtual ~replace_tool() = default;
 
 
-        // INTERFACE
+        // INTERNAL API
 
-      public:
+      protected:
 
         //! evaluate
-        virtual std::string operator()(const macro_argument_list& args) override;
-
-
-        // INTERFACE -- QUERY FOR DATA
-
-      public:
-
-        //! get number of arguments associated with this macro
-        virtual unsigned int get_number_args() const override { return(TOOL_TOTAL_ARGUMENTS); }
+        virtual std::string evaluate(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA
@@ -105,7 +97,7 @@ namespace macro_packages
 
         //! constructor
         replace_version(std::string n, translator_data& p, language_printer& prn)
-          : replacement_rule_simple(std::move(n)),
+          : replacement_rule_simple(std::move(n), VERSION_TOTAL_ARGUMENTS),
             data_payload(p),
             printer(prn)
           {
@@ -115,20 +107,12 @@ namespace macro_packages
         virtual ~replace_version() = default;
 
 
-        // INTERFACE
+        // INTERNAL API
 
-      public:
+      protected:
 
         //! evaluate
-        virtual std::string operator()(const macro_argument_list& args) override;
-
-
-        // INTERFACE -- QUERY FOR DATA
-
-      public:
-
-        //! get number of arguments associated with this macro
-        virtual unsigned int get_number_args() const override { return(VERSION_TOTAL_ARGUMENTS); }
+        virtual std::string evaluate(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA
@@ -155,7 +139,7 @@ namespace macro_packages
         replace_guard(std::string n, translator_data& p, language_printer& prn,
                       std::string t = OUTPUT_CPPTRANSPORT_TAG,
                       std::string ge = "_H")
-          : replacement_rule_simple(std::move(n)),
+          : replacement_rule_simple(std::move(n), GUARD_TOTAL_ARGUMENTS),
             data_payload(p),
             printer(prn),
             tag(t),
@@ -167,20 +151,12 @@ namespace macro_packages
         virtual ~replace_guard() = default;
 
 
-        // INTERFACE
+        // INTERNAL API
 
-      public:
+      protected:
 
         //! evaluate
-        virtual std::string operator()(const macro_argument_list& args) override;
-
-
-        // INTERFACE -- QUERY FOR DATA
-
-      public:
-
-        //! get number of arguments associated with this macro
-        virtual unsigned int get_number_args() const override { return(GUARD_TOTAL_ARGUMENTS); }
+        virtual std::string evaluate(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA
@@ -211,7 +187,7 @@ namespace macro_packages
 
         //! constructor
         replace_date(std::string n, translator_data& p, language_printer& prn)
-          : replacement_rule_simple(std::move(n)),
+          : replacement_rule_simple(std::move(n), DATE_TOTAL_ARGUMENTS),
             data_payload(p),
             printer(prn)
           {
@@ -221,20 +197,12 @@ namespace macro_packages
         virtual ~replace_date() = default;
 
 
-        // INTERFACE
+        // INTERNAL API
 
-      public:
+      protected:
 
         //! evaluate
-        virtual std::string operator()(const macro_argument_list& args) override;
-
-
-        // INTERFACE -- QUERY FOR DATA
-
-      public:
-
-        //! get number of arguments associated with this macro
-        virtual unsigned int get_number_args() const override { return(DATE_TOTAL_ARGUMENTS); }
+        virtual std::string evaluate(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA
@@ -259,7 +227,7 @@ namespace macro_packages
 
         //! constructor
         replace_source(std::string n, translator_data& p, language_printer& prn)
-          : replacement_rule_simple(std::move(n)),
+          : replacement_rule_simple(std::move(n), SOURCE_TOTAL_ARGUMENTS),
             data_payload(p),
             printer(prn)
           {
@@ -269,20 +237,12 @@ namespace macro_packages
         virtual ~replace_source() = default;
 
 
-        // INTERFACE
+        // INTERNAL API
 
-      public:
+      protected:
 
         //! evaluate
-        virtual std::string operator()(const macro_argument_list& args) override;
-
-
-        // INTERFACE -- QUERY FOR DATA
-
-      public:
-
-        //! get number of arguments associated with this macro
-        virtual unsigned int get_number_args() const override { return(SOURCE_TOTAL_ARGUMENTS); }
+        virtual std::string evaluate(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA
@@ -307,7 +267,7 @@ namespace macro_packages
 
         //! constructor
         replace_uid(std::string n, translator_data& p, language_printer& prn)
-          : replacement_rule_simple(std::move(n)),
+          : replacement_rule_simple(std::move(n), UUID_TOTAL_ARGUMENTS),
             data_payload(p),
             printer(prn)
           {
@@ -317,20 +277,12 @@ namespace macro_packages
         virtual ~replace_uid() = default;
 
 
-        // INTERFACE
+        // INTERNAL API
 
-      public:
+      protected:
 
         //! evaluate
-        virtual std::string operator()(const macro_argument_list& args) override;
-
-
-        // INTERFACE -- QUERY FOR DATA
-
-      public:
-
-        //! get number of arguments associated with this macro
-        virtual unsigned int get_number_args() const override { return(UUID_TOTAL_ARGUMENTS); }
+        virtual std::string evaluate(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA
@@ -355,7 +307,7 @@ namespace macro_packages
 
         //! constructor
         replace_name(std::string n, translator_data& p, language_printer& prn)
-          : replacement_rule_simple(std::move(n)),
+          : replacement_rule_simple(std::move(n), NAME_TOTAL_ARGUMENTS),
             data_payload(p),
             printer(prn)
           {
@@ -365,20 +317,12 @@ namespace macro_packages
         virtual ~replace_name() = default;
 
 
-        // INTERFACE
+        // INTERNAL API
 
-      public:
+      protected:
 
         //! evaluate
-        virtual std::string operator()(const macro_argument_list& args) override;
-
-
-        // INTERFACE -- QUERY FOR DATA
-
-      public:
-
-        //! get number of arguments associated with this macro
-        virtual unsigned int get_number_args() const override { return(NAME_TOTAL_ARGUMENTS); }
+        virtual std::string evaluate(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA
@@ -403,7 +347,7 @@ namespace macro_packages
 
         //! constructor
         replace_author(std::string n, translator_data& p, language_printer& prn)
-          : replacement_rule_simple(std::move(n)),
+          : replacement_rule_simple(std::move(n), AUTHOR_TOTAL_ARGUMENTS),
             data_payload(p),
             printer(prn)
           {
@@ -413,20 +357,12 @@ namespace macro_packages
         virtual ~replace_author() = default;
 
 
-        // INTERFACE
+        // INTERNAL API
 
-      public:
+      protected:
 
         //! evaluate
-        virtual std::string operator()(const macro_argument_list& args) override;
-
-
-        // INTERFACE -- QUERY FOR DATA
-
-      public:
-
-        //! get number of arguments associated with this macro
-        virtual unsigned int get_number_args() const override { return(AUTHOR_TOTAL_ARGUMENTS); }
+        virtual std::string evaluate(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA
@@ -451,7 +387,7 @@ namespace macro_packages
 
         //! constructor
         replace_tag(std::string n, translator_data& p, language_printer& prn)
-          : replacement_rule_simple(std::move(n)),
+          : replacement_rule_simple(std::move(n), TAG_TOTAL_ARGUMENTS),
             data_payload(p),
             printer(prn)
           {
@@ -461,20 +397,12 @@ namespace macro_packages
         virtual ~replace_tag() = default;
 
 
-        // INTERFACE
+        // INTERNAL API
 
-      public:
+      protected:
 
         //! evaluate
-        virtual std::string operator()(const macro_argument_list& args) override;
-
-
-        // INTERFACE -- QUERY FOR DATA
-
-      public:
-
-        //! get number of arguments associated with this macro
-        virtual unsigned int get_number_args() const override { return(TAG_TOTAL_ARGUMENTS); }
+        virtual std::string evaluate(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA
@@ -499,7 +427,7 @@ namespace macro_packages
 
         //! constructor
         replace_model(std::string n, translator_data& p, language_printer& prn)
-          : replacement_rule_simple(std::move(n)),
+          : replacement_rule_simple(std::move(n), MODEL_TOTAL_ARGUMENTS),
             data_payload(p),
             printer(prn)
           {
@@ -509,20 +437,12 @@ namespace macro_packages
         virtual ~replace_model() = default;
 
 
-        // INTERFACE
+        // INTERNAL API
 
-      public:
+      protected:
 
         //! evaluate
-        virtual std::string operator()(const macro_argument_list& args) override;
-
-
-        // INTERFACE -- QUERY FOR DATA
-
-      public:
-
-        //! get number of arguments associated with this macro
-        virtual unsigned int get_number_args() const override { return(MODEL_TOTAL_ARGUMENTS); }
+        virtual std::string evaluate(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA
@@ -547,7 +467,7 @@ namespace macro_packages
 
         //! constructor
         replace_header(std::string n, translator_data& p, language_printer& prn)
-          : replacement_rule_simple(std::move(n)),
+          : replacement_rule_simple(std::move(n), HEADER_TOTAL_ARGUMENTS),
             data_payload(p),
             printer(prn)
           {
@@ -557,20 +477,12 @@ namespace macro_packages
         virtual ~replace_header() = default;
 
 
-        // INTERFACE
+        // INTERNAL API
 
-      public:
+      protected:
 
         //! evaluate
-        virtual std::string operator()(const macro_argument_list& args) override;
-
-
-        // INTERFACE -- QUERY FOR DATA
-
-      public:
-
-        //! get number of arguments associated with this macro
-        virtual unsigned int get_number_args() const override { return(HEADER_TOTAL_ARGUMENTS); }
+        virtual std::string evaluate(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA
@@ -595,7 +507,7 @@ namespace macro_packages
 
         //! constructor
         replace_core(std::string n, translator_data& p, language_printer& prn)
-          : replacement_rule_simple(std::move(n)),
+          : replacement_rule_simple(std::move(n), CORE_TOTAL_ARGUMENTS),
             data_payload(p),
             printer(prn)
           {
@@ -605,20 +517,12 @@ namespace macro_packages
         virtual ~replace_core() = default;
 
 
-        // INTERFACE
+        // INTERNAL API
 
-      public:
+      protected:
 
         //! evaluate
-        virtual std::string operator()(const macro_argument_list& args) override;
-
-
-        // INTERFACE -- QUERY FOR DATA
-
-      public:
-
-        //! get number of arguments associated with this macro
-        virtual unsigned int get_number_args() const override { return(CORE_TOTAL_ARGUMENTS); }
+        virtual std::string evaluate(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA
@@ -643,7 +547,7 @@ namespace macro_packages
 
         //! constructor
         replace_number_fields(std::string n, translator_data& p, language_printer& prn)
-          : replacement_rule_simple(std::move(n)),
+          : replacement_rule_simple(std::move(n), NUMBER_FIELDS_TOTAL_ARGUMENTS),
             data_payload(p),
             printer(prn)
           {
@@ -653,20 +557,12 @@ namespace macro_packages
         virtual ~replace_number_fields() = default;
 
 
-        // INTERFACE
+        // INTERNAL API
 
-      public:
+      protected:
 
         //! evaluate
-        virtual std::string operator()(const macro_argument_list& args) override;
-
-
-        // INTERFACE -- QUERY FOR DATA
-
-      public:
-
-        //! get number of arguments associated with this macro
-        virtual unsigned int get_number_args() const override { return(NUMBER_FIELDS_TOTAL_ARGUMENTS); }
+        virtual std::string evaluate(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA
@@ -691,7 +587,7 @@ namespace macro_packages
 
         //! constructor
         replace_number_params(std::string n, translator_data& p, language_printer& prn)
-          : replacement_rule_simple(std::move(n)),
+          : replacement_rule_simple(std::move(n), NUMBER_PARAMS_TOTAL_ARGUMENTS),
             data_payload(p),
             printer(prn)
           {
@@ -701,20 +597,12 @@ namespace macro_packages
         virtual ~replace_number_params() = default;
 
 
-        // INTERFACE
+        // INTERNAL API
 
-      public:
+      protected:
 
         //! evaluate
-        virtual std::string operator()(const macro_argument_list& args) override;
-
-
-        // INTERFACE -- QUERY FOR DATA
-
-      public:
-
-        //! get number of arguments associated with this macro
-        virtual unsigned int get_number_args() const override { return(NUMBER_PARAMS_TOTAL_ARGUMENTS); }
+        virtual std::string evaluate(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA
@@ -739,7 +627,7 @@ namespace macro_packages
 
         //! constructor
         replace_field_list(std::string n, translator_data& p, language_printer& prn)
-          : replacement_rule_simple(std::move(n)),
+          : replacement_rule_simple(std::move(n), FIELD_LIST_TOTAL_ARGUMENTS),
             data_payload(p),
             printer(prn)
           {
@@ -749,20 +637,12 @@ namespace macro_packages
         virtual ~replace_field_list() = default;
 
 
-        // INTERFACE
+        // INTERNAL API
 
-      public:
+      protected:
 
         //! evaluate
-        virtual std::string operator()(const macro_argument_list& args) override;
-
-
-        // INTERFACE -- QUERY FOR DATA
-
-      public:
-
-        //! get number of arguments associated with this macro
-        virtual unsigned int get_number_args() const override { return(FIELD_LIST_TOTAL_ARGUMENTS); }
+        virtual std::string evaluate(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA
@@ -787,7 +667,7 @@ namespace macro_packages
 
         //! constructor
         replace_latex_list(std::string n, translator_data& p, language_printer& prn)
-          : replacement_rule_simple(std::move(n)),
+          : replacement_rule_simple(std::move(n), LATEX_LIST_TOTAL_ARGUMENTS),
             data_payload(p),
             printer(prn)
           {
@@ -797,20 +677,12 @@ namespace macro_packages
         virtual ~replace_latex_list() = default;
 
 
-        // INTERFACE
+        // INTERNAL API
 
-      public:
+      protected:
 
         //! evaluate
-        virtual std::string operator()(const macro_argument_list& args) override;
-
-
-        // INTERFACE -- QUERY FOR DATA
-
-      public:
-
-        //! get number of arguments associated with this macro
-        virtual unsigned int get_number_args() const override { return(LATEX_LIST_TOTAL_ARGUMENTS); }
+        virtual std::string evaluate(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA
@@ -835,7 +707,7 @@ namespace macro_packages
 
         //! constructor
         replace_param_list(std::string n, translator_data& p, language_printer& prn)
-          : replacement_rule_simple(std::move(n)),
+          : replacement_rule_simple(std::move(n), PARAM_LIST_TOTAL_ARGUMENTS),
             data_payload(p),
             printer(prn)
           {
@@ -845,20 +717,12 @@ namespace macro_packages
         virtual ~replace_param_list() = default;
 
 
-        // INTERFACE
+        // INTERNAL API
 
-      public:
+      protected:
 
         //! evaluate
-        virtual std::string operator()(const macro_argument_list& args) override;
-
-
-        // INTERFACE -- QUERY FOR DATA
-
-      public:
-
-        //! get number of arguments associated with this macro
-        virtual unsigned int get_number_args() const override { return(PARAM_LIST_TOTAL_ARGUMENTS); }
+        virtual std::string evaluate(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA
@@ -883,7 +747,7 @@ namespace macro_packages
 
         //! constructor
         replace_platx_list(std::string n, translator_data& p, language_printer& prn)
-          : replacement_rule_simple(std::move(n)),
+          : replacement_rule_simple(std::move(n), PLATX_LIST_TOTAL_ARGUMENTS),
             data_payload(p),
             printer(prn)
           {
@@ -893,20 +757,12 @@ namespace macro_packages
         virtual ~replace_platx_list() = default;
 
 
-        // INTERFACE
+        // INTERNAL API
 
-      public:
+      protected:
 
         //! evaluate
-        virtual std::string operator()(const macro_argument_list& args) override;
-
-
-        // INTERFACE -- QUERY FOR DATA
-
-      public:
-
-        //! get number of arguments associated with this macro
-        virtual unsigned int get_number_args() const override { return(PLATX_LIST_TOTAL_ARGUMENTS); }
+        virtual std::string evaluate(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA
@@ -931,7 +787,7 @@ namespace macro_packages
 
         //! constructor
         replace_state_list(std::string n, translator_data& p, language_printer& prn)
-          : replacement_rule_simple(std::move(n)),
+          : replacement_rule_simple(std::move(n), STATE_LIST_TOTAL_ARGUMENTS),
             data_payload(p),
             printer(prn)
           {
@@ -941,20 +797,12 @@ namespace macro_packages
         virtual ~replace_state_list() = default;
 
 
-        // INTERFACE
+        // INTERNAL API
 
-      public:
+      protected:
 
         //! evaluate
-        virtual std::string operator()(const macro_argument_list& args) override;
-
-
-        // INTERFACE -- QUERY FOR DATA
-
-      public:
-
-        //! get number of arguments associated with this macro
-        virtual unsigned int get_number_args() const override { return(STATE_LIST_TOTAL_ARGUMENTS); }
+        virtual std::string evaluate(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA
@@ -979,7 +827,7 @@ namespace macro_packages
 
         //! constructor
         replace_b_abs_err(std::string n, translator_data& p, language_printer& prn)
-          : replacement_rule_simple(std::move(n)),
+          : replacement_rule_simple(std::move(n), BACKG_ABS_ERR_TOTAL_ARGUMENTS),
             data_payload(p),
             printer(prn)
           {
@@ -989,20 +837,12 @@ namespace macro_packages
         virtual ~replace_b_abs_err() = default;
 
 
-        // INTERFACE
+        // INTERNAL API
 
-      public:
+      protected:
 
         //! evaluate
-        virtual std::string operator()(const macro_argument_list& args) override;
-
-
-        // INTERFACE -- QUERY FOR DATA
-
-      public:
-
-        //! get number of arguments associated with this macro
-        virtual unsigned int get_number_args() const override { return(BACKG_ABS_ERR_TOTAL_ARGUMENTS); }
+        virtual std::string evaluate(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA
@@ -1027,7 +867,7 @@ namespace macro_packages
 
         //! constructor
         replace_b_rel_err(std::string n, translator_data& p, language_printer& prn)
-          : replacement_rule_simple(std::move(n)),
+          : replacement_rule_simple(std::move(n), BACKG_REL_ERR_TOTAL_ARGUMENTS),
             data_payload(p),
             printer(prn)
           {
@@ -1037,20 +877,12 @@ namespace macro_packages
         virtual ~replace_b_rel_err() = default;
 
 
-        // INTERFACE
+        // INTERNAL API
 
-      public:
+      protected:
 
         //! evaluate
-        virtual std::string operator()(const macro_argument_list& args) override;
-
-
-        // INTERFACE -- QUERY FOR DATA
-
-      public:
-
-        //! get number of arguments associated with this macro
-        virtual unsigned int get_number_args() const override { return(BACKG_REL_ERR_TOTAL_ARGUMENTS); }
+        virtual std::string evaluate(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA
@@ -1075,7 +907,7 @@ namespace macro_packages
 
         //! constructor
         replace_b_step(std::string n, translator_data& p, language_printer& prn)
-          : replacement_rule_simple(std::move(n)),
+          : replacement_rule_simple(std::move(n), BACKG_STEP_TOTAL_ARGUMENTS),
             data_payload(p),
             printer(prn)
           {
@@ -1085,20 +917,12 @@ namespace macro_packages
         virtual ~replace_b_step() = default;
 
 
-        // INTERFACE
+        // INTERNAL API
 
-      public:
+      protected:
 
         //! evaluate
-        virtual std::string operator()(const macro_argument_list& args) override;
-
-
-        // INTERFACE -- QUERY FOR DATA
-
-      public:
-
-        //! get number of arguments associated with this macro
-        virtual unsigned int get_number_args() const override { return(BACKG_STEP_TOTAL_ARGUMENTS); }
+        virtual std::string evaluate(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA
@@ -1123,7 +947,7 @@ namespace macro_packages
 
         //! constructor
         replace_b_stepper(std::string n, translator_data& p, language_printer& prn)
-          : replacement_rule_simple(std::move(n)),
+          : replacement_rule_simple(std::move(n), BACKG_NAME_TOTAL_ARGUMENTS),
             data_payload(p),
             printer(prn)
           {
@@ -1133,20 +957,12 @@ namespace macro_packages
         virtual ~replace_b_stepper() = default;
 
 
-        // INTERFACE
+        // INTERNAL API
 
-      public:
+      protected:
 
         //! evaluate
-        virtual std::string operator()(const macro_argument_list& args) override;
-
-
-        // INTERFACE -- QUERY FOR DATA
-
-      public:
-
-        //! get number of arguments associated with this macro
-        virtual unsigned int get_number_args() const override { return(BACKG_NAME_TOTAL_ARGUMENTS); }
+        virtual std::string evaluate(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA
@@ -1171,7 +987,7 @@ namespace macro_packages
 
         //! constructor
         replace_p_abs_err(std::string n, translator_data& p, language_printer& prn)
-          : replacement_rule_simple(std::move(n)),
+          : replacement_rule_simple(std::move(n), PERT_ABS_ERR_TOTAL_ARGUMENTS),
             data_payload(p),
             printer(prn)
           {
@@ -1181,20 +997,12 @@ namespace macro_packages
         virtual ~replace_p_abs_err() = default;
 
 
-        // INTERFACE
+        // INTERNAL API
 
-      public:
+      protected:
 
         //! evaluate
-        virtual std::string operator()(const macro_argument_list& args) override;
-
-
-        // INTERFACE -- QUERY FOR DATA
-
-      public:
-
-        //! get number of arguments associated with this macro
-        virtual unsigned int get_number_args() const override { return(PERT_ABS_ERR_TOTAL_ARGUMENTS); }
+        virtual std::string evaluate(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA
@@ -1219,7 +1027,7 @@ namespace macro_packages
 
         //! constructor
         replace_p_rel_err(std::string n, translator_data& p, language_printer& prn)
-          : replacement_rule_simple(std::move(n)),
+          : replacement_rule_simple(std::move(n), PERT_REL_ERR_TOTAL_ARGUMENTS),
             data_payload(p),
             printer(prn)
           {
@@ -1229,20 +1037,12 @@ namespace macro_packages
         virtual ~replace_p_rel_err() = default;
 
 
-        // INTERFACE
+        // INTERNAL API
 
-      public:
+      protected:
 
         //! evaluate
-        virtual std::string operator()(const macro_argument_list& args) override;
-
-
-        // INTERFACE -- QUERY FOR DATA
-
-      public:
-
-        //! get number of arguments associated with this macro
-        virtual unsigned int get_number_args() const override { return(PERT_REL_ERR_TOTAL_ARGUMENTS); }
+        virtual std::string evaluate(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA
@@ -1267,7 +1067,7 @@ namespace macro_packages
 
         //! constructor
         replace_p_step(std::string n, translator_data& p, language_printer& prn)
-          : replacement_rule_simple(std::move(n)),
+          : replacement_rule_simple(std::move(n), PERT_STEP_TOTAL_ARGUMENTS),
             data_payload(p),
             printer(prn)
           {
@@ -1277,20 +1077,12 @@ namespace macro_packages
         virtual ~replace_p_step() = default;
 
 
-        // INTERFACE
+        // INTERNAL API
 
-      public:
+      protected:
 
         //! evaluate
-        virtual std::string operator()(const macro_argument_list& args) override;
-
-
-        // INTERFACE -- QUERY FOR DATA
-
-      public:
-
-        //! get number of arguments associated with this macro
-        virtual unsigned int get_number_args() const override { return(PERT_STEP_TOTAL_ARGUMENTS); }
+        virtual std::string evaluate(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA
@@ -1315,7 +1107,7 @@ namespace macro_packages
 
         //! constructor
         replace_p_stepper(std::string n, translator_data& p, language_printer& prn)
-          : replacement_rule_simple(std::move(n)),
+          : replacement_rule_simple(std::move(n), PERT_NAME_TOTAL_ARGUMENTS),
             data_payload(p),
             printer(prn)
           {
@@ -1325,20 +1117,12 @@ namespace macro_packages
         virtual ~replace_p_stepper() = default;
 
 
-        // INTERFACE
+        // INTERNAL API
 
-      public:
+      protected:
 
         //! evaluate
-        virtual std::string operator()(const macro_argument_list& args) override;
-
-
-        // INTERFACE -- QUERY FOR DATA
-
-      public:
-
-        //! get number of arguments associated with this macro
-        virtual unsigned int get_number_args() const override { return(PERT_NAME_TOTAL_ARGUMENTS); }
+        virtual std::string evaluate(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA
@@ -1363,7 +1147,7 @@ namespace macro_packages
 
         //! constructor
         replace_unique(std::string n, translator_data& p, language_printer& prn)
-          : replacement_rule_simple(std::move(n)),
+          : replacement_rule_simple(std::move(n), UNIQUE_TOTAL_ARGUMENTS),
             data_payload(p),
             printer(prn),
             unique(0)
@@ -1374,20 +1158,12 @@ namespace macro_packages
         virtual ~replace_unique() = default;
 
 
-        // INTERFACE
+        // INTERNAL API
 
-      public:
+      protected:
 
         //! evaluate
-        virtual std::string operator()(const macro_argument_list& args) override;
-
-
-        // INTERFACE -- QUERY FOR DATA
-
-      public:
-
-        //! get number of arguments associated with this macro
-        virtual unsigned int get_number_args() const override { return(UNIQUE_TOTAL_ARGUMENTS); }
+        virtual std::string evaluate(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA

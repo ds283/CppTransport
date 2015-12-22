@@ -46,8 +46,9 @@ namespace macro_packages
       public:
 
         //! constructor
-        replacement_rule_simple(std::string n)
-          : name(std::move(n))
+        replacement_rule_simple(std::string nm, unsigned int n)
+          : name(std::move(nm)),
+            num_args(n)
           {
           }
 
@@ -60,7 +61,7 @@ namespace macro_packages
       public:
 
         //! evaluate the macro
-        virtual std::string operator()(const macro_argument_list& args) = 0;
+        std::string operator()(const macro_argument_list& args);
 
         //! report end of input; here a no-op but but can be overridden if needed
         virtual void report_end_of_input() { return; }
@@ -71,10 +72,18 @@ namespace macro_packages
       public:
 
         //! get number of arguments associated with this macro
-        virtual unsigned int get_number_args() const = 0;
+        unsigned int get_number_args() const { return(this->num_args); };
 
         //! get name associated with this macro
         const std::string& get_name() const { return(this->name); }
+
+
+        // INTERNAL API
+
+      protected:
+
+        //! evaluation function; has to be supplied by implementation
+        virtual std::string evaluate(const macro_argument_list& args) = 0;
 
 
         // INTERNAL DATA
@@ -83,6 +92,9 @@ namespace macro_packages
 
         //! name of this macro
         std::string name;
+
+        //! number of arguments expected
+        unsigned int num_args;
 
       };
 

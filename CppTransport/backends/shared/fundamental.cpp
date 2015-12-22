@@ -77,19 +77,19 @@ namespace macro_packages
     // PRE macros
 
 
-    std::string replace_tool::operator()(const macro_argument_list& args)
+    std::string replace_tool::evaluate(const macro_argument_list& args)
       {
         return(CPPTRANSPORT_NAME);
       }
 
 
-    std::string replace_version::operator()(const macro_argument_list& args)
+    std::string replace_version::evaluate(const macro_argument_list& args)
       {
         return(CPPTRANSPORT_VERSION);
       }
 
 
-    std::string replace_guard::operator()(const macro_argument_list& args)
+    std::string replace_guard::evaluate(const macro_argument_list& args)
       {
         std::string guard;
         enum process_type type = this->data_payload.get_stack().top_process_type();
@@ -107,7 +107,7 @@ namespace macro_packages
       }
 
 
-    std::string replace_date::operator()(const macro_argument_list& args)
+    std::string replace_date::evaluate(const macro_argument_list& args)
       {
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
 
@@ -115,13 +115,13 @@ namespace macro_packages
       }
 
 
-    std::string replace_source::operator()(const macro_argument_list& args)
+    std::string replace_source::evaluate(const macro_argument_list& args)
       {
         return(this->data_payload.get_model_input().string());
       }
 
 
-    std::string replace_uid::operator()(const macro_argument_list& args)
+    std::string replace_uid::evaluate(const macro_argument_list& args)
       {
         boost::optional< contexted_value<std::string>& > nm_value = this->data_payload.get_name();
         std::string name = nm_value ? *nm_value : std::string();
@@ -143,7 +143,7 @@ namespace macro_packages
       }
 
 
-    std::string replace_name::operator()(const macro_argument_list& args)
+    std::string replace_name::evaluate(const macro_argument_list& args)
       {
         boost::optional< contexted_value<std::string>& > value = this->data_payload.get_name();
         if(value)
@@ -157,7 +157,7 @@ namespace macro_packages
       }
 
 
-    std::string replace_author::operator()(const macro_argument_list& args)
+    std::string replace_author::evaluate(const macro_argument_list& args)
       {
         boost::optional< contexted_value<std::string>& > value = this->data_payload.get_author();
         if(value)
@@ -171,7 +171,7 @@ namespace macro_packages
       }
 
 
-    std::string replace_tag::operator()(const macro_argument_list& args)
+    std::string replace_tag::evaluate(const macro_argument_list& args)
       {
         boost::optional< contexted_value<std::string>& > value = this->data_payload.get_tag();
         if(value)
@@ -185,7 +185,7 @@ namespace macro_packages
       }
 
 
-    std::string replace_model::operator()(const macro_argument_list& args)
+    std::string replace_model::evaluate(const macro_argument_list& args)
       {
         boost::optional< contexted_value<std::string>& > value = this->data_payload.get_model();
         if(value)
@@ -199,19 +199,19 @@ namespace macro_packages
       }
 
 
-    std::string replace_header::operator()(const macro_argument_list& args)
+    std::string replace_header::evaluate(const macro_argument_list& args)
       {
         return(this->data_payload.get_implementation_output().string());
       }
 
 
-    std::string replace_core::operator()(const macro_argument_list& args)
+    std::string replace_core::evaluate(const macro_argument_list& args)
       {
         return(this->data_payload.get_core_output().string());
       }
 
 
-    std::string replace_number_fields::operator()(const macro_argument_list& args)
+    std::string replace_number_fields::evaluate(const macro_argument_list& args)
       {
         std::ostringstream out;
 
@@ -221,7 +221,7 @@ namespace macro_packages
       }
 
 
-    std::string replace_number_params::operator()(const macro_argument_list& args)
+    std::string replace_number_params::evaluate(const macro_argument_list& args)
       {
         std::ostringstream out;
 
@@ -231,7 +231,7 @@ namespace macro_packages
       }
 
 
-    std::string replace_field_list::operator()(const macro_argument_list& args)
+    std::string replace_field_list::evaluate(const macro_argument_list& args)
       {
         std::vector<std::string> list = this->data_payload.get_field_list();
 
@@ -239,7 +239,7 @@ namespace macro_packages
       }
 
 
-    std::string replace_latex_list::operator()(const macro_argument_list& args)
+    std::string replace_latex_list::evaluate(const macro_argument_list& args)
       {
         std::vector<std::string> list = this->data_payload.get_latex_list();
 
@@ -247,7 +247,7 @@ namespace macro_packages
       }
 
 
-    std::string replace_param_list::operator()(const macro_argument_list& args)
+    std::string replace_param_list::evaluate(const macro_argument_list& args)
       {
         std::vector<std::string> list = this->data_payload.get_param_list();
 
@@ -255,7 +255,7 @@ namespace macro_packages
       }
 
 
-    std::string replace_platx_list::operator()(const macro_argument_list& args)
+    std::string replace_platx_list::evaluate(const macro_argument_list& args)
       {
         std::vector<std::string> list = this->data_payload.get_platx_list();
 
@@ -263,7 +263,7 @@ namespace macro_packages
       }
 
 
-    std::string replace_state_list::operator()(const macro_argument_list& args)
+    std::string replace_state_list::evaluate(const macro_argument_list& args)
       {
         symbol_list f_list = this->data_payload.get_field_symbols();
         symbol_list d_list = this->data_payload.get_deriv_symbols();
@@ -283,7 +283,7 @@ namespace macro_packages
       }
 
 
-     std::string replace_b_abs_err::operator()(const macro_argument_list& args)
+     std::string replace_b_abs_err::evaluate(const macro_argument_list& args)
       {
         const struct stepper s = this->data_payload.get_background_stepper();
 
@@ -291,7 +291,7 @@ namespace macro_packages
       }
 
 
-    std::string replace_b_rel_err::operator()(const macro_argument_list& args)
+    std::string replace_b_rel_err::evaluate(const macro_argument_list& args)
       {
         const struct stepper s = this->data_payload.get_background_stepper();
 
@@ -299,7 +299,7 @@ namespace macro_packages
       }
 
 
-    std::string replace_b_step::operator()(const macro_argument_list& args)
+    std::string replace_b_step::evaluate(const macro_argument_list& args)
       {
         const struct stepper s = this->data_payload.get_background_stepper();
 
@@ -307,7 +307,7 @@ namespace macro_packages
       }
 
 
-    std::string replace_b_stepper::operator()(const macro_argument_list& args)
+    std::string replace_b_stepper::evaluate(const macro_argument_list& args)
       {
         const struct stepper s = this->data_payload.get_background_stepper();
 
@@ -315,7 +315,7 @@ namespace macro_packages
       }
 
 
-    std::string replace_p_abs_err::operator()(const macro_argument_list& args)
+    std::string replace_p_abs_err::evaluate(const macro_argument_list& args)
       {
         const struct stepper s = this->data_payload.get_perturbations_stepper();
 
@@ -323,7 +323,7 @@ namespace macro_packages
       }
 
 
-    std::string replace_p_rel_err::operator()(const macro_argument_list& args)
+    std::string replace_p_rel_err::evaluate(const macro_argument_list& args)
       {
         const struct stepper s = this->data_payload.get_perturbations_stepper();
 
@@ -331,7 +331,7 @@ namespace macro_packages
       }
 
 
-    std::string replace_p_step::operator()(const macro_argument_list& args)
+    std::string replace_p_step::evaluate(const macro_argument_list& args)
       {
         const struct stepper s = this->data_payload.get_perturbations_stepper();
 
@@ -339,7 +339,7 @@ namespace macro_packages
       }
 
 
-    std::string replace_p_stepper::operator()(const macro_argument_list& args)
+    std::string replace_p_stepper::evaluate(const macro_argument_list& args)
       {
         const struct stepper s = this->data_payload.get_perturbations_stepper();
 
@@ -350,7 +350,7 @@ namespace macro_packages
     // POST macros
 
 
-    std::string replace_unique::operator()(const macro_argument_list& args)
+    std::string replace_unique::evaluate(const macro_argument_list& args)
       {
         return boost::lexical_cast<std::string>(this->unique++);
       }

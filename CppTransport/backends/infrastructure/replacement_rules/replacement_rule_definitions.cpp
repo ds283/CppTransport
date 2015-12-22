@@ -10,27 +10,18 @@
 namespace macro_packages
   {
 
-    std::string simple_rule::operator()(const macro_argument_list& args)
+    std::string replacement_rule_simple::operator()(const macro_argument_list& args)
       {
         // check that correct number of arguments have been supplied
-        if(args.size() != this->args)
+        if(args.size() != this->num_args)
           {
             std::ostringstream msg;
 
-            msg << ERROR_WRONG_ARGUMENT_COUNT << " '" << this->name << "'; " << ERROR_EXPECTED_ARGUMENT_COUNT << " " << this->args << ", " << ERROR_RECEIVED_ARGUMENT_COUNT << " " << args.size();
+            msg << ERROR_WRONG_ARGUMENT_COUNT << " '" << this->name << "'; " << ERROR_EXPECTED_ARGUMENT_COUNT << " " << this->num_args << ", " << ERROR_RECEIVED_ARGUMENT_COUNT << " " << args.size();
             throw macro_packages::rule_apply_fail(msg.str());
           }
 
-
-        if(this->rule == nullptr)
-          {
-            std::ostringstream msg;
-
-            msg << ERROR_NO_RULE_HANDLER << " '" << this->name << "'";
-            throw macro_packages::rule_apply_fail(msg.str());
-          }
-
-        return (*this->rule)(args);
+        return this->evaluate(args);
       }
 
 

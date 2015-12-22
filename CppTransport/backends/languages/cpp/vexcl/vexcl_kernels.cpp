@@ -41,7 +41,7 @@ namespace vexcl
     // *******************************************************************
 
 
-    std::string import_kernel::operator()(const macro_argument_list& args)
+    std::string import_kernel::evaluate(const macro_argument_list& args)
       {
         std::string kernel_file = args[IMPORT_KERNEL_FILE_ARGUMENT];
 

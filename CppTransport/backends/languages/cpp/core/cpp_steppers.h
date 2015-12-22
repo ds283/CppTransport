@@ -31,7 +31,7 @@ namespace cpp
 
         //! constructor
         replace_backg_stepper(std::string n, translator_data& p, language_printer& prn)
-          : ::macro_packages::replacement_rule_simple(std::move(n)),
+          : ::macro_packages::replacement_rule_simple(std::move(n), BACKG_STEPPER_TOTAL_ARGUMENTS),
             data_payload(p),
             printer(prn)
           {
@@ -41,20 +41,12 @@ namespace cpp
         virtual ~replace_backg_stepper() = default;
 
 
-        // INTERFACE
+        // INTERNAL API
 
-      public:
+      protected:
 
         //! evaluate
-        virtual std::string operator()(const macro_argument_list& args) override;
-
-
-        // INTERFACE -- QUERY FOR DATA
-
-      public:
-
-        //! get number of arguments associated with this macro
-        virtual unsigned int get_number_args() const override { return(BACKG_STEPPER_TOTAL_ARGUMENTS); }
+        virtual std::string evaluate(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA
@@ -79,7 +71,7 @@ namespace cpp
 
         //! constructor
         replace_pert_stepper(std::string n, translator_data& p, language_printer& prn)
-          : ::macro_packages::replacement_rule_simple(std::move(n)),
+          : ::macro_packages::replacement_rule_simple(std::move(n), PERT_STEPPER_TOTAL_ARGUMENTS),
             data_payload(p),
             printer(prn)
           {
@@ -89,20 +81,12 @@ namespace cpp
         virtual ~replace_pert_stepper() = default;
 
 
-        // INTERFACE
+        // INTERNAL API
 
-      public:
+      protected:
 
         //! evaluate
-        virtual std::string operator()(const macro_argument_list& args) override;
-
-
-        // INTERFACE -- QUERY FOR DATA
-
-      public:
-
-        //! get number of arguments associated with this macro
-        virtual unsigned int get_number_args() const override { return(PERT_STEPPER_TOTAL_ARGUMENTS); }
+        virtual std::string evaluate(const macro_argument_list& args) override;
 
 
         // INTERNAL DATA

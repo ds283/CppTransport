@@ -105,7 +105,7 @@ namespace macro_packages
           }
        }
 
-    std::string replace_temp_pool::operator()(const macro_argument_list& args)
+    std::string replace_temp_pool::evaluate(const macro_argument_list& args)
       {
         std::string t = args[TEMP_POOL_TEMPLATE_ARGUMENT];
 

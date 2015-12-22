@@ -46,7 +46,7 @@ namespace shared
     // *******************************************************************
 
 
-    std::string args_params::operator()(const macro_argument_list& args)
+    std::string args_params::evaluate(const macro_argument_list& args)
       {
         std::vector<std::string> list = this->data_payload.get_param_list();
 
@@ -61,7 +61,7 @@ namespace shared
       }
 
 
-    std::string args_1index::operator()(const macro_argument_list& args)
+    std::string args_1index::evaluate(const macro_argument_list& args)
       {
         std::string name = args[COORD_ARGS_NAME_ARGUMENT];
 
@@ -92,7 +92,7 @@ namespace shared
       }
 
 
-    std::string args_2index::operator()(const macro_argument_list& args)
+    std::string args_2index::evaluate(const macro_argument_list& args)
       {
         std::string name = args[TWOPF_ARGS_NAME_ARGUMENT];
 
@@ -121,7 +121,7 @@ namespace shared
       }
 
 
-    std::string args_3index::operator()(const macro_argument_list& args)
+    std::string args_3index::evaluate(const macro_argument_list& args)
       {
         std::string name = args[THREEPF_ARGS_NAME_ARGUMENT];
 

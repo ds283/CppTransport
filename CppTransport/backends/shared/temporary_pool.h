@@ -33,7 +33,7 @@ namespace macro_packages
         //! constructor
         replace_temp_pool(std::string n, translator_data& p, cse& cw, language_printer& prn,
                           std::string t = OUTPUT_DEFAULT_POOL_TEMPLATE)
-          : replacement_rule_simple(std::move(n)),
+          : replacement_rule_simple(std::move(n), TEMP_POOL_TOTAL_ARGUMENTS),
             data_payload(p),
             cse_worker(cw),
             printer(prn),
@@ -51,24 +51,16 @@ namespace macro_packages
 
       public:
 
-        //! evaluate
-        virtual std::string operator()(const macro_argument_list& args) override;
-
         //! over-ride default end-of-input handler
         virtual void report_end_of_input() override;
-
-
-        // INTERFACE -- QUERY FOR DATA
-
-      public:
-
-        //! get number of arguments associated with this macro
-        virtual unsigned int get_number_args() const override { return(TEMP_POOL_TOTAL_ARGUMENTS); }
 
 
         // INTERNAL API
 
       protected:
+
+        //! evaluate
+        virtual std::string evaluate(const macro_argument_list& args) override;
 
         //! deposit temporary pool
         void deposit_temporaries();

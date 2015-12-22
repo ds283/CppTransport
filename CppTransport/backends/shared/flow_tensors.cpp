@@ -104,7 +104,7 @@ namespace macro_packages
     // *******************************************************************
 
 
-    std::string replace_V::operator()(const macro_argument_list& args)
+    std::string replace_V::evaluate(const macro_argument_list& args)
       {
         GiNaC::ex V = this->Hubble_obj->compute_V();
 
@@ -116,7 +116,7 @@ namespace macro_packages
       }
 
 
-    std::string replace_Hsq::operator()(const macro_argument_list& args)
+    std::string replace_Hsq::evaluate(const macro_argument_list& args)
       {
         GiNaC::ex Hsq = this->Hubble_obj->compute_Hsq();
 
@@ -128,7 +128,7 @@ namespace macro_packages
       }
 
 
-    std::string replace_eps::operator()(const macro_argument_list& args)
+    std::string replace_eps::evaluate(const macro_argument_list& args)
       {
         GiNaC::ex eps = this->Hubble_obj->compute_eps();
 

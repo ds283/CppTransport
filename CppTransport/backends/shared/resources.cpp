@@ -10,7 +10,7 @@
 #include "resources.h"
 
 
-#define BIND1(X, N) std::move(std::make_unique<X>(N, this->mgr, this->printer))
+#define BIND(X, N) std::move(std::make_unique<X>(N, this->mgr, this->printer))
 
 
 namespace macro_packages
@@ -20,15 +20,15 @@ namespace macro_packages
       : replacement_rule_package(f, cw, p, prn),
         mgr(f.get_resource_manager())
       {
-        pre_package.emplace_back(BIND1(set_params, "RESOURCE_PARAMETERS"));
-        pre_package.emplace_back(BIND1(set_coordinates, "RESOURCE_COORDINATES"));
-        pre_package.emplace_back(BIND1(set_phase_flatten, "PHASE_FLATTEN"));
-        pre_package.emplace_back(BIND1(set_field_flatten, "FIELD_FLATTEN"));
-        pre_package.emplace_back(BIND1(release_flatteners, "RELEASE_FLATTENERS"));
-        pre_package.emplace_back(BIND1(set_dV, "RESOURCE_DV"));
-        pre_package.emplace_back(BIND1(set_ddV, "RESOURCE_DDV"));
-        pre_package.emplace_back(BIND1(set_dddV, "RESOURCE_DDDV"));
-        pre_package.emplace_back(BIND1(release, "RESOURCE_RELEASE"));
+        pre_package.emplace_back(BIND(set_params, "RESOURCE_PARAMETERS"));
+        pre_package.emplace_back(BIND(set_coordinates, "RESOURCE_COORDINATES"));
+        pre_package.emplace_back(BIND(set_phase_flatten, "PHASE_FLATTEN"));
+        pre_package.emplace_back(BIND(set_field_flatten, "FIELD_FLATTEN"));
+        pre_package.emplace_back(BIND(release_flatteners, "RELEASE_FLATTENERS"));
+        pre_package.emplace_back(BIND(set_dV, "RESOURCE_DV"));
+        pre_package.emplace_back(BIND(set_ddV, "RESOURCE_DDV"));
+        pre_package.emplace_back(BIND(set_dddV, "RESOURCE_DDDV"));
+        pre_package.emplace_back(BIND(release, "RESOURCE_RELEASE"));
       }
 
 
@@ -40,7 +40,7 @@ namespace macro_packages
       }
 
 
-    std::string set_params::operator()(const macro_argument_list& args)
+    std::string set_params::evaluate(const macro_argument_list& args)
       {
         this->mgr.assign_parameters(args[RESOURCES::PARAMETERS_KERNEL_ARGUMENT]);
 
@@ -51,7 +51,7 @@ namespace macro_packages
       }
 
 
-    std::string set_coordinates::operator()(const macro_argument_list& args)
+    std::string set_coordinates::evaluate(const macro_argument_list& args)
       {
         this->mgr.assign_coordinates(args[RESOURCES::COORDINATES_KERNEL_ARGUMENT]);
 
@@ -62,7 +62,7 @@ namespace macro_packages
       }
 
 
-    std::string set_phase_flatten::operator()(const macro_argument_list& args)
+    std::string set_phase_flatten::evaluate(const macro_argument_list& args)
       {
         this->mgr.assign_phase_flatten(args[RESOURCES::PHASE_FLATTEN_KERNEL_ARGUMENT]);
 
@@ -73,7 +73,7 @@ namespace macro_packages
       }
 
 
-    std::string set_field_flatten::operator()(const macro_argument_list& args)
+    std::string set_field_flatten::evaluate(const macro_argument_list& args)
       {
         this->mgr.assign_field_flatten(args[RESOURCES::FIELD_FLATTEN_KERNEL_ARGUMENT]);
 
@@ -84,7 +84,7 @@ namespace macro_packages
       }
 
 
-    std::string release_flatteners::operator()(const macro_argument_list& args)
+    std::string release_flatteners::evaluate(const macro_argument_list& args)
       {
         this->mgr.release_flatteners();
 
@@ -92,7 +92,7 @@ namespace macro_packages
       }
 
 
-    std::string set_dV::operator()(const macro_argument_list& args)
+    std::string set_dV::evaluate(const macro_argument_list& args)
       {
         this->mgr.assign_dV(args[RESOURCES::DV_KERNEL_ARGUMENT]);
 
@@ -103,7 +103,7 @@ namespace macro_packages
       }
 
 
-    std::string set_ddV::operator()(const macro_argument_list& args)
+    std::string set_ddV::evaluate(const macro_argument_list& args)
       {
         this->mgr.assign_ddV(args[RESOURCES::DDV_KERNEL_ARGUMENT]);
 
@@ -114,7 +114,7 @@ namespace macro_packages
       }
 
 
-    std::string set_dddV::operator()(const macro_argument_list& args)
+    std::string set_dddV::evaluate(const macro_argument_list& args)
       {
         this->mgr.assign_dddV(args[RESOURCES::DDDV_KERNEL_ARGUMENT]);
 
@@ -125,7 +125,7 @@ namespace macro_packages
       }
 
 
-    std::string set_connexion::operator()(const macro_argument_list& args)
+    std::string set_connexion::evaluate(const macro_argument_list& args)
       {
         this->mgr.assign_connexion(args[RESOURCES::CONNEXION_KERNEL_ARGUMENT]);
 
@@ -136,7 +136,7 @@ namespace macro_packages
       }
 
 
-    std::string set_Riemann::operator()(const macro_argument_list& args)
+    std::string set_Riemann::evaluate(const macro_argument_list& args)
       {
         this->mgr.assign_Riemann(args[RESOURCES::RIEMANN_KERNEL_ARGUMENT]);
 
@@ -147,7 +147,7 @@ namespace macro_packages
       }
 
 
-    std::string release::operator()(const macro_argument_list& args)
+    std::string release::evaluate(const macro_argument_list& args)
       {
         this->mgr.release();
 

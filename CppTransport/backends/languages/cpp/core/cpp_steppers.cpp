@@ -94,7 +94,7 @@ namespace cpp
     // ********************************************************************************
 
 
-    std::string replace_backg_stepper::operator()(const macro_argument_list& args)
+    std::string replace_backg_stepper::evaluate(const macro_argument_list& args)
       {
         const struct stepper& s = this->data_payload.get_background_stepper();
         std::string state_name = args[BACKG_STEPPER_STATE_ARGUMENT];
@@ -103,7 +103,7 @@ namespace cpp
       }
 
 
-    std::string replace_pert_stepper::operator()(const macro_argument_list& args)
+    std::string replace_pert_stepper::evaluate(const macro_argument_list& args)
       {
         const struct stepper& s = this->data_payload.get_perturbations_stepper();
         std::string state_name = args[PERT_STEPPER_STATE_ARGUMENT];
