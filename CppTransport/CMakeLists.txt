@@ -188,6 +188,8 @@ set(BACKENDS_INFRASTRUCTURE_LANGUAGE_CONCEPTS_FILES
   backends/infrastructure/language_concepts/cse_map.cpp
   backends/infrastructure/language_concepts/cse_map.h
   backends/infrastructure/language_concepts/language_printer.h
+  backends/infrastructure/language_concepts/lambdas.cpp
+  backends/infrastructure/language_concepts/lambdas.h
   )
 
 set(BACKENDS_INFRASTRUCTURE_MACRO_SUBSTITUTION_FILES
