@@ -15,25 +15,6 @@
 #include "cse_map.h"
 
 
-//! replacement rule for an 'index' macro, which takes both arguments and needs an
-//! index set; we need to be able to evaluate it concretely on a specific index
-//! assignment, if the index set is unrolled, and abstractly on a loop variable if
-//! it is not. This rule deals with the unrolling
-typedef std::function<std::string(const macro_argument_list&, const assignment_list&, cse_map*)> replacement_rule_unroll;
-
-//! hook called before index set unrolling, usually to set up a CSE map to the expressions
-//! which will be used by the unroll replacement rule
-typedef std::function<std::unique_ptr<cse_map>(const macro_argument_list&)> replacement_pre_unroll;
-
-//! hook called after index set unrolling. There is no requirement to release the CSE map
-//! whose lifetime is managed by the platform
-typedef std::function<void(cse_map*)> replacement_post_unroll;
-
-//! replacement rule for an 'index' macro on an abstract index set, used when planting
-//! 'for'-loop based implementations of an index set
-typedef std::function<std::string(const macro_argument_list&, const abstract_index_list&)> replacement_rule_abstract;
-
-
 namespace macro_packages
   {
 
