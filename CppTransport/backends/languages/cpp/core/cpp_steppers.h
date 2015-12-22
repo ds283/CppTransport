@@ -115,18 +115,6 @@ namespace cpp
         //! destructor is default
         virtual ~cpp_steppers() = default;
 
-
-        // INTERFACE
-
-      public:
-
-        const std::vector<macro_packages::index_rule>  get_index_rules();
-
-
-        // INTERNAL API
-
-      protected:
-
       };
 
   } // namespace cpp

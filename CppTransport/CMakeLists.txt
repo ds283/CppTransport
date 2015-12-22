@@ -51,6 +51,8 @@ ADD_EXECUTABLE(CppTransport
   backends/infrastructure/macro_substitution/macro_tokenizer.cpp
   backends/infrastructure/macro_substitution/abstract_index.cpp
   backends/infrastructure/macro_substitution/index_class.cpp
+  backends/infrastructure/replacement_rules/cse_map_field_indices.cpp
+  backends/infrastructure/replacement_rules/cse_map_phase_indices.cpp
   backends/infrastructure/replacement_rules/package_group.cpp
   backends/infrastructure/replacement_rules/package_group_factory.cpp
   backends/infrastructure/replacement_rules/replacement_rule_package.cpp
@@ -212,6 +214,10 @@ set(BACKENDS_INFRASTRUCTURE_REPLACEMENT_RULES_FILES
   backends/infrastructure/replacement_rules/replacement_rule_definitions.h
   backends/infrastructure/replacement_rules/replacement_rule_package.cpp
   backends/infrastructure/replacement_rules/replacement_rule_package.h
+  backends/infrastructure/replacement_rules/cse_map_phase_indices.cpp
+  backends/infrastructure/replacement_rules/cse_map_phase_indices.h
+  backends/infrastructure/replacement_rules/cse_map_field_indices.cpp
+  backends/infrastructure/replacement_rules/cse_map_field_indices.h
   )
 
 set(BACKENDS_LANGUAGES_CPP_CORE_FILES

@@ -10,15 +10,14 @@
 #include "resources.h"
 
 
-#define BIND(X, N) std::move(std::make_unique<X>(N, this->mgr, this->printer))
+#define BIND(X, N) std::move(std::make_unique<X>(N, f.get_resource_manager(), prn))
 
 
 namespace macro_packages
   {
 
     resources::resources(tensor_factory& f, cse& cw, translator_data& p, language_printer& prn)
-      : replacement_rule_package(f, cw, p, prn),
-        mgr(f.get_resource_manager())
+      : replacement_rule_package(f, cw, p, prn)
       {
         pre_package.emplace_back(BIND(set_params, "RESOURCE_PARAMETERS"));
         pre_package.emplace_back(BIND(set_coordinates, "RESOURCE_COORDINATES"));
@@ -29,14 +28,6 @@ namespace macro_packages
         pre_package.emplace_back(BIND(set_ddV, "RESOURCE_DDV"));
         pre_package.emplace_back(BIND(set_dddV, "RESOURCE_DDDV"));
         pre_package.emplace_back(BIND(release, "RESOURCE_RELEASE"));
-      }
-
-
-    const std::vector<index_rule> resources::get_index_rules()
-      {
-        std::vector<index_rule> package;
-
-        return(package);
       }
 
 

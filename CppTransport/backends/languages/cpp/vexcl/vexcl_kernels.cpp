@@ -17,7 +17,7 @@
 #include "to_printable.h"
 
 
-#define BIND(X, N) std::move(std::make_unique<X>(N, this->data_payload, this->printer))
+#define BIND(X, N) std::move(std::make_unique<X>(N, p, prn))
 
 
 namespace vexcl
@@ -27,14 +27,6 @@ namespace vexcl
       : ::macro_packages::replacement_rule_package(f, cw, p, prn)
       {
         pre_package.emplace_back(BIND(import_kernel, "IMPORT_KERNEL"));
-      }
-
-
-    const std::vector<macro_packages::index_rule> vexcl_kernels::get_index_rules()
-      {
-        std::vector<macro_packages::index_rule> package;
-
-        return(package);
       }
 
 

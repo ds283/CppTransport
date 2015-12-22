@@ -16,7 +16,7 @@
 #include "msg_en.h"
 
 
-#define BIND(X, N) std::move(std::make_unique<X>(N, this->data_payload, this->printer))
+#define BIND(X, N) std::move(std::make_unique<X>(N, p, prn))
 
 
 namespace shared
@@ -32,14 +32,6 @@ namespace shared
         pre_package.emplace_back(BIND(args_2index, "TWOPF_ARGS"));
         pre_package.emplace_back(BIND(args_3index, "U3_ARGS"));
         pre_package.emplace_back(BIND(args_3index, "THREEPF_ARGS"));
-      }
-
-
-    const std::vector<macro_packages::index_rule> kernel_argument_macros::get_index_rules()
-      {
-        std::vector<macro_packages::index_rule> package;
-
-        return(package);
       }
 
 

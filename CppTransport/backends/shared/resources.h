@@ -503,22 +503,6 @@ namespace macro_packages
         //! destructor is default
         virtual ~resources() = default;
 
-
-        // INTERFACE
-
-      public:
-
-        //! return index- macros package
-        const std::vector<index_rule>  get_index_rules() override;
-
-
-        // INTERNAL DATA
-
-      private:
-
-        //! cache reference to resource manager
-        resource_manager& mgr;
-
       };
 
   }

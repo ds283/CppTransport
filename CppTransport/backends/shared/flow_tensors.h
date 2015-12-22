@@ -9,6 +9,7 @@
 
 
 #include "replacement_rule_package.h"
+#include "cse_map_field_indices.h"
 
 
 namespace macro_packages
@@ -131,7 +132,7 @@ namespace macro_packages
 
         //! constructor
         replace_eps(std::string n, tensor_factory& f, cse& cw, language_printer& prn)
-        : replacement_rule_simple(std::move(n), PARAMETER_TOTAL_ARGUMENTS),
+        : replacement_rule_simple(std::move(n), EPSILON_TOTAL_ARGUMENTS),
           cse_worker(cw)
           {
             Hubble_obj = f.make_Hubble(prn);
@@ -162,6 +163,386 @@ namespace macro_packages
       };
 
 
+    class replace_parameter : public replacement_rule_index
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! constructor
+        replace_parameter(std::string n, tensor_factory& f, cse& cw, language_printer& prn)
+          : replacement_rule_index(std::move(n), PARAMETER_TOTAL_ARGUMENTS, PARAMETER_TOTAL_INDICES, index_class::parameter),
+            cse_worker(cw),
+            printer(prn),
+            shared(f.get_shared_resources())
+          {
+          }
+
+        //! destructor
+        virtual ~replace_parameter() = default;
+
+
+        // INTERFACE
+
+      public:
+
+        //! determine unroll status
+        enum unroll_behaviour get_unroll() const override { return(unroll_behaviour::allow); }
+
+
+        // INTERNAL API
+
+      protected:
+
+        //! evaluate
+        virtual std::string evaluate(const macro_argument_list& args, const assignment_list& indices) override;
+
+
+        // INTERNAL DATA
+
+      private:
+
+        //! reference to shared resource
+        shared_resources& shared;
+
+        //! CSE worker
+        cse& cse_worker;
+
+        //! language printer
+        language_printer& printer;
+
+      };
+
+
+    class replace_field : public replacement_rule_index
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! constructor
+        replace_field(std::string n, tensor_factory& f, cse& cw, language_printer& prn)
+          : replacement_rule_index(std::move(n), FIELD_TOTAL_ARGUMENTS, FIELD_TOTAL_INDICES, index_class::field_only),
+            printer(prn),
+            cse_worker(cw),
+            shared(f.get_shared_resources())
+          {
+          }
+
+        //! destructor
+        virtual ~replace_field() = default;
+
+
+        // INTERFACE
+
+      public:
+
+        //! determine unroll status
+        enum unroll_behaviour get_unroll() const override { return(unroll_behaviour::allow); }
+
+
+        // INTERNAL API
+
+      protected:
+
+        //! evaluate
+        virtual std::string evaluate(const macro_argument_list& args, const assignment_list& indices) override;
+
+
+        // INTERNAL DATA
+
+      private:
+
+        //! reference to shared resource
+        shared_resources& shared;
+
+        //! CSE worker
+        cse& cse_worker;
+
+        //! language printer
+        language_printer& printer;
+
+      };
+
+
+    class replace_coordinate : public replacement_rule_index
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! constructor
+        replace_coordinate(std::string n, tensor_factory& f, cse& cw, language_printer& prn)
+          : replacement_rule_index(std::move(n), COORDINATE_TOTAL_ARGUMENTS, COORDINATE_TOTAL_INDICES, index_class::full),
+            printer(prn),
+            cse_worker(cw),
+            shared(f.get_shared_resources())
+          {
+          }
+
+        //! destructor
+        virtual ~replace_coordinate() = default;
+
+
+        // INTERFACE
+
+      public:
+
+        //! determine unroll status
+        enum unroll_behaviour get_unroll() const override { return(unroll_behaviour::allow); }
+
+
+        // INTERNAL API
+
+      protected:
+
+        //! evaluate
+        virtual std::string evaluate(const macro_argument_list& args, const assignment_list& indices) override;
+
+
+        // INTERNAL DATA
+
+      private:
+
+        //! reference to shared resource
+        shared_resources& shared;
+
+        //! CSE worker
+        cse& cse_worker;
+
+        //! language printer
+        language_printer& printer;
+
+      };
+
+
+    class replace_SR_velocity : public cse_map_field1
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! constructor
+        replace_SR_velocity(std::string n, tensor_factory& f, cse& cw, language_printer& prn)
+          : cse_map_field1(std::move(n), SR_VELOCITY_TOTAL_ARGUMENTS, f.get_shared_resources().get_number_parameters(), f.get_shared_resources().get_number_field()),
+            printer(prn),
+            cse_worker(cw),
+            shared(f.get_shared_resources())
+          {
+            SR_velocity_tensor = f.make_SR_velocity(prn);
+          }
+
+        //! destructor
+        virtual ~replace_SR_velocity() = default;
+
+
+        // INTERFACE
+
+      public:
+
+        //! determine unroll status
+        enum unroll_behaviour get_unroll() const override { return(unroll_behaviour::allow); }
+
+
+        // INTERNAL API
+
+      protected:
+
+        //! evaluate
+        virtual void pre_evaluate(const macro_argument_list& args) override;
+
+
+        // INTERNAL DATA
+
+      private:
+
+        //! reference to shared resource
+        shared_resources& shared;
+
+        //! CSE worker
+        cse& cse_worker;
+
+        //! language printer
+        language_printer& printer;
+
+        //! SR_velocity object
+        std::unique_ptr<SR_velocity> SR_velocity_tensor;
+
+      };
+
+
+    class replace_dV : public cse_map_field1
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! constructor
+        replace_dV(std::string n, tensor_factory& f, cse& cw, language_printer& prn)
+          : cse_map_field1(std::move(n), DV_TOTAL_ARGUMENTS, f.get_shared_resources().get_number_parameters(), f.get_shared_resources().get_number_field()),
+            printer(prn),
+            cse_worker(cw),
+            shared(f.get_shared_resources())
+          {
+            dV_tensor = f.make_dV(prn);
+          }
+
+        //! destructor
+        virtual ~replace_dV() = default;
+
+
+        // INTERFACE
+
+      public:
+
+        //! determine unroll status
+        enum unroll_behaviour get_unroll() const override { return(unroll_behaviour::allow); }
+
+
+        // INTERNAL API
+
+      protected:
+
+        //! evaluate
+        virtual void pre_evaluate(const macro_argument_list& args) override;
+
+
+        // INTERNAL DATA
+
+      private:
+
+        //! reference to shared resource
+        shared_resources& shared;
+
+        //! CSE worker
+        cse& cse_worker;
+
+        //! language printer
+        language_printer& printer;
+
+        //! dV object
+        std::unique_ptr<dV> dV_tensor;
+
+      };
+
+
+    class replace_ddV : public cse_map_field2
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! constructor
+        replace_ddV(std::string n, tensor_factory& f, cse& cw, language_printer& prn)
+          : cse_map_field2(std::move(n), DDV_TOTAL_ARGUMENTS, f.get_shared_resources().get_number_parameters(), f.get_shared_resources().get_number_field()),
+            printer(prn),
+            cse_worker(cw),
+            shared(f.get_shared_resources())
+          {
+            ddV_tensor = f.make_ddV(prn);
+          }
+
+        //! destructor
+        virtual ~replace_ddV() = default;
+
+
+        // INTERFACE
+
+      public:
+
+        //! determine unroll status
+        enum unroll_behaviour get_unroll() const override { return(unroll_behaviour::allow); }
+
+
+        // INTERNAL API
+
+      protected:
+
+        //! evaluate
+        virtual void pre_evaluate(const macro_argument_list& args) override;
+
+
+        // INTERNAL DATA
+
+      private:
+
+        //! reference to shared resource
+        shared_resources& shared;
+
+        //! CSE worker
+        cse& cse_worker;
+
+        //! language printer
+        language_printer& printer;
+
+        //! ddV object
+        std::unique_ptr<ddV> ddV_tensor;
+
+      };
+
+
+    class replace_dddV : public cse_map_field3
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! constructor
+        replace_dddV(std::string n, tensor_factory& f, cse& cw, language_printer& prn)
+          : cse_map_field3(std::move(n), DDDV_TOTAL_ARGUMENTS, f.get_shared_resources().get_number_parameters(), f.get_shared_resources().get_number_field()),
+            printer(prn),
+            cse_worker(cw),
+            shared(f.get_shared_resources())
+          {
+            dddV_tensor = f.make_dddV(prn);
+          }
+
+        //! destructor
+        virtual ~replace_dddV() = default;
+
+
+        // INTERFACE
+
+      public:
+
+        //! determine unroll status
+        enum unroll_behaviour get_unroll() const override { return(unroll_behaviour::allow); }
+
+
+        // INTERNAL API
+
+      protected:
+
+        //! evaluate
+        virtual void pre_evaluate(const macro_argument_list& args) override;
+
+
+        // INTERNAL DATA
+
+      private:
+
+        //! reference to shared resource
+        shared_resources& shared;
+
+        //! CSE worker
+        cse& cse_worker;
+
+        //! language printer
+        language_printer& printer;
+
+        //! dddV object
+        std::unique_ptr<dddV> dddV_tensor;
+
+      };
+
+
     class flow_tensors : public replacement_rule_package
       {
 
@@ -176,50 +557,9 @@ namespace macro_packages
         virtual ~flow_tensors() = default;
 
 
-        // INTERFACE
-
-      public:
-
-        const std::vector<index_rule>  get_index_rules();
-
-
-        // INTERNAL API
-
-      protected:
-
-        std::string replace_parameter(const macro_argument_list& args, const assignment_list& indices, cse_map* map);
-
-        std::string replace_field(const macro_argument_list& args, const assignment_list& indices, cse_map* map);
-
-        std::string replace_coordinate(const macro_argument_list& args, const assignment_list& indices, cse_map* map);
-
-        std::unique_ptr<cse_map> pre_sr_velocity(const macro_argument_list& args);
-
-        std::unique_ptr<cse_map> pre_dV(const macro_argument_list& args);
-
-        std::unique_ptr<cse_map> pre_ddV(const macro_argument_list& args);
-
-        std::unique_ptr<cse_map> pre_dddV(const macro_argument_list& args);
-
-
         // INTERNAL DATA
 
       private:
-
-        //! dV object
-        std::unique_ptr<dV> dV_tensor;
-
-        //! ddV object
-        std::unique_ptr<ddV> ddV_tensor;
-
-        //! dddV object
-        std::unique_ptr<dddV> dddV_tensor;
-
-        //! SR_velocity object
-        std::unique_ptr<SR_velocity> SR_velocity_tensor;
-
-        //! reference to shared resource
-        shared_resources& shared;
 
       };
 

@@ -19,7 +19,7 @@
 #include "boost/date_time/posix_time/posix_time.hpp"
 
 
-#define BIND(X, N) std::move(std::make_unique<X>(N, this->data_payload, this->printer))
+#define BIND(X, N) std::move(std::make_unique<X>(N, p, prn))
 
 
 namespace macro_packages
@@ -58,14 +58,6 @@ namespace macro_packages
         pre_package.emplace_back(BIND(replace_p_stepper, "PERT_STEPPER"));
 
         post_package.emplace_back(BIND(replace_unique, "UNIQUE"));
-      }
-
-
-    const std::vector<index_rule> fundamental::get_index_rules()
-      {
-        std::vector<index_rule> package;
-
-        return(package);
       }
 
 

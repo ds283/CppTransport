@@ -46,13 +46,13 @@ class package_group
     // return references to our ruleset caches
 
     //! return reference to pre-rules
-    std::vector<macro_packages::replacement_rule_simple*>& get_pre_ruleset() { return(this->pre_ruleset); }
+    std::vector<macro_packages::replacement_rule_simple*>& get_pre_ruleset()   { return(this->pre_ruleset); }
 
     //! return reference to post-rules
-    std::vector<macro_packages::replacement_rule_simple*>& get_post_ruleset() { return(this->post_ruleset); }
+    std::vector<macro_packages::replacement_rule_simple*>& get_post_ruleset()  { return(this->post_ruleset); }
 
     //! return reference to index-rules
-    std::vector<macro_packages::index_rule>& get_index_ruleset();
+    std::vector<macro_packages::replacement_rule_index*>& get_index_ruleset()  { return(this->index_ruleset); }
 
 
 		// INTERFACE - GET LANGUAGE PRINTER FOR THIS PACKAGE GROUP
@@ -128,18 +128,18 @@ class package_group
 
     // RULE CACHE, BUILD BY AGGREGATING RULES FROM MACRO PACKAGES
 
-    //! rules for pre-macros; held as a raw pointer because
-    //! we have no ownership in these objects.
-    //! They are owned by the underylying replacement_rule_package
+    // all these are held as raw pointers because
+    // we have no ownership in these objects.
+    // They are owned by the underylying replacement_rule_package
+
+    // rules for pre-macros
     std::vector<macro_packages::replacement_rule_simple*> pre_ruleset;
 
-    //! rules for post-macros; held as a raw pointer because
-    //! we have no ownership in these objects.
-    //! They are owned by the underylying replacement_rule_package
+    //! rules for post-macros
     std::vector<macro_packages::replacement_rule_simple*> post_ruleset;
 
     //! rules for index macros
-    std::vector<macro_packages::index_rule>  index_ruleset;
+    std::vector<macro_packages::replacement_rule_index*> index_ruleset;
 
 
     // STATISTICS AND METADATA

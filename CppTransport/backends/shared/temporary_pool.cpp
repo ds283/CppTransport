@@ -14,7 +14,7 @@
 #include "msg_en.h"
 
 
-#define BIND(X, N) std::move(std::make_unique<X>(N, this->data_payload, this->cse_worker, this->printer))
+#define BIND(X, N) std::move(std::make_unique<X>(N, p, cw, prn))
 
 
 namespace macro_packages
@@ -25,14 +25,6 @@ namespace macro_packages
 	    {
         pre_package.emplace_back(BIND(replace_temp_pool, "TEMP_POOL"));
 	    }
-
-
-    const std::vector<index_rule> temporary_pool::get_index_rules()
-      {
-        std::vector<index_rule> package;
-
-        return(package);
-      }
 
 
 		void temporary_pool::report_end_of_input()

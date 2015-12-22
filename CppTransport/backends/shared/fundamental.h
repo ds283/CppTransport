@@ -1195,14 +1195,6 @@ namespace macro_packages
         //! destructor is default
         virtual ~fundamental() = default;
 
-
-        // INTERFACE
-
-      public:
-
-        //! return index- macros package
-        const std::vector<index_rule>  get_index_rules() override;
-
       };
 
   } // namespace macro_packages

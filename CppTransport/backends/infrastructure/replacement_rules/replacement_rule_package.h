@@ -57,7 +57,7 @@ namespace macro_packages
         const std::vector< std::unique_ptr<replacement_rule_simple> >& get_post_rules() { return(this->post_package); }
 
         //! get index-macro package
-        virtual const std::vector<index_rule>   get_index_rules() = 0;
+        const std::vector< std::unique_ptr<replacement_rule_index> >& get_index_rules() { return(this->index_package); }
 
 
         // INTERFACE -- END OF INPUT
@@ -69,50 +69,24 @@ namespace macro_packages
         virtual void report_end_of_input() { return; }
 
 
-        // INTERFACE -- INTERNAL API
-        // COMMON UTILITY FUNCTIONS FOR MACRO REPLACEMENT
-
-      protected:
-
-        //! generic CSE-map replacement rule for 1-index full tensor
-        std::string replace_1index_tensor(const macro_argument_list& args, const assignment_list& indices, cse_map* map);
-
-        //! generic CSE-map replacement rule for 2-index full tensopr
-        std::string replace_2index_tensor(const macro_argument_list& args, const assignment_list& indices, cse_map* map);
-
-        //! generic CSE-map replacement rule for 3-index full tensor
-        std::string replace_3index_tensor(const macro_argument_list& args, const assignment_list& indices, cse_map* map);
-
-        //! generic CSE-map replacement rule for 1-index field-space tensor
-        std::string replace_1index_field_tensor(const macro_argument_list& args, const assignment_list& indices, cse_map* map);
-
-        //! generic CSE-map replacement rule for 2-index field-space tensor
-        std::string replace_2index_field_tensor(const macro_argument_list& args, const assignment_list& indices, cse_map* map);
-
-        //! generic CSE-map replacement rule for 3-index field-space tensor
-        std::string replace_3index_field_tensor(const macro_argument_list& args, const assignment_list& indices, cse_map* map);
-
-
         // INTERNAL DATA
 
       protected:
 
         // MACRO PACKAGES
 
+        // held as a container of std::unique_ptr<>, because ownership of these
+        // replacement rules is vested in this package.
+        // They are shared with clients as raw pointers or references.
+
         //! package of pre- macros
-        //! held as a container of std::unique_ptr<>, because ownership of these
-        //! replacement rules is vested in this package.
-        //! They are shared with clients as raw pointers or references.
         std::vector< std::unique_ptr<replacement_rule_simple> > pre_package;
 
         //! package of post- macros
-        //! held as a container of std::unique_ptr<>, because ownership of these
-        //! replacement rules is vested in this package.
-        //! They are shared with clients as raw pointers or references.
         std::vector< std::unique_ptr<replacement_rule_simple> > post_package;
 
         //! package of index-macros
-        std::vector<index_rule> index_package;
+        std::vector< std::unique_ptr<replacement_rule_index> > index_package;
 
 
         // REFERENCES TO EXTERNALLY-SUPPLIED AGENTS

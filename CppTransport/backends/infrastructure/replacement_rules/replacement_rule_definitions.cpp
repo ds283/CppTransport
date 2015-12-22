@@ -25,30 +25,30 @@ namespace macro_packages
       }
 
 
-    std::string index_rule::operator()(const macro_argument_list& args, const assignment_list& indices, cse_map* state)
+    std::string replacement_rule_index::operator()(const macro_argument_list& args, const assignment_list& indices)
       {
         // check that correct number of arguments have been supplied
-        if(args.size() != this->args)
+        if(args.size() != this->num_args)
           {
             std::ostringstream msg;
 
-            msg << ERROR_WRONG_ARGUMENT_COUNT << " '" << this->name << "'; " << ERROR_EXPECTED_ARGUMENT_COUNT << " " << this->args << ", " << ERROR_RECEIVED_ARGUMENT_COUNT << " " << args.size();
+            msg << ERROR_WRONG_ARGUMENT_COUNT << " '" << this->name << "'; " << ERROR_EXPECTED_ARGUMENT_COUNT << " " << this->num_args << ", " << ERROR_RECEIVED_ARGUMENT_COUNT << " " << args.size();
             throw rule_apply_fail(msg.str());
           }
 
         // check that correct number of indices have been supplied
-        if(indices.size() != this->indices)
+        if(indices.size() != this->num_indices)
           {
             std::ostringstream msg;
 
-            msg << ERROR_WRONG_INDEX_COUNT << " '" << this->name << "'; " << ERROR_EXPECTED_INDEX_COUNT << " " << this->indices << ", " << ERROR_RECEIVED_INDEX_COUNT << " " << indices.size();
+            msg << ERROR_WRONG_INDEX_COUNT << " '" << this->name << "'; " << ERROR_EXPECTED_INDEX_COUNT << " " << this->num_indices << ", " << ERROR_RECEIVED_INDEX_COUNT << " " << indices.size();
             throw macro_packages::rule_apply_fail(msg.str());
           }
 
         // check that index types are compatible
         for(const assignment_record& rec : indices)
           {
-            switch(this->range)
+            switch(this->idx_class)
               {
                 case index_class::full:
                   {
@@ -96,52 +96,28 @@ namespace macro_packages
               }
           }
 
-        if(this->rule == nullptr)
-          {
-            std::ostringstream msg;
-
-            msg << ERROR_NO_RULE_HANDLER << " '" << this->name << "'";
-            throw macro_packages::rule_apply_fail(msg.str());
-          }
-
-        return (this->rule)(args, indices, state);
+        return this->evaluate(args, indices);
       }
 
 
-    std::unique_ptr<cse_map> index_rule::pre_evaluate(const macro_argument_list& args)
+    void replacement_rule_index::pre(const macro_argument_list& args)
       {
         // check that correct number of arguments have been supplied
-        if(args.size() != this->args)
+        if(args.size() != this->num_args)
           {
             std::ostringstream msg;
 
-            msg << ERROR_WRONG_ARGUMENT_COUNT << " '" << this->name << "'; " << ERROR_EXPECTED_ARGUMENT_COUNT << " " << this->args << ", " << ERROR_RECEIVED_ARGUMENT_COUNT << " " << args.size();
+            msg << ERROR_WRONG_ARGUMENT_COUNT << " '" << this->name << "'; " << ERROR_EXPECTED_ARGUMENT_COUNT << " " << this->num_args << ", " << ERROR_RECEIVED_ARGUMENT_COUNT << " " << args.size();
             throw rule_apply_fail(msg.str());
           }
 
-        if(this->pre != nullptr)
-          {
-            return (this->pre)(args);
-          }
-        else
-          {
-            return std::unique_ptr<cse_map>();
-          }
+        this->pre_evaluate(args);
       }
 
 
-    void index_rule::post_evaluate(cse_map* state)
+    void replacement_rule_index::post(const macro_argument_list& args)
       {
-        if(this->post != nullptr)
-          {
-            (this->post)(state);
-          }
-      }
-
-
-    void simple_rule::report_end_of_input()
-      {
-        this->rule->report_end_of_input();
+        this->post_evaluate(args);
       }
 
   }   // namespace macro_packages

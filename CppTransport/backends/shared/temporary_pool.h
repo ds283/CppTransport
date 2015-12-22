@@ -108,14 +108,6 @@ namespace macro_packages
         ~temporary_pool() = default;
 
 
-		    // INTERFACE - implements a 'replacement_rule_package' interface
-
-      public:
-
-        //! return index- macros package
-        const std::vector<index_rule>  get_index_rules() override;
-
-
 		    // INTERFACE -- report end of an input; used to deposit temporaries if necessary
 
       public:

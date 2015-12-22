@@ -158,13 +158,6 @@ namespace vexcl
         //! destructor
         virtual ~vexcl_steppers() = default;
 
-
-        // INTERFACE
-
-      public:
-
-        const std::vector<macro_packages::index_rule>  get_index_rules();
-
       };
 
   } // namespace cpp

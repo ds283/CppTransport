@@ -14,7 +14,7 @@
 #include "translation_unit.h"
 
 
-#define BIND(X, N) std::move(std::make_unique<X>(N, this->data_payload, this->printer))
+#define BIND(X, N) std::move(std::make_unique<X>(N, p, prn))
 
 
 namespace vexcl
@@ -30,14 +30,6 @@ namespace vexcl
         pre_package.emplace_back(BIND(replace_pert_stepper, "MAKE_PERT_STEPPER"));
         pre_package.emplace_back(BIND(stepper_name, "BACKG_STEPPER"));
         pre_package.emplace_back(BIND(stepper_name, "PERT_STEPPER"));
-      }
-
-
-    const std::vector<macro_packages::index_rule> vexcl_steppers::get_index_rules()
-      {
-        std::vector<macro_packages::index_rule> package;
-
-        return(package);
       }
 
 

@@ -108,163 +108,81 @@ namespace macro_packages
       public:
 
         //! constructor
-        replacement_rule_index() = default;
+        replacement_rule_index(std::string nm, unsigned int a, unsigned int i, enum index_class c)
+          : name(std::move(nm)),
+            num_args(a),
+            num_indices(i),
+            idx_class(c)
+          {
+          }
 
         //! destructor
         virtual ~replacement_rule_index() = default;
 
 
-        // INTERFACE
+        // INTERFACE -- EVALUATION
 
       public:
 
         //! evaluate the macro
-        virtual std::string operator()(const macro_argument_list& args, const assignment_list& indices) = 0;
+        std::string operator()(const macro_argument_list& args, const assignment_list& indices);
 
         //! pre-evaluation
-        virtual void pre(const macro_argument_list& args) = 0;
+        void pre(const macro_argument_list& args);
 
         //! post-evaluation
-        virtual void post(const macro_argument_list& args) = 0;
-
-      };
+        void post(const macro_argument_list& args);
 
 
-    class simple_rule
-      {
-
-      public:
-
-        //! constructor enforces setup of all fields;
-        //! we capture the replacement rule via a std::shared_ptr<> which may not be ideal
-        // TODO: consider searching for a better solution
-        simple_rule(std::string n, std::shared_ptr<replacement_rule_simple> r, unsigned int a)
-          : rule(std::move(r)),
-            args(a),
-            name(std::move(n))
-          {
-          }
-
-
-        // INTERFACE - GET DATA
+        // INTERFACE -- QUERY FOR DATA
 
       public:
 
         //! get number of arguments associated with this macro
-        unsigned int get_number_args() const { return(this->args); }
-
-        //! get name associated with this macro
-        const std::string& get_name() const { return(this->name); }
-
-
-        // INTERFACE - EVALUATION
-
-      public:
-
-        //! apply replacement rule
-        std::string operator()(const macro_argument_list& args);
-
-        //! report end of input; used eg. to deposit temporaries when input is finished
-        void report_end_of_input();
-
-
-        // INTERNAL DATA
-
-      private:
-
-        //! function pointer to replacement rule
-        std::shared_ptr<replacement_rule_simple> rule;
-
-        //! number of arguments expected by this macro
-        unsigned int args;
-
-        //! name of this macro
-        std::string name;
-
-      };
-
-
-    class index_rule
-      {
-
-      public:
-
-        //! constructor enforces setup of all fields
-        index_rule(std::string n, replacement_rule_unroll r, replacement_pre_unroll pr, replacement_post_unroll po,
-                   unsigned int a, unsigned int i, enum index_class rn, enum unroll_behaviour u)
-          : rule(std::move(r)),
-            pre(std::move(pr)),
-            post(std::move(po)),
-            args(a),
-            indices(i),
-            range(rn),
-            unroll(u),
-            name(n)
-          {
-          }
-
-
-        // INTERFACE - GET DATA
-
-      public:
-
-        //! get number of arguments associated with this macro
-        unsigned int get_number_args() const { return(this->args); }
+        unsigned int get_number_args() const { return(this->num_args); }
 
         //! get number of indices associated with this macro
-        unsigned int get_number_indices() const { return(this->indices); }
+        unsigned int get_number_indices() const { return(this->num_indices); }
 
         //! get index class associated with this macro
-        enum index_class get_index_class() const { return(this->range); }
+        enum index_class get_index_class() const { return(this->idx_class); }
 
         //! get name associated with this macro
         const std::string& get_name() const { return(this->name); }
 
-        //! get unroll flag associated with this macro
-        enum unroll_behaviour get_unroll() const { return(this->unroll); }
+        //! get unroll status for this macro -- must be handled by implementation
+        virtual enum unroll_behaviour get_unroll() const = 0;
 
 
-        // INTERFACE - EVALUATION
+        // INTERNAL API
 
-      public:
+      protected:
 
-        //! apply replacement rule
-        std::string operator()(const macro_argument_list& args, const assignment_list& indices, cse_map* state);
+        //! evaluation function; has to be supplied by implementation
+        virtual std::string evaluate(const macro_argument_list& args, const assignment_list& indices) = 0;
 
-        //! pre-hook
-        std::unique_ptr<cse_map> pre_evaluate(const macro_argument_list& args);
+        //! pre-evaluation; if needed, can be supplied by implementation; default is no-op
+        virtual void pre_evaluate(const macro_argument_list& args) { return; }
 
-        //! post-hook
-        void post_evaluate(cse_map* state);
+        //! post-evaluation; if needed, can be supplied by implementation; default is no-op
+        virtual void post_evaluate(const macro_argument_list& args) { return; }
 
 
         // INTERNAL DATA
 
-      private:
-
-        //! function pointer to replacement rule
-        replacement_rule_unroll rule;
-
-        //! function pointer to set-up method for this macro
-        replacement_pre_unroll pre;
-
-        //! function pointer to set-down method for this macro
-        replacement_post_unroll post;
-
-        //! number of arguments expected by this macro
-        unsigned int args;
-
-        //! number of indices expected by this macro
-        unsigned int indices;
-
-        //! type of index expected by this macro
-        enum index_class range;
-
-        //! does this macro require unrolling, prevent unrolling, or simply allow it?
-        enum unroll_behaviour unroll;
+      protected:
 
         //! name of this macro
         std::string name;
+
+        //! number of arguments expected
+        unsigned int num_args;
+
+        //! number of indices expected
+        unsigned int num_indices;
+
+        //! class of index expected
+        enum index_class idx_class;
 
       };
 

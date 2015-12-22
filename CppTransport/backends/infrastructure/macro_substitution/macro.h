@@ -16,23 +16,20 @@
 #include "core.h"
 #include "index_assignment.h"
 #include "cse.h"
-#include "package_group.h"
 #include "translator_data.h"
+#include "package_group.h"
 #include "replacement_rule_definitions.h"
 #include "macro_tokenizer.h"
 
 #include "boost/timer/timer.hpp"
 
 
+// package_group.h includes macro.h
+// macro.h includes package_group.h
+
+// if we were included from package_group.h then no declaration for package_group will yet have been seen,
+// so forward-declare here
 class package_group;
-
-
-namespace macro_packages
-	{
-    class simple_rule;
-
-    class index_rule;
-	}
 
 
 namespace macro_impl
@@ -208,7 +205,7 @@ class macro_agent
     std::vector<macro_packages::replacement_rule_simple*>& post_rule_cache;
 
     //! cache index rules
-    std::vector<macro_packages::index_rule>&  index_rule_cache;
+    std::vector<macro_packages::replacement_rule_index*>& index_rule_cache;
 
 
     // MACRO CONFIGURATION

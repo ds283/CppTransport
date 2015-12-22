@@ -221,13 +221,6 @@ namespace shared
         //! destructor is default
         virtual ~kernel_argument_macros() = default;
 
-
-        // INTERFACE
-
-      public:
-
-        const std::vector<macro_packages::index_rule>  get_index_rules();
-
       };
 
   } // namespace shared

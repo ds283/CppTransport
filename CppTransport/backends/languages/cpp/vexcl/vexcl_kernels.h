@@ -73,13 +73,6 @@ namespace vexcl
         //! destructor is default
         virtual ~vexcl_kernels() = default;
 
-
-        // INTERFACE
-
-      public:
-
-        const std::vector<macro_packages::index_rule>  get_index_rules();
-
       };
 
   } // namespace vexcl

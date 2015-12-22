@@ -16,15 +16,13 @@ constexpr unsigned int MAX_TOKEN_ERRORS = 4;
 
 token_list::token_list(const std::string& input, const std::string& prefix,
                        unsigned int nf, unsigned int np,
-                       const std::vector<macro_packages::replacement_rule_simple*>& pre,
-                       const std::vector<macro_packages::replacement_rule_simple*>& post,
-                       const std::vector<macro_packages::index_rule>& index,
+                       std::vector<macro_packages::replacement_rule_simple*>& pre,
+                       std::vector<macro_packages::replacement_rule_simple*>& post,
+                       std::vector<macro_packages::replacement_rule_index*>& index,
                        translator_data& d)
   : num_fields(nf),
     num_params(np),
     data_payload(d),
-    num_prevent_unroll(0),
-    num_force_unroll(0),
     input_string(std::make_shared<std::string>(input))
 	{
 		size_t position = 0;
@@ -98,7 +96,7 @@ token_list::token_list(const std::string& input, const std::string& prefix,
 										        if(this->check_for_match(candidate, pre, false))
 											        {
 										            // we matched a simple pre-macro
-										            const macro_packages::replacement_rule_simple& rule = this->find_match(candidate, pre);
+										            macro_packages::replacement_rule_simple& rule = this->find_match(candidate, pre);
 
 												        // found a match -- move position past the candidate
 										            position += candidate_length;
@@ -118,7 +116,7 @@ token_list::token_list(const std::string& input, const std::string& prefix,
 										        else if(this->check_for_match(candidate, post, false))
 											        {
 										            // we matched a simple post-macro
-										            const macro_packages::replacement_rule_simple& rule = this->find_match(candidate, post);
+										            macro_packages::replacement_rule_simple& rule = this->find_match(candidate, post);
 
 										            // found a match -- move position past the candidate
 										            position += candidate_length;
@@ -138,7 +136,7 @@ token_list::token_list(const std::string& input, const std::string& prefix,
 										        else if(this->check_for_match(candidate, index, false))
 											        {
 										            // we matched an index macro
-										            const macro_packages::index_rule& rule = this->find_match(candidate, index);
+										            macro_packages::replacement_rule_index& rule = this->find_match(candidate, index);
 
 										            // found a match -- move position past the candidate
 										            position += candidate_length;
@@ -152,26 +150,26 @@ token_list::token_list(const std::string& input, const std::string& prefix,
                                 // apply unroll flags, either inherited from the macro or by allowing suffixies
                                 if(rule.get_unroll() == unroll_behaviour::force)
                                   {
-                                    ++this->num_force_unroll;
+                                    this->force_unroll.push_back(candidate);
                                   }
                                 else if(rule.get_unroll() == unroll_behaviour::prevent)
                                   {
-                                    ++this->num_prevent_unroll;
+                                    this->prevent_unroll.push_back(candidate);
                                   }
                                 else if(position < input.length() && input[position] == '@')    // check for 'force unroll' suffix if macro is neutral; ignore suffixes otherwise
                                   {
                                     ++position;
-                                    ++this->num_force_unroll;
+                                    this->force_unroll.push_back(candidate);
                                   }
                                 else if(position < input.length() && input[position] == '^')    // check for 'prevent unroll' suffix if macro is neutral
                                   {
                                     ++position;
-                                    ++this->num_prevent_unroll;
+                                    this->prevent_unroll.push_back(candidate);
                                   }
 
                                 error_context ctx(this->data_payload.get_stack(), input_string, position, this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
 
-                                if(this->num_force_unroll > 0 && this->num_prevent_unroll > 0)
+                                if(this->force_unroll.size() > 0 && this->prevent_unroll.size() > 0)
                                   {
                                     std::ostringstream msg;
                                     msg << ERROR_INCOMPATIBLE_UNROLL << " '" << candidate << "'";
@@ -242,15 +240,15 @@ token_list::token_list(const std::string& input, const std::string& prefix,
 
 
 template <typename Rule>
-bool token_list::check_for_match(const std::string& candidate, const std::vector<Rule>& rule_list, bool allow_substring)
+bool token_list::check_for_match(const std::string& candidate, std::vector<Rule*>& rule_list, bool allow_substring)
 	{
 		bool found = false;
 
-    for(const Rule& t : rule_list)
+    for(Rule* const& t : rule_list)
 			{
-				if(candidate.length() <= t.get_name().length())
+				if(candidate.length() <= t->get_name().length())
 					{
-				    std::string name_substring = allow_substring ? t.get_name().substr(0, candidate.length()) : t.get_name();
+				    std::string name_substring = allow_substring ? t->get_name().substr(0, candidate.length()) : t->get_name();
 						if(candidate == name_substring)
 							{
 								found = true;
@@ -277,9 +275,9 @@ namespace macro_tokenizer_impl
           {
           }
 
-        bool operator()(const Rule& r)
+        bool operator()(Rule* const& r)
           {
-            return(this->name == r.get_name());
+            return(this->name == r->get_name());
           }
 
       private:
@@ -292,11 +290,11 @@ namespace macro_tokenizer_impl
 
 
 template <typename Rule>
-const Rule& token_list::find_match(const std::string& candidate, const std::vector<Rule>& rule_list)
+Rule& token_list::find_match(const std::string& candidate, std::vector<Rule*>& rule_list)
 	{
-    typename std::vector<Rule>::const_iterator t = std::find_if(rule_list.begin(), rule_list.end(), macro_tokenizer_impl::RuleNameComparator<Rule>(candidate));
+    typename std::vector<Rule*>::const_iterator t = std::find_if(rule_list.begin(), rule_list.end(), macro_tokenizer_impl::RuleNameComparator<Rule>(candidate));
 
-    if(t != rule_list.end()) return(*t);
+    if(t != rule_list.end()) return(*(*t));
 
 		throw std::runtime_error(ERROR_TOKENIZE_NO_MACRO_MATCH);
 	}
@@ -559,8 +557,8 @@ std::string token_list::to_string()
 
 enum unroll_behaviour token_list::unroll_status() const
   {
-    if(this->num_force_unroll > 0 && this->num_prevent_unroll == 0) return unroll_behaviour::force;
-    if(this->num_force_unroll == 0 && this->num_prevent_unroll > 0) return unroll_behaviour::prevent;
+    if(this->force_unroll.size() > 0 && this->prevent_unroll.size() == 0) return unroll_behaviour::force;
+    if(this->force_unroll.size() == 0 && this->prevent_unroll.size() > 0) return unroll_behaviour::prevent;
 
     // if we are in an inconsistent state then an error will already have been raised, so do nothing here
     return unroll_behaviour::allow;
@@ -654,7 +652,7 @@ void token_list_impl::simple_macro_token::evaluate()
 
 
 token_list_impl::index_macro_token::index_macro_token(const std::string& m, const abstract_index_list i,
-                                                      const macro_argument_list& a, const macro_packages::index_rule& r,
+                                                      const macro_argument_list& a, macro_packages::replacement_rule_index& r,
                                                       error_context ec)
 	: generic_token(m, std::move(ec)),
     name(m),
@@ -665,7 +663,7 @@ token_list_impl::index_macro_token::index_macro_token(const std::string& m, cons
     try
       {
         // state assumes ownership of the CSE-map returned from the pre-rule
-        state = this->rule.pre_evaluate(args);
+        this->rule.pre(args);
       }
     catch(macro_packages::rule_apply_fail& xe)
       {
@@ -678,15 +676,12 @@ token_list_impl::index_macro_token::~index_macro_token()
 	{
     try
       {
-        this->rule.post_evaluate(this->state.get());
+        this->rule.post(this->args);
       }
     catch(macro_packages::rule_apply_fail& xe)
       {
         this->error(xe.what());
       }
-
-    // release CSE map held by this macro if it hasn't already been done
-    this->state.release();
 	}
 
 
@@ -706,7 +701,7 @@ void token_list_impl::index_macro_token::evaluate(const assignment_list& a)
 
     try
       {
-        this->conversion = this->rule(this->args, index_values, this->state.get());
+        this->conversion = this->rule(this->args, index_values);
       }
     catch(macro_packages::rule_apply_fail& xe)
       {

@@ -13,7 +13,7 @@
 #include "cpp_steppers.h"
 
 
-#define BIND(X, N) std::move(std::make_unique<X>(N, this->data_payload, this->printer))
+#define BIND(X, N) std::move(std::make_unique<X>(N, p, prn))
 
 
 namespace cpp
@@ -27,14 +27,6 @@ namespace cpp
       {
         pre_package.emplace_back(BIND(replace_backg_stepper, "MAKE_BACKG_STEPPER"));
         pre_package.emplace_back(BIND(replace_pert_stepper, "MAKE_PERT_SEPPER"));
-      }
-
-
-    const std::vector<macro_packages::index_rule> cpp_steppers::get_index_rules()
-      {
-        std::vector<macro_packages::index_rule> package;
-
-        return(package);
       }
 
 

@@ -67,21 +67,19 @@ void package_group::build_post_ruleset()
   }
 
 
-std::vector<macro_packages::index_rule>& package_group::get_index_ruleset()
-  {
-    return(this->index_ruleset);
-  }
-
-
 void package_group::build_index_ruleset()
   {
     this->index_ruleset.clear();
 
     for(std::unique_ptr<macro_packages::replacement_rule_package>& pkg : this->packages)
       {
-        std::vector<macro_packages::index_rule> rules = pkg->get_index_rules();
+        const std::vector< std::unique_ptr<macro_packages::replacement_rule_index> >& rules = pkg->get_index_rules();
+
         this->index_ruleset.reserve(this->index_ruleset.size() + rules.size());
-        this->index_ruleset.insert(this->index_ruleset.end(), rules.begin(), rules.end());
+        for(const std::unique_ptr<macro_packages::replacement_rule_index>& rule : rules)
+          {
+            this->index_ruleset.emplace_back(rule.get());
+          }
       }
   }
 

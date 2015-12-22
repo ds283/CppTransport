@@ -163,7 +163,7 @@ namespace token_list_impl
       public:
 
         //! constructor
-        index_macro_token(const std::string& m, const abstract_index_list i, const macro_argument_list& a, const macro_packages::index_rule& r, error_context ec);
+        index_macro_token(const std::string& m, const abstract_index_list i, const macro_argument_list& a, macro_packages::replacement_rule_index& r, error_context ec);
 
         //! destructor
         virtual ~index_macro_token();
@@ -181,12 +181,10 @@ namespace token_list_impl
 
       protected:
 
-        const std::string          name;
-        const macro_argument_list  args;
-        const abstract_index_list  indices;
-        macro_packages::index_rule rule;
-
-        std::unique_ptr<cse_map>   state;
+        const std::string name;
+        const macro_argument_list args;
+        const abstract_index_list indices;
+        macro_packages::replacement_rule_index& rule;
 
       };
 
@@ -201,9 +199,9 @@ class token_list
 		//! build a token list from an input string
     token_list(const std::string& input, const std::string& prefix,
                unsigned int nf, unsigned int np,
-               const std::vector<macro_packages::replacement_rule_simple*>& pre,
-               const std::vector<macro_packages::replacement_rule_simple*>& post,
-               const std::vector<macro_packages::index_rule>& index,
+               std::vector<macro_packages::replacement_rule_simple*>& pre,
+               std::vector<macro_packages::replacement_rule_simple*>& post,
+               std::vector<macro_packages::replacement_rule_index*>& index,
                translator_data& d);
 
 		// suppress default copy constructor
@@ -267,11 +265,11 @@ class token_list
 
 		//! check whether the current candidate is a potential match for a macro
 		template <typename Rule>
-		bool check_for_match(const std::string& candidate, const std::vector<Rule>& rule_list, bool allow_substring=true);
+		bool check_for_match(const std::string& candidate, std::vector<Rule*>& rule_list, bool allow_substring=true);
 
 		//! find the replacement rule for the current candidate
 		template <typename Rule>
-		const Rule& find_match(const std::string& candidate, const std::vector<Rule>& rule_list);
+		Rule& find_match(const std::string& candidate, std::vector<Rule*>& rule_list);
 
 		//! add an index to our internal list
 		abstract_index_list::const_iterator add_index(char label);
@@ -311,11 +309,11 @@ class token_list
 
     // MACRO DATA
 
-    //! number of macros preventing loop unroll
-    unsigned int num_prevent_unroll;
+    //! list of macro names preventing loop unroll
+    std::list< std::string > prevent_unroll;
 
-    //! number of macros forcing loop unroll
-    unsigned int num_force_unroll;
+    //! list of macro names forcing loop unroll
+    std::list< std::string > force_unroll;
 
 
     // INDEX DATA (maintains information about indices encountered in this entire line)
