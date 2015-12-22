@@ -7,6 +7,9 @@
 #define CPPTRANSPORT_TRANSPORT_TENSOR_H
 
 
+#include "macro_types.h"
+
+
 //! define 'transport_tensor' concept, representing an arbitrary symbolic tensor
 //! (eg. U-tensor, Lagrangian tensor such as A, B, C)
 //! which knows how to compute itself symbolically in a way suitable for
@@ -30,6 +33,9 @@ class transport_tensor
     // INTERFACE
 
   public:
+
+    //! determine whether this tensor can be unrolled with the current resources
+    virtual enum unroll_behaviour get_unroll() = 0;
 
   };
 

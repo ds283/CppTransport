@@ -14,4 +14,10 @@ namespace canonical
         return(this->res.ddV_resource(this->printer));
       }
 
+
+    enum unroll_behaviour canonical_ddV::get_unroll()
+      {
+        if(this->res.roll_ddV()) return unroll_behaviour::allow;
+        return unroll_behaviour::force;   // can't roll
+      }
   }   // namespace canonical

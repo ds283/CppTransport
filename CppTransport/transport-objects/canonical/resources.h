@@ -72,11 +72,26 @@ namespace canonical
 
 
         // INTERFACE -- BUILD ARGUMENT LISTS
+        // used to interact with expression cache
 
       public:
 
         //! generate argument list
         std::unique_ptr<ginac_cache_args> generate_arguments(unsigned int flags, language_printer& printer) const;
+
+
+        // INTERFACE -- QUERY ROLL/UNROLL AVAILABILITY
+
+      public:
+
+        //! query whether dV can be rolled-up into loops
+        bool roll_dV() const;
+
+        //! query whether ddV can be rolled-up into loops
+        bool roll_ddV() const;
+
+        //! query whether dddV can be rolled-up into loops
+        bool roll_dddV() const;
 
 
         // INTERNAL API

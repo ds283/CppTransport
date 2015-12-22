@@ -67,4 +67,10 @@ namespace canonical
         cached = true;
       }
 
+
+    enum unroll_behaviour canonical_zeta1::get_unroll()
+      {
+        if(this->shared.roll_coordinates()) return unroll_behaviour::allow;
+        return unroll_behaviour::force;   // can't roll-up
+      }
   }   // namespace canonical

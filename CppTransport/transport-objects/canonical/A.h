@@ -51,7 +51,7 @@ namespace canonical
         virtual ~canonical_A() = default;
 
 
-        // INTERFACE -- IMPLEMENTS A 'B' TENSOR CONCEPT
+        // INTERFACE -- IMPLEMENTS AN 'A' TENSOR CONCEPT
 
       public:
 
@@ -64,6 +64,14 @@ namespace canonical
 
         //! invalidate cache
         virtual void reset_cache() override { this->cached = false; }
+
+
+        // INTERFACE -- IMPLEMENTS A 'transport_tensor' CONCEPT
+
+      public:
+
+        //! determine whether this tensor can be unrolled with the current resources
+        virtual enum unroll_behaviour get_unroll() override;
 
 
         // INTERNAL API

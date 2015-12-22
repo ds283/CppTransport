@@ -108,3 +108,20 @@ std::unique_ptr<symbol_list> shared_resources::generate_derivs(language_printer&
 
     return(list);
   }
+
+
+bool shared_resources::roll_parameters() const
+  {
+    const boost::optional< contexted_value<std::string> >& resource = this->mgr.parameters();
+
+    return(static_cast<bool>(resource));
+  }
+
+
+bool shared_resources::roll_coordinates() const
+  {
+    const boost::optional< contexted_value<std::string> >& resource = this->mgr.coordinates();
+    const boost::optional< contexted_value<std::string> >& flatten = this->mgr.phase_flatten();
+
+    return(resource && flatten);
+  }

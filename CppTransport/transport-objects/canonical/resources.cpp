@@ -395,5 +395,31 @@ namespace canonical
         return(args);
       }
 
+
+    bool resources::roll_dV() const
+      {
+        const boost::optional< contexted_value<std::string> >& resource = this->mgr.dV();
+        const boost::optional< contexted_value<std::string> >& flatten = this->mgr.field_flatten();
+
+        return(resource && flatten);
+      }
+
+
+    bool resources::roll_ddV() const
+      {
+        const boost::optional< contexted_value<std::string> >& resource = this->mgr.ddV();
+        const boost::optional< contexted_value<std::string> >& flatten = this->mgr.field_flatten();
+
+        return(resource && flatten);
+      }
+
+
+    bool resources::roll_dddV() const
+      {
+        const boost::optional< contexted_value<std::string> >& resource = this->mgr.dddV();
+        const boost::optional< contexted_value<std::string> >& flatten = this->mgr.field_flatten();
+
+        return(resource && flatten);
+      }
   }   // namespace canonical
 

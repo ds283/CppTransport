@@ -53,6 +53,14 @@ namespace canonical
         virtual std::unique_ptr<flattened_tensor> compute() override;
 
 
+        // INTERFACE -- IMPLEMENTS A 'transport_tensor' CONCEPT
+
+      public:
+
+        //! determine whether this tensor can be unrolled with the current resources
+        virtual enum unroll_behaviour get_unroll() override;
+
+
         // INTERNAL DATA
 
       private:

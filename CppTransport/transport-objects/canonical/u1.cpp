@@ -70,4 +70,10 @@ namespace canonical
         cached = true;
       }
 
+
+    enum unroll_behaviour canonical_u1::get_unroll()
+      {
+        if(this->shared.roll_coordinates() && this->res.roll_dV()) return unroll_behaviour::allow;
+        return unroll_behaviour::force;   // can't roll-up
+      }
   }   // namespace canonical

@@ -13,7 +13,7 @@
 #include "indices.h"
 
 
-class ddV
+class ddV: public transport_tensor
   {
 
     // CONSTRUCTOR, DESTRUCTOR

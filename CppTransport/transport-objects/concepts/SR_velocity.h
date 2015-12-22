@@ -13,7 +13,7 @@
 #include "indices.h"
 
 
-class SR_velocity
+class SR_velocity: public transport_tensor
   {
 
     // CONSTRUCTOR, DESTRUCTOR

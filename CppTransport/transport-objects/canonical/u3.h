@@ -73,6 +73,14 @@ namespace canonical
         virtual void reset_cache() override { return; }
 
 
+        // INTERFACE -- IMPLEMENTS A 'transport_tensor' CONCEPT
+
+      public:
+
+        //! determine whether this tensor can be unrolled with the current resources
+        virtual enum unroll_behaviour get_unroll() override;
+
+
         // INTERNAL DATA
 
       private:

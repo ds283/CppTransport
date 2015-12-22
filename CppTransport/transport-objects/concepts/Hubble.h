@@ -11,6 +11,7 @@
 #include "flattened_tensor.h"
 
 
+// not Hubble does not inherit from transport_tensor
 class Hubble
   {
 

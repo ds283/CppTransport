@@ -66,6 +66,17 @@ class shared_resources
     std::unique_ptr<symbol_list> generate_derivs(language_printer& printer) const;
 
 
+    // INTERFACE -- QUERY ROLL/UNROLL AVAILABILITY
+
+  public:
+
+    //! query whether parameters can be rolled-up into loops
+    bool roll_parameters() const;
+
+    //! query whether coordinate labels can be rolled-up into loops
+    bool roll_coordinates() const;
+
+
     // INTERNAL DATA
 
   private:
