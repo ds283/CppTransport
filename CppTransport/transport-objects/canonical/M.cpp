@@ -48,7 +48,10 @@ namespace canonical
             GiNaC::symbol& deriv_i = (*derivs)[this->fl.flatten(i)];
             GiNaC::symbol& deriv_j = (*derivs)[this->fl.flatten(j)];
 
-            result = this->expr(i, j, Vij, Vi, Vj, deriv_i, deriv_j);
+            GiNaC::idx idx_i = this->shared.generate_index(i);
+            GiNaC::idx idx_j = this->shared.generate_index(j);
+
+            result = this->expr(idx_i, idx_j, Vij, Vi, Vj, deriv_i, deriv_j);
 
             this->cache.store(expression_item_types::M_item, index, *args, result);
           }
@@ -57,14 +60,16 @@ namespace canonical
       }
 
 
-    GiNaC::ex canonical_M::expr(field_index& i, field_index& j, GiNaC::ex& Vij, GiNaC::ex& Vi, GiNaC::ex& Vj,
+    GiNaC::ex canonical_M::expr(GiNaC::idx& i, GiNaC::idx& j, GiNaC::ex& Vij, GiNaC::ex& Vi, GiNaC::ex& Vj,
                                 GiNaC::symbol& deriv_i, GiNaC::symbol& deriv_j)
       {
         GiNaC::ex u = -Vij/Hsq;
         u += -(3-eps) * deriv_i * deriv_j / (Mp*Mp);
         u += -1/(Mp*Mp*Hsq) * ( deriv_i*Vj + deriv_j*Vi );
 
-        return (i == j ? eps : 0) + u/3;
+        GiNaC::ex delta_ij = GiNaC::delta_tensor(i, j);
+
+        return delta_ij*eps + u/3;
       }
 
 

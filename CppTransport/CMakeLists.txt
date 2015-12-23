@@ -46,6 +46,7 @@ ADD_EXECUTABLE(CppTransport
   backends/infrastructure/file_handling/lexstream_data.cpp
   backends/infrastructure/language_concepts/cse.cpp
   backends/infrastructure/language_concepts/cse_map.cpp
+  backends/infrastructure/language_concepts/lambdas.cpp
   backends/infrastructure/macro_substitution/index_assignment.cpp
   backends/infrastructure/macro_substitution/macro.cpp
   backends/infrastructure/macro_substitution/macro_tokenizer.cpp
@@ -113,6 +114,7 @@ ADD_EXECUTABLE(CppTransport
   utilities/error_context.cpp
   utilities/finder.cpp
   utilities/formatter.cpp
+  utilities/ginac_print_indexed.cpp
   utilities/to_printable.cpp
   utilities/local_environment.cpp
   utilities/argument_cache.cpp
@@ -790,7 +792,7 @@ set(UTILITIES_FILES
   utilities/local_environment.h
   utilities/to_printable.cpp
   utilities/to_printable.h
-  )
+  utilities/ginac_print_indexed.cpp utilities/ginac_print_indexed.h)
 
 set(SOURCE_FILES
   ${BACKENDS_INFRASTRUCTURE_FILE_HANDLING_FILES}

@@ -7,6 +7,8 @@
 #define CPPTRANSPORT_TRANSPORT_TENSOR_H
 
 
+#include <stdexcept>
+
 #include "macro_types.h"
 
 
@@ -36,6 +38,25 @@ class transport_tensor
 
     //! determine whether this tensor can be unrolled with the current resources
     virtual enum unroll_behaviour get_unroll() = 0;
+
+  };
+
+
+class tensor_exception: std::runtime_error
+  {
+
+    // CONSTRUCTOR, DESTRUCTOR
+
+  public:
+
+    //! constructor
+    tensor_exception(std::string x)
+      : std::runtime_error(std::move(x))
+      {
+      }
+
+    //! destructor is default
+    ~tensor_exception() = default;
 
   };
 

@@ -62,6 +62,10 @@ namespace canonical
         virtual GiNaC::ex compute_component(field_index i, field_index j, field_index k,
                                             GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a) override;
 
+        //! evaluate lambda for tensor
+        virtual std::unique_ptr<atomic_lambda> compute_lambda(const abstract_index_list& indices,
+                                                              GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a) override;
+
         //! invalidate cache
         virtual void reset_cache() override { this->cached = false; }
 
@@ -82,7 +86,7 @@ namespace canonical
         void populate_cache();
 
         //! underlying symbolic expression
-        GiNaC::ex expr(field_index& i, field_index& j, field_index& k,
+        GiNaC::ex expr(GiNaC::idx& i, GiNaC::idx& j, GiNaC::idx& k,
                        GiNaC::ex& Vijk, GiNaC::ex& Vij, GiNaC::ex& Vjk, GiNaC::ex& Vik,
                        GiNaC::ex& Vi, GiNaC::ex& Vj, GiNaC::ex& Vk,
                        GiNaC::symbol& deriv_i, GiNaC::symbol& deriv_j, GiNaC::symbol& deriv_k,

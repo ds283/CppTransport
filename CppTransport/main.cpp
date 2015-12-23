@@ -13,6 +13,8 @@
 #include "argument_cache.h"
 #include "translation_unit.h"
 
+#include "ginac_print_indexed.h"
+
 #include "boost/timer/timer.hpp"
 
 
@@ -23,6 +25,11 @@ int main(int argc, const char *argv[])
   {
     boost::timer::auto_cpu_timer timer;
 
+    // we use Kroncecker deltas in some symbolic expressions, and GiNaC's C-source output
+    // has to be adjusted to print these correctly
+    set_up_ginac_printing();
+
+    // construct local environment and argument cache
     local_environment env;
     argument_cache args(argc, argv);
 

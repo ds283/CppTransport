@@ -59,22 +59,22 @@ class shared_resources
     GiNaC::symbol generate_Mp() const { return this->M_Planck; }
 
     //! generate concrete parameter label resource
-    std::unique_ptr<symbol_list> generate_parameters(language_printer& printer) const;
+    std::unique_ptr<symbol_list> generate_parameters(const language_printer& printer) const;
 
     //! generate concrete field-space coordinate label resource
-    std::unique_ptr<symbol_list> generate_fields(language_printer& printer) const;
+    std::unique_ptr<symbol_list> generate_fields(const language_printer& printer) const;
 
     //! generate concrete field-space derivative label resource
-    std::unique_ptr<symbol_list> generate_derivs(language_printer& printer) const;
+    std::unique_ptr<symbol_list> generate_derivs(const language_printer& printer) const;
 
     //! generate abstract parameter label resource
-    GiNaC::symbol generate_parameters(abstract_index& idx, language_printer& printer) const;
+    GiNaC::symbol generate_parameters(const abstract_index& idx, const language_printer& printer) const;
 
     //! generate abstract field-space coordinate label resource
-    GiNaC::symbol generate_fields(abstract_index& idx, language_printer& printer) const;
+    GiNaC::symbol generate_fields(const abstract_index& idx, const language_printer& printer) const;
 
     //! generate abstract fields-space derivative label resource
-    GiNaC::symbol generate_derivs(abstract_index& idx, language_printer& printer) const;
+    GiNaC::symbol generate_derivs(const abstract_index& idx, const language_printer& printer) const;
 
 
     // INTERFACE -- QUERY ROLL/UNROLL AVAILABILITY
@@ -86,6 +86,20 @@ class shared_resources
 
     //! query whether coordinate labels can be rolled-up into loops
     bool roll_coordinates() const;
+
+
+    // INTERFACE -- MAKE INDICES
+
+  public:
+
+    //! make a field-space index
+    GiNaC::idx generate_index(const field_index& i);
+
+    //! make a phase-space index
+    GiNaC::idx generate_index(const phase_index& i);
+
+    //! make an abstract index
+    GiNaC::idx generate_index(const abstract_index& i);
 
 
     // INTERNAL DATA

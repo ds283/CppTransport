@@ -50,7 +50,7 @@ namespace canonical
 
     GiNaC::ex canonical_SR_velocity::expr(GiNaC::ex& Vi)
       {
-        return - Vi * (Mp*Mp) / V;
+        return -Vi * (Mp*Mp) / V;
       }
 
 

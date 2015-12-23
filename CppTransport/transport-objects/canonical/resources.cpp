@@ -29,7 +29,7 @@ namespace canonical
       }
 
 
-    std::unique_ptr<ginac_cache_args> resources::generate_arguments(language_printer& printer) const
+    std::unique_ptr<ginac_cache_args> resources::generate_arguments(const language_printer& printer) const
       {
         std::unique_ptr<ginac_cache_args> args = std::make_unique<ginac_cache_args>();
 
@@ -54,7 +54,7 @@ namespace canonical
       }
 
 
-    GiNaC::ex resources::V_resource(language_printer& printer)
+    GiNaC::ex resources::V_resource(const language_printer& printer)
       {
         std::unique_ptr<ginac_cache_args> args = this->generate_arguments(printer);
 
@@ -109,7 +109,7 @@ namespace canonical
       }
 
 
-    GiNaC::ex resources::eps_resource(language_printer& printer)
+    GiNaC::ex resources::eps_resource(const language_printer& printer)
       {
         std::unique_ptr<ginac_cache_args> args = this->generate_arguments(printer);
 
@@ -136,7 +136,7 @@ namespace canonical
       }
 
 
-    GiNaC::ex resources::Hsq_resource(language_printer& printer)
+    GiNaC::ex resources::Hsq_resource(const language_printer& printer)
       {
         std::unique_ptr<ginac_cache_args> args = this->generate_arguments(printer);
 
@@ -158,7 +158,7 @@ namespace canonical
       }
 
 
-    std::unique_ptr<flattened_tensor> resources::dV_resource(language_printer& printer)
+    std::unique_ptr<flattened_tensor> resources::dV_resource(const language_printer& printer)
       {
         std::unique_ptr<flattened_tensor> list = std::make_unique<flattened_tensor>(this->fl.get_flattened_size<field_index>(1));
 
@@ -217,7 +217,7 @@ namespace canonical
       }
 
 
-    std::unique_ptr<flattened_tensor> resources::ddV_resource(language_printer& printer)
+    std::unique_ptr<flattened_tensor> resources::ddV_resource(const language_printer& printer)
       {
         std::unique_ptr<flattened_tensor> list = std::make_unique<flattened_tensor>(this->fl.get_flattened_size<field_index>(2));
 
@@ -283,7 +283,7 @@ namespace canonical
       }
 
 
-    std::unique_ptr<flattened_tensor> resources::dddV_resource(language_printer& printer)
+    std::unique_ptr<flattened_tensor> resources::dddV_resource(const language_printer& printer)
       {
         std::unique_ptr<flattened_tensor> list = std::make_unique<flattened_tensor>(this->fl.get_flattened_size<field_index>(3));
 
@@ -356,7 +356,7 @@ namespace canonical
       }
 
 
-    std::unique_ptr<ginac_cache_args> resources::generate_arguments(unsigned int flags, language_printer& printer) const
+    std::unique_ptr<ginac_cache_args> resources::generate_arguments(unsigned int flags, const language_printer& printer) const
       {
         // first, generate arguments from param/coordinates if they exist
         std::unique_ptr<ginac_cache_args> args = this->generate_arguments(printer);
@@ -423,7 +423,7 @@ namespace canonical
       }
 
 
-    GiNaC::symbol resources::dV_resource(abstract_index& a, language_printer& printer)
+    GiNaC::symbol resources::dV_resource(const abstract_index& a, const language_printer& printer)
       {
         const boost::optional< contexted_value<std::string> >& resource = this->mgr.dV();
         const boost::optional< contexted_value<std::string> >& flatten = this->mgr.field_flatten();
@@ -435,7 +435,7 @@ namespace canonical
       }
 
 
-    GiNaC::symbol resources::ddV_resource(abstract_index& a, abstract_index& b, language_printer& printer)
+    GiNaC::symbol resources::ddV_resource(const abstract_index& a, const abstract_index& b, const language_printer& printer)
       {
         const boost::optional< contexted_value<std::string> >& resource = this->mgr.ddV();
         const boost::optional< contexted_value<std::string> >& flatten = this->mgr.field_flatten();
@@ -447,8 +447,8 @@ namespace canonical
       }
 
 
-    GiNaC::symbol resources::dddV_resource(abstract_index& a, abstract_index& b, abstract_index& c,
-                                           language_printer& printer)
+    GiNaC::symbol resources::dddV_resource(const abstract_index& a, const abstract_index& b, const abstract_index& c,
+                                           const language_printer& printer)
       {
         const boost::optional< contexted_value<std::string> >& resource = this->mgr.dddV();
         const boost::optional< contexted_value<std::string> >& flatten = this->mgr.field_flatten();

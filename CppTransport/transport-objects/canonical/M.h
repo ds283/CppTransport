@@ -81,7 +81,7 @@ namespace canonical
         void populate_cache();
 
         //! underlying symbolic expression
-        GiNaC::ex expr(field_index& i, field_index& j, GiNaC::ex& Vij, GiNaC::ex& Vi, GiNaC::ex& Vj,
+        GiNaC::ex expr(GiNaC::idx& i, GiNaC::idx& j, GiNaC::ex& Vij, GiNaC::ex& Vi, GiNaC::ex& Vj,
                        GiNaC::symbol& deriv_i, GiNaC::symbol& deriv_j);
 
 

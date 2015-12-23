@@ -53,31 +53,31 @@ namespace canonical
       public:
 
         //! generate V resource
-        GiNaC::ex V_resource(language_printer& printer);
+        GiNaC::ex V_resource(const language_printer& printer);
 
         //! generate epsilon resource
-        GiNaC::ex eps_resource(language_printer& printer);
+        GiNaC::ex eps_resource(const language_printer& printer);
 
         //! generate Hubble-squared resource
-        GiNaC::ex Hsq_resource(language_printer& printer);
+        GiNaC::ex Hsq_resource(const language_printer& printer);
 
         //! generate concrete dV resource labels
-        std::unique_ptr<flattened_tensor> dV_resource(language_printer& printer);
+        std::unique_ptr<flattened_tensor> dV_resource(const language_printer& printer);
 
         //! generate concrete ddV resource labels
-        std::unique_ptr<flattened_tensor> ddV_resource(language_printer& printer);
+        std::unique_ptr<flattened_tensor> ddV_resource(const language_printer& printer);
 
         //! generate concrete dddV resource labels
-        std::unique_ptr<flattened_tensor> dddV_resource(language_printer& printer);
+        std::unique_ptr<flattened_tensor> dddV_resource(const language_printer& printer);
 
         //! generate abstract dV resource label
-        GiNaC::symbol dV_resource(abstract_index& a, language_printer& printer);
+        GiNaC::symbol dV_resource(const abstract_index& a, const language_printer& printer);
 
         //! generate abstract ddV resource label
-        GiNaC::symbol ddV_resource(abstract_index& a, abstract_index& b, language_printer& printer);
+        GiNaC::symbol ddV_resource(const abstract_index& a, const abstract_index& b, const language_printer& printer);
 
         //! generate abstract dddV resource label
-        GiNaC::symbol dddV_resource(abstract_index& a, abstract_index& b, abstract_index& c, language_printer& printer);
+        GiNaC::symbol dddV_resource(const abstract_index& a, const abstract_index& b, const abstract_index& c, const language_printer& printer);
 
 
 
@@ -87,7 +87,7 @@ namespace canonical
       public:
 
         //! generate argument list
-        std::unique_ptr<ginac_cache_args> generate_arguments(unsigned int flags, language_printer& printer) const;
+        std::unique_ptr<ginac_cache_args> generate_arguments(unsigned int flags, const language_printer& printer) const;
 
 
         // INTERFACE -- QUERY ROLL/UNROLL AVAILABILITY
@@ -110,7 +110,7 @@ namespace canonical
 
         //! generate argument list for param/field combinations;
         //! used internally and as the first step in generating an external argument list
-        std::unique_ptr<ginac_cache_args> generate_arguments(language_printer& printer) const;
+        std::unique_ptr<ginac_cache_args> generate_arguments(const language_printer& printer) const;
 
 
         // INTERNAL DATA

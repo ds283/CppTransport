@@ -63,7 +63,11 @@ namespace canonical
             GiNaC::symbol& deriv_j = (*derivs)[this->fl.flatten(j)];
             GiNaC::symbol& deriv_k = (*derivs)[this->fl.flatten(k)];
 
-            result = this->expr(i, j, k, Vijk, Vij, Vjk, Vik, Vi, Vj, Vk,
+            GiNaC::idx idx_i = this->shared.generate_index(i);
+            GiNaC::idx idx_j = this->shared.generate_index(j);
+            GiNaC::idx idx_k = this->shared.generate_index(k);
+
+            result = this->expr(idx_i, idx_j, idx_k, Vijk, Vij, Vjk, Vik, Vi, Vj, Vk,
                                 deriv_i, deriv_j, deriv_k, k1, k2, k3, a);
 
             this->cache.store(expression_item_types::A_item, index, *args, result);
@@ -73,7 +77,7 @@ namespace canonical
       }
 
 
-    GiNaC::ex canonical_A::expr(field_index& i, field_index& j, field_index& k,
+    GiNaC::ex canonical_A::expr(GiNaC::idx& i, GiNaC::idx& j, GiNaC::idx& k,
                                 GiNaC::ex& Vijk, GiNaC::ex& Vij, GiNaC::ex& Vjk, GiNaC::ex& Vik,
                                 GiNaC::ex& Vi, GiNaC::ex& Vj, GiNaC::ex& Vk,
                                 GiNaC::symbol& deriv_i, GiNaC::symbol& deriv_j, GiNaC::symbol& deriv_k,
@@ -103,9 +107,13 @@ namespace canonical
 
         result +=( deriv_i * deriv_j * deriv_k ) / (8 * Mp*Mp*Mp*Mp) * (6 - 2*eps);
 
-        if(j == k) result += ( deriv_i / (2*Mp*Mp) ) * k2dotk3 / (3*a*a*Hsq);
-        if(i == k) result += ( deriv_j / (2*Mp*Mp) ) * k1dotk3 / (3*a*a*Hsq);
-        if(i == j) result += ( deriv_k / (2*Mp*Mp) ) * k1dotk2 / (3*a*a*Hsq);
+        GiNaC::ex delta_ij = GiNaC::delta_tensor(i, j);
+        GiNaC::ex delta_jk = GiNaC::delta_tensor(j, k);
+        GiNaC::ex delta_ik = GiNaC::delta_tensor(i, k);
+
+        result += delta_jk * ( deriv_i / (2*Mp*Mp) ) * k2dotk3 / (3*a*a*Hsq);
+        result += delta_ik * ( deriv_j / (2*Mp*Mp) ) * k1dotk3 / (3*a*a*Hsq);
+        result += delta_ij * ( deriv_k / (2*Mp*Mp) ) * k1dotk2 / (3*a*a*Hsq);
 
         return(result);
       }
@@ -128,6 +136,33 @@ namespace canonical
       {
         if(this->shared.roll_coordinates() && this->res.roll_dV() && this->res.roll_ddV() && this->res.roll_dddV()) return unroll_behaviour::allow;
         return unroll_behaviour::force;   // can't roll-up
+      }
+
+
+    std::unique_ptr<atomic_lambda> canonical_A::compute_lambda(const abstract_index_list& indices, GiNaC::symbol& k1,
+                                                               GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a)
+      {
+        if(indices.size() != 3) throw tensor_exception("A");
+
+        const abstract_index& i = indices[0];
+        const abstract_index& j = indices[1];
+        const abstract_index& k = indices[2];
+
+        GiNaC::symbol deriv_i = this->shared.generate_derivs(i, this->printer);
+        GiNaC::symbol deriv_j = this->shared.generate_derivs(j, this->printer);
+        GiNaC::symbol deriv_k = this->shared.generate_derivs(k, this->printer);
+
+        GiNaC::symbol Vijk = this->res.dddV_resource(i, j, k, this->printer);
+        GiNaC::symbol Vij  = this->res.ddV_resource(i, j, this->printer);
+        GiNaC::symbol Vjk  = this->res.ddV_resource(j, k, this->printer);
+        GiNaC::symbol Vik  = this->res.ddV_resource(i, k, this->printer);
+        GiNaC::symbol Vi   = this->res.dV_resource(i, this->printer);
+        GiNaC::symbol Vj   = this->res.dV_resource(j, this->printer);
+        GiNaC::symbol Vk   = this->res.dV_resource(k, this->printer);
+
+        GiNaC::idx idx_i = this->shared.generate_index(i);
+        GiNaC::idx idx_j = this->shared.generate_index(j);
+        GiNaC::idx idx_k = this->shared.generate_index(k);
       }
 
   }   // namespace canonical

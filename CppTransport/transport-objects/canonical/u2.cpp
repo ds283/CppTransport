@@ -46,13 +46,16 @@ namespace canonical
             field_index species_i = this->traits.to_species(i);
             field_index species_j = this->traits.to_species(j);
 
+            GiNaC::idx idx_i = this->shared.generate_index(species_i);
+            GiNaC::idx idx_j = this->shared.generate_index(species_j);
+
             if(this->traits.is_species(i) && this->traits.is_species(j))
               {
                 result = 0;
               }
             else if(this->traits.is_species(i) && this->traits.is_momentum(j))
               {
-                result = (species_i == species_j ? 1 : 0);
+                result = GiNaC::delta_tensor(idx_i, idx_j);
               }
             else if(this->traits.is_momentum(i) && this->traits.is_species(j))
               {
@@ -63,11 +66,11 @@ namespace canonical
                 GiNaC::symbol& deriv_i = (*derivs)[this->fl.flatten(species_i)];
                 GiNaC::symbol& deriv_j = (*derivs)[this->fl.flatten(species_j)];
 
-                result = this->expr_field_momentum(species_i, species_j, Vij, Vi, Vj, deriv_i, deriv_j, k, a);
+                result = this->expr_field_momentum(idx_i, idx_j, Vij, Vi, Vj, deriv_i, deriv_j, k, a);
               }
             else if(this->traits.is_momentum(i) && this->traits.is_momentum(j))
               {
-                result = (species_i == species_j ? (eps-3) : 0);
+                result = GiNaC::delta_tensor(idx_i, idx_j) * (eps-3);
               }
             else
               {
@@ -82,12 +85,13 @@ namespace canonical
       }
 
 
-    GiNaC::ex canonical_u2::expr_field_momentum(field_index& i, field_index& j,
+    GiNaC::ex canonical_u2::expr_field_momentum(GiNaC::idx& i, GiNaC::idx& j,
                                                 GiNaC::ex& Vij, GiNaC::ex& Vi, GiNaC::ex& Vj,
                                                 GiNaC::symbol& deriv_i, GiNaC::symbol& deriv_j,
                                                 GiNaC::symbol& k, GiNaC::symbol& a)
       {
-        GiNaC::ex result = (i == j ? -(k*k) / (a*a * Hsq) : 0);
+        GiNaC::ex delta_ij = GiNaC::delta_tensor(i, j);
+        GiNaC::ex result = delta_ij * ( -k*k / (a*a * Hsq) );
 
         result += -Vij/Hsq;
         result += -(3-eps) * deriv_i * deriv_j / (Mp*Mp);

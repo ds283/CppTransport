@@ -53,7 +53,11 @@ namespace canonical
             GiNaC::symbol& deriv_j = (*derivs)[this->fl.flatten(j)];
             GiNaC::symbol& deriv_k = (*derivs)[this->fl.flatten(k)];
 
-            result = this->expr(i, j, k, deriv_i, deriv_j, deriv_k, k1, k2, k3, a);
+            GiNaC::idx idx_i = this->shared.generate_index(i);
+            GiNaC::idx idx_j = this->shared.generate_index(j);
+            GiNaC::idx idx_k = this->shared.generate_index(k);
+
+            result = this->expr(idx_i, idx_j, idx_k, deriv_i, deriv_j, deriv_k, k1, k2, k3, a);
 
             this->cache.store(expression_item_types::C_item, index, *args, result);
           }
@@ -62,7 +66,7 @@ namespace canonical
       }
 
 
-    GiNaC::ex canonical_C::expr(field_index& i, field_index& j, field_index& k,
+    GiNaC::ex canonical_C::expr(GiNaC::idx& i, GiNaC::idx& j, GiNaC::idx& k,
                                 GiNaC::symbol& deriv_i, GiNaC::symbol& deriv_j, GiNaC::symbol& deriv_k,
                                 GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a)
       {
@@ -70,13 +74,17 @@ namespace canonical
         GiNaC::ex k1dotk3 = (k2*k2 - k1*k1 - k3*k3) / 2;
         GiNaC::ex k2dotk3 = (k1*k1 - k2*k2 - k3*k3) / 2;
 
-        GiNaC::ex result = 0;
-        if(i == j) result += -deriv_k / (2*Mp*Mp);
+        GiNaC::ex delta_ij = GiNaC::delta_tensor(i, j);
+
+        GiNaC::ex result = - delta_ij * deriv_k / (2*Mp*Mp);
 
         result += ( deriv_i * deriv_j * deriv_k / (8 * Mp*Mp*Mp*Mp) ) * (1 - k1dotk2*k1dotk2 / (k1*k1 * k2*k2));
 
-        if(j == k) result += (deriv_i / (Mp*Mp)) * (k1dotk3 / (k1*k1)) / 2;
-        if(i == k) result += (deriv_j / (Mp*Mp)) * (k2dotk3 / (k2*k2)) / 2;
+        GiNaC::ex delta_jk = GiNaC::delta_tensor(j, k);
+        GiNaC::ex delta_ik = GiNaC::delta_tensor(i, k);
+
+        result += delta_jk * (deriv_i / (Mp*Mp)) * (k1dotk3 / (k1*k1)) / 2;
+        result += delta_ik * (deriv_j / (Mp*Mp)) * (k2dotk3 / (k2*k2)) / 2;
 
         return(result);
       }

@@ -26,7 +26,7 @@ shared_resources::shared_resources(translator_data& p, resource_manager& m, expr
   }
 
 
-std::unique_ptr<symbol_list> shared_resources::generate_parameters(language_printer& printer) const
+std::unique_ptr<symbol_list> shared_resources::generate_parameters(const language_printer& printer) const
   {
     std::unique_ptr<symbol_list> list = std::make_unique< std::vector<GiNaC::symbol> >();
 
@@ -53,7 +53,7 @@ std::unique_ptr<symbol_list> shared_resources::generate_parameters(language_prin
   }
 
 
-std::unique_ptr<symbol_list> shared_resources::generate_fields(language_printer& printer) const
+std::unique_ptr<symbol_list> shared_resources::generate_fields(const language_printer& printer) const
   {
     std::unique_ptr<symbol_list> list = std::make_unique< std::vector<GiNaC::symbol> >();
 
@@ -81,7 +81,7 @@ std::unique_ptr<symbol_list> shared_resources::generate_fields(language_printer&
   }
 
 
-std::unique_ptr<symbol_list> shared_resources::generate_derivs(language_printer& printer) const
+std::unique_ptr<symbol_list> shared_resources::generate_derivs(const language_printer& printer) const
   {
     std::unique_ptr<symbol_list> list = std::make_unique< std::vector<GiNaC::symbol> >();
 
@@ -127,7 +127,7 @@ bool shared_resources::roll_coordinates() const
   }
 
 
-GiNaC::symbol shared_resources::generate_parameters(abstract_index& idx, language_printer& printer) const
+GiNaC::symbol shared_resources::generate_parameters(const abstract_index& idx, const language_printer& printer) const
   {
     const boost::optional< contexted_value<std::string> >& resource = this->mgr.parameters();
 
@@ -138,7 +138,7 @@ GiNaC::symbol shared_resources::generate_parameters(abstract_index& idx, languag
   }
 
 
-GiNaC::symbol shared_resources::generate_fields(abstract_index& idx, language_printer& printer) const
+GiNaC::symbol shared_resources::generate_fields(const abstract_index& idx, const language_printer& printer) const
   {
     const boost::optional< contexted_value<std::string> >& resource = this->mgr.coordinates();
     const boost::optional< contexted_value<std::string> >& flatten = this->mgr.phase_flatten();
@@ -150,7 +150,7 @@ GiNaC::symbol shared_resources::generate_fields(abstract_index& idx, language_pr
   }
 
 
-GiNaC::symbol shared_resources::generate_derivs(abstract_index& idx, language_printer& printer) const
+GiNaC::symbol shared_resources::generate_derivs(const abstract_index& idx, const language_printer& printer) const
   {
     const boost::optional< contexted_value<std::string> >& resource = this->mgr.coordinates();
     const boost::optional< contexted_value<std::string> >& flatten = this->mgr.phase_flatten();
@@ -159,4 +159,47 @@ GiNaC::symbol shared_resources::generate_derivs(abstract_index& idx, language_pr
 
     std::string variable = printer.array_subscript(*resource, idx, *flatten, static_cast<unsigned int>(this->num_fields));
     return this->sym_factory.get_symbol(variable);
+  }
+
+
+GiNaC::idx shared_resources::generate_index(const field_index& i)
+  {
+    return GiNaC::idx(static_cast<unsigned int>(i), static_cast<unsigned int>(this->num_fields));
+  }
+
+
+GiNaC::idx shared_resources::generate_index(const phase_index& i)
+  {
+    return GiNaC::idx(static_cast<unsigned int>(i), 2*static_cast<unsigned int>(this->num_fields));
+  }
+
+
+GiNaC::idx shared_resources::generate_index(const abstract_index& i)
+  {
+    std::string name = i.get_loop_variable();
+    GiNaC::symbol sym = this->sym_factory.get_symbol(name);
+
+    unsigned int size = 0;
+    switch(i.get_class())
+      {
+        case index_class::parameter:
+          {
+            size = static_cast<unsigned int>(this->num_params);
+            break;
+          }
+
+        case index_class::field_only:
+          {
+            size = static_cast<unsigned int>(this->num_fields);
+            break;
+          }
+
+        case index_class::full:
+          {
+            size = static_cast<unsigned int>(this->num_phase);
+            break;
+          }
+      }
+
+    return GiNaC::idx(sym, size);
   }
