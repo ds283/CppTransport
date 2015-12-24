@@ -114,4 +114,35 @@ namespace canonical
         if(this->shared.roll_coordinates() && this->res.roll_dV()) return unroll_behaviour::allow;
         return unroll_behaviour::force;   // can't roll-up
       }
+
+
+    std::unique_ptr<atomic_lambda> canonical_B::compute_lambda(const abstract_index& i, const abstract_index& j, const abstract_index& k,
+                                                               GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a)
+      {
+        if(i.get_class() != index_class::field_only) throw tensor_exception("B");
+        if(j.get_class() != index_class::field_only) throw tensor_exception("B");
+        if(k.get_class() != index_class::field_only) throw tensor_exception("B");
+
+        GiNaC::symbol deriv_i = this->shared.generate_derivs(i, this->printer);
+        GiNaC::symbol deriv_j = this->shared.generate_derivs(j, this->printer);
+        GiNaC::symbol deriv_k = this->shared.generate_derivs(k, this->printer);
+
+        GiNaC::ex Vi   = this->res.dV_resource(i, this->printer);
+        GiNaC::ex Vj   = this->res.dV_resource(j, this->printer);
+        GiNaC::ex Vk   = this->res.dV_resource(k, this->printer);
+
+        GiNaC::idx idx_i = this->shared.generate_index(i);
+        GiNaC::idx idx_j = this->shared.generate_index(j);
+        GiNaC::idx idx_k = this->shared.generate_index(k);
+
+        // expr() expects Hsq, eps, Mp to be correctly set up in the cache
+        this->Hsq = this->res.Hsq_resource(this->printer);
+        this->eps = this->res.eps_resource(this->printer);
+        this->Mp = this->shared.generate_Mp();
+
+        GiNaC::ex result = this->expr(idx_i, idx_j, idx_k, Vi, Vj, Vk, deriv_i, deriv_j, deriv_k, k1, k2, k3, a);
+
+        return std::make_unique<atomic_lambda>(i, j, k, result);
+      }
+
   }   // namespace canonical

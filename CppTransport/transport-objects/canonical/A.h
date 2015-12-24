@@ -63,7 +63,7 @@ namespace canonical
                                             GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a) override;
 
         //! evaluate lambda for tensor
-        virtual std::unique_ptr<atomic_lambda> compute_lambda(const abstract_index_list& indices,
+        virtual std::unique_ptr<atomic_lambda> compute_lambda(const abstract_index& i, const abstract_index& j, const abstract_index& k,
                                                               GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a) override;
 
         //! invalidate cache

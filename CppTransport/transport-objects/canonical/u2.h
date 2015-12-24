@@ -61,6 +61,10 @@ namespace canonical
         //! evaluate component of tensor
         virtual GiNaC::ex compute_component(phase_index i, phase_index j, GiNaC::symbol& k, GiNaC::symbol& a) override;
 
+        //! evaluate lambda for tensor
+        virtual std::unique_ptr<map_lambda> compute_lambda(const abstract_index& i, const abstract_index& j,
+                                                           GiNaC::symbol& k, GiNaC::symbol& a) override;
+
         //! invalidate cache
         virtual void reset_cache() override { this->cached = false; }
 

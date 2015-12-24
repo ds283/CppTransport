@@ -85,4 +85,31 @@ namespace canonical
         if(this->shared.roll_coordinates() && this->res.roll_dV()) return unroll_behaviour::allow;
         return unroll_behaviour::force;   // can't roll-up
       }
+
+
+    std::unique_ptr<map_lambda> canonical_u1::compute_lambda(const abstract_index& i)
+      {
+        if(i.get_class() != index_class::full) throw tensor_exception("U1");
+
+        // convert this index to species-only indices
+        const abstract_index i_field_a = this->traits.species_to_species(i);
+        const abstract_index i_field_b = this->traits.momentum_to_species(i);
+
+        GiNaC::symbol deriv_a_i = this->shared.generate_derivs(i_field_a, this->printer);
+        GiNaC::symbol deriv_b_i = this->shared.generate_derivs(i_field_b, this->printer);
+
+        GiNaC::ex V_b_i = this->res.dV_resource(i_field_b, this->printer);
+
+        // expr() expects Hsq and eps to be correctly set up in the cache
+        Hsq = this->res.Hsq_resource(this->printer);
+        eps = this->res.eps_resource(this->printer);
+
+        std::vector<GiNaC::ex> map(lambda_flattened_map_size(1));
+
+        map[lambda_flatten(LAMBDA_FIELD)] = deriv_a_i;
+        map[lambda_flatten(LAMBDA_MOMENTUM)] = this->expr_momentum(V_b_i, deriv_b_i);
+
+        return std::make_unique<map_lambda>(i, map);
+      }
+
   }   // namespace canonical

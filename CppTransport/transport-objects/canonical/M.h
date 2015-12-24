@@ -61,6 +61,9 @@ namespace canonical
         //! evaluate component of tensor
         virtual GiNaC::ex compute_component(field_index i, field_index j) override;
 
+        //! evaluate lambda for tensor
+        virtual std::unique_ptr<atomic_lambda> compute_lambda(const abstract_index& i, const abstract_index& j) override;
+
         //! invalidate cache
         virtual void reset_cache() override { this->cached = false; }
 

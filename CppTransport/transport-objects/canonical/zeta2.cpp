@@ -66,7 +66,7 @@ namespace canonical
               }
             else if(this->traits.is_momentum(i) && this->traits.is_species(j))
               {
-                result = this->expr_field_momentum(idx_j, idx_i, deriv_i, deriv_j, k, k2, k1, a);
+                result = this->expr_field_momentum(idx_j, idx_i, deriv_j, deriv_i, k, k2, k1, a);
               }
             else if(this->traits.is_momentum(i) && this->traits.is_momentum(j))
               {
@@ -141,4 +141,38 @@ namespace canonical
         if(this->shared.roll_coordinates() && this->res.roll_dV()) return unroll_behaviour::allow;
         return unroll_behaviour::force;   // can't roll-up
       }
+
+
+    std::unique_ptr<map_lambda> canonical_zeta2::compute_lambda(const abstract_index& i, const abstract_index& j,
+                                                                GiNaC::symbol& k, GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& a)
+      {
+        if(i.get_class() != index_class::full) throw tensor_exception("U3");
+        if(j.get_class() != index_class::full) throw tensor_exception("U3");
+
+        // convert these indices to species-only indices
+        const abstract_index i_field_a = this->traits.species_to_species(i);
+        const abstract_index i_field_b = this->traits.momentum_to_species(i);
+        const abstract_index j_field_a = this->traits.species_to_species(j);
+        const abstract_index j_field_b = this->traits.momentum_to_species(j);
+
+        GiNaC::symbol deriv_a_i = this->shared.generate_derivs(i_field_a, this->printer);
+        GiNaC::symbol deriv_b_i = this->shared.generate_derivs(i_field_b, this->printer);
+        GiNaC::symbol deriv_a_j = this->shared.generate_derivs(j_field_a, this->printer);
+        GiNaC::symbol deriv_b_j = this->shared.generate_derivs(j_field_b, this->printer);
+
+        GiNaC::idx idx_a_i = this->shared.generate_index(i_field_a);
+        GiNaC::idx idx_b_i = this->shared.generate_index(i_field_b);
+        GiNaC::idx idx_a_j = this->shared.generate_index(j_field_a);
+        GiNaC::idx idx_b_j = this->shared.generate_index(j_field_b);
+
+        map_lambda_table table(lambda_flattened_map_size(2));
+
+        table[lambda_flatten(LAMBDA_FIELD, LAMBDA_FIELD)] = this->expr_field_field(deriv_a_i, deriv_a_j, k, k1, k2, a);
+        table[lambda_flatten(LAMBDA_FIELD, LAMBDA_MOMENTUM)] = this->expr_field_momentum(idx_a_i, idx_b_j, deriv_a_i, deriv_b_j, k, k1, k2, a);
+        table[lambda_flatten(LAMBDA_MOMENTUM, LAMBDA_FIELD)] = this->expr_field_momentum(idx_a_j, idx_b_i, deriv_a_j, deriv_b_i, k, k1, k2, a);
+        table[lambda_flatten(LAMBDA_MOMENTUM, LAMBDA_MOMENTUM)] = 0;
+
+        return std::make_unique<map_lambda>(i, j, table);
+      }
+
   }   // namespace canonical

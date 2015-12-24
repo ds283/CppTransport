@@ -20,4 +20,15 @@ namespace canonical
         if(this->res.roll_dV()) return unroll_behaviour::allow;
         return unroll_behaviour::force;   // can't roll-up
       }
+
+
+    std::unique_ptr<atomic_lambda> canonical_dV::compute_lambda(const abstract_index& i)
+      {
+        if(i.get_class() != index_class::field_only) throw tensor_exception("dV");
+
+        GiNaC::ex result = this->res.dV_resource(i, this->printer);
+
+        return std::make_unique<atomic_lambda>(i, result);
+      }
+
   }   // namespace canonical

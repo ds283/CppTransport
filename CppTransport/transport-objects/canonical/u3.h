@@ -69,6 +69,10 @@ namespace canonical
         virtual GiNaC::ex compute_component(phase_index i, phase_index j, phase_index k,
                                             GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a) override;
 
+        //! evaluate lambda for tensor
+        virtual std::unique_ptr<map_lambda> compute_lambda(const abstract_index& i, const abstract_index& j, const abstract_index& k,
+                                                           GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a) override;
+
         //! invalidate cache; a no-op here
         virtual void reset_cache() override { return; }
 

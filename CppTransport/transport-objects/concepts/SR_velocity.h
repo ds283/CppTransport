@@ -11,6 +11,7 @@
 #include "flattened_tensor.h"
 
 #include "indices.h"
+#include "lambdas.h"
 
 
 class SR_velocity: public transport_tensor
@@ -36,6 +37,9 @@ class SR_velocity: public transport_tensor
 
     //! evaluate component of tensor
     virtual GiNaC::ex compute_component(field_index i) = 0;
+
+    //! evaluate lambda for tensor
+    virtual std::unique_ptr<atomic_lambda> compute_lambda(const abstract_index& i) = 0;
 
     //! invalidate cache
     virtual void reset_cache() = 0;

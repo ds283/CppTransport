@@ -8,6 +8,7 @@
 
 
 #include "indices.h"
+#include "abstract_index.h"
 
 
 class index_traits
@@ -27,30 +28,42 @@ class index_traits
     ~index_traits() = default;
 
 
-    // INTERFACE -- INDEX INTROSPECTION
+    // INTERFACE -- CONCRETE INDEX INTROSPECTION
 
   public:
 
-    //! determine if an index is a species label
-    bool is_species(phase_index);
+    //! determine if a concrete index is a species label
+    bool is_species(const phase_index& index);
 
-    //! determine if an index is a momentum label
-    bool is_momentum(phase_index);
+    //! determine if a concrete index is a momentum label
+    bool is_momentum(const phase_index& index);
 
 
-    // INTERFACE -- INDEX CONVERSION
+    // INTERFACE -- CONCRETE INDEX CONVERSION
 
   public:
 
-    //! convert an index to a momentum label
-    phase_index to_momentum(field_index);
+    //! convert a concrete index to a concrete momentum index
+    phase_index to_momentum(const field_index& index);
 
-    //! convert an index to a momentum label
-    phase_index to_momentum(phase_index);
+    //! convert a concrete index to a concrete momentum index
+    phase_index to_momentum(const phase_index& index);
 
-    //! convert an index to a species label
-    field_index to_species(phase_index);
+    //! convert a concrete index to a concrete species label
+    field_index to_species(const phase_index& index);
 
+
+    // INTERFACE -- ABSTRACT INDEX CONVERSION
+
+  public:
+
+    //! convert an abstract phase-space index to an abstract species index
+    //! conversion is direct
+    abstract_index species_to_species(const abstract_index& index);
+
+    //! convert an abstract phase-space index to an abstract species index
+    //! conversion is offset by -number_fields
+    abstract_index momentum_to_species(const abstract_index& index);
 
     // INTERNAL DATA
 

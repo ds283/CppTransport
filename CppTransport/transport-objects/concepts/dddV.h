@@ -11,6 +11,7 @@
 #include "flattened_tensor.h"
 
 #include "indices.h"
+#include "lambdas.h"
 
 
 class dddV: public transport_tensor
@@ -33,6 +34,9 @@ class dddV: public transport_tensor
 
     //! evaluate full tensor, returning a flattened list
     virtual std::unique_ptr<flattened_tensor> compute() = 0;
+
+    //! evaluate lambda for tensor
+    virtual std::unique_ptr<atomic_lambda> compute_lambda(const abstract_index& i, const abstract_index& j, const abstract_index& k) = 0;
 
   };
 

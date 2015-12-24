@@ -11,7 +11,9 @@ abstract_index::abstract_index(char l, unsigned int f, unsigned int p)
   : label(l),
     classification(identify_index(l)),
     fields(f),
-    params(p)
+    params(p),
+    pre_string("__"),
+    post_string("")
   {
   }
 
@@ -20,7 +22,9 @@ abstract_index::abstract_index(char l, enum index_class c, unsigned int f, unsig
   : label(l),
     classification(c),
     fields(f),
-    params(p)
+    params(p),
+    pre_string("__"),
+    post_string("")
   {
   }
 

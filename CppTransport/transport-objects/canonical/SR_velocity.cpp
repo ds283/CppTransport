@@ -69,4 +69,21 @@ namespace canonical
         if(this->res.roll_dV()) return unroll_behaviour::allow;
         return unroll_behaviour::force;   // can't roll-up
       }
+
+
+    std::unique_ptr<atomic_lambda> canonical_SR_velocity::compute_lambda(const abstract_index& i)
+      {
+        if(i.get_class() != index_class::field_only) throw tensor_exception("SR_velocity");
+
+        GiNaC::ex Vi = this->res.dV_resource(i, this->printer);
+
+        // expr() expects Hsq and Mp to be correctly set up in the cache
+        Hsq = this->res.Hsq_resource(this->printer);
+        this->Mp = this->shared.generate_Mp();
+
+        GiNaC::ex result = this->expr(Vi);
+
+        return std::make_unique<atomic_lambda>(i, result);
+      }
+
   }   // namespace canonical

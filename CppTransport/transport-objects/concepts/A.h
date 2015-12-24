@@ -40,9 +40,8 @@ class A: public transport_tensor
                                         GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a) = 0;
 
     //! evaluate lambda for tensor
-    virtual std::unique_ptr<atomic_lambda> compute_lambda(const abstract_index_list& indices,
-                                                          GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3,
-                                                          GiNaC::symbol& a) = 0;
+    virtual std::unique_ptr<atomic_lambda> compute_lambda(const abstract_index& i, const abstract_index& j, const abstract_index& k,
+                                                          GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a) = 0;
 
     //! invalidate cache
     virtual void reset_cache() = 0;

@@ -49,6 +49,10 @@ namespace canonical
 
             if(!cached) this->populate_cache();
 
+            GiNaC::symbol& deriv_i = (*derivs)[this->fl.flatten(i)];
+            GiNaC::symbol& deriv_j = (*derivs)[this->fl.flatten(j)];
+            GiNaC::symbol& deriv_k = (*derivs)[this->fl.flatten(k)];
+
             GiNaC::ex& Vijk = (*dddV)[this->fl.flatten(i,j,k)];
 
             GiNaC::ex& Vij  = (*ddV)[this->fl.flatten(i,j)];
@@ -58,10 +62,6 @@ namespace canonical
             GiNaC::ex& Vi   = (*dV)[this->fl.flatten(i)];
             GiNaC::ex& Vj   = (*dV)[this->fl.flatten(j)];
             GiNaC::ex& Vk   = (*dV)[this->fl.flatten(k)];
-
-            GiNaC::symbol& deriv_i = (*derivs)[this->fl.flatten(i)];
-            GiNaC::symbol& deriv_j = (*derivs)[this->fl.flatten(j)];
-            GiNaC::symbol& deriv_k = (*derivs)[this->fl.flatten(k)];
 
             GiNaC::idx idx_i = this->shared.generate_index(i);
             GiNaC::idx idx_j = this->shared.generate_index(j);
@@ -139,30 +139,40 @@ namespace canonical
       }
 
 
-    std::unique_ptr<atomic_lambda> canonical_A::compute_lambda(const abstract_index_list& indices, GiNaC::symbol& k1,
-                                                               GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a)
+    std::unique_ptr<atomic_lambda> canonical_A::compute_lambda(const abstract_index& i, const abstract_index& j, const abstract_index& k,
+                                                               GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a)
       {
-        if(indices.size() != 3) throw tensor_exception("A");
-
-        const abstract_index& i = indices[0];
-        const abstract_index& j = indices[1];
-        const abstract_index& k = indices[2];
+        if(i.get_class() != index_class::field_only) throw tensor_exception("A");
+        if(j.get_class() != index_class::field_only) throw tensor_exception("A");
+        if(k.get_class() != index_class::field_only) throw tensor_exception("A");
 
         GiNaC::symbol deriv_i = this->shared.generate_derivs(i, this->printer);
         GiNaC::symbol deriv_j = this->shared.generate_derivs(j, this->printer);
         GiNaC::symbol deriv_k = this->shared.generate_derivs(k, this->printer);
 
-        GiNaC::symbol Vijk = this->res.dddV_resource(i, j, k, this->printer);
-        GiNaC::symbol Vij  = this->res.ddV_resource(i, j, this->printer);
-        GiNaC::symbol Vjk  = this->res.ddV_resource(j, k, this->printer);
-        GiNaC::symbol Vik  = this->res.ddV_resource(i, k, this->printer);
-        GiNaC::symbol Vi   = this->res.dV_resource(i, this->printer);
-        GiNaC::symbol Vj   = this->res.dV_resource(j, this->printer);
-        GiNaC::symbol Vk   = this->res.dV_resource(k, this->printer);
+        GiNaC::ex Vijk = this->res.dddV_resource(i, j, k, this->printer);
+
+        GiNaC::ex Vij  = this->res.ddV_resource(i, j, this->printer);
+        GiNaC::ex Vjk  = this->res.ddV_resource(j, k, this->printer);
+        GiNaC::ex Vik  = this->res.ddV_resource(i, k, this->printer);
+
+        GiNaC::ex Vi   = this->res.dV_resource(i, this->printer);
+        GiNaC::ex Vj   = this->res.dV_resource(j, this->printer);
+        GiNaC::ex Vk   = this->res.dV_resource(k, this->printer);
 
         GiNaC::idx idx_i = this->shared.generate_index(i);
         GiNaC::idx idx_j = this->shared.generate_index(j);
         GiNaC::idx idx_k = this->shared.generate_index(k);
+
+        // expr() expects Hsq, eps, Mp to be correctly set up in the cache
+        this->Hsq = this->res.Hsq_resource(this->printer);
+        this->eps = this->res.eps_resource(this->printer);
+        this->Mp = this->shared.generate_Mp();
+
+        GiNaC::ex result = this->expr(idx_i, idx_j, idx_k, Vijk, Vij, Vjk, Vik, Vi, Vj, Vk,
+                                      deriv_i, deriv_j, deriv_k, k1, k2, k3, a);
+
+        return std::make_unique<atomic_lambda>(i, j, k, result);
       }
 
   }   // namespace canonical

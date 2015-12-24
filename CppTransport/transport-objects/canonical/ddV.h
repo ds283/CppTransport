@@ -52,6 +52,9 @@ namespace canonical
         //! evaluate full tensor, returning a flattened list
         virtual std::unique_ptr<flattened_tensor> compute() override;
 
+        //! evaluate lambda for tensor
+        virtual std::unique_ptr<atomic_lambda> compute_lambda(const abstract_index& i, const abstract_index& j) override;
+
 
         // INTERFACE -- IMPLEMENTS A 'transport_tensor' CONCEPT
 

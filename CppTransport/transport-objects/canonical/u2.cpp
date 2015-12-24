@@ -118,4 +118,48 @@ namespace canonical
         if(this->shared.roll_coordinates() && this->res.roll_dV() && this->res.roll_ddV()) return unroll_behaviour::allow;
         return unroll_behaviour::force;   // can't roll-up
       }
+
+
+    std::unique_ptr<map_lambda> canonical_u2::compute_lambda(const abstract_index& i, const abstract_index& j,
+                                                             GiNaC::symbol& k, GiNaC::symbol& a)
+      {
+        if(i.get_class() != index_class::full) throw tensor_exception("U2");
+        if(j.get_class() != index_class::full) throw tensor_exception("U2");
+
+        // convert these indices to species-only indices
+        const abstract_index i_field_a = this->traits.species_to_species(i);
+        const abstract_index i_field_b = this->traits.momentum_to_species(i);
+        const abstract_index j_field_a = this->traits.species_to_species(j);
+        const abstract_index j_field_b = this->traits.momentum_to_species(j);
+
+        GiNaC::symbol deriv_a_i = this->shared.generate_derivs(i_field_a, this->printer);
+        GiNaC::symbol deriv_b_i = this->shared.generate_derivs(i_field_b, this->printer);
+        GiNaC::symbol deriv_a_j = this->shared.generate_derivs(j_field_a, this->printer);
+        GiNaC::symbol deriv_b_j = this->shared.generate_derivs(j_field_b, this->printer);
+
+        GiNaC::ex V_ba_ij = this->res.ddV_resource(i_field_b, j_field_b, this->printer);
+
+        GiNaC::ex V_b_i = this->res.dV_resource(i_field_b, this->printer);
+        GiNaC::ex V_a_j = this->res.dV_resource(j_field_b, this->printer);
+
+        GiNaC::idx idx_a_i = this->shared.generate_index(i_field_a);
+        GiNaC::idx idx_b_i = this->shared.generate_index(i_field_b);
+        GiNaC::idx idx_a_j = this->shared.generate_index(j_field_a);
+        GiNaC::idx idx_b_j = this->shared.generate_index(j_field_b);
+
+        // expr() expects Hsq, eps and Mp to be correctly set up in the cache
+        Hsq = this->res.Hsq_resource(this->printer);
+        eps = this->res.eps_resource(this->printer);
+        Mp = this->shared.generate_Mp();
+
+        std::vector<GiNaC::ex> map(lambda_flattened_map_size(2));
+
+        map[lambda_flatten(LAMBDA_FIELD, LAMBDA_FIELD)] = deriv_a_i;
+        map[lambda_flatten(LAMBDA_FIELD, LAMBDA_MOMENTUM)] = GiNaC::delta_tensor(idx_a_i, idx_b_j);
+        map[lambda_flatten(LAMBDA_MOMENTUM, LAMBDA_FIELD)] = this->expr_field_momentum(idx_b_i, idx_a_j, V_ba_ij, V_b_i, V_a_j, deriv_b_i, deriv_a_j, k, a);
+        map[lambda_flatten(LAMBDA_MOMENTUM, LAMBDA_MOMENTUM)] = GiNaC::delta_tensor(idx_b_i, idx_b_j) * (eps-3);
+
+        return std::make_unique<map_lambda>(i, j, map);
+      }
+
   }   // namespace canonical
