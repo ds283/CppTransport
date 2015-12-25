@@ -105,8 +105,11 @@ namespace macro_packages
 
       public:
 
-        //! evaluate the macro
-        std::string operator()(const macro_argument_list& args, const assignment_list& indices);
+        //! evaluate the macro on a concrete (unrolled) index assignment
+        std::string evaluate_unroll(const macro_argument_list& args, const assignment_list& indices);
+
+        //! evaluate the macro on an abstract (rolled-up) index assignment
+        std::string evaluate_roll(const macro_argument_list& args, const abstract_index_list& indices);
 
         //! pre-evaluation
         void pre(const macro_argument_list& args);
@@ -139,14 +142,21 @@ namespace macro_packages
 
       protected:
 
-        //! evaluation function; has to be supplied by implementation
-        virtual std::string evaluate(const macro_argument_list& args, const assignment_list& indices) = 0;
+        //! evaluation function for unrolled index sets; has to be supplied by implementation
+        virtual std::string unroll(const macro_argument_list& args, const assignment_list& indices) = 0;
 
         //! pre-evaluation; if needed, can be supplied by implementation; default is no-op
         virtual void pre_hook(const macro_argument_list& args) { return; }
 
         //! post-evaluation; if needed, can be supplied by implementation; default is no-op
         virtual void post_hook(const macro_argument_list& args) { return; }
+
+        //! evaluation function for rolled-up index sets; has to be supplied by implementation
+        virtual std::string roll(const macro_argument_list& args, const abstract_index_list& indices) = 0;
+
+        //! validate supplies arguments and index assignments
+        template <typename IndexDatabase>
+        void check(const macro_argument_list& args, const IndexDatabase& indices);
 
 
         // INTERNAL DATA

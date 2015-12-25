@@ -25,7 +25,46 @@ namespace macro_packages
       }
 
 
-    std::string replacement_rule_index::operator()(const macro_argument_list& args, const assignment_list& indices)
+    std::string replacement_rule_index::evaluate_unroll(const macro_argument_list& args, const assignment_list& indices)
+      {
+        this->check(args, indices);
+
+        return this->unroll(args, indices);
+      }
+
+
+    void replacement_rule_index::pre(const macro_argument_list& args)
+      {
+        // check that correct number of arguments have been supplied
+        if(args.size() != this->num_args)
+          {
+            std::ostringstream msg;
+
+            msg << ERROR_WRONG_ARGUMENT_COUNT << " '" << this->name << "'; " << ERROR_EXPECTED_ARGUMENT_COUNT << " " << this->num_args << ", " << ERROR_RECEIVED_ARGUMENT_COUNT << " " << args.size();
+            throw rule_apply_fail(msg.str());
+          }
+
+        this->pre_hook(args);
+      }
+
+
+    void replacement_rule_index::post(const macro_argument_list& args)
+      {
+        this->post_hook(args);
+      }
+
+
+    std::string replacement_rule_index::evaluate_roll(const macro_argument_list& args,
+                                                      const abstract_index_list& indices)
+      {
+        this->check(args, indices);
+
+        return("");
+      }
+
+
+    template <typename IndexDatabase>
+    void replacement_rule_index::check(const macro_argument_list& args, const IndexDatabase& indices)
       {
         // check that correct number of arguments have been supplied
         if(args.size() != this->num_args)
@@ -46,7 +85,7 @@ namespace macro_packages
           }
 
         // check that index types are compatible
-        for(const assignment_record& rec : indices)
+        for(const typename IndexDatabase::underlying_type& rec : indices)
           {
             switch(this->idx_class)
               {
@@ -95,29 +134,6 @@ namespace macro_packages
                   }
               }
           }
-
-        return this->evaluate(args, indices);
-      }
-
-
-    void replacement_rule_index::pre(const macro_argument_list& args)
-      {
-        // check that correct number of arguments have been supplied
-        if(args.size() != this->num_args)
-          {
-            std::ostringstream msg;
-
-            msg << ERROR_WRONG_ARGUMENT_COUNT << " '" << this->name << "'; " << ERROR_EXPECTED_ARGUMENT_COUNT << " " << this->num_args << ", " << ERROR_RECEIVED_ARGUMENT_COUNT << " " << args.size();
-            throw rule_apply_fail(msg.str());
-          }
-
-        this->pre_hook(args);
-      }
-
-
-    void replacement_rule_index::post(const macro_argument_list& args)
-      {
-        this->post_hook(args);
       }
 
   }   // namespace macro_packages

@@ -173,8 +173,14 @@ namespace token_list_impl
 
       public:
 
-        //! evaluate and cache the result given a list of index assignments
-        void evaluate(const assignment_list& a);
+        //! evaluate (and cache the result) given a list of concrete index assignments;
+        //! used to replace this macro while unrolling an index set
+        void evaluate_unroll(const assignment_list& a);
+
+        //! evaluate (and cache the result) given a list of abstract index assignments;
+        //! used to replace this macro while handling an index set by
+        //! rolling up into a for-loop
+        void evaluate_roll();
 
 
         // INTERNAL DATA

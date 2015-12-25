@@ -174,6 +174,10 @@ template <typename RecordType>
 class index_database
   {
 
+  public:
+
+    typedef RecordType underlying_type;
+
   private:
 
     //! basic index database, organized as a map with lookup via key value;

@@ -75,21 +75,21 @@ namespace macro_packages
     // ******************************************************************
 
 
-    std::string replace_parameter::evaluate(const macro_argument_list& args, const assignment_list& indices)
+    std::string replace_parameter::unroll(const macro_argument_list& args, const assignment_list& indices)
       {
         std::unique_ptr<symbol_list> parameters = this->shared.generate_parameters(this->printer);
         return this->printer.ginac((*parameters)[indices[0].get_numeric_value()]);
       }
 
 
-    std::string replace_field::evaluate(const macro_argument_list& args, const assignment_list& indices)
+    std::string replace_field::unroll(const macro_argument_list& args, const assignment_list& indices)
       {
         std::unique_ptr<symbol_list> fields = this->shared.generate_fields(this->printer);
         return this->printer.ginac((*fields)[indices[0].get_numeric_value()]);
       }
 
 
-    std::string replace_coordinate::evaluate(const macro_argument_list& args, const assignment_list& indices)
+    std::string replace_coordinate::unroll(const macro_argument_list& args, const assignment_list& indices)
       {
         std::unique_ptr<symbol_list> fields = this->shared.generate_fields(this->printer);
         std::unique_ptr<symbol_list> derivs = this->shared.generate_derivs(this->printer);
@@ -113,7 +113,7 @@ namespace macro_packages
       }
 
 
-// ******************************************************************
+    // ******************************************************************
 
 
     void replace_SR_velocity::pre_hook(const macro_argument_list& args)
@@ -143,5 +143,62 @@ namespace macro_packages
         this->map = std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }
 
+
+    // ******************************************************************
+
+
+    std::string replace_parameter::roll(const macro_argument_list& args, const abstract_index_list& indices)
+      {
+        GiNaC::ex sym = this->shared.generate_parameters(indices[0], this->printer);
+        return this->printer.ginac(sym);
+      }
+
+
+    std::string replace_field::roll(const macro_argument_list& args, const abstract_index_list& indices)
+      {
+        GiNaC::ex sym = this->shared.generate_fields(indices[0], this->printer);
+        return this->printer.ginac(sym);
+      }
+
+
+    std::string replace_coordinate::roll(const macro_argument_list& args, const abstract_index_list& indices)
+      {
+        // safe to re-use generate_fields since the symbol is the same as for the field list
+        GiNaC::ex sym = this->shared.generate_fields(indices[0], this->printer);
+        return this->printer.ginac(sym);
+      }
+
+
+    std::string replace_SR_velocity::roll(const macro_argument_list& args, const abstract_index_list& indices)
+      {
+        std::unique_ptr<atomic_lambda> lambda = this->SR_velocity_tensor->compute_lambda(indices[0]);
+      }
+
+
+    std::string replace_dV::roll(const macro_argument_list& args, const abstract_index_list& indices)
+      {
+        std::unique_ptr<atomic_lambda> lambda = this->dV_tensor->compute_lambda(indices[0]);
+
+        // assume that the result will always be just a single symbol, so can be safely inlined
+        return this->printer.ginac(**lambda);
+      }
+
+
+    std::string replace_ddV::roll(const macro_argument_list& args, const abstract_index_list& indices)
+      {
+        std::unique_ptr<atomic_lambda> lambda = this->ddV_tensor->compute_lambda(indices[0], indices[1]);
+
+        // assume that the result will always be just a single symbol, so can be safely inlined
+        return this->printer.ginac(**lambda);
+      }
+
+
+    std::string replace_dddV::roll(const macro_argument_list& args, const abstract_index_list& indices)
+      {
+        std::unique_ptr<atomic_lambda> lambda = this->dddV_tensor->compute_lambda(indices[0], indices[1], indices[2]);
+
+        // assume that the result will always be just a single symbol, so can be safely inlined
+        return this->printer.ginac(**lambda);
+      }
 
   } // namespace macro_packages

@@ -113,6 +113,8 @@
 
 #define ERROR_SUBSTITUTION_FAILURE            "Internal error: substitution failure"
 
+#define ERROR_DN_DOES_NOT_ROLL                "Internal error: attempt to roll-up a delta-N macro"
+
 #define ERROR_NO_BUFFER_REGISTERED            "Internal error: TemporaryPool macro package in use, but no buffer registered"
 #define ERROR_NO_MACROS_REGISTERED            "Internal error: TemporaryPool macro package in use, but no macro set registered"
 

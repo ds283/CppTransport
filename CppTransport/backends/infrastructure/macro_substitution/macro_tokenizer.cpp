@@ -520,7 +520,7 @@ unsigned int token_list::evaluate_macros(const assignment_list& a)
 
     for(token_list_impl::index_macro_token*& t : this->index_macro_tokens)
       {
-        t->evaluate(a);
+        t->evaluate_unroll(a);
         replacements++;
       }
 
@@ -535,6 +535,12 @@ unsigned int token_list::evaluate_macros()
     for(token_list_impl::free_index_token*& t : this->free_index_tokens)
       {
         t->evaluate();
+        replacements++;
+      }
+
+    for(token_list_impl::index_macro_token*& t : this->index_macro_tokens)
+      {
+        t->evaluate_roll();
         replacements++;
       }
 
@@ -685,7 +691,7 @@ token_list_impl::index_macro_token::~index_macro_token()
 	}
 
 
-void token_list_impl::index_macro_token::evaluate(const assignment_list& a)
+void token_list_impl::index_macro_token::evaluate_unroll(const assignment_list& a)
 	{
     // strip out the index assignment -- just for the indices this macro requires;
     // preserves ordering
@@ -701,10 +707,23 @@ void token_list_impl::index_macro_token::evaluate(const assignment_list& a)
 
     try
       {
-        this->conversion = this->rule(this->args, index_values);
+        this->conversion = this->rule.evaluate_unroll(this->args, index_values);
       }
     catch(macro_packages::rule_apply_fail& xe)
       {
         this->error(xe.what());
       }
 	}
+
+
+void token_list_impl::index_macro_token::evaluate_roll()
+  {
+    try
+      {
+        this->conversion = this->rule.evaluate_roll(this->args, this->indices);
+      }
+    catch(macro_packages::rule_apply_fail& xe)
+      {
+        this->error(xe.what());
+      }
+  }

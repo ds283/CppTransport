@@ -8,7 +8,7 @@
 #include "indices.h"
 
 
-std::string macro_packages::cse_map_field1::evaluate(const macro_argument_list& args, const assignment_list& indices)
+std::string macro_packages::cse_map_field1::unroll(const macro_argument_list& args, const assignment_list& indices)
   {
     if(this->map == nullptr) throw rule_apply_fail(ERROR_NO_PRE_MAP);
 
@@ -18,7 +18,7 @@ std::string macro_packages::cse_map_field1::evaluate(const macro_argument_list& 
   }
 
 
-std::string macro_packages::cse_map_field2::evaluate(const macro_argument_list& args, const assignment_list& indices)
+std::string macro_packages::cse_map_field2::unroll(const macro_argument_list& args, const assignment_list& indices)
   {
     if(this->map == nullptr) throw rule_apply_fail(ERROR_NO_PRE_MAP);
 
@@ -29,7 +29,7 @@ std::string macro_packages::cse_map_field2::evaluate(const macro_argument_list& 
   }
 
 
-std::string macro_packages::cse_map_field3::evaluate(const macro_argument_list& args, const assignment_list& indices)
+std::string macro_packages::cse_map_field3::unroll(const macro_argument_list& args, const assignment_list& indices)
   {
     if(this->map == nullptr) throw rule_apply_fail(ERROR_NO_PRE_MAP);
 

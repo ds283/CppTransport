@@ -65,13 +65,52 @@ namespace macro_packages
       }
 
 
-// ******************************************************************
-
-
     void replace_M::pre_hook(const macro_argument_list& args)
       {
         std::unique_ptr<flattened_tensor> container = this->M_tensor->compute();
         this->map = std::make_unique<cse_map>(std::move(container), this->cse_worker);
+      }
+
+
+    // *******************************************************************
+
+
+    std::string replace_A::roll(const macro_argument_list& args, const abstract_index_list& indices)
+      {
+        GiNaC::symbol k1 = sym_factory.get_symbol(args[A_PREDEF_K1_ARGUMENT]);
+        GiNaC::symbol k2 = sym_factory.get_symbol(args[A_PREDEF_K2_ARGUMENT]);
+        GiNaC::symbol k3 = sym_factory.get_symbol(args[A_PREDEF_K3_ARGUMENT]);
+        GiNaC::symbol  a = sym_factory.get_symbol(args[A_PREDEF_A_ARGUMENT]);
+
+        std::unique_ptr<atomic_lambda> lambda = this->A_tensor->compute_lambda(indices[0], indices[1], indices[2], k1, k2, k3, a);
+      }
+
+
+    std::string replace_B::roll(const macro_argument_list& args, const abstract_index_list& indices)
+      {
+        GiNaC::symbol k1 = sym_factory.get_symbol(args[A_PREDEF_K1_ARGUMENT]);
+        GiNaC::symbol k2 = sym_factory.get_symbol(args[A_PREDEF_K2_ARGUMENT]);
+        GiNaC::symbol k3 = sym_factory.get_symbol(args[A_PREDEF_K3_ARGUMENT]);
+        GiNaC::symbol  a = sym_factory.get_symbol(args[A_PREDEF_A_ARGUMENT]);
+
+        std::unique_ptr<atomic_lambda> lambda = this->B_tensor->compute_lambda(indices[0], indices[1], indices[2], k1, k2, k3, a);
+      }
+
+
+    std::string replace_C::roll(const macro_argument_list& args, const abstract_index_list& indices)
+      {
+        GiNaC::symbol k1 = sym_factory.get_symbol(args[A_PREDEF_K1_ARGUMENT]);
+        GiNaC::symbol k2 = sym_factory.get_symbol(args[A_PREDEF_K2_ARGUMENT]);
+        GiNaC::symbol k3 = sym_factory.get_symbol(args[A_PREDEF_K3_ARGUMENT]);
+        GiNaC::symbol  a = sym_factory.get_symbol(args[A_PREDEF_A_ARGUMENT]);
+
+        std::unique_ptr<atomic_lambda> lambda = this->C_tensor->compute_lambda(indices[0], indices[1], indices[2], k1, k2, k3, a);
+      }
+
+
+    std::string replace_M::roll(const macro_argument_list& args, const abstract_index_list& indices)
+      {
+        std::unique_ptr<atomic_lambda> lambda = this->M_tensor->compute_lambda(indices[0], indices[1]);
       }
 
   } // namespace macro_packages
