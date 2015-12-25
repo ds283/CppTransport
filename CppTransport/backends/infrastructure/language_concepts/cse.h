@@ -105,7 +105,7 @@ class cse
     //! p  = printer appropriate for language
     //! pd = payload from translation_unit
     //! k  = kernel name for temporary identifiers
-    cse(unsigned int s, language_printer& p, translator_data& pd, std::string k=OUTPUT_DEFAULT_CPP_CSE_TEMPORARY_NAME)
+    cse(unsigned int s, language_printer& p, translator_data& pd, std::string k= OUTPUT_DEFAULT_CSE_TEMPORARY_NAME)
       : serial_number(s),
         printer(p),
         temporary_name_kernel(k),

@@ -44,7 +44,8 @@ constexpr auto OUTPUT_CPPTRANSPORT_TAG               = "CPPTRANSPORT";
 constexpr auto OUTPUT_TIME_FORMAT                    = "%X on %d %m %Y";
 constexpr auto OUTPUT_DEFAULT_POOL_TEMPLATE          = "auto $1 = $2;";
 
-constexpr auto OUTPUT_DEFAULT_CPP_CSE_TEMPORARY_NAME = "__t";
+constexpr auto OUTPUT_DEFAULT_CSE_TEMPORARY_NAME     = "__t";
+constexpr auto OUTPUT_DEFAULT_LAMBDA_TEMPORAY_NAME   = "__l";
 
 constexpr auto OUTPUT_TEMPORARY_POOL_START           = "BEGIN TEMPORARY POOL";
 constexpr auto OUTPUT_TEMPORARY_POOL_END             = "END TEMPORARY POOL";

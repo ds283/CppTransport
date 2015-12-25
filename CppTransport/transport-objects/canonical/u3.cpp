@@ -36,76 +36,65 @@ namespace canonical
     GiNaC::ex canonical_u3::compute_component(phase_index i, phase_index j, phase_index k,
                                               GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a)
       {
-        unsigned int index = this->fl.flatten(i, j, k);
-        std::unique_ptr<ginac_cache_args> args = this->res.generate_arguments(use_dV_argument | use_ddV_argument | use_dddV_argument, this->printer);
-        args->push_back(k1);
-        args->push_back(k2);
-        args->push_back(k3);
-        args->push_back(a);
-
         GiNaC::ex result;
 
-        if(!this->cache.query(expression_item_types::U3_item, index, *args, result))
+        // we don't actively cache u3 results; the A, B, C agents individually cache their own results, so
+        // we can just rely on these
+
+        // note that we flip the sign of momenta attached to the i, j, k components compared to the
+        // analytic definition
+        // this accounts for integrating out the delta-functions when contracting u3 with something else
+
+        // also, note factor of 2 from definition of 2nd order term in transport eq: dX/dN = u2.X + (1/2) u3.X.X + ...
+
+        field_index species_i = this->traits.to_species(i);
+        field_index species_j = this->traits.to_species(j);
+        field_index species_k = this->traits.to_species(k);
+
+        bool is_species_i = this->traits.is_species(i);
+        bool is_species_j = this->traits.is_species(j);
+        bool is_species_k = this->traits.is_species(k);
+
+        bool is_momentum_i = !is_species_i;
+        bool is_momentum_j = !is_species_j;
+        bool is_momentum_k = !is_species_k;
+
+        if(is_species_i && is_species_j && is_species_k)
           {
-            timing_instrument timer(this->compute_timer);
-
-            // note that we flip the sign of momenta attached to the i, j, k components compared to the
-            // analytic definition
-            // this accounts for integrating out the delta-functions when contracting u3 with something else
-
-            // also, note factor of 2 from definition of 2nd order term in transport eq: dX/dN = u2.X + (1/2) u3.X.X + ...
-
-            field_index species_i = this->traits.to_species(i);
-            field_index species_j = this->traits.to_species(j);
-            field_index species_k = this->traits.to_species(k);
-
-            bool is_species_i = this->traits.is_species(i);
-            bool is_species_j = this->traits.is_species(j);
-            bool is_species_k = this->traits.is_species(k);
-
-            bool is_momentum_i = !is_species_i;
-            bool is_momentum_j = !is_species_j;
-            bool is_momentum_k = !is_species_k;
-
-            if(is_species_i && is_species_j && is_species_k)
-              {
-                result = - B_agent.compute_component(species_j, species_k, species_i, k2, k3, k1, a);
-              }
-            else if(is_species_i && is_species_j && is_momentum_k)
-              {
-                result = - C_agent.compute_component(species_i, species_k, species_j, k1, k3, k2, a);
-              }
-            else if(is_species_i && is_momentum_j && is_species_k)
-              {
-                result = - C_agent.compute_component(species_i, species_j, species_k, k1, k2, k3, a);
-              }
-            else if(is_species_i && is_momentum_j && is_momentum_k)
-              {
-                result = 0;
-              }
-            else if(is_momentum_i && is_species_j && is_species_k)
-              {
-                result = 3 * A_agent.compute_component(species_i, species_j, species_k, k1, k2, k3, a);
-              }
-            else if(is_momentum_i && is_species_j && is_momentum_k)
-              {
-                result = B_agent.compute_component(species_i, species_j, species_k, k1, k2, k3, a);
-              }
-            else if(is_momentum_i && is_momentum_j && is_species_k)
-              {
-                result = B_agent.compute_component(species_i, species_k, species_j, k1, k3, k2, a);
-              }
-            else if(is_momentum_i && is_momentum_j && is_momentum_k)
-              {
-                result = C_agent.compute_component(species_j, species_k, species_i, k2, k3, k1, a);
-              }
-            else
-              {
-                // TODO: prefer to throw exception
-                assert(false);
-              }
-
-            this->cache.store(expression_item_types::U3_item, index, *args, result);
+            result = - B_agent.compute_component(species_j, species_k, species_i, k2, k3, k1, a);
+          }
+        else if(is_species_i && is_species_j && is_momentum_k)
+          {
+            result = - C_agent.compute_component(species_i, species_k, species_j, k1, k3, k2, a);
+          }
+        else if(is_species_i && is_momentum_j && is_species_k)
+          {
+            result = - C_agent.compute_component(species_i, species_j, species_k, k1, k2, k3, a);
+          }
+        else if(is_species_i && is_momentum_j && is_momentum_k)
+          {
+            result = 0;
+          }
+        else if(is_momentum_i && is_species_j && is_species_k)
+          {
+            result = 3 * A_agent.compute_component(species_i, species_j, species_k, k1, k2, k3, a);
+          }
+        else if(is_momentum_i && is_species_j && is_momentum_k)
+          {
+            result = B_agent.compute_component(species_i, species_j, species_k, k1, k2, k3, a);
+          }
+        else if(is_momentum_i && is_momentum_j && is_species_k)
+          {
+            result = B_agent.compute_component(species_i, species_k, species_j, k1, k3, k2, a);
+          }
+        else if(is_momentum_i && is_momentum_j && is_momentum_k)
+          {
+            result = C_agent.compute_component(species_j, species_k, species_i, k2, k3, k1, a);
+          }
+        else
+          {
+            // TODO: prefer to throw exception
+            assert(false);
           }
 
         return(result);

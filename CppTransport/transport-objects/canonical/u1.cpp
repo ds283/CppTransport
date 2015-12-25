@@ -91,6 +91,8 @@ namespace canonical
       {
         if(i.get_class() != index_class::full) throw tensor_exception("U1");
 
+        GiNaC::idx idx_i = this->shared.generate_index(i);
+
         // convert this index to species-only indices
         const abstract_index i_field_a = this->traits.species_to_species(i);
         const abstract_index i_field_b = this->traits.momentum_to_species(i);
@@ -98,16 +100,26 @@ namespace canonical
         GiNaC::symbol deriv_a_i = this->shared.generate_derivs(i_field_a, this->printer);
         GiNaC::symbol deriv_b_i = this->shared.generate_derivs(i_field_b, this->printer);
 
-        GiNaC::ex V_b_i = this->res.dV_resource(i_field_b, this->printer);
-
-        // expr() expects Hsq and eps to be correctly set up in the cache
-        Hsq = this->res.Hsq_resource(this->printer);
-        eps = this->res.eps_resource(this->printer);
-
         std::vector<GiNaC::ex> map(lambda_flattened_map_size(1));
 
         map[lambda_flatten(LAMBDA_FIELD)] = deriv_a_i;
-        map[lambda_flatten(LAMBDA_MOMENTUM)] = this->expr_momentum(V_b_i, deriv_b_i);
+
+        std::unique_ptr<ginac_cache_args> args = this->res.generate_arguments(use_dV_argument, this->printer);
+        args->push_back(GiNaC::ex_to<GiNaC::symbol>(idx_i.get_value()));
+
+        if(!this->cache.query(expression_item_types::U1_lambda, 0, *args, map[lambda_flatten(LAMBDA_MOMENTUM)]))
+          {
+            timing_instrument timer(this->compute_timer);
+
+            GiNaC::ex V_b_i = this->res.dV_resource(i_field_b, this->printer);
+
+            // expr() expects Hsq and eps to be correctly set up in the cache
+            Hsq = this->res.Hsq_resource(this->printer);
+            eps = this->res.eps_resource(this->printer);
+            map[lambda_flatten(LAMBDA_MOMENTUM)] = this->expr_momentum(V_b_i, deriv_b_i);
+
+            this->cache.store(expression_item_types::U1_lambda, 0, *args, map[lambda_flatten(LAMBDA_MOMENTUM)]);
+          }
 
         return std::make_unique<map_lambda>(i, map);
       }

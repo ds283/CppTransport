@@ -112,18 +112,36 @@ namespace canonical
         if(j.get_class() != index_class::field_only) throw tensor_exception("C");
         if(k.get_class() != index_class::field_only) throw tensor_exception("C");
 
-        GiNaC::symbol deriv_i = this->shared.generate_derivs(i, this->printer);
-        GiNaC::symbol deriv_j = this->shared.generate_derivs(j, this->printer);
-        GiNaC::symbol deriv_k = this->shared.generate_derivs(k, this->printer);
-
         GiNaC::idx idx_i = this->shared.generate_index(i);
         GiNaC::idx idx_j = this->shared.generate_index(j);
         GiNaC::idx idx_k = this->shared.generate_index(k);
 
-        // expr() expects Mp to be correctly set up in the cache
-        this->Mp = this->shared.generate_Mp();
+        std::unique_ptr<ginac_cache_args> args = this->res.generate_arguments(0, this->printer);
+        args->push_back(k1);
+        args->push_back(k2);
+        args->push_back(k3);
+        args->push_back(a);
+        args->push_back(GiNaC::ex_to<GiNaC::symbol>(idx_i.get_value()));
+        args->push_back(GiNaC::ex_to<GiNaC::symbol>(idx_j.get_value()));
+        args->push_back(GiNaC::ex_to<GiNaC::symbol>(idx_k.get_value()));
 
-        GiNaC::ex result = this->expr(idx_i, idx_j, idx_k, deriv_i, deriv_j, deriv_k, k1, k2, k3, a);
+        GiNaC::ex result;
+
+        if(!this->cache.query(expression_item_types::C_lambda, 0, *args, result))
+          {
+            timing_instrument timer(this->compute_timer);
+
+            GiNaC::symbol deriv_i = this->shared.generate_derivs(i, this->printer);
+            GiNaC::symbol deriv_j = this->shared.generate_derivs(j, this->printer);
+            GiNaC::symbol deriv_k = this->shared.generate_derivs(k, this->printer);
+
+            // expr() expects Mp to be correctly set up in the cache
+            this->Mp = this->shared.generate_Mp();
+
+            result = this->expr(idx_i, idx_j, idx_k, deriv_i, deriv_j, deriv_k, k1, k2, k3, a);
+
+            this->cache.store(expression_item_types::C_lambda, 0, *args, result);
+          }
 
         return std::make_unique<atomic_lambda>(i, j, k, result);
       }

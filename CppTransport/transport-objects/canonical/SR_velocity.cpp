@@ -75,13 +75,26 @@ namespace canonical
       {
         if(i.get_class() != index_class::field_only) throw tensor_exception("SR_velocity");
 
-        GiNaC::ex Vi = this->res.dV_resource(i, this->printer);
+        GiNaC::idx idx_i = this->shared.generate_index(i);
 
-        // expr() expects Hsq and Mp to be correctly set up in the cache
-        Hsq = this->res.Hsq_resource(this->printer);
-        this->Mp = this->shared.generate_Mp();
+        std::unique_ptr<ginac_cache_args> args = this->res.generate_arguments(use_dV_argument, this->printer);
+        args->push_back(GiNaC::ex_to<GiNaC::symbol>(idx_i.get_value()));
 
-        GiNaC::ex result = this->expr(Vi);
+        GiNaC::ex result;
+        if(!this->cache.query(expression_item_types::sr_U_lambda, 0, *args, result))
+          {
+            timing_instrument timer(this->compute_timer);
+
+            GiNaC::ex Vi = this->res.dV_resource(i, this->printer);
+
+            // expr() expects Hsq and Mp to be correctly set up in the cache
+            Hsq = this->res.Hsq_resource(this->printer);
+            this->Mp = this->shared.generate_Mp();
+
+            result = this->expr(Vi);
+
+            this->cache.store(expression_item_types::sr_U_lambda, 0, *args, result);
+          }
 
         return std::make_unique<atomic_lambda>(i, result);
       }

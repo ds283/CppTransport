@@ -146,31 +146,49 @@ namespace canonical
         if(j.get_class() != index_class::field_only) throw tensor_exception("A");
         if(k.get_class() != index_class::field_only) throw tensor_exception("A");
 
-        GiNaC::symbol deriv_i = this->shared.generate_derivs(i, this->printer);
-        GiNaC::symbol deriv_j = this->shared.generate_derivs(j, this->printer);
-        GiNaC::symbol deriv_k = this->shared.generate_derivs(k, this->printer);
-
-        GiNaC::ex Vijk = this->res.dddV_resource(i, j, k, this->printer);
-
-        GiNaC::ex Vij  = this->res.ddV_resource(i, j, this->printer);
-        GiNaC::ex Vjk  = this->res.ddV_resource(j, k, this->printer);
-        GiNaC::ex Vik  = this->res.ddV_resource(i, k, this->printer);
-
-        GiNaC::ex Vi   = this->res.dV_resource(i, this->printer);
-        GiNaC::ex Vj   = this->res.dV_resource(j, this->printer);
-        GiNaC::ex Vk   = this->res.dV_resource(k, this->printer);
-
         GiNaC::idx idx_i = this->shared.generate_index(i);
         GiNaC::idx idx_j = this->shared.generate_index(j);
         GiNaC::idx idx_k = this->shared.generate_index(k);
 
-        // expr() expects Hsq, eps, Mp to be correctly set up in the cache
-        this->Hsq = this->res.Hsq_resource(this->printer);
-        this->eps = this->res.eps_resource(this->printer);
-        this->Mp = this->shared.generate_Mp();
+        std::unique_ptr<ginac_cache_args> args = this->res.generate_arguments(use_dV_argument | use_ddV_argument | use_dddV_argument, this->printer);
+        args->push_back(k1);
+        args->push_back(k2);
+        args->push_back(k3);
+        args->push_back(a);
+        args->push_back(GiNaC::ex_to<GiNaC::symbol>(idx_i.get_value()));
+        args->push_back(GiNaC::ex_to<GiNaC::symbol>(idx_j.get_value()));
+        args->push_back(GiNaC::ex_to<GiNaC::symbol>(idx_k.get_value()));
 
-        GiNaC::ex result = this->expr(idx_i, idx_j, idx_k, Vijk, Vij, Vjk, Vik, Vi, Vj, Vk,
-                                      deriv_i, deriv_j, deriv_k, k1, k2, k3, a);
+        GiNaC::ex result;
+
+        if(!this->cache.query(expression_item_types::A_lambda, 0, *args, result))
+          {
+            timing_instrument timer(this->compute_timer);
+
+            GiNaC::symbol deriv_i = this->shared.generate_derivs(i, this->printer);
+            GiNaC::symbol deriv_j = this->shared.generate_derivs(j, this->printer);
+            GiNaC::symbol deriv_k = this->shared.generate_derivs(k, this->printer);
+
+            GiNaC::ex Vijk = this->res.dddV_resource(i, j, k, this->printer);
+
+            GiNaC::ex Vij  = this->res.ddV_resource(i, j, this->printer);
+            GiNaC::ex Vjk  = this->res.ddV_resource(j, k, this->printer);
+            GiNaC::ex Vik  = this->res.ddV_resource(i, k, this->printer);
+
+            GiNaC::ex Vi   = this->res.dV_resource(i, this->printer);
+            GiNaC::ex Vj   = this->res.dV_resource(j, this->printer);
+            GiNaC::ex Vk   = this->res.dV_resource(k, this->printer);
+
+            // expr() expects Hsq, eps, Mp to be correctly set up in the cache
+            this->Hsq = this->res.Hsq_resource(this->printer);
+            this->eps = this->res.eps_resource(this->printer);
+            this->Mp = this->shared.generate_Mp();
+
+            result = this->expr(idx_i, idx_j, idx_k, Vijk, Vij, Vjk, Vik, Vi, Vj, Vk,
+                                deriv_i, deriv_j, deriv_k, k1, k2, k3, a);
+
+            this->cache.store(expression_item_types::A_lambda, 0, *args, result);
+          }
 
         return std::make_unique<atomic_lambda>(i, j, k, result);
       }

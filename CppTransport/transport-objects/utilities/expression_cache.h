@@ -12,13 +12,24 @@
 
 enum class expression_item_types
   {
-    sr_U_item,
-    U1_item, U2_item, U3_item,
-    A_item, B_item, C_item, M_item,
-    zxfm1_item, zxfm2_item,
-    dN1_item, dN2_item,
-    V_item, dV_item, ddV_item, dddV_item,
-    Hubble2_item, epsilon_item
+    sr_U_item, sr_U_lambda,
+    U1_item, U1_lambda,
+    U2_item, U2_lambda,
+//    U3_item, U3_lambda,
+    A_item, A_lambda,
+    B_item, B_lambda,
+    C_item, C_lambda,
+    M_item, M_lambda,
+    zxfm1_item, zxfm1_lambda,
+    zxfm2_item, zxfm2_lambda,
+    dN1_item,
+    dN2_item,
+    V_item,
+    dV_item,
+    ddV_item,
+    dddV_item,
+    Hubble2_item,
+    epsilon_item
   };
 
 

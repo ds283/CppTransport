@@ -47,6 +47,7 @@ ADD_EXECUTABLE(CppTransport
   backends/infrastructure/language_concepts/cse.cpp
   backends/infrastructure/language_concepts/cse_map.cpp
   backends/infrastructure/language_concepts/lambdas.cpp
+  backends/infrastructure/language_concepts/lambda_manager.cpp
   backends/infrastructure/macro_substitution/index_assignment.cpp
   backends/infrastructure/macro_substitution/macro.cpp
   backends/infrastructure/macro_substitution/macro_tokenizer.cpp
@@ -192,6 +193,8 @@ set(BACKENDS_INFRASTRUCTURE_LANGUAGE_CONCEPTS_FILES
   backends/infrastructure/language_concepts/language_printer.h
   backends/infrastructure/language_concepts/lambdas.cpp
   backends/infrastructure/language_concepts/lambdas.h
+  backends/infrastructure/language_concepts/lambda_manager.h
+  backends/infrastructure/language_concepts/lambda_manager.cpp
   )
 
 set(BACKENDS_INFRASTRUCTURE_MACRO_SUBSTITUTION_FILES

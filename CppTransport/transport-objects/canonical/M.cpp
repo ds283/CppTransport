@@ -97,23 +97,36 @@ namespace canonical
         if(i.get_class() != index_class::field_only) throw tensor_exception("M");
         if(j.get_class() != index_class::field_only) throw tensor_exception("M");
 
-        GiNaC::symbol deriv_i = this->shared.generate_derivs(i, this->printer);
-        GiNaC::symbol deriv_j = this->shared.generate_derivs(j, this->printer);
-
-        GiNaC::ex Vij  = this->res.ddV_resource(i, j, this->printer);
-
-        GiNaC::ex Vi   = this->res.dV_resource(i, this->printer);
-        GiNaC::ex Vj   = this->res.dV_resource(j, this->printer);
-
         GiNaC::idx idx_i = this->shared.generate_index(i);
         GiNaC::idx idx_j = this->shared.generate_index(j);
 
-        // expr() expects Hsq, eps and Mp to be correctly set up in the cache
-        Hsq = this->res.Hsq_resource(this->printer);
-        eps = this->res.eps_resource(this->printer);
-        this->Mp = this->shared.generate_Mp();
+        std::unique_ptr<ginac_cache_args> args = this->res.generate_arguments(0, this->printer);
+        args->push_back(GiNaC::ex_to<GiNaC::symbol>(idx_i.get_value()));
+        args->push_back(GiNaC::ex_to<GiNaC::symbol>(idx_j.get_value()));
 
-        GiNaC::ex result = this->expr(idx_i, idx_j, Vij, Vi, Vj, deriv_i, deriv_j);
+        GiNaC::ex result;
+
+        if(!this->cache.query(expression_item_types::M_lambda, 0, *args, result))
+          {
+            timing_instrument timer(this->compute_timer);
+
+            GiNaC::symbol deriv_i = this->shared.generate_derivs(i, this->printer);
+            GiNaC::symbol deriv_j = this->shared.generate_derivs(j, this->printer);
+
+            GiNaC::ex Vij  = this->res.ddV_resource(i, j, this->printer);
+
+            GiNaC::ex Vi   = this->res.dV_resource(i, this->printer);
+            GiNaC::ex Vj   = this->res.dV_resource(j, this->printer);
+
+            // expr() expects Hsq, eps and Mp to be correctly set up in the cache
+            Hsq = this->res.Hsq_resource(this->printer);
+            eps = this->res.eps_resource(this->printer);
+            this->Mp = this->shared.generate_Mp();
+
+            result = this->expr(idx_i, idx_j, Vij, Vi, Vj, deriv_i, deriv_j);
+
+            this->cache.store(expression_item_types::M_lambda, 0, *args, result);
+          }
 
         return std::make_unique<atomic_lambda>(i, j, result);
       }
