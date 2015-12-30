@@ -188,7 +188,7 @@ std::string C_style_printer::lambda_invokation(const std::string& name, const ge
   }
 
 
-std::string C_style_printer::open_lambda(const abstract_index_list& indices) const
+std::string C_style_printer::open_lambda(const abstract_index_list& indices, const std::string& return_type) const
   {
     std::ostringstream stmt;
 
@@ -202,7 +202,7 @@ std::string C_style_printer::open_lambda(const abstract_index_list& indices) con
         ++count;
       }
 
-    stmt << this->function_close << " " << this->open_brace;
+    stmt << this->function_close << " " << this->lambda_return << " " << return_type << " " << this->open_brace;
 
     return(stmt.str());
   }

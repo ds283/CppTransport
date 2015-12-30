@@ -102,7 +102,7 @@ namespace canonical
         table[lambda_flatten(LAMBDA_FIELD)] = this->expr(deriv_a_i);
         table[lambda_flatten(LAMBDA_MOMENTUM)] = 0;
 
-        return std::make_unique<map_lambda>(i, table, expression_item_types::zxfm1_lambda, *args);
+        return std::make_unique<map_lambda>(i, table, expression_item_types::zxfm1_lambda, *args, this->shared.generate_working_type());
       }
 
   }   // namespace canonical

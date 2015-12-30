@@ -10,34 +10,38 @@
 #include "language_printer.h"
 
 
-generic_lambda::generic_lambda(const abstract_index_list& list, enum expression_item_types t, const ginac_cache_tags& tg)
+generic_lambda::generic_lambda(const abstract_index_list& list, enum expression_item_types t, const ginac_cache_tags& tg, std::string ty)
   : index_list(list),
     type(t),
-    tags(tg)
+    tags(tg),
+    working_type(std::move(ty))
   {
   }
 
 
-generic_lambda::generic_lambda(const abstract_index& i, enum expression_item_types t, const ginac_cache_tags& tg)
+generic_lambda::generic_lambda(const abstract_index& i, enum expression_item_types t, const ginac_cache_tags& tg, std::string ty)
   : type(t),
-    tags(tg)
+    tags(tg),
+    working_type(std::move(ty))
   {
     index_list.emplace_back(std::make_pair(i.get_label(), std::make_shared<abstract_index>(i)));
   }
 
 
-generic_lambda::generic_lambda(const abstract_index& i, const abstract_index& j, enum expression_item_types t, const ginac_cache_tags& tg)
+generic_lambda::generic_lambda(const abstract_index& i, const abstract_index& j, enum expression_item_types t, const ginac_cache_tags& tg, std::string ty)
   : type(t),
-    tags(tg)
+    tags(tg),
+    working_type(std::move(ty))
   {
     index_list.emplace_back(std::make_pair(i.get_label(), std::make_shared<abstract_index>(i)));
     index_list.emplace_back(std::make_pair(j.get_label(), std::make_shared<abstract_index>(j)));
   }
 
 
-generic_lambda::generic_lambda(const abstract_index& i, const abstract_index& j, const abstract_index& k, enum expression_item_types t, const ginac_cache_tags& tg)
+generic_lambda::generic_lambda(const abstract_index& i, const abstract_index& j, const abstract_index& k, enum expression_item_types t, const ginac_cache_tags& tg, std::string ty)
   : type(t),
-    tags(tg)
+    tags(tg),
+    working_type(std::move(ty))
   {
     index_list.emplace_back(std::make_pair(i.get_label(), std::make_shared<abstract_index>(i)));
     index_list.emplace_back(std::make_pair(j.get_label(), std::make_shared<abstract_index>(j)));
@@ -49,7 +53,7 @@ std::string atomic_lambda::make_temporary(language_printer& printer, unsigned in
   {
     std::ostringstream stmt;
 
-    std::string open = printer.open_lambda(this->index_list);
+    std::string open = printer.open_lambda(this->index_list, this->working_type);
     std::string close = printer.close_lambda();
 
     stmt << open << " " << printer.format_return(this->expr) << " " << close;
@@ -62,7 +66,7 @@ std::string map_lambda::make_temporary(language_printer& printer, unsigned int n
   {
     std::ostringstream stmt;
 
-    std::string open = printer.open_lambda(this->index_list);
+    std::string open = printer.open_lambda(this->index_list, this->working_type);
     std::string close = printer.close_lambda();
 
     // can assume that the cached map is a suitable size for the supplied index list,

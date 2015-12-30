@@ -400,8 +400,9 @@ namespace canonical
       {
         const boost::optional< contexted_value<std::string> >& resource = this->mgr.dV();
         const boost::optional< contexted_value<std::string> >& flatten = this->mgr.field_flatten();
+        const boost::optional< contexted_value<std::string> >& working_type = this->mgr.working_type();
 
-        return(resource && flatten);
+        return(resource && flatten && working_type);
       }
 
 
@@ -409,8 +410,9 @@ namespace canonical
       {
         const boost::optional< contexted_value<std::string> >& resource = this->mgr.ddV();
         const boost::optional< contexted_value<std::string> >& flatten = this->mgr.field_flatten();
+        const boost::optional< contexted_value<std::string> >& working_type = this->mgr.working_type();
 
-        return(resource && flatten);
+        return(resource && flatten && working_type);
       }
 
 
@@ -418,8 +420,9 @@ namespace canonical
       {
         const boost::optional< contexted_value<std::string> >& resource = this->mgr.dddV();
         const boost::optional< contexted_value<std::string> >& flatten = this->mgr.field_flatten();
+        const boost::optional< contexted_value<std::string> >& working_type = this->mgr.working_type();
 
-        return(resource && flatten);
+        return(resource && flatten && working_type);
       }
 
 

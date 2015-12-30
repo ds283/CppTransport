@@ -40,6 +40,7 @@ constexpr auto         DEFAULT_C_STYLE_ELSE_IF_KEYWORD       = "else if";
 
 constexpr auto         DEFAULT_C_STYLE_LAMBDA_CAPTURE        = "[&]";
 constexpr auto         DEFAULT_C_STYLE_LAMBDA_ARGUMENT_TYPE  = "unsigned int";
+constexpr auto         DEFAULT_C_STYLE_LAMBDA_RETURN_TYPE    = "->";
 
 constexpr auto         DEFAULT_C_STYLE_SEMICOLON             = ";";
 
@@ -75,6 +76,7 @@ class C_style_printer: public language_printer
                     std::string ek = DEFAULT_C_STYLE_ELSE_IF_KEYWORD,
                     std::string lc = DEFAULT_C_STYLE_LAMBDA_CAPTURE,
                     std::string la = DEFAULT_C_STYLE_LAMBDA_ARGUMENT_TYPE,
+                    std::string lr = DEFAULT_C_STYLE_LAMBDA_RETURN_TYPE,
                     std::string sc = DEFAULT_C_STYLE_SEMICOLON)
       : comment_prefix(std::move(cpre)),
         comment_postfix(std::move(cpost)),
@@ -98,6 +100,7 @@ class C_style_printer: public language_printer
         else_if_keyword(std::move(ek)),
         lambda_capture(std::move(lc)),
         lambda_argument_type(std::move(la)),
+        lambda_return(std::move(lr)),
         semicolon(std::move(sc))
       {
       }
@@ -209,7 +212,7 @@ class C_style_printer: public language_printer
     virtual std::string lambda_invokation(const std::string& name, const generic_lambda& lambda) const override;
 
     //! format a lambda definition open string
-    virtual std::string open_lambda(const abstract_index_list& indices) const override;
+    virtual std::string open_lambda(const abstract_index_list& indices, const std::string& return_type) const override;
 
     //! format a lambda definition close string
     virtual std::string close_lambda() const override;
@@ -303,6 +306,9 @@ class C_style_printer: public language_printer
 
     //! lambda argument type
     std::string lambda_argument_type;
+
+    //! lambda return type indicator
+    std::string lambda_return;
 
     //! semicolon
     std::string semicolon;

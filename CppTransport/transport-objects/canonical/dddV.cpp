@@ -39,7 +39,7 @@ namespace canonical
 
         GiNaC::ex result = this->res.dddV_resource(i, j, k, this->printer);
 
-        return std::make_unique<atomic_lambda>(i, j, k, result, expression_item_types::dddV_lambda, *args);
+        return std::make_unique<atomic_lambda>(i, j, k, result, expression_item_types::dddV_lambda, *args, this->shared.generate_working_type());
       }
 
   }

@@ -47,6 +47,11 @@ namespace macro_packages
 
         constexpr unsigned int RELEASE_TOTAL_ARGUMENTS = 0;
 
+        constexpr unsigned int WORKING_TYPE_KERNEL_ARGUMENT = 0;
+        constexpr unsigned int WORKING_TYPE_TOTAL_ARGUMENTS = 1;
+
+        constexpr unsigned int RELEASE_WORKING_TYPE_TOTAL_ARGUMENTS = 0;
+
       }   // namespace RESOURCES
 
 
@@ -467,6 +472,86 @@ namespace macro_packages
 
         //! destructor
         virtual ~release_flatteners() = default;
+
+
+        // INTERNAL API
+
+      protected:
+
+        //! evaluate
+        virtual std::string evaluate(const macro_argument_list& args) override;
+
+
+        // INTERNAL DATA
+
+      private:
+
+        //! resource manager
+        resource_manager& mgr;
+
+        //! language printer
+        language_printer& printer;
+
+      };
+
+
+    class set_working_type : public replacement_rule_simple
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! constructor
+        set_working_type(std::string n, resource_manager& m, language_printer& prn)
+          : replacement_rule_simple(std::move(n), RESOURCES::WORKING_TYPE_TOTAL_ARGUMENTS),
+            mgr(m),
+            printer(prn)
+          {
+          }
+
+        //! destructor
+        virtual ~set_working_type() = default;
+
+
+        // INTERNAL API
+
+      protected:
+
+        //! evaluate
+        virtual std::string evaluate(const macro_argument_list& args) override;
+
+
+        // INTERNAL DATA
+
+      private:
+
+        //! resource manager
+        resource_manager& mgr;
+
+        //! language printer
+        language_printer& printer;
+
+      };
+
+
+    class release_working_type : public replacement_rule_simple
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! constructor
+        release_working_type(std::string n, resource_manager& m, language_printer& prn)
+          : replacement_rule_simple(std::move(n), RESOURCES::RELEASE_WORKING_TYPE_TOTAL_ARGUMENTS),
+            mgr(m),
+            printer(prn)
+          {
+          }
+
+        //! destructor
+        virtual ~release_working_type() = default;
 
 
         // INTERNAL API

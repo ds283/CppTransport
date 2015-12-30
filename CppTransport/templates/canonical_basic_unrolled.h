@@ -20,6 +20,8 @@ namespace transport
     $PHASE_FLATTEN{FLATTEN}
     $FIELD_FLATTEN{FIELDS_FLATTEN}
 
+    $WORKING_TYPE{number}
+
     // set up a state type for 2pf integration
     template <typename number>
     using twopf_state = std::vector<number>;

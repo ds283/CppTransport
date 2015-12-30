@@ -28,6 +28,8 @@ namespace macro_packages
         pre_package.emplace_back(BIND(set_ddV, "RESOURCE_DDV"));
         pre_package.emplace_back(BIND(set_dddV, "RESOURCE_DDDV"));
         pre_package.emplace_back(BIND(release, "RESOURCE_RELEASE"));
+        pre_package.emplace_back(BIND(set_working_type, "WORKING_TYPE"));
+        pre_package.emplace_back(BIND(release_working_type, "RELEASE_WORKING_TYPE"));
       }
 
 
@@ -145,4 +147,22 @@ namespace macro_packages
         return this->printer.comment(RESOURCE_RELEASE);
       }
 
+
+    std::string set_working_type::evaluate(const macro_argument_list& args)
+      {
+        this->mgr.assign_working_type(args[RESOURCES::WORKING_TYPE_KERNEL_ARGUMENT]);
+
+        std::ostringstream msg;
+        msg << RESOURCE_SET_WORKING_TYPE << " '" << static_cast<std::string>(args[RESOURCES::WORKING_TYPE_KERNEL_ARGUMENT]) << "'";
+
+        return this->printer.comment(msg.str());
+      }
+
+
+    std::string release_working_type::evaluate(const macro_argument_list& args)
+      {
+        this->mgr.release_working_type();
+
+        return this->printer.comment(RESOURCE_RELEASE_WORKING_TYPE);
+      }
   }

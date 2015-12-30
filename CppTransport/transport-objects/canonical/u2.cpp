@@ -176,7 +176,7 @@ namespace canonical
             this->cache.store(expression_item_types::U2_lambda, 0, *args, map[lambda_flatten(LAMBDA_MOMENTUM, LAMBDA_FIELD)]);
           }
 
-        return std::make_unique<map_lambda>(i, j, map, expression_item_types::U2_lambda, *args);
+        return std::make_unique<map_lambda>(i, j, map, expression_item_types::U2_lambda, *args, this->shared.generate_working_type());
       }
 
   }   // namespace canonical

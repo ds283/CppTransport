@@ -207,7 +207,7 @@ namespace canonical
             this->cache.store(expression_item_types::zxfm2_lambda, lambda_flatten(LAMBDA_MOMENTUM, LAMBDA_FIELD), *args, table[lambda_flatten(LAMBDA_MOMENTUM, LAMBDA_FIELD)]);
           }
 
-        return std::make_unique<map_lambda>(i, j, table, expression_item_types::zxfm2_lambda, *args);
+        return std::make_unique<map_lambda>(i, j, table, expression_item_types::zxfm2_lambda, *args, this->shared.generate_working_type());
       }
 
   }   // namespace canonical

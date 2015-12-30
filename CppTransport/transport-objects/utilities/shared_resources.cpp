@@ -162,6 +162,16 @@ GiNaC::symbol shared_resources::generate_derivs(const abstract_index& idx, const
   }
 
 
+std::string shared_resources::generate_working_type() const
+  {
+    const boost::optional< contexted_value<std::string> >& working_type = this->mgr.working_type();
+
+    if(!working_type) throw resource_failure("WORKING TYPE");
+
+    return *working_type;
+  }
+
+
 GiNaC::idx shared_resources::generate_index(const field_index& i)
   {
     return GiNaC::idx(static_cast<unsigned int>(i), static_cast<unsigned int>(this->num_fields));

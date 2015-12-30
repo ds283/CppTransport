@@ -190,7 +190,7 @@ namespace canonical
             this->cache.store(expression_item_types::A_lambda, 0, *args, result);
           }
 
-        return std::make_unique<atomic_lambda>(i, j, k, result, expression_item_types::A_lambda, *args);
+        return std::make_unique<atomic_lambda>(i, j, k, result, expression_item_types::A_lambda, *args, this->shared.generate_working_type());
       }
 
   }   // namespace canonical

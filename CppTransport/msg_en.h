@@ -155,6 +155,8 @@
 #define RESOURCE_RELEASE_FLATTENERS           "release flatteners"
 #define RESOURCE_RELEASE                      "release resources"
 
+#define RESOURCE_SET_WORKING_TYPE             "working type set to"
+#define RESOURCE_RELEASE_WORKING_TYPE         "release working type"
 
 #define WARNING_UNKNOWN_SWITCH                "Unknown command-line switch"
 

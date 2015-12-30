@@ -90,6 +90,8 @@ namespace transport
     $PHASE_FLATTEN{FLATTEN}
     $FIELD_FLATTEN{FIELDS_FLATTEN}
 
+    $WORKING_TYPE{number}
+
 
     // *********************************************************************************************
 

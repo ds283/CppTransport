@@ -76,6 +76,8 @@ class shared_resources
     //! generate abstract fields-space derivative label resource
     GiNaC::symbol generate_derivs(const abstract_index& idx, const language_printer& printer) const;
 
+    std::string generate_working_type() const;
+
 
     // INTERFACE -- QUERY ROLL/UNROLL AVAILABILITY
 
