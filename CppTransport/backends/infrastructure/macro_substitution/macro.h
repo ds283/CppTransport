@@ -99,7 +99,7 @@ class macro_agent
 
     // apply macro substitution to a line, provided this does not bring the total number
     // of recursive applications above the maximum
-    std::unique_ptr< std::list<std::string> > apply(std::string& line, unsigned int& replacements);
+    std::unique_ptr< std::list<std::string> > apply(const std::string& line, unsigned int& replacements);
 
 
 		// INTERFACE - STATISTICS

@@ -10,14 +10,14 @@
 #include "flow_tensors.h"
 
 
-#define BIND(X, N) std::move(std::make_unique<X>(N, f, cw, prn))
+#define BIND(X, N) std::move(std::make_unique<X>(N, f, cw, lm, prn))
 
 
 namespace macro_packages
   {
 
-    flow_tensors::flow_tensors(tensor_factory& f, cse& cw, translator_data& p, language_printer& prn)
-      : replacement_rule_package(f, cw, p, prn)
+    flow_tensors::flow_tensors(tensor_factory& f, cse& cw, lambda_manager& lm, translator_data& p, language_printer& prn)
+      : replacement_rule_package(f, cw, lm, p, prn)
       {
         pre_package.emplace_back(BIND(replace_V, "POTENTIAL"));
         pre_package.emplace_back(BIND(replace_Hsq, "HUBBLE_SQ"));
@@ -172,6 +172,7 @@ namespace macro_packages
     std::string replace_SR_velocity::roll(const macro_argument_list& args, const abstract_index_list& indices)
       {
         std::unique_ptr<atomic_lambda> lambda = this->SR_velocity_tensor->compute_lambda(indices[0]);
+        return this->lambda_mgr.cache(std::move(lambda));
       }
 
 

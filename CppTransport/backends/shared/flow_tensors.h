@@ -51,9 +51,10 @@ namespace macro_packages
       public:
 
         //! constructor
-        replace_V(std::string n, tensor_factory& f, cse& cw, language_printer& prn)
+        replace_V(std::string n, tensor_factory& f, cse& cw, lambda_manager& lm, language_printer& prn)
           : replacement_rule_simple(std::move(n), POTENTIAL_TOTAL_ARGUMENTS),
-            cse_worker(cw)
+            cse_worker(cw),
+            lambda_mgr(lm)
           {
             Hubble_obj = f.make_Hubble(prn);
           }
@@ -80,6 +81,9 @@ namespace macro_packages
         //! CSE worker
         cse& cse_worker;
 
+        //! lambda manager
+        lambda_manager& lambda_mgr;
+
       };
 
 
@@ -91,9 +95,10 @@ namespace macro_packages
       public:
 
         //! constructor
-        replace_Hsq(std::string n, tensor_factory& f, cse& cw, language_printer& prn)
+        replace_Hsq(std::string n, tensor_factory& f, cse& cw, lambda_manager& lm, language_printer& prn)
         : replacement_rule_simple(std::move(n), HUBBLESQ_TOTAL_ARGUMENTS),
-          cse_worker(cw)
+          cse_worker(cw),
+          lambda_mgr(lm)
           {
             Hubble_obj = f.make_Hubble(prn);
           }
@@ -120,6 +125,9 @@ namespace macro_packages
         //! CSE worker
         cse& cse_worker;
 
+        //! lambda manager
+        lambda_manager& lambda_mgr;
+
       };
 
 
@@ -131,9 +139,10 @@ namespace macro_packages
       public:
 
         //! constructor
-        replace_eps(std::string n, tensor_factory& f, cse& cw, language_printer& prn)
+        replace_eps(std::string n, tensor_factory& f, cse& cw, lambda_manager& lm, language_printer& prn)
         : replacement_rule_simple(std::move(n), EPSILON_TOTAL_ARGUMENTS),
-          cse_worker(cw)
+          cse_worker(cw),
+          lambda_mgr(lm)
           {
             Hubble_obj = f.make_Hubble(prn);
           }
@@ -160,6 +169,9 @@ namespace macro_packages
         //! CSE worker
         cse& cse_worker;
 
+        //! lambda manager
+        lambda_manager& lambda_mgr;
+
       };
 
 
@@ -171,9 +183,10 @@ namespace macro_packages
       public:
 
         //! constructor
-        replace_parameter(std::string n, tensor_factory& f, cse& cw, language_printer& prn)
+        replace_parameter(std::string n, tensor_factory& f, cse& cw, lambda_manager& lm, language_printer& prn)
           : replacement_rule_index(std::move(n), PARAMETER_TOTAL_ARGUMENTS, PARAMETER_TOTAL_INDICES, index_class::parameter),
             cse_worker(cw),
+            lambda_mgr(lm),
             printer(prn),
             shared(f.get_shared_resources())
           {
@@ -212,6 +225,9 @@ namespace macro_packages
         //! CSE worker
         cse& cse_worker;
 
+        //! lambda manager
+        lambda_manager& lambda_mgr;
+
         //! language printer
         language_printer& printer;
 
@@ -226,10 +242,11 @@ namespace macro_packages
       public:
 
         //! constructor
-        replace_field(std::string n, tensor_factory& f, cse& cw, language_printer& prn)
+        replace_field(std::string n, tensor_factory& f, cse& cw, lambda_manager& lm, language_printer& prn)
           : replacement_rule_index(std::move(n), FIELD_TOTAL_ARGUMENTS, FIELD_TOTAL_INDICES, index_class::field_only),
             printer(prn),
             cse_worker(cw),
+            lambda_mgr(lm),
             shared(f.get_shared_resources())
           {
           }
@@ -267,6 +284,9 @@ namespace macro_packages
         //! CSE worker
         cse& cse_worker;
 
+        //! lambda manager
+        lambda_manager& lambda_mgr;
+
         //! language printer
         language_printer& printer;
 
@@ -281,10 +301,11 @@ namespace macro_packages
       public:
 
         //! constructor
-        replace_coordinate(std::string n, tensor_factory& f, cse& cw, language_printer& prn)
+        replace_coordinate(std::string n, tensor_factory& f, cse& cw, lambda_manager& lm, language_printer& prn)
           : replacement_rule_index(std::move(n), COORDINATE_TOTAL_ARGUMENTS, COORDINATE_TOTAL_INDICES, index_class::full),
             printer(prn),
             cse_worker(cw),
+            lambda_mgr(lm),
             shared(f.get_shared_resources())
           {
           }
@@ -322,6 +343,9 @@ namespace macro_packages
         //! CSE worker
         cse& cse_worker;
 
+        //! lambda manager
+        lambda_manager& lambda_mgr;
+
         //! language printer
         language_printer& printer;
 
@@ -336,10 +360,11 @@ namespace macro_packages
       public:
 
         //! constructor
-        replace_SR_velocity(std::string n, tensor_factory& f, cse& cw, language_printer& prn)
+        replace_SR_velocity(std::string n, tensor_factory& f, cse& cw, lambda_manager& lm, language_printer& prn)
           : cse_map_field1(std::move(n), SR_VELOCITY_TOTAL_ARGUMENTS, f.get_shared_resources().get_number_parameters(), f.get_shared_resources().get_number_field()),
             printer(prn),
             cse_worker(cw),
+            lambda_mgr(lm),
             shared(f.get_shared_resources())
           {
             SR_velocity_tensor = f.make_SR_velocity(prn);
@@ -378,6 +403,9 @@ namespace macro_packages
         //! CSE worker
         cse& cse_worker;
 
+        //! lambda manager
+        lambda_manager& lambda_mgr;
+
         //! language printer
         language_printer& printer;
 
@@ -395,10 +423,11 @@ namespace macro_packages
       public:
 
         //! constructor
-        replace_dV(std::string n, tensor_factory& f, cse& cw, language_printer& prn)
+        replace_dV(std::string n, tensor_factory& f, cse& cw, lambda_manager& lm, language_printer& prn)
           : cse_map_field1(std::move(n), DV_TOTAL_ARGUMENTS, f.get_shared_resources().get_number_parameters(), f.get_shared_resources().get_number_field()),
             printer(prn),
             cse_worker(cw),
+            lambda_mgr(lm),
             shared(f.get_shared_resources())
           {
             dV_tensor = f.make_dV(prn);
@@ -437,6 +466,9 @@ namespace macro_packages
         //! CSE worker
         cse& cse_worker;
 
+        //! lambda manager
+        lambda_manager& lambda_mgr;
+
         //! language printer
         language_printer& printer;
 
@@ -454,10 +486,11 @@ namespace macro_packages
       public:
 
         //! constructor
-        replace_ddV(std::string n, tensor_factory& f, cse& cw, language_printer& prn)
+        replace_ddV(std::string n, tensor_factory& f, cse& cw, lambda_manager& lm, language_printer& prn)
           : cse_map_field2(std::move(n), DDV_TOTAL_ARGUMENTS, f.get_shared_resources().get_number_parameters(), f.get_shared_resources().get_number_field()),
             printer(prn),
             cse_worker(cw),
+            lambda_mgr(lm),
             shared(f.get_shared_resources())
           {
             ddV_tensor = f.make_ddV(prn);
@@ -496,6 +529,9 @@ namespace macro_packages
         //! CSE worker
         cse& cse_worker;
 
+        //! lambda manager
+        lambda_manager& lambda_mgr;
+
         //! language printer
         language_printer& printer;
 
@@ -513,10 +549,11 @@ namespace macro_packages
       public:
 
         //! constructor
-        replace_dddV(std::string n, tensor_factory& f, cse& cw, language_printer& prn)
+        replace_dddV(std::string n, tensor_factory& f, cse& cw, lambda_manager& lm, language_printer& prn)
           : cse_map_field3(std::move(n), DDDV_TOTAL_ARGUMENTS, f.get_shared_resources().get_number_parameters(), f.get_shared_resources().get_number_field()),
             printer(prn),
             cse_worker(cw),
+            lambda_mgr(lm),
             shared(f.get_shared_resources())
           {
             dddV_tensor = f.make_dddV(prn);
@@ -555,6 +592,9 @@ namespace macro_packages
         //! CSE worker
         cse& cse_worker;
 
+        //! lambda manager
+        lambda_manager& lambda_mgr;
+
         //! language printer
         language_printer& printer;
 
@@ -572,7 +612,7 @@ namespace macro_packages
       public:
 
         //! constructor
-        flow_tensors(tensor_factory& f, cse& cw, translator_data& p, language_printer& prn);
+        flow_tensors(tensor_factory& f, cse& cw, lambda_manager& lm, translator_data& p, language_printer& prn);
 
         //! destructor is default
         virtual ~flow_tensors() = default;

@@ -35,7 +35,7 @@ namespace canonical
                                              GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a)
       {
         unsigned int index = this->fl.flatten(i, j, k);
-        std::unique_ptr<ginac_cache_args> args = this->res.generate_arguments(0, this->printer);
+        std::unique_ptr<ginac_cache_tags> args = this->res.generate_arguments(0, this->printer);
         args->push_back(k1);
         args->push_back(k2);
         args->push_back(k3);
@@ -116,7 +116,7 @@ namespace canonical
         GiNaC::idx idx_j = this->shared.generate_index(j);
         GiNaC::idx idx_k = this->shared.generate_index(k);
 
-        std::unique_ptr<ginac_cache_args> args = this->res.generate_arguments(0, this->printer);
+        std::unique_ptr<ginac_cache_tags> args = this->res.generate_arguments(0, this->printer);
         args->push_back(k1);
         args->push_back(k2);
         args->push_back(k3);
@@ -143,7 +143,7 @@ namespace canonical
             this->cache.store(expression_item_types::C_lambda, 0, *args, result);
           }
 
-        return std::make_unique<atomic_lambda>(i, j, k, result);
+        return std::make_unique<atomic_lambda>(i, j, k, result, expression_item_types::C_lambda, *args);
       }
 
   }   // namespace canonical

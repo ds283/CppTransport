@@ -216,7 +216,7 @@ namespace shared
       public:
 
         //! constructor
-        kernel_argument_macros(tensor_factory& f, cse& cw, translator_data& p, language_printer& prn);
+        kernel_argument_macros(tensor_factory& f, cse& cw, lambda_manager& lm, translator_data& p, language_printer& prn);
 
         //! destructor is default
         virtual ~kernel_argument_macros() = default;

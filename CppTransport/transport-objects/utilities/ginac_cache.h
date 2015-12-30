@@ -18,7 +18,7 @@
 constexpr unsigned int DEFAULT_GINAC_CACHE_SIZE = 2048;
 
 
-typedef std::list< GiNaC::symbol > ginac_cache_args;
+typedef std::list< GiNaC::symbol > ginac_cache_tags;
 
 
 template <typename ExpressionType, unsigned int HashSize>
@@ -33,7 +33,7 @@ class ginac_cache
 		  public:
 
 				// constructor
-				cache_element(ExpressionType t, unsigned int i, const ginac_cache_args& a, const GiNaC::ex& e);
+				cache_element(ExpressionType t, unsigned int i, const ginac_cache_tags& a, const GiNaC::ex& e);
 
 				cache_element(ExpressionType t, unsigned int i, const GiNaC::ex& e);
 
@@ -44,10 +44,10 @@ class ginac_cache
 
 		  public:
 
-				bool compare(ExpressionType t, unsigned int i, const ginac_cache_args& a, GiNaC::ex& e) const;
+				bool compare(ExpressionType t, unsigned int i, const ginac_cache_tags& a, GiNaC::ex& e) const;
 
-		    bool compare(ExpressionType t, unsigned int i, const ginac_cache_args& a, GiNaC::ex& e,
-		                 GiNaC::ex& expected, bool& matched) const;
+		    bool compare(ExpressionType t, unsigned int i, const ginac_cache_tags& a, GiNaC::ex& e,
+                     GiNaC::ex& expected, bool& matched) const;
 
 				bool compare(ExpressionType t, unsigned int i, GiNaC::ex& e) const;
 
@@ -67,7 +67,7 @@ class ginac_cache
 		    ExpressionType type;
 
 				unsigned int index;
-				ginac_cache_args args;
+				ginac_cache_tags tags;
 
 				GiNaC::ex expr;
 
@@ -94,7 +94,7 @@ class ginac_cache
 
 		//! query for an element; returns true if it exists in the cache, in which case its value
 		//! is copied to expr
-		bool query(ExpressionType t, unsigned int i, const ginac_cache_args& a, GiNaC::ex& e);
+		bool query(ExpressionType t, unsigned int i, const ginac_cache_tags& a, GiNaC::ex& e);
 
 		//! convenience form without an argument list
 		bool query(ExpressionType t, unsigned int i, GiNaC::ex& e);
@@ -102,10 +102,10 @@ class ginac_cache
     //! query for an element; returns true if it exists in the cache, in which case its value
     //! is copied to expr. This is a debugging version which checks that the
 		//! returned value matches the expected expression
-    bool query(ExpressionType t, unsigned int i, const ginac_cache_args& a, GiNaC::ex& e, GiNaC::ex& expected);
+    bool query(ExpressionType t, unsigned int i, const ginac_cache_tags& a, GiNaC::ex& e, GiNaC::ex& expected);
 
 		//! store an element in the cache. No collision checking is performed.
-		void store(ExpressionType t, unsigned int i, const ginac_cache_args& a, const GiNaC::ex& e);
+		void store(ExpressionType t, unsigned int i, const ginac_cache_tags& a, const GiNaC::ex& e);
 
 		//! convenience form without an argument list
 		void store(ExpressionType t, unsigned int i, const GiNaC::ex& e);
@@ -150,10 +150,10 @@ class ginac_cache
 
 
 template <typename ExpressionType, unsigned int HashSize>
-ginac_cache<ExpressionType, HashSize>::cache_element::cache_element(ExpressionType t, unsigned int i, const ginac_cache_args& a, const GiNaC::ex& e)
+ginac_cache<ExpressionType, HashSize>::cache_element::cache_element(ExpressionType t, unsigned int i, const ginac_cache_tags& a, const GiNaC::ex& e)
 	: type(t),
 		index(i),
-		args(a),
+		tags(a),
 		expr(e)
 	{
 	}
@@ -169,22 +169,22 @@ ginac_cache<ExpressionType, HashSize>::cache_element::cache_element(ExpressionTy
 
 
 template <typename ExpressionType, unsigned int HashSize>
-bool ginac_cache<ExpressionType, HashSize>::cache_element::compare(ExpressionType t, unsigned int i, const ginac_cache_args& a, GiNaC::ex& e) const
+bool ginac_cache<ExpressionType, HashSize>::cache_element::compare(ExpressionType t, unsigned int i, const ginac_cache_tags& a, GiNaC::ex& e) const
 	{
 		if(this->type != t) return(false);
 		if(this->index != i) return(false);
-		if(this->args.size() != a.size()) return(false);
+		if(this->tags.size() != a.size()) return(false);
 
-    ginac_cache_args::const_iterator m;
-    ginac_cache_args::const_iterator n;
-		for(m = this->args.begin(), n = a.begin(); m != this->args.end() && n != a.end(); ++m, ++n)
+    ginac_cache_tags::const_iterator m;
+    ginac_cache_tags::const_iterator n;
+		for(m = this->tags.begin(), n = a.begin(); m != this->tags.end() && n != a.end(); ++m, ++n)
 			{
 		    GiNaC::ex test = ((*m) - (*n)).eval();
 				bool equal = static_cast<bool>(test == 0);
 				if(!equal) return(false);
 			}
 
-		if(m != this->args.end() || n != a.end()) return(false);
+		if(m != this->tags.end() || n != a.end()) return(false);
 
 		e = this->expr;
 		return(true);
@@ -192,23 +192,23 @@ bool ginac_cache<ExpressionType, HashSize>::cache_element::compare(ExpressionTyp
 
 
 template <typename ExpressionType, unsigned int HashSize>
-bool ginac_cache<ExpressionType, HashSize>::cache_element::compare(ExpressionType t, unsigned int i, const ginac_cache_args& a, GiNaC::ex& e,
+bool ginac_cache<ExpressionType, HashSize>::cache_element::compare(ExpressionType t, unsigned int i, const ginac_cache_tags& a, GiNaC::ex& e,
                                                                    GiNaC::ex& expected, bool& matched) const
 	{
     if(this->type != t) return(false);
     if(this->index != i) return(false);
-    if(this->args.size() != a.size()) return(false);
+    if(this->tags.size() != a.size()) return(false);
 
-    ginac_cache_args::const_iterator m;
-    ginac_cache_args::const_iterator n;
-    for(m = this->args.begin(), n = a.begin(); m != this->args.end() && n != a.end(); ++m, ++n)
+    ginac_cache_tags::const_iterator m;
+    ginac_cache_tags::const_iterator n;
+    for(m = this->tags.begin(), n = a.begin(); m != this->tags.end() && n != a.end(); ++m, ++n)
 	    {
         GiNaC::ex test = ((*m) - (*n)).eval();
         bool equal = static_cast<bool>(test == 0);
         if(!equal) return(false);
 	    }
 
-    if(m != this->args.end() || n != a.end()) return(false);
+    if(m != this->tags.end() || n != a.end()) return(false);
 
     e = this->expr;
 
@@ -224,7 +224,7 @@ bool ginac_cache<ExpressionType, HashSize>::cache_element::compare(ExpressionTyp
 
         unsigned int count = 0;
         std::cout << "  Lookup argument list:" << '\n';
-        for(GiNaC::ex& expr : this->args)
+        for(GiNaC::ex& expr : this->tags)
 	        {
             std::cout << "  argument " << count << " = " << expr << '\n';
             ++count;
@@ -232,7 +232,7 @@ bool ginac_cache<ExpressionType, HashSize>::cache_element::compare(ExpressionTyp
 
         count = 0;
         std::cout << "  Expected argument list:" << '\n';
-        for(GiNaC::ex& expr : this->args)
+        for(GiNaC::ex& expr : this->tags)
 	        {
             std::cout << "  argument " << count << " = " << expr << '\n';
             ++count;
@@ -254,7 +254,7 @@ bool ginac_cache<ExpressionType, HashSize>::cache_element::compare(ExpressionTyp
 	{
     if(this->type != t) return(false);
     if(this->index != i) return(false);
-    if(this->args.size() != 0) return(false);
+    if(this->tags.size() != 0) return(false);
 
     e = this->expr;
     return(true);
@@ -268,10 +268,10 @@ void ginac_cache<ExpressionType, HashSize>::cache_element::write(Stream& out) co
 		out << "== Cache element" << '\n';
 		out << "   Type = " << this->type << '\n';
 		out << "   Index = " << this->index << '\n';
-		out << "   Number of arguments = " << this->args.size() << '\n';
+    out << "   Number of arguments = " << this->tags.size() << '\n';
 
 		unsigned int count = 0;
-		for(GiNaC::ex& expr : this->args)
+		for(GiNaC::ex& expr : this->tags)
 			{
 				out << "   Argument " << count << " = " << expr << '\n';
         ++count;
@@ -281,7 +281,7 @@ void ginac_cache<ExpressionType, HashSize>::cache_element::write(Stream& out) co
 
 
 template <typename ExpressionType, unsigned int HashSize>
-bool ginac_cache<ExpressionType, HashSize>::query(ExpressionType t, unsigned int i, const ginac_cache_args& a, GiNaC::ex& e)
+bool ginac_cache<ExpressionType, HashSize>::query(ExpressionType t, unsigned int i, const ginac_cache_tags& a, GiNaC::ex& e)
 	{
     timing_instrument timer(this->query_timer);
 
@@ -302,7 +302,7 @@ bool ginac_cache<ExpressionType, HashSize>::query(ExpressionType t, unsigned int
 
 
 template <typename ExpressionType, unsigned int HashSize>
-bool ginac_cache<ExpressionType, HashSize>::query(ExpressionType t, unsigned int i, const ginac_cache_args& a, GiNaC::ex& e, GiNaC::ex& expected)
+bool ginac_cache<ExpressionType, HashSize>::query(ExpressionType t, unsigned int i, const ginac_cache_tags& a, GiNaC::ex& e, GiNaC::ex& expected)
 	{
     timing_instrument timer(this->query_timer);
 
@@ -361,7 +361,7 @@ bool ginac_cache<ExpressionType, HashSize>::query(ExpressionType t, unsigned int
 
 
 template <typename ExpressionType, unsigned int HashSize>
-void ginac_cache<ExpressionType, HashSize>::store(ExpressionType t, unsigned int i, const ginac_cache_args& a, const GiNaC::ex& e)
+void ginac_cache<ExpressionType, HashSize>::store(ExpressionType t, unsigned int i, const ginac_cache_tags& a, const GiNaC::ex& e)
 	{
     unsigned int hash = this->hash(static_cast<typename std::underlying_type<ExpressionType>::type>(t), i, a.size());
 

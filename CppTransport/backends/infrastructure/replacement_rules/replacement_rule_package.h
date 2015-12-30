@@ -12,6 +12,7 @@
 #include "language_printer.h"
 #include "cse.h"
 #include "cse_map.h"
+#include "lambda_manager.h"
 #include "error.h"
 #include "replacement_rule_definitions.h"
 #include "index_assignment.h"
@@ -37,7 +38,7 @@ namespace macro_packages
       public:
 
         //! constructor
-        replacement_rule_package(tensor_factory& f, cse& cw, translator_data& p, language_printer& prn);
+        replacement_rule_package(tensor_factory& f, cse& cw, lambda_manager& lm, translator_data& p, language_printer& prn);
 
         // provide virtual destructor so that derived classes delete correctly
         virtual ~replacement_rule_package() = default;
@@ -102,6 +103,9 @@ namespace macro_packages
 
         // CSE worker object
         cse& cse_worker;
+
+        // lambda manager object
+        lambda_manager& lambda_mgr;
 
 
         // CACHE USEFUL OBJECTS

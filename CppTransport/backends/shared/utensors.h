@@ -39,10 +39,11 @@ namespace macro_packages
       public:
 
         //! constructor
-        replace_U1(std::string n, tensor_factory& f, cse& cw, symbol_factory& s, language_printer& prn)
+        replace_U1(std::string n, tensor_factory& f, cse& cw, lambda_manager& lm, symbol_factory& s, language_printer& prn)
           : cse_map_phase1(std::move(n), U1_PREDEF_TOTAL_ARGUMENTS, f.get_shared_resources().get_number_parameters(), f.get_shared_resources().get_number_field()),
             printer(prn),
             cse_worker(cw),
+            lambda_mgr(lm),
             shared(f.get_shared_resources()),
             sym_factory(s)
           {
@@ -82,6 +83,9 @@ namespace macro_packages
         //! CSE worker
         cse& cse_worker;
 
+        //! lambda manager
+        lambda_manager& lambda_mgr;
+
         //! language printer
         language_printer& printer;
 
@@ -102,10 +106,11 @@ namespace macro_packages
       public:
 
         //! constructor
-        replace_U2(std::string n, tensor_factory& f, cse& cw, symbol_factory& s, language_printer& prn)
+        replace_U2(std::string n, tensor_factory& f, cse& cw, lambda_manager& lm, symbol_factory& s, language_printer& prn)
           : cse_map_phase2(std::move(n), U2_PREDEF_TOTAL_ARGUMENTS, f.get_shared_resources().get_number_parameters(), f.get_shared_resources().get_number_field()),
             printer(prn),
             cse_worker(cw),
+            lambda_mgr(lm),
             shared(f.get_shared_resources()),
             sym_factory(s)
           {
@@ -145,6 +150,9 @@ namespace macro_packages
         //! CSE worker
         cse& cse_worker;
 
+        //! lambda manager
+        lambda_manager& lambda_mgr;
+
         //! language printer
         language_printer& printer;
 
@@ -165,10 +173,11 @@ namespace macro_packages
       public:
 
         //! constructor
-        replace_U3(std::string n, tensor_factory& f, cse& cw, symbol_factory& s, language_printer& prn)
+        replace_U3(std::string n, tensor_factory& f, cse& cw, lambda_manager& lm, symbol_factory& s, language_printer& prn)
           : cse_map_phase3(std::move(n), U3_PREDEF_TOTAL_ARGUMENTS, f.get_shared_resources().get_number_parameters(), f.get_shared_resources().get_number_field()),
             printer(prn),
             cse_worker(cw),
+            lambda_mgr(lm),
             shared(f.get_shared_resources()),
             sym_factory(s)
           {
@@ -208,6 +217,9 @@ namespace macro_packages
         //! CSE worker
         cse& cse_worker;
 
+        //! lambda manager
+        lambda_manager& lambda_mgr;
+
         //! language printer
         language_printer& printer;
 
@@ -228,7 +240,7 @@ namespace macro_packages
       public:
 
         //! constructor
-        utensors(tensor_factory& f, cse& cw, translator_data& p, language_printer& prn);
+        utensors(tensor_factory& f, cse& cw, lambda_manager& lm, translator_data& p, language_printer& prn);
 
         //! destructor
         virtual ~utensors() = default;

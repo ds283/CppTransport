@@ -12,6 +12,7 @@
 #include <string>
 
 #include "abstract_index.h"
+#include "lambdas.h"
 
 #include "ginac/ginac.h"
 
@@ -111,6 +112,29 @@ class language_printer
 
     //! generate initialization list from a set of strings
     virtual std::string initialization_list(const std::vector<std::string>& list) const = 0;
+
+
+    // INTERFACE -- LAMBDAS
+
+  public:
+
+    //! format a lambda invokation string
+    virtual std::string lambda_invokation(const std::string& name, const generic_lambda& lambda) const = 0;
+
+    //! format a lambda definition open string
+    virtual std::string open_lambda(const abstract_index_list& indices) const = 0;
+
+    //! format a lambda definition close string
+    virtual std::string close_lambda() const = 0;
+
+    //! format a return statement
+    virtual std::string format_return(const GiNaC::ex& expr) const = 0;
+
+    //! format an if statement
+    virtual std::string format_if(const std::list<GiNaC::ex>& conditions) const = 0;
+
+    //! format an else-if statement
+    virtual std::string format_elseif(const std::list<GiNaC::ex>& conditions) const = 0;
 
 
     // INTERNAL DATA

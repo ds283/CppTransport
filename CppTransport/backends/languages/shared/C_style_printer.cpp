@@ -165,3 +165,96 @@ std::string C_style_printer::initialization_list(const std::vector<std::string>&
     stmt << " " << this->initializer_close;
     return(stmt.str());
   }
+
+
+std::string C_style_printer::lambda_invokation(const std::string& name, const generic_lambda& lambda) const
+  {
+    std::ostringstream stmt;
+    stmt << name << this->function_open;
+
+    const abstract_index_list& index_list = lambda.get_index_list();
+
+    unsigned int count = 0;
+    for(const abstract_index& idx : index_list)
+      {
+        if(count > 0) stmt << this->argument_sep;
+        stmt << idx.get_loop_variable();
+        ++count;
+      }
+
+    stmt << this->function_close;
+
+    return(stmt.str());
+  }
+
+
+std::string C_style_printer::open_lambda(const abstract_index_list& indices) const
+  {
+    std::ostringstream stmt;
+
+    stmt << this->lambda_capture << this->function_open;
+
+    unsigned int count = 0;
+    for(const abstract_index& idx : indices)
+      {
+        if(count > 0) stmt << this->argument_sep << " ";
+        stmt << this->lambda_argument_type << " " << idx.get_loop_variable();
+        ++count;
+      }
+
+    stmt << this->function_close << " " << this->open_brace;
+
+    return(stmt.str());
+  }
+
+
+std::string C_style_printer::close_lambda() const
+  {
+    std::ostringstream stmt;
+
+    stmt << " " << this->close_brace;
+
+    return(stmt.str());
+  }
+
+
+std::string C_style_printer::format_return(const GiNaC::ex& expr) const
+  {
+    std::ostringstream stmt;
+
+    stmt << this->return_keyword << " " << this->ginac(expr) << this->semicolon;
+
+    return(stmt.str());
+  }
+
+
+std::string C_style_printer::format_if(const std::list<GiNaC::ex>& conditions) const
+  {
+    return this->format_if_stmt(this->if_keyword, conditions);
+  }
+
+
+std::string C_style_printer::format_elseif(const std::list<GiNaC::ex>& conditions) const
+  {
+    return this->format_if_stmt(this->else_if_keyword, conditions);
+  }
+
+
+std::string C_style_printer::format_if_stmt(const std::string& kw, const std::list<GiNaC::ex>& conditions) const
+  {
+    std::ostringstream stmt;
+
+    stmt << kw << "(";
+
+    unsigned int count = 0;
+    for(const GiNaC::ex& expr : conditions)
+      {
+        if(count > 0) stmt << " && ";
+        stmt << expr;
+        ++count;
+      }
+
+    stmt << ")";
+
+    return stmt.str();
+  }

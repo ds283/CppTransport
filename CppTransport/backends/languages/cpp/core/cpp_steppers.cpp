@@ -22,8 +22,8 @@ namespace cpp
     static std::string replace_stepper(const struct stepper& s, std::string state_name);
 
 
-    cpp_steppers::cpp_steppers(tensor_factory& f, cse& cw, translator_data& p, language_printer& prn)
-      : ::macro_packages::replacement_rule_package(f, cw, p, prn)
+    cpp_steppers::cpp_steppers(tensor_factory& f, cse& cw, lambda_manager& lm, translator_data& p, language_printer& prn)
+      : ::macro_packages::replacement_rule_package(f, cw, lm, p, prn)
       {
         pre_package.emplace_back(BIND(replace_backg_stepper, "MAKE_BACKG_STEPPER"));
         pre_package.emplace_back(BIND(replace_pert_stepper, "MAKE_PERT_STEPPER"));

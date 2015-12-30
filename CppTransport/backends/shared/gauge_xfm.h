@@ -41,10 +41,11 @@ namespace macro_packages
       public:
 
         //! constructor
-        replace_zeta1(std::string n, tensor_factory& f, cse& cw, language_printer& prn)
+        replace_zeta1(std::string n, tensor_factory& f, cse& cw, lambda_manager& lm, language_printer& prn)
           : cse_map_phase1(std::move(n), ZETA_XFM_1_TOTAL_ARGUMENTS, f.get_shared_resources().get_number_parameters(), f.get_shared_resources().get_number_field()),
             printer(prn),
             cse_worker(cw),
+            lambda_mgr(lm),
             shared(f.get_shared_resources())
           {
             zeta1_tensor = f.make_zeta1(prn);
@@ -83,6 +84,9 @@ namespace macro_packages
         //! CSE worker
         cse& cse_worker;
 
+        //! lambda manager
+        lambda_manager& lambda_mgr;
+
         //! language printer
         language_printer& printer;
 
@@ -100,10 +104,11 @@ namespace macro_packages
       public:
 
         //! constructor
-        replace_zeta2(std::string n, tensor_factory& f, cse& cw, symbol_factory& s, language_printer& prn)
+        replace_zeta2(std::string n, tensor_factory& f, cse& cw, lambda_manager& lm, symbol_factory& s, language_printer& prn)
           : cse_map_phase2(std::move(n), ZETA_XFM_2_TOTAL_ARGUMENTS, f.get_shared_resources().get_number_parameters(), f.get_shared_resources().get_number_field()),
             printer(prn),
             cse_worker(cw),
+            lambda_mgr(lm),
             shared(f.get_shared_resources()),
             sym_factory(s)
           {
@@ -143,6 +148,9 @@ namespace macro_packages
         //! CSE worker
         cse& cse_worker;
 
+        //! lambda manager
+        lambda_manager& lambda_mgr;
+
         //! language printer
         language_printer& printer;
 
@@ -163,10 +171,11 @@ namespace macro_packages
       public:
 
         //! constructor
-        replace_dN1(std::string n, tensor_factory& f, cse& cw, language_printer& prn)
+        replace_dN1(std::string n, tensor_factory& f, cse& cw, lambda_manager& lm, language_printer& prn)
           : cse_map_phase1(std::move(n), DELTAN_XFM_1_TOTAL_ARGUMENTS, f.get_shared_resources().get_number_parameters(), f.get_shared_resources().get_number_field()),
             printer(prn),
             cse_worker(cw),
+            lambda_mgr(lm),
             shared(f.get_shared_resources())
           {
             dN1_tensor = f.make_dN1(prn);
@@ -205,6 +214,9 @@ namespace macro_packages
         //! CSE worker
         cse& cse_worker;
 
+        //! lambda manager
+        lambda_manager& lambda_mgr;
+
         //! language printer
         language_printer& printer;
 
@@ -222,10 +234,11 @@ namespace macro_packages
       public:
 
         //! constructor
-        replace_dN2(std::string n, tensor_factory& f, cse& cw, language_printer& prn)
+        replace_dN2(std::string n, tensor_factory& f, cse& cw, lambda_manager& lm, language_printer& prn)
           : cse_map_phase2(std::move(n), DELTAN_XFM_1_TOTAL_ARGUMENTS, f.get_shared_resources().get_number_parameters(), f.get_shared_resources().get_number_field()),
             printer(prn),
             cse_worker(cw),
+            lambda_mgr(lm),
             shared(f.get_shared_resources())
           {
             dN2_tensor = f.make_dN2(prn);
@@ -267,6 +280,9 @@ namespace macro_packages
         //! language printer
         language_printer& printer;
 
+        //! lambda manager
+        lambda_manager& lambda_mgr;
+
         //! dN2 tensor
         std::unique_ptr<dN2> dN2_tensor;
 
@@ -281,7 +297,7 @@ namespace macro_packages
       public:
 
         //! constructor
-        gauge_xfm(tensor_factory& f, cse& cw, translator_data& p, language_printer& prn);
+        gauge_xfm(tensor_factory& f, cse& cw, lambda_manager& lm, translator_data& p, language_printer& prn);
 
         //! destructor is default
         virtual ~gauge_xfm() = default;

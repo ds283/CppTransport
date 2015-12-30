@@ -124,25 +124,27 @@ class cse
 
   public:
 
-    void               parse(const GiNaC::ex& expr);
+    void parse(const GiNaC::ex& expr);
 
-    std::string        temporaries(const std::string& t);
+    std::unique_ptr<std::list<std::string> > temporaries(const std::string& left, const std::string& mid, const std::string& right) const;
 
     // two methods for getting the symbol corresponding to a GiNaC expression
     // get_symbol_without_use_count() just returns the symbol and is used during the parsing phase
     // get_symbol_with_use_count() marks each temporary as 'used', and injects it into the declarations.
     // This method is used when actually outputting symbols
-    std::string        get_symbol_with_use_count(const GiNaC::ex& expr);
+    std::string get_symbol_with_use_count(const GiNaC::ex& expr);
 
-    void               clear();
+    void clear();
 
 
 		// INTERFACE - GET/SET NAME USED FOR TEMPORARIES
 
   public:
 
-    const std::string& get_temporary_name() const                { return(this->temporary_name_kernel); }
-    void               set_temporary_name(const std::string& k)  { this->temporary_name_kernel = k; }
+    const std::string& get_temporary_name() const { return (this->temporary_name_kernel); }
+
+
+    void set_temporary_name(const std::string& k) { this->temporary_name_kernel = k; }
 
 
 		// INTERFACE - METADATA
@@ -150,10 +152,10 @@ class cse
   public:
 
 		// get CSE active flag
-    bool               do_cse() const { return(this->data_payload.do_cse()); }
+    bool do_cse() const { return (this->data_payload.do_cse()); }
 
 		// get raw GiNaC printer associated with this CSE worker
-    language_printer&  get_ginac_printer() { return(this->printer); }
+    language_printer& get_ginac_printer() { return (this->printer); }
 
 
 		// INTERFACE - STATISTICS
@@ -170,7 +172,8 @@ class cse
 
     // these functions are abstract and must be implemented by any derived classes
     // typically they will vary depending on the target language
-    virtual std::string print(const GiNaC::ex& expr, bool use_count)                          = 0;
+    virtual std::string print(const GiNaC::ex& expr, bool use_count) = 0;
+
     virtual std::string print_operands(const GiNaC::ex& expr, std::string op, bool use_count) = 0;
 
     std::string get_symbol_without_use_count(const GiNaC::ex& expr);

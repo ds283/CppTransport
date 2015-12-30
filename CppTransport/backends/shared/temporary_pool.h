@@ -31,11 +31,12 @@ namespace macro_packages
       public:
 
         //! constructor
-        replace_temp_pool(std::string n, translator_data& p, cse& cw, language_printer& prn,
+        replace_temp_pool(std::string n, translator_data& p, cse& cw, lambda_manager& lm, language_printer& prn,
                           std::string t = OUTPUT_DEFAULT_POOL_TEMPLATE)
           : replacement_rule_simple(std::move(n), TEMP_POOL_TOTAL_ARGUMENTS),
             data_payload(p),
             cse_worker(cw),
+            lambda_mgr(lm),
             printer(prn),
             templ(t),
             unique(0),
@@ -76,6 +77,9 @@ namespace macro_packages
         //! CSE worker
         cse& cse_worker;
 
+        //! lambda manager
+        lambda_manager& lambda_mgr;
+
         //! language printer
         language_printer& printer;
 
@@ -102,7 +106,7 @@ namespace macro_packages
 		    // by default, it assumes that a literal pool location has not been set (s=false)
 		    // this needs to be overridden for kernel buffers, where the literal pool coincides with
 		    // the beginning of the buffer
-        temporary_pool(tensor_factory& f, cse& cw, translator_data& u, language_printer& prn);
+        temporary_pool(tensor_factory& f, cse& cw, lambda_manager& lm, translator_data& u, language_printer& prn);
 
         //! destructor is default
         ~temporary_pool() = default;

@@ -28,6 +28,7 @@ cpp_group::cpp_group(translator_data& p, tensor_factory& fctry)
     // to our list
     l_printer = std::make_unique<cpp::cpp_printer>();
     cse_worker = std::make_unique<cpp::cpp_cse>(0, *l_printer, this->data_payload);
+    lambda_mgr = std::make_unique<lambda_manager>(0, *l_printer, this->data_payload);
 
     // construct replacement rule packages
     this->add_package<macro_packages::fundamental>       (p, *l_printer);

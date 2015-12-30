@@ -7,15 +7,22 @@
 #define CPPTRANSPORT_LAMBDAS_H
 
 
+#include <stdexcept>
+
 #include "abstract_index.h"
+#include "expression_cache.h"
 
 #include "ginac/ginac.h"
+
+
+// forward-declare language_printer class
+class language_printer;
 
 
 //! generic lambda-representable object;
 //! concrete realizations are just atomic, ie. a single expression,
 //! and case-by-case enumeration
-class lambda
+class generic_lambda
   {
 
     // CONSTRUCTOR, DESTRUCTOR
@@ -23,19 +30,33 @@ class lambda
   public:
 
     //! pre-supplied database constructor
-    lambda(const abstract_index_list& list);
+    generic_lambda(const abstract_index_list& list, enum expression_item_types t, const ginac_cache_tags& tg);
 
     //! one-index lambda constructor
-    lambda(const abstract_index& i);
+    generic_lambda(const abstract_index& i, enum expression_item_types t, const ginac_cache_tags& tg);
 
     //! two-index lambda constructor
-    lambda(const abstract_index& i, const abstract_index& j);
+    generic_lambda(const abstract_index& i, const abstract_index& j, enum expression_item_types t, const ginac_cache_tags& tg);
 
     //! three-index lambda constructor
-    lambda(const abstract_index& i, const abstract_index& j, const abstract_index& k);
+    generic_lambda(const abstract_index& i, const abstract_index& j, const abstract_index& k, enum expression_item_types t, const ginac_cache_tags& tg);
 
     //! destructor is default
-    virtual ~lambda() = default;
+    virtual ~generic_lambda() = default;
+
+
+    // INTERFACE
+
+  public:
+
+    //! get lambda type
+    enum expression_item_types get_type() const { return(this->type); }
+
+    //! get tags
+    const ginac_cache_tags& get_tags() const { return(this->tags); }
+
+    //! get index list
+    const abstract_index_list& get_index_list() const { return(this->index_list); }
 
 
     // INTERNAL DATA
@@ -45,12 +66,18 @@ class lambda
     //! index list associated with this lambda
     abstract_index_list index_list;
 
+    //! transport object with which this lambda is associated
+    enum expression_item_types type;
+
+    //! tag list identifying this lambda
+    ginac_cache_tags tags;
+
   };
 
 
 //! atomic lambda expression, ie. one with just one symbolic expression no matter
 //! what arrangement of indices is involves
-class atomic_lambda: public lambda
+class atomic_lambda: public generic_lambda
   {
 
     // CONSTRUCTOR, DESTRUCTOR
@@ -58,29 +85,29 @@ class atomic_lambda: public lambda
   public:
 
     //! constructor
-    atomic_lambda(const abstract_index_list& list, GiNaC::ex e)
-      : lambda(list)
+    atomic_lambda(const abstract_index_list& list, GiNaC::ex e, enum expression_item_types t, const ginac_cache_tags& tg)
+      : generic_lambda(list, t, tg)
       {
         expr.swap(e);
       }
 
     //! one-index lambda constructor
-    atomic_lambda(const abstract_index& i, GiNaC::ex e)
-      : lambda(i)
+    atomic_lambda(const abstract_index& i, GiNaC::ex e, enum expression_item_types t, const ginac_cache_tags& tg)
+      : generic_lambda(i, t, tg)
       {
         expr.swap(e);
       }
 
     //! two-index lambda constructor
-    atomic_lambda(const abstract_index& i, const abstract_index& j, GiNaC::ex e)
-      : lambda(i, j)
+    atomic_lambda(const abstract_index& i, const abstract_index& j, GiNaC::ex e, enum expression_item_types t, const ginac_cache_tags& tg)
+      : generic_lambda(i, j, t, tg)
       {
         expr.swap(e);
       }
 
     //! three-index lambda constructor
-    atomic_lambda(const abstract_index& i, const abstract_index& j, const abstract_index& k, GiNaC::ex e)
-      : lambda(i, j, k)
+    atomic_lambda(const abstract_index& i, const abstract_index& j, const abstract_index& k, GiNaC::ex e, enum expression_item_types t, const ginac_cache_tags& tg)
+      : generic_lambda(i, j, k, t, tg)
       {
         expr.swap(e);
       }
@@ -94,7 +121,10 @@ class atomic_lambda: public lambda
   public:
 
     //! dereference to get GiNaC expression
-    const GiNaC::ex& operator*() { return(this->expr); }
+    const GiNaC::ex& operator*() const { return(this->expr); }
+
+    //! format for deposition as a temporary
+    std::string make_temporary(language_printer& printer, unsigned int) const;
 
 
     // INTERNAL DATA
@@ -112,7 +142,7 @@ typedef std::vector<GiNaC::ex> map_lambda_table;
 
 //! lambda-map expression, with a collection of different symbolic expressions for
 //! different combinations of field/momentum indices
-class map_lambda: public lambda
+class map_lambda: public generic_lambda
   {
 
     // CONSTRUCTOR, DESTRUCTOR
@@ -120,35 +150,53 @@ class map_lambda: public lambda
   public:
 
     //! constructor
-    map_lambda(const abstract_index_list& list, map_lambda_table t)
-      : lambda(list),
+    map_lambda(const abstract_index_list& list, map_lambda_table t, enum expression_item_types tp, const ginac_cache_tags& tg)
+      : generic_lambda(list, tp, tg),
         map(t)
       {
+        unsigned int size = 1;
+        for(unsigned int i = 0; i < list.size(); ++i)
+          {
+            size *= 2;
+          }
+
+        if(t.size() != size) throw std::runtime_error(ERROR_INCONSISTENT_LAMBDA_MAP);
       }
 
     //! one-index lambda constructor
-    map_lambda(const abstract_index& i, map_lambda_table& t)
-      : lambda(i),
+    map_lambda(const abstract_index& i, map_lambda_table& t, enum expression_item_types tp, const ginac_cache_tags& tg)
+      : generic_lambda(i, tp, tg),
         map(t)
       {
+        if(t.size() != 2) throw std::runtime_error(ERROR_INCONSISTENT_LAMBDA_MAP);
       }
 
     //! two-index lambda constructor
-    map_lambda(const abstract_index& i, const abstract_index& j, map_lambda_table& t)
-      : lambda(i, j),
+    map_lambda(const abstract_index& i, const abstract_index& j, map_lambda_table& t, enum expression_item_types tp, const ginac_cache_tags& tg)
+      : generic_lambda(i, j, tp, tg),
         map(t)
       {
+        if(t.size() != 4) throw std::runtime_error(ERROR_INCONSISTENT_LAMBDA_MAP);
       }
 
     //! three-index lambda constructor
-    map_lambda(const abstract_index& i, const abstract_index& j, const abstract_index& k, map_lambda_table& t)
-      : lambda(i, j, k),
+    map_lambda(const abstract_index& i, const abstract_index& j, const abstract_index& k, map_lambda_table& t, enum expression_item_types tp, const ginac_cache_tags& tg)
+      : generic_lambda(i, j, k, tp, tg),
         map(t)
       {
+        if(t.size() != 8) throw std::runtime_error(ERROR_INCONSISTENT_LAMBDA_MAP);
       }
 
     //! destructor is default
     ~map_lambda() = default;
+
+
+    // INTERFACE
+
+  public:
+
+    //! format for deposition as a temporary
+    std::string make_temporary(language_printer& printer, unsigned int num_fields) const;
 
 
     // INTERNAL DATA

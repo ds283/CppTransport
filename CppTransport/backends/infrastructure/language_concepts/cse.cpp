@@ -83,52 +83,22 @@ void cse::parse(const GiNaC::ex& expr)
   }
 
 
-std::string cse::temporaries(const std::string& t)
+std::unique_ptr< std::list<std::string> > cse::temporaries(const std::string& left, const std::string& mid, const std::string& right) const
   {
-    std::ostringstream out;
-    bool ok = true;
+    std::unique_ptr< std::list<std::string> > rval = std::make_unique< std::list<std::string> >();
 
-    size_t lhs_pos;
-    size_t rhs_pos;
-
-    if((lhs_pos = t.find("$1")) == std::string::npos)
+    // deposit each declaration into the output stream
+    for(const std::pair<std::string, std::string>& decl: this->decls)
       {
-        std::ostringstream msg;
-        msg << ERROR_MISSING_LHS << " '" << t << "'";
+        std::ostringstream out;
 
-        error_context err_ctx(this->data_payload.get_stack(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
-        err_ctx.error(msg.str());
-        ok = false;
-      }
-    if((rhs_pos = t.find("$2")) == std::string::npos)
-      {
-        std::ostringstream msg;
-        msg << ERROR_MISSING_RHS << " '" << t << "'";
+        // replace LHS and RHS macros in the template
+        out << left << decl.first << mid << decl.second << right << '\n';
 
-        error_context err_ctx(this->data_payload.get_stack(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
-        err_ctx.error(msg.str());
-        ok = false;
+        rval->push_back(out.str());
       }
 
-    std::string left  = t.substr(0, lhs_pos);
-    std::string mid   = t.substr(lhs_pos+2, rhs_pos-lhs_pos-2);
-    std::string right = t.substr(rhs_pos+2, std::string::npos);
-
-    if(ok)
-      {
-        // deposit each declaration into the output stream
-        for(const std::pair<std::string, std::string>& decl: this->decls)
-          {
-            // replace LHS and RHS macros in the template
-            out << left << decl.first << mid << decl.second << right << '\n';
-          }
-      }
-    else
-      {
-        out << t << '\n';
-      }
-
-    return(out.str());
+    return(rval);
   }
 
 

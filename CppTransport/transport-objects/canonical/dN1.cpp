@@ -28,7 +28,7 @@ namespace canonical
     GiNaC::ex canonical_dN1::compute_component(phase_index i)
       {
         unsigned int index = this->fl.flatten(i);
-        std::unique_ptr<ginac_cache_args> args = this->res.generate_arguments(0, this->printer);
+        std::unique_ptr<ginac_cache_tags> args = this->res.generate_arguments(0, this->printer);
 
         GiNaC::ex result;
 

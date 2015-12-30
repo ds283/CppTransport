@@ -110,7 +110,7 @@ namespace cpp
       public:
 
         //! constructor
-        cpp_steppers(tensor_factory& f, cse& cw, translator_data& p, language_printer& prn);
+        cpp_steppers(tensor_factory& f, cse& cw, lambda_manager& lm, translator_data& p, language_printer& prn);
 
         //! destructor is default
         virtual ~cpp_steppers() = default;

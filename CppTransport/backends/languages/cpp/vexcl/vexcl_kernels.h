@@ -68,7 +68,7 @@ namespace vexcl
       public:
 
         //! constructor
-        vexcl_kernels(tensor_factory& f, cse& cw, translator_data& p, language_printer& prn);
+        vexcl_kernels(tensor_factory& f, cse& cw, lambda_manager& lm, translator_data& p, language_printer& prn);
 
         //! destructor is default
         virtual ~vexcl_kernels() = default;

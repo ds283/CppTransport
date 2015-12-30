@@ -29,9 +29,9 @@ namespace canonical
       }
 
 
-    std::unique_ptr<ginac_cache_args> resources::generate_arguments(const language_printer& printer) const
+    std::unique_ptr<ginac_cache_tags> resources::generate_arguments(const language_printer& printer) const
       {
-        std::unique_ptr<ginac_cache_args> args = std::make_unique<ginac_cache_args>();
+        std::unique_ptr<ginac_cache_tags> args = std::make_unique<ginac_cache_tags>();
 
         // query resource manager for parameter and coordinate labels
         const boost::optional< contexted_value<std::string> >& param_resource = this->mgr.parameters();
@@ -56,7 +56,7 @@ namespace canonical
 
     GiNaC::ex resources::V_resource(const language_printer& printer)
       {
-        std::unique_ptr<ginac_cache_args> args = this->generate_arguments(printer);
+        std::unique_ptr<ginac_cache_tags> args = this->generate_arguments(printer);
 
         // if no substitutions, then nothing to do, so exit immediately
         if(args->size() == 0) return(this->V);
@@ -111,7 +111,7 @@ namespace canonical
 
     GiNaC::ex resources::eps_resource(const language_printer& printer)
       {
-        std::unique_ptr<ginac_cache_args> args = this->generate_arguments(printer);
+        std::unique_ptr<ginac_cache_tags> args = this->generate_arguments(printer);
 
         GiNaC::ex eps;
 
@@ -138,7 +138,7 @@ namespace canonical
 
     GiNaC::ex resources::Hsq_resource(const language_printer& printer)
       {
-        std::unique_ptr<ginac_cache_args> args = this->generate_arguments(printer);
+        std::unique_ptr<ginac_cache_tags> args = this->generate_arguments(printer);
 
         GiNaC::ex Hsq;
 
@@ -179,7 +179,7 @@ namespace canonical
         else                        // have to construct dV ourselves
           {
             // build argument list
-            std::unique_ptr<ginac_cache_args> args = this->generate_arguments(printer);
+            std::unique_ptr<ginac_cache_tags> args = this->generate_arguments(printer);
 
             // don't generate other objects unless we need them
             GiNaC::ex subs_V;
@@ -241,7 +241,7 @@ namespace canonical
         else                        // have to construct ddV ourselves
           {
             // build argument list
-            std::unique_ptr<ginac_cache_args> args = this->generate_arguments(printer);
+            std::unique_ptr<ginac_cache_tags> args = this->generate_arguments(printer);
 
             // don't generate other objects unless we need them
             GiNaC::ex subs_V;
@@ -310,7 +310,7 @@ namespace canonical
         else                        // have to construct dddV ourselves
           {
             // build argument list
-            std::unique_ptr<ginac_cache_args> args = this->generate_arguments(printer);
+            std::unique_ptr<ginac_cache_tags> args = this->generate_arguments(printer);
 
             // don't generate other objects unless we need them
             GiNaC::ex subs_V;
@@ -356,10 +356,10 @@ namespace canonical
       }
 
 
-    std::unique_ptr<ginac_cache_args> resources::generate_arguments(unsigned int flags, const language_printer& printer) const
+    std::unique_ptr<ginac_cache_tags> resources::generate_arguments(unsigned int flags, const language_printer& printer) const
       {
         // first, generate arguments from param/coordinates if they exist
-        std::unique_ptr<ginac_cache_args> args = this->generate_arguments(printer);
+        std::unique_ptr<ginac_cache_tags> args = this->generate_arguments(printer);
         const boost::optional< contexted_value<std::string> >& flatten = this->mgr.field_flatten();
 
         if(flatten && (flags & use_dV_argument))

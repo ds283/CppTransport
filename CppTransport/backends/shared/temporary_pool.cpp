@@ -14,14 +14,14 @@
 #include "msg_en.h"
 
 
-#define BIND(X, N) std::move(std::make_unique<X>(N, p, cw, prn))
+#define BIND(X, N) std::move(std::make_unique<X>(N, p, cw, lm, prn))
 
 
 namespace macro_packages
   {
 
-    temporary_pool::temporary_pool(tensor_factory& f, cse& cw, translator_data& p, language_printer& prn)
-	    : replacement_rule_package(f, cw, p, prn)
+    temporary_pool::temporary_pool(tensor_factory& f, cse& cw, lambda_manager& lm, translator_data& p, language_printer& prn)
+	    : replacement_rule_package(f, cw, lm, p, prn)
 	    {
         pre_package.emplace_back(BIND(replace_temp_pool, "TEMP_POOL"));
 	    }
@@ -69,31 +69,86 @@ namespace macro_packages
         if(tag_set)
           {
             // get buffer and macro package from the top of the stack
-            buffer&      buf = this->data_payload.get_stack().top_buffer();
-            macro_agent& ms  = this->data_payload.get_stack().top_macro_package();
+            buffer& buf = this->data_payload.get_stack().top_buffer();
+            macro_agent& ms = this->data_payload.get_stack().top_macro_package();
 
-            // get any temporaries which need to be deposited
-            std::string temps = this->cse_worker.temporaries(this->templ);
+            bool ok = true;
 
-            // apply macro replacement to them, in case this is required
-            unsigned int replacements;
-            std::unique_ptr< std::list<std::string> > r_list = ms.apply(temps, replacements);
+            size_t lhs_pos;
+            size_t rhs_pos;
 
-            if(r_list)
+            if((lhs_pos = this->templ.find("$1")) == std::string::npos)
               {
-                // write to current tagged position, but don't move it - we might need to write again later
-                std::ostringstream label;
-                label << OUTPUT_TEMPORARY_POOL_START << " (" << OUTPUT_TEMPORARY_POOL_SEQUENCE << "=" << this->unique++ << ")";
-                buf.write_to_tag(this->printer.comment(label.str()));
+                std::ostringstream msg;
+                msg << ERROR_MISSING_LHS << " '" << this->templ << "'";
 
-                for(const std::string& l : *r_list)
-                  {
-                    if(temps != "") buf.write_to_tag(l);
-                  }
+                error_context err_ctx(this->data_payload.get_stack(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
+                err_ctx.error(msg.str());
+                ok = false;
+              }
+            if((rhs_pos = this->templ.find("$2")) == std::string::npos)
+              {
+                std::ostringstream msg;
+                msg << ERROR_MISSING_RHS << " '" << this->templ << "'";
+
+                error_context err_ctx(this->data_payload.get_stack(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
+                err_ctx.error(msg.str());
+                ok = false;
               }
 
-            // clear worker object; if we don't we might duplicate temporaries we've already written out
-            this->cse_worker.clear();
+            std::string left  = this->templ.substr(0, lhs_pos);
+            std::string mid   = this->templ.substr(lhs_pos+2, rhs_pos-lhs_pos-2);
+            std::string right = this->templ.substr(rhs_pos+2, std::string::npos);
+
+            if(ok)
+              {
+                // get temporaries which need to be deposited from CSE manager
+                std::unique_ptr< std::list<std::string> > cse_temps = this->cse_worker.temporaries(left, mid, right);
+
+                // get temporaries which need to be deposited from lambda manager
+                std::unique_ptr< std::list<std::string> > lambda_temps = this->lambda_mgr.temporaries(left, mid, right);
+
+                // apply macro replacement to output from temporaries, in case this is required
+                if(cse_temps->size() > 0 || lambda_temps->size() > 0)
+                  {
+                    std::ostringstream label;
+                    label << OUTPUT_TEMPORARY_POOL_START << " (" << OUTPUT_TEMPORARY_POOL_SEQUENCE << "=" <<
+                    this->unique++ << ")";
+                    buf.write_to_tag(this->printer.comment(label.str()));
+                  }
+
+                for(const std::string& temp : *cse_temps)
+                  {
+                    unsigned int replacements = 0;
+                    std::unique_ptr< std::list<std::string> > r_list = ms.apply(temp, replacements);
+
+                    if(r_list)
+                      {
+                        for(const std::string& l : *r_list)
+                          {
+                            if(l != "") buf.write_to_tag(l);
+                          }
+                      }
+                  }
+
+                for(const std::string& temp : *lambda_temps)
+                  {
+                    unsigned int replacements = 0;
+                    std::unique_ptr< std::list<std::string> > r_list = ms.apply(temp, replacements);
+
+                    if(r_list)
+                      {
+                        for(const std::string& l : *r_list)
+                          {
+                            if(l != "") buf.write_to_tag(l);
+                          }
+                      }
+                  }
+
+                // clear worker objects; if we don't we might duplicate temporaries we've already written out
+                this->cse_worker.clear();
+                this->lambda_mgr.clear();
+              }
           }
        }
 

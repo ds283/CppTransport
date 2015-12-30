@@ -42,7 +42,7 @@ macro_agent::macro_agent(translator_data& p, package_group& pkg, std::string pf,
   }
 
 
-std::unique_ptr< std::list<std::string> > macro_agent::apply(std::string& line, unsigned int& replacements)
+std::unique_ptr< std::list<std::string> > macro_agent::apply(const std::string& line, unsigned int& replacements)
   {
 		// if timer is stopped, restart it
     timing_instrument timer(this->macro_apply_timer);
@@ -413,7 +413,7 @@ void macro_agent::plant_RHS_forloop(index_database<abstract_index>::const_iterat
         counter += right_tokens.evaluate_macros(simple_macro_type::post);
 
         std::string left_line = left_tokens.to_string();
-        std::string right_line = right_tokens.to_string() + (left_tokens.size() == 0 && split_result.semicolon ? ";" : "") + (left_tokens.size() == 0 && split_result.comma ? "," : "");
+        std::string right_line = right_tokens.to_string() + (split_result.semicolon ? ";" : "") + (split_result.comma ? "," : "");
 
         boost::algorithm::trim_left(left_line);
         std::string total_line = left_line;
@@ -422,13 +422,16 @@ void macro_agent::plant_RHS_forloop(index_database<abstract_index>::const_iterat
           {
             total_line += " += ";
           }
-        else
+        else if(split_result.type == macro_impl::split_type::sum)
           {
             if(coalesce) total_line += " = ";
             else         total_line += " += ";
           }
+        // else split_result.type == macro_impl::splt_type::none and there is no need for an assignment operator
 
-        total_line += right_line + (split_result.semicolon ? ";" : "") + (split_result.comma ? "," : "");
+        total_line += right_line;
+        if(left_tokens.size() == 0) boost::algorithm::trim_left(total_line);
+
         r_list.push_back(this->dress(total_line, raw_indent, current_indent));
       }
     else

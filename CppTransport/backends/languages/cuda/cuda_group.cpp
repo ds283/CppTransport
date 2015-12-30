@@ -27,6 +27,7 @@ cuda_group::cuda_group(translator_data& p, tensor_factory& fctry)
     // this has to happen before setting up the individual macro packages,
     // because it gets pushed to them when they join the package group
     l_printer = std::make_unique<cuda::cuda_printer>();
+    lambda_mgr = std::make_unique<lambda_manager>(0, *l_printer, this->data_payload);
     cse_worker = std::make_unique<cpp::cpp_cse>(0, *l_printer, this->data_payload);
 
     this->add_package<macro_packages::fundamental>       (p, *l_printer);

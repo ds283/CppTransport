@@ -23,8 +23,8 @@ namespace shared
   {
 
 
-    kernel_argument_macros::kernel_argument_macros(tensor_factory& f, cse& cw, translator_data& p, language_printer& prn)
-      : ::macro_packages::replacement_rule_package(f, cw, p, prn)
+    kernel_argument_macros::kernel_argument_macros(tensor_factory& f, cse& cw, lambda_manager& lm, translator_data& p, language_printer& prn)
+      : ::macro_packages::replacement_rule_package(f, cw, lm, p, prn)
       {
         pre_package.emplace_back(BIND(args_params, "PARAM_ARGS"));
         pre_package.emplace_back(BIND(args_1index, "COORD_ARGS"));

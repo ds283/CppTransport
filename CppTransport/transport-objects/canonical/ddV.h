@@ -33,10 +33,11 @@ namespace canonical
       public:
 
         //! constructor
-        canonical_ddV(language_printer& p, resources& r, index_flatten& f)
+        canonical_ddV(language_printer& p, resources& r, shared_resources& s, index_flatten& f)
           : ddV(),
             printer(p),
             res(r),
+            shared(s),
             fl(f)
           {
           }
@@ -73,6 +74,9 @@ namespace canonical
 
         //! reference to supplied language printer
         language_printer& printer;
+
+        //! reference to shared resource object
+        shared_resources& shared;
 
         //! reference to resource object
         resources& res;

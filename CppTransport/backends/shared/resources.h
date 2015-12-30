@@ -498,7 +498,7 @@ namespace macro_packages
       public:
 
         //! constructor
-        resources(tensor_factory& f, cse& cw, translator_data& p, language_printer& prn);
+        resources(tensor_factory& f, cse& cw, lambda_manager& lm, translator_data& p, language_printer& prn);
 
         //! destructor is default
         virtual ~resources() = default;

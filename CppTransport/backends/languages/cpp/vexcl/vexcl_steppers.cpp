@@ -23,8 +23,8 @@ namespace vexcl
     constexpr auto VEXCL_STEPPER = "runge_kutta_dopri5";
 
 
-    vexcl_steppers::vexcl_steppers(tensor_factory& f, cse& cw, translator_data& p, language_printer& prn)
-      : ::macro_packages::replacement_rule_package(f, cw, p, prn)
+    vexcl_steppers::vexcl_steppers(tensor_factory& f, cse& cw, lambda_manager& lm, translator_data& p, language_printer& prn)
+      : ::macro_packages::replacement_rule_package(f, cw, lm, p, prn)
       {
         pre_package.emplace_back(BIND(replace_backg_stepper, "MAKE_BACKG_STEPPER"));
         pre_package.emplace_back(BIND(replace_pert_stepper, "MAKE_PERT_STEPPER"));

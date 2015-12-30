@@ -34,7 +34,7 @@ namespace canonical
                                                  GiNaC::symbol& a)
       {
         unsigned int index = this->fl.flatten(i, j);
-        std::unique_ptr<ginac_cache_args> args = this->res.generate_arguments(use_dV_argument, this->printer);
+        std::unique_ptr<ginac_cache_tags> args = this->res.generate_arguments(use_dV_argument, this->printer);
         args->push_back(k);
         args->push_back(k1);
         args->push_back(k2);
@@ -172,7 +172,7 @@ namespace canonical
 
         table[lambda_flatten(LAMBDA_MOMENTUM, LAMBDA_MOMENTUM)] = 0;
 
-        std::unique_ptr<ginac_cache_args> args = this->res.generate_arguments(use_dV_argument, this->printer);
+        std::unique_ptr<ginac_cache_tags> args = this->res.generate_arguments(use_dV_argument, this->printer);
         args->push_back(k);
         args->push_back(k1);
         args->push_back(k2);
@@ -207,7 +207,7 @@ namespace canonical
             this->cache.store(expression_item_types::zxfm2_lambda, lambda_flatten(LAMBDA_MOMENTUM, LAMBDA_FIELD), *args, table[lambda_flatten(LAMBDA_MOMENTUM, LAMBDA_FIELD)]);
           }
 
-        return std::make_unique<map_lambda>(i, j, table);
+        return std::make_unique<map_lambda>(i, j, table, expression_item_types::zxfm2_lambda, *args);
       }
 
   }   // namespace canonical

@@ -28,7 +28,7 @@ namespace canonical
     GiNaC::ex canonical_u1::compute_component(phase_index i)
       {
         unsigned int index = this->fl.flatten(i);
-        std::unique_ptr<ginac_cache_args> args = this->res.generate_arguments(use_dV_argument, this->printer);
+        std::unique_ptr<ginac_cache_tags> args = this->res.generate_arguments(use_dV_argument, this->printer);
 
         GiNaC::ex result;
 
@@ -104,7 +104,7 @@ namespace canonical
 
         map[lambda_flatten(LAMBDA_FIELD)] = deriv_a_i;
 
-        std::unique_ptr<ginac_cache_args> args = this->res.generate_arguments(use_dV_argument, this->printer);
+        std::unique_ptr<ginac_cache_tags> args = this->res.generate_arguments(use_dV_argument, this->printer);
         args->push_back(GiNaC::ex_to<GiNaC::symbol>(idx_i.get_value()));
 
         if(!this->cache.query(expression_item_types::U1_lambda, 0, *args, map[lambda_flatten(LAMBDA_MOMENTUM)]))
@@ -121,7 +121,7 @@ namespace canonical
             this->cache.store(expression_item_types::U1_lambda, 0, *args, map[lambda_flatten(LAMBDA_MOMENTUM)]);
           }
 
-        return std::make_unique<map_lambda>(i, map);
+        return std::make_unique<map_lambda>(i, map, expression_item_types::U1_lambda, *args);
       }
 
   }   // namespace canonical

@@ -11,14 +11,14 @@
 #include "utensors.h"
 
 
-#define BIND_SYMBOL(X, N) std::move(std::make_unique<X>(N, f, cw, p.get_symbol_factory(), prn))
+#define BIND_SYMBOL(X, N) std::move(std::make_unique<X>(N, f, cw, lm, p.get_symbol_factory(), prn))
 
 
 namespace macro_packages
   {
 
-    utensors::utensors(tensor_factory& f, cse& cw, translator_data& p, language_printer& prn)
-      : replacement_rule_package(f, cw, p, prn)
+    utensors::utensors(tensor_factory& f, cse& cw, lambda_manager& lm, translator_data& p, language_printer& prn)
+      : replacement_rule_package(f, cw, lm, p, prn)
       {
         index_package.emplace_back(BIND_SYMBOL(replace_U1, "U1_PREDEF"));
         index_package.emplace_back(BIND_SYMBOL(replace_U2, "U2_PREDEF"));
@@ -64,6 +64,7 @@ namespace macro_packages
     std::string replace_U1::roll(const macro_argument_list& args, const abstract_index_list& indices)
       {
         std::unique_ptr<map_lambda> lambda = this->u1_tensor->compute_lambda(indices[0]);
+        return this->lambda_mgr.cache(std::move(lambda));
       }
 
 
@@ -73,6 +74,7 @@ namespace macro_packages
         GiNaC::symbol a = sym_factory.get_symbol(args[U2_PREDEF_A_ARGUMENT]);
 
         std::unique_ptr<map_lambda> lambda = this->u2_tensor->compute_lambda(indices[0], indices[1], k, a);
+        return this->lambda_mgr.cache(std::move(lambda));
       }
 
 
@@ -84,6 +86,7 @@ namespace macro_packages
         GiNaC::symbol  a = sym_factory.get_symbol(args[U3_PREDEF_A_ARGUMENT]);
 
         std::unique_ptr<map_lambda> lambda = this->u3_tensor->compute_lambda(indices[0], indices[1], indices[2], k1, k2, k3, a);
+        return this->lambda_mgr.cache(std::move(lambda));
       }
 
   } // namespace macro_packages

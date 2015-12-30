@@ -15,7 +15,7 @@ enum class expression_item_types
     sr_U_item, sr_U_lambda,
     U1_item, U1_lambda,
     U2_item, U2_lambda,
-//    U3_item, U3_lambda,
+    U3_item, U3_lambda,
     A_item, A_lambda,
     B_item, B_lambda,
     C_item, C_lambda,
@@ -25,9 +25,9 @@ enum class expression_item_types
     dN1_item,
     dN2_item,
     V_item,
-    dV_item,
-    ddV_item,
-    dddV_item,
+    dV_item, dV_lambda,
+    ddV_item, ddV_lambda,
+    dddV_item, dddV_lambda,
     Hubble2_item,
     epsilon_item
   };

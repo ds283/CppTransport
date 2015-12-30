@@ -16,8 +16,8 @@
 namespace macro_packages
   {
 
-    resources::resources(tensor_factory& f, cse& cw, translator_data& p, language_printer& prn)
-      : replacement_rule_package(f, cw, p, prn)
+    resources::resources(tensor_factory& f, cse& cw, lambda_manager& lm, translator_data& p, language_printer& prn)
+      : replacement_rule_package(f, cw, lm, p, prn)
       {
         pre_package.emplace_back(BIND(set_params, "RESOURCE_PARAMETERS"));
         pre_package.emplace_back(BIND(set_coordinates, "RESOURCE_COORDINATES"));

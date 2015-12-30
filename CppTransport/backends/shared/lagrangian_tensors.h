@@ -49,10 +49,11 @@ namespace macro_packages
       public:
 
         //! constructor
-        replace_A(std::string n, tensor_factory& f, cse& cw, symbol_factory& s, language_printer& prn)
+        replace_A(std::string n, tensor_factory& f, cse& cw, lambda_manager& lm, symbol_factory& s, language_printer& prn)
           : cse_map_field3(std::move(n), A_PREDEF_TOTAL_ARGUMENTS, f.get_shared_resources().get_number_parameters(), f.get_shared_resources().get_number_field()),
             printer(prn),
             cse_worker(cw),
+            lambda_mgr(lm),
             shared(f.get_shared_resources()),
             sym_factory(s)
           {
@@ -92,6 +93,9 @@ namespace macro_packages
         //! CSE worker
         cse& cse_worker;
 
+        //! lambda manager
+        lambda_manager& lambda_mgr;
+
         //! language printer
         language_printer& printer;
 
@@ -112,10 +116,11 @@ namespace macro_packages
       public:
 
         //! constructor
-        replace_B(std::string n, tensor_factory& f, cse& cw, symbol_factory& s, language_printer& prn)
+        replace_B(std::string n, tensor_factory& f, cse& cw, lambda_manager& lm, symbol_factory& s, language_printer& prn)
           : cse_map_field3(std::move(n), B_PREDEF_TOTAL_ARGUMENTS, f.get_shared_resources().get_number_parameters(), f.get_shared_resources().get_number_field()),
             printer(prn),
             cse_worker(cw),
+            lambda_mgr(lm),
             shared(f.get_shared_resources()),
             sym_factory(s)
           {
@@ -155,6 +160,9 @@ namespace macro_packages
         //! CSE worker
         cse& cse_worker;
 
+        //! lambda manager
+        lambda_manager& lambda_mgr;
+
         //! language printer
         language_printer& printer;
 
@@ -175,10 +183,11 @@ namespace macro_packages
       public:
 
         //! constructor
-        replace_C(std::string n, tensor_factory& f, cse& cw, symbol_factory& s, language_printer& prn)
+        replace_C(std::string n, tensor_factory& f, cse& cw, lambda_manager& lm, symbol_factory& s, language_printer& prn)
           : cse_map_field3(std::move(n), C_PREDEF_TOTAL_ARGUMENTS, f.get_shared_resources().get_number_parameters(), f.get_shared_resources().get_number_field()),
             printer(prn),
             cse_worker(cw),
+            lambda_mgr(lm),
             shared(f.get_shared_resources()),
             sym_factory(s)
           {
@@ -221,6 +230,9 @@ namespace macro_packages
         //! language printer
         language_printer& printer;
 
+        //! lambda manager
+        lambda_manager& lambda_mgr;
+
         //! symbol factory
         symbol_factory& sym_factory;
 
@@ -238,10 +250,11 @@ namespace macro_packages
       public:
 
         //! constructor
-        replace_M(std::string n, tensor_factory& f, cse& cw, symbol_factory& s, language_printer& prn)
+        replace_M(std::string n, tensor_factory& f, cse& cw, lambda_manager& lm, symbol_factory& s, language_printer& prn)
           : cse_map_field2(std::move(n), M_PREDEF_TOTAL_ARGUMENTS, f.get_shared_resources().get_number_parameters(), f.get_shared_resources().get_number_field()),
             printer(prn),
             cse_worker(cw),
+            lambda_mgr(lm),
             shared(f.get_shared_resources()),
             sym_factory(s)
           {
@@ -281,6 +294,9 @@ namespace macro_packages
         //! CSE worker
         cse& cse_worker;
 
+        //! lambda manager
+        lambda_manager& lambda_mgr;
+
         //! language printer
         language_printer& printer;
 
@@ -301,7 +317,7 @@ namespace macro_packages
       public:
 
         //! constructor
-        lagrangian_tensors(tensor_factory& f, cse& cw, translator_data& p, language_printer& prn);
+        lagrangian_tensors(tensor_factory& f, cse& cw, lambda_manager& lm, translator_data& p, language_printer& prn);
 
         //! destructor is default
         virtual ~lagrangian_tensors() = default;

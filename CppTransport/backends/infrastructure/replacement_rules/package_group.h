@@ -16,7 +16,9 @@
 #include "concepts/tensor_factory.h"
 #include "buffer.h"
 #include "cse.h"
+#include "lambda_manager.h"
 #include "error.h"
+
 
 class package_group
   {
@@ -113,8 +115,12 @@ class package_group
     tensor_factory& fctry;
 
     //! polymorphic pointer to CSE worker; as above exactly which CSE scheme is
-    //! invovled may depend what kind of model is being processed
+    //! involved may depend what kind of model is being processed
     std::unique_ptr<cse> cse_worker;  // should be set by implementations
+
+    //! lambda manager; has to be held as a managed pointer since depends on
+    //! the language printer, which isn't known until construction
+    std::unique_ptr<lambda_manager> lambda_mgr;
 
     //! polymorphic pointer to language printer; as above, depends on what kind
     //! of model is being processed
@@ -163,7 +169,7 @@ void package_group::add_package(Args&& ... args)
     assert(this->cse_worker);
 
     // construct a new package of the specified type, forwarding any arguments we were given
-    std::unique_ptr< macro_packages::replacement_rule_package> pkg = std::make_unique<PackageType>(this->fctry, *this->cse_worker, std::forward<Args>(args) ...);
+    std::unique_ptr< macro_packages::replacement_rule_package> pkg = std::make_unique<PackageType>(this->fctry, *this->cse_worker, *this->lambda_mgr, std::forward<Args>(args) ...);
     this->packages.push_back(std::move(pkg));
 
     // rebuild ruleset caches

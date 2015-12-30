@@ -35,21 +35,21 @@ namespace canonical
 
     std::unique_ptr<dV> tensor_factory::make_dV(language_printer& p)
       {
-        std::unique_ptr<canonical_dV> obj = std::make_unique<canonical_dV>(p, this->cres, this->fl);
+        std::unique_ptr<canonical_dV> obj = std::make_unique<canonical_dV>(p, this->cres, this->shared, this->fl);
         return std::move(obj);      // require std::move() here because there is no implicit conversion for upcast
       }
 
 
     std::unique_ptr<ddV> tensor_factory::make_ddV(language_printer& p)
       {
-        std::unique_ptr<canonical_ddV> obj = std::make_unique<canonical_ddV>(p, this->cres, this->fl);
+        std::unique_ptr<canonical_ddV> obj = std::make_unique<canonical_ddV>(p, this->cres, this->shared, this->fl);
         return std::move(obj);      // require std::move() here because there is no implicit conversion for upcast
       }
 
 
     std::unique_ptr<dddV> tensor_factory::make_dddV(language_printer& p)
       {
-        std::unique_ptr<canonical_dddV> obj = std::make_unique<canonical_dddV>(p, this->cres, this->fl);
+        std::unique_ptr<canonical_dddV> obj = std::make_unique<canonical_dddV>(p, this->cres, this->shared, this->fl);
         return std::move(obj);      // require std::move() here because there is no implicit conversion for upcast
       }
 

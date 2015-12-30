@@ -28,7 +28,7 @@ namespace canonical
     GiNaC::ex canonical_SR_velocity::compute_component(field_index i)
       {
         unsigned int index = this->fl.flatten(i);
-        std::unique_ptr<ginac_cache_args> args = this->res.generate_arguments(use_dV_argument, this->printer);
+        std::unique_ptr<ginac_cache_tags> args = this->res.generate_arguments(use_dV_argument, this->printer);
 
         GiNaC::ex result;
 
@@ -77,7 +77,7 @@ namespace canonical
 
         GiNaC::idx idx_i = this->shared.generate_index(i);
 
-        std::unique_ptr<ginac_cache_args> args = this->res.generate_arguments(use_dV_argument, this->printer);
+        std::unique_ptr<ginac_cache_tags> args = this->res.generate_arguments(use_dV_argument, this->printer);
         args->push_back(GiNaC::ex_to<GiNaC::symbol>(idx_i.get_value()));
 
         GiNaC::ex result;
@@ -96,7 +96,7 @@ namespace canonical
             this->cache.store(expression_item_types::sr_U_lambda, 0, *args, result);
           }
 
-        return std::make_unique<atomic_lambda>(i, result);
+        return std::make_unique<atomic_lambda>(i, result, expression_item_types::sr_U_lambda, *args);
       }
 
   }   // namespace canonical

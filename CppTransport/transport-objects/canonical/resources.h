@@ -87,7 +87,7 @@ namespace canonical
       public:
 
         //! generate argument list
-        std::unique_ptr<ginac_cache_args> generate_arguments(unsigned int flags, const language_printer& printer) const;
+        std::unique_ptr<ginac_cache_tags> generate_arguments(unsigned int flags, const language_printer& printer) const;
 
 
         // INTERFACE -- QUERY ROLL/UNROLL AVAILABILITY
@@ -110,7 +110,7 @@ namespace canonical
 
         //! generate argument list for param/field combinations;
         //! used internally and as the first step in generating an external argument list
-        std::unique_ptr<ginac_cache_args> generate_arguments(const language_printer& printer) const;
+        std::unique_ptr<ginac_cache_tags> generate_arguments(const language_printer& printer) const;
 
 
         // INTERNAL DATA

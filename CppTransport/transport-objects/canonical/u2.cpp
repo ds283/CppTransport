@@ -31,7 +31,7 @@ namespace canonical
     GiNaC::ex canonical_u2::compute_component(phase_index i, phase_index j, GiNaC::symbol& k, GiNaC::symbol& a)
       {
         unsigned int index = this->fl.flatten(i, j);
-        std::unique_ptr<ginac_cache_args> args = this->res.generate_arguments(use_dV_argument | use_ddV_argument, this->printer);
+        std::unique_ptr<ginac_cache_tags> args = this->res.generate_arguments(use_dV_argument | use_ddV_argument, this->printer);
         args->push_back(k);
         args->push_back(a);
 
@@ -151,7 +151,7 @@ namespace canonical
         map[lambda_flatten(LAMBDA_FIELD, LAMBDA_MOMENTUM)] = GiNaC::delta_tensor(idx_a_i, idx_b_j);
         map[lambda_flatten(LAMBDA_MOMENTUM, LAMBDA_MOMENTUM)] = GiNaC::delta_tensor(idx_b_i, idx_b_j) * (eps-3);
 
-        std::unique_ptr<ginac_cache_args> args = this->res.generate_arguments(use_dV_argument | use_ddV_argument, this->printer);
+        std::unique_ptr<ginac_cache_tags> args = this->res.generate_arguments(use_dV_argument | use_ddV_argument, this->printer);
         args->push_back(k);
         args->push_back(a);
         args->push_back(GiNaC::ex_to<GiNaC::symbol>(idx_i.get_value()));
@@ -176,7 +176,7 @@ namespace canonical
             this->cache.store(expression_item_types::U2_lambda, 0, *args, map[lambda_flatten(LAMBDA_MOMENTUM, LAMBDA_FIELD)]);
           }
 
-        return std::make_unique<map_lambda>(i, j, map);
+        return std::make_unique<map_lambda>(i, j, map, expression_item_types::U2_lambda, *args);
       }
 
   }   // namespace canonical

@@ -28,7 +28,7 @@ namespace canonical
     GiNaC::ex canonical_zeta1::compute_component(phase_index i)
       {
         unsigned int index = this->fl.flatten(i);
-        std::unique_ptr<ginac_cache_args> args = this->res.generate_arguments(0, this->printer);
+        std::unique_ptr<ginac_cache_tags> args = this->res.generate_arguments(0, this->printer);
 
         GiNaC::ex result;
 
@@ -86,6 +86,11 @@ namespace canonical
       {
         if(i.get_class() != index_class::full) throw tensor_exception("U3");
 
+        GiNaC::idx idx_i = this->shared.generate_index(i);
+
+        std::unique_ptr<ginac_cache_tags> args = this->res.generate_arguments(0, this->printer);
+        args->push_back(GiNaC::ex_to<GiNaC::symbol>(idx_i.get_value()));
+
         // convert these indices to species-only indices
         const abstract_index i_field_a = this->traits.species_to_species(i);
         const abstract_index i_field_b = this->traits.momentum_to_species(i);
@@ -97,7 +102,7 @@ namespace canonical
         table[lambda_flatten(LAMBDA_FIELD)] = this->expr(deriv_a_i);
         table[lambda_flatten(LAMBDA_MOMENTUM)] = 0;
 
-        return std::make_unique<map_lambda>(i, table);
+        return std::make_unique<map_lambda>(i, table, expression_item_types::zxfm1_lambda, *args);
       }
 
   }   // namespace canonical

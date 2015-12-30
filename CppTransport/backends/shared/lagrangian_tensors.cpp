@@ -10,14 +10,14 @@
 #include "lagrangian_tensors.h"
 
 
-#define BIND_SYMBOL(X, N) std::move(std::make_unique<X>(N, f, cw, p.get_symbol_factory(), prn))
+#define BIND_SYMBOL(X, N) std::move(std::make_unique<X>(N, f, cw, lm, p.get_symbol_factory(), prn))
 
 
 namespace macro_packages
   {
 
-    lagrangian_tensors::lagrangian_tensors(tensor_factory& f, cse& cw, translator_data& p, language_printer& prn)
-      : replacement_rule_package(f, cw, p, prn)
+    lagrangian_tensors::lagrangian_tensors(tensor_factory& f, cse& cw, lambda_manager& lm, translator_data& p, language_printer& prn)
+      : replacement_rule_package(f, cw, lm, p, prn)
       {
         index_package.emplace_back(BIND_SYMBOL(replace_A, "A_PREDEF"));
         index_package.emplace_back(BIND_SYMBOL(replace_B, "B_PREDEF"));
@@ -83,6 +83,7 @@ namespace macro_packages
         GiNaC::symbol  a = sym_factory.get_symbol(args[A_PREDEF_A_ARGUMENT]);
 
         std::unique_ptr<atomic_lambda> lambda = this->A_tensor->compute_lambda(indices[0], indices[1], indices[2], k1, k2, k3, a);
+        return this->lambda_mgr.cache(std::move(lambda));
       }
 
 
@@ -94,6 +95,7 @@ namespace macro_packages
         GiNaC::symbol  a = sym_factory.get_symbol(args[A_PREDEF_A_ARGUMENT]);
 
         std::unique_ptr<atomic_lambda> lambda = this->B_tensor->compute_lambda(indices[0], indices[1], indices[2], k1, k2, k3, a);
+        return this->lambda_mgr.cache(std::move(lambda));
       }
 
 
@@ -105,12 +107,14 @@ namespace macro_packages
         GiNaC::symbol  a = sym_factory.get_symbol(args[A_PREDEF_A_ARGUMENT]);
 
         std::unique_ptr<atomic_lambda> lambda = this->C_tensor->compute_lambda(indices[0], indices[1], indices[2], k1, k2, k3, a);
+        return this->lambda_mgr.cache(std::move(lambda));
       }
 
 
     std::string replace_M::roll(const macro_argument_list& args, const abstract_index_list& indices)
       {
         std::unique_ptr<atomic_lambda> lambda = this->M_tensor->compute_lambda(indices[0], indices[1]);
+        return this->lambda_mgr.cache(std::move(lambda));
       }
 
   } // namespace macro_packages

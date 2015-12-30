@@ -59,7 +59,7 @@ namespace macro_packages
       {
         this->check(args, indices);
 
-        return("");
+        return this->roll(args, indices);
       }
 
 

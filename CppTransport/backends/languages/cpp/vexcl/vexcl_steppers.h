@@ -153,7 +153,7 @@ namespace vexcl
       public:
 
         //! constructor
-        vexcl_steppers(tensor_factory& f, cse& cw, translator_data& p, language_printer& prn);
+        vexcl_steppers(tensor_factory& f, cse& cw, lambda_manager& lm, translator_data& p, language_printer& prn);
 
         //! destructor
         virtual ~vexcl_steppers() = default;

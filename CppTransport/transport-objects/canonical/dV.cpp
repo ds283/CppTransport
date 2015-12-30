@@ -26,9 +26,14 @@ namespace canonical
       {
         if(i.get_class() != index_class::field_only) throw tensor_exception("dV");
 
+        GiNaC::idx idx_i = this->shared.generate_index(i);
+
+        std::unique_ptr<ginac_cache_tags> args = this->res.generate_arguments(use_dddV_argument, this->printer);
+        args->push_back(GiNaC::ex_to<GiNaC::symbol>(idx_i.get_value()));
+
         GiNaC::ex result = this->res.dV_resource(i, this->printer);
 
-        return std::make_unique<atomic_lambda>(i, result);
+        return std::make_unique<atomic_lambda>(i, result, expression_item_types::dV_lambda, *args);
       }
 
   }   // namespace canonical

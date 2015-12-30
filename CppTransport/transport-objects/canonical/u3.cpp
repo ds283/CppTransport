@@ -115,6 +115,19 @@ namespace canonical
         if(j.get_class() != index_class::full) throw tensor_exception("U3");
         if(k.get_class() != index_class::full) throw tensor_exception("U3");
 
+        GiNaC::idx idx_i = this->shared.generate_index(i);
+        GiNaC::idx idx_j = this->shared.generate_index(j);
+        GiNaC::idx idx_k = this->shared.generate_index(k);
+
+        std::unique_ptr<ginac_cache_tags> args = this->res.generate_arguments(use_dV_argument | use_ddV_argument | use_dddV_argument, this->printer);
+        args->push_back(k1);
+        args->push_back(k2);
+        args->push_back(k3);
+        args->push_back(a);
+        args->push_back(GiNaC::ex_to<GiNaC::symbol>(idx_i.get_value()));
+        args->push_back(GiNaC::ex_to<GiNaC::symbol>(idx_j.get_value()));
+        args->push_back(GiNaC::ex_to<GiNaC::symbol>(idx_k.get_value()));
+
         // convert these indices to species-only indices
         const abstract_index i_field_a = this->traits.species_to_species(i);
         const abstract_index i_field_b = this->traits.momentum_to_species(i);
@@ -142,7 +155,7 @@ namespace canonical
         table[lambda_flatten(LAMBDA_MOMENTUM, LAMBDA_MOMENTUM, LAMBDA_FIELD)] = **mmf;
         table[lambda_flatten(LAMBDA_MOMENTUM, LAMBDA_MOMENTUM, LAMBDA_MOMENTUM)] = **mmm;
 
-        return std::make_unique<map_lambda>(i, j, k, table);
+        return std::make_unique<map_lambda>(i, j, k, table, expression_item_types::U3_lambda, *args);
       }
 
   }   // namespace canonical

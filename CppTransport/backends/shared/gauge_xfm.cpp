@@ -10,15 +10,15 @@
 #include "gauge_xfm.h"
 
 
-#define BIND(X, N) std::move(std::make_unique<X>(N, f, cw, prn))
-#define BIND_SYMBOL(X, N) std::move(std::make_unique<X>(N, f, cw, p.get_symbol_factory(), prn))
+#define BIND(X, N) std::move(std::make_unique<X>(N, f, cw, lm, prn))
+#define BIND_SYMBOL(X, N) std::move(std::make_unique<X>(N, f, cw, lm, p.get_symbol_factory(), prn))
 
 
 namespace macro_packages
   {
 
-    gauge_xfm::gauge_xfm(tensor_factory& f, cse& cw, translator_data& p, language_printer& prn)
-      : replacement_rule_package(f, cw, p, prn)
+    gauge_xfm::gauge_xfm(tensor_factory& f, cse& cw, lambda_manager& lm, translator_data& p, language_printer& prn)
+      : replacement_rule_package(f, cw, lm, p, prn)
       {
         index_package.emplace_back(BIND(replace_zeta1, "ZETA_XFM_1"));
         index_package.emplace_back(BIND_SYMBOL(replace_zeta2, "ZETA_XFM_2"));
@@ -33,6 +33,7 @@ namespace macro_packages
     std::string replace_zeta1::roll(const macro_argument_list& args, const abstract_index_list& indices)
       {
         std::unique_ptr<map_lambda> lambda = this->zeta1_tensor->compute_lambda(indices[0]);
+        return this->lambda_mgr.cache(std::move(lambda));
       }
 
 
@@ -44,6 +45,7 @@ namespace macro_packages
         GiNaC::symbol  a = sym_factory.get_symbol(args[ZETA_XFM_2_A_ARGUMENT]);
 
         std::unique_ptr<map_lambda> lambda = this->zeta2_tensor->compute_lambda(indices[0], indices[1], k, k1, k2, a);
+        return this->lambda_mgr.cache(std::move(lambda));
       }
 
 
