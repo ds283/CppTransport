@@ -36,7 +36,7 @@ constexpr auto         DEFAULT_C_STYLE_INITIALIZER_SEPARATOR = ",";
 
 constexpr auto         DEFAULT_C_STYLE_RETURN_KEYWORD        = "return";
 constexpr auto         DEFAULT_C_STYLE_IF_KEYWORD            = "if";
-constexpr auto         DEFAULT_C_STYLE_ELSE_IF_KEYWORD       = "else if";
+constexpr auto         DEFAULT_C_STYLE_ELSE_KEYWORD          = "else";
 
 constexpr auto         DEFAULT_C_STYLE_LAMBDA_CAPTURE        = "[&]";
 constexpr auto         DEFAULT_C_STYLE_LAMBDA_ARGUMENT_TYPE  = "unsigned int";
@@ -73,7 +73,7 @@ class C_style_printer: public language_printer
                     std::string is = DEFAULT_C_STYLE_INITIALIZER_SEPARATOR,
                     std::string rk = DEFAULT_C_STYLE_RETURN_KEYWORD,
                     std::string ik = DEFAULT_C_STYLE_IF_KEYWORD,
-                    std::string ek = DEFAULT_C_STYLE_ELSE_IF_KEYWORD,
+                    std::string ek = DEFAULT_C_STYLE_ELSE_KEYWORD,
                     std::string lc = DEFAULT_C_STYLE_LAMBDA_CAPTURE,
                     std::string la = DEFAULT_C_STYLE_LAMBDA_ARGUMENT_TYPE,
                     std::string lr = DEFAULT_C_STYLE_LAMBDA_RETURN_TYPE,
@@ -97,7 +97,7 @@ class C_style_printer: public language_printer
         initializer_sep(std::move(is)),
         return_keyword(std::move(rk)),
         if_keyword(std::move(ik)),
-        else_if_keyword(std::move(ek)),
+        else_keyword(std::move(ek)),
         lambda_capture(std::move(lc)),
         lambda_argument_type(std::move(la)),
         lambda_return(std::move(lr)),
@@ -226,6 +226,9 @@ class C_style_printer: public language_printer
     //! format an else-if statement
     virtual std::string format_elseif(const std::list<GiNaC::ex>& conditions) const override;
 
+    //! format an else statement
+    virtual std::string format_else(const GiNaC::ex& expr) const override;
+
   protected:
 
     //! format a generic if-type statement
@@ -299,7 +302,7 @@ class C_style_printer: public language_printer
     std::string if_keyword;
 
     //! keyword used for 'else if'
-    std::string else_if_keyword;
+    std::string else_keyword;
 
     //! lambda-capture header
     std::string lambda_capture;

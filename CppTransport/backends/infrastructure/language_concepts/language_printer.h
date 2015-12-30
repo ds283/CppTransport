@@ -136,6 +136,8 @@ class language_printer
     //! format an else-if statement
     virtual std::string format_elseif(const std::list<GiNaC::ex>& conditions) const = 0;
 
+    //! format an else statement
+    virtual std::string format_else(const GiNaC::ex& expr) const = 0;
 
     // INTERNAL DATA
 

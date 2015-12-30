@@ -80,8 +80,7 @@ std::string map_lambda::make_temporary(language_printer& printer, unsigned int n
         std::list< GiNaC::ex > conditions;
         unsigned int state = counter;
 
-        // work through index list in reverse order, assuming this is the order assigned by the
-        // lambda_flatten() functions
+        // work through index list in reverse order, assuming this is the order given by the lambda_flatten() functions
         // calculate out the appropriate conditions for this index from the current position in the map, and push them to the list
         for(abstract_index_list::const_reverse_iterator t = this->index_list.crbegin(); t != this->index_list.crend(); ++t)
           {
@@ -97,6 +96,10 @@ std::string map_lambda::make_temporary(language_printer& printer, unsigned int n
         stmt << " " << printer.format_return(expr) << '\n';
         ++counter;
       }
+
+    // kill compiler warning about possible void return
+    GiNaC::ex null_value = 0;
+    if(counter > 0) stmt << printer.format_else(null_value);
 
     stmt << " " << close;
 

@@ -236,7 +236,20 @@ std::string C_style_printer::format_if(const std::list<GiNaC::ex>& conditions) c
 
 std::string C_style_printer::format_elseif(const std::list<GiNaC::ex>& conditions) const
   {
-    return this->format_if_stmt(this->else_if_keyword, conditions);
+    std::ostringstream else_if;
+    else_if << this->else_keyword << " " << this->if_keyword;
+
+    return this->format_if_stmt(else_if.str(), conditions);
+  }
+
+
+std::string C_style_printer::format_else(const GiNaC::ex& expr) const
+  {
+    std::ostringstream stmt;
+
+    stmt << this->else_keyword << " " << this->format_return(expr);
+
+    return(stmt.str());
   }
 
 
