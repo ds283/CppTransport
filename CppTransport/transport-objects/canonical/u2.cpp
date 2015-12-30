@@ -161,10 +161,10 @@ namespace canonical
           {
             timing_instrument timer(this->compute_timer);
 
-            GiNaC::ex V_ba_ij = this->res.ddV_resource(i_field_b, j_field_b, this->printer);
+            GiNaC::ex V_ba_ij = this->res.ddV_resource(i_field_b, j_field_a, this->printer);
 
             GiNaC::ex V_b_i = this->res.dV_resource(i_field_b, this->printer);
-            GiNaC::ex V_a_j = this->res.dV_resource(j_field_b, this->printer);
+            GiNaC::ex V_a_j = this->res.dV_resource(j_field_a, this->printer);
 
             // expr() expects Hsq, eps and Mp to be correctly set up in the cache
             Hsq = this->res.Hsq_resource(this->printer);
