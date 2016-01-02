@@ -187,10 +187,20 @@ namespace token_list_impl
 
       protected:
 
+        //! name of this macro token
         const std::string name;
+
+        //! argument list for this token
         const macro_argument_list args;
+
+        //! index list for this token
         const abstract_index_list indices;
+
+        //! reference to replacement rule object for this token
         macro_packages::replacement_rule_index& rule;
+
+        //! flag to determine whether 'pre' handler has been called
+        bool initialized;
 
       };
 

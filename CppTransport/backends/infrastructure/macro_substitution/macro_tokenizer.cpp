@@ -664,17 +664,9 @@ token_list_impl::index_macro_token::index_macro_token(const std::string& m, cons
     name(m),
     args(a),
     indices(std::move(i)),
-    rule(r)
+    rule(r),
+    initialized(false)
 	{
-    try
-      {
-        // state assumes ownership of the CSE-map returned from the pre-rule
-        this->rule.pre(args);
-      }
-    catch(macro_packages::rule_apply_fail& xe)
-      {
-        this->error(xe.what());
-      }
 	}
 
 
@@ -693,6 +685,21 @@ token_list_impl::index_macro_token::~index_macro_token()
 
 void token_list_impl::index_macro_token::evaluate_unroll(const assignment_list& a)
 	{
+    // call 'pre'-handler if it has not already been invoked
+    if(!initialized)
+      {
+        try
+          {
+            this->rule.pre(args);
+          }
+        catch(macro_packages::rule_apply_fail& xe)
+          {
+            this->error(xe.what());
+          }
+
+        initialized = true;
+      }
+
     // strip out the index assignment -- just for the indices this macro requires;
     // preserves ordering
     assignment_list index_values;
@@ -718,6 +725,10 @@ void token_list_impl::index_macro_token::evaluate_unroll(const assignment_list& 
 
 void token_list_impl::index_macro_token::evaluate_roll()
   {
+    // as a performance optimization, 'pre' handler is not called for roll-up evaluation;
+    // it just results in lots of CSE being performed which is unnecessary for roll-up
+    // cases
+
     try
       {
         this->conversion = this->rule.evaluate_roll(this->args, this->indices);
