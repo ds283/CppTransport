@@ -136,7 +136,7 @@ namespace canonical
             GiNaC::symbol deriv_k = this->shared.generate_derivs(k, this->printer);
 
             // expr() expects Mp to be correctly set up in the cache
-            this->Mp = this->shared.generate_Mp();
+            this->populate_cache();
 
             result = this->expr(idx_i, idx_j, idx_k, deriv_i, deriv_j, deriv_k, k1, k2, k3, a);
 

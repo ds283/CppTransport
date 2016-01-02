@@ -114,8 +114,8 @@ namespace canonical
             GiNaC::ex V_b_i = this->res.dV_resource(i_field_b, this->printer);
 
             // expr() expects Hsq and eps to be correctly set up in the cache
-            Hsq = this->res.Hsq_resource(this->printer);
-            eps = this->res.eps_resource(this->printer);
+            this->populate_cache();
+
             map[lambda_flatten(LAMBDA_MOMENTUM)] = this->expr_momentum(V_b_i, deriv_b_i);
 
             this->cache.store(expression_item_types::U1_lambda, 0, *args, map[lambda_flatten(LAMBDA_MOMENTUM)]);

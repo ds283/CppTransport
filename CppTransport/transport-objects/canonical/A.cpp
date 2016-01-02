@@ -180,9 +180,7 @@ namespace canonical
             GiNaC::ex Vk   = this->res.dV_resource(k, this->printer);
 
             // expr() expects Hsq, eps, Mp to be correctly set up in the cache
-            this->Hsq = this->res.Hsq_resource(this->printer);
-            this->eps = this->res.eps_resource(this->printer);
-            this->Mp = this->shared.generate_Mp();
+            this->populate_cache();
 
             result = this->expr(idx_i, idx_j, idx_k, Vijk, Vij, Vjk, Vik, Vi, Vj, Vk,
                                 deriv_i, deriv_j, deriv_k, k1, k2, k3, a);

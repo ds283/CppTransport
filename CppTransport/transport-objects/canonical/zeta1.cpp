@@ -99,6 +99,8 @@ namespace canonical
 
         GiNaC::symbol deriv_a_i = this->shared.generate_derivs(i_field_a, this->printer);
 
+        this->populate_cache();
+
         table[lambda_flatten(LAMBDA_FIELD)] = this->expr(deriv_a_i);
         table[lambda_flatten(LAMBDA_MOMENTUM)] = 0;
 

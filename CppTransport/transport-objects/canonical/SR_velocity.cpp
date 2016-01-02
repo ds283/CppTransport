@@ -88,8 +88,7 @@ namespace canonical
             GiNaC::ex Vi = this->res.dV_resource(i, this->printer);
 
             // expr() expects Hsq and Mp to be correctly set up in the cache
-            Hsq = this->res.Hsq_resource(this->printer);
-            this->Mp = this->shared.generate_Mp();
+            this->populate_cache();
 
             result = this->expr(Vi);
 
