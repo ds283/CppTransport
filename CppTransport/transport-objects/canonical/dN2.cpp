@@ -58,8 +58,8 @@ namespace canonical
 
     void canonical_dN2::cache_symbols()
       {
-        Hsq = this->res.Hsq_resource(this->cse_worker, this->printer);
-        eps = this->res.eps_resource(this->cse_worker, this->printer);
+        Hsq = this->res.raw_Hsq_resource(this->printer);
+        eps = this->res.raw_eps_resource(this->printer);
         dotH = -eps*Hsq;
 
         std::unique_ptr<symbol_list> f = this->shared.generate_fields(this->printer);

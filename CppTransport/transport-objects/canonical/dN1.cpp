@@ -50,8 +50,8 @@ namespace canonical
 
     void canonical_dN1::cache_symbols()
       {
-        Hsq = this->res.Hsq_resource(this->cse_worker, this->printer);
-        eps = this->res.eps_resource(this->cse_worker, this->printer);
+        Hsq = this->res.raw_Hsq_resource(this->printer);
+        eps = this->res.raw_eps_resource(this->printer);
         dotH = -eps*Hsq;
       }
 

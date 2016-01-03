@@ -69,8 +69,7 @@ namespace canonical
 
         GiNaC::ex subs_V;
 
-        // check whether this set of substitutions has already been done; if so, there
-        // is no need to do any work
+        // check whether this set of substitutions has already been done; if so, there is no need to do any work
         if(!this->cache.query(expression_item_types::V_item, 0, *args, subs_V))
           {
             timing_instrument timer(this->compute_timer);
@@ -117,6 +116,12 @@ namespace canonical
 
     GiNaC::ex resources::eps_resource(const cse& cse_worker, const language_printer& printer)
       {
+        return this->raw_eps_resource(printer);
+      }
+
+
+    GiNaC::ex resources::raw_eps_resource(const language_printer& printer)
+      {
         std::unique_ptr<ginac_cache_tags> args = this->generate_arguments(printer);
 
         GiNaC::ex eps;
@@ -144,6 +149,12 @@ namespace canonical
 
     GiNaC::ex resources::Hsq_resource(const cse& cse_worker, const language_printer& printer)
       {
+        return this->raw_Hsq_resource(printer);
+      }
+
+
+    GiNaC::ex resources::raw_Hsq_resource(const language_printer& printer)
+      {
         std::unique_ptr<ginac_cache_tags> args = this->generate_arguments(printer);
 
         GiNaC::ex Hsq;
@@ -152,8 +163,8 @@ namespace canonical
           {
             timing_instrument timer(this->compute_timer);
 
-            GiNaC::ex V = this->V_resource(cse_worker, printer);
-            GiNaC::ex eps = this->eps_resource(cse_worker, printer);
+            GiNaC::ex V = this->raw_V_resource(printer);
+            GiNaC::ex eps = this->raw_eps_resource(printer);
             GiNaC::symbol Mp = this->share.generate_Mp();
 
             Hsq = V / ((3-eps)*Mp*Mp);
