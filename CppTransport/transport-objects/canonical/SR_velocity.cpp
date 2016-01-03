@@ -57,7 +57,6 @@ namespace canonical
     void canonical_SR_velocity::cache_symbols()
       {
         V = this->res.V_resource(this->cse_worker, this->printer);
-        Hsq = this->res.Hsq_resource(this->cse_worker, this->printer);
         Mp = this->shared.generate_Mp();
       }
 

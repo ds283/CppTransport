@@ -136,9 +136,6 @@ namespace canonical
         //! flattened ddV tensor
         std::unique_ptr<flattened_tensor> ddV;
 
-        //! Hubble parameter
-        GiNaC::ex Hsq;
-
         //! Planck mass
         GiNaC::symbol Mp;
 
