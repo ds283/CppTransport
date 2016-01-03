@@ -157,9 +157,9 @@ TARGET_INCLUDE_DIRECTORIES(CppTransport PRIVATE
 ADD_SUBDIRECTORY(test-target EXCLUDE_FROM_ALL)
 
 
-# install targets for CppTransport translator, templates, and header-only library/runtime API
+# install targets for CppTransport translator, cpptransport-templates, and header-only library/runtime API
 INSTALL(TARGETS CppTransport DESTINATION bin)
-INSTALL(DIRECTORY templates DESTINATION share)
+INSTALL(DIRECTORY cpptransport-templates DESTINATION share)
 INSTALL(DIRECTORY transport-runtime-api DESTINATION include)
 INSTALL(FILES cmake/FindCppTransport.cmake DESTINATION share/cmake/Modules)
 
@@ -322,18 +322,18 @@ set(PARSER_FILES
   )
 
 set(TEMPLATES_FILES
-  templates/canonical_mpi.h
-  templates/canonical_core.h
+  cpptransport-templates/canonical_mpi.h
+  cpptransport-templates/canonical_core.h
   )
 
 set(TEMPLATES_VEXCL_CUDA_FILES
-  templates/vexcl-cuda/threepf.cu
-  templates/vexcl-cuda/twopf.cu
+  cpptransport-templates/vexcl-cuda/threepf.cu
+  cpptransport-templates/vexcl-cuda/twopf.cu
   )
 
 set(TEMPLATES_VEXCL_OPENCL_FILES
-  templates/vexcl-opencl/threepf.cl
-  templates/vexcl-opencl/twopf.cl
+  cpptransport-templates/vexcl-opencl/threepf.cl
+  cpptransport-templates/vexcl-opencl/twopf.cl
   )
 
 set(TEST_TARGET_FILES
