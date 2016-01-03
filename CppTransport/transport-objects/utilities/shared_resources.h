@@ -76,6 +76,8 @@ class shared_resources
     //! generate abstract fields-space derivative label resource
     GiNaC::symbol generate_derivs(const abstract_index& idx, const language_printer& printer) const;
 
+    //! generate string representing working type for lambda objects
+    //! (this could be double, but may be something else (eg. number) if the implementation allows templated objects)
     std::string generate_working_type() const;
 
 
