@@ -65,6 +65,9 @@ namespace transport
 
             twopf_items = 0;
             threepf_items = 0;
+
+            twopf_invokations = 0;
+            threepf_invokations = 0;
 #endif
           }
 
@@ -84,6 +87,10 @@ namespace transport
                 std::cout << "  -- setup: " << format_time(twopf_setup_timer.elapsed().user/this->twopf_items) << " user, " << format_time(twopf_setup_timer.elapsed().system/this->twopf_items) << " system, " << format_time(twopf_setup_timer.elapsed().wall/this->twopf_items) << " wall" << '\n';
                 std::cout << "  -- U tensors: " << format_time(twopf_u_tensor_timer.elapsed().user/this->twopf_items) << " user, " << format_time(twopf_u_tensor_timer.elapsed().system/this->twopf_items) << " system, " << format_time(twopf_u_tensor_timer.elapsed().wall/this->twopf_items) << " wall" << '\n';
                 std::cout << "  -- transport equations: " << format_time(twopf_transport_eq_timer.elapsed().user/this->twopf_items) << " user, " << format_time(twopf_transport_eq_timer.elapsed().system/this->twopf_items) << " system, " << format_time(twopf_transport_eq_timer.elapsed().wall/this->twopf_items) << " wall" << '\n';
+                std::cout << "* PER INVOKATION" << '\n';
+                std::cout << "  -- setup: " << format_time(twopf_setup_timer.elapsed().user/this->twopf_invokations) << " user, " << format_time(twopf_setup_timer.elapsed().system/this->twopf_invokations) << " system, " << format_time(twopf_setup_timer.elapsed().wall/this->twopf_invokations) << " wall" << '\n';
+                std::cout << "  -- U tensors: " << format_time(twopf_u_tensor_timer.elapsed().user/this->twopf_invokations) << " user, " << format_time(twopf_u_tensor_timer.elapsed().system/this->twopf_invokations) << " system, " << format_time(twopf_u_tensor_timer.elapsed().wall/this->twopf_invokations) << " wall" << '\n';
+                std::cout << "  -- transport equations: " << format_time(twopf_transport_eq_timer.elapsed().user/this->twopf_invokations) << " user, " << format_time(twopf_transport_eq_timer.elapsed().system/this->twopf_invokations) << " system, " << format_time(twopf_transport_eq_timer.elapsed().wall/this->twopf_invokations) << " wall" << '\n';
               }
 
             if(this->threepf_items > 0)
@@ -97,6 +104,10 @@ namespace transport
                 std::cout << "  -- setup: " << format_time(threepf_setup_timer.elapsed().user/this->threepf_items) << " user, " << format_time(threepf_setup_timer.elapsed().system/this->threepf_items) << " system, " << format_time(threepf_setup_timer.elapsed().wall/this->threepf_items) << " wall" << '\n';
                 std::cout << "  -- U tensors: " << format_time(threepf_u_tensor_timer.elapsed().user/this->threepf_items) << " user, " << format_time(threepf_u_tensor_timer.elapsed().system/this->threepf_items) << " system, " << format_time(threepf_u_tensor_timer.elapsed().wall/this->threepf_items) << " wall" << '\n';
                 std::cout << "  -- transport equations: " << format_time(threepf_transport_eq_timer.elapsed().user/this->threepf_items) << " user, " << format_time(threepf_transport_eq_timer.elapsed().system/this->threepf_items) << " system, " << format_time(threepf_transport_eq_timer.elapsed().wall/this->threepf_items) << " wall" << '\n';
+                std::cout << "* PER INVOKATION" << '\n';
+                std::cout << "  -- setup: " << format_time(threepf_setup_timer.elapsed().user/this->threepf_invokations) << " user, " << format_time(threepf_setup_timer.elapsed().system/this->threepf_invokations) << " system, " << format_time(threepf_setup_timer.elapsed().wall/this->threepf_invokations) << " wall" << '\n';
+                std::cout << "  -- U tensors: " << format_time(threepf_u_tensor_timer.elapsed().user/this->threepf_invokations) << " user, " << format_time(threepf_u_tensor_timer.elapsed().system/this->threepf_invokations) << " system, " << format_time(threepf_u_tensor_timer.elapsed().wall/this->threepf_invokations) << " wall" << '\n';
+                std::cout << "  -- transport equations: " << format_time(threepf_transport_eq_timer.elapsed().user/this->threepf_invokations) << " user, " << format_time(threepf_transport_eq_timer.elapsed().system/this->threepf_invokations) << " system, " << format_time(threepf_transport_eq_timer.elapsed().wall/this->threepf_invokations) << " wall" << '\n';
               }
           }
 #else
@@ -182,12 +193,14 @@ namespace transport
         boost::timer::cpu_timer twopf_transport_eq_timer;
 
         unsigned int twopf_items;
+        unsigned int twopf_invokations;
 
         boost::timer::cpu_timer threepf_setup_timer;
         boost::timer::cpu_timer threepf_u_tensor_timer;
         boost::timer::cpu_timer threepf_transport_eq_timer;
 
         unsigned int threepf_items;
+        unsigned int threepf_invokations;
 #endif
 
       };
@@ -205,7 +218,8 @@ namespace transport
           ,
             boost::timer::cpu_timer& st,
             boost::timer::cpu_timer& ut,
-            boost::timer::cpu_timer& tt
+            boost::timer::cpu_timer& tt,
+            unsigned int& in
 #endif
         )
           : __params(tk->get_params()),
@@ -222,7 +236,8 @@ namespace transport
             ,
                 __setup_timer(st),
                 __u_tensor_timer(ut),
-                __transport_eq_timer(tt)
+                __transport_eq_timer(tt),
+                __invokations(in)
 #endif
           {
           }
@@ -285,6 +300,7 @@ namespace transport
         boost::timer::cpu_timer& __setup_timer;
         boost::timer::cpu_timer& __u_tensor_timer;
         boost::timer::cpu_timer& __transport_eq_timer;
+        unsigned int& __invokations;
 #endif
 
       };
@@ -322,7 +338,8 @@ namespace transport
           ,
           boost::timer::cpu_timer& st,
           boost::timer::cpu_timer& ut,
-          boost::timer::cpu_timer& tt
+          boost::timer::cpu_timer& tt,
+          unsigned int& in
 #endif
         )
           : __params(tk->get_params()),
@@ -347,7 +364,8 @@ namespace transport
             ,
             __setup_timer(st),
             __u_tensor_timer(ut),
-            __transport_eq_timer(tt)
+            __transport_eq_timer(tt),
+            __invokations(in)
 #endif
           {
           }
@@ -431,6 +449,7 @@ namespace transport
         boost::timer::cpu_timer& __setup_timer;
         boost::timer::cpu_timer& __u_tensor_timer;
         boost::timer::cpu_timer& __transport_eq_timer;
+        unsigned int& __invokations;
 #endif
 
       };
@@ -577,7 +596,7 @@ namespace transport
         $MODEL_mpi_twopf_functor<number> rhs(tk, *kconfig
 #ifdef CPPTRANSPORT_INSTRUMENT
           ,
-            this->twopf_setup_timer, this->twopf_u_tensor_timer, this->twopf_transport_eq_timer
+            this->twopf_setup_timer, this->twopf_u_tensor_timer, this->twopf_transport_eq_timer, this->twopf_invokations
 #endif
           );
         rhs.set_up_workspace();
@@ -739,7 +758,7 @@ namespace transport
         $MODEL_mpi_threepf_functor<number>  rhs(tk, *kconfig
 #ifdef CPPTRANSPORT_INSTRUMENT
           ,
-            this->threepf_setup_timer, this->threepf_u_tensor_timer, this->threepf_transport_eq_timer
+            this->threepf_setup_timer, this->threepf_u_tensor_timer, this->threepf_transport_eq_timer, this->threepf_invokations
 #endif
           );
         rhs.set_up_workspace();
@@ -896,6 +915,7 @@ namespace transport
 
 #ifdef CPPTRANSPORT_INSTRUMENT
         __transport_eq_timer.stop();
+        ++__invokations;
 #endif
       }
 
@@ -1089,6 +1109,7 @@ namespace transport
 
 #ifdef CPPTRANSPORT_INSTRUMENT
         __transport_eq_timer.stop();
+        ++__invokations;
 #endif
       }
 
