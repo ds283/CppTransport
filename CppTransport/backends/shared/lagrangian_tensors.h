@@ -57,7 +57,7 @@ namespace macro_packages
             shared(f.get_shared_resources()),
             sym_factory(s)
           {
-            A_tensor = f.make_A(prn);
+            A_tensor = f.make_A(prn, cw);
           }
 
         //! destructor
@@ -124,7 +124,7 @@ namespace macro_packages
             shared(f.get_shared_resources()),
             sym_factory(s)
           {
-            B_tensor = f.make_B(prn);
+            B_tensor = f.make_B(prn, cw);
           }
 
         //! destructor
@@ -191,7 +191,7 @@ namespace macro_packages
             shared(f.get_shared_resources()),
             sym_factory(s)
           {
-            C_tensor = f.make_C(prn);
+            C_tensor = f.make_C(prn, cw);
           }
 
         //! destructor
@@ -258,7 +258,7 @@ namespace macro_packages
             shared(f.get_shared_resources()),
             sym_factory(s)
           {
-            M_tensor = f.make_M(prn);
+            M_tensor = f.make_M(prn, cw);
           }
 
         //! destructor

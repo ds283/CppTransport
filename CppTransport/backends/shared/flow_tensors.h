@@ -56,7 +56,7 @@ namespace macro_packages
             cse_worker(cw),
             lambda_mgr(lm)
           {
-            Hubble_obj = f.make_Hubble(prn);
+            Hubble_obj = f.make_Hubble(prn, cw);
           }
 
         //! destructor
@@ -100,7 +100,7 @@ namespace macro_packages
           cse_worker(cw),
           lambda_mgr(lm)
           {
-            Hubble_obj = f.make_Hubble(prn);
+            Hubble_obj = f.make_Hubble(prn, cw);
           }
 
         //! destructor
@@ -144,7 +144,7 @@ namespace macro_packages
           cse_worker(cw),
           lambda_mgr(lm)
           {
-            Hubble_obj = f.make_Hubble(prn);
+            Hubble_obj = f.make_Hubble(prn, cw);
           }
 
         //! destructor
@@ -367,7 +367,7 @@ namespace macro_packages
             lambda_mgr(lm),
             shared(f.get_shared_resources())
           {
-            SR_velocity_tensor = f.make_SR_velocity(prn);
+            SR_velocity_tensor = f.make_SR_velocity(prn, cw);
           }
 
         //! destructor
@@ -430,7 +430,7 @@ namespace macro_packages
             lambda_mgr(lm),
             shared(f.get_shared_resources())
           {
-            dV_tensor = f.make_dV(prn);
+            dV_tensor = f.make_dV(prn, cw);
           }
 
         //! destructor
@@ -493,7 +493,7 @@ namespace macro_packages
             lambda_mgr(lm),
             shared(f.get_shared_resources())
           {
-            ddV_tensor = f.make_ddV(prn);
+            ddV_tensor = f.make_ddV(prn, cw);
           }
 
         //! destructor
@@ -556,7 +556,7 @@ namespace macro_packages
             lambda_mgr(lm),
             shared(f.get_shared_resources())
           {
-            dddV_tensor = f.make_dddV(prn);
+            dddV_tensor = f.make_dddV(prn, cw);
           }
 
         //! destructor

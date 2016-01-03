@@ -36,7 +36,7 @@ namespace canonical
           {
             timing_instrument timer(this->compute_timer);
 
-            if(!cached) this->populate_cache();
+            if(!cached) { this->populate_workspace(); this->cache_symbols(); this->cached = true; }
 
             field_index i_species = this->traits.to_species(i);
             result = -(1/(2*dotH)) * diff(Hsq, (*fields)[this->fl.flatten(i_species)]);
@@ -48,13 +48,17 @@ namespace canonical
       }
 
 
-    void canonical_dN1::populate_cache()
+    void canonical_dN1::cache_symbols()
+      {
+        Hsq = this->res.Hsq_resource(this->cse_worker, this->printer);
+        eps = this->res.eps_resource(this->cse_worker, this->printer);
+        dotH = -eps*Hsq;
+      }
+
+
+    void canonical_dN1::populate_workspace()
       {
         fields = this->shared.generate_fields(this->printer);
-        Hsq = this->res.Hsq_resource(this->printer);
-        eps = this->res.eps_resource(this->printer);
-        dotH = -eps*Hsq;
-        cached = true;
       }
 
 

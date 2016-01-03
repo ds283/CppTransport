@@ -38,13 +38,14 @@ namespace canonical
       public:
 
         //! constructor
-        canonical_u3(language_printer& p, expression_cache& c, resources& r, shared_resources& s,
+        canonical_u3(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
                      boost::timer::cpu_timer& tm, index_flatten& f, index_traits& t)
           : u3(),
-            A_agent(p, c, r, s, tm, f, t),
-            B_agent(p, c, r, s, tm, f, t),
-            C_agent(p, c, r, s, tm, f, t),
+            A_agent(p, cw, c, r, s, tm, f, t),
+            B_agent(p, cw, c, r, s, tm, f, t),
+            C_agent(p, cw, c, r, s, tm, f, t),
             printer(p),
+            cse_worker(cw),
             cache(c),
             shared(s),
             res(r),
@@ -93,6 +94,9 @@ namespace canonical
 
         //! reference to language printer
         language_printer& printer;
+
+        //! reference to supplied CSE worker
+        cse& cse_worker;
 
         //! reference to expression cache
         expression_cache& cache;

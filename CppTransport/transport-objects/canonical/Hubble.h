@@ -31,9 +31,10 @@ namespace canonical
       public:
 
         //! constructor
-        canonical_Hubble(language_printer& p, resources& r)
+        canonical_Hubble(language_printer& p, cse& cw, resources& r)
           : Hubble(),
             printer(p),
+            cse_worker(cw),
             res(r)
           {
           }
@@ -64,6 +65,9 @@ namespace canonical
 
         //! reference to supplied language printer
         language_printer& printer;
+
+        //! reference to supplied CSE worker
+        cse& cse_worker;
 
         //! reference to resource object
         resources& res;

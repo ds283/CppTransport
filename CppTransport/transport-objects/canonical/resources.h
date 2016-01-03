@@ -17,6 +17,7 @@
 #include "index_flatten.h"
 
 #include "shared_resources.h"
+#include "cse.h"
 #include "language_printer.h"
 
 #include "concepts/flattened_tensor.h"
@@ -52,14 +53,14 @@ namespace canonical
 
       public:
 
-        //! generate V resource
-        GiNaC::ex V_resource(const language_printer& printer);
+        //! generate V resource, including any necessary substitutions for parameters/coordinates
+        GiNaC::ex V_resource(const cse& cse_worker, const language_printer& printer);
 
         //! generate epsilon resource
-        GiNaC::ex eps_resource(const language_printer& printer);
+        GiNaC::ex eps_resource(const cse& cse_worker, const language_printer& printer);
 
         //! generate Hubble-squared resource
-        GiNaC::ex Hsq_resource(const language_printer& printer);
+        GiNaC::ex Hsq_resource(const cse& cse_worker, const language_printer& printer);
 
         //! generate concrete dV resource labels
         std::unique_ptr<flattened_tensor> dV_resource(const language_printer& printer);
@@ -78,6 +79,12 @@ namespace canonical
 
         //! generate abstract dddV resource label
         GiNaC::symbol dddV_resource(const abstract_index& a, const abstract_index& b, const abstract_index& c, const language_printer& printer);
+
+      protected:
+
+        //! generate V resource, including any necessary substitutions for parameters/coordinates
+        //! returns raw expression, without applying any CSE
+        GiNaC::ex raw_V_resource(const language_printer& printer);
 
 
 

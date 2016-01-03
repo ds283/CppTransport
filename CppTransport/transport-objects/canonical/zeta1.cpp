@@ -68,7 +68,7 @@ namespace canonical
 
     void canonical_zeta1::cache_symbols()
       {
-        eps = this->res.eps_resource(this->printer);
+        eps = this->res.eps_resource(this->cse_worker, this->printer);
         Mp = this->shared.generate_Mp();
       }
 

@@ -39,7 +39,7 @@ namespace canonical
           {
             timing_instrument timer(this->compute_timer);
 
-            if(!cached) this->populate_cache();
+            if(!cached) { this->populate_workspace(); this->cache_symbols(); this->cached = true; }
 
             GiNaC::symbol coord_i = this->traits.is_species(i) ? (*fields)[this->fl.flatten(i)] : (*derivs)[this->fl.flatten(this->traits.to_species(i))];
             GiNaC::symbol coord_j = this->traits.is_species(j) ? (*fields)[this->fl.flatten(j)] : (*derivs)[this->fl.flatten(this->traits.to_species(j))];
@@ -56,27 +56,34 @@ namespace canonical
       }
 
 
-    void canonical_dN2::populate_cache()
+    void canonical_dN2::cache_symbols()
       {
-        fields = this->shared.generate_fields(this->printer);
-        derivs = this->shared.generate_derivs(this->printer);
-        dV = this->res.dV_resource(this->printer);
-        Hsq = this->res.Hsq_resource(this->printer);
-        eps = this->res.eps_resource(this->printer);
+        Hsq = this->res.Hsq_resource(this->cse_worker, this->printer);
+        eps = this->res.eps_resource(this->cse_worker, this->printer);
         dotH = -eps*Hsq;
+
+        std::unique_ptr<symbol_list> f = this->shared.generate_fields(this->printer);
+        std::unique_ptr<symbol_list> d = this->shared.generate_derivs(this->printer);
+        std::unique_ptr<flattened_tensor> Vi = this->res.dV_resource(this->printer);
 
         p = 0;
         field_index num_fields = this->shared.get_number_field();
         for(field_index i = field_index(0); i < num_fields; ++i)
           {
-            p += diff(1/(2*dotH), (*fields)[this->fl.flatten(i)]) * (*derivs)[this->fl.flatten(i)];
+            p += diff(1/(2*dotH), (*f)[this->fl.flatten(i)]) * (*d)[this->fl.flatten(i)];
 
-            GiNaC::ex dXdN = (eps-3) * (*derivs)[this->fl.flatten(i)] - (*dV)[this->fl.flatten(i)]/Hsq;
+            GiNaC::ex dXdN = (eps-3) * (*d)[this->fl.flatten(i)] - (*Vi)[this->fl.flatten(i)]/Hsq;
 
-            p += diff(1/(2*dotH), (*derivs)[this->fl.flatten(i)]) * dXdN;
+            p += diff(1/(2*dotH), (*d)[this->fl.flatten(i)]) * dXdN;
           }
+      }
 
-        cached = true;
+
+    void canonical_dN2::populate_workspace()
+      {
+        fields = this->shared.generate_fields(this->printer);
+        derivs = this->shared.generate_derivs(this->printer);
+        dV = this->res.dV_resource(this->printer);
       }
 
 

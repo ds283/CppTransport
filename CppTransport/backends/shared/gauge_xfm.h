@@ -48,7 +48,7 @@ namespace macro_packages
             lambda_mgr(lm),
             shared(f.get_shared_resources())
           {
-            zeta1_tensor = f.make_zeta1(prn);
+            zeta1_tensor = f.make_zeta1(prn, cw);
           }
 
         //! destructor
@@ -112,7 +112,7 @@ namespace macro_packages
             shared(f.get_shared_resources()),
             sym_factory(s)
           {
-            zeta2_tensor = f.make_zeta2(prn);
+            zeta2_tensor = f.make_zeta2(prn, cw);
           }
 
         //! destructor
@@ -178,7 +178,7 @@ namespace macro_packages
             lambda_mgr(lm),
             shared(f.get_shared_resources())
           {
-            dN1_tensor = f.make_dN1(prn);
+            dN1_tensor = f.make_dN1(prn, cw);
           }
 
         //! destructor
@@ -241,7 +241,7 @@ namespace macro_packages
             lambda_mgr(lm),
             shared(f.get_shared_resources())
           {
-            dN2_tensor = f.make_dN2(prn);
+            dN2_tensor = f.make_dN2(prn, cw);
           }
 
         //! destructor

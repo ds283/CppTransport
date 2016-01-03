@@ -72,8 +72,8 @@ namespace canonical
 
     void canonical_u1::cache_symbols()
       {
-        Hsq = this->res.Hsq_resource(this->printer);
-        eps = this->res.eps_resource(this->printer);
+        Hsq = this->res.Hsq_resource(this->cse_worker, this->printer);
+        eps = this->res.eps_resource(this->cse_worker, this->printer);
       }
 
 

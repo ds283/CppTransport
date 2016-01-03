@@ -11,6 +11,8 @@
 
 #include "resource_manager.h"
 
+#include "language_printer.h"
+#include "cse.h"
 #include "expression_cache.h"
 #include "shared_resources.h"
 #include "translator_data.h"
@@ -64,52 +66,52 @@ class tensor_factory
   public:
 
     //! obtain a Hubble-object
-    virtual std::unique_ptr<Hubble> make_Hubble(language_printer& p) = 0;
+    virtual std::unique_ptr<Hubble> make_Hubble(language_printer& p, cse& cw) = 0;
 
     //! obtain a dV-tensor
-    virtual std::unique_ptr<dV> make_dV(language_printer& p) = 0;
+    virtual std::unique_ptr<dV> make_dV(language_printer& p, cse& cw) = 0;
 
     //! obtain a ddV-tensor
-    virtual std::unique_ptr<ddV> make_ddV(language_printer& p) = 0;
+    virtual std::unique_ptr<ddV> make_ddV(language_printer& p, cse& cw) = 0;
 
     //! obtain a dddV-tensor
-    virtual std::unique_ptr<dddV> make_dddV(language_printer& p) = 0;
+    virtual std::unique_ptr<dddV> make_dddV(language_printer& p, cse& cw) = 0;
 
     //! obtain SR tensor
-    virtual std::unique_ptr<SR_velocity> make_SR_velocity(language_printer& p) = 0;
+    virtual std::unique_ptr<SR_velocity> make_SR_velocity(language_printer& p, cse& cw) = 0;
 
     //! obtain an A-tensor
-    virtual std::unique_ptr<A> make_A(language_printer& p) = 0;
+    virtual std::unique_ptr<A> make_A(language_printer& p, cse& cw) = 0;
 
     //! obtain a B-tensor
-    virtual std::unique_ptr<B> make_B(language_printer& p) = 0;
+    virtual std::unique_ptr<B> make_B(language_printer& p, cse& cw) = 0;
 
     //! obtain a C-tensor
-    virtual std::unique_ptr<C> make_C(language_printer& p) = 0;
+    virtual std::unique_ptr<C> make_C(language_printer& p, cse& cw) = 0;
 
     //! obtain an M-tensor
-    virtual std::unique_ptr<M> make_M(language_printer& p) = 0;
+    virtual std::unique_ptr<M> make_M(language_printer& p, cse& cw) = 0;
 
     //! obtain a u1-tensor
-    virtual std::unique_ptr<u1> make_u1(language_printer& p) = 0;
+    virtual std::unique_ptr<u1> make_u1(language_printer& p, cse& cw) = 0;
 
     //! obtain a u2-tensor
-    virtual std::unique_ptr<u2> make_u2(language_printer& p) = 0;
+    virtual std::unique_ptr<u2> make_u2(language_printer& p, cse& cw) = 0;
 
     //! obtain a u3-tensor
-    virtual std::unique_ptr<u3> make_u3(language_printer& p) = 0;
+    virtual std::unique_ptr<u3> make_u3(language_printer& p, cse& cw) = 0;
 
     //! obtain a zeta1-tensor
-    virtual std::unique_ptr<zeta1> make_zeta1(language_printer& p) = 0;
+    virtual std::unique_ptr<zeta1> make_zeta1(language_printer& p, cse& cw) = 0;
 
     //! obtain a zeta2-tensor
-    virtual std::unique_ptr<zeta2> make_zeta2(language_printer& p) = 0;
+    virtual std::unique_ptr<zeta2> make_zeta2(language_printer& p, cse& cw) = 0;
 
     //! obtain a dN1-tensor
-    virtual std::unique_ptr<dN1> make_dN1(language_printer& p) = 0;
+    virtual std::unique_ptr<dN1> make_dN1(language_printer& p, cse& cw) = 0;
 
     //! obtain a dN2-tensor
-    virtual std::unique_ptr<dN2> make_dN2(language_printer& p) = 0;
+    virtual std::unique_ptr<dN2> make_dN2(language_printer& p, cse& cw) = 0;
 
 
     // INTERFACE -- PROVIDE ACCESS TO AGENTS

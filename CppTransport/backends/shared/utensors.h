@@ -47,7 +47,7 @@ namespace macro_packages
             shared(f.get_shared_resources()),
             sym_factory(s)
           {
-            u1_tensor = f.make_u1(prn);
+            u1_tensor = f.make_u1(prn, cw);
           }
 
         //! destructor
@@ -114,7 +114,7 @@ namespace macro_packages
             shared(f.get_shared_resources()),
             sym_factory(s)
           {
-            u2_tensor = f.make_u2(prn);
+            u2_tensor = f.make_u2(prn, cw);
           }
 
         //! destructor
@@ -181,7 +181,7 @@ namespace macro_packages
             shared(f.get_shared_resources()),
             sym_factory(s)
           {
-            u3_tensor = f.make_u3(prn);
+            u3_tensor = f.make_u3(prn, cw);
           }
 
         //! destructor

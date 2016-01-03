@@ -54,7 +54,13 @@ namespace canonical
       }
 
 
-    GiNaC::ex resources::V_resource(const language_printer& printer)
+    GiNaC::ex resources::V_resource(const cse& cse_worker, const language_printer& printer)
+      {
+        return this->raw_V_resource(printer);
+      }
+
+
+    GiNaC::ex resources::raw_V_resource(const language_printer& printer)
       {
         std::unique_ptr<ginac_cache_tags> args = this->generate_arguments(printer);
 
@@ -109,7 +115,7 @@ namespace canonical
       }
 
 
-    GiNaC::ex resources::eps_resource(const language_printer& printer)
+    GiNaC::ex resources::eps_resource(const cse& cse_worker, const language_printer& printer)
       {
         std::unique_ptr<ginac_cache_tags> args = this->generate_arguments(printer);
 
@@ -136,7 +142,7 @@ namespace canonical
       }
 
 
-    GiNaC::ex resources::Hsq_resource(const language_printer& printer)
+    GiNaC::ex resources::Hsq_resource(const cse& cse_worker, const language_printer& printer)
       {
         std::unique_ptr<ginac_cache_tags> args = this->generate_arguments(printer);
 
@@ -146,8 +152,8 @@ namespace canonical
           {
             timing_instrument timer(this->compute_timer);
 
-            GiNaC::ex V = this->V_resource(printer);
-            GiNaC::ex eps = this->eps_resource(printer);
+            GiNaC::ex V = this->V_resource(cse_worker, printer);
+            GiNaC::ex eps = this->eps_resource(cse_worker, printer);
             GiNaC::symbol Mp = this->share.generate_Mp();
 
             Hsq = V / ((3-eps)*Mp*Mp);
@@ -198,7 +204,7 @@ namespace canonical
                     // generate necessary items if they have not been done
                     if(!cached)
                       {
-                        subs_V = this->V_resource(printer);
+                        subs_V = this->raw_V_resource(printer);
                         f_list = this->share.generate_fields(printer);
                         cached = true;
                       }
@@ -262,7 +268,7 @@ namespace canonical
                         // generate necessary items if they have not been done
                         if(!cached)
                           {
-                            subs_V = this->V_resource(printer);
+                            subs_V = this->raw_V_resource(printer);
                             f_list = this->share.generate_fields(printer);
                             cached = true;
                           }
@@ -333,7 +339,7 @@ namespace canonical
                             // generate necessary items if they have not been done
                             if(!cached)
                               {
-                                subs_V = this->V_resource(printer);
+                                subs_V = this->raw_V_resource(printer);
                                 f_list = this->share.generate_fields(printer);
                                 cached = true;
                               }

@@ -116,8 +116,8 @@ namespace canonical
 
     void canonical_zeta2::cache_symbols()
       {
-        Hsq = this->res.Hsq_resource(this->printer);
-        eps = this->res.eps_resource(this->printer);
+        Hsq = this->res.Hsq_resource(this->cse_worker, this->printer);
+        eps = this->res.eps_resource(this->cse_worker, this->printer);
         Mp = this->shared.generate_Mp();
 
         // formulae from DS calculation 28 May 2014

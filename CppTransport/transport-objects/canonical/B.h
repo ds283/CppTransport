@@ -34,10 +34,11 @@ namespace canonical
       public:
 
         //! constructor
-        canonical_B(language_printer& p, expression_cache& c, resources& r, shared_resources& s,
+        canonical_B(language_printer& p, cse& cw, expression_cache& c, resources& r, shared_resources& s,
                      boost::timer::cpu_timer& tm, index_flatten& f, index_traits& t)
           : B(),
             printer(p),
+            cse_worker(cw),
             cache(c),
             res(r),
             shared(s),
@@ -104,6 +105,9 @@ namespace canonical
 
         //! reference to supplied language printer
         language_printer& printer;
+
+        //! reference to supplied CSE worker
+        cse& cse_worker;
 
         //! reference to expression cache
         expression_cache& cache;
