@@ -55,9 +55,16 @@ namespace transport
           : $MODEL<number>()
           {
 #ifdef CPPTRANSPORT_INSTRUMENT
-            setup_timer.stop();
-            u_tensor_timer.stop();
-            transport_eq_timer.stop();
+            twopf_setup_timer.stop();
+            twopf_u_tensor_timer.stop();
+            twopf_transport_eq_timer.stop();
+
+            threepf_setup_timer.stop();
+            threepf_u_tensor_timer.stop();
+            threepf_transport_eq_timer.stop();
+
+            twopf_items = 0;
+            threepf_items = 0;
 #endif
           }
 
@@ -66,10 +73,31 @@ namespace transport
         //! instrumented destructor
         ~$MODEL_mpi()
           {
-            std::cout << "INSTRUMENTATION REPORT" << '\n';
-            std::cout << "-- setup: " << format_time(setup_timer.elapsed().user) << '\n';
-            std::cout << "-- U tensors: " << format_time(u_tensor_timer.elapsed().user) << '\n';
-            std::cout << "-- transport equations: " << format_time(transport_eq_timer.elapsed().user) << '\n';
+            if(this->twopf_items > 0)
+              {
+                std::cout << '\n' << "TWOPF INSTRUMENTATION REPORT" << '\n';
+                std::cout << "* TOTALS" << '\n';
+                std::cout << "  -- setup: " << format_time(twopf_setup_timer.elapsed().user) << " user, " << format_time(twopf_setup_timer.elapsed().system) << " system, " << format_time(twopf_setup_timer.elapsed().wall) << " wall" << '\n';
+                std::cout << "  -- U tensors: " << format_time(twopf_u_tensor_timer.elapsed().user) << " user, " << format_time(twopf_u_tensor_timer.elapsed().system) << " system, " << format_time(twopf_u_tensor_timer.elapsed().wall) << " wall" << '\n';
+                std::cout << "  -- transport equations: " << format_time(twopf_transport_eq_timer.elapsed().user) << " user, " << format_time(twopf_transport_eq_timer.elapsed().system) << " system, " << format_time(twopf_transport_eq_timer.elapsed().wall) << " wall" << '\n';
+                std::cout << "* PER ITEM" << '\n';
+                std::cout << "  -- setup: " << format_time(twopf_setup_timer.elapsed().user/this->twopf_items) << " user, " << format_time(twopf_setup_timer.elapsed().system/this->twopf_items) << " system, " << format_time(twopf_setup_timer.elapsed().wall/this->twopf_items) << " wall" << '\n';
+                std::cout << "  -- U tensors: " << format_time(twopf_u_tensor_timer.elapsed().user/this->twopf_items) << " user, " << format_time(twopf_u_tensor_timer.elapsed().system/this->twopf_items) << " system, " << format_time(twopf_u_tensor_timer.elapsed().wall/this->twopf_items) << " wall" << '\n';
+                std::cout << "  -- transport equations: " << format_time(twopf_transport_eq_timer.elapsed().user/this->twopf_items) << " user, " << format_time(twopf_transport_eq_timer.elapsed().system/this->twopf_items) << " system, " << format_time(twopf_transport_eq_timer.elapsed().wall/this->twopf_items) << " wall" << '\n';
+              }
+
+            if(this->threepf_items > 0)
+              {
+                std::cout << '\n' << "THREEPF INSTRUMENTATION REPORT" << '\n';
+                std::cout << "* TOTALS" << '\n';
+                std::cout << "  -- setup: " << format_time(threepf_setup_timer.elapsed().user) << " user, " << format_time(threepf_setup_timer.elapsed().system) << " system, " << format_time(threepf_setup_timer.elapsed().wall) << " wall" << '\n';
+                std::cout << "  -- U tensors: " << format_time(threepf_u_tensor_timer.elapsed().user) << " user, " << format_time(threepf_u_tensor_timer.elapsed().system) << " system, " << format_time(threepf_u_tensor_timer.elapsed().wall) << " wall" << '\n';
+                std::cout << "  -- transport equations: " << format_time(threepf_transport_eq_timer.elapsed().user) << " user, " << format_time(threepf_transport_eq_timer.elapsed().system) << " system, " << format_time(threepf_transport_eq_timer.elapsed().wall) << " wall" << '\n';
+                std::cout << "* PER ITEM" << '\n';
+                std::cout << "  -- setup: " << format_time(threepf_setup_timer.elapsed().user/this->threepf_items) << " user, " << format_time(threepf_setup_timer.elapsed().system/this->threepf_items) << " system, " << format_time(threepf_setup_timer.elapsed().wall/this->threepf_items) << " wall" << '\n';
+                std::cout << "  -- U tensors: " << format_time(threepf_u_tensor_timer.elapsed().user/this->threepf_items) << " user, " << format_time(threepf_u_tensor_timer.elapsed().system/this->threepf_items) << " system, " << format_time(threepf_u_tensor_timer.elapsed().wall/this->threepf_items) << " wall" << '\n';
+                std::cout << "  -- transport equations: " << format_time(threepf_transport_eq_timer.elapsed().user/this->threepf_items) << " user, " << format_time(threepf_transport_eq_timer.elapsed().system/this->threepf_items) << " system, " << format_time(threepf_transport_eq_timer.elapsed().wall/this->threepf_items) << " wall" << '\n';
+              }
           }
 #else
         //! uninstrumented destructor
@@ -149,9 +177,17 @@ namespace transport
       private:
 
 #ifdef CPPTRANSPORT_INSTRUMENT
-        boost::timer::cpu_timer setup_timer;
-        boost::timer::cpu_timer u_tensor_timer;
-        boost::timer::cpu_timer transport_eq_timer;
+        boost::timer::cpu_timer twopf_setup_timer;
+        boost::timer::cpu_timer twopf_u_tensor_timer;
+        boost::timer::cpu_timer twopf_transport_eq_timer;
+
+        unsigned int twopf_items;
+
+        boost::timer::cpu_timer threepf_setup_timer;
+        boost::timer::cpu_timer threepf_u_tensor_timer;
+        boost::timer::cpu_timer threepf_transport_eq_timer;
+
+        unsigned int threepf_items;
 #endif
 
       };
@@ -541,7 +577,7 @@ namespace transport
         $MODEL_mpi_twopf_functor<number> rhs(tk, *kconfig
 #ifdef CPPTRANSPORT_INSTRUMENT
           ,
-            this->setup_timer, this->u_tensor_timer, this->transport_eq_timer
+            this->twopf_setup_timer, this->twopf_u_tensor_timer, this->twopf_transport_eq_timer
 #endif
           );
         rhs.set_up_workspace();
@@ -578,6 +614,10 @@ namespace transport
 
         obs.stop_timers(steps, refinement_level);
         rhs.close_down_workspace();
+
+#ifdef CPPTRANSPORT_INSTRUMENT
+        ++this->twopf_items;
+#endif
       }
 
 
@@ -699,7 +739,7 @@ namespace transport
         $MODEL_mpi_threepf_functor<number>  rhs(tk, *kconfig
 #ifdef CPPTRANSPORT_INSTRUMENT
           ,
-            this->setup_timer, this->u_tensor_timer, this->transport_eq_timer
+            this->threepf_setup_timer, this->threepf_u_tensor_timer, this->threepf_transport_eq_timer
 #endif
           );
         rhs.set_up_workspace();
@@ -753,6 +793,10 @@ namespace transport
 
         obs.stop_timers(steps, refinement_level);
         rhs.close_down_workspace();
+
+#ifdef CPPTRANSPORT_INSTRUMENT
+        ++this->threepf_items;
+#endif
       }
 
 
