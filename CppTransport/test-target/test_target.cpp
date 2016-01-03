@@ -7,7 +7,7 @@
 //
 
 
-#include "axion_basic_unrolled.h"
+#include "axion_mpi.h"
 
 
 // ****************************************************************************
@@ -20,7 +20,7 @@ int main(int argc, char* argv[])
 
     // set up an instance of the double quadratic model,
     // using doubles, with given parameter choices
-    std::shared_ptr< transport::axion_basic<double> > model = mgr->create_model< transport::axion_basic<double> >();
+    std::shared_ptr< transport::axion_mpi<double> > model = mgr->create_model< transport::axion_mpi<double> >();
 
     mgr->process();
 

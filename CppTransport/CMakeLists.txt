@@ -322,12 +322,8 @@ set(PARSER_FILES
   )
 
 set(TEMPLATES_FILES
-  templates/canonical_basic.h
-  templates/canonical_basic_loop.h
-  templates/canonical_basic_twopf.h
-  templates/canonical_basic_unrolled.h
+  templates/canonical_mpi.h
   templates/canonical_core.h
-  templates/canonical_core_twopf.h
   )
 
 set(TEMPLATES_VEXCL_CUDA_FILES

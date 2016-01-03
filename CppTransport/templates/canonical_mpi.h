@@ -43,7 +43,7 @@ namespace transport
 
     // CLASS FOR $MODEL 'basic', ie., MPI implementation
     template <typename number>
-    class $MODEL_basic : public $MODEL<number>
+    class $MODEL_mpi : public $MODEL<number>
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -51,13 +51,13 @@ namespace transport
       public:
 
         //! constructor
-        $MODEL_basic()
+        $MODEL_mpi()
           : $MODEL<number>()
           {
           }
 
         //! destructor is default
-        virtual ~$MODEL_basic() = default;
+        virtual ~$MODEL_mpi() = default;
 
 
         // EXTRACT MODEL INFORMATION -- implements a 'model' interface
@@ -131,12 +131,12 @@ namespace transport
 
     // integration - 2pf functor
     template <typename number>
-    class $MODEL_basic_twopf_functor
+    class $MODEL_mpi_twopf_functor
       {
 
       public:
 
-        $MODEL_basic_twopf_functor(const twopf_list_task<number>* tk, const twopf_kconfig& k)
+        $MODEL_mpi_twopf_functor(const twopf_list_task<number>* tk, const twopf_kconfig& k)
           : params(tk->get_params()),
             Mp(tk->get_params().get_Mp()),
             N_horizon_exit(tk->get_N_horizon_crossing()),
@@ -206,12 +206,12 @@ namespace transport
 
     // integration - observer object for 2pf
     template <typename number>
-    class $MODEL_basic_twopf_observer: public twopf_singleconfig_batch_observer<number>
+    class $MODEL_mpi_twopf_observer: public twopf_singleconfig_batch_observer<number>
       {
 
       public:
 
-        $MODEL_basic_twopf_observer(twopf_batcher<number>& b, const twopf_kconfig_record& c,
+        $MODEL_mpi_twopf_observer(twopf_batcher<number>& b, const twopf_kconfig_record& c,
                                        const time_config_database& t)
           : twopf_singleconfig_batch_observer<number>(b, c, t,
                                                       $MODEL_pool::backg_size, $MODEL_pool::tensor_size, $MODEL_pool::twopf_size,
@@ -226,12 +226,12 @@ namespace transport
 
     // integration - 3pf functor
     template <typename number>
-    class $MODEL_basic_threepf_functor
+    class $MODEL_mpi_threepf_functor
       {
 
       public:
 
-        $MODEL_basic_threepf_functor(const twopf_list_task<number>* tk, const threepf_kconfig& k)
+        $MODEL_mpi_threepf_functor(const twopf_list_task<number>* tk, const threepf_kconfig& k)
           : params(tk->get_params()),
             Mp(tk->get_params().get_Mp()),
             N_horizon_exit(tk->get_N_horizon_crossing()),
@@ -326,11 +326,11 @@ namespace transport
 
     // integration - observer object for 3pf
     template <typename number>
-    class $MODEL_basic_threepf_observer: public threepf_singleconfig_batch_observer<number>
+    class $MODEL_mpi_threepf_observer: public threepf_singleconfig_batch_observer<number>
       {
 
       public:
-        $MODEL_basic_threepf_observer(threepf_batcher<number>& b, const threepf_kconfig_record& c,
+        $MODEL_mpi_threepf_observer(threepf_batcher<number>& b, const threepf_kconfig_record& c,
                                          const time_config_database& t)
           : threepf_singleconfig_batch_observer<number>(b, c, t,
                                                         $MODEL_pool::backg_size, $MODEL_pool::tensor_size,
@@ -354,7 +354,7 @@ namespace transport
 
     // generate a context
     template <typename number>
-    context $MODEL_basic<number>::backend_get_context(void)
+    context $MODEL_mpi<number>::backend_get_context(void)
       {
         context ctx;
 
@@ -366,21 +366,21 @@ namespace transport
 
 
     template <typename number>
-    worker_type $MODEL_basic<number>::get_backend_type(void)
+    worker_type $MODEL_mpi<number>::get_backend_type(void)
       {
         return(worker_type::cpu);
       }
 
 
     template <typename number>
-    unsigned int $MODEL_basic<number>::get_backend_memory(void)
+    unsigned int $MODEL_mpi<number>::get_backend_memory(void)
       {
         return(0);
       }
 
 
     template <typename number>
-    unsigned int $MODEL_basic<number>::get_backend_priority(void)
+    unsigned int $MODEL_mpi<number>::get_backend_priority(void)
       {
         return(1);
       }
@@ -388,7 +388,7 @@ namespace transport
 
     // process work queue for twopf
     template <typename number>
-    void $MODEL_basic<number>::backend_process_queue(work_queue<twopf_kconfig_record>& work, const twopf_list_task<number>* tk,
+    void $MODEL_mpi<number>::backend_process_queue(work_queue<twopf_kconfig_record>& work, const twopf_list_task<number>* tk,
                                                         twopf_batcher<number>& batcher, bool silent)
       {
         // set batcher to delayed flushing mode so that we have a chance to unwind failed integrations
@@ -449,7 +449,7 @@ namespace transport
 
 
     template <typename number>
-    void $MODEL_basic<number>::twopf_kmode(const twopf_kconfig_record& kconfig, const twopf_list_task<number>* tk,
+    void $MODEL_mpi<number>::twopf_kmode(const twopf_kconfig_record& kconfig, const twopf_list_task<number>* tk,
                                               twopf_batcher<number>& batcher, unsigned int refinement_level)
       {
         if(refinement_level > tk->get_max_refinements()) throw runtime_exception(exception_type::REFINEMENT_FAILURE, CPPTRANSPORT_REFINEMENT_TOO_DEEP);
@@ -459,10 +459,10 @@ namespace transport
 
         // set up a functor to observe the integration
         // this also starts the timers running, so we do it as early as possible
-        $MODEL_basic_twopf_observer<number> obs(batcher, kconfig, time_db);
+        $MODEL_mpi_twopf_observer<number> obs(batcher, kconfig, time_db);
 
         // set up a functor to evolve this system
-        $MODEL_basic_twopf_functor<number> rhs(tk, *kconfig);
+        $MODEL_mpi_twopf_functor<number> rhs(tk, *kconfig);
         rhs.set_up_workspace();
 
         // set up a state vector
@@ -509,7 +509,7 @@ namespace transport
     // ics       - iniitial conditions for the background fields (or fields+momenta)
     // imaginary - whether to populate using real or imaginary components of the 2pf
     template <typename number>
-    void $MODEL_basic<number>::populate_twopf_ic(twopf_state<number>& x, unsigned int start, double kmode, double Ninit,
+    void $MODEL_mpi<number>::populate_twopf_ic(twopf_state<number>& x, unsigned int start, double kmode, double Ninit,
                                                     const twopf_list_task<number>* tk, const std::vector<number>& ics, bool imaginary)
       {
         assert(x.size() >= start);
@@ -521,7 +521,7 @@ namespace transport
 
     // make initial conditions for the tensor twopf
     template <typename number>
-    void $MODEL_basic<number>::populate_tensor_ic(twopf_state<number>& x, unsigned int start, double kmode, double Ninit,
+    void $MODEL_mpi<number>::populate_tensor_ic(twopf_state<number>& x, unsigned int start, double kmode, double Ninit,
                                                      const twopf_list_task<number>* tk, const std::vector<number>& ics)
       {
         assert(x.size() >= start);
@@ -538,7 +538,7 @@ namespace transport
 
 
     template <typename number>
-    void $MODEL_basic<number>::backend_process_queue(work_queue<threepf_kconfig_record>& work, const threepf_task<number>* tk,
+    void $MODEL_mpi<number>::backend_process_queue(work_queue<threepf_kconfig_record>& work, const threepf_task<number>* tk,
                                                         threepf_batcher<number>& batcher, bool silent)
       {
         // set batcher to delayed flushing mode so that we have a chance to unwind failed integrations
@@ -602,7 +602,7 @@ namespace transport
 
 
     template <typename number>
-    void $MODEL_basic<number>::threepf_kmode(const threepf_kconfig_record& kconfig, const threepf_task<number>* tk,
+    void $MODEL_mpi<number>::threepf_kmode(const threepf_kconfig_record& kconfig, const threepf_task<number>* tk,
                                                 threepf_batcher<number>& batcher, unsigned int refinement_level)
       {
         if(refinement_level > tk->get_max_refinements()) throw runtime_exception(exception_type::REFINEMENT_FAILURE, CPPTRANSPORT_REFINEMENT_TOO_DEEP);
@@ -612,10 +612,10 @@ namespace transport
 
         // set up a functor to observe the integration
         // this also starts the timers running, so we do it as early as possible
-        $MODEL_basic_threepf_observer<number> obs(batcher, kconfig, time_db);
+        $MODEL_mpi_threepf_observer<number> obs(batcher, kconfig, time_db);
 
         // set up a functor to evolve this system
-        $MODEL_basic_threepf_functor<number>  rhs(tk, *kconfig);
+        $MODEL_mpi_threepf_functor<number>  rhs(tk, *kconfig);
         rhs.set_up_workspace();
 
         // set up a state vector
@@ -671,7 +671,7 @@ namespace transport
 
 
     template <typename number>
-    void $MODEL_basic<number>::populate_threepf_ic(threepf_state<number>& x, unsigned int start,
+    void $MODEL_mpi<number>::populate_threepf_ic(threepf_state<number>& x, unsigned int start,
                                                       const threepf_kconfig& kconfig, double Ninit,
                                                       const twopf_list_task<number>* tk, const std::vector<number>& ics)
       {
@@ -686,7 +686,7 @@ namespace transport
 
 
     template <typename number>
-    void $MODEL_basic_twopf_functor<number>::operator()(const twopf_state<number>& __x, twopf_state<number>& __dxdt, double __t)
+    void $MODEL_mpi_twopf_functor<number>::operator()(const twopf_state<number>& __x, twopf_state<number>& __dxdt, double __t)
       {
         $RESOURCE_RELEASE
 
@@ -758,7 +758,7 @@ namespace transport
 
 
     template <typename number>
-    void $MODEL_basic_twopf_observer<number>::operator()(const twopf_state<number>& x, double t)
+    void $MODEL_mpi_twopf_observer<number>::operator()(const twopf_state<number>& x, double t)
       {
         this->start_batching(t, this->get_log(), generic_batcher::log_severity_level::normal);
         this->push(x);
@@ -770,7 +770,7 @@ namespace transport
 
 
     template <typename number>
-    void $MODEL_basic_threepf_functor<number>::operator()(const threepf_state<number>& __x, threepf_state<number>& __dxdt, double __t)
+    void $MODEL_mpi_threepf_functor<number>::operator()(const threepf_state<number>& __x, threepf_state<number>& __dxdt, double __t)
       {
         $RESOURCE_RELEASE
 
@@ -937,7 +937,7 @@ namespace transport
 
 
     template <typename number>
-    void $MODEL_basic_threepf_observer<number>::operator()(const threepf_state<number>& x, double t)
+    void $MODEL_mpi_threepf_observer<number>::operator()(const threepf_state<number>& x, double t)
       {
         this->start_batching(t, this->get_log(), generic_batcher::log_severity_level::normal);
         this->push(x);

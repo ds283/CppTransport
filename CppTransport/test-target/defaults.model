@@ -3,7 +3,7 @@ tag            "please cite arXiv:XXXX.YYYY";
 
 % specify which class template should be used with this model
 core           "canonical_core";
-implementation "canonical_basic_unrolled";
+implementation "canonical_mpi";
 
 % fix properties of the steppers
 background
