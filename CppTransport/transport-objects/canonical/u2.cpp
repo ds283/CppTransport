@@ -131,7 +131,7 @@ namespace canonical
         if(j.get_class() != index_class::full) throw tensor_exception("U2");
 
         GiNaC::idx idx_i = this->shared.generate_index(i);
-        GiNaC::idx idx_j = this->shared.generate_index(i);
+        GiNaC::idx idx_j = this->shared.generate_index(j);
 
         // convert these indices to species-only indices
         const abstract_index i_field_a = this->traits.species_to_species(i);
@@ -151,7 +151,7 @@ namespace canonical
 
         std::vector<GiNaC::ex> map(lambda_flattened_map_size(2));
 
-        map[lambda_flatten(LAMBDA_FIELD, LAMBDA_FIELD)] = deriv_a_i;
+        map[lambda_flatten(LAMBDA_FIELD, LAMBDA_FIELD)] = 0;
         map[lambda_flatten(LAMBDA_FIELD, LAMBDA_MOMENTUM)] = GiNaC::delta_tensor(idx_a_i, idx_b_j);
         map[lambda_flatten(LAMBDA_MOMENTUM, LAMBDA_MOMENTUM)] = GiNaC::delta_tensor(idx_b_i, idx_b_j) * (eps-3);
 
