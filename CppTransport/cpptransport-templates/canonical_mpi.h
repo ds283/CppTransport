@@ -54,10 +54,27 @@ namespace transport
         $MODEL_mpi()
           : $MODEL<number>()
           {
+#ifdef CPPTRANSPORT_INSTRUMENT
+            setup_timer.stop();
+            u_tensor_timer.stop();
+            transport_eq_timer.stop();
+#endif
           }
 
-        //! destructor is default
+        // destructor is default unless instrumented
+#ifdef CPPTRANSPORT_INSTRUMENT
+        //! instrumented destructor
+        ~$MODEL_mpi()
+          {
+            std::cout << "INSTRUMENTATION REPORT" << '\n';
+            std::cout << "-- setup: " << format_time(setup_timer.elapsed().user) << '\n';
+            std::cout << "-- U tensors: " << format_time(u_tensor_timer.elapsed().user) << '\n';
+            std::cout << "-- transport equations: " << format_time(transport_eq_timer.elapsed().user) << '\n';
+          }
+#else
+        //! uninstrumented destructor
         virtual ~$MODEL_mpi() = default;
+#endif
 
 
         // EXTRACT MODEL INFORMATION -- implements a 'model' interface
@@ -126,6 +143,17 @@ namespace transport
         void populate_threepf_ic(threepf_state<number>& x, unsigned int start, const threepf_kconfig& kconfig,
                                  double Ninit, const twopf_list_task<number>* tk, const std::vector<number>& ic);
 
+
+        // INTERNAL DATA
+
+      private:
+
+#ifdef CPPTRANSPORT_INSTRUMENT
+        boost::timer::cpu_timer setup_timer;
+        boost::timer::cpu_timer u_tensor_timer;
+        boost::timer::cpu_timer transport_eq_timer;
+#endif
+
       };
 
 
@@ -136,70 +164,92 @@ namespace transport
 
       public:
 
-        $MODEL_mpi_twopf_functor(const twopf_list_task<number>* tk, const twopf_kconfig& k)
-          : params(tk->get_params()),
-            Mp(tk->get_params().get_Mp()),
-            N_horizon_exit(tk->get_N_horizon_crossing()),
-            astar_normalization(tk->get_astar_normalization()),
-            config(k),
-            u2(nullptr),
-            dV(nullptr),
-            ddV(nullptr),
-            raw_params(nullptr)
+        $MODEL_mpi_twopf_functor(const twopf_list_task<number>* tk, const twopf_kconfig& k
+#ifdef CPPTRANSPORT_INSTRUMENT
+          ,
+            boost::timer::cpu_timer& st,
+            boost::timer::cpu_timer& ut,
+            boost::timer::cpu_timer& tt
+#endif
+        )
+          : __params(tk->get_params()),
+            __Mp(tk->get_params().get_Mp()),
+            __N_horizon_exit(tk->get_N_horizon_crossing()),
+            __astar_normalization(tk->get_astar_normalization()),
+            __config(k),
+            __k(k.k_comoving),
+            __u2(nullptr),
+            __dV(nullptr),
+            __ddV(nullptr),
+            __raw_params(nullptr)
+#ifdef CPPTRANSPORT_INSTRUMENT
+            ,
+                __setup_timer(st),
+                __u_tensor_timer(ut),
+                __transport_eq_timer(tt)
+#endif
           {
           }
 
         void set_up_workspace()
           {
             $RESOURCE_RELEASE
-            this->u2 = new number[2*$NUMBER_FIELDS * 2*$NUMBER_FIELDS];
+            this->__u2 = new number[2*$NUMBER_FIELDS * 2*$NUMBER_FIELDS];
 
-            this->dV = new number[$NUMBER_FIELDS];
-            this->ddV = new number[$NUMBER_FIELDS * $NUMBER_FIELDS];
+            this->__dV = new number[$NUMBER_FIELDS];
+            this->__ddV = new number[$NUMBER_FIELDS * $NUMBER_FIELDS];
 
-            this->raw_params = new number[$NUMBER_PARAMS];
+            this->__raw_params = new number[$NUMBER_PARAMS];
 
-            this->raw_params[$1] = this->params.get_vector()[$1];
+            this->__raw_params[$1] = this->__params.get_vector()[$1];
           }
 
         void close_down_workspace()
           {
-            delete[] this->u2;
+            delete[] this->__u2;
 
-            delete[] this->dV;
-            delete[] this->ddV;
+            delete[] this->__dV;
+            delete[] this->__ddV;
 
-            delete[] this->raw_params;
+            delete[] this->__raw_params;
           }
 
         void operator ()(const twopf_state<number>& __x, twopf_state<number>& __dxdt, double __t);
 
         // adjust horizon exit time, given an initial time N_init which we wish to move to zero
-        void rebase_horizon_exit_time(double N_init) { this->N_horizon_exit -= N_init; }
+        void rebase_horizon_exit_time(double N_init) { this->__N_horizon_exit -= N_init; }
 
 
         // INTERNAL DATA
 
       private:
 
-        const parameters<number>& params;
+        const parameters<number>& __params;
 
-        number Mp;
+        number __Mp;
 
-        double N_horizon_exit;
+        double __N_horizon_exit;
 
-        double astar_normalization;
+        double __astar_normalization;
 
-        const twopf_kconfig config;
+        const twopf_kconfig __config;
+
+        const double __k;
 
         // manage memory ourselves, rather than via an STL container, for maximum performance
         // also avoids copying overheads (the Boost odeint library copies the functor by value)
-        number* u2;
+        number* __u2;
 
-        number* dV;
-        number* ddV;
+        number* __dV;
+        number* __ddV;
 
-        number* raw_params;
+        number* __raw_params;
+
+#ifdef CPPTRANSPORT_INSTRUMENT
+        boost::timer::cpu_timer& __setup_timer;
+        boost::timer::cpu_timer& __u_tensor_timer;
+        boost::timer::cpu_timer& __transport_eq_timer;
+#endif
 
       };
 
@@ -231,95 +281,121 @@ namespace transport
 
       public:
 
-        $MODEL_mpi_threepf_functor(const twopf_list_task<number>* tk, const threepf_kconfig& k)
-          : params(tk->get_params()),
-            Mp(tk->get_params().get_Mp()),
-            N_horizon_exit(tk->get_N_horizon_crossing()),
-            astar_normalization(tk->get_astar_normalization()),
-            config(k),
-            u2_k1(nullptr),
-            u2_k2(nullptr),
-            u2_k3(nullptr),
-            u3_k1k2k3(nullptr),
-            u3_k2k1k3(nullptr),
-            u3_k3k1k2(nullptr),
-            dV(nullptr),
-            ddV(nullptr),
-            dddV(nullptr),
-            raw_params(nullptr)
+        $MODEL_mpi_threepf_functor(const twopf_list_task<number>* tk, const threepf_kconfig& k
+#ifdef CPPTRANSPORT_INSTRUMENT
+          ,
+          boost::timer::cpu_timer& st,
+          boost::timer::cpu_timer& ut,
+          boost::timer::cpu_timer& tt
+#endif
+        )
+          : __params(tk->get_params()),
+            __Mp(tk->get_params().get_Mp()),
+            __N_horizon_exit(tk->get_N_horizon_crossing()),
+            __astar_normalization(tk->get_astar_normalization()),
+            __config(k),
+            __k1(k.k1_comoving),
+            __k2(k.k2_comoving),
+            __k3(k.k3_comoving),
+            __u2_k1(nullptr),
+            __u2_k2(nullptr),
+            __u2_k3(nullptr),
+            __u3_k1k2k3(nullptr),
+            __u3_k2k1k3(nullptr),
+            __u3_k3k1k2(nullptr),
+            __dV(nullptr),
+            __ddV(nullptr),
+            __dddV(nullptr),
+            __raw_params(nullptr)
+#ifdef CPPTRANSPORT_INSTRUMENT
+            ,
+            __setup_timer(st),
+            __u_tensor_timer(ut),
+            __transport_eq_timer(tt)
+#endif
           {
           }
 
         void set_up_workspace()
           {
             $RESOURCE_RELEASE
-            this->u2_k1 = new number[2*$NUMBER_FIELDS * 2*$NUMBER_FIELDS];
-            this->u2_k2 = new number[2*$NUMBER_FIELDS * 2*$NUMBER_FIELDS];
-            this->u2_k3 = new number[2*$NUMBER_FIELDS * 2*$NUMBER_FIELDS];
+            this->__u2_k1 = new number[2*$NUMBER_FIELDS * 2*$NUMBER_FIELDS];
+            this->__u2_k2 = new number[2*$NUMBER_FIELDS * 2*$NUMBER_FIELDS];
+            this->__u2_k3 = new number[2*$NUMBER_FIELDS * 2*$NUMBER_FIELDS];
 
-            this->u3_k1k2k3 = new number[2*$NUMBER_FIELDS * 2*$NUMBER_FIELDS * 2*$NUMBER_FIELDS];
-            this->u3_k2k1k3 = new number[2*$NUMBER_FIELDS * 2*$NUMBER_FIELDS * 2*$NUMBER_FIELDS];
-            this->u3_k3k1k2 = new number[2*$NUMBER_FIELDS * 2*$NUMBER_FIELDS * 2*$NUMBER_FIELDS];
+            this->__u3_k1k2k3 = new number[2*$NUMBER_FIELDS * 2*$NUMBER_FIELDS * 2*$NUMBER_FIELDS];
+            this->__u3_k2k1k3 = new number[2*$NUMBER_FIELDS * 2*$NUMBER_FIELDS * 2*$NUMBER_FIELDS];
+            this->__u3_k3k1k2 = new number[2*$NUMBER_FIELDS * 2*$NUMBER_FIELDS * 2*$NUMBER_FIELDS];
 
-            this->dV = new number[$NUMBER_FIELDS];
-            this->ddV = new number[$NUMBER_FIELDS * $NUMBER_FIELDS];
-            this->dddV = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
+            this->__dV = new number[$NUMBER_FIELDS];
+            this->__ddV = new number[$NUMBER_FIELDS * $NUMBER_FIELDS];
+            this->__dddV = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
 
-            this->raw_params = new number[$NUMBER_PARAMS];
+            this->__raw_params = new number[$NUMBER_PARAMS];
 
-            this->raw_params[$1] = this->params.get_vector()[$1];
+            this->__raw_params[$1] = this->__params.get_vector()[$1];
           }
 
         void close_down_workspace()
           {
-            delete[] this->u2_k1;
-            delete[] this->u2_k2;
-            delete[] this->u2_k3;
+            delete[] this->__u2_k1;
+            delete[] this->__u2_k2;
+            delete[] this->__u2_k3;
 
-            delete[] this->u3_k1k2k3;
-            delete[] this->u3_k2k1k3;
-            delete[] this->u3_k3k1k2;
+            delete[] this->__u3_k1k2k3;
+            delete[] this->__u3_k2k1k3;
+            delete[] this->__u3_k3k1k2;
 
-            delete[] this->dV;
-            delete[] this->ddV;
-            delete[] this->dddV;
+            delete[] this->__dV;
+            delete[] this->__ddV;
+            delete[] this->__dddV;
 
-            delete[] this->raw_params;
+            delete[] this->__raw_params;
           }
 
         void operator ()(const threepf_state<number>& __x, threepf_state<number>& __dxdt, double __dt);
 
         // adjust horizon exit time, given an initial time N_init which we wish to move to zero
-        void rebase_horizon_exit_time(double N_init) { this->N_horizon_exit -= N_init; }
+        void rebase_horizon_exit_time(double N_init) { this->__N_horizon_exit -= N_init; }
 
       private:
 
-        const parameters<number>& params;
+        const parameters<number>& __params;
 
-        number Mp;
+        number __Mp;
 
-        double N_horizon_exit;
+        double __N_horizon_exit;
 
-        double astar_normalization;
+        double __astar_normalization;
 
-        const threepf_kconfig config;
+        const threepf_kconfig __config;
+
+        const double __k1;
+        const double __k2;
+        const double __k3;
 
         // manage memory ourselves, rather than via an STL container, for maximum performance
         // also avoids copying overheads (the Boost odeint library copies the functor by value)
 
-        number* u2_k1;
-        number* u2_k2;
-        number* u2_k3;
+        number* __u2_k1;
+        number* __u2_k2;
+        number* __u2_k3;
 
-        number* u3_k1k2k3;
-        number* u3_k2k1k3;
-        number* u3_k3k1k2;
+        number* __u3_k1k2k3;
+        number* __u3_k2k1k3;
+        number* __u3_k3k1k2;
 
-        number* dV;
-        number* ddV;
-        number* dddV;
+        number* __dV;
+        number* __ddV;
+        number* __dddV;
 
-        number* raw_params;
+        number* __raw_params;
+
+#ifdef CPPTRANSPORT_INSTRUMENT
+        boost::timer::cpu_timer& __setup_timer;
+        boost::timer::cpu_timer& __u_tensor_timer;
+        boost::timer::cpu_timer& __transport_eq_timer;
+#endif
 
       };
 
@@ -462,7 +538,12 @@ namespace transport
         $MODEL_mpi_twopf_observer<number> obs(batcher, kconfig, time_db);
 
         // set up a functor to evolve this system
-        $MODEL_mpi_twopf_functor<number> rhs(tk, *kconfig);
+        $MODEL_mpi_twopf_functor<number> rhs(tk, *kconfig
+#ifdef CPPTRANSPORT_INSTRUMENT
+          ,
+            this->setup_timer, this->u_tensor_timer, this->transport_eq_timer
+#endif
+          );
         rhs.set_up_workspace();
 
         // set up a state vector
@@ -615,7 +696,12 @@ namespace transport
         $MODEL_mpi_threepf_observer<number> obs(batcher, kconfig, time_db);
 
         // set up a functor to evolve this system
-        $MODEL_mpi_threepf_functor<number>  rhs(tk, *kconfig);
+        $MODEL_mpi_threepf_functor<number>  rhs(tk, *kconfig
+#ifdef CPPTRANSPORT_INSTRUMENT
+          ,
+            this->setup_timer, this->u_tensor_timer, this->transport_eq_timer
+#endif
+          );
         rhs.set_up_workspace();
 
         // set up a state vector
@@ -690,19 +776,21 @@ namespace transport
       {
         $RESOURCE_RELEASE
 
-        const auto __Mp = this->Mp;
-        const auto __k = this->config.k_comoving;
-        const auto __a = std::exp(__t - this->N_horizon_exit + this->astar_normalization);
+        const auto __a = std::exp(__t - this->__N_horizon_exit + this->__astar_normalization);
 
         // calculation of dV, ddV, dddV has to occur above the temporary pool
-        $MODEL_compute_dV(this->raw_params, __x, this->dV);
-        $MODEL_compute_ddV(this->raw_params, __x, this->ddV);
+        $MODEL_compute_dV(__raw_params, __x, __dV);
+        $MODEL_compute_ddV(__raw_params, __x, __ddV);
 
         // capture resources for transport tensors
-        $RESOURCE_PARAMETERS{raw_params}
+        $RESOURCE_PARAMETERS{__raw_params}
         $RESOURCE_COORDINATES{__x}
-        $RESOURCE_DV{dV}
-        $RESOURCE_DDV{ddV}
+        $RESOURCE_DV{__dV}
+        $RESOURCE_DDV{__ddV}
+
+#ifdef CPPTRANSPORT_INSTRUMENT
+        __setup_timer.resume();
+#endif
 
         $TEMP_POOL{"const auto $1 = $2;"}
 
@@ -727,6 +815,11 @@ namespace transport
 #define __dtwopf_tensor(a,b) __dxdt[$MODEL_pool::tensor_start + TENSOR_FLATTEN(a,b)]
 #define __dtwopf(a,b)        __dxdt[$MODEL_pool::twopf_start + FLATTEN(a,b)]
 
+#ifdef CPPTRANSPORT_INSTRUMENT
+        __setup_timer.stop();
+        __u_tensor_timer.resume();
+#endif
+
         // evolve the background
         __background($A) = $U1_PREDEF[A];
 
@@ -744,13 +837,22 @@ namespace transport
         __dtwopf_tensor(1,1) = __pf*__tensor_twopf_fp + __pp*__tensor_twopf_pp + __pf*__tensor_twopf_pf + __pp*__tensor_twopf_pp;
 
         // set up components of the u2 tensor
-        this->u2[FLATTEN($A,$B)] = $U2_PREDEF[AB]{__k, __a};
+        __u2[FLATTEN($A,$B)] = $U2_PREDEF[AB]{__k, __a};
+
+#ifdef CPPTRANSPORT_INSTRUMENT
+        __u_tensor_timer.stop();
+        __transport_eq_timer.resume();
+#endif
 
         // evolve the 2pf
         // here, we are dealing only with the real part - which is symmetric.
         // so the index placement is not important
-        __dtwopf($A, $B) $=  + this->u2[FLATTEN($A, $C)] * __twopf($C, $B);
-        __dtwopf($A, $B) $+= + this->u2[FLATTEN($B, $C)] * __twopf($A, $C);
+        __dtwopf($A, $B) $=  + __u2[FLATTEN($A, $C)] * __twopf($C, $B);
+        __dtwopf($A, $B) $+= + __u2[FLATTEN($B, $C)] * __twopf($A, $C);
+
+#ifdef CPPTRANSPORT_INSTRUMENT
+        __transport_eq_timer.stop();
+#endif
       }
 
 
@@ -774,23 +876,23 @@ namespace transport
       {
         $RESOURCE_RELEASE
 
-        const auto __Mp = this->Mp;
-        const auto __k1 = this->config.k1_comoving;
-        const auto __k2 = this->config.k2_comoving;
-        const auto __k3 = this->config.k3_comoving;
-        const auto __a = std::exp(__t - this->N_horizon_exit + this->astar_normalization);
+        const auto __a = std::exp(__t - this->__N_horizon_exit + this->__astar_normalization);
 
         // calculation of dV, ddV, dddV has to occur above the temporary pool
-        $MODEL_compute_dV(this->raw_params, __x, this->dV);
-        $MODEL_compute_ddV(this->raw_params, __x, this->ddV);
-        $MODEL_compute_dddV(this->raw_params, __x, this->dddV);
+        $MODEL_compute_dV(__raw_params, __x, __dV);
+        $MODEL_compute_ddV(__raw_params, __x, __ddV);
+        $MODEL_compute_dddV(__raw_params, __x, __dddV);
 
         // capture resources for transport tensors
-        $RESOURCE_PARAMETERS{raw_params}
+        $RESOURCE_PARAMETERS{__raw_params}
         $RESOURCE_COORDINATES{__x}
-        $RESOURCE_DV{dV}
-        $RESOURCE_DDV{ddV}
-        $RESOURCE_DDDV{dddV};
+        $RESOURCE_DV{__dV}
+        $RESOURCE_DDV{__ddV}
+        $RESOURCE_DDDV{__dddV};
+
+#ifdef CPPTRANSPORT_INSTRUMENT
+        __setup_timer.resume();
+#endif
 
         $TEMP_POOL{"const auto $1 = $2;"}
 
@@ -856,6 +958,11 @@ namespace transport
 #define __dtwopf_im_k3(a,b)     __dxdt[$MODEL_pool::twopf_im_k3_start + FLATTEN(a,b)]
 #define __dthreepf(a,b,c)       __dxdt[$MODEL_pool::threepf_start     + FLATTEN(a,b,c)]
 
+#ifdef CPPTRANSPORT_INSTRUMENT
+        __setup_timer.stop();
+        __u_tensor_timer.resume();
+#endif
+
         // evolve the background
         __background($A) = $U1_PREDEF[A];
 
@@ -886,50 +993,59 @@ namespace transport
         __dtwopf_k3_tensor(1,1) = __pf*__tensor_k3_twopf_fp + __pp*__tensor_k3_twopf_pp + __pf*__tensor_k3_twopf_pf + __pp*__tensor_k3_twopf_pp;
 
         // set up components of the u2 tensor for k1, k2, k3
-        this->u2_k1[FLATTEN($A,$B)] = $U2_PREDEF[AB]{__k1, __a};
-        this->u2_k2[FLATTEN($A,$B)] = $U2_PREDEF[AB]{__k2, __a};
-        this->u2_k3[FLATTEN($A,$B)] = $U2_PREDEF[AB]{__k3, __a};
+        __u2_k1[FLATTEN($A,$B)] = $U2_PREDEF[AB]{__k1, __a};
+        __u2_k2[FLATTEN($A,$B)] = $U2_PREDEF[AB]{__k2, __a};
+        __u2_k3[FLATTEN($A,$B)] = $U2_PREDEF[AB]{__k3, __a};
 
         // set up components of the u3 tensor
-        this->u3_k1k2k3[FLATTEN($A,$B,$C)] = $U3_PREDEF[ABC]{__k1, __k2, __k3, __a};
-        this->u3_k2k1k3[FLATTEN($A,$B,$C)] = $U3_PREDEF[ABC]{__k2, __k1, __k3, __a};
-        this->u3_k3k1k2[FLATTEN($A,$B,$C)] = $U3_PREDEF[ABC]{__k3, __k1, __k2, __a};
+        __u3_k1k2k3[FLATTEN($A,$B,$C)] = $U3_PREDEF[ABC]{__k1, __k2, __k3, __a};
+        __u3_k2k1k3[FLATTEN($A,$B,$C)] = $U3_PREDEF[ABC]{__k2, __k1, __k3, __a};
+        __u3_k3k1k2[FLATTEN($A,$B,$C)] = $U3_PREDEF[ABC]{__k3, __k1, __k2, __a};
+
+#ifdef CPPTRANSPORT_INSTRUMENT
+        __u_tensor_timer.stop();
+        __transport_eq_timer.resume();
+#endif
 
         // evolve the real and imaginary components of the 2pf
         // for the imaginary parts, index placement *does* matter so we must take care
-        __dtwopf_re_k1($A, $B) $=  + this->u2_k1[FLATTEN($A, $C)] * __twopf_re_k1($C, $B);
-        __dtwopf_re_k1($A, $B) $+= + this->u2_k1[FLATTEN($B, $C)] * __twopf_re_k1($A, $C);
+        __dtwopf_re_k1($A, $B) $=  + __u2_k1[FLATTEN($A, $C)] * __twopf_re_k1($C, $B);
+        __dtwopf_re_k1($A, $B) $+= + __u2_k1[FLATTEN($B, $C)] * __twopf_re_k1($A, $C);
 
-        __dtwopf_im_k1($A, $B) $=  + this->u2_k1[FLATTEN($A, $C)] * __twopf_im_k1($C, $B);
-        __dtwopf_im_k1($A, $B) $+= + this->u2_k1[FLATTEN($B, $C)] * __twopf_im_k1($A, $C);
+        __dtwopf_im_k1($A, $B) $=  + __u2_k1[FLATTEN($A, $C)] * __twopf_im_k1($C, $B);
+        __dtwopf_im_k1($A, $B) $+= + __u2_k1[FLATTEN($B, $C)] * __twopf_im_k1($A, $C);
 
-        __dtwopf_re_k2($A, $B) $=  + this->u2_k2[FLATTEN($A, $C)] * __twopf_re_k2($C, $B);
-        __dtwopf_re_k2($A, $B) $+= + this->u2_k2[FLATTEN($B, $C)] * __twopf_re_k2($A, $C);
+        __dtwopf_re_k2($A, $B) $=  + __u2_k2[FLATTEN($A, $C)] * __twopf_re_k2($C, $B);
+        __dtwopf_re_k2($A, $B) $+= + __u2_k2[FLATTEN($B, $C)] * __twopf_re_k2($A, $C);
 
-        __dtwopf_im_k2($A, $B) $=  + this->u2_k2[FLATTEN($A, $C)] * __twopf_im_k2($C, $B);
-        __dtwopf_im_k2($A, $B) $+= + this->u2_k2[FLATTEN($B, $C)] * __twopf_im_k2($A, $C);
+        __dtwopf_im_k2($A, $B) $=  + __u2_k2[FLATTEN($A, $C)] * __twopf_im_k2($C, $B);
+        __dtwopf_im_k2($A, $B) $+= + __u2_k2[FLATTEN($B, $C)] * __twopf_im_k2($A, $C);
 
-        __dtwopf_re_k3($A, $B) $=  + this->u2_k3[FLATTEN($A, $C)] * __twopf_re_k3($C, $B);
-        __dtwopf_re_k3($A, $B) $+= + this->u2_k3[FLATTEN($B, $C)] * __twopf_re_k3($A, $C);
+        __dtwopf_re_k3($A, $B) $=  + __u2_k3[FLATTEN($A, $C)] * __twopf_re_k3($C, $B);
+        __dtwopf_re_k3($A, $B) $+= + __u2_k3[FLATTEN($B, $C)] * __twopf_re_k3($A, $C);
 
-        __dtwopf_im_k3($A, $B) $=  + this->u2_k3[FLATTEN($A, $C)] * __twopf_im_k3($C, $B);
-        __dtwopf_im_k3($A, $B) $+= + this->u2_k3[FLATTEN($B, $C)] * __twopf_im_k3($A, $C);
+        __dtwopf_im_k3($A, $B) $=  + __u2_k3[FLATTEN($A, $C)] * __twopf_im_k3($C, $B);
+        __dtwopf_im_k3($A, $B) $+= + __u2_k3[FLATTEN($B, $C)] * __twopf_im_k3($A, $C);
 
         // evolve the components of the 3pf
         // index placement matters, partly because of the k-dependence
         // but also in the source terms from the imaginary components of the 2pf
 
-        __dthreepf($A, $B, $C) $=  + this->u2_k1[FLATTEN($A, $M)] * __threepf($M, $B, $C);
-        __dthreepf($A, $B, $C) $+= + this->u3_k1k2k3[FLATTEN($A, $M, $N)] * __twopf_re_k2($M, $B) * __twopf_re_k3($N, $C);
-        __dthreepf($A, $B, $C) $+= - this->u3_k1k2k3[FLATTEN($A, $M, $N)] * __twopf_im_k2($M, $B) * __twopf_im_k3($N, $C);
+        __dthreepf($A, $B, $C) $=  + __u2_k1[FLATTEN($A, $M)] * __threepf($M, $B, $C);
+        __dthreepf($A, $B, $C) $+= + __u3_k1k2k3[FLATTEN($A, $M, $N)] * __twopf_re_k2($M, $B) * __twopf_re_k3($N, $C);
+        __dthreepf($A, $B, $C) $+= - __u3_k1k2k3[FLATTEN($A, $M, $N)] * __twopf_im_k2($M, $B) * __twopf_im_k3($N, $C);
 
-        __dthreepf($A, $B, $C) $+= + this->u2_k2[FLATTEN($B, $M)] * __threepf($A, $M, $C);
-        __dthreepf($A, $B, $C) $+= + this->u3_k2k1k3[FLATTEN($B, $M, $N)] * __twopf_re_k1($A, $M) * __twopf_re_k3($N, $C);
-        __dthreepf($A, $B, $C) $+= - this->u3_k2k1k3[FLATTEN($B, $M, $N)] * __twopf_im_k1($A, $M) * __twopf_im_k3($N, $C);
+        __dthreepf($A, $B, $C) $+= + __u2_k2[FLATTEN($B, $M)] * __threepf($A, $M, $C);
+        __dthreepf($A, $B, $C) $+= + __u3_k2k1k3[FLATTEN($B, $M, $N)] * __twopf_re_k1($A, $M) * __twopf_re_k3($N, $C);
+        __dthreepf($A, $B, $C) $+= - __u3_k2k1k3[FLATTEN($B, $M, $N)] * __twopf_im_k1($A, $M) * __twopf_im_k3($N, $C);
 
-        __dthreepf($A, $B, $C) $+= + this->u2_k3[FLATTEN($C, $M)] * __threepf($A, $B, $M);
-        __dthreepf($A, $B, $C) $+= + this->u3_k3k1k2[FLATTEN($C, $M, $N)] * __twopf_re_k1($A, $M) * __twopf_re_k2($B, $N);
-        __dthreepf($A, $B, $C) $+= - this->u3_k3k1k2[FLATTEN($C, $M, $N)] * __twopf_im_k1($A, $M) * __twopf_im_k2($B, $N);
+        __dthreepf($A, $B, $C) $+= + __u2_k3[FLATTEN($C, $M)] * __threepf($A, $B, $M);
+        __dthreepf($A, $B, $C) $+= + __u3_k3k1k2[FLATTEN($C, $M, $N)] * __twopf_re_k1($A, $M) * __twopf_re_k2($B, $N);
+        __dthreepf($A, $B, $C) $+= - __u3_k3k1k2[FLATTEN($C, $M, $N)] * __twopf_im_k1($A, $M) * __twopf_im_k2($B, $N);
+
+#ifdef CPPTRANSPORT_INSTRUMENT
+        __transport_eq_timer.stop();
+#endif
       }
 
 
