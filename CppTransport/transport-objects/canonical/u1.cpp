@@ -30,13 +30,13 @@ namespace canonical
         unsigned int index = this->fl.flatten(i);
         std::unique_ptr<ginac_cache_tags> args = this->res.generate_arguments(use_dV_argument, this->printer);
 
+        if(!cached) { this->populate_workspace(); this->cache_symbols(); this->cached = true; }
+
         GiNaC::ex result;
 
         if(!this->cache.query(expression_item_types::U1_item, index, *args, result))
           {
             timing_instrument timer(this->compute_timer);
-
-            if(!cached) { this->populate_workspace(); this->cache_symbols(); this->cached = true; }
 
             field_index species_i = this->traits.to_species(i);
 
@@ -111,14 +111,13 @@ namespace canonical
         std::unique_ptr<ginac_cache_tags> args = this->res.generate_arguments(use_dV_argument, this->printer);
         args->push_back(GiNaC::ex_to<GiNaC::symbol>(idx_i.get_value()));
 
+        this->cache_symbols();
+
         if(!this->cache.query(expression_item_types::U1_lambda, 0, *args, map[lambda_flatten(LAMBDA_MOMENTUM)]))
           {
             timing_instrument timer(this->compute_timer);
 
             GiNaC::ex V_b_i = this->res.dV_resource(i_field_b, this->printer);
-
-            // expr() expects Hsq and eps to be correctly set up in the cache
-            this->cache_symbols();
 
             map[lambda_flatten(LAMBDA_MOMENTUM)] = this->expr_momentum(V_b_i, deriv_b_i);
 

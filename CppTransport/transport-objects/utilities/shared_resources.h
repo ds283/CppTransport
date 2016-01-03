@@ -55,8 +55,23 @@ class shared_resources
 
   public:
 
-    //! generate Mp resource
+    //! generate Mp symbol resource
     GiNaC::symbol generate_Mp() const { return this->M_Planck; }
+
+    //! generate Hsq symbol resource
+    GiNaC::symbol generate_Hsq() const { return this->sym_factory.get_symbol(HSQ_SYMBOL_NAME); }
+
+    //! generate epsilon symbol resource
+    GiNaC::symbol generate_eps() const { return this->sym_factory.get_symbol(EPS_SYMBOL_NAME); }
+
+    //! generate V symbol resource
+    GiNaC::symbol generate_V() const { return this->sym_factory.get_symbol(V_SYMBOL_NAME); }
+
+    //! generate named symbol resource
+    GiNaC::symbol generate_symbol(const std::string& name) const { return this->sym_factory.get_symbol(name); }
+
+
+  public:
 
     //! generate concrete parameter label resource
     std::unique_ptr<symbol_list> generate_parameters(const language_printer& printer) const;
@@ -75,6 +90,9 @@ class shared_resources
 
     //! generate abstract fields-space derivative label resource
     GiNaC::symbol generate_derivs(const abstract_index& idx, const language_printer& printer) const;
+
+
+  public:
 
     //! generate string representing working type for lambda objects
     //! (this could be double, but may be something else (eg. number) if the implementation allows templated objects)
@@ -137,19 +155,19 @@ class shared_resources
     const symbol_list param_list;
 
     //! Mp symbol
-    GiNaC::symbol M_Planck;
+    const GiNaC::symbol M_Planck;
 
 
     // LOCAL COPIES OF MODEL DATA
 
     //! number of parameters
-    param_index num_params;
+    const param_index num_params;
 
     //! number of field-space indices
-    field_index num_fields;
+    const field_index num_fields;
 
     //! number of phase-space indices
-    phase_index num_phase;
+    const phase_index num_phase;
 
 
     // AGENTS

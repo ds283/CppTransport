@@ -30,13 +30,13 @@ namespace canonical
         unsigned int index = this->fl.flatten(i);
         std::unique_ptr<ginac_cache_tags> args = this->res.generate_arguments(0, this->printer);
 
+        if(!cached) { this->populate_workspace(); this->cache_symbols(); this->cached = true; }
+
         GiNaC::ex result;
 
         if(!this->cache.query(expression_item_types::dN1_item, index, *args, result))
           {
             timing_instrument timer(this->compute_timer);
-
-            if(!cached) { this->populate_workspace(); this->cache_symbols(); this->cached = true; }
 
             field_index i_species = this->traits.to_species(i);
             result = -(1/(2*dotH)) * diff(Hsq, (*fields)[this->fl.flatten(i_species)]);

@@ -10,7 +10,7 @@ namespace canonical
   {
 
     std::unique_ptr<flattened_tensor> canonical_zeta2::compute(GiNaC::symbol& k, GiNaC::symbol& k1,
-                                                            GiNaC::symbol& k2, GiNaC::symbol& a)
+                                                               GiNaC::symbol& k2, GiNaC::symbol& a)
       {
         std::unique_ptr<flattened_tensor> result = std::make_unique<flattened_tensor>(this->fl.get_flattened_size<phase_index>(2));
 
@@ -40,12 +40,12 @@ namespace canonical
         args->push_back(k2);
         args->push_back(a);
 
+        if(!cached) { this->populate_workspace(); this->cache_symbols(); this->cached = true; }
+
         GiNaC::ex result;
         if(!this->cache.query(expression_item_types::zxfm2_item, index, *args, result))
           {
             timing_instrument timer(this->compute_timer);
-
-            if(!cached) { this->populate_workspace(); this->cache_symbols(); this->cached = true; }
 
             GiNaC::symbol& deriv_i = (*derivs)[this->fl.flatten(this->traits.to_species(i))];
             GiNaC::symbol& deriv_j = (*derivs)[this->fl.flatten(this->traits.to_species(j))];
@@ -125,13 +125,17 @@ namespace canonical
         std::unique_ptr<symbol_list> ds = this->shared.generate_derivs(this->printer);
         std::unique_ptr<flattened_tensor> Vi = this->res.dV_resource(this->printer);
 
-        p = 0;
+        GiNaC::ex p_ex = 0;
         const field_index num_field = this->shared.get_number_field();
         for(field_index i = field_index(0); i < num_field; ++i)
           {
-            p += (*Vi)[this->fl.flatten(i)] * (*ds)[this->fl.flatten(i)];
+            p_ex += (*Vi)[this->fl.flatten(i)] * (*ds)[this->fl.flatten(i)];
           }
-        p = p / (Mp*Mp*Hsq);
+        p_ex = p_ex / (Mp*Mp*Hsq);
+
+        GiNaC::symbol p_sym = this->shared.generate_symbol(ZETA2_P_SYMBOL_NAME);
+        p = p_sym;
+        this->cse_worker.parse(p_ex, p_sym.get_name());
       }
 
 

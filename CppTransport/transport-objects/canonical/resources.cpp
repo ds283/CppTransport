@@ -54,9 +54,23 @@ namespace canonical
       }
 
 
-    GiNaC::ex resources::V_resource(const cse& cse_worker, const language_printer& printer)
+    GiNaC::ex resources::V_resource(cse& cse_worker, const language_printer& printer)
       {
-        return this->raw_V_resource(printer);
+        if(cse_worker.do_cse())
+          {
+            GiNaC::symbol V = this->share.generate_V();
+            GiNaC::ex raw_V = this->raw_V_resource(printer);
+
+            // parse raw expression, assigning result to correct symbolic name
+            cse_worker.parse(raw_V, V.get_name());
+
+            // return symbol
+            return V;
+          }
+        else
+          {
+            return this->raw_V_resource(printer);
+          }
       }
 
 
@@ -114,9 +128,23 @@ namespace canonical
       }
 
 
-    GiNaC::ex resources::eps_resource(const cse& cse_worker, const language_printer& printer)
+    GiNaC::ex resources::eps_resource(cse& cse_worker, const language_printer& printer)
       {
-        return this->raw_eps_resource(printer);
+        if(cse_worker.do_cse())
+          {
+            GiNaC::symbol eps = this->share.generate_eps();
+            GiNaC::ex raw_eps = this->raw_eps_resource(printer);
+
+            // parse raw expression, assigning result to the correct symbolic name
+            cse_worker.parse(raw_eps, eps.get_name());
+
+            // return symbol
+            return eps;
+          }
+        else
+          {
+            return this->raw_eps_resource(printer);
+          }
       }
 
 
@@ -147,9 +175,23 @@ namespace canonical
       }
 
 
-    GiNaC::ex resources::Hsq_resource(const cse& cse_worker, const language_printer& printer)
+    GiNaC::ex resources::Hsq_resource(cse& cse_worker, const language_printer& printer)
       {
-        return this->raw_Hsq_resource(printer);
+        if(cse_worker.do_cse())
+          {
+            GiNaC::symbol Hsq = this->share.generate_Hsq();
+            GiNaC::ex raw_Hsq = this->raw_Hsq_resource(printer);
+
+            // parse raw expression, assigning result to the correct symbolic name
+            cse_worker.parse(raw_Hsq, Hsq.get_name());
+
+            // return symbol (no deposition into temporary pool yet guaranteed -- needs to be explicitly printed)
+            return Hsq;
+          }
+        else
+          {
+            return this->raw_Hsq_resource(printer);
+          }
       }
 
 

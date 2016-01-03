@@ -27,6 +27,11 @@ constexpr auto MPLANCK_SYMBOL                        = "__Mp";
 constexpr auto MPLANCK_LATEX_SYMBOL                  = "M_{\\mathrm{P}}";
 constexpr auto MPLANCK_TEXT_NAME                     = "M_P";
 
+constexpr auto HSQ_SYMBOL_NAME                       = "__InternalHsq";
+constexpr auto EPS_SYMBOL_NAME                       = "__InternalEps";
+constexpr auto V_SYMBOL_NAME                         = "__InternalV";
+constexpr auto ZETA2_P_SYMBOL_NAME                   = "__InternalZ2p";
+
 constexpr auto DEFAULT_RECURSION_DEPTH               = (127);
 constexpr auto DEFAULT_MODEL_NAME                    = "UNKNOWN_MODEL";
 constexpr auto DEFAULT_AUTHOR                        = "Anonymous";
@@ -34,11 +39,16 @@ constexpr auto DEFAULT_AUTHOR                        = "Anonymous";
 constexpr auto TEMPLATE_PATHS_ENV                    = "CPPTRANSPORT_TEMPLATE_PATH";
 
 constexpr auto DEFAULT_UNROLL_MAX                    = 1000;
-// output strings
+
+
+// macro strings
 
 constexpr auto BACKEND_MACRO_PREFIX                  = "$";
 constexpr auto BACKEND_LINE_SPLIT_EQUAL              = "$=";
 constexpr auto BACKEND_LINE_SPLIT_SUM_EQUAL          = "$+=";
+
+
+// output strings
 
 constexpr auto OUTPUT_CPPTRANSPORT_TAG               = "CPPTRANSPORT";
 constexpr auto OUTPUT_TIME_FORMAT                    = "%X on %d %m %Y";

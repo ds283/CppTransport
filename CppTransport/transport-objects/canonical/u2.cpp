@@ -35,13 +35,13 @@ namespace canonical
         args->push_back(k);
         args->push_back(a);
 
+        if(!cached) { this->populate_workspace(); this->cache_symbols(); this->cached = true; }
+
         GiNaC::ex result;
 
         if(!this->cache.query(expression_item_types::U2_item, index, *args, result))
           {
             timing_instrument timer(this->compute_timer);
-
-            if(!cached) { this->populate_workspace(); this->cache_symbols(); this->cached = true; }
 
             field_index species_i = this->traits.to_species(i);
             field_index species_j = this->traits.to_species(j);
@@ -161,6 +161,8 @@ namespace canonical
         args->push_back(GiNaC::ex_to<GiNaC::symbol>(idx_i.get_value()));
         args->push_back(GiNaC::ex_to<GiNaC::symbol>(idx_j.get_value()));
 
+        this->cache_symbols();
+
         if(!this->cache.query(expression_item_types::U2_lambda, 0, *args, map[lambda_flatten(LAMBDA_MOMENTUM, LAMBDA_FIELD)]))
           {
             timing_instrument timer(this->compute_timer);
@@ -169,9 +171,6 @@ namespace canonical
 
             GiNaC::ex V_b_i = this->res.dV_resource(i_field_b, this->printer);
             GiNaC::ex V_a_j = this->res.dV_resource(j_field_a, this->printer);
-
-            // expr() expects Hsq, eps and Mp to be correctly set up in the cache
-            this->cache_symbols();
 
             map[lambda_flatten(LAMBDA_MOMENTUM, LAMBDA_FIELD)] = this->expr_field_momentum(idx_b_i, idx_a_j, V_ba_ij, V_b_i, V_a_j, deriv_b_i, deriv_a_j, k, a);
 

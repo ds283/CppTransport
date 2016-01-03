@@ -62,9 +62,22 @@ void cse::clear()
   }
 
 
-void cse::parse(const GiNaC::ex& expr)
+void cse::parse(const GiNaC::ex& expr, std::string name)
   {
-    timing_instrument time_instmt(timer);
+    timing_instrument instrument(timer);
+
+    // find iterator to entire expression;
+    // used to determine whether to create an anonymous temporary name, or used the supplied string "name"
+    GiNaC::const_postorder_iterator last;
+
+    const bool use_name = name.length() > 0;
+    if(use_name)    // avoid performing possibly expensive search if no name supplied
+      {
+        for(GiNaC::const_postorder_iterator t = expr.postorder_begin(); t != expr.postorder_end(); ++t)
+          {
+            last = t;
+          }
+      }
 
     for(GiNaC::const_postorder_iterator t = expr.postorder_begin(); t != expr.postorder_end(); ++t)
       {
@@ -77,7 +90,24 @@ void cse::parse(const GiNaC::ex& expr)
         // if not, we should insert it
         if(u == this->symbols.end())
           {
-            this->symbols.emplace(std::make_pair( e, cse_impl::symbol_record( e, this->make_symbol() ) ));
+            std::string nm;
+            if(use_name && t == last) nm = name;
+            else                      nm = this->make_symbol();
+
+            // perform insertion
+            std::pair< symbol_table::iterator, bool > result = this->symbols.emplace(std::make_pair( e, cse_impl::symbol_record(e, nm) ));
+
+            // check whether insertion took place; failure could be due to aliasing
+            if(!result.second) throw cse_exception(name);
+
+            // if a name was supplied, we automatically deposit everything to the pool, because typically clients
+            // further up the stack will only get a GiNaC symbol corresponding to this name;
+            // they won't have an explicit expression to print which could cause these temporaries to be deposited
+            if(use_name && !result.first->second.is_written())
+              {
+                this->decls.push_back(std::make_pair(result.first->second.get_symbol(), result.first->second.get_target()));
+                result.first->second.set_written();
+              }
           }
       }
   }

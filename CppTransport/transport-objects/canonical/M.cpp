@@ -33,13 +33,13 @@ namespace canonical
         unsigned int index = this->fl.flatten(i, j);
         std::unique_ptr<ginac_cache_tags> args = this->res.generate_arguments(use_dV_argument | use_ddV_argument, this->printer);
 
+        if(!cached) { this->populate_workspace(); this->cache_symbols(); this->cached = true; }
+
         GiNaC::ex result;
 
         if(!this->cache.query(expression_item_types::M_item, index, *args, result))
           {
             timing_instrument timer(this->compute_timer);
-
-            if(!cached) { this->populate_workspace(); this->cache_symbols(); this->cached = true; }
 
             GiNaC::ex& Vij = (*ddV)[this->fl.flatten(i,j)];
             GiNaC::ex& Vi  = (*dV)[this->fl.flatten(i)];
@@ -108,6 +108,8 @@ namespace canonical
         args->push_back(GiNaC::ex_to<GiNaC::symbol>(idx_i.get_value()));
         args->push_back(GiNaC::ex_to<GiNaC::symbol>(idx_j.get_value()));
 
+        this->cache_symbols();
+
         GiNaC::ex result;
 
         if(!this->cache.query(expression_item_types::M_lambda, 0, *args, result))
@@ -121,9 +123,6 @@ namespace canonical
 
             GiNaC::ex Vi   = this->res.dV_resource(i, this->printer);
             GiNaC::ex Vj   = this->res.dV_resource(j, this->printer);
-
-            // expr() expects Hsq, eps and Mp to be correctly set up in the cache
-            this->cache_symbols();
 
             result = this->expr(idx_i, idx_j, Vij, Vi, Vj, deriv_i, deriv_j);
 

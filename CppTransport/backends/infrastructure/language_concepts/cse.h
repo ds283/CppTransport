@@ -46,6 +46,7 @@
 #include <string>
 #include <unordered_map>
 #include <utility>
+#include <stdexcept>
 
 #include "ginac/ginac.h"
 
@@ -124,8 +125,14 @@ class cse
 
   public:
 
-    void parse(const GiNaC::ex& expr);
+    //! parse a given GiNaC expression, building up a list of temporaries as we go.
+    //! Nothing is marked as requiring deposition in a temporary pool, though, until
+    //! it is tagged using get_symbol_with_use_count()
+    //! the second argument is optional and can be used to assign a fixed temporary
+    //! name to the entire expression, if desired
+    void parse(const GiNaC::ex& expr, std::string name="");
 
+    //! obtain list of temporary definitions which should be deposited in the current pool
     std::unique_ptr<std::list<std::string> > temporaries(const std::string& left, const std::string& mid, const std::string& right) const;
 
     // two methods for getting the symbol corresponding to a GiNaC expression
@@ -134,6 +141,8 @@ class cse
     // This method is used when actually outputting symbols
     std::string get_symbol_with_use_count(const GiNaC::ex& expr);
 
+    //! clear all current temporary definitions;
+    //! typically called when closing one pool and opening another
     void clear();
 
 
@@ -141,20 +150,21 @@ class cse
 
   public:
 
-    const std::string& get_temporary_name() const { return (this->temporary_name_kernel); }
+    //! get current temporary name kernel
+    const std::string& get_temporary_kernel() const { return (this->temporary_name_kernel); }
 
-
-    void set_temporary_name(const std::string& k) { this->temporary_name_kernel = k; }
+    //! set current temporary name kerne
+    void set_temporary_kernel(const std::string& k) { this->temporary_name_kernel = k; }
 
 
 		// INTERFACE - METADATA
 
   public:
 
-		// get CSE active flag
+		// get CSE active flag; indicates whether CSE will actually be performed
     bool do_cse() const { return (this->data_payload.do_cse()); }
 
-		// get raw GiNaC printer associated with this CSE worker
+		// get raw language printer associated with this CSE worker
     language_printer& get_ginac_printer() { return (this->printer); }
 
 
@@ -162,7 +172,7 @@ class cse
 
   public:
 
-		// get time spent performing CSE
+		// get cumulative time spent performing CSE
 		boost::timer::nanosecond_type get_cse_time() const { return(this->timer.elapsed().wall); }
 
 
@@ -172,13 +182,23 @@ class cse
 
     // these functions are abstract and must be implemented by any derived classes
     // typically they will vary depending on the target language
+
+    //! print a GiNaC expression; if use_count is set then any temporaries which are
+    //! used will be marked for deposition
     virtual std::string print(const GiNaC::ex& expr, bool use_count) = 0;
 
+    //! print the operands to a GiNaC expression; if use_count is set then any temporaries
+    //! which are used will be marked for deposition
     virtual std::string print_operands(const GiNaC::ex& expr, std::string op, bool use_count) = 0;
 
+
+  protected:
+
+    //! get symbol corresponding to a GiNaC expression, without tagging it (and any temporaries it depends on)
+    //! for deposition
     std::string get_symbol_without_use_count(const GiNaC::ex& expr);
 
-		// make a temporary symbol
+		// !make a temporary symbol
     std::string make_symbol();
 
 
@@ -186,23 +206,49 @@ class cse
 
   protected:
 
+    //! reference to supplied language printer
     language_printer& printer;
 
+    //! reference to supplied payload from parent translator
     translator_data& data_payload;
 
+    //! serial number of current temporary pool
     unsigned int serial_number;
+
+    //! unique symbol counter within current temporary pool
     unsigned int symbol_counter;
 
+    //! current kernel for making names of temporaries
     std::string temporary_name_kernel;
 
     typedef std::unordered_map< std::string, cse_impl::symbol_record > symbol_table;
     typedef std::vector< std::pair<std::string, std::string> > declaration_table;
 
+    //! symbol table: maps printed GiNaC expressions to temporary names
     symbol_table symbols;
+
+    //! declaration table: maps temporary names to printed GiNaC expressions
     declaration_table decls;
 
-		// timer
+		// work timer
 		boost::timer::cpu_timer timer;
+
+  };
+
+
+class cse_exception: public std::runtime_error
+  {
+
+    // CONSTRUCTOR, DESTRUCTOR
+
+  public:
+
+    cse_exception(std::string arg)
+      : std::runtime_error(std::move(arg))
+      {
+      }
+
+    virtual ~cse_exception() = default;
 
   };
 

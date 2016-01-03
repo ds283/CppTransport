@@ -67,13 +67,13 @@ namespace canonical
 
 
         //! generate V resource, including any necessary substitutions for parameters/coordinates
-        GiNaC::ex V_resource(const cse& cse_worker, const language_printer& printer);
+        GiNaC::ex V_resource(cse& cse_worker, const language_printer& printer);
 
         //! generate epsilon resource
-        GiNaC::ex eps_resource(const cse& cse_worker, const language_printer& printer);
+        GiNaC::ex eps_resource(cse& cse_worker, const language_printer& printer);
 
         //! generate Hubble-squared resource
-        GiNaC::ex Hsq_resource(const cse& cse_worker, const language_printer& printer);
+        GiNaC::ex Hsq_resource(cse& cse_worker, const language_printer& printer);
 
 
         //! generate concrete dV resource labels

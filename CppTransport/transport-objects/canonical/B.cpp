@@ -41,13 +41,13 @@ namespace canonical
         args->push_back(k3);
         args->push_back(a);
 
+        if(!cached) { this->populate_workspace(); this->cache_symbols(); this->cached = true; }
+
         GiNaC::ex result;
 
         if(!this->cache.query(expression_item_types::B_item, index, *args, result))
           {
             timing_instrument timer(this->compute_timer);
-
-            if(!cached) { this->populate_workspace(); this->cache_symbols(); this->cached = true; }
 
             GiNaC::ex& Vi   = (*dV)[this->fl.flatten(i)];
             GiNaC::ex& Vj   = (*dV)[this->fl.flatten(j)];
@@ -140,6 +140,8 @@ namespace canonical
         args->push_back(GiNaC::ex_to<GiNaC::symbol>(idx_j.get_value()));
         args->push_back(GiNaC::ex_to<GiNaC::symbol>(idx_k.get_value()));
 
+        this->cache_symbols();
+
         GiNaC::ex result;
 
         if(!this->cache.query(expression_item_types::B_lambda, 0, *args, result))
@@ -153,9 +155,6 @@ namespace canonical
             GiNaC::ex Vi   = this->res.dV_resource(i, this->printer);
             GiNaC::ex Vj   = this->res.dV_resource(j, this->printer);
             GiNaC::ex Vk   = this->res.dV_resource(k, this->printer);
-
-            // expr() expects Hsq, eps, Mp to be correctly set up in the cache
-            this->cache_symbols();
 
             result = this->expr(idx_i, idx_j, idx_k, Vi, Vj, Vk, deriv_i, deriv_j, deriv_k, k1, k2, k3, a);
 
