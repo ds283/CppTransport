@@ -81,8 +81,11 @@ namespace canonical
 
       private:
 
-        //! populate workspace
-        void populate_cache();
+        //! cache symbols
+        void cache_symbols();
+
+        //! populate workspcae
+        void populate_workspace();
 
         //! underlying symbolic expression
         GiNaC::ex expr_field_momentum(GiNaC::idx& i, GiNaC::idx& j, GiNaC::ex& Vij, GiNaC::ex& Vi, GiNaC::ex& Vj,

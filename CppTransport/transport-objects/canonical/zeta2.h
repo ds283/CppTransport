@@ -83,8 +83,11 @@ namespace canonical
 
       private:
 
+        //! cache symbols
+        void cache_symbols();
+
         //! populate workspace
-        void populate_cache();
+        void populate_workspace();
 
         //! compute field-field entry
         GiNaC::ex expr_field_field(GiNaC::symbol& deriv_i, GiNaC::symbol& deriv_j,

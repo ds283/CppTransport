@@ -36,7 +36,7 @@ namespace canonical
           {
             timing_instrument timer(this->compute_timer);
 
-            if(!cached) this->populate_cache();
+            if(!cached) { this->populate_workspace(); this->cache_symbols(); this->cached = true; }
 
             GiNaC::ex& Vi = (*dV)[this->fl.flatten(i)];
             result = this->expr(Vi);
@@ -54,13 +54,17 @@ namespace canonical
       }
 
 
-    void canonical_SR_velocity::populate_cache()
+    void canonical_SR_velocity::cache_symbols()
       {
         V = this->res.V_resource(this->printer);
-        dV = this->res.dV_resource(this->printer);
         Hsq = this->res.Hsq_resource(this->printer);
         Mp = this->shared.generate_Mp();
-        cached = true;
+      }
+
+
+    void canonical_SR_velocity::populate_workspace()
+      {
+        dV = this->res.dV_resource(this->printer);
       }
 
 
@@ -87,8 +91,8 @@ namespace canonical
 
             GiNaC::ex Vi = this->res.dV_resource(i, this->printer);
 
-            // expr() expects Hsq and Mp to be correctly set up in the cache
-            this->populate_cache();
+            // expr() expects V, Hsq and Mp to be correctly set up in the cache
+            this->cache_symbols();
 
             result = this->expr(Vi);
 

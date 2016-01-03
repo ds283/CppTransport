@@ -47,7 +47,7 @@ namespace canonical
           {
             timing_instrument timer(this->compute_timer);
 
-            if(!cached) this->populate_cache();
+            if(!cached) { this->populate_workspace(); this->cache_symbols(); this->cached = true; }
 
             GiNaC::symbol& deriv_i = (*derivs)[this->fl.flatten(i)];
             GiNaC::symbol& deriv_j = (*derivs)[this->fl.flatten(j)];
@@ -90,11 +90,15 @@ namespace canonical
       }
 
 
-    void canonical_C::populate_cache()
+    void canonical_C::cache_symbols()
+      {
+        Mp = this->shared.generate_Mp();
+      }
+
+
+    void canonical_C::populate_workspace()
       {
         derivs = this->shared.generate_derivs(this->printer);
-        Mp = this->shared.generate_Mp();
-        cached = true;
       }
 
 
@@ -136,7 +140,7 @@ namespace canonical
             GiNaC::symbol deriv_k = this->shared.generate_derivs(k, this->printer);
 
             // expr() expects Mp to be correctly set up in the cache
-            this->populate_cache();
+            this->cache_symbols();
 
             result = this->expr(idx_i, idx_j, idx_k, deriv_i, deriv_j, deriv_k, k1, k2, k3, a);
 

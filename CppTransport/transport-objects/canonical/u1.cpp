@@ -36,7 +36,7 @@ namespace canonical
           {
             timing_instrument timer(this->compute_timer);
 
-            if(!cached) this->populate_cache();
+            if(!cached) { this->populate_workspace(); this->cache_symbols(); this->cached = true; }
 
             field_index species_i = this->traits.to_species(i);
 
@@ -70,13 +70,17 @@ namespace canonical
       }
 
 
-    void canonical_u1::populate_cache()
+    void canonical_u1::cache_symbols()
+      {
+        Hsq = this->res.Hsq_resource(this->printer);
+        eps = this->res.eps_resource(this->printer);
+      }
+
+
+    void canonical_u1::populate_workspace()
       {
         derivs = this->shared.generate_derivs(this->printer);
         dV = this->res.dV_resource(this->printer);
-        Hsq = this->res.Hsq_resource(this->printer);
-        eps = this->res.eps_resource(this->printer);
-        cached = true;
       }
 
 
@@ -114,7 +118,7 @@ namespace canonical
             GiNaC::ex V_b_i = this->res.dV_resource(i_field_b, this->printer);
 
             // expr() expects Hsq and eps to be correctly set up in the cache
-            this->populate_cache();
+            this->cache_symbols();
 
             map[lambda_flatten(LAMBDA_MOMENTUM)] = this->expr_momentum(V_b_i, deriv_b_i);
 

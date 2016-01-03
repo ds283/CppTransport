@@ -45,7 +45,7 @@ namespace canonical
           {
             timing_instrument timer(this->compute_timer);
 
-            if(!cached) this->populate_cache();
+            if(!cached) { this->populate_workspace(); this->cache_symbols(); this->cached = true; }
 
             GiNaC::symbol& deriv_i = (*derivs)[this->fl.flatten(this->traits.to_species(i))];
             GiNaC::symbol& deriv_j = (*derivs)[this->fl.flatten(this->traits.to_species(j))];
@@ -114,25 +114,31 @@ namespace canonical
       }
 
 
-    void canonical_zeta2::populate_cache()
+    void canonical_zeta2::cache_symbols()
       {
-        derivs = this->shared.generate_derivs(this->printer);
-        dV = this->res.dV_resource(this->printer);
         Hsq = this->res.Hsq_resource(this->printer);
         eps = this->res.eps_resource(this->printer);
         Mp = this->shared.generate_Mp();
 
         // formulae from DS calculation 28 May 2014
 
+        std::unique_ptr<symbol_list> ds = this->shared.generate_derivs(this->printer);
+        std::unique_ptr<flattened_tensor> Vi = this->res.dV_resource(this->printer);
+
         p = 0;
         const field_index num_field = this->shared.get_number_field();
         for(field_index i = field_index(0); i < num_field; ++i)
           {
-            p += (*dV)[this->fl.flatten(i)] * (*derivs)[this->fl.flatten(i)];
+            p += (*Vi)[this->fl.flatten(i)] * (*ds)[this->fl.flatten(i)];
           }
         p = p / (Mp*Mp*Hsq);
+      }
 
-        cached = true;
+
+    void canonical_zeta2::populate_workspace()
+      {
+        derivs = this->shared.generate_derivs(this->printer);
+        dV = this->res.dV_resource(this->printer);
       }
 
 
@@ -180,7 +186,7 @@ namespace canonical
         args->push_back(GiNaC::ex_to<GiNaC::symbol>(idx_i.get_value()));
         args->push_back(GiNaC::ex_to<GiNaC::symbol>(idx_j.get_value()));
 
-        this->populate_cache();
+        this->cache_symbols();
 
         if(!this->cache.query(expression_item_types::zxfm2_lambda, lambda_flatten(LAMBDA_FIELD, LAMBDA_FIELD), *args, table[lambda_flatten(LAMBDA_FIELD, LAMBDA_FIELD)]))
           {

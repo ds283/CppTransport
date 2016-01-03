@@ -36,7 +36,7 @@ namespace canonical
           {
             timing_instrument timer(this->compute_timer);
 
-            if(!cached) this->populate_cache();
+            if(!cached) { this->populate_workspace(); this->cache_symbols(); this->cached = true; }
 
             if(this->traits.is_species(i))
               {
@@ -66,12 +66,16 @@ namespace canonical
       }
 
 
-    void canonical_zeta1::populate_cache()
+    void canonical_zeta1::cache_symbols()
       {
-        derivs = this->shared.generate_derivs(this->printer);
         eps = this->res.eps_resource(this->printer);
         Mp = this->shared.generate_Mp();
-        cached = true;
+      }
+
+
+    void canonical_zeta1::populate_workspace()
+      {
+        derivs = this->shared.generate_derivs(this->printer);
       }
 
 
@@ -99,7 +103,7 @@ namespace canonical
 
         GiNaC::symbol deriv_a_i = this->shared.generate_derivs(i_field_a, this->printer);
 
-        this->populate_cache();
+        this->cache_symbols();
 
         table[lambda_flatten(LAMBDA_FIELD)] = this->expr(deriv_a_i);
         table[lambda_flatten(LAMBDA_MOMENTUM)] = 0;

@@ -78,8 +78,11 @@ namespace canonical
 
       private:
 
+        //! cache symbols
+        void cache_symbols();
+
         //! populate workspace
-        void populate_cache();
+        void populate_workspace();
 
         //! underlying symbolic expression
         GiNaC::ex expr(GiNaC::ex& Vi);
