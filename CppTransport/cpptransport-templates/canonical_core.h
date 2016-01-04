@@ -201,9 +201,6 @@ namespace transport
         virtual void compute_gauge_xfm_1(const twopf_list_task<number>* __task, const std::vector<number>& __state, std::vector<number>& __dN) override;
         virtual void compute_gauge_xfm_2(const twopf_list_task<number>* __task, const std::vector<number>& __state, double __k, double __k1, double __k2, double __N, std::vector<number>& __ddN) override;
 
-        virtual void compute_deltaN_xfm_1(const twopf_list_task<number>* __task, const std::vector<number>& __state, std::vector<number>& __dN) override;
-        virtual void compute_deltaN_xfm_2(const twopf_list_task<number>* __task, const std::vector<number>& __state, std::vector<number>& __ddN) override;
-
         // calculate tensor quantities, including the 'flow' tensors u2, u3 and the basic tensors A, B, C from which u3 is built
         virtual void u2(const twopf_list_task<number>* __task, const std::vector<number>& __fields, double __k, double __N, std::vector<number>& __u2) override;
         virtual void u3(const twopf_list_task<number>* __task, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector<number>& __u3) override;
@@ -1025,44 +1022,6 @@ namespace transport
 
         __ddN[FLATTEN($A,$B)] = $ZETA_XFM_2[AB]{__k, __k1, __k2, __a};
       }
-
-
-    template <typename number>
-    void $MODEL<number>::compute_deltaN_xfm_1(const twopf_list_task<number>* __task,
-                                                 const std::vector<number>& __state,
-                                                 std::vector<number>& __dN)
-	    {
-        $RESOURCE_RELEASE
-        __raw_params[$1] = __task->get_params().get_vector()[$1];
-        const auto __Mp = __task->get_params().get_Mp();
-
-        $RESOURCE_PARAMETERS{__raw_params}
-        $RESOURCE_COORDINATES{__state}
-
-        $TEMP_POOL{"const auto $1 = $2;"}
-
-        __dN[FLATTEN($A)] = $DELTAN_XFM_1[A];
-	    }
-
-
-    template <typename number>
-    void $MODEL<number>::compute_deltaN_xfm_2(const twopf_list_task<number>* __task,
-                                                 const std::vector<number>& __state,
-                                                 std::vector<number>& __ddN)
-	    {
-        $RESOURCE_RELEASE
-        __raw_params[$1] = __task->get_params().get_vector()[$1];
-        const auto __Mp = __task->get_params().get_Mp();
-
-        $MODEL_compute_dV(__raw_params, __state, __dV);
-
-        $RESOURCE_PARAMETERS{__raw_params}
-        $RESOURCE_COORDINATES{__state}
-
-        $TEMP_POOL{"const auto $1 = $2;"}
-
-        __ddN[FLATTEN($A,$B)] = $DELTAN_XFM_2[AB];
-	    }
 
 
     // CALCULATE TENSOR QUANTITIES
