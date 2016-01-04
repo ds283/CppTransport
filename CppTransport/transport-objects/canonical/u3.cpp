@@ -138,7 +138,7 @@ namespace canonical
 
         map_lambda_table table(lambda_flattened_map_size(3));
 
-        std::unique_ptr<atomic_lambda> fff = B_agent.compute_lambda(j_field_a, i_field_a, k_field_a, k2, k3, k1, a);
+        std::unique_ptr<atomic_lambda> fff = B_agent.compute_lambda(j_field_a, k_field_a, i_field_a, k2, k3, k1, a);
         std::unique_ptr<atomic_lambda> ffm = C_agent.compute_lambda(i_field_a, k_field_b, j_field_a, k1, k3, k2, a);
         std::unique_ptr<atomic_lambda> fmf = C_agent.compute_lambda(i_field_a, j_field_b, k_field_a, k1, k2, k3, a);
         std::unique_ptr<atomic_lambda> mff = A_agent.compute_lambda(i_field_b, j_field_a, k_field_a, k1, k2, k3, a);
