@@ -21,7 +21,7 @@
 #include "transport-runtime-api/transport.h"
 
 
-#define CPPTRANSPORT_INSTRUMENT
+// #define CPPTRANSPORT_INSTRUMENT
 
 
 namespace transport

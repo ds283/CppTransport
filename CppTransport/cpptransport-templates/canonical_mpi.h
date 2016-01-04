@@ -41,7 +41,7 @@ namespace transport
     // *********************************************************************************************
 
 
-    // CLASS FOR $MODEL 'basic', ie., MPI implementation
+    // CLASS FOR $MODEL '*_mpi', ie., an MPI-based implementation
     template <typename number>
     class $MODEL_mpi : public $MODEL<number>
       {
