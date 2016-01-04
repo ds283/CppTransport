@@ -616,6 +616,8 @@ namespace transport
 
         $RESOURCE_PARAMETERS{__raw_params}
         $RESOURCE_COORDINATES{__fields}
+        $RESOURCE_DV{__dV}
+        $RESOURCE_DDV{__ddV}
 
         $TEMP_POOL{"const auto $1 = $2;"}
 
@@ -626,7 +628,7 @@ namespace transport
 
 //        std::array< std::array<number, $NUMBER_FIELDS>, $NUMBER_FIELDS> __M;
 //
-//        __M[$a][$b] = $M_PREDEF[ab]{__raw_params, __fields, __dV, __ddV, FLATTEN, FIELDS_FLATTEN};
+//        __M[$a][$b] = $M_PREDEF[ab];
 
         // NOTE - conventions for the scale factor are
         //   a = exp(t), where t is the user-defined time (usually = 0 at the start of the integration)
@@ -708,6 +710,8 @@ namespace transport
 
       $RESOURCE_PARAMETERS{__raw_params}
       $RESOURCE_COORDINATES{__fields}
+      $RESOURCE_DV{__dV}
+      $RESOURCE_DDV{__ddV}
 
       $TEMP_POOL{"const auto $1 = $2;"}
 
@@ -718,7 +722,7 @@ namespace transport
 
 //      std::array< std::array<number, $NUMBER_FIELDS>, $NUMBER_FIELDS> __M;
 //
-//      __M[$a][$b] = $M_PREDEF[ab]{__raw_params, __fields, __dV, __ddV, FLATTEN, FIELDS_FLATTEN};
+//      __M[$a][$b] = $M_PREDEF[ab];
 
       // only the field-momentum and momentum-field correlation functions have imaginary parts
       if(IS_FIELD(__i) && IS_MOMENTUM(__j))
