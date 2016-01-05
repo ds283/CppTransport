@@ -42,6 +42,12 @@ unsigned int translator_data::unroll_policy() const
   }
 
 
+bool translator_data::fast() const
+  {
+    return(this->cache.fast());
+  }
+
+
 boost::optional< contexted_value<std::string>& > translator_data::get_name() const
   {
     return(this->driver.get_script().get_name());

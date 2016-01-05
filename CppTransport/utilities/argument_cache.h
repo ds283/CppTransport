@@ -68,6 +68,8 @@ class argument_cache
     //! get unrolling policy
     unsigned int unroll_policy() const { return(this->unroll_policy_size); }
 
+    bool fast() const { return(this->fast_flag); }
+
 
     // INPUT FILES
 
@@ -117,6 +119,9 @@ class argument_cache
 
     //! unroll policy - maximum size of index set above which unrolling is disabled
     unsigned int unroll_policy_size;
+
+    //! fast setting
+    bool fast_flag;
 
 
     // INPUT FILES

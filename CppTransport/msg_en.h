@@ -75,11 +75,11 @@
 #define ERROR_TOKENIZE_TOO_MANY_ERRORS        "Too many errors from this token; further output will be suppressed"
 #define ERROR_DIRECTIVE_CALLED_AS_UNROLL      "Internal error: directive called as unroll"
 
-#define ERROR_NO_RULE_HANDLER                 "Internal error: no assigned replacement rule for macro"
 #define ERROR_NO_PRE_MAP                      "Missing data to perform macro replacement"
 
 #define ERROR_INCOMPATIBLE_UNROLL             "Unrolling requirements are incompatible with earlier macros for"
 #define ERROR_LHS_RHS_INCOMPATIBLE_UNROLL     "Left-hand side and right-hand side have incompatible unrolling requirements"
+#define ERROR_PREVENT_INCOMPATIBLE_FAST       "Macro preventing unroll is incompatible with --fast switch"
 
 #define ERROR_MISSING_INDEX_ASSIGNMENT        "Internal error: missing index assignment"
 
@@ -100,7 +100,6 @@
 #define ERROR_EXPECTED_INDEX_COUNT            "expected"
 #define ERROR_RECEIVED_INDEX_COUNT            "received"
 
-#define WARNING_INDEX_TYPE_MISMATCH           "expected index type for this macro does not match for"
 #define ERROR_WRONG_INDEX_CLASS               "Index type mismatch for"
 #define ERROR_WRONG_INDEX_LABEL               "index"
 

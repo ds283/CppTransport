@@ -91,6 +91,9 @@ class translator_data
     //! get size of index assignment at which unrolling is disabled
     unsigned int unroll_policy() const;
 
+    //! get fast option
+    bool fast() const;
+
 
     // GET MODEL DATA
 

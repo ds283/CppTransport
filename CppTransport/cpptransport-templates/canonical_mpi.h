@@ -899,8 +899,7 @@ namespace transport
         __dtwopf_tensor(1,0) = __pf*__tensor_twopf_ff + __pp*__tensor_twopf_pf + __ff*__tensor_twopf_pf + __fp*__tensor_twopf_pp;
         __dtwopf_tensor(1,1) = __pf*__tensor_twopf_fp + __pp*__tensor_twopf_pp + __pf*__tensor_twopf_pf + __pp*__tensor_twopf_pp;
 
-        $SET[AB]{U2_CONTAINER, "__u2[FLATTEN($A,$B)]"}
-        $SET[AB]{U2_ALIAS, "$U2_PREDEF[AB]{__k, __a}"}
+        $SET[MN]{U2_CONTAINER, "const auto __u2_$M_$N"}
 
         // set up components of the u2 tensor
         $U2_CONTAINER[AB] = $U2_PREDEF[AB]{__k, __a};

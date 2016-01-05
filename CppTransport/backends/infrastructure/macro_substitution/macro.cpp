@@ -131,13 +131,17 @@ std::unique_ptr< std::list<std::string> > macro_agent::apply_line(const std::str
     if(left_tokens->unroll_status() == unroll_behaviour::force) ++force;
     if(right_tokens->unroll_status() == unroll_behaviour::force) ++force;
 
-    if(force > 0 && prevent > 0)
+    if(total_assignment_size > 1 && force > 0 && prevent > 0)
       {
         ctx.error(ERROR_LHS_RHS_INCOMPATIBLE_UNROLL);
       }
+    else if(total_assignment_size > 1 && this->data_payload.fast() && prevent > 0)
+      {
+        ctx.error(ERROR_PREVENT_INCOMPATIBLE_FAST);
+      }
     else
       {
-        if(force > 0 || (unroll_by_policy && prevent == 0)) unroll = true;
+        if(force > 0 || ((unroll_by_policy || this->data_payload.fast()) && prevent == 0)) unroll = true;
         else unroll = false;
       }
 
