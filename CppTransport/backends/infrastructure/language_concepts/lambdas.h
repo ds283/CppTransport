@@ -236,14 +236,7 @@ constexpr unsigned int lambda_flatten(unsigned int a, unsigned int b, unsigned i
 
 constexpr unsigned int lambda_flattened_map_size(unsigned int d)
   {
-    unsigned int size = 1;
-    while(d > 0)
-      {
-        size *= 2;
-        --d;
-      }
-
-    return(size);
+    return(d > 0 ? 2*lambda_flattened_map_size(d-1) : 1);
   }
 
 
