@@ -22,6 +22,37 @@
 #include "translator_data.h"
 
 
+namespace std
+  {
+
+    // provide std::equal_to implementation for abstract_index
+    template<> struct equal_to<abstract_index>
+      {
+
+        constexpr bool operator()(const abstract_index& lhs, const abstract_index& rhs) const
+          {
+            return (lhs.get_label() == rhs.get_label()) && (lhs.get_class() == rhs.get_class());
+          }
+
+      };
+
+    // provide std::hash implementation for abstract_index, so it can be used in a std::unordered_map
+    template<> struct hash<abstract_index>
+      {
+
+        size_t operator()(const abstract_index& idx) const
+          {
+            return static_cast<size_t>(idx.get_label());
+          }
+
+      };
+
+  }   // namespace std
+
+
+typedef std::unordered_map< abstract_index, abstract_index > index_remap_rule;
+
+
 namespace token_list_impl
   {
 
@@ -111,11 +142,16 @@ namespace token_list_impl
         //! planting code as a 'for'-loop
         void evaluate();
 
+        //! evaluate on an abstract index and cache the result, first performing
+        //! substitution according to an index remapping rule
+        void evaluate(const index_remap_rule& rule);
+
 
         // INTERNAL DATA
 
       protected:
 
+        //! record index
         abstract_index index;
 
       };
@@ -155,6 +191,9 @@ namespace token_list_impl
 
         enum simple_macro_type type;
 
+        //! have argument-related errors been reported yet? if so, silence further errors
+        bool argument_error;
+
       };
 
     class index_macro_token: public generic_token
@@ -177,10 +216,17 @@ namespace token_list_impl
         //! used to replace this macro while unrolling an index set
         void evaluate_unroll(const assignment_list& a);
 
-        //! evaluate (and cache the result) given a list of abstract index assignments;
+        //! evaluate (and cache the result) on an abstract index assignment;
         //! used to replace this macro while handling an index set by
         //! rolling up into a for-loop
         void evaluate_roll();
+
+        //! evaluate (and cache the result) on an abstract index assignment determined by the given
+        //! substitution rule
+        void evaluate_roll(const index_remap_rule& rule);
+
+        //! call post-hook and reset initialization status
+        void reset();
 
 
         // INTERNAL DATA
@@ -201,6 +247,12 @@ namespace token_list_impl
 
         //! flag to determine whether 'pre' handler has been called
         bool initialized;
+
+        //! have argument-related errors been reported yet? if so, silence further errors
+        bool argument_error;
+
+        //! have index-related errors been reported yet? if so, silence further errors
+        bool index_error;
 
       };
 
@@ -227,12 +279,16 @@ class token_list
 		~token_list() = default;
 
 
-    // INTERFACE -- METADATA
+    // INTERFACE -- UTILITIES
 
   public:
 
     //! get number of tokens
     unsigned int size() const { return(this->tokens.size()); }
+
+    //! reset token list to pristine state, as if no evaluations had taken place
+    //! principally used to force call to post-hooks and reset pre-hooks
+    void reset();
 
 
 		// INTERFACE -- MACRO EVALUATION AND CONVERSION
@@ -254,6 +310,9 @@ class token_list
     //! used when planting code as a 'for'-loop
     unsigned int evaluate_macros();
 
+    //! evaluate index macros on an abstract assignment determined by the given substitution rule
+    unsigned int evaluate_macros(const index_remap_rule& rule);
+
 		//! get list of indices identified during tokenization
 		const abstract_index_list& get_indices() { return(this->indices); }
 
@@ -274,10 +333,10 @@ class token_list
     void check_no_index_list(const std::string& input, const std::string& candidate, size_t& position);
 
 		//! check an argument list of correct size exists in the input string, and return it (tokenized)
-		macro_argument_list get_argument_list(const std::string& input, const std::string& candidate, size_t& position, unsigned int expected_args);
+		macro_argument_list get_argument_list(const std::string& input, const std::string& candidate, size_t& position);
 
 		//! check an index list of correct size exists in the input string, and return it (tokenized)
-    abstract_index_list get_index_list(const std::string& input, const std::string& candidate, size_t& position, unsigned int expected_indices, enum index_class range);
+    abstract_index_list get_index_list(const std::string& input, const std::string& candidate, size_t& position, bool accumulate_indices);
 
 		//! check whether the current candidate is a potential match for a macro
 		template <typename Rule>
@@ -347,6 +406,5 @@ class token_list
     unsigned int num_params;
 
 	};
-
 
 #endif //CPPTRANSPORT_MACRO_TOKENIZER_H

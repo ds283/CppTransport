@@ -72,6 +72,7 @@ ADD_EXECUTABLE(CppTransport
   backends/languages/opencl/opencl_printer.cpp
   backends/languages/shared/C_style_printer.cpp
   backends/languages/shared/kernel_argument_macros.cpp
+  backends/shared/directives.cpp
   backends/shared/flow_tensors.cpp
   backends/shared/fundamental.cpp
   backends/shared/gauge_xfm.cpp
@@ -286,6 +287,8 @@ set(BACKENDS_SHARED_FILES
   backends/shared/temporary_pool.h
   backends/shared/utensors.cpp
   backends/shared/utensors.h
+  backends/shared/directives.cpp
+  backends/shared/directives.h
   )
 
 set(CONCEPTS_FILES

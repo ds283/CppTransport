@@ -6,6 +6,7 @@
 
 #include "cpp_group.h"
 
+#include "directives.h"
 #include "fundamental.h"
 #include "flow_tensors.h"
 #include "lagrangian_tensors.h"
@@ -31,6 +32,7 @@ cpp_group::cpp_group(translator_data& p, tensor_factory& fctry)
     lambda_mgr = std::make_unique<lambda_manager>(0, *l_printer, this->data_payload);
 
     // construct replacement rule packages
+    this->add_package<macro_packages::directives>        (p, *l_printer);
     this->add_package<macro_packages::fundamental>       (p, *l_printer);
     this->add_package<macro_packages::flow_tensors>      (p, *l_printer);
     this->add_package<macro_packages::lagrangian_tensors>(p, *l_printer);

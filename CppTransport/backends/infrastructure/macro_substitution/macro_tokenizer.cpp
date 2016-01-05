@@ -105,7 +105,7 @@ token_list::token_list(const std::string& input, const std::string& prefix,
 										            this->check_no_index_list(input, candidate, position);
 
 										            macro_argument_list arg_list;
-												        if(rule.get_number_args() > 0) arg_list = this->get_argument_list(input, candidate, position, rule.get_number_args());
+												        if(rule.get_number_args() > 0) arg_list = this->get_argument_list(input, candidate, position);
 
                                 error_context ctx(this->data_payload.get_stack(), input_string, position, this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
                                 std::unique_ptr<token_list_impl::simple_macro_token> tok = std::make_unique<token_list_impl::simple_macro_token>(candidate, arg_list, rule, simple_macro_type::pre, ctx);
@@ -125,7 +125,7 @@ token_list::token_list(const std::string& input, const std::string& prefix,
 										            this->check_no_index_list(input, candidate, position);
 
 										            macro_argument_list arg_list;
-										            if(rule.get_number_args() > 0) arg_list = this->get_argument_list(input, candidate, position, rule.get_number_args());
+										            if(rule.get_number_args() > 0) arg_list = this->get_argument_list(input, candidate, position);
 
                                 error_context ctx(this->data_payload.get_stack(), input_string, position, this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
                                 std::unique_ptr<token_list_impl::simple_macro_token> tok = std::make_unique<token_list_impl::simple_macro_token>(candidate, arg_list, rule, simple_macro_type::post, ctx);
@@ -142,12 +142,13 @@ token_list::token_list(const std::string& input, const std::string& prefix,
 										            position += candidate_length;
 
 												        // should find an index list
-										            abstract_index_list idx_list = this->get_index_list(input, candidate, position, rule.get_number_indices(), rule.get_index_class());
+										            abstract_index_list idx_list = this->get_index_list(input, candidate, position, !rule.is_directive());
 
+                                // may find an argument list
 										            macro_argument_list arg_list;
-										            if(rule.get_number_args() > 0) arg_list = this->get_argument_list(input, candidate, position, rule.get_number_args());
+										            if(rule.get_number_args() > 0) arg_list = this->get_argument_list(input, candidate, position);
 
-                                // apply unroll flags, either inherited from the macro or by allowing suffixies
+                                // determine unroll status flags, either inherited from the macro or by allowing suffixies
                                 if(rule.get_unroll() == unroll_behaviour::force)
                                   {
                                     this->force_unroll.push_back(candidate);
@@ -156,12 +157,12 @@ token_list::token_list(const std::string& input, const std::string& prefix,
                                   {
                                     this->prevent_unroll.push_back(candidate);
                                   }
-                                else if(position < input.length() && input[position] == '@')    // check for 'force unroll' suffix if macro is neutral; ignore suffixes otherwise
+                                else if(position < input.length() && input[position] == '|')    // check for 'force unroll' suffix if macro is neutral; ignore suffixes otherwise
                                   {
                                     ++position;
                                     this->force_unroll.push_back(candidate);
                                   }
-                                else if(position < input.length() && input[position] == '^')    // check for 'prevent unroll' suffix if macro is neutral
+                                else if(position < input.length() && input[position] == '@')    // check for 'prevent unroll' suffix if macro is neutral
                                   {
                                     ++position;
                                     this->prevent_unroll.push_back(candidate);
@@ -177,7 +178,7 @@ token_list::token_list(const std::string& input, const std::string& prefix,
                                   }
 
                                 std::unique_ptr<token_list_impl::index_macro_token> tok = std::make_unique<token_list_impl::index_macro_token>(candidate, idx_list, arg_list, rule, ctx);
-                                if(arg_list.size() != rule.get_number_args() || idx_list.size() != rule.get_number_indices()) tok->mark_silent();   // constructor will raise error; further errors will be suppressed
+
                                 this->index_macro_tokens.push_back(tok.get());
 												        this->tokens.push_back(std::move(tok));     // transfers ownership
 											        }
@@ -319,7 +320,7 @@ void token_list::check_no_index_list(const std::string& input, const std::string
 	}
 
 
-macro_argument_list token_list::get_argument_list(const std::string& input, const std::string& candidate, size_t& position, unsigned int expected_args)
+macro_argument_list token_list::get_argument_list(const std::string& input, const std::string& candidate, size_t& position)
 	{
     macro_argument_list arg_list;
 
@@ -393,7 +394,7 @@ macro_argument_list token_list::get_argument_list(const std::string& input, cons
 	}
 
 
-abstract_index_list token_list::get_index_list(const std::string& input, const std::string& candidate, size_t& position, unsigned int expected_indices, enum index_class range)
+abstract_index_list token_list::get_index_list(const std::string& input, const std::string& candidate, size_t& position, bool accumulate_indices)
 	{
     abstract_index_list idx_list;
 
@@ -413,18 +414,10 @@ abstract_index_list token_list::get_index_list(const std::string& input, const s
                 std::pair< abstract_index_list::iterator, bool > result = idx_list.emplace_back(std::make_pair(input[position],
                                                                                                                std::make_shared<abstract_index>(input[position], this->num_fields, this->num_params)));    // will guess suitable index class
 
-                // if the index was new, add to list for this entire tokenization job
+                // if the index was new, add to list for this entire tokenization job unless this
                 // if the index has already been seen for a previous macro then add_index() will do nothing provided
                 // the index type is consistent
-								if(result.second) this->add_index(*result.first, ctx);
-
-                // check for consistency with the intended index type, as supplied by the rule definition
-                if(result.first->get_class() != range)
-                  {
-                    std::ostringstream msg;
-                    msg << WARNING_INDEX_TYPE_MISMATCH << " '" << result.first->get_label() << "'";
-                    ctx.warn(msg.str());
-                  }
+								if(result.second && accumulate_indices) this->add_index(*result.first, ctx);
 							}
 						else
 							{
@@ -548,6 +541,26 @@ unsigned int token_list::evaluate_macros()
   }
 
 
+unsigned int token_list::evaluate_macros(const index_remap_rule& rule)
+  {
+    unsigned int replacements = 0;
+
+    for(token_list_impl::free_index_token*& t : this->free_index_tokens)
+      {
+        t->evaluate(rule);
+        replacements++;
+      }
+
+    for(token_list_impl::index_macro_token*& t : this->index_macro_tokens)
+      {
+        t->evaluate_roll(rule);
+        replacements++;
+      }
+
+    return(replacements);
+  }
+
+
 std::string token_list::to_string()
 	{
     std::string output;
@@ -568,6 +581,16 @@ enum unroll_behaviour token_list::unroll_status() const
 
     // if we are in an inconsistent state then an error will already have been raised, so do nothing here
     return unroll_behaviour::allow;
+  }
+
+
+void token_list::reset()
+  {
+    // reset initialization status of all index macro tokens
+    for(token_list_impl::index_macro_token* tok : this->index_macro_tokens)
+      {
+        tok->reset();
+      }
   }
 
 
@@ -617,7 +640,14 @@ token_list_impl::free_index_token::free_index_token(abstract_index_list::const_i
 void token_list_impl::free_index_token::evaluate(const assignment_list& a)
 	{
     assignment_list::const_iterator it = a.find(this->index.get_label());
-    if(it == a.end()) throw std::runtime_error(ERROR_MISSING_INDEX_ASSIGNMENT);
+
+    if(it == a.end())
+      {
+        std::ostringstream msg;
+        msg << ERROR_MISSING_INDEX_ASSIGNMENT << " '" << this->index.get_label() << "'";
+
+        throw macro_packages::rule_apply_fail(msg.str());
+      }
 
     std::ostringstream cnv;
     cnv << it->get_numeric_value();
@@ -631,6 +661,22 @@ void token_list_impl::free_index_token::evaluate()
   }
 
 
+void token_list_impl::free_index_token::evaluate(const index_remap_rule& rule)
+  {
+    // find substitution for this index
+    index_remap_rule::const_iterator t = rule.find(this->index);
+
+    if(t == rule.end())
+      {
+        std::ostringstream msg;
+        msg << ERROR_INDEX_SUBSTITUTION << " '" << this->index.get_label() << "'";
+        throw macro_packages::rule_apply_fail(msg.str());
+      }
+
+    this->conversion = t->second.get_loop_variable();
+  }
+
+
 token_list_impl::simple_macro_token::simple_macro_token(const std::string& m, const macro_argument_list& a,
                                                         macro_packages::replacement_rule_simple& r, simple_macro_type t,
                                                         error_context ec)
@@ -638,7 +684,8 @@ token_list_impl::simple_macro_token::simple_macro_token(const std::string& m, co
     name(m),
     args(a),
     rule(r),
-    type(t)
+    type(t),
+    argument_error(false)
 	{
 	}
 
@@ -649,6 +696,14 @@ void token_list_impl::simple_macro_token::evaluate()
     try
       {
         this->conversion = this->rule(this->args);
+      }
+    catch(macro_packages::argument_mismatch& xe)
+      {
+        if(!this->argument_error)
+          {
+            this->error(xe.what());
+            this->argument_error = true;
+          }
       }
     catch(macro_packages::rule_apply_fail& xe)
       {
@@ -665,7 +720,9 @@ token_list_impl::index_macro_token::index_macro_token(const std::string& m, cons
     args(a),
     indices(std::move(i)),
     rule(r),
-    initialized(false)
+    initialized(false),
+    argument_error(false),
+    index_error(false)
 	{
 	}
 
@@ -674,7 +731,7 @@ token_list_impl::index_macro_token::~index_macro_token()
 	{
     try
       {
-        this->rule.post(this->args);
+        if(this->initialized) this->rule.post(this->args);
       }
     catch(macro_packages::rule_apply_fail& xe)
       {
@@ -692,6 +749,22 @@ void token_list_impl::index_macro_token::evaluate_unroll(const assignment_list& 
           {
             this->rule.pre(args);
           }
+        catch(macro_packages::argument_mismatch& xe)
+          {
+            if(!this->argument_error)
+              {
+                this->error(xe.what());
+                this->argument_error = true;
+              }
+          }
+        catch(macro_packages::index_mismatch& xe)
+          {
+            if(!this->index_error)
+              {
+                this->error(xe.what());
+                this->index_error = true;
+              }
+          }
         catch(macro_packages::rule_apply_fail& xe)
           {
             this->error(xe.what());
@@ -707,7 +780,13 @@ void token_list_impl::index_macro_token::evaluate_unroll(const assignment_list& 
     for(const abstract_index& idx : this->indices)
       {
         assignment_list::const_iterator it = a.find(idx.get_label());
-        if(it == a.end()) throw std::runtime_error(ERROR_MISSING_INDEX_ASSIGNMENT);
+        if(it == a.end())
+          {
+            std::ostringstream msg;
+            msg << ERROR_MISSING_INDEX_ASSIGNMENT << " '" << idx.get_label() << "'";
+
+            throw macro_packages::rule_apply_fail(msg.str());
+          }
 
         index_values.emplace_back(std::make_pair(idx.get_label(), std::make_shared<assignment_record>(*it)));
       }
@@ -715,6 +794,22 @@ void token_list_impl::index_macro_token::evaluate_unroll(const assignment_list& 
     try
       {
         this->conversion = this->rule.evaluate_unroll(this->args, index_values);
+      }
+    catch(macro_packages::argument_mismatch& xe)
+      {
+        if(!this->argument_error)
+          {
+            this->error(xe.what());
+            this->argument_error = true;
+          }
+      }
+    catch(macro_packages::index_mismatch& xe)
+      {
+        if(!this->index_error)
+          {
+            this->error(xe.what());
+            this->index_error = true;
+          }
       }
     catch(macro_packages::rule_apply_fail& xe)
       {
@@ -732,6 +827,52 @@ void token_list_impl::index_macro_token::evaluate_roll()
     try
       {
         this->conversion = this->rule.evaluate_roll(this->args, this->indices);
+      }
+    catch(macro_packages::rule_apply_fail& xe)
+      {
+        this->error(xe.what());
+      }
+  }
+
+
+void token_list_impl::index_macro_token::evaluate_roll(const index_remap_rule& rule)
+  {
+    // build index set using substitution rules
+    abstract_index_list list;
+
+    for(const abstract_index& idx : this->indices)
+      {
+        index_remap_rule::const_iterator t = rule.find(idx);
+
+        if(t == rule.end())
+          {
+            std::ostringstream msg;
+            msg << ERROR_INDEX_SUBSTITUTION << " '" << idx.get_label() << "'";
+            throw macro_packages::rule_apply_fail(msg.str());
+          }
+
+        const abstract_index& subs = t->second;
+
+        list.emplace_back(std::make_pair(subs.get_label(), std::make_shared<abstract_index>(subs)));
+      }
+
+    try
+      {
+        this->conversion = this->rule.evaluate_roll(this->args, list);
+      }
+    catch(macro_packages::rule_apply_fail& xe)
+      {
+        this->error(xe.what());
+      }
+  }
+
+
+void token_list_impl::index_macro_token::reset()
+  {
+    try
+      {
+        if(this->initialized) this->rule.post(this->args);
+        this->initialized = false;
       }
     catch(macro_packages::rule_apply_fail& xe)
       {

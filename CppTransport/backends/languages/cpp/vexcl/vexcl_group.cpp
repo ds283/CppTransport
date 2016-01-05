@@ -6,6 +6,7 @@
 
 #include "vexcl_group.h"
 
+#include "directives.h"
 #include "fundamental.h"
 #include "flow_tensors.h"
 #include "lagrangian_tensors.h"
@@ -31,6 +32,7 @@ vexcl_group::vexcl_group(translator_data& p, tensor_factory& fctry)
     cse_worker = std::make_unique<cpp::cpp_cse>(0, *this->l_printer, this->data_payload);
 
     // construct replacement rule packages
+    this->add_package<macro_packages::directives>        (p, *l_printer);
     this->add_package<macro_packages::fundamental>       (p, *l_printer);
     this->add_package<macro_packages::flow_tensors>      (p, *l_printer);
     this->add_package<macro_packages::lagrangian_tensors>(p, *l_printer);

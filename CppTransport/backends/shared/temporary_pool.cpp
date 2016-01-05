@@ -68,9 +68,10 @@ namespace macro_packages
         // if there is no location defined, we should hold on until one is set later
         if(tag_set)
           {
-            // get buffer and macro package from the top of the stack
+            // get buffer and macro agent associated with current top-of-stack output file;
+            // this will be our own parent macro agent
             buffer& buf = this->data_payload.get_stack().top_buffer();
-            macro_agent& ms = this->data_payload.get_stack().top_macro_package();
+            macro_agent& ma = this->data_payload.get_stack().top_macro_package();
 
             bool ok = true;
 
@@ -120,7 +121,7 @@ namespace macro_packages
                 for(const std::string& temp : *cse_temps)
                   {
                     unsigned int replacements = 0;
-                    std::unique_ptr< std::list<std::string> > r_list = ms.apply(temp, replacements);
+                    std::unique_ptr< std::list<std::string> > r_list = ma.apply(temp, replacements);
 
                     if(r_list)
                       {
@@ -134,7 +135,7 @@ namespace macro_packages
                 for(const std::string& temp : *lambda_temps)
                   {
                     unsigned int replacements = 0;
-                    std::unique_ptr< std::list<std::string> > r_list = ms.apply(temp, replacements);
+                    std::unique_ptr< std::list<std::string> > r_list = ma.apply(temp, replacements);
 
                     if(r_list)
                       {

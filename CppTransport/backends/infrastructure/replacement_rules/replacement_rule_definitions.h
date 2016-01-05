@@ -18,6 +18,16 @@
 namespace macro_packages
   {
 
+    //! tag for type of replacement rule;
+    //! either a macro, which evaluates to text and is replaced in the template,
+    //! or a directive, which does not evaluate to text and instead causes a
+    //! change of state in the translator
+    enum class replacement_rule_class
+      {
+        macro, directive
+      };
+
+
     //! base class for a 'simple' macro which takes arguments but not indices
     class replacement_rule_simple
       {
@@ -88,13 +98,36 @@ namespace macro_packages
 
       public:
 
-        //! constructor
+        //! constructor for a 'traditional' index macro with a fixed number of arguments and indices,
+        //! and enforcing a specific class for the index type
         replacement_rule_index(std::string nm, unsigned int a, unsigned int i, enum index_class c)
           : name(std::move(nm)),
             num_args(a),
             num_indices(i),
             idx_class(c)
           {
+            // traditional rules are always macros
+            rule_class = replacement_rule_class::macro;
+          }
+
+        //! constructor for a 'traditional' index macro with a fixed number of arguments and indices,
+        //! but no specific class for the index types
+        replacement_rule_index(std::string nm, unsigned int a, unsigned int i)
+          : name(std::move(nm)),
+            num_args(a),
+            num_indices(i)
+          {
+            // traditional rules are always macros
+            rule_class = replacement_rule_class::macro;
+          }
+
+        //! constructor for a 'variable' index macro which can accept a variable number of indices
+        replacement_rule_index(std::string nm, unsigned int a)
+          : name(std::move(nm)),
+            num_args(a)
+          {
+            // for the time being, variable rules are always directives
+            rule_class = replacement_rule_class::directive;
           }
 
         //! destructor
@@ -125,17 +158,24 @@ namespace macro_packages
         //! get number of arguments associated with this macro
         unsigned int get_number_args() const { return(this->num_args); }
 
-        //! get number of indices associated with this macro
-        unsigned int get_number_indices() const { return(this->num_indices); }
+        //! get number of indices associated with this macro;
+        //! returned as a boost::optional which will be empty if the macro can accept a variable
+        //! number of indices
+        boost::optional<unsigned int> get_number_indices() const { return(this->num_indices); }
 
-        //! get index class associated with this macro
-        enum index_class get_index_class() const { return(this->idx_class); }
+        //! get index class associated with this macro;
+        //! returned as a boost::optional which will be empty if the macro can accept variable
+        //! index types
+        boost::optional<enum index_class> get_index_class() const { return(this->idx_class); }
 
         //! get name associated with this macro
         const std::string& get_name() const { return(this->name); }
 
         //! get unroll status for this macro -- must be handled by implementation
         virtual enum unroll_behaviour get_unroll() const = 0;
+
+        //! determine whether this rule is a directive
+        bool is_directive() const { return(this->rule_class == replacement_rule_class::directive); }
 
 
         // INTERNAL API
@@ -163,17 +203,20 @@ namespace macro_packages
 
       protected:
 
-        //! name of this macro
+        //! name of this replacement rule
         std::string name;
+
+        //! class of this replacement rule
+        enum replacement_rule_class rule_class;
 
         //! number of arguments expected
         unsigned int num_args;
 
         //! number of indices expected
-        unsigned int num_indices;
+        boost::optional<unsigned int> num_indices;
 
         //! class of index expected
-        enum index_class idx_class;
+        boost::optional<enum index_class> idx_class;
 
       };
 
@@ -193,6 +236,44 @@ namespace macro_packages
 
         //! destructor is default
         virtual ~rule_apply_fail() = default;
+
+      };
+
+
+    class argument_mismatch: public std::runtime_error
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! constructor
+        argument_mismatch(const std::string x)
+          : std::runtime_error(std::move(x))
+          {
+          }
+
+        //! destructor is default
+        virtual ~argument_mismatch() = default;
+
+      };
+
+
+    class index_mismatch: public std::runtime_error
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! constructor
+        index_mismatch(const std::string x)
+          : std::runtime_error(std::move(x))
+          {
+          }
+
+        //! destructor is default
+        virtual ~index_mismatch() = default;
 
       };
 

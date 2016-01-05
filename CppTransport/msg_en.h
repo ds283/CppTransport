@@ -73,6 +73,7 @@
 #define ERROR_TOKENIZE_SKIPPING               "skipping"
 
 #define ERROR_TOKENIZE_TOO_MANY_ERRORS        "Too many errors from this token; further output will be suppressed"
+#define ERROR_DIRECTIVE_CALLED_AS_UNROLL      "Internal error: directive called as unroll"
 
 #define ERROR_NO_RULE_HANDLER                 "Internal error: no assigned replacement rule for macro"
 #define ERROR_NO_PRE_MAP                      "Missing data to perform macro replacement"
@@ -159,6 +160,19 @@
 
 #define RESOURCE_SET_WORKING_TYPE             "working type set to"
 #define RESOURCE_RELEASE_WORKING_TYPE         "release working type"
+
+#define DIRECTIVE_SET_MACRO_A                 "set macro"
+#define DIRECTIVE_SET_MACRO_B                 "to"
+
+#define ERROR_DIRECTIVE_SET                   "Error while evaluating set directive for"
+
+#define ERROR_SET_WRONG_NUMBER_INDICES_A      "Macro body contains unexpected number of indices; expected"
+#define ERROR_SET_WRONG_NUMBER_INDICES_B      "received"
+#define ERROR_SET_UNDECLARED_INDEX            "Macro body contains undeclared index"
+
+#define ERROR_SET_REDEFINITION                "Redefinition of macro"
+#define WARN_PRIOR_REDEFINITION               "Earlier definition of this macro was here"
+#define ERROR_INDEX_SUBSTITUTION              "Missing substitution for index"
 
 #define WARNING_UNKNOWN_SWITCH                "Unknown command-line switch"
 

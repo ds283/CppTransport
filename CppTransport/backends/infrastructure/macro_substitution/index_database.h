@@ -493,7 +493,7 @@ const RecordType& index_database<RecordType>::operator[](std::size_t i) const
   {
     if(i > this->db.size()) throw std::out_of_range(ERROR_INDEX_DATABASE_OUT_OF_RANGE);
 
-    const_iterator it = this->begin();
+    const_iterator it = this->cbegin();
     while(i > 0)
       {
         ++it;
@@ -509,7 +509,7 @@ RecordType& index_database<RecordType>::operator[](std::size_t i)
   {
     if(i > this->db.size()) throw std::out_of_range(ERROR_INDEX_DATABASE_OUT_OF_RANGE);
 
-    iterator it = this->cbegin();
+    iterator it = this->begin();
     while(i > 0)
       {
         ++it;

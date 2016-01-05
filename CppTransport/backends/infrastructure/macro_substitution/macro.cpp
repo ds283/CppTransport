@@ -70,6 +70,14 @@ std::unique_ptr< std::list<std::string> > macro_agent::apply(const std::string& 
   }
 
 
+std::unique_ptr< token_list > macro_agent::tokenize(const std::string& line)
+  {
+    return std::make_unique<token_list>(line, this->prefix, this->fields, this->parameters,
+                                        this->pre_rule_cache, this->post_rule_cache, this->index_rule_cache,
+                                        this->data_payload);
+  }
+
+
 std::unique_ptr< std::list<std::string> > macro_agent::apply_line(const std::string& line, unsigned int& replacements)
   {
     std::unique_ptr< std::list<std::string> > r_list = std::make_unique<std::list<std::string> >();
@@ -77,23 +85,21 @@ std::unique_ptr< std::list<std::string> > macro_agent::apply_line(const std::str
     // break the line at the split point, if it exists, to get a 'left-hand' side and a 'right-hand' side
     macro_impl::split_string split_result = this->split(line);
 
-    timing_instrument timer(this->tokenization_timer);
-    token_list left_tokens(split_result.left, this->prefix, this->fields, this->parameters, this->pre_rule_cache,
-                           this->post_rule_cache, this->index_rule_cache, this->data_payload);
-    token_list right_tokens(split_result.right, this->prefix, this->fields, this->parameters, this->pre_rule_cache,
-                            this->post_rule_cache, this->index_rule_cache, this->data_payload);
-    timer.stop();
+    timing_instrument tok_timer(this->tokenization_timer);
+    std::unique_ptr<token_list> left_tokens = this->tokenize(split_result.left);
+    std::unique_ptr<token_list> right_tokens = this->tokenize(split_result.right);
+    tok_timer.stop();
 
     // running total of number of macro replacements
     unsigned int counter = 0;
 
     // evaluate pre macros and cache the results
     // we'd like to do this only once if possible, because evaluation may be expensive
-    counter += left_tokens.evaluate_macros(simple_macro_type::pre);
-    counter += right_tokens.evaluate_macros(simple_macro_type::pre);
+    counter += left_tokens->evaluate_macros(simple_macro_type::pre);
+    counter += right_tokens->evaluate_macros(simple_macro_type::pre);
 
     // generate assignments for the LHS indices
-    assignment_set LHS_assignments(left_tokens.get_indices());
+    assignment_set LHS_assignments(left_tokens->get_indices());
 
     // generate an assignment for each RHS index; first get RHS indices which are not also LHS indices
     abstract_index_list RHS_indices;
@@ -102,7 +108,7 @@ std::unique_ptr< std::list<std::string> > macro_agent::apply_line(const std::str
 
     try
       {
-        RHS_indices = right_tokens.get_indices() - left_tokens.get_indices();
+        RHS_indices = right_tokens->get_indices() - left_tokens->get_indices();
       }
     catch(index_exception& xe)
       {
@@ -120,10 +126,10 @@ std::unique_ptr< std::list<std::string> > macro_agent::apply_line(const std::str
 
     unsigned int prevent = 0;
     unsigned int force = 0;
-    if(left_tokens.unroll_status() == unroll_behaviour::prevent) ++prevent;
-    if(right_tokens.unroll_status() == unroll_behaviour::prevent) ++prevent;
-    if(left_tokens.unroll_status() == unroll_behaviour::force) ++force;
-    if(right_tokens.unroll_status() == unroll_behaviour::force) ++force;
+    if(left_tokens->unroll_status() == unroll_behaviour::prevent) ++prevent;
+    if(right_tokens->unroll_status() == unroll_behaviour::prevent) ++prevent;
+    if(left_tokens->unroll_status() == unroll_behaviour::force) ++force;
+    if(right_tokens->unroll_status() == unroll_behaviour::force) ++force;
 
     if(force > 0 && prevent > 0)
       {
@@ -137,12 +143,12 @@ std::unique_ptr< std::list<std::string> > macro_agent::apply_line(const std::str
 
     if(unroll)
       {
-        this->unroll_index_assignment(left_tokens, right_tokens, LHS_assignments, RHS_assignments, counter,
+        this->unroll_index_assignment(*left_tokens, *right_tokens, LHS_assignments, RHS_assignments, counter,
                                       split_result, ctx, *r_list);
       }
     else
       {
-        this->forloop_index_assignment(left_tokens, right_tokens, LHS_assignments, RHS_assignments, counter,
+        this->forloop_index_assignment(*left_tokens, *right_tokens, LHS_assignments, RHS_assignments, counter,
                                        split_result, ctx, *r_list);
       }
 
@@ -462,4 +468,10 @@ std::string macro_agent::dress(std::string out_str, const std::string& raw_inden
 
     out << out_str;
     return(out.str());
+  }
+
+
+void macro_agent::inject_macro(macro_packages::replacement_rule_index* rule)
+  {
+    this->index_rule_cache.push_back(rule);
   }

@@ -7,6 +7,7 @@
 #ifndef CPPTRANSPORT_MACRO_H
 #define CPPTRANSPORT_MACRO_H
 
+
 #include <iostream>
 #include <vector>
 #include <list>
@@ -88,7 +89,7 @@ class macro_agent
 
   public:
 
-		// constructor
+		//! constructor
 		macro_agent(translator_data& p, package_group& pkg, std::string pf, std::string speq, std::string spsumeq,
 		            unsigned int dm = DEFAULT_RECURSION_DEPTH);
 
@@ -97,19 +98,31 @@ class macro_agent
 
   public:
 
-    // apply macro substitution to a line, provided this does not bring the total number
-    // of recursive applications above the maximum
+    //! apply macro substitution to a line, provided this does not bring the total number
+    //! of recursive applications above the maximum
     std::unique_ptr< std::list<std::string> > apply(const std::string& line, unsigned int& replacements);
+
+
+    // INTERFACE -- SERVICE API
+
+  public:
+
+    //! tokenize a line; used internally, but also available as a service to clients which may need
+    //! to inspect tokenized strings (eg. directive implementations)
+    std::unique_ptr< token_list > tokenize(const std::string& line);
+
+    //! inject a new macro definition
+    void inject_macro(macro_packages::replacement_rule_index* rule);
 
 
 		// INTERFACE - STATISTICS
 
   public:
 
-		// get total time spent doing macro replacement
+		//! get total time spent doing macro replacement
 		boost::timer::nanosecond_type get_total_work_time() const { return(this->macro_apply_timer.elapsed().wall); }
 
-		// get time spent doing tokenization
+		//! get time spent doing tokenization
 		boost::timer::nanosecond_type get_tokenization_time() const { return(this->tokenization_timer.elapsed().wall); }
 
 
@@ -117,7 +130,7 @@ class macro_agent
 
   protected:
 
-    // do the heavy lifting of applying macro substitution to a line
+    //! do the heavy lifting of applying macro substitution to a line
     std::unique_ptr< std::list<std::string> > apply_line(const std::string& line, unsigned int& replacements);
 
     //! find a split-point in a line, if one exists
@@ -125,10 +138,10 @@ class macro_agent
 
 
     // INTERNAL API -- HANDLE INDEX SET BY UNROLLING
-    //! unroll an index assignment
 
   protected:
 
+    //! unroll an index assignment
     void unroll_index_assignment(token_list& left_tokens, token_list& right_tokens,
                                  assignment_set& LHS_assignments, assignment_set& RHS_assignments,
                                  unsigned int& counter, macro_impl::split_string& split_result,
@@ -198,14 +211,14 @@ class macro_agent
     //! indexes to macro package
     package_group& package;
 
-    //! cache pre-rules
-    std::vector<macro_packages::replacement_rule_simple*>& pre_rule_cache;
+    //! cache pre-rules; note we take a copy, not a reference, so we can inject further rules later if required
+    std::vector<macro_packages::replacement_rule_simple*> pre_rule_cache;
 
-    //! cache post-rules
-    std::vector<macro_packages::replacement_rule_simple*>& post_rule_cache;
+    //! cache post-rules; note we take a copy, not a reference, so we can inject further rules later if required
+    std::vector<macro_packages::replacement_rule_simple*> post_rule_cache;
 
-    //! cache index rules
-    std::vector<macro_packages::replacement_rule_index*>& index_rule_cache;
+    //! cache index rules; note we take a copy, not a reference, so we can inject further rules later if required
+    std::vector<macro_packages::replacement_rule_index*> index_rule_cache;
 
 
     // MACRO CONFIGURATION
