@@ -64,6 +64,9 @@ void cse::clear()
 
 void cse::parse(const GiNaC::ex& expr, std::string name)
   {
+    // no effect if CSE is disabled
+    if(!this->data_payload.do_cse()) return;
+
     timing_instrument instrument(timer);
 
     // find iterator to entire expression;
@@ -134,6 +137,9 @@ std::unique_ptr< std::list<std::string> > cse::temporaries(const std::string& le
 
 std::string cse::get_symbol_without_use_count(const GiNaC::ex& expr)
   {
+    // if CSE disabled, return raw expression
+    if(!this->data_payload.do_cse()) return this->printer.ginac(expr);
+
     // print expression using ourselves as the lookup function (false means that print doesn't count uses via recursively calling ourselves)
     std::string e = this->print(expr, false);
 
@@ -150,6 +156,9 @@ std::string cse::get_symbol_without_use_count(const GiNaC::ex& expr)
 
 std::string cse::get_symbol_with_use_count(const GiNaC::ex& expr)
   {
+    // if CSE disabled, return raw expression
+    if(!this->data_payload.do_cse()) return this->printer.ginac(expr);
+
     // print expression using ourselves as the lookup function (true means that print will count uses via recursively calling ourselves)
     std::string e = this->print(expr, true);
 

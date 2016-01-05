@@ -125,6 +125,8 @@
 
 #define ERROR_CURRENT_LINE_EMPTY              "Internal error: current line empty in lexfile"
 
+#define ERROR_OUT_OF_BOUNDS_CSE_MAP           "Internal error: out of bounds subscript in CSE map"
+
 #define WARNING_TEMPORARY_NO_TAG_SET          "Temporary pool being written, but no location set: defaults to end-of-buffer"
 
 #define WARNING_HEX_CONVERSION_A              "Leading '0x' in "

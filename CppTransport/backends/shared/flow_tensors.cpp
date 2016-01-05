@@ -40,6 +40,8 @@ namespace macro_packages
       {
         GiNaC::ex V = this->Hubble_obj->compute_V();
 
+
+
         // pass to CSE module for evalaution
         this->cse_worker.parse(V);
 

@@ -56,7 +56,10 @@ namespace canonical
 
     GiNaC::ex resources::V_resource(cse& cse_worker, const language_printer& printer)
       {
-        if(cse_worker.do_cse())
+        // behaviour differs depending whether CSE is in use or not
+        // If not, we want to return the raw expression; if it is, we want to assign an internal name to a collection
+        // of CSE temporaries, and then return a *different* symbolic expression representing this collection
+        if(this->payload.do_cse())
           {
             GiNaC::symbol V = this->share.generate_V();
             GiNaC::ex raw_V = this->raw_V_resource(printer);
@@ -130,7 +133,7 @@ namespace canonical
 
     GiNaC::ex resources::eps_resource(cse& cse_worker, const language_printer& printer)
       {
-        if(cse_worker.do_cse())
+        if(this->payload.do_cse())
           {
             GiNaC::symbol eps = this->share.generate_eps();
             GiNaC::ex raw_eps = this->raw_eps_resource(printer);
@@ -177,7 +180,7 @@ namespace canonical
 
     GiNaC::ex resources::Hsq_resource(cse& cse_worker, const language_printer& printer)
       {
-        if(cse_worker.do_cse())
+        if(this->payload.do_cse())
           {
             GiNaC::symbol Hsq = this->share.generate_Hsq();
             GiNaC::ex raw_Hsq = this->raw_Hsq_resource(printer);
