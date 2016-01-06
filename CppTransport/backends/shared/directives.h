@@ -110,6 +110,8 @@ namespace macro_packages
                 value(v),
                 if_branch(true)
               {
+                if(value) enabled = true;
+                else      enabled = false;
               }
 
             ~if_record() = default;
@@ -128,8 +130,11 @@ namespace macro_packages
             //! currently in the if-branch? if not, assume we are in else-branch
             bool in_if_branch() const { return(this->if_branch); }
 
-            //! convert to else-branch
-            void mark_else_branch() { this->if_branch = false; }
+            //! mark as in else-branch
+            void mark_else_branch() { this->if_branch = false; if(value) enabled = false; else enabled = true; }
+
+            //! get current output-enabled status
+            bool is_enabled() const { return(this->enabled); }
 
 
             // INTERNAL DATA
@@ -144,6 +149,9 @@ namespace macro_packages
 
             //! which branch are we in?
             bool if_branch;
+
+            //! is output currently enabled?
+            bool enabled;
 
           };
 
@@ -352,6 +360,9 @@ namespace macro_packages
 
         //! reference to parent if_stack
         if_stack& istack;
+
+        //! condition cache, used for formatting comment string for output
+        std::string condition_cache;
 
       };
 

@@ -129,12 +129,16 @@ namespace macro_packages
         if(condition == std::string("fast") && this->payload.fast()) truth = true;
         else if(condition == std::string("!fast") && !this->payload.fast()) truth = true;
 
-        if(!truth)
+        this->istack.emplace(condition, truth);
+
+        if(this->istack.top().is_enabled())
+          {
+            ma.enable_output();
+          }
+        else
           {
             ma.disable_output();
           }
-
-        this->istack.emplace(condition, truth);
 
         std::ostringstream msg;
         msg << "IF " << condition;
@@ -151,13 +155,13 @@ namespace macro_packages
 
         macro_agent& ma = this->payload.get_stack().top_macro_package();
 
-        if(this->istack.top().get_value())
+        if(this->istack.top().is_enabled())
           {
-            ma.disable_output();
+            ma.enable_output();
           }
         else
           {
-            ma.enable_output();
+            ma.disable_output();
           }
       }
 
@@ -175,16 +179,26 @@ namespace macro_packages
         if(this->istack.size() == 0) throw rule_apply_fail(ERROR_UNPAIRED_ENDIF);
 
         macro_agent& ma = this->payload.get_stack().top_macro_package();
-        ma.enable_output();
+
+        this->condition_cache = this->istack.top().get_condition();
+        this->istack.pop();
+
+        if(this->istack.size() == 0 || this->istack.top().is_enabled())
+          {
+            ma.enable_output();
+          }
+        else
+          {
+            ma.disable_output();
+          }
       }
 
 
     std::string endif_directive::evaluate(const macro_argument_list& args)
       {
         std::ostringstream msg;
-        msg << "ENDIF " << this->istack.top().get_condition();
+        msg << "ENDIF " << this->condition_cache;
 
-        this->istack.pop();
         return this->printer.comment(msg.str());
       }
 
