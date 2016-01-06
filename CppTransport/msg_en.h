@@ -173,6 +173,10 @@
 #define WARN_PRIOR_REDEFINITION               "Earlier definition of this macro was here"
 #define ERROR_INDEX_SUBSTITUTION              "Missing substitution for index"
 
+#define ERROR_UNPAIRED_ELSE                   "Unexpected $ELSE without opening $IF"
+#define ERROR_UNPAIRED_ENDIF                  "Unexpected $ENDIF without opening $IF"
+#define ERROR_DUPLICATE_ELSE                  "Duplicate $ELSE clause"
+
 #define WARNING_UNKNOWN_SWITCH                "Unknown command-line switch"
 
 #define WARNING_PARSING_FAILED                "Failed to parse file"

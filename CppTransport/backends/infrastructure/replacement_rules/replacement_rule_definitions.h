@@ -54,6 +54,9 @@ namespace macro_packages
         //! evaluate the macro
         std::string operator()(const macro_argument_list& args);
 
+        //! perform any required setup after tokenization; here a no-op but can be overridden if needed
+        virtual void post_tokenize_hook(const macro_argument_list& args) { return; }
+
         //! report end of input; here a no-op but but can be overridden if needed
         virtual void report_end_of_input() { return; }
 

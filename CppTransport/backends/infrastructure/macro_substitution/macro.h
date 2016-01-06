@@ -102,17 +102,23 @@ class macro_agent
     //! of recursive applications above the maximum
     std::unique_ptr< std::list<std::string> > apply(const std::string& line, unsigned int& replacements);
 
-
-    // INTERFACE -- SERVICE API
-
-  public:
-
     //! tokenize a line; used internally, but also available as a service to clients which may need
     //! to inspect tokenized strings (eg. directive implementations)
     std::unique_ptr< token_list > tokenize(const std::string& line);
 
     //! inject a new macro definition
     void inject_macro(macro_packages::replacement_rule_index* rule);
+
+
+    // INTERFACE -- OUTPUT CONTROL
+
+  public:
+
+    //! temporarily disable output
+    void disable_output() { this->output_enabled = false; }
+
+    //! re-enable output
+    void enable_output() { this->output_enabled = true; }
 
 
 		// INTERFACE - STATISTICS
@@ -183,6 +189,11 @@ class macro_agent
     // INTERNAL DATA
 
   private:
+
+    // INTERNAL STATE
+
+    //! output currently enabled?
+    bool output_enabled;
 
 
     // TRANSLATOR-SUPPLIED PAYLOAD AND CONFIGURATION DATA

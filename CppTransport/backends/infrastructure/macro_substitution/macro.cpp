@@ -26,7 +26,8 @@ macro_agent::macro_agent(translator_data& p, package_group& pkg, std::string pf,
     package(pkg),
     pre_rule_cache(pkg.get_pre_ruleset()),
     post_rule_cache(pkg.get_post_ruleset()),
-    index_rule_cache(pkg.get_index_ruleset())
+    index_rule_cache(pkg.get_index_ruleset()),
+    output_enabled(true)
   {
     assert(recursion_max > 0);
 
@@ -92,6 +93,10 @@ std::unique_ptr< std::list<std::string> > macro_agent::apply_line(const std::str
 
     // running total of number of macro replacements
     unsigned int counter = 0;
+
+    // return quickly if output is disabled
+    // (tokenization always happens so we can catch eg. $ELSE, $ENDIF)
+    if(!this->output_enabled) return(r_list);
 
     // evaluate pre macros and cache the results
     // we'd like to do this only once if possible, because evaluation may be expensive

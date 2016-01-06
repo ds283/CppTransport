@@ -109,7 +109,7 @@ token_list::token_list(const std::string& input, const std::string& prefix,
 
                                 error_context ctx(this->data_payload.get_stack(), input_string, position, this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
                                 std::unique_ptr<token_list_impl::simple_macro_token> tok = std::make_unique<token_list_impl::simple_macro_token>(candidate, arg_list, rule, simple_macro_type::pre, ctx);
-                                if(arg_list.size() != rule.get_number_args()) tok->mark_silent();   // constructor will raise error; further errors will be suppressed
+
                                 this->simple_macro_tokens.push_back(tok.get());
 												        this->tokens.push_back(std::move(tok));     // transfers ownership
 											        }
@@ -129,7 +129,7 @@ token_list::token_list(const std::string& input, const std::string& prefix,
 
                                 error_context ctx(this->data_payload.get_stack(), input_string, position, this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
                                 std::unique_ptr<token_list_impl::simple_macro_token> tok = std::make_unique<token_list_impl::simple_macro_token>(candidate, arg_list, rule, simple_macro_type::post, ctx);
-                                if(arg_list.size() != rule.get_number_args()) tok->mark_silent();   // constructor will raise error; further errors will be suppressed
+
                                 this->simple_macro_tokens.push_back(tok.get());
 												        this->tokens.push_back(std::move(tok));     // transfers ownership
 											        }
@@ -190,6 +190,7 @@ token_list::token_list(const std::string& input, const std::string& prefix,
 
                                 error_context ctx(this->data_payload.get_stack(), input_string, position, this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
                                 std::unique_ptr<token_list_impl::free_index_token> tok = std::make_unique<token_list_impl::free_index_token>(idx, ctx);
+
                                 this->free_index_tokens.push_back(tok.get());
 										            this->tokens.push_back(std::move(tok));     // transfers ownership
 
@@ -204,6 +205,7 @@ token_list::token_list(const std::string& input, const std::string& prefix,
 
                             error_context ctx(this->data_payload.get_stack(), input_string, position, this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
                             std::unique_ptr<token_list_impl::free_index_token> tok = std::make_unique<token_list_impl::free_index_token>(idx, ctx);
+
                             this->free_index_tokens.push_back(tok.get());
 								            this->tokens.push_back(std::move(tok));     // transfers ownership
 
@@ -216,6 +218,7 @@ token_list::token_list(const std::string& input, const std::string& prefix,
 
                         error_context ctx(this->data_payload.get_stack(), input_string, position, this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
                         std::unique_ptr<token_list_impl::free_index_token> tok = std::make_unique<token_list_impl::free_index_token>(idx, ctx);
+
                         this->free_index_tokens.push_back(tok.get());
 												this->tokens.push_back(std::move(tok));     // transfers ownership
 
@@ -233,6 +236,7 @@ token_list::token_list(const std::string& input, const std::string& prefix,
 
                 error_context ctx(this->data_payload.get_stack(), input_string, position, this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
                 std::unique_ptr<token_list_impl::text_token> tok = std::make_unique<token_list_impl::text_token>(string_literal, ctx);
+
 						    this->tokens.push_back(std::move(tok));     // transfers ownership
 							}
 					}
@@ -687,7 +691,20 @@ token_list_impl::simple_macro_token::simple_macro_token(const std::string& m, co
     type(t),
     argument_error(false)
 	{
-	}
+    try
+      {
+        this->rule.post_tokenize_hook(a);
+      }
+    catch(macro_packages::argument_mismatch& xe)
+      {
+        this->error(xe.what());
+        this->argument_error = true;
+      }
+    catch(macro_packages::rule_apply_fail& xe)
+      {
+        this->error(xe.what());
+      }
+  }
 
 
 void token_list_impl::simple_macro_token::evaluate()

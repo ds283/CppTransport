@@ -8,6 +8,8 @@
 #define CPPTRANSPORT_DIRECTIVES_H
 
 
+#include <stack>
+
 #include "replacement_rule_package.h"
 
 #include "macro_tokenizer.h"
@@ -19,6 +21,13 @@ namespace macro_packages
     constexpr unsigned int SET_DIRECTIVE_NAME_ARGUMENT = 0;
     constexpr unsigned int SET_DIRECTIVE_DEFINITION_ARGUMENT = 1;
     constexpr unsigned int SET_DIRECTIVE_TOTAL_ARGUMENTS = 2;
+
+    constexpr unsigned int IF_DIRECTIVE_CONDITION_ARGUMENT = 0;
+    constexpr unsigned int IF_DIRECTIVE_TOTAL_ARGUMENTS = 1;
+
+    constexpr unsigned int ELSE_DIRECTIVE_TOTAL_ARGUMENTS = 0;
+
+    constexpr unsigned int ENDIF_DIRECTIVE_TOTAL_ARGUMENTS = 0;
 
 
     namespace directives_impl
@@ -85,6 +94,56 @@ namespace macro_packages
 
             //! record declaration point
             const error_context declaration_point;
+
+          };
+
+
+        class if_record
+          {
+
+            // CONSTRUCTOR, DESTRUCTOR
+
+          public:
+
+            if_record(std::string c, bool v)
+              : condition(std::move(c)),
+                value(v),
+                if_branch(true)
+              {
+              }
+
+            ~if_record() = default;
+
+
+            // INTERFACE
+
+          public:
+
+            //! get truth value
+            bool get_value() const { return(this->value); }
+
+            //! get conditions
+            const std::string& get_condition() const { return(this->condition); }
+
+            //! currently in the if-branch? if not, assume we are in else-branch
+            bool in_if_branch() const { return(this->if_branch); }
+
+            //! convert to else-branch
+            void mark_else_branch() { this->if_branch = false; }
+
+
+            // INTERNAL DATA
+
+          private:
+
+            //! string version of condition
+            std::string condition;
+
+            //! record truth value
+            bool value;
+
+            //! which branch are we in?
+            bool if_branch;
 
           };
 
@@ -155,6 +214,148 @@ namespace macro_packages
 
       };
 
+
+    typedef std::stack< directives_impl::if_record > if_stack;
+
+
+    class if_directive: public replacement_rule_simple
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! constructor
+        if_directive(std::string n, translator_data& p, language_printer& prn, if_stack& is)
+          : replacement_rule_simple(n, IF_DIRECTIVE_TOTAL_ARGUMENTS),
+            payload(p),
+            printer(prn),
+            istack(is)
+          {
+          }
+
+        //! destructor
+        virtual ~if_directive() = default;
+
+
+        // INTERNAL API
+
+      protected:
+
+        //! evaluate
+        virtual std::string evaluate(const macro_argument_list& args) override;
+
+
+        // INTERNAL DATA
+
+      private:
+
+        //! reference to data payload provided by translator
+        translator_data& payload;
+
+        //! reference to language printer object
+        language_printer& printer;
+
+        //! reference to parent if_stack
+        if_stack& istack;
+
+      };
+
+
+    class else_directive: public replacement_rule_simple
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! constructor
+        else_directive(std::string n, translator_data& p, language_printer& prn, if_stack& is)
+          : replacement_rule_simple(n, ELSE_DIRECTIVE_TOTAL_ARGUMENTS),
+            payload(p),
+            printer(prn),
+            istack(is)
+          {
+          }
+
+        //! destructor
+        virtual ~else_directive() = default;
+
+
+        // INTERNAL API
+
+      protected:
+
+        //! evaluate
+        virtual std::string evaluate(const macro_argument_list& args) override;
+
+        //! evaluate else clause after tokenization
+        virtual void post_tokenize_hook(const macro_argument_list& args) override;
+
+
+        // INTERNAL DATA
+
+      private:
+
+        //! reference to data payload provided by translator
+        translator_data& payload;
+
+        //! reference to language printer object
+        language_printer& printer;
+
+        //! reference to parent if_stack
+        if_stack& istack;
+
+      };
+
+
+    class endif_directive: public replacement_rule_simple
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! constructor
+        endif_directive(std::string n, translator_data& p, language_printer& prn, if_stack& is)
+          : replacement_rule_simple(n, ENDIF_DIRECTIVE_TOTAL_ARGUMENTS),
+            payload(p),
+            printer(prn),
+            istack(is)
+          {
+          }
+
+        //! destructor
+        virtual ~endif_directive() = default;
+
+
+        // INTERNAL API
+
+      protected:
+
+        //! evaluate
+        virtual std::string evaluate(const macro_argument_list& args) override;
+
+        //! evaluate endif clause after tokenization
+        virtual void post_tokenize_hook(const macro_argument_list& args) override;
+
+
+        // INTERNAL DATA
+
+      private:
+
+        //! reference to data payload provided by translator
+        translator_data& payload;
+
+        //! reference to language printer object
+        language_printer& printer;
+
+        //! reference to parent if_stack
+        if_stack& istack;
+
+      };
+
+
     class directives: public replacement_rule_package
       {
 
@@ -167,6 +368,14 @@ namespace macro_packages
 
         //! destructor
         virtual ~directives() = default;
+
+
+        // INTERNAL DATA
+
+      private:
+
+        //! stack of records corresponding to open if statements
+        if_stack istack;
 
       };
 

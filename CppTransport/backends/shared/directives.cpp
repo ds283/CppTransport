@@ -12,6 +12,7 @@
 
 
 #define BIND_SYMBOL(X, N) std::move(std::make_unique<X>(N, p, prn))
+#define BIND_IF_SYMBOL(X, N) std::move(std::make_unique<X>(N, p, prn, istack))
 
 
 namespace macro_packages
@@ -20,6 +21,10 @@ namespace macro_packages
     directives::directives(tensor_factory& f, cse& cw, lambda_manager& lm, translator_data& p, language_printer& prn)
       : replacement_rule_package(f, cw, lm, p, prn)
       {
+        pre_package.emplace_back(BIND_IF_SYMBOL(if_directive, "IF"));
+        pre_package.emplace_back(BIND_IF_SYMBOL(else_directive, "ELSE"));
+        pre_package.emplace_back(BIND_IF_SYMBOL(endif_directive, "ENDIF"));
+
         index_package.emplace_back(BIND_SYMBOL(set_directive, "SET"));
       }
 
@@ -110,6 +115,77 @@ namespace macro_packages
                 throw index_mismatch(msg.str());
               }
           }
+      }
+
+
+    std::string if_directive::evaluate(const macro_argument_list& args)
+      {
+        std::string condition = args[IF_DIRECTIVE_CONDITION_ARGUMENT];
+
+        bool truth = false;
+
+        macro_agent& ma = this->payload.get_stack().top_macro_package();
+
+        if(condition == std::string("fast") && this->payload.fast()) truth = true;
+        else if(condition == std::string("!fast") && !this->payload.fast()) truth = true;
+
+        if(!truth)
+          {
+            ma.disable_output();
+          }
+
+        this->istack.emplace(condition, truth);
+
+        std::ostringstream msg;
+        msg << "IF " << condition;
+        return this->printer.comment(msg.str());
+      }
+
+
+    void else_directive::post_tokenize_hook(const macro_argument_list& args)
+      {
+        if(this->istack.size() == 0) throw rule_apply_fail(ERROR_UNPAIRED_ELSE);
+        if(!this->istack.top().in_if_branch()) throw rule_apply_fail(ERROR_DUPLICATE_ELSE);
+
+        this->istack.top().mark_else_branch();
+
+        macro_agent& ma = this->payload.get_stack().top_macro_package();
+
+        if(this->istack.top().get_value())
+          {
+            ma.disable_output();
+          }
+        else
+          {
+            ma.enable_output();
+          }
+      }
+
+
+    std::string else_directive::evaluate(const macro_argument_list& args)
+      {
+        std::ostringstream msg;
+        msg << "ELSE " << this->istack.top().get_condition();
+        return this->printer.comment(msg.str());
+      }
+
+
+    void endif_directive::post_tokenize_hook(const macro_argument_list& args)
+      {
+        if(this->istack.size() == 0) throw rule_apply_fail(ERROR_UNPAIRED_ENDIF);
+
+        macro_agent& ma = this->payload.get_stack().top_macro_package();
+        ma.enable_output();
+      }
+
+
+    std::string endif_directive::evaluate(const macro_argument_list& args)
+      {
+        std::ostringstream msg;
+        msg << "ENDIF " << this->istack.top().get_condition();
+
+        this->istack.pop();
+        return this->printer.comment(msg.str());
       }
 
 
