@@ -264,9 +264,11 @@ namespace transport
         number* __C_k3k1k2;
         number* __C_k3k2k1;
 
-        number* __dV;
-        number* __ddV;
-        number* __dddV;
+        $IF{!fast}
+          number* __dV;
+          number* __ddV;
+          number* __dddV;
+        $ENDIF
 
         number* __raw_params;
 
@@ -288,8 +290,11 @@ namespace transport
 
         void set_up_workspace()
           {
-            $RESOURCE_RELEASE
-            __dV = new number[$NUMBER_FIELDS];
+            $IF{!fast}
+              $RESOURCE_RELEASE
+              __dV = new number[$NUMBER_FIELDS];
+            $ENDIF
+
             __raw_params = new number[$NUMBER_PARAMS];
 
             __raw_params[$1] = __params.get_vector()[$1];
@@ -297,7 +302,10 @@ namespace transport
 
         void close_down_workspace()
           {
-            delete[] __dV;
+            $IF{!fast}
+              delete[] __dV;
+            $ENDIF
+
             delete[] __raw_params;
           }
 
@@ -307,7 +315,9 @@ namespace transport
 
         const parameters<number>& __params;
 
-        number* __dV;
+        $IF{!fast}
+          number* __dV;
+        $ENDIF
 
         number* __raw_params;
 
@@ -350,30 +360,32 @@ namespace transport
     $MODEL<number>::$MODEL()
       : canonical_model<number>("$UNIQUE_ID", static_cast<unsigned int>(100*$VERSION))
       {
-        __A_k1k2k3 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
-        __A_k1k3k2 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
-        __B_k1k2k3 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
-        __B_k1k3k2 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
-        __C_k1k2k3 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
-        __C_k1k3k2 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
+          __A_k1k2k3 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
+          __A_k1k3k2 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
+          __B_k1k2k3 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
+          __B_k1k3k2 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
+          __C_k1k2k3 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
+          __C_k1k3k2 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
 
-        __A_k2k1k3 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
-        __A_k2k3k1 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
-        __B_k2k1k3 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
-        __B_k2k3k1 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
-        __C_k2k1k3 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
-        __C_k2k3k1 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
+          __A_k2k1k3 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
+          __A_k2k3k1 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
+          __B_k2k1k3 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
+          __B_k2k3k1 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
+          __C_k2k1k3 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
+          __C_k2k3k1 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
 
-        __A_k3k1k2 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
-        __A_k3k2k1 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
-        __B_k3k1k2 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
-        __B_k3k2k1 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
-        __C_k3k1k2 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
-        __C_k3k2k1 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
+          __A_k3k1k2 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
+          __A_k3k2k1 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
+          __B_k3k1k2 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
+          __B_k3k2k1 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
+          __C_k3k1k2 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
+          __C_k3k2k1 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
 
-        __dV = new number[$NUMBER_FIELDS];
-        __ddV = new number[$NUMBER_FIELDS * $NUMBER_FIELDS];
-        __dddV = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
+        $IF{!fast}
+          __dV = new number[$NUMBER_FIELDS];
+          __ddV = new number[$NUMBER_FIELDS * $NUMBER_FIELDS];
+          __dddV = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
+        $ENDIF
 
         __raw_params = new number[$NUMBER_PARAMS];
       }
@@ -403,9 +415,11 @@ namespace transport
         delete[] __C_k3k1k2;
         delete[] __C_k3k2k1;
 
-        delete[] __dV;
-        delete[] __ddV;
-        delete[] __dddV;
+        $IF{!fast}
+          delete[] __dV;
+          delete[] __ddV;
+          delete[] __dddV;
+        $ENDIF
 
         delete[] __raw_params;
       }
@@ -493,40 +507,42 @@ namespace transport
       }
 
 
-    template <typename number>
-    void $MODEL_compute_dV(number* raw_params, const std::vector<number>& __x, number* dV)
-      {
-        $RESOURCE_RELEASE
-        $RESOURCE_PARAMETERS{raw_params}
-        $RESOURCE_COORDINATES{__x}
-        $TEMP_POOL{"const auto $1 = $2;"}
+    $IF{!fast}
+      template <typename number>
+      void $MODEL_compute_dV(number* raw_params, const std::vector<number>& __x, number* dV)
+        {
+          $RESOURCE_RELEASE
+          $RESOURCE_PARAMETERS{raw_params}
+          $RESOURCE_COORDINATES{__x}
+          $TEMP_POOL{"const auto $1 = $2;"}
 
-        dV[FIELDS_FLATTEN($a)] = $DV[a];
-      }
-
-
-    template <typename number>
-    void $MODEL_compute_ddV(number* raw_params, const std::vector<number>& __x, number* ddV)
-      {
-        $RESOURCE_RELEASE
-        $RESOURCE_PARAMETERS{raw_params}
-        $RESOURCE_COORDINATES{__x}
-        $TEMP_POOL{"const auto $1 = $2;"}
-
-        ddV[FIELDS_FLATTEN($a,$b)] = $DDV[ab];
-      }
+          dV[FIELDS_FLATTEN($a)] = $DV[a];
+        }
 
 
-    template <typename number>
-    void $MODEL_compute_dddV(number* raw_params, const std::vector<number>& __x, number* dddV)
-      {
-        $RESOURCE_RELEASE
-        $RESOURCE_PARAMETERS{raw_params}
-        $RESOURCE_COORDINATES{__x}
-        $TEMP_POOL{"const auto $1 = $2;"}
+      template <typename number>
+      void $MODEL_compute_ddV(number* raw_params, const std::vector<number>& __x, number* ddV)
+        {
+          $RESOURCE_RELEASE
+          $RESOURCE_PARAMETERS{raw_params}
+          $RESOURCE_COORDINATES{__x}
+          $TEMP_POOL{"const auto $1 = $2;"}
 
-        dddV[FIELDS_FLATTEN($a,$b,$c)] = $DDDV[abc];
-      }
+          ddV[FIELDS_FLATTEN($a,$b)] = $DDV[ab];
+        }
+
+
+      template <typename number>
+      void $MODEL_compute_dddV(number* raw_params, const std::vector<number>& __x, number* dddV)
+        {
+          $RESOURCE_RELEASE
+          $RESOURCE_PARAMETERS{raw_params}
+          $RESOURCE_COORDINATES{__x}
+          $TEMP_POOL{"const auto $1 = $2;"}
+
+          dddV[FIELDS_FLATTEN($a,$b,$c)] = $DDDV[abc];
+        }
+    $ENDIF
 
 
     // Handle initial conditions
@@ -608,13 +624,8 @@ namespace transport
         const auto __Mp = __task->get_params().get_Mp();
         const auto __a = std::exp(__Ninit - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
-//        $MODEL_compute_dV(__raw_params, __fields, __dV);
-//        $MODEL_compute_ddV(__raw_params, __fields, __ddV);
-
         $RESOURCE_PARAMETERS{__raw_params}
         $RESOURCE_COORDINATES{__fields}
-        $RESOURCE_DV{__dV}
-        $RESOURCE_DDV{__ddV}
 
         $TEMP_POOL{"const auto $1 = $2;"}
 
@@ -622,10 +633,6 @@ namespace transport
         const auto __N = std::log(__k / (__a * std::sqrt(__Hsq)));
 
         number __tpf = 0.0;
-
-//        std::array< std::array<number, $NUMBER_FIELDS>, $NUMBER_FIELDS> __M;
-//
-//        __M[$a][$b] = $M_PREDEF[ab];
 
         // NOTE - conventions for the scale factor are
         //   a = exp(t), where t is the user-defined time (usually = 0 at the start of the integration)
@@ -702,13 +709,8 @@ namespace transport
       const auto __Mp = __task->get_params().get_Mp();
       const auto __a = std::exp(__Ninit - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
-//      $MODEL_compute_dV(__raw_params, __fields, __dV);
-//      $MODEL_compute_ddV(__raw_params, __fields, __ddV);
-
       $RESOURCE_PARAMETERS{__raw_params}
       $RESOURCE_COORDINATES{__fields}
-      $RESOURCE_DV{__dV}
-      $RESOURCE_DDV{__ddV}
 
       $TEMP_POOL{"const auto $1 = $2;"}
 
@@ -716,10 +718,6 @@ namespace transport
       const auto __N = std::log(__k / (__a * std::sqrt(__Hsq)));
 
       number __tpf = 0.0;
-
-//      std::array< std::array<number, $NUMBER_FIELDS>, $NUMBER_FIELDS> __M;
-//
-//      __M[$a][$b] = $M_PREDEF[ab];
 
       // only the field-momentum and momentum-field correlation functions have imaginary parts
       if(IS_FIELD(__i) && IS_MOMENTUM(__j))
@@ -807,13 +805,17 @@ namespace transport
         const auto __Mp = __task->get_params().get_Mp();
         const auto __a = std::exp(__Ninit - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
-        $MODEL_compute_dV(__raw_params, __fields, __dV);
+        $IF{!fast}
+          $MODEL_compute_dV(__raw_params, __fields, __dV);
+        $ENDIF
 
         $TEMP_POOL{"const auto $1 = $2;"}
 
         $RESOURCE_PARAMETERS{__raw_params}
         $RESOURCE_COORDINATES{__fields}
-        $RESOURCE_DV{__dV}
+        $IF{!fast}
+          $RESOURCE_DV{__dV}
+        $ENDIF
 
         const auto __Hsq = $HUBBLE_SQ;
 
@@ -827,20 +829,35 @@ namespace transport
 
         number __tpf = 0.0;
 
-        __B_k1k2k3[FIELDS_FLATTEN($a, $b, $c)] = $B_PREDEF[abc]{__k1, __k2, __k3, __a};
-        __B_k1k3k2[FIELDS_FLATTEN($a, $b, $c)] = $B_PREDEF[abc]{__k1, __k3, __k2, __a};
-        __C_k1k2k3[FIELDS_FLATTEN($a, $b, $c)] = $C_PREDEF[abc]{__k1, __k2, __k3, __a};
-        __C_k1k3k2[FIELDS_FLATTEN($a, $b, $c)] = $C_PREDEF[abc]{__k1, __k3, __k2, __a};
+        $SET[abc]{B_k1k2k3, "__B_k1k2k3[FIELDS_FLATTEN($a,$b,$c)]"}
+        $SET[abc]{B_k1k3k2, "__B_k1k3k2[FIELDS_FLATTEN($a,$b,$c)]"}
+        $SET[abc]{C_k1k2k3, "__C_k1k2k3[FIELDS_FLATTEN($a,$b,$c)]"}
+        $SET[abc]{C_k1k3k2, "__C_k1k3k2[FIELDS_FLATTEN($a,$b,$c)]"}
 
-        __B_k2k3k1[FIELDS_FLATTEN($a, $b, $c)] = $B_PREDEF[abc]{__k2, __k3, __k1, __a};
-        __B_k2k1k3[FIELDS_FLATTEN($a, $b, $c)] = $B_PREDEF[abc]{__k2, __k1, __k3, __a};
-        __C_k2k3k1[FIELDS_FLATTEN($a, $b, $c)] = $C_PREDEF[abc]{__k2, __k3, __k1, __a};
-        __C_k2k1k3[FIELDS_FLATTEN($a, $b, $c)] = $C_PREDEF[abc]{__k2, __k1, __k3, __a};
+        $SET[abc]{B_k2k3k1, "__B_k2k3k1[FIELDS_FLATTEN($a,$b,$c)]"}
+        $SET[abc]{B_k2k1k3, "__B_k2k1k3[FIELDS_FLATTEN($a,$b,$c)]"}
+        $SET[abc]{C_k2k3k1, "__C_k2k3k1[FIELDS_FLATTEN($a,$b,$c)]"}
+        $SET[abc]{C_k2k1k3, "__C_k2k1k3[FIELDS_FLATTEN($a,$b,$c)]"}
 
-        __B_k3k1k2[FIELDS_FLATTEN($a, $b, $c)] = $B_PREDEF[abc]{__k3, __k1, __k2, __a};
-        __B_k3k2k1[FIELDS_FLATTEN($a, $b, $c)] = $B_PREDEF[abc]{__k3, __k2, __k1, __a};
-        __C_k3k1k2[FIELDS_FLATTEN($a, $b, $c)] = $C_PREDEF[abc]{__k3, __k1, __k2, __a};
-        __C_k3k2k1[FIELDS_FLATTEN($a, $b, $c)] = $C_PREDEF[abc]{__k3, __k2, __k1, __a};
+        $SET[abc]{B_k3k1k2, "__B_k3k1k2[FIELDS_FLATTEN($a,$b,$c)]"}
+        $SET[abc]{B_k3k2k1, "__B_k3k2k1[FIELDS_FLATTEN($a,$b,$c)]"}
+        $SET[abc]{C_k3k1k2, "__C_k3k1k2[FIELDS_FLATTEN($a,$b,$c)]"}
+        $SET[abc]{C_k3k2k1, "__C_k3k2k1[FIELDS_FLATTEN($a,$b,$c)]"}
+
+        $B_k1k2k3[abc] = $B_PREDEF[abc]{__k1, __k2, __k3, __a};
+        $B_k1k3k2[abc] = $B_PREDEF[abc]{__k1, __k3, __k2, __a};
+        $C_k1k2k3[abc] = $C_PREDEF[abc]{__k1, __k2, __k3, __a};
+        $C_k1k3k2[abc] = $C_PREDEF[abc]{__k1, __k3, __k2, __a};
+
+        $B_k2k3k1[abc] = $B_PREDEF[abc]{__k2, __k3, __k1, __a};
+        $B_k2k1k3[abc] = $B_PREDEF[abc]{__k2, __k1, __k3, __a};
+        $C_k2k3k1[abc] = $C_PREDEF[abc]{__k2, __k3, __k1, __a};
+        $C_k2k1k3[abc] = $C_PREDEF[abc]{__k2, __k1, __k3, __a};
+
+        $B_k3k1k2[abc] = $B_PREDEF[abc]{__k3, __k1, __k2, __a};
+        $B_k3k2k1[abc] = $B_PREDEF[abc]{__k3, __k2, __k1, __a};
+        $C_k3k1k2[abc] = $C_PREDEF[abc]{__k3, __k1, __k2, __a};
+        $C_k3k2k1[abc] = $C_PREDEF[abc]{__k3, __k2, __k1, __a};
 
         unsigned int total_fields  = (IS_FIELD(__i)    ? 1 : 0) + (IS_FIELD(__j)    ? 1 : 0) + (IS_FIELD(__k)    ? 1 : 0);
         unsigned int total_momenta = (IS_MOMENTUM(__i) ? 1 : 0) + (IS_MOMENTUM(__j) ? 1 : 0) + (IS_MOMENTUM(__k) ? 1 : 0);
@@ -990,8 +1007,6 @@ namespace transport
         __raw_params[$1] = __task->get_params().get_vector()[$1];
         const auto __Mp = __task->get_params().get_Mp();
 
-        $MODEL_compute_dV(__raw_params, __state, __dV);
-
         $RESOURCE_PARAMETERS{__raw_params}
         $RESOURCE_COORDINATES{__state}
 
@@ -1012,11 +1027,15 @@ namespace transport
         const auto __Mp = __task->get_params().get_Mp();
         const auto __a = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
-        $MODEL_compute_dV(__raw_params, __state, __dV);
+        $IF{!fast}
+          $MODEL_compute_dV(__raw_params, __state, __dV);
+        $ENDIF
 
         $RESOURCE_PARAMETERS{__raw_params}
         $RESOURCE_COORDINATES{__state}
-        $RESOURCE_DV{__dV}
+        $IF{!fast}
+          $RESOURCE_DV{__dV}
+        $ENDIF
 
         $TEMP_POOL{"const auto $1 = $2;"}
 
@@ -1037,13 +1056,17 @@ namespace transport
         const auto __Mp = __task->get_params().get_Mp();
         const auto __a = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
-        $MODEL_compute_dV(__raw_params, __fields, __dV);
-        $MODEL_compute_ddV(__raw_params, __fields, __ddV);
+        $IF{!fast}
+          $MODEL_compute_dV(__raw_params, __fields, __dV);
+          $MODEL_compute_ddV(__raw_params, __fields, __ddV);
+        $ENDIF
 
         $RESOURCE_PARAMETERS{__raw_params}
         $RESOURCE_COORDINATES{__fields}
-        $RESOURCE_DV{__dV}
-        $RESOURCE_DDV{__ddV}
+        $IF{!fast}
+          $RESOURCE_DV{__dV}
+          $RESOURCE_DDV{__ddV}
+        $ENDIF
 
         $TEMP_POOL{"const auto $1 = $2;"}
 
@@ -1061,15 +1084,19 @@ namespace transport
         const auto __Mp = __task->get_params().get_Mp();
         const auto __a = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
-        $MODEL_compute_dV(__raw_params, __fields, __dV);
-        $MODEL_compute_ddV(__raw_params, __fields, __ddV);
-        $MODEL_compute_dddV(__raw_params, __fields, __dddV);
+        $IF{!fast}
+          $MODEL_compute_dV(__raw_params, __fields, __dV);
+          $MODEL_compute_ddV(__raw_params, __fields, __ddV);
+          $MODEL_compute_dddV(__raw_params, __fields, __dddV);
+        $ENDIF
 
         $RESOURCE_PARAMETERS{__raw_params}
         $RESOURCE_COORDINATES{__fields}
-        $RESOURCE_DV{__dV}
-        $RESOURCE_DDV{__ddV}
-        $RESOURCE_DDDV{__dddV}
+        $IF{!fast}
+          $RESOURCE_DV{__dV}
+          $RESOURCE_DDV{__ddV}
+          $RESOURCE_DDDV{__dddV}
+        $ENDIF
 
         $TEMP_POOL{"const auto $1 = $2;"}
 
@@ -1087,15 +1114,19 @@ namespace transport
         const auto __Mp = __task->get_params().get_Mp();
         const auto __a = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
-        $MODEL_compute_dV(__raw_params, __fields, __dV);
-        $MODEL_compute_ddV(__raw_params, __fields, __ddV);
-        $MODEL_compute_dddV(__raw_params, __fields, __dddV);
+        $IF{!fast}
+          $MODEL_compute_dV(__raw_params, __fields, __dV);
+          $MODEL_compute_ddV(__raw_params, __fields, __ddV);
+          $MODEL_compute_dddV(__raw_params, __fields, __dddV);
+        $ENDIF
 
         $RESOURCE_PARAMETERS{__raw_params}
         $RESOURCE_COORDINATES{__fields}
-        $RESOURCE_DV{__dV}
-        $RESOURCE_DDV{__ddV}
-        $RESOURCE_DDDV{__dddV}
+        $IF{!fast}
+          $RESOURCE_DV{__dV}
+          $RESOURCE_DDV{__ddV}
+          $RESOURCE_DDDV{__dddV}
+        $ENDIF
 
         $TEMP_POOL{"const auto $1 = $2;"}
 
@@ -1113,11 +1144,15 @@ namespace transport
         const auto __Mp = __task->get_params().get_Mp();
         const auto __a = std::exp(__N - __task->get_N_horizon_crossing() + __task->get_astar_normalization());
 
-        $MODEL_compute_dV(__raw_params, __fields, __dV);
+        $IF{!fast}
+          $MODEL_compute_dV(__raw_params, __fields, __dV);
+        $ENDIF
 
         $RESOURCE_PARAMETERS{__raw_params}
         $RESOURCE_COORDINATES{__fields}
-        $RESOURCE_DV{__dV}
+        $IF{!fast}
+          $RESOURCE_DV{__dV}
+        $ENDIF
 
         $TEMP_POOL{"const auto $1 = $2;"}
 
@@ -1137,7 +1172,6 @@ namespace transport
 
         $RESOURCE_PARAMETERS{__raw_params}
         $RESOURCE_COORDINATES{__fields}
-        $RESOURCE_DV{__dV}
 
         $TEMP_POOL{"const auto $1 = $2;"}
 
@@ -1365,12 +1399,16 @@ namespace transport
     template <typename number>
     void $MODEL_background_functor<number>::operator()(const backg_state<number>& __x, backg_state<number>& __dxdt, double __t)
       {
-        $RESOURCE_RELEASE
-        $MODEL_compute_dV(__raw_params, __x, __dV);
+        $IF{!fast}
+          $RESOURCE_RELEASE
+          $MODEL_compute_dV(__raw_params, __x, __dV);
+        $ENDIF
 
         $RESOURCE_PARAMETERS{__raw_params}
         $RESOURCE_COORDINATES{__x}
-        $RESOURCE_DV{__dV}
+        $IF{!fast}
+          $RESOURCE_DV{__dV}
+        $ENDIF
 
         $TEMP_POOL{"const auto $1 = $2;"}
 
