@@ -756,6 +756,7 @@ set(TRANSPORT_RUNTIME_API_TASKS_INTEGRATION_DETAIL_FILES
   transport-runtime-api/tasks/integration_detail/threepf_task.h
   transport-runtime-api/tasks/integration_detail/twopf_list_task.h
   transport-runtime-api/tasks/integration_detail/twopf_task.h
+  transport-runtime-api/tasks/integration_detail/default_policies.h
   )
 
 set(TRANSPORT_RUNTIME_API_TASKS_POSTINTEGRATION_DETAIL_FILES
