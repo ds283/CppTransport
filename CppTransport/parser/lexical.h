@@ -5,8 +5,8 @@
 
 
 
-#ifndef __lexical_H_
-#define __lexical_H_
+#ifndef CPPTRANSPORT_LEXICAL_H
+#define CPPTRANSPORT_LEXICAL_H
 
 #include <string>
 
@@ -36,4 +36,4 @@ enum class character_type
   };
 
 
-#endif //__lexical_H_
+#endif //CPPTRANSPORT_LEXICAL_H

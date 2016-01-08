@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __formatter_H_
-#define __formatter_H_
+#ifndef CPPTRANSPORT_FORMATTER_H
+#define CPPTRANSPORT_FORMATTER_H
 
 
 #include <boost/timer/timer.hpp>
@@ -15,4 +15,4 @@ std::string format_time(boost::timer::nanosecond_type time, unsigned int precisi
 
 
 
-#endif //__formatter_H_
+#endif //CPPTRANSPORT_FORMATTER_H

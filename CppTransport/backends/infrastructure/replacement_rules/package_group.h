@@ -4,18 +4,19 @@
 //
 
 
+#ifndef CPPTRANSPORT_PACKAGE_GROUP_H
+#define CPPTRANSPORT_PACKAGE_GROUP_H
 
-#ifndef __package_group_H_
-#define __package_group_H_
 
 #include <memory>
 
 #include "macro.h"
 #include "ginac_cache.h"
 #include "replacement_rule_package.h"
-#include "u_tensor_factory.h"
+#include "concepts/tensor_factory.h"
 #include "buffer.h"
 #include "cse.h"
+#include "lambda_manager.h"
 #include "error.h"
 
 
@@ -26,7 +27,7 @@ class package_group
 
   public:
 
-    package_group(translator_data& p, const std::string& cmnt, ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& cache);
+    package_group(translator_data& p, tensor_factory& fctry);
 
     virtual ~package_group();
 
@@ -45,24 +46,23 @@ class package_group
   public:
 
     // return references to our ruleset caches
-    // TODO find some way to prevent them being changed explicitly - they can change *indirectly* by rebuilding the cache, so is it ok to use const?
 
     //! return reference to pre-rules
-    std::vector<macro_packages::simple_rule>& get_pre_ruleset();
+    std::vector<macro_packages::replacement_rule_simple*>& get_pre_ruleset()   { return(this->pre_ruleset); }
 
     //! return reference to post-rules
-    std::vector<macro_packages::simple_rule>& get_post_ruleset();
+    std::vector<macro_packages::replacement_rule_simple*>& get_post_ruleset()  { return(this->post_ruleset); }
 
     //! return reference to index-rules
-    std::vector<macro_packages::index_rule>& get_index_ruleset();
+    std::vector<macro_packages::replacement_rule_index*>& get_index_ruleset()  { return(this->index_ruleset); }
 
 
-		// INTERFACE - QUERY DATA ABOUT THE BACKEND
+		// INTERFACE - GET LANGUAGE PRINTER FOR THIS PACKAGE GROUP
 
   public:
 
-		// !make a comment appropriate for this backend
-    const std::string& get_comment_separator() const { return (this->comment_string); }
+    //! return reference to language printer
+    language_printer& get_language_printer() { return(*this->l_printer); }    // will throw exception if l_printer has not been set
 
 
 		// INTERFACE - STATISTICS
@@ -70,7 +70,12 @@ class package_group
   public:
 
 		// report macro replacement time data
-		void report_macro_metadata(boost::timer::nanosecond_type m, boost::timer::nanosecond_type t) { this->statistics_reported = true; this->macro_replacement_time = m; this->macro_tokenization_time = t; }
+		void report_macro_metadata(boost::timer::nanosecond_type m, boost::timer::nanosecond_type t)
+      {
+        this->statistics_reported = true;
+        this->macro_replacement_time = m;
+        this->macro_tokenization_time = t;
+      }
 
 
 		// INTERNAL API
@@ -79,7 +84,8 @@ class package_group
 
     //! register a replacement rule package, transfer its ownership to ourselves, and populate it
     //! with details about the u-tensor factory and CSE worker
-    void push_back(std::unique_ptr<macro_packages::replacement_rule_package>&& package);
+    template <typename PackageType, typename ... Args>
+    void add_package(Args&& ... args);
 
     //! rebuild pre-ruleset
     void build_pre_ruleset();
@@ -95,24 +101,82 @@ class package_group
 
   protected:
 
+
+    // PAYLOAD DATA (provided by parent translator)
+
+    //! data payload
     translator_data& data_payload;
-    std::unique_ptr<u_tensor_factory> u_factory;
-    std::unique_ptr<cse>              cse_worker;  // should be set by implementations
-    std::unique_ptr<flattener>        fl;
+
+
+    // AGENTS
+
+    //! polymorphic reference to tensor factory; exactly which factory is involved
+    //! may depend on what kind of model is being processed, eg. canonical, noncanonical
+    tensor_factory& fctry;
+
+    //! polymorphic pointer to CSE worker; as above exactly which CSE scheme is
+    //! involved may depend what kind of model is being processed
+    std::unique_ptr<cse> cse_worker;  // should be set by implementations
+
+    //! lambda manager; has to be held as a managed pointer since depends on
+    //! the language printer, which isn't known until construction
+    std::unique_ptr<lambda_manager> lambda_mgr;
+
+    //! polymorphic pointer to language printer; as above, depends on what kind
+    //! of model is being processed
+    std::unique_ptr<language_printer> l_printer;  // should be set by implementations
+
+
+    // MACRO PACKAGE CACHE
 
     std::list< std::unique_ptr<macro_packages::replacement_rule_package> > packages;
-    std::string                                                            comment_string;
 
-    std::vector<macro_packages::simple_rule> pre_ruleset;
-    std::vector<macro_packages::simple_rule> post_ruleset;
-    std::vector<macro_packages::index_rule>  index_ruleset;
 
-    // statistics
-    bool                          statistics_reported;
+    // RULE CACHE, BUILD BY AGGREGATING RULES FROM MACRO PACKAGES
+
+    // all these are held as raw pointers because
+    // we have no ownership in these objects.
+    // They are owned by the underylying replacement_rule_package
+
+    // rules for pre-macros
+    std::vector<macro_packages::replacement_rule_simple*> pre_ruleset;
+
+    //! rules for post-macros
+    std::vector<macro_packages::replacement_rule_simple*> post_ruleset;
+
+    //! rules for index macros
+    std::vector<macro_packages::replacement_rule_index*> index_ruleset;
+
+
+    // STATISTICS AND METADATA
+
+    //! have macro replacement statistics been reported?
+    bool statistics_reported;
+
+    //! time taken to replace macros
     boost::timer::nanosecond_type macro_replacement_time;
+
+    //! time taken to tokenize template
     boost::timer::nanosecond_type macro_tokenization_time;
 
   };
 
 
-#endif //__package_group_H_
+template <typename PackageType, typename ... Args>
+void package_group::add_package(Args&& ... args)
+  {
+    // establish that everything has been set up correctly
+    assert(this->cse_worker);
+
+    // construct a new package of the specified type, forwarding any arguments we were given
+    std::unique_ptr< macro_packages::replacement_rule_package> pkg = std::make_unique<PackageType>(this->fctry, *this->cse_worker, *this->lambda_mgr, std::forward<Args>(args) ...);
+    this->packages.push_back(std::move(pkg));
+
+    // rebuild ruleset caches
+    this->build_pre_ruleset();
+    this->build_post_ruleset();
+    this->build_index_ruleset();
+  }
+
+
+#endif //CPPTRANSPORT_PACKAGE_GROUP_H

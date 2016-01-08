@@ -3,19 +3,23 @@
 // Copyright (c) 2013-15 University of Sussex. All rights reserved.
 //
 
-#ifndef __replacement_rule_package_H_
-#define __replacement_rule_package_H_
+#ifndef CPPTRANSPORT_REPLACEMENT_RULE_PACKAGE_H
+#define CPPTRANSPORT_REPLACEMENT_RULE_PACKAGE_H
 
 
 #include "ginac/ginac.h"
 
-#include "flatten.h"
 #include "language_printer.h"
 #include "cse.h"
+#include "cse_map.h"
+#include "lambda_manager.h"
 #include "error.h"
 #include "replacement_rule_definitions.h"
 #include "index_assignment.h"
+#include "index_flatten.h"
 #include "translator_data.h"
+
+#include "concepts/tensor_factory.h"
 
 
 // need forward reference to avoid circularity
@@ -33,14 +37,8 @@ namespace macro_packages
 
       public:
 
-        replacement_rule_package(translator_data& p, language_printer& prn)
-          : data_payload(p),
-            printer(prn),
-            u_factory(nullptr),         // initialize utility objects to nullptr
-            fl(nullptr),                // these will be populated later, when this rule package
-            cse_worker(nullptr)         // is registered in a group
-          {
-          }
+        //! constructor
+        replacement_rule_package(tensor_factory& f, cse& cw, lambda_manager& lm, translator_data& p, language_printer& prn);
 
         // provide virtual destructor so that derived classes delete correctly
         virtual ~replacement_rule_package() = default;
@@ -52,28 +50,15 @@ namespace macro_packages
 
         // these methods must be overridden by derived classes which implement the replacement_rule_package concept
 
-        //! get pre-rules
-        virtual const std::vector<simple_rule> get_pre_rules  () = 0;
 
-        //! get post-rules
-        virtual const std::vector<simple_rule> get_post_rules () = 0;
+        //! return pre- macros package
+        const std::vector< std::unique_ptr<replacement_rule_simple> >& get_pre_rules()  { return(this->pre_package); }
 
-        //! get index rules
-        virtual const std::vector<index_rule>  get_index_rules() = 0;
+        //! return post- macros package
+        const std::vector< std::unique_ptr<replacement_rule_simple> >& get_post_rules() { return(this->post_package); }
 
-
-        // INTERFACE -- SET WORKER OBJECTS
-
-      public:
-
-        //! set u-tensor factory object
-        inline void set_u_factory(u_tensor_factory* uf) { this->u_factory = uf; }
-
-        //! set flattener object
-        inline void set_flattener(flattener* f) { this->fl = f; }
-
-        //! set CSE worker object
-        inline void set_cse_worker(cse* cw) { this->cse_worker = cw; }
+        //! get index-macro package
+        const std::vector< std::unique_ptr<replacement_rule_index> >& get_index_rules() { return(this->index_package); }
 
 
         // INTERFACE -- END OF INPUT
@@ -85,47 +70,58 @@ namespace macro_packages
         virtual void report_end_of_input() { return; }
 
 
-        // INTERFACE -- INTERNAL API
-
-      protected:
-
-        std::string replace_1index_tensor(const std::vector<std::string>& args,
-                                          std::vector<struct index_assignment> indices, void* state);
-
-        std::string replace_2index_tensor(const std::vector<std::string>& args,
-                                          std::vector<struct index_assignment> indices, void* state);
-
-        std::string replace_3index_tensor(const std::vector<std::string>& args,
-                                          std::vector<struct index_assignment> indices, void* state);
-
-        std::string replace_1index_field_tensor(const std::vector<std::string>& args,
-                                                std::vector<struct index_assignment> indices, void* state);
-
-        std::string replace_2index_field_tensor(const std::vector<std::string>& args,
-                                                std::vector<struct index_assignment> indices, void* state);
-
-        std::string replace_3index_field_tensor(const std::vector<std::string>& args,
-                                                std::vector<struct index_assignment> indices, void* state);
-
-        void generic_post_hook(void* state);
-
-        unsigned int get_index_label(struct index_assignment& index);
-
-
         // INTERNAL DATA
 
       protected:
 
-        translator_data&  data_payload;
+        // MACRO PACKAGES
+
+        // held as a container of std::unique_ptr<>, because ownership of these
+        // replacement rules is vested in this package.
+        // They are shared with clients as raw pointers or references.
+
+        //! package of pre- macros
+        std::vector< std::unique_ptr<replacement_rule_simple> > pre_package;
+
+        //! package of post- macros
+        std::vector< std::unique_ptr<replacement_rule_simple> > post_package;
+
+        //! package of index-macros
+        std::vector< std::unique_ptr<replacement_rule_index> > index_package;
+
+
+        // REFERENCES TO EXTERNALLY-SUPPLIED AGENTS
+
+        //! data payload from parent translator
+        translator_data& data_payload;
+
+        //! language-printer
         language_printer& printer;
 
-        u_tensor_factory* u_factory;
-        flattener*        fl;
-        cse*              cse_worker;
+        //! tensor factory
+        tensor_factory& fctry;
+
+        // CSE worker object
+        cse& cse_worker;
+
+        // lambda manager object
+        lambda_manager& lambda_mgr;
+
+
+        // CACHE USEFUL OBJECTS
+
+        //! symbol factory
+        symbol_factory& sym_factory;
+
+
+        // INTERNAL AGENTS
+
+        //! index flattener
+        index_flatten fl;
 
       };
 
   }
 
 
-#endif // __replacement_rule_package_H_
+#endif // CPPTRANSPORT_REPLACEMENT_RULE_PACKAGE_H

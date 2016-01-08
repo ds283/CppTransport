@@ -47,7 +47,7 @@ namespace cpp
             if(use_count) out << this->get_symbol_with_use_count(*t);
             else          out << this->get_symbol_without_use_count(*t);
 
-            c++;
+            ++c;
           }
 
         return(out.str());

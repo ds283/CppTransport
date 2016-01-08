@@ -14,80 +14,32 @@
 #include "translation_unit.h"
 
 
-#define VEXCL_STEPPER "runge_kutta_fehlberg78"
-//#define VEXCL_STEPPER "runge_kutta_dopri5"
-
-#define BIND(X) std::bind(&vexcl_steppers::X, this, std::placeholders::_1)
+#define BIND(X, N) std::move(std::make_unique<X>(N, p, prn))
 
 
-namespace cpp
+namespace vexcl
   {
 
-    const std::vector<macro_packages::simple_rule> vexcl_steppers::get_pre_rules()
+    constexpr auto VEXCL_STEPPER = "runge_kutta_dopri5";
+
+
+    vexcl_steppers::vexcl_steppers(tensor_factory& f, cse& cw, lambda_manager& lm, translator_data& p, language_printer& prn)
+      : ::macro_packages::replacement_rule_package(f, cw, lm, p, prn)
       {
-        std::vector<macro_packages::simple_rule> package;
-
-        const std::vector<replacement_rule_simple> rules =
-          { BIND(replace_backg_stepper), BIND(replace_pert_stepper), BIND(stepper_name), BIND(stepper_name)
-          };
-
-        const std::vector<std::string> names =
-          { "MAKE_BACKG_STEPPER",        "MAKE_PERT_STEPPER",        "BACKG_STEPPER",    "BACKG_STEPPER"
-          };
-
-        const std::vector<unsigned int> args =
-          { 1,                           1,                          1,                  1
-          };
-
-        assert(rules.size() == names.size());
-        assert(rules.size() == args.size());
-
-        for(int i = 0; i < rules.size(); ++i)
-          {
-            macro_packages::simple_rule rule;
-
-            rule.rule = rules[i];
-            rule.args = args[i];
-            rule.name = names[i];
-
-            package.push_back(rule);
-          }
-
-        return(package);
-      }
-
-
-    const std::vector<macro_packages::simple_rule> vexcl_steppers::get_post_rules()
-      {
-        std::vector<macro_packages::simple_rule> package;
-
-        return(package);
-      }
-
-
-    const std::vector<macro_packages::index_rule> vexcl_steppers::get_index_rules()
-      {
-        std::vector<macro_packages::index_rule> package;
-
-        return(package);
+        pre_package.emplace_back(BIND(replace_backg_stepper, "MAKE_BACKG_STEPPER"));
+        pre_package.emplace_back(BIND(replace_pert_stepper, "MAKE_PERT_STEPPER"));
+        pre_package.emplace_back(BIND(stepper_name, "BACKG_STEPPER"));
+        pre_package.emplace_back(BIND(stepper_name, "PERT_STEPPER"));
       }
 
 
     // *******************************************************************
 
 
-    std::string vexcl_steppers::replace_backg_stepper(const std::vector<std::string>& args)
+    std::string replace_backg_stepper::evaluate(const macro_argument_list& args)
       {
         const struct stepper& s = this->data_payload.get_background_stepper();
-
-        assert(args.size() == 1);
-        if(args.size() < 1)
-          {
-            error_context err_context(this->data_payload.get_stack(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
-            err_context.error(ERROR_VEXCL_NO_STEPPER_STATE);
-            exit(EXIT_FAILURE);
-          }
-        std::string state_name = args[0];
+        std::string state_name = args[BACKG_STEPPER_STATE_ARGUMENT];
 
         if(s.name != VEXCL_STEPPER)
           {
@@ -105,18 +57,10 @@ namespace cpp
       }
 
 
-    std::string vexcl_steppers::replace_pert_stepper(const std::vector<std::string>& args)
+    std::string replace_pert_stepper::evaluate(const macro_argument_list& args)
       {
         const struct stepper& s = this->data_payload.get_perturbations_stepper();
-
-        assert(args.size() == 1);
-        if(args.size() < 1)
-          {
-            error_context err_context(this->data_payload.get_stack(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
-            err_context.error(ERROR_VEXCL_NO_STEPPER_STATE);
-            exit(EXIT_FAILURE);
-          }
-        std::string state_name = args[0];
+        std::string state_name = args[PERT_STEPPER_STATE_ARGUMENT];
 
         if(s.name != VEXCL_STEPPER)
           {
@@ -133,7 +77,7 @@ namespace cpp
         return(out.str());
       }
 
-    std::string vexcl_steppers::stepper_name(const std::vector<std::string>& args)
+    std::string stepper_name::evaluate(const macro_argument_list& args)
       {
         return(VEXCL_STEPPER);
       }

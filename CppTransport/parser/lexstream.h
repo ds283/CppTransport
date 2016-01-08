@@ -2,11 +2,9 @@
 // Created by David Seery on 12/06/2013.
 // Copyright (c) 2013-15 University of Sussex. All rights reserved.
 //
-// To change the template use AppCode | Preferences | File Templates.
-//
 
-#ifndef __lexstream_H_
-#define __lexstream_H_
+#ifndef CPPTRANSPORT_LEXSTREAM_H
+#define CPPTRANSPORT_LEXSTREAM_H
 
 #include <iostream>
 #include <string>
@@ -430,4 +428,4 @@ std::string lexstream<Keywords, Characters>::get_lexeme(lexfile& input, enum lex
   }
 
 
-#endif //__lexstream_H_
+#endif //CPPTRANSPORT_LEXSTREAM_H

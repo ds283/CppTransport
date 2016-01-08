@@ -2,35 +2,37 @@
 // Created by David Seery on 27/06/2013.
 // Copyright (c) 2013-15 University of Sussex. All rights reserved.
 //
-// To change the template use AppCode | Preferences | File Templates.
-//
 
 
 #include <assert.h>
-
-#include "boost/algorithm/string.hpp"
+#include <cctype>
 
 #include "macro.h"
-#include "macro_tokenizer.h"
+#include "timing_instrument.h"
+
+#include "boost/algorithm/string.hpp"
 
 
 // **************************************************************************************
 
 
-macro_agent::macro_agent(translator_data& p, package_group& pkg, std::string pf, std::string sp, unsigned int dm)
+macro_agent::macro_agent(translator_data& p, package_group& pkg, std::string pf, std::string speq, std::string spsumeq, unsigned int dm)
   : data_payload(p),
-    prefix(pf),
-    split(sp),
+    prefix(std::move(pf)),
+    split_equal(std::move(speq)),
+    split_sum_equal(std::move(spsumeq)),
     recursion_max(dm),
     recursion_depth(0),
+    package(pkg),
     pre_rule_cache(pkg.get_pre_ruleset()),
     post_rule_cache(pkg.get_post_ruleset()),
-    index_rule_cache(pkg.get_index_ruleset())
+    index_rule_cache(pkg.get_index_ruleset()),
+    output_enabled(true)
   {
     assert(recursion_max > 0);
 
 		// pause timers
-		timer.stop();
+		macro_apply_timer.stop();
 		tokenization_timer.stop();
 
     if(recursion_max == 0) recursion_max = 1;
@@ -41,16 +43,15 @@ macro_agent::macro_agent(translator_data& p, package_group& pkg, std::string pf,
   }
 
 
-std::unique_ptr< std::vector<std::string> > macro_agent::apply(std::string& line, unsigned int& replacements)
+std::unique_ptr< std::list<std::string> > macro_agent::apply(const std::string& line, unsigned int& replacements)
   {
 		// if timer is stopped, restart it
-		bool stopped = this->timer.is_stopped();
-		if(stopped) timer.resume();
+    timing_instrument timer(this->macro_apply_timer);
 
 		// the result of macro substitution is potentially large, and we'd rather not copy
 		// a very large array of strings while moving the result around.
 		// So, use a std::unique_ptr<> to manage the result object
-    std::unique_ptr< std::vector<std::string> > r_list;
+    std::unique_ptr< std::list<std::string> > r_list;
 
     if(++this->recursion_depth < this->recursion_max)
       {
@@ -66,142 +67,420 @@ std::unique_ptr< std::vector<std::string> > macro_agent::apply(std::string& line
         err_context.warn(msg.str());
       }
 
-		// if timer was stopped, stop it again
-		if(stopped) timer.stop();
+    return(r_list);
+  }
+
+
+std::unique_ptr< token_list > macro_agent::tokenize(const std::string& line)
+  {
+    return std::make_unique<token_list>(line, this->prefix, this->fields, this->parameters,
+                                        this->pre_rule_cache, this->post_rule_cache, this->index_rule_cache,
+                                        this->data_payload);
+  }
+
+
+std::unique_ptr< std::list<std::string> > macro_agent::apply_line(const std::string& line, unsigned int& replacements)
+  {
+    std::unique_ptr< std::list<std::string> > r_list = std::make_unique<std::list<std::string> >();
+
+    // break the line at the split point, if it exists, to get a 'left-hand' side and a 'right-hand' side
+    macro_impl::split_string split_result = this->split(line);
+
+    timing_instrument tok_timer(this->tokenization_timer);
+    std::unique_ptr<token_list> left_tokens = this->tokenize(split_result.left);
+    std::unique_ptr<token_list> right_tokens = this->tokenize(split_result.right);
+    tok_timer.stop();
+
+    // running total of number of macro replacements
+    unsigned int counter = 0;
+
+    // return quickly if output is disabled
+    // (tokenization always happens so we can catch eg. $ELSE, $ENDIF)
+    if(!this->output_enabled) return(r_list);
+
+    // evaluate pre macros and cache the results
+    // we'd like to do this only once if possible, because evaluation may be expensive
+    counter += left_tokens->evaluate_macros(simple_macro_type::pre);
+    counter += right_tokens->evaluate_macros(simple_macro_type::pre);
+
+    // generate assignments for the LHS indices
+    assignment_set LHS_assignments(left_tokens->get_indices());
+
+    // generate an assignment for each RHS index; first get RHS indices which are not also LHS indices
+    abstract_index_list RHS_indices;
+    error_context ctx(this->data_payload.get_stack(), this->data_payload.get_error_handler(),
+                      this->data_payload.get_warning_handler());
+
+    try
+      {
+        RHS_indices = right_tokens->get_indices() - left_tokens->get_indices();
+      }
+    catch(index_exception& xe)
+      {
+        std::ostringstream msg;
+        msg << ERROR_MACRO_LHS_RHS_MISMATCH << " '" << xe.what() << "'";
+        ctx.error(msg.str());
+      }
+
+    assignment_set RHS_assignments(RHS_indices);
+
+    // decide on total size of assignment set and apply policy for unrolling
+    unsigned int total_assignment_size = LHS_assignments.size() * RHS_assignments.size();
+    bool unroll_by_policy = total_assignment_size <= this->data_payload.unroll_policy();
+    bool unroll = unroll_by_policy;
+
+    unsigned int prevent = 0;
+    unsigned int force = 0;
+    if(left_tokens->unroll_status() == unroll_behaviour::prevent) ++prevent;
+    if(right_tokens->unroll_status() == unroll_behaviour::prevent) ++prevent;
+    if(left_tokens->unroll_status() == unroll_behaviour::force) ++force;
+    if(right_tokens->unroll_status() == unroll_behaviour::force) ++force;
+
+    if(total_assignment_size > 1 && force > 0 && prevent > 0)
+      {
+        ctx.error(ERROR_LHS_RHS_INCOMPATIBLE_UNROLL);
+      }
+    else if(total_assignment_size > 1 && this->data_payload.fast() && prevent > 0)
+      {
+        ctx.error(ERROR_PREVENT_INCOMPATIBLE_FAST);
+      }
+    else
+      {
+        if(force > 0 || ((unroll_by_policy || this->data_payload.fast()) && prevent == 0)) unroll = true;
+        else unroll = false;
+      }
+
+    if(unroll)
+      {
+        this->unroll_index_assignment(*left_tokens, *right_tokens, LHS_assignments, RHS_assignments, counter,
+                                      split_result, ctx, *r_list);
+      }
+    else
+      {
+        this->forloop_index_assignment(*left_tokens, *right_tokens, LHS_assignments, RHS_assignments, counter,
+                                       split_result, ctx, *r_list);
+      }
+
+    replacements = counter;
 
     return(r_list);
   }
 
 
-std::unique_ptr< std::vector<std::string> > macro_agent::apply_line(std::string& line, unsigned int& replacements)
+void macro_agent::unroll_index_assignment(token_list& left_tokens, token_list& right_tokens,
+                                          assignment_set& LHS_assignments, assignment_set& RHS_assignments,
+                                          unsigned int& counter, macro_impl::split_string& split_result,
+                                          error_context& ctx, std::list<std::string>& r_list)
   {
-    std::unique_ptr< std::vector<std::string> > r_list = std::make_unique< std::vector<std::string> >();
-
-		// break the line at the split point, if it exists, to get a 'left-hand' side and a 'right-hand' side
-    std::string left;
-    std::string right;
-
-		size_t split_point;
-		if((split_point = line.find(this->split)) != std::string::npos)
-			{
-				left = line.substr(0, split_point);
-				right = line.substr(split_point + this->split.size());
-			}
-		else  // no split-point; everything counts as the right-hand side
-			{
-				right = line;
-			}
-
-    // trim trailing white space on the right-hand side
-    boost::algorithm::trim_right(right);
-
-    // check if the last component is a semicolon
-    // note std:string::back() and std::string::pop_back() require C++11
-    bool semicolon = false;
-    if(right.size() > 0 && right.back() == ';')
-	    {
-        semicolon = true;
-        right.pop_back();
-	    }
-
-    // check if the last component is a comma
-    bool comma = false;
-    if(right.size() > 0 && right.back() == ',')
-	    {
-        comma = true;
-        right.pop_back();
-	    }
-
-		tokenization_timer.resume();
-		token_list left_tokens(left, this->prefix, this->pre_rule_cache, this->post_rule_cache, this->index_rule_cache);
-		token_list right_tokens(right, this->prefix, this->pre_rule_cache, this->post_rule_cache, this->index_rule_cache);
-		tokenization_timer.stop();
-
-    // running total of number of macro replacements
-    unsigned int counter = 0;
-
-    // evaluate pre macros and cache the results
-		// we'd like to do this only once if possible, because evaluation may be expensive
-		counter += left_tokens.evaluate_macros(token_list::simple_macro_token::pre);
-		counter += right_tokens.evaluate_macros(token_list::simple_macro_token::pre);
-
-    // generate an assignment for each LHS index
-    assignment_package assigner(this->fields, this->parameters, this->order);
-    std::vector< std::vector<struct index_assignment> > LHS_assignments = assigner.assign(left_tokens.get_indices());
-
-		// LHS_assignments may be empty if there are no valid assignments (probably one of the index
-		// ranges is empty). If there are no LHS indices then it will contain one empty vector
-		// (the trivial index assignment, ie. no indices to assign).
-		// It's important to distinguish these two cases!
-
-		// generate an assignment for each RHS index
-		// TODO: check that RHS assignments match the expected type for each macro (the previous implementation did this; the revised one doesn't yet)
-    std::vector<index_abstract> RHS_indices = assigner.difference(right_tokens.get_indices(), left_tokens.get_indices());
-    std::vector< std::vector<struct index_assignment> > RHS_assignments = assigner.assign(RHS_indices);
+    // LHS_assignments may be *empty* (ie size=0) if there are no valid assignments (probably one of the index
+    // ranges is empty).
+    // If there are no LHS indices then it will report size=1, ie. the trivial index assignment
+    // It's important to distinguish these two cases!
 
 		if(LHS_assignments.size() > 0)
 			{
-				for(std::vector< std::vector<struct index_assignment> >::iterator t = LHS_assignments.begin(); t != LHS_assignments.end(); ++t)
+        // compute raw indent for LHS
+        std::string raw_indent = this->compute_prefix(split_result);
+
+        for(std::unique_ptr<assignment_list> LHS_assign : LHS_assignments)
 			    {
-				    // evaluate LHS macros on this index assignment
-				    counter += left_tokens.evaluate_macros(*t);
-						counter += left_tokens.evaluate_macros(token_list::simple_macro_token::post);
+				    // evaluate LHS macros on this index assignment;
+            // only need index- and post-macros; pre-macros were evaluated earlier
+				    counter += left_tokens.evaluate_macros(*LHS_assign);
+						counter += left_tokens.evaluate_macros(simple_macro_type::post);
 
 						if(RHS_assignments.size() > 1)   // multiple RHS assignments
 							{
 						    // push the LHS evaluated on this assignment into the output list, if it is non-empty
 						    if(left_tokens.size() > 0)
 							    {
-						        r_list->push_back(left_tokens.to_string());
+                    std::string lhs = left_tokens.to_string();
+                    if(split_result.type == macro_impl::split_type::sum)       lhs += " = ";
+                    if(split_result.type == macro_impl::split_type::sum_equal) lhs += " += ";
+						        r_list.push_back(lhs);
 							    }
 
 						    // now generate a set of RHS evaluations for this LHS evaluation
-						    for(std::vector< std::vector<struct index_assignment> >::iterator u = RHS_assignments.begin(); u != RHS_assignments.end(); ++u)
+                for(std::unique_ptr<assignment_list> RHS_assign : RHS_assignments)
 							    {
-						        std::vector<index_assignment> LHS_RHS_assignment = assigner.merge(*t, *u);
+                    assignment_list total_assignment;
+                    try
+                      {
+                        total_assignment = *LHS_assign + *RHS_assign;
+                      }
+                    catch(index_exception& xe)
+                      {
+                        std::ostringstream msg;
+                        msg << ERROR_MACRO_LHS_RHS_MISMATCH << " '" << xe.what() << "'";
+                        ctx.error(msg.str());
+                      }
 
-						        counter += right_tokens.evaluate_macros(LHS_RHS_assignment);
-						        counter += right_tokens.evaluate_macros(token_list::simple_macro_token::post);
+						        counter += right_tokens.evaluate_macros(total_assignment);
+						        counter += right_tokens.evaluate_macros(simple_macro_type::post);
 
 								    // set up replacement right hand side; add trailing ; and , only if the LHS is empty
-						        std::string this_line = right_tokens.to_string() + (left_tokens.size() == 0 && semicolon ? ";" : "") + (left_tokens.size() == 0 && comma ? "," : "");
+						        std::string this_line = right_tokens.to_string() + (left_tokens.size() == 0 && split_result.semicolon ? ";" : "") + (left_tokens.size() == 0 && split_result.comma ? "," : "");
 
-						        r_list->push_back(this_line);
+                    if(left_tokens.size() == 0)   // no need to format for indentation if no LHS; RHS will already include indentation
+                      {
+                        r_list.push_back(this_line);
+                      }
+                    else
+                      {
+                        r_list.push_back(this->dress(this_line, raw_indent, 3));
+                      }
 							    }
 
 								// add a trailing ; and , if the LHS is nonempty
-						    if(left_tokens.size() > 0 && r_list->size() > 0)
+						    if(left_tokens.size() > 0 && r_list.size() > 0)
 							    {
-						        if(semicolon)
+						        if(split_result.semicolon)
 							        {
-						            r_list->back() += ";";
+						            r_list.back() += ";";
 							        }
-						        if(comma)
+						        if(split_result.comma)
 							        {
-						            r_list->back() += ",";
+						            r_list.back() += ",";
 							        }
 							    }
 							}
 						else if(RHS_assignments.size() == 1)  // just one RHS assignment, so coalesce with LHS
 							{
-						    std::vector<index_assignment> LHS_RHS_assignment = assigner.merge(*t, RHS_assignments.front());
+                std::unique_ptr<assignment_list> RHS_assign = *RHS_assignments.begin();
 
-						    counter += right_tokens.evaluate_macros(LHS_RHS_assignment);
-						    counter += right_tokens.evaluate_macros(token_list::simple_macro_token::post);
+                assignment_list total_assignment;
+                try
+                  {
+                    total_assignment = *LHS_assign + *RHS_assign;
+                  }
+                catch(index_exception& xe)
+                  {
+                    std::ostringstream msg;
+                    msg << ERROR_MACRO_LHS_RHS_MISMATCH << " '" << xe.what() << "'";
+                    ctx.error(msg.str());
+                  }
 
-								// set up line with macro replacements, and add trailing ; and , if necessary
-						    std::string full_line = left_tokens.to_string() + " " + right_tokens.to_string() + (semicolon ? ";" : "") + (comma ? "," : "");
-								r_list->push_back(full_line);
+						    counter += right_tokens.evaluate_macros(total_assignment);
+						    counter += right_tokens.evaluate_macros(simple_macro_type::post);
+
+								// set up line with macro replacements, and add trailing ; and , if necessary;
+                // since the line includes the full LHS it needs no special formatting to account for indentation
+						    std::string full_line = left_tokens.to_string();
+                if(split_result.type == macro_impl::split_type::sum)       full_line += " =";
+                if(split_result.type == macro_impl::split_type::sum_equal) full_line += " +=";
+
+                full_line += (left_tokens.size() > 0 ? " " : "") + right_tokens.to_string() + (split_result.semicolon ? ";" : "") + (split_result.comma ? "," : "");
+								r_list.push_back(full_line);
 							}
 			    }
 			}
 		else
 			{
-				r_list->push_back(std::string("// Skipped: empty index range (LHS index set is empty)"));
+				r_list.push_back(std::string("// Skipped: empty index range (LHS index set is empty)"));
 			}
-
-    replacements = counter;
-
-    return(r_list);
 	}
 
+
+void macro_agent::forloop_index_assignment(token_list& left_tokens, token_list& right_tokens,
+                                           assignment_set& LHS_assignments, assignment_set& RHS_assignments,
+                                           unsigned int& counter, macro_impl::split_string& split_result,
+                                           error_context& ctx, std::list<std::string>& r_list)
+  {
+    std::string raw_indent = this->compute_prefix(split_result);
+    unsigned int current_indent = 0;
+
+    if(LHS_assignments.size() > 0)
+      {
+        this->plant_LHS_forloop(LHS_assignments.idx_set_begin(), LHS_assignments.idx_set_end(),
+                                RHS_assignments, left_tokens, right_tokens, counter, split_result,
+                                ctx, r_list, raw_indent, current_indent);
+      }
+    else
+      {
+        r_list.push_back(std::string("// Skipped: empty index range (LHS index set is empty)"));
+      }
+  }
+
+
+macro_impl::split_string macro_agent::split(const std::string& line)
+  {
+    macro_impl::split_string rval;
+
+    // check for sum split point
+    if((rval.split_point = line.find(this->split_equal)) != std::string::npos)
+      {
+        rval.left  = line.substr(0, rval.split_point);
+        rval.right = line.substr(rval.split_point + this->split_equal.length());
+        rval.type  = macro_impl::split_type::sum;
+      }
+    else    // not sum, but possibly sum-equals?
+      {
+        if((rval.split_point = line.find(this->split_sum_equal)) != std::string::npos)
+          {
+            rval.left  = line.substr(0, rval.split_point);
+            rval.right = line.substr(rval.split_point + this->split_sum_equal.length());
+            rval.type  = macro_impl::split_type::sum_equal;
+          }
+        else    // no split-point; everything counts as the right-hand side
+          {
+            rval.right = line;
+            rval.type  = macro_impl::split_type::none;
+          }
+      }
+
+    // trim trailing white space on the right-hand side,
+    // and leading white space if there is a nontrivial left-hand side
+    boost::algorithm::trim_right(rval.right);
+    if(rval.left.length() > 0) boost::algorithm::trim_left(rval.right);
+
+    // check if the last component is a semicolon
+    // note std:string::back() and std::string::pop_back() require C++11
+    if(rval.right.size() > 0 && rval.right.back() == ';')
+      {
+        rval.semicolon = true;
+        rval.right.pop_back();
+      }
+
+    // check if the last component is a comma
+    if(rval.right.size() > 0 && rval.right.back() == ',')
+      {
+        rval.comma = true;
+        rval.right.pop_back();
+      }
+
+    return(rval);
+  }
+
+
+std::string macro_agent::compute_prefix(macro_impl::split_string& split_string)
+  {
+    std::string prefix;
+    size_t pos = 0;
+
+    std::string raw = (split_string.left.length() > 0) ? split_string.left : split_string.right;
+
+    while(pos < raw.length() && std::isspace(raw[pos]))
+      {
+        prefix += raw[pos];
+        ++pos;
+      }
+
+    return(prefix);
+  }
+
+
+void macro_agent::plant_LHS_forloop(index_database<abstract_index>::const_iterator current,
+                                    index_database<abstract_index>::const_iterator end,
+                                    assignment_set& RHS_assignments, token_list& left_tokens, token_list& right_tokens,
+                                    unsigned int& counter, macro_impl::split_string& split_result, error_context& ctx,
+                                    std::list<std::string>& r_list, const std::string& raw_indent,
+                                    unsigned int current_indent)
+  {
+    if(current == end)
+      {
+        // evaluate macros, converting indices to abstract 'for' loop variables
+        counter += left_tokens.evaluate_macros();
+        counter += left_tokens.evaluate_macros(simple_macro_type::post);
+
+        // if this is an assignment statement then plant code to zero the accumulator variable,
+        // unless there are no RHS assignments.
+        // In that case we can simply coalesce the assignment with the RHS.
+        if(left_tokens.size() > 0 && RHS_assignments.size() > 1 && split_result.type == macro_impl::split_type::sum)
+          {
+            std::string zero_stmt = left_tokens.to_string() + " = 0;";
+            boost::algorithm::trim_left(zero_stmt);
+            r_list.push_back(this->dress(zero_stmt, raw_indent, current_indent));
+          }
+
+        this->plant_RHS_forloop(RHS_assignments.idx_set_begin(), RHS_assignments.idx_set_end(), left_tokens,
+                                right_tokens, counter, split_result, ctx, r_list, raw_indent, current_indent, RHS_assignments.size() == 1);
+      }
+    else
+      {
+        language_printer& printer = this->package.get_language_printer();
+        boost::optional< std::string > start_delimiter = printer.get_start_block_delimiter();
+        boost::optional< std::string > end_delimiter = printer.get_end_block_delimiter();
+
+        r_list.push_back(this->dress(printer.for_loop(current->get_loop_variable(), 0, current->numeric_range()), raw_indent, current_indent));
+
+        std::ostringstream brace_indent;
+        for(unsigned int i = 0; i < printer.get_block_delimiter_indent(); ++i) brace_indent << " ";
+
+        if(start_delimiter) r_list.push_back(this->dress(brace_indent.str() + *start_delimiter, raw_indent, current_indent));
+        this->plant_LHS_forloop(++current, end, RHS_assignments, left_tokens, right_tokens, counter, split_result, ctx,
+                                r_list, raw_indent, current_indent + printer.get_block_indent());
+        if(end_delimiter) r_list.push_back(this->dress(brace_indent.str() + *end_delimiter, raw_indent, current_indent));
+      }
+  }
+
+
+void macro_agent::plant_RHS_forloop(index_database<abstract_index>::const_iterator current,
+                                    index_database<abstract_index>::const_iterator end,
+                                    token_list& left_tokens, token_list& right_tokens, unsigned int& counter,
+                                    macro_impl::split_string& split_result, error_context& ctx,
+                                    std::list<std::string>& r_list, const std::string& raw_indent,
+                                    unsigned int current_indent, bool coalesce)
+  {
+    if(current == end)
+      {
+        // evaluate macros, converting indices to abstract 'for' loop variables
+        counter += right_tokens.evaluate_macros();
+        counter += right_tokens.evaluate_macros(simple_macro_type::post);
+
+        std::string left_line = left_tokens.to_string();
+        std::string right_line = right_tokens.to_string() + (split_result.semicolon ? ";" : "") + (split_result.comma ? "," : "");
+
+        boost::algorithm::trim_left(left_line);
+        std::string total_line = left_line;
+
+        if(split_result.type == macro_impl::split_type::sum_equal)
+          {
+            total_line += " += ";
+          }
+        else if(split_result.type == macro_impl::split_type::sum)
+          {
+            if(coalesce) total_line += " = ";
+            else         total_line += " += ";
+          }
+        // else split_result.type == macro_impl::splt_type::none and there is no need for an assignment operator
+
+        total_line += right_line;
+        if(left_tokens.size() == 0) boost::algorithm::trim_left(total_line);
+
+        r_list.push_back(this->dress(total_line, raw_indent, current_indent));
+      }
+    else
+      {
+        language_printer& printer = this->package.get_language_printer();
+        boost::optional< std::string > start_delimiter = printer.get_start_block_delimiter();
+        boost::optional< std::string > end_delimiter = printer.get_end_block_delimiter();
+
+        r_list.push_back(this->dress(printer.for_loop(current->get_loop_variable(), 0, current->numeric_range()), raw_indent, current_indent));
+
+        std::ostringstream brace_indent;
+        for(unsigned int i = 0; i < printer.get_block_delimiter_indent(); ++i) brace_indent << " ";
+
+        if(start_delimiter) r_list.push_back(this->dress(brace_indent.str() + *start_delimiter, raw_indent, current_indent));
+        this->plant_RHS_forloop(++current, end, left_tokens, right_tokens, counter, split_result, ctx, r_list,
+                                raw_indent, current_indent + printer.get_block_indent(), coalesce);
+        if(end_delimiter) r_list.push_back(this->dress(brace_indent.str() + *end_delimiter, raw_indent, current_indent));
+      }
+  }
+
+
+std::string macro_agent::dress(std::string out_str, const std::string& raw_indent, unsigned int current_indent)
+  {
+    std::ostringstream out;
+
+    out << raw_indent;
+    for(unsigned int i = 0; i < current_indent; ++i) out << " ";
+
+    out << out_str;
+    return(out.str());
+  }
+
+
+void macro_agent::inject_macro(macro_packages::replacement_rule_index* rule)
+  {
+    this->index_rule_cache.push_back(rule);
+  }

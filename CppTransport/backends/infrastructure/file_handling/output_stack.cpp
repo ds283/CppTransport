@@ -16,8 +16,7 @@
 
 void output_stack::push(const boost::filesystem::path in, buffer& buf, macro_agent& agent, enum process_type type)
   {
-		// NOTE ms and package elements should be updated later with push_top_data()
-    this->inclusions.emplace_front(in, 1, buf, agent, type);
+    this->inclusions.emplace_front(in, 2, buf, agent, type);
   }
 
 

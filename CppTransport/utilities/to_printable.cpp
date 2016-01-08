@@ -2,8 +2,6 @@
 // Created by David Seery on 26/06/2013.
 // based on http://stackoverflow.com/questions/2417588/escaping-a-c-string
 //
-// To change the template use AppCode | Preferences | File Templates.
-//
 
 
 #include "to_printable.h"

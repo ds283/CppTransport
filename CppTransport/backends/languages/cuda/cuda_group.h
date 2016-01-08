@@ -4,21 +4,12 @@
 //
 
 
-#ifndef __cuda_group_H_
-#define __cuda_group_H_
+#ifndef CPPTRANSPORT_CUDA_GROUP_H
+#define CPPTRANSPORT_CUDA_GROUP_H
 
 
 #include "package_group.h"
-
-#include "fundamental.h"
-#include "flow_tensors.h"
-#include "lagrangian_tensors.h"
-#include "utensors.h"
-#include "gauge_xfm.h"
-#include "temporary_pool.h"
-#include "summation.h"
-#include "kernel_argument_macros.h"
-#include "cuda_printer.h"
+#include "concepts/tensor_factory.h"
 
 
 class cuda_group : public package_group
@@ -29,19 +20,12 @@ class cuda_group : public package_group
   public:
 
     //! constructor
-    cuda_group(translator_data& p, ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& cache);
+    cuda_group(translator_data& p, tensor_factory& fctry);
 
     //! destructor is default
     ~cuda_group() = default;
 
-
-    // INTERNAL API
-
-  protected:
-
-    cuda::cuda_printer                  printer;
-
   };
 
 
-#endif //__cuda_group_H_
+#endif //CPPTRANSPORT_CUDA_GROUP_H

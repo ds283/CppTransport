@@ -2,13 +2,11 @@
 // Created by David Seery on 17/06/2013.
 // Copyright (c) 2013-15 University of Sussex. All rights reserved.
 //
-// To change the template use AppCode | Preferences | File Templates.
-//
 
 
 
-#ifndef __y_driver_H_
-#define __y_driver_H_
+#ifndef CPPTRANSPORT_Y_DRIVER_H
+#define CPPTRANSPORT_Y_DRIVER_H
 
 
 #include <iostream>
@@ -209,4 +207,4 @@ namespace y
 	}
 
 
-#endif //__y_driver_H_
+#endif //CPPTRANSPORT_Y_DRIVER_H

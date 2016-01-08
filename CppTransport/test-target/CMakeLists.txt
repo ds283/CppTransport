@@ -24,7 +24,8 @@ SET(CPPTRANSPORT_SPLINTER_EIGEN_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../thirdparty/sp
 # JsonCPP includes work fine, since they have the same relative position in the build
 # tree and the source tree
 # We also need to dig the include path for Eigen out of the bundled SPLINTER repository
-SET(CPPTRANSPORT_INCLUDE_DIRS
+SET(
+  CPPTRANSPORT_INCLUDE_DIRS
   ${CPPTRANSPORT_INCLUDE_DIR}
   ${CPPTRANSPORT_JSONCPP_INCLUDE_DIR}
   ${CPPTRANSPORT_SPLINTER_EIGEN_DIR}
@@ -35,16 +36,19 @@ SET(CPPTRANSPORT_LIBRARIES jsoncpp_lib_static splinter-static-2-0)
 
 
 ADD_CUSTOM_COMMAND(
-  OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/axion_core.h ${CMAKE_CURRENT_BINARY_DIR}/axion_basic_unrolled.h
-  COMMAND CppTransport ${CMAKE_CURRENT_SOURCE_DIR}/axion.model
+  OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/axion_core.h ${CMAKE_CURRENT_BINARY_DIR}/axion_mpi.h
+  COMMAND CppTransport --verbose --no-search-env -I ${CMAKE_CURRENT_SOURCE_DIR}/../cpptransport-templates ${CMAKE_CURRENT_SOURCE_DIR}/axion.model
   DEPENDS axion.model
+  DEPENDS defaults.model
+  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/../cpptransport-templates/canonical_mpi.h
+  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/../cpptransport-templates/canonical_core.h
 )
 
 
 SET(
   AXION_HEADERS
   ${CMAKE_CURRENT_BINARY_DIR}/axion_core.h
-  ${CMAKE_CURRENT_BINARY_DIR}/axion_basic_unrolled.h
+  ${CMAKE_CURRENT_BINARY_DIR}/axion_mpi.h
 )
 
 
@@ -53,7 +57,9 @@ ADD_CUSTOM_TARGET(AxionGenerator DEPENDS ${AXION_HEADERS})
 
 ADD_EXECUTABLE(test-target test_target.cpp)
 ADD_DEPENDENCIES(test-target AxionGenerator)
+
 TARGET_LINK_LIBRARIES(test-target sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${CPPTRANSPORT_LIBRARIES})
+TARGET_COMPILE_OPTIONS(test-target PRIVATE -std=c++14)
 
 
 TARGET_INCLUDE_DIRECTORIES(

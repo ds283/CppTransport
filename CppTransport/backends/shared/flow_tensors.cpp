@@ -8,224 +8,200 @@
 #include <functional>
 
 #include "flow_tensors.h"
-#include "cse.h"
-#include "index_assignment.h"
-#include "u_tensor_factory.h"
-#include "translation_unit.h"
 
 
-#define BIND1(X) std::bind(&flow_tensors::X, this, std::placeholders::_1)
-#define BIND3(X) std::bind(&flow_tensors::X, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)
+#define BIND(X, N) std::move(std::make_unique<X>(N, f, cw, lm, prn))
 
 
 namespace macro_packages
   {
-    const std::vector<simple_rule> flow_tensors::get_pre_rules()
+
+    flow_tensors::flow_tensors(tensor_factory& f, cse& cw, lambda_manager& lm, translator_data& p, language_printer& prn)
+      : replacement_rule_package(f, cw, lm, p, prn)
       {
-        std::vector<simple_rule> package;
+        pre_package.emplace_back(BIND(replace_V, "POTENTIAL"));
+        pre_package.emplace_back(BIND(replace_Hsq, "HUBBLE_SQ"));
+        pre_package.emplace_back(BIND(replace_eps, "EPSILON"));
 
-        const std::vector<replacement_rule_simple> rules =
-          { BIND1(replace_V), BIND1(replace_Hsq), BIND1(replace_eps)
-          };
-
-        const std::vector<std::string> names =
-          { "POTENTIAL",      "HUBBLE_SQ",        "EPSILON"
-          };
-
-        const std::vector<unsigned int> args =
-          { 0,                0,                  0
-          };
-
-        assert(rules.size() == names.size());
-        assert(rules.size() == args.size());
-
-        for(int i = 0; i < rules.size(); ++i)
-          {
-            simple_rule rule;
-
-            rule.rule = rules[i];
-            rule.args = args[i];
-            rule.name = names[i];
-
-            package.push_back(rule);
-          }
-
-        return(package);
-      }
-
-
-    const std::vector<simple_rule> flow_tensors::get_post_rules()
-      {
-        std::vector<simple_rule> package;
-
-        return(package);
-      }
-
-
-    const std::vector<index_rule> flow_tensors::get_index_rules()
-      {
-        std::vector<index_rule> package;
-
-        const std::vector<replacement_rule_pre> pres =
-          { nullptr,                           nullptr,              nullptr,
-            BIND1(pre_sr_velocity)
-          };
-
-        const std::vector<replacement_rule_post> posts =
-          { nullptr,                           nullptr,              nullptr,
-            BIND1(generic_post_hook)
-          };
-
-        const std::vector<replacement_rule_index> rules =
-          { BIND3(replace_parameter),          BIND3(replace_field), BIND3(replace_coordinate),
-            BIND3(replace_1index_field_tensor)
-          };
-
-        const std::vector<std::string> names =
-          { "PARAMETER",                       "FIELD",              "COORDINATE",
-            "SR_VELOCITY"
-          };
-
-        const std::vector<unsigned int> args =
-          { 0,                                 0,                    0,
-            0
-          };
-
-        const std::vector<unsigned int> indices =
-          { 1,                                 1,                    1,
-            1
-          };
-
-        const std::vector<unsigned int> ranges =
-          { INDEX_RANGE_PARAMETER,             1,                    2,
-            1
-          };
-
-        assert(pres.size() == posts.size());
-        assert(pres.size() == rules.size());
-        assert(pres.size() == names.size());
-        assert(pres.size() == args.size());
-        assert(pres.size() == ranges.size());
-
-        for(int i = 0; i < pres.size(); ++i)
-          {
-            index_rule rule;
-
-            rule.rule    = rules[i];
-            rule.name    = names[i];
-            rule.pre     = pres[i];
-            rule.post    = posts[i];
-            rule.args    = args[i];
-            rule.indices = indices[i];
-            rule.range   = ranges[i];
-
-            package.push_back(rule);
-          }
-
-        return(package);
+        index_package.emplace_back(BIND(replace_parameter, "PARAMETER"));
+        index_package.emplace_back(BIND(replace_field, "FIELD"));
+        index_package.emplace_back(BIND(replace_coordinate, "COORDINATE"));
+        index_package.emplace_back(BIND(replace_SR_velocity, "SR_VELOCITY"));
+        index_package.emplace_back(BIND(replace_dV, "DV"));
+        index_package.emplace_back(BIND(replace_ddV, "DDV"));
+        index_package.emplace_back(BIND(replace_dddV, "DDDV"));
       }
 
 
     // *******************************************************************
 
 
-    std::string flow_tensors::replace_V(const std::vector<std::string> &args)
+    std::string replace_V::evaluate(const macro_argument_list& args)
       {
-        GiNaC::ex potential = this->data_payload.get_potential();
+        GiNaC::ex V = this->Hubble_obj->compute_V();
 
-        return(this->printer.ginac(potential));
+
+
+        // pass to CSE module for evalaution
+        this->cse_worker.parse(V);
+
+        // emit
+        return this->cse_worker.get_symbol_with_use_count(V);
       }
 
 
-    std::string flow_tensors::replace_Hsq(const std::vector<std::string> &args)
+    std::string replace_Hsq::evaluate(const macro_argument_list& args)
       {
-        GiNaC::ex Hsq = this->u_factory->compute_Hsq();
+        GiNaC::ex Hsq = this->Hubble_obj->compute_Hsq();
 
-        return(this->printer.ginac(Hsq));
+        // pass to CSE module for evaluation
+        this->cse_worker.parse(Hsq);
+
+        // emit
+        return this->cse_worker.get_symbol_with_use_count(Hsq);
       }
 
 
-    std::string flow_tensors::replace_eps(const std::vector<std::string> &args)
+    std::string replace_eps::evaluate(const macro_argument_list& args)
       {
-        GiNaC::ex eps = this->u_factory->compute_eps();
+        GiNaC::ex eps = this->Hubble_obj->compute_eps();
 
-        return(this->printer.ginac(eps));
+        // pass to CSE module for evaluation
+        this->cse_worker.parse(eps);
+
+        // emit
+        return this->cse_worker.get_symbol_with_use_count(eps);
       }
 
 
     // ******************************************************************
 
 
-    std::string flow_tensors::replace_parameter(const std::vector<std::string>& args, std::vector<struct index_assignment> indices, void* state)
+    std::string replace_parameter::unroll(const macro_argument_list& args, const assignment_list& indices)
       {
-        assert(indices.size() == 1);
-        assert(indices[0].trait == index_trait::parameter);
-        assert(indices[0].species < this->data_payload.get_number_parameters());
-
-        std::vector<GiNaC::symbol> parameters = this->data_payload.get_parameter_symbols();
-        return(this->printer.ginac(parameters[indices[0].species]));
+        std::unique_ptr<symbol_list> parameters = this->shared.generate_parameters(this->printer);
+        return this->printer.ginac((*parameters)[indices[0].get_numeric_value()]);
       }
 
 
-    std::string flow_tensors::replace_field(const std::vector<std::string>& args, std::vector<struct index_assignment> indices, void* state)
+    std::string replace_field::unroll(const macro_argument_list& args, const assignment_list& indices)
       {
-        assert(indices.size() == 1);
-        assert(indices[0].trait == index_trait::field);
-        assert(indices[0].species < this->data_payload.get_number_fields());
-
-        std::vector<GiNaC::symbol> fields = this->data_payload.get_field_symbols();
-        return(this->printer.ginac(fields[indices[0].species]));
+        std::unique_ptr<symbol_list> fields = this->shared.generate_fields(this->printer);
+        return this->printer.ginac((*fields)[indices[0].get_numeric_value()]);
       }
 
 
-    std::string flow_tensors::replace_coordinate(const std::vector<std::string>& args, std::vector<struct index_assignment> indices, void* state)
+    std::string replace_coordinate::unroll(const macro_argument_list& args, const assignment_list& indices)
       {
-        assert(indices.size() == 1);
-        assert(indices[0].species < this->data_payload.get_number_fields());
-
-        std::vector<GiNaC::symbol> fields  = this->data_payload.get_field_symbols();
-        std::vector<GiNaC::symbol> momenta = this->data_payload.get_deriv_symbols();
+        std::unique_ptr<symbol_list> fields = this->shared.generate_fields(this->printer);
+        std::unique_ptr<symbol_list> derivs = this->shared.generate_derivs(this->printer);
 
         std::string rval;
 
-        switch(indices[0].trait)
+        if(indices[0].is_field())
           {
-            case index_trait::field:
-              {
-                rval = this->printer.ginac(fields[indices[0].species]);
-                break;
-              }
-
-            case index_trait::momentum:
-              {
-                rval = this->printer.ginac(momenta[indices[0].species]);
-                break;
-              }
-
-            case index_trait::parameter:
-            case index_trait::unknown:
-              {
-                assert(false);
-                break;
-              }
+            rval = this->printer.ginac((*fields)[indices[0].species()]);
+          }
+        else if(indices[0].is_momentum())
+          {
+            rval = this->printer.ginac((*derivs)[indices[0].species()]);
+          }
+        else
+          {
+            assert(false);
           }
 
         return(rval);
       }
 
 
-// ******************************************************************
+    // ******************************************************************
 
 
-    void* flow_tensors::pre_sr_velocity(const std::vector<std::string>& args)
+    void replace_SR_velocity::pre_hook(const macro_argument_list& args)
       {
-        std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
-        this->u_factory->compute_sr_u(*container, *this->fl);
-
-        cse_map* map = this->cse_worker->map_factory(container);
-
-        return(map);
+        std::unique_ptr<flattened_tensor> container = this->SR_velocity_tensor->compute();
+        this->map = std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }
 
+
+    void replace_dV::pre_hook(const macro_argument_list& args)
+      {
+        std::unique_ptr<flattened_tensor> container = this->dV_tensor->compute();
+        this->map = std::make_unique<cse_map>(std::move(container), this->cse_worker);
+      }
+
+
+    void replace_ddV::pre_hook(const macro_argument_list& args)
+      {
+        std::unique_ptr<flattened_tensor> container = this->ddV_tensor->compute();
+        this->map = std::make_unique<cse_map>(std::move(container), this->cse_worker);
+      }
+
+
+    void replace_dddV::pre_hook(const macro_argument_list& args)
+      {
+        std::unique_ptr<flattened_tensor> container = this->dddV_tensor->compute();
+        this->map = std::make_unique<cse_map>(std::move(container), this->cse_worker);
+      }
+
+
+    // ******************************************************************
+
+
+    std::string replace_parameter::roll(const macro_argument_list& args, const abstract_index_list& indices)
+      {
+        GiNaC::ex sym = this->shared.generate_parameters(indices[0], this->printer);
+        return this->printer.ginac(sym);
+      }
+
+
+    std::string replace_field::roll(const macro_argument_list& args, const abstract_index_list& indices)
+      {
+        GiNaC::ex sym = this->shared.generate_fields(indices[0], this->printer);
+        return this->printer.ginac(sym);
+      }
+
+
+    std::string replace_coordinate::roll(const macro_argument_list& args, const abstract_index_list& indices)
+      {
+        // safe to re-use generate_fields since the symbol is the same as for the field list
+        GiNaC::ex sym = this->shared.generate_fields(indices[0], this->printer);
+        return this->printer.ginac(sym);
+      }
+
+
+    std::string replace_SR_velocity::roll(const macro_argument_list& args, const abstract_index_list& indices)
+      {
+        std::unique_ptr<atomic_lambda> lambda = this->SR_velocity_tensor->compute_lambda(indices[0]);
+        return this->lambda_mgr.cache(std::move(lambda));
+      }
+
+
+    std::string replace_dV::roll(const macro_argument_list& args, const abstract_index_list& indices)
+      {
+        std::unique_ptr<atomic_lambda> lambda = this->dV_tensor->compute_lambda(indices[0]);
+
+        // assume that the result will always be just a single symbol, so can be safely inlined
+        return this->printer.ginac(**lambda);
+      }
+
+
+    std::string replace_ddV::roll(const macro_argument_list& args, const abstract_index_list& indices)
+      {
+        std::unique_ptr<atomic_lambda> lambda = this->ddV_tensor->compute_lambda(indices[0], indices[1]);
+
+        // assume that the result will always be just a single symbol, so can be safely inlined
+        return this->printer.ginac(**lambda);
+      }
+
+
+    std::string replace_dddV::roll(const macro_argument_list& args, const abstract_index_list& indices)
+      {
+        std::unique_ptr<atomic_lambda> lambda = this->dddV_tensor->compute_lambda(indices[0], indices[1], indices[2]);
+
+        // assume that the result will always be just a single symbol, so can be safely inlined
+        return this->printer.ginac(**lambda);
+      }
 
   } // namespace macro_packages

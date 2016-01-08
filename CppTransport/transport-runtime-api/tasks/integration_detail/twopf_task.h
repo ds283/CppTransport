@@ -28,7 +28,7 @@ namespace transport
 
         //! Construct a named two-point function task
         twopf_task(const std::string& nm, const initial_conditions<number>& i,
-                   range<double>& t, range<double>& ks, bool ff=true);
+                   range<double>& t, range<double>& ks, bool ff=false);
 
         //! deserialization constructor
         twopf_task(const std::string& nm, Json::Value& reader, sqlite3* handle, const initial_conditions<number>& i);

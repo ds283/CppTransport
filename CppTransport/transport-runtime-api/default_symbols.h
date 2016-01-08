@@ -2,8 +2,6 @@
 // Created by David Seery on 05/08/2013.
 // Copyright (c) 2013-15 University of Sussex. All rights reserved.
 //
-// To change the template use AppCode | Preferences | File Templates.
-//
 
 #ifndef CPPTRANSPORT_DEFAULT_SYMBOLS_H_
 #define CPPTRANSPORT_DEFAULT_SYMBOLS_H_

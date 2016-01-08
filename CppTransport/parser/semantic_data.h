@@ -5,8 +5,8 @@
 
 
 
-#ifndef __semantic_data_H_
-#define __semantic_data_H_
+#ifndef CPPTRANSPORT_SEMANTIC_DATA_H
+#define CPPTRANSPORT_SEMANTIC_DATA_H
 
 
 #include <iostream>
@@ -93,4 +93,4 @@ class subexpr
 	};
 
 
-#endif //__semantic_data_H_
+#endif //CPPTRANSPORT_SEMANTIC_DATA_H

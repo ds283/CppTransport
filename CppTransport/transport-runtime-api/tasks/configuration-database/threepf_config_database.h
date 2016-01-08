@@ -27,6 +27,8 @@
 #include "sqlite3.h"
 #include "transport-runtime-api/sqlite3/operations/sqlite3_utility.h"
 
+#include "boost/optional.hpp"
+
 
 namespace transport
   {
@@ -221,15 +223,16 @@ namespace transport
 
         //! add record to the database -- specified by wavenumber on each leg
         template <typename StoragePolicy>
-        int add_k1k2k3_record(twopf_kconfig_database& twopf_db, double k1_conventional, double k2_conventional, double k3_conventional, StoragePolicy policy);
+        boost::optional<unsigned int> add_k1k2k3_record(twopf_kconfig_database& twopf_db, double k1_conventional, double k2_conventional, double k3_conventional, StoragePolicy policy);
 
         //! add record to the database -- specified by Fergusson-Shellard-Liguori parametrization
         template <typename StoragePolicy>
-        int add_FLS_record(twopf_kconfig_database& twopf_db, double kt_conventional, double alpha, double beta, StoragePolicy policy);
+        boost::optional<unsigned int> add_FLS_record(twopf_kconfig_database& twopf_db, double kt_conventional, double alpha, double beta, StoragePolicy policy);
 
-        //! add a record to the database -- directly specified
+        //! add a record to the database -- directly specified;
+        //! returns serial number of stored object
         template <typename StoragePolicy>
-        int add_record(twopf_kconfig_database& twopf_db, threepf_kconfig config, StoragePolicy policy);
+        boost::optional<unsigned int> add_record(twopf_kconfig_database& twopf_db, threepf_kconfig config, StoragePolicy policy);
 
 		    //! lookup record with a given serial number -- non const version
 		    record_iterator lookup(unsigned int serial);
@@ -411,7 +414,7 @@ namespace transport
 
 
     template <typename StoragePolicy>
-    int threepf_kconfig_database::add_k1k2k3_record(twopf_kconfig_database& twopf_db, double k1_conventional, double k2_conventional, double k3_conventional, StoragePolicy policy)
+    boost::optional<unsigned int> threepf_kconfig_database::add_k1k2k3_record(twopf_kconfig_database& twopf_db, double k1_conventional, double k2_conventional, double k3_conventional, StoragePolicy policy)
       {
         // insert a record into the database
         threepf_kconfig config;
@@ -439,7 +442,7 @@ namespace transport
 
 
     template <typename StoragePolicy>
-    int threepf_kconfig_database::add_FLS_record(twopf_kconfig_database& twopf_db, double kt_conventional, double alpha, double beta, StoragePolicy policy)
+    boost::optional<unsigned int> threepf_kconfig_database::add_FLS_record(twopf_kconfig_database& twopf_db, double kt_conventional, double alpha, double beta, StoragePolicy policy)
       {
         // insert a record into the database
         threepf_kconfig config;
@@ -468,7 +471,7 @@ namespace transport
 
 
     template <typename StoragePolicy>
-    int threepf_kconfig_database::add_record(twopf_kconfig_database& twopf_db, threepf_kconfig config, StoragePolicy policy)
+    boost::optional<unsigned int> threepf_kconfig_database::add_record(twopf_kconfig_database& twopf_db, threepf_kconfig config, StoragePolicy policy)
       {
         // populate serial numbers in configuration record before
         // passing to storage policy
@@ -492,30 +495,31 @@ namespace transport
         if(k3_stored) config.k3_serial = (*rec)->serial;
         else          config.k3_serial = twopf_db.add_record(config.k3_conventional);
 
-        // ask storage policy whether this configuration should be reatined
-        if(policy(config))
+        if(policy(config))   // policy confirms that this configuration should be retained
           {
             if(config.kt_conventional > this->kmax_conventional) this->kmax_conventional = config.kt_conventional;
             if(config.kt_conventional < this->kmin_conventional) this->kmin_conventional = config.kt_conventional;
-            if(config.kt_comoving > this->kmax_comoving)         this->kmax_comoving     = config.kt_comoving;
-            if(config.kt_comoving < this->kmin_comoving)         this->kmin_comoving     = config.kt_comoving;
+            if(config.kt_comoving > this->kmax_comoving) this->kmax_comoving = config.kt_comoving;
+            if(config.kt_comoving < this->kmin_comoving) this->kmin_comoving = config.kt_comoving;
 
-            this->database.emplace(config.serial, threepf_kconfig_record(config, this->store_background, !k1_stored, !k2_stored, !k3_stored));
+            this->database.emplace(config.serial,
+                                   threepf_kconfig_record(config, this->store_background, !k1_stored, !k2_stored,
+                                                          !k3_stored));
             this->store_background = false;
 
-		        this->modified = true;
+            this->modified = true;
 
             return(config.serial);
           }
-        else
-          {
-            // unwind any twopf configurations added
-            if(!k1_stored) twopf_db.delete_record(config.k1_serial);
-            if(!k2_stored) twopf_db.delete_record(config.k2_serial);
-            if(!k3_stored) twopf_db.delete_record(config.k3_serial);
-          }
 
-        return(-1);
+        // policy declined to store this configuration
+
+        // unwind any twopf configurations added
+        if(!k1_stored) twopf_db.delete_record(config.k1_serial);
+        if(!k2_stored) twopf_db.delete_record(config.k2_serial);
+        if(!k3_stored) twopf_db.delete_record(config.k3_serial);
+
+        return boost::optional<unsigned int>();
       }
 
 

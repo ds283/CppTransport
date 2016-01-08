@@ -3,6 +3,7 @@
 // Copyright (c) 2013-15 University of Sussex. All rights reserved.
 //
 
+
 #include "translator_data.h"
 
 
@@ -23,9 +24,27 @@ translator_data::translator_data(const boost::filesystem::path& file,
   }
 
 
-bool translator_data::get_do_cse() const
+bool translator_data::do_cse() const
   {
     return(this->cache.do_cse());
+  }
+
+
+bool translator_data::annotate() const
+  {
+    return(this->cache.annotate());
+  }
+
+
+unsigned int translator_data::unroll_policy() const
+  {
+    return(this->cache.unroll_policy());
+  }
+
+
+bool translator_data::fast() const
+  {
+    return(this->cache.fast());
   }
 
 
@@ -65,7 +84,7 @@ unsigned int translator_data::get_number_parameters() const
   }
 
 
-enum indexorder translator_data::get_index_order() const
+enum index_order translator_data::get_index_order() const
   {
     return(this->driver.get_script().get_indexorder());
   }
@@ -83,19 +102,19 @@ const GiNaC::ex translator_data::get_potential() const
   }
 
 
-const std::vector<GiNaC::symbol> translator_data::get_field_symbols() const
+const symbol_list translator_data::get_field_symbols() const
   {
     return(this->driver.get_script().get_field_symbols());
   }
 
 
-const std::vector<GiNaC::symbol> translator_data::get_deriv_symbols() const
+const symbol_list translator_data::get_deriv_symbols() const
   {
     return(this->driver.get_script().get_deriv_symbols());
   }
 
 
-const std::vector<GiNaC::symbol> translator_data::get_parameter_symbols() const
+const symbol_list translator_data::get_parameter_symbols() const
   {
     return(this->driver.get_script().get_param_symbols());
   }

@@ -50,7 +50,7 @@ namespace transport
 
             //! value constructor
             generic_config_iterator(config_iterator_type i)
-              : it(i)
+              : it(std::move(i))
               {
               }
 

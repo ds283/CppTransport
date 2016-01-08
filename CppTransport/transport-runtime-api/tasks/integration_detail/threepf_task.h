@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __threepf_task_H_
-#define __threepf_task_H_
+#ifndef CPPTRANSPORT_THREEPF_TASK_H
+#define CPPTRANSPORT_THREEPF_TASK_H
 
 
 #include <memory>
@@ -13,6 +13,7 @@
 #include "transport-runtime-api/tasks/integration_detail/common.h"
 #include "transport-runtime-api/tasks/integration_detail/abstract.h"
 #include "transport-runtime-api/tasks/integration_detail/twopf_list_task.h"
+#include "transport-runtime-api/tasks/integration_detail/default_policies.h"
 #include "transport-runtime-api/tasks/configuration-database/threepf_config_database.h"
 
 #include "transport-runtime-api/utilities/spline1d.h"
@@ -317,10 +318,10 @@ namespace transport
 
         //! Construct a named three-point function task based on sampling from a cubic lattice of ks,
         //! with specified policies
-        template <typename StoragePolicy>
+        template <typename StoragePolicy = task_policy_impl::DefaultStoragePolicy, typename TrianglePolicy = task_policy_impl::DefaultCubicTrianglePolicy>
         threepf_cubic_task(const std::string& nm, const initial_conditions<number>& i,
-                           range<double>& t, range<double>& ks, StoragePolicy policy,
-                           bool ff=true, double tol=CPPTRANSPORT_DEFAULT_KCONFIG_TOLERANCE);
+                           range<double>& t, range<double>& ks, bool ff=false,
+                           StoragePolicy policy = StoragePolicy(), TrianglePolicy triangle = TrianglePolicy());
 
         //! Deserialization constructor
         threepf_cubic_task(const std::string& nm, Json::Value& reader, sqlite3* handle, const initial_conditions<number>& i);
@@ -364,10 +365,10 @@ namespace transport
 
     // build a 3pf task from a cubic lattice of k-modes
     template <typename number>
-    template <typename StoragePolicy>
+    template <typename StoragePolicy, typename TrianglePolicy>
     threepf_cubic_task<number>::threepf_cubic_task(const std::string& nm, const initial_conditions<number>& i,
-                                                   range<double>& t, range<double>& ks, StoragePolicy policy,
-                                                   bool ff, double tol)
+                                                   range<double>& t, range<double>& ks, bool ff,
+                                                   StoragePolicy policy, TrianglePolicy triangle)
 	    : threepf_task<number>(nm, i, t, ff)
 	    {
         // step through the lattice of k-modes, recording which are viable triangular configurations
@@ -378,12 +379,11 @@ namespace transport
 	            {
                 for(unsigned int l = 0; l <= k; ++l)
 	                {
-                    auto maxij  = (ks[j] > ks[k] ? ks[j] : ks[k]);
-                    auto maxijk = (maxij > ks[l] ? maxij : ks[l]);
-
-                    if(ks[j] + ks[k] + ks[l] - 2.0*maxijk >= -std::abs(tol))   // impose the triangle conditions
+                    if(triangle(j, k, l, ks[j], ks[k], ks[l]))      // ask policy object whether this is a triangle
 	                    {
-                        if(this->threepf_task<number>::threepf_db->add_k1k2k3_record(*this->twopf_list_task<number>::twopf_db, ks[j], ks[k], ks[l], policy) < 0)
+                        boost::optional<unsigned int> new_serial = this->threepf_task<number>::threepf_db->add_k1k2k3_record(*this->twopf_list_task<number>::twopf_db, ks[j], ks[k], ks[l], policy);
+
+                        if(!new_serial)  // configuration was not stored
                           {
                             this->threepf_task<number>::integrable = false;    // can't integrate any task which has dropped configurations, because the points may be scattered over the integration region
                           }
@@ -436,12 +436,10 @@ namespace transport
         //! Construct a named three-point function task based on sampling at specified values of
         //! the Fergusson-Shellard-Liguori parameters k_t, alpha and beta,
         //! with specified storage policies
-        template <typename StoragePolicy>
+        template <typename StoragePolicy = task_policy_impl::DefaultStoragePolicy, typename TrianglePolicy = task_policy_impl::DefaultFLSTrianglePolicy>
         threepf_fls_task(const std::string& nm, const initial_conditions<number>& i, range<double>& t,
-                         range<double>& kts, range<double>& alphas, range<double>& betas,
-                         StoragePolicy kp, bool ff=true,
-                         double smallest_squeezing=CPPTRANSPORT_DEFAULT_SMALLEST_SQUEEZING,
-                         double tol=CPPTRANSPORT_DEFAULT_KCONFIG_TOLERANCE);
+                         range<double>& kts, range<double>& alphas, range<double>& betas, bool ff=false,
+                         StoragePolicy policy = StoragePolicy(), TrianglePolicy triangle = TrianglePolicy());
 
         //! Deserialization constructor
         threepf_fls_task(const std::string& nm, Json::Value& reader, sqlite3* handle, const initial_conditions<number>& i);
@@ -492,10 +490,10 @@ namespace transport
 
     // build a threepf task from sampling at specific values of the Fergusson-Shellard-Liguori parameters k_t, alpha, beta
     template <typename number>
-    template <typename StoragePolicy>
+    template <typename StoragePolicy, typename TrianglePolicy>
     threepf_fls_task<number>::threepf_fls_task(const std::string& nm, const initial_conditions<number>& i, range<double>& t,
-                                               range<double>& kts, range<double>& alphas, range<double>& betas,
-                                               StoragePolicy policy, bool ff, double smallest_squeezing, double tol)
+                                               range<double>& kts, range<double>& alphas, range<double>& betas, bool ff,
+                                               StoragePolicy policy, TrianglePolicy triangle)
 	    : threepf_task<number>(nm, i, t, ff)
 	    {
         for(unsigned int j = 0; j < kts.size(); ++j)
@@ -504,17 +502,11 @@ namespace transport
 	            {
                 for(unsigned int l = 0; l < betas.size(); ++l)
 	                {
-                    if(betas[l] >= 0.0
-	                     && betas[l] <= 1.0
-	                     && betas[l]-1.0 - alphas[k] <= std::abs(tol)
-	                     && alphas[k] - (1.0-betas[l]) < std::abs(tol)                   // impose triangle conditions,
-	                     && alphas[k] >= 0.0
-	                     && betas[l] - (1.0+alphas[k])/3.0 >= -std::abs(tol)             // impose k1 >= k2 >= k3
-	                     && std::abs(1.0 - betas[l]) > smallest_squeezing                // impose maximum squeezing on k3
-	                     && std::abs(1.0 + alphas[k] + betas[l]) > smallest_squeezing
-	                     && std::abs(1.0 - alphas[k] + betas[l]) > smallest_squeezing)   // impose maximum squeezing on k1, k2
+                    if(triangle(alphas[k], betas[l]))     // ask policy object to decide whether this is a triangle
 	                    {
-                        if(this->threepf_task<number>::threepf_db->add_FLS_record(*this->threepf_task<number>::twopf_db, kts[j], alphas[k], betas[l], policy) < 0)
+                        boost::optional<unsigned int> new_serial = this->threepf_task<number>::threepf_db->add_FLS_record(*this->threepf_task<number>::twopf_db, kts[j], alphas[k], betas[l], policy);
+
+                        if(!new_serial)   // configuration was not stored
                           {
                             this->threepf_task<number>::integrable = false;    // can't integrate any task which has dropped configurations, because the points may be scattered over the integration region
                           }
@@ -565,4 +557,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__threepf_task_H_
+#endif //CPPTRANSPORT_THREEPF_TASK_H

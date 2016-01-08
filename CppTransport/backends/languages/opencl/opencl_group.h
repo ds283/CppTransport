@@ -4,21 +4,12 @@
 //
 
 
-#ifndef __opencl_group_H_
-#define __opencl_group_H_
+#ifndef CPPTRANSPORT_OPENCL_GROUP_H
+#define CPPTRANSPORT_OPENCL_GROUP_H
 
 
 #include "package_group.h"
-
-#include "fundamental.h"
-#include "flow_tensors.h"
-#include "lagrangian_tensors.h"
-#include "utensors.h"
-#include "gauge_xfm.h"
-#include "temporary_pool.h"
-#include "summation.h"
-#include "kernel_argument_macros.h"
-#include "opencl_printer.h"
+#include "concepts/tensor_factory.h"
 
 
 class opencl_group: public package_group
@@ -29,19 +20,12 @@ class opencl_group: public package_group
   public:
 
     //! constructor
-    opencl_group(translator_data& p, ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& cache);
+    opencl_group(translator_data& p, tensor_factory& fctry);
 
     //! destructor is default
     ~opencl_group() = default;
 
-
-    // INTERNAL DATA
-
-  protected:
-
-    opencl::opencl_printer              printer;
-
   };
 
 
-#endif //__opencl_group_H_
+#endif //CPPTRANSPORT_OPENCL_GROUP_H
