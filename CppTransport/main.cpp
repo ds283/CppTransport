@@ -31,7 +31,7 @@ int main(int argc, const char *argv[])
 
     // construct local environment and argument cache
     local_environment env;
-    argument_cache args(argc, argv);
+    argument_cache args(argc, argv, env);
 
     // set up the initial search path;
     // this should consist of the current working directory, but also

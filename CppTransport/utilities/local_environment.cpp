@@ -17,6 +17,7 @@ local_environment::local_environment()
   : colour_terminal(false)
   {
     this->set_terminal_colour_support();
+    this->set_home_directory();
     this->set_template_search_paths();
   }
 
@@ -43,6 +44,17 @@ void local_environment::set_terminal_colour_support()
   }
 
 
+void local_environment::set_home_directory()
+  {
+    char* home_cstr = std::getenv(HOME_ENV);
+
+    if(home_cstr == nullptr) return;
+
+    std::string home_path(home_cstr);
+    this->home = boost::filesystem::path(home_path);
+  }
+
+
 void local_environment::set_template_search_paths()
   {
     char* template_paths_cstr = std::getenv(TEMPLATE_PATHS_ENV);
@@ -57,4 +69,14 @@ void local_environment::set_template_search_paths()
         std::string path = boost::copy_range<std::string>(*t);
         this->template_search.emplace_back(path);
       }
+  }
+
+
+boost::optional<boost::filesystem::path> local_environment::config_file_path() const
+  {
+    if(!this->home) return boost::optional<boost::filesystem::path>();
+
+    boost::filesystem::path config_path = *this->home;
+
+    return config_path / CONFIG_FILE_LOCATION;
   }

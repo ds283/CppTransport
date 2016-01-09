@@ -37,6 +37,9 @@ constexpr auto DEFAULT_MODEL_NAME                    = "UNKNOWN_MODEL";
 constexpr auto DEFAULT_AUTHOR                        = "Anonymous";
 
 constexpr auto TEMPLATE_PATHS_ENV                    = "CPPTRANSPORT_TEMPLATE_PATH";
+constexpr auto HOME_ENV                              = "HOME";
+
+constexpr auto CONFIG_FILE_LOCATION                  = ".cpptransport";
 
 constexpr auto DEFAULT_UNROLL_MAX                    = 1000;
 

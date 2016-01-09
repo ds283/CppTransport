@@ -11,6 +11,7 @@
 
 
 #include "boost/filesystem/operations.hpp"
+#include "boost/optional.hpp"
 
 
 class local_environment
@@ -38,6 +39,9 @@ class local_environment
     //! get template search paths specified via environment variables
     const std::list< boost::filesystem::path >& search_paths() const { return(this->template_search); }
 
+    //! get path to config file, if it exists
+    boost::optional< boost::filesystem::path > config_file_path() const;
+
 
     // INTERNAL API
 
@@ -45,6 +49,9 @@ class local_environment
 
     //! detect terminal colour support
     void set_terminal_colour_support();
+
+    //! detect home directory
+    void set_home_directory();
 
     //! detect template search paths
     void set_template_search_paths();
@@ -61,6 +68,11 @@ class local_environment
 
 
     // ENVIRONMENT PATHS
+
+    //! user home directory
+    boost::optional< boost::filesystem::path > home;
+
+    //! template search path
     std::list<boost::filesystem::path> template_search;
 
   };

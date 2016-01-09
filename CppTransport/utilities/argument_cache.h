@@ -9,6 +9,8 @@
 
 #include <list>
 
+#include "local_environment.h"
+
 #include "boost/program_options.hpp"
 #include "boost/filesystem/operations.hpp"
 
@@ -21,7 +23,7 @@ class argument_cache
   public:
 
     //! constructor
-    argument_cache(int argc, const char* argv[]);
+    argument_cache(int argc, const char* argv[], local_environment& env);
 
     //! destructor is default
     ~argument_cache() = default;
