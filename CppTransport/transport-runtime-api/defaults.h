@@ -35,6 +35,9 @@
 
 #define CPPTRANSPORT_DEFAULT_PYTHON_PATH                "/usr/bin/python"
 
+#define CPPTRANSPORT_HOME_ENV                           "HOME"
+#define CPPTRANSPORT_RUNTIME_CONFIG_FILE                ".cpptransport_runtime"
+
 // default storage limit on nodes - 500 Mb
 // on a machine with 8 workers, that would give 4000 Mb or 4 Gb
 // this can be increased (either here, or when creating a

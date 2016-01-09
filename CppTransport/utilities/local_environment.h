@@ -30,11 +30,15 @@ class local_environment
 
     // TERMINAL PROPERTIES
 
+  public:
+
     //! does the terminal support colourized output?
     bool has_colour_terminal_support() const { return(this->colour_terminal); }
 
 
     // ENVIRONMENT PATHS
+
+  public:
 
     //! get template search paths specified via environment variables
     const std::list< boost::filesystem::path >& search_paths() const { return(this->template_search); }

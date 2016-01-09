@@ -575,12 +575,56 @@ namespace transport
         boost::program_options::options_description cmdline_options;
         cmdline_options.add(generic).add(configuration).add(journaling).add(job_options).add(hidden_options);
 
+        boost::program_options::options_description config_file_options;
+        config_file_options.add(configuration).add(journaling).add(job_options).add(hidden_options);
+
         boost::program_options::options_description output_options;
         output_options.add(generic).add(configuration).add(journaling).add(job_options);
 
         boost::program_options::variables_map option_map;
-        boost::program_options::store(boost::program_options::parse_command_line(argc, argv, cmdline_options), option_map);
+
+        // parse options from configuration file
+        boost::optional< boost::filesystem::path > config_path = this->local_env.config_file_path();
+        if(config_path)
+          {
+            if(boost::filesystem::exists(*config_path) && boost::filesystem::is_regular_file(*config_path))
+              {
+                std::ifstream instream((*config_path).string());
+                if(instream)
+                  {
+                    // parse contents of file; 'true' means allow unregistered options
+                    boost::program_options::parsed_options file_parsed = boost::program_options::parse_config_file(instream, config_file_options, true);
+                    boost::program_options::store(file_parsed, option_map);
+                    boost::program_options::notify(option_map);
+
+                    std::vector<std::string> unrecognized_config_options = boost::program_options::collect_unrecognized(file_parsed.options, boost::program_options::exclude_positional);
+                    if(unrecognized_config_options.size() > 0)
+                      {
+                        for(const std::string& option : unrecognized_config_options)
+                          {
+                            std::ostringstream msg;
+                            msg << CPPTRANSPORT_UNKNOWN_SWITCH << " '" << option << "'";
+                            this->warning_handler(msg.str());
+                          }
+                      }
+                  }
+              }
+          }
+
+        boost::program_options::parsed_options cmdline_parsed = boost::program_options::command_line_parser(argc, argv).options(cmdline_options).allow_unregistered().run();
+        boost::program_options::store(cmdline_parsed, option_map);
         boost::program_options::notify(option_map);
+
+        std::vector<std::string> unrecognized_cmdline_options = boost::program_options::collect_unrecognized(cmdline_parsed.options, boost::program_options::exclude_positional);
+        if(unrecognized_cmdline_options.size() > 0)
+          {
+            for(const std::string& option : unrecognized_cmdline_options)
+              {
+                std::ostringstream msg;
+                msg << CPPTRANSPORT_UNKNOWN_SWITCH << " '" << option << "'";
+                this->warning_handler(msg.str());
+              }
+          }
 
         bool emitted_version = false;
 

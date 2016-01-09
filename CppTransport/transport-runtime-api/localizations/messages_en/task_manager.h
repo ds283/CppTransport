@@ -47,4 +47,6 @@
 #define CPPTRANSPORT_TASK_MANAGER_LABEL              "Task manager:"
 #define CPPTRANSPORT_TASK_MANAGER_WARNING_LABEL      "Warning:"
 
+#define CPPTRANSPORT_UNKNOWN_SWITCH                  "Ignored unknown command-line switch"
+
 #endif // CPPTRANSPORT_MESSAGES_EN_TASK_MANAGER_H

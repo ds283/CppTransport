@@ -43,6 +43,7 @@ namespace transport
         //! returns exit code provided by system
         int execute_python(const boost::filesystem::path& script) const;
 
+
         // TERMINAL PROPERTIES
 
       public:
@@ -51,9 +52,24 @@ namespace transport
         bool has_colour_terminal_support() const { return(this->colour_output); }
 
 
+        // ENVIRONMENT PATHS
+
+      public:
+
+        //! get path to config file, if it exists
+        boost::optional< boost::filesystem::path > config_file_path() const;
+
+
         // INTERNAL DATA
 
       protected:
+
+
+        // ENVIRONMENT PATHS
+
+        //! user home directory
+        boost::optional< boost::filesystem::path > home;
+
 
         // LOCATION OF EXECUTABLES
 
@@ -73,6 +89,15 @@ namespace transport
       {
         // set up python path
         python_location = find_python();
+
+        // detect home directory
+        char* home_cstr = std::getenv(CPPTRANSPORT_HOME_ENV);
+
+        if(home_cstr != nullptr)
+          {
+            std::string home_path(home_cstr);
+            this->home = boost::filesystem::path(home_path);
+          }
 
         // determine if terminal supports colour output
         char* term_type_cstr = std::getenv("TERM");
@@ -113,6 +138,17 @@ namespace transport
 
         return std::system(command.str().c_str());
       }
+
+
+    boost::optional<boost::filesystem::path> local_environment::config_file_path() const
+      {
+        if(!this->home) return boost::optional<boost::filesystem::path>();
+
+        boost::filesystem::path config_path = *this->home;
+
+        return config_path / CPPTRANSPORT_RUNTIME_CONFIG_FILE;
+      }
+
 
 
   }   // namespace transport
