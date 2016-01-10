@@ -4,11 +4,11 @@
 //
 
 
-
 #ifndef CPPTRANSPORT_LEXICAL_H
 #define CPPTRANSPORT_LEXICAL_H
 
 #include <string>
+
 
 enum class keyword_type
   {
@@ -27,6 +27,7 @@ enum class keyword_type
     f_beta, f_psi, f_factorial, f_binomial
   };
 
+
 enum class character_type
   {
       open_brace, close_brace, open_bracket, close_bracket,
@@ -34,6 +35,34 @@ enum class character_type
       equals, plus, binary_minus, unary_minus, star, backslash, foreslash, tilde,
       ampersand, circumflex, ampersat, ellipsis, rightarrow
   };
+
+
+namespace std
+  {
+
+    // allow hashing of these enums
+    template<> struct hash<keyword_type>
+      {
+
+        size_t operator()(const keyword_type& t) const
+          {
+            return static_cast< std::underlying_type<keyword_type>::type >(t);
+          }
+
+      };
+
+
+    template<> struct hash<character_type>
+      {
+
+        size_t operator()(const character_type& t) const
+          {
+            return static_cast< std::underlying_type<character_type>::type >(t);
+          }
+
+      };
+
+  }
 
 
 #endif //CPPTRANSPORT_LEXICAL_H
