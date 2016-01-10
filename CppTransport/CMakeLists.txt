@@ -16,7 +16,7 @@ SET(CMAKE_C_FLAGS_RELEASE "-mavx -Ofast")
 
 
 # find Bison to produce parser
-FIND_PACKAGE(Bison 3.0 REQUIRED)
+FIND_PACKAGE(BISON 3.0 REQUIRED)
 
 
 # pull in bundled JsonCpp and SPLINTER libraries
