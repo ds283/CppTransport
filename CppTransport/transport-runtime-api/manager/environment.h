@@ -12,6 +12,7 @@
 
 #include "transport-runtime-api/utilities/python_finder.h"
 
+#include "boost/optional.hpp"
 #include "boost/filesystem/operations.hpp"
 
 
@@ -130,7 +131,8 @@ namespace transport
             boost::filesystem::path user_profile = boost::filesystem::path(std::string(user_home)) / boost::filesystem::path(std::string(".profile"));
             if(boost::filesystem::exists(user_profile))
               {
-                command << "source " << user_profile.string() << "; ";
+                // . is the POSIX command for 'source'; 'source' is a csh command which has been imported to other shells
+                command << ". " << user_profile.string() << "; ";
               }
           }
 
