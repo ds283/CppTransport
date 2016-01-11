@@ -2048,7 +2048,7 @@ namespace transport
 
         this->datapipe_attach_container(pipe, ctr_path);
 
-        return(group);
+        return(std::move(group));   // std::move required by GCC 5.2 although standard implies that copy elision should occur
 			}
 
 
@@ -2070,7 +2070,7 @@ namespace transport
 
 		    this->datapipe_attach_container(pipe, ctr_path);
 
-        return(group);
+        return(std::move(group));   // std::move required by GCC 5.2 although standard implies that copy elision should occur
 	    }
 
 

@@ -1144,7 +1144,7 @@ namespace transport
         this->enumerate_content_groups<integration_payload>(name, list, finder);
 
         list.sort(&output_group_helper::comparator<integration_payload>);
-        return(list);
+        return(std::move(list));   // std::move required by GCC 5.2 although standard implies that copy elision should occur
       }
 
 
@@ -1167,13 +1167,13 @@ namespace transport
         this->enumerate_content_groups<postintegration_payload>(name, list, finder);
 
         list.sort(&output_group_helper::comparator<postintegration_payload>);
-        return(list);
+        return(std::move(list));   // std::move required by GCC 5.2 although standard implies that copy elision should occur
       }
 
 
     // Enumerate the output groups available from a named output task
     template <typename number>
-    std::list<std::unique_ptr < output_group_record<output_payload> > >
+    std::list< std::unique_ptr < output_group_record<output_payload> > >
     repository_sqlite3<number>::enumerate_output_task_content(const std::string& name)
       {
         std::unique_ptr< task_record<number>> record(this->query_task(name));
@@ -1190,7 +1190,7 @@ namespace transport
         this->enumerate_content_groups<output_payload>(name, list, finder);
 
         list.sort(&output_group_helper::comparator<output_payload>);
-        return(list);
+        return(std::move(list));   // std::move required by GCC 5.2 although standard implies that copy elision should occur
       }
 
 

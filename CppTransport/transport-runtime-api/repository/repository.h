@@ -1012,7 +1012,7 @@ namespace transport
 
         std::unique_ptr< output_group_record<integration_payload> > rval;
         output.front().swap(rval);
-        return(rval);
+        return(std::move(rval));    // std::move required by GCC 5.2 although standard implies that copy elision should occue
 	    }
 
 
@@ -1038,7 +1038,7 @@ namespace transport
 
         std::unique_ptr< output_group_record<postintegration_payload> > rval;
         output.front().swap(rval);
-        return(rval);
+        return(std::move(rval));    // std::move required by GCC 5.2 although standard implies that copy elision should occur
 	    }
 
 
