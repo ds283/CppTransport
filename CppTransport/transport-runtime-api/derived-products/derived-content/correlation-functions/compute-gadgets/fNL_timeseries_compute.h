@@ -171,7 +171,7 @@ namespace transport
 				    // set up a work list for all threepf k-configurations
             const threepf_kconfig_database& threepf_db = tk->get_threepf_database();
 
-            for(threepf_kconfig_database::const_config_iterator t = threepf_db.config_begin(); t != threepf_db.config_end(); ++t)
+            for(threepf_kconfig_database::const_record_iterator t = threepf_db.record_begin(); t != threepf_db.record_end(); ++t)
               {
 		            work_list.enqueue_item(*t);
               }
