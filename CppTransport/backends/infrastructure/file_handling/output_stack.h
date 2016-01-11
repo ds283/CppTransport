@@ -58,7 +58,10 @@ class output_stack: public filestack_derivation_helper<output_stack>
 
   public:
 
-    virtual ~output_stack() = default;
+    // TODO: intended to be explicitly defaulted, but Intel compiler prior to v16 complains
+    virtual ~output_stack()
+      {
+      }
 
 
 		// INTERFACE - implements a 'filestack' interface

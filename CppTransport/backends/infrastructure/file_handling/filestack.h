@@ -21,7 +21,10 @@ class filestack
 
   public:
 
-    virtual ~filestack() = default;
+    // TODO: intended to be explicitly defaulted, but Intel compiler prior to v16 complains
+    virtual ~filestack()
+      {
+      }
 
 
 		// INTERFACE
