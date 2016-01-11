@@ -45,7 +45,7 @@ namespace transport
             size_t get_memory_required() const { return(this->state_size * this->work_list.size()); }
 
             //! Add a work item on this list
-            void enqueue_item(const ItemType& item) { work_list.push_back(item); }
+            void enqueue_item(const ItemType item) { work_list.push_back(std::move(item)); }
 
             //! Return the number of items sitting in this list
             size_t size() const { return(this->work_list.size()); }
