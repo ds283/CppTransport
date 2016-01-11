@@ -29,7 +29,7 @@ namespace std
     template<> struct equal_to<abstract_index>
       {
 
-        constexpr bool operator()(const abstract_index& lhs, const abstract_index& rhs) const
+        bool operator()(const abstract_index& lhs, const abstract_index& rhs) const
           {
             return (lhs.get_label() == rhs.get_label()) && (lhs.get_class() == rhs.get_class());
           }
