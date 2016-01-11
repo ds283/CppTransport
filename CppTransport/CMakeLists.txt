@@ -162,7 +162,7 @@ ADD_SUBDIRECTORY(test-target EXCLUDE_FROM_ALL)
 INSTALL(TARGETS CppTransport DESTINATION bin)
 INSTALL(DIRECTORY cpptransport-templates DESTINATION share)
 INSTALL(DIRECTORY transport-runtime-api DESTINATION include)
-INSTALL(FILES cmake/FindCppTransport.cmake DESTINATION share/cmake/Modules)
+INSTALL(FILES cmake/FindCppTransport.cmake DESTINATION share/cmake)
 
 
 ## FILL IN DUMMY TARGETS FOR CLION
