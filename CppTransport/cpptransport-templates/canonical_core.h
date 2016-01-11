@@ -449,7 +449,7 @@ namespace transport
         else
           {
             std::ostringstream msg;
-            msg << CPPTRANSPORT_WRONG_ICS_A << __coords.size() << CPPTRANSPORT_WRONG_ICS_B << 2*$NUMBER_FIELDS << ")";
+            msg << CPPTRANSPORT_WRONG_ICS_A << __coords.size() << CPPTRANSPORT_WRONG_ICS_B << 2*$NUMBER_FIELDS << "]";
             throw std::out_of_range(msg.str());
           }
       }
@@ -474,7 +474,7 @@ namespace transport
         else
           {
             std::ostringstream msg;
-            msg << CPPTRANSPORT_WRONG_ICS_A << __coords.size() << CPPTRANSPORT_WRONG_ICS_B << 2*$NUMBER_FIELDS << ")";
+            msg << CPPTRANSPORT_WRONG_ICS_A << __coords.size() << CPPTRANSPORT_WRONG_ICS_B << 2*$NUMBER_FIELDS << "]";
             throw std::out_of_range(msg.str());
           }
       }
@@ -501,7 +501,7 @@ namespace transport
         else
           {
             std::ostringstream msg;
-            msg << CPPTRANSPORT_WRONG_ICS_A << __coords.size() << CPPTRANSPORT_WRONG_ICS_B << 2*$NUMBER_FIELDS << ")";
+            msg << CPPTRANSPORT_WRONG_ICS_A << __coords.size() << CPPTRANSPORT_WRONG_ICS_B << 2*$NUMBER_FIELDS << "]";
             throw std::out_of_range(msg.str());
           }
       }
@@ -577,7 +577,7 @@ namespace transport
           {
             std::ostringstream msg;
 
-            msg << CPPTRANSPORT_WRONG_ICS_A << __input.size() << "]"
+            msg << CPPTRANSPORT_WRONG_ICS_A << __input.size()
                 << CPPTRANSPORT_WRONG_ICS_B << $NUMBER_FIELDS
                 << CPPTRANSPORT_WRONG_ICS_C << 2*$NUMBER_FIELDS << "]";
 
