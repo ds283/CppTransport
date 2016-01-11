@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __time_config_database_H_
-#define __time_config_database_H_
+#ifndef CPPTRANSPORT_TIME_CONFIG_DATABASE_H
+#define CPPTRANSPORT_TIME_CONFIG_DATABASE_H
 
 
 #include <functional>
@@ -263,7 +263,26 @@ namespace transport
 			}
 
 
+      // allow random-access notation for time_config const_value_iterators, which is required by older versions
+      // of BOOST odeint-v2 in integrate_times()
+      // TODO: preferable to remove this when a future opportunity arises
+
+
+    time_config_database::const_value_iterator operator-(const time_config_database::const_value_iterator &lhs, unsigned int rhs)
+      {
+        time_config_database::const_value_iterator temp = lhs;
+
+        while(rhs > 0)
+          {
+            --temp;
+            --rhs;
+          }
+
+        return temp;
+      }
+
+
   }   // namespace transport
 
 
-#endif //__time_config_database_H_
+#endif //CPPTRANSPORT_TIME_CONFIG_DATABASE_H
