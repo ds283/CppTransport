@@ -1,6 +1,6 @@
 //
 // Created by David Seery on 31/03/2015.
-// Copyright (c) 2014-15 University of Sussex. All rights reserved.
+// Copyright (c) 2014-2016 University of Sussex. All rights reserved.
 //
 
 

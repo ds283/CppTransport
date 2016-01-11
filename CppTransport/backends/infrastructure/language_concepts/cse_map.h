@@ -1,6 +1,6 @@
 //
 // Created by David Seery on 14/12/2015.
-// Copyright (c) 2013-15 University of Sussex. All rights reserved.
+// Copyright (c) 2013-2016 University of Sussex. All rights reserved.
 //
 
 #ifndef CPPTRANSPORT_CSE_MAP_H

@@ -1,6 +1,6 @@
 //
 // Created by David Seery on 18/12/2015.
-// Copyright (c) 2013-15 University of Sussex. All rights reserved.
+// Copyright (c) 2013-2016 University of Sussex. All rights reserved.
 //
 
 #ifndef CPPTRANSPORT_MAKE_U_TENSOR_FACTORY_H
