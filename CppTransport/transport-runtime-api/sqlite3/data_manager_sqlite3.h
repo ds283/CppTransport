@@ -197,6 +197,7 @@ namespace transport
 
 
         // INTEGRITY CHECK HANDLERS
+
       protected:
 
         // CALCULATE MISSING SERIAL NUMBERS
