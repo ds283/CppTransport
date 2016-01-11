@@ -1,6 +1,6 @@
 //
 // Created by David Seery on 05/12/2013.
-// Copyright (c) 2013-15 University of Sussex. All rights reserved.
+// Copyright (c) 2013-2016 University of Sussex. All rights reserved.
 //
 
 
@@ -51,7 +51,7 @@ namespace cpp
         //  ** If stepper is a Controlled Stepper then dt is the initial step size. The actual step
         //     size is adjusted during integration according to error control.
         //     However, if a time point from the sequence is approached the step size is
-        //     reduced to obtain the state x(t) exactly at the time point. [runge_kutta_fehlberg78]
+        //     reduced to obtain the state x(t) exactly at the time point. [runge_kutta_cash_karp45, runge_kutta_fehlberg78]
         //  ** If stepper is a Dense Output Stepper then dt is the initial step size. The actual step
         //     size is adjusted during integration according to error control. Dense output is used
         //     to obtain the states x(t) at the time points from the sequence. [runge_kutta_dopri5, bulirsch_stoer]
@@ -71,6 +71,10 @@ namespace cpp
         else if(s.name == "runge_kutta_fehlberg78")
           {
             out << "boost::numeric::odeint::make_controlled< boost::numeric::odeint::runge_kutta_fehlberg78< " << state_name << " > >(" << s.abserr << ", " << s.relerr << ")";
+          }
+        else if(s.name == "runge_kutta_cash_karp45")
+          {
+            out << "boost::numeric::odeint::make_controlled< boost::numeric::odeint::runge_kutta_cash_karp45< " << state_name << " > >(" << s.abserr << ", " << s.relerr << ")";
           }
         else
           {

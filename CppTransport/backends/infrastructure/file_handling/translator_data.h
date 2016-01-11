@@ -1,6 +1,6 @@
 //
 // Created by David Seery on 30/11/2015.
-// Copyright (c) 2013-15 University of Sussex. All rights reserved.
+// Copyright (c) 2013-2016 University of Sussex. All rights reserved.
 //
 
 #ifndef CPPTRANSPORT_TRANSLATOR_DATA_H
