@@ -68,8 +68,8 @@ namespace transport
             bool operator()(unsigned int i, unsigned int j, unsigned int k, double k1, double k2, double k3)
               {
                 // impose ordering k1 > k2 > k3
-                if(j > k) return false;
-                if(k > j) return false;
+                if(i < j) return false;
+                if(j < k) return false;
 
                 // impose triangle
                 double max = std::max(std::max(k1, k2), k3);
