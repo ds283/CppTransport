@@ -15,6 +15,8 @@
 
 #include "transport-runtime-api/derived-products/derived-content/SQL_query/SQL_query.h"
 
+#include "transport-runtime-api/instruments/timing_instrument.h"
+
 #include "boost/log/core.hpp"
 #include "boost/log/trivial.hpp"
 #include "boost/log/expressions.hpp"
@@ -390,9 +392,8 @@ namespace transport
 		    BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::log_severity_level::datapipe_pull) << "** PULL zeta twopf time sample request, k-configuration " << this->kdata.kserial;
 #endif
 
-        this->pipe->database_timer.resume();
+        timing_instrument timer(this->pipe->database_timer);
         this->pipe->pull_timeslice.zeta_twopf(this->pipe, query, this->kdata.serial, sample);
-        this->pipe->database_timer.stop();
 	    }
 
 
@@ -406,9 +407,8 @@ namespace transport
 		    BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::log_severity_level::datapipe_pull) << "** PULL zeta threepf time sample request, type = real, k-configuration " << this->kdata.kserial;
 #endif
 
-        this->pipe->database_timer.resume();
+        timing_instrument timer(this->pipe->database_timer);
         this->pipe->pull_timeslice.zeta_threepf(this->pipe, query, this->kdata.serial, sample);
-        this->pipe->database_timer.stop();
 	    }
 
 
@@ -422,9 +422,8 @@ namespace transport
 		    BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::log_severity_level::datapipe_pull) << "** PULL zeta reduced bispectrum time sample request, type = real, k-configuration " << this->kdata.kserial;
 #endif
 
-        this->pipe->database_timer.resume();
+        timing_instrument timer(this->pipe->database_timer);
         this->pipe->pull_timeslice.zeta_redbsp(this->pipe, query, this->kdata.serial, sample);
-        this->pipe->database_timer.stop();
 	    }
 
 
@@ -438,9 +437,8 @@ namespace transport
 		    BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::log_severity_level::datapipe_pull) << "** PULL zeta twopf kconfig sample request, t-serial " << this->tserial;
 #endif
 
-        this->pipe->database_timer.resume();
+        timing_instrument timer(this->pipe->database_timer);
         this->pipe->pull_kslice.zeta_twopf(this->pipe, query, this->tserial, sample);
-        this->pipe->database_timer.stop();
 	    }
 
 
@@ -454,9 +452,8 @@ namespace transport
 		    BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::log_severity_level::datapipe_pull) << "** PULL zeta threepf kconfig sample request, t-serial " << this->tserial;
 #endif
 
-        this->pipe->database_timer.resume();
+        timing_instrument timer(this->pipe->database_timer);
         this->pipe->pull_kslice.zeta_threepf(this->pipe, query, this->tserial, sample);
-        this->pipe->database_timer.stop();
 	    }
 
 
@@ -470,9 +467,8 @@ namespace transport
 		    BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::log_severity_level::datapipe_pull) << "** PULL zeta reduced bispectrum kconfig sample request, t-serial " << this->tserial;
 #endif
 
-        this->pipe->database_timer.resume();
+        timing_instrument timer(this->pipe->database_timer);
         this->pipe->pull_kslice.zeta_redbsp(this->pipe, query, this->tserial, sample);
-        this->pipe->database_timer.stop();
 	    }
 
 

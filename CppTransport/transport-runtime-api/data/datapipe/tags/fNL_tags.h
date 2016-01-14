@@ -15,6 +15,8 @@
 
 #include "transport-runtime-api/derived-products/derived-content/SQL_query/SQL_query.h"
 
+#include "transport-runtime-api/instruments/timing_instrument.h"
+
 #include "boost/log/core.hpp"
 #include "boost/log/trivial.hpp"
 #include "boost/log/expressions.hpp"
@@ -216,9 +218,8 @@ namespace transport
 		    BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::log_severity_level::datapipe_pull) << "** PULL fNL sample request, template = " << template_type(this->type);
 #endif
 
-        this->pipe->database_timer.resume();
+        timing_instrument timer(this->pipe->database_timer);
         this->pipe->pull_timeslice.fNL(this->pipe, query, sample, this->type);
-        this->pipe->database_timer.stop();
 	    }
 
 
@@ -232,9 +233,8 @@ namespace transport
 		    BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::log_severity_level::datapipe_pull) << "** PULL bispectrum.template sample request, template = " << template_type(this->type);
 #endif
 
-        this->pipe->database_timer.resume();
+        timing_instrument timer(this->pipe->database_timer);
         this->pipe->pull_timeslice.BT(this->pipe, query, sample, this->type);
-        this->pipe->database_timer.stop();
 	    }
 
 
@@ -248,9 +248,8 @@ namespace transport
 		    BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::log_severity_level::datapipe_pull) << "** PULL template.template sample request, template = " << template_type(this->type);
 #endif
 
-        this->pipe->database_timer.resume();
+        timing_instrument timer(this->pipe->database_timer);
         this->pipe->pull_timeslice.BT(this->pipe, query, sample, this->type);
-        this->pipe->database_timer.stop();
 	    }
 
 

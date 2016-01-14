@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __tensor_time_series_H_
-#define __tensor_time_series_H_
+#ifndef CPPTRANSPORT_TENSOR_TIME_SERIES_H
+#define CPPTRANSPORT_TENSOR_TIME_SERIES_H
 
 
 #include <iostream>
@@ -161,10 +161,28 @@ namespace transport
 									        {
 								            cf_time_data_tag<number> tag = pipe.new_cf_time_data_tag(cf_data_type::cf_tensor_twopf, this->gadget.get_model()->tensor_flatten(m, n), t->serial);
 
-								            // it's safe to take a reference here to avoid a copy; we don't need the cache data to survive over multiple calls to lookup_tag()
-								            const std::vector<number>& line_data = t_handle.lookup_tag(tag);
+								            std::vector<number> line_data = t_handle.lookup_tag(tag);
 
-								            data_line<number> line = data_line<number>(group, this->x_type, value_type::correlation_function_value, t_axis, line_data,
+                            value_type value;
+                            if(this->dimensionless)
+                              {
+                                for(unsigned int j = 0; j < line_data.size(); ++j)
+                                  {
+                                    line_data[j] *= 1.0 / (2.0*M_PI*M_PI);
+                                  }
+                                value = value_type::dimensionless_value;
+                              }
+                            else
+                              {
+                                double k_cube = t->k_comoving * t->k_comoving * t->k_comoving;
+                                for(unsigned int j = 0; j < line_data.size(); ++j)
+                                  {
+                                    line_data[j] *= 1.0 / k_cube;
+                                  }
+                                value = value_type::correlation_function_value;
+                              }
+
+								            data_line<number> line = data_line<number>(group, this->x_type, value, t_axis, line_data,
 								                                                       this->get_LaTeX_label(m,n,*t), this->get_non_LaTeX_label(m,n,*t));
 
 								            lines.push_back(line);
@@ -249,4 +267,4 @@ namespace transport
 	}
 
 
-#endif //__tensor_time_series_H_
+#endif //CPPTRANSPORT_TENSOR_TIME_SERIES_H

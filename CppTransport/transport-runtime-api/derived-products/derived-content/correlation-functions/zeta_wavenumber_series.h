@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __zeta_wavenumber_series_H_
-#define __zeta_wavenumber_series_H_
+#ifndef CPPTRANSPORT_ZETA_WAVENUMBER_SERIES_H
+#define CPPTRANSPORT_ZETA_WAVENUMBER_SERIES_H
 
 #include <iostream>
 #include <sstream>
@@ -153,19 +153,31 @@ namespace transport
 				        zeta_twopf_kconfig_data_tag<number> tag = pipe.new_zeta_twopf_kconfig_data_tag(t->serial);
 
                 std::vector<number> line_data = z_handle.lookup_tag(tag);
+                assert(line_data.size() == k_values.size());
 
-                value_type value = value_type::correlation_function_value;
-				        if(this->dimensionless)
-					        {
-						        assert(line_data.size() == k_values.size());
-				            typename std::vector<number>::iterator     l_pos = line_data.begin();
-				            std::vector<twopf_kconfig>::const_iterator k_pos = k_values.begin();
-						        for(; l_pos != line_data.end() && k_pos != k_values.end(); ++l_pos, ++k_pos)
-							        {
-								        *l_pos *= k_pos->k_comoving * k_pos->k_comoving * k_pos->k_comoving / (2.0*M_PI*M_PI);
-							        }
+                value_type value;
+                if(this->dimensionless)
+                  {
+                    typename std::vector<number>::iterator     l_pos = line_data.begin();
+                    std::vector<twopf_kconfig>::const_iterator k_pos = k_values.begin();
+                    for(; l_pos != line_data.end() && k_pos != k_values.end(); ++l_pos, ++k_pos)
+                      {
+                        *l_pos *= 1.0 / (2.0*M_PI*M_PI);
+                      }
                     value = value_type::dimensionless_value;
-					        }
+                  }
+                else
+                  {
+                    typename std::vector<number>::iterator     l_pos = line_data.begin();
+                    std::vector<twopf_kconfig>::const_iterator k_pos = k_values.begin();
+                    for(; l_pos != line_data.end() && k_pos != k_values.end(); ++l_pos, ++k_pos)
+                      {
+                        double k_cube = k_pos->k_comoving * k_pos->k_comoving * k_pos->k_comoving;
+                        *l_pos *=  1.0 / k_cube;
+                      }
+                    value = value_type::correlation_function_value;
+                  }
+
                 data_line<number> line = data_line<number>(group, this->x_type, value, w_axis, line_data,
                                                            this->get_LaTeX_label(t->t), this->get_non_LaTeX_label(t->t), this->is_spectral_index());
                 lines.push_back(line);
@@ -370,17 +382,21 @@ namespace transport
                 std::vector<number> line_data = z_handle.lookup_tag(tag);
 				        assert(line_data.size() == w_axis.size());
 
-                value_type value = value_type::correlation_function_value;
+                value_type value;
                 if(this->dimensionless)
                   {
-                    assert(line_data.size() == k_values.size());
+                    value = value_type::dimensionless_value;
+                  }
+                else
+                  {
                     typename std::vector<number>::iterator       l_pos = line_data.begin();
                     std::vector<threepf_kconfig>::const_iterator k_pos = k_values.begin();
                     for(; l_pos != line_data.end() && k_pos != k_values.end(); ++l_pos, ++k_pos)
                       {
-                        *l_pos *= k_pos->kt_comoving * k_pos->kt_comoving * k_pos->kt_comoving * k_pos->kt_comoving * k_pos->kt_comoving * k_pos->kt_comoving;
+                        double shape = k_pos->k1_comoving*k_pos->k1_comoving * k_pos->k2_comoving*k_pos->k2_comoving * k_pos->k3_comoving*k_pos->k3_comoving;
+                        *l_pos *= 1.0/shape;
                       }
-                    value = value_type::dimensionless_value;
+                    value = value_type::correlation_function_value;
                   }
 
 		            data_line<number> line = data_line<number>(group, this->x_type, value, w_axis, line_data,
@@ -664,4 +680,4 @@ namespace transport
 	}
 
 
-#endif //__zeta_wavenumber_series_H_
+#endif //CPPTRANSPORT_ZETA_WAVENUMBER_SERIES_H

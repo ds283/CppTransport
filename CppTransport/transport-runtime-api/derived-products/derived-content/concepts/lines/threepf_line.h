@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __threepf_line_H_
-#define __threepf_line_H_
+#ifndef CPPTRANSPORT_THREEPF_LINE_H
+#define CPPTRANSPORT_THREEPF_LINE_H
 
 
 #include <iostream>
@@ -142,7 +142,7 @@ namespace transport
             //! use beta on line labels?
             bool use_beta_label;
 
-            //! compute the dimensionless threepf (ie. kt^6 * threepf)
+            //! compute the dimensionless threepf (ie. (k1 k2 k3)^2 * threepf)
             bool dimensionless;
 
 	        };
@@ -194,7 +194,7 @@ namespace transport
 
 		        const std::vector<std::string>& field_names = this->gadget.get_model()->get_f_latex_names();
 
-            if(this->dimensionless) label << CPPTRANSPORT_LATEX_KT_SIX << " ";
+            if(this->dimensionless) label << CPPTRANSPORT_LATEX_SHAPE_FACTOR << " ";
 
             switch(this->get_dot_meaning())
               {
@@ -224,7 +224,7 @@ namespace transport
 
 		        unsigned int N_fields = this->gadget.get_N_fields();
 
-            if(this->dimensionless) label << CPPTRANSPORT_NONLATEX_KT_SIX << " ";
+            if(this->dimensionless) label << CPPTRANSPORT_NONLATEX_SHAPE_FACTOR << " ";
 
 		        const std::vector<std::string>& field_names = this->gadget.get_model()->get_field_names();
 
@@ -276,4 +276,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__threepf_line_H_
+#endif //CPPTRANSPORT_THREEPF_LINE_H

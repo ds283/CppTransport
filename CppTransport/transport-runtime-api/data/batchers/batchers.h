@@ -4,12 +4,12 @@
 //
 
 
-#ifndef __batchers_H_
-#define __batchers_H_
+#ifndef CPPTRANSPORT_BATCHERS_H
+#define CPPTRANSPORT_BATCHERS_H
 
 
 #include "transport-runtime-api/data/batchers/integration_batcher.h"
 #include "transport-runtime-api/data/batchers/postintegration_batcher.h"
 
 
-#endif //__batchers_H_
+#endif //CPPTRANSPORT_BATCHERS_H
