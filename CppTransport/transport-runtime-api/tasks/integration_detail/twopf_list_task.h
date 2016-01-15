@@ -263,6 +263,9 @@ namespace transport
         //! Otherwise, integration begins at the initial conditions time.
         time_config_database build_time_config_database(double N_config_begin) const;
 
+        //! get earliest time which can safely be recorded for all configurations
+        double get_earliest_recordable_time() const;
+
 
         // SERIALIZATION -- implements a 'serializable' interface
 
@@ -517,6 +520,29 @@ namespace transport
       }
 
 
+    template <typename number>
+    double twopf_list_task<number>::get_earliest_recordable_time() const
+      {
+        if(this->fast_forward)
+          {
+            double largest_k = this->twopf_db->get_kmax_conventional();
+            twopf_kconfig_database::record_iterator rec;
+            if(!this->twopf_db->find(largest_k, rec))
+              {
+                std::ostringstream msg;
+                msg << CPPTRANSPORT_TASK_TWOPF_LIST_DATABASE_MISS << " " << largest_k;
+                throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
+              }
+
+            return (*rec)->t_exit - this->ff_efolds;
+          }
+        else
+          {
+            return this->get_N_initial();
+          }
+      }
+
+
 		template <typename number>
 		time_config_database twopf_list_task<number>::build_time_config_database(double N_config_begin) const
 			{
@@ -525,11 +551,7 @@ namespace transport
 
 				// check for fast-forward integration, and push only those sample times which are
 				// guaranteed to be available for all k-configurations into the database
-        double latest_crossing = log(this->twopf_db->get_kmax_conventional());
-
-        double earliest_recordable;
-        if(this->fast_forward) earliest_recordable = this->get_N_horizon_crossing() + latest_crossing - this->ff_efolds;
-        else                   earliest_recordable = this->get_N_initial();
+        double earliest_recordable = this->get_earliest_recordable_time();
 
         double Nbegin = 0.0;
         if(this->fast_forward) Nbegin = N_config_begin;
@@ -581,11 +603,7 @@ namespace transport
 
         // check for fast-forward integration, and push only those sample times which are
         // guaranteed to be available for all k-configurations into the database
-        double latest_crossing = log(this->twopf_db->get_kmax_conventional());
-
-        double earliest_recordable;
-        if(this->fast_forward) earliest_recordable = this->get_N_horizon_crossing() + latest_crossing - this->ff_efolds;
-        else                   earliest_recordable = this->get_N_initial();
+        double earliest_recordable = this->get_earliest_recordable_time();
 
         // get raw time sample points
         const std::vector<double> raw_times = this->times->get_grid();
@@ -635,6 +653,7 @@ namespace transport
 		        // set spline to evaluate aH-k and then solve for N
 		        sp.set_offset(log(t->k_comoving));
 
+            // update database with computed horizon exit time
 		        t->t_exit = task_impl::find_zero_of_spline(sp, tol);
 			    }
 			}

@@ -371,7 +371,7 @@ namespace transport
       public:
 
         $MODEL_mpi_twopf_observer(twopf_batcher<number>& b, const twopf_kconfig_record& c,
-                                       const time_config_database& t)
+                                  const time_config_database& t)
           : twopf_singleconfig_batch_observer<number>(b, c, t,
                                                       $MODEL_pool::backg_size, $MODEL_pool::tensor_size, $MODEL_pool::twopf_size,
                                                       $MODEL_pool::backg_start, $MODEL_pool::tensor_start, $MODEL_pool::twopf_start)
@@ -529,7 +529,7 @@ namespace transport
 
       public:
         $MODEL_mpi_threepf_observer(threepf_batcher<number>& b, const threepf_kconfig_record& c,
-                                         const time_config_database& t)
+                                    const time_config_database& t)
           : threepf_singleconfig_batch_observer<number>(b, c, t,
                                                         $MODEL_pool::backg_size, $MODEL_pool::tensor_size,
                                                         $MODEL_pool::twopf_size, $MODEL_pool::threepf_size,
@@ -587,7 +587,7 @@ namespace transport
     // process work queue for twopf
     template <typename number>
     void $MODEL_mpi<number>::backend_process_queue(work_queue<twopf_kconfig_record>& work, const twopf_list_task<number>* tk,
-                                                        twopf_batcher<number>& batcher, bool silent)
+                                                   twopf_batcher<number>& batcher, bool silent)
       {
         // set batcher to delayed flushing mode so that we have a chance to unwind failed integrations
         batcher.set_flush_mode(generic_batcher::flush_mode::flush_delayed);
@@ -648,7 +648,7 @@ namespace transport
 
     template <typename number>
     void $MODEL_mpi<number>::twopf_kmode(const twopf_kconfig_record& kconfig, const twopf_list_task<number>* tk,
-                                              twopf_batcher<number>& batcher, unsigned int refinement_level)
+                                         twopf_batcher<number>& batcher, unsigned int refinement_level)
       {
         if(refinement_level > tk->get_max_refinements()) throw runtime_exception(exception_type::REFINEMENT_FAILURE, CPPTRANSPORT_REFINEMENT_TOO_DEEP);
 
@@ -717,7 +717,7 @@ namespace transport
     // imaginary - whether to populate using real or imaginary components of the 2pf
     template <typename number>
     void $MODEL_mpi<number>::populate_twopf_ic(twopf_state<number>& x, unsigned int start, double kmode, double Ninit,
-                                                    const twopf_list_task<number>* tk, const std::vector<number>& ics, bool imaginary)
+                                               const twopf_list_task<number>* tk, const std::vector<number>& ics, bool imaginary)
       {
         assert(x.size() >= start);
         assert(x.size() >= start + $MODEL_pool::twopf_size);
@@ -729,7 +729,7 @@ namespace transport
     // make initial conditions for the tensor twopf
     template <typename number>
     void $MODEL_mpi<number>::populate_tensor_ic(twopf_state<number>& x, unsigned int start, double kmode, double Ninit,
-                                                     const twopf_list_task<number>* tk, const std::vector<number>& ics)
+                                                const twopf_list_task<number>* tk, const std::vector<number>& ics)
       {
         assert(x.size() >= start);
         assert(x.size() >= start + $MODEL_pool::tensor_size);
@@ -746,7 +746,7 @@ namespace transport
 
     template <typename number>
     void $MODEL_mpi<number>::backend_process_queue(work_queue<threepf_kconfig_record>& work, const threepf_task<number>* tk,
-                                                        threepf_batcher<number>& batcher, bool silent)
+                                                   threepf_batcher<number>& batcher, bool silent)
       {
         // set batcher to delayed flushing mode so that we have a chance to unwind failed integrations
         batcher.set_flush_mode(generic_batcher::flush_mode::flush_delayed);
@@ -810,7 +810,7 @@ namespace transport
 
     template <typename number>
     void $MODEL_mpi<number>::threepf_kmode(const threepf_kconfig_record& kconfig, const threepf_task<number>* tk,
-                                                threepf_batcher<number>& batcher, unsigned int refinement_level)
+                                           threepf_batcher<number>& batcher, unsigned int refinement_level)
       {
         if(refinement_level > tk->get_max_refinements()) throw runtime_exception(exception_type::REFINEMENT_FAILURE, CPPTRANSPORT_REFINEMENT_TOO_DEEP);
 
@@ -888,8 +888,8 @@ namespace transport
 
     template <typename number>
     void $MODEL_mpi<number>::populate_threepf_ic(threepf_state<number>& x, unsigned int start,
-                                                      const threepf_kconfig& kconfig, double Ninit,
-                                                      const twopf_list_task<number>* tk, const std::vector<number>& ics)
+                                                 const threepf_kconfig& kconfig, double Ninit,
+                                                 const twopf_list_task<number>* tk, const std::vector<number>& ics)
       {
         assert(x.size() >= start);
         assert(x.size() >= start + $MODEL_pool::threepf_size);
