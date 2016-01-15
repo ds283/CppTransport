@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __twopf_line_H_
-#define __twopf_line_H_
+#ifndef CPPTRANSPORT_TWOPF_LINE_H
+#define CPPTRANSPORT_TWOPF_LINE_H
 
 
 #include <iostream>
@@ -288,4 +288,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__twopf_line_H_
+#endif //CPPTRANSPORT_TWOPF_LINE_H

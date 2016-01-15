@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __zeta_time_series_H_
-#define __zeta_time_series_H_
+#ifndef CPPTRANSPORT_ZETA_TIME_SERIES_H
+#define CPPTRANSPORT_ZETA_TIME_SERIES_H
 
 
 #include <iostream>
@@ -152,15 +152,24 @@ namespace transport
 
                 std::vector<number> line_data = z_handle.lookup_tag(tag);
 
-                value_type value = value_type::correlation_function_value;
-		            if(this->dimensionless)
-			            {
-				            for(unsigned int j = 0; j < line_data.size(); ++j)
-					            {
-						            line_data[j] *= t->k_comoving * t->k_comoving * t->k_comoving / (2.0*M_PI*M_PI);
-					            }
+                value_type value;
+                if(this->dimensionless)
+                  {
+                    for(unsigned int j = 0; j < line_data.size(); ++j)
+                      {
+                        line_data[j] *= 1.0 / (2.0*M_PI*M_PI);
+                      }
                     value = value_type::dimensionless_value;
-			            }
+                  }
+                else
+                  {
+                    double k_cube = t->k_comoving * t->k_comoving * t->k_comoving;
+                    for(unsigned int j = 0; j < line_data.size(); ++j)
+                      {
+                        line_data[j] *= 1.0 / k_cube;
+                      }
+                    value = value_type::correlation_function_value;
+                  }
 
                 data_line<number> line = data_line<number>(group, this->x_type, value, t_axis, line_data,
                                                            this->get_LaTeX_label(*t), this->get_non_LaTeX_label(*t));
@@ -359,14 +368,19 @@ namespace transport
                 std::string latex_label = "$" + this->make_LaTeX_label() + "\\;" + this->make_LaTeX_tag(*t, this->use_kt_label, this->use_alpha_label, this->use_beta_label) + "$";
                 std::string nonlatex_label = this->make_non_LaTeX_label() + " " + this->make_non_LaTeX_tag(*t, this->use_kt_label, this->use_alpha_label, this->use_beta_label);
 
-                value_type value = value_type::correlation_function_value;
+                value_type value;
                 if(this->dimensionless)
                   {
+                    value = value_type::dimensionless_value;
+                  }
+                else
+                  {
+                    double shape = t->k1_comoving*t->k1_comoving * t->k2_comoving*t->k2_comoving * t->k3_comoving*t->k3_comoving;
                     for(unsigned int j = 0; j < line_data.size(); ++j)
                       {
-                        line_data[j] *= t->kt_comoving * t->kt_comoving * t->kt_comoving * t->kt_comoving * t->kt_comoving * t->kt_comoving;
+                        line_data[j] *= 1.0/shape;
                       }
-                    value = value_type::dimensionless_value;
+                    value = value_type::correlation_function_value;
                   }
 
                 data_line<number> line = data_line<number>(group, this->x_type, value, t_axis, line_data,
@@ -648,4 +662,4 @@ namespace transport
   }   // namespace transport
 
 
-#endif // __zeta_time_series_H_
+#endif // CPPTRANSPORT_ZETA_TIME_SERIES_H

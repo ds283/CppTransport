@@ -590,6 +590,10 @@ set(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_UTILITIES_FILES
   transport-runtime-api/derived-products/utilities/wrapper.h
   )
 
+set(TRANSPORT_RUNTIME_API_INSTRUMENTS_FILES
+  transport-runtime-api/instruments/timing_instrument.h
+  )
+
 set(TRANSPORT_RUNTIME_API_FILES
   transport-runtime-api/ansi_colour_codes.h
   transport-runtime-api/default_symbols.h
@@ -795,7 +799,9 @@ set(UTILITIES_FILES
   utilities/local_environment.h
   utilities/to_printable.cpp
   utilities/to_printable.h
-  utilities/ginac_print_indexed.cpp utilities/ginac_print_indexed.h)
+  utilities/ginac_print_indexed.cpp
+  utilities/ginac_print_indexed.h
+)
 
 set(SOURCE_FILES
   ${BACKENDS_INFRASTRUCTURE_FILE_HANDLING_FILES}
@@ -845,6 +851,7 @@ set(SOURCE_FILES
   ${TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_LINE_COLLECTIONS_FILES}
   ${TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_UTILITIES_FILES}
   ${TRANSPORT_RUNTIME_API_FILES}
+  ${TRANSPORT_RUNTIME_API_INSTRUMENTS_FILES}
   ${TRANSPORT_RUNTIME_API_LOCALIZATIONS_FILES}
   ${TRANSPORT_RUNTIME_API_LOCALIZATIONS_MESSAGES_EN_DERIVED_PRODUCTS_FILES}
   ${TRANSPORT_RUNTIME_API_LOCALIZATIONS_MESSAGES_EN_FILES}
@@ -864,6 +871,6 @@ set(SOURCE_FILES
   ${TRANSPORT_RUNTIME_API_TASKS_POSTINTEGRATION_DETAIL_FILES}
   ${TRANSPORT_RUNTIME_API_UTILITIES_FILES}
   ${UTILITIES_FILES}
-  )
+)
 
 ADD_EXECUTABLE(dummy_clion_target EXCLUDE_FROM_ALL ${SOURCE_FILES})

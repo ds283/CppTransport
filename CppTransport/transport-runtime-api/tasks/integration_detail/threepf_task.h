@@ -206,8 +206,12 @@ namespace transport
         double kmin = std::min(std::min(config.k1_conventional, config.k2_conventional), config.k3_conventional);
 
         twopf_kconfig_database::record_iterator rec;
-		    bool found = this->twopf_db->find(kmin, rec);
-		    assert(found);
+		    if(!this->twopf_db->find(kmin, rec))
+          {
+            std::ostringstream msg;
+            msg << CPPTRANSPORT_TASK_THREEPF_DATABASE_MISS << " " << kmin;
+            throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
+          }
 
         return((*rec)->t_exit - this->ff_efolds);
       }
@@ -239,8 +243,12 @@ namespace transport
 		            double kmin = std::min(std::min(config.k1_conventional, config.k2_conventional), config.k3_conventional);
 
 		            twopf_kconfig_database::record_iterator rec;
-		            bool found = this->twopf_db->find(kmin, rec);
-		            assert(found);
+                if(!this->twopf_db->find(kmin, rec))
+                  {
+                    std::ostringstream msg;
+                    msg << CPPTRANSPORT_TASK_THREEPF_DATABASE_MISS << " " << kmin;
+                    throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
+                  }
 
 		            time = (*rec)->t_exit;
 		            break;
@@ -303,6 +311,7 @@ namespace transport
 		        // set spline to evaluate aH-k and then solve for N
 		        sp.set_offset(log(t->kt_comoving/3.0));
 
+            // update database record with computed exit time
             t->t_exit = task_impl::find_zero_of_spline(sp, tol);
 			    }
 			}

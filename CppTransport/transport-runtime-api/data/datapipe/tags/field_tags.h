@@ -15,6 +15,8 @@
 
 #include "transport-runtime-api/derived-products/derived-content/SQL_query/SQL_query.h"
 
+#include "transport-runtime-api/instruments/timing_instrument.h"
+
 #include "boost/log/core.hpp"
 #include "boost/log/trivial.hpp"
 #include "boost/log/expressions.hpp"
@@ -364,9 +366,8 @@ namespace transport
 		    BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::log_severity_level::datapipe_pull) << "** PULL background time sample request for element " << this->id;
 #endif
 
-        this->pipe->database_timer.resume();
+        timing_instrument timer(this->pipe->database_timer);
         this->pipe->pull_timeslice.background(this->pipe, this->id, query, sample);
-        this->pipe->database_timer.stop();
 	    }
 
 
@@ -377,7 +378,7 @@ namespace transport
         assert(this->pipe->validate_attached(datapipe<number>::attachment_type::integration_attached));
         if(!this->pipe->validate_attached(datapipe<number>::attachment_type::integration_attached)) throw runtime_exception(exception_type::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
-        this->pipe->database_timer.resume();
+        timing_instrument timer(this->pipe->database_timer);
         switch(this->type)
           {
             case cf_data_type::cf_twopf_re:
@@ -415,7 +416,6 @@ namespace transport
               this->pipe->pull_timeslice.tensor_twopf(this->pipe, this->id, query, this->kserial, sample);
               break;
           }
-        this->pipe->database_timer.stop();
 	    }
 
 
@@ -426,7 +426,7 @@ namespace transport
         assert(this->pipe->validate_attached(datapipe<number>::attachment_type::integration_attached));
         if(!this->pipe->validate_attached(datapipe<number>::attachment_type::integration_attached)) throw runtime_exception(exception_type::DATAPIPE_ERROR, CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
-        this->pipe->database_timer.resume();
+        timing_instrument timer(this->pipe->database_timer);
         switch(this->type)
           {
             case cf_data_type::cf_twopf_re:
@@ -455,6 +455,7 @@ namespace transport
               BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::log_severity_level::datapipe_pull) << "** PULL threepf-Nderiv kconfig sample request for element " << this->id << ", t-serial " << this->tserial;
 #endif
               this->pipe->pull_kslice.threepf(this->pipe, this->id, query, this->tserial, sample, threepf_type::Nderiv);
+              break;
 
             case cf_data_type::cf_tensor_twopf:
 #ifdef CPPTRANSPORT_DEBUG_DATAPIPE
@@ -463,7 +464,6 @@ namespace transport
               this->pipe->pull_kslice.tensor_twopf(this->pipe, this->id, query, this->tserial, sample);
               break;
           }
-        this->pipe->database_timer.stop();
 	    }
 
 

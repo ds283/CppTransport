@@ -602,7 +602,7 @@ namespace transport
           {
             std::ostringstream msg;
 
-            msg << CPPTRANSPORT_WRONG_PARAMS_A << input.size() << CPPTRANSPORT_WRONG_PARAMS_B << $NUMBER_PARAMS << ")";
+            msg << CPPTRANSPORT_WRONG_PARAMS_A << input.size() << CPPTRANSPORT_WRONG_PARAMS_B << $NUMBER_PARAMS << "]";
 
             throw std::out_of_range(msg.str());
           }

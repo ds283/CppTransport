@@ -164,7 +164,7 @@ namespace transport
 				std::string zeta_threepf_line<number>::make_LaTeX_label(void) const
 					{
             std::ostringstream label;
-            if(this->dimensionless) label << CPPTRANSPORT_LATEX_KT_SIX << " ";
+            if(this->dimensionless) label << CPPTRANSPORT_LATEX_SHAPE_FACTOR << " ";
             label << CPPTRANSPORT_LATEX_ZETA_SYMBOL << " " << CPPTRANSPORT_LATEX_ZETA_SYMBOL << " " << CPPTRANSPORT_LATEX_ZETA_SYMBOL;
 
             return(label.str());
@@ -175,7 +175,7 @@ namespace transport
 				std::string zeta_threepf_line<number>::make_non_LaTeX_label(void) const
 					{
             std::ostringstream label;
-            if(this->dimensionless) label << CPPTRANSPORT_NONLATEX_KT_SIX << " ";
+            if(this->dimensionless) label << CPPTRANSPORT_NONLATEX_SHAPE_FACTOR << " ";
             label << CPPTRANSPORT_NONLATEX_ZETA_SYMBOL << " " << CPPTRANSPORT_NONLATEX_ZETA_SYMBOL << " " << CPPTRANSPORT_NONLATEX_ZETA_SYMBOL;
 
             return(label.str());
