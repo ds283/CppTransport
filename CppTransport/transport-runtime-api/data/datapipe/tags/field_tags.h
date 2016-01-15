@@ -455,6 +455,7 @@ namespace transport
               BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::log_severity_level::datapipe_pull) << "** PULL threepf-Nderiv kconfig sample request for element " << this->id << ", t-serial " << this->tserial;
 #endif
               this->pipe->pull_kslice.threepf(this->pipe, this->id, query, this->tserial, sample, threepf_type::Nderiv);
+              break;
 
             case cf_data_type::cf_tensor_twopf:
 #ifdef CPPTRANSPORT_DEBUG_DATAPIPE
