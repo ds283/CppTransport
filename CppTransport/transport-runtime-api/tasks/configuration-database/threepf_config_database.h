@@ -495,7 +495,8 @@ namespace transport
         if(k3_stored) config.k3_serial = (*rec)->serial;
         else          config.k3_serial = twopf_db.add_record(config.k3_conventional);
 
-        if(policy(config))   // policy confirms that this configuration should be retained
+        storage_outcome result = policy(config);
+        if(result == storage_outcome::accept)   // policy confirms that this configuration should be retained
           {
             if(config.kt_conventional > this->kmax_conventional) this->kmax_conventional = config.kt_conventional;
             if(config.kt_conventional < this->kmin_conventional) this->kmin_conventional = config.kt_conventional;
@@ -514,10 +515,14 @@ namespace transport
 
         // policy declined to store this configuration
 
-        // unwind any twopf configurations added
-        if(!k1_stored) twopf_db.delete_record(config.k1_serial);
-        if(!k2_stored) twopf_db.delete_record(config.k2_serial);
-        if(!k3_stored) twopf_db.delete_record(config.k3_serial);
+        if(result == storage_outcome::reject_remove)
+          {
+            // unwind any twopf configurations added
+            if(!k1_stored) twopf_db.delete_record(config.k1_serial);
+            if(!k2_stored) twopf_db.delete_record(config.k2_serial);
+            if(!k3_stored) twopf_db.delete_record(config.k3_serial);
+            twopf_db.rebuild_cache();
+          }
 
         return boost::optional<unsigned int>();
       }

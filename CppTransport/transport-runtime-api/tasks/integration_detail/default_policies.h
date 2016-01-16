@@ -13,6 +13,8 @@
 namespace transport
   {
 
+    enum class storage_outcome { accept, reject_retain, reject_remove };
+
     namespace task_policy_impl
       {
 
@@ -35,9 +37,9 @@ namespace transport
 
           public:
 
-            bool operator()(const threepf_kconfig& data)
+            enum storage_outcome operator()(const threepf_kconfig& data)
               {
-                return(true);
+                return(storage_outcome::accept);
               }
 
           };
