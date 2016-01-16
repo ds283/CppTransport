@@ -111,6 +111,12 @@ namespace transport
         //! Get start time for a threepf configuration
         double get_fast_forward_start(const threepf_kconfig& config) const;
 
+        //! Set fast-forward integration setting
+        virtual void set_fast_forward(bool g) override { this->fast_forward = g; this->validate_subhorizon_efolds(); this->cache_stored_time_config_database(this->threepf_db->get_kmax_2pf_conventional()); }
+
+        //! Set number of fast-forward e-folds
+        virtual void set_fast_forward_efolds(double N) override { this->fast_forward = true; this->ff_efolds = (N >= 0.0 ? N : this->ff_efolds); this->validate_subhorizon_efolds(); this->cache_stored_time_config_database(this->threepf_db->get_kmax_2pf_conventional()); }
+
 
         // SERIALIZATION -- implements a 'serialiazble' interface
 
@@ -168,7 +174,7 @@ namespace transport
         integrable = reader[CPPTRANSPORT_NODE_THREEPF_INTEGRABLE].asBool();
 
         // rebuild database of stored times; this isn't serialized but recomputed on-the-fly
-        this->cache_stored_time_config_database();
+        this->cache_stored_time_config_database(threepf_db->get_kmax_2pf_conventional());
 	    }
 
 
@@ -196,7 +202,7 @@ namespace transport
     template <typename number>
     const time_config_database threepf_task<number>::get_time_config_database(const threepf_kconfig& config) const
       {
-        return(this->build_time_config_database(this->get_fast_forward_start(config)));
+        return this->build_time_config_database(this->get_fast_forward_start(config), this->threepf_db->get_kmax_2pf_conventional());
       }
 
 
@@ -277,14 +283,16 @@ namespace transport
     void threepf_task<number>::compute_horizon_exit_times()
 	    {
 		    double largest_kt = this->threepf_db->get_kmax_comoving()/3.0;
-        double largest_k = this->twopf_db->get_kmax_comoving();
+        double largest_k1 = this->threepf_db->get_kmax_2pf_comoving();
+        double largest_k2 = this->twopf_db->get_kmax_comoving();
 
         std::vector<double> N;
         std::vector<number> log_aH;
 
         try
           {
-            this->get_model()->compute_aH(this, N, log_aH, std::max(largest_k, largest_kt));
+            double maxk = std::max(std::max(largest_kt, largest_k1), largest_k2);
+            this->get_model()->compute_aH(this, N, log_aH, maxk);
             assert(N.size() == log_aH.size());
 
             spline1d<number> sp(N, log_aH);
@@ -309,7 +317,7 @@ namespace transport
 		    for(threepf_kconfig_database::config_iterator t = this->threepf_db->config_begin(); t != this->threepf_db->config_end(); ++t)
 			    {
 		        // set spline to evaluate aH-k and then solve for N
-		        sp.set_offset(log(t->kt_comoving/3.0));
+		        sp.set_offset(std::log(t->kt_comoving/3.0));
 
             // update database record with computed exit time
             t->t_exit = task_impl::find_zero_of_spline(sp, tol);
@@ -412,7 +420,7 @@ namespace transport
 
 		    // write_time_details() should come *after* compute_horizon_exit_times();
         this->write_time_details();
-        this->cache_stored_time_config_database();
+        this->cache_stored_time_config_database(this->threepf_db->get_kmax_2pf_conventional());
 	    }
 
 
@@ -537,7 +545,7 @@ namespace transport
 
 		    // write_time_details() should come *after* compute_horizon_exit_times();
         this->write_time_details();
-        this->cache_stored_time_config_database();
+        this->cache_stored_time_config_database(this->threepf_db->get_kmax_2pf_conventional());
 	    }
 
 

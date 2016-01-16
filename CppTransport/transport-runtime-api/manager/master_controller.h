@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __master_controller_H_
-#define __master_controller_H_
+#ifndef CPPTRANSPORT_MASTER_CONTROLLER_H
+#define CPPTRANSPORT_MASTER_CONTROLLER_H
 
 
 #include <list>
@@ -2282,4 +2282,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__master_controller_H_
+#endif //CPPTRANSPORT_MASTER_CONTROLLER_H

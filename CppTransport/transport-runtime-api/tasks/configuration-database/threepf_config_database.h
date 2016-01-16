@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __threepf_config_database_H_
-#define __threepf_config_database_H_
+#ifndef CPPTRANSPORT_THREEPF_CONFIG_DATABASE_H
+#define CPPTRANSPORT_THREEPF_CONFIG_DATABASE_H
 
 
 #include <map>
@@ -14,6 +14,7 @@
 
 #include "transport-runtime-api/serialization/serializable.h"
 #include "transport-runtime-api/tasks/task_configurations.h"
+#include "transport-runtime-api/tasks/integration_detail/default_policies.h"
 #include "transport-runtime-api/tasks/configuration-database/twopf_config_database.h"
 
 #include "transport-runtime-api/tasks/configuration-database/generic_record_iterator.h"
@@ -245,13 +246,29 @@ namespace transport
 
       public:
 
-        //! get largest conventionally-normalized k-number committed to the database
-        double get_kmax_conventional() const { return(this->kmax_conventional); }
-        double get_kmax_comoving()     const { return(this->kmax_comoving); }
+        //! get largest conventionally-normalized k_t committed to the database
+        double get_kmax_conventional() const { return(this->ktmax_conventional); }
 
-        //! get smallest conventionally-normalized k-number committed to the database
-        double get_kmin_conventional() const { return(this->kmin_conventional); }
-        double get_kmin_comoving()     const { return(this->kmax_comoving); }
+        //! get largest comoving k_t committed to the database
+        double get_kmax_comoving() const { return(this->ktmax_comoving); }
+
+        //! get smallest conventionally-normalized k_t committed to the database
+        double get_kmin_conventional() const { return(this->ktmin_conventional); }
+
+        //! get smallest comoving k_t committed to the database
+        double get_kmin_comoving() const { return(this->ktmin_comoving); }
+
+        //! get largest conventionally-normalized 2pf wavenumber used by a record in the database
+        double get_kmax_2pf_conventional() const { return(this->kmax_2pf_conventional); }
+
+        //! get largest comoving 2pf wavenumber used by a record in the database
+        double get_kmax_2pf_comoving() const { return(this->kmax_2pf_comoving); }
+
+        //! get smallest conventionally-normalized 2pf wavenumber used by a record in the database
+        double get_kmin_2pf_conventional() const { return(this->kmin_2pf_conventional); }
+
+        //! get smallest comoving 2pf wavenumber used by a record in the database
+        double get_kmin_2pf_comoving() const { return(this->kmin_2pf_comoving); }
 
 
         // SERIALIZATION -- implements a 'serializable' interface
@@ -291,23 +308,37 @@ namespace transport
 
 				// META-INFORMATION
 
-		    //! cache maximum stored wavenumber
-		    double kmax_conventional;
-		    double kmax_comoving;
+		    //! cache maximum stored k_t wavenumber
+		    double ktmax_conventional;
+		    double ktmax_comoving;
 
-		    //! cache minimum stored wavenumber
-		    double kmin_conventional;
-		    double kmin_comoving;
+		    //! cache minimum stored k_t wavenumber
+		    double ktmin_conventional;
+		    double ktmin_comoving;
+
+
+        //! cache maximum 2pf wavenumber
+        double kmax_2pf_conventional;
+        double kmax_2pf_comoving;
+
+        //! cache minimum 2pf wavenumber
+        double kmin_2pf_conventional;
+        double kmin_2pf_comoving;
+
       };
 
 
     threepf_kconfig_database::threepf_kconfig_database(double cn)
       : comoving_normalization(cn),
         serial(0),
-        kmax_conventional(-std::numeric_limits<double>::max()),
-        kmin_conventional(std::numeric_limits<double>::max()),
-        kmax_comoving(-std::numeric_limits<double>::max()),
-        kmin_comoving(std::numeric_limits<double>::max()),
+        ktmax_conventional(-std::numeric_limits<double>::max()),
+        ktmin_conventional(std::numeric_limits<double>::max()),
+        ktmax_comoving(-std::numeric_limits<double>::max()),
+        ktmin_comoving(std::numeric_limits<double>::max()),
+        kmax_2pf_conventional(-std::numeric_limits<double>::max()),
+        kmin_2pf_conventional(std::numeric_limits<double>::max()),
+        kmax_2pf_comoving(-std::numeric_limits<double>::max()),
+        kmin_2pf_comoving(std::numeric_limits<double>::max()),
         store_background(true),
         modified(true)
       {
@@ -317,10 +348,14 @@ namespace transport
     threepf_kconfig_database::threepf_kconfig_database(double cn, sqlite3* handle, twopf_kconfig_database& twopf_db)
       : comoving_normalization(cn),
         serial(0),
-        kmax_conventional(-std::numeric_limits<double>::max()),
-        kmin_conventional(std::numeric_limits<double>::max()),
-        kmax_comoving(-std::numeric_limits<double>::max()),
-        kmin_comoving(std::numeric_limits<double>::max()),
+        ktmax_conventional(-std::numeric_limits<double>::max()),
+        ktmin_conventional(std::numeric_limits<double>::max()),
+        ktmax_comoving(-std::numeric_limits<double>::max()),
+        ktmin_comoving(std::numeric_limits<double>::max()),
+        kmax_2pf_conventional(-std::numeric_limits<double>::max()),
+        kmin_2pf_conventional(std::numeric_limits<double>::max()),
+        kmax_2pf_comoving(-std::numeric_limits<double>::max()),
+        kmin_2pf_comoving(std::numeric_limits<double>::max()),
         store_background(false),
         modified(false)
       {
@@ -379,16 +414,27 @@ namespace transport
 		            config.k3_conventional = (*k3)->k_conventional;
 		            config.k3_comoving     = (*k3)->k_comoving;
 
-		            if(config.serial+1 > serial)                         this->serial            = config.serial+1;
-		            if(config.kt_conventional > this->kmax_conventional) this->kmax_conventional = config.kt_conventional;
-		            if(config.kt_conventional < this->kmin_conventional) this->kmin_conventional = config.kt_conventional;
-		            if(config.kt_comoving > this->kmax_comoving)         this->kmax_comoving     = config.kt_comoving;
-		            if(config.kt_comoving < this->kmin_comoving)         this->kmin_comoving     = config.kt_comoving;
+		            if(config.serial+1 > serial)                             this->serial             = config.serial+1;
+		            if(config.kt_conventional > this->ktmax_conventional)    this->ktmax_conventional = config.kt_conventional;
+		            if(config.kt_conventional < this->ktmin_conventional)    this->ktmin_conventional = config.kt_conventional;
+		            if(config.kt_comoving > this->ktmax_comoving)            this->ktmax_comoving     = config.kt_comoving;
+		            if(config.kt_comoving < this->ktmin_comoving)            this->ktmin_comoving     = config.kt_comoving;
+
+                double k_max_conventional = std::max(std::max(config.k1_conventional, config.k2_conventional), config.k3_conventional);
+                double k_min_conventional = std::min(std::min(config.k1_conventional, config.k2_conventional), config.k3_conventional);
+                double k_max_comoving     = std::max(std::max(config.k1_comoving, config.k2_comoving), config.k3_comoving);
+                double k_min_comoving     = std::min(std::min(config.k1_comoving, config.k2_comoving), config.k3_comoving);
+
+                if(k_max_conventional > this->kmax_2pf_conventional) this->kmax_2pf_conventional = k_max_conventional;
+                if(k_min_conventional < this->kmin_2pf_conventional) this->kmin_2pf_conventional = k_min_conventional;
+                if(k_max_comoving > this->kmax_2pf_comoving)         this->kmax_2pf_comoving     = k_max_comoving;
+                if(k_min_comoving < this->kmin_2pf_comoving)         this->kmin_2pf_comoving     = k_min_comoving;
 
 		            bool store_bg = (sqlite3_column_int(stmt, 9) > 0);
 		            bool store_k1 = (sqlite3_column_int(stmt, 10) > 0);
 		            bool store_k2 = (sqlite3_column_int(stmt, 11) > 0);
 		            bool store_k3 = (sqlite3_column_int(stmt, 12) > 0);
+
 		            this->database.emplace(config.serial, threepf_kconfig_record(config, store_bg, store_k1, store_k2, store_k3));
 	            }
             else
@@ -422,20 +468,20 @@ namespace transport
         config.serial = 0;
         config.k1_serial = config.k2_serial = config.k3_serial = 0;
 
-        config.k1_conventional  = k1_conventional;
-        config.k2_conventional  = k2_conventional;
-        config.k3_conventional  = k3_conventional;
+        config.k1_conventional = k1_conventional;
+        config.k2_conventional = k2_conventional;
+        config.k3_conventional = k3_conventional;
 
-        config.k1_comoving      = k1_conventional * this->comoving_normalization;
-        config.k2_comoving      = k2_conventional * this->comoving_normalization;
-        config.k3_comoving      = k3_conventional * this->comoving_normalization;
+        config.k1_comoving     = k1_conventional * this->comoving_normalization;
+        config.k2_comoving     = k2_conventional * this->comoving_normalization;
+        config.k3_comoving     = k3_conventional * this->comoving_normalization;
 
-        config.kt_conventional  = k1_conventional + k2_conventional + k3_conventional;
-        config.kt_comoving = config.kt_conventional * this->comoving_normalization;
-        config.beta             = 1.0 - 2.0 * k3_conventional / config.kt_conventional;
-        config.alpha            = 4.0 * k2_conventional / config.kt_conventional - 1.0 - config.beta;
+        config.kt_conventional = k1_conventional + k2_conventional + k3_conventional;
+        config.kt_comoving     = config.kt_conventional * this->comoving_normalization;
+        config.beta            = 1.0 - 2.0 * k3_conventional / config.kt_conventional;
+        config.alpha           = 4.0 * k2_conventional / config.kt_conventional - 1.0 - config.beta;
 
-        config.t_exit           = 0.0; // this will be updated later, once all k-configurations are known
+        config.t_exit          = 0.0; // this will be updated later, once all k-configurations are known
 
         return(this->add_record(twopf_db, config, policy));
       }
@@ -455,16 +501,16 @@ namespace transport
         config.alpha           = alpha;
         config.beta            = beta;
 
-        config.k1_conventional  = (kt_conventional / 4.0) * (1.0 + alpha + beta);
-        config.k1_comoving      = config.k1_conventional * this->comoving_normalization;
+        config.k1_conventional = (kt_conventional / 4.0) * (1.0 + alpha + beta);
+        config.k1_comoving     = config.k1_conventional * this->comoving_normalization;
 
-        config.k2_conventional  = (kt_conventional / 4.0) * (1.0 - alpha + beta);
-        config.k2_comoving      = config.k2_conventional * this->comoving_normalization;
+        config.k2_conventional = (kt_conventional / 4.0) * (1.0 - alpha + beta);
+        config.k2_comoving     = config.k2_conventional * this->comoving_normalization;
 
-        config.k3_conventional  = (kt_conventional / 2.0) * (1.0 - beta);
-        config.k3_comoving      = config.k3_conventional * this->comoving_normalization;
+        config.k3_conventional = (kt_conventional / 2.0) * (1.0 - beta);
+        config.k3_comoving     = config.k3_conventional * this->comoving_normalization;
 
-		    config.t_exit           = 0.0; // this will be updated later, once all k-configurations are known
+		    config.t_exit          = 0.0; // this will be updated later, once all k-configurations are known
 
         return(this->add_record(twopf_db, config, policy));
       }
@@ -498,14 +544,24 @@ namespace transport
         storage_outcome result = policy(config);
         if(result == storage_outcome::accept)   // policy confirms that this configuration should be retained
           {
-            if(config.kt_conventional > this->kmax_conventional) this->kmax_conventional = config.kt_conventional;
-            if(config.kt_conventional < this->kmin_conventional) this->kmin_conventional = config.kt_conventional;
-            if(config.kt_comoving > this->kmax_comoving) this->kmax_comoving = config.kt_comoving;
-            if(config.kt_comoving < this->kmin_comoving) this->kmin_comoving = config.kt_comoving;
+            if(config.kt_conventional > this->ktmax_conventional) this->ktmax_conventional = config.kt_conventional;
+            if(config.kt_conventional < this->ktmin_conventional) this->ktmin_conventional = config.kt_conventional;
+            if(config.kt_comoving > this->ktmax_comoving) this->ktmax_comoving = config.kt_comoving;
+            if(config.kt_comoving < this->ktmin_comoving) this->ktmin_comoving = config.kt_comoving;
+
+            double k_max_conventional = std::max(std::max(config.k1_conventional, config.k2_conventional), config.k3_conventional);
+            double k_min_conventional = std::min(std::min(config.k1_conventional, config.k2_conventional), config.k3_conventional);
+            double k_max_comoving     = std::max(std::max(config.k1_comoving, config.k2_comoving), config.k3_comoving);
+            double k_min_comoving     = std::min(std::min(config.k1_comoving, config.k2_comoving), config.k3_comoving);
+
+            if(k_max_conventional > this->kmax_2pf_conventional) this->kmax_2pf_conventional = k_max_conventional;
+            if(k_min_conventional < this->kmin_2pf_conventional) this->kmin_2pf_conventional = k_min_conventional;
+            if(k_max_comoving > this->kmax_2pf_comoving)         this->kmax_2pf_comoving     = k_max_comoving;
+            if(k_min_comoving < this->kmin_2pf_comoving)         this->kmin_2pf_comoving     = k_min_comoving;
 
             this->database.emplace(config.serial,
-                                   threepf_kconfig_record(config, this->store_background, !k1_stored, !k2_stored,
-                                                          !k3_stored));
+                                   threepf_kconfig_record(config, this->store_background,
+                                                          !k1_stored, !k2_stored, !k3_stored));
             this->store_background = false;
 
             this->modified = true;
@@ -609,4 +665,4 @@ namespace transport
   }   // namespace transport
 
 
-#endif //__threepf_config_database_H_
+#endif //CPPTRANSPORT_THREEPF_CONFIG_DATABASE_H

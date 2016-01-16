@@ -74,7 +74,7 @@ namespace transport
 
 		    // write_time_details() should come *after* compute_horizon_exit_times();
         this->write_time_details();
-        this->cache_stored_time_config_database();
+        this->cache_stored_time_config_database(this->twopf_db->get_kmax_conventional());
 	    }
 
 
@@ -84,7 +84,7 @@ namespace transport
 	    : twopf_list_task<number>(nm, reader, handle, i)
 	    {
 		    // rebuild database of stored times; this isn't serialized but recomputed on-the-fly
-        this->cache_stored_time_config_database();
+        this->cache_stored_time_config_database(this->twopf_db->get_kmax_conventional());
 	    }
 
 

@@ -122,7 +122,7 @@ namespace transport
         time_config_database build_time_config_database() const;
 
         //! build and cache stored time database -- only includes records for times which are committed to the database
-        virtual void cache_stored_time_config_database();
+        virtual void cache_stored_time_config_database(double largest_conventional_k);
 
 
 		    // K-CONFIGURATION DATABASE
@@ -340,7 +340,7 @@ namespace transport
 
 
     template <typename number>
-    void integration_task<number>::cache_stored_time_config_database()
+    void integration_task<number>::cache_stored_time_config_database(double largest_conventional_k)
       {
         // empty database and start again
         this->stored_time_db = build_time_config_database();

@@ -1367,7 +1367,7 @@ namespace transport
             N_range   = tk->get_N_end_of_inflation();
             found_end = true;
           }
-        catch (end_of_inflation_not_found& xe)
+        catch(end_of_inflation_not_found& xe)
           {
             // try to fall back on a sensible default
             N_range = tk->get_N_initial() + CPPTRANSPORT_DEFAULT_END_OF_INFLATION_SEARCH;
