@@ -384,9 +384,9 @@ namespace transport
         // we insist on ordering, so i <= j <= k
         for(unsigned int j = 0; j < ks.size(); ++j)
 	        {
-            for(unsigned int k = 0; k <= j; ++k)
+            for(unsigned int k = 0; k < ks.size(); ++k)
 	            {
-                for(unsigned int l = 0; l <= k; ++l)
+                for(unsigned int l = 0; l < ks.size(); ++l)
 	                {
                     if(triangle(j, k, l, ks[j], ks[k], ks[l]))      // ask policy object whether this is a triangle
 	                    {
