@@ -11,8 +11,40 @@ SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/splinter/cmake/")
 
 
-SET(CMAKE_CXX_FLAGS_RELEASE "-mavx -Ofast -DNDEBUG")
-SET(CMAKE_C_FLAGS_RELEASE "-mavx -Ofast")
+# Attempt some platform/compiler introspection
+STRING(COMPARE EQUAL "Linux" ${CMAKE_SYSTEM_NAME} LINUX)
+STRING(COMPARE EQUAL "Windows" ${CMAKE_SYSTEM_NAME} WINDOWS)
+STRING(COMPARE EQUAL "Darwin" ${CMAKE_SYSTEM_NAME} OS_X)
+
+IF(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+  SET(CLANG TRUE)
+ELSEIF(CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
+  SET(CLANG TRUE)
+ELSEIF(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  SET(GCC TRUE)
+ELSEIF(CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
+  SET(INTEL TRUE)
+ELSEIF(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+  SET(MSVC TRUE)
+ENDIF()
+
+
+IF(CLANG)
+
+  SET(CMAKE_CXX_FLAGS_RELEASE "-Ofast -DNDEBUG")
+  SET(CMAKE_C_FLAGS_RELEASE "-Ofast")
+
+ELSEIF(GCC)
+
+  SET(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
+  SET(CMAKE_C_FLAGS_RELEASE "-O3")
+
+ELSEIF(INTEL)
+
+  SET(CMAKE_CXX_FLAGS_RELEASE "-Ofast -DNDEBUG")
+  SET(CMAKE_C_FLAGS_RELEASE "-Ofast")
+
+ENDIF()
 
 
 # find Bison to produce parser
@@ -120,7 +152,7 @@ ADD_EXECUTABLE(CppTransport
   utilities/to_printable.cpp
   utilities/local_environment.cpp
   utilities/argument_cache.cpp
-)
+  )
 
 TARGET_LINK_LIBRARIES(CppTransport ${GINAC_LIBRARIES} ${Boost_LIBRARIES})
 TARGET_COMPILE_OPTIONS(CppTransport PRIVATE -std=c++14)
@@ -167,7 +199,7 @@ INSTALL(FILES cmake/FindCppTransport.cmake DESTINATION share/cmake)
 
 ## FILL IN DUMMY TARGETS FOR CLION
 
-set(BACKENDS_INFRASTRUCTURE_FILE_HANDLING_FILES
+SET(BACKENDS_INFRASTRUCTURE_FILE_HANDLING_FILES
   backends/infrastructure/file_handling/backend_data.cpp
   backends/infrastructure/file_handling/backend_data.h
   backends/infrastructure/file_handling/buffer.cpp
@@ -186,7 +218,7 @@ set(BACKENDS_INFRASTRUCTURE_FILE_HANDLING_FILES
   backends/infrastructure/file_handling/translator_data.h
   )
 
-set(BACKENDS_INFRASTRUCTURE_LANGUAGE_CONCEPTS_FILES
+SET(BACKENDS_INFRASTRUCTURE_LANGUAGE_CONCEPTS_FILES
   backends/infrastructure/language_concepts/cse.cpp
   backends/infrastructure/language_concepts/cse.h
   backends/infrastructure/language_concepts/cse_map.cpp
@@ -198,7 +230,7 @@ set(BACKENDS_INFRASTRUCTURE_LANGUAGE_CONCEPTS_FILES
   backends/infrastructure/language_concepts/lambda_manager.cpp
   )
 
-set(BACKENDS_INFRASTRUCTURE_MACRO_SUBSTITUTION_FILES
+SET(BACKENDS_INFRASTRUCTURE_MACRO_SUBSTITUTION_FILES
   backends/infrastructure/macro_substitution/abstract_index.cpp
   backends/infrastructure/macro_substitution/abstract_index.h
   backends/infrastructure/macro_substitution/index_assignment.cpp
@@ -213,7 +245,7 @@ set(BACKENDS_INFRASTRUCTURE_MACRO_SUBSTITUTION_FILES
   backends/infrastructure/macro_substitution/macro_types.h
   )
 
-set(BACKENDS_INFRASTRUCTURE_REPLACEMENT_RULES_FILES
+SET(BACKENDS_INFRASTRUCTURE_REPLACEMENT_RULES_FILES
   backends/infrastructure/replacement_rules/package_group.cpp
   backends/infrastructure/replacement_rules/package_group.h
   backends/infrastructure/replacement_rules/package_group_factory.cpp
@@ -228,21 +260,21 @@ set(BACKENDS_INFRASTRUCTURE_REPLACEMENT_RULES_FILES
   backends/infrastructure/replacement_rules/cse_map_field_indices.h
   )
 
-set(BACKENDS_LANGUAGES_CPP_CORE_FILES
+SET(BACKENDS_LANGUAGES_CPP_CORE_FILES
   backends/languages/cpp/core/cpp_group.cpp
   backends/languages/cpp/core/cpp_group.h
   backends/languages/cpp/core/cpp_steppers.cpp
   backends/languages/cpp/core/cpp_steppers.h
   )
 
-set(BACKENDS_LANGUAGES_CPP_FILES
+SET(BACKENDS_LANGUAGES_CPP_FILES
   backends/languages/cpp/cpp_cse.cpp
   backends/languages/cpp/cpp_cse.h
   backends/languages/cpp/cpp_printer.cpp
   backends/languages/cpp/cpp_printer.h
   )
 
-set(BACKENDS_LANGUAGES_CPP_VEXCL_FILES
+SET(BACKENDS_LANGUAGES_CPP_VEXCL_FILES
   backends/languages/cpp/vexcl/vexcl_group.cpp
   backends/languages/cpp/vexcl/vexcl_group.h
   backends/languages/cpp/vexcl/vexcl_kernels.cpp
@@ -251,28 +283,28 @@ set(BACKENDS_LANGUAGES_CPP_VEXCL_FILES
   backends/languages/cpp/vexcl/vexcl_steppers.h
   )
 
-set(BACKENDS_LANGUAGES_CUDA_FILES
+SET(BACKENDS_LANGUAGES_CUDA_FILES
   backends/languages/cuda/cuda_group.cpp
   backends/languages/cuda/cuda_group.h
   backends/languages/cuda/cuda_printer.cpp
   backends/languages/cuda/cuda_printer.h
   )
 
-set(BACKENDS_LANGUAGES_OPENCL_FILES
+SET(BACKENDS_LANGUAGES_OPENCL_FILES
   backends/languages/opencl/opencl_group.cpp
   backends/languages/opencl/opencl_group.h
   backends/languages/opencl/opencl_printer.cpp
   backends/languages/opencl/opencl_printer.h
   )
 
-set(BACKENDS_LANGUAGES_SHARED_FILES
+SET(BACKENDS_LANGUAGES_SHARED_FILES
   backends/languages/shared/C_style_printer.cpp
   backends/languages/shared/C_style_printer.h
   backends/languages/shared/kernel_argument_macros.cpp
   backends/languages/shared/kernel_argument_macros.h
   )
 
-set(BACKENDS_SHARED_FILES
+SET(BACKENDS_SHARED_FILES
   backends/shared/flow_tensors.cpp
   backends/shared/flow_tensors.h
   backends/shared/fundamental.cpp
@@ -291,21 +323,21 @@ set(BACKENDS_SHARED_FILES
   backends/shared/directives.h
   )
 
-set(CONCEPTS_FILES
+SET(CONCEPTS_FILES
   concepts/model_settings.h
   concepts/stepper.h
   concepts/symbol_list.h
   )
 
-set(INSTRUMENTS_FILES
+SET(INSTRUMENTS_FILES
   instruments/timing_instrument.h
   )
 
-set(PARSER_BISON_FILES
+SET(PARSER_BISON_FILES
   parser/bison/y_parser.yy
   )
 
-set(PARSER_FILES
+SET(PARSER_FILES
   parser/input_stack.cpp
   parser/input_stack.h
   parser/lexeme.h
@@ -324,27 +356,27 @@ set(PARSER_FILES
   parser/y_lexer.h
   )
 
-set(TEMPLATES_FILES
+SET(TEMPLATES_FILES
   cpptransport-templates/canonical_mpi.h
   cpptransport-templates/canonical_core.h
   )
 
-set(TEMPLATES_VEXCL_CUDA_FILES
+SET(TEMPLATES_VEXCL_CUDA_FILES
   cpptransport-templates/vexcl-cuda/threepf.cu
   cpptransport-templates/vexcl-cuda/twopf.cu
   )
 
-set(TEMPLATES_VEXCL_OPENCL_FILES
+SET(TEMPLATES_VEXCL_OPENCL_FILES
   cpptransport-templates/vexcl-opencl/threepf.cl
   cpptransport-templates/vexcl-opencl/twopf.cl
   )
 
-set(TEST_TARGET_FILES
+SET(TEST_TARGET_FILES
   test-target/CMakeLists.txt
   test-target/test_target.cpp
   )
 
-set(TOP_LEVEL_FILES
+SET(TOP_LEVEL_FILES
   CMakeLists.txt
   core.h
   CppTransport.1
@@ -353,7 +385,7 @@ set(TOP_LEVEL_FILES
   switches.h
   )
 
-set(TRANSPORT_OBJECTS_CANONICAL_FILES
+SET(TRANSPORT_OBJECTS_CANONICAL_FILES
   transport-objects/canonical/resources.cpp
   transport-objects/canonical/resources.h
   transport-objects/canonical/Hubble.cpp
@@ -392,7 +424,7 @@ set(TRANSPORT_OBJECTS_CANONICAL_FILES
   transport-objects/canonical/tensor_factory.h
   )
 
-set(TRANSPORT_OBJECTS_CONCEPTS_FILES
+SET(TRANSPORT_OBJECTS_CONCEPTS_FILES
   transport-objects/concepts/transport_tensor.cpp
   transport-objects/concepts/transport_tensor.h
   transport-objects/concepts/Hubble.h
@@ -415,12 +447,12 @@ set(TRANSPORT_OBJECTS_CONCEPTS_FILES
   transport-objects/concepts/tensor_factory.h
   )
 
-set(TRANSPORT_OBJECTS_FILES
+SET(TRANSPORT_OBJECTS_FILES
   transport-objects/resource_manager.cpp
   transport-objects/resource_manager.h
   transport-objects/make_tensor_factory.h)
 
-set(TRANSPORT_OBJECTS_INDICES_FILES
+SET(TRANSPORT_OBJECTS_INDICES_FILES
   transport-objects/indices/indices.cpp
   transport-objects/indices/indices.h
   transport-objects/indices/index_flatten.h
@@ -429,7 +461,7 @@ set(TRANSPORT_OBJECTS_INDICES_FILES
   transport-objects/indices/index_traits.h
   )
 
-set(TRANSPORT_OBJECTS_UTILITIES_FILES
+SET(TRANSPORT_OBJECTS_UTILITIES_FILES
   transport-objects/utilities/expression_cache.h
   transport-objects/utilities/ginac_cache.h
   transport-objects/utilities/shared_resources.cpp
@@ -438,7 +470,7 @@ set(TRANSPORT_OBJECTS_UTILITIES_FILES
   transport-objects/utilities/symbol_factory.h
   )
 
-set(TRANSPORT_RUNTIME_API_CONCEPTS_FILES
+SET(TRANSPORT_RUNTIME_API_CONCEPTS_FILES
   transport-runtime-api/concepts/flattener.h
   transport-runtime-api/concepts/initial_conditions.h
   transport-runtime-api/concepts/initial_conditions_forward_declare.h
@@ -446,7 +478,7 @@ set(TRANSPORT_RUNTIME_API_CONCEPTS_FILES
   transport-runtime-api/concepts/range.h
   )
 
-set(TRANSPORT_RUNTIME_API_CONCEPTS_RANGE_DETAIL_FILES
+SET(TRANSPORT_RUNTIME_API_CONCEPTS_RANGE_DETAIL_FILES
   transport-runtime-api/concepts/range_detail/abstract.h
   transport-runtime-api/concepts/range_detail/aggregation.h
   transport-runtime-api/concepts/range_detail/common.h
@@ -454,7 +486,7 @@ set(TRANSPORT_RUNTIME_API_CONCEPTS_RANGE_DETAIL_FILES
   transport-runtime-api/concepts/range_detail/stepping.h
   )
 
-set(TRANSPORT_RUNTIME_API_DATA_BATCHERS_FILES
+SET(TRANSPORT_RUNTIME_API_DATA_BATCHERS_FILES
   transport-runtime-api/data/batchers/batchers.h
   transport-runtime-api/data/batchers/generic_batcher.h
   transport-runtime-api/data/batchers/integration_batcher.h
@@ -464,7 +496,7 @@ set(TRANSPORT_RUNTIME_API_DATA_BATCHERS_FILES
   transport-runtime-api/data/batchers/postprocess_delegate.h
   )
 
-set(TRANSPORT_RUNTIME_API_DATA_DATAPIPE_FILES
+SET(TRANSPORT_RUNTIME_API_DATA_DATAPIPE_FILES
   transport-runtime-api/data/datapipe/datapipe.h
   transport-runtime-api/data/datapipe/datapipe_detail.h
   transport-runtime-api/data/datapipe/datapipe_forward_declare.h
@@ -473,7 +505,7 @@ set(TRANSPORT_RUNTIME_API_DATA_DATAPIPE_FILES
   transport-runtime-api/data/datapipe/tags_forward_declare.h
   )
 
-set(TRANSPORT_RUNTIME_API_DATA_DATAPIPE_TAGS_FILES
+SET(TRANSPORT_RUNTIME_API_DATA_DATAPIPE_TAGS_FILES
   transport-runtime-api/data/datapipe/tags/config_tags.h
   transport-runtime-api/data/datapipe/tags/field_tags.h
   transport-runtime-api/data/datapipe/tags/fNL_tags.h
@@ -481,18 +513,18 @@ set(TRANSPORT_RUNTIME_API_DATA_DATAPIPE_TAGS_FILES
   transport-runtime-api/data/datapipe/tags/zeta_tags.h
   )
 
-set(TRANSPORT_RUNTIME_API_DATA_FILES
+SET(TRANSPORT_RUNTIME_API_DATA_FILES
   transport-runtime-api/data/data_manager.h
   )
 
-set(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_CONVENIENCE_FILES
+SET(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_CONVENIENCE_FILES
   transport-runtime-api/derived-products/convenience/time_series_plot.h
   transport-runtime-api/derived-products/convenience/time_series_table.h
   transport-runtime-api/derived-products/convenience/wavenumber_series_plot.h
   transport-runtime-api/derived-products/convenience/wavenumber_series_table.h
   )
 
-set(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_BACKGROUND_QUANTITES_FILES
+SET(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_BACKGROUND_QUANTITES_FILES
   transport-runtime-api/derived-products/derived-content/background-quantites/background_line.h
   transport-runtime-api/derived-products/derived-content/background-quantites/largest_u2_line.h
   transport-runtime-api/derived-products/derived-content/background-quantites/largest_u3_line.h
@@ -500,12 +532,12 @@ set(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_BACKGROUND_QUANTITES_
   transport-runtime-api/derived-products/derived-content/background-quantites/u3_line.h
   )
 
-set(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_CONCEPTS_FILES
+SET(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_CONCEPTS_FILES
   transport-runtime-api/derived-products/derived-content/concepts/derived_line.h
   transport-runtime-api/derived-products/derived-content/concepts/derived_line_helper.h
   )
 
-set(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_CONCEPTS_LINES_FILES
+SET(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_CONCEPTS_LINES_FILES
   transport-runtime-api/derived-products/derived-content/concepts/lines/fNL_line.h
   transport-runtime-api/derived-products/derived-content/concepts/lines/r_line.h
   transport-runtime-api/derived-products/derived-content/concepts/lines/tensor_twopf_line.h
@@ -516,18 +548,18 @@ set(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_CONCEPTS_LINES_FILES
   transport-runtime-api/derived-products/derived-content/concepts/lines/zeta_twopf_line.h
   )
 
-set(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_CONCEPTS_SERIES_FILES
+SET(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_CONCEPTS_SERIES_FILES
   transport-runtime-api/derived-products/derived-content/concepts/series/time_series.h
   transport-runtime-api/derived-products/derived-content/concepts/series/wavenumber_series.h
   )
 
-set(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_CORRELATION_FUNCTIONS_COMPUTE_GADGETS_FILES
+SET(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_CORRELATION_FUNCTIONS_COMPUTE_GADGETS_FILES
   transport-runtime-api/derived-products/derived-content/correlation-functions/compute-gadgets/common.h
   transport-runtime-api/derived-products/derived-content/correlation-functions/compute-gadgets/fNL_timeseries_compute.h
   transport-runtime-api/derived-products/derived-content/correlation-functions/compute-gadgets/zeta_timeseries_compute.h
   )
 
-set(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_CORRELATION_FUNCTIONS_FILES
+SET(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_CORRELATION_FUNCTIONS_FILES
   transport-runtime-api/derived-products/derived-content/correlation-functions/field_time_series.h
   transport-runtime-api/derived-products/derived-content/correlation-functions/field_wavenumber_series.h
   transport-runtime-api/derived-products/derived-content/correlation-functions/fNL_time_series.h
@@ -540,35 +572,35 @@ set(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_CORRELATION_FUNCTIONS
   transport-runtime-api/derived-products/derived-content/correlation-functions/zeta_wavenumber_series.h
   )
 
-set(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_DEPRECATED_FILES
+SET(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_DEPRECATED_FILES
   transport-runtime-api/derived-products/derived-content/deprecated/threepf_kconfig_shift.h
   transport-runtime-api/derived-products/derived-content/deprecated/threepf_time_shift.h
   transport-runtime-api/derived-products/derived-content/deprecated/zeta_kseries_compute.h
   )
 
-set(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_INTEGRATION_ANALYSIS_FILES
+SET(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_INTEGRATION_ANALYSIS_FILES
   transport-runtime-api/derived-products/derived-content/integration-analysis/cost_metrics.h
   transport-runtime-api/derived-products/derived-content/integration-analysis/cost_wavenumber.h
   )
 
-set(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_SQL_QUERY_DETAIL_FILES
+SET(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_SQL_QUERY_DETAIL_FILES
   transport-runtime-api/derived-products/derived-content/SQL_query/detail/SQL_query.h
   transport-runtime-api/derived-products/derived-content/SQL_query/detail/SQL_threepf_query.h
   transport-runtime-api/derived-products/derived-content/SQL_query/detail/SQL_time_query.h
   transport-runtime-api/derived-products/derived-content/SQL_query/detail/SQL_twopf_query.h
   )
 
-set(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_SQL_QUERY_FILES
+SET(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_SQL_QUERY_FILES
   transport-runtime-api/derived-products/derived-content/SQL_query/SQL_policy.h
   transport-runtime-api/derived-products/derived-content/SQL_query/SQL_query.h
   transport-runtime-api/derived-products/derived-content/SQL_query/SQL_query_helper.h
   )
 
-set(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_UTILITIES_FILES
+SET(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_UTILITIES_FILES
   transport-runtime-api/derived-products/derived-content/utilities/integration_task_gadget.h
   )
 
-set(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_FILES
+SET(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_FILES
   transport-runtime-api/derived-products/data_products.h
   transport-runtime-api/derived-products/derived_product.h
   transport-runtime-api/derived-products/derived_product_forward_declare.h
@@ -576,7 +608,7 @@ set(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_FILES
   transport-runtime-api/derived-products/enumerations.h
   )
 
-set(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_LINE_COLLECTIONS_FILES
+SET(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_LINE_COLLECTIONS_FILES
   transport-runtime-api/derived-products/line-collections/data_line.h
   transport-runtime-api/derived-products/line-collections/line_asciitable.h
   transport-runtime-api/derived-products/line-collections/line_collection.h
@@ -584,17 +616,17 @@ set(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_LINE_COLLECTIONS_FILES
   transport-runtime-api/derived-products/line-collections/line_values.h
   )
 
-set(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_UTILITIES_FILES
+SET(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_UTILITIES_FILES
   transport-runtime-api/derived-products/utilities/extractor.h
   transport-runtime-api/derived-products/utilities/index_selector.h
   transport-runtime-api/derived-products/utilities/wrapper.h
   )
 
-set(TRANSPORT_RUNTIME_API_INSTRUMENTS_FILES
+SET(TRANSPORT_RUNTIME_API_INSTRUMENTS_FILES
   transport-runtime-api/instruments/timing_instrument.h
   )
 
-set(TRANSPORT_RUNTIME_API_FILES
+SET(TRANSPORT_RUNTIME_API_FILES
   transport-runtime-api/ansi_colour_codes.h
   transport-runtime-api/default_symbols.h
   transport-runtime-api/defaults.h
@@ -605,11 +637,11 @@ set(TRANSPORT_RUNTIME_API_FILES
   transport-runtime-api/version.h
   )
 
-set(TRANSPORT_RUNTIME_API_LOCALIZATIONS_FILES
+SET(TRANSPORT_RUNTIME_API_LOCALIZATIONS_FILES
   transport-runtime-api/localizations/messages_en.h
   )
 
-set(TRANSPORT_RUNTIME_API_LOCALIZATIONS_MESSAGES_EN_DERIVED_PRODUCTS_FILES
+SET(TRANSPORT_RUNTIME_API_LOCALIZATIONS_MESSAGES_EN_DERIVED_PRODUCTS_FILES
   transport-runtime-api/localizations/messages_en/derived-products/derived_line.h
   transport-runtime-api/localizations/messages_en/derived-products/derived_product.h
   transport-runtime-api/localizations/messages_en/derived-products/fNL_line.h
@@ -624,7 +656,7 @@ set(TRANSPORT_RUNTIME_API_LOCALIZATIONS_MESSAGES_EN_DERIVED_PRODUCTS_FILES
   transport-runtime-api/localizations/messages_en/derived-products/wavenumber_series_convenience.h
   )
 
-set(TRANSPORT_RUNTIME_API_LOCALIZATIONS_MESSAGES_EN_FILES
+SET(TRANSPORT_RUNTIME_API_LOCALIZATIONS_MESSAGES_EN_FILES
   transport-runtime-api/localizations/messages_en/advisory_classes.h
   transport-runtime-api/localizations/messages_en/command_line.h
   transport-runtime-api/localizations/messages_en/data_manager.h
@@ -650,13 +682,13 @@ set(TRANSPORT_RUNTIME_API_LOCALIZATIONS_MESSAGES_EN_FILES
   transport-runtime-api/localizations/messages_en/work_journal.h
   )
 
-set(TRANSPORT_RUNTIME_API_LOCALIZATIONS_MESSAGES_EN_TASKS_FILES
+SET(TRANSPORT_RUNTIME_API_LOCALIZATIONS_MESSAGES_EN_TASKS_FILES
   transport-runtime-api/localizations/messages_en/tasks/tasks.h
   transport-runtime-api/localizations/messages_en/tasks/threepf_config_database.h
   transport-runtime-api/localizations/messages_en/tasks/twopf_config_database.h
   )
 
-set(TRANSPORT_RUNTIME_API_MANAGER_FILES
+SET(TRANSPORT_RUNTIME_API_MANAGER_FILES
   transport-runtime-api/manager/argument_cache.h
   transport-runtime-api/manager/environment.h
   transport-runtime-api/manager/instance_manager.h
@@ -669,7 +701,7 @@ set(TRANSPORT_RUNTIME_API_MANAGER_FILES
   transport-runtime-api/manager/work_journal.h
   )
 
-set(TRANSPORT_RUNTIME_API_MODELS_FILES
+SET(TRANSPORT_RUNTIME_API_MODELS_FILES
   transport-runtime-api/models/advisory_classes.h
   transport-runtime-api/models/canonical_model.h
   transport-runtime-api/models/model.h
@@ -677,19 +709,19 @@ set(TRANSPORT_RUNTIME_API_MODELS_FILES
   transport-runtime-api/models/observers.h
   )
 
-set(TRANSPORT_RUNTIME_API_REPOSITORY_FILES
+SET(TRANSPORT_RUNTIME_API_REPOSITORY_FILES
   transport-runtime-api/repository/json_repository.h
   transport-runtime-api/repository/repository.h
   transport-runtime-api/repository/transaction_manager.h
   )
 
-set(TRANSPORT_RUNTIME_API_REPOSITORY_RECORDS_FILES
+SET(TRANSPORT_RUNTIME_API_REPOSITORY_RECORDS_FILES
   transport-runtime-api/repository/records/record_finder.h
   transport-runtime-api/repository/records/repository_records.h
   transport-runtime-api/repository/records/repository_records_forward_declare.h
   )
 
-set(TRANSPORT_RUNTIME_API_REPOSITORY_WRITERS_FILES
+SET(TRANSPORT_RUNTIME_API_REPOSITORY_WRITERS_FILES
   transport-runtime-api/repository/writers/derived_content_writer.h
   transport-runtime-api/repository/writers/generic_writer.h
   transport-runtime-api/repository/writers/integration_writer.h
@@ -697,22 +729,22 @@ set(TRANSPORT_RUNTIME_API_REPOSITORY_WRITERS_FILES
   transport-runtime-api/repository/writers/writers.h
   )
 
-set(TRANSPORT_RUNTIME_API_SCHEDULER_FILES
+SET(TRANSPORT_RUNTIME_API_SCHEDULER_FILES
   transport-runtime-api/scheduler/context.h
   transport-runtime-api/scheduler/scheduler.h
   transport-runtime-api/scheduler/work_queue.h
   )
 
-set(TRANSPORT_RUNTIME_API_SERIALIZATION_FILES
+SET(TRANSPORT_RUNTIME_API_SERIALIZATION_FILES
   transport-runtime-api/serialization/serializable.h
   )
 
-set(TRANSPORT_RUNTIME_API_SQLITE3_FILES
+SET(TRANSPORT_RUNTIME_API_SQLITE3_FILES
   transport-runtime-api/sqlite3/data_manager_sqlite3.h
   transport-runtime-api/sqlite3/repository_sqlite3.h
   )
 
-set(TRANSPORT_RUNTIME_API_SQLITE3_OPERATIONS_FILES
+SET(TRANSPORT_RUNTIME_API_SQLITE3_OPERATIONS_FILES
   transport-runtime-api/sqlite3/operations/data_manager.h
   transport-runtime-api/sqlite3/operations/data_manager_aggregate.h
   transport-runtime-api/sqlite3/operations/data_manager_common.h
@@ -732,7 +764,7 @@ set(TRANSPORT_RUNTIME_API_SQLITE3_OPERATIONS_FILES
   transport-runtime-api/sqlite3/operations/sqlite3_utility.h
   )
 
-set(TRANSPORT_RUNTIME_API_TASKS_CONFIGURATION_DATABASE_FILES
+SET(TRANSPORT_RUNTIME_API_TASKS_CONFIGURATION_DATABASE_FILES
   transport-runtime-api/tasks/configuration-database/generic_config_iterator.h
   transport-runtime-api/tasks/configuration-database/generic_record_iterator.h
   transport-runtime-api/tasks/configuration-database/generic_value_iterator.h
@@ -741,7 +773,7 @@ set(TRANSPORT_RUNTIME_API_TASKS_CONFIGURATION_DATABASE_FILES
   transport-runtime-api/tasks/configuration-database/twopf_config_database.h
   )
 
-set(TRANSPORT_RUNTIME_API_TASKS_FILES
+SET(TRANSPORT_RUNTIME_API_TASKS_FILES
   transport-runtime-api/tasks/derivable_task.h
   transport-runtime-api/tasks/integration_tasks.h
   transport-runtime-api/tasks/output_tasks.h
@@ -753,7 +785,7 @@ set(TRANSPORT_RUNTIME_API_TASKS_FILES
   transport-runtime-api/tasks/tasks_forward_declare.h
   )
 
-set(TRANSPORT_RUNTIME_API_TASKS_INTEGRATION_DETAIL_FILES
+SET(TRANSPORT_RUNTIME_API_TASKS_INTEGRATION_DETAIL_FILES
   transport-runtime-api/tasks/integration_detail/abstract.h
   transport-runtime-api/tasks/integration_detail/background_task.h
   transport-runtime-api/tasks/integration_detail/common.h
@@ -763,7 +795,7 @@ set(TRANSPORT_RUNTIME_API_TASKS_INTEGRATION_DETAIL_FILES
   transport-runtime-api/tasks/integration_detail/default_policies.h
   )
 
-set(TRANSPORT_RUNTIME_API_TASKS_POSTINTEGRATION_DETAIL_FILES
+SET(TRANSPORT_RUNTIME_API_TASKS_POSTINTEGRATION_DETAIL_FILES
   transport-runtime-api/tasks/postintegration_detail/abstract.h
   transport-runtime-api/tasks/postintegration_detail/common.h
   transport-runtime-api/tasks/postintegration_detail/fNL_task.h
@@ -772,7 +804,7 @@ set(TRANSPORT_RUNTIME_API_TASKS_POSTINTEGRATION_DETAIL_FILES
   transport-runtime-api/tasks/postintegration_detail/zeta_twopf_task.h
   )
 
-set(TRANSPORT_RUNTIME_API_UTILITIES_FILES
+SET(TRANSPORT_RUNTIME_API_UTILITIES_FILES
   transport-runtime-api/utilities/asciitable.h
   transport-runtime-api/utilities/formatter.h
   transport-runtime-api/utilities/host_information.h
@@ -784,7 +816,7 @@ set(TRANSPORT_RUNTIME_API_UTILITIES_FILES
   transport-runtime-api/utilities/spline1d.h
   )
 
-set(UTILITIES_FILES
+SET(UTILITIES_FILES
   utilities/argument_cache.cpp
   utilities/argument_cache.h
   utilities/error.cpp
@@ -801,9 +833,9 @@ set(UTILITIES_FILES
   utilities/to_printable.h
   utilities/ginac_print_indexed.cpp
   utilities/ginac_print_indexed.h
-)
+  )
 
-set(SOURCE_FILES
+SET(SOURCE_FILES
   ${BACKENDS_INFRASTRUCTURE_FILE_HANDLING_FILES}
   ${BACKENDS_INFRASTRUCTURE_LANGUAGE_CONCEPTS_FILES}
   ${BACKENDS_INFRASTRUCTURE_MACRO_SUBSTITUTION_FILES}
@@ -871,6 +903,6 @@ set(SOURCE_FILES
   ${TRANSPORT_RUNTIME_API_TASKS_POSTINTEGRATION_DETAIL_FILES}
   ${TRANSPORT_RUNTIME_API_UTILITIES_FILES}
   ${UTILITIES_FILES}
-)
+  )
 
 ADD_EXECUTABLE(dummy_clion_target EXCLUDE_FROM_ALL ${SOURCE_FILES})
