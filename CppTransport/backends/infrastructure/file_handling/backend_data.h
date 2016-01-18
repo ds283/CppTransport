@@ -43,7 +43,7 @@ class backend_data
   public:
 
     //! get minimum version
-    double get_min_version() const { return(*this->minver); }
+    unsigned int get_min_version() const { return(*this->minver); }
 
     //! get backend name
     const std::string& get_backend_name() const { return(*this->name); }
@@ -60,7 +60,7 @@ class backend_data
     std::string line;
 
     //! minimum version
-    boost::optional<double> minver;
+    boost::optional<unsigned int> minver;
 
     //! name of backend
     boost::optional<std::string> name;
