@@ -161,17 +161,17 @@ namespace transport
             sqlite3_stmt* stmt;
             check_stmt(db, sqlite3_prepare_v2(db, store_stmt.str().c_str(), store_stmt.str().length()+1, &stmt, nullptr));
 
-            check_stmt(db, sqlite3_bind_text(stmt, 1, name.c_str(), name.length(), SQLITE_STATIC));
-            check_stmt(db, sqlite3_bind_text(stmt, 2, task.c_str(), task.length(), SQLITE_STATIC));
-            check_stmt(db, sqlite3_bind_text(stmt, 3, output_path.string().c_str(), output_path.string().length(), SQLITE_STATIC));
-            check_stmt(db, sqlite3_bind_text(stmt, 4, sql_path.string().c_str(), sql_path.string().length(), SQLITE_STATIC));
-            check_stmt(db, sqlite3_bind_text(stmt, 5, logdir_path.string().c_str(), logdir_path.string().length(), SQLITE_STATIC));
-            check_stmt(db, sqlite3_bind_text(stmt, 6, tempdir_path.string().c_str(), tempdir_path.string().length(), SQLITE_STATIC));
-            check_stmt(db, sqlite3_bind_int(stmt, 7, workgroup_number));
-            check_stmt(db, sqlite3_bind_int(stmt, 8, static_cast<int>(is_seeded)));
-            check_stmt(db, sqlite3_bind_text(stmt, 9, seed_group.c_str(), seed_group.length(), SQLITE_STATIC));
-            check_stmt(db, sqlite3_bind_int(stmt, 10, static_cast<int>(is_collecting_stats)));
-            check_stmt(db, sqlite3_bind_int(stmt, 11, static_cast<int>(is_collecting_ics)));
+            check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@content_group"), name.c_str(), name.length(), SQLITE_STATIC));
+            check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@task"), task.c_str(), task.length(), SQLITE_STATIC));
+            check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@output"), output_path.string().c_str(), output_path.string().length(), SQLITE_STATIC));
+            check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@container"), sql_path.string().c_str(), sql_path.string().length(), SQLITE_STATIC));
+            check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@logdir"), logdir_path.string().c_str(), logdir_path.string().length(), SQLITE_STATIC));
+            check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@tempdir"), tempdir_path.string().c_str(), tempdir_path.string().length(), SQLITE_STATIC));
+            check_stmt(db, sqlite3_bind_int(stmt, sqlite3_bind_parameter_index(stmt, "@workgroup_number"), workgroup_number));
+            check_stmt(db, sqlite3_bind_int(stmt, sqlite3_bind_parameter_index(stmt, "@seeded"), static_cast<int>(is_seeded)));
+            check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@seed_group"), seed_group.c_str(), seed_group.length(), SQLITE_STATIC));
+            check_stmt(db, sqlite3_bind_int(stmt, sqlite3_bind_parameter_index(stmt, "@collect_stats"), static_cast<int>(is_collecting_stats)));
+            check_stmt(db, sqlite3_bind_int(stmt, sqlite3_bind_parameter_index(stmt, "@collect_ics"), static_cast<int>(is_collecting_ics)));
 
             check_stmt(db, sqlite3_step(stmt), CPPTRANSPORT_REPO_STORE_INTEGRATION_WRITER_FAIL, SQLITE_DONE);
 
@@ -192,16 +192,16 @@ namespace transport
             sqlite3_stmt* stmt;
             check_stmt(db, sqlite3_prepare_v2(db, store_stmt.str().c_str(), store_stmt.str().length()+1, &stmt, nullptr));
 
-            check_stmt(db, sqlite3_bind_text(stmt, 1, name.c_str(), name.length(), SQLITE_STATIC));
-            check_stmt(db, sqlite3_bind_text(stmt, 2, task.c_str(), task.length(), SQLITE_STATIC));
-            check_stmt(db, sqlite3_bind_text(stmt, 3, output_path.string().c_str(), output_path.string().length(), SQLITE_STATIC));
-            check_stmt(db, sqlite3_bind_text(stmt, 4, container.string().c_str(), container.string().length(), SQLITE_STATIC));
-            check_stmt(db, sqlite3_bind_text(stmt, 5, logdir_path.string().c_str(), logdir_path.string().length(), SQLITE_STATIC));
-            check_stmt(db, sqlite3_bind_text(stmt, 6, tempdir_path.string().c_str(), tempdir_path.string().length(), SQLITE_STATIC));
-            check_stmt(db, sqlite3_bind_int(stmt, 7, static_cast<int>(is_paired)));
-            check_stmt(db, sqlite3_bind_text(stmt, 8, parent_group.c_str(), parent_group.length(), SQLITE_STATIC));
-            check_stmt(db, sqlite3_bind_int(stmt, 9, static_cast<int>(is_seeded)));
-            check_stmt(db, sqlite3_bind_text(stmt, 10, seed_group.c_str(), seed_group.length(), SQLITE_STATIC));
+            check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@content_group"), name.c_str(), name.length(), SQLITE_STATIC));
+            check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@task"), task.c_str(), task.length(), SQLITE_STATIC));
+            check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@output"), output_path.string().c_str(), output_path.string().length(), SQLITE_STATIC));
+            check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@container"), container.string().c_str(), container.string().length(), SQLITE_STATIC));
+            check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@logdir"), logdir_path.string().c_str(), logdir_path.string().length(), SQLITE_STATIC));
+            check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@tempdir"), tempdir_path.string().c_str(), tempdir_path.string().length(), SQLITE_STATIC));
+            check_stmt(db, sqlite3_bind_int(stmt, sqlite3_bind_parameter_index(stmt, "@paired"), static_cast<int>(is_paired)));
+            check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@parent"), parent_group.c_str(), parent_group.length(), SQLITE_STATIC));
+            check_stmt(db, sqlite3_bind_int(stmt, sqlite3_bind_parameter_index(stmt, "@seeded"), static_cast<int>(is_seeded)));
+            check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@seed_group"), seed_group.c_str(), seed_group.length(), SQLITE_STATIC));
 
             check_stmt(db, sqlite3_step(stmt), CPPTRANSPORT_REPO_STORE_POSTINTEGRATION_WRITER_FAIL, SQLITE_DONE);
 
@@ -219,11 +219,11 @@ namespace transport
             sqlite3_stmt* stmt;
             check_stmt(db, sqlite3_prepare_v2(db, store_stmt.str().c_str(), store_stmt.str().length()+1, &stmt, nullptr));
 
-            check_stmt(db, sqlite3_bind_text(stmt, 1, name.c_str(), name.length(), SQLITE_STATIC));
-            check_stmt(db, sqlite3_bind_text(stmt, 2, task.c_str(), task.length(), SQLITE_STATIC));
-            check_stmt(db, sqlite3_bind_text(stmt, 3, output_path.string().c_str(), output_path.string().length(), SQLITE_STATIC));
-            check_stmt(db, sqlite3_bind_text(stmt, 4, logdir_path.string().c_str(), logdir_path.string().length(), SQLITE_STATIC));
-            check_stmt(db, sqlite3_bind_text(stmt, 5, tempdir_path.string().c_str(), tempdir_path.string().length(), SQLITE_STATIC));
+            check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@content_group"), name.c_str(), name.length(), SQLITE_STATIC));
+            check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@task"), task.c_str(), task.length(), SQLITE_STATIC));
+            check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@output"), output_path.string().c_str(), output_path.string().length(), SQLITE_STATIC));
+            check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@logdir"), logdir_path.string().c_str(), logdir_path.string().length(), SQLITE_STATIC));
+            check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@tempdir"), tempdir_path.string().c_str(), tempdir_path.string().length(), SQLITE_STATIC));
 
             check_stmt(db, sqlite3_step(stmt), CPPTRANSPORT_REPO_STORE_DERIVED_CONTENT_WRITER_FAIL, SQLITE_DONE);
 

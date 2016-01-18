@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __data_manager_aggregate_H_
-#define __data_manager_aggregate_H_
+#ifndef CPPTRANSPORT_DATA_MANAGER_AGGREGATE_H
+#define CPPTRANSPORT_DATA_MANAGER_AGGREGATE_H
 
 
 #include "transport-runtime-api/sqlite3/operations/data_manager_common.h"
@@ -235,4 +235,4 @@ namespace transport
   }   // namespace transport
 
 
-#endif //__data_manager_aggregate_H_
+#endif //CPPTRANSPORT_DATA_MANAGER_AGGREGATE_H

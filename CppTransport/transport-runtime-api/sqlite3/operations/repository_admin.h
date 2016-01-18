@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __repository_admin_H_
-#define __repository_admin_H_
+#ifndef CPPTRANSPORT_REPOSITORY_ADMIN_H
+#define CPPTRANSPORT_REPOSITORY_ADMIN_H
 
 
 #include "transport-runtime-api/sqlite3/operations/repository_common.h"
@@ -131,4 +131,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__repository_admin_H_
+#endif //CPPTRANSPORT_REPOSITORY_ADMIN_H

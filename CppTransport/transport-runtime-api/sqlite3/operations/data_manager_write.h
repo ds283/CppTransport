@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __data_manager_admin_H_
-#define __data_manager_admin_H_
+#ifndef CPPTRANSPORT_DATA_MANAGER_WRITE_H
+#define CPPTRANSPORT_DATA_MANAGER_WRITE_H
 
 
 #include "transport-runtime-api/sqlite3/operations/data_manager_common.h"
@@ -42,25 +42,29 @@ namespace transport
 		        // gained by passing an nByte parameter that is equal to the number of bytes in the input string including the nul-terminator
 		        // bytes as this saves SQLite from having to make a copy of the input string.
 
-				    // However, here, we certainly *shouldn't* include the nul-terminator byte, because that isn't part of the string
+				    // However, here, we certainly *shouldn't* include the null-terminator byte, because that isn't part of the string
 
-		        check_stmt(db, sqlite3_bind_int(stmt, 1, batcher->get_worker_group()));
-		        check_stmt(db, sqlite3_bind_int(stmt, 2, batcher->get_worker_number()));
-		        check_stmt(db, sqlite3_bind_text(stmt, 3, batcher->get_backend().c_str(), batcher->get_backend().length(), SQLITE_STATIC));
-		        check_stmt(db, sqlite3_bind_text(stmt, 4, batcher->get_back_stepper().c_str(), batcher->get_back_stepper().length(), SQLITE_STATIC));
-		        check_stmt(db, sqlite3_bind_text(stmt, 5, batcher->get_pert_stepper().c_str(), batcher->get_pert_stepper().length(), SQLITE_STATIC));
+		        check_stmt(db, sqlite3_bind_int(stmt, sqlite3_bind_parameter_index(stmt, "@workgroup"), batcher->get_worker_group()));
+		        check_stmt(db, sqlite3_bind_int(stmt, sqlite3_bind_parameter_index(stmt, "@worker"), batcher->get_worker_number()));
+		        check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@backend"), batcher->get_backend().c_str(), batcher->get_backend().length(), SQLITE_STATIC));
+
+		        check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@back_stepper"), batcher->get_back_stepper().c_str(), batcher->get_back_stepper().length(), SQLITE_STATIC));
+		        check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@pert_stepper"), batcher->get_pert_stepper().c_str(), batcher->get_pert_stepper().length(), SQLITE_STATIC));
+
             std::pair< double, double > backg_tol = batcher->get_back_tol();
-            check_stmt(db, sqlite3_bind_double(stmt, 6, backg_tol.first));
-            check_stmt(db, sqlite3_bind_double(stmt, 7, backg_tol.second));
+            check_stmt(db, sqlite3_bind_double(stmt, sqlite3_bind_parameter_index(stmt, "@back_abs_tol"), backg_tol.first));
+            check_stmt(db, sqlite3_bind_double(stmt, sqlite3_bind_parameter_index(stmt, "@back_rel_tol"), backg_tol.second));
+
             std::pair< double, double > pert_tol = batcher->get_pert_tol();
-            check_stmt(db, sqlite3_bind_double(stmt, 8, pert_tol.first));
-            check_stmt(db, sqlite3_bind_double(stmt, 9, pert_tol.second));
-		        check_stmt(db, sqlite3_bind_text(stmt, 10, host.get_host_name().c_str(), host.get_host_name().length(), SQLITE_STATIC));
-		        check_stmt(db, sqlite3_bind_text(stmt, 11, host.get_os_name().c_str(), host.get_os_name().length(), SQLITE_STATIC));
-		        check_stmt(db, sqlite3_bind_text(stmt, 12, host.get_os_version().c_str(), host.get_os_version().length(), SQLITE_STATIC));
-		        check_stmt(db, sqlite3_bind_text(stmt, 13, host.get_os_release().c_str(), host.get_os_release().length(), SQLITE_STATIC));
-		        check_stmt(db, sqlite3_bind_text(stmt, 14, host.get_architecture().c_str(), host.get_architecture().length(), SQLITE_STATIC));
-		        check_stmt(db, sqlite3_bind_text(stmt, 15, host.get_cpu_vendor_id().c_str(), host.get_cpu_vendor_id().length(), SQLITE_STATIC));
+            check_stmt(db, sqlite3_bind_double(stmt, sqlite3_bind_parameter_index(stmt, "@pert_abs_tol"), pert_tol.first));
+            check_stmt(db, sqlite3_bind_double(stmt, sqlite3_bind_parameter_index(stmt, "@pert_rel_tol"), pert_tol.second));
+
+		        check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@hostname"), host.get_host_name().c_str(), host.get_host_name().length(), SQLITE_STATIC));
+		        check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@os_name"), host.get_os_name().c_str(), host.get_os_name().length(), SQLITE_STATIC));
+		        check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@os_version"), host.get_os_version().c_str(), host.get_os_version().length(), SQLITE_STATIC));
+		        check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@os_release"), host.get_os_release().c_str(), host.get_os_release().length(), SQLITE_STATIC));
+		        check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@architecture"), host.get_architecture().c_str(), host.get_architecture().length(), SQLITE_STATIC));
+		        check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@cpu_vendor_id"), host.get_cpu_vendor_id().c_str(), host.get_cpu_vendor_id().length(), SQLITE_STATIC));
 
 				    check_stmt(db, sqlite3_step(stmt), CPPTRANSPORT_DATACTR_WORKER_INSERT_FAIL, SQLITE_DONE);
 
@@ -86,15 +90,23 @@ namespace transport
 
             exec(db, "BEGIN TRANSACTION;");
 
-            for(typename std::vector<typename integration_items<number>::configuration_statistics >::const_iterator t = batch.begin(); t != batch.end(); ++t)
+            const int kserial_id = sqlite3_bind_parameter_index(stmt, "@kserial");
+            const int integration_time_id = sqlite3_bind_parameter_index(stmt, "@integration_time");
+            const int batch_time_id = sqlite3_bind_parameter_index(stmt, "@batch_time");
+            const int steps_id = sqlite3_bind_parameter_index(stmt, "@steps");
+            const int refinements_id = sqlite3_bind_parameter_index(stmt, "@refinements");
+            const int workgroup_id = sqlite3_bind_parameter_index(stmt, "@workgroup");
+            const int worker_id = sqlite3_bind_parameter_index(stmt, "@worker");
+
+            for(const typename integration_items<number>::configuration_statistics& item : batch)
               {
-                check_stmt(db, sqlite3_bind_int(stmt, 1, t->serial));
-                check_stmt(db, sqlite3_bind_int64(stmt, 2, t->integration));
-                check_stmt(db, sqlite3_bind_int64(stmt, 3, t->batching));
-                check_stmt(db, sqlite3_bind_int(stmt, 4, t->steps));
-		            check_stmt(db, sqlite3_bind_int(stmt, 5, t->refinements));
-		            check_stmt(db, sqlite3_bind_int(stmt, 6, batcher->get_worker_group()));
-                check_stmt(db, sqlite3_bind_int(stmt, 7, batcher->get_worker_number()));
+                check_stmt(db, sqlite3_bind_int(stmt, kserial_id, item.serial));
+                check_stmt(db, sqlite3_bind_int64(stmt, integration_time_id, item.integration));
+                check_stmt(db, sqlite3_bind_int64(stmt, batch_time_id, item.batching));
+                check_stmt(db, sqlite3_bind_int(stmt, steps_id, item.steps));
+		            check_stmt(db, sqlite3_bind_int(stmt, refinements_id, item.refinements));
+		            check_stmt(db, sqlite3_bind_int(stmt, workgroup_id, batcher->get_worker_group()));
+                check_stmt(db, sqlite3_bind_int(stmt, worker_id, batcher->get_worker_number()));
 
                 check_stmt(db, sqlite3_step(stmt), CPPTRANSPORT_DATACTR_STATS_INSERT_FAIL, SQLITE_DONE);
 
@@ -141,19 +153,19 @@ namespace transport
 
             exec(db, "BEGIN TRANSACTION;");
 
-            for(typename std::vector<ValueType>::const_iterator t = batch.begin(); t != batch.end(); ++t)
+            for(const ValueType& item : batch)
               {
                 for(unsigned int page = 0; page < num_pages; ++page)
 	                {
-                    check_stmt(db, sqlite3_bind_int(stmt, 1, t->get_serial()));
+                    check_stmt(db, sqlite3_bind_int(stmt, 1, item.get_serial()));
 		                check_stmt(db, sqlite3_bind_int(stmt, 2, page));
 
-		                if(data_traits<number, ValueType>::has_texit) check_stmt(db, sqlite3_bind_double(stmt, 3, t->get_texit()));
+		                if(data_traits<number, ValueType>::has_texit) check_stmt(db, sqlite3_bind_double(stmt, 3, item.get_texit()));
 
 		                for(unsigned int i = 0; i < num_cols; ++i)
 			                {
 				                unsigned int index = page*num_cols + i;
-				                number       value = index < 2*Nfields ? t->coords[index] : 0.0;
+				                number       value = index < 2*Nfields ? item.coords[index] : 0.0;
 
 		                    check_stmt(db, sqlite3_bind_double(stmt, i+3+(data_traits<number, ValueType>::has_texit ? 1 : 0), static_cast<double>(value)));    // 'number' must be castable to double
 			                }
@@ -200,18 +212,18 @@ namespace transport
 
 		        exec(db, "BEGIN TRANSACTION;");
 
-		        for(typename std::vector<ValueType>::const_iterator t = batch.begin(); t != batch.end(); ++t)
+            for(const ValueType& item : batch)
 			        {
 		            for(unsigned int page = 0; page < num_pages; ++page)
 			            {
-		                check_stmt(db, sqlite3_bind_int(stmt, 1, t->time_serial));
-		                check_stmt(db, sqlite3_bind_int(stmt, 2, t->kconfig_serial));
+		                check_stmt(db, sqlite3_bind_int(stmt, 1, item.time_serial));
+		                check_stmt(db, sqlite3_bind_int(stmt, 2, item.kconfig_serial));
 		                check_stmt(db, sqlite3_bind_int(stmt, 3, page));
 
 		                for(unsigned int i = 0; i < num_cols; ++i)
 			                {
 		                    unsigned int index = page*num_cols + i;
-		                    number       value = index < num_elements ? t->elements[index] : 0.0;
+		                    number       value = index < num_elements ? item.elements[index] : 0.0;
 
 		                    check_stmt(db, sqlite3_bind_double(stmt, i+4, static_cast<double>(value)));    // 'number' must be castable to double
 			                }
@@ -245,12 +257,12 @@ namespace transport
 
             exec(db, "BEGIN TRANSACTION;");
 
-            for(typename std::vector<ValueType>::const_iterator t = batch.begin(); t != batch.end(); ++t)
+            for(const ValueType& item : batch)
 	            {
-                check_stmt(db, sqlite3_bind_int(stmt, 1, t->time_serial));
-                check_stmt(db, sqlite3_bind_int(stmt, 2, t->kconfig_serial));
-                check_stmt(db, sqlite3_bind_double(stmt, 3, static_cast<double>(t->value)));
-                if(data_traits<number, ValueType>::has_redbsp) check_stmt(db, sqlite3_bind_double(stmt, 4, static_cast<double>(t->redbsp)));
+                check_stmt(db, sqlite3_bind_int(stmt, 1, item.time_serial));
+                check_stmt(db, sqlite3_bind_int(stmt, 2, item.kconfig_serial));
+                check_stmt(db, sqlite3_bind_double(stmt, 3, static_cast<double>(item.value)));
+                if(data_traits<number, ValueType>::has_redbsp) check_stmt(db, sqlite3_bind_double(stmt, 4, static_cast<double>(item.redbsp)));
 
                 check_stmt(db, sqlite3_step(stmt), data_traits<number, ValueType>::write_error_msg(), SQLITE_DONE);
 
@@ -294,12 +306,12 @@ namespace transport
             sqlite3_stmt* stmt;
             check_stmt(db, sqlite3_prepare_v2(db, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr));
 
-            for(typename std::set< typename postintegration_items<number>::fNL_item, typename postintegration_items<number>::fNL_item_comparator >::const_iterator t = batch.begin(); t != batch.end(); ++t)
+            for(const typename postintegration_items<number>::fNL_item& item : batch)
               {
-                check_stmt(db, sqlite3_bind_int(stmt, 1, t->time_serial));
-                check_stmt(db, sqlite3_bind_double(stmt, 2, static_cast<double>(t->BB)));
-                check_stmt(db, sqlite3_bind_double(stmt, 3, static_cast<double>(t->BT)));
-                check_stmt(db, sqlite3_bind_double(stmt, 4, static_cast<double>(t->TT)));
+                check_stmt(db, sqlite3_bind_int(stmt, 1, item.time_serial));
+                check_stmt(db, sqlite3_bind_double(stmt, 2, static_cast<double>(item.BB)));
+                check_stmt(db, sqlite3_bind_double(stmt, 3, static_cast<double>(item.BT)));
+                check_stmt(db, sqlite3_bind_double(stmt, 4, static_cast<double>(item.TT)));
 
                 check_stmt(db, sqlite3_step(stmt), CPPTRANSPORT_DATACTR_FNL_DATATAB_FAIL, SQLITE_DONE);
 
@@ -344,4 +356,4 @@ namespace transport
   }   // namespace transport
 
 
-#endif //__data_manager_admin_H_
+#endif //CPPTRANSPORT_DATA_MANAGER_WRITE_H

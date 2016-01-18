@@ -24,8 +24,8 @@ namespace transport
             sqlite3_stmt* stmt;
             check_stmt(db, sqlite3_prepare_v2(db, store_stmt.str().c_str(), store_stmt.str().length()+1, &stmt, nullptr));
 
-            check_stmt(db, sqlite3_bind_text(stmt, 1, name.c_str(), name.length(), SQLITE_STATIC));
-            check_stmt(db, sqlite3_bind_text(stmt, 2, filename.c_str(), filename.length(), SQLITE_STATIC));
+            check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@name"), name.c_str(), name.length(), SQLITE_STATIC));
+            check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@path"), filename.c_str(), filename.length(), SQLITE_STATIC));
 
             check_stmt(db, sqlite3_step(stmt), CPPTRANSPORT_REPO_STORE_PACKAGE_FAIL, SQLITE_DONE);
 
@@ -42,9 +42,9 @@ namespace transport
             sqlite3_stmt* stmt;
             check_stmt(db, sqlite3_prepare_v2(db, store_stmt.str().c_str(), store_stmt.str().length()+1, &stmt, nullptr));
 
-            check_stmt(db, sqlite3_bind_text(stmt, 1, name.c_str(), name.length(), SQLITE_STATIC));
-            check_stmt(db, sqlite3_bind_text(stmt, 2, pkg.c_str(), pkg.length(), SQLITE_STATIC));
-            check_stmt(db, sqlite3_bind_text(stmt, 3, filename.c_str(), filename.length(), SQLITE_STATIC));
+            check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@name"), name.c_str(), name.length(), SQLITE_STATIC));
+            check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@package"), pkg.c_str(), pkg.length(), SQLITE_STATIC));
+            check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@path"), filename.c_str(), filename.length(), SQLITE_STATIC));
 
             check_stmt(db, sqlite3_step(stmt), CPPTRANSPORT_REPO_STORE_PACKAGE_FAIL, SQLITE_DONE);
 
@@ -61,9 +61,9 @@ namespace transport
             sqlite3_stmt* stmt;
             check_stmt(db, sqlite3_prepare_v2(db, store_stmt.str().c_str(), store_stmt.str().length()+1, &stmt, nullptr));
 
-            check_stmt(db, sqlite3_bind_text(stmt, 1, name.c_str(), name.length(), SQLITE_STATIC));
-            check_stmt(db, sqlite3_bind_text(stmt, 2, parent.c_str(), parent.length(), SQLITE_STATIC));
-            check_stmt(db, sqlite3_bind_text(stmt, 3, filename.c_str(), filename.length(), SQLITE_STATIC));
+            check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@name"), name.c_str(), name.length(), SQLITE_STATIC));
+            check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@parent"), parent.c_str(), parent.length(), SQLITE_STATIC));
+            check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@path"), filename.c_str(), filename.length(), SQLITE_STATIC));
 
             check_stmt(db, sqlite3_step(stmt), CPPTRANSPORT_REPO_STORE_PACKAGE_FAIL, SQLITE_DONE);
 
@@ -80,8 +80,8 @@ namespace transport
             sqlite3_stmt* stmt;
             check_stmt(db, sqlite3_prepare_v2(db, store_stmt.str().c_str(), store_stmt.str().length()+1, &stmt, nullptr));
 
-            check_stmt(db, sqlite3_bind_text(stmt, 1, name.c_str(), name.length(), SQLITE_STATIC));
-            check_stmt(db, sqlite3_bind_text(stmt, 2, filename.c_str(), filename.length(), SQLITE_STATIC));
+            check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@name"), name.c_str(), name.length(), SQLITE_STATIC));
+            check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@path"), filename.c_str(), filename.length(), SQLITE_STATIC));
 
             check_stmt(db, sqlite3_step(stmt), CPPTRANSPORT_REPO_STORE_PACKAGE_FAIL, SQLITE_DONE);
 
@@ -98,8 +98,8 @@ namespace transport
             sqlite3_stmt* stmt;
             check_stmt(db, sqlite3_prepare_v2(db, store_stmt.str().c_str(), store_stmt.str().length()+1, &stmt, nullptr));
 
-            check_stmt(db, sqlite3_bind_text(stmt, 1, name.c_str(), name.length(), SQLITE_STATIC));
-            check_stmt(db, sqlite3_bind_text(stmt, 2, filename.c_str(), filename.length(), SQLITE_STATIC));
+            check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@name"), name.c_str(), name.length(), SQLITE_STATIC));
+            check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@path"), filename.c_str(), filename.length(), SQLITE_STATIC));
 
             check_stmt(db, sqlite3_step(stmt), CPPTRANSPORT_REPO_STORE_PACKAGE_FAIL, SQLITE_DONE);
 
@@ -167,9 +167,9 @@ namespace transport
             sqlite3_stmt* stmt;
             check_stmt(db, sqlite3_prepare_v2(db, store_stmt.str().c_str(), store_stmt.str().length()+1, &stmt, nullptr));
 
-            check_stmt(db, sqlite3_bind_text(stmt, 1, name.c_str(), name.length(), SQLITE_STATIC));
-            check_stmt(db, sqlite3_bind_text(stmt, 2, task.c_str(), task.length(), SQLITE_STATIC));
-            check_stmt(db, sqlite3_bind_text(stmt, 3, filename.c_str(), filename.length(), SQLITE_STATIC));
+            check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@name"), name.c_str(), name.length(), SQLITE_STATIC));
+            check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@task"), task.c_str(), task.length(), SQLITE_STATIC));
+            check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@path"), filename.c_str(), filename.length(), SQLITE_STATIC));
 
             check_stmt(db, sqlite3_step(stmt), CPPTRANSPORT_REPO_STORE_PACKAGE_FAIL, SQLITE_DONE);
 
@@ -206,9 +206,9 @@ namespace transport
             sqlite3_stmt* stmt;
             check_stmt(db, sqlite3_prepare_v2(db, store_stmt.str().c_str(), store_stmt.str().length()+1, &stmt, nullptr));
 
-            check_stmt(db, sqlite3_bind_text(stmt, 1, name.c_str(), name.length(), SQLITE_STATIC));
-            check_stmt(db, sqlite3_bind_text(stmt, 2, task.c_str(), task.length(), SQLITE_STATIC));
-            check_stmt(db, sqlite3_bind_text(stmt, 3, filename.c_str(), filename.length(), SQLITE_STATIC));
+            check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@name"), name.c_str(), name.length(), SQLITE_STATIC));
+            check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@task"), task.c_str(), task.length(), SQLITE_STATIC));
+            check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@path"), filename.c_str(), filename.length(), SQLITE_STATIC));
 
             check_stmt(db, sqlite3_step(stmt), CPPTRANSPORT_REPO_STORE_PACKAGE_FAIL, SQLITE_DONE);
 

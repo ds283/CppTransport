@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __data_manager_operations_H_
-#define __data_manager_operations_H_
+#ifndef CPPTRANSPORT_DATA_MANAGER_OPERATIONS_H
+#define CPPTRANSPORT_DATA_MANAGER_OPERATIONS_H
 
 
 #include "transport-runtime-api/sqlite3/operations/data_manager_common.h"
@@ -17,4 +17,4 @@
 #include "transport-runtime-api/sqlite3/operations/data_manager_integrity.h"
 
 
-#endif //__data_manager_operations_H_
+#endif //CPPTRANSPORT_DATA_MANAGER_OPERATIONS_H

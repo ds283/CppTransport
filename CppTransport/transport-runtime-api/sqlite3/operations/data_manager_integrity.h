@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __data_manager_integrity_H_
-#define __data_manager_integrity_H_
+#ifndef CPPTRANSPORT_DATA_MANAGER_INTEGRITY_H
+#define CPPTRANSPORT_DATA_MANAGER_INTEGRITY_H
 
 
 #include "transport-runtime-api/sqlite3/operations/data_manager_common.h"
@@ -97,15 +97,15 @@ namespace transport
         template <typename Database>
         void drop_statistics(sqlite3* db, const std::list<unsigned int>& drop_list, const Database& dbase)
 	        {
-            for(std::list<unsigned int>::const_iterator t = drop_list.begin(); t != drop_list.end(); ++t)
+            for(unsigned int drop_serial : drop_list)
 	            {
                 typename Database::const_config_iterator u = std::find_if(dbase.config_begin(), dbase.config_end(),
-                                                                          integrity_detail::ConfigurationFinder<typename Database::const_config_iterator::type>(*t));
+                                                                          integrity_detail::ConfigurationFinder<typename Database::const_config_iterator::type>(drop_serial));
 
                 if(u != dbase.config_end())
 	                {
                     std::ostringstream drop_stmt;
-                    drop_stmt << "DELETE FROM " << CPPTRANSPORT_SQLITE_STATS_TABLE << " WHERE kserial=" << *t << ";";
+                    drop_stmt << "DELETE FROM " << CPPTRANSPORT_SQLITE_STATS_TABLE << " WHERE kserial=" << drop_serial << ";";
                     exec(db, drop_stmt.str());
 	                }
 	            }
@@ -115,15 +115,15 @@ namespace transport
         template <typename number, typename ValueType, typename Database>
         void drop_ics(sqlite3* db, const std::list<unsigned int>& drop_list, const Database& dbase)
 	        {
-            for(std::list<unsigned int>::const_iterator t = drop_list.begin(); t != drop_list.end(); ++t)
+            for(unsigned int drop_serial : drop_list)
 	            {
                 typename Database::const_config_iterator u = std::find_if(dbase.config_begin(), dbase.config_end(),
-                                                                          integrity_detail::ConfigurationFinder<typename Database::const_config_iterator::type>(*t));
+                                                                          integrity_detail::ConfigurationFinder<typename Database::const_config_iterator::type>(drop_serial));
 
                 if(u != dbase.config_end())
 	                {
                     std::ostringstream drop_stmt;
-                    drop_stmt << "DELETE FROM " << data_traits<number, ValueType>::sqlite_table() << " WHERE kserial=" << *t << ";";
+                    drop_stmt << "DELETE FROM " << data_traits<number, ValueType>::sqlite_table() << " WHERE kserial=" << drop_serial << ";";
                     exec(db, drop_stmt.str());
 	                }
 	            }
@@ -134,17 +134,17 @@ namespace transport
 		    void drop_k_configurations(sqlite3* db, WriterObject& writer, const std::list<unsigned int>& drop_list, const Database& dbase,
 		                               std::string table, bool silent=false)
 			    {
-				    for(std::list<unsigned int>::const_iterator t = drop_list.begin(); t != drop_list.end(); ++t)
+            for(unsigned int drop_serial : drop_list)
 					    {
 				        typename Database::const_config_iterator u = std::find_if(dbase.config_begin(), dbase.config_end(),
-				                                                                  integrity_detail::ConfigurationFinder<typename Database::const_config_iterator::type>(*t));
+				                                                                  integrity_detail::ConfigurationFinder<typename Database::const_config_iterator::type>(drop_serial));
 
 				        if(u != dbase.config_end())
 					        {
 				            if(!silent) BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "** " << *u;
 
 				            std::ostringstream drop_stmt;
-				            drop_stmt << "DELETE FROM " << table << " WHERE kserial=" << *t << ";";
+				            drop_stmt << "DELETE FROM " << table << " WHERE kserial=" << drop_serial << ";";
 				            exec(db, drop_stmt.str());
 					        }
 					    }
@@ -156,4 +156,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__data_manager_integrity_H_
+#endif //CPPTRANSPORT_DATA_MANAGER_INTEGRITY_H

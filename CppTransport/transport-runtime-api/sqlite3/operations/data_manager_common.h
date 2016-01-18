@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __data_manager_common_H_
-#define __data_manager_common_H_
+#ifndef CPPTRANSPORT_DATA_MANAGER_COMMON_H
+#define CPPTRANSPORT_DATA_MANAGER_COMMON_H
 
 
 #include <set>
@@ -113,4 +113,4 @@ namespace transport
   }   // namespace transport
 
 
-#endif //__data_manager_common_H_
+#endif //CPPTRANSPORT_DATA_MANAGER_COMMON_H
