@@ -1,6 +1,6 @@
 //
 // Created by David Seery on 11/12/2013.
-// Copyright (c) 2013-15 University of Sussex. All rights reserved.
+// Copyright (c) 2013-2016 University of Sussex. All rights reserved.
 //
 
 
@@ -16,80 +16,29 @@
 #include "msg_en.h"
 
 
-#define BIND(X) std::bind(&kernel_argument_macros::X, this, std::placeholders::_1)
+#define BIND(X, N) std::move(std::make_unique<X>(N, p, prn))
 
 
 namespace shared
   {
 
-    kernel_argument_macros::kernel_argument_macros(translator_data& p, language_printer& prn, std::string q, std::string l)
-      : ::macro_packages::replacement_rule_package(p, prn),
-        qualifier(q),
-        label(l)
+
+    kernel_argument_macros::kernel_argument_macros(tensor_factory& f, cse& cw, lambda_manager& lm, translator_data& p, language_printer& prn)
+      : ::macro_packages::replacement_rule_package(f, cw, lm, p, prn)
       {
-//        printer->set_label(label);
-      }
-
-    const std::vector<macro_packages::simple_rule> kernel_argument_macros::get_pre_rules()
-      {
-        std::vector<macro_packages::simple_rule> package;
-
-        const std::vector<replacement_rule_simple> rules =
-                                                     { BIND(args_params), BIND(args_1index),
-                                                       BIND(args_2index), BIND(args_2index),
-                                                       BIND(args_3index), BIND(args_3index)
-                                                     };
-
-        const std::vector<std::string> names =
-                                         { "PARAM_ARGS", "COORD_ARGS",
-                                           "U2_ARGS", "TWOPF_ARGS",
-                                           "U3_ARGS", "THREEPF_ARGS"
-                                         };
-
-        const std::vector<unsigned int> args =
-                                          { 0, 1,
-                                            1, 1,
-                                            1, 1
-                                          };
-
-        assert(rules.size() == names.size());
-        assert(rules.size() == args.size());
-
-        for(int i = 0; i < rules.size(); ++i)
-          {
-            macro_packages::simple_rule rule;
-
-            rule.rule = rules[i];
-            rule.args = args[i];
-            rule.name = names[i];
-
-            package.push_back(rule);
-          }
-
-        return(package);
-      }
-
-
-    const std::vector<macro_packages::simple_rule> kernel_argument_macros::get_post_rules()
-      {
-        std::vector<macro_packages::simple_rule> package;
-
-        return(package);
-      }
-
-
-    const std::vector<macro_packages::index_rule> kernel_argument_macros::get_index_rules()
-      {
-        std::vector<macro_packages::index_rule> package;
-
-        return(package);
+        pre_package.emplace_back(BIND(args_params, "PARAM_ARGS"));
+        pre_package.emplace_back(BIND(args_1index, "COORD_ARGS"));
+        pre_package.emplace_back(BIND(args_2index, "U2_ARGS"));
+        pre_package.emplace_back(BIND(args_2index, "TWOPF_ARGS"));
+        pre_package.emplace_back(BIND(args_3index, "U3_ARGS"));
+        pre_package.emplace_back(BIND(args_3index, "THREEPF_ARGS"));
       }
 
 
     // *******************************************************************
 
 
-    std::string kernel_argument_macros::args_params(const std::vector<std::string> &args)
+    std::string args_params::evaluate(const macro_argument_list& args)
       {
         std::vector<std::string> list = this->data_payload.get_param_list();
 
@@ -104,105 +53,90 @@ namespace shared
       }
 
 
-    std::string kernel_argument_macros::args_1index(const std::vector<std::string>& args)
+    std::string args_1index::evaluate(const macro_argument_list& args)
       {
-        assert(args.size() == 1);
-
-        std::string name     = (args.size() >= 1 ? args[0] : OUTPUT_DEFAULT_ONEINDEX_NAME);
+        std::string name = args[COORD_ARGS_NAME_ARGUMENT];
 
         std::ostringstream out;
 
-        std::vector<struct index_abstract> indices;
-        struct index_abstract A;
-        A.label  = 'A';
-        A.range  = INDEX_RANGE_ALL;
-        indices.push_back(A);
+        // build a set of assignments for a fake index 'A'
+        // the assignments will range over all possible values which A can assume
+        // we use these to construct a list of arguments, one for each possible value
+        abstract_index_list indices;
+        indices.emplace_back('A', std::make_unique<abstract_index>('A', this->data_payload.get_number_fields(), this->data_payload.get_number_parameters()));
 
-        assignment_package assigner(this->data_payload.get_number_fields(), this->data_payload.get_number_parameters(), this->data_payload.get_index_order());
+        assignment_set assignments(indices, this->data_payload.get_index_order());
 
-        std::vector< std::vector<struct index_assignment> > assignment = assigner.assign(indices);
-
-        for(std::vector< std::vector<struct index_assignment> >::iterator t = assignment.begin(); t != assignment.end(); ++t)
+        unsigned int c = 0;
+        for(std::unique_ptr<assignment_list> assign : assignments)
           {
-            out << (t != assignment.begin() ? ", " : "") << this->qualifier << (this->qualifier != "" ? " " : "") << "double* " << name;
-            for(std::vector<struct index_assignment>::iterator u = (*t).begin(); u != (*t).end(); ++u)
+            out << (c != 0 ? ", " : "") << this->qualifier << (this->qualifier != "" ? " " : "") << "double* " << name;
+
+            for(const assignment_record& t : *assign)
               {
-                out << "_" << assigner.value(*u);
+                out << "_" << t.get_numeric_value();
               }
+
+            ++c;
           }
 
         return(out.str());
       }
 
 
-    std::string kernel_argument_macros::args_2index(const std::vector<std::string>& args)
+    std::string args_2index::evaluate(const macro_argument_list& args)
       {
-        assert(args.size() == 1);
-
-        std::string  name    = (args.size() >= 1 ? args[0] : OUTPUT_DEFAULT_TWOINDEX_NAME);
+        std::string name = args[TWOPF_ARGS_NAME_ARGUMENT];
 
         std::ostringstream out;
 
-        std::vector< struct index_abstract > indices;
-        struct index_abstract A;
-        A.label  = 'A';
-        A.range  = INDEX_RANGE_ALL;
-        indices.push_back(A);
-        struct index_abstract B;
-        B.label  = 'B';
-        B.range  = INDEX_RANGE_ALL;
-        indices.push_back(B);
+        abstract_index_list indices;
+        indices.emplace_back('A', std::make_unique<abstract_index>('A', this->data_payload.get_number_fields(), this->data_payload.get_number_parameters()));
+        indices.emplace_back('B', std::make_unique<abstract_index>('B', this->data_payload.get_number_fields(), this->data_payload.get_number_parameters()));
 
-        assignment_package assigner(this->data_payload.get_number_fields(), this->data_payload.get_number_parameters(), this->data_payload.get_index_order());
+        assignment_set assignments(indices, this->data_payload.get_index_order());
 
-        std::vector< std::vector<struct index_assignment> > assignment = assigner.assign(indices);
-
-        for(std::vector< std::vector<struct index_assignment> >::iterator t = assignment.begin(); t != assignment.end(); ++t)
+        unsigned int c = 0;
+        for(std::unique_ptr<assignment_list> assign : assignments)
           {
-            out << (t != assignment.begin() ? ", " : "") << this->qualifier << (this->qualifier != "" ? " " : "") << "double* " << name;
-            for(std::vector<struct index_assignment>::iterator u = (*t).begin(); u != (*t).end(); ++u)
+            out << (c != 0 ? ", " : "") << this->qualifier << (this->qualifier != "" ? " " : "") << "double* " << name;
+
+            for(const assignment_record& t : *assign)
               {
-                out << "_" << assigner.value(*u);
+                out << "_" << t.get_numeric_value();
               }
+
+            ++c;
           }
 
         return(out.str());
       }
 
 
-    std::string kernel_argument_macros::args_3index(const std::vector<std::string>& args)
+    std::string args_3index::evaluate(const macro_argument_list& args)
       {
-        assert(args.size() == 1);
-
-        std::string  name    = (args.size() >= 1 ? args[0] : OUTPUT_DEFAULT_THREEINDEX_NAME);
+        std::string name = args[THREEPF_ARGS_NAME_ARGUMENT];
 
         std::ostringstream out;
 
-        std::vector< struct index_abstract > indices;
-        struct index_abstract A;
-        A.label  = 'A';
-        A.range  = INDEX_RANGE_ALL;
-        indices.push_back(A);
-        struct index_abstract B;
-        B.label  = 'B';
-        B.range  = INDEX_RANGE_ALL;
-        indices.push_back(B);
-        struct index_abstract C;
-        C.label  = 'C';
-        C.range  = INDEX_RANGE_ALL;
-        indices.push_back(C);
+        abstract_index_list indices;
+        indices.emplace_back('A', std::make_unique<abstract_index>('A', this->data_payload.get_number_fields(), this->data_payload.get_number_parameters()));
+        indices.emplace_back('B', std::make_unique<abstract_index>('B', this->data_payload.get_number_fields(), this->data_payload.get_number_parameters()));
+        indices.emplace_back('C', std::make_unique<abstract_index>('C', this->data_payload.get_number_fields(), this->data_payload.get_number_parameters()));
 
-        assignment_package assigner(this->data_payload.get_number_fields(), this->data_payload.get_number_parameters(), this->data_payload.get_index_order());
+        assignment_set assignments(indices, this->data_payload.get_index_order());
 
-        std::vector< std::vector<struct index_assignment> > assignment = assigner.assign(indices);
-
-        for(std::vector< std::vector<struct index_assignment> >::iterator t = assignment.begin(); t != assignment.end(); ++t)
+        unsigned int c = 0;
+        for(std::unique_ptr<assignment_list> assign : assignments)
           {
-            out << (t != assignment.begin() ? ", " : "") << this->qualifier << (this->qualifier != "" ? " " : "") << "double* " << name;
-            for(std::vector<struct index_assignment>::iterator u = (*t).begin(); u != (*t).end(); ++u)
+            out << (c != 0 ? ", " : "") << this->qualifier << (this->qualifier != "" ? " " : "") << "double* " << name;
+
+            for(const assignment_record& t : *assign)
               {
-                out << "_" << assigner.value(*u);
+                out << "_" << t.get_numeric_value();
               }
+
+            ++c;
           }
 
         return(out.str());

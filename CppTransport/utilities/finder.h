@@ -1,10 +1,10 @@
 //
 // Created by David Seery on 12/06/2013.
-// Copyright (c) 2013-15 University of Sussex. All rights reserved.
+// Copyright (c) 2013-2016 University of Sussex. All rights reserved.
 //
 
-#ifndef __finder_H_
-#define __finder_H_
+#ifndef CPPTRANSPORT_FINDER_H
+#define CPPTRANSPORT_FINDER_H
 
 
 #include <iostream>
@@ -60,4 +60,4 @@ class finder
   };
 
 
-#endif //__finder_H_
+#endif //CPPTRANSPORT_FINDER_H

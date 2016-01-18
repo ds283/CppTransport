@@ -1,6 +1,6 @@
 //
 // Created by David Seery on 17/06/2013.
-// Copyright (c) 2013-15 University of Sussex. All rights reserved.
+// Copyright (c) 2013-2016 University of Sussex. All rights reserved.
 //
 
 
@@ -10,6 +10,7 @@
 
 #include "lexical.h"
 #include "y_lexer.h"
+
 
 std::unordered_map<enum keyword_type, enum y::y_parser::token::yytokentype> keyword_tokens =
   {

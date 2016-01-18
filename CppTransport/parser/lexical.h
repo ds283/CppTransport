@@ -1,14 +1,14 @@
 //
 // Created by David Seery on 17/06/2013.
-// Copyright (c) 2013-15 University of Sussex. All rights reserved.
+// Copyright (c) 2013-2016 University of Sussex. All rights reserved.
 //
 
 
-
-#ifndef __lexical_H_
-#define __lexical_H_
+#ifndef CPPTRANSPORT_LEXICAL_H
+#define CPPTRANSPORT_LEXICAL_H
 
 #include <string>
+
 
 enum class keyword_type
   {
@@ -27,6 +27,7 @@ enum class keyword_type
     f_beta, f_psi, f_factorial, f_binomial
   };
 
+
 enum class character_type
   {
       open_brace, close_brace, open_bracket, close_bracket,
@@ -36,4 +37,32 @@ enum class character_type
   };
 
 
-#endif //__lexical_H_
+namespace std
+  {
+
+    // allow hashing of these enums
+    template<> struct hash<keyword_type>
+      {
+
+        size_t operator()(const keyword_type& t) const
+          {
+            return static_cast< std::underlying_type<keyword_type>::type >(t);
+          }
+
+      };
+
+
+    template<> struct hash<character_type>
+      {
+
+        size_t operator()(const character_type& t) const
+          {
+            return static_cast< std::underlying_type<character_type>::type >(t);
+          }
+
+      };
+
+  }
+
+
+#endif //CPPTRANSPORT_LEXICAL_H

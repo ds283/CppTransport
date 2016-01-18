@@ -1,6 +1,6 @@
 //
 // Created by David Seery on 05/05/2014.
-// Copyright (c) 2014-15 University of Sussex. All rights reserved.
+// Copyright (c) 2014-2016 University of Sussex. All rights reserved.
 //
 
 
@@ -9,18 +9,18 @@
 
 
 #define CPPTRANSPORT_WRONG_FIELD_NAMES_A   "Error: supplied number of field names [= "
-#define CPPTRANSPORT_WRONG_FIELD_NAMES_B   " does not match expected number of fields [= "
+#define CPPTRANSPORT_WRONG_FIELD_NAMES_B   "] does not match expected number of fields [= "
 #define CPPTRANSPORT_WRONG_F_LATEX_NAMES_A "Error: supplied number of LaTeX field names [= "
-#define CPPTRANSPORT_WRONG_F_LATEX_NAMES_B " does not match expected number of fields [= "
+#define CPPTRANSPORT_WRONG_F_LATEX_NAMES_B "] does not match expected number of fields [= "
 #define CPPTRANSPORT_WRONG_PARAM_NAMES_A   "Error: supplied number of parameter names [= "
-#define CPPTRANSPORT_WRONG_PARAM_NAMES_B   " does not match expected number of parameters [= "
+#define CPPTRANSPORT_WRONG_PARAM_NAMES_B   "] does not match expected number of parameters [= "
 #define CPPTRANSPORT_WRONG_P_LATEX_NAMES_A "Error: supplied number of LaTeX parameter names [= "
-#define CPPTRANSPORT_WRONG_P_LATEX_NAMES_B " does not match expected number of parameters [= "
+#define CPPTRANSPORT_WRONG_P_LATEX_NAMES_B "] does not match expected number of parameters [= "
 #define CPPTRANSPORT_WRONG_PARAMS_A        "Error: supplied number of parameters [= "
-#define CPPTRANSPORT_WRONG_PARAMS_B        " does not match expected number [= "
+#define CPPTRANSPORT_WRONG_PARAMS_B        "] does not match expected number [= "
 
 #define CPPTRANSPORT_WRONG_ICS_A           "Error: supplied number of initial conditions [= "
-#define CPPTRANSPORT_WRONG_ICS_B           " does not match expected number [= "
+#define CPPTRANSPORT_WRONG_ICS_B           "] does not match expected number [= "
 #define CPPTRANSPORT_WRONG_ICS_C           " or "
 
 #define CPPTRANSPORT_SOLVING_ICS_MESSAGE   "Solving for background evolution using initial conditions"

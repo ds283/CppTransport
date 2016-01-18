@@ -1,6 +1,6 @@
 //
 // Created by David Seery on 17/05/2014.
-// Copyright (c) 2014-15 University of Sussex. All rights reserved.
+// Copyright (c) 2014-2016 University of Sussex. All rights reserved.
 //
 
 
@@ -19,7 +19,7 @@
 
 
 #define CPPTRANSPORT_DEFAULT_K_PRECISION (6)
-#define CPPTRANSPORT_DEFAULT_T_PRECISION (2)
+#define CPPTRANSPORT_DEFAULT_T_PRECISION (5)
 
 
 namespace transport

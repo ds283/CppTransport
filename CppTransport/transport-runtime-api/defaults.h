@@ -1,6 +1,6 @@
 //
 // Created by David Seery on 14/05/2014.
-// Copyright (c) 2014-15 University of Sussex. All rights reserved.
+// Copyright (c) 2014-2016 University of Sussex. All rights reserved.
 //
 
 
@@ -34,6 +34,9 @@
 #define CPPTRANSPORT_DEFAULT_KCONFIG_SEARCH_PRECISION   (1E-5)
 
 #define CPPTRANSPORT_DEFAULT_PYTHON_PATH                "/usr/bin/python"
+
+#define CPPTRANSPORT_HOME_ENV                           "HOME"
+#define CPPTRANSPORT_RUNTIME_CONFIG_FILE                ".cpptransport_runtime"
 
 // default storage limit on nodes - 500 Mb
 // on a machine with 8 workers, that would give 4000 Mb or 4 Gb

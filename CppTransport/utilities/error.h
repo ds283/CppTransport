@@ -1,10 +1,10 @@
 //
 // Created by David Seery on 12/06/2013.
-// Copyright (c) 2013-15 University of Sussex. All rights reserved.
+// Copyright (c) 2013-2016 University of Sussex. All rights reserved.
 //
 
-#ifndef __error_H_
-#define __error_H_
+#ifndef CPPTRANSPORT_ERROR_H
+#define CPPTRANSPORT_ERROR_H
 
 #include <string>
 #include <deque>
@@ -36,4 +36,4 @@ void warn (const std::string& msg, const argument_cache& cache, const local_envi
 void error(const std::string& msg, const argument_cache& cache, const local_environment& env, const error_context& context, unsigned int level);
 
 
-#endif //__error_H_
+#endif //CPPTRANSPORT_ERROR_H

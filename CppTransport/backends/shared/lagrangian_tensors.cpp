@@ -1,6 +1,6 @@
 //
 // Created by David Seery on 04/12/2013.
-// Copyright (c) 2013-15 University of Sussex. All rights reserved.
+// Copyright (c) 2013-2016 University of Sussex. All rights reserved.
 //
 
 
@@ -8,277 +8,113 @@
 #include <functional>
 
 #include "lagrangian_tensors.h"
-#include "cse.h"
-#include "u_tensor_factory.h"
 
 
-#define BIND1(X) std::bind(&lagrangian_tensors::X, this, std::placeholders::_1)
-#define BIND3(X) std::bind(&lagrangian_tensors::X, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)
+#define BIND_SYMBOL(X, N) std::move(std::make_unique<X>(N, f, cw, lm, p.get_symbol_factory(), prn))
 
 
 namespace macro_packages
   {
 
-    const std::vector<simple_rule> lagrangian_tensors::get_pre_rules()
+    lagrangian_tensors::lagrangian_tensors(tensor_factory& f, cse& cw, lambda_manager& lm, translator_data& p, language_printer& prn)
+      : replacement_rule_package(f, cw, lm, p, prn)
       {
-        std::vector<simple_rule> package;
-
-        return(package);
-      }
-
-
-    const std::vector<simple_rule> lagrangian_tensors::get_post_rules()
-      {
-        std::vector<simple_rule> package;
-
-        return(package);
-      }
-
-
-    const std::vector<index_rule> lagrangian_tensors::get_index_rules()
-      {
-        std::vector<index_rule> package;
-
-        const std::vector<replacement_rule_pre> pres =
-          { BIND1(pre_A_tensor),                BIND1(pre_B_tensor),                BIND1(pre_C_tensor),
-            BIND1(pre_A_predef),                BIND1(pre_B_predef),                BIND1(pre_C_predef),
-            BIND1(pre_M_tensor),                BIND1(pre_M_predef)
-          };
-
-        const std::vector<replacement_rule_post> posts =
-          { BIND1(generic_post_hook),           BIND1(generic_post_hook),           BIND1(generic_post_hook),
-            BIND1(generic_post_hook),           BIND1(generic_post_hook),           BIND1(generic_post_hook),
-            BIND1(generic_post_hook),           BIND1(generic_post_hook)
-          };
-
-        const std::vector<replacement_rule_index> rules =
-          { BIND3(replace_3index_field_tensor), BIND3(replace_3index_field_tensor), BIND3(replace_3index_field_tensor),
-            BIND3(replace_3index_field_tensor), BIND3(replace_3index_field_tensor), BIND3(replace_3index_field_tensor),
-            BIND3(replace_2index_field_tensor), BIND3(replace_2index_field_tensor)
-          };
-
-        const std::vector<std::string> names =
-          { "A_TENSOR",                         "B_TENSOR",                         "C_TENSOR",
-            "A_PREDEF",                         "B_PREDEF",                         "C_PREDEF",
-            "M_TENSOR",                         "M_PREDEF"
-          };
-
-        const std::vector<unsigned int> args =
-          { 4,                                  4,                                  4,
-            6,                                  6,                                  6,
-            0,                                  2
-          };
-
-        const std::vector<unsigned int> indices =
-          { 3,                                  3,                                  3,
-            3,                                  3,                                  3,
-            2,                                  2
-          };
-
-        const std::vector<unsigned int> ranges =
-          { 1,                                  1,                                  1,
-            1,                                  1,                                  1,
-            1,                                  1
-          };
-
-        assert(pres.size() == posts.size());
-        assert(pres.size() == rules.size());
-        assert(pres.size() == names.size());
-        assert(pres.size() == args.size());
-        assert(pres.size() == ranges.size());
-
-        for(int i = 0; i < pres.size(); ++i)
-          {
-            index_rule rule;
-
-            rule.rule    = rules[i];
-            rule.name    = names[i];
-            rule.pre     = pres[i];
-            rule.post    = posts[i];
-            rule.args    = args[i];
-            rule.indices = indices[i];
-            rule.range   = ranges[i];
-
-            package.push_back(rule);
-          }
-
-        return(package);
+        index_package.emplace_back(BIND_SYMBOL(replace_A, "A_PREDEF"));
+        index_package.emplace_back(BIND_SYMBOL(replace_B, "B_PREDEF"));
+        index_package.emplace_back(BIND_SYMBOL(replace_C, "C_PREDEF"));
+        index_package.emplace_back(BIND_SYMBOL(replace_M, "M_PREDEF"));
       }
 
 
     // *******************************************************************
 
 
-    void* lagrangian_tensors::pre_A_tensor(const std::vector<std::string>& args)
+    void replace_A::pre_hook(const macro_argument_list& args)
       {
-        assert(args.size() == 4);
+        GiNaC::symbol k1 = sym_factory.get_symbol(args[A_PREDEF_K1_ARGUMENT]);
+        GiNaC::symbol k2 = sym_factory.get_symbol(args[A_PREDEF_K2_ARGUMENT]);
+        GiNaC::symbol k3 = sym_factory.get_symbol(args[A_PREDEF_K3_ARGUMENT]);
+        GiNaC::symbol  a = sym_factory.get_symbol(args[A_PREDEF_A_ARGUMENT]);
 
-		    symbol_factory& sym_factory = this->data_payload.get_symbol_factory();
-
-        GiNaC::symbol k1 = sym_factory.get_symbol(args.size() >= 1 ? args[0] : this->default_k1);
-        GiNaC::symbol k2 = sym_factory.get_symbol(args.size() >= 2 ? args[1] : this->default_k2);
-        GiNaC::symbol k3 = sym_factory.get_symbol(args.size() >= 3 ? args[2] : this->default_k3);
-        GiNaC::symbol  a = sym_factory.get_symbol(args.size() >= 4 ? args[3] : this->default_a);
-
-        std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
-        this->u_factory->compute_A(k1, k2, k3, a, *container, *this->fl);
-
-        cse_map* map = this->cse_worker->map_factory(container);
-
-        return(map);
+        std::unique_ptr<flattened_tensor> container = this->A_tensor->compute(k1, k2, k3, a);
+        this->map = std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }
 
 
-    void* lagrangian_tensors::pre_A_predef(const std::vector<std::string>& args)
+    void replace_B::pre_hook(const macro_argument_list& args)
       {
-        assert(args.size() == 6);
+        GiNaC::symbol k1 = sym_factory.get_symbol(args[B_PREDEF_K1_ARGUMENT]);
+        GiNaC::symbol k2 = sym_factory.get_symbol(args[B_PREDEF_K2_ARGUMENT]);
+        GiNaC::symbol k3 = sym_factory.get_symbol(args[B_PREDEF_K3_ARGUMENT]);
+        GiNaC::symbol  a = sym_factory.get_symbol(args[B_PREDEF_A_ARGUMENT]);
 
-        symbol_factory& sym_factory = this->data_payload.get_symbol_factory();
-
-        GiNaC::symbol k1 = sym_factory.get_symbol(args.size() >= 1 ? args[0] : this->default_k1);
-        GiNaC::symbol k2 = sym_factory.get_symbol(args.size() >= 2 ? args[1] : this->default_k2);
-        GiNaC::symbol k3 = sym_factory.get_symbol(args.size() >= 3 ? args[2] : this->default_k3);
-        GiNaC::symbol  a = sym_factory.get_symbol(args.size() >= 4 ? args[3] : this->default_a);
-
-        GiNaC::symbol Hsq_symbol = sym_factory.get_symbol(args.size() >= 5 ? args[4] : this->default_Hsq);
-        GiNaC::symbol eps_symbol = sym_factory.get_symbol(args.size() >= 6 ? args[5] : this->default_eps);
-        GiNaC::ex     Hsq = Hsq_symbol;
-        GiNaC::ex     eps = eps_symbol;
-
-        std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
-        this->u_factory->compute_A(k1, k2, k3, a, Hsq, eps, *container, *this->fl);
-
-        cse_map* map = this->cse_worker->map_factory(container);
-
-        return(map);
+        std::unique_ptr<flattened_tensor> container = this->B_tensor->compute(k1, k2, k3, a);
+        this->map = std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }
 
 
-      // ******************************************************************
-
-
-    void* lagrangian_tensors::pre_B_tensor(const std::vector<std::string> &args)
+    void replace_C::pre_hook(const macro_argument_list& args)
       {
-        assert(args.size() == 4);
+        GiNaC::symbol k1 = sym_factory.get_symbol(args[C_PREDEF_K1_ARGUMENT]);
+        GiNaC::symbol k2 = sym_factory.get_symbol(args[C_PREDEF_K2_ARGUMENT]);
+        GiNaC::symbol k3 = sym_factory.get_symbol(args[C_PREDEF_K3_ARGUMENT]);
+        GiNaC::symbol  a = sym_factory.get_symbol(args[C_PREDEF_A_ARGUMENT]);
 
-        symbol_factory& sym_factory = this->data_payload.get_symbol_factory();
-
-        GiNaC::symbol k1 = sym_factory.get_symbol(args.size() >= 1 ? args[0] : this->default_k1);
-        GiNaC::symbol k2 = sym_factory.get_symbol(args.size() >= 2 ? args[1] : this->default_k2);
-        GiNaC::symbol k3 = sym_factory.get_symbol(args.size() >= 3 ? args[2] : this->default_k3);
-        GiNaC::symbol  a = sym_factory.get_symbol(args.size() >= 4 ? args[3] : this->default_a);
-
-        std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
-        this->u_factory->compute_B(k1, k2, k3, a, *container, *this->fl);
-
-        cse_map* map = this->cse_worker->map_factory(container);
-
-        return (map);
+        std::unique_ptr<flattened_tensor> container = this->C_tensor->compute(k1, k2, k3, a);
+        this->map = std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }
 
 
-    void* lagrangian_tensors::pre_B_predef(const std::vector<std::string>& args)
+    void replace_M::pre_hook(const macro_argument_list& args)
       {
-        assert(args.size() == 6);
-
-        symbol_factory& sym_factory = this->data_payload.get_symbol_factory();
-
-        GiNaC::symbol k1 = sym_factory.get_symbol(args.size() >= 1 ? args[0] : this->default_k1);
-        GiNaC::symbol k2 = sym_factory.get_symbol(args.size() >= 2 ? args[1] : this->default_k2);
-        GiNaC::symbol k3 = sym_factory.get_symbol(args.size() >= 3 ? args[2] : this->default_k3);
-        GiNaC::symbol  a = sym_factory.get_symbol(args.size() >= 4 ? args[3] : this->default_a);
-
-        GiNaC::symbol Hsq_symbol(args.size() >= 5 ? args[4] : this->default_Hsq);
-        GiNaC::symbol eps_symbol(args.size() >= 6 ? args[5] : this->default_eps);
-        GiNaC::ex     Hsq = Hsq_symbol;
-        GiNaC::ex     eps = eps_symbol;
-
-        std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
-        this->u_factory->compute_B(k1, k2, k3, a, Hsq, eps, *container, *this->fl);
-
-        cse_map* map = this->cse_worker->map_factory(container);
-
-        return (map);
+        std::unique_ptr<flattened_tensor> container = this->M_tensor->compute();
+        this->map = std::make_unique<cse_map>(std::move(container), this->cse_worker);
       }
 
 
-    // ******************************************************************
+    // *******************************************************************
 
 
-    void* lagrangian_tensors::pre_C_tensor(const std::vector<std::string> &args)
+    std::string replace_A::roll(const macro_argument_list& args, const abstract_index_list& indices)
       {
-        assert(args.size() == 4);
+        GiNaC::symbol k1 = sym_factory.get_symbol(args[A_PREDEF_K1_ARGUMENT]);
+        GiNaC::symbol k2 = sym_factory.get_symbol(args[A_PREDEF_K2_ARGUMENT]);
+        GiNaC::symbol k3 = sym_factory.get_symbol(args[A_PREDEF_K3_ARGUMENT]);
+        GiNaC::symbol  a = sym_factory.get_symbol(args[A_PREDEF_A_ARGUMENT]);
 
-        symbol_factory& sym_factory = this->data_payload.get_symbol_factory();
-
-        GiNaC::symbol k1 = sym_factory.get_symbol(args.size() >= 1 ? args[0] : this->default_k1);
-        GiNaC::symbol k2 = sym_factory.get_symbol(args.size() >= 2 ? args[1] : this->default_k2);
-        GiNaC::symbol k3 = sym_factory.get_symbol(args.size() >= 3 ? args[2] : this->default_k3);
-        GiNaC::symbol  a = sym_factory.get_symbol(args.size() >= 4 ? args[3] : this->default_a);
-
-        std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
-        this->u_factory->compute_C(k1, k2, k3, a, *container, *this->fl);
-
-        cse_map* map = this->cse_worker->map_factory(container);
-
-        return (map);
+        std::unique_ptr<atomic_lambda> lambda = this->A_tensor->compute_lambda(indices[0], indices[1], indices[2], k1, k2, k3, a);
+        return this->lambda_mgr.cache(std::move(lambda));
       }
 
 
-    void* lagrangian_tensors::pre_C_predef(const std::vector<std::string> &args)
+    std::string replace_B::roll(const macro_argument_list& args, const abstract_index_list& indices)
       {
-        assert(args.size() == 6);
+        GiNaC::symbol k1 = sym_factory.get_symbol(args[A_PREDEF_K1_ARGUMENT]);
+        GiNaC::symbol k2 = sym_factory.get_symbol(args[A_PREDEF_K2_ARGUMENT]);
+        GiNaC::symbol k3 = sym_factory.get_symbol(args[A_PREDEF_K3_ARGUMENT]);
+        GiNaC::symbol  a = sym_factory.get_symbol(args[A_PREDEF_A_ARGUMENT]);
 
-        symbol_factory& sym_factory = this->data_payload.get_symbol_factory();
-
-        GiNaC::symbol k1 = sym_factory.get_symbol(args.size() >= 1 ? args[0] : this->default_k1);
-        GiNaC::symbol k2 = sym_factory.get_symbol(args.size() >= 2 ? args[1] : this->default_k2);
-        GiNaC::symbol k3 = sym_factory.get_symbol(args.size() >= 3 ? args[2] : this->default_k3);
-        GiNaC::symbol  a = sym_factory.get_symbol(args.size() >= 4 ? args[3] : this->default_a);
-
-        GiNaC::symbol Hsq_symbol = sym_factory.get_symbol(args.size() >= 5 ? args[4] : this->default_Hsq);
-        GiNaC::symbol eps_symbol = sym_factory.get_symbol(args.size() >= 6 ? args[5] : this->default_eps);
-        GiNaC::ex     Hsq = Hsq_symbol;
-        GiNaC::ex     eps = eps_symbol;
-
-        std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
-        this->u_factory->compute_C(k1, k2, k3, a, Hsq, eps, *container, *this->fl);
-
-        cse_map* map = this->cse_worker->map_factory(container);
-
-        return (map);
+        std::unique_ptr<atomic_lambda> lambda = this->B_tensor->compute_lambda(indices[0], indices[1], indices[2], k1, k2, k3, a);
+        return this->lambda_mgr.cache(std::move(lambda));
       }
 
 
-// ******************************************************************
-
-
-    void* lagrangian_tensors::pre_M_tensor(const std::vector<std::string> &args)
+    std::string replace_C::roll(const macro_argument_list& args, const abstract_index_list& indices)
       {
-        std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
-        this->u_factory->compute_M(*container, *this->fl);
+        GiNaC::symbol k1 = sym_factory.get_symbol(args[A_PREDEF_K1_ARGUMENT]);
+        GiNaC::symbol k2 = sym_factory.get_symbol(args[A_PREDEF_K2_ARGUMENT]);
+        GiNaC::symbol k3 = sym_factory.get_symbol(args[A_PREDEF_K3_ARGUMENT]);
+        GiNaC::symbol  a = sym_factory.get_symbol(args[A_PREDEF_A_ARGUMENT]);
 
-        cse_map* map = this->cse_worker->map_factory(container);
-
-        return (map);
+        std::unique_ptr<atomic_lambda> lambda = this->C_tensor->compute_lambda(indices[0], indices[1], indices[2], k1, k2, k3, a);
+        return this->lambda_mgr.cache(std::move(lambda));
       }
 
 
-    void* lagrangian_tensors::pre_M_predef(const std::vector<std::string> &args)
+    std::string replace_M::roll(const macro_argument_list& args, const abstract_index_list& indices)
       {
-        assert(args.size() == 2);
-
-        GiNaC::symbol Hsq_symbol(args.size() >= 1 ? args[0] : this->default_Hsq);
-        GiNaC::symbol eps_symbol(args.size() >= 2 ? args[1] : this->default_eps);
-        GiNaC::ex     Hsq = Hsq_symbol;
-        GiNaC::ex     eps = eps_symbol;
-
-        std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
-        this->u_factory->compute_M(Hsq, eps, *container, *this->fl);
-
-        cse_map* map = this->cse_worker->map_factory(container);
-
-        return (map);
+        std::unique_ptr<atomic_lambda> lambda = this->M_tensor->compute_lambda(indices[0], indices[1]);
+        return this->lambda_mgr.cache(std::move(lambda));
       }
 
   } // namespace macro_packages

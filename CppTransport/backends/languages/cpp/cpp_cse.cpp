@@ -1,6 +1,6 @@
 //
 // Created by David Seery on 04/12/2013.
-// Copyright (c) 2013-15 University of Sussex. All rights reserved.
+// Copyright (c) 2013-2016 University of Sussex. All rights reserved.
 //
 
 
@@ -47,7 +47,7 @@ namespace cpp
             if(use_count) out << this->get_symbol_with_use_count(*t);
             else          out << this->get_symbol_without_use_count(*t);
 
-            c++;
+            ++c;
           }
 
         return(out.str());

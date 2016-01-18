@@ -1,6 +1,6 @@
 //
 // Created by David Seery on 15/04/15.
-// Copyright (c) 2015 University of Sussex. All rights reserved.
+// Copyright (c) 2015-2016 University of Sussex. All rights reserved.
 //
 
 
@@ -28,7 +28,7 @@ namespace transport
 
         //! Construct a named two-point function task
         twopf_task(const std::string& nm, const initial_conditions<number>& i,
-                   range<double>& t, range<double>& ks, bool ff=true);
+                   range<double>& t, range<double>& ks, bool ff=false);
 
         //! deserialization constructor
         twopf_task(const std::string& nm, Json::Value& reader, sqlite3* handle, const initial_conditions<number>& i);
@@ -74,7 +74,7 @@ namespace transport
 
 		    // write_time_details() should come *after* compute_horizon_exit_times();
         this->write_time_details();
-        this->cache_stored_time_config_database();
+        this->cache_stored_time_config_database(this->twopf_db->get_kmax_conventional());
 	    }
 
 
@@ -84,7 +84,7 @@ namespace transport
 	    : twopf_list_task<number>(nm, reader, handle, i)
 	    {
 		    // rebuild database of stored times; this isn't serialized but recomputed on-the-fly
-        this->cache_stored_time_config_database();
+        this->cache_stored_time_config_database(this->twopf_db->get_kmax_conventional());
 	    }
 
 

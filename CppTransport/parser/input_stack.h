@@ -1,11 +1,11 @@
 //
 // Created by David Seery on 09/12/2013.
-// Copyright (c) 2013-15 University of Sussex. All rights reserved.
+// Copyright (c) 2013-2016 University of Sussex. All rights reserved.
 //
 
 
-#ifndef __input_stack_H_
-#define __input_stack_H_
+#ifndef CPPTRANSPORT_INPUT_STACK_H
+#define CPPTRANSPORT_INPUT_STACK_H
 
 
 #include <string>
@@ -47,4 +47,4 @@ class input_stack: public filestack_derivation_helper<input_stack>
   };
 
 
-#endif //__input_stack_H_
+#endif //CPPTRANSPORT_INPUT_STACK_H

@@ -1,6 +1,6 @@
 //
 // Created by David Seery on 22/06/2014.
-// Copyright (c) 2014-15 University of Sussex. All rights reserved.
+// Copyright (c) 2014-2016 University of Sussex. All rights reserved.
 //
 
 
@@ -231,15 +231,23 @@ namespace transport
             redbsp.clear();
             redbsp.assign(h.t_axis.size(), 0.0);
 
+            const double k1 = k.k1_comoving;
+            const double k2 = k.k2_comoving;
+            const double k3 = k.k3_comoving;
+
+            const double k1k2 = k3*k3/(k1*k2);
+            const double k1k3 = k2*k2/(k1*k3);
+            const double k2k3 = k1*k1/(k2*k3);
+
             // cache gauge transformation coefficients
             // these have to be recomputed for each k-configuration, because they are time and shape-dependent
             // we take advantage of the caller-provided caches to store them; they should be correctly sized
 
             for(unsigned int j = 0; j < h.t_axis.size(); ++j)
               {
-                h.mdl->compute_gauge_xfm_2(h.tk, h.background[j], k.k1_comoving, k.k2_comoving, k.k3_comoving, h.t_axis[j].t, gauge_xfm2_123[j]);
-                h.mdl->compute_gauge_xfm_2(h.tk, h.background[j], k.k2_comoving, k.k1_comoving, k.k3_comoving, h.t_axis[j].t, gauge_xfm2_213[j]);
-                h.mdl->compute_gauge_xfm_2(h.tk, h.background[j], k.k3_comoving, k.k1_comoving, k.k2_comoving, h.t_axis[j].t, gauge_xfm2_312[j]);
+                h.mdl->compute_gauge_xfm_2(h.tk, h.background[j], k1, k2, k3, h.t_axis[j].t, gauge_xfm2_123[j]);
+                h.mdl->compute_gauge_xfm_2(h.tk, h.background[j], k2, k1, k3, h.t_axis[j].t, gauge_xfm2_213[j]);
+                h.mdl->compute_gauge_xfm_2(h.tk, h.background[j], k3, k1, k2, h.t_axis[j].t, gauge_xfm2_312[j]);
               }
 
             // linear component of the gauge transformation
@@ -257,7 +265,7 @@ namespace transport
 
                         for(unsigned int j = 0; j < h.t_axis.size(); ++j)
                           {
-                            number component = h.dN[j][l]*h.dN[j][m]*h.dN[j][n]*threepf_line[j];
+                            number component = h.dN[j][l]*h.dN[j][m]*h.dN[j][n] * threepf_line[j];
                             zeta_threepf[j] += component;
                           }
                       }
@@ -298,11 +306,14 @@ namespace transport
                             const std::vector<number>  k3_re_mq = h.t_handle.lookup_tag(k3_re_mq_tag);
                             const std::vector<number>& k3_im_mq = h.t_handle.lookup_tag(k3_im_mq_tag);
 
+                            // as of 14 Jan 2016 the database stores dimensionless quantities k^3 * 2pf, (k1 k2 k3) * 3pf
+                            // this means we need some dimensionless factors k1k2, k1k3, k2k3 to convert between the different normalization conventions
+
                             for(unsigned int j = 0; j < h.t_axis.size(); ++j)
                               {
-                                number component1 = gauge_xfm2_123[j][h.mdl->flatten(l,m)] * h.dN[j][p] * h.dN[j][q] * (k2_re_lp[j]*k3_re_mq[j] - k2_im_lp[j]*k3_im_mq[j]);
-                                number component2 = gauge_xfm2_213[j][h.mdl->flatten(l,m)] * h.dN[j][p] * h.dN[j][q] * (k1_re_lp[j]*k3_re_mq[j] - k1_im_lp[j]*k3_im_mq[j]);
-                                number component3 = gauge_xfm2_312[j][h.mdl->flatten(l,m)] * h.dN[j][p] * h.dN[j][q] * (k1_re_lp[j]*k2_re_mq[j] - k1_im_lp[j]*k2_im_mq[j]);
+                                number component1 = gauge_xfm2_123[j][h.mdl->flatten(l,m)] * h.dN[j][p] * h.dN[j][q] * k2k3 * (k2_re_lp[j]*k3_re_mq[j] - k2_im_lp[j]*k3_im_mq[j]);
+                                number component2 = gauge_xfm2_213[j][h.mdl->flatten(l,m)] * h.dN[j][p] * h.dN[j][q] * k1k2 * (k1_re_lp[j]*k3_re_mq[j] - k1_im_lp[j]*k3_im_mq[j]);
+                                number component3 = gauge_xfm2_312[j][h.mdl->flatten(l,m)] * h.dN[j][p] * h.dN[j][q] * k1k2 * (k1_re_lp[j]*k2_re_mq[j] - k1_im_lp[j]*k2_im_mq[j]);
 
                                 zeta_threepf[j] += component1;
                                 zeta_threepf[j] += component2;
@@ -318,29 +329,29 @@ namespace transport
             std::vector<number> twopf_k2;
             std::vector<number> twopf_k3;
 
-            twopf_kconfig k1;
-            k1.serial         = k.k1_serial;
-            k1.k_comoving     = k.k1_comoving;
-            k1.k_conventional = k.k1_conventional;
+            twopf_kconfig k1_config;
+            k1_config.serial         = k.k1_serial;
+            k1_config.k_comoving     = k.k1_comoving;
+            k1_config.k_conventional = k.k1_conventional;
 
-            twopf_kconfig k2;
-            k2.serial         = k.k2_serial;
-            k2.k_comoving     = k.k2_comoving;
-            k2.k_conventional = k.k2_conventional;
+            twopf_kconfig k2_config;
+            k2_config.serial         = k.k2_serial;
+            k2_config.k_comoving     = k.k2_comoving;
+            k2_config.k_conventional = k.k2_conventional;
 
-            twopf_kconfig k3;
-            k3.serial         = k.k3_serial;
-            k3.k_comoving     = k.k3_comoving;
-            k3.k_conventional = k.k3_conventional;
+            twopf_kconfig k3_config;
+            k3_config.serial         = k.k3_serial;
+            k3_config.k_comoving     = k.k3_comoving;
+            k3_config.k_conventional = k.k3_conventional;
 
-            this->twopf(h, twopf_k1, k1);
-            this->twopf(h, twopf_k2, k2);
-            this->twopf(h, twopf_k3, k3);
+            this->twopf(h, twopf_k1, k1_config);
+            this->twopf(h, twopf_k2, k2_config);
+            this->twopf(h, twopf_k3, k3_config);
 
             // build the reduced bispectrum
             for(unsigned int j = 0; j < h.t_axis.size(); ++j)
               {
-                number form_factor = (6.0/5.0) * ( twopf_k1[j]*twopf_k2[j] + twopf_k1[j]*twopf_k3[j] + twopf_k2[j]*twopf_k3[j] );
+                number form_factor = (6.0/5.0) * ( twopf_k1[j]*twopf_k2[j]*k1k2 + twopf_k1[j]*twopf_k3[j]*k1k3 + twopf_k2[j]*twopf_k3[j]*k2k3 );
 
                 redbsp[j] = zeta_threepf[j] / form_factor;
               }

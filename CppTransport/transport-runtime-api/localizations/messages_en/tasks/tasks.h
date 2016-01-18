@@ -1,6 +1,6 @@
 //
 // Created by David Seery on 05/05/2014.
-// Copyright (c) 2014-15 University of Sussex. All rights reserved.
+// Copyright (c) 2014-2016 University of Sussex. All rights reserved.
 //
 
 
@@ -38,6 +38,8 @@
 #define CPPTRANSPORT_TASK_THREEPF_ELEMENTS_B          "3pf k-configurations and"
 #define CPPTRANSPORT_TASK_THREEPF_ELEMENTS_C          "2pf k-configurations"
 
+#define CPPTRANSPORT_TASK_THREEPF_DATABASE_MISS       "Internal error: missing database entry for k_t ="
+
 #define CPPTRANSPORT_TASK_TWOPF_ELEMENTS_A            "task with"
 #define CPPTRANSPORT_TASK_TWOPF_ELEMENTS_B            "2pf k-configurations"
 
@@ -60,6 +62,8 @@
 #define CPPTRANSPORT_TASK_TWOPF_LIST_NO_END_INFLATION "warning: end of inflation not found within search window"
 
 #define CPPTRANSPORT_TASK_TWOPF_LIST_NO_TIMES         "no times to be stored"
+
+#define CPPTRANSPORT_TASK_TWOPF_LIST_DATABASE_MISS    "Internal error: missing database entry for k ="
 
 #define CPPTRANSPORT_TASK_FAIL_COMPUTE_HEXIT          "error: failed to compute horizon exit times for all k-configurations"
 #define CPPTRANSPORT_TASK_SEARCH_FROM                 "searched from N="

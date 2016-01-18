@@ -1,6 +1,6 @@
 //
 // Created by David Seery on 28/04/15.
-// Copyright (c) 2015 University of Sussex. All rights reserved.
+// Copyright (c) 2015-2016 University of Sussex. All rights reserved.
 //
 
 
@@ -14,6 +14,8 @@
 #include <memory>
 
 #include "transport-runtime-api/derived-products/derived-content/SQL_query/SQL_query.h"
+
+#include "transport-runtime-api/instruments/timing_instrument.h"
 
 #include "boost/log/core.hpp"
 #include "boost/log/trivial.hpp"
@@ -103,9 +105,8 @@ namespace transport
 
         if(record->get_payload().has_statistics())
 	        {
-            this->pipe->database_timer.resume();
+            timing_instrument timer(this->pipe->database_timer);
             this->pipe->pull_statistics.k_statistics(this->pipe, query, data);
-            this->pipe->database_timer.stop();
 	        }
         else
 	        {

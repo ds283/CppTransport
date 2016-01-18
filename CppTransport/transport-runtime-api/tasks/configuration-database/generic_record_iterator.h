@@ -1,6 +1,6 @@
 //
 // Created by David Seery on 17/04/15.
-// Copyright (c) 2015 University of Sussex. All rights reserved.
+// Copyright (c) 2015-2016 University of Sussex. All rights reserved.
 //
 
 
@@ -50,7 +50,7 @@ namespace transport
 
             //! value constructor
             generic_record_iterator(record_iterator_type i)
-              : it(i)
+              : it(std::move(i))
               {
               }
 

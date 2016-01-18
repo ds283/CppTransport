@@ -1,6 +1,6 @@
 //
 // Created by David Seery on 05/12/2013.
-// Copyright (c) 2013-15 University of Sussex. All rights reserved.
+// Copyright (c) 2013-2016 University of Sussex. All rights reserved.
 //
 
 
@@ -145,10 +145,10 @@ void buffer::write_to_tag(std::string line)
 
 void buffer::delimit_line(std::string& item)
   {
-    for(std::list<struct delimiter>::iterator t = this->delimiters.begin(); t != this->delimiters.end(); ++t)
+    for(struct delimiter& dlmt : this->delimiters)
       {
-        item.insert(0, (*t).left);
-        item.append((*t).right);
+        item.insert(0, dlmt.left);
+        item.append(dlmt.right);
       }
   }
 

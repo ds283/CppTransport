@@ -1,11 +1,11 @@
 //
 // Created by David Seery on 10/12/2013.
-// Copyright (c) 2013-15 University of Sussex. All rights reserved.
+// Copyright (c) 2013-2016 University of Sussex. All rights reserved.
 //
 
 
-#ifndef __stepper_H_
-#define __stepper_H_
+#ifndef CPPTRANSPORT_STEPPER_H
+#define CPPTRANSPORT_STEPPER_H
 
 
 #include <string>
@@ -20,4 +20,4 @@ struct stepper
   };
 
 
-#endif //__stepper_H_
+#endif //CPPTRANSPORT_STEPPER_H

@@ -1,15 +1,15 @@
 //
 // Created by David Seery on 27/03/15.
-// Copyright (c) 2015 University of Sussex. All rights reserved.
+// Copyright (c) 2015-2016 University of Sussex. All rights reserved.
 //
 
 
-#ifndef __batchers_H_
-#define __batchers_H_
+#ifndef CPPTRANSPORT_BATCHERS_H
+#define CPPTRANSPORT_BATCHERS_H
 
 
 #include "transport-runtime-api/data/batchers/integration_batcher.h"
 #include "transport-runtime-api/data/batchers/postintegration_batcher.h"
 
 
-#endif //__batchers_H_
+#endif //CPPTRANSPORT_BATCHERS_H

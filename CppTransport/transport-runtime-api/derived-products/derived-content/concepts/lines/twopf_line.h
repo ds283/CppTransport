@@ -1,11 +1,11 @@
 //
 // Created by David Seery on 02/06/2014.
-// Copyright (c) 2014-15 University of Sussex. All rights reserved.
+// Copyright (c) 2014-2016 University of Sussex. All rights reserved.
 //
 
 
-#ifndef __twopf_line_H_
-#define __twopf_line_H_
+#ifndef CPPTRANSPORT_TWOPF_LINE_H
+#define CPPTRANSPORT_TWOPF_LINE_H
 
 
 #include <iostream>
@@ -288,4 +288,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__twopf_line_H_
+#endif //CPPTRANSPORT_TWOPF_LINE_H

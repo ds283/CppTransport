@@ -1,6 +1,6 @@
 //
 // Created by David Seery on 05/05/2014.
-// Copyright (c) 2014-15 University of Sussex. All rights reserved.
+// Copyright (c) 2014-2016 University of Sussex. All rights reserved.
 //
 
 
@@ -46,5 +46,7 @@
 
 #define CPPTRANSPORT_TASK_MANAGER_LABEL              "Task manager:"
 #define CPPTRANSPORT_TASK_MANAGER_WARNING_LABEL      "Warning:"
+
+#define CPPTRANSPORT_UNKNOWN_SWITCH                  "Ignored unknown command-line switch"
 
 #endif // CPPTRANSPORT_MESSAGES_EN_TASK_MANAGER_H

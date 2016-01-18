@@ -1,11 +1,11 @@
 //
 // Created by David Seery on 10/12/2013.
-// Copyright (c) 2013-15 University of Sussex. All rights reserved.
+// Copyright (c) 2013-2016 University of Sussex. All rights reserved.
 //
 
 
-#ifndef __output_stack_H_
-#define __output_stack_H_
+#ifndef CPPTRANSPORT_OUTPUT_STACK_H
+#define CPPTRANSPORT_OUTPUT_STACK_H
 
 
 #include <string>
@@ -19,10 +19,9 @@
 
 // forward reference to avoid circularity
 class macro_agent;
-class package_group;
 
 
-enum process_type { process_core, process_implementation };
+enum class process_type { process_core, process_implementation };
 
 
 class output_stack: public filestack_derivation_helper<output_stack>
@@ -59,7 +58,10 @@ class output_stack: public filestack_derivation_helper<output_stack>
 
   public:
 
-    virtual ~output_stack() = default;
+    // TODO: intended to be explicitly defaulted, but Intel compiler prior to v16 complains
+    virtual ~output_stack()
+      {
+      }
 
 
 		// INTERFACE - implements a 'filestack' interface
@@ -103,4 +105,4 @@ class output_stack: public filestack_derivation_helper<output_stack>
   };
 
 
-#endif //__output_stack_H_
+#endif //CPPTRANSPORT_OUTPUT_STACK_H

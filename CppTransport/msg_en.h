@@ -1,10 +1,10 @@
 //
 // Created by David Seery on 12/06/2013.
-// Copyright (c) 2013-15 University of Sussex. All rights reserved.
+// Copyright (c) 2013-2016 University of Sussex. All rights reserved.
 //
 
-#ifndef __msg_H_
-#define __msg_H_
+#ifndef CPPTRANSPORT_MSG_EN_H
+#define CPPTRANSPORT_MSG_EN_H
 
 // Messages
 
@@ -63,6 +63,26 @@
 #define ERROR_DECIMAL_LOOKUP                  "Lookup of decimal literal value failed"
 #define ERROR_UNKNOWN_IDENTIFIER              "Undeclared identifier"
 
+#define ERROR_ASSIGNMENT_ITERATOR_NO_PARENT   "Internal error: increment or decrement of unattached assignment set iterator"
+#define ERROR_ASSIGNMENT_ITERATOR_DECREMENT   "Internal error: attempt to decrement assignment iterator before first element"
+#define ERROR_ASSIGNMENT_ITERATOR_INCREMENT   "Internal error: attempt to increment assignment iterator after last element"
+
+#define ERROR_TOKENIZE_INDEX_MISMATCH         "Duplicate inequivalent declaration of index"
+#define ERROR_TOKENIZE_NO_MACRO_MATCH         "Internal error: unepexectedly failed to match a macro"
+#define ERROR_TOKENIZE_UNEXPECTED_LIST        "Did not expect index list following simple macro"
+#define ERROR_TOKENIZE_SKIPPING               "skipping"
+
+#define ERROR_TOKENIZE_TOO_MANY_ERRORS        "Too many errors from this token; further output will be suppressed"
+#define ERROR_DIRECTIVE_CALLED_AS_UNROLL      "Internal error: directive called as unroll"
+
+#define ERROR_NO_PRE_MAP                      "Missing data to perform macro replacement"
+
+#define ERROR_INCOMPATIBLE_UNROLL             "Unrolling requirements are incompatible with earlier macros for"
+#define ERROR_LHS_RHS_INCOMPATIBLE_UNROLL     "Left-hand side and right-hand side have incompatible unrolling requirements"
+#define ERROR_PREVENT_INCOMPATIBLE_FAST       "Macro preventing unroll is incompatible with --fast switch"
+
+#define ERROR_MISSING_INDEX_ASSIGNMENT        "Internal error: missing index assignment"
+
 #define ERROR_EXPECTED_INDEX                  "Expected index label following prefix"
 #define ERROR_TOO_FEW_INDICES                 "Too few indices supplied to summation-convention object"
 #define ERROR_EXPECTED_OPEN_INDEX_LIST        "Expected index list beginning with '[' for indexed macro"
@@ -73,13 +93,28 @@
 #define ERROR_EXPECTED_OPEN_ARGUMENT_LIST     "Missing open of argument list '{' for macro"
 #define ERROR_EXPECTED_CLOSE_ARGUMENT_LIST    "Missing close of argument list '}' for macro"
 #define ERROR_EXPECTED_CLOSE_ARGUMENT_QUOTE   "Missing closing quotation '\"' for macro"
-#define ERROR_WRONG_ARGUMENT_COUNT            "Unexpected number of arguments to macro"
+#define ERROR_WRONG_ARGUMENT_COUNT            "Incorrect number of arguments for macro"
 #define ERROR_EXPECTED_ARGUMENT_COUNT         "expected"
-#define ERROR_WRONG_INDEX_COUNT               "Unexpected number of arguments to macro"
+#define ERROR_RECEIVED_ARGUMENT_COUNT         "received"
+#define ERROR_WRONG_INDEX_COUNT               "Incorrect number of indices for macro"
 #define ERROR_EXPECTED_INDEX_COUNT            "expected"
+#define ERROR_RECEIVED_INDEX_COUNT            "received"
+
+#define ERROR_WRONG_INDEX_CLASS               "Index type mismatch for"
+#define ERROR_WRONG_INDEX_LABEL               "index"
 
 #define ERROR_MISSING_LHS                     "Missing left-hand side in temporary template "
 #define ERROR_MISSING_RHS                     "Missing right-hand side in temporary template "
+
+#define ERROR_MACRO_LHS_RHS_MISMATCH          "Mismatched index class on left- and right-hand sides"
+
+#define ERROR_INDEX_DATABASE_EMPLACE_FAIL     "Internal error: emplacement in index database failed"
+#define ERROR_INDEX_DATABASE_OUT_OF_RANGE     "Internal error: out of range access in index database"
+
+#define ERROR_SUBSTITUTION_FAILURE            "Internal error: substitution failure"
+
+#define ERROR_DN_DOES_NOT_ROLL                "Internal error: attempt to roll-up a delta-N macro"
+#define ERROR_INCONSISTENT_LAMBDA_MAP         "Internal error: inconsistent lambda map size"
 
 #define ERROR_NO_BUFFER_REGISTERED            "Internal error: TemporaryPool macro package in use, but no buffer registered"
 #define ERROR_NO_MACROS_REGISTERED            "Internal error: TemporaryPool macro package in use, but no macro set registered"
@@ -89,6 +124,8 @@
 #define ERROR_FILESTACK_OVERWRITE             "Internal error: attempt to overwrite data for top filestack element"
 
 #define ERROR_CURRENT_LINE_EMPTY              "Internal error: current line empty in lexfile"
+
+#define ERROR_OUT_OF_BOUNDS_CSE_MAP           "Internal error: out of bounds subscript in CSE map"
 
 #define WARNING_TEMPORARY_NO_TAG_SET          "Temporary pool being written, but no location set: defaults to end-of-buffer"
 
@@ -106,7 +143,41 @@
 #define WARNING_LEXEME_STRING                 "Internal error: attempt to get string value for non-string lexeme"
 #define WARNING_LEXEME_IDENTIFIER             "Internal error: attempt to get identifier value for non-identifier lexeme"
 
-#define WARNING_UNKNOWN_SWITCH                "Unknown command-line switch"
+#define RESOURCE_SET_PARAMETERS               "parameters resource set to"
+#define RESOURCE_SET_COORDINATES              "coordinates resource set to"
+#define RESOURCE_SET_DV                       "V,i resource set to"
+#define RESOURCE_SET_DDV                      "V,ij resource set to"
+#define RESOURCE_SET_DDDV                     "V,ijk resource set to"
+#define RESOURCE_SET_CONNEXION                "connexion resource set to"
+#define RESOURCE_SET_RIEMANN                  "Riemann resource set to"
+
+#define RESOURCE_SET_PHASE_FLATTEN            "phase-space flattener set to"
+#define RESOURCE_SET_FIELD_FLATTEN            "field-space flattener set to"
+
+#define RESOURCE_RELEASE_FLATTENERS           "release flatteners"
+#define RESOURCE_RELEASE                      "release resources"
+
+#define RESOURCE_SET_WORKING_TYPE             "working type set to"
+#define RESOURCE_RELEASE_WORKING_TYPE         "release working type"
+
+#define DIRECTIVE_SET_MACRO_A                 "set macro"
+#define DIRECTIVE_SET_MACRO_B                 "to"
+
+#define ERROR_DIRECTIVE_SET                   "Error while evaluating set directive for"
+
+#define ERROR_SET_WRONG_NUMBER_INDICES_A      "Macro body contains unexpected number of indices; expected"
+#define ERROR_SET_WRONG_NUMBER_INDICES_B      "received"
+#define ERROR_SET_UNDECLARED_INDEX            "Macro body contains undeclared index"
+
+#define ERROR_SET_REDEFINITION                "Redefinition of macro"
+#define WARN_PRIOR_REDEFINITION               "Earlier definition of this macro was here"
+#define ERROR_INDEX_SUBSTITUTION              "Missing substitution for index"
+
+#define ERROR_UNPAIRED_ELSE                   "Unexpected $ELSE without opening $IF"
+#define ERROR_UNPAIRED_ENDIF                  "Unexpected $ENDIF without opening $IF"
+#define ERROR_DUPLICATE_ELSE                  "Duplicate $ELSE clause"
+
+#define WARNING_UNKNOWN_SWITCH                "Ignored unknown command-line switch"
 
 #define WARNING_PARSING_FAILED                "Failed to parse file"
 
@@ -126,11 +197,11 @@
 
 #define MESSAGE_TRANSLATING                   "translating"
 #define MESSAGE_TRANSLATING_TO                "into"
-#define MESSAGE_EXPANSION_OF_LINE             "expansion of template line"
+#define ANNOTATE_EXPANSION_OF_LINE            "expansion of template line"
 
 #define MESSAGE_OPENED_BUFFER                 "opened output file"
 
-#define MESSAGE_TRANSLATION_RESULT            "translation succeeded with"
+#define MESSAGE_TRANSLATION_RESULT            "translation finished with"
 #define MESSAGE_MACRO_REPLACEMENTS            "macro replacements"
 
 #define ERROR_UNKNOWN_STEPPER                 "Unknown or unimplemented odeint-v2 stepper"
@@ -139,47 +210,4 @@
 #define MESSAGE_MINUTE_LABEL                  "m"
 #define MESSAGE_SECOND_LABEL                  "s"
 
-// output strings
-
-#define BACKEND_MACRO_PREFIX                  "$$__"
-#define BACKEND_LINE_SPLIT                    "$$//"
-
-#define OUTPUT_CPPTRANSPORT_TAG               "__CPPTRANSPORT"
-#define OUTPUT_TIME_FORMAT                    "%X on %d %m %Y"
-#define OUTPUT_DEFAULT_POOL_TEMPLATE          "auto $1 = $2;"
-
-#define OUTPUT_DEFAULT_CPP_CSE_TEMPORARY_NAME "__temp"
-
-#define OUTPUT_DEFAULT_U2_NAME                "__u2"
-#define OUTPUT_DEFAULT_U3_NAME                "__u3"
-#define OUTPUT_DEFAULT_M_NAME                 "__M"
-#define OUTPUT_DEFAULT_K_NAME                 "__k"
-#define OUTPUT_DEFAULT_K1_NAME                "__k1"
-#define OUTPUT_DEFAULT_K2_NAME                "__k2"
-#define OUTPUT_DEFAULT_K3_NAME                "__k3"
-#define OUTPUT_DEFAULT_A_NAME                 "__a"
-
-#define OUTPUT_DEFAULT_HSQ_NAME               "__Hsq"
-#define OUTPUT_DEFAULT_EPS_NAME               "__eps"
-
-#define OUTPUT_DEFAULT_ONEINDEX_NAME          "__1index"
-#define OUTPUT_DEFAULT_TWOINDEX_NAME          "__2index"
-#define OUTPUT_DEFAULT_THREEINDEX_NAME        "__3index"
-
-#define OUTPUT_DEFAULT_STEPPER_STATE_NAME     "double"
-
-#define OUTPUT_TEMPORARY_POOL_START           "-- START -- temporary pool"
-#define OUTPUT_TEMPORARY_POOL_END             "-- END -- temporary pool"
-#define OUTPUT_TEMPORARY_POOL_SEQUENCE        "sequence"
-#define OUTPUT_KERNEL_LOCATION                "-- VEXCL KERNEL INSERTION"
-
-#define OUTPUT_VEXCL_KERNEL_PRE               ", \""
-#define OUTPUT_VEXCL_KERNEL_POST              "\""
-#define OUTPUT_VEXCL_UNKNOWN_KERNEL           (OUTPUT_VEXCL_KERNEL_PRE "<UNKNOWN_KERNEL_NAME>" OUTPUT_VEXCL_KERNEL_POST)
-
-#define OUTPUT_VEXCL_KERNEL_LINE_PRE          "\""
-#define OUTPUT_VEXCL_KERNEL_LINE_POST         "\\n\""
-
-#define OUTPUT_OPENCL_DEFAULT_LABEL           "idx"
-
-#endif //__msg_H_
+#endif //CPPTRANSPORT_MSG_EN_H

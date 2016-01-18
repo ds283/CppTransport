@@ -1,6 +1,6 @@
 //
 // Created by David Seery on 04/12/2013.
-// Copyright (c) 2013-15 University of Sussex. All rights reserved.
+// Copyright (c) 2013-2016 University of Sussex. All rights reserved.
 //
 
 
@@ -8,164 +8,92 @@
 #include <functional>
 
 #include "gauge_xfm.h"
-#include "cse.h"
-#include "u_tensor_factory.h"
 
 
-#define BIND1(X) std::bind(&gauge_xfm::X, this, std::placeholders::_1)
-#define BIND3(X) std::bind(&gauge_xfm::X, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)
+#define BIND(X, N) std::move(std::make_unique<X>(N, f, cw, lm, prn))
+#define BIND_SYMBOL(X, N) std::move(std::make_unique<X>(N, f, cw, lm, p.get_symbol_factory(), prn))
 
 
 namespace macro_packages
   {
 
-    const std::vector<simple_rule> gauge_xfm::get_pre_rules()
+    gauge_xfm::gauge_xfm(tensor_factory& f, cse& cw, lambda_manager& lm, translator_data& p, language_printer& prn)
+      : replacement_rule_package(f, cw, lm, p, prn)
       {
-        std::vector<simple_rule> package;
-
-        return(package);
-      }
-
-
-    const std::vector<simple_rule> gauge_xfm::get_post_rules()
-      {
-        std::vector<simple_rule> package;
-
-        return(package);
-      }
-
-
-    const std::vector<index_rule> gauge_xfm::get_index_rules()
-      {
-        std::vector<index_rule> package;
-
-        const std::vector<replacement_rule_pre> pres =
-          { BIND1(pre_zeta_xfm_1),        BIND1(pre_zeta_xfm_2),
-            BIND1(pre_deltaN_xfm_1),      BIND1(pre_deltaN_xfm_2)
-          };
-
-        const std::vector<replacement_rule_post> posts =
-          { BIND1(generic_post_hook),     BIND1(generic_post_hook),
-            BIND1(generic_post_hook),     BIND1(generic_post_hook),
-          };
-
-        const std::vector<replacement_rule_index> rules =
-          { BIND3(replace_1index_tensor), BIND3(replace_2index_tensor),
-            BIND3(replace_1index_tensor), BIND3(replace_2index_tensor)
-          };
-
-        const std::vector<std::string> names =
-          { "ZETA_XFM_1",                 "ZETA_XFM_2",
-            "DELTAN_XFM_1",               "DELTAN_XFM_2"
-          };
-
-        const std::vector<unsigned int> args =
-          { 2,                            6,
-            0,                            0
-          };
-
-        const std::vector<unsigned int> indices =
-          { 1,                            2,
-            1,                            2
-          };
-
-        const std::vector<unsigned int> ranges =
-          { 2,                            2,
-            2,                            2
-          };
-
-        assert(pres.size() == posts.size());
-        assert(pres.size() == rules.size());
-        assert(pres.size() == names.size());
-        assert(pres.size() == args.size());
-        assert(pres.size() == ranges.size());
-
-        for(int i = 0; i < pres.size(); ++i)
-          {
-            index_rule rule;
-
-            rule.rule    = rules[i];
-            rule.name    = names[i];
-            rule.pre     = pres[i];
-            rule.post    = posts[i];
-            rule.args    = args[i];
-            rule.indices = indices[i];
-            rule.range   = ranges[i];
-
-            package.push_back(rule);
-          }
-
-        return(package);
+        index_package.emplace_back(BIND(replace_zeta1, "ZETA_XFM_1"));
+        index_package.emplace_back(BIND_SYMBOL(replace_zeta2, "ZETA_XFM_2"));
+        index_package.emplace_back(BIND(replace_dN1, "DELTAN_XFM_1"));
+        index_package.emplace_back(BIND(replace_dN2, "DELTAN_XFM_2"));
       }
 
 
     // *******************************************************************
 
 
-    void* gauge_xfm::pre_zeta_xfm_1(const std::vector<std::string>& args)
+    std::string replace_zeta1::roll(const macro_argument_list& args, const abstract_index_list& indices)
       {
-        assert(args.size() == 2);
-
-        symbol_factory& sym_factory = this->data_payload.get_symbol_factory();
-
-        GiNaC::symbol Hsq_symbol = sym_factory.get_symbol(args.size() >= 1 ? args[0] : this->default_Hsq);
-        GiNaC::symbol eps_symbol = sym_factory.get_symbol(args.size() >= 2 ? args[1] : this->default_eps);
-        GiNaC::ex     Hsq = Hsq_symbol;
-        GiNaC::ex     eps = eps_symbol;
-
-        std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
-        this->u_factory->compute_zeta_xfm_1(Hsq, eps, *container, *this->fl);
-
-        cse_map* map = this->cse_worker->map_factory(container);
-
-        return(map);
+        std::unique_ptr<map_lambda> lambda = this->zeta1_tensor->compute_lambda(indices[0]);
+        return this->lambda_mgr.cache(std::move(lambda));
       }
 
 
-    void* gauge_xfm::pre_zeta_xfm_2(const std::vector<std::string>& args)
+    std::string replace_zeta2::roll(const macro_argument_list& args, const abstract_index_list& indices)
       {
-        assert(args.size() == 6);
+        GiNaC::symbol  k = sym_factory.get_symbol(args[ZETA_XFM_2_K_ARGUMENT]);
+        GiNaC::symbol k1 = sym_factory.get_symbol(args[ZETA_XFM_2_K1_ARGUMENT]);
+        GiNaC::symbol k2 = sym_factory.get_symbol(args[ZETA_XFM_2_K2_ARGUMENT]);
+        GiNaC::symbol  a = sym_factory.get_symbol(args[ZETA_XFM_2_A_ARGUMENT]);
 
-        symbol_factory& sym_factory = this->data_payload.get_symbol_factory();
-
-        GiNaC::symbol  k = sym_factory.get_symbol(args.size() >= 1 ? args[0] : this->default_k);
-        GiNaC::symbol k1 = sym_factory.get_symbol(args.size() >= 2 ? args[1] : this->default_k1);
-        GiNaC::symbol k2 = sym_factory.get_symbol(args.size() >= 3 ? args[2] : this->default_k2);
-        GiNaC::symbol  a = sym_factory.get_symbol(args.size() >= 4 ? args[3] : this->default_a);
-
-        GiNaC::symbol Hsq_symbol = sym_factory.get_symbol(args.size() >= 5 ? args[4] : this->default_Hsq);
-        GiNaC::symbol eps_symbol = sym_factory.get_symbol(args.size() >= 6 ? args[5] : this->default_eps);
-        GiNaC::ex     Hsq = Hsq_symbol;
-        GiNaC::ex     eps = eps_symbol;
-
-        std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
-        this->u_factory->compute_zeta_xfm_2(k, k1, k2, a, Hsq, eps, *container, *this->fl);
-
-        cse_map* map = this->cse_worker->map_factory(container);
-
-        return(map);
+        std::unique_ptr<map_lambda> lambda = this->zeta2_tensor->compute_lambda(indices[0], indices[1], k, k1, k2, a);
+        return this->lambda_mgr.cache(std::move(lambda));
       }
 
 
-    void* gauge_xfm::pre_deltaN_xfm_1(const std::vector<std::string>& args)
+    std::string replace_dN1::roll(const macro_argument_list& args, const abstract_index_list& indices)
+      {
+        throw rule_apply_fail(ERROR_DN_DOES_NOT_ROLL);
+      }
+
+
+    std::string replace_dN2::roll(const macro_argument_list& args, const abstract_index_list& indices)
+      {
+        throw rule_apply_fail(ERROR_DN_DOES_NOT_ROLL);
+      }
+
+
+    // *******************************************************************
+
+
+    void replace_zeta1::pre_hook(const macro_argument_list& args)
+      {
+        std::unique_ptr<flattened_tensor> container = this->zeta1_tensor->compute();
+        this->map =  std::make_unique<cse_map>(std::move(container), this->cse_worker);
+      }
+
+
+    void replace_zeta2::pre_hook(const macro_argument_list& args)
+      {
+        GiNaC::symbol  k = sym_factory.get_symbol(args[ZETA_XFM_2_K_ARGUMENT]);
+        GiNaC::symbol k1 = sym_factory.get_symbol(args[ZETA_XFM_2_K1_ARGUMENT]);
+        GiNaC::symbol k2 = sym_factory.get_symbol(args[ZETA_XFM_2_K2_ARGUMENT]);
+        GiNaC::symbol  a = sym_factory.get_symbol(args[ZETA_XFM_2_A_ARGUMENT]);
+
+        std::unique_ptr<flattened_tensor> container = this->zeta2_tensor->compute(k, k1, k2, a);
+        this->map = std::make_unique<cse_map>(std::move(container), this->cse_worker);
+      }
+
+
+    void replace_dN1::pre_hook(const macro_argument_list& args)
 	    {
-        std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
-        this->u_factory->compute_deltaN_xfm_1(*container, *this->fl);
-
-        cse_map* map = this->cse_worker->map_factory(container);
-
-        return(map);
+        std::unique_ptr<flattened_tensor> container = this->dN1_tensor->compute();
+        this->map = std::make_unique<cse_map>(std::move(container), this->cse_worker);
 	    }
 
 
-    void* gauge_xfm::pre_deltaN_xfm_2(const std::vector<std::string>& args)
+    void replace_dN2::pre_hook(const macro_argument_list& args)
 	    {
-        std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
-        this->u_factory->compute_deltaN_xfm_2(*container, *this->fl);
-
-        cse_map* map = this->cse_worker->map_factory(container);
-
-        return(map);
+        std::unique_ptr<flattened_tensor> container = this->dN2_tensor->compute();
+        this->map = std::make_unique<cse_map>(std::move(container), this->cse_worker);
 	    }
 
 

@@ -1,6 +1,6 @@
 //
 // Created by David Seery on 17/06/2013.
-// Copyright (c) 2013-15 University of Sussex. All rights reserved.
+// Copyright (c) 2013-2016 University of Sussex. All rights reserved.
 //
 
 
@@ -326,13 +326,13 @@ namespace y
 
     void y_driver::set_indexorder_left()
 	    {
-        this->root.set_indexorder(indexorder::left);
+        this->root.set_indexorder(index_order::left);
 	    }
 
 
     void y_driver::set_indexorder_right()
 	    {
-        this->root.set_indexorder(indexorder::right);
+        this->root.set_indexorder(index_order::right);
 	    }
 
 

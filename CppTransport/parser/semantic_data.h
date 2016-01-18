@@ -1,12 +1,12 @@
 //
 // Created by David Seery on 21/06/2013.
-// Copyright (c) 2013-15 University of Sussex. All rights reserved.
+// Copyright (c) 2013-2016 University of Sussex. All rights reserved.
 //
 
 
 
-#ifndef __semantic_data_H_
-#define __semantic_data_H_
+#ifndef CPPTRANSPORT_SEMANTIC_DATA_H
+#define CPPTRANSPORT_SEMANTIC_DATA_H
 
 
 #include <iostream>
@@ -93,4 +93,4 @@ class subexpr
 	};
 
 
-#endif //__semantic_data_H_
+#endif //CPPTRANSPORT_SEMANTIC_DATA_H

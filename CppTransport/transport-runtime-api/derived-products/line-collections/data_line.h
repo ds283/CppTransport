@@ -1,6 +1,6 @@
 //
 // Created by David Seery on 21/05/2014.
-// Copyright (c) 2014-15 University of Sussex. All rights reserved.
+// Copyright (c) 2014-2016 University of Sussex. All rights reserved.
 //
 
 
@@ -135,7 +135,9 @@ namespace transport
             data_type(data_line_type::continuous_data)
           {
             if(a.size() != d.size())
-              throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_PRODUCT_DATALINE_AXIS_MISMATCH);
+              {
+                throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_PRODUCT_DATALINE_AXIS_MISMATCH);
+              }
 
             if(!spectral_index)
               {

@@ -1,11 +1,11 @@
 //
 // Created by David Seery on 26/03/15.
-// Copyright (c) 2015 University of Sussex. All rights reserved.
+// Copyright (c) 2015-2016 University of Sussex. All rights reserved.
 //
 
 
-#ifndef __integration_batcher_H_
-#define __integration_batcher_H_
+#ifndef CPPTRANSPORT_INTEGRATION_BATCHER_H
+#define CPPTRANSPORT_INTEGRATION_BATCHER_H
 
 
 #include <vector>
@@ -16,7 +16,7 @@
 #include "transport-runtime-api/data/batchers/generic_batcher.h"
 #include "transport-runtime-api/data/batchers/postintegration_batcher.h"
 #include "transport-runtime-api/data/batchers/integration_items.h"
-#include "postprocess_delegate.h"
+#include "transport-runtime-api/data/batchers/postprocess_delegate.h"
 
 #include "transport-runtime-api/models/model_forward_declare.h"
 #include "transport-runtime-api/tasks/tasks_forward_declare.h"
@@ -1065,6 +1065,7 @@ namespace transport
         this->threepf_momentum_batch.push_back(momentum_item);
 
         // derivative three-point function needs extra shifts in order to convert any momentum insertions
+        // into time-derivative insertions
         Nderiv_item.time_serial    = time_serial;
         Nderiv_item.kconfig_serial = kconfig.serial;
         Nderiv_item.source_serial  = source_serial;
@@ -1305,4 +1306,4 @@ namespace transport
   }   // namespace transport
 
 
-#endif //__integration_batcher_H_
+#endif //CPPTRANSPORT_INTEGRATION_BATCHER_H

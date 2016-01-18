@@ -1,17 +1,15 @@
 //
 // Created by David Seery on 04/12/2013.
-// Copyright (c) 2013-15 University of Sussex. All rights reserved.
+// Copyright (c) 2013-2016 University of Sussex. All rights reserved.
 //
 
 
 
-#ifndef __cpp_printer_H_
-#define __cpp_printer_H_
+#ifndef CPPTRANSPORT_CPP_PRINTER_H
+#define CPPTRANSPORT_CPP_PRINTER_H
 
 
 #include "C_style_printer.h"
-
-#define CPP_COMMENT_SEPARATOR "//"
 
 
 namespace cpp
@@ -20,19 +18,22 @@ namespace cpp
     class cpp_printer: public C_style_printer
       {
 
+        // CONSTRUCTOR, DESTRUCTOR
+
       public:
 
+        //! constructor is default
         cpp_printer() = default;
 
+        //! destructor is default
         virtual ~cpp_printer() = default;
 
 
-        // no need to override ginac() and comment() methods, which can
-        // pass directly through to those inherited from C_style_printer
+        // NO METHODS OVERRIDDEN
 
       };
 
   } // namespace cpp
 
 
-#endif //__cpp_printer_H_
+#endif //CPPTRANSPORT_CPP_PRINTER_H

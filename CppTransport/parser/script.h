@@ -1,14 +1,12 @@
 //
 // Created by David Seery on 18/06/2013.
-// Copyright (c) 2013-15 University of Sussex. All rights reserved.
-//
-// To change the template use AppCode | Preferences | File Templates.
+// Copyright (c) 2013-2016 University of Sussex. All rights reserved.
 //
 
 
 
-#ifndef __script_H_
-#define __script_H_
+#ifndef CPPTRANSPORT_SCRIPT_H
+#define CPPTRANSPORT_SCRIPT_H
 
 
 #include <iostream>
@@ -16,7 +14,8 @@
 #include <unordered_map>
 
 #include "stepper.h"
-#include "indexorder.h"
+#include "model_settings.h"
+#include "symbol_list.h"
 
 #include "semantic_data.h"
 #include "filestack.h"
@@ -286,18 +285,18 @@ class script
 
     std::vector<std::string> get_platx_list() const;
 
-    std::vector<GiNaC::symbol> get_field_symbols() const;
+    symbol_list get_field_symbols() const;
 
-    std::vector<GiNaC::symbol> get_deriv_symbols() const;
+    symbol_list get_deriv_symbols() const;
 
-    std::vector<GiNaC::symbol> get_param_symbols() const;
+    symbol_list get_param_symbols() const;
 
     const GiNaC::symbol& get_Mp_symbol() const;
 
 
-    void set_indexorder(enum indexorder o);
+    void set_indexorder(enum index_order o);
 
-    enum indexorder get_indexorder() const;
+    enum index_order get_indexorder() const;
 
 
     void set_potential(GiNaC::ex V);
@@ -368,7 +367,7 @@ class script
     std::unique_ptr< contexted_value<std::string> > implementation;
     std::unique_ptr< contexted_value<std::string> > model;
 
-    enum indexorder order;
+    enum index_order order;
 
     struct stepper background_stepper;
     struct stepper perturbations_stepper;
@@ -392,15 +391,15 @@ class script
 
     // symbols
 
-		symbol_factory             sym_factory;
+    symbol_factory sym_factory;
 
-    std::vector<GiNaC::symbol> deriv_symbols;
+    symbol_list deriv_symbols;
 
 		// reserved symbols
 
-    GiNaC::symbol              M_Planck;
+    GiNaC::symbol M_Planck;
 
 	};
 
 
-#endif //__script_H_
+#endif //CPPTRANSPORT_SCRIPT_H

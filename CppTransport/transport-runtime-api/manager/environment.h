@@ -1,6 +1,6 @@
 //
 // Created by David Seery on 02/06/15.
-// Copyright (c) 2015 University of Sussex. All rights reserved.
+// Copyright (c) 2015-2016 University of Sussex. All rights reserved.
 //
 
 
@@ -12,6 +12,7 @@
 
 #include "transport-runtime-api/utilities/python_finder.h"
 
+#include "boost/optional.hpp"
 #include "boost/filesystem/operations.hpp"
 
 
@@ -43,6 +44,7 @@ namespace transport
         //! returns exit code provided by system
         int execute_python(const boost::filesystem::path& script) const;
 
+
         // TERMINAL PROPERTIES
 
       public:
@@ -51,9 +53,24 @@ namespace transport
         bool has_colour_terminal_support() const { return(this->colour_output); }
 
 
+        // ENVIRONMENT PATHS
+
+      public:
+
+        //! get path to config file, if it exists
+        boost::optional< boost::filesystem::path > config_file_path() const;
+
+
         // INTERNAL DATA
 
       protected:
+
+
+        // ENVIRONMENT PATHS
+
+        //! user home directory
+        boost::optional< boost::filesystem::path > home;
+
 
         // LOCATION OF EXECUTABLES
 
@@ -73,6 +90,15 @@ namespace transport
       {
         // set up python path
         python_location = find_python();
+
+        // detect home directory
+        char* home_cstr = std::getenv(CPPTRANSPORT_HOME_ENV);
+
+        if(home_cstr != nullptr)
+          {
+            std::string home_path(home_cstr);
+            this->home = boost::filesystem::path(home_path);
+          }
 
         // determine if terminal supports colour output
         char* term_type_cstr = std::getenv("TERM");
@@ -105,7 +131,8 @@ namespace transport
             boost::filesystem::path user_profile = boost::filesystem::path(std::string(user_home)) / boost::filesystem::path(std::string(".profile"));
             if(boost::filesystem::exists(user_profile))
               {
-                command << "source " << user_profile.string() << "; ";
+                // . is the POSIX command for 'source'; 'source' is a csh command which has been imported to other shells
+                command << ". " << user_profile.string() << "; ";
               }
           }
 
@@ -113,6 +140,17 @@ namespace transport
 
         return std::system(command.str().c_str());
       }
+
+
+    boost::optional<boost::filesystem::path> local_environment::config_file_path() const
+      {
+        if(!this->home) return boost::optional<boost::filesystem::path>();
+
+        boost::filesystem::path config_path = *this->home;
+
+        return config_path / CPPTRANSPORT_RUNTIME_CONFIG_FILE;
+      }
+
 
 
   }   // namespace transport

@@ -1,6 +1,6 @@
 //
 // Created by David Seery on 13/11/2013.
-// Copyright (c) 2013-15 University of Sussex. All rights reserved.
+// Copyright (c) 2013-2016 University of Sussex. All rights reserved.
 //
 
 // based on GinacPrint by Doug Baker
@@ -49,9 +49,7 @@
 #include "msg_en.h"
 
 #include "cse.h"
-
-
-// **********************************************************************
+#include "timing_instrument.h"
 
 
 void cse::clear()
@@ -60,15 +58,29 @@ void cse::clear()
     this->decls.clear();
 
     this->serial_number++;
+    this->symbol_counter = 0;
   }
 
 
-// **********************************************************************
-
-
-void cse::parse(const GiNaC::ex& expr)
+void cse::parse(const GiNaC::ex& expr, std::string name)
   {
-		timer.resume();
+    // no effect if CSE is disabled
+    if(!this->data_payload.do_cse()) return;
+
+    timing_instrument instrument(timer);
+
+    // find iterator to entire expression;
+    // used to determine whether to create an anonymous temporary name, or used the supplied string "name"
+    GiNaC::const_postorder_iterator last;
+
+    const bool use_name = name.length() > 0;
+    if(use_name)    // avoid performing possibly expensive search if no name supplied
+      {
+        for(GiNaC::const_postorder_iterator t = expr.postorder_begin(); t != expr.postorder_end(); ++t)
+          {
+            last = t;
+          }
+      }
 
     for(GiNaC::const_postorder_iterator t = expr.postorder_begin(); t != expr.postorder_end(); ++t)
       {
@@ -76,78 +88,63 @@ void cse::parse(const GiNaC::ex& expr)
         std::string e = this->print(*t, false);
 
         // does this expression already exist in the lookup table?
-        symbol_lookup_table::iterator u = this->symbols.find(e);
+        symbol_table::iterator u = this->symbols.find(e);
 
         // if not, we should insert it
         if(u == this->symbols.end())
           {
-            this->symbols.emplace(std::make_pair( e, symbol_record( e, this->make_symbol() ) ));
+            std::string nm;
+            if(use_name && t == last) nm = name;
+            else                      nm = this->make_symbol();
+
+            // perform insertion
+            std::pair< symbol_table::iterator, bool > result = this->symbols.emplace(std::make_pair( e, cse_impl::symbol_record(e, nm) ));
+
+            // check whether insertion took place; failure could be due to aliasing
+            if(!result.second) throw cse_exception(name);
+
+            // if a name was supplied, we automatically deposit everything to the pool, because typically clients
+            // further up the stack will only get a GiNaC symbol corresponding to this name;
+            // they won't have an explicit expression to print which could cause these temporaries to be deposited
+            if(use_name && !result.first->second.is_written())
+              {
+                this->decls.push_back(std::make_pair(result.first->second.get_symbol(), result.first->second.get_target()));
+                result.first->second.set_written();
+              }
           }
       }
-
-		timer.stop();
   }
 
 
-std::string cse::temporaries(const std::string& t)
+std::unique_ptr< std::list<std::string> > cse::temporaries(const std::string& left, const std::string& mid, const std::string& right) const
   {
-    std::ostringstream out;
-    bool ok = true;
+    std::unique_ptr< std::list<std::string> > rval = std::make_unique< std::list<std::string> >();
 
-    size_t lhs_pos;
-    size_t rhs_pos;
-
-    if((lhs_pos = t.find("$1")) == std::string::npos)
+    // deposit each declaration into the output stream
+    for(const std::pair<std::string, std::string>& decl: this->decls)
       {
-        std::ostringstream msg;
-        msg << ERROR_MISSING_LHS << " '" << t << "'";
+        std::ostringstream out;
 
-        error_context err_ctx(this->data_payload.get_stack(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
-        err_ctx.error(msg.str());
-        ok = false;
-      }
-    if((rhs_pos = t.find("$2")) == std::string::npos)
-      {
-        std::ostringstream msg;
-        msg << ERROR_MISSING_RHS << " '" << t << "'";
+        // replace LHS and RHS macros in the template
+        out << left << decl.first << mid << decl.second << right << '\n';
 
-        error_context err_ctx(this->data_payload.get_stack(), this->data_payload.get_error_handler(), this->data_payload.get_warning_handler());
-        err_ctx.error(msg.str());
-        ok = false;
+        rval->push_back(out.str());
       }
 
-    std::string left  = t.substr(0, lhs_pos);
-    std::string mid   = t.substr(lhs_pos+2, rhs_pos-lhs_pos-2);
-    std::string right = t.substr(rhs_pos+2, std::string::npos);
-
-    if(ok)
-      {
-        // deposit each declaration into the output stream
-        for(const std::pair<std::string, std::string>& decl: this->decls)
-          {
-            // replace LHS and RHS macros in the template
-            out << left << decl.first << mid << decl.second << right << '\n';
-          }
-      }
-    else
-      {
-        out << t << '\n';
-      }
-
-    return(out.str());
+    return(rval);
   }
-
-
-// **********************************************************************
 
 
 std::string cse::get_symbol_without_use_count(const GiNaC::ex& expr)
   {
+    // if CSE disabled, return raw expression
+    if(!this->data_payload.do_cse()) return this->printer.ginac(expr);
+
     // print expression using ourselves as the lookup function (false means that print doesn't count uses via recursively calling ourselves)
     std::string e = this->print(expr, false);
 
     // search for this expression in the lookup table
-    symbol_lookup_table::iterator t = this->symbols.find(e);
+    symbol_table::iterator t = this->symbols.find(e);
 
     // was it present? if not, return the plain expression
     if(t == this->symbols.end()) return e;
@@ -159,11 +156,14 @@ std::string cse::get_symbol_without_use_count(const GiNaC::ex& expr)
 
 std::string cse::get_symbol_with_use_count(const GiNaC::ex& expr)
   {
+    // if CSE disabled, return raw expression
+    if(!this->data_payload.do_cse()) return this->printer.ginac(expr);
+
     // print expression using ourselves as the lookup function (true means that print will count uses via recursively calling ourselves)
     std::string e = this->print(expr, true);
 
     // search for this expression in the lookup table
-    symbol_lookup_table::iterator t = this->symbols.find(e);
+    symbol_table::iterator t = this->symbols.find(e);
 
     // was it present? if not, return the plain expression
     if(t == this->symbols.end()) return e;
@@ -189,51 +189,4 @@ std::string cse::make_symbol()
     symbol_counter++;
 
     return(s.str());
-  }
-
-
-// **********************************************************************
-
-
-cse_map::cse_map(std::vector<GiNaC::ex>* l, cse* c)
-  : list(l), cse_worker(c)
-  {
-    assert(l != nullptr);
-    assert(c != nullptr);
-
-		// if doing CSE, parse the whole vector of expressions
-    if(cse_worker->get_perform_cse())
-      {
-        // parse each component of the container
-        for(int i = 0; i < list->size(); ++i)
-          {
-            cse_worker->parse((*list)[i]);
-          }
-      }
-  }
-
-
-cse_map::~cse_map()
-  {
-    delete list;
-  }
-
-
-std::string cse_map::operator[](unsigned int index)
-  {
-    std::string rval = "";
-
-    if(index < this->list->size())
-      {
-        if(this->cse_worker->get_perform_cse())
-          {
-            rval = this->cse_worker->get_symbol_with_use_count((*this->list)[index]);
-          }
-        else
-          {
-            rval = (this->cse_worker->get_ginac_printer()).ginac((*this->list)[index]);
-          }
-      }
-
-    return(rval);
   }

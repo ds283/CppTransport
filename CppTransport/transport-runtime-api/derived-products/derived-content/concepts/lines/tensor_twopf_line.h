@@ -1,11 +1,11 @@
 //
 // Created by David Seery on 15/12/14.
-// Copyright (c) 2014-15 University of Sussex. All rights reserved.
+// Copyright (c) 2014-2016 University of Sussex. All rights reserved.
 //
 
 
-#ifndef __tensor_twopf_line_H_
-#define __tensor_twopf_line_H_
+#ifndef CPPTRANSPORT_TENSOR_TWOPF_LINE_H
+#define CPPTRANSPORT_TENSOR_TWOPF_LINE_H
 
 
 #include <iostream>
@@ -36,6 +36,10 @@
 #include "transport-runtime-api/derived-products/derived-content/utilities/integration_task_gadget.h"
 
 
+#define CPPTRANSPORT_NODE_PRODUCT_DERIVED_TENSOR_TWOPF_LINE_ROOT          "tensor-twopf-line-settings"
+
+#define CPPTRANSPORT_NODE_PRODUCT_DERIVED_TENSOR_TWOPF_LINE_DIMENSIONLESS "dimensionless"
+
 namespace transport
 	{
 
@@ -62,6 +66,17 @@ namespace transport
 				    tensor_twopf_line(Json::Value& reader, typename repository_finder<number>::task_finder& finder);
 
 				    virtual ~tensor_twopf_line() = default;
+
+
+            // MANAGE SETTINGS
+
+          public:
+
+            //! is this dimensionles?
+            bool is_dimensionless() const { return(this->dimensionless); }
+
+            //! set dimensionless
+            void set_dimensionless(bool g) { this->dimensionless = g; }
 
 
 				    // LABELLING SERVICES
@@ -101,6 +116,9 @@ namespace transport
 				    //! record which indices are active in this group
 				    index_selector<2> active_indices;
 
+            //! compute the dimensionless twopf?
+            bool dimensionless;
+
 			    };
 
 
@@ -108,7 +126,8 @@ namespace transport
 		    tensor_twopf_line<number>::tensor_twopf_line(const twopf_list_task<number>& tk, index_selector<2>& sel)
 		      : derived_line<number>(tk),  // not called because of virtual inheritance; here to silence Intel compiler warning
 		        gadget(tk),
-		        active_indices(sel)
+		        active_indices(sel),
+            dimensionless(false)
 			    {
 				    if(active_indices.get_number_fields() != 2)
 					    {
@@ -129,6 +148,8 @@ namespace transport
 			    {
 				    assert(this->parent_task != nullptr);
 		        gadget.set_task(this->parent_task, finder);
+
+            dimensionless = reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_TENSOR_TWOPF_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_TENSOR_TWOPF_LINE_DIMENSIONLESS].asBool();
 			    }
 
 
@@ -190,6 +211,8 @@ namespace transport
 		    void tensor_twopf_line<number>::serialize(Json::Value& writer) const
 			    {
 				    this->active_indices.serialize(writer);
+
+            writer[CPPTRANSPORT_NODE_PRODUCT_DERIVED_TENSOR_TWOPF_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_TENSOR_TWOPF_LINE_DIMENSIONLESS] = this->dimensionless;
 			    }
 
 
@@ -207,4 +230,4 @@ namespace transport
 	    }
 	}
 
-#endif //__tensor_twopf_line_H_
+#endif //CPPTRANSPORT_TENSOR_TWOPF_LINE_H

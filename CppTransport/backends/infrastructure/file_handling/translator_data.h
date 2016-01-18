@@ -1,6 +1,6 @@
 //
 // Created by David Seery on 30/11/2015.
-// Copyright (c) 2013-15 University of Sussex. All rights reserved.
+// Copyright (c) 2013-2016 University of Sussex. All rights reserved.
 //
 
 #ifndef CPPTRANSPORT_TRANSLATOR_DATA_H
@@ -11,7 +11,7 @@
 
 #include "finder.h"
 #include "output_stack.h"
-#include "indexorder.h"
+#include "model_settings.h"
 #include "symbol_factory.h"
 #include "y_driver.h"
 #include "error_context.h"
@@ -78,11 +78,26 @@ class translator_data
     const std::string& get_implementation_guard() const { return(this->implementation_guard); }
 
 
-    // GET MODEL DATA
+    // GET CONFIGURATION OPTIONS
 
   public:
 
-    bool get_do_cse() const;
+    //! perform common-subexpression elimination?
+    bool do_cse() const;
+
+    //! annotate output?
+    bool annotate() const;
+
+    //! get size of index assignment at which unrolling is disabled
+    unsigned int unroll_policy() const;
+
+    //! get fast option
+    bool fast() const;
+
+
+    // GET MODEL DATA
+
+  public:
 
     boost::optional< contexted_value<std::string>& > get_name() const;
 
@@ -92,21 +107,21 @@ class translator_data
 
     boost::optional< contexted_value<std::string>& > get_tag() const;
 
-    unsigned int    get_number_fields() const;
+    unsigned int     get_number_fields() const;
 
-    unsigned int    get_number_parameters() const;
+    unsigned int     get_number_parameters() const;
 
-    enum indexorder get_index_order() const;
+    enum index_order get_index_order() const;
 
     const GiNaC::symbol& get_Mp_symbol() const;
 
     const GiNaC::ex get_potential() const;
 
-    const std::vector<GiNaC::symbol> get_field_symbols() const;
+    const symbol_list get_field_symbols() const;
 
-    const std::vector<GiNaC::symbol> get_deriv_symbols() const;
+    const symbol_list get_deriv_symbols() const;
 
-    const std::vector<GiNaC::symbol> get_parameter_symbols() const;
+    const symbol_list get_parameter_symbols() const;
 
     const std::vector<std::string> get_field_list() const;
 

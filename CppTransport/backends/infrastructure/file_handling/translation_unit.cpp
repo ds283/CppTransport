@@ -1,6 +1,6 @@
 //
 // Created by David Seery on 05/12/2013.
-// Copyright (c) 2013-15 University of Sussex. All rights reserved.
+// Copyright (c) 2013-2016 University of Sussex. All rights reserved.
 //
 
 
@@ -109,6 +109,8 @@ translation_unit::translation_unit(boost::filesystem::path file, finder& p, argu
     cache(c),
     env(e),
     parse_failed(false),
+    errors(0),
+    warnings(0),
     lexstream_payload(file,
                       std::bind(&translation_unit::context_error, this, std::placeholders::_1, std::placeholders::_2),
                       std::bind(&translation_unit::context_warn, this, std::placeholders::_1, std::placeholders::_2),
@@ -163,7 +165,7 @@ translation_unit::translation_unit(boost::filesystem::path file, finder& p, argu
         boost::optional< contexted_value<std::string>& > core = driver.get_script().get_core();
         if(core)
           {
-            core_output = this->mangle_output_name(name, this->get_template_suffix(*(*core)));
+            core_output = this->mangle_output_name(name, this->get_template_suffix(*core));
           }
       }
     core_guard = boost::to_upper_copy(leafname(core_output.string()));
@@ -178,7 +180,7 @@ translation_unit::translation_unit(boost::filesystem::path file, finder& p, argu
         boost::optional< contexted_value<std::string>& > impl = driver.get_script().get_implementation();
         if(impl)
           {
-            implementation_output = this->mangle_output_name(name, this->get_template_suffix(*(*impl)));
+            implementation_output = this->mangle_output_name(name, this->get_template_suffix(*impl));
           }
       }
     implementation_guard = boost::to_upper_copy(leafname(implementation_output.string()));
@@ -195,6 +197,7 @@ unsigned int translation_unit::apply()
   {
     unsigned int rval = 0;
 
+    // don't attempt translation if parsing failed
 		if(this->parse_failed) return rval;
 
     const script& s = this->driver.get_script();
@@ -202,24 +205,24 @@ unsigned int translation_unit::apply()
     boost::optional< contexted_value<std::string>& > core = s.get_core();
     if(core)
       {
-        rval += this->outstream.translate(*(*core), (*core).get_declaration_point(), this->translator_payload.get_core_output().string(), process_core);
+        rval += this->outstream.translate(*core, (*core).get_declaration_point(), this->translator_payload.get_core_output().string(), process_type::process_core);
       }
     else
       {
         this->error(ERROR_NO_CORE_TEMPLATE);
-//        exit(EXIT_FAILURE);
       }
 
     boost::optional< contexted_value<std::string>& > impl = s.get_implementation();
     if(impl)
       {
-        rval += this->outstream.translate(*(*impl), (*core).get_declaration_point(), this->translator_payload.get_implementation_output().string(), process_implementation);
+        rval += this->outstream.translate(*impl, (*core).get_declaration_point(), this->translator_payload.get_implementation_output().string(), process_type::process_implementation);
       }
     else
       {
         this->error(ERROR_NO_IMPLEMENTATION_TEMPLATE);
-//        exit(EXIT_FAILURE);
       }
+
+    if(this->errors > 0) this->parse_failed = true;
 
     return(rval);
   }
@@ -266,24 +269,28 @@ void translation_unit::print_advisory(const std::string& msg)
 void translation_unit::error(const std::string& msg)
 	{
 		::error(msg, this->cache, this->env);
+    ++this->errors;
 	}
 
 
 void translation_unit::warn(const std::string& msg)
 	{
 		::warn(msg, this->cache, this->env);
+    ++this->warnings;
 	}
 
 
 void translation_unit::context_error(const std::string& msg, const error_context& ctx)
   {
     ::error(msg, this->cache, this->env, ctx);
+    ++this->errors;
   }
 
 
 void translation_unit::context_warn(const std::string& msg, const error_context& ctx)
   {
     ::warn(msg, this->cache, this->env, ctx);
+    ++this->warnings;
   }
 
 

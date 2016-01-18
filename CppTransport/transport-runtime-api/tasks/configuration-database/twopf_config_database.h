@@ -1,11 +1,11 @@
 //
 // Created by David Seery on 16/04/15.
-// Copyright (c) 2015 University of Sussex. All rights reserved.
+// Copyright (c) 2015-2016 University of Sussex. All rights reserved.
 //
 
 
-#ifndef __twopf_config_database_H_
-#define __twopf_config_database_H_
+#ifndef CPPTRANSPORT_TWOPF_CONFIG_DATABASE_H
+#define CPPTRANSPORT_TWOPF_CONFIG_DATABASE_H
 
 
 #include <limits>
@@ -16,6 +16,7 @@
 
 #include "transport-runtime-api/serialization/serializable.h"
 #include "transport-runtime-api/tasks/task_configurations.h"
+#include "transport-runtime-api/tasks/integration_detail/default_policies.h"
 
 #include "transport-runtime-api/tasks/configuration-database/generic_record_iterator.h"
 #include "transport-runtime-api/tasks/configuration-database/generic_config_iterator.h"
@@ -241,6 +242,9 @@ namespace transport
         //! remove a record specified by serial number
         void delete_record(unsigned int serial);
 
+        //! rebuild caches after deleting records
+        void rebuild_cache();
+
 
         // INTERFACE -- LOOKUP META-INFORMATION
 
@@ -248,10 +252,14 @@ namespace transport
 
         //! get largest conventionally-normalized k-number committed to the database
         double get_kmax_conventional() const { return(this->kmax_conventional); }
+
+        //! get largest comoving k-number committed to the database
 		    double get_kmax_comoving()     const { return(this->kmax_comoving); }
 
         //! get smallest conventionally-normalized k-number committed to the database
         double get_kmin_conventional() const { return(this->kmin_conventional); }
+
+        //! get smallest comoving k-number committed to the database
 		    double get_kmin_comoving()     const { return(this->kmax_comoving); }
 
 
@@ -460,6 +468,23 @@ namespace transport
       }
 
 
+    void twopf_kconfig_database::rebuild_cache()
+      {
+        this->kmax_conventional = - std::numeric_limits<double>::max();
+        this->kmin_conventional = std::numeric_limits<double>::max();
+        this->kmax_comoving = - std::numeric_limits<double>::max();
+        this->kmin_comoving = std::numeric_limits<double>::max();
+
+        for(const std::pair<unsigned int, twopf_kconfig_record>& rec : this->database)
+          {
+            if(rec.second->k_conventional > this->kmax_conventional) this->kmax_conventional = rec.second->k_conventional;
+            if(rec.second->k_conventional < this->kmin_conventional) this->kmin_conventional = rec.second->k_conventional;
+            if(rec.second->k_comoving > this->kmax_comoving)         this->kmax_comoving     = rec.second->k_comoving;
+            if(rec.second->k_comoving < this->kmin_comoving)         this->kmin_comoving     = rec.second->k_comoving;
+          }
+      }
+
+
     void twopf_kconfig_database::write(sqlite3* handle)
       {
         std::ostringstream create_stmt;
@@ -506,4 +531,4 @@ namespace transport
   }   // namespace transport
 
 
-#endif //__twopf_config_database_H_
+#endif //CPPTRANSPORT_TWOPF_CONFIG_DATABASE_H

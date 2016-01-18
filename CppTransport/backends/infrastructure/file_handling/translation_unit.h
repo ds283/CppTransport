@@ -1,12 +1,10 @@
 //
 // Created by David Seery on 25/06/2013.
-// Copyright (c) 2013-15 University of Sussex. All rights reserved.
-//
-// To change the template use AppCode | Preferences | File Templates.
+// Copyright (c) 2013-2016 University of Sussex. All rights reserved.
 //
 
-#ifndef __input_H_
-#define __input_H_
+#ifndef CPPTRANSPORT_TRANSLATION_UNIT_H
+#define CPPTRANSPORT_TRANSLATION_UNIT_H
 
 #include "lexstream.h"
 #include "y_common.h"
@@ -15,7 +13,7 @@
 #include "y_parser.hpp"
 
 #include "stepper.h"
-#include "indexorder.h"
+#include "model_settings.h"
 #include "output_stack.h"
 #include "translator.h"
 #include "translator_data.h"
@@ -44,9 +42,11 @@ class translation_unit
 
   public:
 
-		// perform translation
+		//! perform translation
     unsigned int apply();
 
+    //! detect errors encountered during processing
+    bool fail() const { return(this->parse_failed); }
 
 		// INTERNAL API
 
@@ -84,6 +84,9 @@ class translation_unit
     boost::filesystem::path name;                    // name of input script
     bool                    parse_failed;
 
+    unsigned int            errors;
+    unsigned int            warnings;
+
     finder&                 path;
     argument_cache&         cache;
     local_environment&      env;
@@ -101,4 +104,4 @@ class translation_unit
   };
 
 
-#endif // __input_H_
+#endif // CPPTRANSPORT_TRANSLATION_UNIT_H

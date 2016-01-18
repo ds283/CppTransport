@@ -1,6 +1,6 @@
 //
 // Created by David Seery on 08/01/2014.
-// Copyright (c) 2014-15 University of Sussex. All rights reserved.
+// Copyright (c) 2014-2016 University of Sussex. All rights reserved.
 //
 
 
@@ -197,6 +197,7 @@ namespace transport
 
 
         // INTEGRITY CHECK HANDLERS
+
       protected:
 
         // CALCULATE MISSING SERIAL NUMBERS
@@ -2048,7 +2049,7 @@ namespace transport
 
         this->datapipe_attach_container(pipe, ctr_path);
 
-        return(group);
+        return(std::move(group));   // std::move required by GCC 5.2 although standard implies that copy elision should occur
 			}
 
 
@@ -2070,7 +2071,7 @@ namespace transport
 
 		    this->datapipe_attach_container(pipe, ctr_path);
 
-        return(group);
+        return(std::move(group));   // std::move required by GCC 5.2 although standard implies that copy elision should occur
 	    }
 
 

@@ -1,6 +1,6 @@
 //
 // Created by David Seery on 28/04/15.
-// Copyright (c) 2015 University of Sussex. All rights reserved.
+// Copyright (c) 2015-2016 University of Sussex. All rights reserved.
 //
 
 
@@ -14,6 +14,8 @@
 #include <memory>
 
 #include "transport-runtime-api/derived-products/derived-content/SQL_query/SQL_query.h"
+
+#include "transport-runtime-api/instruments/timing_instrument.h"
 
 #include "boost/log/core.hpp"
 #include "boost/log/trivial.hpp"
@@ -225,9 +227,8 @@ namespace transport
 		    BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::log_severity_level::datapipe_pull) << "** PULL time sample request";
 #endif
 
-        this->pipe->database_timer.resume();
+        timing_instrument timer(this->pipe->database_timer);
         this->pipe->pull_config.time(this->pipe, query, data);
-        this->pipe->database_timer.stop();
 	    }
 
 
@@ -242,9 +243,8 @@ namespace transport
 		    BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::log_severity_level::datapipe_pull) << "** PULL 2pf k-configuration sample request";
 #endif
 
-        this->pipe->database_timer.resume();
+        timing_instrument timer(this->pipe->database_timer);
         this->pipe->pull_config.twopf(this->pipe, query, data);
-        this->pipe->database_timer.stop();
 	    }
 
 
@@ -259,9 +259,8 @@ namespace transport
 		    BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::log_severity_level::datapipe_pull) << "** PULL 3pf k-configuration sample request";
 #endif
 
-        this->pipe->database_timer.resume();
+        timing_instrument timer(this->pipe->database_timer);
         this->pipe->pull_config.threepf(this->pipe, query, data);
-        this->pipe->database_timer.stop();
 	    }
 
 

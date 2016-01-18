@@ -1,17 +1,20 @@
 //
 // Created by David Seery on 09/12/2013.
-// Copyright (c) 2013-15 University of Sussex. All rights reserved.
+// Copyright (c) 2013-2016 University of Sussex. All rights reserved.
 //
 
 
-#ifndef __translator_H_
-#define __translator_H_
+#ifndef CPPTRANSPORT_TRANSLATOR_H
+#define CPPTRANSPORT_TRANSLATOR_H
 
+
+#include <iostream>
 
 #include "buffer.h"
 #include "output_stack.h"
 #include "translator_data.h"
-#include "expression_types.h"
+#include "expression_cache.h"
+#include "backend_data.h"
 
 #include "ginac_cache.h"
 #include "formatter.h"
@@ -61,9 +64,6 @@ class translator
     // internal API to process a file
     unsigned int process(const boost::filesystem::path& in, buffer& buf, enum process_type type, filter_function* filter);
 
-    // parse the header line from a template, tokenizing it into 'backend' and 'minimum version' data
-    void parse_header_line(const boost::filesystem::path& in, const std::string line, std::string& backend, double& minver);
-
 
 		// INTERNAL DATA
 
@@ -72,10 +72,10 @@ class translator
     //! translator_data payload
     translator_data& data_payload;
 
-		//! expression cache for this translator
-		ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE> cache;
+		//! expression cache for this translator; has to be a pointer because we use it in the destructor
+		std::unique_ptr<expression_cache> cache;
 
   };
 
 
-#endif //__translator_H_
+#endif //CPPTRANSPORT_TRANSLATOR_H

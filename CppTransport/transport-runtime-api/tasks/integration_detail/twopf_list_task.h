@@ -1,6 +1,6 @@
 //
 // Created by David Seery on 15/04/15.
-// Copyright (c) 2015 University of Sussex. All rights reserved.
+// Copyright (c) 2015-2016 University of Sussex. All rights reserved.
 //
 
 
@@ -72,7 +72,10 @@ namespace transport
             // find root; note use of std::ref, because root finder would normally would take a copy of
             // its system function and this is slow -- we have to copy the whole spline
             assert(sp(sp.get_min_x()) * sp(sp.get_max_x()) < 0.0);
-            if(sp(sp.get_min_x()) * sp(sp.get_max_x()) >= 0.0) throw runtime_exception(exception_type::TASK_STRUCTURE_ERROR, CPPTRANSPORT_TASK_SEARCH_ROOT_BRACKET);
+            if(sp(sp.get_min_x()) * sp(sp.get_max_x()) >= 0.0)
+              {
+                throw runtime_exception(exception_type::TASK_STRUCTURE_ERROR, CPPTRANSPORT_TASK_SEARCH_ROOT_BRACKET);
+              }
 
             boost::uintmax_t max_iter = CPPTRANSPORT_MAX_ITERATIONS;
             std::pair< double, double > result = boost::math::tools::bisect(std::ref(sp), sp.get_min_x(), sp.get_max_x(), tol, max_iter);
@@ -201,13 +204,13 @@ namespace transport
         bool get_fast_forward() const { return(this->fast_forward); }
 
         //! Set fast-forward integration setting
-        void set_fast_forward(bool g) { this->fast_forward = g; this->validate_subhorizon_efolds(); this->cache_stored_time_config_database(); }
+        virtual void set_fast_forward(bool g) { this->fast_forward = g; this->validate_subhorizon_efolds(); this->cache_stored_time_config_database(this->twopf_db->get_kmax_conventional()); }
 
         //! Get number of fast-forward e-folds
         double get_fast_forward_efolds() const { return(this->ff_efolds); }
 
         //! Set number of fast-forward e-folds
-        void set_fast_forward_efolds(double N) { this->fast_forward = true; this->ff_efolds = (N >= 0.0 ? N : this->ff_efolds); this->validate_subhorizon_efolds(); this->cache_stored_time_config_database(); }
+        virtual void set_fast_forward_efolds(double N) { this->fast_forward = true; this->ff_efolds = (N >= 0.0 ? N : this->ff_efolds); this->validate_subhorizon_efolds(); this->cache_stored_time_config_database(this->twopf_db->get_kmax_conventional()); }
 
         //! Get start time for a twopf configuration
         double get_fast_forward_start(const twopf_kconfig& config) const;
@@ -242,7 +245,7 @@ namespace transport
         //! override cache_stored_time_config_database()
         //! supplied by integration_task<> in order to account for fast-forward integration
         //! if it is being used
-        virtual void cache_stored_time_config_database() override;
+        virtual void cache_stored_time_config_database(double largest_conventional_k) override;
 
 
         // INTERNAL API
@@ -261,7 +264,10 @@ namespace transport
         //! If fast-forward integration is being used then this parameter is used to set the initial
         //! time of the integration.
         //! Otherwise, integration begins at the initial conditions time.
-        time_config_database build_time_config_database(double N_config_begin) const;
+        time_config_database build_time_config_database(double N_config_begin, double largest_conventional_k) const;
+
+        //! get earliest time which can safely be recorded for all configurations
+        double get_earliest_recordable_time(double largest_conventional_k) const;
 
 
         // SERIALIZATION -- implements a 'serializable' interface
@@ -389,7 +395,7 @@ namespace transport
     template <typename number>
     const time_config_database twopf_list_task<number>::get_time_config_database(const twopf_kconfig& config) const
       {
-        return(this->build_time_config_database(this->get_fast_forward_start(config)));
+        return this->build_time_config_database(this->get_fast_forward_start(config), this->twopf_db->get_kmax_conventional());
       }
 
 
@@ -517,19 +523,38 @@ namespace transport
       }
 
 
+    template <typename number>
+    double twopf_list_task<number>::get_earliest_recordable_time(double largest_conventional_k) const
+      {
+        if(this->fast_forward)
+          {
+            twopf_kconfig_database::record_iterator rec;
+
+            if(!this->twopf_db->find(largest_conventional_k, rec))
+              {
+                std::ostringstream msg;
+                msg << CPPTRANSPORT_TASK_TWOPF_LIST_DATABASE_MISS << " " << largest_conventional_k;
+                throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
+              }
+
+            return (*rec)->t_exit - this->ff_efolds;
+          }
+        else
+          {
+            return this->get_N_initial();
+          }
+      }
+
+
 		template <typename number>
-		time_config_database twopf_list_task<number>::build_time_config_database(double N_config_begin) const
+		time_config_database twopf_list_task<number>::build_time_config_database(double N_config_begin, double largest_conventional_k) const
 			{
         // set up new time configuration database
         time_config_database time_db;
 
 				// check for fast-forward integration, and push only those sample times which are
 				// guaranteed to be available for all k-configurations into the database
-        double latest_crossing = log(this->twopf_db->get_kmax_conventional());
-
-        double earliest_recordable;
-        if(this->fast_forward) earliest_recordable = this->get_N_horizon_crossing() + latest_crossing - this->ff_efolds;
-        else                   earliest_recordable = this->get_N_initial();
+        double earliest_recordable = this->get_earliest_recordable_time(largest_conventional_k);
 
         double Nbegin = 0.0;
         if(this->fast_forward) Nbegin = N_config_begin;
@@ -575,17 +600,13 @@ namespace transport
 
 
     template <typename number>
-    void twopf_list_task<number>::cache_stored_time_config_database()
+    void twopf_list_task<number>::cache_stored_time_config_database(double largest_conventional_k)
       {
         this->stored_time_db.clear();
 
         // check for fast-forward integration, and push only those sample times which are
         // guaranteed to be available for all k-configurations into the database
-        double latest_crossing = log(this->twopf_db->get_kmax_conventional());
-
-        double earliest_recordable;
-        if(this->fast_forward) earliest_recordable = this->get_N_horizon_crossing() + latest_crossing - this->ff_efolds;
-        else                   earliest_recordable = this->get_N_initial();
+        double earliest_recordable = this->get_earliest_recordable_time(largest_conventional_k);
 
         // get raw time sample points
         const std::vector<double> raw_times = this->times->get_grid();
@@ -635,6 +656,7 @@ namespace transport
 		        // set spline to evaluate aH-k and then solve for N
 		        sp.set_offset(log(t->k_comoving));
 
+            // update database with computed horizon exit time
 		        t->t_exit = task_impl::find_zero_of_spline(sp, tol);
 			    }
 			}

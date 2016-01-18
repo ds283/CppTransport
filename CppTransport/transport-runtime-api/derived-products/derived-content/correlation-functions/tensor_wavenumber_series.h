@@ -1,11 +1,11 @@
 //
 // Created by David Seery on 18/12/14.
-// Copyright (c) 2014-15 University of Sussex. All rights reserved.
+// Copyright (c) 2014-2016 University of Sussex. All rights reserved.
 //
 
 
-#ifndef __tensor_wavenumber_series_H_
-#define __tensor_wavenumber_series_H_
+#ifndef CPPTRANSPORT_TENSOR_WAVENUMBER_SERIES_H
+#define CPPTRANSPORT_TENSOR_WAVENUMBER_SERIES_H
 
 
 #include <iostream>
@@ -136,12 +136,17 @@ namespace transport
             std::vector<double> w_axis = this->pull_kconfig_axis(pipe, this->kquery);
 
 		        // set up cache handles
-		        typename datapipe<number>::time_config_handle& tc_handle = pipe.new_time_config_handle(this->tquery);
-		        typename datapipe<number>::kconfig_data_handle& k_handle = pipe.new_kconfig_data_handle(this->kquery);
+            typename datapipe<number>::twopf_kconfig_handle& kc_handle = pipe.new_twopf_kconfig_handle(this->kquery);
+		        typename datapipe<number>::time_config_handle& tc_handle   = pipe.new_time_config_handle(this->tquery);
+		        typename datapipe<number>::kconfig_data_handle& k_handle   = pipe.new_kconfig_data_handle(this->kquery);
 
 		        // pull time-configuration data information from the database
 		        time_config_tag<number> t_tag = pipe.new_time_config_tag();
 		        const std::vector< time_config > t_values = tc_handle.lookup_tag(t_tag);
+
+            // pull k-configuration information from the database
+            twopf_kconfig_tag<number> k_tag = pipe.new_twopf_kconfig_tag();
+            const typename std::vector< twopf_kconfig > k_values = kc_handle.lookup_tag(k_tag);
 
 		        // loop through all components of the tensor twopf, pulling data from the database for each t-component
 		        for(std::vector<time_config>::const_iterator t = t_values.begin(); t != t_values.end(); ++t)
@@ -156,12 +161,33 @@ namespace transport
 										        cf_kconfig_data_tag<number> tag = pipe.new_cf_kconfig_data_tag(cf_data_type::cf_tensor_twopf, this->gadget.get_model()->tensor_flatten(m,n), t->serial);
 
 										        // it's safe to take a reference here to avoid a copy; we don't need the cache data to survive over multiple calls to lookup_tag()
-										        const std::vector<number>& line_data = k_handle.lookup_tag(tag);
+										        std::vector<number> line_data = k_handle.lookup_tag(tag);
+                            assert(line_data.size() == k_values.size());
 
-								            std::string latex_label = "$" + this->make_LaTeX_label(m,n) + "\\;" + this->make_LaTeX_tag(t->t) + "$";
-								            std::string nonlatex_label = this->make_non_LaTeX_label(m,n) + " " + this->make_non_LaTeX_tag(t->t);
+                            value_type value;
+                            if(this->dimensionless)
+                              {
+                                typename std::vector<number>::iterator     l_pos = line_data.begin();
+                                std::vector<twopf_kconfig>::const_iterator k_pos = k_values.begin();
+                                for(; l_pos != line_data.end() && k_pos != k_values.end(); ++l_pos, ++k_pos)
+                                  {
+                                    *l_pos *= 1.0 / (2.0*M_PI*M_PI);
+                                  }
+                                value = value_type::dimensionless_value;
+                              }
+                            else
+                              {
+                                typename std::vector<number>::iterator     l_pos = line_data.begin();
+                                std::vector<twopf_kconfig>::const_iterator k_pos = k_values.begin();
+                                for(; l_pos != line_data.end() && k_pos != k_values.end(); ++l_pos, ++k_pos)
+                                  {
+                                    double k_cube = k_pos->k_comoving * k_pos->k_comoving * k_pos->k_comoving;
+                                    *l_pos *=  1.0 / k_cube;
+                                  }
+                                value = value_type::correlation_function_value;
+                              }
 
-								            data_line<number> line = data_line<number>(group, this->x_type, value_type::correlation_function_value, w_axis, line_data,
+								            data_line<number> line = data_line<number>(group, this->x_type, value, w_axis, line_data,
 								                                                       this->get_LaTeX_label(m,n,t->t), this->get_non_LaTeX_label(m,n,t->t), this->is_spectral_index());
 
 										        lines.push_back(line);
@@ -245,4 +271,4 @@ namespace transport
 
 	}
 
-#endif //__tensor_wavenumber_series_H_
+#endif //CPPTRANSPORT_TENSOR_WAVENUMBER_SERIES_H

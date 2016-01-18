@@ -1,6 +1,6 @@
 //
 // Created by David Seery on 03/07/2014.
-// Copyright (c) 2014-15 University of Sussex. All rights reserved.
+// Copyright (c) 2014-2016 University of Sussex. All rights reserved.
 //
 
 
@@ -117,12 +117,12 @@ namespace transport
 		      protected:
 
 		        //! compute shape function for a given bispectrum
-		        void shape_function(const std::vector<number>& bispectrum, const std::vector<number>& twopf_k1,
-		                            const std::vector<number>& twopf_k2, const std::vector<number>& twopf_k3,
-		                            std::vector<number>& shape) const;
+		        void shape_function(const std::vector<number>& bispectrum,
+                                const std::vector<number>& twopf_k1, const std::vector<number>& twopf_k2,
+                                const std::vector<number>& twopf_k3, std::vector<number>& shape) const;
 
 		        //! compute shape function for a selected template
-		        void shape_function(template_type type,
+		        void shape_function(template_type type, const threepf_kconfig& config,
 		                            const std::vector<number>& twopf_k1, const std::vector<number>& twopf_k2,
 		                            const std::vector<number>& twopf_k3, std::vector<number>& shape) const;
 
@@ -171,7 +171,7 @@ namespace transport
 				    // set up a work list for all threepf k-configurations
             const threepf_kconfig_database& threepf_db = tk->get_threepf_database();
 
-            for(threepf_kconfig_database::const_config_iterator t = threepf_db.config_begin(); t != threepf_db.config_end(); ++t)
+            for(threepf_kconfig_database::const_record_iterator t = threepf_db.record_begin(); t != threepf_db.record_end(); ++t)
               {
 		            work_list.enqueue_item(*t);
               }
@@ -281,15 +281,17 @@ namespace transport
                 zeta_twopf_time_data_tag<number> k2_tag = h.pipe.new_zeta_twopf_time_data_tag(k2);
                 zeta_twopf_time_data_tag<number> k3_tag = h.pipe.new_zeta_twopf_time_data_tag(k3);
 
+                // as of 14 Jan 2016 we store dimensionless twopf objects k^3 * 2pf in the database
+                // so these will require conversion
                 const std::vector<number> twopf_k1 = z_handle.lookup_tag(k1_tag);
                 const std::vector<number> twopf_k2 = z_handle.lookup_tag(k2_tag);
                 const std::vector<number> twopf_k3 = z_handle.lookup_tag(k3_tag);
 
-                // compute shape functions for bispectrum and template
+                // compute shape functions for template
                 std::vector<number> S_bispectrum;
                 std::vector<number> S_template;
                 this->shape_function(bispectrum, twopf_k1, twopf_k2, twopf_k3, S_bispectrum);
-                this->shape_function(h.type, twopf_k1, twopf_k2, twopf_k3, S_template);
+                this->shape_function(h.type, *(h.work_list[i]), twopf_k1, twopf_k2, twopf_k3, S_template);
 
                 number measure = h.tk->measure(*(h.work_list[i]));
                 for(unsigned int j = 0; j < h.t_axis.size(); ++j)
@@ -322,8 +324,10 @@ namespace transport
 
 		    // compute shape function for a supplied bispectrum
 		    template <typename number>
-		    void fNL_timeseries_compute<number>::shape_function(const std::vector<number>& bispectrum, const std::vector<number>& twopf_k1,
-		                                                        const std::vector<number>& twopf_k2, const std::vector<number>& twopf_k3,
+		    void fNL_timeseries_compute<number>::shape_function(const std::vector<number>& bispectrum,
+                                                            const std::vector<number>& twopf_k1,
+                                                            const std::vector<number>& twopf_k2,
+                                                            const std::vector<number>& twopf_k3,
 		                                                        std::vector<number>& shape) const
 			    {
 		        shape.clear();
@@ -331,6 +335,8 @@ namespace transport
 
 		        for(unsigned int j = 0; j < bispectrum.size(); ++j)
 			        {
+                // as of 14 Jan 2016 we store dimensionless objects k^3 * 2pf and (k1 k2 k3)^3 * 3pf in the
+                // database, but that does not cause any changes here
 		            number Bref = this->reference_bispectrum(twopf_k1[j], twopf_k2[j], twopf_k3[j]);
 
 		            shape[j] = bispectrum[j] / Bref;
@@ -340,12 +346,22 @@ namespace transport
 
 		    // compute shape function for the intended template
 		    template <typename number>
-		    void fNL_timeseries_compute<number>::shape_function(template_type type,
-		                                                        const std::vector<number>& twopf_k1, const std::vector<number>& twopf_k2,
-		                                                        const std::vector<number>& twopf_k3, std::vector<number>& shape) const
+        void fNL_timeseries_compute<number>::shape_function(template_type type, const threepf_kconfig& config,
+                                                            const std::vector<number>& twopf_k1,
+                                                            const std::vector<number>& twopf_k2,
+                                                            const std::vector<number>& twopf_k3,
+                                                            std::vector<number>& shape) const
 			    {
 		        shape.clear();
 		        shape.resize(twopf_k1.size());
+
+            const double k1 = config.k1_comoving;
+            const double k2 = config.k2_comoving;
+            const double k3 = config.k3_comoving;
+
+            const double k1_cube = k1*k1*k1;
+            const double k2_cube = k2*k2*k2;
+            const double k3_cube = k3*k3*k3;
 
 		        for(unsigned int j = 0; j < twopf_k1.size(); ++j)
 			        {
@@ -354,23 +370,23 @@ namespace transport
 		            switch(type)
 			            {
 		                case template_type::fNL_local_template:
-			                T = this->local_template(twopf_k1[j], twopf_k2[j], twopf_k3[j]);
+			                T = this->local_template(twopf_k1[j]/k1_cube, twopf_k2[j]/k2_cube, twopf_k3[j]/k3_cube);
 			                break;
 
 		                case template_type::fNL_equi_template:
-			                T = this->equi_template(twopf_k1[j], twopf_k2[j], twopf_k3[j]);
+			                T = this->equi_template(twopf_k1[j]/k1_cube, twopf_k2[j]/k2_cube, twopf_k3[j]/k3_cube);
 			                break;
 
 		                case template_type::fNL_ortho_template:
-			                T = this->ortho_template(twopf_k1[j], twopf_k2[j], twopf_k3[j]);
+			                T = this->ortho_template(twopf_k1[j]/k1_cube, twopf_k2[j]/k2_cube, twopf_k3[j]/k3_cube);
 			                break;
 
 		                case template_type::fNL_DBI_template:
-			                T = this->DBI_template(twopf_k1[j], twopf_k2[j], twopf_k3[j]);
+			                T = this->DBI_template(twopf_k1[j]/k1_cube, twopf_k2[j]/k2_cube, twopf_k3[j]/k3_cube);
 		                  break;
 			            }
 
-		            number Bref = this->reference_bispectrum(twopf_k1[j], twopf_k2[j], twopf_k3[j]);
+		            number Bref = this->reference_bispectrum(twopf_k1[j]/k1_cube, twopf_k2[j]/k2_cube, twopf_k3[j]/k3_cube);
 
 		            shape[j] = T/Bref;
 			        }

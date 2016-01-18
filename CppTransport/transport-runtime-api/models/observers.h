@@ -1,11 +1,11 @@
 //
 // Created by David Seery on 22/12/2013.
-// Copyright (c) 2013-15 University of Sussex. All rights reserved.
+// Copyright (c) 2013-2016 University of Sussex. All rights reserved.
 //
 
 
-#ifndef __observers_H_
-#define __observers_H_
+#ifndef CPPTRANSPORT_OBSERVERS_H
+#define CPPTRANSPORT_OBSERVERS_H
 
 
 #include <iostream>
@@ -264,15 +264,17 @@ namespace transport
       private:
 
         const twopf_kconfig_record& k_config;
-        twopf_batcher<number>     & batcher;
+        const double k_cube;
 
-        unsigned int backg_size;
-        unsigned int tensor_size;
-        unsigned int twopf_size;
+        twopf_batcher<number>& batcher;
 
-        unsigned int backg_start;
-        unsigned int tensor_start;
-        unsigned int twopf_start;
+        const unsigned int backg_size;
+        const unsigned int tensor_size;
+        const unsigned int twopf_size;
+
+        const unsigned int backg_start;
+        const unsigned int tensor_start;
+        const unsigned int twopf_start;
 
       };
 
@@ -284,9 +286,15 @@ namespace transport
                                                                                  unsigned int bg_st, unsigned int ten_st, unsigned int tw_st,
                                                                                  boost::timer::nanosecond_type t_int, bool s, unsigned int p)
       : timing_observer<number>(t, t_int, s, p),
-        batcher(b), k_config(c),
-        backg_size(bg_sz), tensor_size(ten_sz), twopf_size(tw_sz),
-        backg_start(bg_st), tensor_start(ten_st), twopf_start(tw_st)
+        batcher(b),
+        k_config(c),
+        k_cube(c->k_comoving*c->k_comoving*c->k_comoving),
+        backg_size(bg_sz),
+        tensor_size(ten_sz),
+        twopf_size(tw_sz),
+        backg_start(bg_st),
+        tensor_start(ten_st),
+        twopf_start(tw_st)
       {
       }
 
@@ -301,10 +309,10 @@ namespace transport
             for(unsigned int i = 0; i < this->backg_size; ++i) bg_x[i] = x[this->backg_start + i];
 
             std::vector<number> tensor_tpf_x(this->tensor_size);
-            for(unsigned int i = 0; i < this->tensor_size; ++i) tensor_tpf_x[i] = x[this->tensor_start + i];
+            for(unsigned int i = 0; i < this->tensor_size; ++i) tensor_tpf_x[i] = this->k_cube * x[this->tensor_start + i];
 
             std::vector<number> tpf_x(this->twopf_size);
-            for(unsigned int i = 0; i < this->twopf_size; ++i) tpf_x[i] = x[this->twopf_start + i];
+            for(unsigned int i = 0; i < this->twopf_size; ++i) tpf_x[i] = this->k_cube * x[this->twopf_start + i];
 
             if(this->k_config.is_background_stored())
               {
@@ -380,24 +388,29 @@ namespace transport
       private:
 
         const threepf_kconfig_record& k_config;
-        threepf_batcher<number>     & batcher;
+        const double k1_cube;
+        const double k2_cube;
+        const double k3_cube;
+        const double shape;
 
-        unsigned int backg_size;
-        unsigned int tensor_size;
-        unsigned int twopf_size;
-        unsigned int threepf_size;
+        threepf_batcher<number>& batcher;
 
-        unsigned int backg_start;
-        unsigned int tensor_k1_start;
-        unsigned int tensor_k2_start;
-        unsigned int tensor_k3_start;
-        unsigned int twopf_re_k1_start;
-        unsigned int twopf_im_k1_start;
-        unsigned int twopf_re_k2_start;
-        unsigned int twopf_im_k2_start;
-        unsigned int twopf_re_k3_start;
-        unsigned int twopf_im_k3_start;
-        unsigned int threepf_start;
+        const unsigned int backg_size;
+        const unsigned int tensor_size;
+        const unsigned int twopf_size;
+        const unsigned int threepf_size;
+
+        const unsigned int backg_start;
+        const unsigned int tensor_k1_start;
+        const unsigned int tensor_k2_start;
+        const unsigned int tensor_k3_start;
+        const unsigned int twopf_re_k1_start;
+        const unsigned int twopf_im_k1_start;
+        const unsigned int twopf_re_k2_start;
+        const unsigned int twopf_im_k2_start;
+        const unsigned int twopf_re_k3_start;
+        const unsigned int twopf_im_k3_start;
+        const unsigned int threepf_start;
 
       };
 
@@ -414,13 +427,26 @@ namespace transport
                                                                                      unsigned int th_st,
                                                                                      boost::timer::nanosecond_type t_int, bool s, unsigned int p)
       : timing_observer<number>(t, t_int, s, p),
-        batcher(b), k_config(c),
-        backg_size(bg_sz), tensor_size(ten_sz), twopf_size(tw_sz), threepf_size(th_sz),
+        batcher(b),
+        k_config(c),
+        k1_cube(c->k1_comoving*c->k1_comoving*c->k1_comoving),
+        k2_cube(c->k2_comoving*c->k2_comoving*c->k2_comoving),
+        k3_cube(c->k3_comoving*c->k3_comoving*c->k3_comoving),
+        shape(c->k1_comoving*c->k1_comoving * c->k2_comoving*c->k2_comoving * c->k3_comoving*c->k3_comoving),
+        backg_size(bg_sz),
+        tensor_size(ten_sz),
+        twopf_size(tw_sz),
+        threepf_size(th_sz),
         backg_start(bg_st),
-        tensor_k1_start(ten_k1_st), tensor_k2_start(ten_k2_st), tensor_k3_start(ten_k3_st),
-        twopf_re_k1_start(tw_re_k1_st), twopf_im_k1_start(tw_im_k1_st),
-        twopf_re_k2_start(tw_re_k2_st), twopf_im_k2_start(tw_im_k2_st),
-        twopf_re_k3_start(tw_re_k3_st), twopf_im_k3_start(tw_im_k3_st),
+        tensor_k1_start(ten_k1_st),
+        tensor_k2_start(ten_k2_st),
+        tensor_k3_start(ten_k3_st),
+        twopf_re_k1_start(tw_re_k1_st),
+        twopf_im_k1_start(tw_im_k1_st),
+        twopf_re_k2_start(tw_re_k2_st),
+        twopf_im_k2_start(tw_im_k2_st),
+        twopf_re_k3_start(tw_re_k3_st),
+        twopf_im_k3_start(tw_im_k3_st),
         threepf_start(th_st)
       {
       }
@@ -436,31 +462,31 @@ namespace transport
             for(unsigned int i = 0; i < this->backg_size; ++i) bg_x[i] = x[this->backg_start + i];
 
             std::vector<number> tensor_tpf_x1(this->tensor_size);
-            for(unsigned int i = 0; i < this->tensor_size; ++i) tensor_tpf_x1[i] = x[this->tensor_k1_start + i];
+            for(unsigned int i = 0; i < this->tensor_size; ++i) tensor_tpf_x1[i] = this->k1_cube * x[this->tensor_k1_start + i];
 
             std::vector<number> tpf_x1_re(this->twopf_size);
-            for(unsigned int i = 0; i < this->twopf_size; ++i) tpf_x1_re[i] = x[this->twopf_re_k1_start + i];
+            for(unsigned int i = 0; i < this->twopf_size; ++i) tpf_x1_re[i] = this->k1_cube * x[this->twopf_re_k1_start + i];
             std::vector<number> tpf_x1_im(this->twopf_size);
-            for(unsigned int i = 0; i < this->twopf_size; ++i) tpf_x1_im[i] = x[this->twopf_im_k1_start + i];
+            for(unsigned int i = 0; i < this->twopf_size; ++i) tpf_x1_im[i] = this->k1_cube * x[this->twopf_im_k1_start + i];
 
             std::vector<number> tensor_tpf_x2(this->tensor_size);
-            for(unsigned int i = 0; i < this->tensor_size; ++i) tensor_tpf_x2[i] = x[this->tensor_k2_start + i];
+            for(unsigned int i = 0; i < this->tensor_size; ++i) tensor_tpf_x2[i] = this->k2_cube * x[this->tensor_k2_start + i];
 
             std::vector<number> tpf_x2_re(this->twopf_size);
-            for(unsigned int i = 0; i < this->twopf_size; ++i) tpf_x2_re[i] = x[this->twopf_re_k2_start + i];
+            for(unsigned int i = 0; i < this->twopf_size; ++i) tpf_x2_re[i] = this->k2_cube * x[this->twopf_re_k2_start + i];
             std::vector<number> tpf_x2_im(this->twopf_size);
-            for(unsigned int i = 0; i < this->twopf_size; ++i) tpf_x2_im[i] = x[this->twopf_im_k2_start + i];
+            for(unsigned int i = 0; i < this->twopf_size; ++i) tpf_x2_im[i] = this->k2_cube * x[this->twopf_im_k2_start + i];
 
             std::vector<number> tensor_tpf_x3(this->tensor_size);
-            for(unsigned int i = 0; i < this->tensor_size; ++i) tensor_tpf_x3[i] = x[this->tensor_k3_start + i];
+            for(unsigned int i = 0; i < this->tensor_size; ++i) tensor_tpf_x3[i] = this->k3_cube * x[this->tensor_k3_start + i];
 
             std::vector<number> tpf_x3_re(this->twopf_size);
-            for(unsigned int i = 0; i < this->twopf_size; ++i) tpf_x3_re[i] = x[this->twopf_re_k3_start + i];
+            for(unsigned int i = 0; i < this->twopf_size; ++i) tpf_x3_re[i] = this->k3_cube * x[this->twopf_re_k3_start + i];
             std::vector<number> tpf_x3_im(this->twopf_size);
-            for(unsigned int i = 0; i < this->twopf_size; ++i) tpf_x3_im[i] = x[this->twopf_im_k3_start + i];
+            for(unsigned int i = 0; i < this->twopf_size; ++i) tpf_x3_im[i] = this->k3_cube * x[this->twopf_im_k3_start + i];
 
             std::vector<number> thpf_x(this->threepf_size);
-            for(unsigned int i = 0; i < this->threepf_size; ++i) thpf_x[i] = x[this->threepf_start + i];
+            for(unsigned int i = 0; i < this->threepf_size; ++i) thpf_x[i] = this->shape * x[this->threepf_start + i];
 
             if(this->k_config.is_background_stored())
               {
@@ -556,15 +582,16 @@ namespace transport
       private:
 
         const work_queue<twopf_kconfig_record>::device_work_list& work_list;
-        twopf_batcher<number>                                   & batcher;
 
-        unsigned int backg_size;
-        unsigned int tensor_size;
-        unsigned int twopf_size;
+        twopf_batcher<number>& batcher;
 
-        unsigned int backg_start;
-        unsigned int tensor_start;
-        unsigned int twopf_start;
+        const unsigned int backg_size;
+        const unsigned int tensor_size;
+        const unsigned int twopf_size;
+
+        const unsigned int backg_start;
+        const unsigned int tensor_start;
+        const unsigned int twopf_start;
 
       };
 
@@ -577,9 +604,14 @@ namespace transport
                                                                                unsigned int bg_st, unsigned int ten_st, unsigned int tw_st,
                                                                                boost::timer::nanosecond_type t_int, bool s, unsigned int p)
       : timing_observer<number>(t, t_int, s, p),
-        batcher(b), work_list(c),
-        backg_size(bg_sz), tensor_size(ten_sz), twopf_size(tw_sz),
-        backg_start(bg_st), tensor_start(ten_st), twopf_start(tw_st)
+        batcher(b),
+        work_list(c),
+        backg_size(bg_sz),
+        tensor_size(ten_sz),
+        twopf_size(tw_sz),
+        backg_start(bg_st),
+        tensor_start(ten_st),
+        twopf_start(tw_st)
       {
       }
 
@@ -595,14 +627,17 @@ namespace transport
             // loop through all k-configurations
             for(unsigned int c = 0; c < n; ++c)
               {
+                double k = this->work_list[c]->k_comoving;
+                double k_cube = k*k*k;
+
                 std::vector<number> bg_x(this->backg_size);
                 for(unsigned int i = 0; i < this->backg_size; ++i) bg_x[i] = x[(this->backg_start + i)*n + c];
 
                 std::vector<number> tensor_tpf_x(this->tensor_size);
-                for(unsigned int i = 0; i < this->tensor_size; ++i) tensor_tpf_x[i] = x[(this->tensor_start + i)*n + c];
+                for(unsigned int i = 0; i < this->tensor_size; ++i) tensor_tpf_x[i] = k_cube * x[(this->tensor_start + i)*n + c];
 
                 std::vector<number> tpf_x(this->twopf_size);
-                for(unsigned int i = 0; i < this->twopf_size; ++i) tpf_x[i] = x[(this->twopf_start + i)*n + c];
+                for(unsigned int i = 0; i < this->twopf_size; ++i) tpf_x[i] = k_cube * x[(this->twopf_start + i)*n + c];
 
                 if(this->work_list[c].is_background_stored())
                   {
@@ -676,24 +711,25 @@ namespace transport
       private:
 
         const work_queue<threepf_kconfig_record>::device_work_list& work_list;
-        threepf_batcher<number>                                   & batcher;
 
-        unsigned int backg_size;
-        unsigned int tensor_size;
-        unsigned int twopf_size;
-        unsigned int threepf_size;
+        threepf_batcher<number>& batcher;
 
-        unsigned int backg_start;
-        unsigned int tensor_k1_start;
-        unsigned int tensor_k2_start;
-        unsigned int tensor_k3_start;
-        unsigned int twopf_re_k1_start;
-        unsigned int twopf_im_k1_start;
-        unsigned int twopf_re_k2_start;
-        unsigned int twopf_im_k2_start;
-        unsigned int twopf_re_k3_start;
-        unsigned int twopf_im_k3_start;
-        unsigned int threepf_start;
+        const unsigned int backg_size;
+        const unsigned int tensor_size;
+        const unsigned int twopf_size;
+        const unsigned int threepf_size;
+
+        const unsigned int backg_start;
+        const unsigned int tensor_k1_start;
+        const unsigned int tensor_k2_start;
+        const unsigned int tensor_k3_start;
+        const unsigned int twopf_re_k1_start;
+        const unsigned int twopf_im_k1_start;
+        const unsigned int twopf_re_k2_start;
+        const unsigned int twopf_im_k2_start;
+        const unsigned int twopf_re_k3_start;
+        const unsigned int twopf_im_k3_start;
+        const unsigned int threepf_start;
 
       };
 
@@ -711,13 +747,22 @@ namespace transport
                                                                                    unsigned int th_st,
                                                                                    boost::timer::nanosecond_type t_int, bool s, unsigned int p)
       : timing_observer<number>(t, t_int, s, p),
-        batcher(b), work_list(c),
-        backg_size(bg_sz), tensor_size(ten_sz), twopf_size(tw_sz), threepf_size(th_sz),
+        batcher(b),
+        work_list(c),
+        backg_size(bg_sz),
+        tensor_size(ten_sz),
+        twopf_size(tw_sz),
+        threepf_size(th_sz),
         backg_start(bg_st),
-        tensor_k1_start(ten_k1_st), tensor_k2_start(ten_k2_st), tensor_k3_start(ten_k3_st),
-        twopf_re_k1_start(tw_re_k1_st), twopf_im_k1_start(tw_im_k1_st),
-        twopf_re_k2_start(tw_re_k2_st), twopf_im_k2_start(tw_im_k2_st),
-        twopf_re_k3_start(tw_re_k3_st), twopf_im_k3_start(tw_im_k3_st),
+        tensor_k1_start(ten_k1_st),
+        tensor_k2_start(ten_k2_st),
+        tensor_k3_start(ten_k3_st),
+        twopf_re_k1_start(tw_re_k1_st),
+        twopf_im_k1_start(tw_im_k1_st),
+        twopf_re_k2_start(tw_re_k2_st),
+        twopf_im_k2_start(tw_im_k2_st),
+        twopf_re_k3_start(tw_re_k3_st),
+        twopf_im_k3_start(tw_im_k3_st),
         threepf_start(th_st)
       {
       }
@@ -734,35 +779,45 @@ namespace transport
             // loop through all k-configurations
             for(unsigned int c = 0; c < n; ++c)
               {
+                double k1 = this->work_list[c]->k1_comoving;
+                double k2 = this->work_list[c]->k2_comoving;
+                double k3 = this->work_list[c]->k3_comoving;
+
+                double k1_cube = k1*k1*k1;
+                double k2_cube = k2*k2*k2;
+                double k3_cube = k3*k3*k3;
+
+                double shape = k1*k1 * k2*k2 * k3*k3;
+
                 std::vector<number> bg_x(this->backg_size);
                 for(unsigned int i = 0; i < this->backg_size; ++i) bg_x[i] = x[(this->backg_start + i)*n + c];
 
                 std::vector<number> tensor_tpf_x1(this->tensor_size);
-                for(unsigned int i = 0; i < this->tensor_size; ++i) tensor_tpf_x1[i] = x[(this->tensor_k1_start + i)*n + c];
+                for(unsigned int i = 0; i < this->tensor_size; ++i) tensor_tpf_x1[i] = k1_cube * x[(this->tensor_k1_start + i)*n + c];
 
                 std::vector<number> tpf_x1_re(this->twopf_size);
-                for(unsigned int i = 0; i < this->twopf_size; ++i) tpf_x1_re[i] = x[(this->twopf_re_k1_start + i)*n + c];
+                for(unsigned int i = 0; i < this->twopf_size; ++i) tpf_x1_re[i] = k1_cube * x[(this->twopf_re_k1_start + i)*n + c];
                 std::vector<number> tpf_x1_im(this->twopf_size);
-                for(unsigned int i = 0; i < this->twopf_size; ++i) tpf_x1_im[i] = x[(this->twopf_im_k1_start + i)*n + c];
+                for(unsigned int i = 0; i < this->twopf_size; ++i) tpf_x1_im[i] = k1_cube * x[(this->twopf_im_k1_start + i)*n + c];
 
                 std::vector<number> tensor_tpf_x2(this->tensor_size);
-                for(unsigned int i = 0; i < this->tensor_size; ++i) tensor_tpf_x2[i] = x[(this->tensor_k2_start + i)*n + c];
+                for(unsigned int i = 0; i < this->tensor_size; ++i) tensor_tpf_x2[i] = k2_cube * x[(this->tensor_k2_start + i)*n + c];
 
                 std::vector<number> tpf_x2_re(this->twopf_size);
-                for(unsigned int i = 0; i < this->twopf_size; ++i) tpf_x2_re[i] = x[(this->twopf_re_k2_start + i)*n + c];
+                for(unsigned int i = 0; i < this->twopf_size; ++i) tpf_x2_re[i] = k2_cube * x[(this->twopf_re_k2_start + i)*n + c];
                 std::vector<number> tpf_x2_im(this->twopf_size);
-                for(unsigned int i = 0; i < this->twopf_size; ++i) tpf_x2_im[i] = x[(this->twopf_im_k2_start + i)*n + c];
+                for(unsigned int i = 0; i < this->twopf_size; ++i) tpf_x2_im[i] = k2_cube * x[(this->twopf_im_k2_start + i)*n + c];
 
                 std::vector<number> tensor_tpf_x3(this->tensor_size);
-                for(unsigned int i = 0; i < this->tensor_size; ++i) tensor_tpf_x3[i] = x[(this->tensor_k3_start + i)*n + c];
+                for(unsigned int i = 0; i < this->tensor_size; ++i) tensor_tpf_x3[i] = k3_cube * x[(this->tensor_k3_start + i)*n + c];
 
                 std::vector<number> tpf_x3_re(this->twopf_size);
-                for(unsigned int i = 0; i < this->twopf_size; ++i) tpf_x3_re[i] = x[(this->twopf_re_k3_start + i)*n + c];
+                for(unsigned int i = 0; i < this->twopf_size; ++i) tpf_x3_re[i] = k3_cube * x[(this->twopf_re_k3_start + i)*n + c];
                 std::vector<number> tpf_x3_im(this->twopf_size);
-                for(unsigned int i = 0; i < this->twopf_size; ++i) tpf_x3_im[i] = x[(this->twopf_im_k3_start + i)*n + c];
+                for(unsigned int i = 0; i < this->twopf_size; ++i) tpf_x3_im[i] = k3_cube * x[(this->twopf_im_k3_start + i)*n + c];
 
                 std::vector<number> thpf_x(this->threepf_size);
-                for(unsigned int i = 0; i < this->threepf_size; ++i) thpf_x[i] = x[(this->threepf_start + i)*n + c];
+                for(unsigned int i = 0; i < this->threepf_size; ++i) thpf_x[i] = shape * x[(this->threepf_start + i)*n + c];
 
                 if(this->work_list[c].is_background_stored())
                   {
@@ -809,4 +864,4 @@ namespace transport
   } // namespace transport
 
 
-#endif //__observers_H_
+#endif //CPPTRANSPORT_OBSERVERS_H

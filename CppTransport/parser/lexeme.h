@@ -1,12 +1,12 @@
 //
 // Created by David Seery on 13/06/2013.
-// Copyright (c) 2013-15 University of Sussex. All rights reserved.
+// Copyright (c) 2013-2016 University of Sussex. All rights reserved.
 //
 
 
 
-#ifndef __lexeme_H_
-#define __lexeme_H_
+#ifndef CPPTRANSPORT_LEXEME_H
+#define CPPTRANSPORT_LEXEME_H
 
 
 #include <assert.h>
@@ -482,4 +482,4 @@ namespace lexeme    // package in a unique namespace
 
 	}
 
-#endif //__lexeme_H_
+#endif //CPPTRANSPORT_LEXEME_H

@@ -1,6 +1,6 @@
 //
 // Created by David Seery on 13/08/15.
-// Copyright (c) 2015 University of Sussex. All rights reserved.
+// Copyright (c) 2015-2016 University of Sussex. All rights reserved.
 //
 
 
@@ -48,7 +48,7 @@ namespace transport
 
             //! value constructor
             generic_value_iterator(value_iterator_type i, ValueType o)
-	            : it(i),
+	            : it(std::move(i)),
                 offset(o)
 	            {
 	            }

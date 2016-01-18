@@ -1,11 +1,11 @@
 //
 // Created by David Seery on 19/05/2014.
-// Copyright (c) 2014-15 University of Sussex. All rights reserved.
+// Copyright (c) 2014-2016 University of Sussex. All rights reserved.
 //
 
 
-#ifndef __field_time_series_H_
-#define __field_time_series_H_
+#ifndef CPPTRANSPORT_FIELD_TIME_SERIES_H
+#define CPPTRANSPORT_FIELD_TIME_SERIES_H
 
 
 #include <iostream>
@@ -395,16 +395,26 @@ namespace transport
 			                                                                           this->gadget.get_model()->flatten(m, n), t->serial);
 
 		                        std::vector<number> line_data = t_handle.lookup_tag(tag);
+                            assert(line_data.size() == t_axis.size());
 
-                            value_type value = value_type::correlation_function_value;
+                            value_type value;
 		                        if(this->dimensionless)
 			                        {
 		                            for(unsigned int j = 0; j < line_data.size(); ++j)
 			                            {
-		                                line_data[j] *= t->k_comoving * t->k_comoving * t->k_comoving / (2.0*M_PI*M_PI);
+		                                line_data[j] *= 1.0 / (2.0*M_PI*M_PI);
 			                            }
                                 value = value_type::dimensionless_value;
 			                        }
+                            else
+                              {
+                                double k_cube = t->k_comoving * t->k_comoving * t->k_comoving;
+                                for(unsigned int j = 0; j < line_data.size(); ++j)
+                                  {
+                                    line_data[j] *= 1.0 / k_cube;
+                                  }
+                                value = value_type::correlation_function_value;
+                              }
 
                             data_line<number> line = data_line<number>(group, this->x_type, value, t_axis, line_data,
                                                                        this->get_LaTeX_label(m,n,*t), this->get_non_LaTeX_label(m,n,*t));
@@ -598,15 +608,12 @@ namespace transport
 
 		        // set up cache handles
             typename datapipe<number>::threepf_kconfig_handle& kc_handle = pipe.new_threepf_kconfig_handle(this->kquery);
-		        typename datapipe<number>::time_config_handle&     tc_handle = pipe.new_time_config_handle(this->tquery);
             typename datapipe<number>::time_data_handle&       t_handle  = pipe.new_time_data_handle(this->tquery);
 
 		        // pull time- and k-configuration information from the database
 		        threepf_kconfig_tag<number> kc_tag = pipe.new_threepf_kconfig_tag();
-		        time_config_tag<number>     tc_tag = pipe.new_time_config_tag();
 
 		        const std::vector< threepf_kconfig > k_values = kc_handle.lookup_tag(kc_tag);
-            const std::vector< time_config >     t_values = tc_handle.lookup_tag(tc_tag);
 
 		        // loop through all components of the threepf, for each k-configuration we use,
 		        // pulling data from the database
@@ -626,15 +633,21 @@ namespace transport
                                                                                          this->gadget.get_model()->flatten(l,m,n), t->serial);
 
 		                            std::vector<number> line_data = t_handle.lookup_tag(tag);
+                                assert(line_data.size() == t_axis.size());
 
-                                value_type value = value_type::correlation_function_value;
+                                value_type value;
                                 if(this->dimensionless)
                                   {
+                                    value = value_type::dimensionless_value;
+                                  }
+                                else
+                                  {
+                                    double shape = t->k1_comoving*t->k1_comoving * t->k2_comoving*t->k2_comoving * t->k3_comoving*t->k3_comoving;
                                     for(unsigned int j = 0; j < line_data.size(); ++j)
                                       {
-                                        line_data[j] *= t->kt_comoving * t->kt_comoving * t->kt_comoving * t->kt_comoving * t->kt_comoving * t->kt_comoving;
+                                        line_data[j] *= 1.0/shape;
                                       }
-                                    value = value_type::dimensionless_value;
+                                    value = value_type::correlation_function_value;
                                   }
 
                                 data_line<number> line = data_line<number>(group, this->x_type, value, t_axis, line_data,
@@ -723,4 +736,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif // __field_time_series_H_
+#endif // CPPTRANSPORT_FIELD_TIME_SERIES_H

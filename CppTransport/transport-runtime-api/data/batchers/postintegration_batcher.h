@@ -1,11 +1,11 @@
 //
 // Created by David Seery on 26/03/15.
-// Copyright (c) 2015 University of Sussex. All rights reserved.
+// Copyright (c) 2015-2016 University of Sussex. All rights reserved.
 //
 
 
-#ifndef __postintegration_batcher_H_
-#define __postintegration_batcher_H_
+#ifndef CPPTRANSPORT_POSTINTEGRATION_BATCHER_H
+#define CPPTRANSPORT_POSTINTEGRATION_BATCHER_H
 
 
 #include <vector>
@@ -775,4 +775,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__postintegration_batcher_H_
+#endif //CPPTRANSPORT_POSTINTEGRATION_BATCHER_H

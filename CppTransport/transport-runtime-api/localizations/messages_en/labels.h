@@ -1,6 +1,6 @@
 //
 // Created by David Seery on 05/05/2014.
-// Copyright (c) 2014-15 University of Sussex. All rights reserved.
+// Copyright (c) 2014-2016 University of Sussex. All rights reserved.
 //
 
 
@@ -95,8 +95,8 @@
 #define CPPTRANSPORT_LATEX_DIMENSIONLESS_TWOPF          "\\Delta"
 #define CPPTRANSPORT_NONLATEX_DIMENSIONLESS_TWOPF       "Delta"
 
-#define CPPTRANSPORT_LATEX_KT_SIX                       "k_t^6"
-#define CPPTRANSPORT_NONLATEX_KT_SIX                    "k_t^6"
+#define CPPTRANSPORT_LATEX_SHAPE_FACTOR                 "(k_1 k_2 k_3)^2"
+#define CPPTRANSPORT_NONLATEX_SHAPE_FACTOR              "(k_1 k_2 k_3)^2"
 
 #define CPPTRANSPORT_LATEX_REDUCED_BISPECTRUM_SYMBOL    "f_{\\mathrm{NL}}(k_1, k_2, k_3)"
 #define CPPTRANSPORT_NONLATEX_REDUCED_BISPECTRUM_SYMBOL "fNL(k1, k2, k3)"
