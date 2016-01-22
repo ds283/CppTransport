@@ -96,7 +96,8 @@ namespace transport
 
       public:
 
-        //! Open a repository with a specified pathname, and specified warning and error handlers
+        //! Open a repository with a specified pathname, and specified warning and error handlers.
+        //! Creates the repository directory structure if it does not already exist
         repository_sqlite3(const std::string& path, repository_mode mode = repository_mode::readwrite,
                            typename repository<number>::error_callback e = default_error_handler(),
                            typename repository<number>::warning_callback w = default_warning_handler(),
@@ -140,19 +141,19 @@ namespace transport
 
         //! Write a 'model/initial conditions/parameters' combination (a 'package') to the package database.
         //! No combination with the supplied name should already exist; if it does, this is considered an error.
-        virtual void commit_package(const initial_conditions<number>& ics) override;
+        virtual void commit(const initial_conditions<number>& ics) override;
 
         //! Write an integration task to the database.
-        virtual void commit_task(const integration_task<number>& tk) override;
+        virtual void commit(const integration_task<number>& tk) override;
 
         //! Write an output task to the database
-        virtual void commit_task(const output_task<number>& tk) override;
+        virtual void commit(const output_task<number>& tk) override;
 
         //! Write a postintegration task to the database
-        virtual void commit_task(const postintegration_task<number>& tk) override;
+        virtual void commit(const postintegration_task<number>& tk) override;
 
         //! Write a derived product specification
-        virtual void commit_derived_product(const derived_data::derived_product<number>& d) override;
+        virtual void commit(const derived_data::derived_product<number>& d) override;
 
 
         // READ RECORDS FROM THE DATABASE -- implements a 'repository' interface
@@ -408,7 +409,7 @@ namespace transport
                                 std::bind(&repository_sqlite3<number>::query_derived_product, this, std::placeholders::_1)),
         db(nullptr)
       {
-        // check whether object exists in filesystem at the specified path; if not, we can create it
+        // check whether object exists in filesystem at the specified path; if not, we create it
         if(!boost::filesystem::exists(path))
           {
             if(mode == repository_mode::readwrite)
@@ -932,7 +933,7 @@ namespace transport
 
     // Write a 'model/initial conditions/parameters' combination (a 'package') to the package database.
     template <typename number>
-    void repository_sqlite3<number>::commit_package(const initial_conditions<number>& ics)
+    void repository_sqlite3<number>::commit(const initial_conditions<number>& ics)
       {
         // check for a package with a duplicate name
         this->check_package_duplicate(ics.get_name());
@@ -944,7 +945,7 @@ namespace transport
 
     // Write an integration task to the database.
     template <typename number>
-    void repository_sqlite3<number>::commit_task(const integration_task<number>& tk)
+    void repository_sqlite3<number>::commit(const integration_task<number>& tk)
       {
         // check for a task with a duplicate name
         this->check_task_duplicate(tk.get_name());
@@ -960,14 +961,14 @@ namespace transport
             msg << CPPTRANSPORT_REPO_AUTOCOMMIT_INTEGRATION_A << " '" << tk.get_name() << "' "
               << CPPTRANSPORT_REPO_AUTOCOMMIT_INTEGRATION_B << " '" << tk.get_ics().get_name() << "'";
             this->message(msg.str());
-            this->commit_package(tk.get_ics());
+            this->commit(tk.get_ics());
           }
       }
 
 
     // Write an output task to the database
     template <typename number>
-    void repository_sqlite3<number>::commit_task(const output_task<number>& tk)
+    void repository_sqlite3<number>::commit(const output_task<number>& tk)
       {
         // check for a task with a duplicate name
         this->check_task_duplicate(tk.get_name());
@@ -988,7 +989,7 @@ namespace transport
                 msg << CPPTRANSPORT_REPO_AUTOCOMMIT_OUTPUT_A << " '" << tk.get_name() << "' "
                   << CPPTRANSPORT_REPO_AUTOCOMMIT_OUTPUT_B << " '" << product->get_name() << "'";
                 this->message(msg.str());
-                this->commit_derived_product(*product);
+                this->commit(*product);
               }
           }
       }
@@ -996,7 +997,7 @@ namespace transport
 
     // Write a postintegration task to the database
     template <typename number>
-    void repository_sqlite3<number>::commit_task(const postintegration_task<number>& tk)
+    void repository_sqlite3<number>::commit(const postintegration_task<number>& tk)
       {
         // check for a task with a duplicate name
         this->check_task_duplicate(tk.get_name());
@@ -1019,7 +1020,7 @@ namespace transport
                 msg << CPPTRANSPORT_REPO_AUTOCOMMIT_POSTINTEGR_A << " '" << tk.get_name() << "' "
                   << CPPTRANSPORT_REPO_AUTOCOMMIT_POSTINTEGR_B << " '" << tk.get_parent_task()->get_name() << "'";
                 this->message(msg.str());
-                this->commit_task(*Itk);
+                this->commit(*Itk);
               }
             else if((Ptk = dynamic_cast< postintegration_task<number>* >(ptk)) != nullptr)
               {
@@ -1027,7 +1028,7 @@ namespace transport
                 msg << CPPTRANSPORT_REPO_AUTOCOMMIT_POSTINTEGR_C << " '" << tk.get_name() << "' "
                   << CPPTRANSPORT_REPO_AUTOCOMMIT_POSTINTEGR_D << " '" << tk.get_parent_task()->get_name() << "'";
                 this->message(msg.str());
-                this->commit_task(*Ptk);
+                this->commit(*Ptk);
               }
           }
       }
@@ -1035,7 +1036,7 @@ namespace transport
 
     // Write a derived product specification
     template <typename number>
-    void repository_sqlite3<number>::commit_derived_product(const derived_data::derived_product<number>& d)
+    void repository_sqlite3<number>::commit(const derived_data::derived_product<number>& d)
       {
         // check for a derived product with a duplicate name
         this->check_product_duplicate(d.get_name());
@@ -1062,7 +1063,7 @@ namespace transport
                     msg << CPPTRANSPORT_REPO_AUTOCOMMIT_PRODUCT_A << " '" << d.get_name() << "' "
                       << CPPTRANSPORT_REPO_AUTOCOMMIT_PRODUCT_B << " '" << Itk->get_name() << "'";
                     this->message(msg.str());
-                    this->commit_task(*Itk);
+                    this->commit(*Itk);
                   }
                 else if((Ptk = dynamic_cast< postintegration_task<number>* >(tk)) != nullptr)
                   {
@@ -1070,7 +1071,7 @@ namespace transport
                     msg << CPPTRANSPORT_REPO_AUTOCOMMIT_PRODUCT_C << " '" << d.get_name() << "' "
                       << CPPTRANSPORT_REPO_AUTOCOMMIT_PRODUCT_D << " '" << Ptk->get_name() << "'";
                     this->message(msg.str());
-                    this->commit_task(*Ptk);
+                    this->commit(*Ptk);
                   }
               }
           }

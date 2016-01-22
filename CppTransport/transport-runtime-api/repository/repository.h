@@ -124,19 +124,19 @@ namespace transport
 
         //! Write a 'model/initial conditions/parameters' combination (a 'package') to the package database.
         //! No combination with the supplied name should already exist; if it does, this is considered an error.
-        virtual void commit_package(const initial_conditions<number>& ics) = 0;
+        virtual void commit(const initial_conditions<number>& ics) = 0;
 
         //! Write an integration task to the database.
-        virtual void commit_task(const integration_task<number>& tk) = 0;
+        virtual void commit(const integration_task<number>& tk) = 0;
 
         //! Write an output task to the database
-        virtual void commit_task(const output_task<number>& tk) = 0;
+        virtual void commit(const output_task<number>& tk) = 0;
 
         //! Write a postintegration task to the database
-        virtual void commit_task(const postintegration_task<number>& tk) = 0;
+        virtual void commit(const postintegration_task<number>& tk) = 0;
 
         //! Write a derived product specification
-        virtual void commit_derived_product(const derived_data::derived_product<number>& d) = 0;
+        virtual void commit(const derived_data::derived_product<number>& d) = 0;
 
 
 		    // READ RECORDS FROM THE DATABASE
