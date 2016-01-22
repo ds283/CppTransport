@@ -976,10 +976,11 @@ namespace transport
         record->commit();
 
         // check whether derived products on which this task depends have already been committed to the database
-        const typename std::vector<output_task_element<number> >               elements = tk.get_elements();
-        for(typename std::vector<output_task_element<number> >::const_iterator t        = elements.begin(); t != elements.end(); ++t)
+        const typename std::vector< output_task_element<number> > elements = tk.get_elements();
+
+        for(const output_task_element<number>& elt : elements)
           {
-            derived_data::derived_product<number>* product = (*t).get_product();
+            derived_data::derived_product<number>* product = elt.get_product();
             unsigned int count = sqlite3_operations::count_products(this->db, product->get_name());
             if(count == 0)
               {
@@ -1046,15 +1047,16 @@ namespace transport
         typename std::vector<derivable_task<number>*> task_list;
         d.get_task_list(task_list);
 
-        for(typename std::vector<derivable_task<number>*>::iterator t = task_list.begin(); t != task_list.end(); ++t)
+        for(derivable_task<number>* tk : task_list)
           {
-            unsigned int count = sqlite3_operations::count_tasks(this->db, (*t)->get_name());
+            unsigned int count = sqlite3_operations::count_tasks(this->db, tk->get_name());
+
             if(count == 0)
               {
-                integration_task<number>    * Itk = nullptr;
+                integration_task<number>* Itk = nullptr;
                 postintegration_task<number>* Ptk = nullptr;
 
-                if((Itk = dynamic_cast< integration_task<number>* >(*t)) != nullptr)
+                if((Itk = dynamic_cast< integration_task<number>* >(tk)) != nullptr)
                   {
                     std::ostringstream msg;
                     msg << CPPTRANSPORT_REPO_AUTOCOMMIT_PRODUCT_A << " '" << d.get_name() << "' "
@@ -1062,7 +1064,7 @@ namespace transport
                     this->message(msg.str());
                     this->commit_task(*Itk);
                   }
-                else if((Ptk = dynamic_cast< postintegration_task<number>* >(*t)) != nullptr)
+                else if((Ptk = dynamic_cast< postintegration_task<number>* >(tk)) != nullptr)
                   {
                     std::ostringstream msg;
                     msg << CPPTRANSPORT_REPO_AUTOCOMMIT_PRODUCT_C << " '" << d.get_name() << "' "
@@ -1339,9 +1341,9 @@ namespace transport
         // get list of group names associated with the task 'name'
         sqlite3_operations::enumerate_content_groups<Payload>(this->db, name, group_names);
 
-        for(std::list<std::string>::iterator t = group_names.begin(); t != group_names.end(); ++t)
+        for(const std::string& name : group_names)
           {
-            boost::filesystem::path filename = sqlite3_operations::find_group<Payload>(this->db, *t, CPPTRANSPORT_REPO_OUTPUT_MISSING);
+            boost::filesystem::path filename = sqlite3_operations::find_group<Payload>(this->db, name, CPPTRANSPORT_REPO_OUTPUT_MISSING);
             Json::Value             root     = this->deserialize_JSON_document(filename);
             list.emplace_back(this->template content_group_record_factory<Payload>(root));
           }
@@ -1395,16 +1397,16 @@ void repository_sqlite3<number>::recover_integrations(data_manager<number>& data
 
     // then, carry out an integrity check and commit the writer
 
-    for(std::list< sqlite3_operations::inflight_integration >::const_iterator t = list.begin(); t != list.end(); ++t)
+    for(const sqlite3_operations::inflight_integration& inflight : list)
       {
         // get task record
-        std::unique_ptr< task_record<number> > pre_rec(this->query_task(t->task_name));
+        std::unique_ptr< task_record<number> > pre_rec(this->query_task(inflight.task_name));
         integration_task_record<number>* rec = dynamic_cast< integration_task_record<number>* >(pre_rec.get());
 
         assert(rec != nullptr);
         if(rec == nullptr) throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_RECORD_CAST_FAILED);
 
-        std::unique_ptr< integration_writer<number> > writer = this->get_integration_recovery_writer(*t, data_mgr, rec, worker);
+        std::unique_ptr< integration_writer<number> > writer = this->get_integration_recovery_writer(inflight, data_mgr, rec, worker);
 
         // carry out an integrity check; this updates the writer with all missing serial numbers
         // if any are missing, the writer will be marked as failed
@@ -1445,17 +1447,17 @@ void repository_sqlite3<number>::recover_postintegrations(data_manager<number>& 
                                                           std::list<sqlite3_operations::inflight_integration>& i_list,
                                                           unsigned int worker)
   {
-    for(std::list<sqlite3_operations::inflight_postintegration>::const_iterator t = p_list.begin(); t != p_list.end(); ++t)
+    for(const sqlite3_operations::inflight_postintegration& inflight : p_list)
       {
         // get task record
-        std::unique_ptr< task_record<number> > pre_rec(this->query_task(t->task_name));
+        std::unique_ptr< task_record<number> > pre_rec(this->query_task(inflight.task_name));
         postintegration_task_record<number>* rec = dynamic_cast< postintegration_task_record<number>* >(pre_rec.get());
 
         assert(rec != nullptr);
         if(rec == nullptr) throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_RECORD_CAST_FAILED);
 
-        if(t->is_paired) this->recover_paired_postintegration(*t, data_mgr, rec, i_list, worker);
-        else             this->recover_unpaired_postintegration(*t, data_mgr, rec, worker);
+        if(inflight.is_paired) this->recover_paired_postintegration(inflight, data_mgr, rec, i_list, worker);
+        else                   this->recover_unpaired_postintegration(inflight, data_mgr, rec, worker);
       }
   }
 
@@ -1539,7 +1541,8 @@ void repository_sqlite3<number>::recover_paired_postintegration(const sqlite3_op
         i_writer->commit();
         p_writer->commit();
 
-        // remove interation from list
+        // remove integration from list of remaining hot integrations
+        // (we shouldn't try to recover it twice)
         i_list.erase(t);
       }
   }
@@ -1569,7 +1572,12 @@ repository_sqlite3<number>::get_postintegration_recovery_writer(const sqlite3_op
 template <typename number>
 void repository_sqlite3<number>::recover_derived_content(data_manager<number>& data_mgr, std::list<sqlite3_operations::inflight_derived_content>& list, unsigned int worker)
   {
-    // TODO: not implemented
+    // loop through hot derived content
+
+    for(const sqlite3_operations::inflight_derived_content& inflight : list)
+      {
+        // TODO: not yet implemented
+      }
   }
 
 
