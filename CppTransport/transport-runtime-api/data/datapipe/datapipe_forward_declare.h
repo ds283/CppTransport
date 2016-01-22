@@ -4,7 +4,7 @@
 //
 
 
-#if !defined(__datapipe_detail_H_) && !(defined__datapipe_forward_declare_H_)
+#if !defined(CPPTRANSPORT_DATAPIPE_DETAIL_H) && !(defined__datapipe_forward_declare_H_)
 #define __datapipe_forward_declare_H_
 
 

@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __repository_sqlite3_H_
-#define __repository_sqlite3_H_
+#ifndef CPPTRANSPORT_REPOSITORY_SQLITE3_H
+#define CPPTRANSPORT_REPOSITORY_SQLITE3_H
 
 
 #include <assert.h>
@@ -1671,4 +1671,4 @@ std::shared_ptr< json_repository<number> > repository_factory(const std::string&
 }   // namespace transport
 
 
-#endif //__repository_sqlite3_H_
+#endif //CPPTRANSPORT_REPOSITORY_SQLITE3_H

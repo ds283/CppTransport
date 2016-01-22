@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __datapipe_detail_H_
-#define __datapipe_detail_H_
+#ifndef CPPTRANSPORT_DATAPIPE_DETAIL_H
+#define CPPTRANSPORT_DATAPIPE_DETAIL_H
 
 
 #include <vector>
@@ -1123,4 +1123,4 @@ namespace transport
 
 
 
-#endif //__datapipe_detail_H_
+#endif //CPPTRANSPORT_DATAPIPE_DETAIL_H

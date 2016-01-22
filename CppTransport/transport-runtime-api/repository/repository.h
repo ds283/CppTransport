@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __repository_H_
-#define __repository_H_
+#ifndef CPPTRANSPORT_REPOSITORY_H
+#define CPPTRANSPORT_REPOSITORY_H
 
 
 #include <iostream>
@@ -1012,7 +1012,7 @@ namespace transport
 
         std::unique_ptr< output_group_record<integration_payload> > rval;
         output.front().swap(rval);
-        return(std::move(rval));    // std::move required by GCC 5.2 although standard implies that copy elision should occue
+        return(std::move(rval));    // std::move required by GCC 5.2 although standard implies that copy elision should occur
 	    }
 
 
@@ -1046,4 +1046,4 @@ namespace transport
 
 
 
-#endif //__repository_H_
+#endif //CPPTRANSPORT_REPOSITORY_H

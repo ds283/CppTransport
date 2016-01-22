@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __data_manager_sqlite3_H_
-#define __data_manager_sqlite3_H_
+#ifndef CPPTRANSPORT_DATA_MANAGER_SQLITE3_H
+#define CPPTRANSPORT_DATA_MANAGER_SQLITE3_H
 
 
 #include <sstream>
@@ -26,8 +26,8 @@
 #include "transport-runtime-api/sqlite3/operations/data_manager.h"
 
 
-#define CPPTRANSPORT_TEMPORARY_CONTAINER_STEM "worker"
-#define CPPTRANSPORT_TEMPORARY_CONTAINER_XTN  ".sqlite"
+constexpr auto CPPTRANSPORT_TEMPORARY_CONTAINER_STEM = "worker";
+constexpr auto CPPTRANSPORT_TEMPORARY_CONTAINER_XTN  = ".sqlite";
 
 
 namespace transport
@@ -2104,4 +2104,4 @@ namespace transport
 
 
 
-#endif //__data_manager_sqlite3_H_
+#endif //CPPTRANSPORT_DATA_MANAGER_SQLITE3_H

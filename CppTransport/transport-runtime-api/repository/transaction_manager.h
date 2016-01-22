@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __transaction_manager_H_
-#define __transaction_manager_H_
+#ifndef CPPTRANSPORT_TRANSACTION_MANAGER_H
+#define CPPTRANSPORT_TRANSACTION_MANAGER_H
 
 #include <list>
 #include <functional>
@@ -71,7 +71,7 @@ namespace transport
 
 		      private:
 
-				    //! journaled file
+				    //! journalled file
 				    boost::filesystem::path journal;
 
 				    //! target file
@@ -142,7 +142,7 @@ namespace transport
 		    bool dead;
 
 		    //! file journal
-		    std::list< journal_record* > journal;
+		    std::list< std::unique_ptr<journal_record> > journal;
 
 	    };
 
@@ -163,11 +163,6 @@ namespace transport
 			{
 		    // rollback the transaction if it was not committed
 		    if(!this->committed) this->rollback();
-
-		    for(std::list< journal_record* >::iterator t = this->journal.begin(); t != this->journal.end(); ++t)
-			    {
-				    delete *t;
-			    }
 			}
 
 
@@ -177,9 +172,9 @@ namespace transport
 		void transaction_manager::commit()
 			{
 				// work through the journal, committing
-				for(std::list< journal_record* >::iterator t = this->journal.begin(); t != this->journal.end(); ++t)
+        for(std::unique_ptr<journal_record>& rec : this->journal)
 					{
-				    (*t)->commit();
+				    rec->commit();
 					}
 
 				this->committer();
@@ -191,9 +186,9 @@ namespace transport
 		void transaction_manager::rollback()
 			{
 				// work through the journal, rolling back
-				for(std::list< journal_record* >::iterator t = this->journal.begin(); t != this->journal.end(); ++t)
+        for(std::unique_ptr<journal_record>& rec : this->journal)
 					{
-				    (*t)->rollback();
+				    rec->rollback();
 					}
 
 				this->rollbacker();
@@ -210,11 +205,11 @@ namespace transport
 				if(this->committed) throw runtime_exception(exception_type::REPOSITORY_TRANSACTION_ERROR, CPPTRANSPORT_REPO_TRANSACTION_COMMITTED);
 				if(this->dead)      throw runtime_exception(exception_type::REPOSITORY_TRANSACTION_ERROR, CPPTRANSPORT_REPO_TRANSACTION_DEAD);
 
-				this->journal.push_back(new rename_record(journal, target));
+				this->journal.push_back(std::make_unique<rename_record>(journal, target));
 			}
 
 
 	}
 
 
-#endif //__transaction_manager_H_
+#endif //CPPTRANSPORT_TRANSACTION_MANAGER_H

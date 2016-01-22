@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __data_manager_H_
-#define __data_manager_H_
+#ifndef CPPTRANSPORT_DATA_MANAGER_H
+#define CPPTRANSPORT_DATA_MANAGER_H
 
 
 #include <vector>
@@ -805,4 +805,4 @@ namespace transport
 
 
 
-#endif //__data_manager_H_
+#endif //CPPTRANSPORT_DATA_MANAGER_H

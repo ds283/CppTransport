@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __task_manager_H_
-#define __task_manager_H_
+#ifndef CPPTRANSPORT_TASK_MANAGER_H
+#define CPPTRANSPORT_TASK_MANAGER_H
 
 #include <functional>
 
@@ -207,4 +207,4 @@ namespace transport
   } // namespace transport
 
 
-#endif //__task_manager_H_
+#endif //CPPTRANSPORT_TASK_MANAGER_H

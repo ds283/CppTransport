@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __json_repository_H_
-#define __json_repository_H_
+#ifndef CPPTRANSPORT_JSON_REPOSITORY_H
+#define CPPTRANSPORT_JSON_REPOSITORY_H
 
 
 #include <assert.h>
@@ -196,4 +196,4 @@ namespace transport
   }
 
 
-#endif //__json_repository_H_
+#endif //CPPTRANSPORT_JSON_REPOSITORY_H

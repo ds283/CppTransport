@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __slave_controller_H_
-#define __slave_controller_H_
+#ifndef CPPTRANSPORT_SLAVE_CONTROLLER_H
+#define CPPTRANSPORT_SLAVE_CONTROLLER_H
 
 
 #include <list>
@@ -21,7 +21,7 @@
 
 #include "transport-runtime-api/manager/mpi_operations.h"
 
-#include "transport-runtime-api/repository/repository.h"
+#include "transport-runtime-api/repository/json_repository.h"
 #include "transport-runtime-api/data/data_manager.h"
 #include "transport-runtime-api/manager/slave_work_handler.h"
 #include "transport-runtime-api/manager/environment.h"
@@ -1224,4 +1224,4 @@ namespace transport
 	}
 
 
-#endif //__slave_controller_H_
+#endif //CPPTRANSPORT_SLAVE_CONTROLLER_H
