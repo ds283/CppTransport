@@ -98,7 +98,7 @@ namespace transport
       public:
 
 		    //! Set model_finder object
-		    void set_model_finder(const typename instance_manager<number>::model_finder& f);
+		    void set_model_finder(const model_finder<number>& f);
 
         //! Get path to root of repository
         const boost::filesystem::path& get_root_path() const { return (this->root_path); };
@@ -360,7 +360,7 @@ namespace transport
 		    // FINDER SERVICES
 
         //! Cached model-finder supplied by instance manager
-        typename instance_manager<number>::model_finder model_finder;
+        model_finder<number> m_finder;
 
         //! Cached package-finder instance
         typename repository_finder<number>::package_finder pkg_finder;
@@ -421,9 +421,9 @@ namespace transport
 
 
     template <typename number>
-    void repository<number>::set_model_finder(const typename instance_manager<number>::model_finder& f)
+    void repository<number>::set_model_finder(const model_finder<number>& f)
 	    {
-        this->model_finder = f;
+        this->m_finder = f;
 	    }
 
 

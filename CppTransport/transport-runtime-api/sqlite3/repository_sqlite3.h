@@ -757,7 +757,7 @@ namespace transport
         find_function                      finder = std::bind(&sqlite3_operations::find_package, std::placeholders::_1, std::placeholders::_2, CPPTRANSPORT_REPO_PACKAGE_MISSING);
         pkg.commit = std::bind(&repository_sqlite3<number>::commit_replace, this, std::placeholders::_1, finder);
 
-        return new package_record<number>(reader, this->model_finder, pkg);
+        return new package_record<number>(reader, this->m_finder, pkg);
       }
 
 

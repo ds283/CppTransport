@@ -73,7 +73,7 @@ namespace transport
 		    //! one has to be provided by a master controller over MPI later
 		    slave_controller(boost::mpi::environment& e, boost::mpi::communicator& w,
                          local_environment& le, argument_cache& ac,
-		                     const typename instance_manager<number>::model_finder& f,
+		                     const model_finder<number>& f,
 		                     error_callback err, warning_callback warn, message_callback msg);
 
 		    //! destroy a slave manager object
@@ -200,7 +200,7 @@ namespace transport
 
 
 				// MODEL FINDER REFERENCE
-		    const typename instance_manager<number>::model_finder model_finder;
+		    const model_finder<number> finder;
 
 		    // RUNTIME AGENTS
 
@@ -231,13 +231,13 @@ namespace transport
     template <typename number>
     slave_controller<number>::slave_controller(boost::mpi::environment& e, boost::mpi::communicator& w,
                                                local_environment& le, argument_cache& ac,
-                                               const typename instance_manager<number>::model_finder& f,
+                                               const model_finder<number>& f,
                                                error_callback err, warning_callback warn, message_callback msg)
 	    : environment(e),
 	      world(w),
         local_env(le),
         arg_cache(ac),
-	      model_finder(f),
+	      finder(f),
 	      data_mgr(data_manager_factory<number>(ac.get_batcher_capacity(), ac.get_datapipe_capacity(), ac.get_checkpoint_interval())),
 	      error_handler(err),
 	      warning_handler(warn),
@@ -315,7 +315,7 @@ namespace transport
 
             this->repo = repository_factory<number>(repo_path.string(), repository_mode::readonly,
                                                     this->error_handler, this->warning_handler, this->message_handler);
-            this->repo->set_model_finder(this->model_finder);
+            this->repo->set_model_finder(this->finder);
 
             this->arg_cache = payload.get_argument_cache();
 

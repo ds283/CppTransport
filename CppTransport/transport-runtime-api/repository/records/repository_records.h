@@ -336,7 +336,7 @@ namespace transport
         package_record(const initial_conditions<number>& i, repository_record::handler_package& pkg);
 
         //! deserialization constructor
-        package_record(Json::Value& reader, typename instance_manager<number>::model_finder& f, repository_record::handler_package& pkg);
+        package_record(Json::Value& reader, model_finder<number>& f, repository_record::handler_package& pkg);
 
         virtual ~package_record() = default;
 
@@ -1728,7 +1728,7 @@ namespace transport
 
 
     template <typename number>
-    package_record<number>::package_record(Json::Value& reader, typename instance_manager<number>::model_finder& f,
+    package_record<number>::package_record(Json::Value& reader, model_finder<number>& f,
                                            repository_record::handler_package& pkg)
 	    : repository_record(reader, pkg),
 	      ics(this->name, reader[CPPTRANSPORT_NODE_INITIAL_CONDITIONS], f)        // name gets deserialized by repository_record, so is safe to use here

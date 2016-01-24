@@ -55,7 +55,7 @@ namespace transport
         }
 
         //! Deserialization constructor
-        parameters(Json::Value& reader, typename instance_manager<number>::model_finder f);
+        parameters(Json::Value& reader, model_finder<number> f);
 
         virtual ~parameters() = default;
 
@@ -122,7 +122,7 @@ namespace transport
 
 
     template <typename number>
-    parameters<number>::parameters(Json::Value& reader, typename instance_manager<number>::model_finder f)
+    parameters<number>::parameters(Json::Value& reader, model_finder<number> f)
       {
 		    // construct model object
         std::string uid = reader[CPPTRANSPORT_NODE_PARAMS_MODEL_UID].asString();

@@ -3,8 +3,8 @@
 // Copyright (c) 2013-2016 University of Sussex. All rights reserved.
 //
 
-#ifndef CPPTRANSPORT_MODEL_H_
-#define CPPTRANSPORT_MODEL_H_
+#ifndef CPPTRANSPORT_MODEL_H
+#define CPPTRANSPORT_MODEL_H
 
 #include <string>
 #include <vector>
@@ -357,4 +357,4 @@ namespace transport
 
   }    // namespace transport
 
-#endif // CPPTRANSPORT_MODEL_H_
+#endif // CPPTRANSPORT_MODEL_H

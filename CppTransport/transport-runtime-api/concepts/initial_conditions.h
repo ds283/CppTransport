@@ -116,7 +116,7 @@ namespace transport
           }
 
         //! Deserialization constructor
-        initial_conditions(const std::string& nm, Json::Value& reader, typename instance_manager<number>::model_finder f);
+        initial_conditions(const std::string& nm, Json::Value& reader, model_finder<number> f);
 
         virtual ~initial_conditions() = default;
 
@@ -253,8 +253,7 @@ namespace transport
 
 
     template <typename number>
-    initial_conditions<number>::initial_conditions(const std::string& nm, Json::Value& reader,
-                                                   typename instance_manager<number>::model_finder f)
+    initial_conditions<number>::initial_conditions(const std::string& nm, Json::Value& reader, model_finder<number> f)
       : name(nm), params(reader[CPPTRANSPORT_NODE_ICS_PARAMETERS], f)
       {
 		    // construct model object
