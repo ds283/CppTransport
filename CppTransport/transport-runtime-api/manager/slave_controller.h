@@ -14,7 +14,7 @@
 #include <functional>
 
 #include "transport-runtime-api/models/model.h"
-#include "transport-runtime-api/manager/instance_manager.h"
+#include "transport-runtime-api/manager/model_manager.h"
 #include "transport-runtime-api/tasks/task.h"
 #include "transport-runtime-api/tasks/integration_tasks.h"
 #include "transport-runtime-api/tasks/output_tasks.h"
@@ -62,7 +62,7 @@ namespace transport
 		    //! unlike a master controller, there is no option to supply a repository;
 		    //! one has to be provided by a master controller over MPI later
 		    slave_controller(boost::mpi::environment& e, boost::mpi::communicator& w,
-                         local_environment& le, argument_cache& ac, model_finder<number> f,
+                         local_environment& le, argument_cache& ac, model_manager<number>& f,
                          error_handler eh, warning_handler wh, message_handler mh);
 
 		    //! destroy a slave manager object
@@ -189,7 +189,7 @@ namespace transport
 
 
 				// MODEL FINDER REFERENCE
-		    model_finder<number> finder;
+		    model_manager<number>& finder;
 
 
 		    // RUNTIME AGENTS
@@ -220,7 +220,7 @@ namespace transport
 
     template <typename number>
     slave_controller<number>::slave_controller(boost::mpi::environment& e, boost::mpi::communicator& w,
-                                               local_environment& le, argument_cache& ac, model_finder<number> f,
+                                               local_environment& le, argument_cache& ac, model_manager<number>& f,
                                                error_handler eh, warning_handler wh, message_handler mh)
 	    : environment(e),
 	      world(w),

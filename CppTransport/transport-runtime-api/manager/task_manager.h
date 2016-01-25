@@ -10,7 +10,7 @@
 
 #include <functional>
 
-#include "transport-runtime-api/manager/instance_manager.h"
+#include "transport-runtime-api/manager/model_manager.h"
 #include "transport-runtime-api/repository/json_repository.h"
 
 #include "transport-runtime-api/manager/master_controller.h"
@@ -81,7 +81,7 @@ namespace transport
 
         //! instance manager
         //! must be declared before slave and master controllers below
-        instance_manager<number> instance_mgr;
+        model_manager<number> instance_mgr;
 
         //! environment agent (handles interactions with local machine such as location of Python)
         local_environment local_env;
@@ -107,11 +107,11 @@ namespace transport
 	      // note it is safe to assume environment and world have been constructed when the constructor for
 	      // slave and master are invoked, because environment and world are declared
 	      // prior to slave and master in the class declaration
-	      slave(environment, world, local_env, arg_cache, this->instance_mgr.model_finder_factory(),
+	      slave(environment, world, local_env, arg_cache, this->instance_mgr,
 	            error_handler(local_env, arg_cache),
 	            warning_handler(local_env, arg_cache),
 	            message_handler(local_env, arg_cache)),
-	      master(environment, world, local_env, arg_cache, this->instance_mgr.model_finder_factory(),
+	      master(environment, world, local_env, arg_cache, this->instance_mgr,
                error_handler(local_env, arg_cache),
                warning_handler(local_env, arg_cache),
                message_handler(local_env, arg_cache))

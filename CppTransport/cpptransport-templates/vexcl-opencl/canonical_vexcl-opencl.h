@@ -97,7 +97,7 @@ namespace transport
           // the snag is that the master node, worker number 0, must still
           // be initialized even though it does no work
           // to handle that, we make it share the first GPU even though it won't queue any work to it
-          $$__MODEL_vexcl(instance_manager<number>* mgr, unsigned int w_number)
+          $$__MODEL_vexcl(model_manager<number>* mgr, unsigned int w_number)
             : $$__MODEL<number>(mgr), ctx(vex::Filter::Type(CL_DEVICE_TYPE_GPU) && vex::Filter::DoublePrecision && vex::Filter::Position(w_number > 0 ? w_number-1 : 0))
             {
               if(this->ctx.size() != 1) throw runtime_exception(exception_type::BACKEND_ERROR, CPPTRANSPORT_SINGLE_GPU_ONLY);

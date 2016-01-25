@@ -16,7 +16,7 @@
 
 
 #include "transport-runtime-api/models/model.h"
-#include "transport-runtime-api/manager/instance_manager.h"
+#include "transport-runtime-api/manager/model_manager.h"
 #include "transport-runtime-api/tasks/task.h"
 #include "transport-runtime-api/tasks/integration_tasks.h"
 #include "transport-runtime-api/tasks/output_tasks.h"
@@ -57,7 +57,7 @@ namespace transport
         //! the repository is not set at construction; it has to be provided later via
         //! a command-line or configuration-file option
         master_controller(boost::mpi::environment& e, boost::mpi::communicator& w,
-                          local_environment& le, argument_cache& ac, model_finder<number> f,
+                          local_environment& le, argument_cache& ac, model_manager<number>& f,
                           error_handler eh, warning_handler wh, message_handler mh);
 
         //! destroy a master manager object
@@ -277,7 +277,7 @@ namespace transport
 
 
         // MODEL FINDER REFERENCE
-        const model_finder<number> finder;
+        model_manager<number>& finder;
 
 
         // RUNTIME AGENTS

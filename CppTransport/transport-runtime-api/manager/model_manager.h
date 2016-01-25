@@ -4,8 +4,8 @@
 //
 
 
-#ifndef CPPTRANSPORT_INSTANCE_MANAGER_H
-#define CPPTRANSPORT_INSTANCE_MANAGER_H
+#ifndef CPPTRANSPORT_MODEL_MANAGER_H
+#define CPPTRANSPORT_MODEL_MANAGER_H
 
 
 #include <assert.h>
@@ -29,7 +29,7 @@
 namespace transport
   {
 
-    namespace instance_manager_impl
+    namespace model_manager_impl
       {
 
         // set up equality operator for model_instance record
@@ -94,19 +94,15 @@ namespace transport
             return(lhs.uid == rhs.uid);
           }
 
-      }   // namespace instance_manager_impl
+      }   // namespace model_manager_impl
 
 
-    // pull in instance_manager_impl namespace for this block scope
-    using namespace instance_manager_impl;
-
-
-    // forward declare model_finder class
-    template <typename number> class model_finder;
+    // pull in model_manager_impl namespace for this block scope
+    using namespace model_manager_impl;
 
 
     template <typename number>
-    class instance_manager
+    class model_manager
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -114,11 +110,11 @@ namespace transport
       public:
 
         //! constructor is default
-        instance_manager() = default;
+        model_manager() = default;
 
         //! destructor is default; cached list of shared_ptr<>s will be destroyed automatically, releasing
         //! our hold on those pointers
-        ~instance_manager() = default;
+        ~model_manager() = default;
 
 
         // INTERFACE -- MODEL MANAGEMENT API
@@ -143,15 +139,8 @@ namespace transport
 
       public:
 
-        //! Construct a model_finder function for this instance manager
-        model_finder<number> model_finder_factory();
-
-      protected:
-
         //! Search for a model by uid
-        model<number>* find_model(const std::string& i) const;
-
-        friend class model_finder<number>;
+        model<number>* operator()(const std::string& i) const;
 
 
         // INTERFACE -- WRITE DETAILS TO STREAM
@@ -180,7 +169,7 @@ namespace transport
       public:
 
         //! constructor
-        model_finder(instance_manager<number>& m)
+        model_finder(model_manager<number>& m)
           : mgr(m)
           {
           }
@@ -198,21 +187,33 @@ namespace transport
       private:
 
         //! reference to instance manager object
-        instance_manager<number>& mgr;
+        model_manager<number>& mgr;
 
       };
 
 
     template <typename number>
-    model<number>* model_finder<number>::operator()(const std::string& name) const
+    model<number>* model_manager<number>::operator()(const std::string& name) const
       {
-        return(this->mgr.find_model(name));
+        model_instance<number> instance(name);
+
+        typename std::list< model_instance<number> >::const_iterator t;
+        if((t = std::find(this->models.begin(), this->models.end(), instance)) == this->models.end())
+          {
+            std::ostringstream msg;
+            msg << CPPTRANSPORT_INSTANCES_MISSING << " '" << name << "'";
+            throw runtime_exception(exception_type::MISSING_MODEL_INSTANCE, msg.str());
+          }
+        else
+          {
+            return(t->get_model());
+          }
       }
 
 
     template <typename number>
     template <typename Model>
-    std::shared_ptr<Model> instance_manager<number>::create_model()
+    std::shared_ptr<Model> model_manager<number>::create_model()
       {
         std::shared_ptr<Model> model = std::make_shared<Model>();
         this->register_model(model);
@@ -222,7 +223,7 @@ namespace transport
 
 
     template <typename number>
-    void instance_manager<number>::register_model(std::shared_ptr< model<number> > m)
+    void model_manager<number>::register_model(std::shared_ptr<model < number> > m)
       {
         assert(m);
 
@@ -251,33 +252,7 @@ namespace transport
 
 
     template <typename number>
-    model<number>* instance_manager<number>::find_model(const std::string& i) const
-      {
-        model_instance<number> instance(i);
-
-        typename std::list< model_instance<number> >::const_iterator t;
-        if((t = std::find(this->models.begin(), this->models.end(), instance)) == this->models.end())
-          {
-            std::ostringstream msg;
-            msg << CPPTRANSPORT_INSTANCES_MISSING << " '" << i << "'";
-            throw runtime_exception(exception_type::MISSING_MODEL_INSTANCE, msg.str());
-          }
-        else
-          {
-            return(t->get_model());
-          }
-      }
-
-
-    template <typename number>
-    model_finder<number> instance_manager<number>::model_finder_factory()
-      {
-        return model_finder<number>(*this);
-      }
-
-
-    template <typename number>
-    void instance_manager<number>::write_models(std::ostream& stream) const
+    void model_manager<number>::write_models(std::ostream& stream) const
       {
         unsigned int c = 0;
 
@@ -296,4 +271,4 @@ namespace transport
   }   // namespace transport
 
 
-#endif //CPPTRANSPORT_INSTANCE_MANAGER_H
+#endif //CPPTRANSPORT_MODEL_MANAGER_H

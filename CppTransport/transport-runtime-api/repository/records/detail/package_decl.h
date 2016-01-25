@@ -26,7 +26,7 @@ namespace transport
         package_record(const initial_conditions<number>& i, repository_record::handler_package& pkg);
 
         //! deserialization constructor
-        package_record(Json::Value& reader, model_finder<number>& f, repository_record::handler_package& pkg);
+        package_record(Json::Value& reader, model_manager <number>& f, repository_record::handler_package& pkg);
 
         virtual ~package_record() = default;
 

@@ -668,7 +668,7 @@ set(TRANSPORT_RUNTIME_API_LOCALIZATIONS_MESSAGES_EN_FILES
   transport-runtime-api/localizations/messages_en/command_line.h
   transport-runtime-api/localizations/messages_en/data_manager.h
   transport-runtime-api/localizations/messages_en/initial_conditions.h
-  transport-runtime-api/localizations/messages_en/instance_manager.h
+  transport-runtime-api/localizations/messages_en/model_manager.h
   transport-runtime-api/localizations/messages_en/integration.h
   transport-runtime-api/localizations/messages_en/json_repository_interface.h
   transport-runtime-api/localizations/messages_en/labels.h
@@ -709,7 +709,7 @@ set(TRANSPORT_RUNTIME_API_MANAGER_DETAIL_FILES
 set(TRANSPORT_RUNTIME_API_MANAGER_FILES
   transport-runtime-api/manager/argument_cache.h
   transport-runtime-api/manager/environment.h
-  transport-runtime-api/manager/instance_manager.h
+  transport-runtime-api/manager/model_manager.h
   transport-runtime-api/manager/master_controller.h
   transport-runtime-api/manager/master_scheduler.h
   transport-runtime-api/manager/message_handlers.h

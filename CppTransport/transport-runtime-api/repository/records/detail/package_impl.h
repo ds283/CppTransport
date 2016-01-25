@@ -25,7 +25,7 @@ namespace transport
 
 
     template <typename number>
-    package_record<number>::package_record(Json::Value& reader, model_finder<number>& f,
+    package_record<number>::package_record(Json::Value& reader, model_manager<number>& f,
                                            repository_record::handler_package& pkg)
       : repository_record(reader, pkg),
         ics(this->name, reader[CPPTRANSPORT_NODE_INITIAL_CONDITIONS], f)        // name gets deserialized by repository_record, so is safe to use here

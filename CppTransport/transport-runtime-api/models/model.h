@@ -26,7 +26,7 @@
 
 #include "transport-runtime-api/derived-products/utilities/index_selector.h"
 
-#include "transport-runtime-api/manager/instance_manager.h"
+#include "transport-runtime-api/manager/model_manager.h"
 #include "transport-runtime-api/data/data_manager.h"
 
 #include "transport-runtime-api/models/advisory_classes.h"

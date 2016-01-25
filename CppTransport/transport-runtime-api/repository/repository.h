@@ -20,8 +20,8 @@
 #include "transport-runtime-api/serialization/serializable.h"
 #include "transport-runtime-api/manager/message_handlers.h"
 
-// need instance_manager for model_finder object
-#include "transport-runtime-api/manager/instance_manager.h"
+// need model_manager for model_finder object
+#include "transport-runtime-api/manager/model_manager.h"
 
 // forward-declare model class if needed
 #include "transport-runtime-api/models/model_forward_declare.h"

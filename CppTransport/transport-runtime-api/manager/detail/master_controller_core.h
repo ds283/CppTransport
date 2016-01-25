@@ -21,7 +21,7 @@ namespace transport
 
     template <typename number>
     master_controller<number>::master_controller(boost::mpi::environment& e, boost::mpi::communicator& w,
-                                                 local_environment& le, argument_cache& ac, model_finder<number> f,
+                                                 local_environment& le, argument_cache& ac, model_manager <number>& f,
                                                  error_handler eh, warning_handler wh, message_handler mh)
       : environment(e),
         world(w),

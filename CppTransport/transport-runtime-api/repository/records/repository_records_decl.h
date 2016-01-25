@@ -20,7 +20,7 @@
 
 #include "transport-runtime-api/repository/records/record_finder_decl.h"
 
-#include "transport-runtime-api/manager/instance_manager.h"
+#include "transport-runtime-api/manager/model_manager.h"
 
 // forward-declare model class if needed
 #include "transport-runtime-api/models/model_forward_declare.h"

@@ -26,7 +26,7 @@ namespace transport
       public:
 
         //! Create a repository object
-        repository(const std::string& path, const model_finder<number> f, repository_mode mode,
+        repository(const std::string& path, model_manager <number>& f, repository_mode mode,
                    error_handler e, warning_handler w, message_handler m,
                    package_finder<number> pf, task_finder<number> tf, derived_product_finder<number> dpf);
 
@@ -38,9 +38,6 @@ namespace transport
         // ADMINISTRATION
 
       public:
-
-        //! Set model_finder object
-        void set_model_finder(const model_finder<number>& f);
 
         //! Get path to root of repository
         const boost::filesystem::path& get_root_path() const { return (this->root_path); };
@@ -302,7 +299,7 @@ namespace transport
         // FINDER SERVICES
 
         //! Cached model-finder supplied by instance manager
-        model_finder<number> m_finder;
+        model_manager <number> m_finder;
 
         //! Cached package-finder instance
         package_finder<number> pkg_finder;
