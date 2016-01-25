@@ -2097,9 +2097,9 @@ namespace transport
 
 
     template <typename number>
-    std::shared_ptr< data_manager<number> > data_manager_factory(unsigned int bcap, unsigned int dcap, unsigned int ckp)
+    std::unique_ptr< data_manager<number> > data_manager_factory(unsigned int bcap, unsigned int dcap, unsigned int ckp)
       {
-        return std::make_shared< data_manager_sqlite3<number> >(bcap, dcap, ckp);
+        return std::make_unique< data_manager_sqlite3<number> >(bcap, dcap, ckp);
       }
 
 

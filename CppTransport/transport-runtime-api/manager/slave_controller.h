@@ -198,7 +198,7 @@ namespace transport
 		    std::shared_ptr< json_repository<number> > repo;
 
 		    //! Data manager instance
-		    std::shared_ptr< data_manager<number> > data_mgr;
+		    std::unique_ptr< data_manager<number> > data_mgr;
 
 				//! Handler for postintegration and output tasks
 				slave_work_handler<number> work_handler;

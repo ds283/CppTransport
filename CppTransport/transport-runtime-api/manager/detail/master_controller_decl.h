@@ -286,7 +286,7 @@ namespace transport
         std::shared_ptr< json_repository<number> > repo;
 
         //! Data manager instance
-        std::shared_ptr< data_manager<number> > data_mgr;
+        std::unique_ptr< data_manager<number> > data_mgr;
 
         //! Event journal
         work_journal journal;
