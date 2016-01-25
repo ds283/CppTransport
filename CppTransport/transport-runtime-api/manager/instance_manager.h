@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __instance_manager_H_
-#define __instance_manager_H_
+#ifndef CPPTRANSPORT_INSTANCE_MANAGER_H
+#define CPPTRANSPORT_INSTANCE_MANAGER_H
 
 
 #include <assert.h>
@@ -110,16 +110,18 @@ namespace transport
       {
 
         // CONSTRUCTOR, DESTRUCTOR
-        // ensure destructor is declared virtual so that derived types are destroyed
 
       public:
 
+        //! constructor is default
+        instance_manager() = default;
+
         //! destructor is default; cached list of shared_ptr<>s will be destroyed automatically, releasing
         //! our hold on those pointers
-        virtual ~instance_manager() = default;
+        ~instance_manager() = default;
 
 
-        // INTERFACE --MODEL MANAGEMENT API
+        // INTERFACE -- MODEL MANAGEMENT API
 
       public:
 
@@ -294,4 +296,4 @@ namespace transport
   }   // namespace transport
 
 
-#endif //__instance_manager_H_
+#endif //CPPTRANSPORT_INSTANCE_MANAGER_H

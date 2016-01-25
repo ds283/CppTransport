@@ -31,7 +31,7 @@ namespace transport
     //! relying on a JSON-aware repository interface 'json_repository'
     //! to handle storage and serialization, and MPI to handle task communication.
     template <typename number>
-    class task_manager: public instance_manager<number>
+    class task_manager
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -53,7 +53,13 @@ namespace transport
 		    void process(void);
 
 
-        // INTERFACE -- REPOSITORY MANAGEMENT
+        // INTERFACE -- MODEL MANAGEMENT
+
+      public:
+
+        //! Create a model instance of templated type and register it; delegate to instance manager
+        template <typename Model>
+        std::shared_ptr<Model> create_model() { return(this->instance_mgr.template create_model<Model>()); }
 
 
         // INTERFACE -- ERROR REPORTING
@@ -84,36 +90,41 @@ namespace transport
         boost::mpi::communicator world;
 
 
-		    // SLAVE AND MASTER COMPONENT MANAGERS
-
-		    //! slave controller
-		    slave_controller<number> slave;
-
-		    //! master controller
-		    master_controller<number> master;
-
-
         // LOCAL ENVIRONMENT
+
+        //! instance manager
+        //! must be declared before slave and master controllers below
+        instance_manager<number> instance_mgr;
+
+        //! environment agent (handles interactions with local machine such as location of Python)
         local_environment local_env;
 
         //! Argument cache
         argument_cache arg_cache;
+
+
+        // SLAVE AND MASTER COMPONENT MANAGERS
+
+        //! slave controller
+        slave_controller<number> slave;
+
+        //! master controller
+        master_controller<number> master;
 
       };
 
 
     template <typename number>
     task_manager<number>::task_manager(int argc, char* argv[])
-	    : instance_manager<number>(),
-	      environment(argc, argv),
-	    // note it is safe to assume environment and world have been constructed when the constructor for
-	    // slave and master are invoked, because environment and world are declared
-	    // prior to slave and master in the class declaration
-	      slave(environment, world, local_env, arg_cache, this->model_finder_factory(),
+	    : environment(argc, argv),
+	      // note it is safe to assume environment and world have been constructed when the constructor for
+	      // slave and master are invoked, because environment and world are declared
+	      // prior to slave and master in the class declaration
+	      slave(environment, world, local_env, arg_cache, this->instance_mgr.model_finder_factory(),
 	            std::bind(&task_manager<number>::error, this, std::placeholders::_1),
 	            std::bind(&task_manager<number>::warn, this, std::placeholders::_1),
 	            std::bind(&task_manager<number>::message, this, std::placeholders::_1)),
-	      master(environment, world, local_env, arg_cache, this->model_finder_factory(),
+	      master(environment, world, local_env, arg_cache, this->instance_mgr.model_finder_factory(),
 	             std::bind(&task_manager<number>::error, this, std::placeholders::_1),
 	             std::bind(&task_manager<number>::warn, this, std::placeholders::_1),
 	             std::bind(&task_manager<number>::message, this, std::placeholders::_1))
@@ -131,7 +142,7 @@ namespace transport
 				if(this->world.rank() == MPI::RANK_MASTER)
 					{
             // output model list if it has been asked for (have to wait until this point to be sure all models have registered)
-            if(this->arg_cache.get_model_list()) this->write_models(std::cout);
+            if(this->arg_cache.get_model_list()) this->instance_mgr.write_models(std::cout);
 						this->master.execute_tasks();
 					}
 				else
