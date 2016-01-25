@@ -131,7 +131,7 @@ namespace transport
 						derived_line(const task<number>& tk);
 
 				    //! Deserialization constructor
-						derived_line(Json::Value& reader, typename repository_finder<number>::task_finder& finder);
+						derived_line(Json::Value& reader, task_finder<number>& finder);
 
 						//! Dummy deserialization constructor, should not be used
 						//! Has to be provided as part of our virtual inheritance strategy (mainly to silence
@@ -322,7 +322,7 @@ namespace transport
 
 
 				template <typename number>
-				derived_line<number>::derived_line(Json::Value& reader, typename repository_finder<number>::task_finder& finder)
+				derived_line<number>::derived_line(Json::Value& reader, task_finder<number>& finder)
 					: parent_task(nullptr)
 					{
 				    precision       = reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_PRECISION].asUInt();

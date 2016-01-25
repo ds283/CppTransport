@@ -17,7 +17,7 @@
 #include "transport-runtime-api/models/model_forward_declare.h"
 
 // need repository definitions
-#include "transport-runtime-api/repository/records/repository_records.h"
+#include "transport-runtime-api/repository/records/repository_records_forward_declare.h"
 #include "transport-runtime-api/repository/writers/writers.h"
 
 // need batcher definitions

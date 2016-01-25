@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __zeta_twopf_task_H_
-#define __zeta_twopf_task_H_
+#ifndef CPPTRANSPORT_ZETA_TWOPF_TASK_H
+#define CPPTRANSPORT_ZETA_TWOPF_TASK_H
 
 
 #include "transport-runtime-api/tasks/postintegration_detail/common.h"
@@ -31,7 +31,7 @@ namespace transport
         zeta_twopf_task(const std::string& nm, const twopf_task<number>& t);
 
         //! deserialization constructor
-        zeta_twopf_task(const std::string& nm, Json::Value& reader, typename repository_finder<number>::task_finder& finder);
+        zeta_twopf_task(const std::string& nm, Json::Value& reader, task_finder<number>& finder);
 
         //! destructor is default
         virtual ~zeta_twopf_task() = default;
@@ -81,7 +81,7 @@ namespace transport
 
 
     template <typename number>
-    zeta_twopf_task<number>::zeta_twopf_task(const std::string& nm, Json::Value& reader, typename repository_finder<number>::task_finder& finder)
+    zeta_twopf_task<number>::zeta_twopf_task(const std::string& nm, Json::Value& reader, task_finder<number>& finder)
 	    : zeta_twopf_list_task<number>(nm, reader, finder)
 	    {
         this->paired = reader[CPPTRANSPORT_NODE_POSTINTEGRATION_TASK_PAIRED].asBool();
@@ -100,4 +100,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__zeta_twopf_task_H_
+#endif //CPPTRANSPORT_ZETA_TWOPF_TASK_H

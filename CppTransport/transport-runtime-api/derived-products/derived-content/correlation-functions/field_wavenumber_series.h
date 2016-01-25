@@ -45,7 +45,7 @@ namespace transport
                                     unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
 		        //! deserialization constructor
-		        twopf_wavenumber_series(Json::Value& reader, typename repository_finder<number>::task_finder& finder);
+		        twopf_wavenumber_series(Json::Value& reader, task_finder<number>& finder);
 
 		        virtual ~twopf_wavenumber_series() = default;
 
@@ -117,7 +117,7 @@ namespace transport
         // note that because time_series<> inherits virtually from derived_line<>, the constructor for
         // derived_line<> is *not* called from time_series<>. We have to call it ourselves.
         template <typename number>
-        twopf_wavenumber_series<number>::twopf_wavenumber_series(Json::Value& reader, typename repository_finder<number>::task_finder& finder)
+        twopf_wavenumber_series<number>::twopf_wavenumber_series(Json::Value& reader, task_finder<number>& finder)
 	        : derived_line<number>(reader, finder),
 	          twopf_line<number>(reader, finder),
 	          wavenumber_series<number>(reader),
@@ -286,7 +286,7 @@ namespace transport
 				                              unsigned int prec=CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
 				    //! deserialization constructor
-				    threepf_wavenumber_series(Json::Value& reader, typename repository_finder<number>::task_finder& finder);
+				    threepf_wavenumber_series(Json::Value& reader, task_finder<number>& finder);
 
 				    virtual ~threepf_wavenumber_series() = default;
 
@@ -363,7 +363,7 @@ namespace transport
         // note that because time_series<> inherits virtually from derived_line<>, the constructor for
         // derived_line<> is *not* called from time_series<>. We have to call it ourselves.
         template <typename number>
-        threepf_wavenumber_series<number>::threepf_wavenumber_series(Json::Value& reader, typename repository_finder<number>::task_finder& finder)
+        threepf_wavenumber_series<number>::threepf_wavenumber_series(Json::Value& reader, task_finder<number>& finder)
 	        : derived_line<number>(reader, finder),
 	          threepf_line<number>(reader, finder),
 	          wavenumber_series<number>(reader),

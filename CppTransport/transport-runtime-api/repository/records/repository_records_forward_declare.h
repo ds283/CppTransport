@@ -4,8 +4,8 @@
 //
 
 
-#if !defined(__repository_records_forward_declare_H_) && !defined(__repository_records_H_)
-#define __repository_records_forward_declare_H_
+#if !defined(CPPTRANSPORT_REPOSITORY_RECORDS_FORWARD_DECLARE_H) && !defined(CPPTRANSPORT_REPOSITORY_RECORDS_H)
+#define CPPTRANSPORT_REPOSITORY_RECORDS_FORWARD_DECLARE_H
 
 
 namespace transport
@@ -31,4 +31,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__repository_records_forward_declare_H_
+#endif //CPPTRANSPORT_REPOSITORY_RECORDS_FORWARD_DECLARE_H

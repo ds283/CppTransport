@@ -44,7 +44,7 @@ namespace transport
                             unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
 				    //! deserialization constructor
-				    largest_u2_line(Json::Value& reader, typename repository_finder<number>::task_finder& finder);
+				    largest_u2_line(Json::Value& reader, task_finder<number>& finder);
 
 				    //! destructor
 				    virtual ~largest_u2_line() = default;
@@ -118,7 +118,7 @@ namespace transport
 
 
 				template <typename number>
-				largest_u2_line<number>::largest_u2_line(Json::Value& reader, typename repository_finder<number>::task_finder& finder)
+				largest_u2_line<number>::largest_u2_line(Json::Value& reader, task_finder<number>& finder)
 					: derived_line<number>(reader, finder),
 		        time_series<number>(reader),
 						gadget(),

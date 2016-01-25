@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __task_H_
-#define __task_H_
+#ifndef CPPTRANSPORT_TASK_H
+#define CPPTRANSPORT_TASK_H
 
 
 #include <assert.h>
@@ -115,4 +115,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__task_H_
+#endif //CPPTRANSPORT_TASK_H

@@ -20,7 +20,7 @@
 
 #include "transport-runtime-api/derived-products/derived-content/correlation-functions/template_types.h"
 
-#include "transport-runtime-api/repository/records/repository_records.h"
+#include "transport-runtime-api/repository/records/repository_records_decl.h"
 #include "transport-runtime-api/repository/writers/generic_writer.h"
 
 #include "boost/log/core.hpp"

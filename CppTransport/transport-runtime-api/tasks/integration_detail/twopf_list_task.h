@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __twopf_list_task_H_
-#define __twopf_list_task_H_
+#ifndef CPPTRANSPORT_TWOPF_LIST_TASK_H
+#define CPPTRANSPORT_TWOPF_LIST_TASK_H
 
 
 #include <functional>
@@ -720,4 +720,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__twopf_list_task_H_
+#endif //CPPTRANSPORT_TWOPF_LIST_TASK_H

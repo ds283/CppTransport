@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __output_tasks_H_
-#define __output_tasks_H_
+#ifndef CPPTRANSPORT_OUTPUT_TASKS_H
+#define CPPTRANSPORT_OUTPUT_TASKS_H
 
 
 #include <assert.h>
@@ -35,8 +35,7 @@
 #define CPPTRANSPORT_NODE_OUTPUT_ARRAY           "derived-data-tasks"
 #define CPPTRANSPORT_NODE_OUTPUT_DERIVED_PRODUCT "label"
 #define CPPTRANSPORT_NODE_OUTPUT_SERIAL          "serial"
-#define CPPTRANSPORT_NODE_OUTPUTGROUP_TAGS       "tags"
-#define CPPTRANSPORT_NODE_OUTPUTGROUP_TAG        "tag"
+#define CPPTRANSPORT_NODE_OUTPUT_TAGS            "tags"
 
 
 namespace transport
@@ -90,7 +89,7 @@ namespace transport
 	        }
 
         //! Deserialization constructor
-        output_task(const std::string& nm, Json::Value& reader, typename repository_finder<number>::derived_product_finder& pfinder);
+        output_task(const std::string& nm, Json::Value& reader, derived_product_finder<number>& pfinder);
 
 
         //! Destroy an output task
@@ -200,7 +199,7 @@ namespace transport
 
 
     template <typename number>
-    output_task<number>::output_task(const std::string& nm, Json::Value& reader, typename repository_finder<number>::derived_product_finder& pfinder)
+    output_task<number>::output_task(const std::string& nm, Json::Value& reader, derived_product_finder<number>& pfinder)
       : task<number>(nm, reader),
         serial(0)
       {
@@ -214,7 +213,7 @@ namespace transport
             unsigned int sn           = (*t)[CPPTRANSPORT_NODE_OUTPUT_SERIAL].asUInt();
 
             std::list<std::string> tags;
-            Json::Value& tag_list = (*t)[CPPTRANSPORT_NODE_OUTPUTGROUP_TAGS];
+            Json::Value& tag_list = (*t)[CPPTRANSPORT_NODE_OUTPUT_TAGS];
 
             for(Json::Value::iterator u = tag_list.begin(); u != tag_list.end(); ++u)
               {
@@ -257,7 +256,7 @@ namespace transport
                 Json::Value tag_element = *u;
                 tag_list.append(tag_element);
 	            }
-		        elem[CPPTRANSPORT_NODE_OUTPUTGROUP_TAGS] = tag_list;
+		        elem[CPPTRANSPORT_NODE_OUTPUT_TAGS] = tag_list;
 		        element_list.append(elem);
 	        }
         writer[CPPTRANSPORT_NODE_OUTPUT_ARRAY] = element_list;
@@ -332,4 +331,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__output_tasks_H_
+#endif //CPPTRANSPORT_OUTPUT_TASKS_H

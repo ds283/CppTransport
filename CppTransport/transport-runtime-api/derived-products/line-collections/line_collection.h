@@ -187,7 +187,7 @@ namespace transport
 						line_collection(const line_collection<number>& obj);
 
 						//! Deserialization constructor
-						line_collection(const std::string& name, Json::Value& reader, typename repository_finder<number>::task_finder finder);
+						line_collection(const std::string& name, Json::Value& reader, task_finder<number> finder);
 
 						virtual ~line_collection();
 
@@ -296,7 +296,7 @@ namespace transport
 
 
 				template <typename number>
-				line_collection<number>::line_collection(const std::string& name, Json::Value& reader, typename repository_finder<number>::task_finder finder)
+				line_collection<number>::line_collection(const std::string& name, Json::Value& reader, task_finder<number> finder)
 					: derived_product<number>(name, reader)
 					{
 						// read in line management attributes

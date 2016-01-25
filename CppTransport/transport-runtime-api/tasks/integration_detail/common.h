@@ -20,7 +20,7 @@
 
 
 // need package_finder
-#include "transport-runtime-api/repository/records/record_finder.h"
+#include "transport-runtime-api/repository/records/record_finder_decl.h"
 
 #include "transport-runtime-api/tasks/task.h"
 #include "transport-runtime-api/tasks/derivable_task.h"

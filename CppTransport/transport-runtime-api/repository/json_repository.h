@@ -43,9 +43,7 @@ namespace transport
 
         json_repository(const std::string& path, model_finder<number> f, repository_mode type,
                         error_handler e, warning_handler w, message_handler m,
-                        typename repository_finder<number>::package_finder pf,
-                        typename repository_finder<number>::task_finder tf,
-                        typename repository_finder<number>::derived_product_finder dpf);
+                        package_finder<number> pf, task_finder<number> tf, derived_product_finder<number> dpf);
 
         virtual ~json_repository() = default;
 
@@ -118,9 +116,7 @@ namespace transport
     template <typename number>
     json_repository<number>::json_repository(const std::string& path, model_finder<number> f, repository_mode type,
                                              error_handler e, warning_handler w, message_handler m,
-                                             typename repository_finder<number>::package_finder pf,
-                                             typename repository_finder<number>::task_finder tf,
-                                             typename repository_finder<number>::derived_product_finder dpf)
+                                             package_finder<number> pf, task_finder<number> tf, derived_product_finder<number> dpf)
 	    : repository<number>(path, f, type, e, w, m, pf, tf, dpf)
 	    {
 	    }

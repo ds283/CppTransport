@@ -59,7 +59,7 @@ namespace transport
 				    r_line(const zeta_twopf_list_task<number>& tk);
 
 				    //! Deserialization constructor
-				    r_line(Json::Value& reader, typename repository_finder<number>::task_finder& finder);
+				    r_line(Json::Value& reader, task_finder<number>& finder);
 
 				    virtual ~r_line() = default;
 
@@ -110,7 +110,7 @@ namespace transport
 
 
 				template <typename number>
-				r_line<number>::r_line(Json::Value& reader, typename repository_finder<number>::task_finder& finder)
+				r_line<number>::r_line(Json::Value& reader, task_finder<number>& finder)
 					: derived_line<number>(reader),  // not called because of virtual inheritance; here to silence Intel compiler warning
 						gadget()
 					{

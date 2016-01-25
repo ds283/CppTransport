@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __fNL_task_H_
-#define __fNL_task_H_
+#ifndef CPPTRANSPORT_FNL_TASK_H
+#define CPPTRANSPORT_FNL_TASK_H
 
 
 #include "transport-runtime-api/tasks/postintegration_detail/common.h"
@@ -39,7 +39,7 @@ namespace transport
         fNL_task(const std::string& nm, const zeta_threepf_task<number>& t, derived_data::template_type ty=derived_data::template_type::fNL_local_template);
 
         //! deserialization constructor
-        fNL_task(const std::string& nm, Json::Value& reader, typename repository_finder<number>::task_finder& finder);
+        fNL_task(const std::string& nm, Json::Value& reader, task_finder<number>& finder);
 
         //! destructor is default
         virtual ~fNL_task() = default;
@@ -96,7 +96,7 @@ namespace transport
 
 
     template <typename number>
-    fNL_task<number>::fNL_task(const std::string& nm, Json::Value& reader, typename repository_finder<number>::task_finder& finder)
+    fNL_task<number>::fNL_task(const std::string& nm, Json::Value& reader, task_finder<number>& finder)
 	    : postintegration_task<number>(nm, reader, finder)
 	    {
         std::string type_str = reader[CPPTRANSPORT_NODE_FNL_TASK_TEMPLATE].asString();
@@ -148,4 +148,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__fNL_task_H_
+#endif //CPPTRANSPORT_FNL_TASK_H

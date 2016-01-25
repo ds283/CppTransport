@@ -370,9 +370,7 @@ namespace transport
     repository_sqlite3<number>::repository_sqlite3(const std::string& path, model_finder<number> f, repository_mode mode,
                                                    error_handler e, warning_handler w, message_handler m)
       : json_repository<number>(path, f, mode, e, w, m,
-                                std::bind(&repository_sqlite3<number>::query_package, this, std::placeholders::_1),
-                                std::bind(&repository_sqlite3<number>::query_task, this, std::placeholders::_1),
-                                std::bind(&repository_sqlite3<number>::query_derived_product, this, std::placeholders::_1)),
+                                package_finder<number>(*this), task_finder<number>(*this), derived_product_finder<number>(*this)),
         db(nullptr)
       {
         // check whether object exists in filesystem at the specified path; if not, we create it

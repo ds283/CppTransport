@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __twopf_task_H_
-#define __twopf_task_H_
+#ifndef CPPTRANSPORT_TWOPF_TASK_H
+#define CPPTRANSPORT_TWOPF_TASK_H
 
 
 #include "transport-runtime-api/tasks/integration_detail/common.h"
@@ -100,4 +100,4 @@ namespace transport
 	}
 
 
-#endif //__twopf_task_H_
+#endif //CPPTRANSPORT_TWOPF_TASK_H

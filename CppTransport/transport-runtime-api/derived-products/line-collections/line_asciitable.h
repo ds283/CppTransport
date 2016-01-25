@@ -64,7 +64,7 @@ namespace transport
 					    }
 
 				    //! Deserialization constructor
-				    line_asciitable(const std::string& name, Json::Value& reader, typename repository_finder<number>::task_finder finder);
+				    line_asciitable(const std::string& name, Json::Value& reader, task_finder<number> finder);
 
 				    virtual ~line_asciitable() = default;
 
@@ -156,7 +156,7 @@ namespace transport
 
 
 				template <typename number>
-				line_asciitable<number>::line_asciitable(const std::string& name, Json::Value& reader, typename repository_finder<number>::task_finder finder)
+				line_asciitable<number>::line_asciitable(const std::string& name, Json::Value& reader, task_finder<number> finder)
 					: line_collection<number>(name, reader, finder)
 					{
 						precision   = reader[CPPTRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_ROOT][CPPTRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_PRECISION].asUInt();

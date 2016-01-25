@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __integration_abstract_task_H_
-#define __integration_abstract_task_H_
+#ifndef CPPTRANSPORT_INTEGRATION_ABSTRACT_TASK_H
+#define CPPTRANSPORT_INTEGRATION_ABSTRACT_TASK_H
 
 
 #include "transport-runtime-api/tasks/integration_detail/common.h"
@@ -390,4 +390,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__integration_abstract_task_H_
+#endif //CPPTRANSPORT_INTEGRATION_ABSTRACT_TASK_H

@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __derived_product_H_
-#define __derived_product_H_
+#ifndef CPPTRANSPORT_DERIVED_PRODUCT_H
+#define CPPTRANSPORT_DERIVED_PRODUCT_H
 
 
 #include <float.h>
@@ -162,4 +162,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__derived_product_H_
+#endif //CPPTRANSPORT_DERIVED_PRODUCT_H

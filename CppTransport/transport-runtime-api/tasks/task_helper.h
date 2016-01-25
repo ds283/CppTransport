@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __task_helper_H_
-#define __task_helper_H_
+#ifndef CPPTRANSPORT_TASK_HELPER_H
+#define CPPTRANSPORT_TASK_HELPER_H
 
 #include <string>
 #include <memory>
@@ -31,7 +31,7 @@ namespace transport
       {
 
         template <typename number>
-        integration_task<number>* deserialize(const std::string& nm, Json::Value& reader, sqlite3* handle, typename repository_finder<number>::package_finder& f)
+        integration_task<number>* deserialize(const std::string& nm, Json::Value& reader, sqlite3* handle, package_finder<number>& f)
           {
             std::string type = reader[CPPTRANSPORT_NODE_TASK_TYPE].asString();
 
@@ -55,7 +55,7 @@ namespace transport
       {
 
         template <typename number>
-        output_task<number>* deserialize(const std::string& nm, Json::Value& reader, typename repository_finder<number>::derived_product_finder& pfinder)
+        output_task<number>* deserialize(const std::string& nm, Json::Value& reader, derived_product_finder<number>& pfinder)
           {
             std::string type = reader[CPPTRANSPORT_NODE_TASK_TYPE].asString();
 
@@ -72,7 +72,7 @@ namespace transport
       {
 
         template <typename number>
-        postintegration_task<number>* deserialize(const std::string& nm, Json::Value& reader, typename repository_finder<number>::task_finder& f)
+        postintegration_task<number>* deserialize(const std::string& nm, Json::Value& reader, task_finder<number>& f)
           {
             std::string type = reader[CPPTRANSPORT_NODE_TASK_TYPE].asString();
 
@@ -90,4 +90,4 @@ namespace transport
   }   // namespace transport
 
 
-#endif //__task_helper_H_
+#endif //CPPTRANSPORT_TASK_HELPER_H

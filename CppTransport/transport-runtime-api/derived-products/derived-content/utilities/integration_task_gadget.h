@@ -45,7 +45,7 @@ namespace transport
 				  public:
 
 						//! initialize after default constructor
-						void set_task(derivable_task<number>* tk, typename repository_finder<number>::task_finder& finder);
+						void set_task(derivable_task<number>* tk, task_finder<number>& finder);
 
 						//! get pointer to model instance
 						model<number>* get_model() const { return(this->mdl); }
@@ -102,7 +102,7 @@ namespace transport
 
 
 				template <typename number>
-				void integration_task_gadget<number>::set_task(derivable_task<number>* tk, typename repository_finder<number>::task_finder& finder)
+				void integration_task_gadget<number>::set_task(derivable_task<number>* tk, task_finder<number>& finder)
 					{
 						assert(tk != nullptr);
 

@@ -17,6 +17,9 @@
 #include "transport-runtime-api/defaults.h"
 #include "transport-runtime-api/data/data_manager.h"
 
+// need definitions of reposiotry records
+#include "transport-runtime-api/repository/records/repository_records_decl.h"
+
 #include "transport-runtime-api/messages.h"
 #include "transport-runtime-api/exceptions.h"
 

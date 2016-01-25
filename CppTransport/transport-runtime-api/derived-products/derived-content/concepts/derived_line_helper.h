@@ -47,7 +47,7 @@ namespace transport
 			        {
 
 		            template <typename number>
-		            derived_line<number>* deserialize(Json::Value& reader, typename repository_finder<number>::task_finder finder)
+		            derived_line<number>* deserialize(Json::Value& reader, task_finder<number> finder)
 			            {
 		                std::string type = reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE].asString();
 

@@ -18,7 +18,7 @@
 #include "transport-runtime-api/exceptions.h"
 #include "transport-runtime-api/localizations/messages_en.h"
 
-#include "transport-runtime-api/repository/records/repository_records.h"
+#include "transport-runtime-api/repository/records/repository_records_decl.h"
 #include "transport-runtime-api/repository/writers/generic_writer.h"
 
 #include "boost/log/core.hpp"

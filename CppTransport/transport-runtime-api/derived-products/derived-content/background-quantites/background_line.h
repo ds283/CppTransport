@@ -49,7 +49,7 @@ namespace transport
 				    background_line(const twopf_list_task<number>& tk, SQL_time_config_query tq, background_quantity t, unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
 				    //! deserialization constructor
-				    background_line(Json::Value& reader, typename repository_finder<number>::task_finder& finder);
+				    background_line(Json::Value& reader, task_finder<number>& finder);
 
 				    //! destructor
 				    virtual ~background_line() = default;
@@ -135,7 +135,7 @@ namespace transport
 
 
 				template <typename number>
-				background_line<number>::background_line(Json::Value& reader, typename repository_finder<number>::task_finder& finder)
+				background_line<number>::background_line(Json::Value& reader, task_finder<number>& finder)
 					: derived_line<number>(reader, finder),
 		        time_series<number>(reader),
 						gadget(),

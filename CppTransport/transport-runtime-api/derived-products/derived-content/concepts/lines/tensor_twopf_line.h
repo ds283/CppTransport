@@ -63,7 +63,7 @@ namespace transport
 				    tensor_twopf_line(const twopf_list_task<number>& tk, index_selector<2>& sel);
 
 				    //! Deserialization constructor
-				    tensor_twopf_line(Json::Value& reader, typename repository_finder<number>::task_finder& finder);
+				    tensor_twopf_line(Json::Value& reader, task_finder<number>& finder);
 
 				    virtual ~tensor_twopf_line() = default;
 
@@ -141,7 +141,7 @@ namespace transport
 
 
 		    template <typename number>
-		    tensor_twopf_line<number>::tensor_twopf_line(Json::Value& reader, typename repository_finder<number>::task_finder& finder)
+		    tensor_twopf_line<number>::tensor_twopf_line(Json::Value& reader, task_finder<number>& finder)
 			    : derived_line<number>(reader),  // not called because of virtual inheritance; here to silence Intel compiler warning
 			      gadget(),
 		        active_indices(reader)

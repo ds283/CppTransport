@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __derived_product_helper_H_
-#define __derived_product_helper_H_
+#ifndef CPPTRANSPORT_DERIVED_PRODUCT_HELPER_H
+#define CPPTRANSPORT_DERIVED_PRODUCT_HELPER_H
 
 
 #include "transport-runtime-api/derived-products/line-collections/line_plot2d.h"
@@ -22,7 +22,7 @@ namespace transport
           {
 
             template <typename number>
-            derived_data::derived_product<number>* deserialize(const std::string& name, Json::Value& reader, typename repository_finder<number>::task_finder& finder)
+            derived_data::derived_product<number>* deserialize(const std::string& name, Json::Value& reader, task_finder<number>& finder)
               {
                 std::string type = reader[CPPTRANSPORT_NODE_DERIVED_PRODUCT_TYPE].asString();
 
@@ -41,4 +41,4 @@ namespace transport
 	}
 
 
-#endif //__derived_product_helper_H_
+#endif //CPPTRANSPORT_DERIVED_PRODUCT_HELPER_H

@@ -335,11 +335,13 @@ set(CPPTRANSPORT_TEMPLATES_FILES
   )
 
 set(CPPTRANSPORT_TEMPLATES_VEXCL_CUDA_FILES
+  cpptransport-templates/vexcl-cuda/canonical_vexcl-cuda.h
   cpptransport-templates/vexcl-cuda/threepf.cu
   cpptransport-templates/vexcl-cuda/twopf.cu
   )
 
 set(CPPTRANSPORT_TEMPLATES_VEXCL_OPENCL_FILES
+  cpptransport-templates/vexcl-opencl/canonical_vexcl-opencl.h
   cpptransport-templates/vexcl-opencl/threepf.cl
   cpptransport-templates/vexcl-opencl/twopf.cl
   )
@@ -369,11 +371,6 @@ set(PARSER_FILES
   parser/y_driver.h
   parser/y_lexer.cpp
   parser/y_lexer.h
-  )
-
-set(TEST_TARGET_FILES
-  test-target/CMakeLists.txt
-  test-target/test_target.cpp
   )
 
 set(TOP_LEVEL_FILES
@@ -715,12 +712,12 @@ set(TRANSPORT_RUNTIME_API_MANAGER_FILES
   transport-runtime-api/manager/instance_manager.h
   transport-runtime-api/manager/master_controller.h
   transport-runtime-api/manager/master_scheduler.h
+  transport-runtime-api/manager/message_handlers.h
   transport-runtime-api/manager/mpi_operations.h
   transport-runtime-api/manager/slave_controller.h
   transport-runtime-api/manager/slave_work_handler.h
   transport-runtime-api/manager/task_manager.h
   transport-runtime-api/manager/work_journal.h
-  transport-runtime-api/manager/message_handlers.h
   )
 
 set(TRANSPORT_RUNTIME_API_MODELS_FILES
@@ -731,16 +728,40 @@ set(TRANSPORT_RUNTIME_API_MODELS_FILES
   transport-runtime-api/models/observers.h
   )
 
+set(TRANSPORT_RUNTIME_API_REPOSITORY_DETAIL_FILES
+  transport-runtime-api/repository/detail/repository_decl.h
+  transport-runtime-api/repository/detail/repository_impl.h
+  )
+
 set(TRANSPORT_RUNTIME_API_REPOSITORY_FILES
   transport-runtime-api/repository/json_repository.h
   transport-runtime-api/repository/repository.h
   transport-runtime-api/repository/transaction_manager.h
   )
 
+set(TRANSPORT_RUNTIME_API_REPOSITORY_RECORDS_DETAIL_FILES
+  transport-runtime-api/repository/records/detail/derived_product_decl.h
+  transport-runtime-api/repository/records/detail/derived_product_impl.h
+  transport-runtime-api/repository/records/detail/metadata_decl.h
+  transport-runtime-api/repository/records/detail/metadata_impl.h
+  transport-runtime-api/repository/records/detail/output_group_decl.h
+  transport-runtime-api/repository/records/detail/output_group_impl.h
+  transport-runtime-api/repository/records/detail/output_group_metadata_decl.h
+  transport-runtime-api/repository/records/detail/output_group_metadata_impl.h
+  transport-runtime-api/repository/records/detail/package_decl.h
+  transport-runtime-api/repository/records/detail/package_impl.h
+  transport-runtime-api/repository/records/detail/record_decl.h
+  transport-runtime-api/repository/records/detail/record_impl.h
+  transport-runtime-api/repository/records/detail/task_decl.h
+  transport-runtime-api/repository/records/detail/task_impl.h
+  )
+
 set(TRANSPORT_RUNTIME_API_REPOSITORY_RECORDS_FILES
-  transport-runtime-api/repository/records/record_finder.h
-  transport-runtime-api/repository/records/repository_records.h
+  transport-runtime-api/repository/records/record_finder_decl.h
+  transport-runtime-api/repository/records/record_finder_impl.h
+  transport-runtime-api/repository/records/repository_records_decl.h
   transport-runtime-api/repository/records/repository_records_forward_declare.h
+  transport-runtime-api/repository/records/repository_records_impl.h
   )
 
 set(TRANSPORT_RUNTIME_API_REPOSITORY_WRITERS_FILES
@@ -876,7 +897,6 @@ set(SOURCE_FILES
   ${INSTRUMENTS_FILES}
   ${PARSER_BISON_FILES}
   ${PARSER_FILES}
-  ${TEST_TARGET_FILES}
   ${TOP_LEVEL_FILES}
   ${TRANSPORT_OBJECTS_CANONICAL_FILES}
   ${TRANSPORT_OBJECTS_CONCEPTS_FILES}
@@ -914,7 +934,9 @@ set(SOURCE_FILES
   ${TRANSPORT_RUNTIME_API_MANAGER_DETAIL_FILES}
   ${TRANSPORT_RUNTIME_API_MANAGER_FILES}
   ${TRANSPORT_RUNTIME_API_MODELS_FILES}
+  ${TRANSPORT_RUNTIME_API_REPOSITORY_DETAIL_FILES}
   ${TRANSPORT_RUNTIME_API_REPOSITORY_FILES}
+  ${TRANSPORT_RUNTIME_API_REPOSITORY_RECORDS_DETAIL_FILES}
   ${TRANSPORT_RUNTIME_API_REPOSITORY_RECORDS_FILES}
   ${TRANSPORT_RUNTIME_API_REPOSITORY_WRITERS_FILES}
   ${TRANSPORT_RUNTIME_API_SCHEDULER_FILES}
@@ -927,6 +949,6 @@ set(SOURCE_FILES
   ${TRANSPORT_RUNTIME_API_TASKS_POSTINTEGRATION_DETAIL_FILES}
   ${TRANSPORT_RUNTIME_API_UTILITIES_FILES}
   ${UTILITIES_FILES}
-  transport-runtime-api/manager/message_handlers.h)
+  transport-runtime-api/repository/records/repository_records_impl.h)
 
 ADD_EXECUTABLE(dummy_clion_target EXCLUDE_FROM_ALL ${SOURCE_FILES})

@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __postintegration_abstract_task_H_
-#define __postintegration_abstract_task_H_
+#ifndef CPPTRANSPORT_POSTINTEGRATION_ABSTRACT_TASK_H
+#define CPPTRANSPORT_POSTINTEGRATION_ABSTRACT_TASK_H
 
 
 #include "transport-runtime-api/tasks/postintegration_detail/common.h"
@@ -37,7 +37,7 @@ namespace transport
         postintegration_task(const std::string& nm, const derivable_task<number>& t);
 
         //! deserialization constructor
-        postintegration_task(const std::string& nm, Json::Value& reader, typename repository_finder<number>::task_finder& finder);
+        postintegration_task(const std::string& nm, Json::Value& reader, task_finder<number>& finder);
 
         //! override copy constructor to perform a deep copy
         postintegration_task(const postintegration_task<number>& obj);
@@ -123,7 +123,7 @@ namespace transport
 
 
     template <typename number>
-    postintegration_task<number>::postintegration_task(const std::string& nm, Json::Value& reader, typename repository_finder<number>::task_finder& finder)
+    postintegration_task<number>::postintegration_task(const std::string& nm, Json::Value& reader, task_finder<number>& finder)
 	    : derivable_task<number>(nm, reader),
 	      ptk(nullptr)
 	    {
@@ -169,4 +169,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__postintegration_abstract_task_H_
+#endif //CPPTRANSPORT_POSTINTEGRATION_ABSTRACT_TASK_H

@@ -42,7 +42,7 @@ namespace transport
             fNL_time_series(const fNL_task<number>& tk, SQL_time_config_query tq);
 
             //! deserialization constructor
-            fNL_time_series(Json::Value& reader, typename repository_finder<number>::task_finder& finder);
+            fNL_time_series(Json::Value& reader, task_finder<number>& finder);
 
             virtual ~fNL_time_series() = default;
 
@@ -113,7 +113,7 @@ namespace transport
         // derived_line<> is not called automatically when constructing time_series<>, so we
         // have to call it explicitly.
         template <typename number>
-        fNL_time_series<number>::fNL_time_series(Json::Value& reader, typename repository_finder<number>::task_finder& finder)
+        fNL_time_series<number>::fNL_time_series(Json::Value& reader, task_finder<number>& finder)
           : derived_line<number>(reader, finder),
             fNL_line<number>(reader),
             time_series<number>(reader),

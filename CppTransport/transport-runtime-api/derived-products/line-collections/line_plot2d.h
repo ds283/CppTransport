@@ -106,7 +106,7 @@ namespace transport
 			        }
 
 				    //! Deserialization constructor
-		        line_plot2d(const std::string& name, Json::Value& reader, typename repository_finder<number>::task_finder finder);
+		        line_plot2d(const std::string& name, Json::Value& reader, task_finder<number> finder);
 
 		        virtual ~line_plot2d() = default;
 
@@ -348,7 +348,7 @@ namespace transport
 
 
 				template <typename number>
-		    line_plot2d<number>::line_plot2d(const std::string& name, Json::Value& reader, typename repository_finder<number>::task_finder finder)
+		    line_plot2d<number>::line_plot2d(const std::string& name, Json::Value& reader, task_finder<number> finder)
 			    : line_collection<number>(name, reader, finder)
 			    {
 				    reverse_x        = reader[CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_ROOT][CPPTRANSPORT_NODE_PRODUCT_LINE_PLOT2D_REVERSEX].asBool();

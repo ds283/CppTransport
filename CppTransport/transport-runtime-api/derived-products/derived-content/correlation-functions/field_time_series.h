@@ -44,7 +44,7 @@ namespace transport
                                    SQL_time_config_query tq, unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
 		        //! deserialization constructor.
-		        background_time_series(Json::Value& reader, typename repository_finder<number>::task_finder& finder);
+		        background_time_series(Json::Value& reader, task_finder<number>& finder);
 
 		        virtual ~background_time_series() = default;
 
@@ -126,7 +126,7 @@ namespace transport
 		    // note that because time_series<> inherits virtually from derived_line<>, the constructor for
 		    // derived_line<> is *not* called from time_series<>. We have to call it ourselves.
 		    template <typename number>
-		    background_time_series<number>::background_time_series(Json::Value& reader, typename repository_finder<number>::task_finder& finder)
+		    background_time_series<number>::background_time_series(Json::Value& reader, task_finder<number>& finder)
 			    : derived_line<number>(reader, finder),
 			      time_series<number>(reader),
 			      gadget(),
@@ -282,7 +282,7 @@ namespace transport
 		                          unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
 		        //! deserialization constuctor.
-		        twopf_time_series(Json::Value& reader, typename repository_finder<number>::task_finder& finder);
+		        twopf_time_series(Json::Value& reader, task_finder<number>& finder);
 
 		        virtual ~twopf_time_series() = default;
 
@@ -350,7 +350,7 @@ namespace transport
 		    // note that because time_series<> inherits virtually from derived_line<>, the constructor for
 		    // derived_line<> is *not* called from time_series<>. We have to call it ourselves.
 		    template <typename number>
-		    twopf_time_series<number>::twopf_time_series(Json::Value& reader, typename repository_finder<number>::task_finder& finder)
+		    twopf_time_series<number>::twopf_time_series(Json::Value& reader, task_finder<number>& finder)
 			    : derived_line<number>(reader, finder),
 			      twopf_line<number>(reader, finder),
 			      time_series<number>(reader),
@@ -511,7 +511,7 @@ namespace transport
                                 unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
 		        //! deserialization constructor.
-		        threepf_time_series(Json::Value& reader, typename repository_finder<number>::task_finder& finder);
+		        threepf_time_series(Json::Value& reader, task_finder<number>& finder);
 
 		        virtual ~threepf_time_series() = default;
 
@@ -586,7 +586,7 @@ namespace transport
 		    // note that because time_series<> inherits virtually from derived_line<>, the constructor for
 		    // derived_line<> is *not* called from time_series<>. We have to call it ourselves.
 		    template <typename number>
-		    threepf_time_series<number>::threepf_time_series(Json::Value& reader, typename repository_finder<number>::task_finder& finder)
+		    threepf_time_series<number>::threepf_time_series(Json::Value& reader, task_finder<number>& finder)
 			    : derived_line<number>(reader, finder),
 		        threepf_line<number>(reader, finder),
 		        time_series<number>(reader),
