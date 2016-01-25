@@ -85,20 +85,20 @@ namespace transport
 
           };
 
+
+        template <typename number>
+        bool operator==(const model_instance<number>& lhs, const model_instance<number>& rhs)
+          {
+            // only check uids; there would be no way to tell the difference between two different instances
+            // with the same uid
+            return(lhs.uid == rhs.uid);
+          }
+
       }   // namespace instance_manager_impl
 
 
     // pull in instance_manager_impl namespace for this block scope
     using namespace instance_manager_impl;
-
-
-    template <typename number>
-    bool operator==(const model_instance<number>& lhs, const model_instance<number>& rhs)
-      {
-        // only check uids; there would be no way to tell the difference between two different instances
-        // with the same uid
-        return(lhs.uid == rhs.uid);
-      }
 
 
     // forward declare model_finder class
