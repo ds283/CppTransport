@@ -80,7 +80,7 @@ namespace transport
       public:
 
         //! Create a repository object
-        repository(const std::string& path, repository_mode mode,
+        repository(const std::string& path, const model_finder<number> f, repository_mode mode,
                    typename repository<number>::error_callback e,
                    typename repository<number>::warning_callback w,
                    typename repository<number>::message_callback m,
@@ -400,7 +400,7 @@ namespace transport
 
 
     template <typename number>
-    repository<number>::repository(const std::string& path, repository_mode mode,
+    repository<number>::repository(const std::string& path, model_finder<number> f, repository_mode mode,
                                    typename repository<number>::error_callback e,
                                    typename repository<number>::warning_callback w,
                                    typename repository<number>::message_callback m,
@@ -412,6 +412,7 @@ namespace transport
 	      error(e),
 	      warning(w),
 	      message(m),
+        m_finder(f),
 	      pkg_finder(pf),
 	      tk_finder(tf),
 	      dprod_finder(dpf),

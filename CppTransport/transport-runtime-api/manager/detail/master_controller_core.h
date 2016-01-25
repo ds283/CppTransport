@@ -21,12 +21,13 @@ namespace transport
 
     template <typename number>
     master_controller<number>::master_controller(boost::mpi::environment& e, boost::mpi::communicator& w,
-                                                 local_environment& le, argument_cache& ac,
+                                                 local_environment& le, argument_cache& ac, model_finder<number> f,
                                                  error_callback err, warning_callback warn, message_callback msg)
       : environment(e),
         world(w),
         local_env(le),
         arg_cache(ac),
+        finder(f),
         data_mgr(data_manager_factory<number>(ac.get_batcher_capacity(), ac.get_datapipe_capacity(), ac.get_checkpoint_interval())),
         journal(w.size()-1),
         error_handler(err),
@@ -37,27 +38,7 @@ namespace transport
 
 
     template <typename number>
-    master_controller<number>::master_controller(boost::mpi::environment& e, boost::mpi::communicator& w,
-                                                 local_environment& le, argument_cache& ac,
-                                                 std::shared_ptr< json_repository<number> > r,
-                                                 error_callback err, warning_callback warn, message_callback msg)
-      : environment(e),
-        world(w),
-        local_env(le),
-        arg_cache(ac),
-        repo(r),
-        data_mgr(data_manager_factory<number>(ac.get_batcher_capacity(), ac.get_datapipe_capacity(), ac.get_checkpoint_interval())),
-        journal(w.size()-1),
-        error_handler(err),
-        warning_handler(warn),
-        message_handler(msg)
-      {
-        assert(repo);
-      }
-
-
-    template <typename number>
-    void master_controller<number>::process_arguments(int argc, char* argv[], instance_manager<number>& instance_mgr)
+    void master_controller<number>::process_arguments(int argc, char* argv[])
       {
         // set up Boost::program_options descriptors for command-line arguments
         boost::program_options::options_description generic("Generic options");
@@ -170,9 +151,8 @@ namespace transport
             try
               {
                 this->repo = repository_factory<number>(option_map[CPPTRANSPORT_SWITCH_REPO].as<std::string>(),
-                                                        repository_mode::readwrite,
+                                                        this->finder, repository_mode::readwrite,
                                                         this->error_handler, this->warning_handler, this->message_handler);
-                this->repo->set_model_finder(instance_mgr.model_finder_factory());
               }
             catch(runtime_exception& xe)
               {

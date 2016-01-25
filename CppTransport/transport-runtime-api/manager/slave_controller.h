@@ -72,8 +72,7 @@ namespace transport
 		    //! unlike a master controller, there is no option to supply a repository;
 		    //! one has to be provided by a master controller over MPI later
 		    slave_controller(boost::mpi::environment& e, boost::mpi::communicator& w,
-                         local_environment& le, argument_cache& ac,
-		                     const model_finder<number>& f,
+                         local_environment& le, argument_cache& ac, model_finder<number> f,
 		                     error_callback err, warning_callback warn, message_callback msg);
 
 		    //! destroy a slave manager object
@@ -200,7 +199,8 @@ namespace transport
 
 
 				// MODEL FINDER REFERENCE
-		    const model_finder<number> finder;
+		    model_finder<number> finder;
+
 
 		    // RUNTIME AGENTS
 
@@ -230,8 +230,7 @@ namespace transport
 
     template <typename number>
     slave_controller<number>::slave_controller(boost::mpi::environment& e, boost::mpi::communicator& w,
-                                               local_environment& le, argument_cache& ac,
-                                               const model_finder<number>& f,
+                                               local_environment& le, argument_cache& ac, model_finder<number> f,
                                                error_callback err, warning_callback warn, message_callback msg)
 	    : environment(e),
 	      world(w),
@@ -313,9 +312,8 @@ namespace transport
 	        {
             boost::filesystem::path repo_path = payload.get_repository_path();
 
-            this->repo = repository_factory<number>(repo_path.string(), repository_mode::readonly,
+            this->repo = repository_factory<number>(repo_path.string(), this->finder, repository_mode::readonly,
                                                     this->error_handler, this->warning_handler, this->message_handler);
-            this->repo->set_model_finder(this->finder);
 
             this->arg_cache = payload.get_argument_cache();
 

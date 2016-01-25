@@ -66,16 +66,11 @@ namespace transport
 
       public:
 
-        //! construct a master controller object with no supplied repository
-        //! (one has to be provided in the command line arguments later)
+        //! construct a master controller object
+        //! the repository is not set at construction; it has to be provided later via
+        //! a command-line or configuration-file option
         master_controller(boost::mpi::environment& e, boost::mpi::communicator& w,
-                          local_environment& le, argument_cache& ac,
-                          error_callback err, warning_callback warn, message_callback msg);
-
-        //! construct a master controller object with a supplied repository
-        master_controller(boost::mpi::environment& e, boost::mpi::communicator& w,
-                          local_environment& le, argument_cache& ac,
-                          std::shared_ptr< json_repository<number> > r,
+                          local_environment& le, argument_cache& ac, model_finder<number> f,
                           error_callback err, warning_callback warn, message_callback msg);
 
         //! destroy a master manager object
@@ -87,7 +82,7 @@ namespace transport
       public:
 
         //! interpret command-line arguments
-        void process_arguments(int argc, char* argv[], instance_manager<number>& instance_mgr);
+        void process_arguments(int argc, char* argv[]);
 
         //! execute any queued tasks
         void execute_tasks(void);
@@ -292,6 +287,10 @@ namespace transport
 
         //! Argument cache
         argument_cache& arg_cache;
+
+
+        // MODEL FINDER REFERENCE
+        const model_finder<number> finder;
 
 
         // RUNTIME AGENTS

@@ -7,6 +7,7 @@
 #ifndef CPPTRANSPORT_TASK_MANAGER_H
 #define CPPTRANSPORT_TASK_MANAGER_H
 
+
 #include <functional>
 
 #include "transport-runtime-api/manager/instance_manager.h"
@@ -39,9 +40,6 @@ namespace transport
 
         //! Construct a task manager using command-line arguments. The repository must exist and be named on the command line.
         task_manager(int argc, char* argv[]);
-
-        //! Construct a task manager using a previously-constructed repository object. Usually this will be used only when creating a new repository.
-        task_manager(int argc, char* argv[], std::shared_ptr< json_repository<number> > r);
 
         //! Destroy a task manager object
         ~task_manager() = default;
@@ -115,39 +113,15 @@ namespace transport
 	            std::bind(&task_manager<number>::error, this, std::placeholders::_1),
 	            std::bind(&task_manager<number>::warn, this, std::placeholders::_1),
 	            std::bind(&task_manager<number>::message, this, std::placeholders::_1)),
-	      master(environment, world, local_env, arg_cache,
+	      master(environment, world, local_env, arg_cache, this->model_finder_factory(),
 	             std::bind(&task_manager<number>::error, this, std::placeholders::_1),
 	             std::bind(&task_manager<number>::warn, this, std::placeholders::_1),
 	             std::bind(&task_manager<number>::message, this, std::placeholders::_1))
       {
         if(world.rank() == MPI::RANK_MASTER)  // process command-line arguments if we are the master node
 	        {
-            master.process_arguments(argc, argv, *this);
+            master.process_arguments(argc, argv);
 	        }
-      }
-
-
-    template <typename number>
-    task_manager<number>::task_manager(int argc, char* argv[], std::shared_ptr< json_repository<number> > r)
-      : instance_manager<number>(),
-        environment(argc, argv),
-        // note it is safe to assume environment and world have been constructed when the constructor for
-        // slave and master are invoked, because environment and world are declared
-        // prior to slave and master in the class declaration
-        slave(environment, world, local_env, arg_cache, this->model_finder_factory(),
-              std::bind(&task_manager<number>::error, this, std::placeholders::_1),
-              std::bind(&task_manager<number>::warn, this, std::placeholders::_1),
-              std::bind(&task_manager<number>::message, this, std::placeholders::_1)),
-        master(environment, world, local_env, arg_cache, r,
-               std::bind(&task_manager<number>::error, this, std::placeholders::_1),
-               std::bind(&task_manager<number>::warn, this, std::placeholders::_1),
-               std::bind(&task_manager<number>::message, this, std::placeholders::_1))
-      {
-        assert(r);
-
-		    // set model finder for the repository
-		    // (this is a function which, given a model ID, returns the model* instance representing it)
-		    r->set_model_finder(this->model_finder_factory());
       }
 
 

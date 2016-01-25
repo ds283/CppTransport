@@ -31,12 +31,12 @@
 #include "transport-runtime-api/sqlite3/operations/repository.h"
 
 
-#define CPPTRANSPORT_REPO_REPOSITORY_LEAF "database.sqlite"
-#define CPPTRANSPORT_REPO_STORE_LEAF      "repository"
-#define CPPTRANSPORT_REPO_PACKAGES_LEAF   "packages"
-#define CPPTRANSPORT_REPO_TASKS_LEAF      "tasks"
-#define CPPTRANSPORT_REPO_PRODUCTS_LEAF   "products"
-#define CPPTRANSPORT_REPO_OUTPUT_LEAF     "output"
+constexpr auto CPPTRANSPORT_REPO_REPOSITORY_LEAF = "database.sqlite";
+constexpr auto CPPTRANSPORT_REPO_STORE_LEAF      = "repository";
+constexpr auto CPPTRANSPORT_REPO_PACKAGES_LEAF   = "packages";
+constexpr auto CPPTRANSPORT_REPO_TASKS_LEAF      = "tasks";
+constexpr auto CPPTRANSPORT_REPO_PRODUCTS_LEAF   = "products";
+constexpr auto CPPTRANSPORT_REPO_OUTPUT_LEAF     = "output";
 
 
 namespace transport
@@ -98,7 +98,8 @@ namespace transport
 
         //! Open a repository with a specified pathname, and specified warning and error handlers.
         //! Creates the repository directory structure if it does not already exist
-        repository_sqlite3(const std::string& path, repository_mode mode = repository_mode::readwrite,
+        repository_sqlite3(const std::string& path, model_finder<number> f,
+                           repository_mode mode = repository_mode::readwrite,
                            typename repository<number>::error_callback e = default_error_handler(),
                            typename repository<number>::warning_callback w = default_warning_handler(),
                            typename repository<number>::message_callback m = default_message_handler());
@@ -399,11 +400,11 @@ namespace transport
 
     // Create a repository object associated with a pathname
     template <typename number>
-    repository_sqlite3<number>::repository_sqlite3(const std::string& path, repository_mode mode,
+    repository_sqlite3<number>::repository_sqlite3(const std::string& path, model_finder<number> f, repository_mode mode,
                                                    typename repository<number>::error_callback e,
                                                    typename repository<number>::warning_callback w,
                                                    typename repository<number>::message_callback m)
-      : json_repository<number>(path, mode, e, w, m,
+      : json_repository<number>(path, f, mode, e, w, m,
                                 std::bind(&repository_sqlite3<number>::query_package, this, std::placeholders::_1),
                                 std::bind(&repository_sqlite3<number>::query_task, this, std::placeholders::_1),
                                 std::bind(&repository_sqlite3<number>::query_derived_product, this, std::placeholders::_1)),
@@ -1652,19 +1653,21 @@ void repository_sqlite3<number>::register_writer(derived_content_writer<number>&
 
 
 template <typename number>
-std::shared_ptr< json_repository<number> > repository_factory(const std::string& path, repository_mode mode = repository_mode::readwrite)
+std::shared_ptr< json_repository<number> > repository_factory(const std::string& path, model_finder<number> finder,
+                                                              repository_mode mode = repository_mode::readwrite)
   {
-    return std::make_shared< repository_sqlite3<number> >(path, mode);
+    return std::make_shared< repository_sqlite3<number> >(path, finder, mode);
   }
 
 
 template <typename number>
-std::shared_ptr< json_repository<number> > repository_factory(const std::string& path, repository_mode mode,
+std::shared_ptr< json_repository<number> > repository_factory(const std::string& path, model_finder<number> finder,
+                                                              repository_mode mode,
                                                               typename repository<number>::error_callback e,
                                                               typename repository<number>::warning_callback w,
                                                               typename repository<number>::message_callback m)
   {
-    return std::make_shared< repository_sqlite3<number> >(path, mode, e, w, m);
+    return std::make_shared< repository_sqlite3<number> >(path, finder, mode, e, w, m);
   }
 
 
