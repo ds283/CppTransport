@@ -18,6 +18,9 @@
 #include "transport-runtime-api/exceptions.h"
 
 #include "transport-runtime-api/serialization/serializable.h"
+#include "transport-runtime-api/manager/message_handlers.h"
+
+// need instance_manager for model_finder object
 #include "transport-runtime-api/manager/instance_manager.h"
 
 // forward-declare model class if needed
@@ -63,27 +66,13 @@ namespace transport
     class repository
 	    {
 
-      public:
-
-        //! Error-reporting callback object
-        typedef std::function<void(const std::string&)> error_callback;
-
-        //! Warning callback object
-        typedef std::function<void(const std::string&)> warning_callback;
-
-        //! Message callback object
-        typedef std::function<void(const std::string&)> message_callback;
-
-
         // CONSTRUCTOR, DESTRUCTOR
 
       public:
 
         //! Create a repository object
         repository(const std::string& path, const model_finder<number> f, repository_mode mode,
-                   typename repository<number>::error_callback e,
-                   typename repository<number>::warning_callback w,
-                   typename repository<number>::message_callback m,
+                   error_handler e, warning_handler w, message_handler m,
                    typename repository_finder<number>::package_finder pf,
                    typename repository_finder<number>::task_finder tf,
                    typename repository_finder<number>::derived_product_finder dpf);
@@ -348,13 +337,13 @@ namespace transport
 		    // ERROR, WARNING, MESSAGE HANDLERS
 
 		    //! error handler
-		    error_callback error;
+		    error_handler error;
 
 		    //! warning handler
-		    warning_callback warning;
+		    warning_handler warning;
 
 		    //! message handler
-		    message_callback message;
+		    message_handler message;
 
 
 		    // FINDER SERVICES
@@ -401,9 +390,7 @@ namespace transport
 
     template <typename number>
     repository<number>::repository(const std::string& path, model_finder<number> f, repository_mode mode,
-                                   typename repository<number>::error_callback e,
-                                   typename repository<number>::warning_callback w,
-                                   typename repository<number>::message_callback m,
+                                   error_handler e, warning_handler w, message_handler m,
                                    typename repository_finder<number>::package_finder pf,
                                    typename repository_finder<number>::task_finder tf,
                                    typename repository_finder<number>::derived_product_finder dpf)

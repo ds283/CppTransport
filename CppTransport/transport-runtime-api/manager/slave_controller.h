@@ -25,6 +25,7 @@
 #include "transport-runtime-api/data/data_manager.h"
 #include "transport-runtime-api/manager/slave_work_handler.h"
 #include "transport-runtime-api/manager/environment.h"
+#include "transport-runtime-api/manager/message_handlers.h"
 
 #include "transport-runtime-api/scheduler/context.h"
 #include "transport-runtime-api/scheduler/scheduler.h"
@@ -52,17 +53,6 @@ namespace transport
 		class slave_controller
 			{
 
-		  public:
-
-		    //! Error-reporting callback object
-		    typedef std::function<void(const std::string&)> error_callback;
-
-		    //! Warning callback object
-		    typedef std::function<void(const std::string&)> warning_callback;
-
-		    //! Message callback object
-		    typedef std::function<void(const std::string&)> message_callback;
-
 
 				// CONSTRUCTOR, DESTRUCTOR
 
@@ -73,7 +63,7 @@ namespace transport
 		    //! one has to be provided by a master controller over MPI later
 		    slave_controller(boost::mpi::environment& e, boost::mpi::communicator& w,
                          local_environment& le, argument_cache& ac, model_finder<number> f,
-		                     error_callback err, warning_callback warn, message_callback msg);
+                         error_handler eh, warning_handler wh, message_handler mh);
 
 		    //! destroy a slave manager object
 		    ~slave_controller() = default;
@@ -217,13 +207,13 @@ namespace transport
 				// ERROR CALLBACKS
 
 				//! error callback
-				error_callback error_handler;
+				error_handler err;
 
 				//! warning callback
-				warning_callback warning_handler;
+				warning_handler warn;
 
 				//! message callback
-				message_callback message_handler;
+				message_handler msg;
 
 			};
 
@@ -231,16 +221,16 @@ namespace transport
     template <typename number>
     slave_controller<number>::slave_controller(boost::mpi::environment& e, boost::mpi::communicator& w,
                                                local_environment& le, argument_cache& ac, model_finder<number> f,
-                                               error_callback err, warning_callback warn, message_callback msg)
+                                               error_handler eh, warning_handler wh, message_handler mh)
 	    : environment(e),
 	      world(w),
         local_env(le),
         arg_cache(ac),
 	      finder(f),
 	      data_mgr(data_manager_factory<number>(ac.get_batcher_capacity(), ac.get_datapipe_capacity(), ac.get_checkpoint_interval())),
-	      error_handler(err),
-	      warning_handler(warn),
-	      message_handler(msg)
+	      err(eh),
+	      warn(wh),
+	      msg(mh)
 	    {
 	    }
 
@@ -313,7 +303,7 @@ namespace transport
             boost::filesystem::path repo_path = payload.get_repository_path();
 
             this->repo = repository_factory<number>(repo_path.string(), this->finder, repository_mode::readonly,
-                                                    this->error_handler, this->warning_handler, this->message_handler);
+                                                    this->err, this->warn, this->msg);
 
             this->arg_cache = payload.get_argument_cache();
 
@@ -325,7 +315,7 @@ namespace transport
 	        {
             if(xe.get_exception_code() == exception_type::REPO_NOT_FOUND)
 	            {
-                this->error_handler(xe.what());
+                this->err(xe.what());
                 repo = nullptr;
 	            }
             else
@@ -400,14 +390,14 @@ namespace transport
 	            {
                 std::ostringstream msg;
                 msg << CPPTRANSPORT_REPO_MISSING_RECORD << " '" << xe.what() << "'" << CPPTRANSPORT_REPO_SKIPPING_TASK;
-                this->error_handler(msg.str());
+                this->err(msg.str());
 	            }
             else if(xe.get_exception_code() == exception_type::MISSING_MODEL_INSTANCE
 	                  || xe.get_exception_code() == exception_type::REPOSITORY_BACKEND_ERROR)
 	            {
                 std::ostringstream msg;
                 msg << xe.what() << " " << CPPTRANSPORT_REPO_FOR_TASK << " '" << payload.get_task_name() << "'" << CPPTRANSPORT_REPO_SKIPPING_TASK;
-                this->error_handler(msg.str());
+                this->err(msg.str());
 	            }
             else
 	            {
@@ -624,14 +614,14 @@ namespace transport
 	            {
                 std::ostringstream msg;
                 msg << CPPTRANSPORT_REPO_MISSING_RECORD << " '" << xe.what() << "'" << CPPTRANSPORT_REPO_SKIPPING_TASK;
-                this->error_handler(msg.str());
+                this->err(msg.str());
 	            }
             else if(xe.get_exception_code() == exception_type::MISSING_MODEL_INSTANCE
 	                  || xe.get_exception_code() == exception_type::REPOSITORY_BACKEND_ERROR)
 	            {
                 std::ostringstream msg;
                 msg << xe.what() << " " << CPPTRANSPORT_REPO_FOR_TASK << " '" << payload.get_task_name() << "'" << CPPTRANSPORT_REPO_SKIPPING_TASK;
-                this->error_handler(msg.str());
+                this->err(msg.str());
 	            }
             else
 	            {
@@ -866,14 +856,14 @@ namespace transport
 	            {
                 std::ostringstream msg;
                 msg << CPPTRANSPORT_REPO_MISSING_RECORD << " '" << xe.what() << "'" << CPPTRANSPORT_REPO_SKIPPING_TASK;
-                this->error_handler(msg.str());
+                this->err(msg.str());
 	            }
             else if(xe.get_exception_code() == exception_type::MISSING_MODEL_INSTANCE
 	                  || xe.get_exception_code() == exception_type::REPOSITORY_BACKEND_ERROR)
 	            {
                 std::ostringstream msg;
                 msg << xe.what() << " " << CPPTRANSPORT_REPO_FOR_TASK << " '" << payload.get_task_name() << "'" << CPPTRANSPORT_REPO_SKIPPING_TASK;
-                this->error_handler(msg.str());
+                this->err(msg.str());
 	            }
             else
 	            {

@@ -18,6 +18,7 @@
 
 #include "transport-runtime-api/manager/argument_cache.h"
 #include "transport-runtime-api/manager/environment.h"
+#include "transport-runtime-api/manager/message_handlers.h"
 
 #include "transport-runtime-api/messages.h"
 #include "transport-runtime-api/exceptions.h"
@@ -60,20 +61,6 @@ namespace transport
         //! Create a model instance of templated type and register it; delegate to instance manager
         template <typename Model>
         std::shared_ptr<Model> create_model() { return(this->instance_mgr.template create_model<Model>()); }
-
-
-        // INTERFACE -- ERROR REPORTING
-
-      protected:
-
-        //! Report an error
-        void error(const std::string& msg);
-
-        //! Report a warning
-        void warn(const std::string& msg);
-
-        //! Report a message
-        void message(const std::string& msg);
 
 
         // INTERNAL DATA
@@ -121,13 +108,13 @@ namespace transport
 	      // slave and master are invoked, because environment and world are declared
 	      // prior to slave and master in the class declaration
 	      slave(environment, world, local_env, arg_cache, this->instance_mgr.model_finder_factory(),
-	            std::bind(&task_manager<number>::error, this, std::placeholders::_1),
-	            std::bind(&task_manager<number>::warn, this, std::placeholders::_1),
-	            std::bind(&task_manager<number>::message, this, std::placeholders::_1)),
+	            error_handler(local_env, arg_cache),
+	            warning_handler(local_env, arg_cache),
+	            message_handler(local_env, arg_cache)),
 	      master(environment, world, local_env, arg_cache, this->instance_mgr.model_finder_factory(),
-	             std::bind(&task_manager<number>::error, this, std::placeholders::_1),
-	             std::bind(&task_manager<number>::warn, this, std::placeholders::_1),
-	             std::bind(&task_manager<number>::message, this, std::placeholders::_1))
+               error_handler(local_env, arg_cache),
+               warning_handler(local_env, arg_cache),
+               message_handler(local_env, arg_cache))
       {
         if(world.rank() == MPI::RANK_MASTER)  // process command-line arguments if we are the master node
 	        {
@@ -150,43 +137,6 @@ namespace transport
 						this->slave.wait_for_tasks();
 					}
 			}
-
-
-    template <typename number>
-    void task_manager<number>::error(const std::string& msg)
-      {
-        bool colour = this->local_env.has_colour_terminal_support() && this->arg_cache.get_colour_output();
-
-        if(colour) std::cout << ANSI_BOLD_RED;
-        std::cout << msg << '\n';
-        if(colour) std::cout << ANSI_NORMAL;
-      }
-
-
-    template <typename number>
-    void task_manager<number>::warn(const std::string& msg)
-      {
-        bool colour = this->local_env.has_colour_terminal_support() && this->arg_cache.get_colour_output();
-
-        if(colour) std::cout << ANSI_BOLD_MAGENTA;
-        std::cout << CPPTRANSPORT_TASK_MANAGER_WARNING_LABEL << " ";
-        if(colour) std::cout << ANSI_NORMAL;
-        std::cout << msg << '\n';
-      }
-
-
-    template <typename number>
-    void task_manager<number>::message(const std::string& msg)
-      {
-        bool colour = this->local_env.has_colour_terminal_support() && this->arg_cache.get_colour_output();
-
-        if(this->arg_cache.get_verbose())
-          {
-//            if(colour) std::cout << ANSI_GREEN;
-            std::cout << msg << '\n';
-//            if(colour) std::cout << ANSI_NORMAL;
-          }
-      }
 
 
   } // namespace transport

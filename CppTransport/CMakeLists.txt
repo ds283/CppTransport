@@ -720,6 +720,7 @@ set(TRANSPORT_RUNTIME_API_MANAGER_FILES
   transport-runtime-api/manager/slave_work_handler.h
   transport-runtime-api/manager/task_manager.h
   transport-runtime-api/manager/work_journal.h
+  transport-runtime-api/manager/message_handlers.h
   )
 
 set(TRANSPORT_RUNTIME_API_MODELS_FILES
@@ -926,6 +927,6 @@ set(SOURCE_FILES
   ${TRANSPORT_RUNTIME_API_TASKS_POSTINTEGRATION_DETAIL_FILES}
   ${TRANSPORT_RUNTIME_API_UTILITIES_FILES}
   ${UTILITIES_FILES}
-  )
+  transport-runtime-api/manager/message_handlers.h)
 
 ADD_EXECUTABLE(dummy_clion_target EXCLUDE_FROM_ALL ${SOURCE_FILES})

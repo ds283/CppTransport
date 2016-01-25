@@ -28,6 +28,7 @@
 #include "transport-runtime-api/manager/work_journal.h"
 #include "transport-runtime-api/manager/argument_cache.h"
 #include "transport-runtime-api/manager/environment.h"
+#include "transport-runtime-api/manager/message_handlers.h"
 
 #include "transport-runtime-api/manager/detail/job_descriptors.h"
 #include "transport-runtime-api/manager/detail/aggregation_forward_declare.h"
@@ -48,20 +49,6 @@ namespace transport
     class master_controller
       {
 
-        // TYPES
-
-      public:
-
-        //! Error-reporting callback object
-        typedef std::function<void(const std::string&)> error_callback;
-
-        //! Warning callback object
-        typedef std::function<void(const std::string&)> warning_callback;
-
-        //! Message callback object
-        typedef std::function<void(const std::string&)> message_callback;
-
-
         // CONSTRUCTOR, DESTRUCTOR
 
       public:
@@ -71,7 +58,7 @@ namespace transport
         //! a command-line or configuration-file option
         master_controller(boost::mpi::environment& e, boost::mpi::communicator& w,
                           local_environment& le, argument_cache& ac, model_finder<number> f,
-                          error_callback err, warning_callback warn, message_callback msg);
+                          error_handler eh, warning_handler wh, message_handler mh);
 
         //! destroy a master manager object
         ~master_controller() = default;
@@ -317,13 +304,13 @@ namespace transport
         // ERROR CALLBACKS
 
         //! error callback
-        error_callback error_handler;
+        error_handler err;
 
         //! warning callback
-        warning_callback warning_handler;
+        warning_handler warn;
 
         //! message callback
-        message_callback message_handler;
+        message_handler msg;
 
       };
 

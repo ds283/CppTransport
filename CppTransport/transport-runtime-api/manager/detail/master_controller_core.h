@@ -22,7 +22,7 @@ namespace transport
     template <typename number>
     master_controller<number>::master_controller(boost::mpi::environment& e, boost::mpi::communicator& w,
                                                  local_environment& le, argument_cache& ac, model_finder<number> f,
-                                                 error_callback err, warning_callback warn, message_callback msg)
+                                                 error_handler eh, warning_handler wh, message_handler mh)
       : environment(e),
         world(w),
         local_env(le),
@@ -30,9 +30,9 @@ namespace transport
         finder(f),
         data_mgr(data_manager_factory<number>(ac.get_batcher_capacity(), ac.get_datapipe_capacity(), ac.get_checkpoint_interval())),
         journal(w.size()-1),
-        error_handler(err),
-        warning_handler(warn),
-        message_handler(msg)
+        err(eh),
+        warn(wh),
+        msg(mh)
       {
       }
 
@@ -105,7 +105,7 @@ namespace transport
                           {
                             std::ostringstream msg;
                             msg << CPPTRANSPORT_UNKNOWN_SWITCH << " '" << option << "'";
-                            this->warning_handler(msg.str());
+                            this->warn(msg.str());
                           }
                       }
                   }
@@ -123,7 +123,7 @@ namespace transport
               {
                 std::ostringstream msg;
                 msg << CPPTRANSPORT_UNKNOWN_SWITCH << " '" << option << "'";
-                this->warning_handler(msg.str());
+                this->warn(msg.str());
               }
           }
 
@@ -152,13 +152,13 @@ namespace transport
               {
                 this->repo = repository_factory<number>(option_map[CPPTRANSPORT_SWITCH_REPO].as<std::string>(),
                                                         this->finder, repository_mode::readwrite,
-                                                        this->error_handler, this->warning_handler, this->message_handler);
+                                                        this->err, this->warn, this->msg);
               }
             catch(runtime_exception& xe)
               {
                 if(xe.get_exception_code() == exception_type::REPO_NOT_FOUND)
                   {
-                    this->error_handler(xe.what());
+                    this->err(xe.what());
                     repo = nullptr;
                   }
                 else
@@ -197,7 +197,7 @@ namespace transport
               {
                 std::ostringstream msg;
                 msg << CPPTRANSPORT_EXPECTED_POSITIVE << " " << CPPTRANSPORT_SWITCH_CAPACITY;
-                this->error_handler(msg.str());
+                this->err(msg.str());
               }
           }
 
@@ -217,7 +217,7 @@ namespace transport
               {
                 std::ostringstream msg;
                 msg << CPPTRANSPORT_EXPECTED_POSITIVE << " " << CPPTRANSPORT_SWITCH_CACHE_CAPACITY;
-                this->error_handler(msg.str());
+                this->err(msg.str());
               }
           }
 
@@ -237,7 +237,7 @@ namespace transport
               {
                 std::ostringstream msg;
                 msg << CPPTRANSPORT_EXPECTED_POSITIVE << " " << CPPTRANSPORT_SWITCH_BATCHER_CAPACITY;
-                this->error_handler(msg.str());
+                this->err(msg.str());
               }
           }
 
@@ -256,7 +256,7 @@ namespace transport
               {
                 std::ostringstream msg;
                 msg << CPPTRANSPORT_EXPECTED_POSITIVE << " " CPPTRANSPORT_SWITCH_CHECKPOINT;
-                this->error_handler(msg.str());
+                this->err(msg.str());
               }
           }
 
@@ -303,7 +303,7 @@ namespace transport
 
         if(!this->repo)
           {
-            this->error_handler(CPPTRANSPORT_REPO_NONE);
+            this->err(CPPTRANSPORT_REPO_NONE);
           }
         else
           {
@@ -348,7 +348,7 @@ namespace transport
                 boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
                 msg << boost::posix_time::to_simple_string(now);
 
-                this->message_handler(msg.str());
+                this->msg(msg.str());
               }
           }
 
@@ -411,14 +411,14 @@ namespace transport
               {
                 std::ostringstream msg;
                 msg << CPPTRANSPORT_REPO_MISSING_RECORD << " '" << xe.what() << "'" << CPPTRANSPORT_REPO_SKIPPING_TASK;
-                this->error_handler(msg.str());
+                this->err(msg.str());
               }
             else if(xe.get_exception_code() == exception_type::MISSING_MODEL_INSTANCE
                     || xe.get_exception_code() == exception_type::REPOSITORY_BACKEND_ERROR)
               {
                 std::ostringstream msg;
                 msg << xe.what() << " " << CPPTRANSPORT_REPO_FOR_TASK << " '" << job.get_name() << "'" << CPPTRANSPORT_REPO_SKIPPING_TASK;
-                this->error_handler(msg.str());
+                this->err(msg.str());
               }
             else throw xe;
           }
@@ -513,7 +513,7 @@ namespace transport
           {
             std::ostringstream update_msg;
             update_msg << CPPTRANSPORT_TASK_MANAGER_LABEL << " " << msg;
-            this->message_handler(update_msg.str());
+            this->msg(update_msg.str());
 
             BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "±± Console advisory message: " << update_msg.str();
             this->log_worker_metadata(writer);

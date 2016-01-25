@@ -42,9 +42,7 @@ namespace transport
       public:
 
         json_repository(const std::string& path, model_finder<number> f, repository_mode type,
-                        typename repository<number>::error_callback e,
-                        typename repository<number>::warning_callback w,
-                        typename repository<number>::message_callback m,
+                        error_handler e, warning_handler w, message_handler m,
                         typename repository_finder<number>::package_finder pf,
                         typename repository_finder<number>::task_finder tf,
                         typename repository_finder<number>::derived_product_finder dpf);
@@ -119,9 +117,7 @@ namespace transport
 
     template <typename number>
     json_repository<number>::json_repository(const std::string& path, model_finder<number> f, repository_mode type,
-                                             typename repository<number>::error_callback e,
-                                             typename repository<number>::warning_callback w,
-                                             typename repository<number>::message_callback m,
+                                             error_handler e, warning_handler w, message_handler m,
                                              typename repository_finder<number>::package_finder pf,
                                              typename repository_finder<number>::task_finder tf,
                                              typename repository_finder<number>::derived_product_finder dpf)

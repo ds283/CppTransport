@@ -124,7 +124,7 @@ namespace transport
           {
             std::ostringstream msg;
             msg << CPPTRANSPORT_SEED_GROUP_NOT_FOUND_A << " '" << seed_group << "' " << CPPTRANSPORT_SEED_GROUP_NOT_FOUND_B << " '" << tk->get_name() << "'";
-            this->warning_handler(msg.str());
+            this->warn(msg.str());
             return std::list<unsigned int>{};
           }
 
@@ -260,7 +260,7 @@ namespace transport
               {
                 std::ostringstream msg;
                 msg << CPPTRANSPORT_DATACTR_REMOVE_TEMP << " '" << payload.get_container_path() << "'";
-                this->error_handler(msg.str());
+                this->err(msg.str());
               }
           }
       }
