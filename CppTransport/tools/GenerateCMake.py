@@ -9,13 +9,7 @@ def list_files(path):
     files = []
     for name in os.listdir(path):
         if os.path.isfile(os.path.join(path, name)):
-            if name[0] != '.' and not (name.endswith("_core.h") and not path.endswith("templates")) and not (
-                        name.endswith("_basic.h") and not path.endswith("templates")) and not (name.endswith(
-                    "_basic_unrolled.h") and not path.endswith("templates")) and not (
-                        name.endswith("_basic_loop.h") and not path.endswith("templates")) and not (name.endswith(
-                        "_vexcl-cuda.h") and not path.endswith("templates")) and not (
-                name.endswith("_vexcl-opencl.h") and not path.endswith("templates")) and not name.endswith(
-                    ".model"):  # ignore system files beginning with a .
+            if name[0] != '.':  # ignore system files beginning with a .
                 files.append(name)
     return files
 
@@ -59,7 +53,8 @@ cmake_variables = { 'TOP_LEVEL_FILES': top_level_files }
 
 for dir in top_level_dirs:
 
-    if dir[0] != '.' and dir.lower() != 'thirdparty' and dir.lower() != 'cmake' and dir.lower() != 'build-clang' and dir.lower()!= 'build-icpc' and dir.lower() != 'tools' and dir.lower() != 'splinter':     # don't descend into thirdparty directories
+    if dir[
+    0] != '.' and dir.lower() != 'thirdparty' and dir.lower() != 'cmake' and dir.lower() != 'build-clang' and dir.lower() != 'build-icpc' and dir.lower() != 'tools' and dir.lower() != 'splinter' and dir.lower() != 'test-target':  # don't descend into thirdparty directories
 
         add_folder(os.path.join(top_path, dir), dir, dir.upper().replace("-", "_"), cmake_variables)
 
