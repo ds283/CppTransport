@@ -79,9 +79,14 @@ namespace transport
 
           protected:
 
+            //! shared pointer to model object
             std::shared_ptr< model<number> > m_ptr;
-            const std::string                uid;
-            unsigned int                     tver;
+
+            //! UID for this model
+            const std::string uid;
+
+            //! runtime API version expected by this model
+            unsigned int tver;
 
           };
 
@@ -121,7 +126,10 @@ namespace transport
 
       public:
 
-        //! Create a model instance and register it
+        //! Create a model instance and register it; we return a std::shared_ptr<>
+        //! because ownership is shared between ourselves (we keep ownership of this instance in the
+        //! models list) and the client, who is entitled to keep their own copy of
+        //! the model object available
         template <typename Model>
         std::shared_ptr<Model> create_model();
 
@@ -154,8 +162,10 @@ namespace transport
 
       protected:
 
-        //! list of model_instance records
-        std::list< model_instance<number> > models;
+        typedef std::list< model_instance<number> > model_db;
+
+        //! database of registered models
+        model_db models;
 
       };
 
@@ -197,7 +207,7 @@ namespace transport
       {
         model_instance<number> instance(name);
 
-        typename std::list< model_instance<number> >::const_iterator t;
+        typename model_db::const_iterator t;
         if((t = std::find(this->models.begin(), this->models.end(), instance)) == this->models.end())
           {
             std::ostringstream msg;
