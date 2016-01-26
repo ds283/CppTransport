@@ -510,6 +510,7 @@ set(TRANSPORT_RUNTIME_API_DATA_DATAPIPE_FILES
   transport-runtime-api/data/datapipe/linecache_specializations.h
   transport-runtime-api/data/datapipe/tags.h
   transport-runtime-api/data/datapipe/tags_forward_declare.h
+  transport-runtime-api/data/datapipe/dispatch_function.h
   )
 
 set(TRANSPORT_RUNTIME_API_DATA_DATAPIPE_TAGS_FILES
@@ -709,6 +710,10 @@ set(TRANSPORT_RUNTIME_API_MANAGER_DETAIL_FILES
   transport-runtime-api/manager/detail/master_controller_integration.h
   transport-runtime-api/manager/detail/master_controller_output.h
   transport-runtime-api/manager/detail/master_controller_postintegration.h
+  transport-runtime-api/manager/detail/slave_dispatch_decl.h
+  transport-runtime-api/manager/detail/slave_dispatch_impl.h
+  transport-runtime-api/manager/detail/slave_controller_decl.h
+  transport-runtime-api/manager/detail/slave_controller_impl.h
   )
 
 set(TRANSPORT_RUNTIME_API_MANAGER_FILES

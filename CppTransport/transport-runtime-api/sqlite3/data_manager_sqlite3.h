@@ -255,9 +255,9 @@ namespace transport
         //! Create a new datapipe
         virtual std::unique_ptr< datapipe<number> > create_datapipe(const boost::filesystem::path& logdir,
                                                                     const boost::filesystem::path& tempdir,
-                                                                    integration_content_finder<number> integration_finder,
-                                                                    postintegration_content_finder<number> postintegration_finder,
-                                                                    typename datapipe<number>::dispatch_function dispatcher,
+                                                                    integration_content_finder<number>& integration_finder,
+                                                                    postintegration_content_finder<number>& postintegration_finder,
+                                                                    generic_dispatch_function<number>& dispatcher,
                                                                     unsigned int worker, bool no_log = false) override;
 
         // ATTACH
@@ -1565,9 +1565,9 @@ namespace transport
 
     template <typename number>
     std::unique_ptr< datapipe<number> > data_manager_sqlite3<number>::create_datapipe(const boost::filesystem::path& logdir, const boost::filesystem::path& tempdir,
-                                                                                      integration_content_finder<number> integration_finder,
-                                                                                      postintegration_content_finder<number> postintegration_finder,
-                                                                                      typename datapipe<number>::dispatch_function dispatcher,
+                                                                                      integration_content_finder<number>& integration_finder,
+                                                                                      postintegration_content_finder<number>& postintegration_finder,
+                                                                                      generic_dispatch_function<number>& dispatcher,
                                                                                       unsigned int worker, bool no_log)
 			{
         // set up callback API

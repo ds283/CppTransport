@@ -39,6 +39,7 @@
 #include "transport-runtime-api/data/batchers/postintegration_items.h"
 
 #include "transport-runtime-api/data/datapipe/linecache_specializations.h"
+#include "transport-runtime-api/data/datapipe/dispatch_function.h"
 
 #include "boost/filesystem/operations.hpp"
 #include "boost/timer/timer.hpp"
@@ -82,26 +83,23 @@ namespace transport
 
       public:
 
-        //! Push derived content
-        typedef std::function<void(datapipe<number>*, typename derived_data::derived_product<number>*, const std::list<std::string>&)> dispatch_function;
-
-
         class utility_callbacks
 	        {
 
           public:
 
             //! constructor
-            utility_callbacks(integration_content_finder<number>& i, postintegration_content_finder<number>& p, dispatch_function& d)
+            utility_callbacks(integration_content_finder<number>& i, postintegration_content_finder<number>& p,
+                              generic_dispatch_function<number>& d)
               : integration_finder(i),
                 postintegration_finder(p),
                 dispatch(d)
               {
               }
 
-            integration_content_finder<number>      integration_finder;
-            postintegration_content_finder<number>  postintegration_finder;
-            dispatch_function                       dispatch;
+            integration_content_finder<number>&     integration_finder;
+            postintegration_content_finder<number>& postintegration_finder;
+            generic_dispatch_function<number>&      dispatch;
 
 	        };
 

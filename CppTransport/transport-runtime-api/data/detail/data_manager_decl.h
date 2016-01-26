@@ -279,9 +279,9 @@ namespace transport
         //! Create a datapipe
         virtual std::unique_ptr< datapipe<number> > create_datapipe(const boost::filesystem::path& logdir,
                                                                     const boost::filesystem::path& tempdir,
-                                                                    integration_content_finder<number> integration_finder,
-                                                                    postintegration_content_finder<number> postintegration_finder,
-                                                                    typename datapipe<number>::dispatch_function dispatcher,
+                                                                    integration_content_finder<number>& integration_finder,
+                                                                    postintegration_content_finder<number>& postintegration_finder,
+                                                                    generic_dispatch_function<number>& dispatcher,
                                                                     unsigned int worker, bool no_log = false) = 0;
 
         // ATTACH
