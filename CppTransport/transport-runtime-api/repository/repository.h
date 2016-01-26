@@ -50,6 +50,7 @@
 
 // DECLARE REPOSITORY RECORD FINDERS
 #include "transport-runtime-api/repository/records/record_finder_decl.h"
+#include "transport-runtime-api/repository/records/content_finder_decl.h"
 
 // DECLARE REPOSITORY RECORDS
 #include "transport-runtime-api/repository/records/repository_records_decl.h"
@@ -59,6 +60,7 @@
 
 // DEFINITIONS FOR REPOSITORY RECORD FINDERS
 #include "transport-runtime-api/repository/records/record_finder_impl.h"
+#include "transport-runtime-api/repository/records/content_finder_impl.h"
 
 // DEFINITIONS FOR REPOSITORY RECORDS
 #include "transport-runtime-api/repository/records/repository_records_impl.h"

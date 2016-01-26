@@ -504,9 +504,9 @@ set(TRANSPORT_RUNTIME_API_DATA_BATCHERS_FILES
   )
 
 set(TRANSPORT_RUNTIME_API_DATA_DATAPIPE_FILES
-  transport-runtime-api/data/datapipe/datapipe.h
-  transport-runtime-api/data/datapipe/datapipe_detail.h
+  transport-runtime-api/data/datapipe/datapipe_decl.h
   transport-runtime-api/data/datapipe/datapipe_forward_declare.h
+  transport-runtime-api/data/datapipe/datapipe_impl.h
   transport-runtime-api/data/datapipe/linecache_specializations.h
   transport-runtime-api/data/datapipe/tags.h
   transport-runtime-api/data/datapipe/tags_forward_declare.h
@@ -518,6 +518,11 @@ set(TRANSPORT_RUNTIME_API_DATA_DATAPIPE_TAGS_FILES
   transport-runtime-api/data/datapipe/tags/fNL_tags.h
   transport-runtime-api/data/datapipe/tags/stats_tags.h
   transport-runtime-api/data/datapipe/tags/zeta_tags.h
+  )
+
+set(TRANSPORT_RUNTIME_API_DATA_DETAIL_FILES
+  transport-runtime-api/data/detail/data_manager_decl.h
+  transport-runtime-api/data/detail/data_manager_impl.h
   )
 
 set(TRANSPORT_RUNTIME_API_DATA_FILES
@@ -668,13 +673,13 @@ set(TRANSPORT_RUNTIME_API_LOCALIZATIONS_MESSAGES_EN_FILES
   transport-runtime-api/localizations/messages_en/command_line.h
   transport-runtime-api/localizations/messages_en/data_manager.h
   transport-runtime-api/localizations/messages_en/initial_conditions.h
-  transport-runtime-api/localizations/messages_en/model_manager.h
   transport-runtime-api/localizations/messages_en/integration.h
   transport-runtime-api/localizations/messages_en/json_repository_interface.h
   transport-runtime-api/localizations/messages_en/labels.h
   transport-runtime-api/localizations/messages_en/manager.h
   transport-runtime-api/localizations/messages_en/master_scheduler.h
   transport-runtime-api/localizations/messages_en/model_list.h
+  transport-runtime-api/localizations/messages_en/model_manager.h
   transport-runtime-api/localizations/messages_en/models.h
   transport-runtime-api/localizations/messages_en/named_list.h
   transport-runtime-api/localizations/messages_en/parameters.h
@@ -709,10 +714,10 @@ set(TRANSPORT_RUNTIME_API_MANAGER_DETAIL_FILES
 set(TRANSPORT_RUNTIME_API_MANAGER_FILES
   transport-runtime-api/manager/argument_cache.h
   transport-runtime-api/manager/environment.h
-  transport-runtime-api/manager/model_manager.h
   transport-runtime-api/manager/master_controller.h
   transport-runtime-api/manager/master_scheduler.h
   transport-runtime-api/manager/message_handlers.h
+  transport-runtime-api/manager/model_manager.h
   transport-runtime-api/manager/mpi_operations.h
   transport-runtime-api/manager/slave_controller.h
   transport-runtime-api/manager/slave_work_handler.h
@@ -757,6 +762,8 @@ set(TRANSPORT_RUNTIME_API_REPOSITORY_RECORDS_DETAIL_FILES
   )
 
 set(TRANSPORT_RUNTIME_API_REPOSITORY_RECORDS_FILES
+  transport-runtime-api/repository/records/content_finder_decl.h
+  transport-runtime-api/repository/records/content_finder_impl.h
   transport-runtime-api/repository/records/record_finder_decl.h
   transport-runtime-api/repository/records/record_finder_impl.h
   transport-runtime-api/repository/records/repository_records_decl.h
@@ -909,6 +916,7 @@ set(SOURCE_FILES
   ${TRANSPORT_RUNTIME_API_DATA_BATCHERS_FILES}
   ${TRANSPORT_RUNTIME_API_DATA_DATAPIPE_FILES}
   ${TRANSPORT_RUNTIME_API_DATA_DATAPIPE_TAGS_FILES}
+  ${TRANSPORT_RUNTIME_API_DATA_DETAIL_FILES}
   ${TRANSPORT_RUNTIME_API_DATA_FILES}
   ${TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_CONVENIENCE_FILES}
   ${TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_BACKGROUND_QUANTITES_FILES}
@@ -949,6 +957,6 @@ set(SOURCE_FILES
   ${TRANSPORT_RUNTIME_API_TASKS_POSTINTEGRATION_DETAIL_FILES}
   ${TRANSPORT_RUNTIME_API_UTILITIES_FILES}
   ${UTILITIES_FILES}
-  transport-runtime-api/repository/records/repository_records_impl.h)
+  )
 
 ADD_EXECUTABLE(dummy_clion_target EXCLUDE_FROM_ALL ${SOURCE_FILES})

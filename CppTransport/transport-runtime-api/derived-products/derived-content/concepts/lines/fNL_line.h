@@ -18,7 +18,7 @@
 #include "transport-runtime-api/serialization/serializable.h"
 
 // get details of datapipe<number>
-#include "transport-runtime-api/data/datapipe/datapipe.h"
+#include "transport-runtime-api/data/datapipe/datapipe_decl.h"
 
 #include "transport-runtime-api/derived-products/derived-content/concepts/derived_line.h"
 

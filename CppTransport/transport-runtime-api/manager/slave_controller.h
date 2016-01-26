@@ -195,7 +195,7 @@ namespace transport
 		    // RUNTIME AGENTS
 
 		    //! Repository manager instance
-		    std::shared_ptr< json_repository<number> > repo;
+		    std::unique_ptr< json_repository<number> > repo;
 
 		    //! Data manager instance
 		    std::unique_ptr< data_manager<number> > data_mgr;
@@ -641,8 +641,8 @@ namespace transport
         this->send_worker_data();
 
         // set up output-group finder function
-        typename datapipe<number>::integration_content_finder     i_finder = std::bind(&repository<number>::find_integration_task_output, this->repo, std::placeholders::_1, std::placeholders::_2);
-        typename datapipe<number>::postintegration_content_finder p_finder = std::bind(&repository<number>::find_postintegration_task_output, this->repo, std::placeholders::_1, std::placeholders::_2);
+        integration_content_finder<number>     i_finder(*this->repo);
+        postintegration_content_finder<number> p_finder(*this->repo);
 
         // set up content-dispatch function
         typename datapipe<number>::dispatch_function dispatcher = std::bind(&slave_controller<number>::push_derived_content, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
@@ -1047,8 +1047,8 @@ namespace transport
         BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << *tk;
 
         // set up output-group finder function
-        typename datapipe<number>::integration_content_finder     i_finder = std::bind(&repository<number>::find_integration_task_output, this->repo, std::placeholders::_1, std::placeholders::_2);
-        typename datapipe<number>::postintegration_content_finder p_finder = std::bind(&repository<number>::find_postintegration_task_output, this->repo, std::placeholders::_1, std::placeholders::_2);
+        integration_content_finder<number>     i_finder(*this->repo);
+        postintegration_content_finder<number> p_finder(*this->repo);
 
         // set up empty content-dispatch function -- this datapipe is not used to produce content
         typename datapipe<number>::dispatch_function dispatcher = std::bind(&slave_controller<number>::disallow_push_content, this, std::placeholders::_1, std::placeholders::_2);

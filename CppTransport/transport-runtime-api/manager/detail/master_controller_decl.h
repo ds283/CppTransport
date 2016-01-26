@@ -283,7 +283,7 @@ namespace transport
         // RUNTIME AGENTS
 
         //! Repository manager instance
-        std::shared_ptr< json_repository<number> > repo;
+        std::unique_ptr< json_repository<number> > repo;
 
         //! Data manager instance
         std::unique_ptr< data_manager<number> > data_mgr;

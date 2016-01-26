@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __tags_H_
-#define __tags_H_
+#ifndef CPPTRANSPORT_TAGS_H
+#define CPPTRANSPORT_TAGS_H
 
 
 #include "transport-runtime-api/data/datapipe/tags/config_tags.h"
@@ -15,4 +15,4 @@
 #include "transport-runtime-api/data/datapipe/tags/zeta_tags.h"
 
 
-#endif //__tags_H_
+#endif //CPPTRANSPORT_TAGS_H

@@ -1616,10 +1616,10 @@ void repository_sqlite3<number>::register_writer(derived_content_writer<number>&
 
 
 template <typename number>
-std::shared_ptr< json_repository<number> > repository_factory(const std::string& path, model_manager<number>& finder,
+std::unique_ptr< json_repository<number> > repository_factory(const std::string& path, model_manager<number>& finder,
                                                               repository_mode mode, error_handler e, warning_handler w, message_handler m)
   {
-    return std::make_shared< repository_sqlite3<number> >(path, finder, mode, e, w, m);
+    return std::make_unique< repository_sqlite3<number> >(path, finder, mode, e, w, m);
   }
 
 

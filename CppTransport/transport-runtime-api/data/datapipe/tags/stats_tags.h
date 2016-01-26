@@ -106,7 +106,7 @@ namespace transport
         if(record->get_payload().has_statistics())
 	        {
             timing_instrument timer(this->pipe->database_timer);
-            this->pipe->pull_statistics.k_statistics(this->pipe, query, data);
+            this->pipe->data_mgr.pull_k_statistics_sample(this->pipe, query, data);
 	        }
         else
 	        {

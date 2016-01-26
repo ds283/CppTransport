@@ -248,15 +248,38 @@ namespace transport
 
         // DATA PIPES -- implements a 'data_manager' interface
 
+        // CREATE
+
       public:
 
         //! Create a new datapipe
         virtual std::unique_ptr< datapipe<number> > create_datapipe(const boost::filesystem::path& logdir,
                                                                     const boost::filesystem::path& tempdir,
-                                                                    typename datapipe<number>::integration_content_finder integration_finder,
-                                                                    typename datapipe<number>::postintegration_content_finder postintegration_finder,
+                                                                    integration_content_finder<number> integration_finder,
+                                                                    postintegration_content_finder<number> postintegration_finder,
                                                                     typename datapipe<number>::dispatch_function dispatcher,
                                                                     unsigned int worker, bool no_log = false) override;
+
+        // ATTACH
+
+      public:
+
+        //! Attach an integration content group to a datapipe
+        std::unique_ptr< output_group_record<integration_payload> >
+          datapipe_attach_integration_content(datapipe<number>* pipe, integration_content_finder<number>& finder,
+                                              const std::string& name, const std::list<std::string>& tags) override;
+
+        //! Attach an postintegration content group to a datapipe
+        std::unique_ptr< output_group_record<postintegration_payload> >
+          datapipe_attach_postintegration_content(datapipe<number>* pipe, postintegration_content_finder<number>& finder,
+                                                  const std::string& name, const std::list<std::string>& tags) override;
+
+        //! Detach an output_group_record from a pipe
+        void datapipe_detach(datapipe<number>* pipe) override;
+
+        // PULL
+
+      public:
 
         //! Pull a set of time sample-points from a datapipe
         virtual void pull_time_config(datapipe<number>* pipe, const derived_data::SQL_time_config_query& tquery, std::vector<time_config>& sample) override;
@@ -341,19 +364,6 @@ namespace transport
 
         //! Attach a SQLite database to a datapipe
         void datapipe_attach_container(datapipe<number>* pipe, const boost::filesystem::path& ctr_path);
-
-        //! Attach an integration content group to a datapipe
-        std::unique_ptr< output_group_record<integration_payload> >
-	        datapipe_attach_integration_content(datapipe<number>* pipe, typename datapipe<number>::integration_content_finder& finder,
-	                                            const std::string& name, const std::list<std::string>& tags);
-
-        //! Attach an postintegration content group to a datapipe
-        std::unique_ptr< output_group_record<postintegration_payload> >
-	        datapipe_attach_postintegration_content(datapipe<number>* pipe, typename datapipe<number>::postintegration_content_finder& finder,
-	                                                const std::string& name, const std::list<std::string>& tags);
-
-        //! Detach an output_group_record from a pipe
-        void datapipe_detach(datapipe<number>* pipe);
 
 
 		    // INTERNAL UTILITY FUNCTIONS
@@ -1555,102 +1565,16 @@ namespace transport
 
     template <typename number>
     std::unique_ptr< datapipe<number> > data_manager_sqlite3<number>::create_datapipe(const boost::filesystem::path& logdir, const boost::filesystem::path& tempdir,
-                                                                                      typename datapipe<number>::integration_content_finder integration_finder,
-                                                                                      typename datapipe<number>::postintegration_content_finder postintegration_finder,
+                                                                                      integration_content_finder<number> integration_finder,
+                                                                                      postintegration_content_finder<number> postintegration_finder,
                                                                                       typename datapipe<number>::dispatch_function dispatcher,
                                                                                       unsigned int worker, bool no_log)
 			{
         // set up callback API
-        typename datapipe<number>::utility_callbacks utilities;
-
-        utilities.integration_attach = std::bind(&data_manager_sqlite3<number>::datapipe_attach_integration_content, this,
-                                                 std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
-
-        utilities.postintegration_attach = std::bind(&data_manager_sqlite3<number>::datapipe_attach_postintegration_content, this,
-                                                     std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
-
-        utilities.detach = std::bind(&data_manager_sqlite3<number>::datapipe_detach, this, std::placeholders::_1);
-
-        utilities.integration_finder     = integration_finder;
-        utilities.postintegration_finder = postintegration_finder;
-        utilities.dispatch               = dispatcher;
-
-        typename datapipe<number>::config_cache config;
-
-        config.time = std::bind(&data_manager_sqlite3<number>::pull_time_config, this,
-                                std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
-
-        config.twopf = std::bind(&data_manager_sqlite3<number>::pull_kconfig_twopf, this,
-                                 std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
-
-        config.threepf = std::bind(&data_manager_sqlite3<number>::pull_kconfig_threepf, this,
-                                   std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
-
-        typename datapipe<number>::timeslice_cache timeslice;
-
-        timeslice.background = std::bind(&data_manager_sqlite3<number>::pull_background_time_sample, this,
-                                         std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
-
-        timeslice.twopf = std::bind(&data_manager_sqlite3<number>::pull_twopf_time_sample, this,
-                                    std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
-                                    std::placeholders::_4, std::placeholders::_5, std::placeholders::_6);
-
-        timeslice.threepf = std::bind(&data_manager_sqlite3<number>::pull_threepf_time_sample, this,
-                                      std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
-                                      std::placeholders::_4, std::placeholders::_5, std::placeholders::_6);
-
-        timeslice.tensor_twopf = std::bind(&data_manager_sqlite3<number>::pull_tensor_twopf_time_sample, this,
-                                           std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
-                                           std::placeholders::_4, std::placeholders::_5);
-
-        timeslice.zeta_twopf = std::bind(&data_manager_sqlite3<number>::pull_zeta_twopf_time_sample, this,
-                                         std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
-
-        timeslice.zeta_threepf = std::bind(&data_manager_sqlite3<number>::pull_zeta_threepf_time_sample, this,
-                                           std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
-
-        timeslice.zeta_redbsp = std::bind(&data_manager_sqlite3<number>::pull_zeta_redbsp_time_sample, this,
-                                          std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
-
-        timeslice.fNL = std::bind(&data_manager_sqlite3<number>::pull_fNL_time_sample, this,
-                                  std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
-
-        timeslice.BT = std::bind(&data_manager_sqlite3<number>::pull_BT_time_sample, this,
-                                 std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
-
-        timeslice.TT = std::bind(&data_manager_sqlite3<number>::pull_TT_time_sample, this,
-                                 std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
-
-        typename datapipe<number>::kslice_cache kslice;
-
-        kslice.twopf = std::bind(&data_manager_sqlite3<number>::pull_twopf_kconfig_sample, this,
-                                 std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
-                                 std::placeholders::_4, std::placeholders::_5, std::placeholders::_6);
-
-        kslice.threepf = std::bind(&data_manager_sqlite3<number>::pull_threepf_kconfig_sample, this,
-                                   std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
-                                   std::placeholders::_4, std::placeholders::_5, std::placeholders::_6);
-
-        kslice.tensor_twopf = std::bind(&data_manager_sqlite3<number>::pull_tensor_twopf_kconfig_sample, this,
-                                        std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
-                                        std::placeholders::_4, std::placeholders::_5);
-
-        kslice.zeta_twopf = std::bind(&data_manager_sqlite3<number>::pull_zeta_twopf_kconfig_sample, this,
-                                      std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
-
-        kslice.zeta_threepf = std::bind(&data_manager_sqlite3<number>::pull_zeta_threepf_kconfig_sample, this,
-                                        std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
-
-        kslice.zeta_redbsp = std::bind(&data_manager_sqlite3<number>::pull_zeta_redbsp_kconfig_sample, this,
-                                       std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
-
-        typename datapipe<number>::stats_cache stats;
-
-        stats.k_statistics = std::bind(&data_manager_sqlite3<number>::pull_k_statistics_sample, this,
-                                       std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+        typename datapipe<number>::utility_callbacks utilities(integration_finder, postintegration_finder, dispatcher);
 
         // set up datapipe
-        return std::make_unique< datapipe<number> >(this->pipe_capacity, logdir, tempdir, worker, utilities, config, timeslice, kslice, stats, no_log);
+        return std::make_unique< datapipe<number> >(this->pipe_capacity, logdir, tempdir, worker, *this, utilities, no_log);
 			}
 
 
@@ -2036,7 +1960,7 @@ namespace transport
 
     template <typename number>
     std::unique_ptr< output_group_record<integration_payload> >
-    data_manager_sqlite3<number>::datapipe_attach_integration_content(datapipe<number>* pipe, typename datapipe<number>::integration_content_finder& finder,
+    data_manager_sqlite3<number>::datapipe_attach_integration_content(datapipe<number>* pipe, integration_content_finder<number>& finder,
                                                                       const std::string& name, const std::list<std::string>& tags)
 			{
 				assert(pipe != nullptr);
@@ -2058,7 +1982,7 @@ namespace transport
 
     template <typename number>
     std::unique_ptr< output_group_record<postintegration_payload> >
-    data_manager_sqlite3<number>::datapipe_attach_postintegration_content(datapipe<number>* pipe, typename datapipe<number>::postintegration_content_finder& finder,
+    data_manager_sqlite3<number>::datapipe_attach_postintegration_content(datapipe<number>* pipe, postintegration_content_finder<number>& finder,
                                                                           const std::string& name, const std::list<std::string>& tags)
 	    {
         assert(pipe != nullptr);

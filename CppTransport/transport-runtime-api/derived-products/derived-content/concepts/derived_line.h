@@ -27,7 +27,7 @@
 #include "transport-runtime-api/tasks/tasks_forward_declare.h"
 
 // get details of datapipe<number>
-#include "transport-runtime-api/data/datapipe/datapipe.h"
+#include "transport-runtime-api/data/datapipe/datapipe_decl.h"
 
 #include "transport-runtime-api/derived-products/line-collections/data_line.h"
 
