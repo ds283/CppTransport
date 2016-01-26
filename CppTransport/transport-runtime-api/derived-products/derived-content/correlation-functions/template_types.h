@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __template_types_H_
-#define __template_types_H_
+#ifndef CPPTRANSPORT_TEMPLATE_TYPES_H
+#define CPPTRANSPORT_TEMPLATE_TYPES_H
 
 #include "transport-runtime-api/localizations/messages_en.h"
 
@@ -34,4 +34,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__template_types_H_
+#endif //CPPTRANSPORT_TEMPLATE_TYPES_H

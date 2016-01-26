@@ -7,7 +7,7 @@
 #define CPPTRANSPORT_SLAVE_DISPATCH_IMPL_H
 
 
-#include "transport-runtime-api/manager/detail/slave_dispatch_decl.h"
+#include "transport-runtime-api/manager/detail/slave_datapipe_dispatch_decl.h"
 
 
 namespace transport
@@ -15,7 +15,7 @@ namespace transport
 
 
     template <typename number>
-    void slave_dispatch_function<number>::operator()(datapipe<number>* pipe, typename derived_data::derived_product<number>* product, const std::list<std::string>& used_groups)
+    void slave_datapipe_dispatch<number>::operator()(datapipe<number>* pipe, typename derived_data::derived_product<number>* product, const std::list<std::string>& used_groups)
       {
         this->controller.push_derived_content(pipe, product, used_groups);
       }

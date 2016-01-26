@@ -495,6 +495,8 @@ set(TRANSPORT_RUNTIME_API_CONCEPTS_RANGE_DETAIL_FILES
 
 set(TRANSPORT_RUNTIME_API_DATA_BATCHERS_FILES
   transport-runtime-api/data/batchers/batchers.h
+  transport-runtime-api/data/batchers/container_dispatch_function.h
+  transport-runtime-api/data/batchers/container_replace_function.h
   transport-runtime-api/data/batchers/generic_batcher.h
   transport-runtime-api/data/batchers/integration_batcher.h
   transport-runtime-api/data/batchers/integration_items.h
@@ -505,12 +507,12 @@ set(TRANSPORT_RUNTIME_API_DATA_BATCHERS_FILES
 
 set(TRANSPORT_RUNTIME_API_DATA_DATAPIPE_FILES
   transport-runtime-api/data/datapipe/datapipe_decl.h
+  transport-runtime-api/data/datapipe/datapipe_dispatch_function.h
   transport-runtime-api/data/datapipe/datapipe_forward_declare.h
   transport-runtime-api/data/datapipe/datapipe_impl.h
   transport-runtime-api/data/datapipe/linecache_specializations.h
   transport-runtime-api/data/datapipe/tags.h
   transport-runtime-api/data/datapipe/tags_forward_declare.h
-  transport-runtime-api/data/datapipe/dispatch_function.h
   )
 
 set(TRANSPORT_RUNTIME_API_DATA_DATAPIPE_TAGS_FILES
@@ -710,10 +712,12 @@ set(TRANSPORT_RUNTIME_API_MANAGER_DETAIL_FILES
   transport-runtime-api/manager/detail/master_controller_integration.h
   transport-runtime-api/manager/detail/master_controller_output.h
   transport-runtime-api/manager/detail/master_controller_postintegration.h
-  transport-runtime-api/manager/detail/slave_dispatch_decl.h
-  transport-runtime-api/manager/detail/slave_dispatch_impl.h
+  transport-runtime-api/manager/detail/slave_container_dispatch_decl.h
+  transport-runtime-api/manager/detail/slave_container_dispatch_impl.h
   transport-runtime-api/manager/detail/slave_controller_decl.h
   transport-runtime-api/manager/detail/slave_controller_impl.h
+  transport-runtime-api/manager/detail/slave_datapipe_dispatch_decl.h
+  transport-runtime-api/manager/detail/slave_datapipe_dispatch_impl.h
   )
 
 set(TRANSPORT_RUNTIME_API_MANAGER_FILES
@@ -792,6 +796,13 @@ set(TRANSPORT_RUNTIME_API_SCHEDULER_FILES
 
 set(TRANSPORT_RUNTIME_API_SERIALIZATION_FILES
   transport-runtime-api/serialization/serializable.h
+  )
+
+set(TRANSPORT_RUNTIME_API_SQLITE3_DETAIL_FILES
+  transport-runtime-api/sqlite3/detail/container_replace_decl.h
+  transport-runtime-api/sqlite3/detail/container_replace_impl.h
+  transport-runtime-api/sqlite3/detail/data_manager_sqlite3_decl.h
+  transport-runtime-api/sqlite3/detail/data_manager_sqlite3_impl.h
   )
 
 set(TRANSPORT_RUNTIME_API_SQLITE3_FILES
@@ -954,6 +965,7 @@ set(SOURCE_FILES
   ${TRANSPORT_RUNTIME_API_REPOSITORY_WRITERS_FILES}
   ${TRANSPORT_RUNTIME_API_SCHEDULER_FILES}
   ${TRANSPORT_RUNTIME_API_SERIALIZATION_FILES}
+  ${TRANSPORT_RUNTIME_API_SQLITE3_DETAIL_FILES}
   ${TRANSPORT_RUNTIME_API_SQLITE3_FILES}
   ${TRANSPORT_RUNTIME_API_SQLITE3_OPERATIONS_FILES}
   ${TRANSPORT_RUNTIME_API_TASKS_CONFIGURATION_DATABASE_FILES}

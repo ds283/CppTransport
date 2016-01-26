@@ -14,8 +14,9 @@ namespace transport
 
 
     // forward declare dispatch function classes
-    template <typename number> class slave_dispatch_function;
+    template <typename number> class slave_datapipe_dispatch;
     template <typename number> class slave_null_dispatch_function;
+    template <typename number> class slave_container_dispatch;
 
 
     template <typename number>
@@ -86,7 +87,7 @@ namespace transport
         void schedule_integration(TaskObject* tk, model<number>* m, BatchObject& batcher, unsigned int state_size);
 
         //! Push a temporary container to the master process
-        void push_temp_container(generic_batcher* batcher, unsigned int message, std::string log_message);
+        void push_temp_container(generic_batcher& batcher, unsigned int message, std::string log_message);
 
         //! Construct a work item filter for a twopf task
         work_item_filter<twopf_kconfig> work_item_filter_factory(twopf_task<number>* tk, const std::list<unsigned int>& items) const { return work_item_filter<twopf_kconfig>(items); }
@@ -134,8 +135,9 @@ namespace transport
         void push_derived_content(datapipe<number>* pipe, typename derived_data::derived_product<number>* product, const std::list<std::string>& used_groups);
 
 
-        friend class slave_dispatch_function<number>;
+        friend class slave_datapipe_dispatch<number>;
         friend class slave_null_dispatch_function<number>;
+        friend class slave_container_dispatch<number>;
 
 
         // INTERNAL DATA

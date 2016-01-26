@@ -3,8 +3,8 @@
 // Copyright (c) 2016 University of Sussex. All rights reserved.
 //
 
-#ifndef CPPTRANSPORT_DISPATCH_FUNCTION_H
-#define CPPTRANSPORT_DISPATCH_FUNCTION_H
+#ifndef CPPTRANSPORT_DATAPIPE_DISPATCH_FUNCTION_H
+#define CPPTRANSPORT_DATAPIPE_DISPATCH_FUNCTION_H
 
 
 #include <string>
@@ -20,7 +20,7 @@ namespace transport
 
     //! dispatch_function is a visitor-pattern type callback used to 'dispatch' derived content (ie. send to the client)
     template <typename number>
-    class generic_dispatch_function
+    class datapipe_dispatch_function
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -28,10 +28,10 @@ namespace transport
       public:
 
         //! constructor
-        generic_dispatch_function() = default;
+        datapipe_dispatch_function() = default;
 
         //! destructor is default
-        virtual ~generic_dispatch_function() = default;
+        virtual ~datapipe_dispatch_function() = default;
 
 
         // INTERFACE
@@ -46,4 +46,4 @@ namespace transport
   }   // namespace transport
 
 
-#endif //CPPTRANSPORT_DISPATCH_FUNCTION_H
+#endif //CPPTRANSPORT_DATAPIPE_DISPATCH_FUNCTION_H

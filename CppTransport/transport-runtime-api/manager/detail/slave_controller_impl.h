@@ -219,12 +219,11 @@ namespace transport
         if((tka = dynamic_cast<twopf_task<number>*>(tk)) != nullptr)
           {
             // construct a callback for the integrator to push new batches to the master
-            generic_batcher::container_dispatch_function dispatcher = std::bind(&slave_controller<number>::push_temp_container, this, std::placeholders::_1,
-                                                                                MPI::INTEGRATION_DATA_READY, std::string("INTEGRATION_DATA_READY"));
+            std::unique_ptr< slave_container_dispatch<number> > dispatcher = std::make_unique< slave_container_dispatch<number> >(*this, MPI::INTEGRATION_DATA_READY, std::string("INTEGRATION_DATA_READY"));
 
             // construct a batcher to hold the output of the integration
             twopf_batcher<number> batcher = this->data_mgr->create_temp_twopf_container(tka, payload.get_tempdir_path(), payload.get_logdir_path(),
-                                                                                        this->get_rank(), payload.get_workgroup_number(), m, dispatcher);
+                                                                                        this->get_rank(), payload.get_workgroup_number(), m, std::move(dispatcher));
 
             // write log header
             boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
@@ -236,12 +235,11 @@ namespace transport
         else if((tkb = dynamic_cast<threepf_task<number>*>(tk)) != nullptr)
           {
             // construct a callback for the integrator to push new batches to the master
-            generic_batcher::container_dispatch_function dispatcher = std::bind(&slave_controller<number>::push_temp_container, this, std::placeholders::_1,
-                                                                                MPI::INTEGRATION_DATA_READY, std::string("INTEGRATION_DATA_READY"));
+            std::unique_ptr< slave_container_dispatch<number> > dispatcher = std::make_unique< slave_container_dispatch<number> >(*this, MPI::INTEGRATION_DATA_READY, std::string("INTEGRATION_DATA_READY"));
 
             // construct a batcher to hold the output of the integration
             threepf_batcher<number> batcher = this->data_mgr->create_temp_threepf_container(tkb, payload.get_tempdir_path(), payload.get_logdir_path(),
-                                                                                            this->get_rank(), payload.get_workgroup_number(), m, dispatcher);
+                                                                                            this->get_rank(), payload.get_workgroup_number(), m, std::move(dispatcher));
 
             // write log header
             boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
@@ -440,7 +438,7 @@ namespace transport
         postintegration_content_finder<number> p_finder(*this->repo);
 
         // set up content-dispatch function; must survive throughout lifetime of datapipe
-        slave_dispatch_function<number> dispatcher(*this);
+        slave_datapipe_dispatch<number> dispatcher(*this);
 
         // acquire a datapipe which we can use to stream content from the databse
         std::unique_ptr< datapipe<number> > pipe = this->data_mgr->create_datapipe(payload.get_logdir_path(), payload.get_tempdir_path(), i_finder, p_finder, dispatcher, this->get_rank());
@@ -697,21 +695,19 @@ namespace transport
             model<number>* m = ptk->get_model();
 
             // construct a callback for the postintegrator to push new batches to the master
-            generic_batcher::container_dispatch_function dispatcher = std::bind(&slave_controller<number>::push_temp_container, this, std::placeholders::_1,
-                                                                                MPI::POSTINTEGRATION_DATA_READY, std::string("POSTINTEGRATION_DATA_READY"));
+            std::unique_ptr< slave_container_dispatch<number> > dispatcher = std::make_unique< slave_container_dispatch<number> >(*this, MPI::POSTINTEGRATION_DATA_READY, std::string("POSTINTEGRATION_DATA_READY"));
 
             // construct batcher to hold postintegration output
-            zeta_twopf_batcher<number> batcher = this->data_mgr->create_temp_zeta_twopf_container(payload.get_tempdir_path(), payload.get_logdir_path(), this->get_rank(), m, dispatcher);
+            zeta_twopf_batcher<number> batcher = this->data_mgr->create_temp_zeta_twopf_container(payload.get_tempdir_path(), payload.get_logdir_path(), this->get_rank(), m, std::move(dispatcher));
 
             // is this 2pf task paired?
             if(z2pf->is_paired())
               {
                 // also need a callback for the paired integrator
-                generic_batcher::container_dispatch_function i_dispatcher = std::bind(&slave_controller<number>::push_temp_container, this, std::placeholders::_1,
-                                                                                      MPI::INTEGRATION_DATA_READY, std::string("INTEGRATION_DATA_READY"));
+                std::unique_ptr< slave_container_dispatch<number> > i_dispatcher = std::make_unique< slave_container_dispatch<number> >(*this, MPI::INTEGRATION_DATA_READY, std::string("INTEGRATION_DATA_READY"));
 
                 // construct a batcher to hold integration output
-                twopf_batcher<number> i_batcher = this->data_mgr->create_temp_twopf_container(ptk, payload.get_paired_tempdir_path(), payload.get_paired_logdir_path(), this->get_rank(), payload.get_paired_workgroup_number(), m, i_dispatcher);
+                twopf_batcher<number> i_batcher = this->data_mgr->create_temp_twopf_container(ptk, payload.get_paired_tempdir_path(), payload.get_paired_logdir_path(), this->get_rank(), payload.get_paired_workgroup_number(), m, std::move(i_dispatcher));
 
                 // pair batchers
                 i_batcher.pair(&batcher);
@@ -749,20 +745,18 @@ namespace transport
             model<number>* m = ptk->get_model();
 
             // construct a callback for the integrator to push new batches to the master
-            generic_batcher::container_dispatch_function dispatcher = std::bind(&slave_controller<number>::push_temp_container, this, std::placeholders::_1,
-                                                                                MPI::POSTINTEGRATION_DATA_READY, std::string("POSTINTEGRATION_DATA_READY"));
+            std::unique_ptr< slave_container_dispatch<number> > p_dispatcher = std::make_unique< slave_container_dispatch<number> >(*this, MPI::POSTINTEGRATION_DATA_READY, std::string("POSTINTEGRATION_DATA_READY"));
 
             // construct batcher to hold output
-            zeta_threepf_batcher<number> batcher = this->data_mgr->create_temp_zeta_threepf_container(payload.get_tempdir_path(), payload.get_logdir_path(), this->get_rank(), m, dispatcher);
+            zeta_threepf_batcher<number> batcher = this->data_mgr->create_temp_zeta_threepf_container(payload.get_tempdir_path(), payload.get_logdir_path(), this->get_rank(), m, std::move(p_dispatcher));
 
             if(z3pf->is_paired())
               {
                 // also need a callback for the paired integrator
-                generic_batcher::container_dispatch_function i_dispatcher = std::bind(&slave_controller<number>::push_temp_container, this, std::placeholders::_1,
-                                                                                      MPI::INTEGRATION_DATA_READY, std::string("INTEGRATION_DATA_READY"));
+                std::unique_ptr< slave_container_dispatch<number> > i_dispatcher = std::make_unique< slave_container_dispatch<number> >(*this, MPI::INTEGRATION_DATA_READY, std::string("INTEGRATION_DATA_READY"));
 
                 // construct a batcher to hold integration output
-                threepf_batcher<number> i_batcher = this->data_mgr->create_temp_threepf_container(ptk, payload.get_paired_tempdir_path(), payload.get_paired_logdir_path(), this->get_rank(), payload.get_paired_workgroup_number(), m, i_dispatcher);
+                threepf_batcher<number> i_batcher = this->data_mgr->create_temp_threepf_container(ptk, payload.get_paired_tempdir_path(), payload.get_paired_logdir_path(), this->get_rank(), payload.get_paired_workgroup_number(), m, std::move(i_dispatcher));
 
                 // pair batchers
                 i_batcher.pair(&batcher);
@@ -811,11 +805,10 @@ namespace transport
             model<number>* m = pptk->get_model();
 
             // construct a callback for the integrator to push new batches to the master
-            generic_batcher::container_dispatch_function dispatcher = std::bind(&slave_controller<number>::push_temp_container, this, std::placeholders::_1,
-                                                                                MPI::POSTINTEGRATION_DATA_READY, std::string("POSTINTEGRATION_DATA_READY"));
+            std::unique_ptr< slave_container_dispatch<number> > dispatcher = std::make_unique< slave_container_dispatch<number> >(*this, MPI::POSTINTEGRATION_DATA_READY, std::string("POSTINTEGRATION_DATA_READY"));
 
             // construct batcher to hold output
-            fNL_batcher<number> batcher = this->data_mgr->create_temp_fNL_container(payload.get_tempdir_path(), payload.get_logdir_path(), this->get_rank(), m, dispatcher, zfNL->get_template());
+            fNL_batcher<number> batcher = this->data_mgr->create_temp_fNL_container(payload.get_tempdir_path(), payload.get_logdir_path(), this->get_rank(), m, std::move(dispatcher), zfNL->get_template());
 
             this->schedule_postintegration(zfNL, ptk, payload, batcher);
           }
@@ -957,14 +950,11 @@ namespace transport
 
 
     template <typename number>
-    void slave_controller<number>::push_temp_container(generic_batcher* batcher, unsigned int message, std::string log_message)
+    void slave_controller<number>::push_temp_container(generic_batcher& batcher, unsigned int message, std::string log_message)
       {
-        assert(batcher != nullptr);
-        if(batcher == nullptr) throw runtime_exception(exception_type::DATA_CONTAINER_ERROR, CPPTRANSPORT_DATAMGR_NULL_BATCHER);
+        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << "-- Sending " << log_message << " message for container " << batcher.get_container_path();
 
-        BOOST_LOG_SEV(batcher->get_log(), generic_batcher::log_severity_level::normal) << "-- Sending " << log_message << " message for container " << batcher->get_container_path();
-
-        MPI::data_ready_payload payload(batcher->get_container_path().string());
+        MPI::data_ready_payload payload(batcher.get_container_path().string());
 
         // advise master process that data is available in the named container
         this->world.isend(MPI::RANK_MASTER, message, payload);

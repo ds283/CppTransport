@@ -158,28 +158,28 @@ namespace transport
         virtual twopf_batcher<number> create_temp_twopf_container(twopf_task<number>* tk, const boost::filesystem::path& tempdir,
                                                                   const boost::filesystem::path& logdir,
                                                                   unsigned int worker, unsigned int group, model<number>* m,
-                                                                  generic_batcher::container_dispatch_function dispatcher) = 0;
+                                                                  std::unique_ptr<container_dispatch_function> dispatcher) = 0;
 
         //! Create a temporary container for threepf data. Returns a batcher which can be used for writing to the container.
         virtual threepf_batcher<number> create_temp_threepf_container(threepf_task<number>* tk, const boost::filesystem::path& tempdir,
                                                                       const boost::filesystem::path& logdir,
                                                                       unsigned int worker, unsigned int group, model<number>* m,
-                                                                      generic_batcher::container_dispatch_function dispatcher) = 0;
+                                                                      std::unique_ptr<container_dispatch_function> dispatcher) = 0;
 
         //! Create a temporary container for zeta twopf data. Returns a batcher which can be used for writing to the container.
         virtual zeta_twopf_batcher<number> create_temp_zeta_twopf_container(const boost::filesystem::path& tempdir, const boost::filesystem::path& logdir,
                                                                             unsigned int worker, model<number>* m,
-                                                                            generic_batcher::container_dispatch_function dispatcher) = 0;
+                                                                            std::unique_ptr<container_dispatch_function> dispatcher) = 0;
 
         //! Create a temporary container for zeta threepf data. Returns a batcher which can be used for writing to the container.
         virtual zeta_threepf_batcher<number> create_temp_zeta_threepf_container(const boost::filesystem::path& tempdir, const boost::filesystem::path& logdir,
                                                                                 unsigned int worker, model<number>* m,
-                                                                                generic_batcher::container_dispatch_function dispatcher) = 0;
+                                                                                std::unique_ptr<container_dispatch_function> dispatcher) = 0;
 
         //! Create a temporary container for fNL data. Returns a batcher which can be used for writing to the container.
         virtual fNL_batcher<number> create_temp_fNL_container(const boost::filesystem::path& tempdir, const boost::filesystem::path& logdir,
                                                               unsigned int worker, model<number>* m,
-                                                              generic_batcher::container_dispatch_function dispatcher, derived_data::template_type type) = 0;
+                                                              std::unique_ptr<container_dispatch_function> dispatcher, derived_data::template_type type) = 0;
 
 
         // INTEGRITY CHECK
@@ -281,7 +281,7 @@ namespace transport
                                                                     const boost::filesystem::path& tempdir,
                                                                     integration_content_finder<number>& integration_finder,
                                                                     postintegration_content_finder<number>& postintegration_finder,
-                                                                    generic_dispatch_function<number>& dispatcher,
+                                                                    datapipe_dispatch_function <number>& dispatcher,
                                                                     unsigned int worker, bool no_log = false) = 0;
 
         // ATTACH

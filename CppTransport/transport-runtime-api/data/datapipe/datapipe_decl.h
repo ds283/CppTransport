@@ -39,7 +39,7 @@
 #include "transport-runtime-api/data/batchers/postintegration_items.h"
 
 #include "transport-runtime-api/data/datapipe/linecache_specializations.h"
-#include "transport-runtime-api/data/datapipe/dispatch_function.h"
+#include "transport-runtime-api/data/datapipe/datapipe_dispatch_function.h"
 
 #include "boost/filesystem/operations.hpp"
 #include "boost/timer/timer.hpp"
@@ -90,7 +90,7 @@ namespace transport
 
             //! constructor
             utility_callbacks(integration_content_finder<number>& i, postintegration_content_finder<number>& p,
-                              generic_dispatch_function<number>& d)
+                              datapipe_dispatch_function<number>& d)
               : integration_finder(i),
                 postintegration_finder(p),
                 dispatch(d)
@@ -99,7 +99,7 @@ namespace transport
 
             integration_content_finder<number>&     integration_finder;
             postintegration_content_finder<number>& postintegration_finder;
-            generic_dispatch_function<number>&      dispatch;
+            datapipe_dispatch_function<number>&      dispatch;
 
 	        };
 

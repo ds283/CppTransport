@@ -7,7 +7,7 @@
 #define CPPTRANSPORT_SLAVE_DISPATCH_DECL_H
 
 
-#include "transport-runtime-api/data/datapipe/dispatch_function.h"
+#include "transport-runtime-api/data/datapipe/datapipe_dispatch_function.h"
 
 
 namespace transport
@@ -17,7 +17,7 @@ namespace transport
     template <typename number> class slave_controller;
 
     template <typename number>
-    class slave_dispatch_function: public generic_dispatch_function<number>
+    class slave_datapipe_dispatch : public datapipe_dispatch_function<number>
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -25,20 +25,21 @@ namespace transport
       public:
 
         //! constructor captures slave controller
-        slave_dispatch_function(slave_controller<number>& c)
-          : generic_dispatch_function<number>(),
+        slave_datapipe_dispatch(slave_controller<number>& c)
+          : datapipe_dispatch_function<number>(),
             controller(c)
           {
           }
 
         //! destructor is default
-        ~slave_dispatch_function() = default;
+        ~slave_datapipe_dispatch() = default;
 
 
         // INTERFACE
 
       public:
 
+        //! dispatch derived product
         void operator()(datapipe<number>* pipe, typename derived_data::derived_product<number>* product, const std::list<std::string>& tags) override;
 
 
@@ -53,7 +54,7 @@ namespace transport
 
 
     template <typename number>
-    class slave_null_dispatch_function: public generic_dispatch_function<number>
+    class slave_null_dispatch_function: public datapipe_dispatch_function<number>
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -62,7 +63,7 @@ namespace transport
 
         //! constructor captures slave controller
         slave_null_dispatch_function(slave_controller<number>& c)
-          : generic_dispatch_function<number>(),
+          : datapipe_dispatch_function<number>(),
             controller(c)
           {
           }

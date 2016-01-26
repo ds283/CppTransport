@@ -48,13 +48,15 @@
 #include "transport-runtime-api/manager/detail/slave_controller_decl.h"
 
 // DECLARE SLAVE DISPATCH FUNCTION
-#include "transport-runtime-api/manager/detail/slave_dispatch_decl.h"
+#include "transport-runtime-api/manager/detail/slave_datapipe_dispatch_decl.h"
+#include "transport-runtime-api/manager/detail/slave_container_dispatch_decl.h"
 
 // DEFINE SLAVE CONTROLLER
 #include "transport-runtime-api/manager/detail/slave_controller_impl.h"
 
 // DEFINE SLAVE DISPATCH FUNCTION
-#include "transport-runtime-api/manager/detail/slave_dispatch_impl.h"
+#include "transport-runtime-api/manager/detail/slave_datapipe_dispatch_impl.h"
+#include "transport-runtime-api/manager/detail/slave_container_dispatch_impl.h"
 
 
 #endif //CPPTRANSPORT_SLAVE_CONTROLLER_H
