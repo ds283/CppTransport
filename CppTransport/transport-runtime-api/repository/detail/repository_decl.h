@@ -83,13 +83,13 @@ namespace transport
       public:
 
         //! Read a package record from the database
-        virtual package_record<number>* query_package(const std::string& name) = 0;
+        virtual std::unique_ptr< package_record<number> > query_package(const std::string& name) = 0;
 
         //! Read a task record from the database
-        virtual task_record<number>* query_task(const std::string& name) = 0;
+        virtual std::unique_ptr< task_record<number> > query_task(const std::string& name) = 0;
 
         //! Read a derived product specification from the database
-        virtual derived_product_record<number>* query_derived_product(const std::string& name) = 0;
+        virtual std::unique_ptr< derived_product_record<number> > query_derived_product(const std::string& name) = 0;
 
         //! Enumerate the output groups available from a named integration task
         virtual std::list< std::unique_ptr< output_group_record<integration_payload> > > enumerate_integration_task_content(const std::string& name) = 0;
@@ -246,31 +246,31 @@ namespace transport
       protected:
 
         //! Create a new package record from an explicit object
-        virtual package_record<number>* package_record_factory(const initial_conditions<number>& ics) = 0;
+        virtual std::unique_ptr< package_record<number> > package_record_factory(const initial_conditions<number>& ics) = 0;
 
         //! Create a new integration task record from an explicit object
-        virtual integration_task_record<number>* integration_task_record_factory(const integration_task<number>& tk) = 0;
+        virtual std::unique_ptr< integration_task_record<number> > integration_task_record_factory(const integration_task<number>& tk) = 0;
 
         //! Create a new output task record from an explicit object
-        virtual output_task_record<number>* output_task_record_factory(const output_task<number>& tk) = 0;
+        virtual std::unique_ptr< output_task_record<number> > output_task_record_factory(const output_task<number>& tk) = 0;
 
         //! Create a postintegration task record from an explicit object
-        virtual postintegration_task_record<number>* postintegration_task_record_factory(const postintegration_task<number>& tk) = 0;
+        virtual std::unique_ptr< postintegration_task_record<number> > postintegration_task_record_factory(const postintegration_task<number>& tk) = 0;
 
         //! Create a new derived product record from explicit object
-        virtual derived_product_record<number>* derived_product_record_factory(const derived_data::derived_product<number>& prod) = 0;
+        virtual std::unique_ptr< derived_product_record<number> > derived_product_record_factory(const derived_data::derived_product<number>& prod) = 0;
 
         //! Create a new content group for an integration task
-        virtual output_group_record<integration_payload>* integration_content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
-                                                                                                   bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg) = 0;
+        virtual std::unique_ptr< output_group_record<integration_payload> > integration_content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
+                                                                                                                     bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg) = 0;
 
         //! Create a new content group for a postintegration task
-        virtual output_group_record<postintegration_payload>* postintegration_content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
-                                                                                                           bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg) = 0;
+        virtual std::unique_ptr< output_group_record<postintegration_payload> > postintegration_content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
+                                                                                                                             bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg) = 0;
 
         //! Create a new content group for an output task
-        virtual output_group_record<output_payload>* output_content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
-                                                                                         bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg) = 0;
+        virtual std::unique_ptr< output_group_record<output_payload> > output_content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
+                                                                                                           bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg) = 0;
 
 
         // PRIVATE DATA

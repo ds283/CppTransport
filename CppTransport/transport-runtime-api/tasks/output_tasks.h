@@ -220,7 +220,7 @@ namespace transport
 		            tags.push_back(u->asString());
               }
 
-            std::unique_ptr< derived_product_record<number> > product_record(pfinder(product_name));
+            std::unique_ptr< derived_product_record<number> > product_record = pfinder(product_name);
             assert(product_record.get() != nullptr);
             derived_data::derived_product<number>* dp = product_record->get_product();
 

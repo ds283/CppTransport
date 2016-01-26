@@ -37,7 +37,7 @@ namespace transport
 
             // extract initial conditions
             std::string pkg_name = reader[CPPTRANSPORT_NODE_PACKAGE_NAME].asString();
-            std::unique_ptr< package_record<number> > record(f(pkg_name));
+            std::unique_ptr< package_record<number> > record = f(pkg_name);
             initial_conditions<number> ics = record->get_ics();
 
             if(type == CPPTRANSPORT_NODE_TASK_TYPE_TWOPF)              return new twopf_task<number>(nm, reader, handle, ics);

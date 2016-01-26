@@ -334,7 +334,7 @@ namespace transport
 				    std::string parent_task_name = reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TASK_NAME].asString();
 
 				    // extract parent task
-            std::unique_ptr< task_record<number> > tk_rec(finder(parent_task_name));
+            std::unique_ptr< task_record<number> > tk_rec = finder(parent_task_name);
             assert(tk_rec.get() != nullptr);
 
 						parent_task = dynamic_cast< derivable_task<number>* >(tk_rec->get_abstract_task()->clone());

@@ -45,7 +45,7 @@ namespace transport
       public:
 
         //! find package
-        package_record<number>* operator()(const std::string& name);
+        std::unique_ptr< package_record<number> > operator()(const std::string& name);
 
 
         // INTERNAL DATA
@@ -81,7 +81,7 @@ namespace transport
       public:
 
         //! find package
-        task_record<number>* operator()(const std::string& name);
+        std::unique_ptr< task_record<number> > operator()(const std::string& name);
 
 
         // INTERNAL DATA
@@ -117,7 +117,7 @@ namespace transport
       public:
 
         //! find package
-        derived_product_record<number>* operator()(const std::string& name);
+        std::unique_ptr< derived_product_record<number> > operator()(const std::string& name);
 
 
         // INTERNAL DATA

@@ -106,7 +106,7 @@ namespace transport
 					{
 						assert(tk != nullptr);
 
-				    std::unique_ptr< task_record<number> > tk_rec(finder(tk->get_name()));
+				    std::unique_ptr< task_record<number> > tk_rec = finder(tk->get_name());
 				    assert(tk_rec.get() != nullptr);
 
 				    if(tk_rec->get_type() != task_record<number>::task_type::integration)

@@ -130,7 +130,7 @@ namespace transport
         // deserialize and reconstruct parent integration task
         std::string tk_name = reader[CPPTRANSPORT_NODE_POSTINTEGRATION_TASK_PARENT].asString();
 
-        std::unique_ptr< task_record<number> > record(finder(tk_name));
+        std::unique_ptr< task_record<number> > record = finder(tk_name);
         assert(record.get() != nullptr);
 
         ptk = dynamic_cast< derivable_task<number>* >(record->get_abstract_task()->clone());

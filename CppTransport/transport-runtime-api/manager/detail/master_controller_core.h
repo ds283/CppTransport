@@ -367,7 +367,7 @@ namespace transport
         try
           {
             // query a task record with the name we're looking for from the database
-            std::unique_ptr< task_record<number> > record(this->repo->query_task(job.get_name()));
+            std::unique_ptr< task_record<number> > record = this->repo->query_task(job.get_name());
 
             switch(record->get_type())
               {

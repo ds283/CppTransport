@@ -172,7 +172,7 @@ namespace transport
       {
         assert(rec != nullptr);
 
-        std::unique_ptr< task_record<number> > pre_prec(this->repo->query_task(ptk->get_name()));
+        std::unique_ptr< task_record<number> > pre_prec = this->repo->query_task(ptk->get_name());
         integration_task_record<number>* prec = dynamic_cast< integration_task_record<number>* >(pre_prec.get());
 
         assert(prec != nullptr);

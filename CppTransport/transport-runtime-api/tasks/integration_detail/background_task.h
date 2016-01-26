@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __background_task_H_
-#define __background_task_H_
+#ifndef CPPTRANSPORT_BACKGROUND_TASK_H
+#define CPPTRANSPORT_BACKGROUND_TASK_H
 
 
 #include "transport-runtime-api/tasks/integration_detail/common.h"
@@ -69,4 +69,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__background_task_H_
+#endif //CPPTRANSPORT_BACKGROUND_TASK_H

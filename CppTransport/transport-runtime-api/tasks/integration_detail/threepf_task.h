@@ -25,16 +25,17 @@
 #include "sqlite3.h"
 
 
-#define CPPTRANSPORT_NODE_THREEPF_INTEGRABLE            "integrable"
-
-#define CPPTRANSPORT_NODE_THREEPF_CUBIC_SPACING         "k-spacing"
-#define CPPTRANSPORT_NODE_THREEPF_FLS_KT_SPACING        "kt-spacing"
-#define CPPTRANSPORT_NODE_THREEPF_FLS_ALPHA_SPACING     "alpha-spacing"
-#define CPPTRANSPORT_NODE_THREEPF_FLS_BETA_SPACING      "beta-spacing"
 
 
 namespace transport
 	{
+
+    constexpr auto CPPTRANSPORT_NODE_THREEPF_INTEGRABLE = "integrable";
+
+    constexpr auto CPPTRANSPORT_NODE_THREEPF_CUBIC_SPACING = "k-spacing";
+    constexpr auto CPPTRANSPORT_NODE_THREEPF_FLS_KT_SPACING = "kt-spacing";
+    constexpr auto CPPTRANSPORT_NODE_THREEPF_FLS_ALPHA_SPACING = "alpha-spacing";
+    constexpr auto CPPTRANSPORT_NODE_THREEPF_FLS_BETA_SPACING = "beta-spacing";
 
 		enum class threepf_ics_exit_type { smallest_wavenumber_exit, kt_wavenumber_exit};
 

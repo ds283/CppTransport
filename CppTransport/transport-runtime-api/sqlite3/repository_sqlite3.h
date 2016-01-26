@@ -129,22 +129,22 @@ namespace transport
       public:
 
         //! Read a package record from the database
-        virtual package_record<number>* query_package(const std::string& name) override;
+        virtual std::unique_ptr< package_record<number> > query_package(const std::string& name) override;
 
         //! Read a task record from the database
-        virtual task_record<number>* query_task(const std::string& name) override;
+        virtual std::unique_ptr< task_record<number> > query_task(const std::string& name) override;
 
         //! Read a derived product specification from the database
-        virtual derived_product_record<number>* query_derived_product(const std::string& name) override;
+        virtual std::unique_ptr< derived_product_record<number> > query_derived_product(const std::string& name) override;
 
         //! Enumerate the output groups available from a named integration task
-        virtual std::list<std::unique_ptr < output_group_record<integration_payload> > > enumerate_integration_task_content(const std::string& name) override;
+        virtual std::list< std::unique_ptr < output_group_record<integration_payload> > > enumerate_integration_task_content(const std::string& name) override;
 
         //! Enumerate the output groups available for a named postintegration task
-        virtual std::list<std::unique_ptr < output_group_record<postintegration_payload> > > enumerate_postintegration_task_content(const std::string& name) override;
+        virtual std::list< std::unique_ptr < output_group_record<postintegration_payload> > > enumerate_postintegration_task_content(const std::string& name) override;
 
         //! Enumerate the output groups available from a named output task
-        virtual std::list<std::unique_ptr < output_group_record<output_payload> > > enumerate_output_task_content(const std::string& name) override;
+        virtual std::list< std::unique_ptr < output_group_record<output_payload> > > enumerate_output_task_content(const std::string& name) override;
 
 
         // JSON INTERFACE
@@ -174,68 +174,68 @@ namespace transport
       protected:
 
         //! Create a new package record from an explicit object
-        virtual package_record<number>* package_record_factory(const initial_conditions<number>& ics) override;
+        virtual std::unique_ptr< package_record<number> > package_record_factory(const initial_conditions<number>& ics) override;
 
         //! Create a new integration task record from an explicit object
-        virtual integration_task_record<number>* integration_task_record_factory(const integration_task<number>& tk) override;
+        virtual std::unique_ptr< integration_task_record<number> > integration_task_record_factory(const integration_task<number>& tk) override;
 
         //! Create a new output task record from an explicit object
-        virtual output_task_record<number>* output_task_record_factory(const output_task<number>& tk) override;
+        virtual std::unique_ptr< output_task_record<number> > output_task_record_factory(const output_task<number>& tk) override;
 
         //! Create a postintegration task record from an explicit object
-        virtual postintegration_task_record<number>* postintegration_task_record_factory(const postintegration_task<number>& tk) override;
+        virtual std::unique_ptr< postintegration_task_record<number> > postintegration_task_record_factory(const postintegration_task<number>& tk) override;
 
         //! Create a new derived product record from explicit object
-        virtual derived_product_record<number>* derived_product_record_factory(const derived_data::derived_product<number>& prod) override;
+        virtual std::unique_ptr< derived_product_record<number> > derived_product_record_factory(const derived_data::derived_product<number>& prod) override;
 
         //! Create a new content group for an integration task
-        virtual output_group_record<integration_payload>* integration_content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
-                                                                                                   bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg) override;
+        virtual std::unique_ptr< output_group_record<integration_payload> > integration_content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
+                                                                                                                     bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg) override;
 
         //! Create a new content group for a postintegration task
-        virtual output_group_record<postintegration_payload>* postintegration_content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
-                                                                                                           bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg) override;
+        virtual std::unique_ptr< output_group_record<postintegration_payload> > postintegration_content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
+                                                                                                                             bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg) override;
 
         //! Create a new content group for an output task
-        virtual output_group_record<output_payload>* output_content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
-                                                                                         bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg) override;
+        virtual std::unique_ptr< output_group_record<output_payload> > output_content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
+                                                                                                           bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg) override;
 
         //! Implementation -- Create a new content group record
         template <typename Payload>
-        output_group_record<Payload>* content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
-                                                                   bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg);
+        std::unique_ptr< output_group_record<Payload> > content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
+                                                                                     bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg);
 
         // 2. Factories from JSON representations: these are needed as part of the 'json_repository<>' interface
 
       protected:
 
         //! Create a package record from a JSON value
-        virtual package_record<number>* package_record_factory(Json::Value& reader) override;
+        virtual std::unique_ptr< package_record<number> > package_record_factory(Json::Value& reader) override;
 
         //! Create an integration task record from a JSON value
-        virtual integration_task_record<number>* integration_task_record_factory(Json::Value& reader) override;
+        virtual std::unique_ptr< integration_task_record<number> > integration_task_record_factory(Json::Value& reader) override;
 
         //! Create an output task record from a JSON value
-        virtual output_task_record<number>* output_task_record_factory(Json::Value& reader) override;
+        virtual std::unique_ptr< output_task_record<number> > output_task_record_factory(Json::Value& reader) override;
 
         //! Create a postintegration task record from a JSON value
-        virtual postintegration_task_record<number>* postintegration_task_record_factory(Json::Value& reader) override;
+        virtual std::unique_ptr< postintegration_task_record<number> > postintegration_task_record_factory(Json::Value& reader) override;
 
         //! create a new derived product record from a JSON value
-        virtual derived_product_record<number>* derived_product_record_factory(Json::Value& reader) override;
+        virtual std::unique_ptr< derived_product_record<number> > derived_product_record_factory(Json::Value& reader) override;
 
         //! Create a new content group for an integration task from a JSON value
-        virtual output_group_record<integration_payload>* integration_content_group_record_factory(Json::Value& reader) override;
+        virtual std::unique_ptr< output_group_record<integration_payload> > integration_content_group_record_factory(Json::Value& reader) override;
 
         //! Create a new content group for a postintegration task from a JSON value
-        virtual output_group_record<postintegration_payload>* postintegration_content_group_record_factory(Json::Value& reader) override;
+        virtual std::unique_ptr< output_group_record<postintegration_payload> > postintegration_content_group_record_factory(Json::Value& reader) override;
 
         //! Create a new content group for an output task from a JSON value
-        virtual output_group_record<output_payload>* output_content_group_record_factory(Json::Value& reader) override;
+        virtual std::unique_ptr< output_group_record<output_payload> > output_content_group_record_factory(Json::Value& reader) override;
 
         //! Implementation -- Create a new content group record
         template <typename Payload>
-        output_group_record<Payload>* content_group_record_factory(Json::Value& reader);
+        std::unique_ptr< output_group_record<Payload> > content_group_record_factory(Json::Value& reader);
 
 
         // UTILITY FUNCTIONS
@@ -703,160 +703,160 @@ namespace transport
 
 
     template <typename number>
-    package_record<number>* repository_sqlite3<number>::package_record_factory(const initial_conditions<number>& ics)
+    std::unique_ptr< package_record<number> > repository_sqlite3<number>::package_record_factory(const initial_conditions<number>& ics)
       {
         repository_record::handler_package pkg;
         count_function                     counter = std::bind(&sqlite3_operations::count_packages, std::placeholders::_1, std::placeholders::_2);
         store_function                     storer  = std::bind(&sqlite3_operations::store_package, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
         pkg.commit = std::bind(&repository_sqlite3<number>::commit_first, this, std::placeholders::_1, counter, storer, this->package_store.string(), CPPTRANSPORT_REPO_PACKAGE_EXISTS);
 
-        return new package_record<number>(ics, pkg);
+        return std::make_unique< package_record<number> >(ics, pkg);
       }
 
 
     template <typename number>
-    package_record<number>* repository_sqlite3<number>::package_record_factory(Json::Value& reader)
+    std::unique_ptr< package_record<number> > repository_sqlite3<number>::package_record_factory(Json::Value& reader)
       {
         repository_record::handler_package pkg;
         find_function                      finder = std::bind(&sqlite3_operations::find_package, std::placeholders::_1, std::placeholders::_2, CPPTRANSPORT_REPO_PACKAGE_MISSING);
         pkg.commit = std::bind(&repository_sqlite3<number>::commit_replace, this, std::placeholders::_1, finder);
 
-        return new package_record<number>(reader, this->m_finder, pkg);
+        return std::make_unique< package_record<number> >(reader, this->m_finder, pkg);
       }
 
 
     template <typename number>
-    integration_task_record<number>* repository_sqlite3<number>::integration_task_record_factory(const integration_task<number>& tk)
+    std::unique_ptr< integration_task_record<number> > repository_sqlite3<number>::integration_task_record_factory(const integration_task<number>& tk)
       {
         repository_record::handler_package pkg;
         count_function                     counter = std::bind(&sqlite3_operations::count_tasks, std::placeholders::_1, std::placeholders::_2);
         store_function                     storer  = std::bind(&sqlite3_operations::store_integration_task, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, tk.get_ics().get_name());
         pkg.commit = std::bind(&repository_sqlite3<number>::commit_integration_first, this, std::placeholders::_1, counter, storer, this->task_store.string(), CPPTRANSPORT_REPO_TASK_EXISTS);
 
-        return new integration_task_record<number>(tk, pkg);
+        return std::make_unique< integration_task_record<number> >(tk, pkg);
       }
 
 
     template <typename number>
-    integration_task_record<number>* repository_sqlite3<number>::integration_task_record_factory(Json::Value& reader)
+    std::unique_ptr< integration_task_record<number> > repository_sqlite3<number>::integration_task_record_factory(Json::Value& reader)
       {
         repository_record::handler_package pkg;
         find_function                      finder = std::bind(&sqlite3_operations::find_integration_task, std::placeholders::_1, std::placeholders::_2, CPPTRANSPORT_REPO_TASK_MISSING);
         pkg.commit = std::bind(&repository_sqlite3<number>::commit_integration_replace, this, std::placeholders::_1, finder);
 
-        return new integration_task_record<number>(reader, this->root_path, this->pkg_finder, pkg);
+        return std::make_unique< integration_task_record<number> >(reader, this->root_path, this->pkg_finder, pkg);
       }
 
 
     template <typename number>
-    output_task_record<number>* repository_sqlite3<number>::output_task_record_factory(const output_task<number>& tk)
+    std::unique_ptr< output_task_record<number> > repository_sqlite3<number>::output_task_record_factory(const output_task<number>& tk)
       {
         repository_record::handler_package pkg;
         count_function                     counter = std::bind(&sqlite3_operations::count_tasks, std::placeholders::_1, std::placeholders::_2);
         store_function                     storer  = std::bind(&sqlite3_operations::store_output_task, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
         pkg.commit = std::bind(&repository_sqlite3<number>::commit_first, this, std::placeholders::_1, counter, storer, this->task_store.string(), CPPTRANSPORT_REPO_TASK_EXISTS);
 
-        return new output_task_record<number>(tk, pkg);
+        return std::make_unique< output_task_record<number> >(tk, pkg);
       }
 
 
     template <typename number>
-    output_task_record<number>* repository_sqlite3<number>::output_task_record_factory(Json::Value& reader)
+    std::unique_ptr< output_task_record<number> > repository_sqlite3<number>::output_task_record_factory(Json::Value& reader)
       {
         repository_record::handler_package pkg;
         find_function                      finder = std::bind(&sqlite3_operations::find_output_task, std::placeholders::_1, std::placeholders::_2, CPPTRANSPORT_REPO_TASK_MISSING);
         pkg.commit = std::bind(&repository_sqlite3<number>::commit_replace, this, std::placeholders::_1, finder);
 
-        return new output_task_record<number>(reader, this->dprod_finder, pkg);
+        return std::make_unique< output_task_record<number> >(reader, this->dprod_finder, pkg);
       }
 
 
     template <typename number>
-    postintegration_task_record<number>* repository_sqlite3<number>::postintegration_task_record_factory(const postintegration_task<number>& tk)
+    std::unique_ptr< postintegration_task_record<number> > repository_sqlite3<number>::postintegration_task_record_factory(const postintegration_task<number>& tk)
       {
         repository_record::handler_package pkg;
         count_function                     counter = std::bind(&sqlite3_operations::count_tasks, std::placeholders::_1, std::placeholders::_2);
         store_function                     storer  = std::bind(&sqlite3_operations::store_postintegration_task, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, tk.get_parent_task()->get_name());
         pkg.commit = std::bind(&repository_sqlite3<number>::commit_first, this, std::placeholders::_1, counter, storer, this->task_store.string(), CPPTRANSPORT_REPO_TASK_EXISTS);
 
-        return new postintegration_task_record<number>(tk, pkg);
+        return std::make_unique< postintegration_task_record<number> >(tk, pkg);
       }
 
 
     template <typename number>
-    postintegration_task_record<number>* repository_sqlite3<number>::postintegration_task_record_factory(Json::Value& reader)
+    std::unique_ptr< postintegration_task_record<number> > repository_sqlite3<number>::postintegration_task_record_factory(Json::Value& reader)
       {
         repository_record::handler_package pkg;
         find_function                      finder = std::bind(&sqlite3_operations::find_postintegration_task, std::placeholders::_1, std::placeholders::_2, CPPTRANSPORT_REPO_TASK_MISSING);
         pkg.commit = std::bind(&repository_sqlite3<number>::commit_replace, this, std::placeholders::_1, finder);
 
-        return new postintegration_task_record<number>(reader, this->tk_finder, pkg);
+        return std::make_unique< postintegration_task_record<number> >(reader, this->tk_finder, pkg);
       }
 
 
     template <typename number>
-    derived_product_record<number>* repository_sqlite3<number>::derived_product_record_factory(const derived_data::derived_product<number>& prod)
+    std::unique_ptr< derived_product_record<number> > repository_sqlite3<number>::derived_product_record_factory(const derived_data::derived_product<number>& prod)
       {
         repository_record::handler_package pkg;
         count_function                     counter = std::bind(&sqlite3_operations::count_products, std::placeholders::_1, std::placeholders::_2);
         store_function                     storer  = std::bind(&sqlite3_operations::store_product, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
         pkg.commit = std::bind(&repository_sqlite3<number>::commit_first, this, std::placeholders::_1, counter, storer, this->product_store.string(), CPPTRANSPORT_REPO_PRODUCT_EXISTS);
 
-        return new derived_product_record<number>(prod, pkg);
+        return std::make_unique< derived_product_record<number> >(prod, pkg);
       }
 
 
     template <typename number>
-    derived_product_record<number>* repository_sqlite3<number>::derived_product_record_factory(Json::Value& reader)
+    std::unique_ptr< derived_product_record<number> > repository_sqlite3<number>::derived_product_record_factory(Json::Value& reader)
       {
         repository_record::handler_package pkg;
         find_function                      finder = std::bind(&sqlite3_operations::find_product, std::placeholders::_1, std::placeholders::_2, CPPTRANSPORT_REPO_PRODUCT_MISSING);
         pkg.commit = std::bind(&repository_sqlite3<number>::commit_replace, this, std::placeholders::_1, finder);
 
-        return new derived_product_record<number>(reader, this->tk_finder, pkg);
+        return std::make_unique< derived_product_record<number> >(reader, this->tk_finder, pkg);
       }
 
 
     template <typename number>
-    output_group_record<integration_payload>* repository_sqlite3<number>::integration_content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
-                                                                                                                   bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg)
+    std::unique_ptr< output_group_record<integration_payload> > repository_sqlite3<number>::integration_content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
+                                                                                                                                     bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg)
       {
         return this->content_group_record_factory<integration_payload>(tn, path, lock, nt, tg);
       }
 
 
     template <typename number>
-    output_group_record<integration_payload>* repository_sqlite3<number>::integration_content_group_record_factory(Json::Value& reader)
+    std::unique_ptr< output_group_record<integration_payload> > repository_sqlite3<number>::integration_content_group_record_factory(Json::Value& reader)
       {
         return this->content_group_record_factory<integration_payload>(reader);
       }
 
 
     template <typename number>
-    output_group_record<postintegration_payload>* repository_sqlite3<number>::postintegration_content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
-                                                                                                                           bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg)
+    std::unique_ptr< output_group_record<postintegration_payload> > repository_sqlite3<number>::postintegration_content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
+                                                                                                                                             bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg)
       {
         return this->content_group_record_factory<postintegration_payload>(tn, path, lock, nt, tg);
       }
 
 
     template <typename number>
-    output_group_record<postintegration_payload>* repository_sqlite3<number>::postintegration_content_group_record_factory(Json::Value& reader)
+    std::unique_ptr< output_group_record<postintegration_payload> > repository_sqlite3<number>::postintegration_content_group_record_factory(Json::Value& reader)
       {
         return this->content_group_record_factory<postintegration_payload>(reader);
       }
 
 
     template <typename number>
-    output_group_record<output_payload>* repository_sqlite3<number>::output_content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
-                                                                                                         bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg)
+    std::unique_ptr< output_group_record<output_payload> > repository_sqlite3<number>::output_content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
+                                                                                                                           bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg)
       {
         return this->content_group_record_factory<output_payload>(tn, path, lock, nt, tg);
       }
 
 
     template <typename number>
-    output_group_record<output_payload>* repository_sqlite3<number>::output_content_group_record_factory(Json::Value& reader)
+    std::unique_ptr< output_group_record<output_payload> > repository_sqlite3<number>::output_content_group_record_factory(Json::Value& reader)
       {
         return this->content_group_record_factory<output_payload>(reader);
       }
@@ -864,8 +864,8 @@ namespace transport
 
     template <typename number>
     template <typename Payload>
-    output_group_record<Payload>* repository_sqlite3<number>::content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
-                                                                                           bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg)
+    std::unique_ptr< output_group_record<Payload> > repository_sqlite3<number>::content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
+                                                                                                             bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg)
       {
         repository_record::handler_package pkg;
         count_function                     counter = std::bind(&sqlite3_operations::count_groups, std::placeholders::_1, std::placeholders::_2);
@@ -876,19 +876,19 @@ namespace transport
         paths.root   = this->get_root_path();
         paths.output = path;
 
-        return new output_group_record<Payload>(tn, paths, lock, nt, tg, pkg);
+        return std::make_unique< output_group_record<Payload> >(tn, paths, lock, nt, tg, pkg);
       }
 
 
     template <typename number>
     template <typename Payload>
-    output_group_record<Payload>* repository_sqlite3<number>::content_group_record_factory(Json::Value& reader)
+    std::unique_ptr< output_group_record<Payload> > repository_sqlite3<number>::content_group_record_factory(Json::Value& reader)
       {
         repository_record::handler_package pkg;
         find_function                      finder = std::bind(&sqlite3_operations::find_group<Payload>, std::placeholders::_1, std::placeholders::_2, CPPTRANSPORT_REPO_OUTPUT_MISSING);
         pkg.commit = std::bind(&repository_sqlite3<number>::commit_replace, this, std::placeholders::_1, finder);
 
-        return new output_group_record<Payload>(reader, this->root_path, pkg);
+        return std::make_unique< output_group_record<Payload> >(reader, this->root_path, pkg);
       }
 
 
@@ -902,7 +902,7 @@ namespace transport
         // check for a package with a duplicate name
         this->check_package_duplicate(ics.get_name());
 
-        std::unique_ptr <package_record<number>> record(package_record_factory(ics));
+        std::unique_ptr< package_record<number> > record = package_record_factory(ics);
         record->commit();
       }
 
@@ -914,7 +914,7 @@ namespace transport
         // check for a task with a duplicate name
         this->check_task_duplicate(tk.get_name());
 
-        std::unique_ptr <integration_task_record<number>> record(integration_task_record_factory(tk));
+        std::unique_ptr< integration_task_record<number> > record = integration_task_record_factory(tk);
         record->commit();
 
         // check whether the initial conditions package for this task is already present; if not, insert it
@@ -937,7 +937,7 @@ namespace transport
         // check for a task with a duplicate name
         this->check_task_duplicate(tk.get_name());
 
-        std::unique_ptr <output_task_record<number>> record(output_task_record_factory(tk));
+        std::unique_ptr< output_task_record<number> > record = output_task_record_factory(tk);
         record->commit();
 
         // check whether derived products on which this task depends have already been committed to the database
@@ -966,7 +966,7 @@ namespace transport
         // check for a task with a duplicate name
         this->check_task_duplicate(tk.get_name());
 
-        std::unique_ptr <postintegration_task_record<number>> record(postintegration_task_record_factory(tk));
+        std::unique_ptr< postintegration_task_record<number> > record(postintegration_task_record_factory(tk));
         record->commit();
 
         // check whether parent task is already committed to the database
@@ -1005,7 +1005,7 @@ namespace transport
         // check for a derived product with a duplicate name
         this->check_product_duplicate(d.get_name());
 
-        std::unique_ptr <derived_product_record<number>> record(derived_product_record_factory(d));
+        std::unique_ptr< derived_product_record<number> > record = derived_product_record_factory(d);
         record->commit();
 
         // check whether all tasks on which this derived product depends are already in the database
@@ -1047,7 +1047,7 @@ namespace transport
 
     //! Read a package record from the database
     template <typename number>
-    package_record<number>* repository_sqlite3<number>::query_package(const std::string& name)
+    std::unique_ptr< package_record<number> > repository_sqlite3<number>::query_package(const std::string& name)
       {
         boost::filesystem::path filename = sqlite3_operations::find_package(this->db, name, CPPTRANSPORT_REPO_PACKAGE_MISSING);
         Json::Value             root     = this->deserialize_JSON_document(filename);
@@ -1057,7 +1057,7 @@ namespace transport
 
     //! Read a task record from the database
     template <typename number>
-    task_record<number>* repository_sqlite3<number>::query_task(const std::string& name)
+    std::unique_ptr< task_record<number> > repository_sqlite3<number>::query_task(const std::string& name)
       {
         if(sqlite3_operations::count_integration_tasks(this->db, name) > 0)
           {
@@ -1084,7 +1084,7 @@ namespace transport
 
     // Read a derived product from the database
     template <typename number>
-    derived_product_record<number>* repository_sqlite3<number>::query_derived_product(const std::string& name)
+    std::unique_ptr< derived_product_record<number> > repository_sqlite3<number>::query_derived_product(const std::string& name)
       {
         boost::filesystem::path filename = sqlite3_operations::find_product(this->db, name, CPPTRANSPORT_REPO_PRODUCT_MISSING);
         Json::Value             root     = this->deserialize_JSON_document(filename);
@@ -1097,7 +1097,7 @@ namespace transport
     std::list< std::unique_ptr < output_group_record<integration_payload> > >
     repository_sqlite3<number>::enumerate_integration_task_content(const std::string& name)
       {
-        std::unique_ptr< task_record<number> > record(this->query_task(name));
+        std::unique_ptr< task_record<number> > record = this->query_task(name);
 
         if(record->get_type() != task_record<number>::task_type::integration)
           {
@@ -1120,7 +1120,7 @@ namespace transport
     std::list< std::unique_ptr < output_group_record<postintegration_payload> > >
     repository_sqlite3<number>::enumerate_postintegration_task_content(const std::string& name)
       {
-        std::unique_ptr< task_record<number>> record(this->query_task(name));
+        std::unique_ptr< task_record<number>> record = this->query_task(name);
 
         if(record->get_type() != task_record<number>::task_type::postintegration)
           {
@@ -1143,7 +1143,7 @@ namespace transport
     std::list< std::unique_ptr < output_group_record<output_payload> > >
     repository_sqlite3<number>::enumerate_output_task_content(const std::string& name)
       {
-        std::unique_ptr< task_record<number>> record(this->query_task(name));
+        std::unique_ptr< task_record<number>> record = this->query_task(name);
 
         if(record->get_type() != task_record<number>::task_type::output)
           {
@@ -1365,7 +1365,7 @@ void repository_sqlite3<number>::recover_integrations(data_manager<number>& data
     for(const sqlite3_operations::inflight_integration& inflight : list)
       {
         // get task record
-        std::unique_ptr< task_record<number> > pre_rec(this->query_task(inflight.task_name));
+        std::unique_ptr< task_record<number> > pre_rec = this->query_task(inflight.task_name);
         integration_task_record<number>* rec = dynamic_cast< integration_task_record<number>* >(pre_rec.get());
 
         assert(rec != nullptr);
@@ -1415,7 +1415,7 @@ void repository_sqlite3<number>::recover_postintegrations(data_manager<number>& 
     for(const sqlite3_operations::inflight_postintegration& inflight : p_list)
       {
         // get task record
-        std::unique_ptr< task_record<number> > pre_rec(this->query_task(inflight.task_name));
+        std::unique_ptr< task_record<number> > pre_rec = this->query_task(inflight.task_name);
         postintegration_task_record<number>* rec = dynamic_cast< postintegration_task_record<number>* >(pre_rec.get());
 
         assert(rec != nullptr);
@@ -1482,7 +1482,7 @@ void repository_sqlite3<number>::recover_paired_postintegration(const sqlite3_op
     else
       {
         // get task record
-        std::unique_ptr< task_record<number> > pre_rec(this->query_task(t->task_name));
+        std::unique_ptr< task_record<number> > pre_rec = this->query_task(t->task_name);
         integration_task_record<number>* i_rec = dynamic_cast< integration_task_record<number>* >(pre_rec.get());
 
         assert(i_rec != nullptr);

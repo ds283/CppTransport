@@ -71,28 +71,28 @@ namespace transport
       protected:
 
         //! Create a package record from a JSON value
-        virtual package_record<number>* package_record_factory(Json::Value& reader) = 0;
+        virtual std::unique_ptr< package_record<number> > package_record_factory(Json::Value& reader) = 0;
 
         //! Create an integration task record from a JSON value
-        virtual integration_task_record<number>* integration_task_record_factory(Json::Value& reader) = 0;
+        virtual std::unique_ptr< integration_task_record<number> > integration_task_record_factory(Json::Value& reader) = 0;
 
         //! Create an output task record from a JSON value
-        virtual output_task_record<number>* output_task_record_factory(Json::Value& reader) = 0;
+        virtual std::unique_ptr< output_task_record<number> > output_task_record_factory(Json::Value& reader) = 0;
 
         //! Create a postintegration task record from a JSON value
-        virtual postintegration_task_record<number>* postintegration_task_record_factory(Json::Value& reader) = 0;
+        virtual std::unique_ptr< postintegration_task_record<number> > postintegration_task_record_factory(Json::Value& reader) = 0;
 
         //! create a new derived product record from a JSON value
-        virtual derived_product_record<number>* derived_product_record_factory(Json::Value& reader) = 0;
+        virtual std::unique_ptr< derived_product_record<number> > derived_product_record_factory(Json::Value& reader) = 0;
 
         //! Create a new content group for an integration task from a JSON value
-        virtual output_group_record<integration_payload>* integration_content_group_record_factory(Json::Value& reader) = 0;
+        virtual std::unique_ptr< output_group_record<integration_payload> > integration_content_group_record_factory(Json::Value& reader) = 0;
 
         //! Create a new content group for a postintegration task from a JSON value
-        virtual output_group_record<postintegration_payload>* postintegration_content_group_record_factory(Json::Value& reader) = 0;
+        virtual std::unique_ptr< output_group_record<postintegration_payload> > postintegration_content_group_record_factory(Json::Value& reader) = 0;
 
         //! Create a new content group for an output task from a JSON value
-        virtual output_group_record<output_payload>* output_content_group_record_factory(Json::Value& reader) = 0;
+        virtual std::unique_ptr< output_group_record<output_payload> > output_content_group_record_factory(Json::Value& reader) = 0;
 
 
         // SERVICES FOR JSON-BASED REPOSITORIES

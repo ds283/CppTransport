@@ -15,21 +15,21 @@ namespace transport
 
 
     template <typename number>
-    package_record<number>* package_finder<number>::operator()(const std::string& name)
+    std::unique_ptr< package_record<number> > package_finder<number>::operator()(const std::string& name)
       {
         return this->repo.query_package(name);
       }
 
 
     template <typename number>
-    task_record<number>* task_finder<number>::operator()(const std::string& name)
+    std::unique_ptr< task_record<number> > task_finder<number>::operator()(const std::string& name)
       {
         return this->repo.query_task(name);
       }
 
 
     template <typename number>
-    derived_product_record<number>* derived_product_finder<number>::operator()(const std::string& name)
+    std::unique_ptr< derived_product_record<number> > derived_product_finder<number>::operator()(const std::string& name)
       {
         return this->repo.query_derived_product(name);
       }

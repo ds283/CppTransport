@@ -24,14 +24,14 @@
 #include "boost/math/tools/roots.hpp"
 #include "boost/log/utility/formatting_ostream.hpp"
 
-#define CPPTRANSPORT_NODE_TWOPF_LIST_KSTAR         "kstar"
-#define CPPTRANSPORT_NODE_TWOPF_LIST_NORMALIZATION "normalization"
-#define CPPTRANSPORT_NODE_TWOPF_LIST_COLLECT_ICS   "collect-ics"
 
 
 namespace transport
 	{
 
+    constexpr auto CPPTRANSPORT_NODE_TWOPF_LIST_KSTAR = "kstar";
+    constexpr auto CPPTRANSPORT_NODE_TWOPF_LIST_NORMALIZATION = "normalization";
+    constexpr auto CPPTRANSPORT_NODE_TWOPF_LIST_COLLECT_ICS = "collect-ics";
 
     namespace task_impl
       {
