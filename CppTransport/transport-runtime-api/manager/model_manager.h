@@ -49,16 +49,16 @@ namespace transport
 
             model_instance(std::shared_ptr< model<number> > m, const std::string& i, unsigned int v)
             : m_ptr(m),
-            uid(i),
-            tver(v)
+              uid(i),
+              tver(v)
               {
                 assert(m != nullptr);
               }
 
-            model_instance(const std::string& i)
-              : m_ptr(nullptr), uid(i)
-              {
-              }
+
+            // INTERFACE
+
+          public:
 
             //! Get pointer to stored model
             model<number>* get_model() const { return(this->m_ptr.get()); }
@@ -98,6 +98,45 @@ namespace transport
             // with the same uid
             return(lhs.uid == rhs.uid);
           }
+
+
+        template <typename number>
+        class ModelInstanceComparator
+          {
+
+            // CONSTRUCTOR, DESTRUCTOR
+
+          public:
+
+            //! constructor captures UID for comparison
+            ModelInstanceComparator(const std::string& u)
+              : uid(u)
+              {
+              }
+
+            //! destructor is default
+            ~ModelInstanceComparator() = default;
+
+
+            // INTERFACE
+
+          public:
+
+            bool operator()(const model_instance<number>& m)
+              {
+                return(m.get_uid() == this->uid);
+              }
+
+
+            // INTERNAL DATA
+
+          private:
+
+            //! UID for comparison
+            const std::string& uid;
+
+          };
+
 
       }   // namespace model_manager_impl
 
@@ -148,7 +187,7 @@ namespace transport
       public:
 
         //! Search for a model by uid
-        model<number>* operator()(const std::string& i) const;
+        model<number>* operator()(const std::string& uid) const;
 
 
         // INTERFACE -- WRITE DETAILS TO STREAM
@@ -171,47 +210,14 @@ namespace transport
 
 
     template <typename number>
-    class model_finder
+    model<number>* model_manager<number>::operator()(const std::string& uid) const
       {
+        typename model_db::const_iterator t = std::find_if(this->models.begin(), this->models.end(), ModelInstanceComparator<number>(uid));
 
-        // CONSTRUCTOR, DESTRUCTOR
-
-      public:
-
-        //! constructor
-        model_finder(model_manager<number>& m)
-          : mgr(m)
-          {
-          }
-
-        //! destructor is default
-        ~model_finder() = default;
-
-
-        // OPERATOR() TO FIND MODEL
-        model<number>* operator()(const std::string& name) const;
-
-
-        // INTERNAL DATA
-
-      private:
-
-        //! reference to instance manager object
-        model_manager<number>& mgr;
-
-      };
-
-
-    template <typename number>
-    model<number>* model_manager<number>::operator()(const std::string& name) const
-      {
-        model_instance<number> instance(name);
-
-        typename model_db::const_iterator t;
-        if((t = std::find(this->models.begin(), this->models.end(), instance)) == this->models.end())
+        if(t == this->models.end())
           {
             std::ostringstream msg;
-            msg << CPPTRANSPORT_INSTANCES_MISSING << " '" << name << "'";
+            msg << CPPTRANSPORT_INSTANCES_MISSING << " '" << uid << "'";
             throw runtime_exception(exception_type::MISSING_MODEL_INSTANCE, msg.str());
           }
         else
@@ -233,7 +239,7 @@ namespace transport
 
 
     template <typename number>
-    void model_manager<number>::register_model(std::shared_ptr<model < number> > m)
+    void model_manager<number>::register_model(std::shared_ptr< model<number> > m)
       {
         assert(m);
 
@@ -248,11 +254,10 @@ namespace transport
             throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
           }
 
-        model_instance<number> instance(m, uid, version);
-
-        if(std::find(this->models.begin(), this->models.end(), instance) == this->models.end())
+        typename model_db::const_iterator t = std::find_if(this->models.begin(), this->models.end(), ModelInstanceComparator<number>(uid));
+        if(t == this->models.end())
           {
-            this->models.push_back(instance);
+            this->models.emplace_back(m, uid, version);
           }
         else
           {

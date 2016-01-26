@@ -299,7 +299,7 @@ namespace transport
         // FINDER SERVICES
 
         //! Cached model-finder supplied by instance manager
-        model_manager <number> m_finder;
+        model_manager<number>& m_finder;
 
         //! Cached package-finder instance
         package_finder<number> pkg_finder;
