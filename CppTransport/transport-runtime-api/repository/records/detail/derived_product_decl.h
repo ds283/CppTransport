@@ -30,7 +30,8 @@ namespace transport
         //! deserialization constructor
         derived_product_record(Json::Value& reader, task_finder<number>& f, repository_record::handler_package& pkg);
 
-        virtual ~derived_product_record();
+        //! destructor is default
+        virtual ~derived_product_record() = default;
 
 
         // GET CONTENTS
@@ -38,7 +39,7 @@ namespace transport
       public:
 
         //! Get product
-        derived_data::derived_product<number>* get_product() const { return(this->product); }
+        derived_data::derived_product<number>* get_product() const { return(this->product.get()); }
 
 
         // SERIALIZATION -- implements a 'serializable' interface
@@ -62,7 +63,7 @@ namespace transport
       protected:
 
         //! Derived product associated with this record
-        derived_data::derived_product<number>* product;
+        std::unique_ptr< derived_data::derived_product<number> > product;
 
       };
 

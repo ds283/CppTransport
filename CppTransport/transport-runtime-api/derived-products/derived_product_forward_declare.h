@@ -27,8 +27,10 @@ namespace transport
 #ifndef CPPTRANSPORT_DERIVED_PRODUCT_HELPER_H
 		    namespace derived_product_helper
 			    {
+
 		        template <typename number>
-		        derived_data::derived_product<number>* deserialize(const std::string& name, Json::Value& reader, task_finder<number>& finder);
+		        std::unique_ptr< derived_data::derived_product<number> > deserialize(const std::string& name, Json::Value& reader, task_finder<number>& finder);
+
 			    }
 #endif
 

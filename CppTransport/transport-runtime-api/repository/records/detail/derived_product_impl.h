@@ -18,7 +18,7 @@ namespace transport
       : repository_record(prod.get_name(), pkg),
         product(prod.clone())
       {
-        assert(product != nullptr);
+        assert(product);
       }
 
 
@@ -27,7 +27,7 @@ namespace transport
       : repository_record(obj),
         product(obj.product->clone())
       {
-        assert(product != nullptr);
+        assert(product);
       }
 
 
@@ -39,13 +39,6 @@ namespace transport
         assert(product != nullptr);
 
         if(product == nullptr) throw runtime_exception(exception_type::SERIALIZATION_ERROR, CPPTRANSPORT_REPO_PRODUCT_DESERIALIZE_FAIL);
-      }
-
-
-    template <typename number>
-    derived_product_record<number>::~derived_product_record()
-      {
-        delete this->product;
       }
 
 

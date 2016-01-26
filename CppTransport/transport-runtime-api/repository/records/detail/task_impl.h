@@ -44,9 +44,9 @@ namespace transport
       {
         Json::Value group_list(Json::arrayValue);
 
-        for(std::list<std::string>::const_iterator t = this->content_groups.begin(); t != this->content_groups.end(); ++t)
+        for(const std::string& string : this->content_groups)
           {
-            Json::Value group_element = *t;
+            Json::Value group_element = string;
             group_list.append(group_element);
           }
         writer[CPPTRANSPORT_NODE_TASK_OUTPUT_GROUPS] = group_list;
@@ -104,13 +104,6 @@ namespace transport
 
 
     template <typename number>
-    integration_task_record<number>::~integration_task_record()
-      {
-        delete this->tk;
-      }
-
-
-    template <typename number>
     void integration_task_record<number>::serialize(Json::Value& writer) const
       {
         writer[CPPTRANSPORT_NODE_RECORD_TYPE] = std::string(CPPTRANSPORT_NODE_RECORD_INTEGRATION_TASK);
@@ -149,7 +142,7 @@ namespace transport
       : task_record<number>(t.get_name(), pkg),
         tk(dynamic_cast<postintegration_task<number>*>(t.clone()))
       {
-        assert(tk != nullptr);
+        assert(tk);
       }
 
 
@@ -158,7 +151,7 @@ namespace transport
       : task_record<number>(obj),
         tk(dynamic_cast<postintegration_task<number>*>(obj.tk->clone()))
       {
-        assert(tk != nullptr);
+        assert(tk);
       }
 
 
@@ -167,15 +160,8 @@ namespace transport
       : task_record<number>(reader, pkg),
         tk(postintegration_task_helper::deserialize<number>(this->name, reader, f))
       {
-        assert(tk != nullptr);
-        if(tk == nullptr) throw runtime_exception(exception_type::SERIALIZATION_ERROR, CPPTRANSPORT_REPO_TASK_DESERIALIZE_FAIL);
-      }
-
-
-    template <typename number>
-    postintegration_task_record<number>::~postintegration_task_record()
-      {
-        delete this->tk;
+        assert(tk);
+        if(!tk) throw runtime_exception(exception_type::SERIALIZATION_ERROR, CPPTRANSPORT_REPO_TASK_DESERIALIZE_FAIL);
       }
 
 
@@ -196,7 +182,7 @@ namespace transport
       : task_record<number>(t.get_name(), pkg),
         tk(dynamic_cast<output_task<number>*>(t.clone()))
       {
-        assert(tk != nullptr);
+        assert(tk);
       }
 
 
@@ -205,7 +191,7 @@ namespace transport
       : task_record<number>(obj),
         tk(dynamic_cast<output_task<number>*>(obj.tk->clone()))
       {
-        assert(tk != nullptr);
+        assert(tk);
       }
 
 
@@ -214,16 +200,9 @@ namespace transport
       : task_record<number>(reader, pkg),
         tk(output_task_helper::deserialize<number>(this->name, reader, f))
       {
-        assert(tk != nullptr);
+        assert(tk);
 
-        if(tk == nullptr) throw runtime_exception(exception_type::SERIALIZATION_ERROR, CPPTRANSPORT_REPO_TASK_DESERIALIZE_FAIL);
-      }
-
-
-    template <typename number>
-    output_task_record<number>::~output_task_record()
-      {
-        delete this->tk;
+        if(!tk) throw runtime_exception(exception_type::SERIALIZATION_ERROR, CPPTRANSPORT_REPO_TASK_DESERIALIZE_FAIL);
       }
 
 

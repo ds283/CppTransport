@@ -61,6 +61,9 @@ namespace transport
 						//! deserialization constructor
 						cost_wavenumber(Json::Value& reader, task_finder<number>& finder);
 
+            //! copy constructor
+            cost_wavenumber(const cost_wavenumber& obj);
+
 						//! destructor
 						virtual ~cost_wavenumber() = default;
 
@@ -118,7 +121,7 @@ namespace transport
 						analysis_type type;
 
 						//! query object
-						std::shared_ptr< SQL_query > kquery;
+						std::unique_ptr< SQL_query > kquery;
 
 					};
 
@@ -158,7 +161,7 @@ namespace transport
 						assert(this->parent_task != nullptr);
 						gadget.set_task(this->parent_task, finder);
 
-						kquery.reset(SQL_query_helper::deserialize(reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY]));
+						kquery = SQL_query_helper::deserialize(reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY]);
 
 				    std::string type_string = reader[CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_TYPE].asString();
 						type = analysis_type::twopf_analysis;
@@ -172,6 +175,18 @@ namespace transport
 						else if(metric_string == CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_STEPS) metric = cost_metric::steps_cost;
 						else assert(false); // TODO: raise exception
 					}
+
+
+        template <typename number>
+        cost_wavenumber<number>::cost_wavenumber(const cost_wavenumber<number>& obj)
+          : derived_line<number>(obj),
+            wavenumber_series<number>(obj),
+            gadget(obj.gadget),
+            metric(obj.metric),
+            type(obj.type),
+            kquery(obj.kquery->clone())
+          {
+          }
 
 
 				template <typename number>

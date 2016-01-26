@@ -93,7 +93,8 @@ namespace transport
         integration_task_record(Json::Value& reader, const boost::filesystem::path& repo_root,
                                 package_finder<number>& f, repository_record::handler_package& pkg);
 
-        virtual ~integration_task_record();
+        //! destructor is default
+        virtual ~integration_task_record() = default;
 
 
         // INTERFACE
@@ -101,10 +102,10 @@ namespace transport
       public:
 
         //! Get task
-        integration_task<number>* get_task() const { return(this->tk); }
+        integration_task<number>* get_task() const { return(this->tk.get()); }
 
         //! Get abstract task
-        virtual task<number>* get_abstract_task() const override { return(this->tk); }
+        virtual task<number>* get_abstract_task() const override { return(this->tk.get()); }
 
 
         // K-CONFIGURATION DATABASE HANDLING
@@ -150,7 +151,7 @@ namespace transport
       protected:
 
         //! Task associated with this record
-        integration_task<number>* tk;
+        std::unique_ptr< integration_task<number> > tk;
 
         //! k-configuration database associated with this record
         boost::filesystem::path kconfig_db;
@@ -178,7 +179,8 @@ namespace transport
         //! deserialization constructor
         postintegration_task_record(Json::Value& reader, task_finder<number>& f, repository_record::handler_package& pkg);
 
-        virtual ~postintegration_task_record();
+        //! destructor is default
+        virtual ~postintegration_task_record() = default;
 
 
         // GET CONTENTS
@@ -186,10 +188,10 @@ namespace transport
       public:
 
         //! Get task
-        postintegration_task<number>* get_task() const { return(this->tk); }
+        postintegration_task<number>* get_task() const { return(this->tk.get()); }
 
         //! Get abstract task
-        virtual task<number>* get_abstract_task() const override { return(this->tk); }
+        virtual task<number>* get_abstract_task() const override { return(this->tk.get()); }
 
 
         // ADMINISTRATION
@@ -221,7 +223,7 @@ namespace transport
       protected:
 
         //! Task associated with this record
-        postintegration_task<number>* tk;
+        std::unique_ptr< postintegration_task<number> > tk;
 
       };
 
@@ -246,7 +248,8 @@ namespace transport
         //! deserialization constructor
         output_task_record(Json::Value& reader, derived_product_finder<number>& f, repository_record::handler_package& pkg);
 
-        virtual ~output_task_record();
+        //! destructor is default
+        virtual ~output_task_record() = default;
 
 
         // GET CONTENTS
@@ -254,10 +257,10 @@ namespace transport
       public:
 
         //! Get task
-        output_task<number>* get_task() const { return(this->tk); }
+        output_task<number>* get_task() const { return(this->tk.get()); }
 
         //! Get abstract task
-        virtual task<number>* get_abstract_task() const override { return(this->tk); }
+        virtual task<number>* get_abstract_task() const override { return(this->tk.get()); }
 
 
         // ADMINISTRATION
@@ -289,7 +292,7 @@ namespace transport
       protected:
 
         //! Task associated with this record
-        output_task<number>* tk;
+        std::unique_ptr< output_task<number> > tk;
 
       };
 

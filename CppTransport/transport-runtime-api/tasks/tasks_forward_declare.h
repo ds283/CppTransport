@@ -43,7 +43,7 @@ namespace transport
     namespace integration_task_helper
 	    {
         template <typename number>
-        integration_task<number>* deserialize(const std::string& nm, Json::Value& reader, sqlite3* handle, package_finder<number>& f);
+        std::unique_ptr< integration_task<number> > deserialize(const std::string& nm, Json::Value& reader, sqlite3* handle, package_finder<number>& f);
 	    }
 #endif
 
@@ -55,7 +55,7 @@ namespace transport
     namespace output_task_helper
 	    {
         template <typename number>
-        output_task<number>* deserialize(const std::string& nm, Json::Value& reader, derived_product_finder<number>& pfinder);
+        std::unique_ptr< output_task<number> > deserialize(const std::string& nm, Json::Value& reader, derived_product_finder<number>& pfinder);
 	    }
 #endif
 
@@ -83,7 +83,7 @@ namespace transport
     namespace postintegration_task_helper
 	    {
         template <typename number>
-        postintegration_task<number>* deserialize(const std::string& nm, Json::Value& reader, task_finder<number>& f);
+        std::unique_ptr< postintegration_task<number> > deserialize(const std::string& nm, Json::Value& reader, task_finder<number>& f);
 	    }
 #endif
 

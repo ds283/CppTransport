@@ -30,7 +30,7 @@ namespace transport
 		// forward-declare helper
 		namespace range_helper
 			{
-				template <typename value> range<value>* deserialize(Json::Value& reader);
+				template <typename value> std::unique_ptr< range<value> > deserialize(Json::Value& reader);
 			}
 
 		template <typename value>

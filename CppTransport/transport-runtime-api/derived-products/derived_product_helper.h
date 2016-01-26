@@ -22,12 +22,12 @@ namespace transport
           {
 
             template <typename number>
-            derived_data::derived_product<number>* deserialize(const std::string& name, Json::Value& reader, task_finder<number>& finder)
+            std::unique_ptr< derived_data::derived_product<number> > deserialize(const std::string& name, Json::Value& reader, task_finder<number>& finder)
               {
                 std::string type = reader[CPPTRANSPORT_NODE_DERIVED_PRODUCT_TYPE].asString();
 
-                if (type == CPPTRANSPORT_NODE_DERIVED_PRODUCT_LINE_PLOT2D)         return new line_plot2d<number>(name, reader, finder);
-                else if(type == CPPTRANSPORT_NODE_DERIVED_PRODUCT_LINE_ASCIITABLE) return new line_asciitable<number>(name, reader, finder);
+                if (type == CPPTRANSPORT_NODE_DERIVED_PRODUCT_LINE_PLOT2D)         return std::make_unique< line_plot2d<number> >(name, reader, finder);
+                else if(type == CPPTRANSPORT_NODE_DERIVED_PRODUCT_LINE_ASCIITABLE) return std::make_unique< line_asciitable<number> >(name, reader, finder);
 
                 std::ostringstream msg;
                 msg << CPPTRANSPORT_PRODUCT_UNKNOWN_TYPE << " '" << type << "'";
