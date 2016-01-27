@@ -803,7 +803,9 @@ set(TRANSPORT_RUNTIME_API_SQLITE3_DETAIL_FILES
   transport-runtime-api/sqlite3/detail/container_replace_impl.h
   transport-runtime-api/sqlite3/detail/data_manager_sqlite3_decl.h
   transport-runtime-api/sqlite3/detail/data_manager_sqlite3_impl.h
-  )
+  transport-runtime-api/sqlite3/detail/repository_sqlite3_decl.h
+  transport-runtime-api/sqlite3/detail/repository_sqlite3_impl.h
+  transport-runtime-api/sqlite3/detail/transaction_handler_decl.h transport-runtime-api/sqlite3/detail/transaction_handler_impl.h)
 
 set(TRANSPORT_RUNTIME_API_SQLITE3_FILES
   transport-runtime-api/sqlite3/data_manager_sqlite3.h

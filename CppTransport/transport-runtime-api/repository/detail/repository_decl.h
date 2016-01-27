@@ -51,7 +51,7 @@ namespace transport
       protected:
 
         //! Generate a transaction management object
-        transaction_manager transaction_factory(transaction_manager::open_handler o, transaction_manager::commit_handler c, transaction_manager::rollback_handler r);
+        transaction_manager transaction_factory(std::unique_ptr<transaction_handler> handle);
 
         //! Release resources after end of transaction
         void release_transaction();

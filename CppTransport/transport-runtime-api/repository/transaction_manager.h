@@ -21,70 +21,126 @@
 namespace transport
 	{
 
-    //! transaction manager
-    class transaction_manager
-	    {
+    class transaction_handler
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
 
       public:
 
-        typedef std::function<void()> open_handler;
-        typedef std::function<void()> commit_handler;
-		    typedef std::function<void()> rollback_handler;
-		    typedef std::function<void()> release_handler;
+        //! constructor is default
+        transaction_handler() = default;
 
-      protected:
+        //! destructor is default
+        ~transaction_handler() = default;
 
-		    class journal_record
-			    {
 
-		      public:
+        // INTERFACE
 
-				    journal_record() = default;
+      public:
 
-				    virtual ~journal_record() = default;
+        //! open transaction
+        virtual void open() = 0;
 
-				    virtual void commit() = 0;
+        //! commit transaction
+        virtual void commit() = 0;
 
-				    virtual void rollback() = 0;
+        //! rollback transaciton
+        virtual void rollback() = 0;
 
-			    };
+        //! release transaction
+        virtual void release() = 0;
 
-		    class rename_record: public journal_record
-			    {
+      };
 
-		      public:
 
-				    rename_record(const boost::filesystem::path& j, const boost::filesystem::path& t)
-					    : journal(j),
-		            target(t)
-					    {
-					    }
+    namespace transaction_manager_impl
+      {
 
-				    // TODO: Intel compiler complains if destructor is explicitly defaulted; can probably be reverted with new version of compiler [Intel say this issue is 'fixed']
-				    virtual ~rename_record()
-					    {
-					    }
+        //! abstract class giving interface definition for transaction journal records
+        class journal_record
+          {
 
-				    virtual void commit() override { boost::filesystem::rename(journal, target); }
+            // CONSTRUCTOR, DESTRUCTOR
 
-				    virtual void rollback() override { boost::filesystem::remove(journal); }
+          public:
 
-		      private:
+            //! constructor is default
+            journal_record() = default;
 
-				    //! journalled file
-				    boost::filesystem::path journal;
+            //! destructor is default
+            virtual ~journal_record() = default;
 
-				    //! target file
-				    boost::filesystem::path target;
 
-			    };
+            // INTERFACE
 
+          public:
+
+            virtual void commit() = 0;
+
+            virtual void rollback() = 0;
+
+          };
+
+
+        //! concrete transaction journal record, corresponding to a file emplacement
+        class emplace_record : public journal_record
+          {
+
+            // CONSTRUCTOR, DESTRUCTOR
+
+          public:
+
+            emplace_record(const boost::filesystem::path& j, const boost::filesystem::path& t)
+              : journal(j),
+                target(t)
+              {
+              }
+
+            // TODO: Intel compiler complains if destructor is explicitly defaulted; can probably be reverted with new version of compiler [Intel say this issue is 'fixed']
+            virtual ~emplace_record()
+              {
+              }
+
+
+            // INTERFACE
+
+          public:
+
+            virtual void commit() override { boost::filesystem::rename(journal, target); }
+
+            virtual void rollback() override { boost::filesystem::remove(journal); }
+
+
+            // INTERNAL DATA
+
+          private:
+
+            //! journalled file
+            boost::filesystem::path journal;
+
+            //! target file
+            boost::filesystem::path target;
+
+          };
+
+      }
+
+
+    // import transaction_manager_impl for this block
+    using namespace transaction_manager_impl;
+
+
+    //! transaction manager
+    class transaction_manager
+	    {
 
 		    // CONSTRUCTOR, DESTRUCTOR
 
       public:
 
-        transaction_manager(open_handler& o, commit_handler& c, rollback_handler& r, release_handler& rel);
+        //! constructor captures ownership of handler object
+        transaction_manager(std::unique_ptr<transaction_handler> h);
 
 		    // allow moving
 		    transaction_manager(transaction_manager&& obj) = default;
@@ -95,6 +151,7 @@ namespace transport
 		    // disable assignment
 		    transaction_manager& operator=(const transaction_manager& obj) = delete;
 
+        //! destructor should rollback if not committed
         ~transaction_manager();
 
 
@@ -123,17 +180,8 @@ namespace transport
 
 		    // DATABASE OPEN, COMMIT AND ROLLBACK HANDLERS
 
-		    //! begin a new transaction on the database
-        open_handler opener;
-
-		    //! commit a transaction to the database
-        commit_handler committer;
-
-		    //! rollback a transaction
-		    rollback_handler rollbacker;
-
-		    //! notify owner to release resources following a commit
-		    release_handler releaser;
+        //! owned pointer to handlers
+        std::unique_ptr<transaction_handler> handler;
 
 		    //! has this transaction been committed?
 		    bool committed;
@@ -147,22 +195,19 @@ namespace transport
 	    };
 
 
-		transaction_manager::transaction_manager(open_handler& o, commit_handler& c, rollback_handler& r, release_handler& rel)
-			: opener(o),
-			  committer(c),
-			  rollbacker(r),
-			  releaser(rel),
+		transaction_manager::transaction_manager(std::unique_ptr<transaction_handler> h)
+			: handler(std::move(h)),
 			  committed(false),
 				dead(false)
 			{
-		    opener();
+		    handler->open();
 			}
 
 
     transaction_manager::~transaction_manager()
 			{
 		    // rollback the transaction if it was not committed
-		    if(!this->committed) this->rollback();
+		    if(!this->committed) this->handler->rollback();
 			}
 
 
@@ -177,9 +222,9 @@ namespace transport
 				    rec->commit();
 					}
 
-				this->committer();
+				this->handler->commit();
 				this->committed = true;
-				this->releaser();
+				this->handler->release();
 			}
 
 
@@ -191,9 +236,9 @@ namespace transport
 				    rec->rollback();
 					}
 
-				this->rollbacker();
+        this->handler->rollback();
 				this->dead = true;
-				this->releaser();
+        this->handler->release();
 			}
 
 
@@ -205,7 +250,7 @@ namespace transport
 				if(this->committed) throw runtime_exception(exception_type::REPOSITORY_TRANSACTION_ERROR, CPPTRANSPORT_REPO_TRANSACTION_COMMITTED);
 				if(this->dead)      throw runtime_exception(exception_type::REPOSITORY_TRANSACTION_ERROR, CPPTRANSPORT_REPO_TRANSACTION_DEAD);
 
-				this->journal.push_back(std::make_unique<rename_record>(journal, target));
+				this->journal.push_back(std::make_unique<emplace_record>(journal, target));
 			}
 
 

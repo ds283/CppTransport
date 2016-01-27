@@ -88,14 +88,12 @@ namespace transport
 
 
     template <typename number>
-    transaction_manager repository<number>::transaction_factory(transaction_manager::open_handler o, transaction_manager::commit_handler c, transaction_manager::rollback_handler r)
+    transaction_manager repository<number>::transaction_factory(std::unique_ptr<transaction_handler> handle)
       {
         if(this->transactions > 0) throw runtime_exception(exception_type::REPOSITORY_TRANSACTION_ERROR, CPPTRANSPORT_REPO_TRANSACTION_UNDERWAY);
         this->transactions++;
 
-        typename transaction_manager::release_handler releaser = std::bind(&repository<number>::release_transaction, this);
-
-        return transaction_manager(o, c, r, releaser);
+        return transaction_manager(std::move(handle));
       }
 
 
