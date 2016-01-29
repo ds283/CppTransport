@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __integration_writer_H_
-#define __integration_writer_H_
+#ifndef CPPTRANSPORT_INTEGRATION_WRITER_H
+#define CPPTRANSPORT_INTEGRATION_WRITER_H
 
 
 #include <iostream>
@@ -33,34 +33,120 @@
 namespace transport
 	{
 
+    // forward-declare integration writer
+    template <typename number> class integration_writer;
+
+    //! Commit object
+    template <typename number>
+    class integration_writer_commit
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! constructor is default
+        integration_writer_commit() = default;
+
+        //! destructor is default
+        virtual ~integration_writer_commit() = default;
+
+
+        // INTERFACE
+
+      public:
+
+        //! commit
+        virtual void operator()(integration_writer<number>& writer) = 0;
+
+      };
+
+
+
+    //! Abort object
+    template <typename number>
+    class integration_writer_abort
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! constructor is default
+        integration_writer_abort() = default;
+
+        //! destructor is default
+        virtual ~integration_writer_abort() = default;
+
+
+        // INTERFACE
+
+      public:
+
+        //! abort
+        virtual void operator()(integration_writer<number>& writer) = 0;
+
+      };
+
+
+    //! Aggregation object
+    template <typename number>
+    class integration_writer_aggregate
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! constructor is default
+        integration_writer_aggregate() = default;
+
+        //! destructor is default
+        virtual ~integration_writer_aggregate() = default;
+
+
+        // INTERFACE
+
+      public:
+
+        //! aggregate
+        virtual bool operator()(integration_writer<number>& writer, const std::string& product) = 0;
+
+      };
+
+
+    //! Integrity-check object
+    template <typename number>
+    class integration_writer_integrity
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! constructor is default
+        integration_writer_integrity() = default;
+
+        //! destructor is default
+        virtual ~integration_writer_integrity() = default;
+
+
+        // INTERFACE
+
+      public:
+
+        //! check integrity
+        virtual void operator()(integration_writer<number>& writer, integration_task<number>* task) = 0;
+
+      };
+
+
     // WRITER FOR INTEGRATION OUTPUT
 
     //! Integration writer: used to commit integration output to the database
 		template <typename number>
     class integration_writer: public generic_writer
 	    {
-
-      public:
-
-        //! Define a commit callback object. Used to commit data products to the repository
-        typedef std::function<void(integration_writer<number>&)> commit_callback;
-
-        //! Define an abort callback object. Used to abort storage of data products
-        typedef std::function<void(integration_writer<number>&)> abort_callback;
-
-        //! Define an aggregation callback object. Used to aggregate results from worker processes
-        typedef std::function<bool(integration_writer<number>&, const std::string&)> aggregate_callback;
-
-        //! Define an integrity check callback object.
-        typedef std::function<void(integration_writer<number>&, integration_task<number>*)> integrity_callback;
-
-        class callback_group
-	        {
-          public:
-            commit_callback commit;
-            abort_callback  abort;
-	        };
-
 
         // CONSTRUCTOR, DESTRUCTOR
 
@@ -69,7 +155,9 @@ namespace transport
         //! Construct an integration writer object.
         //! After creation it is not yet associated with anything in the data_manager backend; that must be done later
         //! by the task_manager, which can depute a data_manager object of its choice to do the work.
-        integration_writer(const std::string& n, integration_task_record<number>* rec, const callback_group& c,
+        integration_writer(const std::string& n, integration_task_record<number>* rec,
+                           std::unique_ptr< integration_writer_commit<number> > c,
+                           std::unique_ptr< integration_writer_abort<number> > a,
                            const typename generic_writer::metadata_group& m, const typename generic_writer::paths_group& p,
                            unsigned int w, unsigned int wg);
 
@@ -85,7 +173,7 @@ namespace transport
       public:
 
         //! Set aggregator
-        void set_aggregation_handler(aggregate_callback c) { this->aggregator = c; }
+        void set_aggregation_handler(std::unique_ptr< integration_writer_aggregate<number> > c) { this->aggregate_h = std::move(c); }
 
         //! Aggregate a product
         bool aggregate(const std::string& product);
@@ -96,13 +184,13 @@ namespace transport
       public:
 
         //! Commit contents of this integration_writer to the database
-        void commit() { this->callbacks.commit(*this); this->committed = true; }
+        void commit() { (*this->commit_h)(*this); this->committed = true; }
 
         //! Set integrity check callback
-        void set_integrity_check_handler(integrity_callback c) { this->integrity_checker = c; }
+        void set_integrity_check_handler(std::unique_ptr< integration_writer_integrity<number> > c) { this->integrity_h = std::move(c); }
 
         //! Check integrity
-        void check_integrity(integration_task<number>* tk) { if(this->integrity_checker) this->integrity_checker(*this, tk); }
+        void check_integrity(integration_task<number>* tk) { if(this->integrity_h) (*this->integrity_h)(*this, tk); }
 
 
         // STATISTICS AND OTHER AUXILIARY INFORMATION
@@ -133,7 +221,7 @@ namespace transport
         void set_workgroup_number(unsigned int wg) { this->workgroup_number = wg; }
 
         //! Return task
-        integration_task_record<number>* get_record() const { return(this->parent_record); }
+        integration_task_record<number>* get_record() const { return(this->parent_record.get()); }
 
         //! Set metadata
         void set_metadata(const integration_metadata& data) { this->metadata = data; }
@@ -174,17 +262,20 @@ namespace transport
 
         // REPOSITORY CALLBACK FUNCTIONS
 
-        //! Repository callbacks
-        callback_group callbacks;
+        //! Commit handler
+        std::unique_ptr< integration_writer_commit<number> > commit_h;
+
+        //! Abort handler
+        std::unique_ptr< integration_writer_abort<number> > abort_h;
 
 
         // DATA MANAGER CALLBACK FUNCTIONS
 
         //! Aggregate callback
-        aggregate_callback aggregator;
+        std::unique_ptr< integration_writer_aggregate<number> > aggregate_h;
 
         //! Integrity check callback
-        integrity_callback integrity_checker;
+        std::unique_ptr< integration_writer_integrity<number> > integrity_h;
 
 
         // METADATA
@@ -193,7 +284,7 @@ namespace transport
         unsigned int workgroup_number;
 
         //! task associated with this integration writer
-        integration_task_record<number>* parent_record;
+        std::unique_ptr< integration_task_record<number> > parent_record;
 
         //! metadata for this integration
         integration_metadata metadata;
@@ -235,20 +326,22 @@ namespace transport
 
     template <typename number>
     integration_writer<number>::integration_writer(const std::string& n, integration_task_record<number>* rec,
-                                                   const typename integration_writer<number>::callback_group& c,
+                                                   std::unique_ptr< integration_writer_commit<number> > c,
+                                                   std::unique_ptr< integration_writer_abort<number> > a,
                                                    const generic_writer::metadata_group& m, const generic_writer::paths_group& p,
                                                    unsigned int w, unsigned int wg)
 	    : generic_writer(n, m, p, w),
         workgroup_number(wg),
         seeded(false),
-	      callbacks(c),
-	      aggregator(nullptr),
-        integrity_checker(nullptr),
+        commit_h(std::move(c)),
+        abort_h(std::move(a)),
+	      aggregate_h(nullptr),
+        integrity_h(nullptr),
 	      parent_record(dynamic_cast< integration_task_record<number>* >(rec->clone())),
 	      collect_statistics(rec->get_task()->get_model()->supports_per_configuration_statistics()),
 	      metadata()
 	    {
-        assert(this->parent_record != nullptr);
+        assert(this->parent_record);
 
 	      twopf_list_task<number>* tk_as_twopf_list = dynamic_cast< twopf_list_task<number>* >(rec->get_task());
 	      assert(tk_as_twopf_list != nullptr);
@@ -271,27 +364,24 @@ namespace transport
         // this has to happen in the derived destructor, not the base generic_writer<> destructor
         // because by the time we arrive in the generic_writer<> destructor we have lost
         // the identity of the derived class
-        if(!this->committed) this->callbacks.abort(*this);
-
-        // delete copy of task object
-        delete this->parent_record;
+        if(!this->committed) (*this->abort_h)(*this);
 	    }
 
 
 		template <typename number>
     bool integration_writer<number>::aggregate(const std::string& product)
 	    {
-        if(!this->aggregator)
+        if(!this->aggregate_h)
 	        {
             assert(false);
             throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_REPO_WRITER_AGGREGATOR_UNSET);
 	        }
 
-        return this->aggregator(*this, product);
+        return (*this->aggregate_h)(*this, product);
 	    }
 
 
 	}   // namespace transport
 
 
-#endif //__integration_writer_H_
+#endif //CPPTRANSPORT_INTEGRATION_WRITER_H

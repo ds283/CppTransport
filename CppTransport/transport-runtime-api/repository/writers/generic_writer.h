@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __generic_writer_H_
-#define __generic_writer_H_
+#ifndef CPPTRANSPORT_GENERIC_WRITER_H
+#define CPPTRANSPORT_GENERIC_WRITER_H
 
 
 #include <iostream>
@@ -306,4 +306,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__generic_writer_H_
+#endif //CPPTRANSPORT_GENERIC_WRITER_H

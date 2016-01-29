@@ -45,9 +45,6 @@
 #include "transport-runtime-api/data/data_manager.h"
 
 
-// DECLARE MAIN REPOSITORY CLASS
-#include "transport-runtime-api/repository/detail/repository_decl.h"
-
 // DECLARE REPOSITORY RECORD FINDERS
 #include "transport-runtime-api/repository/records/record_finder_decl.h"
 #include "transport-runtime-api/repository/records/content_finder_decl.h"
@@ -55,8 +52,11 @@
 // DECLARE REPOSITORY RECORDS
 #include "transport-runtime-api/repository/records/repository_records_decl.h"
 
-// DEFINITIONS FOR MAIN REPOSITORY CLASS METHODS
-#include "transport-runtime-api/repository/detail/repository_impl.h"
+// DECLARE WRITER HANDLERS
+#include "transport-runtime-api/repository/detail/writer_repo_decl.h"
+
+// DECLARE MAIN REPOSITORY CLASS
+#include "transport-runtime-api/repository/detail/repository_decl.h"
 
 // DEFINITIONS FOR REPOSITORY RECORD FINDERS
 #include "transport-runtime-api/repository/records/record_finder_impl.h"
@@ -64,6 +64,12 @@
 
 // DEFINITIONS FOR REPOSITORY RECORDS
 #include "transport-runtime-api/repository/records/repository_records_impl.h"
+
+// DEFINE WRITER HANDLERS
+#include "transport-runtime-api/repository/detail/writer_repo_impl.h"
+
+// DEFINITIONS FOR MAIN REPOSITORY CLASS METHODS
+#include "transport-runtime-api/repository/detail/repository_impl.h"
 
 
 #endif //CPPTRANSPORT_REPOSITORY_H

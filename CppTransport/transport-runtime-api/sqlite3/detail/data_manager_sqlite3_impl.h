@@ -92,13 +92,19 @@ namespace transport
         threepf_task<number>* tk3 = nullptr;
         if((tk2 = dynamic_cast<twopf_task<number>*>(tk)) != nullptr)
           {
-            writer.set_aggregation_handler(std::bind(&data_manager_sqlite3<number>::aggregate_twopf_batch, this, std::placeholders::_1, std::placeholders::_2));
-            writer.set_integrity_check_handler(std::bind(&data_manager<number>::check_twopf_integrity_handler, this, std::placeholders::_1, std::placeholders::_2));
+            std::unique_ptr< sqlite3_twopf_writer_aggregate<number> > aggregate = std::make_unique< sqlite3_twopf_writer_aggregate<number> >(*this);
+            std::unique_ptr< sqlite3_twopf_writer_integrity<number> > integrity = std::make_unique< sqlite3_twopf_writer_integrity<number> >(*this);
+
+            writer.set_aggregation_handler(std::move(aggregate));
+            writer.set_integrity_check_handler(std::move(integrity));
           }
         else if((tk3 = dynamic_cast<threepf_task<number>*>(tk)) != nullptr)
           {
-            writer.set_aggregation_handler(std::bind(&data_manager_sqlite3<number>::aggregate_threepf_batch, this, std::placeholders::_1, std::placeholders::_2));
-            writer.set_integrity_check_handler(std::bind(&data_manager<number>::check_threepf_integrity_handler, this, std::placeholders::_1, std::placeholders::_2));
+            std::unique_ptr< sqlite3_threepf_writer_aggregate<number> > aggregate = std::make_unique< sqlite3_threepf_writer_aggregate<number> >(*this);
+            std::unique_ptr< sqlite3_threepf_writer_integrity<number> > integrity = std::make_unique< sqlite3_threepf_writer_integrity<number> >(*this);
+
+            writer.set_aggregation_handler(std::move(aggregate));
+            writer.set_integrity_check_handler(std::move(integrity));
           }
         else
           {
@@ -144,7 +150,8 @@ namespace transport
     void data_manager_sqlite3<number>::initialize_writer(derived_content_writer<number>& writer, bool recovery_mode)
       {
         // set up aggregation handler
-        writer.set_aggregation_handler(std::bind(&data_manager_sqlite3<number>::aggregate_derived_product, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+        std::unique_ptr< sqlite3_derived_content_writer_aggregate<number> > aggregate = std::make_unique< sqlite3_derived_content_writer_aggregate<number> >(*this);
+        writer.set_aggregation_handler(std::move(aggregate));
       }
 
 
@@ -212,39 +219,58 @@ namespace transport
         fNL_task<number>* zfNL = nullptr;
         if((z2pf = dynamic_cast<zeta_twopf_task<number>*>(tk)) != nullptr)
           {
-            writer.set_aggregation_handler(std::bind(&data_manager_sqlite3<number>::aggregate_zeta_twopf_batch, this, std::placeholders::_1, std::placeholders::_2));
-            writer.set_integrity_check_handler(std::bind(&data_manager<number>::check_zeta_twopf_integrity_handler, this, std::placeholders::_1, std::placeholders::_2));
+            std::unique_ptr< sqlite3_zeta_twopf_writer_aggregate<number> > aggregate = std::make_unique< sqlite3_zeta_twopf_writer_aggregate<number> >(*this);
+            std::unique_ptr< sqlite3_zeta_twopf_writer_integrity<number> > integrity = std::make_unique< sqlite3_zeta_twopf_writer_integrity<number> >(*this);
+
+            writer.set_aggregation_handler(std::move(aggregate));
+            writer.set_integrity_check_handler(std::move(integrity));
+
             writer.get_products().add_zeta_twopf();
           }
         else if((z3pf = dynamic_cast<zeta_threepf_task<number>*>(tk)) != nullptr)
           {
-            writer.set_aggregation_handler(std::bind(&data_manager_sqlite3<number>::aggregate_zeta_threepf_batch, this, std::placeholders::_1, std::placeholders::_2));
-            writer.set_integrity_check_handler(std::bind(&data_manager<number>::check_zeta_threepf_integrity_handler, this, std::placeholders::_1, std::placeholders::_2));
+            std::unique_ptr< sqlite3_zeta_threepf_writer_aggregate<number> > aggregate = std::make_unique< sqlite3_zeta_threepf_writer_aggregate<number> >(*this);
+            std::unique_ptr< sqlite3_zeta_threepf_writer_integrity<number> > integrity = std::make_unique< sqlite3_zeta_threepf_writer_integrity<number> >(*this);
+
+            writer.set_aggregation_handler(std::move(aggregate));
+            writer.set_integrity_check_handler(std::move(integrity));
+
             writer.get_products().add_zeta_twopf();
             writer.get_products().add_zeta_threepf();
             writer.get_products().add_zeta_redbsp();
           }
         else if((zfNL = dynamic_cast<fNL_task<number>*>(tk)) != nullptr)
           {
-            writer.set_aggregation_handler(std::bind(&data_manager_sqlite3<number>::aggregate_fNL_batch, this, std::placeholders::_1, std::placeholders::_2, zfNL->get_template()));
-            writer.set_integrity_check_handler(std::bind(&data_manager<number>::check_fNL_integrity_handler, this, std::placeholders::_1, std::placeholders::_2));
+            std::unique_ptr< sqlite3_fNL_writer_aggregate<number> > aggregate = std::make_unique< sqlite3_fNL_writer_aggregate<number> >(*this, zfNL->get_template());
+            std::unique_ptr< sqlite3_fNL_writer_integrity<number> > integrity = std::make_unique< sqlite3_fNL_writer_integrity<number> >(*this);
+
+            writer.set_aggregation_handler(std::move(aggregate));
+            writer.set_integrity_check_handler(std::move(integrity));
             switch(zfNL->get_template())
               {
                 case derived_data::template_type::fNL_local_template:
-                  writer.get_products().add_fNL_local();
-                break;
+                  {
+                    writer.get_products().add_fNL_local();
+                    break;
+                  }
 
                 case derived_data::template_type::fNL_equi_template:
-                  writer.get_products().add_fNL_equi();
-                break;
+                  {
+                    writer.get_products().add_fNL_equi();
+                    break;
+                  }
 
                 case derived_data::template_type::fNL_ortho_template:
-                  writer.get_products().add_fNL_ortho();
-                break;
+                  {
+                    writer.get_products().add_fNL_ortho();
+                    break;
+                  }
 
                 case derived_data::template_type::fNL_DBI_template:
-                  writer.get_products().add_fNL_DBI();
-                break;
+                  {
+                    writer.get_products().add_fNL_DBI();
+                    break;
+                  }
               }
           }
         else

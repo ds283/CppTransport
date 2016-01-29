@@ -179,6 +179,14 @@ namespace transport
         bool aggregate_fNL_batch(postintegration_writer<number>& writer, const std::string& temp_ctr, derived_data::template_type type);
 
 
+        friend class sqlite3_twopf_writer_aggregate<number>;
+        friend class sqlite3_threepf_writer_aggregate<number>;
+        friend class sqlite3_zeta_twopf_writer_aggregate<number>;
+        friend class sqlite3_zeta_threepf_writer_aggregate<number>;
+        friend class sqlite3_fNL_writer_aggregate<number>;
+        friend class sqlite3_derived_content_writer_aggregate<number>;
+
+
         // INTEGRITY CHECK HANDLERS
 
       protected:
@@ -224,6 +232,13 @@ namespace transport
         //! drop initial conditions for a sset of k-configurations
         virtual void drop_initial_conditions_configurations(integration_writer<number>& writer, const std::list<unsigned int>& serials, const twopf_kconfig_database& db) override;
         virtual void drop_initial_conditions_configurations(integration_writer<number>& writer, const std::list<unsigned int>& serials, const threepf_kconfig_database& db) override;
+
+
+        friend class sqlite3_twopf_writer_integrity<number>;
+        friend class sqlite3_threepf_writer_integrity<number>;
+        friend class sqlite3_zeta_twopf_writer_integrity<number>;
+        friend class sqlite3_zeta_threepf_writer_integrity<number>;
+        friend class sqlite3_fNL_writer_integrity<number>;
 
 
         // DATA PIPES -- implements a 'data_manager' interface

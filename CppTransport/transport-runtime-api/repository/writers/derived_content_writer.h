@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __derived_content_writer_H_
-#define __derived_content_writer_H_
+#ifndef CPPTRANSPORT_DERIVED_CONTENT_WRITER_H
+#define CPPTRANSPORT_DERIVED_CONTENT_WRITER_H
 
 
 #include <iostream>
@@ -33,6 +33,88 @@
 namespace transport
 	{
 
+    // forward-declare derived content writer
+    template <typename number> class derived_content_writer;
+
+    //! Commit object
+    template <typename number>
+    class derived_content_writer_commit
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! constructor is default
+        derived_content_writer_commit() = default;
+
+        //! destructor is default
+        virtual ~derived_content_writer_commit() = default;
+
+
+        // INTERFACE
+
+      public:
+
+        //! commit
+        virtual void operator()(derived_content_writer<number>& writer) = 0;
+
+      };
+
+
+
+    //! Abort object
+    template <typename number>
+    class derived_content_writer_abort
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! constructor is default
+        derived_content_writer_abort() = default;
+
+        //! destructor is default
+        virtual ~derived_content_writer_abort() = default;
+
+
+        // INTERFACE
+
+      public:
+
+        //! abort
+        virtual void operator()(derived_content_writer<number>& writer) = 0;
+
+      };
+
+
+    //! Aggregation object
+    template <typename number>
+    class derived_content_writer_aggregate
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! constructor is default
+        derived_content_writer_aggregate() = default;
+
+        //! destructor is default
+        virtual ~derived_content_writer_aggregate() = default;
+
+
+        // INTERFACE
+
+      public:
+
+        //! aggregate
+        virtual bool operator()(derived_content_writer<number>& writer, const std::string& product, const std::list<std::string>& used_groups) = 0;
+
+      };
+
+
     // WRITER FOR DERIVED CONTENT OUTPUT
 
     //! Derived content writer: used to commit derived products to the database
@@ -40,31 +122,14 @@ namespace transport
     class derived_content_writer: public generic_writer
 	    {
 
-      public:
-
-        //! Define a commit callback object. Used to commit data products to the repository
-        typedef std::function<void(derived_content_writer<number>&)> commit_callback;
-
-        //! Define an abort callback object. Used to abort storage of data products
-        typedef std::function<void(derived_content_writer<number>&)> abort_callback;
-
-        //! Define an aggregation callback object. Used to aggregate results from worker processes
-        typedef std::function<bool(derived_content_writer<number>&, const std::string&, const std::list<std::string>&)> aggregate_callback;
-
-        class callback_group
-	        {
-          public:
-            commit_callback commit;
-            abort_callback  abort;
-	        };
-
-
         // CONSTRUCTOR, DESTRUCTOR
 
       public:
 
         //! Construct a derived-content writer object
-        derived_content_writer(const std::string& n, output_task_record<number>* rec, const callback_group& c,
+        derived_content_writer(const std::string& n, output_task_record<number>* rec,
+                               std::unique_ptr< derived_content_writer_commit<number> > c,
+                               std::unique_ptr< derived_content_writer_abort<number> > a,
                                const typename generic_writer::metadata_group& m, const typename generic_writer::paths_group& p,
                                unsigned int w);
 
@@ -80,7 +145,7 @@ namespace transport
       public:
 
         //! Set aggregator
-        void set_aggregation_handler(aggregate_callback c) { this->aggregator = c; }
+        void set_aggregation_handler(std::unique_ptr< derived_content_writer_aggregate<number> > c) { this->aggregate_h = std::move(c); }
 
         //! Aggregate a product
         bool aggregate(const std::string& product, const std::list<std::string>& used_groups);
@@ -91,7 +156,7 @@ namespace transport
       public:
 
         //! Commit contents of this integration_writer to the database
-        void commit() { this->callbacks.commit(*this); this->committed = true; }
+        void commit() { (*this->commit_h)(*this); this->committed = true; }
 
 
         // ADMINISTRATION
@@ -134,7 +199,7 @@ namespace transport
       public:
 
         //! Return task
-        output_task_record<number>* get_record() const { return(this->parent_record); }
+        output_task_record<number>* get_record() const { return(this->parent_record.get()); }
 
         //! Set metadata
         void set_metadata(const output_metadata& data) { this->metadata = data; }
@@ -152,14 +217,17 @@ namespace transport
 
         // REPOSITORY CALLBACK FUNCTIONS
 
-        //! Repository callbacks
-        callback_group callbacks;
+        //! Commit handler
+        std::unique_ptr< derived_content_writer_commit<number> > commit_h;
+
+        //! Abort handler
+        std::unique_ptr< derived_content_writer_abort<number> > abort_h;
 
 
         // DATA MANAGER CALLBACK FUNCTIONS
 
         //! Aggregate callback
-        aggregate_callback aggregator;
+        std::unique_ptr< derived_content_writer_aggregate<number> > aggregate_h;
 
 
         // CONTENT
@@ -171,7 +239,7 @@ namespace transport
         // METADATA
 
         //! task associated with this derived_content_writer
-        output_task_record<number>* parent_record;
+        std::unique_ptr< output_task_record<number> > parent_record;
 
         //! metadata for this output task
         output_metadata metadata;
@@ -184,16 +252,18 @@ namespace transport
 
     template <typename number>
     derived_content_writer<number>::derived_content_writer(const std::string& n, output_task_record<number>* rec,
-                                                           const typename derived_content_writer<number>::callback_group& c,
+                                                           std::unique_ptr< derived_content_writer_commit<number> > c,
+                                                           std::unique_ptr< derived_content_writer_abort<number> > a,
                                                            const generic_writer::metadata_group& m, const generic_writer::paths_group& p,
                                                            unsigned int w)
 	    : generic_writer(n, m, p, w),
-	      callbacks(c),
-	      aggregator(nullptr),
+        commit_h(std::move(c)),
+        abort_h(std::move(a)),
+	      aggregate_h(nullptr),
 	      parent_record(dynamic_cast< output_task_record<number>* >(rec->clone())),
 	      metadata()
 	    {
-        assert(this->parent_record != nullptr);
+        assert(this->parent_record);
 	    }
 
 
@@ -204,22 +274,20 @@ namespace transport
         // this has to happen in the derived destructor, not the base generic_writer<> destructor
         // because by the time we arrive in the generic_writer<> destructor we have lost
         // the identity of the derived class
-        if(!this->committed) this->callbacks.abort(*this);
-
-        delete this->parent_record;
+        if(!this->committed) (*this->abort_h)(*this);
 	    }
 
 
     template <typename number>
     bool derived_content_writer<number>::aggregate(const std::string& product, const std::list<std::string>& used_groups)
 	    {
-        if(!this->aggregator)
+        if(!this->aggregate_h)
 	        {
             assert(false);
             throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_REPO_WRITER_AGGREGATOR_UNSET);
 	        }
 
-        return this->aggregator(*this, product, used_groups);
+        return (*this->aggregate_h)(*this, product, used_groups);
 	    }
 
 
@@ -230,11 +298,9 @@ namespace transport
         std::list<std::string> notes;
         std::list<std::string> tags;
 
-        derived_content data(product.get_name(), product.get_filename().string(), now, used_groups, notes, tags);
-
-        content.push_back(data);
+        content.emplace_back(product.get_name(), product.get_filename().string(), now, used_groups, notes, tags);
 	    }
 
 	}
 
-#endif //__derived_content_writer_H_
+#endif //CPPTRANSPORT_DERIVED_CONTENT_WRITER_H

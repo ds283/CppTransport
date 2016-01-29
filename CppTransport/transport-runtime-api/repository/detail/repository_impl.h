@@ -113,11 +113,10 @@ namespace transport
     repository<number>::new_integration_task_content(integration_task_record<number>* rec, const std::list<std::string>& tags,
                                                      unsigned int worker, unsigned int workgroup, std::string suffix)
       {
-        typename integration_writer<number>::callback_group callbacks;
-        callbacks.commit = std::bind(&repository<number>::close_integration_writer, this, std::placeholders::_1);
-        callbacks.abort  = std::bind(&repository<number>::abort_integration_writer, this, std::placeholders::_1);
+        std::unique_ptr< repository_integration_writer_commit<number> > commit = std::make_unique< repository_integration_writer_commit<number> >(*this);
+        std::unique_ptr< repository_integration_writer_abort<number> > abort = std::make_unique< repository_integration_writer_abort<number> >(*this);
 
-        return this->base_new_integration_task_content(rec, tags, worker, workgroup, callbacks, suffix);
+        return this->base_new_integration_task_content(rec, tags, worker, workgroup, std::move(commit), std::move(abort), suffix);
       }
 
 
@@ -128,11 +127,10 @@ namespace transport
                                                          const boost::filesystem::path& logdir_path, const boost::filesystem::path& tempdir_path,
                                                          unsigned int worker, unsigned int workgroup)
       {
-        typename integration_writer<number>::callback_group callbacks;
-        callbacks.commit = std::bind(&repository<number>::close_integration_writer, this, std::placeholders::_1);
-        callbacks.abort  = std::bind(&repository<number>::abort_integration_writer, this, std::placeholders::_1);
+        std::unique_ptr< repository_integration_writer_commit<number> > commit = std::make_unique< repository_integration_writer_commit<number> >(*this);
+        std::unique_ptr< repository_integration_writer_abort<number> > abort = std::make_unique< repository_integration_writer_abort<number> >(*this);
 
-        return this->base_recover_integration_task_content(name, rec, output, sql_path, logdir_path, tempdir_path, worker, workgroup, callbacks);
+        return this->base_recover_integration_task_content(name, rec, output, sql_path, logdir_path, tempdir_path, worker, workgroup, std::move(commit), std::move(abort));
       }
 
 
@@ -141,11 +139,10 @@ namespace transport
     repository<number>::new_output_task_content(output_task_record<number>* rec, const std::list<std::string>& tags,
                                                 unsigned int worker, std::string suffix)
       {
-        typename derived_content_writer<number>::callback_group callbacks;
-        callbacks.commit = std::bind(&repository<number>::close_derived_content_writer, this, std::placeholders::_1);
-        callbacks.abort  = std::bind(&repository<number>::abort_derived_content_writer, this, std::placeholders::_1);
+        std::unique_ptr< repository_derived_content_writer_commit<number> > commit = std::make_unique< repository_derived_content_writer_commit<number> >(*this);
+        std::unique_ptr< repository_derived_content_writer_abort<number> > abort = std::make_unique< repository_derived_content_writer_abort<number> >(*this);
 
-        return this->base_new_output_task_content(rec, tags, worker, callbacks, suffix);
+        return this->base_new_output_task_content(rec, tags, worker, std::move(commit), std::move(abort), suffix);
       }
 
 
@@ -155,11 +152,10 @@ namespace transport
                                                     const boost::filesystem::path& output, const boost::filesystem::path& logdir_path,
                                                     const boost::filesystem::path& tempdir_path, unsigned int worker)
       {
-        typename derived_content_writer<number>::callback_group callbacks;
-        callbacks.commit = std::bind(&repository<number>::close_derived_content_writer, this, std::placeholders::_1);
-        callbacks.abort  = std::bind(&repository<number>::abort_derived_content_writer, this, std::placeholders::_1);
+        std::unique_ptr< repository_derived_content_writer_commit<number> > commit = std::make_unique< repository_derived_content_writer_commit<number> >(*this);
+        std::unique_ptr< repository_derived_content_writer_abort<number> > abort = std::make_unique< repository_derived_content_writer_abort<number> >(*this);
 
-        return this->base_recover_output_task_content(name, rec, output, logdir_path, tempdir_path, worker, callbacks);
+        return this->base_recover_output_task_content(name, rec, output, logdir_path, tempdir_path, worker, std::move(commit), std::move(abort));
       }
 
 
@@ -168,11 +164,10 @@ namespace transport
     repository<number>::new_postintegration_task_content(postintegration_task_record<number>* rec, const std::list<std::string>& tags,
                                                          unsigned int worker, std::string suffix)
       {
-        typename postintegration_writer<number>::callback_group callbacks;
-        callbacks.commit        = std::bind(&repository<number>::close_postintegration_writer, this, std::placeholders::_1);
-        callbacks.abort         = std::bind(&repository<number>::abort_postintegration_writer, this, std::placeholders::_1);
+        std::unique_ptr< repository_postintegration_writer_commit<number> > commit = std::make_unique< repository_postintegration_writer_commit<number> >(*this);
+        std::unique_ptr< repository_postintegration_writer_abort<number> > abort = std::make_unique< repository_postintegration_writer_abort<number> >(*this);
 
-        return this->base_new_postintegration_task_content(rec, tags, worker, callbacks, suffix);
+        return this->base_new_postintegration_task_content(rec, tags, worker, std::move(commit), std::move(abort), suffix);
       }
 
 
@@ -183,11 +178,10 @@ namespace transport
                                                              const boost::filesystem::path& logdir_path, const boost::filesystem::path& tempdir_path,
                                                              unsigned int worker)
       {
-        typename postintegration_writer<number>::callback_group callbacks;
-        callbacks.commit        = std::bind(&repository<number>::close_postintegration_writer, this, std::placeholders::_1);
-        callbacks.abort         = std::bind(&repository<number>::abort_postintegration_writer, this, std::placeholders::_1);
+        std::unique_ptr< repository_postintegration_writer_commit<number> > commit = std::make_unique< repository_postintegration_writer_commit<number> >(*this);
+        std::unique_ptr< repository_postintegration_writer_abort<number> > abort = std::make_unique< repository_postintegration_writer_abort<number> >(*this);
 
-        return this->base_recover_postintegration_task_content(name, rec, output, sql_path, logdir_path, tempdir_path, worker, callbacks);
+        return this->base_recover_postintegration_task_content(name, rec, output, sql_path, logdir_path, tempdir_path, worker, std::move(commit), std::move(abort));
       }
 
 
@@ -195,7 +189,9 @@ namespace transport
     std::unique_ptr< integration_writer<number> >
     repository<number>::base_new_integration_task_content(integration_task_record<number>* rec, const std::list<std::string>& tags,
                                                           unsigned int worker, unsigned int workgroup,
-                                                          typename integration_writer<number>::callback_group& callbacks, std::string suffix)
+                                                          std::unique_ptr< repository_integration_writer_commit<number> > commit,
+                                                          std::unique_ptr< repository_integration_writer_abort<number> > abort,
+                                                          std::string suffix)
       {
         // get current time
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
@@ -228,7 +224,7 @@ namespace transport
         paths.temp   = temp_path;
 
         // integration_writer constructor takes a copy of the integration_task_record
-        return std::make_unique< integration_writer<number> >(output_leaf, rec, callbacks, metadata, paths, worker, workgroup);
+        return std::make_unique< integration_writer<number> >(output_leaf, rec, std::move(commit), std::move(abort), metadata, paths, worker, workgroup);
       }
 
 
@@ -238,7 +234,8 @@ namespace transport
                                                               const boost::filesystem::path& output_path, const boost::filesystem::path& sql_path,
                                                               const boost::filesystem::path& logdir_path, const boost::filesystem::path& tempdir_path,
                                                               unsigned int worker, unsigned int workgroup,
-                                                              typename integration_writer<number>::callback_group& callbacks)
+                                                              std::unique_ptr< repository_integration_writer_commit<number> > commit,
+                                                              std::unique_ptr< repository_integration_writer_abort<number> > abort)
       {
         // get current time
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
@@ -253,14 +250,16 @@ namespace transport
         paths.log    = logdir_path;
         paths.temp   = tempdir_path;
 
-        return std::make_unique< integration_writer<number> >(name, rec, callbacks, metadata, paths, worker, workgroup);
+        return std::make_unique< integration_writer<number> >(name, rec, std::move(commit), std::move(abort), metadata, paths, worker, workgroup);
       }
 
 
     template <typename number>
     std::unique_ptr< derived_content_writer<number> >
     repository<number>::base_new_output_task_content(output_task_record<number>* rec, const std::list<std::string>& tags, unsigned int worker,
-                                                     typename derived_content_writer<number>::callback_group& callbacks, std::string suffix)
+                                                     std::unique_ptr< repository_derived_content_writer_commit<number> > commit,
+                                                     std::unique_ptr< repository_derived_content_writer_abort<number> > abort,
+                                                     std::string suffix)
       {
         // get current time
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
@@ -290,7 +289,7 @@ namespace transport
         paths.log    = log_path;
         paths.temp   = temp_path;
 
-        return std::make_unique< derived_content_writer<number> >(output_leaf, rec, callbacks, metadata, paths, worker);
+        return std::make_unique< derived_content_writer<number> >(output_leaf, rec, std::move(commit), std::move(abort), metadata, paths, worker);
       }
 
 
@@ -299,7 +298,9 @@ namespace transport
     repository<number>::base_recover_output_task_content(const std::string& name, output_task_record<number>* rec,
                                                          const boost::filesystem::path& output_path,
                                                          const boost::filesystem::path& logdir_path, const boost::filesystem::path& tempdir_path,
-                                                         unsigned int worker, typename derived_content_writer<number>::callback_group& callbacks)
+                                                         unsigned int worker,
+                                                         std::unique_ptr< repository_derived_content_writer_commit<number> > commit,
+                                                         std::unique_ptr< repository_derived_content_writer_abort<number> > abort)
       {
         // get current time
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
@@ -313,14 +314,16 @@ namespace transport
         paths.log    = logdir_path;
         paths.temp   = tempdir_path;
 
-        return std::make_unique< derived_content_writer<number> >(name, rec, callbacks, metadata, paths, worker);
+        return std::make_unique< derived_content_writer<number> >(name, rec, std::move(commit), std::move(abort), metadata, paths, worker);
       }
 
 
     template <typename number>
     std::unique_ptr< postintegration_writer<number> >
     repository<number>::base_new_postintegration_task_content(postintegration_task_record<number>* rec, const std::list<std::string>& tags, unsigned int worker,
-                                                              typename postintegration_writer<number>::callback_group& callbacks, std::string suffix)
+                                                              std::unique_ptr< repository_postintegration_writer_commit<number> > commit,
+                                                              std::unique_ptr< repository_postintegration_writer_abort<number> > abort,
+                                                              std::string suffix)
       {
         // get current time
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
@@ -352,7 +355,7 @@ namespace transport
         paths.log    = log_path;
         paths.temp   = temp_path;
 
-        return std::make_unique< postintegration_writer<number> >(output_leaf, rec, callbacks, metadata, paths, worker);
+        return std::make_unique< postintegration_writer<number> >(output_leaf, rec, std::move(commit), std::move(abort), metadata, paths, worker);
       }
 
 
@@ -361,7 +364,9 @@ namespace transport
     repository<number>::base_recover_postintegration_task_content(const std::string& name, postintegration_task_record<number>* rec,
                                                                   const boost::filesystem::path& output_path, const boost::filesystem::path& sql_path,
                                                                   const boost::filesystem::path& logdir_path, const boost::filesystem::path& tempdir_path,
-                                                                  unsigned int worker, typename postintegration_writer<number>::callback_group& callbacks)
+                                                                  unsigned int worker,
+                                                                  std::unique_ptr< repository_postintegration_writer_commit<number> > commit,
+                                                                  std::unique_ptr< repository_postintegration_writer_abort<number> > abort)
       {
         // get current time
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
@@ -376,7 +381,7 @@ namespace transport
         paths.log    = logdir_path;
         paths.temp   = tempdir_path;
 
-        return std::make_unique< postintegration_writer<number> >(name, rec, callbacks, metadata, paths, worker);
+        return std::make_unique< postintegration_writer<number> >(name, rec, std::move(commit), std::move(abort), metadata, paths, worker);
       }
 
 

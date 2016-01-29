@@ -153,7 +153,8 @@ namespace transport
         std::unique_ptr< integration_writer<number> > base_new_integration_task_content(integration_task_record<number>* rec,
                                                                                         const std::list<std::string>& tags,
                                                                                         unsigned int worker, unsigned int workgroup,
-                                                                                        typename integration_writer<number>::callback_group& callbacks,
+                                                                                        std::unique_ptr< repository_integration_writer_commit<number> > commit,
+                                                                                        std::unique_ptr< repository_integration_writer_abort<number> > abort,
                                                                                         std::string suffix="");
 
         //! generate an integration writer for recovery
@@ -161,28 +162,36 @@ namespace transport
                                                                                             const boost::filesystem::path& output_path, const boost::filesystem::path& sql_path,
                                                                                             const boost::filesystem::path& logdir_path, const boost::filesystem::path& tempdir_path,
                                                                                             unsigned int worker, unsigned int workgroup,
-                                                                                            typename integration_writer<number>::callback_group& callbacks);
+                                                                                            std::unique_ptr< repository_integration_writer_commit<number> > commit,
+                                                                                            std::unique_ptr< repository_integration_writer_abort<number> > abort);
 
         //! generate a derived content writer
         std::unique_ptr< derived_content_writer<number> > base_new_output_task_content(output_task_record<number>* rec,
                                                                                        const std::list<std::string>& tags, unsigned int worker,
-                                                                                       typename derived_content_writer<number>::callback_group& callbacks, std::string suffix="");
+                                                                                       std::unique_ptr< repository_derived_content_writer_commit<number> > commit,
+                                                                                       std::unique_ptr< repository_derived_content_writer_abort<number> > abort,
+                                                                                       std::string suffix="");
 
         //! generate a postintegration writer for recovery
         std::unique_ptr < derived_content_writer<number> > base_recover_output_task_content(const std::string& name, output_task_record<number>* rec,
                                                                                             const boost::filesystem::path& output_path, const boost::filesystem::path& logdir_path,
                                                                                             const boost::filesystem::path& tempdir_path, unsigned int worker,
-                                                                                            typename derived_content_writer<number>::callback_group& callbacks);
+                                                                                            std::unique_ptr< repository_derived_content_writer_commit<number> > commit,
+                                                                                            std::unique_ptr< repository_derived_content_writer_abort<number> > abort);
 
         std::unique_ptr< postintegration_writer<number> > base_new_postintegration_task_content(postintegration_task_record<number>* rec,
                                                                                                 const std::list<std::string>& tags, unsigned int worker,
-                                                                                                typename postintegration_writer<number>::callback_group& callbacks, std::string suffix="");
+                                                                                                std::unique_ptr< repository_postintegration_writer_commit<number> > commit,
+                                                                                                std::unique_ptr< repository_postintegration_writer_abort<number> > abort,
+                                                                                                std::string suffix="");
 
         //! generate a postintegration writer for recovery
         std::unique_ptr < postintegration_writer<number> > base_recover_postintegration_task_content(const std::string& name, postintegration_task_record<number>* rec,
                                                                                                      const boost::filesystem::path& output_path, const boost::filesystem::path& sql_path,
                                                                                                      const boost::filesystem::path& logdir_path, const boost::filesystem::path& tempdir_path,
-                                                                                                     unsigned int worker, typename postintegration_writer<number>::callback_group& callbacks);
+                                                                                                     unsigned int worker,
+                                                                                                     std::unique_ptr< repository_postintegration_writer_commit<number> > commit,
+                                                                                                     std::unique_ptr< repository_postintegration_writer_abort<number> > abort);
 
 
         // PERFORM RECOVERY ON CRASHED WRITERS
@@ -238,6 +247,15 @@ namespace transport
 
         //! Rollback a failed integration
         void abort_derived_content_writer(derived_content_writer<number>& writer);
+
+
+        friend repository_integration_writer_commit<number>;
+        friend repository_postintegration_writer_commit<number>;
+        friend repository_derived_content_writer_commit<number>;
+
+        friend repository_integration_writer_abort<number>;
+        friend repository_postintegration_writer_abort<number>;
+        friend repository_derived_content_writer_abort<number>;
 
 
         // REPOSITORY RECORD FACTORIES -- USED TO OBTAIN REPOSITORY RECORD CLASSES FROM OTHER REPRESENTATIONS

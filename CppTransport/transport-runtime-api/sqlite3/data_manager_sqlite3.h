@@ -29,17 +29,23 @@
 #include "transport-runtime-api/sqlite3/operations/data_manager.h"
 
 
-// DECLARE DATA_MANAGER_SQLITE3
-#include "transport-runtime-api/sqlite3/detail/data_manager_sqlite3_decl.h"
-
 // DECLARE CONTAINER REPLACEMENT FUNCTION
 #include "transport-runtime-api/sqlite3/detail/container_replace_decl.h"
 
-// DEFINE DATA_MANAGER_SQLITE3
-#include "transport-runtime-api/sqlite3/detail/data_manager_sqlite3_impl.h"
+// DECLARE *_WRITER HANDLERS
+#include "transport-runtime-api/sqlite3/detail/writer_data_mgr_decl.h"
+
+// DECLARE DATA_MANAGER_SQLITE3
+#include "transport-runtime-api/sqlite3/detail/data_manager_sqlite3_decl.h"
 
 // DEFINE CONTAINER REPLACEMENT FUNCTION
 #include "transport-runtime-api/sqlite3/detail/container_replace_impl.h"
+
+// DEFINE *_WRITER HANDLERS
+#include "transport-runtime-api/sqlite3/detail/writer_data_mgr_impl.h"
+
+// DEFINE DATA_MANAGER_SQLITE3
+#include "transport-runtime-api/sqlite3/detail/data_manager_sqlite3_impl.h"
 
 
 namespace transport
