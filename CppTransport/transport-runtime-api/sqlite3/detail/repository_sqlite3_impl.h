@@ -955,20 +955,20 @@ namespace transport
     template <typename number>
     template <typename Payload>
     void repository_sqlite3<number>::enumerate_content_groups(const std::string& name, std::list< std::unique_ptr< output_group_record<Payload> > >& list,
-    find_function finder)
-  {
-    std::list<std::string> group_names;
+                                                              find_function finder)
+      {
+        std::list<std::string> group_names;
 
-    // get list of group names associated with the task 'name'
-    sqlite3_operations::enumerate_content_groups<Payload>(this->db, name, group_names);
+        // get list of group names associated with the task 'name'
+        sqlite3_operations::enumerate_content_groups<Payload>(this->db, name, group_names);
 
-    for(const std::string& name : group_names)
-  {
-    boost::filesystem::path filename = sqlite3_operations::find_group<Payload>(this->db, name, CPPTRANSPORT_REPO_OUTPUT_MISSING);
-    Json::Value             root     = this->deserialize_JSON_document(filename);
-    list.emplace_back(this->template content_group_record_factory<Payload>(root));
-  }
-}
+        for(const std::string& name : group_names)
+          {
+            boost::filesystem::path filename = sqlite3_operations::find_group<Payload>(this->db, name, CPPTRANSPORT_REPO_OUTPUT_MISSING);
+            Json::Value             root     = this->deserialize_JSON_document(filename);
+            list.emplace_back(this->template content_group_record_factory<Payload>(root));
+          }
+      }
 
 
 // CONTENT GROUP MANAGEMENT
