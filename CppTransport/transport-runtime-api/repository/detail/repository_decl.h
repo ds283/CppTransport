@@ -61,8 +61,12 @@ namespace transport
 
       public:
 
+        // For all commit() methods, no record with the supplied name should
+        // already exist; if it does, this is an error.
+        // This prevents records being changed later, which could make already-generated output
+        // inconsistent with the task specifications stored in the repository
+
         //! Write a 'model/initial conditions/parameters' combination (a 'package') to the package database.
-        //! No combination with the supplied name should already exist; if it does, this is considered an error.
         virtual void commit(const initial_conditions<number>& ics) = 0;
 
         //! Write an integration task to the database.
