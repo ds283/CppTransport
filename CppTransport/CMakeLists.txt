@@ -732,7 +732,7 @@ set(TRANSPORT_RUNTIME_API_MANAGER_FILES
   transport-runtime-api/manager/slave_work_handler.h
   transport-runtime-api/manager/task_manager.h
   transport-runtime-api/manager/work_journal.h
-  )
+  transport-runtime-api/manager/task_gallery.h)
 
 set(TRANSPORT_RUNTIME_API_MODELS_FILES
   transport-runtime-api/models/advisory_classes.h

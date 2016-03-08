@@ -19,6 +19,7 @@
 #include "transport-runtime-api/manager/argument_cache.h"
 #include "transport-runtime-api/manager/environment.h"
 #include "transport-runtime-api/manager/message_handlers.h"
+#include "transport-runtime-api/manager/task_gallery.h"
 
 #include "transport-runtime-api/messages.h"
 #include "transport-runtime-api/exceptions.h"
@@ -54,13 +55,28 @@ namespace transport
 		    void process(void);
 
 
+        // INTERFACE -- MANAGE TASK GALLERY
+
+        // Tasks in the gallery are available to be written to the database
+        // if needed.
+        // First, the main database is checked and if
+
+      public:
+
+        //! declare gallery generator
+        template <typename GeneratorObject>
+        void add_generator(GeneratorObject generator);
+
+        //! declare
+
+
         // INTERFACE -- MODEL MANAGEMENT
 
       public:
 
         //! Create a model instance of templated type and register it; delegate to instance manager
         template <typename Model>
-        std::shared_ptr<Model> create_model() { return(this->instance_mgr.template create_model<Model>()); }
+        std::shared_ptr<Model> create_model() { return(this->model_mgr.template create_model<Model>()); }
 
 
         // INTERNAL DATA
@@ -79,11 +95,16 @@ namespace transport
 
         // LOCAL ENVIRONMENT
 
-        //! instance manager
-        //! must be declared before slave and master controllers below
-        model_manager<number> instance_mgr;
+        // All these objects must be declared before the slave/master component managers, so that
+        // they are constructed before slave/master components are
 
-        //! environment agent (handles interactions with local machine such as location of Python)
+        //! instance manager
+        model_manager<number> model_mgr;
+
+        //! task gallery
+        task_gallery<number> gallery;
+
+        //! environment agent (handles interactions with local machine such as location of Python interpreter)
         local_environment local_env;
 
         //! Argument cache
@@ -107,11 +128,11 @@ namespace transport
 	      // note it is safe to assume environment and world have been constructed when the constructor for
 	      // slave and master are invoked, because environment and world are declared
 	      // prior to slave and master in the class declaration
-	      slave(environment, world, local_env, arg_cache, this->instance_mgr,
+	      slave(environment, world, local_env, arg_cache, model_mgr,
 	            error_handler(local_env, arg_cache),
 	            warning_handler(local_env, arg_cache),
 	            message_handler(local_env, arg_cache)),
-	      master(environment, world, local_env, arg_cache, this->instance_mgr,
+	      master(environment, world, local_env, arg_cache, model_mgr, gallery,
                error_handler(local_env, arg_cache),
                warning_handler(local_env, arg_cache),
                message_handler(local_env, arg_cache))
@@ -128,8 +149,9 @@ namespace transport
 			{
 				if(this->world.rank() == MPI::RANK_MASTER)
 					{
-            // output model list if it has been asked for (have to wait until this point to be sure all models have registered)
-            if(this->arg_cache.get_model_list()) this->instance_mgr.write_models(std::cout);
+            // output model list, perform other tasks specifically on master node
+            this->master.pre_process_tasks();
+
 						this->master.execute_tasks();
 					}
 				else
@@ -137,6 +159,15 @@ namespace transport
 						this->slave.wait_for_tasks();
 					}
 			}
+
+
+    template <typename number>
+    template <typename GeneratorObject>
+    void task_manager<number>::add_generator(GeneratorObject obj)
+      {
+        // pass through to gallery manager
+        this->gallery.add_generator(obj);
+      }
 
 
   } // namespace transport

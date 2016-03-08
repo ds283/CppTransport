@@ -55,6 +55,17 @@ namespace transport
         void set_colour_output(bool g)                            { this->colour_output = g; }
 
 
+        // REPOSITORY OPTIONS
+
+      public:
+
+        //! Set create mode
+        void set_create_mode(bool g)                              { this->create = g; }
+
+        //! Get create mode status
+        bool get_create_model() const                              { return(this->create); }
+
+
         // CHECKPOINTING AND RECOVERY
 
       public:
@@ -143,6 +154,9 @@ namespace transport
         //! recovery mode?
         bool recovery;
 
+        //! create mode?
+        bool create;
+
         //! colour output?
         bool colour_output;
 
@@ -168,6 +182,7 @@ namespace transport
             ar & verbose;
             ar & list_models;
             ar & recovery;
+            ar & create;
             ar & colour_output;
             ar & batcher_capacity;
             ar & pipe_capacity;
@@ -183,6 +198,7 @@ namespace transport
 	      verbose(false),
         list_models(false),
         recovery(false),
+        create(false),
         colour_output(true),
         batcher_capacity(CPPTRANSPORT_DEFAULT_BATCHER_STORAGE),
         pipe_capacity(CPPTRANSPORT_DEFAULT_PIPE_STORAGE),

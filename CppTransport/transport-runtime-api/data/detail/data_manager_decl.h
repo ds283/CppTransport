@@ -26,6 +26,8 @@ namespace transport
           {
           }
 
+        //! Explicitly delete copy constructor, preventing duplication (data_manager instances should be unique)
+        data_manager(const data_manager<number>& obj) = delete;
 
         //! Destroy the data_manager instance. In practice this would always be delegated to an implementation class
         virtual ~data_manager() = default;

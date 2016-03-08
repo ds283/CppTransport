@@ -21,13 +21,15 @@ namespace transport
 
     template <typename number>
     master_controller<number>::master_controller(boost::mpi::environment& e, boost::mpi::communicator& w,
-                                                 local_environment& le, argument_cache& ac, model_manager <number>& f,
+                                                 local_environment& le, argument_cache& ac, model_manager<number>& f,
+                                                 task_gallery<number>& g,
                                                  error_handler eh, warning_handler wh, message_handler mh)
       : environment(e),
         world(w),
         local_env(le),
         arg_cache(ac),
-        finder(f),
+        model_mgr(f),
+        gallery(g),
         data_mgr(data_manager_factory<number>(ac.get_batcher_capacity(), ac.get_datapipe_capacity(), ac.get_checkpoint_interval())),
         journal(w.size()-1),
         err(eh),
@@ -66,6 +68,7 @@ namespace transport
 
         boost::program_options::options_description job_options("Job specification");
         job_options.add_options()
+          (CPPTRANSPORT_SWITCH_CREATE,                                                                                       CPPTRANSPORT_HELP_CREATE)
           (CPPTRANSPORT_SWITCH_TASK,             boost::program_options::value< std::vector< std::string > >()->composing(), CPPTRANSPORT_HELP_TASK)
           (CPPTRANSPORT_SWITCH_SEED,             boost::program_options::value< std::string >(),                             CPPTRANSPORT_HELP_SEED);
 
@@ -151,7 +154,7 @@ namespace transport
             try
               {
                 this->repo = repository_factory<number>(option_map[CPPTRANSPORT_SWITCH_REPO].as<std::string>(),
-                                                        this->finder, repository_mode::readwrite,
+                                                        this->model_mgr, repository_mode::readwrite,
                                                         this->err, this->warn, this->msg);
               }
             catch(runtime_exception& xe)
@@ -277,15 +280,17 @@ namespace transport
         if(option_map.count(CPPTRANSPORT_SWITCH_VERBOSE_LONG))                                                this->arg_cache.set_verbose(true);
         if(option_map.count(CPPTRANSPORT_SWITCH_RECOVER))                                                     this->arg_cache.set_recovery_mode(true);
         if(option_map.count(CPPTRANSPORT_SWITCH_NO_COLOUR) || option_map.count(CPPTRANSPORT_SWITCH_NO_COLOR)) this->arg_cache.set_colour_output(false);
+        if(option_map.count(CPPTRANSPORT_SWITCH_CREATE))                                                      this->arg_cache.set_create_mode(true);
 
-        // process task specification
+        // process task item
+        // this can depend on prior information specified by other switches, eg. --seed
         if(option_map.count(CPPTRANSPORT_SWITCH_TASK))
           {
             std::vector<std::string> tasks = option_map[CPPTRANSPORT_SWITCH_TASK].as< std::vector<std::string> >();
 
             for(std::vector<std::string>::const_iterator t = tasks.begin(); t != tasks.end(); ++t)
               {
-                job_queue.push_back(job_descriptor(master_controller_impl::job_type::job_task, *t, tags));
+                job_queue.push_back(job_descriptor(job_type::job_task, *t, tags));
 
                 if(option_map.count(CPPTRANSPORT_SWITCH_SEED))
                   {
@@ -293,6 +298,14 @@ namespace transport
                   }
               }
           }
+      }
+
+
+    template <typename number>
+    void master_controller<number>::pre_process_tasks()
+      {
+        if(this->arg_cache.get_model_list())   this->model_mgr.write_models(std::cout);
+        if(this->arg_cache.get_create_model()) this->gallery.commit(*this->repo);
       }
 
 
@@ -316,11 +329,11 @@ namespace transport
             this->initialize_workers();
 
             unsigned int database_tasks = 0;
-            for(const master_controller_impl::job_descriptor& job : this->job_queue)
+            for(const job_descriptor& job : this->job_queue)
               {
                 switch(job.get_type())
                   {
-                    case master_controller_impl::job_type::job_task:
+                    case job_type::job_task:
                       {
                         this->process_task(job);
                         database_tasks++;
@@ -362,48 +375,15 @@ namespace transport
 
 
     template <typename number>
-    void master_controller<number>::process_task(const master_controller_impl::job_descriptor& job)
+    void master_controller<number>::process_task(const job_descriptor& job)
       {
+        std::unique_ptr< task_record<number> > record;
+
         try
           {
-            // query a task record with the name we're looking for from the database
-            std::unique_ptr< task_record<number> > record = this->repo->query_task(job.get_name());
-
-            switch(record->get_type())
-              {
-                case task_record<number>::task_type::integration:
-                  {
-                    integration_task_record<number>* int_rec = dynamic_cast< integration_task_record<number>* >(record.get());
-
-                    assert(int_rec != nullptr);
-                    if(int_rec == nullptr) throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_RECORD_CAST_FAILED);
-
-                    this->dispatch_integration_task(int_rec, job.is_seeded(), job.get_seed_group(), job.get_tags());
-                    break;
-                  }
-
-                case task_record<number>::task_type::output:
-                  {
-                    output_task_record<number>* out_rec = dynamic_cast< output_task_record<number>* >(record.get());
-
-                    assert(out_rec != nullptr);
-                    if(out_rec == nullptr) throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_RECORD_CAST_FAILED);
-
-                    this->dispatch_output_task(out_rec, job.get_tags());
-                    break;
-                  }
-
-                case task_record<number>::task_type::postintegration:
-                  {
-                    postintegration_task_record<number>* pint_rec = dynamic_cast< postintegration_task_record<number>* >(record.get());
-
-                    assert(pint_rec != nullptr);
-                    if(pint_rec == nullptr) throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_RECORD_CAST_FAILED);
-
-                    this->dispatch_postintegration_task(pint_rec, job.is_seeded(), job.get_seed_group(), job.get_tags());
-                    break;
-                  }
-              }
+            // query a task record with the name we're looking for from the database;
+            // will throw RECORD_NOT_FOUND if the task record is not present
+            record = this->repo->query_task(job.get_name());
           }
         catch (runtime_exception xe)
           {
@@ -412,6 +392,7 @@ namespace transport
                 std::ostringstream msg;
                 msg << CPPTRANSPORT_REPO_MISSING_RECORD << " '" << xe.what() << "'" << CPPTRANSPORT_REPO_SKIPPING_TASK;
                 this->err(msg.str());
+                return;
               }
             else if(xe.get_exception_code() == exception_type::MISSING_MODEL_INSTANCE
                     || xe.get_exception_code() == exception_type::REPOSITORY_BACKEND_ERROR)
@@ -419,10 +400,48 @@ namespace transport
                 std::ostringstream msg;
                 msg << xe.what() << " " << CPPTRANSPORT_REPO_FOR_TASK << " '" << job.get_name() << "'" << CPPTRANSPORT_REPO_SKIPPING_TASK;
                 this->err(msg.str());
+                return;
               }
             else throw xe;
           }
+
+        switch(record->get_type())
+          {
+            case task_record<number>::task_type::integration:
+              {
+                integration_task_record<number>* int_rec = dynamic_cast< integration_task_record<number>* >(record.get());
+
+                assert(int_rec != nullptr);
+                if(int_rec == nullptr) throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_RECORD_CAST_FAILED);
+
+                this->dispatch_integration_task(int_rec, job.is_seeded(), job.get_seed_group(), job.get_tags());
+                break;
+              }
+
+            case task_record<number>::task_type::output:
+              {
+                output_task_record<number>* out_rec = dynamic_cast< output_task_record<number>* >(record.get());
+
+                assert(out_rec != nullptr);
+                if(out_rec == nullptr) throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_RECORD_CAST_FAILED);
+
+                this->dispatch_output_task(out_rec, job.get_tags());
+                break;
+              }
+
+            case task_record<number>::task_type::postintegration:
+              {
+                postintegration_task_record<number>* pint_rec = dynamic_cast< postintegration_task_record<number>* >(record.get());
+
+                assert(pint_rec != nullptr);
+                if(pint_rec == nullptr) throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_RECORD_CAST_FAILED);
+
+                this->dispatch_postintegration_task(pint_rec, job.is_seeded(), job.get_seed_group(), job.get_tags());
+                break;
+              }
+          }
       }
+
     // WORKER HANDLING
 
 

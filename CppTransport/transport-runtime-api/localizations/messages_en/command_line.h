@@ -47,6 +47,9 @@
 #define CPPTRANSPORT_SWITCH_SEED              "seed"
 #define CPPTRANSPORT_HELP_SEED                "use named output group as a seed"
 
+#define CPPTRANSPORT_SWITCH_CREATE            "create"
+#define CPPTRANSPORT_HELP_CREATE              "write repository content"
+
 #define CPPTRANSPORT_SWITCH_TASK              "task"
 #define CPPTRANSPORT_HELP_TASK                "add named task to list of jobs"
 

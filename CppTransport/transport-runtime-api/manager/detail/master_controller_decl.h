@@ -29,6 +29,7 @@
 #include "transport-runtime-api/manager/argument_cache.h"
 #include "transport-runtime-api/manager/environment.h"
 #include "transport-runtime-api/manager/message_handlers.h"
+#include "transport-runtime-api/manager/task_gallery.h"
 
 #include "transport-runtime-api/manager/detail/job_descriptors.h"
 #include "transport-runtime-api/manager/detail/aggregation_forward_declare.h"
@@ -58,6 +59,7 @@ namespace transport
         //! a command-line or configuration-file option
         master_controller(boost::mpi::environment& e, boost::mpi::communicator& w,
                           local_environment& le, argument_cache& ac, model_manager<number>& f,
+                          task_gallery<number>& g,
                           error_handler eh, warning_handler wh, message_handler mh);
 
         //! destroy a master manager object
@@ -70,6 +72,9 @@ namespace transport
 
         //! interpret command-line arguments
         void process_arguments(int argc, char* argv[]);
+
+        //! perform tasks after processing command-line arguments
+        void pre_process_tasks();
 
         //! execute any queued tasks
         void execute_tasks(void);
@@ -275,12 +280,14 @@ namespace transport
         //! Argument cache
         argument_cache& arg_cache;
 
-
-        // MODEL FINDER REFERENCE
-        model_manager<number>& finder;
+        //! Task gallery
+        task_gallery<number>& gallery;
 
 
         // RUNTIME AGENTS
+
+        //! Model finder delegate
+        model_manager<number>& model_mgr;
 
         //! Repository manager instance
         std::unique_ptr< json_repository<number> > repo;

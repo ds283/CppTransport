@@ -30,6 +30,8 @@ namespace transport
                    error_handler e, warning_handler w, message_handler m,
                    package_finder<number> pf, task_finder<number> tf, derived_product_finder<number> dpf);
 
+        //! Explicitly delete copy constructor, preventing duplication (repository instances should be unique)
+        repository(const repository<number>& obj) = delete;
 
         //! Close a repository, including the corresponding containers and environment. In practice this would always be delegated to the implementation class
         virtual ~repository() = default;
