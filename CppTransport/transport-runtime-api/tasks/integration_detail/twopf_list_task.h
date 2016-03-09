@@ -9,6 +9,7 @@
 
 
 #include <functional>
+#include <limits>
 
 #include "transport-runtime-api/tasks/integration_detail/common.h"
 #include "transport-runtime-api/tasks/integration_detail/abstract.h"
@@ -23,6 +24,8 @@
 
 #include "boost/math/tools/roots.hpp"
 #include "boost/log/utility/formatting_ostream.hpp"
+
+#include "Eigen/Core"
 
 
 
@@ -163,11 +166,16 @@ namespace transport
       protected:
 
 		    //! Compute horizon-exit times for each mode in the database -- use supplied spline
-		    template <typename SplineObject, typename TolerancePolicy>
-		    void twopf_compute_horizon_exit_times(SplineObject& sp, TolerancePolicy tol);
+		    template <typename SplineObject, typename SplineArray, typename TolerancePolicy>
+		    void twopf_compute_horizon_exit_times(SplineObject& sp, SplineArray& field_sp, TolerancePolicy tol);
 
         //! Issue advisory messages if failed to compute horizon exit times
         void compute_horizon_exit_times_fail(failed_to_compute_horizon_exit& xe);
+
+        //! Compute largest eigenvalue of the mass matrix at a given time, given
+        //! an array of pointers to spline objects
+        template <typename SplineArray>
+        number compute_largest_mass_eigenvalue(double N, SplineArray& field_sp);
 
 
 		    // INTERFACE - INITIAL CONDITIONS AND INTEGRATION DETAILS
@@ -629,15 +637,21 @@ namespace transport
 
 		    std::vector<double> N;
 		    std::vector<number> log_aH;
+        std::vector< std::vector<number> > fields;
+        std::vector< std::unique_ptr< spline1d<number> > > field_splines;
 
         try
           {
-            this->get_model()->compute_aH(this, N, log_aH, largest_k);
+            this->get_model()->compute_aH(this, N, log_aH, fields, largest_k);
             assert(N.size() == log_aH.size());
 
             spline1d<number> sp(N, log_aH);
+            for(std::vector<number>& field_history : fields)
+              {
+                field_splines.emplace_back(std::make_unique< spline1d<number> >(N, field_history));
+              }
 
-            this->twopf_compute_horizon_exit_times(sp, task_impl::TolerancePredicate(CPPTRANSPORT_ROOT_FIND_TOLERANCE));
+            this->twopf_compute_horizon_exit_times(sp, field_splines, task_impl::TolerancePredicate(CPPTRANSPORT_ROOT_FIND_TOLERANCE));
           }
         catch(failed_to_compute_horizon_exit& xe)
           {
@@ -648,8 +662,8 @@ namespace transport
 
 
 		template <typename number>
-		template <typename SplineObject, typename TolerancePolicy>
-		void twopf_list_task<number>::twopf_compute_horizon_exit_times(SplineObject& sp, TolerancePolicy tol)
+		template <typename SplineObject, typename SplineArray, typename TolerancePolicy>
+		void twopf_list_task<number>::twopf_compute_horizon_exit_times(SplineObject& sp, SplineArray& field_sp, TolerancePolicy tol)
 			{
 		    for(twopf_kconfig_database::config_iterator t = this->twopf_db->config_begin(); t != this->twopf_db->config_end(); ++t)
 			    {
@@ -658,6 +672,17 @@ namespace transport
 
             // update database with computed horizon exit time
 		        t->t_exit = task_impl::find_zero_of_spline(sp, tol);
+
+            // compute eigenvalues of mass matrix at initial time for this k-mode
+            double Nbegin;
+            if(this->fast_forward) Nbegin = this->get_fast_forward_start(*t);
+            else                   Nbegin = this->ics.get_N_initial();
+
+            double a = std::exp(Nbegin - this->get_N_horizon_crossing() + this->get_astar_normalization());
+            double k_over_a = t->k_comoving/a;
+            double k_over_a_sq = k_over_a*k_over_a;
+            number largest_mass_eigenvalue = this->compute_largest_mass_eigenvalue(Nbegin, field_sp);
+            t->k_to_mass_ratio = k_over_a_sq / static_cast<double>(largest_mass_eigenvalue);
 			    }
 			}
 
@@ -688,6 +713,51 @@ namespace transport
           {
             std::cout << CPPTRANSPORT_TASK_SEARCH_TOO_CLOSE_FAIL << '\n';
           }
+      }
+
+
+    template <typename number>
+    template <typename SplineArray>
+    number twopf_list_task<number>::compute_largest_mass_eigenvalue(double N, SplineArray& field_sp)
+      {
+        Eigen::Matrix<number, Eigen::Dynamic, Eigen::Dynamic> mass_matrix;
+
+        unsigned int num_fields = this->get_model()->get_N_fields();
+
+        std::vector<number> flat_M(num_fields*num_fields);
+        mass_matrix.resize(num_fields, num_fields);
+
+        std::vector<number> fields;
+        fields.reserve(num_fields);
+        assert(field_sp.size() == num_fields);
+
+        for(auto& spline : field_sp)
+          {
+            fields.push_back((*spline)(N));
+          }
+
+        this->get_model()->M(this, fields, N, flat_M);
+
+        for(unsigned int i = 0; i < num_fields; ++i)
+          {
+            for(unsigned int j = 0; j < num_fields; ++j)
+              {
+                mass_matrix(i,j) = flat_M[this->get_model()->flatten(i,j)];
+              }
+          }
+
+        // result of computing eigenvalues is a vector of complex numbers
+        auto evalues = mass_matrix.eigenvalues();
+        number largest_eigenvalue = -std::numeric_limits<number>().max();
+        for(unsigned int i = 0; i < num_fields; ++i)
+          {
+            if(std::abs(evalues(i)) > largest_eigenvalue)
+              {
+                largest_eigenvalue = std::abs(evalues(i));
+              }
+          }
+
+        return largest_eigenvalue;
       }
 
 

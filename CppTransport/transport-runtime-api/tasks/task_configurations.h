@@ -91,6 +91,10 @@ namespace transport
 		    //! time of horizon exit
 		    double t_exit;
 
+        //! value of (k/a) / largest eigenvalue of mass matrix
+        //! used to detect whether the initial conditions have been set sufficiently early
+        double k_to_mass_ratio;
+
         template <typename Stream> void write(Stream& out) const;
 	    };
 

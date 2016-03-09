@@ -128,7 +128,7 @@ namespace transport
 
         //! Compute initial conditions which give horizon-crossing at time Ncross,
         //! if we allow Npre e-folds before horizon-crossing.
-        //! The supplied parameters should be validated.
+        //! The supplied parameters should have been validated.
         void offset_ics(const parameters<number>& params, const std::vector<number>& input, std::vector<number>& output,
                         double Ninit, double Ncross, double Npre,
                         double tolerance = CPPTRANSPORT_DEFAULT_ICS_GAP_TOLERANCE,
@@ -145,8 +145,10 @@ namespace transport
         //! Compute when the end of inflation occurs relative to the initial conditions
         virtual double compute_end_of_inflation(const integration_task<number>* tk, double search_time=CPPTRANSPORT_DEFAULT_END_OF_INFLATION_SEARCH) = 0;
 
-		    //! Compute aH as a function of N up to the horizon-exit time of some wavenumber
-		    virtual void compute_aH(const twopf_list_task<number>* tk, std::vector<double>& N, std::vector<number>& aH, double largest_k) = 0;
+		    //! Compute aH as a function of N up to the horizon-exit time of some wavenumber.
+        //! Samples of log(aH) and the fields are returned in the supplied vector, with samples taken
+        //! at internally-chosen values of N -- also returned in the corresponding vector
+		    virtual void compute_aH(const twopf_list_task<number>* tk, std::vector<double>& N, std::vector<number>& log_aH, std::vector< std::vector<number> >& fields, double largest_k) = 0;
 
 
         // INTERFACE - PARAMETER HANDLING
@@ -178,6 +180,8 @@ namespace transport
         virtual void B(const twopf_list_task<number>* __task, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector<number>& __B) = 0;
 
         virtual void C(const twopf_list_task<number>* __task, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector<number>& __C) = 0;
+
+        virtual void M(const twopf_list_task<number>* __task, const std::vector<number>& __fields, double __N, std::vector<number>& __M) = 0;
 
 
         // BACKEND
