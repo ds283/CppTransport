@@ -18,6 +18,8 @@
 #include "boost/numeric/odeint.hpp"
 #include "boost/range/algorithm.hpp"
 
+#include "Eigen/Core"
+
 #include "transport-runtime-api/transport.h"
 
 
@@ -220,7 +222,7 @@ namespace transport
 
         double compute_end_of_inflation(const integration_task<number>* tk, double search_time=CPPTRANSPORT_DEFAULT_END_OF_INFLATION_SEARCH) override;
 
-		    void compute_aH(const twopf_list_task<number>* tk, std::vector<double>& N, std::vector<number>& log_aH, std::vector< std::vector<number> >& fields, double largest_k) override;
+		    void compute_aH(const twopf_list_task<number>* tk, std::vector<double>& N, std::vector<number>& log_aH, std::vector<number>& log_a2M, double largest_k) override;
 
 
         // CALCULATE INITIAL CONDITIONS FOR N-POINT FUNCTIONS
@@ -1298,17 +1300,36 @@ namespace transport
         class aHAggregatorPredicate
           {
           public:
-            aHAggregatorPredicate(const twopf_list_task<number>* tk, std::vector<double>& N, std::vector<number>& log_aH, std::vector< std::vector<number> >& fields, double lk)
+            aHAggregatorPredicate(const twopf_list_task<number>* tk, model<number>* m, std::vector<double>& N,
+                                  std::vector<number>& log_aH, std::vector<number>& log_a2M, double lk)
               : params(tk->get_params()),
+                task(tk),
+                mdl(m),
                 N_vector(N),
                 log_aH_vector(log_aH),
-                fields_vector(fields),
+                log_a2M_vector(log_a2M),
                 largest_k(lk),
+                flat_M($NUMBER_FIELDS*$NUMBER_FIELDS),
                 N_horizon_crossing(tk->get_N_horizon_crossing()),
                 astar_normalization(tk->get_astar_normalization())
               {
                 param_vector = params.get_vector();
                 __Mp = params.get_Mp();
+              }
+
+            number largest_evalue(const backg_state<number>& fields, double N)
+              {
+                this->mdl->M(this->task, fields, N, this->flat_M);
+
+                mass_matrix($a,$b) = flat_M[FIELDS_FLATTEN($a,$b)];
+
+                // result of computing eigenvalues is a vector of complex numbers
+                auto evalues = mass_matrix.template selfadjointView<Eigen::Upper>().eigenvalues();
+                number largest_eigenvalue = -std::numeric_limits<number>().max();
+
+                if(std::abs(evalues($a)) > largest_eigenvalue) { largest_eigenvalue = std::abs(evalues($a)); }
+
+                return largest_eigenvalue;
               }
 
             bool operator()(const std::pair< backg_state<number>, double >& __x)
@@ -1322,19 +1343,24 @@ namespace transport
                 const auto __Hsq = $HUBBLE_SQ;
                 const auto __H   = std::sqrt(__Hsq);
 
-                const auto __a   = std::exp(__x.second - this->N_horizon_crossing + this->astar_normalization);
+                const auto __N   = __x.second - this->N_horizon_crossing + this->astar_normalization;
 
                 this->N_vector.push_back(__x.second);
-                this->log_aH_vector.push_back(std::log(__a*__H));
-
-                this->fields_vector[$A].push_back(__x.first[$A]);
+                this->log_aH_vector.push_back(__N + std::log(__H)); // = log(aH)
+                this->log_a2M_vector.push_back(2.0*__N + std::log(this->largest_evalue(__x.first, __x.second))); // = log(a^2 * largest eigenvalue)
 
                 // are we now at a point where we have comfortably covered the horizon crossing time for largest_k?
-                if(std::log(largest_k) - std::log(__a*__H) < -0.5) return(true);
+                if(std::log(largest_k) - __N - std::log(__H) < -0.5) return(true);
                 return(false);
               }
 
           private:
+
+            //! pointer to model object
+            model<number>* mdl;
+
+            //! point to task object
+            const twopf_list_task<number>* task;
 
             //! parameters for the model in use
             const parameters<number>& params;
@@ -1352,7 +1378,13 @@ namespace transport
             std::vector<number>& log_aH_vector;
 
             //! output vector for field values
-            std::vector< std::vector<number> >& fields_vector;
+            std::vector<number>& log_a2M_vector;
+
+            //! working space for calculation of mass matrix
+            std::vector<number> flat_M;
+
+            //! Eigen matrix representing mass matrix
+            Eigen::Matrix<number, $NUMBER_FIELDS, $NUMBER_FIELDS> mass_matrix;
 
             //! largest k-mode for which we are trying to find a horizon-exit time
             const double largest_k;
@@ -1369,12 +1401,11 @@ namespace transport
 
 
 		template <typename number>
-		void $MODEL<number>::compute_aH(const twopf_list_task<number>* tk, std::vector<double>& N, std::vector<number>& log_aH, std::vector< std::vector<number> >& fields, double largest_k)
+		void $MODEL<number>::compute_aH(const twopf_list_task<number>* tk, std::vector<double>& N, std::vector<number>& log_aH, std::vector<number>& log_a2M, double largest_k)
 			{
 				N.clear();
 				log_aH.clear();
-        fields.clear();
-        fields.resize(2*$NUMBER_FIELDS);
+        log_a2M.clear();
 
 				// set up a functor to evolve the system
 				$MODEL_background_functor<number> system(tk->get_params());
@@ -1402,7 +1433,7 @@ namespace transport
 
         auto range = boost::numeric::odeint::make_adaptive_time_range(stepper, system, x, tk->get_N_initial(), N_range, $BACKG_STEP_SIZE);
 
-        $MODEL_impl::aHAggregatorPredicate<number> aggregator(tk, N, log_aH, fields, largest_k);
+        $MODEL_impl::aHAggregatorPredicate<number> aggregator(tk, this, N, log_aH, log_a2M, largest_k);
 
 				// step through iterators, finding first point which is comfortably after time when largest_k has left
 				// the horizon

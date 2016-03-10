@@ -25,8 +25,6 @@
 #include "boost/math/tools/roots.hpp"
 #include "boost/log/utility/formatting_ostream.hpp"
 
-#include "Eigen/Core"
-
 
 
 namespace transport
@@ -111,7 +109,7 @@ namespace transport
             if(std::abs(sp(res)) >= CPPTRANSPORT_ROOT_FIND_ACCURACY)
               {
                 std::ostringstream msg;
-                msg << CPPTRANSPORT_TASK_SEARCH_ROOT_ACCURACY << " [" << CPPTRANSPORT_TASK_SEARCH_ROOT_KAH << "=" << sp(res) << "]";
+                msg << CPPTRANSPORT_TASK_SEARCH_ROOT_ACCURACY << " [" << CPPTRANSPORT_TASK_SEARCH_ROOT_ZERO_EQ << "=" << sp(res) << "]";
                 throw runtime_exception(exception_type::TASK_STRUCTURE_ERROR, msg.str());
               }
 
@@ -166,16 +164,19 @@ namespace transport
       protected:
 
 		    //! Compute horizon-exit times for each mode in the database -- use supplied spline
-		    template <typename SplineObject, typename SplineArray, typename TolerancePolicy>
-		    void twopf_compute_horizon_exit_times(SplineObject& sp, SplineArray& field_sp, TolerancePolicy tol);
+		    template <typename SplineObject, typename TolerancePolicy>
+		    void twopf_compute_horizon_exit_times(SplineObject& log_aH, SplineObject& log_Mevalue, TolerancePolicy tol);
+
+        //! Compute safe initial times for a k-mode
+        //! 'Safe' means that the mode can safely be approximated as massless because (k/a)^2 >> the largest eigenvalue of the
+        //! mass matrix
+        //! Uses supplied spline which gives time dependence of largest eigenvalue of the mass matrix
+        template <typename SplineObject, typename TolerancePolicy>
+        double compute_t_massless(const twopf_kconfig& config, double t_exit, SplineObject& log_a2M,
+                                  TolerancePolicy tol);
 
         //! Issue advisory messages if failed to compute horizon exit times
         void compute_horizon_exit_times_fail(failed_to_compute_horizon_exit& xe);
-
-        //! Compute largest eigenvalue of the mass matrix at a given time, given
-        //! an array of pointers to spline objects
-        template <typename SplineArray>
-        number compute_largest_mass_eigenvalue(double N, SplineArray& field_sp);
 
 
 		    // INTERFACE - INITIAL CONDITIONS AND INTEGRATION DETAILS
@@ -637,21 +638,18 @@ namespace transport
 
 		    std::vector<double> N;
 		    std::vector<number> log_aH;
-        std::vector< std::vector<number> > fields;
-        std::vector< std::unique_ptr< spline1d<number> > > field_splines;
+        std::vector<number> log_a2M;
 
         try
           {
-            this->get_model()->compute_aH(this, N, log_aH, fields, largest_k);
+            this->get_model()->compute_aH(this, N, log_aH, log_a2M, largest_k);
             assert(N.size() == log_aH.size());
+            assert(N.size() == log_a2M.size());
 
-            spline1d<number> sp(N, log_aH);
-            for(std::vector<number>& field_history : fields)
-              {
-                field_splines.emplace_back(std::make_unique< spline1d<number> >(N, field_history));
-              }
+            spline1d<number> log_aH_sp(N, log_aH);
+            spline1d<number> log_a2M_sp(N, log_a2M);
 
-            this->twopf_compute_horizon_exit_times(sp, field_splines, task_impl::TolerancePredicate(CPPTRANSPORT_ROOT_FIND_TOLERANCE));
+            this->twopf_compute_horizon_exit_times(log_aH_sp, log_a2M_sp, task_impl::TolerancePredicate(CPPTRANSPORT_ROOT_FIND_TOLERANCE));
           }
         catch(failed_to_compute_horizon_exit& xe)
           {
@@ -662,29 +660,71 @@ namespace transport
 
 
 		template <typename number>
-		template <typename SplineObject, typename SplineArray, typename TolerancePolicy>
-		void twopf_list_task<number>::twopf_compute_horizon_exit_times(SplineObject& sp, SplineArray& field_sp, TolerancePolicy tol)
+		template <typename SplineObject, typename TolerancePolicy>
+		void twopf_list_task<number>::twopf_compute_horizon_exit_times(SplineObject& log_aH, SplineObject& log_Mevalue, TolerancePolicy tol)
 			{
 		    for(twopf_kconfig_database::config_iterator t = this->twopf_db->config_begin(); t != this->twopf_db->config_end(); ++t)
 			    {
-		        // set spline to evaluate aH-k and then solve for N
-		        sp.set_offset(log(t->k_comoving));
+		        // set spline to evaluate log(aH)-log(k) and then solve for N which makes this
+            // zero, hence k = aH
+		        log_aH.set_offset(log(t->k_comoving));
 
             // update database with computed horizon exit time
-		        t->t_exit = task_impl::find_zero_of_spline(sp, tol);
+		        t->t_exit = task_impl::find_zero_of_spline(log_aH, tol);
 
-            // compute eigenvalues of mass matrix at initial time for this k-mode
-            double Nbegin;
-            if(this->fast_forward) Nbegin = this->get_fast_forward_start(*t);
-            else                   Nbegin = this->ics.get_N_initial();
-
-            double a = std::exp(Nbegin - this->get_N_horizon_crossing() + this->get_astar_normalization());
-            double k_over_a = t->k_comoving/a;
-            double k_over_a_sq = k_over_a*k_over_a;
-            number largest_mass_eigenvalue = this->compute_largest_mass_eigenvalue(Nbegin, field_sp);
-            t->k_to_mass_ratio = k_over_a_sq / static_cast<double>(largest_mass_eigenvalue);
+            t->t_massless = this->compute_t_massless(*t, t->t_exit, log_Mevalue, tol);
 			    }
 			}
+
+
+    template <typename number>
+    template <typename SplineObject, typename TolerancePolicy>
+    double twopf_list_task<number>::compute_t_massless(const twopf_kconfig& config, double t_exit,
+                                                       SplineObject& log_a2M, TolerancePolicy tol)
+      {
+        double log_k = std::log(config.k_comoving);
+
+        // test whether this k-mode is heavy at the initial time
+        double kM_ratio_init = 2.0*log_k - log_a2M(this->ics.get_N_initial());
+        bool light_at_init = kM_ratio_init > 0.0;
+
+        // test whether this k-mode is heavy at horizon exit
+        double kM_ratio_exit = 2.0*log_k - log_a2M(t_exit);
+        bool light_at_exit = kM_ratio_exit > 0.0;
+
+        // sensible default for initial time; to be updated later
+        double t_massless = t_exit;
+
+        if(light_at_init && light_at_exit)
+          {
+            // mass matrix is not relevant any time before horizon exit
+
+            t_massless = t_exit;
+          }
+        else if(light_at_init && !light_at_exit)
+          {
+            // mass matrix becomes relevant some time before horizon exit
+
+            log_a2M.set_offset(2*log_k);
+            t_massless = task_impl::find_zero_of_spline(log_a2M, tol);
+            log_a2M.set_offset(0.0);
+          }
+        else if(!light_at_init && light_at_exit)
+          {
+            // mode is heavy at initial time but becomes light by horizon exit;
+            // does this ever happen in practice?
+
+            throw no_massless_time(kM_ratio_init, kM_ratio_exit, t_exit, config.k_conventional);
+          }
+        else if(!light_at_init && !light_at_exit)
+          {
+            // mode is never light
+
+            throw no_massless_time(kM_ratio_init, kM_ratio_exit, t_exit, config.k_conventional);
+          }
+
+        return(t_massless);
+      }
 
 
     template <typename number>
@@ -713,51 +753,6 @@ namespace transport
           {
             std::cout << CPPTRANSPORT_TASK_SEARCH_TOO_CLOSE_FAIL << '\n';
           }
-      }
-
-
-    template <typename number>
-    template <typename SplineArray>
-    number twopf_list_task<number>::compute_largest_mass_eigenvalue(double N, SplineArray& field_sp)
-      {
-        Eigen::Matrix<number, Eigen::Dynamic, Eigen::Dynamic> mass_matrix;
-
-        unsigned int num_fields = this->get_model()->get_N_fields();
-
-        std::vector<number> flat_M(num_fields*num_fields);
-        mass_matrix.resize(num_fields, num_fields);
-
-        std::vector<number> fields;
-        fields.reserve(num_fields);
-        assert(field_sp.size() == num_fields);
-
-        for(auto& spline : field_sp)
-          {
-            fields.push_back((*spline)(N));
-          }
-
-        this->get_model()->M(this, fields, N, flat_M);
-
-        for(unsigned int i = 0; i < num_fields; ++i)
-          {
-            for(unsigned int j = 0; j < num_fields; ++j)
-              {
-                mass_matrix(i,j) = flat_M[this->get_model()->flatten(i,j)];
-              }
-          }
-
-        // result of computing eigenvalues is a vector of complex numbers
-        auto evalues = mass_matrix.eigenvalues();
-        number largest_eigenvalue = -std::numeric_limits<number>().max();
-        for(unsigned int i = 0; i < num_fields; ++i)
-          {
-            if(std::abs(evalues(i)) > largest_eigenvalue)
-              {
-                largest_eigenvalue = std::abs(evalues(i));
-              }
-          }
-
-        return largest_eigenvalue;
       }
 
 

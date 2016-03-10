@@ -289,25 +289,22 @@ namespace transport
 
         std::vector<double> N;
         std::vector<number> log_aH;
-        std::vector< std::vector<number> > fields;
-        std::vector< std::unique_ptr< spline1d<number> > > field_splines;
+        std::vector<number> log_a2M;
 
         try
           {
             double maxk = std::max(std::max(largest_kt, largest_k1), largest_k2);
-            this->get_model()->compute_aH(this, N, log_aH, fields, maxk);
+            this->get_model()->compute_aH(this, N, log_aH, log_a2M, maxk);
             assert(N.size() == log_aH.size());
+            assert(N.size() == log_a2M.size());
 
-            spline1d<number> sp(N, log_aH);
-            for(std::vector<number>& field_history : fields)
-              {
-                field_splines.emplace_back(std::make_unique< spline1d<number> >(N, field_history));
-              }
+            spline1d<number> log_aH_sp(N, log_aH);
+            spline1d<number> log_a2M_sp(N, log_a2M);
 
-            this->threepf_compute_horizon_exit_times(sp, task_impl::TolerancePredicate(CPPTRANSPORT_ROOT_FIND_TOLERANCE));
+            this->threepf_compute_horizon_exit_times(log_aH_sp, task_impl::TolerancePredicate(CPPTRANSPORT_ROOT_FIND_TOLERANCE));
 
             // forward to underlying twopf_list_task to also update its database
-            this->twopf_list_task<number>::twopf_compute_horizon_exit_times(sp, field_splines, task_impl::TolerancePredicate(CPPTRANSPORT_ROOT_FIND_TOLERANCE));
+            this->twopf_list_task<number>::twopf_compute_horizon_exit_times(log_aH_sp, log_a2M_sp, task_impl::TolerancePredicate(CPPTRANSPORT_ROOT_FIND_TOLERANCE));
           }
         catch(failed_to_compute_horizon_exit& xe)
           {

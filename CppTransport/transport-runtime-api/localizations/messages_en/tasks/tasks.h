@@ -83,7 +83,7 @@
 #define CPPTRANSPORT_TASK_SEARCH_ROOT_NAN             "received std::nan result while computing root of k-aH=0"
 #define CPPTRANSPORT_TASK_SEARCH_ROOT_BRACKET         "extreme values of N did not bracket root of k-aH"
 #define CPPTRANSPORT_TASK_SEARCH_ROOT_ITERATIONS      "iterations"
-#define CPPTRANSPORT_TASK_SEARCH_ROOT_KAH             "abs( log(k)-log(aH) )"
+#define CPPTRANSPORT_TASK_SEARCH_ROOT_ZERO_EQ         "abs(y)"
 
 
 #endif // CPPTRANSPORT_MESSAGES_EN_TASKS_H
