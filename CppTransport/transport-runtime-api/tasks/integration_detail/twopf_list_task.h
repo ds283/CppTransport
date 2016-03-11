@@ -165,14 +165,14 @@ namespace transport
 
 		    //! Compute horizon-exit times for each mode in the database -- use supplied spline
 		    template <typename SplineObject, typename TolerancePolicy>
-		    void twopf_compute_horizon_exit_times(SplineObject& log_aH, SplineObject& log_Mevalue, TolerancePolicy tol);
+		    void twopf_compute_horizon_exit_times(SplineObject& log_aH, SplineObject& log_a2H2M, TolerancePolicy tol);
 
         //! Compute safe initial times for a k-mode
         //! 'Safe' means that the mode can safely be approximated as massless because (k/a)^2 >> the largest eigenvalue of the
         //! mass matrix
         //! Uses supplied spline which gives time dependence of largest eigenvalue of the mass matrix
         template <typename SplineObject, typename TolerancePolicy>
-        double compute_t_massless(const twopf_kconfig& config, double t_exit, SplineObject& log_a2M,
+        double compute_t_massless(const twopf_kconfig& config, double t_exit, SplineObject& log_a2H2M,
                                   TolerancePolicy tol);
 
         //! Issue advisory messages if failed to compute horizon exit times
@@ -638,18 +638,18 @@ namespace transport
 
 		    std::vector<double> N;
 		    std::vector<number> log_aH;
-        std::vector<number> log_a2M;
+        std::vector<number> log_a2H2M;
 
         try
           {
-            this->get_model()->compute_aH(this, N, log_aH, log_a2M, largest_k);
+            this->get_model()->compute_aH(this, N, log_aH, log_a2H2M, largest_k);
             assert(N.size() == log_aH.size());
-            assert(N.size() == log_a2M.size());
+            assert(N.size() == log_a2H2M.size());
 
             spline1d<number> log_aH_sp(N, log_aH);
-            spline1d<number> log_a2M_sp(N, log_a2M);
+            spline1d<number> log_a2H2M_sp(N, log_a2H2M);
 
-            this->twopf_compute_horizon_exit_times(log_aH_sp, log_a2M_sp, task_impl::TolerancePredicate(CPPTRANSPORT_ROOT_FIND_TOLERANCE));
+            this->twopf_compute_horizon_exit_times(log_aH_sp, log_a2H2M_sp, task_impl::TolerancePredicate(CPPTRANSPORT_ROOT_FIND_TOLERANCE));
           }
         catch(failed_to_compute_horizon_exit& xe)
           {
@@ -661,7 +661,7 @@ namespace transport
 
 		template <typename number>
 		template <typename SplineObject, typename TolerancePolicy>
-		void twopf_list_task<number>::twopf_compute_horizon_exit_times(SplineObject& log_aH, SplineObject& log_Mevalue, TolerancePolicy tol)
+		void twopf_list_task<number>::twopf_compute_horizon_exit_times(SplineObject& log_aH, SplineObject& log_a2H2M, TolerancePolicy tol)
 			{
 		    for(twopf_kconfig_database::config_iterator t = this->twopf_db->config_begin(); t != this->twopf_db->config_end(); ++t)
 			    {
@@ -671,8 +671,7 @@ namespace transport
 
             // update database with computed horizon exit time
 		        t->t_exit = task_impl::find_zero_of_spline(log_aH, tol);
-
-            t->t_massless = this->compute_t_massless(*t, t->t_exit, log_Mevalue, tol);
+            t->t_massless = this->compute_t_massless(*t, t->t_exit, log_a2H2M, tol);
 			    }
 			}
 
@@ -680,16 +679,16 @@ namespace transport
     template <typename number>
     template <typename SplineObject, typename TolerancePolicy>
     double twopf_list_task<number>::compute_t_massless(const twopf_kconfig& config, double t_exit,
-                                                       SplineObject& log_a2M, TolerancePolicy tol)
+                                                       SplineObject& log_a2H2M, TolerancePolicy tol)
       {
         double log_k = std::log(config.k_comoving);
 
         // test whether this k-mode is heavy at the initial time
-        double kM_ratio_init = 2.0*log_k - log_a2M(this->ics.get_N_initial());
+        double kM_ratio_init = 2.0*log_k - log_a2H2M(this->ics.get_N_initial());
         bool light_at_init = kM_ratio_init > 0.0;
 
         // test whether this k-mode is heavy at horizon exit
-        double kM_ratio_exit = 2.0*log_k - log_a2M(t_exit);
+        double kM_ratio_exit = 2.0*log_k - log_a2H2M(t_exit);
         bool light_at_exit = kM_ratio_exit > 0.0;
 
         // sensible default for initial time; to be updated later
@@ -705,9 +704,9 @@ namespace transport
           {
             // mass matrix becomes relevant some time before horizon exit
 
-            log_a2M.set_offset(2*log_k);
-            t_massless = task_impl::find_zero_of_spline(log_a2M, tol);
-            log_a2M.set_offset(0.0);
+            log_a2H2M.set_offset(2.0*log_k);
+            t_massless = task_impl::find_zero_of_spline(log_a2H2M, tol);
+            log_a2H2M.set_offset(0.0);
           }
         else if(!light_at_init && light_at_exit)
           {

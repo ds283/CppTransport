@@ -148,9 +148,9 @@ namespace transport
 		    //! Compute aH as a function of N up to the horizon-exit time of some wavenumber.
         //! Samples of log(aH) and the fields are returned in the supplied vector, with samples taken
         //! at internally-chosen values of N -- also returned in the corresponding vector
-        //! Also computes log(a^2 * largest eigenvalue of the mass matrix) and returns this in
-        //! log_a2M
-		    virtual void compute_aH(const twopf_list_task<number>* tk, std::vector<double>& N, std::vector<number>& log_aH, std::vector<number>& log_a2M, double largest_k) = 0;
+        //! Also computes log(a^2 * H^2 largest eigenvalue of the mass matrix) and returns this in
+        //! log_a2H2M. Note that the mass matrix used in the code is M^2/H^2, ie. is dimensionless
+		    virtual void compute_aH(const twopf_list_task<number>* tk, std::vector<double>& N, std::vector<number>& log_aH, std::vector<number>& log_a2H2M, double largest_k) = 0;
 
 
         // INTERFACE - PARAMETER HANDLING

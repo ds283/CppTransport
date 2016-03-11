@@ -289,22 +289,22 @@ namespace transport
 
         std::vector<double> N;
         std::vector<number> log_aH;
-        std::vector<number> log_a2M;
+        std::vector<number> log_a2H2M;
 
         try
           {
             double maxk = std::max(std::max(largest_kt, largest_k1), largest_k2);
-            this->get_model()->compute_aH(this, N, log_aH, log_a2M, maxk);
+            this->get_model()->compute_aH(this, N, log_aH, log_a2H2M, maxk);
             assert(N.size() == log_aH.size());
-            assert(N.size() == log_a2M.size());
+            assert(N.size() == log_a2H2M.size());
 
             spline1d<number> log_aH_sp(N, log_aH);
-            spline1d<number> log_a2M_sp(N, log_a2M);
+            spline1d<number> log_a2H2M_sp(N, log_a2H2M);
 
             this->threepf_compute_horizon_exit_times(log_aH_sp, task_impl::TolerancePredicate(CPPTRANSPORT_ROOT_FIND_TOLERANCE));
 
             // forward to underlying twopf_list_task to also update its database
-            this->twopf_list_task<number>::twopf_compute_horizon_exit_times(log_aH_sp, log_a2M_sp, task_impl::TolerancePredicate(CPPTRANSPORT_ROOT_FIND_TOLERANCE));
+            this->twopf_list_task<number>::twopf_compute_horizon_exit_times(log_aH_sp, log_a2H2M_sp, task_impl::TolerancePredicate(CPPTRANSPORT_ROOT_FIND_TOLERANCE));
           }
         catch(failed_to_compute_horizon_exit& xe)
           {
