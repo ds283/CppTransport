@@ -734,8 +734,14 @@ namespace transport
 
         std::cout << CPPTRANSPORT_TASK_SEARCH_FROM << xe.get_search_begin() << " " << CPPTRANSPORT_TASK_SEARCH_TO << xe.get_search_end() << " ";
 
-        if(xe.get_found_end()) std::cout << CPPTRANSPORT_TASK_SEARCH_FOUND_END;
-        else std::cout << CPPTRANSPORT_TASK_SEARCH_NO_FOUND_END;
+        if(xe.get_found_end())
+          {
+            std::cout << CPPTRANSPORT_TASK_SEARCH_FOUND_END;
+          }
+        else
+          {
+            std::cout << CPPTRANSPORT_TASK_SEARCH_NO_FOUND_END;
+          }
         std::cout << '\n';
 
         std::cout << CPPTRANSPORT_TASK_SEARCH_RECORDED << " " << xe.get_N_samples() << " " << CPPTRANSPORT_TASK_SEARCH_SAMPLES;

@@ -1347,8 +1347,7 @@ namespace transport
 
                 this->N_vector.push_back(__x.second);
                 this->log_aH_vector.push_back(__N + std::log(__H)); // = log(aH)
-                this->log_a2H2M_vector.push_back(2.0*__N
-                                                 + 2.0*std::log(__H)
+                this->log_a2H2M_vector.push_back(2.0*__N + 2.0*std::log(__H)
                                                  + std::log(this->largest_evalue(__x.first, __x.second))); // = log(a^2 H^2 * largest eigenvalue)
 
                 // are we now at a point where we have comfortably covered the horizon crossing time for largest_k?
