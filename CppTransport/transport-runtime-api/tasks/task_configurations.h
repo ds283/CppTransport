@@ -107,9 +107,14 @@ namespace transport
         std::ostringstream exit_str;
         exit_str << std::setprecision(CPPTRANSPORT_DEFAULT_K_PRECISION) << this->t_exit;
 
+        std::ostringstream massless_str;
+        massless_str << std::setprecision(CPPTRANSPORT_DEFAULT_K_PRECISION) << this->t_massless;
+
         out << CPPTRANSPORT_KCONFIG_SERIAL << " " << this->serial << ", "
-        << CPPTRANSPORT_KCONFIG_KEQUALS << " " << str.str() << ", "
-        << CPPTRANSPORT_KCONFIG_T_EXIT << " " << exit_str.str() << '\n';
+          << CPPTRANSPORT_KCONFIG_KEQUALS << " " << str.str() << ", "
+          << CPPTRANSPORT_KCONFIG_T_EXIT << " " << exit_str.str() << ", "
+          << CPPTRANSPORT_KCONFIG_T_MASSLESS << " " << massless_str.str();
+        out << '\n';
       }
 
 

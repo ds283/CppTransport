@@ -65,7 +65,7 @@ namespace transport
 
 		        //! shift a threepf kconfig-line for coordinate labels (l,m,n)
 		        //! and supplied time configuration
-		        void shift(twopf_list_task<number>* tk, model<number>* mdl, datapipe<number>& pipe,
+		        void shift(twopf_db_task<number>* tk, model<number>* mdl, datapipe<number>& pipe,
 		                   const SQL_threepf_kconfig_query& kquery, std::vector<threepf_kconfig>& configs,
 		                   const std::vector<number>& background, std::vector<number>& line_data,
 		                   unsigned int l, unsigned int m, unsigned int n, const time_config& t_config) const;
@@ -73,7 +73,7 @@ namespace transport
 		      protected:
 
 		        //! apply the derivative shift to a particular operator
-		        void make_shift(twopf_list_task<number>* tk, model<number>* mdl, datapipe<number>& pipe,
+		        void make_shift(twopf_db_task<number>* tk, model<number>* mdl, datapipe<number>& pipe,
 		                        const SQL_threepf_kconfig_query& kquery, const std::vector< threepf_kconfig >& configs,
 		                        const std::vector<number>& background, std::vector<number>& line_data,
 		                        const SQL_threepf_kconfig_query& q_query, const SQL_threepf_kconfig_query& r_query,
@@ -87,7 +87,7 @@ namespace transport
 
 
 				template <typename number>
-				void threepf_kconfig_shift<number>::shift(twopf_list_task<number>* tk, model<number>* mdl, datapipe<number>& pipe,
+				void threepf_kconfig_shift<number>::shift(twopf_db_task<number>* tk, model<number>* mdl, datapipe<number>& pipe,
 				                                          const SQL_threepf_kconfig_query& kquery, std::vector<threepf_kconfig>& configs,
 				                                          const std::vector<number>& background, std::vector<number>& line_data,
 				                                          unsigned int l, unsigned int m, unsigned int n, const time_config& t_config) const
@@ -133,7 +133,7 @@ namespace transport
 
 
 		    template <typename number>
-		    void threepf_kconfig_shift<number>::make_shift(twopf_list_task<number>* tk, model<number>* mdl, datapipe<number>& pipe,
+		    void threepf_kconfig_shift<number>::make_shift(twopf_db_task<number>* tk, model<number>* mdl, datapipe<number>& pipe,
 		                                                   const SQL_threepf_kconfig_query& kquery, const std::vector<threepf_kconfig>& configs,
 		                                                   const std::vector<number>& background, std::vector<number>& line_data,
 		                                                   const SQL_threepf_kconfig_query& q_query, const SQL_threepf_kconfig_query& r_query,

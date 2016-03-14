@@ -28,7 +28,7 @@ namespace transport
 #endif
 
 #ifndef CPPTRANSPORT_TWOPF_LIST_TASK_H
-    template <typename number> class twopf_list_task;
+    template <typename number> class twopf_db_task;
 #endif
 
 #ifndef CPPTRANSPORT_TWOPF_TASK_H

@@ -343,7 +343,7 @@ namespace transport
 	    {
         assert(this->parent_record);
 
-	      twopf_list_task<number>* tk_as_twopf_list = dynamic_cast< twopf_list_task<number>* >(rec->get_task());
+	      twopf_db_task<number>* tk_as_twopf_list = dynamic_cast< twopf_db_task<number>* >(rec->get_task());
 	      assert(tk_as_twopf_list != nullptr);
 
 	      if(tk_as_twopf_list != nullptr)

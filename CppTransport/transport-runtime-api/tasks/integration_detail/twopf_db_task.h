@@ -123,10 +123,10 @@ namespace transport
     //! Base type for a task which can represent a set of two-point functions evaluated at different wavenumbers.
     //! Ultimately, all n-point-function integrations are of this type because they all solve for the two-point function
     //! even if the goal is to compute a higher n-point function.
-    //! The key concept associated with a twopf_list_task is a database of wavenumbers
+    //! The key concept associated with a twopf_db_task is a database of wavenumbers
     //! which describe the points at which we sample the twopf.
     template <typename number>
-    class twopf_list_task: public integration_task<number>
+    class twopf_db_task: public integration_task<number>
 	    {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -134,12 +134,13 @@ namespace transport
       public:
 
         //! construct a twopf-list-task object
-        twopf_list_task(const std::string& nm, const initial_conditions<number>& i, range<double>& t, bool ff, double ast=CPPTRANSPORT_DEFAULT_ASTAR_NORMALIZATION);
+        twopf_db_task(const std::string& nm, const initial_conditions<number>& i, range<double>& t, bool ff, double ast=CPPTRANSPORT_DEFAULT_ASTAR_NORMALIZATION);
 
         //! deserialization constructor
-        twopf_list_task(const std::string& nm, Json::Value& reader, sqlite3* handle, const initial_conditions<number>& i);
+        twopf_db_task(const std::string& nm, Json::Value& reader, sqlite3* handle, const initial_conditions<number>& i);
 
-        virtual ~twopf_list_task() = default;
+        //! destructor is default
+        virtual ~twopf_db_task() = default;
 
 
         // INTERFACE - TWOPF K-CONFIGURATIONS
@@ -347,7 +348,7 @@ namespace transport
 
 
     template <typename number>
-    twopf_list_task<number>::twopf_list_task(const std::string& nm, const initial_conditions<number>& i, range<double>& t,
+    twopf_db_task<number>::twopf_db_task(const std::string& nm, const initial_conditions<number>& i, range<double>& t,
                                              bool ff, double ast)
 	    : integration_task<number>(nm, i, t),
         fast_forward(ff),
@@ -362,7 +363,7 @@ namespace transport
 
 
     template <typename number>
-    twopf_list_task<number>::twopf_list_task(const std::string& nm, Json::Value& reader, sqlite3* handle, const initial_conditions<number>& i)
+    twopf_db_task<number>::twopf_db_task(const std::string& nm, Json::Value& reader, sqlite3* handle, const initial_conditions<number>& i)
 	    : integration_task<number>(nm, reader, i)
 	    {
         kstar    = reader[CPPTRANSPORT_NODE_TWOPF_LIST_KSTAR].asDouble();
@@ -377,7 +378,7 @@ namespace transport
 
 
     template <typename number>
-    void twopf_list_task<number>::serialize(Json::Value& writer) const
+    void twopf_db_task<number>::serialize(Json::Value& writer) const
 	    {
         writer[CPPTRANSPORT_NODE_FAST_FORWARD]             = this->fast_forward;
         writer[CPPTRANSPORT_NODE_FAST_FORWARD_EFOLDS]      = this->ff_efolds;
@@ -394,21 +395,21 @@ namespace transport
 
 
     template <typename number>
-    void twopf_list_task<number>::write_kconfig_database(sqlite3* handle)
+    void twopf_db_task<number>::write_kconfig_database(sqlite3* handle)
 	    {
         this->twopf_db->write(handle);
 	    }
 
 
     template <typename number>
-    const time_config_database twopf_list_task<number>::get_time_config_database(const twopf_kconfig& config) const
+    const time_config_database twopf_db_task<number>::get_time_config_database(const twopf_kconfig& config) const
       {
         return this->build_time_config_database(this->get_initial_time(config), this->twopf_db->get_kmax_conventional());
       }
 
 
     template <typename number>
-    double twopf_list_task<number>::get_initial_time(const twopf_kconfig& config) const
+    double twopf_db_task<number>::get_initial_time(const twopf_kconfig& config) const
       {
         if(this->fast_forward)
           {
@@ -422,7 +423,7 @@ namespace transport
 
 
     template <typename number>
-    std::vector<number> twopf_list_task<number>::get_ics_vector(const twopf_kconfig& config) const
+    std::vector<number> twopf_db_task<number>::get_ics_vector(const twopf_kconfig& config) const
 	    {
         if(this->fast_forward)
           {
@@ -436,21 +437,21 @@ namespace transport
 
 
 		template <typename number>
-		double twopf_list_task<number>::get_ics_exit_time(const twopf_kconfig& config) const
+		double twopf_db_task<number>::get_ics_exit_time(const twopf_kconfig& config) const
 			{
 				return(config.t_exit);
 			}
 
 
 		template <typename number>
-		std::vector<number> twopf_list_task<number>::get_ics_exit_vector(const twopf_kconfig& config) const
+		std::vector<number> twopf_db_task<number>::get_ics_exit_vector(const twopf_kconfig& config) const
 			{
 				return this->integration_task<number>::get_ics_vector(this->get_ics_exit_time(config));
 			}
 
 
     template <typename number>
-    void twopf_list_task<number>::write_time_details()
+    void twopf_db_task<number>::write_time_details()
       {
         // compute horizon-crossing time for earliest mode (the one with the smallest wavenumber) and the latest one (the one with the largest wavenumber)
 
@@ -510,7 +511,7 @@ namespace transport
 
 
     template <typename number>
-    void twopf_list_task<number>::validate_subhorizon_efolds()
+    void twopf_db_task<number>::validate_subhorizon_efolds()
       {
         double earliest_required = std::numeric_limits<double>::max();
         double earliest_tmassless = std::numeric_limits<double>::max();
@@ -540,7 +541,7 @@ namespace transport
 
 
     template <typename number>
-    double twopf_list_task<number>::get_earliest_recordable_time(double largest_conventional_k) const
+    double twopf_db_task<number>::get_earliest_recordable_time(double largest_conventional_k) const
       {
         twopf_kconfig_database::record_iterator rec;
 
@@ -556,7 +557,7 @@ namespace transport
 
 
 		template <typename number>
-		time_config_database twopf_list_task<number>::build_time_config_database(double Nbegin, double largest_conventional_k) const
+		time_config_database twopf_db_task<number>::build_time_config_database(double Nbegin, double largest_conventional_k) const
 			{
         // set up new time configuration database
         time_config_database time_db;
@@ -604,7 +605,7 @@ namespace transport
 
 
     template <typename number>
-    void twopf_list_task<number>::cache_stored_time_config_database(double largest_conventional_k)
+    void twopf_db_task<number>::cache_stored_time_config_database(double largest_conventional_k)
       {
         this->stored_time_db.clear();
 
@@ -627,7 +628,7 @@ namespace transport
 
 
 		template <typename number>
-		void twopf_list_task<number>::compute_horizon_exit_times()
+		void twopf_db_task<number>::compute_horizon_exit_times()
 			{
 				double largest_k = this->twopf_db->get_kmax_comoving();
 
@@ -656,7 +657,7 @@ namespace transport
 
 		template <typename number>
 		template <typename SplineObject, typename TolerancePolicy>
-		void twopf_list_task<number>::twopf_compute_horizon_exit_times(SplineObject& log_aH, SplineObject& log_a2H2M, TolerancePolicy tol)
+		void twopf_db_task<number>::twopf_compute_horizon_exit_times(SplineObject& log_aH, SplineObject& log_a2H2M, TolerancePolicy tol)
 			{
 		    for(twopf_kconfig_database::config_iterator t = this->twopf_db->config_begin(); t != this->twopf_db->config_end(); ++t)
 			    {
@@ -673,7 +674,7 @@ namespace transport
 
     template <typename number>
     template <typename SplineObject, typename TolerancePolicy>
-    double twopf_list_task<number>::compute_t_massless(const twopf_kconfig& config, double t_exit,
+    double twopf_db_task<number>::compute_t_massless(const twopf_kconfig& config, double t_exit,
                                                        SplineObject& log_a2H2M, TolerancePolicy tol)
       {
         double log_k = std::log(config.k_comoving);
@@ -722,7 +723,7 @@ namespace transport
 
 
     template <typename number>
-    void twopf_list_task<number>::compute_horizon_exit_times_fail(failed_to_compute_horizon_exit& xe)
+    void twopf_db_task<number>::compute_horizon_exit_times_fail(failed_to_compute_horizon_exit& xe)
       {
         std::cout << "'" << this->get_name() << "': ";
         std::cout << CPPTRANSPORT_TASK_FAIL_COMPUTE_HEXIT << '\n';
@@ -758,16 +759,17 @@ namespace transport
 
     template <typename number>
     template <typename Stream>
-    void twopf_list_task<number>::write(Stream& out) const
+    void twopf_db_task<number>::write(Stream& out) const
       {
-        out << CPPTRANSPORT_FAST_FORWARD     << ": " << (this->get_fast_forward() ? CPPTRANSPORT_YES : CPPTRANSPORT_NO) << ", ";
+        out << CPPTRANSPORT_FAST_FORWARD     << ": " << (this->get_fast_forward() ? CPPTRANSPORT_YES : CPPTRANSPORT_NO);
+        out << " " << CPPTRANSPORT_WITH << " " << this->ff_efolds << " " << CPPTRANSPORT_EFOLDS << ", ";
         out << CPPTRANSPORT_MESH_REFINEMENTS << ": " << this->get_max_refinements() << '\n';
         out << static_cast< const integration_task<number>& >(*this);
       }
 
 
 		template <typename number, typename Char, typename Traits>
-		std::basic_ostream<Char, Traits>& operator<<(std::basic_ostream<Char, Traits>& out, const twopf_list_task<number>& obj)
+		std::basic_ostream<Char, Traits>& operator<<(std::basic_ostream<Char, Traits>& out, const twopf_db_task<number>& obj)
 	    {
         obj.write(out);
         return(out);
@@ -775,7 +777,7 @@ namespace transport
 
 
     template <typename number, typename Char, typename Traits, typename Allocator>
-    boost::log::basic_formatting_ostream<Char, Traits, Allocator>& operator<<(boost::log::basic_formatting_ostream<Char, Traits, Allocator>& out, const twopf_list_task<number>& obj)
+    boost::log::basic_formatting_ostream<Char, Traits, Allocator>& operator<<(boost::log::basic_formatting_ostream<Char, Traits, Allocator>& out, const twopf_db_task<number>& obj)
       {
         obj.write(out);
         return(out);

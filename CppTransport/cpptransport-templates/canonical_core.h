@@ -200,19 +200,19 @@ namespace transport
       public:
 
         // calculate gauge transformations to zeta
-        void compute_gauge_xfm_1(const twopf_list_task<number>* __task, const std::vector<number>& __state, std::vector<number>& __dN) override;
-        void compute_gauge_xfm_2(const twopf_list_task<number>* __task, const std::vector<number>& __state, double __k, double __k1, double __k2, double __N, std::vector<number>& __ddN) override;
+        void compute_gauge_xfm_1(const twopf_db_task<number>* __task, const std::vector<number>& __state, std::vector<number>& __dN) override;
+        void compute_gauge_xfm_2(const twopf_db_task<number>* __task, const std::vector<number>& __state, double __k, double __k1, double __k2, double __N, std::vector<number>& __ddN) override;
 
         // calculate tensor quantities, including the 'flow' tensors u2, u3 and the basic tensors A, B, C from which u3 is built
-        void u2(const twopf_list_task<number>* __task, const std::vector<number>& __fields, double __k, double __N, std::vector<number>& __u2) override;
-        void u3(const twopf_list_task<number>* __task, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector<number>& __u3) override;
+        void u2(const twopf_db_task<number>* __task, const std::vector<number>& __fields, double __k, double __N, std::vector<number>& __u2) override;
+        void u3(const twopf_db_task<number>* __task, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector<number>& __u3) override;
 
-        void A(const twopf_list_task<number>* __task, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector<number>& __A) override;
-        void B(const twopf_list_task<number>* __task, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector<number>& __B) override;
-        void C(const twopf_list_task<number>* __task, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector<number>& __C) override;
+        void A(const twopf_db_task<number>* __task, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector<number>& __A) override;
+        void B(const twopf_db_task<number>* __task, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector<number>& __B) override;
+        void C(const twopf_db_task<number>* __task, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector<number>& __C) override;
 
         // calculate mass matrix
-        void M(const twopf_list_task<number>* __task, const std::vector<number>& __fields, double __N, std::vector<number>& __M) override;
+        void M(const twopf_db_task<number>* __task, const std::vector<number>& __fields, double __N, std::vector<number>& __M) override;
 
         // BACKEND INTERFACE (PARTIAL IMPLEMENTATION -- WE PROVIDE A COMMON BACKGROUND INTEGRATOR)
 
@@ -222,7 +222,7 @@ namespace transport
 
         double compute_end_of_inflation(const integration_task<number>* tk, double search_time=CPPTRANSPORT_DEFAULT_END_OF_INFLATION_SEARCH) override;
 
-		    void compute_aH(const twopf_list_task<number>* tk, std::vector<double>& N, std::vector<number>& log_aH, std::vector<number>& log_a2H2M, double largest_k) override;
+		    void compute_aH(const twopf_db_task<number>* tk, std::vector<double>& N, std::vector<number>& log_aH, std::vector<number>& log_a2H2M, double largest_k) override;
 
 
         // CALCULATE INITIAL CONDITIONS FOR N-POINT FUNCTIONS
@@ -230,17 +230,17 @@ namespace transport
       protected:
 
         number make_twopf_re_ic(unsigned int __i, unsigned int __j, double __k, double __Ninit,
-                                const twopf_list_task<number>* __task, const std::vector<number>& __fields);
+                                const twopf_db_task<number>* __task, const std::vector<number>& __fields);
 
         number make_twopf_im_ic(unsigned int __i, unsigned int __j, double __k, double __Ninit,
-                                const twopf_list_task<number>* __task, const std::vector<number>& __fields);
+                                const twopf_db_task<number>* __task, const std::vector<number>& __fields);
 
         number make_twopf_tensor_ic(unsigned int __i, unsigned int __j, double __k, double __Ninit,
-                                    const twopf_list_task<number>* __task, const std::vector<number>& __fields);
+                                    const twopf_db_task<number>* __task, const std::vector<number>& __fields);
 
         number make_threepf_ic(unsigned int __i, unsigned int __j, unsigned int __k,
                                double kmode_1, double kmode_2, double kmode_3, double __Ninit,
-                               const twopf_list_task<number>* __task, const std::vector<number>& __fields);
+                               const twopf_db_task<number>* __task, const std::vector<number>& __fields);
 
 
         // INTERNAL DATA
@@ -620,7 +620,7 @@ namespace transport
     // __fields -- vector of initial conditions for the background fields (or fields+momenta)
     template <typename number>
     number $MODEL<number>::make_twopf_re_ic(unsigned int __i, unsigned int __j, double __k, double __Ninit,
-                                            const twopf_list_task<number>* __task, const std::vector<number>& __fields)
+                                            const twopf_db_task<number>* __task, const std::vector<number>& __fields)
       {
         $RESOURCE_RELEASE
         __raw_params[$1] = __task->get_params().get_vector()[$1];
@@ -705,7 +705,7 @@ namespace transport
   // set up initial conditions for the imaginary part of the equal-time two-point function
   template <typename number>
   number $MODEL<number>::make_twopf_im_ic(unsigned int __i, unsigned int __j, double __k, double __Ninit,
-                                          const twopf_list_task<number>* __task, const std::vector<number>& __fields)
+                                          const twopf_db_task<number>* __task, const std::vector<number>& __fields)
     {
       $RESOURCE_RELEASE
       __raw_params[$1] = __task->get_params().get_vector()[$1];
@@ -752,7 +752,7 @@ namespace transport
     // set up initial conditions for the real part of the equal-time tensor two-point function
     template <typename number>
     number $MODEL<number>::make_twopf_tensor_ic(unsigned int __i, unsigned int __j, double __k, double __Ninit,
-                                                const twopf_list_task<number>* __task, const std::vector<number>& __fields)
+                                                const twopf_db_task<number>* __task, const std::vector<number>& __fields)
       {
         $RESOURCE_RELEASE
         __raw_params[$1] = __task->get_params().get_vector()[$1];
@@ -801,7 +801,7 @@ namespace transport
     template <typename number>
     number $MODEL<number>::make_threepf_ic(unsigned int __i, unsigned int __j, unsigned int __k,
                                            double __k1, double __k2, double __k3, double __Ninit,
-                                           const twopf_list_task<number>* __task, const std::vector<number>& __fields)
+                                           const twopf_db_task<number>* __task, const std::vector<number>& __fields)
       {
         $RESOURCE_RELEASE
         __raw_params[$1] = __task->get_params().get_vector()[$1];
@@ -1003,7 +1003,7 @@ namespace transport
 
 
     template <typename number>
-    void $MODEL<number>::compute_gauge_xfm_1(const twopf_list_task<number>* __task,
+    void $MODEL<number>::compute_gauge_xfm_1(const twopf_db_task<number>* __task,
                                              const std::vector<number>& __state,
                                              std::vector<number>& __dN)
       {
@@ -1021,7 +1021,7 @@ namespace transport
 
 
     template <typename number>
-    void $MODEL<number>::compute_gauge_xfm_2(const twopf_list_task<number>* __task,
+    void $MODEL<number>::compute_gauge_xfm_2(const twopf_db_task<number>* __task,
                                              const std::vector<number>& __state,
                                              double __k, double __k1, double __k2, double __N,
                                              std::vector<number>& __ddN)
@@ -1051,7 +1051,7 @@ namespace transport
 
 
     template <typename number>
-    void $MODEL<number>::u2(const twopf_list_task<number>* __task,
+    void $MODEL<number>::u2(const twopf_db_task<number>* __task,
                             const std::vector<number>& __fields, double __k, double __N,
                             std::vector<number>& __u2)
       {
@@ -1079,7 +1079,7 @@ namespace transport
 
 
     template <typename number>
-    void $MODEL<number>::u3(const twopf_list_task<number>* __task,
+    void $MODEL<number>::u3(const twopf_db_task<number>* __task,
                             const std::vector<number>& __fields, double __k1, double __k2, double __k3, double __N,
                             std::vector<number>& __u3)
       {
@@ -1109,7 +1109,7 @@ namespace transport
 
 
     template <typename number>
-    void $MODEL<number>::A(const twopf_list_task<number>* __task,
+    void $MODEL<number>::A(const twopf_db_task<number>* __task,
                            const std::vector<number>& __fields, double __k1, double __k2, double __k3, double __N,
                            std::vector<number>& __A)
       {
@@ -1139,7 +1139,7 @@ namespace transport
 
 
     template <typename number>
-    void $MODEL<number>::B(const twopf_list_task<number>* __task,
+    void $MODEL<number>::B(const twopf_db_task<number>* __task,
                            const std::vector<number>& __fields, double __k1, double __k2, double __k3, double __N,
                            std::vector<number>& __B)
       {
@@ -1165,7 +1165,7 @@ namespace transport
 
 
     template <typename number>
-    void $MODEL<number>::C(const twopf_list_task<number>* __task,
+    void $MODEL<number>::C(const twopf_db_task<number>* __task,
                            const std::vector<number>& __fields, double __k1, double __k2, double __k3, double __N,
                            std::vector<number>& __C)
       {
@@ -1184,7 +1184,7 @@ namespace transport
 
 
     template <typename number>
-    void $MODEL<number>::M(const twopf_list_task<number>* __task, const std::vector<number>& __fields, double __N,
+    void $MODEL<number>::M(const twopf_db_task<number>* __task, const std::vector<number>& __fields, double __N,
                            std::vector<number>& __M)
       {
         $RESOURCE_RELEASE
@@ -1300,7 +1300,7 @@ namespace transport
         class aHAggregatorPredicate
           {
           public:
-            aHAggregatorPredicate(const twopf_list_task<number>* tk, model<number>* m, std::vector<double>& N,
+            aHAggregatorPredicate(const twopf_db_task<number>* tk, model<number>* m, std::vector<double>& N,
                                   std::vector<number>& log_aH, std::vector<number>& log_a2H2M, double lk)
               : params(tk->get_params()),
                 task(tk),
@@ -1361,7 +1361,7 @@ namespace transport
             model<number>* mdl;
 
             //! point to task object
-            const twopf_list_task<number>* task;
+            const twopf_db_task<number>* task;
 
             //! parameters for the model in use
             const parameters<number>& params;
@@ -1402,7 +1402,7 @@ namespace transport
 
 
 		template <typename number>
-		void $MODEL<number>::compute_aH(const twopf_list_task<number>* tk, std::vector<double>& N, std::vector<number>& log_aH, std::vector<number>& log_a2H2M, double largest_k)
+		void $MODEL<number>::compute_aH(const twopf_db_task<number>* tk, std::vector<double>& N, std::vector<number>& log_aH, std::vector<number>& log_a2H2M, double largest_k)
 			{
 				N.clear();
 				log_aH.clear();

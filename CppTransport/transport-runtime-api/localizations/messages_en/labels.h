@@ -10,10 +10,9 @@
 
 #define CPPTRANSPORT_YES                                "yes"
 #define CPPTRANSPORT_NO                                 "no"
+#define CPPTRANSPORT_WITH                               "with"
 
 #define CPPTRANSPORT_EFOLDS                             "e-folds"
-#define CPPTRANSPORT_TWOPF_MESSAGE                      "Two-point function for"
-#define CPPTRANSPORT_THREEPF_MESSAGE                    "Three-point function for"
 
 #define CPPTRANSPORT_HOUR                               "h"
 #define CPPTRANSPORT_MINUTE                             "m"
@@ -24,14 +23,15 @@
 #define CPPTRANSPORT_KILOBYTE                           "kb"
 #define CPPTRANSPORT_BYTE                               "b"
 
-#define CPPTRANSPORT_KCONFIG_SERIAL                     "Serial ="
+#define CPPTRANSPORT_KCONFIG_SERIAL                     "serial ="
 #define CPPTRANSPORT_KCONFIG_KEQUALS                    "comoving k ="
 #define CPPTRANSPORT_KCONFIG_KTEQUALS                   "comoving k_t ="
 #define CPPTRANSPORT_KCONFIG_ALPHAEQUALS                "alpha ="
 #define CPPTRANSPORT_KCONFIG_BETAEQUALS                 "beta ="
 #define CPPTRANSPORT_KCONFIG_T_EXIT                     "t_exit ="
+#define CPPTRANSPORT_KCONFIG_T_MASSLESS                 "t_massless ="
 
-#define CPPTRANSPORT_TIME_CONFIG_SERIAL                 "Serial ="
+#define CPPTRANSPORT_TIME_CONFIG_SERIAL                 "serial ="
 #define CPPTRANSPORT_TIME_CONFIG_TEQUALS                "t ="
 
 #define CPPTRANSPORT_FAST_FORWARD                       "Fast-forward integration"

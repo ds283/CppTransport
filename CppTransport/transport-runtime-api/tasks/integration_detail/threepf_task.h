@@ -12,7 +12,7 @@
 
 #include "transport-runtime-api/tasks/integration_detail/common.h"
 #include "transport-runtime-api/tasks/integration_detail/abstract.h"
-#include "transport-runtime-api/tasks/integration_detail/twopf_list_task.h"
+#include "transport-runtime-api/tasks/integration_detail/twopf_db_task.h"
 #include "transport-runtime-api/tasks/integration_detail/default_policies.h"
 #include "transport-runtime-api/tasks/configuration-database/threepf_config_database.h"
 
@@ -41,7 +41,7 @@ namespace transport
 
     // three-point function task
     template <typename number>
-    class threepf_task: public twopf_list_task<number>
+    class threepf_task: public twopf_db_task<number>
 	    {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -135,7 +135,7 @@ namespace transport
         virtual void write_kconfig_database(sqlite3* handle) override;
 
 		    //! Check whether k-configuration databases have been modified
-		    virtual bool is_kconfig_database_modified() const override { return(this->threepf_db->is_modified() || this->twopf_list_task<number>::is_kconfig_database_modified()); }
+		    virtual bool is_kconfig_database_modified() const override { return(this->threepf_db->is_modified() || this->twopf_db_task<number>::is_kconfig_database_modified()); }
 
 
         // INTERNAL DATA
@@ -158,18 +158,18 @@ namespace transport
 
     template <typename number>
     threepf_task<number>::threepf_task(const std::string& nm, const initial_conditions<number>& i, range<double>& t, bool ff)
-	    : twopf_list_task<number>(nm, i, t, ff),
+	    : twopf_db_task<number>(nm, i, t, ff),
 	      integrable(true)
 	    {
-        threepf_db = std::make_shared<threepf_kconfig_database>(this->twopf_list_task<number>::kstar);
+        threepf_db = std::make_shared<threepf_kconfig_database>(this->twopf_db_task<number>::kstar);
 	    }
 
 
     template <typename number>
     threepf_task<number>::threepf_task(const std::string& nm, Json::Value& reader, sqlite3* handle, const initial_conditions<number>& i)
-	    : twopf_list_task<number>(nm, reader, handle, i)
+	    : twopf_db_task<number>(nm, reader, handle, i)
 	    {
-		    threepf_db = std::make_shared<threepf_kconfig_database>(this->twopf_list_task<number>::kstar, handle, *this->twopf_list_task<number>::twopf_db);
+		    threepf_db = std::make_shared<threepf_kconfig_database>(this->twopf_db_task<number>::kstar, handle, *this->twopf_db_task<number>::twopf_db);
 
         //! deserialize integrable status
         integrable = reader[CPPTRANSPORT_NODE_THREEPF_INTEGRABLE].asBool();
@@ -188,14 +188,14 @@ namespace transport
 		    // threepf database is serialized separately to a SQLite database
         // this serialization is handled by the repository layer via write_kconfig_database() below
 
-        this->twopf_list_task<number>::serialize(writer);
+        this->twopf_db_task<number>::serialize(writer);
 	    }
 
 
 		template <typename number>
 		void threepf_task<number>::write_kconfig_database(sqlite3* handle)
 			{
-		    this->twopf_list_task<number>::write_kconfig_database(handle);
+		    this->twopf_db_task<number>::write_kconfig_database(handle);
 				this->threepf_db->write(handle);
 			}
 
@@ -234,11 +234,11 @@ namespace transport
             throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
           }
 
-        // initial times reported by twopf_list_task<>::get_initial_time() will be adjusted
+        // initial times reported by twopf_db_task<>::get_initial_time() will be adjusted
         // depending whether fast-forward or ordinary integration is being used
-        double init1 = this->twopf_list_task<number>::get_initial_time(*(*rec1));
-        double init2 = this->twopf_list_task<number>::get_initial_time(*(*rec2));
-        double init3 = this->twopf_list_task<number>::get_initial_time(*(*rec3));
+        double init1 = this->twopf_db_task<number>::get_initial_time(*(*rec1));
+        double init2 = this->twopf_db_task<number>::get_initial_time(*(*rec2));
+        double init3 = this->twopf_db_task<number>::get_initial_time(*(*rec3));
 
         return std::min(std::min(init1, init2), init3);
       }
@@ -323,8 +323,8 @@ namespace transport
 
             this->threepf_compute_horizon_exit_times(log_aH_sp, task_impl::TolerancePredicate(CPPTRANSPORT_ROOT_FIND_TOLERANCE));
 
-            // forward to underlying twopf_list_task to also update its database
-            this->twopf_list_task<number>::twopf_compute_horizon_exit_times(log_aH_sp, log_a2H2M_sp, task_impl::TolerancePredicate(CPPTRANSPORT_ROOT_FIND_TOLERANCE));
+            // forward to underlying twopf_db_task to also update its database
+            this->twopf_db_task<number>::twopf_compute_horizon_exit_times(log_aH_sp, log_a2H2M_sp, task_impl::TolerancePredicate(CPPTRANSPORT_ROOT_FIND_TOLERANCE));
           }
         catch(failed_to_compute_horizon_exit& xe)
           {
@@ -422,7 +422,7 @@ namespace transport
 	                {
                     if(triangle(j, k, l, ks[j], ks[k], ks[l]))      // ask policy object whether this is a triangle
 	                    {
-                        boost::optional<unsigned int> new_serial = this->threepf_task<number>::threepf_db->add_k1k2k3_record(*this->twopf_list_task<number>::twopf_db, ks[j], ks[k], ks[l], policy);
+                        boost::optional<unsigned int> new_serial = this->threepf_task<number>::threepf_db->add_k1k2k3_record(*this->twopf_db_task<number>::twopf_db, ks[j], ks[k], ks[l], policy);
 
                         if(!new_serial)  // configuration was not stored
                           {

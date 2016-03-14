@@ -37,7 +37,7 @@ namespace transport
               public:
 
 		            //! constructor
-                handle(datapipe<number>& pipe, twopf_list_task<number>* tk, const SQL_time_config_query& tq, unsigned int Nf);
+                handle(datapipe<number>& pipe, twopf_db_task<number>* tk, const SQL_time_config_query& tq, unsigned int Nf);
 
 		            //! destructor is default
                 ~handle() = default;
@@ -53,7 +53,7 @@ namespace transport
                 model<number>* mdl;
 
                 //! task pointer
-                twopf_list_task<number>* tk;
+                twopf_db_task<number>* tk;
 
 		            //! database SQL query for time axis
 		            const SQL_time_config_query tquery;
@@ -93,7 +93,7 @@ namespace transport
           public:
 
             //! make a handle
-            std::unique_ptr<handle> make_handle(datapipe<number>& pipe, twopf_list_task<number>* tk, const SQL_time_config_query& tq, unsigned int Nf) const;
+            std::unique_ptr<handle> make_handle(datapipe<number>& pipe, twopf_db_task<number>* tk, const SQL_time_config_query& tq, unsigned int Nf) const;
 
 
             // COMPUTE ZETA PRODUCTS
@@ -120,7 +120,7 @@ namespace transport
 
 
         template <typename number>
-        zeta_timeseries_compute<number>::handle::handle(datapipe<number>& p, twopf_list_task<number>* t, const SQL_time_config_query& tq, unsigned int Nf)
+        zeta_timeseries_compute<number>::handle::handle(datapipe<number>& p, twopf_db_task<number>* t, const SQL_time_config_query& tq, unsigned int Nf)
           : pipe(p),
             tk(t),
             tquery(tq),
@@ -171,7 +171,7 @@ namespace transport
 
         template <typename number>
         std::unique_ptr<typename zeta_timeseries_compute<number>::handle>
-        zeta_timeseries_compute<number>::make_handle(datapipe<number>& pipe, twopf_list_task<number>* t, const SQL_time_config_query& tq, unsigned int Nf) const
+        zeta_timeseries_compute<number>::make_handle(datapipe<number>& pipe, twopf_db_task<number>* t, const SQL_time_config_query& tq, unsigned int Nf) const
           {
             return std::make_unique<handle>(pipe, t, tq, Nf);
           }

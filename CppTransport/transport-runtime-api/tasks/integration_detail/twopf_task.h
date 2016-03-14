@@ -10,7 +10,7 @@
 
 #include "transport-runtime-api/tasks/integration_detail/common.h"
 #include "transport-runtime-api/tasks/integration_detail/abstract.h"
-#include "transport-runtime-api/tasks/integration_detail/twopf_list_task.h"
+#include "transport-runtime-api/tasks/integration_detail/twopf_db_task.h"
 
 
 namespace transport
@@ -19,7 +19,7 @@ namespace transport
     // two-point function task
     // we need to specify the wavenumbers k at which we want to sample it
     template <typename number>
-    class twopf_task: public twopf_list_task<number>
+    class twopf_task: public twopf_db_task<number>
 	    {
 
       public:
@@ -59,12 +59,12 @@ namespace transport
     template <typename number>
     twopf_task<number>::twopf_task(const std::string& nm, const initial_conditions<number>& i,
                                    range<double>& t, range<double>& ks, bool ff)
-	    : twopf_list_task<number>(nm, i, t, ff)
+	    : twopf_db_task<number>(nm, i, t, ff)
 	    {
         // the mapping from the provided list of ks to the work list is just one-to-one
         for(unsigned int j = 0; j < ks.size(); ++j)
 	        {
-            this->twopf_list_task<number>::twopf_db->add_record(ks[j]);
+            this->twopf_db_task<number>::twopf_db->add_record(ks[j]);
 	        }
 
         std::cout << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_TWOPF_ELEMENTS_A << " " << this->twopf_db->size() << " "
@@ -81,7 +81,7 @@ namespace transport
     // deserialization constructor
     template <typename number>
     twopf_task<number>::twopf_task(const std::string& nm, Json::Value& reader, sqlite3* handle, const initial_conditions<number>& i)
-	    : twopf_list_task<number>(nm, reader, handle, i)
+	    : twopf_db_task<number>(nm, reader, handle, i)
 	    {
 		    // rebuild database of stored times; this isn't serialized but recomputed on-the-fly
         this->cache_stored_time_config_database(this->twopf_db->get_kmax_conventional());
@@ -94,7 +94,7 @@ namespace transport
 	    {
         writer[CPPTRANSPORT_NODE_TASK_TYPE] = std::string(CPPTRANSPORT_NODE_TASK_TYPE_TWOPF);
 
-        this->twopf_list_task<number>::serialize(writer);
+        this->twopf_db_task<number>::serialize(writer);
 	    }
 
 	}

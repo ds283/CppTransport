@@ -46,7 +46,7 @@ namespace transport
 		      public:
 
 				    //! basic user-facing constructor
-				    background_line(const twopf_list_task<number>& tk, SQL_time_config_query tq, background_quantity t, unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
+				    background_line(const twopf_db_task<number>& tk, SQL_time_config_query tq, background_quantity t, unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
 				    //! deserialization constructor
 				    background_line(Json::Value& reader, task_finder<number>& finder);
@@ -124,7 +124,7 @@ namespace transport
 
 
 				template <typename number>
-				background_line<number>::background_line(const twopf_list_task<number>& tk, SQL_time_config_query tq, background_quantity t, unsigned int prec)
+				background_line<number>::background_line(const twopf_db_task<number>& tk, SQL_time_config_query tq, background_quantity t, unsigned int prec)
 					: derived_line<number>(tk, axis_class::time_axis, std::list<axis_value>{ axis_value::efolds_axis }, prec),
 		        time_series<number>(tk),
 		        gadget(tk),

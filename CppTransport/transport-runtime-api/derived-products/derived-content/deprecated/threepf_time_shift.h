@@ -65,7 +65,7 @@ namespace transport
 
             //! shift a threepf timeline for coordinate labels (l,m,n)
             //! and supplied 3pf k-configuration
-            void shift(twopf_list_task<number>* tk, model<number>* mdl, datapipe<number>& pipe,
+            void shift(twopf_db_task<number>* tk, model<number>* mdl, datapipe<number>& pipe,
                        const SQL_time_config_query& tquery, std::vector<number>& line_data, const std::vector<time_config>& t_axis,
                        unsigned int l, unsigned int m, unsigned int n, const threepf_kconfig& config) const;
 
@@ -73,7 +73,7 @@ namespace transport
 
             //! apply the derivative shift to a threepf-timeline for a specific
             //! configuration
-            void make_shift(twopf_list_task<number>* tk, model<number>* mdl, datapipe<number>& pipe,
+            void make_shift(twopf_db_task<number>* tk, model<number>* mdl, datapipe<number>& pipe,
                             const SQL_time_config_query& tquery, std::vector<number>& line_data,
                             const std::vector<time_config>& t_axis, const std::vector<typename std::vector<number> >& background,
                             unsigned int p, const extractor& p_extract,
@@ -92,7 +92,7 @@ namespace transport
 
 
         template <typename number>
-        void threepf_time_shift<number>::shift(twopf_list_task<number>* tk, model<number>* mdl, datapipe<number>& pipe,
+        void threepf_time_shift<number>::shift(twopf_db_task<number>* tk, model<number>* mdl, datapipe<number>& pipe,
                                                const SQL_time_config_query& tquery, std::vector<number>& line_data, const std::vector<time_config>& t_axis,
                                                unsigned int l, unsigned int m, unsigned int n, const threepf_kconfig& config) const
 			    {
@@ -134,7 +134,7 @@ namespace transport
 
 
         template <typename number>
-        void threepf_time_shift<number>::make_shift(twopf_list_task<number>* tk, model<number>* mdl, datapipe<number>& pipe,
+        void threepf_time_shift<number>::make_shift(twopf_db_task<number>* tk, model<number>* mdl, datapipe<number>& pipe,
                                                     const SQL_time_config_query& tquery, std::vector<number>& line_data,
                                                     const std::vector<time_config>& t_axis, const std::vector<std::vector<number> >& background,
                                                     unsigned int p, const extractor& p_extract,
