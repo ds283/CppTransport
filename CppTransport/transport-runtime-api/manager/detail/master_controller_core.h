@@ -103,7 +103,6 @@ namespace transport
                     // parse contents of file; 'true' means allow unregistered options
                     boost::program_options::parsed_options file_parsed = boost::program_options::parse_config_file(instream, config_file_options, true);
                     boost::program_options::store(file_parsed, option_map);
-                    boost::program_options::notify(option_map);
 
                     std::vector<std::string> unrecognized_config_options = boost::program_options::collect_unrecognized(file_parsed.options, boost::program_options::exclude_positional);
                     if(unrecognized_config_options.size() > 0)
