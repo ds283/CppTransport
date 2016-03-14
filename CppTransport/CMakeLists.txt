@@ -879,7 +879,6 @@ set(TRANSPORT_RUNTIME_API_UTILITIES_FILES
   transport-runtime-api/utilities/latex_output.h
   transport-runtime-api/utilities/linecache.h
   transport-runtime-api/utilities/named_list.h
-  transport-runtime-api/utilities/python_finder.h
   transport-runtime-api/utilities/random_string.h
   transport-runtime-api/utilities/spline1d.h
   )

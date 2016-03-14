@@ -4,13 +4,11 @@
 //
 
 
-#ifndef __environment_H_
-#define __environment_H_
+#ifndef CPPTRANSPORT_ENVIRONMENT_H
+#define CPPTRANSPORT_ENVIRONMENT_H
 
 
 #include <string>
-
-#include "transport-runtime-api/utilities/python_finder.h"
 
 #include "boost/optional.hpp"
 #include "boost/filesystem/operations.hpp"
@@ -37,12 +35,42 @@ namespace transport
 
       public:
 
-        //! get location of Python executable
-        std::string get_python_location() const { return(this->python_location.string()); }
+        //! determine whether a Python interpreter is available
+        bool has_python() const { return(this->python_available); }
 
         //! execute a Python script;
         //! returns exit code provided by system
         int execute_python(const boost::filesystem::path& script) const;
+
+      protected:
+
+        //! detect Python installation details
+        void detect_python();
+
+        //! get location of Python executable
+        std::string get_python_location() const { return(this->python_location.string()); }
+
+
+        // MATPLOTLIB SUPPORT
+
+      public:
+
+        //! determine whether Matplotlib is available
+        bool has_matplotlib() const { return(this->matplotlib_available); }
+
+        //! determine whether Matplotlib style sheets are available
+        bool has_matplotlib_style_sheets() const { return(this->matplotlib_style_sheets); }
+
+        //! determine whether Seaborn is available
+        bool has_seaborn() const { return(this->seaborn_available); }
+
+      protected:
+
+        //! detect Matplotlib installation
+        void detect_matplotlib();
+
+        //! detect seaborn installation
+        void detect_seaborn();
 
 
         // TERMINAL PROPERTIES
@@ -52,6 +80,11 @@ namespace transport
         //! determine whether the terminal we are running in has support for ANSI colourized output
         bool has_colour_terminal_support() const { return(this->colour_output); }
 
+      protected:
+
+        //! detect terminal type
+        void detect_term();
+
 
         // ENVIRONMENT PATHS
 
@@ -59,6 +92,11 @@ namespace transport
 
         //! get path to config file, if it exists
         boost::optional< boost::filesystem::path > config_file_path() const;
+
+      protected:
+
+        //! detect home direcotry
+        void detect_home();
 
 
         // INTERNAL DATA
@@ -72,10 +110,25 @@ namespace transport
         boost::optional< boost::filesystem::path > home;
 
 
-        // LOCATION OF EXECUTABLES
+        // PYTHON SUPPORT
+
+        //! is Python available
+        bool python_available;
 
         //! Python executable
         boost::filesystem::path python_location;
+
+
+        // MATPLOTLIB SUPPORT
+
+        //! has Matplotlib available?
+        bool matplotlib_available;
+
+        //! Matplotlib has style sheet support?
+        bool matplotlib_style_sheets;
+
+        //! is Seaborn available?
+        bool seaborn_available;
 
 
         // TERMINAL PROPERTIES
@@ -87,10 +140,30 @@ namespace transport
 
 
     local_environment::local_environment()
+      : python_available(false),
+        matplotlib_available(false),
+        matplotlib_style_sheets(false),
+        seaborn_available(false)
       {
-        // set up python path
-        python_location = find_python();
+        // detect Python if available, and find location of executable
+        detect_python();
 
+        // detect whether matplotlib is available
+        detect_matplotlib();
+
+        // detect whether seaborn is available
+        detect_seaborn();
+
+        // detect home directory
+        detect_home();
+
+        //! detect terminal colour support
+        detect_term();
+      }
+
+
+    void local_environment::detect_home()
+      {
         // detect home directory
         char* home_cstr = std::getenv(CPPTRANSPORT_HOME_ENV);
 
@@ -99,24 +172,110 @@ namespace transport
             std::string home_path(home_cstr);
             this->home = boost::filesystem::path(home_path);
           }
+      }
 
+
+    void local_environment::detect_term()
+      {
         // determine if terminal supports colour output
         char* term_type_cstr = std::getenv("TERM");
 
         if(term_type_cstr == nullptr)
           {
-            colour_output = false;
+            this->colour_output = false;
             return;
           }
 
         std::string term_type(term_type_cstr);
 
-        colour_output = term_type == "xterm"
+        this->colour_output = term_type == "xterm"
           || term_type == "xterm-color"
           || term_type == "xterm-256color"
           || term_type == "screen"
           || term_type == "linux"
           || term_type == "cygwin";
+      }
+
+
+    void local_environment::detect_python()
+      {
+        std::string path;
+        FILE* f = popen("which python", "r");
+
+        if(!f)
+          {
+            this->python_available = false;
+            this->python_location = CPPTRANSPORT_DEFAULT_PYTHON_PATH;
+          }
+        else
+          {
+            char buffer[1024];
+            char* line = fgets(buffer, sizeof(buffer), f);
+            pclose(f);
+
+            if(line != nullptr)
+              {
+                this->python_available = true;
+                std::string temp = std::string(line);
+                boost::algorithm::trim_right(temp);
+                this->python_location = temp;
+              }
+            else
+              {
+                this->python_available = false;
+                path = CPPTRANSPORT_DEFAULT_PYTHON_PATH;
+              }
+          }
+      }
+
+
+    void local_environment::detect_matplotlib()
+      {
+        if(!this->python_available)
+          {
+            this->matplotlib_available = false;
+            return;
+          }
+
+        // get name of temporary file
+        boost::filesystem::path temp_mpl = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
+
+        std::fstream outf(temp_mpl.string(), std::ios_base::out | std::ios_base::trunc);
+        outf << "import matplotlib.pyplot as plt" << '\n';
+        outf.close();
+
+        this->matplotlib_available = this->execute_python(temp_mpl) == 0;
+
+        if(!this->matplotlib_available) return;
+
+        // get name of second temporary file
+        boost::filesystem::path temp_sheets = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
+
+        std::fstream outf2(temp_sheets.string(), std::ios_base::out | std::ios_base::trunc);
+        outf2 << "import matplotlib.pyplot as plt" << '\n';
+        outf2 << "plt.style.use('ggplot')" << '\n';
+        outf2.close();
+
+        this->matplotlib_style_sheets = this->execute_python(temp_sheets) == 0;
+      }
+
+
+    void local_environment::detect_seaborn()
+      {
+        if(!this->python_available)
+          {
+            this->seaborn_available = false;
+            return;
+          }
+
+        // get name of temporary file
+        boost::filesystem::path temp_sns = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
+
+        std::fstream outf(temp_sns.string(), std::ios_base::out | std::ios_base::trunc);
+        outf << "import seaborn as sns" << '\n';
+        outf.close();
+
+        this->seaborn_available = this->execute_python(temp_sns) == 0;
       }
 
 
@@ -136,7 +295,7 @@ namespace transport
               }
           }
 
-        command << this->python_location.string() << " \"" << script.string() << "\"";
+        command << this->python_location.string() << " \"" << script.string() << "\" > /dev/null 2>&1";
 
         return std::system(command.str().c_str());
       }
@@ -155,4 +314,4 @@ namespace transport
 
   }   // namespace transport
 
-#endif //__environment_H_
+#endif //CPPTRANSPORT_ENVIRONMENT_H

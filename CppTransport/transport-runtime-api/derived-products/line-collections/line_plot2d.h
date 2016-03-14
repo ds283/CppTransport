@@ -16,8 +16,6 @@
 #include "transport-runtime-api/derived-products/line-collections/line_collection.h"
 #include "transport-runtime-api/derived-products/line-collections/data_line.h"
 
-#include "transport-runtime-api/utilities/python_finder.h"
-
 #include "transport-runtime-api/messages.h"
 #include "transport-runtime-api/exceptions.h"
 
