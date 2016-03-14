@@ -110,7 +110,7 @@ namespace transport
       public:
 
         //! Get start time for a threepf configuration
-        double get_fast_forward_start(const threepf_kconfig& config) const;
+        double get_initial_time(const threepf_kconfig& config) const;
 
         //! Set fast-forward integration setting
         virtual void set_fast_forward(bool g) override { this->fast_forward = g; this->validate_subhorizon_efolds(); this->cache_stored_time_config_database(this->threepf_db->get_kmax_2pf_conventional()); }
@@ -203,24 +203,44 @@ namespace transport
     template <typename number>
     const time_config_database threepf_task<number>::get_time_config_database(const threepf_kconfig& config) const
       {
-        return this->build_time_config_database(this->get_fast_forward_start(config), this->threepf_db->get_kmax_2pf_conventional());
+        return this->build_time_config_database(this->get_initial_time(config), this->threepf_db->get_kmax_2pf_conventional());
       }
 
 
     template <typename number>
-    double threepf_task<number>::get_fast_forward_start(const threepf_kconfig& config) const
+    double threepf_task<number>::get_initial_time(const threepf_kconfig& config) const
       {
-        double kmin = std::min(std::min(config.k1_conventional, config.k2_conventional), config.k3_conventional);
-
-        twopf_kconfig_database::record_iterator rec;
-		    if(!this->twopf_db->find(kmin, rec))
+        twopf_kconfig_database::record_iterator rec1;
+		    if(!this->twopf_db->find(config.k1_conventional, rec1))
           {
             std::ostringstream msg;
-            msg << CPPTRANSPORT_TASK_THREEPF_DATABASE_MISS << " " << kmin;
+            msg << CPPTRANSPORT_TASK_THREEPF_DATABASE_MISS << " " << config.k1_conventional;
             throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
           }
 
-        return((*rec)->t_exit - this->ff_efolds);
+        twopf_kconfig_database::record_iterator rec2;
+        if(!this->twopf_db->find(config.k2_conventional, rec1))
+          {
+            std::ostringstream msg;
+            msg << CPPTRANSPORT_TASK_THREEPF_DATABASE_MISS << " " << config.k2_conventional;
+            throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
+          }
+
+        twopf_kconfig_database::record_iterator rec3;
+        if(!this->twopf_db->find(config.k3_conventional, rec1))
+          {
+            std::ostringstream msg;
+            msg << CPPTRANSPORT_TASK_THREEPF_DATABASE_MISS << " " << config.k3_conventional;
+            throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
+          }
+
+        // initial times reported by twopf_list_task<>::get_initial_time() will be adjusted
+        // depending whether fast-forward or ordinary integration is being used
+        double init1 = this->twopf_list_task<number>::get_initial_time(*(*rec1));
+        double init2 = this->twopf_list_task<number>::get_initial_time(*(*rec2));
+        double init3 = this->twopf_list_task<number>::get_initial_time(*(*rec3));
+
+        return std::min(std::min(init1, init2), init3);
       }
 
 
@@ -229,7 +249,7 @@ namespace transport
 	    {
         if(this->fast_forward)
           {
-            return this->integration_task<number>::get_ics_vector(this->get_fast_forward_start(config));
+            return this->integration_task<number>::get_ics_vector(this->get_initial_time(config));
           }
         else
           {

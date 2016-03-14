@@ -149,10 +149,12 @@ namespace transport
         //! Provide access to twopf k-configuration database
         const twopf_kconfig_database& get_twopf_database() const { return(*(this->twopf_db)); }
 
-		    //! Compute horizon-exit times for each mode in the database
+		    //! Compute horizon-exit times for each mode in the database,
+        //! and also values of t_massless, the point where each mode becomes massless
 
 		    //! Should be called once the database has been populated.
-		    //! Horizon exit times are stored when the database is serialized, so does not need to be called again.
+		    //! Horizon exit times and massless times are stored when the database is serialized,
+        //! so does not need to be called again.
 		    virtual void compute_horizon_exit_times();
 
         //! Write k-configuration database to disk
@@ -163,13 +165,14 @@ namespace transport
 
       protected:
 
-		    //! Compute horizon-exit times for each mode in the database -- use supplied spline
+		    //! Compute horizon-exit times for each mode in the database -- use supplied spline;
+        //! also compute t_massless
 		    template <typename SplineObject, typename TolerancePolicy>
 		    void twopf_compute_horizon_exit_times(SplineObject& log_aH, SplineObject& log_a2H2M, TolerancePolicy tol);
 
-        //! Compute safe initial times for a k-mode
-        //! 'Safe' means that the mode can safely be approximated as massless because (k/a)^2 >> the largest eigenvalue of the
-        //! mass matrix
+        //! Compute t_massless for a k-mode
+        //! Before t_massless the mode can safely be approximated as massless because
+        // (k/a)^2 >> the largest eigenvalue of the mass matrix
         //! Uses supplied spline which gives time dependence of largest eigenvalue of the mass matrix
         template <typename SplineObject, typename TolerancePolicy>
         double compute_t_massless(const twopf_kconfig& config, double t_exit, SplineObject& log_a2H2M,
@@ -222,7 +225,7 @@ namespace transport
         virtual void set_fast_forward_efolds(double N) { this->fast_forward = true; this->ff_efolds = (N >= 0.0 ? N : this->ff_efolds); this->validate_subhorizon_efolds(); this->cache_stored_time_config_database(this->twopf_db->get_kmax_conventional()); }
 
         //! Get start time for a twopf configuration
-        double get_fast_forward_start(const twopf_kconfig& config) const;
+        double get_initial_time(const twopf_kconfig& config) const;
 
 
         // INTERFACE- TIME STEP REFINEMENT
@@ -268,14 +271,10 @@ namespace transport
         //! or check that initial conditions allow all modes to be subhorizon at the initial time otherwise
         void validate_subhorizon_efolds();
 
-        //! Populate list of time configurations to be stored.
-        //! The parameter N_config_begin specifies the initial time for whatever configuration is being integrated.
-        //! If fast-forward integration is being used then this parameter is used to set the initial
-        //! time of the integration.
-        //! Otherwise, integration begins at the initial conditions time.
-        time_config_database build_time_config_database(double N_config_begin, double largest_conventional_k) const;
+        //! Populate list of time configurations to be stored, beginning from the earliest time Nbegin
+        time_config_database build_time_config_database(double Nbegin, double largest_conventional_k) const;
 
-        //! get earliest time which can safely be recorded for all configurations
+        //! Get earliest time which can safely be recorded for all configurations
         double get_earliest_recordable_time(double largest_conventional_k) const;
 
 
@@ -404,14 +403,21 @@ namespace transport
     template <typename number>
     const time_config_database twopf_list_task<number>::get_time_config_database(const twopf_kconfig& config) const
       {
-        return this->build_time_config_database(this->get_fast_forward_start(config), this->twopf_db->get_kmax_conventional());
+        return this->build_time_config_database(this->get_initial_time(config), this->twopf_db->get_kmax_conventional());
       }
 
 
     template <typename number>
-    double twopf_list_task<number>::get_fast_forward_start(const twopf_kconfig& config) const
+    double twopf_list_task<number>::get_initial_time(const twopf_kconfig& config) const
       {
-        return(config.t_exit - this->ff_efolds);
+        if(this->fast_forward)
+          {
+            return(config.t_massless - this->ff_efolds);
+          }
+        else
+          {
+            return(this->ics.get_N_initial());
+          }
       }
 
 
@@ -420,7 +426,7 @@ namespace transport
 	    {
         if(this->fast_forward)
           {
-            return this->integration_task<number>::get_ics_vector(this->get_fast_forward_start(config));
+            return this->integration_task<number>::get_ics_vector(this->get_initial_time(config));
           }
         else
           {
@@ -507,13 +513,14 @@ namespace transport
     void twopf_list_task<number>::validate_subhorizon_efolds()
       {
         double earliest_required = std::numeric_limits<double>::max();
+        double earliest_tmassless = std::numeric_limits<double>::max();
 
         for(twopf_kconfig_database::const_config_iterator t = this->twopf_db->config_begin(); t != this->twopf_db->config_end(); ++t)
 	        {
-            if(t->t_exit < earliest_required) earliest_required = t->t_exit;
+            double ics_time = this->get_initial_time(*t);
+            if(ics_time < earliest_required) earliest_required = ics_time;
+            if(t->t_massless < earliest_tmassless) earliest_tmassless = t->t_massless;
 	        }
-
-        if(this->fast_forward) earliest_required -= this->ff_efolds;
 
         if(earliest_required < this->get_N_initial())
           {
@@ -523,7 +530,7 @@ namespace transport
             throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
           }
 
-        if(!this->fast_forward && earliest_required - this->get_N_initial() < CPPTRANSPORT_DEFAULT_RECOMMENDED_EFOLDS)
+        if(!this->fast_forward && earliest_tmassless - this->get_N_initial() < CPPTRANSPORT_DEFAULT_RECOMMENDED_EFOLDS)
           {
             std::cout << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_TWOPF_LIST_CROSS_WARN_A << this->get_N_initial() << " "
               << CPPTRANSPORT_TASK_TWOPF_LIST_CROSS_WARN_B << " " << earliest_required-this->get_N_initial() << " "
@@ -535,39 +542,27 @@ namespace transport
     template <typename number>
     double twopf_list_task<number>::get_earliest_recordable_time(double largest_conventional_k) const
       {
-        if(this->fast_forward)
-          {
-            twopf_kconfig_database::record_iterator rec;
+        twopf_kconfig_database::record_iterator rec;
 
-            if(!this->twopf_db->find(largest_conventional_k, rec))
-              {
-                std::ostringstream msg;
-                msg << CPPTRANSPORT_TASK_TWOPF_LIST_DATABASE_MISS << " " << largest_conventional_k;
-                throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
-              }
-
-            return (*rec)->t_exit - this->ff_efolds;
-          }
-        else
+        if(!this->twopf_db->find(largest_conventional_k, rec))
           {
-            return this->get_N_initial();
+            std::ostringstream msg;
+            msg << CPPTRANSPORT_TASK_TWOPF_LIST_DATABASE_MISS << " " << largest_conventional_k;
+            throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
           }
+
+        return this->get_initial_time(*(*rec));
       }
 
 
 		template <typename number>
-		time_config_database twopf_list_task<number>::build_time_config_database(double N_config_begin, double largest_conventional_k) const
+		time_config_database twopf_list_task<number>::build_time_config_database(double Nbegin, double largest_conventional_k) const
 			{
         // set up new time configuration database
         time_config_database time_db;
 
-				// check for fast-forward integration, and push only those sample times which are
-				// guaranteed to be available for all k-configurations into the database
+				// find earliest recordable time, which is the initial time of the mode with largest wavenumber
         double earliest_recordable = this->get_earliest_recordable_time(largest_conventional_k);
-
-        double Nbegin = 0.0;
-        if(this->fast_forward) Nbegin = N_config_begin;
-        else                   Nbegin = this->ics.get_N_initial();
 
         // get raw time sample points
 		    const std::vector<double> raw_times = this->times->get_grid();

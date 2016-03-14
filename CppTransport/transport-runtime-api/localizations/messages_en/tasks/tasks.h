@@ -38,7 +38,7 @@
 #define CPPTRANSPORT_TASK_THREEPF_ELEMENTS_B          "3pf k-configurations and"
 #define CPPTRANSPORT_TASK_THREEPF_ELEMENTS_C          "2pf k-configurations"
 
-#define CPPTRANSPORT_TASK_THREEPF_DATABASE_MISS       "Internal error: missing database entry for k_t ="
+#define CPPTRANSPORT_TASK_THREEPF_DATABASE_MISS       "Internal error: missing database entry for k ="
 
 #define CPPTRANSPORT_TASK_TWOPF_ELEMENTS_A            "task with"
 #define CPPTRANSPORT_TASK_TWOPF_ELEMENTS_B            "2pf k-configurations"
@@ -53,7 +53,7 @@
 
 #define CPPTRANSPORT_TASK_TWOPF_LIST_CROSS_WARN_A     "warning: initial conditions set at time N="
 #define CPPTRANSPORT_TASK_TWOPF_LIST_CROSS_WARN_B     "allow only"
-#define CPPTRANSPORT_TASK_TWOPF_LIST_CROSS_WARN_C     "e-folds of subhorizon evolution for largest scale"
+#define CPPTRANSPORT_TASK_TWOPF_LIST_CROSS_WARN_C     "e-folds of massless evolution for some scales"
 
 #define CPPTRANSPORT_TASK_TWOPF_LIST_EARLIEST_STORED  "earliest stored time N="
 
