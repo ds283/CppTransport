@@ -219,7 +219,7 @@ namespace transport
           }
 
         twopf_kconfig_database::record_iterator rec2;
-        if(!this->twopf_db->find(config.k2_conventional, rec1))
+        if(!this->twopf_db->find(config.k2_conventional, rec2))
           {
             std::ostringstream msg;
             msg << CPPTRANSPORT_TASK_THREEPF_DATABASE_MISS << " " << config.k2_conventional;
@@ -227,7 +227,7 @@ namespace transport
           }
 
         twopf_kconfig_database::record_iterator rec3;
-        if(!this->twopf_db->find(config.k3_conventional, rec1))
+        if(!this->twopf_db->find(config.k3_conventional, rec3))
           {
             std::ostringstream msg;
             msg << CPPTRANSPORT_TASK_THREEPF_DATABASE_MISS << " " << config.k3_conventional;
