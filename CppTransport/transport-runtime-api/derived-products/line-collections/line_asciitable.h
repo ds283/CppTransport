@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __line_asciitable_H_
-#define __line_asciitable_H_
+#ifndef CPPTRANSPORT_PRODUCT_LINE_ASCIITABLE_H
+#define CPPTRANSPORT_PRODUCT_LINE_ASCIITABLE_H
 
 
 #include <iostream>
@@ -82,7 +82,7 @@ namespace transport
 		      public:
 
 						//! Generate our derived output
-		        virtual std::list<std::string> derive(datapipe<number>& pipe, const std::list<std::string>& tags, local_environment& env) override;
+		        virtual std::list<std::string> derive(datapipe<number>& pipe, const std::list<std::string>& tags, local_environment& env, argument_cache& args) override;
 
 
 		      protected:
@@ -166,7 +166,7 @@ namespace transport
 
 
 				template <typename number>
-				std::list<std::string> line_asciitable<number>::derive(datapipe<number>& pipe, const std::list<std::string>& tags, local_environment& env)
+				std::list<std::string> line_asciitable<number>::derive(datapipe<number>& pipe, const std::list<std::string>& tags, local_environment& env, argument_cache& args)
 					{
 						// generate output from our constituent lines
 				    std::list< data_line<number> > derived_lines;
@@ -297,4 +297,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__line_asciitable_H_
+#endif //CPPTRANSPORT_PRODUCT_LINE_ASCIITABLE_H

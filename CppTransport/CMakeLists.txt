@@ -881,6 +881,7 @@ set(TRANSPORT_RUNTIME_API_UTILITIES_FILES
   transport-runtime-api/utilities/named_list.h
   transport-runtime-api/utilities/random_string.h
   transport-runtime-api/utilities/spline1d.h
+  transport-runtime-api/utilities/plot_environment.h
   )
 
 set(UTILITIES_FILES

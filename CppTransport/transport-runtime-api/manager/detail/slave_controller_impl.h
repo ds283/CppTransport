@@ -521,7 +521,7 @@ namespace transport
                         try
                           {
                             boost::timer::cpu_timer derive_timer;
-                            this_groups = product->derive(*pipe, task_tags, this->local_env);
+                            this_groups = product->derive(*pipe, task_tags, this->local_env, this->arg_cache);
                             content_groups.merge(this_groups);
                             derive_timer.stop();
                             processing_time += derive_timer.elapsed().wall;

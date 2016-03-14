@@ -4,8 +4,8 @@
 //
 
 
-#ifndef CPPTRANSPORT_PRODUCT_LINE_PLOT2D_H_
-#define CPPTRANSPORT_PRODUCT_LINE_PLOT2D_H_
+#ifndef CPPTRANSPORT_PRODUCT_LINE_PLOT2D_H
+#define CPPTRANSPORT_PRODUCT_LINE_PLOT2D_H
 
 
 #include <iostream>
@@ -15,6 +15,8 @@
 
 #include "transport-runtime-api/derived-products/line-collections/line_collection.h"
 #include "transport-runtime-api/derived-products/line-collections/data_line.h"
+
+#include "transport-runtime-api/utilities/plot_environment.h"
 
 #include "transport-runtime-api/messages.h"
 #include "transport-runtime-api/exceptions.h"
@@ -133,7 +135,7 @@ namespace transport
 		      public:
 
 				    //! Generate our derived output
-				    virtual std::list<std::string> derive(datapipe<number>& pipe, const std::list<std::string>& tags, local_environment& env) override;
+				    virtual std::list<std::string> derive(datapipe<number>& pipe, const std::list<std::string>& tags, local_environment& env, argument_cache& args) override;
 
 
 		      protected:
@@ -146,7 +148,7 @@ namespace transport
 				    //! Make plot
 				    bool make_plot(datapipe<number>& pipe, const std::deque<double>& axis,
 				                   const typename std::vector< std::vector< typename line_collection<number>::output_line > >& data_bins,
-				                   const std::vector< value_type >& bin_types, local_environment& env) const;
+				                   const std::vector< value_type >& bin_types, local_environment& env, argument_cache& args) const;
 
 
 		        // GET AND SET BASIC PLOT ATTRIBUTES
@@ -387,7 +389,7 @@ namespace transport
 
 
 				template <typename number>
-				std::list<std::string> line_plot2d<number>::derive(datapipe<number>& pipe, const std::list<std::string>& tags, local_environment& env)
+				std::list<std::string> line_plot2d<number>::derive(datapipe<number>& pipe, const std::list<std::string>& tags, local_environment& env, argument_cache& args)
 					{
 						// generate output from our constituent lines
 				    std::list< data_line<number> > derived_lines;
@@ -414,7 +416,7 @@ namespace transport
 							}
 
 						// generate plot
-				    bool success = this->make_plot(pipe, axis, binned_lines, bin_types, env);
+				    bool success = this->make_plot(pipe, axis, binned_lines, bin_types, env, args);
 
             // get output groups which were used
             std::list<std::string> used_groups = this->extract_output_groups(derived_lines);
@@ -485,7 +487,7 @@ namespace transport
 				template <typename number>
 				bool line_plot2d<number>::make_plot(datapipe<number>& pipe, const std::deque<double>& axis,
 				                                    const typename std::vector< std::vector< typename line_collection<number>::output_line > >& data_bins,
-																						const std::vector< value_type >& bin_types, local_environment& env) const
+																						const std::vector< value_type >& bin_types, local_environment& env, argument_cache& args) const
 					{
 						// extract paths from the datapipe
             boost::filesystem::path temp_root = pipe.get_abs_tempdir_path();
@@ -510,7 +512,8 @@ namespace transport
 					    }
 
 				    out << "import numpy as np" << '\n';
-				    out << "import matplotlib.pyplot as plt" << '\n';
+            plot_environment plot_env(env, args);
+            plot_env.write_environment(out);
 
 				    if(this->typeset_with_LaTeX)
 					    {
@@ -712,11 +715,14 @@ namespace transport
 						// if output format wasn't Python, try to execute the script
 						if(plot_file.extension() != ".py")
 							{
-                // hand off to local environment to execute
-                int rc = env.execute_python(script_file);
+                // determine if local environment has a Python interpreter
+                bool success = env.has_python();
+
+                // if yes, hand off to local environment to execute
+                if(success) success = env.execute_python(script_file) == 0;
 
 						    // remove python script if worked ok, otherwise move script to destination and throw an exception
-						    if(rc == 0)
+						    if(success)
 							    {
 						        boost::filesystem::remove(script_file);
 							    }
@@ -885,4 +891,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif // CPPTRANSPORT_PRODUCT_LINE_PLOT2D_H_
+#endif // CPPTRANSPORT_PRODUCT_LINE_PLOT2D_H

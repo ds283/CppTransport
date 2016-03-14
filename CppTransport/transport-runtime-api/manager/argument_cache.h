@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __argument_cache_H_
-#define __argument_cache_H_
+#ifndef CPPTRANSPORT_ARGUMENT_CACHE_H
+#define CPPTRANSPORT_ARGUMENT_CACHE_H
 
 
 #include <string>
@@ -18,6 +18,16 @@
 
 namespace transport
 	{
+
+    enum class plot_style
+      {
+        raw_matplotlib,
+        matplotlib_ggplot,
+        matplotlib_ticks,
+        seaborn
+      };
+
+
     class argument_cache
 	    {
 
@@ -129,6 +139,17 @@ namespace transport
         const std::string& get_journal_filename() const           { return(this->journal_filename); }
 
 
+        // PLOTTING OPTIONS
+
+      public:
+
+        //! Set plotting environment
+        void set_plot_environment(const std::string& e);
+
+        //! Get plotting environment
+        plot_style get_plot_environment() const                   { return(this->plot_env); }
+
+
         // INTERNAL DATA
 
       private:
@@ -169,6 +190,9 @@ namespace transport
         //! checkpoint interval in seconds. Zero indicates that checkpointing is disabled
         unsigned int checkpoint_interval;
 
+        //! plotting environemtn
+        plot_style plot_env;
+
         // enable boost::serialization support, and hence automated packing for transmission over MPI
         friend class boost::serialization::access;
 
@@ -187,6 +211,7 @@ namespace transport
             ar & batcher_capacity;
             ar & pipe_capacity;
             ar & checkpoint_interval;
+            ar & plot_env;
           }
 
 	    };
@@ -202,11 +227,22 @@ namespace transport
         colour_output(true),
         batcher_capacity(CPPTRANSPORT_DEFAULT_BATCHER_STORAGE),
         pipe_capacity(CPPTRANSPORT_DEFAULT_PIPE_STORAGE),
-        checkpoint_interval(CPPTRANSPORT_DEFAULT_CHECKPOINT_INTERVAL)
+        checkpoint_interval(CPPTRANSPORT_DEFAULT_CHECKPOINT_INTERVAL),
+        plot_env(plot_style::raw_matplotlib)
 	    {
 	    }
+
+
+    void argument_cache::set_plot_environment(const std::string& e)
+      {
+        if(e == "raw")          this->plot_env = plot_style::raw_matplotlib;
+        else if(e == "ggplot")  this->plot_env = plot_style::matplotlib_ggplot;
+        else if(e == "ticks")   this->plot_env = plot_style::matplotlib_ticks;
+        else if(e == "seaborn") this->plot_env = plot_style::seaborn;
+      }
+
 
 	}   // namespace transport
 
 
-#endif //__argument_cache_H_
+#endif //CPPTRANSPORT_ARGUMENT_CACHE_H
