@@ -91,7 +91,7 @@ namespace transport
 		    //! time of horizon exit
 		    double t_exit;
 
-        //! safe time for initial conditions
+        //! time where massless approximation is marginal, ie k/a = M^2 where M^2 is largest eigenvalue of mass matrix
         double t_massless;
 
         template <typename Stream> void write(Stream& out) const;
@@ -162,8 +162,11 @@ namespace transport
         double alpha;
         double beta;
 
-		    //! horizon-exit time
+		    //! horizon-exit time for k_t/3.0
 		    double t_exit;
+
+        //! time where massless approximation is marginal, ie k/a = M^2 where M^2 is largest eigenvalue of mass matrix
+        double t_massless;
 
         template <typename Stream> void write(Stream& out) const;
 	    };

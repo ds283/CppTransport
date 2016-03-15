@@ -371,8 +371,8 @@ namespace transport
       public:
 
         $MODEL_mpi_twopf_observer(twopf_batcher<number>& b, const twopf_kconfig_record& c,
-                                  const time_config_database& t)
-          : twopf_singleconfig_batch_observer<number>(b, c, t,
+                                  double t_ics, const time_config_database& t)
+          : twopf_singleconfig_batch_observer<number>(b, c, t_ics, t,
                                                       $MODEL_pool::backg_size, $MODEL_pool::tensor_size, $MODEL_pool::twopf_size,
                                                       $MODEL_pool::backg_start, $MODEL_pool::tensor_start, $MODEL_pool::twopf_start)
           {
@@ -529,8 +529,8 @@ namespace transport
 
       public:
         $MODEL_mpi_threepf_observer(threepf_batcher<number>& b, const threepf_kconfig_record& c,
-                                    const time_config_database& t)
-          : threepf_singleconfig_batch_observer<number>(b, c, t,
+                                    double t_ics, const time_config_database& t)
+          : threepf_singleconfig_batch_observer<number>(b, c, t_ics, t,
                                                         $MODEL_pool::backg_size, $MODEL_pool::tensor_size,
                                                         $MODEL_pool::twopf_size, $MODEL_pool::threepf_size,
                                                         $MODEL_pool::backg_start,
@@ -657,7 +657,7 @@ namespace transport
 
         // set up a functor to observe the integration
         // this also starts the timers running, so we do it as early as possible
-        $MODEL_mpi_twopf_observer<number> obs(batcher, kconfig, time_db);
+        $MODEL_mpi_twopf_observer<number> obs(batcher, kconfig, tk->get_initial_time(*kconfig), time_db);
 
         // set up a functor to evolve this system
         $MODEL_mpi_twopf_functor<number> rhs(tk, *kconfig
@@ -819,7 +819,7 @@ namespace transport
 
         // set up a functor to observe the integration
         // this also starts the timers running, so we do it as early as possible
-        $MODEL_mpi_threepf_observer<number> obs(batcher, kconfig, time_db);
+        $MODEL_mpi_threepf_observer<number> obs(batcher, kconfig, tk->get_initial_time(*kconfig), time_db);
 
         // set up a functor to evolve this system
         $MODEL_mpi_threepf_functor<number>  rhs(tk, *kconfig

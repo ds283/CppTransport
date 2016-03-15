@@ -210,37 +210,14 @@ namespace transport
     template <typename number>
     double threepf_task<number>::get_initial_time(const threepf_kconfig& config) const
       {
-        twopf_kconfig_database::record_iterator rec1;
-		    if(!this->twopf_db->find(config.k1_conventional, rec1))
+        if(this->fast_forward)
           {
-            std::ostringstream msg;
-            msg << CPPTRANSPORT_TASK_THREEPF_DATABASE_MISS << " " << config.k1_conventional;
-            throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
+            return(config.t_massless - this->ff_efolds);
           }
-
-        twopf_kconfig_database::record_iterator rec2;
-        if(!this->twopf_db->find(config.k2_conventional, rec2))
+        else
           {
-            std::ostringstream msg;
-            msg << CPPTRANSPORT_TASK_THREEPF_DATABASE_MISS << " " << config.k2_conventional;
-            throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
+            return(this->ics.get_N_initial());
           }
-
-        twopf_kconfig_database::record_iterator rec3;
-        if(!this->twopf_db->find(config.k3_conventional, rec3))
-          {
-            std::ostringstream msg;
-            msg << CPPTRANSPORT_TASK_THREEPF_DATABASE_MISS << " " << config.k3_conventional;
-            throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
-          }
-
-        // initial times reported by twopf_db_task<>::get_initial_time() will be adjusted
-        // depending whether fast-forward or ordinary integration is being used
-        double init1 = this->twopf_db_task<number>::get_initial_time(*(*rec1));
-        double init2 = this->twopf_db_task<number>::get_initial_time(*(*rec2));
-        double init3 = this->twopf_db_task<number>::get_initial_time(*(*rec3));
-
-        return std::min(std::min(init1, init2), init3);
       }
 
 
@@ -321,10 +298,13 @@ namespace transport
             spline1d<number> log_aH_sp(N, log_aH);
             spline1d<number> log_a2H2M_sp(N, log_a2H2M);
 
-            this->threepf_compute_horizon_exit_times(log_aH_sp, task_impl::TolerancePredicate(CPPTRANSPORT_ROOT_FIND_TOLERANCE));
-
-            // forward to underlying twopf_db_task to also update its database
+            // forward to underlying twopf_db_task to update its database;
+            // should be done *before* computing horizon exit times for threepfs, so that horizon exit & massless times
+            // for the corresponding twopfs are known
             this->twopf_db_task<number>::twopf_compute_horizon_exit_times(log_aH_sp, log_a2H2M_sp, task_impl::TolerancePredicate(CPPTRANSPORT_ROOT_FIND_TOLERANCE));
+
+            // compute horizon exit times & massless times for threepf configuraitons
+            this->threepf_compute_horizon_exit_times(log_aH_sp, task_impl::TolerancePredicate(CPPTRANSPORT_ROOT_FIND_TOLERANCE));
           }
         catch(failed_to_compute_horizon_exit& xe)
           {
@@ -345,6 +325,33 @@ namespace transport
 
             // update database record with computed exit time
             t->t_exit = task_impl::find_zero_of_spline(sp, tol);
+
+            // determine massless time from pre-computed massless times of corresponding twopf database
+            twopf_kconfig_database::record_iterator rec1;
+            if(!this->twopf_db->find(t->k1_conventional, rec1))
+              {
+                std::ostringstream msg;
+                msg << CPPTRANSPORT_TASK_THREEPF_DATABASE_MISS << " " << t->k1_conventional;
+                throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
+              }
+
+            twopf_kconfig_database::record_iterator rec2;
+            if(!this->twopf_db->find(t->k2_conventional, rec2))
+              {
+                std::ostringstream msg;
+                msg << CPPTRANSPORT_TASK_THREEPF_DATABASE_MISS << " " << t->k2_conventional;
+                throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
+              }
+
+            twopf_kconfig_database::record_iterator rec3;
+            if(!this->twopf_db->find(t->k3_conventional, rec3))
+              {
+                std::ostringstream msg;
+                msg << CPPTRANSPORT_TASK_THREEPF_DATABASE_MISS << " " << t->k3_conventional;
+                throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
+              }
+
+            t->t_massless = std::min(std::min((*rec1)->t_massless, (*rec2)->t_massless), (*rec3)->t_massless);
 			    }
 			}
 

@@ -121,7 +121,8 @@ namespace transport
 	            << " temp.serial AS serial,"
 	            << " temp.conventional AS conventional,"
               << " temp.comoving AS comoving,"
-	            << " temp.t_exit AS t_exit"
+	            << " temp.t_exit AS t_exit,"
+              << " temp.t_massless AS t_massless,"
               << " FROM (" << query.make_query(policy, false) << ") temp"
               << " ORDER BY temp.serial";
 
@@ -141,6 +142,7 @@ namespace transport
                     value.k_conventional = sqlite3_column_double(stmt, 1);
                     value.k_comoving     = sqlite3_column_double(stmt, 2);
 		                value.t_exit         = sqlite3_column_double(stmt, 3);
+                    value.t_massless     = sqlite3_column_double(stmt, 4);
 
                     sample.push_back(value);
                   }
@@ -189,7 +191,8 @@ namespace transport
               << " temp.wavenumber1 AS wavenumber1,"
               << " temp.wavenumber2 AS wavenumber1,"
               << " temp.wavenumber3 AS wavenumber1,"
-	            << " temp.t_exit AS t_exit"
+	            << " temp.t_exit_kt AS t_exit_kt,"
+              << " temp.t_massless AS t_massless,"
               << " FROM (" << query.make_query(policy, false) << ") temp"
               << " INNER JOIN " << CPPTRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE << " AS tpf1"
               << " ON temp.wavenumber1=tpf1.serial"
@@ -226,6 +229,7 @@ namespace transport
                     value.k3_comoving     = sqlite3_column_double(stmt, 10);
                     value.k3_serial       = static_cast<unsigned int>(sqlite3_column_int(stmt, 13));
 		                value.t_exit          = sqlite3_column_double(stmt, 14);
+                    value.t_massless      = sqlite3_column_double(stmt, 15);
 
                     sample.push_back(value);
                   }
