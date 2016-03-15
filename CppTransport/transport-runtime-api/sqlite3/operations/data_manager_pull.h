@@ -122,7 +122,7 @@ namespace transport
 	            << " temp.conventional AS conventional,"
               << " temp.comoving AS comoving,"
 	            << " temp.t_exit AS t_exit,"
-              << " temp.t_massless AS t_massless,"
+              << " temp.t_massless AS t_massless"
               << " FROM (" << query.make_query(policy, false) << ") temp"
               << " ORDER BY temp.serial";
 
@@ -192,7 +192,7 @@ namespace transport
               << " temp.wavenumber2 AS wavenumber1,"
               << " temp.wavenumber3 AS wavenumber1,"
 	            << " temp.t_exit_kt AS t_exit_kt,"
-              << " temp.t_massless AS t_massless,"
+              << " temp.t_massless AS t_massless"
               << " FROM (" << query.make_query(policy, false) << ") temp"
               << " INNER JOIN " << CPPTRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE << " AS tpf1"
               << " ON temp.wavenumber1=tpf1.serial"
