@@ -397,16 +397,14 @@ namespace transport
         boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
 
         msg << CPPTRANSPORT_REPO_COMMITTING_OUTPUT_GROUP_A << " '" << group->get_name() << "' "
-        << CPPTRANSPORT_REPO_COMMITTING_OUTPUT_GROUP_B << " '" << group->get_task_name() << "' "
-        << CPPTRANSPORT_REPO_COMMITTING_OUTPUT_GROUP_D << " " << boost::posix_time::to_simple_string(now);
-
+          << CPPTRANSPORT_REPO_COMMITTING_OUTPUT_GROUP_B << " '" << group->get_task_name() << "' "
+          << CPPTRANSPORT_REPO_COMMITTING_OUTPUT_GROUP_D << " " << boost::posix_time::to_simple_string(now);
         this->message(msg.str());
 
         if(group->get_payload().is_failed())
           {
             std::ostringstream warn;
-            warn << CPPTRANSPORT_REPO_WARN_OUTPUT_GROUP_A << " '" << group->get_name() << "' "
-            << CPPTRANSPORT_REPO_WARN_OUTPUT_GROUP_B;
+            warn << CPPTRANSPORT_REPO_WARN_OUTPUT_GROUP_A << " '" << group->get_name() << "' " << CPPTRANSPORT_REPO_WARN_OUTPUT_GROUP_B;
             this->warning(warn.str());
           }
       }
@@ -480,13 +478,13 @@ namespace transport
                 throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_CANT_WRITE_FAILURE_PATH);
               }
 
-            std::ostringstream msg;
+            std::ostringstream msg1;
+            msg1 << CPPTRANSPORT_REPO_FAILED_OUTPUT_GROUP_A << " '" << writer.get_record()->get_task()->get_name() << "': " << CPPTRANSPORT_REPO_FAILED_OUTPUT_GROUP_B;
+            this->error(msg1.str());
 
-            msg << CPPTRANSPORT_REPO_FAILED_OUTPUT_GROUP_A << " '" << writer.get_record()->get_task()->get_name() << "': "
-            << CPPTRANSPORT_REPO_FAILED_OUTPUT_GROUP_B << " '" << writer.get_name() << "' "
-            << CPPTRANSPORT_REPO_FAILED_OUTPUT_GROUP_C;
-
-            this->message(msg.str());
+            std::ostringstream msg2;
+            msg2 << CPPTRANSPORT_REPO_CONTENT_FAILED_A << " '" << writer.get_name() << "' " << CPPTRANSPORT_REPO_CONTENT_FAILED_B;
+            this->warning(msg2.str());
           }
         else throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_CANT_WRITE_FAILURE_PATH);
       }
@@ -568,13 +566,13 @@ namespace transport
                 throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_CANT_WRITE_FAILURE_PATH);
               }
 
-            std::ostringstream msg;
+            std::ostringstream msg1;
+            msg1 << CPPTRANSPORT_REPO_FAILED_POSTINT_GROUP_A << " '" << writer.get_record()->get_task()->get_name() << "': " << CPPTRANSPORT_REPO_FAILED_POSTINT_GROUP_B;
+            this->error(msg1.str());
 
-            msg << CPPTRANSPORT_REPO_FAILED_POSTINT_GROUP_A << " '" << writer.get_record()->get_task()->get_name() << "': "
-            << CPPTRANSPORT_REPO_FAILED_POSTINT_GROUP_B << " '" << writer.get_name() << "' "
-            << CPPTRANSPORT_REPO_FAILED_POSTINT_GROUP_C;
-
-            this->message(msg.str());
+            std::ostringstream msg2;
+            msg2 << CPPTRANSPORT_REPO_CONTENT_FAILED_A << " '" << writer.get_name() << "' " << CPPTRANSPORT_REPO_CONTENT_FAILED_B;
+            this->warning(msg2.str());
           }
         else throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_CANT_WRITE_FAILURE_PATH);
       }
@@ -635,13 +633,13 @@ namespace transport
                 throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_CANT_WRITE_FAILURE_PATH);
               }
 
-            std::ostringstream msg;
+            std::ostringstream msg1;
+            msg1 << CPPTRANSPORT_REPO_FAILED_CONTENT_GROUP_A << " '" << writer.get_record()->get_task()->get_name() << "': " << CPPTRANSPORT_REPO_FAILED_CONTENT_GROUP_B;
+            this->error(msg1.str());
 
-            msg << CPPTRANSPORT_REPO_FAILED_CONTENT_GROUP_A << " '" << writer.get_record()->get_task()->get_name() << "': "
-            << CPPTRANSPORT_REPO_FAILED_CONTENT_GROUP_B << " '" << writer.get_name() << "' "
-            << CPPTRANSPORT_REPO_FAILED_CONTENT_GROUP_C;
-
-            this->message(msg.str());
+            std::ostringstream msg2;
+            msg2 << CPPTRANSPORT_REPO_CONTENT_FAILED_A << " '" << writer.get_name() << "' " << CPPTRANSPORT_REPO_CONTENT_FAILED_B;
+            this->warning(msg2.str());
           }
         else throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_CANT_WRITE_FAILURE_PATH);
       }

@@ -848,6 +848,17 @@ namespace transport
                         break;
                       }
 
+                    case MPI::REPORT_ERROR:
+                      {
+                        MPI::error_report payload;
+                        this->world.recv(stat->source(), MPI::REPORT_ERROR);
+
+                        std::ostringstream msg;
+                        msg << payload.get_message() << CPPTRANSPORT_MASTER_REPORTED_BY_WORKER << " " << stat->source();
+                        this->err(msg.str());
+                        break;
+                      }
+
                     default:
                       {
                         BOOST_LOG_SEV(log, base_writer::log_severity_level::warning) << "!! Received unexpected message " << stat->tag() << " waiting in the queue; discarding";

@@ -59,17 +59,17 @@
 #define CPPTRANSPORT_REPO_WARN_OUTPUT_GROUP_A         "Output group"
 #define CPPTRANSPORT_REPO_WARN_OUTPUT_GROUP_B         "has missing content"
 
+#define CPPTRANSPORT_REPO_CONTENT_FAILED_A            "Content group"
+#define CPPTRANSPORT_REPO_CONTENT_FAILED_B            "moved to fail cache in repository"
+
 #define CPPTRANSPORT_REPO_FAILED_OUTPUT_GROUP_A       "Task"
-#define CPPTRANSPORT_REPO_FAILED_OUTPUT_GROUP_B       "Errors were encountered during integration. Failing output group"
-#define CPPTRANSPORT_REPO_FAILED_OUTPUT_GROUP_C       "moved to fail cache in repository"
+#define CPPTRANSPORT_REPO_FAILED_OUTPUT_GROUP_B       "Errors were encountered during integration"
 
 #define CPPTRANSPORT_REPO_FAILED_CONTENT_GROUP_A      "Task"
-#define CPPTRANSPORT_REPO_FAILED_CONTENT_GROUP_B      "Some derived content could not be generated, or other errors were encountered. Failing output group"
-#define CPPTRANSPORT_REPO_FAILED_CONTENT_GROUP_C      "moved to fail cache in repository"
+#define CPPTRANSPORT_REPO_FAILED_CONTENT_GROUP_B      "Some derived content could not be generated"
 
 #define CPPTRANSPORT_REPO_FAILED_POSTINT_GROUP_A      "Task"
-#define CPPTRANSPORT_REPO_FAILED_POSTINT_GROUP_B      "Some postprocessing could not be completed, or other errors were encountered. Failing output group"
-#define CPPTRANSPORT_REPO_FAILED_POSTINT_GROUP_C      "moved to fail cache in repository"
+#define CPPTRANSPORT_REPO_FAILED_POSTINT_GROUP_B      "Some postprocessing could not be completed"
 
 #define CPPTRANSPORT_REPO_ROOT_EXISTS                 "Repository error: root directory already exists"
 #define CPPTRANSPORT_REPO_NOT_SET                     "Internal error: attempt to access repository when unset in 'task_manager'"

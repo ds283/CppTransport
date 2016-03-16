@@ -532,6 +532,10 @@ namespace transport
                           {
                             success = false;
                             BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::log_severity_level::error) << "!! Exception reported while processing: code=" << static_cast<int>(xe.get_exception_code()) << ": " << xe.what();
+
+                            std::ostringstream msg;
+                            msg << CPPTRANSPORT_SLAVE_ERROR_PROCESSING_PRODUCT << " '" << product->get_name() << "'";
+                            this->world.isend(MPI::RANK_MASTER, MPI::REPORT_ERROR, MPI::error_report(msg.str()));
                           }
 
                         // check that the datapipe was correctly detached
