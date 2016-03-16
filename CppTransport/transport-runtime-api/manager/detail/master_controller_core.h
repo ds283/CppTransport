@@ -61,7 +61,7 @@ namespace transport
           (CPPTRANSPORT_SWITCH_BATCHER_CAPACITY, boost::program_options::value< int >(),                                     CPPTRANSPORT_HELP_BATCHER_CAPACITY)
           (CPPTRANSPORT_SWITCH_CACHE_CAPACITY,   boost::program_options::value< int >(),                                     CPPTRANSPORT_HELP_CACHE_CAPACITY);
 
-        boost::program_options::options_description plotting("Plotting environment:");
+        boost::program_options::options_description plotting("Plot style");
         plotting.add_options()
           (CPPTRANSPORT_PLOT_STYLE,              boost::program_options::value< std::string >(),                             CPPTRANSPORT_HELP_PLOT_STYLE);
 

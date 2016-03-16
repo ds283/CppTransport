@@ -32,7 +32,7 @@
 #define CPPTRANSPORT_SWITCH_VERBOSE_LONG      "verbose"
 #define CPPTRANSPORT_HELP_VERBOSE             "enable verbose output"
 
-#define CPPTRANSPORT_SWITCH_GANTT_CHART       "gantt-chart"
+#define CPPTRANSPORT_SWITCH_GANTT_CHART       "gantt"
 #define CPPTRANSPORT_HELP_GANTT_CHART         "output Gantt chart describing worker activity"
 
 #define CPPTRANSPORT_SWITCH_JOURNAL           "journal"
