@@ -54,7 +54,7 @@ namespace transport
         configuration.add_options()
           (CPPTRANSPORT_SWITCH_VERBOSE,                                                                                      CPPTRANSPORT_HELP_VERBOSE)
           (CPPTRANSPORT_SWITCH_REPO,             boost::program_options::value< std::string >(),                             CPPTRANSPORT_HELP_REPO)
-          (CPPTRANSPORT_SWITCH_TAG,              boost::program_options::value< std::vector<std::string> >(),                CPPTRANSPORT_HELP_TAG)
+          (CPPTRANSPORT_SWITCH_TAG,              boost::program_options::value< std::vector<std::string> >()->composing(),   CPPTRANSPORT_HELP_TAG)
           (CPPTRANSPORT_SWITCH_CHECKPOINT,       boost::program_options::value< int >(),                                     CPPTRANSPORT_HELP_CHECKPOINT)
           (CPPTRANSPORT_SWITCH_RECOVER,                                                                                      CPPTRANSPORT_HELP_RECOVER)
           (CPPTRANSPORT_SWITCH_CAPACITY,         boost::program_options::value< int >(),                                     CPPTRANSPORT_HELP_CAPACITY)
@@ -63,7 +63,7 @@ namespace transport
 
         boost::program_options::options_description plotting("Plotting environment:");
         plotting.add_options()
-          (CPPTRANSPORT_PLOT_ENV,                boost::program_options::value< std::string >(),                             CPPTRANSPORT_HELP_PLOT_ENV);
+          (CPPTRANSPORT_PLOT_STYLE,              boost::program_options::value< std::string >(),                             CPPTRANSPORT_HELP_PLOT_STYLE);
 
         boost::program_options::options_description journaling("Journaling options");
         journaling.add_options()
@@ -90,6 +90,11 @@ namespace transport
         output_options.add(generic).add(configuration).add(plotting).add(journaling).add(job_options);
 
         boost::program_options::variables_map option_map;
+
+        // parse options from the command line; we do this first so that any options
+        // supplied on the command line override options specified in a configuration file
+        boost::program_options::parsed_options cmdline_parsed = boost::program_options::command_line_parser(argc, argv).options(cmdline_options).allow_unregistered().run();
+        boost::program_options::store(cmdline_parsed, option_map);
 
         // parse options from configuration file
         boost::optional< boost::filesystem::path > config_path = this->local_env.config_file_path();
@@ -118,10 +123,10 @@ namespace transport
               }
           }
 
-        boost::program_options::parsed_options cmdline_parsed = boost::program_options::command_line_parser(argc, argv).options(cmdline_options).allow_unregistered().run();
-        boost::program_options::store(cmdline_parsed, option_map);
+        // inform the Boost::Program_Options library that all option parsing is complete
         boost::program_options::notify(option_map);
 
+        // inform the user that we have ignored any recongized options
         std::vector<std::string> unrecognized_cmdline_options = boost::program_options::collect_unrecognized(cmdline_parsed.options, boost::program_options::exclude_positional);
         if(unrecognized_cmdline_options.size() > 0)
           {
@@ -132,6 +137,8 @@ namespace transport
                 this->warn(msg.str());
               }
           }
+
+        // HANDLE SUPPLIED OPTIONS
 
         bool emitted_version = false;
 
@@ -281,9 +288,14 @@ namespace transport
           }
 
         // process plotting environment, if provided
-        if(option_map.count(CPPTRANSPORT_PLOT_ENV_LONG))
+        if(option_map.count(CPPTRANSPORT_PLOT_STYLE_LONG))
           {
-            this->arg_cache.set_plot_environment(option_map[CPPTRANSPORT_PLOT_ENV_LONG].as<std::string>());
+            if(!this->arg_cache.set_plot_environment(option_map[CPPTRANSPORT_PLOT_STYLE_LONG].as<std::string>()))
+              {
+                std::ostringstream msg;
+                msg << CPPTRANSPORT_UNKNOWN_PLOT_STYLE << " '" << option_map[CPPTRANSPORT_PLOT_STYLE_LONG].as<std::string>() << "'";
+                this->warn(msg.str());
+              }
           }
 
         if(option_map.count(CPPTRANSPORT_SWITCH_VERBOSE_LONG))                                                this->arg_cache.set_verbose(true);

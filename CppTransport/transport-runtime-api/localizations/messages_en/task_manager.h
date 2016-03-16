@@ -48,5 +48,6 @@
 #define CPPTRANSPORT_TASK_MANAGER_WARNING_LABEL      "Warning:"
 
 #define CPPTRANSPORT_UNKNOWN_SWITCH                  "Ignored unknown command-line switch"
+#define CPPTRANSPORT_UNKNOWN_PLOT_STYLE              "Ignored unknown plot style"
 
 #endif // CPPTRANSPORT_MESSAGES_EN_TASK_MANAGER_H

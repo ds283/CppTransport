@@ -10,10 +10,10 @@
 
 #include <string>
 
+#include "transport-runtime-api/defaults.h"
+
 #include "boost/serialization/string.hpp"
 #include "boost/serialization/list.hpp"
-
-#include "transport-runtime-api/defaults.h"
 
 
 namespace transport
@@ -36,6 +36,9 @@ namespace transport
       public:
 
 		    //! constructor sets default values for all options
+        //! Notice that argument_cache is a dependency of the error, warning and message handlers and therefore
+        //! cannot itself handle errors; all errors should be pushed back to the caller by status flags or
+        //! using exceptions. Then they have to be handled at the call-site rather than within argument_cache.
         argument_cache();
 
 		    //! destructor is default
@@ -143,8 +146,8 @@ namespace transport
 
       public:
 
-        //! Set plotting environment
-        void set_plot_environment(const std::string& e);
+        //! Set plotting environment; returns true if environment was recognized or false if it was not
+        bool set_plot_environment(const std::string& e);
 
         //! Get plotting environment
         plot_style get_plot_environment() const                   { return(this->plot_env); }
@@ -233,12 +236,14 @@ namespace transport
 	    }
 
 
-    void argument_cache::set_plot_environment(const std::string& e)
+    bool argument_cache::set_plot_environment(const std::string& e)
       {
-        if(e == "raw")          this->plot_env = plot_style::raw_matplotlib;
-        else if(e == "ggplot")  this->plot_env = plot_style::matplotlib_ggplot;
-        else if(e == "ticks")   this->plot_env = plot_style::matplotlib_ticks;
-        else if(e == "seaborn") this->plot_env = plot_style::seaborn;
+        if(e == "raw")          { this->plot_env = plot_style::raw_matplotlib; return true; }
+        else if(e == "ggplot")  { this->plot_env = plot_style::matplotlib_ggplot; return true; }
+        else if(e == "ticks")   { this->plot_env = plot_style::matplotlib_ticks; return true; }
+        else if(e == "seaborn") { this->plot_env = plot_style::seaborn; return true; }
+
+        return false;
       }
 
 

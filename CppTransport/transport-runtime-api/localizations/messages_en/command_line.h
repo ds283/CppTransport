@@ -62,9 +62,9 @@
 #define CPPTRANSPORT_SWITCH_NO_COLOR          "no-color"
 #define CPPTRANSPORT_HELP_NO_COLOR            "disable colourized output"
 
-#define CPPTRANSPORT_PLOT_ENV                 "plot-environment,e"
-#define CPPTRANSPORT_PLOT_ENV_LONG            "plot-environment"
-#define CPPTRANSPORT_HELP_PLOT_ENV            "set plotting environment"
+#define CPPTRANSPORT_PLOT_STYLE               "plot-style,e"
+#define CPPTRANSPORT_PLOT_STYLE_LONG          "plot-style"
+#define CPPTRANSPORT_HELP_PLOT_STYLE          "set plotting style"
 
 
 #endif //CPPTRANSPORT_COMMAND_LINE_H
