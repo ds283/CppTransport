@@ -8,8 +8,12 @@
 #define CPPTRANSPORT_ENVIRONMENT_H
 
 
+#include <fstream>
 #include <string>
 
+#include "transport-runtime-api/defaults.h"
+
+#include "boost/algorithm/string.hpp"
 #include "boost/optional.hpp"
 #include "boost/filesystem/operations.hpp"
 

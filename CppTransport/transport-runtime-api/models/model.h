@@ -27,6 +27,7 @@
 #include "transport-runtime-api/derived-products/utilities/index_selector.h"
 
 #include "transport-runtime-api/manager/model_manager.h"
+#include "transport-runtime-api/manager/message_handlers.h"
 #include "transport-runtime-api/data/data_manager.h"
 
 #include "transport-runtime-api/models/advisory_classes.h"
@@ -59,7 +60,7 @@ namespace transport
       public:
 
         //! constructor
-        model(const std::string& u, unsigned int v);
+        model(const std::string& u, unsigned int v, error_handler e, warning_handler w, message_handler m);
 
         //! destructor is default
 		    ~model() = default;
@@ -246,6 +247,20 @@ namespace transport
         //! copy of translator version used to produce this model, used for registration
         const unsigned int tver;
 
+
+        // ERROR, WARNING AND MESSAGE HANDLERS
+
+      protected:
+
+        //! error handler
+        error_handler error_h;
+
+        //! warning handler
+        warning_handler warn_h;
+
+        //! message handler
+        message_handler message_h;
+
       };
 
 
@@ -255,9 +270,12 @@ namespace transport
     // CONSTRUCTOR, DESTRUCTOR
 
     template <typename number>
-    model<number>::model(const std::string& u, unsigned int v)
+    model<number>::model(const std::string& u, unsigned int v, error_handler e, warning_handler w, message_handler m)
       : uid(u),
-        tver(v)
+        tver(v),
+        error_h(std::move(e)),
+        warn_h(std::move(w)),
+        message_h(std::move(m))
       {
       }
 

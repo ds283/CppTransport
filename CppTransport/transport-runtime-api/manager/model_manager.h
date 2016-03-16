@@ -18,12 +18,17 @@
 
 #include <memory>
 
-#include "transport-runtime-api/version.h"
-#include "transport-runtime-api/exceptions.h"
-#include "transport-runtime-api/messages.h"
+#include "transport-runtime-api/manager/argument_cache.h"
+#include "transport-runtime-api/manager/environment.h"
+
+#include "transport-runtime-api/manager/message_handlers.h"
 
 // forward-declare model class if needed
 #include "transport-runtime-api/models/model_forward_declare.h"
+
+#include "transport-runtime-api/version.h"
+#include "transport-runtime-api/exceptions.h"
+#include "transport-runtime-api/messages.h"
 
 
 namespace transport
@@ -153,8 +158,8 @@ namespace transport
 
       public:
 
-        //! constructor is default
-        model_manager() = default;
+        //! constructor caches local environment policies
+        model_manager(local_environment& e, argument_cache& c);
 
         //! destructor is default; cached list of shared_ptr<>s will be destroyed automatically, releasing
         //! our hold on those pointers
@@ -206,6 +211,15 @@ namespace transport
         //! database of registered models
         model_db models;
 
+
+        // ENVIRONMENTAL POLICIES
+
+        //! reference to local environment
+        local_environment& env;
+
+        //! reference to argument cache
+        argument_cache& arg_cache;
+
       };
 
 
@@ -228,10 +242,22 @@ namespace transport
 
 
     template <typename number>
+    model_manager<number>::model_manager(local_environment& e, argument_cache& c)
+      : env(e),
+        arg_cache(c)
+      {
+      }
+
+
+    template <typename number>
     template <typename Model>
     std::shared_ptr<Model> model_manager<number>::create_model()
       {
-        std::shared_ptr<Model> model = std::make_shared<Model>();
+        std::shared_ptr<Model> model = std::make_shared<Model>(error_handler(this->env, this->arg_cache),
+                                                               warning_handler(this->env, this->arg_cache),
+                                                               message_handler(this->env, this->arg_cache));
+
+        // register the model in our database
         this->register_model(model);
 
         return(model);

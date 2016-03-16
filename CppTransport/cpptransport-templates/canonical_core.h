@@ -113,7 +113,7 @@ namespace transport
       public:
 
         //! constructor
-        $MODEL();
+        $MODEL(error_handler e, warning_handler w, message_handler m);
 
         //! destructor
 		    virtual ~$MODEL();
@@ -361,8 +361,9 @@ namespace transport
 
 
     template <typename number>
-    $MODEL<number>::$MODEL()
-      : canonical_model<number>("$UNIQUE_ID", static_cast<unsigned int>(100*$VERSION))
+    $MODEL<number>::$MODEL(error_handler e, warning_handler w, message_handler m)
+      : canonical_model<number>("$UNIQUE_ID", static_cast<unsigned int>(100*$VERSION),
+                                std::move(e), std::move(w), std::move(m))
       {
           __A_k1k2k3 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];
           __A_k1k3k2 = new number[$NUMBER_FIELDS * $NUMBER_FIELDS * $NUMBER_FIELDS];

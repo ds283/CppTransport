@@ -39,7 +39,7 @@
 #define CPPTRANSPORT_HELP_JOURNAL             "write JSON-format journal describing worker activity"
 
 #define CPPTRANSPORT_SWITCH_CHECKPOINT        "checkpoint"
-#define CPPTRANSPORT_HELP_CHECKPOINT          "flush data after given interval, measured in minutes"
+#define CPPTRANSPORT_HELP_CHECKPOINT          "commit data after given interval, measured in minutes"
 
 #define CPPTRANSPORT_SWITCH_RECOVER           "recover"
 #define CPPTRANSPORT_HELP_RECOVER             "attempt to recover crashed output groups"

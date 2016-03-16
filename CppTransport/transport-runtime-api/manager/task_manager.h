@@ -95,20 +95,24 @@ namespace transport
 
         // LOCAL ENVIRONMENT
 
-        // All these objects must be declared before the slave/master component managers, so that
-        // they are constructed before slave/master components are
+        // local environment and argument cache must be declared *first*, so that they are available
+        // during construction of the other objects
 
-        //! instance manager
-        model_manager<number> model_mgr;
-
-        //! task gallery
-        task_gallery<number> gallery;
+        // All local objects (model_mgr, gallery, local_env, arg_cache) must be
+        // declared before the slave/master component managers, so that
+        // they are constructed before slave/master components
 
         //! environment agent (handles interactions with local machine such as location of Python interpreter)
         local_environment local_env;
 
         //! Argument cache
         argument_cache arg_cache;
+
+        //! instance manager
+        model_manager<number> model_mgr;
+
+        //! task gallery
+        task_gallery<number> gallery;
 
 
         // SLAVE AND MASTER COMPONENT MANAGERS
@@ -125,9 +129,12 @@ namespace transport
     template <typename number>
     task_manager<number>::task_manager(int argc, char* argv[])
 	    : environment(argc, argv),
+        // it's safe to assume local_env and arg_cache have been constructed at this point
+        model_mgr(local_env, arg_cache),
 	      // note it is safe to assume environment and world have been constructed when the constructor for
 	      // slave and master are invoked, because environment and world are declared
-	      // prior to slave and master in the class declaration
+	      // prior to slave and master in the class declaration.
+        // It's also safe to assume local_env, arg_cache, model_mgr and gallery have been constructed
 	      slave(environment, world, local_env, arg_cache, model_mgr,
 	            error_handler(local_env, arg_cache),
 	            warning_handler(local_env, arg_cache),
