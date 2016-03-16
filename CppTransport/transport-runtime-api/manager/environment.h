@@ -40,11 +40,11 @@ namespace transport
       public:
 
         //! determine whether a Python interpreter is available
-        bool has_python() const { return(this->python_available); }
+        bool has_python() { if(!this->python_cached) this->detect_python(); return(this->python_available); }
 
         //! execute a Python script;
         //! returns exit code provided by system
-        int execute_python(const boost::filesystem::path& script) const;
+        int execute_python(const boost::filesystem::path& script);
 
       protected:
 
@@ -52,7 +52,7 @@ namespace transport
         void detect_python();
 
         //! get location of Python executable
-        std::string get_python_location() const { return(this->python_location.string()); }
+        std::string get_python_location() { if(!this->python_cached) this->detect_python(); return(this->python_location.string()); }
 
 
         // MATPLOTLIB SUPPORT
@@ -60,13 +60,13 @@ namespace transport
       public:
 
         //! determine whether Matplotlib is available
-        bool has_matplotlib() const { return(this->matplotlib_available); }
+        bool has_matplotlib() { if(!this->matplotlib_cached) this->detect_matplotlib(); return(this->matplotlib_available); }
 
         //! determine whether Matplotlib style sheets are available
-        bool has_matplotlib_style_sheets() const { return(this->matplotlib_style_sheets); }
+        bool has_matplotlib_style_sheets() { if(!this->matplotlib_cached) this->detect_matplotlib(); return(this->matplotlib_style_sheets); }
 
         //! determine whether Seaborn is available
-        bool has_seaborn() const { return(this->seaborn_available); }
+        bool has_seaborn() { if(!this->seaborn_cached) this->detect_seaborn(); return(this->seaborn_available); }
 
       protected:
 
@@ -116,6 +116,9 @@ namespace transport
 
         // PYTHON SUPPORT
 
+        //! has the status of Python support been cached?
+        bool python_cached;
+
         //! is Python available
         bool python_available;
 
@@ -125,11 +128,17 @@ namespace transport
 
         // MATPLOTLIB SUPPORT
 
+        //! has the status of Matplotlib availability been cached?
+        bool matplotlib_cached;
+
         //! has Matplotlib available?
         bool matplotlib_available;
 
         //! Matplotlib has style sheet support?
         bool matplotlib_style_sheets;
+
+        //! has the status of Seaborn availability been cached?
+        bool seaborn_cached;
 
         //! is Seaborn available?
         bool seaborn_available;
@@ -144,25 +153,22 @@ namespace transport
 
 
     local_environment::local_environment()
-      : python_available(false),
+      : python_cached(false),
+        python_available(false),
+        matplotlib_cached(false),
         matplotlib_available(false),
         matplotlib_style_sheets(false),
+        seaborn_cached(false),
         seaborn_available(false)
       {
-        // detect Python if available, and find location of executable
-        detect_python();
-
-        // detect whether matplotlib is available
-        detect_matplotlib();
-
-        // detect whether seaborn is available
-        detect_seaborn();
-
         // detect home directory
         detect_home();
 
-        //! detect terminal colour support
+        // detect terminal colour support
         detect_term();
+
+        // detection of Python support (Python interpreter, Matplotlib, style sheets, Seaborn, etc.) is
+        // deferred until needed, since it slows down program initialization
       }
 
 
@@ -230,6 +236,8 @@ namespace transport
                 path = CPPTRANSPORT_DEFAULT_PYTHON_PATH;
               }
           }
+
+        this->python_cached = true;
       }
 
 
@@ -261,6 +269,8 @@ namespace transport
         outf2.close();
 
         this->matplotlib_style_sheets = this->execute_python(temp_sheets) == 0;
+
+        this->matplotlib_cached = true;
       }
 
 
@@ -280,10 +290,12 @@ namespace transport
         outf.close();
 
         this->seaborn_available = this->execute_python(temp_sns) == 0;
+
+        this->seaborn_cached = true;
       }
 
 
-    int local_environment::execute_python(const boost::filesystem::path& script) const
+    int local_environment::execute_python(const boost::filesystem::path& script)
       {
         std::ostringstream command;
 
@@ -299,9 +311,17 @@ namespace transport
               }
           }
 
-        command << this->python_location.string() << " \"" << script.string() << "\" > /dev/null 2>&1";
+        if(!this->python_cached) this->detect_python();
 
-        return std::system(command.str().c_str());
+        if(this->python_available)
+          {
+            command << this->python_location.string() << " \"" << script.string() << "\" > /dev/null 2>&1";
+            return std::system(command.str().c_str());
+          }
+        else
+          {
+            return EXIT_FAILURE;
+          }
       }
 
 
