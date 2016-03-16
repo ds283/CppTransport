@@ -468,8 +468,9 @@ namespace transport
 		    earliest_crossing -= this->get_N_horizon_crossing();
 		    latest_crossing   -= this->get_N_horizon_crossing();
 
-        std::cout << "'" << this->get_name() << "': ";
-        std::cout << CPPTRANSPORT_TASK_TWOPF_LIST_MODE_RANGE_A << this->twopf_db->get_kmin_conventional()
+        std::ostringstream msg;
+        msg << "'" << this->get_name() << "': ";
+        msg << CPPTRANSPORT_TASK_TWOPF_LIST_MODE_RANGE_A << this->twopf_db->get_kmin_conventional()
           << " " << CPPTRANSPORT_TASK_TWOPF_LIST_MODE_RANGE_B;
 
         std::ostringstream early_time;
@@ -477,9 +478,9 @@ namespace transport
         if(earliest_crossing > 0) early_time << "+";
 		    early_time << earliest_crossing;
 
-        std::cout << early_time.str() << ", ";
+        msg << early_time.str() << ", ";
 
-        std::cout << CPPTRANSPORT_TASK_TWOPF_LIST_MODE_RANGE_C << this->twopf_db->get_kmax_conventional()
+        msg << CPPTRANSPORT_TASK_TWOPF_LIST_MODE_RANGE_C << this->twopf_db->get_kmax_conventional()
           << " " << CPPTRANSPORT_TASK_TWOPF_LIST_MODE_RANGE_D;
 
         std::ostringstream late_time;
@@ -487,25 +488,33 @@ namespace transport
         if(latest_crossing > 0) late_time << "+";
         late_time << latest_crossing;
 
-        std::cout << late_time.str() << '\n';
+        msg << late_time.str();
+        this->get_model()->message(msg.str());
 
         this->validate_subhorizon_efolds();
 
         try
           {
             double end_of_inflation = this->get_N_end_of_inflation();
-            std::cout << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_TWOPF_LIST_END_OF_INFLATION  << end_of_inflation << '\n';
+
+            std::ostringstream msg2;
+            msg2 << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_TWOPF_LIST_END_OF_INFLATION  << end_of_inflation;
+            this->get_model()->message(msg2.str());
 
             // check if end time is after the end of inflation
             double end_time = this->times->get_grid().back();
             if(end_time > end_of_inflation)
               {
-                std::cout << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_TWOPF_LIST_WARN_LATE_END << '\n';
+                std::ostringstream msg3;
+                msg3 << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_TWOPF_LIST_WARN_LATE_END;
+                this->get_model()->warn(msg3.str());
               }
           }
         catch(end_of_inflation_not_found& xe)
           {
-            std::cout << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_TWOPF_LIST_NO_END_INFLATION << '\n';
+            std::ostringstream msg4;
+            msg4 << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_TWOPF_LIST_NO_END_INFLATION;
+            this->get_model()->warn(msg4.str());
           }
       }
 
@@ -533,9 +542,11 @@ namespace transport
 
         if(!this->fast_forward && earliest_tmassless - this->get_N_initial() < CPPTRANSPORT_DEFAULT_RECOMMENDED_EFOLDS)
           {
-            std::cout << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_TWOPF_LIST_CROSS_WARN_A << this->get_N_initial() << " "
+            std::ostringstream msg;
+            msg << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_TWOPF_LIST_CROSS_WARN_A << this->get_N_initial() << " "
               << CPPTRANSPORT_TASK_TWOPF_LIST_CROSS_WARN_B << " " << earliest_required-this->get_N_initial() << " "
-              << CPPTRANSPORT_TASK_TWOPF_LIST_CROSS_WARN_C << '\n';
+              << CPPTRANSPORT_TASK_TWOPF_LIST_CROSS_WARN_C;
+            this->get_model()->warn(msg.str());
           }
       }
 
@@ -725,34 +736,43 @@ namespace transport
     template <typename number>
     void twopf_db_task<number>::compute_horizon_exit_times_fail(failed_to_compute_horizon_exit& xe)
       {
-        std::cout << "'" << this->get_name() << "': ";
-        std::cout << CPPTRANSPORT_TASK_FAIL_COMPUTE_HEXIT << '\n';
+        std::ostringstream msg1;
+        msg1 << "'" << this->get_name() << "': ";
+        msg1 << CPPTRANSPORT_TASK_FAIL_COMPUTE_HEXIT;
+        this->get_model()->message(msg1.str());
 
-        std::cout << CPPTRANSPORT_TASK_SEARCH_FROM << xe.get_search_begin() << " " << CPPTRANSPORT_TASK_SEARCH_TO << xe.get_search_end() << " ";
+        std::ostringstream msg2;
+        msg2 << CPPTRANSPORT_TASK_SEARCH_FROM << xe.get_search_begin() << " " << CPPTRANSPORT_TASK_SEARCH_TO << xe.get_search_end() << " ";
 
         if(xe.get_found_end())
           {
-            std::cout << CPPTRANSPORT_TASK_SEARCH_FOUND_END;
+            msg2 << CPPTRANSPORT_TASK_SEARCH_FOUND_END;
           }
         else
           {
-            std::cout << CPPTRANSPORT_TASK_SEARCH_NO_FOUND_END;
+            msg2 << CPPTRANSPORT_TASK_SEARCH_NO_FOUND_END;
           }
-        std::cout << '\n';
+        this->get_model()->message(msg2.str());
 
-        std::cout << CPPTRANSPORT_TASK_SEARCH_RECORDED << " " << xe.get_N_samples() << " " << CPPTRANSPORT_TASK_SEARCH_SAMPLES;
-        std::cout << ", " << CPPTRANSPORT_TASK_SEARCH_LAST_SAMPLE << xe.get_last_log_aH() << " ";
-        std::cout << CPPTRANSPORT_TASK_SEARCH_LAST_SAMPLE_TIME << xe.get_last_N();
-        std::cout << ", " << CPPTRANSPORT_TASK_SEARCH_LARGEST_K << std::log(xe.get_largest_k());
-        std::cout << ", " << CPPTRANSPORT_TASK_SEARCH_KAH << xe.get_largest_k()/std::exp(xe.get_last_log_aH()) << '\n';
+        std::ostringstream msg3;
+        msg3 << CPPTRANSPORT_TASK_SEARCH_RECORDED << " " << xe.get_N_samples() << " " << CPPTRANSPORT_TASK_SEARCH_SAMPLES;
+        msg3 << ", " << CPPTRANSPORT_TASK_SEARCH_LAST_SAMPLE << xe.get_last_log_aH() << " ";
+        msg3 << CPPTRANSPORT_TASK_SEARCH_LAST_SAMPLE_TIME << xe.get_last_N();
+        msg3 << ", " << CPPTRANSPORT_TASK_SEARCH_LARGEST_K << std::log(xe.get_largest_k());
+        msg3 << ", " << CPPTRANSPORT_TASK_SEARCH_KAH << xe.get_largest_k()/std::exp(xe.get_last_log_aH());
+        this->get_model()->message(msg3.str());
 
         if(xe.get_found_end() && xe.get_N_samples() > 1 && xe.get_last_log_aH() < std::log(xe.get_largest_k()))
           {
-            std::cout << CPPTRANSPORT_TASK_SEARCH_GUESS_FAIL << '\n';
+            std::ostringstream msg;
+            msg << CPPTRANSPORT_TASK_SEARCH_GUESS_FAIL;
+            this->get_model()->warn(msg.str());
           }
         else if(xe.get_found_end() && xe.get_N_samples() > 1 && xe.get_last_log_aH() > std::log(xe.get_largest_k()))
           {
-            std::cout << CPPTRANSPORT_TASK_SEARCH_TOO_CLOSE_FAIL << '\n';
+            std::ostringstream msg;
+            msg << CPPTRANSPORT_TASK_SEARCH_TOO_CLOSE_FAIL;
+            this->get_model()->warn(msg.str());
           }
       }
 

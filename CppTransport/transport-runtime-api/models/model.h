@@ -228,6 +228,20 @@ namespace transport
         virtual bool supports_per_configuration_statistics(void) const = 0;
 
 
+        // SERVICES
+
+      public:
+
+        //! report erorr
+        void error(const std::string& msg) const { this->error_h(msg); }
+
+        //! report warning
+        void warn(const std::string& msg) const { this->warn_h(msg); }
+
+        //! report message
+        void message(const std::string& msg) const { this->message_h(msg); }
+
+
         // INTERNAL UTILITY FUNCTIONS
 
       protected:

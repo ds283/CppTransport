@@ -67,8 +67,10 @@ namespace transport
             this->twopf_db_task<number>::twopf_db->add_record(ks[j]);
 	        }
 
-        std::cout << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_TWOPF_ELEMENTS_A << " " << this->twopf_db->size() << " "
-          <<CPPTRANSPORT_TASK_TWOPF_ELEMENTS_B << '\n';
+        std::ostringstream msg;
+        msg << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_TWOPF_ELEMENTS_A << " " << this->twopf_db->size() << " "
+          << CPPTRANSPORT_TASK_TWOPF_ELEMENTS_B << '\n';
+        this->get_model()->message(msg.str());
 
         this->compute_horizon_exit_times();
 

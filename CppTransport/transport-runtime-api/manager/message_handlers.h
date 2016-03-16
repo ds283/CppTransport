@@ -42,7 +42,7 @@ namespace transport
       public:
 
         //! report an error
-        void operator()(const std::string& msg);
+        void operator()(const std::string& msg) const;
 
 
         // INTERNAL DATA
@@ -81,7 +81,7 @@ namespace transport
       public:
 
         //! report an error
-        void operator()(const std::string& msg);
+        void operator()(const std::string& msg) const;
 
 
         // INTERNAL DATA
@@ -120,7 +120,7 @@ namespace transport
       public:
 
         //! report an error
-        void operator()(const std::string& msg);
+        void operator()(const std::string& msg) const;
 
 
         // INTERNAL DATA
@@ -136,7 +136,7 @@ namespace transport
       };
 
 
-    void error_handler::operator()(const std::string& msg)
+    void error_handler::operator()(const std::string& msg) const
       {
         bool colour = this->env.has_colour_terminal_support() && this->args.get_colour_output();
 
@@ -146,7 +146,7 @@ namespace transport
       }
 
 
-    void warning_handler::operator()(const std::string& msg)
+    void warning_handler::operator()(const std::string& msg) const
       {
         bool colour = this->env.has_colour_terminal_support() && this->args.get_colour_output();
 
@@ -157,7 +157,7 @@ namespace transport
       }
 
 
-    void message_handler::operator()(const std::string& msg)
+    void message_handler::operator()(const std::string& msg) const
       {
         bool colour = this->env.has_colour_terminal_support() && this->args.get_colour_output();
 

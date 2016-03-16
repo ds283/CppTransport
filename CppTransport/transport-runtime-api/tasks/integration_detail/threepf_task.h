@@ -444,8 +444,10 @@ namespace transport
         if(!ks.is_simple_linear()) this->threepf_task<number>::integrable = false;
         spacing = (ks.get_max() - ks.get_min())/ks.get_steps();
 
-        std::cout << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_THREEPF_ELEMENTS_A << " " << this->threepf_db->size() << " "
-          << CPPTRANSPORT_TASK_THREEPF_ELEMENTS_B << " " << this->twopf_db->size() << " " <<CPPTRANSPORT_TASK_THREEPF_ELEMENTS_C << '\n';
+        std::ostringstream msg;
+        msg << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_THREEPF_ELEMENTS_A << " " << this->threepf_db->size() << " "
+          << CPPTRANSPORT_TASK_THREEPF_ELEMENTS_B << " " << this->twopf_db->size() << " " << CPPTRANSPORT_TASK_THREEPF_ELEMENTS_C;
+        this->get_model()->message(msg.str());
 
         this->compute_horizon_exit_times();
 
@@ -569,8 +571,10 @@ namespace transport
         alpha_spacing = (alphas.get_max() - alphas.get_min()) / alphas.get_steps();
         beta_spacing  = (betas.get_max() - betas.get_min()) / betas.get_steps();
 
-        std::cout << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_THREEPF_ELEMENTS_A << " " << this->threepf_db->size() << " "
+        std::ostringstream msg;
+        msg << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_THREEPF_ELEMENTS_A << " " << this->threepf_db->size() << " "
           << CPPTRANSPORT_TASK_THREEPF_ELEMENTS_B << " " << this->twopf_db->size() << " " <<CPPTRANSPORT_TASK_THREEPF_ELEMENTS_C << '\n';
+        this->get_model()->message(msg.str());
 
         this->compute_horizon_exit_times();
 
