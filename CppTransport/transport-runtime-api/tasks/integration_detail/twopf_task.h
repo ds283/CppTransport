@@ -68,8 +68,7 @@ namespace transport
 	        }
 
         std::ostringstream msg;
-        msg << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_TWOPF_ELEMENTS_A << " " << this->twopf_db->size() << " "
-          << CPPTRANSPORT_TASK_TWOPF_ELEMENTS_B << '\n';
+        msg << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_TWOPF_ELEMENTS_A << " " << this->twopf_db->size() << " " << CPPTRANSPORT_TASK_TWOPF_ELEMENTS_B;
         this->get_model()->message(msg.str());
 
         this->compute_horizon_exit_times();
