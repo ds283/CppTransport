@@ -575,7 +575,7 @@ namespace transport
           << CPPTRANSPORT_SOLVING_CONFIG << " " << this->k_config->serial << ", "
           << CPPTRANSPORT_INTEGRATION_TIME << " = " << format_time(this->get_integration_time()) << ", "
           << CPPTRANSPORT_INITIAL_TIME << " = " << init_time.str() << ", "
-          << CPPTRANSPORT_EXIT_TIME << " = " << exit_time.str() << ", "
+          << CPPTRANSPORT_EXIT_TIME << " " << CPPTRANSPORT_EXIT_TIME_KT << " = " << exit_time.str() << ", "
           << CPPTRANSPORT_MASSLESS_TIME << " = " << massless_time.str() << ", "
           << CPPTRANSPORT_SUBHORIZON_EFOLDS << " = " << subh_efolds.str() << ", "
           << CPPTRANSPORT_MASSLESS_EFOLDS << " = " << massless_efolds.str();

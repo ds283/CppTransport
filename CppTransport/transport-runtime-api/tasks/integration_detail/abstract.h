@@ -78,7 +78,8 @@ namespace transport
         //! Get 'parameters' object associated with this task
         const parameters<number>& get_params() const { return(this->ics.get_params()); }
 
-        //! Get model associated with this task
+        //! Get model associated with this task; passed through to initial_conditions<> object
+        //! which owns the model pointer
         model<number>* get_model() const { return(this->ics.get_model()); }
 
 
@@ -161,7 +162,7 @@ namespace transport
         //! Range of times at which to sample for this task;
         //! kept for serialization purposes, and so we can reconstruct the time configuration database if the
 		    //! k-range changes
-        std::unique_ptr<range<double> > times;
+        std::unique_ptr< range<double> > times;
 
 		    //! time of end-of-inflation
         double end_of_inflation;

@@ -40,6 +40,7 @@
 #define CPPTRANSPORT_REFINEMENT_INTERNAL   "internal exception="
 
 #define CPPTRANSPORT_EXIT_TIME             "t_exit"
+#define CPPTRANSPORT_EXIT_TIME_KT          "(k_t)"
 #define CPPTRANSPORT_MASSLESS_TIME         "t_massless"
 #define CPPTRANSPORT_INITIAL_TIME          "t_init"
 #define CPPTRANSPORT_MASSLESS_EFOLDS       "massless e-folds"
