@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __cost_wavenumber_series_H_
-#define __cost_wavenumber_series_H_
+#ifndef CPPTRANSPORT_COST_WAVENUMBER_SERIES_H
+#define CPPTRANSPORT_COST_WAVENUMBER_SERIES_H
 
 
 #include <iostream>
@@ -283,14 +283,18 @@ namespace transport
 		                    switch(this->metric)
 			                    {
 		                        case cost_metric::time_cost:
-			                        line_data.push_back(static_cast<number>(t->integration) / (1000.0*1000.0*1000.0)); // convert to seconds
-			                        this_value = value_type::time_value;
-			                        break;
+                              {
+                                line_data.push_back(static_cast<number>(t->integration) / 1E9); // convert to seconds
+                                this_value = value_type::time_value;
+                                break;
+                              }
 
 		                        case cost_metric::steps_cost:
-			                        line_data.push_back(static_cast<number>(t->steps));
-			                        this_value = value_type::steps_value;
-			                        break;
+                              {
+                                line_data.push_back(static_cast<number>(t->steps));
+                                this_value = value_type::steps_value;
+                                break;
+                              }
 			                    }
 			                }
 
@@ -354,4 +358,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__cost_wavenumber_series_H_
+#endif //CPPTRANSPORT_COST_WAVENUMBER_SERIES_H
