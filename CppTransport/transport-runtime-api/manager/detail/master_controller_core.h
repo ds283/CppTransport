@@ -854,7 +854,7 @@ namespace transport
                         this->world.recv(stat->source(), MPI::REPORT_ERROR);
 
                         std::ostringstream msg;
-                        msg << payload.get_message() << CPPTRANSPORT_MASTER_REPORTED_BY_WORKER << " " << stat->source();
+                        msg << payload.get_message() << " " << CPPTRANSPORT_MASTER_REPORTED_BY_WORKER << " " << stat->source();
                         this->err(msg.str());
                         break;
                       }
