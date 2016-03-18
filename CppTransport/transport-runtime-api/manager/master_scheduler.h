@@ -736,15 +736,15 @@ namespace transport
 				this->unassigned--;
 
 				// remove assigned work items from the queue
-				for(std::list<unsigned int>::const_iterator t = assignment.get_items().begin(); t != assignment.get_items().end(); ++t)
+        for(const unsigned int& item : assignment.get_items())
 					{
 						// we're guaranteed only one instance of this work item exists in the queue
-				    std::list<unsigned int>::iterator u = std::find(this->queue.begin(), this->queue.end(), *t);
+				    std::list<unsigned int>::iterator u = std::find(this->queue.begin(), this->queue.end(), item);
 
 						if(u == this->queue.end())
 							{
 						    std::ostringstream msg;
-								msg << CPPTRANSPORT_SCHEDULING_ASSIGN_NOT_EXIST << " " << *t << ", " << CPPTRANSPORT_SCHEDULING_ASSIGN_WORKER << " " << assignment.get_worker();
+								msg << CPPTRANSPORT_SCHEDULING_ASSIGN_NOT_EXIST << " " << item << ", " << CPPTRANSPORT_SCHEDULING_ASSIGN_WORKER << " " << assignment.get_worker();
 								throw runtime_exception(exception_type::SCHEDULING_ERROR, msg.str());
 							}
 						else
@@ -801,9 +801,9 @@ namespace transport
       {
         std::vector< master_scheduler::worker_metadata > list;
 
-        for(std::vector<master_scheduler::worker_information>::const_iterator t = this->worker_data.begin(); t != this->worker_data.end(); ++t)
+        for(const master_scheduler::worker_information& info : this->worker_data)
           {
-            list.emplace_back(t->get_number(), t->is_assigned(), t->is_active(), t->get_total_time(), t->get_number_items(), t->get_last_contact_time());
+            list.emplace_back(info.get_number(), info.is_assigned(), info.is_active(), info.get_total_time(), info.get_number_items(), info.get_last_contact_time());
           }
 
         return(list);
