@@ -143,6 +143,7 @@ namespace transport
 
     // WRITER FOR INTEGRATION OUTPUT
 
+
     //! Integration writer: used to commit integration output to the database
 		template <typename number>
     class integration_writer: public generic_writer
@@ -155,7 +156,7 @@ namespace transport
         //! Construct an integration writer object.
         //! After creation it is not yet associated with anything in the data_manager backend; that must be done later
         //! by the task_manager, which can depute a data_manager object of its choice to do the work.
-        integration_writer(const std::string& n, integration_task_record<number>* rec,
+        integration_writer(const std::string& n, integration_task_record<number>& rec,
                            std::unique_ptr< integration_writer_commit<number> > c,
                            std::unique_ptr< integration_writer_abort<number> > a,
                            const typename generic_writer::metadata_group& m, const typename generic_writer::paths_group& p,
@@ -221,7 +222,14 @@ namespace transport
         void set_workgroup_number(unsigned int wg) { this->workgroup_number = wg; }
 
         //! Return task
-        integration_task_record<number>* get_record() const { return(this->parent_record.get()); }
+        const std::string get_task_name() const { return(this->task->get_name()); }
+
+        //! Return task
+        template <typename TaskType>
+        const TaskType& get_task() const { return dynamic_cast<TaskType&>(*this->task); }
+
+        //! Return writer type
+        integration_task_type get_type() const { return(this->type); }
 
         //! Set metadata
         void set_metadata(const integration_metadata& data) { this->metadata = data; }
@@ -283,8 +291,11 @@ namespace transport
         //! workgroup number
         unsigned int workgroup_number;
 
-        //! task associated with this integration writer
-        std::unique_ptr< integration_task_record<number> > parent_record;
+        //! copy of task associated with this integration writer; needed for interrogration of task properties
+        std::unique_ptr< integration_task<number> > task;
+
+        //! type of task
+        integration_task_type type;
 
         //! metadata for this integration
         integration_metadata metadata;
@@ -325,7 +336,7 @@ namespace transport
 
 
     template <typename number>
-    integration_writer<number>::integration_writer(const std::string& n, integration_task_record<number>* rec,
+    integration_writer<number>::integration_writer(const std::string& n, integration_task_record<number>& rec,
                                                    std::unique_ptr< integration_writer_commit<number> > c,
                                                    std::unique_ptr< integration_writer_abort<number> > a,
                                                    const generic_writer::metadata_group& m, const generic_writer::paths_group& p,
@@ -337,13 +348,12 @@ namespace transport
         abort_h(std::move(a)),
 	      aggregate_h(nullptr),
         integrity_h(nullptr),
-	      parent_record(dynamic_cast< integration_task_record<number>* >(rec->clone())),
-	      collect_statistics(rec->get_task()->get_model()->supports_per_configuration_statistics()),
+        task(dynamic_cast< integration_task<number>* >(rec.get_task()->clone())),
+        type(rec.get_task_type()),
+	      collect_statistics(rec.get_task()->get_model()->supports_per_configuration_statistics()),
 	      metadata()
 	    {
-        assert(this->parent_record);
-
-	      twopf_db_task<number>* tk_as_twopf_list = dynamic_cast< twopf_db_task<number>* >(rec->get_task());
+	      twopf_db_task<number>* tk_as_twopf_list = dynamic_cast< twopf_db_task<number>* >(rec.get_task());
 	      assert(tk_as_twopf_list != nullptr);
 
 	      if(tk_as_twopf_list != nullptr)

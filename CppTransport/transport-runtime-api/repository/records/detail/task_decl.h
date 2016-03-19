@@ -19,8 +19,6 @@ namespace transport
 
       public:
 
-        enum class task_type { integration, postintegration, output };
-
 
         // CONSTRUCTOR, DESTRUCTOR
 
@@ -83,8 +81,11 @@ namespace transport
 
       public:
 
-        //! construct an integration task record
-        integration_task_record(const integration_task<number>& tk, repository_record::handler_package& pkg);
+        //! construct an integration task record for a twopf task
+        integration_task_record(const twopf_task<number>& tk, repository_record::handler_package& pkg);
+
+        //! construct an integration task record for a threepf task
+        integration_task_record(const threepf_task<number>& tk, repository_record::handler_package& pkg);
 
         //! override copy constructor to perform a deep copy
         integration_task_record(const integration_task_record& obj);
@@ -107,6 +108,9 @@ namespace transport
         //! Get abstract task
         virtual task<number>* get_abstract_task() const override { return(this->tk.get()); }
 
+        //! Get task type
+        integration_task_type get_task_type() const { return(this->type); }
+
 
         // K-CONFIGURATION DATABASE HANDLING
 
@@ -127,7 +131,7 @@ namespace transport
       public:
 
         //! Get type
-        virtual typename task_record<number>::task_type get_type() const override { return(task_record<number>::task_type::integration); }
+        virtual task_type get_type() const override final { return(task_type::integration); }
 
 
         // SERIALIZATION -- implements a 'serializable' interface
@@ -153,6 +157,9 @@ namespace transport
         //! Task associated with this record
         std::unique_ptr< integration_task<number> > tk;
 
+        //! Type of task associated with this record
+        integration_task_type type;
+
         //! k-configuration database associated with this record
         boost::filesystem::path kconfig_db;
 
@@ -170,8 +177,14 @@ namespace transport
 
       public:
 
-        //! construct a postintegration_task_record
-        postintegration_task_record(const postintegration_task<number>& tk, repository_record::handler_package& pkg);
+        //! construct a postintegration_task_record for a zeta twopf task
+        postintegration_task_record(const zeta_twopf_task<number>& tk, repository_record::handler_package& pkg);
+
+        //! construct a postintegration_task_record for a zeta threepf task
+        postintegration_task_record(const zeta_threepf_task<number>& tk, repository_record::handler_package& pkg);
+
+        //! construct a postintegration_task_record for an fNL task
+        postintegration_task_record(const fNL_task<number>& tk, repository_record::handler_package& pkg);
 
         //! override copy constructor to perform a deep copy
         postintegration_task_record(const postintegration_task_record& obj);
@@ -193,13 +206,16 @@ namespace transport
         //! Get abstract task
         virtual task<number>* get_abstract_task() const override { return(this->tk.get()); }
 
+        //! Get task type
+        postintegration_task_type get_task_type() const { return(this->type); }
+
 
         // ADMINISTRATION
 
       public:
 
         //! Get type
-        virtual typename task_record<number>::task_type get_type() const override { return(task_record<number>::task_type::postintegration); }
+        virtual task_type get_type() const override final { return(task_type::postintegration); }
 
 
         // SERIALIZATION -- implements a 'serializable' interface
@@ -224,6 +240,9 @@ namespace transport
 
         //! Task associated with this record
         std::unique_ptr< postintegration_task<number> > tk;
+
+        //! Type of task associated with this record
+        postintegration_task_type type;
 
       };
 
@@ -268,7 +287,7 @@ namespace transport
       public:
 
         //! Get type
-        virtual typename task_record<number>::task_type get_type() const override { return(task_record<number>::task_type::output); }
+        virtual task_type get_type() const override final { return(task_type::output); }
 
 
         // SERIALIZATION -- implements a 'serializable' interface

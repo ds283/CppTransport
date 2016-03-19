@@ -404,6 +404,13 @@ namespace transport
           {
             // query a task record with the name we're looking for from the database;
             // will throw RECORD_NOT_FOUND if the task record is not present
+
+            // notice that this record will persist throughout the entire job, until this function exits
+            // however, we have to be cautious about using it because other processes may write to the
+            // repository for the same job
+
+            // for this reason, we don't hold copies to this record in any of the writers, but only
+            // a copy of the job name. When commits need to occur, the record is looked up again
             record = this->repo->query_task(job.get_name());
           }
         catch (runtime_exception xe)
@@ -428,36 +435,36 @@ namespace transport
 
         switch(record->get_type())
           {
-            case task_record<number>::task_type::integration:
+            case task_type::integration:
               {
                 integration_task_record<number>* int_rec = dynamic_cast< integration_task_record<number>* >(record.get());
 
                 assert(int_rec != nullptr);
                 if(int_rec == nullptr) throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_RECORD_CAST_FAILED);
 
-                this->dispatch_integration_task(int_rec, job.is_seeded(), job.get_seed_group(), job.get_tags());
+                this->dispatch_integration_task(*int_rec, job.is_seeded(), job.get_seed_group(), job.get_tags());
                 break;
               }
 
-            case task_record<number>::task_type::output:
+            case task_type::output:
               {
                 output_task_record<number>* out_rec = dynamic_cast< output_task_record<number>* >(record.get());
 
                 assert(out_rec != nullptr);
                 if(out_rec == nullptr) throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_RECORD_CAST_FAILED);
 
-                this->dispatch_output_task(out_rec, job.get_tags());
+                this->dispatch_output_task(*out_rec, job.get_tags());
                 break;
               }
 
-            case task_record<number>::task_type::postintegration:
+            case task_type::postintegration:
               {
                 postintegration_task_record<number>* pint_rec = dynamic_cast< postintegration_task_record<number>* >(record.get());
 
                 assert(pint_rec != nullptr);
                 if(pint_rec == nullptr) throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_RECORD_CAST_FAILED);
 
-                this->dispatch_postintegration_task(pint_rec, job.is_seeded(), job.get_seed_group(), job.get_tags());
+                this->dispatch_postintegration_task(*pint_rec, job.is_seeded(), job.get_seed_group(), job.get_tags());
                 break;
               }
           }

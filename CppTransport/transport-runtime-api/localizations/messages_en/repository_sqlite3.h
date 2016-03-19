@@ -11,6 +11,8 @@
 #define CPPTRANSPORT_REPO_FAIL_DATABASE_OPEN                "Repository error: failed to open repository database"
 #define CPPTRANSPORT_REPO_FAIL_KCONFIG_DATABASE_OPEN        "Repository error: failed to open kconfiguration database for task"
 
+#define CPPTRANSPORT_REPO_FAIL_INTEGRATION_TASK_TYPE        "Repository error: unknown integration task type"
+
 #define CPPTRANSPORT_REPO_DATABASES_OPEN                    "Repository error: SQLite database handles unexpectedly open"
 #define CPPTRANSPORT_REPO_DATABASES_CLOSED                  "Repository error: SQLite database handles unexpectedly closed"
 #define CPPTRANSPORT_REPO_DATABASES_NOT_OPEN                "Repository error: SQLite database handles closed, but should be open"

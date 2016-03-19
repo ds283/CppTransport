@@ -22,14 +22,14 @@
 namespace transport
 	{
 
-    constexpr auto CPPTRANSPORT_NODE_FAST_FORWARD = "fast-forward";
-    constexpr auto CPPTRANSPORT_NODE_FAST_FORWARD_EFOLDS = "ff-efolds";
-    constexpr auto CPPTRANSPORT_NODE_MESH_REFINEMENTS = "mesh-refinements";
-    constexpr auto CPPTRANSPORT_NODE_END_OF_INFLATION = "end-of-inflation";
+    constexpr auto CPPTRANSPORT_NODE_FAST_FORWARD         = "fast-forward";
+    constexpr auto CPPTRANSPORT_NODE_FAST_FORWARD_EFOLDS  = "ff-efolds";
+    constexpr auto CPPTRANSPORT_NODE_MESH_REFINEMENTS     = "mesh-refinements";
+    constexpr auto CPPTRANSPORT_NODE_END_OF_INFLATION     = "end-of-inflation";
 
-    constexpr auto CPPTRANSPORT_NODE_TIME_RANGE = "integration-range";
+    constexpr auto CPPTRANSPORT_NODE_TIME_RANGE           = "integration-range";
 
-    constexpr auto CPPTRANSPORT_NODE_PACKAGE_NAME = "package";
+    constexpr auto CPPTRANSPORT_NODE_PACKAGE_NAME         = "package";
 
     //! An 'integration_task' is a specialization of 'task'. It contains the basic information
     //! needed to carry out an integration. The more specialized two- and three-pf integration
@@ -66,6 +66,14 @@ namespace transport
 
         //! destructor is default
         virtual ~integration_task() = default;
+
+
+        // INTERFACE
+
+      public:
+
+        //! identify integration task type
+        virtual integration_task_type get_task_type() const = 0;
 
 
         // INTERFACE - TASK COMPONENTS

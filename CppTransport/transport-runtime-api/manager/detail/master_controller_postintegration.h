@@ -20,15 +20,13 @@ namespace transport
   {
 
     template <typename number>
-    void master_controller<number>::dispatch_postintegration_task(postintegration_task_record<number>* rec, bool seeded, const std::string& seed_group,
+    void master_controller<number>::dispatch_postintegration_task(postintegration_task_record<number>& rec, bool seeded, const std::string& seed_group,
                                                                   const std::list<std::string>& tags)
       {
-        assert(rec != nullptr);
-
         // can't process a task if there are no workers
         if(this->world.size() <= 1) throw runtime_exception(exception_type::MPI_ERROR, CPPTRANSPORT_TOO_FEW_WORKERS);
 
-        postintegration_task<number>* tk = rec->get_task();
+        postintegration_task<number>* tk = rec.get_task();
 
         zeta_twopf_task<number>*   z2pf = nullptr;
         zeta_threepf_task<number>* z3pf = nullptr;
@@ -107,7 +105,7 @@ namespace transport
         else
           {
             std::ostringstream msg;
-            msg << CPPTRANSPORT_UNKNOWN_DERIVED_TASK << " '" << rec->get_name() << "'";
+            msg << CPPTRANSPORT_UNKNOWN_DERIVED_TASK << " '" << rec.get_name() << "'";
             throw runtime_exception(exception_type::REPOSITORY_ERROR, msg.str());
           }
       }
@@ -115,12 +113,10 @@ namespace transport
 
     template <typename number>
     template <typename TaskObject>
-    void master_controller<number>::schedule_postintegration(postintegration_task_record<number>* rec, TaskObject* tk,
+    void master_controller<number>::schedule_postintegration(postintegration_task_record<number>& rec, TaskObject* tk,
                                                              bool seeded, const std::string& seed_group, const std::list<std::string>& tags,
                                                              slave_work_event::event_type begin_label, slave_work_event::event_type end_label)
       {
-        assert(rec != nullptr);
-
         // create an output writer to commit our results into the repository
         // like all writers, it aborts (ie. executes a rollback if needed) when it goes out of scope unless
         // it is explicitly committed
@@ -166,12 +162,10 @@ namespace transport
 
     template <typename number>
     template <typename TaskObject, typename ParentTaskObject>
-    void master_controller<number>::schedule_paired_postintegration(postintegration_task_record<number>* rec, TaskObject* tk, ParentTaskObject* ptk,
+    void master_controller<number>::schedule_paired_postintegration(postintegration_task_record<number>& rec, TaskObject* tk, ParentTaskObject* ptk,
                                                                     bool seeded, const std::string& seed_group, const std::list<std::string>& tags,
                                                                     slave_work_event::event_type begin_label, slave_work_event::event_type end_label)
       {
-        assert(rec != nullptr);
-
         std::unique_ptr< task_record<number> > pre_prec = this->repo->query_task(ptk->get_name());
         integration_task_record<number>* prec = dynamic_cast< integration_task_record<number>* >(pre_prec.get());
 
@@ -184,7 +178,7 @@ namespace transport
         this->data_mgr->create_tables(*p_writer, tk);
 
         // create an output writer for the integration task; use suffix option to add "-paired" to distinguish the different output groups
-        std::unique_ptr<integration_writer<number> > i_writer = this->repo->new_integration_task_content(prec, tags, this->get_rank(), 0, "paired");
+        std::unique_ptr<integration_writer<number> > i_writer = this->repo->new_integration_task_content(*prec, tags, this->get_rank(), 0, "paired");
         this->data_mgr->initialize_writer(*i_writer);
         this->data_mgr->create_tables(*i_writer, ptk);
 
@@ -353,7 +347,7 @@ namespace transport
           journal_instrument instrument(this->journal, master_work_event::event_type::MPI_begin, master_work_event::event_type::MPI_end);
 
           std::vector<boost::mpi::request> requests(this->world.size()-1);
-          MPI::new_postintegration_payload payload(writer.get_record()->get_name(), tempdir_path, logdir_path, tags);
+          MPI::new_postintegration_payload payload(writer.get_task_name(), tempdir_path, logdir_path, tags);
 
           for(unsigned int i = 0; i < this->world.size()-1; ++i)
             {
@@ -406,7 +400,7 @@ namespace transport
           journal_instrument instrument(this->journal, master_work_event::event_type::MPI_begin, master_work_event::event_type::MPI_end);
 
           std::vector<boost::mpi::request> requests(this->world.size()-1);
-          MPI::new_postintegration_payload payload(p_writer.get_record()->get_name(), p_tempdir_path, p_logdir_path, tags, i_tempdir_path, i_logdir_path, i_writer.get_workgroup_number());
+          MPI::new_postintegration_payload payload(p_writer.get_task_name(), p_tempdir_path, p_logdir_path, tags, i_tempdir_path, i_logdir_path, i_writer.get_workgroup_number());
 
           for(unsigned int i = 0; i < this->world.size()-1; ++i)
             {

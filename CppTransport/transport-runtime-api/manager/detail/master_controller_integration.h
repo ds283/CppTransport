@@ -22,16 +22,14 @@ namespace transport
     using namespace master_controller_impl;
 
     template <typename number>
-    void master_controller<number>::dispatch_integration_task(integration_task_record<number>* rec, bool seeded, const std::string& seed_group,
+    void master_controller<number>::dispatch_integration_task(integration_task_record<number>& rec, bool seeded, const std::string& seed_group,
                                                               const std::list<std::string>& tags)
       {
-        assert(rec != nullptr);
-
         // can't process a task if there are no workers
         if(this->world.size() == 1) throw runtime_exception(exception_type::MPI_ERROR, CPPTRANSPORT_TOO_FEW_WORKERS);
 
-        integration_task<number>* tk = rec->get_task();
-        model<number>* m = rec->get_task()->get_model();
+        integration_task<number>* tk = rec.get_task();
+        model<number>* m = rec.get_task()->get_model();
 
         twopf_task<number>* tka = nullptr;
         threepf_task<number>* tkb = nullptr;
@@ -51,7 +49,7 @@ namespace transport
         else
           {
             std::ostringstream msg;
-            msg << CPPTRANSPORT_UNKNOWN_DERIVED_TASK << " '" << rec->get_name() << "'";
+            msg << CPPTRANSPORT_UNKNOWN_DERIVED_TASK << " '" << rec.get_name() << "'";
             throw runtime_exception(exception_type::REPOSITORY_ERROR, msg.str());
           }
       }
@@ -59,12 +57,10 @@ namespace transport
 
     template <typename number>
     template <typename TaskObject>
-    void master_controller<number>::schedule_integration(integration_task_record<number>* rec, TaskObject* tk,
+    void master_controller<number>::schedule_integration(integration_task_record<number>& rec, TaskObject* tk,
                                                          bool seeded, const std::string& seed_group, const std::list<std::string>& tags,
                                                          slave_work_event::event_type begin_label, slave_work_event::event_type end_label)
       {
-        assert(rec != nullptr);
-
         // create an output writer to commit the result of this integration to the repository.
         // like all writers, it aborts (ie. executes a rollback if needed) when it goes out of scope unless
         // it is explicitly committed
@@ -166,7 +162,7 @@ namespace transport
           journal_instrument instrument(this->journal, master_work_event::event_type::MPI_begin, master_work_event::event_type::MPI_end);
 
           std::vector<boost::mpi::request> requests(this->world.size()-1);
-          MPI::new_integration_payload payload(writer.get_record()->get_name(), tempdir_path, logdir_path, writer.get_workgroup_number());
+          MPI::new_integration_payload payload(writer.get_task_name(), tempdir_path, logdir_path, writer.get_workgroup_number());
 
           for(unsigned int i = 0; i < this->world.size()-1; ++i)
             {
@@ -196,7 +192,7 @@ namespace transport
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
         BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "";
         BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "++ TASK COMPLETE (at " << boost::posix_time::to_simple_string(now) << "): FINAL USAGE STATISTICS";
-        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "++   Total wallclock time for task '" << writer.get_record()->get_name() << "' " << format_time(wallclock_timer.elapsed().wall);
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "++   Total wallclock time for task '" << writer.get_task_name() << "' " << format_time(wallclock_timer.elapsed().wall);
         BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "++   Total wallclock time required by worker processes = " << format_time(i_metadata.total_wallclock_time);
         BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "++   Total aggregation time required by master process = " << format_time(i_metadata.total_aggregation_time);
         BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "";

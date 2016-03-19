@@ -58,6 +58,17 @@ namespace transport
         virtual ~threepf_task() = default;
 
 
+        // INTERFACE
+
+      public:
+
+        //! supply 'derivable_task' interface
+        task_type get_type() const override final { return task_type::integration; }
+
+        //! respond to task type query
+        integration_task_type get_task_type() const override final { return integration_task_type::threepf; }
+
+
         // INTERFACE - THREEPF K-CONFIGURATIONS
 
       public:
@@ -154,6 +165,13 @@ namespace transport
         bool integrable;
 
 	    };
+
+
+    template <typename number>
+    struct integration_task_traits<number, integration_task_type::threepf>
+      {
+        typedef threepf_task<number> task_type;
+      };
 
 
     template <typename number>

@@ -127,7 +127,7 @@ namespace transport
       public:
 
         //! Construct a derived-content writer object
-        derived_content_writer(const std::string& n, output_task_record<number>* rec,
+        derived_content_writer(const std::string& n, output_task_record<number>& rec,
                                std::unique_ptr< derived_content_writer_commit<number> > c,
                                std::unique_ptr< derived_content_writer_abort<number> > a,
                                const typename generic_writer::metadata_group& m, const typename generic_writer::paths_group& p,
@@ -157,6 +157,9 @@ namespace transport
 
         //! Commit contents of this integration_writer to the database
         void commit() { (*this->commit_h)(*this); this->committed = true; }
+
+        //! Lookup derived product in task
+        boost::optional< derived_data::derived_product<number>& > lookup_derived_product(const std::string& name) { return(this->task->lookup_derived_product(name)); }
 
 
         // ADMINISTRATION
@@ -198,8 +201,12 @@ namespace transport
 
       public:
 
+        //! Return task name
+        const std::string& get_task_name() const { return(this->task->get_name()); }
+
         //! Return task
-        output_task_record<number>* get_record() const { return(this->parent_record.get()); }
+        template <typename TaskType>
+        const TaskType& get_task() const { return dynamic_cast<TaskType&>(*this->task); }
 
         //! Set metadata
         void set_metadata(const output_metadata& data) { this->metadata = data; }
@@ -238,8 +245,8 @@ namespace transport
 
         // METADATA
 
-        //! task associated with this derived_content_writer
-        std::unique_ptr< output_task_record<number> > parent_record;
+        //! copy of task associated with this derived_content_writer; needed to interrogate for task properties
+        std::unique_ptr< output_task<number> > task;
 
         //! metadata for this output task
         output_metadata metadata;
@@ -251,7 +258,7 @@ namespace transport
 
 
     template <typename number>
-    derived_content_writer<number>::derived_content_writer(const std::string& n, output_task_record<number>* rec,
+    derived_content_writer<number>::derived_content_writer(const std::string& n, output_task_record<number>& rec,
                                                            std::unique_ptr< derived_content_writer_commit<number> > c,
                                                            std::unique_ptr< derived_content_writer_abort<number> > a,
                                                            const generic_writer::metadata_group& m, const generic_writer::paths_group& p,
@@ -260,10 +267,9 @@ namespace transport
         commit_h(std::move(c)),
         abort_h(std::move(a)),
 	      aggregate_h(nullptr),
-	      parent_record(dynamic_cast< output_task_record<number>* >(rec->clone())),
+        task(rec.get_task()->clone()),
 	      metadata()
 	    {
-        assert(this->parent_record);
 	    }
 
 
@@ -298,7 +304,7 @@ namespace transport
         std::list<std::string> notes;
         std::list<std::string> tags;
 
-        content.emplace_back(product.get_name(), product.get_filename().string(), now, used_groups, notes, tags);
+        this->content.emplace_back(product.get_name(), product.get_filename().string(), now, used_groups, notes, tags);
 	    }
 
 	}

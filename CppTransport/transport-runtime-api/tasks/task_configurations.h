@@ -262,7 +262,7 @@ namespace transport
             tags(tgs),
             serial(sn)
           {
-            assert(product != nullptr);
+            assert(product);
           }
 
         //! Override the default copy constructor to perform a deep copy of the stored derived_product<>
@@ -274,12 +274,7 @@ namespace transport
           }
 
         //! Destroy an output task element
-        ~output_task_element()
-          {
-            assert(this->product != nullptr);
-
-            delete this->product;
-          }
+        ~output_task_element() = default;
 
 
         // INTERFACE - EXTRACT DETAILS
@@ -288,7 +283,7 @@ namespace transport
         const std::string& get_product_name() const { return(this->product->get_name()); }
 
         //! Get derived product associated with this task element
-        derived_data::derived_product<number>* get_product() const { return(this->product); }
+        derived_data::derived_product<number>& get_product() const { return(*this->product); }
 
         //! Get tags associated with this task element
         const std::list<std::string>& get_tags() const { return(this->tags); }
@@ -311,7 +306,7 @@ namespace transport
       protected:
 
         //! Pointer to derived data product (part of the task description, specifying which eg. plot to produce) which which this output is associated
-        derived_data::derived_product<number>* product;
+        std::unique_ptr< derived_data::derived_product<number> > product;
 
         //! Optional list of tags to enforce for each content provider in the product
         std::list<std::string> tags;

@@ -46,6 +46,14 @@ namespace transport
         virtual ~postintegration_task();
 
 
+        // INTERFACE
+
+      public:
+
+        //! identify integration task type
+        virtual postintegration_task_type get_task_type() const = 0;
+
+
         // INTERFACE - implements a 'derivable task' interface
 
       public:

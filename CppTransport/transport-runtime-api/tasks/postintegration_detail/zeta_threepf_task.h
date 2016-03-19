@@ -45,6 +45,17 @@ namespace transport
 
       public:
 
+        //! supply 'derivable_task' interface
+        task_type get_type() const override final { return task_type::postintegration; }
+
+        //! respond to task type query
+        postintegration_task_type get_task_type() const override final { return postintegration_task_type::threepf; }
+
+
+        // INTERFACE
+
+      public:
+
         //! get pairing status
         bool is_paired() const { return(this->paired); }
 
@@ -87,6 +98,13 @@ namespace transport
         bool paired;
 
 	    };
+
+
+    template <typename number>
+    struct postintegration_task_traits<number, postintegration_task_type::threepf>
+      {
+        typedef zeta_threepf_task<number> task_type;
+      };
 
 
     template <typename number>

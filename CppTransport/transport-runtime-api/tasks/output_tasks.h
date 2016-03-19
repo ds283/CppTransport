@@ -28,6 +28,7 @@
 // forward declare derived products if needed
 #include "transport-runtime-api/derived-products/derived_product_forward_declare.h"
 
+#include "boost/optional.hpp"
 #include "boost/log/utility/formatting_ostream.hpp"
 
 
@@ -127,7 +128,7 @@ namespace transport
         void add_element(const derived_data::derived_product<number>& prod, const std::list<std::string>& tags);
 
 		    //! Lookup a derived product
-		    derived_data::derived_product<number>* lookup_derived_product(const std::string& name);
+		    boost::optional< derived_data::derived_product<number>& > lookup_derived_product(const std::string& name);
 
 
         // SERIALIZATION (implements a 'serializable' interface)
@@ -270,9 +271,9 @@ namespace transport
 	    {
         // check that this derived product has a distinct filename
 
-        for(typename std::vector< output_task_element<number> >::const_iterator t = this->elements.begin(); t != this->elements.end(); ++t)
+        for(const output_task_element<number>& ele : this->elements)
 	        {
-            if(t->get_product()->get_filename() == prod.get_filename())
+            if(ele.get_product().get_filename() == prod.get_filename())
 	            {
                 std::ostringstream msg;
                 msg << CPPTRANSPORT_OUTPUT_TASK_FILENAME_COLLISION_A << " " << prod.get_filename() << " "
@@ -280,7 +281,7 @@ namespace transport
                 throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
 	            }
 
-            if(t->get_product_name() == prod.get_name())
+            if(ele.get_product_name() == prod.get_name())
 	            {
                 std::ostringstream msg;
                 msg << CPPTRANSPORT_OUTPUT_TASK_NAME_COLLISION_A << " " << prod.get_name() << " "
@@ -304,15 +305,15 @@ namespace transport
 
 
 		template <typename number>
-		derived_data::derived_product<number>* output_task<number>::lookup_derived_product(const std::string& name)
+		boost::optional< typename derived_data::derived_product<number>& > output_task<number>::lookup_derived_product(const std::string& name)
 			{
-		    derived_data::derived_product<number>* rval = nullptr;
+        boost::optional< derived_data::derived_product<number>& > rval;
 
-				for(typename std::vector< output_task_element<number> >::const_iterator t = this->elements.begin(); t != this->elements.end(); ++t)
+        for(const output_task_element<number>& ele : this->elements)
 					{
-						if(t->get_product_name() == name)
+						if(ele.get_product_name() == name)
 							{
-								rval = t->get_product();
+								rval = ele.get_product();
 								break;
 							}
 					}

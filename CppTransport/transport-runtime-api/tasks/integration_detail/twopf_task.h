@@ -37,6 +37,17 @@ namespace transport
         ~twopf_task() = default;
 
 
+        // INTERFACE
+
+      public:
+
+        //! supply 'derivable_task' interface
+        task_type get_type() const override final { return task_type::integration; }
+
+        //! respond to task type query
+        integration_task_type get_task_type() const override final { return integration_task_type::twopf; }
+
+
         // SERIALIZATION (implements a 'serializable' interface)
 
       public:
@@ -53,6 +64,13 @@ namespace transport
         virtual twopf_task<number>* clone() const override { return new twopf_task<number>(static_cast<const twopf_task<number>&>(*this)); }
 
 	    };
+
+
+    template <typename number>
+    struct integration_task_traits<number, integration_task_type::twopf>
+      {
+        typedef twopf_task<number> task_type;
+      };
 
 
     // build a twopf task

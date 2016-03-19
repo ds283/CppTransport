@@ -46,7 +46,7 @@ namespace transport
         boost::filesystem::path ctr_path = writer.get_abs_container_path();
 
         // open the main container
-        int mode = recovery_mode ? SQLITE_OPEN_READWRITE : SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE;
+        int mode = recovery_mode ? SQLITE_OPEN_READWRITE : (SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE);
         int status = sqlite3_open_v2(ctr_path.string().c_str(), &db, mode, nullptr);
 
         if(status != SQLITE_OK)
@@ -83,33 +83,27 @@ namespace transport
         writer.set_data_manager_handle(db);
 
         // set up aggregation handlers
-        integration_task_record<number>* rec = writer.get_record();
-        assert(rec != nullptr);
-
-        integration_task<number>* tk = rec->get_task();
-
-        twopf_task<number>* tk2 = nullptr;
-        threepf_task<number>* tk3 = nullptr;
-        if((tk2 = dynamic_cast<twopf_task<number>*>(tk)) != nullptr)
+        switch(writer.get_type())
           {
-            std::unique_ptr< sqlite3_twopf_writer_aggregate<number> > aggregate = std::make_unique< sqlite3_twopf_writer_aggregate<number> >(*this);
-            std::unique_ptr< sqlite3_twopf_writer_integrity<number> > integrity = std::make_unique< sqlite3_twopf_writer_integrity<number> >(*this);
+            case integration_task_type::twopf:
+              {
+                std::unique_ptr<sqlite3_twopf_writer_aggregate<number> > aggregate = std::make_unique<sqlite3_twopf_writer_aggregate<number> >(*this);
+                std::unique_ptr<sqlite3_twopf_writer_integrity<number> > integrity = std::make_unique<sqlite3_twopf_writer_integrity<number> >(*this);
 
-            writer.set_aggregation_handler(std::move(aggregate));
-            writer.set_integrity_check_handler(std::move(integrity));
-          }
-        else if((tk3 = dynamic_cast<threepf_task<number>*>(tk)) != nullptr)
-          {
-            std::unique_ptr< sqlite3_threepf_writer_aggregate<number> > aggregate = std::make_unique< sqlite3_threepf_writer_aggregate<number> >(*this);
-            std::unique_ptr< sqlite3_threepf_writer_integrity<number> > integrity = std::make_unique< sqlite3_threepf_writer_integrity<number> >(*this);
+                writer.set_aggregation_handler(std::move(aggregate));
+                writer.set_integrity_check_handler(std::move(integrity));
+                break;
+              }
 
-            writer.set_aggregation_handler(std::move(aggregate));
-            writer.set_integrity_check_handler(std::move(integrity));
-          }
-        else
-          {
-            assert(false);
-            throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATACTR_AGGREGATION_HANDLER_NOT_SET);
+            case integration_task_type::threepf:
+              {
+                std::unique_ptr<sqlite3_threepf_writer_aggregate<number> > aggregate = std::make_unique<sqlite3_threepf_writer_aggregate<number> >(*this);
+                std::unique_ptr<sqlite3_threepf_writer_integrity<number> > integrity = std::make_unique<sqlite3_threepf_writer_integrity<number> >(*this);
+
+                writer.set_aggregation_handler(std::move(aggregate));
+                writer.set_integrity_check_handler(std::move(integrity));
+                break;
+              }
           }
       }
 
@@ -208,75 +202,73 @@ namespace transport
         this->open_containers.push_back(db);
         writer.set_data_manager_handle(db);
 
-        // set aggregation handler
-        postintegration_task_record<number> * rec = writer.get_record();
-        assert(rec != nullptr);
-
-        postintegration_task<number>* tk = rec->get_task();
-
-        zeta_twopf_task<number>* z2pf = nullptr;
-        zeta_threepf_task<number>* z3pf = nullptr;
-        fNL_task<number>* zfNL = nullptr;
-        if((z2pf = dynamic_cast<zeta_twopf_task<number>*>(tk)) != nullptr)
+        // set aggregation handlers
+        switch(writer.get_type())
           {
-            std::unique_ptr< sqlite3_zeta_twopf_writer_aggregate<number> > aggregate = std::make_unique< sqlite3_zeta_twopf_writer_aggregate<number> >(*this);
-            std::unique_ptr< sqlite3_zeta_twopf_writer_integrity<number> > integrity = std::make_unique< sqlite3_zeta_twopf_writer_integrity<number> >(*this);
-
-            writer.set_aggregation_handler(std::move(aggregate));
-            writer.set_integrity_check_handler(std::move(integrity));
-
-            writer.get_products().add_zeta_twopf();
-          }
-        else if((z3pf = dynamic_cast<zeta_threepf_task<number>*>(tk)) != nullptr)
-          {
-            std::unique_ptr< sqlite3_zeta_threepf_writer_aggregate<number> > aggregate = std::make_unique< sqlite3_zeta_threepf_writer_aggregate<number> >(*this);
-            std::unique_ptr< sqlite3_zeta_threepf_writer_integrity<number> > integrity = std::make_unique< sqlite3_zeta_threepf_writer_integrity<number> >(*this);
-
-            writer.set_aggregation_handler(std::move(aggregate));
-            writer.set_integrity_check_handler(std::move(integrity));
-
-            writer.get_products().add_zeta_twopf();
-            writer.get_products().add_zeta_threepf();
-            writer.get_products().add_zeta_redbsp();
-          }
-        else if((zfNL = dynamic_cast<fNL_task<number>*>(tk)) != nullptr)
-          {
-            std::unique_ptr< sqlite3_fNL_writer_aggregate<number> > aggregate = std::make_unique< sqlite3_fNL_writer_aggregate<number> >(*this, zfNL->get_template());
-            std::unique_ptr< sqlite3_fNL_writer_integrity<number> > integrity = std::make_unique< sqlite3_fNL_writer_integrity<number> >(*this);
-
-            writer.set_aggregation_handler(std::move(aggregate));
-            writer.set_integrity_check_handler(std::move(integrity));
-            switch(zfNL->get_template())
+            case postintegration_task_type::twopf:
               {
-                case derived_data::template_type::fNL_local_template:
-                  {
-                    writer.get_products().add_fNL_local();
-                    break;
-                  }
+                std::unique_ptr< sqlite3_zeta_twopf_writer_aggregate<number> > aggregate = std::make_unique< sqlite3_zeta_twopf_writer_aggregate<number> >(*this);
+                std::unique_ptr< sqlite3_zeta_twopf_writer_integrity<number> > integrity = std::make_unique< sqlite3_zeta_twopf_writer_integrity<number> >(*this);
 
-                case derived_data::template_type::fNL_equi_template:
-                  {
-                    writer.get_products().add_fNL_equi();
-                    break;
-                  }
+                writer.set_aggregation_handler(std::move(aggregate));
+                writer.set_integrity_check_handler(std::move(integrity));
 
-                case derived_data::template_type::fNL_ortho_template:
-                  {
-                    writer.get_products().add_fNL_ortho();
-                    break;
-                  }
-
-                case derived_data::template_type::fNL_DBI_template:
-                  {
-                    writer.get_products().add_fNL_DBI();
-                    break;
-                  }
+                writer.get_products().add_zeta_twopf();
+                break;
               }
-          }
-        else
-          {
-            assert(false);
-            throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_DATACTR_AGGREGATION_HANDLER_NOT_SET);
+
+            case postintegration_task_type::threepf:
+              {
+                std::unique_ptr< sqlite3_zeta_threepf_writer_aggregate<number> > aggregate = std::make_unique< sqlite3_zeta_threepf_writer_aggregate<number> >(*this);
+                std::unique_ptr< sqlite3_zeta_threepf_writer_integrity<number> > integrity = std::make_unique< sqlite3_zeta_threepf_writer_integrity<number> >(*this);
+
+                writer.set_aggregation_handler(std::move(aggregate));
+                writer.set_integrity_check_handler(std::move(integrity));
+
+                writer.get_products().add_zeta_twopf();
+                writer.get_products().add_zeta_threepf();
+                writer.get_products().add_zeta_redbsp();
+                break;
+              }
+
+            case postintegration_task_type::fNL:
+              {
+                const fNL_task<number>& ztk = writer.template get_task< fNL_task<number> >();
+
+                std::unique_ptr< sqlite3_fNL_writer_aggregate<number> > aggregate = std::make_unique< sqlite3_fNL_writer_aggregate<number> >(*this, ztk.get_template());
+                std::unique_ptr< sqlite3_fNL_writer_integrity<number> > integrity = std::make_unique< sqlite3_fNL_writer_integrity<number> >(*this);
+
+                writer.set_aggregation_handler(std::move(aggregate));
+                writer.set_integrity_check_handler(std::move(integrity));
+                switch(ztk.get_template())
+                  {
+                    case derived_data::template_type::fNL_local_template:
+                      {
+                        writer.get_products().add_fNL_local();
+                        break;
+                      }
+
+                    case derived_data::template_type::fNL_equi_template:
+                      {
+                        writer.get_products().add_fNL_equi();
+                        break;
+                      }
+
+                    case derived_data::template_type::fNL_ortho_template:
+                      {
+                        writer.get_products().add_fNL_ortho();
+                        break;
+                      }
+
+                    case derived_data::template_type::fNL_DBI_template:
+                      {
+                        writer.get_products().add_fNL_DBI();
+                        break;
+                      }
+                  }
+
+                break;
+              }
           }
       }
 
@@ -990,16 +982,9 @@ namespace transport
       {
         bool success = true;
 
-        // lookup derived product from output task
-        output_task_record<number>* rec = writer.get_record();
-        assert(rec != nullptr);
+        boost::optional< derived_data::derived_product<number>& > product = writer.lookup_derived_product(temp_name);
 
-        output_task<number>* tk = rec->get_task();
-        assert(tk != nullptr);
-
-        derived_data::derived_product<number>* product = tk->lookup_derived_product(temp_name);
-
-        if(product == nullptr)
+        if(!product)
           {
             BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::error) << "!! Failed to lookup derived product '" << temp_name << "'; skipping this product";
             return(false);

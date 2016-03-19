@@ -22,14 +22,12 @@ namespace transport
     using namespace master_controller_impl;
 
     template <typename number>
-    void master_controller<number>::dispatch_output_task(output_task_record<number>* rec, const std::list<std::string>& tags)
+    void master_controller<number>::dispatch_output_task(output_task_record<number>& rec, const std::list<std::string>& tags)
       {
-        assert(rec != nullptr);
-
         // can't process a task if there are no workers
         if(this->world.size() <= 1) throw runtime_exception(exception_type::MPI_ERROR, CPPTRANSPORT_TOO_FEW_WORKERS);
 
-        output_task<number>* tk = rec->get_task();
+        output_task<number>* tk = rec.get_task();
 
         this->work_scheduler.set_state_size(sizeof(number));
         this->work_scheduler.prepare_queue(*tk);
@@ -92,7 +90,7 @@ namespace transport
           journal_instrument instrument(this->journal, master_work_event::event_type::MPI_begin, master_work_event::event_type::MPI_end);
 
           std::vector<boost::mpi::request> requests(this->world.size()-1);
-          MPI::new_derived_content_payload payload(writer.get_record()->get_name(), tempdir_path, logdir_path, tags);
+          MPI::new_derived_content_payload payload(writer.get_task_name(), tempdir_path, logdir_path, tags);
 
           for(unsigned int i = 0; i < this->world.size()-1; ++i)
             {
@@ -121,7 +119,7 @@ namespace transport
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
         BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "";
         BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "++ TASK COMPLETE (at " << boost::posix_time::to_simple_string(now) << "): FINAL USAGE STATISTICS";
-        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "++   Total wallclock time for task '" << writer.get_record()->get_name() << "' " << format_time(wallclock_timer.elapsed().wall);
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "++   Total wallclock time for task '" << writer.get_task_name() << "' " << format_time(wallclock_timer.elapsed().wall);
         BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "";
         BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "++ AGGREGATE CACHE STATISTICS";
         BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "++   Total work time required by worker processes      = " << format_time(o_metadata.work_time);

@@ -382,7 +382,22 @@ namespace transport
 
 
     template <typename number>
-    std::unique_ptr< integration_task_record<number> > repository_sqlite3<number>::integration_task_record_factory(const integration_task<number>& tk)
+    std::unique_ptr< integration_task_record<number> > repository_sqlite3<number>::integration_task_record_factory(const twopf_task<number>& tk)
+      {
+        return this->integration_task_record_factory_generic(tk);
+      }
+
+
+    template <typename number>
+    std::unique_ptr< integration_task_record<number> > repository_sqlite3<number>::integration_task_record_factory(const threepf_task<number>& tk)
+      {
+        return this->integration_task_record_factory_generic(tk);
+      }
+
+
+    template <typename number>
+    template <typename TaskType>
+    std::unique_ptr< integration_task_record<number> > repository_sqlite3<number>::integration_task_record_factory_generic(const TaskType& tk)
       {
         repository_record::handler_package pkg;
         count_function                     counter = std::bind(&sqlite3_operations::count_tasks, std::placeholders::_1, std::placeholders::_2);
@@ -428,7 +443,29 @@ namespace transport
 
 
     template <typename number>
-    std::unique_ptr< postintegration_task_record<number> > repository_sqlite3<number>::postintegration_task_record_factory(const postintegration_task<number>& tk)
+    std::unique_ptr< postintegration_task_record<number> > repository_sqlite3<number>::postintegration_task_record_factory(const zeta_twopf_task<number>& tk)
+      {
+        return this->postintegration_task_record_factory_generic(tk);
+      }
+
+
+    template <typename number>
+    std::unique_ptr< postintegration_task_record<number> > repository_sqlite3<number>::postintegration_task_record_factory(const zeta_threepf_task<number>& tk)
+      {
+        return this->postintegration_task_record_factory_generic(tk);
+      }
+
+
+    template <typename number>
+    std::unique_ptr< postintegration_task_record<number> > repository_sqlite3<number>::postintegration_task_record_factory(const fNL_task<number>& tk)
+      {
+        return this->postintegration_task_record_factory_generic(tk);
+      }
+
+
+    template <typename number>
+    template <typename TaskType>
+    std::unique_ptr< postintegration_task_record<number> > repository_sqlite3<number>::postintegration_task_record_factory_generic(const TaskType& tk)
       {
         repository_record::handler_package pkg;
         count_function                     counter = std::bind(&sqlite3_operations::count_tasks, std::placeholders::_1, std::placeholders::_2);
@@ -564,8 +601,24 @@ namespace transport
 
 
     // Write an integration task to the database.
+
     template <typename number>
-    void repository_sqlite3<number>::commit(const integration_task<number>& tk)
+    void repository_sqlite3<number>::commit(const twopf_task<number>& tk)
+      {
+        return this->commit_integration_task(tk);
+      }
+
+
+    template <typename number>
+    void repository_sqlite3<number>::commit(const threepf_task<number>& tk)
+      {
+        return this->commit_integration_task(tk);
+      }
+
+
+    template <typename number>
+    template <typename TaskType>
+    void repository_sqlite3<number>::commit_integration_task(const TaskType& tk)
       {
         // check for a task with a duplicate name
         this->check_task_duplicate(tk.get_name());
@@ -587,6 +640,7 @@ namespace transport
 
 
     // Write an output task to the database
+
     template <typename number>
     void repository_sqlite3<number>::commit(const output_task<number>& tk)
       {
@@ -601,56 +655,60 @@ namespace transport
 
         for(const output_task_element<number>& elt : elements)
           {
-            derived_data::derived_product<number>* product = elt.get_product();
-            unsigned int count = sqlite3_operations::count_products(this->db, product->get_name());
+            derived_data::derived_product<number>& product = elt.get_product();
+            unsigned int count = sqlite3_operations::count_products(this->db, product.get_name());
             if(count == 0)
               {
                 std::ostringstream msg;
                 msg << CPPTRANSPORT_REPO_AUTOCOMMIT_OUTPUT_A << " '" << tk.get_name() << "' "
-                << CPPTRANSPORT_REPO_AUTOCOMMIT_OUTPUT_B << " '" << product->get_name() << "'";
+                << CPPTRANSPORT_REPO_AUTOCOMMIT_OUTPUT_B << " '" << product.get_name() << "'";
                 this->message(msg.str());
-                this->commit(*product);
+                this->commit(product);
               }
           }
       }
 
 
     // Write a postintegration task to the database
+
     template <typename number>
-    void repository_sqlite3<number>::commit(const postintegration_task<number>& tk)
+    void repository_sqlite3<number>::commit(const zeta_twopf_task<number>& tk)
+      {
+        return this->commit_postintegration_task(tk);
+      }
+
+
+    template <typename number>
+    void repository_sqlite3<number>::commit(const zeta_threepf_task<number>& tk)
+      {
+        return this->commit_postintegration_task(tk);
+      }
+
+
+    template <typename number>
+    void repository_sqlite3<number>::commit(const fNL_task<number>& tk)
+      {
+        return this->commit_postintegration_task(tk);
+      }
+
+
+    template <typename number>
+    template <typename TaskType>
+    void repository_sqlite3<number>::commit_postintegration_task(const TaskType& tk)
       {
         // check for a task with a duplicate name
         this->check_task_duplicate(tk.get_name());
 
-        std::unique_ptr< postintegration_task_record<number> > record(postintegration_task_record_factory(tk));
+        std::unique_ptr<postintegration_task_record < number> > record(postintegration_task_record_factory(tk));
         record->commit();
 
         // check whether parent task is already committed to the database
         unsigned int count = sqlite3_operations::count_tasks(this->db, tk.get_parent_task()->get_name());
-        if(count == 0)
-          {
-            derivable_task<number>* ptk = tk.get_parent_task();
+        if(count > 0) return;
 
-            integration_task<number>    * Itk = nullptr;
-            postintegration_task<number>* Ptk = nullptr;
-
-            if((Itk = dynamic_cast< integration_task<number>* >(ptk)) != nullptr)
-              {
-                std::ostringstream msg;
-                msg << CPPTRANSPORT_REPO_AUTOCOMMIT_POSTINTEGR_A << " '" << tk.get_name() << "' "
-                << CPPTRANSPORT_REPO_AUTOCOMMIT_POSTINTEGR_B << " '" << tk.get_parent_task()->get_name() << "'";
-                this->message(msg.str());
-                this->commit(*Itk);
-              }
-            else if((Ptk = dynamic_cast< postintegration_task<number>* >(ptk)) != nullptr)
-              {
-                std::ostringstream msg;
-                msg << CPPTRANSPORT_REPO_AUTOCOMMIT_POSTINTEGR_C << " '" << tk.get_name() << "' "
-                << CPPTRANSPORT_REPO_AUTOCOMMIT_POSTINTEGR_D << " '" << tk.get_parent_task()->get_name() << "'";
-                this->message(msg.str());
-                this->commit(*Ptk);
-              }
-          }
+        this->autocommit(*tk.get_parent_task(), tk.get_name(),
+                         CPPTRANSPORT_REPO_AUTOCOMMIT_POSTINTEGR_A, CPPTRANSPORT_REPO_AUTOCOMMIT_POSTINTEGR_B,
+                         CPPTRANSPORT_REPO_AUTOCOMMIT_POSTINTEGR_C, CPPTRANSPORT_REPO_AUTOCOMMIT_POSTINTEGR_D);
       }
 
 
@@ -674,26 +732,81 @@ namespace transport
 
             if(count == 0)
               {
-                integration_task<number>* Itk = nullptr;
-                postintegration_task<number>* Ptk = nullptr;
-
-                if((Itk = dynamic_cast< integration_task<number>* >(tk)) != nullptr)
-                  {
-                    std::ostringstream msg;
-                    msg << CPPTRANSPORT_REPO_AUTOCOMMIT_PRODUCT_A << " '" << d.get_name() << "' "
-                    << CPPTRANSPORT_REPO_AUTOCOMMIT_PRODUCT_B << " '" << Itk->get_name() << "'";
-                    this->message(msg.str());
-                    this->commit(*Itk);
-                  }
-                else if((Ptk = dynamic_cast< postintegration_task<number>* >(tk)) != nullptr)
-                  {
-                    std::ostringstream msg;
-                    msg << CPPTRANSPORT_REPO_AUTOCOMMIT_PRODUCT_C << " '" << d.get_name() << "' "
-                    << CPPTRANSPORT_REPO_AUTOCOMMIT_PRODUCT_D << " '" << Ptk->get_name() << "'";
-                    this->message(msg.str());
-                    this->commit(*Ptk);
-                  }
+                this->autocommit(*tk, d.get_name(),
+                                 CPPTRANSPORT_REPO_AUTOCOMMIT_PRODUCT_A, CPPTRANSPORT_REPO_AUTOCOMMIT_PRODUCT_B,
+                                 CPPTRANSPORT_REPO_AUTOCOMMIT_PRODUCT_C, CPPTRANSPORT_REPO_AUTOCOMMIT_PRODUCT_D);
               }
+          }
+      }
+
+
+    template <typename number>
+    void repository_sqlite3<number>::autocommit(derivable_task<number>& tk, std::string parent,
+                                                std::string commit_int_A, std::string commit_int_B,
+                                                std::string commit_pint_A, std::string commit_pint_B)
+      {
+        switch(tk.get_type())
+          {
+            case task_type::integration:
+              {
+                integration_task<number>& rtk = dynamic_cast< integration_task<number>& >(tk);
+
+                std::ostringstream msg;
+                msg << commit_int_A << " '" << parent << "' " << commit_int_B << " '" << rtk.get_name() << "'";
+                this->message(msg.str());
+
+                switch(rtk.get_task_type())
+                  {
+                    case integration_task_type::twopf:
+                      {
+                        this->commit(dynamic_cast< twopf_task<number>& >(rtk));
+                        break;
+                      }
+
+                    case integration_task_type::threepf:
+                      {
+                        this->commit(dynamic_cast< threepf_task<number>& >(rtk));
+                        break;
+                      }
+                  }
+
+                break;
+              }
+
+            case task_type::postintegration:
+              {
+                postintegration_task<number>& rtk = dynamic_cast< postintegration_task<number>& >(tk);
+
+                std::ostringstream msg;
+                msg << commit_pint_A << " '" << parent << "' " << commit_pint_B << " '" << rtk.get_name() << "'";
+                this->message(msg.str());
+
+                switch(rtk.get_task_type())
+                  {
+                    case postintegration_task_type::twopf:
+                      {
+                        this->commit(dynamic_cast< zeta_twopf_task<number>& >(rtk));
+                        break;
+                      }
+
+                    case postintegration_task_type::threepf:
+                      {
+                        this->commit(dynamic_cast< zeta_threepf_task<number>& >(rtk));
+                        break;
+                      }
+
+                    case postintegration_task_type::fNL:
+                      {
+                        this->commit(dynamic_cast< fNL_task<number>& >(rtk));
+                        break;
+                      }
+                  }
+
+                break;
+              }
+
+            case task_type::output:
+              assert(false);
           }
       }
 
@@ -755,7 +868,7 @@ namespace transport
       {
         std::unique_ptr< task_record<number> > record = this->query_task(name);
 
-        if(record->get_type() != task_record<number>::task_type::integration)
+        if(record->get_type() != task_type::integration)
           {
             std::ostringstream msg;
             msg << CPPTRANSPORT_REPO_EXTRACT_DERIVED_NOT_INTGRTN << " '" << name << "'";
@@ -778,7 +891,7 @@ namespace transport
       {
         std::unique_ptr< task_record<number>> record = this->query_task(name);
 
-        if(record->get_type() != task_record<number>::task_type::postintegration)
+        if(record->get_type() != task_type::postintegration)
           {
             std::ostringstream msg;
             msg << CPPTRANSPORT_REPO_EXTRACT_DERIVED_NOT_POSTINT << " '" << name << "'";
@@ -801,7 +914,7 @@ namespace transport
       {
         std::unique_ptr< task_record<number>> record = this->query_task(name);
 
-        if(record->get_type() != task_record<number>::task_type::output)
+        if(record->get_type() != task_type::output)
           {
             std::ostringstream msg;
             msg << CPPTRANSPORT_REPO_EXTRACT_DERIVED_NOT_OUTPUT << " '" << name << "'";
@@ -1027,7 +1140,7 @@ void repository_sqlite3<number>::recover_integrations(data_manager<number>& data
         assert(rec != nullptr);
         if(rec == nullptr) throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_RECORD_CAST_FAILED);
 
-        std::unique_ptr< integration_writer<number> > writer = this->get_integration_recovery_writer(inflight, data_mgr, rec, worker);
+        std::unique_ptr< integration_writer<number> > writer = this->get_integration_recovery_writer(inflight, data_mgr, *rec, worker);
 
         // carry out an integrity check; this updates the writer with all missing serial numbers
         // if any are missing, the writer will be marked as failed
@@ -1045,7 +1158,7 @@ void repository_sqlite3<number>::recover_integrations(data_manager<number>& data
 template <typename number>
 std::unique_ptr< integration_writer<number> >
 repository_sqlite3<number>::get_integration_recovery_writer(const sqlite3_operations::inflight_integration& data, data_manager<number>& data_mgr,
-                                                            integration_task_record<number>* rec, unsigned int worker)
+                                                            integration_task_record<number>& rec, unsigned int worker)
   {
     // set up a new writer instance for this content group
     std::unique_ptr< integration_writer<number> > writer = this->recover_integration_task_content(data.content_group, rec, data.output, data.container, data.logdir, data.tempdir, worker, data.workgroup_number);
@@ -1077,21 +1190,21 @@ void repository_sqlite3<number>::recover_postintegrations(data_manager<number>& 
         assert(rec != nullptr);
         if(rec == nullptr) throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_RECORD_CAST_FAILED);
 
-        if(inflight.is_paired) this->recover_paired_postintegration(inflight, data_mgr, rec, i_list, worker);
-        else                   this->recover_unpaired_postintegration(inflight, data_mgr, rec, worker);
+        if(inflight.is_paired) this->recover_paired_postintegration(inflight, data_mgr, *rec, i_list, worker);
+        else                   this->recover_unpaired_postintegration(inflight, data_mgr, *rec, worker);
       }
   }
 
 
 template <typename number>
 void repository_sqlite3<number>::recover_unpaired_postintegration(const sqlite3_operations::inflight_postintegration& data, data_manager<number>& data_mgr,
-                                                                  postintegration_task_record<number>* rec, unsigned int worker)
+                                                                  postintegration_task_record<number>& rec, unsigned int worker)
   {
     std::unique_ptr< postintegration_writer<number> > writer = this->get_postintegration_recovery_writer(data, data_mgr, rec, worker);
 
     // carry out an integrity check; this updates the writer with all missing serial numbers
     // if any are missing, the writer will be marked as failed
-    writer->check_integrity(rec->get_task());
+    writer->check_integrity(rec.get_task());
 
     // close writer
     data_mgr.close_writer(*writer);
@@ -1127,7 +1240,7 @@ namespace repository_sqlite3_impl
 
 template <typename number>
 void repository_sqlite3<number>::recover_paired_postintegration(const sqlite3_operations::inflight_postintegration& data, data_manager<number>& data_mgr,
-                                                                postintegration_task_record<number>* p_rec,
+                                                                postintegration_task_record<number>& p_rec,
                                                                 std::list<sqlite3_operations::inflight_integration>& i_list, unsigned int worker)
   {
     // try to find paired integration in i_list
@@ -1139,20 +1252,17 @@ void repository_sqlite3<number>::recover_paired_postintegration(const sqlite3_op
       {
         // get task record
         std::unique_ptr< task_record<number> > pre_rec = this->query_task(t->task_name);
-        integration_task_record<number>* i_rec = dynamic_cast< integration_task_record<number>* >(pre_rec.get());
-
-        assert(i_rec != nullptr);
-        if(i_rec == nullptr) throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_RECORD_CAST_FAILED);
+        integration_task_record<number>& i_rec = dynamic_cast< integration_task_record<number>& >(*pre_rec);
 
         std::unique_ptr< integration_writer<number> >     i_writer = this->get_integration_recovery_writer(*t, data_mgr, i_rec, worker);
         std::unique_ptr< postintegration_writer<number> > p_writer = this->get_postintegration_recovery_writer(data, data_mgr, p_rec, worker);
 
         // carry out an integrity check; this updates the writers with all missing serial numbers
         // if any are missing, the writer will be marked as failed
-        i_writer->check_integrity(i_rec->get_task());
-        p_writer->check_integrity(p_rec->get_task());
+        i_writer->check_integrity(i_rec.get_task());
+        p_writer->check_integrity(p_rec.get_task());
 
-        data_mgr.synchronize_missing_serials(*i_writer, *p_writer, i_rec->get_task(), p_rec->get_task());
+        data_mgr.synchronize_missing_serials(*i_writer, *p_writer, i_rec.get_task(), p_rec.get_task());
 
         // close writers
         data_mgr.close_writer(*i_writer);
@@ -1172,7 +1282,7 @@ void repository_sqlite3<number>::recover_paired_postintegration(const sqlite3_op
 template <typename number>
 std::unique_ptr< postintegration_writer<number> >
 repository_sqlite3<number>::get_postintegration_recovery_writer(const sqlite3_operations::inflight_postintegration& data, data_manager<number>& data_mgr,
-                                                                postintegration_task_record<number>* rec, unsigned int worker)
+                                                                postintegration_task_record<number>& rec, unsigned int worker)
   {
     // set up a new writer instance for this content group
     std::unique_ptr< postintegration_writer<number> > writer = this->recover_postintegration_task_content(data.content_group, rec, data.output, data.container, data.logdir, data.tempdir, worker);
@@ -1216,7 +1326,7 @@ void repository_sqlite3<number>::register_writer(integration_writer<number>& wri
 
     sqlite3_operations::register_integration_writer(transaction, this->db,
                                                     writer.get_name(),
-                                                    writer.get_record()->get_task()->get_name(),
+                                                    writer.get_task_name(),
                                                     writer.get_relative_output_path(),
                                                     writer.get_relative_container_path(),
                                                     writer.get_relative_logdir_path(),
@@ -1238,7 +1348,7 @@ void repository_sqlite3<number>::register_writer(postintegration_writer<number>&
 
     sqlite3_operations::register_postintegration_writer(transaction, this->db,
                                                         writer.get_name(),
-                                                        writer.get_record()->get_task()->get_name(),
+                                                        writer.get_task_name(),
                                                         writer.get_relative_output_path(),
                                                         writer.get_relative_container_path(),
                                                         writer.get_relative_logdir_path(),
@@ -1259,7 +1369,7 @@ void repository_sqlite3<number>::register_writer(derived_content_writer<number>&
 
     sqlite3_operations::register_derived_content_writer(transaction, this->db,
                                                         writer.get_name(),
-                                                        writer.get_record()->get_task()->get_name(),
+                                                        writer.get_task_name(),
                                                         writer.get_relative_output_path(),
                                                         writer.get_relative_logdir_path(),
                                                         writer.get_relative_tempdir_path());

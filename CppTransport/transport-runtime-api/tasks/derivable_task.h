@@ -55,6 +55,9 @@ namespace transport
         //! Get database of stored time configurations
         virtual const time_config_database& get_stored_time_config_database() const = 0;
 
+        //! Identify task type
+        virtual task_type get_type() const = 0;
+
 
         // SERIALIZE -- implements a 'serializable' interface
 

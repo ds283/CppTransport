@@ -148,11 +148,11 @@ namespace transport
 
         //! Master node: Dispatch an integration task to the worker processes.
         //! Makes a queue then invokes master_dispatch_integration_queue()
-        void dispatch_integration_task(integration_task_record<number>* rec, bool seeded, const std::string& seed_group, const std::list<std::string>& tags);
+        void dispatch_integration_task(integration_task_record<number>& rec, bool seeded, const std::string& seed_group, const std::list<std::string>& tags);
 
         //! Master node: Dispatch an integration queue to the worker processes.
         template <typename TaskObject>
-        void schedule_integration(integration_task_record<number>* rec, TaskObject* tk,
+        void schedule_integration(integration_task_record<number>& rec, TaskObject* tk,
                                   bool seeded, const std::string& seed_group, const std::list<std::string>& tags,
                                   slave_work_event::event_type begin_label, slave_work_event::event_type end_label);
 
@@ -183,17 +183,17 @@ namespace transport
       protected:
 
         //! Master node: Dispatch a postintegration task to the worker processes.
-        void dispatch_postintegration_task(postintegration_task_record<number>* rec, bool seeded, const std::string& seed_group, const std::list<std::string>& tags);
+        void dispatch_postintegration_task(postintegration_task_record<number>& rec, bool seeded, const std::string& seed_group, const std::list<std::string>& tags);
 
         //! Master node: Dispatch a postintegration queue to the worker processes
         template <typename TaskObject>
-        void schedule_postintegration(postintegration_task_record<number>* rec, TaskObject* tk,
+        void schedule_postintegration(postintegration_task_record<number>& rec, TaskObject* tk,
                                       bool seeded, const std::string& seed_group, const std::list<std::string>& tags,
                                       slave_work_event::event_type begin_label, slave_work_event::event_type end_label);
 
         //! Master node: Dispatch a paired postintegration queue to the worker processes
         template <typename TaskObject, typename ParentTaskObject>
-        void schedule_paired_postintegration(postintegration_task_record<number>* rec, TaskObject* tk, ParentTaskObject* ptk,
+        void schedule_paired_postintegration(postintegration_task_record<number>& rec, TaskObject* tk, ParentTaskObject* ptk,
                                              bool seeded, const std::string& seed_group, const std::list<std::string>& tags,
                                              slave_work_event::event_type begin_label,
                                              slave_work_event::event_type end_label);
@@ -228,7 +228,7 @@ namespace transport
       protected:
 
         //! Master node: Dispatch an output 'task' (ie., generation of derived data products) to the worker processes
-        void dispatch_output_task(output_task_record<number>* rec, const std::list<std::string>& tags);
+        void dispatch_output_task(output_task_record<number>& rec, const std::list<std::string>& tags);
 
         //! Master node: Pass new output task to the workers
         bool output_task_to_workers(derived_content_writer<number>& writer, const std::list<std::string>& tags,

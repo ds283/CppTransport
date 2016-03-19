@@ -21,6 +21,8 @@
 #include "transport-runtime-api/serialization/serializable.h"
 #include "transport-runtime-api/messages.h"
 
+#include "transport-runtime-api/tasks/task_types.h"
+
 
 #define CPPTRANSPORT_NODE_TASK_TYPE               "task-type"
 #define CPPTRANSPORT_NODE_TASK_TYPE_TWOPF         "twopf-task"

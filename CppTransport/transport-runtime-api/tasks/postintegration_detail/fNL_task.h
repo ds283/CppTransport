@@ -45,6 +45,17 @@ namespace transport
         virtual ~fNL_task() = default;
 
 
+        // INTERFACE
+
+      public:
+
+        //! supply 'derivable_task' interface
+        task_type get_type() const override final { return task_type::postintegration; }
+
+        //! respond to task type query
+        postintegration_task_type get_task_type() const override final { return postintegration_task_type::fNL; }
+
+
         // GET/SET TEMPLATE TYPE
 
       public:
@@ -78,6 +89,13 @@ namespace transport
         derived_data::template_type type;
 
 	    };
+
+
+    template <typename number>
+    struct postintegration_task_traits<number, postintegration_task_type::fNL>
+      {
+        typedef fNL_task<number> task_type;
+      };
 
 
     template <typename number>

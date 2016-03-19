@@ -156,7 +156,7 @@ namespace transport
 
             switch(record->get_type())
               {
-                case task_record<number>::task_type::integration:
+                case task_type::integration:
                   {
                     integration_task_record<number>* int_rec = dynamic_cast< integration_task_record<number>* >(record.get());
 
@@ -168,12 +168,12 @@ namespace transport
                     break;
                   }
 
-                case task_record<number>::task_type::output:
+                case task_type::output:
                   {
                     throw runtime_exception(exception_type::RECORD_NOT_FOUND, payload.get_task_name());    // RECORD_NOT_FOUND expects task name in message
                   }
 
-                case task_record<number>::task_type::postintegration:
+                case task_type::postintegration:
                   {
                     throw runtime_exception(exception_type::RECORD_NOT_FOUND, payload.get_task_name());    // RECORD_NOT_FOUND expects task name in message
                   }
@@ -377,12 +377,12 @@ namespace transport
 
             switch(record->get_type())
               {
-                case task_record<number>::task_type::integration:
+                case task_type::integration:
                   {
                     throw runtime_exception(exception_type::RECORD_NOT_FOUND, payload.get_task_name());     // RECORD_NOT_FOUND expects task name in message
                   }
 
-                case task_record<number>::task_type::output:
+                case task_type::output:
                   {
                     output_task_record<number>* out_rec = dynamic_cast< output_task_record<number>* >(record.get());
 
@@ -394,7 +394,7 @@ namespace transport
                     break;
                   }
 
-                case task_record<number>::task_type::postintegration:
+                case task_type::postintegration:
                   {
                     throw runtime_exception(exception_type::RECORD_NOT_FOUND, payload.get_task_name());    // RECORD_NOT_FOUND expects task name in message
                   }
@@ -498,15 +498,7 @@ namespace transport
 
                     for(unsigned int i = 0; i < list.size(); ++i)
                       {
-                        typename derived_data::derived_product<number>* product = list[i].get_product();
-
-                        assert(product != nullptr);
-                        if(product == nullptr)
-                          {
-                            std::ostringstream msg;
-                            msg << CPPTRANSPORT_TASK_NULL_DERIVED_PRODUCT << " '" << tk->get_name() << "'";
-                            throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
-                          }
+                        typename derived_data::derived_product<number>& product = list[i].get_product();
 
                         // merge command-line supplied tags with tags specified in the task
                         std::list<std::string> task_tags = list[i].get_tags();
@@ -514,14 +506,14 @@ namespace transport
 
                         task_tags.splice(task_tags.end(), command_line_tags);
 
-                        BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::log_severity_level::normal) << "-- Processing derived product '" << product->get_name() << "'";
+                        BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::log_severity_level::normal) << "-- Processing derived product '" << product.get_name() << "'";
 
                         std::list<std::string> this_groups;
 
                         try
                           {
                             boost::timer::cpu_timer derive_timer;
-                            this_groups = product->derive(*pipe, task_tags, this->local_env, this->arg_cache);
+                            this_groups = product.derive(*pipe, task_tags, this->local_env, this->arg_cache);
                             content_groups.merge(this_groups);
                             derive_timer.stop();
                             processing_time += derive_timer.elapsed().wall;
@@ -534,14 +526,14 @@ namespace transport
                             BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::log_severity_level::error) << "!! Exception reported while processing: code=" << static_cast<int>(xe.get_exception_code()) << ": " << xe.what();
 
                             std::ostringstream msg;
-                            msg << CPPTRANSPORT_SLAVE_ERROR_PROCESSING_PRODUCT << " '" << product->get_name() << "'";
+                            msg << CPPTRANSPORT_SLAVE_ERROR_PROCESSING_PRODUCT << " '" << product.get_name() << "'";
                             this->world.isend(MPI::RANK_MASTER, MPI::REPORT_ERROR, MPI::error_report(msg.str()));
                           }
 
                         // check that the datapipe was correctly detached
                         if(pipe->is_attached())
                           {
-                            BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::log_severity_level::error) << "!! Task manager detected that datapipe was not correctly detached after generating derived product '" << product->get_name() << "'";
+                            BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::log_severity_level::error) << "!! Task manager detected that datapipe was not correctly detached after generating derived product '" << product.get_name() << "'";
                             pipe->detach();
                           }
 
@@ -620,21 +612,21 @@ namespace transport
 
             switch(record->get_type())
               {
-                case task_record<number>::task_type::integration:
+                case task_type::integration:
                   {
 //                    std::ostringstream msg;
 //                    msg << CPPTRANSPORT_REPO_TASK_IS_INTEGRATION << " '" << payload.get_task_name() << "'";
                     throw runtime_exception(exception_type::RECORD_NOT_FOUND, payload.get_task_name());    // RECORD_NOT_FOUND expects task name in message
                   }
 
-                case task_record<number>::task_type::output:
+                case task_type::output:
                   {
 //                    std::ostringstream msg;
 //                    msg << CPPTRANSPORT_REPO_TASK_IS_OUTPUT << " '" << payload.get_task_name() << "'";
                     throw runtime_exception(exception_type::RECORD_NOT_FOUND, payload.get_task_name());    // RECORD_NOT_FOUND expects task name in message
                   }
 
-                case task_record<number>::task_type::postintegration:
+                case task_type::postintegration:
                   {
                     postintegration_task_record<number>* pint_rec = dynamic_cast< postintegration_task_record<number>* >(record.get());
 

@@ -110,7 +110,7 @@ namespace transport
 
     template <typename number>
     std::unique_ptr< integration_writer<number> >
-    repository<number>::new_integration_task_content(integration_task_record<number>* rec, const std::list<std::string>& tags,
+    repository<number>::new_integration_task_content(integration_task_record<number>& rec, const std::list<std::string>& tags,
                                                      unsigned int worker, unsigned int workgroup, std::string suffix)
       {
         std::unique_ptr< repository_integration_writer_commit<number> > commit = std::make_unique< repository_integration_writer_commit<number> >(*this);
@@ -122,7 +122,7 @@ namespace transport
 
     template <typename number>
     std::unique_ptr< integration_writer<number> >
-    repository<number>::recover_integration_task_content(const std::string& name, integration_task_record<number>* rec,
+    repository<number>::recover_integration_task_content(const std::string& name, integration_task_record<number>& rec,
                                                          const boost::filesystem::path& output, const boost::filesystem::path& sql_path,
                                                          const boost::filesystem::path& logdir_path, const boost::filesystem::path& tempdir_path,
                                                          unsigned int worker, unsigned int workgroup)
@@ -136,7 +136,7 @@ namespace transport
 
     template <typename number>
     std::unique_ptr< derived_content_writer<number> >
-    repository<number>::new_output_task_content(output_task_record<number>* rec, const std::list<std::string>& tags,
+    repository<number>::new_output_task_content(output_task_record<number>& rec, const std::list<std::string>& tags,
                                                 unsigned int worker, std::string suffix)
       {
         std::unique_ptr< repository_derived_content_writer_commit<number> > commit = std::make_unique< repository_derived_content_writer_commit<number> >(*this);
@@ -148,7 +148,7 @@ namespace transport
 
     template <typename number>
     std::unique_ptr< derived_content_writer<number> >
-    repository<number>::recover_output_task_content(const std::string& name, output_task_record<number>* rec,
+    repository<number>::recover_output_task_content(const std::string& name, output_task_record<number>& rec,
                                                     const boost::filesystem::path& output, const boost::filesystem::path& logdir_path,
                                                     const boost::filesystem::path& tempdir_path, unsigned int worker)
       {
@@ -161,7 +161,7 @@ namespace transport
 
     template <typename number>
     std::unique_ptr< postintegration_writer<number> >
-    repository<number>::new_postintegration_task_content(postintegration_task_record<number>* rec, const std::list<std::string>& tags,
+    repository<number>::new_postintegration_task_content(postintegration_task_record<number>& rec, const std::list<std::string>& tags,
                                                          unsigned int worker, std::string suffix)
       {
         std::unique_ptr< repository_postintegration_writer_commit<number> > commit = std::make_unique< repository_postintegration_writer_commit<number> >(*this);
@@ -173,7 +173,7 @@ namespace transport
 
     template <typename number>
     std::unique_ptr< postintegration_writer<number> >
-    repository<number>::recover_postintegration_task_content(const std::string& name, postintegration_task_record<number>* rec,
+    repository<number>::recover_postintegration_task_content(const std::string& name, postintegration_task_record<number>& rec,
                                                              const boost::filesystem::path& output, const boost::filesystem::path& sql_path,
                                                              const boost::filesystem::path& logdir_path, const boost::filesystem::path& tempdir_path,
                                                              unsigned int worker)
@@ -187,7 +187,7 @@ namespace transport
 
     template <typename number>
     std::unique_ptr< integration_writer<number> >
-    repository<number>::base_new_integration_task_content(integration_task_record<number>* rec, const std::list<std::string>& tags,
+    repository<number>::base_new_integration_task_content(integration_task_record<number>& rec, const std::list<std::string>& tags,
                                                           unsigned int worker, unsigned int workgroup,
                                                           std::unique_ptr< repository_integration_writer_commit<number> > commit,
                                                           std::unique_ptr< repository_integration_writer_abort<number> > abort,
@@ -197,8 +197,8 @@ namespace transport
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
 
         // request a name for this content group
-        boost::filesystem::path parent_path = static_cast<boost::filesystem::path>(CPPTRANSPORT_REPO_TASKOUTPUT_LEAF) / rec->get_name();
-        std::string output_leaf = this->reserve_content_name(rec->get_name(), parent_path, now, suffix);
+        boost::filesystem::path parent_path = static_cast<boost::filesystem::path>(CPPTRANSPORT_REPO_TASKOUTPUT_LEAF) / rec.get_name();
+        std::string output_leaf = this->reserve_content_name(rec.get_name(), parent_path, now, suffix);
 
         boost::filesystem::path output_path = parent_path / output_leaf;
         boost::filesystem::path sql_path    = output_path / CPPTRANSPORT_REPO_DATABASE_LEAF;
@@ -230,7 +230,7 @@ namespace transport
 
     template <typename number>
     std::unique_ptr <integration_writer<number>>
-    repository<number>::base_recover_integration_task_content(const std::string& name, integration_task_record<number>* rec,
+    repository<number>::base_recover_integration_task_content(const std::string& name, integration_task_record<number>& rec,
                                                               const boost::filesystem::path& output_path, const boost::filesystem::path& sql_path,
                                                               const boost::filesystem::path& logdir_path, const boost::filesystem::path& tempdir_path,
                                                               unsigned int worker, unsigned int workgroup,
@@ -256,7 +256,7 @@ namespace transport
 
     template <typename number>
     std::unique_ptr< derived_content_writer<number> >
-    repository<number>::base_new_output_task_content(output_task_record<number>* rec, const std::list<std::string>& tags, unsigned int worker,
+    repository<number>::base_new_output_task_content(output_task_record<number>& rec, const std::list<std::string>& tags, unsigned int worker,
                                                      std::unique_ptr< repository_derived_content_writer_commit<number> > commit,
                                                      std::unique_ptr< repository_derived_content_writer_abort<number> > abort,
                                                      std::string suffix)
@@ -265,8 +265,8 @@ namespace transport
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
 
         // request a name for this content group
-        boost::filesystem::path parent_path = static_cast<boost::filesystem::path>(CPPTRANSPORT_REPO_TASKOUTPUT_LEAF) / rec->get_name();
-        std::string output_leaf = this->reserve_content_name(rec->get_name(), parent_path, now, suffix);
+        boost::filesystem::path parent_path = static_cast<boost::filesystem::path>(CPPTRANSPORT_REPO_TASKOUTPUT_LEAF) / rec.get_name();
+        std::string output_leaf = this->reserve_content_name(rec.get_name(), parent_path, now, suffix);
 
         boost::filesystem::path output_path = parent_path / output_leaf;
 
@@ -295,7 +295,7 @@ namespace transport
 
     template <typename number>
     std::unique_ptr< derived_content_writer<number> >
-    repository<number>::base_recover_output_task_content(const std::string& name, output_task_record<number>* rec,
+    repository<number>::base_recover_output_task_content(const std::string& name, output_task_record<number>& rec,
                                                          const boost::filesystem::path& output_path,
                                                          const boost::filesystem::path& logdir_path, const boost::filesystem::path& tempdir_path,
                                                          unsigned int worker,
@@ -320,7 +320,7 @@ namespace transport
 
     template <typename number>
     std::unique_ptr< postintegration_writer<number> >
-    repository<number>::base_new_postintegration_task_content(postintegration_task_record<number>* rec, const std::list<std::string>& tags, unsigned int worker,
+    repository<number>::base_new_postintegration_task_content(postintegration_task_record<number>& rec, const std::list<std::string>& tags, unsigned int worker,
                                                               std::unique_ptr< repository_postintegration_writer_commit<number> > commit,
                                                               std::unique_ptr< repository_postintegration_writer_abort<number> > abort,
                                                               std::string suffix)
@@ -329,8 +329,8 @@ namespace transport
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
 
         // request a name for this content group
-        boost::filesystem::path parent_path = static_cast<boost::filesystem::path>(CPPTRANSPORT_REPO_TASKOUTPUT_LEAF) / rec->get_name();
-        std::string output_leaf = this->reserve_content_name(rec->get_name(), parent_path, now, suffix);
+        boost::filesystem::path parent_path = static_cast<boost::filesystem::path>(CPPTRANSPORT_REPO_TASKOUTPUT_LEAF) / rec.get_name();
+        std::string output_leaf = this->reserve_content_name(rec.get_name(), parent_path, now, suffix);
 
         boost::filesystem::path output_path = parent_path / output_leaf;
         boost::filesystem::path sql_path    = output_path / CPPTRANSPORT_REPO_DATABASE_LEAF;
@@ -361,7 +361,7 @@ namespace transport
 
     template <typename number>
     std::unique_ptr< postintegration_writer<number> >
-    repository<number>::base_recover_postintegration_task_content(const std::string& name, postintegration_task_record<number>* rec,
+    repository<number>::base_recover_postintegration_task_content(const std::string& name, postintegration_task_record<number>& rec,
                                                                   const boost::filesystem::path& output_path, const boost::filesystem::path& sql_path,
                                                                   const boost::filesystem::path& logdir_path, const boost::filesystem::path& tempdir_path,
                                                                   unsigned int worker,
@@ -413,9 +413,16 @@ namespace transport
     template <typename number>
     void repository<number>::close_integration_writer(integration_writer<number>& writer)
       {
-        integration_task_record<number>* rec = writer.get_record();
-        const std::list<std::string>& tags = writer.get_tags();
+        // TODO: OPEN TRANSACTION ON DATABASE
+
+        // read record from database
+        std::unique_ptr< task_record<number> > raw_rec = this->query_task(writer.get_task_name());
+        integration_task_record<number>* rec = dynamic_cast< integration_task_record<number>* >(raw_rec.get());
+
         assert(rec != nullptr);
+        if(rec == nullptr) throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_RECORD_CAST_FAILED);
+
+        const std::list<std::string>& tags = writer.get_tags();
 
         // set up notes for the new output record, if it exists
         std::list<std::string> notes;
@@ -479,7 +486,7 @@ namespace transport
               }
 
             std::ostringstream msg1;
-            msg1 << CPPTRANSPORT_REPO_FAILED_OUTPUT_GROUP_A << " '" << writer.get_record()->get_task()->get_name() << "': " << CPPTRANSPORT_REPO_FAILED_OUTPUT_GROUP_B;
+            msg1 << CPPTRANSPORT_REPO_FAILED_OUTPUT_GROUP_A << " '" << writer.get_task_name() << "': " << CPPTRANSPORT_REPO_FAILED_OUTPUT_GROUP_B;
             this->error(msg1.str());
 
             std::ostringstream msg2;
@@ -493,8 +500,15 @@ namespace transport
     template <typename number>
     void repository<number>::close_postintegration_writer(postintegration_writer<number>& writer)
       {
-        // get repository record for this task
-        postintegration_task_record<number>* rec = writer.get_record();
+        // TODO: OPEN TRANSACTION ON DATABASE
+
+        // read record from database
+        std::unique_ptr< task_record<number> > raw_rec = this->query_task(writer.get_task_name());
+        postintegration_task_record<number>* rec = dynamic_cast< postintegration_task_record<number>* >(raw_rec.get());
+
+        assert(rec != nullptr);
+        if(rec == nullptr) throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_RECORD_CAST_FAILED);
+
         const std::list<std::string>& tags = writer.get_tags();
 
         // convert to task class
@@ -567,7 +581,7 @@ namespace transport
               }
 
             std::ostringstream msg1;
-            msg1 << CPPTRANSPORT_REPO_FAILED_POSTINT_GROUP_A << " '" << writer.get_record()->get_task()->get_name() << "': " << CPPTRANSPORT_REPO_FAILED_POSTINT_GROUP_B;
+            msg1 << CPPTRANSPORT_REPO_FAILED_POSTINT_GROUP_A << " '" << writer.get_task_name() << "': " << CPPTRANSPORT_REPO_FAILED_POSTINT_GROUP_B;
             this->error(msg1.str());
 
             std::ostringstream msg2;
@@ -581,9 +595,16 @@ namespace transport
     template <typename number>
     void repository<number>::close_derived_content_writer(derived_content_writer<number>& writer)
       {
-        output_task_record<number>* rec = writer.get_record();
-        const std::list<std::string>& tags = writer.get_tags();
+        // TODO: OPEN TRANSACTION ON DATABASE
+
+        // read record from database
+        std::unique_ptr< task_record<number> > raw_rec = this->query_task(writer.get_task_name());
+        output_task_record<number>* rec = dynamic_cast< output_task_record<number>* >(raw_rec.get());
+
         assert(rec != nullptr);
+        if(rec == nullptr) throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_RECORD_CAST_FAILED);
+
+        const std::list<std::string>& tags = writer.get_tags();
 
         // create a new, empty output group record
         std::unique_ptr< output_group_record<output_payload> >
@@ -634,7 +655,7 @@ namespace transport
               }
 
             std::ostringstream msg1;
-            msg1 << CPPTRANSPORT_REPO_FAILED_CONTENT_GROUP_A << " '" << writer.get_record()->get_task()->get_name() << "': " << CPPTRANSPORT_REPO_FAILED_CONTENT_GROUP_B;
+            msg1 << CPPTRANSPORT_REPO_FAILED_CONTENT_GROUP_A << " '" << writer.get_task_name() << "': " << CPPTRANSPORT_REPO_FAILED_CONTENT_GROUP_B;
             this->error(msg1.str());
 
             std::ostringstream msg2;

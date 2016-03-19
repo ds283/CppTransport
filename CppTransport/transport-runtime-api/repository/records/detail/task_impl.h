@@ -12,7 +12,16 @@ namespace transport
 
     constexpr auto CPPTRANSPORT_NODE_TASK_OUTPUT_GROUPS = "output-groups";
 
+    constexpr auto CPPTRANSPORT_NODE_RECORD_INTEGRATION_TASK_TYPE = "type";
+    constexpr auto CPPTRANSPORT_NODE_RECORD_INTEGRATION_TASK_TWOPF = "twopf";
+    constexpr auto CPPTRANSPORT_NODE_RECORD_INTEGRATION_TASK_THREEPF = "threepf";
     constexpr auto CPPTRANSPORT_NODE_RECORD_INTEGRATION_TASK_KCONFIG_DATABASE = "kconfig-database";
+
+    constexpr auto CPPTRANSPORT_NODE_RECORD_POSTINTEGRATION_TASK_TYPE = "type";
+    constexpr auto CPPTRANSPORT_NODE_RECORD_POSTINTEGRATION_TASK_TWOPF = "twopf";
+    constexpr auto CPPTRANSPORT_NODE_RECORD_POSTINTEGRATION_TASK_THREEPF = "threepf";
+    constexpr auto CPPTRANSPORT_NODE_RECORD_POSTINTEGRATION_TASK_FNL = "fNL";
+
 
     // GENERIC TASK RECORD
 
@@ -59,8 +68,19 @@ namespace transport
 
 
     template <typename number>
-    integration_task_record<number>::integration_task_record(const integration_task<number>& t, repository_record::handler_package& pkg)
+    integration_task_record<number>::integration_task_record(const twopf_task<number>& t, repository_record::handler_package& pkg)
       : task_record<number>(t.get_name(), pkg),
+        type(integration_task_type::twopf),
+        tk(dynamic_cast<integration_task<number>*>(t.clone()))
+      {
+        assert(tk != nullptr);
+      }
+
+
+    template <typename number>
+    integration_task_record<number>::integration_task_record(const threepf_task<number>& t, repository_record::handler_package& pkg)
+      : task_record<number>(t.get_name(), pkg),
+        type(integration_task_type::threepf),
         tk(dynamic_cast<integration_task<number>*>(t.clone()))
       {
         assert(tk != nullptr);
@@ -71,6 +91,7 @@ namespace transport
     integration_task_record<number>::integration_task_record(const integration_task_record<number>& obj)
       : task_record<number>(obj),
         tk(dynamic_cast<integration_task<number>*>(obj.tk->clone())),
+        type(obj.type),
         kconfig_db(obj.kconfig_db)
       {
         assert(tk != nullptr);
@@ -84,6 +105,18 @@ namespace transport
       {
         // deserialize location of database
         kconfig_db = reader[CPPTRANSPORT_NODE_RECORD_INTEGRATION_TASK_KCONFIG_DATABASE].asString();
+
+        // deserialize task type
+        std::string task_type = reader[CPPTRANSPORT_NODE_RECORD_INTEGRATION_TASK_TYPE].asString();
+
+        if(task_type == CPPTRANSPORT_NODE_RECORD_INTEGRATION_TASK_TWOPF)        type = integration_task_type::twopf;
+        else if(task_type == CPPTRANSPORT_NODE_RECORD_INTEGRATION_TASK_THREEPF) type = integration_task_type::threepf;
+        else
+          {
+            std::ostringstream msg;
+            msg << CPPTRANSPORT_REPO_FAIL_INTEGRATION_TASK_TYPE << " '" << task_type << "'";
+            throw runtime_exception(exception_type::SERIALIZATION_ERROR, msg.str());
+          }
 
         boost::filesystem::path abs_database = repo_root / kconfig_db;
 
@@ -108,6 +141,21 @@ namespace transport
       {
         writer[CPPTRANSPORT_NODE_RECORD_TYPE] = std::string(CPPTRANSPORT_NODE_RECORD_INTEGRATION_TASK);
 
+        switch(this->type)
+          {
+            case integration_task_type::twopf:
+              {
+                writer[CPPTRANSPORT_NODE_RECORD_INTEGRATION_TASK_TYPE] = std::string(CPPTRANSPORT_NODE_RECORD_INTEGRATION_TASK_TWOPF);
+                break;
+              }
+
+            case integration_task_type::threepf:
+              {
+                writer[CPPTRANSPORT_NODE_RECORD_INTEGRATION_TASK_TYPE] = std::string(CPPTRANSPORT_NODE_RECORD_INTEGRATION_TASK_THREEPF);
+                break;
+              }
+          }
+
         writer[CPPTRANSPORT_NODE_RECORD_INTEGRATION_TASK_KCONFIG_DATABASE] = this->kconfig_db.string();
 
         this->tk->serialize(writer);
@@ -129,6 +177,8 @@ namespace transport
 
         this->tk->write_kconfig_database(handle);
 
+        // perform routine maintenance on kconfig database
+        // should be quick, since the kconfig database isn't expected to be very large
         sqlite3_operations::exec(handle, "VACUUM;");
         sqlite3_close(handle);
       }
@@ -138,9 +188,30 @@ namespace transport
 
 
     template <typename number>
-    postintegration_task_record<number>::postintegration_task_record(const postintegration_task<number>& t, repository_record::handler_package& pkg)
+    postintegration_task_record<number>::postintegration_task_record(const zeta_twopf_task<number>& t, repository_record::handler_package& pkg)
       : task_record<number>(t.get_name(), pkg),
-        tk(dynamic_cast<postintegration_task<number>*>(t.clone()))
+        tk(dynamic_cast<postintegration_task<number>*>(t.clone())),
+        type(postintegration_task_type::twopf)
+      {
+        assert(tk);
+      }
+
+
+    template <typename number>
+    postintegration_task_record<number>::postintegration_task_record(const zeta_threepf_task<number>& t, repository_record::handler_package& pkg)
+      : task_record<number>(t.get_name(), pkg),
+        tk(dynamic_cast<postintegration_task<number>*>(t.clone())),
+        type(postintegration_task_type::threepf)
+      {
+        assert(tk);
+      }
+
+
+    template <typename number>
+    postintegration_task_record<number>::postintegration_task_record(const fNL_task<number>& t, repository_record::handler_package& pkg)
+      : task_record<number>(t.get_name(), pkg),
+        tk(dynamic_cast<postintegration_task<number>*>(t.clone())),
+        type(postintegration_task_type::fNL)
       {
         assert(tk);
       }
@@ -149,7 +220,8 @@ namespace transport
     template <typename number>
     postintegration_task_record<number>::postintegration_task_record(const postintegration_task_record<number>& obj)
       : task_record<number>(obj),
-        tk(dynamic_cast<postintegration_task<number>*>(obj.tk->clone()))
+        tk(dynamic_cast<postintegration_task<number>*>(obj.tk->clone())),
+        type(obj.type)
       {
         assert(tk);
       }
@@ -162,6 +234,18 @@ namespace transport
       {
         assert(tk);
         if(!tk) throw runtime_exception(exception_type::SERIALIZATION_ERROR, CPPTRANSPORT_REPO_TASK_DESERIALIZE_FAIL);
+
+        std::string task_type = reader[CPPTRANSPORT_NODE_RECORD_POSTINTEGRATION_TASK_TYPE].asString();
+
+        if(task_type == CPPTRANSPORT_NODE_RECORD_POSTINTEGRATION_TASK_TWOPF)        this->type = postintegration_task_type::twopf;
+        else if(task_type == CPPTRANSPORT_NODE_RECORD_POSTINTEGRATION_TASK_THREEPF) this->type = postintegration_task_type::threepf;
+        else if(task_type == CPPTRANSPORT_NODE_RECORD_POSTINTEGRATION_TASK_FNL)     this->type = postintegration_task_type::fNL;
+        else
+          {
+            std::ostringstream msg;
+            msg << CPPTRANSPORT_REPO_FAIL_INTEGRATION_TASK_TYPE << " '" << task_type << "'";
+            throw runtime_exception(exception_type::SERIALIZATION_ERROR, msg.str());
+          }
       }
 
 
@@ -169,6 +253,28 @@ namespace transport
     void postintegration_task_record<number>::serialize(Json::Value& writer) const
       {
         writer[CPPTRANSPORT_NODE_RECORD_TYPE] = std::string(CPPTRANSPORT_NODE_RECORD_POSTINTEGRATION_TASK);
+
+        switch(this->type)
+          {
+            case postintegration_task_type::twopf:
+              {
+                writer[CPPTRANSPORT_NODE_RECORD_POSTINTEGRATION_TASK_TYPE] = std::string(CPPTRANSPORT_NODE_RECORD_POSTINTEGRATION_TASK_TWOPF);
+                break;
+              }
+
+            case postintegration_task_type::threepf:
+              {
+                writer[CPPTRANSPORT_NODE_RECORD_POSTINTEGRATION_TASK_TYPE] = std::string(CPPTRANSPORT_NODE_RECORD_POSTINTEGRATION_TASK_THREEPF);
+                break;
+              }
+
+            case postintegration_task_type::fNL:
+              {
+                writer[CPPTRANSPORT_NODE_RECORD_POSTINTEGRATION_TASK_TYPE] = std::string(CPPTRANSPORT_NODE_RECORD_POSTINTEGRATION_TASK_FNL);
+                break;
+              }
+          }
+
         this->tk->serialize(writer);
         this->task_record<number>::serialize(writer);
       }

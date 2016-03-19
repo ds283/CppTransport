@@ -19,7 +19,9 @@
 #define CPPTRANSPORT_OUTPUT_TASK_NAME_COLLISION_B     "to output task"
 
 #define CPPTRANSPORT_TASK_TIMES                       "Sampling times: "
-#define CPPTRANSPORT_SERIALIZE_BACKGROUND_TASK        "Internal error: attempt to serialize background 'task' object"
+#define CPPTRANSPORT_SERIALIZE_BACKGROUND_TASK        "Internal error: attempt to serialize background task object"
+#define CPPTRANSPORT_KCONFIG_BACKGROUND_TASK          "Internal error: attempt to query background task object for k-configuration database"
+#define CPPTRANSPORT_QUERY_BACKGROUND_TASK            "Internal error: attempt to query background task object for type"
 
 #define CPPTRANSPORT_OUTPUT_ELEMENTS                  "Derived data tasks: "
 #define CPPTRANSPORT_OUTPUT_ELEMENT_TASK              "task"

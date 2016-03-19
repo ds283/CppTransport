@@ -72,13 +72,16 @@ namespace transport
         virtual void commit(const initial_conditions<number>& ics) = 0;
 
         //! Write an integration task to the database.
-        virtual void commit(const integration_task<number>& tk) = 0;
+        virtual void commit(const twopf_task<number>& tk) = 0;
+        virtual void commit(const threepf_task<number>& tk) = 0;
 
         //! Write an output task to the database
         virtual void commit(const output_task<number>& tk) = 0;
 
         //! Write a postintegration task to the database
-        virtual void commit(const postintegration_task<number>& tk) = 0;
+        virtual void commit(const zeta_twopf_task<number>& tk) = 0;
+        virtual void commit(const zeta_threepf_task<number>& tk) = 0;
+        virtual void commit(const fNL_task<number>& tk) = 0;
 
         //! Write a derived product specification
         virtual void commit(const derived_data::derived_product<number>& d) = 0;
@@ -115,36 +118,36 @@ namespace transport
       public:
 
         //! Generate a writer object for new integration output
-        virtual std::unique_ptr< integration_writer<number> > new_integration_task_content(integration_task_record<number>* rec,
+        virtual std::unique_ptr< integration_writer<number> > new_integration_task_content(integration_task_record<number>& rec,
                                                                                            const std::list<std::string>& tags,
                                                                                            unsigned int worker, unsigned int workgroup, std::string suffix="");
 
         //! Generate a writer object for new derived-content output
-        virtual std::unique_ptr< derived_content_writer<number> > new_output_task_content(output_task_record<number>* rec,
+        virtual std::unique_ptr< derived_content_writer<number> > new_output_task_content(output_task_record<number>& rec,
                                                                                           const std::list<std::string>& tags,
                                                                                           unsigned int worker, std::string suffix="");
 
         //! Generate a writer object for new postintegration output
-        virtual std::unique_ptr< postintegration_writer<number> > new_postintegration_task_content(postintegration_task_record<number>* rec,
+        virtual std::unique_ptr< postintegration_writer<number> > new_postintegration_task_content(postintegration_task_record<number>& rec,
                                                                                                    const std::list<std::string>& tags,
                                                                                                    unsigned int worker, std::string suffix="");
 
       protected:
 
         //! Generate a writer object for integration recovery
-        virtual std::unique_ptr< integration_writer<number> > recover_integration_task_content(const std::string& name, integration_task_record<number>* rec,
+        virtual std::unique_ptr< integration_writer<number> > recover_integration_task_content(const std::string& name, integration_task_record<number>& rec,
                                                                                                const boost::filesystem::path& output, const boost::filesystem::path& sql_path,
                                                                                                const boost::filesystem::path& logdir_path, const boost::filesystem::path& tempdir_path,
                                                                                                unsigned int worker, unsigned int workgroup);
 
         //! Generate a writer object for postintegration recovery
-        virtual std::unique_ptr< postintegration_writer<number> > recover_postintegration_task_content(const std::string& name, postintegration_task_record<number>* rec,
+        virtual std::unique_ptr< postintegration_writer<number> > recover_postintegration_task_content(const std::string& name, postintegration_task_record<number>& rec,
                                                                                                        const boost::filesystem::path& output, const boost::filesystem::path& sql_path,
                                                                                                        const boost::filesystem::path& logdir_path, const boost::filesystem::path& tempdir_path,
                                                                                                        unsigned int worker);
 
         //! Generate a writer object for output-task recovery
-        virtual std::unique_ptr< derived_content_writer<number> > recover_output_task_content(const std::string& name, output_task_record<number>* rec,
+        virtual std::unique_ptr< derived_content_writer<number> > recover_output_task_content(const std::string& name, output_task_record<number>& rec,
                                                                                               const boost::filesystem::path& output,
                                                                                               const boost::filesystem::path& logdir_path, const boost::filesystem::path& tempdir_path,
                                                                                               unsigned int worker);
@@ -156,7 +159,7 @@ namespace transport
         virtual std::string reserve_content_name(const std::string& tk, boost::filesystem::path& parent_path, boost::posix_time::ptime& now, const std::string& suffix) = 0;
 
         //! generate an integration writer
-        std::unique_ptr< integration_writer<number> > base_new_integration_task_content(integration_task_record<number>* rec,
+        std::unique_ptr< integration_writer<number> > base_new_integration_task_content(integration_task_record<number>& rec,
                                                                                         const std::list<std::string>& tags,
                                                                                         unsigned int worker, unsigned int workgroup,
                                                                                         std::unique_ptr< repository_integration_writer_commit<number> > commit,
@@ -164,7 +167,7 @@ namespace transport
                                                                                         std::string suffix="");
 
         //! generate an integration writer for recovery
-        std::unique_ptr< integration_writer<number> > base_recover_integration_task_content(const std::string& name, integration_task_record<number>* rec,
+        std::unique_ptr< integration_writer<number> > base_recover_integration_task_content(const std::string& name, integration_task_record<number>& rec,
                                                                                             const boost::filesystem::path& output_path, const boost::filesystem::path& sql_path,
                                                                                             const boost::filesystem::path& logdir_path, const boost::filesystem::path& tempdir_path,
                                                                                             unsigned int worker, unsigned int workgroup,
@@ -172,27 +175,27 @@ namespace transport
                                                                                             std::unique_ptr< repository_integration_writer_abort<number> > abort);
 
         //! generate a derived content writer
-        std::unique_ptr< derived_content_writer<number> > base_new_output_task_content(output_task_record<number>* rec,
+        std::unique_ptr< derived_content_writer<number> > base_new_output_task_content(output_task_record<number>& rec,
                                                                                        const std::list<std::string>& tags, unsigned int worker,
                                                                                        std::unique_ptr< repository_derived_content_writer_commit<number> > commit,
                                                                                        std::unique_ptr< repository_derived_content_writer_abort<number> > abort,
                                                                                        std::string suffix="");
 
         //! generate a postintegration writer for recovery
-        std::unique_ptr < derived_content_writer<number> > base_recover_output_task_content(const std::string& name, output_task_record<number>* rec,
+        std::unique_ptr < derived_content_writer<number> > base_recover_output_task_content(const std::string& name, output_task_record<number>& rec,
                                                                                             const boost::filesystem::path& output_path, const boost::filesystem::path& logdir_path,
                                                                                             const boost::filesystem::path& tempdir_path, unsigned int worker,
                                                                                             std::unique_ptr< repository_derived_content_writer_commit<number> > commit,
                                                                                             std::unique_ptr< repository_derived_content_writer_abort<number> > abort);
 
-        std::unique_ptr< postintegration_writer<number> > base_new_postintegration_task_content(postintegration_task_record<number>* rec,
+        std::unique_ptr< postintegration_writer<number> > base_new_postintegration_task_content(postintegration_task_record<number>& rec,
                                                                                                 const std::list<std::string>& tags, unsigned int worker,
                                                                                                 std::unique_ptr< repository_postintegration_writer_commit<number> > commit,
                                                                                                 std::unique_ptr< repository_postintegration_writer_abort<number> > abort,
                                                                                                 std::string suffix="");
 
         //! generate a postintegration writer for recovery
-        std::unique_ptr < postintegration_writer<number> > base_recover_postintegration_task_content(const std::string& name, postintegration_task_record<number>* rec,
+        std::unique_ptr < postintegration_writer<number> > base_recover_postintegration_task_content(const std::string& name, postintegration_task_record<number>& rec,
                                                                                                      const boost::filesystem::path& output_path, const boost::filesystem::path& sql_path,
                                                                                                      const boost::filesystem::path& logdir_path, const boost::filesystem::path& tempdir_path,
                                                                                                      unsigned int worker,
@@ -273,13 +276,16 @@ namespace transport
         virtual std::unique_ptr< package_record<number> > package_record_factory(const initial_conditions<number>& ics) = 0;
 
         //! Create a new integration task record from an explicit object
-        virtual std::unique_ptr< integration_task_record<number> > integration_task_record_factory(const integration_task<number>& tk) = 0;
+        virtual std::unique_ptr< integration_task_record<number> > integration_task_record_factory(const twopf_task<number>& tk) = 0;
+        virtual std::unique_ptr< integration_task_record<number> > integration_task_record_factory(const threepf_task<number>& tk) = 0;
 
         //! Create a new output task record from an explicit object
         virtual std::unique_ptr< output_task_record<number> > output_task_record_factory(const output_task<number>& tk) = 0;
 
         //! Create a postintegration task record from an explicit object
-        virtual std::unique_ptr< postintegration_task_record<number> > postintegration_task_record_factory(const postintegration_task<number>& tk) = 0;
+        virtual std::unique_ptr< postintegration_task_record<number> > postintegration_task_record_factory(const zeta_twopf_task<number>& tk) = 0;
+        virtual std::unique_ptr< postintegration_task_record<number> > postintegration_task_record_factory(const zeta_threepf_task<number>& tk) = 0;
+        virtual std::unique_ptr< postintegration_task_record<number> > postintegration_task_record_factory(const fNL_task<number>& tk) = 0;
 
         //! Create a new derived product record from explicit object
         virtual std::unique_ptr< derived_product_record<number> > derived_product_record_factory(const derived_data::derived_product<number>& prod) = 0;

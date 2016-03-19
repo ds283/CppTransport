@@ -34,6 +34,17 @@ namespace transport
         virtual ~background_task() = default;
 
 
+        // INTERFACE
+
+      public:
+
+        //! supply 'derivable_task' interface
+        task_type get_type() const override final { return task_type::integration; }
+
+        //! does not accept task_type queries
+        integration_task_type get_task_type() const override final { throw std::runtime_error(CPPTRANSPORT_QUERY_BACKGROUND_TASK); }
+
+
         // DISABLE SERIALIZATION
 
       public:
@@ -42,11 +53,16 @@ namespace transport
         //! Only twopf and threepf integration tasks can be serialized.
         virtual void serialize(Json::Value& writer) const override { throw std::runtime_error(CPPTRANSPORT_SERIALIZE_BACKGROUND_TASK); }
 
+
+        // DISABLE K-CONFIGURATION DATABASE
+
+      public:
+
 		    //! Throw an exception if an attempt is made to write a background k-configuration database
-		    virtual void write_kconfig_database(sqlite3* handle) override { throw std::runtime_error(CPPTRANSPORT_SERIALIZE_BACKGROUND_TASK); }
+		    virtual void write_kconfig_database(sqlite3* handle) override { throw std::runtime_error(CPPTRANSPORT_KCONFIG_BACKGROUND_TASK); }
 
         //! Throw an exception if an attempt is made to write a background k-configuration database
-		    virtual bool is_kconfig_database_modified() const override { throw std::runtime_error(CPPTRANSPORT_SERIALIZE_BACKGROUND_TASK); }
+		    virtual bool is_kconfig_database_modified() const override { throw std::runtime_error(CPPTRANSPORT_KCONFIG_BACKGROUND_TASK); }
 
 
         // CLONE

@@ -101,16 +101,34 @@ namespace transport
         virtual void commit(const initial_conditions<number>& ics) override;
 
         //! Write an integration task to the database.
-        virtual void commit(const integration_task<number>& tk) override;
+        virtual void commit(const twopf_task<number>& tk) override;
+        virtual void commit(const threepf_task<number>& tk) override;
 
         //! Write an output task to the database
         virtual void commit(const output_task<number>& tk) override;
 
         //! Write a postintegration task to the database
-        virtual void commit(const postintegration_task<number>& tk) override;
+        virtual void commit(const zeta_twopf_task<number>& tk) override;
+        virtual void commit(const zeta_threepf_task<number>& tk) override;
+        virtual void commit(const fNL_task<number>& tk) override;
 
         //! Write a derived product specification
         virtual void commit(const derived_data::derived_product<number>& d) override;
+
+      protected:
+
+        //! Generic commit method for integration task; public commit methods delegate to this
+        template <typename TaskType>
+        void commit_integration_task(const TaskType& tk);
+
+        //! Generic commit method for postintegration task; public commit methods delegate to this
+        template <typename TaskType>
+        void commit_postintegration_task(const TaskType& tk);
+
+        //! Autocommit a derivable task encountered as part of another task specification
+        void autocommit(derivable_task <number>& tk, std::string parent,
+                        std::string commit_int_A, std::string commit_int_B,
+                        std::string commit_pint_A, std::string commit_pint_B);
 
 
         // READ RECORDS FROM THE DATABASE -- implements a 'repository' interface
@@ -166,13 +184,24 @@ namespace transport
         virtual std::unique_ptr< package_record<number> > package_record_factory(const initial_conditions<number>& ics) override;
 
         //! Create a new integration task record from an explicit object
-        virtual std::unique_ptr< integration_task_record<number> > integration_task_record_factory(const integration_task<number>& tk) override;
+        virtual std::unique_ptr< integration_task_record<number> > integration_task_record_factory(const twopf_task<number>& tk) override;
+        virtual std::unique_ptr< integration_task_record<number> > integration_task_record_factory(const threepf_task<number>& tk) override;
+
+        // generic integration task factory
+        template <typename TaskType>
+        std::unique_ptr< integration_task_record<number> > integration_task_record_factory_generic(const TaskType& tk);
 
         //! Create a new output task record from an explicit object
         virtual std::unique_ptr< output_task_record<number> > output_task_record_factory(const output_task<number>& tk) override;
 
         //! Create a postintegration task record from an explicit object
-        virtual std::unique_ptr< postintegration_task_record<number> > postintegration_task_record_factory(const postintegration_task<number>& tk) override;
+        virtual std::unique_ptr< postintegration_task_record<number> > postintegration_task_record_factory(const zeta_twopf_task<number>& tk) override;
+        virtual std::unique_ptr< postintegration_task_record<number> > postintegration_task_record_factory(const zeta_threepf_task<number>& tk) override;
+        virtual std::unique_ptr< postintegration_task_record<number> > postintegration_task_record_factory(const fNL_task<number>& tk) override;
+
+        //! generic postintegration task record factory
+        template <typename TaskType>
+        std::unique_ptr< postintegration_task_record<number> > postintegration_task_record_factory_generic(const TaskType& tk);
 
         //! Create a new derived product record from explicit object
         virtual std::unique_ptr< derived_product_record<number> > derived_product_record_factory(const derived_data::derived_product<number>& prod) override;
@@ -306,18 +335,18 @@ namespace transport
         //! construct an integration_writer in recovery mode
         std::unique_ptr< integration_writer<number> > get_integration_recovery_writer(const sqlite3_operations::inflight_integration& data,
                                                                                       data_manager<number>& data_mgr,
-                                                                                      integration_task_record<number>* rec, unsigned int worker);
+                                                                                      integration_task_record<number>& rec, unsigned int worker);
 
         //! construct a postintegration_writer in recovery mode
         std::unique_ptr< postintegration_writer<number> > get_postintegration_recovery_writer(const sqlite3_operations::inflight_postintegration& data,
                                                                                               data_manager<number>& data_mgr,
-                                                                                              postintegration_task_record<number>* rec, unsigned int worker);
+                                                                                              postintegration_task_record<number>& rec, unsigned int worker);
 
         void recover_unpaired_postintegration(const sqlite3_operations::inflight_postintegration& data, data_manager<number>& data_mgr,
-                                              postintegration_task_record<number>* rec, unsigned int worker);
+                                              postintegration_task_record<number>& rec, unsigned int worker);
 
         void recover_paired_postintegration(const sqlite3_operations::inflight_postintegration& data, data_manager<number>& data_mgr,
-                                            postintegration_task_record<number>* p_rec,
+                                            postintegration_task_record<number>& p_rec,
                                             std::list<sqlite3_operations::inflight_integration>& i_list, unsigned int worker);
 
 

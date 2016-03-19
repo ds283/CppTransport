@@ -156,7 +156,7 @@ namespace transport
 
         //! Construct a postintegration writer object.
         //! After creation it must be initialized by a suitable data_manager
-        postintegration_writer(const std::string& n, postintegration_task_record<number>* rec,
+        postintegration_writer(const std::string& n, postintegration_task_record<number>& rec,
                                std::unique_ptr< postintegration_writer_commit<number> > c,
                                std::unique_ptr< postintegration_writer_abort<number> > a,
                                const typename generic_writer::metadata_group& m, const typename generic_writer::paths_group& p,
@@ -216,7 +216,14 @@ namespace transport
       public:
 
         //! Return task
-        postintegration_task_record<number>* get_record() const { return(this->parent_record.get()); }
+        const std::string& get_task_name() const { return(this->task->get_name()); }
+
+        //! Return task
+        template <typename TaskType>
+        const TaskType& get_task() const { return dynamic_cast<TaskType&>(*this->task); }
+
+        //! Return task type
+        postintegration_task_type get_type() const { return(this->type); }
 
         //! Set metadata
         void set_metadata(const output_metadata& data) { this->metadata = data; }
@@ -283,8 +290,11 @@ namespace transport
 
         // METADATA
 
-        //! task associated with this integration writer
-        std::unique_ptr< postintegration_task_record<number> > parent_record;
+        //! copy of task associated with this integration writer; needed for interrogation of task properties
+        std::unique_ptr< postintegration_task<number> > task;
+
+        //! type of task
+        postintegration_task_type type;
 
         //! output metadata for this task
         output_metadata metadata;
@@ -331,7 +341,7 @@ namespace transport
 
 
     template <typename number>
-    postintegration_writer<number>::postintegration_writer(const std::string& n, postintegration_task_record<number>* rec,
+    postintegration_writer<number>::postintegration_writer(const std::string& n, postintegration_task_record<number>& rec,
                                                            std::unique_ptr< postintegration_writer_commit<number> > c,
                                                            std::unique_ptr< postintegration_writer_abort<number> > a,
                                                            const generic_writer::metadata_group& m, const generic_writer::paths_group& p, unsigned int w)
@@ -342,10 +352,10 @@ namespace transport
         abort_h(std::move(a)),
 	      aggregate_h(nullptr),
         integrity_h(nullptr),
-	      parent_record(dynamic_cast< postintegration_task_record<number>* >(rec->clone())),
+        task(dynamic_cast< postintegration_task<number>* >(rec.get_task()->clone())),
+        type(rec.get_task_type()),
 	      metadata()
 	    {
-        assert(this->parent_record);
 	    }
 
 
