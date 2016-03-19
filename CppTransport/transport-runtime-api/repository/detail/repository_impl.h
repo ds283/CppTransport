@@ -16,10 +16,11 @@ namespace transport
   {
 
     constexpr auto CPPTRANSPORT_REPO_TASKOUTPUT_LEAF = "output";
-    constexpr auto CPPTRANSPORT_REPO_FAILURE_LEAF = "failed";
-    constexpr auto CPPTRANSPORT_REPO_LOGDIR_LEAF = "logs";
-    constexpr auto CPPTRANSPORT_REPO_TEMPDIR_LEAF = "tempfiles";
-    constexpr auto CPPTRANSPORT_REPO_DATABASE_LEAF = "data.sqlite";
+    constexpr auto CPPTRANSPORT_REPO_FAILURE_LEAF    = "failed";
+    constexpr auto CPPTRANSPORT_REPO_LOGDIR_LEAF     = "logs";
+    constexpr auto CPPTRANSPORT_REPO_TEMPDIR_LEAF    = "tempfiles";
+    constexpr auto CPPTRANSPORT_REPO_DATABASE_LEAF   = "data.sqlite";
+    constexpr auto CPPTRANSPORT_REPO_LOCKFILE_LEAF   = "lockfile";
 
 
     namespace repository_impl
@@ -93,7 +94,7 @@ namespace transport
         if(this->transactions > 0) throw runtime_exception(exception_type::REPOSITORY_TRANSACTION_ERROR, CPPTRANSPORT_REPO_TRANSACTION_UNDERWAY);
         this->transactions++;
 
-        return transaction_manager(std::move(handle));
+        return transaction_manager(this->root_path / CPPTRANSPORT_REPO_LOCKFILE_LEAF, std::move(handle));
       }
 
 

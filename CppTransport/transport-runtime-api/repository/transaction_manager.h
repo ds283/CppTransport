@@ -9,6 +9,8 @@
 
 #include <list>
 #include <functional>
+#include <thread>
+#include <chrono>
 
 
 #include "transport-runtime-api/version.h"
@@ -140,7 +142,7 @@ namespace transport
       public:
 
         //! constructor captures ownership of handler object
-        transaction_manager(std::unique_ptr<transaction_handler> h);
+        transaction_manager(boost::filesystem::path l, std::unique_ptr<transaction_handler> h);
 
 		    // allow moving
 		    transaction_manager(transaction_manager&& obj) = default;
@@ -183,6 +185,15 @@ namespace transport
         //! owned pointer to handlers
         std::unique_ptr<transaction_handler> handler;
 
+
+        // LOCKFILE
+
+        //! lockfile location
+        boost::filesystem::path lockfile;
+
+
+        // STATUS
+
 		    //! has this transaction been committed?
 		    bool committed;
 
@@ -195,11 +206,38 @@ namespace transport
 	    };
 
 
-		transaction_manager::transaction_manager(std::unique_ptr<transaction_handler> h)
+		transaction_manager::transaction_manager(boost::filesystem::path l, std::unique_ptr<transaction_handler> h)
 			: handler(std::move(h)),
+        lockfile(std::move(l)),
 			  committed(false),
 				dead(false)
 			{
+        unsigned int attempts = CPPTRANSPORT_DEFAULT_LOCKFILE_ATTEMPTS;
+        bool locked = false;
+
+        // set up lockfile
+        while(!locked && attempts > 0)
+          {
+            if(boost::filesystem::exists(lockfile))
+              {
+                // repository commits normally don't take a long time, so sleep for a second
+                // before trying again
+                std::this_thread::sleep_for(std::chrono::seconds(1));
+                --attempts;
+              }
+            else
+              {
+                locked = true;
+              }
+          }
+
+        if(!locked) throw runtime_exception(exception_type::REPOSITORY_TRANSACTION_ERROR, CPPTRANSPORT_REPO_TRANSACTION_NO_LOCK);
+
+        // no lockfile is present, so make one -- then we have exclusive access to the database until
+        // the lockfile is removed
+        std::ofstream make_lock(lockfile.string(), std::ios::out | std::ios::trunc);
+        make_lock.close();
+
 		    handler->open();
 			}
 
@@ -207,7 +245,10 @@ namespace transport
     transaction_manager::~transaction_manager()
 			{
 		    // rollback the transaction if it was not committed
-		    if(!this->committed) this->handler->rollback();
+		    if(!this->committed && !this->dead) this->handler->rollback();
+
+        // remove lockfile if present, releasing our exclusive lock on the database
+        if(boost::filesystem::exists(this->lockfile)) boost::filesystem::remove(this->lockfile);
 			}
 
 
@@ -225,6 +266,9 @@ namespace transport
 				this->handler->commit();
 				this->committed = true;
 				this->handler->release();
+
+        // remove lockfile if present, releasing our exclusive lock on the database
+        if(boost::filesystem::exists(this->lockfile)) boost::filesystem::remove(this->lockfile);
 			}
 
 
