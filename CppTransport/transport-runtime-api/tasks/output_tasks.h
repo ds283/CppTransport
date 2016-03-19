@@ -174,11 +174,9 @@ namespace transport
       {
         out << CPPTRANSPORT_OUTPUT_ELEMENTS << '\n';
 
-        const std::vector< output_task_element<number> > elements = this->get_elements();
-
-        for(typename std::vector< output_task_element<number> >::const_iterator t = elements.begin(); t != elements.end(); ++t)
+        for(const output_task_element<number>& ele : this->get_elements())
           {
-            out << *t;
+            out << ele;
           }
       }
 
@@ -208,17 +206,17 @@ namespace transport
         Json::Value& element_list = reader[CPPTRANSPORT_NODE_OUTPUT_ARRAY];
 		    assert(element_list.isArray());
 
-        for(Json::Value::iterator t = element_list.begin(); t != element_list.end(); ++t)
+        for(Json::Value& value : element_list)
           {
-            std::string  product_name = (*t)[CPPTRANSPORT_NODE_OUTPUT_DERIVED_PRODUCT].asString();
-            unsigned int sn           = (*t)[CPPTRANSPORT_NODE_OUTPUT_SERIAL].asUInt();
+            std::string  product_name = value[CPPTRANSPORT_NODE_OUTPUT_DERIVED_PRODUCT].asString();
+            unsigned int sn           = value[CPPTRANSPORT_NODE_OUTPUT_SERIAL].asUInt();
 
             std::list<std::string> tags;
-            Json::Value& tag_list = (*t)[CPPTRANSPORT_NODE_OUTPUT_TAGS];
+            Json::Value& tag_list = value[CPPTRANSPORT_NODE_OUTPUT_TAGS];
 
-            for(Json::Value::iterator u = tag_list.begin(); u != tag_list.end(); ++u)
+            for(Json::Value& tag : tag_list)
               {
-		            tags.push_back(u->asString());
+		            tags.push_back(tag.asString());
               }
 
             std::unique_ptr< derived_product_record<number> > product_record = pfinder(product_name);
@@ -241,24 +239,22 @@ namespace transport
         // serialize array of task elements
         Json::Value element_list(Json::arrayValue);
 
-        for(typename std::vector< output_task_element<number> >::const_iterator t = this->elements.begin(); t != this->elements.end(); ++t)
+        for(const output_task_element<number>& ele : this->elements)
 	        {
-            Json::Value elem(Json::objectValue);
+            Json::Value record(Json::objectValue);
 
-            elem[CPPTRANSPORT_NODE_OUTPUT_DERIVED_PRODUCT] = t->get_product_name();
-            elem[CPPTRANSPORT_NODE_OUTPUT_SERIAL]          = t->get_serial();
-
-            const std::list<std::string>& tags = t->get_tags();
+            record[CPPTRANSPORT_NODE_OUTPUT_DERIVED_PRODUCT] = ele.get_product_name();
+            record[CPPTRANSPORT_NODE_OUTPUT_SERIAL]          = ele.get_serial();
 
             Json::Value tag_list(Json::objectValue);
 
-            for(std::list<std::string>::const_iterator u = tags.begin(); u != tags.end(); ++u)
+            for(const std::string& tag : ele.get_tags())
 	            {
-                Json::Value tag_element = *u;
+                Json::Value tag_element = tag;
                 tag_list.append(tag_element);
 	            }
-		        elem[CPPTRANSPORT_NODE_OUTPUT_TAGS] = tag_list;
-		        element_list.append(elem);
+		        record[CPPTRANSPORT_NODE_OUTPUT_TAGS] = tag_list;
+		        element_list.append(record);
 	        }
         writer[CPPTRANSPORT_NODE_OUTPUT_ARRAY] = element_list;
 
