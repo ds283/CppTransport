@@ -10,15 +10,15 @@
 namespace transport
   {
 
-    constexpr auto CPPTRANSPORT_NODE_RECORD_NAME = "name";
+    constexpr auto CPPTRANSPORT_NODE_RECORD_NAME                  = "name";
 
-    constexpr auto CPPTRANSPORT_NODE_RECORD_TYPE = "record-type";
-    constexpr auto CPPTRANSPORT_NODE_RECORD_PACKAGE = "package";
-    constexpr auto CPPTRANSPORT_NODE_RECORD_INTEGRATION_TASK = "integration-task";
-    constexpr auto CPPTRANSPORT_NODE_RECORD_POSTINTEGRATION_TASK = "postintegration-task";
-    constexpr auto CPPTRANSPORT_NODE_RECORD_OUTPUT_TASK = "output-task";
-    constexpr auto CPPTRANSPORT_NODE_RECORD_DERIVED_PRODUCT = "derived-product";
-    constexpr auto CPPTRANSPORT_NODE_RECORD_CONTENT = "content-group";
+    constexpr auto CPPTRANSPORT_NODE_RECORD_TYPE                  = "record-type";
+    constexpr auto CPPTRANSPORT_NODE_RECORD_PACKAGE               = "package";
+    constexpr auto CPPTRANSPORT_NODE_RECORD_INTEGRATION_TASK      = "integration-task";
+    constexpr auto CPPTRANSPORT_NODE_RECORD_POSTINTEGRATION_TASK  = "postintegration-task";
+    constexpr auto CPPTRANSPORT_NODE_RECORD_OUTPUT_TASK           = "output-task";
+    constexpr auto CPPTRANSPORT_NODE_RECORD_DERIVED_PRODUCT       = "derived-product";
+    constexpr auto CPPTRANSPORT_NODE_RECORD_CONTENT               = "content-group";
 
 
     // GENERIC REPOSITORY RECORD

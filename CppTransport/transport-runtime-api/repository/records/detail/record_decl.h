@@ -7,6 +7,8 @@
 #define CPPTRANSPORT_RECORD_DECL_H
 
 
+#include <transport-runtime-api/repository/transaction_manager.h>
+
 namespace transport
   {
 
@@ -19,7 +21,7 @@ namespace transport
 
       public:
 
-        typedef std::function<void(repository_record&)> commit_handler;
+        typedef std::function<void(repository_record&, transaction_manager&)> commit_handler;
 
         class handler_package
           {
@@ -79,7 +81,7 @@ namespace transport
       public:
 
         //! Commit this record to the database
-        void commit() { this->handlers.commit(*this); }
+        void commit(transaction_manager& mgr) { this->handlers.commit(*this, mgr); }
 
 
         // SERIALIZATION -- implements a 'serializable' interface

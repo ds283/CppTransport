@@ -52,8 +52,11 @@ namespace transport
 
       protected:
 
+        //! Generate a transaction management object -- supplied by implementation class
+        virtual transaction_manager transaction_factory() = 0;
+
         //! Generate a transaction management object
-        transaction_manager transaction_factory(std::unique_ptr<transaction_handler> handle);
+        transaction_manager generate_transaction_manager(std::unique_ptr<transaction_handler> handle);
 
         //! Release resources after end of transaction
         void release_transaction();
@@ -240,22 +243,22 @@ namespace transport
         void advise_commit(output_group_record<Payload>* group);
 
         //! Commit the products from an integration to the database
-        void close_integration_writer(integration_writer<number>& writer);
+        void close_integration_writer(integration_writer<number>& writer, transaction_manager& mgr);
 
         //! Rollback a failed integration
-        void abort_integration_writer(integration_writer<number>& writer);
+        void abort_integration_writer(integration_writer<number>& writer, transaction_manager& mgr);
 
         //! Commit the products from a postintegration to the database
-        void close_postintegration_writer(postintegration_writer<number>& writer);
+        void close_postintegration_writer(postintegration_writer<number>& writer, transaction_manager& mgr);
 
         //! Rollback a failed postintegration
-        void abort_postintegration_writer(postintegration_writer<number>& writer);
+        void abort_postintegration_writer(postintegration_writer<number>& writer, transaction_manager& mgr);
 
         //! Commit the products from an output task to the database
-        void close_derived_content_writer(derived_content_writer<number>& writer);
+        void close_derived_content_writer(derived_content_writer<number>& writer, transaction_manager& mgr);
 
         //! Rollback a failed integration
-        void abort_derived_content_writer(derived_content_writer<number>& writer);
+        void abort_derived_content_writer(derived_content_writer<number>& writer, transaction_manager& mgr);
 
 
         friend repository_integration_writer_commit<number>;

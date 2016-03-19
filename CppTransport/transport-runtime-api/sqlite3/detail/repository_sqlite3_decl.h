@@ -74,7 +74,7 @@ namespace transport
       protected:
 
         //! Generate a transaction management object
-        transaction_manager transaction_factory();
+        transaction_manager transaction_factory() override final;
 
         //! Begin a transaction on the database.
         void begin_transaction();
@@ -279,16 +279,16 @@ namespace transport
       protected:
 
         //! Commit callback: commit to database for the first time
-        void commit_first(repository_record& record, count_function counter, store_function storer, std::string store_root, std::string exists_err);
+        void commit_first(repository_record& record, transaction_manager& mgr, count_function counter, store_function storer, std::string store_root, std::string exists_err);
 
         //! Commit callback: replacement commit to database
-        void commit_replace(repository_record& record, find_function finder);
+        void commit_replace(repository_record& record, transaction_manager& mgr, find_function finder);
 
         //! Commit callback: commit integration task to database for the first time (need special treatment)
-        void commit_integration_first(repository_record& record, count_function counter, store_function storer, std::string store_root, std::string exists_err);
+        void commit_integration_first(repository_record& record, transaction_manager& mgr, count_function counter, store_function storer, std::string store_root, std::string exists_err);
 
         //! Commit callback: replacement commit to database for integration tasks (need special treatment)
-        void commit_integration_replace(repository_record& record, find_function finder);
+        void commit_integration_replace(repository_record& record, transaction_manager& mgr, find_function finder);
 
         //! Commit k-configuration databases
         void commit_kconfig_database(transaction_manager& mgr, integration_task_record<number>& record);

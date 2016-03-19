@@ -88,7 +88,7 @@ namespace transport
 
 
     template <typename number>
-    transaction_manager repository<number>::transaction_factory(std::unique_ptr<transaction_handler> handle)
+    transaction_manager repository<number>::generate_transaction_manager(std::unique_ptr<transaction_handler> handle)
       {
         if(this->transactions > 0) throw runtime_exception(exception_type::REPOSITORY_TRANSACTION_ERROR, CPPTRANSPORT_REPO_TRANSACTION_UNDERWAY);
         this->transactions++;
@@ -411,10 +411,8 @@ namespace transport
 
 
     template <typename number>
-    void repository<number>::close_integration_writer(integration_writer<number>& writer)
+    void repository<number>::close_integration_writer(integration_writer<number>& writer, transaction_manager& mgr)
       {
-        // TODO: OPEN TRANSACTION ON DATABASE
-
         // read record from database
         std::unique_ptr< task_record<number> > raw_rec = this->query_task(writer.get_task_name());
         integration_task_record<number>* rec = dynamic_cast< integration_task_record<number>* >(raw_rec.get());
@@ -455,19 +453,19 @@ namespace transport
         output_record->get_payload().set_initial_conditions(writer.is_collecting_initial_conditions());
 
         // commit new output record
-        output_record->commit();
+        output_record->commit(mgr);
 
         // add this output group to the integration task record
         rec->add_new_output_group(output_record->get_name());
         rec->update_last_edit_time();
-        rec->commit();
+        rec->commit(mgr);
 
         this->advise_commit(output_record.get());
       }
 
 
     template <typename number>
-    void repository<number>::abort_integration_writer(integration_writer<number>& writer)
+    void repository<number>::abort_integration_writer(integration_writer<number>& writer, transaction_manager& mgr)
       {
         boost::filesystem::path fail_path = this->get_root_path() / CPPTRANSPORT_REPO_FAILURE_LEAF;
 
@@ -498,10 +496,8 @@ namespace transport
 
 
     template <typename number>
-    void repository<number>::close_postintegration_writer(postintegration_writer<number>& writer)
+    void repository<number>::close_postintegration_writer(postintegration_writer<number>& writer, transaction_manager& mgr)
       {
-        // TODO: OPEN TRANSACTION ON DATABASE
-
         // read record from database
         std::unique_ptr< task_record<number> > raw_rec = this->query_task(writer.get_task_name());
         postintegration_task_record<number>* rec = dynamic_cast< postintegration_task_record<number>* >(raw_rec.get());
@@ -550,19 +546,19 @@ namespace transport
         if(writer.get_products().get_fNL_DBI())      output_record->get_payload().get_precomputed_products().add_fNL_DBI();
 
         // commit new output record
-        output_record->commit();
+        output_record->commit(mgr);
 
         // add this output group to the integration task record
         rec->add_new_output_group(output_record->get_name());
         rec->update_last_edit_time();
-        rec->commit();
+        rec->commit(mgr);
 
         this->advise_commit(output_record.get());
       }
 
 
     template <typename number>
-    void repository<number>::abort_postintegration_writer(postintegration_writer<number>& writer)
+    void repository<number>::abort_postintegration_writer(postintegration_writer<number>& writer, transaction_manager& mgr)
       {
         boost::filesystem::path fail_path = this->get_root_path() / CPPTRANSPORT_REPO_FAILURE_LEAF;
 
@@ -593,10 +589,8 @@ namespace transport
 
 
     template <typename number>
-    void repository<number>::close_derived_content_writer(derived_content_writer<number>& writer)
+    void repository<number>::close_derived_content_writer(derived_content_writer<number>& writer, transaction_manager& mgr)
       {
-        // TODO: OPEN TRANSACTION ON DATABASE
-
         // read record from database
         std::unique_ptr< task_record<number> > raw_rec = this->query_task(writer.get_task_name());
         output_task_record<number>* rec = dynamic_cast< output_task_record<number>* >(raw_rec.get());
@@ -615,28 +609,27 @@ namespace transport
         output_record->set_name(writer.get_name());
 
         // populate output group with content from the writer
-        const std::list<derived_content>& content = writer.get_content();
-        for(std::list<derived_content>::const_iterator t = content.begin(); t != content.end(); ++t)
+        for(const derived_content& c : writer.get_content())
           {
-            output_record->get_payload().add_derived_content(*t);
+            output_record->get_payload().add_derived_content(c);
           }
         output_record->get_payload().set_metadata(writer.get_metadata());
         output_record->get_payload().set_fail(false);
 
         // commit new output record
-        output_record->commit();
+        output_record->commit(mgr);
 
         // add this output group to the integration task record
         rec->add_new_output_group(output_record->get_name());
         rec->update_last_edit_time();
-        rec->commit();
+        rec->commit(mgr);
 
         this->advise_commit(output_record.get());
       }
 
 
     template <typename number>
-    void repository<number>::abort_derived_content_writer(derived_content_writer<number>& writer)
+    void repository<number>::abort_derived_content_writer(derived_content_writer<number>& writer, transaction_manager& mgr)
       {
         boost::filesystem::path fail_path = this->get_root_path() / CPPTRANSPORT_REPO_FAILURE_LEAF;
 
