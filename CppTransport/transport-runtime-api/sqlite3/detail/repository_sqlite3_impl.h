@@ -916,7 +916,22 @@ namespace transport
     template <typename number>
     typename package_db<number>::type repository_sqlite3<number>::enumerate_packages()
       {
+        std::list<std::string> package_names;
+
+        // get list of package names
+        sqlite3_operations::enumerate_packages(this->db, package_names);
+
         typename package_db<number>::type db;
+
+        for(const std::string& name : package_names)
+          {
+            boost::filesystem::path filename = sqlite3_operations::find_package(this->db, name, CPPTRANSPORT_REPO_PACKAGE_MISSING);
+            Json::Value             root     = this->deserialize_JSON_document(filename);
+
+            std::unique_ptr< package_record<number> > pkg = this->package_record_factory(root);
+            db.insert( std::make_pair(name, std::move(pkg)) );
+          }
+
         return(std::move(db));
       }
 
@@ -925,7 +940,42 @@ namespace transport
     template <typename number>
     typename task_db<number>::type repository_sqlite3<number>::enumerate_tasks()
       {
+        std::list<std::string> integration_names;
+        std::list<std::string> postintegration_names;
+        std::list<std::string> output_names;
+
+        // get list of task names
+        sqlite3_operations::enumerate_tasks(this->db, integration_names, postintegration_names, output_names);
+
         typename task_db<number>::type db;
+
+        for(const std::string& name : integration_names)
+          {
+            boost::filesystem::path filename = sqlite3_operations::find_integration_task(this->db, name, CPPTRANSPORT_REPO_TASK_MISSING);
+            Json::Value             root     = this->deserialize_JSON_document(filename);
+
+            std::unique_ptr< task_record<number> > task = this->integration_task_record_factory(root);
+            db.insert( std::make_pair(name, std::move(task)) );
+          }
+
+        for(const std::string& name : postintegration_names)
+          {
+            boost::filesystem::path filename = sqlite3_operations::find_postintegration_task(this->db, name, CPPTRANSPORT_REPO_TASK_MISSING);
+            Json::Value             root     = this->deserialize_JSON_document(filename);
+
+            std::unique_ptr< task_record<number> > task = this->postintegration_task_record_factory(root);
+            db.insert( std::make_pair(name, std::move(task)) );
+          }
+
+        for(const std::string& name : output_names)
+          {
+            boost::filesystem::path filename = sqlite3_operations::find_output_task(this->db, name, CPPTRANSPORT_REPO_TASK_MISSING);
+            Json::Value             root     = this->deserialize_JSON_document(filename);
+
+            std::unique_ptr< task_record<number> > task = this->output_task_record_factory(root);
+            db.insert( std::make_pair(name, std::move(task)) );
+          }
+
         return(std::move(db));
       }
 
@@ -934,7 +984,22 @@ namespace transport
     template <typename number>
     typename derived_product_db<number>::type repository_sqlite3<number>::enumerate_derived_products()
       {
+        std::list<std::string> derived_product_names;
+
+        // get list of derived products
+        sqlite3_operations::enumerate_derived_products(this->db, derived_product_names);
+
         typename derived_product_db<number>::type db;
+
+        for(const std::string& name : derived_product_names)
+          {
+            boost::filesystem::path filename = sqlite3_operations::find_product(this->db, name, CPPTRANSPORT_REPO_PRODUCT_MISSING);
+            Json::Value             root     = this->deserialize_JSON_document(filename);
+
+            std::unique_ptr< derived_product_record<number> > prod = this->derived_product_record_factory(root);
+            db.insert( std::make_pair(name, std::move(prod)) );
+          }
+
         return(std::move(db));
       }
 
@@ -953,9 +1018,7 @@ namespace transport
           }
 
         integration_content_db db;
-
-        find_function finder = std::bind(sqlite3_operations::find_integration_task, std::placeholders::_1, std::placeholders::_2, CPPTRANSPORT_REPO_TASK_MISSING);
-        this->enumerate_content_groups<integration_payload>(name, db, finder);
+        this->enumerate_content_groups<integration_payload>(name, db);
 
         return(std::move(db));   // std::move required by GCC 5.2 although standard implies that copy elision should occur
       }
@@ -975,9 +1038,7 @@ namespace transport
           }
 
         postintegration_content_db db;
-
-        find_function finder = std::bind(sqlite3_operations::find_postintegration_task, std::placeholders::_1, std::placeholders::_2, CPPTRANSPORT_REPO_TASK_MISSING);
-        this->enumerate_content_groups<postintegration_payload>(name, db, finder);
+        this->enumerate_content_groups<postintegration_payload>(name, db);
 
         return(std::move(db));   // std::move required by GCC 5.2 although standard implies that copy elision should occur
       }
@@ -997,9 +1058,7 @@ namespace transport
           }
 
         output_content_db db;
-
-        find_function finder = std::bind(sqlite3_operations::find_output_task, std::placeholders::_1, std::placeholders::_2, CPPTRANSPORT_REPO_OUTPUT_MISSING);
-        this->enumerate_content_groups<output_payload>(name, db, finder);
+        this->enumerate_content_groups<output_payload>(name, db);
 
         return(std::move(db));   // std::move required by GCC 5.2 although standard implies that copy elision should occur
       }
@@ -1142,12 +1201,12 @@ namespace transport
 
     template <typename number>
     template <typename Payload>
-    void repository_sqlite3<number>::enumerate_content_groups(const std::string& name, std::map< boost::posix_time::ptime, std::unique_ptr< output_group_record<Payload> > >& db,
-                                                              find_function finder)
+    void repository_sqlite3<number>::enumerate_content_groups(const std::string& name, std::map< boost::posix_time::ptime, std::unique_ptr< output_group_record<Payload> > >& db)
       {
         std::list<std::string> group_names;
 
-        // get list of group names associated with the task 'name'
+        // get list of group names associated with the task 'name'; overwrites existing content (here, none)
+        // of the list group_names
         sqlite3_operations::enumerate_content_groups<Payload>(this->db, name, group_names);
 
         for(const std::string& name : group_names)
@@ -1188,6 +1247,13 @@ void repository_sqlite3<number>::perform_recovery(data_manager<number>& data_mgr
     // so recovery should be used with caution
     boost::filesystem::path lockfile = this->root_path / CPPTRANSPORT_REPO_LOCKFILE_LEAF;
     if(boost::filesystem::exists(lockfile)) boost::filesystem::remove(lockfile);
+
+    // TODO: would be nice to lock the whole database at this point by setting up a transaction manager
+    // and using it to control the entire recovery process.
+    // At the moment this cannot be done, because the writers which are constructed to perform recovery
+    // expect themselves to generate internal transactions
+    // To get round this, the writers would have to be refactored to accept a transaction_manager
+    // and use it to handle all their internal affairs.
 
     // get SQLite layer to enumerate hot writers
     std::list<sqlite3_operations::inflight_integration>     hot_integrations;

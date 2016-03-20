@@ -296,7 +296,7 @@ namespace transport
 
         //! Enumerate content groups
         template <typename Payload>
-        void enumerate_content_groups(const std::string& name, std::map< boost::posix_time::ptime, std::unique_ptr < output_group_record<Payload> > >& db, find_function finder);
+        void enumerate_content_groups(const std::string& name, std::map< boost::posix_time::ptime, std::unique_ptr < output_group_record<Payload> > >& db);
 
 
         // COMMIT CALLBACK METHODS FOR REPOSITORY RECORDS
