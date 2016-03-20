@@ -145,7 +145,7 @@ namespace transport
         // close open handles if it exists
         if(this->db != nullptr)
           {
-            // perform routine maintenance
+            // perform routine maintenance if in read/write mode
             if(this->access_mode == repository_mode::readwrite) sqlite3_operations::exec(this->db, "VACUUM;");
 
             sqlite3_close(this->db);
@@ -156,7 +156,7 @@ namespace transport
     // TRANSACTION MANAGEMENT
 
 
-    // Begin transaction
+    // Begin transaction on the underlying SQLite3 database
     template <typename number>
     void repository_sqlite3<number>::begin_transaction()
       {
@@ -166,7 +166,7 @@ namespace transport
       }
 
 
-    // End transaction
+    // End transaction on the underlying SQLite3 database
     template <typename number>
     void repository_sqlite3<number>::commit_transaction()
       {
@@ -176,7 +176,7 @@ namespace transport
       }
 
 
-    // Abort transaction
+    // Abort transaction on the underlying SQLite3 database
     template <typename number>
     void repository_sqlite3<number>::abort_transaction()
       {
@@ -186,7 +186,8 @@ namespace transport
       }
 
 
-    // Release transaction
+    // Release transaction; there's nothing specific for us to do here except pass control to
+    // the lower-lying repository<> method
     template <typename number>
     void repository_sqlite3<number>::release_transaction()
       {
@@ -848,10 +849,36 @@ namespace transport
       }
 
 
+    // Enumerate package records
+    template <typename number>
+    typename package_db<number>::type repository_sqlite3<number>::enumerate_packages()
+      {
+        typename package_db<number>::type db;
+        return(std::move(db));
+      }
+
+
+    // Enumerate task records
+    template <typename number>
+    typename task_db<number>::type repository_sqlite3<number>::enumerate_tasks()
+      {
+        typename task_db<number>::type db;
+        return(std::move(db));
+      }
+
+
+    // Enumerate package records
+    template <typename number>
+    typename derived_product_db<number>::type repository_sqlite3<number>::enumerate_derived_products()
+      {
+        typename derived_product_db<number>::type db;
+        return(std::move(db));
+      }
+
+
     // Enumerate the output groups available from a named integration task
     template <typename number>
-    std::list< std::unique_ptr < output_group_record<integration_payload> > >
-    repository_sqlite3<number>::enumerate_integration_task_content(const std::string& name)
+    integration_content_db repository_sqlite3<number>::enumerate_integration_task_content(const std::string& name)
       {
         std::unique_ptr< task_record<number> > record = this->query_task(name);
 
@@ -862,19 +889,18 @@ namespace transport
             throw runtime_exception(exception_type::REPOSITORY_ERROR, msg.str());
           }
 
-        std::list< std::unique_ptr< output_group_record<integration_payload> > > list;
-        find_function finder = std::bind(sqlite3_operations::find_integration_task, std::placeholders::_1, std::placeholders::_2, CPPTRANSPORT_REPO_TASK_MISSING);
-        this->enumerate_content_groups<integration_payload>(name, list, finder);
+        integration_content_db db;
 
-        list.sort(&output_group_helper::comparator<integration_payload>);
-        return(std::move(list));   // std::move required by GCC 5.2 although standard implies that copy elision should occur
+        find_function finder = std::bind(sqlite3_operations::find_integration_task, std::placeholders::_1, std::placeholders::_2, CPPTRANSPORT_REPO_TASK_MISSING);
+        this->enumerate_content_groups<integration_payload>(name, db, finder);
+
+        return(std::move(db));   // std::move required by GCC 5.2 although standard implies that copy elision should occur
       }
 
 
     // Enumerate the output groups available from a named postintegration task
     template <typename number>
-    std::list< std::unique_ptr < output_group_record<postintegration_payload> > >
-    repository_sqlite3<number>::enumerate_postintegration_task_content(const std::string& name)
+    postintegration_content_db repository_sqlite3<number>::enumerate_postintegration_task_content(const std::string& name)
       {
         std::unique_ptr< task_record<number>> record = this->query_task(name);
 
@@ -885,19 +911,18 @@ namespace transport
             throw runtime_exception(exception_type::REPOSITORY_ERROR, msg.str());
           }
 
-        std::list< std::unique_ptr < output_group_record<postintegration_payload> > > list;
-        find_function finder = std::bind(sqlite3_operations::find_postintegration_task, std::placeholders::_1, std::placeholders::_2, CPPTRANSPORT_REPO_TASK_MISSING);
-        this->enumerate_content_groups<postintegration_payload>(name, list, finder);
+        postintegration_content_db db;
 
-        list.sort(&output_group_helper::comparator<postintegration_payload>);
-        return(std::move(list));   // std::move required by GCC 5.2 although standard implies that copy elision should occur
+        find_function finder = std::bind(sqlite3_operations::find_postintegration_task, std::placeholders::_1, std::placeholders::_2, CPPTRANSPORT_REPO_TASK_MISSING);
+        this->enumerate_content_groups<postintegration_payload>(name, db, finder);
+
+        return(std::move(db));   // std::move required by GCC 5.2 although standard implies that copy elision should occur
       }
 
 
     // Enumerate the output groups available from a named output task
     template <typename number>
-    std::list< std::unique_ptr < output_group_record<output_payload> > >
-    repository_sqlite3<number>::enumerate_output_task_content(const std::string& name)
+    output_content_db repository_sqlite3<number>::enumerate_output_task_content(const std::string& name)
       {
         std::unique_ptr< task_record<number>> record = this->query_task(name);
 
@@ -908,12 +933,12 @@ namespace transport
             throw runtime_exception(exception_type::REPOSITORY_ERROR, msg.str());
           }
 
-        std::list< std::unique_ptr < output_group_record<output_payload> > > list;
-        find_function finder = std::bind(sqlite3_operations::find_output_task, std::placeholders::_1, std::placeholders::_2, CPPTRANSPORT_REPO_OUTPUT_MISSING);
-        this->enumerate_content_groups<output_payload>(name, list, finder);
+        output_content_db db;
 
-        list.sort(&output_group_helper::comparator<output_payload>);
-        return(std::move(list));   // std::move required by GCC 5.2 although standard implies that copy elision should occur
+        find_function finder = std::bind(sqlite3_operations::find_output_task, std::placeholders::_1, std::placeholders::_2, CPPTRANSPORT_REPO_OUTPUT_MISSING);
+        this->enumerate_content_groups<output_payload>(name, db, finder);
+
+        return(std::move(db));   // std::move required by GCC 5.2 although standard implies that copy elision should occur
       }
 
 
@@ -1054,7 +1079,7 @@ namespace transport
 
     template <typename number>
     template <typename Payload>
-    void repository_sqlite3<number>::enumerate_content_groups(const std::string& name, std::list< std::unique_ptr< output_group_record<Payload> > >& list,
+    void repository_sqlite3<number>::enumerate_content_groups(const std::string& name, std::map< boost::posix_time::ptime, std::unique_ptr< output_group_record<Payload> > >& db,
                                                               find_function finder)
       {
         std::list<std::string> group_names;
@@ -1066,7 +1091,9 @@ namespace transport
           {
             boost::filesystem::path filename = sqlite3_operations::find_group<Payload>(this->db, name, CPPTRANSPORT_REPO_OUTPUT_MISSING);
             Json::Value             root     = this->deserialize_JSON_document(filename);
-            list.emplace_back(this->template content_group_record_factory<Payload>(root));
+
+            std::unique_ptr< output_group_record<Payload> > group = this->template content_group_record_factory<Payload>(root);
+            db.insert( std::make_pair(group->get_creation_time(), std::move(group)) );
           }
       }
 

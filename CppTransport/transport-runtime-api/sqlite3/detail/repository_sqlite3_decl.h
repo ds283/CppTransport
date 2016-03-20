@@ -144,14 +144,31 @@ namespace transport
         //! Read a derived product specification from the database
         virtual std::unique_ptr< derived_product_record<number> > query_derived_product(const std::string& name) override;
 
+
+        // ENUMERATE DATABASE RECORDS
+
+      public:
+
+        //! Enumerate package records
+        virtual typename package_db<number>::type enumerate_packages() override;
+
+        //! Enumerate task records
+        virtual typename task_db<number>::type enumerate_tasks() override;
+
+        //! Enumerate derived product records
+        virtual typename derived_product_db<number>::type enumerate_derived_products() override;
+
+
+        // ENUMERATE OUTPUT GROUPS
+
         //! Enumerate the output groups available from a named integration task
-        virtual std::list< std::unique_ptr < output_group_record<integration_payload> > > enumerate_integration_task_content(const std::string& name) override;
+        virtual integration_content_db enumerate_integration_task_content(const std::string& name) override;
 
         //! Enumerate the output groups available for a named postintegration task
-        virtual std::list< std::unique_ptr < output_group_record<postintegration_payload> > > enumerate_postintegration_task_content(const std::string& name) override;
+        virtual postintegration_content_db enumerate_postintegration_task_content(const std::string& name) override;
 
         //! Enumerate the output groups available from a named output task
-        virtual std::list< std::unique_ptr < output_group_record<output_payload> > > enumerate_output_task_content(const std::string& name) override;
+        virtual output_content_db enumerate_output_task_content(const std::string& name) override;
 
 
         // JSON INTERFACE
@@ -271,7 +288,7 @@ namespace transport
 
         //! Enumerate content groups
         template <typename Payload>
-        void enumerate_content_groups(const std::string& name, std::list< std::unique_ptr < output_group_record<Payload> > >& list, find_function finder);
+        void enumerate_content_groups(const std::string& name, std::map< boost::posix_time::ptime, std::unique_ptr < output_group_record<Payload> > >& db, find_function finder);
 
 
         // COMMIT CALLBACK METHODS FOR REPOSITORY RECORDS

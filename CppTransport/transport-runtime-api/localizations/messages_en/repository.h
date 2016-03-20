@@ -71,16 +71,13 @@
 #define CPPTRANSPORT_REPO_FAILED_POSTINT_GROUP_A      "Task"
 #define CPPTRANSPORT_REPO_FAILED_POSTINT_GROUP_B      "Some postprocessing could not be completed"
 
-#define CPPTRANSPORT_REPO_ROOT_EXISTS                 "Repository error: root directory already exists"
 #define CPPTRANSPORT_REPO_NOT_SET                     "Internal error: attempt to access repository when unset in 'task_manager'"
 
 #define CPPTRANSPORT_REPO_MISSING_RECORD              "Repository error: Could not find database record"
 
 #define CPPTRANSPORT_REPO_SKIPPING_TASK               "; skipping this task"
 #define CPPTRANSPORT_REPO_NONE                        "Nothing to do: no repository specified"
-#define CPPTRANSPORT_RUN_REPAIR                       "; consider checking database integrity"
 #define CPPTRANSPORT_REPO_FOR_TASK                    "while processing task"
-#define CPPTRANSPORT_UNKNOWN_JOB_TYPE                 "Internal error: unexpected job type in 'task_manager'"
 #define CPPTRANSPORT_REPO_OUTPUT_WRITER_UNSETHANDLE   "Internal error: attempt to read an unset 'data_manager' data-container handle in 'integration_writer'"
 #define CPPTRANSPORT_REPO_WRITER_AGGREGATOR_UNSET     "Internal error: aggregator unset in writer object"
 #define CPPTRANSPORT_REPO_WRITER_FAILURE_UNSUPPORTED  "Internal error: writer doesn't support failure lists"
@@ -96,7 +93,6 @@
 #define CPPTRANSPORT_REPO_TASK_DESERIALIZE_FAIL       "Repository error: failed to deserialize task"
 #define CPPTRANSPORT_REPO_PRODUCT_DESERIALIZE_FAIL    "Repository error: failed to deserialize derived product"
 
-#define CPPTRANSPORT_REPO_UNKNOWN_RECORD_TYPE         "Repository error: unknown type for record"
 #define CPPTRANSPORT_REPO_RECORD_CAST_FAILED          "Internal error: dynamic cast of repository record failed"
 
 #define CPPTRANSPORT_REPO_TRANSACTION_UNDERWAY        "Repository error: attempt to begin a new transaction while one is already underway"

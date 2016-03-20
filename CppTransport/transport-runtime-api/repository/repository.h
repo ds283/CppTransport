@@ -12,6 +12,7 @@
 #include <string>
 #include <memory>
 #include <functional>
+#include <map>
 
 #include "transport-runtime-api/version.h"
 #include "transport-runtime-api/messages.h"
@@ -19,6 +20,8 @@
 
 #include "transport-runtime-api/serialization/serializable.h"
 #include "transport-runtime-api/manager/message_handlers.h"
+
+#include "boost/date_time.hpp"
 
 // need model_manager for model_finder object
 #include "transport-runtime-api/manager/model_manager.h"

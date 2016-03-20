@@ -234,13 +234,12 @@ namespace transport
     std::list<unsigned int> master_controller<number>::seed_writer(postintegration_writer<number>& writer, TaskObject* tk, const std::string& seed_group)
       {
         // enumerate the content groups available for our own task
-        std::list< std::unique_ptr< output_group_record<postintegration_payload> > > list = this->repo->enumerate_postintegration_task_content(tk->get_name());
+        postintegration_content_db db = this->repo->enumerate_postintegration_task_content(tk->get_name());
 
-        // find the specified group in this list
-        std::list< std::unique_ptr< output_group_record<postintegration_payload> > >::const_iterator t = std::find_if(list.begin(), list.end(),
-                                                                                                                      OutputGroupFinder<postintegration_payload>(seed_group));
+        // find the specified group in this list, by name
+        postintegration_content_db::const_iterator t = std::find_if(db.begin(), db.end(), OutputGroupFinder<postintegration_payload>(seed_group));
 
-        if(t == list.end())   // no record found
+        if(t == db.end())   // no record found
           {
             std::ostringstream msg;
             msg << CPPTRANSPORT_SEED_GROUP_NOT_FOUND_A << " '" << seed_group << "' " << CPPTRANSPORT_SEED_GROUP_NOT_FOUND_B << " '" << tk->get_name() << "'";
@@ -251,10 +250,10 @@ namespace transport
         // mark writer as seeded
         writer.set_seed(seed_group);
 
-        this->data_mgr->seed_writer(writer, tk, *(*t));
-        this->work_scheduler.prepare_queue((*t)->get_payload().get_failed_serials());
+        this->data_mgr->seed_writer(writer, tk, *(t->second));
+        this->work_scheduler.prepare_queue(t->second->get_payload().get_failed_serials());
 
-        return((*t)->get_payload().get_failed_serials());
+        return(t->second->get_payload().get_failed_serials());
       }
 
 
@@ -265,13 +264,12 @@ namespace transport
                                                                         TaskObject* tk, ParentTaskObject* ptk, const std::string& seed_group)
       {
         // enumerate the content groups available for our own task
-        std::list< std::unique_ptr< output_group_record<postintegration_payload> > > list = this->repo->enumerate_postintegration_task_content(tk->get_name());
+        postintegration_content_db db = this->repo->enumerate_postintegration_task_content(tk->get_name());
 
         // find the specified group in this list
-        std::list< std::unique_ptr< output_group_record<postintegration_payload> > >::const_iterator t = std::find_if(list.begin(), list.end(),
-                                                                                                                      OutputGroupFinder<postintegration_payload>(seed_group));
+        postintegration_content_db::const_iterator t = std::find_if(db.begin(), db.end(),  OutputGroupFinder<postintegration_payload>(seed_group));
 
-        if(t == list.end())   // no record found
+        if(t == db.end())   // no record found
           {
             std::ostringstream msg;
             msg << CPPTRANSPORT_SEED_GROUP_NOT_FOUND_A << " '" << seed_group << "' " << CPPTRANSPORT_SEED_GROUP_NOT_FOUND_B << " '" << tk->get_name() << "'";
@@ -280,7 +278,7 @@ namespace transport
           }
 
         // find parent content group for the seed
-        std::string parent_seed_name = (*t)->get_payload().get_parent_group();
+        std::string parent_seed_name = t->second->get_payload().get_parent_group();
 
         // check that same k-configurations are missing from both content groups in the pair
         // currently we assume this to be true, although the integrity check for paired writers
@@ -289,13 +287,13 @@ namespace transport
 
         if(i_writer.is_seeded())
           {
-            std::list<unsigned int> postintegration_serials = (*t)->get_payload().get_failed_serials();
+            std::list<unsigned int> postintegration_serials = t->second->get_payload().get_failed_serials();
 
             // minimal check is that each content group is missing the same number of serial numbers
             if(postintegration_serials.size() != integration_serials.size())
               {
                 std::ostringstream msg;
-                msg << CPPTRANSPORT_SEED_GROUP_MISMATCHED_SERIALS_A << " '" << (*t)->get_name() << "' "
+                msg << CPPTRANSPORT_SEED_GROUP_MISMATCHED_SERIALS_A << " '" << t->second->get_name() << "' "
                 << CPPTRANSPORT_SEED_GROUP_MISMATCHED_SERIALS_B << " '" << parent_seed_name << "' "
                 << CPPTRANSPORT_SEED_GROUP_MISMATCHED_SERIALS_C;
                 throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
@@ -309,17 +307,17 @@ namespace transport
             if(diff.size() > 0)
               {
                 std::ostringstream msg;
-                msg << CPPTRANSPORT_SEED_GROUP_MISMATCHED_SERIALS_A << " '" << (*t)->get_name() << "' "
+                msg << CPPTRANSPORT_SEED_GROUP_MISMATCHED_SERIALS_A << " '" << t->second->get_name() << "' "
                 << CPPTRANSPORT_SEED_GROUP_MISMATCHED_SERIALS_B << " '" << parent_seed_name << "' "
                 << CPPTRANSPORT_SEED_GROUP_MISMATCHED_SERIALS_C;
                 throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
               }
 
             p_writer.set_seed(seed_group);
-            this->data_mgr->seed_writer(p_writer, tk, *(*t));
+            this->data_mgr->seed_writer(p_writer, tk, *(t->second));
           }
 
-        return((*t)->get_payload().get_failed_serials());
+        return(t->second->get_payload().get_failed_serials());
       }
 
 

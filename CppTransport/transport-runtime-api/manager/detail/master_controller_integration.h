@@ -110,13 +110,12 @@ namespace transport
     std::list<unsigned int> master_controller<number>::seed_writer(integration_writer<number>& writer, TaskObject* tk, const std::string& seed_group)
       {
         // enumerate the content groups available for our own task
-        std::list< std::unique_ptr< output_group_record<integration_payload> > > list = this->repo->enumerate_integration_task_content(tk->get_name());
+        integration_content_db db = this->repo->enumerate_integration_task_content(tk->get_name());
 
         // find the specified group in this list
-        std::list< std::unique_ptr< output_group_record<integration_payload> > >::const_iterator t = std::find_if(list.begin(), list.end(),
-                                                                                                                  OutputGroupFinder<integration_payload>(seed_group));
+        integration_content_db::const_iterator t = std::find_if(db.begin(), db.end(), OutputGroupFinder<integration_payload>(seed_group));
 
-        if(t == list.end())   // no record found
+        if(t == db.end())   // no record found
           {
             std::ostringstream msg;
             msg << CPPTRANSPORT_SEED_GROUP_NOT_FOUND_A << " '" << seed_group << "' " << CPPTRANSPORT_SEED_GROUP_NOT_FOUND_B << " '" << tk->get_name() << "'";
@@ -128,13 +127,13 @@ namespace transport
         writer.set_seed(seed_group);
 
         // get workgroup number used by seed
-        unsigned int seed_workgroup = (*t)->get_payload().get_workgroup_number();
+        unsigned int seed_workgroup = t->second->get_payload().get_workgroup_number();
         writer.set_workgroup_number(seed_workgroup+1);
 
-        this->data_mgr->seed_writer(writer, tk, *(*t));
-        this->work_scheduler.prepare_queue((*t)->get_payload().get_failed_serials());
+        this->data_mgr->seed_writer(writer, tk, *t->second);
+        this->work_scheduler.prepare_queue(t->second->get_payload().get_failed_serials());
 
-        return((*t)->get_payload().get_failed_serials());
+        return(t->second->get_payload().get_failed_serials());
       }
 
 

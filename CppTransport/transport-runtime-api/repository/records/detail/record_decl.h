@@ -116,6 +116,19 @@ namespace transport
 
       };
 
+
+    namespace record_helper
+      {
+
+        // used for sorting a list of records into lexicographic order
+        template <typename RecordType>
+        bool comparator(const std::unique_ptr<RecordType>& A, const std::unique_ptr<RecordType>& B)
+          {
+            return(A->get_name() < B->get_name());
+          }
+
+      }   // namespace output_group_helper
+
   }   // namespace transport
 
 

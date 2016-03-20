@@ -17,6 +17,38 @@ namespace transport
       };
 
 
+    //! database type for packages
+    template <typename number>
+    struct package_db
+      {
+        typedef std::map< std::string, std::unique_ptr< package_record<number> > > type;
+      };
+
+    //! database type for tasks
+    template <typename number>
+    struct task_db
+      {
+        typedef std::map< std::string, std::unique_ptr< task_record<number> > > type;
+      };
+
+    //! database type for derived products
+    template <typename number>
+    struct derived_product_db
+      {
+        typedef std::map< std::string, std::unique_ptr< derived_product_record<number> > > type;
+      };
+
+
+    //! database type for integration content groups
+    typedef std::map< boost::posix_time::ptime, std::unique_ptr< output_group_record<integration_payload> > > integration_content_db;
+
+    //! database type for postintegration content groups
+    typedef std::map< boost::posix_time::ptime, std::unique_ptr< output_group_record<postintegration_payload> > > postintegration_content_db;
+
+    //! database type for output content groups
+    typedef std::map< boost::posix_time::ptime, std::unique_ptr< output_group_record<output_payload> > > output_content_db;
+
+
     template <typename number>
     class repository
       {
@@ -103,14 +135,33 @@ namespace transport
         //! Read a derived product specification from the database
         virtual std::unique_ptr< derived_product_record<number> > query_derived_product(const std::string& name) = 0;
 
+
+        // ENUMERATE DATABASE RECORDS
+
+      public:
+
+        //! Enumerate package records
+        virtual typename package_db<number>::type enumerate_packages() = 0;
+
+        //! Enumerate task records
+        virtual typename task_db<number>::type enumerate_tasks() = 0;
+
+        //! Enumerate derived product records
+        virtual typename derived_product_db<number>::type enumerate_derived_products() = 0;
+
+
+        // ENUMERATE OUTPUT GROUPS
+
+      public:
+
         //! Enumerate the output groups available from a named integration task
-        virtual std::list< std::unique_ptr< output_group_record<integration_payload> > > enumerate_integration_task_content(const std::string& name) = 0;
+        virtual integration_content_db enumerate_integration_task_content(const std::string& name) = 0;
 
         //! Enumerate the output groups available for a named postintegration task
-        virtual std::list< std::unique_ptr< output_group_record<postintegration_payload> > > enumerate_postintegration_task_content(const std::string& name) = 0;
+        virtual postintegration_content_db enumerate_postintegration_task_content(const std::string& name) = 0;
 
         //! Enumerate the output groups available from a named output task
-        virtual std::list< std::unique_ptr< output_group_record<output_payload> > > enumerate_output_task_content(const std::string& name) = 0;
+        virtual output_content_db enumerate_output_task_content(const std::string& name) = 0;
 
 
         // GENERATE WRITERS FOR TASKS

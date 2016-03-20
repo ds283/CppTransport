@@ -693,7 +693,7 @@ namespace transport
         bool comparator(const std::unique_ptr< output_group_record<Payload> >& A,
                         const std::unique_ptr< output_group_record<Payload> >& B)
           {
-            return (A->get_creation_time() > B->get_creation_time());
+            return(A->get_creation_time() > B->get_creation_time());
           }
 
       }   // namespace output_group_helper

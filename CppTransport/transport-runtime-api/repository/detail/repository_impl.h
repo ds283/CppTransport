@@ -45,7 +45,10 @@ namespace transport
 
           public:
 
-            bool operator()(const std::unique_ptr< output_group_record<Payload> >& a) { return(a->get_name() == name); }
+            bool operator()(const std::pair< const boost::posix_time::ptime, std::unique_ptr< output_group_record<Payload> > >& a)
+              {
+                return(a.second->get_name() == name);
+              }
 
 
             // INTERNAL DATA
@@ -55,6 +58,23 @@ namespace transport
             //! name of group to compare
             std::string name;
 
+          };
+
+
+        template <typename MapType, typename Comparator>
+        void remove_if(MapType& map, Comparator comp)
+          {
+            for(typename MapType::iterator current = map.begin(); current != map.end(); /* no increment rule */)
+              {
+                if(comp(*current))
+                  {
+                    map.erase(current++);
+                  }
+                else
+                  {
+                    ++current;
+                  }
+              }
           };
 
       }
@@ -668,15 +688,15 @@ namespace transport
     repository<number>::find_integration_task_output(const std::string& name, const std::list<std::string>& tags)
       {
         // search for output groups associated with this task
-        std::list< std::unique_ptr< output_group_record<integration_payload> > > output = this->enumerate_integration_task_content(name);
+        integration_content_db db = this->enumerate_integration_task_content(name);
 
         // remove items which are marked as failed
-        output.remove_if( [&] (const std::unique_ptr< output_group_record<integration_payload> >& group) { return(group->get_payload().is_failed()); } );
+        repository_impl::remove_if(db, [&] (const std::pair< const boost::posix_time::ptime, std::unique_ptr< output_group_record<integration_payload> > >& group) { return(group.second->get_payload().is_failed()); } );
 
         // remove items from the list which have mismatching tags
-        output.remove_if( [&] (const std::unique_ptr< output_group_record<integration_payload> >& group) { return(group->check_tags(tags)); } );
+        repository_impl::remove_if(db, [&] (const std::pair< const boost::posix_time::ptime, std::unique_ptr< output_group_record<integration_payload> > >& group) { return(group.second->check_tags(tags)); } );
 
-        if(output.empty())
+        if(db.empty())
           {
             std::ostringstream msg;
             msg << CPPTRANSPORT_REPO_NO_MATCHING_OUTPUT_GROUPS << " '" << name << "'";
@@ -684,7 +704,7 @@ namespace transport
           }
 
         std::unique_ptr< output_group_record<integration_payload> > rval;
-        output.front().swap(rval);
+        (*db.begin()).second.swap(rval);
         return(std::move(rval));    // std::move required by GCC 5.2 although standard implies that copy elision should occur
       }
 
@@ -694,15 +714,15 @@ namespace transport
     repository<number>::find_postintegration_task_output(const std::string& name, const std::list<std::string>& tags)
       {
         // search for output groups associated with this task
-        std::list< std::unique_ptr< output_group_record<postintegration_payload> > > output = this->enumerate_postintegration_task_content(name);
+        postintegration_content_db db = this->enumerate_postintegration_task_content(name);
 
         // remove items which are marked as failed
-        output.remove_if( [&] (const std::unique_ptr< output_group_record<postintegration_payload> >& group) { return(group->get_payload().is_failed()); } );
+        repository_impl::remove_if(db, [&] (const std::pair< const boost::posix_time::ptime, std::unique_ptr< output_group_record<postintegration_payload> > >& group) { return(group.second->get_payload().is_failed()); } );
 
         // remove items from the list which have mismatching tags
-        output.remove_if( [&] (const std::unique_ptr< output_group_record<postintegration_payload> >& group) { return(group.get()->check_tags(tags)); } );
+        repository_impl::remove_if(db, [&] (const std::pair< const boost::posix_time::ptime, std::unique_ptr< output_group_record<postintegration_payload> > >& group) { return(group.second.get()->check_tags(tags)); } );
 
-        if(output.empty())
+        if(db.empty())
           {
             std::ostringstream msg;
             msg << CPPTRANSPORT_REPO_NO_MATCHING_OUTPUT_GROUPS << " '" << name << "'";
@@ -710,7 +730,7 @@ namespace transport
           }
 
         std::unique_ptr< output_group_record<postintegration_payload> > rval;
-        output.front().swap(rval);
+        (*db.begin()).second.swap(rval);
         return(std::move(rval));    // std::move required by GCC 5.2 although standard implies that copy elision should occur
       }
 
