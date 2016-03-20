@@ -25,6 +25,69 @@ constexpr bool         DEFAULT_ASCIITABLE_WRAP_WIDTH    = (true);
 namespace transport
   {
 
+    enum class column_justify { left, right };
+
+    class column_descriptor
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! constructor
+        column_descriptor(std::string n, column_justify j=column_justify::left)
+          : name(std::move(n)),
+            just(j)
+          {
+          }
+
+        //! destructor is default
+        ~column_descriptor() = default;
+
+
+        // INTERFACE
+
+      public:
+
+        //! get name
+        const std::string& get_name() const { return(this->name); }
+
+        //! get width
+        size_t get_width() const { return(this->name.length()); }
+
+        //! get justification
+        template <typename Stream>
+        void justify(Stream& out) const
+          {
+            switch(this->just)
+              {
+                case column_justify::left:
+                  {
+                    out << std::left;
+                    break;
+                  }
+
+                case column_justify::right:
+                  {
+                    out << std::right;
+                    break;
+                  }
+              }
+          }
+
+
+        // INTERNAL DATA
+
+      private:
+
+        //! column name
+        std::string name;
+
+        //! justification
+        column_justify just;
+
+      };
+
     class asciitable
 	    {
 
@@ -55,7 +118,7 @@ namespace transport
                    const std::string tag = "");
 
         //! Write columns of text; the data in table should be stored column-wise
-        void write(const std::vector<std::string>& columns, const std::vector< std::vector<std::string> >& table,
+        void write(const std::vector<column_descriptor>& columns, const std::vector< std::vector<std::string> >& table,
                    const std::string tag = "");
 
 
@@ -101,7 +164,7 @@ namespace transport
       // IMPLEMENTATION -- CLASS asciitable
 
 
-    void asciitable::write(const std::vector<std::string>& columns, const std::vector< std::vector<std::string> >& table,
+    void asciitable::write(const std::vector<column_descriptor>& columns, const std::vector< std::vector<std::string> >& table,
                            const std::string tag)
       {
         assert(columns.size() == table.size());
@@ -115,15 +178,15 @@ namespace transport
 
         for(unsigned int i = 0; i < columns.size(); ++i)
           {
-            widths[i] = columns[i].length();
+            widths[i] = columns[i].get_width();
 
             for(const std::string& entry : table[i])
               {
                 if(entry.length() > widths[i]) widths[i] = entry.length();
               }
 
-            // increment width by one to allow a space between columns
-            ++widths[i];
+            // allow two spaces between columns
+            widths[i] += 2;
           }
 
         // write out tag if one has been given
@@ -161,7 +224,8 @@ namespace transport
             // write out column headings
             for(size_t i = 0; i < batch_size; ++i)
               {
-                this->stream << std::right << std::setw(widths[columns_output + i]) << columns[columns_output + i];
+                columns[columns_output + i].justify(this->stream);
+                this->stream << std::setw(widths[columns_output+i]) << columns[columns_output+i].get_name();
               }
             this->stream << '\n';
 
@@ -171,7 +235,8 @@ namespace transport
                 for(size_t j = 0; j < batch_size; ++j)
                   {
                     std::string entry = i < table[columns_output+j].size() ? (table[columns_output+j])[i] : "";
-                    this->stream << std::right << std::setw(widths[columns_output + j]) << entry;
+                    columns[columns_output+j].justify(this->stream);
+                    this->stream << std::setw(widths[columns_output+j]) << entry;
                   }
                 this->stream << '\n';
               }
@@ -192,14 +257,14 @@ namespace transport
         assert(xs.size() == ys.size());
 
         // format data into a set of column titles
-        std::vector<std::string> table_columns;
+        std::vector<column_descriptor> table_columns;
         std::vector< std::vector<std::string> > table(columns.size() + 1);
 
         // build vector of total column names
-        table_columns.push_back(x_name);
+        table_columns.emplace_back(x_name, column_justify::right);
         for(const std::string& col : columns)
           {
-            table_columns.push_back(col);
+            table_columns.emplace_back(col, column_justify::right);
           }
 
         size_t current_column = 0;

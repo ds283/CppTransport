@@ -87,5 +87,9 @@
 #define CPPTRANSPORT_TASK_SEARCH_ROOT_ITERATIONS      "iterations"
 #define CPPTRANSPORT_TASK_SEARCH_ROOT_ZERO_EQ         "abs(y)"
 
+#define CPPTRANSPORT_TASK_TYPE_INTEGRATION            "integration"
+#define CPPTRANSPORT_TASK_TYPE_POSTINTEGRATION        "postintegration"
+#define CPPTRANSPORT_TASK_TYPE_OUTPUT                 "output"
+
 
 #endif // CPPTRANSPORT_MESSAGES_EN_TASKS_H

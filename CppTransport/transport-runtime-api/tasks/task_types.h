@@ -20,6 +20,22 @@ namespace transport
 
     template <typename number, postintegration_task_type Type> struct postintegration_task_traits;
 
+
+    std::string task_type_to_string(task_type type)
+      {
+        switch(type)
+          {
+            case task_type::integration:
+              return std::string(CPPTRANSPORT_TASK_TYPE_INTEGRATION);
+
+            case task_type::postintegration:
+              return std::string(CPPTRANSPORT_TASK_TYPE_POSTINTEGRATION);
+
+            case task_type::output:
+              return std::string(CPPTRANSPORT_TASK_TYPE_OUTPUT);
+          }
+      }
+
   }   // namespace transport
 
 

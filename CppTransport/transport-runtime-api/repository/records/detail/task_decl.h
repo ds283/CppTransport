@@ -45,11 +45,14 @@ namespace transport
 
       public:
 
-        //! get record type
+        //! Get record type
         virtual task_type get_type() const = 0;
 
         //! Add content
         void add_new_output_group(const std::string& name) { this->content_groups.push_back(name); }
+
+        //! Get content groups
+        const std::list<std::string>& get_output_groups() const { return(this->content_groups); }
 
 
         // SERIALIZATION -- implements a 'serializable' interface

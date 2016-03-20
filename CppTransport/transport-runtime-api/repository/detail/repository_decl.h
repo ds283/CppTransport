@@ -22,6 +22,7 @@ namespace transport
     struct package_db
       {
         typedef std::map< std::string, std::unique_ptr< package_record<number> > > type;
+        typedef std::pair< const std::string, std::unique_ptr< package_record<number> > > value_type;
       };
 
     //! database type for tasks
@@ -29,6 +30,7 @@ namespace transport
     struct task_db
       {
         typedef std::map< std::string, std::unique_ptr< task_record<number> > > type;
+        typedef std::pair< const std::string, std::unique_ptr< task_record<number> > > value_type;
       };
 
     //! database type for derived products
@@ -36,6 +38,7 @@ namespace transport
     struct derived_product_db
       {
         typedef std::map< std::string, std::unique_ptr< derived_product_record<number> > > type;
+        typedef std::pair< const std::string, std::unique_ptr< derived_product_record<number> > > value_type;
       };
 
 

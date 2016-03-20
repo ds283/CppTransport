@@ -171,9 +171,9 @@ namespace transport
           {
             std::vector<std::string> tasks = option_map[CPPTRANSPORT_SWITCH_TASK].as< std::vector<std::string> >();
 
-            for(std::vector<std::string>::const_iterator t = tasks.begin(); t != tasks.end(); ++t)
+            for(const std::string& task : tasks)
               {
-                job_queue.push_back(job_descriptor(job_type::job_task, *t, tags));
+                job_queue.push_back(job_descriptor(job_type::job_task, task, tags));
 
                 if(option_map.count(CPPTRANSPORT_SWITCH_SEED))
                   {
@@ -297,6 +297,9 @@ namespace transport
     void master_controller<number>::recognize_repository_switches(boost::program_options::variables_map& option_map)
       {
         if(option_map.count(CPPTRANSPORT_SWITCH_RECOVER)) this->arg_cache.set_recovery_mode(true);
+
+        if(option_map.count(CPPTRANSPORT_SWITCH_STATUS)) this->cmdline_reports.status();
+        if(option_map.count(CPPTRANSPORT_SWITCH_INFO)) this->cmdline_reports.info(option_map[CPPTRANSPORT_SWITCH_INFO].as< std::vector<std::string> >());
       }
 
 
@@ -366,6 +369,8 @@ namespace transport
       {
         if(this->arg_cache.get_model_list())   this->model_mgr.write_models(std::cout);
         if(this->arg_cache.get_create_model()) this->gallery.commit(*this->repo);
+
+        if(this->repo) this->cmdline_reports.report(*this->repo);
       }
 
 
@@ -581,10 +586,14 @@ namespace transport
       {
         BOOST_LOG_SEV(log, base_writer::log_severity_level::normal) << "++ Notifying workers of end-of-work";
 
+        std::vector<boost::mpi::request> requests(this->world.size()-1);
         for(unsigned int i = 0; i < this->world.size()-1; ++i)
           {
-            this->world.isend(this->worker_rank(i), MPI::END_OF_WORK);
+            requests[i] = this->world.isend(this->worker_rank(i), MPI::END_OF_WORK);
           }
+
+        // wait for all messages to be received, then return
+        boost::mpi::wait_all(requests.begin(), requests.end());
       }
 
 
@@ -897,7 +906,7 @@ namespace transport
                     case MPI::REPORT_ERROR:
                       {
                         MPI::error_report payload;
-                        this->world.recv(stat->source(), MPI::REPORT_ERROR);
+                        this->world.recv(stat->source(), MPI::REPORT_ERROR, payload);
 
                         std::ostringstream msg;
                         msg << payload.get_message() << " " << CPPTRANSPORT_MASTER_REPORTED_BY_WORKER << " " << stat->source();

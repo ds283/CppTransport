@@ -127,7 +127,8 @@ namespace transport
         assert(m != nullptr);
 
         MPI::slave_information_payload payload(m->get_backend_type(), m->get_backend_memory(), m->get_backend_priority());
-        this->world.isend(MPI::RANK_MASTER, MPI::INFORMATION_RESPONSE, payload);
+        boost::mpi::request resp_msg = this->world.isend(MPI::RANK_MASTER, MPI::INFORMATION_RESPONSE, payload);
+        resp_msg.wait();
       }
 
 
@@ -136,7 +137,8 @@ namespace transport
       {
         MPI::slave_information_payload payload(worker_type::cpu, 0, 1);
 
-        this->world.isend(MPI::RANK_MASTER, MPI::INFORMATION_RESPONSE, payload);
+        boost::mpi::request resp_msg = this->world.isend(MPI::RANK_MASTER, MPI::INFORMATION_RESPONSE, payload);
+        resp_msg.wait();
       }
 
 
@@ -281,7 +283,8 @@ namespace transport
 
                     MPI::work_acknowledgment_payload ack_payload;
                     ack_payload.set_timestamp();
-                    this->world.isend(MPI::RANK_MASTER, MPI::NEW_WORK_ACKNOWLEDGMENT, ack_payload);
+                    boost::mpi::request ack_msg = this->world.isend(MPI::RANK_MASTER, MPI::NEW_WORK_ACKNOWLEDGMENT, ack_payload);
+                    ack_msg.wait();
 
                     const std::list<unsigned int>& work_items = payload.get_items();
                     auto filter = this->work_item_filter_factory(tk, work_items);
@@ -328,7 +331,8 @@ namespace transport
                                                                        batcher.get_reported_refinements(), batcher.get_reported_failures(),
                                                                        batcher.get_failed_serials());
 
-                    this->world.isend(MPI::RANK_MASTER, success ? MPI::FINISHED_INTEGRATION : MPI::INTEGRATION_FAIL, outgoing_payload);
+                    boost::mpi::request finish_msg = this->world.isend(MPI::RANK_MASTER, success ? MPI::FINISHED_INTEGRATION : MPI::INTEGRATION_FAIL, outgoing_payload);
+                    finish_msg.wait();
 
                     break;
                   };
@@ -345,7 +349,8 @@ namespace transport
                     // send close-down acknowledgment to master
                     boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
                     BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << '\n' << "-- Worker sending WORKER_CLOSE_DOWN to master | close down at " << boost::posix_time::to_simple_string(now);
-                    this->world.isend(MPI::RANK_MASTER, MPI::WORKER_CLOSE_DOWN);
+                    boost::mpi::request close_msg = this->world.isend(MPI::RANK_MASTER, MPI::WORKER_CLOSE_DOWN);
+                    close_msg.wait();
 
                     break;
                   };
@@ -463,7 +468,8 @@ namespace transport
 
                     MPI::work_acknowledgment_payload ack_payload;
                     ack_payload.set_timestamp();
-                    this->world.isend(MPI::RANK_MASTER, MPI::NEW_WORK_ACKNOWLEDGMENT, ack_payload);
+                    boost::mpi::request ack_msg = this->world.isend(MPI::RANK_MASTER, MPI::NEW_WORK_ACKNOWLEDGMENT, ack_payload);
+                    ack_msg.wait();
 
                     const std::list<unsigned int>& work_items = assignment_payload.get_items();
                     auto filter = this->work_item_filter_factory(tk, work_items);
@@ -527,7 +533,9 @@ namespace transport
 
                             std::ostringstream msg;
                             msg << CPPTRANSPORT_SLAVE_ERROR_PROCESSING_PRODUCT << " '" << product.get_name() << "'";
-                            this->world.isend(MPI::RANK_MASTER, MPI::REPORT_ERROR, MPI::error_report(msg.str()));
+
+                            boost::mpi::request err_msg = this->world.isend(MPI::RANK_MASTER, MPI::REPORT_ERROR, MPI::error_report(msg.str()));
+                            err_msg.wait();
                           }
 
                         // check that the datapipe was correctly detached
@@ -564,7 +572,8 @@ namespace transport
                                                                  pipe->get_threepf_kconfig_cache_evictions(), pipe->get_stats_cache_evictions(),
                                                                  pipe->get_data_cache_evictions());
 
-                    this->world.isend(MPI::RANK_MASTER, success ? MPI::FINISHED_DERIVED_CONTENT : MPI::DERIVED_CONTENT_FAIL, finish_payload);
+                    boost::mpi::request finish_msg = this->world.isend(MPI::RANK_MASTER, success ? MPI::FINISHED_DERIVED_CONTENT : MPI::DERIVED_CONTENT_FAIL, finish_payload);
+                    finish_msg.wait();
 
                     break;
                   }
@@ -581,7 +590,8 @@ namespace transport
                     // send close-down acknowledgment to master
                     now = boost::posix_time::second_clock::universal_time();
                     BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::log_severity_level::normal) << '\n' << "-- Worker sending WORKER_CLOSE_DOWN to master | close down at " << boost::posix_time::to_simple_string(now);
-                    this->world.isend(MPI::RANK_MASTER, MPI::WORKER_CLOSE_DOWN);
+                    boost::mpi::request close_msg = this->world.isend(MPI::RANK_MASTER, MPI::WORKER_CLOSE_DOWN);
+                    close_msg.wait();
 
                     break;
                   }
@@ -856,7 +866,8 @@ namespace transport
 
                     MPI::work_acknowledgment_payload ack_payload;
                     ack_payload.set_timestamp();
-                    this->world.isend(MPI::RANK_MASTER, MPI::NEW_WORK_ACKNOWLEDGMENT, ack_payload);
+                    boost::mpi::request ack_msg = this->world.isend(MPI::RANK_MASTER, MPI::NEW_WORK_ACKNOWLEDGMENT, ack_payload);
+                    ack_msg.wait();
 
                     const std::list<unsigned int>& work_items = assignment_payload.get_items();
                     auto filter = this->work_item_filter_factory(ptk, work_items);
@@ -912,7 +923,8 @@ namespace transport
                                                                            pipe->get_threepf_kconfig_cache_evictions(), pipe->get_stats_cache_evictions(),
                                                                            pipe->get_data_cache_evictions());
 
-                    this->world.isend(MPI::RANK_MASTER, success ? MPI::FINISHED_POSTINTEGRATION : MPI::POSTINTEGRATION_FAIL, outgoing_payload);
+                    boost::mpi::request finish_msg = this->world.isend(MPI::RANK_MASTER, success ? MPI::FINISHED_POSTINTEGRATION : MPI::POSTINTEGRATION_FAIL, outgoing_payload);
+                    finish_msg.wait();
 
                     break;
                   }
@@ -929,7 +941,8 @@ namespace transport
                     // send close-down acknowledgment to master
                     now = boost::posix_time::second_clock::universal_time();
                     BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << '\n' << "-- Worker sending WORKER_CLOSE_DOWN to master | close down at " << boost::posix_time::to_simple_string(now);
-                    this->world.isend(MPI::RANK_MASTER, MPI::WORKER_CLOSE_DOWN);
+                    boost::mpi::request close_msg = this->world.isend(MPI::RANK_MASTER, MPI::WORKER_CLOSE_DOWN);
+                    close_msg.wait();
 
                     break;
                   }
@@ -953,7 +966,8 @@ namespace transport
         MPI::data_ready_payload payload(batcher.get_container_path().string());
 
         // advise master process that data is available in the named container
-        this->world.isend(MPI::RANK_MASTER, message, payload);
+        boost::mpi::request push_msg = this->world.isend(MPI::RANK_MASTER, message, payload);
+        push_msg.wait();
       }
 
 
@@ -974,7 +988,8 @@ namespace transport
         if(boost::filesystem::exists(product_filename))
           {
             MPI::content_ready_payload payload(product->get_name(), used_groups);
-            this->world.isend(MPI::RANK_MASTER, MPI::DERIVED_CONTENT_READY, payload);
+            boost::mpi::request ready_msg = this->world.isend(MPI::RANK_MASTER, MPI::DERIVED_CONTENT_READY, payload);
+            ready_msg.wait();
           }
         else
           {
