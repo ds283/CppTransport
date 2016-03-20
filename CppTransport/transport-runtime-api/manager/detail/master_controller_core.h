@@ -10,7 +10,6 @@
 #include "transport-runtime-api/manager/detail/master_controller_decl.h"
 
 
-#include "boost/program_options.hpp"
 #include "boost/timer/timer.hpp"
 
 
@@ -54,9 +53,6 @@ namespace transport
         configuration.add_options()
           (CPPTRANSPORT_SWITCH_VERBOSE,                                                                                      CPPTRANSPORT_HELP_VERBOSE)
           (CPPTRANSPORT_SWITCH_REPO,             boost::program_options::value< std::string >(),                             CPPTRANSPORT_HELP_REPO)
-          (CPPTRANSPORT_SWITCH_TAG,              boost::program_options::value< std::vector<std::string> >()->composing(),   CPPTRANSPORT_HELP_TAG)
-          (CPPTRANSPORT_SWITCH_CHECKPOINT,       boost::program_options::value< int >(),                                     CPPTRANSPORT_HELP_CHECKPOINT)
-          (CPPTRANSPORT_SWITCH_RECOVER,                                                                                      CPPTRANSPORT_HELP_RECOVER)
           (CPPTRANSPORT_SWITCH_CAPACITY,         boost::program_options::value< int >(),                                     CPPTRANSPORT_HELP_CAPACITY)
           (CPPTRANSPORT_SWITCH_BATCHER_CAPACITY, boost::program_options::value< int >(),                                     CPPTRANSPORT_HELP_BATCHER_CAPACITY)
           (CPPTRANSPORT_SWITCH_CACHE_CAPACITY,   boost::program_options::value< int >(),                                     CPPTRANSPORT_HELP_CACHE_CAPACITY);
@@ -74,20 +70,28 @@ namespace transport
         job_options.add_options()
           (CPPTRANSPORT_SWITCH_CREATE,                                                                                       CPPTRANSPORT_HELP_CREATE)
           (CPPTRANSPORT_SWITCH_TASK,             boost::program_options::value< std::vector< std::string > >()->composing(), CPPTRANSPORT_HELP_TASK)
+          (CPPTRANSPORT_SWITCH_TAG,              boost::program_options::value< std::vector<std::string> >()->composing(),   CPPTRANSPORT_HELP_TAG)
+          (CPPTRANSPORT_SWITCH_CHECKPOINT,       boost::program_options::value< int >(),                                     CPPTRANSPORT_HELP_CHECKPOINT)
           (CPPTRANSPORT_SWITCH_SEED,             boost::program_options::value< std::string >(),                             CPPTRANSPORT_HELP_SEED);
+
+        boost::program_options::options_description report_options("Repository reporting and status");
+        report_options.add_options()
+          (CPPTRANSPORT_SWITCH_RECOVER,                                                                                      CPPTRANSPORT_HELP_RECOVER)
+          (CPPTRANSPORT_SWITCH_STATUS,                                                                                       CPPTRANSPORT_HELP_STATUS)
+          (CPPTRANSPORT_SWITCH_INFO,             boost::program_options::value< std::vector< std::string > >()->composing(), CPPTRANSPORT_HELP_INFO);
 
         boost::program_options::options_description hidden_options;
         hidden_options.add_options()
           (CPPTRANSPORT_SWITCH_NO_COLOR, CPPTRANSPORT_HELP_NO_COLOR);
 
         boost::program_options::options_description cmdline_options;
-        cmdline_options.add(generic).add(configuration).add(plotting).add(journaling).add(job_options).add(hidden_options);
+        cmdline_options.add(generic).add(configuration).add(job_options).add(report_options).add(plotting).add(journaling).add(hidden_options);
 
         boost::program_options::options_description config_file_options;
-        config_file_options.add(configuration).add(plotting).add(journaling).add(job_options).add(hidden_options);
+        config_file_options.add(configuration).add(job_options).add(report_options).add(plotting).add(journaling).add(hidden_options);
 
         boost::program_options::options_description output_options;
-        output_options.add(generic).add(configuration).add(plotting).add(journaling).add(job_options);
+        output_options.add(generic).add(configuration).add(job_options).add(report_options).add(plotting).add(journaling);
 
         boost::program_options::variables_map option_map;
 
@@ -95,6 +99,7 @@ namespace transport
         // supplied on the command line override options specified in a configuration file
         boost::program_options::parsed_options cmdline_parsed = boost::program_options::command_line_parser(argc, argv).options(cmdline_options).allow_unregistered().run();
         boost::program_options::store(cmdline_parsed, option_map);
+        this->warn_unrecognized_switches(cmdline_parsed);
 
         // parse options from configuration file
         boost::optional< boost::filesystem::path > config_path = this->local_env.config_file_path();
@@ -108,17 +113,7 @@ namespace transport
                     // parse contents of file; 'true' means allow unregistered options
                     boost::program_options::parsed_options file_parsed = boost::program_options::parse_config_file(instream, config_file_options, true);
                     boost::program_options::store(file_parsed, option_map);
-
-                    std::vector<std::string> unrecognized_config_options = boost::program_options::collect_unrecognized(file_parsed.options, boost::program_options::exclude_positional);
-                    if(unrecognized_config_options.size() > 0)
-                      {
-                        for(const std::string& option : unrecognized_config_options)
-                          {
-                            std::ostringstream msg;
-                            msg << CPPTRANSPORT_UNKNOWN_SWITCH << " '" << option << "'";
-                            this->warn(msg.str());
-                          }
-                      }
+                    this->warn_unrecognized_switches(file_parsed);
                   }
               }
           }
@@ -126,38 +121,10 @@ namespace transport
         // inform the Boost::Program_Options library that all option parsing is complete
         boost::program_options::notify(option_map);
 
-        // inform the user that we have ignored any recongized options
-        std::vector<std::string> unrecognized_cmdline_options = boost::program_options::collect_unrecognized(cmdline_parsed.options, boost::program_options::exclude_positional);
-        if(unrecognized_cmdline_options.size() > 0)
-          {
-            for(const std::string& option : unrecognized_cmdline_options)
-              {
-                std::ostringstream msg;
-                msg << CPPTRANSPORT_UNKNOWN_SWITCH << " '" << option << "'";
-                this->warn(msg.str());
-              }
-          }
 
         // HANDLE SUPPLIED OPTIONS
 
-        bool emitted_version = false;
-
-        if(option_map.count(CPPTRANSPORT_SWITCH_VERSION))
-          {
-            std::cout << CPPTRANSPORT_NAME << " " << CPPTRANSPORT_VERSION << " " << CPPTRANSPORT_COPYRIGHT << " | " << CPPTRANSPORT_RUNTIME_API << '\n';
-            emitted_version = true;
-          }
-
-        if(option_map.count(CPPTRANSPORT_SWITCH_HELP))
-          {
-            if(!emitted_version) std::cout << CPPTRANSPORT_NAME << " " << CPPTRANSPORT_VERSION << " " << CPPTRANSPORT_COPYRIGHT << " | " << CPPTRANSPORT_RUNTIME_API << '\n';
-            std::cout << output_options << '\n';
-          }
-
-        if(option_map.count(CPPTRANSPORT_SWITCH_MODELS))
-          {
-            this->arg_cache.set_model_list(true);
-          }
+        this->recognize_generic_switches(option_map, output_options);
 
         if(option_map.count(CPPTRANSPORT_SWITCH_REPO))
           {
@@ -181,6 +148,12 @@ namespace transport
               }
           }
 
+        this->recognize_configuration_switches(option_map);
+        this->recognize_repository_switches(option_map);
+        this->recognize_journal_switches(option_map);
+        this->recognize_job_switches(option_map);
+        this->recognize_plot_switches(option_map);
+
         // populate list of tags
         std::list<std::string> tags;
         if(option_map.count(CPPTRANSPORT_SWITCH_TAG) > 0)
@@ -188,9 +161,75 @@ namespace transport
             std::vector<std::string> tmp = option_map[CPPTRANSPORT_SWITCH_TAG].as<std::vector<std::string> >();
 
             // copy tags into std::list tags
-            // Boost::program_arguments doesn't support lists, so we have to do it this way
+            // Boost::program_arguments doesn't support lists, only vectors, so we have to do it this way
             std::copy(tmp.begin(), tmp.end(), std::back_inserter(tags));
           }
+
+        // process task item
+        // this can depend on prior information specified by other switches, eg. --seed
+        if(option_map.count(CPPTRANSPORT_SWITCH_TASK))
+          {
+            std::vector<std::string> tasks = option_map[CPPTRANSPORT_SWITCH_TASK].as< std::vector<std::string> >();
+
+            for(std::vector<std::string>::const_iterator t = tasks.begin(); t != tasks.end(); ++t)
+              {
+                job_queue.push_back(job_descriptor(job_type::job_task, *t, tags));
+
+                if(option_map.count(CPPTRANSPORT_SWITCH_SEED))
+                  {
+                    job_queue.back().set_seed(option_map[CPPTRANSPORT_SWITCH_SEED].as<std::string>());
+                  }
+              }
+          }
+      }
+
+
+    template <typename number>
+    void master_controller<number>::warn_unrecognized_switches(boost::program_options::parsed_options& options)
+      {
+        std::vector<std::string> unrecognized_options = boost::program_options::collect_unrecognized(options.options, boost::program_options::exclude_positional);
+        if(unrecognized_options.size() > 0)
+          {
+            for(const std::string& option : unrecognized_options)
+              {
+                std::ostringstream msg;
+                msg << CPPTRANSPORT_UNKNOWN_SWITCH << " '" << option << "'";
+                this->warn(msg.str());
+              }
+          }
+      }
+
+
+    template <typename number>
+    void master_controller<number>::recognize_generic_switches(boost::program_options::variables_map& option_map, boost::program_options::options_description& description)
+      {
+        bool emitted_version = false;
+
+        if(option_map.count(CPPTRANSPORT_SWITCH_VERSION))
+          {
+            std::cout << CPPTRANSPORT_NAME << " " << CPPTRANSPORT_VERSION << " " << CPPTRANSPORT_COPYRIGHT << " | " << CPPTRANSPORT_RUNTIME_API << '\n';
+            emitted_version = true;
+          }
+
+        if(option_map.count(CPPTRANSPORT_SWITCH_HELP))
+          {
+            if(!emitted_version) std::cout << CPPTRANSPORT_NAME << " " << CPPTRANSPORT_VERSION << " " << CPPTRANSPORT_COPYRIGHT << " | " << CPPTRANSPORT_RUNTIME_API << '\n';
+            std::cout << description << '\n';
+          }
+
+        if(option_map.count(CPPTRANSPORT_SWITCH_MODELS))
+          {
+            this->arg_cache.set_model_list(true);
+          }
+
+        if(option_map.count(CPPTRANSPORT_SWITCH_NO_COLOUR) || option_map.count(CPPTRANSPORT_SWITCH_NO_COLOR)) this->arg_cache.set_colour_output(false);
+      }
+
+
+    template <typename number>
+    void master_controller<number>::recognize_configuration_switches(boost::program_options::variables_map& option_map)
+      {
+        if(option_map.count(CPPTRANSPORT_SWITCH_VERBOSE_LONG)) this->arg_cache.set_verbose(true);
 
         // process global capacity specification, if provided
         if(option_map.count(CPPTRANSPORT_SWITCH_CAPACITY))
@@ -223,7 +262,6 @@ namespace transport
                 unsigned int cp = static_cast<unsigned int>(capacity);
 
                 this->arg_cache.set_datapipe_capacity(cp);
-
                 this->data_mgr->set_pipe_capacity(cp);                            // probably not required; only slaves need these values set
               }
             else
@@ -243,7 +281,6 @@ namespace transport
                 unsigned int cp = static_cast<unsigned int>(capacity);
 
                 this->arg_cache.set_batcher_capacity(cp);
-
                 this->data_mgr->set_batcher_capacity(cp);                         // probably not required; only slaves need these values set
               }
             else
@@ -253,6 +290,39 @@ namespace transport
                 this->err(msg.str());
               }
           }
+      }
+
+
+    template <typename number>
+    void master_controller<number>::recognize_repository_switches(boost::program_options::variables_map& option_map)
+      {
+        if(option_map.count(CPPTRANSPORT_SWITCH_RECOVER)) this->arg_cache.set_recovery_mode(true);
+      }
+
+
+    template <typename number>
+    void master_controller<number>::recognize_journal_switches(boost::program_options::variables_map& option_map)
+      {
+        // process Gantt chart specification, if provided
+        if(option_map.count(CPPTRANSPORT_SWITCH_GANTT_CHART))
+          {
+            this->arg_cache.set_gantt_chart(true);
+            this->arg_cache.set_gantt_filename(option_map[CPPTRANSPORT_SWITCH_GANTT_CHART].as<std::string>());
+          }
+
+        // process journal specification, if provided
+        if(option_map.count(CPPTRANSPORT_SWITCH_JOURNAL))
+          {
+            this->arg_cache.set_journal(true);
+            this->arg_cache.set_journal_filename(option_map[CPPTRANSPORT_SWITCH_JOURNAL].as<std::string>());
+          }
+      }
+
+
+    template <typename number>
+    void master_controller<number>::recognize_job_switches(boost::program_options::variables_map& option_map)
+      {
+        if(option_map.count(CPPTRANSPORT_SWITCH_CREATE)) this->arg_cache.set_create_mode(true);
 
         // process checkpoint timer specification, if provided
         if(option_map.count(CPPTRANSPORT_SWITCH_CHECKPOINT))
@@ -272,21 +342,12 @@ namespace transport
                 this->err(msg.str());
               }
           }
+      }
 
-        // process Gantt chart specification, if provided
-        if(option_map.count(CPPTRANSPORT_SWITCH_GANTT_CHART))
-          {
-            this->arg_cache.set_gantt_chart(true);
-            this->arg_cache.set_gantt_filename(option_map[CPPTRANSPORT_SWITCH_GANTT_CHART].as<std::string>());
-          }
 
-        // process journal specification, if provided
-        if(option_map.count(CPPTRANSPORT_SWITCH_JOURNAL))
-          {
-            this->arg_cache.set_journal(true);
-            this->arg_cache.set_journal_filename(option_map[CPPTRANSPORT_SWITCH_JOURNAL].as<std::string>());
-          }
-
+    template <typename number>
+    void master_controller<number>::recognize_plot_switches(boost::program_options::variables_map& option_map)
+      {
         // process plotting environment, if provided
         if(option_map.count(CPPTRANSPORT_PLOT_STYLE_LONG))
           {
@@ -295,28 +356,6 @@ namespace transport
                 std::ostringstream msg;
                 msg << CPPTRANSPORT_UNKNOWN_PLOT_STYLE << " '" << option_map[CPPTRANSPORT_PLOT_STYLE_LONG].as<std::string>() << "'";
                 this->warn(msg.str());
-              }
-          }
-
-        if(option_map.count(CPPTRANSPORT_SWITCH_VERBOSE_LONG))                                                this->arg_cache.set_verbose(true);
-        if(option_map.count(CPPTRANSPORT_SWITCH_RECOVER))                                                     this->arg_cache.set_recovery_mode(true);
-        if(option_map.count(CPPTRANSPORT_SWITCH_NO_COLOUR) || option_map.count(CPPTRANSPORT_SWITCH_NO_COLOR)) this->arg_cache.set_colour_output(false);
-        if(option_map.count(CPPTRANSPORT_SWITCH_CREATE))                                                      this->arg_cache.set_create_mode(true);
-
-        // process task item
-        // this can depend on prior information specified by other switches, eg. --seed
-        if(option_map.count(CPPTRANSPORT_SWITCH_TASK))
-          {
-            std::vector<std::string> tasks = option_map[CPPTRANSPORT_SWITCH_TASK].as< std::vector<std::string> >();
-
-            for(std::vector<std::string>::const_iterator t = tasks.begin(); t != tasks.end(); ++t)
-              {
-                job_queue.push_back(job_descriptor(job_type::job_task, *t, tags));
-
-                if(option_map.count(CPPTRANSPORT_SWITCH_SEED))
-                  {
-                    job_queue.back().set_seed(option_map[CPPTRANSPORT_SWITCH_SEED].as<std::string>());
-                  }
               }
           }
       }

@@ -42,7 +42,7 @@
 #define CPPTRANSPORT_HELP_CHECKPOINT          "commit data after given interval, measured in minutes"
 
 #define CPPTRANSPORT_SWITCH_RECOVER           "recover"
-#define CPPTRANSPORT_HELP_RECOVER             "attempt to recover crashed output groups"
+#define CPPTRANSPORT_HELP_RECOVER             "attempt to recover crashed tasks or jobs"
 
 #define CPPTRANSPORT_SWITCH_SEED              "seed"
 #define CPPTRANSPORT_HELP_SEED                "use named output group as a seed"
@@ -65,6 +65,12 @@
 #define CPPTRANSPORT_PLOT_STYLE               "plot-style,e"
 #define CPPTRANSPORT_PLOT_STYLE_LONG          "plot-style"
 #define CPPTRANSPORT_HELP_PLOT_STYLE          "set plotting style"
+
+#define CPPTRANSPORT_SWITCH_STATUS            "status"
+#define CPPTRANSPORT_HELP_STATUS              "report current status of repository"
+
+#define CPPTRANSPORT_SWITCH_INFO              "info"
+#define CPPTRANSPORT_HELP_INFO                "display repository information for specified object"
 
 
 #endif //CPPTRANSPORT_COMMAND_LINE_H

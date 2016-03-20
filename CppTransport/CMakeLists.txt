@@ -730,9 +730,10 @@ set(TRANSPORT_RUNTIME_API_MANAGER_FILES
   transport-runtime-api/manager/mpi_operations.h
   transport-runtime-api/manager/slave_controller.h
   transport-runtime-api/manager/slave_work_handler.h
+  transport-runtime-api/manager/task_gallery.h
   transport-runtime-api/manager/task_manager.h
   transport-runtime-api/manager/work_journal.h
-  transport-runtime-api/manager/task_gallery.h)
+  )
 
 set(TRANSPORT_RUNTIME_API_MODELS_FILES
   transport-runtime-api/models/advisory_classes.h
@@ -742,9 +743,15 @@ set(TRANSPORT_RUNTIME_API_MODELS_FILES
   transport-runtime-api/models/observers.h
   )
 
+set(TRANSPORT_RUNTIME_API_REPORTING_FILES
+  transport-runtime-api/reporting/command_line.h
+  )
+
 set(TRANSPORT_RUNTIME_API_REPOSITORY_DETAIL_FILES
   transport-runtime-api/repository/detail/repository_decl.h
   transport-runtime-api/repository/detail/repository_impl.h
+  transport-runtime-api/repository/detail/writer_repo_decl.h
+  transport-runtime-api/repository/detail/writer_repo_impl.h
   )
 
 set(TRANSPORT_RUNTIME_API_REPOSITORY_FILES
@@ -805,7 +812,11 @@ set(TRANSPORT_RUNTIME_API_SQLITE3_DETAIL_FILES
   transport-runtime-api/sqlite3/detail/data_manager_sqlite3_impl.h
   transport-runtime-api/sqlite3/detail/repository_sqlite3_decl.h
   transport-runtime-api/sqlite3/detail/repository_sqlite3_impl.h
-  transport-runtime-api/sqlite3/detail/transaction_handler_decl.h transport-runtime-api/sqlite3/detail/transaction_handler_impl.h transport-runtime-api/repository/detail/writer_repo_decl.h transport-runtime-api/repository/detail/writer_repo_impl.h transport-runtime-api/sqlite3/detail/writer_data_mgr_decl.h transport-runtime-api/sqlite3/detail/writer_data_mgr_impl.h)
+  transport-runtime-api/sqlite3/detail/transaction_handler_decl.h
+  transport-runtime-api/sqlite3/detail/transaction_handler_impl.h
+  transport-runtime-api/sqlite3/detail/writer_data_mgr_decl.h
+  transport-runtime-api/sqlite3/detail/writer_data_mgr_impl.h
+  )
 
 set(TRANSPORT_RUNTIME_API_SQLITE3_FILES
   transport-runtime-api/sqlite3/data_manager_sqlite3.h
@@ -850,6 +861,7 @@ set(TRANSPORT_RUNTIME_API_TASKS_FILES
   transport-runtime-api/tasks/task_configurations.h
   transport-runtime-api/tasks/task_configurations_forward_declare.h
   transport-runtime-api/tasks/task_helper.h
+  transport-runtime-api/tasks/task_types.h
   transport-runtime-api/tasks/tasks_forward_declare.h
   )
 
@@ -879,9 +891,9 @@ set(TRANSPORT_RUNTIME_API_UTILITIES_FILES
   transport-runtime-api/utilities/latex_output.h
   transport-runtime-api/utilities/linecache.h
   transport-runtime-api/utilities/named_list.h
+  transport-runtime-api/utilities/plot_environment.h
   transport-runtime-api/utilities/random_string.h
   transport-runtime-api/utilities/spline1d.h
-  transport-runtime-api/utilities/plot_environment.h
   )
 
 set(UTILITIES_FILES
@@ -960,6 +972,7 @@ set(SOURCE_FILES
   ${TRANSPORT_RUNTIME_API_MANAGER_DETAIL_FILES}
   ${TRANSPORT_RUNTIME_API_MANAGER_FILES}
   ${TRANSPORT_RUNTIME_API_MODELS_FILES}
+  ${TRANSPORT_RUNTIME_API_REPORTING_FILES}
   ${TRANSPORT_RUNTIME_API_REPOSITORY_DETAIL_FILES}
   ${TRANSPORT_RUNTIME_API_REPOSITORY_FILES}
   ${TRANSPORT_RUNTIME_API_REPOSITORY_RECORDS_DETAIL_FILES}

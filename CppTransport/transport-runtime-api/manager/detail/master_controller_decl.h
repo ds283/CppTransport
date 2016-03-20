@@ -34,9 +34,12 @@
 #include "transport-runtime-api/manager/detail/job_descriptors.h"
 #include "transport-runtime-api/manager/detail/aggregation_forward_declare.h"
 
+#include "transport-runtime-api/reporting/command_line.h"
+
 
 #include "boost/mpi.hpp"
 #include "boost/serialization/string.hpp"
+#include "boost/program_options.hpp"
 
 
 namespace transport
@@ -78,6 +81,29 @@ namespace transport
 
         //! execute any queued tasks
         void execute_tasks(void);
+
+      protected:
+
+        //! warn user of unrecognized options or command-line switches
+        void warn_unrecognized_switches(boost::program_options::parsed_options& options);
+
+        //! recognize generic options
+        void recognize_generic_switches(boost::program_options::variables_map& option_map, boost::program_options::options_description& description);
+
+        //! recognize configuration switches
+        void recognize_configuration_switches(boost::program_options::variables_map& option_map);
+
+        //! recognize repository switches
+        void recognize_repository_switches(boost::program_options::variables_map& option_map);
+
+        //! recognize journalling switches
+        void recognize_journal_switches(boost::program_options::variables_map& option_map);
+
+        //! recognize job control switches
+        void recognize_job_switches(boost::program_options::variables_map& option_map);
+
+        //! recognize plotting control switches
+        void recognize_plot_switches(boost::program_options::variables_map& option_map);
 
 
         // MPI FUNCTIONS
@@ -297,6 +323,9 @@ namespace transport
 
         //! Event journal
         work_journal journal;
+
+        //! Command-line reports tool
+        reporting::command_line cmdline_reports;
 
 
         // DATA AND STATE
