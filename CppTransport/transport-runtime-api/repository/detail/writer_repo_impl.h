@@ -50,7 +50,7 @@ namespace transport
     void repository_derived_content_writer_commit<number>::operator()(derived_content_writer<number>& writer)
       {
         transaction_manager mgr = this->repo.transaction_factory();
-        return this->repo.close_derived_content_writer(writer, mgr);
+        this->repo.close_derived_content_writer(writer, mgr);
         mgr.commit();
       }
 
@@ -59,7 +59,7 @@ namespace transport
     void repository_derived_content_writer_abort<number>::operator()(derived_content_writer<number>& writer)
       {
         transaction_manager mgr = this->repo.transaction_factory();
-        return this->repo.abort_derived_content_writer(writer, mgr);
+        this->repo.abort_derived_content_writer(writer, mgr);
         mgr.commit();
       }
 
