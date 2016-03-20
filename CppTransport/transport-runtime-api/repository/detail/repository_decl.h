@@ -105,21 +105,29 @@ namespace transport
 
         //! Write a 'model/initial conditions/parameters' combination (a 'package') to the package database.
         virtual void commit(const initial_conditions<number>& ics) = 0;
+        virtual void commit(transaction_manager& mgr, const initial_conditions<number>& ics) = 0;
 
         //! Write an integration task to the database.
         virtual void commit(const twopf_task<number>& tk) = 0;
         virtual void commit(const threepf_task<number>& tk) = 0;
+        virtual void commit(transaction_manager& mgr, const twopf_task<number>& tk) = 0;
+        virtual void commit(transaction_manager& mgr, const threepf_task<number>& tk) = 0;
 
         //! Write an output task to the database
         virtual void commit(const output_task<number>& tk) = 0;
+        virtual void commit(transaction_manager& mgr, const output_task<number>& tk) = 0;
 
         //! Write a postintegration task to the database
         virtual void commit(const zeta_twopf_task<number>& tk) = 0;
         virtual void commit(const zeta_threepf_task<number>& tk) = 0;
         virtual void commit(const fNL_task<number>& tk) = 0;
+        virtual void commit(transaction_manager& mgr, const zeta_twopf_task<number>& tk) = 0;
+        virtual void commit(transaction_manager& mgr, const zeta_threepf_task<number>& tk) = 0;
+        virtual void commit(transaction_manager& mgr, const fNL_task<number>& tk) = 0;
 
         //! Write a derived product specification
         virtual void commit(const derived_data::derived_product<number>& d) = 0;
+        virtual void commit(transaction_manager& mgr, const derived_data::derived_product<number>& d) = 0;
 
 
         // READ RECORDS FROM THE DATABASE

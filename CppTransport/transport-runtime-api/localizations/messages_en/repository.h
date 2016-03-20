@@ -98,7 +98,11 @@
 #define CPPTRANSPORT_REPO_TRANSACTION_UNDERWAY        "Repository error: attempt to begin a new transaction while one is already underway"
 #define CPPTRANSPORT_REPO_TRANSACTION_COMMITTED       "Repository error: attempt to add to a transaction which has already been committed"
 #define CPPTRANSPORT_REPO_TRANSACTION_DEAD            "Repository error: attempt to add to a transaction which has been rolled back"
+
 #define CPPTRANSPORT_REPO_TRANSACTION_NO_LOCK         "Repository error: transaction manager cannot gain exclusive repository lock"
+#define CPPTRANSPORT_REPO_TRANSACTION_LOST_LOCK       "Repository error: transaction manager lost exclusive lock"
+
+#define CPPTRANSPORT_REPO_RECOVER_WHILE_TRANSACTIONS  "Repository error: attempt to perform recovery while transactions are in progress"
 
 #define CPPTRANSPORT_REPO_TRANSACTION_OVER_RELEASE    "Internal error: over-release of transaction"
 

@@ -99,34 +99,42 @@ namespace transport
         //! Write a 'model/initial conditions/parameters' combination (a 'package') to the package database.
         //! No combination with the supplied name should already exist; if it does, this is considered an error.
         virtual void commit(const initial_conditions<number>& ics) override;
+        virtual void commit(transaction_manager& mgr, const initial_conditions<number>& ics) override;
 
         //! Write an integration task to the database.
         virtual void commit(const twopf_task<number>& tk) override;
         virtual void commit(const threepf_task<number>& tk) override;
+        virtual void commit(transaction_manager& mgr, const twopf_task<number>& tk) override;
+        virtual void commit(transaction_manager& mgr, const threepf_task<number>& tk) override;
 
         //! Write an output task to the database
         virtual void commit(const output_task<number>& tk) override;
+        virtual void commit(transaction_manager& mgr, const output_task<number>& tk) override;
 
         //! Write a postintegration task to the database
         virtual void commit(const zeta_twopf_task<number>& tk) override;
         virtual void commit(const zeta_threepf_task<number>& tk) override;
         virtual void commit(const fNL_task<number>& tk) override;
+        virtual void commit(transaction_manager& mgr, const zeta_twopf_task<number>& tk) override;
+        virtual void commit(transaction_manager& mgr, const zeta_threepf_task<number>& tk) override;
+        virtual void commit(transaction_manager& mgr, const fNL_task<number>& tk) override;
 
         //! Write a derived product specification
         virtual void commit(const derived_data::derived_product<number>& d) override;
+        virtual void commit(transaction_manager& mgr, const derived_data::derived_product<number>& d) override;
 
       protected:
 
         //! Generic commit method for integration task; public commit methods delegate to this
         template <typename TaskType>
-        void commit_integration_task(const TaskType& tk);
+        void commit_integration_task(transaction_manager& mgr, const TaskType& tk);
 
         //! Generic commit method for postintegration task; public commit methods delegate to this
         template <typename TaskType>
-        void commit_postintegration_task(const TaskType& tk);
+        void commit_postintegration_task(transaction_manager& mgr, const TaskType& tk);
 
         //! Autocommit a derivable task encountered as part of another task specification
-        void autocommit(derivable_task <number>& tk, std::string parent,
+        void autocommit(transaction_manager& mgr, derivable_task <number>& tk, std::string parent,
                         std::string commit_int_A, std::string commit_int_B,
                         std::string commit_pint_A, std::string commit_pint_B);
 

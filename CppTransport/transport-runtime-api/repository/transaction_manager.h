@@ -257,6 +257,13 @@ namespace transport
 
 		void transaction_manager::commit()
 			{
+        // check lockfile is present
+        if(!boost::filesystem::exists(this->lockfile))
+          {
+            this->rollback();
+            throw runtime_exception(exception_type::REPOSITORY_TRANSACTION_ERROR, CPPTRANSPORT_REPO_TRANSACTION_LOST_LOCK);
+          }
+
 				// work through the journal, committing
         for(std::unique_ptr<journal_record>& rec : this->journal)
 					{
@@ -267,7 +274,7 @@ namespace transport
 				this->committed = true;
 				this->handler->release();
 
-        // remove lockfile if present, releasing our exclusive lock on the database
+        // remove lockfile, releasing our exclusive lock on the database
         if(boost::filesystem::exists(this->lockfile)) boost::filesystem::remove(this->lockfile);
 			}
 

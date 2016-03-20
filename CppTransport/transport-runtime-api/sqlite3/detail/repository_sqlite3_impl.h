@@ -567,16 +567,24 @@ namespace transport
 
 
     // Write a 'model/initial conditions/parameters' combination (a 'package') to the package database.
+
     template <typename number>
     void repository_sqlite3<number>::commit(const initial_conditions<number>& ics)
+      {
+        transaction_manager mgr = this->transaction_factory();
+        this->commit(mgr, ics);
+        mgr.commit();
+      }
+
+
+    template <typename number>
+    void repository_sqlite3<number>::commit(transaction_manager& mgr, const initial_conditions<number>& ics)
       {
         // check for a package with a duplicate name
         this->check_package_duplicate(ics.get_name());
 
-        transaction_manager mgr = this->transaction_factory();
         std::unique_ptr< package_record<number> > record = package_record_factory(ics);
         record->commit(mgr);
-        mgr.commit();
       }
 
 
@@ -585,28 +593,44 @@ namespace transport
     template <typename number>
     void repository_sqlite3<number>::commit(const twopf_task<number>& tk)
       {
-        return this->commit_integration_task(tk);
+        transaction_manager mgr = this->transaction_factory();
+        this->commit_integration_task(mgr, tk);
+        mgr.commit();
+      }
+
+
+    template <typename number>
+    void repository_sqlite3<number>::commit(transaction_manager& mgr, const twopf_task<number>& tk)
+      {
+        this->commit_integration_task(mgr, tk);
       }
 
 
     template <typename number>
     void repository_sqlite3<number>::commit(const threepf_task<number>& tk)
       {
-        return this->commit_integration_task(tk);
+        transaction_manager mgr = this->transaction_factory();
+        this->commit_integration_task(mgr, tk);
+        mgr.commit();
+      }
+
+
+    template <typename number>
+    void repository_sqlite3<number>::commit(transaction_manager& mgr, const threepf_task<number>& tk)
+      {
+        this->commit_integration_task(mgr, tk);
       }
 
 
     template <typename number>
     template <typename TaskType>
-    void repository_sqlite3<number>::commit_integration_task(const TaskType& tk)
+    void repository_sqlite3<number>::commit_integration_task(transaction_manager& mgr, const TaskType& tk)
       {
         // check for a task with a duplicate name
         this->check_task_duplicate(tk.get_name());
 
-        transaction_manager mgr = this->transaction_factory();
         std::unique_ptr< integration_task_record<number> > record = integration_task_record_factory(tk);
         record->commit(mgr);
-        mgr.commit();
 
         // check whether the initial conditions package for this task is already present; if not, insert it
         unsigned int count = sqlite3_operations::count_packages(this->db, tk.get_ics().get_name());
@@ -616,7 +640,7 @@ namespace transport
             msg << CPPTRANSPORT_REPO_AUTOCOMMIT_INTEGRATION_A << " '" << tk.get_name() << "' "
             << CPPTRANSPORT_REPO_AUTOCOMMIT_INTEGRATION_B << " '" << tk.get_ics().get_name() << "'";
             this->message(msg.str());
-            this->commit(tk.get_ics());
+            this->commit(mgr, tk.get_ics());
           }
       }
 
@@ -626,13 +650,20 @@ namespace transport
     template <typename number>
     void repository_sqlite3<number>::commit(const output_task<number>& tk)
       {
+        transaction_manager mgr = this->transaction_factory();
+        this->commit(mgr, tk);
+        mgr.commit();
+      }
+
+
+    template <typename number>
+    void repository_sqlite3<number>::commit(transaction_manager& mgr, const output_task<number>& tk)
+      {
         // check for a task with a duplicate name
         this->check_task_duplicate(tk.get_name());
 
-        transaction_manager mgr = this->transaction_factory();
         std::unique_ptr< output_task_record<number> > record = output_task_record_factory(tk);
         record->commit(mgr);
-        mgr.commit();
 
         // check whether derived products on which this task depends have already been committed to the database
         const typename std::vector< output_task_element<number> > elements = tk.get_elements();
@@ -647,7 +678,7 @@ namespace transport
                 msg << CPPTRANSPORT_REPO_AUTOCOMMIT_OUTPUT_A << " '" << tk.get_name() << "' "
                 << CPPTRANSPORT_REPO_AUTOCOMMIT_OUTPUT_B << " '" << product.get_name() << "'";
                 this->message(msg.str());
-                this->commit(product);
+                this->commit(mgr, product);
               }
           }
       }
@@ -658,57 +689,89 @@ namespace transport
     template <typename number>
     void repository_sqlite3<number>::commit(const zeta_twopf_task<number>& tk)
       {
-        return this->commit_postintegration_task(tk);
+        transaction_manager mgr = this->transaction_factory();
+        this->commit_postintegration_task(mgr, tk);
+        mgr.commit();
+      }
+
+
+    template <typename number>
+    void repository_sqlite3<number>::commit(transaction_manager& mgr, const zeta_twopf_task<number>& tk)
+      {
+        this->commit_postintegration_task(mgr, tk);
       }
 
 
     template <typename number>
     void repository_sqlite3<number>::commit(const zeta_threepf_task<number>& tk)
       {
-        return this->commit_postintegration_task(tk);
+        transaction_manager mgr = this->transaction_factory();
+        this->commit_postintegration_task(mgr, tk);
+        mgr.commit();
+      }
+
+
+    template <typename number>
+    void repository_sqlite3<number>::commit(transaction_manager& mgr, const zeta_threepf_task<number>& tk)
+      {
+        this->commit_postintegration_task(mgr, tk);
       }
 
 
     template <typename number>
     void repository_sqlite3<number>::commit(const fNL_task<number>& tk)
       {
-        return this->commit_postintegration_task(tk);
+        transaction_manager mgr = this->transaction_factory();
+        this->commit_postintegration_task(mgr, tk);
+        mgr.commit();
+      }
+
+
+    template <typename number>
+    void repository_sqlite3<number>::commit(transaction_manager& mgr, const fNL_task<number>& tk)
+      {
+        this->commit_postintegration_task(mgr, tk);
       }
 
 
     template <typename number>
     template <typename TaskType>
-    void repository_sqlite3<number>::commit_postintegration_task(const TaskType& tk)
+    void repository_sqlite3<number>::commit_postintegration_task(transaction_manager& mgr, const TaskType& tk)
       {
         // check for a task with a duplicate name
         this->check_task_duplicate(tk.get_name());
 
-        transaction_manager mgr = this->transaction_factory();
         std::unique_ptr<postintegration_task_record < number> > record(postintegration_task_record_factory(tk));
         record->commit(mgr);
-        mgr.commit();
 
         // check whether parent task is already committed to the database
         unsigned int count = sqlite3_operations::count_tasks(this->db, tk.get_parent_task()->get_name());
         if(count > 0) return;
 
-        this->autocommit(*tk.get_parent_task(), tk.get_name(),
+        this->autocommit(mgr, *tk.get_parent_task(), tk.get_name(),
                          CPPTRANSPORT_REPO_AUTOCOMMIT_POSTINTEGR_A, CPPTRANSPORT_REPO_AUTOCOMMIT_POSTINTEGR_B,
                          CPPTRANSPORT_REPO_AUTOCOMMIT_POSTINTEGR_C, CPPTRANSPORT_REPO_AUTOCOMMIT_POSTINTEGR_D);
       }
 
 
     // Write a derived product specification
+
     template <typename number>
     void repository_sqlite3<number>::commit(const derived_data::derived_product<number>& d)
+      {
+        transaction_manager mgr = this->transaction_factory();
+        this->commit(mgr, d);
+        mgr.commit();
+      }
+
+    template <typename number>
+    void repository_sqlite3<number>::commit(transaction_manager& mgr, const derived_data::derived_product<number>& d)
       {
         // check for a derived product with a duplicate name
         this->check_product_duplicate(d.get_name());
 
-        transaction_manager mgr = this->transaction_factory();
         std::unique_ptr< derived_product_record<number> > record = derived_product_record_factory(d);
         record->commit(mgr);
-        mgr.commit();
 
         // check whether all tasks on which this derived product depends are already in the database
         typename std::vector<derivable_task<number>*> task_list;
@@ -720,7 +783,7 @@ namespace transport
 
             if(count == 0)
               {
-                this->autocommit(*tk, d.get_name(),
+                this->autocommit(mgr, *tk, d.get_name(),
                                  CPPTRANSPORT_REPO_AUTOCOMMIT_PRODUCT_A, CPPTRANSPORT_REPO_AUTOCOMMIT_PRODUCT_B,
                                  CPPTRANSPORT_REPO_AUTOCOMMIT_PRODUCT_C, CPPTRANSPORT_REPO_AUTOCOMMIT_PRODUCT_D);
               }
@@ -729,7 +792,7 @@ namespace transport
 
 
     template <typename number>
-    void repository_sqlite3<number>::autocommit(derivable_task<number>& tk, std::string parent,
+    void repository_sqlite3<number>::autocommit(transaction_manager& mgr, derivable_task<number>& tk, std::string parent,
                                                 std::string commit_int_A, std::string commit_int_B,
                                                 std::string commit_pint_A, std::string commit_pint_B)
       {
@@ -747,13 +810,13 @@ namespace transport
                   {
                     case integration_task_type::twopf:
                       {
-                        this->commit(dynamic_cast< twopf_task<number>& >(rtk));
+                        this->commit(mgr, dynamic_cast< twopf_task<number>& >(rtk));
                         break;
                       }
 
                     case integration_task_type::threepf:
                       {
-                        this->commit(dynamic_cast< threepf_task<number>& >(rtk));
+                        this->commit(mgr, dynamic_cast< threepf_task<number>& >(rtk));
                         break;
                       }
                   }
@@ -773,19 +836,19 @@ namespace transport
                   {
                     case postintegration_task_type::twopf:
                       {
-                        this->commit(dynamic_cast< zeta_twopf_task<number>& >(rtk));
+                        this->commit(mgr, dynamic_cast< zeta_twopf_task<number>& >(rtk));
                         break;
                       }
 
                     case postintegration_task_type::threepf:
                       {
-                        this->commit(dynamic_cast< zeta_threepf_task<number>& >(rtk));
+                        this->commit(mgr, dynamic_cast< zeta_threepf_task<number>& >(rtk));
                         break;
                       }
 
                     case postintegration_task_type::fNL:
                       {
-                        this->commit(dynamic_cast< fNL_task<number>& >(rtk));
+                        this->commit(mgr, dynamic_cast< fNL_task<number>& >(rtk));
                         break;
                       }
                   }
@@ -1117,6 +1180,15 @@ std::string repository_sqlite3<number>::reserve_content_name(const std::string& 
 template <typename number>
 void repository_sqlite3<number>::perform_recovery(data_manager<number>& data_mgr, unsigned int worker)
   {
+    // ensure no transactions are in progress
+    if(this->transactions != 0) throw runtime_exception(exception_type::REPOSITORY_TRANSACTION_ERROR, CPPTRANSPORT_REPO_RECOVER_WHILE_TRANSACTIONS);
+
+    // detect if lockfile is still present in the repository; if so, forcibly remove it
+    // this will cause any concurrent process which has locked the repository to fail,
+    // so recovery should be used with caution
+    boost::filesystem::path lockfile = this->root_path / CPPTRANSPORT_REPO_LOCKFILE_LEAF;
+    if(boost::filesystem::exists(lockfile)) boost::filesystem::remove(lockfile);
+
     // get SQLite layer to enumerate hot writers
     std::list<sqlite3_operations::inflight_integration>     hot_integrations;
     std::list<sqlite3_operations::inflight_postintegration> hot_postintegrations;
@@ -1127,7 +1199,7 @@ void repository_sqlite3<number>::perform_recovery(data_manager<number>& data_mgr
     sqlite3_operations::enumerate_inflight_derived_content(this->db, hot_derived_content);
 
     // recover these writers
-    // do postintegrations first to pick up any paired integrations
+    // do postintegrations first, to pick up any paired integrations
     this->recover_postintegrations(data_mgr, hot_postintegrations, hot_integrations, worker);
 
     // recover any integrations left over after handling paired integrations
