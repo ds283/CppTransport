@@ -3,8 +3,8 @@
 // Copyright (c) 2013-14 University of Sussex. All rights reserved.
 //
 
-#ifndef CPPTRANSPORT_MESSAGES_EN_H_
-#define CPPTRANSPORT_MESSAGES_EN_H_
+#ifndef CPPTRANSPORT_MESSAGES_EN_H
+#define CPPTRANSPORT_MESSAGES_EN_H
 
 
 #include "transport-runtime-api/localizations/messages_en/runtimeapi.h"
@@ -13,6 +13,7 @@
 #include "transport-runtime-api/localizations/messages_en/serialization.h"
 
 #include "transport-runtime-api/localizations/messages_en/labels.h"
+#include "transport-runtime-api/localizations/messages_en/asciitable.h"
 
 #include "transport-runtime-api/localizations/messages_en/models.h"
 #include "transport-runtime-api/localizations/messages_en/integration.h"
@@ -44,6 +45,9 @@
 
 #include "transport-runtime-api/localizations/messages_en/named_list.h"
 
+#include "transport-runtime-api/localizations/messages_en/report_cmdline.h"
+
+
 // derived products
 #include "transport-runtime-api/localizations/messages_en/derived-products/derived_product.h"
 #include "transport-runtime-api/localizations/messages_en/derived-products/line_collection.h"
@@ -59,4 +63,4 @@
 #include "transport-runtime-api/localizations/messages_en/derived-products/SQL_query.h"
 
 
-#endif // CPPTRANSPORT_MESSAGES_EN_H_
+#endif // CPPTRANSPORT_MESSAGES_EN_H

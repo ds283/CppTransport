@@ -204,29 +204,28 @@ namespace transport
 
 						if(out.is_open())
 							{
-						    asciitable<number> writer(out);
+						    asciitable writer(out);
 						    writer.set_precision(this->precision);
 								writer.set_wrap_status(false);    // don't want to wrap the content
 
 								// copy labels into vector of labels
 						    std::vector<std::string> labels;
-						    for(typename std::vector< typename line_collection<number>::output_line >::const_iterator t = data.begin(); t != data.end(); ++t)
+						    for(const typename line_collection<number>::output_line& line : data)
 							    {
-								    labels.push_back((*t).get_label());
+								    labels.push_back(line.get_label());
 							    }
 
 								// copy axis deque into the vector expected by asciitable
 						    std::vector<double> x;
 						    std::copy(axis.begin(), axis.end(), std::back_inserter(x));
 
-								// copy values into array ys.
-								// the outer array runs over time
-								// the inner array runs over lines
-						    std::vector< std::vector<number> > ys(x.size());
+								// copy values into array ys
+                // the entries in ys are stored columnwise
+						    std::vector< std::vector<number> > ys(labels.size());
 
 								for(unsigned int j = 0; j < ys.size(); ++j)
 									{
-										ys[j].resize(data.size());
+										ys[j].resize(x.size());
 									}
 
 								for(unsigned int i = 0; i < data.size(); ++i)
@@ -237,7 +236,7 @@ namespace transport
 
 										for(unsigned int j = 0; j < values.size(); ++j)
 											{
-												ys[j][i] = values[j].format_number();
+												ys[i][j] = values[j].format_number();
 											}
 									}
 
