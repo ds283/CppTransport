@@ -673,6 +673,7 @@ set(TRANSPORT_RUNTIME_API_LOCALIZATIONS_MESSAGES_EN_DERIVED_PRODUCTS_FILES
 
 set(TRANSPORT_RUNTIME_API_LOCALIZATIONS_MESSAGES_EN_FILES
   transport-runtime-api/localizations/messages_en/advisory_classes.h
+  transport-runtime-api/localizations/messages_en/asciitable.h
   transport-runtime-api/localizations/messages_en/command_line.h
   transport-runtime-api/localizations/messages_en/data_manager.h
   transport-runtime-api/localizations/messages_en/initial_conditions.h
@@ -687,6 +688,7 @@ set(TRANSPORT_RUNTIME_API_LOCALIZATIONS_MESSAGES_EN_FILES
   transport-runtime-api/localizations/messages_en/named_list.h
   transport-runtime-api/localizations/messages_en/parameters.h
   transport-runtime-api/localizations/messages_en/range.h
+  transport-runtime-api/localizations/messages_en/report_cmdline.h
   transport-runtime-api/localizations/messages_en/repository.h
   transport-runtime-api/localizations/messages_en/repository_sqlite3.h
   transport-runtime-api/localizations/messages_en/runtimeapi.h
