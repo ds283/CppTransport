@@ -109,9 +109,9 @@ namespace transport
 
           public:
 
-            virtual void commit() override { boost::filesystem::rename(journal, target); }
+            virtual void commit() override { boost::filesystem::rename(this->journal, this->target); }
 
-            virtual void rollback() override { boost::filesystem::remove(journal); }
+            virtual void rollback() override { boost::filesystem::remove(this->journal); }
 
 
             // INTERNAL DATA
@@ -191,6 +191,9 @@ namespace transport
         //! lockfile location
         boost::filesystem::path lockfile;
 
+        //! magic string written to lockfile to identify ourselves
+        std::string magic_string;
+
 
         // STATUS
 
@@ -236,8 +239,14 @@ namespace transport
         // no lockfile is present, so make one -- then we have exclusive access to the database until
         // the lockfile is removed
         std::ofstream make_lock(lockfile.string(), std::ios::out | std::ios::trunc);
-        make_lock.close();
 
+        // write magic string consisting of current POSIX time, used to identify if lockfile has been changed
+        // by another process
+        boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
+        magic_string = boost::posix_time::to_iso_string(now);
+        make_lock << magic_string;
+
+        make_lock.close();
 		    handler->open();
 			}
 
@@ -245,10 +254,20 @@ namespace transport
     transaction_manager::~transaction_manager()
 			{
 		    // rollback the transaction if it was not committed
-		    if(!this->committed && !this->dead) this->handler->rollback();
-
-        // remove lockfile if present, releasing our exclusive lock on the database
-        if(boost::filesystem::exists(this->lockfile)) boost::filesystem::remove(this->lockfile);
+		    if(!this->committed && !this->dead)
+          {
+            try
+              {
+                this->rollback();
+              }
+            catch(runtime_exception& xe)
+              {
+                // indicates that exclusive lock was lost, and lockfile has not been removed.
+                // Here we opt to just swallow the exception rather than risking throw from
+                // inside a destructor.
+                // Probably --recover will need to be run on the repository later.
+              }
+          }
 			}
 
 
@@ -257,12 +276,30 @@ namespace transport
 
 		void transaction_manager::commit()
 			{
-        // check lockfile is present
+        // check lockfile is present; if not, we have somehow lost the exclusive lock
+        // so rollback and throw an exception
         if(!boost::filesystem::exists(this->lockfile))
           {
-            this->rollback();
+            this->handler->rollback();
+            this->handler->release();
             throw runtime_exception(exception_type::REPOSITORY_TRANSACTION_ERROR, CPPTRANSPORT_REPO_TRANSACTION_LOST_LOCK);
           }
+
+        // read magic string from lockfile, and check it matches what we expect
+        // if not, rollback and throw an exception
+        std::ifstream lock_stream(this->lockfile.string(), std::ios::in);
+        std::string read_magic;
+        lock_stream >> read_magic;
+        lock_stream.close();
+
+        if(read_magic != this->magic_string)
+          {
+            this->handler->rollback();
+            this->handler->release();
+            throw runtime_exception(exception_type::REPOSITORY_TRANSACTION_ERROR, CPPTRANSPORT_REPO_TRANSACTION_LOST_LOCK);
+          }
+
+        // all is well with the locking, so proceed to commit
 
 				// work through the journal, committing
         for(std::unique_ptr<journal_record>& rec : this->journal)
@@ -281,6 +318,8 @@ namespace transport
 
 		void transaction_manager::rollback()
 			{
+        // First, unwind all journalled actions
+
 				// work through the journal, rolling back
         for(std::unique_ptr<journal_record>& rec : this->journal)
 					{
@@ -290,6 +329,28 @@ namespace transport
         this->handler->rollback();
 				this->dead = true;
         this->handler->release();
+
+        // Second, check status of locking; we should still have an exclusive lock on the database,
+        // and if not something has gone wrong
+
+        if(!boost::filesystem::exists(this->lockfile))
+          {
+            throw runtime_exception(exception_type::REPOSITORY_TRANSACTION_ERROR, CPPTRANSPORT_REPO_TRANSACTION_LOST_LOCK);
+          }
+
+        // read magic string from lockfile, and check it matches what we expect
+        std::ifstream lock_stream(this->lockfile.string(), std::ios::in);
+        std::string read_magic;
+        lock_stream >> read_magic;
+        lock_stream.close();
+
+        if(read_magic != this->magic_string)
+          {
+            throw runtime_exception(exception_type::REPOSITORY_TRANSACTION_ERROR, CPPTRANSPORT_REPO_TRANSACTION_LOST_LOCK);
+          }
+
+        // remove lockfile if exists, releasing our exclusive lock on the database
+        if(boost::filesystem::exists(this->lockfile)) boost::filesystem::remove(this->lockfile);
 			}
 
 
