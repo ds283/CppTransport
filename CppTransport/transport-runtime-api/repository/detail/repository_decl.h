@@ -134,7 +134,7 @@ namespace transport
         virtual void commit(transaction_manager& mgr, const derived_data::derived_product<number>& d) = 0;
 
 
-        // READ RECORDS FROM THE DATABASE
+        // SEARCH FOR DATABASE RECORDS
 
       public:
 
@@ -174,6 +174,13 @@ namespace transport
 
         //! Enumerate the output groups available from a named output task
         virtual output_content_db enumerate_output_task_content(const std::string& name) = 0;
+
+
+        // ENUMERATE INFLIGHT TASKS
+
+      public:
+
+        //! Enumerate
 
 
         // GENERATE WRITERS FOR TASKS

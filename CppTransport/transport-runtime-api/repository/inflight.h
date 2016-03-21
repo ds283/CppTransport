@@ -7,6 +7,7 @@
 #define CPPTRANSPORT_INFLIGHT_H
 
 #include <string>
+#include <map>
 
 #include "boost/filesystem/operations.hpp"
 
@@ -22,6 +23,10 @@ namespace transport
         boost::filesystem::path path;
         std::string             posix_time;
       };
+
+
+    typedef std::map< std::string, std::unique_ptr<inflight_group> > inflight_db;
+    typedef std::pair< const std::string, std::unique_ptr<inflight_group> > inflight_db_value_type;
 
 
     //! details of an inflight integration task
@@ -42,6 +47,10 @@ namespace transport
       };
 
 
+    typedef std::map< std::string, std::unique_ptr<inflight_integration> > inflight_integration_db;
+    typedef std::pair< const std::string, std::unique_ptr<inflight_integration> > inflight_integration_db_value_type;
+
+
     //! details of an inflight postintegration task
     class inflight_postintegration
       {
@@ -59,6 +68,10 @@ namespace transport
       };
 
 
+    typedef std::map< std::string, std::unique_ptr<inflight_postintegration> > inflight_postintegration_db;
+    typedef std::pair< const std::string, std::unique_ptr<inflight_postintegration> > inflight_postintegration_db_value_type;
+
+
     //! details of an inflight output/derived-content task
     class inflight_derived_content
       {
@@ -69,6 +82,10 @@ namespace transport
         boost::filesystem::path logdir;
         boost::filesystem::path tempdir;
       };
+
+
+    typedef std::map< std::string, std::unique_ptr<inflight_derived_content> > inflight_derived_content_db;
+    typedef std::pair< const std::string, std::unique_ptr<inflight_derived_content> > inflight_derived_content_db_value_type;
 
   }
 

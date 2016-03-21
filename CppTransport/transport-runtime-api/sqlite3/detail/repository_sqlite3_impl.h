@@ -1256,9 +1256,9 @@ void repository_sqlite3<number>::perform_recovery(data_manager<number>& data_mgr
     // and use it to handle all their internal affairs.
 
     // get SQLite layer to enumerate hot writers
-    std::list<inflight_integration>     hot_integrations;
-    std::list<inflight_postintegration> hot_postintegrations;
-    std::list<inflight_derived_content> hot_derived_content;
+    inflight_integration_db     hot_integrations;
+    inflight_postintegration_db hot_postintegrations;
+    inflight_derived_content_db hot_derived_content;
 
     sqlite3_operations::enumerate_inflight_integrations(this->db, hot_integrations);
     sqlite3_operations::enumerate_inflight_postintegrations(this->db, hot_postintegrations);
@@ -1276,23 +1276,23 @@ void repository_sqlite3<number>::perform_recovery(data_manager<number>& data_mgr
 
 
 template <typename number>
-void repository_sqlite3<number>::recover_integrations(data_manager<number>& data_mgr, std::list<inflight_integration>& list, unsigned int worker)
+void repository_sqlite3<number>::recover_integrations(data_manager<number>& data_mgr, inflight_integration_db& list, unsigned int worker)
   {
     // loop through hot integrations; for each one, set up a new integration_writer which is populated
     // with the configuration of the hot writer
 
     // then, carry out an integrity check and commit the writer
 
-    for(const inflight_integration& inflight : list)
+    for(const inflight_integration_db_value_type& inflight : list)
       {
         // get task record
-        std::unique_ptr< task_record<number> > pre_rec = this->query_task(inflight.task_name);
+        std::unique_ptr< task_record<number> > pre_rec = this->query_task(inflight.second->task_name);
         integration_task_record<number>* rec = dynamic_cast< integration_task_record<number>* >(pre_rec.get());
 
         assert(rec != nullptr);
         if(rec == nullptr) throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_RECORD_CAST_FAILED);
 
-        std::unique_ptr< integration_writer<number> > writer = this->get_integration_recovery_writer(inflight, data_mgr, *rec, worker);
+        std::unique_ptr< integration_writer<number> > writer = this->get_integration_recovery_writer(*inflight.second, data_mgr, *rec, worker);
 
         // carry out an integrity check; this updates the writer with all missing serial numbers
         // if any are missing, the writer will be marked as failed
@@ -1328,20 +1328,20 @@ repository_sqlite3<number>::get_integration_recovery_writer(const inflight_integ
 
 
 template <typename number>
-void repository_sqlite3<number>::recover_postintegrations(data_manager<number>& data_mgr, std::list<inflight_postintegration>& p_list,
-                                                          std::list<inflight_integration>& i_list, unsigned int worker)
+void repository_sqlite3<number>::recover_postintegrations(data_manager<number>& data_mgr, inflight_postintegration_db& p_list,
+                                                          inflight_integration_db& i_list, unsigned int worker)
   {
-    for(const inflight_postintegration& inflight : p_list)
+    for(const inflight_postintegration_db_value_type& inflight : p_list)
       {
         // get task record
-        std::unique_ptr< task_record<number> > pre_rec = this->query_task(inflight.task_name);
+        std::unique_ptr< task_record<number> > pre_rec = this->query_task(inflight.second->task_name);
         postintegration_task_record<number>* rec = dynamic_cast< postintegration_task_record<number>* >(pre_rec.get());
 
         assert(rec != nullptr);
         if(rec == nullptr) throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_RECORD_CAST_FAILED);
 
-        if(inflight.is_paired) this->recover_paired_postintegration(inflight, data_mgr, *rec, i_list, worker);
-        else                   this->recover_unpaired_postintegration(inflight, data_mgr, *rec, worker);
+        if(inflight.second->is_paired) this->recover_paired_postintegration(*inflight.second, data_mgr, *rec, i_list, worker);
+        else                           this->recover_unpaired_postintegration(*inflight.second, data_mgr, *rec, worker);
       }
   }
 
@@ -1367,7 +1367,7 @@ void repository_sqlite3<number>::recover_unpaired_postintegration(const inflight
 namespace repository_sqlite3_impl
   {
 
-    template <typename InFlightObject>
+    template <typename InFlightDatabaseObject>
     class FindInFlight
       {
       public:
@@ -1376,9 +1376,9 @@ namespace repository_sqlite3_impl
           {
           }
 
-        bool operator()(const InFlightObject& obj)
+        bool operator()(const InFlightDatabaseObject& obj)
           {
-            return(obj.content_group == name);
+            return(obj.first == name);
           }
 
       protected:
@@ -1391,20 +1391,20 @@ namespace repository_sqlite3_impl
 template <typename number>
 void repository_sqlite3<number>::recover_paired_postintegration(const inflight_postintegration& data, data_manager<number>& data_mgr,
                                                                 postintegration_task_record<number>& p_rec,
-                                                                std::list<inflight_integration>& i_list, unsigned int worker)
+                                                                inflight_integration_db& i_list, unsigned int worker)
   {
     // try to find paired integration in i_list
-    std::list<inflight_integration>::iterator t = std::find_if(i_list.begin(), i_list.end(),
-                                                               repository_sqlite3_impl::FindInFlight<inflight_integration>(data.parent_group));
+    inflight_integration_db::iterator t = std::find_if(i_list.begin(), i_list.end(),
+                                                       repository_sqlite3_impl::FindInFlight<inflight_integration_db_value_type>(data.parent_group));
 
     if(t == i_list.end()) this->recover_unpaired_postintegration(data, data_mgr, p_rec, worker);
     else
       {
         // get task record
-        std::unique_ptr< task_record<number> > pre_rec = this->query_task(t->task_name);
+        std::unique_ptr< task_record<number> > pre_rec = this->query_task(t->second->task_name);
         integration_task_record<number>& i_rec = dynamic_cast< integration_task_record<number>& >(*pre_rec);
 
-        std::unique_ptr< integration_writer<number> >     i_writer = this->get_integration_recovery_writer(*t, data_mgr, i_rec, worker);
+        std::unique_ptr< integration_writer<number> >     i_writer = this->get_integration_recovery_writer(*t->second, data_mgr, i_rec, worker);
         std::unique_ptr< postintegration_writer<number> > p_writer = this->get_postintegration_recovery_writer(data, data_mgr, p_rec, worker);
 
         // carry out an integrity check; this updates the writers with all missing serial numbers
@@ -1451,11 +1451,11 @@ repository_sqlite3<number>::get_postintegration_recovery_writer(const inflight_p
 
 
 template <typename number>
-void repository_sqlite3<number>::recover_derived_content(data_manager<number>& data_mgr, std::list<inflight_derived_content>& list, unsigned int worker)
+void repository_sqlite3<number>::recover_derived_content(data_manager<number>& data_mgr, inflight_derived_content_db& list, unsigned int worker)
   {
     // loop through hot derived content
 
-    for(const inflight_derived_content& inflight : list)
+    for(const inflight_derived_content_db_value_type& inflight : list)
       {
         // TODO: not yet implemented
       }

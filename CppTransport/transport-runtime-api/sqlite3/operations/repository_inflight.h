@@ -59,7 +59,7 @@ namespace transport
           }
 
 
-        void enumerate_inflight_groups(sqlite3* db, std::list<inflight_group>& groups)
+        void enumerate_inflight_groups(sqlite3* db, inflight_db& groups)
           {
             std::stringstream find_stmt;
             find_stmt << "SELECT name, task, path, posix_time FROM " << CPPTRANSPORT_SQLITE_RESERVED_CONTENT_NAMES_TABLE << ";";
@@ -73,21 +73,21 @@ namespace transport
               {
                 if(status == SQLITE_ROW)
                   {
-                    inflight_group gp;
+                    std::unique_ptr<inflight_group> gp;
 
                     const char* sqlite_str = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
-                    gp.name = std::string(sqlite_str);
+                    gp->name = std::string(sqlite_str);
 
                     sqlite_str = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1));
-                    gp.task_name = std::string(sqlite_str);
+                    gp->task_name = std::string(sqlite_str);
 
                     sqlite_str = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 2));
-                    gp.path = std::string(sqlite_str);
+                    gp->path = std::string(sqlite_str);
 
                     sqlite_str = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 3));
-                    gp.posix_time = std::string(sqlite_str);
+                    gp->posix_time = std::string(sqlite_str);
 
-                    groups.push_back(gp);
+                    groups.insert(std::make_pair(gp->name, std::move(gp)));
                   }
               }
 
@@ -178,7 +178,7 @@ namespace transport
           }
 
 
-        void enumerate_inflight_integrations(sqlite3* db, std::list<inflight_integration>& groups)
+        void enumerate_inflight_integrations(sqlite3* db, inflight_integration_db& groups)
           {
             std::stringstream find_stmt;
             find_stmt << "SELECT content_group, task, output, container, logdir, tempdir, workgroup_number, seeded, seed_group, collect_stats, collect_ics FROM " << CPPTRANSPORT_SQLITE_INTEGRATION_WRITERS_TABLE << ";";
@@ -192,37 +192,37 @@ namespace transport
               {
                 if(status == SQLITE_ROW)
                   {
-                    inflight_integration gp;
+                    std::unique_ptr<inflight_integration> gp = std::make_unique<inflight_integration>();
 
                     const char* sqlite_str = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
-                    gp.content_group       = std::string(sqlite_str);
+                    gp->content_group       = std::string(sqlite_str);
 
                     sqlite_str   = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1));
-                    gp.task_name = std::string(sqlite_str);
+                    gp->task_name = std::string(sqlite_str);
 
                     sqlite_str = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 2));
-                    gp.output  = std::string(sqlite_str);
+                    gp->output  = std::string(sqlite_str);
 
                     sqlite_str   = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 3));
-                    gp.container = std::string(sqlite_str);
+                    gp->container = std::string(sqlite_str);
 
                     sqlite_str = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 4));
-                    gp.logdir  = std::string(sqlite_str);
+                    gp->logdir  = std::string(sqlite_str);
 
                     sqlite_str = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 5));
-                    gp.tempdir = std::string(sqlite_str);
+                    gp->tempdir = std::string(sqlite_str);
 
-                    gp.workgroup_number = static_cast<unsigned int>(sqlite3_column_int(stmt, 6));
+                    gp->workgroup_number = static_cast<unsigned int>(sqlite3_column_int(stmt, 6));
 
-                    gp.is_seeded = static_cast<bool>(sqlite3_column_int(stmt, 7));
+                    gp->is_seeded = static_cast<bool>(sqlite3_column_int(stmt, 7));
 
                     sqlite_str    = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 8));
-                    gp.seed_group = std::string(sqlite_str);
+                    gp->seed_group = std::string(sqlite_str);
 
-                    gp.is_collecting_ics   = static_cast<bool>(sqlite3_column_int(stmt, 9));
-                    gp.is_collecting_stats = static_cast<bool>(sqlite3_column_int(stmt, 10));
+                    gp->is_collecting_ics   = static_cast<bool>(sqlite3_column_int(stmt, 9));
+                    gp->is_collecting_stats = static_cast<bool>(sqlite3_column_int(stmt, 10));
 
-                    groups.push_back(gp);
+                    groups.insert(std::make_pair(gp->content_group, std::move(gp)));
                   }
               }
 
@@ -230,7 +230,7 @@ namespace transport
           }
 
 
-        void enumerate_inflight_postintegrations(sqlite3* db, std::list<inflight_postintegration>& groups)
+        void enumerate_inflight_postintegrations(sqlite3* db, inflight_postintegration_db& groups)
           {
             std::stringstream find_stmt;
             find_stmt << "SELECT content_group, task, output, container, logdir, tempdir, paired, parent, seeded, seed_group FROM " << CPPTRANSPORT_SQLITE_POSTINTEGRATION_WRITERS_TABLE << ";";
@@ -244,37 +244,37 @@ namespace transport
               {
                 if(status == SQLITE_ROW)
                   {
-                    inflight_postintegration gp;
+                    std::unique_ptr<inflight_postintegration> gp;
 
                     const char* sqlite_str = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
-                    gp.content_group       = std::string(sqlite_str);
+                    gp->content_group       = std::string(sqlite_str);
 
                     sqlite_str   = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1));
-                    gp.task_name = std::string(sqlite_str);
+                    gp->task_name = std::string(sqlite_str);
 
                     sqlite_str = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 2));
-                    gp.output  = std::string(sqlite_str);
+                    gp->output  = std::string(sqlite_str);
 
                     sqlite_str   = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 3));
-                    gp.container = std::string(sqlite_str);
+                    gp->container = std::string(sqlite_str);
 
                     sqlite_str = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 4));
-                    gp.logdir  = std::string(sqlite_str);
+                    gp->logdir  = std::string(sqlite_str);
 
                     sqlite_str = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 5));
-                    gp.tempdir = std::string(sqlite_str);
+                    gp->tempdir = std::string(sqlite_str);
 
-                    gp.is_paired = static_cast<bool>(sqlite3_column_int(stmt, 6));
+                    gp->is_paired = static_cast<bool>(sqlite3_column_int(stmt, 6));
 
                     sqlite_str      = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 7));
-                    gp.parent_group = std::string(sqlite_str);
+                    gp->parent_group = std::string(sqlite_str);
 
-                    gp.is_seeded = static_cast<bool>(sqlite3_column_int(stmt, 8));
+                    gp->is_seeded = static_cast<bool>(sqlite3_column_int(stmt, 8));
 
                     sqlite_str    = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 9));
-                    gp.seed_group = std::string(sqlite_str);
+                    gp->seed_group = std::string(sqlite_str);
 
-                    groups.push_back(gp);
+                    groups.insert(std::make_pair(gp->content_group, std::move(gp)));
                   }
               }
 
@@ -282,7 +282,7 @@ namespace transport
           }
 
 
-        void enumerate_inflight_derived_content(sqlite3* db, std::list<inflight_derived_content>& groups)
+        void enumerate_inflight_derived_content(sqlite3* db, inflight_derived_content_db& groups)
           {
             std::stringstream find_stmt;
             find_stmt << "SELECT content_group, task, output, logdir, tempdir FROM " << CPPTRANSPORT_SQLITE_DERIVED_WRITERS_TABLE << ";";
@@ -296,24 +296,24 @@ namespace transport
               {
                 if(status == SQLITE_ROW)
                   {
-                    inflight_derived_content gp;
+                    std::unique_ptr<inflight_derived_content> gp;
 
                     const char* sqlite_str = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
-                    gp.content_group       = std::string(sqlite_str);
+                    gp->content_group       = std::string(sqlite_str);
 
                     sqlite_str   = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1));
-                    gp.task_name = std::string(sqlite_str);
+                    gp->task_name = std::string(sqlite_str);
 
                     sqlite_str = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 2));
-                    gp.output  = std::string(sqlite_str);
+                    gp->output  = std::string(sqlite_str);
 
                     sqlite_str = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 3));
-                    gp.logdir  = std::string(sqlite_str);
+                    gp->logdir  = std::string(sqlite_str);
 
                     sqlite_str = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 4));
-                    gp.tempdir = std::string(sqlite_str);
+                    gp->tempdir = std::string(sqlite_str);
 
-                    groups.push_back(gp);
+                    groups.insert(std::make_pair(gp->content_group, std::move(gp)));
                   }
               }
 
