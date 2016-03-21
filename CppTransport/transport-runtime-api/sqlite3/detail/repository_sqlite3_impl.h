@@ -1336,6 +1336,7 @@ void repository_sqlite3<number>::recover_integrations(data_manager<number>& data
         writer->check_integrity(rec->get_task());
 
         // close writer
+        // (closing the writer will remove it from the list of active integrations)
         data_mgr.close_writer(*writer);
 
         // commit output
@@ -1397,6 +1398,7 @@ void repository_sqlite3<number>::recover_unpaired_postintegration(const inflight
     data_mgr.close_writer(*writer);
 
     // commit output
+    // (closing the writer will remove it from the list of active postintegrations)
     writer->commit();
   }
 
@@ -1456,10 +1458,11 @@ void repository_sqlite3<number>::recover_paired_postintegration(const inflight_p
         data_mgr.close_writer(*p_writer);
 
         // commit output
+        // (closing the writers will remove them from the list of active postintegrations)
         i_writer->commit();
         p_writer->commit();
 
-        // remove integration from list of remaining hot integrations
+        // remove integration from database of remaining hot integrations
         // (we shouldn't try to recover it twice)
         i_list.erase(t);
       }
@@ -1491,11 +1494,42 @@ template <typename number>
 void repository_sqlite3<number>::recover_derived_content(data_manager<number>& data_mgr, inflight_derived_content_db& list, unsigned int worker)
   {
     // loop through hot derived content
+    // for each item, set up a new derived_content_writer which is populated with the configuration of the hot writer.
+    // However, in recovery mode, the output group is always treated as if it has failed.
+
+    // When we commit the writer, it will automatically move to the fail cache
 
     for(const inflight_derived_content_db_value_type& inflight : list)
       {
-        // TODO: not yet implemented
+        // get task record
+        std::unique_ptr< task_record<number> > pre_rec = this->query_task(inflight.second->task_name);
+        output_task_record<number>* rec = dynamic_cast< output_task_record<number>* >(pre_rec.get());
+
+        assert(rec != nullptr);
+        if(rec == nullptr) throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_RECORD_CAST_FAILED);
+
+        std::unique_ptr< derived_content_writer<number> > writer = this->get_derived_content_recovery_writer(*inflight.second, data_mgr, *rec, worker);
+
+        // commit writer (automatically removes this content group from database of active tasks))
+        data_mgr.close_writer(*writer);
       }
+  }
+
+
+template <typename number>
+std::unique_ptr< derived_content_writer<number> >
+repository_sqlite3<number>::get_derived_content_recovery_writer(const inflight_derived_content& data, data_manager<number>& data_mgr,
+                                                                output_task_record<number>& rec, unsigned int worker)
+  {
+    std::unique_ptr< derived_content_writer<number> > writer = this->recover_output_task_content(data.content_group, rec, data.output, data.logdir, data.tempdir, worker);
+
+    // initialize writer in recover mode
+    data_mgr.initialize_writer(*writer, true);
+
+    // force writer to fail
+    writer->set_fail(true);
+
+    return(writer);
   }
 
 
@@ -1562,6 +1596,27 @@ void repository_sqlite3<number>::register_writer(derived_content_writer<number>&
                                                         writer.get_relative_tempdir_path());
 
     transaction.commit();
+  }
+
+
+template <typename number>
+void repository_sqlite3<number>::deregister_writer(integration_writer<number>& writer, transaction_manager& mgr)
+  {
+    sqlite3_operations::deregister_content_group(mgr, this->db, writer.get_name(), CPPTRANSPORT_SQLITE_INTEGRATION_WRITERS_TABLE);
+  }
+
+
+template <typename number>
+void repository_sqlite3<number>::deregister_writer(postintegration_writer<number>& writer, transaction_manager& mgr)
+  {
+    sqlite3_operations::deregister_content_group(mgr, this->db, writer.get_name(), CPPTRANSPORT_SQLITE_POSTINTEGRATION_WRITERS_TABLE);
+  }
+
+
+template <typename number>
+void repository_sqlite3<number>::deregister_writer(derived_content_writer<number>& writer, transaction_manager& mgr)
+  {
+    sqlite3_operations::deregister_content_group(mgr, this->db, writer.get_name(), CPPTRANSPORT_SQLITE_DERIVED_WRITERS_TABLE);
   }
 
 

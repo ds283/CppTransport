@@ -15,6 +15,7 @@ namespace transport
       {
         transaction_manager mgr = this->repo.transaction_factory();
         this->repo.close_integration_writer(writer, mgr);
+        this->repo.deregister_writer(writer, mgr);
         mgr.commit();
       }
 
@@ -24,6 +25,7 @@ namespace transport
       {
         transaction_manager mgr = this->repo.transaction_factory();
         this->repo.abort_integration_writer(writer, mgr);
+        this->repo.deregister_writer(writer, mgr);
         mgr.commit();
       }
 
@@ -33,6 +35,7 @@ namespace transport
       {
         transaction_manager mgr = this->repo.transaction_factory();
         this->repo.close_postintegration_writer(writer, mgr);
+        this->repo.deregister_writer(writer, mgr);
         mgr.commit();
       }
 
@@ -42,6 +45,7 @@ namespace transport
       {
         transaction_manager mgr = this->repo.transaction_factory();
         this->repo.abort_postintegration_writer(writer, mgr);
+        this->repo.deregister_writer(writer, mgr);
         mgr.commit();
       }
 
@@ -51,6 +55,7 @@ namespace transport
       {
         transaction_manager mgr = this->repo.transaction_factory();
         this->repo.close_derived_content_writer(writer, mgr);
+        this->repo.deregister_writer(writer, mgr);
         mgr.commit();
       }
 
@@ -60,6 +65,7 @@ namespace transport
       {
         transaction_manager mgr = this->repo.transaction_factory();
         this->repo.abort_derived_content_writer(writer, mgr);
+        this->repo.deregister_writer(writer, mgr);
         mgr.commit();
       }
 

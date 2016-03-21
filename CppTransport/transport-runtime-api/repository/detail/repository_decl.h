@@ -303,6 +303,15 @@ namespace transport
         //! register a derived-content writer
         virtual void register_writer(derived_content_writer<number>& writer) = 0;
 
+        //! deregister an integration writer
+        virtual void deregister_writer(integration_writer<number>& writer, transaction_manager& mgr) = 0;
+
+        //! deregister a postintegration writer
+        virtual void deregister_writer(postintegration_writer<number>& writer, transaction_manager& mgr) = 0;
+
+        //! deregister a derived-content writer
+        virtual void deregister_writer(derived_content_writer<number>& writer, transaction_manager& mgr) = 0;
+
         //! recover crashed writers
         virtual void perform_recovery(data_manager<number>& data_mgr, unsigned int worker) = 0;
 

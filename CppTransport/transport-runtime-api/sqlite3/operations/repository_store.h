@@ -129,24 +129,14 @@ namespace transport
             sqlite3_stmt* stmt;
             check_stmt(db, sqlite3_prepare_v2(db, store_stmt.str().c_str(), store_stmt.str().length()+1, &stmt, nullptr));
 
-            check_stmt(db, sqlite3_bind_text(stmt, 1, name.c_str(), name.length(), SQLITE_STATIC));
-            check_stmt(db, sqlite3_bind_text(stmt, 2, task.c_str(), task.length(), SQLITE_STATIC));
-            check_stmt(db, sqlite3_bind_text(stmt, 3, filename.c_str(), filename.length(), SQLITE_STATIC));
+            check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@name"), name.c_str(), name.length(), SQLITE_STATIC));
+            check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@task"), task.c_str(), task.length(), SQLITE_STATIC));
+            check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@path"), filename.c_str(), filename.length(), SQLITE_STATIC));
 
             check_stmt(db, sqlite3_step(stmt), CPPTRANSPORT_REPO_STORE_PACKAGE_FAIL, SQLITE_DONE);
 
             check_stmt(db, sqlite3_clear_bindings(stmt));
             check_stmt(db, sqlite3_finalize(stmt));
-
-            // remove the integration writer associated with this content group from the list of in-flight writers
-            std::stringstream drop_writer_stmt;
-            drop_writer_stmt << "DELETE FROM " << CPPTRANSPORT_SQLITE_INTEGRATION_WRITERS_TABLE << " WHERE content_group='" << name << "'";
-            exec(db, drop_writer_stmt.str());
-
-            // remove this content group from the list of in-flight groups
-            std::stringstream drop_stmt;
-            drop_stmt << "DELETE FROM " << CPPTRANSPORT_SQLITE_RESERVED_CONTENT_NAMES_TABLE << " WHERE name='" << name << "'";
-            exec(db, drop_stmt.str());
           }
 
 
@@ -175,17 +165,6 @@ namespace transport
 
             check_stmt(db, sqlite3_clear_bindings(stmt));
             check_stmt(db, sqlite3_finalize(stmt));
-
-            // remove the postintegration writer associated with this content group from the list of in-flight writers
-            std::stringstream drop_writer_stmt;
-            drop_writer_stmt << "DELETE FROM " << CPPTRANSPORT_SQLITE_POSTINTEGRATION_WRITERS_TABLE << " WHERE content_group='" << name << "'";
-            exec(db, drop_writer_stmt.str());
-
-            // remove this content group from the list of in-flight groups
-
-            std::stringstream drop_stmt;
-            drop_stmt << "DELETE FROM " << CPPTRANSPORT_SQLITE_RESERVED_CONTENT_NAMES_TABLE << " WHERE name='" << name << "'";
-            exec(db, drop_stmt.str());
           }
 
 
@@ -214,17 +193,6 @@ namespace transport
 
             check_stmt(db, sqlite3_clear_bindings(stmt));
             check_stmt(db, sqlite3_finalize(stmt));
-
-            // remove the derived content writer associated with this content group from the list of in-flight writers
-            std::stringstream drop_writer_stmt;
-            drop_writer_stmt << "DELETE FROM " << CPPTRANSPORT_SQLITE_DERIVED_WRITERS_TABLE << " WHERE content_group='" << name << "'";
-            exec(db, drop_writer_stmt.str());
-
-            // remove this content group from the list of in-flight groups
-
-            std::stringstream drop_stmt;
-            drop_stmt << "DELETE FROM " << CPPTRANSPORT_SQLITE_RESERVED_CONTENT_NAMES_TABLE << " WHERE name='" << name << "'";
-            exec(db, drop_stmt.str());
           }
 
       }   // namespace sqlite3_operations

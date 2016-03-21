@@ -221,6 +221,8 @@ namespace transport
         this->data_mgr->close_writer(*p_writer);
 
         // commit output if successful; integrity failures are ignored, so containers can subsequently be used as a seed
+        // if the writers are not committed they automatically abort
+        // committing (or aborting) the writers automatically deregisters them
         if(success)
           {
             i_writer->commit();

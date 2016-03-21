@@ -61,7 +61,8 @@ namespace transport
         // close the writer
         this->data_mgr->close_writer(*writer);
 
-        // commit output to the database if successful
+        // commit output to the database if successful; if not, the writer automatically aborts
+        // committing (or aborting) the writer automatically deregisters it
         if(success) writer->commit();
       }
 

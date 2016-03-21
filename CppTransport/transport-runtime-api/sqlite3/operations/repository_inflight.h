@@ -65,6 +65,34 @@ namespace transport
           }
 
 
+        void deregister_content_group(transaction_manager& mgr, sqlite3* db, const std::string& name, const std::string writer_table)
+          {
+            sqlite3_stmt* stmt;
+
+            // remove the writer associated with this content group from the list of in-flight writers
+            std::stringstream drop_writer_stmt;
+            drop_writer_stmt << "DELETE FROM " << writer_table << " WHERE content_group=@group;";
+
+            check_stmt(db, sqlite3_prepare_v2(db, drop_writer_stmt.str().c_str(), drop_writer_stmt.str().length()+1, &stmt, nullptr));
+            check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@group"), name.c_str(), name.length(), SQLITE_STATIC));
+            check_stmt(db, sqlite3_step(stmt), CPPTRANSPORT_REPO_DEREGISTER_FAIL, SQLITE_DONE);
+
+            check_stmt(db, sqlite3_clear_bindings(stmt));
+            check_stmt(db, sqlite3_finalize(stmt));
+
+            // remove this content group from the list of in-flight groups
+            std::stringstream drop_stmt;
+            drop_stmt << "DELETE FROM " << CPPTRANSPORT_SQLITE_RESERVED_CONTENT_NAMES_TABLE << " WHERE name=@group;";
+
+            check_stmt(db, sqlite3_prepare_v2(db, drop_stmt.str().c_str(), drop_stmt.str().length()+1, &stmt, nullptr));
+            check_stmt(db, sqlite3_bind_text(stmt, sqlite3_bind_parameter_index(stmt, "@group"), name.c_str(), name.length(), SQLITE_STATIC));
+            check_stmt(db, sqlite3_step(stmt), CPPTRANSPORT_REPO_DEREGISTER_FAIL, SQLITE_DONE);
+
+            check_stmt(db, sqlite3_clear_bindings(stmt));
+            check_stmt(db, sqlite3_finalize(stmt));
+          }
+
+
         void advise_completion_time(transaction_manager& mgr, sqlite3* db, const std::string& name, const std::string& time)
           {
             std::stringstream update_stmt;

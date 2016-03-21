@@ -360,6 +360,15 @@ namespace transport
         //! register a derived-content writer
         virtual void register_writer(derived_content_writer<number>& writer) override;
 
+        //! deregister an integration writer
+        virtual void deregister_writer(integration_writer<number>& writer, transaction_manager& mgr) override;
+
+        //! deregister a postintegration writer
+        virtual void deregister_writer(postintegration_writer<number>& writer, transaction_manager& mgr) override;
+
+        //! deregister a derived-content writer
+        virtual void deregister_writer(derived_content_writer<number>& writer, transaction_manager& mgr) override;
+
         //! Advise completion time for a writer
         virtual void advise_completion_time(const std::string& name, const boost::posix_time::ptime& time) override;
 
@@ -392,6 +401,9 @@ namespace transport
                                             postintegration_task_record<number>& p_rec,
                                             inflight_integration_db& i_list, unsigned int worker);
 
+        //! construct a derived_content_writer in recovery mode
+        std::unique_ptr< derived_content_writer<number> > get_derived_content_recovery_writer(const inflight_derived_content& data, data_manager<number>& data_mgr,
+                                                                                              output_task_record<number>& rec, unsigned int worker);
 
         // INTERNAL DATA
 
