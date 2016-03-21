@@ -33,7 +33,8 @@ namespace transport
         journal(w.size()-1),
         err(eh),
         warn(wh),
-        msg(mh)
+        msg(mh),
+        cmdline_reports(le, ac)
       {
       }
 

@@ -9,6 +9,9 @@
 
 #include "transport-runtime-api/repository/repository.h"
 
+#include "transport-runtime-api/manager/environment.h"
+#include "transport-runtime-api/manager/argument_cache.h"
+
 #include "transport-runtime-api/utilities/asciitable.h"
 #include "transport-runtime-api/utilities/formatter.h"
 
@@ -27,8 +30,10 @@ namespace transport
           public:
 
             //! constructor
-            command_line()
-              : show_status(false)
+            command_line(local_environment& e, argument_cache& c)
+              : env(e),
+                arg_cache(c),
+                show_status(false)
               {
               }
 
@@ -80,6 +85,12 @@ namespace transport
             // INTERNAL DATA
 
           private:
+
+            //! reference to local environment object
+            local_environment& env;
+
+            //! reference to argument cache
+            argument_cache& arg_cache;
 
             //! emit repository status report
             bool show_status;
@@ -139,7 +150,8 @@ namespace transport
             table.push_back(last_edit);
             table.push_back(num_groups);
 
-            asciitable at(std::cout);
+            asciitable at(std::cout, this->env, this->arg_cache);
+            at.set_terminal_output(true);
             at.write(columns, table);
           }
 
@@ -184,7 +196,8 @@ namespace transport
             table.push_back(init);
             table.push_back(duration);
 
-            asciitable at(std::cout);
+            asciitable at(std::cout, this->env, this->arg_cache);
+            at.set_terminal_output(true);
             at.write(columns, table);
           }
 

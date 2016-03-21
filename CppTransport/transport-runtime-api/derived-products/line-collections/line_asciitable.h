@@ -88,7 +88,9 @@ namespace transport
 		      protected:
 
 				    //! Make table
-		        void make_table(datapipe<number>& pipe, const std::deque<double>& axis, const typename std::vector< typename line_collection<number>::output_line >& data) const;
+            void make_table(datapipe<number>& pipe, const std::deque<double>& axis,
+                            const typename std::vector<typename line_collection<number>::output_line>& data,
+                            local_environment& env, argument_cache& args) const;
 
 
 		        // GET AND SET BASIC TABLE ATTRIBUTES
@@ -178,7 +180,7 @@ namespace transport
 						this->merge_lines(pipe, derived_lines, axis, output_lines);
 
 						// make table
-						this->make_table(pipe, axis, output_lines);
+						this->make_table(pipe, axis, output_lines, env, args);
 
             // get output groups which were used
             std::list<std::string> used_groups = this->extract_output_groups(derived_lines);
@@ -191,7 +193,9 @@ namespace transport
 
 
 				template <typename number>
-				void line_asciitable<number>::make_table(datapipe<number>& pipe, const std::deque<double>& axis, const typename std::vector< typename line_collection<number>::output_line >& data) const
+        void line_asciitable<number>::make_table(datapipe<number>& pipe, const std::deque<double>& axis,
+                                                 const typename std::vector<typename line_collection<number>::output_line>& data,
+                                                 local_environment& env, argument_cache& args) const
 					{
 						// extract paths from the datapipe
 				    boost::filesystem::path temp_root = pipe.get_abs_tempdir_path();
@@ -204,7 +208,7 @@ namespace transport
 
 						if(out.is_open())
 							{
-						    asciitable writer(out);
+						    asciitable writer(out, env, args);
 						    writer.set_precision(this->precision);
 								writer.set_wrap_status(false);    // don't want to wrap the content
 

@@ -140,9 +140,9 @@ namespace transport
       {
         bool colour = this->env.has_colour_terminal_support() && this->args.get_colour_output();
 
-        if(colour) std::cout << ANSI_BOLD_RED;
+        if(colour) std::cout << ColourCode(ANSI_colour::bold_red);
         std::cout << msg << '\n';
-        if(colour) std::cout << ANSI_NORMAL;
+        if(colour) std::cout << ColourCode(ANSI_colour::normal);
       }
 
 
@@ -150,9 +150,9 @@ namespace transport
       {
         bool colour = this->env.has_colour_terminal_support() && this->args.get_colour_output();
 
-        if(colour) std::cout << ANSI_BOLD_MAGENTA;
+        if(colour) std::cout << ColourCode(ANSI_colour::bold_magenta);
         std::cout << CPPTRANSPORT_TASK_MANAGER_WARNING_LABEL << " ";
-        if(colour) std::cout << ANSI_NORMAL;
+        if(colour) std::cout << ColourCode(ANSI_colour::normal);
         std::cout << msg << '\n';
       }
 
@@ -163,9 +163,9 @@ namespace transport
 
         if(this->args.get_verbose())
           {
-//            if(colour) std::cout << ANSI_GREEN;
+//            if(colour) std::cout << ColourCode(ANSI_colour::green);
             std::cout << msg << '\n';
-//            if(colour) std::cout << ANSI_NORMAL;
+//            if(colour) std::cout << ColourCode(ANSI_colour::normal);
           }
       }
 

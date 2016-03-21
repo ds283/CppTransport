@@ -13,6 +13,12 @@
 #include <vector>
 #include <sstream>
 
+
+#include "transport-runtime-api/manager/environment.h"
+#include "transport-runtime-api/manager/argument_cache.h"
+
+#include "transport-runtime-api/ansi_colour_codes.h"
+
 #include "transport-runtime-api/messages.h"
 #include "transport-runtime-api/exceptions.h"
 
@@ -35,9 +41,13 @@ namespace transport
       public:
 
         //! constructor
-        column_descriptor(std::string n, column_justify j=column_justify::left)
+        column_descriptor(std::string n, column_justify j=column_justify::left, bool b=true)
           : name(std::move(n)),
-            just(j)
+            just(j),
+            bold(b),
+            prev_flags(0),
+            prev_width(0),
+            prev_prec(0)
           {
           }
 
@@ -55,10 +65,15 @@ namespace transport
         //! get width
         size_t get_width() const { return(this->name.length()); }
 
-        //! get justification
+        //! apply formatting for column
         template <typename Stream>
-        void justify(Stream& out) const
+        void apply_format(Stream& out, size_t w, bool term, local_environment& env, argument_cache& cache)
           {
+            // remember previous status of formatting flags, so we can restore later
+            this->prev_flags = out.flags();
+            this->prev_width = out.width();
+            this->prev_prec = out.precision();
+
             switch(this->just)
               {
                 case column_justify::left:
@@ -73,6 +88,35 @@ namespace transport
                     break;
                   }
               }
+
+            out << std::setw(w);
+          }
+
+        //! apply formatting for column titles
+        template <typename Stream>
+        void apply_format_title(Stream& out, size_t w, bool term, local_environment& env, argument_cache& cache)
+          {
+            if(term && this->bold && env.has_colour_terminal_support() && cache.get_colour_output())
+              {
+                out << ColourCode(ANSI_colour::bold);
+              }
+
+            this->apply_format(out, w, term, env, cache);
+          }
+
+        //! deapply formatting rules
+        template <typename Stream>
+        void deapply_format(Stream& out, bool term, local_environment& env, argument_cache& cache) const
+          {
+            // reset stream formatting flags
+            out.flags(this->prev_flags);
+            out.width(this->prev_width);
+            out.precision(this->prev_prec);
+
+            if(term && this->bold && env.has_colour_terminal_support() && cache.get_colour_output())
+              {
+                out << ColourCode(ANSI_colour::normal);
+              }
           }
 
 
@@ -83,8 +127,20 @@ namespace transport
         //! column name
         std::string name;
 
-        //! justification
+        //! justification for this column
         column_justify just;
+
+        //! apply bold to this column title?
+        bool bold;
+
+        //! cache previous formatting flags for stream
+        std::ios_base::fmtflags prev_flags;
+
+        //! cache previous width setting
+        std::streamsize prev_width;
+
+        //! cache previous precision setting
+        std::streamsize prev_prec;
 
       };
 
@@ -96,10 +152,14 @@ namespace transport
       public:
 
         //! constructor
-        asciitable(std::ostream& s)
-	        : stream(s), precision(DEFAULT_ASCIITABLE_PRECISION),
+        asciitable(std::ostream& s, local_environment& e, argument_cache& c)
+	        : stream(s),
+            env(e),
+            arg_cache(c),
+            precision(DEFAULT_ASCIITABLE_PRECISION),
 	          display_width(DEFAULT_ASCIITABLE_DISPLAY_WIDTH),
-	          wrap_width(DEFAULT_ASCIITABLE_WRAP_WIDTH)
+	          wrap_width(DEFAULT_ASCIITABLE_WRAP_WIDTH),
+            terminal_output(false)
 	        {
           }
 
@@ -117,8 +177,10 @@ namespace transport
                    const std::vector<double>& xs, const std::vector<std::vector<number> >& ys,
                    const std::string tag = "");
 
-        //! Write columns of text; the data in table should be stored column-wise
-        void write(const std::vector<column_descriptor>& columns, const std::vector< std::vector<std::string> >& table,
+        //! Write columns of text; the data in table should be stored column-wise;
+        //! vector of column descriptors is not marked const since the descriptors need to cache internal state
+        //! while writing out the table
+        void write(std::vector<column_descriptor>& columns, const std::vector< std::vector<std::string> >& table,
                    const std::string tag = "");
 
 
@@ -127,27 +189,42 @@ namespace transport
       public:
 
 		    //! Set precision for output content
-        void set_precision(unsigned int p);
+        void set_precision(unsigned int p) { this->precision = p; }
+
+        //! Get precision
+        unsigned int get_precision() const { return(this->precision); }
 
 		    //! Set wrap width
-        void set_display_width(unsigned int width);
+        void set_display_width(unsigned int width) { this->display_width = (width > 1 ? width : 1); }
 
 		    //! Get wrap width
-        unsigned int get_display_width();
+        unsigned int get_display_width() const { return(this->display_width); }
 
 		    //! Set wrap setting
-        void set_wrap_status(bool wrap);
+        void set_wrap_status(bool wrap) { this->wrap_width = wrap; }
 
 		    //! Get wrap setting
-        bool get_wrap_status();
+        bool get_wrap_status() const { return(this->wrap_width); }
+
+        //! Set terminal setting
+        void set_terminal_output(bool t) { this->terminal_output = t; }
+
+        //! Get terminal setting
+        bool get_terminal_output() const { return(this->terminal_output); }
 
 
         // INTERNAL DATA
 
       protected:
 
-				//! Output stream
+				//! output stream
         std::ostream& stream;
+
+        //! reference to local environment policy class
+        local_environment& env;
+
+        //! reference to arguments policy class
+        argument_cache& arg_cache;
 
         //! Precision with which to output numbers
         unsigned int precision;
@@ -158,20 +235,20 @@ namespace transport
         //! Whether to wrap - good for display, bad for files
         bool wrap_width;
 
+        //! Whether to treat the output stream as a terminal
+        bool terminal_output;
+
 	    };
 
 
       // IMPLEMENTATION -- CLASS asciitable
 
 
-    void asciitable::write(const std::vector<column_descriptor>& columns, const std::vector< std::vector<std::string> >& table,
+    void asciitable::write(std::vector<column_descriptor>& columns, const std::vector< std::vector<std::string> >& table,
                            const std::string tag)
       {
         assert(columns.size() == table.size());
         if(columns.size() != table.size()) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_ASCIITABLE_INCOMPATIBLE_COLUMNS);
-
-        // remember previous status of formatting flags, so we can restore later
-        std::ios_base::fmtflags prev_flags = this->stream.flags();
 
         // determine width of each column
         std::vector<size_t> widths(columns.size());
@@ -224,8 +301,10 @@ namespace transport
             // write out column headings
             for(size_t i = 0; i < batch_size; ++i)
               {
-                columns[columns_output + i].justify(this->stream);
-                this->stream << std::setw(widths[columns_output+i]) << columns[columns_output+i].get_name();
+                columns[columns_output+i].apply_format_title(this->stream, widths[columns_output+i], this->terminal_output,
+                                                             this->env, this->arg_cache);
+                this->stream << columns[columns_output+i].get_name();
+                columns[columns_output+i].deapply_format(this->stream, this->terminal_output, this->env, this->arg_cache);
               }
             this->stream << '\n';
 
@@ -235,17 +314,16 @@ namespace transport
                 for(size_t j = 0; j < batch_size; ++j)
                   {
                     std::string entry = i < table[columns_output+j].size() ? (table[columns_output+j])[i] : "";
-                    columns[columns_output+j].justify(this->stream);
-                    this->stream << std::setw(widths[columns_output+j]) << entry;
+                    columns[columns_output+j].apply_format(this->stream, widths[columns_output+j], this->terminal_output,
+                                                           this->env, this->arg_cache);
+                    this->stream << entry;
+                    columns[columns_output+j].deapply_format(this->stream, this->terminal_output, this->env, this->arg_cache);
                   }
                 this->stream << '\n';
               }
 
             columns_output += batch_size;
           }
-
-        // reset stream formatting flags
-        this->stream.flags(prev_flags);
       }
 
 
@@ -301,37 +379,6 @@ namespace transport
 
         this->write(table_columns, table, tag);
 	    }
-
-
-    void asciitable::set_precision(unsigned int p)
-	    {
-        this->precision = p;
-	    }
-
-
-    void asciitable::set_display_width(unsigned int width)
-	    {
-        this->display_width = (width > 1 ? width : 1);
-	    }
-
-
-    unsigned int asciitable::get_display_width()
-	    {
-        return(this->display_width);
-	    }
-
-
-    void asciitable::set_wrap_status(bool wrap)
-	    {
-        this->wrap_width = wrap;
-	    }
-
-
-    bool asciitable::get_wrap_status()
-	    {
-        return(this->wrap_width);
-	    }
-
 
   }   // namespace transport
 
