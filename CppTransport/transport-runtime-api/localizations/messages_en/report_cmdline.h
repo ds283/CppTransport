@@ -9,11 +9,15 @@
 
 constexpr auto CPPTRANSPORT_REPORT_STATUS_TASKS      = "Available tasks:";
 constexpr auto CPPTRANSPORT_REPORT_STATUS_TYPE       = "Type";
-constexpr auto CPPTRANSPORT_REPORT_STATUS_NAME       = "Task";
+constexpr auto CPPTRANSPORT_REPORT_STATUS_TASK_NAME  = "Task";
 constexpr auto CPPTRANSPORT_REPORT_STATUS_LAST_EDIT  = "Last activity";
 constexpr auto CPPTRANSPORT_REPORT_STATUS_NUM_GROUPS = "# output groups";
 
-constexpr auto CPPTRANSPORT_REPORT_STATUS_ACTIVE     = "In-flight content:";
+constexpr auto CPPTRANSPORT_REPORT_STATUS_INFLIGHT   = "In-flight content:";
+constexpr auto CPPTRANSPORT_REPORT_STATUS_CONTENT    = "Name";
+constexpr auto CPPTRANSPORT_REPORT_STATUS_PARENT     = "Parent";
+constexpr auto CPPTRANSPORT_REPORT_STATUS_INITIATED  = "Initiated";
+constexpr auto CPPTRANSPORT_REPORT_STATUS_DURATION   = "Duration";
 
 
 #endif //CPPTRANSPORT_MESSAGES_EN_REPORT_CMDLINE_H

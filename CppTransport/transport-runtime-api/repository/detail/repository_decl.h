@@ -180,7 +180,17 @@ namespace transport
 
       public:
 
-        //! Enumerate
+        //! Enumerate all active jobs
+        virtual inflight_db enumerate_inflight() = 0;
+
+        //! Enumerate all active integrations
+        virtual inflight_integration_db enumerate_inflight_integrations() = 0;
+
+        //! Enumerate all active postintegrations
+        virtual inflight_postintegration_db enumerate_inflight_postintegrations() = 0;
+
+        //! Enumerate all active derived content tasks
+        virtual inflight_derived_content_db enumerate_inflight_derived_content() = 0;
 
 
         // GENERATE WRITERS FOR TASKS

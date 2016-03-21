@@ -1237,6 +1237,42 @@ std::string repository_sqlite3<number>::reserve_content_name(const std::string& 
 
 
 template <typename number>
+inflight_db repository_sqlite3<number>::enumerate_inflight()
+  {
+    inflight_db db;
+    sqlite3_operations::enumerate_inflight_groups(this->db, db);
+    return(std::move(db));
+  }
+
+
+template <typename number>
+inflight_integration_db repository_sqlite3<number>::enumerate_inflight_integrations()
+  {
+    inflight_integration_db db;
+    sqlite3_operations::enumerate_inflight_integrations(this->db, db);
+    return(std::move(db));
+  }
+
+
+template <typename number>
+inflight_postintegration_db repository_sqlite3<number>::enumerate_inflight_postintegrations()
+  {
+    inflight_postintegration_db db;
+    sqlite3_operations::enumerate_inflight_postintegrations(this->db, db);
+    return(std::move(db));
+  }
+
+
+template <typename number>
+inflight_derived_content_db repository_sqlite3<number>::enumerate_inflight_derived_content()
+  {
+    inflight_derived_content_db db;
+    sqlite3_operations::enumerate_inflight_derived_content(this->db, db);
+    return(std::move(db));
+  }
+
+
+template <typename number>
 void repository_sqlite3<number>::perform_recovery(data_manager<number>& data_mgr, unsigned int worker)
   {
     // ensure no transactions are in progress

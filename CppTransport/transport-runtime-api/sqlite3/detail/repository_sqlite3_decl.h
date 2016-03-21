@@ -139,7 +139,7 @@ namespace transport
                         std::string commit_pint_A, std::string commit_pint_B);
 
 
-        // READ RECORDS FROM THE DATABASE -- implements a 'repository' interface
+        // SEARCH FOR DATABASE RECORDS -- implements a 'repository' interface
 
       public:
 
@@ -177,6 +177,23 @@ namespace transport
 
         //! Enumerate the output groups available from a named output task
         virtual output_content_db enumerate_output_task_content(const std::string& name) override;
+
+
+        // ENUMERATE INFLIGHT TASKS
+
+      public:
+
+        //! Enumerate all active jobs
+        virtual inflight_db enumerate_inflight() override;
+
+        //! Enumerate all active integrations
+        virtual inflight_integration_db enumerate_inflight_integrations() override;
+
+        //! Enumerate all active postintegrations
+        virtual inflight_postintegration_db enumerate_inflight_postintegrations() override;
+
+        //! Enumerate all active derived content tasks
+        virtual inflight_derived_content_db enumerate_inflight_derived_content() override;
 
 
         // JSON INTERFACE

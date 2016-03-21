@@ -10,6 +10,7 @@
 #include "transport-runtime-api/repository/repository.h"
 
 #include "transport-runtime-api/utilities/asciitable.h"
+#include "transport-runtime-api/utilities/formatter.h"
 
 
 namespace transport
@@ -63,6 +64,19 @@ namespace transport
             void report_info(repository<number>& repo);
 
 
+            // REPOSITORY STATUS REPORT
+
+          protected:
+
+            //! report on tasks available in a repository
+            template <typename number>
+            void report_repository_tasks(repository<number>& repo);
+
+            //! report on inflight content in a repository
+            template <typename number>
+            void report_repository_inflight(repository<number>& repo);
+
+
             // INTERNAL DATA
 
           private:
@@ -87,38 +101,91 @@ namespace transport
         template <typename number>
         void command_line::report_status(repository<number>& repo)
           {
+            this->report_repository_tasks(repo);
+            std::cout << '\n';
+            this->report_repository_inflight(repo);
+          }
+
+
+        template <typename number>
+        void command_line::report_repository_tasks(repository<number>& repo)
+          {
             typename task_db<number>::type db = repo.enumerate_tasks();
 
             std::cout << CPPTRANSPORT_REPORT_STATUS_TASKS << '\n';
 
             std::vector<column_descriptor> columns;
-            std::vector<std::string> tasks;
+            std::vector<std::string> task;
             std::vector<std::string> last_edit;
             std::vector<std::string> type;
             std::vector<std::string> num_groups;
 
-            for(const typename task_db<number>::value_type& task : db)
+            for(const typename task_db<number>::value_type& tk : db)
               {
-                tasks.push_back(task.first);
-                last_edit.push_back(boost::posix_time::to_simple_string(task.second->get_last_edit_time()));
-                type.push_back(task_type_to_string(task.second->get_type()));
-                num_groups.push_back(boost::lexical_cast<std::string>(task.second->get_output_groups().size()));
+                task.push_back(tk.first);
+                last_edit.push_back(boost::posix_time::to_simple_string(tk.second->get_last_edit_time()));
+                type.push_back(task_type_to_string(tk.second->get_type()));
+                num_groups.push_back(boost::lexical_cast<std::string>(tk.second->get_output_groups().size()));
               }
 
-            columns.emplace_back(CPPTRANSPORT_REPORT_STATUS_NAME, column_justify::left);
+            columns.emplace_back(CPPTRANSPORT_REPORT_STATUS_TASK_NAME, column_justify::left);
             columns.emplace_back(CPPTRANSPORT_REPORT_STATUS_TYPE, column_justify::left);
             columns.emplace_back(CPPTRANSPORT_REPORT_STATUS_LAST_EDIT, column_justify::right);
             columns.emplace_back(CPPTRANSPORT_REPORT_STATUS_NUM_GROUPS, column_justify::right);
 
             std::vector< std::vector<std::string> > table;
-            table.push_back(tasks);
+            table.push_back(task);
             table.push_back(type);
             table.push_back(last_edit);
             table.push_back(num_groups);
 
             asciitable at(std::cout);
+            at.write(columns, table);
+          }
 
-            at.write(columns, table, "");
+
+        template <typename number>
+        void command_line::report_repository_inflight(repository<number>& repo)
+          {
+            inflight_db db = repo.enumerate_inflight();
+
+            if(db.empty()) return;
+
+            std::cout << CPPTRANSPORT_REPORT_STATUS_INFLIGHT << '\n';
+
+            std::vector<column_descriptor> columns;
+            std::vector<std::string> name;
+            std::vector<std::string> parent;
+            std::vector<std::string> init;
+            std::vector<std::string> duration;
+
+            for(const inflight_db_value_type& group : db)
+              {
+                name.push_back(group.first);
+                parent.push_back(group.second->task_name);
+
+                boost::posix_time::ptime init_time = boost::posix_time::from_iso_string(group.second->posix_time);
+                boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
+
+                boost::posix_time::time_duration runtime = now - init_time;
+
+                init.push_back(boost::posix_time::to_simple_string(init_time));
+                duration.push_back(format_time(runtime.total_nanoseconds()));
+              }
+
+            columns.emplace_back(CPPTRANSPORT_REPORT_STATUS_CONTENT, column_justify::left);
+            columns.emplace_back(CPPTRANSPORT_REPORT_STATUS_PARENT, column_justify::left);
+            columns.emplace_back(CPPTRANSPORT_REPORT_STATUS_INITIATED, column_justify::right);
+            columns.emplace_back(CPPTRANSPORT_REPORT_STATUS_DURATION, column_justify::right);
+
+            std::vector< std::vector<std::string> > table;
+            table.push_back(name);
+            table.push_back(parent);
+            table.push_back(init);
+            table.push_back(duration);
+
+            asciitable at(std::cout);
+            at.write(columns, table);
           }
 
 

@@ -73,7 +73,7 @@ namespace transport
               {
                 if(status == SQLITE_ROW)
                   {
-                    std::unique_ptr<inflight_group> gp;
+                    std::unique_ptr<inflight_group> gp = std::make_unique<inflight_group>();
 
                     const char* sqlite_str = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
                     gp->name = std::string(sqlite_str);
@@ -244,7 +244,7 @@ namespace transport
               {
                 if(status == SQLITE_ROW)
                   {
-                    std::unique_ptr<inflight_postintegration> gp;
+                    std::unique_ptr<inflight_postintegration> gp = std::make_unique<inflight_postintegration>();
 
                     const char* sqlite_str = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
                     gp->content_group       = std::string(sqlite_str);
@@ -296,7 +296,7 @@ namespace transport
               {
                 if(status == SQLITE_ROW)
                   {
-                    std::unique_ptr<inflight_derived_content> gp;
+                    std::unique_ptr<inflight_derived_content> gp = std::make_unique<inflight_derived_content>();
 
                     const char* sqlite_str = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
                     gp->content_group       = std::string(sqlite_str);
