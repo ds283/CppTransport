@@ -1242,7 +1242,7 @@ void repository_sqlite3<number>::perform_recovery(data_manager<number>& data_mgr
     // ensure no transactions are in progress
     if(this->transactions != 0) throw runtime_exception(exception_type::REPOSITORY_TRANSACTION_ERROR, CPPTRANSPORT_REPO_RECOVER_WHILE_TRANSACTIONS);
 
-    // detect if lockfile is still present in the repository; if so, forcibly remove it
+    // detect if lockfile is still present in the repository; if so, forcibly remove it.
     // this will cause any concurrent process which has locked the repository to fail,
     // so recovery should be used with caution
     boost::filesystem::path lockfile = this->root_path / CPPTRANSPORT_REPO_LOCKFILE_LEAF;
@@ -1256,9 +1256,9 @@ void repository_sqlite3<number>::perform_recovery(data_manager<number>& data_mgr
     // and use it to handle all their internal affairs.
 
     // get SQLite layer to enumerate hot writers
-    std::list<sqlite3_operations::inflight_integration>     hot_integrations;
-    std::list<sqlite3_operations::inflight_postintegration> hot_postintegrations;
-    std::list<sqlite3_operations::inflight_derived_content> hot_derived_content;
+    std::list<inflight_integration>     hot_integrations;
+    std::list<inflight_postintegration> hot_postintegrations;
+    std::list<inflight_derived_content> hot_derived_content;
 
     sqlite3_operations::enumerate_inflight_integrations(this->db, hot_integrations);
     sqlite3_operations::enumerate_inflight_postintegrations(this->db, hot_postintegrations);
@@ -1276,14 +1276,14 @@ void repository_sqlite3<number>::perform_recovery(data_manager<number>& data_mgr
 
 
 template <typename number>
-void repository_sqlite3<number>::recover_integrations(data_manager<number>& data_mgr, std::list<sqlite3_operations::inflight_integration>& list, unsigned int worker)
+void repository_sqlite3<number>::recover_integrations(data_manager<number>& data_mgr, std::list<inflight_integration>& list, unsigned int worker)
   {
     // loop through hot integrations; for each one, set up a new integration_writer which is populated
     // with the configuration of the hot writer
 
     // then, carry out an integrity check and commit the writer
 
-    for(const sqlite3_operations::inflight_integration& inflight : list)
+    for(const inflight_integration& inflight : list)
       {
         // get task record
         std::unique_ptr< task_record<number> > pre_rec = this->query_task(inflight.task_name);
@@ -1309,7 +1309,7 @@ void repository_sqlite3<number>::recover_integrations(data_manager<number>& data
 
 template <typename number>
 std::unique_ptr< integration_writer<number> >
-repository_sqlite3<number>::get_integration_recovery_writer(const sqlite3_operations::inflight_integration& data, data_manager<number>& data_mgr,
+repository_sqlite3<number>::get_integration_recovery_writer(const inflight_integration& data, data_manager<number>& data_mgr,
                                                             integration_task_record<number>& rec, unsigned int worker)
   {
     // set up a new writer instance for this content group
@@ -1328,12 +1328,10 @@ repository_sqlite3<number>::get_integration_recovery_writer(const sqlite3_operat
 
 
 template <typename number>
-void repository_sqlite3<number>::recover_postintegrations(data_manager<number>& data_mgr,
-                                                          std::list<sqlite3_operations::inflight_postintegration>& p_list,
-                                                          std::list<sqlite3_operations::inflight_integration>& i_list,
-                                                          unsigned int worker)
+void repository_sqlite3<number>::recover_postintegrations(data_manager<number>& data_mgr, std::list<inflight_postintegration>& p_list,
+                                                          std::list<inflight_integration>& i_list, unsigned int worker)
   {
-    for(const sqlite3_operations::inflight_postintegration& inflight : p_list)
+    for(const inflight_postintegration& inflight : p_list)
       {
         // get task record
         std::unique_ptr< task_record<number> > pre_rec = this->query_task(inflight.task_name);
@@ -1349,7 +1347,7 @@ void repository_sqlite3<number>::recover_postintegrations(data_manager<number>& 
 
 
 template <typename number>
-void repository_sqlite3<number>::recover_unpaired_postintegration(const sqlite3_operations::inflight_postintegration& data, data_manager<number>& data_mgr,
+void repository_sqlite3<number>::recover_unpaired_postintegration(const inflight_postintegration& data, data_manager<number>& data_mgr,
                                                                   postintegration_task_record<number>& rec, unsigned int worker)
   {
     std::unique_ptr< postintegration_writer<number> > writer = this->get_postintegration_recovery_writer(data, data_mgr, rec, worker);
@@ -1391,13 +1389,13 @@ namespace repository_sqlite3_impl
 
 
 template <typename number>
-void repository_sqlite3<number>::recover_paired_postintegration(const sqlite3_operations::inflight_postintegration& data, data_manager<number>& data_mgr,
+void repository_sqlite3<number>::recover_paired_postintegration(const inflight_postintegration& data, data_manager<number>& data_mgr,
                                                                 postintegration_task_record<number>& p_rec,
-                                                                std::list<sqlite3_operations::inflight_integration>& i_list, unsigned int worker)
+                                                                std::list<inflight_integration>& i_list, unsigned int worker)
   {
     // try to find paired integration in i_list
-    std::list<sqlite3_operations::inflight_integration>::iterator t = std::find_if(i_list.begin(), i_list.end(),
-                                                                                   repository_sqlite3_impl::FindInFlight<sqlite3_operations::inflight_integration>(data.parent_group));
+    std::list<inflight_integration>::iterator t = std::find_if(i_list.begin(), i_list.end(),
+                                                               repository_sqlite3_impl::FindInFlight<inflight_integration>(data.parent_group));
 
     if(t == i_list.end()) this->recover_unpaired_postintegration(data, data_mgr, p_rec, worker);
     else
@@ -1433,7 +1431,7 @@ void repository_sqlite3<number>::recover_paired_postintegration(const sqlite3_op
 
 template <typename number>
 std::unique_ptr< postintegration_writer<number> >
-repository_sqlite3<number>::get_postintegration_recovery_writer(const sqlite3_operations::inflight_postintegration& data, data_manager<number>& data_mgr,
+repository_sqlite3<number>::get_postintegration_recovery_writer(const inflight_postintegration& data, data_manager<number>& data_mgr,
                                                                 postintegration_task_record<number>& rec, unsigned int worker)
   {
     // set up a new writer instance for this content group
@@ -1453,11 +1451,11 @@ repository_sqlite3<number>::get_postintegration_recovery_writer(const sqlite3_op
 
 
 template <typename number>
-void repository_sqlite3<number>::recover_derived_content(data_manager<number>& data_mgr, std::list<sqlite3_operations::inflight_derived_content>& list, unsigned int worker)
+void repository_sqlite3<number>::recover_derived_content(data_manager<number>& data_mgr, std::list<inflight_derived_content>& list, unsigned int worker)
   {
     // loop through hot derived content
 
-    for(const sqlite3_operations::inflight_derived_content& inflight : list)
+    for(const inflight_derived_content& inflight : list)
       {
         // TODO: not yet implemented
       }

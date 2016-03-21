@@ -757,6 +757,7 @@ set(TRANSPORT_RUNTIME_API_REPOSITORY_DETAIL_FILES
   )
 
 set(TRANSPORT_RUNTIME_API_REPOSITORY_FILES
+  transport-runtime-api/repository/inflight.h
   transport-runtime-api/repository/json_repository.h
   transport-runtime-api/repository/repository.h
   transport-runtime-api/repository/transaction_manager.h

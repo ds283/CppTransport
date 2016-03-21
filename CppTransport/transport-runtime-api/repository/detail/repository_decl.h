@@ -10,6 +10,7 @@
 namespace transport
   {
 
+    // flag for read/write mode
     enum class repository_mode
       {
         readonly,

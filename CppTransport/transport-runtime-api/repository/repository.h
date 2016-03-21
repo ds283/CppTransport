@@ -55,6 +55,9 @@
 // DECLARE REPOSITORY RECORDS
 #include "transport-runtime-api/repository/records/repository_records_decl.h"
 
+// DECLARE INFLIGHT CONTENT RECORDS
+#include "transport-runtime-api/repository/inflight.h"
+
 // DECLARE WRITER HANDLERS
 #include "transport-runtime-api/repository/detail/writer_repo_decl.h"
 

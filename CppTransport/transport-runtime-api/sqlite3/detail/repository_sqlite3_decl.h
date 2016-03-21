@@ -345,34 +345,32 @@ namespace transport
       protected:
 
         //! recover a list of hot integrations
-        void recover_integrations(data_manager<number>& data_mgr, std::list<sqlite3_operations::inflight_integration>& list, unsigned int worker);
+        void recover_integrations(data_manager<number>& data_mgr, std::list<inflight_integration>& list, unsigned int worker);
 
         //! recover a list of hot postintegrations
-        void recover_postintegrations(data_manager<number>& data_mgr,
-                                      std::list<sqlite3_operations::inflight_postintegration>& p_list,
-                                      std::list<sqlite3_operations::inflight_integration>& i_list, unsigned int worker);
+        void recover_postintegrations(data_manager<number>& data_mgr, std::list<inflight_postintegration>& p_list,
+                                      std::list<inflight_integration>& i_list, unsigned int worker);
 
         //! recover a list of hot derived-content writers
-        void recover_derived_content(data_manager<number>& data_mgr, std::list<sqlite3_operations::inflight_derived_content>& list, unsigned int worker);
+        void recover_derived_content(data_manager<number>& data_mgr, std::list<inflight_derived_content>& list, unsigned int worker);
 
       protected:
 
         //! construct an integration_writer in recovery mode
-        std::unique_ptr< integration_writer<number> > get_integration_recovery_writer(const sqlite3_operations::inflight_integration& data,
-                                                                                      data_manager<number>& data_mgr,
+        std::unique_ptr< integration_writer<number> > get_integration_recovery_writer(const inflight_integration& data, data_manager<number>& data_mgr,
                                                                                       integration_task_record<number>& rec, unsigned int worker);
 
         //! construct a postintegration_writer in recovery mode
-        std::unique_ptr< postintegration_writer<number> > get_postintegration_recovery_writer(const sqlite3_operations::inflight_postintegration& data,
+        std::unique_ptr< postintegration_writer<number> > get_postintegration_recovery_writer(const inflight_postintegration& data,
                                                                                               data_manager<number>& data_mgr,
                                                                                               postintegration_task_record<number>& rec, unsigned int worker);
 
-        void recover_unpaired_postintegration(const sqlite3_operations::inflight_postintegration& data, data_manager<number>& data_mgr,
+        void recover_unpaired_postintegration(const inflight_postintegration& data, data_manager<number>& data_mgr,
                                               postintegration_task_record<number>& rec, unsigned int worker);
 
-        void recover_paired_postintegration(const sqlite3_operations::inflight_postintegration& data, data_manager<number>& data_mgr,
+        void recover_paired_postintegration(const inflight_postintegration& data, data_manager<number>& data_mgr,
                                             postintegration_task_record<number>& p_rec,
-                                            std::list<sqlite3_operations::inflight_integration>& i_list, unsigned int worker);
+                                            std::list<inflight_integration>& i_list, unsigned int worker);
 
 
         // INTERNAL DATA

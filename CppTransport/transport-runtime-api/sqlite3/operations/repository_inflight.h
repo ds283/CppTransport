@@ -16,60 +16,6 @@ namespace transport
     namespace sqlite3_operations
       {
 
-        class inflight_group
-          {
-          public:
-            std::string             name;
-            std::string             task_name;
-            boost::filesystem::path path;
-            std::string             posix_time;
-          };
-
-
-        class inflight_integration
-          {
-          public:
-            std::string             content_group;
-            std::string             task_name;
-            boost::filesystem::path output;
-            boost::filesystem::path container;
-            boost::filesystem::path logdir;
-            boost::filesystem::path tempdir;
-            unsigned int            workgroup_number;
-            bool                    is_seeded;
-            std::string             seed_group;
-            bool                    is_collecting_stats;
-            bool                    is_collecting_ics;
-          };
-
-
-        class inflight_postintegration
-          {
-          public:
-            std::string             content_group;
-            std::string             task_name;
-            boost::filesystem::path output;
-            boost::filesystem::path container;
-            boost::filesystem::path logdir;
-            boost::filesystem::path tempdir;
-            bool                    is_paired;
-            std::string             parent_group;
-            bool                    is_seeded;
-            std::string             seed_group;
-          };
-
-
-        class inflight_derived_content
-          {
-          public:
-            std::string             content_group;
-            std::string             task_name;
-            boost::filesystem::path output;
-            boost::filesystem::path logdir;
-            boost::filesystem::path tempdir;
-          };
-
-
         std::string reserve_content_name(transaction_manager& mgr, sqlite3* db, const std::string& tk, boost::filesystem::path& parent_path,
                                          const std::string& posix_time_string, const std::string& suffix)
           {
