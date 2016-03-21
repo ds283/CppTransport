@@ -120,7 +120,7 @@ namespace transport
         // create an output writer to commit our results into the repository
         // like all writers, it aborts (ie. executes a rollback if needed) when it goes out of scope unless
         // it is explicitly committed
-        std::unique_ptr< postintegration_writer<number> > writer = this->repo->new_postintegration_task_content(rec, tags, this->get_rank());
+        std::unique_ptr< postintegration_writer<number> > writer = this->repo->new_postintegration_task_content(rec, tags, this->get_rank(), this->world.size());
 
         // initialize the writer
         this->data_mgr->initialize_writer(*writer);
@@ -173,12 +173,12 @@ namespace transport
         if(prec == nullptr) throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_RECORD_CAST_FAILED);
 
         // create an output writer for the postintegration task
-        std::unique_ptr< postintegration_writer<number> > p_writer = this->repo->new_postintegration_task_content(rec, tags, this->get_rank());
+        std::unique_ptr< postintegration_writer<number> > p_writer = this->repo->new_postintegration_task_content(rec, tags, this->get_rank(), this->world.size());
         this->data_mgr->initialize_writer(*p_writer);
         this->data_mgr->create_tables(*p_writer, tk);
 
         // create an output writer for the integration task; use suffix option to add "-paired" to distinguish the different output groups
-        std::unique_ptr<integration_writer<number> > i_writer = this->repo->new_integration_task_content(*prec, tags, this->get_rank(), 0, "paired");
+        std::unique_ptr<integration_writer<number> > i_writer = this->repo->new_integration_task_content(*prec, tags, this->get_rank(), 0, this->world.size(), "paired");
         this->data_mgr->initialize_writer(*i_writer);
         this->data_mgr->create_tables(*i_writer, ptk);
 

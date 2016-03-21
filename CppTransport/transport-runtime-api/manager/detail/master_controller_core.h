@@ -478,6 +478,7 @@ namespace transport
             else throw xe;
           }
 
+        // introspect task type
         switch(record->get_type())
           {
             case task_type::integration:
@@ -605,11 +606,15 @@ namespace transport
         // emit update message giving current status if required
         std::string msg;
         bool print_msg = this->work_scheduler.generate_update_string(msg);
-        if(print_msg)
+        if(print_msg)     // an update exists
           {
+            // emit update
             std::ostringstream update_msg;
             update_msg << CPPTRANSPORT_TASK_MANAGER_LABEL << " " << msg;
             this->msg(update_msg.str());
+
+            // update main database with new estimate of our completion time
+            this->repo->advise_completion_time(writer.get_name(), this->work_scheduler.get_estimated_completion());
 
             BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "±± Console advisory message: " << update_msg.str();
             this->log_worker_metadata(writer);

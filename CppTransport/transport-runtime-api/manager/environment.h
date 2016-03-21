@@ -174,6 +174,7 @@ namespace transport
 
     void local_environment::detect_home()
       {
+        // TODO: Platform introspection
         // detect home directory
         char* home_cstr = std::getenv(CPPTRANSPORT_HOME_ENV);
 
@@ -187,6 +188,7 @@ namespace transport
 
     void local_environment::detect_term()
       {
+        // TODO: Platform introspection
         // determine if terminal supports colour output
         char* term_type_cstr = std::getenv("TERM");
 
@@ -209,6 +211,7 @@ namespace transport
 
     void local_environment::detect_python()
       {
+        // TODO: Platform introspection
         std::string path;
         FILE* f = popen("which python", "r");
 
@@ -300,6 +303,7 @@ namespace transport
         std::ostringstream command;
 
         // source user's .profile script if it exists
+        // TODO: Platform introspection
         const char* user_home = getenv("HOME");
         if(user_home != nullptr)
           {

@@ -132,12 +132,12 @@ namespace transport
     template <typename number>
     std::unique_ptr< integration_writer<number> >
     repository<number>::new_integration_task_content(integration_task_record<number>& rec, const std::list<std::string>& tags,
-                                                     unsigned int worker, unsigned int workgroup, std::string suffix)
+                                                     unsigned int worker, unsigned int workgroup, unsigned int num_cores, std::string suffix)
       {
         std::unique_ptr< repository_integration_writer_commit<number> > commit = std::make_unique< repository_integration_writer_commit<number> >(*this);
         std::unique_ptr< repository_integration_writer_abort<number> > abort = std::make_unique< repository_integration_writer_abort<number> >(*this);
 
-        return this->base_new_integration_task_content(rec, tags, worker, workgroup, std::move(commit), std::move(abort), suffix);
+        return this->base_new_integration_task_content(rec, tags, worker, workgroup, num_cores, std::move(commit), std::move(abort), suffix);
       }
 
 
@@ -158,12 +158,12 @@ namespace transport
     template <typename number>
     std::unique_ptr< derived_content_writer<number> >
     repository<number>::new_output_task_content(output_task_record<number>& rec, const std::list<std::string>& tags,
-                                                unsigned int worker, std::string suffix)
+                                                unsigned int worker, unsigned int num_cores, std::string suffix)
       {
         std::unique_ptr< repository_derived_content_writer_commit<number> > commit = std::make_unique< repository_derived_content_writer_commit<number> >(*this);
         std::unique_ptr< repository_derived_content_writer_abort<number> > abort = std::make_unique< repository_derived_content_writer_abort<number> >(*this);
 
-        return this->base_new_output_task_content(rec, tags, worker, std::move(commit), std::move(abort), suffix);
+        return this->base_new_output_task_content(rec, tags, worker, num_cores, std::move(commit), std::move(abort), suffix);
       }
 
 
@@ -183,12 +183,12 @@ namespace transport
     template <typename number>
     std::unique_ptr< postintegration_writer<number> >
     repository<number>::new_postintegration_task_content(postintegration_task_record<number>& rec, const std::list<std::string>& tags,
-                                                         unsigned int worker, std::string suffix)
+                                                         unsigned int worker, unsigned int num_cores, std::string suffix)
       {
         std::unique_ptr< repository_postintegration_writer_commit<number> > commit = std::make_unique< repository_postintegration_writer_commit<number> >(*this);
         std::unique_ptr< repository_postintegration_writer_abort<number> > abort = std::make_unique< repository_postintegration_writer_abort<number> >(*this);
 
-        return this->base_new_postintegration_task_content(rec, tags, worker, std::move(commit), std::move(abort), suffix);
+        return this->base_new_postintegration_task_content(rec, tags, worker, num_cores, std::move(commit), std::move(abort), suffix);
       }
 
 
@@ -209,7 +209,7 @@ namespace transport
     template <typename number>
     std::unique_ptr< integration_writer<number> >
     repository<number>::base_new_integration_task_content(integration_task_record<number>& rec, const std::list<std::string>& tags,
-                                                          unsigned int worker, unsigned int workgroup,
+                                                          unsigned int worker, unsigned int workgroup, unsigned int num_cores,
                                                           std::unique_ptr< repository_integration_writer_commit<number> > commit,
                                                           std::unique_ptr< repository_integration_writer_abort<number> > abort,
                                                           std::string suffix)
@@ -219,7 +219,7 @@ namespace transport
 
         // request a name for this content group
         boost::filesystem::path parent_path = static_cast<boost::filesystem::path>(CPPTRANSPORT_REPO_TASKOUTPUT_LEAF) / rec.get_name();
-        std::string output_leaf = this->reserve_content_name(rec.get_name(), parent_path, now, suffix);
+        std::string output_leaf = this->reserve_content_name(rec.get_name(), parent_path, now, suffix, num_cores);
 
         boost::filesystem::path output_path = parent_path / output_leaf;
         boost::filesystem::path sql_path    = output_path / CPPTRANSPORT_REPO_DATABASE_LEAF;
@@ -277,7 +277,8 @@ namespace transport
 
     template <typename number>
     std::unique_ptr< derived_content_writer<number> >
-    repository<number>::base_new_output_task_content(output_task_record<number>& rec, const std::list<std::string>& tags, unsigned int worker,
+    repository<number>::base_new_output_task_content(output_task_record<number>& rec, const std::list<std::string>& tags,
+                                                     unsigned int worker, unsigned int num_cores,
                                                      std::unique_ptr< repository_derived_content_writer_commit<number> > commit,
                                                      std::unique_ptr< repository_derived_content_writer_abort<number> > abort,
                                                      std::string suffix)
@@ -287,7 +288,7 @@ namespace transport
 
         // request a name for this content group
         boost::filesystem::path parent_path = static_cast<boost::filesystem::path>(CPPTRANSPORT_REPO_TASKOUTPUT_LEAF) / rec.get_name();
-        std::string output_leaf = this->reserve_content_name(rec.get_name(), parent_path, now, suffix);
+        std::string output_leaf = this->reserve_content_name(rec.get_name(), parent_path, now, suffix, num_cores);
 
         boost::filesystem::path output_path = parent_path / output_leaf;
 
@@ -341,7 +342,8 @@ namespace transport
 
     template <typename number>
     std::unique_ptr< postintegration_writer<number> >
-    repository<number>::base_new_postintegration_task_content(postintegration_task_record<number>& rec, const std::list<std::string>& tags, unsigned int worker,
+    repository<number>::base_new_postintegration_task_content(postintegration_task_record<number>& rec, const std::list<std::string>& tags,
+                                                              unsigned int worker, unsigned int num_cores,
                                                               std::unique_ptr< repository_postintegration_writer_commit<number> > commit,
                                                               std::unique_ptr< repository_postintegration_writer_abort<number> > abort,
                                                               std::string suffix)
@@ -351,7 +353,7 @@ namespace transport
 
         // request a name for this content group
         boost::filesystem::path parent_path = static_cast<boost::filesystem::path>(CPPTRANSPORT_REPO_TASKOUTPUT_LEAF) / rec.get_name();
-        std::string output_leaf = this->reserve_content_name(rec.get_name(), parent_path, now, suffix);
+        std::string output_leaf = this->reserve_content_name(rec.get_name(), parent_path, now, suffix, num_cores);
 
         boost::filesystem::path output_path = parent_path / output_leaf;
         boost::filesystem::path sql_path    = output_path / CPPTRANSPORT_REPO_DATABASE_LEAF;

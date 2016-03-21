@@ -1224,12 +1224,13 @@ namespace transport
 
 
 template <typename number>
-std::string repository_sqlite3<number>::reserve_content_name(const std::string& tk, boost::filesystem::path& parent_path, boost::posix_time::ptime& now, const std::string& suffix)
+std::string repository_sqlite3<number>::reserve_content_name(const std::string& tk, boost::filesystem::path& parent_path, boost::posix_time::ptime& now,
+                                                             const std::string& suffix, unsigned int num_cores)
   {
     std::string posix_time_string = boost::posix_time::to_iso_string(now);
 
     transaction_manager transaction = this->transaction_factory();
-    std::string         name        = sqlite3_operations::reserve_content_name(transaction, this->db, tk, parent_path, posix_time_string, suffix);
+    std::string         name        = sqlite3_operations::reserve_content_name(transaction, this->db, tk, parent_path, posix_time_string, suffix, num_cores);
     transaction.commit();
 
     return(name);
@@ -1559,6 +1560,18 @@ void repository_sqlite3<number>::register_writer(derived_content_writer<number>&
                                                         writer.get_relative_output_path(),
                                                         writer.get_relative_logdir_path(),
                                                         writer.get_relative_tempdir_path());
+
+    transaction.commit();
+  }
+
+
+template <typename number>
+void repository_sqlite3<number>::advise_completion_time(const std::string& name, const boost::posix_time::ptime& time)
+  {
+    transaction_manager transaction = this->transaction_factory();
+
+    std::string time_string = boost::posix_time::to_iso_string(time);
+    sqlite3_operations::advise_completion_time(transaction, this->db, name, time_string);
 
     transaction.commit();
   }

@@ -13,6 +13,9 @@
 #include <vector>
 #include <sstream>
 
+#include <sys/ioctl.h>
+#include <unistd.h>
+
 
 #include "transport-runtime-api/manager/environment.h"
 #include "transport-runtime-api/manager/argument_cache.h"
@@ -161,6 +164,11 @@ namespace transport
 	          wrap_width(DEFAULT_ASCIITABLE_WRAP_WIDTH),
             terminal_output(false)
 	        {
+            // TODO: Platform introspection
+            // Read terminal display width (assuming the output *is* a terminal)
+            struct winsize w;
+            ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
+            display_width = w.ws_col > 0 ? w.ws_col : DEFAULT_ASCIITABLE_DISPLAY_WIDTH;
           }
 
         //! destructor is default
@@ -281,7 +289,7 @@ namespace transport
             size_t batch_width = 0;
             size_t column_height = 0;
 
-            bool batch_complete;
+            bool batch_complete = false;
             while(!batch_complete)
               {
                 batch_width += widths[columns_output + batch_size];

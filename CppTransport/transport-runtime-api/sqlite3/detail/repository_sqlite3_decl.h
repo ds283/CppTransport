@@ -340,10 +340,11 @@ namespace transport
 
       protected:
 
-        virtual std::string reserve_content_name(const std::string& tk, boost::filesystem::path& parent_path, boost::posix_time::ptime& now, const std::string& suffix) override;
+        virtual std::string reserve_content_name(const std::string& tk, boost::filesystem::path& parent_path, boost::posix_time::ptime& now,
+                                                 const std::string& suffix, unsigned int num_cores) override;
 
 
-        // REGISTER AND RECOVER WRITERS
+        // WRITER MANAGEMENT
 
       public:
 
@@ -358,6 +359,9 @@ namespace transport
 
         //! register a derived-content writer
         virtual void register_writer(derived_content_writer<number>& writer) override;
+
+        //! Advise completion time for a writer
+        virtual void advise_completion_time(const std::string& name, const boost::posix_time::ptime& time) override;
 
       protected:
 

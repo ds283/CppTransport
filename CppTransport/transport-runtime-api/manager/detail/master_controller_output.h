@@ -35,7 +35,7 @@ namespace transport
         // set up a derived_content_writer object to coordinate logging, output destination and commits into the repository.
         // like all writers, it aborts (ie. executes a rollback if needed) when it goes out of scope unless
         // it is explicitly committed
-        std::unique_ptr< derived_content_writer<number> > writer = this->repo->new_output_task_content(rec, tags, this->get_rank());
+        std::unique_ptr< derived_content_writer<number> > writer = this->repo->new_output_task_content(rec, tags, this->get_rank(), this->world.size());
 
         // set up the writer for us
         this->data_mgr->initialize_writer(*writer);

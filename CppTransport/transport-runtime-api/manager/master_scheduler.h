@@ -295,6 +295,7 @@ namespace transport
 		        total_aggregation_time(0),
 		        number_aggregations(0),
 		        total_work_time(0),
+            estimated_completion(boost::posix_time::not_a_date_time),
 		        work_items_completed(0),
 		        work_items_in_flight(0),
             finished(false)
@@ -324,9 +325,6 @@ namespace transport
 
 		    //! set current state size; used when assigning work to GPUs
 		    void set_state_size(unsigned int size) { this->state_size = size; }
-
-        //! advise a new aggregation time
-        void report_aggregation(boost::timer::nanosecond_type time);
 
 
 		    // INTERFACE -- MANAGE WORK QUEUE
@@ -368,6 +366,9 @@ namespace transport
 		    //! check for an update string
 		    bool generate_update_string(std::string& msg);
 
+        //! get current estimated time-of-completion
+        const boost::posix_time::ptime& get_estimated_completion() const { return(this->estimated_completion); }
+
 
 		    // INTERFACE -- MANAGE WORK ASSIGNMENTS
 
@@ -404,6 +405,9 @@ namespace transport
 
         //! get metadata for all workers
         std::vector< worker_metadata > get_metadata() const;
+
+        //! advise a new aggregation time
+        void report_aggregation(boost::timer::nanosecond_type time);
 
 
 		    // INTERNAL API
@@ -482,8 +486,11 @@ namespace transport
 
 		    // STATUS AND TIME-TO-COMPLETION
 
-		    //! Keep track of time
+		    //! Keep track of time elapsed
 		    boost::timer::cpu_timer timer;
+
+        //! Current estimate of completion time
+        boost::posix_time::ptime estimated_completion;
 
 		    //! Keep track of total time spent doing work, to estimate a time-to-completion
 		    boost::timer::nanosecond_type total_work_time;
@@ -877,11 +884,13 @@ namespace transport
 								    boost::timer::nanosecond_type mean_wallclock_time_per_item = total_wallclock_time / this->work_items_completed;
 								    boost::timer::nanosecond_type estimated_time_remaining     = mean_wallclock_time_per_item * static_cast<unsigned int>(this->queue.size() + this->work_items_in_flight);
 
-								    boost::posix_time::time_duration duration        = boost::posix_time::seconds(estimated_time_remaining / (1000 * 1000 * 1000));
-								    boost::posix_time::ptime         completion_time = now + duration;
+                    boost::posix_time::time_duration duration = boost::posix_time::seconds(estimated_time_remaining / (1000 * 1000 * 1000));
+
+                    // update cached expected completion time
+								    this->estimated_completion = now + duration;
 
 										msg_stream << " | " << CPPTRANSPORT_MASTER_SCHEDULER_COMPLETION_ESTIMATE << " "
-											<< boost::posix_time::to_simple_string(completion_time) << " ("
+											<< boost::posix_time::to_simple_string(this->estimated_completion) << " ("
 											<< format_time(estimated_time_remaining) << " " << CPPTRANSPORT_MASTER_SCHEDULER_FROM_NOW << ")";
 
 										msg = msg_stream.str();

@@ -22,6 +22,8 @@ namespace transport
         std::string             task_name;
         boost::filesystem::path path;
         std::string             posix_time;
+        unsigned int            cores;
+        std::string             completion;
       };
 
 

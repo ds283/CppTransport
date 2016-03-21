@@ -28,7 +28,8 @@
 #define CPPTRANSPORT_REPO_STORE_OUTPUT_FAIL                 "Repository error: failed to store output record (backend code="
 
 #define CPPTRANSPORT_REPO_STORE_RESERVE_FAIL                "Repository error: failed to store content group name reservation (backend code="
-#define CPPTRANSPORT_REPO_COMMIT_OUTPUT_NOT_RESERVED        "Repository error: attempt to commit output group for unreserved name"
+#define CPPTRANSPORT_REPO_COMMIT_OUTPUT_NOT_RESERVED        "Repository error: attempt to commit output group for unreserved name (backend code="
+#define CPPTRANSPORT_REPO_UPDATE_COMPLETION_FAIL            "Repository error: failed to update completion time for content group (backend code="
 
 #define CPPTRANSPORT_REPO_STORE_INTEGRATION_WRITER_FAIL     "Repository error: failed to register integration writer (backend code="
 #define CPPTRANSPORT_REPO_STORE_POSTINTEGRATION_WRITER_FAIL "Repository error: failed to register postintegration writer (backend code="

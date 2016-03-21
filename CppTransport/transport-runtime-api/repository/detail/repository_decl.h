@@ -201,19 +201,17 @@ namespace transport
       public:
 
         //! Generate a writer object for new integration output
-        virtual std::unique_ptr< integration_writer<number> > new_integration_task_content(integration_task_record<number>& rec,
-                                                                                           const std::list<std::string>& tags,
-                                                                                           unsigned int worker, unsigned int workgroup, std::string suffix="");
+        virtual std::unique_ptr< integration_writer<number> > new_integration_task_content(integration_task_record<number>& rec, const std::list<std::string>& tags,
+                                                                                           unsigned int worker, unsigned int workgroup,
+                                                                                           unsigned int num_cores, std::string suffix="");
 
         //! Generate a writer object for new derived-content output
-        virtual std::unique_ptr< derived_content_writer<number> > new_output_task_content(output_task_record<number>& rec,
-                                                                                          const std::list<std::string>& tags,
-                                                                                          unsigned int worker, std::string suffix="");
+        virtual std::unique_ptr< derived_content_writer<number> > new_output_task_content(output_task_record<number>& rec, const std::list<std::string>& tags,
+                                                                                          unsigned int worker, unsigned int num_cores, std::string suffix="");
 
         //! Generate a writer object for new postintegration output
-        virtual std::unique_ptr< postintegration_writer<number> > new_postintegration_task_content(postintegration_task_record<number>& rec,
-                                                                                                   const std::list<std::string>& tags,
-                                                                                                   unsigned int worker, std::string suffix="");
+        virtual std::unique_ptr< postintegration_writer<number> > new_postintegration_task_content(postintegration_task_record<number>& rec, const std::list<std::string>& tags,
+                                                                                                   unsigned int worker, unsigned int num_cores, std::string suffix="");
 
       protected:
 
@@ -239,12 +237,13 @@ namespace transport
       protected:
 
         // register an in-flight content group
-        virtual std::string reserve_content_name(const std::string& tk, boost::filesystem::path& parent_path, boost::posix_time::ptime& now, const std::string& suffix) = 0;
+        virtual std::string reserve_content_name(const std::string& tk, boost::filesystem::path& parent_path, boost::posix_time::ptime& now,
+                                                 const std::string& suffix, unsigned int num_cores) = 0;
 
         //! generate an integration writer
         std::unique_ptr< integration_writer<number> > base_new_integration_task_content(integration_task_record<number>& rec,
                                                                                         const std::list<std::string>& tags,
-                                                                                        unsigned int worker, unsigned int workgroup,
+                                                                                        unsigned int worker, unsigned int workgroup, unsigned int num_cores,
                                                                                         std::unique_ptr< repository_integration_writer_commit<number> > commit,
                                                                                         std::unique_ptr< repository_integration_writer_abort<number> > abort,
                                                                                         std::string suffix="");
@@ -259,7 +258,8 @@ namespace transport
 
         //! generate a derived content writer
         std::unique_ptr< derived_content_writer<number> > base_new_output_task_content(output_task_record<number>& rec,
-                                                                                       const std::list<std::string>& tags, unsigned int worker,
+                                                                                       const std::list<std::string>& tags,
+                                                                                       unsigned int worker, unsigned int num_cores,
                                                                                        std::unique_ptr< repository_derived_content_writer_commit<number> > commit,
                                                                                        std::unique_ptr< repository_derived_content_writer_abort<number> > abort,
                                                                                        std::string suffix="");
@@ -272,7 +272,8 @@ namespace transport
                                                                                             std::unique_ptr< repository_derived_content_writer_abort<number> > abort);
 
         std::unique_ptr< postintegration_writer<number> > base_new_postintegration_task_content(postintegration_task_record<number>& rec,
-                                                                                                const std::list<std::string>& tags, unsigned int worker,
+                                                                                                const std::list<std::string>& tags,
+                                                                                                unsigned int worker, unsigned int num_cores,
                                                                                                 std::unique_ptr< repository_postintegration_writer_commit<number> > commit,
                                                                                                 std::unique_ptr< repository_postintegration_writer_abort<number> > abort,
                                                                                                 std::string suffix="");
@@ -286,12 +287,12 @@ namespace transport
                                                                                                      std::unique_ptr< repository_postintegration_writer_abort<number> > abort);
 
 
-        // PERFORM RECOVERY ON CRASHED WRITERS
+        // WRITER MANAGEMENT
 
       public:
 
-        //! recover crashed writers
-        virtual void perform_recovery(data_manager<number>& data_mgr, unsigned int worker) = 0;
+        //! Advise completion time for a writer
+        virtual void advise_completion_time(const std::string& name, const boost::posix_time::ptime& time) = 0;
 
         //! register an integration writer
         virtual void register_writer(integration_writer<number>& writer) = 0;
@@ -301,6 +302,9 @@ namespace transport
 
         //! register a derived-content writer
         virtual void register_writer(derived_content_writer<number>& writer) = 0;
+
+        //! recover crashed writers
+        virtual void perform_recovery(data_manager<number>& data_mgr, unsigned int worker) = 0;
 
 
         // FIND AN OUTPUT GROUP MATCHING DEFINED TAGS
