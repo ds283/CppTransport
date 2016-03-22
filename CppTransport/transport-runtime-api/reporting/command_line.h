@@ -220,6 +220,9 @@ namespace transport
             //! report generic details for a record
             void report_record_generic(const repository_record& rec);
 
+            //! compose tags into a single string
+            std::string compose_tag_list(const std::list<std::string>& tag_list);
+
 
             // HANDLE NEWLINES BETWEEN REPORTS
 
@@ -748,20 +751,7 @@ namespace transport
                     // introspect derived product type
                     type.push_back(derived_data::derived_product_type_to_string(element.get_product().get_type()));
 
-                    // compose tags into a single string
-                    std::ostringstream tag_list;
-                    unsigned int tag_count = 0;
-                    for(const std::string& tag : element.get_tags())
-                      {
-                        if(tag_count > 0) tag_list << ", ";
-                        tag_list << tag;
-                        if(tag_list.str().length() > CPPTRANSPORT_REPORT_MAX_TAG_LENGTH) break;
-                        ++tag_count;
-                      }
-                    if(tag_count < element.get_tags().size()) tag_list << ", ...";
-
-                    if(tag_list.str().length() > 0) tags.push_back(tag_list.str());
-                    else                            tags.push_back("--");
+                    tags.push_back(this->compose_tag_list(element.get_tags()));
                     filename.push_back(element.get_product().get_filename().string());
                   }
 
@@ -839,6 +829,71 @@ namespace transport
             this->report_record_title(rec);
             this->report_record_generic(rec);
 
+            key_value kv(this->env, this->arg_cache);
+            kv.insert_back(CPPTRANSPORT_REPORT_PRODUCT_TYPE, derived_data::derived_product_type_to_string(rec.get_product()->get_type()));
+            kv.insert_back(CPPTRANSPORT_REPORT_PRODUCT_FILENAME, rec.get_product()->get_filename().string());
+
+            kv.write(std::cout);
+            this->force_newline();
+
+            typename std::vector< derivable_task<number>* > task_list;
+            rec.get_product()->get_task_list(task_list);
+
+            if(!task_list.empty())
+              {
+                this->check_newline();
+
+                if(this->env.has_colour_terminal_support() && this->arg_cache.get_colour_output()) std::cout << ColourCode(ANSI_colour::bold_green);
+                std::cout << CPPTRANSPORT_REPORT_PRODUCT_DEPENDS_ON;
+                if(this->env.has_colour_terminal_support() && this->arg_cache.get_colour_output()) std::cout << ColourCode(ANSI_colour::normal);
+                std::cout << '\n';
+
+                std::vector<column_descriptor> columns;
+                std::vector<std::string> name;
+                std::vector<std::string> type;
+                std::vector<std::string> last_edit;
+                std::vector<std::string> num_groups;
+
+                typename task_db<number>::type& db = cache.get_task_db();
+
+                for(derivable_task<number>* tk : task_list)
+                  {
+                    if(tk != nullptr)
+                      {
+                        typename task_db<number>::type::const_iterator t = db.find(tk->get_name());
+                        name.push_back(tk->get_name());
+
+                        if(t != db.end())
+                          {
+                            type.push_back(task_type_to_string(t->second->get_type()));
+                            last_edit.push_back(boost::posix_time::to_simple_string(t->second->get_last_edit_time()));
+                            num_groups.push_back(boost::lexical_cast<std::string>(t->second->get_output_groups().size()));
+                          }
+                        else
+                          {
+                            type.push_back("--");
+                            last_edit.push_back("--");
+                            num_groups.push_back("--");
+                          }
+                      }
+                  }
+
+                columns.emplace_back(CPPTRANSPORT_REPORT_STATUS_TASK_NAME, column_justify::left);
+                columns.emplace_back(CPPTRANSPORT_REPORT_STATUS_TYPE, column_justify::left);
+                columns.emplace_back(CPPTRANSPORT_REPORT_STATUS_LAST_EDIT, column_justify::right);
+                columns.emplace_back(CPPTRANSPORT_REPORT_STATUS_NUM_GROUPS, column_justify::right);
+
+                std::vector< std::vector<std::string> > table;
+                table.push_back(name);
+                table.push_back(type);
+                table.push_back(last_edit);
+                table.push_back(num_groups);
+
+                asciitable at(std::cout, this->env, this->arg_cache);
+                at.set_terminal_output(true);
+                at.write(columns, table);
+              }
+
             this->force_newline();
           }
 
@@ -890,6 +945,26 @@ namespace transport
 
             kv.set_tiling(true);
             kv.write(std::cout);
+          }
+
+
+        std::string command_line::compose_tag_list(const std::list<std::string>& tag_list)
+          {
+            // compose tags into a single string
+            std::ostringstream composed_list;
+            unsigned int tag_count = 0;
+
+            for(const std::string& tag : tag_list)
+              {
+                if(tag_count > 0) composed_list << ", ";
+                composed_list << tag;
+                if(composed_list.str().length() > CPPTRANSPORT_REPORT_MAX_TAG_LENGTH) break;
+                ++tag_count;
+              }
+            if(tag_count < tag_list.size()) composed_list << ", ...";
+
+            if(composed_list.str().length() > 0) return composed_list.str();
+            else                                 return std::string("--");
           }
 
       }   // namespace reporting

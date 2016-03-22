@@ -64,6 +64,7 @@ constexpr auto CPPTRANSPORT_REPORT_PRODUCT_NAME                   = "Derived pro
 constexpr auto CPPTRANSPORT_REPORT_PRODUCT_TYPE                   = "Type";
 constexpr auto CPPTRANSPORT_REPORT_PRODUCT_TAGS                   = "Matches tags";
 constexpr auto CPPTRANSPORT_REPORT_PRODUCT_FILENAME               = "Filename";
+constexpr auto CPPTRANSPORT_REPORT_PRODUCT_DEPENDS_ON             = "Depends on content from";
 
 
 #endif //CPPTRANSPORT_MESSAGES_EN_REPORT_CMDLINE_H
