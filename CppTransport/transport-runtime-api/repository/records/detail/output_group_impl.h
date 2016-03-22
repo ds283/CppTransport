@@ -52,6 +52,7 @@ namespace transport
     constexpr auto CPPTRANSPORT_NODE_PAYLOAD_CONTENT_CREATED = "creation-time";
     constexpr auto CPPTRANSPORT_NODE_PAYLOAD_CONTENT_NOTES = "notes";
     constexpr auto CPPTRANSPORT_NODE_PAYLOAD_CONTENT_TAGS = "tags";
+    constexpr auto CPPTRANSPORT_NODE_PAYLOAD_GROUPS_SUMMARY = "content-groups-summary";
 
 
     // OUTPUT_GROUP METHODS
@@ -82,19 +83,19 @@ namespace transport
 
         unsigned int count = 0;
 
-        for(std::list<std::string>::const_iterator t = this->notes.begin(); t != this->notes.end(); ++t)
+        for(const std::string& note : this->notes)
           {
             out << "  " << CPPTRANSPORT_OUTPUT_GROUP_NOTE << " " << count << '\n';
-            out << "    " << *t << '\n';
+            out << "    " << note << '\n';
             count++;
           }
 
         count = 0;
         out << "  " << CPPTRANSPORT_OUTPUT_GROUP_TAGS << ": ";
-        for(std::list<std::string>::const_iterator t = this->tags.begin(); t != this->tags.end(); ++t)
+        for(const std::string& tag : this->tags)
           {
             if(count > 0) out << ", ";
-            out << *t;
+            out << tag;
             count++;
           }
         out << '\n';
@@ -355,6 +356,14 @@ namespace transport
           {
             this->content.push_back( derived_content(*t) );
           }
+
+        Json::Value& summary_array = reader[CPPTRANSPORT_NODE_PAYLOAD_GROUPS_SUMMARY];
+        assert(summary_array.isArray());
+
+        for(Json::Value::iterator t = summary_array.begin(); t != summary_array.end(); ++t)
+          {
+            this->used_groups.push_back( (*t).asString() );
+          }
       }
 
 
@@ -364,13 +373,22 @@ namespace transport
 
         Json::Value content_array(Json::arrayValue);
 
-        for(std::list<derived_content>::const_iterator t = this->content.begin(); t != this->content.end(); ++t)
+        for(const derived_content& item : this->content)
           {
             Json::Value element(Json::objectValue);
-            (*t).serialize(element);
+            item.serialize(element);
             content_array.append(element);
           }
         writer[CPPTRANSPORT_NODE_PAYLOAD_CONTENT_ARRAY] = content_array;
+
+        Json::Value summary_array(Json::arrayValue);
+
+        for(const std::string& group : this->used_groups)
+          {
+            Json::Value element = group;
+            summary_array.append(element);
+          }
+        writer[CPPTRANSPORT_NODE_PAYLOAD_GROUPS_SUMMARY] = summary_array;
 
         this->metadata.serialize(writer);
       }
@@ -379,10 +397,10 @@ namespace transport
     template <typename Stream>
     void output_payload::write(Stream& out) const
       {
-        for(std::list<derived_content>::const_iterator t = this->content.begin(); t != this->content.end(); ++t)
+        for(const derived_content& item : this->content)
           {
-            out << CPPTRANSPORT_PAYLOAD_OUTPUT_CONTENT_PRODUCT << " = " << (*t).get_parent_product() << ", "
-            << CPPTRANSPORT_PAYLOAD_OUTPUT_CONTENT_PATH    << " = " << (*t).get_filename() << '\n';
+            out << CPPTRANSPORT_PAYLOAD_OUTPUT_CONTENT_PRODUCT << " = " << item.get_parent_product() << ", "
+            << CPPTRANSPORT_PAYLOAD_OUTPUT_CONTENT_PATH    << " = " << item.get_filename() << '\n';
           }
       }
 
@@ -429,27 +447,27 @@ namespace transport
 
         Json::Value content_groups_array(Json::arrayValue);
 
-        for(std::list<std::string>::const_iterator t = this->content_groups.begin(); t != this->content_groups.end(); ++t)
+        for(const std::string& group : this->content_groups)
           {
-            Json::Value element = *t;
+            Json::Value element = group;
             content_groups_array.append(element);
           }
         writer[CPPTRANSPORT_NODE_PAYLOAD_CONTENT_USED_GROUPS] = content_groups_array;
 
         Json::Value note_list(Json::arrayValue);
 
-        for(std::list<std::string>::const_iterator t = this->notes.begin(); t != this->notes.end(); ++t)
+        for(const std::string& note : this->notes)
           {
-            Json::Value note_element = *t;
+            Json::Value note_element = note;
             note_list.append(note_element);
           }
         writer[CPPTRANSPORT_NODE_PAYLOAD_CONTENT_NOTES] = note_list;
 
         Json::Value tag_list(Json::arrayValue);
 
-        for(std::list<std::string>::const_iterator t = this->tags.begin(); t != this->tags.end(); ++t)
+        for(const std::string& tag : this->tags)
           {
-            Json::Value tag_element = *t;
+            Json::Value tag_element = tag;
             tag_list.append(tag_element);
           }
         writer[CPPTRANSPORT_NODE_PAYLOAD_CONTENT_TAGS] = tag_list;

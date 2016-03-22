@@ -217,6 +217,12 @@ namespace transport
         //! Merge list of failed serials reported by backend (not all backends may support this)
         void merge_failure_list(const std::list<unsigned int>& failed) { throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_REPO_WRITER_FAILURE_UNSUPPORTED); }
 
+        //! Set content groups
+        void set_content_groups(const std::list<std::string>& l) { this->content_groups = l; }
+
+        //! Get content groups
+        const std::list<std::string>& get_content_groups() const { return(this->content_groups); }
+
 
         // INTERNAL DATA
 
@@ -250,6 +256,9 @@ namespace transport
 
         //! metadata for this output task
         output_metadata metadata;
+
+        //! global list of content groups used in this task
+        std::list<std::string> content_groups;
 
 	    };
 

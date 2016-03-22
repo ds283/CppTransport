@@ -750,6 +750,7 @@ set(TRANSPORT_RUNTIME_API_REPORTING_FILES
   transport-runtime-api/reporting/command_line.h
   transport-runtime-api/reporting/repository_cache.h
   transport-runtime-api/reporting/key_value.h
+  transport-runtime-api/reporting/content_group_data.h
   )
 
 set(TRANSPORT_RUNTIME_API_REPOSITORY_DETAIL_FILES

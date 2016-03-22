@@ -375,6 +375,7 @@ namespace transport
 
         //! Get metadata
         const output_metadata& get_metadata() const { return(this->metadata); }
+
         //! Set metadata
         void set_metadata(const output_metadata& data) { this->metadata = data; }
 
@@ -507,8 +508,12 @@ namespace transport
         //! Add an output
         void add_derived_content(const derived_content& prod) { this->content.push_back(prod); }
 
+        //! Get derived content records
+        const std::list<derived_content>& get_derived_content() const { return(this->content); }
+
         //! Get metadata
         const output_metadata& get_metadata() const { return(this->metadata); }
+
         //! Set metadata
         void set_metadata(const output_metadata& data) { this->metadata = data; }
 
@@ -523,11 +528,14 @@ namespace transport
         //! Set fail status
         void set_fail(bool g) { this->fail = g; }
 
-        //! Get list of used content groups
-        const std::list<std::string>& get_content_groups() const { return(this->used_groups); }
+        //! Get list of used content groups;
+        //! this information is replicated at a more granular level in the content list,
+        //! but a summary set is provided here for convenience
+        const std::list<std::string>& get_content_groups_summary() const { return(this->used_groups); }
 
         //! Set list of used content groups
-        void set_content_groups(const std::list<std::string>& list) { this->used_groups = list; }
+        void set_content_groups_summary(const std::list<std::string>& list) { this->used_groups = list; }
+
 
         // WRITE TO A STREAM
 

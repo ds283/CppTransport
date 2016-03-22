@@ -80,7 +80,7 @@ namespace transport
         // aggregate cache information
         integration_metadata   i_metadata;      // unused
         output_metadata        o_metadata;
-        std::list<std::string> content_groups;  // unused
+        std::list<std::string> content_groups;
 
         // get paths the workers will need
         boost::filesystem::path tempdir_path = writer.get_abs_tempdir_path();
@@ -103,9 +103,12 @@ namespace transport
           BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "++ All workers received NEW_DERIVED_CONTENT instruction";
         }
 
+        // we keep track of the global content group list, but content groups are also tracked
+        // on a product-by-product basis as they are emplaced during the task
         bool success = this->poll_workers(i_agg, p_agg, d_agg, i_metadata, o_metadata, content_groups, writer, begin_label, end_label);
 
         writer.set_metadata(o_metadata);
+        writer.set_content_groups(content_groups);
         wallclock_timer.stop();
         this->debrief_output(writer, o_metadata, wallclock_timer);
 

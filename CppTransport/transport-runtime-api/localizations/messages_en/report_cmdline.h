@@ -101,6 +101,7 @@ constexpr auto CPPTRANSPORT_REPORT_PAYLOAD_GLOBAL_MAX             = "Max integra
 constexpr auto CPPTRANSPORT_REPORT_PAYLOAD_CONFIGURATIONS         = "Configurations";
 constexpr auto CPPTRANSPORT_REPORT_PAYLOAD_FAILURES               = "Failures";
 
+constexpr auto CPPTRANSPORT_REPORT_PAYLOAD_CONTENT_GROUPS         = "Summary of output groups used";
 
 
 #endif //CPPTRANSPORT_MESSAGES_EN_REPORT_CMDLINE_H

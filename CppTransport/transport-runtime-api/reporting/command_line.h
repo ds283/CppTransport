@@ -11,6 +11,7 @@
 
 #include "transport-runtime-api/reporting/repository_cache.h"
 #include "transport-runtime-api/reporting/key_value.h"
+#include "transport-runtime-api/reporting/content_group_data.h"
 
 #include "transport-runtime-api/manager/environment.h"
 #include "transport-runtime-api/manager/argument_cache.h"
@@ -1040,6 +1041,50 @@ namespace transport
 
             this->report_record_title(rec);
             this->report_output_record_generic(rec);
+
+            const output_payload& payload = rec.get_payload();
+            const std::list<std::string>& groups = payload.get_content_groups_summary();
+
+            if(!groups.empty())
+              {
+                std::vector<column_descriptor> columns;
+                std::vector<std::string> name;
+                std::vector<std::string> task;
+                std::vector<std::string> type;
+                std::vector<std::string> last_edit;
+
+                for(const std::string& group : groups)
+                  {
+                    name.push_back(group);
+
+                    content_group_data<number> data(group, cache);
+
+                    task.push_back(data.get_task());
+                    type.push_back(data.get_type());
+                    last_edit.push_back(data.get_last_edit());
+                  }
+
+                columns.emplace_back(CPPTRANSPORT_REPORT_OUTPUT_GROUP_NAME, column_justify::left);
+                columns.emplace_back(CPPTRANSPORT_REPORT_OUTPUT_PARENT_TASK, column_justify::left);
+                columns.emplace_back(CPPTRANSPORT_REPORT_OUTPUT_PARENT_TASK_TYPE, column_justify::left);
+                columns.emplace_back(CPPTRANSPORT_REPORT_OUTPUT_EDITED, column_justify::right);
+
+                std::cout << '\n';
+                if(this->env.has_colour_terminal_support() && this->arg_cache.get_colour_output()) std::cout << ColourCode(ANSI_colour::bold_green);
+                std::cout << CPPTRANSPORT_REPORT_PAYLOAD_CONTENT_GROUPS;
+                if(this->env.has_colour_terminal_support() && this->arg_cache.get_colour_output()) std::cout << ColourCode(ANSI_colour::normal);
+                std::cout << '\n';
+
+                std::vector< std::vector<std::string> > table;
+                table.push_back(name);
+                table.push_back(task);
+                table.push_back(type);
+                table.push_back(last_edit);
+
+                asciitable at(std::cout, this->env, this->arg_cache);
+                at.set_terminal_output(true);
+                at.write(columns, table);
+              }
 
             this->force_newline();
           }

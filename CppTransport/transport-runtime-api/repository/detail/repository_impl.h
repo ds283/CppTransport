@@ -656,6 +656,7 @@ namespace transport
           }
         output_record->get_payload().set_metadata(writer.get_metadata());
         output_record->get_payload().set_fail(false);
+        output_record->get_payload().set_content_groups_summary(writer.get_content_groups());
 
         // commit new output record
         output_record->commit(mgr);
