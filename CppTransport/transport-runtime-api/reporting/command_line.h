@@ -567,7 +567,7 @@ namespace transport
                         created.push_back(boost::posix_time::to_simple_string(t->second->get_creation_time()));
                         updated.push_back(boost::posix_time::to_simple_string(t->second->get_last_edit_time()));
                         failed.push_back(t->second->get_payload().is_failed() ? CPPTRANSPORT_REPORT_NO : CPPTRANSPORT_REPORT_YES); // label is 'complete', so yes/no other way
-                        size.push_back("--");
+                        size.push_back(format_memory(t->second->get_payload().get_size()));
                       }
                     else
                       {
@@ -639,7 +639,7 @@ namespace transport
                         created.push_back(boost::posix_time::to_simple_string(t->second->get_creation_time()));
                         updated.push_back(boost::posix_time::to_simple_string(t->second->get_last_edit_time()));
                         failed.push_back(t->second->get_payload().is_failed() ? CPPTRANSPORT_REPORT_NO : CPPTRANSPORT_REPORT_YES); // label is 'complete', so yes/no other way
-                        size.push_back("--");
+                        size.push_back(format_memory(t->second->get_payload().get_size()));
                       }
                     else
                       {

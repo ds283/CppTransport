@@ -24,6 +24,7 @@ namespace transport
     constexpr auto CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_SEED_GROUP = "seed-group";
     constexpr auto CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_STATISTICS = "has-statistics";
     constexpr auto CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_ICS = "has-ics";
+    constexpr auto CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_SIZE = "size";
 
     constexpr auto CPPTRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_DATABASE = "database-path";
     constexpr auto CPPTRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_FAILED = "failed";
@@ -32,6 +33,7 @@ namespace transport
     constexpr auto CPPTRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_SEEDED = "seeded";
     constexpr auto CPPTRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_SEED_GROUP = "seed-group";
     constexpr auto CPPTRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_FAILED_SERIALS = "failed-serials";
+    constexpr auto CPPTRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_SIZE = "size";
 
     constexpr auto CPPTRANSPORT_NODE_PRECOMPUTED_ROOT = "contains-products";
     constexpr auto CPPTRANSPORT_NODE_PRECOMPUTED_ZETA_TWOPF = "zeta-twopf";
@@ -245,6 +247,7 @@ namespace transport
         seed_group         = reader[CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_SEED_GROUP].asString();
         statistics         = reader[CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_STATISTICS].asBool();
         initial_conditions = reader[CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_ICS].asBool();
+        size               = reader[CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_SIZE].asUInt();
 
         Json::Value failure_array = reader[CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_FAILED_SERIALS];
         assert(failure_array.isArray());
@@ -265,6 +268,7 @@ namespace transport
         writer[CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_SEED_GROUP] = this->seed_group;
         writer[CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_STATISTICS] = this->statistics;
         writer[CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_ICS]        = this->initial_conditions;
+        writer[CPPTRANSPORT_NODE_PAYLOAD_INTEGRATION_SIZE]       = this->size;
 
         Json::Value failure_array(Json::arrayValue);
         for(std::list<unsigned int>::const_iterator t = this->failed_serials.begin(); t != this->failed_serials.end(); ++t)
@@ -295,6 +299,7 @@ namespace transport
         parent_group = reader[CPPTRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_PARENT_GROUP].asString();
         seeded       = reader[CPPTRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_SEEDED].asBool();
         seed_group   = reader[CPPTRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_SEED_GROUP].asString();
+        size         = reader[CPPTRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_SIZE].asUInt();
 
         Json::Value failure_array = reader[CPPTRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_FAILED_SERIALS];
         assert(failure_array.isArray());
@@ -314,6 +319,7 @@ namespace transport
         writer[CPPTRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_PARENT_GROUP] = this->parent_group;
         writer[CPPTRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_SEEDED]       = this->seeded;
         writer[CPPTRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_SEED_GROUP]   = this->seed_group;
+        writer[CPPTRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_SIZE]         = this->size;
 
         Json::Value failure_array(Json::arrayValue);
         for(std::list<unsigned int>::const_iterator t = this->failed_serials.begin(); t != this->failed_serials.end(); ++t)

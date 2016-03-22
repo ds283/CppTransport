@@ -215,7 +215,8 @@ namespace transport
             workgroup_number(0),
             seeded(false),
             statistics(false),
-            initial_conditions(false)
+            initial_conditions(false),
+            size(0)
           {
           }
 
@@ -281,10 +282,11 @@ namespace transport
         //! Get initial conditions flag
         bool has_initial_conditions() const { return(this->initial_conditions); }
 
+        //! Set container size
+        void set_size(unsigned int s) { this->size = s; }
 
-        // GET AND SET PROPERTIES
-
-      public:
+        //! Get container size
+        unsigned int get_size() const { return(this->size); }
 
 
         // WRITE TO A STREAM
@@ -333,6 +335,9 @@ namespace transport
         //! does this group has initial conditions data?
         bool initial_conditions;
 
+        //! record container size
+        unsigned int size;
+
       };
 
 
@@ -347,7 +352,8 @@ namespace transport
           : metadata(),
             precomputed(),
             paired(false),
-            seeded(false)
+            seeded(false),
+            size(0)
           {
           }
 
@@ -413,6 +419,12 @@ namespace transport
         //! Query seed group
         const std::string& get_seed_group() const { return(this->seed_group); }
 
+        //! Set container size
+        void set_size(unsigned int s) { this->size = s; }
+
+        //! Get container size
+        unsigned int get_size() const { return(this->size); }
+
 
         // WRITE TO A STREAM
 
@@ -459,6 +471,9 @@ namespace transport
 
         //! if this postintegration was seeded, parent output group
         std::string seed_group;
+
+        //! record container size
+        unsigned int size;
 
       };
 
