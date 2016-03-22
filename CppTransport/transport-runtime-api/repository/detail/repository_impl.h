@@ -475,7 +475,14 @@ namespace transport
         output_record->get_payload().set_statistics(writer.is_collecting_statistics());
         output_record->get_payload().set_initial_conditions(writer.is_collecting_initial_conditions());
 
-        output_record->get_payload().set_size(boost::filesystem::file_size(output_record->get_payload().get_container_path()));
+        try
+          {
+            output_record->get_payload().set_size(boost::filesystem::file_size(this->root_path / writer.get_relative_container_path()));
+          }
+        catch(boost::filesystem::filesystem_error& xe)
+          {
+            output_record->get_payload().set_size(0);
+          }
 
         // commit new output record
         output_record->commit(mgr);
@@ -561,7 +568,14 @@ namespace transport
         output_record->get_payload().set_fail(writer.is_failed());
         output_record->get_payload().set_failed_serials(writer.get_missing_serials());
 
-        output_record->get_payload().set_size(boost::filesystem::file_size(output_record->get_payload().get_container_path()));
+        try
+          {
+            output_record->get_payload().set_size(boost::filesystem::file_size(this->root_path / writer.get_relative_container_path()));
+          }
+        catch(boost::filesystem::filesystem_error& xe)
+          {
+            output_record->get_payload().set_size(0);
+          }
 
         // tag this output group with its contents
         if(writer.get_products().get_zeta_twopf())   output_record->get_payload().get_precomputed_products().add_zeta_twopf();
