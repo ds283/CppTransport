@@ -33,7 +33,9 @@ namespace transport
             command_line(local_environment& e, argument_cache& c)
               : env(e),
                 arg_cache(c),
-                show_status(false)
+                newline(false),
+                include_tasks(false),
+                include_inflight(false)
               {
               }
 
@@ -41,45 +43,55 @@ namespace transport
             ~command_line() = default;
 
 
-            // INTERFACE
+            // SELECT REPORTS TO BE INCLUDED
 
           public:
 
-            //! report on overall status of repository
-            void status() { this->show_status = true; }
+            //! include list of tasks in report
+            void task_list() { this->include_tasks = true; }
+
+            //! include list of inflight jobs in report
+            void inflight_list() { this->include_inflight = true; }
 
             //! report on individual repository items
             void info(const std::vector<std::string>& items) { this->info_items = items; }
+
+
+            // GENERATE REPORTS
+
+          public:
 
             //! produce reports
             template <typename number>
             void report(repository<number>& repo);
 
 
-            // INTERNAL API
+            // GENERATE REPORTS
 
           protected:
 
-            //! produce status report
+            //! report on tasks available in a repository
             template <typename number>
-            void report_status(repository<number>& repo);
+            void report_tasks(typename task_db<number>::type& db);
+
+            //! report on inflight content in a repository
+            template <typename number>
+            void report_inflight(typename task_db<number>::type& tk_db, inflight_db& group_db);
 
             //! produce individual item reports
             template <typename number>
             void report_info(repository<number>& repo);
 
 
-            // REPOSITORY STATUS REPORT
+            // HANDLE NEWLINES BETWEEN REPORTS
 
           protected:
 
-            //! report on tasks available in a repository
-            template <typename number>
-            void report_repository_tasks(typename task_db<number>::type& db);
+            //! check whether a newline is needed to separate reports
+            void check_newline() { if(this->newline) { std::cout << '\n'; this->newline = false; } }
 
-            //! report on inflight content in a repository
-            template <typename number>
-            void report_repository_inflight(typename task_db<number>::type& tk_db, inflight_db& group_db);
+            //! force a newline before the next report
+            void force_newline() { this->newline = true; }
 
 
             // INTERNAL DATA
@@ -92,11 +104,23 @@ namespace transport
             //! reference to argument cache
             argument_cache& arg_cache;
 
-            //! emit repository status report
-            bool show_status;
+
+            // REPORTS TO DISPLAY
+
+            //! include list of tasks
+            bool include_tasks;
+
+            //! include list of inflight jobs
+            bool include_inflight;
 
             //! list of repostitory items to provide detailed reports for
             std::vector<std::string> info_items;
+
+
+            // CACHE STATUS
+
+            //! display newline before next report?
+            bool newline;
 
           };
 
@@ -104,25 +128,21 @@ namespace transport
         template <typename number>
         void command_line::report(repository<number>& repo)
           {
-            if(this->show_status) this->report_status(repo);
-            if(this->info_items.size() > 0) this->report_info(repo);
-          }
-
-
-        template <typename number>
-        void command_line::report_status(repository<number>& repo)
-          {
+            // collect common enumerations; no need to perform these multiple times
             typename task_db<number>::type tk_db = repo.enumerate_tasks();
             inflight_db group_db = repo.enumerate_inflight();
 
-            this->report_repository_tasks<number>(tk_db);
-            this->report_repository_inflight<number>(tk_db, group_db);
+            if(this->include_tasks) this->report_tasks<number>(tk_db);
+            if(this->include_inflight) this->report_inflight<number>(tk_db, group_db);
+            if(this->info_items.size() > 0) this->report_info<number>(repo);
           }
 
 
         template <typename number>
-        void command_line::report_repository_tasks(typename task_db<number>::type& db)
+        void command_line::report_tasks(typename task_db<number>::type& db)
           {
+            this->check_newline();
+
             if(this->env.has_colour_terminal_support() && this->arg_cache.get_colour_output()) std::cout << ColourCode(ANSI_colour::bold_magenta);
             std::cout << CPPTRANSPORT_REPORT_STATUS_TASKS << '\n';
             if(this->env.has_colour_terminal_support() && this->arg_cache.get_colour_output()) std::cout << ColourCode(ANSI_colour::normal);
@@ -155,15 +175,17 @@ namespace transport
             asciitable at(std::cout, this->env, this->arg_cache);
             at.set_terminal_output(true);
             at.write(columns, table);
+
+            this->force_newline();
           }
 
 
         template <typename number>
-        void command_line::report_repository_inflight(typename task_db<number>::type& tk_db, inflight_db& group_db)
+        void command_line::report_inflight(typename task_db<number>::type& tk_db, inflight_db& group_db)
           {
             if(group_db.empty()) return;
 
-            std::cout << '\n';
+            this->check_newline();
 
             if(this->env.has_colour_terminal_support() && this->arg_cache.get_colour_output()) std::cout << ColourCode(ANSI_colour::bold_magenta);
             std::cout << CPPTRANSPORT_REPORT_STATUS_INFLIGHT << '\n';
@@ -212,14 +234,6 @@ namespace transport
                     boost::posix_time::ptime complete_time = boost::posix_time::from_iso_string(group.second->completion);
                     complete.push_back(boost::posix_time::to_simple_string(complete_time));
                   }
-
-//                std::cout << "'" << name.back() << "'" << '\n';
-//                std::cout << "'" << parent.back() << "'" << '\n';
-//                std::cout << "'" << type.back() << "'" << '\n';
-//                std::cout << "'" << init.back() << "'" << '\n';
-//                std::cout << "'" << duration.back() << "'" << '\n';
-//                std::cout << "'" << cores.back() << "'" << '\n';
-//                std::cout << "'" << complete.back() << "'" << '\n';
               }
 
             columns.emplace_back(CPPTRANSPORT_REPORT_STATUS_CONTENT, column_justify::left);
@@ -242,13 +256,16 @@ namespace transport
             asciitable at(std::cout, this->env, this->arg_cache);
             at.set_terminal_output(true);
             at.write(columns, table);
+
+            this->force_newline();
           }
 
 
         template <typename number>
         void command_line::report_info(repository<number>& repo)
           {
-
+            this->check_newline();
+            this->force_newline();
           }
 
       }   // namespace reporting

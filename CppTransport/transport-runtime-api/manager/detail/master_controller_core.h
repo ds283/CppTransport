@@ -79,6 +79,7 @@ namespace transport
         report_options.add_options()
           (CPPTRANSPORT_SWITCH_RECOVER,                                                                                      CPPTRANSPORT_HELP_RECOVER)
           (CPPTRANSPORT_SWITCH_STATUS,                                                                                       CPPTRANSPORT_HELP_STATUS)
+          (CPPTRANSPORT_SWITCH_INFLIGHT,                                                                                     CPPTRANSPORT_HELP_INFLIGHT)
           (CPPTRANSPORT_SWITCH_INFO,             boost::program_options::value< std::vector< std::string > >()->composing(), CPPTRANSPORT_HELP_INFO);
 
         boost::program_options::options_description hidden_options;
@@ -299,7 +300,14 @@ namespace transport
       {
         if(option_map.count(CPPTRANSPORT_SWITCH_RECOVER)) this->arg_cache.set_recovery_mode(true);
 
-        if(option_map.count(CPPTRANSPORT_SWITCH_STATUS)) this->cmdline_reports.status();
+        if(option_map.count(CPPTRANSPORT_SWITCH_STATUS))
+          {
+            this->cmdline_reports.task_list();
+            this->cmdline_reports.inflight_list();
+          }
+
+        if(option_map.count(CPPTRANSPORT_SWITCH_INFLIGHT)) this->cmdline_reports.inflight_list();
+
         if(option_map.count(CPPTRANSPORT_SWITCH_INFO)) this->cmdline_reports.info(option_map[CPPTRANSPORT_SWITCH_INFO].as< std::vector<std::string> >());
       }
 

@@ -33,10 +33,10 @@
 #define CPPTRANSPORT_HELP_VERBOSE             "enable verbose output"
 
 #define CPPTRANSPORT_SWITCH_GANTT_CHART       "gantt"
-#define CPPTRANSPORT_HELP_GANTT_CHART         "output Gantt chart describing worker activity"
+#define CPPTRANSPORT_HELP_GANTT_CHART         "output Gantt chart describing activity"
 
 #define CPPTRANSPORT_SWITCH_JOURNAL           "journal"
-#define CPPTRANSPORT_HELP_JOURNAL             "write JSON-format journal describing worker activity"
+#define CPPTRANSPORT_HELP_JOURNAL             "write JSON journal describing activity"
 
 #define CPPTRANSPORT_SWITCH_CHECKPOINT        "checkpoint"
 #define CPPTRANSPORT_HELP_CHECKPOINT          "commit data after given interval, measured in minutes"
@@ -51,7 +51,7 @@
 #define CPPTRANSPORT_HELP_CREATE              "write repository content"
 
 #define CPPTRANSPORT_SWITCH_TASK              "task"
-#define CPPTRANSPORT_HELP_TASK                "add named task to list of jobs"
+#define CPPTRANSPORT_HELP_TASK                "add named task to list of jobs to be processed"
 
 #define CPPTRANSPORT_SWITCH_MODELS            "models"
 #define CPPTRANSPORT_HELP_MODELS              "list models baked into this executable"
@@ -67,10 +67,13 @@
 #define CPPTRANSPORT_HELP_PLOT_STYLE          "set plotting style"
 
 #define CPPTRANSPORT_SWITCH_STATUS            "status"
-#define CPPTRANSPORT_HELP_STATUS              "report current status of repository"
+#define CPPTRANSPORT_HELP_STATUS              "summarize current status of repository"
+
+#define CPPTRANSPORT_SWITCH_INFLIGHT          "in-flight"
+#define CPPTRANSPORT_HELP_INFLIGHT            "report on currently active jobs"
 
 #define CPPTRANSPORT_SWITCH_INFO              "info"
-#define CPPTRANSPORT_HELP_INFO                "display repository information for specified object"
+#define CPPTRANSPORT_HELP_INFO                "show information on the specified object"
 
 
 #endif //CPPTRANSPORT_COMMAND_LINE_H
