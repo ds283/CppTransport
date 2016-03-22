@@ -13,7 +13,6 @@
 
 #include "transport-runtime-api/serialization/serializable.h"
 
-
 #include "transport-runtime-api/derived-products/utilities/wrapper.h"
 
 // forward-declare datapipe if needed
@@ -34,7 +33,7 @@
 
 // get enumeration classes
 #include "transport-runtime-api/derived-products/enumerations.h"
-
+#include "transport-runtime-api/derived-products/derived_product_type.h"
 
 #include "transport-runtime-api/defaults.h"
 #include "transport-runtime-api/messages.h"
@@ -43,19 +42,19 @@
 #include "boost/filesystem/operations.hpp"
 
 
-#define CPPTRANSPORT_NODE_DERIVED_PRODUCT_TYPE                 "derived-product-type"
-
-#define CPPTRANSPORT_NODE_DERIVED_PRODUCT_LINE_PLOT2D          "line-plot2d"
-#define CPPTRANSPORT_NODE_DERIVED_PRODUCT_LINE_ASCIITABLE      "line-asciitable"
-
-#define CPPTRANSPORT_NODE_DERIVED_PRODUCT_FILENAME             "filename"
-
-
 namespace transport
 	{
 
 		namespace derived_data
 			{
+
+        constexpr auto CPPTRANSPORT_NODE_DERIVED_PRODUCT_TYPE                 = "derived-product-type";
+
+        constexpr auto CPPTRANSPORT_NODE_DERIVED_PRODUCT_LINE_PLOT2D          = "line-plot2d";
+        constexpr auto CPPTRANSPORT_NODE_DERIVED_PRODUCT_LINE_ASCIITABLE      = "line-asciitable";
+
+        constexpr auto CPPTRANSPORT_NODE_DERIVED_PRODUCT_FILENAME             = "filename";
+
 
 		    //! A derived product represents some particular post-processing
 		    //! of the integration data, perhaps to produce a plot,
@@ -90,6 +89,9 @@ namespace transport
 
 				    //! Get name of this derived data product
 				    const std::string& get_name() const { return(this->name); }
+
+            //! Get type of this derived data product
+            virtual derived_product_type get_type() const = 0;
 
 				    //! Get filename associated with this derived data product
 				    const boost::filesystem::path& get_filename() const { return(this->filename); }

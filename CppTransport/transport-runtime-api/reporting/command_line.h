@@ -696,8 +696,11 @@ namespace transport
                 for(const output_task_element<number>& element : elements)
                   {
                     name.push_back(element.get_product_name());
-                    type.push_back("--");
 
+                    // introspect derived product type
+                    type.push_back(derived_data::derived_product_type_to_string(element.get_product().get_type()));
+
+                    // compose tags into a single string
                     std::ostringstream tag_list;
                     unsigned int tag_count = 0;
                     for(const std::string& tag : element.get_tags())

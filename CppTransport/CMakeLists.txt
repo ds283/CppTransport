@@ -621,6 +621,7 @@ set(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_FILES
   transport-runtime-api/derived-products/derived_product_forward_declare.h
   transport-runtime-api/derived-products/derived_product_helper.h
   transport-runtime-api/derived-products/enumerations.h
+  transport-runtime-api/derived-products/derived_product_type
   )
 
 set(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_LINE_COLLECTIONS_FILES

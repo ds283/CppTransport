@@ -69,6 +69,14 @@ namespace transport
 				    virtual ~line_asciitable() = default;
 
 
+            // INTERFACE -- DERIVED PRODUCT
+
+          public:
+
+            //! Get type of this derived data product
+            derived_product_type get_type() const override final { return(derived_product_type::line_table); }
+
+
 		        // LINE MANAGEMENT
 
 		      public:

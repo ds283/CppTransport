@@ -21,7 +21,7 @@ namespace transport
     template <typename number, postintegration_task_type Type> struct postintegration_task_traits;
 
 
-    std::string task_type_to_string(task_type type)
+    inline std::string task_type_to_string(task_type type)
       {
         switch(type)
           {
@@ -37,7 +37,7 @@ namespace transport
       }
 
 
-    std::string task_type_to_string(integration_task_type type)
+    inline std::string task_type_to_string(integration_task_type type)
       {
         switch(type)
           {
@@ -50,7 +50,7 @@ namespace transport
       }
 
 
-    std::string task_type_to_string(postintegration_task_type type)
+    inline std::string task_type_to_string(postintegration_task_type type)
       {
         switch(type)
           {

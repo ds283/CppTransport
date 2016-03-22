@@ -111,7 +111,15 @@ namespace transport
 		        virtual ~line_plot2d() = default;
 
 
-		        // LINE MANAGEMENT
+            // INTERFACE -- DERIVED PRODUCT
+
+          public:
+
+            //! Get type of this derived data product
+            derived_product_type get_type() const override final { return(derived_product_type::line_2dplot); }
+
+
+            // LINE MANAGEMENT
 
 		      public:
 
