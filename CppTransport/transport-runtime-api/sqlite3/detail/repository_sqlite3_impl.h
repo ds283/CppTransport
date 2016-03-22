@@ -1018,9 +1018,18 @@ namespace transport
           }
 
         integration_content_db db;
-        this->enumerate_content_groups<integration_payload>(name, db);
+        this->enumerate_content_groups<integration_payload>(db, name);
 
         return(std::move(db));   // std::move required by GCC 5.2 although standard implies that copy elision should occur
+      }
+
+
+    template <typename number>
+    integration_content_db repository_sqlite3<number>::enumerate_integration_task_content()
+      {
+        integration_content_db db;
+        this->enumerate_content_groups<integration_payload>(db);
+        return(std::move(db));
       }
 
 
@@ -1038,9 +1047,18 @@ namespace transport
           }
 
         postintegration_content_db db;
-        this->enumerate_content_groups<postintegration_payload>(name, db);
+        this->enumerate_content_groups<postintegration_payload>(db, name);
 
         return(std::move(db));   // std::move required by GCC 5.2 although standard implies that copy elision should occur
+      }
+
+
+    template <typename number>
+    postintegration_content_db repository_sqlite3<number>::enumerate_postintegration_task_content()
+      {
+        postintegration_content_db db;
+        this->enumerate_content_groups<postintegration_payload>(db);
+        return(std::move(db));
       }
 
 
@@ -1058,9 +1076,18 @@ namespace transport
           }
 
         output_content_db db;
-        this->enumerate_content_groups<output_payload>(name, db);
+        this->enumerate_content_groups<output_payload>(db, name);
 
         return(std::move(db));   // std::move required by GCC 5.2 although standard implies that copy elision should occur
+      }
+
+
+    template <typename number>
+    output_content_db repository_sqlite3<number>::enumerate_output_task_content()
+      {
+        output_content_db db;
+        this->enumerate_content_groups<output_payload>(db);
+        return(std::move(db));
       }
 
 
@@ -1201,21 +1228,29 @@ namespace transport
 
     template <typename number>
     template <typename Payload>
-    void repository_sqlite3<number>::enumerate_content_groups(const std::string& name, std::map< boost::posix_time::ptime, std::unique_ptr< output_group_record<Payload> > >& db)
+    void repository_sqlite3<number>::enumerate_content_groups(std::map< std::string, std::unique_ptr< output_group_record<Payload> > >& db, const std::string name)
       {
         std::list<std::string> group_names;
 
-        // get list of group names associated with the task 'name'; overwrites existing content (here, none)
-        // of the list group_names
-        sqlite3_operations::enumerate_content_groups<Payload>(this->db, name, group_names);
+        // get list of group names associated with the task 'name', or all tasks of a specified payload
+        // if 'name' is empty; overwrites existing content of the list group_names
+        sqlite3_operations::enumerate_content_groups<Payload>(this->db, group_names, name);
 
-        for(const std::string& name : group_names)
+        this->content_groups_from_list(group_names, db);
+      }
+
+
+    template <typename number>
+    template <typename Payload>
+    void repository_sqlite3<number>::content_groups_from_list(const std::list<std::string>& list, std::map< std::string, std::unique_ptr< output_group_record<Payload> > >& db)
+      {
+        for(const std::string& name : list)
           {
             boost::filesystem::path filename = sqlite3_operations::find_group<Payload>(this->db, name, CPPTRANSPORT_REPO_OUTPUT_MISSING);
             Json::Value             root     = this->deserialize_JSON_document(filename);
 
             std::unique_ptr< output_group_record<Payload> > group = this->template content_group_record_factory<Payload>(root);
-            db.insert( std::make_pair(group->get_creation_time(), std::move(group)) );
+            db.insert( std::make_pair(group->get_name(), std::move(group)) );
           }
       }
 

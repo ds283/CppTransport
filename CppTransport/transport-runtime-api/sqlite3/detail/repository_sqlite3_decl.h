@@ -172,11 +172,20 @@ namespace transport
         //! Enumerate the output groups available from a named integration task
         virtual integration_content_db enumerate_integration_task_content(const std::string& name) override;
 
+        //! Enumerate all integration output groups
+        virtual integration_content_db enumerate_integration_task_content() override;
+
         //! Enumerate the output groups available for a named postintegration task
         virtual postintegration_content_db enumerate_postintegration_task_content(const std::string& name) override;
 
+        //! Enumerate all postintegration output groups
+        virtual postintegration_content_db enumerate_postintegration_task_content() override;
+
         //! Enumerate the output groups available from a named output task
         virtual output_content_db enumerate_output_task_content(const std::string& name) override;
+
+        //! Enumerate all output groups
+        virtual output_content_db enumerate_output_task_content() override;
 
 
         // ENUMERATE INFLIGHT TASKS
@@ -311,9 +320,13 @@ namespace transport
         //! Check whether a derived product already exists in the database. Throws an exception if so.
         void check_product_duplicate(const std::string& name);
 
-        //! Enumerate content groups
+        //! Enumerate content groups for a named task, or all tasks of a specified payload if no name is provided
         template <typename Payload>
-        void enumerate_content_groups(const std::string& name, std::map< boost::posix_time::ptime, std::unique_ptr < output_group_record<Payload> > >& db);
+        void enumerate_content_groups(std::map< std::string, std::unique_ptr < output_group_record<Payload> > >& db, const std::string name="");
+
+        //! Build a database of content groups from a list of names
+        template <typename Payload>
+        void content_groups_from_list(const std::list<std::string>& list, std::map< std::string, std::unique_ptr < output_group_record<Payload> > >& db);
 
 
         // COMMIT CALLBACK METHODS FOR REPOSITORY RECORDS

@@ -34,7 +34,7 @@ namespace transport
         err(eh),
         warn(wh),
         msg(mh),
-        cmdline_reports(le, ac)
+        cmdline_reports(le, ac, eh, wh, mh)
       {
       }
 

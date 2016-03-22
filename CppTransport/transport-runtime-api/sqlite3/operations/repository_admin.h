@@ -75,7 +75,13 @@ namespace transport
 				void internal_enumerate_content_groups(sqlite3* db, const std::string& name, std::list<std::string>& groups, const std::string& table)
 					{
 				    std::stringstream find_stmt;
-						find_stmt << "SELECT name FROM " << table << " WHERE " << table << ".task='" << name << "';";
+						find_stmt << "SELECT name FROM " << table;
+
+            if(name.length() > 0)
+              {
+                find_stmt << " WHERE " << table << ".task='" << name << "'";
+              }
+            find_stmt << ";";
 
 				    sqlite3_stmt* stmt;
 				    check_stmt(db, sqlite3_prepare_v2(db, find_stmt.str().c_str(), find_stmt.str().length()+1, &stmt, nullptr));
@@ -102,25 +108,25 @@ namespace transport
 
 
 				template <typename Payload>
-				void enumerate_content_groups(sqlite3* db, const std::string& name, std::list<std::string>& groups);
+				void enumerate_content_groups(sqlite3* db, std::list<std::string>& groups, const std::string& name="");
 
 
 				template <>
-				void enumerate_content_groups<integration_payload>(sqlite3* db, const std::string& name, std::list<std::string>& groups)
+				void enumerate_content_groups<integration_payload>(sqlite3* db, std::list<std::string>& groups, const std::string& name)
 					{
 						internal_enumerate_content_groups(db, name, groups, CPPTRANSPORT_SQLITE_INTEGRATION_GROUPS_TABLE);
 					}
 
 
 		    template <>
-		    void enumerate_content_groups<postintegration_payload>(sqlite3* db, const std::string& name, std::list<std::string>& groups)
+		    void enumerate_content_groups<postintegration_payload>(sqlite3* db, std::list<std::string>& groups, const std::string& name)
 			    {
 		        internal_enumerate_content_groups(db, name, groups, CPPTRANSPORT_SQLITE_POSTINTEGRATION_GROUPS_TABLE);
 			    }
 
 
 		    template <>
-		    void enumerate_content_groups<output_payload>(sqlite3* db, const std::string& name, std::list<std::string>& groups)
+		    void enumerate_content_groups<output_payload>(sqlite3* db, std::list<std::string>& groups, const std::string& name)
 			    {
 		        internal_enumerate_content_groups(db, name, groups, CPPTRANSPORT_SQLITE_OUTPUT_GROUPS_TABLE);
 			    }

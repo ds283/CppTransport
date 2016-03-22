@@ -45,9 +45,9 @@ namespace transport
 
           public:
 
-            bool operator()(const std::pair< const boost::posix_time::ptime, std::unique_ptr< output_group_record<Payload> > >& a)
+            bool operator()(const std::pair< const std::string, std::unique_ptr< output_group_record<Payload> > >& a)
               {
-                return(a.second->get_name() == name);
+                return(a.first == name);
               }
 
 
@@ -693,10 +693,10 @@ namespace transport
         integration_content_db db = this->enumerate_integration_task_content(name);
 
         // remove items which are marked as failed
-        repository_impl::remove_if(db, [&] (const std::pair< const boost::posix_time::ptime, std::unique_ptr< output_group_record<integration_payload> > >& group) { return(group.second->get_payload().is_failed()); } );
+        repository_impl::remove_if(db, [&] (const std::pair< const std::string, std::unique_ptr< output_group_record<integration_payload> > >& group) { return(group.second->get_payload().is_failed()); } );
 
         // remove items from the list which have mismatching tags
-        repository_impl::remove_if(db, [&] (const std::pair< const boost::posix_time::ptime, std::unique_ptr< output_group_record<integration_payload> > >& group) { return(group.second->check_tags(tags)); } );
+        repository_impl::remove_if(db, [&] (const std::pair< const std::string, std::unique_ptr< output_group_record<integration_payload> > >& group) { return(group.second->check_tags(tags)); } );
 
         if(db.empty())
           {
@@ -719,10 +719,10 @@ namespace transport
         postintegration_content_db db = this->enumerate_postintegration_task_content(name);
 
         // remove items which are marked as failed
-        repository_impl::remove_if(db, [&] (const std::pair< const boost::posix_time::ptime, std::unique_ptr< output_group_record<postintegration_payload> > >& group) { return(group.second->get_payload().is_failed()); } );
+        repository_impl::remove_if(db, [&] (const std::pair< const std::string, std::unique_ptr< output_group_record<postintegration_payload> > >& group) { return(group.second->get_payload().is_failed()); } );
 
         // remove items from the list which have mismatching tags
-        repository_impl::remove_if(db, [&] (const std::pair< const boost::posix_time::ptime, std::unique_ptr< output_group_record<postintegration_payload> > >& group) { return(group.second.get()->check_tags(tags)); } );
+        repository_impl::remove_if(db, [&] (const std::pair< const std::string, std::unique_ptr< output_group_record<postintegration_payload> > >& group) { return(group.second.get()->check_tags(tags)); } );
 
         if(db.empty())
           {

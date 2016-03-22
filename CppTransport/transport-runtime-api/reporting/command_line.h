@@ -10,9 +10,11 @@
 #include "transport-runtime-api/repository/repository.h"
 
 #include "transport-runtime-api/reporting/repository_cache.h"
+#include "transport-runtime-api/reporting/key_value.h"
 
 #include "transport-runtime-api/manager/environment.h"
 #include "transport-runtime-api/manager/argument_cache.h"
+#include "transport-runtime-api/manager/message_handlers.h"
 
 #include "transport-runtime-api/utilities/asciitable.h"
 #include "transport-runtime-api/utilities/formatter.h"
@@ -24,6 +26,72 @@ namespace transport
     namespace reporting
       {
 
+
+        namespace command_line_impl
+          {
+
+            template <typename RecordType> struct record_traits;
+
+            template <typename number>
+            struct record_traits< package_record<number> >
+              {
+                std::string type_string() const { return std::string(CPPTRANSPORT_REPORT_RECORD_PACKAGE); }
+              };
+
+            template <typename number>
+            struct record_traits< task_record<number> >
+              {
+                std::string type_string() const { return std::string(CPPTRANSPORT_REPORT_RECORD_TASK); }
+              };
+
+            template <typename number>
+            struct record_traits< integration_task_record<number> >
+              {
+                std::string type_string() const { return std::string(CPPTRANSPORT_REPORT_RECORD_INTEGRATION_TASK); }
+              };
+
+            template <typename number>
+            struct record_traits< postintegration_task_record<number> >
+              {
+                std::string type_string() const { return std::string(CPPTRANSPORT_REPORT_RECORD_POSTINTEGRATION_TASK); }
+              };
+
+            template <typename number>
+            struct record_traits< output_task_record<number> >
+              {
+                std::string type_string() const { return std::string(CPPTRANSPORT_REPORT_RECORD_OUTPUT_TASK); }
+              };
+
+            template <typename number>
+            struct record_traits< derived_product_record<number> >
+              {
+                std::string type_string() const { return std::string(CPPTRANSPORT_REPORT_RECORD_DERIVED); }
+              };
+
+            template <>
+            struct record_traits< output_group_record<integration_payload> >
+              {
+                std::string type_string() const { return std::string(CPPTRANSPORT_REPORT_RECORD_INTEGRATION); }
+              };
+
+            template <>
+            struct record_traits< output_group_record<postintegration_payload> >
+              {
+                std::string type_string() const { return std::string(CPPTRANSPORT_REPORT_RECORD_POSTINTEGRATION); }
+              };
+
+            template <>
+            struct record_traits< output_group_record<output_payload> >
+              {
+                std::string type_string() const { return std::string(CPPTRANSPORT_REPORT_RECORD_OUTPUT); }
+              };
+
+          }
+
+        // pull in command_line_impl namespace for this translation unit
+        using namespace command_line_impl;
+
+
         class command_line
           {
 
@@ -32,9 +100,13 @@ namespace transport
           public:
 
             //! constructor
-            command_line(local_environment& e, argument_cache& c)
+            command_line(local_environment& e, argument_cache& c,
+                         error_handler eh, warning_handler wh, message_handler mh)
               : env(e),
                 arg_cache(c),
+                err(eh),
+                warn(wh),
+                msg(mh),
                 newline(false),
                 include_tasks(false),
                 include_inflight(false)
@@ -74,7 +146,7 @@ namespace transport
 
             //! report on tasks available in a repository
             template <typename number>
-            void report_tasks(repository_cache<number>&);
+            void report_task_list(repository_cache<number>&);
 
             //! report on inflight content in a repository
             template <typename number>
@@ -83,6 +155,65 @@ namespace transport
             //! produce individual item reports
             template <typename number>
             void report_info(repository_cache<number>&);
+
+
+            // SEARCH A DATABASE FOR OBJECTS TO REPORT
+
+          protected:
+
+            //! report on named items in a database
+            template <typename DatabaseType>
+            void report_database_items(std::list<std::string>& items, DatabaseType& db);
+
+
+            // REPORT ON SPECIFIED DATABASE OBJECTS
+
+          protected:
+
+            //! report on a package object
+            template <typename number>
+            void report_object(const package_record<number>& rec);
+
+            //! report on a generic task object
+            template <typename number>
+            void report_object(const task_record<number>& rec);
+
+            //! report on an integration task object
+            template <typename number>
+            void report_object(const integration_task_record<number>& rec);
+
+            //! report on a postintegration task object
+            template <typename number>
+            void report_object(const postintegration_task_record<number>& rec);
+
+            //! report on an output task object
+            template <typename number>
+            void report_object(const output_task_record<number>& rec);
+
+            //! report on a derived product object
+            template <typename number>
+            void report_object(const derived_product_record<number>& rec);
+
+            //! report on an integration content group
+            void report_object(const output_group_record<integration_payload>& rec);
+
+            //! report on a postintegration content group
+            void report_object(const output_group_record<postintegration_payload>& rec);
+
+            //! report on an output content gorup
+            void report_object(const output_group_record<output_payload>& rec);
+
+
+            // GENERIC REPORTING FUNCTIONS
+
+          protected:
+
+            //! write out title for a generic record
+            template <typename RecordType>
+            void report_record_title(const RecordType& rec);
+
+            //! report generic details for a record
+            void report_record_generic(const repository_record& rec);
 
 
             // HANDLE NEWLINES BETWEEN REPORTS
@@ -102,9 +233,20 @@ namespace transport
 
             //! reference to local environment object
             local_environment& env;
-
             //! reference to argument cache
             argument_cache& arg_cache;
+
+
+            // MESSAGE HANDLERS
+
+            //! error handler
+            error_handler err;
+
+            //! warning handler
+            warning_handler warn;
+
+            //! message handler
+            message_handler msg;
 
 
             // REPORTS TO DISPLAY
@@ -132,14 +274,14 @@ namespace transport
           {
             repository_cache<number> cache(repo);
 
-            if(this->include_tasks) this->report_tasks<number>(cache);
+            if(this->include_tasks) this->report_task_list<number>(cache);
             if(this->include_inflight) this->report_inflight<number>(cache);
             if(this->info_items.size() > 0) this->report_info<number>(cache);
           }
 
 
         template <typename number>
-        void command_line::report_tasks(repository_cache<number>& cache)
+        void command_line::report_task_list(repository_cache<number>& cache)
           {
             this->check_newline();
 
@@ -205,6 +347,8 @@ namespace transport
             std::vector<std::string> cores;
             std::vector<std::string> complete;
 
+            // for each inflight group, push its details into the vectors for each column;
+            // then assemble the columns into a table and write them
             for(const inflight_db_value_type& group : group_db)
               {
                 name.push_back(group.first);
@@ -269,8 +413,195 @@ namespace transport
         template <typename number>
         void command_line::report_info(repository_cache<number>& cache)
           {
+            // make local copy of items; we will remove items from this list as we process them
+            std::list<std::string> items;
+            std::copy(this->info_items.begin(), this->info_items.end(), std::back_inserter(items));
+
+            // work through packages
+            this->report_database_items(items, cache.get_package_db());
+            if(items.empty()) return;   // check for lazy return
+
+            // work through tasks
+            this->report_database_items(items, cache.get_task_db());
+            if(items.empty()) return;   // check for lazy return
+
+            // work through derived products
+            this->report_database_items(items, cache.get_derived_product_db());
+            if(items.empty()) return;   // check for lazy return
+
+            // work through integration content
+            this->report_database_items(items, cache.get_integration_content_db());
+            if(items.empty()) return;   // check for lazy return
+
+            // work through postintegration content
+            this->report_database_items(items, cache.get_postintegration_content_db());
+            if(items.empty()) return;   // check for lazy return
+
+            // work through output content
+            this->report_database_items(items, cache.get_output_content_db());
+            if(items.empty()) return;   // check for lazy return
+
+            for(const std::string& item : items)
+              {
+                std::ostringstream msg;
+                msg << CPPTRANSPORT_REPORT_MISSING_OBJECT << " '" << item << "'";
+                this->warn(msg.str());
+              }
+          }
+
+
+        template <typename DatabaseType>
+        void command_line::report_database_items(std::list<std::string>& items, DatabaseType& db)
+          {
+            for(std::list<std::string>::iterator item_t = items.begin(); item_t != items.end(); /* intentionally no update statement*/ )
+              {
+                typename DatabaseType::const_iterator t = db.find(*item_t);
+                if(t != db.end())
+                  {
+                    this->report_object(*t->second);
+                    items.erase(item_t++);
+                  }
+                else
+                  {
+                    ++item_t;
+                  }
+              }
+          }
+
+
+        template <typename RecordType>
+        void command_line::report_record_title(const RecordType& rec)
+          {
+            if(this->env.has_colour_terminal_support() && this->arg_cache.get_colour_output()) std::cout << ColourCode(ANSI_colour::bold_magenta);
+            std::cout << rec.get_name();
+            if(this->env.has_colour_terminal_support() && this->arg_cache.get_colour_output()) std::cout << ColourCode(ANSI_colour::normal);
+
+            std::cout << " -- ";
+
+            if(this->env.has_colour_terminal_support() && this->arg_cache.get_colour_output()) std::cout << ColourCode(ANSI_colour::bold);
+            std::cout << record_traits<RecordType>().type_string();
+            if(this->env.has_colour_terminal_support() && this->arg_cache.get_colour_output()) std::cout << ColourCode(ANSI_colour::normal);
+
+            std::cout << '\n';
+          }
+
+
+        template <typename number>
+        void command_line::report_object(const package_record<number>& rec)
+          {
             this->check_newline();
+            this->report_record_title(rec);
+            this->report_record_generic(rec);
             this->force_newline();
+          }
+
+
+        template <typename number>
+        void command_line::report_object(const task_record<number>& rec)
+          {
+            switch(rec.get_type())
+              {
+                case task_type::integration:
+                  {
+                    this->report_object(dynamic_cast< const integration_task_record<number>& >(rec));
+                    break;
+                  }
+
+                case task_type::postintegration:
+                  {
+                    this->report_object(dynamic_cast< const postintegration_task_record<number>& >(rec));
+                    break;
+                  }
+
+                case task_type::output:
+                  {
+                    this->report_object(dynamic_cast< const output_task_record<number>& >(rec));
+                    break;
+                  }
+              }
+          }
+
+
+        template <typename number>
+        void command_line::report_object(const integration_task_record<number>& rec)
+          {
+            this->check_newline();
+            this->report_record_title(rec);
+            this->report_record_generic(rec);
+            this->force_newline();
+          }
+
+
+        template <typename number>
+        void command_line::report_object(const postintegration_task_record<number>& rec)
+          {
+            this->check_newline();
+            this->report_record_title(rec);
+            this->report_record_generic(rec);
+            this->force_newline();
+          }
+
+
+        template <typename number>
+        void command_line::report_object(const output_task_record<number>& rec)
+          {
+            this->check_newline();
+            this->report_record_title(rec);
+            this->report_record_generic(rec);
+            this->force_newline();
+          }
+
+
+        template <typename number>
+        void command_line::report_object(const derived_product_record<number>& rec)
+          {
+            this->check_newline();
+            this->report_record_title(rec);
+            this->report_record_generic(rec);
+            this->force_newline();
+          }
+
+
+        void command_line::report_object(const output_group_record<integration_payload>& rec)
+          {
+            this->check_newline();
+            this->report_record_title(rec);
+            this->report_record_generic(rec);
+            this->force_newline();
+          }
+
+
+        void command_line::report_object(const output_group_record<postintegration_payload>& rec)
+          {
+            this->check_newline();
+            this->report_record_title(rec);
+            this->report_record_generic(rec);
+            this->force_newline();
+          }
+
+
+        void command_line::report_object(const output_group_record<output_payload>& rec)
+          {
+            this->check_newline();
+            this->report_record_title(rec);
+            this->report_record_generic(rec);
+            this->force_newline();
+          }
+
+
+        void command_line::report_record_generic(const repository_record& rec)
+          {
+            key_value kv(this->env, this->arg_cache);
+
+            boost::posix_time::ptime created = rec.get_creation_time();
+            boost::posix_time::ptime edited = rec.get_last_edit_time();
+
+            kv.insert_back(CPPTRANSPORT_REPORT_CREATION_DATE, boost::posix_time::to_simple_string(created));
+            kv.insert_back(CPPTRANSPORT_REPORT_LAST_EDIT_DATE, boost::posix_time::to_simple_string(edited));
+            kv.insert_back(CPPTRANSPORT_REPORT_API_VERSION, boost::lexical_cast<std::string>(rec.get_runtime_API_version()));
+
+            kv.set_tiling(true);
+            kv.write(std::cout);
           }
 
       }   // namespace reporting

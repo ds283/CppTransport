@@ -44,13 +44,13 @@ namespace transport
 
 
     //! database type for integration content groups
-    typedef std::map< boost::posix_time::ptime, std::unique_ptr< output_group_record<integration_payload> > > integration_content_db;
+    typedef std::map< std::string, std::unique_ptr< output_group_record<integration_payload> > > integration_content_db;
 
     //! database type for postintegration content groups
-    typedef std::map< boost::posix_time::ptime, std::unique_ptr< output_group_record<postintegration_payload> > > postintegration_content_db;
+    typedef std::map< std::string, std::unique_ptr< output_group_record<postintegration_payload> > > postintegration_content_db;
 
     //! database type for output content groups
-    typedef std::map< boost::posix_time::ptime, std::unique_ptr< output_group_record<output_payload> > > output_content_db;
+    typedef std::map< std::string, std::unique_ptr< output_group_record<output_payload> > > output_content_db;
 
 
     template <typename number>
@@ -169,11 +169,20 @@ namespace transport
         //! Enumerate the output groups available from a named integration task
         virtual integration_content_db enumerate_integration_task_content(const std::string& name) = 0;
 
+        //! Enumerate all integration output groups
+        virtual integration_content_db enumerate_integration_task_content() = 0;
+
         //! Enumerate the output groups available for a named postintegration task
         virtual postintegration_content_db enumerate_postintegration_task_content(const std::string& name) = 0;
 
+        //! Enumerate all postintegration output groups
+        virtual postintegration_content_db enumerate_postintegration_task_content() = 0;
+
         //! Enumerate the output groups available from a named output task
         virtual output_content_db enumerate_output_task_content(const std::string& name) = 0;
+
+        //! Enumerate all output groups
+        virtual output_content_db enumerate_output_task_content() = 0;
 
 
         // ENUMERATE INFLIGHT TASKS
