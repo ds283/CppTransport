@@ -57,6 +57,9 @@ namespace transport
             //! write to a stream
             void write(std::ostream& out);
 
+            //! reset
+            void reset() { this->db.clear(); this->tile = false; }
+
 
             // INTERNAL API
 

@@ -25,6 +25,7 @@ constexpr auto CPPTRANSPORT_REPORT_STATUS_CORES                   = "Cores";
 constexpr auto CPPTRANSPORT_REPORT_STATUS_COMPLETION              = "Completion";
 
 constexpr auto CPPTRANSPORT_REPORT_MISSING_OBJECT                 = "Could not find repository record for item";
+constexpr auto CPPTRANSPORT_REPORT_PROVENANCE_FAILURE             = "Could not find record for output content group";
 
 constexpr auto CPPTRANSPORT_REPORT_RECORD_PACKAGE                 = "initial conditions package";
 constexpr auto CPPTRANSPORT_REPORT_RECORD_TASK                    = "task";
@@ -69,8 +70,10 @@ constexpr auto CPPTRANSPORT_REPORT_OUTPUT_NOTES                   = "Notes";
 constexpr auto CPPTRANSPORT_REPORT_PRODUCT_NAME                   = "Derived product";
 constexpr auto CPPTRANSPORT_REPORT_PRODUCT_TYPE                   = "Type";
 constexpr auto CPPTRANSPORT_REPORT_PRODUCT_TAGS                   = "Matches tags";
+constexpr auto CPPTRANSPORT_REPORT_PRODUCT_TAG_SET                = "Tags";
 constexpr auto CPPTRANSPORT_REPORT_PRODUCT_FILENAME               = "Filename";
 constexpr auto CPPTRANSPORT_REPORT_PRODUCT_DEPENDS_ON             = "Depends on content from";
+constexpr auto CPPTRANSPORT_REPORT_PRODUCT_CREATED                = "Created";
 
 constexpr auto CPPTRANSPORT_REPORT_PAYLOAD_CONTAINER              = "Container";
 constexpr auto CPPTRANSPORT_REPORT_PAYLOAD_COMPLETE               = "Complete";

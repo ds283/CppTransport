@@ -76,5 +76,8 @@
 #define CPPTRANSPORT_SWITCH_INFO              "info"
 #define CPPTRANSPORT_HELP_INFO                "show information on the specified object"
 
+#define CPPTRANSPORT_SWITCH_PROVENANCE        "provenance"
+#define CPPTRANSPORT_HELP_PROVENANCE          "report detailed provenance data on content group"
+
 
 #endif //CPPTRANSPORT_COMMAND_LINE_H

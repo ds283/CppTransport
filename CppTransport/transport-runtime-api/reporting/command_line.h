@@ -130,8 +130,11 @@ namespace transport
             //! include list of inflight jobs in report
             void inflight_list() { this->include_inflight = true; }
 
-            //! report on individual repository items
+            //! report on specified repository items
             void info(const std::vector<std::string>& items) { this->info_items = items; }
+
+            //! report on provenance of specific content groups
+            void provenance(const std::vector<std::string>& items) { this->provenance_items = items; }
 
 
             // GENERATE REPORTS
@@ -149,15 +152,19 @@ namespace transport
 
             //! report on tasks available in a repository
             template <typename number>
-            void report_task_list(repository_cache<number>&);
+            void report_task_list(repository_cache<number>& cache);
 
             //! report on inflight content in a repository
             template <typename number>
-            void report_inflight(repository_cache<number>&);
+            void report_inflight(repository_cache<number>& cache);
 
-            //! produce individual item reports
+            //! produce reports on specified repository items
             template <typename number>
-            void report_info(repository_cache<number>&);
+            void report_info(repository_cache<number>& cache);
+
+            //! produce detailed provenance report on specified content groups
+            template <typename number>
+            void report_provenance(repository_cache<number>& cache);
 
 
             // SEARCH A DATABASE FOR OBJECTS TO REPORT
@@ -205,9 +212,13 @@ namespace transport
             template <typename number>
             void report_object(const output_group_record<postintegration_payload>& rec, repository_cache<number>& cache);
 
-            //! report on an output content gorup
+            //! report on an output content group
             template <typename number>
             void report_object(const output_group_record<output_payload>& rec, repository_cache<number>& cache);
+
+            //! report provenance data for specified content group
+            template <typename number>
+            void report_provenance(const output_group_record<output_payload>& rec, repository_cache<number>& cache);
 
 
             // GENERIC REPORTING FUNCTIONS
@@ -275,6 +286,9 @@ namespace transport
             //! list of repostitory items to provide detailed reports for
             std::vector<std::string> info_items;
 
+            //! list of content groups to provided detailed provenance for
+            std::vector<std::string> provenance_items;
+
 
             // CACHE STATUS
 
@@ -292,6 +306,7 @@ namespace transport
             if(this->include_tasks) this->report_task_list<number>(cache);
             if(this->include_inflight) this->report_inflight<number>(cache);
             if(this->info_items.size() > 0) this->report_info<number>(cache);
+            if(this->provenance_items.size() > 0) this->report_provenance<number>(cache);
           }
 
 
@@ -1134,12 +1149,12 @@ namespace transport
                 if(this->env.has_colour_terminal_support() && this->arg_cache.get_colour_output()) std::cout << ColourCode(ANSI_colour::normal);
                 std::cout << '\n';
 
-                key_value kv_notes(this->env, this->arg_cache);
+                kv.reset();
 
                 unsigned int serial = 0;
                 for(const std::string& note : notes)
                   {
-                    kv_notes.insert_back(boost::lexical_cast<std::string>(serial), note);
+                    kv.insert_back(boost::lexical_cast<std::string>(serial), note);
                     ++serial;
                   }
 
@@ -1167,6 +1182,152 @@ namespace transport
             if(composed_list.str().length() > 0) return composed_list.str();
             else                                 return std::string("--");
           }
+
+
+        template <typename number>
+        void command_line::report_provenance(repository_cache<number>& cache)
+          {
+            // make a local copy of items; we remove items from this list as they are processed
+            std::list<std::string> items;
+            std::copy(this->provenance_items.begin(), this->provenance_items.end(), std::back_inserter(items));
+
+            output_content_db& db = cache.get_output_content_db();
+
+            for(std::list<std::string>::iterator item_t = items.begin(); item_t != items.end(); /* intentionally no update statement */ )
+              {
+                output_content_db::const_iterator t = db.find(*item_t);
+                if(t != db.end())
+                  {
+                    this->report_provenance(*t->second, cache);
+                    items.erase(item_t++);
+                  }
+                else
+                  {
+                    ++item_t;
+                  }
+              }
+
+            for(const std::string& item : items)
+              {
+                std::ostringstream msg;
+                msg << CPPTRANSPORT_REPORT_PROVENANCE_FAILURE << " '" << item << "'";
+                this->warn(msg.str());
+              }
+          }
+
+
+        template <typename number>
+        void command_line::report_provenance(const output_group_record<output_payload>& rec, repository_cache<number>& cache)
+          {
+            this->check_newline();
+
+            this->report_record_title(rec);
+            this->report_output_record_generic(rec);
+
+            this->force_newline();
+
+            const output_payload& payload = rec.get_payload();
+            const std::list<derived_content>& content = payload.get_derived_content();
+
+            asciitable at(std::cout, this->env, this->arg_cache);
+            key_value kv(this->env, this->arg_cache);
+            at.set_terminal_output(true);
+
+            typename derived_product_db<number>::type& db = cache.get_derived_product_db();
+
+            if(!content.empty())
+              {
+                for(const derived_content& item : content)
+                  {
+                    this->check_newline();
+
+                    if(this->env.has_colour_terminal_support() && this->arg_cache.get_colour_output()) std::cout << ColourCode(ANSI_colour::bold_green);
+                    std::cout << item.get_parent_product();
+                    if(this->env.has_colour_terminal_support() && this->arg_cache.get_colour_output()) std::cout << ColourCode(ANSI_colour::normal);
+                    std::cout << '\n';
+
+                    kv.reset();
+                    kv.insert_back(CPPTRANSPORT_REPORT_PRODUCT_FILENAME, item.get_filename().string());
+
+                    typename derived_product_db<number>::type::const_iterator t = db.find(item.get_parent_product());
+                    if(t != db.end()) kv.insert_back(CPPTRANSPORT_REPORT_PRODUCT_TYPE, derived_data::derived_product_type_to_string(t->second->get_product()->get_type()));
+                    else              kv.insert_back(CPPTRANSPORT_REPORT_PRODUCT_TYPE, "--");
+
+                    kv.insert_back(CPPTRANSPORT_REPORT_PRODUCT_CREATED, boost::posix_time::to_simple_string(item.get_creation_time()));
+                    kv.insert_back(CPPTRANSPORT_REPORT_PRODUCT_TAG_SET, this->compose_tag_list(item.get_tags()));
+
+                    kv.set_tiling(true);
+                    kv.write(std::cout);
+
+                    const std::list<std::string>& notes = item.get_notes();
+                    if(!notes.empty())
+                      {
+                        std::cout << '\n';
+                        if(this->env.has_colour_terminal_support() && this->arg_cache.get_colour_output()) std::cout << ColourCode(ANSI_colour::bold);
+                        std::cout << CPPTRANSPORT_REPORT_OUTPUT_NOTES;
+                        if(this->env.has_colour_terminal_support() && this->arg_cache.get_colour_output()) std::cout << ColourCode(ANSI_colour::normal);
+                        std::cout << '\n';
+
+                        kv.reset();
+
+                        unsigned int serial = 0;
+                        for(const std::string& note : notes)
+                          {
+                            kv.insert_back(boost::lexical_cast<std::string>(serial), note);
+                            ++serial;
+                          }
+
+                        kv.set_tiling(false);
+                        kv.write(std::cout);
+                      }
+
+                    const std::list<std::string>& groups = item.get_content_groups();
+                    if(!groups.empty())
+                      {
+                        std::vector<column_descriptor> columns;
+                        std::vector<std::string> name;
+                        std::vector<std::string> task;
+                        std::vector<std::string> type;
+                        std::vector<std::string> last_edit;
+
+                        for(const std::string& group : groups)
+                          {
+                            name.push_back(group);
+
+                            content_group_data<number> data(group, cache);
+
+                            task.push_back(data.get_task());
+                            type.push_back(data.get_type());
+                            last_edit.push_back(data.get_last_edit());
+                          }
+
+                        columns.emplace_back(CPPTRANSPORT_REPORT_OUTPUT_GROUP_NAME, column_justify::left);
+                        columns.emplace_back(CPPTRANSPORT_REPORT_OUTPUT_PARENT_TASK, column_justify::left);
+                        columns.emplace_back(CPPTRANSPORT_REPORT_OUTPUT_PARENT_TASK_TYPE, column_justify::left);
+                        columns.emplace_back(CPPTRANSPORT_REPORT_OUTPUT_EDITED, column_justify::right);
+
+                        std::cout << '\n';
+                        if(this->env.has_colour_terminal_support() && this->arg_cache.get_colour_output()) std::cout << ColourCode(ANSI_colour::bold);
+                        std::cout << CPPTRANSPORT_REPORT_PAYLOAD_CONTENT_GROUPS;
+                        if(this->env.has_colour_terminal_support() && this->arg_cache.get_colour_output()) std::cout << ColourCode(ANSI_colour::normal);
+                        std::cout << '\n';
+
+                        std::vector< std::vector<std::string> > table;
+                        table.push_back(name);
+                        table.push_back(task);
+                        table.push_back(type);
+                        table.push_back(last_edit);
+
+                        at.write(columns, table);
+                      }
+
+                    this->force_newline();
+                  }
+              }
+
+            this->force_newline();
+          }
+
 
       }   // namespace reporting
 

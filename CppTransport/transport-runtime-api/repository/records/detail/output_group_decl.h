@@ -54,6 +54,12 @@ namespace transport
         //! Add note
         void add_note(const std::string& note) { this->notes.push_back(note); }
 
+        //! Get tags
+        const std::list<std::string>& get_tags() const { return(this->tags); }
+
+        //! Add tag
+        void add_tag(const std::string& tag) { this->tags.push_back(tag); }
+
         //! Get creation time
         const boost::posix_time::ptime& get_creation_time() const { return(this->created); }
 
