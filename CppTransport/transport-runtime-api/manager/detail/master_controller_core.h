@@ -42,15 +42,17 @@ namespace transport
     template <typename number>
     void master_controller<number>::process_arguments(int argc, char* argv[])
       {
+        unsigned int width = this->local_env.detect_terminal_width();
+
         // set up Boost::program_options descriptors for command-line arguments
-        boost::program_options::options_description generic("Generic options");
+        boost::program_options::options_description generic("Generic options", width);
         generic.add_options()
           (CPPTRANSPORT_SWITCH_HELP,      CPPTRANSPORT_HELP_HELP)
           (CPPTRANSPORT_SWITCH_VERSION,   CPPTRANSPORT_HELP_VERSION)
           (CPPTRANSPORT_SWITCH_MODELS,    CPPTRANSPORT_HELP_MODELS)
           (CPPTRANSPORT_SWITCH_NO_COLOUR, CPPTRANSPORT_HELP_NO_COLOUR);
 
-        boost::program_options::options_description configuration("Configuration options");
+        boost::program_options::options_description configuration("Configuration options", width);
         configuration.add_options()
           (CPPTRANSPORT_SWITCH_VERBOSE,                                                                                      CPPTRANSPORT_HELP_VERBOSE)
           (CPPTRANSPORT_SWITCH_REPO,             boost::program_options::value< std::string >(),                             CPPTRANSPORT_HELP_REPO)
@@ -58,16 +60,16 @@ namespace transport
           (CPPTRANSPORT_SWITCH_BATCHER_CAPACITY, boost::program_options::value< int >(),                                     CPPTRANSPORT_HELP_BATCHER_CAPACITY)
           (CPPTRANSPORT_SWITCH_CACHE_CAPACITY,   boost::program_options::value< int >(),                                     CPPTRANSPORT_HELP_CACHE_CAPACITY);
 
-        boost::program_options::options_description plotting("Plot style");
+        boost::program_options::options_description plotting("Plot style", width);
         plotting.add_options()
           (CPPTRANSPORT_PLOT_STYLE,              boost::program_options::value< std::string >(),                             CPPTRANSPORT_HELP_PLOT_STYLE);
 
-        boost::program_options::options_description journaling("Journaling options");
+        boost::program_options::options_description journaling("Journaling options", width);
         journaling.add_options()
           (CPPTRANSPORT_SWITCH_GANTT_CHART,      boost::program_options::value< std::string >(),                             CPPTRANSPORT_HELP_GANTT_CHART)
           (CPPTRANSPORT_SWITCH_JOURNAL,          boost::program_options::value< std::string >(),                             CPPTRANSPORT_HELP_JOURNAL);
 
-        boost::program_options::options_description job_options("Job specification");
+        boost::program_options::options_description job_options("Job specification", width);
         job_options.add_options()
           (CPPTRANSPORT_SWITCH_CREATE,                                                                                       CPPTRANSPORT_HELP_CREATE)
           (CPPTRANSPORT_SWITCH_TASK,             boost::program_options::value< std::vector< std::string > >()->composing(), CPPTRANSPORT_HELP_TASK)
@@ -75,7 +77,7 @@ namespace transport
           (CPPTRANSPORT_SWITCH_CHECKPOINT,       boost::program_options::value< int >(),                                     CPPTRANSPORT_HELP_CHECKPOINT)
           (CPPTRANSPORT_SWITCH_SEED,             boost::program_options::value< std::string >(),                             CPPTRANSPORT_HELP_SEED);
 
-        boost::program_options::options_description report_options("Repository reporting and status");
+        boost::program_options::options_description report_options("Repository reporting and status", width);
         report_options.add_options()
           (CPPTRANSPORT_SWITCH_RECOVER,                                                                                      CPPTRANSPORT_HELP_RECOVER)
           (CPPTRANSPORT_SWITCH_STATUS,                                                                                       CPPTRANSPORT_HELP_STATUS)

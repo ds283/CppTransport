@@ -11,6 +11,9 @@
 #include <fstream>
 #include <string>
 
+#include <sys/ioctl.h>
+#include <unistd.h>
+
 #include "transport-runtime-api/defaults.h"
 
 #include "boost/algorithm/string.hpp"
@@ -84,10 +87,13 @@ namespace transport
         //! determine whether the terminal we are running in has support for ANSI colourized output
         bool has_colour_terminal_support() const { return(this->colour_output); }
 
+        //! determine current terminal width
+        unsigned int detect_terminal_width() const;
+
       protected:
 
         //! detect terminal type
-        void detect_term();
+        void detect_terminal_type();
 
 
         // ENVIRONMENT PATHS
@@ -165,7 +171,7 @@ namespace transport
         detect_home();
 
         // detect terminal colour support
-        detect_term();
+        detect_terminal_type();
 
         // detection of Python support (Python interpreter, Matplotlib, style sheets, Seaborn, etc.) is
         // deferred until needed, since it slows down program initialization
@@ -186,7 +192,7 @@ namespace transport
       }
 
 
-    void local_environment::detect_term()
+    void local_environment::detect_terminal_type()
       {
         // TODO: Platform introspection
         // determine if terminal supports colour output
@@ -336,6 +342,17 @@ namespace transport
         boost::filesystem::path config_path = *this->home;
 
         return config_path / CPPTRANSPORT_RUNTIME_CONFIG_FILE;
+      }
+
+
+    unsigned int local_environment::detect_terminal_width() const
+      {
+        // TODO: Platform introspection
+        // Read terminal display width (assuming the output *is* a terminal)
+        struct winsize w;
+        ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
+
+        return(w.ws_col > 0 ? w.ws_col : CPPTRANSPORT_DEFAULT_TERMINAL_WIDTH);
       }
 
 

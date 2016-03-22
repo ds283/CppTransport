@@ -15,6 +15,8 @@ constexpr unsigned int CPPTRANSPORT_DEFAULT_WRAP_WIDTH                 = (135);
 constexpr unsigned int CPPTRANSPORT_DEFAULT_PLOT_PRECISION             = (3);
 constexpr unsigned int CPPTRANSPORT_DEFAULT_TABLE_PRECISION            = (17);
 
+constexpr unsigned int CPPTRANSPORT_DEFAULT_TERMINAL_WIDTH             = (80);
+
 constexpr double       CPPTRANSPORT_DEFAULT_ICS_GAP_TOLERANCE          = (1E-8);
 constexpr unsigned int CPPTRANSPORT_DEFAULT_ICS_TIME_STEPS             = (5);
 

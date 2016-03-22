@@ -13,9 +13,6 @@
 #include <vector>
 #include <sstream>
 
-#include <sys/ioctl.h>
-#include <unistd.h>
-
 
 #include "transport-runtime-api/manager/environment.h"
 #include "transport-runtime-api/manager/argument_cache.h"
@@ -27,7 +24,6 @@
 
 
 constexpr unsigned int DEFAULT_ASCIITABLE_PRECISION     = (12);
-constexpr unsigned int DEFAULT_ASCIITABLE_DISPLAY_WIDTH = (80);
 constexpr bool         DEFAULT_ASCIITABLE_WRAP_WIDTH    = (true);
 
 
@@ -160,15 +156,10 @@ namespace transport
             env(e),
             arg_cache(c),
             precision(DEFAULT_ASCIITABLE_PRECISION),
-	          display_width(DEFAULT_ASCIITABLE_DISPLAY_WIDTH),
+	          display_width(e.detect_terminal_width()),
 	          wrap_width(DEFAULT_ASCIITABLE_WRAP_WIDTH),
             terminal_output(false)
 	        {
-            // TODO: Platform introspection
-            // Read terminal display width (assuming the output *is* a terminal)
-            struct winsize w;
-            ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
-            display_width = w.ws_col > 0 ? w.ws_col : DEFAULT_ASCIITABLE_DISPLAY_WIDTH;
           }
 
         //! destructor is default
