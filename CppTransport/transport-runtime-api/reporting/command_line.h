@@ -26,6 +26,8 @@ namespace transport
     namespace reporting
       {
 
+        constexpr unsigned int CPPTRANSPORT_REPORT_MAX_TAG_LENGTH = 20;
+
 
         namespace command_line_impl
           {
@@ -162,8 +164,8 @@ namespace transport
           protected:
 
             //! report on named items in a database
-            template <typename DatabaseType>
-            void report_database_items(std::list<std::string>& items, DatabaseType& db);
+            template <typename number, typename DatabaseType>
+            void report_database_items(std::list<std::string>& items, DatabaseType& db, repository_cache<number>& cache);
 
 
             // REPORT ON SPECIFIED DATABASE OBJECTS
@@ -172,36 +174,39 @@ namespace transport
 
             //! report on a package object
             template <typename number>
-            void report_object(const package_record<number>& rec);
+            void report_object(const package_record<number>& rec, repository_cache<number>& cache);
 
             //! report on a generic task object
             template <typename number>
-            void report_object(const task_record<number>& rec);
+            void report_object(const task_record<number>& rec, repository_cache<number>& cache);
 
             //! report on an integration task object
             template <typename number>
-            void report_object(const integration_task_record<number>& rec);
+            void report_object(const integration_task_record<number>& rec, repository_cache<number>& cache);
 
             //! report on a postintegration task object
             template <typename number>
-            void report_object(const postintegration_task_record<number>& rec);
+            void report_object(const postintegration_task_record<number>& rec, repository_cache<number>& cache);
 
             //! report on an output task object
             template <typename number>
-            void report_object(const output_task_record<number>& rec);
+            void report_object(const output_task_record<number>& rec, repository_cache<number>& cache);
 
             //! report on a derived product object
             template <typename number>
-            void report_object(const derived_product_record<number>& rec);
+            void report_object(const derived_product_record<number>& rec, repository_cache<number>& cache);
 
             //! report on an integration content group
-            void report_object(const output_group_record<integration_payload>& rec);
+            template <typename number>
+            void report_object(const output_group_record<integration_payload>& rec, repository_cache<number>& cache);
 
             //! report on a postintegration content group
-            void report_object(const output_group_record<postintegration_payload>& rec);
+            template <typename number>
+            void report_object(const output_group_record<postintegration_payload>& rec, repository_cache<number>& cache);
 
             //! report on an output content gorup
-            void report_object(const output_group_record<output_payload>& rec);
+            template <typename number>
+            void report_object(const output_group_record<output_payload>& rec, repository_cache<number>& cache);
 
 
             // GENERIC REPORTING FUNCTIONS
@@ -418,27 +423,27 @@ namespace transport
             std::copy(this->info_items.begin(), this->info_items.end(), std::back_inserter(items));
 
             // work through packages
-            this->report_database_items(items, cache.get_package_db());
+            this->report_database_items(items, cache.get_package_db(), cache);
             if(items.empty()) return;   // check for lazy return
 
             // work through tasks
-            this->report_database_items(items, cache.get_task_db());
+            this->report_database_items(items, cache.get_task_db(), cache);
             if(items.empty()) return;   // check for lazy return
 
             // work through derived products
-            this->report_database_items(items, cache.get_derived_product_db());
+            this->report_database_items(items, cache.get_derived_product_db(), cache);
             if(items.empty()) return;   // check for lazy return
 
             // work through integration content
-            this->report_database_items(items, cache.get_integration_content_db());
+            this->report_database_items(items, cache.get_integration_content_db(), cache);
             if(items.empty()) return;   // check for lazy return
 
             // work through postintegration content
-            this->report_database_items(items, cache.get_postintegration_content_db());
+            this->report_database_items(items, cache.get_postintegration_content_db(), cache);
             if(items.empty()) return;   // check for lazy return
 
             // work through output content
-            this->report_database_items(items, cache.get_output_content_db());
+            this->report_database_items(items, cache.get_output_content_db(), cache);
             if(items.empty()) return;   // check for lazy return
 
             for(const std::string& item : items)
@@ -450,15 +455,15 @@ namespace transport
           }
 
 
-        template <typename DatabaseType>
-        void command_line::report_database_items(std::list<std::string>& items, DatabaseType& db)
+        template <typename number, typename DatabaseType>
+        void command_line::report_database_items(std::list<std::string>& items, DatabaseType& db, repository_cache<number>& cache)
           {
             for(std::list<std::string>::iterator item_t = items.begin(); item_t != items.end(); /* intentionally no update statement*/ )
               {
                 typename DatabaseType::const_iterator t = db.find(*item_t);
                 if(t != db.end())
                   {
-                    this->report_object(*t->second);
+                    this->report_object(*t->second, cache);
                     items.erase(item_t++);
                   }
                 else
@@ -487,7 +492,7 @@ namespace transport
 
 
         template <typename number>
-        void command_line::report_object(const package_record<number>& rec)
+        void command_line::report_object(const package_record<number>& rec, repository_cache<number>& cache)
           {
             this->check_newline();
             this->report_record_title(rec);
@@ -497,25 +502,25 @@ namespace transport
 
 
         template <typename number>
-        void command_line::report_object(const task_record<number>& rec)
+        void command_line::report_object(const task_record<number>& rec, repository_cache<number>& cache)
           {
             switch(rec.get_type())
               {
                 case task_type::integration:
                   {
-                    this->report_object(dynamic_cast< const integration_task_record<number>& >(rec));
+                    this->report_object(dynamic_cast< const integration_task_record<number>& >(rec), cache);
                     break;
                   }
 
                 case task_type::postintegration:
                   {
-                    this->report_object(dynamic_cast< const postintegration_task_record<number>& >(rec));
+                    this->report_object(dynamic_cast< const postintegration_task_record<number>& >(rec), cache);
                     break;
                   }
 
                 case task_type::output:
                   {
-                    this->report_object(dynamic_cast< const output_task_record<number>& >(rec));
+                    this->report_object(dynamic_cast< const output_task_record<number>& >(rec), cache);
                     break;
                   }
               }
@@ -523,7 +528,272 @@ namespace transport
 
 
         template <typename number>
-        void command_line::report_object(const integration_task_record<number>& rec)
+        void command_line::report_object(const integration_task_record<number>& rec, repository_cache<number>& cache)
+          {
+            this->check_newline();
+
+            this->report_record_title(rec);
+            this->report_record_generic(rec);
+
+            key_value kv(this->env, this->arg_cache);
+            kv.insert_back(CPPTRANSPORT_REPORT_TASK_TYPE, task_type_to_string(rec.get_task_type()));
+            kv.insert_back(CPPTRANSPORT_REPORT_USES_PACKAGE, rec.get_task()->get_ics().get_name());
+            kv.insert_back(CPPTRANSPORT_REPORT_KCONFIG_DB, rec.get_relative_kconfig_database_path().string());
+
+            kv.write(std::cout);
+
+            // write table of output groups
+            const std::list<std::string>& output_groups = rec.get_output_groups();
+
+            if(!output_groups.empty())
+              {
+                std::cout << '\n';
+
+                std::vector<column_descriptor> columns;
+                std::vector<std::string> name;
+                std::vector<std::string> created;
+                std::vector<std::string> updated;
+                std::vector<std::string> failed;
+                std::vector<std::string> size;
+
+                integration_content_db& db = cache.get_integration_content_db();
+                for(const std::string& group : output_groups)
+                  {
+                    integration_content_db::const_iterator t = db.find(group);
+                    name.push_back(group);
+
+                    if(t != db.end())
+                      {
+                        created.push_back(boost::posix_time::to_simple_string(t->second->get_creation_time()));
+                        updated.push_back(boost::posix_time::to_simple_string(t->second->get_last_edit_time()));
+                        failed.push_back(t->second->get_payload().is_failed() ? CPPTRANSPORT_REPORT_NO : CPPTRANSPORT_REPORT_YES); // label is 'complete', so yes/no other way
+                        size.push_back("--");
+                      }
+                    else
+                      {
+                        created.push_back("--");
+                        updated.push_back("--");
+                        failed.push_back("--");
+                        size.push_back("--");
+                      }
+                  }
+
+                columns.emplace_back(CPPTRANSPORT_REPORT_OUTPUT_GROUP_NAME, column_justify::left);
+                columns.emplace_back(CPPTRANSPORT_REPORT_OUTPUT_CREATED, column_justify::right);
+                columns.emplace_back(CPPTRANSPORT_REPORT_OUTPUT_EDITED, column_justify::right);
+                columns.emplace_back(CPPTRANSPORT_REPORT_OUTPUT_FAILED, column_justify::right);
+                columns.emplace_back(CPPTRANSPORT_REPORT_OUTPUT_SIZE, column_justify::right);
+
+                std::vector< std::vector<std::string> > table;
+                table.push_back(name);
+                table.push_back(created);
+                table.push_back(updated);
+                table.push_back(failed);
+                table.push_back(size);
+
+                asciitable at(std::cout, this->env, this->arg_cache);
+                at.set_terminal_output(true);
+                at.write(columns, table);
+              }
+
+            this->force_newline();
+          }
+
+
+        template <typename number>
+        void command_line::report_object(const postintegration_task_record<number>& rec, repository_cache<number>& cache)
+          {
+            this->check_newline();
+
+            this->report_record_title(rec);
+            this->report_record_generic(rec);
+
+            key_value kv(this->env, this->arg_cache);
+            kv.insert_back(CPPTRANSPORT_REPORT_TASK_TYPE, task_type_to_string(rec.get_task_type()));
+            kv.insert_back(CPPTRANSPORT_REPORT_PARENT_TASK, rec.get_task()->get_parent_task()->get_name());
+
+            kv.write(std::cout);
+
+            // write table of output groups
+            const std::list<std::string>& output_groups = rec.get_output_groups();
+
+            if(!output_groups.empty())
+              {
+                std::cout << '\n';
+
+                std::vector<column_descriptor> columns;
+                std::vector<std::string> name;
+                std::vector<std::string> created;
+                std::vector<std::string> updated;
+                std::vector<std::string> failed;
+                std::vector<std::string> size;
+
+                postintegration_content_db& db = cache.get_postintegration_content_db();
+                for(const std::string& group : output_groups)
+                  {
+                    postintegration_content_db::const_iterator t = db.find(group);
+                    name.push_back(group);
+
+                    if(t != db.end())
+                      {
+                        created.push_back(boost::posix_time::to_simple_string(t->second->get_creation_time()));
+                        updated.push_back(boost::posix_time::to_simple_string(t->second->get_last_edit_time()));
+                        failed.push_back(t->second->get_payload().is_failed() ? CPPTRANSPORT_REPORT_NO : CPPTRANSPORT_REPORT_YES); // label is 'complete', so yes/no other way
+                        size.push_back("--");
+                      }
+                    else
+                      {
+                        created.push_back("--");
+                        updated.push_back("--");
+                        failed.push_back("--");
+                        size.push_back("--");
+                      }
+                  }
+
+                columns.emplace_back(CPPTRANSPORT_REPORT_OUTPUT_GROUP_NAME, column_justify::left);
+                columns.emplace_back(CPPTRANSPORT_REPORT_OUTPUT_CREATED, column_justify::right);
+                columns.emplace_back(CPPTRANSPORT_REPORT_OUTPUT_EDITED, column_justify::right);
+                columns.emplace_back(CPPTRANSPORT_REPORT_OUTPUT_FAILED, column_justify::right);
+                columns.emplace_back(CPPTRANSPORT_REPORT_OUTPUT_SIZE, column_justify::right);
+
+                std::vector< std::vector<std::string> > table;
+                table.push_back(name);
+                table.push_back(created);
+                table.push_back(updated);
+                table.push_back(failed);
+                table.push_back(size);
+
+                asciitable at(std::cout, this->env, this->arg_cache);
+                at.set_terminal_output(true);
+                at.write(columns, table);
+              }
+
+            this->force_newline();
+          }
+
+
+        template <typename number>
+        void command_line::report_object(const output_task_record<number>& rec, repository_cache<number>& cache)
+          {
+            this->check_newline();
+
+            this->report_record_title(rec);
+            this->report_record_generic(rec);
+
+            // write table of derived products in this output task
+            const typename std::vector< output_task_element<number> >& elements = rec.get_task()->get_elements();
+
+            if(!elements.empty())
+              {
+                std::cout << '\n';
+
+                std::vector<column_descriptor> columns;
+                std::vector<std::string> name;
+                std::vector<std::string> type;
+                std::vector<std::string> tags;
+                std::vector<std::string> filename;
+
+                for(const output_task_element<number>& element : elements)
+                  {
+                    name.push_back(element.get_product_name());
+                    type.push_back("--");
+
+                    std::ostringstream tag_list;
+                    unsigned int tag_count = 0;
+                    for(const std::string& tag : element.get_tags())
+                      {
+                        if(tag_count > 0) tag_list << ", ";
+                        tag_list << tag;
+                        if(tag_list.str().length() > CPPTRANSPORT_REPORT_MAX_TAG_LENGTH) break;
+                        ++tag_count;
+                      }
+                    if(tag_count < element.get_tags().size()) tag_list << ", ...";
+
+                    if(tag_list.str().length() > 0) tags.push_back(tag_list.str());
+                    else                            tags.push_back("--");
+                    filename.push_back(element.get_product().get_filename().string());
+                  }
+
+                columns.emplace_back(CPPTRANSPORT_REPORT_PRODUCT_NAME, column_justify::left);
+                columns.emplace_back(CPPTRANSPORT_REPORT_PRODUCT_TYPE, column_justify::left);
+                columns.emplace_back(CPPTRANSPORT_REPORT_PRODUCT_TAGS, column_justify::left);
+                columns.emplace_back(CPPTRANSPORT_REPORT_PRODUCT_FILENAME, column_justify::left);
+
+                std::vector< std::vector<std::string> > table;
+                table.push_back(name);
+                table.push_back(type);
+                table.push_back(tags);
+                table.push_back(filename);
+
+                asciitable at(std::cout, this->env, this->arg_cache);
+                at.set_terminal_output(true);
+                at.write(columns, table);
+
+                this->force_newline();
+              }
+
+            // write table of output groups
+            const std::list<std::string>& output_groups = rec.get_output_groups();
+
+            if(!output_groups.empty())
+              {
+                this->check_newline();
+
+                std::vector<column_descriptor> columns;
+                std::vector<std::string> name;
+                std::vector<std::string> created;
+                std::vector<std::string> updated;
+
+                output_content_db& db = cache.get_output_content_db();
+                for(const std::string& group : output_groups)
+                  {
+                    output_content_db::const_iterator t = db.find(group);
+                    name.push_back(group);
+
+                    if(t != db.end())
+                      {
+                        created.push_back(boost::posix_time::to_simple_string(t->second->get_creation_time()));
+                        updated.push_back(boost::posix_time::to_simple_string(t->second->get_last_edit_time()));
+                      }
+                    else
+                      {
+                        created.push_back("--");
+                        updated.push_back("--");
+                      }
+                  }
+
+                columns.emplace_back(CPPTRANSPORT_REPORT_OUTPUT_GROUP_NAME, column_justify::left);
+                columns.emplace_back(CPPTRANSPORT_REPORT_OUTPUT_CREATED, column_justify::right);
+                columns.emplace_back(CPPTRANSPORT_REPORT_OUTPUT_EDITED, column_justify::right);
+
+                std::vector< std::vector<std::string> > table;
+                table.push_back(name);
+                table.push_back(created);
+                table.push_back(updated);
+
+                asciitable at(std::cout, this->env, this->arg_cache);
+                at.set_terminal_output(true);
+                at.write(columns, table);
+              }
+
+            this->force_newline();
+          }
+
+
+        template <typename number>
+        void command_line::report_object(const derived_product_record<number>& rec, repository_cache<number>& cache)
+          {
+            this->check_newline();
+
+            this->report_record_title(rec);
+            this->report_record_generic(rec);
+
+            this->force_newline();
+          }
+
+
+        template <typename number>
+        void command_line::report_object(const output_group_record<integration_payload>& rec, repository_cache<number>& cache)
           {
             this->check_newline();
             this->report_record_title(rec);
@@ -533,58 +803,25 @@ namespace transport
 
 
         template <typename number>
-        void command_line::report_object(const postintegration_task_record<number>& rec)
+        void command_line::report_object(const output_group_record<postintegration_payload>& rec, repository_cache<number>& cache)
           {
             this->check_newline();
+
             this->report_record_title(rec);
             this->report_record_generic(rec);
+
             this->force_newline();
           }
 
 
         template <typename number>
-        void command_line::report_object(const output_task_record<number>& rec)
+        void command_line::report_object(const output_group_record<output_payload>& rec, repository_cache<number>& cache)
           {
             this->check_newline();
+
             this->report_record_title(rec);
             this->report_record_generic(rec);
-            this->force_newline();
-          }
 
-
-        template <typename number>
-        void command_line::report_object(const derived_product_record<number>& rec)
-          {
-            this->check_newline();
-            this->report_record_title(rec);
-            this->report_record_generic(rec);
-            this->force_newline();
-          }
-
-
-        void command_line::report_object(const output_group_record<integration_payload>& rec)
-          {
-            this->check_newline();
-            this->report_record_title(rec);
-            this->report_record_generic(rec);
-            this->force_newline();
-          }
-
-
-        void command_line::report_object(const output_group_record<postintegration_payload>& rec)
-          {
-            this->check_newline();
-            this->report_record_title(rec);
-            this->report_record_generic(rec);
-            this->force_newline();
-          }
-
-
-        void command_line::report_object(const output_group_record<output_payload>& rec)
-          {
-            this->check_newline();
-            this->report_record_title(rec);
-            this->report_record_generic(rec);
             this->force_newline();
           }
 

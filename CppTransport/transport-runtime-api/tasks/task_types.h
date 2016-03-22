@@ -36,6 +36,36 @@ namespace transport
           }
       }
 
+
+    std::string task_type_to_string(integration_task_type type)
+      {
+        switch(type)
+          {
+            case integration_task_type::twopf:
+              return std::string(CPPTRANSPORT_TASK_TYPE_INTEGRATION_TWOPF);
+
+            case integration_task_type::threepf:
+              return std::string(CPPTRANSPORT_TASK_TYPE_INTEGRATION_THREEPF);
+          }
+      }
+
+
+    std::string task_type_to_string(postintegration_task_type type)
+      {
+        switch(type)
+          {
+            case postintegration_task_type::twopf:
+              return std::string(CPPTRANSPORT_TASK_TYPE_POSTINTEGRATION_TWOPF);
+
+            case postintegration_task_type::threepf:
+              return std::string(CPPTRANSPORT_TASK_TYPE_POSTINTEGRATION_THREEPF);
+
+            case postintegration_task_type::fNL:
+              return std::string(CPPTRANSPORT_TASK_TYPE_POSTINTEGRATION_FNL);
+          }
+      }
+
+
   }   // namespace transport
 
 
