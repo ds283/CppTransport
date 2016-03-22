@@ -69,7 +69,7 @@
 #define CPPTRANSPORT_SWITCH_STATUS            "status"
 #define CPPTRANSPORT_HELP_STATUS              "summarize current status of repository"
 
-#define CPPTRANSPORT_SWITCH_INFLIGHT          "in-flight"
+#define CPPTRANSPORT_SWITCH_INFLIGHT          "inflight"
 #define CPPTRANSPORT_HELP_INFLIGHT            "report on currently active jobs"
 
 #define CPPTRANSPORT_SWITCH_INFO              "info"
