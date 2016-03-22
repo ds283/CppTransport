@@ -747,6 +747,7 @@ set(TRANSPORT_RUNTIME_API_MODELS_FILES
 
 set(TRANSPORT_RUNTIME_API_REPORTING_FILES
   transport-runtime-api/reporting/command_line.h
+  transport-runtime-api/reporting/repository_cache.h
   )
 
 set(TRANSPORT_RUNTIME_API_REPOSITORY_DETAIL_FILES

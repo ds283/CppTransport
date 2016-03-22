@@ -9,6 +9,8 @@
 
 #include "transport-runtime-api/repository/repository.h"
 
+#include "transport-runtime-api/reporting/repository_cache.h"
+
 #include "transport-runtime-api/manager/environment.h"
 #include "transport-runtime-api/manager/argument_cache.h"
 
@@ -72,15 +74,15 @@ namespace transport
 
             //! report on tasks available in a repository
             template <typename number>
-            void report_tasks(typename task_db<number>::type& db);
+            void report_tasks(repository_cache<number>&);
 
             //! report on inflight content in a repository
             template <typename number>
-            void report_inflight(typename task_db<number>::type& tk_db, inflight_db& group_db);
+            void report_inflight(repository_cache<number>&);
 
             //! produce individual item reports
             template <typename number>
-            void report_info(repository<number>& repo);
+            void report_info(repository_cache<number>&);
 
 
             // HANDLE NEWLINES BETWEEN REPORTS
@@ -128,20 +130,20 @@ namespace transport
         template <typename number>
         void command_line::report(repository<number>& repo)
           {
-            // collect common enumerations; no need to perform these multiple times
-            typename task_db<number>::type tk_db = repo.enumerate_tasks();
-            inflight_db group_db = repo.enumerate_inflight();
+            repository_cache<number> cache(repo);
 
-            if(this->include_tasks) this->report_tasks<number>(tk_db);
-            if(this->include_inflight) this->report_inflight<number>(tk_db, group_db);
-            if(this->info_items.size() > 0) this->report_info<number>(repo);
+            if(this->include_tasks) this->report_tasks<number>(cache);
+            if(this->include_inflight) this->report_inflight<number>(cache);
+            if(this->info_items.size() > 0) this->report_info<number>(cache);
           }
 
 
         template <typename number>
-        void command_line::report_tasks(typename task_db<number>::type& db)
+        void command_line::report_tasks(repository_cache<number>& cache)
           {
             this->check_newline();
+
+            typename task_db<number>::type& db = cache.get_task_db();
 
             if(this->env.has_colour_terminal_support() && this->arg_cache.get_colour_output()) std::cout << ColourCode(ANSI_colour::bold_magenta);
             std::cout << CPPTRANSPORT_REPORT_STATUS_TASKS << '\n';
@@ -181,8 +183,11 @@ namespace transport
 
 
         template <typename number>
-        void command_line::report_inflight(typename task_db<number>::type& tk_db, inflight_db& group_db)
+        void command_line::report_inflight(repository_cache<number>& cache)
           {
+            typename task_db<number>::type& tk_db = cache.get_task_db();
+            inflight_db& group_db = cache.get_inflight_db();
+
             if(group_db.empty()) return;
 
             this->check_newline();
@@ -262,7 +267,7 @@ namespace transport
 
 
         template <typename number>
-        void command_line::report_info(repository<number>& repo)
+        void command_line::report_info(repository_cache<number>& cache)
           {
             this->check_newline();
             this->force_newline();
