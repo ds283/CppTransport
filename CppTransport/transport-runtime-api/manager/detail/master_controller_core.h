@@ -130,11 +130,11 @@ namespace transport
 
         this->recognize_generic_switches(option_map, output_options);
 
-        if(option_map.count(CPPTRANSPORT_SWITCH_REPO))
+        if(option_map.count(CPPTRANSPORT_SWITCH_REPO_LONG))
           {
             try
               {
-                this->repo = repository_factory<number>(option_map[CPPTRANSPORT_SWITCH_REPO].as<std::string>(),
+                this->repo = repository_factory<number>(option_map[CPPTRANSPORT_SWITCH_REPO_LONG].as<std::string>(),
                                                         this->model_mgr, repository_mode::readwrite,
                                                         this->err, this->warn, this->msg);
               }

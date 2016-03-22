@@ -13,7 +13,8 @@
 #define CPPTRANSPORT_SWITCH_VERSION           "version"
 #define CPPTRANSPORT_HELP_VERSION             "output version information"
 
-#define CPPTRANSPORT_SWITCH_REPO              "repo"
+#define CPPTRANSPORT_SWITCH_REPO              "repo,r"
+#define CPPTRANSPORT_SWITCH_REPO_LONG         "repo"
 #define CPPTRANSPORT_HELP_REPO                "specify repository path"
 
 #define CPPTRANSPORT_SWITCH_TAG               "tag"
@@ -62,7 +63,7 @@
 #define CPPTRANSPORT_SWITCH_NO_COLOR          "no-color"
 #define CPPTRANSPORT_HELP_NO_COLOR            "disable colourized output"
 
-#define CPPTRANSPORT_PLOT_STYLE               "plot-style,e"
+#define CPPTRANSPORT_PLOT_STYLE               "plot-style,p"
 #define CPPTRANSPORT_PLOT_STYLE_LONG          "plot-style"
 #define CPPTRANSPORT_HELP_PLOT_STYLE          "set plotting style"
 
