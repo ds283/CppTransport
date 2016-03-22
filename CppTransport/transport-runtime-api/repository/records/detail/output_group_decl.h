@@ -386,6 +386,8 @@ namespace transport
         //! Get precomputed products record
         precomputed_products& get_precomputed_products() { return(this->precomputed); }
 
+        const precomputed_products& get_precomputed_products() const { return(this->precomputed); }
+
         //! Get fail status
         bool is_failed() const { return(this->fail); }
 

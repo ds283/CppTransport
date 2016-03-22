@@ -60,11 +60,47 @@ constexpr auto CPPTRANSPORT_REPORT_OUTPUT_EDITED                  = "Last update
 constexpr auto CPPTRANSPORT_REPORT_OUTPUT_FAILED                  = "Complete";
 constexpr auto CPPTRANSPORT_REPORT_OUTPUT_SIZE                    = "Size";
 
+constexpr auto CPPTRANSPORT_REPORT_OUTPUT_PARENT_TASK             = "Task";
+constexpr auto CPPTRANSPORT_REPORT_OUTPUT_PARENT_TASK_TYPE        = "Type";
+constexpr auto CPPTRANSPORT_REPORT_OUTPUT_LOCKED                  = "Locked";
+constexpr auto CPPTRANSPORT_REPORT_OUTPUT_TAGS                    = "Tags";
+constexpr auto CPPTRANSPORT_REPORT_OUTPUT_NOTES                   = "Notes";
+
 constexpr auto CPPTRANSPORT_REPORT_PRODUCT_NAME                   = "Derived product";
 constexpr auto CPPTRANSPORT_REPORT_PRODUCT_TYPE                   = "Type";
 constexpr auto CPPTRANSPORT_REPORT_PRODUCT_TAGS                   = "Matches tags";
 constexpr auto CPPTRANSPORT_REPORT_PRODUCT_FILENAME               = "Filename";
 constexpr auto CPPTRANSPORT_REPORT_PRODUCT_DEPENDS_ON             = "Depends on content from";
+
+constexpr auto CPPTRANSPORT_REPORT_PAYLOAD_CONTAINER              = "Container";
+constexpr auto CPPTRANSPORT_REPORT_PAYLOAD_COMPLETE               = "Complete";
+constexpr auto CPPTRANSPORT_REPORT_PAYLOAD_WORKGROUP              = "Workgroup";
+constexpr auto CPPTRANSPORT_REPORT_PAYLOAD_SEEDED                 = "Seeded";
+constexpr auto CPPTRANSPORT_REPORT_PAYLOAD_SEED_GROUP             = "Seed group";
+constexpr auto CPPTRANSPORT_REPORT_PAYLOAD_STATISTICS             = "Has statistics";
+constexpr auto CPPTRANSPORT_REPORT_PAYLOAD_HAS_ICS                = "Initial conditions";
+constexpr auto CPPTRANSPORT_REPORT_PAYLOAD_SIZE                   = "Size";
+constexpr auto CPPTRANSPORT_REPORT_PAYLOAD_PARENT                 = "Parent group";
+
+constexpr auto CPPTRANSPORT_REPORT_PAYLOAD_PRECOMPUTED            = "Group contains precomputed values for";
+
+constexpr auto CPPTRANSPORT_REPORT_PAYLOAD_HAS_ZETA_TWOPF         = "zeta twopf";
+constexpr auto CPPTRANSPORT_REPORT_PAYLOAD_HAS_ZETA_THREEPF       = "zeta threepf";
+constexpr auto CPPTRANSPORT_REPORT_PAYLOAD_HAS_ZETA_REDBSP        = "reduced bispectrum";
+constexpr auto CPPTRANSPORT_REPORT_PAYLOAD_HAS_FNL_LOCAL          = "fNL_local";
+constexpr auto CPPTRANSPORT_REPORT_PAYLOAD_HAS_FNL_EQUILATERAL    = "fNL_equi";
+constexpr auto CPPTRANSPORT_REPORT_PAYLOAD_HAS_FNL_ORTHOGONAL     = "fNL_ortho";
+constexpr auto CPPTRANSPORT_REPORT_PAYLOAD_HAS_FNL_DBI            = "fNL_DBI";
+
+constexpr auto CPPTRANSPORT_REPORT_PAYLOAD_METADATA               = "Metadata";
+
+constexpr auto CPPTRANSPORT_REPORT_PAYLOAD_TOTAL_WALLCLOCK        = "Wallclock time";
+constexpr auto CPPTRANSPORT_REPORT_PAYLOAD_TOTAL_TIME             = "Total time";
+constexpr auto CPPTRANSPORT_REPORT_PAYLOAD_GLOBAL_MIN             = "Min integration";
+constexpr auto CPPTRANSPORT_REPORT_PAYLOAD_GLOBAL_MAX             = "Max integration";
+constexpr auto CPPTRANSPORT_REPORT_PAYLOAD_CONFIGURATIONS         = "Configurations";
+constexpr auto CPPTRANSPORT_REPORT_PAYLOAD_FAILURES               = "Failures";
+
 
 
 #endif //CPPTRANSPORT_MESSAGES_EN_REPORT_CMDLINE_H

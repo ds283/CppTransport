@@ -217,8 +217,14 @@ namespace transport
             template <typename RecordType>
             void report_record_title(const RecordType& rec);
 
-            //! report generic details for a record
+            //! report details for a generic record
+            //! (creation time, last edit time, API level)
             void report_record_generic(const repository_record& rec);
+
+            //! report details for a generic output group record
+            //! (used instead of report_record_generic() and subsumes its functionality)
+            template <typename Payload>
+            void report_output_record_generic(const output_group_record<Payload>& rec, std::string type="");
 
             //! compose tags into a single string
             std::string compose_tag_list(const std::list<std::string>& tag_list);
@@ -902,8 +908,63 @@ namespace transport
         void command_line::report_object(const output_group_record<integration_payload>& rec, repository_cache<number>& cache)
           {
             this->check_newline();
+
+            // produce generic report on output group
+            typename task_db<number>::type& db = cache.get_task_db();
+            typename task_db<number>::type::const_iterator t = db.find(rec.get_task_name());
+
             this->report_record_title(rec);
-            this->report_record_generic(rec);
+            if(t != db.end() && t->second->get_type() == task_type::integration)
+              {
+                const integration_task_record<number>& irec = dynamic_cast< const integration_task_record<number>& >(*t->second);
+                this->report_output_record_generic(rec, task_type_to_string(irec.get_task_type()));
+              }
+            else
+              {
+                this->report_output_record_generic(rec, "--");
+              }
+
+            // now report on the payload
+            const integration_payload& payload = rec.get_payload();
+
+            key_value kv_payload(this->env, this->arg_cache);
+            key_value kv_container(this->env, this->arg_cache);
+
+            kv_container.insert_back(CPPTRANSPORT_REPORT_PAYLOAD_CONTAINER, payload.get_container_path().string());
+            kv_payload.insert_back(CPPTRANSPORT_REPORT_PAYLOAD_COMPLETE, payload.is_failed() ? CPPTRANSPORT_REPORT_NO : CPPTRANSPORT_REPORT_YES);
+            kv_payload.insert_back(CPPTRANSPORT_REPORT_PAYLOAD_WORKGROUP, boost::lexical_cast<std::string>(payload.get_workgroup_number()));
+            kv_payload.insert_back(CPPTRANSPORT_REPORT_PAYLOAD_SEEDED, payload.is_seeded() ? CPPTRANSPORT_REPORT_YES : CPPTRANSPORT_REPORT_NO);
+            if(payload.is_seeded()) kv_payload.insert_back(CPPTRANSPORT_REPORT_PAYLOAD_SEED_GROUP, payload.get_seed_group());
+            kv_payload.insert_back(CPPTRANSPORT_REPORT_PAYLOAD_STATISTICS, payload.has_statistics() ? CPPTRANSPORT_REPORT_YES : CPPTRANSPORT_REPORT_NO);
+            kv_payload.insert_back(CPPTRANSPORT_REPORT_PAYLOAD_HAS_ICS, payload.has_initial_conditions() ? CPPTRANSPORT_REPORT_YES : CPPTRANSPORT_REPORT_NO);
+            kv_payload.insert_back(CPPTRANSPORT_REPORT_PAYLOAD_SIZE, format_memory(payload.get_size()));
+
+            std::cout << '\n';
+            kv_payload.set_tiling(false);
+            kv_payload.write(std::cout);
+            kv_container.set_tiling(false);
+            kv_container.write(std::cout);
+
+            // finally report on the metdata
+            const integration_metadata& metadata = payload.get_metadata();
+
+            key_value kv_metadata(this->env, this->arg_cache);
+            kv_metadata.insert_back(CPPTRANSPORT_REPORT_PAYLOAD_TOTAL_WALLCLOCK, format_time(metadata.total_wallclock_time));
+            kv_metadata.insert_back(CPPTRANSPORT_REPORT_PAYLOAD_TOTAL_TIME, format_time(metadata.total_integration_time));
+            kv_metadata.insert_back(CPPTRANSPORT_REPORT_PAYLOAD_GLOBAL_MIN, format_time(metadata.global_min_integration_time));
+            kv_metadata.insert_back(CPPTRANSPORT_REPORT_PAYLOAD_GLOBAL_MAX, format_time(metadata.global_max_integration_time));
+            kv_metadata.insert_back(CPPTRANSPORT_REPORT_PAYLOAD_CONFIGURATIONS, boost::lexical_cast<std::string>(metadata.total_configurations));
+            kv_metadata.insert_back(CPPTRANSPORT_REPORT_PAYLOAD_FAILURES, boost::lexical_cast<std::string>(metadata.total_failures));
+
+            std::cout << '\n';
+            if(this->env.has_colour_terminal_support() && this->arg_cache.get_colour_output()) std::cout << ColourCode(ANSI_colour::bold_green);
+            std::cout << CPPTRANSPORT_REPORT_PAYLOAD_METADATA;
+            if(this->env.has_colour_terminal_support() && this->arg_cache.get_colour_output()) std::cout << ColourCode(ANSI_colour::normal);
+            std::cout << '\n';
+
+            kv_metadata.set_tiling(false);
+            kv_metadata.write(std::cout);
+
             this->force_newline();
           }
 
@@ -913,8 +974,60 @@ namespace transport
           {
             this->check_newline();
 
+            // produce generic report on output group
+            typename task_db<number>::type& db = cache.get_task_db();
+            typename task_db<number>::type::const_iterator t = db.find(rec.get_task_name());
+
             this->report_record_title(rec);
-            this->report_record_generic(rec);
+            if(t != db.end() && t->second->get_type() == task_type::postintegration)
+              {
+                const postintegration_task_record<number>& irec = dynamic_cast< const postintegration_task_record<number>& >(*t->second);
+                this->report_output_record_generic(rec, task_type_to_string(irec.get_task_type()));
+              }
+            else
+              {
+                this->report_output_record_generic(rec, "--");
+              }
+
+            // now report on the payload
+            const postintegration_payload& payload = rec.get_payload();
+
+            key_value kv_payload(this->env, this->arg_cache);
+            key_value kv_container(this->env, this->arg_cache);
+
+            kv_container.insert_back(CPPTRANSPORT_REPORT_PAYLOAD_CONTAINER, payload.get_container_path().string());
+            kv_payload.insert_back(CPPTRANSPORT_REPORT_PAYLOAD_COMPLETE, payload.is_failed() ? CPPTRANSPORT_REPORT_NO : CPPTRANSPORT_REPORT_YES);
+            kv_payload.insert_back(CPPTRANSPORT_REPORT_PAYLOAD_PARENT, payload.get_parent_group());
+            kv_payload.insert_back(CPPTRANSPORT_REPORT_PAYLOAD_SEEDED, payload.is_seeded() ? CPPTRANSPORT_REPORT_YES : CPPTRANSPORT_REPORT_NO);
+            if(payload.is_seeded()) kv_payload.insert_back(CPPTRANSPORT_REPORT_PAYLOAD_SEED_GROUP, payload.get_seed_group());
+            kv_payload.insert_back(CPPTRANSPORT_REPORT_PAYLOAD_SIZE, format_memory(payload.get_size()));
+
+            std::cout << '\n';
+            kv_payload.set_tiling(false);
+            kv_payload.write(std::cout);
+            kv_container.set_tiling(false);
+            kv_container.write(std::cout);
+
+            const precomputed_products& products = payload.get_precomputed_products();
+
+            key_value kv_products(this->env, this->arg_cache);
+
+            kv_products.insert_back(CPPTRANSPORT_REPORT_PAYLOAD_HAS_ZETA_TWOPF, products.get_zeta_twopf() ? CPPTRANSPORT_REPORT_YES : CPPTRANSPORT_REPORT_NO);
+            kv_products.insert_back(CPPTRANSPORT_REPORT_PAYLOAD_HAS_ZETA_THREEPF, products.get_zeta_threepf() ? CPPTRANSPORT_REPORT_YES : CPPTRANSPORT_REPORT_NO);
+            kv_products.insert_back(CPPTRANSPORT_REPORT_PAYLOAD_HAS_ZETA_REDBSP, products.get_zeta_redbsp() ? CPPTRANSPORT_REPORT_YES : CPPTRANSPORT_REPORT_NO);
+            kv_products.insert_back(CPPTRANSPORT_REPORT_PAYLOAD_HAS_FNL_LOCAL, products.get_fNL_local() ? CPPTRANSPORT_REPORT_YES : CPPTRANSPORT_REPORT_NO);
+            kv_products.insert_back(CPPTRANSPORT_REPORT_PAYLOAD_HAS_FNL_EQUILATERAL, products.get_fNL_equi() ? CPPTRANSPORT_REPORT_YES : CPPTRANSPORT_REPORT_NO);
+            kv_products.insert_back(CPPTRANSPORT_REPORT_PAYLOAD_HAS_FNL_ORTHOGONAL, products.get_fNL_ortho() ? CPPTRANSPORT_REPORT_YES : CPPTRANSPORT_REPORT_NO);
+            kv_products.insert_back(CPPTRANSPORT_REPORT_PAYLOAD_HAS_FNL_DBI, products.get_fNL_DBI() ? CPPTRANSPORT_REPORT_YES : CPPTRANSPORT_REPORT_NO);
+
+            std::cout << '\n';
+            if(this->env.has_colour_terminal_support() && this->arg_cache.get_colour_output()) std::cout << ColourCode(ANSI_colour::bold_green);
+            std::cout << CPPTRANSPORT_REPORT_PAYLOAD_PRECOMPUTED;
+            if(this->env.has_colour_terminal_support() && this->arg_cache.get_colour_output()) std::cout << ColourCode(ANSI_colour::normal);
+            std::cout << '\n';
+
+            kv_products.set_tiling(false);
+            kv_products.write(std::cout);
 
             this->force_newline();
           }
@@ -926,7 +1039,7 @@ namespace transport
             this->check_newline();
 
             this->report_record_title(rec);
-            this->report_record_generic(rec);
+            this->report_output_record_generic(rec);
 
             this->force_newline();
           }
@@ -945,6 +1058,49 @@ namespace transport
 
             kv.set_tiling(true);
             kv.write(std::cout);
+          }
+
+
+        template <typename Payload>
+        void command_line::report_output_record_generic(const output_group_record<Payload>& rec, std::string type)
+          {
+            key_value kv(this->env, this->arg_cache);
+
+            boost::posix_time::ptime created = rec.get_creation_time();
+            boost::posix_time::ptime edited = rec.get_last_edit_time();
+
+            kv.insert_back(CPPTRANSPORT_REPORT_CREATION_DATE, boost::posix_time::to_simple_string(created));
+            kv.insert_back(CPPTRANSPORT_REPORT_LAST_EDIT_DATE, boost::posix_time::to_simple_string(edited));
+            kv.insert_back(CPPTRANSPORT_REPORT_API_VERSION, boost::lexical_cast<std::string>(rec.get_runtime_API_version()));
+            kv.insert_back(CPPTRANSPORT_REPORT_OUTPUT_PARENT_TASK, rec.get_task_name());
+            if(!type.empty()) kv.insert_back(CPPTRANSPORT_REPORT_OUTPUT_PARENT_TASK_TYPE, type);
+            kv.insert_back(CPPTRANSPORT_REPORT_OUTPUT_LOCKED, rec.get_lock_status() ? CPPTRANSPORT_REPORT_YES : CPPTRANSPORT_REPORT_NO);
+            kv.insert_back(CPPTRANSPORT_REPORT_OUTPUT_TAGS, this->compose_tag_list(rec.get_tags()));
+
+            kv.set_tiling(true);
+            kv.write(std::cout);
+
+            const std::list<std::string>& notes = rec.get_notes();
+            if(!notes.empty())
+              {
+                std::cout << '\n';
+                if(this->env.has_colour_terminal_support() && this->arg_cache.get_colour_output()) std::cout << ColourCode(ANSI_colour::bold_green);
+                std::cout << CPPTRANSPORT_REPORT_OUTPUT_NOTES;
+                if(this->env.has_colour_terminal_support() && this->arg_cache.get_colour_output()) std::cout << ColourCode(ANSI_colour::normal);
+                std::cout << '\n';
+
+                key_value kv_notes(this->env, this->arg_cache);
+
+                unsigned int serial = 0;
+                for(const std::string& note : notes)
+                  {
+                    kv_notes.insert_back(boost::lexical_cast<std::string>(serial), note);
+                    ++serial;
+                  }
+
+                kv.set_tiling(false);
+                kv.write(std::cout);
+              }
           }
 
 

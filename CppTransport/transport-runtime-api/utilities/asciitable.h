@@ -291,6 +291,10 @@ namespace transport
                 if(wrap_width && batch_width >= this->display_width) batch_complete = true;
               }
 
+            // remove one column if the batch width is greater than the display width, and we have more
+            // than one column in the batch
+            if(batch_width > this->display_width && batch_size > 1) --batch_size;
+
             // we are outputting batch_size columns in this batch, and the largest column height is column_height
             // (not all columns need be the same height, however)
 
