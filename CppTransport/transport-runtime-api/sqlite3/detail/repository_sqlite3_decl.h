@@ -51,7 +51,7 @@ namespace transport
 
         //! Open a repository with a specified pathname, and specified warning and error handlers.
         //! Creates the repository directory structure if it does not already exist
-        repository_sqlite3(const std::string& path, model_manager<number>& f, repository_mode mode,
+        repository_sqlite3(const boost::filesystem::path path, model_manager<number>& f, repository_mode mode,
                            error_handler e, warning_handler w, message_handler m);
 
         //! Close a repository, including any corresponding containers
