@@ -46,6 +46,7 @@
 #include "transport-runtime-api/localizations/messages_en/named_list.h"
 
 #include "transport-runtime-api/localizations/messages_en/report_cmdline.h"
+#include "transport-runtime-api/localizations/messages_en/report_HTML.h"
 
 
 // derived products

@@ -698,6 +698,7 @@ set(TRANSPORT_RUNTIME_API_LOCALIZATIONS_MESSAGES_EN_FILES
   transport-runtime-api/localizations/messages_en/sqlite3_utility.h
   transport-runtime-api/localizations/messages_en/task_manager.h
   transport-runtime-api/localizations/messages_en/work_journal.h
+  transport-runtime-api/localizations/messages_en/report_HTML.h
   )
 
 set(TRANSPORT_RUNTIME_API_LOCALIZATIONS_MESSAGES_EN_TASKS_FILES
@@ -751,6 +752,8 @@ set(TRANSPORT_RUNTIME_API_REPORTING_FILES
   transport-runtime-api/reporting/repository_cache.h
   transport-runtime-api/reporting/key_value.h
   transport-runtime-api/reporting/content_group_data.h
+  transport-runtime-api/reporting/HTML_report.h
+  transport-runtime-api/reporting/unique_tags.h
   )
 
 set(TRANSPORT_RUNTIME_API_REPOSITORY_DETAIL_FILES

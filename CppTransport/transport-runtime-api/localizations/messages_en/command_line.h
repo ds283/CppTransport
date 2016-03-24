@@ -79,5 +79,8 @@
 #define CPPTRANSPORT_SWITCH_PROVENANCE        "provenance"
 #define CPPTRANSPORT_HELP_PROVENANCE          "report detailed provenance data on content group"
 
+#define CPPTRANSPORT_SWITCH_HTML              "html"
+#define CPPTRANSPORT_HELP_HTML                "produce a HTML-format repository report"
+
 
 #endif //CPPTRANSPORT_COMMAND_LINE_H

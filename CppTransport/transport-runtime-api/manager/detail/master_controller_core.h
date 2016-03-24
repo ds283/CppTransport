@@ -34,7 +34,8 @@ namespace transport
         err(eh),
         warn(wh),
         msg(mh),
-        cmdline_reports(le, ac, eh, wh, mh)
+        cmdline_reports(le, ac, eh, wh, mh),
+        HTML_reports(le, ac, eh, wh, mh)
       {
       }
 
@@ -83,7 +84,8 @@ namespace transport
           (CPPTRANSPORT_SWITCH_STATUS,                                                                                       CPPTRANSPORT_HELP_STATUS)
           (CPPTRANSPORT_SWITCH_INFLIGHT,                                                                                     CPPTRANSPORT_HELP_INFLIGHT)
           (CPPTRANSPORT_SWITCH_INFO,             boost::program_options::value< std::vector< std::string > >()->composing(), CPPTRANSPORT_HELP_INFO)
-          (CPPTRANSPORT_SWITCH_PROVENANCE,       boost::program_options::value< std::vector< std::string > >()->composing(), CPPTRANSPORT_HELP_PROVENANCE);
+          (CPPTRANSPORT_SWITCH_PROVENANCE,       boost::program_options::value< std::vector< std::string > >()->composing(), CPPTRANSPORT_HELP_PROVENANCE)
+          (CPPTRANSPORT_SWITCH_HTML,             boost::program_options::value< std::string >(),                             CPPTRANSPORT_HELP_HTML);
 
         boost::program_options::options_description hidden_options;
         hidden_options.add_options()
@@ -313,6 +315,8 @@ namespace transport
 
         if(option_map.count(CPPTRANSPORT_SWITCH_INFO)) this->cmdline_reports.info(option_map[CPPTRANSPORT_SWITCH_INFO].as< std::vector<std::string> >());
         if(option_map.count(CPPTRANSPORT_SWITCH_PROVENANCE)) this->cmdline_reports.provenance(option_map[CPPTRANSPORT_SWITCH_PROVENANCE].as< std::vector<std::string> >());
+
+        if(option_map.count(CPPTRANSPORT_SWITCH_HTML)) this->HTML_reports.set_root(option_map[CPPTRANSPORT_SWITCH_HTML].as< std::string >());
       }
 
 
@@ -383,7 +387,11 @@ namespace transport
         if(this->arg_cache.get_model_list())   this->model_mgr.write_models(std::cout);
         if(this->arg_cache.get_create_model()) this->gallery.commit(*this->repo);
 
-        if(this->repo) this->cmdline_reports.report(*this->repo);
+        if(this->repo)
+          {
+            this->cmdline_reports.report(*this->repo);
+            this->HTML_reports.report(*this->repo);
+          }
       }
 
 

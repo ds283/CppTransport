@@ -35,6 +35,7 @@
 #include "transport-runtime-api/manager/detail/aggregation_forward_declare.h"
 
 #include "transport-runtime-api/reporting/command_line.h"
+#include "transport-runtime-api/reporting/HTML_report.h"
 
 
 #include "boost/mpi.hpp"
@@ -324,8 +325,11 @@ namespace transport
         //! Event journal
         work_journal journal;
 
-        //! Command-line reports tool
+        //! Command-line reporting tool
         reporting::command_line cmdline_reports;
+
+        //! HTML reporting tool
+        reporting::HTML_report HTML_reports;
 
 
         // DATA AND STATE

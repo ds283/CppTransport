@@ -33,6 +33,9 @@ namespace transport
           {
           }
 
+        //! disable copying to prevent aliasing
+        repository_cache(const repository_cache<number>& obj) = delete;
+
         //! destructor
         ~repository_cache() = default;
 
