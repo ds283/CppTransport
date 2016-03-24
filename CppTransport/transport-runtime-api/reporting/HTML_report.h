@@ -1121,7 +1121,22 @@ namespace transport
                                 write_content = false;
                               }
 
-                            if(write_content) out << "<img class=\"img-responsive imgproduct\" src=\"" << relative_copy_location.string() << "\" alt=\"filename\">" << '\n';
+                            if(write_content)
+                              {
+                                // Safari will display PDFs in an <img> tag, but Chrome and Firefox will not
+                                if(extension.string() == ".pdf")
+                                  {
+                                    out << "<div style=\"width: 700px; height: 600px\">" << '\n';
+                                    out << "<object data=\"" << relative_copy_location.string() << "\" type=\"application/pdf\" width=\"100%\" height=\"100%\">" << '\n';
+                                    out << "<p>PDF embedding not supported in this browser</p>" << '\n';
+                                    out << "</object>" << '\n';
+                                    out << "</div>" << '\n';
+                                  }
+                                else
+                                  {
+                                    out << "<img class=\"img-responsive imgproduct\" src=\"" << relative_copy_location.string() << "\" alt=\"" << filename << "\">" << '\n';
+                                  }
+                              }
                           }
 
                         typename derived_product_db<number>::type::const_iterator t = product_db.find(item.get_parent_product());
