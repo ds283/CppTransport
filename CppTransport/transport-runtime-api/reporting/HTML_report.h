@@ -155,6 +155,13 @@ namespace transport
             //! write a link-to-package button
             void write_package_button(std::ofstream& out, std::ofstream& out_js, const std::string& name, const std::string& tag);
 
+            //! write a link-to-derived product button
+            template <typename number>
+            void write_derived_product_button(std::ofstream& out, std::ofstream& out_js, const std::string& name, repository_cache<number>& cache, unique_tags<number>& tags);
+
+            //! write a link-to-derived product button
+            void write_derived_product_button(std::ofstream& out, std::ofstream& out_js, const std::string& name, const std::string& tag);
+
             //! write a collapsible notes section
             void write_notes_collapsible(std::ofstream& out, std::ofstream& out_js, const std::list<std::string>& notes, const std::string& tag);
 
@@ -260,6 +267,10 @@ namespace transport
             out << ".topskip {" << '\n';
             out << "    margin-top: 20px;" << '\n';
             out << "}" << '\n';
+            out << ".topbottomskip {" << '\n';
+            out << "    margin-top: 20px;" << '\n';
+            out << "    margin-bottom: 10px;" << '\n';
+            out << "}" << '\n';
             out << ".imgproduct {" << '\n';
             out << "    margin: 15px;" << '\n';
             out << "    border: 2px solid #ccc;" << '\n';
@@ -314,7 +325,7 @@ namespace transport
           {
             // WRITE NAVIGATION BAR
 
-            out << "<ul id=\"tabs\", class=\"nav nav-pills nav-justified\", role=\"tablist\">" << '\n';
+            out << "<ul id=\"tabs\" class=\"nav nav-pills nav-justified\" role=\"tablist\">" << '\n';
             out << "<li class=\"active\"><a data-toggle=\"pill\" href=\"#packages\">Packages</a></li>" << '\n';
             out << "<li><a data-toggle=\"pill\" href=\"#integration\">Integration tasks</a></li>" << '\n';
 
@@ -445,7 +456,7 @@ namespace transport
                 out << "<div class=\"row\">" << '\n';
                 out << "<div class=\"col-md-6\">" << '\n';
 
-                out << "<h4 class=\"list-group-item-text topskip\">Parameter values</h4>" << '\n';
+                out << "<p><h4 class=\"list-group-item-text topskip\">Parameter values</h4></p>" << '\n';
                 out << "<table class=\"table table-striped\">" << '\n';
                 out << "<tbody>" << '\n';
 
@@ -472,7 +483,7 @@ namespace transport
 
                 out << "<div class=\"col-md-6\">" << '\n';
 
-                out << "<h4 class=\"list-group-item-text topskip\">Initial conditions</h4>" << '\n';
+                out << "<p><h4 class=\"list-group-item-text topskip\">Initial conditions</h4></p>" << '\n';
                 out << "<table class=\"table table-striped\">" << '\n';
 
                 out << "<tbody>" << '\n';
@@ -722,7 +733,9 @@ namespace transport
                           {
                             out << "<tr>" << '\n';
 
-                            out << "<td>" << element.get_product_name() << "</td>" << '\n';
+                            out << "<td>";
+                            this->write_derived_product_button(out, out_js, element.get_product_name(), cache, tags);
+                            out << "</td>" << '\n';
                             out << "<td>" << derived_data::derived_product_type_to_string(element.get_product().get_type()) << "</td>" << '\n';
                             out << "<td>" << this->compose_tag_list(element.get_tags()) << "</td>" << '\n';
                             out << "<td>" << element.get_product().get_filename().string() << "</td>" << '\n';
@@ -821,7 +834,7 @@ namespace transport
 
                 if(!task_list.empty())
                   {
-                    out << "<h4 class=\"list-group-item-text topskip\">Depends on tasks</h4>" << '\n';
+                    out << "<p><h4 class=\"list-group-item-text topskip\">Depends on tasks</h4></p>" << '\n';
 
                     unsigned int count = 0;
                     for(derivable_task<number>* tk : task_list)
@@ -938,9 +951,12 @@ namespace transport
 
             if(!tags.empty())
               {
+                unsigned int count = 0;
                 for(const std::string& tag : tags)
                   {
+                    if(count > 0) out << " ";
                     out << "<span class=\"label label-info\">" << tag << "</span>";
+                    ++count;
                   }
               }
             else
@@ -972,7 +988,7 @@ namespace transport
 
                 const integration_payload& payload = rec.get_payload();
 
-                out << "<h4 class=\"list-group-item-text topskip\">Properties</h4>" << '\n';
+                out << "<p><h4 class=\"list-group-item-text topskip\">Properties</h4></p>" << '\n';
                 out << "<div class=\"row\">" << '\n';
                 out << "<div class=\"col-md-12\">Container <span class=\"label label-default\">" << payload.get_container_path().string() << "</span></div>" << '\n';
                 out << "</div>" << '\n';
@@ -1000,9 +1016,15 @@ namespace transport
                 out << "</div>" << '\n';
 
                 out << "<div class=\"row\">" << '\n';
+                out << "<div class=\"col-md-4\">Mean integration time <span class=\"label label-default\">" << format_time(metadata.total_integration_time/metadata.total_configurations) << "</span></div>" << '\n';
                 out << "<div class=\"col-md-4\">Minimum integration <span class=\"label label-default\">" << format_time(metadata.global_min_integration_time) << "</span></div>" << '\n';
                 out << "<div class=\"col-md-4\">Maximum integration <span class=\"label label-default\">" << format_time(metadata.global_max_integration_time) << "</span></div>" << '\n';
+                out << "</div>" << '\n';
+
+                out << "<div class=\"row\">" << '\n';
                 out << "<div class=\"col-md-4\">Failures <span class=\"label label-default\">" << metadata.total_failures << "</span></div>" << '\n';
+                out << "<div class=\"col-md-4\"></div>" << '\n';
+                out << "<div class=\"col-md-4\"></div>" << '\n';
                 out << "</div>" << '\n';
 
                 out << "</a>" << '\n';
@@ -1031,7 +1053,7 @@ namespace transport
 
                 const postintegration_payload& payload = rec.get_payload();
 
-                out << "<h4 class=\"list-group-item-text topskip\">Properties</h4>" << '\n';
+                out << "<p><h4 class=\"list-group-item-text topskip\">Properties</h4></p>" << '\n';
                 out << "<div class=\"row\">" << '\n';
                 out << "<div class=\"col-md-12\">Container <span class=\"label label-default\">" << payload.get_container_path().string() << "</span></div>" << '\n';
                 out << "</div>" << '\n';
@@ -1335,22 +1357,60 @@ namespace transport
           }
 
 
+        template <typename number>
+        void HTML_report::write_derived_product_button(std::ofstream& out, std::ofstream& out_js, const std::string& name,
+                                                       repository_cache<number>& cache, unique_tags<number>& tags)
+          {
+            typename derived_product_db<number>::type& db = cache.get_derived_product_db();
+            typename derived_product_db<number>::type::const_iterator t = db.find(name);
+
+            std::string tag;
+            if(t != db.end()) tag = tags.get_id(*t->second);
+
+            this->write_derived_product_button(out, out_js, name, tag);
+          }
+
+
+        void HTML_report::write_derived_product_button(std::ofstream& out, std::ofstream& out_js, const std::string& name, const std::string& tag)
+          {
+            if(!tag.empty())
+              {
+                std::string button_id = this->make_button_tag();
+                out << "<button class=\"button btn-link\" id=\"" << button_id << "\">" << name << "</button>";
+
+                // we need a Javascript function which causes this button to active the appropriate contents pane when clicked
+                out_js << "$(function(){" << '\n';
+                out_js << "  $('#" << button_id << "').click(function(e){" << '\n';
+                out_js << "    e.preventDefault();" << '\n';
+                out_js << "      $('#tabs a[href=\"#derived\"]').tab('show');" << '\n';
+                out_js << "      var elem = $(\"a[id='" << tag << "']\");" << '\n';
+                out_js << "      $('html, body').animate({ scrollTop: elem.offset().top }, 1000);" << '\n';
+                out_js << "  })" << '\n';
+                out_js << "})" << '\n';
+              }
+            else
+              {
+                out << "<span class=\"label label-danger\">" << name << "</span>";
+              }
+          }
+
+
         void HTML_report::write_notes_collapsible(std::ofstream& out, std::ofstream& out_js, const std::list<std::string>& notes, const std::string& tag)
           {
             if(notes.empty()) return;
 
-            out << "<button data-toggle=\"collapse\" data-target=\"#" << tag << "notes\" class=\"button btn-info button-lg topskip\">Notes <span class=\"badge\">" << notes.size() << "</span></button" << '\n';
+            out << "<button data-toggle=\"collapse\" data-target=\"#" << tag << "notes\" class=\"button btn-info button-lg topbottomskip\">Notes <span class=\"badge\">" << notes.size() << "</span></button>" << '\n';
             out << "<div id=\"" << tag << "notes\" class=\"collapse\">" << '\n';
-            out << "<div class=\"list-group\">" << '\n';
+            out << "<ul class=\"list-group\">" << '\n';
 
             for(const std::string& note : notes)
               {
-                out << "<a href=\"#\" class=\"list-group-item\" onclick=\"return false;\">" << '\n';
+                out << "<li class=\"list-group-item list-group-item-info\">" << '\n';
                 out << "<p>" << note << "</p>" << '\n';
-                out << "</a>";
+                out << "</li>" << '\n';
               }
 
-            out << "</div>" << '\n';
+            out << "</ul>" << '\n';
             out << "</div>" << '\n';
           }
 
