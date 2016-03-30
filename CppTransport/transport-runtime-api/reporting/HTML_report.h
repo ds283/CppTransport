@@ -264,6 +264,9 @@ namespace transport
 
             std::ofstream out(out_path.string(), std::ios::out | std::ios::trunc);
 
+            out << "body {" << '\n';
+            out << "    padding-top: 65px;" << '\n';
+            out << "}" << '\n';
             out << ".topskip {" << '\n';
             out << "    margin-top: 20px;" << '\n';
             out << "}" << '\n';
@@ -289,12 +292,14 @@ namespace transport
             std::ofstream out(out_path.string(), std::ios::out | std::ios::trunc);
             std::ofstream out_js(out_js_path.string(), std::ios::out | std::ios::trunc);
 
+            // Write HTML header
             out << "<!DOCTYPE html>" << '\n';
-            out << "<html>" << '\n';
+            out << "<html lang=\"en\">" << '\n';
             out << "<head>" << '\n';
+            out << "<link rel=\"stylesheet\" href=\"https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css\" type=\"text/css\">" << '\n';
             out << "<link rel=\"stylesheet\" type=\"text/css\" href=\"./cpptransport.css\">" << '\n';
             out << "</head>" << '\n';
-            out << "<body>" << '\n';
+            out << "<body role=\"document\">" << '\n';
 
             out << "<title>CppTransport report</title>" << '\n';
             out << "<meta charset=\"utf-8\">" << '\n';
@@ -302,13 +307,17 @@ namespace transport
 
             out << "<div class =\"container-fluid\">" << '\n';
 
+            // Write JavaScript header; change top padding on window resize
+            out_js << "$(window).on('resize load', function () {" << '\n';
+            out_js << "  $('body').css({\"padding-top\": $(\".navbar\").height() + \"px\"});" << '\n';
+            out_js << "});" << '\n';
+
             this->write_report(out, out_js, cache, tags);
 
             out << "</div>" << '\n';
 
             // jQuery must be available before Bootstrap is loaded
             out << "<script src=\"https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js\"></script>" << '\n';
-            out << "<link rel=\"stylesheet\" href=\"https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css\" type=\"text/css\">" << '\n';
             out << "<script src=\"https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js\"></script>" << '\n';
             out << "<script src=\"" << CPPTRANSPORT_HTML_JAVASCRIPT << "\"></script>" << '\n';
 
@@ -325,9 +334,14 @@ namespace transport
           {
             // WRITE NAVIGATION BAR
 
-            out << "<ul id=\"tabs\" class=\"nav nav-pills nav-justified\" role=\"tablist\">" << '\n';
-            out << "<li class=\"active\"><a data-toggle=\"pill\" href=\"#packages\">Packages</a></li>" << '\n';
-            out << "<li><a data-toggle=\"pill\" href=\"#integration\">Integration tasks</a></li>" << '\n';
+            out << "<nav class=\"navbar navbar-default navbar-fixed-top\">" << '\n';
+            out << "<div class=\"container-fluid\">" << '\n';
+            out << "<div class=\"navbar-header\">" << '\n';
+            out << "<a class=\"navbar-brand\" href=\"#\">TEST</a>" << '\n';
+            out << "</div>" << '\n';
+            out << "<ul id=\"tabs\" class=\"nav navbar-nav\" role=\"tablist\">" << '\n';
+            out << "<li class=\"active\"><a data-toggle=\"tab\" href=\"#packages\">Packages</a></li>" << '\n';
+            out << "<li><a data-toggle=\"tab\" href=\"#integration\">Integration tasks</a></li>" << '\n';
 
             // Write integration content menu
             out << "<li class=\"dropdown\"><a href=\"#\" class=\"dropdown-toggle\" data-toggle=\"dropdown\">Integration content <span class=\"caret\"></span></a>" << '\n';
@@ -345,7 +359,7 @@ namespace transport
             out << "</ul>" << '\n';
             out <<"</li>" << '\n';
 
-            out << "<li><a data-toggle=\"pill\" href=\"#postintegration\">Postintegration tasks</a></li>" << '\n';
+            out << "<li><a data-toggle=\"tab\" href=\"#postintegration\">Postintegration tasks</a></li>" << '\n';
 
             // Write postintegration content menu
             out << "<li class=\"dropdown\"><a href=\"#\" class=\"dropdown-toggle\" data-toggle=\"dropdown\">Postintegration content <span class=\"caret\"></span></a>" << '\n';
@@ -363,7 +377,7 @@ namespace transport
             out << "</ul>" << '\n';
             out <<"</li>" << '\n';
 
-            out << "<li><a data-toggle=\"pill\" href=\"#output\">Output tasks</a></li>" << '\n';
+            out << "<li><a data-toggle=\"tab\" href=\"#output\">Output tasks</a></li>" << '\n';
 
             // Write output content menu
             out << "<li class=\"dropdown\"><a href=\"#\" class=\"dropdown-toggle\" data-toggle=\"dropdown\">Output content <span class=\"caret\"></span></a>" << '\n';
@@ -381,8 +395,10 @@ namespace transport
             out << "</ul>" << '\n';
             out <<"</li>" << '\n';
 
-            out << "<li><a data-toggle=\"pill\" href=\"#derived\">Derived products</a></li>" << '\n';
+            out << "<li><a data-toggle=\"tab\" href=\"#derived\">Derived products</a></li>" << '\n';
             out << "</ul>" << '\n';
+            out << "</div>" << '\n';
+            out << "</nav>" << '\n';
 
             out << "<br>" << '\n';
 
@@ -542,7 +558,7 @@ namespace transport
                     const std::list<std::string>& output_groups = rec.get_output_groups();
                     if(!output_groups.empty())
                       {
-                        out << "<button data-toggle=\"collapse\" data-target=\"#" << tag << "groups\" class=\"button btn-info button-lg topskip\">Output groups <span class=\"badge\">" << output_groups.size() << "</span></button>" << '\n';
+                        out << "<button data-toggle=\"collapse\" data-target=\"#" << tag << "groups\" type=\"button\" class=\"btn btn-info button-lg topskip\">Output groups <span class=\"badge\">" << output_groups.size() << "</span></button>" << '\n';
                         out << "<div id=\"" << tag << "groups\" class=\"collapse\">" << '\n';
                         out << "<table class=\"table table-striped\">" << '\n';
 
@@ -632,7 +648,7 @@ namespace transport
                     const std::list<std::string>& output_groups = rec.get_output_groups();
                     if(!output_groups.empty())
                       {
-                        out << "<button data-toggle=\"collapse\" data-target=\"#" << tag << "groups\" class=\"button btn-info button-lg topskip\">Output groups <span class=\"badge\">" << output_groups.size() << "</span></button>" << '\n';
+                        out << "<button data-toggle=\"collapse\" data-target=\"#" << tag << "groups\" type=\"button\" class=\"btn btn-info button-lg topskip\">Output groups <span class=\"badge\">" << output_groups.size() << "</span></button>" << '\n';
                         out << "<div id=\"" << tag << "groups\" class=\"collapse\">" << '\n';
                         out << "<table class=\"table table-striped\">" << '\n';
 
@@ -714,7 +730,7 @@ namespace transport
                     const typename std::vector< output_task_element<number> >& elements = rec.get_task()->get_elements();
                     if(!elements.empty())
                       {
-                        out << "<button data-toggle=\"collapse\" data-target=\"#" << tag << "elements\" class=\"button btn-info button-lg topskip\">Derived products <span class=\"badge\">" << elements.size() << "</span></button>" << '\n';
+                        out << "<button data-toggle=\"collapse\" data-target=\"#" << tag << "elements\" type=\"button\" class=\"btn btn-info button-lg topskip\">Derived products <span class=\"badge\">" << elements.size() << "</span></button>" << '\n';
                         out << "<div id=\"" << tag << "elements\" class=\"collapse\">" << '\n';
                         out << "<table class=\"table table-striped\">" << '\n';
 
@@ -752,7 +768,7 @@ namespace transport
                     const std::list<std::string>& output_groups = rec.get_output_groups();
                     if(!output_groups.empty())
                       {
-                        out << "<button data-toggle=\"collapse\" data-target=\"#" << tag << "groups\" class=\"button btn-info button-lg topskip\">Output groups <span class=\"badge\">" << output_groups.size() << "</span></button>" << '\n';
+                        out << "<button data-toggle=\"collapse\" data-target=\"#" << tag << "groups\" type=\"button\" class=\"btn btn-info button-lg topskip\">Output groups <span class=\"badge\">" << output_groups.size() << "</span></button>" << '\n';
                         out << "<div id=\"" << tag << "groups\" class=\"collapse\">" << '\n';
                         out << "<table class=\"table table-striped\">" << '\n';
 
@@ -890,7 +906,7 @@ namespace transport
                 std::string tag = tags.get_id(*t->second);
                 std::string button_tag = this->make_button_tag();
 
-                out << "<button class=\"button btn-link\", id=\"" << button_tag << "\">" << name << " <span class=\"badge\">" << t->second->get_output_groups().size() << "</span></button>";
+                out << "<button type=\"button\" class=\"btn btn-link\" id=\"" << button_tag << "\">" << name << " <span class=\"badge\">" << t->second->get_output_groups().size() << "</span></button>";
 
                 std::string pane;
                 switch(t->second->get_type())
@@ -916,13 +932,16 @@ namespace transport
 
                 // we need a Javascript function which causes this button to activate the appropriate task pane when clicked
                 out_js << "$(function(){" << '\n';
-                out_js << "  $('#" << button_tag << "').click(function(e){" << '\n';
-                out_js << "    e.preventDefault();" << '\n';
-                out_js << "      $('#tabs a[href=\"#" << pane << "\"]').tab('show');" << '\n';
-                out_js << "      var elem = $(\"a[id='" << tag << "']\");" << '\n';
-                out_js << "      $('html, body').animate({ scrollTop: elem.offset().top }, 1000);" << '\n';
-                out_js << "  })" << '\n';
-                out_js << "})" << '\n';
+                out_js << "    $('#" << button_tag << "').click(function(e){" << '\n';
+                out_js << "        e.preventDefault();" << '\n';
+                out_js << "        var tab_element = $('#tabs').find('a[href=\"#" << pane << "\"]');" << '\n';
+                out_js << "        tab_element.tab('show');" << '\n';
+                out_js << "        tab_element.one('shown.bs.tab', function(e2){" << '\n';
+                out_js << "            var list_element = $('#" << pane << "').find('a[href=\"#" << tag << "\"]');" << '\n';
+                out_js << "            $('html, body').animate({ scrollTop: list_element.offset().top - $(\".navbar\").height() - 20 }, 1000);" << '\n';
+                out_js << "        });" << '\n';
+                out_js << "    })" << '\n';
+                out_js << "});" << '\n';
               }
             else
               {
@@ -1116,7 +1135,7 @@ namespace transport
                         include_content = false;
                       }
 
-                    out << "<div class=\"list-group\">" << '\n';
+                    out << "<ul class=\"list-group topskip\">" << '\n';
 
                     unsigned int count = 0;
                     for(const derived_content& item : content)
@@ -1124,7 +1143,7 @@ namespace transport
                         boost::filesystem::path filename = item.get_filename();
                         boost::filesystem::path extension = filename.extension();
 
-                        out << "<a href=\"#\" class=\"list-group-item\" onclick=\"return false;\">" << '\n';
+                        out << "<li href=\"#\" class=\"list-group-item\" onclick=\"return false;\">" << '\n';
                         out << "<h4 class=\"list-group-item-text topskip\">" << filename.string() << "</h4>" << '\n';
 
                         boost::filesystem::path abs_product_location = rec.get_abs_output_path() / item.get_filename();
@@ -1185,7 +1204,7 @@ namespace transport
                             std::string group_tag = tag + "_" + boost::lexical_cast<std::string>(count);
                             ++count;
 
-                            out << "<button data-toggle=\"collapse\" data-target=\"#" << group_tag << "\" class=\"button btn-info button-lg topskip\">Data provenance <span class=\"badge\">" << groups.size() << "</span></button>" << '\n';
+                            out << "<button data-toggle=\"collapse\" data-target=\"#" << group_tag << "\" type=\"button\" class=\"btn btn-info button-lg topskip\">Data provenance <span class=\"badge\">" << groups.size() << "</span></button>" << '\n';
                             out << "<div id=\"" << group_tag << "\" class=\"collapse\">" << '\n';
                             out << "<table class=\"table table-striped\">" << '\n';
 
@@ -1223,10 +1242,10 @@ namespace transport
                             out << "</div>" << '\n';
                           }
 
-                        out << "</a>" << '\n';
+                        out << "</li>" << '\n';
                       }
 
-                    out << "</div>" << '\n';
+                    out << "</ul>" << '\n';
                   }
 
                 out << "</a>" << '\n';
@@ -1302,15 +1321,15 @@ namespace transport
             if(!tag.empty())
               {
                 std::string button_id = this->make_button_tag();
-                out << "<button class=\"button btn-link\" id=\"" << button_id << "\">" << name << "</button>";
+                out << "<button type=\"button\" class=\"btn btn-link\" id=\"" << button_id << "\">" << name << "</button>";
 
                 // we need a Javascript function which causes this button to activate the appropriate contents pane when clicked
                 out_js << "$(function(){" << '\n';
-                out_js << "  $('#" << button_id << "').click(function(e){" << '\n';
-                out_js << "    e.preventDefault();" << '\n';
-                out_js << "      $('#tabs a[href=\"#" << tag << "\"]').tab('show');" << '\n';
-                out_js << "  })" << '\n';
-                out_js << "})" << '\n';
+                out_js << "    $('#" << button_id << "').click(function(e){" << '\n';
+                out_js << "        e.preventDefault();" << '\n';
+                out_js << "        $('#tabs').find('a[href=\"#" << tag << "\"]').tab('show');" << '\n';
+                out_js << "    })" << '\n';
+                out_js << "});" << '\n';
               }
             else
               {
@@ -1338,17 +1357,20 @@ namespace transport
             if(!tag.empty())
               {
                 std::string button_id = this->make_button_tag();
-                out << "<button class=\"button btn-link\" id=\"" << button_id << "\">" << name << "</button>";
+                out << "<button type=\"button\" class=\"btn btn-link\" id=\"" << button_id << "\">" << name << "</button>";
 
                 // we need a Javascript function which causes this button to activate the packages pane when clicked
                 out_js << "$(function(){" << '\n';
-                out_js << "  $('#" << button_id << "').click(function(e){" << '\n';
-                out_js << "    e.preventDefault();" << '\n';
-                out_js << "      $('#tabs a[href=\"#packages\"]').tab('show');" << '\n';
-                out_js << "      var elem = $(\"a[id='" << tag << "']\");" << '\n';
-                out_js << "      $('html, body').animate({ scrollTop: elem.offset().top }, 1000);" << '\n';
-                out_js << "  })" << '\n';
-                out_js << "})" << '\n';
+                out_js << "    $('#" << button_id << "').click(function(e){" << '\n';
+                out_js << "        e.preventDefault();" << '\n';
+                out_js << "        var tab_element = $('#tabs').find('a[href=\"#packages\"]');" << '\n';
+                out_js << "        tab_element.tab('show');" << '\n';
+                out_js << "        tab_element.one('shown.bs.tab', function(e2){" << '\n';
+                out_js << "            var list_element = $('#packages').find('a[href=\"#" << tag << "\"]');" << '\n';
+                out_js << "            $('html, body').animate({ scrollTop: list_element.offset().top - $(\".navbar\").height() - 20 }, 1000);" << '\n';
+                out_js << "        });" << '\n';
+                out_js << "    })" << '\n';
+                out_js << "});" << '\n';
               }
             else
               {
@@ -1376,17 +1398,20 @@ namespace transport
             if(!tag.empty())
               {
                 std::string button_id = this->make_button_tag();
-                out << "<button class=\"button btn-link\" id=\"" << button_id << "\">" << name << "</button>";
+                out << "<button type=\"button\" class=\"btn btn-link\" id=\"" << button_id << "\">" << name << "</button>";
 
                 // we need a Javascript function which causes this button to active the appropriate contents pane when clicked
                 out_js << "$(function(){" << '\n';
-                out_js << "  $('#" << button_id << "').click(function(e){" << '\n';
-                out_js << "    e.preventDefault();" << '\n';
-                out_js << "      $('#tabs a[href=\"#derived\"]').tab('show');" << '\n';
-                out_js << "      var elem = $(\"a[id='" << tag << "']\");" << '\n';
-                out_js << "      $('html, body').animate({ scrollTop: elem.offset().top }, 1000);" << '\n';
-                out_js << "  })" << '\n';
-                out_js << "})" << '\n';
+                out_js << "    $('#" << button_id << "').click(function(e){" << '\n';
+                out_js << "        e.preventDefault();" << '\n';
+                out_js << "        var tab_element = $('#tabs').find('a[href=\"#derived\"]');" << '\n';
+                out_js << "        tab_element.tab('show');" << '\n';
+                out_js << "        tab_element.one('shown.bs.tab', function(e2){" << '\n';
+                out_js << "            var list_element = $('#derived').find('a[href=\"#" << tag << "\"]');" << '\n';
+                out_js << "            $('html, body').animate({ scrollTop: list_element.offset().top - $(\".navbar\").height() - 20 }, 1000);" << '\n';
+                out_js << "        });" << '\n';
+                out_js << "    })" << '\n';
+                out_js << "});" << '\n';
               }
             else
               {
@@ -1399,9 +1424,9 @@ namespace transport
           {
             if(notes.empty()) return;
 
-            out << "<button data-toggle=\"collapse\" data-target=\"#" << tag << "notes\" class=\"button btn-info button-lg topbottomskip\">Notes <span class=\"badge\">" << notes.size() << "</span></button>" << '\n';
+            out << "<button data-toggle=\"collapse\" data-target=\"#" << tag << "notes\" type=\"button\" class=\"btn btn-info button-lg topbottomskip\">Notes <span class=\"badge\">" << notes.size() << "</span></button>" << '\n';
             out << "<div id=\"" << tag << "notes\" class=\"collapse\">" << '\n';
-            out << "<ul class=\"list-group\">" << '\n';
+            out << "<ol class=\"list-group\">" << '\n';
 
             for(const std::string& note : notes)
               {
@@ -1410,7 +1435,7 @@ namespace transport
                 out << "</li>" << '\n';
               }
 
-            out << "</ul>" << '\n';
+            out << "</ol>" << '\n';
             out << "</div>" << '\n';
           }
 
