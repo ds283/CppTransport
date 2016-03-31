@@ -103,6 +103,10 @@ namespace transport
         //! get path to config file, if it exists
         boost::optional< boost::filesystem::path > config_file_path() const;
 
+        //! list of paths to search for resources/assets
+        //! may be empty if not paths have been specified
+        const std::list<boost::filesystem::path>& get_resource_paths() const;
+
       protected:
 
         //! detect home direcotry
@@ -118,6 +122,9 @@ namespace transport
 
         //! user home directory
         boost::optional< boost::filesystem::path > home;
+
+        //! CppTransport resource installation paths
+        std::list< boost::filesystem::path > resources;
 
 
         // PYTHON SUPPORT
@@ -188,6 +195,30 @@ namespace transport
           {
             std::string home_path(home_cstr);
             this->home = boost::filesystem::path(home_path);
+          }
+
+        char* path_cstr = std::getenv(CPPTRANSPORT_PATH_ENV);
+
+        if(path_cstr != nullptr)
+          {
+            std::string resource_paths(path_cstr);
+
+            // parse environment variable into a : separated list of directories
+            for(boost::algorithm::split_iterator<std::string::iterator> t = boost::algorithm::make_split_iterator(resource_paths, boost::algorithm::first_finder(":", boost::algorithm::is_equal()));
+                t != boost::algorithm::split_iterator<std::string::iterator>(); ++t)
+              {
+                std::string path = boost::copy_range<std::string>(*t);
+
+                boost::filesystem::path p = path;
+
+                // if path is not absolute, make relative to current working directory
+                if(!p.is_absolute())
+                  {
+                    p = boost::filesystem::absolute(p);
+                  }
+
+                this->resources.emplace_back(p);
+              }
           }
       }
 
@@ -345,6 +376,12 @@ namespace transport
       }
 
 
+    const std::list<boost::filesystem::path>& local_environment::get_resource_paths() const
+      {
+        return this->resources;
+      }
+
+
     unsigned int local_environment::detect_terminal_width() const
       {
         // TODO: Platform introspection
@@ -354,7 +391,6 @@ namespace transport
 
         return(w.ws_col > 0 ? w.ws_col : CPPTRANSPORT_DEFAULT_TERMINAL_WIDTH);
       }
-
 
 
   }   // namespace transport

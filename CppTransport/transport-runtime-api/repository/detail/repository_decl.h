@@ -78,10 +78,13 @@ namespace transport
       public:
 
         //! Get path to root of repository
-        const boost::filesystem::path& get_root_path() const { return (this->root_path); };
+        const boost::filesystem::path& get_root_path() const { return(this->root_path); };
 
         //! Get access mode
         const repository_mode& get_access_mode() const { return (this->access_mode); }
+
+        //! Get repository name, defined to be the directory leafname
+        std::string get_name() const;
 
 
         // TRANSACTIONS

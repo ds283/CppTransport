@@ -1,0 +1,17 @@
+body {
+    padding-top: 65px;
+}
+
+.topskip {
+    margin-top: 20px;
+}
+
+.topbottomskip {
+    margin-top: 20px;
+    margin-bottom: 10px;
+}
+
+.imgproduct {
+    margin: 15px;
+    border: 2px solid #ccc;
+}

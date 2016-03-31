@@ -48,10 +48,11 @@ namespace transport
         // set up Boost::program_options descriptors for command-line arguments
         boost::program_options::options_description generic("Generic options", width);
         generic.add_options()
-          (CPPTRANSPORT_SWITCH_HELP,      CPPTRANSPORT_HELP_HELP)
-          (CPPTRANSPORT_SWITCH_VERSION,   CPPTRANSPORT_HELP_VERSION)
-          (CPPTRANSPORT_SWITCH_MODELS,    CPPTRANSPORT_HELP_MODELS)
-          (CPPTRANSPORT_SWITCH_NO_COLOUR, CPPTRANSPORT_HELP_NO_COLOUR);
+          (CPPTRANSPORT_SWITCH_HELP,                                                                                         CPPTRANSPORT_HELP_HELP)
+          (CPPTRANSPORT_SWITCH_VERSION,                                                                                      CPPTRANSPORT_HELP_VERSION)
+          (CPPTRANSPORT_SWITCH_INCLUDE,          boost::program_options::value< std::vector< std::string > >()->composing(), CPPTRANSPORT_HELP_INCLUDE)
+          (CPPTRANSPORT_SWITCH_MODELS,                                                                                       CPPTRANSPORT_HELP_MODELS)
+          (CPPTRANSPORT_SWITCH_NO_COLOUR,                                                                                    CPPTRANSPORT_HELP_NO_COLOUR);
 
         boost::program_options::options_description configuration("Configuration options", width);
         configuration.add_options()
@@ -74,7 +75,7 @@ namespace transport
         job_options.add_options()
           (CPPTRANSPORT_SWITCH_CREATE,                                                                                       CPPTRANSPORT_HELP_CREATE)
           (CPPTRANSPORT_SWITCH_TASK,             boost::program_options::value< std::vector< std::string > >()->composing(), CPPTRANSPORT_HELP_TASK)
-          (CPPTRANSPORT_SWITCH_TAG,              boost::program_options::value< std::vector<std::string> >()->composing(),   CPPTRANSPORT_HELP_TAG)
+          (CPPTRANSPORT_SWITCH_TAG,              boost::program_options::value< std::vector< std::string > >()->composing(), CPPTRANSPORT_HELP_TAG)
           (CPPTRANSPORT_SWITCH_CHECKPOINT,       boost::program_options::value< int >(),                                     CPPTRANSPORT_HELP_CHECKPOINT)
           (CPPTRANSPORT_SWITCH_SEED,             boost::program_options::value< std::string >(),                             CPPTRANSPORT_HELP_SEED);
 
@@ -237,6 +238,9 @@ namespace transport
     void master_controller<number>::recognize_configuration_switches(boost::program_options::variables_map& option_map)
       {
         if(option_map.count(CPPTRANSPORT_SWITCH_VERBOSE_LONG)) this->arg_cache.set_verbose(true);
+
+        // add search paths if any were specified
+        if(option_map.count(CPPTRANSPORT_SWITCH_INCLUDE_LONG)) this->arg_cache.set_search_paths(option_map[CPPTRANSPORT_SWITCH_INCLUDE_LONG].as< std::vector<std::string> >());
 
         // process global capacity specification, if provided
         if(option_map.count(CPPTRANSPORT_SWITCH_CAPACITY))

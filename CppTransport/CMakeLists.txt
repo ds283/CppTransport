@@ -192,7 +192,11 @@ ADD_SUBDIRECTORY(test-target EXCLUDE_FROM_ALL)
 
 # install targets for CppTransport translator, cpptransport-templates, and header-only library/runtime API
 INSTALL(TARGETS CppTransport DESTINATION bin)
-INSTALL(DIRECTORY cpptransport-templates DESTINATION share)
+INSTALL(DIRECTORY cpptransport-templates DESTINATION share/cpptransport)
+INSTALL(DIRECTORY thirdparty/bootstrap DESTINATION share/cpptransport/HTML)
+INSTALL(DIRECTORY thirdparty/bootstrap-tab-history DESTINATION share/cpptransport/HTML)
+INSTALL(DIRECTORY thirdparty/jQuery DESTINATION share/cpptransport/HTML)
+INSTALL(DIRECTORY HTML_assets DESTINATION share/cpptransport/HTML)
 INSTALL(DIRECTORY transport-runtime-api DESTINATION include)
 INSTALL(FILES cmake/FindCppTransport.cmake DESTINATION share/cmake)
 
@@ -754,6 +758,10 @@ set(TRANSPORT_RUNTIME_API_REPORTING_FILES
   transport-runtime-api/reporting/content_group_data.h
   transport-runtime-api/reporting/HTML_report.h
   transport-runtime-api/reporting/unique_tags.h
+  transport-runtime-api/reporting/HTML_writer.h
+  transport-runtime-api/reporting/JavaScript_writer.h
+  transport-runtime-api/reporting/CSS_writer.h
+  transport-runtime-api/reporting/HTML_report_bundle.h
   )
 
 set(TRANSPORT_RUNTIME_API_REPOSITORY_DETAIL_FILES

@@ -9,11 +9,15 @@
 
 
 #include <string>
+#include <list>
+
+#include <algorithm>
 
 #include "transport-runtime-api/defaults.h"
 
 #include "boost/serialization/string.hpp"
 #include "boost/serialization/list.hpp"
+#include "boost/filesystem/operations.hpp"
 
 
 namespace transport
@@ -153,6 +157,18 @@ namespace transport
         plot_style get_plot_environment() const                   { return(this->plot_env); }
 
 
+        // SEARCH PATHS
+
+      public:
+
+        //! set environment search paths
+        template <typename Container>
+        void set_search_paths(const Container& path_set);
+
+        //! get search paths
+        const std::list< boost::filesystem::path > get_search_paths();
+
+
         // INTERNAL DATA
 
       private:
@@ -196,6 +212,11 @@ namespace transport
         //! plotting environemtn
         plot_style plot_env;
 
+        //! search paths for assets, eg. jQuery, bootstrap ...
+        //! have to use std::string internally since boost::filesystem::path won't serialize
+        std::list< std::string > search_paths;
+
+
         // enable boost::serialization support, and hence automated packing for transmission over MPI
         friend class boost::serialization::access;
 
@@ -215,6 +236,7 @@ namespace transport
             ar & pipe_capacity;
             ar & checkpoint_interval;
             ar & plot_env;
+            ar & search_paths;
           }
 
 	    };
@@ -247,7 +269,33 @@ namespace transport
       }
 
 
-	}   // namespace transport
+    template <typename Container>
+    void argument_cache::set_search_paths(const Container& path_set)
+      {
+        for(const std::string& path : path_set)
+          {
+            boost::filesystem::path p = path;
+
+            // if path is not absolute, make relative to current directory
+            if(!p.is_absolute())
+              {
+                p = boost::filesystem::absolute(p);
+              }
+
+            this->search_paths.emplace_back(p.string());
+          }
+      }
+
+
+    const std::list<boost::filesystem::path> argument_cache::get_search_paths()
+      {
+        std::list<boost::filesystem::path> list;
+        std::copy(this->search_paths.cbegin(), this->search_paths.cend(), std::back_inserter(list));
+        return list;
+      }
+
+
+  }   // namespace transport
 
 
 #endif //CPPTRANSPORT_ARGUMENT_CACHE_H

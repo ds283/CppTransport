@@ -17,6 +17,10 @@
 #define CPPTRANSPORT_SWITCH_REPO_LONG         "repo"
 #define CPPTRANSPORT_HELP_REPO                "specify repository path"
 
+#define CPPTRANSPORT_SWITCH_INCLUDE           "include,I"
+#define CPPTRANSPORT_SWITCH_INCLUDE_LONG      "include"
+#define CPPTRANSPORT_HELP_INCLUDE             "add specified path to search list"
+
 #define CPPTRANSPORT_SWITCH_TAG               "tag"
 #define CPPTRANSPORT_HELP_TAG                 "add tag"
 

@@ -105,6 +105,20 @@ namespace transport
       }
 
 
+    template <typename number>
+    std::string repository<number>::get_name() const
+      {
+        if(this->root_path.filename().string() == ".")
+          {
+            return this->root_path.parent_path().filename().string();
+          }
+        else
+          {
+            return this->root_path.filename().string();
+          }
+      }
+
+
     // TRANSACTIONS
 
 

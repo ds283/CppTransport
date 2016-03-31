@@ -40,7 +40,9 @@ constexpr double       CPPTRANSPORT_DEFAULT_KCONFIG_SEARCH_PRECISION   = (1E-5);
 constexpr auto         CPPTRANSPORT_DEFAULT_PYTHON_PATH                = "/usr/bin/python";
 
 constexpr auto         CPPTRANSPORT_HOME_ENV                           = "HOME";
+constexpr auto         CPPTRANSPORT_PATH_ENV                           = "CPPTRANSPORT_PATH";
 constexpr auto         CPPTRANSPORT_RUNTIME_CONFIG_FILE                = ".cpptransport_runtime";
+constexpr auto         CPPTRANSPORT_HTML_RESOURCE_DIRECTORY            = "HTML";
 
 constexpr auto         CPPTRANSPORT_DEFAULT_COMPLETION_UNSET           = "unset";
 
