@@ -774,7 +774,7 @@ namespace transport
         record->commit(mgr);
 
         // check whether all tasks on which this derived product depends are already in the database
-        typename std::vector<derivable_task<number>*> task_list;
+        typename std::list<derivable_task<number>*> task_list;
         d.get_task_list(task_list);
 
         for(derivable_task<number>* tk : task_list)

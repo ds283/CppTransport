@@ -186,7 +186,7 @@ namespace transport
 
         // INTEGRITY CHECK
 
-      public:   // have to be public so we can use std::bind
+      public:
 
         //! Check integrity for a twopf container
         void check_twopf_integrity_handler(integration_writer<number>& writer, integration_task<number>* tk);
@@ -203,14 +203,12 @@ namespace transport
         //! Check integrity for an fNL container
         void check_fNL_integrity_handler(postintegration_writer<number>& writer, postintegration_task<number>* tk);
 
-      public:
-
         //! Synchronize missing serial numbers between an integration writer and a postintegration writer
         void synchronize_missing_serials(integration_writer<number>& i_writer, postintegration_writer<number>& p_writer,
                                          integration_task<number>* i_tk, postintegration_task<number>* p_tk);
 
 
-        // CALCULATE MISSING SERIAL NUMBERS
+        // -- CALCULATE MISSING SERIAL NUMBERS
 
       protected:
 
@@ -229,7 +227,8 @@ namespace transport
         //! get missing serial numbers from a zeta threepf table; should be provided by implementation
         virtual std::list<unsigned int> get_missing_zeta_threepf_serials(postintegration_writer<number>& writer) = 0;
 
-        // DROP GROUPS OF SERIAL NUMBERS
+
+        // -- DROP GROUPS OF SERIAL NUMBERS
 
       protected:
 
@@ -256,7 +255,8 @@ namespace transport
         virtual void drop_initial_conditions_configurations(integration_writer<number>& writer, const std::list<unsigned int>& serials, const twopf_kconfig_database& db) = 0;
         virtual void drop_initial_conditions_configurations(integration_writer<number>& writer, const std::list<unsigned int>& serials, const threepf_kconfig_database& db) = 0;
 
-        // UTILITY FUNCTIONS
+
+        // -- INTEGRITY-CHECK UTILITY FUNCTIONS
 
       protected:
 
@@ -272,9 +272,10 @@ namespace transport
         std::list<unsigned int> map_twopf_to_threepf_serials(const std::list<unsigned int>& twopf_list, const threepf_kconfig_database& threepf_db);
 
 
-        // DATA PIPES AND DATA ACCESS
+        // DATA ACCESS VIA DATA PIPES
 
-        // CREATE
+
+        // -- CREATE
 
       public:
 
@@ -286,7 +287,8 @@ namespace transport
                                                                     datapipe_dispatch_function <number>& dispatcher,
                                                                     unsigned int worker, bool no_log = false) = 0;
 
-        // ATTACH
+
+        // -- ATTACH
 
       public:
 
@@ -303,7 +305,8 @@ namespace transport
         //! Detach an output_group_record from a pipe
         virtual void datapipe_detach(datapipe<number>* pipe) = 0;
 
-        // PULL
+
+        // -- PULL
 
       public:
 
@@ -388,6 +391,13 @@ namespace transport
         //! Pull a sample of k-configuration statistics from a datapipe
         virtual void pull_k_statistics_sample(datapipe<number>* pipe, const derived_data::SQL_query& query,
                                               std::vector<kconfiguration_statistics>& data) = 0;
+
+
+        // RAW DATA ACCESS -- NO USE OF DATAPIPE
+
+      public:
+
+        //! Read the worker information table
 
 
         // INTERNAL DATA

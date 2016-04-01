@@ -858,7 +858,7 @@ namespace transport
             kv.write(std::cout);
             this->force_newline();
 
-            typename std::vector< derivable_task<number>* > task_list;
+            typename std::list< derivable_task<number>* > task_list;
             rec.get_product()->get_task_list(task_list);
 
             if(!task_list.empty())

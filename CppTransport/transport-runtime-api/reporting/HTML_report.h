@@ -496,7 +496,7 @@ namespace transport
         void HTML_report::make_list_item_label(std::string label, HTML_node& parent)
           {
             HTML_node heading("h3", label);
-            heading.add_attribute("class", "list-group-item-heading");
+            heading.add_attribute("class", "list-group-item-heading lead");
 
             parent.add_element(heading);
           }
@@ -1057,7 +1057,7 @@ namespace transport
 
                 item.add_element(row1);
 
-                typename std::vector< derivable_task<number>* > task_list;
+                typename std::list< derivable_task<number>* > task_list;
                 rec.get_product()->get_task_list(task_list);
 
                 if(!task_list.empty())
