@@ -1166,7 +1166,7 @@ namespace transport
                 row5.add_attribute("class", "row");
                 this->make_data_element("Mean integration time", format_time(metadata.total_integration_time/metadata.total_configurations), row5);
                 this->make_data_element("Shortest integration time", format_time(metadata.global_min_integration_time), row5);
-                this->make_data_element("Longest integration_time", format_time(metadata.global_max_integration_time), row5);
+                this->make_data_element("Longest integration time", format_time(metadata.global_max_integration_time), row5);
 
                 HTML_node row6("div");
                 row6.add_attribute("class", "row");
@@ -1291,9 +1291,10 @@ namespace transport
 
                         if(extension.string() == ".pdf")
                           {
-                            // Safari will display PDFs in an <img> tag, but Chrome and Firefox will not
+                            // Safari will display PDFs in an <img> tag, but Chrome and Firefox will not so we choose to emebed
+                            // as PDF objects instead
                             HTML_node pdf("div");
-                            pdf.add_attribute("style", "width: 700px; height: 600px");
+                            pdf.add_attribute("class", "pdfproduct topskip");
 
                             HTML_node obj("object");
                             obj.add_attribute("data", relative_asset_location.string()).add_attribute("type", "application/pdf");
@@ -1311,15 +1312,26 @@ namespace transport
                             img.add_attribute("class", "img-responsive imgproduct").add_attribute("src", relative_asset_location.string()).add_attribute("alt", filename.string());
                             it.add_element(img);
                           }
+                        else if(extension.string() == ".txt")
+                          {
+                            HTML_node well("div");
+                            well.add_attribute("class", "well topskip");
+                            HTML_node frame("iframe", filename.string());
+                            frame.add_attribute("src", relative_asset_location.string()).add_attribute("class", "iframeproduct");
+                            well.add_element(frame);
+                            it.add_element(well);
+                          }
                         else
                           {
-                            // TODO: fixme
+                            HTML_node well("div", "Cannot embed this content");
+                            well.add_attribute("class", "well");
+                            it.add_element(well);
                           }
 
                         typename derived_product_db<number>::type::const_iterator t = product_db.find(item.get_parent_product());
 
                         HTML_node row1("div");
-                        row1.add_attribute("class", "row");
+                        row1.add_attribute("class", "row topskip");
 
                         if(t != product_db.end())
                           {
@@ -1333,7 +1345,7 @@ namespace transport
                           }
                         this->make_data_element("Created", boost::posix_time::to_simple_string(item.get_creation_time()), row1);
 
-                        HTML_node tg("div");
+                        HTML_node tg("div", "Tags");
                         tg.add_attribute("class", "col-md-4");
                         this->compose_tag_list(item.get_tags(), tg);
                         row1.add_element(tg);
