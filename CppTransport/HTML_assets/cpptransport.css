@@ -2,13 +2,14 @@ body {
     padding-top: 65px;
 }
 
-.topskip {
-    margin-top: 20px;
+/* restyle link buttons to remove surrounding padding and align as if they were text */
+.btn-link {
+    vertical-align: baseline;
+    padding: 0;
 }
 
-.topbottomskip {
+.topskip {
     margin-top: 20px;
-    margin-bottom: 10px;
 }
 
 .imgproduct {

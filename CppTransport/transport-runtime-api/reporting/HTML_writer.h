@@ -154,9 +154,6 @@ namespace transport
             //! add an attribute with value
             HTML_node& add_attribute(std::string name, std::string value);
 
-            //! add an attribute without value
-            HTML_node& add_attribute(std::string name);
-
             //! add an element to this node's content
             HTML_node& add_element(const HTML_element& element);
 
@@ -201,16 +198,6 @@ namespace transport
             // insertion will have no effect if an existing attribute with the same name exists;
             // in that case, the earliest provided attribute is used
             this->attributes.insert(std::make_pair(name, value));
-
-            return(*this);
-          }
-
-
-        HTML_node& HTML_node::add_attribute(std::string name)
-          {
-            // insertion will have no effect if an existing attribute with the same name exists;
-            // in that case, the earliest provided attribute is used
-            this->attributes.insert(std::make_pair(name, std::string()));
 
             return(*this);
           }

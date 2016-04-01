@@ -8,6 +8,7 @@
 
 
 #include "transport-runtime-api/repository/repository.h"
+#include "transport-runtime-api/derived-products/derived_product_type.h"
 
 #include "transport-runtime-api/reporting/content_group_data.h"
 #include "transport-runtime-api/reporting/HTML_report_bundle.h"
@@ -188,10 +189,7 @@ namespace transport
             HTML_node make_content_menu_tab(const DatabaseType& db, HTML_report_bundle<number>& bundle, std::string name);
 
             //! write a grid data element
-            void make_data_element(std::string l, std::string v, HTML_node& parent, std::string type="label-default", std::string cls="col-md-4");
-
-            //! write an empty grid data element
-            void make_empty_data_element(HTML_node& parent, std::string cls="col-md-4");
+            void make_data_element(std::string l, std::string v, HTML_node& parent);
 
             //! make a list item heading
             void make_list_item_label(std::string label, HTML_node& parent);
@@ -472,33 +470,29 @@ namespace transport
           }
 
 
-        void HTML_report::make_data_element(std::string l, std::string v, HTML_node& parent, std::string type, std::string cls)
+        void HTML_report::make_data_element(std::string l, std::string v, HTML_node& parent)
           {
-            HTML_node item("div", l);
-            item.add_attribute("class", cls);
+            HTML_node label("dt", l);
 
-            HTML_node value("span", v);
-            value.add_attribute("class", "label " + type);
-            item.add_element(value);
+            HTML_node value("dd", v);
 
-            parent.add_element(item);
-          }
-
-
-        void HTML_report::make_empty_data_element(HTML_node& parent, std::string cls)
-          {
-            HTML_node item("div");
-            item.add_attribute("class", cls);
-            parent.add_element(item);
+            parent.add_element(label).add_element(value);
           }
 
 
         void HTML_report::make_list_item_label(std::string label, HTML_node& parent)
           {
-            HTML_node heading("h3", label);
-            heading.add_attribute("class", "list-group-item-heading lead");
+            HTML_node panel("div");
+            panel.add_attribute("class", "panel panel-primary");
 
-            parent.add_element(heading);
+            HTML_node header("div");
+            header.add_attribute("class", "panel-heading");
+
+            HTML_node text("h4", label);
+
+            header.add_element(text);
+            panel.add_element(header);
+            parent.add_element(panel);
           }
 
 
@@ -524,7 +518,7 @@ namespace transport
             HTML_node list("div");
             list.add_attribute("class", "list-group");
 
-            // step through all packages, writing them out as list elements elements
+            // step through all packages, writing them out as list elements
             for(const typename package_db<number>::value_type& pkg : db)
               {
                 const package_record<number>& rec = *pkg.second;
@@ -536,35 +530,72 @@ namespace transport
                 // write generic repository information for this record
                 this->write_generic_record(rec, item);
 
-                HTML_node row1("div");
-                row1.add_attribute("class", "row");
-                this->make_data_element("Model", rec.get_ics().get_model()->get_name(), row1);
-                this->make_data_element("Authors", rec.get_ics().get_model()->get_author(), row1);
-                this->make_data_element("Citation data", rec.get_ics().get_model()->get_tag(), row1);
+                HTML_node panel("div");
+                panel.add_attribute("class", "panel panel-default");
+                
+                HTML_node panel_heading("div", "Model, parameters and initial conditions");
+                panel_heading.add_attribute("class", "panel-heading");
 
-                HTML_node row2("div");
-                row2.add_attribute("class", "row");
-                this->make_data_element("Initial time", boost::lexical_cast<std::string>(rec.get_ics().get_N_initial()), row2);
-                this->make_data_element("Horizon-crossing time", boost::lexical_cast<std::string>(rec.get_ics().get_N_horizon_crossing()), row2);
-                this->make_empty_data_element(row2);
+                HTML_node panel_body("div");
+                panel_body.add_attribute("class", "panel-body");
+                
+                HTML_node row("div");
+                row.add_attribute("class", "row");
+                
+                HTML_node col1("div");
+                col1.add_attribute("class", "col-md-4");
+                HTML_node col1_list("dl");
+                col1_list.add_attribute("class", "dl-horizontal");
 
-                HTML_node row3("div");
-                row3.add_attribute("class", "row");
+                this->make_data_element("Model",
+                                        rec.get_ics().get_model()->get_name(), col1_list);
+                this->make_data_element("Authors",
+                                        rec.get_ics().get_model()->get_author(), col1_list);
+
+                col1.add_element(col1_list);
+
+                HTML_node col2("div");
+                col2.add_attribute("class", "col-md-4");
+                HTML_node col2_list("dl");
+                col2_list.add_attribute("class", "dl-horizontal");
+
+                this->make_data_element("Initial time",
+                                        boost::lexical_cast<std::string>(rec.get_ics().get_N_initial()), col2_list);
+                this->make_data_element("Horizon-crossing time",
+                                        boost::lexical_cast<std::string>(rec.get_ics().get_N_horizon_crossing()),
+                                        col2_list);
+
+                col2.add_element(col2_list);
+
+                HTML_node col3("div");
+                col3.add_attribute("class", "col-md-4");
+                HTML_node col3_list("dl");
+                col3_list.add_attribute("class", "dl-horizontal");
+
+                this->make_data_element("Citation data",
+                                        rec.get_ics().get_model()->get_tag(), col3_list);
+
+                col3.add_element(col3_list);
+
+                row.add_element(col1).add_element(col2).add_element(col3);
+                panel_body.add_element(row);
+                panel.add_element(panel_heading).add_element(panel_body);
+                item.add_element(panel);
 
                 HTML_node params_column("div");
-                params_column.add_attribute("class", "col-md-6");
+                params_column.add_attribute("class", "col-md-6 topskip");
 
                 const parameters<number>& params = rec.get_ics().get_params();
                 const std::vector<number>& param_vec = params.get_vector();
                 const std::vector<std::string>& param_names = rec.get_ics().get_model()->get_param_names();
 
-                HTML_node params_label("p");
-                HTML_node params_label_heading("h4", "Parameter values");
-                params_label_heading.add_attribute("class", "list-group-item-text topskip");
-                params_label.add_element(params_label_heading);
+                HTML_node params_panel("div");
+                params_panel.add_attribute("class", "panel panel-info");
+                HTML_node params_panel_heading("div", "Parameter values");
+                params_panel_heading.add_attribute("class", "panel-heading");
 
                 HTML_node params_table("table");
-                params_table.add_attribute("class", "table table-striped");
+                params_table.add_attribute("class", "table table-striped table-condensed");
                 HTML_node params_table_body("tbody");
 
                 // add separate row for value of Planck mass
@@ -579,7 +610,7 @@ namespace transport
 
                 for(unsigned int i = 0; i < param_vec.size() && i < param_names.size(); ++i)
                   {
-                    HTML_node row("tr");
+                    HTML_node table_row("tr");
 
                     HTML_node label("td");
                     HTML_string label_text(param_names[i]);
@@ -588,31 +619,35 @@ namespace transport
 
                     HTML_node value("td", boost::lexical_cast<std::string>(param_vec[i]));
 
-                    row.add_element(label).add_element(value);
-                    params_table_body.add_element(row);
+                    table_row.add_element(label).add_element(value);
+                    params_table_body.add_element(table_row);
                   }
 
                 params_table.add_element(params_table_body);
-                params_column.add_element(params_label).add_element(params_table);
+                params_panel.add_element(params_panel_heading).add_element(params_table);
+                params_column.add_element(params_panel);
+
+                HTML_node data_grid("div");
+                data_grid.add_attribute("class", "row");
 
                 HTML_node ics_column("div");
-                ics_column.add_attribute("class", "col-md-6");
+                ics_column.add_attribute("class", "col-md-6 topskip");
 
                 const std::vector<number>& ics_vec = rec.get_ics().get_vector();
                 const std::vector<std::string>& coord_names = rec.get_ics().get_model()->get_state_names();
 
-                HTML_node ics_label("p");
-                HTML_node ics_label_heading("h4", "Initial conditions");
-                ics_label_heading.add_attribute("class", "list-group-item-text topskip");
-                ics_label.add_element(ics_label_heading);
+                HTML_node ics_panel("div");
+                ics_panel.add_attribute("class", "panel panel-info");
+                HTML_node ics_panel_heading("div", "Initial conditions");
+                ics_panel_heading.add_attribute("class", "panel-heading");
 
                 HTML_node ics_table("table");
-                ics_table.add_attribute("class", "table table-striped");
+                ics_table.add_attribute("class", "table table-striped table-condensed");
                 HTML_node ics_table_body("tbody");
 
                 for(unsigned int i = 0; i < ics_vec.size() && i < coord_names.size(); ++i)
                   {
-                    HTML_node row("tr");
+                    HTML_node table_row("tr");
 
                     HTML_node label("td");
                     HTML_string label_text(coord_names[i]);
@@ -621,16 +656,16 @@ namespace transport
 
                     HTML_node value("td", boost::lexical_cast<std::string>(ics_vec[i]));
 
-                    row.add_element(label).add_element(value);
-                    ics_table_body.add_element(row);
+                    table_row.add_element(label).add_element(value);
+                    ics_table_body.add_element(table_row);
                   }
 
                 ics_table.add_element(ics_table_body);
-                ics_column.add_element(ics_label).add_element(ics_table);
+                ics_panel.add_element(ics_panel_heading).add_element(ics_table);
+                ics_column.add_element(ics_panel);
 
-                row3.add_element(params_column).add_element(ics_column);
-
-                item.add_element(row1).add_element(row2).add_element(row3);
+                data_grid.add_element(params_column).add_element(ics_column);
+                item.add_element(data_grid);
 
                 list.add_element(item);
               }
@@ -665,18 +700,54 @@ namespace transport
                     // write generic repository information for this record
                     this->write_generic_record(rec, item);
 
-                    HTML_node row1("div");
-                    row1.add_attribute("class", "row");
-                    this->make_data_element("Task type", task_type_to_string(rec.get_task_type()), row1);
+                    HTML_node panel("div");
+                    panel.add_attribute("class", "panel panel-default");
 
-                    HTML_node pkg("div", "Uses package");
-                    pkg.add_attribute("class", "col-md-4");
-                    this->write_package_button(bundle, rec.get_task()->get_ics().get_name(), pkg);
-                    row1.add_element(pkg);
+                    HTML_node panel_heading("div", "Task information");
+                    panel_heading.add_attribute("class", "panel-heading");
 
-                    this->make_data_element("k-config database", rec.get_relative_kconfig_database_path().string(), row1);
+                    HTML_node panel_body("div");
+                    panel_body.add_attribute("class", "panel-body");
 
-                    item.add_element(row1);
+                    HTML_node row("div");
+                    row.add_attribute("class", "row");
+
+                    HTML_node col1("div");
+                    col1.add_attribute("class", "col-md-4");
+                    HTML_node col1_list("dl");
+                    col1_list.add_attribute("class", "dl-horizontal");
+
+                    this->make_data_element("Task type",
+                                            task_type_to_string(rec.get_task_type()), col1_list);
+
+                    col1.add_element(col1_list);
+
+                    HTML_node col2("div");
+                    col2.add_attribute("class", "col-md-4");
+                    HTML_node col2_list("dl");
+                    col2_list.add_attribute("class", "dl-horizontal");
+
+                    HTML_node pkg_dt("dt", "Uses package");
+                    HTML_node pkg_dd("dd");
+                    this->write_package_button(bundle, rec.get_task()->get_ics().get_name(), pkg_dd);
+                    col2_list.add_element(pkg_dt).add_element(pkg_dd);
+
+                    col2.add_element(col2_list);
+
+                    HTML_node col3("div");
+                    col3.add_attribute("class", "col-md-4");
+                    HTML_node col3_list("dl");
+                    col3_list.add_attribute("class", "dl-horizontal");
+
+                    this->make_data_element("k-config database",
+                                            rec.get_relative_kconfig_database_path().string(), col3_list);
+
+                    col3.add_element(col3_list);
+
+                    row.add_element(col1).add_element(col2).add_element(col3);
+                    panel_body.add_element(row);
+                    panel.add_element(panel_heading).add_element(panel_body);
+                    item.add_element(panel);
 
                     // write table of output groups, if any are present
                     const std::list<std::string>& output_groups = rec.get_output_groups();
@@ -691,7 +762,7 @@ namespace transport
                         group_list.add_attribute("id", tag + "groups").add_attribute("class", "collapse");
 
                         HTML_node table("table");
-                        table.add_attribute("class", "table table-striped");
+                        table.add_attribute("class", "table table-striped table-condensed");
 
                         HTML_node head("thead");
                         HTML_node head_row("tr");
@@ -783,17 +854,47 @@ namespace transport
                     // write generic repository information for this record
                     this->write_generic_record(rec, item);
 
-                    HTML_node row1("div");
-                    row1.add_attribute("class", "row");
-                    this->make_data_element("Task type", task_type_to_string(rec.get_task_type()), row1);
+                    HTML_node panel("div");
+                    panel.add_attribute("class", "panel panel-default");
 
-                    HTML_node parent_tk("div", "Parent task");
-                    parent_tk.add_attribute("class", "col-md-4");
-                    this->write_task_button(bundle, rec.get_task()->get_parent_task()->get_name(), parent_tk);
-                    row1.add_element(parent_tk);
+                    HTML_node panel_heading("div", "Task information");
+                    panel_heading.add_attribute("class", "panel-heading");
 
-                    this->make_empty_data_element(row1);
-                    item.add_element(row1);
+                    HTML_node panel_body("div");
+                    panel_body.add_attribute("class", "panel-body");
+
+                    HTML_node row("div");
+                    row.add_attribute("class", "row");
+
+                    HTML_node col1("div");
+                    col1.add_attribute("class", "col-md-4");
+                    HTML_node col1_list("dl");
+                    col1_list.add_attribute("class", "dl-horizontal");
+
+                    this->make_data_element("Task type",
+                                            task_type_to_string(rec.get_task_type()), col1_list);
+
+                    col1.add_element(col1_list);
+
+                    HTML_node col2("div");
+                    col2.add_attribute("class", "col-md-4");
+                    HTML_node col2_list("dl");
+                    col2_list.add_attribute("class", "dl-horizontal");
+
+                    HTML_node parent_tk_dt("dt", "Parent task");
+                    HTML_node parent_tk_dd("dd");
+                    this->write_task_button(bundle, rec.get_task()->get_parent_task()->get_name(), parent_tk_dd);
+                    col2_list.add_element(parent_tk_dt).add_element(parent_tk_dd);
+
+                    col2.add_element(col2_list);
+
+                    HTML_node col3("div");
+                    col3.add_attribute("class", "col-md-4");
+
+                    row.add_element(col1).add_element(col2).add_element(col3);
+                    panel_body.add_element(row);
+                    panel.add_element(panel_heading).add_element(panel_body);
+                    item.add_element(panel);
 
                     // write table of output groups, if any are present
                     const std::list<std::string>& output_groups = rec.get_output_groups();
@@ -809,7 +910,7 @@ namespace transport
                         group_list.add_attribute("id", tag + "groups").add_attribute("class", "collapse");
 
                         HTML_node table("table");
-                        table.add_attribute("class", "table table-striped");
+                        table.add_attribute("class", "table table-striped table-condensed");
 
                         HTML_node head("thead");
                         HTML_node head_row("tr");
@@ -830,7 +931,7 @@ namespace transport
                           {
                             postintegration_content_db::const_iterator t = content_db.find(group);
 
-                            HTML_node row("tr");
+                            HTML_node table_row("tr");
 
                             if(t != content_db.end())
                               {
@@ -842,7 +943,7 @@ namespace transport
                                 HTML_node complete("td", (t->second->get_payload().is_failed() ? "No" : "Yes"));
                                 HTML_node size("td", format_memory(t->second->get_payload().get_size()));
 
-                                row.add_element(name).add_element(created).add_element(edited).add_element(complete).add_element(size);
+                                table_row.add_element(name).add_element(created).add_element(edited).add_element(complete).add_element(size);
                               }
                             else
                               {
@@ -856,10 +957,10 @@ namespace transport
                                 null_label.add_attribute("class", "label label-danger");
                                 null.add_element(null_label);
 
-                                row.add_element(name).add_element(null).add_element(null).add_element(null).add_element(null);
+                                table_row.add_element(name).add_element(null).add_element(null).add_element(null).add_element(null);
                               }
 
-                            body.add_element(row);
+                            body.add_element(table_row);
                           }
 
                         table.add_element(head).add_element(body);
@@ -914,7 +1015,7 @@ namespace transport
                         group_list.add_attribute("id", tag + "elements").add_attribute("class", "collapse");
 
                         HTML_node table("table");
-                        table.add_attribute("class", "table table-striped");
+                        table.add_attribute("class", "table table-striped table-condensed");
 
                         HTML_node head("thead");
                         HTML_node head_row("tr");
@@ -965,7 +1066,7 @@ namespace transport
                         group_list.add_attribute("id", tag + "groups").add_attribute("class", "collapse");
 
                         HTML_node table("table");
-                        table.add_attribute("class", "table table-striped");
+                        table.add_attribute("class", "table table-striped table-condensed");
 
                         HTML_node head("thead");
                         HTML_node head_row("tr");
@@ -1049,13 +1150,46 @@ namespace transport
                 // write generic repository information for this record
                 this->write_generic_record(rec, item);
 
-                HTML_node row1("div");
-                row1.add_attribute("class", "row");
-                this->make_data_element("Product type", derived_data::derived_product_type_to_string(rec.get_product()->get_type()), row1);
-                this->make_data_element("Filename", rec.get_product()->get_filename().string(), row1);
-                this->make_empty_data_element(row1);
+                HTML_node panel("div");
+                panel.add_attribute("class", "panel panel-default");
 
-                item.add_element(row1);
+                HTML_node panel_heading("div", "Derived product information");
+                panel_heading.add_attribute("class", "panel-heading");
+
+                HTML_node panel_body("div");
+                panel_body.add_attribute("class", "panel-body");
+
+                HTML_node row("div");
+                row.add_attribute("class", "row");
+
+                HTML_node col1("div");
+                col1.add_attribute("class", "col-md-4");
+                HTML_node col1_list("dl");
+                col1_list.add_attribute("class", "dl-horizontal");
+
+                this->make_data_element("Product type",
+                                        derived_data::derived_product_type_to_string(rec.get_product()->get_type()),
+                                        col1_list);
+
+                col1.add_element(col1_list);
+
+                HTML_node col2("div");
+                col2.add_attribute("class", "col-md-4");
+                HTML_node col2_list("dl");
+                col2_list.add_attribute("class", "dl-horizontal");
+
+                this->make_data_element("Filename",
+                                        rec.get_product()->get_filename().string(), col2_list);
+
+                col2.add_element(col2_list);
+
+                HTML_node col3("div");
+                col3.add_attribute("class", "col-md-4");
+
+                row.add_element(col1).add_element(col2).add_element(col3);
+                panel_body.add_element(row);
+                panel.add_element(panel_heading).add_element(panel_body);
+                item.add_element(panel);
 
                 typename std::list< derivable_task<number>* > task_list;
                 rec.get_product()->get_task_list(task_list);
@@ -1071,7 +1205,7 @@ namespace transport
                     group_list.add_attribute("id", tag + "tasks").add_attribute("class", "collapse");
 
                     HTML_node table("table");
-                    table.add_attribute("class", "table table-striped");
+                    table.add_attribute("class", "table table-striped table-condensed");
 
                     HTML_node head("thead");
                     HTML_node head_row("tr");
@@ -1085,13 +1219,13 @@ namespace transport
 
                     for(derivable_task<number>* tk : task_list)
                       {
-                        HTML_node row("tr");
+                        HTML_node table_row("tr");
 
                         HTML_node name("td");
                         this->write_task_button(bundle, tk->get_name(), name);
 
-                        row.add_element(name);
-                        body.add_element(row);
+                        table_row.add_element(name);
+                        body.add_element(table_row);
                       }
 
                     table.add_element(head).add_element(body);
@@ -1130,51 +1264,93 @@ namespace transport
 
                 const integration_payload& payload = rec.get_payload();
 
-                HTML_node properties_label("p");
-                HTML_node properties_heading("h4", "Properties");
-                properties_heading.add_attribute("class", "list-group-item-text topskip");
-                properties_label.add_element(properties_heading);
+                HTML_node panel("div");
+                panel.add_attribute("class", "panel panel-default");
 
-                HTML_node row1("div");
-                row1.add_attribute("class", "row");
-                this->make_data_element("Container", payload.get_container_path().string(), row1, "label-default", "col-md-12");
+                HTML_node panel_heading("div", "Properties");
+                panel_heading.add_attribute("class", "panel-heading");
 
-                HTML_node row2("div");
-                row2.add_attribute("class", "row");
-                this->make_data_element("Complete", (payload.is_failed() ? "No" : "Yes"), row2);
-                this->make_data_element("Workgroup", boost::lexical_cast<std::string>(payload.get_workgroup_number()), row2);
-                HTML_node seeded("div", "Seeded");
-                seeded.add_attribute("class", "col-md-4");
-                this->write_seeded(bundle, payload, seeded);
-                row2.add_element(seeded);
+                HTML_node panel_body("div");
+                panel_body.add_attribute("class", "panel-body");
 
-                HTML_node row3("div");
-                row3.add_attribute("class", "row");
-                this->make_data_element("Statistics", (payload.has_statistics() ? "Yes" : "No"), row3);
-                this->make_data_element("Initial conditions", (payload.has_initial_conditions() ? "Yes" : "No"), row3);
-                this->make_data_element("Size", format_memory(payload.get_size()), row3);
+                HTML_node ctr_row("div");
+                ctr_row.add_attribute("class", "row");
+                HTML_node ctr_col("div");
+                ctr_col.add_attribute("class", "col-md-12");
+                HTML_node ctr_list("dl");
+                ctr_list.add_attribute("class", "dl-horizontal");
+
+                this->make_data_element("Container",
+                                        payload.get_container_path().string(), ctr_list);
 
                 const integration_metadata& metadata = payload.get_metadata();
 
-                HTML_node row4("div");
-                row4.add_attribute("class", "row");
-                this->make_data_element("Wallclock time", format_time(metadata.total_wallclock_time), row4);
-                this->make_data_element("Total time", format_time(metadata.total_integration_time), row4);
-                this->make_data_element("Configurations", boost::lexical_cast<std::string>(metadata.total_configurations), row4);
+                HTML_node row("div");
+                row.add_attribute("class", "row");
 
-                HTML_node row5("div");
-                row5.add_attribute("class", "row");
-                this->make_data_element("Mean integration time", format_time(metadata.total_integration_time/metadata.total_configurations), row5);
-                this->make_data_element("Shortest integration time", format_time(metadata.global_min_integration_time), row5);
-                this->make_data_element("Longest integration time", format_time(metadata.global_max_integration_time), row5);
+                HTML_node col1("div");
+                col1.add_attribute("class", "col-md-4");
+                HTML_node col1_list("dl");
+                col1_list.add_attribute("class", "dl-horizontal");
 
-                HTML_node row6("div");
-                row6.add_attribute("class", "row");
-                this->make_data_element("Failures", boost::lexical_cast<std::string>(metadata.total_failures), row6);
-                this->make_empty_data_element(row6);
-                this->make_empty_data_element(row6);
+                this->make_data_element("Complete",
+                                        (payload.is_failed() ? "No" : "Yes"), col1_list);
+                this->make_data_element("Workgroup",
+                                        boost::lexical_cast<std::string>(payload.get_workgroup_number()), col1_list);
+                this->make_data_element("Wallclock time",
+                                        format_time(metadata.total_wallclock_time), col1_list);
+                this->make_data_element("Total time",
+                                        format_time(metadata.total_integration_time), col1_list);
+                this->make_data_element("Failures",
+                                        boost::lexical_cast<std::string>(metadata.total_failures), col1_list);
 
-                anchor.add_element(properties_label).add_element(row1).add_element(row2).add_element(row3).add_element(row4).add_element(row5).add_element(row6);
+                col1.add_element(col1_list);
+
+                HTML_node col2("div");
+                col2.add_attribute("class", "col-md-4");
+                HTML_node col2_list("dl");
+                col2_list.add_attribute("class", "dl-horizontal");
+
+                HTML_node seeded_dt("dt", "Seeded");
+                HTML_node seeded_dd("dd");
+                this->write_seeded(bundle, payload, seeded_dd);
+                col2_list.add_element(seeded_dt).add_element(seeded_dd);
+
+                this->make_data_element("Statistics",
+                                        (payload.has_statistics() ? "Yes" : "No"), col2_list);
+                this->make_data_element("Initial conditions",
+                                        (payload.has_initial_conditions() ? "Yes" : "No"), col2_list);
+                this->make_data_element("Configurations",
+                                        boost::lexical_cast<std::string>(metadata.total_configurations), col2_list);
+
+                col2.add_element(col2_list);
+
+                HTML_node col3("div");
+                col3.add_attribute("class", "col-md-4");
+                HTML_node col3_list("dl");
+                col3_list.add_attribute("class", "dl-horizontal");
+
+                this->make_data_element("Size",
+                                        format_memory(payload.get_size()), col3_list);
+                this->make_data_element("Shortest integration",
+                                        format_time(metadata.global_min_integration_time), col3_list);
+                this->make_data_element("Longest integration",
+                                        format_time(metadata.global_max_integration_time), col3_list);
+                this->make_data_element("Mean integration",
+                                        format_time(metadata.total_integration_time / metadata.total_configurations),
+                                        col3_list);
+
+                col3.add_element(col3_list);
+
+                ctr_col.add_element(ctr_list);
+                ctr_row.add_element(ctr_col);
+
+                row.add_element(col1).add_element(col2).add_element(col3);
+
+                panel_body.add_element(ctr_row).add_element(row);
+                panel.add_element(panel_heading).add_element(panel_body);
+
+                anchor.add_element(panel);
                 list.add_element(anchor);
                 pane.add_element(list);
                 parent.add_element(pane);
@@ -1206,33 +1382,72 @@ namespace transport
 
                 const postintegration_payload& payload = rec.get_payload();
 
-                HTML_node properties_label("p");
-                HTML_node properties_heading("h4", "Properties");
-                properties_heading.add_attribute("class", "list-group-item-text topskip");
-                properties_label.add_element(properties_heading);
+                HTML_node panel("div");
+                panel.add_attribute("class", "panel panel-default");
 
-                HTML_node row1("div");
-                row1.add_attribute("class", "row");
-                this->make_data_element("Container", payload.get_container_path().string(), row1, "label-default", "col-md-12");
+                HTML_node panel_heading("div", "Properties");
+                panel_heading.add_attribute("class", "panel-heading");
 
-                HTML_node row2("div");
-                row2.add_attribute("class", "row");
-                this->make_data_element("Complete", (payload.is_failed() ? "No" : "Yes"), row2);
-                HTML_node pt("div", "Parent");
-                pt.add_attribute("class", "col-md-4");
-                this->write_content_button(bundle, payload.get_parent_group(), pt);
-                HTML_node seeded("div", "Seeded");
-                seeded.add_attribute("class", "col-md-4");
-                this->write_seeded(bundle, payload, seeded);
-                row2.add_element(pt).add_element(seeded);
+                HTML_node panel_body("div");
+                panel_body.add_attribute("class", "panel-body");
 
-                HTML_node row3("div");
-                row3.add_attribute("class", "row");
-                this->make_data_element("Size", format_memory(payload.get_size()), row3);
-                this->make_empty_data_element(row3);
-                this->make_empty_data_element(row3);
+                HTML_node ctr_row("div");
+                ctr_row.add_attribute("class", "row");
+                HTML_node ctr_col("div");
+                ctr_col.add_attribute("class", "col-md-12");
+                HTML_node ctr_list("dl");
+                ctr_list.add_attribute("class", "dl-horizontal");
 
-                anchor.add_element(properties_label).add_element(row1).add_element(row2).add_element(row3);
+                this->make_data_element("Container", payload.get_container_path().string(), ctr_list);
+
+                HTML_node row("div");
+                row.add_attribute("class", "row");
+
+                HTML_node col1("div");
+                col1.add_attribute("class", "col-md-4");
+                HTML_node col1_list("dl");
+                col1_list.add_attribute("class", "dl-horizontal");
+
+                this->make_data_element("Complete",
+                                        (payload.is_failed() ? "No" : "Yes"), col1_list);
+                this->make_data_element("Size",
+                                        format_memory(payload.get_size()), col1_list);
+
+                col1.add_element(col1_list);
+
+                HTML_node col2("div");
+                col2.add_attribute("class", "col-md-4");
+                HTML_node col2_list("dl");
+                col2_list.add_attribute("class", "dl-horizontal");
+
+                HTML_node parent_dt("dt", "Parent");
+                HTML_node parent_dd("dd");
+                this->write_content_button(bundle, payload.get_parent_group(), parent_dd);
+                col2_list.add_element(parent_dt).add_element(parent_dd);
+
+                col2.add_element(col2_list);
+
+                HTML_node col3("div");
+                col3.add_attribute("class", "col-md-4");
+                HTML_node col3_list("dl");
+                col3_list.add_attribute("class", "dl-horizontal");
+
+                HTML_node seeded_dt("dt", "Seeded");
+                HTML_node seeded_dd("dd");
+                this->write_seeded(bundle, payload, seeded_dd);
+                col3_list.add_element(seeded_dt).add_element(seeded_dd);
+
+                col3.add_element(col3_list);
+
+                ctr_col.add_element(ctr_list);
+                ctr_row.add_element(ctr_col);
+
+                row.add_element(col1).add_element(col2).add_element(col3);
+
+                panel_body.add_element(ctr_row).add_element(row);
+                panel.add_element(panel_heading).add_element(panel_body);
+
+                anchor.add_element(panel);
                 list.add_element(anchor);
                 pane.add_element(list);
                 parent.add_element(pane);
@@ -1283,7 +1498,7 @@ namespace transport
                         HTML_node it("li");
                         it.add_attribute("href", "#").add_attribute("class", "list-group-item").add_attribute("onclick", "return false;");
                         HTML_node title("h4", filename.string());
-                        title.add_attribute("class", "list-group-item-text topskip");
+                        title.add_attribute("class", "list-group-item-text lead");
                         it.add_element(title);
 
                         boost::filesystem::path abs_product_location = rec.get_abs_output_path() / filename;
@@ -1330,30 +1545,70 @@ namespace transport
 
                         typename derived_product_db<number>::type::const_iterator t = product_db.find(item.get_parent_product());
 
-                        HTML_node row1("div");
-                        row1.add_attribute("class", "row topskip");
+                        HTML_node panel("div");
+                        panel.add_attribute("class", "panel panel-default topskip");
+
+                        HTML_node panel_heading("div", "Properties");
+                        panel_heading.add_attribute("class", "panel-heading");
+
+                        HTML_node panel_body("div");
+                        panel_body.add_attribute("class", "panel-body");
+
+                        HTML_node row("div");
+                        row.add_attribute("class", "row");
+
+                        HTML_node col1("div");
+                        col1.add_attribute("class", "col-md-4");
+                        HTML_node col1_list("dl");
+                        col1_list.add_attribute("class", "dl-horizontal");
 
                         if(t != product_db.end())
                           {
-                            this->make_data_element("Type", derived_data::derived_product_type_to_string(t->second->get_product()->get_type()), row1);
+                            this->make_data_element("Type", derived_data::derived_product_type_to_string(t->second->get_product()->get_type()), col1_list);
                           }
                         else
                           {
+                            HTML_node null_dt("dt", "Type");
+                            HTML_node null_dd("dd");
                             HTML_node null_label("span", "NULL");
                             null_label.add_attribute("class", "label label-danger");
-                            row1.add_element(null_label);
+                            null_dd.add_element(null_label);
+                            col1_list.add_element(null_dt).add_element(null_dd);
                           }
-                        this->make_data_element("Created", boost::posix_time::to_simple_string(item.get_creation_time()), row1);
 
-                        HTML_node tg("div", "Tags");
-                        tg.add_attribute("class", "col-md-4");
-                        this->compose_tag_list(item.get_tags(), tg);
-                        row1.add_element(tg);
+                        col1.add_element(col1_list);
 
-                        it.add_element(row1);
+                        HTML_node col2("div");
+                        col2.add_attribute("class", "col-md-4");
+                        HTML_node col2_list("dl");
+                        col2_list.add_attribute("class", "dl-horizontal");
+
+                        this->make_data_element("Created", boost::posix_time::to_simple_string(item.get_creation_time()), col2_list);
+
+                        col2.add_element(col2_list);
+
+                        HTML_node col3("div");
+                        col3.add_attribute("class", "col-md-4");
+                        HTML_node col3_list("dl");
+                        col3_list.add_attribute("class", "dl-horizontal");
+
+                        HTML_node tg_dt("dt", "Tags");
+                        HTML_node tg_dd("dd");
+                        this->compose_tag_list(item.get_tags(), tg_dd);
+                        col3_list.add_element(tg_dt).add_element(tg_dd);
+
+                        col3.add_element(col3_list);
+
+                        row.add_element(col1).add_element(col2).add_element(col3);
+
+                        panel_body.add_element(row);
 
                         // Write out notes if present
-                        this->write_notes_collapsible(item.get_notes(), tag, it);
+                        this->write_notes_collapsible(item.get_notes(), tag, panel_body);
+
+                        panel.add_element(panel_heading).add_element(panel_body);
+
+                        it.add_element(panel);
 
                         const std::list<std::string>& groups = item.get_content_groups();
                         if(!groups.empty())
@@ -1362,7 +1617,7 @@ namespace transport
                             ++count;
 
                             HTML_node button("button");
-                            button.add_attribute("type", "button").add_attribute("class", "btn btn-info topskip");
+                            button.add_attribute("type", "button").add_attribute("class", "btn btn-info");
                             button.add_attribute("data-toggle", "collapse").add_attribute("data-target", "#" + group_tag);
                             this->make_badged_text("Data provenance", groups.size(), button);
 
@@ -1370,7 +1625,7 @@ namespace transport
                             data.add_attribute("id", group_tag).add_attribute("class", "collapse");
 
                             HTML_node table("table");
-                            table.add_attribute("class", "table table-striped");
+                            table.add_attribute("class", "table table-striped table-condensed");
 
                             HTML_node head("thead");
                             HTML_node head_row("tr");
@@ -1387,7 +1642,7 @@ namespace transport
 
                             for(const std::string& gp : groups)
                               {
-                                HTML_node row("tr");
+                                HTML_node table_row("tr");
 
                                 HTML_node name("td");
                                 this->write_content_button(bundle, gp, name);
@@ -1400,8 +1655,8 @@ namespace transport
                                 HTML_node type("td", properties.get_type());
                                 HTML_node edited("td", properties.get_last_edit());
 
-                                row.add_element(name).add_element(task).add_element(type).add_element(edited);
-                                body.add_element(row);
+                                table_row.add_element(name).add_element(task).add_element(type).add_element(edited);
+                                body.add_element(table_row);
                               }
 
                             table.add_element(head).add_element(body);
@@ -1462,14 +1717,49 @@ namespace transport
             boost::posix_time::ptime created = rec.get_creation_time();
             boost::posix_time::ptime edited = rec.get_last_edit_time();
 
+            HTML_node panel("div");
+            panel.add_attribute("class", "panel panel-default");
+
+            HTML_node panel_heading("div", "Repository metadata");
+            panel_heading.add_attribute("class", "panel-heading");
+
+            HTML_node panel_body("div");
+            panel_body.add_attribute("class", "panel-body");
+
             HTML_node row("div");
             row.add_attribute("class", "row");
 
-            this->make_data_element("Created", boost::posix_time::to_simple_string(created), row, "label-primary");
-            this->make_data_element("Last updated", boost::posix_time::to_simple_string(edited), row, "label-primary");
-            this->make_data_element("Runtime version", boost::lexical_cast<std::string>(rec.get_runtime_API_version()), row, "label-primary");
+            HTML_node col1("div");
+            col1.add_attribute("class", "col-md-4");
+            HTML_node col1_list("dl");
+            col1_list.add_attribute("class", "dl-horizontal");
 
-            parent.add_element(row);
+            this->make_data_element("Created", boost::posix_time::to_simple_string(created), col1_list);
+
+            col1.add_element(col1_list);
+
+            HTML_node col2("div");
+            col2.add_attribute("class", "col-md-4");
+            HTML_node col2_list("dl");
+            col2_list.add_attribute("class", "dl-horizontal");
+
+            this->make_data_element("Last updated", boost::posix_time::to_simple_string(edited), col2_list);
+
+            col2.add_element(col2_list);
+
+            HTML_node col3("div");
+            col3.add_attribute("class", "col-md-4");
+            HTML_node col3_list("dl");
+            col3_list.add_attribute("class", "dl-horizontal");
+
+            this->make_data_element("Runtime version", boost::lexical_cast<std::string>(rec.get_runtime_API_version()), col3_list);
+
+            col3.add_element(col3_list);
+
+            row.add_element(col1).add_element(col2).add_element(col3);
+            panel_body.add_element(row);
+            panel.add_element(panel_heading).add_element(panel_body);
+            parent.add_element(panel);
           }
 
 
@@ -1480,31 +1770,61 @@ namespace transport
             boost::posix_time::ptime created = rec.get_creation_time();
             boost::posix_time::ptime edited = rec.get_last_edit_time();
 
-            HTML_node row1("div");
-            row1.add_attribute("class", "row");
+            HTML_node panel("div");
+            panel.add_attribute("class", "panel panel-default");
 
-            this->make_data_element("Created", boost::posix_time::to_simple_string(created), row1, "label-primary");
-            this->make_data_element("Last updated", boost::posix_time::to_simple_string(edited), row1, "label-primary");
-            this->make_data_element("Runtime version", boost::lexical_cast<std::string>(rec.get_runtime_API_version()), row1, "label-primary");
+            HTML_node panel_heading("div", "Repository metadata");
+            panel_heading.add_attribute("class", "panel-heading");
 
-            HTML_node row2("div");
-            row2.add_attribute("class", "row");
+            HTML_node panel_body("div");
+            panel_body.add_attribute("class", "panel-body");
 
-            HTML_node pt("div", "Parent task");
-            pt.add_attribute("class", "col-md-4");
-            this->write_task_button(bundle, rec.get_task_name(), pt);
-            row2.add_element(pt);
+            HTML_node row("div");
+            row.add_attribute("class", "row");
 
-            this->make_data_element("Locked", (rec.get_lock_status() ? "Yes" : "No"), row2, "label-primary");
+            HTML_node col1("div");
+            col1.add_attribute("class", "col-md-4");
+            HTML_node col1_list("dl");
+            col1_list.add_attribute("class", "dl-horizontal");
 
-            HTML_node tags("div", "Tags");
-            tags.add_attribute("class", "col-md-4");
-            this->compose_tag_list(rec.get_tags(), tags);
-            row2.add_element(tags);
+            this->make_data_element("Created", boost::posix_time::to_simple_string(created), col1_list);
 
-            parent.add_element(row1).add_element(row2);
+            HTML_node pt_dt("dt", "Parent task");
+            HTML_node pt_dd("dd");
+            this->write_task_button(bundle, rec.get_task_name(), pt_dd);
+            col1_list.add_element(pt_dt).add_element(pt_dd);
 
-            this->write_notes_collapsible(rec.get_notes(), bundle.get_id(rec), parent);
+            col1.add_element(col1_list);
+
+            HTML_node col2("div");
+            col2.add_attribute("class", "col-md-4");
+            HTML_node col2_list("dl");
+            col2_list.add_attribute("class", "dl-horizontal");
+
+            this->make_data_element("Last updated", boost::posix_time::to_simple_string(edited), col2_list);
+            this->make_data_element("Locked", (rec.get_lock_status() ? "Yes" : "No"), col2_list);
+
+            col2.add_element(col2_list);
+
+            HTML_node col3("div");
+            col3.add_attribute("class", "col-md-4");
+            HTML_node col3_list("dl");
+            col3_list.add_attribute("class", "dl-horizontal");
+
+            this->make_data_element("Runtime version", boost::lexical_cast<std::string>(rec.get_runtime_API_version()), col3_list);
+            HTML_node tags_dt("dt", "Tags");
+            HTML_node tags_dd("dd");
+            this->compose_tag_list(rec.get_tags(), tags_dd);
+            col3_list.add_element(tags_dt).add_element(tags_dd);
+
+            col3.add_element(col3_list);
+
+            row.add_element(col1).add_element(col2).add_element(col3);
+            panel_body.add_element(row);
+            this->write_notes_collapsible(rec.get_notes(), bundle.get_id(rec), panel_body);
+
+            panel.add_element(panel_heading).add_element(panel_body);
+            parent.add_element(panel);
           }
 
 
@@ -1517,9 +1837,8 @@ namespace transport
               }
             else
               {
-                HTML_node span("span", "No");
-                span.add_attribute("class", "label label-default");
-                parent.add_element(span);
+                HTML_node no("span", "No");
+                parent.add_element(no);
               }
           }
 
@@ -1730,7 +2049,7 @@ namespace transport
             if(notes.empty()) return;
 
             HTML_node button("button");
-            button.add_attribute("type", "button").add_attribute("class", "btn btn-info topbottomskip");
+            button.add_attribute("type", "button").add_attribute("class", "btn btn-info");
             button.add_attribute("data-toggle", "collapse").add_attribute("data-target", "#" + tag + "notes");
             this->make_badged_text("Notes", notes.size(), button);
 
@@ -1738,7 +2057,7 @@ namespace transport
             content.add_attribute("id", tag + "notes").add_attribute("class", "collapse");
 
             HTML_node list("ol");
-            list.add_attribute("class", "list-group");
+            list.add_attribute("class", "list-group topskip");
 
             for(const std::string& note : notes)
               {
