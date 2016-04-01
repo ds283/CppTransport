@@ -1046,7 +1046,7 @@ namespace transport
                 item.add_attribute("href", "#" + tag).add_attribute("class", "list-group-item").add_attribute("onclick", "return false;");
                 this->make_list_item_label(rec.get_name(), item);
 
-                // write generic repostiory information for this record
+                // write generic repository information for this record
                 this->write_generic_record(rec, item);
 
                 HTML_node row1("div");
@@ -1131,12 +1131,9 @@ namespace transport
                 const integration_payload& payload = rec.get_payload();
 
                 HTML_node properties_label("p");
-                HTML_node properties_heading("h4");
+                HTML_node properties_heading("h4", "Properties");
                 properties_heading.add_attribute("class", "list-group-item-text topskip");
-                HTML_node properties_text("Properties");
-                properties_heading.add_element(properties_text);
                 properties_label.add_element(properties_heading);
-                anchor.add_element(properties_label);
 
                 HTML_node row1("div");
                 row1.add_attribute("class", "row");
@@ -1168,8 +1165,8 @@ namespace transport
                 HTML_node row5("div");
                 row5.add_attribute("class", "row");
                 this->make_data_element("Mean integration time", format_time(metadata.total_integration_time/metadata.total_configurations), row5);
-                this->make_data_element("Minimum integration time", format_time(metadata.global_min_integration_time), row5);
-                this->make_data_element("Maximum integration_time", format_time(metadata.global_max_integration_time), row5);
+                this->make_data_element("Shortest integration time", format_time(metadata.global_min_integration_time), row5);
+                this->make_data_element("Longest integration_time", format_time(metadata.global_max_integration_time), row5);
 
                 HTML_node row6("div");
                 row6.add_attribute("class", "row");
@@ -1210,12 +1207,9 @@ namespace transport
                 const postintegration_payload& payload = rec.get_payload();
 
                 HTML_node properties_label("p");
-                HTML_node properties_heading("h4");
+                HTML_node properties_heading("h4", "Properties");
                 properties_heading.add_attribute("class", "list-group-item-text topskip");
-                HTML_node properties_text("Properties");
-                properties_heading.add_element(properties_text);
                 properties_label.add_element(properties_heading);
-                anchor.add_element(properties_label);
 
                 HTML_node row1("div");
                 row1.add_attribute("class", "row");
@@ -1231,7 +1225,6 @@ namespace transport
                 seeded.add_attribute("class", "col-md-4");
                 this->write_seeded(bundle, payload, seeded);
                 row2.add_element(pt).add_element(seeded);
-
 
                 HTML_node row3("div");
                 row3.add_attribute("class", "row");

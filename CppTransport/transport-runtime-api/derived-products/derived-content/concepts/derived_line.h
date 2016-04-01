@@ -276,12 +276,6 @@ namespace transport
 				    //! Wrapped output utility
 				    wrapped_output wrapper;
 
-//				    //! List of time configuration serial numbers associated with this derived product
-//				    std::vector<unsigned int> time_sample_sns;
-//
-//						//! List of k-configuration serial numbers associated with this derived product
-//						std::vector<unsigned int> kconfig_sample_sns;
-
 					};
 
 

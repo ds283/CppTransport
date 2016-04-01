@@ -129,6 +129,7 @@ namespace transport
 
 				    template <typename Stream> void write(Stream& out);
 
+
 		        // INTERNAL DATA
 
 		      protected:
