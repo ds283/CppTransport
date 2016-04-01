@@ -77,8 +77,11 @@ namespace transport
         //! interpret command-line arguments
         void process_arguments(int argc, char* argv[]);
 
-        //! perform tasks after processing command-line arguments
+        //! perform errands after processing command-line arguments, but before executing main tasks
         void pre_process_tasks();
+
+        //! perform errands after executing main tasks
+        void post_process_tasks();
 
         //! execute any queued tasks
         void execute_tasks(void);

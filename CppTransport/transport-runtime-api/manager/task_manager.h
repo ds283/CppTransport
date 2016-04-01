@@ -158,8 +158,8 @@ namespace transport
 					{
             // output model list, perform other tasks specifically on master node
             this->master.pre_process_tasks();
-
 						this->master.execute_tasks();
+            this->master.post_process_tasks();
 					}
 				else
 					{

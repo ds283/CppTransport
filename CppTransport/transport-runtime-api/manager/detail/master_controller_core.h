@@ -390,7 +390,12 @@ namespace transport
       {
         if(this->arg_cache.get_model_list())   this->model_mgr.write_models(std::cout);
         if(this->arg_cache.get_create_model()) this->gallery.commit(*this->repo);
+      }
 
+
+    template <typename number>
+    void master_controller<number>::post_process_tasks()
+      {
         if(this->repo)
           {
             this->cmdline_reports.report(*this->repo);
