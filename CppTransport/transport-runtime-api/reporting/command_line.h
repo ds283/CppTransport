@@ -1174,8 +1174,8 @@ namespace transport
               {
                 if(tag_count > 0) composed_list << ", ";
                 composed_list << tag;
-                if(composed_list.str().length() > CPPTRANSPORT_REPORT_MAX_TAG_LENGTH) break;
                 ++tag_count;
+                if(composed_list.str().length() > CPPTRANSPORT_REPORT_MAX_TAG_LENGTH) break;
               }
             if(tag_count < tag_list.size()) composed_list << ", ...";
 
