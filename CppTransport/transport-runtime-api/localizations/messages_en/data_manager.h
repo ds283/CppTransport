@@ -78,7 +78,8 @@
 
 #define CPPTRANSPORT_DATAMGR_TIME_SERIAL_READ_FAIL               "Data manager error: Failed to select time sample (backend code="
 #define CPPTRANSPORT_DATAMGR_KCONFIG_SERIAL_READ_FAIL            "Data manager error: Failed to select k-configuration sample (backend code="
-#define CPPTRANSPORT_DATAMGR_WORKER_TABLE_READ_FAIL              "Data manager erorr: Failed to read worker information table (backend code="
+#define CPPTRANSPORT_DATAMGR_WORKER_TABLE_READ_FAIL              "Data manager error: Failed to read worker information table (backend code="
+#define CPPTRANSPORT_DATAMGR_STATISTICS_TABLE_READ_FAIL          "Data manager error: Failed to read statistics information table (backend code="
 
 #define CPPTRANSPORT_DATAMGR_INTEGRITY_READ_FAIL                 "Data manager error: Failure while performing integrity check (backend code="
 

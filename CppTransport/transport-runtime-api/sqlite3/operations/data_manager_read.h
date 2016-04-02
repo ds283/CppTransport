@@ -21,7 +21,7 @@ namespace transport
         worker_information_db read_worker_table(sqlite3* db)
           {
             std::ostringstream read_stmt;
-            read_stmt << "SELECT workgroup, worker, backend, back_stepper, pert_stepper, back_abs_tol, back_rel_tol, pert_abs_tol, pert_rel_tol, hostname, os_name, os_version, os_release, architecture cpu_vendor_id FROM " << CPPTRANSPORT_SQLITE_WORKERS_TABLE << ";";
+            read_stmt << "SELECT workgroup, worker, backend, back_stepper, pert_stepper, back_abs_tol, back_rel_tol, pert_abs_tol, pert_rel_tol, hostname, os_name, os_version, os_release, architecture, cpu_vendor_id FROM " << CPPTRANSPORT_SQLITE_WORKERS_TABLE << ";";
 
             sqlite3_stmt* stmt;
             check_stmt(db, sqlite3_prepare_v2(db, read_stmt.str().c_str(), read_stmt.str().length()+1, &stmt, nullptr));
@@ -51,7 +51,7 @@ namespace transport
                     std::string cpu_vendor   = std::string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 14)), static_cast<unsigned int>(sqlite3_column_bytes(stmt, 14)));
 
                     worker_db.insert(std::make_pair(std::make_pair(workgroup, worker),
-                                                    std::make_unique<worker_information>(workgroup, worker, backend, pert_stepper,
+                                                    std::make_unique<worker_record>(workgroup, worker, backend, pert_stepper,
                                                                                          back_stepper, back_abs_tol, back_rel_tol,
                                                                                          pert_abs_tol, pert_rel_tol,
                                                                                          hostname, os_name, os_version, os_release,
@@ -70,6 +70,53 @@ namespace transport
 
             return(worker_db);
           }
+
+
+        // Read statistics table
+        timing_db read_statistics_table(sqlite3* db)
+          {
+            std::ostringstream read_stmt;
+            read_stmt << "SELECT kserial, integration_time, batch_time, steps, refinements, workgroup, worker FROM " << CPPTRANSPORT_SQLITE_STATS_TABLE << ";";
+
+            sqlite3_stmt* stmt;
+            check_stmt(db, sqlite3_prepare_v2(db, read_stmt.str().c_str(), read_stmt.str().length()+1, &stmt, nullptr));
+
+            timing_db data;
+
+            int status;
+            while((status = sqlite3_step(stmt)) != SQLITE_DONE)
+              {
+                if(status == SQLITE_ROW)
+                  {
+                    unsigned int workgroup   = static_cast<unsigned int>(sqlite3_column_int(stmt, 5));
+                    unsigned int worker      = static_cast<unsigned int>(sqlite3_column_int(stmt, 6));
+
+                    unsigned int serial      = static_cast<unsigned int>(sqlite3_column_int(stmt, 0));
+
+                    boost::timer::nanosecond_type integration_time = static_cast<boost::timer::nanosecond_type>(sqlite3_column_int64(stmt, 1));
+                    boost::timer::nanosecond_type batch_time       = static_cast<boost::timer::nanosecond_type>(sqlite3_column_int64(stmt, 2));
+
+                    unsigned int steps       = static_cast<unsigned int>(sqlite3_column_int(stmt, 3));
+                    unsigned int refinements = static_cast<unsigned int>(sqlite3_column_int(stmt, 4));
+
+                    data.insert(std::make_pair(serial,
+                                               std::make_unique<timing_record>(serial, integration_time, batch_time,
+                                                                               steps, refinements, workgroup, worker)));
+                  }
+                else
+                  {
+                    std::ostringstream msg;
+                    msg << CPPTRANSPORT_DATAMGR_STATISTICS_TABLE_READ_FAIL << status << ": " << sqlite3_errmsg(db) << ")";
+                    sqlite3_finalize(stmt);
+                    throw runtime_exception(exception_type::DATA_MANAGER_BACKEND_ERROR, msg.str());
+                  }
+              }
+
+            check_stmt(db, sqlite3_finalize(stmt));
+
+            return(data);
+          }
+
 
       }
 

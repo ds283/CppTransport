@@ -1639,7 +1639,33 @@ namespace transport
 
 
     template <typename number>
-    worker_information_db data_manager_sqlite3<number>::read_worker_information(const boost::filesystem::path& ctr_path)
+    worker_information_db data_manager_sqlite3<number>::read_worker_information(const boost::filesystem::path& ctr_path) const
+      {
+        sqlite3* db = this->open_container(ctr_path);
+
+        worker_information_db worker_db = sqlite3_operations::read_worker_table(db);
+
+        sqlite3_close(db);
+
+        return(worker_db);
+      }
+
+
+    template <typename number>
+    timing_db data_manager_sqlite3<number>::read_timing_information(const boost::filesystem::path& ctr_path) const
+      {
+        sqlite3* db = this->open_container(ctr_path);
+
+        timing_db timing_data = sqlite3_operations::read_statistics_table(db);
+
+        sqlite3_close(db);
+
+        return(timing_data);
+      }
+
+
+    template <typename number>
+    sqlite3* data_manager_sqlite3<number>::open_container(const boost::filesystem::path& ctr_path) const
       {
         if(!boost::filesystem::exists(ctr_path))
           {
@@ -1679,11 +1705,7 @@ namespace transport
         sqlite3_exec(db, "PRAGMA main.synchronous = 1;", nullptr, nullptr, &errmsg);
         sqlite3_exec(db, "PRAGMA main.cache_size = 10000;", nullptr, nullptr, &errmsg);
 
-        worker_information_db worker_db = sqlite3_operations::read_worker_table(db);
-
-        sqlite3_close(db);
-
-        return(worker_db);
+        return(db);
       }
 
 

@@ -400,7 +400,10 @@ namespace transport
       public:
 
         //! Read the worker information table for a container
-        virtual worker_information_db read_worker_information(const boost::filesystem::path& ctr_path) = 0;
+        virtual worker_information_db read_worker_information(const boost::filesystem::path& ctr_path) const = 0;
+
+        //! Read the timing table for a container (supposing one to be present)
+        virtual timing_db read_timing_information(const boost::filesystem::path& ctr_path) const = 0;
 
 
         // INTERNAL DATA

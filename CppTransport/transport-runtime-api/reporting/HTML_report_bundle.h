@@ -134,6 +134,9 @@ namespace transport
             //! get worker table, given *relative* path of container
             worker_information_db read_worker_database(const boost::filesystem::path& ctr_path) const { return(this->dmgr.read_worker_information(this->repo.get_root_path() / ctr_path)); }
 
+            //! get statistics table, given *relative* path of container
+            timing_db read_timing_database(const boost::filesystem::path& ctr_path) const { return(this->dmgr.read_timing_information(this->repo.get_root_path() / ctr_path)); }
+
 
             // FORWARD UNIQUE_TAGS INTERFACE
 

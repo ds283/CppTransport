@@ -10,11 +10,13 @@
 #include <string>
 #include <map>
 
+#include "boost/timer/timer.hpp"
+
 
 namespace transport
   {
 
-    class worker_information
+    class worker_record
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -22,10 +24,10 @@ namespace transport
       public:
 
         //! constructor
-        worker_information(unsigned int wg, unsigned int wk, std::string be, std::string bs,
-                           const std::string ps, double b_atol, double b_rtol, double p_atol, double p_rtol,
-                           std::string hn, std::string on, std::string ov, std::string orl,
-                           std::string ar, std::string cv)
+        worker_record(unsigned int wg, unsigned int wk, std::string be, std::string bs,
+                      const std::string ps, double b_atol, double b_rtol, double p_atol, double p_rtol,
+                      std::string hn, std::string on, std::string ov, std::string orl,
+                      std::string ar, std::string cv)
           : workgroup(wg),
             worker(wk),
             backend(be),
@@ -43,7 +45,7 @@ namespace transport
           }
 
         //! destructor is default
-        ~worker_information() = default;
+        ~worker_record() = default;
 
 
         // INTERFACE
@@ -138,7 +140,90 @@ namespace transport
 
     //! typesef a map from (workgroup, worker) pairs to a worker information record;
     //! used as a database of worker information
-    typedef std::map< std::pair<unsigned int, unsigned int>, std::unique_ptr< worker_information > > worker_information_db;
+    typedef std::map< std::pair<unsigned int, unsigned int>, std::unique_ptr< worker_record > > worker_information_db;
+
+
+    class timing_record
+      {
+
+        // CONSTRUCTOR DESTRUCTOR
+
+      public:
+
+        //! constructor
+        timing_record(unsigned int sn, boost::timer::nanosecond_type it, boost::timer::nanosecond_type bt,
+                      unsigned int st, unsigned int rf, unsigned int wg, unsigned int wk)
+          : serial(sn),
+            integration_time(it),
+            batch_time(bt),
+            steps(st),
+            refinements(rf),
+            workgroup(wg),
+            worker(wk)
+          {
+          }
+
+        //! destructor is default
+        ~timing_record() = default;
+
+
+        // INTERFACE
+
+      public:
+
+        //! get serial number
+        unsigned int get_serial() const { return serial; }
+
+        //! get integration time
+        boost::timer::nanosecond_type get_integration_time() const { return integration_time; }
+
+        //! get batching time
+        boost::timer::nanosecond_type get_batch_time() const { return batch_time; }
+
+        //! get number of steps
+        unsigned int get_steps() const { return steps; }
+
+        //! get number of refinements
+        unsigned int get_refinements() const { return refinements; }
+
+        //! get workgroup identifier
+        unsigned int get_workgroup() const { return workgroup; }
+
+        //! get worker identifier
+        unsigned int get_worker() const { return worker; }
+
+
+        // INTERNAL DATA
+
+      private:
+
+        //! serial number of the k-configuration associated with this record (may be a twopf or a threepf serial)
+        unsigned int serial;
+
+        //! integration time for this configuration
+        boost::timer::nanosecond_type integration_time;
+
+        //! batch time for this configuration
+        boost::timer::nanosecond_type batch_time;
+
+        //! number of steps required for this configuration
+        unsigned int steps;
+
+        //! number of refinements required for this configuration
+        unsigned int refinements;
+
+        //! workgroup identifier of the worker which processed this configuration
+        unsigned int workgroup;
+
+        //! worker identifier of the worker which processed this configuration
+        unsigned int worker;
+
+    };
+
+
+    //! typedef a map from serial number to timing record; acts as a database of timing information
+    typedef std::map< unsigned int, std::unique_ptr< timing_record > > timing_db;
+
 
   }   // namespace transport
 

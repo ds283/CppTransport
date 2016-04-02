@@ -114,6 +114,11 @@ namespace transport
             template <typename number>
             void write_worker_table(HTML_report_bundle<number>& bundle, const output_group_record<integration_payload> rec, HTML_node& parent);
 
+            //! typedef for list of configurations-per-worker
+            typedef std::map< std::pair<unsigned int, unsigned int>, unsigned int > count_list;
+
+            //! count configurations per worker and store in a
+            count_list count_configurations_per_worker(timing_db& data);
 
             // MAKE BUTTONS
 
@@ -180,6 +185,7 @@ namespace transport
             //! write JavaScript button handler which simply changes pane
             template <typename number>
             void write_JavaScript_button(HTML_report_bundle<number>& bundle, std::string button, std::string pane);
+
 
             // MISCELLANEOUS
 
@@ -1381,10 +1387,32 @@ namespace transport
             HTML_node backg_tol_label("th", "Tolerances");
             HTML_node pert_step_label("th", "Perturbations");
             HTML_node pert_tol_label("th", "Tolerances");
+            HTML_node configurations_label("th", "Configurations");
             HTML_node os_name_label("th", "Operating system");
+
             head_row.add_element(identifier_label).add_element(hostname_label).add_element(backend_label);
             head_row.add_element(backg_step_label).add_element(backg_tol_label);
             head_row.add_element(pert_step_label).add_element(pert_tol_label);
+
+            // cache timing data if it is available
+            // (used later to compute how many configurations were processed by each worker)
+            boost::optional< timing_db > timing_data;
+            boost::optional< count_list > counts;
+            bool has_statistics = rec.get_payload().has_statistics();
+            unsigned int configurations = 1;
+            if(has_statistics)
+              {
+                head_row.add_element(configurations_label);
+
+                // will throw an exception if statistics table cannot be found
+                timing_data = bundle.read_timing_database(rec.get_payload().get_container_path());
+
+                // bin data into an aggregate number of configurations processed per worker
+                counts = this->count_configurations_per_worker(*timing_data);
+
+                configurations = rec.get_payload().get_metadata().total_configurations;
+              }
+
             head_row.add_element(os_name_label);
             head.add_element(head_row);
 
@@ -1392,7 +1420,7 @@ namespace transport
 
             for(const worker_information_db::value_type& worker : worker_db)
               {
-                const worker_information& info = *worker.second;
+                const worker_record& info = *worker.second;
                 HTML_node table_row("tr");
 
                 HTML_node identifier("td", boost::lexical_cast<std::string>(info.get_workgroup()) + ", " + boost::lexical_cast<std::string>(info.get_worker()));
@@ -1412,6 +1440,16 @@ namespace transport
                 table_row.add_element(identifier).add_element(hostname).add_element(backend);
                 table_row.add_element(backg_step).add_element(backg_tol);
                 table_row.add_element(pert_step).add_element(pert_tol);
+
+                if(has_statistics)
+                  {
+                    unsigned int count = (*counts)[std::make_pair(info.get_workgroup(), info.get_worker())];
+                    double percent = 100.0 * static_cast<double>(count) / static_cast<double>(configurations);
+
+                    HTML_node configs("td", boost::lexical_cast<std::string>(count) + " (" + format_number(percent) + "%)");
+                    table_row.add_element(configs);
+                  }
+
                 table_row.add_element(os_name);
                 body.add_element(table_row);
               }
@@ -1419,6 +1457,27 @@ namespace transport
             table.add_element(head).add_element(body);
             content.add_element(table);
             parent.add_element(button).add_element(content);
+          }
+
+
+        HTML_report::count_list HTML_report::count_configurations_per_worker(timing_db& data)
+          {
+            count_list list;
+
+            for(timing_db::value_type& record : data)
+              {
+                const timing_record& rec = *record.second;
+
+                // get reference to count for this worker; if we haven't encountered this worker before
+                // then a suitable entry is inserted.
+                // This value associated with this entry is guaranteed to be zero-initialized
+                unsigned int& count = list[std::make_pair(rec.get_workgroup(), rec.get_worker())];
+
+                // increment it
+                count++;
+              }
+
+            return(list);
           }
 
 
