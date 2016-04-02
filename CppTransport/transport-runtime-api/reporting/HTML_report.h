@@ -786,6 +786,9 @@ namespace transport
                         HTML_node group_list("div");
                         group_list.add_attribute("id", tag + "groups").add_attribute("class", "collapse");
 
+                        HTML_node table_wrapper("div");
+                        table_wrapper.add_attribute("class", "table-responsive");
+
                         HTML_node table("table");
                         table.add_attribute("class", "table table-striped table-condensed");
 
@@ -841,7 +844,8 @@ namespace transport
                           }
 
                         table.add_element(head).add_element(body);
-                        group_list.add_element(table);
+                        table_wrapper.add_element(table);
+                        group_list.add_element(table_wrapper);
                         item.add_element(button).add_element(group_list);
                       }
 
@@ -934,6 +938,9 @@ namespace transport
                         HTML_node group_list("div");
                         group_list.add_attribute("id", tag + "groups").add_attribute("class", "collapse");
 
+                        HTML_node table_wrapper("div");
+                        table_wrapper.add_attribute("class", "table-responsive");
+
                         HTML_node table("table");
                         table.add_attribute("class", "table table-striped table-condensed");
 
@@ -989,7 +996,8 @@ namespace transport
                           }
 
                         table.add_element(head).add_element(body);
-                        group_list.add_element(table);
+                        table_wrapper.add_element(table);
+                        group_list.add_element(table_wrapper);
                         item.add_element(button).add_element(group_list);
                       }
 
@@ -1039,6 +1047,9 @@ namespace transport
                         HTML_node group_list("div");
                         group_list.add_attribute("id", tag + "elements").add_attribute("class", "collapse");
 
+                        HTML_node table_wrapper("div");
+                        table_wrapper.add_attribute("class", "table-responsive");
+
                         HTML_node table("table");
                         table.add_attribute("class", "table table-striped table-condensed");
 
@@ -1073,7 +1084,8 @@ namespace transport
                           }
 
                         table.add_element(head).add_element(body);
-                        group_list.add_element(table);
+                        table_wrapper.add_element(table);
+                        group_list.add_element(table_wrapper);
                         item.add_element(button).add_element(group_list);
                       }
 
@@ -1089,6 +1101,9 @@ namespace transport
 
                         HTML_node group_list("div");
                         group_list.add_attribute("id", tag + "groups").add_attribute("class", "collapse");
+
+                        HTML_node table_wrapper("div");
+                        table_wrapper.add_attribute("class", "table-responsive");
 
                         HTML_node table("table");
                         table.add_attribute("class", "table table-striped table-condensed");
@@ -1141,7 +1156,8 @@ namespace transport
                           }
 
                         table.add_element(head).add_element(body);
-                        group_list.add_element(table);
+                        table_wrapper.add_element(table);
+                        group_list.add_element(table_wrapper);
                         item.add_element(button).add_element(group_list);
                       }
 
@@ -1226,6 +1242,9 @@ namespace transport
                     HTML_node group_list("div");
                     group_list.add_attribute("id", tag + "tasks").add_attribute("class", "collapse");
 
+                    HTML_node table_wrapper("div");
+                    table_wrapper.add_attribute("class", "table-responsive");
+
                     HTML_node table("table");
                     table.add_attribute("class", "table table-striped table-condensed");
 
@@ -1251,7 +1270,8 @@ namespace transport
                       }
 
                     table.add_element(head).add_element(body);
-                    group_list.add_element(table);
+                    table_wrapper.add_element(table);
+                    group_list.add_element(table_wrapper);
                     item.add_element(button).add_element(group_list);
                   }
 
@@ -1395,6 +1415,15 @@ namespace transport
             HTML_node content("div");
             content.add_attribute("id", tag + "workers").add_attribute("class", "collapse");
 
+            HTML_node panel("div");
+            panel.add_attribute("class", "panel panel-info topskip");
+
+            HTML_node panel_head("div", "Worker summary for this output group");
+            panel_head.add_attribute("class", "panel-heading");
+
+            HTML_node table_wrapper("div");
+            table_wrapper.add_attribute("class", "table-responsive");
+
             HTML_node table("table");
             table.add_attribute("class", "table table-striped table-condensed");
 
@@ -1402,15 +1431,18 @@ namespace transport
             HTML_node head_row("tr");
 
             HTML_node identifier_label("th", "Identifier");
-            identifier_label.add_attribute("data-toggle", "tooltip").add_attribute("data-container", "body").add_attribute("title", "workgroup, worker number");
+            identifier_label.add_attribute("data-toggle", "tooltip").add_attribute("data-container", "body");
+            identifier_label.add_attribute("data-placement", "top").add_attribute("title", "workgroup, worker number");
             HTML_node hostname_label("th", "Hostname");
             HTML_node backend_label("th", "Backend");
             HTML_node backg_step_label("th", "Background");
             HTML_node backg_tol_label("th", "Tolerances");
-            backg_tol_label.add_attribute("data-toggle", "tooltip").add_attribute("data-container", "body").add_attribute("title", "atol, rtol");
+            backg_tol_label.add_attribute("data-toggle", "tooltip").add_attribute("data-container", "body");
+            backg_tol_label.add_attribute("data-placement", "top").add_attribute("title", "atol, rtol");
             HTML_node pert_step_label("th", "Perturbations");
             HTML_node pert_tol_label("th", "Tolerances");
-            pert_tol_label.add_attribute("data-toggle", "tooltip").add_attribute("data-container", "body").add_attribute("title", "atol, rtol");
+            pert_tol_label.add_attribute("data-toggle", "tooltip").add_attribute("data-container", "body");
+            pert_tol_label.add_attribute("data-placement", "top").add_attribute("title", "atol, rtol");
             HTML_node configurations_label("th", "Configurations");
             HTML_node os_name_label("th", "Operating system");
 
@@ -1479,7 +1511,9 @@ namespace transport
               }
 
             table.add_element(head).add_element(body);
-            content.add_element(table);
+            table_wrapper.add_element(table);
+            panel.add_element(panel_head).add_element(table_wrapper);
+            content.add_element(panel);
             parent.add_element(button).add_element(content);
           }
 
@@ -1535,9 +1569,30 @@ namespace transport
             HTML_node content("div");
             content.add_attribute("id", tag + "timing").add_attribute("class", "collapse");
 
-            this->write_worker_chart(bundle, rec, content, counts);
-            this->write_timing_histogram(bundle, rec, content, timing_data);
+            HTML_node panel("div");
+            panel.add_attribute("class", "panel panel-info topskip");
 
+            HTML_node panel_head("div", "Breakdown of integration details for this output group");
+            panel_head.add_attribute("class", "panel-heading");
+
+            HTML_node panel_body("div");
+            panel_body.add_attribute("class", "panel-body");
+
+            HTML_node chart_row("div");
+            chart_row.add_attribute("class", "row");
+
+            HTML_node col1("div");
+            col1.add_attribute("class", "col-md-6");
+            this->write_worker_chart(bundle, rec, col1, counts);
+
+            HTML_node col2("div");
+            col2.add_attribute("class", "col-md-6");
+            this->write_timing_histogram(bundle, rec, col2, timing_data);
+
+            chart_row.add_element(col1).add_element(col2);
+            panel_body.add_element(chart_row);
+            panel.add_element(panel_head).add_element(panel_body);
+            content.add_element(panel);
             parent.add_element(button).add_element(content);
           }
 
@@ -1613,7 +1668,10 @@ namespace transport
               {
                 boost::filesystem::remove(script_path);
                 HTML_node chart("img", false);
-                chart.add_attribute("src", relative_image_loc.string()).add_attribute("class", "imgproduct");
+                chart.add_attribute("src", relative_image_loc.string()).add_attribute("class", "report-chart");
+                chart.add_attribute("class", "report-chart");
+                chart.add_attribute("data-toggle", "popover").add_attribute("data-placement", "top").add_attribute("title", "Worker activity");
+                chart.add_attribute("data-content", "Shows the number of configurations processed by each worker");
                 parent.add_element(chart);
               }
             else
@@ -1676,7 +1734,10 @@ namespace transport
               {
                 boost::filesystem::remove(script_path);
                 HTML_node chart("img", false);
-                chart.add_attribute("src", relative_image_loc.string()).add_attribute("class", "imgproduct");
+                chart.add_attribute("src", relative_image_loc.string()).add_attribute("class", "report-chart");
+                chart.add_attribute("class", "report-chart");
+                chart.add_attribute("data-toggle", "popover").add_attribute("data-placement", "top").add_attribute("title", "Timing distribution");
+                chart.add_attribute("data-content", "Shows the distribution of integration times in this output group");
                 parent.add_element(chart);
               }
             else
@@ -1965,6 +2026,9 @@ namespace transport
                             HTML_node data("div");
                             data.add_attribute("id", group_tag).add_attribute("class", "collapse");
 
+                            HTML_node table_wrapper("div");
+                            table_wrapper.add_attribute("class", "table-responsive");
+
                             HTML_node table("table");
                             table.add_attribute("class", "table table-striped table-condensed");
 
@@ -2001,7 +2065,8 @@ namespace transport
                               }
 
                             table.add_element(head).add_element(body);
-                            data.add_element(table);
+                            table_wrapper.add_element(table);
+                            data.add_element(table_wrapper);
                             it.add_element(button).add_element(data);
                           }
 

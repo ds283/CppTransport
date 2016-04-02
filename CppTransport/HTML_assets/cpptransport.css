@@ -8,15 +8,18 @@ body {
     padding: 0;
 }
 
+/* Many elements require extra vertical space above them */
 .topskip {
     margin-top: 20px;
 }
 
+/* Style for included output images */
 .imgproduct {
     margin: 15px;
     border: 2px solid #ccc;
 }
 
+/* Style for output included in an iframe */
 .iframeproduct {
     border: 0 transparent;
     overflow: visible;
@@ -24,7 +27,16 @@ body {
     height: 200px;
 }
 
+/* Style for included PDF outputs */
 .pdfproduct {
     width: 700px;
     height: 600px;
+}
+
+/* Style for charts included as part of a report */
+.report-chart {
+    margin: 15px;
+    border: 2px solid #ccc;
+    width: 600px;
+    height: 450px;
 }
