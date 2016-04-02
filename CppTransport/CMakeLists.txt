@@ -534,6 +534,7 @@ set(TRANSPORT_RUNTIME_API_DATA_DETAIL_FILES
 
 set(TRANSPORT_RUNTIME_API_DATA_FILES
   transport-runtime-api/data/data_manager.h
+  transport-runtime-api/data/metadata.h
   )
 
 set(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_CONVENIENCE_FILES
@@ -859,6 +860,7 @@ set(TRANSPORT_RUNTIME_API_SQLITE3_OPERATIONS_FILES
   transport-runtime-api/sqlite3/operations/repository_inflight.h
   transport-runtime-api/sqlite3/operations/repository_store.h
   transport-runtime-api/sqlite3/operations/sqlite3_utility.h
+  transport-runtime-api/sqlite3/operations/data_manager_read.h
   )
 
 set(TRANSPORT_RUNTIME_API_TASKS_CONFIGURATION_DATABASE_FILES

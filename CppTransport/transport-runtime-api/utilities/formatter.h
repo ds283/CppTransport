@@ -71,4 +71,19 @@ inline std::string format_time(boost::timer::nanosecond_type time, unsigned int 
   }
 
 
+inline std::string format_number(double number, unsigned int precision=3)
+  {
+    std::ostringstream out;
+
+    if(std::abs(number) > 1E3 || std::abs(number) < 1E-3)
+      {
+        out << std::scientific;
+      }
+
+    out << std::setprecision(precision) << number;
+
+    return(out.str());
+  }
+
+
 #endif //__formatter_H_

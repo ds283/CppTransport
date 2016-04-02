@@ -8,6 +8,7 @@
 
 
 #include "transport-runtime-api/repository/repository.h"
+#include "transport-runtime-api/data/data_manager.h"
 #include "transport-runtime-api/derived-products/derived_product_type.h"
 
 #include "transport-runtime-api/reporting/content_group_data.h"
@@ -60,7 +61,7 @@ namespace transport
 
             //! produce report
             template <typename number>
-            void report(repository<number>& repo);
+            void report(repository<number>& repo, data_manager<number>& dmgr);
 
 
             // INTERNAL API
@@ -106,6 +107,12 @@ namespace transport
             //! write output content tabs
             template <typename number>
             void write_output_content(HTML_report_bundle<number>& bundle, HTML_node& parent);
+
+          protected:
+
+            //! create a worker table for an integration content record
+            template <typename number>
+            void write_worker_table(HTML_report_bundle<number>& bundle, const output_group_record<integration_payload> rec, HTML_node& parent);
 
 
             // MAKE BUTTONS
@@ -258,7 +265,7 @@ namespace transport
 
 
         template <typename number>
-        void HTML_report::report(repository<number>& repo)
+        void HTML_report::report(repository<number>& repo, data_manager<number>& dmgr)
           {
             // has a root directory been set? if not, no need to generate a report
             if(this->root.empty()) return;
@@ -270,7 +277,7 @@ namespace transport
 
                 // set up a HTML bundle for this report; this encapsulates all the files needed
                 // and also manages any assets
-                HTML_report_bundle<number> bundle(this->env, this->arg_cache, repo, this->root);
+                HTML_report_bundle<number> bundle(this->env, this->arg_cache, repo, dmgr, this->root);
 
                 // write main index.html
                 this->generate_report(bundle);
@@ -547,10 +554,8 @@ namespace transport
                 HTML_node col1_list("dl");
                 col1_list.add_attribute("class", "dl-horizontal");
 
-                this->make_data_element("Model",
-                                        rec.get_ics().get_model()->get_name(), col1_list);
-                this->make_data_element("Authors",
-                                        rec.get_ics().get_model()->get_author(), col1_list);
+                this->make_data_element("Model", rec.get_ics().get_model()->get_name(), col1_list);
+                this->make_data_element("Authors", rec.get_ics().get_model()->get_author(), col1_list);
 
                 col1.add_element(col1_list);
 
@@ -559,11 +564,8 @@ namespace transport
                 HTML_node col2_list("dl");
                 col2_list.add_attribute("class", "dl-horizontal");
 
-                this->make_data_element("Initial time",
-                                        boost::lexical_cast<std::string>(rec.get_ics().get_N_initial()), col2_list);
-                this->make_data_element("Horizon-crossing time",
-                                        boost::lexical_cast<std::string>(rec.get_ics().get_N_horizon_crossing()),
-                                        col2_list);
+                this->make_data_element("Initial time", boost::lexical_cast<std::string>(rec.get_ics().get_N_initial()), col2_list);
+                this->make_data_element("Horizon-crossing time", boost::lexical_cast<std::string>(rec.get_ics().get_N_horizon_crossing()), col2_list);
 
                 col2.add_element(col2_list);
 
@@ -572,8 +574,7 @@ namespace transport
                 HTML_node col3_list("dl");
                 col3_list.add_attribute("class", "dl-horizontal");
 
-                this->make_data_element("Citation data",
-                                        rec.get_ics().get_model()->get_tag(), col3_list);
+                this->make_data_element("Citation data", rec.get_ics().get_model()->get_tag(), col3_list);
 
                 col3.add_element(col3_list);
 
@@ -717,8 +718,7 @@ namespace transport
                     HTML_node col1_list("dl");
                     col1_list.add_attribute("class", "dl-horizontal");
 
-                    this->make_data_element("Task type",
-                                            task_type_to_string(rec.get_task_type()), col1_list);
+                    this->make_data_element("Task type", task_type_to_string(rec.get_task_type()), col1_list);
 
                     col1.add_element(col1_list);
 
@@ -739,8 +739,7 @@ namespace transport
                     HTML_node col3_list("dl");
                     col3_list.add_attribute("class", "dl-horizontal");
 
-                    this->make_data_element("k-config database",
-                                            rec.get_relative_kconfig_database_path().string(), col3_list);
+                    this->make_data_element("k-config database", rec.get_relative_kconfig_database_path().string(), col3_list);
 
                     col3.add_element(col3_list);
 
@@ -1167,9 +1166,7 @@ namespace transport
                 HTML_node col1_list("dl");
                 col1_list.add_attribute("class", "dl-horizontal");
 
-                this->make_data_element("Product type",
-                                        derived_data::derived_product_type_to_string(rec.get_product()->get_type()),
-                                        col1_list);
+                this->make_data_element("Product type", derived_data::derived_product_type_to_string(rec.get_product()->get_type()), col1_list);
 
                 col1.add_element(col1_list);
 
@@ -1178,8 +1175,7 @@ namespace transport
                 HTML_node col2_list("dl");
                 col2_list.add_attribute("class", "dl-horizontal");
 
-                this->make_data_element("Filename",
-                                        rec.get_product()->get_filename().string(), col2_list);
+                this->make_data_element("Filename", rec.get_product()->get_filename().string(), col2_list);
 
                 col2.add_element(col2_list);
 
@@ -1280,8 +1276,7 @@ namespace transport
                 HTML_node ctr_list("dl");
                 ctr_list.add_attribute("class", "dl-horizontal");
 
-                this->make_data_element("Container",
-                                        payload.get_container_path().string(), ctr_list);
+                this->make_data_element("Container", payload.get_container_path().string(), ctr_list);
 
                 const integration_metadata& metadata = payload.get_metadata();
 
@@ -1293,16 +1288,11 @@ namespace transport
                 HTML_node col1_list("dl");
                 col1_list.add_attribute("class", "dl-horizontal");
 
-                this->make_data_element("Complete",
-                                        (payload.is_failed() ? "No" : "Yes"), col1_list);
-                this->make_data_element("Workgroup",
-                                        boost::lexical_cast<std::string>(payload.get_workgroup_number()), col1_list);
-                this->make_data_element("Wallclock time",
-                                        format_time(metadata.total_wallclock_time), col1_list);
-                this->make_data_element("Total time",
-                                        format_time(metadata.total_integration_time), col1_list);
-                this->make_data_element("Failures",
-                                        boost::lexical_cast<std::string>(metadata.total_failures), col1_list);
+                this->make_data_element("Complete", (payload.is_failed() ? "No" : "Yes"), col1_list);
+                this->make_data_element("Workgroup", boost::lexical_cast<std::string>(payload.get_workgroup_number()), col1_list);
+                this->make_data_element("Wallclock time", format_time(metadata.total_wallclock_time), col1_list);
+                this->make_data_element("Total time", format_time(metadata.total_integration_time), col1_list);
+                this->make_data_element("Failures", boost::lexical_cast<std::string>(metadata.total_failures), col1_list);
 
                 col1.add_element(col1_list);
 
@@ -1316,12 +1306,9 @@ namespace transport
                 this->write_seeded(bundle, payload, seeded_dd);
                 col2_list.add_element(seeded_dt).add_element(seeded_dd);
 
-                this->make_data_element("Statistics",
-                                        (payload.has_statistics() ? "Yes" : "No"), col2_list);
-                this->make_data_element("Initial conditions",
-                                        (payload.has_initial_conditions() ? "Yes" : "No"), col2_list);
-                this->make_data_element("Configurations",
-                                        boost::lexical_cast<std::string>(metadata.total_configurations), col2_list);
+                this->make_data_element("Statistics", (payload.has_statistics() ? "Yes" : "No"), col2_list);
+                this->make_data_element("Initial conditions", (payload.has_initial_conditions() ? "Yes" : "No"), col2_list);
+                this->make_data_element("Configurations", boost::lexical_cast<std::string>(metadata.total_configurations), col2_list);
 
                 col2.add_element(col2_list);
 
@@ -1330,15 +1317,10 @@ namespace transport
                 HTML_node col3_list("dl");
                 col3_list.add_attribute("class", "dl-horizontal");
 
-                this->make_data_element("Size",
-                                        format_memory(payload.get_size()), col3_list);
-                this->make_data_element("Shortest integration",
-                                        format_time(metadata.global_min_integration_time), col3_list);
-                this->make_data_element("Longest integration",
-                                        format_time(metadata.global_max_integration_time), col3_list);
-                this->make_data_element("Mean integration",
-                                        format_time(metadata.total_integration_time / metadata.total_configurations),
-                                        col3_list);
+                this->make_data_element("Size", format_memory(payload.get_size()), col3_list);
+                this->make_data_element("Shortest integration", format_time(metadata.global_min_integration_time), col3_list);
+                this->make_data_element("Longest integration", format_time(metadata.global_max_integration_time), col3_list);
+                this->make_data_element("Mean integration", format_time(metadata.total_integration_time / metadata.total_configurations), col3_list);
 
                 col3.add_element(col3_list);
 
@@ -1351,10 +1333,92 @@ namespace transport
                 panel.add_element(panel_heading).add_element(panel_body);
 
                 anchor.add_element(panel);
+
+                this->write_worker_table(bundle, rec, anchor);
+
                 list.add_element(anchor);
                 pane.add_element(list);
                 parent.add_element(pane);
               }
+          }
+
+
+        template <typename number>
+        void HTML_report::write_worker_table(HTML_report_bundle<number>& bundle, const output_group_record<integration_payload> rec, HTML_node& parent)
+          {
+            worker_information_db worker_db = bundle.read_worker_database(rec.get_payload().get_container_path());
+            std::string tag = bundle.get_id(rec);
+
+            HTML_node button("button");
+            button.add_attribute("type", "button");
+
+            if(worker_db.size() == 0)
+              {
+                button.add_attribute("class", "btn btn-info disabled");
+                HTML_string label("Worker information");
+                button.add_element(label);
+                parent.add_element(button);
+                return;
+              }
+
+            button.add_attribute("class", "btn btn-info");
+            button.add_attribute("data-toggle", "collapse").add_attribute("data-target", "#" + tag + "workers");
+            this->make_badged_text("Worker information", worker_db.size(), button);
+
+            HTML_node content("div");
+            content.add_attribute("id", tag + "workers").add_attribute("class", "collapse");
+
+            HTML_node table("table");
+            table.add_attribute("class", "table table-striped table-condensed");
+
+            HTML_node head("thead");
+            HTML_node head_row("tr");
+
+            HTML_node identifier_label("th", "Identifier");
+            HTML_node hostname_label("th", "Hostname");
+            HTML_node backend_label("th", "Backend");
+            HTML_node backg_step_label("th", "Background");
+            HTML_node backg_tol_label("th", "Tolerances");
+            HTML_node pert_step_label("th", "Perturbations");
+            HTML_node pert_tol_label("th", "Tolerances");
+            HTML_node os_name_label("th", "Operating system");
+            head_row.add_element(identifier_label).add_element(hostname_label).add_element(backend_label);
+            head_row.add_element(backg_step_label).add_element(backg_tol_label);
+            head_row.add_element(pert_step_label).add_element(pert_tol_label);
+            head_row.add_element(os_name_label);
+            head.add_element(head_row);
+
+            HTML_node body("tbody");
+
+            for(const worker_information_db::value_type& worker : worker_db)
+              {
+                const worker_information& info = *worker.second;
+                HTML_node table_row("tr");
+
+                HTML_node identifier("td", boost::lexical_cast<std::string>(info.get_workgroup()) + ", " + boost::lexical_cast<std::string>(info.get_worker()));
+                HTML_node hostname("td", info.get_hostname());
+                HTML_node backend("td", info.get_backend());
+                HTML_node backg_step("td", info.get_backg_stepper());
+                HTML_node pert_step("td", info.get_pert_stepper());
+
+                std::pair<double, double> btol = info.get_backg_tol();
+                HTML_node backg_tol("td", format_number(btol.first) + ", " + format_number(btol.second));
+
+                std::pair<double, double> ptol = info.get_pert_tol();
+                HTML_node pert_tol("td", format_number(ptol.first) + ", " + format_number(ptol.second));
+
+                HTML_node os_name("td", info.get_os_name());
+
+                table_row.add_element(identifier).add_element(hostname).add_element(backend);
+                table_row.add_element(backg_step).add_element(backg_tol);
+                table_row.add_element(pert_step).add_element(pert_tol);
+                table_row.add_element(os_name);
+                body.add_element(table_row);
+              }
+
+            table.add_element(head).add_element(body);
+            content.add_element(table);
+            parent.add_element(button).add_element(content);
           }
 
 

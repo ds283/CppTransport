@@ -7,6 +7,7 @@
 #define CPPTRANSPORT_DATA_MANAGER_SQLITE3_IMPL_H
 
 
+#include <transport-runtime-api/exceptions.h>
 #include "transport-runtime-api/sqlite3/detail/data_manager_sqlite3_decl.h"
 
 
@@ -1635,6 +1636,56 @@ namespace transport
 
         BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::log_severity_level::normal) << "** Detached SQLite3 container from datapipe";
       }
+
+
+    template <typename number>
+    worker_information_db data_manager_sqlite3<number>::read_worker_information(const boost::filesystem::path& ctr_path)
+      {
+        if(!boost::filesystem::exists(ctr_path))
+          {
+            std::ostringstream msg;
+            msg << CPPTRANSPORT_DATAMGR_CONTAINER_NOT_EXIST << " '" << ctr_path.string() << "'";
+            throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
+          }
+
+        sqlite3* db = nullptr;
+
+        int status = sqlite3_open_v2(ctr_path.string().c_str(), &db, SQLITE_OPEN_READONLY, nullptr);
+
+        if(status != SQLITE_OK)
+          {
+            std::ostringstream msg;
+            if(db != nullptr)
+              {
+                msg << CPPTRANSPORT_DATACTR_OPEN_A << " '" << ctr_path.string() << "' " << CPPTRANSPORT_DATACTR_OPEN_B << status << ": " << sqlite3_errmsg(db) << ")";
+                sqlite3_close(db);
+              }
+            else
+              {
+                msg << CPPTRANSPORT_DATACTR_OPEN_A << " '" << ctr_path.string() << "' " << CPPTRANSPORT_DATACTR_OPEN_B << status << ")";
+              }
+            throw runtime_exception(exception_type::DATA_CONTAINER_ERROR, msg.str());
+          }
+        sqlite3_extended_result_codes(db, 1);
+
+        // enable foreign key constraints
+        char* errmsg;
+        sqlite3_exec(db, "PRAGMA foreign_keys = ON;", nullptr, nullptr, &errmsg);
+
+        // force temporary databases to be stored in memory, for speed
+        sqlite3_exec(db, "PRAGMA main.temp_store = 2;", nullptr, nullptr, &errmsg);
+
+        // try to speed up SQLite accesses
+        sqlite3_exec(db, "PRAGMA main.synchronous = 1;", nullptr, nullptr, &errmsg);
+        sqlite3_exec(db, "PRAGMA main.cache_size = 10000;", nullptr, nullptr, &errmsg);
+
+        worker_information_db worker_db = sqlite3_operations::read_worker_table(db);
+
+        sqlite3_close(db);
+
+        return(worker_db);
+      }
+
 
   }   // namespace transport
 

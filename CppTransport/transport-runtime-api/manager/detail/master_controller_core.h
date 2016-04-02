@@ -399,7 +399,11 @@ namespace transport
         if(this->repo)
           {
             this->cmdline_reports.report(*this->repo);
-            this->HTML_reports.report(*this->repo);
+          }
+
+        if(this->repo && this->data_mgr)
+          {
+            this->HTML_reports.report(*this->repo, *this->data_mgr);
           }
       }
 

@@ -7,6 +7,8 @@
 #define CPPTRANSPORT_DATA_MANAGER_DECL_H
 
 
+#include <transport-runtime-api/data/metadata.h>
+
 namespace transport
   {
 
@@ -393,11 +395,12 @@ namespace transport
                                               std::vector<kconfiguration_statistics>& data) = 0;
 
 
-        // RAW DATA ACCESS -- NO USE OF DATAPIPE
+        // RAW DATA ACCESS -- DOESN'T REQUIRE USE OF DATAPIPE
 
       public:
 
-        //! Read the worker information table
+        //! Read the worker information table for a container
+        virtual worker_information_db read_worker_information(const boost::filesystem::path& ctr_path) = 0;
 
 
         // INTERNAL DATA

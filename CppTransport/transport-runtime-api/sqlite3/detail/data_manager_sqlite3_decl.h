@@ -361,6 +361,14 @@ namespace transport
         void datapipe_attach_container(datapipe<number>* pipe, const boost::filesystem::path& ctr_path);
 
 
+        // RAW DATA ACCESS -- DOESN'T REQUIRE USE OF DATAPIPE
+
+      public:
+
+        //! Read the worker information table for a container
+        virtual worker_information_db read_worker_information(const boost::filesystem::path& ctr_path) override;
+
+
         // INTERNAL UTILITY FUNCTIONS
 
       protected:

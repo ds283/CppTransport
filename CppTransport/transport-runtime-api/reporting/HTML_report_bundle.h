@@ -7,6 +7,8 @@
 #define CPPTRANSPORT_REPORTING_HTML_REPORT_BUNDLE_H
 
 
+#include "transport-runtime-api/data/data_manager.h"
+
 #include "transport-runtime-api/reporting/repository_cache.h"
 #include "transport-runtime-api/reporting/unique_tags.h"
 
@@ -48,7 +50,7 @@ namespace transport
 
             //! constructor
             HTML_report_bundle(local_environment& e, argument_cache& c,
-                               repository<number>& rep, boost::filesystem::path r);
+                               repository<number>& rep, data_manager<number>& dmg, boost::filesystem::path r);
 
             //! destructor adds JavaScript item
             ~HTML_report_bundle();
@@ -125,6 +127,14 @@ namespace transport
             repository_cache<number>& get_cache() { return this->cache; }
 
 
+            // DATA MANAGER FUNCTIONS
+
+          public:
+
+            //! get worker table, given *relative* path of container
+            worker_information_db read_worker_database(const boost::filesystem::path& ctr_path) const { return(this->dmgr.read_worker_information(this->repo.get_root_path() / ctr_path)); }
+
+
             // FORWARD UNIQUE_TAGS INTERFACE
 
           public:
@@ -162,6 +172,9 @@ namespace transport
             //! reference to repository
             repository<number>& repo;
 
+            //! reference to data manager
+            data_manager<number>& dmgr;
+
             //! reference to local environment policy class
             local_environment& env;
 
@@ -191,8 +204,10 @@ namespace transport
 
         template <typename number>
         HTML_report_bundle<number>::HTML_report_bundle(local_environment& e, argument_cache& c,
-                                                       repository<number>& rep, boost::filesystem::path r)
+                                                       repository<number>& rep, data_manager<number>& dmg,
+                                                       boost::filesystem::path r)
           : repo(rep),
+            dmgr(dmg),
             env(e),
             arg_cache(c),
             cache(rep),

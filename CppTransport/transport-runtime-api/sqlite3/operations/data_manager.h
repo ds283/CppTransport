@@ -14,6 +14,7 @@
 #include "transport-runtime-api/sqlite3/operations/data_manager_aggregate.h"
 #include "transport-runtime-api/sqlite3/operations/data_manager_write.h"
 #include "transport-runtime-api/sqlite3/operations/data_manager_pull.h"
+#include "transport-runtime-api/sqlite3/operations/data_manager_read.h"
 #include "transport-runtime-api/sqlite3/operations/data_manager_integrity.h"
 
 

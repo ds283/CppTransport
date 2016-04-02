@@ -27,6 +27,9 @@
 #include "transport-runtime-api/tasks/configuration-database/twopf_config_database.h"
 #include "transport-runtime-api/tasks/configuration-database/threepf_config_database.h"
 
+// need metadata records (worker information, timing information)
+#include "transport-runtime-api/data/metadata.h"
+
 #include "boost/filesystem/operations.hpp"
 #include "boost/timer/timer.hpp"
 #include "boost/algorithm/string.hpp"
