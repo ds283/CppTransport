@@ -1430,10 +1430,10 @@ namespace transport
                 HTML_node pert_step("td", info.get_pert_stepper());
 
                 std::pair<double, double> btol = info.get_backg_tol();
-                HTML_node backg_tol("td", format_number(btol.first) + ", " + format_number(btol.second));
+                HTML_node backg_tol("td", format_number(btol.first, 2) + ", " + format_number(btol.second, 2));
 
                 std::pair<double, double> ptol = info.get_pert_tol();
-                HTML_node pert_tol("td", format_number(ptol.first) + ", " + format_number(ptol.second));
+                HTML_node pert_tol("td", format_number(ptol.first, 2) + ", " + format_number(ptol.second, 2));
 
                 HTML_node os_name("td", info.get_os_name());
 
