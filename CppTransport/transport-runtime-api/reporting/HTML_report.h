@@ -19,6 +19,7 @@
 #include "transport-runtime-api/manager/message_handlers.h"
 
 #include "transport-runtime-api/utilities/formatter.h"
+#include "transport-runtime-api/utilities/plot_environment.h"
 
 
 namespace transport
@@ -117,8 +118,27 @@ namespace transport
             //! typedef for list of configurations-per-worker
             typedef std::map< std::pair<unsigned int, unsigned int>, unsigned int > count_list;
 
-            //! count configurations per worker and store in a
+            //! count configurations per worker and store in an interable container
             count_list count_configurations_per_worker(timing_db& data);
+
+            //! create visual report of timing statistics
+            template <typename number>
+            void write_timing_report(HTML_report_bundle<number>& bundle, const output_group_record<integration_payload> rec, HTML_node& parent);
+
+            //! produce bar chart showing number of configurations processed per worker
+            template <typename number>
+            void write_worker_chart(HTML_report_bundle<number>& bundle, const output_group_record<integration_payload> rec,
+                                    HTML_node& parent, count_list& counts);
+
+            //! produce histogram showing distribution of integration times
+            template <typename number>
+            void write_timing_histogram(HTML_report_bundle<number>& bundle, const output_group_record<integration_payload> rec,
+                                        HTML_node& parent, timing_db& timing_data);
+
+            //! write standardized matplotlib preamble
+            template <typename number>
+            void write_matplotlib_preamble(std::ofstream& out, HTML_report_bundle<number>& bundle);
+
 
             // MAKE BUTTONS
 
@@ -570,8 +590,8 @@ namespace transport
                 HTML_node col2_list("dl");
                 col2_list.add_attribute("class", "dl-horizontal");
 
-                this->make_data_element("Initial time", boost::lexical_cast<std::string>(rec.get_ics().get_N_initial()), col2_list);
-                this->make_data_element("Horizon-crossing time", boost::lexical_cast<std::string>(rec.get_ics().get_N_horizon_crossing()), col2_list);
+                this->make_data_element("Initial time", format_number(rec.get_ics().get_N_initial()) + " e-folds", col2_list);
+                this->make_data_element("Horizon-crossing time", format_number(rec.get_ics().get_N_horizon_crossing()) + " e-folds", col2_list);
 
                 col2.add_element(col2_list);
 
@@ -624,7 +644,7 @@ namespace transport
                     label_text.bold();
                     label.add_element(label_text);
 
-                    HTML_node value("td", boost::lexical_cast<std::string>(param_vec[i]));
+                    HTML_node value("td", format_number(static_cast<double>(param_vec[i]), 6));
 
                     table_row.add_element(label).add_element(value);
                     params_table_body.add_element(table_row);
@@ -661,7 +681,7 @@ namespace transport
                     label_text.bold();
                     label.add_element(label_text);
 
-                    HTML_node value("td", boost::lexical_cast<std::string>(ics_vec[i]));
+                    HTML_node value("td", format_number(static_cast<double>(ics_vec[i] / params.get_Mp()), 6) + " M<sub>P</sub>");    // using tags in string is hacky, but simple
 
                     table_row.add_element(label).add_element(value);
                     ics_table_body.add_element(table_row);
@@ -1269,7 +1289,7 @@ namespace transport
                 HTML_node panel("div");
                 panel.add_attribute("class", "panel panel-default");
 
-                HTML_node panel_heading("div", "Properties");
+                HTML_node panel_heading("div", "Summary");
                 panel_heading.add_attribute("class", "panel-heading");
 
                 HTML_node panel_body("div");
@@ -1341,6 +1361,7 @@ namespace transport
                 anchor.add_element(panel);
 
                 this->write_worker_table(bundle, rec, anchor);
+                if(rec.get_payload().has_statistics()) this->write_timing_report(bundle, rec, anchor);
 
                 list.add_element(anchor);
                 pane.add_element(list);
@@ -1381,12 +1402,15 @@ namespace transport
             HTML_node head_row("tr");
 
             HTML_node identifier_label("th", "Identifier");
+            identifier_label.add_attribute("data-toggle", "tooltip").add_attribute("data-container", "body").add_attribute("title", "workgroup, worker number");
             HTML_node hostname_label("th", "Hostname");
             HTML_node backend_label("th", "Backend");
             HTML_node backg_step_label("th", "Background");
             HTML_node backg_tol_label("th", "Tolerances");
+            backg_tol_label.add_attribute("data-toggle", "tooltip").add_attribute("data-container", "body").add_attribute("title", "atol, rtol");
             HTML_node pert_step_label("th", "Perturbations");
             HTML_node pert_tol_label("th", "Tolerances");
+            pert_tol_label.add_attribute("data-toggle", "tooltip").add_attribute("data-container", "body").add_attribute("title", "atol, rtol");
             HTML_node configurations_label("th", "Configurations");
             HTML_node os_name_label("th", "Operating system");
 
@@ -1482,6 +1506,200 @@ namespace transport
 
 
         template <typename number>
+        void HTML_report::write_timing_report(HTML_report_bundle<number>& bundle, const output_group_record<integration_payload> rec, HTML_node& parent)
+          {
+            worker_information_db worker_db = bundle.read_worker_database(rec.get_payload().get_container_path());
+            std::string tag = bundle.get_id(rec);
+
+            // will throw an exception if statistics table cannot be found
+            timing_db timing_data = bundle.read_timing_database(rec.get_payload().get_container_path());
+
+            // bin data into an aggregate number of configurations processed per worker
+            count_list counts = this->count_configurations_per_worker(timing_data);
+
+            // Produce report
+
+            HTML_node button("button", "Integration report");
+            button.add_attribute("type", "button");
+
+            if(worker_db.size() == 0 || timing_data.size() == 0 || !bundle.can_produce_plots())
+              {
+                button.add_attribute("class", "btn btn-info disabled");
+                parent.add_element(button);
+                return;
+              }
+
+            button.add_attribute("class", "btn btn-info");
+            button.add_attribute("data-toggle", "collapse").add_attribute("data-target", "#" + tag + "timing");
+
+            HTML_node content("div");
+            content.add_attribute("id", tag + "timing").add_attribute("class", "collapse");
+
+            this->write_worker_chart(bundle, rec, content, counts);
+            this->write_timing_histogram(bundle, rec, content, timing_data);
+
+            parent.add_element(button).add_element(content);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_worker_chart(HTML_report_bundle<number>& bundle, const output_group_record<integration_payload> rec,
+                                             HTML_node& parent, count_list& counts)
+          {
+            boost::filesystem::path relative_asset_loc = bundle.make_asset_directory(rec.get_name());
+
+            boost::filesystem::path relative_script_loc = relative_asset_loc / "_worker_chart.py";
+            boost::filesystem::path relative_image_loc = relative_asset_loc / "_worker_chart.png";
+
+            boost::filesystem::path script_path = this->root / relative_script_loc;
+            boost::filesystem::path image_path = this->root / relative_image_loc;
+
+            std::ofstream out(script_path.string(), std::ios::out | std::ios::trunc);
+            if(out.fail() || !out.is_open()) return;
+
+            this->write_matplotlib_preamble(out, bundle);
+            out << "plt.figure()" << '\n';
+
+            unsigned int count = 0;
+            out << "left = [ ";
+            for(const count_list::value_type& item : counts)
+              {
+                if(count > 0) out << ", ";
+                out << count;
+                ++count;
+              }
+            out << "]" << '\n';
+
+            count = 0;
+            out << "height = [ ";
+            for(const count_list::value_type& item : counts)
+              {
+                if(count > 0) out << ", ";
+                out << item.second;
+                ++count;
+              }
+            out << "]" << '\n';
+
+
+            count = 0;
+            out << "label = [ ";
+            for(const count_list::value_type& item : counts)
+              {
+                if(count > 0) out << ", ";
+                out << "'" << item.first.first << "," << item.first.second << "'";
+                ++count;
+              }
+            out << "]" << '\n';
+
+            if(counts.size() <= 20)
+              {
+                out << "plt.bar(left, height, tick_label=label)" << '\n';
+              }
+            else // don't include tick labels if they would be too crowded
+              {
+                out << "plt.bar(left, height)" << '\n';
+              }
+            out << "plt.xlabel('worker')" << '\n';
+            out << "plt.ylabel('configurations processed')" << '\n';
+            out << "plt.savefig('" << image_path.string() << "')" << '\n';
+            out << "plt.close()" << '\n';
+
+            out.close();
+
+            local_environment& env = bundle.get_environment();
+            bool success = env.execute_python(script_path) == 0;
+
+            if(success)
+              {
+                boost::filesystem::remove(script_path);
+                HTML_node chart("img", false);
+                chart.add_attribute("src", relative_image_loc.string()).add_attribute("class", "imgproduct");
+                parent.add_element(chart);
+              }
+            else
+              {
+                if(boost::filesystem::exists(image_path)) boost::filesystem::remove(image_path);
+                HTML_node no_chart("div", "Could not generate configurations-per-worker chart");
+                no_chart.add_attribute("class", "label label-danger");
+                HTML_node br("br", false);
+                parent.add_element(no_chart).add_element(br);
+              }
+          }
+
+
+        template <typename number>
+        void HTML_report::write_timing_histogram(HTML_report_bundle<number>& bundle, const output_group_record<integration_payload> rec,
+                                                 HTML_node& parent, timing_db& timing_data)
+          {
+            boost::filesystem::path relative_asset_loc = bundle.make_asset_directory(rec.get_name());
+
+            boost::filesystem::path relative_script_loc = relative_asset_loc / "_timing_histogram.py";
+            boost::filesystem::path relative_image_loc = relative_asset_loc / "_timing_histogram.png";
+
+            boost::filesystem::path script_path = this->root / relative_script_loc;
+            boost::filesystem::path image_path = this->root / relative_image_loc;
+
+            std::ofstream out(script_path.string(), std::ios::out | std::ios::trunc);
+            if(out.fail() || !out.is_open()) return;
+
+            this->write_matplotlib_preamble(out, bundle);
+            out << "plt.figure()" << '\n';
+
+            out << "timings = np.array([ ";
+            unsigned int count = 0;
+            for(const timing_db::value_type& item : timing_data)
+              {
+                const timing_record& record = *item.second;
+                if(count > 0) out << ", ";
+
+                out << format_number(static_cast<double>(record.get_integration_time()) / 1E9);
+
+                ++count;
+              }
+            out << " ])" << '\n';
+
+            out << "bin_values = np.logspace(np.log10(timings.min()), np.log10(timings.max()), num=20, base=10.0)" << '\n';
+            out << "plt.hist(timings, bins=bin_values, normed=True)" << '\n';
+            out << "plt.yscale('log')" << '\n';
+            out << "plt.xscale('log')" << '\n';
+            out << "plt.xlabel('integration time in seconds')" << '\n';
+            out << "plt.ylabel('frequency')" << '\n';
+            out << "plt.savefig('" << image_path.string() << "')" << '\n';
+            out << "plt.close()" << '\n';
+
+            out.close();
+
+            local_environment& env = bundle.get_environment();
+            bool success = env.execute_python(script_path) == 0;
+
+            if(success)
+              {
+                boost::filesystem::remove(script_path);
+                HTML_node chart("img", false);
+                chart.add_attribute("src", relative_image_loc.string()).add_attribute("class", "imgproduct");
+                parent.add_element(chart);
+              }
+            else
+              {
+                if(boost::filesystem::exists(image_path)) boost::filesystem::remove(image_path);
+                HTML_node no_chart("div", "Could not generate timing histogram");
+                no_chart.add_attribute("class", "label label-danger");
+                HTML_node br("br", false);
+                parent.add_element(no_chart).add_element(br);
+              }
+          }
+
+
+        template <typename number>
+        void HTML_report::write_matplotlib_preamble(std::ofstream& out, HTML_report_bundle<number>& bundle)
+          {
+            out << "import numpy as np" << '\n';
+            plot_environment plot_env(bundle.get_environment(), bundle.get_argument_cache());
+            plot_env.write_environment(out);
+          }
+
+
+        template <typename number>
         void HTML_report::write_postintegration_content(HTML_report_bundle<number>& bundle, HTML_node& parent)
           {
             postintegration_content_db& db = bundle.get_postintegration_content_db();
@@ -1508,7 +1726,7 @@ namespace transport
                 HTML_node panel("div");
                 panel.add_attribute("class", "panel panel-default");
 
-                HTML_node panel_heading("div", "Properties");
+                HTML_node panel_heading("div", "Summary");
                 panel_heading.add_attribute("class", "panel-heading");
 
                 HTML_node panel_body("div");
@@ -1671,7 +1889,7 @@ namespace transport
                         HTML_node panel("div");
                         panel.add_attribute("class", "panel panel-default topskip");
 
-                        HTML_node panel_heading("div", "Properties");
+                        HTML_node panel_heading("div", "Summary");
                         panel_heading.add_attribute("class", "panel-heading");
 
                         HTML_node panel_body("div");

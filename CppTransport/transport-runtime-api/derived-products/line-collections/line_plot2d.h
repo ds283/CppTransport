@@ -729,7 +729,8 @@ namespace transport
                 // if yes, hand off to local environment to execute
                 if(success) success = env.execute_python(script_file) == 0;
 
-						    // remove python script if worked ok, otherwise move script to destination and throw an exception
+						    // remove python script if worked ok, otherwise move script to destination and mark as failed;
+                // caller may choose to throw an exception
 						    if(success)
 							    {
 						        boost::filesystem::remove(script_file);

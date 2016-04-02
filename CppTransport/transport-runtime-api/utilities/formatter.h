@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __formatter_H_
-#define __formatter_H_
+#ifndef CPPTRANSPORT_FORMATTER_H
+#define CPPTRANSPORT_FORMATTER_H
 
 
 #include <iomanip>
@@ -86,4 +86,4 @@ inline std::string format_number(double number, unsigned int precision=3)
   }
 
 
-#endif //__formatter_H_
+#endif //CPPTRANSPORT_FORMATTER_H

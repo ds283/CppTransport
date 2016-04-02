@@ -159,6 +159,20 @@ namespace transport
             std::string get_id(const output_group_record<Payload>& rec) { return this->tags.get_id(rec); }
 
 
+            // ENVIRONMENT QUERIES
+
+          public:
+
+            //! check whether it is possible to produce plots
+            bool can_produce_plots() const { return(this->env.has_python() && this->env.has_matplotlib()); }
+
+            //! get environment object
+            local_environment& get_environment() { return(this->env); }
+
+            //! get argument cache objects
+            argument_cache& get_argument_cache() { return(this->arg_cache); }
+
+
             // INTERNAL API
 
           protected:
