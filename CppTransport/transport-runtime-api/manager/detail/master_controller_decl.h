@@ -97,8 +97,11 @@ namespace transport
         //! recognize configuration switches
         void recognize_configuration_switches(boost::program_options::variables_map& option_map);
 
-        //! recognize repository switches
+        //! recognize repository & reporting switches
         void recognize_repository_switches(boost::program_options::variables_map& option_map);
+
+        //! recognize repository action switches
+        void recognize_action_switches(boost::program_options::variables_map& option_map);
 
         //! recognize journalling switches
         void recognize_journal_switches(boost::program_options::variables_map& option_map);

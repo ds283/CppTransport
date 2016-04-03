@@ -79,6 +79,14 @@ namespace transport
           (CPPTRANSPORT_SWITCH_CHECKPOINT,       boost::program_options::value< int >(),                                     CPPTRANSPORT_HELP_CHECKPOINT)
           (CPPTRANSPORT_SWITCH_SEED,             boost::program_options::value< std::string >(),                             CPPTRANSPORT_HELP_SEED);
 
+        boost::program_options::options_description action_options("Repository actions", width);
+        action_options.add_options()
+          (CPPTRANSPORT_SWITCH_OBJECT,           boost::program_options::value< std::vector< std::string > >()->composing(), CPPTRANSPORT_HELP_OBJECT)
+          (CPPTRANSPORT_SWITCH_ADD_TAG,          boost::program_options::value< std::vector< std::string > >()->composing(), CPPTRANSPORT_HELP_ADD_TAG)
+          (CPPTRANSPORT_SWITCH_DELETE_TAG,       boost::program_options::value< std::vector< std::string > >()->composing(), CPPTRANSPORT_HELP_DELETE_TAG)
+          (CPPTRANSPORT_SWITCH_ADD_NOTE,         boost::program_options::value< std::vector< std::string > >()->composing(), CPPTRANSPORT_HELP_ADD_NOTE)
+          (CPPTRANSPORT_SWITCH_DELETE_NOTE,      boost::program_options::value< std::vector< std::string > >()->composing(), CPPTRANSPORT_HELP_DELETE_NOTE);
+
         boost::program_options::options_description report_options("Repository reporting and status", width);
         report_options.add_options()
           (CPPTRANSPORT_SWITCH_RECOVER,                                                                                      CPPTRANSPORT_HELP_RECOVER)
@@ -93,13 +101,13 @@ namespace transport
           (CPPTRANSPORT_SWITCH_NO_COLOR, CPPTRANSPORT_HELP_NO_COLOR);
 
         boost::program_options::options_description cmdline_options;
-        cmdline_options.add(generic).add(configuration).add(job_options).add(report_options).add(plotting).add(journaling).add(hidden_options);
+        cmdline_options.add(generic).add(configuration).add(job_options).add(action_options).add(report_options).add(plotting).add(journaling).add(hidden_options);
 
         boost::program_options::options_description config_file_options;
-        config_file_options.add(configuration).add(job_options).add(report_options).add(plotting).add(journaling).add(hidden_options);
+        config_file_options.add(configuration).add(job_options).add(action_options).add(report_options).add(plotting).add(journaling).add(hidden_options);
 
         boost::program_options::options_description output_options;
-        output_options.add(generic).add(configuration).add(job_options).add(report_options).add(plotting).add(journaling);
+        output_options.add(generic).add(configuration).add(job_options).add(action_options).add(report_options).add(plotting).add(journaling);
 
         boost::program_options::variables_map option_map;
 
@@ -158,6 +166,7 @@ namespace transport
 
         this->recognize_configuration_switches(option_map);
         this->recognize_repository_switches(option_map);
+        this->recognize_action_switches(option_map);
         this->recognize_journal_switches(option_map);
         this->recognize_job_switches(option_map);
         this->recognize_plot_switches(option_map);
@@ -321,6 +330,13 @@ namespace transport
         if(option_map.count(CPPTRANSPORT_SWITCH_PROVENANCE)) this->cmdline_reports.provenance(option_map[CPPTRANSPORT_SWITCH_PROVENANCE].as< std::vector<std::string> >());
 
         if(option_map.count(CPPTRANSPORT_SWITCH_HTML)) this->HTML_reports.set_root(option_map[CPPTRANSPORT_SWITCH_HTML].as< std::string >());
+      }
+
+
+    template <typename number>
+    void master_controller<number>::recognize_action_switches(boost::program_options::variables_map& option_map)
+      {
+
       }
 
 
