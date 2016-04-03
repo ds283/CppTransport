@@ -200,8 +200,7 @@ namespace transport
                                          slave_work_event::event_type begin_label, slave_work_event::event_type end_label);
 
         //! Master node: debrief after task completion
-        void debrief_integration(integration_writer<number>& writer,
-                                 integration_metadata& i_metadata, boost::timer::cpu_timer& wallclock_timer);
+        void debrief_integration(integration_writer<number>& writer, integration_metadata& i_metadata);
 
         //! Master node: respond to an aggregation request
         void aggregate_integration(integration_writer<number>& writer, unsigned int worker, unsigned int id,

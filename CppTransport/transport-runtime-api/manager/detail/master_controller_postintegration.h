@@ -166,7 +166,7 @@ namespace transport
                                                                     bool seeded, const std::string& seed_group, const std::list<std::string>& tags,
                                                                     slave_work_event::event_type begin_label, slave_work_event::event_type end_label)
       {
-        std::unique_ptr< task_record<number> > pre_prec = this->repo->query_task(ptk->get_name());
+        std::unique_ptr< task_record<number> > pre_prec = this->repo->query_task(ptk->get_name(), record_mode::readonly);
         integration_task_record<number>* prec = dynamic_cast< integration_task_record<number>* >(pre_prec.get());
 
         assert(prec != nullptr);
@@ -416,11 +416,15 @@ namespace transport
 
         if(content_groups.size() > 1) throw runtime_exception(exception_type::RUNTIME_ERROR,  CPPTRANSPORT_POSTINTEGRATION_MULTIPLE_GROUPS);
 
+        // set wallclock time in integration metadata to our measured time
+        wallclock_timer.stop();
+        i_metadata.total_wallclock_time = wallclock_timer.elapsed().wall;
+
+        // push task metadata to the writers
         i_writer.set_metadata(i_metadata);
         p_writer.set_metadata(o_metadata);
 
-        wallclock_timer.stop();
-        this->debrief_integration(i_writer, i_metadata, wallclock_timer);
+        this->debrief_integration(i_writer, i_metadata);
 
         return(success);
       }

@@ -177,24 +177,26 @@ namespace transport
 
         bool success = this->poll_workers(i_agg, p_agg, d_agg, i_metadata, o_metadata, content_groups, writer, begin_label, end_label);
 
-        // push task metadata we have collected to the writer
-        writer.set_metadata(i_metadata);
+        // set wallclock time in metadata to our measured time
         wallclock_timer.stop();
-        this->debrief_integration(writer, i_metadata, wallclock_timer);
+        i_metadata.total_wallclock_time = wallclock_timer.elapsed().wall;
+
+        // push task metadata to the writer
+        writer.set_metadata(i_metadata);
+
+        this->debrief_integration(writer, i_metadata);
 
         return(success);
       }
 
 
     template <typename number>
-    void master_controller<number>::debrief_integration(integration_writer<number>& writer,
-                                                        integration_metadata& i_metadata, boost::timer::cpu_timer& wallclock_timer)
+    void master_controller<number>::debrief_integration(integration_writer<number>& writer, integration_metadata& i_metadata)
       {
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
         BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "";
         BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "++ TASK COMPLETE (at " << boost::posix_time::to_simple_string(now) << "): FINAL USAGE STATISTICS";
-        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "++   Total wallclock time for task '" << writer.get_task_name() << "' " << format_time(wallclock_timer.elapsed().wall);
-        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "++   Total wallclock time required by worker processes = " << format_time(i_metadata.total_wallclock_time);
+        BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "++   Total wallclock time required for for task '" << writer.get_task_name() << "' " << format_time(i_metadata.total_wallclock_time);
         BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "++   Total aggregation time required by master process = " << format_time(i_metadata.total_aggregation_time);
         BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "";
         BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "++ AGGREGATE PERFORMANCE STATISTICS";
@@ -266,7 +268,8 @@ namespace transport
     template <typename number>
     void master_controller<number>::update_integration_metadata(MPI::finished_integration_payload& payload, integration_metadata& metadata)
       {
-        metadata.total_wallclock_time += payload.get_wallclock_time();
+        // don't update wallclock time; this is set to be the time taken to complete the job measured on the master node
+        // it is fixed once the integration is complete, in integration_task_to_workers()
 
         metadata.total_integration_time += payload.get_integration_time();
         boost::timer::nanosecond_type mean_integration_time = payload.get_integration_time() / (payload.get_num_integrations() > 0 ? payload.get_num_integrations() : 1);
