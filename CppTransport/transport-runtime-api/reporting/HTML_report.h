@@ -139,6 +139,20 @@ namespace transport
             template <typename number>
             void write_matplotlib_preamble(std::ofstream& out, HTML_report_bundle<number>& bundle);
 
+            //! write integration task details for twopf task
+            template <typename number>
+            void write_task_data(HTML_report_bundle<number>& bundle, twopf_task<number>& tk,
+                                 HTML_node& col1_list, HTML_node& col2_list, HTML_node& col3_list);
+
+            //! write integration task details for threepf task
+            template <typename number>
+            void write_task_data(HTML_report_bundle<number>& bundle, threepf_task<number>& tk,
+                                 HTML_node& col1_list, HTML_node& col2_list, HTML_node& col3_list);
+
+            //! write task details for a generic integrationt ask
+            template <typename number>
+            void write_generic_task_data(HTML_report_bundle<number>& bundle, twopf_db_task<number>& tk,
+                                         HTML_node& col1_list, HTML_node& col2_list, HTML_node& col3_list);
 
             // MAKE BUTTONS
 
@@ -746,8 +760,6 @@ namespace transport
 
                     this->make_data_element("Task type", task_type_to_string(rec.get_task_type()), col1_list);
 
-                    col1.add_element(col1_list);
-
                     HTML_node col2("div");
                     col2.add_attribute("class", "col-md-4");
                     HTML_node col2_list("dl");
@@ -758,8 +770,6 @@ namespace transport
                     this->write_package_button(bundle, rec.get_task()->get_ics().get_name(), pkg_dd);
                     col2_list.add_element(pkg_dt).add_element(pkg_dd);
 
-                    col2.add_element(col2_list);
-
                     HTML_node col3("div");
                     col3.add_attribute("class", "col-md-4");
                     HTML_node col3_list("dl");
@@ -767,6 +777,24 @@ namespace transport
 
                     this->make_data_element("k-config database", rec.get_relative_kconfig_database_path().string(), col3_list);
 
+                    switch(rec.get_task_type())
+                      {
+                        case integration_task_type::twopf:
+                          {
+                            twopf_task<number>& tk = dynamic_cast< twopf_task<number>& >(*rec.get_task());
+                            this->write_task_data(bundle, tk, col1_list, col2_list, col3_list);
+                            break;
+                          }
+
+                        case integration_task_type::threepf:
+                          {
+                            threepf_task<number>& tk = dynamic_cast< threepf_task<number>& >(*rec.get_task());
+                            this->write_task_data(bundle, tk, col1_list, col2_list, col3_list);
+                          }
+                      }
+
+                    col1.add_element(col1_list);
+                    col2.add_element(col2_list);
                     col3.add_element(col3_list);
 
                     row.add_element(col1).add_element(col2).add_element(col3);
@@ -854,6 +882,53 @@ namespace transport
               }
 
             parent.add_element(list);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_task_data(HTML_report_bundle<number>& bundle, twopf_task<number>& tk,
+                                          HTML_node& col1_list, HTML_node& col2_list, HTML_node& col3_list)
+          {
+            this->write_generic_task_data(bundle, tk, col1_list, col2_list, col3_list);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_task_data(HTML_report_bundle<number>& bundle, threepf_task<number>& tk,
+                                          HTML_node& col1_list, HTML_node& col2_list, HTML_node& col3_list)
+          {
+            this->write_generic_task_data(bundle, tk, col1_list, col2_list, col3_list);
+
+            const threepf_kconfig_database& threepf_db = tk.get_threepf_database();
+            this->make_data_element("3pf configurations", boost::lexical_cast<std::string>(threepf_db.size()), col3_list);
+
+            this->make_data_element("Integrable", tk.is_integrable() ? "Yes" : "No", col3_list);
+            if(tk.is_integrable())
+              {
+                this->make_data_element("Voxel size", format_number(tk.voxel_size()), col3_list);
+              }
+          }
+
+
+        template <typename number>
+        void HTML_report::write_generic_task_data(HTML_report_bundle<number>& bundle, twopf_db_task<number>& tk,
+                                                  HTML_node& col1_list, HTML_node& col2_list, HTML_node& col3_list)
+          {
+            this->make_data_element("Initial conditions", format_number(tk.get_N_initial()) + " e-folds", col1_list);
+            this->make_data_element("<var>N</var><sub>*</sub>", format_number(tk.get_N_horizon_crossing()) + " e-folds", col1_list);
+            this->make_data_element("<var>N</var><sub>subhorizon</sub>", format_number(tk.get_N_subhorizon_efolds()) + " e-folds", col1_list);
+            this->make_data_element("Maximum refinements", boost::lexical_cast<std::string>(tk.get_max_refinements()), col1_list);
+
+            this->make_data_element("End of inflation", format_number(tk.get_N_end_of_inflation()) + " e-folds", col2_list);
+            this->make_data_element("ln <var>a</var><sub>*</sub>", format_number(tk.get_astar_normalization()), col2_list);
+            this->make_data_element("Adaptive ICs", tk.get_fast_forward() ? format_number(tk.get_fast_forward_efolds()) + " e-folds" : "No", col2_list);
+            this->make_data_element("Collect ICs", tk.get_collect_initial_conditions() ? "Yes" : "No", col2_list);
+
+            const time_config_database& time_db = tk.get_stored_time_config_database();
+            this->make_data_element("Time samples", boost::lexical_cast<std::string>(time_db.size()), col3_list);
+
+            const twopf_kconfig_database& twopf_db = tk.get_twopf_database();
+            this->make_data_element("2pf configurations", boost::lexical_cast<std::string>(twopf_db.size()), col3_list);
           }
 
 
