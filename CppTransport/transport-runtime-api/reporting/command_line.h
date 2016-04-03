@@ -395,7 +395,9 @@ namespace transport
                   }
 
                 boost::posix_time::ptime init_time = boost::posix_time::from_iso_string(group.second->posix_time);
-                boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
+
+                // writers are tagged with UTC, not local time, so we have to be sure to use UTC here to compute the elapsed time
+                boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
 
                 boost::posix_time::time_duration runtime = now - init_time;
 
