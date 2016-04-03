@@ -505,7 +505,7 @@ namespace transport
 
             // for this reason, we don't hold copies to this record in any of the writers, but only
             // a copy of the job name. When commits need to occur, the record is looked up again
-            record = this->repo->query_task(job.get_name());
+            record = this->repo->query_task(job.get_name(), record_mode::readonly);
           }
         catch (runtime_exception xe)
           {

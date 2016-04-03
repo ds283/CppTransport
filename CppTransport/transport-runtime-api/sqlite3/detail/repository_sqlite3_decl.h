@@ -144,47 +144,56 @@ namespace transport
       public:
 
         //! Read a package record from the database
-        virtual std::unique_ptr< package_record<number> > query_package(const std::string& name) override;
+        virtual std::unique_ptr< package_record<number> > query_package(const std::string& name, record_mode mode) override;
 
         //! Read a task record from the database
-        virtual std::unique_ptr< task_record<number> > query_task(const std::string& name) override;
+        virtual std::unique_ptr< task_record<number> > query_task(const std::string& name, record_mode mode) override;
 
         //! Read a derived product specification from the database
-        virtual std::unique_ptr< derived_product_record<number> > query_derived_product(const std::string& name) override;
+        virtual std::unique_ptr< derived_product_record<number> > query_derived_product(const std::string& name, record_mode mode) override;
 
 
         // ENUMERATE DATABASE RECORDS
 
       public:
 
-        //! Enumerate package records
+        //! Enumerate package records; all records are returned in a readonly state, so if updates are required
+        //! they must be re-queried using the query_*() methods
         virtual typename package_db<number>::type enumerate_packages() override;
 
-        //! Enumerate task records
+        //! Enumerate task records; all records are returned in a readonly state, so if updates are required
+        //! they must be re-queried using the query_*() methods
         virtual typename task_db<number>::type enumerate_tasks() override;
 
-        //! Enumerate derived product records
+        //! Enumerate derived product records; all records are returned in a readonly state, so if updates are required
+        //! they must be re-queried using the query_*() methods
         virtual typename derived_product_db<number>::type enumerate_derived_products() override;
 
 
         // ENUMERATE OUTPUT GROUPS
 
-        //! Enumerate the output groups available from a named integration task
+        //! Enumerate the output groups available from a named integration task; all records are returned in a readonly state, so if updates
+        //! are required each individual record must be re-queried using the query_*() methods
         virtual integration_content_db enumerate_integration_task_content(const std::string& name) override;
 
-        //! Enumerate all integration output groups
+        //! Enumerate all integration output groups; all records are returned in a readonly state, so if updates
+        //! are required each individual record must be re-queried using the query_*() methods
         virtual integration_content_db enumerate_integration_task_content() override;
 
-        //! Enumerate the output groups available for a named postintegration task
+        //! Enumerate the output groups available for a named postintegration task; all records are returned in a readonly state, so if updates
+        //! are required each individual record must be re-queried using the query_*() methods
         virtual postintegration_content_db enumerate_postintegration_task_content(const std::string& name) override;
 
-        //! Enumerate all postintegration output groups
+        //! Enumerate all postintegration output groups; all records are returned in a readonly state, so if updates
+        //! are required each individual record must be re-queried using the query_*() methods
         virtual postintegration_content_db enumerate_postintegration_task_content() override;
 
-        //! Enumerate the output groups available from a named output task
+        //! Enumerate the output groups available from a named output task; all records are returned in a readonly state, so if updates
+        //! are required each individual record must be re-queried using the query_*() methods
         virtual output_content_db enumerate_output_task_content(const std::string& name) override;
 
-        //! Enumerate all output groups
+        //! Enumerate all output groups; all records are returned in a readonly state, so if updates
+        //! are required each individual record must be re-queried using the query_*() methods
         virtual output_content_db enumerate_output_task_content() override;
 
 
@@ -279,32 +288,32 @@ namespace transport
       protected:
 
         //! Create a package record from a JSON value
-        virtual std::unique_ptr< package_record<number> > package_record_factory(Json::Value& reader) override;
+        virtual std::unique_ptr< package_record<number> > package_record_factory(Json::Value& reader, record_mode mode) override;
 
         //! Create an integration task record from a JSON value
-        virtual std::unique_ptr< integration_task_record<number> > integration_task_record_factory(Json::Value& reader) override;
+        virtual std::unique_ptr< integration_task_record<number> > integration_task_record_factory(Json::Value& reader, record_mode mode) override;
 
         //! Create an output task record from a JSON value
-        virtual std::unique_ptr< output_task_record<number> > output_task_record_factory(Json::Value& reader) override;
+        virtual std::unique_ptr< output_task_record<number> > output_task_record_factory(Json::Value& reader, record_mode mode) override;
 
         //! Create a postintegration task record from a JSON value
-        virtual std::unique_ptr< postintegration_task_record<number> > postintegration_task_record_factory(Json::Value& reader) override;
+        virtual std::unique_ptr< postintegration_task_record<number> > postintegration_task_record_factory(Json::Value& reader, record_mode mode) override;
 
         //! create a new derived product record from a JSON value
-        virtual std::unique_ptr< derived_product_record<number> > derived_product_record_factory(Json::Value& reader) override;
+        virtual std::unique_ptr< derived_product_record<number> > derived_product_record_factory(Json::Value& reader, record_mode mode) override;
 
         //! Create a new content group for an integration task from a JSON value
-        virtual std::unique_ptr< output_group_record<integration_payload> > integration_content_group_record_factory(Json::Value& reader) override;
+        virtual std::unique_ptr< output_group_record<integration_payload> > integration_content_group_record_factory(Json::Value& reader, record_mode mode) override;
 
         //! Create a new content group for a postintegration task from a JSON value
-        virtual std::unique_ptr< output_group_record<postintegration_payload> > postintegration_content_group_record_factory(Json::Value& reader) override;
+        virtual std::unique_ptr< output_group_record<postintegration_payload> > postintegration_content_group_record_factory(Json::Value& reader, record_mode mode) override;
 
         //! Create a new content group for an output task from a JSON value
-        virtual std::unique_ptr< output_group_record<output_payload> > output_content_group_record_factory(Json::Value& reader) override;
+        virtual std::unique_ptr< output_group_record<output_payload> > output_content_group_record_factory(Json::Value& reader, record_mode mode) override;
 
         //! Implementation -- Create a new content group record
         template <typename Payload>
-        std::unique_ptr< output_group_record<Payload> > content_group_record_factory(Json::Value& reader);
+        std::unique_ptr< output_group_record<Payload> > content_group_record_factory(Json::Value& reader, record_mode mode);
 
 
         // UTILITY FUNCTIONS

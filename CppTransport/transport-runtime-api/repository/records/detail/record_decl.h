@@ -7,6 +7,7 @@
 #define CPPTRANSPORT_RECORD_DECL_H
 
 
+#include "transport-runtime-api/repository/detail/repository_mode.h"
 #include "transport-runtime-api/repository/transaction_manager.h"
 
 
@@ -24,10 +25,32 @@ namespace transport
 
         typedef std::function<void(repository_record&, transaction_manager&)> commit_handler;
 
+        //! handler_package encapsulates all details for further processing of this repository record,
+        //! eg. to (re-)commit it to the database
         class handler_package
           {
+
+            // CONSTRUCTOR, DESTRUCTOR
+
           public:
-            commit_handler commit;
+
+            //! constructor requires values for all arguments
+            handler_package(commit_handler c, record_mode m)
+              : commit(std::move(c)),
+                mode(m)
+              {
+              }
+
+            // DATA
+
+          public:
+
+            //! access mode
+            const record_mode mode;
+
+            //! commit handler
+            const commit_handler commit;
+
           };
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -35,14 +58,15 @@ namespace transport
       public:
 
         //! construct a repository record with a default name (taken from its creation time)
-        repository_record(handler_package& pkg);
+        repository_record(handler_package pkg);
 
         //! construct a repository record with a supplied name
-        repository_record(const std::string& nm, repository_record::handler_package& pkg);
+        repository_record(const std::string& nm, repository_record::handler_package pkg);
 
         //! deserialization constructor
-        repository_record(Json::Value& reader, repository_record::handler_package& pkg);
+        repository_record(Json::Value& reader, repository_record::handler_package pkg);
 
+        //! destructor is default
         virtual ~repository_record() = default;
 
 
@@ -81,8 +105,9 @@ namespace transport
 
       public:
 
-        //! Commit this record to the database
-        void commit(transaction_manager& mgr) { this->handlers.commit(*this, mgr); }
+        //! Commit this record to the database; note can't be marked const because some commit functions
+        //! need to write to the repository record (eg. to set k-configuration database paths)
+        void commit(transaction_manager& mgr);
 
 
         // SERIALIZATION -- implements a 'serializable' interface

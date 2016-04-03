@@ -10,12 +10,6 @@
 namespace transport
   {
 
-    // flag for read/write mode
-    enum class repository_mode
-      {
-        readonly,
-        readwrite
-      };
 
 
     //! database type for packages
@@ -142,26 +136,29 @@ namespace transport
       public:
 
         //! Read a package record from the database
-        virtual std::unique_ptr< package_record<number> > query_package(const std::string& name) = 0;
+        virtual std::unique_ptr< package_record<number> > query_package(const std::string& name, record_mode mode) = 0;
 
         //! Read a task record from the database
-        virtual std::unique_ptr< task_record<number> > query_task(const std::string& name) = 0;
+        virtual std::unique_ptr< task_record<number> > query_task(const std::string& name, record_mode mode) = 0;
 
         //! Read a derived product specification from the database
-        virtual std::unique_ptr< derived_product_record<number> > query_derived_product(const std::string& name) = 0;
+        virtual std::unique_ptr< derived_product_record<number> > query_derived_product(const std::string& name, record_mode mode) = 0;
 
 
         // ENUMERATE DATABASE RECORDS
 
       public:
 
-        //! Enumerate package records
+        //! Enumerate package records; all records are returned in a readonly state, so if updates
+        //! are required each individual record must be re-queried using the query_*() methods
         virtual typename package_db<number>::type enumerate_packages() = 0;
 
-        //! Enumerate task records
+        //! Enumerate task records; all records are returned in a readonly state, so if updates
+        //! are required each individual record must be re-queried using the query_*() methods
         virtual typename task_db<number>::type enumerate_tasks() = 0;
 
-        //! Enumerate derived product records
+        //! Enumerate derived product records; all records are returned in a readonly state, so if updates
+        //! are required each individual record must be re-queried using the query_*() methods
         virtual typename derived_product_db<number>::type enumerate_derived_products() = 0;
 
 
@@ -169,22 +166,28 @@ namespace transport
 
       public:
 
-        //! Enumerate the output groups available from a named integration task
+        //! Enumerate the output groups available from a named integration task; all records are returned in a readonly state, so if updates
+        //! are required each individual record must be re-queried using the query_*() methods
         virtual integration_content_db enumerate_integration_task_content(const std::string& name) = 0;
 
-        //! Enumerate all integration output groups
+        //! Enumerate all integration output groups; all records are returned in a readonly state, so if updates
+        //! are required each individual record must be re-queried using the query_*() methods
         virtual integration_content_db enumerate_integration_task_content() = 0;
 
-        //! Enumerate the output groups available for a named postintegration task
+        //! Enumerate the output groups available for a named postintegration task; all records are returned in a readonly state, so if updates
+        //! are required each individual record must be re-queried using the query_*() methods
         virtual postintegration_content_db enumerate_postintegration_task_content(const std::string& name) = 0;
 
-        //! Enumerate all postintegration output groups
+        //! Enumerate all postintegration output groups; all records are returned in a readonly state, so if updates
+        //! are required each individual record must be re-queried using the query_*() methods
         virtual postintegration_content_db enumerate_postintegration_task_content() = 0;
 
-        //! Enumerate the output groups available from a named output task
+        //! Enumerate the output groups available from a named output task; all records are returned in a readonly state, so if updates
+        //! are required each individual record must be re-queried using the query_*() methods
         virtual output_content_db enumerate_output_task_content(const std::string& name) = 0;
 
-        //! Enumerate all output groups
+        //! Enumerate all output groups; all records are returned in a readonly state, so if updates
+        //! are required each individual record must be re-queried using the query_*() methods
         virtual output_content_db enumerate_output_task_content() = 0;
 
 

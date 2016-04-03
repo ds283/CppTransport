@@ -106,5 +106,7 @@
 
 #define CPPTRANSPORT_REPO_TRANSACTION_OVER_RELEASE    "Internal error: over-release of transaction"
 
+#define CPPTRANSPORT_REPO_COMMIT_READONLY             "Attempt to commit read-only record"
+
 
 #endif // CPPTRANSPORT_MESSAGES_EN_REPOSITORY_H

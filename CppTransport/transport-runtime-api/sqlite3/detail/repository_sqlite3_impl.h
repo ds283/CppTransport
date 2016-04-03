@@ -338,22 +338,24 @@ namespace transport
     template <typename number>
     std::unique_ptr< package_record<number> > repository_sqlite3<number>::package_record_factory(const initial_conditions<number>& ics)
       {
-        repository_record::handler_package pkg;
-        count_function                     counter = std::bind(&sqlite3_operations::count_packages, std::placeholders::_1, std::placeholders::_2);
-        store_function                     storer  = std::bind(&sqlite3_operations::store_package, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
-        pkg.commit = std::bind(&repository_sqlite3<number>::commit_first, this, std::placeholders::_1, std::placeholders::_2, counter, storer, this->package_store.string(), CPPTRANSPORT_REPO_PACKAGE_EXISTS);
+        count_function counter = std::bind(&sqlite3_operations::count_packages, std::placeholders::_1, std::placeholders::_2);
+        store_function storer  = std::bind(&sqlite3_operations::store_package, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
+
+        // for newly-created records, access mode is inherited from the repository
+        repository_record::handler_package pkg(std::bind(&repository_sqlite3<number>::commit_first, this, std::placeholders::_1, std::placeholders::_2, counter, storer, this->package_store.string(), CPPTRANSPORT_REPO_PACKAGE_EXISTS),
+                                               this->access_mode == repository_mode::readwrite ? record_mode::readwrite : record_mode::readonly);
 
         return std::make_unique< package_record<number> >(ics, pkg);
       }
 
 
     template <typename number>
-    std::unique_ptr< package_record<number> > repository_sqlite3<number>::package_record_factory(Json::Value& reader)
+    std::unique_ptr< package_record<number> > repository_sqlite3<number>::package_record_factory(Json::Value& reader, record_mode mode)
       {
-        repository_record::handler_package pkg;
-        find_function                      finder = std::bind(&sqlite3_operations::find_package, std::placeholders::_1, std::placeholders::_2, CPPTRANSPORT_REPO_PACKAGE_MISSING);
+        find_function finder = std::bind(&sqlite3_operations::find_package, std::placeholders::_1, std::placeholders::_2, CPPTRANSPORT_REPO_PACKAGE_MISSING);
 
-        pkg.commit = std::bind(&repository_sqlite3<number>::commit_replace, this, std::placeholders::_1, std::placeholders::_2, finder);
+        // for deserialized records, access mode must be specified explicitly
+        repository_record::handler_package pkg(std::bind(&repository_sqlite3<number>::commit_replace, this, std::placeholders::_1, std::placeholders::_2, finder), mode);
 
         return std::make_unique< package_record<number> >(reader, this->m_finder, pkg);
       }
@@ -377,21 +379,24 @@ namespace transport
     template <typename TaskType>
     std::unique_ptr< integration_task_record<number> > repository_sqlite3<number>::integration_task_record_factory_generic(const TaskType& tk)
       {
-        repository_record::handler_package pkg;
-        count_function                     counter = std::bind(&sqlite3_operations::count_tasks, std::placeholders::_1, std::placeholders::_2);
-        store_function                     storer  = std::bind(&sqlite3_operations::store_integration_task, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, tk.get_ics().get_name());
-        pkg.commit = std::bind(&repository_sqlite3<number>::commit_integration_first, this, std::placeholders::_1, std::placeholders::_2, counter, storer, this->task_store.string(), CPPTRANSPORT_REPO_TASK_EXISTS);
+        count_function counter = std::bind(&sqlite3_operations::count_tasks, std::placeholders::_1, std::placeholders::_2);
+        store_function storer  = std::bind(&sqlite3_operations::store_integration_task, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, tk.get_ics().get_name());
+
+        // for newly-created records, access mode is inherited from the repository
+        repository_record::handler_package pkg(std::bind(&repository_sqlite3<number>::commit_integration_first, this, std::placeholders::_1, std::placeholders::_2, counter, storer, this->task_store.string(), CPPTRANSPORT_REPO_TASK_EXISTS),
+                                               this->access_mode == repository_mode::readwrite ? record_mode::readwrite : record_mode::readonly);
 
         return std::make_unique< integration_task_record<number> >(tk, pkg);
       }
 
 
     template <typename number>
-    std::unique_ptr< integration_task_record<number> > repository_sqlite3<number>::integration_task_record_factory(Json::Value& reader)
+    std::unique_ptr< integration_task_record<number> > repository_sqlite3<number>::integration_task_record_factory(Json::Value& reader, record_mode mode)
       {
-        repository_record::handler_package pkg;
-        find_function                      finder = std::bind(&sqlite3_operations::find_integration_task, std::placeholders::_1, std::placeholders::_2, CPPTRANSPORT_REPO_TASK_MISSING);
-        pkg.commit = std::bind(&repository_sqlite3<number>::commit_integration_replace, this, std::placeholders::_1, std::placeholders::_2, finder);
+        find_function finder = std::bind(&sqlite3_operations::find_integration_task, std::placeholders::_1, std::placeholders::_2, CPPTRANSPORT_REPO_TASK_MISSING);
+
+        // for deserialized records, access mode must be specified explicitly
+        repository_record::handler_package pkg(std::bind(&repository_sqlite3<number>::commit_integration_replace, this, std::placeholders::_1, std::placeholders::_2, finder), mode);
 
         return std::make_unique< integration_task_record<number> >(reader, this->root_path, this->pkg_finder, pkg);
       }
@@ -400,21 +405,24 @@ namespace transport
     template <typename number>
     std::unique_ptr< output_task_record<number> > repository_sqlite3<number>::output_task_record_factory(const output_task<number>& tk)
       {
-        repository_record::handler_package pkg;
-        count_function                     counter = std::bind(&sqlite3_operations::count_tasks, std::placeholders::_1, std::placeholders::_2);
-        store_function                     storer  = std::bind(&sqlite3_operations::store_output_task, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
-        pkg.commit = std::bind(&repository_sqlite3<number>::commit_first, this, std::placeholders::_1, std::placeholders::_2, counter, storer, this->task_store.string(), CPPTRANSPORT_REPO_TASK_EXISTS);
+        count_function counter = std::bind(&sqlite3_operations::count_tasks, std::placeholders::_1, std::placeholders::_2);
+        store_function storer  = std::bind(&sqlite3_operations::store_output_task, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
+
+        // for newly-created records, access mode is inherited from the repository
+        repository_record::handler_package pkg(std::bind(&repository_sqlite3<number>::commit_first, this, std::placeholders::_1, std::placeholders::_2, counter, storer, this->task_store.string(), CPPTRANSPORT_REPO_TASK_EXISTS),
+                                               this->access_mode == repository_mode::readwrite ? record_mode::readwrite : record_mode::readonly);
 
         return std::make_unique< output_task_record<number> >(tk, pkg);
       }
 
 
     template <typename number>
-    std::unique_ptr< output_task_record<number> > repository_sqlite3<number>::output_task_record_factory(Json::Value& reader)
+    std::unique_ptr< output_task_record<number> > repository_sqlite3<number>::output_task_record_factory(Json::Value& reader, record_mode mode)
       {
-        repository_record::handler_package pkg;
-        find_function                      finder = std::bind(&sqlite3_operations::find_output_task, std::placeholders::_1, std::placeholders::_2, CPPTRANSPORT_REPO_TASK_MISSING);
-        pkg.commit = std::bind(&repository_sqlite3<number>::commit_replace, this, std::placeholders::_1, std::placeholders::_2, finder);
+        find_function finder = std::bind(&sqlite3_operations::find_output_task, std::placeholders::_1, std::placeholders::_2, CPPTRANSPORT_REPO_TASK_MISSING);
+
+        // for deserialized records, access mode must be specified explicitly
+        repository_record::handler_package pkg(std::bind(&repository_sqlite3<number>::commit_replace, this, std::placeholders::_1, std::placeholders::_2, finder), mode);
 
         return std::make_unique< output_task_record<number> >(reader, this->dprod_finder, pkg);
       }
@@ -445,21 +453,24 @@ namespace transport
     template <typename TaskType>
     std::unique_ptr< postintegration_task_record<number> > repository_sqlite3<number>::postintegration_task_record_factory_generic(const TaskType& tk)
       {
-        repository_record::handler_package pkg;
-        count_function                     counter = std::bind(&sqlite3_operations::count_tasks, std::placeholders::_1, std::placeholders::_2);
-        store_function                     storer  = std::bind(&sqlite3_operations::store_postintegration_task, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, tk.get_parent_task()->get_name());
-        pkg.commit = std::bind(&repository_sqlite3<number>::commit_first, this, std::placeholders::_1, std::placeholders::_2, counter, storer, this->task_store.string(), CPPTRANSPORT_REPO_TASK_EXISTS);
+        count_function counter = std::bind(&sqlite3_operations::count_tasks, std::placeholders::_1, std::placeholders::_2);
+        store_function storer  = std::bind(&sqlite3_operations::store_postintegration_task, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, tk.get_parent_task()->get_name());
+
+        // for newly-created records, access mode is inherited from the repository
+        repository_record::handler_package pkg(std::bind(&repository_sqlite3<number>::commit_first, this, std::placeholders::_1, std::placeholders::_2, counter, storer, this->task_store.string(), CPPTRANSPORT_REPO_TASK_EXISTS),
+                                               this->access_mode == repository_mode::readwrite ? record_mode::readwrite : record_mode::readonly);
 
         return std::make_unique< postintegration_task_record<number> >(tk, pkg);
       }
 
 
     template <typename number>
-    std::unique_ptr< postintegration_task_record<number> > repository_sqlite3<number>::postintegration_task_record_factory(Json::Value& reader)
+    std::unique_ptr< postintegration_task_record<number> > repository_sqlite3<number>::postintegration_task_record_factory(Json::Value& reader, record_mode mode)
       {
-        repository_record::handler_package pkg;
-        find_function                      finder = std::bind(&sqlite3_operations::find_postintegration_task, std::placeholders::_1, std::placeholders::_2, CPPTRANSPORT_REPO_TASK_MISSING);
-        pkg.commit = std::bind(&repository_sqlite3<number>::commit_replace, this, std::placeholders::_1, std::placeholders::_2, finder);
+        find_function finder = std::bind(&sqlite3_operations::find_postintegration_task, std::placeholders::_1, std::placeholders::_2, CPPTRANSPORT_REPO_TASK_MISSING);
+
+        // for deserialized records, access mode must be specified explicitly
+        repository_record::handler_package pkg(std::bind(&repository_sqlite3<number>::commit_replace, this, std::placeholders::_1, std::placeholders::_2, finder), mode);
 
         return std::make_unique< postintegration_task_record<number> >(reader, this->tk_finder, pkg);
       }
@@ -468,21 +479,24 @@ namespace transport
     template <typename number>
     std::unique_ptr< derived_product_record<number> > repository_sqlite3<number>::derived_product_record_factory(const derived_data::derived_product<number>& prod)
       {
-        repository_record::handler_package pkg;
-        count_function                     counter = std::bind(&sqlite3_operations::count_products, std::placeholders::_1, std::placeholders::_2);
-        store_function                     storer  = std::bind(&sqlite3_operations::store_product, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
-        pkg.commit = std::bind(&repository_sqlite3<number>::commit_first, this, std::placeholders::_1, std::placeholders::_2, counter, storer, this->product_store.string(), CPPTRANSPORT_REPO_PRODUCT_EXISTS);
+        count_function counter = std::bind(&sqlite3_operations::count_products, std::placeholders::_1, std::placeholders::_2);
+        store_function storer  = std::bind(&sqlite3_operations::store_product, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
+
+        // for newly-created records, access mode is inherited from the repository
+        repository_record::handler_package pkg(std::bind(&repository_sqlite3<number>::commit_first, this, std::placeholders::_1, std::placeholders::_2, counter, storer, this->product_store.string(), CPPTRANSPORT_REPO_PRODUCT_EXISTS),
+                                               this->access_mode == repository_mode::readwrite ? record_mode::readwrite : record_mode::readonly);
 
         return std::make_unique< derived_product_record<number> >(prod, pkg);
       }
 
 
     template <typename number>
-    std::unique_ptr< derived_product_record<number> > repository_sqlite3<number>::derived_product_record_factory(Json::Value& reader)
+    std::unique_ptr< derived_product_record<number> > repository_sqlite3<number>::derived_product_record_factory(Json::Value& reader, record_mode mode)
       {
-        repository_record::handler_package pkg;
-        find_function                      finder = std::bind(&sqlite3_operations::find_product, std::placeholders::_1, std::placeholders::_2, CPPTRANSPORT_REPO_PRODUCT_MISSING);
-        pkg.commit = std::bind(&repository_sqlite3<number>::commit_replace, this, std::placeholders::_1, std::placeholders::_2, finder);
+        find_function finder = std::bind(&sqlite3_operations::find_product, std::placeholders::_1, std::placeholders::_2, CPPTRANSPORT_REPO_PRODUCT_MISSING);
+
+        // for deserialized records, access mode must be specified explicitly
+        repository_record::handler_package pkg(std::bind(&repository_sqlite3<number>::commit_replace, this, std::placeholders::_1, std::placeholders::_2, finder), mode);
 
         return std::make_unique< derived_product_record<number> >(reader, this->tk_finder, pkg);
       }
@@ -497,9 +511,9 @@ namespace transport
 
 
     template <typename number>
-    std::unique_ptr< output_group_record<integration_payload> > repository_sqlite3<number>::integration_content_group_record_factory(Json::Value& reader)
+    std::unique_ptr< output_group_record<integration_payload> > repository_sqlite3<number>::integration_content_group_record_factory(Json::Value& reader, record_mode mode)
       {
-        return this->content_group_record_factory<integration_payload>(reader);
+        return this->content_group_record_factory<integration_payload>(reader, mode);
       }
 
 
@@ -512,9 +526,9 @@ namespace transport
 
 
     template <typename number>
-    std::unique_ptr< output_group_record<postintegration_payload> > repository_sqlite3<number>::postintegration_content_group_record_factory(Json::Value& reader)
+    std::unique_ptr< output_group_record<postintegration_payload> > repository_sqlite3<number>::postintegration_content_group_record_factory(Json::Value& reader, record_mode mode)
       {
-        return this->content_group_record_factory<postintegration_payload>(reader);
+        return this->content_group_record_factory<postintegration_payload>(reader, mode);
       }
 
 
@@ -527,9 +541,9 @@ namespace transport
 
 
     template <typename number>
-    std::unique_ptr< output_group_record<output_payload> > repository_sqlite3<number>::output_content_group_record_factory(Json::Value& reader)
+    std::unique_ptr< output_group_record<output_payload> > repository_sqlite3<number>::output_content_group_record_factory(Json::Value& reader, record_mode mode)
       {
-        return this->content_group_record_factory<output_payload>(reader);
+        return this->content_group_record_factory<output_payload>(reader, mode);
       }
 
 
@@ -538,10 +552,12 @@ namespace transport
     std::unique_ptr< output_group_record<Payload> > repository_sqlite3<number>::content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
                                                                                                              bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg)
       {
-        repository_record::handler_package pkg;
-        count_function                     counter = std::bind(&sqlite3_operations::count_groups, std::placeholders::_1, std::placeholders::_2);
-        store_function                     storer  = std::bind(&sqlite3_operations::store_group<Payload>, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, tn);
-        pkg.commit = std::bind(&repository_sqlite3<number>::commit_first, this, std::placeholders::_1, std::placeholders::_2,  counter, storer, this->output_store.string(), CPPTRANSPORT_REPO_OUTPUT_EXISTS);
+        count_function counter = std::bind(&sqlite3_operations::count_groups, std::placeholders::_1, std::placeholders::_2);
+        store_function storer  = std::bind(&sqlite3_operations::store_group<Payload>, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, tn);
+
+        // for created records, read/write status is inherited from repository
+        repository_record::handler_package pkg(std::bind(&repository_sqlite3<number>::commit_first, this, std::placeholders::_1, std::placeholders::_2,  counter, storer, this->output_store.string(), CPPTRANSPORT_REPO_OUTPUT_EXISTS),
+                                               this->access_mode == repository_mode::readwrite ? record_mode::readwrite : record_mode::readonly);
 
         typename output_group_record<Payload>::paths_group paths;
         paths.root   = this->get_root_path();
@@ -553,11 +569,12 @@ namespace transport
 
     template <typename number>
     template <typename Payload>
-    std::unique_ptr< output_group_record<Payload> > repository_sqlite3<number>::content_group_record_factory(Json::Value& reader)
+    std::unique_ptr< output_group_record<Payload> > repository_sqlite3<number>::content_group_record_factory(Json::Value& reader, record_mode mode)
       {
-        repository_record::handler_package pkg;
-        find_function                      finder = std::bind(&sqlite3_operations::find_group<Payload>, std::placeholders::_1, std::placeholders::_2, CPPTRANSPORT_REPO_OUTPUT_MISSING);
-        pkg.commit = std::bind(&repository_sqlite3<number>::commit_replace, this, std::placeholders::_1, std::placeholders::_2, finder);
+        find_function finder = std::bind(&sqlite3_operations::find_group<Payload>, std::placeholders::_1, std::placeholders::_2, CPPTRANSPORT_REPO_OUTPUT_MISSING);
+
+        // for deserialized records, read/write status must be explicitly specified
+        repository_record::handler_package pkg(std::bind(&repository_sqlite3<number>::commit_replace, this, std::placeholders::_1, std::placeholders::_2, finder), mode);
 
         return std::make_unique< output_group_record<Payload> >(reader, this->root_path, pkg);
       }
@@ -583,6 +600,7 @@ namespace transport
         // check for a package with a duplicate name
         this->check_package_duplicate(ics.get_name());
 
+        // create a record and commit it; the commit will throw an exception if the repostiory is not in a read/write mode
         std::unique_ptr< package_record<number> > record = package_record_factory(ics);
         record->commit(mgr);
       }
@@ -629,6 +647,7 @@ namespace transport
         // check for a task with a duplicate name
         this->check_task_duplicate(tk.get_name());
 
+        // create a record and commit it; the commit will throw an exception if the repostiory is not in a read/write mode
         std::unique_ptr< integration_task_record<number> > record = integration_task_record_factory(tk);
         record->commit(mgr);
 
@@ -662,6 +681,7 @@ namespace transport
         // check for a task with a duplicate name
         this->check_task_duplicate(tk.get_name());
 
+        // create a record and commit it; the commit will throw an exception if the repostiory is not in a read/write mode
         std::unique_ptr< output_task_record<number> > record = output_task_record_factory(tk);
         record->commit(mgr);
 
@@ -741,6 +761,7 @@ namespace transport
         // check for a task with a duplicate name
         this->check_task_duplicate(tk.get_name());
 
+        // create a record and commit it; the commit will throw an exception if the repostiory is not in a read/write mode
         std::unique_ptr<postintegration_task_record < number> > record(postintegration_task_record_factory(tk));
         record->commit(mgr);
 
@@ -770,6 +791,7 @@ namespace transport
         // check for a derived product with a duplicate name
         this->check_product_duplicate(d.get_name());
 
+        // create a record and commit it; the commit will throw an exception if the repostiory is not in a read/write mode
         std::unique_ptr< derived_product_record<number> > record = derived_product_record_factory(d);
         record->commit(mgr);
 
@@ -867,35 +889,35 @@ namespace transport
 
     //! Read a package record from the database
     template <typename number>
-    std::unique_ptr< package_record<number> > repository_sqlite3<number>::query_package(const std::string& name)
+    std::unique_ptr< package_record<number> > repository_sqlite3<number>::query_package(const std::string& name, record_mode mode)
       {
         boost::filesystem::path filename = sqlite3_operations::find_package(this->db, name, CPPTRANSPORT_REPO_PACKAGE_MISSING);
         Json::Value             root     = this->deserialize_JSON_document(filename);
-        return this->package_record_factory(root);
+        return this->package_record_factory(root, mode);
       }
 
 
     //! Read a task record from the database
     template <typename number>
-    std::unique_ptr< task_record<number> > repository_sqlite3<number>::query_task(const std::string& name)
+    std::unique_ptr< task_record<number> > repository_sqlite3<number>::query_task(const std::string& name, record_mode mode)
       {
         if(sqlite3_operations::count_integration_tasks(this->db, name) > 0)
           {
             boost::filesystem::path filename = sqlite3_operations::find_integration_task(this->db, name, CPPTRANSPORT_REPO_TASK_MISSING);
             Json::Value             root     = this->deserialize_JSON_document(filename);
-            return this->integration_task_record_factory(root);
+            return this->integration_task_record_factory(root, mode);
           }
         else if(sqlite3_operations::count_postintegration_tasks(this->db, name) > 0)
           {
             boost::filesystem::path filename = sqlite3_operations::find_postintegration_task(this->db, name, CPPTRANSPORT_REPO_TASK_MISSING);
             Json::Value             root     = this->deserialize_JSON_document(filename);
-            return this->postintegration_task_record_factory(root);
+            return this->postintegration_task_record_factory(root, mode);
           }
         else if(sqlite3_operations::count_output_tasks(this->db, name) > 0)
           {
             boost::filesystem::path filename = sqlite3_operations::find_output_task(this->db, name, CPPTRANSPORT_REPO_TASK_MISSING);
             Json::Value             root     = this->deserialize_JSON_document(filename);
-            return this->output_task_record_factory(root);
+            return this->output_task_record_factory(root, mode);
           }
 
         throw runtime_exception(exception_type::RECORD_NOT_FOUND, name);   // RECORD_NOT_FOUND expects task name in message
@@ -904,11 +926,11 @@ namespace transport
 
     // Read a derived product from the database
     template <typename number>
-    std::unique_ptr< derived_product_record<number> > repository_sqlite3<number>::query_derived_product(const std::string& name)
+    std::unique_ptr< derived_product_record<number> > repository_sqlite3<number>::query_derived_product(const std::string& name, record_mode mode)
       {
         boost::filesystem::path filename = sqlite3_operations::find_product(this->db, name, CPPTRANSPORT_REPO_PRODUCT_MISSING);
         Json::Value             root     = this->deserialize_JSON_document(filename);
-        return this->derived_product_record_factory(root);
+        return this->derived_product_record_factory(root, mode);
       }
 
 
@@ -928,7 +950,7 @@ namespace transport
             boost::filesystem::path filename = sqlite3_operations::find_package(this->db, name, CPPTRANSPORT_REPO_PACKAGE_MISSING);
             Json::Value             root     = this->deserialize_JSON_document(filename);
 
-            std::unique_ptr< package_record<number> > pkg = this->package_record_factory(root);
+            std::unique_ptr< package_record<number> > pkg = this->package_record_factory(root, record_mode::readonly);
             db.insert( std::make_pair(name, std::move(pkg)) );
           }
 
@@ -954,7 +976,7 @@ namespace transport
             boost::filesystem::path filename = sqlite3_operations::find_integration_task(this->db, name, CPPTRANSPORT_REPO_TASK_MISSING);
             Json::Value             root     = this->deserialize_JSON_document(filename);
 
-            std::unique_ptr< task_record<number> > task = this->integration_task_record_factory(root);
+            std::unique_ptr< task_record<number> > task = this->integration_task_record_factory(root, record_mode::readonly);
             db.insert( std::make_pair(name, std::move(task)) );
           }
 
@@ -963,7 +985,7 @@ namespace transport
             boost::filesystem::path filename = sqlite3_operations::find_postintegration_task(this->db, name, CPPTRANSPORT_REPO_TASK_MISSING);
             Json::Value             root     = this->deserialize_JSON_document(filename);
 
-            std::unique_ptr< task_record<number> > task = this->postintegration_task_record_factory(root);
+            std::unique_ptr< task_record<number> > task = this->postintegration_task_record_factory(root, record_mode::readonly);
             db.insert( std::make_pair(name, std::move(task)) );
           }
 
@@ -972,7 +994,7 @@ namespace transport
             boost::filesystem::path filename = sqlite3_operations::find_output_task(this->db, name, CPPTRANSPORT_REPO_TASK_MISSING);
             Json::Value             root     = this->deserialize_JSON_document(filename);
 
-            std::unique_ptr< task_record<number> > task = this->output_task_record_factory(root);
+            std::unique_ptr< task_record<number> > task = this->output_task_record_factory(root, record_mode::readonly);
             db.insert( std::make_pair(name, std::move(task)) );
           }
 
@@ -980,7 +1002,7 @@ namespace transport
       }
 
 
-    // Enumerate package records
+    // Enumerate derived product records
     template <typename number>
     typename derived_product_db<number>::type repository_sqlite3<number>::enumerate_derived_products()
       {
@@ -996,7 +1018,7 @@ namespace transport
             boost::filesystem::path filename = sqlite3_operations::find_product(this->db, name, CPPTRANSPORT_REPO_PRODUCT_MISSING);
             Json::Value             root     = this->deserialize_JSON_document(filename);
 
-            std::unique_ptr< derived_product_record<number> > prod = this->derived_product_record_factory(root);
+            std::unique_ptr< derived_product_record<number> > prod = this->derived_product_record_factory(root, record_mode::readonly);
             db.insert( std::make_pair(name, std::move(prod)) );
           }
 
@@ -1008,7 +1030,7 @@ namespace transport
     template <typename number>
     integration_content_db repository_sqlite3<number>::enumerate_integration_task_content(const std::string& name)
       {
-        std::unique_ptr< task_record<number> > record = this->query_task(name);
+        std::unique_ptr< task_record<number> > record = this->query_task(name, record_mode::readonly);
 
         if(record->get_type() != task_type::integration)
           {
@@ -1037,7 +1059,7 @@ namespace transport
     template <typename number>
     postintegration_content_db repository_sqlite3<number>::enumerate_postintegration_task_content(const std::string& name)
       {
-        std::unique_ptr< task_record<number>> record = this->query_task(name);
+        std::unique_ptr< task_record<number>> record = this->query_task(name, record_mode::readonly);
 
         if(record->get_type() != task_type::postintegration)
           {
@@ -1066,7 +1088,7 @@ namespace transport
     template <typename number>
     output_content_db repository_sqlite3<number>::enumerate_output_task_content(const std::string& name)
       {
-        std::unique_ptr< task_record<number>> record = this->query_task(name);
+        std::unique_ptr< task_record<number>> record = this->query_task(name, record_mode::readonly);
 
         if(record->get_type() != task_type::output)
           {
@@ -1249,7 +1271,7 @@ namespace transport
             boost::filesystem::path filename = sqlite3_operations::find_group<Payload>(this->db, name, CPPTRANSPORT_REPO_OUTPUT_MISSING);
             Json::Value             root     = this->deserialize_JSON_document(filename);
 
-            std::unique_ptr< output_group_record<Payload> > group = this->template content_group_record_factory<Payload>(root);
+            std::unique_ptr< output_group_record<Payload> > group = this->template content_group_record_factory<Payload>(root, record_mode::readonly);
             db.insert( std::make_pair(group->get_name(), std::move(group)) );
           }
       }
@@ -1358,7 +1380,7 @@ void repository_sqlite3<number>::recover_integrations(data_manager<number>& data
     for(const inflight_integration_db_value_type& inflight : list)
       {
         // get task record
-        std::unique_ptr< task_record<number> > pre_rec = this->query_task(inflight.second->task_name);
+        std::unique_ptr< task_record<number> > pre_rec = this->query_task(inflight.second->task_name, record_mode::readonly);
         integration_task_record<number>* rec = dynamic_cast< integration_task_record<number>* >(pre_rec.get());
 
         assert(rec != nullptr);
@@ -1407,7 +1429,7 @@ void repository_sqlite3<number>::recover_postintegrations(data_manager<number>& 
     for(const inflight_postintegration_db_value_type& inflight : p_list)
       {
         // get task record
-        std::unique_ptr< task_record<number> > pre_rec = this->query_task(inflight.second->task_name);
+        std::unique_ptr< task_record<number> > pre_rec = this->query_task(inflight.second->task_name, record_mode::readonly);
         postintegration_task_record<number>* rec = dynamic_cast< postintegration_task_record<number>* >(pre_rec.get());
 
         assert(rec != nullptr);
@@ -1475,7 +1497,7 @@ void repository_sqlite3<number>::recover_paired_postintegration(const inflight_p
     else
       {
         // get task record
-        std::unique_ptr< task_record<number> > pre_rec = this->query_task(t->second->task_name);
+        std::unique_ptr< task_record<number> > pre_rec = this->query_task(t->second->task_name, record_mode::readonly);
         integration_task_record<number>& i_rec = dynamic_cast< integration_task_record<number>& >(*pre_rec);
 
         std::unique_ptr< integration_writer<number> >     i_writer = this->get_integration_recovery_writer(*t->second, data_mgr, i_rec, worker);
@@ -1537,7 +1559,7 @@ void repository_sqlite3<number>::recover_derived_content(data_manager<number>& d
     for(const inflight_derived_content_db_value_type& inflight : list)
       {
         // get task record
-        std::unique_ptr< task_record<number> > pre_rec = this->query_task(inflight.second->task_name);
+        std::unique_ptr< task_record<number> > pre_rec = this->query_task(inflight.second->task_name, record_mode::readonly);
         output_task_record<number>* rec = dynamic_cast< output_task_record<number>* >(pre_rec.get());
 
         assert(rec != nullptr);

@@ -770,6 +770,7 @@ set(TRANSPORT_RUNTIME_API_REPOSITORY_DETAIL_FILES
   transport-runtime-api/repository/detail/repository_impl.h
   transport-runtime-api/repository/detail/writer_repo_decl.h
   transport-runtime-api/repository/detail/writer_repo_impl.h
+  transport-runtime-api/repository/detail/repository_mode.h
   )
 
 set(TRANSPORT_RUNTIME_API_REPOSITORY_FILES

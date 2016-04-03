@@ -7,6 +7,11 @@
 #define CPPTRANSPORT_RECORD_IMPL_H
 
 
+#include "transport-runtime-api/messages.h"
+#include "transport-runtime-api/defaults.h"
+#include "transport-runtime-api/exceptions.h"
+
+
 namespace transport
   {
 
@@ -24,25 +29,25 @@ namespace transport
     // GENERIC REPOSITORY RECORD
 
 
-    repository_record::repository_record(repository_record::handler_package& pkg)
+    repository_record::repository_record(repository_record::handler_package pkg)
       : metadata(),
-        handlers(pkg)
+        handlers(std::move(pkg))
       {
         name = boost::posix_time::to_iso_string(metadata.get_creation_time());
       }
 
 
-    repository_record::repository_record(const std::string& nm, repository_record::handler_package& pkg)
+    repository_record::repository_record(const std::string& nm, repository_record::handler_package pkg)
       : name(nm),
         metadata(),
-        handlers(pkg)
+        handlers(std::move(pkg))
       {
       }
 
 
-    repository_record::repository_record(Json::Value& reader, repository_record::handler_package& pkg)
+    repository_record::repository_record(Json::Value& reader, repository_record::handler_package pkg)
       : metadata(reader),
-        handlers(pkg)
+        handlers(std::move(pkg))
       {
         name = reader[CPPTRANSPORT_NODE_RECORD_NAME].asString();
       }
@@ -52,6 +57,21 @@ namespace transport
       {
         writer[CPPTRANSPORT_NODE_RECORD_NAME] = this->name;
         this->metadata.serialize(writer);
+      }
+
+
+    void repository_record::commit(transaction_manager& mgr)
+      {
+        if(this->handlers.mode == record_mode::readwrite)
+          {
+            this->handlers.commit(*this, mgr);
+          }
+        else // no authorization to commit this record; throw an exception
+          {
+            std::ostringstream msg;
+            msg << CPPTRANSPORT_REPO_COMMIT_READONLY << " '" << this->name << "'";
+            throw runtime_exception(exception_type::REPOSITORY_ERROR, msg.str());
+          }
       }
 
   }   // namespace transport

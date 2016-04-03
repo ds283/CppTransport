@@ -7,6 +7,7 @@
 #define CPPTRANSPORT_REPOSITORY_IMPL_H
 
 
+#include "transport-runtime-api/repository/detail/repository_mode.h"
 #include "transport-runtime-api/repository/detail/repository_decl.h"
 
 #include "boost/filesystem/operations.hpp"
@@ -450,8 +451,8 @@ namespace transport
     template <typename number>
     void repository<number>::close_integration_writer(integration_writer<number>& writer, transaction_manager& mgr)
       {
-        // read record from database
-        std::unique_ptr< task_record<number> > raw_rec = this->query_task(writer.get_task_name());
+        // read record from database (so that we have a fresh and up-to-date copy of the data)
+        std::unique_ptr< task_record<number> > raw_rec = this->query_task(writer.get_task_name(), record_mode::readwrite);
         integration_task_record<number>* rec = dynamic_cast< integration_task_record<number>* >(raw_rec.get());
 
         assert(rec != nullptr);
@@ -544,8 +545,8 @@ namespace transport
     template <typename number>
     void repository<number>::close_postintegration_writer(postintegration_writer<number>& writer, transaction_manager& mgr)
       {
-        // read record from database
-        std::unique_ptr< task_record<number> > raw_rec = this->query_task(writer.get_task_name());
+        // read record from database (so that we have a fresh and up-to-date copy of the data)
+        std::unique_ptr< task_record<number> > raw_rec = this->query_task(writer.get_task_name(), record_mode::readwrite);
         postintegration_task_record<number>* rec = dynamic_cast< postintegration_task_record<number>* >(raw_rec.get());
 
         assert(rec != nullptr);
@@ -646,8 +647,8 @@ namespace transport
     template <typename number>
     void repository<number>::close_derived_content_writer(derived_content_writer<number>& writer, transaction_manager& mgr)
       {
-        // read record from database
-        std::unique_ptr< task_record<number> > raw_rec = this->query_task(writer.get_task_name());
+        // read record from database (so that we have a fresh and up-to-date copy of the data)
+        std::unique_ptr< task_record<number> > raw_rec = this->query_task(writer.get_task_name(), record_mode::readwrite);
         output_task_record<number>* rec = dynamic_cast< output_task_record<number>* >(raw_rec.get());
 
         assert(rec != nullptr);
