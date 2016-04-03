@@ -83,10 +83,12 @@ namespace transport
 
         // TRANSACTIONS
 
-      protected:
+      public:
 
         //! Generate a transaction management object -- supplied by implementation class
         virtual transaction_manager transaction_factory() = 0;
+
+      protected:
 
         //! Generate a transaction management object
         transaction_manager generate_transaction_manager(std::unique_ptr<transaction_handler> handle);
@@ -143,6 +145,15 @@ namespace transport
 
         //! Read a derived product specification from the database
         virtual std::unique_ptr< derived_product_record<number> > query_derived_product(const std::string& name, record_mode mode) = 0;
+
+        //! Read an integration content group specification from the database
+        virtual std::unique_ptr< output_group_record<integration_payload> > query_integration_content(const std::string& name, record_mode mode) = 0;
+
+        //! Read a postintegration content group specification from the database
+        virtual std::unique_ptr< output_group_record<postintegration_payload> > query_postintegration_content(const std::string& name, record_mode mode) = 0;
+
+        //! Read an output content group specification from the database
+        virtual std::unique_ptr< output_group_record<output_payload> > query_output_content(const std::string& name, record_mode mode) = 0;
 
 
         // ENUMERATE DATABASE RECORDS

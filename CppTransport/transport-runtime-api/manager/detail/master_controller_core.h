@@ -8,6 +8,7 @@
 
 
 #include "transport-runtime-api/manager/detail/master_controller_decl.h"
+#include "transport-runtime-api/repository/repository_toolkit.h"
 
 
 #include "boost/timer/timer.hpp"
@@ -336,7 +337,23 @@ namespace transport
     template <typename number>
     void master_controller<number>::recognize_action_switches(boost::program_options::variables_map& option_map)
       {
+        repository_toolkit<number> toolkit(*this->repo);
 
+        if(option_map.count(CPPTRANSPORT_SWITCH_OBJECT))
+          {
+            std::vector<std::string> add_tag;
+            std::vector<std::string> delete_tag;
+            std::vector<std::string> add_note;
+            std::vector<std::string> delete_note;
+
+            if(option_map.count(CPPTRANSPORT_SWITCH_ADD_TAG)) add_tag = option_map[CPPTRANSPORT_SWITCH_ADD_TAG].as< std::vector<std::string> >();
+            if(option_map.count(CPPTRANSPORT_SWITCH_DELETE_TAG)) delete_tag = option_map[CPPTRANSPORT_SWITCH_DELETE_TAG].as< std::vector<std::string> >();
+            if(option_map.count(CPPTRANSPORT_SWITCH_ADD_NOTE)) add_note = option_map[CPPTRANSPORT_SWITCH_ADD_NOTE].as< std::vector<std::string> >();
+            if(option_map.count(CPPTRANSPORT_SWITCH_DELETE_NOTE)) delete_note = option_map[CPPTRANSPORT_SWITCH_DELETE_NOTE].as< std::vector<std::string> >();
+
+            toolkit.update_tags_notes(option_map[CPPTRANSPORT_SWITCH_OBJECT].as< std::vector<std::string> >(),
+                                      add_tag, delete_tag, add_note, delete_note);
+          }
       }
 
 

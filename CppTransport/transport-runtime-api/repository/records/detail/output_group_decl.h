@@ -585,6 +585,10 @@ namespace transport
 
       public:
 
+        //! make payload type available for template programming
+        typedef Payload payload_type;
+
+        // encapsulate paths associated with this record
         class paths_group
           {
           public:
@@ -625,13 +629,19 @@ namespace transport
         const std::list<std::string>& get_notes() const { return (this->notes); }
 
         //! Add note
-        void push_note(const std::string& note) { this->notes.push_back(note); }
+        void add_note(const std::string& note) { this->notes.push_back(note); }
+
+        //! Remove numbered note
+        void remove_note(unsigned int number);
 
         //! Get tags
         const std::list<std::string>& get_tags() const { return (this->tags); }
 
         //! Add tag
-        void push_tag(const std::string& tag) { this->tags.push_back(tag); }
+        void add_tag(const std::string& tag);
+
+        //! Remove tag
+        void remove_tag(const std::string& tag);
 
         //! Check whether we match a set of tags
         bool check_tags(std::list<std::string> match_tags) const;

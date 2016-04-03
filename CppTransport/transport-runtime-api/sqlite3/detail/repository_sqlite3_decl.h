@@ -71,10 +71,12 @@ namespace transport
 
         // TRANSACTIONS
 
-      protected:
+      public:
 
         //! Generate a transaction management object
         transaction_manager transaction_factory() override final;
+
+      protected:
 
         //! Begin a transaction on the database.
         void begin_transaction();
@@ -151,6 +153,21 @@ namespace transport
 
         //! Read a derived product specification from the database
         virtual std::unique_ptr< derived_product_record<number> > query_derived_product(const std::string& name, record_mode mode) override;
+
+        //! Read an integration content group specification from the database
+        virtual std::unique_ptr< output_group_record<integration_payload> > query_integration_content(const std::string& name, record_mode mode) override;
+
+        //! Read a postintegration content group specification from the database
+        virtual std::unique_ptr< output_group_record<postintegration_payload> > query_postintegration_content(const std::string& name, record_mode mode) override;
+
+        //! Read an output content group specification from the database
+        virtual std::unique_ptr< output_group_record<output_payload> > query_output_content(const std::string& name, record_mode mode) override;
+
+      protected:
+
+        //! Generic method to read a content group from the database
+        template <typename Payload>
+        std::unique_ptr< output_group_record<Payload> > query_content_group(const std::string& name, record_mode mode);
 
 
         // ENUMERATE DATABASE RECORDS

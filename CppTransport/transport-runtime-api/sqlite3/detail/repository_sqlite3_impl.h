@@ -579,7 +579,8 @@ namespace transport
         find_function finder = std::bind(&sqlite3_operations::find_group<Payload>, std::placeholders::_1, std::placeholders::_2, CPPTRANSPORT_REPO_OUTPUT_MISSING);
 
         // for deserialized records, read/write status must be explicitly specified
-        repository_record::handler_package pkg(std::bind(&repository_sqlite3<number>::commit_replace, this, std::placeholders::_1, std::placeholders::_2, finder), mode);
+        repository_record::handler_package pkg(std::bind(&repository_sqlite3<number>::commit_replace, this, std::placeholders::_1, std::placeholders::_2, finder),
+                                               this->access_mode == repository_mode::readwrite ? mode : record_mode::readonly);
 
         return std::make_unique< output_group_record<Payload> >(reader, this->root_path, pkg);
       }
@@ -939,6 +940,42 @@ namespace transport
       }
 
 
+    // Read a named integration content group from the database
+    template <typename number>
+    std::unique_ptr< output_group_record<integration_payload> > repository_sqlite3<number>::query_integration_content(const std::string& name, record_mode mode)
+      {
+        return this->query_content_group<integration_payload>(name, mode);
+      }
+
+
+    // Read a named postintegration content group from the database
+    template <typename number>
+    std::unique_ptr< output_group_record<postintegration_payload> > repository_sqlite3<number>::query_postintegration_content(const std::string& name, record_mode mode)
+      {
+        return this->query_content_group<postintegration_payload>(name, mode);
+      }
+
+
+    // Read a named output content group from the database
+    template <typename number>
+    std::unique_ptr< output_group_record<output_payload> > repository_sqlite3<number>::query_output_content(const std::string& name, record_mode mode)
+      {
+        return this->query_content_group<output_payload>(name, mode);
+      }
+
+
+    // Read a named content group from the database
+    template <typename number>
+    template <typename Payload>
+    std::unique_ptr< output_group_record<Payload> > repository_sqlite3<number>::query_content_group(const std::string& name, record_mode mode)
+      {
+        boost::filesystem::path filename = sqlite3_operations::find_group<Payload>(this->db, name, CPPTRANSPORT_REPO_OUTPUT_MISSING);
+        Json::Value             root     = this->deserialize_JSON_document(filename);
+
+        return this->content_group_record_factory<Payload>(root, mode);
+      }
+
+
     // Enumerate package records
     template <typename number>
     typename package_db<number>::type repository_sqlite3<number>::enumerate_packages()
@@ -1259,10 +1296,11 @@ namespace transport
       {
         std::list<std::string> group_names;
 
-        // get list of group names associated with the task 'name', or all tasks of a specified payload
-        // if 'name' is empty; overwrites existing content of the list group_names
+        // get list of group names associated with the task 'name', or all tasks of a specified payload if 'name' is empty.
+        // Overwrites existing content of the list group_names
         sqlite3_operations::enumerate_content_groups<Payload>(this->db, group_names, name);
 
+        // convert this list of names into a database of records
         this->content_groups_from_list(group_names, db);
       }
 

@@ -65,9 +65,14 @@ namespace transport
       : repository_record(pkg),
         task(tn),
         paths(p),
-        locked(lock), notes(nt), tags(tg),
+        locked(lock),
+        notes(nt),
+        tags(tg),
         payload()
       {
+        // remove any duplicated tags
+        tags.sort();
+        tags.unique();
       }
 
 
@@ -180,6 +185,37 @@ namespace transport
         this->payload.serialize(writer);
 
         this->repository_record::serialize(writer);
+      }
+
+
+    template <typename Payload>
+    void output_group_record<Payload>::remove_tag(const std::string& tag)
+      {
+        std::list<std::string>::const_iterator it = std::find(this->tags.cbegin(), this->tags.cend(), tag);
+        if(it != this->tags.end()) this->tags.erase(it);
+      }
+
+
+    template <typename Payload>
+    void output_group_record<Payload>::remove_note(unsigned int number)
+      {
+        std::list<std::string>::const_iterator it = this->notes.cbegin();
+        while(number > 0 && it != this->notes.end())
+          {
+            --number;
+            ++it;
+          }
+
+        if(number == 0 && it != this->notes.end()) this->notes.erase(it);
+      }
+
+
+    template <typename Payload>
+    void output_group_record<Payload>::add_tag(const std::string& tag)
+      {
+        this->tags.push_back(tag);
+        this->tags.sort();
+        this->tags.unique();
       }
 
 

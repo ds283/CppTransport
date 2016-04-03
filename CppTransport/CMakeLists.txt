@@ -59,7 +59,7 @@ ADD_SUBDIRECTORY(thirdparty/jsoncpp)
 
 # find required libraries
 FIND_PACKAGE(MPI REQUIRED)
-FIND_PACKAGE(Boost 1.56 REQUIRED COMPONENTS system filesystem random timer date_time mpi log_setup log serialization thread program_options)
+FIND_PACKAGE(Boost 1.56 REQUIRED COMPONENTS system filesystem random timer date_time mpi log_setup log serialization thread program_options regex)
 FIND_PACKAGE(GiNaC 1.6 REQUIRED)
 
 
@@ -778,6 +778,7 @@ set(TRANSPORT_RUNTIME_API_REPOSITORY_FILES
   transport-runtime-api/repository/json_repository.h
   transport-runtime-api/repository/repository.h
   transport-runtime-api/repository/transaction_manager.h
+  transport-runtime-api/repository/repository_toolkit.h
   )
 
 set(TRANSPORT_RUNTIME_API_REPOSITORY_RECORDS_DETAIL_FILES
