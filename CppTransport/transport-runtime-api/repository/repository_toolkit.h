@@ -9,8 +9,7 @@
 
 #include "transport-runtime-api/repository/repository.h"
 
-// need Boost regular expressions for pattern matching
-#include "boost/regex.hpp"
+#include "transport-runtime-api/utilities/match.h"
 
 
 namespace transport
@@ -173,10 +172,9 @@ namespace transport
             const typename ContentDatabase::mapped_type::element_type& record = *item.second;
 
             // step through objects in match list
-            for(const std::string& object_expr_string : objects)
+            for(const std::string& match_expr : objects)
               {
-                boost::regex object_expr(object_expr_string);
-                if(boost::regex_match(record.get_name(), object_expr))
+                if(check_match(record.get_name(), match_expr), true)    // true = insist on exact match
                   {
                     // re-query the database to get a read/write version of this record
                     typename ContentDatabase::mapped_type rw_record = get_rw_content_group<number, typename ContentDatabase::mapped_type::element_type::payload_type>(this->repo, record.get_name(), mgr);

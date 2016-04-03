@@ -19,6 +19,7 @@
 
 #include "transport-runtime-api/utilities/asciitable.h"
 #include "transport-runtime-api/utilities/formatter.h"
+#include "transport-runtime-api/utilities/match.h"
 
 
 namespace transport
@@ -173,7 +174,7 @@ namespace transport
 
             //! report on named items in a database
             template <typename number, typename DatabaseType>
-            void report_database_items(std::list<std::string>& items, DatabaseType& db, repository_cache<number>& cache);
+            void report_database_items(std::map<std::string, bool>& items, DatabaseType& db, repository_cache<number>& cache);
 
 
             // REPORT ON SPECIFIED DATABASE OBJECTS
@@ -446,56 +447,55 @@ namespace transport
         void command_line::report_info(repository_cache<number>& cache)
           {
             // make local copy of items; we will remove items from this list as we process them
-            std::list<std::string> items;
-            std::copy(this->info_items.begin(), this->info_items.end(), std::back_inserter(items));
+            std::map<std::string, bool> items;
+            for(const std::string& item : this->info_items)
+              {
+                items[item] = false;
+              }
 
             // work through packages
             this->report_database_items(items, cache.get_package_db(), cache);
-            if(items.empty()) return;   // check for lazy return
 
             // work through tasks
             this->report_database_items(items, cache.get_task_db(), cache);
-            if(items.empty()) return;   // check for lazy return
 
             // work through derived products
             this->report_database_items(items, cache.get_derived_product_db(), cache);
-            if(items.empty()) return;   // check for lazy return
 
             // work through integration content
             this->report_database_items(items, cache.get_integration_content_db(), cache);
-            if(items.empty()) return;   // check for lazy return
 
             // work through postintegration content
             this->report_database_items(items, cache.get_postintegration_content_db(), cache);
-            if(items.empty()) return;   // check for lazy return
 
             // work through output content
             this->report_database_items(items, cache.get_output_content_db(), cache);
-            if(items.empty()) return;   // check for lazy return
 
-            for(const std::string& item : items)
+            for(const std::pair< const std::string, bool >& item : items)
               {
-                std::ostringstream msg;
-                msg << CPPTRANSPORT_REPORT_MISSING_OBJECT << " '" << item << "'";
-                this->warn(msg.str());
+                if(!item.second)
+                  {
+                    std::ostringstream msg;
+                    msg << CPPTRANSPORT_REPORT_MISSING_OBJECT << " '" << item.first << "'";
+                    this->warn(msg.str());
+                  }
               }
           }
 
 
         template <typename number, typename DatabaseType>
-        void command_line::report_database_items(std::list<std::string>& items, DatabaseType& db, repository_cache<number>& cache)
+        void command_line::report_database_items(std::map< std::string, bool >& items, DatabaseType& db, repository_cache<number>& cache)
           {
-            for(std::list<std::string>::iterator item_t = items.begin(); item_t != items.end(); /* intentionally no update statement*/ )
+            for(std::pair< const std::string, bool >& item : items)
               {
-                typename DatabaseType::const_iterator t = db.find(*item_t);
-                if(t != db.end())
+                // search for item
+                for(const typename DatabaseType::value_type& record : db)
                   {
-                    this->report_object(*t->second, cache);
-                    items.erase(item_t++);
-                  }
-                else
-                  {
-                    ++item_t;
+                    if(check_match(record.second->get_name(), item.first))
+                      {
+                        this->report_object(*record.second, cache);
+                        item.second = true;
+                      }
                   }
               }
           }
