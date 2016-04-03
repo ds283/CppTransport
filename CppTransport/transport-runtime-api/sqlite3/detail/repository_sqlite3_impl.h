@@ -354,8 +354,9 @@ namespace transport
       {
         find_function finder = std::bind(&sqlite3_operations::find_package, std::placeholders::_1, std::placeholders::_2, CPPTRANSPORT_REPO_PACKAGE_MISSING);
 
-        // for deserialized records, access mode must be specified explicitly
-        repository_record::handler_package pkg(std::bind(&repository_sqlite3<number>::commit_replace, this, std::placeholders::_1, std::placeholders::_2, finder), mode);
+        // for deserialized records, access mode must be specified explicitly -- but is respected only if we are ourselves a read/write repository
+        repository_record::handler_package pkg(std::bind(&repository_sqlite3<number>::commit_replace, this, std::placeholders::_1, std::placeholders::_2, finder),
+                                               this->access_mode == repository_mode::readwrite ? mode : record_mode::readonly);
 
         return std::make_unique< package_record<number> >(reader, this->m_finder, pkg);
       }
@@ -395,8 +396,9 @@ namespace transport
       {
         find_function finder = std::bind(&sqlite3_operations::find_integration_task, std::placeholders::_1, std::placeholders::_2, CPPTRANSPORT_REPO_TASK_MISSING);
 
-        // for deserialized records, access mode must be specified explicitly
-        repository_record::handler_package pkg(std::bind(&repository_sqlite3<number>::commit_integration_replace, this, std::placeholders::_1, std::placeholders::_2, finder), mode);
+        // for deserialized records, access mode must be specified explicitly -- but is respected only if we are ourselves a read/write repository
+        repository_record::handler_package pkg(std::bind(&repository_sqlite3<number>::commit_integration_replace, this, std::placeholders::_1, std::placeholders::_2, finder),
+                                               this->access_mode == repository_mode::readwrite ? mode : record_mode::readonly);
 
         return std::make_unique< integration_task_record<number> >(reader, this->root_path, this->pkg_finder, pkg);
       }
@@ -421,8 +423,9 @@ namespace transport
       {
         find_function finder = std::bind(&sqlite3_operations::find_output_task, std::placeholders::_1, std::placeholders::_2, CPPTRANSPORT_REPO_TASK_MISSING);
 
-        // for deserialized records, access mode must be specified explicitly
-        repository_record::handler_package pkg(std::bind(&repository_sqlite3<number>::commit_replace, this, std::placeholders::_1, std::placeholders::_2, finder), mode);
+        // for deserialized records, access mode must be specified explicitly -- but is respected only if we are ourselves a read/write repository
+        repository_record::handler_package pkg(std::bind(&repository_sqlite3<number>::commit_replace, this, std::placeholders::_1, std::placeholders::_2, finder),
+                                               this->access_mode == repository_mode::readwrite ? mode : record_mode::readonly);
 
         return std::make_unique< output_task_record<number> >(reader, this->dprod_finder, pkg);
       }
@@ -469,8 +472,9 @@ namespace transport
       {
         find_function finder = std::bind(&sqlite3_operations::find_postintegration_task, std::placeholders::_1, std::placeholders::_2, CPPTRANSPORT_REPO_TASK_MISSING);
 
-        // for deserialized records, access mode must be specified explicitly
-        repository_record::handler_package pkg(std::bind(&repository_sqlite3<number>::commit_replace, this, std::placeholders::_1, std::placeholders::_2, finder), mode);
+        // for deserialized records, access mode must be specified explicitly -- but is respected only if we are ourselves a read/write repository
+        repository_record::handler_package pkg(std::bind(&repository_sqlite3<number>::commit_replace, this, std::placeholders::_1, std::placeholders::_2, finder),
+                                               this->access_mode == repository_mode::readwrite ? mode : record_mode::readonly);
 
         return std::make_unique< postintegration_task_record<number> >(reader, this->tk_finder, pkg);
       }
@@ -495,8 +499,9 @@ namespace transport
       {
         find_function finder = std::bind(&sqlite3_operations::find_product, std::placeholders::_1, std::placeholders::_2, CPPTRANSPORT_REPO_PRODUCT_MISSING);
 
-        // for deserialized records, access mode must be specified explicitly
-        repository_record::handler_package pkg(std::bind(&repository_sqlite3<number>::commit_replace, this, std::placeholders::_1, std::placeholders::_2, finder), mode);
+        // for deserialized records, access mode must be specified explicitly -- but is respected only if we are ourselves a read/write repository
+        repository_record::handler_package pkg(std::bind(&repository_sqlite3<number>::commit_replace, this, std::placeholders::_1, std::placeholders::_2, finder),
+                                               this->access_mode == repository_mode::readwrite ? mode : record_mode::readonly);
 
         return std::make_unique< derived_product_record<number> >(reader, this->tk_finder, pkg);
       }
