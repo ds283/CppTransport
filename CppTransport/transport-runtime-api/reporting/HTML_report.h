@@ -814,6 +814,12 @@ namespace transport
                         HTML_node group_list("div");
                         group_list.add_attribute("id", tag + "groups").add_attribute("class", "collapse");
 
+                        HTML_node tbl_panel("div");
+                        tbl_panel.add_attribute("class", "panel panel-info topskip");
+
+                        HTML_node tbl_panel_head("div", "Output groups belonging to this task");
+                        tbl_panel_head.add_attribute("class", "panel-heading");
+
                         HTML_node table_wrapper("div");
                         table_wrapper.add_attribute("class", "table-responsive");
 
@@ -839,7 +845,7 @@ namespace transport
                           {
                             integration_content_db::const_iterator t = content_db.find(group);
 
-                            HTML_node row("tr");
+                            HTML_node table_row("tr");
 
                             if(t != content_db.end())
                               {
@@ -851,7 +857,7 @@ namespace transport
                                 HTML_node complete("td", (t->second->get_payload().is_failed() ? "No" : "Yes"));
                                 HTML_node size("td", format_memory(t->second->get_payload().get_size()));
 
-                                row.add_element(name).add_element(created).add_element(edited).add_element(complete).add_element(size);
+                                table_row.add_element(name).add_element(created).add_element(edited).add_element(complete).add_element(size);
                               }
                             else
                               {
@@ -865,15 +871,16 @@ namespace transport
                                 null_label.add_attribute("class", "label label-danger");
                                 null.add_element(null_label);
 
-                                row.add_element(name).add_element(null).add_element(null).add_element(null).add_element(null);
+                                table_row.add_element(name).add_element(null).add_element(null).add_element(null).add_element(null);
                               }
 
-                            body.add_element(row);
+                            body.add_element(table_row);
                           }
 
                         table.add_element(head).add_element(body);
                         table_wrapper.add_element(table);
-                        group_list.add_element(table_wrapper);
+                        tbl_panel.add_element(tbl_panel_head).add_element(table_wrapper);
+                        group_list.add_element(tbl_panel);
                         item.add_element(button).add_element(group_list);
                       }
 
@@ -1013,6 +1020,12 @@ namespace transport
                         HTML_node group_list("div");
                         group_list.add_attribute("id", tag + "groups").add_attribute("class", "collapse");
 
+                        HTML_node tbl_panel("div");
+                        tbl_panel.add_attribute("class", "panel panel-info topskip");
+
+                        HTML_node tbl_panel_head("div", "Output groups belonging to this task");
+                        tbl_panel_head.add_attribute("class", "panel-heading");
+
                         HTML_node table_wrapper("div");
                         table_wrapper.add_attribute("class", "table-responsive");
 
@@ -1072,7 +1085,8 @@ namespace transport
 
                         table.add_element(head).add_element(body);
                         table_wrapper.add_element(table);
-                        group_list.add_element(table_wrapper);
+                        tbl_panel.add_element(tbl_panel_head).add_element(table_wrapper);
+                        group_list.add_element(tbl_panel);
                         item.add_element(button).add_element(group_list);
                       }
 
@@ -1122,6 +1136,12 @@ namespace transport
                         HTML_node group_list("div");
                         group_list.add_attribute("id", tag + "elements").add_attribute("class", "collapse");
 
+                        HTML_node tbl_panel("div");
+                        tbl_panel.add_attribute("class", "panel panel-info topskip");
+
+                        HTML_node tbl_panel_head("div", "Derived products used by this task");
+                        tbl_panel_head.add_attribute("class", "panel-heading");
+
                         HTML_node table_wrapper("div");
                         table_wrapper.add_attribute("class", "table-responsive");
 
@@ -1160,7 +1180,8 @@ namespace transport
 
                         table.add_element(head).add_element(body);
                         table_wrapper.add_element(table);
-                        group_list.add_element(table_wrapper);
+                        tbl_panel.add_element(tbl_panel_head).add_element(table_wrapper);
+                        group_list.add_element(tbl_panel);
                         item.add_element(button).add_element(group_list);
                       }
 
@@ -1176,6 +1197,12 @@ namespace transport
 
                         HTML_node group_list("div");
                         group_list.add_attribute("id", tag + "groups").add_attribute("class", "collapse");
+
+                        HTML_node tbl_panel("div");
+                        tbl_panel.add_attribute("class", "panel panel-info topskip");
+
+                        HTML_node tbl_panel_head("div", "Output groups belonging to this task");
+                        tbl_panel_head.add_attribute("class", "panel-heading");
 
                         HTML_node table_wrapper("div");
                         table_wrapper.add_attribute("class", "table-responsive");
@@ -1232,7 +1259,8 @@ namespace transport
 
                         table.add_element(head).add_element(body);
                         table_wrapper.add_element(table);
-                        group_list.add_element(table_wrapper);
+                        tbl_panel.add_element(tbl_panel_head).add_element(table_wrapper);
+                        group_list.add_element(tbl_panel);
                         item.add_element(button).add_element(group_list);
                       }
 
@@ -1317,6 +1345,12 @@ namespace transport
                     HTML_node group_list("div");
                     group_list.add_attribute("id", tag + "tasks").add_attribute("class", "collapse");
 
+                    HTML_node tbl_panel("div");
+                    tbl_panel.add_attribute("class", "panel panel-info topskip");
+
+                    HTML_node tbl_panel_head("div", "Tasks used by this derived product");
+                    tbl_panel_head.add_attribute("class", "panel-heading");
+
                     HTML_node table_wrapper("div");
                     table_wrapper.add_attribute("class", "table-responsive");
 
@@ -1346,7 +1380,8 @@ namespace transport
 
                     table.add_element(head).add_element(body);
                     table_wrapper.add_element(table);
-                    group_list.add_element(table_wrapper);
+                    tbl_panel.add_element(tbl_panel_head).add_element(table_wrapper);
+                    group_list.add_element(tbl_panel);
                     item.add_element(button).add_element(group_list);
                   }
 
@@ -1885,10 +1920,8 @@ namespace transport
                 HTML_node col1_list("dl");
                 col1_list.add_attribute("class", "dl-horizontal");
 
-                this->make_data_element("Complete",
-                                        (payload.is_failed() ? "No" : "Yes"), col1_list);
-                this->make_data_element("Size",
-                                        format_memory(payload.get_size()), col1_list);
+                this->make_data_element("Complete", (payload.is_failed() ? "No" : "Yes"), col1_list);
+                this->make_data_element("Size", format_memory(payload.get_size()), col1_list);
 
                 col1.add_element(col1_list);
 
@@ -2101,6 +2134,12 @@ namespace transport
                             HTML_node data("div");
                             data.add_attribute("id", group_tag).add_attribute("class", "collapse");
 
+                            HTML_node tbl_panel("div");
+                            tbl_panel.add_attribute("class", "panel panel-info topskip");
+
+                            HTML_node tbl_panel_head("div", "Provenance report for this product");
+                            tbl_panel_head.add_attribute("class", "panel-heading");
+
                             HTML_node table_wrapper("div");
                             table_wrapper.add_attribute("class", "table-responsive");
 
@@ -2141,7 +2180,8 @@ namespace transport
 
                             table.add_element(head).add_element(body);
                             table_wrapper.add_element(table);
-                            data.add_element(table_wrapper);
+                            tbl_panel.add_element(tbl_panel_head).add_element(table_wrapper);
+                            data.add_element(tbl_panel);
                             it.add_element(button).add_element(data);
                           }
 
