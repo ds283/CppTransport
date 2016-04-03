@@ -137,23 +137,51 @@ namespace transport
 
       public:
 
+        // READ ONLY
+
         //! Read a package record from the database
-        virtual std::unique_ptr< package_record<number> > query_package(const std::string& name, record_mode mode) = 0;
+        //! Without a transaction_manager object, the returned record is readonly
+        virtual std::unique_ptr< package_record<number> > query_package(const std::string& name) = 0;
 
         //! Read a task record from the database
-        virtual std::unique_ptr< task_record<number> > query_task(const std::string& name, record_mode mode) = 0;
+        //! Without a transaction_manager object, the returned record is readonly
+        virtual std::unique_ptr< task_record<number> > query_task(const std::string& name) = 0;
 
         //! Read a derived product specification from the database
-        virtual std::unique_ptr< derived_product_record<number> > query_derived_product(const std::string& name, record_mode mode) = 0;
+        //! Without a transaction_manager object, the returned record is readonly
+        virtual std::unique_ptr< derived_product_record<number> > query_derived_product(const std::string& name) = 0;
 
         //! Read an integration content group specification from the database
-        virtual std::unique_ptr< output_group_record<integration_payload> > query_integration_content(const std::string& name, record_mode mode) = 0;
+        //! Without a transaction_manager object, the returned record is readonly
+        virtual std::unique_ptr< output_group_record<integration_payload> > query_integration_content(const std::string& name) = 0;
 
         //! Read a postintegration content group specification from the database
-        virtual std::unique_ptr< output_group_record<postintegration_payload> > query_postintegration_content(const std::string& name, record_mode mode) = 0;
+        //! Without a transaction_manager object, the returned record is readonly
+        virtual std::unique_ptr< output_group_record<postintegration_payload> > query_postintegration_content(const std::string& name) = 0;
 
         //! Read an output content group specification from the database
-        virtual std::unique_ptr< output_group_record<output_payload> > query_output_content(const std::string& name, record_mode mode) = 0;
+        //! Without a transaction_manager object, the returned record is readonly
+        virtual std::unique_ptr< output_group_record<output_payload> > query_output_content(const std::string& name) = 0;
+
+        // READ/WRITE
+
+        //! Read a package record from the database
+        virtual std::unique_ptr< package_record<number> > query_package(const std::string& name, transaction_manager& mgr) = 0;
+
+        //! Read a task record from the database
+        virtual std::unique_ptr< task_record<number> > query_task(const std::string& name, transaction_manager& mgr) = 0;
+
+        //! Read a derived product specification from the database
+        virtual std::unique_ptr< derived_product_record<number> > query_derived_product(const std::string& name, transaction_manager& mgr) = 0;
+
+        //! Read an integration content group specification from the database
+        virtual std::unique_ptr< output_group_record<integration_payload> > query_integration_content(const std::string& name, transaction_manager& mgr) = 0;
+
+        //! Read a postintegration content group specification from the database
+        virtual std::unique_ptr< output_group_record<postintegration_payload> > query_postintegration_content(const std::string& name, transaction_manager& mgr) = 0;
+
+        //! Read an output content group specification from the database
+        virtual std::unique_ptr< output_group_record<output_payload> > query_output_content(const std::string& name, transaction_manager& mgr) = 0;
 
 
         // ENUMERATE DATABASE RECORDS
@@ -395,34 +423,36 @@ namespace transport
       protected:
 
         //! Create a new package record from an explicit object
-        virtual std::unique_ptr< package_record<number> > package_record_factory(const initial_conditions<number>& ics) = 0;
+        virtual std::unique_ptr< package_record<number> > package_record_factory(const initial_conditions<number>& ics, transaction_manager& mgr) = 0;
 
         //! Create a new integration task record from an explicit object
-        virtual std::unique_ptr< integration_task_record<number> > integration_task_record_factory(const twopf_task<number>& tk) = 0;
-        virtual std::unique_ptr< integration_task_record<number> > integration_task_record_factory(const threepf_task<number>& tk) = 0;
+        virtual std::unique_ptr< integration_task_record<number> > integration_task_record_factory(const twopf_task<number>& tk, transaction_manager& mgr) = 0;
+        virtual std::unique_ptr< integration_task_record<number> > integration_task_record_factory(const threepf_task<number>& tk, transaction_manager& mgr) = 0;
 
         //! Create a new output task record from an explicit object
-        virtual std::unique_ptr< output_task_record<number> > output_task_record_factory(const output_task<number>& tk) = 0;
+        virtual std::unique_ptr< output_task_record<number> > output_task_record_factory(const output_task<number>& tk, transaction_manager& mgr) = 0;
 
         //! Create a postintegration task record from an explicit object
-        virtual std::unique_ptr< postintegration_task_record<number> > postintegration_task_record_factory(const zeta_twopf_task<number>& tk) = 0;
-        virtual std::unique_ptr< postintegration_task_record<number> > postintegration_task_record_factory(const zeta_threepf_task<number>& tk) = 0;
-        virtual std::unique_ptr< postintegration_task_record<number> > postintegration_task_record_factory(const fNL_task<number>& tk) = 0;
+        virtual std::unique_ptr< postintegration_task_record<number> > postintegration_task_record_factory(const zeta_twopf_task<number>& tk, transaction_manager& mgr) = 0;
+        virtual std::unique_ptr< postintegration_task_record<number> > postintegration_task_record_factory(const zeta_threepf_task<number>& tk, transaction_manager& mgr) = 0;
+        virtual std::unique_ptr< postintegration_task_record<number> > postintegration_task_record_factory(const fNL_task<number>& tk, transaction_manager& mgr) = 0;
 
         //! Create a new derived product record from explicit object
-        virtual std::unique_ptr< derived_product_record<number> > derived_product_record_factory(const derived_data::derived_product<number>& prod) = 0;
+        virtual std::unique_ptr< derived_product_record<number> > derived_product_record_factory(const derived_data::derived_product<number>& prod, transaction_manager& mgr) = 0;
 
         //! Create a new content group for an integration task
         virtual std::unique_ptr< output_group_record<integration_payload> > integration_content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
-                                                                                                                     bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg) = 0;
+                                                                                                                     bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg,
+                                                                                                                     transaction_manager& mgr) = 0;
 
         //! Create a new content group for a postintegration task
         virtual std::unique_ptr< output_group_record<postintegration_payload> > postintegration_content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
-                                                                                                                             bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg) = 0;
+                                                                                                                             bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg, transaction_manager& mgr) = 0;
 
         //! Create a new content group for an output task
         virtual std::unique_ptr< output_group_record<output_payload> > output_content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
-                                                                                                           bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg) = 0;
+                                                                                                           bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg,
+                                                                                                           transaction_manager& mgr) = 0;
 
 
         // PRIVATE DATA

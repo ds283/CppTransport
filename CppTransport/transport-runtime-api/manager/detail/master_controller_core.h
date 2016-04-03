@@ -520,9 +520,9 @@ namespace transport
             // however, we have to be cautious about using it because other processes may write to the
             // repository for the same job
 
-            // for this reason, we don't hold copies to this record in any of the writers, but only
-            // a copy of the job name. When commits need to occur, the record is looked up again
-            record = this->repo->query_task(job.get_name(), record_mode::readonly);
+            // Because we don't hold any open transactions at this point the record is returned in readonly mode
+            // When commits need to occur, the record is looked up again with an active transaction
+            record = this->repo->query_task(job.get_name());
           }
         catch (runtime_exception xe)
           {

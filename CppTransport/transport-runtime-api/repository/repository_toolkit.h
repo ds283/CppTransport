@@ -21,66 +21,66 @@ namespace transport
 
         //! template method to extract a content group
         template <typename number, typename Payload>
-        std::unique_ptr< output_group_record<Payload> > get_rw_content_group(repository<number>& repo, const std::string& name);
+        std::unique_ptr< output_group_record<Payload> > get_rw_content_group(repository<number>& repo, const std::string& name, transaction_manager& mgr);
 
 
         //! specialize for integration payloads
         template <>
-        std::unique_ptr< output_group_record< integration_payload> > get_rw_content_group(repository<double>& repo, const std::string& name)
+        std::unique_ptr< output_group_record< integration_payload> > get_rw_content_group(repository<double>& repo, const std::string& name, transaction_manager& mgr)
           {
-            return repo.query_integration_content(name, record_mode::readwrite);
+            return repo.query_integration_content(name, mgr);
           }
 
         template <>
-        std::unique_ptr< output_group_record< integration_payload> > get_rw_content_group(repository<float>& repo, const std::string& name)
+        std::unique_ptr< output_group_record< integration_payload> > get_rw_content_group(repository<float>& repo, const std::string& name, transaction_manager& mgr)
           {
-            return repo.query_integration_content(name, record_mode::readwrite);
+            return repo.query_integration_content(name, mgr);
           }
 
         template <>
-        std::unique_ptr< output_group_record< integration_payload> > get_rw_content_group(repository<long double>& repo, const std::string& name)
+        std::unique_ptr< output_group_record< integration_payload> > get_rw_content_group(repository<long double>& repo, const std::string& name, transaction_manager& mgr)
           {
-            return repo.query_integration_content(name, record_mode::readwrite);
+            return repo.query_integration_content(name, mgr);
           }
 
 
         //! specialize for postintegration payloads
         template <>
-        std::unique_ptr< output_group_record< postintegration_payload> > get_rw_content_group(repository<double>& repo, const std::string& name)
+        std::unique_ptr< output_group_record< postintegration_payload> > get_rw_content_group(repository<double>& repo, const std::string& name, transaction_manager& mgr)
           {
-            return repo.query_postintegration_content(name, record_mode::readwrite);
+            return repo.query_postintegration_content(name, mgr);
           }
 
         template <>
-        std::unique_ptr< output_group_record< postintegration_payload> > get_rw_content_group(repository<float>& repo, const std::string& name)
+        std::unique_ptr< output_group_record< postintegration_payload> > get_rw_content_group(repository<float>& repo, const std::string& name, transaction_manager& mgr)
           {
-            return repo.query_postintegration_content(name, record_mode::readwrite);
+            return repo.query_postintegration_content(name, mgr);
           }
 
         template <>
-        std::unique_ptr< output_group_record< postintegration_payload> > get_rw_content_group(repository<long double>& repo, const std::string& name)
+        std::unique_ptr< output_group_record< postintegration_payload> > get_rw_content_group(repository<long double>& repo, const std::string& name, transaction_manager& mgr)
           {
-            return repo.query_postintegration_content(name, record_mode::readwrite);
+            return repo.query_postintegration_content(name, mgr);
           }
 
 
         //! specialize for output payloads
         template <>
-        std::unique_ptr< output_group_record< output_payload> > get_rw_content_group(repository<double>& repo, const std::string& name)
+        std::unique_ptr< output_group_record< output_payload> > get_rw_content_group(repository<double>& repo, const std::string& name, transaction_manager& mgr)
           {
-            return repo.query_output_content(name, record_mode::readwrite);
+            return repo.query_output_content(name, mgr);
           }
 
         template <>
-        std::unique_ptr< output_group_record< output_payload> > get_rw_content_group(repository<float>& repo, const std::string& name)
+        std::unique_ptr< output_group_record< output_payload> > get_rw_content_group(repository<float>& repo, const std::string& name, transaction_manager& mgr)
           {
-            return repo.query_output_content(name, record_mode::readwrite);
+            return repo.query_output_content(name, mgr);
           }
 
         template <>
-        std::unique_ptr< output_group_record< output_payload> > get_rw_content_group(repository<long double>& repo, const std::string& name)
+        std::unique_ptr< output_group_record< output_payload> > get_rw_content_group(repository<long double>& repo, const std::string& name, transaction_manager& mgr)
           {
-            return repo.query_output_content(name, record_mode::readwrite);
+            return repo.query_output_content(name, mgr);
           }
 
       }   // namespace repository_toolkit_impl
@@ -179,7 +179,7 @@ namespace transport
                 if(boost::regex_match(record.get_name(), object_expr))
                   {
                     // re-query the database to get a read/write version of this record
-                    typename ContentDatabase::mapped_type rw_record = get_rw_content_group<number, typename ContentDatabase::mapped_type::element_type::payload_type>(this->repo, record.get_name());
+                    typename ContentDatabase::mapped_type rw_record = get_rw_content_group<number, typename ContentDatabase::mapped_type::element_type::payload_type>(this->repo, record.get_name(), mgr);
 
                     for(const std::string& tag : tags_remove)
                       {
@@ -204,7 +204,7 @@ namespace transport
                     // recommit record
                     // in the current implementation there is no need to re-read the value in the enumerated database, because
                     // each record in the enumeration is inspected only once
-                    rw_record->commit(mgr);
+                    rw_record->commit();
                   }
               }
           }

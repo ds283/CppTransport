@@ -60,11 +60,11 @@ namespace transport
       }
 
 
-    void repository_record::commit(transaction_manager& mgr)
+    void repository_record::commit()
       {
-        if(this->handlers.mode == record_mode::readwrite)
+        if(this->handlers.mgr)
           {
-            this->handlers.commit(*this, mgr);
+            this->handlers.commit(*this, *this->handlers.mgr);
           }
         else // no authorization to commit this record; throw an exception
           {

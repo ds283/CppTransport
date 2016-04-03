@@ -145,29 +145,66 @@ namespace transport
 
       public:
 
+        // READ ONLY
+
         //! Read a package record from the database
-        virtual std::unique_ptr< package_record<number> > query_package(const std::string& name, record_mode mode) override;
+        //! Without a transaction_manager object, the returned record is readonly
+        virtual std::unique_ptr< package_record<number> > query_package(const std::string& name) override;
 
         //! Read a task record from the database
-        virtual std::unique_ptr< task_record<number> > query_task(const std::string& name, record_mode mode) override;
+        //! Without a transaction_manager object, the returned record is readonly
+        virtual std::unique_ptr< task_record<number> > query_task(const std::string& name) override;
 
         //! Read a derived product specification from the database
-        virtual std::unique_ptr< derived_product_record<number> > query_derived_product(const std::string& name, record_mode mode) override;
+        //! Without a transaction_manager object, the returned record is readonly
+        virtual std::unique_ptr< derived_product_record<number> > query_derived_product(const std::string& name) override;
 
         //! Read an integration content group specification from the database
-        virtual std::unique_ptr< output_group_record<integration_payload> > query_integration_content(const std::string& name, record_mode mode) override;
+        //! Without a transaction_manager object, the returned record is readonly
+        virtual std::unique_ptr< output_group_record<integration_payload> > query_integration_content(const std::string& name) override;
 
         //! Read a postintegration content group specification from the database
-        virtual std::unique_ptr< output_group_record<postintegration_payload> > query_postintegration_content(const std::string& name, record_mode mode) override;
+        //! Without a transaction_manager object, the returned record is readonly
+        virtual std::unique_ptr< output_group_record<postintegration_payload> > query_postintegration_content(const std::string& name) override;
 
         //! Read an output content group specification from the database
-        virtual std::unique_ptr< output_group_record<output_payload> > query_output_content(const std::string& name, record_mode mode) override;
+        //! Without a transaction_manager object, the returned record is readonly
+        virtual std::unique_ptr< output_group_record<output_payload> > query_output_content(const std::string& name) override;
+
+        // READ/WRITE
+
+        //! Read a package record from the database
+        virtual std::unique_ptr< package_record<number> > query_package(const std::string& name, transaction_manager& mgr) override;
+
+        //! Read a task record from the database
+        virtual std::unique_ptr< task_record<number> > query_task(const std::string& name, transaction_manager& mgr) override;
+
+        //! Read a derived product specification from the database
+        virtual std::unique_ptr< derived_product_record<number> > query_derived_product(const std::string& name, transaction_manager& mgr) override;
+
+        //! Read an integration content group specification from the database
+        virtual std::unique_ptr< output_group_record<integration_payload> > query_integration_content(const std::string& name, transaction_manager& mgr) override;
+
+        //! Read a postintegration content group specification from the database
+        virtual std::unique_ptr< output_group_record<postintegration_payload> > query_postintegration_content(const std::string& name, transaction_manager& mgr) override;
+
+        //! Read an output content group specification from the database
+        virtual std::unique_ptr< output_group_record<output_payload> > query_output_content(const std::string& name, transaction_manager& mgr) override;
 
       protected:
 
+        //! Generic method to read a package record from the database
+        std::unique_ptr< package_record<number> > query_package(const std::string& name, boost::optional<transaction_manager&> mgr);
+
+        //! Generic method to read a task from the database
+        std::unique_ptr< task_record<number> > query_task(const std::string& name, boost::optional<transaction_manager&> mgr);
+
+        //! Generic method to read a derived product specification from the database
+        std::unique_ptr< derived_product_record<number> > query_derived_product(const std::string& name, boost::optional<transaction_manager&> mgr);
+
         //! Generic method to read a content group from the database
         template <typename Payload>
-        std::unique_ptr< output_group_record<Payload> > query_content_group(const std::string& name, record_mode mode);
+        std::unique_ptr< output_group_record<Payload> > query_content_group(const std::string& name, boost::optional<transaction_manager&> mgr);
 
 
         // ENUMERATE DATABASE RECORDS
@@ -258,79 +295,83 @@ namespace transport
       protected:
 
         //! Create a new package record from an explicit object
-        virtual std::unique_ptr< package_record<number> > package_record_factory(const initial_conditions<number>& ics) override;
+        virtual std::unique_ptr< package_record<number> > package_record_factory(const initial_conditions<number>& ics, transaction_manager& mgr) override;
 
         //! Create a new integration task record from an explicit object
-        virtual std::unique_ptr< integration_task_record<number> > integration_task_record_factory(const twopf_task<number>& tk) override;
-        virtual std::unique_ptr< integration_task_record<number> > integration_task_record_factory(const threepf_task<number>& tk) override;
+        virtual std::unique_ptr< integration_task_record<number> > integration_task_record_factory(const twopf_task<number>& tk, transaction_manager& mgr) override;
+        virtual std::unique_ptr< integration_task_record<number> > integration_task_record_factory(const threepf_task<number>& tk, transaction_manager& mgr) override;
 
         // generic integration task factory
         template <typename TaskType>
-        std::unique_ptr< integration_task_record<number> > integration_task_record_factory_generic(const TaskType& tk);
+        std::unique_ptr< integration_task_record<number> > integration_task_record_factory_generic(const TaskType& tk, transaction_manager& mgr);
 
         //! Create a new output task record from an explicit object
-        virtual std::unique_ptr< output_task_record<number> > output_task_record_factory(const output_task<number>& tk) override;
+        virtual std::unique_ptr< output_task_record<number> > output_task_record_factory(const output_task<number>& tk, transaction_manager& mgr) override;
 
         //! Create a postintegration task record from an explicit object
-        virtual std::unique_ptr< postintegration_task_record<number> > postintegration_task_record_factory(const zeta_twopf_task<number>& tk) override;
-        virtual std::unique_ptr< postintegration_task_record<number> > postintegration_task_record_factory(const zeta_threepf_task<number>& tk) override;
-        virtual std::unique_ptr< postintegration_task_record<number> > postintegration_task_record_factory(const fNL_task<number>& tk) override;
+        virtual std::unique_ptr< postintegration_task_record<number> > postintegration_task_record_factory(const zeta_twopf_task<number>& tk, transaction_manager& mgr) override;
+        virtual std::unique_ptr< postintegration_task_record<number> > postintegration_task_record_factory(const zeta_threepf_task<number>& tk, transaction_manager& mgr) override;
+        virtual std::unique_ptr< postintegration_task_record<number> > postintegration_task_record_factory(const fNL_task<number>& tk, transaction_manager& mgr) override;
 
         //! generic postintegration task record factory
         template <typename TaskType>
-        std::unique_ptr< postintegration_task_record<number> > postintegration_task_record_factory_generic(const TaskType& tk);
+        std::unique_ptr< postintegration_task_record<number> > postintegration_task_record_factory_generic(const TaskType& tk, transaction_manager& mgr);
 
         //! Create a new derived product record from explicit object
-        virtual std::unique_ptr< derived_product_record<number> > derived_product_record_factory(const derived_data::derived_product<number>& prod) override;
+        virtual std::unique_ptr< derived_product_record<number> > derived_product_record_factory(const derived_data::derived_product<number>& prod, transaction_manager& mgr) override;
 
         //! Create a new content group for an integration task
         virtual std::unique_ptr< output_group_record<integration_payload> > integration_content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
-                                                                                                                     bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg) override;
+                                                                                                                     bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg,
+                                                                                                                     transaction_manager& mgr) override;
 
         //! Create a new content group for a postintegration task
         virtual std::unique_ptr< output_group_record<postintegration_payload> > postintegration_content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
-                                                                                                                             bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg) override;
+                                                                                                                             bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg,
+                                                                                                                             transaction_manager& mgr) override;
 
         //! Create a new content group for an output task
         virtual std::unique_ptr< output_group_record<output_payload> > output_content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
-                                                                                                           bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg) override;
+                                                                                                           bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg,
+                                                                                                           transaction_manager& mgr) override;
 
         //! Implementation -- Create a new content group record
         template <typename Payload>
         std::unique_ptr< output_group_record<Payload> > content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
-                                                                                     bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg);
+                                                                                     bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg,
+                                                                                     transaction_manager& mgr);
 
         // 2. Factories from JSON representations: these are needed as part of the 'json_repository<>' interface
 
       protected:
 
         //! Create a package record from a JSON value
-        virtual std::unique_ptr< package_record<number> > package_record_factory(Json::Value& reader, record_mode mode) override;
+        virtual std::unique_ptr< package_record<number> > package_record_factory(Json::Value& reader, boost::optional<transaction_manager&> mgr) override;
 
         //! Create an integration task record from a JSON value
-        virtual std::unique_ptr< integration_task_record<number> > integration_task_record_factory(Json::Value& reader, record_mode mode) override;
+        virtual std::unique_ptr< integration_task_record<number> > integration_task_record_factory(Json::Value& reader, boost::optional<transaction_manager&> mgr) override;
 
         //! Create an output task record from a JSON value
-        virtual std::unique_ptr< output_task_record<number> > output_task_record_factory(Json::Value& reader, record_mode mode) override;
+        virtual std::unique_ptr< output_task_record<number> > output_task_record_factory(Json::Value& reader, boost::optional<transaction_manager&> mgr) override;
 
         //! Create a postintegration task record from a JSON value
-        virtual std::unique_ptr< postintegration_task_record<number> > postintegration_task_record_factory(Json::Value& reader, record_mode mode) override;
+        virtual std::unique_ptr< postintegration_task_record<number> > postintegration_task_record_factory(Json::Value& reader, boost::optional<transaction_manager&> mgr) override;
 
         //! create a new derived product record from a JSON value
-        virtual std::unique_ptr< derived_product_record<number> > derived_product_record_factory(Json::Value& reader, record_mode mode) override;
+        virtual std::unique_ptr< derived_product_record<number> > derived_product_record_factory(Json::Value& reader, boost::optional<transaction_manager&> mgr) override;
 
         //! Create a new content group for an integration task from a JSON value
-        virtual std::unique_ptr< output_group_record<integration_payload> > integration_content_group_record_factory(Json::Value& reader, record_mode mode) override;
+        virtual std::unique_ptr< output_group_record<integration_payload> > integration_content_group_record_factory(Json::Value& reader, boost::optional<transaction_manager&> mgr) override;
 
         //! Create a new content group for a postintegration task from a JSON value
-        virtual std::unique_ptr< output_group_record<postintegration_payload> > postintegration_content_group_record_factory(Json::Value& reader, record_mode mode) override;
+        virtual std::unique_ptr< output_group_record<postintegration_payload> > postintegration_content_group_record_factory(Json::Value& reader, boost::optional<transaction_manager&> mgr) override;
 
         //! Create a new content group for an output task from a JSON value
-        virtual std::unique_ptr< output_group_record<output_payload> > output_content_group_record_factory(Json::Value& reader, record_mode mode) override;
+        virtual std::unique_ptr< output_group_record<output_payload> > output_content_group_record_factory(Json::Value& reader, boost::optional<transaction_manager&> mgr) override;
 
         //! Implementation -- Create a new content group record
         template <typename Payload>
-        std::unique_ptr< output_group_record<Payload> > content_group_record_factory(Json::Value& reader, record_mode mode);
+        std::unique_ptr< output_group_record<Payload> > content_group_record_factory(Json::Value& reader, boost::optional<transaction_manager&> mgr);
 
 
         // UTILITY FUNCTIONS

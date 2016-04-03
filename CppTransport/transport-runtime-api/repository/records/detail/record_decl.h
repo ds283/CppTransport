@@ -10,6 +10,8 @@
 #include "transport-runtime-api/repository/detail/repository_mode.h"
 #include "transport-runtime-api/repository/transaction_manager.h"
 
+#include "boost/optional.hpp"
+
 
 namespace transport
   {
@@ -35,9 +37,9 @@ namespace transport
           public:
 
             //! constructor requires values for all arguments
-            handler_package(commit_handler c, record_mode m)
+            handler_package(commit_handler c, boost::optional<transaction_manager&> m)
               : commit(std::move(c)),
-                mode(m)
+                mgr(m)
               {
               }
 
@@ -45,8 +47,9 @@ namespace transport
 
           public:
 
-            //! access mode
-            const record_mode mode;
+            //! transaction manager, if provided
+            //! if no transaction manager is supplied, the record is in a readonly mode
+            boost::optional<transaction_manager&> mgr;
 
             //! commit handler
             const commit_handler commit;
@@ -107,7 +110,7 @@ namespace transport
 
         //! Commit this record to the database; note can't be marked const because some commit functions
         //! need to write to the repository record (eg. to set k-configuration database paths)
-        void commit(transaction_manager& mgr);
+        void commit();
 
 
         // SERIALIZATION -- implements a 'serializable' interface

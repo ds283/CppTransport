@@ -452,7 +452,7 @@ namespace transport
     void repository<number>::close_integration_writer(integration_writer<number>& writer, transaction_manager& mgr)
       {
         // read record from database (so that we have a fresh and up-to-date copy of the data)
-        std::unique_ptr< task_record<number> > raw_rec = this->query_task(writer.get_task_name(), record_mode::readwrite);
+        std::unique_ptr< task_record<number> > raw_rec = this->query_task(writer.get_task_name(), mgr);
         integration_task_record<number>* rec = dynamic_cast< integration_task_record<number>* >(raw_rec.get());
 
         assert(rec != nullptr);
@@ -471,7 +471,7 @@ namespace transport
 
         // create a new, empty output group record
         std::unique_ptr< output_group_record<integration_payload> >
-          output_record(this->integration_content_group_record_factory(rec->get_task()->get_name(), writer.get_relative_output_path(), false, notes, tags));
+          output_record(this->integration_content_group_record_factory(rec->get_task()->get_name(), writer.get_relative_output_path(), false, notes, tags, mgr));
 
         // stamp output group with the correct 'created' time stamp
         output_record->set_creation_time(writer.get_creation_time());
@@ -500,12 +500,12 @@ namespace transport
           }
 
         // commit new output record
-        output_record->commit(mgr);
+        output_record->commit();
 
         // add this output group to the integration task record
         rec->add_new_output_group(output_record->get_name());
         rec->update_last_edit_time();
-        rec->commit(mgr);
+        rec->commit();
 
         this->advise_commit(output_record.get());
       }
@@ -546,7 +546,7 @@ namespace transport
     void repository<number>::close_postintegration_writer(postintegration_writer<number>& writer, transaction_manager& mgr)
       {
         // read record from database (so that we have a fresh and up-to-date copy of the data)
-        std::unique_ptr< task_record<number> > raw_rec = this->query_task(writer.get_task_name(), record_mode::readwrite);
+        std::unique_ptr< task_record<number> > raw_rec = this->query_task(writer.get_task_name(), mgr);
         postintegration_task_record<number>* rec = dynamic_cast< postintegration_task_record<number>* >(raw_rec.get());
 
         assert(rec != nullptr);
@@ -565,7 +565,7 @@ namespace transport
         // create a new, empty output group record
         std::list<std::string> notes;
         std::unique_ptr<output_group_record<postintegration_payload>>
-          output_record(this->postintegration_content_group_record_factory(rec->get_task()->get_name(), writer.get_relative_output_path(), false, notes, tags));
+          output_record(this->postintegration_content_group_record_factory(rec->get_task()->get_name(), writer.get_relative_output_path(), false, notes, tags, mgr));
 
         // stamp output group with the correct 'created' time stamp
         output_record->set_creation_time(writer.get_creation_time());
@@ -602,12 +602,12 @@ namespace transport
         if(writer.get_products().get_fNL_DBI())      output_record->get_payload().get_precomputed_products().add_fNL_DBI();
 
         // commit new output record
-        output_record->commit(mgr);
+        output_record->commit();
 
         // add this output group to the integration task record
         rec->add_new_output_group(output_record->get_name());
         rec->update_last_edit_time();
-        rec->commit(mgr);
+        rec->commit();
 
         this->advise_commit(output_record.get());
       }
@@ -648,7 +648,7 @@ namespace transport
     void repository<number>::close_derived_content_writer(derived_content_writer<number>& writer, transaction_manager& mgr)
       {
         // read record from database (so that we have a fresh and up-to-date copy of the data)
-        std::unique_ptr< task_record<number> > raw_rec = this->query_task(writer.get_task_name(), record_mode::readwrite);
+        std::unique_ptr< task_record<number> > raw_rec = this->query_task(writer.get_task_name(), mgr);
         output_task_record<number>* rec = dynamic_cast< output_task_record<number>* >(raw_rec.get());
 
         assert(rec != nullptr);
@@ -658,7 +658,7 @@ namespace transport
 
         // create a new, empty output group record
         std::unique_ptr< output_group_record<output_payload> >
-          output_record(this->output_content_group_record_factory(rec->get_task()->get_name(), writer.get_relative_output_path(), false, std::list<std::string>(), tags));
+          output_record(this->output_content_group_record_factory(rec->get_task()->get_name(), writer.get_relative_output_path(), false, std::list<std::string>(), tags, mgr));
 
         // stamp output group with the correct 'created' time stamp
         output_record->set_creation_time(writer.get_creation_time());
@@ -674,12 +674,12 @@ namespace transport
         output_record->get_payload().set_content_groups_summary(writer.get_content_groups());
 
         // commit new output record
-        output_record->commit(mgr);
+        output_record->commit();
 
         // add this output group to the integration task record
         rec->add_new_output_group(output_record->get_name());
         rec->update_last_edit_time();
-        rec->commit(mgr);
+        rec->commit();
 
         this->advise_commit(output_record.get());
       }

@@ -154,7 +154,7 @@ namespace transport
         try
           {
             // query a task record with the name we're looking for from the database
-            std::unique_ptr< task_record<number> > record = this->repo->query_task(payload.get_task_name(), record_mode::readonly);
+            std::unique_ptr< task_record<number> > record = this->repo->query_task(payload.get_task_name());
 
             switch(record->get_type())
               {
@@ -378,7 +378,7 @@ namespace transport
         try
           {
             // query a task record with the name we're looking for from the database
-            std::unique_ptr< task_record<number> > record = this->repo->query_task(payload.get_task_name(), record_mode::readonly);
+            std::unique_ptr< task_record<number> > record = this->repo->query_task(payload.get_task_name());
 
             switch(record->get_type())
               {
@@ -618,7 +618,7 @@ namespace transport
         try
           {
             // query a task record with the name we're looking for from the database
-            std::unique_ptr< task_record<number> > record = this->repo->query_task(payload.get_task_name(), record_mode::readonly);
+            std::unique_ptr< task_record<number> > record = this->repo->query_task(payload.get_task_name());
 
             switch(record->get_type())
               {

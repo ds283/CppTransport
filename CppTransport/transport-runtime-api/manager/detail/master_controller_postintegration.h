@@ -166,7 +166,7 @@ namespace transport
                                                                     bool seeded, const std::string& seed_group, const std::list<std::string>& tags,
                                                                     slave_work_event::event_type begin_label, slave_work_event::event_type end_label)
       {
-        std::unique_ptr< task_record<number> > pre_prec = this->repo->query_task(ptk->get_name(), record_mode::readonly);
+        std::unique_ptr< task_record<number> > pre_prec = this->repo->query_task(ptk->get_name());
         integration_task_record<number>* prec = dynamic_cast< integration_task_record<number>* >(pre_prec.get());
 
         assert(prec != nullptr);

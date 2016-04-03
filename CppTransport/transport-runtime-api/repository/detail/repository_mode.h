@@ -17,14 +17,6 @@ namespace transport
         readwrite
       };
 
-    // specify (requested) read/write mode for an individual repository record
-    // read/write access can only be granted if the repository as a whole has read/write access
-    enum class record_mode
-      {
-        readonly,
-        readwrite
-      };
-
   }
 
 
