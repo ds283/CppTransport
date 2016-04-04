@@ -514,7 +514,7 @@ namespace transport
     template <typename number>
     void repository<number>::abort_integration_writer(integration_writer<number>& writer, transaction_manager& mgr)
       {
-        boost::filesystem::path fail_path = this->get_root_path() / CPPTRANSPORT_REPO_FAILURE_LEAF;
+        boost::filesystem::path fail_path = this->get_root_path() / CPPTRANSPORT_REPO_FAILURE_LEAF / writer.get_task_name();
 
         if(!boost::filesystem::exists(fail_path)) boost::filesystem::create_directories(fail_path);
         if(boost::filesystem::is_directory(fail_path))
@@ -616,7 +616,7 @@ namespace transport
     template <typename number>
     void repository<number>::abort_postintegration_writer(postintegration_writer<number>& writer, transaction_manager& mgr)
       {
-        boost::filesystem::path fail_path = this->get_root_path() / CPPTRANSPORT_REPO_FAILURE_LEAF;
+        boost::filesystem::path fail_path = this->get_root_path() / CPPTRANSPORT_REPO_FAILURE_LEAF / writer.get_task_name();
 
         if(!boost::filesystem::exists(fail_path)) boost::filesystem::create_directories(fail_path);
         if(boost::filesystem::is_directory(fail_path))
@@ -688,7 +688,7 @@ namespace transport
     template <typename number>
     void repository<number>::abort_derived_content_writer(derived_content_writer<number>& writer, transaction_manager& mgr)
       {
-        boost::filesystem::path fail_path = this->get_root_path() / CPPTRANSPORT_REPO_FAILURE_LEAF;
+        boost::filesystem::path fail_path = this->get_root_path() / CPPTRANSPORT_REPO_FAILURE_LEAF / writer.get_task_name();
 
         if(!boost::filesystem::exists(fail_path)) boost::filesystem::create_directories(fail_path);
         if(boost::filesystem::is_directory(fail_path))
