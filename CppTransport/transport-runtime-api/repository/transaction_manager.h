@@ -109,7 +109,7 @@ namespace transport
 
           public:
 
-            virtual void commit() override { boost::filesystem::rename(this->journal, this->target); }
+            virtual void commit() override { boost::filesystem::rename(this->journal, this->target); }    // boost::filesystem::rename() will remove any existing file at target
 
             virtual void rollback() override { boost::filesystem::remove(this->journal); }
 
@@ -125,6 +125,49 @@ namespace transport
             boost::filesystem::path target;
 
           };
+
+
+        //! concrete transaction journal record, corresponding to moving a file or directory
+        class move_record : public journal_record
+          {
+
+            // CONSTRUCTOR, DESTRUCTOR
+
+          public:
+
+            move_record(const boost::filesystem::path& s, const boost::filesystem::path& t)
+              : source(s),
+                target(t)
+              {
+              }
+
+            // TODO: Intel compiler complains if destructor is explicitly defaulted; can probably be reverted with new version of compiler [Intel say this issue is 'fixed']
+            virtual ~move_record()
+              {
+              }
+
+
+            // INTERFACE
+
+          public:
+
+            virtual void commit() override { boost::filesystem::rename(this->source, this->target); }    // boost::filesystem::rename() will remove any existing file at target
+
+            virtual void rollback() override { ; }    // do nothing
+
+
+            // INTERNAL DATA
+
+          private:
+
+            //! journalled file
+            boost::filesystem::path source;
+
+            //! target file
+            boost::filesystem::path target;
+
+          };
+
 
       }
 
@@ -172,9 +215,16 @@ namespace transport
 
       public:
 
-		    //! Add a record to the journal
+		    //! Add an emplacement record to the journal
+        //! On commit, the temporary file located at 'journal' is moved to its permanent home at 'target'
+        //! 'target' is removed if it already exists.
+        //! On rollback, 'journal' is removed.
 		    void journal_deposit(const boost::filesystem::path& journal, const boost::filesystem::path& target);
 
+        //! Add a move record to the journal
+        //! On commit, the object located at 'source' is moved to 'target'
+        //! On rollback, nothing happens
+        void journal_move(const boost::filesystem::path& source, const boost::filesystem::path& target);
 
 		    // INTERNAL DATA
 
@@ -320,7 +370,7 @@ namespace transport
 			{
         // First, unwind all journalled actions
 
-				// work through the journal, rolling back
+				// work through the journal, rolling back each record
         for(std::unique_ptr<journal_record>& rec : this->journal)
 					{
 				    rec->rollback();
@@ -364,6 +414,15 @@ namespace transport
 
 				this->journal.push_back(std::make_unique<emplace_record>(journal, target));
 			}
+
+
+    void transaction_manager::journal_move(const boost::filesystem::path& source, const boost::filesystem::path& target)
+      {
+        if(this->committed) throw runtime_exception(exception_type::REPOSITORY_TRANSACTION_ERROR, CPPTRANSPORT_REPO_TRANSACTION_COMMITTED);
+        if(this->dead)      throw runtime_exception(exception_type::REPOSITORY_TRANSACTION_ERROR, CPPTRANSPORT_REPO_TRANSACTION_DEAD);
+
+        this->journal.push_back(std::make_unique<move_record>(source, target));
+      }
 
 
 	}

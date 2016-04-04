@@ -315,6 +315,9 @@ namespace transport
         //! Task gallery
         task_gallery<number>& gallery;
 
+        //! Boost::ProgramArguments variables_map
+        boost::program_options::variables_map option_map;
+
 
         // RUNTIME AGENTS
 

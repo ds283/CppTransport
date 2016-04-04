@@ -11,7 +11,6 @@ namespace transport
   {
 
 
-
     //! database type for packages
     template <typename number>
     struct package_db
@@ -228,6 +227,27 @@ namespace transport
         //! Enumerate all output groups; all records are returned in a readonly state, so if updates
         //! are required each individual record must be re-queried using the query_*() methods
         virtual output_content_db enumerate_output_task_content() = 0;
+
+
+        // REMOVE OUTPUT GROUPS
+
+        // TO BE USED WITH CARE, in case the repository gets into an inconsistent state
+        // Only output groups without dependents should be removed.
+        // The repository itself will not necessarily check for dependents (this is implementation dependent)
+
+        // repository_toolkit provides a front end for this API that builds a proper dependency graph
+        // and checks for safety
+
+      public:
+
+        //! Remove an integration group
+        virtual void delete_integration_content(const std::string& name, const std::string& task_name, transaction_manager& mgr) = 0;
+
+        //! Remove a postintegration group
+        virtual void delete_postintegration_content(const std::string& name, const std::string& task_name, transaction_manager& mgr) = 0;
+
+        //! Remove an outpout group
+        virtual void delete_output_content(const std::string& name, const std::string& task_name, transaction_manager& mgr) = 0;
 
 
         // ENUMERATE INFLIGHT TASKS

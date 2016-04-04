@@ -864,6 +864,7 @@ set(TRANSPORT_RUNTIME_API_SQLITE3_OPERATIONS_FILES
   transport-runtime-api/sqlite3/operations/repository_store.h
   transport-runtime-api/sqlite3/operations/sqlite3_utility.h
   transport-runtime-api/sqlite3/operations/data_manager_read.h
+  transport-runtime-api/sqlite3/operations/repository_delete.h
   )
 
 set(TRANSPORT_RUNTIME_API_TASKS_CONFIGURATION_DATABASE_FILES

@@ -26,9 +26,11 @@
 #define CPPTRANSPORT_REPO_STORE_TASK_FAIL                   "Repository error: failed to store task record (backend code="
 #define CPPTRANSPORT_REPO_STORE_PRODUCT_FAIL                "Repository error: failed to store derived product record (backend code="
 #define CPPTRANSPORT_REPO_STORE_OUTPUT_FAIL                 "Repository error: failed to store output record (backend code="
+#define CPPTRANSPORT_REPO_DELETE_OUTPUT_FAIL                "Repository error: failed to delete output record (backend code="
 
 #define CPPTRANSPORT_REPO_STORE_RESERVE_FAIL                "Repository error: failed to store content group name reservation (backend code="
-#define CPPTRANSPORT_REPO_COMMIT_OUTPUT_NOT_RESERVED        "Repository error: attempt to commit output group for unreserved name (backend code="
+#define CPPTRANSPORT_REPO_COMMIT_OUTPUT_NOT_RESERVED        "Repository error: attempt to commit output group for unreserved name"
+#define CPPTRANSPORT_REPO_DELETE_OUTPUT_UNSTORED            "Repository error: attempt to delete output group for unstored name"
 #define CPPTRANSPORT_REPO_UPDATE_COMPLETION_FAIL            "Repository error: failed to update completion time for content group (backend code="
 #define CPPTRANSPORT_REPO_DEREGISTER_FAIL                   "Repository error: failed to release content group name reservation (backend code="
 

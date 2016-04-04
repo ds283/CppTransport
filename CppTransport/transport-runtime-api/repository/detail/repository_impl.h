@@ -20,6 +20,7 @@ namespace transport
     constexpr auto CPPTRANSPORT_REPO_FAILURE_LEAF    = "failed";
     constexpr auto CPPTRANSPORT_REPO_LOGDIR_LEAF     = "logs";
     constexpr auto CPPTRANSPORT_REPO_TEMPDIR_LEAF    = "tempfiles";
+    constexpr auto CPPTRANSPORT_REPO_TRASH_LEAF      = "trash";
     constexpr auto CPPTRANSPORT_REPO_DATABASE_LEAF   = "data.sqlite";
     constexpr auto CPPTRANSPORT_REPO_LOCKFILE_LEAF   = "lockfile";
 

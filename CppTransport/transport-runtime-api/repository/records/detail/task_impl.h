@@ -64,6 +64,17 @@ namespace transport
       }
 
 
+    template <typename number>
+    void task_record<number>::delete_output_group(const std::string& name)
+      {
+        std::list<std::string>::const_iterator t = std::find(this->content_groups.cbegin(), this->content_groups.cend(), name);
+
+        if(t == this->content_groups.end()) return;
+
+        this->content_groups.erase(t);
+      }
+
+
     // INTEGRATION TASK RECORD
 
 

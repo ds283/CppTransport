@@ -111,12 +111,10 @@ namespace transport
         boost::program_options::options_description output_options;
         output_options.add(generic).add(configuration).add(job_options).add(action_options).add(report_options).add(plotting).add(journaling);
 
-        boost::program_options::variables_map option_map;
-
         // parse options from the command line; we do this first so that any options
         // supplied on the command line override options specified in a configuration file
         boost::program_options::parsed_options cmdline_parsed = boost::program_options::command_line_parser(argc, argv).options(cmdline_options).allow_unregistered().run();
-        boost::program_options::store(cmdline_parsed, option_map);
+        boost::program_options::store(cmdline_parsed, this->option_map);
         this->warn_unrecognized_switches(cmdline_parsed);
 
         // parse options from configuration file
@@ -130,25 +128,25 @@ namespace transport
                   {
                     // parse contents of file; 'true' means allow unregistered options
                     boost::program_options::parsed_options file_parsed = boost::program_options::parse_config_file(instream, config_file_options, true);
-                    boost::program_options::store(file_parsed, option_map);
+                    boost::program_options::store(file_parsed, this->option_map);
                     this->warn_unrecognized_switches(file_parsed);
                   }
               }
           }
 
         // inform the Boost::Program_Options library that all option parsing is complete
-        boost::program_options::notify(option_map);
+        boost::program_options::notify(this->option_map);
 
 
         // HANDLE SUPPLIED OPTIONS
 
-        this->recognize_generic_switches(option_map, output_options);
+        this->recognize_generic_switches(this->option_map, output_options);
 
-        if(option_map.count(CPPTRANSPORT_SWITCH_REPO_LONG))
+        if(this->option_map.count(CPPTRANSPORT_SWITCH_REPO_LONG))
           {
             try
               {
-                this->repo = repository_factory<number>(option_map[CPPTRANSPORT_SWITCH_REPO_LONG].as<std::string>(),
+                this->repo = repository_factory<number>(this->option_map[CPPTRANSPORT_SWITCH_REPO_LONG].template as<std::string>(),
                                                         this->model_mgr, repository_mode::readwrite,
                                                         this->err, this->warn, this->msg);
               }
@@ -166,18 +164,19 @@ namespace transport
               }
           }
 
-        this->recognize_configuration_switches(option_map);
-        this->recognize_repository_switches(option_map);
-        this->recognize_action_switches(option_map);
-        this->recognize_journal_switches(option_map);
-        this->recognize_job_switches(option_map);
-        this->recognize_plot_switches(option_map);
+        this->recognize_configuration_switches(this->option_map);
+        this->recognize_repository_switches(this->option_map);
+        this->recognize_journal_switches(this->option_map);
+        this->recognize_job_switches(this->option_map);
+        this->recognize_plot_switches(this->option_map);
+        // action switches not handled at this point, but later when all models have been registered by the client
+        // (in case repository access is needed, which can depend on model instances being available)
 
         // populate list of tags
         std::list<std::string> tags;
-        if(option_map.count(CPPTRANSPORT_SWITCH_TAG) > 0)
+        if(this->option_map.count(CPPTRANSPORT_SWITCH_TAG) > 0)
           {
-            std::vector<std::string> tmp = option_map[CPPTRANSPORT_SWITCH_TAG].as<std::vector<std::string> >();
+            std::vector<std::string> tmp = this->option_map[CPPTRANSPORT_SWITCH_TAG].template as<std::vector<std::string> >();
 
             // copy tags into std::list tags
             // Boost::program_arguments doesn't support lists, only vectors, so we have to do it this way
@@ -186,17 +185,17 @@ namespace transport
 
         // process task item
         // this can depend on prior information specified by other switches, eg. --seed
-        if(option_map.count(CPPTRANSPORT_SWITCH_TASK))
+        if(this->option_map.count(CPPTRANSPORT_SWITCH_TASK))
           {
-            std::vector<std::string> tasks = option_map[CPPTRANSPORT_SWITCH_TASK].as< std::vector<std::string> >();
+            std::vector<std::string> tasks = this->option_map[CPPTRANSPORT_SWITCH_TASK].template as< std::vector<std::string> >();
 
             for(const std::string& task : tasks)
               {
                 job_queue.push_back(job_descriptor(job_type::job_task, task, tags));
 
-                if(option_map.count(CPPTRANSPORT_SWITCH_SEED))
+                if(this->option_map.count(CPPTRANSPORT_SWITCH_SEED))
                   {
-                    job_queue.back().set_seed(option_map[CPPTRANSPORT_SWITCH_SEED].as<std::string>());
+                    job_queue.back().set_seed(this->option_map[CPPTRANSPORT_SWITCH_SEED].template as<std::string>());
                   }
               }
           }
@@ -338,7 +337,7 @@ namespace transport
     template <typename number>
     void master_controller<number>::recognize_action_switches(boost::program_options::variables_map& option_map)
       {
-        repository_toolkit<number> toolkit(*this->repo);
+        repository_toolkit<number> toolkit(*this->repo, this->err, this->warn, this->msg);
 
         if(option_map.count(CPPTRANSPORT_SWITCH_OBJECT))
           {
@@ -463,6 +462,10 @@ namespace transport
       {
         if(this->arg_cache.get_model_list())   this->model_mgr.write_models(std::cout);
         if(this->arg_cache.get_create_model()) this->gallery.commit(*this->repo);
+
+        // handle repository action switches
+        // these were left unhandled during option parsing
+        this->recognize_action_switches(this->option_map);
       }
 
 

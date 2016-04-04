@@ -51,6 +51,9 @@ namespace transport
         //! Add content
         void add_new_output_group(const std::string& name) { this->content_groups.push_back(name); }
 
+        //! Remove content
+        void delete_output_group(const std::string& name);
+
         //! Get content groups
         const std::list<std::string>& get_output_groups() const { return(this->content_groups); }
 

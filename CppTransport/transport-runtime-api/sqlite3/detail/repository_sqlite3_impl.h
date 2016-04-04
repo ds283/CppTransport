@@ -1356,6 +1356,10 @@ namespace transport
 
         // get list of group names associated with the task 'name', or all tasks of a specified payload if 'name' is empty.
         // Overwrites existing content of the list group_names
+
+        // The same information is cached in each task record, but there it is on a task-by-task basis.
+        // Rather than read in all task records and search them sequentially, here we just read the information straight from the SQL table.
+        // There are benefits and drawbacks to both approaches; this implementation could possibly be revisted later.
         sqlite3_operations::enumerate_content_groups<Payload>(this->db, group_names, name);
 
         // convert this list of names into a database of records
@@ -1378,418 +1382,504 @@ namespace transport
       }
 
 
-// CONTENT GROUP MANAGEMENT
+    // REMOVE CONTENT GROUPS
 
 
-template <typename number>
-std::string repository_sqlite3<number>::reserve_content_name(const std::string& tk, boost::filesystem::path& parent_path, boost::posix_time::ptime& now,
-                                                             const std::string& suffix, unsigned int num_cores)
-  {
-    std::string posix_time_string = boost::posix_time::to_iso_string(now);
-
-    transaction_manager transaction = this->transaction_factory();
-    std::string         name        = sqlite3_operations::reserve_content_name(transaction, this->db, tk, parent_path, posix_time_string, suffix, num_cores);
-    transaction.commit();
-
-    return(name);
-  }
-
-
-template <typename number>
-inflight_db repository_sqlite3<number>::enumerate_inflight()
-  {
-    inflight_db db;
-    sqlite3_operations::enumerate_inflight_groups(this->db, db);
-    return(std::move(db));
-  }
-
-
-template <typename number>
-inflight_integration_db repository_sqlite3<number>::enumerate_inflight_integrations()
-  {
-    inflight_integration_db db;
-    sqlite3_operations::enumerate_inflight_integrations(this->db, db);
-    return(std::move(db));
-  }
-
-
-template <typename number>
-inflight_postintegration_db repository_sqlite3<number>::enumerate_inflight_postintegrations()
-  {
-    inflight_postintegration_db db;
-    sqlite3_operations::enumerate_inflight_postintegrations(this->db, db);
-    return(std::move(db));
-  }
-
-
-template <typename number>
-inflight_derived_content_db repository_sqlite3<number>::enumerate_inflight_derived_content()
-  {
-    inflight_derived_content_db db;
-    sqlite3_operations::enumerate_inflight_derived_content(this->db, db);
-    return(std::move(db));
-  }
-
-
-template <typename number>
-void repository_sqlite3<number>::perform_recovery(data_manager<number>& data_mgr, unsigned int worker)
-  {
-    // ensure no transactions are in progress
-    if(this->transactions != 0) throw runtime_exception(exception_type::REPOSITORY_TRANSACTION_ERROR, CPPTRANSPORT_REPO_RECOVER_WHILE_TRANSACTIONS);
-
-    // detect if lockfile is still present in the repository; if so, forcibly remove it.
-    // this will cause any concurrent process which has locked the repository to fail,
-    // so recovery should be used with caution
-    boost::filesystem::path lockfile = this->root_path / CPPTRANSPORT_REPO_LOCKFILE_LEAF;
-    if(boost::filesystem::exists(lockfile)) boost::filesystem::remove(lockfile);
-
-    // TODO: would be nice to lock the whole database at this point by setting up a transaction manager
-    // and using it to control the entire recovery process.
-    // At the moment this cannot be done, because the writers which are constructed to perform recovery
-    // expect themselves to generate internal transactions
-    // To get round this, the writers would have to be refactored to accept a transaction_manager
-    // and use it to handle all their internal affairs.
-
-    // get SQLite layer to enumerate hot writers
-    inflight_integration_db     hot_integrations;
-    inflight_postintegration_db hot_postintegrations;
-    inflight_derived_content_db hot_derived_content;
-
-    sqlite3_operations::enumerate_inflight_integrations(this->db, hot_integrations);
-    sqlite3_operations::enumerate_inflight_postintegrations(this->db, hot_postintegrations);
-    sqlite3_operations::enumerate_inflight_derived_content(this->db, hot_derived_content);
-
-    // recover these writers
-    // do postintegrations first, to pick up any paired integrations
-    this->recover_postintegrations(data_mgr, hot_postintegrations, hot_integrations, worker);
-
-    // recover any integrations left over after handling paired integrations
-    this->recover_integrations(data_mgr, hot_integrations, worker);
-
-    this->recover_derived_content(data_mgr, hot_derived_content, worker);
-  }
-
-
-template <typename number>
-void repository_sqlite3<number>::recover_integrations(data_manager<number>& data_mgr, inflight_integration_db& list, unsigned int worker)
-  {
-    // loop through hot integrations; for each one, set up a new integration_writer which is populated
-    // with the configuration of the hot writer
-
-    // then, carry out an integrity check and commit the writer
-
-    for(const inflight_integration_db_value_type& inflight : list)
+    template <typename number>
+    template <typename Payload>
+    void repository_sqlite3<number>::delete_content(task_record<number>& rec, output_group_record<Payload>& group_rec, transaction_manager& mgr)
       {
-        // get task record
-        std::unique_ptr< task_record<number> > pre_rec = this->query_task(inflight.second->task_name);
-        integration_task_record<number>* rec = dynamic_cast< integration_task_record<number>* >(pre_rec.get());
+        // delete this content group from the task record
+        rec.delete_output_group(group_rec.get_name());
+        rec.commit();
 
-        assert(rec != nullptr);
-        if(rec == nullptr) throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_RECORD_CAST_FAILED);
+        // delete this content group from content table in the SQLite backend
+        sqlite3_operations::delete_group<Payload>(mgr, this->db, group_rec.get_name(), rec.get_name());
 
-        std::unique_ptr< integration_writer<number> > writer = this->get_integration_recovery_writer(*inflight.second, data_mgr, *rec, worker);
+        // move the content group to the trash
+        boost::filesystem::path trash_path = this->get_root_path() / CPPTRANSPORT_REPO_TRASH_LEAF / rec.get_name();
+
+        if(!boost::filesystem::exists(trash_path)) boost::filesystem::create_directories(trash_path);
+        if(boost::filesystem::is_directory(trash_path))
+          {
+            boost::filesystem::path abs_dest = trash_path / group_rec.get_name();
+            mgr.journal_move(group_rec.get_abs_output_path(), abs_dest);
+          }
+      }
+
+
+    template <typename number>
+    void repository_sqlite3<number>::delete_integration_content(const std::string& name, const std::string& task_name, transaction_manager& mgr)
+      {
+        // query for integration task record in read/write mode
+        std::unique_ptr< task_record<number> > raw_rec = this->query_task(task_name, mgr);
+
+        if(!raw_rec || raw_rec->get_type() != task_type::integration)
+          {
+            std::ostringstream msg;
+            msg << CPPTRANSPORT_REPO_EXTRACT_DERIVED_NOT_INTGRTN << " '" << name << "'";
+            throw runtime_exception(exception_type::REPOSITORY_ERROR, msg.str());
+          }
+
+        // query for output group record in readonly mode
+        std::unique_ptr< output_group_record<integration_payload> > group_rec = this->query_integration_content(name);
+
+        if(group_rec) this->delete_content(*raw_rec, *group_rec, mgr);
+      }
+
+
+    template <typename number>
+    void repository_sqlite3<number>::delete_postintegration_content(const std::string& name, const std::string& task_name, transaction_manager& mgr)
+      {
+        // query for integration task record in read/write mode
+        std::unique_ptr< task_record<number> > raw_rec = this->query_task(task_name, mgr);
+
+        if(!raw_rec || raw_rec->get_type() != task_type::postintegration)
+          {
+            std::ostringstream msg;
+            msg << CPPTRANSPORT_REPO_EXTRACT_DERIVED_NOT_POSTINT << " '" << name << "'";
+            throw runtime_exception(exception_type::REPOSITORY_ERROR, msg.str());
+          }
+
+        // query for output group record in readonly mode
+        std::unique_ptr< output_group_record<postintegration_payload> > group_rec = this->query_postintegration_content(name);
+
+        if(group_rec) this->delete_content(*raw_rec, *group_rec, mgr);
+      }
+
+
+    template <typename number>
+    void repository_sqlite3<number>::delete_output_content(const std::string& name, const std::string& task_name, transaction_manager& mgr)
+      {
+        // query for integration task record in read/write mode
+        std::unique_ptr< task_record<number> > raw_rec = this->query_task(task_name, mgr);
+
+        if(!raw_rec || raw_rec->get_type() != task_type::output)
+          {
+            std::ostringstream msg;
+            msg << CPPTRANSPORT_REPO_EXTRACT_DERIVED_NOT_POSTINT << " '" << name << "'";
+            throw runtime_exception(exception_type::REPOSITORY_ERROR, msg.str());
+          }
+
+        // query for output group record in readonly mode
+        std::unique_ptr< output_group_record<output_payload> > group_rec = this->query_output_content(name);
+
+        if(group_rec) this->delete_content(*raw_rec, *group_rec, mgr);
+      }
+
+
+    // CONTENT GROUP MANAGEMENT
+
+
+    template <typename number>
+    std::string repository_sqlite3<number>::reserve_content_name(const std::string& tk, boost::filesystem::path& parent_path, boost::posix_time::ptime& now,
+                                                                 const std::string& suffix, unsigned int num_cores)
+      {
+        std::string posix_time_string = boost::posix_time::to_iso_string(now);
+
+        transaction_manager transaction = this->transaction_factory();
+        std::string         name        = sqlite3_operations::reserve_content_name(transaction, this->db, tk, parent_path, posix_time_string, suffix, num_cores);
+        transaction.commit();
+
+        return(name);
+      }
+
+
+    template <typename number>
+    inflight_db repository_sqlite3<number>::enumerate_inflight()
+      {
+        inflight_db db;
+        sqlite3_operations::enumerate_inflight_groups(this->db, db);
+        return(std::move(db));
+      }
+
+
+    template <typename number>
+    inflight_integration_db repository_sqlite3<number>::enumerate_inflight_integrations()
+      {
+        inflight_integration_db db;
+        sqlite3_operations::enumerate_inflight_integrations(this->db, db);
+        return(std::move(db));
+      }
+
+
+    template <typename number>
+    inflight_postintegration_db repository_sqlite3<number>::enumerate_inflight_postintegrations()
+      {
+        inflight_postintegration_db db;
+        sqlite3_operations::enumerate_inflight_postintegrations(this->db, db);
+        return(std::move(db));
+      }
+
+
+    template <typename number>
+    inflight_derived_content_db repository_sqlite3<number>::enumerate_inflight_derived_content()
+      {
+        inflight_derived_content_db db;
+        sqlite3_operations::enumerate_inflight_derived_content(this->db, db);
+        return(std::move(db));
+      }
+
+
+    template <typename number>
+    void repository_sqlite3<number>::perform_recovery(data_manager<number>& data_mgr, unsigned int worker)
+      {
+        // ensure no transactions are in progress
+        if(this->transactions != 0) throw runtime_exception(exception_type::REPOSITORY_TRANSACTION_ERROR, CPPTRANSPORT_REPO_RECOVER_WHILE_TRANSACTIONS);
+
+        // detect if lockfile is still present in the repository; if so, forcibly remove it.
+        // this will cause any concurrent process which has locked the repository to fail,
+        // so recovery should be used with caution
+        boost::filesystem::path lockfile = this->root_path / CPPTRANSPORT_REPO_LOCKFILE_LEAF;
+        if(boost::filesystem::exists(lockfile)) boost::filesystem::remove(lockfile);
+
+        // TODO: would be nice to lock the whole database at this point by setting up a transaction manager
+        // and using it to control the entire recovery process.
+        // At the moment this cannot be done, because the writers which are constructed to perform recovery
+        // expect themselves to generate internal transactions
+        // To get round this, the writers would have to be refactored to accept a transaction_manager
+        // and use it to handle all their internal affairs.
+
+        // get SQLite layer to enumerate hot writers
+        inflight_integration_db     hot_integrations;
+        inflight_postintegration_db hot_postintegrations;
+        inflight_derived_content_db hot_derived_content;
+
+        sqlite3_operations::enumerate_inflight_integrations(this->db, hot_integrations);
+        sqlite3_operations::enumerate_inflight_postintegrations(this->db, hot_postintegrations);
+        sqlite3_operations::enumerate_inflight_derived_content(this->db, hot_derived_content);
+
+        // recover these writers
+        // do postintegrations first, to pick up any paired integrations
+        this->recover_postintegrations(data_mgr, hot_postintegrations, hot_integrations, worker);
+
+        // recover any integrations left over after handling paired integrations
+        this->recover_integrations(data_mgr, hot_integrations, worker);
+
+        this->recover_derived_content(data_mgr, hot_derived_content, worker);
+      }
+
+
+    template <typename number>
+    void repository_sqlite3<number>::recover_integrations(data_manager<number>& data_mgr, inflight_integration_db& list, unsigned int worker)
+      {
+        // loop through hot integrations; for each one, set up a new integration_writer which is populated
+        // with the configuration of the hot writer
+
+        // then, carry out an integrity check and commit the writer
+
+        for(const inflight_integration_db_value_type& inflight : list)
+          {
+            // get task record
+            std::unique_ptr< task_record<number> > pre_rec = this->query_task(inflight.second->task_name);
+            integration_task_record<number>* rec = dynamic_cast< integration_task_record<number>* >(pre_rec.get());
+
+            assert(rec != nullptr);
+            if(rec == nullptr) throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_RECORD_CAST_FAILED);
+
+            std::unique_ptr< integration_writer<number> > writer = this->get_integration_recovery_writer(*inflight.second, data_mgr, *rec, worker);
+
+            // carry out an integrity check; this updates the writer with all missing serial numbers
+            // if any are missing, the writer will be marked as failed
+            writer->check_integrity(rec->get_task());
+
+            // close writer
+            // (closing the writer will remove it from the list of active integrations)
+            data_mgr.close_writer(*writer);
+
+            // commit output
+            writer->commit();
+          }
+      }
+
+
+    template <typename number>
+    std::unique_ptr< integration_writer<number> >
+    repository_sqlite3<number>::get_integration_recovery_writer(const inflight_integration& data, data_manager<number>& data_mgr,
+                                                                integration_task_record<number>& rec, unsigned int worker)
+      {
+        // set up a new writer instance for this content group
+        std::unique_ptr< integration_writer<number> > writer = this->recover_integration_task_content(data.content_group, rec, data.output, data.container, data.logdir, data.tempdir, worker, data.workgroup_number);
+
+        // initialize writer in recovery mode
+        data_mgr.initialize_writer(*writer, true);
+
+        // was this container seeded?
+        if(data.is_seeded) writer->set_seed(data.seed_group);
+        writer->set_collecting_statistics(data.is_collecting_stats);
+        writer->set_collecting_initial_conditions(data.is_collecting_ics);
+
+        return(writer);
+      }
+
+
+    template <typename number>
+    void repository_sqlite3<number>::recover_postintegrations(data_manager<number>& data_mgr, inflight_postintegration_db& p_list,
+                                                              inflight_integration_db& i_list, unsigned int worker)
+      {
+        for(const inflight_postintegration_db_value_type& inflight : p_list)
+          {
+            // get task record
+            std::unique_ptr< task_record<number> > pre_rec = this->query_task(inflight.second->task_name);
+            postintegration_task_record<number>* rec = dynamic_cast< postintegration_task_record<number>* >(pre_rec.get());
+
+            assert(rec != nullptr);
+            if(rec == nullptr) throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_RECORD_CAST_FAILED);
+
+            if(inflight.second->is_paired) this->recover_paired_postintegration(*inflight.second, data_mgr, *rec, i_list, worker);
+            else                           this->recover_unpaired_postintegration(*inflight.second, data_mgr, *rec, worker);
+          }
+      }
+
+
+    template <typename number>
+    void repository_sqlite3<number>::recover_unpaired_postintegration(const inflight_postintegration& data, data_manager<number>& data_mgr,
+                                                                      postintegration_task_record<number>& rec, unsigned int worker)
+      {
+        std::unique_ptr< postintegration_writer<number> > writer = this->get_postintegration_recovery_writer(data, data_mgr, rec, worker);
 
         // carry out an integrity check; this updates the writer with all missing serial numbers
         // if any are missing, the writer will be marked as failed
-        writer->check_integrity(rec->get_task());
+        writer->check_integrity(rec.get_task());
 
         // close writer
-        // (closing the writer will remove it from the list of active integrations)
         data_mgr.close_writer(*writer);
 
         // commit output
+        // (closing the writer will remove it from the list of active postintegrations)
         writer->commit();
       }
-  }
 
 
-template <typename number>
-std::unique_ptr< integration_writer<number> >
-repository_sqlite3<number>::get_integration_recovery_writer(const inflight_integration& data, data_manager<number>& data_mgr,
-                                                            integration_task_record<number>& rec, unsigned int worker)
-  {
-    // set up a new writer instance for this content group
-    std::unique_ptr< integration_writer<number> > writer = this->recover_integration_task_content(data.content_group, rec, data.output, data.container, data.logdir, data.tempdir, worker, data.workgroup_number);
-
-    // initialize writer in recovery mode
-    data_mgr.initialize_writer(*writer, true);
-
-    // was this container seeded?
-    if(data.is_seeded) writer->set_seed(data.seed_group);
-    writer->set_collecting_statistics(data.is_collecting_stats);
-    writer->set_collecting_initial_conditions(data.is_collecting_ics);
-
-    return(writer);
-  }
-
-
-template <typename number>
-void repository_sqlite3<number>::recover_postintegrations(data_manager<number>& data_mgr, inflight_postintegration_db& p_list,
-                                                          inflight_integration_db& i_list, unsigned int worker)
-  {
-    for(const inflight_postintegration_db_value_type& inflight : p_list)
+    namespace repository_sqlite3_impl
       {
-        // get task record
-        std::unique_ptr< task_record<number> > pre_rec = this->query_task(inflight.second->task_name);
-        postintegration_task_record<number>* rec = dynamic_cast< postintegration_task_record<number>* >(pre_rec.get());
 
-        assert(rec != nullptr);
-        if(rec == nullptr) throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_RECORD_CAST_FAILED);
-
-        if(inflight.second->is_paired) this->recover_paired_postintegration(*inflight.second, data_mgr, *rec, i_list, worker);
-        else                           this->recover_unpaired_postintegration(*inflight.second, data_mgr, *rec, worker);
-      }
-  }
-
-
-template <typename number>
-void repository_sqlite3<number>::recover_unpaired_postintegration(const inflight_postintegration& data, data_manager<number>& data_mgr,
-                                                                  postintegration_task_record<number>& rec, unsigned int worker)
-  {
-    std::unique_ptr< postintegration_writer<number> > writer = this->get_postintegration_recovery_writer(data, data_mgr, rec, worker);
-
-    // carry out an integrity check; this updates the writer with all missing serial numbers
-    // if any are missing, the writer will be marked as failed
-    writer->check_integrity(rec.get_task());
-
-    // close writer
-    data_mgr.close_writer(*writer);
-
-    // commit output
-    // (closing the writer will remove it from the list of active postintegrations)
-    writer->commit();
-  }
-
-
-namespace repository_sqlite3_impl
-  {
-
-    template <typename InFlightDatabaseObject>
-    class FindInFlight
-      {
-      public:
-        FindInFlight(const std::string& n)
-          : name(n)
+        template <typename InFlightDatabaseObject>
+        class FindInFlight
           {
-          }
+          public:
+            FindInFlight(const std::string& n)
+              : name(n)
+              {
+              }
 
-        bool operator()(const InFlightDatabaseObject& obj)
+            bool operator()(const InFlightDatabaseObject& obj)
+              {
+                return(obj.first == name);
+              }
+
+          protected:
+            const std::string name;
+          };
+
+      }   // namespace repository_sqlite3_impl
+
+
+    template <typename number>
+    void repository_sqlite3<number>::recover_paired_postintegration(const inflight_postintegration& data, data_manager<number>& data_mgr,
+                                                                    postintegration_task_record<number>& p_rec,
+                                                                    inflight_integration_db& i_list, unsigned int worker)
+      {
+        // try to find paired integration in i_list
+        inflight_integration_db::iterator t = std::find_if(i_list.begin(), i_list.end(),
+                                                           repository_sqlite3_impl::FindInFlight<inflight_integration_db_value_type>(data.parent_group));
+
+        if(t == i_list.end()) this->recover_unpaired_postintegration(data, data_mgr, p_rec, worker);
+        else
           {
-            return(obj.first == name);
+            // get task record
+            std::unique_ptr< task_record<number> > pre_rec = this->query_task(t->second->task_name);
+            integration_task_record<number>& i_rec = dynamic_cast< integration_task_record<number>& >(*pre_rec);
+
+            std::unique_ptr< integration_writer<number> >     i_writer = this->get_integration_recovery_writer(*t->second, data_mgr, i_rec, worker);
+            std::unique_ptr< postintegration_writer<number> > p_writer = this->get_postintegration_recovery_writer(data, data_mgr, p_rec, worker);
+
+            // carry out an integrity check; this updates the writers with all missing serial numbers
+            // if any are missing, the writer will be marked as failed
+            i_writer->check_integrity(i_rec.get_task());
+            p_writer->check_integrity(p_rec.get_task());
+
+            data_mgr.synchronize_missing_serials(*i_writer, *p_writer, i_rec.get_task(), p_rec.get_task());
+
+            // close writers
+            data_mgr.close_writer(*i_writer);
+            data_mgr.close_writer(*p_writer);
+
+            // commit output
+            // (closing the writers will remove them from the list of active postintegrations)
+            i_writer->commit();
+            p_writer->commit();
+
+            // remove integration from database of remaining hot integrations
+            // (we shouldn't try to recover it twice)
+            i_list.erase(t);
           }
-
-      protected:
-        const std::string name;
-      };
-
-  }   // namespace repository_sqlite3_impl
-
-
-template <typename number>
-void repository_sqlite3<number>::recover_paired_postintegration(const inflight_postintegration& data, data_manager<number>& data_mgr,
-                                                                postintegration_task_record<number>& p_rec,
-                                                                inflight_integration_db& i_list, unsigned int worker)
-  {
-    // try to find paired integration in i_list
-    inflight_integration_db::iterator t = std::find_if(i_list.begin(), i_list.end(),
-                                                       repository_sqlite3_impl::FindInFlight<inflight_integration_db_value_type>(data.parent_group));
-
-    if(t == i_list.end()) this->recover_unpaired_postintegration(data, data_mgr, p_rec, worker);
-    else
-      {
-        // get task record
-        std::unique_ptr< task_record<number> > pre_rec = this->query_task(t->second->task_name);
-        integration_task_record<number>& i_rec = dynamic_cast< integration_task_record<number>& >(*pre_rec);
-
-        std::unique_ptr< integration_writer<number> >     i_writer = this->get_integration_recovery_writer(*t->second, data_mgr, i_rec, worker);
-        std::unique_ptr< postintegration_writer<number> > p_writer = this->get_postintegration_recovery_writer(data, data_mgr, p_rec, worker);
-
-        // carry out an integrity check; this updates the writers with all missing serial numbers
-        // if any are missing, the writer will be marked as failed
-        i_writer->check_integrity(i_rec.get_task());
-        p_writer->check_integrity(p_rec.get_task());
-
-        data_mgr.synchronize_missing_serials(*i_writer, *p_writer, i_rec.get_task(), p_rec.get_task());
-
-        // close writers
-        data_mgr.close_writer(*i_writer);
-        data_mgr.close_writer(*p_writer);
-
-        // commit output
-        // (closing the writers will remove them from the list of active postintegrations)
-        i_writer->commit();
-        p_writer->commit();
-
-        // remove integration from database of remaining hot integrations
-        // (we shouldn't try to recover it twice)
-        i_list.erase(t);
       }
-  }
 
 
-template <typename number>
-std::unique_ptr< postintegration_writer<number> >
-repository_sqlite3<number>::get_postintegration_recovery_writer(const inflight_postintegration& data, data_manager<number>& data_mgr,
-                                                                postintegration_task_record<number>& rec, unsigned int worker)
-  {
-    // set up a new writer instance for this content group
-    std::unique_ptr< postintegration_writer<number> > writer = this->recover_postintegration_task_content(data.content_group, rec, data.output, data.container, data.logdir, data.tempdir, worker);
-
-    // initialize writer in recovery mode
-    data_mgr.initialize_writer(*writer, true);
-
-    writer->set_pair(data.is_paired);
-    writer->set_parent_group(data.parent_group);
-
-    // was this container seeded?
-    if(data.is_seeded) writer->set_seed(data.seed_group);
-
-    return(writer);
-  }
-
-
-template <typename number>
-void repository_sqlite3<number>::recover_derived_content(data_manager<number>& data_mgr, inflight_derived_content_db& list, unsigned int worker)
-  {
-    // loop through hot derived content
-    // for each item, set up a new derived_content_writer which is populated with the configuration of the hot writer.
-    // However, in recovery mode, the output group is always treated as if it has failed.
-
-    // When we commit the writer, it will automatically move to the fail cache
-
-    for(const inflight_derived_content_db_value_type& inflight : list)
+    template <typename number>
+    std::unique_ptr< postintegration_writer<number> >
+    repository_sqlite3<number>::get_postintegration_recovery_writer(const inflight_postintegration& data, data_manager<number>& data_mgr,
+                                                                    postintegration_task_record<number>& rec, unsigned int worker)
       {
-        // get task record
-        std::unique_ptr< task_record<number> > pre_rec = this->query_task(inflight.second->task_name);
-        output_task_record<number>* rec = dynamic_cast< output_task_record<number>* >(pre_rec.get());
+        // set up a new writer instance for this content group
+        std::unique_ptr< postintegration_writer<number> > writer = this->recover_postintegration_task_content(data.content_group, rec, data.output, data.container, data.logdir, data.tempdir, worker);
 
-        assert(rec != nullptr);
-        if(rec == nullptr) throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_RECORD_CAST_FAILED);
+        // initialize writer in recovery mode
+        data_mgr.initialize_writer(*writer, true);
 
-        std::unique_ptr< derived_content_writer<number> > writer = this->get_derived_content_recovery_writer(*inflight.second, data_mgr, *rec, worker);
+        writer->set_pair(data.is_paired);
+        writer->set_parent_group(data.parent_group);
 
-        // commit writer (automatically removes this content group from database of active tasks))
-        data_mgr.close_writer(*writer);
+        // was this container seeded?
+        if(data.is_seeded) writer->set_seed(data.seed_group);
+
+        return(writer);
       }
-  }
 
 
-template <typename number>
-std::unique_ptr< derived_content_writer<number> >
-repository_sqlite3<number>::get_derived_content_recovery_writer(const inflight_derived_content& data, data_manager<number>& data_mgr,
-                                                                output_task_record<number>& rec, unsigned int worker)
-  {
-    std::unique_ptr< derived_content_writer<number> > writer = this->recover_output_task_content(data.content_group, rec, data.output, data.logdir, data.tempdir, worker);
+    template <typename number>
+    void repository_sqlite3<number>::recover_derived_content(data_manager<number>& data_mgr, inflight_derived_content_db& list, unsigned int worker)
+      {
+        // loop through hot derived content
+        // for each item, set up a new derived_content_writer which is populated with the configuration of the hot writer.
+        // However, in recovery mode, the output group is always treated as if it has failed.
 
-    // initialize writer in recover mode
-    data_mgr.initialize_writer(*writer, true);
+        // When we commit the writer, it will automatically move to the fail cache
 
-    // force writer to fail
-    writer->set_fail(true);
+        for(const inflight_derived_content_db_value_type& inflight : list)
+          {
+            // get task record
+            std::unique_ptr< task_record<number> > pre_rec = this->query_task(inflight.second->task_name);
+            output_task_record<number>* rec = dynamic_cast< output_task_record<number>* >(pre_rec.get());
 
-    return(writer);
-  }
+            assert(rec != nullptr);
+            if(rec == nullptr) throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_RECORD_CAST_FAILED);
 
+            std::unique_ptr< derived_content_writer<number> > writer = this->get_derived_content_recovery_writer(*inflight.second, data_mgr, *rec, worker);
 
-// separate in-flight tables are needed for the writers because when the global
-// in-flight entries are written (in reserve_content_name() above) not all information is
-// available -- eg. seeding or pairing of the writers.
-// In order to recover a content group if a crash occurs we need to be able to
-// reconstuct these details, so we need the separate tables
-
-
-template <typename number>
-void repository_sqlite3<number>::register_writer(integration_writer<number>& writer)
-  {
-    transaction_manager transaction = this->transaction_factory();
-
-    sqlite3_operations::register_integration_writer(transaction, this->db,
-                                                    writer.get_name(),
-                                                    writer.get_task_name(),
-                                                    writer.get_relative_output_path(),
-                                                    writer.get_relative_container_path(),
-                                                    writer.get_relative_logdir_path(),
-                                                    writer.get_relative_tempdir_path(),
-                                                    writer.get_workgroup_number(),
-                                                    writer.is_seeded(),
-                                                    writer.get_seed_group(),
-                                                    writer.is_collecting_statistics(),
-                                                    writer.is_collecting_initial_conditions());
-
-    transaction.commit();
-  }
+            // commit writer (automatically removes this content group from database of active tasks))
+            data_mgr.close_writer(*writer);
+          }
+      }
 
 
-template <typename number>
-void repository_sqlite3<number>::register_writer(postintegration_writer<number>& writer)
-  {
-    transaction_manager transaction = this->transaction_factory();
+    template <typename number>
+    std::unique_ptr< derived_content_writer<number> >
+    repository_sqlite3<number>::get_derived_content_recovery_writer(const inflight_derived_content& data, data_manager<number>& data_mgr,
+                                                                    output_task_record<number>& rec, unsigned int worker)
+      {
+        std::unique_ptr< derived_content_writer<number> > writer = this->recover_output_task_content(data.content_group, rec, data.output, data.logdir, data.tempdir, worker);
 
-    sqlite3_operations::register_postintegration_writer(transaction, this->db,
+        // initialize writer in recover mode
+        data_mgr.initialize_writer(*writer, true);
+
+        // force writer to fail
+        writer->set_fail(true);
+
+        return(writer);
+      }
+
+
+    // separate in-flight tables are needed for the writers because when the global
+    // in-flight entries are written (in reserve_content_name() above) not all information is
+    // available -- eg. seeding or pairing of the writers.
+    // In order to recover a content group if a crash occurs we need to be able to
+    // reconstuct these details, so we need the separate tables
+
+
+    template <typename number>
+    void repository_sqlite3<number>::register_writer(integration_writer<number>& writer)
+      {
+        transaction_manager transaction = this->transaction_factory();
+
+        sqlite3_operations::register_integration_writer(transaction, this->db,
                                                         writer.get_name(),
                                                         writer.get_task_name(),
                                                         writer.get_relative_output_path(),
                                                         writer.get_relative_container_path(),
                                                         writer.get_relative_logdir_path(),
                                                         writer.get_relative_tempdir_path(),
-                                                        writer.is_paired(),
-                                                        writer.get_parent_group(),
+                                                        writer.get_workgroup_number(),
                                                         writer.is_seeded(),
-                                                        writer.get_seed_group());
+                                                        writer.get_seed_group(),
+                                                        writer.is_collecting_statistics(),
+                                                        writer.is_collecting_initial_conditions());
 
-    transaction.commit();
-  }
-
-
-template <typename number>
-void repository_sqlite3<number>::register_writer(derived_content_writer<number>& writer)
-  {
-    transaction_manager transaction = this->transaction_factory();
-
-    sqlite3_operations::register_derived_content_writer(transaction, this->db,
-                                                        writer.get_name(),
-                                                        writer.get_task_name(),
-                                                        writer.get_relative_output_path(),
-                                                        writer.get_relative_logdir_path(),
-                                                        writer.get_relative_tempdir_path());
-
-    transaction.commit();
-  }
+        transaction.commit();
+      }
 
 
-template <typename number>
-void repository_sqlite3<number>::deregister_writer(integration_writer<number>& writer, transaction_manager& mgr)
-  {
-    sqlite3_operations::deregister_content_group(mgr, this->db, writer.get_name(), CPPTRANSPORT_SQLITE_INTEGRATION_WRITERS_TABLE);
-  }
+    template <typename number>
+    void repository_sqlite3<number>::register_writer(postintegration_writer<number>& writer)
+      {
+        transaction_manager transaction = this->transaction_factory();
+
+        sqlite3_operations::register_postintegration_writer(transaction, this->db,
+                                                            writer.get_name(),
+                                                            writer.get_task_name(),
+                                                            writer.get_relative_output_path(),
+                                                            writer.get_relative_container_path(),
+                                                            writer.get_relative_logdir_path(),
+                                                            writer.get_relative_tempdir_path(),
+                                                            writer.is_paired(),
+                                                            writer.get_parent_group(),
+                                                            writer.is_seeded(),
+                                                            writer.get_seed_group());
+
+        transaction.commit();
+      }
 
 
-template <typename number>
-void repository_sqlite3<number>::deregister_writer(postintegration_writer<number>& writer, transaction_manager& mgr)
-  {
-    sqlite3_operations::deregister_content_group(mgr, this->db, writer.get_name(), CPPTRANSPORT_SQLITE_POSTINTEGRATION_WRITERS_TABLE);
-  }
+    template <typename number>
+    void repository_sqlite3<number>::register_writer(derived_content_writer<number>& writer)
+      {
+        transaction_manager transaction = this->transaction_factory();
+
+        sqlite3_operations::register_derived_content_writer(transaction, this->db,
+                                                            writer.get_name(),
+                                                            writer.get_task_name(),
+                                                            writer.get_relative_output_path(),
+                                                            writer.get_relative_logdir_path(),
+                                                            writer.get_relative_tempdir_path());
+
+        transaction.commit();
+      }
 
 
-template <typename number>
-void repository_sqlite3<number>::deregister_writer(derived_content_writer<number>& writer, transaction_manager& mgr)
-  {
-    sqlite3_operations::deregister_content_group(mgr, this->db, writer.get_name(), CPPTRANSPORT_SQLITE_DERIVED_WRITERS_TABLE);
-  }
+    template <typename number>
+    void repository_sqlite3<number>::deregister_writer(integration_writer<number>& writer, transaction_manager& mgr)
+      {
+        sqlite3_operations::deregister_content_group(mgr, this->db, writer.get_name(), CPPTRANSPORT_SQLITE_INTEGRATION_WRITERS_TABLE);
+      }
 
 
-template <typename number>
-void repository_sqlite3<number>::advise_completion_time(const std::string& name, const boost::posix_time::ptime& time)
-  {
-    transaction_manager transaction = this->transaction_factory();
+    template <typename number>
+    void repository_sqlite3<number>::deregister_writer(postintegration_writer<number>& writer, transaction_manager& mgr)
+      {
+        sqlite3_operations::deregister_content_group(mgr, this->db, writer.get_name(), CPPTRANSPORT_SQLITE_POSTINTEGRATION_WRITERS_TABLE);
+      }
 
-    std::string time_string = boost::posix_time::to_iso_string(time);
-    sqlite3_operations::advise_completion_time(transaction, this->db, name, time_string);
 
-    transaction.commit();
-  }
+    template <typename number>
+    void repository_sqlite3<number>::deregister_writer(derived_content_writer<number>& writer, transaction_manager& mgr)
+      {
+        sqlite3_operations::deregister_content_group(mgr, this->db, writer.get_name(), CPPTRANSPORT_SQLITE_DERIVED_WRITERS_TABLE);
+      }
 
-}   // namespace transport
+
+    template <typename number>
+    void repository_sqlite3<number>::advise_completion_time(const std::string& name, const boost::posix_time::ptime& time)
+      {
+        transaction_manager transaction = this->transaction_factory();
+
+        std::string time_string = boost::posix_time::to_iso_string(time);
+        sqlite3_operations::advise_completion_time(transaction, this->db, name, time_string);
+
+        transaction.commit();
+      }
+
+  }   // namespace transport
 
 
 #endif //CPPTRANSPORT_REPOSITORY_SQLITE3_IMPL_H

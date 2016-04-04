@@ -12,6 +12,7 @@
 #include "transport-runtime-api/sqlite3/operations/repository_admin.h"
 #include "transport-runtime-api/sqlite3/operations/repository_count.h"
 #include "transport-runtime-api/sqlite3/operations/repository_store.h"
+#include "transport-runtime-api/sqlite3/operations/repository_delete.h"
 #include "transport-runtime-api/sqlite3/operations/repository_inflight.h"
 
 

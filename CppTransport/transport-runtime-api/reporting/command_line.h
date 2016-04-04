@@ -446,7 +446,7 @@ namespace transport
         template <typename number>
         void command_line::report_info(repository_cache<number>& cache)
           {
-            // make local copy of items; we will remove items from this list as we process them
+            // make local copy of items; we will tag items in this list as 'processed' as we go
             std::map<std::string, bool> items;
             for(const std::string& item : this->info_items)
               {
@@ -494,7 +494,7 @@ namespace transport
                     if(check_match(record.second->get_name(), item.first))
                       {
                         this->report_object(*record.second, cache);
-                        item.second = true;
+                        item.second = true;   // mark as a match for this item
                       }
                   }
               }

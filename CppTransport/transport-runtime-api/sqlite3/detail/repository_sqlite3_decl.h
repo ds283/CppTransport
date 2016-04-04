@@ -251,6 +251,28 @@ namespace transport
         virtual output_content_db enumerate_output_task_content() override;
 
 
+        // REMOVE OUTPUT GROUPS
+
+        // TO BE USED WITH CARE, in case the repository gets into an inconsistent state
+
+      public:
+
+        //! Remove an integration group
+        virtual void delete_integration_content(const std::string& name, const std::string& task_name, transaction_manager& mgr) override;
+
+        //! Remove a postintegration group
+        virtual void delete_postintegration_content(const std::string& name, const std::string& task_name, transaction_manager& mgr) override;
+
+        //! Remove an outpout group
+        virtual void delete_output_content(const std::string& name, const std::string& task_name, transaction_manager& mgr) override;
+
+      protected:
+
+        //! generic utility function to remove a content group from a task record
+        template <typename Payload>
+        void delete_content(task_record<number>& rec, output_group_record<Payload>& group_rec, transaction_manager& mgr);
+
+
         // ENUMERATE INFLIGHT TASKS
 
       public:

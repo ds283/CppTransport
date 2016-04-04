@@ -10,6 +10,8 @@
 #include "transport-runtime-api/repository/repository.h"
 #include "transport-runtime-api/repository/repository_cache.h"
 
+#include "transport-runtime-api/manager/message_handlers.h"
+
 #include "transport-runtime-api/utilities/match.h"
 
 #include "transport-runtime-api/defaults.h"
@@ -89,6 +91,71 @@ namespace transport
         std::unique_ptr< output_group_record< output_payload> > get_rw_content_group(repository<long double>& repo, const std::string& name, transaction_manager& mgr)
           {
             return repo.query_output_content(name, mgr);
+          }
+
+
+        //! template method to delete a content group
+        template <typename number, typename Payload>
+        void erase_repository_record(repository<number>& repo, const std::string& name, const std::string& task_name, transaction_manager& mgr);
+
+
+        // specialize for integration payloads
+        template <>
+        void erase_repository_record<double, integration_payload>(repository<double>& repo, const std::string& name, const std::string& task_name, transaction_manager& mgr)
+          {
+            repo.delete_integration_content(name, task_name, mgr);
+          }
+
+        template <>
+        void erase_repository_record<float, integration_payload>(repository<float>& repo, const std::string& name, const std::string& task_name, transaction_manager& mgr)
+          {
+            repo.delete_integration_content(name, task_name, mgr);
+          }
+
+        template <>
+        void erase_repository_record<long double, integration_payload>(repository<long double>& repo, const std::string& name, const std::string& task_name, transaction_manager& mgr)
+          {
+            repo.delete_integration_content(name, task_name, mgr);
+          }
+
+
+        // specialize for postintegration payloads
+        template <>
+        void erase_repository_record<double, postintegration_payload>(repository<double>& repo, const std::string& name, const std::string& task_name, transaction_manager& mgr)
+          {
+            repo.delete_postintegration_content(name, task_name, mgr);
+          }
+
+        template <>
+        void erase_repository_record<float, postintegration_payload>(repository<float>& repo, const std::string& name, const std::string& task_name, transaction_manager& mgr)
+          {
+            repo.delete_postintegration_content(name, task_name, mgr);
+          }
+
+        template <>
+        void erase_repository_record<long double, postintegration_payload>(repository<long double>& repo, const std::string& name, const std::string& task_name, transaction_manager& mgr)
+          {
+            repo.delete_postintegration_content(name, task_name, mgr);
+          }
+
+
+        // specialize for output payloads
+        template <>
+        void erase_repository_record<double, output_payload>(repository<double>& repo, const std::string& name, const std::string& task_name, transaction_manager& mgr)
+          {
+            repo.delete_output_content(name, task_name, mgr);
+          }
+
+        template <>
+        void erase_repository_record<float, output_payload>(repository<float>& repo, const std::string& name, const std::string& task_name, transaction_manager& mgr)
+          {
+            repo.delete_output_content(name, task_name, mgr);
+          }
+
+        template <>
+        void erase_repository_record<long double, output_payload>(repository<long double>& repo, const std::string& name, const std::string& task_name, transaction_manager& mgr)
+          {
+            repo.delete_output_content(name, task_name, mgr);
           }
 
       }   // namespace repository_toolkit_impl
@@ -330,9 +397,12 @@ namespace transport
       public:
 
         //! constructor
-        repository_toolkit(repository<number>& r)
+        repository_toolkit(repository<number>& r, error_handler eh, warning_handler wh, message_handler mh)
           : repo(r),
-            cache(r)
+            cache(r),
+            err(eh),
+            warn(wh),
+            msg(mh)
           {
           }
 
@@ -365,9 +435,9 @@ namespace transport
 
         //! iterate over a content database, deleting content groups
         template <typename ContentDatabase>
-        void delete_content(ContentDatabase& db, const std::vector<std::string>& objects, std::unique_ptr<repository_distance_matrix>& dmat,
-                            integration_content_db& integration_content, postintegration_content_db& postintegration_content,
-                            output_content_db& output_content);
+        void delete_content(ContentDatabase& db, std::map< std::string, bool >& items,
+                            std::unique_ptr<repository_distance_matrix>& dmat, integration_content_db& integration_content,
+                            postintegration_content_db& postintegration_content, output_content_db& output_content);
 
 
         // REPOSITORY OBJECT MODEL -- INTERFACE
@@ -414,6 +484,18 @@ namespace transport
 
         //! repository cache, used to avoid constly multiple enumerations
         repository_cache<number> cache;
+
+
+        // MESSAGE HANDLERS
+
+        //! error handler
+        error_handler err;
+
+        //! warning handler
+        warning_handler warn;
+
+        //! message handler
+        message_handler msg;
 
       };
 
@@ -572,6 +654,13 @@ namespace transport
     template <typename number>
     void repository_toolkit<number>::delete_content(const std::vector<std::string>& objects)
       {
+        // make local copy of objects to process; we will tag items in this list as 'processed' as we go
+        std::map<std::string, bool> items;
+        for(const std::string& item : objects)
+          {
+            items[item] = false;
+          }
+
         // cache distance matrix for the content group graph
         std::unique_ptr<repository_distance_matrix> dmat = this->content_group_distance_matrix();
 
@@ -580,15 +669,25 @@ namespace transport
         postintegration_content_db& postintegration_content = this->cache.get_postintegration_content_db();
         output_content_db& output_content = this->cache.get_output_content_db();
 
-        this->delete_content(output_content, objects, dmat, integration_content, postintegration_content, output_content);
-        this->delete_content(postintegration_content, objects, dmat, integration_content, postintegration_content, output_content);
-        this->delete_content(integration_content, objects, dmat, integration_content, postintegration_content, output_content);
+        this->delete_content(output_content, items, dmat, integration_content, postintegration_content, output_content);
+        this->delete_content(postintegration_content, items, dmat, integration_content, postintegration_content, output_content);
+        this->delete_content(integration_content, items, dmat, integration_content, postintegration_content, output_content);
+
+        for(const std::pair< const std::string, bool >& item : items)
+          {
+            if(!item.second)
+              {
+                std::ostringstream msg;
+                msg << CPPTRANSPORT_REPO_TOOLKIT_MISSING_OBJECT << " '" << item.first << "'";
+                this->warn(msg.str());
+              }
+          }
       }
 
 
     template <typename number>
     template <typename ContentDatabase>
-    void repository_toolkit<number>::delete_content(ContentDatabase& db, const std::vector<std::string>& objects,
+    void repository_toolkit<number>::delete_content(ContentDatabase& db, std::map< std::string, bool >& items,
                                                     std::unique_ptr<repository_distance_matrix>& dmat,
                                                     integration_content_db& integration_content,
                                                     postintegration_content_db& postintegration_content,
@@ -606,25 +705,25 @@ namespace transport
             const typename ContentDatabase::mapped_type::element_type& record = *item.second;
 
             // step through objects in match list
-            for(const std::string& match_expr : objects)
+            for(std::pair< const std::string, bool >& item : items)
               {
-                if(check_match(record.get_name(), match_expr, true))    // true = insist on exact match
+                if(check_match(record.get_name(), item.first, true))    // true = insist on exact match
                   {
+                    item.second = true;   // mark as a match for this item
                     std::unique_ptr< std::list<std::string> > dependent_groups = dmat->find_dependent_groups(record.get_name());
 
                     if(dependent_groups)
                       {
                         if(dependent_groups->size() == 0)
                           {
-                            // delete this record from the repository enumeration, and then recompute the distance matrix
-                            std::cout << "Content group '" << record.get_name() << "' is OK for deletion" << '\n';
+                            erase_repository_record<number, typename ContentDatabase::mapped_type::element_type::payload_type>(this->repo, record.get_name(), record.get_task_name(),mgr);
 
                             // erase record and reset iterator to point to following element
                             t = db.erase(t);
 
-                            std::unique_ptr<repository_distance_matrix> new_dmat = this->content_group_distance_matrix(integration_content,
-                                                                                                                       postintegration_content,
-                                                                                                                       output_content);
+                            // delete this record from the repository enumeration, and then recompute the distance matrix
+                            std::unique_ptr<repository_distance_matrix> new_dmat =
+                              this->content_group_distance_matrix(integration_content, postintegration_content, output_content);
                             dmat.swap(new_dmat);
                           }
                         else
@@ -641,7 +740,8 @@ namespace transport
                                 ++count;
                               }
 
-                            throw runtime_exception(exception_type::REPOSITORY_ERROR, msg.str());
+                            this->err(msg.str());
+                            ++t;
                           }
                       }
                   }
