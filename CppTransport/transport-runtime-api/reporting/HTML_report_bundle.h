@@ -9,7 +9,7 @@
 
 #include "transport-runtime-api/data/data_manager.h"
 
-#include "transport-runtime-api/reporting/repository_cache.h"
+#include "transport-runtime-api/repository/repository_cache.h"
 #include "transport-runtime-api/reporting/unique_tags.h"
 
 #include "transport-runtime-api/reporting/HTML_writer.h"

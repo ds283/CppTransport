@@ -376,6 +376,7 @@ namespace transport
 
         //! Get path of data container
         const boost::filesystem::path& get_container_path() const { return(this->container); }
+
         //! Set path of data container
         void set_container_path(const boost::filesystem::path& pt) { this->container = pt; }
 
@@ -439,6 +440,7 @@ namespace transport
 
       public:
 
+        //! write self to stream
         template <typename Stream> void write(Stream& out) const;
 
 

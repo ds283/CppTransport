@@ -101,5 +101,9 @@
 #define CPPTRANSPORT_SWITCH_DELETE_NOTE       "delete-note"
 #define CPPTRANSPORT_HELP_DELETE_NOTE         "remove note from specified objects"
 
+#define CPPTRANSPORT_SWITCH_DELETE            "delete"
+#define CPPTRANSPORT_HELP_DELETE              "remove specified content groups"
+#define CPPTRANSPORT_SWITCH_DELETE_SINGLET    "--delete cannot be used in conjunction with other repository actions"
+
 
 #endif //CPPTRANSPORT_COMMAND_LINE_H

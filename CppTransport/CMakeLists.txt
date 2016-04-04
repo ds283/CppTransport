@@ -704,6 +704,7 @@ set(TRANSPORT_RUNTIME_API_LOCALIZATIONS_MESSAGES_EN_FILES
   transport-runtime-api/localizations/messages_en/task_manager.h
   transport-runtime-api/localizations/messages_en/work_journal.h
   transport-runtime-api/localizations/messages_en/report_HTML.h
+  transport-runtime-api/localizations/messages_en/repository_toolkit.h
   )
 
 set(TRANSPORT_RUNTIME_API_LOCALIZATIONS_MESSAGES_EN_TASKS_FILES
@@ -754,7 +755,6 @@ set(TRANSPORT_RUNTIME_API_MODELS_FILES
 
 set(TRANSPORT_RUNTIME_API_REPORTING_FILES
   transport-runtime-api/reporting/command_line.h
-  transport-runtime-api/reporting/repository_cache.h
   transport-runtime-api/reporting/key_value.h
   transport-runtime-api/reporting/content_group_data.h
   transport-runtime-api/reporting/HTML_report.h
@@ -779,6 +779,7 @@ set(TRANSPORT_RUNTIME_API_REPOSITORY_FILES
   transport-runtime-api/repository/repository.h
   transport-runtime-api/repository/transaction_manager.h
   transport-runtime-api/repository/repository_toolkit.h
+  transport-runtime-api/repository/repository_cache.h
   )
 
 set(TRANSPORT_RUNTIME_API_REPOSITORY_RECORDS_DETAIL_FILES

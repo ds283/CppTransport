@@ -9,7 +9,7 @@
 
 #include "transport-runtime-api/repository/repository.h"
 
-#include "transport-runtime-api/reporting/repository_cache.h"
+#include "transport-runtime-api/repository/repository_cache.h"
 #include "transport-runtime-api/reporting/key_value.h"
 #include "transport-runtime-api/reporting/content_group_data.h"
 
