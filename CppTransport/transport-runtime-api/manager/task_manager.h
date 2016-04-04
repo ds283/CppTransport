@@ -4,12 +4,13 @@
 //
 
 
-#ifndef __task_manager_H_
-#define __task_manager_H_
+#ifndef CPPTRANSPORT_TASK_MANAGER_H
+#define CPPTRANSPORT_TASK_MANAGER_H
+
 
 #include <functional>
 
-#include "transport-runtime-api/manager/instance_manager.h"
+#include "transport-runtime-api/manager/model_manager.h"
 #include "transport-runtime-api/repository/json_repository.h"
 
 #include "transport-runtime-api/manager/master_controller.h"
@@ -17,6 +18,8 @@
 
 #include "transport-runtime-api/manager/argument_cache.h"
 #include "transport-runtime-api/manager/environment.h"
+#include "transport-runtime-api/manager/message_handlers.h"
+#include "transport-runtime-api/manager/task_gallery.h"
 
 #include "transport-runtime-api/messages.h"
 #include "transport-runtime-api/exceptions.h"
@@ -30,7 +33,7 @@ namespace transport
     //! relying on a JSON-aware repository interface 'json_repository'
     //! to handle storage and serialization, and MPI to handle task communication.
     template <typename number>
-    class task_manager: public instance_manager<number>
+    class task_manager
       {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -39,9 +42,6 @@ namespace transport
 
         //! Construct a task manager using command-line arguments. The repository must exist and be named on the command line.
         task_manager(int argc, char* argv[]);
-
-        //! Construct a task manager using a previously-constructed repository object. Usually this will be used only when creating a new repository.
-        task_manager(int argc, char* argv[], std::shared_ptr< json_repository<number> > r);
 
         //! Destroy a task manager object
         ~task_manager() = default;
@@ -55,21 +55,28 @@ namespace transport
 		    void process(void);
 
 
-        // INTERFACE -- REPOSITORY MANAGEMENT
+        // INTERFACE -- MANAGE TASK GALLERY
+
+        // Tasks in the gallery are available to be written to the database
+        // if needed.
+        // First, the main database is checked and if
+
+      public:
+
+        //! declare gallery generator
+        template <typename GeneratorObject>
+        void add_generator(GeneratorObject generator);
+
+        //! declare
 
 
-        // INTERFACE -- ERROR REPORTING
+        // INTERFACE -- MODEL MANAGEMENT
 
-      protected:
+      public:
 
-        //! Report an error
-        void error(const std::string& msg);
-
-        //! Report a warning
-        void warn(const std::string& msg);
-
-        //! Report a message
-        void message(const std::string& msg);
+        //! Create a model instance of templated type and register it; delegate to instance manager
+        template <typename Model>
+        std::shared_ptr<Model> create_model() { return(this->model_mgr.template create_model<Model>()); }
 
 
         // INTERNAL DATA
@@ -86,68 +93,61 @@ namespace transport
         boost::mpi::communicator world;
 
 
-		    // SLAVE AND MASTER COMPONENT MANAGERS
-
-		    //! slave controller
-		    slave_controller<number> slave;
-
-		    //! master controller
-		    master_controller<number> master;
-
-
         // LOCAL ENVIRONMENT
+
+        // local environment and argument cache must be declared *first*, so that they are available
+        // during construction of the other objects
+
+        // All local objects (model_mgr, gallery, local_env, arg_cache) must be
+        // declared before the slave/master component managers, so that
+        // they are constructed before slave/master components
+
+        //! environment agent (handles interactions with local machine such as location of Python interpreter)
         local_environment local_env;
 
         //! Argument cache
         argument_cache arg_cache;
+
+        //! instance manager
+        model_manager<number> model_mgr;
+
+        //! task gallery
+        task_gallery<number> gallery;
+
+
+        // SLAVE AND MASTER COMPONENT MANAGERS
+
+        //! slave controller
+        slave_controller<number> slave;
+
+        //! master controller
+        master_controller<number> master;
 
       };
 
 
     template <typename number>
     task_manager<number>::task_manager(int argc, char* argv[])
-	    : instance_manager<number>(),
-	      environment(argc, argv),
-	    // note it is safe to assume environment and world have been constructed when the constructor for
-	    // slave and master are invoked, because environment and world are declared
-	    // prior to slave and master in the class declaration
-	      slave(environment, world, local_env, arg_cache, this->model_finder_factory(),
-	            std::bind(&task_manager<number>::error, this, std::placeholders::_1),
-	            std::bind(&task_manager<number>::warn, this, std::placeholders::_1),
-	            std::bind(&task_manager<number>::message, this, std::placeholders::_1)),
-	      master(environment, world, local_env, arg_cache,
-	             std::bind(&task_manager<number>::error, this, std::placeholders::_1),
-	             std::bind(&task_manager<number>::warn, this, std::placeholders::_1),
-	             std::bind(&task_manager<number>::message, this, std::placeholders::_1))
+	    : environment(argc, argv),
+        // it's safe to assume local_env and arg_cache have been constructed at this point
+        model_mgr(local_env, arg_cache),
+	      // note it is safe to assume environment and world have been constructed when the constructor for
+	      // slave and master are invoked, because environment and world are declared
+	      // prior to slave and master in the class declaration.
+        // It's also safe to assume local_env, arg_cache, model_mgr and gallery have been constructed
+	      slave(environment, world, local_env, arg_cache, model_mgr,
+	            error_handler(local_env, arg_cache),
+	            warning_handler(local_env, arg_cache),
+	            message_handler(local_env, arg_cache)),
+	      master(environment, world, local_env, arg_cache, model_mgr, gallery,
+               error_handler(local_env, arg_cache),
+               warning_handler(local_env, arg_cache),
+               message_handler(local_env, arg_cache))
       {
         if(world.rank() == MPI::RANK_MASTER)  // process command-line arguments if we are the master node
 	        {
-            master.process_arguments(argc, argv, *this);
+            master.process_arguments(argc, argv);
 	        }
-      }
-
-
-    template <typename number>
-    task_manager<number>::task_manager(int argc, char* argv[], std::shared_ptr< json_repository<number> > r)
-      : instance_manager<number>(),
-        environment(argc, argv),
-        // note it is safe to assume environment and world have been constructed when the constructor for
-        // slave and master are invoked, because environment and world are declared
-        // prior to slave and master in the class declaration
-        slave(environment, world, local_env, arg_cache, this->model_finder_factory(),
-              std::bind(&task_manager<number>::error, this, std::placeholders::_1),
-              std::bind(&task_manager<number>::warn, this, std::placeholders::_1),
-              std::bind(&task_manager<number>::message, this, std::placeholders::_1)),
-        master(environment, world, local_env, arg_cache, r,
-               std::bind(&task_manager<number>::error, this, std::placeholders::_1),
-               std::bind(&task_manager<number>::warn, this, std::placeholders::_1),
-               std::bind(&task_manager<number>::message, this, std::placeholders::_1))
-      {
-        assert(r);
-
-		    // set model finder for the repository
-		    // (this is a function which, given a model ID, returns the model* instance representing it)
-		    r->set_model_finder(this->model_finder_factory());
       }
 
 
@@ -156,9 +156,10 @@ namespace transport
 			{
 				if(this->world.rank() == MPI::RANK_MASTER)
 					{
-            // output model list if it has been asked for (have to wait until this point to be sure all models have registered)
-            if(this->arg_cache.get_model_list()) this->write_models(std::cout);
+            // output model list, perform other tasks specifically on master node
+            this->master.pre_process_tasks();
 						this->master.execute_tasks();
+            this->master.post_process_tasks();
 					}
 				else
 					{
@@ -168,43 +169,15 @@ namespace transport
 
 
     template <typename number>
-    void task_manager<number>::error(const std::string& msg)
+    template <typename GeneratorObject>
+    void task_manager<number>::add_generator(GeneratorObject obj)
       {
-        bool colour = this->local_env.has_colour_terminal_support() && this->arg_cache.get_colour_output();
-
-        if(colour) std::cout << ANSI_BOLD_RED;
-        std::cout << msg << '\n';
-        if(colour) std::cout << ANSI_NORMAL;
-      }
-
-
-    template <typename number>
-    void task_manager<number>::warn(const std::string& msg)
-      {
-        bool colour = this->local_env.has_colour_terminal_support() && this->arg_cache.get_colour_output();
-
-        if(colour) std::cout << ANSI_BOLD_MAGENTA;
-        std::cout << CPPTRANSPORT_TASK_MANAGER_WARNING_LABEL << " ";
-        if(colour) std::cout << ANSI_NORMAL;
-        std::cout << msg << '\n';
-      }
-
-
-    template <typename number>
-    void task_manager<number>::message(const std::string& msg)
-      {
-        bool colour = this->local_env.has_colour_terminal_support() && this->arg_cache.get_colour_output();
-
-        if(this->arg_cache.get_verbose())
-          {
-//            if(colour) std::cout << ANSI_GREEN;
-            std::cout << msg << '\n';
-//            if(colour) std::cout << ANSI_NORMAL;
-          }
+        // pass through to gallery manager
+        this->gallery.add_generator(obj);
       }
 
 
   } // namespace transport
 
 
-#endif //__task_manager_H_
+#endif //CPPTRANSPORT_TASK_MANAGER_H

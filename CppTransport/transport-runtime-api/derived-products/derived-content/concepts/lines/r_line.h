@@ -18,7 +18,7 @@
 #include "transport-runtime-api/serialization/serializable.h"
 
 // get details of datapipe<number>
-#include "transport-runtime-api/data/datapipe/datapipe.h"
+#include "transport-runtime-api/data/datapipe/datapipe_decl.h"
 
 // forward-declare model class if needed
 #include "transport-runtime-api/models/model_forward_declare.h"
@@ -59,7 +59,7 @@ namespace transport
 				    r_line(const zeta_twopf_list_task<number>& tk);
 
 				    //! Deserialization constructor
-				    r_line(Json::Value& reader, typename repository_finder<number>::task_finder& finder);
+				    r_line(Json::Value& reader, task_finder<number>& finder);
 
 				    virtual ~r_line() = default;
 
@@ -104,13 +104,13 @@ namespace transport
 				template <typename number>
 				r_line<number>::r_line(const zeta_twopf_list_task<number>& tk)
 					: derived_line<number>(tk),  // not called because of virtual inheritance; here to silence Intel compiler warning
-						gadget(dynamic_cast< twopf_list_task<number>& >(*(tk.get_parent_task())))
+						gadget(dynamic_cast< twopf_db_task<number>& >(*(tk.get_parent_task())))
 					{
 					}
 
 
 				template <typename number>
-				r_line<number>::r_line(Json::Value& reader, typename repository_finder<number>::task_finder& finder)
+				r_line<number>::r_line(Json::Value& reader, task_finder<number>& finder)
 					: derived_line<number>(reader),  // not called because of virtual inheritance; here to silence Intel compiler warning
 						gadget()
 					{

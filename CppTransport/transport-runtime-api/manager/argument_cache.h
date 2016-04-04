@@ -4,20 +4,34 @@
 //
 
 
-#ifndef __argument_cache_H_
-#define __argument_cache_H_
+#ifndef CPPTRANSPORT_ARGUMENT_CACHE_H
+#define CPPTRANSPORT_ARGUMENT_CACHE_H
 
 
 #include <string>
+#include <list>
+
+#include <algorithm>
+
+#include "transport-runtime-api/defaults.h"
 
 #include "boost/serialization/string.hpp"
 #include "boost/serialization/list.hpp"
-
-#include "transport-runtime-api/defaults.h"
+#include "boost/filesystem/operations.hpp"
 
 
 namespace transport
 	{
+
+    enum class plot_style
+      {
+        raw_matplotlib,
+        matplotlib_ggplot,
+        matplotlib_ticks,
+        seaborn
+      };
+
+
     class argument_cache
 	    {
 
@@ -26,6 +40,9 @@ namespace transport
       public:
 
 		    //! constructor sets default values for all options
+        //! Notice that argument_cache is a dependency of the error, warning and message handlers and therefore
+        //! cannot itself handle errors; all errors should be pushed back to the caller by status flags or
+        //! using exceptions. Then they have to be handled at the call-site rather than within argument_cache.
         argument_cache();
 
 		    //! destructor is default
@@ -53,6 +70,17 @@ namespace transport
 
         //! Set colourized output status
         void set_colour_output(bool g)                            { this->colour_output = g; }
+
+
+        // REPOSITORY OPTIONS
+
+      public:
+
+        //! Set create mode
+        void set_create_mode(bool g)                              { this->create = g; }
+
+        //! Get create mode status
+        bool get_create_model() const                              { return(this->create); }
 
 
         // CHECKPOINTING AND RECOVERY
@@ -118,6 +146,29 @@ namespace transport
         const std::string& get_journal_filename() const           { return(this->journal_filename); }
 
 
+        // PLOTTING OPTIONS
+
+      public:
+
+        //! Set plotting environment; returns true if environment was recognized or false if it was not
+        bool set_plot_environment(const std::string& e);
+
+        //! Get plotting environment
+        plot_style get_plot_environment() const                   { return(this->plot_env); }
+
+
+        // SEARCH PATHS
+
+      public:
+
+        //! set environment search paths
+        template <typename Container>
+        void set_search_paths(const Container& path_set);
+
+        //! get search paths
+        const std::list< boost::filesystem::path > get_search_paths();
+
+
         // INTERNAL DATA
 
       private:
@@ -143,6 +194,9 @@ namespace transport
         //! recovery mode?
         bool recovery;
 
+        //! create mode?
+        bool create;
+
         //! colour output?
         bool colour_output;
 
@@ -154,6 +208,14 @@ namespace transport
 
         //! checkpoint interval in seconds. Zero indicates that checkpointing is disabled
         unsigned int checkpoint_interval;
+
+        //! plotting environemtn
+        plot_style plot_env;
+
+        //! search paths for assets, eg. jQuery, bootstrap ...
+        //! have to use std::string internally since boost::filesystem::path won't serialize
+        std::list< std::string > search_paths;
+
 
         // enable boost::serialization support, and hence automated packing for transmission over MPI
         friend class boost::serialization::access;
@@ -168,10 +230,13 @@ namespace transport
             ar & verbose;
             ar & list_models;
             ar & recovery;
+            ar & create;
             ar & colour_output;
             ar & batcher_capacity;
             ar & pipe_capacity;
             ar & checkpoint_interval;
+            ar & plot_env;
+            ar & search_paths;
           }
 
 	    };
@@ -183,14 +248,54 @@ namespace transport
 	      verbose(false),
         list_models(false),
         recovery(false),
+        create(false),
         colour_output(true),
         batcher_capacity(CPPTRANSPORT_DEFAULT_BATCHER_STORAGE),
         pipe_capacity(CPPTRANSPORT_DEFAULT_PIPE_STORAGE),
-        checkpoint_interval(CPPTRANSPORT_DEFAULT_CHECKPOINT_INTERVAL)
+        checkpoint_interval(CPPTRANSPORT_DEFAULT_CHECKPOINT_INTERVAL),
+        plot_env(plot_style::raw_matplotlib)
 	    {
 	    }
 
-	}   // namespace transport
+
+    bool argument_cache::set_plot_environment(const std::string& e)
+      {
+        if(e == "raw")          { this->plot_env = plot_style::raw_matplotlib; return true; }
+        else if(e == "ggplot")  { this->plot_env = plot_style::matplotlib_ggplot; return true; }
+        else if(e == "ticks")   { this->plot_env = plot_style::matplotlib_ticks; return true; }
+        else if(e == "seaborn") { this->plot_env = plot_style::seaborn; return true; }
+
+        return false;
+      }
 
 
-#endif //__argument_cache_H_
+    template <typename Container>
+    void argument_cache::set_search_paths(const Container& path_set)
+      {
+        for(const std::string& path : path_set)
+          {
+            boost::filesystem::path p = path;
+
+            // if path is not absolute, make relative to current directory
+            if(!p.is_absolute())
+              {
+                p = boost::filesystem::absolute(p);
+              }
+
+            this->search_paths.emplace_back(p.string());
+          }
+      }
+
+
+    const std::list<boost::filesystem::path> argument_cache::get_search_paths()
+      {
+        std::list<boost::filesystem::path> list;
+        std::copy(this->search_paths.cbegin(), this->search_paths.cend(), std::back_inserter(list));
+        return list;
+      }
+
+
+  }   // namespace transport
+
+
+#endif //CPPTRANSPORT_ARGUMENT_CACHE_H

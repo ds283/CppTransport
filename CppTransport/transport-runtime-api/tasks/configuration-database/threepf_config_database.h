@@ -371,7 +371,8 @@ namespace transport
 	        << "threepf_kconfig.wavenumber1     AS wavenumber1, "
 	        << "threepf_kconfig.wavenumber2     AS wavenumber2, "
 	        << "threepf_kconfig.wavenumber3     AS wavenumber3, "
-	        << "threepf_kconfig.t_exit          AS t_exit, "
+	        << "threepf_kconfig.t_exit_kt       AS t_exit_kt, "
+          << "threepf_kconfig.t_massless      AS t_massless, "
 	        << "threepf_kconfig.store_bg        AS store_bg, "
 	        << "threepf_kconfig.store_k1        AS store_k1, "
 	        << "threepf_kconfig.store_k2        AS store_k2, "
@@ -396,6 +397,7 @@ namespace transport
                 config.alpha           = sqlite3_column_double(stmt, 3);
                 config.beta            = sqlite3_column_double(stmt, 4);
 		            config.t_exit          = sqlite3_column_double(stmt, 8);
+                config.t_massless      = sqlite3_column_double(stmt, 9);
 
 		            config.k1_serial = static_cast<unsigned int>(sqlite3_column_int(stmt, 5));
 		            config.k2_serial = static_cast<unsigned int>(sqlite3_column_int(stmt, 6));
@@ -430,10 +432,10 @@ namespace transport
                 if(k_max_comoving > this->kmax_2pf_comoving)         this->kmax_2pf_comoving     = k_max_comoving;
                 if(k_min_comoving < this->kmin_2pf_comoving)         this->kmin_2pf_comoving     = k_min_comoving;
 
-		            bool store_bg = (sqlite3_column_int(stmt, 9) > 0);
-		            bool store_k1 = (sqlite3_column_int(stmt, 10) > 0);
-		            bool store_k2 = (sqlite3_column_int(stmt, 11) > 0);
-		            bool store_k3 = (sqlite3_column_int(stmt, 12) > 0);
+		            bool store_bg = (sqlite3_column_int(stmt, 10) > 0);
+		            bool store_k1 = (sqlite3_column_int(stmt, 11) > 0);
+		            bool store_k2 = (sqlite3_column_int(stmt, 12) > 0);
+		            bool store_k3 = (sqlite3_column_int(stmt, 13) > 0);
 
 		            this->database.emplace(config.serial, threepf_kconfig_record(config, store_bg, store_k1, store_k2, store_k3));
 	            }
@@ -482,6 +484,7 @@ namespace transport
         config.alpha           = 4.0 * k2_conventional / config.kt_conventional - 1.0 - config.beta;
 
         config.t_exit          = 0.0; // this will be updated later, once all k-configurations are known
+        config.t_massless      = 0.0; // this will be updated later, once all k-configurations are known
 
         return(this->add_record(twopf_db, config, policy));
       }
@@ -511,6 +514,7 @@ namespace transport
         config.k3_comoving     = config.k3_conventional * this->comoving_normalization;
 
 		    config.t_exit          = 0.0; // this will be updated later, once all k-configurations are known
+        config.t_massless      = 0.0; // this will be updated later, once all k-configurations are known
 
         return(this->add_record(twopf_db, config, policy));
       }
@@ -598,7 +602,8 @@ namespace transport
 		      << "wavenumber1     INTEGER, "
 		      << "wavenumber2     INTEGER, "
 		      << "wavenumber3     INTEGER, "
-		      << "t_exit          DOUBLE, "
+		      << "t_exit_kt       DOUBLE, "
+          << "t_massless      DOUBLE, "
 		      << "store_bg        INTEGER, "
 		      << "store_k1        INTEGER, "
 		      << "store_k2        INTEGER, "
@@ -610,7 +615,7 @@ namespace transport
         sqlite3_operations::exec(handle, create_stmt.str(), CPPTRANSPORT_THREEPF_DATABASE_WRITE_FAIL);
 
         std::ostringstream insert_stmt;
-		    insert_stmt << "INSERT INTO threepf_kconfig VALUES (@serial, @kt_conventional, @kt_comoving, @alpha, @beta, @wavenumber1, @wavenumber2, @wavenumber3, @t_exit, @store_bg, @store_k1, @store_k2, @store_k3);";
+		    insert_stmt << "INSERT INTO threepf_kconfig VALUES (@serial, @kt_conventional, @kt_comoving, @alpha, @beta, @wavenumber1, @wavenumber2, @wavenumber3, @t_exit_kt, @t_massless, @store_bg, @store_k1, @store_k2, @store_k3);";
 
         sqlite3_stmt* stmt;
         sqlite3_operations::check_stmt(handle, sqlite3_prepare_v2(handle, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr));
@@ -628,10 +633,11 @@ namespace transport
             sqlite3_operations::check_stmt(handle, sqlite3_bind_int(stmt, 7, t->second->k2_serial));
             sqlite3_operations::check_stmt(handle, sqlite3_bind_int(stmt, 8, t->second->k3_serial));
             sqlite3_operations::check_stmt(handle, sqlite3_bind_double(stmt, 9, t->second->t_exit));
-            sqlite3_operations::check_stmt(handle, sqlite3_bind_int(stmt, 10, t->second.is_background_stored()));
-            sqlite3_operations::check_stmt(handle, sqlite3_bind_int(stmt, 11, t->second.is_twopf_k1_stored()));
-            sqlite3_operations::check_stmt(handle, sqlite3_bind_int(stmt, 12, t->second.is_twopf_k2_stored()));
-            sqlite3_operations::check_stmt(handle, sqlite3_bind_int(stmt, 13, t->second.is_twopf_k3_stored()));
+            sqlite3_operations::check_stmt(handle, sqlite3_bind_double(stmt, 10, t->second->t_massless));
+            sqlite3_operations::check_stmt(handle, sqlite3_bind_int(stmt, 11, t->second.is_background_stored()));
+            sqlite3_operations::check_stmt(handle, sqlite3_bind_int(stmt, 12, t->second.is_twopf_k1_stored()));
+            sqlite3_operations::check_stmt(handle, sqlite3_bind_int(stmt, 13, t->second.is_twopf_k2_stored()));
+            sqlite3_operations::check_stmt(handle, sqlite3_bind_int(stmt, 14, t->second.is_twopf_k3_stored()));
 
             sqlite3_operations::check_stmt(handle, sqlite3_step(stmt), CPPTRANSPORT_THREEPF_DATABASE_WRITE_FAIL, SQLITE_DONE);
 

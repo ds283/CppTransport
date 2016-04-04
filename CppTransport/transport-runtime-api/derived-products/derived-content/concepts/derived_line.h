@@ -27,7 +27,7 @@
 #include "transport-runtime-api/tasks/tasks_forward_declare.h"
 
 // get details of datapipe<number>
-#include "transport-runtime-api/data/datapipe/datapipe.h"
+#include "transport-runtime-api/data/datapipe/datapipe_decl.h"
 
 #include "transport-runtime-api/derived-products/line-collections/data_line.h"
 
@@ -131,7 +131,7 @@ namespace transport
 						derived_line(const task<number>& tk);
 
 				    //! Deserialization constructor
-						derived_line(Json::Value& reader, typename repository_finder<number>::task_finder& finder);
+						derived_line(Json::Value& reader, task_finder<number>& finder);
 
 						//! Dummy deserialization constructor, should not be used
 						//! Has to be provided as part of our virtual inheritance strategy (mainly to silence
@@ -276,12 +276,6 @@ namespace transport
 				    //! Wrapped output utility
 				    wrapped_output wrapper;
 
-//				    //! List of time configuration serial numbers associated with this derived product
-//				    std::vector<unsigned int> time_sample_sns;
-//
-//						//! List of k-configuration serial numbers associated with this derived product
-//						std::vector<unsigned int> kconfig_sample_sns;
-
 					};
 
 
@@ -322,7 +316,7 @@ namespace transport
 
 
 				template <typename number>
-				derived_line<number>::derived_line(Json::Value& reader, typename repository_finder<number>::task_finder& finder)
+				derived_line<number>::derived_line(Json::Value& reader, task_finder<number>& finder)
 					: parent_task(nullptr)
 					{
 				    precision       = reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_PRECISION].asUInt();
@@ -334,7 +328,7 @@ namespace transport
 				    std::string parent_task_name = reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TASK_NAME].asString();
 
 				    // extract parent task
-            std::unique_ptr< task_record<number> > tk_rec(finder(parent_task_name));
+            std::unique_ptr< task_record<number> > tk_rec = finder(parent_task_name);
             assert(tk_rec.get() != nullptr);
 
 						parent_task = dynamic_cast< derivable_task<number>* >(tk_rec->get_abstract_task()->clone());

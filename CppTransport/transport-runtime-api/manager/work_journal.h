@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __work_journal_H_
-#define __work_journal_H_
+#ifndef CPPTRANSPORT_WORK_JOURNAL_H
+#define CPPTRANSPORT_WORK_JOURNAL_H
 
 
 #include <list>
@@ -13,8 +13,9 @@
 #include <cstdlib>
 
 #include "transport-runtime-api/manager/environment.h"
+#include "transport-runtime-api/manager/argument_cache.h"
 
-#include "json/json.h"
+#include "transport-runtime-api/utilities/plot_environment.h"
 
 #include "transport-runtime-api/defaults.h"
 #include "transport-runtime-api/messages.h"
@@ -22,6 +23,8 @@
 
 #include "boost/date_time.hpp"
 #include "boost/filesystem/operations.hpp"
+
+#include "json/json.h"
 
 
 // set default minimum time interval for instruments to be 1 second
@@ -654,10 +657,10 @@ namespace transport
 		  public:
 
 				//! write a Gantt chart from the journal entries
-				void make_gantt_chart(const std::string& filename, local_environment& env);
+				void make_gantt_chart(const std::string& filename, local_environment& env, argument_cache& args);
 
         //! write a JSON-format journal
-        void make_journal(const std::string& filename, local_environment& env);
+        void make_journal(const std::string& filename, local_environment& env, argument_cache& args);
 
 
 		  protected:
@@ -969,7 +972,7 @@ namespace transport
 			}
 
 
-		void work_journal::make_gantt_chart(const std::string& filename, local_environment& local_env)
+		void work_journal::make_gantt_chart(const std::string& filename, local_environment& local_env, argument_cache& args)
 			{
 		    std::list< std::list<Gantt_bar> > bars_list;
 		    this->bin_bars(bars_list);
@@ -1020,7 +1023,9 @@ namespace transport
 					}
 
 				out << "import numpy as np" << '\n';
-				out << "import matplotlib.pyplot as plt" << '\n';
+        plot_environment plot_env(local_env, args);
+        plot_env.write_environment(out);
+
 				out << "import matplotlib.dates as mdt" << '\n';
 				out << "import datetime as dt" << '\n';
 				out << "import dateutil.parser" << '\n';
@@ -1119,7 +1124,7 @@ namespace transport
 			}
 
 
-    void work_journal::make_journal(const std::string& filename, local_environment& env)
+    void work_journal::make_journal(const std::string& filename, local_environment& env, argument_cache& args)
       {
         Json::Value entries(Json::arrayValue);
 
@@ -1253,4 +1258,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__work_journal_H_
+#endif //CPPTRANSPORT_WORK_JOURNAL_H

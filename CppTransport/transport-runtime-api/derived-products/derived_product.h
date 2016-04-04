@@ -4,15 +4,14 @@
 //
 
 
-#ifndef __derived_product_H_
-#define __derived_product_H_
+#ifndef CPPTRANSPORT_DERIVED_PRODUCT_H
+#define CPPTRANSPORT_DERIVED_PRODUCT_H
 
 
 #include <float.h>
 
 
 #include "transport-runtime-api/serialization/serializable.h"
-
 
 #include "transport-runtime-api/derived-products/utilities/wrapper.h"
 
@@ -28,12 +27,13 @@
 // forward-declare repository records if needed
 #include "transport-runtime-api/repository/records/repository_records_forward_declare.h"
 
-// get enviornment object
+// get environment objects
 #include "transport-runtime-api/manager/environment.h"
+#include "transport-runtime-api/manager/argument_cache.h"
 
 // get enumeration classes
 #include "transport-runtime-api/derived-products/enumerations.h"
-
+#include "transport-runtime-api/derived-products/derived_product_type.h"
 
 #include "transport-runtime-api/defaults.h"
 #include "transport-runtime-api/messages.h"
@@ -42,19 +42,19 @@
 #include "boost/filesystem/operations.hpp"
 
 
-#define CPPTRANSPORT_NODE_DERIVED_PRODUCT_TYPE                 "derived-product-type"
-
-#define CPPTRANSPORT_NODE_DERIVED_PRODUCT_LINE_PLOT2D          "line-plot2d"
-#define CPPTRANSPORT_NODE_DERIVED_PRODUCT_LINE_ASCIITABLE      "line-asciitable"
-
-#define CPPTRANSPORT_NODE_DERIVED_PRODUCT_FILENAME             "filename"
-
-
 namespace transport
 	{
 
 		namespace derived_data
 			{
+
+        constexpr auto CPPTRANSPORT_NODE_DERIVED_PRODUCT_TYPE                 = "derived-product-type";
+
+        constexpr auto CPPTRANSPORT_NODE_DERIVED_PRODUCT_LINE_PLOT2D          = "line-plot2d";
+        constexpr auto CPPTRANSPORT_NODE_DERIVED_PRODUCT_LINE_ASCIITABLE      = "line-asciitable";
+
+        constexpr auto CPPTRANSPORT_NODE_DERIVED_PRODUCT_FILENAME             = "filename";
+
 
 		    //! A derived product represents some particular post-processing
 		    //! of the integration data, perhaps to produce a plot,
@@ -90,11 +90,14 @@ namespace transport
 				    //! Get name of this derived data product
 				    const std::string& get_name() const { return(this->name); }
 
+            //! Get type of this derived data product
+            virtual derived_product_type get_type() const = 0;
+
 				    //! Get filename associated with this derived data product
 				    const boost::filesystem::path& get_filename() const { return(this->filename); }
 
 		        //! Apply the analysis represented by this derived product to a given output group
-		        virtual std::list<std::string> derive(datapipe<number>& pipe, const std::list<std::string>& tags, local_environment& env) = 0;
+		        virtual std::list<std::string> derive(datapipe<number>& pipe, const std::list<std::string>& tags, local_environment& env, argument_cache& args) = 0;
 
 
             // DERIVED PRODUCTS -- AGGREGATE CONSTITUENT TASKS
@@ -103,7 +106,7 @@ namespace transport
 
             //! Collect a list of tasks which this derived product depends on;
             //! used by the repository to autocommit any necessary tasks
-            virtual void get_task_list(typename std::vector< derivable_task<number>* >& list) const = 0;
+            virtual void get_task_list(typename std::list< derivable_task<number>* >& list) const = 0;
 
 
 				    // SERIALIZATION -- implements a 'serializable' interface
@@ -125,6 +128,7 @@ namespace transport
 		      public:
 
 				    template <typename Stream> void write(Stream& out);
+
 
 		        // INTERNAL DATA
 
@@ -162,4 +166,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__derived_product_H_
+#endif //CPPTRANSPORT_DERIVED_PRODUCT_H

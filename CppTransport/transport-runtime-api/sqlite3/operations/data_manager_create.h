@@ -76,13 +76,14 @@ namespace transport
 			        << "serial       INTEGER PRIMARY KEY, "
 			        << "conventional DOUBLE, "
 			        << "comoving     DOUBLE, "
-			        << "t_exit       DOUBLE"
+			        << "t_exit       DOUBLE, "
+              << "t_massless   DOUBLE"
 			        << ");";
 
 		        exec(db, stmt_text.str(), CPPTRANSPORT_DATACTR_TWOPFTAB_FAIL);
 
 		        std::stringstream insert_stmt;
-		        insert_stmt << "INSERT INTO " << CPPTRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE << " VALUES (@serial, @conventional, @comoving, @t_exit);";
+		        insert_stmt << "INSERT INTO " << CPPTRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE << " VALUES (@serial, @conventional, @comoving, @t_exit, @t_massless);";
 
 		        sqlite3_stmt* stmt;
 		        check_stmt(db, sqlite3_prepare_v2(db, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr));
@@ -95,6 +96,7 @@ namespace transport
 		            check_stmt(db, sqlite3_bind_double(stmt, 2, t->k_conventional));
 		            check_stmt(db, sqlite3_bind_double(stmt, 3, t->k_comoving));
 		            check_stmt(db, sqlite3_bind_double(stmt, 4, t->t_exit));
+                check_stmt(db, sqlite3_bind_double(stmt, 5, t->t_massless));
 
 		            check_stmt(db, sqlite3_step(stmt), CPPTRANSPORT_DATACTR_TWOPFTAB_FAIL, SQLITE_DONE);
 
@@ -128,7 +130,8 @@ namespace transport
 			        << "kt_conventional DOUBLE, "
 			        << "alpha           DOUBLE, "
 			        << "beta            DOUBLE, "
-			        << "t_exit          DOUBLE, "
+			        << "t_exit_kt       DOUBLE, "
+              << "t_massless      DOUBLE, "
 			        << "FOREIGN KEY(wavenumber1) REFERENCES twopf_samples(serial), "
 			        << "FOREIGN KEY(wavenumber2) REFERENCES twopf_samples(serial), "
 			        << "FOREIGN KEY(wavenumber3) REFERENCES twopf_samples(serial)"
@@ -137,7 +140,7 @@ namespace transport
 		        exec(db, stmt_text.str());
 
 		        std::stringstream insert_stmt;
-		        insert_stmt << "INSERT INTO " << CPPTRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE << " VALUES (@serial, @wn1, @wn2, @wn3, @kt_com, @kt_conv, @alpha, @beta, @t_exit);";
+		        insert_stmt << "INSERT INTO " << CPPTRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE << " VALUES (@serial, @wn1, @wn2, @wn3, @kt_com, @kt_conv, @alpha, @beta, @t_exit_kt, @t_massless);";
 
 		        sqlite3_stmt* stmt;
 		        check_stmt(db, sqlite3_prepare_v2(db, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr));
@@ -155,6 +158,7 @@ namespace transport
 		            check_stmt(db, sqlite3_bind_double(stmt, 7, t->alpha));
 		            check_stmt(db, sqlite3_bind_double(stmt, 8, t->beta));
 		            check_stmt(db, sqlite3_bind_double(stmt, 9, t->t_exit));
+                check_stmt(db, sqlite3_bind_double(stmt, 10, t->t_massless));
 
 		            check_stmt(db, sqlite3_step(stmt), CPPTRANSPORT_DATACTR_THREEPFTAB_FAIL, SQLITE_DONE);
 

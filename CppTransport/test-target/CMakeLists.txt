@@ -8,7 +8,7 @@ PROJECT(test-target)
 # not from any already installed elsewhere on the system
 #FIND_PACKAGE(CppTransport REQUIRED)
 FIND_PACKAGE(MPI REQUIRED)
-FIND_PACKAGE(Boost 1.56 REQUIRED COMPONENTS system filesystem random timer date_time mpi log_setup log serialization thread program_options)
+FIND_PACKAGE(Boost 1.56 REQUIRED COMPONENTS system filesystem random timer date_time mpi log_setup log serialization thread program_options regex)
 #find_package(CUDA REQUIRED)
 #find_package(OpenCL REQUIRED)
 

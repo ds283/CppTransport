@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __derived_product_helper_H_
-#define __derived_product_helper_H_
+#ifndef CPPTRANSPORT_DERIVED_PRODUCT_HELPER_H
+#define CPPTRANSPORT_DERIVED_PRODUCT_HELPER_H
 
 
 #include "transport-runtime-api/derived-products/line-collections/line_plot2d.h"
@@ -22,12 +22,12 @@ namespace transport
           {
 
             template <typename number>
-            derived_data::derived_product<number>* deserialize(const std::string& name, Json::Value& reader, typename repository_finder<number>::task_finder& finder)
+            std::unique_ptr< derived_data::derived_product<number> > deserialize(const std::string& name, Json::Value& reader, task_finder<number>& finder)
               {
                 std::string type = reader[CPPTRANSPORT_NODE_DERIVED_PRODUCT_TYPE].asString();
 
-                if (type == CPPTRANSPORT_NODE_DERIVED_PRODUCT_LINE_PLOT2D)         return new line_plot2d<number>(name, reader, finder);
-                else if(type == CPPTRANSPORT_NODE_DERIVED_PRODUCT_LINE_ASCIITABLE) return new line_asciitable<number>(name, reader, finder);
+                if (type == CPPTRANSPORT_NODE_DERIVED_PRODUCT_LINE_PLOT2D)         return std::make_unique< line_plot2d<number> >(name, reader, finder);
+                else if(type == CPPTRANSPORT_NODE_DERIVED_PRODUCT_LINE_ASCIITABLE) return std::make_unique< line_asciitable<number> >(name, reader, finder);
 
                 std::ostringstream msg;
                 msg << CPPTRANSPORT_PRODUCT_UNKNOWN_TYPE << " '" << type << "'";
@@ -41,4 +41,4 @@ namespace transport
 	}
 
 
-#endif //__derived_product_helper_H_
+#endif //CPPTRANSPORT_DERIVED_PRODUCT_HELPER_H

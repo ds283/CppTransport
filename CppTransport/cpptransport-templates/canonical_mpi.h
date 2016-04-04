@@ -97,8 +97,8 @@ namespace transport
       public:
 
         //! constructor
-        $MODEL_mpi()
-          : $MODEL<number>()
+        $MODEL_mpi(error_handler e, warning_handler w, message_handler m)
+          : $MODEL<number>(std::move(e), std::move(w), std::move(m))
           {
 #ifdef CPPTRANSPORT_INSTRUMENT
             twopf_setup_timer.stop();
@@ -194,7 +194,7 @@ namespace transport
         virtual unsigned int get_backend_priority() override;
 
         // Integrate background and 2-point function on the CPU
-        virtual void backend_process_queue(work_queue<twopf_kconfig_record>& work, const twopf_list_task<number>* tk,
+        virtual void backend_process_queue(work_queue<twopf_kconfig_record>& work, const twopf_db_task<number>* tk,
                                            twopf_batcher<number>& batcher,
                                            bool silent = false) override;
 
@@ -213,20 +213,20 @@ namespace transport
 
       protected:
 
-        void twopf_kmode(const twopf_kconfig_record& kconfig, const twopf_list_task<number>* tk,
+        void twopf_kmode(const twopf_kconfig_record& kconfig, const twopf_db_task<number>* tk,
                          twopf_batcher<number>& batcher, unsigned int refinement_level);
 
         void threepf_kmode(const threepf_kconfig_record&, const threepf_task<number>* tk,
                            threepf_batcher<number>& batcher, unsigned int refinement_level);
 
         void populate_twopf_ic(twopf_state<number>& x, unsigned int start, double kmode, double Ninit,
-                               const twopf_list_task<number>* tk, const std::vector<number>& ic, bool imaginary = false);
+                               const twopf_db_task<number>* tk, const std::vector<number>& ic, bool imaginary = false);
 
         void populate_tensor_ic(twopf_state<number>& x, unsigned int start, double kmode, double Ninit,
-                                const twopf_list_task<number>* tk, const std::vector<number>& ic);
+                                const twopf_db_task<number>* tk, const std::vector<number>& ic);
 
         void populate_threepf_ic(threepf_state<number>& x, unsigned int start, const threepf_kconfig& kconfig,
-                                 double Ninit, const twopf_list_task<number>* tk, const std::vector<number>& ic);
+                                 double Ninit, const twopf_db_task<number>* tk, const std::vector<number>& ic);
 
 
         // INTERNAL DATA
@@ -259,7 +259,7 @@ namespace transport
 
       public:
 
-        $MODEL_mpi_twopf_functor(const twopf_list_task<number>* tk, const twopf_kconfig& k
+        $MODEL_mpi_twopf_functor(const twopf_db_task<number>* tk, const twopf_kconfig& k
 #ifdef CPPTRANSPORT_INSTRUMENT
           ,
             boost::timer::cpu_timer& st,
@@ -371,8 +371,8 @@ namespace transport
       public:
 
         $MODEL_mpi_twopf_observer(twopf_batcher<number>& b, const twopf_kconfig_record& c,
-                                  const time_config_database& t)
-          : twopf_singleconfig_batch_observer<number>(b, c, t,
+                                  double t_ics, const time_config_database& t)
+          : twopf_singleconfig_batch_observer<number>(b, c, t_ics, t,
                                                       $MODEL_pool::backg_size, $MODEL_pool::tensor_size, $MODEL_pool::twopf_size,
                                                       $MODEL_pool::backg_start, $MODEL_pool::tensor_start, $MODEL_pool::twopf_start)
           {
@@ -390,7 +390,7 @@ namespace transport
 
       public:
 
-        $MODEL_mpi_threepf_functor(const twopf_list_task<number>* tk, const threepf_kconfig& k
+        $MODEL_mpi_threepf_functor(const twopf_db_task<number>* tk, const threepf_kconfig& k
 #ifdef CPPTRANSPORT_INSTRUMENT
           ,
           boost::timer::cpu_timer& st,
@@ -529,8 +529,8 @@ namespace transport
 
       public:
         $MODEL_mpi_threepf_observer(threepf_batcher<number>& b, const threepf_kconfig_record& c,
-                                    const time_config_database& t)
-          : threepf_singleconfig_batch_observer<number>(b, c, t,
+                                    double t_ics, const time_config_database& t)
+          : threepf_singleconfig_batch_observer<number>(b, c, t_ics, t,
                                                         $MODEL_pool::backg_size, $MODEL_pool::tensor_size,
                                                         $MODEL_pool::twopf_size, $MODEL_pool::threepf_size,
                                                         $MODEL_pool::backg_start,
@@ -586,7 +586,7 @@ namespace transport
 
     // process work queue for twopf
     template <typename number>
-    void $MODEL_mpi<number>::backend_process_queue(work_queue<twopf_kconfig_record>& work, const twopf_list_task<number>* tk,
+    void $MODEL_mpi<number>::backend_process_queue(work_queue<twopf_kconfig_record>& work, const twopf_db_task<number>* tk,
                                                    twopf_batcher<number>& batcher, bool silent)
       {
         // set batcher to delayed flushing mode so that we have a chance to unwind failed integrations
@@ -647,7 +647,7 @@ namespace transport
 
 
     template <typename number>
-    void $MODEL_mpi<number>::twopf_kmode(const twopf_kconfig_record& kconfig, const twopf_list_task<number>* tk,
+    void $MODEL_mpi<number>::twopf_kmode(const twopf_kconfig_record& kconfig, const twopf_db_task<number>* tk,
                                          twopf_batcher<number>& batcher, unsigned int refinement_level)
       {
         if(refinement_level > tk->get_max_refinements()) throw runtime_exception(exception_type::REFINEMENT_FAILURE, CPPTRANSPORT_REFINEMENT_TOO_DEEP);
@@ -657,7 +657,7 @@ namespace transport
 
         // set up a functor to observe the integration
         // this also starts the timers running, so we do it as early as possible
-        $MODEL_mpi_twopf_observer<number> obs(batcher, kconfig, time_db);
+        $MODEL_mpi_twopf_observer<number> obs(batcher, kconfig, tk->get_initial_time(*kconfig), time_db);
 
         // set up a functor to evolve this system
         $MODEL_mpi_twopf_functor<number> rhs(tk, *kconfig
@@ -717,7 +717,7 @@ namespace transport
     // imaginary - whether to populate using real or imaginary components of the 2pf
     template <typename number>
     void $MODEL_mpi<number>::populate_twopf_ic(twopf_state<number>& x, unsigned int start, double kmode, double Ninit,
-                                               const twopf_list_task<number>* tk, const std::vector<number>& ics, bool imaginary)
+                                               const twopf_db_task<number>* tk, const std::vector<number>& ics, bool imaginary)
       {
         assert(x.size() >= start);
         assert(x.size() >= start + $MODEL_pool::twopf_size);
@@ -729,7 +729,7 @@ namespace transport
     // make initial conditions for the tensor twopf
     template <typename number>
     void $MODEL_mpi<number>::populate_tensor_ic(twopf_state<number>& x, unsigned int start, double kmode, double Ninit,
-                                                const twopf_list_task<number>* tk, const std::vector<number>& ics)
+                                                const twopf_db_task<number>* tk, const std::vector<number>& ics)
       {
         assert(x.size() >= start);
         assert(x.size() >= start + $MODEL_pool::tensor_size);
@@ -819,7 +819,7 @@ namespace transport
 
         // set up a functor to observe the integration
         // this also starts the timers running, so we do it as early as possible
-        $MODEL_mpi_threepf_observer<number> obs(batcher, kconfig, time_db);
+        $MODEL_mpi_threepf_observer<number> obs(batcher, kconfig, tk->get_initial_time(*kconfig), time_db);
 
         // set up a functor to evolve this system
         $MODEL_mpi_threepf_functor<number>  rhs(tk, *kconfig
@@ -889,7 +889,7 @@ namespace transport
     template <typename number>
     void $MODEL_mpi<number>::populate_threepf_ic(threepf_state<number>& x, unsigned int start,
                                                  const threepf_kconfig& kconfig, double Ninit,
-                                                 const twopf_list_task<number>* tk, const std::vector<number>& ics)
+                                                 const twopf_db_task<number>* tk, const std::vector<number>& ics)
       {
         assert(x.size() >= start);
         assert(x.size() >= start + $MODEL_pool::threepf_size);

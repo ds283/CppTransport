@@ -11,6 +11,8 @@
 #define CPPTRANSPORT_REPO_FAIL_DATABASE_OPEN                "Repository error: failed to open repository database"
 #define CPPTRANSPORT_REPO_FAIL_KCONFIG_DATABASE_OPEN        "Repository error: failed to open kconfiguration database for task"
 
+#define CPPTRANSPORT_REPO_FAIL_INTEGRATION_TASK_TYPE        "Repository error: unknown integration task type"
+
 #define CPPTRANSPORT_REPO_DATABASES_OPEN                    "Repository error: SQLite database handles unexpectedly open"
 #define CPPTRANSPORT_REPO_DATABASES_CLOSED                  "Repository error: SQLite database handles unexpectedly closed"
 #define CPPTRANSPORT_REPO_DATABASES_NOT_OPEN                "Repository error: SQLite database handles closed, but should be open"
@@ -24,9 +26,13 @@
 #define CPPTRANSPORT_REPO_STORE_TASK_FAIL                   "Repository error: failed to store task record (backend code="
 #define CPPTRANSPORT_REPO_STORE_PRODUCT_FAIL                "Repository error: failed to store derived product record (backend code="
 #define CPPTRANSPORT_REPO_STORE_OUTPUT_FAIL                 "Repository error: failed to store output record (backend code="
+#define CPPTRANSPORT_REPO_DELETE_OUTPUT_FAIL                "Repository error: failed to delete output record (backend code="
 
 #define CPPTRANSPORT_REPO_STORE_RESERVE_FAIL                "Repository error: failed to store content group name reservation (backend code="
 #define CPPTRANSPORT_REPO_COMMIT_OUTPUT_NOT_RESERVED        "Repository error: attempt to commit output group for unreserved name"
+#define CPPTRANSPORT_REPO_DELETE_OUTPUT_UNSTORED            "Repository error: attempt to delete output group for unstored name"
+#define CPPTRANSPORT_REPO_UPDATE_COMPLETION_FAIL            "Repository error: failed to update completion time for content group (backend code="
+#define CPPTRANSPORT_REPO_DEREGISTER_FAIL                   "Repository error: failed to release content group name reservation (backend code="
 
 #define CPPTRANSPORT_REPO_STORE_INTEGRATION_WRITER_FAIL     "Repository error: failed to register integration writer (backend code="
 #define CPPTRANSPORT_REPO_STORE_POSTINTEGRATION_WRITER_FAIL "Repository error: failed to register postintegration writer (backend code="

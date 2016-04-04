@@ -4,8 +4,8 @@
 //
 
 
-#if !defined(__datapipe_detail_H_) && !(defined__datapipe_forward_declare_H_)
-#define __datapipe_forward_declare_H_
+#if !defined(CPPTRANSPORT_DATAPIPE_DECL_H) && !defined(CPPTRANSPORT_DATAPIPE_FORWARD_DECLARE_H)
+#define CPPTRANSPORT_DATAPIPE_FORWARD_DECLARE_H
 
 
 namespace transport
@@ -16,4 +16,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__datapipe_forward_declare_H_
+#endif //CPPTRANSPORT_DATAPIPE_FORWARD_DECLARE_H

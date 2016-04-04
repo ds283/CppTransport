@@ -39,9 +39,14 @@
 #define CPPTRANSPORT_REFINEMENT_LEVEL      "mesh refinement level"
 #define CPPTRANSPORT_REFINEMENT_INTERNAL   "internal exception="
 
-#define CPPTRANSPORT_REFINEMENT_TOO_DEEP   "Integration error: too many levels of mesh refinement were required; decrease the underlying time step"
+#define CPPTRANSPORT_EXIT_TIME             "t_exit"
+#define CPPTRANSPORT_EXIT_TIME_KT          "(k_t)"
+#define CPPTRANSPORT_MASSLESS_TIME         "t_massless"
+#define CPPTRANSPORT_INITIAL_TIME          "t_init"
+#define CPPTRANSPORT_MASSLESS_EFOLDS       "massless e-folds"
+#define CPPTRANSPORT_SUBHORIZON_EFOLDS     "subhorizon e-folds"
 
-#define CPPTRANSPORT_FAIL_COMPUTE_T_EXIT   "Error: failed to compute time of horizon exit for all k-modes"
+#define CPPTRANSPORT_REFINEMENT_TOO_DEEP   "Integration error: too many levels of mesh refinement were required; decrease the underlying time step"
 
 
 #endif // CPPTRANSPORT_MESSAGES_EN_MODELS_H

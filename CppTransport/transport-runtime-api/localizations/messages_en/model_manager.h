@@ -4,8 +4,8 @@
 //
 
 
-#ifndef CPPTRANSPORT_MESSAGES_EN_INSTANCE_MANAGER_H
-#define CPPTRANSPORT_MESSAGES_EN_INSTANCE_MANAGER_H
+#ifndef CPPTRANSPORT_MESSAGES_EN_MODEL_MANAGER_H
+#define CPPTRANSPORT_MESSAGES_EN_MODEL_MANAGER_H
 
 
 #define CPPTRANSPORT_INSTANCES_MULTIPLE    "Internal error: Attempt to add multiple instances of the same 'model' object"
@@ -13,4 +13,4 @@
 #define CPPTRANSPORT_INSTANCES_MISSING     "Internal error: No registered instance of model with uid"
 
 
-#endif // CPPTRANSPORT_MESSAGES_EN_INSTANCE_MANAGER_H
+#endif // CPPTRANSPORT_MESSAGES_EN_MODEL_MANAGER_H

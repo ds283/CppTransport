@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __integration_abstract_task_H_
-#define __integration_abstract_task_H_
+#ifndef CPPTRANSPORT_INTEGRATION_ABSTRACT_TASK_H
+#define CPPTRANSPORT_INTEGRATION_ABSTRACT_TASK_H
 
 
 #include "transport-runtime-api/tasks/integration_detail/common.h"
@@ -19,18 +19,17 @@
 #include "sqlite3.h"
 
 
-#define CPPTRANSPORT_NODE_FAST_FORWARD                  "fast-forward"
-#define CPPTRANSPORT_NODE_FAST_FORWARD_EFOLDS           "ff-efolds"
-#define CPPTRANSPORT_NODE_MESH_REFINEMENTS              "mesh-refinements"
-#define CPPTRANSPORT_NODE_END_OF_INFLATION              "end-of-inflation"
-
-#define CPPTRANSPORT_NODE_TIME_RANGE                    "integration-range"
-
-#define CPPTRANSPORT_NODE_PACKAGE_NAME                  "package"
-
-
 namespace transport
 	{
+
+    constexpr auto CPPTRANSPORT_NODE_FAST_FORWARD         = "fast-forward";
+    constexpr auto CPPTRANSPORT_NODE_FAST_FORWARD_EFOLDS  = "ff-efolds";
+    constexpr auto CPPTRANSPORT_NODE_MESH_REFINEMENTS     = "mesh-refinements";
+    constexpr auto CPPTRANSPORT_NODE_END_OF_INFLATION     = "end-of-inflation";
+
+    constexpr auto CPPTRANSPORT_NODE_TIME_RANGE           = "integration-range";
+
+    constexpr auto CPPTRANSPORT_NODE_PACKAGE_NAME         = "package";
 
     //! An 'integration_task' is a specialization of 'task'. It contains the basic information
     //! needed to carry out an integration. The more specialized two- and three-pf integration
@@ -65,8 +64,16 @@ namespace transport
         //! override copy constructor to perform a deep copy of associated range<> object
         integration_task(const integration_task<number>& obj);
 
-        //! Destroy an integration task
-        virtual ~integration_task();
+        //! destructor is default
+        virtual ~integration_task() = default;
+
+
+        // INTERFACE
+
+      public:
+
+        //! identify integration task type
+        virtual integration_task_type get_task_type() const = 0;
 
 
         // INTERFACE - TASK COMPONENTS
@@ -79,7 +86,8 @@ namespace transport
         //! Get 'parameters' object associated with this task
         const parameters<number>& get_params() const { return(this->ics.get_params()); }
 
-        //! Get model associated with this task
+        //! Get model associated with this task; passed through to initial_conditions<> object
+        //! which owns the model pointer
         model<number>* get_model() const { return(this->ics.get_model()); }
 
 
@@ -157,23 +165,24 @@ namespace transport
       protected:
 
         //! Initial conditions for this task (including parameter choices)
-        initial_conditions<number>       ics;
+        initial_conditions<number> ics;
 
         //! Range of times at which to sample for this task;
         //! kept for serialization purposes, and so we can reconstruct the time configuration database if the
 		    //! k-range changes
-        range<double>*                   times;
+        std::unique_ptr< range<double> > times;
 
 		    //! time of end-of-inflation
-		    double                           end_of_inflation;
+        double end_of_inflation;
 
 		    //! flag to indicate whether end-of-inflation time has been cached
-		    bool                             cached_end_of_inflation;
+        bool cached_end_of_inflation;
 
 
         // STORED TIME CONFIGURATION DATABASE
 
-        time_config_database             stored_time_db;
+        //! time database
+        time_config_database stored_time_db;
 
 	    };
 
@@ -237,15 +246,6 @@ namespace transport
         end_of_inflation(obj.end_of_inflation),
         cached_end_of_inflation(obj.cached_end_of_inflation)
 	    {
-	    }
-
-
-    template <typename number>
-    integration_task<number>::~integration_task()
-	    {
-        assert(this->times != nullptr);
-
-        delete this->times;
 	    }
 
 
@@ -390,4 +390,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__integration_abstract_task_H_
+#endif //CPPTRANSPORT_INTEGRATION_ABSTRACT_TASK_H

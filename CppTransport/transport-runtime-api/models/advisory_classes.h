@@ -127,7 +127,7 @@ namespace transport
 
         double get_largest_k()      const { return(this->largest_k); }
 
-        virtual const char* what()  const noexcept override { return(this->message.c_str()); }
+        const char* what()          const noexcept override { return(this->message.c_str()); }
 
       private:
 
@@ -157,6 +157,50 @@ namespace transport
 
       };
 
+
+    //! advisory class thrown if backend can't find a safe initial time for some k-modes
+    class no_massless_time: public std::exception
+      {
+
+      public:
+
+        no_massless_time(double kM_i, double kM_e, double t_e, double k_conv)
+          : kM_ratio_init(kM_i),
+            kM_ratio_exit(kM_e),
+            t_exit(t_e),
+            k_conventional(k_conv)
+          {
+            std::ostringstream str;
+
+            str << CPPTRANSPORT_ADVISORY_FOR_K_MODE << " " << k_conv << " "
+                << CPPTRANSPORT_ADVISORY_WITH_TEXIT << " " << t_e << ": ";
+
+            str << CPPTRANSPORT_ADVISORY_AT_TINIT << " " << CPPTRANSPORT_ADVISORY_K_A2M << " = " << kM_i << ", ";
+            str << CPPTRANSPORT_ADVISORY_AT_TEXIT << " " << CPPTRANSPORT_ADVISORY_K_A2M << " = " << kM_e;
+
+            message = str.str();
+          }
+
+        const char* what()      const noexcept override { return(this->message.c_str()); }
+
+      private:
+
+        //! (k/a)^2 / M ratio at initial time
+        double kM_ratio_init;
+
+        //! (k/a)^2 / M ratio at horizon exit time
+        double kM_ratio_exit;
+
+        //! horizon exit time for this k-mode
+        double t_exit;
+
+        //! conventionally-normalized wavenumber for this mode
+        double k_conventional;
+
+        //! exception message
+        std::string message;
+
+      };
 
   }
 

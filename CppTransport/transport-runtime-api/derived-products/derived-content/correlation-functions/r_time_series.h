@@ -43,7 +43,7 @@ namespace transport
 				                  unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
 				    //! deserialization constructor
-				    r_time_series(Json::Value& reader, typename repository_finder<number>::task_finder& finder);
+				    r_time_series(Json::Value& reader, task_finder<number>& finder);
 
 				    virtual ~r_time_series() = default;
 
@@ -119,7 +119,7 @@ namespace transport
 				// derived_line<> is not called automatically during construction of time_series<>.
 				// We have to call it ourselves
 				template <typename number>
-				r_time_series<number>::r_time_series(Json::Value& reader, typename repository_finder<number>::task_finder& finder)
+				r_time_series<number>::r_time_series(Json::Value& reader, task_finder<number>& finder)
 					: derived_line<number>(reader, finder),
 		        r_line<number>(reader, finder),
 		        time_series<number>(reader),

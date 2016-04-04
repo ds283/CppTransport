@@ -25,21 +25,20 @@
 #include "boost/filesystem/operations.hpp"
 
 
-#define CPPTRANSPORT_NODE_PRODUCT_LINE_COLLECTION_ROOT       "line-collection"
-
-#define CPPTRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LOGX       "log-x"
-#define CPPTRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LOGY       "log-y"
-#define CPPTRANSPORT_NODE_PRODUCT_LINE_COLLECTION_ABSY       "abs-y"
-#define CPPTRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LATEX      "latex"
-
-#define CPPTRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LINE_ARRAY "line-array"
-
-
 namespace transport
 	{
 
 		namespace derived_data
 			{
+
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_LINE_COLLECTION_ROOT = "line-collection";
+
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LOGX = "log-x";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LOGY = "log-y";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_LINE_COLLECTION_ABSY = "abs-y";
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LATEX = "latex";
+
+        constexpr auto CPPTRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LINE_ARRAY = "line-array";
 
 				//! A line-collection is a specialization of a derived product that produces
 				//! derived data from a collection of 2d lines
@@ -187,9 +186,10 @@ namespace transport
 						line_collection(const line_collection<number>& obj);
 
 						//! Deserialization constructor
-						line_collection(const std::string& name, Json::Value& reader, typename repository_finder<number>::task_finder finder);
+						line_collection(const std::string& name, Json::Value& reader, task_finder<number> finder);
 
-						virtual ~line_collection();
+            //! destructor is default
+						virtual ~line_collection() = default;
 
 
 				    // LINE MANAGEMENT
@@ -218,7 +218,7 @@ namespace transport
 
             //! Collect a list of tasks which this derived product depends on;
             //! used by the repository to autocommit any necessary tasks
-            virtual void get_task_list(typename std::vector< derivable_task<number>* >& list) const override;
+            virtual void get_task_list(typename std::list< derivable_task<number>* >& list) const override;
 
 
             // AGGREGATE OUTPUT GROUPS FROM A LIST OF LINES
@@ -275,7 +275,7 @@ namespace transport
 				    // PLOT DATA
 
 				    //! List of data_line objects to be plotted on the graph.
-				    std::list< derived_line<number>* > lines;
+				    std::list< std::unique_ptr< derived_line<number> > > lines;
 
 
 						// LINE HANDLING ATTRIBUTES
@@ -296,7 +296,7 @@ namespace transport
 
 
 				template <typename number>
-				line_collection<number>::line_collection(const std::string& name, Json::Value& reader, typename repository_finder<number>::task_finder finder)
+				line_collection<number>::line_collection(const std::string& name, Json::Value& reader, task_finder<number> finder)
 					: derived_product<number>(name, reader)
 					{
 						// read in line management attributes
@@ -312,8 +312,8 @@ namespace transport
 				    lines.clear();
 						for(Json::Value::iterator t = line_array.begin(); t != line_array.end(); ++t)
 					    {
-				        derived_line<number>* data = derived_line_helper::deserialize<number>(*t, finder);
-				        lines.push_back(data);
+                std::unique_ptr< derived_line<number> > data = derived_line_helper::deserialize<number>(*t, finder);
+				        lines.push_back(std::move(data));
 					    }
 					}
 
@@ -328,9 +328,9 @@ namespace transport
 			    {
 		        lines.clear();
 
-		        for(typename std::list< derived_line<number>* >::const_iterator t = obj.lines.begin(); t != obj.lines.end(); ++t)
+		        for(const std::unique_ptr< derived_line<number> >& line : obj.lines)
 			        {
-		            lines.push_back((*t)->clone());
+		            lines.emplace_back(line->clone());
 			        }
 			    }
 
@@ -348,7 +348,7 @@ namespace transport
 							    throw runtime_exception(exception_type::DERIVED_PRODUCT_ERROR, CPPTRANSPORT_PRODUCT_LINE_COLLECTION_AXIS_MISMATCH);
 					    }
 
-		        this->lines.push_back(line.clone());
+		        this->lines.emplace_back(line.clone());
 			    }
 
 
@@ -368,21 +368,11 @@ namespace transport
 
 
 		    template <typename number>
-		    line_collection<number>::~line_collection()
-			    {
-		        for(typename std::list< derived_line<number>* >::const_iterator t = this->lines.begin(); t != this->lines.end(); ++t)
-			        {
-		            delete *t;
-			        }
-			    }
-
-
-		    template <typename number>
 		    void line_collection<number>::obtain_output(datapipe<number>& pipe, const std::list<std::string>& tags, std::list< data_line<number> >& derived_lines) const
 			    {
-		        for(typename std::list< derived_line<number>* >::const_iterator t = this->lines.begin(); t != this->lines.end(); ++t)
+            for(const std::unique_ptr< derived_line<number> >& line : this->lines)
 			        {
-		            (*t)->derive_lines(pipe, derived_lines, tags);
+		            line->derive_lines(pipe, derived_lines, tags);
 			        }
 			    }
 
@@ -400,9 +390,9 @@ namespace transport
 		        std::vector< std::vector< std::pair<double, number> > > data;
 		        std::vector<bool> data_absy;
 
-		        for(typename std::list< data_line<number> >::const_iterator t = input.begin(); t != input.end(); ++t)
+            for(const data_line<number>& line : input)
 			        {
-		            const std::vector< std::pair<double, number> >& line_data = t->get_data_points();
+		            const std::vector< std::pair<double, number> >& line_data = line.get_data_points();
 
 		            bool need_abs_y = false;
 		            bool nonzero_values = false;
@@ -417,9 +407,9 @@ namespace transport
 
 		                // issue warnings if required
 		                if(need_abs_y && !this->abs_y && nonzero_values)        // can plot the line, but have to abs() it
-			                BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::log_severity_level::normal) << ":: Warning: data line '" << t->get_non_LaTeX_label() << "' contains negative or zero values; plotting absolute values instead because of logarithmic y-axis";
+			                BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::log_severity_level::normal) << ":: Warning: data line '" << line.get_non_LaTeX_label() << "' contains negative or zero values; plotting absolute values instead because of logarithmic y-axis";
 		                else if(need_abs_y && !this->abs_y && !nonzero_values)  // can't plot the line
-			                BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::log_severity_level::normal) << ":: Warning: data line '" << t->get_non_LaTeX_label() << "' contains no positive values and can't be plotted on a logarithmic y-axis -- skipping this line";
+			                BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::log_severity_level::normal) << ":: Warning: data line '" << line.get_non_LaTeX_label() << "' contains no positive values and can't be plotted on a logarithmic y-axis -- skipping this line";
 			            }
 
 				        bool nonzero_axis = true;
@@ -432,7 +422,7 @@ namespace transport
 
 						        // warn if line can't be plotted
 						        if(!nonzero_axis)
-							        BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::log_severity_level::normal) << ":: Warning: data line '" << t->get_non_LaTeX_label() << "' contains nonpositive x-axis values and can't be plotted on a logarithmic x-axis -- skipping this line";
+							        BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::log_severity_level::normal) << ":: Warning: data line '" << line.get_non_LaTeX_label() << "' contains nonpositive x-axis values and can't be plotted on a logarithmic x-axis -- skipping this line";
 					        }
 
 		            // if we can plot the line, push it onto the queue to be processed.
@@ -441,10 +431,10 @@ namespace transport
 				        //    ** the x-axis is logarithmic but there are some nonpositive points
 		            if((!this->log_x || (this->log_x && nonzero_axis)) && (!this->log_y || (this->log_y && nonzero_values)))
 			            {
-		                output.push_back(output_line(this->use_LaTeX ? t->get_LaTeX_label() : t->get_non_LaTeX_label(), t->get_value_type(), t->get_data_line_type()));
+		                output.push_back(output_line(this->use_LaTeX ? line.get_LaTeX_label() : line.get_non_LaTeX_label(), line.get_value_type(), line.get_data_line_type()));
 		                data_absy.push_back(this->abs_y || need_abs_y);
 
-				            data.push_back(t->get_data_points());
+				            data.push_back(line.get_data_points());
 			            }
 			        }
 
@@ -515,16 +505,85 @@ namespace transport
 			    }
 
 
+        namespace line_collection_impl
+          {
+
+            template <typename number>
+            class DerivedLineNameComparator
+              {
+
+                // CONSTRUCTOR, DESTRUCTOR
+
+              public:
+
+                //! constructor
+                DerivedLineNameComparator() = default;
+
+                //! destructor
+                ~DerivedLineNameComparator() = default;
+
+
+                // INTERFACE
+
+              public:
+
+                //! compare two derivable_tasks by name
+                bool operator()(derivable_task<number>* A, derivable_task<number>* B)
+                  {
+                    if(A == nullptr || B == nullptr) return false;
+                    return A->get_name() < B->get_name();
+                  }
+
+              };
+
+
+            template <typename number>
+            class DerivedLineNameEquality
+              {
+
+                // CONSTRUCTOR, DESTRUCTOR
+
+              public:
+
+                //! constructor
+                DerivedLineNameEquality() = default;
+
+                //! destructor
+                ~DerivedLineNameEquality() = default;
+
+
+                // INTERFACE
+
+              public:
+
+                //! compare two derivable_tasks by name
+                bool operator()(derivable_task<number>* A, derivable_task<number>* B)
+                  {
+                    if(A == nullptr || B == nullptr) return false;
+                    return A->get_name() == B->get_name();
+                  }
+
+              };
+
+          }   // namespace line_collection_impl
+
+
         template <typename number>
-        void line_collection<number>::get_task_list(typename std::vector< derivable_task<number>* >& list) const
+        void line_collection<number>::get_task_list(typename std::list< derivable_task<number>* >& list) const
           {
             list.clear();
 
             // collect data from each derived_line
-            for(typename std::list< derived_line<number>* >::const_iterator t = this->lines.begin(); t != this->lines.end(); ++t)
+            for(const std::unique_ptr< derived_line<number> >& line : this->lines)
               {
-                list.push_back((*t)->get_parent_task());
+                list.push_back(line->get_parent_task());
               }
+
+            // sort into lexical order
+            list.sort(line_collection_impl::DerivedLineNameComparator<number>());
+
+            // remove duplicates
+            list.unique(line_collection_impl::DerivedLineNameEquality<number>());
           }
 
 
@@ -533,9 +592,9 @@ namespace transport
           {
             std::list<std::string> groups;
 
-            for(typename std::list< data_line<number> >::const_iterator t = list.begin(); t != list.end(); ++t)
+            for(const data_line<number>& line : list)
               {
-                std::list<std::string> line_groups = t->get_parent_groups();
+                std::list<std::string> line_groups = line.get_parent_groups();
                 groups.merge(line_groups);
               }
 
@@ -555,10 +614,10 @@ namespace transport
 		        writer[CPPTRANSPORT_NODE_PRODUCT_LINE_COLLECTION_ROOT][CPPTRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LATEX] = this->use_LaTeX;
 
 		        Json::Value line_array(Json::arrayValue);
-		        for(typename std::list< derived_line<number>* >::const_iterator t = this->lines.begin(); t != this->lines.end(); ++t)
+            for(const std::unique_ptr< derived_line<number> >& line : this->lines)
 			        {
 		            Json::Value line_element(Json::objectValue);
-		            (*t)->serialize(line_element);
+		            line->serialize(line_element);
 				        line_array.append(line_element);
 			        }
 		        writer[CPPTRANSPORT_NODE_PRODUCT_LINE_COLLECTION_ROOT][CPPTRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LINE_ARRAY] = line_array;

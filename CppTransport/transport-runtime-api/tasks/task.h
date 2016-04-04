@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __task_H_
-#define __task_H_
+#ifndef CPPTRANSPORT_TASK_H
+#define CPPTRANSPORT_TASK_H
 
 
 #include <assert.h>
@@ -20,6 +20,8 @@
 
 #include "transport-runtime-api/serialization/serializable.h"
 #include "transport-runtime-api/messages.h"
+
+#include "transport-runtime-api/tasks/task_types.h"
 
 
 #define CPPTRANSPORT_NODE_TASK_TYPE               "task-type"
@@ -70,7 +72,7 @@ namespace transport
 
 				//! Clone this task object using a virtual copy idiom.
 				//! Given a pointer just to the base class task<>, it isn't possible
-				//! to perform a deepy copy. This method avoids that problem.
+				//! to perform a deep copy. This method avoids that problem.
 				virtual task<number>* clone() const = 0;
 
 
@@ -115,4 +117,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__task_H_
+#endif //CPPTRANSPORT_TASK_H

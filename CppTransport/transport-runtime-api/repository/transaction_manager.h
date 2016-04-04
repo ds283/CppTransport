@@ -4,11 +4,13 @@
 //
 
 
-#ifndef __transaction_manager_H_
-#define __transaction_manager_H_
+#ifndef CPPTRANSPORT_TRANSACTION_MANAGER_H
+#define CPPTRANSPORT_TRANSACTION_MANAGER_H
 
 #include <list>
 #include <functional>
+#include <thread>
+#include <chrono>
 
 
 #include "transport-runtime-api/version.h"
@@ -21,70 +23,169 @@
 namespace transport
 	{
 
-    //! transaction manager
-    class transaction_manager
-	    {
+    class transaction_handler
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
 
       public:
 
-        typedef std::function<void()> open_handler;
-        typedef std::function<void()> commit_handler;
-		    typedef std::function<void()> rollback_handler;
-		    typedef std::function<void()> release_handler;
+        //! constructor is default
+        transaction_handler() = default;
 
-      protected:
+        //! destructor is default
+        ~transaction_handler() = default;
 
-		    class journal_record
-			    {
 
-		      public:
+        // INTERFACE
 
-				    journal_record() = default;
+      public:
 
-				    virtual ~journal_record() = default;
+        //! open transaction
+        virtual void open() = 0;
 
-				    virtual void commit() = 0;
+        //! commit transaction
+        virtual void commit() = 0;
 
-				    virtual void rollback() = 0;
+        //! rollback transaciton
+        virtual void rollback() = 0;
 
-			    };
+        //! release transaction
+        virtual void release() = 0;
 
-		    class rename_record: public journal_record
-			    {
+      };
 
-		      public:
 
-				    rename_record(const boost::filesystem::path& j, const boost::filesystem::path& t)
-					    : journal(j),
-		            target(t)
-					    {
-					    }
+    namespace transaction_manager_impl
+      {
 
-				    // TODO: Intel compiler complains if destructor is explicitly defaulted; can probably be reverted with new version of compiler [Intel say this issue is 'fixed']
-				    virtual ~rename_record()
-					    {
-					    }
+        //! abstract class giving interface definition for transaction journal records
+        class journal_record
+          {
 
-				    virtual void commit() override { boost::filesystem::rename(journal, target); }
+            // CONSTRUCTOR, DESTRUCTOR
 
-				    virtual void rollback() override { boost::filesystem::remove(journal); }
+          public:
 
-		      private:
+            //! constructor is default
+            journal_record() = default;
 
-				    //! journaled file
-				    boost::filesystem::path journal;
+            //! destructor is default
+            virtual ~journal_record() = default;
 
-				    //! target file
-				    boost::filesystem::path target;
 
-			    };
+            // INTERFACE
 
+          public:
+
+            virtual void commit() = 0;
+
+            virtual void rollback() = 0;
+
+          };
+
+
+        //! concrete transaction journal record, corresponding to a file emplacement
+        class emplace_record : public journal_record
+          {
+
+            // CONSTRUCTOR, DESTRUCTOR
+
+          public:
+
+            emplace_record(const boost::filesystem::path& j, const boost::filesystem::path& t)
+              : journal(j),
+                target(t)
+              {
+              }
+
+            // TODO: Intel compiler complains if destructor is explicitly defaulted; can probably be reverted with new version of compiler [Intel say this issue is 'fixed']
+            virtual ~emplace_record()
+              {
+              }
+
+
+            // INTERFACE
+
+          public:
+
+            virtual void commit() override { boost::filesystem::rename(this->journal, this->target); }    // boost::filesystem::rename() will remove any existing file at target
+
+            virtual void rollback() override { boost::filesystem::remove(this->journal); }
+
+
+            // INTERNAL DATA
+
+          private:
+
+            //! journalled file
+            boost::filesystem::path journal;
+
+            //! target file
+            boost::filesystem::path target;
+
+          };
+
+
+        //! concrete transaction journal record, corresponding to moving a file or directory
+        class move_record : public journal_record
+          {
+
+            // CONSTRUCTOR, DESTRUCTOR
+
+          public:
+
+            move_record(const boost::filesystem::path& s, const boost::filesystem::path& t)
+              : source(s),
+                target(t)
+              {
+              }
+
+            // TODO: Intel compiler complains if destructor is explicitly defaulted; can probably be reverted with new version of compiler [Intel say this issue is 'fixed']
+            virtual ~move_record()
+              {
+              }
+
+
+            // INTERFACE
+
+          public:
+
+            virtual void commit() override { boost::filesystem::rename(this->source, this->target); }    // boost::filesystem::rename() will remove any existing file at target
+
+            virtual void rollback() override { ; }    // do nothing
+
+
+            // INTERNAL DATA
+
+          private:
+
+            //! journalled file
+            boost::filesystem::path source;
+
+            //! target file
+            boost::filesystem::path target;
+
+          };
+
+
+      }
+
+
+    // import transaction_manager_impl for this block
+    using namespace transaction_manager_impl;
+
+
+    //! transaction manager
+    class transaction_manager
+	    {
 
 		    // CONSTRUCTOR, DESTRUCTOR
 
       public:
 
-        transaction_manager(open_handler& o, commit_handler& c, rollback_handler& r, release_handler& rel);
+        //! constructor captures ownership of handler object
+        transaction_manager(boost::filesystem::path l, std::unique_ptr<transaction_handler> h);
 
 		    // allow moving
 		    transaction_manager(transaction_manager&& obj) = default;
@@ -95,6 +196,7 @@ namespace transport
 		    // disable assignment
 		    transaction_manager& operator=(const transaction_manager& obj) = delete;
 
+        //! destructor should rollback if not committed
         ~transaction_manager();
 
 
@@ -113,9 +215,16 @@ namespace transport
 
       public:
 
-		    //! Add a record to the journal
+		    //! Add an emplacement record to the journal
+        //! On commit, the temporary file located at 'journal' is moved to its permanent home at 'target'
+        //! 'target' is removed if it already exists.
+        //! On rollback, 'journal' is removed.
 		    void journal_deposit(const boost::filesystem::path& journal, const boost::filesystem::path& target);
 
+        //! Add a move record to the journal
+        //! On commit, the object located at 'source' is moved to 'target'
+        //! On rollback, nothing happens
+        void journal_move(const boost::filesystem::path& source, const boost::filesystem::path& target);
 
 		    // INTERNAL DATA
 
@@ -123,17 +232,20 @@ namespace transport
 
 		    // DATABASE OPEN, COMMIT AND ROLLBACK HANDLERS
 
-		    //! begin a new transaction on the database
-        open_handler opener;
+        //! owned pointer to handlers
+        std::unique_ptr<transaction_handler> handler;
 
-		    //! commit a transaction to the database
-        commit_handler committer;
 
-		    //! rollback a transaction
-		    rollback_handler rollbacker;
+        // LOCKFILE
 
-		    //! notify owner to release resources following a commit
-		    release_handler releaser;
+        //! lockfile location
+        boost::filesystem::path lockfile;
+
+        //! magic string written to lockfile to identify ourselves
+        std::string magic_string;
+
+
+        // STATUS
 
 		    //! has this transaction been committed?
 		    bool committed;
@@ -142,32 +254,70 @@ namespace transport
 		    bool dead;
 
 		    //! file journal
-		    std::list< journal_record* > journal;
+		    std::list< std::unique_ptr<journal_record> > journal;
 
 	    };
 
 
-		transaction_manager::transaction_manager(open_handler& o, commit_handler& c, rollback_handler& r, release_handler& rel)
-			: opener(o),
-			  committer(c),
-			  rollbacker(r),
-			  releaser(rel),
+		transaction_manager::transaction_manager(boost::filesystem::path l, std::unique_ptr<transaction_handler> h)
+			: handler(std::move(h)),
+        lockfile(std::move(l)),
 			  committed(false),
 				dead(false)
 			{
-		    opener();
+        unsigned int attempts = CPPTRANSPORT_DEFAULT_LOCKFILE_ATTEMPTS;
+        bool locked = false;
+
+        // set up lockfile
+        while(!locked && attempts > 0)
+          {
+            if(boost::filesystem::exists(lockfile))
+              {
+                // repository commits normally don't take a long time, so sleep for a second
+                // before trying again
+                std::this_thread::sleep_for(std::chrono::seconds(1));
+                --attempts;
+              }
+            else
+              {
+                locked = true;
+              }
+          }
+
+        if(!locked) throw runtime_exception(exception_type::REPOSITORY_TRANSACTION_ERROR, CPPTRANSPORT_REPO_TRANSACTION_NO_LOCK);
+
+        // no lockfile is present, so make one -- then we have exclusive access to the database until
+        // the lockfile is removed
+        std::ofstream make_lock(lockfile.string(), std::ios::out | std::ios::trunc);
+
+        // write magic string consisting of current POSIX time, used to identify if lockfile has been changed
+        // by another process
+        boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
+        magic_string = boost::posix_time::to_iso_string(now);
+        make_lock << magic_string;
+
+        make_lock.close();
+		    handler->open();
 			}
 
 
     transaction_manager::~transaction_manager()
 			{
 		    // rollback the transaction if it was not committed
-		    if(!this->committed) this->rollback();
-
-		    for(std::list< journal_record* >::iterator t = this->journal.begin(); t != this->journal.end(); ++t)
-			    {
-				    delete *t;
-			    }
+		    if(!this->committed && !this->dead)
+          {
+            try
+              {
+                this->rollback();
+              }
+            catch(runtime_exception& xe)
+              {
+                // indicates that exclusive lock was lost, and lockfile has not been removed.
+                // Here we opt to just swallow the exception rather than risking throw from
+                // inside a destructor.
+                // Probably --recover will need to be run on the repository later.
+              }
+          }
 			}
 
 
@@ -176,29 +326,81 @@ namespace transport
 
 		void transaction_manager::commit()
 			{
+        // check lockfile is present; if not, we have somehow lost the exclusive lock
+        // so rollback and throw an exception
+        if(!boost::filesystem::exists(this->lockfile))
+          {
+            this->handler->rollback();
+            this->handler->release();
+            throw runtime_exception(exception_type::REPOSITORY_TRANSACTION_ERROR, CPPTRANSPORT_REPO_TRANSACTION_LOST_LOCK);
+          }
+
+        // read magic string from lockfile, and check it matches what we expect
+        // if not, rollback and throw an exception
+        std::ifstream lock_stream(this->lockfile.string(), std::ios::in);
+        std::string read_magic;
+        lock_stream >> read_magic;
+        lock_stream.close();
+
+        if(read_magic != this->magic_string)
+          {
+            this->handler->rollback();
+            this->handler->release();
+            throw runtime_exception(exception_type::REPOSITORY_TRANSACTION_ERROR, CPPTRANSPORT_REPO_TRANSACTION_LOST_LOCK);
+          }
+
+        // all is well with the locking, so proceed to commit
+
 				// work through the journal, committing
-				for(std::list< journal_record* >::iterator t = this->journal.begin(); t != this->journal.end(); ++t)
+        for(std::unique_ptr<journal_record>& rec : this->journal)
 					{
-				    (*t)->commit();
+				    rec->commit();
 					}
 
-				this->committer();
+				this->handler->commit();
 				this->committed = true;
-				this->releaser();
+				this->handler->release();
+
+        // remove lockfile, releasing our exclusive lock on the database
+        if(boost::filesystem::exists(this->lockfile)) boost::filesystem::remove(this->lockfile);
 			}
 
 
 		void transaction_manager::rollback()
 			{
-				// work through the journal, rolling back
-				for(std::list< journal_record* >::iterator t = this->journal.begin(); t != this->journal.end(); ++t)
+        // First, unwind all journalled actions
+
+				// work through the journal, rolling back each record
+        for(std::unique_ptr<journal_record>& rec : this->journal)
 					{
-				    (*t)->rollback();
+				    rec->rollback();
 					}
 
-				this->rollbacker();
+        this->handler->rollback();
 				this->dead = true;
-				this->releaser();
+        this->handler->release();
+
+        // Second, check status of locking; we should still have an exclusive lock on the database,
+        // and if not something has gone wrong
+
+        if(!boost::filesystem::exists(this->lockfile))
+          {
+            throw runtime_exception(exception_type::REPOSITORY_TRANSACTION_ERROR, CPPTRANSPORT_REPO_TRANSACTION_LOST_LOCK);
+          }
+
+        // read magic string from lockfile, and check it matches what we expect
+        std::ifstream lock_stream(this->lockfile.string(), std::ios::in);
+        std::string read_magic;
+        lock_stream >> read_magic;
+        lock_stream.close();
+
+        if(read_magic != this->magic_string)
+          {
+            throw runtime_exception(exception_type::REPOSITORY_TRANSACTION_ERROR, CPPTRANSPORT_REPO_TRANSACTION_LOST_LOCK);
+          }
+
+        // remove lockfile if exists, releasing our exclusive lock on the database
+        if(boost::filesystem::exists(this->lockfile)) boost::filesystem::remove(this->lockfile);
 			}
 
 
@@ -210,11 +412,20 @@ namespace transport
 				if(this->committed) throw runtime_exception(exception_type::REPOSITORY_TRANSACTION_ERROR, CPPTRANSPORT_REPO_TRANSACTION_COMMITTED);
 				if(this->dead)      throw runtime_exception(exception_type::REPOSITORY_TRANSACTION_ERROR, CPPTRANSPORT_REPO_TRANSACTION_DEAD);
 
-				this->journal.push_back(new rename_record(journal, target));
+				this->journal.push_back(std::make_unique<emplace_record>(journal, target));
 			}
+
+
+    void transaction_manager::journal_move(const boost::filesystem::path& source, const boost::filesystem::path& target)
+      {
+        if(this->committed) throw runtime_exception(exception_type::REPOSITORY_TRANSACTION_ERROR, CPPTRANSPORT_REPO_TRANSACTION_COMMITTED);
+        if(this->dead)      throw runtime_exception(exception_type::REPOSITORY_TRANSACTION_ERROR, CPPTRANSPORT_REPO_TRANSACTION_DEAD);
+
+        this->journal.push_back(std::make_unique<move_record>(source, target));
+      }
 
 
 	}
 
 
-#endif //__transaction_manager_H_
+#endif //CPPTRANSPORT_TRANSACTION_MANAGER_H

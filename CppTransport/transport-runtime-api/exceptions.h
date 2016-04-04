@@ -35,7 +35,8 @@ namespace transport
           DATAPIPE_ERROR,                                    // generic datapipe error
           DERIVED_PRODUCT_ERROR,                             // error encountered when generating a derived product
           JOURNAL_ERROR,                                     // error in work journal
-          SPLINE_ERROR                                       // error while performing a spline
+          SPLINE_ERROR,                                      // error while performing a spline
+          REPORTING_ERROR                                    // error while constructing a report
       };
 
 

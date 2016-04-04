@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __integration_tasks_H_
-#define __integration_tasks_H_
+#ifndef CPPTRANSPORT_INTEGRATION_TASKS_H
+#define CPPTRANSPORT_INTEGRATION_TASKS_H
 
 
 #include "transport-runtime-api/tasks/integration_detail/background_task.h"
@@ -13,4 +13,4 @@
 #include "transport-runtime-api/tasks/integration_detail/threepf_task.h"
 
 
-#endif //__integration_tasks_H_
+#endif //CPPTRANSPORT_INTEGRATION_TASKS_H

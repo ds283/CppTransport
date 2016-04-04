@@ -228,7 +228,7 @@ namespace transport
 #endif
 
         timing_instrument timer(this->pipe->database_timer);
-        this->pipe->pull_config.time(this->pipe, query, data);
+        this->pipe->data_mgr.pull_time_config(this->pipe, query, data);
 	    }
 
 
@@ -244,7 +244,7 @@ namespace transport
 #endif
 
         timing_instrument timer(this->pipe->database_timer);
-        this->pipe->pull_config.twopf(this->pipe, query, data);
+        this->pipe->data_mgr.pull_kconfig_twopf(this->pipe, query, data);
 	    }
 
 
@@ -260,7 +260,7 @@ namespace transport
 #endif
 
         timing_instrument timer(this->pipe->database_timer);
-        this->pipe->pull_config.threepf(this->pipe, query, data);
+        this->pipe->data_mgr.pull_kconfig_threepf(this->pipe, query, data);
 	    }
 
 

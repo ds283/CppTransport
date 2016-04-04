@@ -64,12 +64,17 @@ namespace transport
 
       public:
 
+        //! constructor
         template <typename handle_type>
         postintegration_batcher(unsigned int cap, unsigned int ckp, model<number>* m,
                                 const boost::filesystem::path& cp, const boost::filesystem::path& lp,
-                                generic_batcher::container_dispatch_function d, generic_batcher::container_replacement_function r,
+                                std::unique_ptr<container_dispatch_function> d, std::unique_ptr<container_replace_function> r,
                                 handle_type h, unsigned int w);
 
+        //! move constructor
+        postintegration_batcher(postintegration_batcher<number>&&) = default;
+
+        //! destructor is default
         virtual ~postintegration_batcher() = default;
 
 
@@ -152,11 +157,18 @@ namespace transport
 
       public:
 
+        //! constructor
         template <typename handle_type>
         zeta_twopf_batcher(unsigned int cap, unsigned int ckp, model<number>* m,
                            const boost::filesystem::path& cp, const boost::filesystem::path& lp,
-                           const writer_group& w, generic_batcher::container_dispatch_function d,
-                           generic_batcher::container_replacement_function r, handle_type h, unsigned int wn);
+                           const writer_group& w, std::unique_ptr<container_dispatch_function> d,
+                           std::unique_ptr<container_replace_function> r, handle_type h, unsigned int wn);
+
+        //! move constructor
+        zeta_twopf_batcher(zeta_twopf_batcher<number>&&) = default;
+
+        //! destructor is default
+        virtual ~zeta_twopf_batcher() = default;
 
 
         // BATCH, UNBATCH
@@ -178,7 +190,7 @@ namespace transport
 
         virtual size_t storage() const override;
 
-        virtual void flush(generic_batcher::replacement_action action) override;
+        virtual void flush(replacement_action action) override;
 
 
         // INTERNAL DATA
@@ -219,11 +231,18 @@ namespace transport
 
       public:
 
+        //! constructor
         template <typename handle_type>
         zeta_threepf_batcher(unsigned int cap, unsigned int ckp, model<number>* m,
                              const boost::filesystem::path& cp, const boost::filesystem::path& lp,
-                             const writer_group& w, generic_batcher::container_dispatch_function d,
-                             generic_batcher::container_replacement_function r, handle_type h, unsigned int wn);
+                             const writer_group& w, std::unique_ptr<container_dispatch_function> d,
+                             std::unique_ptr<container_replace_function> r, handle_type h, unsigned int wn);
+
+        //! move constructor
+        zeta_threepf_batcher(zeta_threepf_batcher<number>&&) = default;
+
+        //! destructor is default
+        virtual ~zeta_threepf_batcher() = default;
 
 
         // BATCH, UNBATCH
@@ -252,7 +271,7 @@ namespace transport
 
         virtual size_t storage() const override;
 
-        virtual void flush(generic_batcher::replacement_action action) override;
+        virtual void flush(replacement_action action) override;
 
 
         // INTERNAL DATA
@@ -300,12 +319,19 @@ namespace transport
 
       public:
 
+        //! constructor
         template <typename handle_type>
         fNL_batcher(unsigned int cap, unsigned int ckp, model<number>* m,
                     const boost::filesystem::path& cp, const boost::filesystem::path& lp,
-                    const writer_group& w, generic_batcher::container_dispatch_function d,
-                    generic_batcher::container_replacement_function r,
+                    const writer_group& w, std::unique_ptr<container_dispatch_function> d,
+                    std::unique_ptr<container_replace_function> r,
                     handle_type h, unsigned int wn, derived_data::template_type t);
+
+        //! move constructor
+        fNL_batcher(fNL_batcher<number>&&) = default;
+
+        //! destructor is default
+        virtual ~fNL_batcher() = default;
 
 
         // BATCH, UNBATCH
@@ -325,7 +351,7 @@ namespace transport
 
         virtual size_t storage() const override;
 
-        virtual void flush(generic_batcher::replacement_action action) override;
+        virtual void flush(replacement_action action) override;
 
 
         // INTERNAL DATA
@@ -351,9 +377,9 @@ namespace transport
     template <typename handle_type>
     postintegration_batcher<number>::postintegration_batcher(unsigned int cap, unsigned int ckp, model<number>* m,
                                                              const boost::filesystem::path& cp, const boost::filesystem::path& lp,
-                                                             generic_batcher::container_dispatch_function d, generic_batcher::container_replacement_function r,
+                                                             std::unique_ptr<container_dispatch_function> d, std::unique_ptr<container_replace_function> r,
                                                              handle_type h, unsigned int w)
-	    : generic_batcher(cap, ckp, cp, lp, d, r, h, w),
+	    : generic_batcher(cap, ckp, cp, lp, std::move(d), std::move(r), h, w),
 	      items_processed(0),
 	      total_time(0),
 	      longest_time(0),
@@ -417,9 +443,9 @@ namespace transport
     template <typename handle_type>
     zeta_twopf_batcher<number>::zeta_twopf_batcher(unsigned int cap, unsigned int ckp, model<number>* m,
                                                    const boost::filesystem::path& cp, const boost::filesystem::path& lp,
-                                                   const writer_group& w, generic_batcher::container_dispatch_function d,
-                                                   generic_batcher::container_replacement_function r, handle_type h, unsigned int wn)
-	    : postintegration_batcher<number>(cap, ckp, m, cp, lp, d, r, h, wn),
+                                                   const writer_group& w, std::unique_ptr<container_dispatch_function> d,
+                                                   std::unique_ptr<container_replace_function> r, handle_type h, unsigned int wn)
+	    : postintegration_batcher<number>(cap, ckp, m, cp, lp, std::move(d), std::move(r), h, wn),
 	      writers(w)
 	    {
 	    }
@@ -464,7 +490,7 @@ namespace transport
 
 
     template <typename number>
-    void zeta_twopf_batcher<number>::flush(generic_batcher::replacement_action action)
+    void zeta_twopf_batcher<number>::flush(replacement_action action)
 	    {
         BOOST_LOG_SEV(this->get_log(), generic_batcher::log_severity_level::normal) << "** Flushing zeta twopf batcher (capacity=" << format_memory(this->capacity) << ") of size " << format_memory(this->storage());
 
@@ -484,10 +510,10 @@ namespace transport
         // note that the order of calls to 'dispatcher' and 'replacer' is important
         // because 'dispatcher' needs the current path name, not the one created by
         // 'replacer'
-        this->dispatcher(this);
+        (*this->dispatcher)(*this);
 
         // close current container, and replace with a new one if required
-        this->replacer(this, action);
+        (*this->replacer)(*this, action);
 
         // pass flush notification down to generic batcher (eg. resets checkpoint timer)
         this->generic_batcher::flush(action);
@@ -514,9 +540,9 @@ namespace transport
     template <typename handle_type>
     zeta_threepf_batcher<number>::zeta_threepf_batcher(unsigned int cap, unsigned int ckp, model<number>* m,
                                                        const boost::filesystem::path& cp, const boost::filesystem::path& lp,
-                                                       const writer_group& w, generic_batcher::container_dispatch_function d,
-                                                       generic_batcher::container_replacement_function r, handle_type h, unsigned int wn)
-	    : postintegration_batcher<number>(cap, ckp, m, cp, lp, d, r, h, wn),
+                                                       const writer_group& w, std::unique_ptr<container_dispatch_function> d,
+                                                       std::unique_ptr<container_replace_function> r, handle_type h, unsigned int wn)
+	    : postintegration_batcher<number>(cap, ckp, m, cp, lp, std::move(d), std::move(r), h, wn),
 	      writers(w)
 	    {
 	    }
@@ -625,7 +651,7 @@ namespace transport
 
 
     template <typename number>
-    void zeta_threepf_batcher<number>::flush(generic_batcher::replacement_action action)
+    void zeta_threepf_batcher<number>::flush(replacement_action action)
 	    {
         BOOST_LOG_SEV(this->get_log(), generic_batcher::log_severity_level::normal) << "** Flushing zeta threepf batcher (capacity=" << format_memory(this->capacity) << ") of size " << format_memory(this->storage());
 
@@ -653,10 +679,10 @@ namespace transport
         // note that the order of calls to 'dispatcher' and 'replacer' is important
         // because 'dispatcher' needs the current path name, not the one created by
         // 'replacer'
-        this->dispatcher(this);
+        (*this->dispatcher)(*this);
 
         // close current container, and replace with a new one if required
-        this->replacer(this, action);
+        (*this->replacer)(*this, action);
 
         // pass flush notification down to generic batcher (eg. resets checkpoint timer)
         this->generic_batcher::flush(action);
@@ -698,10 +724,10 @@ namespace transport
     template <typename handle_type>
     fNL_batcher<number>::fNL_batcher(unsigned int cap, unsigned int ckp, model<number>* m,
                                      const boost::filesystem::path& cp, const boost::filesystem::path& lp,
-                                     const writer_group& w, generic_batcher::container_dispatch_function d,
-                                     generic_batcher::container_replacement_function r,
+                                     const writer_group& w, std::unique_ptr<container_dispatch_function> d,
+                                     std::unique_ptr<container_replace_function> r,
                                      handle_type h, unsigned int wn, derived_data::template_type t)
-	    : postintegration_batcher<number>(cap, ckp, m, cp, lp, d, r, h, wn),
+	    : postintegration_batcher<number>(cap, ckp, m, cp, lp, std::move(d), std::move(r), h, wn),
 	      writers(w),
 	      type(t)
 	    {
@@ -745,7 +771,7 @@ namespace transport
 
 
     template <typename number>
-    void fNL_batcher<number>::flush(generic_batcher::replacement_action action)
+    void fNL_batcher<number>::flush(replacement_action action)
 	    {
         BOOST_LOG_SEV(this->get_log(), generic_batcher::log_severity_level::normal) << "** Flushing " << template_name(this->type) << " batcher (capacity=" << format_memory(this->capacity) << ") of size " << format_memory(this->storage());
 
@@ -763,10 +789,10 @@ namespace transport
         // note that the order of calls to 'dispatcher' and 'replacer' is important
         // because 'dispatcher' needs the current path name, not the one created by
         // 'replacer'
-        this->dispatcher(this);
+        (*this->dispatcher)(*this);
 
         // close current container, and replace with a new one if required
-        this->replacer(this, action);
+        (*this->replacer)(*this, action);
 
         // pass flush notification down to generic batcher (eg. resets checkpoint timer)
         this->generic_batcher::flush(action);

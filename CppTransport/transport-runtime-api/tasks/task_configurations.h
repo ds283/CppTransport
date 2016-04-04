@@ -91,6 +91,9 @@ namespace transport
 		    //! time of horizon exit
 		    double t_exit;
 
+        //! time where massless approximation is marginal, ie k/a = M^2 where M^2 is largest eigenvalue of mass matrix
+        double t_massless;
+
         template <typename Stream> void write(Stream& out) const;
 	    };
 
@@ -104,9 +107,14 @@ namespace transport
         std::ostringstream exit_str;
         exit_str << std::setprecision(CPPTRANSPORT_DEFAULT_K_PRECISION) << this->t_exit;
 
+        std::ostringstream massless_str;
+        massless_str << std::setprecision(CPPTRANSPORT_DEFAULT_K_PRECISION) << this->t_massless;
+
         out << CPPTRANSPORT_KCONFIG_SERIAL << " " << this->serial << ", "
-        << CPPTRANSPORT_KCONFIG_KEQUALS << " " << str.str() << ", "
-        << CPPTRANSPORT_KCONFIG_T_EXIT << " " << exit_str.str() << '\n';
+          << CPPTRANSPORT_KCONFIG_KEQUALS << " " << str.str() << ", "
+          << CPPTRANSPORT_KCONFIG_T_EXIT << " " << exit_str.str() << ", "
+          << CPPTRANSPORT_KCONFIG_T_MASSLESS << " " << massless_str.str();
+        out << '\n';
       }
 
 
@@ -154,8 +162,11 @@ namespace transport
         double alpha;
         double beta;
 
-		    //! horizon-exit time
+		    //! horizon-exit time for k_t/3.0
 		    double t_exit;
+
+        //! time where massless approximation is marginal, ie k/a = M^2 where M^2 is largest eigenvalue of mass matrix
+        double t_massless;
 
         template <typename Stream> void write(Stream& out) const;
 	    };
@@ -251,7 +262,7 @@ namespace transport
             tags(tgs),
             serial(sn)
           {
-            assert(product != nullptr);
+            assert(product);
           }
 
         //! Override the default copy constructor to perform a deep copy of the stored derived_product<>
@@ -263,12 +274,7 @@ namespace transport
           }
 
         //! Destroy an output task element
-        ~output_task_element()
-          {
-            assert(this->product != nullptr);
-
-            delete this->product;
-          }
+        ~output_task_element() = default;
 
 
         // INTERFACE - EXTRACT DETAILS
@@ -277,7 +283,7 @@ namespace transport
         const std::string& get_product_name() const { return(this->product->get_name()); }
 
         //! Get derived product associated with this task element
-        derived_data::derived_product<number>* get_product() const { return(this->product); }
+        derived_data::derived_product<number>& get_product() const { return(*this->product); }
 
         //! Get tags associated with this task element
         const std::list<std::string>& get_tags() const { return(this->tags); }
@@ -300,7 +306,7 @@ namespace transport
       protected:
 
         //! Pointer to derived data product (part of the task description, specifying which eg. plot to produce) which which this output is associated
-        derived_data::derived_product<number>* product;
+        std::unique_ptr< derived_data::derived_product<number> > product;
 
         //! Optional list of tags to enforce for each content provider in the product
         std::list<std::string> tags;

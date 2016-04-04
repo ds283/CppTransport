@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __json_repository_H_
-#define __json_repository_H_
+#ifndef CPPTRANSPORT_JSON_REPOSITORY_H
+#define CPPTRANSPORT_JSON_REPOSITORY_H
 
 
 #include <assert.h>
@@ -24,6 +24,7 @@
 
 #include "boost/filesystem/operations.hpp"
 #include "boost/date_time/posix_time/posix_time.hpp"
+#include "boost/optional.hpp"
 
 #include "json/json.h"
 
@@ -41,13 +42,9 @@ namespace transport
 
       public:
 
-        json_repository(const std::string& path, repository_mode type,
-                                  typename repository<number>::error_callback e,
-                                  typename repository<number>::warning_callback w,
-                                  typename repository<number>::message_callback m,
-                                  typename repository_finder<number>::package_finder pf,
-                                  typename repository_finder<number>::task_finder tf,
-                                  typename repository_finder<number>::derived_product_finder dpf);
+        json_repository(const boost::filesystem::path path, model_manager<number>& f, repository_mode type,
+                        error_handler e, warning_handler w, message_handler m,
+                        package_finder<number> pf, task_finder<number> tf, derived_product_finder<number> dpf);
 
         virtual ~json_repository() = default;
 
@@ -75,28 +72,28 @@ namespace transport
       protected:
 
         //! Create a package record from a JSON value
-        virtual package_record<number>* package_record_factory(Json::Value& reader) = 0;
+        virtual std::unique_ptr< package_record<number> > package_record_factory(Json::Value& reader, boost::optional<transaction_manager&> mgr) = 0;
 
         //! Create an integration task record from a JSON value
-        virtual integration_task_record<number>* integration_task_record_factory(Json::Value& reader) = 0;
+        virtual std::unique_ptr< integration_task_record<number> > integration_task_record_factory(Json::Value& reader, boost::optional<transaction_manager&> mgr) = 0;
 
         //! Create an output task record from a JSON value
-        virtual output_task_record<number>* output_task_record_factory(Json::Value& reader) = 0;
+        virtual std::unique_ptr< output_task_record<number> > output_task_record_factory(Json::Value& reader, boost::optional<transaction_manager&> mgr) = 0;
 
         //! Create a postintegration task record from a JSON value
-        virtual postintegration_task_record<number>* postintegration_task_record_factory(Json::Value& reader) = 0;
+        virtual std::unique_ptr< postintegration_task_record<number> > postintegration_task_record_factory(Json::Value& reader, boost::optional<transaction_manager&> mgr) = 0;
 
         //! create a new derived product record from a JSON value
-        virtual derived_product_record<number>* derived_product_record_factory(Json::Value& reader) = 0;
+        virtual std::unique_ptr< derived_product_record<number> > derived_product_record_factory(Json::Value& reader, boost::optional<transaction_manager&> mgr) = 0;
 
         //! Create a new content group for an integration task from a JSON value
-        virtual output_group_record<integration_payload>* integration_content_group_record_factory(Json::Value& reader) = 0;
+        virtual std::unique_ptr< output_group_record<integration_payload> > integration_content_group_record_factory(Json::Value& reader, boost::optional<transaction_manager&> mgr) = 0;
 
         //! Create a new content group for a postintegration task from a JSON value
-        virtual output_group_record<postintegration_payload>* postintegration_content_group_record_factory(Json::Value& reader) = 0;
+        virtual std::unique_ptr< output_group_record<postintegration_payload> > postintegration_content_group_record_factory(Json::Value& reader, boost::optional<transaction_manager&> mgr) = 0;
 
         //! Create a new content group for an output task from a JSON value
-        virtual output_group_record<output_payload>* output_content_group_record_factory(Json::Value& reader) = 0;
+        virtual std::unique_ptr< output_group_record<output_payload> > output_content_group_record_factory(Json::Value& reader, boost::optional<transaction_manager&> mgr) = 0;
 
 
         // SERVICES FOR JSON-BASED REPOSITORIES
@@ -118,14 +115,10 @@ namespace transport
 
 
     template <typename number>
-    json_repository<number>::json_repository(const std::string& path, repository_mode type,
-                                             typename repository<number>::error_callback e,
-                                             typename repository<number>::warning_callback w,
-                                             typename repository<number>::message_callback m,
-                                             typename repository_finder<number>::package_finder pf,
-                                             typename repository_finder<number>::task_finder tf,
-                                             typename repository_finder<number>::derived_product_finder dpf)
-	    : repository<number>(path, type, e, w, m, pf, tf, dpf)
+    json_repository<number>::json_repository(const boost::filesystem::path path, model_manager<number>& f, repository_mode type,
+                                             error_handler e, warning_handler w, message_handler m,
+                                             package_finder<number> pf, task_finder<number> tf, derived_product_finder<number> dpf)
+	    : repository<number>(path, f, type, e, w, m, pf, tf, dpf)
 	    {
 	    }
 
@@ -196,4 +189,4 @@ namespace transport
   }
 
 
-#endif //__json_repository_H_
+#endif //CPPTRANSPORT_JSON_REPOSITORY_H

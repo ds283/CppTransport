@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __output_tasks_H_
-#define __output_tasks_H_
+#ifndef CPPTRANSPORT_OUTPUT_TASKS_H
+#define CPPTRANSPORT_OUTPUT_TASKS_H
 
 
 #include <assert.h>
@@ -28,6 +28,7 @@
 // forward declare derived products if needed
 #include "transport-runtime-api/derived-products/derived_product_forward_declare.h"
 
+#include "boost/optional.hpp"
 #include "boost/log/utility/formatting_ostream.hpp"
 
 
@@ -35,8 +36,7 @@
 #define CPPTRANSPORT_NODE_OUTPUT_ARRAY           "derived-data-tasks"
 #define CPPTRANSPORT_NODE_OUTPUT_DERIVED_PRODUCT "label"
 #define CPPTRANSPORT_NODE_OUTPUT_SERIAL          "serial"
-#define CPPTRANSPORT_NODE_OUTPUTGROUP_TAGS       "tags"
-#define CPPTRANSPORT_NODE_OUTPUTGROUP_TAG        "tag"
+#define CPPTRANSPORT_NODE_OUTPUT_TAGS            "tags"
 
 
 namespace transport
@@ -90,7 +90,7 @@ namespace transport
 	        }
 
         //! Deserialization constructor
-        output_task(const std::string& nm, Json::Value& reader, typename repository_finder<number>::derived_product_finder& pfinder);
+        output_task(const std::string& nm, Json::Value& reader, derived_product_finder<number>& pfinder);
 
 
         //! Destroy an output task
@@ -128,7 +128,7 @@ namespace transport
         void add_element(const derived_data::derived_product<number>& prod, const std::list<std::string>& tags);
 
 		    //! Lookup a derived product
-		    derived_data::derived_product<number>* lookup_derived_product(const std::string& name);
+		    boost::optional< derived_data::derived_product<number>& > lookup_derived_product(const std::string& name);
 
 
         // SERIALIZATION (implements a 'serializable' interface)
@@ -174,11 +174,9 @@ namespace transport
       {
         out << CPPTRANSPORT_OUTPUT_ELEMENTS << '\n';
 
-        const std::vector< output_task_element<number> > elements = this->get_elements();
-
-        for(typename std::vector< output_task_element<number> >::const_iterator t = elements.begin(); t != elements.end(); ++t)
+        for(const output_task_element<number>& ele : this->get_elements())
           {
-            out << *t;
+            out << ele;
           }
       }
 
@@ -200,7 +198,7 @@ namespace transport
 
 
     template <typename number>
-    output_task<number>::output_task(const std::string& nm, Json::Value& reader, typename repository_finder<number>::derived_product_finder& pfinder)
+    output_task<number>::output_task(const std::string& nm, Json::Value& reader, derived_product_finder<number>& pfinder)
       : task<number>(nm, reader),
         serial(0)
       {
@@ -208,20 +206,20 @@ namespace transport
         Json::Value& element_list = reader[CPPTRANSPORT_NODE_OUTPUT_ARRAY];
 		    assert(element_list.isArray());
 
-        for(Json::Value::iterator t = element_list.begin(); t != element_list.end(); ++t)
+        for(Json::Value& value : element_list)
           {
-            std::string  product_name = (*t)[CPPTRANSPORT_NODE_OUTPUT_DERIVED_PRODUCT].asString();
-            unsigned int sn           = (*t)[CPPTRANSPORT_NODE_OUTPUT_SERIAL].asUInt();
+            std::string  product_name = value[CPPTRANSPORT_NODE_OUTPUT_DERIVED_PRODUCT].asString();
+            unsigned int sn           = value[CPPTRANSPORT_NODE_OUTPUT_SERIAL].asUInt();
 
             std::list<std::string> tags;
-            Json::Value& tag_list = (*t)[CPPTRANSPORT_NODE_OUTPUTGROUP_TAGS];
+            Json::Value& tag_list = value[CPPTRANSPORT_NODE_OUTPUT_TAGS];
 
-            for(Json::Value::iterator u = tag_list.begin(); u != tag_list.end(); ++u)
+            for(Json::Value& tag : tag_list)
               {
-		            tags.push_back(u->asString());
+		            tags.push_back(tag.asString());
               }
 
-            std::unique_ptr< derived_product_record<number> > product_record(pfinder(product_name));
+            std::unique_ptr< derived_product_record<number> > product_record = pfinder(product_name);
             assert(product_record.get() != nullptr);
             derived_data::derived_product<number>* dp = product_record->get_product();
 
@@ -241,24 +239,22 @@ namespace transport
         // serialize array of task elements
         Json::Value element_list(Json::arrayValue);
 
-        for(typename std::vector< output_task_element<number> >::const_iterator t = this->elements.begin(); t != this->elements.end(); ++t)
+        for(const output_task_element<number>& ele : this->elements)
 	        {
-            Json::Value elem(Json::objectValue);
+            Json::Value record(Json::objectValue);
 
-            elem[CPPTRANSPORT_NODE_OUTPUT_DERIVED_PRODUCT] = t->get_product_name();
-            elem[CPPTRANSPORT_NODE_OUTPUT_SERIAL]          = t->get_serial();
-
-            const std::list<std::string>& tags = t->get_tags();
+            record[CPPTRANSPORT_NODE_OUTPUT_DERIVED_PRODUCT] = ele.get_product_name();
+            record[CPPTRANSPORT_NODE_OUTPUT_SERIAL]          = ele.get_serial();
 
             Json::Value tag_list(Json::objectValue);
 
-            for(std::list<std::string>::const_iterator u = tags.begin(); u != tags.end(); ++u)
+            for(const std::string& tag : ele.get_tags())
 	            {
-                Json::Value tag_element = *u;
+                Json::Value tag_element = tag;
                 tag_list.append(tag_element);
 	            }
-		        elem[CPPTRANSPORT_NODE_OUTPUTGROUP_TAGS] = tag_list;
-		        element_list.append(elem);
+		        record[CPPTRANSPORT_NODE_OUTPUT_TAGS] = tag_list;
+		        element_list.append(record);
 	        }
         writer[CPPTRANSPORT_NODE_OUTPUT_ARRAY] = element_list;
 
@@ -271,9 +267,9 @@ namespace transport
 	    {
         // check that this derived product has a distinct filename
 
-        for(typename std::vector< output_task_element<number> >::const_iterator t = this->elements.begin(); t != this->elements.end(); ++t)
+        for(const output_task_element<number>& ele : this->elements)
 	        {
-            if(t->get_product()->get_filename() == prod.get_filename())
+            if(ele.get_product().get_filename() == prod.get_filename())
 	            {
                 std::ostringstream msg;
                 msg << CPPTRANSPORT_OUTPUT_TASK_FILENAME_COLLISION_A << " " << prod.get_filename() << " "
@@ -281,7 +277,7 @@ namespace transport
                 throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
 	            }
 
-            if(t->get_product_name() == prod.get_name())
+            if(ele.get_product_name() == prod.get_name())
 	            {
                 std::ostringstream msg;
                 msg << CPPTRANSPORT_OUTPUT_TASK_NAME_COLLISION_A << " " << prod.get_name() << " "
@@ -305,15 +301,15 @@ namespace transport
 
 
 		template <typename number>
-		derived_data::derived_product<number>* output_task<number>::lookup_derived_product(const std::string& name)
+		boost::optional< typename derived_data::derived_product<number>& > output_task<number>::lookup_derived_product(const std::string& name)
 			{
-		    derived_data::derived_product<number>* rval = nullptr;
+        boost::optional< derived_data::derived_product<number>& > rval;
 
-				for(typename std::vector< output_task_element<number> >::const_iterator t = this->elements.begin(); t != this->elements.end(); ++t)
+        for(const output_task_element<number>& ele : this->elements)
 					{
-						if(t->get_product_name() == name)
+						if(ele.get_product_name() == name)
 							{
-								rval = t->get_product();
+								rval = ele.get_product();
 								break;
 							}
 					}
@@ -332,4 +328,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__output_tasks_H_
+#endif //CPPTRANSPORT_OUTPUT_TASKS_H

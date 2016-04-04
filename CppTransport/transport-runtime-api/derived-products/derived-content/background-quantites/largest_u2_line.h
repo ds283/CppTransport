@@ -40,11 +40,11 @@ namespace transport
 		      public:
 
 				    //! basic user-facing constructor
-				    largest_u2_line(const twopf_list_task<number>& tk, SQL_time_config_query tq, SQL_twopf_kconfig_query,
+				    largest_u2_line(const twopf_db_task<number>& tk, SQL_time_config_query tq, SQL_twopf_kconfig_query,
                             unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
 				    //! deserialization constructor
-				    largest_u2_line(Json::Value& reader, typename repository_finder<number>::task_finder& finder);
+				    largest_u2_line(Json::Value& reader, task_finder<number>& finder);
 
 				    //! destructor
 				    virtual ~largest_u2_line() = default;
@@ -107,7 +107,7 @@ namespace transport
 
 
 				template <typename number>
-				largest_u2_line<number>::largest_u2_line(const twopf_list_task<number>& tk, SQL_time_config_query tq, SQL_twopf_kconfig_query kq, unsigned int prec)
+				largest_u2_line<number>::largest_u2_line(const twopf_db_task<number>& tk, SQL_time_config_query tq, SQL_twopf_kconfig_query kq, unsigned int prec)
 					: derived_line<number>(tk, axis_class::time_axis, std::list<axis_value>{ axis_value::efolds_axis }, prec),
 		        time_series<number>(tk),
 		        gadget(tk),
@@ -118,7 +118,7 @@ namespace transport
 
 
 				template <typename number>
-				largest_u2_line<number>::largest_u2_line(Json::Value& reader, typename repository_finder<number>::task_finder& finder)
+				largest_u2_line<number>::largest_u2_line(Json::Value& reader, task_finder<number>& finder)
 					: derived_line<number>(reader, finder),
 		        time_series<number>(reader),
 						gadget(),

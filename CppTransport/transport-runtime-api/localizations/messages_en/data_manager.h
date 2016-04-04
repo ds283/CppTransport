@@ -69,6 +69,8 @@
 #define CPPTRANSPORT_DATAMGR_PIPE_NOT_ATTACHED                   "Data manager error: Attempt to use datapipe when no output group is attached"
 #define CPPTRANSPORT_DATAMGR_PIPE_NULL_TASK                      "Data manager error: Null task supplied when attaching datapipe"
 
+#define CPPTRANSPORT_DATAMGR_CONTAINER_NOT_EXIST                 "Data manager error: Could not find requested data container"
+
 #define CPPTRANSPORT_DATAMGR_NULL_DERIVED_PRODUCT                "Data manager error: Null derived product"
 #define CPPTRANSPORT_DATAMGR_NULL_BATCHER                        "Data manager error: Null batcher"
 
@@ -76,6 +78,8 @@
 
 #define CPPTRANSPORT_DATAMGR_TIME_SERIAL_READ_FAIL               "Data manager error: Failed to select time sample (backend code="
 #define CPPTRANSPORT_DATAMGR_KCONFIG_SERIAL_READ_FAIL            "Data manager error: Failed to select k-configuration sample (backend code="
+#define CPPTRANSPORT_DATAMGR_WORKER_TABLE_READ_FAIL              "Data manager error: Failed to read worker information table (backend code="
+#define CPPTRANSPORT_DATAMGR_STATISTICS_TABLE_READ_FAIL          "Data manager error: Failed to read statistics information table (backend code="
 
 #define CPPTRANSPORT_DATAMGR_INTEGRITY_READ_FAIL                 "Data manager error: Failure while performing integrity check (backend code="
 

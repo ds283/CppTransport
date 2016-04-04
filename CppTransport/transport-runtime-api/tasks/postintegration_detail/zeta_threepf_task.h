@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __zeta_threepf_task_H_
-#define __zeta_threepf_task_H_
+#ifndef CPPTRANSPORT_ZETA_THREEPF_TASK_H
+#define CPPTRANSPORT_ZETA_THREEPF_TASK_H
 
 
 #include "transport-runtime-api/tasks/postintegration_detail/common.h"
@@ -32,13 +32,24 @@ namespace transport
         zeta_threepf_task(const std::string& nm, const threepf_task<number>& t);
 
         //! deserialization constructor
-        zeta_threepf_task(const std::string& nm, Json::Value& reader, typename repository_finder<number>::task_finder& finder);
+        zeta_threepf_task(const std::string& nm, Json::Value& reader, task_finder<number>& finder);
 
         //! override copy constructor to reset ptk_as_threepf
         zeta_threepf_task(const zeta_threepf_task<number>& obj);
 
         //! destructor is default
         virtual ~zeta_threepf_task() = default;
+
+
+        // INTERFACE
+
+      public:
+
+        //! supply 'derivable_task' interface
+        task_type get_type() const override final { return task_type::postintegration; }
+
+        //! respond to task type query
+        postintegration_task_type get_task_type() const override final { return postintegration_task_type::threepf; }
 
 
         // INTERFACE
@@ -90,6 +101,13 @@ namespace transport
 
 
     template <typename number>
+    struct postintegration_task_traits<number, postintegration_task_type::threepf>
+      {
+        typedef zeta_threepf_task<number> task_type;
+      };
+
+
+    template <typename number>
     zeta_threepf_task<number>::zeta_threepf_task(const std::string& nm, const threepf_task<number>& t)
 	    : zeta_twopf_list_task<number>(nm, t),
 	      ptk_as_threepf(nullptr),
@@ -103,7 +121,7 @@ namespace transport
 
 
     template <typename number>
-    zeta_threepf_task<number>::zeta_threepf_task(const std::string& nm, Json::Value& reader, typename repository_finder<number>::task_finder& finder)
+    zeta_threepf_task<number>::zeta_threepf_task(const std::string& nm, Json::Value& reader, task_finder<number>& finder)
 	    : zeta_twopf_list_task<number>(nm, reader, finder),
 	      ptk_as_threepf(nullptr)
 	    {
@@ -141,4 +159,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__zeta_threepf_task_H_
+#endif //CPPTRANSPORT_ZETA_THREEPF_TASK_H

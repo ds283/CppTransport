@@ -18,7 +18,7 @@
 #include "transport-runtime-api/serialization/serializable.h"
 
 // get details of datapipe<number>
-#include "transport-runtime-api/data/datapipe/datapipe.h"
+#include "transport-runtime-api/data/datapipe/datapipe_decl.h"
 
 // forward-declare model class if needed
 #include "transport-runtime-api/models/model_forward_declare.h"
@@ -64,7 +64,7 @@ namespace transport
 		        threepf_line(const threepf_task<number>& tk, index_selector<3>& sel);
 
 		        //! Deserialization constructor
-		        threepf_line(Json::Value& reader, typename repository_finder<number>::task_finder& finder);
+		        threepf_line(Json::Value& reader, task_finder<number>& finder);
 
 		        virtual ~threepf_line() = default;
 
@@ -169,7 +169,7 @@ namespace transport
 
 
 		    template <typename number>
-		    threepf_line<number>::threepf_line(Json::Value& reader, typename repository_finder<number>::task_finder& finder)
+		    threepf_line<number>::threepf_line(Json::Value& reader, task_finder<number>& finder)
 			    : derived_line<number>(reader),  // not called because of virtual inheritance; here to silence Intel compiler warning
 			      gadget(),
 			      active_indices(reader)

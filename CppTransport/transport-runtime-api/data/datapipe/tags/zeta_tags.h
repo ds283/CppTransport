@@ -393,7 +393,7 @@ namespace transport
 #endif
 
         timing_instrument timer(this->pipe->database_timer);
-        this->pipe->pull_timeslice.zeta_twopf(this->pipe, query, this->kdata.serial, sample);
+        this->pipe->data_mgr.pull_zeta_twopf_time_sample(this->pipe, query, this->kdata.serial, sample);
 	    }
 
 
@@ -408,7 +408,7 @@ namespace transport
 #endif
 
         timing_instrument timer(this->pipe->database_timer);
-        this->pipe->pull_timeslice.zeta_threepf(this->pipe, query, this->kdata.serial, sample);
+        this->pipe->data_mgr.pull_zeta_threepf_time_sample(this->pipe, query, this->kdata.serial, sample);
 	    }
 
 
@@ -423,7 +423,7 @@ namespace transport
 #endif
 
         timing_instrument timer(this->pipe->database_timer);
-        this->pipe->pull_timeslice.zeta_redbsp(this->pipe, query, this->kdata.serial, sample);
+        this->pipe->data_mgr.pull_zeta_redbsp_time_sample(this->pipe, query, this->kdata.serial, sample);
 	    }
 
 
@@ -438,7 +438,7 @@ namespace transport
 #endif
 
         timing_instrument timer(this->pipe->database_timer);
-        this->pipe->pull_kslice.zeta_twopf(this->pipe, query, this->tserial, sample);
+        this->pipe->data_mgr.pull_zeta_twopf_kconfig_sample(this->pipe, query, this->tserial, sample);
 	    }
 
 
@@ -453,7 +453,7 @@ namespace transport
 #endif
 
         timing_instrument timer(this->pipe->database_timer);
-        this->pipe->pull_kslice.zeta_threepf(this->pipe, query, this->tserial, sample);
+        this->pipe->data_mgr.pull_zeta_threepf_kconfig_sample(this->pipe, query, this->tserial, sample);
 	    }
 
 
@@ -468,7 +468,7 @@ namespace transport
 #endif
 
         timing_instrument timer(this->pipe->database_timer);
-        this->pipe->pull_kslice.zeta_redbsp(this->pipe, query, this->tserial, sample);
+        this->pipe->data_mgr.pull_zeta_redbsp_kconfig_sample(this->pipe, query, this->tserial, sample);
 	    }
 
 

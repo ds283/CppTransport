@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __line_asciitable_H_
-#define __line_asciitable_H_
+#ifndef CPPTRANSPORT_PRODUCT_LINE_ASCIITABLE_H
+#define CPPTRANSPORT_PRODUCT_LINE_ASCIITABLE_H
 
 
 #include <iostream>
@@ -64,9 +64,17 @@ namespace transport
 					    }
 
 				    //! Deserialization constructor
-				    line_asciitable(const std::string& name, Json::Value& reader, typename repository_finder<number>::task_finder finder);
+				    line_asciitable(const std::string& name, Json::Value& reader, task_finder<number> finder);
 
 				    virtual ~line_asciitable() = default;
+
+
+            // INTERFACE -- DERIVED PRODUCT
+
+          public:
+
+            //! Get type of this derived data product
+            derived_product_type get_type() const override final { return(derived_product_type::line_table); }
 
 
 		        // LINE MANAGEMENT
@@ -82,13 +90,15 @@ namespace transport
 		      public:
 
 						//! Generate our derived output
-		        virtual std::list<std::string> derive(datapipe<number>& pipe, const std::list<std::string>& tags, local_environment& env) override;
+		        virtual std::list<std::string> derive(datapipe<number>& pipe, const std::list<std::string>& tags, local_environment& env, argument_cache& args) override;
 
 
 		      protected:
 
 				    //! Make table
-		        void make_table(datapipe<number>& pipe, const std::deque<double>& axis, const typename std::vector< typename line_collection<number>::output_line >& data) const;
+            void make_table(datapipe<number>& pipe, const std::deque<double>& axis,
+                            const typename std::vector<typename line_collection<number>::output_line>& data,
+                            local_environment& env, argument_cache& args) const;
 
 
 		        // GET AND SET BASIC TABLE ATTRIBUTES
@@ -156,7 +166,7 @@ namespace transport
 
 
 				template <typename number>
-				line_asciitable<number>::line_asciitable(const std::string& name, Json::Value& reader, typename repository_finder<number>::task_finder finder)
+				line_asciitable<number>::line_asciitable(const std::string& name, Json::Value& reader, task_finder<number> finder)
 					: line_collection<number>(name, reader, finder)
 					{
 						precision   = reader[CPPTRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_ROOT][CPPTRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_PRECISION].asUInt();
@@ -166,7 +176,7 @@ namespace transport
 
 
 				template <typename number>
-				std::list<std::string> line_asciitable<number>::derive(datapipe<number>& pipe, const std::list<std::string>& tags, local_environment& env)
+				std::list<std::string> line_asciitable<number>::derive(datapipe<number>& pipe, const std::list<std::string>& tags, local_environment& env, argument_cache& args)
 					{
 						// generate output from our constituent lines
 				    std::list< data_line<number> > derived_lines;
@@ -178,7 +188,7 @@ namespace transport
 						this->merge_lines(pipe, derived_lines, axis, output_lines);
 
 						// make table
-						this->make_table(pipe, axis, output_lines);
+						this->make_table(pipe, axis, output_lines, env, args);
 
             // get output groups which were used
             std::list<std::string> used_groups = this->extract_output_groups(derived_lines);
@@ -191,7 +201,9 @@ namespace transport
 
 
 				template <typename number>
-				void line_asciitable<number>::make_table(datapipe<number>& pipe, const std::deque<double>& axis, const typename std::vector< typename line_collection<number>::output_line >& data) const
+        void line_asciitable<number>::make_table(datapipe<number>& pipe, const std::deque<double>& axis,
+                                                 const typename std::vector<typename line_collection<number>::output_line>& data,
+                                                 local_environment& env, argument_cache& args) const
 					{
 						// extract paths from the datapipe
 				    boost::filesystem::path temp_root = pipe.get_abs_tempdir_path();
@@ -204,29 +216,28 @@ namespace transport
 
 						if(out.is_open())
 							{
-						    asciitable<number> writer(out);
+						    asciitable writer(out, env, args);
 						    writer.set_precision(this->precision);
 								writer.set_wrap_status(false);    // don't want to wrap the content
 
 								// copy labels into vector of labels
 						    std::vector<std::string> labels;
-						    for(typename std::vector< typename line_collection<number>::output_line >::const_iterator t = data.begin(); t != data.end(); ++t)
+						    for(const typename line_collection<number>::output_line& line : data)
 							    {
-								    labels.push_back((*t).get_label());
+								    labels.push_back(line.get_label());
 							    }
 
 								// copy axis deque into the vector expected by asciitable
 						    std::vector<double> x;
 						    std::copy(axis.begin(), axis.end(), std::back_inserter(x));
 
-								// copy values into array ys.
-								// the outer array runs over time
-								// the inner array runs over lines
-						    std::vector< std::vector<number> > ys(x.size());
+								// copy values into array ys
+                // the entries in ys are stored columnwise
+						    std::vector< std::vector<number> > ys(labels.size());
 
 								for(unsigned int j = 0; j < ys.size(); ++j)
 									{
-										ys[j].resize(data.size());
+										ys[j].resize(x.size());
 									}
 
 								for(unsigned int i = 0; i < data.size(); ++i)
@@ -237,7 +248,7 @@ namespace transport
 
 										for(unsigned int j = 0; j < values.size(); ++j)
 											{
-												ys[j][i] = values[j].format_number();
+												ys[i][j] = values[j].format_number();
 											}
 									}
 
@@ -297,4 +308,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__line_asciitable_H_
+#endif //CPPTRANSPORT_PRODUCT_LINE_ASCIITABLE_H

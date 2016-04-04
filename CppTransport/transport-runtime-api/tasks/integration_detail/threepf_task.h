@@ -12,7 +12,7 @@
 
 #include "transport-runtime-api/tasks/integration_detail/common.h"
 #include "transport-runtime-api/tasks/integration_detail/abstract.h"
-#include "transport-runtime-api/tasks/integration_detail/twopf_list_task.h"
+#include "transport-runtime-api/tasks/integration_detail/twopf_db_task.h"
 #include "transport-runtime-api/tasks/integration_detail/default_policies.h"
 #include "transport-runtime-api/tasks/configuration-database/threepf_config_database.h"
 
@@ -25,22 +25,23 @@
 #include "sqlite3.h"
 
 
-#define CPPTRANSPORT_NODE_THREEPF_INTEGRABLE            "integrable"
-
-#define CPPTRANSPORT_NODE_THREEPF_CUBIC_SPACING         "k-spacing"
-#define CPPTRANSPORT_NODE_THREEPF_FLS_KT_SPACING        "kt-spacing"
-#define CPPTRANSPORT_NODE_THREEPF_FLS_ALPHA_SPACING     "alpha-spacing"
-#define CPPTRANSPORT_NODE_THREEPF_FLS_BETA_SPACING      "beta-spacing"
 
 
 namespace transport
 	{
 
+    constexpr auto CPPTRANSPORT_NODE_THREEPF_INTEGRABLE = "integrable";
+
+    constexpr auto CPPTRANSPORT_NODE_THREEPF_CUBIC_SPACING = "k-spacing";
+    constexpr auto CPPTRANSPORT_NODE_THREEPF_FLS_KT_SPACING = "kt-spacing";
+    constexpr auto CPPTRANSPORT_NODE_THREEPF_FLS_ALPHA_SPACING = "alpha-spacing";
+    constexpr auto CPPTRANSPORT_NODE_THREEPF_FLS_BETA_SPACING = "beta-spacing";
+
 		enum class threepf_ics_exit_type { smallest_wavenumber_exit, kt_wavenumber_exit};
 
     // three-point function task
     template <typename number>
-    class threepf_task: public twopf_list_task<number>
+    class threepf_task: public twopf_db_task<number>
 	    {
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -55,6 +56,17 @@ namespace transport
 
         //! Destroy a three-point function task
         virtual ~threepf_task() = default;
+
+
+        // INTERFACE
+
+      public:
+
+        //! supply 'derivable_task' interface
+        task_type get_type() const override final { return task_type::integration; }
+
+        //! respond to task type query
+        integration_task_type get_task_type() const override final { return integration_task_type::threepf; }
 
 
         // INTERFACE - THREEPF K-CONFIGURATIONS
@@ -109,7 +121,7 @@ namespace transport
       public:
 
         //! Get start time for a threepf configuration
-        double get_fast_forward_start(const threepf_kconfig& config) const;
+        double get_initial_time(const threepf_kconfig& config) const;
 
         //! Set fast-forward integration setting
         virtual void set_fast_forward(bool g) override { this->fast_forward = g; this->validate_subhorizon_efolds(); this->cache_stored_time_config_database(this->threepf_db->get_kmax_2pf_conventional()); }
@@ -134,7 +146,7 @@ namespace transport
         virtual void write_kconfig_database(sqlite3* handle) override;
 
 		    //! Check whether k-configuration databases have been modified
-		    virtual bool is_kconfig_database_modified() const override { return(this->threepf_db->is_modified() || this->twopf_list_task<number>::is_kconfig_database_modified()); }
+		    virtual bool is_kconfig_database_modified() const override { return(this->threepf_db->is_modified() || this->twopf_db_task<number>::is_kconfig_database_modified()); }
 
 
         // INTERNAL DATA
@@ -156,19 +168,26 @@ namespace transport
 
 
     template <typename number>
+    struct integration_task_traits<number, integration_task_type::threepf>
+      {
+        typedef threepf_task<number> task_type;
+      };
+
+
+    template <typename number>
     threepf_task<number>::threepf_task(const std::string& nm, const initial_conditions<number>& i, range<double>& t, bool ff)
-	    : twopf_list_task<number>(nm, i, t, ff),
+	    : twopf_db_task<number>(nm, i, t, ff),
 	      integrable(true)
 	    {
-        threepf_db = std::make_shared<threepf_kconfig_database>(this->twopf_list_task<number>::kstar);
+        threepf_db = std::make_shared<threepf_kconfig_database>(this->twopf_db_task<number>::kstar);
 	    }
 
 
     template <typename number>
     threepf_task<number>::threepf_task(const std::string& nm, Json::Value& reader, sqlite3* handle, const initial_conditions<number>& i)
-	    : twopf_list_task<number>(nm, reader, handle, i)
+	    : twopf_db_task<number>(nm, reader, handle, i)
 	    {
-		    threepf_db = std::make_shared<threepf_kconfig_database>(this->twopf_list_task<number>::kstar, handle, *this->twopf_list_task<number>::twopf_db);
+		    threepf_db = std::make_shared<threepf_kconfig_database>(this->twopf_db_task<number>::kstar, handle, *this->twopf_db_task<number>::twopf_db);
 
         //! deserialize integrable status
         integrable = reader[CPPTRANSPORT_NODE_THREEPF_INTEGRABLE].asBool();
@@ -187,14 +206,14 @@ namespace transport
 		    // threepf database is serialized separately to a SQLite database
         // this serialization is handled by the repository layer via write_kconfig_database() below
 
-        this->twopf_list_task<number>::serialize(writer);
+        this->twopf_db_task<number>::serialize(writer);
 	    }
 
 
 		template <typename number>
 		void threepf_task<number>::write_kconfig_database(sqlite3* handle)
 			{
-		    this->twopf_list_task<number>::write_kconfig_database(handle);
+		    this->twopf_db_task<number>::write_kconfig_database(handle);
 				this->threepf_db->write(handle);
 			}
 
@@ -202,24 +221,21 @@ namespace transport
     template <typename number>
     const time_config_database threepf_task<number>::get_time_config_database(const threepf_kconfig& config) const
       {
-        return this->build_time_config_database(this->get_fast_forward_start(config), this->threepf_db->get_kmax_2pf_conventional());
+        return this->build_time_config_database(this->get_initial_time(config), this->threepf_db->get_kmax_2pf_conventional());
       }
 
 
     template <typename number>
-    double threepf_task<number>::get_fast_forward_start(const threepf_kconfig& config) const
+    double threepf_task<number>::get_initial_time(const threepf_kconfig& config) const
       {
-        double kmin = std::min(std::min(config.k1_conventional, config.k2_conventional), config.k3_conventional);
-
-        twopf_kconfig_database::record_iterator rec;
-		    if(!this->twopf_db->find(kmin, rec))
+        if(this->fast_forward)
           {
-            std::ostringstream msg;
-            msg << CPPTRANSPORT_TASK_THREEPF_DATABASE_MISS << " " << kmin;
-            throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
+            return(config.t_massless - this->ff_efolds);
           }
-
-        return((*rec)->t_exit - this->ff_efolds);
+        else
+          {
+            return(this->ics.get_N_initial());
+          }
       }
 
 
@@ -228,7 +244,7 @@ namespace transport
 	    {
         if(this->fast_forward)
           {
-            return this->integration_task<number>::get_ics_vector(this->get_fast_forward_start(config));
+            return this->integration_task<number>::get_ics_vector(this->get_initial_time(config));
           }
         else
           {
@@ -288,19 +304,25 @@ namespace transport
 
         std::vector<double> N;
         std::vector<number> log_aH;
+        std::vector<number> log_a2H2M;
 
         try
           {
             double maxk = std::max(std::max(largest_kt, largest_k1), largest_k2);
-            this->get_model()->compute_aH(this, N, log_aH, maxk);
+            this->get_model()->compute_aH(this, N, log_aH, log_a2H2M, maxk);
             assert(N.size() == log_aH.size());
+            assert(N.size() == log_a2H2M.size());
 
-            spline1d<number> sp(N, log_aH);
+            spline1d<number> log_aH_sp(N, log_aH);
+            spline1d<number> log_a2H2M_sp(N, log_a2H2M);
 
-            this->threepf_compute_horizon_exit_times(sp, task_impl::TolerancePredicate(CPPTRANSPORT_ROOT_FIND_TOLERANCE));
+            // forward to underlying twopf_db_task to update its database;
+            // should be done *before* computing horizon exit times for threepfs, so that horizon exit & massless times
+            // for the corresponding twopfs are known
+            this->twopf_db_task<number>::twopf_compute_horizon_exit_times(log_aH_sp, log_a2H2M_sp, task_impl::TolerancePredicate(CPPTRANSPORT_ROOT_FIND_TOLERANCE));
 
-            // forward to underlying twopf_list_task to also update its database
-            this->twopf_list_task<number>::twopf_compute_horizon_exit_times(sp, task_impl::TolerancePredicate(CPPTRANSPORT_ROOT_FIND_TOLERANCE));
+            // compute horizon exit times & massless times for threepf configuraitons
+            this->threepf_compute_horizon_exit_times(log_aH_sp, task_impl::TolerancePredicate(CPPTRANSPORT_ROOT_FIND_TOLERANCE));
           }
         catch(failed_to_compute_horizon_exit& xe)
           {
@@ -321,6 +343,33 @@ namespace transport
 
             // update database record with computed exit time
             t->t_exit = task_impl::find_zero_of_spline(sp, tol);
+
+            // determine massless time from pre-computed massless times of corresponding twopf database
+            twopf_kconfig_database::record_iterator rec1;
+            if(!this->twopf_db->find(t->k1_conventional, rec1))
+              {
+                std::ostringstream msg;
+                msg << CPPTRANSPORT_TASK_THREEPF_DATABASE_MISS << " " << t->k1_conventional;
+                throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
+              }
+
+            twopf_kconfig_database::record_iterator rec2;
+            if(!this->twopf_db->find(t->k2_conventional, rec2))
+              {
+                std::ostringstream msg;
+                msg << CPPTRANSPORT_TASK_THREEPF_DATABASE_MISS << " " << t->k2_conventional;
+                throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
+              }
+
+            twopf_kconfig_database::record_iterator rec3;
+            if(!this->twopf_db->find(t->k3_conventional, rec3))
+              {
+                std::ostringstream msg;
+                msg << CPPTRANSPORT_TASK_THREEPF_DATABASE_MISS << " " << t->k3_conventional;
+                throw runtime_exception(exception_type::RUNTIME_ERROR, msg.str());
+              }
+
+            t->t_massless = std::min(std::min((*rec1)->t_massless, (*rec2)->t_massless), (*rec3)->t_massless);
 			    }
 			}
 
@@ -398,7 +447,7 @@ namespace transport
 	                {
                     if(triangle(j, k, l, ks[j], ks[k], ks[l]))      // ask policy object whether this is a triangle
 	                    {
-                        boost::optional<unsigned int> new_serial = this->threepf_task<number>::threepf_db->add_k1k2k3_record(*this->twopf_list_task<number>::twopf_db, ks[j], ks[k], ks[l], policy);
+                        boost::optional<unsigned int> new_serial = this->threepf_task<number>::threepf_db->add_k1k2k3_record(*this->twopf_db_task<number>::twopf_db, ks[j], ks[k], ks[l], policy);
 
                         if(!new_serial)  // configuration was not stored
                           {
@@ -413,8 +462,10 @@ namespace transport
         if(!ks.is_simple_linear()) this->threepf_task<number>::integrable = false;
         spacing = (ks.get_max() - ks.get_min())/ks.get_steps();
 
-        std::cout << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_THREEPF_ELEMENTS_A << " " << this->threepf_db->size() << " "
-          << CPPTRANSPORT_TASK_THREEPF_ELEMENTS_B << " " << this->twopf_db->size() << " " <<CPPTRANSPORT_TASK_THREEPF_ELEMENTS_C << '\n';
+        std::ostringstream msg;
+        msg << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_THREEPF_ELEMENTS_A << " " << this->threepf_db->size() << " "
+          << CPPTRANSPORT_TASK_THREEPF_ELEMENTS_B << " " << this->twopf_db->size() << " " << CPPTRANSPORT_TASK_THREEPF_ELEMENTS_C;
+        this->get_model()->message(msg.str());
 
         this->compute_horizon_exit_times();
 
@@ -538,8 +589,10 @@ namespace transport
         alpha_spacing = (alphas.get_max() - alphas.get_min()) / alphas.get_steps();
         beta_spacing  = (betas.get_max() - betas.get_min()) / betas.get_steps();
 
-        std::cout << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_THREEPF_ELEMENTS_A << " " << this->threepf_db->size() << " "
+        std::ostringstream msg;
+        msg << "'" << this->get_name() << "': " << CPPTRANSPORT_TASK_THREEPF_ELEMENTS_A << " " << this->threepf_db->size() << " "
           << CPPTRANSPORT_TASK_THREEPF_ELEMENTS_B << " " << this->twopf_db->size() << " " <<CPPTRANSPORT_TASK_THREEPF_ELEMENTS_C << '\n';
+        this->get_model()->message(msg.str());
 
         this->compute_horizon_exit_times();
 

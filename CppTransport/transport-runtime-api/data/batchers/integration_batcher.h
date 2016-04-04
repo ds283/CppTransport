@@ -77,12 +77,17 @@ namespace transport
 
       public:
 
+        //! constructor
         template <typename handle_type>
         integration_batcher(unsigned int cap, unsigned int ckp, model<number>* m,
                             const boost::filesystem::path& cp, const boost::filesystem::path& lp,
-                            container_dispatch_function d, container_replacement_function r,
+                            std::unique_ptr<container_dispatch_function> d, std::unique_ptr<container_replace_function> r,
                             handle_type h, unsigned int w, unsigned int g=0, bool ics=false);
 
+        //! move constructor
+        integration_batcher(integration_batcher<number>&&) = default;
+
+        //! destructor is default
         virtual ~integration_batcher() = default;
 
 
@@ -300,12 +305,19 @@ namespace transport
 
       public:
 
+        //! constructor
         template <typename handle_type>
         twopf_batcher(unsigned int cap, unsigned int ckp, model<number>* m, twopf_task<number>* tk,
                       const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                       const writer_group& w,
-                      generic_batcher::container_dispatch_function d, generic_batcher::container_replacement_function r,
+                      std::unique_ptr<container_dispatch_function> d, std::unique_ptr<container_replace_function> r,
                       handle_type h, unsigned int wn, unsigned int wg);
+
+        //! move constructor
+        twopf_batcher(twopf_batcher<number>&&) = default;
+
+        //! destructor is default
+        virtual ~twopf_batcher() = default;
 
 
         // ADMINISTRATION
@@ -368,7 +380,7 @@ namespace transport
 
         virtual size_t storage() const override;
 
-        virtual void flush(generic_batcher::replacement_action action) override;
+        virtual void flush(replacement_action action) override;
 
 
         // INTERNAL DATA
@@ -431,12 +443,19 @@ namespace transport
 
       public:
 
+        //! constructor
         template <typename handle_type>
         threepf_batcher(unsigned int cap, unsigned int ckp, model<number>* m, threepf_task<number>* tk,
                         const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                         const writer_group& w,
-                        generic_batcher::container_dispatch_function d, generic_batcher::container_replacement_function r,
+                        std::unique_ptr<container_dispatch_function> d, std::unique_ptr<container_replace_function> r,
                         handle_type h, unsigned int wn, unsigned int wg);
+
+        //! move constructor
+        threepf_batcher(threepf_batcher<number>&&) = default;
+
+        //! destructor is default
+        virtual ~threepf_batcher() = default;
 
 
         // INTEGRATION MANAGEMENT
@@ -514,7 +533,7 @@ namespace transport
 
         virtual size_t storage() const override;
 
-        virtual void flush(generic_batcher::replacement_action action) override;
+        virtual void flush(replacement_action action) override;
 
 
         // INTERNAL DATA
@@ -579,9 +598,9 @@ namespace transport
     template <typename handle_type>
     integration_batcher<number>::integration_batcher(unsigned int cap, unsigned int ckp, model<number>* m,
                                                      const boost::filesystem::path& cp, const boost::filesystem::path& lp,
-                                                     container_dispatch_function d, container_replacement_function r,
+                                                     std::unique_ptr<container_dispatch_function> d, std::unique_ptr<container_replace_function> r,
                                                      handle_type h, unsigned int w, unsigned int g, bool ics)
-	    : generic_batcher(cap, ckp, cp, lp, d, r, h, w, g),
+	    : generic_batcher(cap, ckp, cp, lp, std::move(d), std::move(r), h, w, g),
         Nfields(m->get_N_fields()),
         mdl(m),
 	      num_integrations(0),
@@ -790,9 +809,9 @@ namespace transport
     template <typename handle_type>
     twopf_batcher<number>::twopf_batcher(unsigned int cap, unsigned int ckp, model<number>* m, twopf_task<number>* tk,
                                          const boost::filesystem::path& cp, const boost::filesystem::path& lp, const writer_group& w,
-                                         generic_batcher::container_dispatch_function d, generic_batcher::container_replacement_function r,
+                                         std::unique_ptr<container_dispatch_function> d, std::unique_ptr<container_replace_function> r,
                                          handle_type h, unsigned int wn, unsigned int wg)
-	    : integration_batcher<number>(cap, ckp, m, cp, lp, d, r, h, wn, wg, tk->get_collect_initial_conditions()),
+	    : integration_batcher<number>(cap, ckp, m, cp, lp, std::move(d), std::move(r), h, wn, wg, tk->get_collect_initial_conditions()),
 	      writers(w),
         paired_batcher(nullptr),
         parent_task(tk),
@@ -870,7 +889,7 @@ namespace transport
 
 
     template <typename number>
-    void twopf_batcher<number>::flush(generic_batcher::replacement_action action)
+    void twopf_batcher<number>::flush(replacement_action action)
 	    {
         BOOST_LOG_SEV(this->get_log(), generic_batcher::log_severity_level::normal) << "** Flushing twopf batcher (capacity=" << format_memory(this->capacity) << ") of size " << format_memory(this->storage());
 
@@ -897,10 +916,10 @@ namespace transport
         // note that the order of calls to 'dispatcher' and 'replacer' is important
         // because 'dispatcher' needs the current path name, not the one created by
         // 'replacer'
-        this->dispatcher(this);
+        (*this->dispatcher)(*this);
 
         // close current container, and replace with a new one if required
-        this->replacer(this, action);
+        (*this->replacer)(*this, action);
 
         // pass flush notification down to generic batcher (eg. resets checkpoint timer)
         this->generic_batcher::flush(action);
@@ -970,9 +989,9 @@ namespace transport
     template <typename handle_type>
     threepf_batcher<number>::threepf_batcher(unsigned int cap, unsigned int ckp, model<number>* m, threepf_task<number>* tk,
                                              const boost::filesystem::path& cp, const boost::filesystem::path& lp, const writer_group& w,
-                                             generic_batcher::container_dispatch_function d, generic_batcher::container_replacement_function r,
+                                             std::unique_ptr<container_dispatch_function> d, std::unique_ptr<container_replace_function> r,
                                              handle_type h, unsigned int wn, unsigned int wg)
-	    : integration_batcher<number>(cap, ckp, m, cp, lp, d, r, h, wn, wg, tk->get_collect_initial_conditions()),
+	    : integration_batcher<number>(cap, ckp, m, cp, lp, std::move(d), std::move(r), h, wn, wg, tk->get_collect_initial_conditions()),
 	      writers(w),
         paired_batcher(nullptr),
         parent_task(tk),
@@ -1172,7 +1191,7 @@ namespace transport
 
 
     template <typename number>
-    void threepf_batcher<number>::flush(generic_batcher::replacement_action action)
+    void threepf_batcher<number>::flush(replacement_action action)
 	    {
         BOOST_LOG_SEV(this->get_log(), generic_batcher::log_severity_level::normal) << "** Flushing threepf batcher (capacity=" << format_memory(this->capacity) << ") of size " << format_memory(this->storage());
 
@@ -1207,10 +1226,10 @@ namespace transport
         // note that the order of calls to 'dispatcher' and 'replacer' is important
         // because 'dispatcher' needs the current path name, not the one created by
         // 'replacer'
-        this->dispatcher(this);
+        (*this->dispatcher)(*this);
 
         // close current container, and replace with a new one if required
-        this->replacer(this, action);
+        (*this->replacer)(*this, action);
 
         // pass flush notification down to generic batcher (eg. resets checkpoint timer)
         this->generic_batcher::flush(action);

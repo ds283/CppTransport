@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __zeta_twopf_list_task_H_
-#define __zeta_twopf_list_task_H_
+#ifndef CPPTRANSPORT_ZETA_TWOPF_LIST_TASK_H
+#define CPPTRANSPORT_ZETA_TWOPF_LIST_TASK_H
 
 
 #include "transport-runtime-api/tasks/postintegration_detail/common.h"
@@ -26,10 +26,10 @@ namespace transport
       public:
 
         //! construct a zeta_twopf_list task
-        zeta_twopf_list_task(const std::string& nm, const twopf_list_task<number>& t);
+        zeta_twopf_list_task(const std::string& nm, const twopf_db_task<number>& t);
 
         //! deserialization constructor
-        zeta_twopf_list_task(const std::string& nm, Json::Value& reader, typename repository_finder<number>::task_finder& finder);
+        zeta_twopf_list_task(const std::string& nm, Json::Value& reader, task_finder<number>& finder);
 
         //! override copy constructor to reset ptk_as_twopf_list
         zeta_twopf_list_task(const zeta_twopf_list_task<number>& obj);
@@ -59,17 +59,17 @@ namespace transport
 
         //! cast-up version of parent task
         //! TODO: it would be preferable to avoid this somehow
-        twopf_list_task<number>* ptk_as_twopf_list;
+        twopf_db_task<number>* ptk_as_twopf_list;
 
 	    };
 
 
     template <typename number>
-    zeta_twopf_list_task<number>::zeta_twopf_list_task(const std::string& nm, const twopf_list_task<number>& t)
+    zeta_twopf_list_task<number>::zeta_twopf_list_task(const std::string& nm, const twopf_db_task<number>& t)
 	    : postintegration_task<number>(nm, t),
 	      ptk_as_twopf_list(nullptr)
 	    {
-        ptk_as_twopf_list = dynamic_cast< twopf_list_task<number>* >(this->ptk);
+        ptk_as_twopf_list = dynamic_cast< twopf_db_task<number>* >(this->ptk);
         assert(ptk_as_twopf_list != nullptr);
 
         if(ptk_as_twopf_list == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_ZETA_TWOPF_LIST_CAST_FAIL);
@@ -77,11 +77,11 @@ namespace transport
 
 
     template <typename number>
-    zeta_twopf_list_task<number>::zeta_twopf_list_task(const std::string& nm, Json::Value& reader, typename repository_finder<number>::task_finder& finder)
+    zeta_twopf_list_task<number>::zeta_twopf_list_task(const std::string& nm, Json::Value& reader, task_finder<number>& finder)
 	    : postintegration_task<number>(nm, reader, finder),
 	      ptk_as_twopf_list(nullptr)
 	    {
-        ptk_as_twopf_list = dynamic_cast< twopf_list_task<number>* >(this->ptk);
+        ptk_as_twopf_list = dynamic_cast< twopf_db_task<number>* >(this->ptk);
         assert(ptk_as_twopf_list != nullptr);
 
         if(ptk_as_twopf_list == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_ZETA_TWOPF_LIST_CAST_FAIL);
@@ -93,7 +93,7 @@ namespace transport
 	    : postintegration_task<number>(obj),
 	      ptk_as_twopf_list(nullptr)
 	    {
-        ptk_as_twopf_list = dynamic_cast< twopf_list_task<number>* >(this->ptk);
+        ptk_as_twopf_list = dynamic_cast< twopf_db_task<number>* >(this->ptk);
         assert(ptk_as_twopf_list != nullptr);
 
         if(ptk_as_twopf_list == nullptr) throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_ZETA_TWOPF_LIST_CAST_FAIL);
@@ -109,4 +109,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__zeta_twopf_list_task_H_
+#endif //CPPTRANSPORT_ZETA_TWOPF_LIST_TASK_H

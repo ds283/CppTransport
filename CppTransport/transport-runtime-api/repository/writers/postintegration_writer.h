@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __postintegration_writer_H_
-#define __postintegration_writer_H_
+#ifndef CPPTRANSPORT_POSTINTEGRATION_WRITER_H
+#define CPPTRANSPORT_POSTINTEGRATION_WRITER_H
 
 
 #include <iostream>
@@ -20,7 +20,7 @@
 
 #include "transport-runtime-api/derived-products/derived-content/correlation-functions/template_types.h"
 
-#include "transport-runtime-api/repository/records/repository_records.h"
+#include "transport-runtime-api/repository/records/repository_records_decl.h"
 #include "transport-runtime-api/repository/writers/generic_writer.h"
 
 #include "boost/log/core.hpp"
@@ -35,6 +35,114 @@
 namespace transport
 	{
 
+    // forward-declare postintegration writer
+    template <typename number> class postintegration_writer;
+
+    //! Commit object
+    template <typename number>
+    class postintegration_writer_commit
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! constructor is default
+        postintegration_writer_commit() = default;
+
+        //! destructor is default
+        virtual ~postintegration_writer_commit() = default;
+
+
+        // INTERFACE
+
+      public:
+
+        //! commit
+        virtual void operator()(postintegration_writer<number>& writer) = 0;
+
+      };
+
+
+
+    //! Abort object
+    template <typename number>
+    class postintegration_writer_abort
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! constructor is default
+        postintegration_writer_abort() = default;
+
+        //! destructor is default
+        virtual ~postintegration_writer_abort() = default;
+
+
+        // INTERFACE
+
+      public:
+
+        //! abort
+        virtual void operator()(postintegration_writer<number>& writer) = 0;
+
+      };
+
+
+    //! Aggregation object
+    template <typename number>
+    class postintegration_writer_aggregate
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! constructor is default
+        postintegration_writer_aggregate() = default;
+
+        //! destructor is default
+        virtual ~postintegration_writer_aggregate() = default;
+
+
+        // INTERFACE
+
+      public:
+
+        //! aggregate
+        virtual bool operator()(postintegration_writer<number>& writer, const std::string& product) = 0;
+
+      };
+
+
+    //! Integrity-check object
+    template <typename number>
+    class postintegration_writer_integrity
+      {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+      public:
+
+        //! constructor is default
+        postintegration_writer_integrity() = default;
+
+        //! destructor is default
+        virtual ~postintegration_writer_integrity() = default;
+
+
+        // INTERFACE
+
+      public:
+
+        //! check integrity
+        virtual void operator()(postintegration_writer<number>& writer, postintegration_task<number>* task) = 0;
+
+      };
+
+
     // WRITER FOR POSTINTEGRATION OUTPUT
 
     //! Postintegration writer: used to commit postprocessing of integration output to the database
@@ -42,35 +150,15 @@ namespace transport
     class postintegration_writer: public generic_writer
 	    {
 
-      public:
-
-        //! Define a commit callback object. Used to commit data products to the repository
-        typedef std::function<void(postintegration_writer<number>&)> commit_callback;
-
-        //! Define an abort callback object. Used to abort storage of data products
-        typedef std::function<void(postintegration_writer<number>&)> abort_callback;
-
-        //! Define an aggregation callback object. Used to aggregate results from worker processes
-        typedef std::function<bool(postintegration_writer<number>&, const std::string&)> aggregate_callback;
-
-        //! Define an integrity check callback object.
-        typedef std::function<void(postintegration_writer<number>&, postintegration_task<number>*)> integrity_callback;
-
-        class callback_group
-	        {
-          public:
-            commit_callback commit;
-            abort_callback  abort;
-	        };
-
-
         // CONSTRUCTOR, DESTRUCTOR
 
       public:
 
         //! Construct a postintegration writer object.
         //! After creation it must be initialized by a suitable data_manager
-        postintegration_writer(const std::string& n, postintegration_task_record<number>* rec, const callback_group& c,
+        postintegration_writer(const std::string& n, postintegration_task_record<number>& rec,
+                               std::unique_ptr< postintegration_writer_commit<number> > c,
+                               std::unique_ptr< postintegration_writer_abort<number> > a,
                                const typename generic_writer::metadata_group& m, const typename generic_writer::paths_group& p,
                                unsigned int w);
 
@@ -86,7 +174,7 @@ namespace transport
       public:
 
         //! Set aggregator
-        void set_aggregation_handler(aggregate_callback c) { this->aggregator = c; }
+        void set_aggregation_handler(std::unique_ptr< postintegration_writer_aggregate<number> > c) { this->aggregate_h = std::move(c); }
 
         //! Aggregate a product
         bool aggregate(const std::string& product);
@@ -97,13 +185,13 @@ namespace transport
       public:
 
         //! Commit contents of this integration_writer to the database
-        void commit() { this->callbacks.commit(*this); this->committed = true; }
+        void commit() { (*this->commit_h)(*this); this->committed = true; }
 
         //! Set integrity check callback
-        void set_integrity_check_handler(integrity_callback c) { this->integrity_checker = c; }
+        void set_integrity_check_handler(std::unique_ptr< postintegration_writer_integrity<number> > c) { this->integrity_h = std::move(c); }
 
         //! Check integrity
-        void check_integrity(postintegration_task<number>* tk) { if(this->integrity_checker) this->integrity_checker(*this, tk); }
+        void check_integrity(postintegration_task<number>* tk) { if(this->integrity_h) (*this->integrity_h)(*this, tk); }
 
 
         // PAIRING
@@ -128,7 +216,14 @@ namespace transport
       public:
 
         //! Return task
-        postintegration_task_record<number>* get_record() const { return(this->parent_record); }
+        const std::string& get_task_name() const { return(this->task->get_name()); }
+
+        //! Return task
+        template <typename TaskType>
+        const TaskType& get_task() const { return dynamic_cast<TaskType&>(*this->task); }
+
+        //! Return task type
+        postintegration_task_type get_type() const { return(this->type); }
 
         //! Set metadata
         void set_metadata(const output_metadata& data) { this->metadata = data; }
@@ -177,23 +272,29 @@ namespace transport
 
         // REPOSITORY CALLBACK FUNCTIONS
 
-        //! Repository callbacks
-        callback_group callbacks;
+        //! Commit handler
+        std::unique_ptr< postintegration_writer_commit<number> > commit_h;
+
+        //! Abort handler
+        std::unique_ptr< postintegration_writer_abort<number> > abort_h;
 
 
         // DATA MANAGER CALLBACK FUNCTIONS
 
         //! Aggregate callback
-        aggregate_callback aggregator;
+        std::unique_ptr< postintegration_writer_aggregate<number> > aggregate_h;
 
         //! Integrity check callback
-        integrity_callback integrity_checker;
+        std::unique_ptr< postintegration_writer_integrity<number> > integrity_h;
 
 
         // METADATA
 
-        //! task associated with this integration writer
-        postintegration_task_record<number>* parent_record;
+        //! copy of task associated with this integration writer; needed for interrogation of task properties
+        std::unique_ptr< postintegration_task<number> > task;
+
+        //! type of task
+        postintegration_task_type type;
 
         //! output metadata for this task
         output_metadata metadata;
@@ -240,19 +341,21 @@ namespace transport
 
 
     template <typename number>
-    postintegration_writer<number>::postintegration_writer(const std::string& n, postintegration_task_record<number>* rec,
-                                                           const typename postintegration_writer<number>::callback_group& c,
+    postintegration_writer<number>::postintegration_writer(const std::string& n, postintegration_task_record<number>& rec,
+                                                           std::unique_ptr< postintegration_writer_commit<number> > c,
+                                                           std::unique_ptr< postintegration_writer_abort<number> > a,
                                                            const generic_writer::metadata_group& m, const generic_writer::paths_group& p, unsigned int w)
 	    : generic_writer(n, m, p, w),
         paired(false),
         seeded(false),
-	      callbacks(c),
-	      aggregator(nullptr),
-        integrity_checker(nullptr),
-	      parent_record(dynamic_cast< postintegration_task_record<number>* >(rec->clone())),
+        commit_h(std::move(c)),
+        abort_h(std::move(a)),
+	      aggregate_h(nullptr),
+        integrity_h(nullptr),
+        task(dynamic_cast< postintegration_task<number>* >(rec.get_task()->clone())),
+        type(rec.get_task_type()),
 	      metadata()
 	    {
-        assert(this->parent_record != nullptr);
 	    }
 
 
@@ -263,25 +366,23 @@ namespace transport
         // this has to happen in the derived destructor, not the base generic_writer<> destructor
         // because by the time we arrive in the generic_writer<> destructor we have lost
         // the identity of the derived class
-        if(!this->committed) this->callbacks.abort(*this);
-
-        delete this->parent_record;
+        if(!this->committed) (*this->abort_h)(*this);
 	    }
 
 
     template <typename number>
     bool postintegration_writer<number>::aggregate(const std::string& product)
 	    {
-        if(!this->aggregator)
+        if(!this->aggregate_h)
 	        {
             assert(false);
             throw runtime_exception(exception_type::RUNTIME_ERROR, CPPTRANSPORT_REPO_WRITER_AGGREGATOR_UNSET);
 	        }
 
-        return this->aggregator(*this, product);
+        return (*this->aggregate_h)(*this, product);
 	    }
 
 	}
 
 
-#endif //__postintegration_writer_H_
+#endif //CPPTRANSPORT_POSTINTEGRATION_WRITER_H

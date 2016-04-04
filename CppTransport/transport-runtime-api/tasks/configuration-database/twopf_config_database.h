@@ -344,6 +344,7 @@ namespace transport
 		      << "twopf_kconfig.conventional AS conventional, "
 		      << "twopf_kconfig.comoving     AS comoving, "
 		      << "twopf_kconfig.t_exit       AS t_exit, "
+          << "twopf_kconfig.t_massless   AS t_massless, "
 		      << "twopf_kconfig.store_bg     AS store_bg "
 		      << "FROM twopf_kconfig;";
 
@@ -359,10 +360,11 @@ namespace transport
 					    {
 				        twopf_kconfig config;
 
-				        config.serial         = static_cast<unsigned int>(sqlite3_column_int(stmt, 0));
-				        config.k_conventional = sqlite3_column_double(stmt, 1);
-				        config.k_comoving     = sqlite3_column_double(stmt, 2);
-						    config.t_exit         = sqlite3_column_double(stmt, 3);
+				        config.serial          = static_cast<unsigned int>(sqlite3_column_int(stmt, 0));
+				        config.k_conventional  = sqlite3_column_double(stmt, 1);
+				        config.k_comoving      = sqlite3_column_double(stmt, 2);
+						    config.t_exit          = sqlite3_column_double(stmt, 3);
+                config.t_massless      = sqlite3_column_double(stmt, 4);
 
 				        if(config.serial+1 > serial)                        this->serial            = config.serial+1;
 				        if(config.k_conventional > this->kmax_conventional) this->kmax_conventional = config.k_conventional;
@@ -370,7 +372,7 @@ namespace transport
 				        if(config.k_comoving > this->kmax_comoving)         this->kmax_comoving     = config.k_comoving;
 				        if(config.k_comoving < this->kmin_comoving)         this->kmin_comoving     = config.k_comoving;
 
-						    bool store = (sqlite3_column_int(stmt, 4) != 0);
+						    bool store = (sqlite3_column_int(stmt, 5) != 0);
 
 				        std::pair<database_type::iterator, bool> emplaced_value = this->database.emplace(config.serial, twopf_kconfig_record(config, store));
 						    assert(emplaced_value.second);
@@ -405,10 +407,11 @@ namespace transport
         // insert a record into the database
         twopf_kconfig config;
 
-        config.serial         = this->serial++;
-        config.k_conventional = k_conventional;
-        config.k_comoving     = k_conventional * this->comoving_normalization;
-		    config.t_exit         = 0.0;    // will be updated later
+        config.serial          = this->serial++;
+        config.k_conventional  = k_conventional;
+        config.k_comoving      = k_conventional * this->comoving_normalization;
+		    config.t_exit          = 0.0;     // will be updated later
+        config.t_massless      = 0.0;     // will be updated later
 
         if(config.k_conventional > this->kmax_conventional) this->kmax_conventional = config.k_conventional;
         if(config.k_conventional < this->kmin_conventional) this->kmin_conventional = config.k_conventional;
@@ -495,12 +498,13 @@ namespace transport
 		      << "conventional DOUBLE, "
 			    << "comoving     DOUBLE, "
           << "t_exit       DOUBLE, "
+          << "t_massless       DOUBLE, "
           << "store_bg     INTEGER);";
 
         sqlite3_operations::exec(handle, create_stmt.str(), CPPTRANSPORT_TWOPF_DATABASE_WRITE_FAIL);
 
         std::ostringstream insert_stmt;
-		    insert_stmt << "INSERT INTO twopf_kconfig VALUES (@serial, @conventional, @comoving, @t_exit, @store_bg);";
+		    insert_stmt << "INSERT INTO twopf_kconfig VALUES (@serial, @conventional, @comoving, @t_exit, @t_massless, @store_bg);";
 
 		    sqlite3_stmt* stmt;
         sqlite3_operations::check_stmt(handle, sqlite3_prepare_v2(handle, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr));
@@ -513,7 +517,8 @@ namespace transport
             sqlite3_operations::check_stmt(handle, sqlite3_bind_double(stmt, 2, t->second->k_conventional));
             sqlite3_operations::check_stmt(handle, sqlite3_bind_double(stmt, 3, t->second->k_comoving));
             sqlite3_operations::check_stmt(handle, sqlite3_bind_double(stmt, 4, t->second->t_exit));
-            sqlite3_operations::check_stmt(handle, sqlite3_bind_int(stmt, 5, t->second.is_background_stored()));
+            sqlite3_operations::check_stmt(handle, sqlite3_bind_double(stmt, 5, t->second->t_massless));
+            sqlite3_operations::check_stmt(handle, sqlite3_bind_int(stmt, 6, t->second.is_background_stored()));
 
             sqlite3_operations::check_stmt(handle, sqlite3_step(stmt), CPPTRANSPORT_TWOPF_DATABASE_WRITE_FAIL, SQLITE_DONE);
 

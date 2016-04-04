@@ -18,7 +18,7 @@
 #include "transport-runtime-api/serialization/serializable.h"
 
 // get details of datapipe<number>
-#include "transport-runtime-api/data/datapipe/datapipe.h"
+#include "transport-runtime-api/data/datapipe/datapipe_decl.h"
 
 // forward-declare model class if needed
 #include "transport-runtime-api/models/model_forward_declare.h"

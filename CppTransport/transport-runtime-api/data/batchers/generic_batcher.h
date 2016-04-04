@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __generic_batcher_H_
-#define __generic_batcher_H_
+#ifndef CPPTRANSPORT_GENERIC_BATCHER_H
+#define CPPTRANSPORT_GENERIC_BATCHER_H
 
 #include <vector>
 #include <list>
@@ -16,6 +16,10 @@
 
 #include "transport-runtime-api/utilities/host_information.h"
 #include "transport-runtime-api/utilities/formatter.h"
+
+#include "transport-runtime-api/data/batchers/container_dispatch_function.h"
+#include "transport-runtime-api/data/batchers/container_replace_function.h"
+
 
 #include "boost/filesystem/operations.hpp"
 #include "boost/timer/timer.hpp"
@@ -49,16 +53,6 @@ namespace transport
         //! To unwind integrations, we need the delayed mode.
         enum class flush_mode { flush_immediate, flush_delayed };
 
-        //! Internal flag indicating the action which should be taken by
-        //! a batcher when its temporary container is replaced.
-        enum class replacement_action { action_replace, action_close };
-
-        //! data-manager callback to close a temporary container and replace it with another one
-        typedef std::function<void(generic_batcher* batcher, replacement_action)> container_replacement_function;
-
-        //! task-manager callback to push a container to the master node
-        typedef std::function<void(generic_batcher* batcher)> container_dispatch_function;
-
         //! Logging severity level
         enum class log_severity_level { datapipe_pull, normal, warning, error, critical };
 
@@ -69,11 +63,15 @@ namespace transport
 
       public:
 
+        //! constructor
         template <typename handle_type>
         generic_batcher(unsigned int cap, unsigned int ckp,
                         const boost::filesystem::path& cp, const boost::filesystem::path& lp,
-                        container_dispatch_function d, container_replacement_function r,
+                        std::unique_ptr<container_dispatch_function> d, std::unique_ptr<container_replace_function> r,
                         handle_type h, unsigned int w, unsigned int g=0, bool no_log=false);
+
+        //! move constructor
+        generic_batcher(generic_batcher&&) = default;
 
         virtual ~generic_batcher();
 
@@ -176,10 +174,10 @@ namespace transport
         void*                                                    manager_handle;
 
         //! Callback for dispatching a container
-        container_dispatch_function                              dispatcher;
+        std::unique_ptr<container_dispatch_function>             dispatcher;
 
         //! Callback for obtaining a replacement container
-        container_replacement_function                           replacer;
+        std::unique_ptr<container_replace_function>              replacer;
 
 
         // FLUSH HANDLING
@@ -214,14 +212,14 @@ namespace transport
     template <typename handle_type>
     generic_batcher::generic_batcher(unsigned int cap, unsigned int ckp,
                                      const boost::filesystem::path& cp, const boost::filesystem::path& lp,
-                                     container_dispatch_function d, container_replacement_function r,
+                                     std::unique_ptr<container_dispatch_function> d, std::unique_ptr<container_replace_function> r,
                                      handle_type h, unsigned int w, unsigned int g, bool no_log)
 	    : capacity(cap),
         checkpoint_interval(boost::timer::nanosecond_type(ckp)*1000*1000*1000),
 	      container_path(cp),
 	      logdir_path(lp),
-	      dispatcher(d),
-	      replacer(r),
+	      dispatcher(std::move(d)),
+	      replacer(std::move(r)),
 	      worker_group(g),
 	      worker_number(w),
 	      manager_handle(static_cast<void*>(h)),
@@ -347,4 +345,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__generic_batcher_H_
+#endif //CPPTRANSPORT_GENERIC_BATCHER_H

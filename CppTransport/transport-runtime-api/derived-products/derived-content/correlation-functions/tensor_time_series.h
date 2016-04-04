@@ -39,12 +39,12 @@ namespace transport
 		      public:
 
 				    //! construct a tensor two-point function time series data object
-				    tensor_twopf_time_series(const twopf_list_task<number>& tk, index_selector<2>& sel,
+				    tensor_twopf_time_series(const twopf_db_task<number>& tk, index_selector<2>& sel,
 				                             SQL_time_config_query tq, SQL_twopf_kconfig_query kq,
 				                             unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
 				    //! deserialization constructor
-				    tensor_twopf_time_series(Json::Value& reader, typename repository_finder<number>::task_finder& finder);
+				    tensor_twopf_time_series(Json::Value& reader, task_finder<number>& finder);
 
 				    virtual ~tensor_twopf_time_series() = default;
 
@@ -105,7 +105,7 @@ namespace transport
 		    // derived_line<> is not called automatically during construction of time_series<>.
 		    // We have to call it ourselves
 		    template <typename number>
-		    tensor_twopf_time_series<number>::tensor_twopf_time_series(const twopf_list_task<number>& tk, index_selector<2>& sel,
+		    tensor_twopf_time_series<number>::tensor_twopf_time_series(const twopf_db_task<number>& tk, index_selector<2>& sel,
 		                                                               SQL_time_config_query tq, SQL_twopf_kconfig_query kq, unsigned int prec)
 			    : derived_line<number>(tk, axis_class::time_axis, std::list<axis_value>{ axis_value::efolds_axis }, prec),
             tensor_twopf_line<number>(tk, sel),
@@ -120,7 +120,7 @@ namespace transport
 		    // derived_line<> is not called automatically during construction of time_series<>.
 		    // We have to call it ourselves
 		    template <typename number>
-		    tensor_twopf_time_series<number>::tensor_twopf_time_series(Json::Value& reader, typename repository_finder<number>::task_finder& finder)
+		    tensor_twopf_time_series<number>::tensor_twopf_time_series(Json::Value& reader, task_finder<number>& finder)
 			    : derived_line<number>(reader, finder),
 			      tensor_twopf_line<number>(reader, finder),
 			      time_series<number>(reader),

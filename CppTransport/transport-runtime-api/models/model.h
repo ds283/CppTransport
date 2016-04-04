@@ -3,8 +3,8 @@
 // Copyright (c) 2013-2016 University of Sussex. All rights reserved.
 //
 
-#ifndef CPPTRANSPORT_MODEL_H_
-#define CPPTRANSPORT_MODEL_H_
+#ifndef CPPTRANSPORT_MODEL_H
+#define CPPTRANSPORT_MODEL_H
 
 #include <string>
 #include <vector>
@@ -26,7 +26,8 @@
 
 #include "transport-runtime-api/derived-products/utilities/index_selector.h"
 
-#include "transport-runtime-api/manager/instance_manager.h"
+#include "transport-runtime-api/manager/model_manager.h"
+#include "transport-runtime-api/manager/message_handlers.h"
 #include "transport-runtime-api/data/data_manager.h"
 
 #include "transport-runtime-api/models/advisory_classes.h"
@@ -59,7 +60,7 @@ namespace transport
       public:
 
         //! constructor
-        model(const std::string& u, unsigned int v);
+        model(const std::string& u, unsigned int v, error_handler e, warning_handler w, message_handler m);
 
         //! destructor is default
 		    ~model() = default;
@@ -128,7 +129,7 @@ namespace transport
 
         //! Compute initial conditions which give horizon-crossing at time Ncross,
         //! if we allow Npre e-folds before horizon-crossing.
-        //! The supplied parameters should be validated.
+        //! The supplied parameters should have been validated.
         void offset_ics(const parameters<number>& params, const std::vector<number>& input, std::vector<number>& output,
                         double Ninit, double Ncross, double Npre,
                         double tolerance = CPPTRANSPORT_DEFAULT_ICS_GAP_TOLERANCE,
@@ -140,13 +141,17 @@ namespace transport
       public:
 
         //! Get value of H at horizon crossing, which can be used to normalize the comoving waveumbers
-        double compute_kstar(const twopf_list_task<number>* tk, unsigned int time_steps=CPPTRANSPORT_DEFAULT_ICS_TIME_STEPS);
+        double compute_kstar(const twopf_db_task<number>* tk, unsigned int time_steps=CPPTRANSPORT_DEFAULT_ICS_TIME_STEPS);
 
         //! Compute when the end of inflation occurs relative to the initial conditions
         virtual double compute_end_of_inflation(const integration_task<number>* tk, double search_time=CPPTRANSPORT_DEFAULT_END_OF_INFLATION_SEARCH) = 0;
 
-		    //! Compute aH as a function of N up to the horizon-exit time of some wavenumber
-		    virtual void compute_aH(const twopf_list_task<number>* tk, std::vector<double>& N, std::vector<number>& aH, double largest_k) = 0;
+		    //! Compute aH as a function of N up to the horizon-exit time of some wavenumber.
+        //! Samples of log(aH) and the fields are returned in the supplied vector, with samples taken
+        //! at internally-chosen values of N -- also returned in the corresponding vector
+        //! Also computes log(a^2 * H^2 largest eigenvalue of the mass matrix) and returns this in
+        //! log_a2H2M. Note that the mass matrix used in the code is M^2/H^2, ie. is dimensionless
+		    virtual void compute_aH(const twopf_db_task<number>* tk, std::vector<double>& N, std::vector<number>& log_aH, std::vector<number>& log_a2H2M, double largest_k) = 0;
 
 
         // INTERFACE - PARAMETER HANDLING
@@ -162,22 +167,24 @@ namespace transport
 
         // calculate shape-dependent gauge transformations using full cosmological perturbation theory
         // pure virtual, so must be implemented by derived class
-        virtual void compute_gauge_xfm_1(const twopf_list_task<number>* __task, const std::vector<number>& __state, std::vector<number>& __dN) = 0;
+        virtual void compute_gauge_xfm_1(const twopf_db_task<number>* __task, const std::vector<number>& __state, std::vector<number>& __dN) = 0;
 
-        virtual void compute_gauge_xfm_2(const twopf_list_task<number>* __task, const std::vector<number>& __state, double __k, double __k1, double __k2, double __N, std::vector<number>& __ddN) = 0;
+        virtual void compute_gauge_xfm_2(const twopf_db_task<number>* __task, const std::vector<number>& __state, double __k, double __k1, double __k2, double __N, std::vector<number>& __ddN) = 0;
 
 
         // calculate tensor quantities, including the 'flow' tensors u2, u3 and the basic tensors A, B, C from which u3 is built
 		    // pure virtual, so must be implemented by derived class
-        virtual void u2(const twopf_list_task<number>* __task, const std::vector<number>& __fields, double __k, double __N, std::vector<number>& __u2) = 0;
+        virtual void u2(const twopf_db_task<number>* __task, const std::vector<number>& __fields, double __k, double __N, std::vector<number>& __u2) = 0;
 
-        virtual void u3(const twopf_list_task<number>* __task, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector<number>& __u3) = 0;
+        virtual void u3(const twopf_db_task<number>* __task, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector<number>& __u3) = 0;
 
-        virtual void A(const twopf_list_task<number>* __task, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector<number>& __A) = 0;
+        virtual void A(const twopf_db_task<number>* __task, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector<number>& __A) = 0;
 
-        virtual void B(const twopf_list_task<number>* __task, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector<number>& __B) = 0;
+        virtual void B(const twopf_db_task<number>* __task, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector<number>& __B) = 0;
 
-        virtual void C(const twopf_list_task<number>* __task, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector<number>& __C) = 0;
+        virtual void C(const twopf_db_task<number>* __task, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector<number>& __C) = 0;
+
+        virtual void M(const twopf_db_task<number>* __task, const std::vector<number>& __fields, double __N, std::vector<number>& __M) = 0;
 
 
         // BACKEND
@@ -205,7 +212,7 @@ namespace transport
 
         // process a work list of twopf items
         // must be over-ridden by a derived implementation class
-        virtual void backend_process_queue(work_queue<twopf_kconfig_record>& work, const twopf_list_task<number>* tk,
+        virtual void backend_process_queue(work_queue<twopf_kconfig_record>& work, const twopf_db_task<number>* tk,
                                            twopf_batcher<number>& batcher, bool silent = false) = 0;
 
         // process a work list of threepf items
@@ -219,6 +226,20 @@ namespace transport
 
         // does the backend support collection of per-configuration statistics?
         virtual bool supports_per_configuration_statistics(void) const = 0;
+
+
+        // SERVICES
+
+      public:
+
+        //! report erorr
+        void error(const std::string& msg) const { this->error_h(msg); }
+
+        //! report warning
+        void warn(const std::string& msg) const { this->warn_h(msg); }
+
+        //! report message
+        void message(const std::string& msg) const { this->message_h(msg); }
 
 
         // INTERNAL UTILITY FUNCTIONS
@@ -240,6 +261,20 @@ namespace transport
         //! copy of translator version used to produce this model, used for registration
         const unsigned int tver;
 
+
+        // ERROR, WARNING AND MESSAGE HANDLERS
+
+      protected:
+
+        //! error handler
+        error_handler error_h;
+
+        //! warning handler
+        warning_handler warn_h;
+
+        //! message handler
+        message_handler message_h;
+
       };
 
 
@@ -249,9 +284,12 @@ namespace transport
     // CONSTRUCTOR, DESTRUCTOR
 
     template <typename number>
-    model<number>::model(const std::string& u, unsigned int v)
+    model<number>::model(const std::string& u, unsigned int v, error_handler e, warning_handler w, message_handler m)
       : uid(u),
-        tver(v)
+        tver(v),
+        error_h(std::move(e)),
+        warn_h(std::move(w)),
+        message_h(std::move(m))
       {
       }
 
@@ -321,7 +359,7 @@ namespace transport
 
 
     template <typename number>
-    double model<number>::compute_kstar(const twopf_list_task<number>* tk, unsigned int time_steps)
+    double model<number>::compute_kstar(const twopf_db_task<number>* tk, unsigned int time_steps)
       {
         // integrate for a small interval up to horizon-crossing,
         // and extract the value of H there
@@ -344,7 +382,7 @@ namespace transport
             // This wavenumber should have comoving value k=aH
             // To avoid numbers becoming too large or small, and also because the integrator has
             // noticeably better performance for correlation-function amplitudes in a
-            // certain range, use a fixed normalization which can be adjusted in twopf_list_task
+            // certain range, use a fixed normalization which can be adjusted in twopf_db_task
             return( this->H(tk->get_params(), history.back()) * exp(tk->get_astar_normalization()) );
           }
         else
@@ -357,4 +395,4 @@ namespace transport
 
   }    // namespace transport
 
-#endif // CPPTRANSPORT_MODEL_H_
+#endif // CPPTRANSPORT_MODEL_H

@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __cost_wavenumber_series_H_
-#define __cost_wavenumber_series_H_
+#ifndef CPPTRANSPORT_COST_WAVENUMBER_SERIES_H
+#define CPPTRANSPORT_COST_WAVENUMBER_SERIES_H
 
 
 #include <iostream>
@@ -59,7 +59,10 @@ namespace transport
 						                unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
 						//! deserialization constructor
-						cost_wavenumber(Json::Value& reader, typename repository_finder<number>::task_finder& finder);
+						cost_wavenumber(Json::Value& reader, task_finder<number>& finder);
+
+            //! copy constructor
+            cost_wavenumber(const cost_wavenumber& obj);
 
 						//! destructor
 						virtual ~cost_wavenumber() = default;
@@ -118,7 +121,7 @@ namespace transport
 						analysis_type type;
 
 						//! query object
-						std::shared_ptr< SQL_query > kquery;
+						std::unique_ptr< SQL_query > kquery;
 
 					};
 
@@ -150,7 +153,7 @@ namespace transport
 
 
 				template <typename number>
-				cost_wavenumber<number>::cost_wavenumber(Json::Value& reader, typename repository_finder<number>::task_finder& finder)
+				cost_wavenumber<number>::cost_wavenumber(Json::Value& reader, task_finder<number>& finder)
 					: derived_line<number>(reader, finder),
 					  wavenumber_series<number>(reader),
 					  gadget()
@@ -158,7 +161,7 @@ namespace transport
 						assert(this->parent_task != nullptr);
 						gadget.set_task(this->parent_task, finder);
 
-						kquery.reset(SQL_query_helper::deserialize(reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY]));
+						kquery = SQL_query_helper::deserialize(reader[CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_QUERY]);
 
 				    std::string type_string = reader[CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_TYPE].asString();
 						type = analysis_type::twopf_analysis;
@@ -172,6 +175,18 @@ namespace transport
 						else if(metric_string == CPPTRANSPORT_NODE_PRODUCT_INTEGRATION_COST_STEPS) metric = cost_metric::steps_cost;
 						else assert(false); // TODO: raise exception
 					}
+
+
+        template <typename number>
+        cost_wavenumber<number>::cost_wavenumber(const cost_wavenumber<number>& obj)
+          : derived_line<number>(obj),
+            wavenumber_series<number>(obj),
+            gadget(obj.gadget),
+            metric(obj.metric),
+            type(obj.type),
+            kquery(obj.kquery->clone())
+          {
+          }
 
 
 				template <typename number>
@@ -268,14 +283,18 @@ namespace transport
 		                    switch(this->metric)
 			                    {
 		                        case cost_metric::time_cost:
-			                        line_data.push_back(static_cast<number>(t->integration) / (1000.0*1000.0*1000.0)); // convert to seconds
-			                        this_value = value_type::time_value;
-			                        break;
+                              {
+                                line_data.push_back(static_cast<number>(t->integration) / 1E9); // convert to seconds
+                                this_value = value_type::time_value;
+                                break;
+                              }
 
 		                        case cost_metric::steps_cost:
-			                        line_data.push_back(static_cast<number>(t->steps));
-			                        this_value = value_type::steps_value;
-			                        break;
+                              {
+                                line_data.push_back(static_cast<number>(t->steps));
+                                this_value = value_type::steps_value;
+                                break;
+                              }
 			                    }
 			                }
 
@@ -339,4 +358,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__cost_wavenumber_series_H_
+#endif //CPPTRANSPORT_COST_WAVENUMBER_SERIES_H

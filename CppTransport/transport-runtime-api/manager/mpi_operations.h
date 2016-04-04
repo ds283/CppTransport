@@ -48,6 +48,7 @@ namespace transport
 		        const unsigned int INFORMATION_RESPONSE       = 91;
 		        const unsigned int NEW_WORK_ASSIGNMENT        = 92;
 		        const unsigned int NEW_WORK_ACKNOWLEDGMENT    = 93;
+            const unsigned int REPORT_ERROR               = 94;
 		        const unsigned int END_OF_WORK                = 97;
 		        const unsigned int WORKER_CLOSE_DOWN          = 98;
             const unsigned int TERMINATE                  = 99;
@@ -55,7 +56,41 @@ namespace transport
             // MPI ranks
             const unsigned int RANK_MASTER = 0;
 
+
             // MPI message payloads
+
+            class error_report
+              {
+
+              public:
+
+                //! Default constructor (used for receiving messages)
+                error_report() = default;
+
+                //! Value constructor (used for constructing messages to send)
+                error_report(std::string m)
+                  : msg(std::move(m))
+                  {
+                  }
+
+                //! Get message
+                const std::string& get_message() const { return(this->msg); }
+
+              private:
+
+                //! message
+                std::string msg;
+
+                // enable boost::serialization support, and hence automated packing for transmission over MPI
+                friend class boost::serialization::access;
+
+                template <typename Archive>
+                void serialize(Archive& ar, unsigned int version)
+                  {
+                    ar & msg;
+                  }
+
+              };
 
             class slave_setup_payload
               {

@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __formatter_H_
-#define __formatter_H_
+#ifndef CPPTRANSPORT_FORMATTER_H
+#define CPPTRANSPORT_FORMATTER_H
 
 
 #include <iomanip>
@@ -71,4 +71,19 @@ inline std::string format_time(boost::timer::nanosecond_type time, unsigned int 
   }
 
 
-#endif //__formatter_H_
+inline std::string format_number(double number, unsigned int precision=3)
+  {
+    std::ostringstream out;
+
+    if(std::abs(number) > 1E3 || std::abs(number) < 1E-3)
+      {
+        out << std::scientific;
+      }
+
+    out << std::setprecision(precision) << number;
+
+    return(out.str());
+  }
+
+
+#endif //CPPTRANSPORT_FORMATTER_H

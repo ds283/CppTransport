@@ -30,8 +30,8 @@ namespace transport
       public:
 
         //! constructor
-        canonical_model(const std::string& uid, unsigned int tver)
-          : model<number>(uid, tver)
+        canonical_model(const std::string& uid, unsigned int tver, error_handler e, warning_handler w, message_handler m)
+          : model<number>(uid, tver, std::move(e), std::move(w), std::move(m))
           {
           }
 

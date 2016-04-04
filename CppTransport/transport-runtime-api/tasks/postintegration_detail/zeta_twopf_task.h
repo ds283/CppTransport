@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __zeta_twopf_task_H_
-#define __zeta_twopf_task_H_
+#ifndef CPPTRANSPORT_ZETA_TWOPF_TASK_H
+#define CPPTRANSPORT_ZETA_TWOPF_TASK_H
 
 
 #include "transport-runtime-api/tasks/postintegration_detail/common.h"
@@ -31,10 +31,21 @@ namespace transport
         zeta_twopf_task(const std::string& nm, const twopf_task<number>& t);
 
         //! deserialization constructor
-        zeta_twopf_task(const std::string& nm, Json::Value& reader, typename repository_finder<number>::task_finder& finder);
+        zeta_twopf_task(const std::string& nm, Json::Value& reader, task_finder<number>& finder);
 
         //! destructor is default
         virtual ~zeta_twopf_task() = default;
+
+
+        // INTERFACE
+
+      public:
+
+        //! supply 'derivable_task' interface
+        task_type get_type() const override final { return task_type::postintegration; }
+
+        //! respond to task type query
+        postintegration_task_type get_task_type() const override final { return postintegration_task_type::twopf; }
 
 
         // INTERFACE
@@ -73,6 +84,13 @@ namespace transport
 
 
     template <typename number>
+    struct postintegration_task_traits<number, postintegration_task_type::twopf>
+      {
+        typedef zeta_twopf_task<number> task_type;
+      };
+
+
+    template <typename number>
     zeta_twopf_task<number>::zeta_twopf_task(const std::string& nm, const twopf_task<number>& t)
 	    : zeta_twopf_list_task<number>(nm, t),
 	      paired(false)
@@ -81,7 +99,7 @@ namespace transport
 
 
     template <typename number>
-    zeta_twopf_task<number>::zeta_twopf_task(const std::string& nm, Json::Value& reader, typename repository_finder<number>::task_finder& finder)
+    zeta_twopf_task<number>::zeta_twopf_task(const std::string& nm, Json::Value& reader, task_finder<number>& finder)
 	    : zeta_twopf_list_task<number>(nm, reader, finder)
 	    {
         this->paired = reader[CPPTRANSPORT_NODE_POSTINTEGRATION_TASK_PAIRED].asBool();
@@ -100,4 +118,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__zeta_twopf_task_H_
+#endif //CPPTRANSPORT_ZETA_TWOPF_TASK_H

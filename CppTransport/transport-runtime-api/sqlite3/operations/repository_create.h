@@ -81,7 +81,9 @@ namespace transport
               << "name       TEXT PRIMARY KEY, "
               << "task       TEXT, "
               << "path       TEXT, "
-              << "posix_time TEXT);";   // no obvious way to implement constraint on task names
+              << "posix_time TEXT, "
+              << "cores      INTEGER, "
+              << "completion TEXT);";   // no obvious way to implement constraint on task names
             exec(db, o_reserved_stmt.str());
 
             std::ostringstream o_int_writer_stmt;

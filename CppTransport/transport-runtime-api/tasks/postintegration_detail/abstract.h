@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __postintegration_abstract_task_H_
-#define __postintegration_abstract_task_H_
+#ifndef CPPTRANSPORT_POSTINTEGRATION_ABSTRACT_TASK_H
+#define CPPTRANSPORT_POSTINTEGRATION_ABSTRACT_TASK_H
 
 
 #include "transport-runtime-api/tasks/postintegration_detail/common.h"
@@ -37,13 +37,21 @@ namespace transport
         postintegration_task(const std::string& nm, const derivable_task<number>& t);
 
         //! deserialization constructor
-        postintegration_task(const std::string& nm, Json::Value& reader, typename repository_finder<number>::task_finder& finder);
+        postintegration_task(const std::string& nm, Json::Value& reader, task_finder<number>& finder);
 
         //! override copy constructor to perform a deep copy
         postintegration_task(const postintegration_task<number>& obj);
 
         //! destroy a postintegration_task
         virtual ~postintegration_task();
+
+
+        // INTERFACE
+
+      public:
+
+        //! identify integration task type
+        virtual postintegration_task_type get_task_type() const = 0;
 
 
         // INTERFACE - implements a 'derivable task' interface
@@ -123,14 +131,14 @@ namespace transport
 
 
     template <typename number>
-    postintegration_task<number>::postintegration_task(const std::string& nm, Json::Value& reader, typename repository_finder<number>::task_finder& finder)
+    postintegration_task<number>::postintegration_task(const std::string& nm, Json::Value& reader, task_finder<number>& finder)
 	    : derivable_task<number>(nm, reader),
 	      ptk(nullptr)
 	    {
         // deserialize and reconstruct parent integration task
         std::string tk_name = reader[CPPTRANSPORT_NODE_POSTINTEGRATION_TASK_PARENT].asString();
 
-        std::unique_ptr< task_record<number> > record(finder(tk_name));
+        std::unique_ptr< task_record<number> > record = finder(tk_name);
         assert(record.get() != nullptr);
 
         ptk = dynamic_cast< derivable_task<number>* >(record->get_abstract_task()->clone());
@@ -169,4 +177,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__postintegration_abstract_task_H_
+#endif //CPPTRANSPORT_POSTINTEGRATION_ABSTRACT_TASK_H

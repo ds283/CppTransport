@@ -48,5 +48,11 @@
 #define CPPTRANSPORT_TASK_MANAGER_WARNING_LABEL      "Warning:"
 
 #define CPPTRANSPORT_UNKNOWN_SWITCH                  "Ignored unknown command-line switch"
+#define CPPTRANSPORT_UNKNOWN_PLOT_STYLE              "Ignored unknown plot style"
+
+
+#define CPPTRANSPORT_SLAVE_ERROR_PROCESSING_PRODUCT  "Error processing derived product"
+#define CPPTRANSPORT_MASTER_REPORTED_BY_WORKER       "reported by process"
+
 
 #endif // CPPTRANSPORT_MESSAGES_EN_TASK_MANAGER_H

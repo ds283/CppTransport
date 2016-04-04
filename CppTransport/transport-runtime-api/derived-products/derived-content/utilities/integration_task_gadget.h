@@ -28,7 +28,7 @@ namespace transport
 				  public:
 
 						//! construct gadget from direct integration_task
-						integration_task_gadget(const twopf_list_task<number>& tk);
+						integration_task_gadget(const twopf_db_task<number>& tk);
 
 						//! null constructor, used when deserializing
 						integration_task_gadget();
@@ -45,13 +45,13 @@ namespace transport
 				  public:
 
 						//! initialize after default constructor
-						void set_task(derivable_task<number>* tk, typename repository_finder<number>::task_finder& finder);
+						void set_task(derivable_task<number>* tk, task_finder<number>& finder);
 
 						//! get pointer to model instance
 						model<number>* get_model() const { return(this->mdl); }
 
 						//! get pointer to integration_task<> instance
-						twopf_list_task<number>* get_integration_task() const { return(this->itk); }
+						twopf_db_task<number>* get_integration_task() const { return(this->itk); }
 
 						//! quick access to get number of fields
 						unsigned int get_N_fields() const { return(this->N_fields); }
@@ -62,7 +62,7 @@ namespace transport
 				  private:
 
 						//! pointer to integration task
-						twopf_list_task<number>* itk;
+						twopf_db_task<number>* itk;
 
 				    //! pointer to model.
 				    //! It's OK for this to be 'shallow' copied, rather than 'deep' copied, because model instances are managed
@@ -77,9 +77,9 @@ namespace transport
 
 
 				template <typename number>
-				integration_task_gadget<number>::integration_task_gadget(const twopf_list_task<number>& tk)
+				integration_task_gadget<number>::integration_task_gadget(const twopf_db_task<number>& tk)
 					: mdl(tk.get_model()),
-					  itk(dynamic_cast< twopf_list_task<number>* >(tk.clone())),
+					  itk(dynamic_cast< twopf_db_task<number>* >(tk.clone())),
 						N_fields(tk.get_model()->get_N_fields())
 					{
 					}
@@ -102,20 +102,20 @@ namespace transport
 
 
 				template <typename number>
-				void integration_task_gadget<number>::set_task(derivable_task<number>* tk, typename repository_finder<number>::task_finder& finder)
+				void integration_task_gadget<number>::set_task(derivable_task<number>* tk, task_finder<number>& finder)
 					{
 						assert(tk != nullptr);
 
-				    std::unique_ptr< task_record<number> > tk_rec(finder(tk->get_name()));
+				    std::unique_ptr< task_record<number> > tk_rec = finder(tk->get_name());
 				    assert(tk_rec.get() != nullptr);
 
-				    if(tk_rec->get_type() != task_record<number>::task_type::integration)
+				    if(tk_rec->get_type() != task_type::integration)
 					    throw runtime_exception(exception_type::REPOSITORY_ERROR, CPPTRANSPORT_REPO_TASK_NOT_INTEGRATION);
 
 				    integration_task_record<number>* int_rec = dynamic_cast< integration_task_record<number>* >(tk_rec.get());
 				    assert(int_rec != nullptr);
 
-				    this->itk = dynamic_cast< twopf_list_task<number>* >(int_rec->get_task()->clone());
+				    this->itk = dynamic_cast< twopf_db_task<number>* >(int_rec->get_task()->clone());
 						assert(this->itk != nullptr);
 
 				    this->mdl = this->itk->get_model();
@@ -126,7 +126,7 @@ namespace transport
 
 				template <typename number>
 				integration_task_gadget<number>::integration_task_gadget(const integration_task_gadget<number>& obj)
-					: itk(dynamic_cast< twopf_list_task<number>* >(obj.itk->clone())),
+					: itk(dynamic_cast< twopf_db_task<number>* >(obj.itk->clone())),
 		        mdl(obj.mdl),
 		        N_fields(obj.N_fields)
 					{

@@ -13,7 +13,7 @@
 #include <functional>
 
 #include "transport-runtime-api/models/model.h"
-#include "transport-runtime-api/manager/instance_manager.h"
+#include "transport-runtime-api/manager/model_manager.h"
 #include "transport-runtime-api/tasks/task.h"
 #include "transport-runtime-api/tasks/integration_tasks.h"
 #include "transport-runtime-api/tasks/output_tasks.h"

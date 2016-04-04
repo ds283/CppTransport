@@ -4,8 +4,8 @@
 //
 
 
-#if !defined(__model_forward_declare_H_) && !defined(CPPTRANSPORT_MODEL_H_)
-#define __model_forward_declare_H_
+#if !defined(CPPTRANSPORT_MODEL_FORWARD_DECLARE_H) && !defined(CPPTRANSPORT_MODEL_H)
+#define CPPTRANSPORT_MODEL_FORWARD_DECLARE_H
 
 
 namespace transport
@@ -16,4 +16,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__model_forward_declare_H_
+#endif //CPPTRANSPORT_MODEL_FORWARD_DECLARE_H

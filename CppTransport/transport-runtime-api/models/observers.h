@@ -44,8 +44,9 @@ namespace transport
       public:
 
         //! Create a stepping observer object
-        stepping_observer(const time_config_database& t)
-          : time_db(t)
+        stepping_observer(const time_config_database& t, unsigned int p)
+          : time_db(t),
+            precision(p)
           {
             current_step = time_db.record_begin();
           }
@@ -77,6 +78,9 @@ namespace transport
 
         //! List of steps which should be stored
         const time_config_database& time_db;
+
+        //! Numerical precision to be used when logging
+        unsigned int precision;
 
       };
 
@@ -134,9 +138,6 @@ namespace transport
         //! Time interval at which to issue updates
         boost::timer::nanosecond_type output_interval;
 
-        //! Numerical precision to be used when issuing updates
-        unsigned int                  precision;
-
         //! Timer for the integration
         boost::timer::cpu_timer       integration_timer;
 
@@ -148,11 +149,10 @@ namespace transport
 
     template <typename number>
     timing_observer<number>::timing_observer(const time_config_database& t, boost::timer::nanosecond_type t_int, bool s, unsigned int p)
-      : stepping_observer<number>(t),
+      : stepping_observer<number>(t,p),
         output_interval(t_int),
         silent(s),
-        first_output(true),
-        precision(p)
+        first_output(true)
       {
         batching_timer.stop();
         // leave the integration timer running, so it also records start-up time associated with the integration,
@@ -232,7 +232,7 @@ namespace transport
       public:
 
         twopf_singleconfig_batch_observer(twopf_batcher<number>& b, const twopf_kconfig_record& c,
-                                          const time_config_database& t,
+                                          double t_ics, const time_config_database& t,
                                           unsigned int bg_sz, unsigned int ten_sz, unsigned int tw_sz,
                                           unsigned int bg_st, unsigned int ten_st, unsigned int tw_st,
                                           boost::timer::nanosecond_type t_int = CPPTRANSPORT_DEFAULT_SLOW_INTEGRATION_NOTIFY,
@@ -266,6 +266,8 @@ namespace transport
         const twopf_kconfig_record& k_config;
         const double k_cube;
 
+        const double t_initial;
+
         twopf_batcher<number>& batcher;
 
         const unsigned int backg_size;
@@ -281,7 +283,7 @@ namespace transport
 
     template <typename number>
     twopf_singleconfig_batch_observer<number>::twopf_singleconfig_batch_observer(twopf_batcher<number>& b, const twopf_kconfig_record& c,
-                                                                                 const time_config_database& t,
+                                                                                 double t_ics, const time_config_database& t,
                                                                                  unsigned int bg_sz, unsigned int ten_sz, unsigned int tw_sz,
                                                                                  unsigned int bg_st, unsigned int ten_st, unsigned int tw_st,
                                                                                  boost::timer::nanosecond_type t_int, bool s, unsigned int p)
@@ -289,6 +291,7 @@ namespace transport
         batcher(b),
         k_config(c),
         k_cube(c->k_comoving*c->k_comoving*c->k_comoving),
+        t_initial(t_ics),
         backg_size(bg_sz),
         tensor_size(ten_sz),
         twopf_size(tw_sz),
@@ -332,11 +335,31 @@ namespace transport
         this->timing_observer<number>::stop_timers(steps, refinement);
         this->batcher.report_integration_success(this->get_integration_time(), this->get_batching_time(), this->k_config->serial, steps, refinement);
 
+        std::ostringstream init_time;
+        init_time << std::scientific << std::setprecision(this->precision) << this->t_initial;
+
+        std::ostringstream exit_time;
+        exit_time << std::scientific << std::setprecision(this->precision) << this->k_config->t_exit;
+
+        std::ostringstream massless_time;
+        massless_time << std::scientific << std::setprecision(this->precision) << this->k_config->t_massless;
+
+        std::ostringstream massless_efolds;
+        massless_efolds << std::scientific << std::setprecision(this->precision) << (this->k_config->t_massless - this->t_initial);
+
+        std::ostringstream subh_efolds;
+        subh_efolds << std::scientific << std::setprecision(this->precision) << (this->k_config->t_exit - this->t_initial);
+
         boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
         BOOST_LOG_SEV(this->batcher.get_log(), generic_batcher::log_severity_level::normal)
 	        << "** " << boost::posix_time::to_simple_string(now) << ": "
 	        << CPPTRANSPORT_SOLVING_CONFIG << " " << this->k_config->serial << ", "
-	        << CPPTRANSPORT_INTEGRATION_TIME << " = " << format_time(this->get_integration_time());
+	        << CPPTRANSPORT_INTEGRATION_TIME << " = " << format_time(this->get_integration_time()) << ", "
+          << CPPTRANSPORT_INITIAL_TIME << " = " << init_time.str() << ", "
+          << CPPTRANSPORT_EXIT_TIME << " = " << exit_time.str() << ", "
+          << CPPTRANSPORT_MASSLESS_TIME << " = " << massless_time.str() << ", "
+          << CPPTRANSPORT_SUBHORIZON_EFOLDS << " = " << subh_efolds.str() << ", "
+          << CPPTRANSPORT_MASSLESS_EFOLDS << " = " << massless_efolds.str();
       }
 
 
@@ -350,7 +373,7 @@ namespace transport
       public:
 
         threepf_singleconfig_batch_observer(threepf_batcher<number>& b, const threepf_kconfig_record& c,
-                                            const time_config_database& t,
+                                            double t_ics, const time_config_database& t,
                                             unsigned int bg_sz, unsigned int ten_sz, unsigned int tw_sz, unsigned int th_sz,
                                             unsigned int bg_st,
                                             unsigned int ten_k1_st, unsigned int ten_k2_st, unsigned int ten_k3_st,
@@ -393,6 +416,8 @@ namespace transport
         const double k3_cube;
         const double shape;
 
+        const double t_initial;
+
         threepf_batcher<number>& batcher;
 
         const unsigned int backg_size;
@@ -417,7 +442,7 @@ namespace transport
 
     template <typename number>
     threepf_singleconfig_batch_observer<number>::threepf_singleconfig_batch_observer(threepf_batcher<number>& b, const threepf_kconfig_record& c,
-                                                                                     const time_config_database& t,
+                                                                                     double t_ics, const time_config_database& t,
                                                                                      unsigned int bg_sz, unsigned int ten_sz, unsigned int tw_sz, unsigned int th_sz,
                                                                                      unsigned int bg_st,
                                                                                      unsigned int ten_k1_st, unsigned int ten_k2_st, unsigned int ten_k3_st,
@@ -432,6 +457,7 @@ namespace transport
         k1_cube(c->k1_comoving*c->k1_comoving*c->k1_comoving),
         k2_cube(c->k2_comoving*c->k2_comoving*c->k2_comoving),
         k3_cube(c->k3_comoving*c->k3_comoving*c->k3_comoving),
+        t_initial(t_ics),
         shape(c->k1_comoving*c->k1_comoving * c->k2_comoving*c->k2_comoving * c->k3_comoving*c->k3_comoving),
         backg_size(bg_sz),
         tensor_size(ten_sz),
@@ -528,11 +554,31 @@ namespace transport
         this->timing_observer<number>::stop_timers(steps, refinement);
         this->batcher.report_integration_success(this->get_integration_time(), this->get_batching_time(), this->k_config->serial, steps, refinement);
 
+        std::ostringstream init_time;
+        init_time << std::scientific << std::setprecision(this->precision) << this->t_initial;
+
+        std::ostringstream exit_time;
+        exit_time << std::scientific << std::setprecision(this->precision) << this->k_config->t_exit;
+
+        std::ostringstream massless_time;
+        massless_time << std::scientific << std::setprecision(this->precision) << this->k_config->t_massless;
+
+        std::ostringstream massless_efolds;
+        massless_efolds << std::scientific << std::setprecision(this->precision) << (this->k_config->t_massless - this->t_initial);
+
+        std::ostringstream subh_efolds;
+        subh_efolds << std::scientific << std::setprecision(this->precision) << (this->k_config->t_exit - this->t_initial);
+
         boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
         BOOST_LOG_SEV(this->batcher.get_log(), generic_batcher::log_severity_level::normal)
 	        << "** " << boost::posix_time::to_simple_string(now) << ": "
-		        << CPPTRANSPORT_SOLVING_CONFIG << " " << this->k_config->serial << ", "
-		        << CPPTRANSPORT_INTEGRATION_TIME << " = " << format_time(this->get_integration_time());
+          << CPPTRANSPORT_SOLVING_CONFIG << " " << this->k_config->serial << ", "
+          << CPPTRANSPORT_INTEGRATION_TIME << " = " << format_time(this->get_integration_time()) << ", "
+          << CPPTRANSPORT_INITIAL_TIME << " = " << init_time.str() << ", "
+          << CPPTRANSPORT_EXIT_TIME << " " << CPPTRANSPORT_EXIT_TIME_KT << " = " << exit_time.str() << ", "
+          << CPPTRANSPORT_MASSLESS_TIME << " = " << massless_time.str() << ", "
+          << CPPTRANSPORT_SUBHORIZON_EFOLDS << " = " << subh_efolds.str() << ", "
+          << CPPTRANSPORT_MASSLESS_EFOLDS << " = " << massless_efolds.str();
       }
 
 

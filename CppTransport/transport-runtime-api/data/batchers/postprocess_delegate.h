@@ -29,7 +29,7 @@ namespace transport
 
       public:
 
-        postprocess_delegate(model<number>* m, twopf_list_task<number>* tk);
+        postprocess_delegate(model<number>* m, twopf_db_task<number>* tk);
 
         ~postprocess_delegate() = default;
 
@@ -88,7 +88,7 @@ namespace transport
         model<number>* mdl;
 
         //! cache point to task instance
-        twopf_list_task<number>* parent_task;
+        twopf_db_task<number>* parent_task;
 
         //! B-tensor cache
         std::vector<number> B_qrp;
@@ -103,7 +103,7 @@ namespace transport
 
 
     template <typename number>
-    postprocess_delegate<number>::postprocess_delegate(model<number> *m, twopf_list_task<number>* tk)
+    postprocess_delegate<number>::postprocess_delegate(model<number> *m, twopf_db_task<number>* tk)
       : mdl(m),
         Nfields(m->get_N_fields()),
         parent_task(tk)

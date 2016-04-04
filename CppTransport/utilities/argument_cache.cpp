@@ -62,6 +62,11 @@ argument_cache::argument_cache(int argc, const char** argv, local_environment& e
 
     boost::program_options::variables_map option_map;
 
+    // parse options from command line; we do this first so that any options specified on the command line
+    // override those specified in a configuration file
+    boost::program_options::parsed_options cmdline_parsed = boost::program_options::command_line_parser(argc, argv).options(cmdline_options).positional(positional_options).allow_unregistered().run();
+    boost::program_options::store(cmdline_parsed, option_map);
+
     // parse options from configuration file
     boost::optional< boost::filesystem::path > config_path = env.config_file_path();
     if(config_path)
@@ -88,11 +93,10 @@ argument_cache::argument_cache(int argc, const char** argv, local_environment& e
           }
       }
 
-    // parse options from command line
-    boost::program_options::parsed_options cmdline_parsed = boost::program_options::command_line_parser(argc, argv).options(cmdline_options).positional(positional_options).allow_unregistered().run();
-    boost::program_options::store(cmdline_parsed, option_map);
+    // inform the Boost::Program_Options library that option parsing is complete
     boost::program_options::notify(option_map);
 
+    // inform the user that we have ignored any unrecognized options
     std::vector<std::string> unrecognized_cmdline_options = boost::program_options::collect_unrecognized(cmdline_parsed.options, boost::program_options::exclude_positional);
     if(unrecognized_cmdline_options.size() > 0)
       {
@@ -101,6 +105,9 @@ argument_cache::argument_cache(int argc, const char** argv, local_environment& e
             std::cout << CPPTRANSPORT_NAME << ": " << WARNING_UNKNOWN_SWITCH << " '" << option << "'" << '\n';
           }
       }
+
+
+    // HANDLE OPTIONS
 
     bool emitted_version = false;
 
@@ -133,7 +140,18 @@ argument_cache::argument_cache(int argc, const char** argv, local_environment& e
     if(option_map.count(INCLUDE_SWITCH_LONG) > 0)
       {
         std::vector<std::string> include_paths = option_map[INCLUDE_SWITCH_LONG].as< std::vector<std::string> >();
-        std::copy(include_paths.cbegin(), include_paths.cend(), std::back_inserter(this->search_path_list));
+
+        for(const std::string& path : include_paths)
+          {
+            boost::filesystem::path p = path;
+
+            if(!p.is_absolute())
+              {
+                p = boost::filesystem::absolute(p);
+              }
+
+            this->search_path_list.emplace_back(p);
+          }
       }
 
     if(option_map.count(INPUT_FILE_SWITCH) > 0)

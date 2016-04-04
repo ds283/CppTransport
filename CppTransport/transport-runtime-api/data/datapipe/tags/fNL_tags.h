@@ -219,7 +219,7 @@ namespace transport
 #endif
 
         timing_instrument timer(this->pipe->database_timer);
-        this->pipe->pull_timeslice.fNL(this->pipe, query, sample, this->type);
+        this->pipe->data_mgr.pull_fNL_time_sample(this->pipe, query, sample, this->type);
 	    }
 
 
@@ -234,7 +234,7 @@ namespace transport
 #endif
 
         timing_instrument timer(this->pipe->database_timer);
-        this->pipe->pull_timeslice.BT(this->pipe, query, sample, this->type);
+        this->pipe->data_mgr.pull_BT_time_sample(this->pipe, query, sample, this->type);
 	    }
 
 
@@ -249,7 +249,7 @@ namespace transport
 #endif
 
         timing_instrument timer(this->pipe->database_timer);
-        this->pipe->pull_timeslice.BT(this->pipe, query, sample, this->type);
+        this->pipe->data_mgr.pull_TT_time_sample(this->pipe, query, sample, this->type);
 	    }
 
 

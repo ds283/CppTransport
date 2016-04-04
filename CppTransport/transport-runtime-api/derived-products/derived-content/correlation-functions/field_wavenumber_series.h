@@ -40,12 +40,12 @@ namespace transport
           public:
 
             //! construct a twopf wavenumber-series object
-            twopf_wavenumber_series(const twopf_list_task<number>& tk, index_selector<2>& sel,
+            twopf_wavenumber_series(const twopf_db_task<number>& tk, index_selector<2>& sel,
                                     SQL_time_config_query tq, SQL_twopf_kconfig_query kq,
                                     unsigned int prec = CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
 		        //! deserialization constructor
-		        twopf_wavenumber_series(Json::Value& reader, typename repository_finder<number>::task_finder& finder);
+		        twopf_wavenumber_series(Json::Value& reader, task_finder<number>& finder);
 
 		        virtual ~twopf_wavenumber_series() = default;
 
@@ -103,7 +103,7 @@ namespace transport
         // note that because time_series<> inherits virtually from derived_line<>, the constructor for
         // derived_line<> is *not* called from time_series<>. We have to call it ourselves.
         template <typename number>
-        twopf_wavenumber_series<number>::twopf_wavenumber_series(const twopf_list_task<number>& tk, index_selector<2>& sel,
+        twopf_wavenumber_series<number>::twopf_wavenumber_series(const twopf_db_task<number>& tk, index_selector<2>& sel,
                                                                  SQL_time_config_query tq, SQL_twopf_kconfig_query kq, unsigned int prec)
 	        : derived_line<number>(tk, axis_class::wavenumber_axis, std::list<axis_value>{ axis_value::k_axis, axis_value::efolds_exit_axis }, prec),
 	          twopf_line<number>(tk, sel),
@@ -117,7 +117,7 @@ namespace transport
         // note that because time_series<> inherits virtually from derived_line<>, the constructor for
         // derived_line<> is *not* called from time_series<>. We have to call it ourselves.
         template <typename number>
-        twopf_wavenumber_series<number>::twopf_wavenumber_series(Json::Value& reader, typename repository_finder<number>::task_finder& finder)
+        twopf_wavenumber_series<number>::twopf_wavenumber_series(Json::Value& reader, task_finder<number>& finder)
 	        : derived_line<number>(reader, finder),
 	          twopf_line<number>(reader, finder),
 	          wavenumber_series<number>(reader),
@@ -286,7 +286,7 @@ namespace transport
 				                              unsigned int prec=CPPTRANSPORT_DEFAULT_PLOT_PRECISION);
 
 				    //! deserialization constructor
-				    threepf_wavenumber_series(Json::Value& reader, typename repository_finder<number>::task_finder& finder);
+				    threepf_wavenumber_series(Json::Value& reader, task_finder<number>& finder);
 
 				    virtual ~threepf_wavenumber_series() = default;
 
@@ -363,7 +363,7 @@ namespace transport
         // note that because time_series<> inherits virtually from derived_line<>, the constructor for
         // derived_line<> is *not* called from time_series<>. We have to call it ourselves.
         template <typename number>
-        threepf_wavenumber_series<number>::threepf_wavenumber_series(Json::Value& reader, typename repository_finder<number>::task_finder& finder)
+        threepf_wavenumber_series<number>::threepf_wavenumber_series(Json::Value& reader, task_finder<number>& finder)
 	        : derived_line<number>(reader, finder),
 	          threepf_line<number>(reader, finder),
 	          wavenumber_series<number>(reader),
