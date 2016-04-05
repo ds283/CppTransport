@@ -110,6 +110,9 @@ namespace transport
           {
             if(xe.get_exception_code() == exception_type::REPO_NOT_FOUND)
               {
+#ifdef TRACE_OUTPUT
+                std::cout << "TRACE_OUTPUT L" << '\n';
+#endif
                 this->err(xe.what());
                 repo = nullptr;
               }

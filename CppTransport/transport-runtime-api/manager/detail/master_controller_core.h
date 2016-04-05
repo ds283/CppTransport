@@ -154,6 +154,9 @@ namespace transport
               {
                 if(xe.get_exception_code() == exception_type::REPO_NOT_FOUND)
                   {
+#ifdef TRACE_OUTPUT
+                    std::cout << "TRACE_OUTPUT H" << '\n';
+#endif
                     this->err(xe.what());
                     repo = nullptr;
                   }
@@ -365,6 +368,9 @@ namespace transport
                       {
                         if(xe.get_exception_code() == exception_type::REPOSITORY_ERROR)
                           {
+#ifdef TRACE_OUTPUT
+                            std::cout << "TRACE_OUTPUT G" << '\n';
+#endif
                             this->err(xe.what());
                           }
                         else throw;
@@ -387,6 +393,9 @@ namespace transport
                   {
                     if(xe.get_exception_code() == exception_type::REPOSITORY_ERROR)
                       {
+#ifdef TRACE_OUTPUT
+                        std::cout << "TRACE_OUTPUT I" << '\n';
+#endif
                         this->err(xe.what());
                       }
                     else throw;
@@ -666,10 +675,16 @@ namespace transport
                           }
                         catch(runtime_exception& xe)
                           {
+#ifdef TRACE_OUTPUT
+                            std::cout << "TRACE_OUTPUT J" << '\n';
+#endif
                             this->err(xe.what());
                           }
                         catch(std::exception& xe)
                           {
+#ifdef TRACE_OUTPUT
+                            std::cout << "TRACE_OUTPUT K" << '\n';
+#endif
                             this->err(xe.what());
                           }
                         break;

@@ -361,6 +361,9 @@ namespace transport
               {
                 if(xe.get_exception_code() == exception_type::REPORTING_ERROR)
                   {
+#ifdef TRACE_OUTPUT
+                    std::cout << "TRACE_OUTPUT M" << '\n';
+#endif
                     this->err(xe.what());
                     return;
                   }
@@ -958,7 +961,7 @@ namespace transport
           {
             this->make_data_element("Initial conditions", format_number(tk.get_N_initial()) + " e-folds", col1_list);
             this->make_data_element("<var>N</var><sub>*</sub>", format_number(tk.get_N_horizon_crossing()) + " e-folds", col1_list);
-            this->make_data_element("<var>N</var><sub>subhorizon</sub>", format_number(tk.get_N_subhorizon_efolds()) + " e-folds", col1_list);
+            this->make_data_element("Subhorizon e-folds", format_number(tk.get_N_subhorizon_efolds()) + " e-folds", col1_list);
             this->make_data_element("Maximum refinements", boost::lexical_cast<std::string>(tk.get_max_refinements()), col1_list);
 
             this->make_data_element("End of inflation", format_number(tk.get_N_end_of_inflation()) + " e-folds", col2_list);
@@ -2119,7 +2122,7 @@ namespace transport
             this->plot_scatter(bundle, rec, "_timing_beta.py", "_timing_beta.png", dataset, "shape parameter $k_3 / k_t$",
                                "integration time in seconds", "$k_t$",
                                "report-chart", "Time dependence: shape",
-                               "Shows the dependence of the integration time on the shape parameter k<sub>3</sub>/k<sub>t</sub>",
+                               "Shows the dependence of the integration time on the shape parameter k3/kt",
                                true, true, parent);
           }
 
