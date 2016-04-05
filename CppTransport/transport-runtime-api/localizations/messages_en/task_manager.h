@@ -38,6 +38,9 @@
 #define CPPTRANSPORT_SEED_GROUP_MISMATCHED_SERIALS_B "and"
 #define CPPTRANSPORT_SEED_GROUP_MISMATCHED_SERIALS_C "do not have the same missing k-configurations and cannot be used to seed a paired integration"
 
+#define CPPTRANSPORT_PROCESSING_TASK_A               "Task manager: processing task"
+#define CPPTRANSPORT_PROCESSING_TASK_OF              "of"
+
 #define CPPTRANSPORT_PROCESSED_TASKS_A               "Task manager: processed"
 #define CPPTRANSPORT_PROCESSED_TASKS_B_SINGULAR      "database task"
 #define CPPTRANSPORT_PROCESSED_TASKS_B_PLURAL        "database tasks"

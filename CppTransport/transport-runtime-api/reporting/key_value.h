@@ -25,6 +25,17 @@ namespace transport
         class key_value
           {
 
+            // ASSOCIATED TYPES
+
+          public:
+
+            enum class print_options
+              {
+                none,
+                force_simple
+              };
+
+
             // CONSTRUCTOR, DESTRUCTOR
 
           public:
@@ -55,7 +66,7 @@ namespace transport
             bool get_tiling() const { return(this->tile); }
 
             //! write to a stream
-            void write(std::ostream& out);
+            void write(std::ostream& out, print_options opts=print_options::none);
 
             //! reset
             void reset() { this->db.clear(); this->tile = false; }
@@ -66,7 +77,7 @@ namespace transport
           protected:
 
             //! compute number of columns and column width for current terminal
-            void compute_columns(unsigned int& columns, unsigned int& column_width);
+            void compute_columns(unsigned int& columns, unsigned int& column_width, print_options opts);
 
 
             // INTERNAL DATA
@@ -96,20 +107,23 @@ namespace transport
           };
 
 
-        void key_value::write(std::ostream& out)
+        void key_value::write(std::ostream& out, print_options opts)
           {
             unsigned int columns = 1;
             unsigned int column_width = 0;
 
             // if tiling, compute number of columns and column width
-            if(tile) this->compute_columns(columns, column_width);
+            if(tile) this->compute_columns(columns, column_width, opts);
+
+            bool colour = this->env.has_colour_terminal_support() && this->arg_cache.get_colour_output();
+            if(opts == print_options::force_simple) colour = false;
 
             unsigned int current_column = 0;
             for(const std::pair< std::string, std::string >& elt : this->db)
               {
-                if(this->env.has_colour_terminal_support() && this->arg_cache.get_colour_output()) out << ColourCode(ANSI_colour::bold);
+                if(colour) out << ColourCode(ANSI_colour::bold);
                 out << elt.first;
-                if(this->env.has_colour_terminal_support() && this->arg_cache.get_colour_output()) out << ColourCode(ANSI_colour::normal);
+                if(colour) out << ColourCode(ANSI_colour::normal);
 
                 // set column width if required by tiling
                 if(this->tile)
@@ -130,9 +144,10 @@ namespace transport
           }
 
 
-        void key_value::compute_columns(unsigned int& columns, unsigned int& column_width)
+        void key_value::compute_columns(unsigned int& columns, unsigned int& column_width, print_options opts)
           {
-            unsigned int width = this->env.detect_terminal_width();
+            unsigned int width = CPPTRANSPORT_DEFAULT_TERMINAL_WIDTH;
+            if(opts != print_options::force_simple) this->env.detect_terminal_width();
 
             columns = 1;
             column_width = width;

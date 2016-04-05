@@ -100,6 +100,16 @@ namespace transport
     class message_handler
       {
 
+        // ASSOCIATED TYPE
+
+      public:
+
+        enum class highlight
+          {
+            none,
+            heading
+          };
+
         // CONSTRUCTOR, DESTRUCTOR
 
       public:
@@ -120,7 +130,7 @@ namespace transport
       public:
 
         //! report an error
-        void operator()(const std::string& msg) const;
+        void operator()(const std::string& msg, highlight mode=highlight::none) const;
 
 
         // INTERNAL DATA
@@ -157,15 +167,15 @@ namespace transport
       }
 
 
-    void message_handler::operator()(const std::string& msg) const
+    void message_handler::operator()(const std::string& msg, highlight mode) const
       {
         bool colour = this->env.has_colour_terminal_support() && this->args.get_colour_output();
 
         if(this->args.get_verbose())
           {
-//            if(colour) std::cout << ColourCode(ANSI_colour::green);
+            if(mode == highlight::heading) if(colour) std::cout << ColourCode(ANSI_colour::green);
             std::cout << msg << '\n';
-//            if(colour) std::cout << ColourCode(ANSI_colour::normal);
+            if(mode != highlight::none) if(colour) std::cout << ColourCode(ANSI_colour::normal);
           }
       }
 

@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __master_scheduler_H_
-#define __master_scheduler_H_
+#ifndef CPPTRANSPORT_MASTER_SCHEDULER_H
+#define CPPTRANSPORT_MASTER_SCHEDULER_H
 
 
 #include <vector>
@@ -19,6 +19,7 @@
 
 #include "transport-runtime-api/repository/writers/generic_writer.h"
 
+#include "transport-runtime-api/reporting/key_value.h"
 #include "transport-runtime-api/utilities/formatter.h"
 
 #include "transport-runtime-api/exceptions.h"
@@ -363,8 +364,11 @@ namespace transport
 		    //! finalize queue setup; should be called before generating work assignments
 		    void complete_queue_setup();
 
+        //! check whether an update is available
+        bool update_available();
+
 		    //! check for an update string
-		    bool generate_update_string(std::string& msg);
+		    void populate_update_information(reporting::key_value& updates, reporting::key_value& notifications);
 
         //! get current estimated time-of-completion
         const boost::posix_time::ptime& get_estimated_completion() const { return(this->estimated_completion); }
@@ -843,10 +847,34 @@ namespace transport
 			}
 
 
-		bool master_scheduler::generate_update_string(std::string& msg)
+    bool master_scheduler::update_available()
+      {
+        bool result = false;
+
+        if(this->timer.elapsed().wall > CPPTRANSPORT_SCHEDULER_MINIMUM_UPDATE_TIME)
+          {
+            if(this->update_stack.size() > 0)     // any updates remaining in the queue?
+              {
+                if(this->update_stack.front() > this->queue.size() +
+                                                this->work_items_in_flight)   // wait until items remaining (including those in flight) is small enough
+                  {
+                    result = true;
+                  }
+              }
+
+            if(this->queue.size() == 0 && !this->finished)
+              {
+                result = true;
+              }
+          }
+
+        return result;
+      }
+
+
+    void master_scheduler::populate_update_information(reporting::key_value& updates, reporting::key_value& notifications)
 			{
-				bool result = false;
-				msg.clear();
+        updates.reset();
 
 				if(this->timer.elapsed().wall > CPPTRANSPORT_SCHEDULER_MINIMUM_UPDATE_TIME)
 					{
@@ -854,31 +882,25 @@ namespace transport
 							{
 								if(this->update_stack.front() > this->queue.size() + this->work_items_in_flight)   // wait until items remaining (including those in flight) is small enough
 									{
-										result = true;
+                    // pop work items from front of queue, in case we need to skip multiple updates
 										while(this->update_stack.size() > 0 && this->update_stack.front() > this->queue.size() + this->work_items_in_flight)
 											{
 												this->update_stack.pop_front();
 											}
 
-								    std::ostringstream percent_stream;
-										percent_stream << std::setprecision(3);
-										percent_stream << 100.0 * (static_cast<double>(this->work_items_completed)
+								    std::ostringstream complete_msg;
+										complete_msg << std::setprecision(3);
+										complete_msg << 100.0 * (static_cast<double>(this->work_items_completed)
 											/ (static_cast<double>(this->work_items_completed + this->work_items_in_flight + this->queue.size()))) << "%";
 
-								    std::ostringstream msg_stream;
-
-								    boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
-										msg_stream << boost::posix_time::to_simple_string(now) << ": ";
-
-										msg_stream << this->work_items_completed << " " << CPPTRANSPORT_MASTER_SCHEDULER_WORK_ITEMS_PROCESSED
-											<< ", " << this->work_items_in_flight << " " << CPPTRANSPORT_MASTER_SCHEDULER_WORK_ITEMS_INFLIGHT
-											<< ", " << this->queue.size() << " " << CPPTRANSPORT_MASTER_SCHEDULER_REMAIN
-											<< " (~" << percent_stream.str() << " " << CPPTRANSPORT_MASTER_SCHEDULER_COMPLETE << ")";
+                    updates.insert_back(CPPTRANSPORT_MASTER_SCHEDULER_WORK_ITEMS_PROCESSED, boost::lexical_cast<std::string>(this->work_items_completed));
+                    updates.insert_back(CPPTRANSPORT_MASTER_SCHEDULER_WORK_ITEMS_INFLIGHT, boost::lexical_cast<std::string>(this->work_items_in_flight));
+                    updates.insert_back(CPPTRANSPORT_MASTER_SCHEDULER_REMAIN, boost::lexical_cast<std::string>(this->queue.size()));
+                    updates.insert_back(CPPTRANSPORT_MASTER_SCHEDULER_COMPLETE, complete_msg.str());
 
 								    boost::timer::nanosecond_type mean_time_per_item = this->total_work_time / this->work_items_completed;
-										msg_stream << " | " << CPPTRANSPORT_MASTER_SCHEDULER_MEAN_TIME_PER_ITEM << " " << format_time(mean_time_per_item);
-
-										msg_stream << " | " << CPPTRANSPORT_MASTER_SCHEDULER_TARGET_DURATION << " " << format_time(this->current_granularity);
+                    updates.insert_back(CPPTRANSPORT_MASTER_SCHEDULER_MEAN_TIME_PER_ITEM, format_time(mean_time_per_item));
+                    updates.insert_back(CPPTRANSPORT_MASTER_SCHEDULER_TARGET_DURATION, format_time(this->current_granularity));
 
 								    boost::timer::nanosecond_type total_wallclock_time         = this->timer.elapsed().wall;
 								    boost::timer::nanosecond_type mean_wallclock_time_per_item = total_wallclock_time / this->work_items_completed;
@@ -887,31 +909,25 @@ namespace transport
                     boost::posix_time::time_duration duration = boost::posix_time::seconds(estimated_time_remaining / (1000 * 1000 * 1000));
 
                     // update cached expected completion time
+                    boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
 								    this->estimated_completion = now + duration;
 
-										msg_stream << " | " << CPPTRANSPORT_MASTER_SCHEDULER_COMPLETION_ESTIMATE << " "
-											<< boost::posix_time::to_simple_string(this->estimated_completion) << " ("
-											<< format_time(estimated_time_remaining) << " " << CPPTRANSPORT_MASTER_SCHEDULER_FROM_NOW << ")";
+                    std::ostringstream estimate_msg;
+                    estimate_msg << boost::posix_time::to_simple_string(this->estimated_completion) << " ("
+                      << format_time(estimated_time_remaining) << " " << CPPTRANSPORT_MASTER_SCHEDULER_FROM_NOW << ")";
 
-										msg = msg_stream.str();
+                    notifications.insert_back(CPPTRANSPORT_MASTER_SCHEDULER_COMPLETION_ESTIMATE, estimate_msg.str());
 									}
 							}
 
             if(this->queue.size() == 0 && !this->finished)
               {
-                result = true;
                 this->finished = true;
 
                 boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
-
-                std::ostringstream msg_stream;
-                msg_stream << CPPTRANSPORT_MASTER_SCHEDULER_WORK_COMPLETE << " " << boost::posix_time::to_simple_string(now);
-
-                msg = msg_stream.str();
+                notifications.insert_back(CPPTRANSPORT_MASTER_SCHEDULER_WORK_COMPLETE, boost::posix_time::to_simple_string(now));
               }
 					}
-
-				return(result);
 			}
 
 
@@ -1081,4 +1097,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__master_scheduler_H_
+#endif //CPPTRANSPORT_MASTER_SCHEDULER_H

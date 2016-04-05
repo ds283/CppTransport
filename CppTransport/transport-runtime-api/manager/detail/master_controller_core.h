@@ -460,8 +460,11 @@ namespace transport
     template <typename number>
     void master_controller<number>::pre_process_tasks()
       {
+        // perform recovery if requested
+        if(this->arg_cache.get_recovery_mode() && this->repo) this->repo->perform_recovery(*this->data_mgr, this->get_rank());
+
         if(this->arg_cache.get_model_list())   this->model_mgr.write_models(std::cout);
-        if(this->arg_cache.get_create_model()) this->gallery.commit(*this->repo);
+        if(this->arg_cache.get_create_model() && this->repo) this->gallery.commit(*this->repo);
 
         // handle repository action switches
         // these were left unhandled during option parsing
@@ -497,15 +500,19 @@ namespace transport
           {
             boost::timer::cpu_timer timer;
 
-            // perform recovery if requested
-            if(this->arg_cache.get_recovery_mode()) this->repo->perform_recovery(*this->data_mgr, this->get_rank());
-
             // set up workers
             this->initialize_workers();
 
             unsigned int database_tasks = 0;
             for(const job_descriptor& job : this->job_queue)
               {
+                if(this->job_queue.size() > 0)
+                  {
+                    std::ostringstream msg;
+                    msg << CPPTRANSPORT_PROCESSING_TASK_A << " '" << job.get_name() << "' (" << database_tasks+1 << " " << CPPTRANSPORT_PROCESSING_TASK_OF << " " << this->job_queue.size() << ")";
+                    this->msg(msg.str(), message_handler::highlight::heading);
+                  }
+
                 switch(job.get_type())
                   {
                     case job_type::job_task:
@@ -518,6 +525,7 @@ namespace transport
               }
 
             timer.stop();
+
             if(database_tasks > 0)
               {
                 std::ostringstream msg;
@@ -713,17 +721,39 @@ namespace transport
     void master_controller<number>::check_for_progress_update(WriterObject& writer)
       {
         // emit update message giving current status if required
-        std::string msg;
-        bool print_msg = this->work_scheduler.generate_update_string(msg);
-        if(print_msg)     // an update exists
+        if(this->work_scheduler.update_available())     // an update exists
           {
-            // emit update
+            boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
+
             std::ostringstream update_msg;
-            update_msg << CPPTRANSPORT_TASK_MANAGER_LABEL << " " << msg;
-            this->msg(update_msg.str());
+            update_msg << CPPTRANSPORT_TASK_MANAGER_LABEL << " " << boost::posix_time::to_simple_string(now);
+
+            // emit update
+            reporting::key_value update_data(this->local_env, this->arg_cache);
+            reporting::key_value notifications(this->local_env, this->arg_cache);
+            this->work_scheduler.populate_update_information(update_data, notifications);
+
+            if(this->arg_cache.get_verbose())
+              {
+                bool colour = this->local_env.has_colour_terminal_support() && this->arg_cache.get_colour_output();
+
+                if(colour) std::cout << ColourCode(ANSI_colour::magenta);
+                std::cout << update_msg.str();
+                if(colour) std::cout << ColourCode(ANSI_colour::normal);
+                std::cout << '\n';
+
+                update_data.set_tiling(true);
+                notifications.set_tiling(true);
+                update_data.write(std::cout);
+                notifications.write(std::cout);
+              }
 
             // update main database with new estimate of our completion time
             this->repo->advise_completion_time(writer.get_name(), this->work_scheduler.get_estimated_completion());
+
+            update_msg << '\n';
+            update_data.write(update_msg, reporting::key_value::print_options::force_simple);
+            notifications.write(update_msg, reporting::key_value::print_options::force_simple);
 
             BOOST_LOG_SEV(writer.get_log(), base_writer::log_severity_level::normal) << "±± Console advisory message: " << update_msg.str();
             this->log_worker_metadata(writer);
