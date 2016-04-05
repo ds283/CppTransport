@@ -191,7 +191,7 @@ namespace transport
 
             for(const std::string& task : tasks)
               {
-                job_queue.push_back(job_descriptor(job_type::job_task, task, tags));
+                job_queue.emplace_back(job_type::job_task, task, tags);
 
                 if(this->option_map.count(CPPTRANSPORT_SWITCH_SEED))
                   {
@@ -463,8 +463,8 @@ namespace transport
         // perform recovery if requested
         if(this->arg_cache.get_recovery_mode() && this->repo) this->repo->perform_recovery(*this->data_mgr, this->get_rank());
 
-        if(this->arg_cache.get_model_list())   this->model_mgr.write_models(std::cout);
-        if(this->arg_cache.get_create_model() && this->repo) this->gallery.commit(*this->repo);
+        if(this->arg_cache.get_model_list())                  this->model_mgr.write_models(std::cout);
+        if(this->arg_cache.get_create_model() && this->repo)  this->gallery.commit(*this->repo);
 
         // handle repository action switches
         // these were left unhandled during option parsing
@@ -488,7 +488,143 @@ namespace transport
 
 
     template <typename number>
-    void master_controller<number>::execute_tasks(void)
+    void master_controller<number>::autocomplete_task_schedule()
+      {
+        // build distance matrix for tasks
+        repository_toolkit<number> toolkit(*this->repo, this->err, this->warn, this->msg);
+        std::unique_ptr<repository_distance_matrix> dmat = toolkit.task_distance_matrix();
+
+        std::list< std::string > required_tasks;
+        for(const job_descriptor& job : this->job_queue)
+          {
+            switch(job.get_type())
+              {
+                case job_type::job_task:
+                  {
+                    std::unique_ptr< std::list<std::string> > depends = dmat->find_dependencies(job.get_name());
+
+                    if(depends)
+                      {
+//                        std::cout << "-- Task '" << job.get_name() << "' depends on tasks:" << '\n';
+//                        for(const std::string& tk : *depends)
+//                          {
+//                            std::cout << "   " << tk << '\n';
+//                          }
+                        required_tasks.merge(*depends);
+                      }
+                  }
+              }
+          }
+
+        // remove duplicates
+        required_tasks.sort();
+        required_tasks.unique();
+
+        // required_tasks holds a list of all tasks needed to generate output for the set of tasks specified on
+        // the command line
+        // Of these, we want to check which have no current content
+        this->prune_tasks_with_content(required_tasks);
+
+        // required_tasks now contains only those tasks for which output is needed;
+        // we need to prune it for paired tasks and then insert job records for any
+        // remaining tasks which do not already have one
+        this->prune_paired_tasks(required_tasks);
+
+        // insert any required job descriptors and sort task list into order
+        std::unique_ptr< std::list<std::string> > topological_order = dmat->compute_topological_order();
+        if(topological_order) this->insert_job_descriptors(required_tasks, *topological_order);
+      }
+
+
+    template <typename number>
+    void master_controller<number>::prune_tasks_with_content(std::list<std::string>& required_tasks)
+      {
+        for(std::list<std::string>::const_iterator t = required_tasks.begin(); t != required_tasks.end(); /* intentionally no update step */)
+          {
+            std::unique_ptr< task_record<number> > rec = this->repo->query_task(*t);
+            if(rec)
+              {
+                if(rec->get_output_groups().size() > 0)
+                  {
+//                    std::cout << "Task '" << *t << "' is needed, but already has content; evicting from list" << '\n';
+                    t = required_tasks.erase(t);
+                  }
+                else
+                  {
+//                    std::cout << "Task '" << *t << "' is needed and has no content; retaining in list" << '\n';
+                    ++t;
+                  }
+              }
+          }
+      }
+
+
+    template <typename number>
+    void master_controller<number>::prune_paired_tasks(std::list<std::string>& required_tasks)
+      {
+        for(const std::string& task : required_tasks)
+          {
+            std::unique_ptr< task_record<number> > rec = this->repo->query_task(task);
+            if(rec)
+              {
+                std::string paired_task;
+
+                if(rec->get_type() == task_type::postintegration)
+                  {
+                    const postintegration_task_record<number>& prec = dynamic_cast< const postintegration_task_record<number>& >(*rec);
+                    const postintegration_task<number>& tk = *prec.get_task();
+
+                    // only zeta 2pf and zeta 3pf tasks can be paired
+                    if(tk.get_task_type() == postintegration_task_type::twopf)
+                      {
+                        const zeta_twopf_task<number>& ztk = dynamic_cast< const zeta_twopf_task<number>& >(tk);
+                        if(ztk.is_paired()) paired_task = ztk.get_parent_task()->get_name();
+                      }
+                    else if(tk.get_task_type() == postintegration_task_type::threepf)
+                      {
+                        const zeta_threepf_task<number>& ztk = dynamic_cast< const zeta_threepf_task<number>& >(tk);
+                        if(ztk.is_paired()) paired_task = ztk.get_parent_task()->get_name();
+                      }
+                  }
+
+                if(!paired_task.empty())
+                  {
+                    std::list<std::string>::const_iterator u = std::find(required_tasks.begin(), required_tasks.end(), paired_task);
+                    if(u != required_tasks.end()) required_tasks.erase(u);
+                  }
+              }
+          }
+      }
+
+
+    template <typename number>
+    void master_controller<number>::insert_job_descriptors(const std::list<std::string>& tasks, const std::list<std::string>& order)
+      {
+        // set up tags
+        std::list<std::string> tags;
+        if(this->option_map.count(CPPTRANSPORT_SWITCH_TAG) > 0)
+          {
+            std::vector<std::string> tmp = this->option_map[CPPTRANSPORT_SWITCH_TAG].template as<std::vector<std::string> >();
+            std::copy(tmp.begin(), tmp.end(), std::back_inserter(tags));
+          }
+
+        for(const std::string& task : tasks)
+          {
+            std::list<job_descriptor>::const_iterator j = std::find_if(this->job_queue.cbegin(), this->job_queue.cend(), FindJobDescriptorByName(task));
+
+            if(j == this->job_queue.cend())   // no corresponding job in queue, so we need to insert one
+              {
+                this->job_queue.emplace_back(job_type::job_task, task, tags);
+              }
+          }
+
+        // sort job queue into topological order
+        this->job_queue.sort(CompareJobDescriptorByList(order));
+      }
+
+
+    template <typename number>
+    void master_controller<number>::execute_tasks()
       {
         if(!(this->get_rank() == 0)) throw runtime_exception(exception_type::MPI_ERROR, CPPTRANSPORT_EXEC_SLAVE);
 
@@ -503,13 +639,19 @@ namespace transport
             // set up workers
             this->initialize_workers();
 
-            unsigned int database_tasks = 0;
+            // schedule extra tasks if any explicitly-required tasks depend on content from
+            // a second task, but no content group is available
+            this->autocomplete_task_schedule();
+
+            unsigned int tasks_complete = 0;
+            unsigned int tasks_processed = 0;
             for(const job_descriptor& job : this->job_queue)
               {
-                if(this->job_queue.size() > 0)
+                // emit notification if we are processing multiple tasks
+                if(this->job_queue.size() > 1)
                   {
                     std::ostringstream msg;
-                    msg << CPPTRANSPORT_PROCESSING_TASK_A << " '" << job.get_name() << "' (" << database_tasks+1 << " " << CPPTRANSPORT_PROCESSING_TASK_OF << " " << this->job_queue.size() << ")";
+                    msg << CPPTRANSPORT_PROCESSING_TASK_A << " '" << job.get_name() << "' (" << tasks_processed+1 << " " << CPPTRANSPORT_PROCESSING_TASK_OF << " " << this->job_queue.size() << ")";
                     this->msg(msg.str(), message_handler::highlight::heading);
                   }
 
@@ -517,20 +659,33 @@ namespace transport
                   {
                     case job_type::job_task:
                       {
-                        this->process_task(job);
-                        database_tasks++;
+                        try
+                          {
+                            this->process_task(job);
+                            tasks_complete++;
+                          }
+                        catch(runtime_exception& xe)
+                          {
+                            this->err(xe.what());
+                          }
+                        catch(std::exception& xe)
+                          {
+                            this->err(xe.what());
+                          }
                         break;
                       }
                   }
+
+                ++tasks_processed;
               }
 
             timer.stop();
 
-            if(database_tasks > 0)
+            if(tasks_complete > 0)
               {
                 std::ostringstream msg;
-                msg << CPPTRANSPORT_PROCESSED_TASKS_A << " " << database_tasks << " ";
-                if(database_tasks > 1)
+                msg << CPPTRANSPORT_PROCESSED_TASKS_A << " " << tasks_complete << " ";
+                if(tasks_complete > 1)
                   {
                     msg << CPPTRANSPORT_PROCESSED_TASKS_B_PLURAL;
                   }
@@ -594,10 +749,6 @@ namespace transport
               }
             else throw xe;
           }
-
-        // build distance matrix for tasks
-        repository_toolkit<number> toolkit(*this->repo, this->err, this->warn, this->msg);
-        std::unique_ptr<repository_distance_matrix> dmat = toolkit.task_distance_matrix();
 
         // introspect task type
         switch(record->get_type())

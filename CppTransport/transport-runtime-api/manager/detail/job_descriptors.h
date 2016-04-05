@@ -126,6 +126,94 @@ namespace transport
 
           };
 
+
+        class FindJobDescriptorByName
+          {
+
+            // CONSTRUCTOR, DESTRUCTOR
+
+          public:
+
+            //! constructor
+            FindJobDescriptorByName(std::string n)
+              : name(n)
+              {
+              }
+
+            //! destructor
+            ~FindJobDescriptorByName() = default;
+
+
+            // INTERFACE
+
+          public:
+
+            //! test for name
+            bool operator()(const job_descriptor& j) const
+              {
+                return j.get_name() == this->name;
+              }
+
+
+            // INTERNAL DATA
+
+          private:
+
+            //! name to search for
+            const std::string name;
+
+          };
+
+
+        class CompareJobDescriptorByList
+          {
+
+            // CONSTRUCTOR, DESTRUCTOR
+
+          public:
+
+            //! constructor
+            CompareJobDescriptorByList(const std::list<std::string>& order);
+
+            //! destructor
+            ~CompareJobDescriptorByList() = default;
+
+
+            // INTERFACE
+
+          public:
+
+            //! comparison operator; note can't be marked const since
+            //! order_map may be modified if job descriptors are not present
+            bool operator()(const job_descriptor& A, const job_descriptor& B);
+
+
+            // INTERNAL DATA
+
+          private:
+
+            //! map from names to ordering
+            std::map< std::string, unsigned int > order_map;
+
+          };
+
+
+        CompareJobDescriptorByList::CompareJobDescriptorByList(const std::list<std::string>& order)
+          {
+            unsigned int number = 0;
+            for(const std::string& object : order)
+              {
+                this->order_map[object] = number++;
+              }
+          }
+
+
+        bool CompareJobDescriptorByList::operator()(const job_descriptor& A, const job_descriptor& B)
+          {
+            return this->order_map[A.get_name()] < this->order_map[B.get_name()];
+          }
+
+
       }   // namespace master_controller_impl
 
   }   // namespace transport

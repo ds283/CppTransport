@@ -18,9 +18,14 @@
 #include "transport-runtime-api/messages.h"
 #include "transport-runtime-api/exceptions.h"
 
-// use Floyd-Warshall algorithm from Boost::Graph to compute transitive closures
+// use adjacency lists to represent graphs
 #include "boost/graph/adjacency_list.hpp"
+
+// use Floyd-Warshall algorithm from Boost::Graph to compute transitive closures
 #include "boost/graph/floyd_warshall_shortest.hpp"
+
+// need topological sort in order to get an order on object dependencies
+#include "boost/graph/topological_sort.hpp"
 
 
 namespace transport
@@ -165,6 +170,34 @@ namespace transport
     using namespace repository_toolkit_impl;
 
 
+    namespace repository_toolkit_graph
+      {
+
+        //! weight for graph edges
+        typedef unsigned int edge_weight;
+
+        //! convert to a edge property
+        //! since the Boost::Graph Floyd-Warshall algorithm expects the graph to have weighted edges (in its default incarnation),
+        //! we adopt the simple strategy of adding edge weights and fixing them all to be unity.
+        //! An alternative would be to pass a fictitious weight map to Floyd-Warshall which returns unity for all edges.
+        typedef boost::property<boost::edge_weight_t, edge_weight> WeightProperty;
+
+        //! typedef for graph; edges stored as a set to avoid duplicates;
+        //! points stored as vectors; edges are directed
+        typedef boost::adjacency_list<boost::setS, boost::vecS, boost::directedS, boost::no_property, WeightProperty> graph_type;
+
+        typedef boost::graph_traits<graph_type>::vertex_descriptor vertex_type;
+
+        typedef std::vector<vertex_type> vertex_list;
+
+        typedef boost::property_map<graph_type, boost::vertex_index_t>::type index_map_type;
+
+      }
+
+    // pull in repository_toolkit for this scope
+    using namespace repository_toolkit_graph;
+
+
     //! represent a map from vertex names to vertex values
     class repository_vertex_map
       {
@@ -283,9 +316,17 @@ namespace transport
       public:
 
         //! constructor sets up an empty distance matrix but leaves M uninitialized
-        repository_distance_matrix()
-          : D(std::make_unique<matrix_type>())
+        repository_distance_matrix(graph_type& g, repository_vertex_map m)
+          : G(std::make_unique<graph_type>(g)),
+            M(std::make_unique<repository_vertex_map>(m)),
+            D(std::make_unique<matrix_type>(m.size()))
           {
+            // reassign distance matrix to be of correct size
+            unsigned int vertices = m.size();
+            for(unsigned int i = 0; i < vertices; ++i)
+              {
+                (*this->D)[i].resize(vertices);
+              }
           }
 
         //! destructor is default
@@ -299,10 +340,6 @@ namespace transport
         //! reset all data
         void reset() { this->D->clear(); this->M.reset(); }
 
-        //! assign vertices -- copies map, and reconstructs the distance matrix
-        //! D so it is a suitable size
-        void assign_vertex_map(const repository_vertex_map& map);
-
         //! get dimension of distance matrix
         size_t size() const { if(this->D) { return this->D->size(); } else { return 0; } }
 
@@ -314,13 +351,22 @@ namespace transport
 
       public:
 
-        //! determine a list of groups which depend on a given named group
-        std::unique_ptr< std::list<std::string> > find_dependent_groups(const std::string& name) const;
+        //! determine a list of objects (vertices) which depend on a given named object (vertex)
+        std::unique_ptr< std::list<std::string> > find_dependent_objects(const std::string& name) const;
+
+        //! determine a list of objects (vertices) on which a given named object (vertex) depends
+        std::unique_ptr< std::list<std::string> > find_dependencies(const std::string& name) const;
+
+        //! build topological ordering on graph
+        std::unique_ptr< std::list<std::string> > compute_topological_order() const;
 
 
         // INTERNAL DATA
 
       private:
+
+        //! underlying graph
+        std::unique_ptr<graph_type> G;
 
         //! distance matrix
         std::unique_ptr<matrix_type> D;
@@ -329,22 +375,6 @@ namespace transport
         std::unique_ptr<repository_vertex_map> M;
 
       };
-
-
-    void repository_distance_matrix::assign_vertex_map(const repository_vertex_map& map)
-      {
-        // make copy of the vertex map
-        this->M = std::make_unique<repository_vertex_map>(map);
-
-        // reassign distance matrix to be of correct size
-        unsigned int vertices = map.size();
-        D->resize(vertices);
-
-        for(unsigned int i = 0; i < vertices; ++i)
-          {
-            (*this->D)[i].resize(vertices);
-          }
-      }
 
 
     repository_distance_matrix::matrix_type::value_type& repository_distance_matrix::operator[](size_t n)
@@ -362,26 +392,70 @@ namespace transport
       }
 
 
-    std::unique_ptr< std::list<std::string> > repository_distance_matrix::find_dependent_groups(const std::string& name) const
+    std::unique_ptr< std::list<std::string> > repository_distance_matrix::find_dependent_objects(const std::string& name) const
       {
-        std::unique_ptr< std::list<std::string> > groups = std::make_unique< std::list<std::string> >();
+        std::unique_ptr< std::list<std::string> > objects = std::make_unique< std::list<std::string> >();
 
-        if(!this->D || !this->M) return groups;
+        if(!this->D || !this->M) return objects;
 
         unsigned int vertex = (*this->M)[name];
         for(unsigned int i = 0; i < this->D->size(); ++i)
           {
-            // get distance *from* this group (vertex) *to* some other group (i)
+            // get distance *from* this object (vertex) *to* some other object (i)
             // following directed arrows in the graph
             // (arrows are not bidirectional; this is an inclusion relationship)
             unsigned int dist = (*this->D)[vertex][i];
             if(i != vertex && dist < std::numeric_limits<unsigned int>::max())
               {
-                groups->push_back((*this->M)[i]);
+                objects->push_back((*this->M)[i]);
               }
           }
 
-        return groups;
+        return objects;
+      }
+
+
+    std::unique_ptr< std::list<std::string> > repository_distance_matrix::find_dependencies(const std::string& name) const
+      {
+        std::unique_ptr< std::list<std::string> > objects = std::make_unique< std::list<std::string> >();
+
+        if(!this->D || !this->M) return objects;
+
+        unsigned int vertex = (*this->M)[name];
+        for(unsigned int i = 0; i < this->D->size(); ++i)
+          {
+            // get distance *from* some other group (i) *to* this object (vertex)
+            // following directed arrows in the graph
+            unsigned int dist = (*this->D)[i][vertex];
+            if(i != vertex && dist < std::numeric_limits<unsigned int>::max())
+              {
+                objects->push_back((*this->M)[i]);
+              }
+          }
+
+        return objects;
+      }
+
+
+    std::unique_ptr< std::list<std::string> > repository_distance_matrix::compute_topological_order() const
+      {
+        std::unique_ptr< std::list<std::string> > objects = std::make_unique< std::list<std::string> >();
+
+        if(!this->G || !this->M) return objects;
+
+        // build ordered list of vertices
+        vertex_list list;
+        boost::topological_sort(*this->G, std::back_inserter(list));
+
+        index_map_type index = boost::get(boost::vertex_index, *this->G);
+
+        // convert list of vertices (remember it is supplied in reverse order) to an ordered list of object names
+        for(vertex_list::const_reverse_iterator t = list.crbegin(); t != list.crend(); ++t)
+          {
+            objects->push_back((*this->M)[index(*t)]);
+          }
+
+        return objects;
       }
 
 
@@ -460,22 +534,6 @@ namespace transport
         std::unique_ptr<repository_distance_matrix> content_group_distance_matrix(integration_content_db& integration_db,
                                                                                   postintegration_content_db& postintegration_db,
                                                                                   output_content_db& output_db);
-
-
-      protected:
-
-        //! weight for graph edges
-        typedef unsigned int edge_weight;
-
-        //! convert to a edge property
-        //! since the Boost::Graph Floyd-Warshall algorithm expects the graph to have weighted edges (in its default incarnation),
-        //! we adopt the simple strategy of adding edge weights and fixing them all to be unity.
-        //! An alternative would be to pass a fictitious weight map to Floyd-Warshall which returns unity for all edges.
-        typedef boost::property<boost::edge_weight_t, edge_weight> WeightProperty;
-
-        //! typedef for graph; edges stored as a set to avoid duplicates;
-        //! points stored as vectors; edges are directed
-        typedef boost::adjacency_list<boost::setS, boost::vecS, boost::directedS, boost::no_property, WeightProperty> record_graph;
 
 
         // INTERNAL DATA
@@ -584,11 +642,9 @@ namespace transport
       {
         typename task_db<number>::type& db = this->cache.get_task_db();
 
-        std::unique_ptr<repository_distance_matrix> dmat = std::make_unique<repository_distance_matrix>();
-
         // build graph representing tasks and their connexions
         repository_vertex_map vmap;
-        record_graph G;
+        graph_type G;
 
         // build directed graph representing the dependency chain among tasks
         for(const typename task_db<number>::type::value_type& item : db)
@@ -612,7 +668,9 @@ namespace transport
                     const postintegration_task<number>& tk = *prec.get_task();
                     const derivable_task<number>& ptk = *tk.get_parent_task();
                     vmap.insert(ptk.get_name());
-                    boost::add_edge(vmap[rec.get_name()], vmap[ptk.get_name()], 1, G);
+
+//                    std::cout << "Postintegration task '" << rec.get_name() << "' depends on derivable task '" << ptk.get_name() << "'" << '\n';
+                    boost::add_edge(vmap[ptk.get_name()], vmap[rec.get_name()], 1, G);
 
                     break;
                   }
@@ -623,12 +681,14 @@ namespace transport
 
                     // output tasks depend on derived products, each of which may depend on other tasks
                     const output_task<number>& tk = *orec.get_task();
+//                    std::cout << "Output task '" << rec.get_name() << "' depends on derived products:" << '\n';
 
                     const typename std::vector< output_task_element<number> > elements = tk.get_elements();
 
                     for(const output_task_element<number>& elt : elements)
                       {
                         derived_data::derived_product<number>& product = elt.get_product();
+//                        std::cout << "  -- Derived product '" << product.get_name() << "' depends on tasks:" << '\n';
 
                         // get list of tasks this product depends on
                         typename std::list< derivable_task<number>* > task_list;
@@ -636,6 +696,7 @@ namespace transport
 
                         for(derivable_task<number>* depend_tk : task_list)
                           {
+//                            std::cout << "     ++ '" << depend_tk->get_name() << "'" << '\n';
                             vmap.insert(depend_tk->get_name());
                             boost::add_edge(vmap[depend_tk->get_name()], vmap[rec.get_name()], 1, G);
                           }
@@ -646,8 +707,8 @@ namespace transport
               }
           }
 
-        // initialize distance matrix with vertex list
-        dmat->assign_vertex_map(vmap);
+        // initialize distance matrix with graph and vertex list
+        std::unique_ptr<repository_distance_matrix> dmat = std::make_unique<repository_distance_matrix>(G, vmap);
 
         // run Floyd-Warshall algorithm
         boost::floyd_warshall_all_pairs_shortest_paths(G, *dmat);
@@ -674,11 +735,9 @@ namespace transport
                                                                                                           postintegration_content_db& postintegration_content,
                                                                                                           output_content_db& output_content)
       {
-        std::unique_ptr<repository_distance_matrix> dmat = std::make_unique<repository_distance_matrix>();
-
         // build graph representing output groups and their connexions
         repository_vertex_map vmap;
-        record_graph G;
+        graph_type G;
 
         // build directed graph representing the dependency chain among output groups
         for(const integration_content_db::value_type& item : integration_content)
@@ -719,8 +778,8 @@ namespace transport
               }
           }
 
-        // initialize distance matrix with vertex list
-        dmat->assign_vertex_map(vmap);
+        // initialize distance matrix with graph and vertex list
+        std::unique_ptr<repository_distance_matrix> dmat = std::make_unique<repository_distance_matrix>(G, vmap);
 
         // run Floyd-Warshall algorithm
         boost::floyd_warshall_all_pairs_shortest_paths(G, *dmat);
@@ -788,7 +847,8 @@ namespace transport
                 if(check_match(record.get_name(), item.first, true))    // true = insist on exact match
                   {
                     item.second = true;   // mark as a match for this item
-                    std::unique_ptr< std::list<std::string> > dependent_groups = dmat->find_dependent_groups(record.get_name());
+                    std::unique_ptr< std::list<std::string> > dependent_groups = dmat->find_dependent_objects(
+                      record.get_name());
 
                     if(dependent_groups)
                       {

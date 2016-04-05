@@ -112,6 +112,18 @@ namespace transport
         //! recognize plotting control switches
         void recognize_plot_switches(boost::program_options::variables_map& option_map);
 
+        //! autocomplete content groups by scheduling tasks which are needed, but do not yet have content
+        void autocomplete_task_schedule();
+
+        //! prune autocomplete task list of tasks which already have content
+        void prune_tasks_with_content(std::list<std::string>& required_tasks);
+
+        //! prune autocomplete task list of tasks which are paired with other tasks
+        void prune_paired_tasks(std::list<std::string>& required_tasks);
+
+        //! insert job descriptors for required jobs, and sort jobs into correct topological order
+        void insert_job_descriptors(const std::list<std::string>& tasks, const std::list<std::string>& order);
+
 
         // MPI FUNCTIONS
 
