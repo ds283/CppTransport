@@ -665,10 +665,10 @@ namespace transport
         unsigned int count = sqlite3_operations::count_packages(this->db, tk.get_ics().get_name());
         if(count == 0)
           {
-            std::ostringstream msg;
-            msg << CPPTRANSPORT_REPO_AUTOCOMMIT_INTEGRATION_A << " '" << tk.get_name() << "' "
-            << CPPTRANSPORT_REPO_AUTOCOMMIT_INTEGRATION_B << " '" << tk.get_ics().get_name() << "'";
-            this->message(msg.str());
+//            std::ostringstream msg;
+//            msg << CPPTRANSPORT_REPO_AUTOCOMMIT_INTEGRATION_A << " '" << tk.get_name() << "' "
+//            << CPPTRANSPORT_REPO_AUTOCOMMIT_INTEGRATION_B << " '" << tk.get_ics().get_name() << "'";
+//            this->message(msg.str());
             this->commit(mgr, tk.get_ics());
           }
       }
@@ -704,10 +704,10 @@ namespace transport
             unsigned int count = sqlite3_operations::count_products(this->db, product.get_name());
             if(count == 0)
               {
-                std::ostringstream msg;
-                msg << CPPTRANSPORT_REPO_AUTOCOMMIT_OUTPUT_A << " '" << tk.get_name() << "' "
-                << CPPTRANSPORT_REPO_AUTOCOMMIT_OUTPUT_B << " '" << product.get_name() << "'";
-                this->message(msg.str());
+//                std::ostringstream msg;
+//                msg << CPPTRANSPORT_REPO_AUTOCOMMIT_OUTPUT_A << " '" << tk.get_name() << "' "
+//                << CPPTRANSPORT_REPO_AUTOCOMMIT_OUTPUT_B << " '" << product.get_name() << "'";
+//                this->message(msg.str());
                 this->commit(mgr, product);
               }
           }
@@ -834,9 +834,9 @@ namespace transport
               {
                 integration_task<number>& rtk = dynamic_cast< integration_task<number>& >(tk);
 
-                std::ostringstream msg;
-                msg << commit_int_A << " '" << parent << "' " << commit_int_B << " '" << rtk.get_name() << "'";
-                this->message(msg.str());
+//                std::ostringstream msg;
+//                msg << commit_int_A << " '" << parent << "' " << commit_int_B << " '" << rtk.get_name() << "'";
+//                this->message(msg.str());
 
                 switch(rtk.get_task_type())
                   {
@@ -860,9 +860,9 @@ namespace transport
               {
                 postintegration_task<number>& rtk = dynamic_cast< postintegration_task<number>& >(tk);
 
-                std::ostringstream msg;
-                msg << commit_pint_A << " '" << parent << "' " << commit_pint_B << " '" << rtk.get_name() << "'";
-                this->message(msg.str());
+//                std::ostringstream msg;
+//                msg << commit_pint_A << " '" << parent << "' " << commit_pint_B << " '" << rtk.get_name() << "'";
+//                this->message(msg.str());
 
                 switch(rtk.get_task_type())
                   {
