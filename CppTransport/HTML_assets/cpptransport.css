@@ -33,10 +33,18 @@ body {
     height: 600px;
 }
 
-/* Style for charts included as part of a report */
+/* Style for charts included as part of a report -- standard 2-up format */
 .report-chart {
     margin: 15px;
     border: 2px solid #ccc;
     width: 600px;
     height: 450px;
+}
+
+/* Style for charts included as part of a report -- small 3-up format */
+.report-sm-chart {
+    margin: 15px;
+    border: 2px solid #ccc;
+    width: 380px;
+    height: 290px;
 }

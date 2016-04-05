@@ -123,7 +123,8 @@ namespace transport
 
             //! create visual report of timing statistics
             template <typename number>
-            void write_timing_report(HTML_report_bundle<number>& bundle, const output_group_record<integration_payload> rec, HTML_node& parent);
+            void write_integration_analysis(HTML_report_bundle<number>& bundle,
+                                            const output_group_record<integration_payload> rec, HTML_node& parent);
 
             //! produce bar chart showing number of configurations processed per worker
             template <typename number>
@@ -134,6 +135,40 @@ namespace transport
             template <typename number>
             void write_timing_histogram(HTML_report_bundle<number>& bundle, const output_group_record<integration_payload> rec,
                                         HTML_node& parent, timing_db& timing_data);
+
+            //! write specialized integration analysis for 3pf
+            template <typename number>
+            void write_3pf_integration_analysis(HTML_report_bundle<number>& bundle, const output_group_record<integration_payload> rec,
+                                                const integration_task_record<number>& irec,
+                                                worker_information_db& worker_db, timing_db& timing_data,
+                                                HTML_node& parent);
+
+            //! plot a generic scatter diagram */
+            template <typename number, typename Payload>
+            void plot_scatter(HTML_report_bundle<number>& bundle, const output_group_record<Payload>& rec,
+                              std::string script, std::string image,
+                              const std::list< std::tuple<double, double, double> >& dataset,
+                              std::string xlabel, std::string ylabel, std::string colour_label,
+                              std::string css_class, std::string popover_title, std::string popover_text,
+                              bool xlog, bool ylog, HTML_node& parent);
+
+            //! for 3pf tasks, write a plot of integration time vs. k_t
+            template <typename number>
+            void write_time_kt_diagram(HTML_report_bundle<number>& bundle, const output_group_record<integration_payload>& rec,
+                                       const integration_task_record<number>& irec,
+                                       worker_information_db& worker_db, timing_db& timing_data, HTML_node& parent);
+
+            //! for 3pf tasks, write a plot of integration time vs. alpha
+            template <typename number>
+            void write_time_alpha_diagram(HTML_report_bundle<number>& bundle, const output_group_record<integration_payload>& rec,
+                                          const integration_task_record<number>& irec,
+                                          worker_information_db& worker_db, timing_db& timing_data, HTML_node& parent);
+
+            //! for 3pf tasks, write a plot of integration time vs. beta
+            template <typename number>
+            void write_time_beta_diagram(HTML_report_bundle<number>& bundle, const output_group_record<integration_payload>& rec,
+                                         const integration_task_record<number>& irec,
+                                         worker_information_db& worker_db, timing_db& timing_data, HTML_node& parent);
 
             //! write standardized matplotlib preamble
             template <typename number>
@@ -1447,7 +1482,7 @@ namespace transport
                 this->make_data_element("Complete", (payload.is_failed() ? "No" : "Yes"), col1_list);
                 this->make_data_element("Workgroup", boost::lexical_cast<std::string>(payload.get_workgroup_number()), col1_list);
                 this->make_data_element("Wallclock time", format_time(metadata.total_wallclock_time), col1_list);
-                this->make_data_element("Total time", format_time(metadata.total_integration_time), col1_list);
+                this->make_data_element("CPU time", format_time(metadata.total_integration_time), col1_list);
                 this->make_data_element("Failures", boost::lexical_cast<std::string>(metadata.total_failures), col1_list);
 
                 col1.add_element(col1_list);
@@ -1491,7 +1526,7 @@ namespace transport
                 anchor.add_element(panel);
 
                 this->write_worker_table(bundle, rec, anchor);
-                if(rec.get_payload().has_statistics()) this->write_timing_report(bundle, rec, anchor);
+                if(rec.get_payload().has_statistics()) this->write_integration_analysis(bundle, rec, anchor);
 
                 list.add_element(anchor);
                 pane.add_element(list);
@@ -1650,7 +1685,8 @@ namespace transport
 
 
         template <typename number>
-        void HTML_report::write_timing_report(HTML_report_bundle<number>& bundle, const output_group_record<integration_payload> rec, HTML_node& parent)
+        void HTML_report::write_integration_analysis(HTML_report_bundle<number>& bundle,
+                                                     const output_group_record<integration_payload> rec, HTML_node& parent)
           {
             worker_information_db worker_db = bundle.read_worker_database(rec.get_payload().get_container_path());
             std::string tag = bundle.get_id(rec);
@@ -1662,6 +1698,10 @@ namespace transport
             count_list counts = this->count_configurations_per_worker(timing_data);
 
             // Produce report
+
+            // GLOBAL SECTION
+            // Any kind of task gets a histogram showing the distribution of configurations among workers
+            // and the overall distribution of integration time
 
             HTML_node button("button", "Integration report");
             button.add_attribute("type", "button");
@@ -1701,6 +1741,35 @@ namespace transport
 
             chart_row.add_element(col1).add_element(col2);
             panel_body.add_element(chart_row);
+
+            // ADD CONTENT FOR TASKS OF A SPECIFIC TYPE
+
+            // get record for owning task
+            typename task_db<number>::type& tk_db = bundle.get_task_db();
+            typename task_db<number>::type::const_iterator tk_t = tk_db.find(rec.get_task_name());
+            if(tk_t != tk_db.end())
+              {
+                const task_record<number>& trec = *tk_t->second;
+                if(trec.get_type() == task_type::integration)
+                  {
+                    const integration_task_record<number>& irec = dynamic_cast< const integration_task_record<number>& >(trec);
+
+                    switch(irec.get_task_type())
+                      {
+                        case integration_task_type::threepf:
+                          {
+                            // 3pf tasks get a special analysis
+                            this->write_3pf_integration_analysis(bundle, rec, irec, worker_db, timing_data, panel_body);
+                            break;
+                          }
+
+                        // other tasks get no special treatment
+                        default:
+                          break;
+                      }
+                  }
+              }
+
             panel.add_element(panel_head).add_element(panel_body);
             content.add_element(panel);
             parent.add_element(button).add_element(content);
@@ -1733,7 +1802,7 @@ namespace transport
                 out << count;
                 ++count;
               }
-            out << "]" << '\n';
+            out << " ]" << '\n';
 
             count = 0;
             out << "height = [ ";
@@ -1845,7 +1914,6 @@ namespace transport
                 boost::filesystem::remove(script_path);
                 HTML_node chart("img", false);
                 chart.add_attribute("src", relative_image_loc.string()).add_attribute("class", "report-chart");
-                chart.add_attribute("class", "report-chart");
                 chart.add_attribute("data-toggle", "popover").add_attribute("data-placement", "top").add_attribute("title", "Timing distribution");
                 chart.add_attribute("data-content", "Shows the distribution of integration times in this output group");
                 parent.add_element(chart);
@@ -1858,6 +1926,201 @@ namespace transport
                 HTML_node br("br", false);
                 parent.add_element(no_chart).add_element(br);
               }
+          }
+
+
+        template <typename number>
+        void HTML_report::write_3pf_integration_analysis(HTML_report_bundle<number>& bundle, const output_group_record<integration_payload> rec,
+                                                         const integration_task_record<number>& irec,
+                                                         worker_information_db& worker_db, timing_db& timing_data,
+                                                         HTML_node& parent)
+          {
+            HTML_node row("div");
+            row.add_attribute("class", "row");
+
+            HTML_node col1("div");
+            col1.add_attribute("class", "col-md-6");
+
+            HTML_node col2("div");
+            col1.add_attribute("class", "col-md-6");
+
+            this->write_time_kt_diagram(bundle, rec, irec, worker_db, timing_data, col1);
+            this->write_time_alpha_diagram(bundle, rec, irec, worker_db, timing_data, col1);
+            this->write_time_beta_diagram(bundle, rec, irec, worker_db, timing_data, col2);
+
+            row.add_element(col1).add_element(col2);
+            parent.add_element(row);
+          }
+
+
+        template <typename number, typename Payload>
+        void HTML_report::plot_scatter(HTML_report_bundle<number>& bundle, const output_group_record<Payload>& rec,
+                                       std::string script, std::string image,
+                                       const std::list< std::tuple<double, double, double> >& dataset,
+                                       std::string xlabel, std::string ylabel, std::string colour_label,
+                                       std::string css_class, std::string popover_title, std::string popover_text,
+                                       bool xlog, bool ylog, HTML_node& parent)
+          {
+            boost::filesystem::path relative_asset_loc = bundle.make_asset_directory(rec.get_name());
+
+            boost::filesystem::path relative_script_loc = relative_asset_loc / script;
+            boost::filesystem::path relative_image_loc = relative_asset_loc / image;
+
+            boost::filesystem::path script_path = this->root / relative_script_loc;
+            boost::filesystem::path image_path = this->root / relative_image_loc;
+
+            std::ofstream out(script_path.string(), std::ios::out | std::ios::trunc);
+            if(out.fail() || !out.is_open()) return;
+
+            this->write_matplotlib_preamble(out, bundle);
+            out << "plt.figure()" << '\n';
+
+            unsigned count = 0;
+            out << "x = [ ";
+            for(const std::tuple<double, double, double>& item : dataset)
+              {
+                if(count > 0) out << ", ";
+                out << format_number(std::get<0>(item));
+                ++count;
+              }
+            out << " ]" << '\n';
+
+            count = 0;
+            out << "y = [ ";
+            for(const std::tuple<double, double, double>& item : dataset)
+              {
+                if(count > 0) out << ", ";
+                out << format_number(std::get<1>(item));
+                ++count;
+              }
+            out << " ]" << '\n';
+
+            count = 0;
+            out << "colours = [ ";
+            for(const std::tuple<double, double, double>& item : dataset)
+              {
+                if(count > 0) out << ", ";
+                out << format_number(std::get<2>(item));
+                ++count;
+              }
+            out << " ]" << '\n';
+
+            out << "colour_map = plt.get_cmap('autumn')" << '\n';
+            out << "plt.scatter(x, y, marker='o', c=colours, cmap=colour_map, edgecolors=None)" << '\n';
+            out << "plt.colorbar(cmap=colour_map, label=r'" << colour_label << "')" << '\n';
+            if(xlog) out << "plt.xscale('log')" << '\n';
+            if(ylog) out << "plt.yscale('log')" << '\n';
+            if(!xlabel.empty()) out << "plt.xlabel(r'" << xlabel << "')" << '\n';
+            if(!ylabel.empty()) out << "plt.ylabel(r'" << ylabel << "')" << '\n';
+            out << "plt.savefig('" << image_path.string() << "')" << '\n';
+            out << "plt.close()" << '\n';
+
+            out.close();
+
+            local_environment& env = bundle.get_environment();
+            bool success = env.execute_python(script_path) == 0;
+
+            if(success)
+              {
+                boost::filesystem::remove(script_path);
+                HTML_node chart("img", false);
+                chart.add_attribute("src", relative_image_loc.string()).add_attribute("class", css_class);
+                if(!popover_title.empty() && !popover_text.empty())
+                  {
+                    chart.add_attribute("data-toggle", "popover").add_attribute("data-placement", "top").add_attribute("title", popover_title);
+                    chart.add_attribute("data-content", popover_text);
+                  }
+                parent.add_element(chart);
+              }
+            else
+              {
+                if(boost::filesystem::exists(image_path)) boost::filesystem::remove(image_path);
+                HTML_node no_chart("div", "Could not generate chart");
+                no_chart.add_attribute("class", "label label-danger");
+                HTML_node br("br", false);
+                parent.add_element(no_chart).add_element(br);
+              }
+          }
+
+
+        template <typename number>
+        void HTML_report::write_time_kt_diagram(HTML_report_bundle<number>& bundle, const output_group_record<integration_payload>& rec,
+                                                const integration_task_record<number>& irec,
+                                                worker_information_db& worker_db, timing_db& timing_data,
+                                                HTML_node& parent)
+          {
+            integration_task<number>& raw_tk = *irec.get_task();
+            threepf_task<number>& tk = dynamic_cast< threepf_task<number>& >(raw_tk);
+            const threepf_kconfig_database& kconfig_db = tk.get_threepf_database();
+
+            std::list< std::tuple<double, double, double> > dataset;
+            for(const timing_db::value_type& item : timing_data)
+              {
+                const timing_record& data_point = *item.second;
+                threepf_kconfig_database::const_record_iterator krec = kconfig_db.lookup(data_point.get_serial());
+
+                dataset.emplace_back(std::make_tuple((*krec)->kt_conventional, static_cast<double>(data_point.get_integration_time()) / 1E9, (1.0-(*krec)->beta)/2.0));
+              }
+
+            this->plot_scatter(bundle, rec, "_timing_kt.py", "_timing_kt.png", dataset, "configuration scale $k_t$",
+                               "integration time in seconds", "$k_3 / k_t$",
+                               "report-chart", "Time dependence: scale",
+                               "Shows the dependence of the integration time on the overall configuration scale",
+                               true, true, parent);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_time_alpha_diagram(HTML_report_bundle<number>& bundle, const output_group_record<integration_payload>& rec,
+                                                   const integration_task_record<number>& irec,
+                                                   worker_information_db& worker_db, timing_db& timing_data,
+                                                   HTML_node& parent)
+          {
+            integration_task<number>& raw_tk = *irec.get_task();
+            threepf_task<number>& tk = dynamic_cast< threepf_task<number>& >(raw_tk);
+            const threepf_kconfig_database& kconfig_db = tk.get_threepf_database();
+
+            std::list< std::tuple<double, double, double> > dataset;
+            for(const timing_db::value_type& item : timing_data)
+              {
+                const timing_record& data_point = *item.second;
+                threepf_kconfig_database::const_record_iterator krec = kconfig_db.lookup(data_point.get_serial());
+
+                dataset.emplace_back(std::make_tuple((*krec)->alpha, static_cast<double>(data_point.get_integration_time()) / 1E9, (*krec)->kt_conventional));
+              }
+
+            this->plot_scatter(bundle, rec, "_timing_alpha.py", "_timing_alpha.png", dataset, "shape parameter $\\alpha$",
+                               "integration time in seconds", "$k_t$",
+                               "report-chart", "Time dependence: shape",
+                               "Shows the dependence of the integration time on the shape parameter alpha",
+                               false, true, parent);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_time_beta_diagram(HTML_report_bundle<number>& bundle, const output_group_record<integration_payload>& rec,
+                                                  const integration_task_record<number>& irec,
+                                                  worker_information_db& worker_db, timing_db& timing_data,
+                                                  HTML_node& parent)
+          {
+            integration_task<number>& raw_tk = *irec.get_task();
+            threepf_task<number>& tk = dynamic_cast< threepf_task<number>& >(raw_tk);
+            const threepf_kconfig_database& kconfig_db = tk.get_threepf_database();
+
+            std::list< std::tuple<double, double, double> > dataset;
+            for(const timing_db::value_type& item : timing_data)
+              {
+                const timing_record& data_point = *item.second;
+                threepf_kconfig_database::const_record_iterator krec = kconfig_db.lookup(data_point.get_serial());
+
+                dataset.emplace_back(std::make_tuple((1.0-(*krec)->beta)/2.0, static_cast<double>(data_point.get_integration_time()) / 1E9, (*krec)->kt_conventional));
+              }
+
+            this->plot_scatter(bundle, rec, "_timing_beta.py", "_timing_beta.png", dataset, "shape parameter $k_3 / k_t$",
+                               "integration time in seconds", "$k_t$",
+                               "report-chart", "Time dependence: shape",
+                               "Shows the dependence of the integration time on the shape parameter k<sub>3</sub>/k<sub>t</sub>",
+                               true, true, parent);
           }
 
 

@@ -59,7 +59,7 @@ ADD_EXECUTABLE(test-target test_target.cpp)
 ADD_DEPENDENCIES(test-target AxionGenerator)
 
 TARGET_LINK_LIBRARIES(test-target sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${CPPTRANSPORT_LIBRARIES})
-TARGET_COMPILE_OPTIONS(test-target PRIVATE -std=c++14)
+TARGET_COMPILE_OPTIONS(test-target PRIVATE -std=c++14 -ftemplate-backtrace-limit=0)
 
 
 TARGET_INCLUDE_DIRECTORIES(
