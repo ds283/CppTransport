@@ -444,6 +444,9 @@ namespace transport
 
       public:
 
+        //! construct distance matrix for the task graph
+        std::unique_ptr<repository_distance_matrix> task_distance_matrix();
+
         //! construct distance matrix for the content group graph
         std::unique_ptr<repository_distance_matrix> content_group_distance_matrix();
 
@@ -577,6 +580,83 @@ namespace transport
 
 
     template <typename number>
+    std::unique_ptr<repository_distance_matrix> repository_toolkit<number>::task_distance_matrix()
+      {
+        typename task_db<number>::type& db = this->cache.get_task_db();
+
+        std::unique_ptr<repository_distance_matrix> dmat = std::make_unique<repository_distance_matrix>();
+
+        // build graph representing tasks and their connexions
+        repository_vertex_map vmap;
+        record_graph G;
+
+        // build directed graph representing the dependency chain among tasks
+        for(const typename task_db<number>::type::value_type& item : db)
+          {
+            const task_record<number>& rec = *item.second;
+            vmap.insert(rec.get_name());
+
+            switch(rec.get_type())
+              {
+                case task_type::integration:
+                  {
+                    const integration_task_record<number>& irec = dynamic_cast< const integration_task_record<number>& >(rec);
+                    break;
+                  }
+
+                case task_type::postintegration:
+                  {
+                    const postintegration_task_record<number>& prec = dynamic_cast< const postintegration_task_record<number>& >(rec);
+
+                    // postintegration tasks depend on their parent
+                    const postintegration_task<number>& tk = *prec.get_task();
+                    const derivable_task<number>& ptk = *tk.get_parent_task();
+                    vmap.insert(ptk.get_name());
+                    boost::add_edge(vmap[rec.get_name()], vmap[ptk.get_name()], 1, G);
+
+                    break;
+                  }
+
+                case task_type::output:
+                  {
+                    const output_task_record<number>& orec = dynamic_cast< const output_task_record<number>& >(rec);
+
+                    // output tasks depend on derived products, each of which may depend on other tasks
+                    const output_task<number>& tk = *orec.get_task();
+
+                    const typename std::vector< output_task_element<number> > elements = tk.get_elements();
+
+                    for(const output_task_element<number>& elt : elements)
+                      {
+                        derived_data::derived_product<number>& product = elt.get_product();
+
+                        // get list of tasks this product depends on
+                        typename std::list< derivable_task<number>* > task_list;
+                        product.get_task_list(task_list);
+
+                        for(derivable_task<number>* depend_tk : task_list)
+                          {
+                            vmap.insert(depend_tk->get_name());
+                            boost::add_edge(vmap[depend_tk->get_name()], vmap[rec.get_name()], 1, G);
+                          }
+                      }
+
+                    break;
+                  }
+              }
+          }
+
+        // initialize distance matrix with vertex list
+        dmat->assign_vertex_map(vmap);
+
+        // run Floyd-Warshall algorithm
+        boost::floyd_warshall_all_pairs_shortest_paths(G, *dmat);
+
+        return(dmat);
+      }
+
+
+    template <typename number>
     std::unique_ptr<repository_distance_matrix> repository_toolkit<number>::content_group_distance_matrix()
       {
         // cache content databases
@@ -598,20 +678,18 @@ namespace transport
 
         // build graph representing output groups and their connexions
         repository_vertex_map vmap;
-        unsigned int count = 0;
-
         record_graph G;
 
         // build directed graph representing the dependency chain among output groups
         for(const integration_content_db::value_type& item : integration_content)
           {
-            const output_group_record<integration_payload> rec = *item.second;
+            const output_group_record<integration_payload>& rec = *item.second;
             vmap.insert(rec.get_name());
           }
 
         for(const postintegration_content_db::value_type& item : postintegration_content)
           {
-            const output_group_record<postintegration_payload> rec = *item.second;
+            const output_group_record<postintegration_payload>& rec = *item.second;
             vmap.insert(rec.get_name());
 
             // postintegration content will depend on the parent group, but possibly also a seed group
@@ -628,7 +706,7 @@ namespace transport
 
         for(const output_content_db::value_type& item : output_content)
           {
-            const output_group_record<output_payload> rec = *item.second;
+            const output_group_record<output_payload>& rec = *item.second;
             vmap.insert(rec.get_name());
 
             // postintegration content dependency is summarized in the payload

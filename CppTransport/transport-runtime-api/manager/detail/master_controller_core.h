@@ -595,6 +595,10 @@ namespace transport
             else throw xe;
           }
 
+        // build distance matrix for tasks
+        repository_toolkit<number> toolkit(*this->repo, this->err, this->warn, this->msg);
+        std::unique_ptr<repository_distance_matrix> dmat = toolkit.task_distance_matrix();
+
         // introspect task type
         switch(record->get_type())
           {
