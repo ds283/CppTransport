@@ -526,33 +526,42 @@ namespace transport
         HTML_node HTML_report::make_content_menu_tab(const DatabaseType& db, HTML_report_bundle<number>& bundle, std::string name)
           {
             HTML_node tab("li");
-            tab.add_attribute("class", "dropdown");
             HTML_node anchor("a", name);
             anchor.add_attribute("href", "#").add_attribute("class", "dropdown-toggle").add_attribute("data-toggle", "dropdown");
 
-            HTML_node caret("span");
-            caret.add_attribute("class", "caret");
-            anchor.add_element(caret);
-
-            HTML_node dropdown_menu("ul");
-            dropdown_menu.add_attribute("class", "dropdown-menu scrollable-menu").add_attribute("role", "menu");
-
-            for(const typename DatabaseType::value_type& group : db)
+            if(db.size() > 0)
               {
-                const output_group_record<PayloadType>& rec = *group.second;
-                std::string tag = bundle.get_id(rec);
+                tab.add_attribute("class", "dropdown");
 
-                HTML_node menu_item("li");
-                HTML_node menu_anchor("a", rec.get_name());
-                menu_anchor.add_attribute("href", "#" + tag).add_attribute("data-toggle", "tab");
-                menu_anchor.add_attribute("data-tab-history", "true").add_attribute("data-tab-history-changer", "push").add_attribute("data-tab-history-update-url", "true");
+                HTML_node caret("span");
+                caret.add_attribute("class", "caret");
+                anchor.add_element(caret);
 
-                menu_item.add_element(menu_anchor);
-                dropdown_menu.add_element(menu_item);
+                HTML_node dropdown_menu("ul");
+                dropdown_menu.add_attribute("class", "dropdown-menu scrollable-menu").add_attribute("role", "menu");
+
+                for(const typename DatabaseType::value_type& group : db)
+                  {
+                    const output_group_record<PayloadType>& rec = *group.second;
+                    std::string tag = bundle.get_id(rec);
+
+                    HTML_node menu_item("li");
+                    HTML_node menu_anchor("a", rec.get_name());
+                    menu_anchor.add_attribute("href", "#" + tag).add_attribute("data-toggle", "tab");
+                    menu_anchor.add_attribute("data-tab-history", "true").add_attribute("data-tab-history-changer", "push").add_attribute("data-tab-history-update-url", "true");
+
+                    menu_item.add_element(menu_anchor);
+                    dropdown_menu.add_element(menu_item);
+                  }
+
+                tab.add_element(anchor);
+                tab.add_element(dropdown_menu);
               }
-
-            tab.add_element(anchor);
-            tab.add_element(dropdown_menu);
+            else
+              {
+                tab.add_attribute("class", "dropdown disabled");
+                tab.add_element(anchor);
+              }
 
             return tab;
           }
@@ -1317,6 +1326,7 @@ namespace transport
         void HTML_report::write_derived_products(HTML_report_bundle<number>& bundle, HTML_node& parent)
           {
             typename derived_product_db<number>::type& db = bundle.get_derived_product_db();
+            typename task_db<number>::type& tk_db = bundle.get_task_db();
 
             if(db.empty()) return;
 
@@ -1402,8 +1412,12 @@ namespace transport
                     HTML_node head_row("tr");
 
                     HTML_node name_label("th", "Name");
+                    HTML_node type_label("th", "Type");
+                    HTML_node edited_label("th", "Last updated");
 
                     head_row.add_element(name_label);
+                    head_row.add_element(type_label);
+                    head_row.add_element(edited_label);
                     head.add_element(head_row);
 
                     HTML_node body("tbody");
@@ -1412,10 +1426,24 @@ namespace transport
                       {
                         HTML_node table_row("tr");
 
-                        HTML_node name("td");
-                        this->write_task_button(bundle, tk->get_name(), name);
+                        if(tk != nullptr)
+                          {
+                            typename task_db<number>::type::const_iterator t = tk_db.find(tk->get_name());
 
-                        table_row.add_element(name);
+                            if(t != tk_db.end())
+                              {
+
+                                HTML_node name("td");
+                                this->write_task_button(bundle, tk->get_name(), name);
+
+                                HTML_node type("td", task_type_to_string(tk->get_type()));
+                                HTML_node edited("td", boost::posix_time::to_simple_string(t->second->get_last_edit_time()));
+
+                                table_row.add_element(name);
+                                table_row.add_element(type);
+                                table_row.add_element(edited);
+                              }
+                          }
                         body.add_element(table_row);
                       }
 
