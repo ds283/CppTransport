@@ -47,6 +47,14 @@ namespace transport
             virtual ~fNL_time_series() = default;
 
 
+            // TYPE INTROSPECTION
+
+          public:
+
+            //! get type
+            virtual derived_line_type get_line_type() const override { return derived_line_type::fNL_time; }
+
+
             // DERIVE LINES -- implements a 'time_series' interface
 
           public:

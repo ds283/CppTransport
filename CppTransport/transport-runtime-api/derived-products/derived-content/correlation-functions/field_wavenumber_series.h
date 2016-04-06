@@ -50,6 +50,14 @@ namespace transport
 		        virtual ~twopf_wavenumber_series() = default;
 
 
+            // TYPE INTROSPECTION
+
+          public:
+
+            //! get type
+            virtual derived_line_type get_line_type() const override { return derived_line_type::twopf_wavenumber; }
+
+
             // DERIVE LINES -- implements a 'derived_line' interface
 
           public:
@@ -289,6 +297,14 @@ namespace transport
 				    threepf_wavenumber_series(Json::Value& reader, task_finder<number>& finder);
 
 				    virtual ~threepf_wavenumber_series() = default;
+
+
+            // TYPE INTROSPECTION
+
+          public:
+
+            //! get type
+            virtual derived_line_type get_line_type() const override { return derived_line_type::threepf_wavenumber; }
 
 
 		        // DERIVE LINES -- implements a 'time_series' interface

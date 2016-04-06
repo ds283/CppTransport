@@ -107,6 +107,7 @@ namespace transport
 
 				    //! get x-axis text label
 				    const std::string& get_x_label() const { return(this->x_label); }
+
 				    //! set x-axis text label
 				    void set_x_label(const std::string& l) { this->internal_set_x_label(l); this->x_label_set = true; }
 

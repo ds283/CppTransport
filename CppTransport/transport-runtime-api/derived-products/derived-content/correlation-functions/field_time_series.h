@@ -49,7 +49,17 @@ namespace transport
 		        virtual ~background_time_series() = default;
 
 
+            // TYPE INTROSPECTION
+
+          public:
+
+            //! get type
+            virtual derived_line_type get_line_type() const override { return derived_line_type::background; }
+
+
 		        // DERIVE LINES -- implements a 'time_series' interface
+
+          public:
 
 		        //! generate data lines for plotting
             virtual void derive_lines(datapipe<number>& pipe, std::list<data_line<number> >& lines,
@@ -287,7 +297,17 @@ namespace transport
 		        virtual ~twopf_time_series() = default;
 
 
+            // TYPE INTROSPECTION
+
+          public:
+
+            //! get type
+            virtual derived_line_type get_line_type() const override { return derived_line_type::twopf_time; }
+
+
 		        // DERIVE LINES -- implements a 'time_series' interface
+
+          public:
 
 		        //! generate data lines for plotting
             virtual void derive_lines(datapipe<number>& pipe, std::list<data_line<number> >& lines,
@@ -514,6 +534,14 @@ namespace transport
 		        threepf_time_series(Json::Value& reader, task_finder<number>& finder);
 
 		        virtual ~threepf_time_series() = default;
+
+
+            // TYPE INTROSPECTION
+
+          public:
+
+            //! get type
+            virtual derived_line_type get_line_type() const override { return derived_line_type::threepf_time; }
 
 
 		        // DERIVE LINES -- implements a 'time_series' interface

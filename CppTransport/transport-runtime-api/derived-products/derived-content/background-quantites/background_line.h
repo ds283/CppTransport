@@ -55,6 +55,14 @@ namespace transport
 				    virtual ~background_line() = default;
 
 
+            // TYPE INTROSPECTION
+
+          public:
+
+            //! get type
+            virtual derived_line_type get_line_type() const override { return derived_line_type::background; }
+
+
 				    // DERIVE LIVES -- implements a 'derived_line' interface
 
 		      public:

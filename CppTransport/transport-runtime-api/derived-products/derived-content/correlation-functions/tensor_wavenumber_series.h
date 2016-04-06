@@ -49,7 +49,17 @@ namespace transport
 				    virtual ~tensor_twopf_wavenumber_series() = default;
 
 
+            // TYPE INTROSPECTION
+
+          public:
+
+            //! get type
+            virtual derived_line_type get_line_type() const override { return derived_line_type::tensor_twopf_wavenumber; }
+
+
 				    // DERIVE LINES -- implements a 'derived_line' interface
+
+          public:
 
 				    //! generate data lines for plotting
 				    virtual void derive_lines(datapipe<number>& pipe, std::list<data_line<number> >& lines,

@@ -47,6 +47,14 @@ namespace transport
 		        virtual ~r_wavenumber_series() = default;
 
 
+            // TYPE INTROSPECTION
+
+          public:
+
+            //! get type
+            virtual derived_line_type get_line_type() const override { return derived_line_type::r_wavenumber; }
+
+
 		        // DERIVE LINES -- implements a 'derived_line' interface
 
 		        //! generate data lines for plotting

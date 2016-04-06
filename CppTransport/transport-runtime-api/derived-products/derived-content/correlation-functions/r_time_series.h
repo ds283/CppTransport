@@ -48,6 +48,14 @@ namespace transport
 				    virtual ~r_time_series() = default;
 
 
+            // TYPE INTROSPECTION
+
+          public:
+
+            //! get type
+            virtual derived_line_type get_line_type() const override { return derived_line_type::r_time; }
+
+
 				    // DERIVE LINES -- implements a 'time series' interface
 
 		      public:

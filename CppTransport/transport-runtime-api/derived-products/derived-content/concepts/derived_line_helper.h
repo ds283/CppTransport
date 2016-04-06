@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __general_time_data_helper_H_
-#define __general_time_data_helper_H_
+#ifndef CPPTRANSPORT_DERIVED_LINE_HELPER_H
+#define CPPTRANSPORT_DERIVED_LINE_HELPER_H
 
 
 #include <iostream>
@@ -55,24 +55,24 @@ namespace transport
 		                else if(type == CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TWOPF_TIME_SERIES)                         return std::make_unique< twopf_time_series<number> >(reader, finder);
 		                else if(type == CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_TIME_SERIES)                       return std::make_unique< threepf_time_series<number> >(reader, finder);
 		                else if(type == CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TENSOR_TWOPF_TIME_SERIES)                  return std::make_unique< tensor_twopf_time_series<number> >(reader, finder);
-		                else if(type == CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TENSOR_TWOPF_WAVENUMBER_SERIES)            return std::make_unique< tensor_twopf_wavenumber_series<number> >(reader, finder);
                     else if(type == CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_TWOPF_TIME_SERIES)                    return std::make_unique< zeta_twopf_time_series<number> >(reader, finder);
                     else if(type == CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_THREEPF_TIME_SERIES)                  return std::make_unique< zeta_threepf_time_series<number> >(reader, finder);
                     else if(type == CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_REDUCED_BISPECTRUM_TIME_SERIES)       return std::make_unique< zeta_reduced_bispectrum_time_series<number> >(reader, finder);
 			              else if(type == CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TWOPF_WAVENUMBER_SERIES)                   return std::make_unique< twopf_wavenumber_series<number> >(reader, finder);
 		                else if(type == CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_WAVENUMBER_SERIES)                 return std::make_unique< threepf_wavenumber_series<number> >(reader, finder);
+                    else if(type == CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TENSOR_TWOPF_WAVENUMBER_SERIES)            return std::make_unique< tensor_twopf_wavenumber_series<number> >(reader, finder);
 		                else if(type == CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_TWOPF_WAVENUMBER_SERIES)              return std::make_unique< zeta_twopf_wavenumber_series<number> >(reader, finder);
 		                else if(type == CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_THREEPF_WAVENUMBER_SERIES)            return std::make_unique< zeta_threepf_wavenumber_series<number> >(reader, finder);
 		                else if(type == CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_REDUCED_BISPECTRUM_WAVENUMBER_SERIES) return std::make_unique< zeta_reduced_bispectrum_wavenumber_series<number> >(reader, finder);
                     else if(type == CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_FNL_TIME_SERIES)                           return std::make_unique< fNL_time_series<number> >(reader, finder);
 		                else if(type == CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_R_TIME_SERIES)                             return std::make_unique< r_time_series<number> >(reader, finder);
 		                else if(type == CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_R_WAVENUMBER_SERIES)                       return std::make_unique< r_wavenumber_series<number> >(reader, finder);
-				            else if(type == CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_INTEGRATION_COST)                          return std::make_unique< cost_wavenumber<number> >(reader, finder);
 				            else if(type == CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_BACKGROUND_LINE)                           return std::make_unique< background_line<number> >(reader, finder);
                     else if(type == CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_U2_LINE)                                   return std::make_unique< u2_line<number> >(reader, finder);
                     else if(type == CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_U3_LINE)                                   return std::make_unique< u3_line<number> >(reader, finder);
                     else if(type == CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_LARGEST_U2_LINE)                           return std::make_unique< largest_u2_line<number> >(reader, finder);
                     else if(type == CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_LARGEST_U3_LINE)                           return std::make_unique< largest_u3_line<number> >(reader, finder);
+                    else if(type == CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_INTEGRATION_COST)                          return std::make_unique< cost_wavenumber<number> >(reader, finder);
 
                     std::ostringstream msg;
                     msg << CPPTRANSPORT_PRODUCT_DERIVED_LINE_CONTENT_TYPE_UNKNOWN << " '" << type << "'";
@@ -88,4 +88,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__general_time_data_helper_H_
+#endif //CPPTRANSPORT_DERIVED_LINE_HELPER_H

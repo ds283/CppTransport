@@ -555,6 +555,7 @@ set(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_BACKGROUND_QUANTITES_
 set(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_CONCEPTS_FILES
   transport-runtime-api/derived-products/derived-content/concepts/derived_line.h
   transport-runtime-api/derived-products/derived-content/concepts/derived_line_helper.h
+  transport-runtime-api/derived-products/derived-content/concepts/derived_line_type.h
   )
 
 set(TRANSPORT_RUNTIME_API_DERIVED_PRODUCTS_DERIVED_CONTENT_CONCEPTS_LINES_FILES

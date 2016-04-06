@@ -109,6 +109,29 @@ namespace transport
             template <typename number>
             void write_output_content(HTML_report_bundle<number>& bundle, HTML_node& parent);
 
+
+            // INTEGRATION TASKS
+
+          protected:
+
+            //! write integration task details for twopf task
+            template <typename number>
+            void write_task_data(HTML_report_bundle<number>& bundle, twopf_task<number>& tk,
+                                 HTML_node& col1_list, HTML_node& col2_list, HTML_node& col3_list);
+
+            //! write integration task details for threepf task
+            template <typename number>
+            void write_task_data(HTML_report_bundle<number>& bundle, threepf_task<number>& tk,
+                                 HTML_node& col1_list, HTML_node& col2_list, HTML_node& col3_list);
+
+            //! write task details for a generic integration task
+            template <typename number>
+            void write_generic_task_data(HTML_report_bundle<number>& bundle, twopf_db_task<number>& tk,
+                                         HTML_node& col1_list, HTML_node& col2_list, HTML_node& col3_list);
+
+
+            // INTEGRATION CONTENT
+
           protected:
 
             //! create a worker table for an integration content record
@@ -174,20 +197,39 @@ namespace transport
             template <typename number>
             void write_matplotlib_preamble(std::ofstream& out, HTML_report_bundle<number>& bundle);
 
-            //! write integration task details for twopf task
-            template <typename number>
-            void write_task_data(HTML_report_bundle<number>& bundle, twopf_task<number>& tk,
-                                 HTML_node& col1_list, HTML_node& col2_list, HTML_node& col3_list);
 
-            //! write integration task details for threepf task
-            template <typename number>
-            void write_task_data(HTML_report_bundle<number>& bundle, threepf_task<number>& tk,
-                                 HTML_node& col1_list, HTML_node& col2_list, HTML_node& col3_list);
+            // DERIVED PRODUCTS
 
-            //! write task details for a generic integrationt ask
+          protected:
+
+            //! write details for line_plot2d product
             template <typename number>
-            void write_generic_task_data(HTML_report_bundle<number>& bundle, twopf_db_task<number>& tk,
-                                         HTML_node& col1_list, HTML_node& col2_list, HTML_node& col3_list);
+            void write_derived_product(HTML_report_bundle<number>& bundle, const derived_product_record<number>& rec,
+                                       const derived_data::line_plot2d<number>& product, HTML_node& parent);
+
+            //! write details for line_asciitable products
+            template <typename number>
+            void write_derived_product(HTML_report_bundle<number>& bundle, const derived_product_record<number>& rec,
+                                       const derived_data::line_asciitable<number>& product, HTML_node& parent);
+
+            //! write details for generic derived product
+            template <typename number>
+            void write_generic_derived_product(HTML_report_bundle<number>& bundle, const derived_data::derived_product<number>& product,
+                                               HTML_node& col1_list, HTML_node& col2_list, HTML_node& col3_list);
+
+            //! write details for generic line collection
+            template <typename number>
+            void write_line_collection(HTML_report_bundle<number>& bundle, const derived_data::line_collection<number>& product,
+                                       HTML_node& col1_list, HTML_node& col2_list, HTML_node& col3_list);
+
+            //! write a collapsible list of lines in a line collection
+            template <typename number>
+            void write_line_list(HTML_report_bundle<number>& bundle, const derived_product_record<number>& rec,
+                                 const derived_data::line_collection<number>& line_collection, HTML_node& parent);
+
+            //! write details for an individual line in a line collection
+            template <typename number>
+            void write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::derived_line<number>& line, HTML_node& parent);
 
             // MAKE BUTTONS
 
@@ -1350,32 +1392,23 @@ namespace transport
                 HTML_node panel_body("div");
                 panel_body.add_attribute("class", "panel-body");
 
-                HTML_node row("div");
-                row.add_attribute("class", "row");
+                switch(rec.get_product()->get_type())
+                  {
+                    case derived_data::derived_product_type::line_2dplot:
+                      {
+                        const derived_data::line_plot2d<number>& item = dynamic_cast< const derived_data::line_plot2d<number>& >(*rec.get_product());
+                        this->write_derived_product(bundle, rec, item, panel_body);
+                        break;
+                      }
 
-                HTML_node col1("div");
-                col1.add_attribute("class", "col-md-4");
-                HTML_node col1_list("dl");
-                col1_list.add_attribute("class", "dl-horizontal");
+                    case derived_data::derived_product_type::line_table:
+                      {
+                        const derived_data::line_asciitable<number>& item = dynamic_cast< const derived_data::line_asciitable<number>& >(*rec.get_product());
+                        this->write_derived_product(bundle, rec, item, panel_body);
+                        break;
+                      }
+                  }
 
-                this->make_data_element("Product type", derived_data::derived_product_type_to_string(rec.get_product()->get_type()), col1_list);
-
-                col1.add_element(col1_list);
-
-                HTML_node col2("div");
-                col2.add_attribute("class", "col-md-4");
-                HTML_node col2_list("dl");
-                col2_list.add_attribute("class", "dl-horizontal");
-
-                this->make_data_element("Filename", rec.get_product()->get_filename().string(), col2_list);
-
-                col2.add_element(col2_list);
-
-                HTML_node col3("div");
-                col3.add_attribute("class", "col-md-4");
-
-                row.add_element(col1).add_element(col2).add_element(col3);
-                panel_body.add_element(row);
                 panel.add_element(panel_heading).add_element(panel_body);
                 anchor.add_element(panel);
 
@@ -1454,6 +1487,231 @@ namespace transport
                 pane.add_element(list);
                 parent.add_element(pane);
               }
+          }
+
+
+        template <typename number>
+        void HTML_report::write_derived_product(HTML_report_bundle<number>& bundle, const derived_product_record<number>& rec,
+                                                const derived_data::line_plot2d<number>& product, HTML_node& parent)
+          {
+            HTML_node row("div");
+            row.add_attribute("class", "row");
+
+            HTML_node col1("div");
+            col1.add_attribute("class", "col-md-4");
+            HTML_node col1_list("dl");
+            col1_list.add_attribute("class", "dl-horizontal");
+
+            HTML_node col2("div");
+            col2.add_attribute("class", "col-md-4");
+            HTML_node col2_list("dl");
+            col2_list.add_attribute("class", "dl-horizontal");
+
+            HTML_node col3("div");
+            col3.add_attribute("class", "col-md-4");
+            HTML_node col3_list("dl");
+            col3_list.add_attribute("class", "dl-horizontal");
+
+            this->write_generic_derived_product(bundle, product, col1_list, col2_list, col3_list);
+            this->write_line_collection(bundle, product, col1_list, col2_list, col3_list);
+
+            this->make_data_element("Reverse x-axis", product.get_reverse_x() ? "Yes" : "No", col1_list);
+            this->make_data_element("Reverse y-axis", product.get_reverse_y() ? "Yes" : "No", col1_list);
+
+            HTML_node tdt("dt", "Title");
+            HTML_node tdd("dd");
+            if(product.get_title())
+              {
+                HTML_string s(product.get_title_text());
+                tdd.add_element(s);
+              }
+            else
+              {
+                HTML_node s("span", "NULL");
+                s.add_attribute("class", "label label-default");
+                tdd.add_element(s);
+              }
+            col2_list.add_element(tdt).add_element(tdd);
+
+            HTML_node xdt("dt", "x-axis label");
+            HTML_node xdd("dd");
+            if(product.get_x_label())
+              {
+                HTML_string s(product.get_x_label_text());
+                xdd.add_element(s);
+              }
+            else
+              {
+                HTML_node s("span", "NULL");
+                s.add_attribute("class", "label label-default");
+                xdd.add_element(s);
+              }
+            col2_list.add_element(xdt).add_element(xdd);
+
+            HTML_node ydt("dt", "y-axis label");
+            HTML_node ydd("dd");
+            if(product.get_y_label())
+              {
+                HTML_string s(product.get_y_label_text());
+                ydd.add_element(s);
+              }
+            else
+              {
+                HTML_node s("span", "NULL");
+                s.add_attribute("class", "label label-default");
+                ydd.add_element(s);
+              }
+            col2_list.add_element(ydt).add_element(ydd);
+
+            this->make_data_element("Legend", product.get_legend() ? derived_data::legend_pos_to_string(product.get_legend_position()) : "No", col3_list);
+            this->make_data_element("LaTeX typsetting", product.get_typeset_with_LaTeX() ? "Yes" : "No", col3_list);
+            this->make_data_element("Dash second axis", product.get_dash_second_axis() ? "Yes" :  "No", col3_list);
+
+            col1.add_element(col1_list);
+            col2.add_element(col2_list);
+            col3.add_element(col3_list);
+
+            row.add_element(col1).add_element(col2).add_element(col3);
+            parent.add_element(row);
+
+            this->write_line_list(bundle, rec, product, parent);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_derived_product(HTML_report_bundle<number>& bundle, const derived_product_record<number>& rec,
+                                                const derived_data::line_asciitable<number>& product, HTML_node& parent)
+          {
+            HTML_node row("div");
+            row.add_attribute("class", "row");
+
+            HTML_node col1("div");
+            col1.add_attribute("class", "col-md-4");
+            HTML_node col1_list("dl");
+            col1_list.add_attribute("class", "dl-horizontal");
+
+            HTML_node col2("div");
+            col2.add_attribute("class", "col-md-4");
+            HTML_node col2_list("dl");
+            col2_list.add_attribute("class", "dl-horizontal");
+
+            HTML_node col3("div");
+            col3.add_attribute("class", "col-md-4");
+            HTML_node col3_list("dl");
+            col3_list.add_attribute("class", "dl-horizontal");
+
+            this->write_generic_derived_product(bundle, product, col1_list, col2_list, col3_list);
+            this->write_line_collection(bundle, product, col1_list, col2_list, col3_list);
+
+            this->make_data_element("x-axis label", product.get_x_label(), col3_list);
+
+            col1.add_element(col1_list);
+            col2.add_element(col2_list);
+            col3.add_element(col3_list);
+
+            row.add_element(col1).add_element(col2).add_element(col3);
+            parent.add_element(row);
+
+            this->write_line_list(bundle, rec, product, parent);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_generic_derived_product(HTML_report_bundle<number>& bundle, const derived_data::derived_product<number>& product,
+                                                        HTML_node& col1_list, HTML_node& col2_list, HTML_node& col3_list)
+          {
+            this->make_data_element("Product type", derived_data::derived_product_type_to_string(product.get_type()), col1_list);
+            this->make_data_element("Filename", product.get_filename().string(), col2_list);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_line_collection(HTML_report_bundle<number>& bundle, const derived_data::line_collection<number>& product,
+                                                HTML_node& col1_list, HTML_node& col2_list, HTML_node& col3_list)
+          {
+            this->make_data_element("x-axis values", derived_data::axis_value_to_string(product.get_x_axis_value()), col1_list);
+            this->make_data_element("LaTeX labels", product.get_use_LaTeX() ? "Yes" : "No", col1_list);
+
+            this->make_data_element("log x values", product.get_log_x() ? "Yes" : "No", col2_list);
+
+            this->make_data_element("log y values", product.get_log_y() ? "Yes" : "No", col3_list);
+            this->make_data_element("abs y values", product.get_abs_y() ? "Yes" : "No", col3_list);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_line_list(HTML_report_bundle<number>& bundle, const derived_product_record<number>& rec,
+                                          const derived_data::line_collection<number>& line_collection, HTML_node& parent)
+          {
+            const std::list< std::unique_ptr< derived_data::derived_line<number> > >& lines = line_collection.get_lines();
+
+            if(lines.empty()) return;
+
+            std::string tag = bundle.get_id(rec);
+
+            HTML_node button("button");
+            button.add_attribute("data-toggle", "collapse").add_attribute("data-target", "#" + tag + "lines");
+            button.add_attribute("type", "button").add_attribute("class", "btn btn-info topskip");
+            this->make_badged_text("Derived lines", lines.size(), button);
+
+            HTML_node content("div");
+            content.add_attribute("id", tag + "lines").add_attribute("class", "collapse");
+
+            HTML_node panel("div");
+            panel.add_attribute("class", "panel panel-info topskip");
+
+            HTML_node panel_head("div", "Derived lines in this collection");
+            panel_head.add_attribute("class", "panel-heading");
+
+            HTML_node line_list("ul");
+            line_list.add_attribute("class", "list-group");
+
+            for(const std::unique_ptr< derived_data::derived_line<number> >& line : lines)
+              {
+                HTML_node item("li");
+                item.add_attribute("class", "list-group-item").add_attribute("onclick", "return false;");
+                if(line)
+                  {
+                    this->write_derived_line(bundle, *line, item);
+                  }
+                line_list.add_element(item);
+              }
+
+            panel.add_element(panel_head).add_element(line_list);
+            content.add_element(panel);
+            parent.add_element(button).add_element(content);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_derived_line(HTML_report_bundle<number>& bundle, const derived_data::derived_line<number>& line, HTML_node& parent)
+          {
+            HTML_node row("div");
+            row.add_attribute("class", "row");
+
+            HTML_node col1("div");
+            col1.add_attribute("class", "col-md-4");
+            HTML_node col1_list("dl");
+            col1_list.add_attribute("class", "dl-horizontal");
+
+            HTML_node col2("div");
+            col2.add_attribute("class", "col-md-4");
+            HTML_node col2_list("dl");
+            col2_list.add_attribute("class", "dl-horizontal");
+
+            HTML_node col3("div");
+            col3.add_attribute("class", "col-md-4");
+            HTML_node col3_list("dl");
+            col3_list.add_attribute("class", "dl-horizontal");
+
+
+
+            col1.add_element(col1_list);
+            col2.add_element(col2_list);
+            col3.add_element(col3_list);
+
+            row.add_element(col1).add_element(col2).add_element(col3);
+            parent.add_element(row);
           }
 
 

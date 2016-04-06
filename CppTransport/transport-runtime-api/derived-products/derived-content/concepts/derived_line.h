@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __derived_line_H_
-#define __derived_line_H_
+#ifndef CPPTRANSPORT_DERIVED_LINE_H
+#define CPPTRANSPORT_DERIVED_LINE_H
 
 
 #include <iostream>
@@ -35,6 +35,8 @@
 #include "transport-runtime-api/derived-products/utilities/wrapper.h"
 
 #include "transport-runtime-api/derived-products/line-collections/line_values.h"
+
+#include "transport-runtime-api/derived-products/derived-content/concepts/derived_line_type.h"
 
 
 #define CPPTRANSPORT_NODE_PRODUCT_DERIVED_LINE_TASK_NAME                                 "task-name"
@@ -143,6 +145,14 @@ namespace transport
 						derived_line(const derived_line<number>& obj);
 
 						virtual ~derived_line();
+
+
+            // TYPE INTROSPECTION
+
+          public:
+
+            //! get type
+            virtual derived_line_type get_line_type() const = 0;
 
 
 				    // ADMIN
@@ -833,4 +843,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__derived_line_H_
+#endif //CPPTRANSPORT_DERIVED_LINE_H
