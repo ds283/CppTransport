@@ -2864,7 +2864,7 @@ namespace transport
             for(const std::string& note : notes)
               {
                 HTML_node item("li", note);
-                item.add_attribute("class", "list-group-item list-group-item-info");
+                item.add_attribute("class", "list-group-item");
                 list.add_element(item);
               }
 
@@ -2898,7 +2898,7 @@ namespace transport
             for(const metadata_history& log_item : activity)
               {
                 HTML_node item("li", log_item.to_string());
-                item.add_attribute("class", "list-group-item list-group-item-info");
+                item.add_attribute("class", "list-group-item");
                 list.add_element(item);
               }
 

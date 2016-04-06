@@ -164,13 +164,13 @@ namespace transport
 
             case history_actions::add_note:
               {
-                msg << CPPTRANSPORT_HISTORY_NOTE << " '" << this->info << "' " << CPPTRANSPORT_HISTORY_ADDED << " " << this->user_id << " " << CPPTRANSPORT_HISTORY_AT << " " << time;
+                msg << CPPTRANSPORT_HISTORY_NOTE << " " << CPPTRANSPORT_HISTORY_ADDED << " " << this->user_id << " " << CPPTRANSPORT_HISTORY_AT << " " << time;
                 break;
               }
 
             case history_actions::remove_note:
               {
-                msg << CPPTRANSPORT_HISTORY_NOTE << " '" << this->info << "' " << CPPTRANSPORT_HISTORY_REMOVED << " " << this->user_id << " " << CPPTRANSPORT_HISTORY_AT << " " << time;
+                msg << CPPTRANSPORT_HISTORY_NOTE << " " << CPPTRANSPORT_HISTORY_REMOVED << " " << this->user_id << " " << CPPTRANSPORT_HISTORY_AT << " " << time;
                 break;
               }
 
