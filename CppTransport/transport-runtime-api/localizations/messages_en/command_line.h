@@ -89,6 +89,12 @@
 #define CPPTRANSPORT_SWITCH_OBJECT            "object"
 #define CPPTRANSPORT_HELP_OBJECT              "select repository objects"
 
+#define CPPTRANSPORT_SWITCH_LOCK              "lock"
+#define CPPTRANSPORT_HELP_LOCK                "lock specified objects to prevent modification"
+
+#define CPPTRANSPORT_SWITCH_UNLOCK            "unlock"
+#define CPPTRANSPORT_HELP_UNLOCK              "unlock specified objects"
+
 #define CPPTRANSPORT_SWITCH_ADD_TAG           "add-tag"
 #define CPPTRANSPORT_HELP_ADD_TAG             "add tag to specified objects"
 

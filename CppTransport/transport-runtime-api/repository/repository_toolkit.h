@@ -496,6 +496,12 @@ namespace transport
         //! remove content groups
         void delete_content(const std::vector<std::string>& objects);
 
+        //! lock records
+        void lock_content(const std::vector<std::string>& objects);
+
+        //! unlock records
+        void unlock_content(const std::vector<std::string>& objects);
+
 
         // REPOSITORY RECORDS -- INTERNAL API
 
@@ -503,7 +509,7 @@ namespace transport
 
         //! iterate over a content database, updating tags and notes
         template <typename ContentDatabase>
-        void update_tags_notes(ContentDatabase& db, const std::vector<std::string>& objects,
+        void update_tags_notes(ContentDatabase& db, std::map< std::string, bool >& items,
                                const std::vector<std::string>& tags_add, const std::vector<std::string>& tags_remove,
                                const std::vector<std::string>& notes_add, const std::vector<std::string>& notes_remove);
 
@@ -512,6 +518,14 @@ namespace transport
         void delete_content(ContentDatabase& db, std::map< std::string, bool >& items,
                             std::unique_ptr<repository_distance_matrix>& dmat, integration_content_db& integration_content,
                             postintegration_content_db& postintegration_content, output_content_db& output_content);
+
+        //! iterate over a content database, locking content groups
+        template <typename ContentDatabase>
+        void lock_content(ContentDatabase& db, std::map< std::string, bool >& items);
+
+        //! iterate over a content database, unlocking content groups
+        template <typename ContentDatabase>
+        void unlock_content(ContentDatabase& db, std::map< std::string, bool >& items);
 
 
         // REPOSITORY OBJECT MODEL -- INTERFACE
@@ -566,20 +580,37 @@ namespace transport
                                                        const std::vector<std::string>& tags_add, const std::vector<std::string>& tags_remove,
                                                        const std::vector<std::string>& notes_add, const std::vector<std::string>& notes_remove)
       {
+        // make local copy of objects to process; we will tag items in this list as 'processed' as we go
+        std::map<std::string, bool> items;
+        for(const std::string& item : objects)
+          {
+            items[item] = false;
+          }
+
         // only output group records carry tags and notes
         integration_content_db& integration_content = this->cache.get_integration_content_db();
         postintegration_content_db& postintegration_content = this->cache.get_postintegration_content_db();
         output_content_db& output_content = this->cache.get_output_content_db();
 
-        this->update_tags_notes(integration_content, objects, tags_add, tags_remove, notes_add, notes_remove);
-        this->update_tags_notes(postintegration_content, objects, tags_add, tags_remove, notes_add, notes_remove);
-        this->update_tags_notes(output_content, objects, tags_add, tags_remove, notes_add, notes_remove);
+        this->update_tags_notes(integration_content, items, tags_add, tags_remove, notes_add, notes_remove);
+        this->update_tags_notes(postintegration_content, items, tags_add, tags_remove, notes_add, notes_remove);
+        this->update_tags_notes(output_content, items, tags_add, tags_remove, notes_add, notes_remove);
+
+        for(const std::pair< const std::string, bool >& item : items)
+          {
+            if(!item.second)
+              {
+                std::ostringstream msg;
+                msg << CPPTRANSPORT_REPO_TOOLKIT_MISSING_OBJECT << " '" << item.first << "'";
+                this->msg(msg.str());
+              }
+          }
       }
 
 
     template <typename number>
     template <typename ContentDatabase>
-    void repository_toolkit<number>::update_tags_notes(ContentDatabase& db, const std::vector<std::string>& objects,
+    void repository_toolkit<number>::update_tags_notes(ContentDatabase& db, std::map< std::string, bool >& items,
                                                        const std::vector<std::string>& tags_add, const std::vector<std::string>& tags_remove,
                                                        const std::vector<std::string>& notes_add, const std::vector<std::string>& notes_remove)
       {
@@ -594,40 +625,52 @@ namespace transport
             const typename ContentDatabase::mapped_type::element_type& record = *item.second;
 
             // step through objects in match list
-            for(const std::string& match_expr : objects)
+            for(std::pair< const std::string, bool >& t : items)
               {
-                if(check_match(record.get_name(), match_expr), true)    // true = insist on exact match
+                const std::string& match_expr = t.first;
+                if(check_match(record.get_name(), match_expr, true))    // true = insist on exact match
                   {
+                    t.second = true;
+
                     // re-query the database to get a read/write version of this record
                     typename ContentDatabase::mapped_type rw_record = get_rw_content_group<number, typename ContentDatabase::mapped_type::element_type::payload_type>(this->repo, record.get_name(), mgr);
 
-                    for(const std::string& tag : tags_remove)
+                    if(rw_record->get_lock_status())
                       {
-                        rw_record->remove_tag(tag);
+                        std::ostringstream msg;
+                        msg << CPPTRANSPORT_REPO_TOOLKIT_IGNORING_LOCKED << " '" << record.get_name() << "'";
+                        this->msg(msg.str());
                       }
-
-                    for(const std::string& tag : tags_add)
+                    else
                       {
-                        rw_record->add_tag(tag);
+                        for(const std::string& tag : tags_remove)
+                          {
+                            rw_record->remove_tag(tag);
+                          }
+
+                        for(const std::string& tag : tags_add)
+                          {
+                            rw_record->add_tag(tag);
+                          }
+
+                        for(const std::string& note : notes_remove)
+                          {
+                            rw_record->remove_note(boost::lexical_cast<unsigned int>(note));
+                          }
+
+                        for(const std::string& note : notes_add)
+                          {
+                            rw_record->add_note(note);
+                          }
+
+                        // recommit record
+                        // in the current implementation there is no need to re-read the value in the enumerated database
+                        // (the record it contains is now out of date) because each record in the enumeration is inspected only once
+
+                        // However, if multiple passes were ever implemented, the record in the enumeration would have to
+                        // be modified
+                        rw_record->commit();
                       }
-
-                    for(const std::string& note : notes_remove)
-                      {
-                        rw_record->remove_note(boost::lexical_cast<unsigned int>(note));
-                      }
-
-                    for(const std::string& note : notes_add)
-                      {
-                        rw_record->add_note(note);
-                      }
-
-                    // recommit record
-                    // in the current implementation there is no need to re-read the value in the enumerated database
-                    // (the record it contains is now out of date) because each record in the enumeration is inspected only once
-
-                    // However, if multiple passes were ever implemented, the record in the enumeration would have to
-                    // be modified
-                    rw_record->commit();
                   }
               }
           }
@@ -806,6 +849,9 @@ namespace transport
         postintegration_content_db& postintegration_content = this->cache.get_postintegration_content_db();
         output_content_db& output_content = this->cache.get_output_content_db();
 
+        // attempt deletion in order output, postintegration, integration so that wildcard matches
+        // will delete descendent content groups first;
+        // that way we minimize 'can't delete because has descendents' errors
         this->delete_content(output_content, items, dmat, integration_content, postintegration_content, output_content);
         this->delete_content(postintegration_content, items, dmat, integration_content, postintegration_content, output_content);
         this->delete_content(integration_content, items, dmat, integration_content, postintegration_content, output_content);
@@ -816,7 +862,7 @@ namespace transport
               {
                 std::ostringstream msg;
                 msg << CPPTRANSPORT_REPO_TOOLKIT_MISSING_OBJECT << " '" << item.first << "'";
-                this->warn(msg.str());
+                this->msg(msg.str());
               }
           }
       }
@@ -847,22 +893,35 @@ namespace transport
                 if(check_match(record.get_name(), item.first, true))    // true = insist on exact match
                   {
                     item.second = true;   // mark as a match for this item
-                    std::unique_ptr< std::list<std::string> > dependent_groups = dmat->find_dependent_objects(
-                      record.get_name());
+                    std::unique_ptr< std::list<std::string> > dependent_groups = dmat->find_dependent_objects(record.get_name());
 
                     if(dependent_groups)
                       {
                         if(dependent_groups->size() == 0)
                           {
-                            erase_repository_record<number, typename ContentDatabase::mapped_type::element_type::payload_type>(this->repo, record.get_name(), record.get_task_name(),mgr);
+                            if(record.get_lock_status())
+                              {
+                                std::ostringstream msg;
+                                msg << CPPTRANSPORT_REPO_TOOLKIT_IGNORING_LOCKED << " '" << record.get_name() << "'";
+                                this->msg(msg.str());
+                                ++t;
+                              }
+                            else
+                              {
+                                std::ostringstream msg;
+                                msg << CPPTRANSPORT_REPO_TOOLKIT_DELETING_OBJECT << " '" << record.get_name() << "'";
+                                this->msg(msg.str());
 
-                            // erase record and reset iterator to point to following element
-                            t = db.erase(t);
+                                erase_repository_record<number, typename ContentDatabase::mapped_type::element_type::payload_type>(this->repo, record.get_name(), record.get_task_name(),mgr);
 
-                            // delete this record from the repository enumeration, and then recompute the distance matrix
-                            std::unique_ptr<repository_distance_matrix> new_dmat =
-                              this->content_group_distance_matrix(integration_content, postintegration_content, output_content);
-                            dmat.swap(new_dmat);
+                                // erase record and reset iterator to point to following element
+                                t = db.erase(t);
+
+                                // delete this record from the repository enumeration, and then recompute the distance matrix
+                                std::unique_ptr<repository_distance_matrix> new_dmat =
+                                  this->content_group_distance_matrix(integration_content, postintegration_content, output_content);
+                                dmat.swap(new_dmat);
+                              }
                           }
                         else
                           {
@@ -895,7 +954,145 @@ namespace transport
       }
 
 
-}   // namespace transport
+    template <typename number>
+    void repository_toolkit<number>::lock_content(const std::vector<std::string>& objects)
+      {
+        // make local copy of objects to process; we will tag items in this list as 'processed' as we go
+        std::map<std::string, bool> items;
+        for(const std::string& item : objects)
+          {
+            items[item] = false;
+          }
+
+        // cache content databases
+        integration_content_db& integration_content = this->cache.get_integration_content_db();
+        postintegration_content_db& postintegration_content = this->cache.get_postintegration_content_db();
+        output_content_db& output_content = this->cache.get_output_content_db();
+
+        this->lock_content(integration_content, items);
+        this->lock_content(postintegration_content, items);
+        this->lock_content(output_content, items);
+
+        for(const std::pair< const std::string, bool >& item : items)
+          {
+            if(!item.second)
+              {
+                std::ostringstream msg;
+                msg << CPPTRANSPORT_REPO_TOOLKIT_MISSING_OBJECT << " '" << item.first << "'";
+                this->msg(msg.str());
+              }
+          }
+      }
+
+
+    template <typename number>
+    template <typename ContentDatabase>
+    void repository_toolkit<number>::lock_content(ContentDatabase& db, std::map< std::string, bool >& items)
+      {
+        // lock the database by setting up a transaction
+        transaction_manager mgr = this->repo.transaction_factory();
+
+        // step through records in content database
+        for(const typename ContentDatabase::value_type& item : db)
+          {
+            // ContentDatabase has mapped_type equal to std::unique_ptr< output_group_record<PayloadType> >
+            // to get the output_group_record<PayloadType> we need the ::element_type member of std::unique_ptr<>
+            const typename ContentDatabase::mapped_type::element_type& record = *item.second;
+
+            // step through objects in match list
+            for(std::pair< const std::string, bool >& t : items)
+              {
+                const std::string& match_expr = t.first;
+                if(check_match(record.get_name(), match_expr, true))    // true = insist on exact match
+                  {
+                    t.second = true;
+
+                    // re-query the database to get a read/write version of this record
+                    typename ContentDatabase::mapped_type rw_record = get_rw_content_group<number, typename ContentDatabase::mapped_type::element_type::payload_type>(this->repo, record.get_name(), mgr);
+
+                    rw_record->set_lock_status(true);
+
+                    // recommit record
+                    rw_record->commit();
+                  }
+              }
+          }
+
+        // commit all changes
+        mgr.commit();
+      }
+
+
+    template <typename number>
+    void repository_toolkit<number>::unlock_content(const std::vector<std::string>& objects)
+      {
+        // make local copy of objects to process; we will tag items in this list as 'processed' as we go
+        std::map<std::string, bool> items;
+        for(const std::string& item : objects)
+          {
+            items[item] = false;
+          }
+
+        // cache content databases
+        integration_content_db& integration_content = this->cache.get_integration_content_db();
+        postintegration_content_db& postintegration_content = this->cache.get_postintegration_content_db();
+        output_content_db& output_content = this->cache.get_output_content_db();
+
+        this->unlock_content(integration_content, items);
+        this->unlock_content(postintegration_content, items);
+        this->unlock_content(output_content, items);
+
+        for(const std::pair< const std::string, bool >& item : items)
+          {
+            if(!item.second)
+              {
+                std::ostringstream msg;
+                msg << CPPTRANSPORT_REPO_TOOLKIT_MISSING_OBJECT << " '" << item.first << "'";
+                this->msg(msg.str());
+              }
+          }
+      }
+
+
+    template <typename number>
+    template <typename ContentDatabase>
+    void repository_toolkit<number>::unlock_content(ContentDatabase& db, std::map< std::string, bool >& items)
+      {
+        // lock the database by setting up a transaction
+        transaction_manager mgr = this->repo.transaction_factory();
+
+        // step through records in content database
+        for(const typename ContentDatabase::value_type& item : db)
+          {
+            // ContentDatabase has mapped_type equal to std::unique_ptr< output_group_record<PayloadType> >
+            // to get the output_group_record<PayloadType> we need the ::element_type member of std::unique_ptr<>
+            const typename ContentDatabase::mapped_type::element_type& record = *item.second;
+
+            // step through objects in match list
+            for(std::pair< const std::string, bool >& t : items)
+              {
+                const std::string& match_expr = t.first;
+                if(check_match(record.get_name(), match_expr, true))    // true = insist on exact match
+                  {
+                    t.second = true;
+
+                    // re-query the database to get a read/write version of this record
+                    typename ContentDatabase::mapped_type rw_record = get_rw_content_group<number, typename ContentDatabase::mapped_type::element_type::payload_type>(this->repo, record.get_name(), mgr);
+
+                    rw_record->set_lock_status(false);
+
+                    // recommit record
+                    rw_record->commit();
+                  }
+              }
+          }
+
+        // commit all changes
+        mgr.commit();
+      }
+
+
+  }   // namespace transport
 
 
 #endif //CPPTRANSPORT_REPOSITORY_TOOLKIT_H

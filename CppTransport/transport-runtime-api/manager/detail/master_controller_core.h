@@ -184,6 +184,8 @@ namespace transport
         boost::program_options::options_description action_options("Repository actions", width);
         action_options.add_options()
           (CPPTRANSPORT_SWITCH_OBJECT,           boost::program_options::value< std::vector< std::string > >()->composing(), CPPTRANSPORT_HELP_OBJECT)
+          (CPPTRANSPORT_SWITCH_LOCK,                                                                                         CPPTRANSPORT_HELP_LOCK)
+          (CPPTRANSPORT_SWITCH_UNLOCK,                                                                                       CPPTRANSPORT_HELP_UNLOCK)
           (CPPTRANSPORT_SWITCH_ADD_TAG,          boost::program_options::value< std::vector< std::string > >()->composing(), CPPTRANSPORT_HELP_ADD_TAG)
           (CPPTRANSPORT_SWITCH_DELETE_TAG,       boost::program_options::value< std::vector< std::string > >()->composing(), CPPTRANSPORT_HELP_DELETE_TAG)
           (CPPTRANSPORT_SWITCH_ADD_NOTE,         boost::program_options::value< std::vector< std::string > >()->composing(), CPPTRANSPORT_HELP_ADD_NOTE)
@@ -443,65 +445,56 @@ namespace transport
       {
         repository_toolkit<number> toolkit(*this->repo, this->err, this->warn, this->msg);
 
-        if(option_map.count(CPPTRANSPORT_SWITCH_OBJECT))
+        try
           {
-            std::vector<std::string> add_tag;
-            std::vector<std::string> delete_tag;
-            std::vector<std::string> add_note;
-            std::vector<std::string> delete_note;
-
-            if(option_map.count(CPPTRANSPORT_SWITCH_DELETE))
+            if(option_map.count(CPPTRANSPORT_SWITCH_OBJECT))
               {
-                if(option_map.count(CPPTRANSPORT_SWITCH_ADD_TAG) ||
-                  option_map.count(CPPTRANSPORT_SWITCH_DELETE_TAG) ||
-                  option_map.count(CPPTRANSPORT_SWITCH_ADD_NOTE) ||
-                  option_map.count(CPPTRANSPORT_SWITCH_DELETE_NOTE))
+                if(option_map.count(CPPTRANSPORT_SWITCH_DELETE))
                   {
-                    this->err(CPPTRANSPORT_SWITCH_DELETE_SINGLET);
-                  }
-                else
-                  {
-                    try
+                    if(option_map.count(CPPTRANSPORT_SWITCH_ADD_TAG)  || option_map.count(CPPTRANSPORT_SWITCH_DELETE_TAG) ||
+                       option_map.count(CPPTRANSPORT_SWITCH_ADD_NOTE) || option_map.count(CPPTRANSPORT_SWITCH_DELETE_NOTE) ||
+                       option_map.count(CPPTRANSPORT_SWITCH_LOCK)     || option_map.count(CPPTRANSPORT_SWITCH_UNLOCK))
+                      {
+                        this->err(CPPTRANSPORT_SWITCH_DELETE_SINGLET);
+                      }
+                    else
                       {
                         toolkit.delete_content(option_map[CPPTRANSPORT_SWITCH_OBJECT].as< std::vector<std::string> >());
                       }
-                    catch(runtime_exception& xe)
-                      {
-                        if(xe.get_exception_code() == exception_type::REPOSITORY_ERROR)
-                          {
-#ifdef TRACE_OUTPUT
-                            std::cout << "TRACE_OUTPUT G" << '\n';
-#endif
-                            this->err(xe.what());
-                          }
-                        else throw;
-                      }
                   }
-              }
-            else
-              {
-                if(option_map.count(CPPTRANSPORT_SWITCH_ADD_TAG)) add_tag = option_map[CPPTRANSPORT_SWITCH_ADD_TAG].as< std::vector<std::string> >();
-                if(option_map.count(CPPTRANSPORT_SWITCH_DELETE_TAG)) delete_tag = option_map[CPPTRANSPORT_SWITCH_DELETE_TAG].as< std::vector<std::string> >();
-                if(option_map.count(CPPTRANSPORT_SWITCH_ADD_NOTE)) add_note = option_map[CPPTRANSPORT_SWITCH_ADD_NOTE].as< std::vector<std::string> >();
-                if(option_map.count(CPPTRANSPORT_SWITCH_DELETE_NOTE)) delete_note = option_map[CPPTRANSPORT_SWITCH_DELETE_NOTE].as< std::vector<std::string> >();
+                else
+                  {
+                    std::vector<std::string> add_tag;
+                    std::vector<std::string> delete_tag;
+                    std::vector<std::string> add_note;
+                    std::vector<std::string> delete_note;
 
-                try
-                  {
-                    toolkit.update_tags_notes(option_map[CPPTRANSPORT_SWITCH_OBJECT].as< std::vector<std::string> >(),
-                                              add_tag, delete_tag, add_note, delete_note);
-                  }
-                catch(runtime_exception& xe)
-                  {
-                    if(xe.get_exception_code() == exception_type::REPOSITORY_ERROR)
+                    if(option_map.count(CPPTRANSPORT_SWITCH_ADD_TAG)) add_tag = option_map[CPPTRANSPORT_SWITCH_ADD_TAG].as< std::vector<std::string> >();
+                    if(option_map.count(CPPTRANSPORT_SWITCH_DELETE_TAG)) delete_tag = option_map[CPPTRANSPORT_SWITCH_DELETE_TAG].as< std::vector<std::string> >();
+                    if(option_map.count(CPPTRANSPORT_SWITCH_ADD_NOTE)) add_note = option_map[CPPTRANSPORT_SWITCH_ADD_NOTE].as< std::vector<std::string> >();
+                    if(option_map.count(CPPTRANSPORT_SWITCH_DELETE_NOTE)) delete_note = option_map[CPPTRANSPORT_SWITCH_DELETE_NOTE].as< std::vector<std::string> >();
+
+                    if(!add_tag.empty() || !delete_tag.empty() || !add_note.empty() || !delete_note.empty())
                       {
-#ifdef TRACE_OUTPUT
-                        std::cout << "TRACE_OUTPUT I" << '\n';
-#endif
-                        this->err(xe.what());
+                        toolkit.update_tags_notes(option_map[CPPTRANSPORT_SWITCH_OBJECT].as< std::vector<std::string> >(), add_tag, delete_tag, add_note, delete_note);
                       }
-                    else throw;
+
+                    if(option_map.count(CPPTRANSPORT_SWITCH_LOCK)) toolkit.lock_content(option_map[CPPTRANSPORT_SWITCH_OBJECT].as< std::vector<std::string> >());
+                    if(option_map.count(CPPTRANSPORT_SWITCH_UNLOCK)) toolkit.unlock_content(option_map[CPPTRANSPORT_SWITCH_OBJECT].as< std::vector<std::string> >());
                   }
+
               }
+          }
+        catch(runtime_exception& xe)
+          {
+            if(xe.get_exception_code() == exception_type::REPOSITORY_ERROR)
+              {
+#ifdef TRACE_OUTPUT
+                std::cout << "TRACE_OUTPUT G" << '\n';
+#endif
+                this->err(xe.what());
+              }
+            else throw;
           }
       }
 

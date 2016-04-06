@@ -1389,6 +1389,14 @@ namespace transport
     template <typename Payload>
     void repository_sqlite3<number>::delete_content(task_record<number>& rec, output_group_record<Payload>& group_rec, transaction_manager& mgr)
       {
+        // verify that output group is unlocked
+        if(group_rec.get_lock_status())
+          {
+            std::ostringstream msg;
+            msg << CPPTRANSPORT_REPO_GROUP_IS_LOCKED << " '" << group_rec.get_name() << "'";
+            throw runtime_exception(exception_type::REPOSITORY_ERROR, msg.str());
+          }
+
         // delete this content group from the task record
         rec.delete_output_group(group_rec.get_name());
         rec.commit();
