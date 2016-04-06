@@ -219,7 +219,7 @@ namespace transport
 
             //! write a link-to-derived product button
             template <typename number>
-            void write_derived_product_button(HTML_report_bundle<number>& bundle, const std::string& name, const std::string& element, HTML_node& parent);
+            void write_derived_product_button(HTML_report_bundle<number>& bundle, const std::string& name, const std::string& pane, HTML_node& parent);
 
 
             // WRITE GENERIC RECORD DETAILS
@@ -252,7 +252,8 @@ namespace transport
 
             //! write JavaScript button handler which changes pane and scrolls to a given element
             template <typename number>
-            void write_JavaScript_button_scroll(HTML_report_bundle<number>& bundle, std::string button, std::string pane, std::string element);
+            void write_JavaScript_button(HTML_report_bundle<number>& bundle, std::string button, std::string pane,
+                                         std::string element);
 
             //! write JavaScript button handler which simply changes pane
             template <typename number>
@@ -270,7 +271,7 @@ namespace transport
             HTML_node make_menu_tab(std::string pane, std::string name);
 
             //! build a content-group menu tab
-            template <typename number, typename DatabaseType, typename PayloadType>
+            template <typename number, typename DatabaseType>
             HTML_node make_content_menu_tab(const DatabaseType& db, HTML_report_bundle<number>& bundle, std::string name);
 
             //! write a grid data element
@@ -436,25 +437,22 @@ namespace transport
             HTML_node integration_tasks_tab = this->make_menu_tab("integration", "Integration tasks");
 
             // Integration content tab
-            HTML_node integration_content_tab = this->make_content_menu_tab<number, integration_content_db, integration_payload>(
-              bundle.get_integration_content_db(), bundle, "Integration content");
+            HTML_node integration_content_tab = this->make_content_menu_tab<number>(bundle.get_integration_content_db(), bundle, "Integration content");
 
             // Postintegration tasks tab
             HTML_node postintegration_tasks_tab = this->make_menu_tab("postintegration", "Postintegration tasks");
 
             // Postintegration content tab
-            HTML_node postintegration_content_tab = this->make_content_menu_tab<number, postintegration_content_db, postintegration_payload>(
-              bundle.get_postintegration_content_db(), bundle, "Postintegration content");
+            HTML_node postintegration_content_tab = this->make_content_menu_tab<number>(bundle.get_postintegration_content_db(), bundle, "Postintegration content");
 
             // Output tasks tab
             HTML_node output_tasks_tab = this->make_menu_tab("output", "Output tasks");
 
             // Output content tab
-            HTML_node output_content_tab = this->make_content_menu_tab<number, output_content_db, output_payload>(
-              bundle.get_output_content_db(), bundle, "Output_content");
+            HTML_node output_content_tab = this->make_content_menu_tab<number>(bundle.get_output_content_db(), bundle, "Output_content");
 
             // Derived products tab
-            HTML_node derived_products_tab = this->make_menu_tab("derived", "Derived products");
+            HTML_node derived_products_tab = this->make_content_menu_tab<number>(bundle.get_derived_product_db(), bundle, "Derived products");
 
             tablist.add_element(package_tab);
             tablist.add_element(integration_tasks_tab);
@@ -500,10 +498,7 @@ namespace transport
 
             this->write_output_content(bundle, tab_panes);
 
-            HTML_node derived_products_pane("div");
-            derived_products_pane.add_attribute("id", "derived").add_attribute("class", "tab-pane fade");
-            this->write_derived_products(bundle, derived_products_pane);
-            tab_panes.add_element(derived_products_pane);
+            this->write_derived_products(bundle, tab_panes);
 
             parent.add_element(navbar);
             parent.add_element(tab_panes);
@@ -522,7 +517,7 @@ namespace transport
           }
 
 
-        template <typename number, typename DatabaseType, typename PayloadType>
+        template <typename number, typename DatabaseType>
         HTML_node HTML_report::make_content_menu_tab(const DatabaseType& db, HTML_report_bundle<number>& bundle, std::string name)
           {
             HTML_node tab("li");
@@ -542,7 +537,8 @@ namespace transport
 
                 for(const typename DatabaseType::value_type& group : db)
                   {
-                    const output_group_record<PayloadType>& rec = *group.second;
+                    // DatabaseType::value_type is a std::pair< std::string, pointer-to-record >
+                    const typename DatabaseType::value_type::second_type::element_type& rec = *group.second;
                     std::string tag = bundle.get_id(rec);
 
                     HTML_node menu_item("li");
@@ -1328,22 +1324,22 @@ namespace transport
             typename derived_product_db<number>::type& db = bundle.get_derived_product_db();
             typename task_db<number>::type& tk_db = bundle.get_task_db();
 
-            if(db.empty()) return;
-
-            HTML_node list("div");
-            list.add_attribute("class", "list-group");
-
             for(const typename derived_product_db<number>::value_type& product : db)
               {
                 const derived_product_record<number>& rec = *product.second;
                 const std::string tag = bundle.get_id(rec);
 
-                HTML_node item("a");
-                item.add_attribute("href", "#" + tag).add_attribute("class", "list-group-item").add_attribute("onclick", "return false;");
-                this->make_list_item_label(rec.get_name(), item);
+                HTML_node pane("div");
+                pane.add_attribute("id", tag).add_attribute("class", "tab-pane fade");
 
-                // write generic repository information for this record
-                this->write_generic_record(bundle, rec, item);
+                HTML_node list("div");
+                list.add_attribute("class", "list-group");
+
+                HTML_node anchor("a");
+                anchor.add_attribute("href", "#").add_attribute("class", "list-group-item").add_attribute("onclick", "return false;");
+
+                this->make_list_item_label(rec.get_name(), anchor);
+                this->write_generic_record(bundle, rec, anchor);
 
                 HTML_node panel("div");
                 panel.add_attribute("class", "panel panel-default");
@@ -1381,7 +1377,7 @@ namespace transport
                 row.add_element(col1).add_element(col2).add_element(col3);
                 panel_body.add_element(row);
                 panel.add_element(panel_heading).add_element(panel_body);
-                item.add_element(panel);
+                anchor.add_element(panel);
 
                 typename std::list< derivable_task<number>* > task_list;
                 rec.get_product()->get_task_list(task_list);
@@ -1451,13 +1447,13 @@ namespace transport
                     table_wrapper.add_element(table);
                     tbl_panel.add_element(tbl_panel_head).add_element(table_wrapper);
                     group_list.add_element(tbl_panel);
-                    item.add_element(button).add_element(group_list);
+                    anchor.add_element(button).add_element(group_list);
                   }
 
-                list.add_element(item);
+                list.add_element(anchor);
+                pane.add_element(list);
+                parent.add_element(pane);
               }
-
-            parent.add_element(list);
           }
 
 
@@ -2668,7 +2664,8 @@ namespace transport
 
 
         template <typename number>
-        void HTML_report::write_JavaScript_button_scroll(HTML_report_bundle<number>& bundle, std::string button, std::string pane, std::string element)
+        void HTML_report::write_JavaScript_button(HTML_report_bundle<number>& bundle, std::string button,
+                                                  std::string pane, std::string element)
           {
             // we need a Javascript function which causes this button to activate the appropriate task pane when clicked
             bundle.write_JavaScript("$(function(){");
@@ -2738,7 +2735,7 @@ namespace transport
                       }
                   }
 
-                this->write_JavaScript_button_scroll(bundle, button_id, pane, element_id);
+                this->write_JavaScript_button(bundle, button_id, pane, element_id);
               }
             else
               {
@@ -2819,7 +2816,7 @@ namespace transport
 
                 parent.add_element(button);
 
-                this->write_JavaScript_button_scroll(bundle, button_id, "packages", element);
+                this->write_JavaScript_button(bundle, button_id, "packages", element);
               }
             else
               {
@@ -2837,17 +2834,17 @@ namespace transport
             typename derived_product_db<number>::type& db = bundle.get_derived_product_db();
             typename derived_product_db<number>::type::const_iterator t = db.find(name);
 
-            std::string element;
-            if(t != db.end()) element = bundle.get_id(*t->second);
+            std::string pane;
+            if(t != db.end()) pane = bundle.get_id(*t->second);
 
-            this->write_derived_product_button(bundle, name, element, parent);
+            this->write_derived_product_button(bundle, name, pane, parent);
           }
 
 
         template <typename number>
-        void HTML_report::write_derived_product_button(HTML_report_bundle<number>& bundle, const std::string& name, const std::string& element, HTML_node& parent)
+        void HTML_report::write_derived_product_button(HTML_report_bundle<number>& bundle, const std::string& name, const std::string& pane, HTML_node& parent)
           {
-            if(!element.empty())
+            if(!pane.empty())
               {
                 std::string button_id = this->make_button_tag();
 
@@ -2856,7 +2853,7 @@ namespace transport
 
                 parent.add_element(button);
 
-                this->write_JavaScript_button_scroll(bundle, button_id, "derived", element);
+                this->write_JavaScript_button(bundle, button_id, pane);
               }
             else
               {
@@ -2881,7 +2878,7 @@ namespace transport
             content.add_attribute("id", tag + "notes").add_attribute("class", "collapse");
 
             HTML_node panel("div");
-            panel.add_attribute("class", "panel panel-info topskip");
+            panel.add_attribute("class", "panel panel-info scrollable-panel topskip");
 
             HTML_node panel_head("div", "Notes attached to this record");
             panel_head.add_attribute("class", "panel-heading");
@@ -2915,7 +2912,7 @@ namespace transport
             content.add_attribute("id", tag + "activity").add_attribute("class", "collapse");
 
             HTML_node panel("div");
-            panel.add_attribute("class", "panel panel-info topskip");
+            panel.add_attribute("class", "panel panel-info scrollable-panel topskip");
 
             HTML_node panel_head("div", "Activity report");
             panel_head.add_attribute("class", "panel-heading");

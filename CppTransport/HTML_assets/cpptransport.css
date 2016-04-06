@@ -8,6 +8,20 @@ body {
     padding: 0;
 }
 
+/* prevent scrollable menus from becoming too long */
+.scrollable-menu {
+    height: auto;
+    max-height: 400px;
+    overflow-x: hidden;
+}
+
+/* give log panes (notes, activities) a maximum height */
+.scrollable-panel {
+    height: auto;
+    max-height: 400px;
+    overflow-x: hidden;
+}
+
 /* Many elements require extra vertical space above them */
 .topskip {
     margin-top: 20px;
