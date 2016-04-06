@@ -16,8 +16,8 @@ namespace transport
     // Create a repository object associated with a pathname
     template <typename number>
     repository_sqlite3<number>::repository_sqlite3(const boost::filesystem::path path, model_manager<number>& f, repository_mode mode,
-                                                   error_handler e, warning_handler w, message_handler m)
-      : json_repository<number>(path, f, mode, e, w, m,
+                                                   local_environment& ev, error_handler e, warning_handler w, message_handler m)
+      : json_repository<number>(path, f, mode, ev, e, w, m,
                                 package_finder<number>(*this), task_finder<number>(*this), derived_product_finder<number>(*this)),
         db(nullptr)
       {
@@ -343,7 +343,7 @@ namespace transport
 
         // for newly-created records, access mode is inherited from the repository
         repository_record::handler_package pkg(std::bind(&repository_sqlite3<number>::commit_first, this, std::placeholders::_1, std::placeholders::_2, counter, storer, this->package_store.string(), CPPTRANSPORT_REPO_PACKAGE_EXISTS),
-                                               this->access_mode == repository_mode::readwrite ? mgr : boost::optional<transaction_manager&>());
+                                               this->env, this->access_mode == repository_mode::readwrite ? mgr : boost::optional<transaction_manager&>());
 
         return std::make_unique< package_record<number> >(ics, pkg);
       }
@@ -356,7 +356,7 @@ namespace transport
 
         // for deserialized records, access mode must be specified explicitly -- but is respected only if we are ourselves a read/write repository
         repository_record::handler_package pkg(std::bind(&repository_sqlite3<number>::commit_replace, this, std::placeholders::_1, std::placeholders::_2, finder),
-                                               this->access_mode == repository_mode::readwrite ? mgr : boost::optional<transaction_manager&>());
+                                               this->env, this->access_mode == repository_mode::readwrite ? mgr : boost::optional<transaction_manager&>());
 
         return std::make_unique< package_record<number> >(reader, this->m_finder, pkg);
       }
@@ -385,7 +385,7 @@ namespace transport
 
         // for newly-created records, access mode is inherited from the repository
         repository_record::handler_package pkg(std::bind(&repository_sqlite3<number>::commit_integration_first, this, std::placeholders::_1, std::placeholders::_2, counter, storer, this->task_store.string(), CPPTRANSPORT_REPO_TASK_EXISTS),
-                                               this->access_mode == repository_mode::readwrite ? mgr : boost::optional<transaction_manager&>());
+                                               this->env, this->access_mode == repository_mode::readwrite ? mgr : boost::optional<transaction_manager&>());
 
         return std::make_unique< integration_task_record<number> >(tk, pkg);
       }
@@ -398,7 +398,7 @@ namespace transport
 
         // for deserialized records, access mode must be specified explicitly -- but is respected only if we are ourselves a read/write repository
         repository_record::handler_package pkg(std::bind(&repository_sqlite3<number>::commit_integration_replace, this, std::placeholders::_1, std::placeholders::_2, finder),
-                                               this->access_mode == repository_mode::readwrite ? mgr : boost::optional<transaction_manager&>());
+                                               this->env, this->access_mode == repository_mode::readwrite ? mgr : boost::optional<transaction_manager&>());
 
         return std::make_unique< integration_task_record<number> >(reader, this->root_path, this->pkg_finder, pkg);
       }
@@ -412,7 +412,7 @@ namespace transport
 
         // for newly-created records, access mode is inherited from the repository
         repository_record::handler_package pkg(std::bind(&repository_sqlite3<number>::commit_first, this, std::placeholders::_1, std::placeholders::_2, counter, storer, this->task_store.string(), CPPTRANSPORT_REPO_TASK_EXISTS),
-                                               this->access_mode == repository_mode::readwrite ? mgr : boost::optional<transaction_manager&>());
+                                               this->env, this->access_mode == repository_mode::readwrite ? mgr : boost::optional<transaction_manager&>());
 
         return std::make_unique< output_task_record<number> >(tk, pkg);
       }
@@ -425,7 +425,7 @@ namespace transport
 
         // for deserialized records, access mode must be specified explicitly -- but is respected only if we are ourselves a read/write repository
         repository_record::handler_package pkg(std::bind(&repository_sqlite3<number>::commit_replace, this, std::placeholders::_1, std::placeholders::_2, finder),
-                                               this->access_mode == repository_mode::readwrite ? mgr : boost::optional<transaction_manager&>());
+                                               this->env, this->access_mode == repository_mode::readwrite ? mgr : boost::optional<transaction_manager&>());
 
         return std::make_unique< output_task_record<number> >(reader, this->dprod_finder, pkg);
       }
@@ -461,7 +461,7 @@ namespace transport
 
         // for newly-created records, access mode is inherited from the repository
         repository_record::handler_package pkg(std::bind(&repository_sqlite3<number>::commit_first, this, std::placeholders::_1, std::placeholders::_2, counter, storer, this->task_store.string(), CPPTRANSPORT_REPO_TASK_EXISTS),
-                                               this->access_mode == repository_mode::readwrite ? mgr : boost::optional<transaction_manager&>());
+                                               this->env, this->access_mode == repository_mode::readwrite ? mgr : boost::optional<transaction_manager&>());
 
         return std::make_unique< postintegration_task_record<number> >(tk, pkg);
       }
@@ -474,7 +474,7 @@ namespace transport
 
         // for deserialized records, access mode must be specified explicitly -- but is respected only if we are ourselves a read/write repository
         repository_record::handler_package pkg(std::bind(&repository_sqlite3<number>::commit_replace, this, std::placeholders::_1, std::placeholders::_2, finder),
-                                               this->access_mode == repository_mode::readwrite ? mgr : boost::optional<transaction_manager&>());
+                                               this->env, this->access_mode == repository_mode::readwrite ? mgr : boost::optional<transaction_manager&>());
 
         return std::make_unique< postintegration_task_record<number> >(reader, this->tk_finder, pkg);
       }
@@ -488,7 +488,7 @@ namespace transport
 
         // for newly-created records, access mode is inherited from the repository
         repository_record::handler_package pkg(std::bind(&repository_sqlite3<number>::commit_first, this, std::placeholders::_1, std::placeholders::_2, counter, storer, this->product_store.string(), CPPTRANSPORT_REPO_PRODUCT_EXISTS),
-                                               this->access_mode == repository_mode::readwrite ? mgr : boost::optional<transaction_manager&>());
+                                               this->env, this->access_mode == repository_mode::readwrite ? mgr : boost::optional<transaction_manager&>());
 
         return std::make_unique< derived_product_record<number> >(prod, pkg);
       }
@@ -501,7 +501,7 @@ namespace transport
 
         // for deserialized records, access mode must be specified explicitly -- but is respected only if we are ourselves a read/write repository
         repository_record::handler_package pkg(std::bind(&repository_sqlite3<number>::commit_replace, this, std::placeholders::_1, std::placeholders::_2, finder),
-                                               this->access_mode == repository_mode::readwrite ? mgr : boost::optional<transaction_manager&>());
+                                               this->env, this->access_mode == repository_mode::readwrite ? mgr : boost::optional<transaction_manager&>());
 
         return std::make_unique< derived_product_record<number> >(reader, this->tk_finder, pkg);
       }
@@ -566,7 +566,7 @@ namespace transport
 
         // for created records, read/write status is inherited from repository
         repository_record::handler_package pkg(std::bind(&repository_sqlite3<number>::commit_first, this, std::placeholders::_1, std::placeholders::_2,  counter, storer, this->output_store.string(), CPPTRANSPORT_REPO_OUTPUT_EXISTS),
-                                               this->access_mode == repository_mode::readwrite ? mgr : boost::optional<transaction_manager&>());
+                                               this->env, this->access_mode == repository_mode::readwrite ? mgr : boost::optional<transaction_manager&>());
 
         typename output_group_record<Payload>::paths_group paths;
         paths.root   = this->get_root_path();
@@ -584,7 +584,7 @@ namespace transport
 
         // for deserialized records, read/write status must be explicitly specified
         repository_record::handler_package pkg(std::bind(&repository_sqlite3<number>::commit_replace, this, std::placeholders::_1, std::placeholders::_2, finder),
-                                               this->access_mode == repository_mode::readwrite ? mgr : boost::optional<transaction_manager&>());
+                                               this->env, this->access_mode == repository_mode::readwrite ? mgr : boost::optional<transaction_manager&>());
 
         return std::make_unique< output_group_record<Payload> >(reader, this->root_path, pkg);
       }

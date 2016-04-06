@@ -9,6 +9,7 @@
 
 #include "transport-runtime-api/repository/detail/repository_mode.h"
 #include "transport-runtime-api/repository/transaction_manager.h"
+#include "transport-runtime-api/manager/environment.h"
 
 #include "boost/optional.hpp"
 
@@ -37,8 +38,9 @@ namespace transport
           public:
 
             //! constructor requires values for all arguments
-            handler_package(commit_handler c, boost::optional<transaction_manager&> m)
+            handler_package(commit_handler c, local_environment& e, boost::optional<transaction_manager&> m)
               : commit(std::move(c)),
+                env(e),
                 mgr(m)
               {
               }
@@ -47,12 +49,20 @@ namespace transport
 
           public:
 
-            //! transaction manager, if provided
-            //! if no transaction manager is supplied, the record is in a readonly mode
-            boost::optional<transaction_manager&> mgr;
+            // POLICY CLASSES
+
+            //! local environment
+            local_environment& env;
 
             //! commit handler
             const commit_handler commit;
+
+
+            // TRANSACTION SUPPORT
+
+            //! transaction manager, if provided
+            //! if no transaction manager is supplied, the record is in a readonly mode
+            boost::optional<transaction_manager&> mgr;
 
           };
 
@@ -91,17 +101,19 @@ namespace transport
         //! get creation time
         const boost::posix_time::ptime& get_creation_time() const { return(this->metadata.get_creation_time()); }
 
-        //! set creation time (use with care)
+        //! set creation time (use with care; needed to timestamp created output group records correctly)
         void set_creation_time(const boost::posix_time::ptime& t) { this->metadata.set_creation_time(t); }
 
         //! get last-edit time
+        //! no option to set last-edit time since that action is performed by any methods
+        //! which change the record
         const boost::posix_time::ptime& get_last_edit_time() const { return(this->metadata.get_last_edit_time()); }
-
-        //! reset last-edit time to now
-        void update_last_edit_time() { this->metadata.update_last_edit_time(); }
 
         //! get runtime API version
         unsigned int get_runtime_API_version() const { return(this->metadata.get_runtime_API_version()); }
+
+        //! get history for this record
+        const std::list< metadata_history >& get_history() const { return(this->metadata.get_history()); }
 
 
         // COMMIT TO DATABASE

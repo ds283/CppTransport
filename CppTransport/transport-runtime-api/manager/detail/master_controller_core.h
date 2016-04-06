@@ -251,7 +251,7 @@ namespace transport
               {
                 this->repo = repository_factory<number>(this->option_map[CPPTRANSPORT_SWITCH_REPO_LONG].template as<std::string>(),
                                                         this->model_mgr, repository_mode::readwrite,
-                                                        this->err, this->warn, this->msg);
+                                                        this->local_env, this->err, this->warn, this->msg);
               }
             catch(runtime_exception& xe)
               {

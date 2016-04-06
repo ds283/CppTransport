@@ -705,6 +705,7 @@ set(TRANSPORT_RUNTIME_API_LOCALIZATIONS_MESSAGES_EN_FILES
   transport-runtime-api/localizations/messages_en/work_journal.h
   transport-runtime-api/localizations/messages_en/report_HTML.h
   transport-runtime-api/localizations/messages_en/repository_toolkit.h
+  transport-runtime-api/localizations/messages_en/repository_records.h
   )
 
 set(TRANSPORT_RUNTIME_API_LOCALIZATIONS_MESSAGES_EN_TASKS_FILES

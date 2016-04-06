@@ -98,7 +98,7 @@ namespace transport
             boost::filesystem::path repo_path = payload.get_repository_path();
 
             this->repo = repository_factory<number>(repo_path.string(), this->finder, repository_mode::readonly,
-                                                    this->err, this->warn, this->msg);
+                                                    this->local_env, this->err, this->warn, this->msg);
 
             this->arg_cache = payload.get_argument_cache();
 

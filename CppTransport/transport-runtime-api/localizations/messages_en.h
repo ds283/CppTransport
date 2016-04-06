@@ -38,6 +38,7 @@
 
 #include "transport-runtime-api/localizations/messages_en/repository.h"
 #include "transport-runtime-api/localizations/messages_en/json_repository_interface.h"
+#include "transport-runtime-api/localizations/messages_en/repository_records.h"
 
 #include "transport-runtime-api/localizations/messages_en/repository_sqlite3.h"
 #include "transport-runtime-api/localizations/messages_en/repository_toolkit.h"

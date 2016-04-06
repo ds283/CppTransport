@@ -227,8 +227,8 @@ namespace transport
           protected:
 
             //! write details for generic records
-            template <typename RecordType>
-            void write_generic_record(const RecordType& rec, HTML_node& parent);
+            template <typename number, typename RecordType>
+            void write_generic_record(HTML_report_bundle<number>& bundle, const RecordType& rec, HTML_node& parent);
 
             //! write details for generic output records
             template <typename number, typename Payload>
@@ -241,6 +241,9 @@ namespace transport
 
             //! write a collapsible notes section
             void write_notes_collapsible(const std::list<std::string>& notes, const std::string& tag, HTML_node& parent);
+
+            //! write a collapsible activity log
+            void write_activity_collapsible(const std::list<metadata_history>& activity, const std::string& tag, HTML_node& parent);
 
 
             // WRITE JAVASCRIPT HANDLERS
@@ -613,7 +616,7 @@ namespace transport
                 this->make_list_item_label(rec.get_name(), item);
 
                 // write generic repository information for this record
-                this->write_generic_record(rec, item);
+                this->write_generic_record(bundle, rec, item);
 
                 HTML_node panel("div");
                 panel.add_attribute("class", "panel panel-default");
@@ -777,7 +780,7 @@ namespace transport
                     this->make_list_item_label(rec.get_name(), item);
 
                     // write generic repository information for this record
-                    this->write_generic_record(rec, item);
+                    this->write_generic_record(bundle, rec, item);
 
                     HTML_node panel("div");
                     panel.add_attribute("class", "panel panel-default");
@@ -1001,7 +1004,7 @@ namespace transport
                     this->make_list_item_label(rec.get_name(), item);
 
                     // write generic repository information for this record
-                    this->write_generic_record(rec, item);
+                    this->write_generic_record(bundle, rec, item);
 
                     HTML_node panel("div");
                     panel.add_attribute("class", "panel panel-default");
@@ -1160,7 +1163,7 @@ namespace transport
                     this->make_list_item_label(rec.get_name(), item);
 
                     // write generic repository information for this record
-                    this->write_generic_record(rec, item);
+                    this->write_generic_record(bundle, rec, item);
 
                     // write elements
                     const typename std::vector< output_task_element<number> >& elements = rec.get_task()->get_elements();
@@ -1330,7 +1333,7 @@ namespace transport
                 this->make_list_item_label(rec.get_name(), item);
 
                 // write generic repository information for this record
-                this->write_generic_record(rec, item);
+                this->write_generic_record(bundle, rec, item);
 
                 HTML_node panel("div");
                 panel.add_attribute("class", "panel panel-default");
@@ -2498,8 +2501,9 @@ namespace transport
           }
 
 
-        template <typename RecordType>
-        void HTML_report::write_generic_record(const RecordType& rec, HTML_node& parent)
+        template <typename number, typename RecordType>
+        void HTML_report::write_generic_record(HTML_report_bundle<number>& bundle,
+                                               const RecordType& rec, HTML_node& parent)
           {
             boost::posix_time::ptime created = rec.get_creation_time();
             boost::posix_time::ptime edited = rec.get_last_edit_time();
@@ -2545,14 +2549,17 @@ namespace transport
 
             row.add_element(col1).add_element(col2).add_element(col3);
             panel_body.add_element(row);
+
+            this->write_activity_collapsible(rec.get_history(), bundle.get_id(rec), panel_body);
+
             panel.add_element(panel_heading).add_element(panel_body);
             parent.add_element(panel);
           }
 
 
         template <typename number, typename Payload>
-        void HTML_report::write_generic_output_record(HTML_report_bundle<number>& bundle, const output_group_record<Payload>& rec,
-                                                      HTML_node& parent)
+        void HTML_report::write_generic_output_record(HTML_report_bundle<number>& bundle,
+                                                      const output_group_record<Payload>& rec, HTML_node& parent)
           {
             boost::posix_time::ptime created = rec.get_creation_time();
             boost::posix_time::ptime edited = rec.get_last_edit_time();
@@ -2608,7 +2615,9 @@ namespace transport
 
             row.add_element(col1).add_element(col2).add_element(col3);
             panel_body.add_element(row);
+
             this->write_notes_collapsible(rec.get_notes(), bundle.get_id(rec), panel_body);
+            this->write_activity_collapsible(rec.get_history(), bundle.get_id(rec), panel_body);
 
             panel.add_element(panel_heading).add_element(panel_body);
             parent.add_element(panel);
@@ -2843,8 +2852,14 @@ namespace transport
             HTML_node content("div");
             content.add_attribute("id", tag + "notes").add_attribute("class", "collapse");
 
+            HTML_node panel("div");
+            panel.add_attribute("class", "panel panel-info topskip");
+
+            HTML_node panel_head("div", "Notes attached to this record");
+            panel_head.add_attribute("class", "panel-heading");
+
             HTML_node list("ol");
-            list.add_attribute("class", "list-group topskip");
+            list.add_attribute("class", "list-group");
 
             for(const std::string& note : notes)
               {
@@ -2853,7 +2868,42 @@ namespace transport
                 list.add_element(item);
               }
 
-            content.add_element(list);
+            panel.add_element(panel_head).add_element(list);
+            content.add_element(panel);
+            parent.add_element(button).add_element(content);
+          }
+
+
+        void HTML_report::write_activity_collapsible(const std::list<metadata_history>& activity, const std::string& tag, HTML_node& parent)
+          {
+            if(activity.empty()) return;
+
+            HTML_node button("button");
+            button.add_attribute("type", "button").add_attribute("class", "btn btn-info");
+            button.add_attribute("data-toggle", "collapse").add_attribute("data-target", "#" + tag + "activity");
+            this->make_badged_text("Activity log", activity.size(), button);
+
+            HTML_node content("div");
+            content.add_attribute("id", tag + "activity").add_attribute("class", "collapse");
+
+            HTML_node panel("div");
+            panel.add_attribute("class", "panel panel-info topskip");
+
+            HTML_node panel_head("div", "Activity report");
+            panel_head.add_attribute("class", "panel-heading");
+
+            HTML_node list("ol");
+            list.add_attribute("class", "list-group");
+
+            for(const metadata_history& log_item : activity)
+              {
+                HTML_node item("li", log_item.to_string());
+                item.add_attribute("class", "list-group-item list-group-item-info");
+                list.add_element(item);
+              }
+
+            panel.add_element(panel_head).add_element(list);
+            content.add_element(panel);
             parent.add_element(button).add_element(content);
           }
 

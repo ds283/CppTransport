@@ -91,10 +91,11 @@ namespace transport
 
     template <typename number>
     repository<number>::repository(const boost::filesystem::path path, model_manager <number>& f, repository_mode mode,
-                                   error_handler e, warning_handler w, message_handler m,
+                                   local_environment& ev, error_handler e, warning_handler w, message_handler m,
                                    package_finder<number> pf, task_finder<number> tf, derived_product_finder<number> dpf)
       : root_path(path.is_absolute() ? path : boost::filesystem::absolute(path)),
         access_mode(mode),
+        env(ev),
         error(e),
         warning(w),
         message(m),
@@ -505,7 +506,6 @@ namespace transport
 
         // add this output group to the integration task record
         rec->add_new_output_group(output_record->get_name());
-        rec->update_last_edit_time();
         rec->commit();
 
         this->advise_commit(output_record.get());
@@ -607,7 +607,6 @@ namespace transport
 
         // add this output group to the integration task record
         rec->add_new_output_group(output_record->get_name());
-        rec->update_last_edit_time();
         rec->commit();
 
         this->advise_commit(output_record.get());
@@ -679,7 +678,6 @@ namespace transport
 
         // add this output group to the integration task record
         rec->add_new_output_group(output_record->get_name());
-        rec->update_last_edit_time();
         rec->commit();
 
         this->advise_commit(output_record.get());

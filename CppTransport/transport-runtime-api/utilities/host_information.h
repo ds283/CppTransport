@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __host_information_H_
-#define __host_information_H_
+#ifndef CPPTRANSPORT_HOST_INFORMATION_H
+#define CPPTRANSPORT_HOST_INFORMATION_H
 
 #include "mpi.h"
 #include <sys/utsname.h>
@@ -144,4 +144,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__host_information_H_
+#endif //CPPTRANSPORT_HOST_INFORMATION_H

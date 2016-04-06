@@ -189,10 +189,45 @@ namespace transport
 
 
     template <typename Payload>
+    void output_group_record<Payload>::add_note(const std::string& note)
+      {
+        this->notes.push_back(note);
+        this->metadata.add_history_item(this->handlers.env.get_userid(), history_actions::add_note);
+        this->metadata.update_last_edit_time();
+      }
+
+
+    template <typename Payload>
+    void output_group_record<Payload>::set_lock_status(bool g)
+      {
+        this->locked = g;
+        this->metadata.add_history_item(this->handlers.env.get_userid(), history_actions::locked);
+        this->metadata.update_last_edit_time();
+      }
+
+
+    template <typename Payload>
+    void output_group_record<Payload>::add_tag(const std::string& tag)
+      {
+        this->tags.push_back(tag);
+        this->tags.sort();
+        this->tags.unique();
+
+        this->metadata.add_history_item(this->handlers.env.get_userid(), history_actions::add_tag, tag);
+        this->metadata.update_last_edit_time();
+      }
+
+
+    template <typename Payload>
     void output_group_record<Payload>::remove_tag(const std::string& tag)
       {
         std::list<std::string>::const_iterator it = std::find(this->tags.cbegin(), this->tags.cend(), tag);
-        if(it != this->tags.end()) this->tags.erase(it);
+        if(it != this->tags.end())
+          {
+            this->tags.erase(it);
+            this->metadata.add_history_item(this->handlers.env.get_userid(), history_actions::remove_tag, tag);
+            this->metadata.update_last_edit_time();
+          }
       }
 
 
@@ -206,16 +241,12 @@ namespace transport
             ++it;
           }
 
-        if(number == 0 && it != this->notes.end()) this->notes.erase(it);
-      }
-
-
-    template <typename Payload>
-    void output_group_record<Payload>::add_tag(const std::string& tag)
-      {
-        this->tags.push_back(tag);
-        this->tags.sort();
-        this->tags.unique();
+        if(number == 0 && it != this->notes.end())
+          {
+            this->notes.erase(it);
+            this->metadata.add_history_item(this->handlers.env.get_userid(), history_actions::remove_note);
+            this->metadata.update_last_edit_time();
+          }
       }
 
 

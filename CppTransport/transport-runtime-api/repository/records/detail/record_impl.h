@@ -30,7 +30,7 @@ namespace transport
 
 
     repository_record::repository_record(repository_record::handler_package pkg)
-      : metadata(),
+      : metadata(pkg.env.get_userid()),
         handlers(std::move(pkg))
       {
         name = boost::posix_time::to_iso_string(metadata.get_creation_time());
@@ -39,7 +39,7 @@ namespace transport
 
     repository_record::repository_record(const std::string& nm, repository_record::handler_package pkg)
       : name(nm),
-        metadata(),
+        metadata(pkg.env.get_userid()),
         handlers(std::move(pkg))
       {
       }

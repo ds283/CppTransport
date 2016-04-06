@@ -56,7 +56,7 @@ namespace transport
 
         //! Create a repository object
         repository(const boost::filesystem::path path, model_manager <number>& f, repository_mode mode,
-                   error_handler e, warning_handler w, message_handler m,
+                   local_environment& ev, error_handler e, warning_handler w, message_handler m,
                    package_finder<number> pf, task_finder<number> tf, derived_product_finder<number> dpf);
 
         //! Explicitly delete copy constructor, preventing duplication (repository instances should be unique)
@@ -484,6 +484,12 @@ namespace transport
 
         //! BOOST path to the repository root directory
         const boost::filesystem::path root_path;
+
+
+        // POLICY CLASSES
+
+        //! local environment
+        local_environment& env;
 
 
         // ERROR, WARNING, MESSAGE HANDLERS

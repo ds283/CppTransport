@@ -17,18 +17,19 @@
 #include <utility>
 
 #include "transport-runtime-api/repository/json_repository.h"
+#include "transport-runtime-api/derived-products/data_products.h"
+#include "transport-runtime-api/sqlite3/operations/repository.h"
+
 
 #include "transport-runtime-api/version.h"
 #include "transport-runtime-api/messages.h"
 #include "transport-runtime-api/exceptions.h"
 
-#include "transport-runtime-api/derived-products/data_products.h"
 
 #include "boost/filesystem/operations.hpp"
 #include "boost/date_time/posix_time/posix_time.hpp"
 
 #include "sqlite3.h"
-#include "transport-runtime-api/sqlite3/operations/repository.h"
 
 
 // DECLARE SQLITE3_TRANSACTION_HANDLER
@@ -52,10 +53,10 @@ namespace transport
 
     template <typename number>
     std::unique_ptr<json_repository<number> > repository_factory(const std::string& path, model_manager<number>& finder,
-                                                                 repository_mode mode, error_handler e,
-                                                                 warning_handler w, message_handler m)
+                                                                 repository_mode mode, local_environment& ev,
+                                                                 error_handler e, warning_handler w, message_handler m)
       {
-        return std::make_unique<repository_sqlite3<number> >(path, finder, mode, e, w, m);
+        return std::make_unique<repository_sqlite3<number> >(path, finder, mode, ev, e, w, m);
       }
 
   }   // namespace transport

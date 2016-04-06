@@ -621,17 +621,17 @@ namespace transport
         //! Get task name
         const std::string& get_task_name() const { return(this->task); }
 
-        //! Get locked flag
+        //! Get locked status
         bool get_lock_status() const { return (this->locked); }
 
-        //! Set locked flag
-        void set_lock_status(bool g) { this->locked = g; }
+        //! Set locked status
+        void set_lock_status(bool g);
 
         //! Get notes
         const std::list<std::string>& get_notes() const { return (this->notes); }
 
         //! Add note
-        void add_note(const std::string& note) { this->notes.push_back(note); }
+        void add_note(const std::string& note);
 
         //! Remove numbered note
         void remove_note(unsigned int number);
