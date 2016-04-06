@@ -17,6 +17,107 @@
 namespace transport
   {
 
+    namespace master_controller_impl
+      {
+
+        template <typename number>
+        class WorkerBundle
+          {
+
+            // CONSTRUCTOR, DESTRUCTOR
+
+          public:
+
+            //! constructor
+            WorkerBundle(boost::mpi::environment& e, boost::mpi::communicator& c,
+                         repository<number>* r, work_journal& j, argument_cache& a);
+
+            //! destructor
+            ~WorkerBundle();
+
+
+            // INTERNAL FUNCTIONS
+
+          protected:
+
+            //! Map worker number to communicator rank
+            // TODO: replace with a better abstraction
+            constexpr unsigned int worker_rank(unsigned int worker_number) const { return(worker_number+1); }
+
+
+            // INTERNAL DATA
+
+          private:
+
+            //! reference to MPI environment
+            boost::mpi::environment& env;
+
+            //! reference to MPI communicator
+            boost::mpi::communicator& world;
+
+            //! pointer to repository object
+            repository<number>* repo;
+
+            //! reference to work journal
+            work_journal& journal;
+
+            //! reference to argument cache
+            argument_cache& args;
+
+          };
+
+
+        template <typename number>
+        WorkerBundle<number>::WorkerBundle(boost::mpi::environment& e, boost::mpi::communicator& c,
+                                           repository<number>* r, work_journal& j, argument_cache& a)
+          : env(e),
+            world(c),
+            repo(r),
+            journal(j),
+            args(a)
+          {
+            // set up instrument to journal the MPI communication if needed
+            journal_instrument instrument(this->journal, master_work_event::event_type::MPI_begin, master_work_event::event_type::MPI_end);
+
+            std::vector<boost::mpi::request> requests(world.size()-1);
+
+            // if repository is initialized, send SETUP message
+            if(repo != nullptr)
+              {
+                // request information from each worker, and pass all necessary setup details
+                MPI::slave_setup_payload payload(this->repo->get_root_path(), args);
+
+                for(unsigned int i = 0; i < world.size()-1; ++i)
+                  {
+                    requests[i] = world.isend(this->worker_rank(i), MPI::INFORMATION_REQUEST, payload);
+                  }
+
+                // wait for all messages to be received, then return
+                boost::mpi::wait_all(requests.begin(), requests.end());
+              }
+          }
+
+
+        template <typename number>
+        WorkerBundle<number>::~WorkerBundle()
+          {
+            // set up instrument to journal the MPI communication if needed
+            journal_instrument instrument(this->journal, master_work_event::event_type::MPI_begin, master_work_event::event_type::MPI_end);
+
+            std::vector<boost::mpi::request> requests(this->world.size()-1);
+
+            for(unsigned int i = 0; i < this->world.size()-1; ++i)
+              {
+                requests[i] = this->world.isend(this->worker_rank(i), MPI::TERMINATE);
+              }
+
+            // wait for all messages to be received, then exit ourselves
+            boost::mpi::wait_all(requests.begin(), requests.end());
+          }
+
+
+      }
+
     using namespace master_controller_impl;
 
     template <typename number>
@@ -633,9 +734,48 @@ namespace transport
 
 
     template <typename number>
+    void master_controller<number>::validate_tasks()
+      {
+        for(std::list<job_descriptor>::const_iterator t = this->job_queue.begin(); t != this->job_queue.end(); /* intentionally no update step */)
+          {
+            const job_descriptor& job = *t;
+
+            try
+              {
+                std::unique_ptr< task_record<number> > record = this->repo->query_task(job.get_name());
+                ++t;
+              }
+            catch(runtime_exception& xe)
+              {
+                if(xe.get_exception_code() == exception_type::RECORD_NOT_FOUND)
+                  {
+                    std::ostringstream msg;
+                    msg << CPPTRANSPORT_TASK_MISSING << " '" << job.get_name() << "'";
+                    this->warn(msg.str());
+                  }
+                else
+                  {
+                    std::ostringstream msg;
+                    msg << CPPTRANSPORT_TASK_CANT_BE_READ << " '" << job.get_name() << "' (" << xe.what() << ")";
+                    this->warn(msg.str());
+                  }
+                t = this->job_queue.erase(t);
+              }
+          }
+      }
+
+
+    template <typename number>
     void master_controller<number>::execute_tasks()
       {
         if(!(this->get_rank() == 0)) throw runtime_exception(exception_type::MPI_ERROR, CPPTRANSPORT_EXEC_SLAVE);
+
+        // set up worker scope
+        // WorkerBundle will send SETUP messages to all workers if the repository is not null
+        // when it goes out of scope its destructor will send TERMINATE messages
+        // this way, even if we break out of this function by an exception,
+        // the workers should all get TERMINATE instructions
+        WorkerBundle<number> bundle(this->environment, this->world, this->repo.get(), this->journal, this->arg_cache);
 
         if(!this->repo)
           {
@@ -645,8 +785,9 @@ namespace transport
           {
             boost::timer::cpu_timer timer;
 
-            // set up workers
-            this->initialize_workers();
+            // validate that requested tasks can be read from the database
+            // any whic can't be read are removed from the job queue and a warning issued
+            this->validate_tasks();
 
             // schedule extra tasks if any explicitly-required tasks depend on content from
             // a second task, but no content group is available
@@ -718,10 +859,6 @@ namespace transport
               }
           }
 
-        // there is no more work, so ask all workers to shut down
-        // and then exit ourselves
-        this->terminate_workers();
-
         if(this->arg_cache.get_gantt_chart()) this->journal.make_gantt_chart(this->arg_cache.get_gantt_filename(), this->local_env, this->arg_cache);
         if(this->arg_cache.get_journal())     this->journal.make_journal(this->arg_cache.get_journal_filename(), this->local_env, this->arg_cache);
       }
@@ -745,24 +882,21 @@ namespace transport
             // When commits need to occur, the record is looked up again with an active transaction
             record = this->repo->query_task(job.get_name());
           }
-        catch (runtime_exception xe)
+        catch (runtime_exception xe)    // exceptions should not occur, since records were validated. But catch exceptions just to be sure
           {
             if(xe.get_exception_code() == exception_type::RECORD_NOT_FOUND)
               {
                 std::ostringstream msg;
-                msg << CPPTRANSPORT_REPO_MISSING_RECORD << " '" << xe.what() << "'" << CPPTRANSPORT_REPO_SKIPPING_TASK;
+                msg << CPPTRANSPORT_TASK_MISSING << " '" << job.get_name() << "'";
                 this->err(msg.str());
-                return;
               }
-            else if(xe.get_exception_code() == exception_type::MISSING_MODEL_INSTANCE
-                    || xe.get_exception_code() == exception_type::REPOSITORY_BACKEND_ERROR)
+            else
               {
                 std::ostringstream msg;
-                msg << xe.what() << " " << CPPTRANSPORT_REPO_FOR_TASK << " '" << job.get_name() << "'" << CPPTRANSPORT_REPO_SKIPPING_TASK;
+                msg << CPPTRANSPORT_TASK_CANT_BE_READ << " '" << job.get_name() << "' (" << xe.what() << ")";
                 this->err(msg.str());
-                return;
               }
-            else throw xe;
+            return;
           }
 
         // introspect task type
@@ -804,31 +938,6 @@ namespace transport
       }
 
     // WORKER HANDLING
-
-
-    template <typename number>
-    void master_controller<number>::initialize_workers(void)
-      {
-        // set up instrument to journal the MPI communication if needed
-        journal_instrument instrument(this->journal, master_work_event::event_type::MPI_begin, master_work_event::event_type::MPI_end);
-
-        std::vector<boost::mpi::request> requests(this->world.size()-1);
-
-        // we require this->repo not to be null
-        assert(this->repo);
-        if(!this->repo) throw std::runtime_error(CPPTRANSPORT_REPO_NOT_SET);
-
-        // request information from each worker, and pass all necessary setup details
-        MPI::slave_setup_payload payload(this->repo->get_root_path(), this->arg_cache);
-
-        for(unsigned int i = 0; i < this->world.size()-1; ++i)
-          {
-            requests[i] = this->world.isend(this->worker_rank(i), MPI::INFORMATION_REQUEST, payload);
-          }
-
-        // wait for all messages to be received, then return
-        boost::mpi::wait_all(requests.begin(), requests.end());
-      }
 
 
     template <typename number>
@@ -982,24 +1091,6 @@ namespace transport
 
         // wait for all assignments to be received
         boost::mpi::wait_all(msg_status.begin(), msg_status.end());
-      }
-
-
-    template <typename number>
-    void master_controller<number>::terminate_workers(void)
-      {
-        // set up instrument to journal the MPI communication if needed
-        journal_instrument instrument(this->journal, master_work_event::event_type::MPI_begin, master_work_event::event_type::MPI_end);
-
-        std::vector<boost::mpi::request> requests(this->world.size()-1);
-
-        for(unsigned int i = 0; i < this->world.size()-1; ++i)
-          {
-            requests[i] = this->world.isend(this->worker_rank(i), MPI::TERMINATE);
-          }
-
-        // wait for all messages to be received, then exit ourselves
-        boost::mpi::wait_all(requests.begin(), requests.end());
       }
 
 
