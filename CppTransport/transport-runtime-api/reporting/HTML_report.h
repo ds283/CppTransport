@@ -1725,7 +1725,7 @@ namespace transport
             HTML_node panel("div");
             panel.add_attribute("class", "panel panel-info topskip");
 
-            HTML_node panel_head("div", "Breakdown of integration details for this output group");
+            HTML_node panel_head("div", "Integration analysis for this output group");
             panel_head.add_attribute("class", "panel-heading");
 
             HTML_node panel_body("div");
@@ -2009,7 +2009,7 @@ namespace transport
             out << " ]" << '\n';
 
             out << "colour_map = plt.get_cmap('autumn')" << '\n';
-            out << "plt.scatter(x, y, marker='o', c=colours, cmap=colour_map, edgecolors=None)" << '\n';
+            out << "plt.scatter(x, y, marker='o', c=colours, cmap=colour_map, norm=col.LogNorm())" << '\n';
             out << "plt.colorbar(cmap=colour_map, label=r'" << colour_label << "')" << '\n';
             if(xlog) out << "plt.xscale('log')" << '\n';
             if(ylog) out << "plt.yscale('log')" << '\n';
