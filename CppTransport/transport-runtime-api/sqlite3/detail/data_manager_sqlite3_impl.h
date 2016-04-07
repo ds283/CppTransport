@@ -709,7 +709,8 @@ namespace transport
         // set up batcher
         fNL_batcher<number> batcher(this->batcher_capacity, this->checkpoint_interval, m, container, logdir, writers, std::move(dispatcher), std::move(replacer), db, worker, type);
 
-        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << "** Created new temporary " << derived_data::template_name(type) << " container " << container;
+        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal) << "** Created new temporary " <<
+            derived_data::template_type_to_string(type) << " container " << container;
 
         // add this database to our list of open connections
         this->open_containers.push_back(db);
@@ -853,7 +854,7 @@ namespace transport
 
         BOOST_LOG_SEV(batcher.get_log(), generic_batcher::log_severity_level::normal)
         << "** " << (action == replacement_action::action_replace ? "Replacing" : "Closing")
-        << " temporary " << derived_data::template_name(type) << " container " << batcher.get_container_path();
+        << " temporary " << derived_data::template_type_to_string(type) << " container " << batcher.get_container_path();
 
         batcher.get_manager_handle(&db);
         this->open_containers.remove(db);

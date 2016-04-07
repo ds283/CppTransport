@@ -192,6 +192,12 @@ namespace transport
 						//! has a label been set?
 						bool is_label_set() const { return(this->label_set); }
 
+            //! get LaTeX label
+            const std::string get_LaTeX_label() const { return(this->LaTeX_label); }
+
+            //! get non-LaTeX label
+            const std::string get_non_LaTeX_label() const { return(this->non_LaTeX_label); }
+
 						//! use tags?
 						bool get_label_tags() const { return(this->use_tags); }
 

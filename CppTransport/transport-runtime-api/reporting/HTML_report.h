@@ -279,17 +279,23 @@ namespace transport
 
             // SQL QUERIES
 
+            //! construct a generic SQL language block
+            void write_SQL_block(const std::string& SQL, HTML_node& parent);
+
+            //! embed an SQL block in a titled panel
+            void write_SQL_panel(std::string title, const std::string& SQL, HTML_node& parent);
+
             //! write details for an SQL time configuration query
             template <typename number>
-            void write_SQL_query(HTML_report_bundle<number>& bundle, const derived_data::SQL_time_config_query& line, HTML_node& parent);
+            void write_SQL_query(HTML_report_bundle<number>& bundle, const derived_data::SQL_time_config_query& query, HTML_node& parent);
 
             //! write details for an SQL twopf momentum-configuration query
             template <typename number>
-            void write_SQL_query(HTML_report_bundle<number>& bundle, const derived_data::SQL_twopf_kconfig_query& line, HTML_node& parent);
+            void write_SQL_query(HTML_report_bundle<number>& bundle, const derived_data::SQL_twopf_kconfig_query& query, HTML_node& parent);
 
             //! write details for an SQL threepf momentum-configuration query
             template <typename number>
-            void write_SQL_query(HTML_report_bundle<number>& bundle, const derived_data::SQL_threepf_kconfig_query& line, HTML_node& parent);
+            void write_SQL_query(HTML_report_bundle<number>& bundle, const derived_data::SQL_threepf_kconfig_query& query, HTML_node& parent);
 
 
             // SPECIFIC LINES
@@ -580,11 +586,17 @@ namespace transport
             // add plugin to enable history on bootstrap tabs
             bundle.emplace_JavaScript_asset("bootstrap-tab-history/bootstrap-tab-history.js", "bootstrap-tab-history.js");
 
+            // add prism.js for syntax highlighting
+            bundle.emplace_JavaScript_asset("prism/prism.min.js", "prism.min.js");
+
             // add our own JavaScript file utility.js which handles eg. resizing navigation bar on window resize
             bundle.emplace_JavaScript_asset("HTML_assets/utility.js", "utility.js");
 
             // add bootstrap CSS file
             bundle.emplace_CSS_asset("bootstrap/css/bootstrap.min.css", "bootstrap.min.css");
+
+            // add prism.js CSS file
+            bundle.emplace_CSS_asset("prism/prism.css", "prism.css");
 
             // add our own CSS file
             bundle.emplace_CSS_asset("HTML_assets/cpptransport.css", "cpptransport.css");
@@ -1672,9 +1684,10 @@ namespace transport
 
             HTML_node tdt("dt", "Title");
             HTML_node tdd("dd");
-            if(product.get_title())
+            if(product.get_title() && !product.get_title_text().empty())
               {
-                HTML_string s(product.get_title_text());
+                HTML_node s("code", product.get_title_text(), true, false);
+                s.add_attribute("class", "language-latex");
                 tdd.add_element(s);
               }
             else
@@ -1687,9 +1700,10 @@ namespace transport
 
             HTML_node xdt("dt", "x-axis label");
             HTML_node xdd("dd");
-            if(product.get_x_label())
+            if(product.get_x_label() && !product.get_x_label_text().empty())
               {
-                HTML_string s(product.get_x_label_text());
+                HTML_node s("code", product.get_x_label_text(), true, false);
+                s.add_attribute("class", "language-latex");
                 xdd.add_element(s);
               }
             else
@@ -1702,9 +1716,10 @@ namespace transport
 
             HTML_node ydt("dt", "y-axis label");
             HTML_node ydd("dd");
-            if(product.get_y_label())
+            if(product.get_y_label() && !product.get_y_label_text().empty())
               {
-                HTML_string s(product.get_y_label_text());
+                HTML_node s("code", product.get_y_label_text(), true, false);
+                s.add_attribute("class", "language-latex");
                 ydd.add_element(s);
               }
             else
@@ -1818,10 +1833,18 @@ namespace transport
             HTML_node line_list("ul");
             line_list.add_attribute("class", "list-group");
 
+            unsigned int count = 0;
             for(const std::unique_ptr< derived_data::derived_line<number> >& line : lines)
               {
                 HTML_node item("li");
                 item.add_attribute("class", "list-group-item").add_attribute("onclick", "return false;");
+
+                std::ostringstream lbl_text;
+                lbl_text << "Line " << ++count;
+                HTML_node lbl("span", lbl_text.str());
+                lbl.add_attribute("class", "label label-primary");
+                item.add_element(lbl);
+
                 if(line)
                   {
                     switch(line->get_line_type())
@@ -1993,99 +2016,8 @@ namespace transport
         template <typename number>
         void HTML_report::write_wavenumber_series_line(HTML_report_bundle<number>& bundle, const derived_data::wavenumber_series<number>& line, HTML_node& parent)
           {
-
-          }
-
-
-        template <typename number>
-        void HTML_report::write_twopf_line(HTML_report_bundle<number>& bundle, const derived_data::twopf_line<number>& line, HTML_node& parent)
-          {
-
-          }
-
-
-        template <typename number>
-        void HTML_report::write_threepf_line(HTML_report_bundle<number>& bundle, const derived_data::threepf_line<number>& line, HTML_node& parent)
-          {
-
-          }
-
-
-        template <typename number>
-        void HTML_report::write_zeta_twopf_line(HTML_report_bundle<number>& bundle, const derived_data::zeta_twopf_line<number>& line, HTML_node& parent)
-          {
-
-          }
-
-
-        template <typename number>
-        void HTML_report::write_zeta_threepf_line(HTML_report_bundle<number>& bundle, const derived_data::zeta_threepf_line<number>& line, HTML_node& parent)
-          {
-
-          }
-
-
-        template <typename number>
-        void HTML_report::write_zeta_redbsp_line(HTML_report_bundle<number>& bundle, const derived_data::zeta_reduced_bispectrum_line<number>& line, HTML_node& parent)
-          {
-
-          }
-
-
-        template <typename number>
-        void HTML_report::write_tensor_twopf_line(HTML_report_bundle<number>& bundle, const derived_data::tensor_twopf_line<number>& line, HTML_node& parent)
-          {
-
-          }
-
-
-        template <typename number>
-        void HTML_report::write_fNL_line(HTML_report_bundle<number>& bundle, const derived_data::fNL_line<number>& line, HTML_node& parent)
-          {
-
-          }
-
-
-        template <typename number>
-        void HTML_report::write_r_line(HTML_report_bundle<number>& bundle, const derived_data::r_line<number>& line, HTML_node& parent)
-          {
-
-          }
-
-
-        template <typename number>
-        void HTML_report::write_SQL_query(HTML_report_bundle<number>& bundle, const derived_data::SQL_time_config_query& line, HTML_node& parent)
-          {
-
-          }
-
-
-        template <typename number>
-        void HTML_report::write_SQL_query(HTML_report_bundle<number>& bundle, const derived_data::SQL_twopf_kconfig_query& line, HTML_node& parent)
-          {
-
-          }
-
-
-        template <typename number>
-        void HTML_report::write_SQL_query(HTML_report_bundle<number>& bundle, const derived_data::SQL_threepf_kconfig_query& line, HTML_node& parent)
-          {
-
-          }
-
-
-        void HTML_report::derived_line_title(std::string title, HTML_node& parent)
-          {
-            HTML_node t("h5", title);
-            parent.add_element(t);
-          }
-
-
-        template <typename number>
-        void HTML_report::write_generic_derived_line(HTML_report_bundle<number>& bundle, const derived_data::derived_line<number>& line, HTML_node& parent)
-          {
             HTML_node row("div");
-            row.add_attribute("class", "row topskip");
+            row.add_attribute("class", "row topskip-small");
 
             HTML_node col1("div");
             col1.add_attribute("class", "col-md-4");
@@ -2101,6 +2033,324 @@ namespace transport
             col3.add_attribute("class", "col-md-4");
             HTML_node col3_list("dl");
             col3_list.add_attribute("class", "dl-horizontal");
+
+            this->make_data_element("Spectral index", line.is_spectral_index() ? "Yes" : "No", col1_list);
+
+            col1.add_element(col1_list);
+            col2.add_element(col2_list);
+            col3.add_element(col3_list);
+
+            row.add_element(col1).add_element(col2).add_element(col3);
+            parent.add_element(row);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_twopf_line(HTML_report_bundle<number>& bundle, const derived_data::twopf_line<number>& line, HTML_node& parent)
+          {
+            HTML_node row("div");
+            row.add_attribute("class", "row topskip-small");
+
+            HTML_node col1("div");
+            col1.add_attribute("class", "col-md-4");
+            HTML_node col1_list("dl");
+            col1_list.add_attribute("class", "dl-horizontal");
+
+            HTML_node col2("div");
+            col2.add_attribute("class", "col-md-4");
+            HTML_node col2_list("dl");
+            col2_list.add_attribute("class", "dl-horizontal");
+
+            HTML_node col3("div");
+            col3.add_attribute("class", "col-md-4");
+            HTML_node col3_list("dl");
+            col3_list.add_attribute("class", "dl-horizontal");
+
+            this->make_data_element("2pf type", derived_data::twopf_type_to_string(line.get_type()), col1_list);
+            this->make_data_element("Dimensionless", line.is_dimensionless() ? "Yes" : "No", col2_list);
+
+            col1.add_element(col1_list);
+            col2.add_element(col2_list);
+            col3.add_element(col3_list);
+
+            row.add_element(col1).add_element(col2).add_element(col3);
+            parent.add_element(row);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_threepf_line(HTML_report_bundle<number>& bundle, const derived_data::threepf_line<number>& line, HTML_node& parent)
+          {
+            HTML_node row("div");
+            row.add_attribute("class", "row topskip-small");
+
+            HTML_node col1("div");
+            col1.add_attribute("class", "col-md-4");
+            HTML_node col1_list("dl");
+            col1_list.add_attribute("class", "dl-horizontal");
+
+            HTML_node col2("div");
+            col2.add_attribute("class", "col-md-4");
+            HTML_node col2_list("dl");
+            col2_list.add_attribute("class", "dl-horizontal");
+
+            HTML_node col3("div");
+            col3.add_attribute("class", "col-md-4");
+            HTML_node col3_list("dl");
+            col3_list.add_attribute("class", "dl-horizontal");
+
+            this->make_data_element("Dimensionless", line.is_dimensionless() ? "Yes" : "No", col1_list);
+
+            col1.add_element(col1_list);
+            col2.add_element(col2_list);
+            col3.add_element(col3_list);
+
+            row.add_element(col1).add_element(col2).add_element(col3);
+            parent.add_element(row);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_zeta_twopf_line(HTML_report_bundle<number>& bundle, const derived_data::zeta_twopf_line<number>& line, HTML_node& parent)
+          {
+            HTML_node row("div");
+            row.add_attribute("class", "row topskip-small");
+
+            HTML_node col1("div");
+            col1.add_attribute("class", "col-md-4");
+            HTML_node col1_list("dl");
+            col1_list.add_attribute("class", "dl-horizontal");
+
+            HTML_node col2("div");
+            col2.add_attribute("class", "col-md-4");
+            HTML_node col2_list("dl");
+            col2_list.add_attribute("class", "dl-horizontal");
+
+            HTML_node col3("div");
+            col3.add_attribute("class", "col-md-4");
+            HTML_node col3_list("dl");
+            col3_list.add_attribute("class", "dl-horizontal");
+
+            this->make_data_element("Dimensionless", line.is_dimensionless() ? "Yes" : "No", col1_list);
+
+            col1.add_element(col1_list);
+            col2.add_element(col2_list);
+            col3.add_element(col3_list);
+
+            row.add_element(col1).add_element(col2).add_element(col3);
+            parent.add_element(row);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_zeta_threepf_line(HTML_report_bundle<number>& bundle, const derived_data::zeta_threepf_line<number>& line, HTML_node& parent)
+          {
+            HTML_node row("div");
+            row.add_attribute("class", "row topskip-small");
+
+            HTML_node col1("div");
+            col1.add_attribute("class", "col-md-4");
+            HTML_node col1_list("dl");
+            col1_list.add_attribute("class", "dl-horizontal");
+
+            HTML_node col2("div");
+            col2.add_attribute("class", "col-md-4");
+            HTML_node col2_list("dl");
+            col2_list.add_attribute("class", "dl-horizontal");
+
+            HTML_node col3("div");
+            col3.add_attribute("class", "col-md-4");
+            HTML_node col3_list("dl");
+            col3_list.add_attribute("class", "dl-horizontal");
+
+            this->make_data_element("Dimensionless", line.is_dimensionless() ? "Yes" : "No", col1_list);
+
+            col1.add_element(col1_list);
+            col2.add_element(col2_list);
+            col3.add_element(col3_list);
+
+            row.add_element(col1).add_element(col2).add_element(col3);
+            parent.add_element(row);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_zeta_redbsp_line(HTML_report_bundle<number>& bundle, const derived_data::zeta_reduced_bispectrum_line<number>& line, HTML_node& parent)
+          {
+            // not currently used
+          }
+
+
+        template <typename number>
+        void HTML_report::write_tensor_twopf_line(HTML_report_bundle<number>& bundle, const derived_data::tensor_twopf_line<number>& line, HTML_node& parent)
+          {
+            HTML_node row("div");
+            row.add_attribute("class", "row topskip-small");
+
+            HTML_node col1("div");
+            col1.add_attribute("class", "col-md-4");
+            HTML_node col1_list("dl");
+            col1_list.add_attribute("class", "dl-horizontal");
+
+            HTML_node col2("div");
+            col2.add_attribute("class", "col-md-4");
+            HTML_node col2_list("dl");
+            col2_list.add_attribute("class", "dl-horizontal");
+
+            HTML_node col3("div");
+            col3.add_attribute("class", "col-md-4");
+            HTML_node col3_list("dl");
+            col3_list.add_attribute("class", "dl-horizontal");
+
+            this->make_data_element("Dimensionless", line.is_dimensionless() ? "Yes" : "No", col1_list);
+
+            col1.add_element(col1_list);
+            col2.add_element(col2_list);
+            col3.add_element(col3_list);
+
+            row.add_element(col1).add_element(col2).add_element(col3);
+            parent.add_element(row);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_fNL_line(HTML_report_bundle<number>& bundle, const derived_data::fNL_line<number>& line, HTML_node& parent)
+          {
+            HTML_node row("div");
+            row.add_attribute("class", "row topskip-small");
+
+            HTML_node col1("div");
+            col1.add_attribute("class", "col-md-4");
+            HTML_node col1_list("dl");
+            col1_list.add_attribute("class", "dl-horizontal");
+
+            HTML_node col2("div");
+            col2.add_attribute("class", "col-md-4");
+            HTML_node col2_list("dl");
+            col2_list.add_attribute("class", "dl-horizontal");
+
+            HTML_node col3("div");
+            col3.add_attribute("class", "col-md-4");
+            HTML_node col3_list("dl");
+            col3_list.add_attribute("class", "dl-horizontal");
+
+            this->make_data_element("Template", derived_data::template_type_to_string(line.get_template()), col1_list);
+
+            col1.add_element(col1_list);
+            col2.add_element(col2_list);
+            col3.add_element(col3_list);
+
+            row.add_element(col1).add_element(col2).add_element(col3);
+            parent.add_element(row);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_r_line(HTML_report_bundle<number>& bundle, const derived_data::r_line<number>& line, HTML_node& parent)
+          {
+            // not currently used
+          }
+
+
+        void HTML_report::write_SQL_block(const std::string& SQL, HTML_node& parent)
+          {
+            HTML_node pre("pre");
+
+            HTML_node code("code", SQL, true, false);
+            code.add_attribute("class", "language-sql");
+            pre.add_element(code);
+
+            parent.add_element(pre);
+          }
+
+
+        void HTML_report::write_SQL_panel(std::string title, const std::string& SQL, HTML_node& parent)
+          {
+            HTML_node t("h6", title);
+            t.add_attribute("class", "topskip-small");
+            parent.add_element(t);
+
+            this->write_SQL_block(SQL, parent);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_SQL_query(HTML_report_bundle<number>& bundle, const derived_data::SQL_time_config_query& query, HTML_node& parent)
+          {
+            this->write_SQL_panel("SQL query for time sample points", query.get_query_string(), parent);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_SQL_query(HTML_report_bundle<number>& bundle, const derived_data::SQL_twopf_kconfig_query& query, HTML_node& parent)
+          {
+            this->write_SQL_panel("SQL query for 2-point function momentum-configuration points", query.get_query_string(), parent);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_SQL_query(HTML_report_bundle<number>& bundle, const derived_data::SQL_threepf_kconfig_query& query, HTML_node& parent)
+          {
+            this->write_SQL_panel("SQL query for 3-point function momentum-configuration sample points", query.get_query_string(), parent);
+          }
+
+
+        void HTML_report::derived_line_title(std::string title, HTML_node& parent)
+          {
+            HTML_node t("h4", title);
+            parent.add_element(t);
+          }
+
+
+        template <typename number>
+        void HTML_report::write_generic_derived_line(HTML_report_bundle<number>& bundle, const derived_data::derived_line<number>& line, HTML_node& parent)
+          {
+            HTML_node row("div");
+            row.add_attribute("class", "row topskip-small");
+
+            HTML_node col1("div");
+            col1.add_attribute("class", "col-md-4");
+            HTML_node col1_list("dl");
+            col1_list.add_attribute("class", "dl-horizontal");
+
+            HTML_node col2("div");
+            col2.add_attribute("class", "col-md-4");
+            HTML_node col2_list("dl");
+            col2_list.add_attribute("class", "dl-horizontal");
+
+            HTML_node col3("div");
+            col3.add_attribute("class", "col-md-4");
+            HTML_node col3_list("dl");
+            col3_list.add_attribute("class", "dl-horizontal");
+
+            this->make_data_element("Derivatives/momenta", derived_data::dot_type_to_string(line.get_dot_meaning()), col1_list);
+            this->make_data_element("k-labels", derived_data::klabel_type_to_string(line.get_klabel_meaning()), col2_list);
+            this->make_data_element("Add identifiers to labels", line.get_label_tags() ? "Yes" : "No", col3_list);
+
+            HTML_node tt("dt", "Data from task");
+            HTML_node td("dd");
+            derivable_task<number>* ptk = line.get_parent_task();
+            if(ptk != nullptr)
+              {
+                this->write_task_button(bundle, ptk->get_name(), td);
+                col1_list.add_element(tt).add_element(td);
+              }
+
+            HTML_node lt("dt", "Label");
+            HTML_node ld("dd");
+            if(line.is_label_set() && !line.get_non_LaTeX_label().empty())
+              {
+                HTML_node s("code", line.get_non_LaTeX_label(), true, false);
+                s.add_attribute("class", "language-latex");
+                ld.add_element(s);
+              }
+            else
+              {
+                HTML_node s("span", "DEFAULT");
+                s.add_attribute("class", "label label-default");
+                ld.add_element(s);
+              }
+            col2_list.add_element(lt).add_element(ld);
 
             col1.add_element(col1_list);
             col2.add_element(col2_list);

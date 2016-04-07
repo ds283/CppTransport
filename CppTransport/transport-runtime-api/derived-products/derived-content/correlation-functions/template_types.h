@@ -18,7 +18,7 @@ namespace transport
 
 				enum class template_type { fNL_local_template, fNL_equi_template, fNL_ortho_template, fNL_DBI_template };
 
-				std::string template_name(template_type type)
+				inline std::string template_type_to_string(template_type type)
 					{
 						switch(type)
 							{

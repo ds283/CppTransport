@@ -2,6 +2,11 @@ body {
     padding-top: 65px;
 }
 
+/* Revert prism.js to normal word wrapping */
+code[class*="language-"] {
+    word-wrap: break-word;
+}
+
 /* restyle link buttons to remove surrounding padding and align as if they were text */
 .btn-link {
     vertical-align: baseline;
@@ -25,6 +30,11 @@ body {
 /* Many elements require extra vertical space above them */
 .topskip {
     margin-top: 20px;
+}
+
+/* Smaller vertical space used in derived line descriptions */
+.topskip-small {
+    margin-top: 0;
 }
 
 /* Style for included output images */
